@@ -4,11 +4,11 @@ import {
   useEventTarget,
   Rectangle,
   Text,
-  type CRCEventTargetSnapshot,
-  type CRCKeyboardEvent,
-  type CRCLogicalMouseEvent,
-  type CRCNode,
-} from '@crc/core';
+  type PibblEventTargetSnapshot,
+  type PibblKeyboardEvent,
+  type PibblLogicalMouseEvent,
+  type PibblNode,
+} from '@pibbl/core';
 export const FOCUS_NAVIGATION_SOURCE_ID =
   'focus-and-keyboard-navigation-example';
 /**
@@ -72,12 +72,12 @@ export interface FocusNavigationSceneProps {
   readonly state: FocusNavigationState;
   readonly onActivation: (
     target: FocusNavigationTarget,
-    event: CRCLogicalMouseEvent,
+    event: PibblLogicalMouseEvent,
   ) => void;
   readonly onFocusChange: (target: FocusNavigationTarget) => void;
   readonly onFocusSnapshot: (
     target: FocusNavigationTarget,
-    snapshot: CRCEventTargetSnapshot,
+    snapshot: PibblEventTargetSnapshot,
   ) => void;
 }
 interface ControlProps extends Omit<FocusNavigationSceneProps, 'squareLabels'> {
@@ -102,7 +102,7 @@ function rectanglePath(
   return path;
 }
 function activationLabel(
-  snapshot: CRCEventTargetSnapshot,
+  snapshot: PibblEventTargetSnapshot,
   label: string,
 ): string {
   if (snapshot.isFocusVisible) return `▶ ${label}`;
@@ -130,7 +130,7 @@ const CanvasControl = function CanvasControl({
       onClick: (event) => onActivation(target, event),
       onFocus: () => onFocusChange(target),
       onKeyDown: ownsHorizontalArrows
-        ? (event: CRCKeyboardEvent) => {
+        ? (event: PibblKeyboardEvent) => {
             if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
               event.preventDefault();
             }
@@ -303,7 +303,7 @@ const FocusNavigationScene = function FocusNavigationScene(
 };
 export function createFocusNavigationScene(
   props: FocusNavigationSceneProps,
-): CRCNode {
+): PibblNode {
   return (
     <FocusManagement>
       <FocusNavigationScene {...props} />

@@ -7,7 +7,7 @@ import {
   physics2DLabScenarioEntry,
   type Physics2DLabState,
   type ScenarioController,
-} from "@crc/scenarios";
+} from "@pibbl/scenarios";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import {
   installSchedulerDriverForTest,
@@ -71,7 +71,7 @@ describe("public 2D physics laboratory", () => {
         "dynamicBody2D",
         "staticBody2D",
         "collider2D",
-        "crcPhysicsBody2D",
+        "pibblPhysicsBody2D",
         "useRef",
         "useSignal",
         "setPointerCapture",
@@ -111,10 +111,10 @@ describe("public 2D physics laboratory", () => {
       loadScenarioSource(physics2DLabScenarioEntry),
     ]);
     for (const source of [learningSource, labSource]) {
-      expect(source).toMatch(/from ["']@crc\/core["']/u);
-      expect(source).toMatch(/from ["']@crc\/core\/physics\/2d["']/u);
+      expect(source).toMatch(/from ["']@pibbl\/core["']/u);
+      expect(source).toMatch(/from ["']@pibbl\/core\/physics\/2d["']/u);
       expect(source).not.toMatch(
-        /@crc\/(?:core|physics)\/(?:internal|lib|src)\b/u,
+        /@pibbl\/(?:core|physics)\/(?:internal|lib|src)\b/u,
       );
       expect(source).not.toMatch(
         /ManualSchedulerDriver|installSchedulerDriverForTest|setInterval/u,

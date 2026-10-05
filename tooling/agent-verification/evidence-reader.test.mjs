@@ -6,12 +6,12 @@ import { join } from 'node:path';
 import { readReplayEvidence } from './evidence-reader.mjs';
 
 async function fixture(value, check) {
-  const directory = await mkdtemp(join(tmpdir(), 'crc-evidence-reader-'));
+  const directory = await mkdtemp(join(tmpdir(), 'pibbl-evidence-reader-'));
   const path = join(directory, 'report.json');
   try { await writeFile(path, typeof value === 'string' ? value : JSON.stringify(value)); await check(path); }
   finally { await rm(directory, { recursive: true, force: true }); }
 }
-const report = { schema: 'crc-viz-replay/1', status: 'fail', run: { runId: 'run-one', rerun: { arguments: ['fixture'] } },
+const report = { schema: 'pibbl-viz-replay/1', status: 'fail', run: { runId: 'run-one', rerun: { arguments: ['fixture'] } },
   steps: [{ actionId: 'hover', status: 'pass', observation: { rows: [1, 2] } }, { actionId: 'resize', status: 'incomplete' }],
   failure: { actionId: 'resize', message: 'anchor mismatch' }, errors: [], droppedErrors: 0 };
 
@@ -29,7 +29,7 @@ test('summary omits bulky observations; explicit action and manifest views retai
 });
 
 test('checkpoint views cannot promote a completed subset to final success', async () => {
-  await fixture({ schema: 'crc-replay-checkpoint/1', status: 'partial', runId: 'run-one', sequence: 3, stage: 'hover', report: { ...report, status: 'pass' } }, async path => {
+  await fixture({ schema: 'pibbl-replay-checkpoint/1', status: 'partial', runId: 'run-one', sequence: 3, stage: 'hover', report: { ...report, status: 'pass' } }, async path => {
     const summary = await readReplayEvidence(path);
     assert.equal(summary.kind, 'checkpoint');
     assert.equal(summary.claimedStatus, 'partial');
@@ -71,7 +71,7 @@ test('summary includes secondary failure categories without conflating them with
 test('checkpoint summary preserves clock identity and correlation limits', async () => {
   const timing = { clock: 'node-monotonic', clockId: 'clock-one', elapsedMs: 50,
     anchor: { monotonicMs: 100, wallTimestamp: '2026-09-30T12:00:00.000Z', correlation: 'paired-observations-not-synchronized' } };
-  await fixture({ schema: 'crc-replay-checkpoint/1', status: 'partial', report, timing }, async path => {
+  await fixture({ schema: 'pibbl-replay-checkpoint/1', status: 'partial', report, timing }, async path => {
     assert.deepEqual((await readReplayEvidence(path)).checkpoint.timing, timing);
   });
 });
@@ -136,7 +136,7 @@ test('pages saved action records with content-bound cursors and explicit checkpo
     const expired = await readReplayEvidence(path, { page: 'actions', cursor: first.nextCursor });
     assert.equal(expired.status, 'cursor-expired'); assert.deepEqual(expired.data, []);
   });
-  await fixture({ schema: 'crc-replay-checkpoint/1', report }, async path => {
+  await fixture({ schema: 'pibbl-replay-checkpoint/1', report }, async path => {
     const page = await readReplayEvidence(path, { page: 'actions' });
     assert.equal(page.claimedStatus, 'partial'); assert.equal(page.history, 'checkpoint-prefix');
   });
@@ -167,7 +167,7 @@ test('rejects noncanonical encoded cursors rather than accepting whitespace alia
 });
 
 test('reads text and signal mutation evidence through the shared summary and identified check views', async () => {
-  for (const schema of ['crc-text-replay/1', 'crc-signal-mutation-replay/1']) {
+  for (const schema of ['pibbl-text-replay/1', 'pibbl-signal-mutation-replay/1']) {
     const check = { checkId: 'repair.assertion', actionId: 'repair', status: 'pass', required: true, reason: null };
     await fixture({ ...report, schema, status: 'pass', checks: [check] }, async path => {
       const summary = await readReplayEvidence(path);
@@ -214,11 +214,11 @@ test('projection uses own JSON fields, escapes pointer tokens, distinguishes spe
 test('invalid field selectors and unsupported versions have machine-readable errors', async () => {
   await fixture(report, async path => {
     for (const fields of [[], ['bad'], ['/bad~2escape'], Array(17).fill('/state'), ['/state', '/state'], ['/' + 'x'.repeat(512)], ['/' + Array(17).fill('x').join('/')]]) {
-      await assert.rejects(readReplayEvidence(path, { actionId: 'hover', fields }), error => error.code === 'CRC_EVIDENCE_INVALID_SELECTOR');
+      await assert.rejects(readReplayEvidence(path, { actionId: 'hover', fields }), error => error.code === 'PIBBL_EVIDENCE_INVALID_SELECTOR');
     }
-    await assert.rejects(readReplayEvidence(path, { fields: ['/status'] }), error => error.code === 'CRC_EVIDENCE_INVALID_SELECTOR');
+    await assert.rejects(readReplayEvidence(path, { fields: ['/status'] }), error => error.code === 'PIBBL_EVIDENCE_INVALID_SELECTOR');
   });
-  await fixture({ ...report, schema: 'crc-text-replay/2' }, path => assert.rejects(readReplayEvidence(path), error => error.code === 'CRC_EVIDENCE_UNSUPPORTED_SCHEMA'));
+  await fixture({ ...report, schema: 'pibbl-text-replay/2' }, path => assert.rejects(readReplayEvidence(path), error => error.code === 'PIBBL_EVIDENCE_UNSUPPORTED_SCHEMA'));
 });
 
 test('CLI projects real retained signal evidence and exposes structured selector failures', async () => {
@@ -230,12 +230,12 @@ test('CLI projects real retained signal evidence and exposes structured selector
   assert.equal(result.status, 0, result.stderr);
   const view = JSON.parse(result.stdout);
   assert.equal(view.verification, 'saved-evidence-only');
-  assert.equal(view.sourceSchema, 'crc-signal-mutation-replay/1');
+  assert.equal(view.sourceSchema, 'pibbl-signal-mutation-replay/1');
   assert.deepEqual(view.data.map(field => field.value), [42, 42, 'replacement-published']);
   for (const arguments_ of [['--action', 'replacement', '--fields', '{}'], ['--fields', '[]'], ['--manifest', '--check', 'anything'], ['--wat']]) {
     const failed = spawnSync(process.execPath, [cli, artifact, ...arguments_], { encoding: 'utf8', timeout: 5000 });
     assert.equal(failed.status, 1);
-    assert.equal(JSON.parse(failed.stdout).code, 'CRC_EVIDENCE_INVALID_SELECTOR');
+    assert.equal(JSON.parse(failed.stdout).code, 'PIBBL_EVIDENCE_INVALID_SELECTOR');
   }
 });
 
@@ -249,21 +249,21 @@ test('projection bounds object-key previews and enforces output bytes even for w
   });
   const strings = Object.fromEntries(Array.from({ length: 16 }, (_, i) => [`s${i}`, '\u0000'.repeat(1024)]));
   await fixture({ ...report, steps: [{ actionId: 'escaped', status: 'pass', ...strings }] }, path =>
-    assert.rejects(readReplayEvidence(path, { actionId: 'escaped', fields: Object.keys(strings).map(key => '/' + key) }), error => error.code === 'CRC_EVIDENCE_BUDGET_EXCEEDED'));
+    assert.rejects(readReplayEvidence(path, { actionId: 'escaped', fields: Object.keys(strings).map(key => '/' + key) }), error => error.code === 'PIBBL_EVIDENCE_BUDGET_EXCEEDED'));
 });
 
 test('preserves redacted failure reasons and stages without inventing an assertion message', async () => {
-  await fixture({ schema: 'crc-text-replay/1', status: 'blocked', steps: [], failure: { stage: 'initial', reason: 'Unvalidated payload omitted.', code: 'CRC_FIXTURE_IDENTITY_MISMATCH' } }, async path => {
+  await fixture({ schema: 'pibbl-text-replay/1', status: 'blocked', steps: [], failure: { stage: 'initial', reason: 'Unvalidated payload omitted.', code: 'PIBBL_FIXTURE_IDENTITY_MISMATCH' } }, async path => {
     const view = await readReplayEvidence(path);
     assert.equal(view.failure.reason, 'Unvalidated payload omitted.');
     assert.equal(view.failure.stage, 'initial');
-    assert.equal(view.failure.code, 'CRC_FIXTURE_IDENTITY_MISMATCH');
+    assert.equal(view.failure.code, 'PIBBL_FIXTURE_IDENTITY_MISMATCH');
     assert.equal(view.failure.message, null);
   });
 });
 
 test('reads layout smoke actions without inventing per-action success or attestation', async () => {
- const smoke={schema:'crc-layout-studio-smoke/1',status:'pass',steps:[{action:'overlap-prohibited',before:{assertion:'fail'},after:{relations:{overlap:{area:200}},clicks:4}}],errors:[]};
+ const smoke={schema:'pibbl-layout-studio-smoke/1',status:'pass',steps:[{action:'overlap-prohibited',before:{assertion:'fail'},after:{relations:{overlap:{area:200}},clicks:4}}],errors:[]};
  await fixture(smoke,async path=>{
   const summary=await readReplayEvidence(path);
   assert.equal(summary.attestation,'not-provided-by-schema');
@@ -275,9 +275,9 @@ test('reads layout smoke actions without inventing per-action success or attesta
   assert.equal(projection.attestation,'not-provided-by-schema');
   assert.deepEqual(projection.data.map(item=>item.value),['fail',200]);
   assert.equal((await readReplayEvidence(path,{page:'actions'})).data[0].actionId,'overlap-prohibited');
-  await assert.rejects(readReplayEvidence(path,{manifest:true}),{code:'CRC_EVIDENCE_NO_MATCH'});
+  await assert.rejects(readReplayEvidence(path,{manifest:true}),{code:'PIBBL_EVIDENCE_NO_MATCH'});
  });
  await fixture({...smoke,status:'fail',error:'Controlled smoke failure'},async path=>assert.equal((await readReplayEvidence(path)).failure.message,'Controlled smoke failure'));
- for(const invalid of [{...smoke,run:{runId:'invented'}},{...smoke,checks:[]},{...smoke,steps:[{actionId:'wrong-field'}]}])await fixture(invalid,path=>assert.rejects(readReplayEvidence(path),{code:'CRC_EVIDENCE_INVALID_DOCUMENT'}));
- await fixture({...smoke,schema:'crc-layout-studio-smoke/2'},path=>assert.rejects(readReplayEvidence(path),{code:'CRC_EVIDENCE_UNSUPPORTED_SCHEMA'}));
+ for(const invalid of [{...smoke,run:{runId:'invented'}},{...smoke,checks:[]},{...smoke,steps:[{actionId:'wrong-field'}]}])await fixture(invalid,path=>assert.rejects(readReplayEvidence(path),{code:'PIBBL_EVIDENCE_INVALID_DOCUMENT'}));
+ await fixture({...smoke,schema:'pibbl-layout-studio-smoke/2'},path=>assert.rejects(readReplayEvidence(path),{code:'PIBBL_EVIDENCE_UNSUPPORTED_SCHEMA'}));
 });

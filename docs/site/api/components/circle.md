@@ -12,7 +12,7 @@ relatedTypes: [CircleProps, CircleStyle]
 # Circle
 
 ```ts
-import { Circle } from "@crc/core";
+import { Circle } from "@pibbl/core";
 ```
 
 `Circle` uses [`CircleProps`](#/api/types/elements-components#circleprops) and [`CircleStyle`](#/api/types/styles#circlestyle). `radius` is required; `cx` and

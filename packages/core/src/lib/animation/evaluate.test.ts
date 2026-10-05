@@ -14,7 +14,7 @@ import {
   drive,
   tween,
   wait,
-  type CRCAnimationProgram,
+  type PibblAnimationProgram,
   type WritableSignal,
 } from '../../index';
 import {
@@ -54,7 +54,7 @@ function evaluateAt(
 }
 
 function committedValueAt<T>(
-  program: CRCAnimationProgram,
+  program: PibblAnimationProgram,
   output: WritableSignal<T>,
   time: number,
 ): T {

@@ -1,5 +1,5 @@
-import { Layer, signal, useSignal, Rectangle } from "@crc/core";
-import { HoverData, Scale, type HoverQueryContext } from "@crc/core/viz";
+import { Layer, signal, useSignal, Rectangle } from "@pibbl/core";
+import { HoverData, type HoverQueryContext, LinearScale } from "@pibbl/core/viz";
 import { afterEach, expect, it } from "vitest";
 import { testRuntime } from "./support/runtime.js";
 let runtime: ReturnType<typeof testRuntime>;
@@ -49,8 +49,8 @@ it("supports branch-dependent scale lookup without varying hook slots", () => {
   let value = 0,
     retained: HoverQueryContext | undefined;
   runtime.mount(
-    <Scale id="a" type="linear" domain={[0, 10]} range={[0, 100]}>
-      <Scale id="b" type="linear" domain={[0, 10]} range={[0, 200]}>
+    <LinearScale id="a"  domain={[0, 10]} range={[0, 100]}>
+      <LinearScale id="b"  domain={[0, 10]} range={[0, 200]}>
         <HoverData
           query={(context) => {
             retained = context;
@@ -62,8 +62,8 @@ it("supports branch-dependent scale lookup without varying hook slots", () => {
             return null;
           }}
         </HoverData>
-      </Scale>
-    </Scale>,
+      </LinearScale>
+    </LinearScale>,
   );
   runtime.flush();
   expect(value).toBe(20);
@@ -77,14 +77,14 @@ it("isolates identically named providers across roots", () => {
   const values: number[] = [];
   for (const end of [100, 200])
     runtime.mount(
-      <Scale id="x" type="linear" domain={[0, 10]} range={[0, end]}>
+      <LinearScale id="x"  domain={[0, 10]} range={[0, end]}>
         <HoverData query={(context) => context.scale("x").map(5)}>
           {(value) => {
             values.push(value!);
             return null;
           }}
         </HoverData>
-      </Scale>,
+      </LinearScale>,
     );
   runtime.flush();
   expect(values).toEqual([50, 100]);
@@ -92,13 +92,13 @@ it("isolates identically named providers across roots", () => {
 it("diagnoses scale lookup through a Layer boundary", () => {
   runtime = testRuntime();
   runtime.mount(
-    <Scale id="x" type="linear" domain={[0, 10]} range={[0, 100]}>
+    <LinearScale id="x"  domain={[0, 10]} range={[0, 100]}>
       <Layer style={{ width: 100, height: 100 }}>
         <HoverData query={(context) => context.scale("x")}>
           {() => null}
         </HoverData>
       </Layer>
-    </Scale>,
+    </LinearScale>,
   );
   expect(() => runtime.flush()).toThrow(/Layer boundary/);
 });

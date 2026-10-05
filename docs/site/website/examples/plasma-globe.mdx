@@ -17,7 +17,7 @@ The example mounts `tendrils` and `lightning` through `useTexture`. Shared resou
 
 These are Canvas fills. They do not light native HTML or apply a filter to a DOM form. For an HTML-hosted effect, keep native controls above a decorative canvas and explicitly forward the states the effect needs, as in the [native button recipe](/guides/native-button/).
 
-The source uses an 880 by 720 canvas and requires no external image assets. CRC owns the frames and mount-owned texture cleanup. A seed alone does not guarantee an identical animation: replay also requires the same frame deltas and input history. Long frame gaps are capped. The example starts automatically unless reduced motion is enabled; Stop releases the mount.
+The source uses an 880 by 720 canvas and requires no external image assets. Pibbl owns the frames and mount-owned texture cleanup. A seed alone does not guarantee an identical animation: replay also requires the same frame deltas and input history. Long frame gaps are capped. The example starts automatically unless reduced motion is enabled; Stop releases the mount.
 
 ## APIs and agent guidance
 

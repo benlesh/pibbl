@@ -25,7 +25,7 @@ updates. The table reports the median of the three process medians and the
 median of the three process p95 values.
 
 ```sh
-fnm exec --using=24.15.0 env VITE_CRC_REPORT_PERF=1 \
+fnm exec --using=24.15.0 env VITE_PIBBL_REPORT_PERF=1 \
   corepack pnpm@11.21.0 exec vitest run \
   packages/core/test/signal-scheduler-performance.test.ts \
   --browser.headless --browser.ui=false \
@@ -54,7 +54,7 @@ that is 6.5%, slightly above the plan's 5% diagnostic threshold, while the
 absolute work remains small. The runtime therefore keeps the documented
 optimization choice: use direct signals when receiver ownership or Layer
 isolation is valuable; use one explicit read when one component intentionally
-coordinates a very large fan-out. CRC does not add bitmap caches or a retained
+coordinates a very large fan-out. Pibbl does not add bitmap caches or a retained
 scene graph to erase this bookkeeping cost.
 
 The matched results include the final hot-path optimizations: no renderer
@@ -106,7 +106,7 @@ Completed focused and packaging gates:
 | visual safeguard           | destructive drill rejected, every protected baseline byte preserved, recovery green                                   |
 
 The Studio visual review found two intentional documentation captures. The
-`api-crc` sidebar now includes the new public `batch` function, and the diagram
+`api-pibbl` sidebar now includes the new public `batch` function, and the diagram
 editor landing page now teaches `useSignal`, stable refs, and reactions instead
 of the removed hook vocabulary. Both captures were inspected before their
 baselines were updated.

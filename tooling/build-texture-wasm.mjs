@@ -6,7 +6,7 @@ import { join } from "node:path";
 const root = new URL("../packages/core/", import.meta.url);
 const require = createRequire(new URL("package.json", root));
 const compiler = require.resolve("assemblyscript/bin/asc.js");
-const temp = await mkdtemp(join(tmpdir(), "crc-texture-wasm-"));
+const temp = await mkdtemp(join(tmpdir(), "pibbl-texture-wasm-"));
 try {
   for (const [index, name] of [
     "marble",

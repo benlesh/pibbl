@@ -1,5 +1,5 @@
 import type { drawingCompositionScenarioEntry } from './catalog.js';
-import { Clip, Group, Layer, Rectangle, SvgPath } from '@crc/core';
+import { Clip, Group, Layer, Rectangle, SvgPath } from '@pibbl/core';
 export const DRAWING_COMPOSITION_SOURCE_ID = 'drawing-composition-example';
 /**
  * Actions supported by the drawing composition scenario's public controller.

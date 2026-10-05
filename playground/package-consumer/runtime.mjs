@@ -1,8 +1,8 @@
-import * as core from "@crc/core";
-import * as internal from "@crc/core/internal";
-import * as particles from "@crc/core/particles";
-import * as threeAdapter from "@crc/three";
-import * as physics2d from "@crc/core/physics/2d";
+import * as core from "@pibbl/core";
+import * as internal from "@pibbl/core/internal";
+import * as particles from "@pibbl/core/particles";
+import * as threeAdapter from "@pibbl/three";
+import * as physics2d from "@pibbl/core/physics/2d";
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { readFileSync } from "node:fs";
@@ -12,11 +12,11 @@ import {
   Fragment as ProductionFragment,
   jsx,
   jsxs,
-} from "@crc/core/jsx-runtime";
+} from "@pibbl/core/jsx-runtime";
 import {
   Fragment as DevelopmentFragment,
   jsxDEV,
-} from "@crc/core/jsx-dev-runtime";
+} from "@pibbl/core/jsx-dev-runtime";
 
 const expected = [
   "DragHandle", "ResizeHandle", "ResizeHandles", "RotationHandle",
@@ -61,7 +61,7 @@ const expected = [
   "Wedge",
   "batch",
   "computed",
-  "crc",
+  "pibbl",
   "createArcPath",
   "createCirclePath",
   "createElement",
@@ -138,44 +138,44 @@ const expected = [
 
 const actual = Object.keys(core).sort();
 if (JSON.stringify(actual) !== JSON.stringify(expected)) {
-  throw new Error(`Unexpected @crc/core exports: ${actual.join(", ")}`);
+  throw new Error(`Unexpected @pibbl/core exports: ${actual.join(", ")}`);
 }
 for (const removedName of ["useState", "useMemo", "useWhenChanged"]) {
   if (removedName in core) {
     throw new Error(
-      `Removed @crc/core export is still present: ${removedName}`,
+      `Removed @pibbl/core export is still present: ${removedName}`,
     );
   }
 }
 
 const expectedInternal = [
-  "CRCInternalManualSchedulerDriver",
+  "PibblInternalManualSchedulerDriver",
   "borrowTextureRaster",
-  "crcInternalAssertCommandAllowed",
-  "crcInternalCreatePropAttachment",
-  "crcInternalCreateSignalConsumer",
-  "crcInternalCurrentFrame",
-  "crcInternalCurrentRenderOwner",
-  "crcInternalCurrentSimulationOwner",
-  "crcInternalCurrentWorldTransform",
-  "crcInternalInstallTestSchedulerDriver",
-  "crcInternalOnRenderFinish",
-  "crcInternalOnSimulationRenderTransactionFinish",
-  "crcInternalPaintTarget",
-  "crcInternalQueueBegin",
-  "crcInternalQueueComplete",
-  "crcInternalQueueCurrentCommit",
-  "crcInternalQueueCurrentComplete",
-  "crcInternalQueueSimulationBegin",
-  "crcInternalQueueSimulationCommitAcknowledgement",
-  "crcInternalQueueSimulationComplete",
-  "crcInternalRegisterAdvance",
-  "crcInternalRegisterSimulationAdvance",
-  "crcInternalRequestRender",
-  "crcInternalRequestRendererWork",
-  "crcInternalRequestSimulationRender",
-  "crcInternalRunPurePrimitiveResolver",
-  "crcInternalSnapshotRealmScheduler",
+  "pibblInternalAssertCommandAllowed",
+  "pibblInternalCreatePropAttachment",
+  "pibblInternalCreateSignalConsumer",
+  "pibblInternalCurrentFrame",
+  "pibblInternalCurrentRenderOwner",
+  "pibblInternalCurrentSimulationOwner",
+  "pibblInternalCurrentWorldTransform",
+  "pibblInternalInstallTestSchedulerDriver",
+  "pibblInternalOnRenderFinish",
+  "pibblInternalOnSimulationRenderTransactionFinish",
+  "pibblInternalPaintTarget",
+  "pibblInternalQueueBegin",
+  "pibblInternalQueueComplete",
+  "pibblInternalQueueCurrentCommit",
+  "pibblInternalQueueCurrentComplete",
+  "pibblInternalQueueSimulationBegin",
+  "pibblInternalQueueSimulationCommitAcknowledgement",
+  "pibblInternalQueueSimulationComplete",
+  "pibblInternalRegisterAdvance",
+  "pibblInternalRegisterSimulationAdvance",
+  "pibblInternalRequestRender",
+  "pibblInternalRequestRendererWork",
+  "pibblInternalRequestSimulationRender",
+  "pibblInternalRunPurePrimitiveResolver",
+  "pibblInternalSnapshotRealmScheduler",
   "createBackendToken",
   "defineBackendPrimitive",
   "derivePrimitive",
@@ -185,11 +185,11 @@ const expectedInternal = [
   "getCurrentFrameTimestamp",
   "getCurrentLogicalViewport",
   "getCurrentSurfaceDensity",
-  "hasCRCEventHandler",
+  "hasPibblEventHandler",
   "haveSameLayerNodeTree",
   "isBackendEventTargetLive",
   "materializeRetainedLayerChildren",
-  "mountBackendCRC",
+  "mountBackendPibbl",
   "onCurrentRenderFinish",
   "pushLayoutBox",
   "registerNestedInteractionResolver",
@@ -205,39 +205,39 @@ const expectedInternal = [
   "withHooksForbidden",
 ];
 const actualInternal = Object.keys(internal).sort();
-if (JSON.stringify(actualInternal) !== JSON.stringify(expectedInternal)) {
+if (JSON.stringify(actualInternal) !== JSON.stringify([...expectedInternal].sort())) {
   throw new Error(
-    `Unexpected @crc/core/internal exports: ${actualInternal.join(", ")}`,
+    `Unexpected @pibbl/core/internal exports: ${actualInternal.join(", ")}`,
   );
 }
 for (const exportName of expectedInternal) {
   if (typeof internal[exportName] !== "function") {
     throw new Error(
-      `Expected @crc/core/internal ${exportName} to be callable.`,
+      `Expected @pibbl/core/internal ${exportName} to be callable.`,
     );
   }
   if (exportName in core) {
     throw new Error(
-      `Internal renderer function leaked from @crc/core: ${exportName}.`,
+      `Internal renderer function leaked from @pibbl/core: ${exportName}.`,
     );
   }
 }
 for (const exportName of expected) {
   if (exportName in internal) {
     throw new Error(
-      `@crc/core/internal re-exported public root value ${exportName}.`,
+      `@pibbl/core/internal re-exported public root value ${exportName}.`,
     );
   }
 }
 if (actual.length !== expected.length) {
   throw new Error(
-    `Expected ${expected.length} @crc/core runtime exports, received ${actual.length}.`,
+    `Expected ${expected.length} @pibbl/core runtime exports, received ${actual.length}.`,
   );
 }
 
 const requireFromRuntime = createRequire(import.meta.url);
-const coreEntry = requireFromRuntime.resolve("@crc/core");
-const internalEntry = requireFromRuntime.resolve("@crc/core/internal");
+const coreEntry = requireFromRuntime.resolve("@pibbl/core");
+const internalEntry = requireFromRuntime.resolve("@pibbl/core/internal");
 function schedulerModules(entry, visited = new Set()) {
   if (visited.has(entry)) return [];
   visited.add(entry);
@@ -249,7 +249,7 @@ function schedulerModules(entry, visited = new Set()) {
 const coreSchedulers = schedulerModules(coreEntry);
 const internalSchedulers = schedulerModules(internalEntry);
 if (coreSchedulers.length !== 1 || internalSchedulers.length !== 1 || coreSchedulers[0] !== internalSchedulers[0]) {
-  throw new Error("@crc/core/internal did not share the packed core scheduler identity.");
+  throw new Error("@pibbl/core/internal did not share the packed core scheduler identity.");
 }
 
 const runtimeCount = core.signal(2, { debugName: "runtime count" });
@@ -273,7 +273,7 @@ if (runtimeCallback.get()() !== "updated") {
   throw new Error("Function-valued signals were treated as updater callbacks.");
 }
 if (typeof internal.createBackendToken("consumer") !== "object") {
-  throw new Error("@crc/core/internal did not create an opaque backend token.");
+  throw new Error("@pibbl/core/internal did not create an opaque backend token.");
 }
 
 const expectedParticles = [
@@ -292,12 +292,12 @@ const expectedParticles = [
 const actualParticles = Object.keys(particles).sort();
 if (JSON.stringify(actualParticles) !== JSON.stringify(expectedParticles)) {
   throw new Error(
-    `Unexpected @crc/core/particles exports: ${actualParticles.join(", ")}`,
+    `Unexpected @pibbl/core/particles exports: ${actualParticles.join(", ")}`,
   );
 }
 for (const exportName of expectedParticles) {
   if (typeof particles[exportName] !== "function") {
-    throw new Error(`Expected @crc/core/particles ${exportName} to be callable.`);
+    throw new Error(`Expected @pibbl/core/particles ${exportName} to be callable.`);
   }
 }
 const expectedThreeAdapter = ["defineThreeLayer"];
@@ -306,11 +306,11 @@ if (
   JSON.stringify(actualThreeAdapter) !== JSON.stringify(expectedThreeAdapter)
 ) {
   throw new Error(
-    `Unexpected @crc/three exports: ${actualThreeAdapter.join(", ")}`,
+    `Unexpected @pibbl/three exports: ${actualThreeAdapter.join(", ")}`,
   );
 }
 if (typeof threeAdapter.defineThreeLayer !== "function") {
-  throw new Error("Expected @crc/three defineThreeLayer to be callable.");
+  throw new Error("Expected @pibbl/three defineThreeLayer to be callable.");
 }
 if (typeof THREE.Scene !== "function" || typeof OrbitControls !== "function") {
   throw new Error(
@@ -319,7 +319,7 @@ if (typeof THREE.Scene !== "function" || typeof OrbitControls !== "function") {
 }
 for (const threeExport of ["Scene", "Object3D", "WebGLRenderer"]) {
   if (threeExport in threeAdapter) {
-    throw new Error(`@crc/three re-exported Three value ${threeExport}.`);
+    throw new Error(`@pibbl/three re-exported Three value ${threeExport}.`);
   }
 }
 const particleRange = particles.particleRange(1, 2);
@@ -357,7 +357,7 @@ for (const [exportName, value] of Object.entries({
   jsxDEV,
 })) {
   if (typeof value !== "function") {
-    throw new Error(`Expected @crc/core compiler export ${exportName}.`);
+    throw new Error(`Expected @pibbl/core compiler export ${exportName}.`);
   }
 }
 if (
@@ -371,7 +371,7 @@ for (const exportName of expected.filter(
 )) {
   if (typeof core[exportName] !== "function") {
     throw new Error(
-      `Expected @crc/core ${exportName} to be a runtime function.`,
+      `Expected @pibbl/core ${exportName} to be a runtime function.`,
     );
   }
 }
@@ -381,7 +381,7 @@ if (
   typeof core.easing.linear !== "function"
 ) {
   throw new Error(
-    "Expected @crc/core easing to be a frozen function collection.",
+    "Expected @pibbl/core easing to be a frozen function collection.",
   );
 }
 for (const creatorName of [
@@ -397,7 +397,7 @@ for (const creatorName of [
   "createWedgePath",
 ]) {
   if (typeof core[creatorName] !== "function") {
-    throw new Error(`Expected @crc/core ${creatorName} to be callable.`);
+    throw new Error(`Expected @pibbl/core ${creatorName} to be callable.`);
   }
 }
 
@@ -421,13 +421,13 @@ if (
 }
 
 for (const specifier of [
-  "@crc/core/lib/crc",
-  "@crc/core/lib/types",
-  "@crc/core/lib/global-state",
-  "@crc/core/src/index",
-  ["@crc", "webgl"].join("/"),
-  ["@crc", "particles", "webgl"].join("/"),
-  ["@crc", "physics", "3d"].join("/"),
+  "@pibbl/core/lib/pibbl",
+  "@pibbl/core/lib/types",
+  "@pibbl/core/lib/global-state",
+  "@pibbl/core/src/index",
+  ["@pibbl", "webgl"].join("/"),
+  ["@pibbl", "particles", "webgl"].join("/"),
+  ["@pibbl", "physics", "3d"].join("/"),
 ]) {
   try {
     await import(specifier);

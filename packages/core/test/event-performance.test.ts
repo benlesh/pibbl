@@ -4,23 +4,23 @@ import type {
   PerformanceWorkload,
   PerformanceWorkloadId,
   ScenarioController,
-} from '@crc/scenarios';
+} from '@pibbl/scenarios';
 import {
   PERFORMANCE_WORKLOADS,
   loadScenario,
   performanceLabScenarioEntry,
-} from '@crc/scenarios';
+} from '@pibbl/scenarios';
 import { commands } from 'vitest/browser';
 import { afterEach, describe, expect, it } from 'vitest';
 import performanceLabSource from '../../scenarios/src/performance-lab.example.tsx?raw';
-import { Absolute, crc, useEventListener, Flow, Rectangle, Text, type CRCController } from '../src/index';
+import { Absolute, pibbl, useEventListener, Flow, Rectangle, Text, type PibblController } from '../src/index';
 import { GLOBAL_STATE } from '../src/lib/global-state';
 import { snapshotRealmScheduler } from '../src/lib/scheduler/testing';
 import {
   resetLayoutDiagnostics,
   snapshotLayoutDiagnostics,
 } from '../src/lib/layout/diagnostics';
-import type { Canvas, CRCInstance } from '../src/lib/types';
+import type { Canvas, PibblInstance } from '../src/lib/types';
 import { RuntimeDiagnostics } from './support/runtime-diagnostics';
 import { expectVisualMatch } from './visual-compare';
 import { createElement } from '../src/lib/element/create-element';
@@ -100,16 +100,16 @@ const RERENDER_BUDGET = { medianMs: 5, p95Ms: 8 } as const;
 const WARMUP_BATCHES = 5;
 const MEASURED_BATCHES = 101;
 const RUN_TIMING =
-  import.meta.env.VITE_CRC_PERF_GUARD === '1' ||
-  import.meta.env.VITE_CRC_REPORT_PERF === '1';
-const DEVTOOLS_PROFILE_KIND = import.meta.env.VITE_CRC_DEVTOOLS_PROFILE as
+  import.meta.env.VITE_PIBBL_PERF_GUARD === '1' ||
+  import.meta.env.VITE_PIBBL_REPORT_PERF === '1';
+const DEVTOOLS_PROFILE_KIND = import.meta.env.VITE_PIBBL_DEVTOOLS_PROFILE as
   'allocations' | 'cpu' | undefined;
-const DEVTOOLS_PROFILE_OUTPUT = import.meta.env.VITE_CRC_DEVTOOLS_PROFILE_OUTPUT;
-const DEVTOOLS_PROFILE_TARGET = import.meta.env.VITE_CRC_DEVTOOLS_PROFILE_TARGET ?? 'lab';
+const DEVTOOLS_PROFILE_OUTPUT = import.meta.env.VITE_PIBBL_DEVTOOLS_PROFILE_OUTPUT;
+const DEVTOOLS_PROFILE_TARGET = import.meta.env.VITE_PIBBL_DEVTOOLS_PROFILE_TARGET ?? 'lab';
 const activeControllers = new Set<ScenarioController<PerformanceLabState>>();
 const activeDiagnostics = new Set<RuntimeDiagnostics>();
 const activeFrameDiagnostics = new Set<FrameCallbackDiagnostics>();
-const activeRuntimeControllers = new Set<CRCController>();
+const activeRuntimeControllers = new Set<PibblController>();
 
 const EmptyPerformanceScene = (_props: {}) => undefined;
 
@@ -282,12 +282,12 @@ function pixelAt(
   ).data);
 }
 
-function ownedInstances(canvas: HTMLCanvasElement): CRCInstance[] {
+function ownedInstances(canvas: HTMLCanvasElement): PibblInstance[] {
   const ownedCanvases = new Set<Canvas>([canvas]);
   let changed = true;
   while (changed) {
     changed = false;
-    for (const [candidateCanvas, instance] of GLOBAL_STATE.crcInstances) {
+    for (const [candidateCanvas, instance] of GLOBAL_STATE.pibblInstances) {
       if (instance.parent && ownedCanvases.has(instance.parent) && !ownedCanvases.has(candidateCanvas)) {
         ownedCanvases.add(candidateCanvas);
         changed = true;
@@ -295,8 +295,8 @@ function ownedInstances(canvas: HTMLCanvasElement): CRCInstance[] {
     }
   }
   return Array.from(ownedCanvases)
-    .map(candidate => GLOBAL_STATE.crcInstances.get(candidate))
-    .filter((instance): instance is CRCInstance => Boolean(instance));
+    .map(candidate => GLOBAL_STATE.pibblInstances.get(candidate))
+    .filter((instance): instance is PibblInstance => Boolean(instance));
 }
 
 function summarizeInstances(canvas: HTMLCanvasElement): InstanceSummary {
@@ -347,7 +347,7 @@ async function selectWorkload(
 }
 
 function installCounterRegressionDrill(canvas: HTMLCanvasElement): void {
-  if (import.meta.env.VITE_CRC_PERF_COUNTER_DRILL !== '1') {
+  if (import.meta.env.VITE_PIBBL_PERF_COUNTER_DRILL !== '1') {
     return;
   }
   const context = canvas.getContext('2d');
@@ -392,7 +392,7 @@ describe('shared event performance laboratory', () => {
     document.body.replaceChildren(canvas);
     const diagnostics = new RuntimeDiagnostics(canvas);
     activeDiagnostics.add(diagnostics);
-    const mounted = crc(canvas, createElement(EmptyPerformanceScene, {}));
+    const mounted = pibbl(canvas, createElement(EmptyPerformanceScene, {}));
     activeRuntimeControllers.add(mounted);
     await settleFrames();
 
@@ -423,7 +423,7 @@ describe('shared event performance laboratory', () => {
     const targets: number[] = [];
     let ancestorCalls = 0;
     const targetCount = 100;
-    const mounted = crc(canvas, createElement(StructuralEventScene, {
+    const mounted = pibbl(canvas, createElement(StructuralEventScene, {
       count: targetCount,
       recordAncestor: () => { ancestorCalls++; },
       recordTarget: index => targets.push(index),
@@ -615,7 +615,7 @@ describe('shared event performance laboratory', () => {
     canvas.height = 100;
     document.body.replaceChildren(canvas);
     resetLayoutDiagnostics();
-    const mounted = crc(canvas, createElement(Flow, {
+    const mounted = pibbl(canvas, createElement(Flow, {
       style: { width: 200, height: 100 },
       children: [createElement(Flow, {
         children: [createElement(Text, {
@@ -666,7 +666,7 @@ describe('shared event performance laboratory', () => {
     let target: number | undefined;
 
     resetLayoutDiagnostics();
-    const mounted = crc(canvas, createElement(Absolute, {
+    const mounted = pibbl(canvas, createElement(Absolute, {
       style: { width: 320, height: 400, overflow: 'clip' },
       children: windowRecords.map(id => createElement(Rectangle, {
         key: `row-${id}`,
@@ -837,7 +837,7 @@ describe('shared event performance laboratory', () => {
     const renderMedianMs = percentile(renderSamples, 0.5);
     const renderP95Ms = percentile(renderSamples, 0.95);
 
-    if (import.meta.env.VITE_CRC_PERF_GUARD === '1') {
+    if (import.meta.env.VITE_PIBBL_PERF_GUARD === '1') {
       expect(renderMedianMs, 'sparse-1000 rerender median').toBeLessThanOrEqual(
         RERENDER_BUDGET.medianMs,
       );
@@ -846,7 +846,7 @@ describe('shared event performance laboratory', () => {
       );
     }
 
-    if (import.meta.env.VITE_CRC_REPORT_PERF === '1') {
+    if (import.meta.env.VITE_PIBBL_REPORT_PERF === '1') {
       console.warn('TFC-06 render observations', JSON.stringify({
         renderCallbacks: {
           medianMs: renderMedianMs,
@@ -862,7 +862,7 @@ describe('shared event performance laboratory', () => {
 
   it.skipIf(!DEVTOOLS_PROFILE_KIND || DEVTOOLS_PROFILE_TARGET !== 'lab')('profiles sparse-1000 rerenders through Chrome DevTools', async () => {
     if (!DEVTOOLS_PROFILE_OUTPUT) {
-      throw new Error('VITE_CRC_DEVTOOLS_PROFILE_OUTPUT is required when profiling.');
+      throw new Error('VITE_PIBBL_DEVTOOLS_PROFILE_OUTPUT is required when profiling.');
     }
     const { canvas, controller } = await mountLab();
     await controller.perform('show-sparse-1000');
@@ -890,18 +890,18 @@ describe('shared event performance laboratory', () => {
 
   it.skipIf(!DEVTOOLS_PROFILE_KIND || DEVTOOLS_PROFILE_TARGET !== 'runtime')('profiles uninstrumented sparse-1000 rerenders through Chrome DevTools', async () => {
     if (!DEVTOOLS_PROFILE_OUTPUT) {
-      throw new Error('VITE_CRC_DEVTOOLS_PROFILE_OUTPUT is required when profiling.');
+      throw new Error('VITE_PIBBL_DEVTOOLS_PROFILE_OUTPUT is required when profiling.');
     }
     const canvas = document.createElement('canvas');
     canvas.width = 480;
     canvas.height = 240;
     document.body.replaceChildren(canvas);
     let revision = 0;
-    const controller = crc(canvas, createElement(DirectSparseProfileScene, { revision }));
+    const controller = pibbl(canvas, createElement(DirectSparseProfileScene, { revision }));
     activeRuntimeControllers.add(controller);
     const rerender = async () => {
       revision++;
-      crc(canvas, createElement(DirectSparseProfileScene, { revision }));
+      pibbl(canvas, createElement(DirectSparseProfileScene, { revision }));
       await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
     };
     await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
@@ -976,7 +976,7 @@ describe('shared event performance laboratory', () => {
       observation.p95Ms <= observation.p99Ms,
     )).toBe(true);
 
-    if (import.meta.env.VITE_CRC_PERF_GUARD === '1') {
+    if (import.meta.env.VITE_PIBBL_PERF_GUARD === '1') {
       expect(window.devicePixelRatio).toBe(1);
       expect(navigator.userAgent).toContain('Chrome');
       for (const observation of observations) {
@@ -986,7 +986,7 @@ describe('shared event performance laboratory', () => {
       }
     }
 
-    if (import.meta.env.VITE_CRC_REPORT_PERF === '1') {
+    if (import.meta.env.VITE_PIBBL_REPORT_PERF === '1') {
       console.warn('TFC-06 dispatch observations', JSON.stringify({
         environment: {
           devicePixelRatio: window.devicePixelRatio,

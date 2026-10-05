@@ -15,7 +15,7 @@ import {
   type Percentage,
   type ResolvedBoxStyle,
   type Size,
-} from "@crc/core";
+} from "@pibbl/core";
 
 const percentage: Percentage = "50%";
 const width: Length = percentage;

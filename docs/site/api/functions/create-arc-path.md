@@ -12,7 +12,7 @@ relatedTypes: [ArcPathOptions]
 # createArcPath
 
 ```ts
-import { createArcPath, Path } from "@crc/core";
+import { createArcPath, Path } from "@pibbl/core";
 ```
 
 [`ArcPathOptions`](#/api/types/elements-components#arcpathoptions) is accepted by `createArcPath(options): Path2D`, a pure numeric constructor.

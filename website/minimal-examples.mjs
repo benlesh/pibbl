@@ -14,7 +14,7 @@ export function validateExampleSource(entry, code) {
     if (!node || typeof node !== "object") return;
     if (node.type === "ImportDeclaration") {
       if (
-        !/^@crc\/(core(?:\/(?:filters|types|textures|particles|viz|jsx-runtime|jsx-dev-runtime|physics\/2d(?:\/(?:geometry|testing))?))?|three|text)$/.test(
+        !/^@pibbl\/(core(?:\/(?:filters|types|textures|particles|viz|jsx-runtime|jsx-dev-runtime|physics\/2d(?:\/(?:geometry|testing))?))?|three|text)$/.test(
           node.source.value,
         ) &&
         !/^three(?:\/addons\/)/.test(node.source.value) &&

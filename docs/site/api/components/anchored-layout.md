@@ -10,7 +10,7 @@ symbols: [AnchoredLayout, AnchoredItem, AnchoredPlacement, AnchoredLayoutProps]
 
 # AnchoredLayout
 
-Import from `@crc/core/viz`. Supply `items` with unique string/number `key`, local
+Import from `@pibbl/core/viz`. Supply `items` with unique string/number `key`, local
 `anchor`, optional `anchorRadius` (default 0), and numeric outer `width`/`height`.
 Additional item fields are preserved and inferred by the children callback.
 
@@ -33,8 +33,8 @@ arbitrary overflowing child paint is outside the guarantee. This layout requires
 no scales, hover state, or DOM elements.
 
 ```tsx
-import { Group, Rectangle, Text } from "@crc/core";
-import { AnchoredLayout } from "@crc/core/viz";
+import { Group, Rectangle, Text } from "@pibbl/core";
+import { AnchoredLayout } from "@pibbl/core/viz";
 
 export function Annotations() {
   const items = [

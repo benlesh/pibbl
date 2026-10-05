@@ -7,17 +7,17 @@ test("text previews ship the matching engine, font, and license", async () => {
     await readFile(new URL("../website/package.json", import.meta.url), "utf8"),
   );
   assert.equal(
-    manifest.dependencies["@crc/text"],
+    manifest.dependencies["@pibbl/text"],
     "workspace:*",
     "build the text engine before website previews",
   );
   assert.equal(
-    manifest.dependencies["@crc/three"],
+    manifest.dependencies["@pibbl/three"],
     "workspace:*",
     "build the renderer adapter before website previews",
   );
   const base = new URL(
-    "../website/public/generated/crc-text/",
+    "../website/public/generated/pibbl-text/",
     import.meta.url,
   );
   const wasm = await readFile(new URL("engine.wasm", base));

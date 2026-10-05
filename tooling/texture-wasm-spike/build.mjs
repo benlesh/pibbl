@@ -3,9 +3,9 @@ import { fileURLToPath } from 'node:url';
 import { mkdtemp, copyFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-const compiler = process.env.CRC_ASC ?? '/private/tmp/crc-texture-wasm-compiler/node_modules/assemblyscript/bin/asc.js';
+const compiler = process.env.PIBBL_ASC ?? '/private/tmp/pibbl-texture-wasm-compiler/node_modules/assemblyscript/bin/asc.js';
 const root = fileURLToPath(new URL('.', import.meta.url));
-const directory = await mkdtemp(join(tmpdir(), 'crc-texture-asc-'));
+const directory = await mkdtemp(join(tmpdir(), 'pibbl-texture-asc-'));
 try {
   for (const name of ['kernel','materials']) {
   const source = join(directory, `${name}.ts`);

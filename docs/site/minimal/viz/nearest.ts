@@ -4,7 +4,7 @@ import {
   type NearestPoint,
   type NearestPointOptions,
   type ResolvedLinearScale,
-} from "@crc/core/viz";
+} from "@pibbl/core/viz";
 
 const horizontal: ResolvedLinearScale = {
   type: "linear",

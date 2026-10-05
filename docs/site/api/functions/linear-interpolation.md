@@ -10,6 +10,6 @@ symbols: [linearInterpolation, HoverInterpolation]
 
 # linearInterpolation
 
-Import from `@crc/core/viz`. Returns an ordinary linear interpolation function.
+Import from `@pibbl/core/viz`. Returns an ordinary linear interpolation function.
 
 `linearInterpolation()` returns `(beforeY, afterY, fraction) => number`. Pass it as interpolateX's interpolation function or supply your own synchronous function. It estimates in data space before scales map the result. Inputs and output must be finite.

@@ -3,16 +3,16 @@ import {
   Group,
   Rectangle,
   Text,
-  crc,
+  pibbl,
   useRef,
   useSignal,
-  type CRCController,
-  type CRCPointerEvent,
-} from "@crc/core";
+  type PibblController,
+  type PibblPointerEvent,
+} from "@pibbl/core";
 import {
   PhysicsWorld2D,
   collider2D,
-  crcPhysicsBody2D,
+  pibblPhysicsBody2D,
   disableBody2D,
   dynamicBody2D,
   enableBody2D,
@@ -20,7 +20,7 @@ import {
   setLinearVelocity2D,
   staticBody2D,
   teleportBody2D,
-} from "@crc/core/physics/2d";
+} from "@pibbl/core/physics/2d";
 
 const BALL_RADIUS = 28;
 const MAX_THROW_SPEED = 1000;
@@ -93,11 +93,11 @@ function releaseVelocity(
 }
 
 function DraggableBall() {
-  const body = crcPhysicsBody2D();
+  const body = pibblPhysicsBody2D();
   const dragSession = useRef<BallDragSession | null>(null);
   const dragging = useSignal(false);
 
-  const dragTo = (event: CRCPointerEvent): readonly [number, number] | null => {
+  const dragTo = (event: PibblPointerEvent): readonly [number, number] | null => {
     const session = dragSession.current;
     if (session?.pointerId !== event.pointerId) return null;
     const position = clampBallPosition(
@@ -118,7 +118,7 @@ function DraggableBall() {
     return pose;
   };
 
-  const finishDrag = (event: CRCPointerEvent): void => {
+  const finishDrag = (event: PibblPointerEvent): void => {
     const session = dragSession.current;
     if (session?.pointerId !== event.pointerId) return;
     const position = clampBallPosition(
@@ -146,7 +146,7 @@ function DraggableBall() {
     }
   };
 
-  const cancelDrag = (event: CRCPointerEvent): void => {
+  const cancelDrag = (event: PibblPointerEvent): void => {
     const session = dragSession.current;
     if (session?.pointerId !== event.pointerId) return;
     teleportBody2D(body, {
@@ -366,6 +366,6 @@ function PhysicsLesson() {
   );
 }
 
-export default function mount(canvas: HTMLCanvasElement): CRCController {
-  return crc(canvas, <PhysicsLesson />, { pixelRatio: 1 });
+export default function mount(canvas: HTMLCanvasElement): PibblController {
+  return pibbl(canvas, <PhysicsLesson />, { pixelRatio: 1 });
 }

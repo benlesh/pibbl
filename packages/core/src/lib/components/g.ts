@@ -1,15 +1,15 @@
-import type { CRCDragHandleStyle } from '../manipulation/handles.js';
+import type { PibblDragHandleStyle } from '../manipulation/handles.js';
 import type { HtmlBoxStyle } from '../html/types.js';
 import { definePrimitive } from '../define-primitive.js';
-import { CRCNodeInput, SystemStyle } from '../types.js';
-import type { CRCPhysics2DPropExtension } from '../types.js';
+import { PibblNodeInput, SystemStyle } from '../types.js';
+import type { PibblPhysics2DPropExtension } from '../types.js';
 import {
   createGroupTransform,
   setPrimitivePresentation,
 } from '../primitive-presentation.js';
 import { stripLayoutParticipation } from '../style/resolve-built-in.js';
 import {
-  type CRCStructuralEventProps,
+  type PibblStructuralEventProps,
   wireStructuralEvents,
 } from './structural-events.js';
 import type {
@@ -21,13 +21,13 @@ import type {
 /**
  * Authored inputs for Group, including the declared data and presentation options.
  *
- * @see {@link CRCPhysics2DPropExtension}
- * @see {@link CRCNodeInput}
+ * @see {@link PibblPhysics2DPropExtension}
+ * @see {@link PibblNodeInput}
  * @see {@link Group}
  */
-export interface GroupProps extends CRCStructuralEventProps, CRCPhysics2DPropExtension {
-  /** Descendant content or the callback that supplies it. See {@link CRCNodeInput}. */
-  children: CRCNodeInput;
+export interface GroupProps extends PibblStructuralEventProps, PibblPhysics2DPropExtension {
+  /** Descendant content or the callback that supplies it. See {@link PibblNodeInput}. */
+  children: PibblNodeInput;
 }
 
 /**
@@ -37,7 +37,7 @@ export interface GroupProps extends CRCStructuralEventProps, CRCPhysics2DPropExt
  * @see {@link BoxStyle}
  * @see {@link LayoutItemStyle}
  * @see {@link Group}
- * @see {@link CRCDragHandleStyle}
+ * @see {@link PibblDragHandleStyle}
  * @see {@link HtmlBoxStyle}
  */
 export interface GStyle extends SystemStyle, BoxStyle, LayoutItemStyle {
@@ -73,7 +73,7 @@ function renderGroup(
  *
  * @param props - Authored component inputs, supplied through JSX or createElement. See the linked
  * props and style types.
- * @throws When called directly; CRC mounts this component through JSX or createElement.
+ * @throws When called directly; Pibbl mounts this component through JSX or createElement.
  *
  * @see {@link GroupProps}
  * @see {@link GStyle}

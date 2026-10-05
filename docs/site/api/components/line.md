@@ -12,7 +12,7 @@ relatedTypes: [Canvas, LineProps, LineStyle]
 # Line
 
 ```ts
-import { Line } from "@crc/core";
+import { Line } from "@pibbl/core";
 ```
 
 `Line` uses [`LineProps`](#/api/types/elements-components#lineprops) and [`LineStyle`](#/api/types/styles#linestyle). Its numeric coordinate pairs define

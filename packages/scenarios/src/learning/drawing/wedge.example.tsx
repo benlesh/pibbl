@@ -1,4 +1,4 @@
-import { crc, useSignal, Rectangle, Wedge, type CRCController } from "@crc/core";
+import { pibbl, useSignal, Rectangle, Wedge, type PibblController } from "@pibbl/core";
 
 function WedgeStudy() {
   const active = useSignal(false);
@@ -24,6 +24,6 @@ function WedgeStudy() {
   ];
 }
 
-export default function mount(canvas: HTMLCanvasElement): CRCController {
-  return crc(canvas, <WedgeStudy />);
+export default function mount(canvas: HTMLCanvasElement): PibblController {
+  return pibbl(canvas, <WedgeStudy />);
 }

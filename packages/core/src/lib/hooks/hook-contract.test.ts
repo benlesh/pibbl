@@ -1,8 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { crc } from '../crc';
+import { pibbl } from '../pibbl';
 import {
   clearSharedState,
-  getCRCInstance,
+  getPibblInstance,
   GLOBAL_STATE,
 } from '../global-state';
 import type { RenderingContext2D } from '../types';
@@ -47,11 +47,11 @@ describe('useRef', () => {
       refs.push(ref);
       values.push(ref.current!);
     };
-    const controller = crc(canvas, createElement(RefProbe, { initial: 1, key: 'first' }));
+    const controller = pibbl(canvas, createElement(RefProbe, { initial: 1, key: 'first' }));
     await nextFrame();
-    crc(canvas, createElement(RefProbe, { initial: 2, key: 'first' }));
+    pibbl(canvas, createElement(RefProbe, { initial: 2, key: 'first' }));
     await nextFrame();
-    crc(canvas, createElement(RefProbe, { initial: 3, key: 'second' }));
+    pibbl(canvas, createElement(RefProbe, { initial: 3, key: 'second' }));
     await nextFrame();
 
     expect(values).toEqual([1, 1, 3]);
@@ -70,14 +70,14 @@ describe('hook ordering and render errors', () => {
       useSignal(0);
       if (include) useReaction(() => cleanup, []);
     };
-    const controller = crc(canvas, createElement(Probe, { include: true }));
+    const controller = pibbl(canvas, createElement(Probe, { include: true }));
     frames.flush();
 
-    crc(canvas, createElement(Probe, { include: false }));
-    expect(() => frames.flush()).toThrowError(/fewer CRC hooks/i);
+    pibbl(canvas, createElement(Probe, { include: false }));
+    expect(() => frames.flush()).toThrowError(/fewer Pibbl hooks/i);
     expect(cleanup).toHaveBeenCalledOnce();
 
-    crc(canvas, createElement(Probe, { include: false }));
+    pibbl(canvas, createElement(Probe, { include: false }));
     expect(() => frames.flush()).not.toThrow();
     controller.dispose();
     frames.restore();
@@ -90,11 +90,11 @@ describe('hook ordering and render errors', () => {
       useSignal(0);
       if (more) useRef(0);
     };
-    const controller = crc(canvas, createElement(MoreProbe, { more: false }));
+    const controller = pibbl(canvas, createElement(MoreProbe, { more: false }));
     frames.flush();
-    crc(canvas, createElement(MoreProbe, { more: true }));
-    expect(() => frames.flush()).toThrowError(/more CRC hooks/i);
-    crc(canvas, createElement(MoreProbe, { more: true }));
+    pibbl(canvas, createElement(MoreProbe, { more: true }));
+    expect(() => frames.flush()).toThrowError(/more Pibbl hooks/i);
+    pibbl(canvas, createElement(MoreProbe, { more: true }));
     expect(() => frames.flush()).not.toThrow();
 
     const OrderProbe = ({ swapped }: { swapped: boolean }) => {
@@ -106,11 +106,11 @@ describe('hook ordering and render errors', () => {
         useRef(0);
       }
     };
-    crc(canvas, createElement(OrderProbe, { swapped: false }));
+    pibbl(canvas, createElement(OrderProbe, { swapped: false }));
     frames.flush();
-    crc(canvas, createElement(OrderProbe, { swapped: true }));
+    pibbl(canvas, createElement(OrderProbe, { swapped: true }));
     expect(() => frames.flush()).toThrowError(/hook order changed/i);
-    crc(canvas, createElement(OrderProbe, { swapped: true }));
+    pibbl(canvas, createElement(OrderProbe, { swapped: true }));
     expect(() => frames.flush()).not.toThrow();
     controller.dispose();
     frames.restore();
@@ -130,12 +130,12 @@ describe('hook ordering and render errors', () => {
       transforms.push(ctx.getTransform());
       useSignal(2);
     });
-    const controller = crc(canvas, createElement(Broken, {}));
+    const controller = pibbl(canvas, createElement(Broken, {}));
     expect(() => frames.flush()).toThrow(renderError);
-    expect(GLOBAL_STATE.currentCRCInstance).toBeUndefined();
+    expect(GLOBAL_STATE.currentPibblInstance).toBeUndefined();
     expect(GLOBAL_STATE.componentRefs).toBeUndefined();
 
-    crc(canvas, createElement(Healthy, {}));
+    pibbl(canvas, createElement(Healthy, {}));
     expect(() => frames.flush()).not.toThrow();
     expect(transforms[0].isIdentity).toBe(true);
 
@@ -146,9 +146,9 @@ describe('hook ordering and render errors', () => {
         return 'ok';
       });
     };
-    crc(canvas, createElement(ConstProbe, { fail: true }));
+    pibbl(canvas, createElement(ConstProbe, { fail: true }));
     expect(() => frames.flush()).toThrow(constError);
-    crc(canvas, createElement(ConstProbe, { fail: false }));
+    pibbl(canvas, createElement(ConstProbe, { fail: false }));
     expect(() => frames.flush()).not.toThrow();
     controller.dispose();
     frames.restore();
@@ -176,7 +176,7 @@ describe('hook ordering and render errors', () => {
 
     for (const call of calls) {
       expect(call).toThrowError(
-        'CRC hooks can only be called while rendering a component.',
+        'Pibbl hooks can only be called while rendering a component.',
       );
     }
   });
@@ -195,15 +195,15 @@ describe('hook ordering and render errors', () => {
         useEventListener({ onClick: () => undefined });
       }
     };
-    const controller = crc(canvas, createElement(Probe, { swapped: false }));
+    const controller = pibbl(canvas, createElement(Probe, { swapped: false }));
     frames.flush();
 
-    crc(canvas, createElement(Probe, { swapped: true }));
+    pibbl(canvas, createElement(Probe, { swapped: true }));
     expect(() => frames.flush()).toThrowError(/hook order changed/i);
-    expect(getCRCInstance(canvas).eventRoot.targets.size).toBe(0);
-    expect(getCRCInstance(canvas).eventRoot.listenersByComponent.size).toBe(0);
+    expect(getPibblInstance(canvas).eventRoot.targets.size).toBe(0);
+    expect(getPibblInstance(canvas).eventRoot.listenersByComponent.size).toBe(0);
 
-    crc(canvas, createElement(Probe, { swapped: true }));
+    pibbl(canvas, createElement(Probe, { swapped: true }));
     expect(() => frames.flush()).not.toThrow();
     controller.dispose();
     frames.restore();
@@ -229,7 +229,7 @@ class ManualFrames {
 
   flush(): void {
     const entry = Array.from(this.callbacks.entries()).at(-1);
-    if (!entry) throw new Error('No pending CRC frame');
+    if (!entry) throw new Error('No pending Pibbl frame');
     const [id, callback] = entry;
     this.callbacks.delete(id);
     callback(performance.now());

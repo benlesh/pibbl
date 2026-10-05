@@ -32,7 +32,7 @@ Change `INITIAL_NODES`—for example, move Build or revise a subtitle. Predict t
 
 ## Check your result
 
-Select and drag Idea outside its initial card, pan empty workspace, zoom around a pointer, then reset only the view. Tab to Sketch and activate it. Dispose the controller twice: later browser events do not repaint. If a render fails, CRC releases runtime-owned resources and refs; pixels painted earlier in that frame are not rolled back.
+Select and drag Idea outside its initial card, pan empty workspace, zoom around a pointer, then reset only the view. Tab to Sketch and activate it. Dispose the controller twice: later browser events do not repaint. If a render fails, Pibbl releases runtime-owned resources and refs; pixels painted earlier in that frame are not rolled back.
 
 ## What you learned
 

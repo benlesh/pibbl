@@ -1,11 +1,11 @@
-import { crc, Group, Rectangle, Circle, Text, signal } from "@crc/core";
-import { displacement } from "@crc/core/filters";
+import { pibbl, Group, Rectangle, Circle, Text, signal } from "@pibbl/core";
+import { displacement } from "@pibbl/core/filters";
 import {
   rainDrops,
   useTexture,
   type RainDropsOptions,
   type RainDropsMessage,
-} from "@crc/core/textures";
+} from "@pibbl/core/textures";
 
 const width = 360,
   height = 240;
@@ -87,7 +87,7 @@ function RainGlass() {
             fill: "#ffffff",
           }}
         >
-          CRC
+          Pibbl
         </Text>
       </Group>
 
@@ -109,5 +109,5 @@ function RainGlass() {
     </>
   );
 }
-const controller = crc(canvas, <RainGlass />);
+const controller = pibbl(canvas, <RainGlass />);
 window.addEventListener("pagehide", () => controller.dispose(), { once: true });

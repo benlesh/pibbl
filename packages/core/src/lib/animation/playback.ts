@@ -14,8 +14,8 @@ import {
   snapshotRealmScheduler,
 } from '../scheduler/realm-scheduler.js';
 import type {
-  CRCBeginCommandHandle,
-  CRCFrameSnapshot,
+  PibblBeginCommandHandle,
+  PibblFrameSnapshot,
 } from '../scheduler/types.js';
 import { getDefinitionRecord } from './definition.js';
 import { sampleSpring, type SpringSample } from './spring.js';
@@ -33,11 +33,11 @@ import {
 } from './evaluate.js';
 import { getProgramRecord, type ProgramDuration } from './program.js';
 import type {
-  CRCAnimationProgram,
-  CRCPlayback,
-  CRCPlaybackEvent,
-  CRCPlaybackOptions,
-  CRCPlaybackStatus,
+  PibblAnimationProgram,
+  PibblPlayback,
+  PibblPlaybackEvent,
+  PibblPlaybackOptions,
+  PibblPlaybackStatus,
 } from './types.js';
 import {
   acquireTransactionalProgramWriterLeases,
@@ -71,7 +71,7 @@ interface PlaybackRun {
   readonly token: object;
   readonly lease: TransactionalProgramWriterLease;
   readonly activation: ProgramActivation;
-  readonly program: CRCAnimationProgram;
+  readonly program: PibblAnimationProgram;
   direction: 'forward' | 'reverse';
   playbackRate: number;
   position: number;
@@ -96,7 +96,7 @@ interface FrameDelivery {
   readonly frameId: number;
   readonly logicalTime: number;
   readonly events: Array<{
-    readonly event: CRCPlaybackEvent;
+    readonly event: PibblPlaybackEvent;
     readonly registrationOrder: number;
   }>;
   readonly errors: Array<{
@@ -118,17 +118,25 @@ export interface AnimationPlaybackSnapshot {
   readonly outputStageAttempts: number;
 }
 
+/** Internal root lifetime used to revoke a deferred disposal publication. */
+interface DeferredStatusCommandOwner {
+  add(teardown: () => void): void;
+  remove(teardown: () => void): void;
+}
+
 export interface AnimationPlaybackController {
-  readonly handle: CRCPlayback;
-  adopt(program: CRCAnimationProgram, options?: CRCPlaybackOptions): void;
+  readonly handle: PibblPlayback;
+  adopt(program: PibblAnimationProgram, options?: PibblPlaybackOptions): void;
   committedSpringSnapshot(): SpringSample | undefined;
-  retarget(program: CRCAnimationProgram, options?: CRCPlaybackOptions): void;
+  retarget(program: PibblAnimationProgram, options?: PibblPlaybackOptions): void;
+  /** @internal Associates render-phase disposal work with the owning root. */
+  setDeferredStatusCommandOwner(owner: DeferredStatusCommandOwner): void;
   dispose(): void;
 }
 
 export interface AnimationPlaybackCandidate {
-  readonly program: CRCAnimationProgram;
-  readonly options: CRCPlaybackOptions;
+  readonly program: PibblAnimationProgram;
+  readonly options: PibblPlaybackOptions;
 }
 
 let nextPlaybackRegistrationOrder = 0;
@@ -139,7 +147,7 @@ let queuedCommands = 0;
 let queuedMilestones = 0;
 let outputStageAttempts = 0;
 let activePlaybackBeginContext: {
-  readonly snapshot: CRCFrameSnapshot;
+  readonly snapshot: PibblFrameSnapshot;
   readonly batch: SignalCommitBatch;
 } | undefined;
 
@@ -160,12 +168,12 @@ function freezePath(path: readonly number[]): readonly number[] {
 }
 
 function playbackEvent(
-  type: CRCPlaybackEvent['type'],
-  snapshot: CRCFrameSnapshot,
+  type: PibblPlaybackEvent['type'],
+  snapshot: PibblFrameSnapshot,
   programPath: readonly number[] = [],
   iteration = 0,
   marker?: string,
-): CRCPlaybackEvent {
+): PibblPlaybackEvent {
   return Object.freeze({
     type,
     logicalTime: snapshot.logicalTime,
@@ -176,27 +184,27 @@ function playbackEvent(
   });
 }
 
-function validateOptions(options: CRCPlaybackOptions): void {
+function validateOptions(options: PibblPlaybackOptions): void {
   if (options.conflict !== undefined &&
     options.conflict !== 'error' && options.conflict !== 'replace') {
-    throw new TypeError('CRC animation playback conflict must be "error" or "replace".');
+    throw new TypeError('Pibbl animation playback conflict must be "error" or "replace".');
   }
   if (options.debugName !== undefined &&
     (typeof options.debugName !== 'string' || options.debugName.length === 0)) {
-    throw new TypeError('CRC animation playback debugName must be nonempty when provided.');
+    throw new TypeError('Pibbl animation playback debugName must be nonempty when provided.');
   }
   if (options.onEvent !== undefined && typeof options.onEvent !== 'function') {
-    throw new TypeError('CRC animation playback onEvent must be a function.');
+    throw new TypeError('Pibbl animation playback onEvent must be a function.');
   }
   if (options.onError !== undefined && typeof options.onError !== 'function') {
-    throw new TypeError('CRC animation playback onError must be a function.');
+    throw new TypeError('Pibbl animation playback onError must be a function.');
   }
 }
 
 /** @internal Creates one validated immutable render-time playback candidate. */
 export function normalizeAnimationPlaybackCandidate(
-  program: CRCAnimationProgram,
-  options: CRCPlaybackOptions = {},
+  program: PibblAnimationProgram,
+  options: PibblPlaybackOptions = {},
 ): AnimationPlaybackCandidate {
   getProgramRecord(program);
   const normalizedOptions = Object.freeze({ ...options });
@@ -204,7 +212,7 @@ export function normalizeAnimationPlaybackCandidate(
   return Object.freeze({ program, options: normalizedOptions });
 }
 
-function firstStepperName(program: CRCAnimationProgram): string | undefined {
+function firstStepperName(program: PibblAnimationProgram): string | undefined {
   const record = getProgramRecord(program);
   if (record.kind === 'track') {
     const definition = getDefinitionRecord(record.definition);
@@ -218,19 +226,19 @@ function firstStepperName(program: CRCAnimationProgram): string | undefined {
 }
 
 function unavailableControlError(
-  program: CRCAnimationProgram,
+  program: PibblAnimationProgram,
   control: 'reverse' | 'finish',
 ): Error | undefined {
   const duration = getProgramRecord(program).duration;
   if (duration.kind === 'infinite') {
     return new TypeError(
-      `CRC animation program is infinite; ${control} is unavailable.`,
+      `Pibbl animation program is infinite; ${control} is unavailable.`,
     );
   }
   if (duration.kind === 'unresolved-stepper') {
     const name = firstStepperName(program);
-    const label = name === undefined ? 'CRC animation stateful program' :
-      `CRC animation stepper "${name}"`;
+    const label = name === undefined ? 'Pibbl animation stateful program' :
+      `Pibbl animation stepper "${name}"`;
     return new TypeError(
       `${label} terminal time is not discovered; ${control} is unavailable.`,
     );
@@ -247,8 +255,8 @@ function finiteDuration(duration: ProgramDuration): number | undefined {
  * usePlayback in the following implementation task.
  */
 export function createAnimationPlaybackController(
-  initialProgram: CRCAnimationProgram,
-  initialOptions: CRCPlaybackOptions = {},
+  initialProgram: PibblAnimationProgram,
+  initialOptions: PibblPlaybackOptions = {},
 ): AnimationPlaybackController {
   const initialCandidate = normalizeAnimationPlaybackCandidate(
     initialProgram,
@@ -262,10 +270,11 @@ export function createAnimationPlaybackController(
   let run: PlaybackRun | undefined;
   let storedPlaybackRate = 1;
   let delivery: FrameDelivery | undefined;
-  let pendingRetarget: CRCBeginCommandHandle | undefined;
-  const pendingCommands = new Set<CRCBeginCommandHandle>();
-  const metadataWriter = Object.freeze({ name: 'CRC playback metadata' });
-  const status = signal<CRCPlaybackStatus>('idle', {
+  let pendingRetarget: PibblBeginCommandHandle | undefined;
+  let deferredStatusCommandOwner: DeferredStatusCommandOwner | undefined;
+  const pendingCommands = new Set<PibblBeginCommandHandle>();
+  const metadataWriter = Object.freeze({ name: 'Pibbl playback metadata' });
+  const status = signal<PibblPlaybackStatus>('idle', {
     debugName: options.debugName === undefined ? undefined : `${options.debugName} status`,
   });
   const currentTime = signal(0, {
@@ -276,7 +285,7 @@ export function createAnimationPlaybackController(
     return options.debugName;
   }
 
-  function ensureDelivery(snapshot: CRCFrameSnapshot): FrameDelivery {
+  function ensureDelivery(snapshot: PibblFrameSnapshot): FrameDelivery {
     if (delivery?.frameId === snapshot.frameId) return delivery;
     const current: FrameDelivery = {
       frameId: snapshot.frameId,
@@ -331,8 +340,8 @@ export function createAnimationPlaybackController(
   }
 
   function queueEvent(
-    snapshot: CRCFrameSnapshot,
-    event: CRCPlaybackEvent,
+    snapshot: PibblFrameSnapshot,
+    event: PibblPlaybackEvent,
     registrationOrder: number,
   ): void {
     const frame = ensureDelivery(snapshot);
@@ -350,7 +359,7 @@ export function createAnimationPlaybackController(
   }
 
   function queueError(
-    snapshot: CRCFrameSnapshot,
+    snapshot: PibblFrameSnapshot,
     error: unknown,
     registrationOrder: number,
     trace = true,
@@ -369,14 +378,14 @@ export function createAnimationPlaybackController(
   }
 
   function queueDiagnosticError(
-    snapshot: CRCFrameSnapshot,
+    snapshot: PibblFrameSnapshot,
     error: unknown,
     registrationOrder: number,
   ): void {
     queueError(snapshot, error, registrationOrder, true, false);
   }
 
-  function queuePendingStart(target: PlaybackRun, snapshot: CRCFrameSnapshot): void {
+  function queuePendingStart(target: PlaybackRun, snapshot: PibblFrameSnapshot): void {
     if (!target.startPending || target.startQueuedFrameId === snapshot.frameId) return;
     target.startQueuedFrameId = snapshot.frameId;
     queueEvent(snapshot, playbackEvent('start', snapshot), target.registrationOrder);
@@ -387,7 +396,7 @@ export function createAnimationPlaybackController(
 
   function stage<T>(
     batch: SignalCommitBatch,
-    snapshot: CRCFrameSnapshot,
+    snapshot: PibblFrameSnapshot,
     target: WritableSignal<T>,
     value: T,
     label: string,
@@ -403,15 +412,15 @@ export function createAnimationPlaybackController(
 
   function stageStatus(
     batch: SignalCommitBatch,
-    snapshot: CRCFrameSnapshot,
-    value: CRCPlaybackStatus,
+    snapshot: PibblFrameSnapshot,
+    value: PibblPlaybackStatus,
   ): void {
     stage(batch, snapshot, status, value, 'status');
   }
 
   function stageCurrentTime(
     batch: SignalCommitBatch,
-    snapshot: CRCFrameSnapshot,
+    snapshot: PibblFrameSnapshot,
     value: number,
   ): void {
     stage(batch, snapshot, currentTime, value, 'currentTime');
@@ -429,13 +438,13 @@ export function createAnimationPlaybackController(
     if (run === target) run = undefined;
   }
 
-  function scheduleTerminal(snapshot: CRCFrameSnapshot, target: PlaybackRun): void {
+  function scheduleTerminal(snapshot: PibblFrameSnapshot, target: PlaybackRun): void {
     ensureDelivery(snapshot).terminalRuns.add(target);
   }
 
   function cancelRun(
     target: PlaybackRun,
-    snapshot: CRCFrameSnapshot,
+    snapshot: PibblFrameSnapshot,
     batch: SignalCommitBatch,
     releaseImmediately = false,
   ): void {
@@ -467,11 +476,11 @@ export function createAnimationPlaybackController(
 
   function beginRunReplacement(
     target: PlaybackRun,
-    snapshot: CRCFrameSnapshot,
+    snapshot: PibblFrameSnapshot,
     batch: SignalCommitBatch,
   ): AnimationWriterLeaseReplacement {
     if (target.status === 'ending' || target.released) {
-      throw new Error('CRC animation playback run is already ending.');
+      throw new Error('Pibbl animation playback run is already ending.');
     }
     const previousStatus = target.status;
     const previousStartPending = target.startPending;
@@ -506,7 +515,7 @@ export function createAnimationPlaybackController(
 
   function queueEvaluationTraces(
     target: PlaybackRun,
-    snapshot: CRCFrameSnapshot,
+    snapshot: PibblFrameSnapshot,
     result: ProgramEvaluationResult,
     stagedOutputs: ReadonlySet<WritableSignal<unknown>>,
     sampledTime: number,
@@ -545,7 +554,7 @@ export function createAnimationPlaybackController(
 
   function queueEvaluationMilestones(
     target: PlaybackRun,
-    snapshot: CRCFrameSnapshot,
+    snapshot: PibblFrameSnapshot,
     result: ProgramEvaluationResult,
   ): void {
     for (const milestone of result.milestones) {
@@ -577,7 +586,7 @@ export function createAnimationPlaybackController(
 
   function advanceRun(
     target: PlaybackRun,
-    snapshot: CRCFrameSnapshot,
+    snapshot: PibblFrameSnapshot,
     batch: SignalCommitBatch,
   ): void {
     queuePendingStart(target, snapshot);
@@ -724,7 +733,7 @@ export function createAnimationPlaybackController(
 
   function createRun(
     generation: number,
-    snapshot: CRCFrameSnapshot,
+    snapshot: PibblFrameSnapshot,
     batch: SignalCommitBatch,
     conflict: 'error' | 'replace',
     ignoredToken?: object,
@@ -747,22 +756,22 @@ export function createAnimationPlaybackController(
         },
         preflightReplacement(): void {
           if (target === undefined || target.released) {
-            throw new Error('CRC animation replacement owner is unavailable.');
+            throw new Error('Pibbl animation replacement owner is unavailable.');
           }
           if (activePlaybackBeginContext === undefined) {
-            throw new Error('CRC animation replacement must begin during Begin.');
+            throw new Error('Pibbl animation replacement must begin during Begin.');
           }
           if (target.status === 'ending') {
-            throw new Error('CRC animation playback run is already ending.');
+            throw new Error('Pibbl animation playback run is already ending.');
           }
         },
         beginReplacement(): AnimationWriterLeaseReplacement {
           if (target === undefined || target.released) {
-            throw new Error('CRC animation replacement owner is unavailable.');
+            throw new Error('Pibbl animation replacement owner is unavailable.');
           }
           const context = activePlaybackBeginContext;
           if (context === undefined) {
-            throw new Error('CRC animation replacement must begin during Begin.');
+            throw new Error('Pibbl animation replacement must begin during Begin.');
           }
           return beginRunReplacement(target, context.snapshot, context.batch);
         },
@@ -833,7 +842,7 @@ export function createAnimationPlaybackController(
   function acceptPlay(
     generation: number,
     conflict: 'error' | 'replace',
-    snapshot: CRCFrameSnapshot,
+    snapshot: PibblFrameSnapshot,
     batch: SignalCommitBatch,
   ): void {
     try {
@@ -881,7 +890,7 @@ export function createAnimationPlaybackController(
   function acceptFreshControl(
     generation: number,
     command: 'seek' | 'reverse' | 'finish',
-    snapshot: CRCFrameSnapshot,
+    snapshot: PibblFrameSnapshot,
     batch: SignalCommitBatch,
     seekTime?: number,
   ): void {
@@ -933,10 +942,10 @@ export function createAnimationPlaybackController(
     command: PlaybackCommandName,
     generation: number,
     argument?: number | 'error' | 'replace',
-  ): CRCBeginCommandHandle | undefined {
+  ): PibblBeginCommandHandle | undefined {
     if (disposed) return undefined;
     queuedCommands++;
-    let commandHandle!: CRCBeginCommandHandle;
+    let commandHandle!: PibblBeginCommandHandle;
     commandHandle = queueBeginCommand((snapshot, batch, sequence) => {
       pendingCommands.delete(commandHandle);
       if (pendingRetarget === commandHandle) pendingRetarget = undefined;
@@ -962,10 +971,39 @@ export function createAnimationPlaybackController(
     return commandHandle;
   }
 
+  function stageDisposedAfterRender(): void {
+    let command!: PibblBeginCommandHandle;
+    let revokeFromOwner: (() => void) | undefined;
+    command = queueBeginCommand((snapshot, batch) => {
+      try {
+        batch.stage(status, 'disposed', metadataWriter);
+        recordSchedulerTrace({
+          kind: 'animation-write',
+          frameId: snapshot.frameId,
+          logicalTime: snapshot.logicalTime,
+          debugName: debugName(),
+          target: 'status',
+          outcome: 'staged',
+        });
+      } finally {
+        revokeFromOwner?.();
+      }
+    });
+    const owner = deferredStatusCommandOwner;
+    if (owner === undefined) return;
+    const revoke = () => {
+      command.cancel();
+      const phase = snapshotRealmScheduler().phase;
+      if (phase !== 'advance' && phase !== 'render') status.set('disposed');
+    };
+    revokeFromOwner = () => owner.remove(revoke);
+    owner.add(revoke);
+  }
+
   function acceptCommandWithoutTrace(
     command: PlaybackCommandName,
     generation: number,
-    snapshot: CRCFrameSnapshot,
+    snapshot: PibblFrameSnapshot,
     batch: SignalCommitBatch,
     argument?: number | 'error' | 'replace',
   ): void {
@@ -1082,14 +1120,14 @@ export function createAnimationPlaybackController(
     registerRun(target);
   }
 
-  const handle: CRCPlayback = Object.freeze({
+  const handle: PibblPlayback = Object.freeze({
     status: status.asReadonly(),
     currentTime: currentTime.asReadonly(),
     play(playOptions: { readonly conflict?: 'error' | 'replace' } = {}): void {
       if (disposed) return;
       const conflict = playOptions.conflict ?? options.conflict ?? 'error';
       if (conflict !== 'error' && conflict !== 'replace') {
-        throw new TypeError('CRC animation playback conflict must be "error" or "replace".');
+        throw new TypeError('Pibbl animation playback conflict must be "error" or "replace".');
       }
       const generation = ++queuedGeneration;
       enqueue('play', generation, conflict);
@@ -1109,7 +1147,7 @@ export function createAnimationPlaybackController(
     seek(milliseconds: number): void {
       if (disposed) return;
       if (!Number.isFinite(milliseconds)) {
-        throw new RangeError('CRC animation playback seek time must be finite.');
+        throw new RangeError('Pibbl animation playback seek time must be finite.');
       }
       enqueue('seek', queuedGeneration, milliseconds);
     },
@@ -1120,7 +1158,7 @@ export function createAnimationPlaybackController(
       if (disposed) return;
       if (!Number.isFinite(rate) || rate <= 0) {
         throw new RangeError(
-          'CRC animation playback rate must be finite and greater than zero.',
+          'Pibbl animation playback rate must be finite and greater than zero.',
         );
       }
       enqueue('setPlaybackRate', queuedGeneration, rate);
@@ -1129,7 +1167,7 @@ export function createAnimationPlaybackController(
 
   return Object.freeze({
     handle,
-    adopt(nextProgram: CRCAnimationProgram, nextOptions: CRCPlaybackOptions = {}): void {
+    adopt(nextProgram: PibblAnimationProgram, nextOptions: PibblPlaybackOptions = {}): void {
       if (disposed) return;
       const candidate = normalizeAnimationPlaybackCandidate(nextProgram, nextOptions);
       program = candidate.program;
@@ -1144,7 +1182,7 @@ export function createAnimationPlaybackController(
       if (definitionRecord.kind !== 'spring') return undefined;
       return sampleSpring(definitionRecord, target.position / 1000);
     },
-    retarget(nextProgram: CRCAnimationProgram, nextOptions: CRCPlaybackOptions = {}): void {
+    retarget(nextProgram: PibblAnimationProgram, nextOptions: PibblPlaybackOptions = {}): void {
       if (disposed) return;
       const candidate = normalizeAnimationPlaybackCandidate(nextProgram, nextOptions);
       program = candidate.program;
@@ -1155,6 +1193,9 @@ export function createAnimationPlaybackController(
       }
       const generation = ++queuedGeneration;
       pendingRetarget = enqueue('play', generation, 'replace');
+    },
+    setDeferredStatusCommandOwner(owner: DeferredStatusCommandOwner): void {
+      deferredStatusCommandOwner = owner;
     },
     dispose(): void {
       if (disposed) return;
@@ -1177,17 +1218,7 @@ export function createAnimationPlaybackController(
       if (schedulerPhase !== 'advance' && schedulerPhase !== 'render') {
         status.set('disposed');
       } else {
-        queueBeginCommand((snapshot, batch) => {
-          batch.stage(status, 'disposed', metadataWriter);
-          recordSchedulerTrace({
-            kind: 'animation-write',
-            frameId: snapshot.frameId,
-            logicalTime: snapshot.logicalTime,
-            debugName: debugName(),
-            target: 'status',
-            outcome: 'staged',
-          });
-        });
+        stageDisposedAfterRender();
       }
     },
   });

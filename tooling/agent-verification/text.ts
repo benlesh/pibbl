@@ -144,7 +144,7 @@ export function createTextRecorder(
         (_, index) => ring[(Math.max(0, total - count) + index) % capacity],
       );
       return Object.freeze({
-        schema: "crc-text-call-evidence/1",
+        schema: "pibbl-text-call-evidence/1",
         status,
         scope: "one-context-successful-calls",
         geometry: "draw-positions-not-glyph-bounds",

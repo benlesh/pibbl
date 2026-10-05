@@ -1,34 +1,34 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { crc } from '../crc';
-import { clearSharedState, getCRCInstance } from '../global-state';
+import { pibbl } from '../pibbl';
+import { clearSharedState, getPibblInstance } from '../global-state';
 import { useEventListener } from '../hooks/use-event-listener';
 import { useEventTarget } from '../hooks/use-event-target';
 import {
   classifyNativeEventType,
   dispatchToLogicalTarget,
 } from './dispatch';
-import { CRC_EVENT_TYPES } from './event-definitions';
+import { PIBBL_EVENT_TYPES } from './event-definitions';
 import type { NativeListenerHub } from './native-listener-hub';
-import type { CRCEventNode } from './registrations';
+import type { PibblEventNode } from './registrations';
 import type {
-  CRCClipboardEvent,
-  CRCCompositionEvent,
-  CRCDragEvent,
-  CRCEventHandlers,
-  CRCEventTarget,
-  CRCEventType,
-  CRCFocusEvent,
-  CRCInputEvent,
-  CRCKeyboardEvent,
-  CRCTouchEvent,
+  PibblClipboardEvent,
+  PibblCompositionEvent,
+  PibblDragEvent,
+  PibblEventHandlers,
+  PibblEventTarget,
+  PibblEventType,
+  PibblFocusEvent,
+  PibblInputEvent,
+  PibblKeyboardEvent,
+  PibblTouchEvent,
 } from './types';
 import { createElement } from '../element/create-element';
 
 type ExplicitDispatch = (
-  type: CRCEventType,
-  target: CRCEventNode,
+  type: PibblEventType,
+  target: PibblEventNode,
   originalEvent: Event,
-  relatedTarget?: CRCEventNode | null,
+  relatedTarget?: PibblEventNode | null,
 ) => unknown;
 
 type NativeEventRoute =
@@ -158,7 +158,7 @@ describe('touch event dispatch', () => {
   it('retains each contact target through move and end and releases it on end or cancel', async () => {
     const trace: string[] = [];
     const Target = ({ label, x }: { label: string; x: number }) => {
-      const record = (event: CRCTouchEvent) => {
+      const record = (event: PibblTouchEvent) => {
         trace.push(
           `${label}:${event.type}:${touchIdentifiers(event.changedTouches).join(',')}:${event.x},${event.y}`,
         );
@@ -178,7 +178,7 @@ describe('touch event dispatch', () => {
       createElement(Target, { label: 'b', x: 50 }),
     ];
     const canvas = createCanvas();
-    crc(canvas, createElement(Root, {}));
+    pibbl(canvas, createElement(Root, {}));
     await nextFrame();
 
     const startOne = createTouch(canvas, 1, 20, 20);
@@ -212,7 +212,7 @@ describe('touch event dispatch', () => {
       touches: TouchList;
     }> = [];
     const Target = ({ label, x }: { label: string; x: number }) => {
-      const record = (event: CRCTouchEvent) => groups.push({
+      const record = (event: PibblTouchEvent) => groups.push({
         label,
         x: event.x,
         changedTouches: event.changedTouches,
@@ -232,11 +232,11 @@ describe('touch event dispatch', () => {
       createElement(Target, { label: 'b', x: 50 }),
     ];
     const canvas = createCanvas();
-    crc(canvas, createElement(Root, {}));
+    pibbl(canvas, createElement(Root, {}));
     await nextFrame();
 
     const observer = vi.fn();
-    getCRCInstance(canvas).eventRoot.observers.get('touchstart')!.add(observer);
+    getPibblInstance(canvas).eventRoot.observers.get('touchstart')!.add(observer);
     const changed = [
       createTouch(canvas, 1, 10, 20),
       createTouch(canvas, 2, 30, 20),
@@ -278,7 +278,7 @@ describe('touch event dispatch', () => {
 
 describe('non-coordinate logical transport', () => {
   it('projects keyboard fields and modifiers to an explicit target', async () => {
-    let received: CRCKeyboardEvent | undefined;
+    let received: PibblKeyboardEvent | undefined;
     const { target } = await mountExplicitTarget({
       onKeyDown: event => received = event,
     });
@@ -316,7 +316,7 @@ describe('non-coordinate logical transport', () => {
   });
 
   it('preserves a logical related target for explicit focus dispatch', async () => {
-    let received: CRCFocusEvent | undefined;
+    let received: PibblFocusEvent | undefined;
     const Target = ({ label }: { label: string }) => {
       useEventTarget({
         onFocusOut: label === 'a' ? event => received = event : () => undefined,
@@ -330,10 +330,10 @@ describe('non-coordinate logical transport', () => {
       createElement(Target, { label: 'b' }),
     ];
     const canvas = createCanvas();
-    crc(canvas, createElement(Root, {}));
+    pibbl(canvas, createElement(Root, {}));
     await nextFrame();
     const [targetA, targetB] = Array.from(
-      getCRCInstance(canvas).eventRoot.targets,
+      getPibblInstance(canvas).eventRoot.targets,
     );
     const originalEvent = new FocusEvent('focusout', { bubbles: true });
 
@@ -353,8 +353,8 @@ describe('non-coordinate logical transport', () => {
   });
 
   it('projects input and composition fields and transports plain editing events', async () => {
-    const inputEvents: CRCInputEvent[] = [];
-    const compositionEvents: CRCCompositionEvent[] = [];
+    const inputEvents: PibblInputEvent[] = [];
+    const compositionEvents: PibblCompositionEvent[] = [];
     const plainTypes: string[] = [];
     const { target } = await mountExplicitTarget({
       onBeforeInput: event => inputEvents.push(event),
@@ -430,7 +430,7 @@ describe('non-coordinate logical transport', () => {
   });
 
   it('projects clipboard data unchanged to an explicit target', async () => {
-    let received: CRCClipboardEvent | undefined;
+    let received: PibblClipboardEvent | undefined;
     const { target } = await mountExplicitTarget({
       onPaste: event => received = event,
     });
@@ -465,10 +465,10 @@ describe('non-coordinate logical transport', () => {
       });
     };
     const canvas = createCanvas();
-    crc(canvas, createElement(Target, {}));
+    pibbl(canvas, createElement(Target, {}));
     await nextFrame();
     const observed: string[] = [];
-    const eventRoot = getCRCInstance(canvas).eventRoot;
+    const eventRoot = getPibblInstance(canvas).eventRoot;
     const nativeEvents = [
       new KeyboardEvent('keydown', { key: 'x' }),
       new FocusEvent('focus'),
@@ -477,7 +477,7 @@ describe('non-coordinate logical transport', () => {
       new ClipboardEvent('paste'),
     ];
     for (const event of nativeEvents) {
-      eventRoot.observers.get(event.type as CRCEventType)!.add(
+      eventRoot.observers.get(event.type as PibblEventType)!.add(
         observedEvent => observed.push(observedEvent.type),
       );
       canvas.dispatchEvent(event);
@@ -630,7 +630,7 @@ describe('drag event dispatch', () => {
   });
 
   it('projects coordinate, modifier, and data-transfer fields unchanged', async () => {
-    let received: CRCDragEvent | undefined;
+    let received: PibblDragEvent | undefined;
     const Target = (_props: {}) => {
       useEventTarget({ onDragStart: event => received = event }, {
         path: rectanglePath(0, 0, 100, 100),
@@ -638,7 +638,7 @@ describe('drag event dispatch', () => {
       });
     };
     const canvas = createCanvas(200);
-    crc(canvas, createElement(Target, {}));
+    pibbl(canvas, createElement(Target, {}));
     await nextFrame();
     const dataTransfer = createDataTransfer('drag payload');
     const originalEvent = dispatchDrag(canvas, 'dragstart', 50, 70, {
@@ -664,9 +664,9 @@ describe('drag event dispatch', () => {
 
   it('derives sibling drag boundaries by path difference and propagates them', async () => {
     const trace: string[] = [];
-    let targetA: CRCEventTarget | undefined;
-    let targetB: CRCEventTarget | undefined;
-    const relatedLabel = (event: CRCDragEvent) =>
+    let targetA: PibblEventTarget | undefined;
+    let targetB: PibblEventTarget | undefined;
+    const relatedLabel = (event: PibblDragEvent) =>
       event.relatedTarget === targetA ? 'a' :
         event.relatedTarget === targetB ? 'b' : 'none';
     const Target = ({ label, x }: { label: string; x: number }) => {
@@ -701,9 +701,9 @@ describe('drag event dispatch', () => {
       ];
     };
     const canvas = createCanvas();
-    crc(canvas, createElement(Parent, {}));
+    pibbl(canvas, createElement(Parent, {}));
     await nextFrame();
-    [targetA, targetB] = Array.from(getCRCInstance(canvas).eventRoot.targets)
+    [targetA, targetB] = Array.from(getPibblInstance(canvas).eventRoot.targets)
       .map(target => target.publicTarget);
 
     dispatchDrag(canvas, 'dragover', 25, 25);
@@ -748,8 +748,8 @@ describe('native event route exhaustiveness', () => {
         'dragstart', 'drag', 'dragend', 'dragenter', 'dragleave',
         'dragover', 'drop',
       ]],
-    ] as const satisfies readonly [NativeEventRoute, readonly CRCEventType[]][]);
-    const expectedByType = new Map<CRCEventType, NativeEventRoute>();
+    ] as const satisfies readonly [NativeEventRoute, readonly PibblEventType[]][]);
+    const expectedByType = new Map<PibblEventType, NativeEventRoute>();
     for (const [route, types] of expected) {
       for (const type of types) {
         expect(expectedByType.has(type), `${type} has one expected route`)
@@ -758,21 +758,21 @@ describe('native event route exhaustiveness', () => {
       }
     }
 
-    expect(Array.from(expectedByType.keys())).toEqual(CRC_EVENT_TYPES);
+    expect(Array.from(expectedByType.keys())).toEqual(PIBBL_EVENT_TYPES);
     expect(
-      CRC_EVENT_TYPES.map(type => [
+      PIBBL_EVENT_TYPES.map(type => [
         type,
         classifyNativeEventType(type),
       ]),
     ).toEqual(
-      CRC_EVENT_TYPES.map(type => [type, expectedByType.get(type)]),
+      PIBBL_EVENT_TYPES.map(type => [type, expectedByType.get(type)]),
     );
   });
 });
 
 async function mountExplicitTarget(
   handlers: Parameters<typeof useEventTarget>[0],
-): Promise<{ canvas: HTMLCanvasElement; target: CRCEventNode }> {
+): Promise<{ canvas: HTMLCanvasElement; target: PibblEventNode }> {
   const Target = (_props: {}) => {
     useEventTarget(handlers, {
       path: rectanglePath(0, 0, 100, 100),
@@ -780,19 +780,19 @@ async function mountExplicitTarget(
     });
   };
   const canvas = createCanvas();
-  crc(canvas, createElement(Target, {}));
+  pibbl(canvas, createElement(Target, {}));
   await nextFrame();
   return {
     canvas,
-    target: Array.from(getCRCInstance(canvas).eventRoot.targets)[0],
+    target: Array.from(getPibblInstance(canvas).eventRoot.targets)[0],
   };
 }
 
 async function mountIsolatedTouchTarget(
-  handlers: CRCEventHandlers,
+  handlers: PibblEventHandlers,
 ): Promise<{
   canvas: HTMLCanvasElement;
-  controller: ReturnType<typeof crc>;
+  controller: ReturnType<typeof pibbl>;
   nativeListeners: NativeListenerHub;
 }> {
   const Target = (_props: {}) => {
@@ -802,20 +802,20 @@ async function mountIsolatedTouchTarget(
     });
   };
   const canvas = createCanvas();
-  const controller = crc(canvas, createElement(Target, {}));
+  const controller = pibbl(canvas, createElement(Target, {}));
   await nextFrame();
   return {
     canvas,
     controller,
-    nativeListeners: getCRCInstance(canvas).eventRoot.nativeListeners!,
+    nativeListeners: getPibblInstance(canvas).eventRoot.nativeListeners!,
   };
 }
 
 async function mountIsolatedDragTarget(
-  handlers: CRCEventHandlers,
+  handlers: PibblEventHandlers,
 ): Promise<{
   canvas: HTMLCanvasElement;
-  controller: ReturnType<typeof crc>;
+  controller: ReturnType<typeof pibbl>;
   nativeListeners: NativeListenerHub;
 }> {
   const Target = (_props: {}) => {
@@ -825,12 +825,12 @@ async function mountIsolatedDragTarget(
     });
   };
   const canvas = createCanvas();
-  const controller = crc(canvas, createElement(Target, {}));
+  const controller = pibbl(canvas, createElement(Target, {}));
   await nextFrame();
   return {
     canvas,
     controller,
-    nativeListeners: getCRCInstance(canvas).eventRoot.nativeListeners!,
+    nativeListeners: getPibblInstance(canvas).eventRoot.nativeListeners!,
   };
 }
 
@@ -869,10 +869,10 @@ function dragListenerCounts(hub: NativeListenerHub): {
 }
 
 function explicitDispatch(
-  type: CRCEventType,
-  target: CRCEventNode,
+  type: PibblEventType,
+  target: PibblEventNode,
   originalEvent: Event,
-  relatedTarget?: CRCEventNode | null,
+  relatedTarget?: PibblEventNode | null,
 ): void {
   explicitTargetDispatch(
     type,

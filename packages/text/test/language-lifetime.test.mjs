@@ -11,7 +11,7 @@ test("language interning is bounded across font lifetimes and existing tags rema
   let font = await loadOutlineFont(bytes);
   try {
     for (let i = 0; i < 256; i++)
-      createTextGeometry(font, "A", { fontSize: 10, language: `x-crc-${i}` });
+      createTextGeometry(font, "A", { fontSize: 10, language: `x-pibbl-${i}` });
     font.dispose();
     font = await loadOutlineFont(bytes);
     const before = await nativeResources();
@@ -20,7 +20,7 @@ test("language interning is bounded across font lifetimes and existing tags rema
         () =>
           createTextGeometry(font, "A", {
             fontSize: 10,
-            language: `x-crc-${i}`,
+            language: `x-pibbl-${i}`,
           }),
         /256 distinct language tags/,
       );
@@ -28,7 +28,7 @@ test("language interning is bounded across font lifetimes and existing tags rema
     assert.equal(after.results, 0);
     assert.equal(after.allocatedBytes, before.allocatedBytes);
     assert.ok(
-      createTextGeometry(font, "A", { fontSize: 10, language: "X-CRC-0" })
+      createTextGeometry(font, "A", { fontSize: 10, language: "X-Pibbl-0" })
         .geometry.segmentCount > 0,
     );
     assert.ok(

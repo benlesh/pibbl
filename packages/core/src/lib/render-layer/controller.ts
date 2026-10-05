@@ -1,48 +1,48 @@
-import { GLOBAL_STATE, getCurrentCRCInstance } from "../global-state.js";
+import { GLOBAL_STATE, getCurrentPibblInstance } from "../global-state.js";
 import { getCurrentWorldTransform } from "../render-target.js";
 import {
   queueFrameCompletion,
   requestInstanceRender,
 } from "../scheduler/realm-scheduler.js";
-import type { CRCComponentRefs, RenderingContext2D } from "../types.js";
-import type { CRCPointerEvents } from "../events/types.js";
+import type { PibblComponentRefs, RenderingContext2D } from "../types.js";
+import type { PibblPointerEvents } from "../events/types.js";
 import {
-  CRCHitDisposition,
-  CRCPaintEntryKind,
-  type CRCHitTestOutput,
-  type CRCNestedPaintEntry,
+  PibblHitDisposition,
+  PibblPaintEntryKind,
+  type PibblHitTestOutput,
+  type PibblNestedPaintEntry,
 } from "../events/paint-entry.js";
 import {
   createTarget,
   releaseTarget,
   updateTarget,
-  type CRCEventTargetRegistration,
+  type PibblEventTargetRegistration,
 } from "../events/registrations.js";
 import {
   hasResolverPointerCapture,
   releaseResolverInputWinner,
   releaseResolverPointerCapture,
   setResolverPointerCapture,
-  type CRCResolverInputType,
-  type CRCResolverInputWinner,
+  type PibblResolverInputType,
+  type PibblResolverInputWinner,
 } from "../events/resolver-input.js";
 import type {
-  CRCRenderLayerContext,
-  CRCRenderLayerDefinition,
-  CRCRenderLayerFrame,
-  CRCRenderLayerHit,
-  CRCRenderLayerInteractionSnapshot,
-  CRCRenderLayerSize,
-  CRCRenderLayerTarget,
+  PibblRenderLayerContext,
+  PibblRenderLayerDefinition,
+  PibblRenderLayerFrame,
+  PibblRenderLayerHit,
+  PibblRenderLayerInteractionSnapshot,
+  PibblRenderLayerSize,
+  PibblRenderLayerTarget,
 } from "./types.js";
 
 class SynchronousLifecycleError extends TypeError {}
 
 interface StagedInteraction<Target extends object> {
-  readonly snapshot: CRCRenderLayerInteractionSnapshot<Target>;
-  readonly targets: readonly CRCRenderLayerTarget<Target>[];
+  readonly snapshot: PibblRenderLayerInteractionSnapshot<Target>;
+  readonly targets: readonly PibblRenderLayerTarget<Target>[];
   readonly transform: DOMMatrix;
-  readonly clippingStack: CRCNestedPaintEntry["clippingStack"];
+  readonly clippingStack: PibblNestedPaintEntry["clippingStack"];
 }
 
 interface RenderCandidate<Target extends object> {
@@ -53,7 +53,7 @@ interface RenderCandidate<Target extends object> {
 
 interface RenderLayerPolicy {
   readonly missBehavior: "pass-through" | "block" | "target-layer";
-  readonly pointerEvents: CRCPointerEvents | undefined;
+  readonly pointerEvents: PibblPointerEvents | undefined;
   readonly keyboardFocusable: boolean | undefined;
   readonly keyboardNavigationBounds:
     | Readonly<{
@@ -67,10 +67,10 @@ interface RenderLayerPolicy {
 
 interface WinnerState<Target extends object> {
   readonly point: Readonly<{ x: number; y: number }>;
-  readonly hit: CRCRenderLayerHit<Target>;
+  readonly hit: PibblRenderLayerHit<Target>;
 }
 
-const MISS_SNAPSHOT: CRCRenderLayerInteractionSnapshot<object> = Object.freeze({
+const MISS_SNAPSHOT: PibblRenderLayerInteractionSnapshot<object> = Object.freeze({
   targets: Object.freeze([]),
   hitTest: () => Object.freeze({ kind: "miss" as const }),
 });
@@ -105,14 +105,14 @@ export function assertSynchronous(value: unknown, callback: string): void {
 }
 
 export class RenderLayerController<Props, Resources, Target extends object> {
-  private readonly instance = getCurrentCRCInstance();
-  private readonly refs: CRCComponentRefs<any>;
+  private readonly instance = getCurrentPibblInstance();
+  private readonly refs: PibblComponentRefs<any>;
   private readonly canvas: OffscreenCanvas;
-  private readonly context: CRCRenderLayerContext;
+  private readonly context: PibblRenderLayerContext;
   private resources: Resources | undefined;
   private created = false;
   private disposed = false;
-  private size: CRCRenderLayerSize | undefined;
+  private size: PibblRenderLayerSize | undefined;
   private props: Readonly<Props> | undefined;
   private needsRender = true;
   private needsResize = true;
@@ -120,14 +120,14 @@ export class RenderLayerController<Props, Resources, Target extends object> {
   private candidate: RenderCandidate<Target> | undefined;
   private committed: ImageBitmap | undefined;
   private committedInteraction:
-    CRCRenderLayerInteractionSnapshot<Target> | undefined;
-  private committedTargetDescriptors: readonly CRCRenderLayerTarget<Target>[] =
+    PibblRenderLayerInteractionSnapshot<Target> | undefined;
+  private committedTargetDescriptors: readonly PibblRenderLayerTarget<Target>[] =
     Object.freeze([]);
   private readonly committedTargets = new Map<
     Target,
-    CRCEventTargetRegistration
+    PibblEventTargetRegistration
   >();
-  private readonly layerTarget: CRCEventTargetRegistration;
+  private readonly layerTarget: PibblEventTargetRegistration;
   private committedPolicy: RenderLayerPolicy = Object.freeze({
     missBehavior: "pass-through",
     pointerEvents: undefined,
@@ -137,23 +137,23 @@ export class RenderLayerController<Props, Resources, Target extends object> {
   private resolverTransform = new DOMMatrix();
   private resolverInverseTransform = new DOMMatrix();
   private resolverBounds = new Path2D();
-  private resolverSize: CRCRenderLayerSize | undefined;
+  private resolverSize: PibblRenderLayerSize | undefined;
   private resolutionErrorQueued = false;
   private readonly inputNativeReleases = new Map<
-    CRCResolverInputType,
+    PibblResolverInputType,
     () => void
   >();
-  private readonly resolverEntry: CRCNestedPaintEntry;
-  private readonly inputWinner: CRCResolverInputWinner;
+  private readonly resolverEntry: PibblNestedPaintEntry;
+  private readonly inputWinner: PibblResolverInputWinner;
   private lastTime: number | undefined;
 
   constructor(
-    private readonly definition: CRCRenderLayerDefinition<
+    private readonly definition: PibblRenderLayerDefinition<
       Props,
       Resources,
       Target
     >,
-    refs: CRCComponentRefs<any>,
+    refs: PibblComponentRefs<any>,
   ) {
     this.refs = refs;
     this.layerTarget = createTarget(this.instance, refs, -1);
@@ -167,7 +167,7 @@ export class RenderLayerController<Props, Resources, Target extends object> {
         ),
     };
     this.resolverEntry = {
-      paintKind: CRCPaintEntryKind.Resolver,
+      paintKind: PibblPaintEntryKind.Resolver,
       instance: this.instance,
       bounds: this.resolverBounds,
       transform: this.resolverTransform,
@@ -194,7 +194,7 @@ export class RenderLayerController<Props, Resources, Target extends object> {
 
   render(
     props: Readonly<Props>,
-    size: CRCRenderLayerSize,
+    size: PibblRenderLayerSize,
     ctx: RenderingContext2D,
     policy: RenderLayerPolicy = this.committedPolicy,
   ): void {
@@ -331,7 +331,7 @@ export class RenderLayerController<Props, Resources, Target extends object> {
     this.drawCommitted(ctx, size);
   }
 
-  private publishResolver(size: CRCRenderLayerSize): void {
+  private publishResolver(size: PibblRenderLayerSize): void {
     if (!sameSize(this.resolverSize, size)) {
       const bounds = new Path2D();
       bounds.rect(0, 0, size.width, size.height);
@@ -351,7 +351,7 @@ export class RenderLayerController<Props, Resources, Target extends object> {
 
   private drawCommitted(
     ctx: RenderingContext2D,
-    size: CRCRenderLayerSize,
+    size: PibblRenderLayerSize,
   ): void {
     if (this.committed) {
       ctx.drawImage(
@@ -368,7 +368,7 @@ export class RenderLayerController<Props, Resources, Target extends object> {
     }
   }
 
-  private createFrame(): CRCRenderLayerFrame {
+  private createFrame(): PibblRenderLayerFrame {
     const snapshot = GLOBAL_STATE.frameSnapshot;
     const time = snapshot?.logicalTime ?? this.instance.renderTimestamp;
     const delta = this.lastTime === undefined ? 0 : time - this.lastTime;
@@ -397,9 +397,9 @@ export class RenderLayerController<Props, Resources, Target extends object> {
   private settleInteraction(props: Readonly<Props>): StagedInteraction<Target> {
     const snapshot =
       this.definition.interaction?.settle(this.resources!, props, this.size!) ??
-      (MISS_SNAPSHOT as CRCRenderLayerInteractionSnapshot<Target>);
+      (MISS_SNAPSHOT as PibblRenderLayerInteractionSnapshot<Target>);
     assertSynchronous(snapshot, "interaction.settle");
-    const targets: CRCRenderLayerTarget<Target>[] = [];
+    const targets: PibblRenderLayerTarget<Target>[] = [];
     const identities = new Set<Target>();
     for (const target of snapshot.targets) {
       if (identities.has(target.target)) {
@@ -510,7 +510,7 @@ export class RenderLayerController<Props, Resources, Target extends object> {
   }
 
   private applyResolverGeometry(
-    target: CRCEventTargetRegistration,
+    target: PibblEventTargetRegistration,
     interaction: StagedInteraction<Target>,
   ): void {
     if (!target.paintEntry) return;
@@ -537,7 +537,7 @@ export class RenderLayerController<Props, Resources, Target extends object> {
   }
 
   private observeTransactionalFocusTarget(
-    target: CRCEventTargetRegistration,
+    target: PibblEventTargetRegistration,
   ): void {
     this.instance.eventRoot.focusPolicy?.observeTransactionalTarget?.(target);
   }
@@ -545,10 +545,10 @@ export class RenderLayerController<Props, Resources, Target extends object> {
   private resolveLocal(
     localX: number,
     localY: number,
-    output: CRCHitTestOutput,
+    output: PibblHitTestOutput,
   ): void {
     if (this.committedPolicy.pointerEvents === "none") {
-      output.disposition = CRCHitDisposition.Miss;
+      output.disposition = PibblHitDisposition.Miss;
       output.target = null;
       return;
     }
@@ -558,26 +558,26 @@ export class RenderLayerController<Props, Resources, Target extends object> {
     switch (state.hit.kind) {
       case "miss":
         if (this.committedPolicy.missBehavior === "pass-through") {
-          output.disposition = CRCHitDisposition.Miss;
+          output.disposition = PibblHitDisposition.Miss;
           output.target = null;
           delete output.winner;
           delete output.winnerState;
         } else if (this.committedPolicy.missBehavior === "block") {
-          output.disposition = CRCHitDisposition.Block;
+          output.disposition = PibblHitDisposition.Block;
           output.target = null;
         } else {
-          output.disposition = CRCHitDisposition.Target;
+          output.disposition = PibblHitDisposition.Target;
           output.target = this.layerTarget.live ? this.layerTarget : null;
         }
         return;
       case "block":
-        output.disposition = CRCHitDisposition.Block;
+        output.disposition = PibblHitDisposition.Block;
         output.target = null;
         return;
       case "target": {
         const target = this.committedTargets.get(state.hit.target);
         if (!target?.live) {
-          output.disposition = CRCHitDisposition.Block;
+          output.disposition = PibblHitDisposition.Block;
           output.target = null;
           output.winnerState = {
             point: state.point,
@@ -586,7 +586,7 @@ export class RenderLayerController<Props, Resources, Target extends object> {
           this.reportUnknownTarget();
           return;
         }
-        output.disposition = CRCHitDisposition.Target;
+        output.disposition = PibblHitDisposition.Target;
         output.target = target;
       }
     }
@@ -619,7 +619,7 @@ export class RenderLayerController<Props, Resources, Target extends object> {
   }
 
   private deliverInput(
-    type: CRCResolverInputType,
+    type: PibblResolverInputType,
     rootPoint: Readonly<{ x: number; y: number }>,
     originalEvent: PointerEvent | WheelEvent | MouseEvent,
     resolvedState: unknown,
@@ -648,7 +648,7 @@ export class RenderLayerController<Props, Resources, Target extends object> {
   }
 
   private updateInputNativeOwnership(enabled: boolean): void {
-    const required = new Set<CRCResolverInputType>(
+    const required = new Set<PibblResolverInputType>(
       enabled
         ? RESOLVER_INPUT_TYPES
         : hasResolverPointerCapture(this.inputWinner)
@@ -671,7 +671,7 @@ export class RenderLayerController<Props, Resources, Target extends object> {
 
   private failCandidate(
     ctx: RenderingContext2D,
-    size: CRCRenderLayerSize,
+    size: PibblRenderLayerSize,
     error: unknown,
   ): void {
     this.inputGated = true;
@@ -720,8 +720,8 @@ function assertCapability(): void {
 }
 
 function sameSize(
-  a: CRCRenderLayerSize | undefined,
-  b: CRCRenderLayerSize,
+  a: PibblRenderLayerSize | undefined,
+  b: PibblRenderLayerSize,
 ): boolean {
   return (
     !!a &&

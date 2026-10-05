@@ -58,7 +58,7 @@ Lifecycle ownership suites:
 
 Typecheck: passed
 Lint and formatting: passed
-@crc/core build: passed
+@pibbl/core build: passed
 Packed consumer and tree shaking: passed
   marker absent without focus and present with focus
   103186 no-focus bytes vs 126495 with-focus bytes

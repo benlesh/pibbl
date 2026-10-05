@@ -7,7 +7,7 @@ slug: drag-handle
 apiCategory: component
 symbols: [DragHandle]
 relatedTypes:
-  [CRCDragHandleProps, CRCDragHandleStyle, CRCManipulationController]
+  [PibblDragHandleProps, PibblDragHandleStyle, PibblManipulationController]
 ---
 
 # DragHandle
@@ -19,10 +19,10 @@ import {
   Rectangle,
   useManipulation,
   useSignal,
-} from "@crc/core";
+} from "@pibbl/core";
 ```
 
-`DragHandle` starts a move interaction for its controller. Its children provide the hit areas through normal CRC event targeting. It adds
+`DragHandle` starts a move interaction for its controller. Its children provide the hit areas through normal Pibbl event targeting. It adds
 no target of its own: empty space, gaps between children, and descendants with
 `pointerEvents="none"` do not start dragging. Shapes retain their transforms,
 clips, fill and stroke hit rules. Place it inside the `ManipulationFrame` attached
@@ -42,7 +42,7 @@ const manipulation = useManipulation({ box, move: {} });
 </ManipulationFrame>;
 ```
 
-Related types: [CRCDragHandleProps](#/api/types/events#crcdraghandleprops), [CRCDragHandleStyle](#/api/types/events#crcdraghandlestyle), [CRCManipulationController](#/api/types/events#crcmanipulationcontroller).
+Related types: [PibblDragHandleProps](#/api/types/events#pibbldraghandleprops), [PibblDragHandleStyle](#/api/types/events#pibbldraghandlestyle), [PibblManipulationController](#/api/types/events#pibblmanipulationcontroller).
 
 Position readouts display the frame’s applied `left` and `top`, default to active-only, and accept the same `style.readout` states, gap, and canvas containment as resize readouts. `formatReadout={({ left, top }) => ...}` can display custom document units. Put `keyboardFocusable` and cursor styling on the actual child target. Child event cancellation can reject a drag before it reaches the handle.
 

@@ -1,0 +1,151 @@
+{
+  "name": "pibbl",
+  "version": "0.0.1",
+  "type": "module",
+  "description": "Pibbl Canvas component runtime — the unscoped mirror of @pibbl/core",
+  "author": "Ben Lesh <ben@benlesh.com>",
+  "license": "MIT",
+  "homepage": "https://github.com/benlesh/crc",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/benlesh/crc.git",
+    "directory": "packages/pibbl"
+  },
+  "bugs": "https://github.com/benlesh/crc/issues",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.mjs"
+    },
+    "./internal": {
+      "types": "./dist/internal.d.ts",
+      "default": "./dist/internal.mjs"
+    },
+    "./filters": {
+      "types": "./dist/filters.d.ts",
+      "default": "./dist/filters.mjs"
+    },
+    "./jsx-runtime": {
+      "types": "./dist/jsx-runtime.d.ts",
+      "default": "./dist/jsx-runtime.mjs"
+    },
+    "./jsx-dev-runtime": {
+      "types": "./dist/jsx-dev-runtime.d.ts",
+      "default": "./dist/jsx-dev-runtime.mjs"
+    },
+    "./types": {
+      "types": "./dist/types.d.ts"
+    },
+    "./package.json": "./package.json",
+    "./particles": {
+      "types": "./dist/particles.d.ts",
+      "default": "./dist/particles.mjs"
+    },
+    "./viz": {
+      "types": "./dist/viz.d.ts",
+      "default": "./dist/viz.mjs"
+    },
+    "./textures": {
+      "types": "./dist/textures.d.ts",
+      "default": "./dist/textures.mjs"
+    },
+    "./physics/2d": {
+      "types": "./dist/physics/2d.d.ts",
+      "default": "./dist/physics/2d.mjs"
+    },
+    "./physics/2d/geometry": {
+      "types": "./dist/physics/2d/geometry.d.ts",
+      "default": "./dist/physics/2d/geometry.mjs"
+    },
+    "./physics/2d/testing": {
+      "types": "./dist/physics/2d/testing.d.ts",
+      "default": "./dist/physics/2d/testing.mjs"
+    },
+    "./sprites": {
+      "types": "./dist/sprites.d.ts",
+      "default": "./dist/sprites.mjs"
+    },
+    "./sprites/formats/aseprite": {
+      "types": "./dist/sprites/formats/aseprite.d.ts",
+      "default": "./dist/sprites/formats/aseprite.mjs"
+    },
+    "./sprites/formats/texture-packer": {
+      "types": "./dist/sprites/formats/texture-packer.d.ts",
+      "default": "./dist/sprites/formats/texture-packer.mjs"
+    },
+    "./machines": {
+      "types": "./dist/machines.d.ts",
+      "default": "./dist/machines.mjs"
+    },
+    "./machines/animation": {
+      "types": "./dist/machines/animation.d.ts",
+      "default": "./dist/machines/animation.mjs"
+    }
+  },
+  "main": "./dist/index.mjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "internal": [
+        "./dist/internal.d.ts"
+      ],
+      "filters": [
+        "./dist/filters.d.ts"
+      ],
+      "jsx-runtime": [
+        "./dist/jsx-runtime.d.ts"
+      ],
+      "jsx-dev-runtime": [
+        "./dist/jsx-dev-runtime.d.ts"
+      ],
+      "types": [
+        "./dist/types.d.ts"
+      ],
+      "particles": [
+        "./dist/particles.d.ts"
+      ],
+      "viz": [
+        "./dist/viz.d.ts"
+      ],
+      "textures": [
+        "./dist/textures.d.ts"
+      ],
+      "physics/2d": [
+        "./dist/physics/2d.d.ts"
+      ],
+      "physics/2d/geometry": [
+        "./dist/physics/2d/geometry.d.ts"
+      ],
+      "physics/2d/testing": [
+        "./dist/physics/2d/testing.d.ts"
+      ],
+      "sprites": [
+        "./dist/sprites.d.ts"
+      ],
+      "sprites/formats/aseprite": [
+        "./dist/sprites/formats/aseprite.d.ts"
+      ],
+      "sprites/formats/texture-packer": [
+        "./dist/sprites/formats/texture-packer.d.ts"
+      ],
+      "machines": [
+        "./dist/machines.d.ts"
+      ],
+      "machines/animation": [
+        "./dist/machines/animation.d.ts"
+      ]
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "node ../../tooling/build-pibbl.mjs",
+    "prepublishOnly": "pnpm run build"
+  },
+  "dependencies": {
+    "@pibbl/core": "workspace:0.0.1"
+  }
+}

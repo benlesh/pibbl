@@ -1,5 +1,5 @@
 import type { tween } from './definition.js';
-import type { CRCEasing } from './types.js';
+import type { PibblEasing } from './types.js';
 
 const NEWTON_ITERATIONS = 8;
 const BISECTION_ITERATIONS = 50;
@@ -10,7 +10,7 @@ function clampProgress(progress: number): number {
 
 function assertFiniteControl(value: number, name: string): void {
   if (!Number.isFinite(value)) {
-    throw new RangeError(`CRC cubic bezier ${name} must be finite.`);
+    throw new RangeError(`Pibbl cubic bezier ${name} must be finite.`);
   }
 }
 
@@ -33,13 +33,13 @@ function cubicBezier(
   y1: number,
   x2: number,
   y2: number,
-): CRCEasing {
+): PibblEasing {
   assertFiniteControl(x1, 'x1');
   assertFiniteControl(y1, 'y1');
   assertFiniteControl(x2, 'x2');
   assertFiniteControl(y2, 'y2');
   if (x1 < 0 || x1 > 1 || x2 < 0 || x2 > 1) {
-    throw new RangeError('CRC cubic bezier x1 and x2 must be within [0, 1].');
+    throw new RangeError('Pibbl cubic bezier x1 and x2 must be within [0, 1].');
   }
 
   return (input: number): number => {
@@ -68,12 +68,12 @@ function cubicBezier(
   };
 }
 
-function steps(count: number, position: 'start' | 'end' = 'end'): CRCEasing {
+function steps(count: number, position: 'start' | 'end' = 'end'): PibblEasing {
   if (!Number.isInteger(count) || count <= 0) {
-    throw new RangeError('CRC steps count must be a positive integer.');
+    throw new RangeError('Pibbl steps count must be a positive integer.');
   }
   if (position !== 'start' && position !== 'end') {
-    throw new TypeError('CRC steps position must be "start" or "end".');
+    throw new TypeError('Pibbl steps position must be "start" or "end".');
   }
 
   return (input: number): number => {
@@ -88,42 +88,42 @@ function steps(count: number, position: 'start' | 'end' = 'end'): CRCEasing {
 /**
  * Built-in easing functions for mapping normalized animation progress.
  *
- * @see {@link CRCEasing}
+ * @see {@link PibblEasing}
  * @see {@link tween}
  */
 export const easing = Object.freeze({
   /**
-   * Returns clamped progress unchanged. See {@link CRCEasing}.
+   * Returns clamped progress unchanged. See {@link PibblEasing}.
    * @param progress - Input progress, clamped to the interval [0, 1].
    * @returns The clamped progress.
    */
   linear: (progress: number): number => clampProgress(progress),
   /**
    * Creates a cubic Bézier easing; control-point x coordinates must be finite and within [0, 1].
-   * See {@link CRCEasing}.
+   * See {@link PibblEasing}.
    * @param x1 - First control point horizontal coordinate, in [0, 1].
    * @param y1 - Finite first control point vertical coordinate.
    * @param x2 - Second control point horizontal coordinate, in [0, 1].
    * @param y2 - Finite second control point vertical coordinate.
-   * @returns A cubic Bézier easing function. See {@link CRCEasing}.
+   * @returns A cubic Bézier easing function. See {@link PibblEasing}.
    */
   cubicBezier,
   /**
    * Accelerates from rest using the CSS ease-in control points. See {@link easing}.
    * @param progress - Input progress, clamped to [0, 1].
-   * @returns Eased progress. See {@link CRCEasing}.
+   * @returns Eased progress. See {@link PibblEasing}.
    */
   easeIn: cubicBezier(0.42, 0, 1, 1),
   /**
    * Decelerates toward rest using the CSS ease-out control points. See {@link easing}.
    * @param progress - Input progress, clamped to [0, 1].
-   * @returns Eased progress. See {@link CRCEasing}.
+   * @returns Eased progress. See {@link PibblEasing}.
    */
   easeOut: cubicBezier(0, 0, 0.58, 1),
   /**
    * Accelerates then decelerates using the CSS ease-in-out control points. See {@link easing}.
    * @param progress - Input progress, clamped to [0, 1].
-   * @returns Eased progress. See {@link CRCEasing}.
+   * @returns Eased progress. See {@link PibblEasing}.
    */
   easeInOut: cubicBezier(0.42, 0, 0.58, 1),
   /**
@@ -131,7 +131,7 @@ export const easing = Object.freeze({
    * {@link easing}.
    * @param count - Positive integer number of steps.
    * @param position - Whether jumps occur at the start or end of each interval; defaults to end.
-   * @returns A stepped easing function. See {@link CRCEasing}.
+   * @returns A stepped easing function. See {@link PibblEasing}.
    */
   steps,
 });

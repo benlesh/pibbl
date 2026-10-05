@@ -9,7 +9,7 @@ import type {
   ScenarioDefinition,
   ScenarioMountContext,
 } from './types';
-import { crc } from '@crc/core';
+import { pibbl } from '@pibbl/core';
 import {
   CLEANUP_STRESS_SOURCE_ID,
   createCleanupStressScene,
@@ -49,7 +49,7 @@ export const CLEANUP_STRESS_ACTION_IDS = [
 
 interface InnerRuntime {
   abortController: AbortController;
-  controller: ReturnType<typeof crc>;
+  controller: ReturnType<typeof pibbl>;
   status: CleanupRuntimeStatus;
 }
 
@@ -128,7 +128,7 @@ async function mountCleanupStress(
     if (!currentRuntime || currentRuntime.status !== 'mounted') {
       throw new Error('The cleanup stress runtime must be remounted before rendering.');
     }
-    crc(context.canvas, scene(), { signal: currentRuntime.abortController.signal });
+    pibbl(context.canvas, scene(), { signal: currentRuntime.abortController.signal });
     pendingRender = nextFrame();
     await pendingRender;
     assertActive();
@@ -142,7 +142,7 @@ async function mountCleanupStress(
       mountGeneration: state.mountGeneration + 1,
       runtime: 'mounted',
     };
-    const controller = crc(context.canvas, scene(), { signal: abortController.signal });
+    const controller = pibbl(context.canvas, scene(), { signal: abortController.signal });
     currentRuntime = { abortController, controller, status: 'mounted' };
     pendingRender = nextFrame();
     await pendingRender;
@@ -171,7 +171,7 @@ async function mountCleanupStress(
       lastAction: action,
       revision: state.revision + 1,
     };
-    crc(context.canvas, scene(), { signal: currentRuntime.abortController.signal });
+    pibbl(context.canvas, scene(), { signal: currentRuntime.abortController.signal });
     pendingRender = Promise.resolve();
     publish();
   };
@@ -300,7 +300,7 @@ async function mountCleanupStress(
               mountCycles: state.mountCycles + 1,
               mountGeneration: state.mountGeneration + 1,
             };
-            const controller = crc(context.canvas, scene(), {
+            const controller = pibbl(context.canvas, scene(), {
               signal: abortController.signal,
             });
             pendingRender = nextFrame();

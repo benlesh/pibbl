@@ -1,7 +1,7 @@
-import { getFlowController2D, type CRCFlowField2D } from "../flow/hook.js";
+import { getFlowController2D, type PibblFlowField2D } from "../flow/hook.js";
 import { FlowParticlePopulation2D } from "../flow/population.js";
-import type { RenderingContext2D } from "@crc/core";
-import type { CRCInternalRenderOwner } from "@crc/core/internal";
+import type { RenderingContext2D } from "@pibbl/core";
+import type { PibblInternalRenderOwner } from "@pibbl/core/internal";
 import type { CompiledEffect2D, CompiledEmitter2D } from "../compiler.js";
 import { mix32 } from "../random.js";
 import {
@@ -30,8 +30,8 @@ const DEGREES_TO_RADIANS = Math.PI / 180;
 const COMPLEX_RASTER_REUSE_THRESHOLD = 3;
 
 export interface CanvasParticleExecutorOptions {
-  readonly flow?: CRCFlowField2D;
-  readonly owner: CRCInternalRenderOwner;
+  readonly flow?: PibblFlowField2D;
+  readonly owner: PibblInternalRenderOwner;
   readonly compiled: CompiledEffect2D;
   readonly parameters: Readonly<Float64Array>;
   readonly requestRender: () => void;
@@ -149,7 +149,7 @@ function assertDecodedSpriteSources(compiled: CompiledEffect2D): void {
       height <= 0
     ) {
       throw new TypeError(
-        `CRC Canvas particle emitter "${emitter.name}" requires a decoded sprite source with finite dimensions.`,
+        `Pibbl Canvas particle emitter "${emitter.name}" requires a decoded sprite source with finite dimensions.`,
       );
     }
   }
@@ -200,7 +200,7 @@ function createOwnedRaster(
   const surface = new OffscreenCanvas(width, height);
   const context = surface.getContext("2d");
   if (context === null) {
-    throw new Error("CRC Canvas particle rasterization requires a 2D context.");
+    throw new Error("Pibbl Canvas particle rasterization requires a 2D context.");
   }
   paint(context);
   return surface.transferToImageBitmap();
@@ -227,7 +227,7 @@ export function createCanvasParticleExecutor(
   const parameterLength = compiled.parameterLayout.defaults.length;
   if (options.parameters.length !== parameterLength) {
     throw new RangeError(
-      "CRC Canvas particle parameter register length mismatch.",
+      "Pibbl Canvas particle parameter register length mismatch.",
     );
   }
   assertDecodedSpriteSources(compiled);
@@ -283,7 +283,7 @@ export function createCanvasParticleExecutor(
   let disposed = false;
 
   function requireActive(): void {
-    if (disposed) throw new Error("CRC Canvas particle executor is disposed.");
+    if (disposed) throw new Error("Pibbl Canvas particle executor is disposed.");
   }
 
   function selectedGeneration(): CanvasLedgerGeneration {
@@ -530,7 +530,7 @@ export function createCanvasParticleExecutor(
       requireActive();
       if (parameters.length !== parameterLength) {
         throw new RangeError(
-          "CRC Canvas particle parameter register length mismatch.",
+          "Pibbl Canvas particle parameter register length mismatch.",
         );
       }
       candidateParameters.set(parameters);
@@ -559,7 +559,7 @@ export function createCanvasParticleExecutor(
       requireActive();
       if (request.origin.length !== 2) {
         throw new TypeError(
-          "CRC Canvas particle burst origin must be two-dimensional.",
+          "Pibbl Canvas particle burst origin must be two-dimensional.",
         );
       }
       ledgerTransactionOpen = true;

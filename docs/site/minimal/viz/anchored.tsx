@@ -1,10 +1,10 @@
-import { crc, Circle, Rectangle, Text } from "@crc/core";
+import { pibbl, Circle, Rectangle, Text } from "@pibbl/core";
 import {
   AnchoredLayout,
   type AnchoredItem,
   type AnchoredLayoutProps,
   type AnchoredPlacement,
-} from "@crc/core/viz";
+} from "@pibbl/core/viz";
 
 interface Callout extends AnchoredItem {
   readonly label: string;
@@ -48,7 +48,7 @@ const canvas = document.createElement("canvas");
 canvas.width = 320;
 canvas.height = 220;
 document.body.append(canvas);
-const app = crc(
+const app = pibbl(
   canvas,
   <>
     {items.map((item) => (

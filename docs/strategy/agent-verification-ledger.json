@@ -1,5 +1,5 @@
 {
-  "schema": "crc-agent-verification-ledger/2",
+  "schema": "pibbl-agent-verification-ledger/2",
   "auditedAt": "2026-09-30",
   "inventory": "docs/strategy/agent-verification-inventory.md",
   "meaning": "Evidence accounting with reviewed, version-bound closure records. Unassessed does not mean absent; partial is scoped support; gap is an audited missing capability. Complete requires a full-requirement review, linked acceptance checks and fingerprinted retained evidence. The validator checks structure and evidence integrity, not semantic truth.",
@@ -114,7 +114,7 @@
     },
     {
       "id": "ENV-01",
-      "requirement": "- ENV-01: Identify exact CRC and sibling-package versions, source revision, dirty-worktree fingerprint, build mode, and source-versus-built resolution.",
+      "requirement": "- ENV-01: Identify exact Pibbl and sibling-package versions, source revision, dirty-worktree fingerprint, build mode, and source-versus-built resolution.",
       "status": "partial",
       "evidence": [
         {
@@ -156,7 +156,7 @@
         },
         {
           "path": "tooling/agent-verification/runtime-identity.test.mjs",
-          "supports": "Bundles the actual CRC runtime/scheduler dependency graph and evaluates distinct copies in one VM realm and separate realms; validates descriptor-only getter rejection and unknown serialized bindings."
+          "supports": "Bundles the actual Pibbl runtime/scheduler dependency graph and evaluates distinct copies in one VM realm and separate realms; validates descriptor-only getter rejection and unknown serialized bindings."
         },
         {
           "path": "packages/core/test/agent-runtime-identity.test.ts",
@@ -176,7 +176,7 @@
         },
         {
           "path": "packages/scenarios/src/agent-targeting-verification.ts",
-          "supports": "Shared lab now gates targeting and signal inspection on a matching actual application crc binding, exposes serializable compatibility evidence and rechecks when inspection is enabled."
+          "supports": "Shared lab now gates targeting and signal inspection on a matching actual application pibbl binding, exposes serializable compatibility evidence and rechecks when inspection is enabled."
         },
         {
           "path": "tooling/agent-verification/replay.mjs",
@@ -250,11 +250,11 @@
       "remaining": "",
       "verificationRun": "environment-identity-closure-2026-10-01",
       "closure": {
-        "schema": "crc-requirement-closure/1",
+        "schema": "pibbl-requirement-closure/1",
         "inventorySha256": "d81589bd06da940fa68c83621f3f2d4645a4ff0bc6c6f9b8797df69e903ad878",
         "requirementText": "- **ENV-03:** Detect incompatible package versions or duplicate core runtimes; distinguish separate JavaScript realms and their independent schedulers.",
         "reviewedAt": "2026-10-02",
-        "review": "Reviewed every clause of ENV-03 against explicit live binding comparison, checked targeting workflow, repository declarations and actual resolved consumer peer audit. Tests evaluate separately bundled real CRC graphs in one realm and different realms; browser tests use an actual iframe and public Canvas mount. Duplicate same-realm runtimes are refused, separate realms are identified as independent schedulers, and mismatched/unknown bindings never become empty-scene success. Standard semver checks diagnose installed incompatible peers, missing required peers and broken optional peers without executing packages. Physical duplicate installs are reported separately from live runtime duplication. The shared native lab retains a matching application/inspector handshake before actions. Installed resolution is explicitly Node require/default; live runtime evidence covers cooperating source browser participants. No global discovery, arbitrary-object attestation, or inference about unobserved custom-loader/worker graphs is claimed. A stale port-5196 fingerprint was correctly blocked, retained separately, and replaced by a passing run on a fresh verified port-5199 server. Package consolidation review (2026-10-02): moved feature paths and core/Three peer topology were revalidated with the current source browser checks, Node verification tests where applicable, and native scenario replay. Prior artifacts retain their original dated scope. Existing stale layout-test and signal-graph fingerprints were also revalidated against their relevant current behavior suites; no runtime semantics were changed to reconcile these records.",
+        "review": "Reviewed every clause of ENV-03 against explicit live binding comparison, checked targeting workflow, repository declarations and actual resolved consumer peer audit. Tests evaluate separately bundled real Pibbl graphs in one realm and different realms; browser tests use an actual iframe and public Canvas mount. Duplicate same-realm runtimes are refused, separate realms are identified as independent schedulers, and mismatched/unknown bindings never become empty-scene success. Standard semver checks diagnose installed incompatible peers, missing required peers and broken optional peers without executing packages. Physical duplicate installs are reported separately from live runtime duplication. The shared native lab retains a matching application/inspector handshake before actions. Installed resolution is explicitly Node require/default; live runtime evidence covers cooperating source browser participants. No global discovery, arbitrary-object attestation, or inference about unobserved custom-loader/worker graphs is claimed. A stale port-5196 fingerprint was correctly blocked, retained separately, and replaced by a passing run on a fresh verified port-5199 server. Package consolidation review (2026-10-02): moved feature paths and core/Three peer topology were revalidated with the current source browser checks, Node verification tests where applicable, and native scenario replay. Prior artifacts retain their original dated scope. Existing stale layout-test and signal-graph fingerprints were also revalidated against their relevant current behavior suites; no runtime semantics were changed to reconcile these records.",
         "acceptance": [
           {
             "criterion": "Detect incompatible package versions using actual declared requirements and consumer resolution; unavailable evidence must not become compatible.",
@@ -415,7 +415,7 @@
           },
           {
             "id": "consolidation-targeting",
-            "command": "node tooling/agent-verification/watchdog.mjs targeting http://127.0.0.1:5182/#/testing/agent-targeting-verification /tmp/crc-migration-targeting 60000",
+            "command": "node tooling/agent-verification/watchdog.mjs targeting http://127.0.0.1:5182/#/testing/agent-targeting-verification /tmp/pibbl-migration-targeting 60000",
             "environment": "Node 24.15.0 / pnpm 11.21.0 / Playwright Chromium; source Studio port 5182; package consolidation verification 2026-10-02",
             "result": "pass",
             "artifact": "docs/testing/package-consolidation-evidence/targeting.json"
@@ -742,7 +742,7 @@
           "supports": "Scenario exercises defined missing/gap/error and repaired data behavior rather than inventing one universal status model."
         }
       ],
-      "remaining": "Audit supported empty/loading/stale/disabled distinctions per application; document absent states as conditional, not mandatory CRC features."
+      "remaining": "Audit supported empty/loading/stale/disabled distinctions per application; document absent states as conditional, not mandatory Pibbl features."
     },
     {
       "id": "INT-07",
@@ -938,7 +938,7 @@
       "remaining": "",
       "verificationRun": "runtime-handshake-lab-2026-10-01",
       "closure": {
-        "schema": "crc-requirement-closure/1",
+        "schema": "pibbl-requirement-closure/1",
         "inventorySha256": "d81589bd06da940fa68c83621f3f2d4645a4ff0bc6c6f9b8797df69e903ad878",
         "requirementText": "- **QRY-04:** Make pagination snapshot-consistent; cursors must not silently mix changing scene generations. Report cursor expiration and incomplete history.",
         "reviewedAt": "2026-10-02",
@@ -1059,7 +1059,7 @@
           },
           {
             "id": "consolidation-targeting",
-            "command": "node tooling/agent-verification/watchdog.mjs targeting http://127.0.0.1:5182/#/testing/agent-targeting-verification /tmp/crc-migration-targeting 60000",
+            "command": "node tooling/agent-verification/watchdog.mjs targeting http://127.0.0.1:5182/#/testing/agent-targeting-verification /tmp/pibbl-migration-targeting 60000",
             "environment": "Node 24.15.0 / pnpm 11.21.0 / Playwright Chromium; source Studio port 5182; package consolidation verification 2026-10-02",
             "result": "pass",
             "artifact": "docs/testing/package-consolidation-evidence/targeting.json"
@@ -1691,7 +1691,7 @@
       "remaining": "",
       "verificationRun": "lay-02-reviewed-2026-10-01",
       "closure": {
-        "schema": "crc-requirement-closure/1",
+        "schema": "pibbl-requirement-closure/1",
         "inventorySha256": "d81589bd06da940fa68c83621f3f2d4645a4ff0bc6c6f9b8797df69e903ad878",
         "requirementText": "- **LAY-02:** Explain parent placement versus primitive-local drawing coordinates, including the difference between layout `left`/`top` and shape `x`/`y`.",
         "reviewedAt": "2026-10-02",
@@ -1777,7 +1777,7 @@
           },
           {
             "id": "consolidation-layout",
-            "command": "node tooling/agent-verification/layout-smoke.mjs http://127.0.0.1:5182/#/testing/agent-layout-placement /tmp/crc-migration-layout.json",
+            "command": "node tooling/agent-verification/layout-smoke.mjs http://127.0.0.1:5182/#/testing/agent-layout-placement /tmp/pibbl-migration-layout.json",
             "environment": "Node 24.15.0 / pnpm 11.21.0 / Playwright Chromium; source Studio port 5182; package consolidation verification 2026-10-02",
             "result": "pass",
             "artifact": "docs/testing/package-consolidation-evidence/layout.json"
@@ -2019,7 +2019,7 @@
       "remaining": "",
       "verificationRun": "lay-06-reviewed-2026-10-01",
       "closure": {
-        "schema": "crc-requirement-closure/1",
+        "schema": "pibbl-requirement-closure/1",
         "inventorySha256": "d81589bd06da940fa68c83621f3f2d4645a4ff0bc6c6f9b8797df69e903ad878",
         "requirementText": "- **LAY-06:** Identify overflow, overlap and out-of-allocation drawing as facts; diagnose them as errors only when an application expectation makes them errors.",
         "reviewedAt": "2026-10-01",
@@ -2460,7 +2460,7 @@
         },
         {
           "path": "packages/core/test/agent-signal-observation.test.tsx",
-          "supports": "Public CRC scene paints blue, then red prefix before a later component throws. Independent pixels prove red/transparent partial output, pending/unavailable inspection and Render error history; explicit rerender restores blue."
+          "supports": "Public Pibbl scene paints blue, then red prefix before a later component throws. Independent pixels prove red/transparent partial output, pending/unavailable inspection and Render error history; explicit rerender restores blue."
         }
       ],
       "remaining": "Expose per-root failed-attempt identity and its relation to last-successful snapshots; general partial-paint causal evidence remains absent. Pending status alone does not distinguish failure from queued work, and realm error counts do not locate a root.",
@@ -2645,7 +2645,7 @@
         },
         {
           "path": "packages/scenarios/src/agent-text-verification.example.tsx",
-          "supports": "Public CRC Text application paints distinct fixture and private strings; seeded wrong label and repair share one application."
+          "supports": "Public Pibbl Text application paints distinct fixture and private strings; seeded wrong label and repair share one application."
         },
         {
           "path": "packages/scenarios/src/agent-text-verification.ts",
@@ -2735,7 +2735,7 @@
       "remaining": "",
       "verificationRun": "redacted-text-closure-2026-10-01",
       "closure": {
-        "schema": "crc-requirement-closure/1",
+        "schema": "pibbl-requirement-closure/1",
         "inventorySha256": "d81589bd06da940fa68c83621f3f2d4645a4ff0bc6c6f9b8797df69e903ad878",
         "requirementText": "- **TXT-08:** Preserve text redaction and payload limits while allowing explicit fixture text to serve as an assertion or locator.",
         "reviewedAt": "2026-10-02",
@@ -2841,7 +2841,7 @@
           },
           {
             "id": "consolidation-text",
-            "command": "node tooling/agent-verification/text-replay.mjs http://127.0.0.1:5182/#/testing/agent-text-verification /tmp/crc-migration-text",
+            "command": "node tooling/agent-verification/text-replay.mjs http://127.0.0.1:5182/#/testing/agent-text-verification /tmp/pibbl-migration-text",
             "environment": "Node 24.15.0 / pnpm 11.21.0 / Playwright Chromium; source Studio port 5182; package consolidation verification 2026-10-02",
             "result": "pass",
             "artifact": "docs/testing/package-consolidation-evidence/text.json"
@@ -3103,7 +3103,7 @@
     },
     {
       "id": "AST-03",
-      "requirement": "- AST-03: Control successful, delayed, failed and out-of-order asset completion using harness fixtures, without adding a production network scheduler to CRC.",
+      "requirement": "- AST-03: Control successful, delayed, failed and out-of-order asset completion using harness fixtures, without adding a production network scheduler to Pibbl.",
       "status": "partial",
       "evidence": [
         {
@@ -3180,7 +3180,7 @@
     },
     {
       "id": "AST-08",
-      "requirement": "- AST-08: Separate application loading policy from CRC readiness; distinguish an intentionally displayed placeholder from a failed asset gate.",
+      "requirement": "- AST-08: Separate application loading policy from Pibbl readiness; distinguish an intentionally displayed placeholder from a failed asset gate.",
       "status": "partial",
       "evidence": [
         {
@@ -3264,7 +3264,7 @@
         },
         {
           "path": "packages/core/test/agent-interaction-point.test.tsx",
-          "supports": "Public CRC scene verifies off-center native click delivery through transformed clipped/covered geometry, bounded inconclusive sampling of a tiny target, full occlusion, stale generations, invalid/overflow bounds, unknown handles, disposal and Canvas-state restoration."
+          "supports": "Public Pibbl scene verifies off-center native click delivery through transformed clipped/covered geometry, bounded inconclusive sampling of a tiny target, full occlusion, stale generations, invalid/overflow bounds, unknown handles, disposal and Canvas-state restoration."
         },
         {
           "path": "packages/scenarios/src/agent-targeting-verification.ts",
@@ -3689,7 +3689,7 @@
       "evidence": [
         {
           "path": "docs/design/canvas-accessibility-guidance.md",
-          "supports": "Explicitly separates CRC logical focus from application-owned roles, names, states, relationships and equivalent operations."
+          "supports": "Explicitly separates Pibbl logical focus from application-owned roles, names, states, relationships and equivalent operations."
         },
         {
           "path": "packages/core/src/lib/focus/focus-manager.test.ts",
@@ -3993,7 +3993,7 @@
       "remaining": "",
       "verificationRun": "signal-mutation-closure-2026-10-01",
       "closure": {
-        "schema": "crc-requirement-closure/1",
+        "schema": "pibbl-requirement-closure/1",
         "inventorySha256": "d81589bd06da940fa68c83621f3f2d4645a4ff0bc6c6f9b8797df69e903ad878",
         "requirementText": "- **SIG-14:** Diagnose likely in-place-mutation mistakes through documented equality semantics and explicit app assertions; no universal deep mutation detector is assumed.",
         "reviewedAt": "2026-10-02",
@@ -4064,7 +4064,7 @@
           },
           {
             "id": "consolidation-signals",
-            "command": "node tooling/agent-verification/signal-mutation-replay.mjs http://127.0.0.1:5182/#/testing/agent-signal-mutation /tmp/crc-migration-signals",
+            "command": "node tooling/agent-verification/signal-mutation-replay.mjs http://127.0.0.1:5182/#/testing/agent-signal-mutation /tmp/pibbl-migration-signals",
             "environment": "Node 24.15.0 / pnpm 11.21.0 / Playwright Chromium; source Studio port 5182; package consolidation verification 2026-10-02",
             "result": "pass",
             "artifact": "docs/testing/package-consolidation-evidence/signals.json"
@@ -4460,7 +4460,7 @@
       "evidence": [
         {
           "path": "packages/core/src/lib/animation/types.ts",
-          "supports": "CRCPlayback exposes published status/currentTime and controls; no general playback identity/program/direction inspection record."
+          "supports": "PibblPlayback exposes published status/currentTime and controls; no general playback identity/program/direction inspection record."
         },
         {
           "path": "packages/core/src/lib/animation/playback.test.ts",
@@ -4501,7 +4501,7 @@
           "supports": "Finite completion and unsupported infinite/stateful reverse/finish behavior have explicit assertions."
         }
       ],
-      "remaining": "Connect definition-specific controls and rejection reasons to reusable agent evidence; retain CRC cancel semantics rather than inventing a universal stop operation.",
+      "remaining": "Connect definition-specific controls and rejection reasons to reusable agent evidence; retain Pibbl cancel semantics rather than inventing a universal stop operation.",
       "verificationRun": "animation-audit-2026-09-30"
     },
     {
@@ -4612,7 +4612,7 @@
     },
     {
       "id": "ANI-10",
-      "requirement": "- ANI-10: Test application reduced-motion behavior, hidden-page/resume behavior and frame gaps only against an explicit policy; CRC cannot infer product intent.",
+      "requirement": "- ANI-10: Test application reduced-motion behavior, hidden-page/resume behavior and frame gaps only against an explicit policy; Pibbl cannot infer product intent.",
       "status": "gap",
       "evidence": [
         {
@@ -4624,7 +4624,7 @@
           "supports": "Audited lab uses manual scheduling and has no explicit reduced-motion or hidden-page/resume policy scenario."
         }
       ],
-      "remaining": "Define a reference application policy for reduced motion and visibility/resume, then test that policy including frame gaps. Do not add an inferred global CRC policy. Gap is scoped to the audited animation lab, not a claim about all applications.",
+      "remaining": "Define a reference application policy for reduced motion and visibility/resume, then test that policy including frame gaps. Do not add an inferred global Pibbl policy. Gap is scoped to the audited animation lab, not a claim about all applications.",
       "verificationRun": "animation-audit-2026-09-30"
     },
     {
@@ -4984,7 +4984,7 @@
       "remaining": "",
       "verificationRun": "dat-07-native-review-2026-10-01",
       "closure": {
-        "schema": "crc-requirement-closure/1",
+        "schema": "pibbl-requirement-closure/1",
         "inventorySha256": "d81589bd06da940fa68c83621f3f2d4645a4ff0bc6c6f9b8797df69e903ad878",
         "requirementText": "- **DAT-07:** Verify missing, zero and invalid values retain distinct semantics; do not treat missing data as zero unless the application explicitly requires it.",
         "reviewedAt": "2026-10-02",
@@ -5084,7 +5084,7 @@
           },
           {
             "id": "consolidation-viz",
-            "command": "node tooling/agent-verification/viz-replay.mjs http://127.0.0.1:5182/#/testing/viz-hover-lab /tmp/crc-migration-viz",
+            "command": "node tooling/agent-verification/viz-replay.mjs http://127.0.0.1:5182/#/testing/viz-hover-lab /tmp/pibbl-migration-viz",
             "environment": "Node 24.15.0 / pnpm 11.21.0 / Playwright Chromium; source Studio port 5182; package consolidation verification 2026-10-02",
             "result": "pass",
             "artifact": "docs/testing/package-consolidation-evidence/viz.json"
@@ -5444,7 +5444,7 @@
     },
     {
       "id": "VIZ-11",
-      "requirement": "- VIZ-11: Compare custom annotations and ordinary CRC primitives with series mappings so all geometry uses the same local frame and scale generation.",
+      "requirement": "- VIZ-11: Compare custom annotations and ordinary Pibbl primitives with series mappings so all geometry uses the same local frame and scale generation.",
       "status": "partial",
       "evidence": [
         {
@@ -5797,7 +5797,7 @@
     },
     {
       "id": "REN-05",
-      "requirement": "- REN-05: For external renderers, correlate the committed layer generation with renderer-supplied camera/projection, transforms and bounds where available. Three owns its scene and render queues; CRC does not reconstruct the removed custom WebGL settled-scene model or promise private queue inspection.",
+      "requirement": "- REN-05: For external renderers, correlate the committed layer generation with renderer-supplied camera/projection, transforms and bounds where available. Three owns its scene and render queues; Pibbl does not reconstruct the removed custom WebGL settled-scene model or promise private queue inspection.",
       "status": "partial",
       "evidence": [
         {
@@ -5819,11 +5819,11 @@
       "evidence": [
         {
           "path": "packages/three/src/lib/define-three-layer.test.tsx",
-          "supports": "Nearest unregistered geometry blocks lower CRC paint; active camera layers, disabled subtrees and invisible material groups affect picks."
+          "supports": "Nearest unregistered geometry blocks lower Pibbl paint; active camera layers, disabled subtrees and invisible material groups affect picks."
         },
         {
           "path": "packages/core/src/lib/render-layer/define-render-layer.test.tsx",
-          "supports": "Later CRC paint wins and prevents delivery to the lower external layer."
+          "supports": "Later Pibbl paint wins and prevents delivery to the lower external layer."
         }
       ],
       "remaining": "Expose distinct source/raster/pick/focus order facts and test transparent/depth cases explicitly. Raycast order is not necessarily raster transparency order.",
@@ -5892,7 +5892,7 @@
     },
     {
       "id": "REN-08",
-      "requirement": "- REN-08: Inspect renderer-supplied material, lighting and background evidence where supported; distinguish missing geometry from an appearance explained by those inputs. Shadow-cache explanations require explicit renderer evidence, not assumptions inherited from CRC's removed custom renderer.",
+      "requirement": "- REN-08: Inspect renderer-supplied material, lighting and background evidence where supported; distinguish missing geometry from an appearance explained by those inputs. Shadow-cache explanations require explicit renderer evidence, not assumptions inherited from Pibbl's removed custom renderer.",
       "status": "gap",
       "evidence": [
         {
@@ -5900,7 +5900,7 @@
           "supports": "Adapter exposes application Three resources and lifecycle options, without a bounded material/light/background inspection facet."
         }
       ],
-      "remaining": "Add optional renderer-supplied appearance explanations with provenance and budgets. Do not infer material/light/shadow-cache causes from absent pixels or the removed CRC renderer.",
+      "remaining": "Add optional renderer-supplied appearance explanations with provenance and budgets. Do not infer material/light/shadow-cache causes from absent pixels or the removed Pibbl renderer.",
       "verificationRun": "renderer-audit-2026-09-30"
     },
     {
@@ -5944,7 +5944,7 @@
       "evidence": [
         {
           "path": "docs/design/render-layer-and-three-contract.md",
-          "supports": "CRC owns scheduler/composition/event boundary; application owns Three scene resources and disposal; renderer stays ordinary Three."
+          "supports": "Pibbl owns scheduler/composition/event boundary; application owns Three scene resources and disposal; renderer stays ordinary Three."
         },
         {
           "path": "packages/three/src/lib/define-three-layer.test.tsx",
@@ -6058,7 +6058,7 @@
     },
     {
       "id": "SIM-06",
-      "requirement": "- SIM-06: Verify fixed-step, clamping, repeatability and bounded catch-up under controlled conditions without promising cross-platform bit-identical simulation. The existing `@crc/physics/2d/testing` harness advances requested host frames; one host frame must not be reported as one guaranteed physics tick.",
+      "requirement": "- SIM-06: Verify fixed-step, clamping, repeatability and bounded catch-up under controlled conditions without promising cross-platform bit-identical simulation. The existing `@pibbl/physics/2d/testing` harness advances requested host frames; one host frame must not be reported as one guaranteed physics tick.",
       "status": "partial",
       "evidence": [
         {
@@ -6198,7 +6198,7 @@
     },
     {
       "id": "APP-05",
-      "requirement": "- APP-05: Verify text entry, IME, selection and clipboard through actual editable DOM adapters when present; CRC event facades alone do not establish editing support.",
+      "requirement": "- APP-05: Verify text entry, IME, selection and clipboard through actual editable DOM adapters when present; Pibbl event facades alone do not establish editing support.",
       "status": "gap",
       "evidence": [
         {
@@ -6343,7 +6343,7 @@
       "remaining": "",
       "verificationRun": "async-data-closure-2026-10-01",
       "closure": {
-        "schema": "crc-requirement-closure/1",
+        "schema": "pibbl-requirement-closure/1",
         "inventorySha256": "d81589bd06da940fa68c83621f3f2d4645a4ff0bc6c6f9b8797df69e903ad878",
         "requirementText": "- **APP-11:** Record loading/error/retry and asynchronous response ordering for application data; stale responses must follow the application's declared policy.",
         "reviewedAt": "2026-10-01",
@@ -7051,7 +7051,7 @@
       "evidence": [
         {
           "path": "packages/core/test/event-performance.test.ts",
-          "supports": "Routine structural assertions are separate from opt-in VITE_CRC_PERF_GUARD timing thresholds."
+          "supports": "Routine structural assertions are separate from opt-in VITE_PIBBL_PERF_GUARD timing thresholds."
         },
         {
           "path": "packages/core/test/animation-performance.test.ts",
@@ -7085,10 +7085,10 @@
       "evidence": [
         {
           "path": "packages/core/test/event-performance.test.ts",
-          "supports": "Current workloads measure CRC behavior, not a feature-matched comparison with other Canvas/DOM implementations."
+          "supports": "Current workloads measure Pibbl behavior, not a feature-matched comparison with other Canvas/DOM implementations."
         }
       ],
-      "remaining": "Build matched application benchmarks before claiming CRC is better for agents than raw Canvas/DOM or another library; record feature/quality/hardware differences and correctness, not only speed.",
+      "remaining": "Build matched application benchmarks before claiming Pibbl is better for agents than raw Canvas/DOM or another library; record feature/quality/hardware differences and correctness, not only speed.",
       "verificationRun": "performance-audit-2026-09-30"
     },
     {
@@ -7186,7 +7186,7 @@
           "supports": "Editor declaration library tests distinguish core versus lazy Three declarations."
         },
         {
-          "path": "playground/src/crc-editor-types.txt",
+          "path": "playground/src/pibbl-editor-types.txt",
           "supports": "Generated Studio declarations provide the editor surface."
         }
       ],
@@ -7467,7 +7467,7 @@
     },
     {
       "id": "HAR-13",
-      "requirement": "- HAR-13: Serialize or explicitly coordinate competing test actors. Record manual intervention, concurrent agent input and external changes that invalidate a reproduction instead of attributing them to CRC nondeterminism.",
+      "requirement": "- HAR-13: Serialize or explicitly coordinate competing test actors. Record manual intervention, concurrent agent input and external changes that invalidate a reproduction instead of attributing them to Pibbl nondeterminism.",
       "status": "gap",
       "evidence": [
         {
@@ -7752,7 +7752,7 @@
           "supports": "Two native screenshot fixtures compare raw red Canvas readback against sibling blue DOM overlay composition. Plain overlay yields exactly 100 changed pixels; 2× CSS scaling plus ancestor overflow clipping yields exactly 200 at bounds (70,20,10,20). Overlay removal restores a match while backing pixels stay unchanged."
         }
       ],
-      "remaining": "Extend surface-specific evidence to representative CRC overlays, other browser/backend capabilities and capture paths outside this helper. These fixtures prove rectangular sibling overlay composition and integer CSS scaling/clipping, not arbitrary transforms, browser UI or cross-origin frames.",
+      "remaining": "Extend surface-specific evidence to representative Pibbl overlays, other browser/backend capabilities and capture paths outside this helper. These fixtures prove rectangular sibling overlay composition and integer CSS scaling/clipping, not arbitrary transforms, browser UI or cross-origin frames.",
       "verificationRun": "visual-composition-2026-09-30"
     },
     {
@@ -8846,7 +8846,7 @@
     "gallery-mask-narrowing-2026-09-30": {
       "date": "2026-09-30",
       "environment": "Node 24.15.0; pnpm 11.21.0; Playwright Chromium",
-      "command": "fnm exec --using=24.15.0 node tooling/verify-visual-safeguard.mjs; VITE_CRC_DRAWING_VISUAL_DRILL=image-mask-background fnm exec --using=24.15.0 corepack pnpm@11.21.0 exec vitest run packages/core/test/drawing-gallery.test.ts --browser.headless --browser.ui=false (pre-fix reproduction); tsc --noEmit; focused ESLint",
+      "command": "fnm exec --using=24.15.0 node tooling/verify-visual-safeguard.mjs; VITE_PIBBL_DRAWING_VISUAL_DRILL=image-mask-background fnm exec --using=24.15.0 corepack pnpm@11.21.0 exec vitest run packages/core/test/drawing-gallery.test.ts --browser.headless --browser.ui=false (pre-fix reproduction); tsc --noEmit; focused ESLint",
       "result": "Both old gallery masks hid their injected 72-pixel defect. Extended safeguard now passes clean smoke/gallery, rejects original smoke mutation and all three mask defects with exact expected bounds, recovers cleanly and preserves baseline hashes. Typecheck/lint passed. New translucent center oracle uses independently calculated source-over RGB with one-unit quantization allowance after exact rounded expectation failed.",
       "scope": "Gallery mask narrowing and two additional independent interior pixel assertions; does not prove all masked text content or curve boundary geometry."
     },
@@ -8895,7 +8895,7 @@
     "numeric-assertion-evidence-2026-09-30": {
       "date": "2026-09-30",
       "environment": "Node 24.15.0; pnpm 11.21.0; Playwright Chromium; densities 1 and 2",
-      "command": "fnm exec --using=24.15.0 node --test tooling/agent-verification/numeric-assertion.test.mjs tooling/agent-verification/failure-evidence.test.mjs; focused ESLint; watchdog.mjs viz source Studio port 5195 with default density and CRC_VERIFY_DENSITY=2",
+      "command": "fnm exec --using=24.15.0 node --test tooling/agent-verification/numeric-assertion.test.mjs tooling/agent-verification/failure-evidence.test.mjs; focused ESLint; watchdog.mjs viz source Studio port 5195 with default density and PIBBL_VERIFY_DENSITY=2",
       "result": "New numeric tests initially failed on absent module. Seven numeric/serializer tests and lint passed after implementation. Native visualization replay passed all nine actions at both densities, zero recorded/dropped errors and watchdog exit 0. Reports retained in viz-numeric-evidence-1-2026-09-30 and viz-numeric-evidence-2-2026-09-30 under agent-watchdog output.",
       "scope": "Explicit failure diagnostics for the twelve final approximate numeric checks; original exclusive absolute tolerances preserved. Browser polling predicates and unrelated test assertions are outside this conversion."
     },
@@ -8946,7 +8946,7 @@
       "environment": "Node 24.15.0; pnpm 11.21.0; Playwright Chromium",
       "command": "vitest run packages/core/test/agent-viz-verification.test.ts --browser.headless --browser.ui=false; focused ESLint; pnpm typecheck; pnpm scenarios:write-index",
       "result": "New test initially failed on missing weighted-data action. All six browser tests passed after implementation and catalog ordering correction. Lint and typecheck passed; scenario index regenerated.",
-      "scope": "Runnable weighted aggregation evidence slice through public CRC/viz APIs; not complete data verification or native replay coverage."
+      "scope": "Runnable weighted aggregation evidence slice through public Pibbl/viz APIs; not complete data verification or native replay coverage."
     },
     "weighted-repair-2026-09-30": {
       "date": "2026-09-30",
@@ -9021,14 +9021,14 @@
     "three-picking-studio-lab-2026-09-30": {
       "date": "2026-09-30",
       "environment": "Node 24.15.0; pnpm 11.21.0; Playwright Chromium plus Codex in-app browser",
-      "command": "vitest run --config /tmp/crc-three-lab-vitest.config.ts packages/core/test/three-picking-verification.test.ts --browser.headless --browser.ui=false; focused ESLint; scenarios:write-index; manual Studio interaction through browser tools",
+      "command": "vitest run --config /tmp/pibbl-three-lab-vitest.config.ts packages/core/test/three-picking-verification.test.ts --browser.headless --browser.ui=false; focused ESLint; scenarios:write-index; manual Studio interaction through browser tools",
       "result": "Isolated browser test failed on missing catalog entry before implementation and passed after. Manual Studio run confirmed frame 1/Three click with liveVisible=false and displayedVisible=true, then frame 2/Canvas click after commit. Lint passed and catalog regenerated. Normal test startup encountered concurrent docs/dependency-scan failures; workspace typecheck reports unrelated in-progress path-bending and texture-package errors.",
       "scope": "Runnable single visibility-transition lab. Temporary test config omits only unrelated docs build and is not a replacement trust gate. Full Studio UI was verified separately after its server restart."
     },
     "three-lab-wait-ownership-2026-09-30": {
       "date": "2026-09-30",
       "environment": "Node 24.15.0; pnpm 11.21.0; Playwright Chromium",
-      "command": "vitest run --config /tmp/crc-three-lab-vitest.config.ts packages/core/test/three-picking-verification.test.ts --browser.headless --browser.ui=false; pnpm typecheck; focused ESLint",
+      "command": "vitest run --config /tmp/pibbl-three-lab-vitest.config.ts packages/core/test/three-picking-verification.test.ts --browser.headless --browser.ui=false; pnpm typecheck; focused ESLint",
       "result": "Disposal test failed with both waits unresolved before repair. All three isolated lab browser tests passed after cancellation and deadline handling. Final workspace typecheck and focused lint passed. Normal browser invocation still failed during fsevents dependency scanning before tests ran.",
       "scope": "Three lab wait ownership and stale evidence prevention; isolated configuration omits docs plugin and is not the aggregate gate."
     },
@@ -9308,8 +9308,8 @@
     "async-data-ordering-2026-10-01": {
       "date": "2026-10-01",
       "environment": "Node 24.15.0 / pnpm 11.21.0 / Playwright Chromium",
-      "command": "vitest run --config /tmp/crc-async-vitest.config.ts packages/core/test/agent-viz-verification.test.ts --browser.headless --browser.ui=false; focused eslint; pnpm typecheck",
-      "result": "Regression failed for absent async action, then eight browser tests and focused lint passed. Normal browser config initially blocked by unrelated texture compiler errors; temporary config imports original and removes only crc-studio-docs plugin. Workspace typecheck blocked by missing tooling/texture-wasm-spike/runtime.mjs.",
+      "command": "vitest run --config /tmp/pibbl-async-vitest.config.ts packages/core/test/agent-viz-verification.test.ts --browser.headless --browser.ui=false; focused eslint; pnpm typecheck",
+      "result": "Regression failed for absent async action, then eight browser tests and focused lint passed. Normal browser config initially blocked by unrelated texture compiler errors; temporary config imports original and removes only pibbl-studio-docs plugin. Workspace typecheck blocked by missing tooling/texture-wasm-spike/runtime.mjs.",
       "scope": "Application-owned controlled transport and public chart behavior; no aggregate gate, real network or retained replay claim."
     },
     "async-data-closure-2026-10-01": {
@@ -9351,7 +9351,7 @@
       "date": "2026-10-01",
       "environment": "Node 24.15.0 / pnpm 11.21.0 / esbuild / Node VM / Playwright Chromium",
       "command": "node --test tooling/agent-verification/runtime-identity.test.mjs; vitest run packages/core/test/agent-runtime-identity.test.ts --browser.headless --browser.ui=false; pnpm typecheck; focused eslint",
-      "result": "Two Node tests failed before implementation, then passed using actual separately bundled CRC dependency graphs. One browser iframe test passed; initial helper typecheck/lint passed. Final workspace typecheck was blocked by concurrent electric-paint tests using unknown termination/crackle configuration keys; focused lint passed.",
+      "result": "Two Node tests failed before implementation, then passed using actual separately bundled Pibbl dependency graphs. One browser iframe test passed; initial helper typecheck/lint passed. Final workspace typecheck was blocked by concurrent electric-paint tests using unknown termination/crackle configuration keys; focused lint passed.",
       "scope": "Source-development explicit identity comparison only; version equality is not API compatibility evidence, and no integration/global-discovery/aggregate gate claim."
     },
     "runtime-inspection-handshake-2026-10-01": {
@@ -9373,7 +9373,7 @@
       "environment": "Node 24.15.0 / pnpm 11.21.0 / Playwright Chromium",
       "command": "vitest runtime identity, targeting shared lab, pagination and observation suites with JSON reporter; native targeting watchdog runtime-handshake-2026-10-01-1; pnpm typecheck; focused eslint",
       "result": "New shared-lab handshake assertion failed before implementation. All 36 browser tests, typecheck and lint passed. Native replay passed eight actions with accepted same-runtime/matching-version evidence and unchanged pagination contract.",
-      "scope": "Existing source lab migration with actual application crc identity; QRY-04 closure re-reviewed and rebound to fresh artifacts. ENV-03 remains partial for consumer installations and other peers. No aggregate trust claim."
+      "scope": "Existing source lab migration with actual application pibbl identity; QRY-04 closure re-reviewed and rebound to fresh artifacts. ENV-03 remains partial for consumer installations and other peers. No aggregate trust claim."
     },
     "installed-peer-resolution-2026-10-01": {
       "date": "2026-10-01",

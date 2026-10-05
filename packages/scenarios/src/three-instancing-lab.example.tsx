@@ -1,7 +1,7 @@
 import type { threeInstancingLabScenarioEntry } from './catalog.js';
 import type { ThreeInstancingLabAction } from './three-instancing-lab.js';
-import { dropShadow } from '@crc/core/filters';
-/** @jsxImportSource @crc/core */
+import { dropShadow } from '@pibbl/core/filters';
+/** @jsxImportSource @pibbl/core */
 // Adapted from Three.js "webgl_instancing_raycast":
 // https://github.com/mrdoob/three.js/blob/dev/examples/webgl_instancing_raycast.html
 // Three.js is MIT licensed: https://github.com/mrdoob/three.js/blob/dev/LICENSE
@@ -11,9 +11,9 @@ import {
   Group,
   Rectangle,
   Text,
-  type CRCNode,
-} from '@crc/core';
-import { defineThreeLayer } from '@crc/three';
+  type PibblNode,
+} from '@pibbl/core';
+import { defineThreeLayer } from '@pibbl/three';
 import {
   Color,
   HemisphereLight,
@@ -42,14 +42,14 @@ export type ThreeInstancingMissBehavior =
   | 'target-layer';
 
 /**
- * Supported three instancing resolution values: `"none"`, `"CRC tile"`, `"Three blocked"`, `"Three
+ * Supported three instancing resolution values: `"none"`, `"Pibbl tile"`, `"Three blocked"`, `"Three
  * target"`, `"Toolbar"`.
  *
  * @see {@link ThreeInstancingLabState}
  */
 export type ThreeInstancingResolution =
   | 'none'
-  | 'CRC tile'
+  | 'Pibbl tile'
   | 'Three blocked'
   | 'Three target'
   | 'Toolbar';
@@ -405,7 +405,7 @@ export interface ThreeInstancingLabSceneProps {
   readonly onToolbar: () => void;
 }
 
-function tileField(onTile: () => void): CRCNode {
+function tileField(onTile: () => void): PibblNode {
   return Array.from({ length: 40 }, (_, index) => {
     const column = index % 8;
     const row = Math.floor(index / 8);
@@ -438,7 +438,7 @@ function layerClip(width: number, height: number): Path2D {
 
 export function createThreeInstancingLabScene(
   props: ThreeInstancingLabSceneProps,
-): CRCNode {
+): PibblNode {
   const width = props.compact ? SMALL_LAYER_WIDTH : LARGE_LAYER_WIDTH;
   const height = props.compact ? SMALL_LAYER_HEIGHT : LARGE_LAYER_HEIGHT;
   const clip = layerClip(width, height);
@@ -519,7 +519,7 @@ export function createThreeInstancingLabScene(
             font: '700 11px monospace',
           }}
         >
-          {`CRC ${props.state.tileClicks} · THREE ${props.state.threeTargetClicks} · BLOCK ${props.state.blockedThreeInputs} · CAMERA ${props.state.cameraChanges}`}
+          {`Pibbl ${props.state.tileClicks} · THREE ${props.state.threeTargetClicks} · BLOCK ${props.state.blockedThreeInputs} · CAMERA ${props.state.cameraChanges}`}
         </Text>
       </Group>
     </FocusManagement>

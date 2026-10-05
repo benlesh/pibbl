@@ -40,17 +40,17 @@ These candidates have not been visually ranked. A later audit should run them be
 
 ### Core and imports
 
-The current [core manifest](../../packages/core/package.json) exposes particles, textures, visualization, and physics feature subpaths. Use actual public entries in rewritten examples. `@crc/core/internal` is not an application API. Current [runtime exports](../../packages/core/src/index.ts) and tests outrank historical plans.
+The current [core manifest](../../packages/core/package.json) exposes particles, textures, visualization, and physics feature subpaths. Use actual public entries in rewritten examples. `@pibbl/core/internal` is not an application API. Current [runtime exports](../../packages/core/src/index.ts) and tests outrank historical plans.
 
 ### HTML
 
-The [HtmlBox contract](../design/html-box-contract.md) describes a native HTML boundary in a CRC allocation. Hosts sit above Canvas, retain native behavior, and require explicit overlay setup. DOM content does not feed intrinsic sizing back into CRC. Canvas filters and non-default composition around HTML are rejected. A Canvas screenshot omits HTML; gallery captures must include the browser composition.
+The [HtmlBox contract](../design/html-box-contract.md) describes a native HTML boundary in a Pibbl allocation. Hosts sit above Canvas, retain native behavior, and require explicit overlay setup. DOM content does not feed intrinsic sizing back into Pibbl. Canvas filters and non-default composition around HTML are rejected. A Canvas screenshot omits HTML; gallery captures must include the browser composition.
 
 This newly implemented boundary is important design input and is present in the inspected working tree. The pack does not claim fresh verification of its implementation or a published release. Avoid applying the older broad “no HTML” assumption to the new site, while preserving the narrower limit that arbitrary Canvas content does not gain automatic semantic DOM.
 
 ### Three and external layers
 
-The [render layer and Three contract](../design/render-layer-and-three-contract.md) defines one external bitmap and interaction boundary with explicit resource ownership. The application uses normal Three resources. It does not gain a CRC Three JSX reconciler, interleaved Canvas/Three subprimitives, a Three physics binding, or WebXR support. Rendering capabilities include OffscreenCanvas and transferToImageBitmap requirements.
+The [render layer and Three contract](../design/render-layer-and-three-contract.md) defines one external bitmap and interaction boundary with explicit resource ownership. The application uses normal Three resources. It does not gain a Pibbl Three JSX reconciler, interleaved Canvas/Three subprimitives, a Three physics binding, or WebXR support. Rendering capabilities include OffscreenCanvas and transferToImageBitmap requirements.
 
 ### Signals and animation
 

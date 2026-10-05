@@ -1,4 +1,4 @@
-import { crc } from "@crc/core";
+import { pibbl } from "@pibbl/core";
 import {
   PieLabel,
   PieLayout,
@@ -15,7 +15,7 @@ import {
   type PieSliceGeometry,
   type PieSliceProps,
   type PieSliceStyle,
-} from "@crc/core/viz";
+} from "@pibbl/core/viz";
 
 type Datum = { name: string; value: number; color: string };
 const data: readonly Datum[] = [
@@ -68,5 +68,5 @@ const canvas = document.createElement("canvas");
 canvas.width = 320;
 canvas.height = 220;
 document.body.append(canvas);
-const app = crc(canvas, <PieLayout {...layout} />);
+const app = pibbl(canvas, <PieLayout {...layout} />);
 window.addEventListener("pagehide", () => app.dispose(), { once: true });

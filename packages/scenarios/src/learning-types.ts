@@ -1,7 +1,7 @@
 import type { getLearningExampleBySlug, getLearningExamplesByBrowseGroup, getLearningExamplesBySection, learningSections } from './learning-catalog.js';
 import type { loadTutorialSnapshot } from './tutorial-catalog.js';
 import type { TutorialSnapshotCatalogEntry, TutorialSnapshotMetadata } from './tutorial-types.js';
-import type { CRCController } from "@crc/core";
+import type { PibblController } from "@pibbl/core";
 
 /**
  * A stable identifier for a public learning-example section.
@@ -153,13 +153,13 @@ export interface LearningExampleMetadata extends WorkbenchSourceMetadata {
  * The mounted learning example's ownership and cleanup interface.
  *
  * @param canvas - Canvas on which to mount the example.
- * @returns A controller whose dispose method releases the example mount. See {@link CRCController}
+ * @returns A controller whose dispose method releases the example mount. See {@link PibblController}
  * .
  *
- * @see {@link CRCController}
+ * @see {@link PibblController}
  * @see {@link LearningExampleModule}
  */
-export type LearningMount = (canvas: HTMLCanvasElement) => CRCController;
+export type LearningMount = (canvas: HTMLCanvasElement) => PibblController;
 
 /**
  * The executable module loaded by a public learning catalog entry.

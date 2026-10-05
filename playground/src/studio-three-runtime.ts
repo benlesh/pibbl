@@ -1,4 +1,4 @@
-import { defineThreeLayer } from "@crc/three";
+import { defineThreeLayer } from "@pibbl/three";
 import {
   Color,
   HemisphereLight,
@@ -14,8 +14,8 @@ import {
 } from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 
-export const crcStudioThreeModules = Object.freeze({
-  "@crc/three": Object.freeze({ defineThreeLayer }),
+export const pibblStudioThreeModules = Object.freeze({
+  "@pibbl/three": Object.freeze({ defineThreeLayer }),
   three: Object.freeze({
     Color,
     HemisphereLight,

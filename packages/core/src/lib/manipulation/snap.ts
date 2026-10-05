@@ -1,9 +1,9 @@
-import type { CRCManipulationModifiers, CRCManipulationWhen } from './types.js';
+import type { PibblManipulationModifiers, PibblManipulationWhen } from './types.js';
 
 export function isSnapActive(
   enabled: boolean | undefined,
-  when: CRCManipulationWhen | undefined,
-  modifiers: CRCManipulationModifiers,
+  when: PibblManipulationWhen | undefined,
+  modifiers: PibblManipulationModifiers,
 ): boolean {
   if (enabled === false) return false;
   switch (when ?? 'always') {

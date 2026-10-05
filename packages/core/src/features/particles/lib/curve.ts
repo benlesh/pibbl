@@ -1,10 +1,10 @@
-import type { CRCEasing } from "@crc/core";
+import type { PibblEasing } from "@pibbl/core";
 import { parseParticleColor } from "./color.js";
 import { getParticleDescriptorRecord } from "./particle.js";
 import type {
-  CRCParticleCurve,
-  CRCParticleCurveValue,
-  CRCParticleGradient,
+  PibblParticleCurve,
+  PibblParticleCurveValue,
+  PibblParticleGradient,
 } from "./types.js";
 
 export const PARTICLE_CURVE_POINT_COUNT = 257;
@@ -26,7 +26,7 @@ function clampProgress(progress: number): number {
   return Math.min(1, Math.max(0, progress));
 }
 
-export function compileEasingTable(easing?: CRCEasing): readonly number[] {
+export function compileEasingTable(easing?: PibblEasing): readonly number[] {
   const samples: number[] = [];
   for (let index = 0; index < PARTICLE_CURVE_POINT_COUNT; index += 1) {
     const progress = index / PARTICLE_CURVE_SEGMENTS;
@@ -74,14 +74,14 @@ function segmentProgress(
 }
 
 function curveComponent(
-  value: CRCParticleCurveValue,
+  value: PibblParticleCurveValue,
   component: number,
 ): number {
   return typeof value === "number" ? value : value[component]!;
 }
 
 export function compileParticleCurve(
-  descriptor: CRCParticleCurve<CRCParticleCurveValue>,
+  descriptor: PibblParticleCurve<PibblParticleCurveValue>,
 ): CompiledParticleCurve {
   const record = getParticleDescriptorRecord(descriptor);
   if (record?.type !== "curve") {
@@ -126,7 +126,7 @@ export function sampleParticleCurve(
 }
 
 export function compileParticleGradient(
-  descriptor: CRCParticleGradient,
+  descriptor: PibblParticleGradient,
 ): CompiledParticleGradient {
   const record = getParticleDescriptorRecord(descriptor);
   if (record?.type !== "gradient") {

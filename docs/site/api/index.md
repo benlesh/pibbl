@@ -1,7 +1,7 @@
 ---
 id: api-overview
 title: API overview
-summary: The supported @crc/core, @crc/three, @crc/core/particles, @crc/core/physics, and @crc/core/viz APIs, arranged by authoring role.
+summary: The supported @pibbl/core, @pibbl/three, @pibbl/core/particles, @pibbl/core/physics, and @pibbl/core/viz APIs, arranged by authoring role.
 kind: api
 slug: overview
 apiCategory: overview
@@ -12,29 +12,29 @@ keywords: [canvas, three.js, JSX, createElement, API]
 # API overview
 
 Import Canvas components, signals, animation, events, layout, focus, and the
-generic render-layer lifecycle from `@crc/core`. Optional official packages add
+generic render-layer lifecycle from `@pibbl/core`. Optional official packages add
 thin Three.js integration, Canvas particle effects, physics, and visualization:
 
 ```ts
-import { Rectangle, Text, crc, defineRenderLayer } from "@crc/core";
-import { defineThreeLayer } from "@crc/three";
-import { Particles2D } from "@crc/core/particles";
-import { PhysicsWorld2D } from "@crc/core/physics/2d";
-import { Axis, LineSeries, Scale } from "@crc/core/viz";
+import { Rectangle, Text, pibbl, defineRenderLayer } from "@pibbl/core";
+import { defineThreeLayer } from "@pibbl/three";
+import { Particles2D } from "@pibbl/core/particles";
+import { PhysicsWorld2D } from "@pibbl/core/physics/2d";
+import { Axis, LineSeries, LinearScale } from "@pibbl/core/viz";
 ```
 
 Package source paths and `lib/*` paths are not supported.
 
 ## Authoring
 
-Use automatic JSX with `@crc/core/jsx-runtime`, or use
+Use automatic JSX with `@pibbl/core/jsx-runtime`, or use
 [`createElement`](#/api/functions/create-element) for the equivalent explicit
 form. `Fragment` is the explicit fragment value; JSX shorthand is usually more
 readable, while `Fragment` is useful when a fragment needs a key.
 
 - [Components](#/api/components/absolute) draw, compose, lay out, and add focus
   policy.
-- [Functions](#/api/functions/crc) mount scenes and define paths, animation,
+- [Functions](#/api/functions/pibbl) mount scenes and define paths, animation,
   measurement, render layers, particles, and geometry.
 - [Hooks](#/api/hooks/use-canvas-context) own component state, lifecycle,
   interaction, paths, layout, playback, particles, and 2D physics handles.
@@ -47,17 +47,17 @@ readable, while `Fragment` is useful when a fragment needs a key.
 composited external-raster component with explicit create, update, resize,
 render, interaction, and dispose callbacks.
 
-`@crc/three` adds only
+`@pibbl/three` adds only
 [`defineThreeLayer`](#/api/functions/define-three-layer) and its
 [Three integration types](#/api/types/three). Applications use ordinary
 `three` and `three/addons/*` APIs for scenes, cameras, geometry, materials,
 lights, loaders, controls, animation mixers, post-processing, and exporters.
-CRC owns the surrounding Canvas composition, scheduler, hit arbitration, focus,
-and teardown; it does not mirror Three as CRC JSX components.
+Pibbl owns the surrounding Canvas composition, scheduler, hit arbitration, focus,
+and teardown; it does not mirror Three as Pibbl JSX components.
 
 ## Particle effects
 
-`@crc/core/particles` adds
+`@pibbl/core/particles` adds
 [`Particles2D`](#/api/components/particles-2d),
 [`useParticleSystem`](#/api/hooks/use-particle-system),
 [`defineParticleEffect2D`](#/api/functions/define-particle-effect-2d), and the
@@ -67,21 +67,21 @@ See the grouped [particle types](#/api/types/particles) and
 
 ## Physics
 
-`@crc/core/physics/2d` provides the CRC-scheduled 2D runtime, components, body
+`@pibbl/core/physics/2d` provides the Pibbl-scheduled 2D runtime, components, body
 handles, commands, events, and queries. Pure geometry is available from
-`@crc/core/physics/2d/geometry`.
+`@pibbl/core/physics/2d/geometry`.
 
-There is no root `@crc/core/physics` barrel and no independent physics clock.
+There is no root `@pibbl/core/physics` barrel and no independent physics clock.
 
 ## Visualization
 
-`@crc/core/viz` provides allocation-relative
-[`Scale`](#/api/components/scale), [`Axis`](#/api/components/axis),
+`@pibbl/core/viz` provides allocation-relative
+[Scale providers](#/api/components/scale), [`Axis`](#/api/components/axis),
 [`LineSeries`](#/api/components/line-series),
 [`PointSeries`](#/api/components/point-series),
 [`PlotSeries`](#/api/components/plot-series),
 [`ScaleAdjust`](#/api/components/scale-adjust), and
-[`useScale`](#/api/hooks/use-scale).
+[`useLinearScale`](#/api/hooks/use-scale).
 
 Compose inspection with [`HoverData`](#/api/components/hover-data),
 [`HoverCard`](#/api/components/hover-card),
@@ -97,21 +97,21 @@ available.
 
 ## Compiler entries
 
-`@crc/core/jsx-runtime` exports `Fragment`, `jsx`, and `jsxs`; its local `JSX`
+`@pibbl/core/jsx-runtime` exports `Fragment`, `jsx`, and `jsxs`; its local `JSX`
 namespace exports `Element`, `ElementType`, `ElementChildrenAttribute`,
 `IntrinsicAttributes`, `IntrinsicElements`, and `LibraryManagedAttributes`.
-`Element` is the branded `CRCElement`; `ElementType` is a synchronous CRC
+`Element` is the branded `PibblElement`; `ElementType` is a synchronous Pibbl
 component; `ElementChildrenAttribute` names `children`; `IntrinsicAttributes`
 admits a string or numeric `key`; `IntrinsicElements` is empty; and
 `LibraryManagedAttributes` maps primitive values to their specified-style input.
 
-`@crc/core/jsx-dev-runtime` exports `Fragment` and `jsxDEV` plus the same local
+`@pibbl/core/jsx-dev-runtime` exports `Fragment` and `jsxDEV` plus the same local
 `JSX` namespace. `jsxDEV` carries development-only filename, line, and column
 metadata for diagnostics. These compiler-facing constructors are not normal
 application APIs: use JSX or `createElement`, never call them directly.
 
-`@crc/core/types` preserves the explicit type-only package entry. Most authors
-can import types from `@crc/core` beside the corresponding runtime values.
+`@pibbl/core/types` preserves the explicit type-only package entry. Most authors
+can import types from `@pibbl/core` beside the corresponding runtime values.
 
 ## A small scene
 
@@ -130,16 +130,23 @@ function Poster() {
           font: "600 28px sans-serif",
         }}
       >
-        Hello, CRC
+        Hello, Pibbl
       </Text>
     </>
   );
 }
 
-crc(document.querySelector("canvas")!, <Poster />);
+pibbl(document.querySelector("canvas")!, <Poster />);
 ```
 
 Start with the [Getting started guide](#/learn/guides/configure-jsx). Add an
-ordinary Three scene with [Use Three.js inside CRC](#/learn/guides/three-js),
+ordinary Three scene with [Use Three.js inside Pibbl](#/learn/guides/three-js),
 then explore the
 [Three.js instancing example](#/examples/three/three-instancing).
+
+## State machines and sprites
+
+- [Machine functions](#/api/functions/machines) and [useMachine](#/api/hooks/use-machine) coordinate general application state and owned work.
+- [playAnimation](#/api/functions/play-animation) integrates optional state-owned playback.
+- [Sprite](#/api/components/sprite) and [sprite sheets](#/api/functions/sprite-sheets) draw shared atlas frames.
+- [Machine types](#/api/types/machines) and [sprite types](#/api/types/sprites) describe their public contracts.

@@ -5,16 +5,16 @@ import {
   Text,
   batch,
   computed,
-  crc,
+  pibbl,
   createElement,
   resolveSignalValue,
   signal,
   useReaction,
   useSignal,
-  type CRCController,
-  type CRCNode,
+  type PibblController,
+  type PibblNode,
   type SignalValue,
-} from '@crc/core';
+} from '@pibbl/core';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { clearSharedState } from '../src/lib/global-state';
 import {
@@ -25,7 +25,7 @@ import {
   ManualSchedulerDriver,
 } from '../src/lib/scheduler/testing';
 import * as signalGraph from '../src/lib/signals/graph';
-import type { CRCAdvanceParticipant } from '../src/lib/scheduler/types';
+import type { PibblAdvanceParticipant } from '../src/lib/scheduler/types';
 
 interface SignalGraphPerformanceSnapshot {
   readonly rendererConsumers: number;
@@ -51,8 +51,8 @@ interface AuthoringBaselineObservation {
   readonly traversalsPerUpdate: number;
 }
 
-const REPORT_TIMING = import.meta.env.VITE_CRC_REPORT_PERF === '1';
-const activeControllers = new Set<CRCController>();
+const REPORT_TIMING = import.meta.env.VITE_PIBBL_REPORT_PERF === '1';
+const activeControllers = new Set<PibblController>();
 let driver: ManualSchedulerDriver;
 let restoreDriver: () => void;
 
@@ -94,7 +94,7 @@ describe('signal and scheduler structural performance', () => {
       traversals += 1;
       value.get();
     };
-    const controller = drive(crc(createCanvas(), createElement(Root, {})));
+    const controller = drive(pibbl(createCanvas(), createElement(Root, {})));
     driver.flush(1);
     traversals = 0;
     const requestsBefore = driver.requestCount;
@@ -119,7 +119,7 @@ describe('signal and scheduler structural performance', () => {
       traversals++;
       value.get();
     };
-    const controller = drive(crc(createCanvas(), createElement(Reader, {})));
+    const controller = drive(pibbl(createCanvas(), createElement(Reader, {})));
     driver.flush(1);
     traversals = 0;
     const graphBefore = snapshotSignalGraph();
@@ -150,7 +150,7 @@ describe('signal and scheduler structural performance', () => {
     };
 
     for (const index of expectedOrder) {
-      drive(crc(createCanvas(), createElement(Root, { index })));
+      drive(pibbl(createCanvas(), createElement(Root, { index })));
     }
     expect(driver.requestCount).toBe(1);
     driver.flush(1);
@@ -180,14 +180,14 @@ describe('signal and scheduler structural performance', () => {
       traversals += 1;
       parity.get();
     };
-    const controller = drive(crc(createCanvas(), createElement(Root, {})));
+    const controller = drive(pibbl(createCanvas(), createElement(Root, {})));
     driver.flush(1);
     traversals = 0;
 
     const graphBefore = snapshotSignalGraph();
     const requestsBefore = driver.requestCount;
     let releaseAdvance = () => {};
-    const advance: CRCAdvanceParticipant = (_frame, batch) => {
+    const advance: PibblAdvanceParticipant = (_frame, batch) => {
       batch.stage(source, 3, advance);
       releaseAdvance();
     };
@@ -226,7 +226,7 @@ describe('signal and scheduler structural performance', () => {
       childTraversals[index] += 1;
       if (index === 0) pulse.get();
     };
-    const layers: readonly CRCNode[] = childTraversals.map((_count, index) =>
+    const layers: readonly PibblNode[] = childTraversals.map((_count, index) =>
       createElement(Layer, {
         key: `stable-layer-${index}`,
         style: { width: 4, height: 4 },
@@ -237,7 +237,7 @@ describe('signal and scheduler structural performance', () => {
       rootTraversals += 1;
       return layers;
     };
-    const controller = drive(crc(createCanvas(40, 40), createElement(Root, {})));
+    const controller = drive(pibbl(createCanvas(40, 40), createElement(Root, {})));
     driver.flush(1);
 
     expect(rootTraversals).toBe(1);
@@ -339,7 +339,7 @@ describe('signal and scheduler structural performance', () => {
       'transferToImageBitmap',
     );
     const baseline = snapshotSignalGraph();
-    const plain = drive(crc(
+    const plain = drive(pibbl(
       createCanvas(400, 4),
       Array.from({ length: 100 }, (_, index) =>
         createElement(Rectangle, {
@@ -365,7 +365,7 @@ describe('signal and scheduler structural performance', () => {
     plain.dispose();
 
     const beforeLayout = snapshotSignalGraph();
-    const layout = drive(crc(
+    const layout = drive(pibbl(
       createCanvas(400, 4),
       createElement(Absolute, {
         style: { width: 400, height: 4 },
@@ -434,7 +434,7 @@ describe('signal and scheduler structural performance', () => {
         style: { width: 4, height: 4 },
       });
     };
-    const controller = drive(crc(createCanvas(), createElement(Root, {})));
+    const controller = drive(pibbl(createCanvas(), createElement(Root, {})));
     driver.flush(1);
     expect({ reactions, cleanups }).toEqual({ reactions: 1, cleanups: 0 });
     traversals = 0;
@@ -459,7 +459,7 @@ describe('signal and scheduler structural performance', () => {
       };
       const before = snapshotSignalGraph();
       const controller = drive(
-        crc(
+        pibbl(
           createCanvas(),
           Array.from({ length: fanout }, (_, index) =>
             createElement(Reader, { key: `reader-${index}`, index }),
@@ -511,7 +511,7 @@ function observeStateSlotWorkload(
       createElement(Cell, { key: `slot-${index}`, index }),
     );
   };
-  const controller = drive(crc(createCanvas(), createElement(Root, {})));
+  const controller = drive(pibbl(createCanvas(), createElement(Root, {})));
   driver.flush(1);
   const samples = sampleManualUpdates(updateValue, () => {
     traversals = 0;
@@ -552,7 +552,7 @@ function observePrimitiveInputWorkload(
       createElement(DataSink, { key: 'data', data: rows }),
     ];
   };
-  const controller = drive(crc(createCanvas(), createElement(Root, {})));
+  const controller = drive(pibbl(createCanvas(), createElement(Root, {})));
   driver.flush(1);
   const samples = sampleManualUpdates(updateValue, () => {
     traversals = 0;
@@ -619,7 +619,7 @@ function observeReceiverInputWorkload(
       }),
     ];
   };
-  const controller = drive(crc(createCanvas(), createElement(Root, {})));
+  const controller = drive(pibbl(createCanvas(), createElement(Root, {})));
   driver.flush(1);
   const samples = sampleManualUpdates(updateValue, () => {
     traversals = 0;
@@ -691,19 +691,19 @@ function layerBitmapSources(
 
 function reportTiming(label: string, elapsedMs: number): void {
   if (REPORT_TIMING) {
-    console.warn(`[crc structural diagnostic] ${label}: ${elapsedMs.toFixed(3)}ms`);
+    console.warn(`[pibbl structural diagnostic] ${label}: ${elapsedMs.toFixed(3)}ms`);
   }
 }
 
 function reportObservation(label: string, observation: unknown): void {
   if (REPORT_TIMING) {
     console.warn(
-      `[crc structural diagnostic] ${label}: ${JSON.stringify(observation)}`,
+      `[pibbl structural diagnostic] ${label}: ${JSON.stringify(observation)}`,
     );
   }
 }
 
-function drive(controller: CRCController): CRCController {
+function drive(controller: PibblController): PibblController {
   activeControllers.add(controller);
   return controller;
 }

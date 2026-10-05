@@ -1,12 +1,12 @@
 import {
   createElement,
-  crc,
+  pibbl,
   defineRenderLayer,
   defineTexture,
   Group,
   useTexture,
-} from "@crc/core";
-import { displacement } from "@crc/core/filters";
+} from "@pibbl/core";
+import { displacement } from "@pibbl/core/filters";
 import { describe, expect, it } from "vitest";
 import { clickMouse } from "./support/mouse-input";
 
@@ -83,7 +83,7 @@ describe("displacement around defineRenderLayer", () => {
         }),
       });
     }
-    const controller = crc(canvas, createElement(Scene, {}));
+    const controller = pibbl(canvas, createElement(Scene, {}));
     try {
       await new Promise<void>((resolve) =>
         requestAnimationFrame(() => resolve()),

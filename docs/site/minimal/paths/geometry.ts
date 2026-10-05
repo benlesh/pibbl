@@ -11,7 +11,7 @@ import {
   type PathSegment,
   type SimplifyPathOptions,
   type SubdividePathOptions,
-} from "@crc/core";
+} from "@pibbl/core";
 
 const curve = new PathGeometry();
 curve.moveTo(10, 70);

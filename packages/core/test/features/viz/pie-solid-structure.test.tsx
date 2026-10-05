@@ -1,12 +1,12 @@
-import { createElement, signal, type CRCNode } from "@crc/core";
-import { PieLayout, PieLabel, PieSlice, type PieLayoutSlice } from "@crc/core/viz";
+import { createElement, signal, type PibblNode } from "@pibbl/core";
+import { PieLayout, PieLabel, PieSlice, type PieLayoutSlice } from "@pibbl/core/viz";
 import { expect, it, vi } from "vitest";
 import { commands } from "vitest/browser";
-import { getCRCInstance } from "../../../src/lib/global-state.js";
+import { getPibblInstance } from "../../../src/lib/global-state.js";
 import { testRuntime } from "./support/runtime.js";
 
-const enabled = import.meta.env.VITE_CRC_VIZ_STRUCTURE === "1";
-const legacy = import.meta.env.VITE_CRC_VIZ_LEGACY === "1";
+const enabled = import.meta.env.VITE_PIBBL_VIZ_STRUCTURE === "1";
+const legacy = import.meta.env.VITE_PIBBL_VIZ_LEGACY === "1";
 const fill = { fill: "#2878b5" };
 
 type Row = { category: number; value: number };
@@ -21,7 +21,7 @@ interface StructuralSnapshot {
 
 /**
  * Non-timed public-solid-pie evidence. Run unchanged in baseline mode with
- * VITE_CRC_VIZ_LEGACY=1; candidate mode adds revision: 0 to prove the opted-in
+ * VITE_PIBBL_VIZ_LEGACY=1; candidate mode adds revision: 0 to prove the opted-in
  * cached path has the same retained pointer work.
  */
 it.skipIf(!enabled)("records dense solid-pie structure", async () => {
@@ -53,7 +53,7 @@ it.skipIf(!enabled)("records dense solid-pie structure", async () => {
           <PieLabel slice={slice} />
         </PieSlice>
       );
-      function App(): CRCNode {
+      function App(): PibblNode {
         return createElement(PieLayout<Row>, {
           data: rows,
           value: "value",
@@ -67,7 +67,7 @@ it.skipIf(!enabled)("records dense solid-pie structure", async () => {
       fillSpy.mockClear();
       const canvas = runtime.mount(<App />);
       runtime.flush();
-      const instance = getCRCInstance(canvas);
+      const instance = getPibblInstance(canvas);
       const afterMount = {
         targets: instance.eventRoot.targets.size,
         paintEntries: instance.paintEntries.size,
@@ -131,7 +131,7 @@ it.skipIf(!enabled)("records dense solid-pie structure", async () => {
     }
   }
   await commands.writeFile(
-    import.meta.env.VITE_CRC_VIZ_RESULT,
+    import.meta.env.VITE_PIBBL_VIZ_RESULT,
     JSON.stringify({ legacy, results }, null, 2),
   );
 });

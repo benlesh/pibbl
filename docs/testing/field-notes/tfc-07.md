@@ -33,7 +33,7 @@ The 1,000-cycle case settles a real render before every disposal. Its accepted l
 
 | Resource                |      Acquired/requested |      Released/completed | Live/pending before final disposal |
 | ----------------------- | ----------------------: | ----------------------: | ---------------------------------: |
-| CRC instances           |                   1,002 |                   1,001 |                                  1 |
+| Pibbl instances         |                   1,002 |                   1,001 |                                  1 |
 | Native Canvas listeners |                   8,016 |                   8,008 |                                  8 |
 | Animation frames        |                   2,004 |                   2,004 |                                  0 |
 | Component refs          | `baseline refs × 1,002` | `baseline refs × 1,001` |                    `baseline refs` |

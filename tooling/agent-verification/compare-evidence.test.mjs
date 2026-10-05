@@ -1,10 +1,10 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { compareReplayReports } from './compare-evidence.mjs';
-const identity = { schema: 'crc-targeting-identity/1', revision: 'revision', sha256: 'a'.repeat(64), files: 10 };
-const tool = { ...identity, schema: 'crc-replay-tool-identity/1' };
-function report() { return { schema: 'crc-viz-replay/1', status: 'pass', url: 'http://localhost/#/testing/viz-hover-lab', browser: 'chromium-test', expectedIdentity: identity, servedIdentity: identity,
-  run: { schema: 'crc-replay-run/1', runId: 'first', kind: 'viz', environment: { node: 'v24', platform: 'test', architecture: 'test', browserContext: { viewport: { width: 1280, height: 1000 }, deviceScaleFactor: 1, locale: 'en-US', timezoneId: 'UTC', reducedMotion: 'reduce', colorScheme: 'light' } }, toolIdentity: tool, toolIdentityAfter: tool },
+const identity = { schema: 'pibbl-targeting-identity/1', revision: 'revision', sha256: 'a'.repeat(64), files: 10 };
+const tool = { ...identity, schema: 'pibbl-replay-tool-identity/1' };
+function report() { return { schema: 'pibbl-viz-replay/1', status: 'pass', url: 'http://localhost/#/testing/viz-hover-lab', browser: 'chromium-test', expectedIdentity: identity, servedIdentity: identity,
+  run: { schema: 'pibbl-replay-run/1', runId: 'first', kind: 'viz', environment: { node: 'v24', platform: 'test', architecture: 'test', browserContext: { viewport: { width: 1280, height: 1000 }, deviceScaleFactor: 1, locale: 'en-US', timezoneId: 'UTC', reducedMotion: 'reduce', colorScheme: 'light' } }, toolIdentity: tool, toolIdentityAfter: tool },
   requiredActions: ['hover'], steps: [{ actionId: 'hover', status: 'pass', state: { selected: 'a' } }] }; }
 
 test('compares recorded actions while ignoring independent run IDs', () => {

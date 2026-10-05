@@ -10,7 +10,7 @@ Read the [human guide](/guides/text-geometry/), then the [complete API reference
 
 ## Complete public package surface
 
-All eight exports below come from `@crc/text`, not `@crc/core`. Their detailed definitions and constraints are in [Text geometry](/reference/functions/text-geometry/).
+All eight exports below come from `@pibbl/text`, not `@pibbl/core`. Their detailed definitions and constraints are in [Text geometry](/reference/functions/text-geometry/).
 
 | Export                | Role                                                                                                    |
 | --------------------- | ------------------------------------------------------------------------------------------------------- |
@@ -23,7 +23,7 @@ All eight exports below come from `@crc/text`, not `@crc/core`. Their detailed d
 | `TextGlyph`           | Glyph ID, UTF-16 cluster, segment range, position, and advance.                                         |
 | `InkBounds`           | Curve-extrema ink rectangle, distinct from layout advance.                                              |
 
-Ordinary `Text`, `Path`, `PathGeometry`, `envelopeTransform`, `transformPath`, `composeTransforms`, and `affineTransform` come from `@crc/core`. Do not invent `TextOnPath`, a text-displacement API, or a private font-engine import.
+Ordinary `Text`, `Path`, `PathGeometry`, `envelopeTransform`, `transformPath`, `composeTransforms`, and `affineTransform` come from `@pibbl/core`. Do not invent `TextOnPath`, a text-displacement API, or a private font-engine import.
 
 ## Geometry pipeline
 
@@ -37,7 +37,7 @@ This changes real path geometry. It is different from a Canvas filter that only 
 - Deploy the matching packaged engine and WASM. Verify a production build and non-root base path; the reference explains plain-esbuild placement. A successful development preview does not prove deployed asset URLs.
 - Start async loading outside synchronous components. Use an AbortController on teardown, and dispose any font returned after its owner was removed.
 - Retain a font across edits; dispose it after the last conversion. Geometry and metadata are JavaScript-owned and remain valid afterward.
-- Dispose the CRC mount, native controls/listeners, and owned overlays when removing a demo. `HtmlBox` controls remain native HTML; they are not warped or captured by the Canvas effect.
+- Dispose the Pibbl mount, native controls/listeners, and owned overlays when removing a demo. `HtmlBox` controls remain native HTML; they are not warped or captured by the Canvas effect.
 
 ## Do not infer unsupported behavior
 

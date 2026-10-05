@@ -9,19 +9,19 @@ import { valid } from 'semver';
 const exactRelease = value => typeof value === 'string' && value.length <= 64 && valid(value) === value;
 const label = value => typeof value === 'string' && value.length > 0 && value.length <= 128;
 export function auditCorePeerPins(core, peers) {
-  if (core?.name !== '@crc/core' || !exactRelease(core.version)) throw new Error('Invalid or unsupported core manifest.');
+  if (core?.name !== '@pibbl/core' || !exactRelease(core.version)) throw new Error('Invalid or unsupported core manifest.');
   if (!Array.isArray(peers) || peers.length < 1 || peers.length > 32) throw new RangeError('Supply 1 through 32 peer manifests.');
   const names = new Set();
   const packages = peers.map(peer => {
     if (!label(peer?.name) || !label(peer.version)) throw new Error('Invalid peer manifest identity.');
     if (names.has(peer.name)) throw new Error('Duplicate peer manifest identity.');
     names.add(peer.name);
-    const required = peer.peerDependencies?.['@crc/core'];
+    const required = peer.peerDependencies?.['@pibbl/core'];
     const status = !exactRelease(required) ? 'unavailable' : required === core.version ? 'compatible' : 'incompatible';
     return Object.freeze({ name: peer.name, version: peer.version,
       requiredCore: label(required) ? required : null, observedCore: core.version, status });
   });
-  return Object.freeze({ schema: 'crc-core-peer-audit/1', scope: 'declared-core-peer-pins',
+  return Object.freeze({ schema: 'pibbl-core-peer-audit/1', scope: 'declared-core-peer-pins',
     status: packages.some(peer => peer.status === 'incompatible') ? 'incompatible' : packages.some(peer => peer.status === 'unavailable') ? 'unavailable' : 'compatible',
     runtimeIdentity: 'not-observed', otherPeers: 'not-checked', packages: Object.freeze(packages),
   });
@@ -47,7 +47,7 @@ export async function readCorePeerAudit(root) {
       bytes = buffer.subarray(0, length);
     } finally { await file.close(); }
     const value = JSON.parse(bytes.toString('utf8'));
-    if (value.name !== `@crc/${name}`) throw new Error(`Unexpected package identity at ${path}.`);
+    if (value.name !== `@pibbl/${name}`) throw new Error(`Unexpected package identity at ${path}.`);
     values.push(value);
     manifests.push(Object.freeze({ path, sha256: createHash('sha256').update(bytes).digest('hex') }));
   }
@@ -61,7 +61,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
     process.stdout.write(JSON.stringify(result) + '\n');
     if (result.status !== 'compatible') process.exitCode = 1;
   } catch (error) {
-    process.stdout.write(JSON.stringify({ schema: 'crc-core-peer-audit/1', status: 'unavailable', reason: String(error.message).slice(0, 512) }) + '\n');
+    process.stdout.write(JSON.stringify({ schema: 'pibbl-core-peer-audit/1', status: 'unavailable', reason: String(error.message).slice(0, 512) }) + '\n');
     process.exitCode = 1;
   }
 }

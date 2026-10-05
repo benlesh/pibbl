@@ -1,10 +1,10 @@
 import {
-  Absolute, Overlay, Flow, Flex, Grid, Rectangle, crc, createElement, definePrimitive,
-  type CRCController, type SystemStyle,
-} from '@crc/core';
+  Absolute, Overlay, Flow, Flex, Grid, Rectangle, pibbl, createElement, definePrimitive,
+  type PibblController, type SystemStyle,
+} from '@pibbl/core';
 import { afterEach, describe, expect, it } from 'vitest';
 import { installSchedulerDriverForTest, ManualSchedulerDriver } from '../src/lib/scheduler/testing';
-let controller: CRCController | undefined;
+let controller: PibblController | undefined;
 let restore: (() => void) | undefined;
 afterEach(() => {
   controller?.dispose();
@@ -39,7 +39,7 @@ describe('responsive queries in allocated layout', () => {
       const canvas = document.createElement('canvas');
       canvas.width = 700; canvas.height = 160;
       document.body.append(canvas);
-      controller = crc(canvas, root, { pixelRatio: 1 });
+      controller = pibbl(canvas, root, { pixelRatio: 1 });
       driver.flush(1);
       expect(observed).toEqual([{ width: 10, height: 10, color: 'red' }]);
       expect(driver.pendingHostFrames).toBe(0);
@@ -57,7 +57,7 @@ describe('responsive queries in allocated layout', () => {
     const canvas = document.createElement('canvas');
     canvas.width = 600; canvas.height = 100;
     document.body.append(canvas);
-    controller = crc(canvas, createElement(Probe, { style: {
+    controller = pibbl(canvas, createElement(Probe, { style: {
       gap: 12, values: [1, 2], custom: { old: true },
       when: [
         { query: { minWidth: 600 }, style: { gap: 24, values: [3], custom } },

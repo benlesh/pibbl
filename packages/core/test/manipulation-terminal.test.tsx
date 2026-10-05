@@ -1,17 +1,17 @@
 import { afterEach, expect, it, vi } from "vitest";
 import { commands } from "vitest/browser";
-import * as CRC from "@crc/core";
+import * as Pibbl from "@pibbl/core";
 import type {
-  CRCController,
-  CRCManipulationCancelEvent,
-  CRCNode,
-} from "@crc/core";
+  PibblController,
+  PibblManipulationCancelEvent,
+  PibblNode,
+} from "@pibbl/core";
 import {
   installSchedulerDriverForTest,
   ManualSchedulerDriver,
 } from "../src/lib/scheduler/testing";
 
-const mounts: CRCController[] = [];
+const mounts: PibblController[] = [];
 
 afterEach(async () => {
   for (const mount of mounts.splice(0)) mount.dispose();
@@ -58,29 +58,29 @@ it("rolls a captured drag back exactly once on pointercancel and native capture 
 
 it("does not arm or preview when native pointer capture fails", async () => {
   const starts: number[] = [];
-  const box = CRC.signal({ left: 40, top: 50, width: 100, height: 80 });
-  let control!: CRC.CRCManipulationController;
+  const box = Pibbl.signal({ left: 40, top: 50, width: 100, height: 80 });
+  let control!: Pibbl.PibblManipulationController;
   const canvas = createCanvas();
   vi.spyOn(canvas, "setPointerCapture").mockImplementation(() => {});
-  function Scene(): CRCNode {
-    control = CRC.useManipulation({
+  function Scene(): PibblNode {
+    control = Pibbl.useManipulation({
       box,
       move: {},
       onStart: () => starts.push(1),
     });
     return (
-      <CRC.ManipulationFrame {...control.frameProps}>
-        <CRC.DragHandle controller={control}>
-          <CRC.Rectangle
+      <Pibbl.ManipulationFrame {...control.frameProps}>
+        <Pibbl.DragHandle controller={control}>
+          <Pibbl.Rectangle
             pointerEvents="auto"
             keyboardFocusable
             style={{ width: 100, height: 80, fill: "transparent" }}
           />
-        </CRC.DragHandle>
-      </CRC.ManipulationFrame>
+        </Pibbl.DragHandle>
+      </Pibbl.ManipulationFrame>
     );
   }
-  mounts.push(CRC.crc(canvas, <Scene />, { pixelRatio: 1 }));
+  mounts.push(Pibbl.pibbl(canvas, <Scene />, { pixelRatio: 1 }));
   await settle();
 
   await commands.manipulationPointer([
@@ -96,41 +96,41 @@ it("does not arm or preview when native pointer capture fails", async () => {
 });
 
 it("lets a nested control decline a drag and lets the deepest resize handle claim first", async () => {
-  const declined = CRC.signal({ left: 40, top: 50, width: 100, height: 80 });
-  const resized = CRC.signal({ left: 180, top: 50, width: 100, height: 80 });
+  const declined = Pibbl.signal({ left: 40, top: 50, width: 100, height: 80 });
+  const resized = Pibbl.signal({ left: 180, top: 50, width: 100, height: 80 });
   const canvas = createCanvas(400, 240);
-  function Declined(): CRCNode {
-    const control = CRC.useManipulation({ box: declined, move: {} });
+  function Declined(): PibblNode {
+    const control = Pibbl.useManipulation({ box: declined, move: {} });
     return (
-      <CRC.ManipulationFrame {...control.frameProps}>
-        <CRC.DragHandle controller={control}>
-          <CRC.Rectangle
+      <Pibbl.ManipulationFrame {...control.frameProps}>
+        <Pibbl.DragHandle controller={control}>
+          <Pibbl.Rectangle
             pointerEvents="auto"
             keyboardFocusable
             style={{ width: 100, height: 80, fill: "#16a34a" }}
             onPointerDown={(event) => event.preventDefault()}
           />
-        </CRC.DragHandle>
-      </CRC.ManipulationFrame>
+        </Pibbl.DragHandle>
+      </Pibbl.ManipulationFrame>
     );
   }
-  function DeepestResize(): CRCNode {
-    const control = CRC.useManipulation({ box: resized, move: {}, resize: {} });
+  function DeepestResize(): PibblNode {
+    const control = Pibbl.useManipulation({ box: resized, move: {}, resize: {} });
     return (
-      <CRC.ManipulationFrame {...control.frameProps}>
-        <CRC.DragHandle controller={control}>
-          <CRC.Rectangle
+      <Pibbl.ManipulationFrame {...control.frameProps}>
+        <Pibbl.DragHandle controller={control}>
+          <Pibbl.Rectangle
             pointerEvents="auto"
             keyboardFocusable
             style={{ width: 100, height: 80, fill: "transparent" }}
           />
-          <CRC.ResizeHandle controller={control} position="bottom-right" />
-        </CRC.DragHandle>
-      </CRC.ManipulationFrame>
+          <Pibbl.ResizeHandle controller={control} position="bottom-right" />
+        </Pibbl.DragHandle>
+      </Pibbl.ManipulationFrame>
     );
   }
   mounts.push(
-    CRC.crc(
+    Pibbl.pibbl(
       canvas,
       [<Declined key="declined" />, <DeepestResize key="resize" />],
       { pixelRatio: 1 },
@@ -159,40 +159,40 @@ it("rejects duplicate and cross-root frame attachment before either mount can re
   const driver = new ManualSchedulerDriver();
   const restoreDriver = installSchedulerDriverForTest(driver);
   try {
-    function Duplicate(): CRCNode {
-      const control = CRC.useManipulation({
-        box: CRC.signal({ left: 40, top: 50, width: 100, height: 80 }),
+    function Duplicate(): PibblNode {
+      const control = Pibbl.useManipulation({
+        box: Pibbl.signal({ left: 40, top: 50, width: 100, height: 80 }),
         move: {},
       });
       return [
-        <CRC.ManipulationFrame key="first" {...control.frameProps} />,
-        <CRC.ManipulationFrame key="second" {...control.frameProps} />,
+        <Pibbl.ManipulationFrame key="first" {...control.frameProps} />,
+        <Pibbl.ManipulationFrame key="second" {...control.frameProps} />,
       ];
     }
-    mounts.push(CRC.crc(createCanvas(), <Duplicate />, { pixelRatio: 1 }));
+    mounts.push(Pibbl.pibbl(createCanvas(), <Duplicate />, { pixelRatio: 1 }));
     expect(() => driver.flush(0)).toThrow(
       "A manipulation controller can attach to only one frame.",
     );
 
-    let shared!: CRC.CRCManipulationController;
-    function Owner(): CRCNode {
-      shared = CRC.useManipulation({
-        box: CRC.signal({ left: 40, top: 50, width: 100, height: 80 }),
+    let shared!: Pibbl.PibblManipulationController;
+    function Owner(): PibblNode {
+      shared = Pibbl.useManipulation({
+        box: Pibbl.signal({ left: 40, top: 50, width: 100, height: 80 }),
         move: {},
       });
-      return <CRC.ManipulationFrame {...shared.frameProps} />;
+      return <Pibbl.ManipulationFrame {...shared.frameProps} />;
     }
-    mounts.push(CRC.crc(createCanvas(), <Owner />, { pixelRatio: 1 }));
+    mounts.push(Pibbl.pibbl(createCanvas(), <Owner />, { pixelRatio: 1 }));
     driver.flush(1);
     mounts.push(
-      CRC.crc(
+      Pibbl.pibbl(
         createCanvas(),
-        <CRC.ManipulationFrame {...shared.frameProps} />,
+        <Pibbl.ManipulationFrame {...shared.frameProps} />,
         { pixelRatio: 1 },
       ),
     );
     expect(() => driver.flush(2)).toThrow(
-      "A manipulation controller cannot attach across CRC roots.",
+      "A manipulation controller cannot attach across Pibbl roots.",
     );
   } finally {
     restoreDriver();
@@ -204,16 +204,16 @@ it("rejects a manipulation press while an active animation owns its box signal",
   vi.spyOn(globalThis, "reportError").mockImplementation((error) =>
     errors.push(error),
   );
-  const box = CRC.signal({ left: 40, top: 50, width: 100, height: 80 });
-  let control!: CRC.CRCManipulationController;
-  let playback!: CRC.CRCPlayback;
+  const box = Pibbl.signal({ left: 40, top: 50, width: 100, height: 80 });
+  let control!: Pibbl.PibblManipulationController;
+  let playback!: Pibbl.PibblPlayback;
   const canvas = createCanvas();
-  function Scene(): CRCNode {
-    control = CRC.useManipulation({ box, move: {} });
-    playback = CRC.usePlayback(
-      CRC.drive(
+  function Scene(): PibblNode {
+    control = Pibbl.useManipulation({ box, move: {} });
+    playback = Pibbl.usePlayback(
+      Pibbl.drive(
         box,
-        CRC.tween({
+        Pibbl.tween({
           from: { left: 40, top: 50, width: 100, height: 80 },
           to: { left: 140, top: 50, width: 100, height: 80 },
           duration: 100_000,
@@ -228,18 +228,18 @@ it("rejects a manipulation press while an active animation owns its box signal",
       { autoplay: true },
     );
     return (
-      <CRC.ManipulationFrame {...control.frameProps}>
-        <CRC.DragHandle controller={control}>
-          <CRC.Rectangle
+      <Pibbl.ManipulationFrame {...control.frameProps}>
+        <Pibbl.DragHandle controller={control}>
+          <Pibbl.Rectangle
             pointerEvents="auto"
             keyboardFocusable
             style={{ width: 100, height: 80, fill: "transparent" }}
           />
-        </CRC.DragHandle>
-      </CRC.ManipulationFrame>
+        </Pibbl.DragHandle>
+      </Pibbl.ManipulationFrame>
     );
   }
-  mounts.push(CRC.crc(canvas, <Scene />, { pixelRatio: 1 }));
+  mounts.push(Pibbl.pibbl(canvas, <Scene />, { pixelRatio: 1 }));
   await settle();
   const beforePress = box.get();
   expect(playback.status.get()).toBe("running");
@@ -256,10 +256,10 @@ it("rejects a manipulation press while an active animation owns its box signal",
 });
 
 async function mountActiveDrag() {
-  const box = CRC.signal({ left: 40, top: 50, width: 100, height: 80 });
-  const cancellations: CRCManipulationCancelEvent[] = [];
+  const box = Pibbl.signal({ left: 40, top: 50, width: 100, height: 80 });
+  const cancellations: PibblManipulationCancelEvent[] = [];
   const commits: unknown[] = [];
-  let control!: CRC.CRCManipulationController;
+  let control!: Pibbl.PibblManipulationController;
   let seenPointerId: number | undefined;
   let nativeLosses = 0;
   const canvas = createCanvas();
@@ -267,26 +267,26 @@ async function mountActiveDrag() {
     seenPointerId = event.pointerId;
   });
   canvas.addEventListener("lostpointercapture", () => nativeLosses++);
-  function Scene(): CRCNode {
-    control = CRC.useManipulation({
+  function Scene(): PibblNode {
+    control = Pibbl.useManipulation({
       box,
       move: {},
       onCancel: (event) => cancellations.push(event),
       onCommit: (event) => commits.push(event),
     });
     return (
-      <CRC.ManipulationFrame {...control.frameProps}>
-        <CRC.DragHandle controller={control}>
-          <CRC.Rectangle
+      <Pibbl.ManipulationFrame {...control.frameProps}>
+        <Pibbl.DragHandle controller={control}>
+          <Pibbl.Rectangle
             pointerEvents="auto"
             keyboardFocusable
             style={{ width: 100, height: 80, fill: "transparent" }}
           />
-        </CRC.DragHandle>
-      </CRC.ManipulationFrame>
+        </Pibbl.DragHandle>
+      </Pibbl.ManipulationFrame>
     );
   }
-  mounts.push(CRC.crc(canvas, <Scene />, { pixelRatio: 1 }));
+  mounts.push(Pibbl.pibbl(canvas, <Scene />, { pixelRatio: 1 }));
   await settle();
   await commands.manipulationPointer([
     { type: "move", x: 60, y: 70 },

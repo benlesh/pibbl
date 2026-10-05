@@ -85,7 +85,7 @@
       "actionId": "intentional-block"
     }
   ],
-  "schema": "crc-targeting-replay/1",
+  "schema": "pibbl-targeting-replay/1",
   "status": "blocked",
   "url": "http://127.0.0.1:5196/#/testing/agent-targeting-verification",
   "node": "v24.15.0",
@@ -133,7 +133,7 @@
   ],
   "checkpointRunId": "4a85ecf9-93fc-4f4c-bca0-832740a493d5",
   "run": {
-    "schema": "crc-replay-run/1",
+    "schema": "pibbl-replay-run/1",
     "runId": "4a85ecf9-93fc-4f4c-bca0-832740a493d5",
     "kind": "targeting",
     "startedAt": "2026-10-02T01:40:41.753Z",
@@ -180,7 +180,7 @@
       "cwd": "/Users/benlesh/GitHub/crc",
       "environment": {},
       "unsetEnvironment": [
-        "CRC_VERIFY_BROWSER_ENDPOINT"
+        "PIBBL_VERIFY_BROWSER_ENDPOINT"
       ],
       "outputPolicy": "fresh-default-directory",
       "preconditions": [
@@ -189,14 +189,14 @@
       ]
     },
     "toolIdentity": {
-      "schema": "crc-replay-tool-identity/1",
+      "schema": "pibbl-replay-tool-identity/1",
       "revision": "c838c434159efe602583f1cc2bf5383b57c15db5",
       "sha256": "ad03427a9d4dd0e1ef982abe56696956a0902763ff046daacb5215d611d3a089",
       "files": 11,
       "scope": "Replay and declared local dependencies on disk; not loaded-module or installed-dependency attestation."
     },
     "toolIdentityAfter": {
-      "schema": "crc-replay-tool-identity/1",
+      "schema": "pibbl-replay-tool-identity/1",
       "revision": "c838c434159efe602583f1cc2bf5383b57c15db5",
       "sha256": "ad03427a9d4dd0e1ef982abe56696956a0902763ff046daacb5215d611d3a089",
       "files": 11,
@@ -214,13 +214,13 @@
     "sha256": "0234e7816a15a7c66b8f49346f4d75f6a69a6567afa275135f3fc44e95c07e91"
   },
   "expectedIdentity": {
-    "schema": "crc-targeting-identity/1",
+    "schema": "pibbl-targeting-identity/1",
     "revision": "c838c434159efe602583f1cc2bf5383b57c15db5",
     "sha256": "3823e756260301a351feb4cdc46a05db58eabb732f5185f2b50b0172920e59fa",
     "files": 203
   },
   "servedIdentity": {
-    "schema": "crc-targeting-identity/1",
+    "schema": "pibbl-targeting-identity/1",
     "revision": "c838c434159efe602583f1cc2bf5383b57c15db5",
     "sha256": "9915eebd214a0919b3807125b581d5339e86ba0b6717b74766a7441c1e217224",
     "files": 203
@@ -236,7 +236,7 @@
     "actionId": null,
     "lastActionId": null,
     "message": "Served fixture identity mismatch; reload the intended checkout before verifying.",
-    "code": "CRC_FIXTURE_IDENTITY_MISMATCH",
+    "code": "PIBBL_FIXTURE_IDENTITY_MISMATCH",
     "assertion": null,
     "layoutDiagnostic": null,
     "detail": {

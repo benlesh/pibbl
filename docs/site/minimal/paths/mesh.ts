@@ -5,7 +5,7 @@ import {
   transformPath,
   type MeshTransformOptions,
   type PathGuide,
-} from "@crc/core";
+} from "@pibbl/core";
 
 function edge(x1: number, y1: number, x2: number, y2: number): PathGuide {
   const path = new PathGeometry();

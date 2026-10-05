@@ -26,7 +26,7 @@ import {
   degrees,
   useManipulation,
   useSignal,
-} from "@crc/core";
+} from "@pibbl/core";
 
 function Card() {
   const box = useSignal({ left: 96, top: 120, width: 320, height: 224 });

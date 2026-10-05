@@ -4,7 +4,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Make CRC own logical viewport, CSS sizing, backing density, fit projection, mouse conversion, and layer density so Canvas output is crisp by default.
+**Goal:** Make Pibbl own logical viewport, CSS sizing, backing density, fit projection, mouse conversion, and layer density so Canvas output is crisp by default.
 
 **Architecture:** A focused surface subsystem resolves immutable logical/display/backing geometry and owns root DOM observation. Rendering installs one surface transform while interaction capture normalizes it away, keeping paint and hit testing in logical coordinates. Layers use derived density-only surfaces.
 
@@ -40,14 +40,14 @@
 - Create: `packages/core/src/lib/surface/types.ts`
 - Create: `packages/core/src/lib/surface/resolve-surface.ts`
 - Test: `packages/core/src/lib/surface/resolve-surface.test.ts`
-- Modify: `packages/core/src/lib/crc.ts`
+- Modify: `packages/core/src/lib/pibbl.ts`
 - Modify: `packages/core/src/lib/types.ts`
 - Modify: `packages/core/src/index.ts`
 - Test: `packages/core/src/lib/runtime-contract.test.ts`
 
 **Interfaces:**
 
-- Produces the public `CRCConfig`, fit, ratio, fixed, and responsive types.
+- Produces the public `PibblConfig`, fit, ratio, fixed, and responsive types.
 - Produces `validateSurfaceConfig`, `resolveSurface`, and `createLayerSurface`.
 
 - [ ] **Step 1: Write failing projection tests**
@@ -82,12 +82,12 @@ export type ResolvedSurfaceConfig =
       mode: "fixed";
       width: number;
       height: number;
-      fit: CRCFit;
-      pixelRatio: CRCPixelRatio;
+      fit: PibblFit;
+      pixelRatio: PibblPixelRatio;
     }
-  | { mode: "responsive"; pixelRatio: CRCPixelRatio };
+  | { mode: "responsive"; pixelRatio: PibblPixelRatio };
 
-export interface CRCSurfaceSnapshot {
+export interface PibblSurfaceSnapshot {
   logicalWidth: number;
   logicalHeight: number;
   displayWidth: number;
@@ -110,7 +110,7 @@ Return `undefined` for a zero display axis before constructing an inverse.
 ```bash
 corepack pnpm@11.21.0 vitest run packages/core/src/lib/surface/resolve-surface.test.ts packages/core/src/lib/runtime-contract.test.ts --browser.headless --browser.ui=false
 corepack pnpm@11.21.0 typecheck
-git add packages/core/src/lib/surface packages/core/src/lib/crc.ts packages/core/src/lib/types.ts packages/core/src/index.ts packages/core/src/lib/runtime-contract.test.ts
+git add packages/core/src/lib/surface packages/core/src/lib/pibbl.ts packages/core/src/lib/types.ts packages/core/src/index.ts packages/core/src/lib/runtime-contract.test.ts
 git commit -m "feat(surface): define logical canvas projection"
 ```
 
@@ -122,7 +122,7 @@ git commit -m "feat(surface): define logical canvas projection"
 
 - Create: `packages/core/src/lib/surface/root-surface.ts`
 - Test: `packages/core/src/lib/surface/root-surface.test.ts`
-- Modify: `packages/core/src/lib/mount-crc.ts`
+- Modify: `packages/core/src/lib/mount-pibbl.ts`
 - Modify: `packages/core/src/lib/execute-render.ts`
 - Modify: `packages/core/src/lib/types.ts`
 - Modify: `packages/core/src/lib/update.ts`
@@ -131,7 +131,7 @@ git commit -m "feat(surface): define logical canvas projection"
 
 **Interfaces:**
 
-- Consumes `ResolvedSurfaceConfig`, `CRCSurfaceSnapshot`, and `resolveSurface`.
+- Consumes `ResolvedSurfaceConfig`, `PibblSurfaceSnapshot`, and `resolveSurface`.
 - Produces `RootSurfaceState`, `mountRootSurface`, and `prepareRootSurface`.
 
 - [ ] **Step 1: Write failing lifecycle tests**
@@ -182,7 +182,7 @@ Reset identity in `finally`; defer zero-size traversal without disposing refs. S
 
 ```bash
 corepack pnpm@11.21.0 vitest run packages/core/src/lib/surface/root-surface.test.ts packages/core/src/lib/runtime-contract.test.ts packages/core/test/lifecycle-ownership.test.ts --browser.headless --browser.ui=false
-git add packages/core/src/lib/surface/root-surface.ts packages/core/src/lib/surface/root-surface.test.ts packages/core/src/lib/mount-crc.ts packages/core/src/lib/execute-render.ts packages/core/src/lib/types.ts packages/core/src/lib/update.ts packages/core/src/lib/runtime-contract.test.ts packages/core/test/lifecycle-ownership.test.ts
+git add packages/core/src/lib/surface/root-surface.ts packages/core/src/lib/surface/root-surface.test.ts packages/core/src/lib/mount-pibbl.ts packages/core/src/lib/execute-render.ts packages/core/src/lib/types.ts packages/core/src/lib/update.ts packages/core/src/lib/runtime-contract.test.ts packages/core/test/lifecycle-ownership.test.ts
 git commit -m "feat(surface): own canvas density and resize lifecycle"
 ```
 
@@ -221,7 +221,7 @@ corepack pnpm@11.21.0 vitest run packages/core/src/lib/surface/transform.test.ts
 
 ```ts
 export function toLogicalTransform(
-  surface: CRCSurfaceSnapshot,
+  surface: PibblSurfaceSnapshot,
   current: DOMMatrix,
 ): DOMMatrix {
   return surface.inverseRenderTransform.multiply(current);
@@ -250,7 +250,7 @@ git commit -m "feat(surface): keep interaction in logical coordinates"
 
 - Modify: `packages/core/src/lib/components/layer.ts`
 - Test: `packages/core/src/lib/components/layer.test.ts`
-- Modify: `packages/core/src/lib/mount-crc.ts`
+- Modify: `packages/core/src/lib/mount-pibbl.ts`
 - Modify: `packages/core/src/lib/types.ts`
 - Test: `packages/core/test/geometry-composition.test.ts`
 - Test: `packages/core/test/lifecycle-ownership.test.ts`
@@ -258,7 +258,7 @@ git commit -m "feat(surface): keep interaction in logical coordinates"
 **Interfaces:**
 
 - Consumes `createLayerSurface` and normalized transforms.
-- Produces internal derived-surface support for `mountCRC`.
+- Produces internal derived-surface support for `mountPibbl`.
 
 - [ ] **Step 1: Write failing layer tests**
 
@@ -292,7 +292,7 @@ Recompute on logical size or root density changes, normalize the parent entry tr
 
 ```bash
 corepack pnpm@11.21.0 vitest run packages/core/src/lib/components/layer.test.ts packages/core/test/geometry-composition.test.ts packages/core/test/lifecycle-ownership.test.ts --browser.headless --browser.ui=false
-git add packages/core/src/lib/components/layer.ts packages/core/src/lib/components/layer.test.ts packages/core/src/lib/mount-crc.ts packages/core/src/lib/types.ts packages/core/test/geometry-composition.test.ts packages/core/test/lifecycle-ownership.test.ts
+git add packages/core/src/lib/components/layer.ts packages/core/src/lib/components/layer.test.ts packages/core/src/lib/mount-pibbl.ts packages/core/src/lib/types.ts packages/core/test/geometry-composition.test.ts packages/core/test/lifecycle-ownership.test.ts
 git commit -m "feat(surface): render layers at root density"
 ```
 
@@ -362,7 +362,7 @@ git commit -m "test(surface): prove responsive high-density canvas"
 - Modify: `docs/design/layout-system-contract.md`
 - Modify: `AGENTS.md`
 - Modify: the existing `playground/package-consumer` source selected by inspection.
-- Verify: `playground/src/crc-editor-types.txt` through `tooling/verify-studio-types.mjs`.
+- Verify: `playground/src/pibbl-editor-types.txt` through `tooling/verify-studio-types.mjs`.
 
 **Interfaces:**
 
@@ -371,12 +371,12 @@ git commit -m "test(surface): prove responsive high-density canvas"
 - [ ] **Step 1: Add package-consumer usage**
 
 ```ts
-crc(canvas, scene, {
+pibbl(canvas, scene, {
   viewport: { width: 720, height: 420 },
   fit: "cover",
   pixelRatio: 2,
 });
-crc(otherCanvas, scene, { viewport: "responsive" });
+pibbl(otherCanvas, scene, { viewport: "responsive" });
 ```
 
 - [ ] **Step 2: Update normative contracts**
@@ -397,7 +397,7 @@ corepack pnpm@11.21.0 playground:build:built
 - [ ] **Step 4: Commit**
 
 ```bash
-git add docs/design AGENTS.md playground/package-consumer playground/src/crc-editor-types.txt
+git add docs/design AGENTS.md playground/package-consumer playground/src/pibbl-editor-types.txt
 git commit -m "docs(surface): publish canvas surface contract"
 ```
 

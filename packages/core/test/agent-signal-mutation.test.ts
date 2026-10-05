@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest';
-import { getScenarioBySlug, loadScenario } from '@crc/scenarios';
+import { getScenarioBySlug, loadScenario } from '@pibbl/scenarios';
 it.each([180, 240])('verifies mutation and replacement pixels in a 480 by %i display', async displayHeight => {
   const entry = getScenarioBySlug('agent-signal-mutation');
   expect(entry).toBeDefined();

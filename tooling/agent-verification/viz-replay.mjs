@@ -13,13 +13,13 @@ import { resolve } from 'node:path';
 import { chromium } from 'playwright';
 import { sourceIdentity, assertIdentity } from './identity.mjs';
 const repository = resolve(import.meta.dirname, '../..');
-const density = Number(process.env.CRC_VERIFY_DENSITY ?? 1);
-assert.ok(density === 1 || density === 2, 'CRC_VERIFY_DENSITY must be 1 or 2');
+const density = Number(process.env.PIBBL_VERIFY_DENSITY ?? 1);
+assert.ok(density === 1 || density === 2, 'PIBBL_VERIFY_DENSITY must be 1 or 2');
 const url = process.argv[2];
 if (!url) throw new Error('Provide the source Studio URL ending in #/testing/viz-hover-lab');
 const output = process.argv[3] ? resolve(process.argv[3]) : resolve(repository, 'packages/core/test/out/agent-viz', new Date().toISOString().replaceAll(':', '-'));
 await reserveEvidenceDirectory(output);
-const report = { requiredChecks: requiredReplayChecks('viz'), schema: 'crc-viz-replay/1', status: 'incomplete', url, node: process.version, density,
+const report = { requiredChecks: requiredReplayChecks('viz'), schema: 'pibbl-viz-replay/1', status: 'incomplete', url, node: process.version, density,
   provenance: 'Loaded fixture fingerprint covers core/viz source, fixture/example, identity tooling, dev config and lockfile; not full installed dependency or asset attestation.', steps: [], errors: [], droppedErrors: 0 };
 const checkpoint = createCheckpointWriter(output);
 report.checkpointRunId = checkpoint.runId;
@@ -30,8 +30,8 @@ try {
   await checkpoint(report, 'setup');
   report.expectedIdentity = await sourceIdentity(repository, 'viz');
   report.run.toolIdentity = await captureReplayToolIdentity(repository, 'viz', report.expectedIdentity.revision);
-  browser = process.env.CRC_VERIFY_BROWSER_ENDPOINT
-    ? await chromium.connect(process.env.CRC_VERIFY_BROWSER_ENDPOINT, { timeout: 15000 })
+  browser = process.env.PIBBL_VERIFY_BROWSER_ENDPOINT
+    ? await chromium.connect(process.env.PIBBL_VERIFY_BROWSER_ENDPOINT, { timeout: 15000 })
     : await chromium.launch({ timeout: 15000 }); report.browser = browser.version();
   const page = await browser.newPage(report.run.environment.browserContext);
   browserFailure = observeBrowserFailure(browser, page);
@@ -44,7 +44,7 @@ try {
   await evidence.waitFor({ state: 'attached' });
   const readEvidence = async () => {
     const text = await evidence.textContent(); assert.ok(text && text.length < 65536);
-    const parsed = JSON.parse(text); assert.equal(parsed.schema, 'crc-viz-fixture/1');
+    const parsed = JSON.parse(text); assert.equal(parsed.schema, 'pibbl-viz-fixture/1');
     report.servedIdentity = parsed.identity ?? null;
     assertIdentity(report.expectedIdentity, parsed.identity);
     return parsed.state;

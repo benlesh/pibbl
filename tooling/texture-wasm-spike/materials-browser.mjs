@@ -1,4 +1,4 @@
-import {crc,createElement,defineRenderLayer} from '../../packages/core/src/index.ts';
+import {pibbl,createElement,defineRenderLayer} from '../../packages/core/src/index.ts';
 import {ManualSchedulerDriver,installSchedulerDriverForTest} from '../../packages/core/src/lib/scheduler/testing.ts';
 import {materialField} from './reference-material-field.ts';
 import {TextureRaster} from './reference-presentation.ts';
@@ -56,9 +56,9 @@ window.materials={
         const timing={},Layer=makeLayer(mode,size,kind,quality,timing);let controller,tick=0;
         const scene=(seed,detail=.65)=>createElement(Layer,{seed,scale:6,detail,style:{width:832,height:400}});
         try {
-          const start=performance.now();controller=crc(canvas,scene(42),{pixelRatio:1});driver.flush(tick++*16.667);
+          const start=performance.now();controller=pibbl(canvas,scene(42),{pixelRatio:1});driver.flush(tick++*16.667);
           const firstGenerationMs=performance.now()-start,firstKernelMs=timing.generate;
-          const update=i=>{crc(canvas,scene(42+i,.45+(i%10)*.045));driver.flush(tick++*16.667);};
+          const update=i=>{pibbl(canvas,scene(42+i,.45+(i%10)*.045));driver.flush(tick++*16.667);};
           for(let i=0;i<caseWarmup;i++)update(i+1);
           const total=[],generate=[],rasterUpload=[];
           for(let i=0;i<caseSamples;i++) {const t=performance.now();update(caseWarmup+i+1);total.push(performance.now()-t);generate.push(timing.generate);rasterUpload.push(timing.rasterUpload);}
@@ -83,7 +83,7 @@ window.materials={
       const caption=document.createElement('p');caption.style.maxWidth='512px';caption.textContent=quality?({marble:'Finer veins, secondary hairlines and mineral clouds; four samples per pixel smooth the thin detail.',paper:'Layered fibers, finer grain and subtle relief.',cellular:'Beveled cells, directional shading and fine mottling.'})[kind]:'The shipped recipe, at the same resolution and with the same palette.';
       section.append(heading,canvas,caption);document.querySelector('#gallery').append(section);
       const timing={},Layer=makeLayer(mode,size,kind,quality,timing);
-      previews.push(crc(canvas,createElement(Layer,{seed,scale,detail,tiles:document.querySelector('#tiles').checked?2:1,style:{width:512,height:512}}),{pixelRatio:1}));
+      previews.push(pibbl(canvas,createElement(Layer,{seed,scale,detail,tiles:document.querySelector('#tiles').checked?2:1,style:{width:512,height:512}}),{pixelRatio:1}));
     }
     document.querySelector('#status').textContent=`${kind} · ${size}×${size} · ${mode}${size>512?' · experimental resolution above the public 262,144-cell limit':''}`;
   },

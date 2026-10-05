@@ -27,7 +27,7 @@ export function createCheckpointWriter(output, {
       const nowMs = monotonicNow();
       if (!Number.isFinite(nowMs) || nowMs < previousMs) throw new Error("Checkpoint monotonic clock moved backward or became invalid.");
       const snapshot = {
-        schema: "crc-replay-checkpoint/1",
+        schema: "pibbl-replay-checkpoint/1",
         runId,
         sequence: sequence + 1,
         status: "partial",

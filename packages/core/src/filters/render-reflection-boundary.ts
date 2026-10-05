@@ -1,22 +1,22 @@
 import { borrowTextureRaster, type TexturePaint } from '../lib/textures/texture-protocol.js';
-import { GLOBAL_STATE, getCRCInstance } from '../lib/global-state.js';
+import { GLOBAL_STATE, getPibblInstance } from '../lib/global-state.js';
 import { getOptionalService } from '../lib/optional-services.js';
 import { update } from '../lib/update.js';
-import type { CRCInstance } from '../lib/types.js';
+import type { PibblInstance } from '../lib/types.js';
 import type { FilterWindows } from '../lib/filter/filter-region.js';
 import { ReflectionGpu, type ReflectionLight, type ReflectionSettings } from './reflection-gpu.js';
-import type { CRCReflectedLightSource } from '../lib/style/filter-types.js';
+import type { PibblReflectedLightSource } from '../lib/style/filter-types.js';
 import type { CustomPreparedFilter } from './filter-executor.js';
 
-const GPU_BORROWER = Symbol('crc.reflection-borrower');
-const rootServices = new WeakMap<CRCInstance, RootGpuService>();
+const GPU_BORROWER = Symbol('pibbl.reflection-borrower');
+const rootServices = new WeakMap<PibblInstance, RootGpuService>();
 
 class RootGpuService {
   readonly gpu: ReflectionGpu;
   readonly borrowers = new Set<GpuBorrower>();
   private disposed = false;
   private recoveryRequested = false;
-  constructor(private readonly root: CRCInstance) {
+  constructor(private readonly root: PibblInstance) {
     this.gpu = new ReflectionGpu({
       onContextRestored: () => {
         if (this.disposed || this.recoveryRequested || this.root.mainTeardowns.closed) return;
@@ -44,10 +44,10 @@ class GpuBorrower {
   private committed = false;
   private disposed = false;
   readonly shared: RootGpuService;
-  private readonly root: CRCInstance;
-  constructor(readonly instance: CRCInstance) {
+  private readonly root: PibblInstance;
+  constructor(readonly instance: PibblInstance) {
     let root = instance;
-    while (root.parent) root = getCRCInstance(root.parent);
+    while (root.parent) root = getPibblInstance(root.parent);
     this.root = root;
     let shared = rootServices.get(root);
     if (!shared) { shared = new RootGpuService(root); rootServices.set(root, shared); }
@@ -82,21 +82,21 @@ class GpuBorrower {
 }
 
 /** @internal Test-only read-only access; it never creates a GPU service. */
-export function peekReflectionGpu(instance: CRCInstance): ReflectionGpu | undefined {
+export function peekReflectionGpu(instance: PibblInstance): ReflectionGpu | undefined {
   let root = instance;
-  while (root.parent) root = getCRCInstance(root.parent);
+  while (root.parent) root = getPibblInstance(root.parent);
   return rootServices.get(root)?.gpu;
 }
 
-export function isReflectionImage(value: CRCReflectedLightSource): value is HTMLImageElement | ImageBitmap {
+export function isReflectionImage(value: PibblReflectedLightSource): value is HTMLImageElement | ImageBitmap {
   return (typeof HTMLImageElement !== 'undefined' && value instanceof HTMLImageElement) ||
     (typeof ImageBitmap !== 'undefined' && value instanceof ImageBitmap);
 }
 export function processReflection(source: OffscreenCanvas, windows: FilterWindows, paint: TexturePaint,
-  light: CRCReflectedLightSource, settings: ReflectionSettings,
+  light: PibblReflectedLightSource, settings: ReflectionSettings,
   region: Readonly<{x:number;y:number;width:number;height:number}>, warp?: CustomPreparedFilter['textureWarp']): ImageBitmap {
-  const instance=GLOBAL_STATE.currentCRCInstance;
-  if(!instance) throw new Error('Reflection requires an active CRC instance.');
+  const instance=GLOBAL_STATE.currentPibblInstance;
+  if(!instance) throw new Error('Reflection requires an active Pibbl instance.');
   const borrower=getOptionalService(instance,GPU_BORROWER,()=>new GpuBorrower(instance)); borrower.used=true;
   return borrowTextureRaster(paint,map=>{
     borrower.useMap(map.resource);

@@ -6,11 +6,11 @@ Date: 2026-08-11
 
 ## Scenario and risk
 
-The mouse interaction contract explorer renders the approved native evidence and CRC projection from one executable oracle. The main risk was treating Canvas overlap as DOM propagation, or preserving current handler-set order because it happened to exist before platform expectations were measured.
+The mouse interaction contract explorer renders the approved native evidence and Pibbl projection from one executable oracle. The main risk was treating Canvas overlap as DOM propagation, or preserving current handler-set order because it happened to exist before platform expectations were measured.
 
 ## Manual and headless method
 
-The manual explorer was exercised in the in-app Chromium browser. Entry, move, switch, Canvas-background leave, root exit, geometry, activation, mutation, exception, coordinate, and context-policy cases all updated their diagram and native/CRC sequence fields. Reset restored Enter a region. Browser output contained only Vite connection debug messages.
+The manual explorer was exercised in the in-app Chromium browser. Entry, move, switch, Canvas-background leave, root exit, geometry, activation, mutation, exception, coordinate, and context-policy cases all updated their diagram and native/Pibbl sequence fields. Reset restored Enter a region. Browser output contained only Vite connection debug messages.
 
 Headlessly, the explorer loads through its catalog entry, drives every action, validates the oracle independently, asserts fixed representative traces, and probes the public-API diagrams whose current runtime behavior is not intentionally deferred. Nested clip intersection, the interaction-width miss, and the two removal schematics remain contract-only until TFC-04/TFC-05. The TFC-01 native fixture consumes the approved oracle for analogous movement and activation traces while independently driving the native gesture, so expected data and observed behavior cannot pass through the same unchecked projection.
 
@@ -21,14 +21,14 @@ The explorer uses a fixed 480×240 Canvas and public `g`, `clip`, `layer`, `line
 ## Surprising findings and browser differences
 
 - Current Pointer Events Level 4 now includes Mouse and Wheel Events material that used to be read primarily through UI Events; the older UI Events algorithms still provide useful explicit transition ordering.
-- DOM's nearest-common-inclusive-ancestor click rule has no honest CRC equivalent without a propagation tree, so cross-target release intentionally produces no CRC region click.
+- DOM's nearest-common-inclusive-ancestor click rule has no honest Pibbl equivalent without a propagation tree, so cross-target release intentionally produces no Pibbl region click.
 - The executable CDP-driven native fixture clicks after leaving and re-entering the original live target before release. Pointer Events leaves hysteresis to implementations while describing a no-boundary-crossing sequence as the general case. The contract follows measured reference Chromium when down, up, and the generated click all resolve to the same live target.
 - Reference Chromium/macOS emits secondary `mousedown → contextmenu → mouseup`, but the specification leaves high-level context-menu order browser-dependent.
 - Browser boundary events after target removal can depend on layout timing and feature flags. The contract specifies stable postconditions and the next explicit movement rather than one exact task boundary.
 
 ## Flakes and stabilization
 
-The oracle test does not synthesize unimplemented CRC behavior. It verifies shared data/rendering, while the native fixture verifies only analogous browser traces. Canvas-specific contract cases stay green as approved expectations until TFC-04/TFC-05 make runtime conformance assertions.
+The oracle test does not synthesize unimplemented Pibbl behavior. It verifies shared data/rendering, while the native fixture verifies only analogous browser traces. Canvas-specific contract cases stay green as approved expectations until TFC-04/TFC-05 make runtime conformance assertions.
 
 Manual actions await their scenario frame, and headless target pixels avoid glyph antialiasing and overlap edges. No retry or widened visual threshold was added.
 
@@ -53,7 +53,7 @@ Candidate tools:
 
 1. a typed trace-projection adapter for symbolic targets, fixture targets, and logical related targets;
 2. an oracle linter that checks every public mouse event appears in at least one approved case;
-3. a contract-conformance driver that can run one gesture against current CRC and produce an actionable expected/actual trace diff.
+3. a contract-conformance driver that can run one gesture against current Pibbl and produce an actionable expected/actual trace diff.
 
 ## Decisions and follow-ups
 

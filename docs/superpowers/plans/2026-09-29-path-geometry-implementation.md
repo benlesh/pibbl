@@ -5,10 +5,10 @@
 **Goal:** Deliver editable public path geometry in observable vertical slices.
 
 **Architecture:** Private packed buffers hold canonical geometry; fresh conversion
-helpers produce native/SVG output. CRC resolves geometry at its input boundaries.
+helpers produce native/SVG output. Pibbl resolves geometry at its input boundaries.
 Mutation revisions allow private native caching after the first slice.
 
-**Tech stack:** TypeScript, Canvas Path2D/DOMMatrix, CRC JSX, Vitest Chromium;
+**Tech stack:** TypeScript, Canvas Path2D/DOMMatrix, Pibbl JSX, Vitest Chromium;
 Node 24.15+ and pnpm 11.21.0.
 
 **Spec:** [Approved design](../specs/2026-09-29-path-geometry-design.md).
@@ -73,12 +73,12 @@ processing. These belong to the tests in their owning slices above.
 - `corepack pnpm@11.21.0 exec vitest run packages/core/test/path-geometry.test.tsx packages/core/src/lib/components/path.test.ts --browser.headless --browser.ui=false`: 2 files, 6 tests passed in Chromium. Initial run failed for missing PathGeometry export as expected.
 - `corepack pnpm@11.21.0 exec tsc --noEmit`: passed.
 - Changed TypeScript/TSX files passed ESLint; changed Markdown passed Prettier.
-- Studio's separate `playground/src/crc-editor-types.txt` declarations required
+- Studio's separate `playground/src/pibbl-editor-types.txt` declarations required
   extending for the new class, segment type, helpers, and Path input union.
 - Preview: `http://127.0.0.1:5184/#/examples/drawing/path-geometry`.
 - Deferred: arcs/other builders, splice/addPath, Clip/hooks, native caching,
   geometry utilities, full package-consumer evidence and trust gate.
-- `corepack pnpm@11.21.0 --filter @crc/core build`: passed.
+- `corepack pnpm@11.21.0 --filter @pibbl/core build`: passed.
 - `node tooling/verify-studio-pivot.mjs`: passed after rebuilding core; source,
   built, and editor declarations have exact public export-name parity.
 - Studio was inspected in the in-app browser: live canvas renders both shapes,

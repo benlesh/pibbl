@@ -1,4 +1,4 @@
-// Fixture generator: direct native HarfBuzz, with no CRC wrapper or geometry code.
+// Fixture generator: direct native HarfBuzz, with no Pibbl wrapper or geometry code.
 #include <hb.h>
 #include <hb-ot.h>
 #include <fstream>

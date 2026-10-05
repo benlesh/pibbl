@@ -3,10 +3,10 @@ import {
   Arc,
   Circle,
   createElement,
-  type CRCElement,
+  type PibblElement,
   Ellipse,
   Wedge,
-} from '@crc/core';
+} from '@pibbl/core';
 import { describe, expect, it, vi } from 'vitest';
 import { componentTest } from '../src/lib/test-utils/component-test';
 import { RegularPolygon } from '../src/lib/components/regular-polygon';
@@ -16,7 +16,7 @@ function pixelAt(canvas: HTMLCanvasElement, x: number, y: number) {
   return Array.from(canvas.getContext('2d')!.getImageData(x, y, 1, 1).data);
 }
 
-function inDeclaredBox<P>(child: CRCElement<P>) {
+function inDeclaredBox<P>(child: PibblElement<P>) {
   return createElement(Absolute, {
     children: [
       createElement(Absolute, {

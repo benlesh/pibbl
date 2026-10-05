@@ -5,30 +5,30 @@ import {
 } from "../../../playground/src/sandbox-runner";
 
 const rectangleLesson = `
-import { crc, Rectangle } from "@crc/core";
-import { jsx as _jsx } from "@crc/core/jsx-runtime";
+import { pibbl, Rectangle } from "@pibbl/core";
+import { jsx as _jsx } from "@pibbl/core/jsx-runtime";
 window.requestAnimationFrame = () => 0;
 export default function mount(canvas) {
-  return crc(canvas, _jsx(Rectangle, { style: { width: 1, height: 1 } }));
+  return pibbl(canvas, _jsx(Rectangle, { style: { width: 1, height: 1 } }));
 }
 `;
 
 const invalidControllerLesson = `
-import { crc } from "@crc/core";
+import { pibbl } from "@pibbl/core";
 export default function mount(canvas) {
   return {};
 }
 `;
 
 const throwingLesson = `
-import { crc } from "@crc/core";
+import { pibbl } from "@pibbl/core";
 export default function mount(canvas) {
   throw new Error("mount failed");
 }
 `;
 
 const disposableLesson = `
-import { crc } from "@crc/core";
+import { pibbl } from "@pibbl/core";
 export default function mount(canvas) {
   return {
     dispose() {
@@ -156,9 +156,9 @@ it("keeps a responsive canvas inside its preview after both dimensions shrink", 
       width: 1100,
       height: 680,
       code: `
-      import { crc, createElement, useLayoutBox } from "@crc/core";
+      import { pibbl, createElement, useLayoutBox } from "@pibbl/core";
       function Scene() { const box = useLayoutBox(); console.log(box.width + "x" + box.height); }
-      export default function mount(canvas) { return crc(canvas, createElement(Scene, {}), { viewport: "responsive" }); }
+      export default function mount(canvas) { return pibbl(canvas, createElement(Scene, {}), { viewport: "responsive" }); }
     `,
       onEvent(event) {
         if (event.kind === "log") sizes.push(event.message!);

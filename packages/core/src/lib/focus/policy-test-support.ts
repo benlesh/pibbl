@@ -1,7 +1,7 @@
 import { createElement } from '../element/create-element.js';
 import type {
-  CRCElement,
-  CRCNode,
+  PibblElement,
+  PibblNode,
 } from '../element/types.js';
 import {
   FocusManagement,
@@ -9,10 +9,10 @@ import {
   type FocusManagementProps,
   type KeyboardNavigationProps,
 } from './policy-components.js';
-import type { CRCKeyboardNavigationOptions } from './types.js';
+import type { PibblKeyboardNavigationOptions } from './types.js';
 
 /** Test-only non-JSX construction of the public focus policy descriptor. */
-export function focusManaged(child: CRCNode): CRCElement<any> {
+export function focusManaged(child: PibblNode): PibblElement<any> {
   return createElement(FocusManagement, {
     children: child as FocusManagementProps['children'],
   });
@@ -20,9 +20,9 @@ export function focusManaged(child: CRCNode): CRCElement<any> {
 
 /** Test-only non-JSX construction of the public directional policy descriptor. */
 export function directionalPolicy(
-  child: CRCNode,
-  options: CRCKeyboardNavigationOptions = { mode: 'directional' },
-): CRCElement<any> {
+  child: PibblNode,
+  options: PibblKeyboardNavigationOptions = { mode: 'directional' },
+): PibblElement<any> {
   return createElement(KeyboardNavigation, {
     ...options,
     children: child as KeyboardNavigationProps['children'],

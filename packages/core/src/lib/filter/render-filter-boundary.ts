@@ -17,9 +17,9 @@ import {
   type PrimitivePresentation,
 } from '../primitive-presentation.js';
 import { layoutDiagnostic } from '../style/diagnostics.js';
-import type { CRCInstance } from '../types.js';
+import type { PibblInstance } from '../types.js';
 
-const FILTER_SURFACE_POOL = Symbol('crc.native-filter-surface-pool');
+const FILTER_SURFACE_POOL = Symbol('pibbl.native-filter-surface-pool');
 
 export interface RenderFilterBoundaryInput {
   readonly component: string;
@@ -34,9 +34,9 @@ export function renderFilterBoundary(
 ): void {
   const parent = GLOBAL_STATE.renderContext;
   const parentTarget = GLOBAL_STATE.renderTarget;
-  const instance = GLOBAL_STATE.currentCRCInstance;
+  const instance = GLOBAL_STATE.currentPibblInstance;
   if (!parent || !parentTarget || !instance) {
-    throw new Error('Filter rendering requires an active CRC render target.');
+    throw new Error('Filter rendering requires an active Pibbl render target.');
   }
 
   const parentPaintTransform = getCurrentPaintTransform();
@@ -111,7 +111,7 @@ export function renderFilterBoundary(
 }
 
 /** @internal Read-only test/diagnostic access; it never allocates a pool. */
-export function peekNativeFilterPool(instance: CRCInstance): FilterSurfacePool | undefined {
+export function peekNativeFilterPool(instance: PibblInstance): FilterSurfacePool | undefined {
   return (instance.optionalServices.get(FILTER_SURFACE_POOL) as NativeFilterService | undefined)?.pool;
 }
 
@@ -120,7 +120,7 @@ class NativeFilterService {
   used = false;
   private committed = false;
 
-  constructor(private readonly instance: NonNullable<typeof GLOBAL_STATE.currentCRCInstance>) {}
+  constructor(private readonly instance: NonNullable<typeof GLOBAL_STATE.currentPibblInstance>) {}
 
   beginRender(): void { this.used = false; }
   endRender(success: boolean): void {

@@ -76,7 +76,7 @@ the scenario index regenerated from the current catalog. No commit or PR has
 been created for this combined local work.
 
 The older implementation remains preserved in
-`/Users/benlesh/.codex/worktrees/agent-verification/crc`, branch
+`/Users/benlesh/.codex/worktrees/agent-verification/pibbl`, branch
 `codex/agent-verification`, at `51821c12` plus uncommitted changes. Continue new
 work in the current checkout; do not copy its older catalog/index over current
 files. Earlier isolated-checkout evidence below is historical and superseded by
@@ -119,7 +119,7 @@ cannot close an inspection requirement.
 | DAT-01–DAT-13   | 13    | Open / partial | Application data lineage and analytical oracles need concrete scenarios; do not infer business meaning.                                                                                                                           |
 | VIZ-01–VIZ-15   | 15    | Open / partial | Generation-aware native interpolation, gaps, resize/density, duplicates and nearest-query evidence exist for one lab; general chart inspection remains open.                                                                      |
 | VIN-01–VIN-12   | 12    | Open / partial | Native nearest-x and pixel-distance selection, provenance, cutoff and clearing have scoped evidence; linked views, brush/zoom and broader policies remain open.                                                                   |
-| REN-01–REN-12   | 12    | Open / partial | Use public external layers and Three; removed CRC WebGL internals are out of scope. Adapter facets remain open.                                                                                                                   |
+| REN-01–REN-12   | 12    | Open / partial | Use public external layers and Three; removed Pibbl WebGL internals are out of scope. Adapter facets remain open.                                                                                                                 |
 | SIM-01–SIM-09   | 9     | Open / partial | inspectPhysics2D, debug overlay and isolated testing entry exist; audit evidence against each remaining simulation obligation.                                                                                                    |
 | APP-01–APP-12   | 12    | Open / partial | Application-owned semantic model, DOM integration and accessibility require scenario-specific evidence.                                                                                                                           |
 | ERR-01–ERR-13   | 13    | Open / partial | Existing runtime diagnostics and failure tests are candidates; general structured causal reporting remains open.                                                                                                                  |
@@ -180,7 +180,7 @@ package bytes, external assets, or atomic loading of all imports during hot
 updates. It is not malicious-server attestation. The fixed inputs and these
 limitations are documented in the isolated tooling README.
 
-Fresh commands in `/Users/benlesh/.codex/worktrees/agent-verification/crc`, using
+Fresh commands in `/Users/benlesh/.codex/worktrees/agent-verification/pibbl`, using
 Node 24.15.0 through `fnm exec --using=24.15.0`:
 
 - `node --test tooling/agent-verification/identity.test.mjs`: 3 passed, including
@@ -228,7 +228,7 @@ Fresh evidence in the isolated checkout, Node 24.15.0 / Chromium 151.0.7922.34:
 - `node tooling/agent-verification/replay.mjs 'http://127.0.0.1:5194/#/testing/agent-targeting-verification'`: all three modes passed, including pixels, native delivery and matching served identity.
 
 Report: `packages/core/test/out/agent-targeting/2026-09-29T21-54-17.464Z/report.json`
-in `/Users/benlesh/.codex/worktrees/agent-verification/crc`. The demo was served at
+in `/Users/benlesh/.codex/worktrees/agent-verification/pibbl`. The demo was served at
 <http://127.0.0.1:5194/#/testing/agent-targeting-verification> for feedback.
 
 This advances HIT-01/02/11/12 and LYR-01/05; it does not close those complete
@@ -469,7 +469,7 @@ at (313.5,392.5) must produce x=5,y=20 and local anchors (258.5,157.5).
 
 The new visualization test plus existing hover-lab tests pass (3 tests across two
 files). Typecheck and targeted lint pass. Native Studio replay at
-`CRC_VERIFY_DENSITY=2` passed all three data generations and independently checks
+`PIBBL_VERIFY_DENSITY=2` passed all three data generations and independently checks
 rendered viewport agreement; source identity matched:
 `packages/core/test/out/agent-viz/2026-09-29T22-21-42.108Z/report.json`.
 
@@ -481,7 +481,7 @@ antialiasing equivalence. The remaining inventory is still active.
 ## Logical capture versus geometric targeting, 2026-09-29
 
 Added a separate bounded capture facet to the targeting snapshot and labeled
-probes `geometry-only`. The facet reads at most 32 CRC-owned logical capture
+probes `geometry-only`. The facet reads at most 32 Pibbl-owned logical capture
 records without invoking native methods or cleanup-capable runtime lookups. It
 reports liveness, target IDs and pointer IDs; native activation/transfer details
 and external-renderer capture remain explicitly unavailable. Capture state may
@@ -510,7 +510,7 @@ content. Shadow-root hosts and ancestor-frame interception are not claimed; the
 query may flush layout and says nothing about pixel opacity or future delivery.
 
 The shared lab's Add DOM overlay / Remove DOM overlay actions demonstrate a real
-HTML interceptor over a valid CRC target. Native clicks first reach only the
+HTML interceptor over a valid Pibbl target. Native clicks first reach only the
 overlay, then select item A after removal. Mode changes/disposal remove owned DOM
 and restore parent positioning. The helper enters the targeting identity scope
 and is forbidden in production output.
@@ -548,7 +548,7 @@ unproven and the objective remains active.
 
 Added a separate bounded focus facet to the targeting snapshot: native focus in
 the owner document, logical target ID, focus-visible state and up to 64 committed
-candidates with source order and root bounds. It reads the known CRC manager's
+candidates with source order and root bounds. It reads the known Pibbl manager's
 committed fields without invoking focus/navigation/subscription methods. Missing
 policy is unconfigured; unknown or pending policy is unavailable. No accessibility
 tree, native ancestor-frame focus or visible focus-indicator proof is implied.
@@ -921,7 +921,7 @@ claimed. The full 373-requirement objective remains active and incomplete.
 Added optional exact-canvas binding to source-only signal inspection. Direct
 component subscribers now correlate to stable session-local numeric component and
 surface IDs, bounded display paths/names, root/Layer classification and render
-revisions. The scanner traverses CRC-owned records with limits of 64 surfaces,
+revisions. The scanner traverses Pibbl-owned records with limits of 64 surfaces,
 256 component records and 256 paint entries. Unknown owners remain null. A small
 internal opaque identity accessor connects existing consumer state to component
 records without installing production tracking or changing signal behavior.
@@ -1320,7 +1320,7 @@ coverage remain open. The complete inventory objective remains active.
 ## Bounded sampled component removal evidence, 2026-09-30
 
 Component observations now include a 64-record removal history. The inspector
-checks its previous bounded weak handle set for CRC's closed teardown flag while
+checks its previous bounded weak handle set for Pibbl's closed teardown flag while
 the original root is live. A confirmed removal retains only the numeric component
 ID and `component-disposed` reason; oldest records are evicted with a dropped
 counter. Snapshot omissions, scan truncation and unavailable weak references do
@@ -1411,7 +1411,7 @@ was introduced during this audit. Full inventory completion remains unproven.
 The LAY-08 audit identified a real purity gap: standalone `measureElement` allowed
 signal writes during custom normalization, measurement callbacks and the supplied
 text-measurement service. Three public-API regression cases failed before the fix.
-The whole measurement operation now uses CRC's existing signal-write prohibition,
+The whole measurement operation now uses Pibbl's existing signal-write prohibition,
 including recursive measurement. Rejected updates do not invoke the updater or
 change the signal; the previous write policy restores after failure. No new public
 API or inspection-triggered measurement was added.
@@ -1526,7 +1526,7 @@ It therefore does not prove real browser input-to-frame behavior. General
 playback/track/lease inspection and an animation causal transcript remain gaps
 within otherwise partially supported requirements. The lab has no explicit
 application policy scenario for reduced motion or visibility/resume; ANI-10 is
-recorded as a scoped gap, not a request for CRC to infer product policy.
+recorded as a scoped gap, not a request for Pibbl to infer product policy.
 
 Accounting now records **72 partial assessments, 4 audited gaps and 297
 unassessed IDs**. These are audit counts, not implementation completion. The
@@ -1573,7 +1573,7 @@ have scoped evidence. No production code or baseline changed.
 Application pipeline stage counts, aggregate oracles, calendar/category policy,
 decimation invariants and general redacted semantic queries lack the required
 evidence at this boundary. These are conditional/application responsibilities,
-not authorization to add joins, calendar scales or decimation to `@crc/viz`.
+not authorization to add joins, calendar scales or decimation to `@pibbl/viz`.
 The ledger explicitly preserves those distinctions. Current numeric guards also
 need a fuller public input-type matrix before claiming complete coverage.
 
@@ -1639,7 +1639,7 @@ updates were made.
 
 The material finding is a committed-state limitation: `default-picker.ts`
 retains mutable Three scene/camera references and reads them when picking occurs.
-CRC committing the picker alongside the bitmap does not freeze those references.
+Pibbl committing the picker alongside the bitmap does not freeze those references.
 Thus between-frame mutations or failed candidate updates require a controlled
 reproduction and resolution before claiming bitmap/pick generation consistency.
 REN-07 is recorded as a gap from source inspection, not as a newly executed
@@ -1696,7 +1696,7 @@ recorded as guidance, never as a passed human accessibility evaluation.
 
 Accounting is **140 partial assessments, 19 audited gaps and 214 unassessed IDs**.
 Conditional application responsibilities remain explicit; they do not authorize
-inventing new product features or automatic semantic DOM in CRC.
+inventing new product features or automatic semantic DOM in Pibbl.
 
 ## Diagnostic and controlled-failure audit — 2026-09-30
 
@@ -1865,7 +1865,7 @@ own completion evidence. TST-13 remains partial; accounting stays at 206 partial
 
 ## Machine-readable visual evidence — 2026-09-30
 
-The shared visual comparator now saves a `crc-visual-comparison/1` JSON sidecar
+The shared visual comparator now saves a `pibbl-visual-comparison/1` JSON sidecar
 beside each diff. It includes match/mismatch/unavailable status, operation stage,
 expected/actual dimensions, retained image references, exact changed-pixel count,
 maximum channel delta, unmasked changed bounds, and compared/ignored pixel counts.
@@ -2440,7 +2440,7 @@ The actual Studio recovered after its development-server restart. Browser-tool
 interaction then confirmed frame 1 with liveVisible=false/displayedVisible=true
 and threeClicks=1, followed by frame 2 with both false and canvasClicks=1.
 URL: http://127.0.0.1:5196/#/testing/three-picking-generation . A screenshot of the
-final state is saved at /tmp/crc-three-picking-lab.png. This is a runnable slice;
+final state is saved at /tmp/pibbl-three-picking-lab.png. This is a runnable slice;
 full trust and broader renderer requirements remain open. Counts unchanged.
 
 ## Three lab wait ownership — 2026-09-30
@@ -2476,7 +2476,7 @@ the same normal invocation passed afterward. Full repository trust remains unrun
 
 This repairs verification infrastructure without changing inventory dispositions.
 The exhaustive objective remains active. Local diagnostic output is retained in
-/tmp/crc-deps-debug.log and /tmp/crc-agent-verification-normal.log; these temporary
+/tmp/pibbl-deps-debug.log and /tmp/pibbl-agent-verification-normal.log; these temporary
 logs are not a durable CI evidence publication guarantee.
 
 ## Geometry versus clip diagnosis — 2026-09-30
@@ -2550,7 +2550,7 @@ No classification or completion banner was invented for those documents. The
 short-circuiting gate did not reach Studio documentation checks, typecheck, lint,
 builds, packed consumers, browser or lifecycle stages. The source of this failure
 is distinct from the repaired Node-test/browser-discovery bug. Local output is
-/tmp/crc-trust-after-index.log; this is diagnostic evidence, not a retained CI run.
+/tmp/pibbl-trust-after-index.log; this is diagnostic evidence, not a retained CI run.
 The goal and all remaining requirements stay open.
 
 ## Stroke interaction versus paint — 2026-09-30
@@ -2752,7 +2752,7 @@ Runtime tests alone do not close those inspection requirements. Counts now:
 
 ## Passive reaction subscriber classification — 2026-09-30
 
-Added a CRC-owned reaction kind marker and descriptor-only inspector classification.
+Added a Pibbl-owned reaction kind marker and descriptor-only inspector classification.
 Public useReaction evidence verifies stable identity across dynamic branches,
 subscription removal at disposal, immutable old snapshots and unchanged counters
 under repeated inspection. Reaction dirtiness remains unknown rather than borrowing
@@ -2824,7 +2824,7 @@ Keyboard operation never certifies screen-reader semantics. Counts: 261 partial,
 
 ## Focus policy observation and checkpoint delivery — 2026-09-30
 
-Committed focus snapshots now identify CRC management, source-order Tab exit and
+Committed focus snapshots now identify Pibbl management, source-order Tab exit and
 Enter/Space defaults. Candidates expose session-local directional boundary IDs;
 null membership means no boundary for that candidate. IDs are weakly held and
 bounded by existing candidate traversal. Handler prevention, ranking, eligibility
@@ -3243,7 +3243,7 @@ latest-request-wins policy, bounded pending transport slots, loading/error/retry
 state and completion disposition. Request identity is separate from chart data
 generation. Stale success/error cannot overwrite current request state or data;
 current failure retains the chart, retry clears error, and reset cancels pending
-work without reusing request IDs. No public CRC networking API was introduced.
+work without reusing request IDs. No public Pibbl networking API was introduced.
 
 A failing missing-action regression preceded implementation. All eight focused
 browser tests and ESLint passed. The browser run used a temporary configuration
@@ -3365,7 +3365,7 @@ unavailable evidence; inconsistent references never become a coherent identity.
 The comparison invokes no runtime or scheduler functions and returns no live
 references. Captured bindings themselves retain their realm and must be discarded.
 
-Two Node tests failed before implementation and passed after it. They bundle CRC's
+Two Node tests failed before implementation and passed after it. They bundle Pibbl's
 actual runtime/scheduler graph, load two copies in one VM realm, then another copy
 in a separate realm. A real Chromium iframe test passed and confirmed no change to
 the inspecting scheduler. Initial helper typecheck and final focused lint passed.
@@ -3408,7 +3408,7 @@ and other peer dependencies. Counts unchanged; no aggregate trust claim.
 ## Checked runtime identity in the shared lab — 2026-10-01
 
 Migrated the targeting lab factory to the checked runtime entry and bound the
-application's actual imported crc function. The serialized Runtime compatibility
+application's actual imported pibbl function. The serialized Runtime compatibility
 state includes acceptance/refusal and its diagnostic. Signal inspection starts
 only after the targeting binding is accepted; inspection re-enable runs the check
 again. Source fingerprints now include both runtime helper files and core manifest.
@@ -3472,7 +3472,7 @@ observation-error regression failed before repair; failed observation now report
 incompleteness without breaking drawing or retaining private error messages.
 
 Four focused Chromium tests passed on Node 24.15.0 / pnpm 11.21.0, including
-public CRC Text, history bounds, method restoration and native string conversion.
+public Pibbl Text, history bounds, method restoration and native string conversion.
 Typecheck and focused lint passed before the final conversion-only test addition.
 TXT-08 advances to partial, not complete: shared manual/native workflow integration
 and retained replay evidence remain. No glyph visibility, font attribution or
@@ -3483,7 +3483,7 @@ reviewed complete. No aggregate trust pass.
 
 Added the source-only agent-text-verification catalog lab with seeded wrong text,
 repair, independent expected label and a redacted serialized evidence panel.
-Manual Studio actions and the headless browser test mount the same public CRC
+Manual Studio actions and the headless browser test mount the same public Pibbl
 application. Production/built mode reports unavailable inspection. Each action
 owns a fresh bounded recorder and stops it after the expected drawing calls.
 
@@ -3871,7 +3871,7 @@ no full documentation or aggregate trust pass is claimed.
 
 ## Shared retrieval for layout smoke evidence — 2026-10-01
 
-The bounded saved-evidence reader now accepts crc-layout-studio-smoke/1. It uses
+The bounded saved-evidence reader now accepts pibbl-layout-studio-smoke/1. It uses
 the schema's action field for action selection, summaries and content-bound
 pagination without modifying raw action details. All views explicitly report
 attestation not provided by the schema. Unrecorded action statuses remain null;
@@ -3904,7 +3904,7 @@ font. No system-font availability or external service is required. The first
 missing-scene test failed; the implemented workflow and nonempty-render guard pass
 in Chromium. Typecheck and focused lint pass. Fresh browser evidence is retained
 in late-font-verified-browser.json. Font readiness is not claimed to automatically
-invalidate CRC, and the no-redraw observation is explicitly finite.
+invalidate Pibbl, and the no-redraw observation is explicitly finite.
 
 TXT-06 advances from gap to partial. Shared Studio controls/evidence and font-load
 failure/disposal hardening remain; this is not yet a feedback-ready lab. Counts:
@@ -4095,11 +4095,11 @@ build/browser/package matrix is implied by these passes.
 Reproduction from a provisioned checkout with the source Studio running:
 
 ```sh
-node tooling/agent-verification/workflow.mjs plan HIT-12 http://127.0.0.1:5199 /tmp/crc-targeting-final-new
-node tooling/agent-verification/workflow.mjs run HIT-12 http://127.0.0.1:5199 /tmp/crc-targeting-final-new
-node tooling/agent-verification/workflow.mjs run DAT-07 http://127.0.0.1:5199 /tmp/crc-viz-final-new
-node tooling/agent-verification/workflow.mjs run SIG-14 http://127.0.0.1:5199 /tmp/crc-signals-final-new
-node tooling/agent-verification/layout-smoke.mjs 'http://127.0.0.1:5199/#/testing/agent-layout-placement' /tmp/crc-layout-final-new.json
+node tooling/agent-verification/workflow.mjs plan HIT-12 http://127.0.0.1:5199 /tmp/pibbl-targeting-final-new
+node tooling/agent-verification/workflow.mjs run HIT-12 http://127.0.0.1:5199 /tmp/pibbl-targeting-final-new
+node tooling/agent-verification/workflow.mjs run DAT-07 http://127.0.0.1:5199 /tmp/pibbl-viz-final-new
+node tooling/agent-verification/workflow.mjs run SIG-14 http://127.0.0.1:5199 /tmp/pibbl-signals-final-new
+node tooling/agent-verification/layout-smoke.mjs 'http://127.0.0.1:5199/#/testing/agent-layout-placement' /tmp/pibbl-layout-final-new.json
 corepack pnpm@11.21.0 trust
 ```
 

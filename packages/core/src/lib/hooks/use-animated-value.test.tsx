@@ -1,12 +1,12 @@
 import { signalObserversForTest } from "../../../test/support/signal-observer";
 import { afterEach, beforeEach, describe, expect, expectTypeOf, it } from 'vitest';
 import {
-  crcInternalCurrentRenderOwner,
-  crcInternalRequestRendererWork,
-  type CRCInternalRenderOwner,
-} from '@crc/core/internal';
+  pibblInternalCurrentRenderOwner,
+  pibblInternalRequestRendererWork,
+  type PibblInternalRenderOwner,
+} from '@pibbl/core/internal';
 import {
-  crc,
+  pibbl,
   computed,
   useConst,
   useAnimatedValue,
@@ -16,7 +16,7 @@ import {
 import { animationPlaybackSnapshot } from '../animation/playback.js';
 import { createSpringRecord, sampleSpring } from '../animation/spring.js';
 import { executeRender } from '../execute-render.js';
-import { clearSharedState, getCRCInstance } from '../global-state.js';
+import { clearSharedState, getPibblInstance } from '../global-state.js';
 import { getSignalNode, signalGraphSnapshot } from '../signals/graph.js';
 import { writerLeaseSnapshot } from '../animation/writer-leases.js';
 import {
@@ -28,7 +28,7 @@ import {
 
 let driver: ManualSchedulerDriver;
 let restoreDriver: () => void;
-const roots = new Set<ReturnType<typeof crc>>();
+const roots = new Set<ReturnType<typeof pibbl>>();
 
 beforeEach(() => {
   document.body.replaceChildren();
@@ -44,13 +44,13 @@ afterEach(() => {
   document.body.replaceChildren();
 });
 
-function mount(node: Parameters<typeof crc>[1]): {
+function mount(node: Parameters<typeof pibbl>[1]): {
   readonly canvas: HTMLCanvasElement;
-  readonly controller: ReturnType<typeof crc>;
+  readonly controller: ReturnType<typeof pibbl>;
 } {
   const canvas = document.createElement('canvas');
   document.body.appendChild(canvas);
-  const controller = crc(canvas, node);
+  const controller = pibbl(canvas, node);
   roots.add(controller);
   return { canvas, controller };
 }
@@ -106,7 +106,7 @@ describe('useAnimatedValue mount behavior', () => {
     expect(animationPlaybackSnapshot()).toEqual(beforePlaybacks);
     expect(writerLeaseSnapshot()).toEqual(beforeLeases);
 
-    crc(canvas, <Probe target={10} />);
+    pibbl(canvas, <Probe target={10} />);
     driver.flush(1);
     expect(outputs[1]).toBe(outputs[0]);
     expect(values).toEqual([10, 10]);
@@ -159,7 +159,7 @@ describe('useAnimatedValue mount behavior', () => {
     expect(output.get()).toBe(1.2);
     expect(driver.pendingHostFrames).toBe(0);
 
-    crc(canvas, <Probe target={1.9} />);
+    pibbl(canvas, <Probe target={1.9} />);
     driver.flush(10);
     expect(output.get()).toBe(1.2);
     expect(driver.pendingHostFrames).toBe(0);
@@ -186,7 +186,7 @@ describe('useAnimatedValue retargeting', () => {
     driver.flush(60);
     expect(output.get()).toBe(5);
 
-    crc(canvas, <Probe target={20} />);
+    pibbl(canvas, <Probe target={20} />);
     driver.flush(70);
     expect(output.get()).toBe(6);
     driver.flush(80);
@@ -224,7 +224,7 @@ describe('useAnimatedValue retargeting', () => {
 
     const { canvas } = mount(<Probe duration={100} />);
     driver.flush(0);
-    crc(canvas, <Probe duration={Number.NaN} />);
+    pibbl(canvas, <Probe duration={Number.NaN} />);
 
     expect(() => driver.flush(10)).toThrow(/duration must be finite/iu);
     expect(driver.pendingHostFrames).toBe(1);
@@ -254,7 +254,7 @@ describe('useAnimatedValue retargeting', () => {
     driver.flush(0);
     driver.flush(10);
     driver.flush(110);
-    crc(canvas, <Probe target={0} />);
+    pibbl(canvas, <Probe target={0} />);
     driver.flush(120);
     const committed = output.get();
     driver.flush(130);
@@ -313,7 +313,7 @@ describe('useAnimatedValue retargeting', () => {
       driver.flush(0);
       driver.flush(10);
       sampleNames.length = 0;
-      crc(canvas, <Probe debugName="latest" />);
+      pibbl(canvas, <Probe debugName="latest" />);
       driver.flush(20);
       sampleNames.length = 0;
       driver.flush(30);
@@ -327,18 +327,18 @@ describe('useAnimatedValue retargeting', () => {
 
   it('adopts no target from a failed shared root transaction', () => {
     let output!: Signal<number>;
-    let owner!: CRCInternalRenderOwner;
+    let owner!: PibblInternalRenderOwner;
     let failComposition = false;
     const workKey = {};
     function Probe({ target }: { target: number }) {
       output = useAnimatedValue(target, { type: 'tween', duration: 100 });
       output.get();
-      owner ??= crcInternalCurrentRenderOwner();
+      owner ??= pibblInternalCurrentRenderOwner();
     }
 
     const { canvas } = mount(<Probe target={0} />);
     driver.flush(0);
-    crcInternalRequestRendererWork(owner, {
+    pibblInternalRequestRendererWork(owner, {
       key: workKey,
       kind: 'compose',
       run: () => {
@@ -347,13 +347,13 @@ describe('useAnimatedValue retargeting', () => {
     });
 
     failComposition = true;
-    crc(canvas, <Probe target={10} />);
+    pibbl(canvas, <Probe target={10} />);
     expect(() => driver.flush(10)).toThrow(/expected composition failure/iu);
     expect(output.get()).toBe(0);
     expect(animationPlaybackSnapshot().queuedCommands).toBe(0);
 
     failComposition = false;
-    crc(canvas, <Probe target={0} />);
+    pibbl(canvas, <Probe target={0} />);
     driver.flush(20);
     expect(output.get()).toBe(0);
     expect(driver.pendingHostFrames).toBe(0);
@@ -379,11 +379,11 @@ describe('useAnimatedValue retargeting', () => {
     const { canvas } = mount(<Probe fail={false} target={0} />);
     driver.flush(0);
     const staleOutput = output;
-    crc(canvas, <Probe fail target={10} />);
+    pibbl(canvas, <Probe fail target={10} />);
 
     expect(() => driver.flush(10)).toThrow(failure);
     expect(equalityCalls).toBe(1);
-    expect(getCRCInstance(canvas).refs.size).toBe(0);
+    expect(getPibblInstance(canvas).refs.size).toBe(0);
     expect(animationPlaybackSnapshot().activePlaybacks).toBe(0);
     expect(animationPlaybackSnapshot().queuedCommands).toBe(0);
     expect(writerLeaseSnapshot().active).toBe(0);
@@ -408,17 +408,17 @@ describe('useAnimatedValue retargeting', () => {
 
     const { canvas } = mount(<Probe target={0} write={false} />);
     driver.flush(0);
-    crc(canvas, <Probe target={10} write />);
+    pibbl(canvas, <Probe target={10} write />);
 
-    expect(() => driver.flush(10)).toThrow('CRC render');
+    expect(() => driver.flush(10)).toThrow('Pibbl render');
     expect(external.get()).toBe(0);
-    expect(getCRCInstance(canvas).refs.size).toBe(0);
+    expect(getPibblInstance(canvas).refs.size).toBe(0);
     driver.flush(11);
   });
 
   it('keeps one signal identity across failed omitted and explicit initial mount retries', () => {
     const beforeGraph = signalGraphSnapshot();
-    let owner!: CRCInternalRenderOwner;
+    let owner!: PibblInternalRenderOwner;
     let failComposition = false;
     const values: Array<readonly [direct: number, derived: number]> = [];
     const versions: number[] = [];
@@ -445,13 +445,13 @@ describe('useAnimatedValue retargeting', () => {
       initial,
       target,
     }: { include: boolean; initial?: number; target: number }) {
-      owner ??= crcInternalCurrentRenderOwner();
+      owner ??= pibblInternalCurrentRenderOwner();
       return include ? <Child initial={initial} target={target} /> : undefined;
     }
 
     const { canvas } = mount(<Root include={false} target={0} />);
     driver.flush(0);
-    crcInternalRequestRendererWork(owner, {
+    pibblInternalRequestRendererWork(owner, {
       key: workKey,
       kind: 'compose',
       run: () => {
@@ -460,12 +460,12 @@ describe('useAnimatedValue retargeting', () => {
     });
 
     failComposition = true;
-    crc(canvas, <Root include target={10} />);
+    pibbl(canvas, <Root include target={10} />);
     expect(() => driver.flush(10)).toThrow(/mount transaction failed/iu);
-    crc(canvas, <Root include initial={3} target={20} />);
+    pibbl(canvas, <Root include initial={3} target={20} />);
     expect(() => driver.flush(20)).toThrow(/mount transaction failed/iu);
     failComposition = false;
-    crc(canvas, <Root include target={30} />);
+    pibbl(canvas, <Root include target={30} />);
     driver.flush(30);
 
     expect(values).toEqual([[10, 20], [3, 6], [30, 60]]);
@@ -536,7 +536,7 @@ describe('useAnimatedValue public types and lifecycle', () => {
         executeRender(canvas, 1, undefined);
       } else {
         driver.flush(10);
-        crc(canvas, undefined);
+        pibbl(canvas, undefined);
         driver.flush(20);
       }
       if (driver.pendingHostFrames > 0) driver.flush(21);

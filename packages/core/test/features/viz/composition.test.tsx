@@ -5,8 +5,8 @@ import {
   Rectangle,
   signal,
   useCanvasContext,
-} from "@crc/core";
-import { Axis, LineSeries, Scale, ScaleAdjust } from "@crc/core/viz";
+} from "@pibbl/core";
+import { Axis, LineSeries, ScaleAdjust, LinearScale } from "@pibbl/core/viz";
 import { afterEach, expect, it, vi } from "vitest";
 import { testRuntime } from "./support/runtime.js";
 let runtime: ReturnType<typeof testRuntime>;
@@ -25,11 +25,11 @@ it("batches ordered runs with real gaps and supports both accessor forms", () =>
     { x: 10, y: 10 },
   ];
   runtime.mount(
-    <Scale id="x" type="linear" domain={[0, 10]} range={[0, 200]}>
-      <Scale id="y" type="linear" domain={[0, 10]} range={[100, 0]}>
+    <LinearScale id="x"  domain={[0, 10]} range={[0, 200]}>
+      <LinearScale id="y"  domain={[0, 10]} range={[100, 0]}>
         <LineSeries data={data} x="x" y={(d) => d.y} xScale="x" yScale="y" />
-      </Scale>
-    </Scale>,
+      </LinearScale>
+    </LinearScale>,
   );
   runtime.flush();
   expect(moves.mock.calls).toEqual([
@@ -65,13 +65,13 @@ it("places axes at the local frame edges and changes ScaleAdjust axes without ch
     );
   }
   runtime.mount(
-    <Scale id="x" type="linear" domain={[0, 10]} range={[0, 200]}>
-      <Scale id="y" type="linear" domain={[0, 10]} range={[100, 0]}>
+    <LinearScale id="x"  domain={[0, 10]} range={[0, 200]}>
+      <LinearScale id="y"  domain={[0, 10]} range={[100, 0]}>
         <Axis scale="x" position="bottom" tickCount={3} />
         <Axis scale="y" position="left" tickCount={3} />
         <Marker />
-      </Scale>
-    </Scale>,
+      </LinearScale>
+    </LinearScale>,
   );
   runtime.flush();
   expect(
@@ -94,8 +94,8 @@ it("hits the stroke and bubbles ordinary events while the gap falls through", ()
         style={{ width: 600, height: 400, fill: "white" }}
         onPointerDown={() => events.push("background")}
       />
-      <Scale id="x" type="linear" domain={[0, 10]} range={[0, 200]}>
-        <Scale id="y" type="linear" domain={[0, 10]} range={[100, 0]}>
+      <LinearScale id="x"  domain={[0, 10]} range={[0, 200]}>
+        <LinearScale id="y"  domain={[0, 10]} range={[100, 0]}>
           <LineSeries
             data={[
               { x: 0, y: 0 },
@@ -110,8 +110,8 @@ it("hits the stroke and bubbles ordinary events while the gap falls through", ()
             yScale="y"
             onPointerDown={() => events.push("line")}
           />
-        </Scale>
-      </Scale>
+        </LinearScale>
+      </LinearScale>
     </Group>,
   );
   runtime.flush();
@@ -146,8 +146,8 @@ it("skips excluded accessors and observes a direct static style signal", () => {
     },
   );
   runtime.mount(
-    <Scale id="x" type="linear" domain={[0, 10]} range={[0, 200]}>
-      <Scale id="y" type="linear" domain={[0, 10]} range={[100, 0]}>
+    <LinearScale id="x"  domain={[0, 10]} range={[0, 200]}>
+      <LinearScale id="y"  domain={[0, 10]} range={[100, 0]}>
         <LineSeries
           data={[0, 1, 2]}
           defined={(value) => value !== 2}
@@ -160,8 +160,8 @@ it("skips excluded accessors and observes a direct static style signal", () => {
           yScale="y"
           style={{ stroke: color }}
         />
-      </Scale>
-    </Scale>,
+      </LinearScale>
+    </LinearScale>,
   );
   runtime.flush();
   expect(seen).toEqual([0, 1]);
@@ -179,11 +179,11 @@ it("reads signal data only in the series receiver, without forwarding it into Pa
   ]);
   const read = vi.spyOn(data, "get");
   runtime.mount(
-    <Scale id="x" type="linear" domain={[0, 1]} range={[0, 100]}>
-      <Scale id="y" type="linear" domain={[0, 1]} range={[100, 0]}>
+    <LinearScale id="x"  domain={[0, 1]} range={[0, 100]}>
+      <LinearScale id="y"  domain={[0, 1]} range={[100, 0]}>
         <LineSeries data={data} x="x" y="y" xScale="x" yScale="y" />
-      </Scale>
-    </Scale>,
+      </LinearScale>
+    </LinearScale>,
   );
   runtime.flush();
   expect(read).toHaveBeenCalledTimes(1);
@@ -201,9 +201,9 @@ it("formats original tick values in an allocated reversed bottom axis", () => {
   const text = observeTextPositions();
   runtime.mount(
     <Absolute>
-      <Scale
+      <LinearScale
         id="x"
-        type="linear"
+
         domain={[0, 10]}
         range="width"
         reverse
@@ -219,7 +219,7 @@ it("formats original tick values in an allocated reversed bottom axis", () => {
             return `v${value}`;
           }}
         />
-      </Scale>
+      </LinearScale>
     </Absolute>,
   );
   runtime.flush();
@@ -243,11 +243,11 @@ it("keeps a large series as one painted batch", () => {
     y: Math.sin(i / 100),
   }));
   runtime.mount(
-    <Scale id="x" type="linear" domain={[0, 19999]} range={[0, 600]}>
-      <Scale id="y" type="linear" domain={[-1, 1]} range={[400, 0]}>
+    <LinearScale id="x"  domain={[0, 19999]} range={[0, 600]}>
+      <LinearScale id="y"  domain={[-1, 1]} range={[400, 0]}>
         <LineSeries data={data} x="x" y="y" xScale="x" yScale="y" />
-      </Scale>
-    </Scale>,
+      </LinearScale>
+    </LinearScale>,
   );
   runtime.flush();
   expect(stroke).toHaveBeenCalledTimes(1);

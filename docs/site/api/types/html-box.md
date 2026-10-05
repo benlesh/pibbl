@@ -7,15 +7,35 @@ slug: html-box
 apiCategory: types
 symbols:
   [
+    HtmlBoxFocusState,
     HtmlBoxProps,
     HtmlBoxStyle,
     HtmlMountCallback,
     HtmlUpdateFunction,
-    HtmlBoxFocusState,
   ]
 ---
 
 # HTML box types
+
+## HtmlBoxFocusState
+
+Readonly `isFocusWithin` and `isFocusVisible` booleans describe the whole native
+region. Native descendants keep their browser focus and focus rings.
+
+See [HtmlBox](#/api/components/html-box).
+
+## HtmlBoxProps
+
+`data` is the opaque application payload, `mount` is its mount callback,
+`pointerEvents` is `"auto" | "none"`, and optional `onFocusChange` observes the
+region snapshot. Read a Pibbl signal with `.get()` to subscribe the enclosing
+component when replacing data. `data` is not recursively resolved.
+
+## HtmlBoxStyle
+
+Pibbl box/layout fields and Group affine transform fields, plus opacity. Width and
+height default to the parent's allocation; DOM content does not define intrinsic
+size. Overflow defaults to clip. Canvas filters enclosing HtmlBox are unsupported.
 
 ## HtmlMountCallback
 
@@ -38,23 +58,3 @@ type HtmlUpdateFunction<Props> = (props: Props) => void;
 
 Updates persistent content after subsequent successful component renders. A clean
 Layer reprojection does not call the updater. Return a no-op if updates are unused.
-
-## HtmlBoxProps
-
-`data` is the opaque application payload, `mount` is its mount callback,
-`pointerEvents` is `"auto" | "none"`, and optional `onFocusChange` observes the
-region snapshot. Read a CRC signal with `.get()` to subscribe the enclosing
-component when replacing data. `data` is not recursively resolved.
-
-## HtmlBoxStyle
-
-CRC box/layout fields and Group affine transform fields, plus opacity. Width and
-height default to the parent's allocation; DOM content does not define intrinsic
-size. Overflow defaults to clip. Canvas filters enclosing HtmlBox are unsupported.
-
-## HtmlBoxFocusState
-
-Readonly `isFocusWithin` and `isFocusVisible` booleans describe the whole native
-region. Native descendants keep their browser focus and focus rings.
-
-See [HtmlBox](#/api/components/html-box).

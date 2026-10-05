@@ -5,7 +5,7 @@ import { resolve, join } from "node:path";
 import { build } from "esbuild";
 import { build as viteBuild } from "vite";
 const root = resolve(import.meta.dirname, "..");
-const temp = mkdtempSync(join(tmpdir(), "crc-wasm-bundles-"));
+const temp = mkdtempSync(join(tmpdir(), "pibbl-wasm-bundles-"));
 const kernels = Object.fromEntries(
   [
     "marble",
@@ -30,8 +30,8 @@ try {
   let checks = 0;
   for (const mode of ["source", "built"]) {
     const alias = {
-      "@crc/core/textures": join(root, `packages/core/${mode === "source" ? "src/features/textures/index.ts" : "dist/features/textures/index.mjs"}`),
-      "@crc/core": join(root, `packages/core/${mode === "source" ? "src/index.ts" : "dist/index.mjs"}`),
+      "@pibbl/core/textures": join(root, `packages/core/${mode === "source" ? "src/features/textures/index.ts" : "dist/features/textures/index.mjs"}`),
+      "@pibbl/core": join(root, `packages/core/${mode === "source" ? "src/index.ts" : "dist/index.mjs"}`),
     };
     for (const name of ["plain", ...Object.keys(kernels)]) {
       const factory =
@@ -44,8 +44,8 @@ try {
               : name;
       const contents =
         name === "plain"
-          ? "import {crc,createElement,Rectangle} from '@crc/core'; export function mount(c){return crc(c,createElement(Rectangle,{style:{width:40,height:40,fill:'red'}}));}"
-          : `import {crc,createElement,Rectangle,useTexture} from '@crc/core'; import {${factory}} from '@crc/core/textures'; function Scene(){const texture=useTexture(${factory}());return createElement(Rectangle,{style:{width:40,height:40,fill:texture}});} export function mount(c){return crc(c,createElement(Scene,{}));}`;
+          ? "import {pibbl,createElement,Rectangle} from '@pibbl/core'; export function mount(c){return pibbl(c,createElement(Rectangle,{style:{width:40,height:40,fill:'red'}}));}"
+          : `import {pibbl,createElement,Rectangle,useTexture} from '@pibbl/core'; import {${factory}} from '@pibbl/core/textures'; function Scene(){const texture=useTexture(${factory}());return createElement(Rectangle,{style:{width:40,height:40,fill:texture}});} export function mount(c){return pibbl(c,createElement(Scene,{}));}`;
       const input = join(temp, `${mode}-${name}.mjs`);
       writeFileSync(input, contents);
       for (const minify of [false, true]) {

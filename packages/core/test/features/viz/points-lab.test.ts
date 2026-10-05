@@ -1,4 +1,4 @@
-import { getScenarioBySlug, loadScenario } from "@crc/scenarios";
+import { getScenarioBySlug, loadScenario } from "@pibbl/scenarios";
 import { expect, it } from "vitest";
 it("inspects allocated plots, keeps custom keyed state on reorder, and reflows on resize", async () => {
   const entry = getScenarioBySlug("viz-points-lab");

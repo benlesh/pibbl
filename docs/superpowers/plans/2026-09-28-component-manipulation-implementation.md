@@ -4,11 +4,11 @@
 
 > **For agentic workers:** Use superpowers:subagent-driven-development or superpowers:executing-plans task by task. The user selected parallel subagents; preserve that choice. Repository thin-slice and review rules override repeated per-task review ceremonies. Track execution with the checkboxes below.
 
-**Goal:** Ship unified component positioning and agent-verifiable moving, resizing, rotation, handles, and snapping through the public CRC API.
+**Goal:** Ship unified component positioning and agent-verifiable moving, resizing, rotation, handles, and snapping through the public Pibbl API.
 
 **Architecture:** Layout and standalone rendering share a single left/top placement contract with explicit placement ownership. Component-owned manipulation controllers write ordinary geometry signals; frames and handles reuse existing rendering, event capture, and the realm scheduler. Pure gesture math is separate from runtime ownership and handle presentation.
 
-**Tech Stack:** TypeScript, CRC automatic JSX, Canvas2D, native Pointer Events, Vitest browser mode with Playwright Chromium, Vite, esbuild, pnpm.
+**Tech Stack:** TypeScript, Pibbl automatic JSX, Canvas2D, native Pointer Events, Vitest browser mode with Playwright Chromium, Vite, esbuild, pnpm.
 
 **Spec:** [Component manipulation design](../specs/2026-09-28-component-manipulation-design.md). Product direction approved by the user on 2026-09-28; this plan resolves implementation details rather than reopening that approval.
 
@@ -23,7 +23,7 @@
 - Use managed worktree tools when isolation is required, after inspecting attached artifacts. A new worktree does not copy uncommitted responsive changes: establish the intended base explicitly before implementation.
 - No new public input injection, manual clocks, semantic DOM, or global keyboard interception.
 - Typecheck is insufficient evidence of parent-child positioning correctness: execute the affected public scenario.
-- New runtime API exports live in @crc/core; no new package or entry point is needed for this feature. Pure solver functions remain internal initially.
+- New runtime API exports live in @pibbl/core; no new package or entry point is needed for this feature. Pure solver functions remain internal initially.
 - Public docs live under docs/site. Test-lab metadata stays out of public search.
 
 ## Review focus
@@ -63,21 +63,21 @@ Rectangle and Image render at local origin after placement. Text renders at loca
 
 ### Public manipulation surface
 
-Names below are the implementation target. Export their option/controller/event types with a CRC prefix. The configuration uses declared signal-valued fields, not arbitrary recursive signal discovery.
+Names below are the implementation target. Export their option/controller/event types with a Pibbl prefix. The configuration uses declared signal-valued fields, not arbitrary recursive signal discovery.
 
 ```ts
-type CRCManipulationBox = Readonly<{
+type PibblManipulationBox = Readonly<{
   left: number;
   top: number;
   width: number;
   height: number;
 }>;
-type CRCManipulationGeometry = Readonly<{
-  box: CRCManipulationBox;
+type PibblManipulationGeometry = Readonly<{
+  box: PibblManipulationBox;
   rotation: number;
 }>;
-type CRCManipulationWhen = "always" | "shift" | "alt" | "ctrl" | "meta";
-type CRCResizePosition =
+type PibblManipulationWhen = "always" | "shift" | "alt" | "ctrl" | "meta";
+type PibblResizePosition =
   | "top-left"
   | "top"
   | "top-right"
@@ -86,8 +86,8 @@ type CRCResizePosition =
   | "bottom"
   | "bottom-left"
   | "left";
-type CRCManipulationOperation = "move" | "resize" | "rotate";
-type CRCManipulationCancelReason =
+type PibblManipulationOperation = "move" | "resize" | "rotate";
+type PibblManipulationCancelReason =
   | "explicit"
   | "escape"
   | "pointer-cancel"
@@ -98,14 +98,14 @@ type CRCManipulationCancelReason =
   | "constraints-unsatisfiable";
 ```
 
-- `useManipulation(options: CRCManipulationOptions): CRCManipulationController` binds `box: WritableSignal<CRCManipulationBox>`, optional `rotation: WritableSignal<number>`, optional `move`, `resize`, `rotate`, and `onStart/onChange/onCommit/onCancel` callbacks. Missing operations are disabled; supplying an operation object enables it unless its `enabled` boolean/signal is false. Rotation configuration requires rotation state.
+- `useManipulation(options: PibblManipulationOptions): PibblManipulationController` binds `box: WritableSignal<PibblManipulationBox>`, optional `rotation: WritableSignal<number>`, optional `move`, `resize`, `rotate`, and `onStart/onChange/onCommit/onCancel` callbacks. Missing operations are disabled; supplying an operation object enables it unless its `enabled` boolean/signal is false. Rotation configuration requires rotation state.
 - `move` accepts `axis: 'both' | 'x' | 'y'` (default both), optional parent-space rectangular `bounds`, and snap `{ enabled?, when?, step: number | {x:number;y:number}, origin?: {x:number;y:number} }`.
 - `resize` accepts optional min/max dimensions, optional `bounds`, aspect ratio `{ value: 'initial' | number, when? }`, and discriminated snap: size `{ target:'size', step:number | {width:number;height:number}, enabled?, when? }` or grid `{ target:'grid', step:number | {x:number;y:number}, origin?, enabled?, when? }`. Size target is the shorthand default. Width/height must stay positive; default minimum is one local unit, no flipping. Bounds use the parent-space rotated corners for containment.
 - `rotate` accepts snap `{ step:number, origin?:number, enabled?, when? }`. Radians are manipulation units; `degrees(n:number):number` converts finite degrees to radians. Adapt to Group rotationDegrees internally without changing Group's public units.
 - Controller has readonly `active` and `snapshot` signals, `cancel():void`, and stable `frameProps: {controller, style}` referencing the original writable box signal. A controller attaches to exactly one frame; duplicate or cross-root frame attachment is an actionable error. Handles must belong to that frame.
-- Active value is null or `{operation, handle: CRCResizePosition | null, pointerId}`. Snapshot includes initial/proposed/applied geometry and snapActive/snapSatisfied. Callbacks receive immutable snapshots plus before/after; commit includes changed, cancel includes reason. No callback receives borrowed scratch.
+- Active value is null or `{operation, handle: PibblResizePosition | null, pointerId}`. Snapshot includes initial/proposed/applied geometry and snapActive/snapSatisfied. Callbacks receive immutable snapshots plus before/after; commit includes changed, cancel includes reason. No callback receives borrowed scratch.
 - `ManipulationFrame` accepts frameProps and children, applies geometry, and establishes overlay allocation. `DragHandle` has required declared region style. `ResizeHandle` accepts position, optional children, and hitSize. `ResizeHandles` accepts positions array, corners, or edges-and-corners. `RotationHandle` uses a top-center handle with a 24 CSS-pixel outward offset. Standard handle size is 8 CSS pixels; default hitSize is 24 CSS pixels. Validate positive finite sizes.
-- `Manipulable` binds `style: WritableSignal<CRCManipulationBox>`, optional rotation, `draggable/resizable/rotatable` boolean-or-operation options, resize handle selection, callbacks, and children. It owns one controller and composes the same frame/handles. A false/absent flag disables its operation; true uses defaults. Keep the geometry binding distinct from readonly/computed decoration; do not silently mutate arbitrary styles.
+- `Manipulable` binds `style: WritableSignal<PibblManipulationBox>`, optional rotation, `draggable/resizable/rotatable` boolean-or-operation options, resize handle selection, callbacks, and children. It owns one controller and composes the same frame/handles. A false/absent flag disables its operation; true uses defaults. Keep the geometry binding distinct from readonly/computed decoration; do not silently mutate arbitrary styles.
 - Signal form ships first. Controlled callback-only geometry binding, public pure solver, Flex/Grid resize-only binding, layout reordering, and automatic selection/history stay deferred.
 
 ### Gesture and solver rules
@@ -131,9 +131,9 @@ Pointer up evaluates the final sample then emits commit exactly once if activate
 
 ## Task 2: Runtime diagnostics and environment parity
 
-**Owner:** Worker A after Task 1. **Files:** create `packages/core/src/lib/development.ts`, `layout/positioning-diagnostics.ts`, `packages/core/test/layout-positioning-diagnostics.test.tsx`, `tooling/verify-positioning-environments.mjs`; modify `layout/absolute.ts`, `layout/flex.ts`, `layout/flow.ts`, `layout/grid.ts`, `element/create-element.ts`, `tooling/crc-runtime-source.ts`, `vitest.config.ts`, and package verification wiring as needed.
+**Owner:** Worker A after Task 1. **Files:** create `packages/core/src/lib/development.ts`, `layout/positioning-diagnostics.ts`, `packages/core/test/layout-positioning-diagnostics.test.tsx`, `tooling/verify-positioning-environments.mjs`; modify `layout/absolute.ts`, `layout/flex.ts`, `layout/flow.ts`, `layout/grid.ts`, `element/create-element.ts`, `tooling/pibbl-runtime-source.ts`, `vitest.config.ts`, and package verification wiring as needed.
 
-**Interfaces:** `assertSupportedChildPosition(layout, child, authoredResolvedStyle): void` uses `CRC_LAYOUT_IGNORED_POSITION`, source metadata and stable keys. Shared `isDevelopment` detection uses the existing optional import.meta.env.DEV mechanism; do not add an application strict-mode flag.
+**Interfaces:** `assertSupportedChildPosition(layout, child, authoredResolvedStyle): void` uses `PIBBL_LAYOUT_IGNORED_POSITION`, source metadata and stable keys. Shared `isDevelopment` detection uses the existing optional import.meta.env.DEV mechanism; do not add an application strict-mode flag.
 
 - [ ] Add parameterized public tests for Flex/Flow/Grid: explicit left/top including zero errors; omitted/undefined succeeds; signal-valued and dynamic children are checked; error identifies parent, child and fields. Read authored resolved values before defaults.
 - [ ] Run focused diagnostics tests red, then integrate one shared check at direct-child inspection. Do not add a speculative traversal, render pass, or measurement resource acquisition.
@@ -171,7 +171,7 @@ Pointer up evaluates the final sample then emits commit exactly once if activate
 
 **Owner:** Root integrates; Worker B authors example in disjoint files. **Files:** create `manipulation/manipulable.ts`, `packages/scenarios/src/learning/user-events/manipulation.example.tsx`, `packages/core/test/manipulation-example.test.ts`; modify `packages/scenarios/src/learning-catalog.ts`, `packages/scenarios/src/index.ts`, public exports and Studio declarations through their single owner.
 
-**Interfaces:** one compound card, title drag region, corner resize handles, grid toggle, Shift snapping, minimum size, reset, and visible box/gesture readout. Demonstrate nested Flex content using finite allocation. Learning example imports @crc/core only and is independent from exhaustive test fixtures.
+**Interfaces:** one compound card, title drag region, corner resize handles, grid toggle, Shift snapping, minimum size, reset, and visible box/gesture readout. Demonstrate nested Flex content using finite allocation. Learning example imports @pibbl/core only and is independent from exhaustive test fixtures.
 
 - [ ] Add failing browser evidence that actual handle interaction changes displayed signal geometry and nested content allocation.
 - [ ] Implement Manipulable convenience composition and the minimal example; integrate exports/editor declarations needed to run it. Avoid a separate controller implementation.
@@ -223,7 +223,7 @@ Teardown is special: release input resources synchronously, mark controller dead
 
 ## Task 9: Migration completeness, documentation, and public consumers
 
-**Owner:** Worker B, after interfaces stabilize; root owns shared catalogs/exports during integration. **Files:** affected drawing usages under `packages/core`, `packages/scenarios`, `packages/webgl`, `packages/particles`, `packages/physics`, `packages/viz`, `packages/three`, and `playground` as identified by the classified migration inventory. Add `playground/package-consumer/manipulation.tsx`; modify consumer tsconfigs, `playground/src/crc-editor-types.txt`, `tooling/verify-studio-types.mjs`, `tooling/verify-packed-consumer.mjs`, `tooling/verify-docs.mjs` and environment verification wiring. Update `docs/design/style-system-contract.md`, `layout-system-contract.md`, `drawing-components-contract.md`, `user-events-contract.md`, `runtime-resource-ownership.md`, and add `docs/design/component-manipulation-contract.md`, `docs/site/learn/guides/manipulation.md`, API entries for the public surface and migration guidance.
+**Owner:** Worker B, after interfaces stabilize; root owns shared catalogs/exports during integration. **Files:** affected drawing usages under `packages/core`, `packages/scenarios`, `packages/webgl`, `packages/particles`, `packages/physics`, `packages/viz`, `packages/three`, and `playground` as identified by the classified migration inventory. Add `playground/package-consumer/manipulation.tsx`; modify consumer tsconfigs, `playground/src/pibbl-editor-types.txt`, `tooling/verify-studio-types.mjs`, `tooling/verify-packed-consumer.mjs`, `tooling/verify-docs.mjs` and environment verification wiring. Update `docs/design/style-system-contract.md`, `layout-system-contract.md`, `drawing-components-contract.md`, `user-events-contract.md`, `runtime-resource-ownership.md`, and add `docs/design/component-manipulation-contract.md`, `docs/site/learn/guides/manipulation.md`, API entries for the public surface and migration guidance.
 
 **Interfaces:** root package exports, public declarations, Bundler/NodeNext consumers, packed runtime, Studio editor types, docs and examples all agree. Do not update historical completed-plan claims as though they described the new runtime.
 

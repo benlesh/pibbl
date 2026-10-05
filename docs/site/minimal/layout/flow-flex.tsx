@@ -2,13 +2,13 @@ import {
   Flex,
   Flow,
   Rectangle,
-  crc,
+  pibbl,
   type FlexItemStyle,
   type FlexProps,
   type FlexStyle,
   type FlowProps,
   type FlowStyle,
-} from "@crc/core";
+} from "@pibbl/core";
 
 const flexItem: FlexItemStyle = { flexGrow: 1, flexBasis: 60 };
 const flexStyle: FlexStyle = {
@@ -70,5 +70,5 @@ const canvas = document.createElement("canvas");
 canvas.width = 320;
 canvas.height = 220;
 document.body.append(canvas);
-const app = crc(canvas, <Flow {...flowProps} style={flowStyle} />);
+const app = pibbl(canvas, <Flow {...flowProps} style={flowStyle} />);
 window.addEventListener("pagehide", () => app.dispose(), { once: true });

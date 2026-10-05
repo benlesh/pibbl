@@ -1,6 +1,6 @@
-import { crc, definePrimitive, Group, Rectangle, Text, useSignal, useRef, usePlayback, repeat, sequence, wait, drive, tween, type CRCController, type CRCPointerEvent } from '@crc/core';
+import { pibbl, definePrimitive, Group, Rectangle, Text, useSignal, useRef, usePlayback, repeat, sequence, wait, drive, tween, type PibblController, type PibblPointerEvent } from '@pibbl/core';
 
-// A visual study built entirely on public CRC APIs, not a new filter contract.
+// A visual study built entirely on public Pibbl APIs, not a new filter contract.
 type Effect = 'bifrost' | 'hologram' | 'embers';
 interface SceneProps {
   effect: Effect; progress: number; time: number; brightness: number;
@@ -267,7 +267,7 @@ function Study({ initial }: { initial: StudyOptions }) {
     <Rectangle style={{ left: x, top: y, width: size, height: 38, cornerRadius: 6, fill: active ? '#304968' : '#142137', stroke: active ? '#86b6df' : '#2b3c54', strokeWidth: 1, cursor: 'pointer' }} onClick={click} />
     <Text pointerEvents="none" style={{ left: x + size / 2, top: y + 19, textBaseline: 'middle', textAlign: 'center', font: '600 11px sans-serif', fill: '#e2ebf7' }}>{label}</Text>
   </Group>;
-  const scrub = (event: CRCPointerEvent) => playback.seek(clamp((event.x - 40) / 880) * transitionDuration);
+  const scrub = (event: PibblPointerEvent) => playback.seek(clamp((event.x - 40) / 880) * transitionDuration);
   return <Group>
     <Rectangle style={{ width: 960, height: 790, fill: '#0b1220' }} />
     <EnergyScene effect={effect.get()} progress={progress.get()} time={time.get()} brightness={brightness.get()} hue={hue.get()} entry={entry.get()} targetWidth={width.get()} />
@@ -299,6 +299,6 @@ function Study({ initial }: { initial: StudyOptions }) {
   </Group>;
 }
 
-export default function mount(canvas: HTMLCanvasElement, options: StudyOptions = {}): CRCController {
-  return crc(canvas, <Study initial={options} />);
+export default function mount(canvas: HTMLCanvasElement, options: StudyOptions = {}): PibblController {
+  return pibbl(canvas, <Study initial={options} />);
 }

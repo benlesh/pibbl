@@ -1,4 +1,4 @@
-import { getWorkbenchEntryBySlug } from "@crc/scenarios";
+import { getWorkbenchEntryBySlug } from "@pibbl/scenarios";
 
 import type { PageLifecycle } from "../app/page-lifecycle";
 import { loadWorkbenchSource } from "../learning-sources";

@@ -8,7 +8,7 @@ Date: 2026-08-11
 
 The cataloged Geometry composition matrix drives the same public-API scene through root fill boundaries, half-size CSS presentation, nested translation/rotation/scale/skew, intersecting clips and an `evenodd` hole, root/layer paint order, transformed custom-size nested layers, and a transformed stroke interaction width. Every case supplies positive, boundary where applicable, and negative probes whose expected target and exact RGBA pixel come from the shared scenario definition.
 
-The risks were disagreement between rendered and interactive coordinates, CSS pixels leaking into `CRCMouseEvent.x/y`, nested clips behaving as a union, transforms being applied in the wrong order, independent layer dispatchers double-firing or competing for hover/cursor state, layer dimensions failing to crop descendants, and a visually unpainted interaction width becoming nondeterministic at its boundary.
+The risks were disagreement between rendered and interactive coordinates, CSS pixels leaking into `PibblMouseEvent.x/y`, nested clips behaving as a union, transforms being applied in the wrong order, independent layer dispatchers double-firing or competing for hover/cursor state, layer dimensions failing to crop descendants, and a visually unpainted interaction width becoming nondeterministic at its boundary.
 
 ## Manual and headless method
 
@@ -28,7 +28,7 @@ The first gallery attempt exposed a missing static source adapter for the new sc
 
 Headlessly, `packages/core/test/geometry-composition.test.ts` imports that same scenario. Eight semantic tests drive every matrix case through raw Chromium input, assert the exact route and intrinsic coordinates, check cursor ownership, and compare every declared pixel probe with exact RGBA. The completing session repeated those eight interaction tests in 20 independent runs: 160/160 passed, with zero retries or assertion failures. The combined semantic/visual file passes 15/15 after the visual comparisons described below were added.
 
-The current same-target activation rule was also checked against the reported background-start gesture. Raw Chromium input that presses on Canvas background and releases on the target does not emit CRC `click`, in both the interaction laboratory and baseline smoke scenario. The regression asserts that the stored down target is absent, the up target is the region, the click is rejected, and activation state is cleared; no production exception was added.
+The current same-target activation rule was also checked against the reported background-start gesture. Raw Chromium input that presses on Canvas background and releases on the target does not emit Pibbl `click`, in both the interaction laboratory and baseline smoke scenario. The regression asserts that the stored down target is absent, the up target is the region, the click is rejected, and activation state is cleared; no production exception was added.
 
 ## Visual strategy and stabilization
 
@@ -49,7 +49,7 @@ Targeted Canvas probes remain the primary boundary proof. The screenshot catches
 After a green exact comparison, one test-only drill painted a 60×50 pink rectangle at intrinsic `(210, 20)` in the compound-transform case without changing the approved baseline:
 
 ```sh
-VITE_CRC_GEOMETRY_VISUAL_DRILL=1 corepack pnpm@11.21.0 exec vitest run packages/core/test/geometry-composition.test.ts --browser.headless --browser.ui=false
+VITE_PIBBL_GEOMETRY_VISUAL_DRILL=1 corepack pnpm@11.21.0 exec vitest run packages/core/test/geometry-composition.test.ts --browser.headless --browser.ui=false
 ```
 
 The run failed only that case: 14 passed, 1 failed, 3,000 pixels differed, and the maximum channel delta was 178. The expected artifact showed only the blue clipped quadrilateral; actual added the pink rectangle; diff preserved the quadrilateral in gray and marked precisely the new 60×50 area red. All three artifacts were inspected. The drill output was not accepted, the environment flag was unset, and the normal command returned to 15/15 green.
@@ -72,9 +72,9 @@ The focused exact comparison passed before and after the deliberate failure dril
 
 ## Platform evidence and decisions
 
-The current [WHATWG Canvas specification](https://html.spec.whatwg.org/multipage/canvas.html) makes each new clip an intersection with the current clipping region, applies the current transform to paths and drawn images, treats path/stroke boundary points as inside, and defines hit-test coordinates in Canvas space rather than retroactively transforming the supplied point. The [CSSOM View MouseEvent coordinate definition](https://drafts.csswg.org/cssom-view/#extensions-to-the-mouseevent-interface) keeps `clientX/Y` in viewport CSS coordinates. CRC therefore maps the root client point through the Canvas bounding box into intrinsic width/height space once, then composes transforms, clips, and layer bounds during target resolution.
+The current [WHATWG Canvas specification](https://html.spec.whatwg.org/multipage/canvas.html) makes each new clip an intersection with the current clipping region, applies the current transform to paths and drawn images, treats path/stroke boundary points as inside, and defines hit-test coordinates in Canvas space rather than retroactively transforming the supplied point. The [CSSOM View MouseEvent coordinate definition](https://drafts.csswg.org/cssom-view/#extensions-to-the-mouseevent-interface) keeps `clientX/Y` in viewport CSS coordinates. Pibbl therefore maps the root client point through the Canvas bounding box into intrinsic width/height space once, then composes transforms, clips, and layer bounds during target resolution.
 
-CRC-specific composition decisions are:
+Pibbl-specific composition decisions are:
 
 - every active clip must contain the point, including `evenodd` holes;
 - one root dispatcher owns hover, activation, observer, and cursor state across root and nested layers;
@@ -87,7 +87,7 @@ These choices preserve TFC-04's approved exit-before-entry and same-live-target 
 
 ## Surprises, flakes, and browser differences
 
-- The in-app pointer controller quantizes screen coordinates to integer pixels. The gallery Canvas sat at a fractional vertical offset (`.375` CSS pixel), so the half-scale center requested at intrinsic y=120 reported y=119, and an exact stroke-boundary request at y=110 landed 0.375 intrinsic pixel outside even though the rounded diagnostic displayed 110. The manual run therefore verified y=111 inside and y=109 outside; the raw-CDP headless driver, which accepts fractional screen coordinates, remains the exact inclusive y=110 oracle. This is manual-controller precision, not a CRC behavior difference.
+- The in-app pointer controller quantizes screen coordinates to integer pixels. The gallery Canvas sat at a fractional vertical offset (`.375` CSS pixel), so the half-scale center requested at intrinsic y=120 reported y=119, and an exact stroke-boundary request at y=110 landed 0.375 intrinsic pixel outside even though the rounded diagnostic displayed 110. The manual run therefore verified y=111 inside and y=109 outside; the raw-CDP headless driver, which accepts fractional screen coordinates, remains the exact inclusive y=110 oracle. This is manual-controller precision, not a Pibbl behavior difference.
 - CSS scaling changes the screenshot dimensions from 480×240 to 240×120. Keeping that case separate avoids silently resizing images before comparison and proves the gallery actually presents the smaller Canvas.
 - The 20-run interaction loop occasionally selected another available local server port. Case assertions and artifacts were unchanged; this was port allocation, not a test retry or product flake.
 - The user-reported background-down/target-up activation was not reproducible on the current dispatcher. Exact raw-input regressions now make that invariant visible in both the laboratory and smoke test.
@@ -115,7 +115,7 @@ Candidate tools:
 
 ## Decisions and follow-ups
 
-- The implemented behavior is recorded in the [CRC mouse interaction contract](../../design/mouse-interaction-contract.md).
+- The implemented behavior is recorded in the [Pibbl mouse interaction contract](../../design/mouse-interaction-contract.md).
 - Exact, per-case text-free images are the composition contract; exact RGBA/state probes remain the boundary contract.
 - The matrix is a trusted test laboratory rather than a documentation candidate, but its source remains presentation-neutral for the gallery, browser tests, and future diagnostics.
 - TFC-06 should benchmark the recursive global resolver as implemented and optimize only measured hot paths without weakening composition or activation identity.

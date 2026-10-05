@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest';
-import { getScenarioBySlug, loadScenario } from '@crc/scenarios';
+import { getScenarioBySlug, loadScenario } from '@pibbl/scenarios';
 import type { AgentLateFontState } from '../../scenarios/src/agent-late-font';
 it('separates font readiness from repaint and responsive rendering in one application workflow', async () => {
  const canvas=document.createElement('canvas');canvas.style.cssText='width:400px;height:120px';const host=document.createElement('div');document.body.append(canvas,host);
@@ -30,7 +30,7 @@ it('preserves provenance on load failure and recovers without retaining loaded f
  try {
   await expect(controller.perform('load-font')).rejects.toThrow('controlled font failure');
   expect(controller.getState()).toMatchObject({status:'error',sample:null,diagnosis:'observation-failed'});
-  expect(JSON.parse(host.textContent!)).toMatchObject({schema:'crc-late-font-fixture/1',provenance:'source-development-no-build-attestation',state:{status:'error',sample:null}});
+  expect(JSON.parse(host.textContent!)).toMatchObject({schema:'pibbl-late-font-fixture/1',provenance:'source-development-no-build-attestation',state:{status:'error',sample:null}});
   load.mockRestore();
   await controller.perform('load-font');
   const first=controller.getState();expect(first.font).toBe('loaded');

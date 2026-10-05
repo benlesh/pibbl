@@ -1,10 +1,10 @@
 import { afterEach, expect, it, vi } from "vitest";
-import { crc, Rectangle } from "@crc/core";
+import { pibbl, Rectangle } from "@pibbl/core";
 import {
   ReactionDiffusion,
   ProceduralTexture,
   type TextureRenderer,
-} from "@crc/core/textures";
+} from "@pibbl/core/textures";
 import { InkSimulation } from "../../../src/features/textures/lib/simulation.js";
 import { TextureRaster } from "../../../src/features/textures/lib/presentation.js";
 import { clearSharedState } from "../../../src/lib/global-state.js";
@@ -45,7 +45,7 @@ it("advances fixed steps, caps a long gap, and resumes without charging paused t
       style={{ width: 128, height: 80 }}
     />
   );
-  const controller = crc(c, scene());
+  const controller = pibbl(c, scene());
   try {
     d.flush(0);
     expect(advance).not.toHaveBeenCalled();
@@ -53,11 +53,11 @@ it("advances fixed steps, caps a long gap, and resumes without charging paused t
     expect(advance).toHaveBeenLastCalledWith(8);
     d.flush(10000);
     expect(advance).toHaveBeenLastCalledWith(24);
-    crc(c, scene(true));
+    pibbl(c, scene(true));
     d.flush(10016);
     expect(d.pendingHostFrames).toBe(0);
     const count = advance.mock.calls.length;
-    crc(c, scene(false));
+    pibbl(c, scene(false));
     d.flush(60000);
     expect(advance).toHaveBeenCalledTimes(count);
     d.flush(60000 + 1000 / 60);
@@ -92,13 +92,13 @@ it("recolors without stepping or replacing the source and keeps output independe
     configurable: true,
     value: 1,
   });
-  const controller = crc(c, scene(["#000000", "#ffffff"]), {
+  const controller = pibbl(c, scene(["#000000", "#ffffff"]), {
     pixelRatio: "device",
   });
   try {
     d.flush(0);
     const first = bytes(c);
-    crc(c, scene(["#331122", "#ffffaa"]));
+    pibbl(c, scene(["#331122", "#ffffaa"]));
     d.flush(16);
     expect(bytes(c)).not.toEqual(first);
     expect(sources[1]).toBe(sources[0]);
@@ -132,11 +132,11 @@ it("shares one host frame across instances and releases all owned surfaces exact
     sources.push(t.source, t.mask);
     ctx.drawImage(t.source, 0, 0, t.width, t.height);
   };
-  const a = crc(
+  const a = pibbl(
     canvas(),
     <ReactionDiffusion render={render} style={{ width: 128, height: 80 }} />,
   );
-  const b = crc(
+  const b = pibbl(
     canvas(),
     <ProceduralTexture
       kind="marble"
@@ -162,12 +162,12 @@ it("shares one host frame across instances and releases all owned surfaces exact
     restore();
   }
 });
-it("does not paint through a later CRC target", async () => {
+it("does not paint through a later Pibbl target", async () => {
   const d = new ManualSchedulerDriver(),
     restore = installSchedulerDriverForTest(d),
     c = canvas();
   let clicks = 0;
-  const controller = crc(
+  const controller = pibbl(
     c,
     <>
       <ReactionDiffusion
@@ -201,7 +201,7 @@ it("cleans up a failing renderer", () => {
     c = canvas();
   const dispose = vi.spyOn(TextureRaster.prototype, "dispose");
   let source: OffscreenCanvas | undefined;
-  const controller = crc(
+  const controller = pibbl(
     c,
     <ReactionDiffusion
       render={(_ctx, t) => {
@@ -238,7 +238,7 @@ it.each([
   (props) => {
     const driver = new ManualSchedulerDriver(),
       restore = installSchedulerDriverForTest(driver);
-    const controller = crc(
+    const controller = pibbl(
       canvas(),
       <ReactionDiffusion {...props} style={{ width: 128, height: 80 }} />,
     );

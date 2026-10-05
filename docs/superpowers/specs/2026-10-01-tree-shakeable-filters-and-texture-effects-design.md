@@ -6,17 +6,17 @@ Status: proposed design for review, 2026-10-01. Not an implemented contract or
 approval to change public APIs. This proposal covers optional filter architecture,
 texture consumption, animated underwater displacement, migration, and evidence.
 
-CRC should ship a small integration protocol in its base renderer and load each
+Pibbl should ship a small integration protocol in its base renderer and load each
 optional feature through explicit application imports. Filters continue to own
 appearance-only processing of a primitive and its descendants. Textures produce
 the pixels a filter can use as input. An animated water texture feeding a
 displacement filter is the first new effect; it uses the existing texture owner
-and CRC scheduler rather than introducing another animation system.
+and Pibbl scheduler rather than introducing another animation system.
 
 ## Decisions
 
 1. Replace string-tagged filter descriptors with immutable opaque values returned
-   by imported factories from `@crc/core/filters`.
+   by imported factories from `@pibbl/core/filters`.
 2. Move capture, surface pools, native filter validation, and effect execution
    behind those values. Core keeps recognition and invocation, not an effect registry.
 3. Split texture consumption from texture production. Built-in drawing components
@@ -24,7 +24,7 @@ and CRC scheduler rather than introducing another animation system.
 4. Keep existing texture authoring exports and ownership. Add internal synchronous
    borrowing for filters; do not expose a backing canvas on public handles.
 5. Add `displacement` as an optional GPU filter and `waterWaves` as an independently
-   removable recipe in `@crc/textures`. Native filters never import the GPU path.
+   removable recipe in `@pibbl/textures`. Native filters never import the GPU path.
 6. Preserve logical geometry, source paint order, event targeting, physics, focus,
    scheduler phases, and explicit Layer caching.
 7. Prove removability using built, packed consumer bundles, including transitive
@@ -38,7 +38,7 @@ The following are observations from this checkout, not bundle measurements:
 
 | Current boundary              | Evidence                                                                                                          | Consequence                                                                                               |
 | ----------------------------- | ----------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
-| Core mounting                 | `packages/core/src/lib/mount-crc.ts` imports and constructs `FilterSurfacePool`                                   | A plain mount reaches filter resource machinery, although backing surfaces are lazy                       |
+| Core mounting                 | `packages/core/src/lib/mount-pibbl.ts` imports and constructs `FilterSurfacePool`                                 | A plain mount reaches filter resource machinery, although backing surfaces are lazy                       |
 | Canvas rendering              | `packages/core/src/lib/backend/canvas-2d-backend.ts` imports `renderFilterBoundary`                               | The renderer reaches filter capture and execution                                                         |
 | Style resolution              | `packages/core/src/lib/style/resolve-dispatch.ts` imports `resolveFilterList`                                     | Every primitive can reach the complete descriptor validator                                               |
 | Filter compilation and bounds | `packages/core/src/lib/style/filter.ts` and `packages/core/src/lib/filter/filter-region.ts` branch on filter type | Factory syntax alone cannot isolate individual implementations                                            |
@@ -83,7 +83,7 @@ removability is not assumed.
 No public shader API, arbitrary custom-filter ABI, retained scene graph, second
 scheduler, automatic pointer distortion, worker pipeline, or CPU full-scene pixel
 processing is introduced. GPU support here is private image processing, not a
-return of the removed CRC WebGL scene runtime.
+return of the removed Pibbl WebGL scene runtime.
 
 ## Public authoring
 
@@ -91,8 +91,8 @@ Existing native operations become named factories. Factory option fields retain
 the current meanings, defaults, ranges, clamping, and concrete-color requirements.
 
 ```tsx
-import { Group, Rectangle } from "@crc/core";
-import { blur, dropShadow } from "@crc/core/filters";
+import { Group, Rectangle } from "@pibbl/core";
+import { blur, dropShadow } from "@pibbl/core/filters";
 
 <Group
   style={{
@@ -112,9 +112,9 @@ The complete initial native exports are `blur`, `brightness`, `contrast`,
 must remain inert and consumer tests must prove individual export elimination.
 Per-effect deep imports are unnecessary for the initial public surface.
 
-`CRCFilter` becomes an opaque readonly value. Its type remains importable from
+`PibblFilter` becomes an opaque readonly value. Its type remains importable from
 core and is also exported from the filter subpath. `SystemStyle.filter` remains
-`CRCFilter | readonly CRCFilter[]`, with the existing shallow signal wrapper.
+`PibblFilter | readonly PibblFilter[]`, with the existing shallow signal wrapper.
 One value is a one-item list; an empty list is a direct-path no-op. Lists preserve
 order and nested boundaries execute inside out.
 
@@ -184,7 +184,7 @@ requirements justify a public contract.
 Core supplies generic occurrence state, successful-generation adoption, teardown
 registration, local/world transforms, and signal dependency ownership. Those
 facilities do not construct filter pools. The supplied executor lazily attaches
-its service to the owning CRC instance on first active use. Last active boundary
+its service to the owning Pibbl instance on first active use. Last active boundary
 removal releases that service; root disposal remains the final idempotent backstop.
 An unsuccessful candidate cannot leak a service registration.
 
@@ -230,8 +230,8 @@ its background and contents inside the filtered boundary.
 
 Split the current texture module into a small recognition/consumption protocol,
 producer lifecycle implementation, and placement utilities. Public `defineTexture`
-and `useTexture` remain available from `@crc/core`; the existing convenience
-re-export from `@crc/textures` remains. Inert root exports alone do not justify
+and `useTexture` remain available from `@pibbl/core`; the existing convenience
+re-export from `@pibbl/textures` remains. Inert root exports alone do not justify
 moving established APIs to another subpath.
 
 A live texture handle or paint view supplies private operations to resolve Canvas
@@ -252,7 +252,7 @@ revision; they do not each advance or rasterize the producer. Successful depende
 replacement detaches an old map. Removal, failed generation, and disposal release
 provisional and committed consumer edges appropriately.
 
-Preserve current ownership restrictions: sharing is within one owning CRC tree,
+Preserve current ownership restrictions: sharing is within one owning Pibbl tree,
 including its managed Layers. The hook owns and disposes the producer; consumers
 borrow it and never extend its lifetime. A retained handle cannot be rendered
 after its owner is disposed. Later sends remain inert as documented. Definition
@@ -290,7 +290,7 @@ ignored. Alpha weights the displacement, so transparent map pixels are neutral.
 For an 8-bit channel `c`, define signed displacement as `(c - 128) / 128` below
 128 and `(c - 128) / 127` at or above 128. Thus bytes 0, 128, and 255 mean exactly
 −1, 0, and +1. Decode sampled channels after bilinear interpolation. This is an
-explicit CRC encoding, not an assertion of SVG displacement equivalence.
+explicit Pibbl encoding, not an assertion of SVG displacement equivalence.
 
 For local output position `p`, let `v` be the decoded RG vector times map alpha:
 
@@ -316,7 +316,7 @@ operations in the same list still execute normally.
 ## GPU processing and capabilities
 
 The initial implementation targets an optional OffscreenCanvas WebGL2 processor.
-It imports neither Three.js nor `@crc/three`. It uploads the captured source and
+It imports neither Three.js nor `@pibbl/three`. It uploads the captured source and
 borrowed map, executes a full-screen displacement pass, and composites the result
 back to Canvas2D synchronously before the scratch target is reused. Initial
 correctness takes priority over speculative sharing with an application's GPU
@@ -339,8 +339,8 @@ no silent CPU fallback, reduced resolution, or substitution of unfiltered output
 Applications may explicitly choose another style for their supported environment.
 
 Context loss invalidates cached GPU resources and aborts the current effect pass.
-Do not composite an incomplete result. Report the failure through CRC's error
-path without stopping unrelated roots. A restoration event requests one CRC
+Do not composite an incomplete result. Report the failure through Pibbl's error
+path without stopping unrelated roots. A restoration event requests one Pibbl
 update and rebuilds lazily; there is no continuous retry loop. Dispose listeners
 and all owned programs, textures, buffers, and framebuffer objects with the service.
 
@@ -357,7 +357,7 @@ the public semantics or claim a performance advantage from shader timing alone.
 
 ## Animated underwater recipe
 
-`waterWaves` lives in its own module in `@crc/textures` and returns a normal
+`waterWaves` lives in its own module in `@pibbl/textures` and returns a normal
 `TextureRecipe<WaterMessage>`. It imports no filter implementation. Its initial
 options are `seed` (default 0, existing validated seed domain), `speed` (finite
 nonnegative multiplier, default 1), `scale` (integer periods per tile, 1 through
@@ -371,7 +371,7 @@ The seed determines mode phases/directions; scale changes spatial frequency;
 speed changes phase progression. Output amplitude is normalized to the encoding
 range; the filter's strength controls the final logical excursion.
 
-Advance with CRC's supplied millisecond delta, expressed internally in seconds.
+Advance with Pibbl's supplied millisecond delta, expressed internally in seconds.
 The first frame establishes a baseline. Pause/resume discards elapsed debt. A
 speed of zero produces a static field and stops continuing requests. Seed or scale
 changes regenerate the field; speed changes preserve phase; display resize and
@@ -387,9 +387,9 @@ phase to the seeded initial state and retains the current pause state. Paused
 configuration changes can invalidate one frame without starting a loop.
 
 ```tsx
-import { Group, Layer, useTexture } from "@crc/core";
-import { displacement } from "@crc/core/filters";
-import { waterWaves } from "@crc/textures";
+import { Group, Layer, useTexture } from "@pibbl/core";
+import { displacement } from "@pibbl/core/filters";
+import { waterWaves } from "@pibbl/textures";
 
 function UnderwaterScene() {
   const water = useTexture(waterWaves({ seed: 7, speed: 0.4, scale: 4 }), {
@@ -416,12 +416,12 @@ function UnderwaterScene() {
 
 This is proposed authoring, with `Scene` supplied by the application. The example
 uses an explicit Layer to retain its content under existing Layer rules. It does
-not promise that the entire CRC root stops traversing or repainting.
+not promise that the entire Pibbl root stops traversing or repainting.
 
 A future ripple recipe can accept local disturbances through `send`. The
 application will map ordinary event coordinates into map coordinates and forward
 messages explicitly. The filter never registers pointer listeners, captures input,
-or simulates CRC physics. Ripple equations, bounds, overload policy, and brush
+or simulates Pibbl physics. Ripple equations, bounds, overload policy, and brush
 semantics require their own design; this proposal establishes the extension path
 without shipping speculative simulation infrastructure. Caustic light overlays,
 color grading, and blur remain separate composable effects.
@@ -461,7 +461,7 @@ bitmap/interaction guarantee of external render layers.
 ## Caching and interaction invariants
 
 Animated displacement reruns processing when its map changes. An ordinary subtree
-is still immediate-mode and is recaptured during rendering. CRC does not retain
+is still immediate-mode and is recaptured during rendering. Pibbl does not retain
 its draw commands or infer that it is static. An explicit child Layer can provide
 a cached bitmap while the surrounding effect moves. A filter inside a Layer
 invalidates that Layer and the necessary ancestors. A filter outside a clean Layer
@@ -500,7 +500,7 @@ Tests must distinguish texture-owned continuing work from leaked filter work.
 
 ## Packaging and the wider optional feature audit
 
-Add the `@crc/core/filters` ESM and declaration entry with Bundler and NodeNext
+Add the `@pibbl/core/filters` ESM and declaration entry with Bundler and NodeNext
 coverage. Keep `sideEffects: false` only while entries are genuinely inert.
 Prefer declaration-style factories and modules with no observable top-level
 initialization. Pure annotations are allowed only for reviewed calls whose unused
@@ -609,8 +609,8 @@ Timing guards remain opt-in. Do not claim portable frame-rate guarantees.
 This is a deliberate source-breaking filter migration. Do not keep a default
 legacy descriptor parser in core: it would preserve the dependency this work is
 removing. Replace all repository call sites and documentation in the release that
-changes `CRCFilter`. Runtime rejection of an old object should say to import a
-factory from `@crc/core/filters`, without importing the legacy implementation.
+changes `PibblFilter`. Runtime rejection of an old object should say to import a
+factory from `@pibbl/core/filters`, without importing the legacy implementation.
 
 | Existing form                                                    | Proposed form                                            |
 | ---------------------------------------------------------------- | -------------------------------------------------------- |
@@ -626,7 +626,7 @@ factory from `@crc/core/filters`, without importing the legacy implementation.
 | `{ type: 'sepia', amount: 0.5 }`                                 | `sepia({ amount: 0.5 })`                                 |
 
 Replace named descriptor interfaces with explicitly named option types such as
-`CRCBlurFilterOptions`. Code reading `.type` or spreading descriptors must retain
+`PibblBlurFilterOptions`. Code reading `.type` or spreading descriptors must retain
 its own application configuration and create a filter value from it. Opaque values
 are not JSON configuration. Applications loading serialized effect choices must
 write an explicit imported-factory mapping, paying for the factories they select.

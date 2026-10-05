@@ -1,5 +1,5 @@
 import { expect, it, vi } from 'vitest';
-import { getScenarioBySlug, loadScenario } from '@crc/scenarios';
+import { getScenarioBySlug, loadScenario } from '@pibbl/scenarios';
 import { clickMouse } from './support/mouse-input';
 
 it('lets a native-input lab inspect live mutation separately from bitmap commit', async () => {

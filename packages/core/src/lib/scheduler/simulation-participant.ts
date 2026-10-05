@@ -7,7 +7,7 @@ import {
   type SignalCommitBatch,
 } from "../signals/graph.js";
 import type { WritableSignal } from "../signals/types.js";
-import type { CRCComponentRefs, CRCInstance } from "../types.js";
+import type { PibblComponentRefs, PibblInstance } from "../types.js";
 import {
   queueBeginCommand,
   queueCurrentFrameCommitAcknowledgement,
@@ -15,62 +15,62 @@ import {
   registerAdvanceParticipant,
   requestInstanceRender,
 } from "./realm-scheduler.js";
-import type { CRCAdvanceLane, CRCBeginCommandHandle } from "./types.js";
+import type { PibblAdvanceLane, PibblBeginCommandHandle } from "./types.js";
 import type {
-  CRCInternalFrame,
-  CRCInternalSignalBatch,
+  PibblInternalFrame,
+  PibblInternalSignalBatch,
 } from "./renderer-participant.js";
 
 /**
  * The scheduler lane in which an official simulation integration advances.
  *
- * @see {@link crcInternalRegisterSimulationAdvance}
+ * @see {@link pibblInternalRegisterSimulationAdvance}
  */
-export type CRCInternalAdvanceLane = CRCAdvanceLane;
+export type PibblInternalAdvanceLane = PibblAdvanceLane;
 
 declare const internalSimulationOwnerBrand: unique symbol;
 /**
  * Opaque ownership identity tying simulation work to a mounted runtime resource.
  *
- * @see {@link crcInternalCurrentSimulationOwner}
- * @see {@link crcInternalOnSimulationRenderTransactionFinish}
- * @see {@link crcInternalQueueSimulationBegin}
+ * @see {@link pibblInternalCurrentSimulationOwner}
+ * @see {@link pibblInternalOnSimulationRenderTransactionFinish}
+ * @see {@link pibblInternalQueueSimulationBegin}
  */
-export interface CRCInternalSimulationOwner {
+export interface PibblInternalSimulationOwner {
   readonly [internalSimulationOwnerBrand]: true;
 }
 
 interface SimulationOwnerState {
-  readonly component: CRCComponentRefs<any>;
-  readonly instance: CRCInstance;
+  readonly component: PibblComponentRefs<any>;
+  readonly instance: PibblInstance;
   readonly cancellations: Set<() => void>;
   active: boolean;
 }
 
 const ownerStates = new WeakMap<
-  CRCInternalSimulationOwner,
+  PibblInternalSimulationOwner,
   SimulationOwnerState
 >();
-const batchViews = new WeakMap<SignalCommitBatch, CRCInternalSignalBatch>();
-let currentSimulationOwner: CRCInternalSimulationOwner | undefined;
+const batchViews = new WeakMap<SignalCommitBatch, PibblInternalSignalBatch>();
+let currentSimulationOwner: PibblInternalSimulationOwner | undefined;
 
 /**
  * Returns the active mount's simulation owner for a matching official integration.
  *
  * @returns The simulation owner for the active runtime context. See
- * {@link CRCInternalSimulationOwner} .
+ * {@link PibblInternalSimulationOwner} .
  *
- * @see {@link CRCInternalSimulationOwner}
+ * @see {@link PibblInternalSimulationOwner}
  */
-export function crcInternalCurrentSimulationOwner(): CRCInternalSimulationOwner {
-  const { componentRefs, crcInstance } = requireHookContext();
-  const slot = useInternalHookSlot<CRCInternalSimulationOwner>(
+export function pibblInternalCurrentSimulationOwner(): PibblInternalSimulationOwner {
+  const { componentRefs, pibblInstance } = requireHookContext();
+  const slot = useInternalHookSlot<PibblInternalSimulationOwner>(
     "internalSimulationOwner",
     (teardowns) => {
-      const owner = {} as CRCInternalSimulationOwner;
+      const owner = {} as PibblInternalSimulationOwner;
       ownerStates.set(owner, {
         component: componentRefs,
-        instance: crcInstance,
+        instance: pibblInstance,
         cancellations: new Set(),
         active: true,
       });
@@ -85,26 +85,26 @@ export function crcInternalCurrentSimulationOwner(): CRCInternalSimulationOwner 
 /**
  * Queues a cancellable simulation command for the shared scheduler's Begin phase.
  *
- * @param owner - Simulation owner admitting this command. See {@link CRCInternalSimulationOwner}.
+ * @param owner - Simulation owner admitting this command. See {@link PibblInternalSimulationOwner}.
  * @param command - Begin-phase work receiving frame, staged signal writes, and command sequence.
- * See {@link CRCInternalFrame} , {@link CRCInternalSignalBatch} .
+ * See {@link PibblInternalFrame} , {@link PibblInternalSignalBatch} .
  * @returns A command sequence and cancellation handle.
  *
- * @see {@link CRCInternalSimulationOwner}
- * @see {@link CRCInternalFrame}
- * @see {@link CRCInternalSignalBatch}
+ * @see {@link PibblInternalSimulationOwner}
+ * @see {@link PibblInternalFrame}
+ * @see {@link PibblInternalSignalBatch}
  */
-export function crcInternalQueueSimulationBegin(
-  owner: CRCInternalSimulationOwner,
+export function pibblInternalQueueSimulationBegin(
+  owner: PibblInternalSimulationOwner,
   command: (
-    frame: CRCInternalFrame,
-    batch: CRCInternalSignalBatch,
+    frame: PibblInternalFrame,
+    batch: PibblInternalSignalBatch,
     sequence: number,
   ) => void,
 ): Readonly<{ readonly sequence: number; cancel(): void }> {
   const state = requireActiveOwner(owner);
   let active = true;
-  let handle: CRCBeginCommandHandle;
+  let handle: PibblBeginCommandHandle;
   const cancel = (): void => {
     if (!active) return;
     active = false;
@@ -135,23 +135,23 @@ export function crcInternalQueueSimulationBegin(
 /**
  * Registers work in a simulation Advance lane and returns its unregister callback.
  *
- * @param owner - Simulation owner registering the work. See {@link CRCInternalSimulationOwner}.
- * @param lane - Advance lane controlling execution order. See {@link CRCInternalAdvanceLane}.
+ * @param owner - Simulation owner registering the work. See {@link PibblInternalSimulationOwner}.
+ * @param lane - Advance lane controlling execution order. See {@link PibblInternalAdvanceLane}.
  * @param advance - Advance callback receiving frame timing and staged signal writes. See
- * {@link CRCInternalFrame} , {@link CRCInternalSignalBatch} .
+ * {@link PibblInternalFrame} , {@link PibblInternalSignalBatch} .
  * @param requestsFrames - Whether this participant requests subsequent host frames; defaults to
  * true.
  * @returns A function that unregisters the participant.
  *
- * @see {@link CRCInternalSimulationOwner}
- * @see {@link CRCInternalAdvanceLane}
- * @see {@link CRCInternalFrame}
- * @see {@link CRCInternalSignalBatch}
+ * @see {@link PibblInternalSimulationOwner}
+ * @see {@link PibblInternalAdvanceLane}
+ * @see {@link PibblInternalFrame}
+ * @see {@link PibblInternalSignalBatch}
  */
-export function crcInternalRegisterSimulationAdvance(
-  owner: CRCInternalSimulationOwner,
-  lane: CRCInternalAdvanceLane,
-  advance: (frame: CRCInternalFrame, batch: CRCInternalSignalBatch) => void,
+export function pibblInternalRegisterSimulationAdvance(
+  owner: PibblInternalSimulationOwner,
+  lane: PibblInternalAdvanceLane,
+  advance: (frame: PibblInternalFrame, batch: PibblInternalSignalBatch) => void,
   requestsFrames = true,
 ): () => void {
   const state = requireActiveOwner(owner);
@@ -188,17 +188,17 @@ export function crcInternalRegisterSimulationAdvance(
 /**
  * Reports whether the current simulation frame's staged writes were committed.
  *
- * @param owner - Owner of the pending commit. See {@link CRCInternalSimulationOwner}.
+ * @param owner - Owner of the pending commit. See {@link PibblInternalSimulationOwner}.
  * @param callback - Callback receiving the frame and whether the commit was applied. See
- * {@link CRCInternalFrame} .
+ * {@link PibblInternalFrame} .
  *
- * @see {@link CRCInternalSimulationOwner}
- * @see {@link CRCInternalFrame}
+ * @see {@link PibblInternalSimulationOwner}
+ * @see {@link PibblInternalFrame}
  */
-export function crcInternalQueueSimulationCommitAcknowledgement(
-  owner: CRCInternalSimulationOwner,
+export function pibblInternalQueueSimulationCommitAcknowledgement(
+  owner: PibblInternalSimulationOwner,
   callback: (
-    frame: CRCInternalFrame,
+    frame: PibblInternalFrame,
     outcome: Readonly<{ readonly applied: boolean }>,
   ) => void,
 ): void {
@@ -223,16 +223,16 @@ export function crcInternalQueueSimulationCommitAcknowledgement(
 /**
  * Queues an owner-scoped callback for the scheduler's Complete phase.
  *
- * @param owner - Owner of the completion work. See {@link CRCInternalSimulationOwner}.
+ * @param owner - Owner of the completion work. See {@link PibblInternalSimulationOwner}.
  * @param callback - Callback invoked during Complete with the shared frame. See
- * {@link CRCInternalFrame} .
+ * {@link PibblInternalFrame} .
  *
- * @see {@link CRCInternalSimulationOwner}
- * @see {@link CRCInternalFrame}
+ * @see {@link PibblInternalSimulationOwner}
+ * @see {@link PibblInternalFrame}
  */
-export function crcInternalQueueSimulationComplete(
-  owner: CRCInternalSimulationOwner,
-  callback: (frame: CRCInternalFrame) => void,
+export function pibblInternalQueueSimulationComplete(
+  owner: PibblInternalSimulationOwner,
+  callback: (frame: PibblInternalFrame) => void,
 ): void {
   const state = requireActiveOwner(owner);
   let active = true;
@@ -255,12 +255,12 @@ export function crcInternalQueueSimulationComplete(
 /**
  * Invalidates the renderer associated with a simulation owner.
  *
- * @param owner - Owner whose renderer should become dirty. See {@link CRCInternalSimulationOwner}.
+ * @param owner - Owner whose renderer should become dirty. See {@link PibblInternalSimulationOwner}.
  *
- * @see {@link CRCInternalSimulationOwner}
+ * @see {@link PibblInternalSimulationOwner}
  */
-export function crcInternalRequestSimulationRender(
-  owner: CRCInternalSimulationOwner,
+export function pibblInternalRequestSimulationRender(
+  owner: PibblInternalSimulationOwner,
 ): void {
   const state = requireActiveOwner(owner);
   requestInstanceRender(state.instance);
@@ -269,20 +269,20 @@ export function crcInternalRequestSimulationRender(
 /**
  * Registers a callback reporting whether the owner's current render transaction succeeded.
  *
- * @param owner - Owner of the rendering transaction. See {@link CRCInternalSimulationOwner}.
+ * @param owner - Owner of the rendering transaction. See {@link PibblInternalSimulationOwner}.
  * @param callback - Callback receiving whether the transaction succeeded.
  *
- * @see {@link CRCInternalSimulationOwner}
+ * @see {@link PibblInternalSimulationOwner}
  */
-export function crcInternalOnSimulationRenderTransactionFinish(
-  owner: CRCInternalSimulationOwner,
+export function pibblInternalOnSimulationRenderTransactionFinish(
+  owner: PibblInternalSimulationOwner,
   callback: (success: boolean) => void,
 ): void {
   const state = requireActiveOwner(owner);
   const transaction = state.instance.eventRoot.renderTransaction;
   if (!transaction) {
     throw new Error(
-      "crcInternalOnSimulationRenderTransactionFinish() requires an active CRC render transaction.",
+      "pibblInternalOnSimulationRenderTransactionFinish() requires an active Pibbl render transaction.",
     );
   }
   let active = true;
@@ -300,7 +300,7 @@ export function crcInternalOnSimulationRenderTransactionFinish(
   });
 }
 
-function simulationBatchView(batch: SignalCommitBatch): CRCInternalSignalBatch {
+function simulationBatchView(batch: SignalCommitBatch): PibblInternalSignalBatch {
   const existing = batchViews.get(batch);
   if (existing) return existing;
   const view = Object.freeze({
@@ -311,7 +311,7 @@ function simulationBatchView(batch: SignalCommitBatch): CRCInternalSignalBatch {
       const owner = currentSimulationOwner;
       if (owner === undefined) {
         throw new Error(
-          "CRC internal simulation batches may only stage during their owning callback.",
+          "Pibbl internal simulation batches may only stage during their owning callback.",
         );
       }
       stageSignalCommitBatchWithProvenance(batch, owner, signal, value, writer);
@@ -320,7 +320,7 @@ function simulationBatchView(batch: SignalCommitBatch): CRCInternalSignalBatch {
       const owner = currentSimulationOwner;
       if (owner === undefined) {
         throw new Error(
-          "CRC internal simulation batches may only discard during their owning callback.",
+          "Pibbl internal simulation batches may only discard during their owning callback.",
         );
       }
       discardSignalCommitBatchWriterForProvenance(batch, owner, writer);
@@ -331,7 +331,7 @@ function simulationBatchView(batch: SignalCommitBatch): CRCInternalSignalBatch {
 }
 
 function withCurrentSimulationOwner<T>(
-  owner: CRCInternalSimulationOwner,
+  owner: PibblInternalSimulationOwner,
   callback: () => T,
 ): T {
   const previous = currentSimulationOwner;
@@ -345,17 +345,17 @@ function withCurrentSimulationOwner<T>(
 
 function discardSimulationOwnerWriters(
   batch: SignalCommitBatch,
-  owner: CRCInternalSimulationOwner,
+  owner: PibblInternalSimulationOwner,
 ): void {
   discardSignalCommitBatchProvenance(batch, owner);
 }
 
 function requireActiveOwner(
-  owner: CRCInternalSimulationOwner,
+  owner: PibblInternalSimulationOwner,
 ): SimulationOwnerState {
   const state = ownerStates.get(owner);
   if (!state || !state.active || !isCurrentOwner(state)) {
-    throw new TypeError("Expected an active CRC internal simulation owner.");
+    throw new TypeError("Expected an active Pibbl internal simulation owner.");
   }
   return state;
 }
@@ -364,12 +364,12 @@ function isCurrentOwner(state: SimulationOwnerState): boolean {
   return (
     !state.component.teardowns.closed &&
     !state.instance.mainTeardowns.closed &&
-    GLOBAL_STATE.crcInstances.get(state.instance.canvas) === state.instance &&
+    GLOBAL_STATE.pibblInstances.get(state.instance.canvas) === state.instance &&
     state.instance.refs.get(state.component.id) === state.component
   );
 }
 
-function disposeSimulationOwner(owner: CRCInternalSimulationOwner): void {
+function disposeSimulationOwner(owner: PibblInternalSimulationOwner): void {
   const state = ownerStates.get(owner);
   if (!state || !state.active) return;
   state.active = false;

@@ -1,9 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { crc, createElement, signal, type CRCNode } from "@crc/core";
+import { pibbl, createElement, signal, type PibblNode } from "@pibbl/core";
 import {
-  crcInternalRequestRender,
-  type CRCInternalRenderOwner,
-} from "@crc/core/internal";
+  pibblInternalRequestRender,
+  type PibblInternalRenderOwner,
+} from "@pibbl/core/internal";
 import { clearSharedState } from "../../../../lib/global-state.js";
 import {
   installSchedulerDriverForTest,
@@ -12,7 +12,7 @@ import {
 } from "../../../../lib/scheduler/testing.js";
 import { compileParticleEffect2D } from "../compiler.js";
 import { defineParticleEffect2D } from "../definition.js";
-import type { CRCParticleEffect2D, CRCParticleSystem } from "../types.js";
+import type { PibblParticleEffect2D, PibblParticleSystem } from "../types.js";
 import {
   type ParticleBindingCandidate,
   useParticleSystemBinding,
@@ -26,7 +26,7 @@ import { particleSystemOwnershipSnapshot } from "./ownership.js";
 
 let driver: ManualSchedulerDriver;
 let restoreDriver: () => void;
-const roots = new Set<ReturnType<typeof crc>>();
+const roots = new Set<ReturnType<typeof pibbl>>();
 
 beforeEach(() => {
   document.body.replaceChildren();
@@ -59,8 +59,8 @@ function effect(debugName: string) {
 }
 
 function candidate(
-  owner: CRCInternalRenderOwner,
-  definition: CRCParticleEffect2D,
+  owner: PibblInternalRenderOwner,
+  definition: PibblParticleEffect2D,
 ): ParticleBindingCandidate {
   const compiled = compileParticleEffect2D(definition);
   return {
@@ -70,7 +70,7 @@ function candidate(
     compiled,
     parameters: compiled.parameterLayout.defaults,
     requestRender() {
-      crcInternalRequestRender(owner);
+      pibblInternalRequestRender(owner);
     },
     adoptFrame() {},
     clear() {},
@@ -85,8 +85,8 @@ describe("useParticleSystem hook ownership", () => {
     const selected = signal(first);
     const seed = signal(3);
     const options = signal({ autoplay: signal(false), seed });
-    let system!: CRCParticleSystem;
-    const Root = (): CRCNode => {
+    let system!: PibblParticleSystem;
+    const Root = (): PibblNode => {
       system = useParticleSystem(selected, options);
       return null;
     };
@@ -112,10 +112,10 @@ describe("useParticleSystem hook ownership", () => {
     const selected = signal(first);
     const observerVersion = signal("old");
     const calls: string[] = [];
-    let system!: CRCParticleSystem;
-    let original!: CRCParticleSystem;
+    let system!: PibblParticleSystem;
+    let original!: PibblParticleSystem;
     let activeCandidate: ParticleBindingCandidate | undefined;
-    const Root = (): CRCNode => {
+    const Root = (): PibblNode => {
       const current = selected.get();
       const label = observerVersion.get();
       system = useParticleSystem(current, {
@@ -179,9 +179,9 @@ describe("useParticleSystem hook ownership", () => {
   it("catches reversed observer order and lets both observers finish when either throws", () => {
     const definition = effect("callbacks");
     const order: string[] = [];
-    let system!: CRCParticleSystem;
+    let system!: PibblParticleSystem;
     let bound: ParticleBindingCandidate | undefined;
-    const Root = (): CRCNode => {
+    const Root = (): PibblNode => {
       system = useParticleSystem(definition, {
         onEvent(event) {
           order.push(`system:${event.type}`);
@@ -226,9 +226,9 @@ describe("useParticleSystem hook ownership", () => {
   it("catches queued-command resurrection, non-idempotent disposal, and stale live registrations", () => {
     const baseline = particleSystemOwnershipSnapshot();
     const definition = effect("disposed");
-    let system!: CRCParticleSystem;
+    let system!: PibblParticleSystem;
     let bound: ParticleBindingCandidate | undefined;
-    const Root = (): CRCNode => {
+    const Root = (): PibblNode => {
       system = useParticleSystem(definition);
       useParticleSystemBinding({
         system,
@@ -275,8 +275,8 @@ describe("useParticleSystem hook ownership", () => {
 
   it("catches autoplay before a successful render and command use during component evaluation", () => {
     const definition = effect("guarded autoplay");
-    let failedSystem!: CRCParticleSystem;
-    const Failed = (): CRCNode => {
+    let failedSystem!: PibblParticleSystem;
+    const Failed = (): PibblNode => {
       failedSystem = useParticleSystem(definition, { autoplay: true });
       throw new Error("mount failed");
     };
@@ -288,8 +288,8 @@ describe("useParticleSystem hook ownership", () => {
     roots.delete(failedRoot);
 
     let guardError: unknown;
-    let guardedSystem!: CRCParticleSystem;
-    const Guarded = (): CRCNode => {
+    let guardedSystem!: PibblParticleSystem;
+    const Guarded = (): PibblNode => {
       guardedSystem = useParticleSystem(definition);
       try {
         guardedSystem.play();
@@ -300,17 +300,17 @@ describe("useParticleSystem hook ownership", () => {
     };
     const guardedRoot = mount(createElement(Guarded, {}));
     driver.flush(1);
-    expect(guardError).toMatchObject({ message: "CRC render" });
+    expect(guardError).toMatchObject({ message: "Pibbl render" });
     expect(guardedSystem.status.get()).toBe("idle");
     guardedRoot.dispose();
     roots.delete(guardedRoot);
   });
 });
 
-function mount(node: CRCNode) {
+function mount(node: PibblNode) {
   const canvas = document.createElement("canvas");
   document.body.appendChild(canvas);
-  const root = crc(canvas, node);
+  const root = pibbl(canvas, node);
   roots.add(root);
   return root;
 }

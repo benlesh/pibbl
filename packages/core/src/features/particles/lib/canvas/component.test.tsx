@@ -1,4 +1,4 @@
-import { blur } from '@crc/core/filters';
+import { blur } from '@pibbl/core/filters';
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   Absolute,
@@ -8,14 +8,14 @@ import {
   Group,
   Layer,
   Rectangle,
-  crc,
+  pibbl,
   definePrimitive,
   signal,
-  type CRCNode,
-} from "@crc/core";
+  type PibblNode,
+} from "@pibbl/core";
 import {
   clearSharedState,
-  getCRCInstance,
+  getPibblInstance,
 } from "../../../../lib/global-state.js";
 import {
   installSchedulerDriverForTest,
@@ -25,13 +25,13 @@ import {
   Particles2D,
   useParticleSystem,
   defineParticleEffect2D,
-  type CRCParticleSystem,
+  type PibblParticleSystem,
 } from "../../index.js";
 import { particleSystemOwnershipSnapshot } from "../system/ownership.js";
 
 let driver: ManualSchedulerDriver;
 let restoreDriver: () => void;
-const roots = new Set<ReturnType<typeof crc>>();
+const roots = new Set<ReturnType<typeof pibbl>>();
 
 beforeEach(() => {
   document.body.replaceChildren();
@@ -79,14 +79,14 @@ function effect(
   });
 }
 
-function mount(node: CRCNode, width = 80, height = 60) {
+function mount(node: PibblNode, width = 80, height = 60) {
   const canvas = document.createElement("canvas");
   canvas.width = width;
   canvas.height = height;
   canvas.style.width = `${width}px`;
   canvas.style.height = `${height}px`;
   document.body.appendChild(canvas);
-  const root = crc(canvas, node, { pixelRatio: 1 });
+  const root = pibbl(canvas, node, { pixelRatio: 1 });
   roots.add(root);
   return { canvas, root };
 }
@@ -201,7 +201,7 @@ describe("Particles2D component", () => {
     expect(pixel(implicit.canvas, 10, 10)[3]).toBeGreaterThan(0);
 
     const manual = effect();
-    let system!: CRCParticleSystem<"marks", Record<never, never>>;
+    let system!: PibblParticleSystem<"marks", Record<never, never>>;
     const Explicit = () => {
       system = useParticleSystem(manual);
       return <Particles2D system={system} style={{ width: 40, height: 40 }} />;
@@ -230,7 +230,7 @@ describe("Particles2D component", () => {
     );
     flush(0);
     const rootRegistration = Array.from(
-      getCRCInstance(rootTarget.canvas).eventRoot.targets,
+      getPibblInstance(rootTarget.canvas).eventRoot.targets,
     )[0]!;
     const hitContext = rootTarget.canvas.getContext("2d")!;
     expect(
@@ -253,7 +253,7 @@ describe("Particles2D component", () => {
     );
     flush(1);
     const placedRegistration = Array.from(
-      getCRCInstance(placed.canvas).eventRoot.targets,
+      getPibblInstance(placed.canvas).eventRoot.targets,
     )[0]!;
     expect(placedRegistration.paintEntry!.transform.e).toBe(12);
     expect(placedRegistration.paintEntry!.transform.f).toBe(7);
@@ -317,7 +317,7 @@ describe("Particles2D component", () => {
 
   it("invalidates an explicit Layer and captures the combined primitive through a nonempty filter", () => {
     const definition = effect({ count: 3 });
-    let system!: CRCParticleSystem<"marks", Record<never, never>>;
+    let system!: PibblParticleSystem<"marks", Record<never, never>>;
     const arcs = vi.spyOn(OffscreenCanvasRenderingContext2D.prototype, "arc");
     const offscreenDraws = vi.spyOn(
       OffscreenCanvasRenderingContext2D.prototype,
@@ -358,7 +358,7 @@ describe("Particles2D component", () => {
   it("defaults to decorative participation and adds one declared-box target with no per-particle targets", () => {
     const decorative = mount(<Particles2D effect={effect()} />);
     flush(0);
-    expect(getCRCInstance(decorative.canvas).eventRoot.targets.size).toBe(0);
+    expect(getPibblInstance(decorative.canvas).eventRoot.targets.size).toBe(0);
 
     const interactive = mount(
       <Particles2D
@@ -372,7 +372,7 @@ describe("Particles2D component", () => {
     flush(1);
     flush(2);
     const targets = Array.from(
-      getCRCInstance(interactive.canvas).eventRoot.targets,
+      getPibblInstance(interactive.canvas).eventRoot.targets,
     );
     expect(targets).toHaveLength(1);
     expect(targets[0]).toMatchObject({ cursor: "pointer" });

@@ -5,7 +5,7 @@ import type {
   ScenarioStateField,
 } from './types';
 
-const STYLE_ID = 'crc-scenario-surface-styles';
+const STYLE_ID = 'pibbl-scenario-surface-styles';
 
 /**
  * Shared DOM presentation styles for scenario controls and observations.

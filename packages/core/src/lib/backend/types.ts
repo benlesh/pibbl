@@ -1,10 +1,10 @@
 import type { registerNestedInteractionResolver, useBackendEventTarget } from '../../internal.js';
-import type { mountBackendCRC } from '../mount-crc.js';
+import type { mountBackendPibbl } from '../mount-pibbl.js';
 import type { defineBackendPrimitive } from '../define-primitive.js';
-import type { CRCElementSource } from '../element/metadata.js';
-import type { CRCNode, CRCNodeInput } from '../element/types.js';
-import type { CRCHitTestOutput } from '../events/paint-entry.js';
-import type { CRCEventFocusOptions, CRCEventHandlers } from '../events/types.js';
+import type { PibblElementSource } from '../element/metadata.js';
+import type { PibblNode, PibblNodeInput } from '../element/types.js';
+import type { PibblHitTestOutput } from '../events/paint-entry.js';
+import type { PibblEventFocusOptions, PibblEventHandlers } from '../events/types.js';
 import type {
   MeasureInput,
   MeasureResult,
@@ -20,40 +20,40 @@ import type {
 } from '../types.js';
 import type { RenderTargetSnapshot } from '../render-target.js';
 
-declare const CRC_BACKEND_TOKEN: unique symbol;
+declare const PIBBL_BACKEND_TOKEN: unique symbol;
 
 /**
- * Opaque identity for one official CRC rendering backend.
+ * Opaque identity for one official Pibbl rendering backend.
  *
  * @see {@link createBackendToken}
- * @see {@link CRCBackendDriver}
- * @see {@link CRCBackendPrimitiveDefinition}
+ * @see {@link PibblBackendDriver}
+ * @see {@link PibblBackendPrimitiveDefinition}
  */
-export interface CRCBackendToken {
-  readonly [CRC_BACKEND_TOKEN]: true;
+export interface PibblBackendToken {
+  readonly [PIBBL_BACKEND_TOKEN]: true;
 }
 
-const backendNames = new WeakMap<CRCBackendToken, string>();
+const backendNames = new WeakMap<PibblBackendToken, string>();
 
 /**
- * Creates a package-private backend identity for an official CRC renderer.
+ * Creates a package-private backend identity for an official Pibbl renderer.
  *
  * @param name - Diagnostic name identifying the backend.
- * @returns A unique backend identity token. See {@link CRCBackendToken}.
+ * @returns A unique backend identity token. See {@link PibblBackendToken}.
  *
- * @see {@link CRCBackendToken}
+ * @see {@link PibblBackendToken}
  */
-export function createBackendToken(name: string): CRCBackendToken {
+export function createBackendToken(name: string): PibblBackendToken {
   if (!name.trim()) {
-    throw new Error('CRC backend names must be nonempty.');
+    throw new Error('Pibbl backend names must be nonempty.');
   }
-  const token = Object.freeze({}) as CRCBackendToken;
+  const token = Object.freeze({}) as PibblBackendToken;
   backendNames.set(token, name);
   return token;
 }
 
 /** @internal Used only for diagnostics and dispatch inside core. */
-export function getBackendTokenName(token: CRCBackendToken): string {
+export function getBackendTokenName(token: PibblBackendToken): string {
   return backendNames.get(token) ?? 'unknown';
 }
 
@@ -63,16 +63,16 @@ export function getBackendTokenName(token: CRCBackendToken): string {
  * @param props - Resolved non-style component inputs. See {@link PrimitiveProgramProps}.
  * @param style - Resolved primitive style. See {@link ResolvedStyle}.
  * @param environment - Backend environment for the active frame.
- * @returns Child nodes to traverse, or no children. See {@link CRCNodeInput}.
+ * @returns Child nodes to traverse, or no children. See {@link PibblNodeInput}.
  *
  * @see {@link SystemStyle}
  * @see {@link PrimitiveProgramProps}
  * @see {@link ResolvedStyle}
- * @see {@link CRCNodeInput}
- * @see {@link CRCBackendPrimitiveDefinition}
+ * @see {@link PibblNodeInput}
+ * @see {@link PibblBackendPrimitiveDefinition}
  * @see {@link defineBackendPrimitive}
  */
-export type CRCBackendPrimitiveProgram<
+export type PibblBackendPrimitiveProgram<
   P = any,
   R extends SystemStyle = SystemStyle,
   E = any,
@@ -80,14 +80,14 @@ export type CRCBackendPrimitiveProgram<
   props: Readonly<PrimitiveProgramProps<P>>,
   style: ResolvedStyle<R>,
   environment: E,
-) => CRCNodeInput | void;
+) => PibblNodeInput | void;
 
 /**
  * Rendering, style, and measurement definition of a backend primitive.
  *
  * @see {@link SystemStyle}
- * @see {@link CRCBackendToken}
- * @see {@link CRCBackendPrimitiveProgram}
+ * @see {@link PibblBackendToken}
+ * @see {@link PibblBackendPrimitiveProgram}
  * @see {@link SpecifiedStyle}
  * @see {@link NormalizedStyle}
  * @see {@link StyleResolutionContext}
@@ -95,17 +95,17 @@ export type CRCBackendPrimitiveProgram<
  * @see {@link MeasureInput}
  * @see {@link PrimitiveProgramProps}
  * @see {@link MeasureResult}
- * @see {@link CRCBackendPrimitiveInput}
+ * @see {@link PibblBackendPrimitiveInput}
  */
-export interface CRCBackendPrimitiveDefinition<
+export interface PibblBackendPrimitiveDefinition<
   P = any,
   S extends SystemStyle = SystemStyle,
   N extends SystemStyle = S,
   R extends SystemStyle = N,
   E = any,
 > {
-  /** Identity of the backend that accepts this primitive. See {@link CRCBackendToken}. */
-  readonly backend: CRCBackendToken;
+  /** Identity of the backend that accepts this primitive. See {@link PibblBackendToken}. */
+  readonly backend: PibblBackendToken;
   /**
    * Names props whose signal identity is preserved for the primitive program. See
    * {@link PreservedSignalPropKey}.
@@ -113,11 +113,11 @@ export interface CRCBackendPrimitiveDefinition<
   readonly preserveSignalProps?: readonly PreservedSignalPropKey<P>[];
   /**
    * Declares how the primitive receives and resolves its children. See
-   * {@link CRCBackendPrimitiveDefinition}.
+   * {@link PibblBackendPrimitiveDefinition}.
    */
   readonly childInput?: 'structural' | 'text';
-  /** Executable primitive program used by the backend. See {@link CRCBackendPrimitiveProgram}. */
-  readonly program: CRCBackendPrimitiveProgram<P, R, E>;
+  /** Executable primitive program used by the backend. See {@link PibblBackendPrimitiveProgram}. */
+  readonly program: PibblBackendPrimitiveProgram<P, R, E>;
   /**
    * Applies primitive defaults and shorthand normalization before layout resolution. See
    * {@link SpecifiedStyle}, {@link NormalizedStyle}.
@@ -152,20 +152,20 @@ export interface CRCBackendPrimitiveDefinition<
  * Inputs used to begin a backend frame.
  *
  * @see {@link Canvas}
- * @see {@link CRCBackendDriver}
+ * @see {@link PibblBackendDriver}
  */
-export interface CRCBackendFrameInput {
+export interface PibblBackendFrameInput {
   /** Canvas surface associated with this resource or mount. See {@link Canvas}. */
   readonly canvas: Canvas;
-  /** Canvas width in logical units. See {@link CRCBackendFrameInput}. */
+  /** Canvas width in logical units. See {@link PibblBackendFrameInput}. */
   readonly logicalWidth: number;
-  /** Canvas height in logical units. See {@link CRCBackendFrameInput}. */
+  /** Canvas height in logical units. See {@link PibblBackendFrameInput}. */
   readonly logicalHeight: number;
-  /** Width of the backing raster in physical pixels. See {@link CRCBackendFrameInput}. */
+  /** Width of the backing raster in physical pixels. See {@link PibblBackendFrameInput}. */
   readonly backingWidth: number;
-  /** Height of the backing raster in physical pixels. See {@link CRCBackendFrameInput}. */
+  /** Height of the backing raster in physical pixels. See {@link PibblBackendFrameInput}. */
   readonly backingHeight: number;
-  /** Timestamp associated with this render frame. See {@link CRCBackendFrameInput}. */
+  /** Timestamp associated with this render frame. See {@link PibblBackendFrameInput}. */
   readonly renderTimestamp: number;
 }
 
@@ -173,10 +173,10 @@ export interface CRCBackendFrameInput {
  * The backend rendering context for one scheduled frame.
  *
  * @see {@link RenderingContext2D}
- * @see {@link CRCBackendDriver}
+ * @see {@link PibblBackendDriver}
  */
-export interface CRCBackendFrame<E> {
-  /** Backend environment used while evaluating the frame. See {@link CRCBackendFrame}. */
+export interface PibblBackendFrame<E> {
+  /** Backend environment used while evaluating the frame. See {@link PibblBackendFrame}. */
   readonly environment: E;
   /** Canvas 2D context used for the current frame. See {@link RenderingContext2D}. */
   readonly context2D?: RenderingContext2D;
@@ -184,7 +184,7 @@ export interface CRCBackendFrame<E> {
   readonly renderTarget?: RenderTargetSnapshot;
   /**
    * World transform establishing the backend frame's logical coordinate basis. See
-   * {@link CRCBackendFrame}.
+   * {@link PibblBackendFrame}.
    */
   readonly worldBaseTransform?: DOMMatrix;
 }
@@ -192,29 +192,29 @@ export interface CRCBackendFrame<E> {
 /**
  * Resolved inputs delivered to a backend primitive program.
  *
- * @see {@link CRCElementSource}
- * @see {@link CRCBackendPrimitiveDefinition}
- * @see {@link CRCBackendDriver}
+ * @see {@link PibblElementSource}
+ * @see {@link PibblBackendPrimitiveDefinition}
+ * @see {@link PibblBackendDriver}
  */
-export interface CRCBackendPrimitiveInput {
-  /** Component name retained for diagnostics. See {@link CRCBackendPrimitiveInput}. */
+export interface PibblBackendPrimitiveInput {
+  /** Component name retained for diagnostics. See {@link PibblBackendPrimitiveInput}. */
   readonly componentName: string;
-  /** Authoring source location retained for diagnostics. See {@link CRCElementSource}. */
-  readonly source?: CRCElementSource;
+  /** Authoring source location retained for diagnostics. See {@link PibblElementSource}. */
+  readonly source?: PibblElementSource;
   /**
    * Primitive definition used to resolve and render the supplied inputs. See
-   * {@link CRCBackendPrimitiveDefinition}.
+   * {@link PibblBackendPrimitiveDefinition}.
    */
-  readonly definition: CRCBackendPrimitiveDefinition;
+  readonly definition: PibblBackendPrimitiveDefinition;
   /**
-   * Component props supplied to evaluation or measurement. See {@link CRCBackendPrimitiveInput}.
+   * Component props supplied to evaluation or measurement. See {@link PibblBackendPrimitiveInput}.
    */
   readonly props: Readonly<Record<PropertyKey, unknown>>;
-  /** Declared presentation and layout properties. See {@link CRCBackendPrimitiveInput}. */
+  /** Declared presentation and layout properties. See {@link PibblBackendPrimitiveInput}. */
   readonly style: Readonly<Record<PropertyKey, unknown>>;
   /**
    * Transform applied to the primitive's presented Canvas geometry. See
-   * {@link CRCBackendPrimitiveInput}.
+   * {@link PibblBackendPrimitiveInput}.
    */
   readonly presentationTransform2D?: DOMMatrix;
 }
@@ -223,86 +223,86 @@ export interface CRCBackendPrimitiveInput {
  * A mounted backend's frame execution and cleanup operations.
  *
  * @see {@link Canvas}
- * @see {@link CRCNode}
- * @see {@link CRCNestedResolverInput}
- * @see {@link mountBackendCRC}
+ * @see {@link PibblNode}
+ * @see {@link PibblNestedResolverInput}
+ * @see {@link mountBackendPibbl}
  */
-export interface CRCBackendMount {
+export interface PibblBackendMount {
   /** Canvas surface associated with this resource or mount. See {@link Canvas}. */
   readonly canvas: Canvas;
   /**
-   * Updates the backend surface to the supplied dimensions. See {@link CRCBackendMount}.
+   * Updates the backend surface to the supplied dimensions. See {@link PibblBackendMount}.
    * @param logicalWidth - New logical viewport width.
    * @param logicalHeight - New logical viewport height.
    */
   resize(logicalWidth: number, logicalHeight: number): void;
   /**
-   * Renders the current data or resources using the supplied context. See {@link CRCBackendMount}
+   * Renders the current data or resources using the supplied context. See {@link PibblBackendMount}
    * .
-   * @param root - Node tree to render. See {@link CRCNode}.
+   * @param root - Node tree to render. See {@link PibblNode}.
    * @param timestamp - Frame timestamp in milliseconds.
    */
-  render(root: CRCNode, timestamp: number): void;
+  render(root: PibblNode, timestamp: number): void;
   /**
-   * Requests future work from the owning scheduler. See {@link CRCBackendMount}.
+   * Requests future work from the owning scheduler. See {@link PibblBackendMount}.
    * @param updateParents - Whether ancestor compositions also need to be scheduled.
    */
   requestFrame(updateParents: boolean): void;
-  /** Releases resources owned by this mounted object. See {@link CRCBackendMount}. */
+  /** Releases resources owned by this mounted object. See {@link PibblBackendMount}. */
   dispose(): void;
 }
 
 /**
  * Version-coupled rendering backend lifecycle used by official integrations.
  *
- * @see {@link CRCBackendToken}
- * @see {@link CRCBackendFrameInput}
- * @see {@link CRCBackendFrame}
- * @see {@link CRCBackendPrimitiveInput}
- * @see {@link CRCNodeInput}
- * @see {@link CRCBackendMountOptions}
+ * @see {@link PibblBackendToken}
+ * @see {@link PibblBackendFrameInput}
+ * @see {@link PibblBackendFrame}
+ * @see {@link PibblBackendPrimitiveInput}
+ * @see {@link PibblNodeInput}
+ * @see {@link PibblBackendMountOptions}
  */
-export interface CRCBackendDriver<E> {
-  /** Identity token distinguishing this backend driver. See {@link CRCBackendToken}. */
-  readonly token: CRCBackendToken;
-  /** Name identifying this backend, emitter, or parameter. See {@link CRCBackendDriver}. */
+export interface PibblBackendDriver<E> {
+  /** Identity token distinguishing this backend driver. See {@link PibblBackendToken}. */
+  readonly token: PibblBackendToken;
+  /** Name identifying this backend, emitter, or parameter. See {@link PibblBackendDriver}. */
   readonly name: string;
   /**
-   * Begins backend work for one shared scheduler frame. See {@link CRCBackendFrame}.
+   * Begins backend work for one shared scheduler frame. See {@link PibblBackendFrame}.
    * @param input - Root surface, timestamp, and logical dimensions for this render. See
-   * {@link CRCBackendFrameInput} .
+   * {@link PibblBackendFrameInput} .
    * @returns Frame state, or undefined when no frame should be rendered. See
-   * {@link CRCBackendFrame} .
+   * {@link PibblBackendFrame} .
    */
-  beginFrame(input: CRCBackendFrameInput): CRCBackendFrame<E> | undefined;
+  beginFrame(input: PibblBackendFrameInput): PibblBackendFrame<E> | undefined;
   /**
-   * Enters a component's backend evaluation scope. See {@link CRCBackendDriver}.
+   * Enters a component's backend evaluation scope. See {@link PibblBackendDriver}.
    * @param frame - Frame whose component environment should become active. See
-   * {@link CRCBackendFrame} .
+   * {@link PibblBackendFrame} .
    * @returns A cleanup function restoring the previous environment.
    */
-  enterComponent(frame: CRCBackendFrame<E>): () => void;
+  enterComponent(frame: PibblBackendFrame<E>): () => void;
   /**
-   * Runs a primitive's drawing program in the current backend frame. See {@link CRCBackendDriver}
+   * Runs a primitive's drawing program in the current backend frame. See {@link PibblBackendDriver}
    * .
-   * @param frame - Active backend frame. See {@link CRCBackendFrame}.
+   * @param frame - Active backend frame. See {@link PibblBackendFrame}.
    * @param input - Primitive descriptor and resolved rendering inputs. See
-   * {@link CRCBackendPrimitiveInput} .
+   * {@link PibblBackendPrimitiveInput} .
    * @param runProgram - Runtime callback used to invoke the primitive program. See
-   * {@link CRCNodeInput} .
+   * {@link PibblNodeInput} .
    */
   runPrimitive(
-    frame: CRCBackendFrame<E>,
-    input: CRCBackendPrimitiveInput,
-    runProgram: (invoke: () => CRCNodeInput | void) => void,
+    frame: PibblBackendFrame<E>,
+    input: PibblBackendPrimitiveInput,
+    runProgram: (invoke: () => PibblNodeInput | void) => void,
   ): void;
   /**
-   * Completes the backend frame and its pending composition work. See {@link CRCBackendDriver}.
-   * @param frame - Frame returned by beginFrame. See {@link CRCBackendFrame}.
+   * Completes the backend frame and its pending composition work. See {@link PibblBackendDriver}.
+   * @param frame - Frame returned by beginFrame. See {@link PibblBackendFrame}.
    * @param success - Whether traversal completed successfully.
    */
-  finishFrame(frame: CRCBackendFrame<E>, success: boolean): void;
-  /** Releases resources owned by this mounted object. See {@link CRCBackendDriver}. */
+  finishFrame(frame: PibblBackendFrame<E>, success: boolean): void;
+  /** Releases resources owned by this mounted object. See {@link PibblBackendDriver}. */
   dispose(): void;
 }
 
@@ -310,18 +310,18 @@ export interface CRCBackendDriver<E> {
  * Canvas, configuration, and ownership inputs used to create a backend mount.
  *
  * @see {@link Canvas}
- * @see {@link CRCBackendDriver}
- * @see {@link mountBackendCRC}
+ * @see {@link PibblBackendDriver}
+ * @see {@link mountBackendPibbl}
  */
-export interface CRCBackendMountOptions<E> {
+export interface PibblBackendMountOptions<E> {
   /** Owning parent runtime instance. See {@link Canvas}. */
   readonly parent: Canvas;
-  /** Canvas width in logical units. See {@link CRCBackendMountOptions}. */
+  /** Canvas width in logical units. See {@link PibblBackendMountOptions}. */
   readonly logicalWidth: number;
-  /** Canvas height in logical units. See {@link CRCBackendMountOptions}. */
+  /** Canvas height in logical units. See {@link PibblBackendMountOptions}. */
   readonly logicalHeight: number;
-  /** Backend driver responsible for this mount. See {@link CRCBackendDriver}. */
-  readonly driver: CRCBackendDriver<E>;
+  /** Backend driver responsible for this mount. See {@link PibblBackendDriver}. */
+  readonly driver: PibblBackendDriver<E>;
 }
 
 /**
@@ -329,10 +329,10 @@ export interface CRCBackendMountOptions<E> {
  *
  * @see {@link useBackendEventTarget}
  */
-export interface CRCBackendEventTargetOptions extends CRCEventFocusOptions {
+export interface PibblBackendEventTargetOptions extends PibblEventFocusOptions {
   /**
    * Cursor shown while this target owns pointer presentation. See
-   * {@link CRCBackendEventTargetOptions}.
+   * {@link PibblBackendEventTargetOptions}.
    */
   readonly cursor?: string;
   /** Defers backend-owned focus geometry until its visual generation commits. */
@@ -342,33 +342,33 @@ export interface CRCBackendEventTargetOptions extends CRCEventFocusOptions {
 /**
  * Context supplied when resolving nested content through a backend.
  *
- * @see {@link CRCBackendMount}
- * @see {@link CRCHitTestOutput}
+ * @see {@link PibblBackendMount}
+ * @see {@link PibblHitTestOutput}
  * @see {@link registerNestedInteractionResolver}
  */
-export interface CRCNestedResolverInput {
-  /** Nested child content to resolve. See {@link CRCBackendMount}. */
-  readonly child: CRCBackendMount;
-  /** Logical region constraining the content or query. See {@link CRCNestedResolverInput}. */
+export interface PibblNestedResolverInput {
+  /** Nested child content to resolve. See {@link PibblBackendMount}. */
+  readonly child: PibblBackendMount;
+  /** Logical region constraining the content or query. See {@link PibblNestedResolverInput}. */
   readonly bounds: Path2D;
-  /** Whether this content participates in pointer targeting. See {@link CRCNestedResolverInput}. */
+  /** Whether this content participates in pointer targeting. See {@link PibblNestedResolverInput}. */
   readonly pointerEvents: 'auto' | 'none';
   /**
    * Resolves nested content in the current local coordinate system. See
-   * {@link CRCNestedResolverInput}.
+   * {@link PibblNestedResolverInput}.
    * @param localX - Horizontal position in resolver-local coordinates.
    * @param localY - Vertical position in resolver-local coordinates.
-   * @param output - Mutable hit-test result to populate. See {@link CRCHitTestOutput}.
+   * @param output - Mutable hit-test result to populate. See {@link PibblHitTestOutput}.
    */
-  resolveLocal(localX: number, localY: number, output: CRCHitTestOutput): void;
+  resolveLocal(localX: number, localY: number, output: PibblHitTestOutput): void;
 }
 
 /** @internal */
 export function backendMismatchError(
   componentName: string,
-  required: CRCBackendToken,
-  active: CRCBackendDriver<unknown>,
-  source?: CRCElementSource,
+  required: PibblBackendToken,
+  active: PibblBackendDriver<unknown>,
+  source?: PibblElementSource,
 ): Error {
   const requiredName = getBackendTokenName(required);
   const prefix = `${componentName} requires the ${requiredName} backend and ` +
@@ -376,10 +376,10 @@ export function backendMismatchError(
   return new Error(withJSXSource(prefix, source));
 }
 
-function withJSXSource(message: string, source?: CRCElementSource): string {
+function withJSXSource(message: string, source?: PibblElementSource): string {
   return source ?
       `${message} JSX source: ${source.fileName}:${source.lineNumber}:${source.columnNumber}.` :
     message;
 }
 
-export type { CRCEventHandlers };
+export type { PibblEventHandlers };

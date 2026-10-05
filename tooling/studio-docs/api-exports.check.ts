@@ -2,11 +2,11 @@ import assert from "node:assert/strict";
 import { fileURLToPath } from "node:url";
 import { ModuleKind } from "typescript/unstable/sync";
 import {
-  crcPublicEntryPaths,
-  crcPhysicsEntryPaths,
-  crcStudioPublicEntryPaths,
+  pibblPublicEntryPaths,
+  pibblPhysicsEntryPaths,
+  pibblStudioPublicEntryPaths,
   collectPublicExports,
-  crcPublicCompilerOptions,
+  pibblPublicCompilerOptions,
   validateApiCoverage,
 } from "./api-exports";
 
@@ -23,8 +23,8 @@ const inventory = await collectPublicExports(
   },
 );
 
-assert.deepEqual(inventory.root.values, ["Circle", "crc"]);
-assert.deepEqual(inventory.root.types, ["CRCConfig", "CircleProps"]);
+assert.deepEqual(inventory.root.values, ["Circle", "pibbl"]);
+assert.deepEqual(inventory.root.types, ["CircleProps", "PibblConfig"]);
 assert.deepEqual(inventory.root.overview, ["JSX"]);
 
 const multiPackageInventory = await collectPublicExports(
@@ -40,11 +40,11 @@ assert.throws(
       {
         frontmatter: {
           id: "api-core",
-          symbols: ["Circle", "crc", "CRCConfig", "CircleProps"],
+          symbols: ["Circle", "pibbl", "PibblConfig", "CircleProps"],
         },
       },
     ]),
-  /Undocumented public exports: CRCThreeLayerContext, CRCThreeLayerDefinition, defineThreeLayer/u,
+  /Undocumented public exports: PibblThreeLayerContext, PibblThreeLayerDefinition, defineThreeLayer/u,
 );
 
 const multiPackageCoverage = validateApiCoverage(multiPackageInventory, [
@@ -52,21 +52,21 @@ const multiPackageCoverage = validateApiCoverage(multiPackageInventory, [
     route: "#/api/components/circle",
     frontmatter: {
       id: "api-core",
-      symbols: ["Circle", "crc", "CRCConfig", "CircleProps"],
+      symbols: ["Circle", "pibbl", "PibblConfig", "CircleProps"],
     },
   },
   {
     route: "#/api/functions/define-three-layer",
     frontmatter: {
       id: "api-function-define-three-layer",
-      symbols: ["defineThreeLayer", "CRCThreeLayerDefinition"],
+      symbols: ["defineThreeLayer", "PibblThreeLayerDefinition"],
     },
   },
   {
     route: "#/api/types/three",
     frontmatter: {
       id: "api-types-three",
-      symbols: ["CRCThreeLayerContext"],
+      symbols: ["PibblThreeLayerContext"],
     },
   },
 ]);
@@ -75,11 +75,11 @@ assert.equal(
   "#/api/functions/define-three-layer",
 );
 assert.equal(
-  multiPackageCoverage.types.get("CRCThreeLayerDefinition")?.route,
+  multiPackageCoverage.types.get("PibblThreeLayerDefinition")?.route,
   "#/api/functions/define-three-layer",
 );
 assert.equal(
-  multiPackageCoverage.types.get("CRCThreeLayerContext")?.route,
+  multiPackageCoverage.types.get("PibblThreeLayerContext")?.route,
   "#/api/types/three",
 );
 assert.deepEqual(multiPackageCoverage.missingValues, []);
@@ -102,7 +102,7 @@ const duplicatePages = [
   {
     frontmatter: {
       id: "api-circle",
-      symbols: ["Circle", "crc", "CRCConfig", "CircleProps"],
+      symbols: ["Circle", "pibbl", "PibblConfig", "CircleProps"],
     },
   },
   { frontmatter: { id: "api-shapes", symbols: ["Circle"] } },
@@ -113,18 +113,18 @@ assert.throws(
 );
 
 const missingPages = [
-  { frontmatter: { id: "api-circle", symbols: ["Circle", "crc"] } },
+  { frontmatter: { id: "api-circle", symbols: ["Circle", "pibbl"] } },
 ];
 assert.throws(
   () => validateApiCoverage(inventory, missingPages),
-  /Undocumented public exports: CRCConfig/u,
+  /Undocumented public exports: CircleProps, PibblConfig/u,
 );
 
 const stalePages = [
   {
     frontmatter: {
       id: "api-circle",
-      symbols: ["Circle", "crc", "CRCConfig", "CircleProps", "RemovedValue"],
+      symbols: ["Circle", "pibbl", "PibblConfig", "CircleProps", "RemovedValue"],
     },
   },
 ];
@@ -138,7 +138,7 @@ const coverage = validateApiCoverage(inventory, [
     route: "#/api/components/circle",
     frontmatter: {
       id: "api-circle",
-      symbols: ["Circle", "crc", "CRCConfig", "CircleProps"],
+      symbols: ["Circle", "pibbl", "PibblConfig", "CircleProps"],
     },
   },
 ]);
@@ -146,17 +146,17 @@ assert.equal(coverage.values.get("Circle")?.route, "#/api/components/circle");
 assert.deepEqual(coverage.missingValues, []);
 assert.deepEqual(coverage.missingTypes, []);
 
-const crcInventory = await collectPublicExports(
-  crcPublicEntryPaths,
-  crcPublicCompilerOptions,
+const pibblInventory = await collectPublicExports(
+  pibblPublicEntryPaths,
+  pibblPublicCompilerOptions,
 );
 const physicsInventory = await collectPublicExports(
-  crcPhysicsEntryPaths,
-  crcPublicCompilerOptions,
+  pibblPhysicsEntryPaths,
+  pibblPublicCompilerOptions,
 );
 const studioInventory = await collectPublicExports(
-  crcStudioPublicEntryPaths,
-  crcPublicCompilerOptions,
+  pibblStudioPublicEntryPaths,
+  pibblPublicCompilerOptions,
 );
 // Real public coverage is checked by symbol name against documentation and
 // source/built declarations. Copied export totals add maintenance without
@@ -167,10 +167,10 @@ for (const [entry, api] of Object.entries(studioInventory)) {
     `Public entry ${entry} must not have an empty API inventory`);
 }
 process.stdout.write(
-  `Validated public API coverage: ${crcInventory.root.values.length} core values, ` +
-    `${crcInventory.root.types.length} core types, ${crcInventory.three.values.length} ` +
-    `Three adapter value, ${crcInventory.three.types.length} Three adapter types, ` +
-    `${crcInventory.particles.values.length} particle values, ` +
-    `${crcInventory.particles.types.length} particle type exports, ` +
+  `Validated public API coverage: ${pibblInventory.root.values.length} core values, ` +
+    `${pibblInventory.root.types.length} core types, ${pibblInventory.three.values.length} ` +
+    `Three adapter value, ${pibblInventory.three.types.length} Three adapter types, ` +
+    `${pibblInventory.particles.values.length} particle values, ` +
+    `${pibblInventory.particles.types.length} particle type exports, ` +
     `${physicsInventory.root.values.length} physics 2D values.\n`,
 );

@@ -18,7 +18,7 @@ import {
   Rectangle,
   type CanvasMeasurementService,
   type Constraints,
-} from "@crc/core";
+} from "@pibbl/core";
 ```
 
 `measureElement(element, constraints, service)` measures one element through

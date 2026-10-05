@@ -1,4 +1,4 @@
-import { getScenarioBySlug, loadScenario, type ScenarioController } from '@crc/scenarios';
+import { getScenarioBySlug, loadScenario, type ScenarioController } from '@pibbl/scenarios';
 import { afterEach, describe, expect, it } from 'vitest';
 let controller: ScenarioController<any> | undefined;
 afterEach(async () => {

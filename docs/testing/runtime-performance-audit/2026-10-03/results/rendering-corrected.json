@@ -2,7 +2,7 @@
   "baseline": "690bb10a99246b6f5f57df9b0341774209905827",
   "node": "v24.15.0",
   "browser": "151.0.7922.34",
-  "sourceRoot": "/Users/benlesh/.codex/worktrees/perf-verification/crc",
+  "sourceRoot": "/Users/benlesh/.codex/worktrees/perf-verification/pibbl",
   "mode": "source",
   "meaning": "Synthetic public-API scheduler CPU wall time; excludes compositor presentation. Timing cases uninstrumented except scalar duration samples. Structural copy counters measured separately. No forced GC.",
   "cases": [

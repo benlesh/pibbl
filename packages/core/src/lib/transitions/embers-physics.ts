@@ -1,12 +1,12 @@
-import type { CRCEmbersOptions } from './embers.js';
+import type { PibblEmbersOptions } from './embers.js';
 import { finite } from "./capture.js";
 import type { lazyTransitionKernel } from "./wasm/kernel.js";
 /**
  * Collision information produced by an ember's physical interaction.
  *
- * @see {@link CRCEmbersPhysicsOptions}
+ * @see {@link PibblEmbersPhysicsOptions}
  */
-export interface CRCEmberCollision {
+export interface PibblEmberCollision {
   /** Fraction of the swept segment at impact, from zero to one. */
   readonly fraction: number;
   /** Outward surface normal in the receiving primitive's local coordinates. */
@@ -15,10 +15,10 @@ export interface CRCEmberCollision {
 /**
  * Collision and physical motion options for transition embers.
  *
- * @see {@link CRCEmberCollision}
- * @see {@link CRCEmbersOptions}
+ * @see {@link PibblEmberCollision}
+ * @see {@link PibblEmbersOptions}
  */
-export interface CRCEmbersPhysicsOptions {
+export interface PibblEmbersPhysicsOptions {
   /** Local units/second². Default [0, -60]. */
   readonly gravity?: readonly [number, number];
   /** Target air velocity in local units/second. Default [0, -45]. */
@@ -34,25 +34,25 @@ export interface CRCEmbersPhysicsOptions {
   readonly obstacles?: Readonly<{
     /**
      * Reads the current committed values required by this integration. See
-     * {@link CRCEmbersPhysicsOptions}.
+     * {@link PibblEmbersPhysicsOptions}.
      * @returns The current obstacle revision and packed geometry arrays.
      */
     read(): Readonly<{
       /**
        * Revision used to detect changes to the underlying state or geometry. See
-       * {@link CRCEmbersPhysicsOptions}.
+       * {@link PibblEmbersPhysicsOptions}.
        */
       revision: number;
-      /** Packed box obstacle data consumed by the simulation. See {@link CRCEmbersPhysicsOptions}. */
+      /** Packed box obstacle data consumed by the simulation. See {@link PibblEmbersPhysicsOptions}. */
       boxes: Float64Array;
       /**
        * Packed ellipse obstacle data consumed by the simulation. See
-       * {@link CRCEmbersPhysicsOptions}.
+       * {@link PibblEmbersPhysicsOptions}.
        */
       ellipses: Float64Array;
       /**
        * Packed polygon obstacle data consumed by the simulation. See
-       * {@link CRCEmbersPhysicsOptions}.
+       * {@link PibblEmbersPhysicsOptions}.
        */
       polygons: Float64Array;
     }>;
@@ -62,14 +62,14 @@ export interface CRCEmbersPhysicsOptions {
    * @param from - Previous particle position.
    * @param to - Proposed particle position.
    * @returns Collision information, or undefined when motion is unobstructed. See
-   * {@link CRCEmberCollision} .
+   * {@link PibblEmberCollision} .
    */
   readonly collide?: (
     from: readonly [number, number],
     to: readonly [number, number],
-  ) => CRCEmberCollision | undefined;
+  ) => PibblEmberCollision | undefined;
 }
-export function resolveEmbersPhysics(options: CRCEmbersPhysicsOptions) {
+export function resolveEmbersPhysics(options: PibblEmbersPhysicsOptions) {
   const vector = (value: readonly [number, number], name: string) =>
     Object.freeze([
       finite(value[0], `${name}.x`),

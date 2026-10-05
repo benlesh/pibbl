@@ -1,31 +1,31 @@
 import type {
   LifecycleLabState,
   ScenarioController,
-} from '@crc/scenarios';
+} from '@pibbl/scenarios';
 import {
   lifecycleLabScenarioEntry,
   loadScenario,
-} from '@crc/scenarios';
+} from '@pibbl/scenarios';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import lifecycleLabSource from '../../scenarios/src/lifecycle-lab.example.tsx?raw';
-import { Absolute, crc, useEventTarget, Layer, Rectangle, type CRCElement, type CRCController } from '../src/index';
+import { Absolute, pibbl, useEventTarget, Layer, Rectangle, type PibblElement, type PibblController } from '../src/index';
 import {
   directionalPolicy,
   focusManaged,
 } from '../src/lib/focus/policy-test-support';
 import { executeRender } from '../src/lib/execute-render';
-import { GLOBAL_STATE, getCRCInstance } from '../src/lib/global-state';
-import { mountCRC } from '../src/lib/mount-crc';
-import { CRC_EVENT_TYPES } from '../src/lib/events/event-definitions';
+import { GLOBAL_STATE, getPibblInstance } from '../src/lib/global-state';
+import { mountPibbl } from '../src/lib/mount-pibbl';
+import { PIBBL_EVENT_TYPES } from '../src/lib/events/event-definitions';
 import { RuntimeDiagnostics } from './support/runtime-diagnostics';
 import { createElement } from '../src/lib/element/create-element';
 
 const activeControllers = new Set<ScenarioController<LifecycleLabState>>();
 const activeDiagnostics = new Set<RuntimeDiagnostics>();
-const activeRuntimeControllers = new Set<CRCController>();
+const activeRuntimeControllers = new Set<PibblController>();
 
 const EMPTY_HANDLERS = Object.fromEntries(
-  CRC_EVENT_TYPES.map(type => [type, 0]),
+  PIBBL_EVENT_TYPES.map(type => [type, 0]),
 );
 
 const BASELINE_HANDLERS = {
@@ -207,7 +207,7 @@ describe('shared event lifecycle laboratory', () => {
       second.rect(60, 0, 50, 50);
       useEventTarget({ onClick: () => undefined }, { fill: true, path: second });
     };
-    const controller = mountCRC(
+    const controller = mountPibbl(
       canvas,
       focusManaged(createElement(SlotTargets, {})),
     );
@@ -263,7 +263,7 @@ describe('shared event lifecycle laboratory', () => {
       'middle',
       'last',
     ];
-    const Host = ({ children }: { children: CRCElement<any>[] }) => children;
+    const Host = ({ children }: { children: PibblElement<any>[] }) => children;
     const createTarget = (label: 'first' | 'middle' | 'last') => createElement(Rectangle, {
       key: label,
       style: {
@@ -296,7 +296,7 @@ describe('shared event lifecycle laboratory', () => {
     };
 
     const abort = new AbortController();
-    const controller = mountCRC(canvas, createScene(), { signal: abort.signal });
+    const controller = mountPibbl(canvas, createScene(), { signal: abort.signal });
     activeRuntimeControllers.add(controller);
     executeRender(canvas, 0);
     const baseline = diagnostics.snapshot();
@@ -412,7 +412,7 @@ describe('shared event lifecycle laboratory', () => {
       original: '-2',
     });
 
-    const remounted = mountCRC(canvas, createScene());
+    const remounted = mountPibbl(canvas, createScene());
     activeRuntimeControllers.add(remounted);
     executeRender(canvas, 2_000);
     expect(diagnostics.snapshot()).toMatchObject({
@@ -478,7 +478,7 @@ describe('shared event lifecycle laboratory', () => {
           onLostPointerCapture: () => { ghostLossCalls++; },
         }),
       }) : undefined;
-    const controller = crc(canvas, createElement(CaptureLayerScene, { show: true }));
+    const controller = pibbl(canvas, createElement(CaptureLayerScene, { show: true }));
     activeRuntimeControllers.add(controller);
     await settleFrames();
 
@@ -501,7 +501,7 @@ describe('shared event lifecycle laboratory', () => {
       propagationListeners: 0,
     });
 
-    crc(canvas, createElement(CaptureLayerScene, { show: false }));
+    pibbl(canvas, createElement(CaptureLayerScene, { show: false }));
     await settleFrames();
     expect(activeNativeCaptures).toEqual(new Set());
     expect(diagnostics.snapshot()).toMatchObject({
@@ -552,13 +552,13 @@ describe('shared event lifecycle laboratory', () => {
         }),
       ],
     });
-    const controller = mountCRC(canvas, scene);
+    const controller = mountPibbl(canvas, scene);
     activeRuntimeControllers.add(controller);
     diagnostics.snapshot();
     diagnostics.ledgerSnapshot();
 
     expect(() => executeRender(canvas, 1)).toThrowError(/duplicate.*key/i);
-    const instance = getCRCInstance(canvas);
+    const instance = getPibblInstance(canvas);
     expect(instance.refs.size).toBe(0);
     expect(instance.regions.size).toBe(0);
     expect(instance.paintEntries.size).toBe(0);
@@ -581,7 +581,7 @@ describe('shared event lifecycle laboratory', () => {
     expect(GLOBAL_STATE).toMatchObject({
       canvas: undefined,
       componentRefs: undefined,
-      currentCRCInstance: undefined,
+      currentPibblInstance: undefined,
       layoutStack: undefined,
       renderContext: undefined,
       seenIds: undefined,

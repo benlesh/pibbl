@@ -2,14 +2,14 @@ import { ResponsiveStylePreparation, preparedStyleValue, preparedStyleQuery, typ
 import { definePrimitive } from '../define-primitive.js';
 import { EMPTY_STYLE } from '../style/empty-style.js';
 import { materializeContainerChildren } from '../element/children.js';
-import { cloneCRCElement } from '../element/create-element.js';
+import { clonePibblElement } from '../element/create-element.js';
 import {
   getPrimitiveDefinition,
   getChildPrimitiveReceiverToken,
   setPlacementConsumed,
 } from '../element/metadata.js';
 import { resolvePrimitiveStyleInput } from '../element/resolve-primitive-inputs.js';
-import type { CRCElement } from '../element/types.js';
+import type { PibblElement } from '../element/types.js';
 import { GLOBAL_STATE } from '../global-state.js';
 import { normalizeEdges } from '../style/normalize.js';
 import { resolveLength } from '../style/resolve-length.js';
@@ -24,15 +24,15 @@ import type {
   ResolvedBoxStyle,
 } from '../style/types.js';
 import type {
-  CRCNodeInput,
-  CRCRenderTransaction,
+  PibblNodeInput,
+  PibblRenderTransaction,
   RenderingContext2D,
   StyleResolutionContext,
   SystemStyle,
 } from '../types.js';
 import { layoutDiagnostic } from '../style/diagnostics.js';
 import {
-  type CRCStructuralEventProps,
+  type PibblStructuralEventProps,
   wireStructuralEvents,
 } from '../components/structural-events.js';
 import { pushLayoutBox } from './context.js';
@@ -57,12 +57,12 @@ export type AbsoluteStyle = BoxStyle & LayoutItemStyle;
 /**
  * Authored inputs for Absolute, including the declared data and presentation options.
  *
- * @see {@link CRCNodeInput}
+ * @see {@link PibblNodeInput}
  * @see {@link Absolute}
  */
-export interface AbsoluteProps extends CRCStructuralEventProps {
-  /** Descendant content or the callback that supplies it. See {@link CRCNodeInput}. */
-  children: CRCNodeInput;
+export interface AbsoluteProps extends PibblStructuralEventProps {
+  /** Descendant content or the callback that supplies it. See {@link PibblNodeInput}. */
+  children: PibblNodeInput;
 }
 
 interface ResolvedAbsoluteStyle extends SystemStyle {
@@ -73,8 +73,8 @@ interface ResolvedAbsoluteStyle extends SystemStyle {
 type LayoutReceiver = 'Absolute' | 'Overlay' | 'Flow' | 'Flex' | 'Grid';
 
 const preparedLayoutTransactions = new WeakMap<
-  CRCRenderTransaction,
-  WeakMap<object, readonly CRCElement<any>[]>
+  PibblRenderTransaction,
+  WeakMap<object, readonly PibblElement<any>[]>
 >();
 
 function renderAbsolute(
@@ -118,7 +118,7 @@ function renderAbsolute(
  *
  * @param props - Authored component inputs, supplied through JSX or createElement. See the linked
  * props and style types.
- * @throws When called directly; CRC mounts this component through JSX or createElement.
+ * @throws When called directly; Pibbl mounts this component through JSX or createElement.
  *
  * @see {@link AbsoluteProps}
  * @see {@link AbsoluteStyle}
@@ -148,16 +148,16 @@ export function resolveContainerBox(
 
 export function placeAbsoluteChild(
   container: Readonly<LayoutBox>,
-  child: CRCElement<any>,
+  child: PibblElement<any>,
 ): LayoutBox {
   return resolveAbsoluteChildPlacement(container, child).box;
 }
 
 function resolveAbsoluteChildPlacement(
   container: Readonly<LayoutBox>,
-  child: CRCElement<any>,
+  child: PibblElement<any>,
   receiverToken?: object,
-): { box: LayoutBox; element: CRCElement<any> } {
+): { box: LayoutBox; element: PibblElement<any> } {
   const prepared = prepareDirectChildStyle(child, receiverToken, container);
   const style = preparedStyleValue(prepared) as Readonly<
     BoxStyle & LayoutItemStyle
@@ -187,14 +187,14 @@ function resolveAbsoluteChildPlacement(
 
 /** @internal Carries normalized finite content size into the eventual render. */
 export function childWithUsedSize(
-  child: CRCElement<any>,
+  child: PibblElement<any>,
   style: Readonly<SystemStyle>,
   width: number,
   height: number,
   receiverToken?: object,
   query?: PreparedQuery,
-): CRCElement<any> {
-  const renderedChild = cloneCRCElement(child);
+): PibblElement<any> {
+  const renderedChild = clonePibblElement(child);
   setPlacementConsumed(renderedChild);
   setPreNormalizedStyle(renderedChild, Object.freeze({
     ...style,
@@ -207,7 +207,7 @@ export function childWithUsedSize(
 /** @internal Shared by the initial direct-child layout algorithms. */
 export function resolveDirectChildBox(
   container: Readonly<LayoutBox>,
-  child: CRCElement<any>,
+  child: PibblElement<any>,
   algorithm: string,
   style: Readonly<SystemStyle> = normalizeDirectChildStyle(child, undefined, container),
 ): ResolvedBoxStyle {
@@ -233,7 +233,7 @@ export function resolveDirectChildBox(
 
 /** @internal Normalizes a descriptor without resolving or invoking its callback. */
 export function normalizeDirectChildStyle(
-  child: CRCElement<any>,
+  child: PibblElement<any>,
   receiverToken?: object,
   queryBasis?: Readonly<LayoutBox>,
 ): Readonly<SystemStyle> {
@@ -242,7 +242,7 @@ export function normalizeDirectChildStyle(
 
 /** Carries responsive eligibility with this normalization, never with a token. */
 export function prepareDirectChildStyle(
-  child: CRCElement<any>,
+  child: PibblElement<any>,
   receiverToken?: object,
   queryBasis?: Readonly<LayoutBox>,
 ): Readonly<SystemStyle> | ResponsiveStylePreparation<Readonly<SystemStyle>> {
@@ -270,16 +270,16 @@ export function prepareDirectChildStyle(
 
 /** @internal Converts source-order descriptors to stable placed children. */
 export function placeDirectChildren(
-  children: readonly CRCElement<any>[],
+  children: readonly PibblElement<any>[],
   contentBox: Readonly<LayoutBox>,
-  place: (child: CRCElement<any>) => LayoutBox | {
+  place: (child: PibblElement<any>) => LayoutBox | {
     box: LayoutBox;
-    element: CRCElement<any>;
+    element: PibblElement<any>;
   },
   overflow: 'visible' | 'clip',
-): CRCElement<any>[] {
+): PibblElement<any>[] {
   const occurrences = new Map<Function, number>();
-  const placed: CRCElement<any>[] = [];
+  const placed: PibblElement<any>[] = [];
   for (const child of children) {
     const occurrence = child.key === undefined ?
       occurrences.get(child.type) ?? 0 :
@@ -307,9 +307,9 @@ export function placeDirectChildren(
 
 /** @internal Prepares one finite direct-child sequence for a layout boundary. */
 export function materializeLayoutChildren(
-  children: CRCNodeInput,
+  children: PibblNodeInput,
   receiver: LayoutReceiver,
-): readonly CRCElement<any>[] {
+): readonly PibblElement<any>[] {
   // Placement identity owns layout sibling keys. Deferring its check preserves
   // fail-closed teardown when a later duplicate follows an acquired child.
   return materializeContainerChildren(children, receiver, {
@@ -319,9 +319,9 @@ export function materializeLayoutChildren(
 
 /** @internal Shares one direct sequence between an occurrence's measurement and paint. */
 export function prepareLayoutChildren(
-  children: CRCNodeInput,
+  children: PibblNodeInput,
   receiver: LayoutReceiver,
-): readonly CRCElement<any>[] {
+): readonly PibblElement<any>[] {
   const transaction = GLOBAL_STATE.renderTransaction;
   const receiverToken = GLOBAL_STATE.primitiveReceiverToken;
   if (!transaction || !receiverToken) {
@@ -481,7 +481,7 @@ function requiredDimension(
 }
 
 function childDiagnosticContext(
-  child: CRCElement<any>,
+  child: PibblElement<any>,
   container: Readonly<LayoutBox>,
   algorithm: string,
 ) {

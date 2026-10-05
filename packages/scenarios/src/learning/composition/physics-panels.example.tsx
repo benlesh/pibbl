@@ -3,21 +3,21 @@ import {
   Group,
   Rectangle,
   Text,
-  crc,
+  pibbl,
   useSignal,
-  type CRCController,
-} from "@crc/core";
+  type PibblController,
+} from "@pibbl/core";
 import {
   PhysicsWorld2D,
   applyImpulse2D,
   collider2D,
-  crcPhysicsBody2D,
+  pibblPhysicsBody2D,
   dynamicBody2D,
   staticBody2D,
-} from "@crc/core/physics/2d";
+} from "@pibbl/core/physics/2d";
 
 function Ball({ x, color }: { x: number; color: string }) {
-  const body = crcPhysicsBody2D();
+  const body = pibblPhysicsBody2D();
   return (
     <Group
       physics={dynamicBody2D({ handle: body, collider: false, mass: 1 })}
@@ -166,6 +166,6 @@ function PhysicsPanels() {
   );
 }
 
-export default function mount(canvas: HTMLCanvasElement): CRCController {
-  return crc(canvas, <PhysicsPanels />);
+export default function mount(canvas: HTMLCanvasElement): PibblController {
+  return pibbl(canvas, <PhysicsPanels />);
 }

@@ -1,13 +1,13 @@
 import {
   Absolute,
-  crc,
+  pibbl,
   useSignal,
   Overlay,
   Group,
   Rectangle,
   Text,
-  type CRCController,
-} from "@crc/core";
+  type PibblController,
+} from "@pibbl/core";
 function AbsoluteOverlayStudy() {
   const active = useSignal(false);
   return (
@@ -70,6 +70,6 @@ function AbsoluteOverlayStudy() {
     </Absolute>
   );
 }
-export default function mount(canvas: HTMLCanvasElement): CRCController {
-  return crc(canvas, <AbsoluteOverlayStudy />);
+export default function mount(canvas: HTMLCanvasElement): PibblController {
+  return pibbl(canvas, <AbsoluteOverlayStudy />);
 }

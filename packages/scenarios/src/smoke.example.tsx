@@ -1,6 +1,6 @@
 import type { smokeScenarioEntry } from './catalog.js';
 import type { smokeScenario } from './smoke.js';
-import { Rectangle, Text } from '@crc/core';
+import { Rectangle, Text } from '@pibbl/core';
 export const SMOKE_SOURCE_ID = 'baseline-smoke-example';
 /**
  * Actions supported by the smoke scenario scenario's public controller.
@@ -64,7 +64,7 @@ const SmokeScene = ({ state, onClick }: SmokeSceneProps) => {
         fill: '#ffffff',
       }}
     >
-      {'CRC smoke scenario'}
+      {'Pibbl smoke scenario'}
     </Text>,
     <Text
       style={{

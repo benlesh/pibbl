@@ -1,5 +1,5 @@
 export const AGENT_LATE_FONT_SOURCE_ID = 'agent-late-font-example';
-import { Text, useLayoutBox, type Signal } from '@crc/core';
+import { Text, useLayoutBox, type Signal } from '@pibbl/core';
 /** Public-API text scene; the owning application decides when font readiness invalidates it. */
 export function AgentLateFontScene({ revision, family, onEvaluation }: {
  revision: Signal<number>;

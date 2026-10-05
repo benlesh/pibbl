@@ -1,20 +1,20 @@
 import { peekNativeFilterPool } from '../src/lib/filter/render-filter-boundary';
-import { grayscale, blur, opacity } from '@crc/core/filters';
+import { grayscale, blur, opacity } from '@pibbl/core/filters';
 import {
   Group,
   Rectangle,
-  crc,
+  pibbl,
   createElement,
   definePrimitive,
-  type CRCController,
-  type CRCNode,
+  type PibblController,
+  type PibblNode,
   type SystemStyle,
-} from "@crc/core";
+} from "@pibbl/core";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { clearSharedState, getCRCInstance } from "../src/lib/global-state";
+import { clearSharedState, getPibblInstance } from "../src/lib/global-state";
 import { FilterSurfacePool } from "../src/lib/filter/filter-surface-pool";
 
-const controllers = new Set<CRCController>();
+const controllers = new Set<PibblController>();
 
 afterEach(() => {
   for (const controller of controllers) controller.dispose();
@@ -60,11 +60,11 @@ describe("filter surface ownership", () => {
         style: { filter: grayscale({ amount: 1 }) },
       }),
     );
-    const controller = crc(canvas, siblings, { pixelRatio: 1 });
+    const controller = pibbl(canvas, siblings, { pixelRatio: 1 });
     controllers.add(controller);
     frames.runNext();
 
-    const instance = getCRCInstance(canvas);
+    const instance = getPibblInstance(canvas);
     const firstPool = peekNativeFilterPool(instance)!;
     expect(firstPool.snapshot()).toEqual({
       surfaceSlots: 2,
@@ -78,7 +78,7 @@ describe("filter surface ownership", () => {
     });
 
     for (let frame = 0; frame < 1_000; frame += 1) {
-      crc(canvas, siblings);
+      pibbl(canvas, siblings);
       frames.runNext(frame + 1);
       expect(firstPool.snapshot().activePairs, `frame ${frame + 1}`).toBe(0);
     }
@@ -94,7 +94,7 @@ describe("filter surface ownership", () => {
     });
 
     const idleContexts = idlePoolContexts(firstPool);
-    crc(canvas, undefined);
+    pibbl(canvas, undefined);
     frames.runNext(1_001);
     expect(instance.refs.size).toBe(0);
     expect(patternAssignment).toBeDefined();
@@ -120,7 +120,7 @@ describe("filter surface ownership", () => {
     expect(peekNativeFilterPool(instance)).toBeUndefined();
 
     const checkout = vi.spyOn(FilterSurfacePool.prototype, "checkoutPair");
-    crc(canvas, threeNestedFilters(createElement(ThrowingPrimitive, {})));
+    pibbl(canvas, threeNestedFilters(createElement(ThrowingPrimitive, {})));
     expect(() => frames.runNext(1_002)).toThrowError("forced filter failure");
     expect(instance.refs.size).toBe(0);
     const replacementPool = checkout.mock.instances[0]! as FilterSurfacePool;
@@ -131,7 +131,7 @@ describe("filter surface ownership", () => {
 
     controller.dispose();
 
-    const freshController = crc(
+    const freshController = pibbl(
       canvas,
       threeNestedFilters(
         createElement(Rectangle, {
@@ -142,7 +142,7 @@ describe("filter surface ownership", () => {
     );
     controllers.add(freshController);
     frames.runNext(1_003);
-    const freshPool = peekNativeFilterPool(getCRCInstance(canvas))!;
+    const freshPool = peekNativeFilterPool(getPibblInstance(canvas))!;
     expect(freshPool).not.toBe(firstPool);
     expect(freshPool.snapshot()).toEqual({
       surfaceSlots: 6,
@@ -164,7 +164,7 @@ const ThrowingPrimitive = definePrimitive<{}>(() => {
   throw new Error("forced filter failure");
 });
 
-function oneHundredFilteredSiblings(firstSibling: CRCNode): CRCNode {
+function oneHundredFilteredSiblings(firstSibling: PibblNode): PibblNode {
   return createElement(Group, {
     children: Array.from({ length: 100 }, (_, index) =>
       index === 0
@@ -184,7 +184,7 @@ function oneHundredFilteredSiblings(firstSibling: CRCNode): CRCNode {
   });
 }
 
-function threeNestedFilters(child: CRCNode): CRCNode {
+function threeNestedFilters(child: PibblNode): PibblNode {
   return createElement(Group, {
     style: { filter: blur({ radius: 1 }) },
     children: createElement(Group, {

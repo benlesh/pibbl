@@ -1,10 +1,10 @@
-import type { CRCPhysicsPose2D } from "../../../2d-geometry.js";
-import { Group } from "@crc/core";
+import type { PibblPhysicsPose2D } from "../../../2d-geometry.js";
+import { Group } from "@pibbl/core";
 
 const MATRIX_EPSILON = 1e-6;
 
 export interface CanvasBodyPresentationCapture2D {
-  readonly initialPose: CRCPhysicsPose2D;
+  readonly initialPose: PibblPhysicsPose2D;
   readonly parentWorld: DOMMatrix;
   readonly initialBodyLocal: DOMMatrix;
   readonly poseResidual: DOMMatrix;
@@ -48,7 +48,7 @@ export function captureBodyPresentation2D(
 
 export function resolveDynamicPresentationTransform2D(
   capture: CanvasBodyPresentationCapture2D,
-  presentedPose: CRCPhysicsPose2D,
+  presentedPose: PibblPhysicsPose2D,
   parentWorld: DOMMatrixReadOnly,
   currentBodyLocal: DOMMatrixReadOnly,
   componentName: string,
@@ -123,7 +123,7 @@ export function bodyLocalTransformFromPrimitive2D(
   return transform;
 }
 
-function validatePose(pose: CRCPhysicsPose2D, componentName: string): void {
+function validatePose(pose: PibblPhysicsPose2D, componentName: string): void {
   if (
     !Number.isFinite(pose.position[0]) ||
     !Number.isFinite(pose.position[1]) ||
@@ -218,7 +218,7 @@ function copyMatrix(source: DOMMatrixReadOnly): DOMMatrix {
   ]);
 }
 
-export function matrixFromPose(pose: CRCPhysicsPose2D): DOMMatrix {
+export function matrixFromPose(pose: PibblPhysicsPose2D): DOMMatrix {
   return new DOMMatrix()
     .translate(pose.position[0], pose.position[1])
     .rotate(pose.rotationDegrees);

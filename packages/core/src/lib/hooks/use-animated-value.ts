@@ -5,9 +5,9 @@ import {
 import { spring, tween } from '../animation/definition.js';
 import { drive } from '../animation/program.js';
 import type {
-  CRCAnimationProgram,
-  CRCSpringAnimatedValueOptions,
-  CRCTweenAnimatedValueOptions,
+  PibblAnimationProgram,
+  PibblSpringAnimatedValueOptions,
+  PibblTweenAnimatedValueOptions,
 } from '../animation/types.js';
 import { GLOBAL_STATE } from '../global-state.js';
 import {
@@ -23,35 +23,35 @@ import type {
   SignalValue,
   WritableSignal,
 } from '../signals/types.js';
-import type { CRCComponentRefs, CRCInstance } from '../types.js';
+import type { PibblComponentRefs, PibblInstance } from '../types.js';
 import { requireHookContext, useHookSlot } from './hook-slot.js';
 
-type CRCTransitionOptions<T> =
-  | CRCTweenAnimatedValueOptions<T>
-  | CRCSpringAnimatedValueOptions;
+type PibblTransitionOptions<T> =
+  | PibblTweenAnimatedValueOptions<T>
+  | PibblSpringAnimatedValueOptions;
 
-type CRCTransitionOptionsInput<T> =
+type PibblTransitionOptionsInput<T> =
   | {
-      readonly [K in keyof CRCTweenAnimatedValueOptions<T>]:
-        SignalValue<CRCTweenAnimatedValueOptions<T>[K]>;
+      readonly [K in keyof PibblTweenAnimatedValueOptions<T>]:
+        SignalValue<PibblTweenAnimatedValueOptions<T>[K]>;
     }
   | {
-      readonly [K in keyof CRCSpringAnimatedValueOptions]:
-        SignalValue<CRCSpringAnimatedValueOptions[K]>;
+      readonly [K in keyof PibblSpringAnimatedValueOptions]:
+        SignalValue<PibblSpringAnimatedValueOptions[K]>;
     };
 
-interface CRCTransitionCandidate<T> {
-  readonly options: CRCTransitionOptions<T>;
+interface PibblTransitionCandidate<T> {
+  readonly options: PibblTransitionOptions<T>;
   readonly equals: SignalEquals<T>;
   readonly hasInitial: boolean;
   readonly initial: T;
   readonly target: T;
 }
 
-interface CRCTransitionHookSlot<T> {
-  readonly componentRefs: CRCComponentRefs<any>;
+interface PibblTransitionHookSlot<T> {
+  readonly componentRefs: PibblComponentRefs<any>;
   readonly controller: AnimationPlaybackController;
-  readonly crcInstance: CRCInstance;
+  readonly pibblInstance: PibblInstance;
   readonly output: WritableSignal<T>;
   readonly readonlyOutput: Signal<T>;
   renderRevision: number;
@@ -65,18 +65,18 @@ function hasOwn(value: object, key: PropertyKey): boolean {
 
 function normalizeCandidate<T>(
   target: T,
-  options: CRCTransitionOptions<T>,
-): CRCTransitionCandidate<T> {
+  options: PibblTransitionOptions<T>,
+): PibblTransitionCandidate<T> {
   if (typeof options !== 'object' || options === null) {
-    throw new TypeError('CRC transition options must be an object.');
+    throw new TypeError('Pibbl transition options must be an object.');
   }
   if (options.type !== 'tween' && options.type !== 'spring') {
-    throw new TypeError('CRC transition type must be "tween" or "spring".');
+    throw new TypeError('Pibbl transition type must be "tween" or "spring".');
   }
   if (options.equals !== undefined && typeof options.equals !== 'function') {
-    throw new TypeError('CRC transition equals must be a function.');
+    throw new TypeError('Pibbl transition equals must be a function.');
   }
-  const snapshot = Object.freeze({ ...options }) as CRCTransitionOptions<T>;
+  const snapshot = Object.freeze({ ...options }) as PibblTransitionOptions<T>;
   if (snapshot.type === 'spring') {
     spring({
       from: target as number,
@@ -113,9 +113,9 @@ function normalizeCandidate<T>(
 function programFor<T>(
   output: WritableSignal<T>,
   from: T,
-  candidate: CRCTransitionCandidate<T>,
+  candidate: PibblTransitionCandidate<T>,
   springVelocity?: number,
-): CRCAnimationProgram {
+): PibblAnimationProgram {
   const options = candidate.options;
   if (options.type === 'spring') {
     return drive(output as unknown as WritableSignal<number>, spring({
@@ -141,41 +141,41 @@ function programFor<T>(
   }));
 }
 
-function isCurrentSlot<T>(slot: CRCTransitionHookSlot<T>): boolean {
+function isCurrentSlot<T>(slot: PibblTransitionHookSlot<T>): boolean {
   return !slot.componentRefs.teardowns.closed &&
-    !slot.crcInstance.mainTeardowns.closed &&
-    GLOBAL_STATE.crcInstances.get(slot.crcInstance.canvas) === slot.crcInstance &&
-    slot.crcInstance.refs.get(slot.componentRefs.id) === slot.componentRefs;
+    !slot.pibblInstance.mainTeardowns.closed &&
+    GLOBAL_STATE.pibblInstances.get(slot.pibblInstance.canvas) === slot.pibblInstance &&
+    slot.pibblInstance.refs.get(slot.componentRefs.id) === slot.componentRefs;
 }
 
 /**
- * Animates a numeric target using an analytic spring. See {@link CRCSpringAnimatedValueOptions}
+ * Animates a numeric target using an analytic spring. See {@link PibblSpringAnimatedValueOptions}
  * and {@link Signal}.
  * @param target - Target value or signal whose changes start transitions. See {@link SignalValue}.
  * @param options - Spring or tween configuration, including signal-backed fields. See
- * {@link SignalValue} , {@link CRCSpringAnimatedValueOptions} .
+ * {@link SignalValue} , {@link PibblSpringAnimatedValueOptions} .
  * @returns A readonly signal containing the animated value. See {@link Signal}.
  */
 export function useAnimatedValue(
   target: SignalValue<number>,
   options: SignalValue<{
-    readonly [K in keyof CRCSpringAnimatedValueOptions]:
-      SignalValue<CRCSpringAnimatedValueOptions[K]>;
+    readonly [K in keyof PibblSpringAnimatedValueOptions]:
+      SignalValue<PibblSpringAnimatedValueOptions[K]>;
   }>,
 ): Signal<number>;
 /**
  * Animates a target using a tween and optional custom interpolation. See
- * {@link CRCTweenAnimatedValueOptions} and {@link Signal}.
+ * {@link PibblTweenAnimatedValueOptions} and {@link Signal}.
  * @param target - Target value or signal whose changes start transitions. See {@link SignalValue}.
  * @param options - Spring or tween configuration, including signal-backed fields. See
- * {@link SignalValue} , {@link CRCTweenAnimatedValueOptions} .
+ * {@link SignalValue} , {@link PibblTweenAnimatedValueOptions} .
  * @returns A readonly signal containing the animated value. See {@link Signal}.
  */
 export function useAnimatedValue<T>(
   target: SignalValue<T>,
   options: SignalValue<{
-    readonly [K in keyof CRCTweenAnimatedValueOptions<T>]:
-      SignalValue<CRCTweenAnimatedValueOptions<T>[K]>;
+    readonly [K in keyof PibblTweenAnimatedValueOptions<T>]:
+      SignalValue<PibblTweenAnimatedValueOptions<T>[K]>;
   }>,
 ): Signal<T>;
 /**
@@ -185,7 +185,7 @@ export function useAnimatedValue<T>(
  * @param targetInput - Target value or signal whose changes start transitions. See
  * {@link SignalValue} .
  * @param optionsInput - Spring or tween configuration, including signal-backed fields. See
- * {@link SignalValue} , {@link CRCTransitionOptionsInput} .
+ * {@link SignalValue} , {@link PibblTransitionOptionsInput} .
  * @returns A readonly signal containing the animated value. See {@link Signal}.
  *
  * @see {@link SignalValue}
@@ -193,23 +193,24 @@ export function useAnimatedValue<T>(
  */
 export function useAnimatedValue<T>(
   targetInput: SignalValue<T>,
-  optionsInput: SignalValue<CRCTransitionOptionsInput<T>>,
+  optionsInput: SignalValue<PibblTransitionOptionsInput<T>>,
 ): Signal<T> {
-  const { componentRefs, crcInstance } = requireHookContext();
+  const { componentRefs, pibblInstance } = requireHookContext();
   const target = resolveSignalValue(targetInput);
   const options = resolveTransitionOptions(optionsInput);
   const candidate = normalizeCandidate(target, options);
-  const slot = useHookSlot<CRCTransitionHookSlot<T>>('transition', teardowns => {
+  const slot = useHookSlot<PibblTransitionHookSlot<T>>('transition', teardowns => {
     const output = signal(candidate.initial);
     const program = programFor(output, candidate.initial, candidate);
     const controller = createAnimationPlaybackController(program, {
       conflict: 'replace',
       debugName: candidate.options.debugName,
     });
-    const value: CRCTransitionHookSlot<T> = {
+    controller.setDeferredStatusCommandOwner(pibblInstance.mainTeardowns);
+    const value: PibblTransitionHookSlot<T> = {
       componentRefs,
       controller,
-      crcInstance,
+      pibblInstance,
       output,
       readonlyOutput: output.asReadonly(),
       renderRevision: 0,
@@ -229,7 +230,7 @@ export function useAnimatedValue<T>(
     !Object.is(previousProvisionalValue, candidate.initial);
   const transaction = GLOBAL_STATE.renderTransaction;
   if (!transaction) {
-    throw new Error('useAnimatedValue requires an active CRC render transaction.');
+    throw new Error('useAnimatedValue requires an active Pibbl render transaction.');
   }
   if (hasProvisionalValue) {
     provisionSignalValueForRender(slot.output, candidate.initial, transaction);
@@ -267,8 +268,8 @@ export function useAnimatedValue<T>(
 }
 
 function resolveTransitionOptions<T>(
-  input: SignalValue<CRCTransitionOptionsInput<T>>,
-): CRCTransitionOptions<T> {
+  input: SignalValue<PibblTransitionOptionsInput<T>>,
+): PibblTransitionOptions<T> {
   const source = resolveSignalValue(input);
   let resolved: Record<PropertyKey, unknown> | undefined;
   for (const key in source) {
@@ -277,5 +278,5 @@ function resolveTransitionOptions<T>(
     resolved ??= { ...source };
     resolved[key] = resolveSignalValue(value as SignalValue<unknown>);
   }
-  return (resolved ?? source) as CRCTransitionOptions<T>;
+  return (resolved ?? source) as PibblTransitionOptions<T>;
 }

@@ -14,7 +14,7 @@
   - import "./model" without a file extension (tooling/studio-docs/markdown.ts:13:46). Add the file extension
 Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
 
- RUN  v4.1.10 /Users/benlesh/.codex/worktrees/perf-verification/crc
+ RUN  v4.1.10 /Users/benlesh/.codex/worktrees/perf-verification/pibbl
 
 (!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
   - import "./build" without a file extension (tooling/studio-docs/vite-plugin.ts:11:8). Add the file extension

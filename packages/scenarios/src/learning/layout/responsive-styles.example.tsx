@@ -1,12 +1,12 @@
 import {
-  crc, Flow, Grid, Group, Line, Rectangle, Text, useLayoutBox, useSignal,
-  type CRCController, type CRCResponsiveStyle, type BoxStyle, type LayoutItemStyle, type SignalValue,
-} from '@crc/core';
+  pibbl, Flow, Grid, Group, Line, Rectangle, Text, useLayoutBox, useSignal,
+  type PibblController, type PibblResponsiveStyle, type BoxStyle, type LayoutItemStyle, type SignalValue,
+} from '@pibbl/core';
 
 const ink = '#172c2a';
 const muted = '#647873';
 const green = '#18755a';
-type Placement = { style?: SignalValue<CRCResponsiveStyle<BoxStyle & LayoutItemStyle> | undefined> };
+type Placement = { style?: SignalValue<PibblResponsiveStyle<BoxStyle & LayoutItemStyle> | undefined> };
 
 function Button({ label, active, click }: Placement & {
   label: string; active: boolean; click: () => void;
@@ -102,9 +102,9 @@ function Scene({ resizeRoot }: { resizeRoot: (phone: boolean) => void }) {
   </Group>;
 }
 
-export default function mount(canvas: HTMLCanvasElement): CRCController {
+export default function mount(canvas: HTMLCanvasElement): PibblController {
   // The host supplies ordinary page scrolling when the Studio preview is short.
-  // CRC still owns only the canvas; this is not a canvas scrolling API.
+  // Pibbl still owns only the canvas; this is not a canvas scrolling API.
   const host = canvas.parentElement;
   const canvasStyles = canvas.style.cssText;
   const hostStyles = host?.style.cssText;
@@ -117,9 +117,9 @@ export default function mount(canvas: HTMLCanvasElement): CRCController {
     canvas.style.cssText = canvasStyles;
     if (host && hostStyles !== undefined) host.style.cssText = hostStyles;
   };
-  let controller: CRCController;
+  let controller: PibblController;
   try {
-    controller = crc(canvas, <Scene resizeRoot={resizeRoot} />, { viewport: 'responsive' });
+    controller = pibbl(canvas, <Scene resizeRoot={resizeRoot} />, { viewport: 'responsive' });
   } catch (error) {
     restoreStyles();
     throw error;

@@ -3,7 +3,7 @@ import {
   installSchedulerTraceCollectorForTest,
   snapshotRealmScheduler,
 } from './realm-scheduler.js';
-import type { CRCSchedulerTraceRecord, SchedulerDriver } from './types.js';
+import type { PibblSchedulerTraceRecord, SchedulerDriver } from './types.js';
 
 /**
  * A host-frame driver controlled explicitly by tests.
@@ -65,7 +65,7 @@ export class ManualSchedulerDriver implements SchedulerDriver {
       | [number, FrameRequestCallback]
       | undefined;
     if (!entry) {
-      throw new Error('No CRC host frame is pending.');
+      throw new Error('No Pibbl host frame is pending.');
     }
     const [frameId, callback] = entry;
     this.callbacks.delete(frameId);
@@ -92,5 +92,5 @@ export function installSchedulerDriverForTest(
 export {
   installSchedulerTraceCollectorForTest,
   snapshotRealmScheduler,
-  type CRCSchedulerTraceRecord,
+  type PibblSchedulerTraceRecord,
 };

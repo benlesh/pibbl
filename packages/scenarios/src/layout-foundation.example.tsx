@@ -1,6 +1,6 @@
 import {
   Absolute,
-  crc,
+  pibbl,
   useLayoutBox,
   useSignal,
   Flex,
@@ -11,12 +11,12 @@ import {
   Rectangle,
   Text,
   type BoxStyle,
-  type CRCController,
-  type CRCNode,
+  type PibblController,
+  type PibblNode,
   type FlexItemStyle,
   type GridItemStyle,
   type OverlayStyle,
-} from '@crc/core';
+} from '@pibbl/core';
 import type { ScenarioDefinition } from './types';
 export const LAYOUT_FOUNDATION_SOURCE_ID = 'layout-foundation-example';
 /**
@@ -46,13 +46,13 @@ export interface LayoutFoundationState {
 /**
  * Controls and owned cleanup returned by the mounted layout-foundation example.
  *
- * @see {@link CRCController}
+ * @see {@link PibblController}
  * @see {@link LayoutFoundationState}
  * @see {@link mountLayoutFoundation}
  */
 export interface LayoutFoundationMount {
-  /** Controller recorded or configured by this scenario. See {@link CRCController}. */
-  readonly controller: CRCController;
+  /** Controller recorded or configured by this scenario. See {@link PibblController}. */
+  readonly controller: PibblController;
   /**
    * Reads the current public layout demonstration state. See {@link LayoutFoundationState}.
    * @returns The example's current semantic state. See {@link LayoutFoundationState}.
@@ -72,7 +72,7 @@ interface ProbeProps {
 interface ProbeStyle extends BoxStyle {
   fill: string;
 }
-function KeyedProbe({ state, style }: ProbeProps): CRCNode {
+function KeyedProbe({ state, style }: ProbeProps): PibblNode {
   const clicks = useSignal(0);
   const box = useLayoutBox();
   state.keyedClicks = clicks.get();
@@ -204,7 +204,7 @@ export function mountLayoutFoundation(
       </Flex>
     </Absolute>
   );
-  const controller = crc(canvas, createScene(), {
+  const controller = pibbl(canvas, createScene(), {
     viewport: 'responsive',
   });
   return {
@@ -215,7 +215,7 @@ export function mountLayoutFoundation(
     resize(width, height) {
       canvas.style.width = `${width}px`;
       canvas.style.height = `${height}px`;
-      crc(canvas, createScene());
+      pibbl(canvas, createScene());
     },
   };
 }

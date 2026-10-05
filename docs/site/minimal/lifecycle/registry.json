@@ -6,20 +6,20 @@
     "source": "signals.ts",
     "environment": "browser",
     "symbols": [
-      { "name": "signal", "importPath": "@crc/core" },
-      { "name": "computed", "importPath": "@crc/core" },
-      { "name": "batch", "importPath": "@crc/core" },
-      { "name": "untracked", "importPath": "@crc/core" },
-      { "name": "isSignal", "importPath": "@crc/core" },
-      { "name": "resolveSignalValue", "importPath": "@crc/core" },
-      { "name": "Signal", "importPath": "@crc/core" },
-      { "name": "WritableSignal", "importPath": "@crc/core" },
-      { "name": "SignalValue", "importPath": "@crc/core" },
-      { "name": "SignalEquals", "importPath": "@crc/core" },
-      { "name": "SignalOptions", "importPath": "@crc/core" }
+      { "name": "signal", "importPath": "@pibbl/core" },
+      { "name": "computed", "importPath": "@pibbl/core" },
+      { "name": "batch", "importPath": "@pibbl/core" },
+      { "name": "untracked", "importPath": "@pibbl/core" },
+      { "name": "isSignal", "importPath": "@pibbl/core" },
+      { "name": "resolveSignalValue", "importPath": "@pibbl/core" },
+      { "name": "Signal", "importPath": "@pibbl/core" },
+      { "name": "WritableSignal", "importPath": "@pibbl/core" },
+      { "name": "SignalValue", "importPath": "@pibbl/core" },
+      { "name": "SignalEquals", "importPath": "@pibbl/core" },
+      { "name": "SignalOptions", "importPath": "@pibbl/core" }
     ],
     "notes": [
-      "Untracked reads do not attach dependency edges. This example refreshes the DOM explicitly; CRC component reads subscribe automatically."
+      "Untracked reads do not attach dependency edges. This example refreshes the DOM explicitly; Pibbl component reads subscribe automatically."
     ]
   },
   {
@@ -29,13 +29,13 @@
     "source": "hooks.tsx",
     "environment": "browser",
     "symbols": [
-      { "name": "useSignal", "importPath": "@crc/core" },
-      { "name": "useComputed", "importPath": "@crc/core" },
-      { "name": "useConst", "importPath": "@crc/core" },
-      { "name": "useRef", "importPath": "@crc/core" },
-      { "name": "useReaction", "importPath": "@crc/core" },
-      { "name": "CRCRef", "importPath": "@crc/core" },
-      { "name": "CRCReactionOptions", "importPath": "@crc/core" }
+      { "name": "useSignal", "importPath": "@pibbl/core" },
+      { "name": "useComputed", "importPath": "@pibbl/core" },
+      { "name": "useConst", "importPath": "@pibbl/core" },
+      { "name": "useRef", "importPath": "@pibbl/core" },
+      { "name": "useReaction", "importPath": "@pibbl/core" },
+      { "name": "PibblRef", "importPath": "@pibbl/core" },
+      { "name": "PibblReactionOptions", "importPath": "@pibbl/core" }
     ],
     "notes": [
       "Hooks run inside a mounted synchronous component. A ref mutation does not request rendering. Reaction setup and cleanup must not write signals."
@@ -48,19 +48,19 @@
     "source": "elements.tsx",
     "environment": "browser",
     "symbols": [
-      { "name": "createElement", "importPath": "@crc/core" },
-      { "name": "Fragment", "importPath": "@crc/core" },
-      { "name": "CRCComponent", "importPath": "@crc/core" },
-      { "name": "CRCElement", "importPath": "@crc/core" },
-      { "name": "CRCElementType", "importPath": "@crc/core" },
-      { "name": "CRCKey", "importPath": "@crc/core" },
-      { "name": "CRCNode", "importPath": "@crc/core" },
-      { "name": "CRCNodeInput", "importPath": "@crc/core" },
-      { "name": "CRCContainerChild", "importPath": "@crc/core" },
-      { "name": "CRCEmptyNode", "importPath": "@crc/core" },
-      { "name": "CRCTextChild", "importPath": "@crc/core" },
-      { "name": "CRCTextInput", "importPath": "@crc/core" },
-      { "name": "CRCRenderResult", "importPath": "@crc/core" }
+      { "name": "createElement", "importPath": "@pibbl/core" },
+      { "name": "Fragment", "importPath": "@pibbl/core" },
+      { "name": "PibblComponent", "importPath": "@pibbl/core" },
+      { "name": "PibblElement", "importPath": "@pibbl/core" },
+      { "name": "PibblElementType", "importPath": "@pibbl/core" },
+      { "name": "PibblKey", "importPath": "@pibbl/core" },
+      { "name": "PibblNode", "importPath": "@pibbl/core" },
+      { "name": "PibblNodeInput", "importPath": "@pibbl/core" },
+      { "name": "PibblContainerChild", "importPath": "@pibbl/core" },
+      { "name": "PibblEmptyNode", "importPath": "@pibbl/core" },
+      { "name": "PibblTextChild", "importPath": "@pibbl/core" },
+      { "name": "PibblTextInput", "importPath": "@pibbl/core" },
+      { "name": "PibblRenderResult", "importPath": "@pibbl/core" }
     ],
     "notes": [
       "Textual values belong inside Text; arbitrary strings are not general scene nodes. Components are synchronous and createElement is equivalent to automatic JSX."
@@ -69,21 +69,21 @@
   {
     "id": "mount",
     "title": "Mount, update, and dispose",
-    "description": "Own one CRC root for a canvas and replace its content without creating another controller.",
+    "description": "Own one Pibbl root for a canvas and replace its content without creating another controller.",
     "source": "mount.tsx",
     "environment": "browser",
     "symbols": [
       {
-        "name": "crc",
-        "importPath": "@crc/core"
+        "name": "pibbl",
+        "importPath": "@pibbl/core"
       },
       {
         "name": "Canvas",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
-        "name": "CRCController",
-        "importPath": "@crc/core"
+        "name": "PibblController",
+        "importPath": "@pibbl/core"
       }
     ],
     "notes": ["One canvas has at most one live mount. dispose() is idempotent."]
@@ -97,71 +97,71 @@
     "symbols": [
       {
         "name": "definePrimitive",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "useCanvasContext",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "SystemStyle",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "RenderingContext2D",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "PrimitiveRender",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "PrimitiveCapabilities",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "PrimitiveInput",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "PrimitiveInputOf",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "PrimitiveProgramProps",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
-        "name": "CRCPrimitiveComponent",
-        "importPath": "@crc/core"
+        "name": "PibblPrimitiveComponent",
+        "importPath": "@pibbl/core"
       },
       {
         "name": "SpecifiedStyle",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "NormalizedStyle",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "ResolvedStyle",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "StyleResolutionContext",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "MeasureInput",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "MeasureResult",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "CanvasMeasurementService",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       }
     ],
     "notes": [
@@ -170,34 +170,34 @@
   },
   {
     "id": "html",
-    "title": "Host a native button in CRC",
+    "title": "Host a native button in Pibbl",
     "description": "Mount and update native HTML inside an HtmlBox, preserving native clicks and focus.",
     "source": "html.tsx",
     "environment": "browser",
     "symbols": [
       {
         "name": "HtmlBox",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "HtmlBoxProps",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "HtmlBoxStyle",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "HtmlMountCallback",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "HtmlUpdateFunction",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "HtmlBoxFocusState",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       }
     ],
     "notes": [
@@ -213,47 +213,47 @@
     "symbols": [
       {
         "name": "defineTexture",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "useTexture",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "TextureDefinition",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "TextureContext",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "TextureFrame",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "TextureRecipe",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "Texture",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "TextureOptions",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "TexturePlacement",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "TexturePaint",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       }
     ],
     "notes": [
-      "The texture is owned by useTexture. requestFrame() opts into another shared CRC frame; stop calling it to stop animation. Release application-owned resources in definition.dispose if any are allocated."
+      "The texture is owned by useTexture. requestFrame() opts into another shared Pibbl frame; stop calling it to stop animation. Release application-owned resources in definition.dispose if any are allocated."
     ]
   },
   {
@@ -264,28 +264,28 @@
     "environment": "browser",
     "symbols": [
       {
-        "name": "CRCConfig",
-        "importPath": "@crc/core"
+        "name": "PibblConfig",
+        "importPath": "@pibbl/core"
       },
       {
-        "name": "CRCFit",
-        "importPath": "@crc/core"
+        "name": "PibblFit",
+        "importPath": "@pibbl/core"
       },
       {
-        "name": "CRCPixelRatio",
-        "importPath": "@crc/core"
+        "name": "PibblPixelRatio",
+        "importPath": "@pibbl/core"
       },
       {
-        "name": "CRCFixedViewportConfig",
-        "importPath": "@crc/core"
+        "name": "PibblFixedViewportConfig",
+        "importPath": "@pibbl/core"
       },
       {
-        "name": "CRCResponsiveViewportConfig",
-        "importPath": "@crc/core"
+        "name": "PibblResponsiveViewportConfig",
+        "importPath": "@pibbl/core"
       }
     ],
     "notes": [
-      "Surface configuration is captured at mount. Dispose and remount to change it. CSS controls display size; CRC manages backing pixels."
+      "Surface configuration is captured at mount. Dispose and remount to change it. CSS controls display size; Pibbl manages backing pixels."
     ]
   }
 ]

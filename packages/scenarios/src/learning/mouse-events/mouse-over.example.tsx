@@ -1,4 +1,4 @@
-import { crc, useSignal, Rectangle, Text, type CRCController } from "@crc/core";
+import { pibbl, useSignal, Rectangle, Text, type PibblController } from "@pibbl/core";
 function MouseOverStudy() {
   const active = useSignal("none");
   const card = (x: number, color: string, label: string) => [
@@ -53,6 +53,6 @@ function MouseOverStudy() {
     </Text>,
   ];
 }
-export default function mount(canvas: HTMLCanvasElement): CRCController {
-  return crc(canvas, <MouseOverStudy />);
+export default function mount(canvas: HTMLCanvasElement): PibblController {
+  return pibbl(canvas, <MouseOverStudy />);
 }

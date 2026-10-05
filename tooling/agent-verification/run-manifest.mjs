@@ -10,7 +10,7 @@ export function createReplayManifest({ runId, repository, kind, url, density = 1
     throw new Error('Unsupported replay density.');
   }
   return {
-    schema: 'crc-replay-run/1',
+    schema: 'pibbl-replay-run/1',
     runId,
     kind,
     startedAt: new Date().toISOString(),
@@ -24,8 +24,8 @@ export function createReplayManifest({ runId, repository, kind, url, density = 1
       executable: process.execPath,
       arguments: [resolve(repository, 'tooling/agent-verification', kind === 'viz' ? 'viz-replay.mjs' : kind === 'text' ? 'text-replay.mjs' : kind === 'signal-mutation' ? 'signal-mutation-replay.mjs' : 'replay.mjs'), url],
       cwd: repository,
-      environment: kind === 'viz' ? { CRC_VERIFY_DENSITY: String(density) } : {},
-      unsetEnvironment: ['CRC_VERIFY_BROWSER_ENDPOINT'],
+      environment: kind === 'viz' ? { PIBBL_VERIFY_DENSITY: String(density) } : {},
+      unsetEnvironment: ['PIBBL_VERIFY_BROWSER_ENDPOINT'],
       outputPolicy: 'fresh-default-directory',
       preconditions: ['Provision the recorded checkout dependencies and Playwright Chromium.',
         'Serve the source Studio from the intended checkout at the recorded URL; served/local identity checks must pass.'],
@@ -47,7 +47,7 @@ export function replayToolFiles(kind) {
 
 export async function captureReplayToolIdentity(repository, kind, revision) {
   return { ...await fingerprint(repository, replayToolFiles(kind), revision),
-    schema: 'crc-replay-tool-identity/1',
+    schema: 'pibbl-replay-tool-identity/1',
     scope: 'Replay and declared local dependencies on disk; not loaded-module or installed-dependency attestation.',
   };
 }

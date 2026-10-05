@@ -4,14 +4,14 @@ import {
   Line,
   Rectangle,
   Text,
-  crc,
+  pibbl,
   useLayoutBox,
   useSignal,
-  type CRCController,
-  type CRCPointerEvent,
+  type PibblController,
+  type PibblPointerEvent,
   type WritableSignal,
-} from "@crc/core";
-import { Axis, BarSeries, Scale, useScale } from "@crc/core/viz";
+} from "@pibbl/core";
+import { Axis, BarSeries, useBarScale, useLinearScale, BarScale, LinearScale } from "@pibbl/core/viz";
 
 const periods = ["Q1", "Q2", "Q3", "Q4"];
 // Illustrative business cash flow, in thousands of dollars; not reported financial data.
@@ -106,9 +106,9 @@ function Plot({
   origin: { x: number; y: number };
   selected: WritableSignal<Segment | null>;
 }) {
-  const periods = useScale("periods", "band").get();
-  const cash = useScale("cash").get();
-  function inspect(event: CRCPointerEvent) {
+  const periods = useBarScale("periods").get();
+  const cash = useLinearScale("cash").get();
+  function inspect(event: PibblPointerEvent) {
     const x = event.x - origin.x,
       y = event.y - origin.y;
     // Reverse search matches the renderer's source paint order at shared edges.
@@ -269,30 +269,30 @@ function Scene() {
       ))}
       <Group style={{ translateX: origin.x, translateY: origin.y }}>
         <Absolute style={{ width, height }}>
-          <Scale
+          <BarScale
             id="periods"
-            type="band"
+
             domain={periods}
             range="width"
             paddingInner={0.35}
             paddingOuter={0.2}
             style={{ width, height }}
           >
-            <Scale
+            <LinearScale
               id="cash"
-              type="linear"
+
               domain={[-300, 500]}
               range="height"
               reverse
             >
               <Plot rows={rows} origin={origin} selected={selected} />
-            </Scale>
-          </Scale>
+            </LinearScale>
+          </BarScale>
         </Absolute>
       </Group>
     </Group>
   );
 }
-export default function mount(canvas: HTMLCanvasElement): CRCController {
-  return crc(canvas, <Scene />, { viewport: "responsive" });
+export default function mount(canvas: HTMLCanvasElement): PibblController {
+  return pibbl(canvas, <Scene />, { viewport: "responsive" });
 }

@@ -18,7 +18,7 @@ symbols:
 
 # LineSeries
 
-Import `LineSeries` and its types from `@crc/core/viz`. `LineSeriesProps<D>` requires
+Import `LineSeries` and its types from `@pibbl/core/viz`. `LineSeriesProps<D>` requires
 `data`, `x`, `y`, `xScale`, and `yScale`. Data is a readonly array or a core signal
 of an array. It is not a thunk. Replace arrays to notify consumers; mutation alone
 is not reactive.
@@ -42,5 +42,5 @@ segment styling, fill, or area is implemented.
 One core `Path` owns the complete batch's paint and stroke hit geometry. Ordinary
 core event handlers and `pointerEvents` work on that target; gaps remain gaps for
 hit testing. There is no nearest-point event enrichment. Applications can compose
-inspection or brushing with [`useScale`](#/api/hooks/use-scale) and core targets.
+inspection or brushing with [`useLinearScale`](#/api/hooks/use-scale) and core targets.
 Wrap the series in a core `Clip` for clipping; scales do not clip automatically.

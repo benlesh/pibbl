@@ -10,7 +10,7 @@ symbols: [nearestDomainValue]
 
 # nearestDomainValue
 
-Import from `@crc/core/viz`. `nearestDomainValue(values, rangeValue, scale)` accepts
+Import from `@pibbl/core/viz`. `nearestDomainValue(values, rangeValue, scale)` accepts
 plain numeric values and a resolved linear scale. It returns the original value
 whose mapped position is closest, or undefined for empty/all-invalid input.
 Equal distances choose the earliest source value. No sorting or inversion is

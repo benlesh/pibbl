@@ -25,7 +25,7 @@ assets.set(
   ),
 );
 const html =
-  '<!doctype html><script type="importmap">{"imports":{"@crc/core":"/core/index.mjs"}}</script>';
+  '<!doctype html><script type="importmap">{"imports":{"@pibbl/core":"/core/index.mjs"}}</script>';
 const server = createServer((request, response) => {
   const path = new URL(request.url, "http://localhost").pathname;
   const data = path === "/" ? html : assets.get(path);
@@ -66,8 +66,8 @@ try {
     try {
       for (const [name, text, iterations] of [
         ["single glyph", "A", 100],
-        ["short label", "Hello CRC", 100],
-        ["long repeated", "Hello CRC ".repeat(100), 25],
+        ["short label", "Hello Pibbl", 100],
+        ["long repeated", "Hello Pibbl ".repeat(100), 25],
         [
           "long varied",
           "ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz 0123456789 ".repeat(
@@ -75,7 +75,7 @@ try {
           ),
           25,
         ],
-        ["very long", "Hello CRC ".repeat(1000), 8],
+        ["very long", "Hello Pibbl ".repeat(1000), 8],
       ]) {
         const samples = [];
         let glyphs = 0,

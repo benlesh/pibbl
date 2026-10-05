@@ -1,18 +1,18 @@
-# CRC layout-system contract
+# Pibbl layout-system contract
 
 Status: current implemented contract, updated for external render-layer layout
 participation on 2026-09-28.
 
-CRC provides dedicated `Absolute`, `Overlay`, `Flow`, `Flex`, and `Grid`
-components. They arrange direct branded `CRCElement` children into declared
+Pibbl provides dedicated `Absolute`, `Overlay`, `Flow`, `Flex`, and `Grid`
+components. They arrange direct branded `PibblElement` children into declared
 boxes, then traverse those children through the normal immediate-mode renderer.
 Layout does not build a retained display list and never speculatively renders a
 child to discover its size.
 
-Each layout component accepts recursive `CRCNode` children. Arrays, finite
+Each layout component accepts recursive `PibblNode` children. Arrays, finite
 synchronous iterables, and unkeyed fragments flatten at the receiving layout
 boundary; keyed fragments remain direct identity items. Iterables are required
-to be finite; infinite iterables are unsupported and CRC does not promise to
+to be finite; infinite iterables are unsupported and Pibbl does not promise to
 detect them. Unsupported child values and duplicate sibling keys fail with
 contextual errors.
 
@@ -38,7 +38,7 @@ A child's parent-relative placement lives in its own specified style:
 - `flexBasis`, `flexGrow`, and `flexShrink` are consumed only by Flex;
 - Grid consumes one-based starts and positive spans.
 
-`CRCRenderLayerStyle` accepts the shared box and layout-item fields. Each
+`PibblRenderLayerStyle` accepts the shared box and layout-item fields. Each
 omitted layer dimension uses its current finite logical allocation; an explicit
 or allocated width and height must resolve to positive finite values. A render
 layer has no intrinsic measurement capability, so an automatic sizing path
@@ -54,14 +54,14 @@ slots. A placed child's `useLayoutBox()` is the stable, readonly local box
 `{ x: 0, y: 0, width, height }`; reading it never schedules an update. Plain
 component props retain the exact specified public style fields and signal
 identity; the finite used allocation is exposed separately through
-`useLayoutBox()`. For a positioned object style, CRC may pass a readonly shallow
+`useLayoutBox()`. For a positioned object style, Pibbl may pass a readonly shallow
 copy to carry private placement provenance. It never mutates the authored object
 or changes its public keys/values, but object identity is not a contract on that
 placed path.
 
 Layout container and item style fields accept signal-valued replacements.
 Mounted parent inspection may resolve a child's style before the receiving
-child evaluates. CRC records those source nodes in a transaction-local
+child evaluates. Pibbl records those source nodes in a transaction-local
 provision keyed by the child's stable primitive receiver token. The successful
 child generation adopts and deduplicates that provision; failure, abort,
 removal, disposal, or an unclaimed provision releases it without changing the
@@ -119,7 +119,7 @@ order.
 
 ## Flow
 
-`Flow` is CRC-native sequential layout rather than CSS inline formatting.
+`Flow` is Pibbl-native sequential layout rather than CSS inline formatting.
 
 | Container field  | Supported values and default                  |
 | ---------------- | --------------------------------------------- |
@@ -152,7 +152,7 @@ direction, margin collapsing, or baseline alignment.
 
 Basis may be a definite number/percentage or pure measured `auto`. Whenever an
 item can shrink or uses measured/automatic basis, it must declare `minWidth` in
-a row or `minHeight` in a column. CRC does not invent the browser's automatic
+a row or `minHeight` in a column. Pibbl does not invent the browser's automatic
 minimum size. Lines collect in source order, hypothetical sizes choose grow or
 shrink mode, and iterative freeze/redistribution enforces min/max constraints.
 Negative remaining space keeps CSS-compatible alignment fallbacks for the
@@ -239,12 +239,12 @@ between objects inside that flattened bitmap.
 
 ## Deliberate exclusions
 
-CRC layout does not promise a complete CSS formatting engine. Deferred features
+Pibbl layout does not promise a complete CSS formatting engine. Deferred features
 include margin, scrolling, auto-placement Grid, implicit tracks, advanced CSS
 intrinsic sizing, reverse/reordered Flexbox, baseline alignment, percentage
 gaps, auto margins, DOM overlays/accessibility, a retained scene graph, workers,
 a public virtualization API. Applications can window large datasets and pass
-the visible descriptors to CRC; the library does not own the records or scroll
+the visible descriptors to Pibbl; the library does not own the records or scroll
 model.
 
 Public JSX layout evidence lives in

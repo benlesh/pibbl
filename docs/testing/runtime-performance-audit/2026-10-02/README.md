@@ -1,4 +1,4 @@
-# CRC runtime performance audit
+# Pibbl runtime performance audit
 
 > **Historical status: Dated audit evidence and remediation proposals; current behavior is defined by runtime contracts.**
 
@@ -8,21 +8,21 @@ The strongest confirmed progressive slowdown is repeated animation milestone rec
 
 ## Issue queue
 
-| Issue       | Priority | Document                                                                                                     | Status |
-| ----------- | -------- | ------------------------------------------------------------------------------------------------------------ | ------ |
-| CRC-PERF-01 | P1       | [Repeating animation history grows with elapsed time](issues/01-animation-history.md)                        | Open   |
-| CRC-PERF-02 | P1       | [Texture initialization failure leaves orphaned scheduled work](issues/02-texture-initialization.md)         | Open   |
-| CRC-PERF-03 | P1       | [Physics retains handles for retired body generations](issues/03-physics-handles.md)                         | Open   |
-| CRC-PERF-04 | P1       | [Physics updates copy and rebuild whole world state](issues/04-physics-update-cost.md)                       | Open   |
-| CRC-PERF-05 | P1       | [Three picking clones static geometry every rendered generation](issues/05-three-picking.md)                 | Open   |
-| CRC-PERF-06 | P2       | [Texture paint bursts block a frame or overflow the queue](issues/06-texture-backpressure.md)                | Open   |
-| CRC-PERF-07 | P2       | [Water wave rasterization allocates and recomputes avoidable work](issues/07-water-raster.md)                | Open   |
-| CRC-PERF-08 | P2       | [Texture resizing leaves obsolete publication surfaces to garbage collection](issues/08-texture-surfaces.md) | Open   |
-| CRC-PERF-09 | P2       | [Particle color string caching lacks an explicit size bound](issues/09-particle-color-cache.md)              | Open   |
-| CRC-PERF-10 | P2       | [Scheduler job merging performs repeated root searches](issues/10-scheduler-root-merge.md)                   | Open   |
-| CRC-PERF-11 | P3       | [Separate runtime responsibilities around measured hot paths](issues/11-runtime-organization.md)             | Open   |
-| CRC-PERF-12 | P2       | [Expose bounded explanations of runtime work and ownership](issues/12-agent-observability.md)                | Open   |
-| CRC-PERF-13 | P2       | [Make long duration and overload regressions repeatable](issues/13-stress-regressions.md)                    | Open   |
+| Issue         | Priority | Document                                                                                                     | Status |
+| ------------- | -------- | ------------------------------------------------------------------------------------------------------------ | ------ |
+| Pibbl-PERF-01 | P1       | [Repeating animation history grows with elapsed time](issues/01-animation-history.md)                        | Open   |
+| Pibbl-PERF-02 | P1       | [Texture initialization failure leaves orphaned scheduled work](issues/02-texture-initialization.md)         | Open   |
+| Pibbl-PERF-03 | P1       | [Physics retains handles for retired body generations](issues/03-physics-handles.md)                         | Open   |
+| Pibbl-PERF-04 | P1       | [Physics updates copy and rebuild whole world state](issues/04-physics-update-cost.md)                       | Open   |
+| Pibbl-PERF-05 | P1       | [Three picking clones static geometry every rendered generation](issues/05-three-picking.md)                 | Open   |
+| Pibbl-PERF-06 | P2       | [Texture paint bursts block a frame or overflow the queue](issues/06-texture-backpressure.md)                | Open   |
+| Pibbl-PERF-07 | P2       | [Water wave rasterization allocates and recomputes avoidable work](issues/07-water-raster.md)                | Open   |
+| Pibbl-PERF-08 | P2       | [Texture resizing leaves obsolete publication surfaces to garbage collection](issues/08-texture-surfaces.md) | Open   |
+| Pibbl-PERF-09 | P2       | [Particle color string caching lacks an explicit size bound](issues/09-particle-color-cache.md)              | Open   |
+| Pibbl-PERF-10 | P2       | [Scheduler job merging performs repeated root searches](issues/10-scheduler-root-merge.md)                   | Open   |
+| Pibbl-PERF-11 | P3       | [Separate runtime responsibilities around measured hot paths](issues/11-runtime-organization.md)             | Open   |
+| Pibbl-PERF-12 | P2       | [Expose bounded explanations of runtime work and ownership](issues/12-agent-observability.md)                | Open   |
+| Pibbl-PERF-13 | P2       | [Make long duration and overload regressions repeatable](issues/13-stress-regressions.md)                    | Open   |
 
 ## Automation entry point
 
@@ -42,7 +42,7 @@ Measurements used macOS ARM64 on Apple M5 Max, 128 GiB RAM, Node 26.9.0, pnpm 11
 
 The six-example real-time soak covered 49,327 scheduler frames over 8.5 minutes: Living Ink 180 seconds, Stirred Ink 90 seconds, and Physics 2D, Physics Panels, Particle Effects, and Underwater 60 seconds each. It reported no page errors. Normal disposal returned observed scheduler ownership to zero. The sampled root/hook-reference/paint-entry counts stayed stable; this does not establish a native or GPU-memory plateau. The soak forced GC every 15 seconds and collected coarse JS heap readings, so it is not an unforced-GC endurance test.
 
-Synthetic public-API workloads covered same-value signal writes, 1,000 to 50,000 rectangles, Group versus Layer isolation, one/four diffusion textures, 1,000 to 50,000 particles, 32 to 1,000 physics bodies, native filters, paint bursts, and initialization failure. A later probe disabled physics sleeping to measure sustained work. The initial filter fixture used invalid blur syntax; the corrected fixture is in followup-results.json. Do not treat that initial fixture error as a CRC bug. At 300 simulated seconds, all 199 sampled successive diffusion images still changed; ongoing rendering was not demonstrated to be redundant.
+Synthetic public-API workloads covered same-value signal writes, 1,000 to 50,000 rectangles, Group versus Layer isolation, one/four diffusion textures, 1,000 to 50,000 particles, 32 to 1,000 physics bodies, native filters, paint bursts, and initialization failure. A later probe disabled physics sleeping to measure sustained work. The initial filter fixture used invalid blur syntax; the corrected fixture is in followup-results.json. Do not treat that initial fixture error as a Pibbl bug. At 300 simulated seconds, all 199 sampled successive diffusion images still changed; ongoing rendering was not demonstrated to be redundant.
 
 Timings are descriptive local scheduler/evaluator costs, not end-to-end presentation latency or portable budgets. Three snapshot results are from Node and exclude rendering/GPU work. Browser screenshots were inspected during the audit but are not required regression baselines. Safari, Firefox, mobile, production bundles, and hours-long native-memory behavior were not audited. No aggregate trust pass was claimed.
 

@@ -1,9 +1,9 @@
-import type { CRCInstance } from '../types.js';
+import type { PibblInstance } from '../types.js';
 import { update } from '../update.js';
 import { createLayerSurface, resolveSurface } from './resolve-surface.js';
 import type {
-  CRCConfig,
-  CRCSurfaceSnapshot,
+  PibblConfig,
+  PibblSurfaceSnapshot,
   LayerSurfaceState,
   RootSurfaceState,
   SurfaceDisplaySize,
@@ -12,7 +12,7 @@ import { validateSurfaceConfig } from './resolve-surface.js';
 
 export function createRootSurfaceState(
   canvas: HTMLCanvasElement,
-  config?: CRCConfig,
+  config?: PibblConfig,
 ): RootSurfaceState {
   const resolved = validateSurfaceConfig(canvas, config);
   return {
@@ -38,14 +38,14 @@ export function createLegacyLayerSurfaceState(
 }
 
 export function mountRootSurface(
-  instance: CRCInstance,
+  instance: PibblInstance,
   canvas: HTMLCanvasElement,
 ): void {
   const state = instance.surface;
   if (state.kind !== 'root') return;
 
   if (typeof ResizeObserver !== 'function') {
-    throw new Error('CRC requires ResizeObserver for Canvas surface sizing.');
+    throw new Error('Pibbl requires ResizeObserver for Canvas surface sizing.');
   }
 
   const resizeObserver = new ResizeObserver(() => {
@@ -68,8 +68,8 @@ export function mountRootSurface(
 }
 
 export function prepareSurface(
-  instance: CRCInstance,
-): CRCSurfaceSnapshot | undefined {
+  instance: PibblInstance,
+): PibblSurfaceSnapshot | undefined {
   const state = instance.surface;
   if (state.kind === 'layer') {
     if (!state.managed) {
@@ -144,7 +144,7 @@ export function readCanvasContentBox(
 }
 
 function mountDensityObservers(
-  instance: CRCInstance,
+  instance: PibblInstance,
   canvas: HTMLCanvasElement,
   state: RootSurfaceState,
 ): void {

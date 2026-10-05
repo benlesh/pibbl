@@ -18,7 +18,7 @@ DEP-04 upgraded the real-browser runner and closed the complete direct dependenc
 
 ## Visual strategy and controls
 
-Vitest's browser viewport is explicitly 800×600; Playwright context settings retain device scale, color scheme, locale, timezone, and reduced motion. The existing comparison writes named expected, actual, and diff artifacts. A deliberate `VITE_CRC_VISUAL_DRILL=1` run failed on 8,298 pixels with maximum channel delta 87; the diff was inspected, the committed baseline was not changed, and a normal rerun passed.
+Vitest's browser viewport is explicitly 800×600; Playwright context settings retain device scale, color scheme, locale, timezone, and reduced motion. The existing comparison writes named expected, actual, and diff artifacts. A deliberate `VITE_PIBBL_VISUAL_DRILL=1` run failed on 8,298 pixels with maximum channel delta 87; the diff was inspected, the committed baseline was not changed, and a normal rerun passed.
 
 ## Surprising findings and browser differences
 

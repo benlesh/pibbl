@@ -1,5 +1,5 @@
-import { Circle, Group, Rectangle } from "@crc/core";
-import { PointSeries, Scale } from "@crc/core/viz";
+import { Circle, Group, Rectangle } from "@pibbl/core";
+import { PointSeries, LinearScale } from "@pibbl/core/viz";
 import { afterEach, expect, it, vi } from "vitest";
 import { testRuntime } from "./support/runtime.js";
 let runtime: ReturnType<typeof testRuntime>;
@@ -29,8 +29,8 @@ it("maps valid dots, skips missing rows, and leaves space between dots untargete
         style={{ width: 600, height: 400, fill: "white" }}
         onPointerDown={() => events.push("background")}
       />
-      <Scale id="x" type="linear" domain={[0, 10]} range={[0, 200]}>
-        <Scale id="y" type="linear" domain={[0, 10]} range={[0, 100]} reverse>
+      <LinearScale id="x"  domain={[0, 10]} range={[0, 200]}>
+        <LinearScale id="y"  domain={[0, 10]} range={[0, 100]} reverse>
           <PointSeries
             data={rows}
             x="x"
@@ -40,8 +40,8 @@ it("maps valid dots, skips missing rows, and leaves space between dots untargete
             style={style}
             onPointerDown={() => events.push("point")}
           />
-        </Scale>
-      </Scale>
+        </LinearScale>
+      </LinearScale>
     </Group>,
   );
   runtime.flush();
@@ -72,8 +72,8 @@ it("preserves overlapping translucent fill and stroke order", () => {
   };
   const canvas = runtime.mount(
     <>
-      <Scale id="x" type="linear" domain={[0, 100]} range={[0, 100]}>
-        <Scale id="y" type="linear" domain={[0, 100]} range={[0, 100]}>
+      <LinearScale id="x"  domain={[0, 100]} range={[0, 100]}>
+        <LinearScale id="y"  domain={[0, 100]} range={[0, 100]}>
           <PointSeries
             data={[
               { x: 30, y: 30 },
@@ -85,8 +85,8 @@ it("preserves overlapping translucent fill and stroke order", () => {
             yScale="y"
             style={style}
           />
-        </Scale>
-      </Scale>
+        </LinearScale>
+      </LinearScale>
       <Group style={{ translateY: 100 }}>
         <Circle style={{ ...style, cx: 30, cy: 30 }} />
         <Circle style={{ ...style, cx: 40, cy: 30 }} />
@@ -116,8 +116,8 @@ it("none passes through and defined false skips accessors and style", () => {
         style={{ width: 600, height: 400, fill: "white" }}
         onPointerDown={hit}
       />
-      <Scale id="x" type="linear" domain={[0, 10]} range={[0, 200]}>
-        <Scale id="y" type="linear" domain={[0, 10]} range={[100, 0]}>
+      <LinearScale id="x"  domain={[0, 10]} range={[0, 200]}>
+        <LinearScale id="y"  domain={[0, 10]} range={[100, 0]}>
           <PointSeries
             data={rows}
             defined={(_, i) => i === 0}
@@ -128,8 +128,8 @@ it("none passes through and defined false skips accessors and style", () => {
             style={style}
             pointerEvents="none"
           />
-        </Scale>
-      </Scale>
+        </LinearScale>
+      </LinearScale>
     </>,
   );
   runtime.flush();
@@ -147,8 +147,8 @@ it("stroke-only rings leave holes and different stroke widths retain their exact
         style={{ width: 600, height: 400, fill: "white" }}
         onPointerDown={() => events.push("background")}
       />
-      <Scale id="x" type="linear" domain={[0, 100]} range={[0, 100]}>
-        <Scale id="y" type="linear" domain={[0, 100]} range={[0, 100]}>
+      <LinearScale id="x"  domain={[0, 100]} range={[0, 100]}>
+        <LinearScale id="y"  domain={[0, 100]} range={[0, 100]}>
           <PointSeries
             data={[
               { x: 30, y: 30 },
@@ -166,8 +166,8 @@ it("stroke-only rings leave holes and different stroke widths retain their exact
             })}
             onPointerDown={() => events.push("ring")}
           />
-        </Scale>
-      </Scale>
+        </LinearScale>
+      </LinearScale>
     </>,
   );
   runtime.flush();
@@ -178,22 +178,22 @@ it("stroke-only rings leave holes and different stroke widths retain their exact
   expect(events).toEqual(["background", "ring", "background", "ring"]);
 });
 
-import { signal } from "@crc/core";
-import { getCRCInstance } from "../../../src/lib/global-state.js";
+import { signal } from "@pibbl/core";
+import { getPibblInstance } from "../../../src/lib/global-state.js";
 it("keeps component and target counts constant as the dot batch grows and releases them on disposal", () => {
   runtime = testRuntime();
   const rows = signal(
     Array.from({ length: 10 }, (_, i) => ({ x: i % 100, y: i % 100 })),
   );
   const canvas = runtime.mount(
-    <Scale id="x" type="linear" domain={[0, 100]} range={[0, 200]}>
-      <Scale id="y" type="linear" domain={[0, 100]} range={[100, 0]}>
+    <LinearScale id="x"  domain={[0, 100]} range={[0, 200]}>
+      <LinearScale id="y"  domain={[0, 100]} range={[100, 0]}>
         <PointSeries data={rows} x="x" y="y" xScale="x" yScale="y" />
-      </Scale>
-    </Scale>,
+      </LinearScale>
+    </LinearScale>,
   );
   runtime.flush();
-  const instance = getCRCInstance(canvas);
+  const instance = getPibblInstance(canvas);
   const count = [instance.refs.size, instance.eventRoot.targets.size];
   rows.set(
     Array.from({ length: 10000 }, (_, i) => ({ x: i % 100, y: i % 100 })),

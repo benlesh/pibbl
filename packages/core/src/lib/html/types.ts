@@ -1,7 +1,7 @@
 import type { HtmlBox } from '../components/html-box.js';
 import type { GStyle } from '../components/g.js';
 import type { HtmlFocusRegion } from '../focus/html-focus-region.js';
-import type { CRCClippingStackEntry, CRCInstance, CRCInteractionLayer } from '../types.js';
+import type { PibblClippingStackEntry, PibblInstance, PibblInteractionLayer } from '../types.js';
 import type { LayoutBox } from '../layout/types.js';
 
 /**
@@ -16,7 +16,7 @@ export type HtmlUpdateFunction<Props> = (props: Props) => void;
  * Mounts application HTML into the supplied host and returns its prop-update callback; the abort
  * signal marks teardown.
  *
- * @param element - CRC-owned host div into which application content may be mounted.
+ * @param element - Pibbl-owned host div into which application content may be mounted.
  * @param initialProps - Props from the initial mount.
  * @param signal - Lifetime signal aborted when the host is disposed.
  * @returns An update callback for subsequent props; release application resources when the signal
@@ -28,7 +28,7 @@ export type HtmlUpdateFunction<Props> = (props: Props) => void;
  */
 export type HtmlMountCallback<Props> = (element: HTMLDivElement, initialProps: Props, signal: AbortSignal) => HtmlUpdateFunction<Props>;
 /**
- * Focus state shared between an HTML host and CRC's logical focus management.
+ * Focus state shared between an HTML host and Pibbl's logical focus management.
  *
  * @see {@link HtmlBoxProps}
  */
@@ -60,7 +60,7 @@ export interface HtmlBoxProps<Props> {
   pointerEvents?: 'auto' | 'none';
   /**
    * Receives changes to focus within the hosted HTML region. See {@link HtmlBoxFocusState}.
-   * @param state - Current DOM and CRC focus ownership for the HTML region. See
+   * @param state - Current DOM and Pibbl focus ownership for the HTML region. See
    * {@link HtmlBoxFocusState} .
    */
   onFocusChange?: (state: Readonly<HtmlBoxFocusState>) => void;
@@ -76,16 +76,16 @@ export interface HtmlBoxStyle extends GStyle {
   opacity?: number;
 }
 export interface HtmlBridge {
-  beginRender(instance: CRCInstance): void;
-  suspend(instance: CRCInstance): void;
-  recordLayer(parent: CRCInstance, child: CRCInstance, bridge: CRCInteractionLayer, opacity: number, composite: GlobalCompositeOperation): void;
+  beginRender(instance: PibblInstance): void;
+  suspend(instance: PibblInstance): void;
+  recordLayer(parent: PibblInstance, child: PibblInstance, bridge: PibblInteractionLayer, opacity: number, composite: GlobalCompositeOperation): void;
   dispose(): void;
 }
 export interface HtmlBoxRegistration {
   slot: HtmlBoxSlot;
   data: unknown;
   matrix: DOMMatrix;
-  clips: readonly CRCClippingStackEntry[];
+  clips: readonly PibblClippingStackEntry[];
   border: Readonly<LayoutBox>;
   content: Readonly<LayoutBox>;
   opacity: number;
@@ -94,7 +94,7 @@ export interface HtmlBoxRegistration {
   onFocusChange?: (state: Readonly<HtmlBoxFocusState>) => void;
 }
 export interface HtmlBoxSlot {
-  readonly owner: CRCInstance;
+  readonly owner: PibblInstance;
   readonly mount: HtmlMountCallback<unknown>;
   region: HtmlFocusRegion & { content: HTMLDivElement | undefined; rootBounds: Readonly<LayoutBox> | undefined; active: boolean };
   shell?: HTMLDivElement;

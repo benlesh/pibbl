@@ -1,25 +1,25 @@
 import {
   definePrimitive,
   resolveBox,
-  type CRCEventHandlers,
-  type CRCNode,
+  type PibblEventHandlers,
+  type PibblNode,
   type ResolvedBoxStyle,
   type SystemStyle,
-} from "@crc/core";
+} from "@pibbl/core";
 import {
-  crcInternalPaintTarget,
+  pibblInternalPaintTarget,
   useInternalValueMemoSlot,
-} from "@crc/core/internal";
+} from "@pibbl/core/internal";
 import type {
-  CRCParticleCommonProps,
-  CRCParticleParameterValues,
+  PibblParticleCommonProps,
+  PibblParticleParameterValues,
   Particles2DStyle,
 } from "../types.js";
 import type { CanvasParticleExecutor } from "./executor.js";
 
 export interface ParticleCanvasPrimitiveProps {
   readonly executor: CanvasParticleExecutor;
-  readonly interaction: CRCParticleCommonProps<CRCParticleParameterValues>;
+  readonly interaction: PibblParticleCommonProps<PibblParticleParameterValues>;
 }
 
 export interface ResolvedParticles2DStyle
@@ -33,7 +33,7 @@ function renderParticleCanvas(
   props: Readonly<ParticleCanvasPrimitiveProps>,
   style: Readonly<ResolvedParticles2DStyle>,
   context: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
-): CRCNode | void {
+): PibblNode | void {
   const { borderBox, contentBox } = style;
   const targetPath = useInternalValueMemoSlot("particleTargetPath", () => {
     const path = new Path2D();
@@ -41,8 +41,8 @@ function renderParticleCanvas(
     return path;
   }, [borderBox.x, borderBox.y, borderBox.width, borderBox.height]);
   const pointerEvents = props.interaction.pointerEvents ?? "none";
-  crcInternalPaintTarget(
-    pointerEvents === "auto" ? (props.interaction as CRCEventHandlers) : {},
+  pibblInternalPaintTarget(
+    pointerEvents === "auto" ? (props.interaction as PibblEventHandlers) : {},
     {
       path: targetPath,
       fill: true,

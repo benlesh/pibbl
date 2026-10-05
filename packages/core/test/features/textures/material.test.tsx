@@ -1,6 +1,6 @@
 import { afterEach, expect, it } from "vitest";
-import { crc } from "@crc/core";
-import { ProceduralTexture } from "@crc/core/textures";
+import { pibbl } from "@pibbl/core";
+import { ProceduralTexture } from "@pibbl/core/textures";
 import { clearSharedState } from "../../../src/lib/global-state.js";
 import {
   ManualSchedulerDriver,
@@ -29,16 +29,16 @@ for (const kind of ["marble", "paper", "cellular"] as const)
     );
     const bytes = () =>
       Array.from(canvas.getContext("2d")!.getImageData(0, 0, 64, 40).data);
-    const controller = crc(canvas, scene(42));
+    const controller = pibbl(canvas, scene(42));
     try {
       driver.flush(0);
       const initial = bytes();
       expect(new Set(initial).size).toBeGreaterThan(10);
       expect(driver.pendingHostFrames).toBe(0);
-      crc(canvas, scene(43));
+      pibbl(canvas, scene(43));
       driver.flush(16);
       expect(bytes()).not.toEqual(initial);
-      crc(canvas, scene(42));
+      pibbl(canvas, scene(42));
       driver.flush(32);
       expect(bytes()).toEqual(initial);
     } finally {
@@ -64,7 +64,7 @@ for (const kind of ["marble", "paper", "cellular"] as const)
         style={{ width: 64, height: 40 }}
       />
     );
-    const controller = crc(canvas, scene(42, 6));
+    const controller = pibbl(canvas, scene(42, 6));
     try {
       let time = 0;
       for (const [seed, scale] of [
@@ -72,7 +72,7 @@ for (const kind of ["marble", "paper", "cellular"] as const)
         [0, 3.5],
         [4294967295, 12],
       ]) {
-        crc(canvas, scene(seed, scale));
+        pibbl(canvas, scene(seed, scale));
         driver.flush((time += 16));
         const data = canvas.getContext("2d")!.getImageData(0, 0, 64, 40).data;
         for (let y = 0; y < 40; y++)

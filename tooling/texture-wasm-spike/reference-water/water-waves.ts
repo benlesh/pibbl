@@ -1,4 +1,4 @@
-import { defineTexture, type TextureContext, type TextureRecipe } from "@crc/core";
+import { defineTexture, type TextureContext, type TextureRecipe } from "@pibbl/core";
 import { validateSeed } from "./palette.js";
 
 export interface WaterWavesOptions {

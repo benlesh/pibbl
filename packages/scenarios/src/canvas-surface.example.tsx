@@ -5,7 +5,7 @@ import {
   Rectangle,
   Text,
   type LayoutBox,
-} from '@crc/core';
+} from '@pibbl/core';
 export const CANVAS_SURFACE_SOURCE_ID = 'canvas-surface-example';
 /**
  * Supported canvas surface mode values: `"fixed"`, `"responsive"`.

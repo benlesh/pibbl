@@ -1,6 +1,6 @@
 import { afterEach, expect, it, vi } from 'vitest';
-import { crc, defineTexture, Rectangle, useTexture } from '@crc/core';
-import { displacement, reflectedLight } from '@crc/core/filters';
+import { pibbl, defineTexture, Rectangle, useTexture } from '@pibbl/core';
+import { displacement, reflectedLight } from '@pibbl/core/filters';
 import { ManualSchedulerDriver, installSchedulerDriverForTest } from '../src/lib/scheduler/testing.js';
 import { resolveFilterList } from '../src/lib/style/filter.js';
 
@@ -21,7 +21,7 @@ it('reveals light on facing slopes while preserving scene alpha and flat pixels'
     const map = useTexture(slopes({}), { resolution: { width: 32, height: 16 } });
     return <Rectangle style={{ width: 32, height: 16, fill: 'rgba(20,40,60,0.5)', filter: reflectedLight({ map: map.paint({mode:'stretch'}), region: {x:0,y:0,width:32,height:16}, source:'#ffffff', opacity:0.5, direction:[1,0] }) }} />;
   }
-  const controller = crc(canvas, <Scene />);
+  const controller = pibbl(canvas, <Scene />);
   try {
     driver.flush(0);
     const ctx = canvas.getContext('2d')!;
@@ -40,7 +40,7 @@ it('fuses displacement and light into one bitmap transfer', () => {
     const region = {x:0,y:0,width:32,height:16};
     return <Rectangle style={{ width:32,height:16,fill:'#124455',filter:[displacement({map,region,strength:2}),reflectedLight({map,region,source:'#ffffff',opacity:0.2,direction:[1,0]})] }} />;
   }
-  const controller = crc(canvas,<Scene />);
+  const controller = pibbl(canvas,<Scene />);
   try { driver.flush(0); expect(transfer).toHaveBeenCalledTimes(1); }
   finally { controller.dispose(); restore(); }
 });
@@ -54,7 +54,7 @@ const cyanLight = defineTexture({
   },
 });
 
-it('accepts a CRC texture light source and leaves the supplied image bitmap caller-owned', () => {
+it('accepts a Pibbl texture light source and leaves the supplied image bitmap caller-owned', () => {
   const driver = new ManualSchedulerDriver(), restore = installSchedulerDriverForTest(driver);
   const canvas = document.createElement('canvas'); canvas.width = 32; canvas.height = 16; document.body.append(canvas);
   const imageCanvas = new OffscreenCanvas(1, 1);
@@ -67,7 +67,7 @@ it('accepts a CRC texture light source and leaves the supplied image bitmap call
     const light = useTexture(cyanLight({}), { resolution: { width: 8, height: 8 } });
     return <Rectangle style={{ width: 32, height: 16, fill: '#102030', filter: reflectedLight({ map: map.paint({ mode: 'stretch' }), region: { x: 0, y: 0, width: 32, height: 16 }, source: light.paint({ mode: 'stretch' }), opacity: 1, direction: [1, 0] }) }} />;
   }
-  const textureController = crc(canvas, <TextureScene />);
+  const textureController = pibbl(canvas, <TextureScene />);
   try {
     driver.flush(0);
     const lit = canvas.getContext('2d')!.getImageData(24, 8, 1, 1).data;
@@ -78,7 +78,7 @@ it('accepts a CRC texture light source and leaves the supplied image bitmap call
     const map = useTexture(slopes({}), { resolution: { width: 32, height: 16 } });
     return <Rectangle style={{ width: 32, height: 16, fill: '#102030', filter: reflectedLight({ map: map.paint({ mode: 'stretch' }), region: { x: 0, y: 0, width: 32, height: 16 }, source: image, opacity: 1, direction: [1, 0] }) }} />;
   }
-  const imageController = crc(canvas, <ImageScene />);
+  const imageController = pibbl(canvas, <ImageScene />);
   try {
     driver.flush(1);
     const lit = canvas.getContext('2d')!.getImageData(24, 8, 1, 1).data;

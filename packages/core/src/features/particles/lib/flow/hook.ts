@@ -1,84 +1,84 @@
-import type { CRCParticleSystemOptions } from '../types.js';
+import type { PibblParticleSystemOptions } from '../types.js';
 import {
   resolveSignalValue,
   signal,
   type Signal,
   type SignalValue,
-} from "@crc/core";
+} from "@pibbl/core";
 import {
-  crcInternalCurrentRenderOwner,
-  crcInternalCurrentSimulationOwner,
-  crcInternalOnRenderFinish,
-  crcInternalQueueSimulationCommitAcknowledgement,
-  crcInternalRegisterSimulationAdvance,
+  pibblInternalCurrentRenderOwner,
+  pibblInternalCurrentSimulationOwner,
+  pibblInternalOnRenderFinish,
+  pibblInternalQueueSimulationCommitAcknowledgement,
+  pibblInternalRegisterSimulationAdvance,
   useInternalHookSlot,
-  type CRCInternalSimulationOwner,
-} from "@crc/core/internal";
+  type PibblInternalSimulationOwner,
+} from "@pibbl/core/internal";
 import { FlowFieldKernel2D, type FlowSource2D } from "./field.js";
 
 /**
  * Committed obstacle geometry and motion packed into borrowed numeric buffers.
  *
- * @see {@link CRCFlowObstacleSource2D}
+ * @see {@link PibblFlowObstacleSource2D}
  */
-export interface CRCFlowObstacleBatch2D {
+export interface PibblFlowObstacleBatch2D {
   /**
    * Revision used to detect changes to the underlying state or geometry. See
-   * {@link CRCFlowObstacleBatch2D}.
+   * {@link PibblFlowObstacleBatch2D}.
    */
   readonly revision: number;
   /** cx, cy, halfWidth, halfHeight, radians, vx, vy, omega, COM x/y. */
   readonly boxes: Float64Array;
   /**
-   * Packed ellipse obstacle data consumed by the simulation. See {@link CRCFlowObstacleBatch2D}.
+   * Packed ellipse obstacle data consumed by the simulation. See {@link PibblFlowObstacleBatch2D}.
    */
   readonly ellipses?: Float64Array;
   /**
-   * Packed polygon obstacle data consumed by the simulation. See {@link CRCFlowObstacleBatch2D}.
+   * Packed polygon obstacle data consumed by the simulation. See {@link PibblFlowObstacleBatch2D}.
    */
   readonly polygons?: Float64Array;
 }
 /**
  * Supplies committed obstacle batches to a flow field without transferring buffer ownership.
  *
- * @see {@link CRCFlowObstacleBatch2D}
- * @see {@link CRCFlowFieldOptions2D}
+ * @see {@link PibblFlowObstacleBatch2D}
+ * @see {@link PibblFlowFieldOptions2D}
  */
-export interface CRCFlowObstacleSource2D {
+export interface PibblFlowObstacleSource2D {
   /**
    * Returns committed simulation state. Buffers are borrowed for this call only.
    * @returns The current obstacle revision and packed obstacle geometry. See
-   * {@link CRCFlowObstacleBatch2D} .
+   * {@link PibblFlowObstacleBatch2D} .
    */
-  read(): CRCFlowObstacleBatch2D;
+  read(): PibblFlowObstacleBatch2D;
 }
 /**
  * Logical bounds, grid resolution, obstacle source, and buoyancy for a flow field.
  *
- * @see {@link CRCFlowObstacleSource2D}
+ * @see {@link PibblFlowObstacleSource2D}
  * @see {@link useFlowField2D}
  */
-export interface CRCFlowFieldOptions2D {
-  /** Logical region constraining the content or query. See {@link CRCFlowFieldOptions2D}. */
+export interface PibblFlowFieldOptions2D {
+  /** Logical region constraining the content or query. See {@link PibblFlowFieldOptions2D}. */
   readonly bounds: Readonly<{
     /**
      * Horizontal extent in the units of the containing geometry or surface. See
-     * {@link CRCFlowFieldOptions2D}.
+     * {@link PibblFlowFieldOptions2D}.
      */
     width: number;
     /**
      * Vertical extent in the units of the containing geometry or surface. See
-     * {@link CRCFlowFieldOptions2D}.
+     * {@link PibblFlowFieldOptions2D}.
      */
     height: number;
   }>;
-  /** Dimensions of the simulation or raster grid. See {@link CRCFlowFieldOptions2D}. */
+  /** Dimensions of the simulation or raster grid. See {@link PibblFlowFieldOptions2D}. */
   readonly resolution: readonly [columns: number, rows: number];
   /**
-   * Obstacle geometry used by the flow or water simulation. See {@link CRCFlowObstacleSource2D}.
+   * Obstacle geometry used by the flow or water simulation. See {@link PibblFlowObstacleSource2D}.
    */
-  readonly obstacles?: CRCFlowObstacleSource2D;
-  /** Strength of heat-driven upward motion in the flow field. See {@link CRCFlowFieldOptions2D}. */
+  readonly obstacles?: PibblFlowObstacleSource2D;
+  /** Strength of heat-driven upward motion in the flow field. See {@link PibblFlowFieldOptions2D}. */
   readonly buoyancy?: number;
 }
 declare const flowBrand: unique symbol;
@@ -88,15 +88,15 @@ declare const flowBrand: unique symbol;
  * @see {@link Signal}
  * @see {@link useFlowField2D}
  * @see {@link useFlowSource2D}
- * @see {@link CRCParticleSystemOptions}
+ * @see {@link PibblParticleSystemOptions}
  */
-export interface CRCFlowField2D {
+export interface PibblFlowField2D {
   readonly [flowBrand]: true;
   /** Revision used to detect changes to the underlying state or geometry. See {@link Signal}. */
   readonly revision: Signal<number>;
   /**
    * Samples velocities for packed position pairs into caller-provided output storage. See
-   * {@link CRCFlowField2D}.
+   * {@link PibblFlowField2D}.
    * @param positions - Packed input positions, with two floats per particle.
    * @param velocities - Output buffer receiving sampled velocities, with two floats per particle.
    * @param count - Number of position pairs to sample.
@@ -109,7 +109,7 @@ export interface CRCFlowField2D {
  * @see {@link SignalValue}
  * @see {@link useFlowSource2D}
  */
-export interface CRCFlowSourceOptions2D {
+export interface PibblFlowSourceOptions2D {
   /** Position of the geometry, source, or selected resize handle. See {@link SignalValue}. */
   readonly position: SignalValue<readonly [number, number]>;
   /** Radius in the coordinate system of this geometry or effect. See {@link SignalValue}. */
@@ -121,20 +121,20 @@ export interface CRCFlowSourceOptions2D {
   /** Whether this operation or resource participates in updates. See {@link SignalValue}. */
   readonly enabled?: SignalValue<boolean>;
 }
-const controllers = new WeakMap<CRCFlowField2D, FlowController2D>();
+const controllers = new WeakMap<PibblFlowField2D, FlowController2D>();
 const STEP = 1000 / 60;
 const EMPTY_OBSTACLES = Object.freeze({ boxes: new Float64Array(0) });
 
 /** Private coupling point; ordinary callers see only the read-only field handle. */
-export function getFlowController2D(handle: CRCFlowField2D): FlowController2D {
+export function getFlowController2D(handle: PibblFlowField2D): FlowController2D {
   const controller = controllers.get(handle);
-  if (!controller) throw new TypeError("Expected a CRC flow field.");
+  if (!controller) throw new TypeError("Expected a Pibbl flow field.");
   controller.requireActive();
   return controller;
 }
 
 export class FlowController2D {
-  readonly handle: CRCFlowField2D;
+  readonly handle: PibblFlowField2D;
   private committed: FlowFieldKernel2D | undefined;
   private candidate: FlowFieldKernel2D | undefined;
   private readonly revision = signal(0);
@@ -145,11 +145,11 @@ export class FlowController2D {
   private remainder = 0;
   private obstacleRevision: number | undefined;
   private obstacleSourceChanged = true;
-  private options: CRCFlowFieldOptions2D;
+  private options: PibblFlowFieldOptions2D;
   private consumers = 0;
   constructor(
-    private readonly owner: CRCInternalSimulationOwner,
-    options: CRCFlowFieldOptions2D,
+    private readonly owner: PibblInternalSimulationOwner,
+    options: PibblFlowFieldOptions2D,
   ) {
     this.options = options;
     const [columns, rows] = options.resolution;
@@ -174,14 +174,14 @@ export class FlowController2D {
       ) => {
         this.requireActive().sampleBatch(positions, velocities, count);
       },
-    }) as CRCFlowField2D;
+    }) as PibblFlowField2D;
     controllers.set(this.handle, this);
   }
   requireActive(): FlowFieldKernel2D {
-    if (!this.committed) throw new Error("CRC flow field is disposed.");
+    if (!this.committed) throw new Error("Pibbl flow field is disposed.");
     return this.committed;
   }
-  validateOptions(options: CRCFlowFieldOptions2D): void {
+  validateOptions(options: PibblFlowFieldOptions2D): void {
     const field = this.requireActive();
     if (
       field.width !== options.bounds.width ||
@@ -196,7 +196,7 @@ export class FlowController2D {
     if (!Number.isFinite(options.buoyancy ?? -300))
       throw new RangeError("Flow buoyancy must be finite.");
   }
-  adoptOptions(options: CRCFlowFieldOptions2D): void {
+  adoptOptions(options: PibblFlowFieldOptions2D): void {
     if (!this.committed) return;
     if (this.options.obstacles !== options.obstacles)
       this.obstacleSourceChanged = true;
@@ -225,7 +225,7 @@ export class FlowController2D {
     const active =
       this.committed && (this.sources.size > 0 || this.consumers > 0);
     if (active && !this.unregister) {
-      this.unregister = crcInternalRegisterSimulationAdvance(
+      this.unregister = pibblInternalRegisterSimulationAdvance(
         this.owner,
         "physics",
         (frame, batch) => {
@@ -256,7 +256,7 @@ export class FlowController2D {
           if (steps > 0 || obstaclesChanged) {
             batch.stage(this.revision, this.revision.get() + 1, this);
           }
-          crcInternalQueueSimulationCommitAcknowledgement(
+          pibblInternalQueueSimulationCommitAcknowledgement(
             this.owner,
             (_frame, outcome) => {
               if (!outcome.applied || !this.committed) return;
@@ -290,22 +290,22 @@ export class FlowController2D {
  * Creates a mount-owned 2D flow field with configured bounds, resolution, and optional obstacles.
  *
  * @param options - Field dimensions, sampling, decay, and obstacle settings. See
- * {@link CRCFlowFieldOptions2D} .
- * @returns A mount-owned 2D flow field sampled by particle effects. See {@link CRCFlowField2D}.
+ * {@link PibblFlowFieldOptions2D} .
+ * @returns A mount-owned 2D flow field sampled by particle effects. See {@link PibblFlowField2D}.
  *
- * @see {@link CRCFlowFieldOptions2D}
- * @see {@link CRCFlowField2D}
+ * @see {@link PibblFlowFieldOptions2D}
+ * @see {@link PibblFlowField2D}
  */
-export function useFlowField2D(options: CRCFlowFieldOptions2D): CRCFlowField2D {
-  const simulationOwner = crcInternalCurrentSimulationOwner();
-  const renderOwner = crcInternalCurrentRenderOwner();
+export function useFlowField2D(options: PibblFlowFieldOptions2D): PibblFlowField2D {
+  const simulationOwner = pibblInternalCurrentSimulationOwner();
+  const renderOwner = pibblInternalCurrentRenderOwner();
   const controller = useInternalHookSlot("flow-field", (teardowns) => {
     const value = new FlowController2D(simulationOwner, options);
     teardowns.add(() => value.dispose());
     return value;
   }).value;
   controller.validateOptions(options);
-  crcInternalOnRenderFinish(renderOwner, (success) => {
+  pibblInternalOnRenderFinish(renderOwner, (success) => {
     if (success) controller.adoptOptions(options);
   });
   return controller.handle;
@@ -314,19 +314,19 @@ export function useFlowField2D(options: CRCFlowFieldOptions2D): CRCFlowField2D {
 /**
  * Registers a mount-owned source of acceleration or heat in a flow field.
  *
- * @param field - Flow field receiving this source. See {@link CRCFlowField2D}.
+ * @param field - Flow field receiving this source. See {@link PibblFlowField2D}.
  * @param options - Source position, influence, and strength settings. See
- * {@link CRCFlowSourceOptions2D} .
+ * {@link PibblFlowSourceOptions2D} .
  *
- * @see {@link CRCFlowField2D}
- * @see {@link CRCFlowSourceOptions2D}
+ * @see {@link PibblFlowField2D}
+ * @see {@link PibblFlowSourceOptions2D}
  */
 export function useFlowSource2D(
-  field: CRCFlowField2D,
-  options: CRCFlowSourceOptions2D,
+  field: PibblFlowField2D,
+  options: PibblFlowSourceOptions2D,
 ): void {
   const controller = getFlowController2D(field);
-  const renderOwner = crcInternalCurrentRenderOwner();
+  const renderOwner = pibblInternalCurrentRenderOwner();
   const position = resolveSignalValue(options.position);
   const radius = resolveSignalValue(options.radius);
   const acceleration = resolveSignalValue(
@@ -363,7 +363,7 @@ export function useFlowSource2D(
         heat,
       }
     : undefined;
-  crcInternalOnRenderFinish(renderOwner, (success) => {
+  pibblInternalOnRenderFinish(renderOwner, (success) => {
     if (!success || revision !== slot.revision) return;
     if (slot.controller !== controller)
       slot.controller.setSource(slot.key, undefined);

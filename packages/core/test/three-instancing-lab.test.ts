@@ -9,7 +9,7 @@ import {
   threeInstancingLabScenarioEntry,
   type ScenarioController,
   type ThreeInstancingLabState,
-} from '@crc/scenarios';
+} from '@pibbl/scenarios';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { loadWorkbenchSource } from '../../../playground/src/learning-sources';
 import { loadScenarioSource } from '../../../playground/src/scenario-sources';
@@ -170,14 +170,14 @@ describe('public Three instancing proving scenarios', () => {
       expect(source).toContain(
         'https://github.com/mrdoob/three.js/blob/dev/LICENSE',
       );
-      expect(source).toMatch(/from ['"]@crc\/core['"]/u);
-      expect(source).toMatch(/from ['"]@crc\/three['"]/u);
+      expect(source).toMatch(/from ['"]@pibbl\/core['"]/u);
+      expect(source).toMatch(/from ['"]@pibbl\/three['"]/u);
       expect(source).toMatch(/from ['"]three['"]/u);
       expect(source).toMatch(
         /from ['"]three\/addons\/controls\/OrbitControls\.js['"]/u,
       );
       expect(source).not.toMatch(
-        /@crc\/core\/(?:internal|lib|src)|@crc\/webgl|requestAnimationFrame|setAnimationLoop/u,
+        /@pibbl\/core\/(?:internal|lib|src)|@pibbl\/webgl|requestAnimationFrame|setAnimationLoop/u,
       );
     }
 
@@ -201,7 +201,7 @@ describe('public Three instancing proving scenarios', () => {
     ).toEqual([
       { label: 'Miss behavior', value: 'pass-through' },
       { label: 'Last resolution', value: 'Three target' },
-      { label: 'CRC tile clicks', value: '2' },
+      { label: 'Pibbl tile clicks', value: '2' },
       { label: 'Three target clicks', value: '3' },
       { label: 'Blocked Three inputs', value: '4' },
       { label: 'Camera changes', value: '5' },
@@ -225,14 +225,14 @@ describe('public Three instancing proving scenarios', () => {
     await clickLogicalPoint(canvas, THREE_INSTANCING_LAB_PROBES.exposedTile);
     await controller.settled();
     expect(controller.getState()).toMatchObject({
-      lastResolution: 'CRC tile',
+      lastResolution: 'Pibbl tile',
       tileClicks: 1,
     });
 
     await clickLogicalPoint(canvas, THREE_INSTANCING_LAB_PROBES.emptyGap);
     await controller.settled();
     expect(controller.getState()).toMatchObject({
-      lastResolution: 'CRC tile',
+      lastResolution: 'Pibbl tile',
       tileClicks: 2,
     });
 
@@ -267,7 +267,7 @@ describe('public Three instancing proving scenarios', () => {
     });
   });
 
-  it('cycles miss policy and orbits through CRC-routed target-layer input without touching lower tiles', async () => {
+  it('cycles miss policy and orbits through Pibbl-routed target-layer input without touching lower tiles', async () => {
     const { canvas, controller } = await mountThreeInstancingLab();
 
     await controller.perform('cycle-miss-behavior');
@@ -301,7 +301,7 @@ describe('public Three instancing proving scenarios', () => {
     expect(controller.getState().tileClicks).toBe(0);
   });
 
-  it('focuses the registered Three object and gives Enter and Space the same CRC propagation path', async () => {
+  it('focuses the registered Three object and gives Enter and Space the same Pibbl propagation path', async () => {
     const { before, controller } = await mountThreeInstancingLab();
     before.focus();
     await pressKey('Enter');

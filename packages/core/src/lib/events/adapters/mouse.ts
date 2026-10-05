@@ -1,8 +1,8 @@
-import type { CRCInstance } from '../../types.js';
+import type { PibblInstance } from '../../types.js';
 import { getMouseCoordinates } from '../../util/get-mouse-coordinates.js';
-import type { CRCEventType } from '../types.js';
+import type { PibblEventType } from '../types.js';
 
-export const CRC_NATIVE_MOUSE_EVENT_TYPES = Object.freeze([
+export const PIBBL_NATIVE_MOUSE_EVENT_TYPES = Object.freeze([
   'click',
   'dblclick',
   'auxclick',
@@ -14,39 +14,39 @@ export const CRC_NATIVE_MOUSE_EVENT_TYPES = Object.freeze([
   'mouseup',
   'mouseout',
   'mouseleave',
-] as const satisfies readonly CRCEventType[]);
+] as const satisfies readonly PibblEventType[]);
 
-export type CRCNativeMouseEventType =
-  (typeof CRC_NATIVE_MOUSE_EVENT_TYPES)[number];
+export type PibblNativeMouseEventType =
+  (typeof PIBBL_NATIVE_MOUSE_EVENT_TYPES)[number];
 
-const nativeMouseEventTypes = new Set<CRCEventType>(
-  CRC_NATIVE_MOUSE_EVENT_TYPES,
+const nativeMouseEventTypes = new Set<PibblEventType>(
+  PIBBL_NATIVE_MOUSE_EVENT_TYPES,
 );
 
-export interface CRCAdaptedMouseEvent {
-  readonly type: CRCNativeMouseEventType;
+export interface PibblAdaptedMouseEvent {
+  readonly type: PibblNativeMouseEventType;
   readonly originalEvent: MouseEvent;
   readonly x: number;
   readonly y: number;
-  readonly press: CRCAdaptedMousePress | undefined;
+  readonly press: PibblAdaptedMousePress | undefined;
 }
 
-export interface CRCAdaptedMousePress {
+export interface PibblAdaptedMousePress {
   readonly x: number;
   readonly y: number;
 }
 
 export function isNativeMouseEventType(
-  type: CRCEventType,
-): type is CRCNativeMouseEventType {
+  type: PibblEventType,
+): type is PibblNativeMouseEventType {
   return nativeMouseEventTypes.has(type);
 }
 
 export function adaptMouseEvent(
-  root: CRCInstance,
-  type: CRCNativeMouseEventType,
+  root: PibblInstance,
+  type: PibblNativeMouseEventType,
   event: Event,
-): CRCAdaptedMouseEvent | undefined {
+): PibblAdaptedMouseEvent | undefined {
   if (!(event instanceof MouseEvent) || !root.surface.snapshot) return undefined;
   const [x, y] = getMouseCoordinates(event, root);
   const press = type === 'mousedown' && event.button === 0 ? { x, y } : undefined;

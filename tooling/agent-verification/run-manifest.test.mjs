@@ -4,13 +4,13 @@ import { resolve } from 'node:path';
 import { capturePageEnvironment, createReplayManifest } from './run-manifest.mjs';
 
 test('records an executable rerun recipe without reusing evidence or copying ambient secrets', () => {
-  const manifest = createReplayManifest({ runId: 'fixture-run', repository: '/tmp/crc fixture', kind: 'viz', url: 'http://127.0.0.1:5195/#/testing/viz-hover-lab', density: 2 });
+  const manifest = createReplayManifest({ runId: 'fixture-run', repository: '/tmp/pibbl fixture', kind: 'viz', url: 'http://127.0.0.1:5195/#/testing/viz-hover-lab', density: 2 });
   assert.equal(manifest.runId, 'fixture-run');
   assert.equal(manifest.rerun.executable, process.execPath);
-  assert.deepEqual(manifest.rerun.arguments, [resolve('/tmp/crc fixture/tooling/agent-verification/viz-replay.mjs'), 'http://127.0.0.1:5195/#/testing/viz-hover-lab']);
-  assert.deepEqual(manifest.rerun.environment, { CRC_VERIFY_DENSITY: '2' });
-  assert.deepEqual(manifest.rerun.unsetEnvironment, ['CRC_VERIFY_BROWSER_ENDPOINT']);
-  assert.equal(manifest.rerun.cwd, '/tmp/crc fixture');
+  assert.deepEqual(manifest.rerun.arguments, [resolve('/tmp/pibbl fixture/tooling/agent-verification/viz-replay.mjs'), 'http://127.0.0.1:5195/#/testing/viz-hover-lab']);
+  assert.deepEqual(manifest.rerun.environment, { PIBBL_VERIFY_DENSITY: '2' });
+  assert.deepEqual(manifest.rerun.unsetEnvironment, ['PIBBL_VERIFY_BROWSER_ENDPOINT']);
+  assert.equal(manifest.rerun.cwd, '/tmp/pibbl fixture');
   assert.equal(manifest.rerun.outputPolicy, 'fresh-default-directory');
   assert.equal(manifest.environment.node, process.version);
   assert.ok(Number.isFinite(Date.parse(manifest.startedAt)));
@@ -18,7 +18,7 @@ test('records an executable rerun recipe without reusing evidence or copying amb
 });
 
 test('targeting recipe keeps its fixed density and rejects invalid configurations', () => {
-  const args = { runId: 'run', repository: '/tmp/crc', kind: 'targeting', url: 'http://localhost:5195/#/testing/agent-targeting-verification', density: 1 };
+  const args = { runId: 'run', repository: '/tmp/pibbl', kind: 'targeting', url: 'http://localhost:5195/#/testing/agent-targeting-verification', density: 1 };
   const manifest = createReplayManifest(args);
   assert.ok(manifest.rerun.arguments[0].endsWith('/replay.mjs'));
   assert.deepEqual(manifest.rerun.environment, {});

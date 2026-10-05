@@ -4,9 +4,9 @@ import {
   Group,
   Layer,
   Rectangle,
-  type CRCElement,
-  type CRCLogicalMouseEvent,
-} from '@crc/core';
+  type PibblElement,
+  type PibblLogicalMouseEvent,
+} from '@pibbl/core';
 export const PERFORMANCE_LAB_SOURCE_ID = 'event-performance-lab-example';
 /**
  * A logical coordinate pair used by the performance scenario.
@@ -276,17 +276,17 @@ export interface PerformanceLabState {
   workloadId: PerformanceWorkloadId;
 }
 export interface PerformanceSceneProps {
-  recordHit: (target: string, event: CRCLogicalMouseEvent) => void;
+  recordHit: (target: string, event: PibblLogicalMouseEvent) => void;
   recordRender: (revision: number) => void;
   revision: number;
   workloadId: PerformanceWorkloadId;
 }
-type PerformanceNode = CRCElement;
+type PerformanceNode = PibblElement;
 interface RegionFactoryOptions {
   count: number;
   cursor?: string;
   keyPrefix?: string;
-  recordHit: (target: string, event: CRCLogicalMouseEvent) => void;
+  recordHit: (target: string, event: PibblLogicalMouseEvent) => void;
   xOffset?: number;
 }
 function sparseRegions(options: RegionFactoryOptions): PerformanceNode[] {
@@ -354,7 +354,7 @@ function layeredRegions(options: RegionFactoryOptions): PerformanceNode[] {
 }
 function workloadNodes(
   workload: PerformanceWorkload,
-  recordHit: (target: string, event: CRCLogicalMouseEvent) => void,
+  recordHit: (target: string, event: PibblLogicalMouseEvent) => void,
 ): PerformanceNode[] {
   switch (workload.kind) {
     case 'zero':

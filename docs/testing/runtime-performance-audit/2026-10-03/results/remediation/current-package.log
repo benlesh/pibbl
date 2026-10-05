@@ -9,9 +9,9 @@ packages/types build: ⚡ Done in 1ms
 packages/types build: Done
 packages/core build$ rimraf dist && tsc -p tsconfig.build.json && node ../../tooling/build-core.mjs
 packages/core build: Done
-packages/particles build$ rimraf dist && tsc -p tsconfig.build.json && esbuild src/index.ts --bundle --format=esm --platform=neutral --target=esnext --sourcemap --outfile=dist/index.mjs --external:@crc/core --external:@crc/core/internal
-packages/textures build$ rimraf dist && tsc -p tsconfig.build.json && esbuild src/index.ts src/lib/definitions.ts src/lib/water-waves.ts src/lib/water-surface.ts --bundle --splitting --format=esm --platform=neutral --target=esnext --sourcemap --outdir=dist --outbase=src --out-extension:.js=.mjs --chunk-names=chunks/[name]-[hash] --external:@crc/core
-packages/physics build$ rimraf dist && tsc -p tsconfig.build.json && esbuild src/2d.ts src/2d-geometry.ts src/2d-testing.ts src/3d-geometry.ts --bundle --splitting --format=esm --platform=neutral --target=esnext --sourcemap --outdir=dist --out-extension:.js=.mjs --chunk-names=chunks/[name]-[hash] --external:@crc/core --external:@crc/core/internal
+packages/particles build$ rimraf dist && tsc -p tsconfig.build.json && esbuild src/index.ts --bundle --format=esm --platform=neutral --target=esnext --sourcemap --outfile=dist/index.mjs --external:@pibbl/core --external:@pibbl/core/internal
+packages/textures build$ rimraf dist && tsc -p tsconfig.build.json && esbuild src/index.ts src/lib/definitions.ts src/lib/water-waves.ts src/lib/water-surface.ts --bundle --splitting --format=esm --platform=neutral --target=esnext --sourcemap --outdir=dist --outbase=src --out-extension:.js=.mjs --chunk-names=chunks/[name]-[hash] --external:@pibbl/core
+packages/physics build$ rimraf dist && tsc -p tsconfig.build.json && esbuild src/2d.ts src/2d-geometry.ts src/2d-testing.ts src/3d-geometry.ts --bundle --splitting --format=esm --platform=neutral --target=esnext --sourcemap --outdir=dist --out-extension:.js=.mjs --chunk-names=chunks/[name]-[hash] --external:@pibbl/core --external:@pibbl/core/internal
 packages/text build$ node scripts/build.mjs
 packages/text build: Python 3.14.7
 packages/textures build:   dist/index.mjs                       76.6kb
@@ -32,12 +32,12 @@ packages/textures build:   dist/lib/water-surface.mjs.map         93b
 packages/textures build:   dist/lib/water-waves.mjs.map           93b 
 packages/textures build: ⚡ Done in 8ms
 packages/textures build: Done
-packages/three build$ rimraf dist && tsc -p tsconfig.build.json && esbuild src/index.ts --bundle --format=esm --platform=neutral --target=esnext --sourcemap --outfile=dist/index.mjs --external:@crc/core --external:three
+packages/three build$ rimraf dist && tsc -p tsconfig.build.json && esbuild src/index.ts --bundle --format=esm --platform=neutral --target=esnext --sourcemap --outfile=dist/index.mjs --external:@pibbl/core --external:three
 packages/particles build:   dist/index.mjs      235.4kb
 packages/particles build:   dist/index.mjs.map  463.8kb
 packages/particles build: ⚡ Done in 4ms
 packages/particles build: Done
-packages/viz build$ rimraf dist && tsc -p tsconfig.build.json && esbuild src/index.ts --bundle --splitting --format=esm --platform=neutral --target=esnext --sourcemap --outdir=dist --out-extension:.js=.mjs --chunk-names=chunks/[name]-[hash] --external:@crc/core --external:@crc/core/internal
+packages/viz build$ rimraf dist && tsc -p tsconfig.build.json && esbuild src/index.ts --bundle --splitting --format=esm --platform=neutral --target=esnext --sourcemap --outdir=dist --out-extension:.js=.mjs --chunk-names=chunks/[name]-[hash] --external:@pibbl/core --external:@pibbl/core/internal
 packages/physics build:   dist/2d.mjs                           3.6mb ⚠️
 packages/physics build:   dist/3d-geometry.mjs                207.8kb
 packages/physics build:   dist/chunks/chunk-XV3GMMYR.mjs       93.9kb
@@ -94,7 +94,7 @@ Optional feature source and packed bundle evidence: {"versions":{"node":"v24.15.
 ℹ duration_ms 84.332792
 $ vitest run --config tooling/package-entries.vitest.config.ts
 
- RUN  v4.1.10 /Users/benlesh/.codex/worktrees/runtime-perf-audit/crc
+ RUN  v4.1.10 /Users/benlesh/.codex/worktrees/runtime-perf-audit/pibbl
 
 
  Test Files  1 passed (1)

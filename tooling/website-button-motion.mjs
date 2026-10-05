@@ -9,7 +9,7 @@ try {
     await page.clock.pauseAt(new Date("2026-10-04T12:00:01Z"));
     await page.goto("http://localhost:4321/guides/native-button/");
     await page.clock.runFor(500);
-    const button = page.getByRole("button", { name: "Try CRC" });
+    const button = page.getByRole("button", { name: "Try Pibbl" });
     const box = await button.boundingBox();
     await page.mouse.move(box.x + 12, box.y + box.height / 2);
     await page.clock.runFor(100);
@@ -21,7 +21,7 @@ try {
       await button.click({ position: { x: box.width / 2, y: box.height / 2 } });
     await page.clock.runFor(300);
     if (action === "click" && reducedMotion === "no-preference")
-      await page.screenshot({ path: "/tmp/crc-button-burst.png" });
+      await page.screenshot({ path: "/tmp/pibbl-button-burst.png" });
     const pixels = await page
       .locator("#ink-canvas")
       .evaluate((c) => c.toDataURL());

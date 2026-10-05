@@ -2,7 +2,7 @@
   "baseline": "0559b523386b9c59aef6565e6414c2e30c9ea28e",
   "node": "v24.15.0",
   "browser": "151.0.7922.34",
-  "sourceRoot": "/Users/benlesh/.codex/worktrees/runtime-perf-audit/crc",
+  "sourceRoot": "/Users/benlesh/.codex/worktrees/runtime-perf-audit/pibbl",
   "mode": "source",
   "meaning": "Synthetic public-API scheduler CPU wall time; excludes compositor presentation. Timing cases uninstrumented except scalar duration samples. Structural copy counters measured separately. No forced GC.",
   "cases": [

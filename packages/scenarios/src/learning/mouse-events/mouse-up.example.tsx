@@ -1,4 +1,4 @@
-import { crc, useSignal, Rectangle, Text, type CRCController } from "@crc/core";
+import { pibbl, useSignal, Rectangle, Text, type PibblController } from "@pibbl/core";
 function MouseUpStudy() {
   const releases = useSignal(0);
   const position = useSignal("—");
@@ -50,6 +50,6 @@ function MouseUpStudy() {
     >{`UP / ${releases.get()} / ${position.get()}`}</Text>,
   ];
 }
-export default function mount(canvas: HTMLCanvasElement): CRCController {
-  return crc(canvas, <MouseUpStudy />);
+export default function mount(canvas: HTMLCanvasElement): PibblController {
+  return pibbl(canvas, <MouseUpStudy />);
 }

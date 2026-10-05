@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   computed,
-  crc,
+  pibbl,
   useSignal,
   definePrimitive,
   Rectangle,
@@ -33,7 +33,7 @@ describe('component signal reads', () => {
       return <Rectangle style={{ left: value, width: 10, height: 10 }} />;
     }
 
-    const controller = crc(createCanvas(), <Scene />);
+    const controller = pibbl(createCanvas(), <Scene />);
     expect(values).toEqual([]);
     expect(frames.pendingCount).toBe(1);
     frames.flush();
@@ -52,7 +52,7 @@ describe('component signal reads', () => {
     frames.restore();
   });
 
-  it('treats a signal read before crc construction as an untracked snapshot', () => {
+  it('treats a signal read before pibbl construction as an untracked snapshot', () => {
     const frames = new ManualFrames();
     const x = signal(1);
     const snapshot = x.get();
@@ -62,7 +62,7 @@ describe('component signal reads', () => {
       return <Rectangle style={{ left: snapshot, width: 10, height: 10 }} />;
     }
 
-    const controller = crc(createCanvas(), <Scene />);
+    const controller = pibbl(createCanvas(), <Scene />);
     frames.flush();
     x.set(2);
 
@@ -86,7 +86,7 @@ describe('component signal reads', () => {
       );
     }
 
-    const controller = crc(createCanvas(), <Scene />);
+    const controller = pibbl(createCanvas(), <Scene />);
     frames.flush();
 
     source.set(3);
@@ -114,7 +114,7 @@ describe('component signal reads', () => {
       return <Rectangle style={{ left: value, width: 10, height: 10 }} />;
     }
 
-    const controller = crc(createCanvas(), <Scene />);
+    const controller = pibbl(createCanvas(), <Scene />);
     frames.flush();
     chooseLeft.set(false);
     frames.flush();
@@ -146,7 +146,7 @@ describe('component signal reads', () => {
       },
     });
 
-    const controller = crc(createCanvas(), <Probe style={{ value: 1 }} />);
+    const controller = pibbl(createCanvas(), <Probe style={{ value: 1 }} />);
     frames.flush();
     styleRead.set(2);
     expect(frames.pendingCount).toBe(1);
@@ -168,9 +168,9 @@ describe('component signal reads', () => {
       return <Rectangle style={{ left: x.get(), width: 10, height: 10 }} />;
     }
 
-    const controller = crc(canvas, <Scene />);
+    const controller = pibbl(canvas, <Scene />);
     frames.flush();
-    crc(canvas, undefined);
+    pibbl(canvas, undefined);
     frames.flush();
 
     x.set(2);
@@ -188,7 +188,7 @@ describe('component signal reads', () => {
       throw failure;
     }
 
-    const controller = crc(createCanvas(), <Broken />);
+    const controller = pibbl(createCanvas(), <Broken />);
     expect(() => frames.flush()).toThrow(failure);
     x.set(2);
 
@@ -199,21 +199,21 @@ describe('component signal reads', () => {
 });
 
 describe('signal write guard', () => {
-  it('rejects a no-op set before equality suppression during CRC render', () => {
+  it('rejects a no-op set before equality suppression during Pibbl render', () => {
     const target = signal(0);
     const frames = new ManualFrames();
     function Broken() {
       target.set(target.get());
     }
 
-    const controller = crc(createCanvas(), <Broken />);
-    expect(() => frames.flush()).toThrowError('CRC render');
+    const controller = pibbl(createCanvas(), <Broken />);
+    expect(() => frames.flush()).toThrowError('Pibbl render');
     expect(target.get()).toBe(0);
     controller.dispose();
     frames.restore();
   });
 
-  it('rejects a no-op update before invoking its updater during CRC render', () => {
+  it('rejects a no-op update before invoking its updater during Pibbl render', () => {
     const target = signal(0);
     const updater = vi.fn((value: number) => value);
     const frames = new ManualFrames();
@@ -221,8 +221,8 @@ describe('signal write guard', () => {
       target.update(updater);
     }
 
-    const controller = crc(createCanvas(), <Broken />);
-    expect(() => frames.flush()).toThrowError('CRC render');
+    const controller = pibbl(createCanvas(), <Broken />);
+    expect(() => frames.flush()).toThrowError('Pibbl render');
     expect(updater).not.toHaveBeenCalled();
     expect(target.get()).toBe(0);
     controller.dispose();
@@ -237,8 +237,8 @@ describe('signal write guard', () => {
         writeSignal(target, write);
       }
 
-      const controller = crc(createCanvas(), <Broken />);
-      expect(() => frames.flush()).toThrowError(/CRC render/);
+      const controller = pibbl(createCanvas(), <Broken />);
+      expect(() => frames.flush()).toThrowError(/Pibbl render/);
       expect(target.get()).toBe(0);
       controller.dispose();
       frames.restore();
@@ -257,11 +257,11 @@ describe('signal write guard', () => {
         },
       });
 
-      const controller = crc(
+      const controller = pibbl(
         createCanvas(),
         <Broken style={{ value: 1 }} />,
       );
-      expect(() => frames.flush()).toThrowError(/CRC render/);
+      expect(() => frames.flush()).toThrowError(/Pibbl render/);
       expect(target.get()).toBe(0);
       controller.dispose();
       frames.restore();
@@ -274,8 +274,8 @@ describe('signal write guard', () => {
         writeSignal(target, write);
       });
 
-      const controller = crc(createCanvas(), <Broken />);
-      expect(() => frames.flush()).toThrowError(/CRC render/);
+      const controller = pibbl(createCanvas(), <Broken />);
+      expect(() => frames.flush()).toThrowError(/Pibbl render/);
       expect(target.get()).toBe(0);
       controller.dispose();
       frames.restore();
@@ -292,7 +292,7 @@ describe('signal write guard', () => {
         derived.get();
       }
 
-      const controller = crc(createCanvas(), <Broken />);
+      const controller = pibbl(createCanvas(), <Broken />);
       expect(() => frames.flush()).toThrowError(/computed signal/);
       expect(target.get()).toBe(0);
       controller.dispose();
@@ -323,12 +323,12 @@ describe('useSignal', () => {
       values.push(value.get());
     }
 
-    const controller = crc(
+    const controller = pibbl(
       canvas,
       <Probe key="same" initial={1} options={frozenOptions} />,
     );
     frames.flush();
-    crc(
+    pibbl(
       canvas,
       <Probe key="same" initial={2} options={{ equals: Object.is }} />,
     );
@@ -340,7 +340,7 @@ describe('useSignal', () => {
     expect(identities[0].get()).toBe(1);
     expect(frames.pendingCount).toBe(0);
 
-    crc(
+    pibbl(
       canvas,
       <Probe key="replacement" initial={3} options={{ equals: Object.is }} />,
     );
@@ -358,19 +358,19 @@ describe('useSignal', () => {
       useSignal(0);
       if (include) useSignal(0);
     }
-    const controller = crc(canvas, <Fewer include />);
+    const controller = pibbl(canvas, <Fewer include />);
     frames.flush();
-    crc(canvas, <Fewer include={false} />);
-    expect(() => frames.flush()).toThrowError(/fewer CRC hooks/i);
+    pibbl(canvas, <Fewer include={false} />);
+    expect(() => frames.flush()).toThrowError(/fewer Pibbl hooks/i);
 
     function More({ include }: { include: boolean }) {
       useSignal(0);
       if (include) useSignal(0);
     }
-    crc(canvas, <More include={false} />);
+    pibbl(canvas, <More include={false} />);
     frames.flush();
-    crc(canvas, <More include />);
-    expect(() => frames.flush()).toThrowError(/more CRC hooks/i);
+    pibbl(canvas, <More include />);
+    expect(() => frames.flush()).toThrowError(/more Pibbl hooks/i);
 
     function Reordered({ swap }: { swap: boolean }) {
       if (swap) {
@@ -381,9 +381,9 @@ describe('useSignal', () => {
         useRef(0);
       }
     }
-    crc(canvas, <Reordered swap={false} />);
+    pibbl(canvas, <Reordered swap={false} />);
     frames.flush();
-    crc(canvas, <Reordered swap />);
+    pibbl(canvas, <Reordered swap />);
     expect(() => frames.flush()).toThrowError(/hook order changed/i);
     controller.dispose();
     frames.restore();
@@ -400,14 +400,14 @@ describe('useSignal', () => {
       retained.get();
     }
 
-    const controller = crc(canvas, <Probe />);
+    const controller = pibbl(canvas, <Probe />);
     frames.flush();
     retained!.set(2);
     expect(frames.pendingCount).toBe(1);
     frames.flush();
     expect(renders).toHaveBeenCalledTimes(2);
 
-    crc(canvas, undefined);
+    pibbl(canvas, undefined);
     frames.flush();
     retained!.update(value => value + 1);
     expect(retained!.get()).toBe(3);
@@ -450,7 +450,7 @@ class ManualFrames {
 
   flush(): void {
     const entry = this.callbacks.entries().next().value;
-    if (!entry) throw new Error('No pending CRC frame');
+    if (!entry) throw new Error('No pending Pibbl frame');
     const [id, callback] = entry;
     this.callbacks.delete(id);
     callback(performance.now());

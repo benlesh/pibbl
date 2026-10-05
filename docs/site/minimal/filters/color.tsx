@@ -1,18 +1,18 @@
-import { crc, Group, Circle, Rectangle, Text } from "@crc/core";
+import { pibbl, Group, Circle, Rectangle, Text } from "@pibbl/core";
 import {
   grayscale,
   hueRotate,
   invert,
-  type CRCFilter,
-  type CRCGrayscaleFilterOptions,
-  type CRCHueRotateFilterOptions,
-  type CRCInvertFilterOptions,
-} from "@crc/core/filters";
+  type PibblFilter,
+  type PibblGrayscaleFilterOptions,
+  type PibblHueRotateFilterOptions,
+  type PibblInvertFilterOptions,
+} from "@pibbl/core/filters";
 
-const gray: CRCGrayscaleFilterOptions = { amount: 1 };
-const hue: CRCHueRotateFilterOptions = { degrees: 150 };
-const inversion: CRCInvertFilterOptions = { amount: 1 };
-const comparisons: [string, CRCFilter | undefined][] = [
+const gray: PibblGrayscaleFilterOptions = { amount: 1 };
+const hue: PibblHueRotateFilterOptions = { degrees: 150 };
+const inversion: PibblInvertFilterOptions = { amount: 1 };
+const comparisons: [string, PibblFilter | undefined][] = [
   ["Original", undefined],
   ["Grayscale 1", grayscale(gray)],
   ["Hue rotation 150 degrees", hueRotate(hue)],
@@ -40,7 +40,7 @@ function Subject() {
           fill: "#fff",
         }}
       >
-        CRC
+        Pibbl
       </Text>
     </>
   );
@@ -59,7 +59,7 @@ const controllers = comparisons.map(([label, filter]) => {
   canvas.height = 156;
   figure.append(caption, canvas);
   grid.append(figure);
-  return crc(
+  return pibbl(
     canvas,
     <>
       <Rectangle style={{ width: 224, height: 156, fill: "#f1f4f5" }} />

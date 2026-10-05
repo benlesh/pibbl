@@ -11,7 +11,7 @@ Date: 2026-09-13
 
 ## Summary
 
-CRC will add an optional official `@crc/particles` package for high-performance
+Pibbl will add an optional official `@pibbl/particles` package for high-performance
 Canvas2D and WebGL particle effects. Particles are components backed by
 immutable effect definitions, not style effects and not one component per
 particle.
@@ -30,7 +30,7 @@ Simple effects use `<Particles2D effect={effect} />` or
 Interactive or observed effects create an explicit `useParticleSystem(effect)`
 and pass it through the mutually exclusive `system` prop.
 
-Canvas2D executes an allocation-free CPU paint path and may use an explicit CRC
+Canvas2D executes an allocation-free CPU paint path and may use an explicit Pibbl
 `Layer` to isolate unrelated static drawing. WebGL particles are settled-scene
 contributors. They issue no WebGL commands during component composition.
 `WebGLLayer` settles their effective transform, opacity, material, depth,
@@ -77,8 +77,8 @@ contract. Lit mesh particles follow the later lighting/material project.
 
 - Cover the common 2D and 3D effects listed above without becoming a general
   physics or entity system.
-- Make particles feel like CRC components while keeping individual particles
-  outside CRC component identity, hooks, focus, and event semantics.
+- Make particles feel like Pibbl components while keeping individual particles
+  outside Pibbl component identity, hooks, focus, and event semantics.
 - Support simple declarative mounting and controlled repeated bursts through
   one runtime model.
 - Compile compatible effects to stateless analytic execution on both backends.
@@ -86,7 +86,7 @@ contract. Lit mesh particles follow the later lighting/material project.
   costs.
 - Allocate declared particle storage once and perform zero steady-state
   per-particle JavaScript allocation.
-- Use CRC's realm scheduler and logical time; create no independent animation
+- Use Pibbl's realm scheduler and logical time; create no independent animation
   loop.
 - Preserve deterministic seeding, command order, completion, ownership, and
   teardown.
@@ -116,7 +116,7 @@ contract. Lit mesh particles follow the later lighting/material project.
   exact GPU `activeCount`.
 - Exact Canvas/WebGL, browser/browser, or CPU/GPU pixel and floating-point
   identity.
-- Automatic collision against Canvas pixels or arbitrary CRC drawing geometry.
+- Automatic collision against Canvas pixels or arbitrary Pibbl drawing geometry.
 - Automatic hidden WebGL acceleration for a Canvas2D component.
 - Automatic worker transfer of a root or Layer Canvas.
 - Sampling depth from Canvas content or a different WebGL island.
@@ -124,7 +124,7 @@ contract. Lit mesh particles follow the later lighting/material project.
   wall-clock performance.
 - A serialized visual-asset format or particle editor before the runtime model
   is proven.
-- Making ordinary CRC animation or `@crc/webgl` responsible for particle-domain
+- Making ordinary Pibbl animation or `@pibbl/webgl` responsible for particle-domain
   motion vocabulary.
 
 ## Why particles are components, not styles
@@ -157,7 +157,7 @@ effect definition.
 One optional workspace package, `packages/particles`, publishes these entry
 points:
 
-### `@crc/particles`
+### `@pibbl/particles`
 
 Runtime values:
 
@@ -174,10 +174,10 @@ curve, gradient, motion, appearance, renderer, parameter, system, status,
 execution, diagnostics, component-prop, bounds, burst-override, callback, and
 error types defined by this design.
 
-The root entry depends on `@crc/core` and does not import, require, or expose
-`@crc/webgl`.
+The root entry depends on `@pibbl/core` and does not import, require, or expose
+`@pibbl/webgl`.
 
-### `@crc/particles/webgl`
+### `@pibbl/particles/webgl`
 
 Runtime values:
 
@@ -188,17 +188,17 @@ It reuses the named particle descriptor factories and `useParticleSystem` from
 the root entry and exports the named 3D effect, emitter, shape, motion,
 appearance, renderer, bounds, component-prop, and execution-capability types.
 
-This entry requires the matching official `@crc/webgl` package and participates
-through a version-coupled `@crc/webgl/internal` friend seam. That seam is for
-matching official CRC renderer packages, is not re-exported from the WebGL root,
+This entry requires the matching official `@pibbl/webgl` package and participates
+through a version-coupled `@pibbl/webgl/internal` friend seam. That seam is for
+matching official Pibbl renderer packages, is not re-exported from the WebGL root,
 and is not an application compatibility promise. It permits CPU-owned scene
 submissions and renderer-owned resource recipes; it never exposes a
 `WebGL2RenderingContext` during component composition.
 
 ### Preset entry points
 
-- `@crc/particles/presets` exports Canvas-compatible preset factories.
-- `@crc/particles/presets/webgl` exports WebGL-specific preset factories.
+- `@pibbl/particles/presets` exports Canvas-compatible preset factories.
+- `@pibbl/particles/presets/webgl` exports WebGL-specific preset factories.
 
 Preset modules remain separately tree-shakable. Importing the base particle
 entry does not load preset code or assets. Presets return ordinary frozen effect
@@ -207,15 +207,15 @@ errors, and teardown as handwritten definitions.
 
 The package adds no JSX runtime, element constructor, Fragment, scheduler,
 signal vocabulary, event vocabulary, or Canvas/WebGL context surface. Every
-entry uses `@crc/core`'s automatic JSX runtime and exact nominal element
-identity. Packed Bundler and NodeNext consumers must resolve one `@crc/core`
-identity and matching CRC package versions.
+entry uses `@pibbl/core`'s automatic JSX runtime and exact nominal element
+identity. Packed Bundler and NodeNext consumers must resolve one `@pibbl/core`
+identity and matching Pibbl package versions.
 
 ## Immutable effect definitions
 
 `defineParticleEffect2D(input)` returns a nominal immutable
-`CRCParticleEffect2D<EmitterNames, Parameters>`. `defineParticleEffect3D(input)`
-returns the corresponding nominal `CRCParticleEffect3D`.
+`PibblParticleEffect2D<EmitterNames, Parameters>`. `defineParticleEffect3D(input)`
+returns the corresponding nominal `PibblParticleEffect3D`.
 
 Construction synchronously:
 
@@ -263,7 +263,7 @@ ribbons, and trails are later extensions.
 Six direct, individually tree-shakable functions create closed immutable
 particle descriptors. They do not choose a value when called: the compiler
 records them and the seeded particle sampler resolves them later. They remain
-in `@crc/particles`, rather than core, because their return values are accepted
+in `@pibbl/particles`, rather than core, because their return values are accepted
 only by particle effect definitions; they are not general random, interpolation,
 or parameter utilities.
 
@@ -284,7 +284,7 @@ finite and monotonically increasing and must cover both endpoints after
 normalization. Duplicate times, empty curves, nonfinite samples, invalid colors,
 or incompatible value dimensions reject during definition construction.
 
-Curve segments may use `CRCEasing`. Definition construction samples an easing
+Curve segments may use `PibblEasing`. Definition construction samples an easing
 into a fixed immutable lookup table, validates every sample, and lets Canvas and
 WebGL interpolate that table. No user easing callback runs per particle or in a
 shader. The table resolution and interpolation rule are fixed by the public
@@ -401,7 +401,7 @@ coordinate convention matches the owning WebGL scene and camera contract.
 `acceleration`, `gravity`, `drag`, `radialAcceleration`, `orbit`, and `sway` are
 particle-effect descriptors. WebGL does not standardize animation, velocity,
 acceleration, force, gravity, or a simulation clock. It standardizes the GPU
-rendering machinery that CRC may use to execute compiled particle math.
+rendering machinery that Pibbl may use to execute compiled particle math.
 
 For a compatible constant acceleration, a stateless executor can evaluate:
 
@@ -414,7 +414,7 @@ same descriptor per instance from logical time, seed, and birth time. A later
 stateful executor integrates position and velocity through bounded fixed steps
 on the CPU or through a scheduled transform-feedback pass on the GPU.
 
-CRC uses `acceleration` rather than `force` when no particle mass exists. Calling
+Pibbl uses `acceleration` rather than `force` when no particle mass exists. Calling
 the value a force would imply `F = m*a` semantics that this focused effect system
 does not model. `gravity` is an ergonomic constant-acceleration alias with
 dimension-specific direction rules.
@@ -443,7 +443,7 @@ Noise/turbulence, changing attractors, pointer fields, collisions, constraints,
 sub-emitters, and arbitrary custom integration require a later stateful tier.
 The compiler never silently approximates them as stateless motion.
 
-This vocabulary does not expand general CRC animation. Ordinary component,
+This vocabulary does not expand general Pibbl animation. Ordinary component,
 transform, camera, and material animation continues to use signals with
 `tween`, `keyframes`, `spring`, `defineAnimation`, or `stepper`. Core's existing
 `stepper` is already the extension point for acceleration, velocity,
@@ -583,7 +583,7 @@ captures the combined particle raster as one primitive output.
 `Particles3D` is valid only inside `WebGLLayer`. It participates in current
 `Group3D` ancestry and the scene camera. It accepts no Canvas filter; authors
 filter the completed `WebGLLayer` from core. A high-count screen-space WebGL
-particle surface may be designed later, but CRC does not create an implicit
+particle surface may be designed later, but Pibbl does not create an implicit
 hidden WebGL context behind `Particles2D`.
 
 ## System handle, commands, and status
@@ -591,15 +591,15 @@ hidden WebGL context behind `Particles2D`.
 The stable handle is:
 
 ```ts
-interface CRCParticleSystem<EmitterName extends string> {
-  readonly status: Signal<CRCParticleSystemStatus>;
-  readonly execution: Signal<CRCParticleExecution>;
+interface PibblParticleSystem<EmitterName extends string> {
+  readonly status: Signal<PibblParticleSystemStatus>;
+  readonly execution: Signal<PibblParticleExecution>;
 
   play(): void;
   pause(): void;
   resume(): void;
   restart(options?: { seed?: number }): void;
-  emit(emitter: EmitterName, options?: CRCParticleBurstOverrides): void;
+  emit(emitter: EmitterName, options?: PibblParticleBurstOverrides): void;
   stop(options?: { mode?: "drain" | "clear" }): void;
 }
 ```
@@ -701,7 +701,7 @@ Complete phases:
 | Complete | Adopt successful resource/state generations and deliver milestones or isolated errors in stable order.                                                                            |
 
 One running system owns one scheduler registration, never one per emitter or
-particle. All timing uses CRC's realm logical timestamp. Time-based stateless
+particle. All timing uses Pibbl's realm logical timestamp. Time-based stateless
 effects sample that timestamp directly; dropped display frames jump to the
 correct analytic sample. Stateful effects consume bounded fixed steps, retain
 or explicitly discard the remainder according to the public step policy, and
@@ -737,7 +737,7 @@ other stateful requirements.
 
 ## Canvas2D execution
 
-Canvas does not provide a portable contract that CRC can use to require,
+Canvas does not provide a portable contract that Pibbl can use to require,
 measure, or report GPU acceleration. `Particles2D` therefore promises algorithmic
 efficiency rather than a GPU execution label.
 
@@ -757,7 +757,7 @@ free/live index structures without `Array.splice`, and bounded fixed steps.
 An animated top-level `Particles2D` causes an ordinary immediate-mode root
 repaint. Authors may place it in an explicit core `Layer` to preserve unrelated
 static content, but the particle layer itself still repaints and composites.
-CRC never auto-promotes a particle component to a Layer. Tight and full-viewport
+Pibbl never auto-promotes a particle component to a Layer. Tight and full-viewport
 scenarios determine whether isolation is beneficial.
 
 Workers are deferred. A transferred `OffscreenCanvas` conflicts with the
@@ -912,7 +912,7 @@ The component-owned system owns:
 - CPU-side stateful storage where selected.
 
 `Particles2D` owns its Canvas executor, decoded/raster asset caches, and any
-backend-local scratch storage. One CRC instance owns reusable transient surfaces
+backend-local scratch storage. One Pibbl instance owns reusable transient surfaces
 where existing core composition already provides them.
 
 `WebGLLayer` owns all programs, textures, buffers, vertex arrays,
@@ -947,7 +947,7 @@ GPU readback is introduced to preserve state.
 
 ## Presets
 
-CRC should ship presets only after the required base modules have public proving
+Pibbl should ship presets only after the required base modules have public proving
 scenarios. Each preset is a pure factory returning an ordinary definition.
 
 Target Canvas-compatible presets:
@@ -974,7 +974,7 @@ do not expose every underlying module property under a second naming scheme.
 Authors needing full control use the returned definition language directly.
 
 ```tsx
-import { confetti } from "@crc/particles/presets";
+import { confetti } from "@pibbl/particles/presets";
 
 const celebration = confetti({
   palette: ["#7c3aed", "#22c55e", "#f59e0b"],
@@ -1005,7 +1005,7 @@ Particle-native constant acceleration, drag, fixed attractors, simple analytic
 colliders, and bounds are part of particle execution. They are closed visual
 effect operations, not a general physics world.
 
-A future `@crc/physics` package would independently own bodies, mass, forces,
+A future `@pibbl/physics` package would independently own bodies, mass, forces,
 constraints, broad/narrow phase collision, queries, fixed-step execution, and
 its own exact resource lifecycle. Particles must not create one rigid body per
 particle.
@@ -1022,7 +1022,7 @@ snapshot:
 
 No CPU physics callback runs once per GPU particle. Cross-system collision
 events remain aggregate and capability-qualified. The particle package has no
-dependency on `@crc/physics` in its initial releases.
+dependency on `@pibbl/physics` in its initial releases.
 
 ## Reduced motion and accessibility
 
@@ -1454,7 +1454,7 @@ Deterministic instrumentation must prove:
 - zero steady-state per-particle JavaScript allocation;
 - one realm host frame across all active roots and managed Layers;
 - one scheduler registration per running system;
-- no CRC component or element traversal per particle;
+- no Pibbl component or element traversal per particle;
 - fixed storage bounded by declared emitter capacity;
 - no Canvas pixel readback and no normal GPU readback;
 - bounded Canvas state changes and raster-cache entries;
@@ -1497,7 +1497,7 @@ Each public tranche updates and verifies:
 - root and subpath runtime exports and declarations;
 - Bundler and NodeNext consumers;
 - packed tarball consumers with and without the optional WebGL peer;
-- one shared `@crc/core` identity and matching official package versions;
+- one shared `@pibbl/core` identity and matching official package versions;
 - source and built Studio modes plus editor declarations;
 - public Learn, API, and Examples catalogs without exposing laboratory-only
   metadata;
@@ -1550,7 +1550,7 @@ The approved product and architecture decisions are:
   materials later;
 - particle acceleration is domain vocabulary rather than a WebGL or general
   animation primitive;
-- general CRC animation retains tween/keyframe/spring/custom/stepper semantics;
+- general Pibbl animation retains tween/keyframe/spring/custom/stepper semantics;
 - general physics remains a separate optional future package;
 - presets are ordinary tree-shakable definition factories; and
 - implementation is decomposed into independently verified projects rather

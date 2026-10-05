@@ -1,10 +1,10 @@
 import { afterEach, expect, it } from "vitest";
-import { crc, Group, Text } from "@crc/core";
+import { pibbl, Group, Text } from "@pibbl/core";
 import {
   ReactionDiffusion,
   ProceduralTexture,
   type TextureRenderer,
-} from "@crc/core/textures";
+} from "@pibbl/core/textures";
 
 const disposals: Array<() => void> = [];
 afterEach(() => {
@@ -49,14 +49,14 @@ it("composes and recolors textures through the public package entry in source an
       </Text>
     </Group>
   );
-  const controller = crc(canvas, scene(["#000000", "#ffffff"]));
+  const controller = pibbl(canvas, scene(["#000000", "#ffffff"]));
   disposals.push(() => controller.dispose());
   await frame();
   const ctx = canvas.getContext("2d")!,
     before = Array.from(ctx.getImageData(0, 40, 240, 80).data);
   expect(paints).toBe(1);
   expect(new Set(before).size).toBeGreaterThan(10);
-  crc(canvas, scene(["#331122", "#ffffaa"]));
+  pibbl(canvas, scene(["#331122", "#ffffaa"]));
   await frame();
   expect(Array.from(ctx.getImageData(0, 40, 240, 80).data)).not.toEqual(before);
   expect(paints).toBe(2);

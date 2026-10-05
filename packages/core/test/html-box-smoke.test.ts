@@ -12,7 +12,7 @@ it('runs the public HtmlBox lesson with native input and retained geometry in so
     await expect.poll(() => parent.querySelector('input')).not.toBeNull();
     const input = parent.querySelector('input')!;
     const button = parent.querySelector('button')!;
-    const shell = parent.querySelector<HTMLElement>('[data-crc-html-box]')!;
+    const shell = parent.querySelector<HTMLElement>('[data-pibbl-html-box]')!;
     await userEvent.fill(input, 'Native state survives');
     await userEvent.click(button);
     expect(button.textContent).toBe('Native clicks: 1');
@@ -23,7 +23,7 @@ it('runs the public HtmlBox lesson with native input and retained geometry in so
     expect(input.value).toBe('Native state survives');
   } finally {
     controller.dispose();
-    expect(parent.querySelector('[data-crc-html-box]')).toBeNull();
+    expect(parent.querySelector('[data-pibbl-html-box]')).toBeNull();
     expect(canvas.parentElement).toBe(parent);
     parent.remove();
   }

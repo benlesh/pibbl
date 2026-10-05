@@ -6,9 +6,9 @@ export default defineConfig({
   devToolbar: { enabled: false },
   integrations: [
     starlight({
-      title: "CRC",
+      title: "Pibbl",
       description:
-        "Build Canvas applications or add CRC effects to your HTML site.",
+        "Build Canvas applications or add Pibbl effects to your HTML site.",
       pagefind: false,
       customCss: ["./src/style.css"],
       components: { MarkdownContent: "./src/components/ContentPanel.astro" },

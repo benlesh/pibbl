@@ -17,10 +17,10 @@ export async function ensureSetup() {
   for (const name of ["emsdk", "harfbuzz"]) {
     const input = lock[name];
     const destination = resolve(cache, `${name}-${input.version}`);
-    const marker = resolve(destination, ".crc-source-sha256");
+    const marker = resolve(destination, ".pibbl-source-sha256");
     try {
       const sourceFiles = JSON.parse(
-        await readFile(resolve(destination, ".crc-source-files.json"), "utf8"),
+        await readFile(resolve(destination, ".pibbl-source-files.json"), "utf8"),
       );
       if (
         (await readFile(marker, "utf8")).trim() === input.sha256 &&
@@ -43,7 +43,7 @@ export async function ensureSetup() {
     // Upgrade an already matching cache without deleting its installed SDK.
     if (await verifyArtifacts(destination, sourceFiles)) {
       await writeFile(
-        resolve(destination, ".crc-source-files.json"),
+        resolve(destination, ".pibbl-source-files.json"),
         JSON.stringify(sourceFiles),
       );
       await writeFile(marker, input.sha256);
@@ -51,10 +51,10 @@ export async function ensureSetup() {
       continue;
     }
     await writeFile(
-      resolve(staging, ".crc-source-files.json"),
+      resolve(staging, ".pibbl-source-files.json"),
       JSON.stringify(sourceFiles),
     );
-    await writeFile(resolve(staging, ".crc-source-sha256"), input.sha256);
+    await writeFile(resolve(staging, ".pibbl-source-sha256"), input.sha256);
     await rm(destination, { recursive: true, force: true });
     await rename(staging, destination);
   }

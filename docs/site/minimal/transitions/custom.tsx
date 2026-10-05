@@ -1,19 +1,19 @@
 import {
-  crc,
+  pibbl,
   Rectangle,
   defineTransition,
   useVisibilityTransition,
-  type CRCTransitionDefinition,
-  type CRCTransitionRenderFrame,
-  type CRCVisibilityTransition,
-} from "@crc/core";
+  type PibblTransitionDefinition,
+  type PibblTransitionRenderFrame,
+  type PibblVisibilityTransition,
+} from "@pibbl/core";
 
-const definition: CRCTransitionDefinition = {
+const definition: PibblTransitionDefinition = {
   render({
     context,
     progress,
     drawSource,
-  }: Readonly<CRCTransitionRenderFrame>) {
+  }: Readonly<PibblTransitionRenderFrame>) {
     context.save();
     context.globalAlpha = progress * progress;
     drawSource();
@@ -25,7 +25,7 @@ const canvas = document.createElement("canvas");
 canvas.width = 360;
 canvas.height = 180;
 document.body.append(canvas);
-let transition: CRCVisibilityTransition | undefined;
+let transition: PibblVisibilityTransition | undefined;
 function Scene() {
   transition = useVisibilityTransition({ enter: effect, duration: 1000 });
   return (
@@ -41,7 +41,7 @@ function Scene() {
     />
   );
 }
-const controller = crc(canvas, <Scene />);
+const controller = pibbl(canvas, <Scene />);
 const button = document.createElement("button");
 button.textContent = "Toggle visibility";
 button.onclick = () => {

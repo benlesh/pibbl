@@ -6,7 +6,7 @@
  * @param {{coordinateSpace?:string,allocation?:Box,drawing?:Box,peer?:Box,expectations?:{containment?:'required',separation?:'required'}}} [input]
  */
 export function analyzeBoxRelations({ coordinateSpace, allocation, drawing, peer, expectations = {} } = {}) {
-  const base = { schema: 'crc-layout-box-relations/1', scope: 'declared-axis-aligned-boxes-not-painted-visibility' };
+  const base = { schema: 'pibbl-layout-box-relations/1', scope: 'declared-axis-aligned-boxes-not-painted-visibility' };
   const invalid = () => Object.freeze({ ...base, status: 'invalid', reason: 'Require finite nonnegative boxes in a named common space and supported expectations; derived arithmetic must remain finite.' });
   const box = value => value && ['x', 'y', 'width', 'height'].every(key => typeof value[key] === 'number' && Number.isFinite(value[key])) && value.width >= 0 && value.height >= 0 && Number.isFinite(value.x + value.width) && Number.isFinite(value.y + value.height);
   if (typeof coordinateSpace !== 'string' || !coordinateSpace.length || coordinateSpace.length > 128 || !box(allocation) || !box(drawing) || (peer !== undefined && !box(peer)) || !expectations || !['required', undefined].includes(expectations.containment) || !['required', undefined].includes(expectations.separation) || Object.keys(expectations).some(key => !['containment', 'separation'].includes(key))) return invalid();

@@ -1,7 +1,7 @@
-import type { CRCEventRoot } from "../types.js";
-import type { CRCHitTestOutput } from "./paint-entry.js";
+import type { PibblEventRoot } from "../types.js";
+import type { PibblHitTestOutput } from "./paint-entry.js";
 
-export type CRCResolverInputType =
+export type PibblResolverInputType =
   | "pointerdown"
   | "pointermove"
   | "pointerup"
@@ -10,10 +10,10 @@ export type CRCResolverInputType =
   | "contextmenu"
   | "click";
 
-export interface CRCResolverInputWinner {
-  readonly eventRoot: CRCEventRoot;
+export interface PibblResolverInputWinner {
+  readonly eventRoot: PibblEventRoot;
   deliver(
-    type: CRCResolverInputType,
+    type: PibblResolverInputType,
     point: Readonly<{ x: number; y: number }>,
     originalEvent: PointerEvent | WheelEvent | MouseEvent,
     state: unknown,
@@ -23,13 +23,13 @@ export interface CRCResolverInputWinner {
 }
 
 const pointerCaptures = new WeakMap<
-  CRCEventRoot,
-  Map<number, CRCResolverInputWinner>
+  PibblEventRoot,
+  Map<number, PibblResolverInputWinner>
 >();
 
 export function dispatchResolvedInput(
-  output: CRCHitTestOutput,
-  type: CRCResolverInputType,
+  output: PibblHitTestOutput,
+  type: PibblResolverInputType,
   point: Readonly<{ x: number; y: number }>,
   originalEvent: PointerEvent | WheelEvent | MouseEvent,
 ): void {
@@ -37,14 +37,14 @@ export function dispatchResolvedInput(
 }
 
 export function getResolverPointerCapture(
-  eventRoot: CRCEventRoot,
+  eventRoot: PibblEventRoot,
   pointerId: number,
-): CRCResolverInputWinner | undefined {
+): PibblResolverInputWinner | undefined {
   return pointerCaptures.get(eventRoot)?.get(pointerId);
 }
 
 export function hasResolverPointerCapture(
-  winner: CRCResolverInputWinner,
+  winner: PibblResolverInputWinner,
 ): boolean {
   return Array.from(pointerCaptures.get(winner.eventRoot)?.values() ?? []).some(
     (owner) => owner === winner,
@@ -52,7 +52,7 @@ export function hasResolverPointerCapture(
 }
 
 export function dispatchCapturedResolverInput(
-  winner: CRCResolverInputWinner,
+  winner: PibblResolverInputWinner,
   type: "pointermove" | "pointerup" | "pointercancel",
   point: Readonly<{ x: number; y: number }>,
   originalEvent: PointerEvent,
@@ -67,7 +67,7 @@ export function dispatchCapturedResolverInput(
 }
 
 export function setResolverPointerCapture(
-  winner: CRCResolverInputWinner,
+  winner: PibblResolverInputWinner,
   pointerId: number,
 ): void {
   let captures = pointerCaptures.get(winner.eventRoot);
@@ -80,12 +80,12 @@ export function setResolverPointerCapture(
   try {
     winner.eventRoot.canvas?.setPointerCapture(pointerId);
   } catch {
-    // CRC ownership is authoritative even when native capture is unavailable.
+    // Pibbl ownership is authoritative even when native capture is unavailable.
   }
 }
 
 export function releaseResolverPointerCapture(
-  winner: CRCResolverInputWinner,
+  winner: PibblResolverInputWinner,
   pointerId: number,
 ): void {
   const captures = pointerCaptures.get(winner.eventRoot);
@@ -96,12 +96,12 @@ export function releaseResolverPointerCapture(
   try {
     winner.eventRoot.canvas?.releasePointerCapture(pointerId);
   } catch {
-    // Native capture is best-effort; CRC ownership has already been released.
+    // Native capture is best-effort; Pibbl ownership has already been released.
   }
 }
 
 export function releaseResolverInputWinner(
-  winner: CRCResolverInputWinner,
+  winner: PibblResolverInputWinner,
 ): void {
   const captures = pointerCaptures.get(winner.eventRoot);
   if (!captures) return;

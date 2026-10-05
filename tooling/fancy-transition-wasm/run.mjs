@@ -3,7 +3,7 @@ import { chromium } from "playwright";
 import { readFile, writeFile, mkdtemp } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
-const dir = await mkdtemp(join(tmpdir(), "crc-fancy-wasm-"));
+const dir = await mkdtemp(join(tmpdir(), "pibbl-fancy-wasm-"));
 await build({
   entryPoints: ["tooling/fancy-transition-wasm/browser.ts"],
   outfile: join(dir, "bundle.js"),

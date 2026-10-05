@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest';
-import { getScenarioBySlug, loadScenario } from '@crc/scenarios';
+import { getScenarioBySlug, loadScenario } from '@pibbl/scenarios';
 import { clickMouse } from './support/mouse-input';
 it('keeps identical overlap geometry benign or erroneous according to explicit app policy', async () => {
  const canvas=document.createElement('canvas');canvas.width=400;canvas.height=240;canvas.style.cssText='width:400px;height:240px';document.body.append(canvas);

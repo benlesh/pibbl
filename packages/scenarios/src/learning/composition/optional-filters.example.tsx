@@ -1,5 +1,5 @@
-import { crc, Group, Rectangle, Text, useSignal, type CRCController } from '@crc/core';
-import { blur } from '@crc/core/filters';
+import { pibbl, Group, Rectangle, Text, useSignal, type PibblController } from '@pibbl/core';
+import { blur } from '@pibbl/core/filters';
 
 function OptionalFilters() {
   const enabled = useSignal(true);
@@ -42,6 +42,6 @@ function OptionalFilters() {
   );
 }
 
-export default function mount(canvas: HTMLCanvasElement): CRCController {
-  return crc(canvas, <OptionalFilters />);
+export default function mount(canvas: HTMLCanvasElement): PibblController {
+  return pibbl(canvas, <OptionalFilters />);
 }

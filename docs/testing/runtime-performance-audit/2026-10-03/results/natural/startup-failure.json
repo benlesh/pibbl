@@ -9,6 +9,6 @@
   "timing": "scheduler begin-to-idle CPU wall time, bounded 4096-frame reservoir per 30-second window; excludes presentation",
   "samples": [],
   "errors": [
-    "Error: page.evaluate: TypeError: Failed to fetch dynamically imported module: http://127.0.0.1:5203/@fs/Users/benlesh/.codex/worktrees/perf-verification/crc/packages/core/src/index.ts"
+    "Error: page.evaluate: TypeError: Failed to fetch dynamically imported module: http://127.0.0.1:5203/@fs/Users/benlesh/.codex/worktrees/perf-verification/pibbl/packages/core/src/index.ts"
   ]
 }

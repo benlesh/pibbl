@@ -2,43 +2,43 @@ import { CommittedObstacles2D } from "./obstacles.js";
 import { boundsOfShape2D } from "../../../2d-geometry.js";
 import { createShape2D } from "../shape-records.js";
 import type {
-  CRCPhysicsBodyInspection2D,
-  CRCPhysicsInspection2D,
+  PibblPhysicsBodyInspection2D,
+  PibblPhysicsInspection2D,
 } from "../inspection-types.js";
 import { RapierSimulation2D } from "../world/rapier.js";
-import { signal, type WritableSignal } from "@crc/core";
+import { signal, type WritableSignal } from "@pibbl/core";
 import {
-  crcInternalOnSimulationRenderTransactionFinish,
-  crcInternalCreateSignalConsumer,
-  crcInternalCurrentRenderOwner,
-  type CRCInternalSignalConsumer,
-  crcInternalQueueSimulationBegin,
-  crcInternalQueueSimulationCommitAcknowledgement,
-  crcInternalQueueSimulationComplete,
-  crcInternalRegisterSimulationAdvance,
-  crcInternalRequestSimulationRender,
-  type CRCInternalSignalBatch,
-  type CRCInternalSimulationOwner,
-} from "@crc/core/internal";
+  pibblInternalOnSimulationRenderTransactionFinish,
+  pibblInternalCreateSignalConsumer,
+  pibblInternalCurrentRenderOwner,
+  type PibblInternalSignalConsumer,
+  pibblInternalQueueSimulationBegin,
+  pibblInternalQueueSimulationCommitAcknowledgement,
+  pibblInternalQueueSimulationComplete,
+  pibblInternalRegisterSimulationAdvance,
+  pibblInternalRequestSimulationRender,
+  type PibblInternalSignalBatch,
+  type PibblInternalSimulationOwner,
+} from "@pibbl/core/internal";
 import type {
-  CRCPhysicsAabb2D,
-  CRCPhysicsPose2D,
-  CRCPhysicsRay2D,
-  CRCPhysicsShape2D,
-  CRCPhysicsVector2,
+  PibblPhysicsAabb2D,
+  PibblPhysicsPose2D,
+  PibblPhysicsRay2D,
+  PibblPhysicsShape2D,
+  PibblPhysicsVector2,
 } from "../../../2d-geometry.js";
 import type { ShapeRecord2D } from "../shape-records.js";
 import type {
-  CRCPhysicsBodyHandle2D,
-  CRCPhysicsColliderHandle2D,
-  CRCPhysicsQueryHit2D,
-  CRCPhysicsQueryMatch2D,
-  CRCPhysicsQueryMode,
-  CRCPhysicsQueryOptions2D,
-  CRCPhysicsQueryResult2D,
-  CRCPhysicsWorldHandle2D,
+  PibblPhysicsBodyHandle2D,
+  PibblPhysicsColliderHandle2D,
+  PibblPhysicsQueryHit2D,
+  PibblPhysicsQueryMatch2D,
+  PibblPhysicsQueryMode,
+  PibblPhysicsQueryOptions2D,
+  PibblPhysicsQueryResult2D,
+  PibblPhysicsWorldHandle2D,
 } from "../types.js";
-import type { CRCResolvedPhysicsWorld2DProps } from "./world-props.js";
+import type { PibblResolvedPhysicsWorld2DProps } from "./world-props.js";
 import { BODY_CCD_2D } from "../world/ccd.js";
 import { COLLIDER_SENSOR_2D } from "../world/contact-cache.js";
 import {
@@ -92,7 +92,7 @@ import {
 
 const worldController2DSymbol = Symbol("PhysicsWorld2DController");
 
-type InternalWorldHandle2D = CRCPhysicsWorldHandle2D &
+type InternalWorldHandle2D = PibblPhysicsWorldHandle2D &
   Readonly<{
     readonly [worldController2DSymbol]: PhysicsWorld2DController;
   }>;
@@ -101,7 +101,7 @@ interface BodyDraft2D {
   readonly id: number;
   readonly attachment: MountedPhysicsAttachment2D;
   readonly descriptor: PhysicsBodyAttachment2DDescriptor;
-  readonly initialPose: CRCPhysicsPose2D;
+  readonly initialPose: PibblPhysicsPose2D;
 }
 
 interface ColliderDraft2D {
@@ -115,7 +115,7 @@ interface ColliderDraft2D {
 interface RenderDraft2D {
   readonly simulationToRoot: DOMMatrix;
   readonly configuration: NormalizedPhysicsWorld2DConfiguration;
-  readonly props: CRCResolvedPhysicsWorld2DProps;
+  readonly props: PibblResolvedPhysicsWorld2DProps;
   readonly bodies: Map<number, BodyDraft2D>;
   readonly colliders: Map<number, ColliderDraft2D>;
 }
@@ -124,7 +124,7 @@ interface AcceptedBody2D {
   readonly id: number;
   readonly attachment: MountedPhysicsAttachment2D;
   readonly descriptor: PhysicsBodyAttachment2DDescriptor;
-  readonly initialPose: CRCPhysicsPose2D;
+  readonly initialPose: PibblPhysicsPose2D;
   readonly handleBindingGeneration: number | undefined;
 }
 
@@ -158,7 +158,7 @@ export interface PhysicsWorld2DControllerSnapshot {
 }
 
 export class PhysicsWorld2DController {
-  readonly handle: CRCPhysicsWorldHandle2D;
+  readonly handle: PibblPhysicsWorldHandle2D;
   private revision: WritableSignal<number> | undefined;
   private committedRevision = 0;
   private obstacles: CommittedObstacles2D | undefined;
@@ -189,15 +189,15 @@ export class PhysicsWorld2DController {
   private acceptedBodies: readonly AcceptedBody2D[] = Object.freeze([]);
   private acceptedColliders: readonly AcceptedCollider2D[] = Object.freeze([]);
   private acceptedConfiguration: NormalizedPhysicsWorld2DConfiguration;
-  private acceptedProps: CRCResolvedPhysicsWorld2DProps = Object.freeze({});
+  private acceptedProps: PibblResolvedPhysicsWorld2DProps = Object.freeze({});
   private readonly suspendedVelocities = new Map<number, BodyVelocity2D>();
   private readonly materializedBodyHandles = new Map<
     string,
-    CRCPhysicsBodyHandle2D
+    PibblPhysicsBodyHandle2D
   >();
   private readonly materializedColliderHandles = new Map<
     string,
-    CRCPhysicsColliderHandle2D
+    PibblPhysicsColliderHandle2D
   >();
   private materializedHandleTopologyPending = false;
   private readonly queries: CommittedWorldQueries2D;
@@ -208,17 +208,17 @@ export class PhysicsWorld2DController {
   private active = true;
   private readonly space: "root" | "local";
   private simulationToRoot = new DOMMatrix();
-  private readonly targetConsumer: CRCInternalSignalConsumer;
+  private readonly targetConsumer: PibblInternalSignalConsumer;
 
   constructor(
-    private readonly owner: CRCInternalSimulationOwner,
-    initialProps: CRCResolvedPhysicsWorld2DProps,
+    private readonly owner: PibblInternalSimulationOwner,
+    initialProps: PibblResolvedPhysicsWorld2DProps,
   ) {
     this.space = initialProps.space ?? "root";
     if (this.space !== "root" && this.space !== "local")
       throw new TypeError('PhysicsWorld2D space must be "root" or "local".');
-    this.targetConsumer = crcInternalCreateSignalConsumer({
-      owner: crcInternalCurrentRenderOwner(),
+    this.targetConsumer = pibblInternalCreateSignalConsumer({
+      owner: pibblInternalCurrentRenderOwner(),
       debugName: "PhysicsWorld2D kinematic targets",
       invalidate: () => {
         if (this.active) this.ensureAdvance();
@@ -231,7 +231,7 @@ export class PhysicsWorld2DController {
     );
     // Idle worlds still observe animation's staged target in the same Advance
     // phase, without keeping the host clock alive themselves.
-    this.releasePassiveAdvance = crcInternalRegisterSimulationAdvance(
+    this.releasePassiveAdvance = pibblInternalRegisterSimulationAdvance(
       this.owner,
       "physics",
       (frame, batch) => {
@@ -277,7 +277,7 @@ export class PhysicsWorld2DController {
   }
 
   beginRender(
-    props: CRCResolvedPhysicsWorld2DProps,
+    props: PibblResolvedPhysicsWorld2DProps,
     rootTransform = new DOMMatrix(),
   ): void {
     if ((props.space ?? "root") !== this.space)
@@ -307,7 +307,7 @@ export class PhysicsWorld2DController {
       bodies: new Map(),
       colliders: new Map(),
     };
-    crcInternalOnSimulationRenderTransactionFinish(this.owner, (success) =>
+    pibblInternalOnSimulationRenderTransactionFinish(this.owner, (success) =>
       this.finishRender(success),
     );
   }
@@ -324,7 +324,7 @@ export class PhysicsWorld2DController {
     );
   }
 
-  convertPoint(point: CRCPhysicsVector2, toRoot: boolean): CRCPhysicsVector2 {
+  convertPoint(point: PibblPhysicsVector2, toRoot: boolean): PibblPhysicsVector2 {
     this.assertActive();
     const value = copyFiniteVector2(point, "point");
     const matrix = toRoot
@@ -358,7 +358,7 @@ export class PhysicsWorld2DController {
     attachment: MountedPhysicsAttachment2D,
     bodyId: number,
     descriptor: PhysicsBodyAttachment2DDescriptor,
-    initialPose: CRCPhysicsPose2D = ZERO_POSE_2D,
+    initialPose: PibblPhysicsPose2D = ZERO_POSE_2D,
   ): void {
     const draft = this.requireDraft();
     draft.bodies.set(bodyId, {
@@ -405,14 +405,14 @@ export class PhysicsWorld2DController {
   queueCommands(commands: readonly PhysicsCommand2D[]): void {
     this.assertActive();
     if (commands.length === 0) return;
-    crcInternalQueueSimulationBegin(this.owner, () => {
+    pibblInternalQueueSimulationBegin(this.owner, () => {
       this.kernel.applyBegin(commands);
     });
     this.ensureAdvance();
   }
 
   acceptBodyHandleCommand(
-    handle: CRCPhysicsBodyHandle2D,
+    handle: PibblPhysicsBodyHandle2D,
     bindingGeneration: number,
     command: PhysicsBodyCommand2D,
   ): boolean {
@@ -443,51 +443,51 @@ export class PhysicsWorld2DController {
     return true;
   }
 
-  presentationPose(bodyId: number): CRCPhysicsPose2D | undefined {
+  presentationPose(bodyId: number): PibblPhysicsPose2D | undefined {
     return this.kernel.bodyIdentity(bodyId) !== undefined
       ? this.kernel.presentationPose(bodyId)
       : undefined;
   }
 
-  raycast<Mode extends CRCPhysicsQueryMode = "closest">(
-    ray: CRCPhysicsRay2D,
-    options?: CRCPhysicsQueryOptions2D<Mode>,
-  ): CRCPhysicsQueryResult2D<Mode, CRCPhysicsQueryHit2D> {
+  raycast<Mode extends PibblPhysicsQueryMode = "closest">(
+    ray: PibblPhysicsRay2D,
+    options?: PibblPhysicsQueryOptions2D<Mode>,
+  ): PibblPhysicsQueryResult2D<Mode, PibblPhysicsQueryHit2D> {
     this.assertActive();
     return this.queries.raycast(1, ray, options);
   }
 
-  shapeCast<Mode extends CRCPhysicsQueryMode = "closest">(
-    shape: CRCPhysicsShape2D,
-    from: CRCPhysicsPose2D,
-    translation: CRCPhysicsVector2,
-    options?: CRCPhysicsQueryOptions2D<Mode>,
-  ): CRCPhysicsQueryResult2D<Mode, CRCPhysicsQueryHit2D> {
+  shapeCast<Mode extends PibblPhysicsQueryMode = "closest">(
+    shape: PibblPhysicsShape2D,
+    from: PibblPhysicsPose2D,
+    translation: PibblPhysicsVector2,
+    options?: PibblPhysicsQueryOptions2D<Mode>,
+  ): PibblPhysicsQueryResult2D<Mode, PibblPhysicsQueryHit2D> {
     this.assertActive();
     return this.queries.shapeCast(1, shape, from, translation, options);
   }
 
-  overlapShape<Mode extends CRCPhysicsQueryMode = "closest">(
-    shape: CRCPhysicsShape2D,
-    pose: CRCPhysicsPose2D,
-    options?: CRCPhysicsQueryOptions2D<Mode>,
-  ): CRCPhysicsQueryResult2D<Mode, CRCPhysicsQueryMatch2D> {
+  overlapShape<Mode extends PibblPhysicsQueryMode = "closest">(
+    shape: PibblPhysicsShape2D,
+    pose: PibblPhysicsPose2D,
+    options?: PibblPhysicsQueryOptions2D<Mode>,
+  ): PibblPhysicsQueryResult2D<Mode, PibblPhysicsQueryMatch2D> {
     this.assertActive();
     return this.queries.overlapShape(1, shape, pose, options);
   }
 
-  queryAabb<Mode extends CRCPhysicsQueryMode = "closest">(
-    bounds: CRCPhysicsAabb2D,
-    options?: CRCPhysicsQueryOptions2D<Mode>,
-  ): CRCPhysicsQueryResult2D<Mode, CRCPhysicsQueryMatch2D> {
+  queryAabb<Mode extends PibblPhysicsQueryMode = "closest">(
+    bounds: PibblPhysicsAabb2D,
+    options?: PibblPhysicsQueryOptions2D<Mode>,
+  ): PibblPhysicsQueryResult2D<Mode, PibblPhysicsQueryMatch2D> {
     this.assertActive();
     return this.queries.queryAabb(1, bounds, options);
   }
 
-  queryPoint<Mode extends CRCPhysicsQueryMode = "closest">(
-    point: CRCPhysicsVector2,
-    options?: CRCPhysicsQueryOptions2D<Mode>,
-  ): CRCPhysicsQueryResult2D<Mode, CRCPhysicsQueryMatch2D> {
+  queryPoint<Mode extends PibblPhysicsQueryMode = "closest">(
+    point: PibblPhysicsVector2,
+    options?: PibblPhysicsQueryOptions2D<Mode>,
+  ): PibblPhysicsQueryResult2D<Mode, PibblPhysicsQueryMatch2D> {
     this.assertActive();
     return this.queries.queryPoint(1, point, options);
   }
@@ -520,7 +520,7 @@ export class PhysicsWorld2DController {
     });
   }
 
-  inspectBody(bodyId: number): CRCPhysicsBodyInspection2D | undefined {
+  inspectBody(bodyId: number): PibblPhysicsBodyInspection2D | undefined {
     if (!this.active) return undefined;
     const identity = this.kernel.bodyIdentity(bodyId);
     const declared = this.acceptedBodies.find((body) => body.id === bodyId);
@@ -588,10 +588,10 @@ export class PhysicsWorld2DController {
     this.suspendedVelocities.clear();
   }
 
-  inspect(): CRCPhysicsInspection2D {
+  inspect(): PibblPhysicsInspection2D {
     this.assertActive();
     const snapshot = this.kernel.snapshot();
-    const vector = (x: number, y: number): CRCPhysicsVector2 =>
+    const vector = (x: number, y: number): PibblPhysicsVector2 =>
       Object.freeze([x, y]);
     const contacts = this.kernel.contacts;
     const declaredTypes = new Map(
@@ -809,7 +809,7 @@ export class PhysicsWorld2DController {
     if (!topologyChanged && !configurationChanged) return;
     this.acceptedConfiguration = draft.configuration;
     this.queuedBegin?.cancel();
-    this.queuedBegin = crcInternalQueueSimulationBegin(this.owner, () => {
+    this.queuedBegin = pibblInternalQueueSimulationBegin(this.owner, () => {
       this.queuedBegin = undefined;
       if (topologyChanged) this.kernel.proposeTopology(this.acceptedTopology);
       if (configurationChanged) {
@@ -826,7 +826,7 @@ export class PhysicsWorld2DController {
 
   private ensureAdvance(): void {
     if (this.releaseAdvance !== undefined) return;
-    this.releaseAdvance = crcInternalRegisterSimulationAdvance(
+    this.releaseAdvance = pibblInternalRegisterSimulationAdvance(
       this.owner,
       "physics",
       (frame, batch) => this.advance(frame.frameId, frame.logicalTime, batch),
@@ -890,7 +890,7 @@ export class PhysicsWorld2DController {
   private advance(
     frameId: number,
     logicalTime: number,
-    batch: CRCInternalSignalBatch,
+    batch: PibblInternalSignalBatch,
   ): void {
     let candidate: PhysicsWorld2DCandidate | undefined;
     try {
@@ -906,11 +906,11 @@ export class PhysicsWorld2DController {
       const events = this.copyEventDeliveries(candidate);
       let adopted = false;
       if (events.length > 0) {
-        crcInternalQueueSimulationComplete(this.owner, () => {
+        pibblInternalQueueSimulationComplete(this.owner, () => {
           if (adopted) this.deliverEvents(events);
         });
       }
-      crcInternalQueueSimulationCommitAcknowledgement(
+      pibblInternalQueueSimulationCommitAcknowledgement(
         this.owner,
         (_frame, outcome) => {
           if (this.liveCandidate !== candidate) return;
@@ -927,7 +927,7 @@ export class PhysicsWorld2DController {
           this.committedRevision = nextRevision;
           this.obstacles?.publish(this.kernel, this.acceptedColliders, nextRevision);
           adopted = true;
-          crcInternalRequestSimulationRender(this.owner);
+          pibblInternalRequestSimulationRender(this.owner);
           if (
             !this.hasAwakeBodies() &&
             (candidate!.stepCount > 0 ||
@@ -947,16 +947,16 @@ export class PhysicsWorld2DController {
       if (this.liveCandidate === candidate) this.liveCandidate = undefined;
       const onError = this.acceptedProps.onError;
       if (onError) {
-        crcInternalQueueSimulationComplete(this.owner, () => onError(error));
+        pibblInternalQueueSimulationComplete(this.owner, () => onError(error));
       }
       throw error;
     }
   }
 
   private readKinematicTargets(
-    batch: CRCInternalSignalBatch,
-  ): ReadonlyMap<number, CRCPhysicsPose2D> {
-    const targets = new Map<number, CRCPhysicsPose2D>();
+    batch: PibblInternalSignalBatch,
+  ): ReadonlyMap<number, PibblPhysicsPose2D> {
+    const targets = new Map<number, PibblPhysicsPose2D>();
     for (const body of this.acceptedBodies) {
       if (
         body.descriptor.bodyType !== "kinematic" ||
@@ -992,7 +992,7 @@ export class PhysicsWorld2DController {
   }
 
   private stagePublicSignals(
-    batch: CRCInternalSignalBatch,
+    batch: PibblInternalSignalBatch,
     nextRevision: number,
   ): void {
     if (this.revision !== undefined) {
@@ -1303,7 +1303,7 @@ export class PhysicsWorld2DController {
 
   private assertActive(): void {
     if (!this.active) {
-      throw new TypeError("Expected a live CRC physics 2D world handle.");
+      throw new TypeError("Expected a live Pibbl physics 2D world handle.");
     }
   }
 
@@ -1349,7 +1349,7 @@ export class PhysicsWorld2DController {
   private materializeBodyHandle(
     index: number,
     generation: number,
-  ): CRCPhysicsBodyHandle2D {
+  ): PibblPhysicsBodyHandle2D {
     const bodyId = this.kernel.bodyIdForIdentity(index, generation);
     if (bodyId === undefined) {
       throw new Error(
@@ -1372,7 +1372,7 @@ export class PhysicsWorld2DController {
   private materializeColliderHandle(
     index: number,
     generation: number,
-  ): CRCPhysicsColliderHandle2D {
+  ): PibblPhysicsColliderHandle2D {
     if (this.kernel.colliderIdForIdentity(index, generation) === undefined) {
       throw new Error(
         "Cannot materialize a stale physics 2D collider query result.",
@@ -1388,7 +1388,7 @@ export class PhysicsWorld2DController {
   }
 
   private resolveBodyHandle(
-    handle: CRCPhysicsBodyHandle2D,
+    handle: PibblPhysicsBodyHandle2D,
   ): Readonly<{ index: number; generation: number }> | null {
     const binding = physicsBodyHandleBinding2D(handle);
     if (binding?.controller !== this) return null;
@@ -1396,7 +1396,7 @@ export class PhysicsWorld2DController {
   }
 
   private resolveColliderHandle(
-    handle: CRCPhysicsColliderHandle2D,
+    handle: PibblPhysicsColliderHandle2D,
   ): Readonly<{ index: number; generation: number }> | null {
     const identity = physicsColliderHandleIdentity2D(handle);
     if (identity?.controller !== this) return null;
@@ -1418,13 +1418,13 @@ export class PhysicsWorld2DController {
 }
 
 export function requirePhysicsWorld2DController(
-  handle: CRCPhysicsWorldHandle2D,
+  handle: PibblPhysicsWorldHandle2D,
 ): PhysicsWorld2DController {
   const controller = (handle as Partial<InternalWorldHandle2D>)[
     worldController2DSymbol
   ];
   if (!(controller instanceof PhysicsWorld2DController)) {
-    throw new TypeError("Expected a live CRC physics 2D world handle.");
+    throw new TypeError("Expected a live Pibbl physics 2D world handle.");
   }
   return controller;
 }
@@ -1436,7 +1436,7 @@ export function snapshotPhysicsWorld2DControllerForTest(
 }
 
 function normalizeWorldConfiguration(
-  props: CRCResolvedPhysicsWorld2DProps,
+  props: PibblResolvedPhysicsWorld2DProps,
 ): NormalizedPhysicsWorld2DConfiguration {
   return normalizePhysicsWorld2DConfiguration({
     gravity: props.gravity,
@@ -1720,7 +1720,7 @@ function sameConfiguration(
   );
 }
 
-function copyPhysicsPose2D(pose: CRCPhysicsPose2D): CRCPhysicsPose2D {
+function copyPhysicsPose2D(pose: PibblPhysicsPose2D): PibblPhysicsPose2D {
   return Object.freeze({
     position: copyFiniteVector2(pose.position, "initial physics pose.position"),
     rotationDegrees: requireFiniteNumber(
@@ -1773,14 +1773,14 @@ function sameRecord(left: unknown, right: unknown): boolean {
 }
 
 function validateUniqueBodyHandles(bodies: readonly BodyDraft2D[]): void {
-  const ids = new Map<CRCPhysicsBodyHandle2D, number>();
+  const ids = new Map<PibblPhysicsBodyHandle2D, number>();
   for (const body of bodies) {
     const handle = body.descriptor.options.handle;
     if (handle === undefined) continue;
     const previous = ids.get(handle);
     if (previous !== undefined && previous !== body.id) {
       throw new Error(
-        "A CRC physics 2D body handle may bind to at most one live body.",
+        "A Pibbl physics 2D body handle may bind to at most one live body.",
       );
     }
     ids.set(handle, body.id);
@@ -1804,7 +1804,7 @@ function eventHandlerName(
   }
 }
 
-const ZERO_POSE_2D: CRCPhysicsPose2D = Object.freeze({
+const ZERO_POSE_2D: PibblPhysicsPose2D = Object.freeze({
   position: Object.freeze([0, 0] as const),
   rotationDegrees: 0,
 });

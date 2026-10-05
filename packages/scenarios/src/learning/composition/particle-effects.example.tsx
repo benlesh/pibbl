@@ -2,15 +2,15 @@ import {
   Group,
   Rectangle,
   Text,
-  crc,
+  pibbl,
   marker,
   repeat,
   sequence,
   usePlayback,
   useSignal,
   wait,
-  type CRCController,
-} from '@crc/core';
+  type PibblController,
+} from '@pibbl/core';
 import {
   Particles2D,
   defineParticleEffect2D,
@@ -18,7 +18,7 @@ import {
   particleCurve,
   particleRange,
   useParticleSystem,
-} from '@crc/core/particles';
+} from '@pibbl/core/particles';
 
 const burningSquareEffect = defineParticleEffect2D({
   debugName: 'learning burning square',
@@ -277,6 +277,6 @@ function ParticleEffectsStudy() {
   );
 }
 
-export default function mount(canvas: HTMLCanvasElement): CRCController {
-  return crc(canvas, <ParticleEffectsStudy />, { pixelRatio: 1 });
+export default function mount(canvas: HTMLCanvasElement): PibblController {
+  return pibbl(canvas, <ParticleEffectsStudy />, { pixelRatio: 1 });
 }

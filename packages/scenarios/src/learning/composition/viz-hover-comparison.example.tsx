@@ -6,31 +6,16 @@ import {
   Rectangle,
   Text,
   batch,
-  crc,
+  pibbl,
   useLayoutBox,
   useSignal,
-  type CRCController,
-  type CRCPointerEvent,
+  type PibblController,
+  type PibblPointerEvent,
   type WritableSignal,
   type SignalValue,
   type Signal,
-} from "@crc/core";
-import {
-  Axis,
-  Scale,
-  LineSeries,
-  HoverData,
-  AnchoredLayout,
-  closestPoint,
-  closestX,
-  defineSeries,
-  interpolateX,
-  linearInterpolation,
-  useScale,
-  type HoverQueryContext,
-  type HoverHit,
-  type HoverSample,
-} from "@crc/core/viz";
+} from "@pibbl/core";
+import { Axis, LineSeries, HoverData, AnchoredLayout, closestPoint, closestX, defineSeries, interpolateX, linearInterpolation, type HoverQueryContext, type HoverHit, type HoverSample, useLinearScale, LinearScale } from "@pibbl/core/viz";
 type Row = { id?: string; x: number; y: number | null | undefined };
 type Mode = "closest-point" | "nearest-per-line" | "interpolated-x";
 type Reading = {
@@ -125,8 +110,8 @@ function Plot({
   origin: { x: number; y: number };
   viewport: { width: number; height: number };
 }) {
-  const xs = useScale("time").get(),
-    ys = useScale("co2").get();
+  const xs = useLinearScale("time").get(),
+    ys = useLinearScale("co2").get();
   const position = useSignal<{ x: number; y: number } | null>(null),
     drag = useSignal<number | null>(null);
   const first = defineSeries({
@@ -238,14 +223,14 @@ function Plot({
     });
     return results;
   }
-  function move(event: CRCPointerEvent) {
+  function move(event: PibblPointerEvent) {
     const x = Math.max(0, Math.min(xs.frame.width, event.x - origin.x));
     batch(() => {
       position.set({ x, y: event.y - origin.y });
       inspection.set(xs.range[0] === xs.range[1] ? null : xs.invert(x));
     });
   }
-  function finish(event: CRCPointerEvent) {
+  function finish(event: PibblPointerEvent) {
     if (drag.get() !== event.pointerId) return;
     drag.set(null);
     event.currentTarget.releasePointerCapture(event.pointerId);
@@ -499,18 +484,18 @@ function Scene({ fixture }: { fixture: Fixture }) {
         Move to inspect · Press and drag the guide
       </Text>
       <Absolute>
-        <Scale
+        <LinearScale
           id="time"
-          type="linear"
+
           domain={
             fixture.xDomain ?? [monthly[0].x, monthly[monthly.length - 1].x]
           }
           range="width"
           style={{ left, top, width, height }}
         >
-          <Scale
+          <LinearScale
             id="co2"
-            type="linear"
+
             domain={fixture.yDomain ?? [410, 420]}
             range="height"
             reverse
@@ -522,8 +507,8 @@ function Scene({ fixture }: { fixture: Fixture }) {
               origin={{ x: left, y: top }}
               viewport={{ width: box.width, height: box.height }}
             />
-          </Scale>
-        </Scale>
+          </LinearScale>
+        </LinearScale>
       </Absolute>
       <Text
         style={{
@@ -542,7 +527,7 @@ function Scene({ fixture }: { fixture: Fixture }) {
 export default function mount(
   canvas: HTMLCanvasElement,
   fixture: Fixture = {},
-): CRCController {
+): PibblController {
   const minHeight = canvas.style.minHeight,
     touchAction = canvas.style.touchAction;
   canvas.style.minHeight = "620px";
@@ -556,7 +541,7 @@ export default function mount(
     if (host) host.style.overflow = overflow ?? "";
   }
   try {
-    const controller = crc(canvas, <Scene fixture={fixture} />, {
+    const controller = pibbl(canvas, <Scene fixture={fixture} />, {
       viewport: "responsive",
     });
     return {

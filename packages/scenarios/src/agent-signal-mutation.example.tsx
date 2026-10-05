@@ -1,4 +1,4 @@
-import { Group, Rectangle, Text, type Signal } from '@crc/core';
+import { Group, Rectangle, Text, type Signal } from '@pibbl/core';
 export const AGENT_SIGNAL_MUTATION_SOURCE_ID = 'agent-signal-mutation-example';
 export function AgentSignalMutationScene({ amount, onRender }: {
   amount: Signal<{ amount: number }>;

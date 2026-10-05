@@ -1,17 +1,17 @@
-import { resolveTexturePaint } from '@crc/core/internal';
+import { resolveTexturePaint } from '@pibbl/core/internal';
 import {
   Path,
   isSignal,
   resolveSignalValue,
   useCanvasContext,
-} from "@crc/core";
-import type { FillStyle, StrokeStyle } from "@crc/core";
+} from "@pibbl/core";
+import type { FillStyle, StrokeStyle } from "@pibbl/core";
 import type {
   PointMarkStyle,
   PointSeriesProps,
   PointSeriesStyle,
 } from "./point-types.js";
-import { useScale } from "./use-scale.js";
+import { useContinuousScale } from "./use-continuous-scale.js";
 import { finiteCoordinate, pointAccessor, pointData } from "./point-data.js";
 import { appendPointTarget, pointPath } from "./point-geometry.js";
 import { opacity, width } from "./paint.js";
@@ -59,11 +59,11 @@ function normalized(style: PointSeriesStyle) {
   };
 }
 /**
- * Batched circles in source paint order with one ordinary CRC target.
+ * Batched circles in source paint order with one ordinary Pibbl target.
  *
  * @param props - Data, coordinate accessors, scales, and point styling. See
  * {@link PointSeriesProps} .
- * @returns CRC nodes drawing the point marks.
+ * @returns Pibbl nodes drawing the point marks.
  *
  * @see {@link PointSeriesProps}
  */
@@ -77,8 +77,8 @@ export function PointSeries<D>({
   style: styleInput,
   ...events
 }: PointSeriesProps<D>) {
-  const xs = useScale(xId).get(),
-    ys = useScale(yId).get();
+  const xs = useContinuousScale(xId).get(),
+    ys = useContinuousScale(yId).get();
   const data = pointData(resolveSignalValue(input), "PointSeries");
   const x = pointAccessor(xInput),
     y = pointAccessor(yInput);

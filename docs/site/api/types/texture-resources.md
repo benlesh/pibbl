@@ -7,6 +7,7 @@ slug: texture-resources
 apiCategory: types
 symbols:
   [
+    defineTexture,
     Texture,
     TextureContext,
     TextureDefinition,
@@ -15,17 +16,16 @@ symbols:
     TexturePaint,
     TexturePlacement,
     TextureRecipe,
-    defineTexture,
     useTexture,
   ]
 ---
 
 # Texture resources
 
-`defineTexture` from `@crc/core` creates a recipe factory. Recipes contain data;
+`defineTexture` from `@pibbl/core` creates a recipe factory. Recipes contain data;
 `useTexture(recipe, options)` creates one persistent, mount-owned source that can
 be passed directly to `style.fill` or `style.stroke`. Its `send(message)` method
-queues typed, structured-cloneable data for the next CRC update. It may not run
+queues typed, structured-cloneable data for the next Pibbl update. It may not run
 during rendering. A static texture without a receiver accepts no messages.
 
 `TextureDefinition<Config, State, Message>` supplies synchronous `create`,
@@ -42,7 +42,7 @@ cells. Resizing resets implementation state. Palette changes preserve state.
 `Texture<Message>` is a `TexturePaint` with `send` and `paint(placement)`.
 `TexturePlacement` chooses `repeat` or `stretch`, logical `tileWidth`/`tileHeight`,
 `offsetX`/`offsetY`, and `rotation` in degrees. Paint views share their owner's
-pixels and lifetime. Sharing is supported within the owner's CRC tree. Disposal
+pixels and lifetime. Sharing is supported within the owner's Pibbl tree. Disposal
 releases the canvas and queued work; later sends are inert, and rendering a
 disposed resource is an error. Owners must outlive consumers.
 
@@ -51,41 +51,41 @@ recipes with the same definition preserves the mounted resource. Changing the
 definition requires a new keyed owner. Custom implementations receive changed
 configuration through `update` and decide whether output needs regeneration.
 
+## defineTexture
+
+Creates the immutable recipe factory for a custom implementation.
+
 ## Texture
 
 The typed resource handle accepted by fills and strokes.
-
-## TexturePaint
-
-An opaque resource-backed paint, optionally with per-use placement.
-
-## TextureRecipe
-
-A pure definition/configuration value consumed by the hook.
-
-## TextureDefinition
-
-The custom implementation lifecycle described above.
 
 ## TextureContext
 
 The owned raster and invalidation capabilities.
 
+## TextureDefinition
+
+The custom implementation lifecycle described above.
+
 ## TextureFrame
 
-CRC-supplied time and delta in milliseconds.
+Pibbl-supplied time and delta in milliseconds.
 
 ## TextureOptions
 
 Resource resolution and presentation palette.
 
+## TexturePaint
+
+An opaque resource-backed paint, optionally with per-use placement.
+
 ## TexturePlacement
 
 Per-consumer repeat/stretch, tile size, offset, and rotation.
 
-## defineTexture
+## TextureRecipe
 
-Creates the immutable recipe factory for a custom implementation.
+A pure definition/configuration value consumed by the hook.
 
 ## useTexture
 

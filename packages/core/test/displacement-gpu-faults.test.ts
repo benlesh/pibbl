@@ -1,13 +1,13 @@
 import {
   createElement,
-  crc,
+  pibbl,
   defineTexture,
   Rectangle,
   useTexture,
-} from "@crc/core";
-import { displacement } from "@crc/core/filters";
+} from "@pibbl/core";
+import { displacement } from "@pibbl/core/filters";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { getCRCInstance } from "../src/lib/global-state";
+import { getPibblInstance } from "../src/lib/global-state";
 import { peekDisplacementGpu } from "../src/filters/render-displacement-boundary";
 import {
   ManualSchedulerDriver,
@@ -56,11 +56,11 @@ function mountFaultedScene(
       },
     });
   }
-  const controller = crc(canvas, createElement(Scene, {}));
+  const controller = pibbl(canvas, createElement(Scene, {}));
   const restoreFault = inject();
   try {
     expect(() => driver.flush(0)).toThrow(expected);
-    expect(peekDisplacementGpu(getCRCInstance(canvas))).toBeUndefined();
+    expect(peekDisplacementGpu(getPibblInstance(canvas))).toBeUndefined();
     expect(
       additions.mock.calls.filter(
         ([type]) =>
@@ -75,9 +75,9 @@ function mountFaultedScene(
     ).toHaveLength(2);
     afterFailure?.();
     restoreFault();
-    crc(canvas, createElement(Scene, {}));
+    pibbl(canvas, createElement(Scene, {}));
     driver.flush(16);
-    expect(peekDisplacementGpu(getCRCInstance(canvas))).toBeDefined();
+    expect(peekDisplacementGpu(getPibblInstance(canvas))).toBeDefined();
   } finally {
     restoreFault();
     controller.dispose();

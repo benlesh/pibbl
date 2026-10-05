@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { createElement } from '../element/create-element';
 import { getPrimitiveDefinition } from '../element/metadata';
-import { getCRCInstance } from '../global-state';
+import { getPibblInstance } from '../global-state';
 import { useSignal } from '../hooks/use-signal';
 import { measureElement } from '../layout/measure';
 import { LayoutDiagnostic } from '../style/diagnostics';
@@ -203,7 +203,7 @@ describe('Arc', () => {
         keyboardNavigationBounds: override,
       }),
     ] }));
-    const targets = [...getCRCInstance(canvas.element).eventRoot.targets];
+    const targets = [...getPibblInstance(canvas.element).eventRoot.targets];
 
     expect(targets[0].keyboardNavigationBounds!.x)
       .toBeCloseTo(100 + Math.SQRT1_2 * 40);

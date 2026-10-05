@@ -11,26 +11,26 @@ symbols:
     blur,
     brightness,
     contrast,
-    CRCBlurFilterOptions,
-    CRCBrightnessFilterOptions,
-    CRCContrastFilterOptions,
-    CRCDisplacementFilterOptions,
-    CRCDropShadowFilterOptions,
-    CRCFilter,
-    CRCGrayscaleFilterOptions,
-    CRCHueRotateFilterOptions,
-    CRCInvertFilterOptions,
-    CRCOpacityFilterOptions,
-    CRCReflectedLightFilterOptions,
-    CRCReflectedLightSource,
-    CRCSaturateFilterOptions,
-    CRCSepiaFilterOptions,
     displacement,
     dropShadow,
     grayscale,
     hueRotate,
     invert,
     opacity,
+    PibblBlurFilterOptions,
+    PibblBrightnessFilterOptions,
+    PibblContrastFilterOptions,
+    PibblDisplacementFilterOptions,
+    PibblDropShadowFilterOptions,
+    PibblFilter,
+    PibblGrayscaleFilterOptions,
+    PibblHueRotateFilterOptions,
+    PibblInvertFilterOptions,
+    PibblOpacityFilterOptions,
+    PibblReflectedLightFilterOptions,
+    PibblReflectedLightSource,
+    PibblSaturateFilterOptions,
+    PibblSepiaFilterOptions,
     reflectedLight,
     saturate,
     sepia,
@@ -40,12 +40,12 @@ keywords: [filter, blur, drop shadow, Canvas, tree shaking]
 
 # Filters
 
-Import each effect from `@crc/core/filters`. Every primitive accepts one opaque
-`CRCFilter` value or a readonly ordered list in `style.filter`.
+Import each effect from `@pibbl/core/filters`. Every primitive accepts one opaque
+`PibblFilter` value or a readonly ordered list in `style.filter`.
 
 ```tsx
-import { Group, Rectangle } from "@crc/core";
-import { blur, dropShadow } from "@crc/core/filters";
+import { Group, Rectangle } from "@pibbl/core";
+import { blur, dropShadow } from "@pibbl/core/filters";
 
 const scene = (
   <Group
@@ -66,23 +66,23 @@ animation, or require browser capabilities at import time. Optimizing ESM bundle
 can remove unused effects. A string object such as `{ type: 'blur', radius: 2 }`
 is no longer a filter; use `blur({ radius: 2 })`.
 
-The factories and their option types are exported from `@crc/core/filters`.
+The factories and their option types are exported from `@pibbl/core/filters`.
 Declared numeric fields accept a number or a numeric signal. Drop-shadow color
 also accepts a string signal. The receiving primitive owns these signal reads;
 calling `.get()` yourself makes the enclosing component the consumer instead.
 
-| Factory      | Option type                  | Fields                                                                                                           |
-| ------------ | ---------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| `blur`       | `CRCBlurFilterOptions`       | `radius`: finite nonnegative Gaussian standard deviation in local logical units                                  |
-| `brightness` | `CRCBrightnessFilterOptions` | `amount`: finite nonnegative ratio; values above 1 are preserved                                                 |
-| `contrast`   | `CRCContrastFilterOptions`   | `amount`: finite nonnegative ratio; values above 1 are preserved                                                 |
-| `dropShadow` | `CRCDropShadowFilterOptions` | Signed finite `offsetX` and `offsetY`; nonnegative `blurRadius` defaults to 0; concrete browser-accepted `color` |
-| `grayscale`  | `CRCGrayscaleFilterOptions`  | Nonnegative finite `amount`, clamped to 1                                                                        |
-| `hueRotate`  | `CRCHueRotateFilterOptions`  | Any finite `degrees`, without modulo normalization                                                               |
-| `invert`     | `CRCInvertFilterOptions`     | Nonnegative finite `amount`, clamped to 1                                                                        |
-| `opacity`    | `CRCOpacityFilterOptions`    | Nonnegative finite `amount`, clamped to 1                                                                        |
-| `saturate`   | `CRCSaturateFilterOptions`   | Nonnegative finite `amount`; values above 1 are preserved                                                        |
-| `sepia`      | `CRCSepiaFilterOptions`      | Nonnegative finite `amount`, clamped to 1                                                                        |
+| Factory      | Option type                    | Fields                                                                                                           |
+| ------------ | ------------------------------ | ---------------------------------------------------------------------------------------------------------------- |
+| `blur`       | `PibblBlurFilterOptions`       | `radius`: finite nonnegative Gaussian standard deviation in local logical units                                  |
+| `brightness` | `PibblBrightnessFilterOptions` | `amount`: finite nonnegative ratio; values above 1 are preserved                                                 |
+| `contrast`   | `PibblContrastFilterOptions`   | `amount`: finite nonnegative ratio; values above 1 are preserved                                                 |
+| `dropShadow` | `PibblDropShadowFilterOptions` | Signed finite `offsetX` and `offsetY`; nonnegative `blurRadius` defaults to 0; concrete browser-accepted `color` |
+| `grayscale`  | `PibblGrayscaleFilterOptions`  | Nonnegative finite `amount`, clamped to 1                                                                        |
+| `hueRotate`  | `PibblHueRotateFilterOptions`  | Any finite `degrees`, without modulo normalization                                                               |
+| `invert`     | `PibblInvertFilterOptions`     | Nonnegative finite `amount`, clamped to 1                                                                        |
+| `opacity`    | `PibblOpacityFilterOptions`    | Nonnegative finite `amount`, clamped to 1                                                                        |
+| `saturate`   | `PibblSaturateFilterOptions`   | Nonnegative finite `amount`; values above 1 are preserved                                                        |
+| `sepia`      | `PibblSepiaFilterOptions`      | Nonnegative finite `amount`, clamped to 1                                                                        |
 
 Drop-shadow offsets and blur radii scale with backing density. Contextual colors
 such as `currentColor`, system colors, and `var(...)` reject. The opacity filter
@@ -104,88 +104,6 @@ Pure measurement ignores their appearance and acquires no raster resources.
 ## contrast
 
 `contrast(options)` creates an opaque filter for contrast scaling.
-
-## CRCBlurFilterOptions
-
-`CRCBlurFilterOptions` describes the validated inputs to `blur`, shown in the
-field table above. Numeric fields support signals owned by the receiving primitive.
-
-## CRCBrightnessFilterOptions
-
-`CRCBrightnessFilterOptions` describes the validated inputs to `brightness`, shown in the
-field table above. Numeric fields support signals owned by the receiving primitive.
-
-## CRCContrastFilterOptions
-
-`CRCContrastFilterOptions` describes the validated inputs to `contrast`, shown in the
-field table above. Numeric fields support signals owned by the receiving primitive.
-
-## CRCDisplacementFilterOptions
-
-`map` is a mounted `TexturePaint`; `strength` is a finite nonnegative logical
-maximum offset; and `region` supplies finite local coordinates with positive width
-and height for texture placement. Optional `blurRadius` is a finite nonnegative
-logical support radius (default 0). Blue × alpha scales the local blur radius;
-red/green × alpha still control displacement. A bounded mip-filtered 5×5 binomial kernel
-softens the refracted scene; this radius is not native Gaussian blur sigma.
-Only when both strength and blur radius are zero does the filter validate the
-map without acquiring GPU processing or subscribing to map pixel revisions.
-
-## CRCDropShadowFilterOptions
-
-`CRCDropShadowFilterOptions` describes the validated inputs to `dropShadow`, shown in the
-field table above. Numeric fields support signals owned by the receiving primitive.
-
-## CRCFilter
-
-`CRCFilter` is the opaque factory result, also available as a type from
-`@crc/core`. The receiving primitive and its descendants form one raster. Lists
-run in declaration order; nested boundaries run inside out. Adjacent native
-filters compile into one Canvas filter operation. An empty list is a direct-path
-no-op. Active native filters require `OffscreenCanvas` and Canvas `filter` support.
-
-Filters change pixels only. Layout, measurement, hit testing, focus bounds, pointer
-coordinates, cursor regions, physics and source paint order use the original
-logical geometry. A shadow or blurred fringe does not extend the target area.
-
-## CRCGrayscaleFilterOptions
-
-`CRCGrayscaleFilterOptions` describes the validated inputs to `grayscale`, shown in the
-field table above. Numeric fields support signals owned by the receiving primitive.
-
-## CRCHueRotateFilterOptions
-
-`CRCHueRotateFilterOptions` describes the validated inputs to `hueRotate`, shown in the
-field table above. Numeric fields support signals owned by the receiving primitive.
-
-## CRCInvertFilterOptions
-
-`CRCInvertFilterOptions` describes the validated inputs to `invert`, shown in the
-field table above. Numeric fields support signals owned by the receiving primitive.
-
-## CRCOpacityFilterOptions
-
-`CRCOpacityFilterOptions` describes the validated inputs to `opacity`, shown in the
-field table above. Numeric fields support signals owned by the receiving primitive.
-
-## CRCReflectedLightFilterOptions
-
-The map, region, source, opacity, threshold, softness, and direction accepted by
-`reflectedLight`. Numeric controls and the map/source accept signals.
-
-## CRCReflectedLightSource
-
-A concrete CSS color, CRC texture paint, decoded HTMLImageElement, or ImageBitmap.
-
-## CRCSaturateFilterOptions
-
-`CRCSaturateFilterOptions` describes the validated inputs to `saturate`, shown in the
-field table above. Numeric fields support signals owned by the receiving primitive.
-
-## CRCSepiaFilterOptions
-
-`CRCSepiaFilterOptions` describes the validated inputs to `sepia`, shown in the
-field table above. Numeric fields support signals owned by the receiving primitive.
 
 ## displacement
 
@@ -212,13 +130,95 @@ It changes pixels only; the receiving primitive retains its original hit geometr
 
 `opacity(options)` creates an opaque filter for combined-raster opacity.
 
+## PibblBlurFilterOptions
+
+`PibblBlurFilterOptions` describes the validated inputs to `blur`, shown in the
+field table above. Numeric fields support signals owned by the receiving primitive.
+
+## PibblBrightnessFilterOptions
+
+`PibblBrightnessFilterOptions` describes the validated inputs to `brightness`, shown in the
+field table above. Numeric fields support signals owned by the receiving primitive.
+
+## PibblContrastFilterOptions
+
+`PibblContrastFilterOptions` describes the validated inputs to `contrast`, shown in the
+field table above. Numeric fields support signals owned by the receiving primitive.
+
+## PibblDisplacementFilterOptions
+
+`map` is a mounted `TexturePaint`; `strength` is a finite nonnegative logical
+maximum offset; and `region` supplies finite local coordinates with positive width
+and height for texture placement. Optional `blurRadius` is a finite nonnegative
+logical support radius (default 0). Blue × alpha scales the local blur radius;
+red/green × alpha still control displacement. A bounded mip-filtered 5×5 binomial kernel
+softens the refracted scene; this radius is not native Gaussian blur sigma.
+Only when both strength and blur radius are zero does the filter validate the
+map without acquiring GPU processing or subscribing to map pixel revisions.
+
+## PibblDropShadowFilterOptions
+
+`PibblDropShadowFilterOptions` describes the validated inputs to `dropShadow`, shown in the
+field table above. Numeric fields support signals owned by the receiving primitive.
+
+## PibblFilter
+
+`PibblFilter` is the opaque factory result, also available as a type from
+`@pibbl/core`. The receiving primitive and its descendants form one raster. Lists
+run in declaration order; nested boundaries run inside out. Adjacent native
+filters compile into one Canvas filter operation. An empty list is a direct-path
+no-op. Active native filters require `OffscreenCanvas` and Canvas `filter` support.
+
+Filters change pixels only. Layout, measurement, hit testing, focus bounds, pointer
+coordinates, cursor regions, physics and source paint order use the original
+logical geometry. A shadow or blurred fringe does not extend the target area.
+
+## PibblGrayscaleFilterOptions
+
+`PibblGrayscaleFilterOptions` describes the validated inputs to `grayscale`, shown in the
+field table above. Numeric fields support signals owned by the receiving primitive.
+
+## PibblHueRotateFilterOptions
+
+`PibblHueRotateFilterOptions` describes the validated inputs to `hueRotate`, shown in the
+field table above. Numeric fields support signals owned by the receiving primitive.
+
+## PibblInvertFilterOptions
+
+`PibblInvertFilterOptions` describes the validated inputs to `invert`, shown in the
+field table above. Numeric fields support signals owned by the receiving primitive.
+
+## PibblOpacityFilterOptions
+
+`PibblOpacityFilterOptions` describes the validated inputs to `opacity`, shown in the
+field table above. Numeric fields support signals owned by the receiving primitive.
+
+## PibblReflectedLightFilterOptions
+
+The map, region, source, opacity, threshold, softness, and direction accepted by
+`reflectedLight`. Numeric controls and the map/source accept signals.
+
+## PibblReflectedLightSource
+
+A concrete CSS color, Pibbl texture paint, decoded HTMLImageElement, or ImageBitmap.
+
+## PibblSaturateFilterOptions
+
+`PibblSaturateFilterOptions` describes the validated inputs to `saturate`, shown in the
+field table above. Numeric fields support signals owned by the receiving primitive.
+
+## PibblSepiaFilterOptions
+
+`PibblSepiaFilterOptions` describes the validated inputs to `sepia`, shown in the
+field table above. Numeric fields support signals owned by the receiving primitive.
+
 ## reflectedLight
 
 `reflectedLight({ map, region, source, opacity, threshold, softness, direction })`
 adds translucent light only on selected wave slopes. `source` accepts a concrete
-CSS color, a CRC texture paint, or a caller-owned, already-decoded HTML image or
+CSS color, a Pibbl texture paint, or a caller-owned, already-decoded HTML image or
 ImageBitmap. It does not load URLs or close caller-owned images. A changed image
-requires ordinary CRC invalidation; CRC texture revisions update automatically.
+requires ordinary Pibbl invalidation; Pibbl texture revisions update automatically.
 
 Opacity defaults to 0.15 (0–1). Threshold defaults to 0.1 (-1–1), softness to 0.25
 (positive, at most 2), and direction to `[-0.6, -0.8]`. Map and region use the same

@@ -40,7 +40,7 @@ keywords: [layout, box, flex, grid, measurement]
 
 # Layout types
 
-CRC layout is opt-in and immediate-mode. Parents inspect normalized direct-child
+Pibbl layout is opt-in and immediate-mode. Parents inspect normalized direct-child
 styles, resolve finite allocations, and render one child descriptor at a time;
 they do not retain drawing commands. Style is local and never cascades.
 
@@ -81,7 +81,7 @@ parent; it does not create a CSS cascade.
 
 ## FlexProps
 
-`FlexProps` accepts recursive `CRCNode` children for CRC's supported Flexbox
+`FlexProps` accepts recursive `PibblNode` children for Pibbl's supported Flexbox
 subset.
 
 ## FlexStyle
@@ -91,7 +91,7 @@ flexing, advanced intrinsic sizing, margins, and scrolling are unsupported.
 
 ## FlowProps
 
-`FlowProps` accepts recursive `CRCNode` children for sequential flow layout.
+`FlowProps` accepts recursive `PibblNode` children for sequential flow layout.
 
 ## FlowStyle
 
@@ -104,7 +104,7 @@ flexing, advanced intrinsic sizing, margins, and scrolling are unsupported.
 
 ## GridProps
 
-`GridProps` accepts recursive `CRCNode` children for explicit-track grid layout.
+`GridProps` accepts recursive `PibblNode` children for explicit-track grid layout.
 
 ## GridStyle
 
@@ -113,7 +113,7 @@ auto-placement and advanced intrinsic sizing are not supported.
 
 ## GridTrack
 
-`GridTrack` describes one explicit Grid track in CRC's supported subset.
+`GridTrack` describes one explicit Grid track in Pibbl's supported subset.
 
 ## LayoutBox
 
@@ -138,7 +138,7 @@ Absolute, Overlay, Flex, and Grid parents.
 
 ## Length
 
-`Length` is CRC's public numeric/percentage/`"auto"` length vocabulary.
+`Length` is Pibbl's public numeric/percentage/`"auto"` length vocabulary.
 Resolution requires a definite percentage basis when a percentage is used.
 
 ## MeasureInput

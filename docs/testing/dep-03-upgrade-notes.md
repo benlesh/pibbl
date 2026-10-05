@@ -16,12 +16,12 @@ Status: complete.
 
 ## Package-output contract
 
-`@crc/core` retains `index.mjs` and `types.mjs` runtime entries. Declaration targets now use `.d.ts` plus an internal declaration tree instead of unbuild's flattened `.d.mts` files. Production source specifiers include `.js`, so the emitted graph resolves under both Bundler and NodeNext. Package builds also emit `.mjs.map` files with source content.
+`@pibbl/core` retains `index.mjs` and `types.mjs` runtime entries. Declaration targets now use `.d.ts` plus an internal declaration tree instead of unbuild's flattened `.d.mts` files. Production source specifiers include `.js`, so the emitted graph resolves under both Bundler and NodeNext. Package builds also emit `.mjs.map` files with source content.
 
 The `playground/package-consumer` fixture checks:
 
-- public value and type imports from `@crc/core`;
-- the type-only `@crc/core/types` export;
+- public value and type imports from `@pibbl/core`;
+- the type-only `@pibbl/core/types` export;
 - strict TypeScript 7 resolution under Bundler and NodeNext;
 - Node ESM loading and the complete 22-name public runtime export set.
 

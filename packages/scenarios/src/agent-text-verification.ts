@@ -1,4 +1,4 @@
-import { crc, createElement } from '@crc/core';
+import { pibbl, createElement } from '@pibbl/core';
 import type { createTextRecorder } from '../../../tooling/agent-verification/text';
 import { AgentTextScene, AGENT_TEXT_SOURCE_ID } from './agent-text-verification.example';
 import type { ScenarioDefinition } from './types';
@@ -18,14 +18,14 @@ export const agentTextScenario: ScenarioDefinition<AgentTextState> = {
     const factory = import.meta.env.DEV && import.meta.env.MODE !== 'built'
       ? (await import('../../../tooling/agent-verification/text')).createTextRecorder : null;
     let recorder: ReturnType<typeof createTextRecorder> | null = null;
-    let controller: ReturnType<typeof crc> | null = null;
+    let controller: ReturnType<typeof pibbl> | null = null;
     let disposed = false;
     let inFlight: Promise<void> | null = null;
     let cancelWait: (() => void) | null = null;
     let state: AgentTextState = { mode: 'seed', status: 'pending', revision: 0, expected: 'Revenue: 42', assertion: 'unavailable', observation: null };
     const evidence = document.createElement('pre'); evidence.dataset.testid = 'agent-text-evidence'; referenceHost?.append(evidence);
     const publish = () => {
-      evidence.textContent = JSON.stringify({ schema: 'crc-text-fixture/1', identity: fixtureIdentity, state });
+      evidence.textContent = JSON.stringify({ schema: 'pibbl-text-fixture/1', identity: fixtureIdentity, state });
       onStateChange?.(structuredClone(state));
     };
     const pause = () => new Promise<void>((resolve, reject) => {
@@ -46,7 +46,7 @@ export const agentTextScenario: ScenarioDefinition<AgentTextState> = {
         recorder = factory?.(canvas.getContext('2d')!, { fixtureText: ['Revenue: 42', 'Revenue: 24'], capacity: 8 }) ?? null;
         const capture = recorder;
         try {
-          controller = crc(canvas, createElement(AgentTextScene, { repaired: action === 'repair' }));
+          controller = pibbl(canvas, createElement(AgentTextScene, { repaired: action === 'repair' }));
           const deadline = performance.now() + 5000;
           do {
             await pause();
@@ -66,7 +66,7 @@ export const agentTextScenario: ScenarioDefinition<AgentTextState> = {
         if (!disposed) {
           state = { ...state, status: 'error', assertion: 'unavailable', observation: null };
           // Do not serialize thrown application values or private text.
-          evidence.textContent = JSON.stringify({ schema: 'crc-text-fixture/1', identity: fixtureIdentity, state });
+          evidence.textContent = JSON.stringify({ schema: 'pibbl-text-fixture/1', identity: fixtureIdentity, state });
         }
         throw error;
       }).finally(() => { inFlight = null; });

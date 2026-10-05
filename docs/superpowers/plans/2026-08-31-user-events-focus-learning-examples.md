@@ -4,11 +4,11 @@
 
 > **For agentic workers:** Implement the independent lesson families in parallel. Per the user's explicit workflow, do not run tests, builds, lint, formatting, or other verification until every lesson and all shared catalog/documentation integration are coded.
 
-**Goal:** Make every public user-event, focus-management, keyboard-activation, and directional-navigation capability added in the 2026-08-28 work discoverable through the CRC Studio's documentation-backed learning examples.
+**Goal:** Make every public user-event, focus-management, keyboard-activation, and directional-navigation capability added in the 2026-08-28 work discoverable through the Pibbl Studio's documentation-backed learning examples.
 
 **Architecture:** Keep the existing Studio contract: each lesson is a self-contained `packages/scenarios/src/learning/**/<slug>.example.ts` module whose default export mounts a public-API-only scene, while `learning-catalog.ts` supplies the rendered documentation. Group individual DOM handler names into coherent lessons so the catalog stays teachable while every supported name appears in lesson code or metadata. Shared section types, catalog registration, indexes, and stale mouse-only copy are integrated only after all independent lesson files exist.
 
-**Tech Stack:** TypeScript, `@crc/core`, the existing `@crc/scenarios` learning catalog, Vite Studio.
+**Tech Stack:** TypeScript, `@pibbl/core`, the existing `@pibbl/scenarios` learning catalog, Vite Studio.
 
 **Specs:**
 
@@ -20,10 +20,10 @@
 
 ## Global Constraints
 
-- Import every public capability from `@crc/core`; no deep imports.
-- Use only public browser events and public CRC APIs in learning examples.
+- Import every public capability from `@pibbl/core`; no deep imports.
+- Use only public browser events and public Pibbl APIs in learning examples.
 - Do not create persistent semantic descendants or imply that logical Canvas focus supplies screen-reader semantics.
-- Each example must export `default function mount(canvas: HTMLCanvasElement): CRCController`.
+- Each example must export `default function mount(canvas: HTMLCanvasElement): PibblController`.
 - Each lesson must have a genuine interaction prompt and visible state or trace; avoid static API galleries.
 - Preserve the existing public runtime and event contracts; this work adds examples and corrects documentation, not behavior.
 - Do not run verification until every coding task below is complete.
@@ -97,7 +97,7 @@
 - Modify: `packages/scenarios/src/learning-catalog.ts`
 - Modify: `docs/scenario-index.md`
 - Modify: `README.md`
-- Modify as needed: existing mouse-event lesson metadata whose copy still says CRC is mouse-only or omits logical related targets/propagation.
+- Modify as needed: existing mouse-event lesson metadata whose copy still says Pibbl is mouse-only or omits logical related targets/propagation.
 
 **Interfaces:**
 

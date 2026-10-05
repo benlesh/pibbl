@@ -1,5 +1,5 @@
 import { afterEach, expect, it, vi } from "vitest";
-import { crc, Group, Rectangle } from "@crc/core";
+import { pibbl, Group, Rectangle } from "@pibbl/core";
 import { clearSharedState } from "../src/lib/global-state.js";
 import { installSchedulerDriverForTest, ManualSchedulerDriver } from "../src/lib/scheduler/testing.js";
 
@@ -18,7 +18,7 @@ it("bounds native transform reads for positioned built-in paint", () => {
   canvas.height = 100;
   document.body.append(canvas);
   const reads = vi.spyOn(CanvasRenderingContext2D.prototype, "getTransform");
-  const controller = crc(canvas, <Group>{Array.from({ length: count }, (_, index) =>
+  const controller = pibbl(canvas, <Group>{Array.from({ length: count }, (_, index) =>
     <Rectangle key={index} style={{ left: index * 3 + 1, top: 2, width: 2, height: 2, fill: "red" }} />,
   )}</Group>, { pixelRatio: 1 });
   try {

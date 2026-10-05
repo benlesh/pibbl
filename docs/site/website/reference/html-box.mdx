@@ -1,14 +1,14 @@
 ---
 title: HtmlBox
-description: Allocate native HTML inside a CRC-centered composition.
+description: Allocate native HTML inside a Pibbl-centered composition.
 kind: reference
 symbols: [HtmlBox]
 ---
 
-`HtmlBox` comes from `@crc/core`. It gives a CRC-centered application an explicitly sized native HTML region. HTML owns editing, semantics, and native events; CRC owns the host placement, transforms, supported clipping, and lifetime.
+`HtmlBox` comes from `@pibbl/core`. It gives a Pibbl-centered application an explicitly sized native HTML region. HTML owns editing, semantics, and native events; Pibbl owns the host placement, transforms, supported clipping, and lifetime.
 
 ```js
-import { createElement, HtmlBox } from "@crc/core";
+import { createElement, HtmlBox } from "@pibbl/core";
 const editor = createElement(HtmlBox, {
   data: "Name",
   style: { width: 240, height: 80 },
@@ -22,10 +22,10 @@ const editor = createElement(HtmlBox, {
 });
 ```
 
-The initial `crc` configuration must include `htmlOverlay`: an empty HTML sibling immediately after the canvas inside a shared positioned wrapper. Canvas and overlay occupy the same content rectangle, with no border, padding, or independent transform. The [complete existing HTML Box example](@PLAYGROUND@#/examples/composition/html-box) includes this host setup and cleanup.
+The initial `pibbl` configuration must include `htmlOverlay`: an empty HTML sibling immediately after the canvas inside a shared positioned wrapper. Canvas and overlay occupy the same content rectangle, with no border, padding, or independent transform. The [complete existing HTML Box example](@PLAYGROUND@#/examples/composition/html-box) includes this host setup and cleanup.
 
 Mount and update callbacks are synchronous. The returned function receives subsequent rendered data. The supplied AbortSignal aborts before removal; use it to remove listeners or disconnect observers. Lifecycle callbacks cannot write signals, though native event handlers can.
 
-All HTML hosts remain above Canvas paint. They do not participate in Canvas filters or non-default composition, and HTML content does not determine CRC intrinsic size. Related types: `HtmlBoxProps`, `HtmlBoxStyle`, and `HtmlMountCallback`.
+All HTML hosts remain above Canvas paint. They do not participate in Canvas filters or non-default composition, and HTML content does not determine Pibbl intrinsic size. Related types: `HtmlBoxProps`, `HtmlBoxStyle`, and `HtmlMountCallback`.
 
 For an existing HTML button, use the simpler [HTML-owned integration](/guides/add-to-your-site/) instead.

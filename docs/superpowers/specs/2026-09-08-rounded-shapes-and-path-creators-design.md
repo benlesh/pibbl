@@ -5,17 +5,17 @@
 
 ## Summary
 
-CRC will add rounded corners to `Rectangle`, `Polygon`, and two new drawing
+Pibbl will add rounded corners to `Rectangle`, `Polygon`, and two new drawing
 leaves, `RegularPolygon` and `Star`. Rounded polygon corners are true circular
 arcs tangent to their incident edges. A uniform radius provides the default,
 and an optional sparse per-corner array overrides individual corners by index.
-When neighboring corners cannot fit on their shared edge, CRC proportionally
+When neighboring corners cannot fit on their shared edge, Pibbl proportionally
 reduces every requested radius by one common scale factor.
 
-CRC will also expose focused pure functions that create the same `Path2D`
+Pibbl will also expose focused pure functions that create the same `Path2D`
 geometry used by its built-in drawing components. These creators let callers
 reuse standard geometry with `Clip`, `Path`, custom primitives, and explicit
-event targets without reproducing CRC's formulas. Components, public creators,
+event targets without reproducing Pibbl's formulas. Components, public creators,
 and existing memoized path hooks will share one canonical implementation per
 shape.
 
@@ -34,10 +34,10 @@ layout, interaction, or lifecycle contracts.
 - Add a regular-polygon component that can be sized by circumradius, inradius,
   or side length.
 - Add an alternating-radius star component with an explicit number of points.
-- Expose public pure `Path2D` creators for CRC's standard path geometry.
+- Expose public pure `Path2D` creators for Pibbl's standard path geometry.
 - Ensure built-in rendering, coordinate targeting, clipping, and caller-created
   paths use the same canonical geometry implementation.
-- Preserve CRC's local style language, declared-box layout, immediate-mode
+- Preserve Pibbl's local style language, declared-box layout, immediate-mode
   traversal, source paint order, identity rules, and resource ownership.
 - Ship public-package, scenario, documentation, and trust-gate evidence.
 
@@ -61,7 +61,7 @@ layout, interaction, or lifecycle contracts.
 
 ## Public surface
 
-The root `@crc/core` entry will add these component exports:
+The root `@pibbl/core` entry will add these component exports:
 
 - `RegularPolygon`, `RegularPolygonProps`, and `RegularPolygonStyle`
 - `Star`, `StarProps`, and `StarStyle`
@@ -85,8 +85,8 @@ corresponding creator. `HorizontalLine` and `VerticalLine` reuse
 
 Every creator accepts one readonly options object and returns a fresh
 `Path2D`. Creator geometry is numeric because a standalone call has no layout
-context in which to resolve CRC percentages. Component styles continue to
-accept CRC lengths and resolve them before delegation.
+context in which to resolve Pibbl percentages. Component styles continue to
+accept Pibbl lengths and resolve them before delegation.
 
 ```ts
 export interface RoundedCornerPathOptions {
@@ -232,7 +232,7 @@ Each specified component radius resolves against the smaller dimension of the
 component's current percentage basis, matching `Circle.radius`. The standalone
 creator equivalents accept finite numeric logical Canvas units only.
 
-Negative or non-finite radii fail. CRC never silently clamps an individually
+Negative or non-finite radii fail. Pibbl never silently clamps an individually
 invalid radius to zero. Oversized but otherwise valid radii are proportionally
 reduced by the geometry algorithm described below.
 
@@ -244,7 +244,7 @@ reduced by the geometry algorithm described below.
 
 Canvas owns signed-width and signed-height traversal, physical-corner
 remapping, and the scaling rule that prevents adjacent corner curves from
-overlapping. CRC validates and expands its fallback vocabulary before calling
+overlapping. Pibbl validates and expands its fallback vocabulary before calling
 Canvas; it does not reimplement the browser's rounded-rectangle algorithm.
 
 `Rectangle` retains its existing pixel-grid behavior. It first adjusts its
@@ -312,8 +312,8 @@ bounds.
 promises both equal side lengths and equal interior angles.
 
 It is a drawing leaf with the same paint, cursor, layout-item, event, and focus
-surface as `Polygon`. Its props extend `CRCEventHandlers` and
-`CRCEventFocusOptions`. Its style contains:
+surface as `Polygon`. Its props extend `PibblEventHandlers` and
+`PibblEventFocusOptions`. Its style contains:
 
 ```ts
 interface RegularPolygonCommonStyle extends RoundedCornerStyle {
@@ -385,8 +385,8 @@ vertex extrema; explicit caller bounds still win.
 ## Star component
 
 `Star` is a drawing leaf with the same paint, cursor, layout-item, event, and
-focus surface as `Polygon`. Its props extend `CRCEventHandlers` and
-`CRCEventFocusOptions`. Its style adds:
+focus surface as `Polygon`. Its props extend `PibblEventHandlers` and
+`PibblEventFocusOptions`. Its style adds:
 
 ```ts
 export interface StarStyle
@@ -481,7 +481,7 @@ Zero-size behavior remains intentional rather than erroneous:
 - zero corner radii preserve sharp corners and do not empty an otherwise valid
   shape.
 
-A component validation failure retains CRC's render-failure behavior: runtime
+A component validation failure retains Pibbl's render-failure behavior: runtime
 resources are torn down, component refs are cleared, pixels painted earlier in
 the failed frame are not rolled back, and a later valid mount can recover.
 
@@ -494,7 +494,7 @@ order therefore observe the exact same geometry.
 
 The creators themselves have no rendering or runtime side effects beyond
 allocating and populating a fresh `Path2D`. They register no events, own no
-resources, and do not depend on CRC render state. Callers can safely construct
+resources, and do not depend on Pibbl render state. Callers can safely construct
 a path outside a component and supply it to `Clip`, `Path`,
 `useEventTarget`, or a custom primitive.
 
@@ -520,7 +520,7 @@ negative local coordinates, and parent constraints make that inference
 ambiguous. Automatic layout that requires measurement must receive a declared
 box, matching the other shape primitives.
 
-Pure path creators do not accept CRC layout lengths, allocations,
+Pure path creators do not accept Pibbl layout lengths, allocations,
 constraints, or percentages.
 
 ## Architecture and ownership

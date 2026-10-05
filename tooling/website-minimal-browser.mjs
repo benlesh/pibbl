@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { chromium } from "playwright";
 
-const base = process.env.CRC_WEBSITE_URL ?? "http://localhost:4321";
+const base = process.env.PIBBL_WEBSITE_URL ?? "http://localhost:4321";
 const families = process.argv.slice(2);
 const examples = JSON.parse(
   await readFile(

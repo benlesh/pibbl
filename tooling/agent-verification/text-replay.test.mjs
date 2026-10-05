@@ -9,12 +9,12 @@ import { sourceTextIdentity } from './text-identity.mjs';
 const root = resolve(import.meta.dirname, '../..');
 for (const mismatch of [false, true]) {
   test(`text replay refuses ${mismatch ? 'stale identity' : 'unexpected private payload'} without retaining content`, { timeout: 20000 }, async () => {
-    const directory = await mkdtemp(join(tmpdir(), 'crc-text-replay-'));
+    const directory = await mkdtemp(join(tmpdir(), 'pibbl-text-replay-'));
     const identity = { ...await sourceTextIdentity(root) };
     if (mismatch) identity.sha256 = '0'.repeat(64);
     const state = { status: 'ready', revision: 1, mode: 'seed', expected: 'Revenue: 42', assertion: 'fail',
       observation: { records: [{ content: { status: 'fixture', value: 'Revenue: 24' } }, { content: { status: 'redacted' } }], unexpected: 'PRIVATE_MUST_NOT_ENTER_REPORT' } };
-    const envelope = { schema: 'crc-text-fixture/1', identity, state };
+    const envelope = { schema: 'pibbl-text-fixture/1', identity, state };
     const server = createServer((_request, response) => { response.setHeader('Content-Type', 'text/html'); response.end(`<pre data-testid="agent-text-evidence">${JSON.stringify(envelope)}</pre>`); });
     await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
     try {

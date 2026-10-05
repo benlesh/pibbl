@@ -1,8 +1,8 @@
-import { definePrimitive, signal, useSignal, type SystemStyle } from '@crc/core';
-/** @jsxImportSource @crc/core */
+import { definePrimitive, signal, useSignal, type SystemStyle } from '@pibbl/core';
+/** @jsxImportSource @pibbl/core */
 import {
   boxShape2D,
-  type CRCPhysicsShape2D,
+  type PibblPhysicsShape2D,
   withPhysicsShape2D,
 } from '../../../2d.js';
 import { describe, expect, it, vi } from 'vitest';
@@ -53,7 +53,7 @@ describe('withPhysicsShape2D', () => {
 
     const Async = withPhysicsShape2D(Raw, {
       resolveShape: (() => Promise.resolve(boxShape2D({ width: 1, height: 1 }))) as unknown as
-        (style: Readonly<ProbeStyle>) => CRCPhysicsShape2D,
+        (style: Readonly<ProbeStyle>) => PibblPhysicsShape2D,
     });
     expect(() => inferCanvasColliderShape2D({
       componentType: Async,
@@ -63,13 +63,13 @@ describe('withPhysicsShape2D', () => {
 
     const Invalid = withPhysicsShape2D(Raw, {
       resolveShape: (() => ({})) as unknown as
-        (style: Readonly<ProbeStyle>) => CRCPhysicsShape2D,
+        (style: Readonly<ProbeStyle>) => PibblPhysicsShape2D,
     });
     expect(() => inferCanvasColliderShape2D({
       componentType: Invalid,
       componentName: 'Invalid',
       style: { size: 3 },
-    })).toThrow(/CRC physics 2D shape/i);
+    })).toThrow(/Pibbl physics 2D shape/i);
   });
 
   it('rejects hooks and signal writes from a shape resolver', () => {

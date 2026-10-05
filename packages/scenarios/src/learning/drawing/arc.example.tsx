@@ -1,4 +1,4 @@
-import { Arc, crc, useSignal, Rectangle, type CRCController } from "@crc/core";
+import { Arc, pibbl, useSignal, Rectangle, type PibblController } from "@pibbl/core";
 
 function ArcStudy() {
   const active = useSignal(false);
@@ -24,6 +24,6 @@ function ArcStudy() {
   ];
 }
 
-export default function mount(canvas: HTMLCanvasElement): CRCController {
-  return crc(canvas, <ArcStudy />);
+export default function mount(canvas: HTMLCanvasElement): PibblController {
+  return pibbl(canvas, <ArcStudy />);
 }

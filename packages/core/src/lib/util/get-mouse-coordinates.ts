@@ -1,14 +1,14 @@
-import type { CRCInstance } from '../types.js';
+import type { PibblInstance } from '../types.js';
 import { getSurfaceSnapshot } from '../surface/transform.js';
 
 const recentCoords = new WeakMap<
   MouseEvent,
-  WeakMap<CRCInstance, readonly [number, number]>
+  WeakMap<PibblInstance, readonly [number, number]>
 >();
 
 export function getMouseCoordinates(
   event: MouseEvent,
-  instance: CRCInstance,
+  instance: PibblInstance,
 ): readonly [number, number] {
   const eventCoords = recentCoords.get(event);
   const cached = eventCoords?.get(instance);

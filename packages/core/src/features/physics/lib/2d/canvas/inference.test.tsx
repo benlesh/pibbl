@@ -1,4 +1,4 @@
-/** @jsxImportSource @crc/core */
+/** @jsxImportSource @pibbl/core */
 import {
   Arc,
   Circle,
@@ -15,18 +15,18 @@ import {
   Text,
   VerticalLine,
   Wedge,
-  crc,
-  type CRCController,
-} from "@crc/core";
+  pibbl,
+  type PibblController,
+} from "@pibbl/core";
 import {
   Capsule2D,
   Chain2D,
   PhysicsShape2D,
   PhysicsWorld2D,
   Segment2D,
-  crcPhysicsWorld2D,
+  pibblPhysicsWorld2D,
   staticBody2D,
-  type CRCPhysicsWorldHandle2D,
+  type PibblPhysicsWorldHandle2D,
 } from "../../../2d.js";
 import { circleShape2D } from "../shapes.js";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -38,7 +38,7 @@ import {
 import { inferCanvasColliderShape2D } from "./inference.js";
 
 describe("Canvas 2D collider inference", () => {
-  const mounts: CRCController[] = [];
+  const mounts: PibblController[] = [];
 
   afterEach(() => {
     for (const mount of mounts.splice(0)) mount.dispose();
@@ -49,9 +49,9 @@ describe("Canvas 2D collider inference", () => {
   it("acquires inferred colliders for every supported current Canvas primitive identity", () => {
     const frames = new ManualFrames();
     frames.install();
-    let world!: CRCPhysicsWorldHandle2D;
+    let world!: PibblPhysicsWorldHandle2D;
     const Capture = () => {
-      world = crcPhysicsWorld2D();
+      world = pibblPhysicsWorld2D();
     };
     const body = staticBody2D;
     const canvas = document.createElement("canvas");
@@ -59,7 +59,7 @@ describe("Canvas 2D collider inference", () => {
     canvas.height = 80;
     document.body.appendChild(canvas);
     mounts.push(
-      crc(
+      pibbl(
         canvas,
         <PhysicsWorld2D>
           <Capture />
@@ -472,7 +472,7 @@ class ManualFrames {
   flush(time: number): void {
     const entry = this.callbacks.entries().next().value as
       readonly [number, FrameRequestCallback] | undefined;
-    if (!entry) throw new Error("No CRC host frame is pending.");
+    if (!entry) throw new Error("No Pibbl host frame is pending.");
     this.callbacks.delete(entry[0]);
     entry[1](time);
   }

@@ -150,11 +150,11 @@ zero. Its fresh results were:
 ## Public removals and audit
 
 The intentional breaking removal consists of runtime values
-`defineWebGLPrimitive` and `crcWebGLContext` plus types
-`CRCWebGLCameraSnapshot`, `CRCWebGLContext`, `CRCWebGLHitCapability`,
-`CRCWebGLPrimitiveCapabilities`, `CRCWebGLPrimitiveHitInput`,
-`CRCWebGLPrimitiveInput`, `CRCWebGLPrimitiveRender`, and
-`CRCWebGLProgramProps`. The public package retains 7 runtime values and 15
+`defineWebGLPrimitive` and `pibblWebGLContext` plus types
+`PibblWebGLCameraSnapshot`, `PibblWebGLContext`, `PibblWebGLHitCapability`,
+`PibblWebGLPrimitiveCapabilities`, `PibblWebGLPrimitiveHitInput`,
+`PibblWebGLPrimitiveInput`, `PibblWebGLPrimitiveRender`, and
+`PibblWebGLProgramProps`. The public package retains 7 runtime values and 15
 types. `createWebGLGeometry` remains public; custom shapes are ordinary
 components that return `Mesh`.
 

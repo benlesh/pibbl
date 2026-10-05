@@ -1,4 +1,4 @@
-# CRC product strategy and future opportunities
+# Pibbl product strategy and future opportunities
 
 - **Status:** Directional guidance and food for thought; not an implementation
   specification, active plan, or feature commitment
@@ -10,7 +10,7 @@
 ## Purpose and authority
 
 This document records product hypotheses, promising opportunities, cautions,
-and experiments that may inform future CRC work. It critically revises an
+and experiments that may inform future Pibbl work. It critically revises an
 earlier improvement proposal rather than accepting that proposal as a roadmap.
 Its purpose is to keep useful ideas discoverable without silently turning them
 into commitments.
@@ -46,7 +46,7 @@ assumption rather than rewriting historical plans or field notes.
 
 - [Agent verification capability inventory](./agent-verification-inventory.md)
   (2026-09-28): an agent-first inventory of observation, control, assertion,
-  diagnosis and evidence needs for complex CRC applications. It includes
+  diagnosis and evidence needs for complex Pibbl applications. It includes
   ownership boundaries, conditional visualization/renderer facets, exclusions
   and a consistency review. It is design input, not an implementation commitment.
 
@@ -54,13 +54,13 @@ assumption rather than rewriting historical plans or field notes.
 
 The strongest working thesis is:
 
-> **CRC should be an application-oriented Canvas 2D runtime that is unusually
+> **Pibbl should be an application-oriented Canvas 2D runtime that is unusually
 > observable, deterministic, and debuggable. This should benefit human
 > developers first-class; coding agents are an important beneficiary and a
 > demanding test of the design.**
 
 This framing preserves the useful human/agent development loop without defining
-CRC primarily around current agent tooling. Inspection, diagnostics, testing,
+Pibbl primarily around current agent tooling. Inspection, diagnostics, testing,
 accessibility, DevTools, support, and automated repair could share foundations
 if those foundations prove useful.
 
@@ -69,7 +69,7 @@ conclusions too quickly. A better approach would:
 
 1. Treat any inspection model as a deliberately designed boundary, not a dump
    of runtime internals.
-2. Use CRC's existing learning scenarios, deterministic laboratories, browser
+2. Use Pibbl's existing learning scenarios, deterministic laboratories, browser
    drivers, and structural evidence as the starting point for representative
    workloads and baselines.
 3. Validate application-enabling capabilities such as scrolling or remaining
@@ -88,16 +88,16 @@ capacity.
 
 ### Product thesis to validate
 
-CRC may occupy a useful category between low-level Canvas drawing libraries and
+Pibbl may occupy a useful category between low-level Canvas drawing libraries and
 DOM application frameworks: a functional runtime for interactive,
 layout-oriented Canvas 2D applications such as dashboards, diagrams, editors,
 inspectors, and timelines.
 
 Observability may be a meaningful differentiator in that category. The
-hypothesis is not merely that CRC can expose a tree, but that developers can
+hypothesis is not merely that Pibbl can expose a tree, but that developers can
 answer high-value questions faster:
 
-- What does CRC believe exists?
+- What does Pibbl believe exists?
 - Where did it place and paint it?
 - Why did it make that decision?
 - Why did an interaction resolve to this target?
@@ -123,7 +123,7 @@ representative applications before presenting it as a product promise.
   accidentally freeze private immediate-mode runtime structures.
 - **Layered tooling.** A small instrumentation layer could support overlays,
   tests, DevTools, and adapters without placing every tool in core.
-- **Measured scope.** CRC should state the workloads it serves well and avoid
+- **Measured scope.** Pibbl should state the workloads it serves well and avoid
   graphics-engine parity as a goal.
 
 ### Candidate validation work, not commitments
@@ -131,7 +131,7 @@ representative applications before presenting it as a product promise.
 These are plausible early investigations if a future planning cycle selects
 this direction:
 
-1. Inventory representative CRC debugging tasks against existing learning and
+1. Inventory representative Pibbl debugging tasks against existing learning and
    laboratory scenarios.
 2. Define a minimal inspection vocabulary that distinguishes lifecycle
    identity, logical structure, layout allocation, paint records, and event
@@ -167,45 +167,45 @@ only when repository evidence supports them.
 
 ### High-value ideas
 
-| Recommendation                                                  | Assessment                                                                | Revision                                                                                                                                                                 |
-| --------------------------------------------------------------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Logical inspection                                              | Potentially foundational and differentiating if it answers real questions | Begin with a small, explicitly versioned vocabulary; do not expose a giant internal snapshot                                                                             |
-| Logical identity                                                | Necessary for diffs, selection, traces, tests, and tooling                | Preserve CRC's shipped lifecycle identity rules; separately define whether a tooling identity exists and what lifetime it has                                            |
-| Resolved layout and geometry visibility                         | Directly valuable for ordinary debugging                                  | Include coordinate spaces, clip ancestry, and provenance; distinguish specified, normalized, measured, allocated, and painted facts                                      |
-| Excellent errors                                                | Broad value with relatively low conceptual risk                           | Treat as a continuous quality bar and improve errors from observed failures                                                                                              |
-| Debug overlays                                                  | Fast human value and a useful validation surface                          | Try narrow overlays before committing to a complete inspector                                                                                                            |
-| Representative benchmarks                                       | Essential for architectural decisions and honest positioning              | Extend CRC's existing structural/performance evidence around representative tasks before investing in competitor scorekeeping                                            |
-| Scrolling                                                       | A meaningful application capability and architectural stress test         | Keep deferred until a focused design names the smallest useful slice and resolves clipping, events, focus, and navigation                                                |
-| Text truncation, ellipsis, baselines, and metric predictability | Possible application-level gaps                                           | Start from CRC's shipped wrapping, fit, clipping, multiline measurement, and platform-owned font behavior; do not reopen already-settled text contracts without evidence |
-| Strong types and closed schemas                                 | Supports humans, tools, and generated code                                | Preserve explicit extension points where concrete application needs justify them                                                                                         |
+| Recommendation                                                  | Assessment                                                                | Revision                                                                                                                                                                   |
+| --------------------------------------------------------------- | ------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Logical inspection                                              | Potentially foundational and differentiating if it answers real questions | Begin with a small, explicitly versioned vocabulary; do not expose a giant internal snapshot                                                                               |
+| Logical identity                                                | Necessary for diffs, selection, traces, tests, and tooling                | Preserve Pibbl's shipped lifecycle identity rules; separately define whether a tooling identity exists and what lifetime it has                                            |
+| Resolved layout and geometry visibility                         | Directly valuable for ordinary debugging                                  | Include coordinate spaces, clip ancestry, and provenance; distinguish specified, normalized, measured, allocated, and painted facts                                        |
+| Excellent errors                                                | Broad value with relatively low conceptual risk                           | Treat as a continuous quality bar and improve errors from observed failures                                                                                                |
+| Debug overlays                                                  | Fast human value and a useful validation surface                          | Try narrow overlays before committing to a complete inspector                                                                                                              |
+| Representative benchmarks                                       | Essential for architectural decisions and honest positioning              | Extend Pibbl's existing structural/performance evidence around representative tasks before investing in competitor scorekeeping                                            |
+| Scrolling                                                       | A meaningful application capability and architectural stress test         | Keep deferred until a focused design names the smallest useful slice and resolves clipping, events, focus, and navigation                                                  |
+| Text truncation, ellipsis, baselines, and metric predictability | Possible application-level gaps                                           | Start from Pibbl's shipped wrapping, fit, clipping, multiline measurement, and platform-owned font behavior; do not reopen already-settled text contracts without evidence |
+| Strong types and closed schemas                                 | Supports humans, tools, and generated code                                | Preserve explicit extension points where concrete application needs justify them                                                                                           |
 
 ### High-value ideas with dependencies
 
-| Recommendation                         | Dependency or caution                                                                                                                                                  |
-| -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Machine-readable diagnostics           | Requires reliable facts, provenance, severity rules, and a way to prevent warning noise                                                                                |
-| Public semantic queries and assertions | Must justify a public surface beyond CRC's existing internal semantic/geometry assertions and exact public-API scenario evidence                                       |
-| Runtime explanations                   | Requires scoped instrumentation of measurement, layout, invalidation, hit testing, and focus resolution                                                                |
-| Scene/layout DevTools                  | Requires an inspection protocol, selection semantics, and low-overhead snapshots or subscriptions                                                                      |
-| Lightweight semantic metadata          | Requires concrete accessibility and testing use cases so CRC does not invent an incomplete pseudo-DOM                                                                  |
-| Accessibility bridge                   | Requires semantics, focus/keyboard behavior, ownership rules, and testing with actual assistive technologies; companion DOM alone does not guarantee accessibility     |
-| Editable text                          | Requires a coherent adapter around CRC's existing editing/composition and clipboard event facades plus caret, selection geometry, focus, IME, and platform integration |
+| Recommendation                         | Dependency or caution                                                                                                                                                    |
+| -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Machine-readable diagnostics           | Requires reliable facts, provenance, severity rules, and a way to prevent warning noise                                                                                  |
+| Public semantic queries and assertions | Must justify a public surface beyond Pibbl's existing internal semantic/geometry assertions and exact public-API scenario evidence                                       |
+| Runtime explanations                   | Requires scoped instrumentation of measurement, layout, invalidation, hit testing, and focus resolution                                                                  |
+| Scene/layout DevTools                  | Requires an inspection protocol, selection semantics, and low-overhead snapshots or subscriptions                                                                        |
+| Lightweight semantic metadata          | Requires concrete accessibility and testing use cases so Pibbl does not invent an incomplete pseudo-DOM                                                                  |
+| Accessibility bridge                   | Requires semantics, focus/keyboard behavior, ownership rules, and testing with actual assistive technologies; companion DOM alone does not guarantee accessibility       |
+| Editable text                          | Requires a coherent adapter around Pibbl's existing editing/composition and clipboard event facades plus caret, selection geometry, focus, IME, and platform integration |
 
 ### Questionable ideas or framing
 
-| Original idea                                 | Concern                                                                                                                                      | Better framing                                                                                                                               |
-| --------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| `controller.inspect()` returns everything     | A convenient dump can leak private structure, become expensive, expose sensitive text/props, and create an accidental compatibility contract | Explore a capability-versioned inspection boundary with filters, redaction, and explicit stability levels                                    |
-| “Agent feedback loop” as a roadmap pillar     | It over-specializes general developer infrastructure and risks optimizing for transient tool conventions                                     | Build a developer feedback loop that is structured enough for automation                                                                     |
-| Diagnostics as a large warning catalog        | Static warning lists can become noisy, costly, or misleading                                                                                 | Start with a few high-confidence diagnoses linked to evidence and remediation                                                                |
-| Jest-style matchers as the test foundation    | Matchers prematurely bind the model to one test runner and naming scheme                                                                     | First determine whether reusable queries are needed; keep adapters thin                                                                      |
-| Comparative benchmarks against many libraries | Cross-library tests can reward unnatural implementations and consume substantial maintenance                                                 | First establish CRC budgets and regressions on representative applications; compare externally only where workloads are genuinely equivalent |
-| “Application runtime” as settled positioning  | The phrase may be accurate but too abstract for users                                                                                        | Treat it as an internal category hypothesis and test the language with actual users                                                          |
-| Strict rejection everywhere                   | Excessive closedness can block legitimate custom rendering and extension                                                                     | Be strict at stable boundaries while retaining deliberate, contained extension points such as `definePrimitive`                              |
+| Original idea                                 | Concern                                                                                                                                      | Better framing                                                                                                                                 |
+| --------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `controller.inspect()` returns everything     | A convenient dump can leak private structure, become expensive, expose sensitive text/props, and create an accidental compatibility contract | Explore a capability-versioned inspection boundary with filters, redaction, and explicit stability levels                                      |
+| “Agent feedback loop” as a roadmap pillar     | It over-specializes general developer infrastructure and risks optimizing for transient tool conventions                                     | Build a developer feedback loop that is structured enough for automation                                                                       |
+| Diagnostics as a large warning catalog        | Static warning lists can become noisy, costly, or misleading                                                                                 | Start with a few high-confidence diagnoses linked to evidence and remediation                                                                  |
+| Jest-style matchers as the test foundation    | Matchers prematurely bind the model to one test runner and naming scheme                                                                     | First determine whether reusable queries are needed; keep adapters thin                                                                        |
+| Comparative benchmarks against many libraries | Cross-library tests can reward unnatural implementations and consume substantial maintenance                                                 | First establish Pibbl budgets and regressions on representative applications; compare externally only where workloads are genuinely equivalent |
+| “Application runtime” as settled positioning  | The phrase may be accurate but too abstract for users                                                                                        | Treat it as an internal category hypothesis and test the language with actual users                                                            |
+| Strict rejection everywhere                   | Excessive closedness can block legitimate custom rendering and extension                                                                     | Be strict at stable boundaries while retaining deliberate, contained extension points such as `definePrimitive`                                |
 
 ### Premature or deferred ideas
 
-- **Serializable declarative CRC format.** This risks freezing component,
+- **Serializable declarative Pibbl format.** This risks freezing component,
   registry, style, and security models before a concrete persistence use case
   exists.
 - **MCP-specific tools.** Any future agent protocol should sit over a
@@ -223,12 +223,12 @@ only when repository evidence supports them.
 
 ### Scope cautions
 
-CRC should not pursue particle or physics systems, a massive primitive catalog,
+Pibbl should not pursue particle or physics systems, a massive primitive catalog,
 complete CSS/SVG compatibility, a public mutable scene graph, or parity features
 whose main purpose is competitive checklists. Broad renderer replacement should
 also require compelling evidence. This does not pre-judge focused acceleration
 experiments or approved isolated-rendering designs; the relevant question is
-whether they improve CRC's chosen application workloads without compromising
+whether they improve Pibbl's chosen application workloads without compromising
 its contracts.
 
 ## Missing foundations and questions
@@ -238,7 +238,7 @@ foundations needed to make them trustworthy.
 
 ### 1. Representative applications and developer tasks
 
-Start with CRC's existing learning scenarios and deterministic laboratories.
+Start with Pibbl's existing learning scenarios and deterministic laboratories.
 Select a small set that collectively exercises:
 
 - nested layout, text, clipping, filters, and frequent updates;
@@ -250,7 +250,7 @@ clipped”—not merely whether a field appears in a snapshot.
 
 ### 2. Determinism and reproducibility
 
-CRC already prefers deterministic structural and ownership evidence. A tooling
+Pibbl already prefers deterministic structural and ownership evidence. A tooling
 proposal must additionally document nondeterminism from fonts, device pixel
 ratio, clocks, platform text metrics, decoded assets, and browser capabilities.
 Decide which logical outputs can be stabilized and which require environmental
@@ -258,7 +258,7 @@ metadata or tolerances.
 
 ### 3. Explanatory provenance
 
-A static scene answers “what.” Hard bugs often require “why.” CRC could
+A static scene answers “what.” Hard bugs often require “why.” Pibbl could
 experiment with associating a resolved fact with selected causes:
 
 - supplied style, normalization, or default;
@@ -275,7 +275,7 @@ change the performance and memory behavior being observed.
 
 ### 4. Automated execution boundary
 
-CRC already drives public scenarios headlessly and asserts semantic state and
+Pibbl already drives public scenarios headlessly and asserts semantic state and
 geometry. What it lacks is a promised public input-injection or general tooling
 adapter. Before creating one, identify consumers that cannot use the existing
 test laboratory and define font/asset readiness, controlled time and animation,
@@ -302,7 +302,7 @@ applications most likely to need it.
 
 ### 7. Adoption and migration
 
-CRC's lifecycle identity is currently derived from parent path,
+Pibbl's lifecycle identity is currently derived from parent path,
 component-function identity, and optional sibling key; keys do not preserve
 identity across parents. Decide whether tooling observes that identity, creates
 a separate identity, or needs neither. Also decide how inspection behaves when
@@ -349,7 +349,7 @@ questions an inspection experiment must answer.
 
 ### Stage 1 — Test a minimum observability spine
 
-**Question:** Can CRC reveal useful logical state without retaining drawing
+**Question:** Can Pibbl reveal useful logical state without retaining drawing
 commands or freezing internals?
 
 - Define the relationship among lifecycle identity, logical components,
@@ -413,7 +413,7 @@ demonstrates value beyond a synchronized hidden tree.
 
 ### Horizon — Broader capabilities and integrations
 
-Only after the runtime and tooling boundaries prove useful and stable should CRC
+Only after the runtime and tooling boundaries prove useful and stable should Pibbl
 consider serialized descriptions, remote rendering, visual editors, broad IDE
 integrations, or protocol-specific agent tools. Each should begin with a named
 consumer and an experiment, not a generalized platform build.
@@ -435,21 +435,21 @@ value. A safer conceptual boundary to investigate has four layers:
 
 The API shape remains open. One method with options, a session object, or a
 protocol adapter should be compared only after experiments measure snapshot
-size, query frequency, instrumentation cost, and compatibility with CRC's
+size, query frequency, instrumentation cost, and compatibility with Pibbl's
 immediate-mode traversal.
 
 ## Experiments and decision criteria
 
-| Experiment                     | Question                                                        | Smallest credible test                                              | Success signal                                                         | Failure or redirect signal                                        |
-| ------------------------------ | --------------------------------------------------------------- | ------------------------------------------------------------------- | ---------------------------------------------------------------------- | ----------------------------------------------------------------- |
-| Debug-task comparison          | Does logical inspection save meaningful time?                   | Reproduce 5–10 layout/interaction bugs with and without a prototype | Faster correct diagnoses and fewer screenshot-only guesses             | Fields accumulate but do not help users reach causes              |
-| Inspection-boundary prototype  | Can a useful model avoid mirroring internals?                   | Implement canonical facts for one reference scenario                | Vocabulary survives a relevant internal refactor                       | Consumers require private nodes or implementation-specific fields |
-| Instrumentation budget         | Is observability affordable?                                    | Measure disabled, enabled-idle, and active-query modes              | Negligible production cost and bounded development overhead            | Always-on bookkeeping materially changes target workloads         |
-| Deterministic logical snapshot | Can logical output be reproduced?                               | Repeat runs across controlled and differing environments            | Stable core facts and documented environment-dependent fields          | Font, timing, or platform differences dominate the output         |
-| Diagnostic precision           | Can CRC explain a few problems reliably?                        | Overflow, zero-area hit target, and clipped-away content            | Low false-positive rate and actionable evidence                        | Heuristics create noise or prescribe incorrect fixes              |
-| Scrolling slice                | Does scrolling unlock a target application and fit CRC's model? | One-axis clipped container with pointer, wheel, and focus behavior  | Reference scenario becomes practical and transforms remain inspectable | Nested input/focus semantics require a different abstraction      |
-| Semantic model                 | Can one small model serve tests and accessibility?              | Button, checkbox, list/tree item, and value-control scenarios       | Concepts work across consumers with clear fallbacks                    | Consumer needs conflict or recreate large DOM/ARIA semantics      |
-| Automation client              | Is the surface generally machine-usable?                        | A small client diagnoses and verifies several seeded bugs           | Uses general queries with no CRC-internal knowledge                    | Requires bespoke prompts, screenshots, or protocol-specific hooks |
+| Experiment                     | Question                                                          | Smallest credible test                                              | Success signal                                                         | Failure or redirect signal                                        |
+| ------------------------------ | ----------------------------------------------------------------- | ------------------------------------------------------------------- | ---------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| Debug-task comparison          | Does logical inspection save meaningful time?                     | Reproduce 5–10 layout/interaction bugs with and without a prototype | Faster correct diagnoses and fewer screenshot-only guesses             | Fields accumulate but do not help users reach causes              |
+| Inspection-boundary prototype  | Can a useful model avoid mirroring internals?                     | Implement canonical facts for one reference scenario                | Vocabulary survives a relevant internal refactor                       | Consumers require private nodes or implementation-specific fields |
+| Instrumentation budget         | Is observability affordable?                                      | Measure disabled, enabled-idle, and active-query modes              | Negligible production cost and bounded development overhead            | Always-on bookkeeping materially changes target workloads         |
+| Deterministic logical snapshot | Can logical output be reproduced?                                 | Repeat runs across controlled and differing environments            | Stable core facts and documented environment-dependent fields          | Font, timing, or platform differences dominate the output         |
+| Diagnostic precision           | Can Pibbl explain a few problems reliably?                        | Overflow, zero-area hit target, and clipped-away content            | Low false-positive rate and actionable evidence                        | Heuristics create noise or prescribe incorrect fixes              |
+| Scrolling slice                | Does scrolling unlock a target application and fit Pibbl's model? | One-axis clipped container with pointer, wheel, and focus behavior  | Reference scenario becomes practical and transforms remain inspectable | Nested input/focus semantics require a different abstraction      |
+| Semantic model                 | Can one small model serve tests and accessibility?                | Button, checkbox, list/tree item, and value-control scenarios       | Concepts work across consumers with clear fallbacks                    | Consumer needs conflict or recreate large DOM/ARIA semantics      |
+| Automation client              | Is the surface generally machine-usable?                          | A small client diagnoses and verifies several seeded bugs           | Uses general queries with no Pibbl-internal knowledge                  | Requires bespoke prompts, screenshots, or protocol-specific hooks |
 
 ## Measures of progress
 
@@ -467,14 +467,14 @@ measures include:
 - usability for human developers and protocol-neutral automated clients.
 
 Any competitor comparison should be subordinate to these measures. The goal is
-to understand CRC's useful performance envelope, not manufacture universal
+to understand Pibbl's useful performance envelope, not manufacture universal
 wins.
 
 ## Open questions
 
 ### Product and positioning
 
-- Which application categories are already choosing CRC, and what jobs are they
+- Which application categories are already choosing Pibbl, and what jobs are they
   hiring it to do?
 - Is “functional application runtime for Canvas 2D” immediately understandable
   to intended users?
@@ -514,7 +514,7 @@ wins.
 - Which logical facts can be exact across platforms, and which require
   tolerances?
 - How should existing test-lab drivers relate to any public tooling adapter?
-- What belongs in CRC core versus a testing or tooling package?
+- What belongs in Pibbl core versus a testing or tooling package?
 - How are fonts, images, animation clocks, device pixel ratio, and async assets
   controlled for repeatable tooling output?
 
@@ -535,7 +535,7 @@ wins.
   scrolling, virtualization, or accessibility later?
 - Is editable text a core primitive, an adapter around a DOM control, or a
   higher-level package?
-- Which additional text guarantees can CRC realistically make across
+- Which additional text guarantees can Pibbl realistically make across
   platforms?
 
 ## Decision policy
@@ -560,9 +560,9 @@ this strategy as a task tracker.
 | Date       | Decision                                                                                                                                  | Status   | Rationale                                                                                                    | Revisit trigger                                                 |
 | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------- |
 | 2026-09-09 | Record this as non-normative repository guidance rather than an active roadmap                                                            | Accepted | Keeps the ideas discoverable without authorizing work or overriding shipped contracts and explicit deferrals | Project-planning workflow fails to surface it when relevant     |
-| 2026-09-09 | Frame observability, determinism, and debuggability as a possible differentiator; treat agent use as a beneficiary, not the sole identity | Proposed | Preserves broad developer value and avoids tying CRC to a transient client category                          | Product evidence contradicts the framing                        |
+| 2026-09-09 | Frame observability, determinism, and debuggability as a possible differentiator; treat agent use as a beneficiary, not the sole identity | Proposed | Preserves broad developer value and avoids tying Pibbl to a transient client category                        | Product evidence contradicts the framing                        |
 | 2026-09-09 | Explore a minimal inspection boundary rather than a comprehensive runtime dump                                                            | Proposed | Reduces accidental coupling and lets task evidence shape any contract                                        | A prototype cannot answer key tasks without broader exposure    |
-| 2026-09-09 | Reuse existing scenarios and evidence before creating a separate proving platform                                                         | Proposed | CRC already has public scenarios, headless driving, semantic/geometry assertions, and structural checks      | Existing fixtures cannot represent the selected debugging tasks |
+| 2026-09-09 | Reuse existing scenarios and evidence before creating a separate proving platform                                                         | Proposed | Pibbl already has public scenarios, headless driving, semantic/geometry assertions, and structural checks    | Existing fixtures cannot represent the selected debugging tasks |
 | 2026-09-09 | Keep scrolling and display-text gaps available as parallel validation candidates                                                          | Proposed | Application work can test product usefulness and stress observability concepts                               | An approved plan establishes a different dependency order       |
 | 2026-09-09 | Defer serialization and protocol-specific agent tooling                                                                                   | Proposed | Both could freeze immature abstractions                                                                      | A concrete near-term consumer supplies requirements             |
 
@@ -596,9 +596,9 @@ decision-log entry, and record:
 
 ## Summary recommendation
 
-CRC should consider observability as an architectural advantage, but earn any
+Pibbl should consider observability as an architectural advantage, but earn any
 larger platform one layer at a time. The immediate strategic question is not
 whether to promise a universal inspection API, agent platform, or complete
 DevTools suite. It is whether a small, stable set of logical facts and
-explanations would make real CRC applications easier to build and debug while
+explanations would make real Pibbl applications easier to build and debug while
 preserving the immediate-mode runtime and current public contracts.

@@ -31,14 +31,14 @@ transforms, and independent native/SVG conversion.
 ## Operations at a glance
 
 This is the operation map for editable `PathGeometry`. All functions below are
-public exports of `@crc/core`; methods belong to a geometry instance.
+public exports of `@pibbl/core`; methods belong to a geometry instance.
 
 ### Build and edit
 
 | Goal                                | API                                                                  | Result                                                |
 | ----------------------------------- | -------------------------------------------------------------------- | ----------------------------------------------------- |
 | Draw contours                       | `moveTo`, `lineTo`, `quadraticCurveTo`, `bezierCurveTo`, `closePath` | Mutates this geometry; returns void                   |
-| Add curved and rectangular shapes   | `arc`, `arcTo`, `ellipse`, `geometry.rect()`, `roundRect`                       | Mutates this geometry; returns void                   |
+| Add curved and rectangular shapes   | `arc`, `arcTo`, `ellipse`, `geometry.rect()`, `roundRect`            | Mutates this geometry; returns void                   |
 | Copy without sharing edits          | `new PathGeometry(source)`, `clone()`                                | Independent `PathGeometry`                            |
 | Append another path                 | `addPath(other, matrix?)`                                            | Mutates this geometry; optionally transforms the copy |
 | Inspect segments                    | `segmentCount`, `getSegment(index)`, iteration                       | Count or independent segment values                   |
@@ -57,16 +57,16 @@ independent `PathGeometry`. `composeTransforms(...)` combines mappings left to
 right before that final approximation. A mapping's `mapPoint(...)` also maps
 individual points, useful for handles and annotations.
 
-| Goal                                                         | API                                    | Working example                                                   |
-| ------------------------------------------------------------ | -------------------------------------- | ----------------------------------------------------------------- |
-| Translate, rotate, scale, skew, or reflect in place          | `geometry.transform(matrix)`           | [Editable geometry](#/examples/drawing/path-geometry)            |
-| Apply an affine mapping without changing the original        | `affineTransform` with `transformPath` | [Transform examples](path-transforms.md)              |
-| Fit into four corners, using bilinear or perspective mapping | `quadTransform`                        | [Interactive quad warp](#/examples/drawing/path-warp) |
+| Goal                                                         | API                                    | Working example                                          |
+| ------------------------------------------------------------ | -------------------------------------- | -------------------------------------------------------- |
+| Translate, rotate, scale, skew, or reflect in place          | `geometry.transform(matrix)`           | [Editable geometry](#/examples/drawing/path-geometry)    |
+| Apply an affine mapping without changing the original        | `affineTransform` with `transformPath` | [Transform examples](path-transforms.md)                 |
+| Fit into four corners, using bilinear or perspective mapping | `quadTransform`                        | [Interactive quad warp](#/examples/drawing/path-warp)    |
 | Stretch between two or more guide paths                      | `envelopeTransform`                    | [Multi-guide envelope](#/examples/drawing/text-envelope) |
-| Warp through a grid of curved boundaries                     | `meshTransform`                        | [Mesh reference](path-transforms.md#meshes)                        |
-| Bend around a circular arc                                   | `arcBendTransform`                     | [Arc and path bending](#/examples/drawing/path-bending)            |
-| Bend along a smooth guide path                               | `pathBendTransform`                    | [Arc and path bending](#/examples/drawing/path-bending)            |
-| Combine mappings and apply them once                         | `composeTransforms`, `transformPath`   | [Transform examples](path-transforms.md)              |
+| Warp through a grid of curved boundaries                     | `meshTransform`                        | [Mesh reference](path-transforms.md#meshes)              |
+| Bend around a circular arc                                   | `arcBendTransform`                     | [Arc and path bending](#/examples/drawing/path-bending)  |
+| Bend along a smooth guide path                               | `pathBendTransform`                    | [Arc and path bending](#/examples/drawing/path-bending)  |
+| Combine mappings and apply them once                         | `composeTransforms`, `transformPath`   | [Transform examples](path-transforms.md)                 |
 
 See [composable path transforms](path-transforms.md) for source rectangles,
 guide correspondence, mesh boundaries, tolerance, and domain limits. See
@@ -94,9 +94,9 @@ Geometry edits do not schedule rendering: notify a consumed signal after editing
 Changing `Path` or `Group` presentation transforms does not rewrite the source
 geometry. Pixel filters likewise do not edit its segments.
 
-Native `Path2D` is opaque: CRC cannot turn it back into editable geometry. The
+Native `Path2D` is opaque: Pibbl cannot turn it back into editable geometry. The
 `create*Path` factories return native paths, not `PathGeometry`. Start with the
-builder when later editing or warping is needed. Text outlines from `@crc/text`
+builder when later editing or warping is needed. Text outlines from `@pibbl/text`
 can also provide editable geometry; see [text geometry](text-geometry.md).
 Boolean union/intersection/subtraction, equal-distance resampling, and curve
 fitting are not provided by this surface.
@@ -107,7 +107,7 @@ for a larger composition using the same mapping APIs.
 ## Smallest construction example
 
 ```ts
-import { PathGeometry, toPath2D, toSvgPathData } from "@crc/core";
+import { PathGeometry, toPath2D, toSvgPathData } from "@pibbl/core";
 
 const geometry = new PathGeometry();
 geometry.moveTo(10, 10);
@@ -172,7 +172,7 @@ export traversal-preserving lines. Turning-point stroke joins can differ from a
 browser's degenerate native ellipse representation.
 
 Path, Clip, explicit event-target and cursor/event-hook inputs accept geometry
-alongside native Path2D. CRC privately caches by identity and saved revision;
+alongside native Path2D. Pibbl privately caches by identity and saved revision;
 paint, clipping and interaction use the same native snapshot. Already-rendered
 hit regions stay unchanged until their consumer renders again. Browser canvas
 methods still require `toPath2D` output. Particle path assets snapshot geometry
@@ -181,7 +181,7 @@ when defining an effect, consistent with immutable effect ownership.
 ## Geometry utilities
 
 ```ts
-import { flattenPath, simplifyPath, subdividePath } from "@crc/core";
+import { flattenPath, simplifyPath, subdividePath } from "@pibbl/core";
 
 const lines = flattenPath(geometry, { tolerance: 0.25 });
 const reduced = simplifyPath(lines, { tolerance: 0.5 });

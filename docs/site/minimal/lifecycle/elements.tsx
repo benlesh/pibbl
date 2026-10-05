@@ -1,29 +1,29 @@
-/** @jsxImportSource @crc/core */
+/** @jsxImportSource @pibbl/core */
 import {
-  crc,
+  pibbl,
   createElement,
   Fragment,
   Text,
-  type CRCComponent,
-  type CRCElement,
-  type CRCElementType,
-  type CRCKey,
-  type CRCNode,
-  type CRCNodeInput,
-  type CRCContainerChild,
-  type CRCEmptyNode,
-  type CRCTextChild,
-  type CRCTextInput,
-  type CRCRenderResult,
-} from "@crc/core";
+  type PibblComponent,
+  type PibblElement,
+  type PibblElementType,
+  type PibblKey,
+  type PibblNode,
+  type PibblNodeInput,
+  type PibblContainerChild,
+  type PibblEmptyNode,
+  type PibblTextChild,
+  type PibblTextInput,
+  type PibblRenderResult,
+} from "@pibbl/core";
 
 const canvas = document.createElement("canvas");
 canvas.width = 320;
 canvas.height = 120;
 document.body.append(canvas);
-const Label: CRCComponent<{ value: string }> = ({ value }): CRCRenderResult => {
-  const words: CRCTextChild = ["Hello ", value];
-  const text: CRCTextInput = words;
+const Label: PibblComponent<{ value: string }> = ({ value }): PibblRenderResult => {
+  const words: PibblTextChild = ["Hello ", value];
+  const text: PibblTextInput = words;
   return (
     <Text
       style={{ left: 20, top: 50, font: "24px sans-serif", fill: "#267d7c" }}
@@ -32,15 +32,15 @@ const Label: CRCComponent<{ value: string }> = ({ value }): CRCRenderResult => {
     </Text>
   );
 };
-const component: CRCElementType<{ value: string }> = Label;
-const key: CRCKey = "greeting";
-const element: CRCElement<{ value: string }> = createElement(component, {
-  value: "CRC",
+const component: PibblElementType<{ value: string }> = Label;
+const key: PibblKey = "greeting";
+const element: PibblElement<{ value: string }> = createElement(component, {
+  value: "Pibbl",
   key,
 });
-const empty: CRCEmptyNode = null;
-const nodes: CRCNode = [element, empty];
-const input: CRCNodeInput = nodes;
-const children: CRCContainerChild = input;
-const controller = crc(canvas, <Fragment>{children}</Fragment>);
+const empty: PibblEmptyNode = null;
+const nodes: PibblNode = [element, empty];
+const input: PibblNodeInput = nodes;
+const children: PibblContainerChild = input;
+const controller = pibbl(canvas, <Fragment>{children}</Fragment>);
 window.addEventListener("pagehide", () => controller.dispose(), { once: true });

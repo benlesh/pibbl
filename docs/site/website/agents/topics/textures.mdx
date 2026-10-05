@@ -8,7 +8,7 @@ kind: agent-guide
 
 Start with [procedural textures](/guides/procedural-textures/) and [texture resource signatures](/reference/types/texture-resources/). Use the [native-button recipe](/guides/native-button/) for a complete HTML/CSS/JavaScript integration, or [Stirred Ink](/examples/stirred-ink/) for a complete texture/physics composition. Both pages expand the actual source and link to running output. The button requires no image assets; the advanced example also uses procedural content.
 
-`defineTexture` and `useTexture` are core APIs. Optional built-in recipes are imported from `@crc/core/textures`. Creating a definition or importing a recipe is inert. A mounted `useTexture` hook owns the live producer. Do not create a new root or simulation for each hover event.
+`defineTexture` and `useTexture` are core APIs. Optional built-in recipes are imported from `@pibbl/core/textures`. Creating a definition or importing a recipe is inert. A mounted `useTexture` hook owns the live producer. Do not create a new root or simulation for each hover event.
 
 ## Ownership, publication, and sharing
 
@@ -41,7 +41,7 @@ The click effect uses radial paint and stir messages. It is an ink disturbance, 
 
 ## Custom producer boundaries
 
-Recipe callbacks are synchronous and cannot call CRC hooks. Draw through the supplied context only during its lifecycle. `invalidate()` requests new source pixels; `requestFrame()` asks CRC for continued advancement. Stop requesting frames when idle. Do not start a recipe-owned `requestAnimationFrame` loop. Release application allocations in the producer's dispose callback.
+Recipe callbacks are synchronous and cannot call Pibbl hooks. Draw through the supplied context only during its lifecycle. `invalidate()` requests new source pixels; `requestFrame()` asks Pibbl for continued advancement. Stop requesting frames when idle. Do not start a recipe-owned `requestAnimationFrame` loop. Release application allocations in the producer's dispose callback.
 
 ## Verification
 

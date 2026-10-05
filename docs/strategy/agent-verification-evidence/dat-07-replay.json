@@ -509,7 +509,7 @@
       "actionId": "zero-missing-invalid"
     }
   ],
-  "schema": "crc-viz-replay/1",
+  "schema": "pibbl-viz-replay/1",
   "status": "pass",
   "url": "http://127.0.0.1:5199/#/testing/viz-hover-lab",
   "node": "v24.15.0",
@@ -4385,7 +4385,7 @@
   "droppedErrors": 0,
   "checkpointRunId": "e8f8d572-d292-4244-a7d4-74113c07b9c7",
   "run": {
-    "schema": "crc-replay-run/1",
+    "schema": "pibbl-replay-run/1",
     "runId": "e8f8d572-d292-4244-a7d4-74113c07b9c7",
     "kind": "viz",
     "startedAt": "2026-10-02T02:48:27.256Z",
@@ -4431,10 +4431,10 @@
       ],
       "cwd": "/Users/benlesh/GitHub/crc",
       "environment": {
-        "CRC_VERIFY_DENSITY": "1"
+        "PIBBL_VERIFY_DENSITY": "1"
       },
       "unsetEnvironment": [
-        "CRC_VERIFY_BROWSER_ENDPOINT"
+        "PIBBL_VERIFY_BROWSER_ENDPOINT"
       ],
       "outputPolicy": "fresh-default-directory",
       "preconditions": [
@@ -4443,14 +4443,14 @@
       ]
     },
     "toolIdentity": {
-      "schema": "crc-replay-tool-identity/1",
+      "schema": "pibbl-replay-tool-identity/1",
       "revision": "c838c434159efe602583f1cc2bf5383b57c15db5",
       "sha256": "b67b39289a51688f8060863a4da95bdc7aa9813a5d0bffcd07150e3fae0856c2",
       "files": 11,
       "scope": "Replay and declared local dependencies on disk; not loaded-module or installed-dependency attestation."
     },
     "toolIdentityAfter": {
-      "schema": "crc-replay-tool-identity/1",
+      "schema": "pibbl-replay-tool-identity/1",
       "revision": "c838c434159efe602583f1cc2bf5383b57c15db5",
       "sha256": "b67b39289a51688f8060863a4da95bdc7aa9813a5d0bffcd07150e3fae0856c2",
       "files": 11,
@@ -4458,14 +4458,14 @@
     }
   },
   "expectedIdentity": {
-    "schema": "crc-targeting-identity/1",
+    "schema": "pibbl-targeting-identity/1",
     "revision": "c838c434159efe602583f1cc2bf5383b57c15db5",
     "sha256": "1cb5e62869969505a0f4a4a0c3b817f13bd135fe3e17b1b8cfd6219526f7f88e",
     "files": 216
   },
   "browser": "151.0.7922.34",
   "servedIdentity": {
-    "schema": "crc-targeting-identity/1",
+    "schema": "pibbl-targeting-identity/1",
     "revision": "c838c434159efe602583f1cc2bf5383b57c15db5",
     "sha256": "1cb5e62869969505a0f4a4a0c3b817f13bd135fe3e17b1b8cfd6219526f7f88e",
     "files": 216

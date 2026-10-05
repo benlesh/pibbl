@@ -1,4 +1,4 @@
-import { emberSimulation, resolveEmbersPhysics, type CRCEmbersPhysicsOptions } from './embers-physics.js';
+import { emberSimulation, resolveEmbersPhysics, type PibblEmbersPhysicsOptions } from './embers-physics.js';
 import { lazyTransitionKernel } from './wasm/kernel.js';
 import { bytes } from './wasm/embers-bytes.js';
 const createKernel = lazyTransitionKernel(bytes, 2);
@@ -7,54 +7,54 @@ import { opacity } from '../../filters/native.js';
 import { filterBoundaryExecutor, type CustomPreparedFilter } from '../../filters/filter-executor.js';
 import { GLOBAL_STATE } from '../global-state.js';
 import { getOptionalService } from '../optional-services.js';
-import { CRC_FILTER_EXECUTOR, type CRCFilterExecutor } from '../style/filter-types.js';
-import type { CRCInstance } from '../types.js';
-import { defineTransitionEffect, type CRCTransitionEffect } from './fade.js';
+import { PIBBL_FILTER_EXECUTOR, type PibblFilterExecutor } from '../style/filter-types.js';
+import type { PibblInstance } from '../types.js';
+import { defineTransitionEffect, type PibblTransitionEffect } from './fade.js';
 
 /**
  * Appearance, motion, and timing controls for an ember visibility transition.
  *
- * @see {@link CRCEmbersPhysicsOptions}
+ * @see {@link PibblEmbersPhysicsOptions}
  * @see {@link embers}
  */
-export interface CRCEmbersOptions {
+export interface PibblEmbersOptions {
   /** Local coordinates enclosing the subject; the burn travels upward through this area. */
   readonly region: Readonly<{
     /**
      * Horizontal coordinate or displacement in the containing coordinate system. See
-     * {@link CRCEmbersOptions}.
+     * {@link PibblEmbersOptions}.
      */
     x: number;
     /**
      * Vertical coordinate or displacement in the containing coordinate system. See
-     * {@link CRCEmbersOptions}.
+     * {@link PibblEmbersOptions}.
      */
     y: number;
     /**
      * Horizontal extent in the units of the containing geometry or surface. See
-     * {@link CRCEmbersOptions}.
+     * {@link PibblEmbersOptions}.
      */
     width: number;
     /**
      * Vertical extent in the units of the containing geometry or surface. See
-     * {@link CRCEmbersOptions}.
+     * {@link PibblEmbersOptions}.
      */
     height: number;
   }>;
   /**
    * Depth of the darkened char region along the ember transition boundary. See
-   * {@link CRCEmbersOptions}.
+   * {@link PibblEmbersOptions}.
    */
   readonly charDepth?: number;
   /**
-   * Width of the glowing burn region along the transition boundary. See {@link CRCEmbersOptions}.
+   * Width of the glowing burn region along the transition boundary. See {@link PibblEmbersOptions}.
    */
   readonly burnWidth?: number;
   /** Horizontal drift in local units; negative blows left. */
   readonly wind?: number;
   /**
    * Seed used for deterministic sampling or simulation initialization. See
-   * {@link CRCEmbersOptions}.
+   * {@link PibblEmbersOptions}.
    */
   readonly seed?: number;
   /**
@@ -63,14 +63,14 @@ export interface CRCEmbersOptions {
    */
   readonly linger?: number;
   /** Opt-in local force simulation and collision. Requires a positive linger. */
-  readonly physics?: CRCEmbersPhysicsOptions;
+  readonly physics?: PibblEmbersPhysicsOptions;
 }
-const SCRATCH = Symbol('crc.transition.embers');
+const SCRATCH = Symbol('pibbl.transition.embers');
 class EmberSurfaces {
   private surfaces: OffscreenCanvas[] = [];
   used = false;
   private committed = false;
-  constructor(private readonly instance: CRCInstance) {}
+  constructor(private readonly instance: PibblInstance) {}
   beginRender(): void { this.used = false; }
   endRender(success: boolean): void {
     if (success && this.used) { this.committed = true; return; }
@@ -97,13 +97,13 @@ const clamp = (value: number) => Math.max(0, Math.min(1, value));
  * A seeded burn/char front over one captured subtree, with outward drifting fragments.
  *
  * @param options - Ember emission, motion, appearance, and optional collision settings. See
- * {@link CRCEmbersOptions} .
- * @returns An ember transition effect. See {@link CRCTransitionEffect}.
+ * {@link PibblEmbersOptions} .
+ * @returns An ember transition effect. See {@link PibblTransitionEffect}.
  *
- * @see {@link CRCEmbersOptions}
- * @see {@link CRCTransitionEffect}
+ * @see {@link PibblEmbersOptions}
+ * @see {@link PibblTransitionEffect}
  */
-export function embers(options: CRCEmbersOptions): CRCTransitionEffect {
+export function embers(options: PibblEmbersOptions): PibblTransitionEffect {
   const region = Object.freeze({ ...options.region });
   const charDepth = options.charDepth ?? 65, burnWidth = options.burnWidth ?? 12;
   const wind = options.wind ?? 110, seed = options.seed ?? 0, linger = options.linger ?? 700;
@@ -117,15 +117,15 @@ export function embers(options: CRCEmbersOptions): CRCTransitionEffect {
     if (simulation?.disposed) return [opacity({ amount: 0 })];
     if ((!frame.active || !linger) && q === 1) return [];
     if ((!frame.active || !linger) && q === 0) return [opacity({ amount: 0 })];
-    const executor: CRCFilterExecutor = {
+    const executor: PibblFilterExecutor = {
       render: filterBoundaryExecutor.render,
       prepare(): CustomPreparedFilter {
         return {
           executor: filterBoundaryExecutor,
           reverseInfluence: output => ({ ...output }),
           process(source, windows) {
-            const instance = GLOBAL_STATE.currentCRCInstance;
-            if (!instance) throw new Error('Embers requires an active CRC instance.');
+            const instance = GLOBAL_STATE.currentPibblInstance;
+            if (!instance) throw new Error('Embers requires an active Pibbl instance.');
             const scratch = getOptionalService(instance, SCRATCH, () => new EmberSurfaces(instance));
             scratch.used = true;
             const c = scratch.context(0, source.width, source.height);
@@ -220,7 +220,7 @@ export function embers(options: CRCEmbersOptions): CRCTransitionEffect {
         };
       },
     };
-    return [Object.freeze({ [CRC_FILTER_EXECUTOR]: executor })];
+    return [Object.freeze({ [PIBBL_FILTER_EXECUTOR]: executor })];
   };
   return defineTransitionEffect(sampler(createKernel(seed)), linger, physics ? () => {
     const kernel = createPhysicsKernel(seed);

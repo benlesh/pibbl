@@ -1,4 +1,4 @@
-import { batch, signal } from "@crc/core";
+import { batch, signal } from "@pibbl/core";
 import mount from "./learning/composition/viz-points-and-inspection.example.js";
 import type { ScenarioDefinition } from "./types.js";
 export interface VizPointsState {

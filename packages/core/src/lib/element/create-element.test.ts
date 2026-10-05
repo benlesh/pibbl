@@ -11,7 +11,7 @@ import {
   Wedge,
   type ArcProps,
   type ArcStyle,
-  type CRCNode,
+  type PibblNode,
   type CircleProps,
   type CircleStyle,
   type EllipseProps,
@@ -22,11 +22,11 @@ import {
   type WedgeStyle,
 } from '../../index';
 
-function Card(props: { title?: string; children?: CRCNode }): CRCNode {
+function Card(props: { title?: string; children?: PibblNode }): PibblNode {
   return props.children;
 }
 
-function KeyedCard(props: { key: string }): CRCNode {
+function KeyedCard(props: { key: string }): PibblNode {
   return props.key;
 }
 
@@ -35,10 +35,10 @@ type MixedKeyProps =
   | { kind: 'keyed'; key: string };
 type ValidUnionProps = { kind: 'first' } | { kind: 'second'; title?: string };
 
-function MixedKeyCard(_props: MixedKeyProps): CRCNode {
+function MixedKeyCard(_props: MixedKeyProps): PibblNode {
   return undefined;
 }
-function ValidUnionCard(_props: ValidUnionProps): CRCNode {
+function ValidUnionCard(_props: ValidUnionProps): PibblNode {
   return undefined;
 }
 
@@ -48,13 +48,13 @@ type CustomChild =
   | readonly CustomChild[]
   | Iterable<CustomChild>;
 
-function CustomChildCard(_props: { children?: CustomChild }): CRCNode {
+function CustomChildCard(_props: { children?: CustomChild }): PibblNode {
   return undefined;
 }
 
 function CustomScalarChild(
   _props: { children?: { readonly label: string } },
-): CRCNode {
+): PibblNode {
   return undefined;
 }
 
@@ -89,7 +89,7 @@ describe('createElement', () => {
 
     // @ts-expect-error containers reject nonzero raw numbers
     createElement(Group, null, 1);
-    // @ts-expect-error Text rejects CRC element children
+    // @ts-expect-error Text rejects Pibbl element children
     createElement(Text, null, child);
     // @ts-expect-error drawing leaves reject children
     createElement(Rectangle, { style: { width: 10, height: 10 } }, child);
@@ -193,14 +193,14 @@ describe('createElement', () => {
   });
 
   it('reserves numeric keys and omits them from delivered prop types', () => {
-    const element = createElement(Card, { key: 42, title: 'CRC' });
+    const element = createElement(Card, { key: 42, title: 'Pibbl' });
     const nullProps = createElement(Card, null);
     const validUnionNull = createElement(ValidUnionCard, null);
     const validUnionBranch = createElement(ValidUnionCard, { kind: 'second' });
     // @ts-expect-error keys are construction metadata, not component props
     void element.props.key;
     // @ts-expect-error key accepts only string and number values
-    createElement(Card, { key: true, title: 'CRC' });
+    createElement(Card, { key: true, title: 'Pibbl' });
     // @ts-expect-error component props may not declare the reserved key field
     createElement(KeyedCard, null);
     // @ts-expect-error a key in any union member remains reserved
@@ -214,14 +214,14 @@ describe('createElement', () => {
   });
 
   it('creates a branded immutable descriptor with a normalized key', () => {
-    const element = createElement(Card, { key: 42, title: 'CRC' }, 'child');
+    const element = createElement(Card, { key: 42, title: 'Pibbl' }, 'child');
 
     expect(element.type).toBe(Card);
     expect(element.key).toBe('42');
-    expect(element.props).toEqual({ title: 'CRC', children: 'child' });
+    expect(element.props).toEqual({ title: 'Pibbl', children: 'child' });
     expect('key' in element.props).toBe(false);
     expect((element as { $$typeof?: symbol }).$$typeof)
-      .toBe(Symbol.for('@crc/core.element'));
+      .toBe(Symbol.for('@pibbl/core.element'));
     expect(Object.keys(element)).toEqual(['type', 'props', 'key']);
     expect(Object.isFrozen(element)).toBe(import.meta.env.DEV);
     expect(Object.isFrozen(element.props)).toBe(import.meta.env.DEV);
@@ -249,14 +249,14 @@ describe('createElement', () => {
       title: string;
     };
     props.key = 7;
-    props.title = 'CRC';
+    props.title = 'Pibbl';
 
     const defensive = createElement(Card, props);
-    const compiler = createElement(Card, { key: 7, title: 'CRC' });
+    const compiler = createElement(Card, { key: 7, title: 'Pibbl' });
 
     expect(defensive.key).toBe('7');
     expect(compiler.key).toBe('7');
-    expect(defensive.props).toEqual({ title: 'CRC' });
+    expect(defensive.props).toEqual({ title: 'Pibbl' });
     expect('key' in defensive.props).toBe(false);
   });
 

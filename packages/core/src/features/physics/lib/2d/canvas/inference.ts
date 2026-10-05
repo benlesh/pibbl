@@ -15,10 +15,10 @@ import {
   Text,
   VerticalLine,
   Wedge,
-} from "@crc/core";
+} from "@pibbl/core";
 import type {
-  CRCPhysicsShape2D,
-  CRCPhysicsVector2,
+  PibblPhysicsShape2D,
+  PibblPhysicsVector2,
 } from "../../../2d-geometry.js";
 import {
   arcShape2D,
@@ -49,18 +49,18 @@ export interface CanvasColliderInferenceInput2D {
 
 const customShapeResolvers2D = new WeakMap<
   Function,
-  (style: Readonly<Record<PropertyKey, unknown>>) => CRCPhysicsShape2D
+  (style: Readonly<Record<PropertyKey, unknown>>) => PibblPhysicsShape2D
 >();
 
 export function installCustomShapeResolver2D(
   component: Function,
   resolver: (
     style: Readonly<Record<PropertyKey, unknown>>,
-  ) => CRCPhysicsShape2D,
+  ) => PibblPhysicsShape2D,
 ): void {
   if (customShapeResolvers2D.has(component)) {
     throw new Error(
-      "A CRC primitive may have only one physics 2D shape resolver.",
+      "A Pibbl primitive may have only one physics 2D shape resolver.",
     );
   }
   customShapeResolvers2D.set(component, resolver);
@@ -68,7 +68,7 @@ export function installCustomShapeResolver2D(
 
 export function inferCanvasColliderShape2D(
   input: CanvasColliderInferenceInput2D,
-): CRCPhysicsShape2D {
+): PibblPhysicsShape2D {
   const { componentType, componentName, style } = input;
   const customResolver = customShapeResolvers2D.get(componentType);
   if (customResolver) return requireShape(customResolver(style), componentName);
@@ -228,9 +228,9 @@ export function inferCanvasColliderShape2D(
 }
 
 export function bakeCanvasShapeTransform2D(
-  shape: CRCPhysicsShape2D,
+  shape: PibblPhysicsShape2D,
   transform: DOMMatrixReadOnly,
-): CRCPhysicsShape2D {
+): PibblPhysicsShape2D {
   if (isIdentity(transform)) return shape;
   const source = requireShapeRecord2D(shape);
   const local = new DOMMatrix()
@@ -244,7 +244,7 @@ export function bakeCanvasShapeTransform2D(
     transform.e,
     transform.f,
   ]).multiply(local);
-  const parts: CRCPhysicsShape2D[] = [];
+  const parts: PibblPhysicsShape2D[] = [];
   for (const leaf of source.leaves) {
     if (leaf.kind === "segment") {
       parts.push(
@@ -274,7 +274,7 @@ export function bakeCanvasShapeTransform2D(
 function inferSvgPath(
   style: Readonly<Record<PropertyKey, unknown>>,
   componentName: string,
-): CRCPhysicsShape2D {
+): PibblPhysicsShape2D {
   if (typeof style.d !== "string")
     throw explicitShapeError(componentName, "SVG path data is not a string");
   const contours = parseSvgContours(style.d, componentName);
@@ -315,9 +315,9 @@ function inferSvgPath(
 }
 
 function lineShape(
-  source: readonly CRCPhysicsVector2[],
+  source: readonly PibblPhysicsVector2[],
   strokeWidth: number,
-): CRCPhysicsShape2D {
+): PibblPhysicsShape2D {
   if (source.length < 2)
     throw new RangeError("A line collider requires at least two points.");
   if (!Number.isFinite(strokeWidth) || strokeWidth < 0)
@@ -328,10 +328,10 @@ function lineShape(
 }
 
 function shapeFromClosedContour(
-  source: readonly CRCPhysicsVector2[],
+  source: readonly PibblPhysicsVector2[],
   path: string,
   forceCompound = false,
-): CRCPhysicsShape2D {
+): PibblPhysicsShape2D {
   if (!forceCompound) {
     try {
       return polygonShape2D({ points: source });
@@ -385,8 +385,8 @@ function shapeFromClosedContour(
 }
 
 function combineShapes(
-  shapes: readonly CRCPhysicsShape2D[],
-): CRCPhysicsShape2D {
+  shapes: readonly PibblPhysicsShape2D[],
+): PibblPhysicsShape2D {
   if (shapes.length === 1) return shapes[0]!;
   const records = shapes.map(requireShapeRecord2D);
   const leaves = records.flatMap((record) => record.leaves);
@@ -427,7 +427,7 @@ function combineShapes(
 
 function leafContour(
   leaf: ReturnType<typeof requireShapeRecord2D>["leaves"][number],
-): readonly CRCPhysicsVector2[] {
+): readonly PibblPhysicsVector2[] {
   switch (leaf.kind) {
     case "circle":
       return ellipseContour(leaf.center, leaf.radius, leaf.radius, 0);
@@ -507,7 +507,7 @@ function leafContour(
       ];
     }
     case "polygon": {
-      const result: CRCPhysicsVector2[] = [];
+      const result: PibblPhysicsVector2[] = [];
       for (let index = 0; index < leaf.vertices.length; index += 2)
         result.push([leaf.vertices[index]!, leaf.vertices[index + 1]!]);
       return result;
@@ -522,7 +522,7 @@ function ellipseContour(
   radiusX: number,
   radiusY: number,
   rotation: number,
-): readonly CRCPhysicsVector2[] {
+): readonly PibblPhysicsVector2[] {
   const cosine = Math.cos(rotation),
     sine = Math.sin(rotation);
   return Array.from({ length: 32 }, (_, index) => {
@@ -543,7 +543,7 @@ function arcContour(
   start: number,
   end: number,
   steps: number,
-): readonly CRCPhysicsVector2[] {
+): readonly PibblPhysicsVector2[] {
   if (radius === 0) return [[cx, cy]];
   return Array.from({ length: steps + 1 }, (_, index) => {
     const angle = start + ((end - start) * index) / steps;
@@ -557,7 +557,7 @@ function arcContour(
 function transformPoint(
   matrix: DOMMatrixReadOnly,
   point: ArrayLike<number>,
-): CRCPhysicsVector2 {
+): PibblPhysicsVector2 {
   return [
     matrix.a * point[0]! + matrix.c * point[1]! + matrix.e,
     matrix.b * point[0]! + matrix.d * point[1]! + matrix.f,
@@ -576,9 +576,9 @@ function isIdentity(matrix: DOMMatrixReadOnly): boolean {
 }
 
 function roundedContour(
-  source: readonly CRCPhysicsVector2[],
+  source: readonly PibblPhysicsVector2[],
   radii: readonly number[],
-): readonly CRCPhysicsVector2[] {
+): readonly PibblPhysicsVector2[] {
   if (radii.every((radius) => radius === 0))
     return source.map((point) => [point[0], point[1]] as const);
   const corners = source.map((point, index) => {
@@ -623,7 +623,7 @@ function roundedContour(
         )
       : current;
   }, 1);
-  const output: CRCPhysicsVector2[] = [];
+  const output: PibblPhysicsVector2[] = [];
   for (const corner of corners) {
     const demand = corner.demand * scale;
     if (corner.radius === 0 || !Number.isFinite(demand)) {
@@ -645,10 +645,10 @@ function roundedContour(
 }
 
 function appendQuadratic(
-  output: CRCPhysicsVector2[],
-  start: CRCPhysicsVector2,
-  control: CRCPhysicsVector2,
-  end: CRCPhysicsVector2,
+  output: PibblPhysicsVector2[],
+  start: PibblPhysicsVector2,
+  control: PibblPhysicsVector2,
+  end: PibblPhysicsVector2,
   depth: number,
 ): void {
   const midpoint = [
@@ -670,7 +670,7 @@ function appendQuadratic(
 }
 
 interface SvgContour {
-  readonly points: readonly CRCPhysicsVector2[];
+  readonly points: readonly PibblPhysicsVector2[];
   readonly closed: boolean;
 }
 
@@ -681,12 +681,12 @@ function parseSvgContours(
   const tokens =
     data.match(/[a-zA-Z]|[-+]?(?:\d*\.\d+|\d+\.?)(?:[eE][-+]?\d+)?/g) ?? [];
   const contours: SvgContour[] = [];
-  let output: CRCPhysicsVector2[] = [],
+  let output: PibblPhysicsVector2[] = [],
     closed = false,
     command = "",
     index = 0;
-  let current: CRCPhysicsVector2 = [0, 0],
-    start: CRCPhysicsVector2 = [0, 0];
+  let current: PibblPhysicsVector2 = [0, 0],
+    start: PibblPhysicsVector2 = [0, 0];
   const finish = () => {
     if (output.length > 0) contours.push({ points: output, closed });
     output = [];
@@ -707,7 +707,7 @@ function parseSvgContours(
       );
     const relative = command === command.toLowerCase(),
       upper = command.toUpperCase();
-    const point = (x: number, y: number): CRCPhysicsVector2 =>
+    const point = (x: number, y: number): PibblPhysicsVector2 =>
       relative ? [current[0] + x, current[1] + y] : [x, y];
     if (upper === "M") {
       finish();
@@ -754,11 +754,11 @@ function parseSvgContours(
 }
 
 function appendCubic(
-  output: CRCPhysicsVector2[],
-  start: CRCPhysicsVector2,
-  first: CRCPhysicsVector2,
-  second: CRCPhysicsVector2,
-  end: CRCPhysicsVector2,
+  output: PibblPhysicsVector2[],
+  start: PibblPhysicsVector2,
+  first: PibblPhysicsVector2,
+  second: PibblPhysicsVector2,
+  end: PibblPhysicsVector2,
   depth: number,
 ): void {
   const error = Math.max(
@@ -780,15 +780,15 @@ function appendCubic(
 }
 
 function midpointOf(
-  a: CRCPhysicsVector2,
-  b: CRCPhysicsVector2,
-): CRCPhysicsVector2 {
+  a: PibblPhysicsVector2,
+  b: PibblPhysicsVector2,
+): PibblPhysicsVector2 {
   return [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
 }
 function pointLineDistance(
-  point: CRCPhysicsVector2,
-  start: CRCPhysicsVector2,
-  end: CRCPhysicsVector2,
+  point: PibblPhysicsVector2,
+  start: PibblPhysicsVector2,
+  end: PibblPhysicsVector2,
 ): number {
   const dx = end[0] - start[0],
     dy = end[1] - start[1],
@@ -833,7 +833,7 @@ function regularPolygonRadius(
     );
   throw new TypeError(`${componentName} requires one resolved size.`);
 }
-function points(value: unknown, path: string): readonly CRCPhysicsVector2[] {
+function points(value: unknown, path: string): readonly PibblPhysicsVector2[] {
   if (!Array.isArray(value))
     throw new TypeError(`${path} must be an array of points.`);
   return value.map((entry, index) => {
@@ -882,15 +882,15 @@ function integer(
   return value;
 }
 function requireShape(
-  shape: CRCPhysicsShape2D,
+  shape: PibblPhysicsShape2D,
   componentName: string,
-): CRCPhysicsShape2D {
+): PibblPhysicsShape2D {
   try {
     requireShapeRecord2D(shape);
     return shape;
   } catch {
     throw new TypeError(
-      `${componentName} physics shape resolver must return a CRC physics 2D shape.`,
+      `${componentName} physics shape resolver must return a Pibbl physics 2D shape.`,
     );
   }
 }

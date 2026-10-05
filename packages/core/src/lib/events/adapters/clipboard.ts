@@ -1,33 +1,33 @@
-import type { CRCEventType } from '../types.js';
+import type { PibblEventType } from '../types.js';
 
-export const CRC_NATIVE_CLIPBOARD_EVENT_TYPES = Object.freeze([
+export const PIBBL_NATIVE_CLIPBOARD_EVENT_TYPES = Object.freeze([
   'copy',
   'cut',
   'paste',
-] as const satisfies readonly CRCEventType[]);
+] as const satisfies readonly PibblEventType[]);
 
-export type CRCNativeClipboardEventType =
-  (typeof CRC_NATIVE_CLIPBOARD_EVENT_TYPES)[number];
+export type PibblNativeClipboardEventType =
+  (typeof PIBBL_NATIVE_CLIPBOARD_EVENT_TYPES)[number];
 
-const nativeClipboardEventTypes = new Set<CRCEventType>(
-  CRC_NATIVE_CLIPBOARD_EVENT_TYPES,
+const nativeClipboardEventTypes = new Set<PibblEventType>(
+  PIBBL_NATIVE_CLIPBOARD_EVENT_TYPES,
 );
 
-export interface CRCAdaptedClipboardEvent {
-  readonly type: CRCNativeClipboardEventType;
+export interface PibblAdaptedClipboardEvent {
+  readonly type: PibblNativeClipboardEventType;
   readonly originalEvent: ClipboardEvent;
 }
 
 export function isNativeClipboardEventType(
-  type: CRCEventType,
-): type is CRCNativeClipboardEventType {
+  type: PibblEventType,
+): type is PibblNativeClipboardEventType {
   return nativeClipboardEventTypes.has(type);
 }
 
 export function adaptClipboardEvent(
-  type: CRCNativeClipboardEventType,
+  type: PibblNativeClipboardEventType,
   event: Event,
-): CRCAdaptedClipboardEvent | undefined {
+): PibblAdaptedClipboardEvent | undefined {
   if (
     typeof ClipboardEvent === 'undefined' ||
     !(event instanceof ClipboardEvent)

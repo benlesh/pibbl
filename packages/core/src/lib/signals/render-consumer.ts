@@ -219,7 +219,7 @@ export function disposeSignalRenderConsumer(consumer: SignalRenderConsumer): voi
 function getConsumerState(consumer: SignalRenderConsumer): ConsumerState {
   const state = consumerStates.get(consumer);
   if (state === undefined) {
-    throw new TypeError('Expected a signal render consumer created by CRC.');
+    throw new TypeError('Expected a signal render consumer created by Pibbl.');
   }
   return state;
 }

@@ -8,13 +8,13 @@ Approved contract: 2026-09-30 semantic `BarSeries` replacement and four-sided,
 categorical `Axis` contract in `remaining-viz-roadmap.md`.
 
 Owner: `audit_series`; branch: `codex/viz-semantic-bars`; worktree:
-`/Users/benlesh/.codex/worktrees/viz-semantic-bars/crc`.
+`/Users/benlesh/.codex/worktrees/viz-semantic-bars/pibbl`.
 
 ## Baseline and red evidence
 
 The first focused browser invocation after dependency provisioning could not
 start because fresh workspace package declarations had not been built
-(`@crc/types` and `@crc/core` could not resolve). Building the workspace was
+(`@pibbl/types` and `@pibbl/core` could not resolve). Building the workspace was
 required before its normal public-test configuration could load. This was an
 environment-provisioning failure, not a measured performance baseline.
 

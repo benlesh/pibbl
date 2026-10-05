@@ -1,24 +1,5 @@
-import { crc, Overlay } from "@crc/core";
-import {
-  Axis,
-  Scale,
-  useScale,
-  type AxisProps,
-  type AxisStyle,
-  type BandCategory,
-  type BandDomain,
-  type BandScaleProps,
-  type BandScaleRange,
-  type LinearDomain,
-  type LinearScaleProps,
-  type ResolvedBandScale,
-  type ResolvedLinearScale,
-  type ResolvedScale,
-  type ScaleId,
-  type ScaleLayoutStyle,
-  type ScaleProps,
-  type ScaleRange,
-} from "@crc/core/viz";
+import { pibbl, Overlay } from "@pibbl/core";
+import { Axis, type AxisProps, type AxisStyle, type BandCategory, type BandDomain, type BarScaleProps, type BandScaleRange, type LinearDomain, type LinearScaleProps, type ResolvedBandScale, type ResolvedLinearScale, type ResolvedScale, type ScaleId, type ScaleLayoutStyle, BarScale, LinearScale, type ScaleRange, useLinearScale, useBarScale } from "@pibbl/core/viz";
 
 const xId: ScaleId = "month";
 const yId: ScaleId = "sales";
@@ -28,9 +9,8 @@ const yDomain: LinearDomain = [0, 100];
 const xRange: BandScaleRange = "width";
 const yRange: ScaleRange = "height";
 const layout: ScaleLayoutStyle = { width: 230, height: 170 };
-const x: BandScaleProps = {
+const x: BarScaleProps = {
   id: xId,
-  type: "band",
   domain: months,
   range: xRange,
   paddingInner: 0.15,
@@ -38,12 +18,10 @@ const x: BandScaleProps = {
 };
 const y: LinearScaleProps = {
   id: yId,
-  type: "linear",
   domain: yDomain,
   range: yRange,
   reverse: true,
 };
-const scaleProps: ScaleProps = x;
 const axisStyle: AxisStyle = { stroke: "#64748b", fill: "#334155" };
 const axis: AxisProps = {
   scale: yId,
@@ -52,9 +30,9 @@ const axis: AxisProps = {
   style: axisStyle,
 };
 function Probe() {
-  const resolved: ResolvedScale = useScale(yId).get();
-  const linear: ResolvedLinearScale = useScale(yId, "linear").get();
-  const band: ResolvedBandScale = useScale(xId, "band").get();
+  const resolved: ResolvedScale = useLinearScale(yId).get();
+  const linear: ResolvedLinearScale = useLinearScale(yId).get();
+  const band: ResolvedBandScale = useBarScale(xId).get();
   const count =
     resolved.type === "linear" ? linear.ticks(5).length : band.domain.length;
   return (
@@ -69,14 +47,14 @@ const canvas = document.createElement("canvas");
 canvas.width = 320;
 canvas.height = 220;
 document.body.append(canvas);
-const app = crc(
+const app = pibbl(
   canvas,
   <Overlay style={{ left: 70, top: 15, width: 230, height: 170 }}>
-    <Scale {...scaleProps}>
-      <Scale {...y}>
+    <BarScale {...x}>
+      <LinearScale {...y}>
         <Probe />
-      </Scale>
-    </Scale>
+      </LinearScale>
+    </BarScale>
   </Overlay>,
 );
 window.addEventListener("pagehide", () => app.dispose(), { once: true });

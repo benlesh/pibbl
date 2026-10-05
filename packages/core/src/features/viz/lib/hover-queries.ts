@@ -1,4 +1,4 @@
-import { resolveSignalValue } from "@crc/core";
+import { resolveSignalValue } from "@pibbl/core";
 import { finiteCoordinate, pointAccessor, pointData } from "./point-data.js";
 import type {
   ClosestPointHit,

@@ -5,11 +5,11 @@ export function getStaticPaths() {
   return galleryExamples.map(example => ({ params: { slug: example.slug }, props: { example } }));
 }
 const { example } = Astro.props;
-const playground = import.meta.env.CRC_PLAYGROUND_URL ?? 'http://localhost:5174/';
+const playground = import.meta.env.PIBBL_PLAYGROUND_URL ?? 'http://localhost:5174/';
 ---
 <!doctype html>
 <html lang="en">
-  <head><meta charset="utf-8" /><meta name="viewport" content="width=device-width" /><title>{example.title} | CRC</title></head>
+  <head><meta charset="utf-8" /><meta name="viewport" content="width=device-width" /><title>{example.title} | Pibbl</title></head>
   <body>
     <header><h1>{example.title}</h1><nav><a href={`/examples/${example.slug}/`}>Documentation and source</a> <a href={`${playground}#/examples/${example.browseGroup}/${example.slug}`}>Open playground</a></nav></header>
     <main><EffectDemo slug={example.slug} /><p>{example.prompts.gesture}</p></main>

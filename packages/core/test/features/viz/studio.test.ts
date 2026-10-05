@@ -2,7 +2,7 @@ import { expect, it } from "vitest";
 import { declarationLibraries } from "../../../../../playground/src/editor-declaration-libraries.js";
 it("provides the viz public declarations to the editable Studio", () => {
   const lib = declarationLibraries().find(
-    (lib) => lib.filePath === "file:///node_modules/@crc/core/viz/index.d.ts",
+    (lib) => lib.filePath === "file:///node_modules/@pibbl/core/viz/index.d.ts",
   );
   expect(lib).toBeDefined();
 });
@@ -26,17 +26,17 @@ it("accepts the standalone viz lesson but still rejects a required fixture argum
   ).toThrow(/mount/);
   expect(() =>
     toRunnableScript(
-      'import { Scale, Axis } from "@crc/core/viz"; export default function mount(canvas) { return {dispose(){}}; }',
+      'import { LinearScale, Axis } from "@pibbl/core/viz"; export default function mount(canvas) { return {dispose(){}}; }',
     ),
   ).not.toThrow();
   expect(() =>
     toRunnableScript(
-      'import { Scale } from "@crc/core/viz/internal"; export default function mount(canvas) { return {dispose(){}}; }',
+      'import { LinearScale } from "@pibbl/core/viz/internal"; export default function mount(canvas) { return {dispose(){}}; }',
     ),
   ).toThrow();
 });
 import { loadWorkbenchSource } from "../../../../../playground/src/learning-sources.js";
-import { getLearningExampleBySlug } from "@crc/scenarios";
+import { getLearningExampleBySlug } from "@pibbl/scenarios";
 it("loads the exact editable lesson source through the workbench adapter", async () => {
   await expect(
     loadWorkbenchSource(getLearningExampleBySlug("viz-responsive-line")!),
@@ -44,7 +44,7 @@ it("loads the exact editable lesson source through the workbench adapter", async
 });
 it("runs a defaulted fixture mount without requiring a second caller argument", () => {
   const emitted =
-    'import { Scale } from "@crc/core/viz"; export default function mount(canvas, fixture = {}) { return {dispose(){}}; }';
+    'import { LinearScale } from "@pibbl/core/viz"; export default function mount(canvas, fixture = {}) { return {dispose(){}}; }';
   expect(() => toRunnableScript(emitted)).not.toThrow();
   expect(() =>
     toRunnableScript(emitted.replace("fixture = {}", "fixture")),
@@ -66,7 +66,7 @@ it("loads the custom points lesson as editable canonical source", async () => {
   ).resolves.toBe(pointsLesson);
   expect(() =>
     toRunnableScript(
-      'import { PointSeries, PlotSeries, nearestPoint, nearestDomainValue } from "@crc/core/viz"; export default function mount(canvas) { return {dispose(){}}; }',
+      'import { PointSeries, PlotSeries, nearestPoint, nearestDomainValue } from "@pibbl/core/viz"; export default function mount(canvas) { return {dispose(){}}; }',
     ),
   ).not.toThrow();
 });
@@ -86,7 +86,7 @@ it("loads the complete function-query comparison as canonical editable source", 
   ).resolves.toBe(hoverLesson);
   expect(() =>
     toRunnableScript(
-      'import { HoverData, HoverCard, defineSeries, closestPoint, closestX, interpolateX, linearInterpolation } from "@crc/core/viz"; export default function mount(canvas) { return {dispose(){}}; }',
+      'import { HoverData, HoverCard, defineSeries, closestPoint, closestX, interpolateX, linearInterpolation } from "@pibbl/core/viz"; export default function mount(canvas) { return {dispose(){}}; }',
     ),
   ).not.toThrow();
 });

@@ -1,6 +1,6 @@
 ---
 id: guide-package-migration
-title: Migrate to one CRC package
+title: Migrate to one Pibbl package
 summary: Replace first-party feature packages with subpath imports from core.
 kind: guide
 slug: package-migration
@@ -8,25 +8,25 @@ order: 65
 keywords: [packages, migration, installation, physics, bundles]
 ---
 
-# Migrate to one CRC package
+# Migrate to one Pibbl package
 
-Install `@crc/core` for drawing, particles, visualization, textures, and physics.
-Keep `@crc/three` and `three` when using the Three adapter.
+Install `@pibbl/core` for drawing, particles, visualization, textures, and physics.
+Keep `@pibbl/three` and `three` when using the Three adapter.
 
-| Previous import            | Current import                  |
-| -------------------------- | ------------------------------- |
-| `@crc/particles`           | `@crc/core/particles`           |
-| `@crc/viz`                 | `@crc/core/viz`                 |
-| `@crc/textures`            | `@crc/core/textures`            |
-| `@crc/physics/2d`          | `@crc/core/physics/2d`          |
-| `@crc/physics/2d/geometry` | `@crc/core/physics/2d/geometry` |
-| `@crc/physics/2d/testing`  | `@crc/core/physics/2d/testing`  |
+| Previous import              | Current import                    |
+| ---------------------------- | --------------------------------- |
+| `@pibbl/particles`           | `@pibbl/core/particles`           |
+| `@pibbl/viz`                 | `@pibbl/core/viz`                 |
+| `@pibbl/textures`            | `@pibbl/core/textures`            |
+| `@pibbl/physics/2d`          | `@pibbl/core/physics/2d`          |
+| `@pibbl/physics/2d/geometry` | `@pibbl/core/physics/2d/geometry` |
+| `@pibbl/physics/2d/testing`  | `@pibbl/core/physics/2d/testing`  |
 
-Remove the previous feature packages and `@crc/types` from your dependencies.
+Remove the previous feature packages and `@pibbl/types` from your dependencies.
 The empty types compatibility package has been removed; import core types from
-`@crc/core` or `@crc/core/types`, and feature types from their feature entry.
+`@pibbl/core` or `@pibbl/core/types`, and feature types from their feature entry.
 There are no forwarding packages. Root, filters, JSX runtime, and Three imports
-keep their existing names. JSX configuration still uses `@crc/core`.
+keep their existing names. JSX configuration still uses `@pibbl/core`.
 
 Feature APIs keep their existing names and behavior. The root entry does not
 re-export optional features. Subpaths share one core runtime and one version.

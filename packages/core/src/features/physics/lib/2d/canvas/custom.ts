@@ -1,12 +1,12 @@
-import type { CRCPrimitiveComponent } from '@crc/core';
+import type { PibblPrimitiveComponent } from '@pibbl/core';
 import {
-  crcInternalRunPurePrimitiveResolver,
+  pibblInternalRunPurePrimitiveResolver,
   derivePrimitive,
-} from '@crc/core/internal';
-import type { CRCPhysicsShape2D } from '../../../2d-geometry.js';
+} from '@pibbl/core/internal';
+import type { PibblPhysicsShape2D } from '../../../2d-geometry.js';
 import type {
-  CRCPhysicsAttachment2D,
-  CRCPhysicsPrimitiveProps2D,
+  PibblPhysicsAttachment2D,
+  PibblPhysicsPrimitiveProps2D,
 } from '../types.js';
 import { requireShapeRecord2D } from '../shape-records.js';
 import { installCustomShapeResolver2D } from './inference.js';
@@ -15,37 +15,37 @@ import { installCustomShapeResolver2D } from './inference.js';
  * Adds physics-attachment support to a custom primitive using its resolved-style shape callback.
  *
  * @param component - Primitive whose rendered style determines its collision shape. See
- * {@link CRCPrimitiveComponent} .
+ * {@link PibblPrimitiveComponent} .
  * @param options - Pure resolver deriving collision geometry from resolved style. See
- * {@link CRCPhysicsShape2D} .
+ * {@link PibblPhysicsShape2D} .
  * @returns A derived primitive accepting the public physics attachment prop. See
- * {@link CRCPrimitiveComponent} , {@link CRCPhysicsPrimitiveProps2D} ,
- * {@link CRCPhysicsAttachment2D} .
+ * {@link PibblPrimitiveComponent} , {@link PibblPhysicsPrimitiveProps2D} ,
+ * {@link PibblPhysicsAttachment2D} .
  *
- * @see {@link CRCPrimitiveComponent}
- * @see {@link CRCPhysicsShape2D}
- * @see {@link CRCPhysicsPrimitiveProps2D}
- * @see {@link CRCPhysicsAttachment2D}
+ * @see {@link PibblPrimitiveComponent}
+ * @see {@link PibblPhysicsShape2D}
+ * @see {@link PibblPhysicsPrimitiveProps2D}
+ * @see {@link PibblPhysicsAttachment2D}
  */
 export function withPhysicsShape2D<P, I, ResolvedStyle>(
-  component: CRCPrimitiveComponent<P, I>,
+  component: PibblPrimitiveComponent<P, I>,
   options: Readonly<{
-    resolveShape(style: Readonly<ResolvedStyle>): CRCPhysicsShape2D;
+    resolveShape(style: Readonly<ResolvedStyle>): PibblPhysicsShape2D;
   }>,
-): CRCPrimitiveComponent<
-  P & CRCPhysicsPrimitiveProps2D,
-  I & { readonly physics?: CRCPhysicsAttachment2D }
+): PibblPrimitiveComponent<
+  P & PibblPhysicsPrimitiveProps2D,
+  I & { readonly physics?: PibblPhysicsAttachment2D }
 > {
   if (typeof options.resolveShape !== 'function') {
     throw new TypeError('withPhysicsShape2D options.resolveShape must be a function.');
   }
-  const derived = derivePrimitive(component) as CRCPrimitiveComponent<
-    P & CRCPhysicsPrimitiveProps2D,
-    I & { readonly physics?: CRCPhysicsAttachment2D }
+  const derived = derivePrimitive(component) as PibblPrimitiveComponent<
+    P & PibblPhysicsPrimitiveProps2D,
+    I & { readonly physics?: PibblPhysicsAttachment2D }
   >;
   installCustomShapeResolver2D(derived, style => {
     const snapshot = immutableSnapshot(style) as Readonly<ResolvedStyle>;
-    const result = crcInternalRunPurePrimitiveResolver(() =>
+    const result = pibblInternalRunPurePrimitiveResolver(() =>
       options.resolveShape(snapshot)
     );
     if (isThenable(result)) {
@@ -54,7 +54,7 @@ export function withPhysicsShape2D<P, I, ResolvedStyle>(
     try {
       requireShapeRecord2D(result);
     } catch {
-      throw new TypeError('A physics 2D shape resolver must return a CRC physics 2D shape.');
+      throw new TypeError('A physics 2D shape resolver must return a Pibbl physics 2D shape.');
     }
     return result;
   });

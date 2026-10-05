@@ -1,8 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
-  cloneCRCElement,
+  clonePibblElement,
   createElement,
-  isCRCElement,
+  isPibblElement,
 } from './element/create-element';
 import { materializeContainerChildren } from './element/children';
 import {
@@ -14,7 +14,7 @@ import { Flow } from './layout/flow';
 import { Flex } from './layout/flex';
 import { Grid } from './layout/grid';
 import { Layer } from './components/layer';
-import { crc } from './crc';
+import { pibbl } from './pibbl';
 import {
   appendElementEnhancer,
   getElementEnhancerDescriptors,
@@ -23,28 +23,28 @@ import { executeRender } from './execute-render';
 import {
   clearSharedState,
   getComponentRefs,
-  getCRCInstance,
+  getPibblInstance,
 } from './global-state';
 import { useLayoutBox } from './hooks/use-layout-box';
 import { useEventListener } from './hooks/use-event-listener';
 import { useEventTarget } from './hooks/use-event-target';
 import { useSignal } from './hooks/use-signal';
 import { measureElement } from './layout/measure';
-import { mountCRC } from './mount-crc';
+import { mountPibbl } from './mount-pibbl';
 import {
   directionalPolicy,
   focusManaged,
 } from './focus/policy-test-support';
-import type { CRCKeyboardNavigationOptions } from './focus/types';
+import type { PibblKeyboardNavigationOptions } from './focus/types';
 import type { BoxStyle, LayoutItemStyle } from './style/types';
-import type { CRCComponentRefs, CRCElement, CRCNode, CRCInstance, MeasureResult, SystemStyle } from './types';
-import type { CRCElement as PublicCRCElement } from '../index';
+import type { PibblComponentRefs, PibblElement, PibblNode, PibblInstance, MeasureResult, SystemStyle } from './types';
+import type { PibblElement as PublicPibblElement } from '../index';
 import { definePrimitive } from './define-primitive';
 import {
-  crcInternalCreatePropAttachment,
-  type CRCInternalMountedPropAttachment,
-  type CRCInternalPrimitiveAttachmentInput,
-} from '@crc/core/internal';
+  pibblInternalCreatePropAttachment,
+  type PibblInternalMountedPropAttachment,
+  type PibblInternalPrimitiveAttachmentInput,
+} from '@pibbl/core/internal';
 
 interface TestMountedEnhancer {
   update(next: TestEnhancerDescriptor): void;
@@ -57,8 +57,8 @@ interface TestEnhancerDescriptor {
   readonly key: symbol;
   readonly generation: number;
   mount(context: {
-    readonly component: CRCComponentRefs<any>;
-    readonly instance: CRCInstance;
+    readonly component: PibblComponentRefs<any>;
+    readonly instance: PibblInstance;
   }): TestMountedEnhancer;
 }
 
@@ -83,7 +83,7 @@ interface TestAttachmentValue {
 }
 
 interface AttachmentPrimitiveProps {
-  readonly children?: CRCNode;
+  readonly children?: PibblNode;
   readonly physics?: TestAttachmentValue;
 }
 
@@ -206,7 +206,7 @@ describe('identity-transparent element enhancers', () => {
     expect(lifecycle).toEqual([]);
 
     const canvas = createCanvas();
-    const controller = crc(canvas, createElement(Host, { enhanced: true }));
+    const controller = pibbl(canvas, createElement(Host, { enhanced: true }));
     activeControllers.add(controller);
     await nextFrame();
     const first = observations[0];
@@ -224,7 +224,7 @@ describe('identity-transparent element enhancers', () => {
     lifecycle.length = 0;
     setState?.(1);
     await nextFrame();
-    crc(canvas, createElement(Host, { enhanced: false }));
+    pibbl(canvas, createElement(Host, { enhanced: false }));
     await nextFrame();
     const last = observations.at(-1)!;
 
@@ -266,7 +266,7 @@ describe('identity-transparent element enhancers', () => {
       return annotate(createElement(Child, { key: 'stable' }), descriptors);
     };
     const canvas = createCanvas();
-    const controller = crc(canvas, createElement(Root, {
+    const controller = pibbl(canvas, createElement(Root, {
       firstGeneration: 1,
       order: 'forward',
       showSecond: true,
@@ -288,7 +288,7 @@ describe('identity-transparent element enhancers', () => {
     ]);
 
     trace.length = 0;
-    crc(canvas, createElement(Root, {
+    pibbl(canvas, createElement(Root, {
       firstGeneration: 2,
       order: 'reverse',
       showSecond: true,
@@ -306,7 +306,7 @@ describe('identity-transparent element enhancers', () => {
     ]);
 
     trace.length = 0;
-    crc(canvas, createElement(Root, {
+    pibbl(canvas, createElement(Root, {
       firstGeneration: 3,
       order: 'forward',
       showSecond: false,
@@ -338,11 +338,11 @@ describe('identity-transparent element enhancers', () => {
       createDescriptor('lazy-owner', enhancerKey, generation, trace),
     ]);
     const canvas = createCanvas();
-    const controller = mountCRC(canvas, plainElement());
+    const controller = mountPibbl(canvas, plainElement());
     activeControllers.add(controller);
 
     executeRender(canvas, 1);
-    const instance = getCRCInstance(canvas);
+    const instance = getPibblInstance(canvas);
     const component = Array.from(instance.refs.values())[0];
     expect(instance.refs.size).toBe(1);
     expect(teardownCount(component.teardowns)).toBe(1);
@@ -398,7 +398,7 @@ describe('identity-transparent element enhancers', () => {
       createDescriptor('second', Symbol('second'), 1, trace),
     ]);
     const canvas = createCanvas();
-    const controller = mountCRC(canvas, enhancedParent);
+    const controller = mountPibbl(canvas, enhancedParent);
     activeControllers.add(controller);
 
     expect(() => executeRender(canvas, 1)).toThrowError('expected descendant failure');
@@ -416,7 +416,7 @@ describe('identity-transparent element enhancers', () => {
       'dispose:second',
       'dispose:first',
     ]);
-    expect(getCRCInstance(canvas).refs.size).toBe(0);
+    expect(getPibblInstance(canvas).refs.size).toBe(0);
 
     const afterFailure = [...trace];
     controller.dispose();
@@ -440,7 +440,7 @@ describe('identity-transparent element enhancers', () => {
       ] : [createDescriptor('existing', existingKey, 1, trace)],
     );
     const canvas = createCanvas();
-    const controller = mountCRC(canvas, createElement(Root, { failing: false }));
+    const controller = mountPibbl(canvas, createElement(Root, { failing: false }));
     activeControllers.add(controller);
     executeRender(canvas, 1);
     trace.length = 0;
@@ -455,7 +455,7 @@ describe('identity-transparent element enhancers', () => {
       'dispose:acquired',
       'dispose:existing',
     ]);
-    expect(getCRCInstance(canvas).refs.size).toBe(0);
+    expect(getPibblInstance(canvas).refs.size).toBe(0);
 
     const afterFailure = [...trace];
     controller.dispose();
@@ -478,7 +478,7 @@ describe('identity-transparent element enhancers', () => {
       ] : [createDescriptor('existing', existingKey, 1, trace)],
     );
     const canvas = createCanvas();
-    const controller = mountCRC(canvas, createElement(Root, { failing: false }));
+    const controller = mountPibbl(canvas, createElement(Root, { failing: false }));
     activeControllers.add(controller);
     executeRender(canvas, 1);
     trace.length = 0;
@@ -495,7 +495,7 @@ describe('identity-transparent element enhancers', () => {
       'dispose:acquired',
       'dispose:existing',
     ]);
-    expect(getCRCInstance(canvas).refs.size).toBe(0);
+    expect(getPibblInstance(canvas).refs.size).toBe(0);
 
     const afterFailure = [...trace];
     controller.dispose();
@@ -514,7 +514,7 @@ describe('identity-transparent element enhancers', () => {
       createDescriptor('never-entered', Symbol('never-entered'), 1, trace),
     ]);
     const canvas = createCanvas();
-    const controller = mountCRC(canvas, enhanced);
+    const controller = mountPibbl(canvas, enhanced);
     activeControllers.add(controller);
 
     expect(() => executeRender(canvas, 1)).toThrowError('enter:enter-failure:failed');
@@ -550,7 +550,7 @@ describe('identity-transparent element enhancers', () => {
       createDescriptor('inner', Symbol('inner'), 1, trace, { exit: true }),
     ]);
     const canvas = createCanvas();
-    const controller = mountCRC(canvas, enhanced);
+    const controller = mountPibbl(canvas, enhanced);
     activeControllers.add(controller);
 
     expect(() => executeRender(canvas, 1)).toThrowError('exit:inner:failed');
@@ -589,7 +589,7 @@ describe('identity-transparent element enhancers', () => {
       createDescriptor('inner', Symbol('inner'), 1, trace),
     ]);
     const canvas = createCanvas();
-    const controller = mountCRC(canvas, enhanced);
+    const controller = mountPibbl(canvas, enhanced);
     activeControllers.add(controller);
     executeRender(canvas, 1);
     trace.length = 0;
@@ -636,7 +636,7 @@ describe('registered primitive prop attachments', () => {
       },
     );
     const canvas = createCanvas();
-    const controller = mountCRC(canvas, build(1, true));
+    const controller = mountPibbl(canvas, build(1, true));
     activeControllers.add(controller);
 
     executeRender(canvas, 1);
@@ -694,7 +694,7 @@ describe('registered primitive prop attachments', () => {
     };
     const attachment = createAttachment('forwarded', 1, trace);
     const canvas = createCanvas();
-    const controller = mountCRC(canvas, createElement(Wrapper, {
+    const controller = mountPibbl(canvas, createElement(Wrapper, {
       forward: false,
       physics: attachment,
     }));
@@ -738,7 +738,7 @@ describe('registered primitive prop attachments', () => {
       createDescriptor('policy', Symbol('policy'), 1, trace),
     );
     const canvas = createCanvas();
-    const controller = mountCRC(canvas, enhanced);
+    const controller = mountPibbl(canvas, enhanced);
     activeControllers.add(controller);
 
     expect(() => executeRender(canvas, 1)).toThrowError(
@@ -758,12 +758,12 @@ describe('registered primitive prop attachments', () => {
       'dispose:policy',
     ]);
     expect(resourceAcquisitions).toBe(0);
-    expect(getCRCInstance(canvas).refs.size).toBe(0);
+    expect(getPibblInstance(canvas).refs.size).toBe(0);
   });
 
   it('remounts on keyed replacement and preserves attachment identity through policy and layout clones', () => {
     const trace: string[] = [];
-    const prepared: CRCInternalPrimitiveAttachmentInput[] = [];
+    const prepared: PibblInternalPrimitiveAttachmentInput[] = [];
     const attachment = createAttachment('placed', 1, trace, { prepared });
     const Primitive = definePrimitive<
       AttachmentPrimitiveProps,
@@ -787,7 +787,7 @@ describe('registered primitive prop attachments', () => {
       })),
     });
     const canvas = createCanvas();
-    const controller = mountCRC(canvas, build('first'));
+    const controller = mountPibbl(canvas, build('first'));
     activeControllers.add(controller);
 
     executeRender(canvas, 1);
@@ -820,7 +820,7 @@ describe('registered primitive prop attachments', () => {
       children: createElement(Primitive, { physics: attachment }),
     });
     const canvas = createCanvas();
-    const controller = mountCRC(canvas, build());
+    const controller = mountPibbl(canvas, build());
     activeControllers.add(controller);
 
     executeRender(canvas, 1);
@@ -836,7 +836,7 @@ describe('registered primitive prop attachments', () => {
     let resourceAcquisitions = 0;
     let primitiveRenders = 0;
     const publicValue = Object.freeze({ generation: 1, name: '3d-body' });
-    const wrongDimension = crcInternalCreatePropAttachment(
+    const wrongDimension = pibblInternalCreatePropAttachment(
       'physics',
       publicValue,
       () => {
@@ -854,7 +854,7 @@ describe('registered primitive prop attachments', () => {
       primitiveRenders++;
     });
     const canvas = createCanvas();
-    const controller = mountCRC(canvas, createElement(Primitive, {
+    const controller = mountPibbl(canvas, createElement(Primitive, {
       physics: wrongDimension,
     }));
     activeControllers.add(controller);
@@ -896,10 +896,10 @@ describe('built-in transparent policies', () => {
       'key',
     ]);
 
-    const cloned = cloneCRCElement(
-      enhanced as CRCElement<any>,
+    const cloned = clonePibblElement(
+      enhanced as PibblElement<any>,
     ) as typeof enhanced;
-    expect(isCRCElement(cloned)).toBe(true);
+    expect(isPibblElement(cloned)).toBe(true);
     expect(cloned.type).toBe(element.type);
     expect(cloned.props).toBe(element.props);
     expect(cloned.key).toBe('stable');
@@ -922,7 +922,7 @@ describe('built-in transparent policies', () => {
   it.each([
     {
       name: 'Absolute',
-      build: (child: CRCNode) => createElement(Absolute, {
+      build: (child: PibblNode) => createElement(Absolute, {
         style: { width: 100, height: 60 },
         children: child,
       }),
@@ -931,7 +931,7 @@ describe('built-in transparent policies', () => {
     },
     {
       name: 'Flow',
-      build: (child: CRCNode) => createElement(Flow, {
+      build: (child: PibblNode) => createElement(Flow, {
         style: { width: 100, height: 60, alignItems: 'start' },
         children: child,
       }),
@@ -940,7 +940,7 @@ describe('built-in transparent policies', () => {
     },
     {
       name: 'Flex',
-      build: (child: CRCNode) => createElement(Flex, {
+      build: (child: PibblNode) => createElement(Flex, {
         style: { width: 100, height: 60, alignItems: 'flex-start' },
         children: child,
       }),
@@ -955,7 +955,7 @@ describe('built-in transparent policies', () => {
     },
     {
       name: 'Grid',
-      build: (child: CRCNode) => createElement(Grid, {
+      build: (child: PibblNode) => createElement(Grid, {
         style: {
           width: 100,
           height: 60,
@@ -980,7 +980,7 @@ describe('built-in transparent policies', () => {
     '$name preserves a private enhancer through measurement, placement, and paint',
     ({ build, childStyle, measurements }) => {
       const trace: string[] = [];
-      const renders: Array<{ id: string; element: CRCElement<any> }> = [];
+      const renders: Array<{ id: string; element: PibblElement<any> }> = [];
       let measurementCount = 0;
       const Child = definePrimitive<
         {},
@@ -991,7 +991,7 @@ describe('built-in transparent policies', () => {
         const refs = getComponentRefs();
         renders.push({
           id: refs.id,
-          element: refs.element as CRCElement<any>,
+          element: refs.element as PibblElement<any>,
         });
         trace.push('paint');
       }, {
@@ -1015,7 +1015,7 @@ describe('built-in transparent policies', () => {
         descriptor,
       );
       const canvas = createCanvas();
-      const controller = mountCRC(canvas, build(enhanced));
+      const controller = mountPibbl(canvas, build(enhanced));
       activeControllers.add(controller);
 
       executeRender(canvas, 1);
@@ -1030,7 +1030,7 @@ describe('built-in transparent policies', () => {
       ]);
       expect(renders).toHaveLength(1);
       expect(renders[0].element.key).toBe('stable');
-      expect(isCRCElement(renders[0].element)).toBe(true);
+      expect(isPibblElement(renders[0].element)).toBe(true);
       expect(Object.isFrozen(renders[0].element)).toBe(import.meta.env.DEV);
       expect('enhancers' in renders[0].element).toBe(false);
 
@@ -1048,7 +1048,7 @@ describe('built-in transparent policies', () => {
   );
 
   it('preserves focus and directional policy on a measured and placed Grid child', () => {
-    const rendered: Array<{ id: string; element: CRCElement<any> }> = [];
+    const rendered: Array<{ id: string; element: PibblElement<any> }> = [];
     const Target = definePrimitive<
       {},
       EnhancerLayoutStyle,
@@ -1056,7 +1056,7 @@ describe('built-in transparent policies', () => {
       ResolvedEnhancerLayoutStyle
     >(() => {
       const refs = getComponentRefs();
-      rendered.push({ id: refs.id, element: refs.element as CRCElement<any> });
+      rendered.push({ id: refs.id, element: refs.element as PibblElement<any> });
       const path = new Path2D();
       path.rect(0, 0, 30, 20);
       useEventTarget({ onClick: () => undefined }, {
@@ -1098,19 +1098,19 @@ describe('built-in transparent policies', () => {
       ),
     });
     const canvas = createCanvas();
-    const controller = mountCRC(canvas, build());
+    const controller = mountPibbl(canvas, build());
     activeControllers.add(controller);
 
     executeRender(canvas, 1);
 
-    const policy = getCRCInstance(canvas).eventRoot.focusPolicy as unknown as {
+    const policy = getPibblInstance(canvas).eventRoot.focusPolicy as unknown as {
       readonly candidates: readonly [{ readonly directionalBoundary?: object }];
     };
     expect(policy).toBeDefined();
     expect(policy.candidates).toHaveLength(1);
     expect(policy.candidates[0].directionalBoundary).toBeDefined();
     expect(rendered[0].element.key).toBe('managed');
-    expect(isCRCElement(rendered[0].element)).toBe(true);
+    expect(isPibblElement(rendered[0].element)).toBe(true);
     expect(Object.isFrozen(rendered[0].element)).toBe(import.meta.env.DEV);
     expect('enhancers' in rendered[0].element).toBe(false);
 
@@ -1138,7 +1138,7 @@ describe('built-in transparent policies', () => {
 
   it('accepts only directional keyboard-navigation mode', () => {
     const Component = (_props: {}) => undefined;
-    const options: CRCKeyboardNavigationOptions = { mode: 'directional' };
+    const options: PibblKeyboardNavigationOptions = { mode: 'directional' };
 
     expect(materializeContainerChildren(
       directionalPolicy(createElement(Component, {}), options),
@@ -1152,7 +1152,7 @@ describe('built-in transparent policies', () => {
   });
 
   it('rejects unbranded descriptor copies with arbitrary string metadata', () => {
-    type PublicElementHasEnhancers = 'enhancers' extends keyof PublicCRCElement<any>
+    type PublicElementHasEnhancers = 'enhancers' extends keyof PublicPibblElement<any>
       ? true
       : false;
     const publicElementHasEnhancers: PublicElementHasEnhancers = false;
@@ -1165,28 +1165,28 @@ describe('built-in transparent policies', () => {
     const Component = (_props: {}) => undefined;
     const descriptor = { key: Symbol('unsupported'), mount };
     const element = createElement(Component, {});
-    const unsupported: PublicCRCElement = {
+    const unsupported: PublicPibblElement = {
       ...element,
-      // @ts-expect-error arbitrary enhancer metadata is not public CRC element input
+      // @ts-expect-error arbitrary enhancer metadata is not public Pibbl element input
       enhancers: [descriptor],
     };
     const canvas = createCanvas();
-    const controller = mountCRC(canvas, unsupported);
+    const controller = mountPibbl(canvas, unsupported);
     activeControllers.add(controller);
 
     expect(publicElementHasEnhancers).toBe(false);
     expect(() => executeRender(canvas, 1))
       .toThrowError(
-        /CRC root.*element-like object.*not created by @crc\/core[\s\S]*jsxImportSource/i,
+        /Pibbl root.*element-like object.*not created by @pibbl\/core[\s\S]*jsxImportSource/i,
       );
     expect(mount).not.toHaveBeenCalled();
   });
 });
 
 function annotate(
-  element: CRCElement<any>,
+  element: PibblElement<any>,
   enhancers: readonly TestEnhancerDescriptor[],
-): CRCElement<any> {
+): PibblElement<any> {
   return enhancers.reduce(
     (enhanced, descriptor) => appendElementEnhancer(enhanced, descriptor),
     element,
@@ -1235,12 +1235,12 @@ function createAttachment(
   options: Readonly<{
     onPrepareAccepted?: () => void;
     prepareError?: string;
-    prepared?: CRCInternalPrimitiveAttachmentInput[];
+    prepared?: PibblInternalPrimitiveAttachmentInput[];
     presentationTransform2D?: DOMMatrix;
   }> = {},
 ): TestAttachmentValue {
   const publicValue = Object.freeze({ name, generation });
-  return crcInternalCreatePropAttachment('physics', publicValue, () => {
+  return pibblInternalCreatePropAttachment('physics', publicValue, () => {
     trace.push(`mount:${name}:${generation}`);
     return createMountedAttachment(name, trace, {
       onPrepareAccepted: options.onPrepareAccepted,
@@ -1257,10 +1257,10 @@ function createMountedAttachment(
   options: Readonly<{
     onPrepareAccepted?: () => void;
     prepareError?: string;
-    prepared?: CRCInternalPrimitiveAttachmentInput[];
+    prepared?: PibblInternalPrimitiveAttachmentInput[];
     presentationTransform2D?: DOMMatrix;
   }> = {},
-): CRCInternalMountedPropAttachment {
+): PibblInternalMountedPropAttachment {
   return {
     update(value) {
       trace.push(

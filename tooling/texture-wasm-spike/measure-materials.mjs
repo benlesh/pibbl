@@ -5,7 +5,7 @@ import os from 'node:os';
 import assert from 'node:assert/strict';
 const isolate=process.argv.includes('--isolate');
 const quick=process.argv.includes('--quick'),verifyOnly=process.argv.includes('--verify-only');
-const output=process.argv.slice(2).find(x=>!x.startsWith('--'))??`/private/tmp/crc-materials-${isolate?'isolated':quick?'quick':'results'}.json`;
+const output=process.argv.slice(2).find(x=>!x.startsWith('--'))??`/private/tmp/pibbl-materials-${isolate?'isolated':quick?'quick':'results'}.json`;
 const browser=await chromium.launch({headless:true});
 try {
   const page=await browser.newPage({viewport:{width:1200,height:1050},deviceScaleFactor:1});
@@ -29,16 +29,16 @@ try {
     await page.locator('#kind').selectOption(kind);
     await page.getByRole('button',{name:'Render comparison'}).click();
     await page.waitForTimeout(300);
-    await page.screenshot({path:`/private/tmp/crc-material-${kind}.png`,fullPage:true});
+    await page.screenshot({path:`/private/tmp/pibbl-material-${kind}.png`,fullPage:true});
   }
   await page.locator('#engine').selectOption('matched-js');
   await page.locator('#seed').fill('1234');await page.locator('#seed').press('Tab');
   await page.locator('#tiles').check();
   await page.waitForTimeout(300);
-  await page.screenshot({path:'/private/tmp/crc-material-tiled.png',fullPage:true});
+  await page.screenshot({path:'/private/tmp/pibbl-material-tiled.png',fullPage:true});
   await page.setViewportSize({width:390,height:844});
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
-  await page.screenshot({path:'/private/tmp/crc-material-mobile.png',fullPage:true});
+  await page.screenshot({path:'/private/tmp/pibbl-material-mobile.png',fullPage:true});
   assert.deepEqual(errors,[]);
   if(result) {
     result.parity=parity;result.timestamp=new Date().toISOString();

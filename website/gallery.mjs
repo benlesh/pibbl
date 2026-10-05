@@ -55,6 +55,7 @@ export const galleries = [
   {
     id: "showcases",
     title: "Interactive showcases",
+    pages: ["examples/brick-climb"],
     slugs: [
       "rainy-window",
       "plasma-globe",

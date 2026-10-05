@@ -12,7 +12,7 @@ import {
   type PathBendFit,
   type PathBendOverflow,
   type PathBendTransformOptions,
-} from "@crc/core";
+} from "@pibbl/core";
 
 const letters = new PathGeometry();
 letters.rect(0, 0, 80, 20);

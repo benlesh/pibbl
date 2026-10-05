@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Signal } from '../signals/types.js';
 import { Text } from '../components/text.js';
-import { crc } from '../crc.js';
+import { pibbl } from '../pibbl.js';
 import { clearSharedState } from '../global-state.js';
 import {
   getSignalNode,
@@ -34,10 +34,10 @@ describe('useComputed', () => {
     }
 
     const canvas = createCanvas();
-    const controller = crc(canvas, <Probe generation="first" />);
+    const controller = pibbl(canvas, <Probe generation="first" />);
     frames.flush();
     expect(evaluations).toEqual([]);
-    crc(canvas, <Probe generation="latest" />);
+    pibbl(canvas, <Probe generation="latest" />);
     frames.flush();
 
     expect(outputs[1]).toBe(outputs[0]);
@@ -64,7 +64,7 @@ describe('useComputed', () => {
     }
 
     const canvas = createCanvas();
-    const controller = crc(canvas, <Probe />);
+    const controller = pibbl(canvas, <Probe />);
     frames.flush();
     expect(output.get()).toBe(1);
     chooseLeft.set(false);
@@ -76,7 +76,7 @@ describe('useComputed', () => {
     right.set(11);
     expect(frames.pendingCount).toBe(1);
     frames.flush();
-    crc(canvas, undefined);
+    pibbl(canvas, undefined);
     frames.flush();
 
     right.set(12);
@@ -99,13 +99,13 @@ describe('useComputed', () => {
     }
 
     const canvas = createCanvas();
-    const controller = crc(canvas, <Probe dependency={Number.NaN} />);
+    const controller = pibbl(canvas, <Probe dependency={Number.NaN} />);
     frames.flush();
-    crc(canvas, <Probe dependency={Number.NaN} />);
+    pibbl(canvas, <Probe dependency={Number.NaN} />);
     frames.flush();
-    crc(canvas, <Probe dependency={0} />);
+    pibbl(canvas, <Probe dependency={0} />);
     frames.flush();
-    crc(canvas, <Probe dependency={-0} />);
+    pibbl(canvas, <Probe dependency={-0} />);
     frames.flush();
 
     expect(evaluations).toEqual([Number.NaN, 0, -0]);
@@ -133,7 +133,7 @@ describe('useComputed', () => {
       return <Receiver value={parity} />;
     }
 
-    const controller = crc(createCanvas(), <Owner />);
+    const controller = pibbl(createCanvas(), <Owner />);
     frames.flush();
     source.set(3);
     frames.flush();
@@ -160,11 +160,11 @@ describe('useComputed', () => {
     }
 
     const canvas = createCanvas();
-    const controller = crc(canvas, <Probe multiplier={2} fail={false} />);
+    const controller = pibbl(canvas, <Probe multiplier={2} fail={false} />);
     frames.flush();
     expect(output.get()).toBe(4);
 
-    crc(canvas, <Probe multiplier={3} fail />);
+    pibbl(canvas, <Probe multiplier={3} fail />);
     expect(() => frames.flush()).toThrow(failure);
     expect(output.get()).toBe(4);
     source.set(3);
@@ -188,7 +188,7 @@ describe('useComputed', () => {
     }
 
     const canvas = createCanvas();
-    const controller = crc(canvas, <ErrorProbe />);
+    const controller = pibbl(canvas, <ErrorProbe />);
     frames.flush();
     shouldThrow.set(true);
     expect(() => frames.flush()).toThrow();
@@ -204,9 +204,9 @@ describe('useComputed', () => {
       );
       output.get();
     }
-    crc(canvas, <CycleProbe cyclic={false} />);
+    pibbl(canvas, <CycleProbe cyclic={false} />);
     frames.flush();
-    crc(canvas, <CycleProbe cyclic />);
+    pibbl(canvas, <CycleProbe cyclic />);
     expect(() => frames.flush()).toThrowError(/computed cycle.*hook cycle/iu);
     controller.dispose();
     frames.restore();
@@ -226,10 +226,10 @@ describe('useComputed', () => {
     }
 
     const canvas = createCanvas();
-    const controller = crc(canvas, <Owner raw={1} />);
+    const controller = pibbl(canvas, <Owner raw={1} />);
     frames.flush();
     const beforeVersion = getSignalNode(output).version;
-    crc(canvas, <Owner raw={3} />);
+    pibbl(canvas, <Owner raw={3} />);
     frames.flush();
 
     expect(getSignalNode(output).version).toBe(beforeVersion);
@@ -250,9 +250,9 @@ describe('useComputed', () => {
     }
 
     const canvas = createCanvas();
-    const controller = crc(canvas, <Probe />);
+    const controller = pibbl(canvas, <Probe />);
     frames.flush();
-    crc(canvas, undefined);
+    pibbl(canvas, undefined);
     frames.flush();
     expect(output.get()).toBe(2);
 
@@ -271,7 +271,7 @@ describe('useComputed', () => {
       value.get();
     }
     const canvas = createCanvas();
-    const controller = crc(canvas, <HookFormula />);
+    const controller = pibbl(canvas, <HookFormula />);
     expect(() => frames.flush()).toThrowError(/hooks.*useComputed formula/iu);
 
     function WriteFormula() {
@@ -281,7 +281,7 @@ describe('useComputed', () => {
       });
       value.get();
     }
-    crc(canvas, <WriteFormula />);
+    pibbl(canvas, <WriteFormula />);
     expect(() => frames.flush()).toThrowError(/computed signal/iu);
     expect(target.get()).toBe(0);
     controller.dispose();
@@ -311,7 +311,7 @@ class ManualFrames {
 
   flush(): void {
     const entry = Array.from(this.callbacks.entries()).at(-1);
-    if (!entry) throw new Error('No pending CRC frame');
+    if (!entry) throw new Error('No pending Pibbl frame');
     const [id, callback] = entry;
     this.callbacks.delete(id);
     callback(performance.now());

@@ -1,6 +1,6 @@
 # Examples and gallery directives
 
-An example earns its place by teaching something recognizable and showing a result someone wants to make. The gallery should offer both approachable lessons and ambitious proof of CRC's range, with an obvious way to move from either into the playground.
+An example earns its place by teaching something recognizable and showing a result someone wants to make. The gallery should offer both approachable lessons and ambitious proof of Pibbl's range, with an obvious way to move from either into the playground.
 
 ## Three distinct content forms
 
@@ -20,7 +20,7 @@ Give the scene a coherent miniature art direction: a limited palette, deliberate
 
 Use public package entries, ordinary application code, explicit cleanup, and predictable initial state. Keep assets local or clearly declared and licensed. Use native HTML for text editing and complex forms when that better serves the experience. Treat that HTML as part of the example, not hidden site scaffolding.
 
-Every example should state what CRC contributes and what comes from application logic, HTML, Three.js, or another declared dependency. A game is not evidence that CRC provides a game engine. A shader is not automatically a CRC feature.
+Every example should state what Pibbl contributes and what comes from application logic, HTML, Three.js, or another declared dependency. A game is not evidence that Pibbl provides a game engine. A shader is not automatically a Pibbl feature.
 
 ## Splitting a large example
 

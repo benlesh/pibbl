@@ -22,7 +22,7 @@ const output = resolve(process.argv[3] ?? `${repository}/packages/core/test/out/
 await reserveEvidenceDirectory(output);
 const report = {
   requiredChecks: requiredReplayChecks('targeting'),
-  schema: 'crc-targeting-replay/1', status: 'incomplete', url,
+  schema: 'pibbl-targeting-replay/1', status: 'incomplete', url,
   node: process.version, browser: null, timestamp: new Date().toISOString(),
   environment: { viewport: { width: 1280, height: 1000 }, density: 1, locale: 'en-US', timezone: 'UTC' },
   provenanceScope: 'Loaded fixture marker compared with local core source, fixture, inspector, development configuration and lockfile; not full dependency or asset attestation.',
@@ -52,8 +52,8 @@ try {
   };
   report.expectedIdentity = await sourceIdentity(repository);
   report.run.toolIdentity = await captureReplayToolIdentity(repository, 'targeting', report.expectedIdentity.revision);
-  browser = process.env.CRC_VERIFY_BROWSER_ENDPOINT
-    ? await chromium.connect(process.env.CRC_VERIFY_BROWSER_ENDPOINT, { timeout: 15000 })
+  browser = process.env.PIBBL_VERIFY_BROWSER_ENDPOINT
+    ? await chromium.connect(process.env.PIBBL_VERIFY_BROWSER_ENDPOINT, { timeout: 15000 })
     : await chromium.launch({ timeout: 15_000 });
   report.browser = browser.version();
   const page = await browser.newPage(report.run.environment.browserContext);
@@ -74,7 +74,7 @@ try {
     const text = await evidence.textContent();
     assert.ok(text && text.length <= 65_536, 'Fixture evidence must be present and bounded.');
     const parsed = JSON.parse(text);
-    assert.equal(parsed.schema, 'crc-targeting-fixture/1');
+    assert.equal(parsed.schema, 'pibbl-targeting-fixture/1');
     report.servedIdentity = parsed.identity ?? null;
     assertIdentity(report.expectedIdentity, parsed.identity);
     return parsed.state;
@@ -168,8 +168,8 @@ try {
     assert.ok(phases.every(record => record.collectedErrors === 0));
     assert.ok(phases.slice(0, -1).every(record => record.outcome === null && record.errorCount === null));
     step.signalEvidence = observed.signalInspection;
-    assert.equal(step.signalEvidence.schema, 'crc-signal-observation/1');
-    assert.equal(step.signalEvidence.scheduler.schema, 'crc-scheduler-observation/1');
+    assert.equal(step.signalEvidence.schema, 'pibbl-signal-observation/1');
+    assert.equal(step.signalEvidence.scheduler.schema, 'pibbl-scheduler-observation/1');
     assert.equal(step.signalEvidence.scheduler.scope, 'loaded-runtime-realm');
     assert.equal(step.signalEvidence.scheduler.phase, 'idle');
     assert.equal(step.signalEvidence.scheduler.frame, null);

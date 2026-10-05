@@ -11,10 +11,10 @@ describe shipped behavior or authorize unrelated runtime changes.
 Provide editable, inspectable geometry for font outlines, shape manipulation,
 freehand drawing, and path editors. Applications should construct paths using
 familiar Path2D methods, transform them with DOMMatrix, export SVG path data,
-and pass them anywhere CRC accepts a native path.
+and pass them anywhere Pibbl accepts a native path.
 
 Keep the existing `Path` drawing component. Export the geometry class as
-`PathGeometry` from `@crc/core`; no new package or matrix abstraction is needed.
+`PathGeometry` from `@pibbl/core`; no new package or matrix abstraction is needed.
 
 ## Decisions established in discussion
 
@@ -25,7 +25,7 @@ Keep the existing `Path` drawing component. Export the geometry class as
 - `toPath2D(geometry)` is a standalone helper returning a fresh caller-owned
   native path. It is not a method and never returns a shared public cache.
 - SVG conversion is also a standalone helper.
-- CRC continues to paint, clip, and hit-test with native paths internally.
+- Pibbl continues to paint, clip, and hit-test with native paths internally.
 - Flattening, simplification, and subdivision are explicit utilities. Preserve
   the original geometry by returning new geometry from utilities by default.
 - Optimize storage, iteration, and conversion frequency structurally; defer
@@ -37,7 +37,7 @@ import policy below are design proposals that make these decisions concrete.
 ## Public authoring
 
 ```tsx
-import { Path, PathGeometry, toPath2D, toSvgPathData } from "@crc/core";
+import { Path, PathGeometry, toPath2D, toSvgPathData } from "@pibbl/core";
 
 const outline = new PathGeometry();
 outline.moveTo(0, 0);
@@ -48,7 +48,7 @@ outline.transform(new DOMMatrix().translate(10, 20).scale(2));
 const native = toPath2D(outline);
 const svgData = toSvgPathData(outline);
 
-// Use inside an ordinary CRC component:
+// Use inside an ordinary Pibbl component:
 const drawing = <Path style={{ d: outline, fill: "purple" }} />;
 ```
 
@@ -69,7 +69,7 @@ not meaningful for comparing different objects.
 
 Path2D exposes no standard segment readback. Native Path2D therefore cannot be
 an input to the editable constructor or `PathGeometry.addPath`. Both native and
-editable paths remain accepted by CRC's rendering APIs. Do not retain opaque
+editable paths remain accepted by Pibbl's rendering APIs. Do not retain opaque
 native subpaths inside editable geometry: that would break export and editing.
 
 SVG string construction is deferred from the initial capability. It requires
@@ -78,7 +78,7 @@ recover that data. Existing `SvgPath`, `createSvgPath`, and `useSvgPath` retain
 their browser-parsing behavior. Export is included without implying import.
 
 Raw browser methods such as `context.fill` still require a native Path2D.
-Interchangeability applies to CRC-owned path inputs, not browser overloads.
+Interchangeability applies to Pibbl-owned path inputs, not browser overloads.
 
 ## Representation and editing
 
@@ -152,7 +152,7 @@ tolerances, spacing, and valid subdivision counts.
 
 Changing geometry does not schedule a frame, notify a signal, or automatically
 invalidate a retained Layer. Applications request an update using the existing
-CRC scheduling mechanisms. Writing the same geometry back to an equality-aware
+Pibbl scheduling mechanisms. Writing the same geometry back to an equality-aware
 signal is not a guaranteed notification. Do not turn this object into another
 reactive primitive or scheduler.
 
@@ -196,7 +196,7 @@ Default number formatting preserves round-trippable JavaScript precision;
 lossy decimal rounding is not implicit. Empty geometry produces an empty string.
 No persistent SVG-string cache is retained by the geometry.
 
-## CRC integration and ownership
+## Pibbl integration and ownership
 
 Introduce a public path-input union `PathGeometry | Path2D`. Extend the Path and
 Clip styles, useEventTarget options, useEvent overloads, useRegion, useCursor,
@@ -209,7 +209,7 @@ Resolve a Clip input once for both native clipping and the interaction clipping
 stack. Explicit hook inputs resolve at registration/update, never per pointer
 event. No new automatic focus bounds are inferred from arbitrary paths.
 
-CRC may privately reuse conversions by geometry identity and captured revision.
+Pibbl may privately reuse conversions by geometry identity and captured revision.
 The proposed implementation uses a WeakMap keyed by PathGeometry, whose value
 contains only the last successfully converted revision and native snapshot.
 Do not expose those cached paths through public APIs. Audit custom callbacks
@@ -224,11 +224,11 @@ uses existing runtime error handling; it must not serve stale data as success.
 
 There is no append-in-place update of a cached native path. Public conversion
 does not use or expose this private cache. Native Path2D inputs pass through
-with existing ownership semantics; CRC cannot detect external native mutation.
+with existing ownership semantics; Pibbl cannot detect external native mutation.
 
 Internal caching can follow the first runnable slice. The initial slice must
 still share one conversion between its paint and event operations. The public
-contract does not depend on whether CRC caches across renders.
+contract does not depend on whether Pibbl caches across renders.
 
 ## Geometry utilities
 

@@ -1,4 +1,4 @@
-import { Circle, Group, Rectangle, crc, useReaction } from "@crc/core";
+import { Circle, Group, Rectangle, pibbl, useReaction } from "@pibbl/core";
 import {
   PhysicsDebug2D,
   PhysicsWorld2D,
@@ -6,8 +6,8 @@ import {
   applyImpulse2D,
   applyTorque2D,
   collider2D,
-  crcPhysicsBody2D,
-  crcPhysicsWorld2D,
+  pibblPhysicsBody2D,
+  pibblPhysicsWorld2D,
   disableBody2D,
   enableBody2D,
   inspectPhysics2D,
@@ -18,13 +18,13 @@ import {
   dynamicBody2D,
   teleportBody2D,
   wakeBody2D,
-  type CRCPhysicsBodyHandle2D,
-  type CRCPhysicsBodyInspection2D,
-  type CRCPhysicsDebug2DProps,
-  type CRCPhysicsInspection2D,
-  type CRCPhysicsSolverOptions,
-  type CRCPhysicsWorldHandle2D,
-} from "@crc/core/physics/2d";
+  type PibblPhysicsBodyHandle2D,
+  type PibblPhysicsBodyInspection2D,
+  type PibblPhysicsDebug2DProps,
+  type PibblPhysicsInspection2D,
+  type PibblPhysicsSolverOptions,
+  type PibblPhysicsWorldHandle2D,
+} from "@pibbl/core/physics/2d";
 
 const canvas = document.createElement("canvas");
 canvas.width = 400;
@@ -32,11 +32,11 @@ canvas.height = 240;
 const status = document.createElement("pre");
 document.body.append(canvas, status);
 
-let body: CRCPhysicsBodyHandle2D | undefined;
-let world: CRCPhysicsWorldHandle2D | undefined;
+let body: PibblPhysicsBodyHandle2D | undefined;
+let world: PibblPhysicsWorldHandle2D | undefined;
 
 function Ball() {
-  body = crcPhysicsBody2D();
+  body = pibblPhysicsBody2D();
   return (
     <Group
       physics={dynamicBody2D({ handle: body, collider: false, mass: 1 })}
@@ -51,17 +51,17 @@ function Ball() {
 }
 
 function DebugOverlay() {
-  world = crcPhysicsWorld2D();
+  world = pibblPhysicsWorld2D();
   useReaction(refresh, []);
-  const debug: CRCPhysicsDebug2DProps = { world, color: "#be123c" };
+  const debug: PibblPhysicsDebug2DProps = { world, color: "#be123c" };
   return <PhysicsDebug2D {...debug} />;
 }
 
-const solver: CRCPhysicsSolverOptions = {
+const solver: PibblPhysicsSolverOptions = {
   velocityIterations: 4,
   positionIterations: 2,
 };
-const controller = crc(
+const controller = pibbl(
   canvas,
   <PhysicsWorld2D gravity={[0, 420]} solver={solver}>
     <Rectangle
@@ -75,12 +75,12 @@ const controller = crc(
 
 function refresh() {
   if (!world || !body) return;
-  const snapshot: CRCPhysicsInspection2D = inspectPhysics2D(world);
-  const ball: CRCPhysicsBodyInspection2D | undefined = inspectPhysics2D(body);
+  const snapshot: PibblPhysicsInspection2D = inspectPhysics2D(world);
+  const ball: PibblPhysicsBodyInspection2D | undefined = inspectPhysics2D(body);
   status.textContent = `Tick ${snapshot.tick}; bodies ${snapshot.bodies.length}; ball ${ball?.pose.position.join(", ") ?? "pending"}; velocity ${body.linearVelocity.get().join(", ")}`;
 }
 
-const actions: readonly [string, (handle: CRCPhysicsBodyHandle2D) => void][] = [
+const actions: readonly [string, (handle: PibblPhysicsBodyHandle2D) => void][] = [
   ["Impulse", (handle) => applyImpulse2D(handle, [80, -180])],
   ["Force", (handle) => applyForce2D(handle, [20, -50])],
   ["Torque", (handle) => applyTorque2D(handle, 5)],

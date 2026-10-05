@@ -43,7 +43,7 @@ export function createCanvasRasterCache(
     maximumEntriesPerSource < 1
   ) {
     throw new RangeError(
-      "CRC Canvas particle raster cache size must be a positive integer.",
+      "Pibbl Canvas particle raster cache size must be a positive integer.",
     );
   }
 
@@ -72,7 +72,7 @@ export function createCanvasRasterCache(
     key: string | number,
   ): T | undefined {
     if (disposed) {
-      throw new Error("CRC Canvas particle raster cache is disposed.");
+      throw new Error("Pibbl Canvas particle raster cache is disposed.");
     }
     const present = sources.get(source)?.entries.get(key);
     if (present === undefined) return undefined;
@@ -86,7 +86,7 @@ export function createCanvasRasterCache(
     raster: T,
   ): T {
     if (disposed) {
-      throw new Error("CRC Canvas particle raster cache is disposed.");
+      throw new Error("Pibbl Canvas particle raster cache is disposed.");
     }
     const cache = requireCache(source);
     const present = cache.entries.get(key);

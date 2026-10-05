@@ -1,4 +1,4 @@
-/** Mirrors CRC's centered `contain` fit for native canvas pointer events. */
+/** Mirrors Pibbl's centered `contain` fit for native canvas pointer events. */
 export function mapViewport(width: number, height: number) {
   const scale = Math.min(width / 1200, height / 720);
   return {

@@ -1,5 +1,5 @@
 {
-  "schema": "crc-replay-watchdog/1",
+  "schema": "pibbl-replay-watchdog/1",
   "status": "exited",
   "timestamp": "2026-10-02T03:57:03.367Z",
   "deadlineMs": 60000,

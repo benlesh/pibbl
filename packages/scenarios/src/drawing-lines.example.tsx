@@ -1,5 +1,5 @@
 import type { drawingLinesScenarioEntry } from './catalog.js';
-import { HorizontalLine, Line, Rectangle, VerticalLine } from '@crc/core';
+import { HorizontalLine, Line, Rectangle, VerticalLine } from '@pibbl/core';
 export const DRAWING_LINES_SOURCE_ID = 'drawing-lines-example';
 /**
  * Actions supported by the drawing lines scenario's public controller.

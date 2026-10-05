@@ -1,5 +1,5 @@
-/** @jsxImportSource @crc/core */
-import { crc, Rectangle } from "@crc/core";
+/** @jsxImportSource @pibbl/core */
+import { pibbl, Rectangle } from "@pibbl/core";
 import {
   lightning,
   useTexture,
@@ -8,7 +8,7 @@ import {
   type ElectricPoint,
   type LightningMessage,
   type LightningOptions,
-} from "@crc/core/textures";
+} from "@pibbl/core/textures";
 
 const canvas = document.createElement("canvas");
 canvas.width = 320;
@@ -40,5 +40,5 @@ function Arc() {
   );
 }
 
-const controller = crc(canvas, <Arc />);
+const controller = pibbl(canvas, <Arc />);
 window.addEventListener("pagehide", () => controller.dispose(), { once: true });

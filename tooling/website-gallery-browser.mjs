@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { chromium } from "playwright";
 import { galleryExamples } from "../website/gallery.mjs";
 
-const base = process.env.CRC_WEBSITE_URL ?? "http://localhost:4321";
+const base = process.env.PIBBL_WEBSITE_URL ?? "http://localhost:4321";
 const update = process.argv.includes("--update-previews");
 const browser = await chromium.launch();
 try {

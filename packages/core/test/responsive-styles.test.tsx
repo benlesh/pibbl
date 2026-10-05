@@ -1,11 +1,11 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
-  crc, Absolute, Group, Flow, Grid, Rectangle, Text, signal, useCanvasContext, useLayoutBox,
+  pibbl, Absolute, Group, Flow, Grid, Rectangle, Text, signal, useCanvasContext, useLayoutBox,
   createElement, definePrimitive, measureElement, type MeasureResult, type SystemStyle,
-  type CRCController, type BoxStyle, type LayoutItemStyle, type CRCResponsiveStyle, type TextStyle,
-} from '@crc/core';
+  type PibblController, type BoxStyle, type LayoutItemStyle, type PibblResponsiveStyle, type TextStyle,
+} from '@pibbl/core';
 
-const mounts: CRCController[] = [];
+const mounts: PibblController[] = [];
 afterEach(() => {
   for (const mount of mounts.splice(0)) mount.dispose();
   vi.restoreAllMocks();
@@ -23,7 +23,7 @@ function canvas(width: number, height = 200) {
 
 describe('public responsive local styles', () => {
   it('keeps shared plain-component occurrences independent and leaves author props raw', async () => {
-    const outerStyle = signal<CRCResponsiveStyle<BoxStyle & LayoutItemStyle>>({
+    const outerStyle = signal<PibblResponsiveStyle<BoxStyle & LayoutItemStyle>>({
       width: '100%', height: 160,
       when: [{ query: { maxWidth: 500 }, style: { left: 10 } }],
     });
@@ -45,7 +45,7 @@ describe('public responsive local styles', () => {
       </Flow>;
     }
     const shared = <Content style={outerStyle} />;
-    mounts.push(crc(canvas(1000, 400), <Group>
+    mounts.push(pibbl(canvas(1000, 400), <Group>
       <Absolute style={{ width: 700, height: 160 }}>{shared}</Absolute>
       <Group style={{ translateY: 200 }}><Absolute style={{ width: 320, height: 160 }}>{shared}</Absolute></Group>
     </Group>, { viewport: 'responsive', pixelRatio: 1 }));
@@ -55,7 +55,7 @@ describe('public responsive local styles', () => {
   });
 
   it('can return from definite responsive placement to query-free intrinsic measurement', async () => {
-    const style = signal<CRCResponsiveStyle<TextStyle>>({
+    const style = signal<PibblResponsiveStyle<TextStyle>>({
       width: 120, height: 44,
       when: [{ query: { minWidth: 600 }, style: { font: '20px sans-serif' } }],
     });
@@ -64,7 +64,7 @@ describe('public responsive local styles', () => {
       sizes.push(useCanvasContext().getTransform().e);
       return null;
     }
-    mounts.push(crc(canvas(700), <Flow style={{ direction: 'horizontal', gap: 10 }}>
+    mounts.push(pibbl(canvas(700), <Flow style={{ direction: 'horizontal', gap: 10 }}>
       <Text style={style}>hello</Text>
       <Following style={{ width: 20, height: 20 }} />
     </Flow>, { viewport: 'responsive', pixelRatio: 1 }));
@@ -98,14 +98,14 @@ describe('public responsive local styles', () => {
     const wide = canvas(1000);
     const phone = canvas(360);
     const nested = canvas(1000);
-    mounts.push(crc(wide, <Actions id="wide" />, { viewport: 'responsive', pixelRatio: 1 }));
-    mounts.push(crc(phone, <Actions id="phone" />, { viewport: 'responsive', pixelRatio: 1 }));
+    mounts.push(pibbl(wide, <Actions id="wide" />, { viewport: 'responsive', pixelRatio: 1 }));
+    mounts.push(pibbl(phone, <Actions id="phone" />, { viewport: 'responsive', pixelRatio: 1 }));
     function Nested() {
       return <Grid style={{ gridTemplateColumns: [cellWidth.get(), '1fr'], gridTemplateRows: [160] }}>
         <Actions id="cell" style={{ width: '100%', height: 160, gridColumnStart: 1, gridRowStart: 1 }} />
       </Grid>;
     }
-    mounts.push(crc(nested, <Nested />, { viewport: 'responsive', pixelRatio: 1 }));
+    mounts.push(pibbl(nested, <Nested />, { viewport: 'responsive', pixelRatio: 1 }));
     await settle();
     expect(observations.get('wide')).toEqual({ x: 124, y: 0 });
     expect(observations.get('phone')).toEqual({ x: 0, y: 56 });
@@ -143,8 +143,8 @@ describe('public responsive local styles', () => {
       </Absolute>;
     }
     const target = canvas(700, 401);
-    mounts.push(crc(target, <Probe id="root" style={{ gap: 16, when: rules }} />, { viewport: 'responsive', pixelRatio: 1 }));
-    mounts.push(crc(canvas(1000, 700), <Container />, { viewport: 'responsive', pixelRatio: 1 }));
+    mounts.push(pibbl(target, <Probe id="root" style={{ gap: 16, when: rules }} />, { viewport: 'responsive', pixelRatio: 1 }));
+    mounts.push(pibbl(canvas(1000, 700), <Container />, { viewport: 'responsive', pixelRatio: 1 }));
     for (const [height, gap] of [[401, 16], [400, 8], [399, 8], [401, 16], [499, 16], [500, 24], [501, 24], [499, 16]]) {
       target.style.height = `${height}px`;
       innerHeight.set(height);
@@ -174,7 +174,7 @@ describe('public responsive local styles', () => {
     ] });
     const wholeRead = vi.spyOn(style, 'get');
     const target = canvas(700);
-    mounts.push(crc(target, <Flow><Rectangle style={style} /></Flow>, { viewport: 'responsive', pixelRatio: 1 }));
+    mounts.push(pibbl(target, <Flow><Rectangle style={style} /></Flow>, { viewport: 'responsive', pixelRatio: 1 }));
     await settle();
     expect(wholeRead).toHaveBeenCalledTimes(1);
     expect(activeRead).toHaveBeenCalledTimes(1);
@@ -200,9 +200,9 @@ describe('public responsive local styles', () => {
     const heightLabel = createElement(Text, { children: 'label', style: { when: [
       { query: { minHeight: 100 }, style: { lineHeight: 24 } },
     ] } });
-    expect(measureElement(heightLabel, constraints, service)).toMatchObject({ status: 'unsupported', reason: expect.stringContaining('CRC_STYLE_QUERY_BASIS') });
+    expect(measureElement(heightLabel, constraints, service)).toMatchObject({ status: 'unsupported', reason: expect.stringContaining('PIBBL_STYLE_QUERY_BASIS') });
     const parent = createElement(Flow, { children: label, style: { width: 700 } });
-    expect(measureElement(parent, constraints, service)).toMatchObject({ status: 'unsupported', reason: expect.stringContaining('CRC_STYLE_QUERY_MEASUREMENT') });
+    expect(measureElement(parent, constraints, service)).toMatchObject({ status: 'unsupported', reason: expect.stringContaining('PIBBL_STYLE_QUERY_MEASUREMENT') });
   });
 
   it('rejects responsive intrinsic measurement invoked during mounted evaluation without reading patch signals', async () => {
@@ -217,9 +217,9 @@ describe('public responsive local styles', () => {
       });
       return null;
     }
-    mounts.push(crc(canvas(700), <Scene />, { pixelRatio: 1 }));
+    mounts.push(pibbl(canvas(700), <Scene />, { pixelRatio: 1 }));
     await settle();
-    expect(result).toMatchObject({ status: 'unsupported', reason: expect.stringContaining('CRC_STYLE_QUERY_MEASUREMENT') });
+    expect(result).toMatchObject({ status: 'unsupported', reason: expect.stringContaining('PIBBL_STYLE_QUERY_MEASUREMENT') });
     expect(read).not.toHaveBeenCalled();
   });
 

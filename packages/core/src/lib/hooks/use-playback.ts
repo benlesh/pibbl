@@ -4,45 +4,45 @@ import {
   type AnimationPlaybackController,
 } from '../animation/playback.js';
 import type {
-  CRCAnimationProgram,
-  CRCPlayback,
-  CRCPlaybackEvent,
-  CRCPlaybackOptions,
+  PibblAnimationProgram,
+  PibblPlayback,
+  PibblPlaybackEvent,
+  PibblPlaybackOptions,
 } from '../animation/types.js';
 import { GLOBAL_STATE } from '../global-state.js';
 import { isSignal } from '../signals/graph.js';
 import { resolveSignalValue } from '../signals/resolve-signal-value.js';
 import type { SignalValue } from '../signals/types.js';
-import type { CRCComponentRefs, CRCInstance } from '../types.js';
+import type { PibblComponentRefs, PibblInstance } from '../types.js';
 import { requireHookContext, useHookSlot } from './hook-slot.js';
 
-type CRCPlaybackOptionsInput = {
-  readonly [K in keyof CRCPlaybackOptions]: SignalValue<CRCPlaybackOptions[K]>;
+type PibblPlaybackOptionsInput = {
+  readonly [K in keyof PibblPlaybackOptions]: SignalValue<PibblPlaybackOptions[K]>;
 };
 
-interface CRCPlaybackHookSlot {
+interface PibblPlaybackHookSlot {
   readonly controller: AnimationPlaybackController;
-  readonly componentRefs: CRCComponentRefs<any>;
-  readonly crcInstance: CRCInstance;
-  latestOptions: CRCPlaybackOptions;
+  readonly componentRefs: PibblComponentRefs<any>;
+  readonly pibblInstance: PibblInstance;
+  latestOptions: PibblPlaybackOptions;
   mountSettled: boolean;
   readonly onError: (error: unknown) => void;
-  readonly onEvent: (event: CRCPlaybackEvent) => void;
+  readonly onEvent: (event: PibblPlaybackEvent) => void;
   renderRevision: number;
 }
 
-function isCurrentSlot(slot: CRCPlaybackHookSlot): boolean {
+function isCurrentSlot(slot: PibblPlaybackHookSlot): boolean {
   return !slot.componentRefs.teardowns.closed &&
-    !slot.crcInstance.mainTeardowns.closed &&
-    GLOBAL_STATE.crcInstances.get(slot.crcInstance.canvas) === slot.crcInstance &&
-    slot.crcInstance.refs.get(slot.componentRefs.id) === slot.componentRefs;
+    !slot.pibblInstance.mainTeardowns.closed &&
+    GLOBAL_STATE.pibblInstances.get(slot.pibblInstance.canvas) === slot.pibblInstance &&
+    slot.pibblInstance.refs.get(slot.componentRefs.id) === slot.componentRefs;
 }
 
 function controllerOptions(
-  candidate: CRCPlaybackOptions,
-  onEvent: (event: CRCPlaybackEvent) => void,
+  candidate: PibblPlaybackOptions,
+  onEvent: (event: PibblPlaybackEvent) => void,
   onError: (error: unknown) => void,
-): CRCPlaybackOptions {
+): PibblPlaybackOptions {
   return {
     ...candidate,
     onEvent: typeof candidate.onEvent === 'function' ?
@@ -56,32 +56,33 @@ function controllerOptions(
  * Creates one component-owned animation playback handle for a hook slot.
  *
  * @param programInput - Animation program, optionally supplied by a signal. See
- * {@link SignalValue} , {@link CRCAnimationProgram} .
+ * {@link SignalValue} , {@link PibblAnimationProgram} .
  * @param optionsInput - Playback configuration, optionally supplied by a signal. See
- * {@link SignalValue} , {@link CRCPlaybackOptionsInput} .
+ * {@link SignalValue} , {@link PibblPlaybackOptionsInput} .
  * @returns Stable mount-owned playback controls and reactive status/time values. See
- * {@link CRCPlayback} .
+ * {@link PibblPlayback} .
  *
  * @see {@link SignalValue}
- * @see {@link CRCAnimationProgram}
- * @see {@link CRCPlayback}
+ * @see {@link PibblAnimationProgram}
+ * @see {@link PibblPlayback}
  */
 export function usePlayback(
-  programInput: SignalValue<CRCAnimationProgram>,
-  optionsInput: SignalValue<CRCPlaybackOptionsInput> = {},
-): CRCPlayback {
-  const { componentRefs, crcInstance } = requireHookContext();
+  programInput: SignalValue<PibblAnimationProgram>,
+  optionsInput: SignalValue<PibblPlaybackOptionsInput> = {},
+): PibblPlayback {
+  const { componentRefs, pibblInstance } = requireHookContext();
   const program = resolveSignalValue(programInput);
   const options = resolvePlaybackOptions(optionsInput);
   const candidate = normalizeAnimationPlaybackCandidate(program, options);
   const candidateOptions = candidate.options;
-  const slot = useHookSlot<CRCPlaybackHookSlot>('playback', teardowns => {
-    let value!: CRCPlaybackHookSlot;
+  const slot = useHookSlot<PibblPlaybackHookSlot>('playback', teardowns => {
+    let value!: PibblPlaybackHookSlot;
     const controller = createAnimationPlaybackController(
       candidate.program,
       candidateOptions,
     );
-    const onEvent = (event: CRCPlaybackEvent): void => {
+    controller.setDeferredStatusCommandOwner(pibblInstance.mainTeardowns);
+    const onEvent = (event: PibblPlaybackEvent): void => {
       if (isCurrentSlot(value)) value.latestOptions.onEvent?.(event);
     };
     const onError = (error: unknown): void => {
@@ -90,7 +91,7 @@ export function usePlayback(
     value = {
       controller,
       componentRefs,
-      crcInstance,
+      pibblInstance,
       latestOptions: {},
       mountSettled: false,
       onError,
@@ -107,7 +108,7 @@ export function usePlayback(
   const revision = ++slot.renderRevision;
   const transaction = GLOBAL_STATE.renderTransaction;
   if (!transaction) {
-    throw new Error('usePlayback requires an active CRC render transaction.');
+    throw new Error('usePlayback requires an active Pibbl render transaction.');
   }
   transaction.onFinish(success => {
     if (!success || revision !== slot.renderRevision || !isCurrentSlot(slot)) return;
@@ -125,15 +126,15 @@ export function usePlayback(
 }
 
 function resolvePlaybackOptions(
-  input: SignalValue<CRCPlaybackOptionsInput>,
-): CRCPlaybackOptions {
+  input: SignalValue<PibblPlaybackOptionsInput>,
+): PibblPlaybackOptions {
   const source = resolveSignalValue(input);
   let resolved: Record<PropertyKey, unknown> | undefined;
   for (const key in source) {
-    const value = source[key as keyof CRCPlaybackOptionsInput];
+    const value = source[key as keyof PibblPlaybackOptionsInput];
     if (!isSignal(value)) continue;
     resolved ??= { ...source };
     resolved[key] = resolveSignalValue(value as SignalValue<unknown>);
   }
-  return (resolved ?? source) as CRCPlaybackOptions;
+  return (resolved ?? source) as PibblPlaybackOptions;
 }

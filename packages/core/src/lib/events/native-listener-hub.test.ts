@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { clearSharedState, getCRCInstance } from '../global-state';
-import { mountCRC } from '../mount-crc';
+import { clearSharedState, getPibblInstance } from '../global-state';
+import { mountPibbl } from '../mount-pibbl';
 import { Teardowns } from '../teardowns';
 import { RuntimeDiagnostics } from '../../../test/support/runtime-diagnostics';
 import { createNativeListenerHub } from './native-listener-hub';
@@ -25,7 +25,7 @@ describe('native listener hub', () => {
     activeDiagnostics.add(diagnostics);
     const Empty = (_props: {}) => undefined;
 
-    const controller = mountCRC(canvas, createElement(Empty, {}));
+    const controller = mountPibbl(canvas, createElement(Empty, {}));
 
     expect(diagnostics.snapshot().nativeListeners).toBe(0);
     controller.dispose();
@@ -40,20 +40,20 @@ describe('native listener hub', () => {
   it('shares the HTML event root with layers and omits a hub for an Offscreen root', () => {
     const canvas = document.createElement('canvas');
     const Empty = (_props: {}) => undefined;
-    const rootController = mountCRC(canvas, createElement(Empty, {}));
+    const rootController = mountPibbl(canvas, createElement(Empty, {}));
     const layerCanvas = new OffscreenCanvas(20, 10);
-    const layerController = mountCRC(layerCanvas, createElement(Empty, {}), { parent: canvas });
+    const layerController = mountPibbl(layerCanvas, createElement(Empty, {}), { parent: canvas });
 
-    expect(getCRCInstance(layerCanvas).eventRoot)
-      .toBe(getCRCInstance(canvas).eventRoot);
-    expect(getCRCInstance(layerCanvas).eventRoot.canvas).toBe(canvas);
+    expect(getPibblInstance(layerCanvas).eventRoot)
+      .toBe(getPibblInstance(canvas).eventRoot);
+    expect(getPibblInstance(layerCanvas).eventRoot.canvas).toBe(canvas);
 
     layerController.dispose();
     rootController.dispose();
 
     const offscreen = new OffscreenCanvas(20, 10);
-    const offscreenController = mountCRC(offscreen, createElement(Empty, {}));
-    expect(getCRCInstance(offscreen).eventRoot).toMatchObject({
+    const offscreenController = mountPibbl(offscreen, createElement(Empty, {}));
+    expect(getPibblInstance(offscreen).eventRoot).toMatchObject({
       canvas: undefined,
       nativeListeners: undefined,
     });

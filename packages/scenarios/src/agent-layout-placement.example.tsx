@@ -1,4 +1,4 @@
-import { Absolute, Group, Path, createRectanglePath, useLayoutBox } from '@crc/core';
+import { Absolute, Group, Path, createRectanglePath, useLayoutBox } from '@pibbl/core';
 
 export const AGENT_LAYOUT_PLACEMENT_SOURCE_ID = 'agent-layout-placement-example';
 export type LayoutPlacementMode = 'clipped' | 'overflow-visible' | 'repaired' | 'overlap-allowed' | 'overlap-prohibited';

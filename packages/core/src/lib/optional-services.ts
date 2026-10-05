@@ -1,4 +1,4 @@
-import type { CRCInstance } from './types.js';
+import type { PibblInstance } from './types.js';
 
 export interface OptionalService {
   dispose(): void;
@@ -6,8 +6,8 @@ export interface OptionalService {
   endRender?(success: boolean): void;
 }
 
-/** @internal Lazily installs an optional feature service on one CRC instance. */
-export function getOptionalService<T extends OptionalService>(instance: CRCInstance, key: symbol, create: () => T): T {
+/** @internal Lazily installs an optional feature service on one Pibbl instance. */
+export function getOptionalService<T extends OptionalService>(instance: PibblInstance, key: symbol, create: () => T): T {
   const existing = instance.optionalServices.get(key) as T | undefined;
   if (existing) return existing;
   const service = create();

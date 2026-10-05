@@ -98,7 +98,7 @@ export function registerTexturePaint(
 export function validateTexturePaint(value: TexturePaint): void {
   const capability =
     typeof value === "object" && value !== null ? capabilities.get(value) : undefined;
-  if (!capability) throw new TypeError("Expected a CRC texture paint value.");
+  if (!capability) throw new TypeError("Expected a Pibbl texture paint value.");
   capability.validate();
 }
 
@@ -119,14 +119,14 @@ export function borrowTextureRaster<T>(
 ): T {
   const capability =
     typeof value === "object" && value !== null ? capabilities.get(value) : undefined;
-  if (!capability) throw new TypeError("Expected a CRC texture paint value.");
+  if (!capability) throw new TypeError("Expected a Pibbl texture paint value.");
   return capability.borrow(callback);
 }
 
 /**
  * Internal paint resolution shared by Canvas built-ins.
  *
- * @param value - Native Canvas paint or CRC texture placement. See {@link TexturePaint}.
+ * @param value - Native Canvas paint or Pibbl texture placement. See {@link TexturePaint}.
  * @param ctx - Canvas context that will consume the resolved paint. See {@link RenderingContext2D}
  * .
  * @param bounds - Destination bounds in local logical coordinates.

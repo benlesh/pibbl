@@ -1,12 +1,12 @@
 import type {
-  CRCParticleChoice,
-  CRCParticleCurve,
-  CRCParticleCurveOptions,
-  CRCParticleCurveValue,
-  CRCParticleGradient,
-  CRCParticleIntegerRange,
-  CRCParticleParameterReference,
-  CRCParticleRange,
+  PibblParticleChoice,
+  PibblParticleCurve,
+  PibblParticleCurveOptions,
+  PibblParticleCurveValue,
+  PibblParticleGradient,
+  PibblParticleIntegerRange,
+  PibblParticleParameterReference,
+  PibblParticleRange,
 } from './types.js';
 
 export type ParticleDescriptorRecord =
@@ -16,13 +16,13 @@ export type ParticleDescriptorRecord =
   | Readonly<{ type: 'parameter'; name: string }>
   | Readonly<{
       type: 'curve';
-      keys: readonly (readonly [number, CRCParticleCurveValue])[];
-      options: CRCParticleCurveOptions | undefined;
+      keys: readonly (readonly [number, PibblParticleCurveValue])[];
+      options: PibblParticleCurveOptions | undefined;
     }>
   | Readonly<{
       type: 'gradient';
       keys: readonly (readonly [number, string])[];
-      options: CRCParticleCurveOptions | undefined;
+      options: PibblParticleCurveOptions | undefined;
     }>;
 
 const descriptorRecords = new WeakMap<object, ParticleDescriptorRecord>();
@@ -69,7 +69,7 @@ function validateRange(min: number, max: number, label: string): void {
   }
 }
 
-function curveValueDimension(value: CRCParticleCurveValue): 1 | 2 {
+function curveValueDimension(value: PibblParticleCurveValue): 1 | 2 {
   if (typeof value === 'number') {
     assertFinite(value, 'particleCurve value');
     return 1;
@@ -102,17 +102,17 @@ function validateKeyTimes(
 }
 
 function normalizeOptions(
-  options: CRCParticleCurveOptions | undefined,
+  options: PibblParticleCurveOptions | undefined,
   label: string,
-): CRCParticleCurveOptions | undefined {
+): PibblParticleCurveOptions | undefined {
   if (options === undefined) return undefined;
   if (options.easing !== undefined && typeof options.easing !== 'function') {
-    throw new TypeError(`${label} options.easing must be a CRC easing function.`);
+    throw new TypeError(`${label} options.easing must be a Pibbl easing function.`);
   }
   return Object.freeze({ easing: options.easing });
 }
 
-function between(min: number, max: number): CRCParticleRange {
+function between(min: number, max: number): PibblParticleRange {
   validateRange(min, max, 'particleRange');
   if (!Number.isFinite(max - min)) {
     throw new RangeError('particleRange span must be finite.');
@@ -121,7 +121,7 @@ function between(min: number, max: number): CRCParticleRange {
   return descriptor(value, value);
 }
 
-function integer(min: number, max: number): CRCParticleIntegerRange {
+function integer(min: number, max: number): PibblParticleIntegerRange {
   validateRange(min, max, 'particleInteger');
   if (!Number.isSafeInteger(min) || !Number.isSafeInteger(max)) {
     throw new RangeError('particleInteger min and max must be safe integers.');
@@ -135,7 +135,7 @@ function integer(min: number, max: number): CRCParticleIntegerRange {
 
 function choice<const T>(
   choices: readonly Readonly<{ value: T; weight: number }>[],
-): CRCParticleChoice<T> {
+): PibblParticleChoice<T> {
   if (choices.length === 0) {
     throw new TypeError('particleChoice choices must be nonempty.');
   }
@@ -153,12 +153,12 @@ function choice<const T>(
     return Object.freeze({ value: cloneFrozenValue(value), weight });
   }));
   const value = { type: 'choice' as const, choices: copied };
-  return descriptor(value, value as ParticleDescriptorRecord) as CRCParticleChoice<T>;
+  return descriptor(value, value as ParticleDescriptorRecord) as PibblParticleChoice<T>;
 }
 
 function parameter<const Name extends string>(
   name: Name,
-): CRCParticleParameterReference<Name> {
+): PibblParticleParameterReference<Name> {
   if (typeof name !== 'string' || name.trim().length === 0) {
     throw new TypeError('particleParameter name must be a nonempty string.');
   }
@@ -166,10 +166,10 @@ function parameter<const Name extends string>(
   return descriptor(value, value);
 }
 
-function curve<const T extends CRCParticleCurveValue>(
+function curve<const T extends PibblParticleCurveValue>(
   keys: readonly (readonly [time: number, value: T])[],
-  options?: CRCParticleCurveOptions,
-): CRCParticleCurve<T> {
+  options?: PibblParticleCurveOptions,
+): PibblParticleCurve<T> {
   validateKeyTimes(keys, 'particleCurve');
   let dimension: 1 | 2 | undefined;
   const copied = Object.freeze(keys.map(([time, value], index) => {
@@ -190,13 +190,13 @@ function curve<const T extends CRCParticleCurveValue>(
   };
   return descriptor(value, {
     type: 'curve', keys: copied, options: normalizedOptions,
-  }) as CRCParticleCurve<T>;
+  }) as PibblParticleCurve<T>;
 }
 
 function gradient(
   keys: readonly (readonly [time: number, color: string])[],
-  options?: CRCParticleCurveOptions,
-): CRCParticleGradient {
+  options?: PibblParticleCurveOptions,
+): PibblParticleGradient {
   validateKeyTimes(keys, 'particleGradient');
   const copied = Object.freeze(keys.map(([time, color], index) => {
     if (typeof color !== 'string' || color.trim().length === 0) {
@@ -225,9 +225,9 @@ export function getParticleDescriptorRecord(value: unknown): ParticleDescriptorR
  *
  * @param min - Finite lower bound, no greater than max.
  * @param max - Finite upper bound; the span must also be finite.
- * @returns An immutable continuous sampling descriptor. See {@link CRCParticleRange}.
+ * @returns An immutable continuous sampling descriptor. See {@link PibblParticleRange}.
  *
- * @see {@link CRCParticleRange}
+ * @see {@link PibblParticleRange}
  */
 export const particleRange = between;
 /**
@@ -235,9 +235,9 @@ export const particleRange = between;
  *
  * @param min - Inclusive lower bound, a safe integer.
  * @param max - Inclusive upper bound; the inclusive span must be a safe integer.
- * @returns An immutable integer sampling descriptor. See {@link CRCParticleIntegerRange}.
+ * @returns An immutable integer sampling descriptor. See {@link PibblParticleIntegerRange}.
  *
- * @see {@link CRCParticleIntegerRange}
+ * @see {@link PibblParticleIntegerRange}
  */
 export const particleInteger = integer;
 /**
@@ -245,18 +245,18 @@ export const particleInteger = integer;
  *
  * @param choices - Nonempty weighted values; every weight and their total must be positive and
  * finite.
- * @returns An immutable descriptor containing copied choices. See {@link CRCParticleChoice}.
+ * @returns An immutable descriptor containing copied choices. See {@link PibblParticleChoice}.
  *
- * @see {@link CRCParticleChoice}
+ * @see {@link PibblParticleChoice}
  */
 export const particleChoice = choice;
 /**
  * References a named parameter declared by a particle effect.
  *
  * @param name - Nonempty name of a parameter declared by the effect.
- * @returns A typed parameter reference. See {@link CRCParticleParameterReference}.
+ * @returns A typed parameter reference. See {@link PibblParticleParameterReference}.
  *
- * @see {@link CRCParticleParameterReference}
+ * @see {@link PibblParticleParameterReference}
  */
 export const particleParameter = parameter;
 /**
@@ -264,12 +264,12 @@ export const particleParameter = parameter;
  *
  * @param keys - Scalar or 2D-vector keys with strictly increasing normalized times, starting at 0
  * and ending at 1.
- * @param options - Optional segment easing. See {@link CRCParticleCurveOptions}.
- * @returns An immutable lifetime curve containing copied keys. See {@link CRCParticleCurve}.
+ * @param options - Optional segment easing. See {@link PibblParticleCurveOptions}.
+ * @returns An immutable lifetime curve containing copied keys. See {@link PibblParticleCurve}.
  *
- * @see {@link CRCParticleCurveOptions}
- * @see {@link CRCParticleCurve}
- * @see {@link CRCParticleCurveValue}
+ * @see {@link PibblParticleCurveOptions}
+ * @see {@link PibblParticleCurve}
+ * @see {@link PibblParticleCurveValue}
  */
 export const particleCurve = curve;
 /**
@@ -277,12 +277,12 @@ export const particleCurve = curve;
  *
  * @param keys - Color keys with strictly increasing normalized times, starting at 0 and ending at
  * 1.
- * @param options - Optional segment easing. See {@link CRCParticleCurveOptions}.
+ * @param options - Optional segment easing. See {@link PibblParticleCurveOptions}.
  * @returns An immutable lifetime color gradient containing copied keys. See
- * {@link CRCParticleGradient} .
+ * {@link PibblParticleGradient} .
  *
- * @see {@link CRCParticleCurveOptions}
- * @see {@link CRCParticleGradient}
+ * @see {@link PibblParticleCurveOptions}
+ * @see {@link PibblParticleGradient}
  */
 export const particleGradient = gradient;
 

@@ -7,15 +7,15 @@ import {
   type SpringDefinitionRecord,
 } from './spring.js';
 import type {
-  CRCAnimationDefinition,
-  CRCAnimationOptions,
-  CRCAnimationSampleInput,
-  CRCEasing,
-  CRCInterpolator,
-  CRCKeyframesOptions,
-  CRCSpringOptions,
-  CRCStepperOptions,
-  CRCTweenOptions,
+  PibblAnimationDefinition,
+  PibblAnimationOptions,
+  PibblAnimationSampleInput,
+  PibblEasing,
+  PibblInterpolator,
+  PibblKeyframesOptions,
+  PibblSpringOptions,
+  PibblStepperOptions,
+  PibblTweenOptions,
 } from './types.js';
 
 declare const seekableDefinitionActivationBrand: unique symbol;
@@ -30,21 +30,21 @@ interface TweenDefinitionRecord<T> extends BaseDefinitionRecord {
   readonly hasFrom: boolean;
   readonly from: T | undefined;
   readonly to: T;
-  readonly easing: CRCEasing;
-  readonly interpolate: CRCInterpolator<T> | undefined;
+  readonly easing: PibblEasing;
+  readonly interpolate: PibblInterpolator<T> | undefined;
 }
 
 interface KeyframesDefinitionRecord<T> extends BaseDefinitionRecord {
   readonly kind: 'keyframes';
   readonly values: readonly T[];
   readonly offsets: readonly number[];
-  readonly easings: readonly CRCEasing[];
-  readonly interpolate: CRCInterpolator<T> | undefined;
+  readonly easings: readonly PibblEasing[];
+  readonly interpolate: PibblInterpolator<T> | undefined;
 }
 
 interface CustomDefinitionRecord<T> extends BaseDefinitionRecord {
   readonly kind: 'custom';
-  readonly sample: (input: CRCAnimationSampleInput<T>) => T;
+  readonly sample: (input: PibblAnimationSampleInput<T>) => T;
 }
 
 export interface StepperDefinitionRecord<T> extends BaseDefinitionRecord {
@@ -77,13 +77,13 @@ export type SeekableDefinitionBoundaryValue<T> =
   | { readonly kind: 'unknown' };
 
 interface SeekableDefinitionActivationRecord<T> {
-  readonly definition: CRCAnimationDefinition<T>;
+  readonly definition: PibblAnimationDefinition<T>;
   readonly definitionRecord: Exclude<DefinitionRecord<T>, StepperDefinitionRecord<T>>;
   readonly initialValue: T;
 }
 
 const definitionRecords = new WeakMap<
-  CRCAnimationDefinition<unknown>,
+  PibblAnimationDefinition<unknown>,
   DefinitionRecord<unknown>
 >();
 const seekableActivationRecords = new WeakMap<
@@ -115,8 +115,8 @@ AnimationDefinitionPerformanceSnapshot {
 }
 
 function definitionLabel(debugName: string | undefined): string {
-  return debugName === undefined ? 'CRC animation definition' :
-    `CRC animation definition "${debugName}"`;
+  return debugName === undefined ? 'Pibbl animation definition' :
+    `Pibbl animation definition "${debugName}"`;
 }
 
 function assertDuration(duration: number, debugName: string | undefined): void {
@@ -235,7 +235,7 @@ function cloneTypedArray(
  * values (notably WeakMap, WeakSet, Promise, and host handles) remain usable
  * identity values because cloning them can manufacture an invalid receiver or
  * change their behavior; an absolute snapshot guarantee for those values
- * requires an explicit public clone contract that CRC does not currently
+ * requires an explicit public clone contract that Pibbl does not currently
  * provide.
  */
 function snapshotAnimationValue<T>(
@@ -390,10 +390,10 @@ function validateSampledValue<T>(sampled: T, debugName: string | undefined): T {
   return sampled;
 }
 
-function createDefinition<T>(record: DefinitionRecord<T>): CRCAnimationDefinition<T> {
-  const definition = Object.freeze({}) as CRCAnimationDefinition<T>;
+function createDefinition<T>(record: DefinitionRecord<T>): PibblAnimationDefinition<T> {
+  const definition = Object.freeze({}) as PibblAnimationDefinition<T>;
   definitionRecords.set(
-    definition as CRCAnimationDefinition<unknown>,
+    definition as PibblAnimationDefinition<unknown>,
     Object.freeze(record) as DefinitionRecord<unknown>,
   );
   return definition;
@@ -417,7 +417,7 @@ function sampledProgress(duration: number, localTime: number): {
   readonly localTime: number;
   readonly progress: number;
 } {
-  assertFiniteNumber(localTime, 'CRC animation sample localTime must be finite.');
+  assertFiniteNumber(localTime, 'Pibbl animation sample localTime must be finite.');
   if (duration === 0) return Object.freeze({ localTime: 0, progress: 1 });
   const normalizedLocalTime = Math.min(duration, Math.max(0, localTime));
   return Object.freeze({
@@ -430,7 +430,7 @@ function interpolate<T>(
   from: T,
   to: T,
   progress: number,
-  custom: CRCInterpolator<T> | undefined,
+  custom: PibblInterpolator<T> | undefined,
   debugName: string | undefined,
 ): T {
   if (custom === undefined && (typeof from !== 'number' || typeof to !== 'number')) {
@@ -450,7 +450,7 @@ function interpolate<T>(
 }
 
 function easedProgress(
-  ease: CRCEasing,
+  ease: PibblEasing,
   progress: number,
   debugName: string | undefined,
 ): number {
@@ -493,10 +493,10 @@ function normalizeOffsets(
 }
 
 function normalizeEasings(
-  easingOption: CRCEasing | readonly CRCEasing[] | undefined,
+  easingOption: PibblEasing | readonly PibblEasing[] | undefined,
   segmentCount: number,
   debugName: string | undefined,
-): readonly CRCEasing[] {
+): readonly PibblEasing[] {
   if (Array.isArray(easingOption)) {
     if (easingOption.length !== segmentCount) {
       throw new RangeError(`${definitionLabel(debugName)} keyframe easing list must have one entry per segment.`);
@@ -517,13 +517,13 @@ function normalizeEasings(
  * Returns an opaque immutable tween definition.
  *
  * @param options - Start and end values, duration, easing, and interpolation settings. See
- * {@link CRCTweenOptions} .
- * @returns An immutable tween definition. See {@link CRCAnimationDefinition}.
+ * {@link PibblTweenOptions} .
+ * @returns An immutable tween definition. See {@link PibblAnimationDefinition}.
  *
- * @see {@link CRCTweenOptions}
- * @see {@link CRCAnimationDefinition}
+ * @see {@link PibblTweenOptions}
+ * @see {@link PibblAnimationDefinition}
  */
-export function tween<T>(options: Readonly<CRCTweenOptions<T>>): CRCAnimationDefinition<T> {
+export function tween<T>(options: Readonly<PibblTweenOptions<T>>): PibblAnimationDefinition<T> {
   assertDuration(options.duration, options.debugName);
   if (typeof options.easing !== 'undefined' && typeof options.easing !== 'function') {
     throw new TypeError(`${definitionLabel(options.debugName)} easing must be a function.`);
@@ -549,16 +549,16 @@ export function tween<T>(options: Readonly<CRCTweenOptions<T>>): CRCAnimationDef
  * Returns an opaque immutable keyframe definition.
  *
  * @param options - Keyframe values, timing, easing, and interpolation settings. See
- * {@link CRCKeyframesOptions} .
+ * {@link PibblKeyframesOptions} .
  * @returns An immutable animation definition sampling the keyframes. See
- * {@link CRCAnimationDefinition} .
+ * {@link PibblAnimationDefinition} .
  *
- * @see {@link CRCKeyframesOptions}
- * @see {@link CRCAnimationDefinition}
+ * @see {@link PibblKeyframesOptions}
+ * @see {@link PibblAnimationDefinition}
  */
 export function keyframes<T>(
-  options: Readonly<CRCKeyframesOptions<T>>,
-): CRCAnimationDefinition<T> {
+  options: Readonly<PibblKeyframesOptions<T>>,
+): PibblAnimationDefinition<T> {
   assertDuration(options.duration, options.debugName);
   if (options.values.length < 2) {
     throw new RangeError(`${definitionLabel(options.debugName)} keyframes require at least two values.`);
@@ -586,16 +586,16 @@ export function keyframes<T>(
 /**
  * Returns an opaque immutable analytic one-dimensional spring definition.
  *
- * @param options - Target, initial conditions, and spring parameters. See {@link CRCSpringOptions}
+ * @param options - Target, initial conditions, and spring parameters. See {@link PibblSpringOptions}
  * .
- * @returns An analytic numeric spring definition. See {@link CRCAnimationDefinition}.
+ * @returns An analytic numeric spring definition. See {@link PibblAnimationDefinition}.
  *
- * @see {@link CRCSpringOptions}
- * @see {@link CRCAnimationDefinition}
+ * @see {@link PibblSpringOptions}
+ * @see {@link PibblAnimationDefinition}
  */
 export function spring(
-  options: Readonly<CRCSpringOptions>,
-): CRCAnimationDefinition<number> {
+  options: Readonly<PibblSpringOptions>,
+): PibblAnimationDefinition<number> {
   return createDefinition(createSpringRecord(options));
 }
 
@@ -603,15 +603,15 @@ export function spring(
  * Returns an opaque immutable definition from a custom seekable sampler.
  *
  * @param options - Duration and pure sampling callback for the animation. See
- * {@link CRCAnimationOptions} .
- * @returns An immutable, seekable animation definition. See {@link CRCAnimationDefinition}.
+ * {@link PibblAnimationOptions} .
+ * @returns An immutable, seekable animation definition. See {@link PibblAnimationDefinition}.
  *
- * @see {@link CRCAnimationOptions}
- * @see {@link CRCAnimationDefinition}
+ * @see {@link PibblAnimationOptions}
+ * @see {@link PibblAnimationDefinition}
  */
 export function defineAnimation<T>(
-  options: Readonly<CRCAnimationOptions<T>>,
-): CRCAnimationDefinition<T> {
+  options: Readonly<PibblAnimationOptions<T>>,
+): PibblAnimationDefinition<T> {
   assertDuration(options.duration, options.debugName);
   if (typeof options.sample !== 'function') {
     throw new TypeError(`${definitionLabel(options.debugName)} sample must be a function.`);
@@ -629,16 +629,16 @@ export function defineAnimation<T>(
  * the playback engine, not by the seekable sampler.
  *
  * @param options - Initial state, fixed-step integration, value reader, and completion predicate.
- * See {@link CRCStepperOptions} .
+ * See {@link PibblStepperOptions} .
  * @returns A stateful animation definition advanced by fixed simulation steps. See
- * {@link CRCAnimationDefinition} .
+ * {@link PibblAnimationDefinition} .
  *
- * @see {@link CRCStepperOptions}
- * @see {@link CRCAnimationDefinition}
+ * @see {@link PibblStepperOptions}
+ * @see {@link PibblAnimationDefinition}
  */
 export function stepper<State, T>(
-  options: Readonly<CRCStepperOptions<State, T>>,
-): CRCAnimationDefinition<T> {
+  options: Readonly<PibblStepperOptions<State, T>>,
+): PibblAnimationDefinition<T> {
   if (typeof options.initial !== 'function') {
     throw new TypeError(`${definitionLabel(options.debugName)} stepper initial must be a function.`);
   }
@@ -673,17 +673,17 @@ export function stepper<State, T>(
 
 /** @internal Returns the private immutable record associated with a definition. */
 export function getDefinitionRecord<T>(
-  definition: CRCAnimationDefinition<T>,
+  definition: PibblAnimationDefinition<T>,
 ): DefinitionRecord<T> {
-  const record = definitionRecords.get(definition as CRCAnimationDefinition<unknown>);
-  if (record === undefined) throw new TypeError('Expected a CRC animation definition.');
+  const record = definitionRecords.get(definition as PibblAnimationDefinition<unknown>);
+  if (record === undefined) throw new TypeError('Expected a Pibbl animation definition.');
   return record as DefinitionRecord<T>;
 }
 
 /** @internal Samples a non-stepper definition from its activation snapshot. */
 export function sampleSeekableDefinition<T>(
-  definition: CRCAnimationDefinition<T>,
-  input: Readonly<Pick<CRCAnimationSampleInput<T>, 'initialValue' | 'localTime'>>,
+  definition: PibblAnimationDefinition<T>,
+  input: Readonly<Pick<PibblAnimationSampleInput<T>, 'initialValue' | 'localTime'>>,
 ): T {
   const record = getDefinitionRecord(definition);
   if (record.kind === 'stepper') {
@@ -756,7 +756,7 @@ function sampleKeyframe<T>(
  * track instance. Stateful definitions use a separate playback-owned record.
  */
 export function activateSeekableDefinition<T>(
-  definition: CRCAnimationDefinition<T>,
+  definition: PibblAnimationDefinition<T>,
   initialValue: T,
   seen: WeakMap<object, unknown> = new WeakMap(),
 ): SeekableDefinitionActivation<T> {
@@ -793,7 +793,7 @@ export function sampleActivatedSeekableDefinition<T>(
     activation as SeekableDefinitionActivation<unknown>,
   ) as SeekableDefinitionActivationRecord<T> | undefined;
   if (activationRecord === undefined) {
-    throw new TypeError('Expected a seekable CRC animation definition activation.');
+    throw new TypeError('Expected a seekable Pibbl animation definition activation.');
   }
   const record = activationRecord.definitionRecord;
   if (record.kind === 'spring') {
@@ -818,7 +818,7 @@ export function getSeekableDefinitionBoundaryValue<T>(
     activation as SeekableDefinitionActivation<unknown>,
   ) as SeekableDefinitionActivationRecord<T> | undefined;
   if (activationRecord === undefined) {
-    throw new TypeError('Expected a seekable CRC animation definition activation.');
+    throw new TypeError('Expected a seekable Pibbl animation definition activation.');
   }
   const record = activationRecord.definitionRecord;
   if (record.kind === 'spring') {
@@ -853,7 +853,7 @@ export function getSeekableDefinitionBoundaryValue<T>(
  * earlier opaque custom value.
  */
 export function getStaticSeekableDefinitionBoundaryValue<T>(
-  definition: CRCAnimationDefinition<T>,
+  definition: PibblAnimationDefinition<T>,
   boundary: 'start' | 'end',
 ): SeekableDefinitionBoundaryValue<T> {
   const record = getDefinitionRecord(definition);

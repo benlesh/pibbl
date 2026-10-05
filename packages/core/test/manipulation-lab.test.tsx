@@ -5,7 +5,7 @@ import {
   loadScenario,
   type ManipulationLabState,
   type ScenarioController,
-} from "@crc/scenarios";
+} from "@pibbl/scenarios";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { commands } from "vitest/browser";
 

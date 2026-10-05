@@ -6,7 +6,7 @@ kind: api
 slug: sequence
 apiCategory: function
 symbols: [sequence]
-relatedTypes: [CRCAnimationProgram]
+relatedTypes: [PibblAnimationProgram]
 ---
 
 # sequence
@@ -15,4 +15,4 @@ relatedTypes: [CRCAnimationProgram]
 source order. Empty and zero-duration children preserve deterministic boundary
 and milestone ordering.
 
-Related type: [`CRCAnimationProgram`](#/api/types/canvas-runtime#crcanimationprogram).
+Related type: [`PibblAnimationProgram`](#/api/types/canvas-runtime#pibblanimationprogram).

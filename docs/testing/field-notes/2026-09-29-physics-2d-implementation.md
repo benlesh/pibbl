@@ -7,22 +7,22 @@ Date: 2026-09-29. Branch: `codex/physics-2d-quality`.
 ## Decision and algorithm
 
 Public worlds now use pinned Rapier 2D compat 0.21.0 (Apache-2.0), with its
-license included in the package. CRC retains the shared scheduler, identity,
+license included in the package. Pibbl retains the shared scheduler, identity,
 commands, presentation, pure queries and rollback. The engine handles solid
-contacts and integration. We compared the repaired CRC reference solver,
-Planck 1.5.0, bare Rapier and the CRC/Rapier integration. This is a selected
+contacts and integration. We compared the repaired Pibbl reference solver,
+Planck 1.5.0, bare Rapier and the Pibbl/Rapier integration. This is a selected
 implementation, not a public engine-selection framework.
 
-The existing CRC sequential-impulse solver did not reliably settle larger piles.
+The existing Pibbl sequential-impulse solver did not reliably settle larger piles.
 Its initial drop issue was fixed before comparison: support impulses precede
 position integration, restitution avoids repeatedly exciting a resting contact,
 and capsule sides produce support faces. Public worlds use Rapier; the private
 reference remains to reproduce the comparison rather than serving applications.
 
-Rapier provides engine-state snapshots, which fit CRC's failed-frame rollback
+Rapier provides engine-state snapshots, which fit Pibbl's failed-frame rollback
 contract. [Rapier serialization](https://rapier.rs/docs/user_guides/javascript/serialization/)
-documents that facility. Replay tests restore both engine and CRC state. This
-is a same-version/same-input claim; CRC's own geometry uses JavaScript
+documents that facility. Replay tests restore both engine and Pibbl state. This
+is a same-version/same-input claim; Pibbl's own geometry uses JavaScript
 trigonometry, so this work does not claim arbitrary cross-platform bitwise
 identity. See [Rapier's determinism constraints](https://rapier.rs/docs/user_guides/javascript/determinism/).
 
@@ -42,19 +42,19 @@ Machine: Apple M5 Max, macOS arm64, Node 24.15.0. The reproducible runner uses
 Full JSON: [integrated benchmark](2026-09-29-physics-2d-integrated-benchmark.json).
 No wall-clock CI threshold is inferred from this machine.
 
-| Workload                               | CRC reference p95 | CRC + Rapier p95 | Bare Rapier p95 |
-| -------------------------------------- | ----------------: | ---------------: | --------------: |
-| 1,000-box settling pile                |          19.56 ms |          7.50 ms |         1.17 ms |
-| 100 awake bodies + 1,001 static bodies |           1.27 ms |          1.48 ms |         0.19 ms |
+| Workload                               | Pibbl reference p95 | Pibbl + Rapier p95 | Bare Rapier p95 |
+| -------------------------------------- | ------------------: | -----------------: | --------------: |
+| 1,000-box settling pile                |            19.56 ms |            7.50 ms |         1.17 ms |
+| 100 awake bodies + 1,001 static bodies |             1.27 ms |            1.48 ms |         0.19 ms |
 
-All 1,000 integrated Rapier bodies slept; the CRC reference slept 16 and Planck
+All 1,000 integrated Rapier bodies slept; the Pibbl reference slept 16 and Planck
 slept 22 in this particular grid scene. None escaped. These results do not
 establish universal engine superiority. The static-heavy case remains slower
 than the reference because engine snapshots and the adapter have real costs.
 Skipping unchanged static-body synchronization reduced its measured integrated
 p95 from about 1.86 ms to 1.48 ms in consecutive runs.
 
-`crc-rapier` includes CRC kernel/transaction work; bare engines do not. These
+`pibbl-rapier` includes Pibbl kernel/transaction work; bare engines do not. These
 measurements exclude Canvas painting and public signal publication. Public
 structural tests additionally verify per-body reads avoid full-world snapshots,
 idle worlds request no frames, passive participants share the scheduler, and
@@ -84,7 +84,7 @@ scope. Pure geometry avoids WASM; runtime imports require ESM/top-level await.
 - Compound COM updates stay aligned, engine-range/geometry-complexity limits fail
   explicitly, and per-body presentation/handle access no longer snapshots all
   bodies. Reference broad-phase/geometry tests remain in the suite.
-- `inspectPhysics2D`, `PhysicsDebug2D`, and `@crc/physics/2d/testing` support public
+- `inspectPhysics2D`, `PhysicsDebug2D`, and `@pibbl/physics/2d/testing` support public
   observations and deterministic isolated browser tests. The harness restores
   the clock on disposal and failed reset.
 - Searchable public API/guide pages cover all 2D exports, including units,
@@ -126,7 +126,7 @@ Environment: Node 24.15.0, pnpm 11.21.0, Playwright Chromium on macOS.
   drill. The API-page visual changed intentionally: two new public physics pages
   add sidebar entries and move subsequent entries down. Expected and actual
   images were inspected; the 31,143-pixel difference is confined to that sidebar
-  reflow. Only `studio-api-crc.expected.png` was updated. The next visual run
+  reflow. Only `studio-api-pibbl.expected.png` was updated. The next visual run
   matched all eight baselines. No simulation screenshot baseline was relaxed.
 
 - Final full browser run: `corepack pnpm@11.21.0 test:ci` passed **253 files,

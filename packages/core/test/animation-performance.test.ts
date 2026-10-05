@@ -5,7 +5,7 @@ import {
   Group,
   Layer,
   Rectangle,
-  crc,
+  pibbl,
   usePlayback,
   createElement,
   keyframes,
@@ -15,10 +15,10 @@ import {
   stepper,
   drive,
   tween,
-  type CRCController,
-  type CRCNode,
-  type CRCPlayback,
-} from '@crc/core';
+  type PibblController,
+  type PibblNode,
+  type PibblPlayback,
+} from '@pibbl/core';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import * as animationDefinition from '../src/lib/animation/definition';
 import { writerLeaseSnapshot } from '../src/lib/animation/writer-leases';
@@ -28,11 +28,11 @@ import {
   installSchedulerTraceCollectorForTest,
   ManualSchedulerDriver,
   snapshotRealmScheduler,
-  type CRCSchedulerTraceRecord,
+  type PibblSchedulerTraceRecord,
 } from '../src/lib/scheduler/testing';
 
-const REPORT_TIMING = import.meta.env.VITE_CRC_REPORT_PERF === '1';
-const controllers = new Set<CRCController>();
+const REPORT_TIMING = import.meta.env.VITE_PIBBL_REPORT_PERF === '1';
+const controllers = new Set<PibblController>();
 let driver: ManualSchedulerDriver;
 let restoreDriver: () => void;
 
@@ -57,10 +57,10 @@ describe('animation structural performance', () => {
     const outputs = Array.from({ length: 1_000 }, (_, index) =>
       signal(0, { debugName: `bulk output ${index}` })
     );
-    const handles: CRCPlayback[] = [];
-    const trace: CRCSchedulerTraceRecord[] = [];
+    const handles: PibblPlayback[] = [];
+    const trace: PibblSchedulerTraceRecord[] = [];
     let traversals = 0;
-    function Root(): CRCNode {
+    function Root(): PibblNode {
       traversals += 1;
       handles.length = 0;
       for (const [index, output] of outputs.entries()) {
@@ -134,8 +134,8 @@ describe('animation structural performance', () => {
         duration: 1,
       }))
     );
-    let playback!: CRCPlayback;
-    function Root(): CRCNode {
+    let playback!: PibblPlayback;
+    function Root(): PibblNode {
       playback = usePlayback(sequence(...tracks));
       output.get();
       return undefined;
@@ -221,10 +221,10 @@ describe('animation structural performance', () => {
 
   it('caps a fixed-step frame gap and records the exact discarded duration', () => {
     const output = signal(0, { debugName: 'bounded stepper output' });
-    const traces: CRCSchedulerTraceRecord[] = [];
+    const traces: PibblSchedulerTraceRecord[] = [];
     let steps = 0;
-    let playback!: CRCPlayback;
-    function Root(): CRCNode {
+    let playback!: PibblPlayback;
+    function Root(): PibblNode {
       playback = usePlayback(drive(output, stepper({
         stepMilliseconds: 10,
         maxElapsedMilliseconds: 40,
@@ -288,8 +288,8 @@ describe('animation structural performance', () => {
       'putImageData',
     );
     const output = signal(0);
-    let playback!: CRCPlayback;
-    function Root(): CRCNode {
+    let playback!: PibblPlayback;
+    function Root(): PibblNode {
       playback = usePlayback(drive(output, tween({
         from: 0,
         to: 10,
@@ -322,16 +322,16 @@ describe('animation structural performance', () => {
 
   it('re-composites a presentation-only Layer animation without repainting its child', () => {
     const offset = signal(0);
-    let playback!: CRCPlayback;
+    let playback!: PibblPlayback;
     let rootTraversals = 0;
     let childTraversals = 0;
-    function Child(): CRCNode {
+    function Child(): PibblNode {
       childTraversals += 1;
       return createElement(Rectangle, {
         style: { width: 4, height: 4, fill: 'red' },
       });
     }
-    function Root(): CRCNode {
+    function Root(): PibblNode {
       rootTraversals += 1;
       playback = usePlayback(drive(offset, tween({
         from: 0,
@@ -348,7 +348,7 @@ describe('animation structural performance', () => {
     }
     const controller = mount(createCanvas(), createElement(Root, {}));
     driver.flush(-1);
-    const layer = Array.from(GLOBAL_STATE.crcInstances.values())
+    const layer = Array.from(GLOBAL_STATE.pibblInstances.values())
       .find(instance => instance.parent !== undefined)!;
     const childRevision = layer.requestedRenderRevision;
     rootTraversals = 0;
@@ -367,17 +367,17 @@ describe('animation structural performance', () => {
   });
 });
 
-function frameRecords<K extends CRCSchedulerTraceRecord['kind']>(
-  records: readonly CRCSchedulerTraceRecord[],
+function frameRecords<K extends PibblSchedulerTraceRecord['kind']>(
+  records: readonly PibblSchedulerTraceRecord[],
   kind: K,
-): Array<Extract<CRCSchedulerTraceRecord, { readonly kind: K }>> {
+): Array<Extract<PibblSchedulerTraceRecord, { readonly kind: K }>> {
   return records.filter(
-    (record): record is Extract<CRCSchedulerTraceRecord, { readonly kind: K }> =>
+    (record): record is Extract<PibblSchedulerTraceRecord, { readonly kind: K }> =>
       record.kind === kind,
   );
 }
 
-function outputWrites(records: readonly CRCSchedulerTraceRecord[]) {
+function outputWrites(records: readonly PibblSchedulerTraceRecord[]) {
   return frameRecords(records, 'animation-write').filter(record =>
     record.target.startsWith('bulk output ')
   );
@@ -426,14 +426,14 @@ interface AnimationPlaybackSnapshotWithWork extends ReturnType<
 function reportTiming(label: string, elapsedMilliseconds: number): void {
   if (REPORT_TIMING) {
     console.warn(
-      `[crc animation structural diagnostic] ${label}: ` +
+      `[pibbl animation structural diagnostic] ${label}: ` +
         `${elapsedMilliseconds.toFixed(3)}ms`,
     );
   }
 }
 
-function mount(canvas: HTMLCanvasElement, node: CRCNode): CRCController {
-  const controller = crc(canvas, node, { pixelRatio: 1 });
+function mount(canvas: HTMLCanvasElement, node: PibblNode): PibblController {
+  const controller = pibbl(canvas, node, { pixelRatio: 1 });
   controllers.add(controller);
   return controller;
 }

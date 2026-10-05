@@ -1,11 +1,11 @@
-import type { ResolvedLinearScale } from "./types.js";
+import type { ResolvedContinuousScale } from "./types.js";
 import type { PointAccessor } from "./point-types.js";
 import { finiteCoordinate, pointAccessor, pointData } from "./point-data.js";
 /**
  * Coordinate accessors, resolved scales, and candidate filtering for a nearest-point search.
  *
  * @see {@link PointAccessor}
- * @see {@link ResolvedLinearScale}
+ * @see {@link ResolvedContinuousScale}
  * @see {@link nearestPoint}
  */
 export interface NearestPointOptions<D> {
@@ -13,10 +13,10 @@ export interface NearestPointOptions<D> {
   readonly x: PointAccessor<D>;
   /** Property key or callback extracting the vertical domain coordinate. See {@link PointAccessor}. */
   readonly y: PointAccessor<D>;
-  /** The scale used to map horizontal data coordinates. See {@link ResolvedLinearScale}. */
-  readonly xScale: ResolvedLinearScale;
-  /** The scale used to map vertical data coordinates. See {@link ResolvedLinearScale}. */
-  readonly yScale: ResolvedLinearScale;
+  /** The scale used to map horizontal data coordinates. See {@link ResolvedContinuousScale}. */
+  readonly xScale: ResolvedContinuousScale;
+  /** The scale used to map vertical data coordinates. See {@link ResolvedContinuousScale}. */
+  readonly yScale: ResolvedContinuousScale;
   /**
    * Returns whether a datum contributes drawable or queryable coordinates. See
    * {@link NearestPointOptions}.
@@ -61,15 +61,15 @@ function finite(value: unknown, name: string): asserts value is number {
  *
  * @param values - Candidate domain values.
  * @param rangeValue - Pointer coordinate in the scale's range.
- * @param scale - Scale mapping candidates into range coordinates. See {@link ResolvedLinearScale}.
+ * @param scale - Scale mapping candidates into range coordinates. See {@link ResolvedContinuousScale}.
  * @returns The nearest domain value, or undefined when no candidate can be selected.
  *
- * @see {@link ResolvedLinearScale}
+ * @see {@link ResolvedContinuousScale}
  */
 export function nearestDomainValue(
   values: readonly number[],
   rangeValue: number,
-  scale: ResolvedLinearScale,
+  scale: ResolvedContinuousScale,
 ): number | undefined {
   pointData(values, "nearestDomainValue");
   finite(rangeValue, "nearestDomainValue rangeValue");

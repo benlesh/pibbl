@@ -1,22 +1,22 @@
-/** @jsxImportSource @crc/core */
-import { Circle, Group, crc, signal } from "@crc/core";
+/** @jsxImportSource @pibbl/core */
+import { Circle, Group, pibbl, signal } from "@pibbl/core";
 import {
   PhysicsDebug2D,
   PhysicsWorld2D,
   collider2D,
   circleShape2D,
-  crcPhysicsWorld2D,
+  pibblPhysicsWorld2D,
   dynamicBody2D,
   staticBody2D,
-  crcPhysicsBody2D,
+  pibblPhysicsBody2D,
   disableBody2D,
   inspectPhysics2D,
   setLinearVelocity2D,
   toPhysicsPoint2D,
   fromPhysicsPoint2D,
-  type CRCPhysicsBodyHandle2D,
-  type CRCPhysicsWorldHandle2D,
-} from "@crc/core/physics/2d";
+  type PibblPhysicsBodyHandle2D,
+  type PibblPhysicsWorldHandle2D,
+} from "@pibbl/core/physics/2d";
 import { expect, it } from "vitest";
 import {
   ManualSchedulerDriver,
@@ -28,9 +28,9 @@ it("exposes immutable JSON-safe simulation observations without advancing or sch
     restore = installSchedulerDriverForTest(driver);
   const canvas = document.createElement("canvas");
   document.body.append(canvas);
-  let world!: CRCPhysicsWorldHandle2D;
+  let world!: PibblPhysicsWorldHandle2D;
   function Ball() {
-    world = crcPhysicsWorld2D();
+    world = pibblPhysicsWorld2D();
     return (
       <Group
         physics={dynamicBody2D({ mass: 1, collider: false })}
@@ -40,7 +40,7 @@ it("exposes immutable JSON-safe simulation observations without advancing or sch
       </Group>
     );
   }
-  const mount = crc(
+  const mount = pibbl(
     canvas,
     <Group style={{ translateX: 50 }}>
       <Group style={{ scaleX: 2, scaleY: 2 }}>
@@ -78,16 +78,16 @@ it("retains declared body type in observations while disabled", () => {
     restore = installSchedulerDriverForTest(driver);
   const canvas = document.createElement("canvas");
   document.body.append(canvas);
-  let world!: CRCPhysicsWorldHandle2D;
-  let body!: CRCPhysicsBodyHandle2D;
+  let world!: PibblPhysicsWorldHandle2D;
+  let body!: PibblPhysicsBodyHandle2D;
   function Ball() {
-    world = crcPhysicsWorld2D();
-    body = crcPhysicsBody2D();
+    world = pibblPhysicsWorld2D();
+    body = pibblPhysicsBody2D();
     return (
       <Circle physics={dynamicBody2D({ handle: body })} style={{ radius: 5 }} />
     );
   }
-  const mount = crc(
+  const mount = pibbl(
     canvas,
     <PhysicsWorld2D>
       <Ball />
@@ -119,12 +119,12 @@ it("inspects each requested body handle without selecting another dynamic body o
   const canvas = document.createElement("canvas");
   document.body.append(canvas);
   const showStale = signal(true);
-  let first!: CRCPhysicsBodyHandle2D;
-  let second!: CRCPhysicsBodyHandle2D;
-  let stale!: CRCPhysicsBodyHandle2D;
+  let first!: PibblPhysicsBodyHandle2D;
+  let second!: PibblPhysicsBodyHandle2D;
+  let stale!: PibblPhysicsBodyHandle2D;
 
   function First() {
-    first = crcPhysicsBody2D();
+    first = pibblPhysicsBody2D();
     return (
       <Group
         physics={dynamicBody2D({ handle: first, collider: false, mass: 1 })}
@@ -136,7 +136,7 @@ it("inspects each requested body handle without selecting another dynamic body o
   }
 
   function Second() {
-    second = crcPhysicsBody2D();
+    second = pibblPhysicsBody2D();
     return (
       <Group
         physics={dynamicBody2D({ handle: second, collider: false, mass: 1 })}
@@ -148,7 +148,7 @@ it("inspects each requested body handle without selecting another dynamic body o
   }
 
   function Stale() {
-    stale = crcPhysicsBody2D();
+    stale = pibblPhysicsBody2D();
     return (
       <Group
         physics={dynamicBody2D({ handle: stale, collider: false, mass: 1 })}
@@ -169,7 +169,7 @@ it("inspects each requested body handle without selecting another dynamic body o
     );
   }
 
-  const mount = crc(
+  const mount = pibbl(
     canvas,
     <PhysicsWorld2D gravity={[0, 0]}>
       <Scene />
@@ -205,8 +205,8 @@ it("keeps Rapier collider geometry aligned after an asymmetric auto-mass density
   const leftShape = circleShape2D({ radius: 10, center: [-50, 0] });
   const rightShape = circleShape2D({ radius: 10, center: [50, 0] });
   const wallShape = circleShape2D({ radius: 10, center: [100, 0] });
-  let world!: CRCPhysicsWorldHandle2D;
-  let body!: CRCPhysicsBodyHandle2D;
+  let world!: PibblPhysicsWorldHandle2D;
+  let body!: PibblPhysicsBodyHandle2D;
   function Left() {
     return (
       <Circle
@@ -216,8 +216,8 @@ it("keeps Rapier collider geometry aligned after an asymmetric auto-mass density
     );
   }
   function Body() {
-    world = crcPhysicsWorld2D();
-    body = crcPhysicsBody2D();
+    world = pibblPhysicsWorld2D();
+    body = pibblPhysicsBody2D();
     return (
       <Group
         physics={dynamicBody2D({
@@ -234,7 +234,7 @@ it("keeps Rapier collider geometry aligned after an asymmetric auto-mass density
       </Group>
     );
   }
-  const mount = crc(
+  const mount = pibbl(
     canvas,
     <PhysicsWorld2D gravity={[0, 0]} fixedStepMilliseconds={100}>
       <Body />
@@ -276,10 +276,10 @@ it("renders the diagnostic overlay without changing authoritative state", () => 
     restore = installSchedulerDriverForTest(driver);
   const canvas = document.createElement("canvas");
   document.body.append(canvas);
-  let world!: CRCPhysicsWorldHandle2D;
+  let world!: PibblPhysicsWorldHandle2D;
   const show = signal(false);
   function Scene() {
-    world = crcPhysicsWorld2D();
+    world = pibblPhysicsWorld2D();
     return (
       <>
         <Circle
@@ -290,7 +290,7 @@ it("renders the diagnostic overlay without changing authoritative state", () => 
       </>
     );
   }
-  const mount = crc(
+  const mount = pibbl(
     canvas,
     <Group style={{ translateX: 40, scaleX: 2, scaleY: 2 }}>
       <PhysicsWorld2D space="local">

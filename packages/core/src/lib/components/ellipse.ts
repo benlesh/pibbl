@@ -1,11 +1,11 @@
 import { definePrimitive } from '../define-primitive.js';
 import type {
-  CRCEventFocusOptions,
-  CRCEventHandlers,
-  CRCEventParticipationOptions,
+  PibblEventFocusOptions,
+  PibblEventHandlers,
+  PibblEventParticipationOptions,
 } from '../events/types.js';
 import type { RenderingContext2D, SystemStyle } from '../types.js';
-import type { CRCPhysics2DPropExtension } from '../types.js';
+import type { PibblPhysics2DPropExtension } from '../types.js';
 import {
   resolveLocalOffset,
   stripLayoutParticipation,
@@ -29,12 +29,12 @@ import { createEllipsePath } from '../geometry/ellipse.js';
 /**
  * Authored inputs for Ellipse, including the declared data and presentation options.
  *
- * @see {@link CRCEventHandlers}
- * @see {@link CRCEventParticipationOptions}
- * @see {@link CRCPhysics2DPropExtension}
+ * @see {@link PibblEventHandlers}
+ * @see {@link PibblEventParticipationOptions}
+ * @see {@link PibblPhysics2DPropExtension}
  * @see {@link Ellipse}
  */
-export interface EllipseProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions, CRCPhysics2DPropExtension {}
+export interface EllipseProps extends PibblEventHandlers, PibblEventFocusOptions, PibblEventParticipationOptions, PibblPhysics2DPropExtension {}
 
 /**
  * Supported geometry and presentation properties for Ellipse.
@@ -109,7 +109,7 @@ function renderEllipse(
  *
  * @param props - Authored component inputs, supplied through JSX or createElement. See the linked
  * props and style types.
- * @throws When called directly; CRC mounts this component through JSX or createElement.
+ * @throws When called directly; Pibbl mounts this component through JSX or createElement.
  *
  * @see {@link EllipseProps}
  * @see {@link EllipseStyle}

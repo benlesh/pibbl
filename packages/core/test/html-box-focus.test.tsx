@@ -1,24 +1,24 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { userEvent } from "vitest/browser";
 import {
-  crc,
+  pibbl,
   FocusManagement,
   Group,
   HtmlBox,
   Layer,
   Rectangle,
-  type CRCController,
-} from "@crc/core";
-import { getCRCInstance, clearSharedState } from "../src/lib/global-state.js";
+  type PibblController,
+} from "@pibbl/core";
+import { getPibblInstance, clearSharedState } from "../src/lib/global-state.js";
 import {
   ManualSchedulerDriver,
   installSchedulerDriverForTest,
 } from "../src/lib/scheduler/testing.js";
 import { isHtmlFocusCandidate } from "../src/lib/focus/types.js";
 import { moveTab } from "../src/lib/focus/keyboard-defaults.js";
-import type { CRCFocusManager } from "../src/lib/focus/focus-manager.js";
+import type { PibblFocusManager } from "../src/lib/focus/focus-manager.js";
 
-const controllers = new Set<CRCController>();
+const controllers = new Set<PibblController>();
 
 afterEach(() => {
   for (const controller of controllers) controller.dispose();
@@ -67,14 +67,14 @@ describe("HtmlBox managed native focus", () => {
       </FocusManagement>
     );
     try {
-      const controller = crc(canvas, scene("stable"), { htmlOverlay: overlay });
+      const controller = pibbl(canvas, scene("stable"), { htmlOverlay: overlay });
       controllers.add(controller);
       driver.flush(10);
       expect(candidateKinds(canvas)).toEqual(["canvas", "html", "canvas"]);
 
       // A root update retains the Layer subtree; focus metadata must replay in
       // its original mixed position instead of appending HtmlBox after Canvas.
-      crc(canvas, scene("stable"));
+      pibbl(canvas, scene("stable"));
       driver.flush(20);
       expect(candidateKinds(canvas)).toEqual(["canvas", "html", "canvas"]);
     } finally {
@@ -128,9 +128,9 @@ describe("HtmlBox managed native focus", () => {
         </Group>
       </FocusManagement>
     );
-    let controller: CRCController | undefined;
+    let controller: PibblController | undefined;
     try {
-      controller = crc(canvas, scene(true), { htmlOverlay: overlay });
+      controller = pibbl(canvas, scene(true), { htmlOverlay: overlay });
       controllers.add(controller);
       driver.flush(10);
       input!.focus({ preventScroll: true });
@@ -139,7 +139,7 @@ describe("HtmlBox managed native focus", () => {
       button!.click();
       expect(clicks).toBe(1);
 
-      crc(canvas, scene(false));
+      pibbl(canvas, scene(false));
       driver.flush(20);
       await Promise.resolve();
       expect(document.activeElement).toBe(canvas);
@@ -164,7 +164,7 @@ describe("HtmlBox managed native focus", () => {
       return () => undefined;
     };
     try {
-      const controller = crc(
+      const controller = pibbl(
         canvas,
         <FocusManagement>
           <HtmlBox
@@ -180,7 +180,7 @@ describe("HtmlBox managed native focus", () => {
       driver.flush(10);
       expect(candidateKinds(canvas)).toEqual([]);
       expect(
-        overlay.querySelector<HTMLElement>("[data-crc-html-box]")!.inert,
+        overlay.querySelector<HTMLElement>("[data-pibbl-html-box]")!.inert,
       ).toBe(true);
     } finally {
       restore();
@@ -205,9 +205,9 @@ describe("HtmlBox managed native focus", () => {
       content.append(input);
       return () => undefined;
     };
-    let controller: CRCController | undefined;
+    let controller: PibblController | undefined;
     try {
-      controller = crc(
+      controller = pibbl(
         canvas,
         <FocusManagement>
           <HtmlBox
@@ -273,9 +273,9 @@ describe("HtmlBox managed native focus", () => {
         details!.open = enabled;
       };
     };
-    let controller: CRCController | undefined;
+    let controller: PibblController | undefined;
     try {
-      controller = crc(
+      controller = pibbl(
         canvas,
         <FocusManagement>
           <HtmlBox
@@ -294,7 +294,7 @@ describe("HtmlBox managed native focus", () => {
       expect((document.activeElement as HTMLInputElement).type).toBe("radio");
       expect((document.activeElement as HTMLInputElement).checked).toBe(true);
 
-      crc(
+      pibbl(
         canvas,
         <FocusManagement>
           <HtmlBox
@@ -338,17 +338,17 @@ describe("HtmlBox managed native focus", () => {
         </Group>
       </FocusManagement>
     );
-    let controller: CRCController | undefined;
+    let controller: PibblController | undefined;
     try {
-      controller = crc(canvas, scene(true), { htmlOverlay: overlay });
+      controller = pibbl(canvas, scene(true), { htmlOverlay: overlay });
       controllers.add(controller);
       driver.flush(10);
       expect(candidateKinds(canvas)).toEqual(["html"]);
-      crc(canvas, scene(false));
+      pibbl(canvas, scene(false));
       driver.flush(20);
       expect(candidateKinds(canvas)).toEqual([]);
       expect(
-        overlay.querySelector<HTMLElement>("[data-crc-html-box]"),
+        overlay.querySelector<HTMLElement>("[data-pibbl-html-box]"),
       ).not.toBeNull();
     } finally {
       controller?.dispose();
@@ -393,9 +393,9 @@ describe("HtmlBox managed native focus", () => {
         </Group>
       </FocusManagement>
     );
-    let controller: CRCController | undefined;
+    let controller: PibblController | undefined;
     try {
-      controller = crc(canvas, scene(false), { htmlOverlay: overlay });
+      controller = pibbl(canvas, scene(false), { htmlOverlay: overlay });
       controllers.add(controller);
       driver.flush(10);
       const manager = focusManager(canvas);
@@ -410,7 +410,7 @@ describe("HtmlBox managed native focus", () => {
         manager.navigationCandidates[2],
       );
 
-      crc(canvas, scene(true));
+      pibbl(canvas, scene(true));
       driver.flush(20);
       expect(
         manager.focusNavigationCandidate(
@@ -457,13 +457,13 @@ describe("HtmlBox managed native focus", () => {
         </Group>
       </FocusManagement>
     );
-    let controller: CRCController | undefined;
+    let controller: PibblController | undefined;
     try {
-      controller = crc(canvas, scene(["a", "b"]), { htmlOverlay: overlay });
+      controller = pibbl(canvas, scene(["a", "b"]), { htmlOverlay: overlay });
       controllers.add(controller);
       driver.flush(10);
       expect(htmlNames(canvas)).toEqual(["a", "b"]);
-      crc(canvas, scene(["b", "a"]));
+      pibbl(canvas, scene(["b", "a"]));
       driver.flush(20);
       expect(htmlNames(canvas)).toEqual(["b", "a"]);
       expect(mounts).toEqual(["a", "b"]);
@@ -516,9 +516,9 @@ describe("HtmlBox managed native focus", () => {
         </Group>
       </FocusManagement>
     );
-    let controller: CRCController | undefined;
+    let controller: PibblController | undefined;
     try {
-      controller = crc(canvas, scene(false), { htmlOverlay: overlay });
+      controller = pibbl(canvas, scene(false), { htmlOverlay: overlay });
       controllers.add(controller);
       driver.flush(10);
       const manager = focusManager(canvas);
@@ -528,13 +528,13 @@ describe("HtmlBox managed native focus", () => {
           "keyboard",
         ),
       ).toBe(true);
-      crc(canvas, scene(true));
+      pibbl(canvas, scene(true));
       driver.flush(20);
       await Promise.resolve();
       expect(document.activeElement).toBe(first);
       expect(changes).toContain("true:true");
 
-      crc(canvas, scene(true, 1));
+      pibbl(canvas, scene(true, 1));
       driver.flush(30);
       await Promise.resolve();
       expect(document.activeElement).toBe(second);
@@ -585,9 +585,9 @@ describe("HtmlBox managed native focus", () => {
         <HtmlBox data={true} mount={mount} style={{ width: 100, height: 30 }} />
       </FocusManagement>
     );
-    let controller: CRCController | undefined;
+    let controller: PibblController | undefined;
     try {
-      controller = crc(canvas, scene, { htmlOverlay: overlay });
+      controller = pibbl(canvas, scene, { htmlOverlay: overlay });
       controllers.add(controller);
       driver.flush(10);
       input!.focus({ preventScroll: true });
@@ -595,7 +595,7 @@ describe("HtmlBox managed native focus", () => {
 
       wrapper.style.width = "0px";
       wrapper.style.height = "0px";
-      crc(canvas, scene);
+      pibbl(canvas, scene);
       driver.flush(20);
       expect(candidateKinds(canvas)).toEqual([]);
       expect(document.activeElement).toBe(canvas);
@@ -606,7 +606,7 @@ describe("HtmlBox managed native focus", () => {
       const first = input;
       wrapper.style.width = "400px";
       wrapper.style.height = "300px";
-      crc(canvas, scene);
+      pibbl(canvas, scene);
       driver.flush(30);
       expect(input).toBe(first);
       expect(candidateKinds(canvas)).toEqual(["html"]);
@@ -625,8 +625,8 @@ function candidateKinds(canvas: HTMLCanvasElement): string[] {
   );
 }
 
-function focusManager(canvas: HTMLCanvasElement): CRCFocusManager {
-  return getCRCInstance(canvas).eventRoot.focusPolicy! as CRCFocusManager;
+function focusManager(canvas: HTMLCanvasElement): PibblFocusManager {
+  return getPibblInstance(canvas).eventRoot.focusPolicy! as PibblFocusManager;
 }
 
 function focusFirstNavigationCandidate(canvas: HTMLCanvasElement): boolean {
@@ -638,7 +638,7 @@ function focusFirstNavigationCandidate(canvas: HTMLCanvasElement): boolean {
 }
 
 function htmlNames(canvas: HTMLCanvasElement): string[] {
-  const manager = getCRCInstance(canvas).eventRoot.focusPolicy! as unknown as {
+  const manager = getPibblInstance(canvas).eventRoot.focusPolicy! as unknown as {
     navigationCandidates: readonly Parameters<typeof isHtmlFocusCandidate>[0][];
   };
   return manager.navigationCandidates.flatMap((candidate) =>

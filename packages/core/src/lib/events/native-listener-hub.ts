@@ -1,6 +1,6 @@
-import { getCRCEventDefinition } from './event-definitions.js';
-import type { CRCEventDefinition } from './event-definitions.js';
-import type { CRCEventType } from './types.js';
+import { getPibblEventDefinition } from './event-definitions.js';
+import type { PibblEventDefinition } from './event-definitions.js';
+import type { PibblEventType } from './types.js';
 import type { Teardowns } from '../teardowns.js';
 
 interface NativeListenerRecord {
@@ -10,13 +10,13 @@ interface NativeListenerRecord {
 }
 
 export interface NativeListenerHub {
-  acquire(type: CRCEventType): () => void;
-  count(type: CRCEventType): number;
+  acquire(type: PibblEventType): () => void;
+  count(type: PibblEventType): number;
   dispose(): void;
 }
 
 export type NativeEventDispatch = (
-  definition: CRCEventDefinition,
+  definition: PibblEventDefinition,
   event: Event,
 ) => void;
 
@@ -25,7 +25,7 @@ export function createNativeListenerHub(
   dispatch: NativeEventDispatch,
   teardowns: Teardowns,
 ): NativeListenerHub {
-  const records = new Map<CRCEventType, NativeListenerRecord>();
+  const records = new Map<PibblEventType, NativeListenerRecord>();
   let disposed = false;
 
   const hub: NativeListenerHub = {
@@ -36,9 +36,9 @@ export function createNativeListenerHub(
 
       let record = records.get(type);
       if (!record) {
-        const definition = getCRCEventDefinition(type);
+        const definition = getPibblEventDefinition(type);
         if (!definition) {
-          throw new Error(`Unknown CRC event type: ${type}`);
+          throw new Error(`Unknown Pibbl event type: ${type}`);
         }
         const listener: EventListener = event => dispatch(definition, event);
         const options = listenerOptions(definition);
@@ -91,7 +91,7 @@ export function createNativeListenerHub(
 }
 
 function listenerOptions(
-  definition: CRCEventDefinition,
+  definition: PibblEventDefinition,
 ): AddEventListenerOptions | boolean {
   if (
     definition.cancelable &&

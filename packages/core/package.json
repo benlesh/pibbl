@@ -1,5 +1,5 @@
 {
-  "name": "@crc/core",
+  "name": "@pibbl/core",
   "type": "module",
   "version": "0.0.1",
   "description": "Canvas 2D component runtime with JSX and createElement authoring",
@@ -66,6 +66,26 @@
     "./physics/2d/testing": {
       "types": "./dist/features/physics/2d-testing.d.ts",
       "default": "./dist/features/physics/2d-testing.mjs"
+    },
+    "./sprites": {
+      "types": "./dist/features/sprites/index.d.ts",
+      "default": "./dist/features/sprites/index.mjs"
+    },
+    "./sprites/formats/aseprite": {
+      "types": "./dist/features/sprites/formats/aseprite.d.ts",
+      "default": "./dist/features/sprites/formats/aseprite.mjs"
+    },
+    "./sprites/formats/texture-packer": {
+      "types": "./dist/features/sprites/formats/texture-packer.d.ts",
+      "default": "./dist/features/sprites/formats/texture-packer.mjs"
+    },
+    "./machines": {
+      "types": "./dist/features/machines/index.d.ts",
+      "default": "./dist/features/machines/index.mjs"
+    },
+    "./machines/animation": {
+      "types": "./dist/features/machines/animation.d.ts",
+      "default": "./dist/features/machines/animation.mjs"
     }
   },
   "main": "./dist/index.mjs",
@@ -109,6 +129,21 @@
       ],
       "physics/2d/testing": [
         "./dist/features/physics/2d-testing.d.ts"
+      ],
+      "sprites": [
+        "./dist/features/sprites/index.d.ts"
+      ],
+      "sprites/formats/aseprite": [
+        "./dist/features/sprites/formats/aseprite.d.ts"
+      ],
+      "sprites/formats/texture-packer": [
+        "./dist/features/sprites/formats/texture-packer.d.ts"
+      ],
+      "machines": [
+        "./dist/features/machines/index.d.ts"
+      ],
+      "machines/animation": [
+        "./dist/features/machines/animation.d.ts"
       ]
     }
   },

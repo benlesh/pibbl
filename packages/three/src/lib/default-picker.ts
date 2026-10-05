@@ -7,19 +7,19 @@ import {
   type Raycaster,
   type Scene,
 } from "three";
-import type { CRCRenderLayerSize } from "@crc/core";
-import type { CRCThreePicker, CRCThreeTarget } from "./types.js";
+import type { PibblRenderLayerSize } from "@pibbl/core";
+import type { PibblThreePicker, PibblThreeTarget } from "./types.js";
 
 export function createDefaultPicker(
   scene: Scene,
   camera: Camera,
   raycaster: Raycaster,
-  size: Readonly<CRCRenderLayerSize>,
-  targetMap: ReadonlyMap<Object3D, CRCThreeTarget>,
+  size: Readonly<PibblRenderLayerSize>,
+  targetMap: ReadonlyMap<Object3D, PibblThreeTarget>,
   disabledRoots: ReadonlySet<Object3D>,
-): CRCThreePicker {
+): PibblThreePicker {
   const snapshot = snapshotPickingScene(scene, camera);
-  const snapshotTargets = new Map<Object3D, CRCThreeTarget>();
+  const snapshotTargets = new Map<Object3D, PibblThreeTarget>();
   const snapshotDisabled = new Set<Object3D>();
   for (const [object, target] of targetMap) {
     const copy = snapshot.copies.get(object);
@@ -89,7 +89,7 @@ function isMaterialArray(
 
 function nearestTarget(
   object: Object3D,
-  targetMap: ReadonlyMap<Object3D, CRCThreeTarget>,
+  targetMap: ReadonlyMap<Object3D, PibblThreeTarget>,
 ): Object3D | undefined {
   for (
     let current: Object3D | null = object;

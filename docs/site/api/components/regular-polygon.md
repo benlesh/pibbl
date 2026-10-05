@@ -12,7 +12,7 @@ relatedTypes: [RegularPolygonProps, RegularPolygonStyle]
 # RegularPolygon
 
 ```ts
-import { RegularPolygon } from "@crc/core";
+import { RegularPolygon } from "@pibbl/core";
 ```
 
 `RegularPolygon` uses [`RegularPolygonProps`](#/api/types/elements-components#regularpolygonprops) and [`RegularPolygonStyle`](#/api/types/styles#regularpolygonstyle). It

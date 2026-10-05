@@ -15,7 +15,7 @@
 Command:
 
 ```sh
-PATH=/private/tmp/crc-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 exec vitest run packages/core/src/lib/runtime-contract.test.ts packages/core/src/lib/components/layer.test.ts --browser.headless --browser.ui=false
+PATH=/private/tmp/pibbl-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 exec vitest run packages/core/src/lib/runtime-contract.test.ts packages/core/src/lib/components/layer.test.ts --browser.headless --browser.ui=false
 ```
 
 Result: exit 1; 2 test files failed, with 2 failed and 26 passed tests.
@@ -35,7 +35,7 @@ stable; that version produced the second expected RED failure above.
 Command:
 
 ```sh
-PATH=/private/tmp/crc-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 exec vitest run packages/core/src/lib/runtime-contract.test.ts packages/core/src/lib/components/layer.test.ts --browser.headless --browser.ui=false
+PATH=/private/tmp/pibbl-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 exec vitest run packages/core/src/lib/runtime-contract.test.ts packages/core/src/lib/components/layer.test.ts --browser.headless --browser.ui=false
 ```
 
 Result: exit 0; 2 test files and all 28 tests passed.
@@ -43,7 +43,7 @@ Result: exit 0; 2 test files and all 28 tests passed.
 Command:
 
 ```sh
-PATH=/private/tmp/crc-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 typecheck
+PATH=/private/tmp/pibbl-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 typecheck
 ```
 
 Result: exit 0; `tsc --noEmit` reported no errors. This includes the public
@@ -72,8 +72,8 @@ functions, dates, and other non-style values too broadly.
 Fix RED commands:
 
 ```sh
-PATH=/private/tmp/crc-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 exec vitest run packages/core/src/lib/runtime-contract.test.ts packages/core/src/lib/components/layer.test.ts --browser.headless --browser.ui=false
-PATH=/private/tmp/crc-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 typecheck
+PATH=/private/tmp/pibbl-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 exec vitest run packages/core/src/lib/runtime-contract.test.ts packages/core/src/lib/components/layer.test.ts --browser.headless --browser.ui=false
+PATH=/private/tmp/pibbl-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 typecheck
 ```
 
 The browser command exited 1 with 1 failed and 27 passed tests because plain
@@ -85,8 +85,8 @@ incorrectly accepted.
 Fix GREEN commands:
 
 ```sh
-PATH=/private/tmp/crc-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 exec vitest run packages/core/src/lib/runtime-contract.test.ts packages/core/src/lib/components/layer.test.ts --browser.headless --browser.ui=false
-PATH=/private/tmp/crc-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 typecheck
+PATH=/private/tmp/pibbl-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 exec vitest run packages/core/src/lib/runtime-contract.test.ts packages/core/src/lib/components/layer.test.ts --browser.headless --browser.ui=false
+PATH=/private/tmp/pibbl-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 typecheck
 ```
 
 The browser command exited 0 with both files and all 28 tests passing.
@@ -110,7 +110,7 @@ the blacklist could still pass the structural heuristic.
 Fix RED command:
 
 ```sh
-PATH=/private/tmp/crc-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 typecheck
+PATH=/private/tmp/pibbl-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 typecheck
 ```
 
 Result: exit 1 with three unused `@ts-expect-error` directives. `URL`, `Error`,
@@ -127,8 +127,8 @@ type deliberately opts in.
 Fix GREEN commands:
 
 ```sh
-PATH=/private/tmp/crc-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 typecheck
-PATH=/private/tmp/crc-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 exec vitest run packages/core/src/lib/runtime-contract.test.ts packages/core/src/lib/components/layer.test.ts --browser.headless --browser.ui=false
+PATH=/private/tmp/pibbl-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 typecheck
+PATH=/private/tmp/pibbl-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 exec vitest run packages/core/src/lib/runtime-contract.test.ts packages/core/src/lib/components/layer.test.ts --browser.headless --browser.ui=false
 ```
 
 Typecheck exited 0 with no errors. The focused browser command exited 0 with
@@ -163,7 +163,7 @@ for status-only re-review before P003-02 begins.
 Command:
 
 ```sh
-PATH=/private/tmp/crc-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 exec vitest run packages/core/src/lib/components/path.test.ts packages/core/src/lib/components/rect.test.ts packages/core/src/lib/components/svg-path.test.ts --browser.headless --browser.ui=false
+PATH=/private/tmp/pibbl-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 exec vitest run packages/core/src/lib/components/path.test.ts packages/core/src/lib/components/rect.test.ts packages/core/src/lib/components/svg-path.test.ts --browser.headless --browser.ui=false
 ```
 
 Result: exit 1; all 3 test files failed, with 11 failed and 3 passed tests. The
@@ -174,7 +174,7 @@ mouse targeting all failed against the legacy top-level implementation.
 Command:
 
 ```sh
-PATH=/private/tmp/crc-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 typecheck
+PATH=/private/tmp/pibbl-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 typecheck
 ```
 
 Result: exit 1 with the expected missing `PathStyle`, `RectStyle`, and
@@ -192,7 +192,7 @@ actual 11-failure behavioral result.
 Command:
 
 ```sh
-PATH=/private/tmp/crc-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 exec vitest run packages/core/src/lib/components/path.test.ts packages/core/src/lib/components/rect.test.ts packages/core/src/lib/components/svg-path.test.ts --browser.headless --browser.ui=false
+PATH=/private/tmp/pibbl-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 exec vitest run packages/core/src/lib/components/path.test.ts packages/core/src/lib/components/rect.test.ts packages/core/src/lib/components/svg-path.test.ts --browser.headless --browser.ui=false
 ```
 
 Result: exit 0; all 3 files and all 14 tests passed. This includes explicit
@@ -202,7 +202,7 @@ coverage for opacity zero, transparent-fill hit geometry, optional rectangle
 Command:
 
 ```sh
-PATH=/private/tmp/crc-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 typecheck
+PATH=/private/tmp/pibbl-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 typecheck
 ```
 
 Result: exit 0; `tsc --noEmit` reported no errors across the migrated core,
@@ -225,7 +225,7 @@ top-level cursor alias despite the style-only contract.
 Fix RED command:
 
 ```sh
-PATH=/private/tmp/crc-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 exec vitest run packages/core/src/lib/components/path.test.ts --browser.headless --browser.ui=false
+PATH=/private/tmp/pibbl-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 exec vitest run packages/core/src/lib/components/path.test.ts --browser.headless --browser.ui=false
 ```
 
 Result: exit 1 with 1 failed and 2 passed tests. The new untyped-caller
@@ -240,9 +240,9 @@ behavior until their scheduled migrations.
 Fix GREEN commands:
 
 ```sh
-PATH=/private/tmp/crc-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 exec vitest run packages/core/src/lib/components/path.test.ts --browser.headless --browser.ui=false
-PATH=/private/tmp/crc-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 exec vitest run packages/core/src/lib/components/path.test.ts packages/core/src/lib/components/rect.test.ts packages/core/src/lib/components/svg-path.test.ts packages/core/src/lib/components/text.test.ts packages/core/src/lib/components/img.test.ts --browser.headless --browser.ui=false
-PATH=/private/tmp/crc-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 typecheck
+PATH=/private/tmp/pibbl-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 exec vitest run packages/core/src/lib/components/path.test.ts --browser.headless --browser.ui=false
+PATH=/private/tmp/pibbl-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 exec vitest run packages/core/src/lib/components/path.test.ts packages/core/src/lib/components/rect.test.ts packages/core/src/lib/components/svg-path.test.ts packages/core/src/lib/components/text.test.ts packages/core/src/lib/components/img.test.ts --browser.headless --browser.ui=false
+PATH=/private/tmp/pibbl-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 typecheck
 ```
 
 The regression command exited 0 with 3/3 tests passing. The combined focused
@@ -278,7 +278,7 @@ P003-03 begins.
 Command:
 
 ```sh
-PATH=/private/tmp/crc-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 exec vitest run packages/core/src/lib/components/line.test.ts packages/core/src/lib/components/line-helpers.test.ts --browser.headless --browser.ui=false
+PATH=/private/tmp/pibbl-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 exec vitest run packages/core/src/lib/components/line.test.ts packages/core/src/lib/components/line-helpers.test.ts --browser.headless --browser.ui=false
 ```
 
 Result: exit 1; both test files failed, with 10 failed and 4 passed tests plus
@@ -289,7 +289,7 @@ not registered.
 Command:
 
 ```sh
-PATH=/private/tmp/crc-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 typecheck
+PATH=/private/tmp/pibbl-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 typecheck
 ```
 
 Result: exit 1 with the expected missing public `LineStyle`,
@@ -301,7 +301,7 @@ legacy required visual props, and unused negative legacy-shape assertions.
 Command:
 
 ```sh
-PATH=/private/tmp/crc-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 exec vitest run packages/core/src/lib/components/line.test.ts packages/core/src/lib/components/line-helpers.test.ts --browser.headless --browser.ui=false
+PATH=/private/tmp/pibbl-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 exec vitest run packages/core/src/lib/components/line.test.ts packages/core/src/lib/components/line-helpers.test.ts --browser.headless --browser.ui=false
 ```
 
 Result: exit 0; both files and all 15 tests passed. This includes exact
@@ -317,7 +317,7 @@ forwarding returned the combined suite to 15/15.
 Command:
 
 ```sh
-PATH=/private/tmp/crc-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 typecheck
+PATH=/private/tmp/pibbl-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 typecheck
 ```
 
 Result: exit 0; `tsc --noEmit` reported no errors across core, scenarios,
@@ -343,7 +343,7 @@ rest forwarding.
 Fix RED command:
 
 ```sh
-PATH=/private/tmp/crc-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 exec vitest run packages/core/src/lib/components/line.test.ts --browser.headless --browser.ui=false
+PATH=/private/tmp/pibbl-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 exec vitest run packages/core/src/lib/components/line.test.ts --browser.headless --browser.ui=false
 ```
 
 Result: exit 1 with 2 failed and 9 passed tests. A runtime-bypassed closed line
@@ -359,8 +359,8 @@ component-owned `custom` data do not cross the internal line-to-path boundary.
 Fix GREEN commands:
 
 ```sh
-PATH=/private/tmp/crc-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 exec vitest run packages/core/src/lib/components/line.test.ts packages/core/src/lib/components/line-helpers.test.ts --browser.headless --browser.ui=false
-PATH=/private/tmp/crc-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 typecheck
+PATH=/private/tmp/pibbl-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 exec vitest run packages/core/src/lib/components/line.test.ts packages/core/src/lib/components/line-helpers.test.ts --browser.headless --browser.ui=false
+PATH=/private/tmp/pibbl-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 typecheck
 ```
 
 The focused browser command exited 0 with both files and all 17 tests passing.
@@ -393,7 +393,7 @@ commit is sent for status-only review before P003-04 begins.
 Command:
 
 ```sh
-PATH=/private/tmp/crc-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 exec vitest run packages/core/src/lib/components/text-layout.test.ts packages/core/src/lib/components/text.test.ts --browser.headless --browser.ui=false
+PATH=/private/tmp/pibbl-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 exec vitest run packages/core/src/lib/components/text-layout.test.ts packages/core/src/lib/components/text.test.ts --browser.headless --browser.ui=false
 ```
 
 Result: exit 1. The new pure suite could not import the absent text-layout
@@ -404,7 +404,7 @@ style geometry did not register the expected click/double-click targets.
 Command:
 
 ```sh
-PATH=/private/tmp/crc-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 typecheck
+PATH=/private/tmp/pibbl-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 typecheck
 ```
 
 Result: exit 1 with the expected missing `TextStyle` and text-layout exports,
@@ -413,7 +413,7 @@ rejected text style fields, and legacy required visual-prop signature.
 ### GREEN pending adversarial review
 
 `TextStyle` now owns literal content, local geometry, bounds, typography, paint,
-opacity, cursor, wrapping, and CRC-native fit. `TextProps` contains only mouse
+opacity, cursor, wrapping, and Pibbl-native fit. `TextProps` contains only mouse
 handlers. `resolveTextLayout` is pure and returns final literal lines with their
 anchors/baselines, measured per-line bounds, aggregate bounds, and finite clip
 geometry. The painter uses those exact lines and bounds; a pure clip helper
@@ -422,7 +422,7 @@ accepts the Canvas-height fallback needed to preserve omitted-height clipping.
 Command:
 
 ```sh
-PATH=/private/tmp/crc-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 exec vitest run packages/core/src/lib/components/text-layout.test.ts packages/core/src/lib/components/text.test.ts --browser.headless --browser.ui=false
+PATH=/private/tmp/pibbl-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 exec vitest run packages/core/src/lib/components/text-layout.test.ts packages/core/src/lib/components/text.test.ts --browser.headless --browser.ui=false
 ```
 
 Result: exit 0; both files and all 23 tests passed. Evidence includes exact
@@ -434,7 +434,7 @@ runtime-bypassed legacy-prop authority check.
 Command:
 
 ```sh
-PATH=/private/tmp/crc-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 typecheck
+PATH=/private/tmp/pibbl-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 typecheck
 ```
 
 Result: exit 0 across core, scenarios, playground, tooling, and the public
@@ -457,14 +457,14 @@ future migration tooling should keep formatting scoped the same way.
 ### Adversarial review round 1 — text-local clip interaction
 
 Review found one Important paint/interaction mismatch. `fit: 'clip'` applied a
-raw Canvas clip, but `useRegion` captured only CRC's shared clipping stack, so
+raw Canvas clip, but `useRegion` captured only Pibbl's shared clipping stack, so
 the measured glyph rectangles outside the visible text clip still received
 handlers and cursor ownership.
 
 Fix RED command:
 
 ```sh
-PATH=/private/tmp/crc-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 exec vitest run packages/core/src/lib/components/text.test.ts --browser.headless --browser.ui=false
+PATH=/private/tmp/pibbl-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 exec vitest run packages/core/src/lib/components/text.test.ts --browser.headless --browser.ui=false
 ```
 
 Result: exit 1 with 1 failed and 22 passed tests. Moving to a measured glyph
@@ -472,7 +472,7 @@ position outside the text clip produced `cursor: pointer`, proving the region
 ignored the paint clip before the click assertion ran.
 
 The new internal `pushClippingPath` seam applies a Canvas clip and publishes the
-same `Path2D`, fill rule, and current transform to CRC interaction state. It
+same `Path2D`, fill rule, and current transform to Pibbl interaction state. It
 returns an idempotent release callback. Both the existing `clip` component and
 text-local clipping now use this seam; text keeps it active only through paint
 and region registration and releases it in `finally`. Nested clips remain stack
@@ -481,7 +481,7 @@ ordered, while component save/restore continues to own Canvas state.
 Fix GREEN command:
 
 ```sh
-PATH=/private/tmp/crc-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 exec vitest run packages/core/src/lib/components/text-layout.test.ts packages/core/src/lib/components/text.test.ts packages/core/src/lib/components/clip.test.ts packages/core/test/interaction-dispatch.test.ts --browser.headless --browser.ui=false
+PATH=/private/tmp/pibbl-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 exec vitest run packages/core/src/lib/components/text-layout.test.ts packages/core/src/lib/components/text.test.ts packages/core/src/lib/components/clip.test.ts packages/core/test/interaction-dispatch.test.ts --browser.headless --browser.ui=false
 ```
 
 Result: exit 0 with all four files and 38 tests passing. The regression proves
@@ -514,7 +514,7 @@ commit is sent for status-only review before P003-05 begins.
 Command:
 
 ```sh
-PATH=/private/tmp/crc-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 exec vitest run packages/core/src/lib/components/img.test.ts packages/core/src/lib/components/img-async.test.ts --browser.headless --browser.ui=false
+PATH=/private/tmp/pibbl-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 exec vitest run packages/core/src/lib/components/img.test.ts packages/core/src/lib/components/img-async.test.ts --browser.headless --browser.ui=false
 ```
 
 Result: exit 1; both files failed, with 20 failed and 5 passed tests. The legacy
@@ -526,7 +526,7 @@ failures.
 Command:
 
 ```sh
-PATH=/private/tmp/crc-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 typecheck
+PATH=/private/tmp/pibbl-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 typecheck
 ```
 
 Result: exit 1 with the expected absent `ImgStyle` export, rejected image style
@@ -549,7 +549,7 @@ the explicit transparent geometry interactive.
 Command:
 
 ```sh
-PATH=/private/tmp/crc-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 exec vitest run packages/core/src/lib/components/img.test.ts packages/core/src/lib/components/img-async.test.ts --browser.headless --browser.ui=false
+PATH=/private/tmp/pibbl-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 exec vitest run packages/core/src/lib/components/img.test.ts packages/core/src/lib/components/img-async.test.ts --browser.headless --browser.ui=false
 ```
 
 Result: exit 0; both files and all 27 tests passed. The focused evidence includes
@@ -561,7 +561,7 @@ authority checks.
 Command:
 
 ```sh
-PATH=/private/tmp/crc-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 typecheck
+PATH=/private/tmp/pibbl-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 typecheck
 ```
 
 Result: exit 0 across core, scenarios, playground, tooling, and the public
@@ -590,7 +590,7 @@ after that clean review.
 Command:
 
 ```sh
-PATH=/private/tmp/crc-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 exec vitest run packages/core/src/lib/components/g.test.ts packages/core/src/lib/components/clip.test.ts packages/core/src/lib/components/layer.test.ts --browser.headless --browser.ui=false
+PATH=/private/tmp/pibbl-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 exec vitest run packages/core/src/lib/components/g.test.ts packages/core/src/lib/components/clip.test.ts packages/core/src/lib/components/layer.test.ts --browser.headless --browser.ui=false
 ```
 
 Result: exit 1; all 3 files failed, with 3 failed and 42 passed tests. Descriptor
@@ -600,7 +600,7 @@ layer dimensions remained authoritative.
 Command:
 
 ```sh
-PATH=/private/tmp/crc-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 typecheck
+PATH=/private/tmp/pibbl-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 typecheck
 ```
 
 Result: exit 1 with missing `GStyle`, `ClipStyle`, and `LayerStyle` exports, the
@@ -609,7 +609,7 @@ still-accepted visual props.
 
 ### GREEN
 
-`GStyle` uses CRC-native `rotationDegrees` and `rotationOrigin`, preserving the
+`GStyle` uses Pibbl-native `rotationDegrees` and `rotationOrigin`, preserving the
 existing scale, origin-relative rotation, translation, and skew order. Clip path
 data and fill rule are style-only; layer dimensions are style-only while the
 child descriptor remains a structural prop. Untyped top-level visual values are
@@ -624,7 +624,7 @@ top-level spread, compatibility adapter, or visual baseline was introduced.
 Focused command:
 
 ```sh
-PATH=/private/tmp/crc-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 exec vitest run packages/core/src/lib/components/g.test.ts packages/core/src/lib/components/clip.test.ts packages/core/src/lib/components/layer.test.ts --browser.headless --browser.ui=false
+PATH=/private/tmp/pibbl-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 exec vitest run packages/core/src/lib/components/g.test.ts packages/core/src/lib/components/clip.test.ts packages/core/src/lib/components/layer.test.ts --browser.headless --browser.ui=false
 ```
 
 Result: exit 0; all 3 files and all 46 tests passed. Exact transform order,
@@ -635,14 +635,14 @@ covered.
 ### Planned style-migration milestone
 
 ```sh
-PATH=/private/tmp/crc-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 typecheck
-PATH=/private/tmp/crc-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 lint:code
-PATH=/private/tmp/crc-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 test:ci
-PATH=/private/tmp/crc-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 test:package-consumer:packed
+PATH=/private/tmp/pibbl-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 typecheck
+PATH=/private/tmp/pibbl-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 lint:code
+PATH=/private/tmp/pibbl-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 test:ci
+PATH=/private/tmp/pibbl-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 test:package-consumer:packed
 ```
 
 Results: typecheck and full ESLint exited 0. Browser mode passed 37 files and 315
-tests with 2 skips. The packed `@crc/core` consumer passed Bundler, NodeNext,
+tests with 2 skips. The packed `@pibbl/core` consumer passed Bundler, NodeNext,
 runtime, and no-source checks. Aggregate `trust` was intentionally not run at
 this milestone. P003-05 and P003-06 are done; P003-07 is the sole next step.
 
@@ -664,7 +664,7 @@ this milestone. P003-05 and P003-06 are done; P003-07 is the sole next step.
   final review was clean.
 - P003-10 added non-enumerable pure measurement capabilities, isolated and
   cycle-safe recursive `measureElement`, shared text measurement, explicit-only
-  image measurement, and CRC-native horizontal/vertical flow with finite
+  image measurement, and Pibbl-native horizontal/vertical flow with finite
   wrapping, gaps, line sizing, alignment, definite-box bypass, recursive nested
   measurement, and exactly-once required measurement. Measurement reports
   intrinsic content size; auto measured sizes are reused by placement and render
@@ -751,9 +751,9 @@ P003-12 are done; P003-13 is the sole next step.
 ## 2026-08-18 — P003-13 public examples and integration
 
 - Added exactly four canonical learner routes under the new Layout section:
-  absolute/overlay, CRC-native Flow, CSS-compatible Flex, and explicit Grid.
-  Each source imports only `@crc/core`, exports the standard
-  `mount(canvas): CRCController` function, has exactly two objectives, paints a
+  absolute/overlay, Pibbl-native Flow, CSS-compatible Flex, and explicit Grid.
+  Each source imports only `@pibbl/core`, exports the standard
+  `mount(canvas): PibblController` function, has exactly two objectives, paints a
   visible interactive lesson, and contains no laboratory diagnostics.
 - Promoted `layout-foundation.example.ts` into the cataloged test laboratory.
   Its public scene nests Flex→Grid→Overlay, resizes from 720 × 420 to 480 × 360,
@@ -856,7 +856,7 @@ The complete rerun of `corepack pnpm@11.21.0 trust` exited zero:
 
 - catalog 28/14, typecheck, ESLint/Prettier, package builds, Studio declaration
   verification, source and built Studio builds passed;
-- packed `@crc/core`/`@crc/types` consumers passed Bundler, NodeNext, runtime
+- packed `@pibbl/core`/`@pibbl/types` consumers passed Bundler, NodeNext, runtime
   export, private/no-source boundary checks;
 - browser suite passed 49 files, 457 tests, with only the two opt-in timing tests
   skipped;
@@ -872,7 +872,7 @@ Monaco/editor bundles. These are accepted build observations, not test failures.
 
 ### Controlled reference performance
 
-`VITE_CRC_REPORT_PERF=1 corepack pnpm@11.21.0
+`VITE_PIBBL_REPORT_PERF=1 corepack pnpm@11.21.0
 test:performance:reference` passed 1 file/7 tests in 5.40 seconds. Render callback
 median/p95/p99 was 2.2/2.4/4.0 ms; selection render was 2.3 ms and settle latency
 8.5 ms. Dispatch observations (median/p95/p99 milliseconds) were:

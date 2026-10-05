@@ -1,5 +1,5 @@
 import {
-  crc,
+  pibbl,
   HtmlBox,
   Rectangle,
   signal,
@@ -8,7 +8,7 @@ import {
   type HtmlMountCallback,
   type HtmlUpdateFunction,
   type HtmlBoxFocusState,
-} from "@crc/core";
+} from "@pibbl/core";
 
 const count = signal(0);
 const output = document.createElement("output");
@@ -53,5 +53,5 @@ function Scene() {
     </>
   );
 }
-const controller = crc(canvas, <Scene />, { htmlOverlay: overlay });
+const controller = pibbl(canvas, <Scene />, { htmlOverlay: overlay });
 window.addEventListener("pagehide", () => controller.dispose(), { once: true });

@@ -1,8 +1,8 @@
-import { crc, Rectangle, signal } from '@crc/core';
+import { pibbl, Rectangle, signal } from '@pibbl/core';
 import { afterEach, describe, expect, it } from 'vitest';
-import { clearSharedState, getCRCInstance } from '../src/lib/global-state';
+import { clearSharedState, getPibblInstance } from '../src/lib/global-state';
 import { signalGraphSnapshot } from '../src/lib/signals/graph';
-import { createElement } from '@crc/core';
+import { createElement } from '@pibbl/core';
 
 interface PerformanceObservation {
   regions: number;
@@ -62,13 +62,13 @@ async function observeWorkload(
   const abortController = new AbortController();
   let callbacks = 0;
   try {
-    crc(canvas, createElement(PerformanceScene, {
+    pibbl(canvas, createElement(PerformanceScene, {
       regions,
       onHit: () => callbacks++,
     }), { signal: abortController.signal });
     await nextFrame();
 
-    expect([...getCRCInstance(canvas).regions].filter(region => region.handlers.mousemove).length).toBe(regions);
+    expect([...getPibblInstance(canvas).regions].filter(region => region.handlers.mousemove).length).toBe(regions);
 
     const context = canvas.getContext('2d');
     if (!context) {
@@ -142,7 +142,7 @@ describe('dispatch performance characterization', () => {
       Number.isFinite(observation.p95Ms) &&
       observation.medianMs <= observation.p95Ms,
     )).toBe(true);
-    if (import.meta.env.VITE_CRC_REPORT_PERF === '1') {
+    if (import.meta.env.VITE_PIBBL_REPORT_PERF === '1') {
       console.warn('TFC-01 dispatch observations', JSON.stringify({
         environment: {
           userAgent: navigator.userAgent,
@@ -177,7 +177,7 @@ describe('dispatch performance characterization', () => {
       });
     };
     const abortController = new AbortController();
-    crc(canvas, createElement(Root, {}), { signal: abortController.signal });
+    pibbl(canvas, createElement(Root, {}), { signal: abortController.signal });
     await nextFrame();
     const context = canvas.getContext('2d');
     if (!context) throw new Error('Performance Canvas has no 2D context.');

@@ -5,8 +5,8 @@ import { useHookSlot } from './hook-slot.js';
  *
  * @see {@link useRef}
  */
-export interface CRCRef<T> {
-  /** Mutable value retained by the ref container. See {@link CRCRef}. */
+export interface PibblRef<T> {
+  /** Mutable value retained by the ref container. See {@link PibblRef}. */
   current: T | undefined;
 }
 
@@ -15,8 +15,8 @@ export interface CRCRef<T> {
  * @param init The initial reference value
  * @returns A reference with a `current` property containing the value
  *
- * @see {@link CRCRef}
+ * @see {@link PibblRef}
  */
-export function useRef<T>(init?: T): CRCRef<T> {
+export function useRef<T>(init?: T): PibblRef<T> {
   return useHookSlot('ref', () => ({ current: init })).value;
 }

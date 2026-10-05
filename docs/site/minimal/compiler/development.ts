@@ -1,5 +1,5 @@
-import { Rectangle, Text, crc } from '@crc/core';
-import { Fragment, jsxDEV, type JSX } from '@crc/core/jsx-dev-runtime';
+import { Rectangle, Text, pibbl } from '@pibbl/core';
+import { Fragment, jsxDEV, type JSX } from '@pibbl/core/jsx-dev-runtime';
 
 const canvas = document.createElement('canvas');
 canvas.width = 280;
@@ -32,5 +32,5 @@ const root = jsxDEV(
   source,
   undefined,
 );
-const controller = crc(canvas, root);
+const controller = pibbl(canvas, root);
 window.addEventListener('pagehide', () => controller.dispose(), { once: true });

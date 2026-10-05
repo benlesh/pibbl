@@ -1,7 +1,7 @@
 import type { LayoutBox } from "../layout/types.js";
-import type { CRCNavigationCandidate } from "./types.js";
+import type { PibblNavigationCandidate } from "./types.js";
 
-export type CRCDirection = "left" | "right" | "up" | "down";
+export type PibblDirection = "left" | "right" | "up" | "down";
 
 export type DirectionalScore = readonly [
   beamPenalty: 0 | 1,
@@ -20,12 +20,12 @@ interface NormalizedBounds {
 }
 
 export function findDirectionalCandidate(
-  current: CRCNavigationCandidate,
-  candidates: readonly CRCNavigationCandidate[],
-  direction: CRCDirection,
-  eligible: (candidate: CRCNavigationCandidate) => boolean = () => true,
-): CRCNavigationCandidate | undefined {
-  let winner: CRCNavigationCandidate | undefined;
+  current: PibblNavigationCandidate,
+  candidates: readonly PibblNavigationCandidate[],
+  direction: PibblDirection,
+  eligible: (candidate: PibblNavigationCandidate) => boolean = () => true,
+): PibblNavigationCandidate | undefined {
+  let winner: PibblNavigationCandidate | undefined;
   let winningScore: DirectionalScore | undefined;
   for (const candidate of candidates) {
     if (!eligible(candidate)) continue;
@@ -41,10 +41,10 @@ export function findDirectionalCandidate(
 
 /** Resolves only within the candidate's nearest committed boundary. */
 export function findNearestDirectionalCandidate(
-  current: CRCNavigationCandidate,
-  direction: CRCDirection,
-  eligible?: (candidate: CRCNavigationCandidate) => boolean,
-): CRCNavigationCandidate | undefined {
+  current: PibblNavigationCandidate,
+  direction: PibblDirection,
+  eligible?: (candidate: PibblNavigationCandidate) => boolean,
+): PibblNavigationCandidate | undefined {
   const boundary = current.directionalBoundary;
   return boundary
     ? findDirectionalCandidate(
@@ -57,9 +57,9 @@ export function findNearestDirectionalCandidate(
 }
 
 export function scoreDirectionalCandidate(
-  current: CRCNavigationCandidate,
-  candidate: CRCNavigationCandidate,
-  direction: CRCDirection,
+  current: PibblNavigationCandidate,
+  candidate: PibblNavigationCandidate,
+  direction: PibblDirection,
 ): DirectionalScore | undefined {
   const currentBounds = normalizeBounds(current.rootBounds);
   const candidateBounds = normalizeBounds(candidate.rootBounds);

@@ -1,5 +1,5 @@
 import type { particleCelebrationLabScenarioEntry } from './catalog.js';
-import { dropShadow } from '@crc/core/filters';
+import { dropShadow } from '@pibbl/core/filters';
 import {
   Circle,
   Clip,
@@ -8,7 +8,7 @@ import {
   Rectangle,
   Text,
   type WritableSignal,
-} from '@crc/core';
+} from '@pibbl/core';
 import {
   Particles2D,
   useParticleSystem,
@@ -16,9 +16,9 @@ import {
   particleChoice,
   particleCurve,
   particleRange,
-  type CRCParticleSystem,
-  type CRCParticleSystemEvent,
-} from '@crc/core/particles';
+  type PibblParticleSystem,
+  type PibblParticleSystemEvent,
+} from '@pibbl/core/particles';
 
 // prettier-ignore
 export const PARTICLE_CELEBRATION_LAB_SOURCE_ID = 'first-class-particle-celebration-laboratory-example';
@@ -63,7 +63,7 @@ export interface ParticleCelebrationLabState {
 export interface ParticleCelebrationLabModel {
   readonly glowEnabled: WritableSignal<boolean>;
   readonly selectedPoints: WritableSignal<readonly CelebrationPoint[]>;
-  system: CRCParticleSystem | undefined;
+  system: PibblParticleSystem | undefined;
   celebrations: number;
   lastAction: string;
   lastLaunchPoints: readonly CelebrationPoint[];
@@ -150,7 +150,7 @@ export const particleCelebrationEffect = defineParticleEffect2D({
 });
 
 export function emitCelebrationBurst(
-  system: CRCParticleSystem,
+  system: PibblParticleSystem,
   x: number,
   y: number,
 ): void {
@@ -166,7 +166,7 @@ export function emitCelebrationBurst(
 
 function recordEvent(
   model: ParticleCelebrationLabModel,
-  event: CRCParticleSystemEvent,
+  event: PibblParticleSystemEvent,
 ): void {
   if (
     event.type === 'burst-accepted' &&

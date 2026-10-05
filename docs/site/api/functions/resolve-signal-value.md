@@ -11,7 +11,7 @@ relatedTypes: [Signal, SignalValue]
 
 # resolveSignalValue
 
-`resolveSignalValue(value)` returns a plain value unchanged or reads one CRC
+`resolveSignalValue(value)` returns a plain value unchanged or reads one Pibbl
 signal with `get()`. It resolves exactly one level: it does not inspect arrays,
 objects, functions, or a signal returned by another signal.
 

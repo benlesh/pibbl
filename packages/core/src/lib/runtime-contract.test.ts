@@ -1,6 +1,6 @@
 import { peekNativeFilterPool } from './filter/render-filter-boundary';
 import { FilterSurfacePool } from './filter/filter-surface-pool';
-import { blur, grayscale } from '@crc/core/filters';
+import { blur, grayscale } from '@pibbl/core/filters';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   Circle,
@@ -15,12 +15,12 @@ import {
   signal,
   drive,
   tween,
-  type CRCPlayback,
+  type PibblPlayback,
 } from '../index';
-import { crc } from './crc';
+import { pibbl } from './pibbl';
 import { definePrimitive } from './define-primitive';
-import { createElement, isCRCElement } from './element/create-element';
-import { clearSharedState, getCRCInstance } from './global-state';
+import { createElement, isPibblElement } from './element/create-element';
+import { clearSharedState, getPibblInstance } from './global-state';
 import { useRef } from './hooks/use-ref';
 import { useSignal } from './hooks/use-signal';
 import type { WritableSignal } from './signals/types';
@@ -29,7 +29,7 @@ import {
   ManualSchedulerDriver,
   snapshotRealmScheduler,
 } from './scheduler/testing';
-import type { CRCNode, SystemStyle } from './types';
+import type { PibblNode, SystemStyle } from './types';
 import { RegularPolygon } from './components/regular-polygon';
 import { Star } from './components/star';
 
@@ -100,7 +100,7 @@ describe('element and primitive contract', () => {
     expect('key' in element.props).toBe(false);
 
     const canvas = createCanvas();
-    const controller = crc(canvas, element);
+    const controller = pibbl(canvas, element);
     await nextFrame();
 
     expect(calls).toEqual([
@@ -125,7 +125,7 @@ describe('element and primitive contract', () => {
     const canvas = createCanvas();
 
     try {
-      const controller = crc(canvas, createElement(Unresolved, {
+      const controller = pibbl(canvas, createElement(Unresolved, {
         style: { radius: '50%' },
       }));
       expect(() => pending?.(0)).toThrowError(/radius.*50%.*resolve/i);
@@ -151,7 +151,7 @@ describe('element and primitive contract', () => {
     const canvas = createCanvas();
 
     try {
-      const controller = crc(canvas, createElement(Leaky, {
+      const controller = pibbl(canvas, createElement(Leaky, {
         style: { radius: '50%' },
       }));
       expect(() => pending?.(0)).toThrowError(/radius.*50%.*resolve/i);
@@ -163,7 +163,7 @@ describe('element and primitive contract', () => {
   });
 });
 
-describe('crc root updates', () => {
+describe('pibbl root updates', () => {
   it('defers an update requested during render to a later host frame', () => {
     const originalRequestAnimationFrame = window.requestAnimationFrame;
     const callbacks: FrameRequestCallback[] = [];
@@ -178,11 +178,11 @@ describe('crc root updates', () => {
     };
     const Initial = (_props: {}) => {
       renders.push('initial');
-      crc(canvas, createElement(Replacement, {}));
+      pibbl(canvas, createElement(Replacement, {}));
     };
 
     try {
-      const controller = crc(canvas, createElement(Initial, {}));
+      const controller = pibbl(canvas, createElement(Initial, {}));
       expect(callbacks).toHaveLength(1);
 
       callbacks[0](10);
@@ -211,7 +211,7 @@ describe('crc root updates', () => {
     const render = vi.fn();
 
     try {
-      const controller = crc(canvas, createElement(render, {}));
+      const controller = pibbl(canvas, createElement(render, {}));
       controller.dispose();
       pending?.(10);
 
@@ -244,7 +244,7 @@ describe('crc root updates', () => {
     };
 
     try {
-      const controller = crc(canvas, createElement(Root, {}));
+      const controller = pibbl(canvas, createElement(Root, {}));
       expect(callbacks).toHaveLength(1);
 
       callbacks[0](25);
@@ -283,7 +283,7 @@ describe('crc root updates', () => {
     const checkout = vi.spyOn(FilterSurfacePool.prototype, 'checkoutPair');
 
     try {
-      crc(canvas, [
+      pibbl(canvas, [
         createElement(ResourceBearingSibling, {}),
         createElement(Rectangle, {
           style: {
@@ -298,7 +298,7 @@ describe('crc root updates', () => {
       ]);
 
       expect(() => pending?.(0)).toThrowError('filtered final composite failed');
-      const failed = getCRCInstance(canvas);
+      const failed = getPibblInstance(canvas);
       expect(setup).not.toHaveBeenCalled();
       expect(cleanups).toBe(0);
       expect(failed.refs.size).toBe(0);
@@ -312,7 +312,7 @@ describe('crc root updates', () => {
       });
 
       drawImage.mockRestore();
-      crc(canvas, createElement(Rectangle, {
+      pibbl(canvas, createElement(Rectangle, {
         style: {
           left: 4,
           top: 4,
@@ -323,8 +323,8 @@ describe('crc root updates', () => {
         },
       }));
       expect(() => pending?.(1)).not.toThrow();
-      expect(getCRCInstance(canvas).refs.size).toBe(1);
-      expect(peekNativeFilterPool(getCRCInstance(canvas))!.snapshot()).toMatchObject({
+      expect(getPibblInstance(canvas).refs.size).toBe(1);
+      expect(peekNativeFilterPool(getPibblInstance(canvas))!.snapshot()).toMatchObject({
         activePairs: 0,
         pairCheckouts: 1,
         pairReturns: 1,
@@ -359,7 +359,7 @@ describe('crc root updates', () => {
       });
     };
     const AcquisitionProbe = (_props: {}) => {
-      const instance = getCRCInstance(canvas);
+      const instance = getPibblInstance(canvas);
       acquiredResources = {
         clickListeners: instance.eventRoot.nativeListeners?.count('click') ?? 0,
         targets: instance.eventRoot.targets.size,
@@ -367,7 +367,7 @@ describe('crc root updates', () => {
     };
 
     try {
-      crc(canvas, [
+      pibbl(canvas, [
         createElement(ResourceBearingSibling, {}),
         createElement(AcquisitionProbe, {}),
         createElement(Polygon, {
@@ -399,7 +399,7 @@ describe('crc root updates', () => {
       );
       expect(clickAcquisition).toBeDefined();
       expect(cleanup).not.toHaveBeenCalled();
-      const failed = getCRCInstance(canvas);
+      const failed = getPibblInstance(canvas);
       expect(failed.refs.size).toBe(0);
       expect(failed.eventRoot.targets.size).toBe(0);
       expect(failed.eventRoot.nativeListeners?.count('click')).toBe(0);
@@ -410,7 +410,7 @@ describe('crc root updates', () => {
       );
       expect(canvas.style.cursor).toBe('');
 
-      crc(canvas, createElement(Polygon, {
+      pibbl(canvas, createElement(Polygon, {
         style: {
           coords: [[0, 0], [40, 0], [40, 40], [0, 40]],
           cornerRadius: 8,
@@ -419,7 +419,7 @@ describe('crc root updates', () => {
       }));
       expect(() => pending?.(1)).not.toThrow();
       expect(arcTo).toHaveBeenCalledTimes(4);
-      expect(getCRCInstance(canvas).refs.size).toBe(1);
+      expect(getPibblInstance(canvas).refs.size).toBe(1);
     } finally {
       window.requestAnimationFrame = originalRequestAnimationFrame;
     }
@@ -444,7 +444,7 @@ describe('crc root updates', () => {
     };
 
     try {
-      crc(canvas, [
+      pibbl(canvas, [
         createElement(ResourceBearingSibling, {}),
         createElement(RegularPolygon, {
           style: {
@@ -470,10 +470,10 @@ describe('crc root updates', () => {
       expect((failure as Error).message).toMatch(/exactly one/);
       expect(setup).not.toHaveBeenCalled();
       expect(cleanup).not.toHaveBeenCalled();
-      expect(getCRCInstance(canvas).refs.size).toBe(0);
-      expect(getCRCInstance(canvas).eventRoot.targets.size).toBe(0);
+      expect(getPibblInstance(canvas).refs.size).toBe(0);
+      expect(getPibblInstance(canvas).eventRoot.targets.size).toBe(0);
 
-      crc(canvas, createElement(RegularPolygon, {
+      pibbl(canvas, createElement(RegularPolygon, {
         style: {
           sides: 6,
           cx: 40,
@@ -483,7 +483,7 @@ describe('crc root updates', () => {
         },
       }));
       expect(() => pending?.(1)).not.toThrow();
-      expect(getCRCInstance(canvas).refs.size).toBe(1);
+      expect(getPibblInstance(canvas).refs.size).toBe(1);
     } finally {
       window.requestAnimationFrame = originalRequestAnimationFrame;
     }
@@ -508,7 +508,7 @@ describe('crc root updates', () => {
     };
 
     try {
-      crc(canvas, [
+      pibbl(canvas, [
         createElement(ResourceBearingSibling, {}),
         createElement(Star, {
           style: {
@@ -534,10 +534,10 @@ describe('crc root updates', () => {
       expect((failure as Error).message).toMatch(/outerRadius/);
       expect(setup).not.toHaveBeenCalled();
       expect(cleanup).not.toHaveBeenCalled();
-      expect(getCRCInstance(canvas).refs.size).toBe(0);
-      expect(getCRCInstance(canvas).eventRoot.targets.size).toBe(0);
+      expect(getPibblInstance(canvas).refs.size).toBe(0);
+      expect(getPibblInstance(canvas).eventRoot.targets.size).toBe(0);
 
-      crc(canvas, createElement(Star, {
+      pibbl(canvas, createElement(Star, {
         style: {
           points: 5,
           cx: 40,
@@ -548,7 +548,7 @@ describe('crc root updates', () => {
         },
       }));
       expect(() => pending?.(1)).not.toThrow();
-      expect(getCRCInstance(canvas).refs.size).toBe(1);
+      expect(getPibblInstance(canvas).refs.size).toBe(1);
     } finally {
       window.requestAnimationFrame = originalRequestAnimationFrame;
     }
@@ -561,9 +561,9 @@ describe('crc root updates', () => {
       renders.push(value);
     };
 
-    const controller = crc(canvas, createElement(Root, { value: 1 }));
-    expect(crc(canvas, createElement(Root, { value: 2 }))).toBe(controller);
-    expect(crc(canvas, createElement(Root, { value: 3 }))).toBe(controller);
+    const controller = pibbl(canvas, createElement(Root, { value: 1 }));
+    expect(pibbl(canvas, createElement(Root, { value: 2 }))).toBe(controller);
+    expect(pibbl(canvas, createElement(Root, { value: 3 }))).toBe(controller);
     await nextFrame();
 
     expect(renders).toEqual([3]);
@@ -582,13 +582,13 @@ describe('crc root updates', () => {
     const ReplacementRoot = (_props: {}) => {
       renders.push('replacement');
     };
-    const controller = crc(canvas, createElement(StatefulRoot, {}));
+    const controller = pibbl(canvas, createElement(StatefulRoot, {}));
     await nextFrame();
 
-    crc(canvas, createElement(ReplacementRoot, {}));
+    pibbl(canvas, createElement(ReplacementRoot, {}));
     valueSignal?.set(1);
-    const pendingRoot = getCRCInstance(canvas).pendingRoot;
-    expect(isCRCElement(pendingRoot) && pendingRoot.type)
+    const pendingRoot = getPibblInstance(canvas).pendingRoot;
+    expect(isPibblElement(pendingRoot) && pendingRoot.type)
       .toBe(createElement(ReplacementRoot, {}).type);
     await nextFrame();
 
@@ -606,13 +606,13 @@ describe('crc root updates', () => {
     const ReplacementRoot = (_props: {}) => {
       renders.push('replacement');
     };
-    const controller = crc(canvas, createElement(SignalRoot, {}));
+    const controller = pibbl(canvas, createElement(SignalRoot, {}));
     await nextFrame();
 
-    crc(canvas, createElement(ReplacementRoot, {}));
+    pibbl(canvas, createElement(ReplacementRoot, {}));
     value.set(1);
-    const pendingRoot = getCRCInstance(canvas).pendingRoot;
-    expect(isCRCElement(pendingRoot) && pendingRoot.type)
+    const pendingRoot = getPibblInstance(canvas).pendingRoot;
+    expect(isPibblElement(pendingRoot) && pendingRoot.type)
       .toBe(createElement(ReplacementRoot, {}).type);
     await nextFrame();
 
@@ -630,8 +630,8 @@ describe('crc root updates', () => {
     const healthyRenders: number[] = [];
     const recoveredRenders: number[] = [];
     let shouldFail = false;
-    let failedPlayback!: CRCPlayback;
-    let healthyPlayback!: CRCPlayback;
+    let failedPlayback!: PibblPlayback;
+    let healthyPlayback!: PibblPlayback;
     const failingCanvas = createCanvas();
     const healthyCanvas = createCanvas();
     const FailingRoot = (_props: {}) => {
@@ -662,12 +662,12 @@ describe('crc root updates', () => {
         style: { left: value, width: 10, height: 10, fill: 'green' },
       });
     };
-    const failedController = crc(
+    const failedController = pibbl(
       failingCanvas,
       createElement(FailingRoot, {}),
       { pixelRatio: 1 },
     );
-    const healthyController = crc(
+    const healthyController = pibbl(
       healthyCanvas,
       createElement(HealthyRoot, {}),
       { pixelRatio: 1 },
@@ -689,12 +689,12 @@ describe('crc root updates', () => {
       expect(healthyOutput.get()).toBe(5);
       expect(failedRenders.at(-1)).toBe(5);
       expect(healthyRenders.at(-1)).toBe(5);
-      expect(getCRCInstance(failingCanvas).refs.size).toBe(0);
+      expect(getPibblInstance(failingCanvas).refs.size).toBe(0);
       expect(healthyPlayback.status.get()).toBe('running');
       expect(driver.pendingHostFrames).toBe(1);
 
       shouldFail = false;
-      crc(failingCanvas, createElement(RecoveredRoot, {}));
+      pibbl(failingCanvas, createElement(RecoveredRoot, {}));
       expect(driver.pendingHostFrames).toBe(1);
       driver.flush(75);
 
@@ -728,8 +728,8 @@ describe('crc root updates', () => {
     const healthyOutput = signal(0);
     const errors: unknown[] = [];
     const healthyRenders: number[] = [];
-    let failedPlayback!: CRCPlayback;
-    let healthyPlayback!: CRCPlayback;
+    let failedPlayback!: PibblPlayback;
+    let healthyPlayback!: PibblPlayback;
     const FailingRoot = (_props: {}) => {
       failedPlayback = usePlayback(parallel(
         drive(firstFailedOutput, defineAnimation({
@@ -774,8 +774,8 @@ describe('crc root updates', () => {
         style: { left: value, width: 5, height: 5, fill: 'blue' },
       });
     };
-    const failedController = crc(createCanvas(), createElement(FailingRoot, {}));
-    const healthyController = crc(createCanvas(), createElement(HealthyRoot, {}));
+    const failedController = pibbl(createCanvas(), createElement(FailingRoot, {}));
+    const healthyController = pibbl(createCanvas(), createElement(HealthyRoot, {}));
 
     try {
       expect(driver.pendingHostFrames).toBe(1);
@@ -826,14 +826,14 @@ describe('crc root updates', () => {
     const LatestReplacement = (_props: {}) => {
       renders.push('latest-replacement');
     };
-    const controller = crc(canvas, createElement(StatefulRoot, {}));
+    const controller = pibbl(canvas, createElement(StatefulRoot, {}));
     await nextFrame();
 
     valueSignal?.set(1);
-    crc(canvas, createElement(FirstReplacement, {}));
-    crc(canvas, createElement(LatestReplacement, {}));
-    const instance = getCRCInstance(canvas);
-    expect(isCRCElement(instance.pendingRoot) && instance.pendingRoot.type)
+    pibbl(canvas, createElement(FirstReplacement, {}));
+    pibbl(canvas, createElement(LatestReplacement, {}));
+    const instance = getPibblInstance(canvas);
+    expect(isPibblElement(instance.pendingRoot) && instance.pendingRoot.type)
       .toBe(createElement(LatestReplacement, {}).type);
     await nextFrame();
 
@@ -849,7 +849,7 @@ describe('component tree identity', () => {
     const onRender = (label: string, identity: number) => {
       observations.set(label, identity);
     };
-    const Host = ({ expanded }: { expanded: boolean }): CRCNode =>
+    const Host = ({ expanded }: { expanded: boolean }): PibblNode =>
       expanded ?
         [
           null,
@@ -865,11 +865,11 @@ describe('component tree identity', () => {
           false,
           createElement(IdentityProbe, { label: 'b', onRender }),
         ];
-    const controller = crc(canvas, createElement(Host, { expanded: false }));
+    const controller = pibbl(canvas, createElement(Host, { expanded: false }));
     await nextFrame();
     const initial = new Map(observations);
 
-    crc(canvas, createElement(Host, { expanded: true }));
+    pibbl(canvas, createElement(Host, { expanded: true }));
     await nextFrame();
 
     expect(observations).toEqual(initial);
@@ -884,21 +884,21 @@ describe('component tree identity', () => {
     };
     const Host = ({ labels }: { labels: string[] }) =>
       labels.map(label => createElement(IdentityProbe, { key: label, label, onRender }));
-    const controller = crc(canvas, createElement(Host, { labels: ['a', 'b'] }));
+    const controller = pibbl(canvas, createElement(Host, { labels: ['a', 'b'] }));
     await nextFrame();
     const a = observations.get('a');
     const b = observations.get('b');
 
-    crc(canvas, createElement(Host, { labels: ['b', 'c', 'a'] }));
+    pibbl(canvas, createElement(Host, { labels: ['b', 'c', 'a'] }));
     await nextFrame();
     expect(observations.get('a')).toBe(a);
     expect(observations.get('b')).toBe(b);
     expect(observations.get('c')).not.toBe(a);
     expect(observations.get('c')).not.toBe(b);
 
-    crc(canvas, createElement(Host, { labels: ['b', 'c'] }));
+    pibbl(canvas, createElement(Host, { labels: ['b', 'c'] }));
     await nextFrame();
-    crc(canvas, createElement(Host, { labels: ['a', 'b', 'c'] }));
+    pibbl(canvas, createElement(Host, { labels: ['a', 'b', 'c'] }));
     await nextFrame();
     expect(observations.get('a')).not.toBe(a);
 
@@ -913,12 +913,12 @@ describe('component tree identity', () => {
     };
     const Host = ({ labels }: { labels: string[] }) =>
       labels.map(label => createElement(IdentityProbe, { label, onRender }));
-    const controller = crc(canvas, createElement(Host, { labels: ['a', 'b'] }));
+    const controller = pibbl(canvas, createElement(Host, { labels: ['a', 'b'] }));
     await nextFrame();
     const firstSlot = observations.get('a');
     const secondSlot = observations.get('b');
 
-    crc(canvas, createElement(Host, { labels: ['inserted', 'a', 'b'] }));
+    pibbl(canvas, createElement(Host, { labels: ['inserted', 'a', 'b'] }));
     await nextFrame();
 
     expect(observations.get('inserted')).toBe(firstSlot);
@@ -939,10 +939,10 @@ describe('component tree identity', () => {
     };
     const Host = ({ second }: { second: boolean }) =>
       second ? createElement(Second, { key: 'shared' }) : createElement(First, { key: 'shared' });
-    const controller = crc(canvas, createElement(Host, { second: false }));
+    const controller = pibbl(canvas, createElement(Host, { second: false }));
     await nextFrame();
 
-    crc(canvas, createElement(Host, { second: true }));
+    pibbl(canvas, createElement(Host, { second: true }));
     await nextFrame();
 
     expect(values).toEqual(['first', 'second']);
@@ -958,10 +958,10 @@ describe('component tree identity', () => {
     const Second = function SameName(_props: {}) {
       values.push(useRef('second').current!);
     };
-    const controller = crc(canvas, createElement(First, {}));
+    const controller = pibbl(canvas, createElement(First, {}));
     await nextFrame();
 
-    crc(canvas, createElement(Second, {}));
+    pibbl(canvas, createElement(Second, {}));
     await nextFrame();
 
     expect(values).toEqual(['first', 'second']);
@@ -982,9 +982,9 @@ describe('component tree identity', () => {
     ];
 
     try {
-      const controller = crc(canvas, createElement(Host, {}));
+      const controller = pibbl(canvas, createElement(Host, {}));
       expect(() => pending?.(0)).toThrowError(
-        'Host received duplicate CRC key "duplicate" as a CRC child.',
+        'Host received duplicate Pibbl key "duplicate" as a Pibbl child.',
       );
       controller.dispose();
     } finally {

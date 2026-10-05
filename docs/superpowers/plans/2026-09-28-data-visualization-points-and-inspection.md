@@ -4,11 +4,11 @@
 
 > **For agentic workers:** Use `superpowers:executing-plans` for inline execution. If the user chooses delegation, use `superpowers:subagent-driven-development`, subject to the repository's limits and feedback checkpoint. Steps use checkboxes for tracking. Base execution approved in an isolated worktree. The user subsequently requested the full continuation. Final execution outcomes below supersede the original feedback pauses.
 
-**Goal:** Ship batched PointSeries dots, PlotSeries custom CRC marks, pure nearest-data helpers, function-based HoverData queries, and anchor-protecting HoverCard placement; demonstrate single and multi-line inspection in runnable Studio lessons.
+**Goal:** Ship batched PointSeries dots, PlotSeries custom Pibbl marks, pure nearest-data helpers, function-based HoverData queries, and anchor-protecting HoverCard placement; demonstrate single and multi-line inspection in runnable Studio lessons.
 
-**Architecture:** Both series consume existing allocation-relative Scale providers and core signals. PointSeries paints ordered circles with one union target; PlotSeries emits keyed translated subtrees whose returned elements retain normal CRC behavior. Lookup helpers operate on plain data and resolved linear-scale snapshots without owning reactive state. HoverData receives ordinary query functions and owns their render-time signal reads; HoverCard independently handles declared-box placement.
+**Architecture:** Both series consume existing allocation-relative Scale providers and core signals. PointSeries paints ordered circles with one union target; PlotSeries emits keyed translated subtrees whose returned elements retain normal Pibbl behavior. Lookup helpers operate on plain data and resolved linear-scale snapshots without owning reactive state. HoverData receives ordinary query functions and owns their render-time signal reads; HoverCard independently handles declared-box placement.
 
-**Tech Stack:** TypeScript, CRC JSX, Canvas 2D/Path2D, Vitest with Playwright Chromium, Node 24.15+ on Node 24 LTS, pnpm 11.21.0.
+**Tech Stack:** TypeScript, Pibbl JSX, Canvas 2D/Path2D, Vitest with Playwright Chromium, Node 24.15+ on Node 24 LTS, pnpm 11.21.0.
 
 **Spec:** [Approved points, custom plots, and inspection design](../specs/2026-09-28-data-visualization-points-and-inspection-design.md).
 
@@ -63,10 +63,10 @@ Register the example/lab in `packages/scenarios/src/learning-catalog.ts` and
 `packages/scenarios/src/catalog.ts`; update `playground/src/scenario-sources.ts`
 for the lab source adapter, and regenerate the catalog index with its existing
 command. Extend `packages/viz/test/studio.test.ts` for editable source and new
-exports. Existing aliases/package setup already support @crc/viz.
+exports. Existing aliases/package setup already support @pibbl/viz.
 
 After feedback, update `tooling/verify-packed-viz.mjs`,
-`playground/src/crc-editor-types.txt` and
+`playground/src/pibbl-editor-types.txt` and
 `tooling/verify-studio-types.mjs` for the maintained editor declarations and
 source/built/Studio consumer checks, `packages/viz/README.md`, `docs/site/learn/guides/data-visualization.md`,
 and create `docs/site/api/components/point-series.md`,
@@ -78,7 +78,7 @@ and create `docs/site/api/components/point-series.md`,
 
 **Files:** Read `AGENTS.md`, the approved spec, current core style/layout/events/hooks contracts, `packages/viz/src/lib/{scale,scale-context,scale-adjust,paint}.ts`, and the responsive specification/current tests. No production edits.
 
-**Interfaces:** Consume existing Scale/useScale/SignalValue/CRCNode and public `useEventTarget`, `useEventListener`, `useCanvasContext`, `Group`. Use core's version-coupled friend entry only where the current package already legitimately needs it.
+**Interfaces:** Consume existing Scale/useScale/SignalValue/PibblNode and public `useEventTarget`, `useEventListener`, `useCanvasContext`, `Group`. Use core's version-coupled friend entry only where the current package already legitimately needs it.
 
 - [x] Record `git status --short`, current revision, `node --version`, and `corepack pnpm@11.21.0 --version`; account for every pre-existing change.
 - [x] Inspect current core responsive exports and implementation, not merely the proposal or an untracked test. Record whether Task 6 is executable now. Do not take ownership of the concurrent implementation or duplicate it.
@@ -113,7 +113,7 @@ and create `docs/site/api/components/point-series.md`,
 
 **Files:** Create plot-types.ts, plot-series.tsx, plot-series.test.tsx; modify index.ts and type-tests/public.tsx.
 
-**Interfaces:** Export `PlotSeries<D>(props: PlotSeriesProps<D>)`, PlotSeriesProps, and PlotKeyAccessor exactly as approved. Consume Task 1 coordinate normalization/eligibility; return ordinary CRCNode subtrees. `render(datum,index,data): CRCNode` is required and opaque.
+**Interfaces:** Export `PlotSeries<D>(props: PlotSeriesProps<D>)`, PlotSeriesProps, and PlotKeyAccessor exactly as approved. Consume Task 1 coordinate normalization/eligibility; return ordinary PibblNode subtrees. `render(datum,index,data): PibblNode` is required and opaque.
 
 - [x] Add `places custom elements and preserves keyed state`: use the Task 1 scale fixture and rows with IDs `a` and `b`; custom marks return a stateful component and a Rectangle at `(-5,-5)` with size 10×10. Verify positions `(40,70)` and `(160,10)`, datum-specific click handlers, and retained per-key state when input order reverses.
 - [x] Run `corepack pnpm@11.21.0 exec vitest run packages/viz/test/plot-series.test.tsx --browser.headless --browser.ui=false`; confirm failure from the absent API/behavior.
@@ -131,7 +131,7 @@ and create `docs/site/api/components/point-series.md`,
 - [x] Add a failing headless lab test that mounts two unequal allocated panels, inspects/selects a known point, reorders custom marks, and resizes the Canvas while preserving selection and keyed mark state. Assert state and coordinates before adding screenshots.
 - [x] Implement a small self-contained dataset with missing values and overlapping dots. Compose scatter in one panel and line-plus-dots with selected custom annotations in the other. Include shared and callback styles, visible readout, click/tap selection, pointer inspection, and previous/next controls. Use public package imports only; keep exhaustive fixtures in the lab adapter.
 - [x] Compute inspection from the same rendered data/scale snapshots. In the translation-only lesson subtract the known plot origin from event.x/y. Keep custom clickable marks above the plot background; use bubbling or pointerEvents on decorations so an inspection overlay does not intercept their handlers. Do not claim general screen-space nearest behavior.
-- [x] Add the new root declarations to `playground/src/crc-editor-types.txt` so the runnable lesson has working editor types immediately. Register the catalogs/source adapter and run `corepack pnpm@11.21.0 scenarios:write-index`, then `corepack pnpm@11.21.0 scenarios:check`. Extend Studio tests to load exact editable source and accept new root imports while still rejecting private paths.
+- [x] Add the new root declarations to `playground/src/pibbl-editor-types.txt` so the runnable lesson has working editor types immediately. Register the catalogs/source adapter and run `corepack pnpm@11.21.0 scenarios:write-index`, then `corepack pnpm@11.21.0 scenarios:check`. Extend Studio tests to load exact editable source and accept new root imports while still rejecting private paths.
 - [x] Run `corepack pnpm@11.21.0 exec vitest run packages/viz/test --browser.headless --browser.ui=false` and the viz type consumer. Fix only failures required to demonstrate this slice and protect existing behavior.
 - [x] Reuse an existing Studio server if healthy, otherwise start `corepack pnpm@11.21.0 -C playground run playground:dev --host 127.0.0.1 --port 5173` and read its actual listening URL. Open the exact route `http://localhost:5173/#/examples/composition/viz-points-and-inspection` if port 5173 was selected; report the actual port if occupied. Inspect both panels, overlap appearance, hover/tap, custom clicks, reorder, removal, reset, and resizing.
 - [x] Create a focused milestone commit of owned files once checks pass, with message `feat(viz): add points custom plots and inspection slice`; preserve concurrent work.
@@ -353,7 +353,7 @@ Reuse H1 descriptors/context and H2 cards; introduce no second interaction syste
 **Interfaces:** Base runtime root exports add `PointSeries`, `PlotSeries`, `nearestDomainValue`, `nearestPoint`; H5 adds exactly the seven approved hover runtime exports. Type-only exports match the approved declarations. No new subpath, visualization dependency, or JSX runtime.
 
 - Add failing packed/type assertions for all eleven added runtime names and new types. Cover both JSX and createElement, datum/key accessor inference, callback returns, and negative contracts. Keep packed import of root pure helpers safe without Canvas/DOM access at module evaluation.
-- Update `tooling/verify-packed-viz.mjs`'s exact sorted export list and declaration probes. Preserve externalized core/core-internal identity, peer version matching, and rejection of private subpaths. Update the maintained `playground/src/crc-editor-types.txt` viz module and add the new lesson to `tooling/verify-studio-types.mjs` consumer inputs. Check new public types against source, built, and editor declarations rather than only testing that the root library exists.
+- Update `tooling/verify-packed-viz.mjs`'s exact sorted export list and declaration probes. Preserve externalized core/core-internal identity, peer version matching, and rejection of private subpaths. Update the maintained `playground/src/pibbl-editor-types.txt` viz module and add the new lesson to `tooling/verify-studio-types.mjs` consumer inputs. Check new public types against source, built, and editor declarations rather than only testing that the root library exists.
 - Document default dots versus custom subtrees; radius units; paint order; keyBy/state; callback versus returned-component hooks; local coordinate conversion; nearest-anchor semantics; ordinary per-element interaction; and the actual responsive support status. Public search includes only the lesson/public API pages, not lab metadata or this plan.
 - Run `corepack pnpm@11.21.0 build`, `corepack pnpm@11.21.0 test:viz-package`, and `corepack pnpm@11.21.0 exec vitest run packages/viz/test --mode built --browser.headless --browser.ui=false`. Confirm source/built behavior and consumer coverage, fixing genuine failures before final review.
 - Request one proportional review of the accepted implementation focusing on the five risks above; reuse the reviewer for changed code or unresolved material findings only. Add regression tests before fixing findings. Avoid overlapping reviews or model overrides.
@@ -377,7 +377,7 @@ The user subsequently approved implementation in an isolated worktree.
 
 ## Execution record — slice ready for feedback
 
-Implemented in `/Users/benlesh/.codex/worktrees/viz-points/crc` on
+Implemented in `/Users/benlesh/.codex/worktrees/viz-points/pibbl` on
 `codex/viz-points`, starting from `4717dc9`. Tasks 0–4 are complete; Tasks 5–7
 remain outstanding. The subsequently approved H1–H5 continuation is planned above, not implemented. No merge or push performed.
 
@@ -490,10 +490,10 @@ Environment: Node 24.15.0, pnpm 11.21.0, Playwright Chromium, 2026-09-28.
 
 The aggregate `corepack pnpm@11.21.0 trust` was run; its inventory failures were
 fixed and affected gates rerun. It is **not green**: Studio visuals stop at the
-unchanged WebGL lighting baseline, which says `crcOrbitCamera` while current code
+unchanged WebGL lighting baseline, which says `pibblOrbitCamera` while current code
 says `useOrbitCamera`. The 110 differing pixels are confined to x=490–510,
 y=416–423. Expected, actual, and diff were inspected; this unrelated baseline
-was not updated. The API crc baseline was intentionally updated after inspection:
+was not updated. The API pibbl baseline was intentionally updated after inspection:
 all 23,549 changed pixels were within the left navigation (x=24–268, y=496–893),
 where the new closestPoint/closestX pages appear; the article was unchanged.
 
@@ -505,7 +505,7 @@ above. No push or merge is authorized or performed.
 
 The user observed overlapping independently placed cards, approved a generic
 AnchoredLayout API, accepted the runnable comparison slice (`b078af0e`), and
-requested final hardening. The component lives in @crc/viz but has no query or
+requested final hardening. The component lives in @pibbl/viz but has no query or
 scale dependency. Its keyed declared outer boxes pack along one axis; a shared
 column/row sits beyond all supplied protected anchors. It tries the opposite
 side when that fits, otherwise preserves exclusion by allowing overflow.
@@ -543,7 +543,7 @@ verified proportionally; no push or merge was performed.
 
 Before delivery, main advanced to f36a0a23 with core responsive styles. The
 isolated branch merged that commit, preserving both catalogs and all Studio
-consumer probes. Core conditional styles now work on returned CRC elements;
+consumer probes. Core conditional styles now work on returned Pibbl elements;
 a public regression verifies an AnchoredLayout child changes at its own declared
 width threshold. Direct conditional styles on viz-owned marks remain deferred.
 The merged result passed trust:static and the full browser suite: 3,876 passed,

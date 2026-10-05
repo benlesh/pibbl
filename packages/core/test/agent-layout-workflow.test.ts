@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest';
-import { getScenarioBySlug, loadScenario } from '@crc/scenarios';
+import { getScenarioBySlug, loadScenario } from '@pibbl/scenarios';
 import { clickMouse } from './support/mouse-input';
 
 it('explains a clipped shape and verifies repair through the shared public workflow', async () => {

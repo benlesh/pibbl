@@ -1,19 +1,19 @@
 ---
 title: Start
-description: Install CRC and render a complete first scene.
+description: Install Pibbl and render a complete first scene.
 ---
 
-Choose [Build with CRC](#build-with-crc) for a Canvas-centered application or [Add CRC to your site](/guides/add-to-your-site/) for a bounded effect in an HTML application.
+Choose [Build with Pibbl](#build-with-pibbl) for a Canvas-centered application or [Add Pibbl to your site](/guides/add-to-your-site/) for a bounded effect in an HTML application.
 
-## Build with CRC
+## Build with Pibbl
 
 In a browser application with a module bundler, install the runtime:
 
 ```sh
-npm install @crc/core
+npm install @pibbl/core
 ```
 
-Match the installed package to the documentation version at the bottom of this page. This local preview documents the checkout, not a verified published release. For an exact local package, run `corepack pnpm@11.21.0 --filter @crc/core build` and `corepack pnpm@11.21.0 --filter @crc/core pack --pack-destination /tmp/crc-pack`, then install the resulting tarball in your application.
+Match the installed package to the documentation version at the bottom of this page. This local preview documents the checkout, not a verified published release. For an exact local package, run `corepack pnpm@11.21.0 --filter @pibbl/core build` and `corepack pnpm@11.21.0 --filter @pibbl/core pack --pack-destination /tmp/pibbl-pack`, then install the resulting tarball in your application.
 
 Add a host canvas and load your application module through your bundler:
 
@@ -23,10 +23,10 @@ Add a host canvas and load your application module through your bundler:
 ```
 
 ```js
-import { crc, createElement, Circle } from "@crc/core";
+import { pibbl, createElement, Circle } from "@pibbl/core";
 
 const canvas = document.querySelector("#scene");
-const controller = crc(
+const controller = pibbl(
   canvas,
   createElement(Circle, {
     style: { cx: 160, cy: 100, radius: 60, fill: "#267d7c" },
@@ -41,17 +41,17 @@ The result is a teal circle centered in a 320 by 200 logical surface. [Inspect C
 
 ## Prefer JSX?
 
-Configure your compiler with `jsx: "react-jsx"` and `jsxImportSource: "@crc/core"`. A `.tsx` file may then pass `<Circle style={{ cx: 160, cy: 100, radius: 60, fill: '#267d7c' }} />` to `crc`. React is not required. Keep CRC JSX compilation separate from your host framework's JSX; plain `createElement` is useful at that boundary.
+Configure your compiler with `jsx: "react-jsx"` and `jsxImportSource: "@pibbl/core"`. A `.tsx` file may then pass `<Circle style={{ cx: 160, cy: 100, radius: 60, fill: '#267d7c' }} />` to `pibbl`. React is not required. Keep Pibbl JSX compilation separate from your host framework's JSX; plain `createElement` is useful at that boundary.
 
-## Add CRC to your site
+## Add Pibbl to your site
 
-HTML can continue to own navigation, text, forms, and accessibility. Place a decorative canvas behind one control and pass native state to CRC. Begin with the [complete native-button recipe](/guides/native-button/).
+HTML can continue to own navigation, text, forms, and accessibility. Place a decorative canvas behind one control and pass native state to Pibbl. Begin with the [complete native-button recipe](/guides/native-button/).
 
 ## Browser and ownership basics
 
-Mount only in a browser after the canvas exists. One live mount owns each canvas; keep the returned controller and dispose it before removing its host. CRC schedules updates. Do not add another animation loop for these examples.
+Mount only in a browser after the canvas exists. One live mount owns each canvas; keep the returned controller and dispose it before removing its host. Pibbl schedules updates. Do not add another animation loop for these examples.
 
-The first scene uses Canvas 2D. The texture recipe also requires the browser capabilities used by CRC's texture renderer, including WebAssembly and offscreen surfaces. Native HTML must remain usable if the enhancement cannot start. [Foundations](/guides/foundations/) explains sizing, signals, and composition boundaries.
+The first scene uses Canvas 2D. The texture recipe also requires the browser capabilities used by Pibbl's texture renderer, including WebAssembly and offscreen surfaces. Native HTML must remain usable if the enhancement cannot start. [Foundations](/guides/foundations/) explains sizing, signals, and composition boundaries.
 
 ## Continue learning
 

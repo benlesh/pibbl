@@ -4,9 +4,9 @@ import { parsePublicMarkdown } from "../tooling/studio-docs/markdown.ts";
 import { websiteDocumentId } from "../tooling/studio-docs/website-routes.ts";
 import {
   collectPublicExports,
-  crcPublicCompilerOptions,
-  crcStudioPublicEntryPaths,
-  crcPhysicsEntryPaths,
+  pibblPublicCompilerOptions,
+  pibblStudioPublicEntryPaths,
+  pibblPhysicsEntryPaths,
 } from "../tooling/studio-docs/api-exports.ts";
 import { parse } from "yaml";
 import MarkdownIt from "markdown-it";
@@ -20,7 +20,7 @@ export const topics = {
   lifecycle: {
     title: "Authoring, signals, and lifecycle",
     match:
-      /crc$|create-element|signal|computed|reaction|runtime|use-const|use-ref|jsx|children|lifecycle|primitive/,
+      /pibbl$|create-element|signal|computed|reaction|runtime|use-const|use-ref|jsx|children|lifecycle|primitive/,
   },
   layout: {
     title: "Drawing, layout, and effects",
@@ -72,19 +72,19 @@ export function topicFor(id) {
   return "lifecycle";
 }
 const entryImports = {
-  root: "@crc/core",
-  filters: "@crc/core/filters",
-  textures: "@crc/core/textures",
-  text: "@crc/text",
-  viz: "@crc/core/viz",
-  three: "@crc/three",
-  particles: "@crc/core/particles",
-  types: "@crc/core/types",
-  jsxRuntime: "@crc/core/jsx-runtime",
-  jsxDevRuntime: "@crc/core/jsx-dev-runtime",
-  physics2d: "@crc/core/physics/2d",
-  physics2dGeometry: "@crc/core/physics/2d/geometry",
-  physics2dTesting: "@crc/core/physics/2d/testing",
+  root: "@pibbl/core",
+  filters: "@pibbl/core/filters",
+  textures: "@pibbl/core/textures",
+  text: "@pibbl/text",
+  viz: "@pibbl/core/viz",
+  three: "@pibbl/three",
+  particles: "@pibbl/core/particles",
+  types: "@pibbl/core/types",
+  jsxRuntime: "@pibbl/core/jsx-runtime",
+  jsxDevRuntime: "@pibbl/core/jsx-dev-runtime",
+  physics2d: "@pibbl/core/physics/2d",
+  physics2dGeometry: "@pibbl/core/physics/2d/geometry",
+  physics2dTesting: "@pibbl/core/physics/2d/testing",
 };
 
 export async function loadDocumentation(root, playground) {
@@ -155,10 +155,10 @@ export async function loadDocumentation(root, playground) {
   });
   const inventory = await collectPublicExports(
     {
-      ...crcStudioPublicEntryPaths,
-      physics2dGeometry: crcPhysicsEntryPaths.physics2dGeometry,
+      ...pibblStudioPublicEntryPaths,
+      physics2dGeometry: pibblPhysicsEntryPaths.physics2dGeometry,
     },
-    crcPublicCompilerOptions,
+    pibblPublicCompilerOptions,
   );
   const symbols = new Map();
   for (const record of records)

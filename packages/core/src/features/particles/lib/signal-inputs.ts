@@ -2,7 +2,7 @@ import {
   isSignal,
   resolveSignalValue,
   type SignalValue,
-} from "@crc/core";
+} from "@pibbl/core";
 
 export type SignalFields<T extends object> = {
   readonly [K in keyof T]: SignalValue<T[K]>;

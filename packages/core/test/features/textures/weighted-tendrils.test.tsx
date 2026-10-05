@@ -1,6 +1,6 @@
 import { afterEach, expect, it, vi } from "vitest";
-import { crc, Rectangle, type Texture } from "@crc/core";
-import { tendrils, useTexture, type TendrilsMessage } from "@crc/core/textures";
+import { pibbl, Rectangle, type Texture } from "@pibbl/core";
+import { tendrils, useTexture, type TendrilsMessage } from "@pibbl/core/textures";
 import {
   ManualSchedulerDriver,
   installSchedulerDriverForTest,
@@ -37,7 +37,7 @@ it("uses ordinary weighted sources for geometry and heavy manual contacts, then 
   canvas.width = 512;
   canvas.height = 256;
   document.body.append(canvas);
-  const controller = crc(canvas, <Scene />);
+  const controller = pibbl(canvas, <Scene />);
   cleanup = () => {
     controller.dispose();
     restore();
@@ -111,7 +111,7 @@ it("keeps seeded output order-independent, validates updates atomically, and bou
     OffscreenCanvasRenderingContext2D.prototype,
     "getImageData",
   );
-  const controller = crc(canvas, <Scene />);
+  const controller = pibbl(canvas, <Scene />);
   cleanup = () => {
     controller.dispose();
     strokes.mockRestore();
@@ -162,7 +162,7 @@ it("starts empty, treats zero-weight removal like source removal, and restores t
   const canvas = document.createElement("canvas");
   canvas.width = canvas.height = 256;
   document.body.append(canvas);
-  const controller = crc(canvas, <Scene />);
+  const controller = pibbl(canvas, <Scene />);
   cleanup = () => {
     controller.dispose();
     restore();
@@ -223,7 +223,7 @@ it("reaches a heavy source before crawling through a dense cloud of weaker neigh
   const canvas = document.createElement("canvas");
   canvas.width = canvas.height = 256;
   document.body.append(canvas);
-  const controller = crc(canvas, <Scene />);
+  const controller = pibbl(canvas, <Scene />);
   cleanup = () => {
     controller.dispose();
     restore();
@@ -268,7 +268,7 @@ it("uses a low-weight site as a birthplace and rises continuously without needin
   const canvas = document.createElement("canvas");
   canvas.width = canvas.height = 256;
   document.body.append(canvas);
-  const controller = crc(canvas, <Scene />);
+  const controller = pibbl(canvas, <Scene />);
   cleanup = () => {
     controller.dispose();
     restore();
@@ -313,7 +313,7 @@ it("stops at a sloping vessel edge and follows it upward continuously", () => {
   const canvas = document.createElement("canvas");
   canvas.width = canvas.height = 256;
   document.body.append(canvas);
-  const controller = crc(canvas, <Scene />);
+  const controller = pibbl(canvas, <Scene />);
   cleanup = () => {
     controller.dispose();
     restore();

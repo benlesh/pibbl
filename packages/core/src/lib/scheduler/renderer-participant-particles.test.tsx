@@ -1,18 +1,18 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { crc, createElement, signal } from '@crc/core';
+import { pibbl, createElement, signal } from '@pibbl/core';
 import {
-  crcInternalAssertCommandAllowed,
-  crcInternalCurrentRenderOwner,
-  crcInternalOnRenderFinish,
-  crcInternalPaintTarget,
-  crcInternalQueueBegin,
-  crcInternalQueueCurrentCommit,
-  crcInternalQueueCurrentComplete,
-  crcInternalRegisterAdvance,
-  crcInternalRequestRender,
-  type CRCInternalRenderOwner,
-} from '@crc/core/internal';
-import { clearSharedState, getCRCInstance } from '../global-state';
+  pibblInternalAssertCommandAllowed,
+  pibblInternalCurrentRenderOwner,
+  pibblInternalOnRenderFinish,
+  pibblInternalPaintTarget,
+  pibblInternalQueueBegin,
+  pibblInternalQueueCurrentCommit,
+  pibblInternalQueueCurrentComplete,
+  pibblInternalRegisterAdvance,
+  pibblInternalRequestRender,
+  type PibblInternalRenderOwner,
+} from '@pibbl/core/internal';
+import { clearSharedState, getPibblInstance } from '../global-state';
 import {
   installSchedulerDriverForTest,
   ManualSchedulerDriver,
@@ -34,12 +34,12 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-describe('@crc/core/internal owner-scoped particle scheduler seam', () => {
+describe('@pibbl/core/internal owner-scoped particle scheduler seam', () => {
   it('uses the active direct-write guard without mutating a signal', () => {
     let error: unknown;
-    const controller = crc(createCanvas(), createElement(() => {
+    const controller = pibbl(createCanvas(), createElement(() => {
       try {
-        crcInternalAssertCommandAllowed();
+        pibblInternalAssertCommandAllowed();
       } catch (caught) {
         error = caught;
       }
@@ -47,43 +47,43 @@ describe('@crc/core/internal owner-scoped particle scheduler seam', () => {
 
     driver.flush(0);
 
-    expect(error).toMatchObject({ message: 'CRC render' });
+    expect(error).toMatchObject({ message: 'Pibbl render' });
     controller.dispose();
   });
 
   it('orders one owner command through Advance, Commit, render, and Complete', () => {
     const trace: string[] = [];
     const value = signal(0);
-    let owner: CRCInternalRenderOwner | undefined;
+    let owner: PibblInternalRenderOwner | undefined;
     let recordRender = false;
     let releaseAdvance = () => {};
     const canvas = createCanvas();
     const Root = (_props: {}) => {
-      owner ??= crcInternalCurrentRenderOwner();
+      owner ??= pibblInternalCurrentRenderOwner();
       value.get();
       if (recordRender) trace.push(`render:${value.get()}`);
     };
-    const controller = crc(canvas, createElement(Root, {}));
+    const controller = pibbl(canvas, createElement(Root, {}));
     driver.flush(0);
     recordRender = true;
 
     let commandFrame: number | undefined;
-    const command = crcInternalQueueBegin(owner!, (frame, batch, sequence) => {
-      crcInternalAssertCommandAllowed();
+    const command = pibblInternalQueueBegin(owner!, (frame, batch, sequence) => {
+      pibblInternalAssertCommandAllowed();
       commandFrame = frame.frameId;
       trace.push(`begin:${sequence}`);
       batch.stage(value, 1, command);
-      crcInternalQueueCurrentCommit(owner!, (_commitFrame, outcome) => {
+      pibblInternalQueueCurrentCommit(owner!, (_commitFrame, outcome) => {
         expect(_commitFrame.frameId).toBe(commandFrame);
         trace.push(`commit:${sequence}:${outcome.applied}`);
       });
-      crcInternalRequestRender(owner!);
+      pibblInternalRequestRender(owner!);
     });
-    releaseAdvance = crcInternalRegisterAdvance(owner!, (frame, batch) => {
+    releaseAdvance = pibblInternalRegisterAdvance(owner!, (frame, batch) => {
       expect(frame.frameId).toBe(commandFrame);
       trace.push(`advance:${command.sequence}`);
       batch.stage(value, batch.read(value), releaseAdvance);
-      crcInternalQueueCurrentComplete(owner!, completeFrame => {
+      pibblInternalQueueCurrentComplete(owner!, completeFrame => {
         expect(completeFrame.frameId).toBe(commandFrame);
         trace.push(`complete:${command.sequence}`);
       });
@@ -110,23 +110,23 @@ describe('@crc/core/internal owner-scoped particle scheduler seam', () => {
 
   it('cancels Begin commands and makes later owner callbacks inert after disposal', () => {
     const trace: string[] = [];
-    let owner: CRCInternalRenderOwner | undefined;
-    const controller = crc(createCanvas(), createElement(() => {
-      owner ??= crcInternalCurrentRenderOwner();
+    let owner: PibblInternalRenderOwner | undefined;
+    const controller = pibbl(createCanvas(), createElement(() => {
+      owner ??= pibblInternalCurrentRenderOwner();
     }, {}));
     driver.flush(0);
 
-    const cancelled = crcInternalQueueBegin(owner!, () => trace.push('cancelled'));
+    const cancelled = pibblInternalQueueBegin(owner!, () => trace.push('cancelled'));
     expect(driver.pendingHostFrames).toBe(1);
     cancelled.cancel();
     expect(driver.pendingHostFrames).toBe(0);
 
-    crcInternalQueueBegin(owner!, () => {
+    pibblInternalQueueBegin(owner!, () => {
       trace.push('dispose');
       controller.dispose();
     });
-    crcInternalQueueBegin(owner!, () => trace.push('inert begin'));
-    crcInternalRegisterAdvance(owner!, () => trace.push('inert advance'));
+    pibblInternalQueueBegin(owner!, () => trace.push('inert begin'));
+    pibblInternalRegisterAdvance(owner!, () => trace.push('inert advance'));
 
     driver.flush(1);
 
@@ -140,22 +140,22 @@ describe('@crc/core/internal owner-scoped particle scheduler seam', () => {
   it('delivers render-finish success and failure to the currently evaluating owner', () => {
     const outcomes: boolean[] = [];
     const failure = new Error('particle render failed');
-    let owner: CRCInternalRenderOwner | undefined;
+    let owner: PibblInternalRenderOwner | undefined;
     let fail = false;
     const Root = (_props: {}) => {
-      owner ??= crcInternalCurrentRenderOwner();
-      crcInternalOnRenderFinish(owner, success => outcomes.push(success));
+      owner ??= pibblInternalCurrentRenderOwner();
+      pibblInternalOnRenderFinish(owner, success => outcomes.push(success));
       if (fail) throw failure;
     };
-    const controller = crc(createCanvas(), createElement(Root, {}));
+    const controller = pibbl(createCanvas(), createElement(Root, {}));
 
     driver.flush(0);
     expect(outcomes).toEqual([true]);
-    expect(() => crcInternalOnRenderFinish(owner!, () => {}))
-      .toThrow(/currently evaluating CRC component/i);
+    expect(() => pibblInternalOnRenderFinish(owner!, () => {}))
+      .toThrow(/currently evaluating Pibbl component/i);
 
     fail = true;
-    crcInternalRequestRender(owner!);
+    pibblInternalRequestRender(owner!);
     expect(() => driver.flush(1)).toThrow(failure);
     expect(outcomes).toEqual([true, false]);
     controller.dispose();
@@ -167,22 +167,22 @@ describe('@crc/core/internal owner-scoped particle scheduler seam', () => {
     const enabledCanvas = createCanvas();
     const disabledCanvas = createCanvas();
     const Enabled = (_props: {}) => {
-      crcInternalPaintTarget({ onPointerDown: () => {} }, { path, fill: true });
+      pibblInternalPaintTarget({ onPointerDown: () => {} }, { path, fill: true });
     };
     const Disabled = (_props: {}) => {
-      crcInternalPaintTarget(
+      pibblInternalPaintTarget(
         { onPointerDown: () => {} },
         { path, fill: true },
         'none',
       );
     };
-    const enabled = crc(enabledCanvas, createElement(Enabled, {}));
-    const disabled = crc(disabledCanvas, createElement(Disabled, {}));
+    const enabled = pibbl(enabledCanvas, createElement(Enabled, {}));
+    const disabled = pibbl(disabledCanvas, createElement(Disabled, {}));
 
     driver.flush(0);
 
-    expect(getCRCInstance(enabledCanvas).paintEntries.size).toBe(1);
-    expect(getCRCInstance(disabledCanvas).paintEntries.size).toBe(0);
+    expect(getPibblInstance(enabledCanvas).paintEntries.size).toBe(1);
+    expect(getPibblInstance(disabledCanvas).paintEntries.size).toBe(0);
     enabled.dispose();
     disabled.dispose();
   });

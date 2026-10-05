@@ -1,24 +1,24 @@
-import { opacity } from '@crc/core/filters';
+import { opacity } from '@pibbl/core/filters';
 import {
   Group,
   Rectangle,
-  crc,
+  pibbl,
   definePrimitive,
-  type CRCController,
-  type CRCElementType,
+  type PibblController,
+  type PibblElementType,
   type PrimitiveInputOf,
   type SystemStyle,
-} from '@crc/core';
+} from '@pibbl/core';
 import {
-  crcInternalCreatePropAttachment,
-  type CRCInternalMountedPropAttachment,
-  type CRCInternalPrimitiveAttachmentInput,
-} from '@crc/core/internal';
+  pibblInternalCreatePropAttachment,
+  type PibblInternalMountedPropAttachment,
+  type PibblInternalPrimitiveAttachmentInput,
+} from '@pibbl/core/internal';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { clearSharedState, getCRCInstance } from '../global-state.js';
+import { clearSharedState, getPibblInstance } from '../global-state.js';
 import { getCurrentWorldTransform } from '../render-target.js';
 import { executeRender } from '../execute-render.js';
-import { mountCRC } from '../mount-crc.js';
+import { mountPibbl } from '../mount-pibbl.js';
 import { focusManaged } from '../focus/policy-test-support.js';
 import { resolveTargetRootBounds } from '../focus/geometry.js';
 
@@ -29,10 +29,10 @@ type PhysicsRectangleProps = Omit<PrimitiveInputOf<typeof Rectangle>, 'physics'>
   readonly physics?: object;
 };
 
-const PhysicsGroup = Group as unknown as CRCElementType<PhysicsGroupProps>;
-const PhysicsRectangle = Rectangle as unknown as CRCElementType<PhysicsRectangleProps>;
+const PhysicsGroup = Group as unknown as PibblElementType<PhysicsGroupProps>;
+const PhysicsRectangle = Rectangle as unknown as PibblElementType<PhysicsRectangleProps>;
 
-const controllers = new Set<CRCController>();
+const controllers = new Set<PibblController>();
 
 afterEach(() => {
   for (const controller of controllers) controller.dispose();
@@ -44,7 +44,7 @@ afterEach(() => {
 
 describe('primitive attachment presentation', () => {
   it('prepares resolved geometry and applies attachment presentation before Group presentation', async () => {
-    const prepared: CRCInternalPrimitiveAttachmentInput[] = [];
+    const prepared: PibblInternalPrimitiveAttachmentInput[] = [];
     const descendantWorld: DOMMatrix[] = [];
     const Probe = definePrimitive<{}, SystemStyle>(() => {
       descendantWorld.push(getCurrentWorldTransform());
@@ -54,7 +54,7 @@ describe('primitive attachment presentation', () => {
       new DOMMatrix().translate(20, 10),
     );
     const canvas = createCanvas(80, 50);
-    const controller = crc(canvas, (
+    const controller = pibbl(canvas, (
       <PhysicsGroup
         physics={attachment}
         style={{ scaleX: 2, scaleY: 2, filter: [] }}
@@ -89,7 +89,7 @@ describe('primitive attachment presentation', () => {
       new DOMMatrix().translate(24, 8),
     );
     const canvas = createCanvas(70, 40);
-    const controller = crc(canvas, focusManaged(
+    const controller = pibbl(canvas, focusManaged(
       <PhysicsRectangle
         physics={attachment}
         style={{
@@ -106,7 +106,7 @@ describe('primitive attachment presentation', () => {
 
     expect(pixelAt(canvas, 28, 12)).toEqual([37, 99, 235, 255]);
     expect(pixelAt(canvas, 4, 4)).toEqual([0, 0, 0, 0]);
-    const [target] = Array.from(getCRCInstance(canvas).eventRoot.targets);
+    const [target] = Array.from(getPibblInstance(canvas).eventRoot.targets);
     expect(resolveTargetRootBounds(target)).toEqual({
       x: 24,
       y: 8,
@@ -123,7 +123,7 @@ describe('primitive attachment presentation', () => {
       readonly physics?: unknown;
     }>(function renderInvalidPhysicsHost() {});
     const canvas = createCanvas(40, 30);
-    const controller = mountCRC(
+    const controller = mountPibbl(
       canvas,
       <InvalidPhysicsHost physics={{ kind: 'lookalike' }} />,
     );
@@ -136,12 +136,12 @@ describe('primitive attachment presentation', () => {
 });
 
 function presentationAttachment(
-  prepared: CRCInternalPrimitiveAttachmentInput[],
+  prepared: PibblInternalPrimitiveAttachmentInput[],
   presentationTransform2D: DOMMatrix,
 ): object {
   const publicValue = Object.freeze({ kind: 'test-physics-2d' });
-  return crcInternalCreatePropAttachment('physics', publicValue, () => {
-    const mounted: CRCInternalMountedPropAttachment = {
+  return pibblInternalCreatePropAttachment('physics', publicValue, () => {
+    const mounted: PibblInternalMountedPropAttachment = {
       update: () => undefined,
       enter: () => undefined,
       preparePrimitive(input) {

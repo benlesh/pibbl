@@ -5,8 +5,8 @@ import {
   useSignal,
   useReaction,
   useLayoutBox,
-} from "@crc/core";
-import { PlotSeries, Scale } from "@crc/core/viz";
+} from "@pibbl/core";
+import { PlotSeries, LinearScale } from "@pibbl/core/viz";
 import { afterEach, expect, it } from "vitest";
 import { testRuntime } from "./support/runtime.js";
 let runtime: ReturnType<typeof testRuntime>;
@@ -50,8 +50,8 @@ it("places custom elements, preserves keyed state on reorder, and releases remov
   }
   function Scene() {
     return (
-      <Scale id="x" type="linear" domain={[0, 10]} range={[0, 200]}>
-        <Scale id="y" type="linear" domain={[0, 10]} range={[100, 0]}>
+      <LinearScale id="x"  domain={[0, 10]} range={[0, 200]}>
+        <LinearScale id="y"  domain={[0, 10]} range={[100, 0]}>
           <PlotSeries
             data={rows}
             x="x"
@@ -62,8 +62,8 @@ it("places custom elements, preserves keyed state on reorder, and releases remov
             render={(d) => <Mark id={d.id} />}
             onPointerDown={() => events.push("series")}
           />
-        </Scale>
-      </Scale>
+        </LinearScale>
+      </LinearScale>
     );
   }
   const canvas = runtime.mount(<Scene />);
@@ -96,8 +96,8 @@ it("skips invalid rows and retains the row receiver while render returns null", 
   const calls: string[] = [];
   function Scene() {
     return (
-      <Scale id="x" type="linear" domain={[0, 10]} range={[0, 200]}>
-        <Scale id="y" type="linear" domain={[0, 10]} range={[100, 0]}>
+      <LinearScale id="x"  domain={[0, 10]} range={[0, 200]}>
+        <LinearScale id="y"  domain={[0, 10]} range={[100, 0]}>
           <PlotSeries
             data={[
               { id: "a", x: 2, y: value.get() },
@@ -115,8 +115,8 @@ it("skips invalid rows and retains the row receiver while render returns null", 
               ) : null;
             }}
           />
-        </Scale>
-      </Scale>
+        </LinearScale>
+      </LinearScale>
     );
   }
   runtime.mount(<Scene />);

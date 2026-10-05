@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { crc, HtmlBox, Group, Clip, PathGeometry } from '@crc/core';
+import { pibbl, HtmlBox, Group, Clip, PathGeometry } from '@pibbl/core';
 import { clearSharedState } from '../src/lib/global-state.js';
 import { ManualSchedulerDriver, installSchedulerDriverForTest } from '../src/lib/scheduler/testing.js';
 
@@ -30,15 +30,15 @@ describe('HtmlBox public lifecycle and projection', () => {
     };
     const clip = new PathGeometry(); clip.rect(0, 0, 100, 80);
     const scene = (x: number, data: string) => <Group style={{ translateX: x, translateY: 20, rotationDegrees: 15 }}><Clip style={{ d: clip }}><HtmlBox data={data} mount={mount} style={{ width: 100, height: 80 }} /></Clip></Group>;
-    const controller = crc(canvas, scene(30, 'first'), { htmlOverlay: overlay, pixelRatio: 2 });
+    const controller = pibbl(canvas, scene(30, 'first'), { htmlOverlay: overlay, pixelRatio: 2 });
     try {
       expect(calls).toEqual([]); driver.flush(10); expect(calls).toEqual(['mount:first']);
       input!.value = 'keep me'; const first = input;
-      const shell = overlay.querySelector<HTMLElement>('[data-crc-html-box]')!;
+      const shell = overlay.querySelector<HTMLElement>('[data-pibbl-html-box]')!;
       const matrix = new DOMMatrix(shell.style.transform);
       const expected = new DOMMatrix().rotate(15).translate(30, 20);
       expect(matrix.e).toBeCloseTo(expected.e); expect(matrix.f).toBeCloseTo(expected.f);
-      crc(canvas, scene(60, 'second')); driver.flush(20);
+      pibbl(canvas, scene(60, 'second')); driver.flush(20);
       expect(input).toBe(first); expect(input!.value).toBe('keep me');
       expect(calls).toEqual(['mount:first', 'update:second']);
       expect(overlay.querySelectorAll('clipPath').length).toBeGreaterThan(0);

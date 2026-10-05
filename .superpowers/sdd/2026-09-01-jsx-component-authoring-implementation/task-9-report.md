@@ -1,4 +1,4 @@
-# Task 9 report — Studio CRC TSX compilation and execution
+# Task 9 report — Studio Pibbl TSX compilation and execution
 
 > **Historical status: COMPLETED IMPLEMENTATION EVIDENCE.** This dated report is preserved for audit and is not current API guidance.
 
@@ -6,7 +6,7 @@
 
 Task 9 is implemented and ready to commit.
 
-- Workspace: `/private/tmp/crc-jsx-component-authoring`
+- Workspace: `/private/tmp/pibbl-jsx-component-authoring`
 - Branch: `codex/jsx-component-authoring`
 - Required start: `d7fc36fa8cdf`
 - Runtime: Node `v26.7.0`, pnpm `11.21.0`
@@ -15,10 +15,10 @@ Task 9 is implemented and ready to commit.
 - Review mode: self-review only, because Task 9 explicitly prohibited
   subagents and reviewers.
 
-The Studio now checks and emits `.tsx` with the automatic CRC JSX runtime,
+The Studio now checks and emits `.tsx` with the automatic Pibbl JSX runtime,
 loads declarations for the root and both compiler-runtime entries, rewrites
 only the three allowed emitted module imports, and runs them through one
-Studio-private `CRC_CORE` bridge. The public `@crc/core` root continues not to
+Studio-private `PIBBL_CORE` bridge. The public `@pibbl/core` root continues not to
 export `jsx`, `jsxs`, or `jsxDEV`.
 
 ## Implementation
@@ -26,12 +26,12 @@ export `jsx`, `jsxs`, or `jsxDEV`.
 ### Monaco and Studio declarations
 
 - Lesson and testing models now use `.tsx` URIs with
-  `JsxEmit.ReactJSX`, `jsxImportSource: "@crc/core"`, and ESNext modules.
+  `JsxEmit.ReactJSX`, `jsxImportSource: "@pibbl/core"`, and ESNext modules.
   Monaco syntax and semantic diagnostics remain enabled.
 - The curated declaration bundle is split by exact Studio markers into three
-  virtual libraries: `@crc/core`, `@crc/core/jsx-runtime`, and
-  `@crc/core/jsx-dev-runtime`.
-- The root declaration exposes branded CRC elements, components, nodes,
+  virtual libraries: `@pibbl/core`, `@pibbl/core/jsx-runtime`, and
+  `@pibbl/core/jsx-dev-runtime`.
+- The root declaration exposes branded Pibbl elements, components, nodes,
   Fragment, public JSX component values, text children, events, styles, and
   the existing transitional lowercase API needed by the current `.ts`
   lessons. Compiler constructors exist only in the two runtime declarations.
@@ -43,7 +43,7 @@ export `jsx`, `jsxs`, or `jsxDEV`.
 
 ### Studio-only runtime bridge
 
-- Added `tooling/crc-studio-runtime-entry.ts`, which re-exports the public root
+- Added `tooling/pibbl-studio-runtime-entry.ts`, which re-exports the public root
   plus `jsx`/`jsxs` and `jsxDEV` from the two compiler-only runtime entries.
 - The Studio bundler resolves exactly those three package entry points to
   source files in source mode and built `.mjs` files in built mode.
@@ -57,9 +57,9 @@ export `jsx`, `jsxs`, or `jsxDEV`.
 
 - Extracted a pure `toRunnableScript` helper so emitted-module rewriting has
   focused browser tests without importing the DOM-backed runner.
-- Named static imports are accepted only from `@crc/core`,
-  `@crc/core/jsx-runtime`, and `@crc/core/jsx-dev-runtime`.
-- All allowed imports become one `CRC_CORE` destructuring declaration. Emitted
+- Named static imports are accepted only from `@pibbl/core`,
+  `@pibbl/core/jsx-runtime`, and `@pibbl/core/jsx-dev-runtime`.
+- All allowed imports become one `PIBBL_CORE` destructuring declaration. Emitted
   aliases use valid object syntax, for example `jsx as _jsx` becomes
   `jsx: _jsx`.
 - Root and runtime imports combine without dropping bindings. Default,
@@ -97,7 +97,7 @@ Tests and verifier assertions were added before production behavior.
 - The executable Studio runtime verifier reported:
 
   ```text
-  CRC Studio source runtime is missing compiler export "jsx"
+  Pibbl Studio source runtime is missing compiler export "jsx"
   ```
 
 The initial sandbox test harness also showed that importing the DOM-backed
@@ -128,7 +128,7 @@ node tooling/verify-studio-types.mjs
 ```
 
 ```text
-CRC Studio declarations passed strict TSX, compiler-runtime, event-family, generic, layout, and surface checks.
+Pibbl Studio declarations passed strict TSX, compiler-runtime, event-family, generic, layout, and surface checks.
 ```
 
 ```sh
@@ -251,8 +251,8 @@ A direct reproduction on the reviewed commit established both root causes:
   while `"export {}"` was changed by the empty-export replacement.
 - Comments inside a named import or `mount(canvas /* comment */)` defeated the
   import/signature regular expressions.
-- `crc as CRC_CORE` produced
-  `ReferenceError: Cannot access 'CRC_CORE' before initialization` because the
+- `pibbl as PIBBL_CORE` produced
+  `ReferenceError: Cannot access 'PIBBL_CORE' before initialization` because the
   generated destructuring declaration read the same shadowed name from its
   temporal dead zone.
 - Aliases named `canvas` or `controller` shared the runner's block and could
@@ -292,8 +292,8 @@ That second RED drove token-level syntax erasure which retains comment tokens.
   an explicit Playground dependency and catalog entry.
 - The transformer parses the emitted code as a module and inspects only parsed
   top-level `ImportDeclaration` and export statements.
-- Imports must contain named value specifiers from exactly `@crc/core`,
-  `@crc/core/jsx-runtime`, or `@crc/core/jsx-dev-runtime`. Side-effect,
+- Imports must contain named value specifiers from exactly `@pibbl/core`,
+  `@pibbl/core/jsx-runtime`, or `@pibbl/core/jsx-dev-runtime`. Side-effect,
   default, namespace, type-only, attributed, external, and private-subpath
   imports fail closed.
 - Local import names are unique across all three entries. Parser early errors
@@ -316,12 +316,12 @@ That second RED drove token-level syntax erasure which retains comment tokens.
 
 The transformed lesson executes inside a strict, private function and returns
 its validated `mount` function. The runner evaluates
-`globalThis["CRC_CORE"]` outside that lesson scope and supplies it as an
+`globalThis["PIBBL_CORE"]` outside that lesson scope and supplies it as an
 argument. The parameter name is generated by scanning every parsed identifier
 and appending a suffix until unique.
 
-This means lesson aliases can validly use `CRC_CORE`, `canvas`, `controller`,
-or even the transformer's preferred `__crcStudioRuntime` name without a TDZ,
+This means lesson aliases can validly use `PIBBL_CORE`, `canvas`, `controller`,
+or even the transformer's preferred `__pibblStudioRuntime` name without a TDZ,
 duplicate declaration, shadowed controller assignment, or runtime-global leak.
 The tests execute transformed output inside a runner-shaped block rather than
 only comparing generated strings.
@@ -400,7 +400,7 @@ with-focus bytes.
   edits preserve lexical content that is not itself removed module syntax.
 - The wrapper restores ECMAScript-module strictness while isolating every lesson
   binding from runner locals. Its only global write remains the existing private
-  `__CRC_EXAMPLE_MOUNT__` handoff.
+  `__PIBBL_EXAMPLE_MOUNT__` handoff.
 - No examples, catalogs, core package exports, Task 8 focus files, or public
   runtime behavior changed in this fix round.
 - The parser increases the source Studio editor-workbench asset from roughly

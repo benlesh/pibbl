@@ -1,5 +1,5 @@
-import { Group, Wedge, signal } from "@crc/core";
-import * as viz from "@crc/core/viz";
+import { Group, Wedge, signal } from "@pibbl/core";
+import * as viz from "@pibbl/core/viz";
 import { afterEach, expect, it } from "vitest";
 import { testRuntime } from "./support/runtime.js";
 let runtime: ReturnType<typeof testRuntime>;

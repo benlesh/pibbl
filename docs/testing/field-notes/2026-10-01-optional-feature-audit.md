@@ -19,11 +19,11 @@ Each probe imports one public value and assigns it to `globalThis.keep`, so the
 selected public value cannot be eliminated. Results use esbuild `metafile`
 `bytesInOutput` attribution. The source probes resolve public specifiers to
 `packages/*/src`; the packed probes resolve them to the just-built
-`packages/*/dist` artifacts. `three`, Rapier, and `@crc/types` were external
+`packages/*/dist` artifacts. `three`, Rapier, and `@pibbl/types` were external
 where appropriate, so these figures do not include their peer dependency bytes.
 
 The source and packed JSON evidence is retained in the review run's temporary
-directory as `crc-optional-feature-audit*.json`; this field note records the
+directory as `pibbl-optional-feature-audit*.json`; this field note records the
 relevant observations without treating temporary files as repository artifacts.
 
 ## Observations
@@ -36,7 +36,7 @@ relevant observations without treating temporary files as repository artifacts.
 | `Flow`                      |     133,115 B |              423,797 B | Source retains `flow.ts` and no `grid.ts`; current base-core filter pipeline accounts for 30,479 attributed source bytes across validator, region, capture, pool state, and backend. |
 | `Grid`                      |     137,754 B |              423,797 B | Source retains `grid.ts` and no `flow.ts`; packed output is byte-identical to the Flow probe.                                                                                        |
 | `defineRenderLayer`         |     215,469 B |              444,699 B | Render-layer code is selected, and source has no `packages/three` input. Core does not pull the Three adapter, but it currently pulls filters.                                       |
-| `defineThreeLayer`          |     233,413 B |              462,428 B | Adds 17,605 B of packed `@crc/three` adapter code over render-layer; `three` remains an external peer.                                                                               |
+| `defineThreeLayer`          |     233,413 B |              462,428 B | Adds 17,605 B of packed `@pibbl/three` adapter code over render-layer; `three` remains an external peer.                                                                             |
 | 3D geometry `sphereShape3D` |       1,839 B |                4,395 B | Geometry stays separate from the 2D runtime and Rapier.                                                                                                                              |
 | 2D geometry `circleShape2D` |       5,391 B |                5,565 B | Geometry stays separate from the 2D runtime and Rapier.                                                                                                                              |
 | 2D runtime `PhysicsWorld2D` |     444,928 B |            4,251,044 B | The runtime is intentionally large and includes the Rapier payload in its packed artifact; it is absent from geometry probes.                                                        |
@@ -62,7 +62,7 @@ relevant observations without treating temporary files as repository artifacts.
 
 3. **Several package boundaries already work at source level.** Physics geometry
    does not include the runtime; core's generic render layer does not include
-   `@crc/three`; and selected animation/layout/viz/particle source exports do
+   `@pibbl/three`; and selected animation/layout/viz/particle source exports do
    not retain unrelated sibling implementation modules. These are useful
    positive controls for the filter harness.
 
@@ -70,11 +70,11 @@ relevant observations without treating temporary files as repository artifacts.
    separate follow-up decisions if 'tree-shakeable by default' is a product-wide
    promise.** Their prebundled root artifacts flatten source-level boundaries
    before the application bundler sees them. This is outside the accepted filter
-   slice, except that `@crc/core/filters` must avoid repeating it.
+   slice, except that `@pibbl/core/filters` must avoid repeating it.
 
 ## Actionable follow-ups
 
-- For this filter work, make `@crc/core/filters` a real built/exported entry and
+- For this filter work, make `@pibbl/core/filters` a real built/exported entry and
   prove packed esbuild and Vite consumers exclude it from an observable plain
   core mount. If prebundling retains the filter modules, preserve affected ESM
   modules or otherwise change the package output before claiming success.

@@ -1,7 +1,7 @@
 ---
 id: api-component-html-box
 title: HtmlBox
-summary: Mounts persistent native HTML in a transformed, clipped CRC box.
+summary: Mounts persistent native HTML in a transformed, clipped Pibbl box.
 kind: api
 slug: html-box
 apiCategory: component
@@ -18,12 +18,12 @@ relatedTypes:
 
 # HtmlBox
 
-`HtmlBox` allocates a native HTML DIV above the canvas. CRC owns its placement,
+`HtmlBox` allocates a native HTML DIV above the canvas. Pibbl owns its placement,
 affine transforms, inherited `PathGeometry` clips, and mounted identity. The
 browser owns its content, editing, semantics, and native events.
 
 ```tsx
-import { HtmlBox } from "@crc/core";
+import { HtmlBox } from "@pibbl/core";
 
 <HtmlBox
   data="Name"
@@ -42,18 +42,18 @@ Mount runs once after attaching the DIV. The returned function receives subseque
 rendered data; the initial data is not delivered twice. The supplied AbortSignal
 aborts once before removal, including mount/update failure. Use an abort listener
 to disconnect observers or unmount an embedded framework. Mount and update must
-be synchronous. Native input handlers can write CRC signals; lifecycle callbacks
+be synchronous. Native input handlers can write Pibbl signals; lifecycle callbacks
 cannot.
 
-Configure the initial `crc` call with `htmlOverlay`, an empty HTML sibling
+Configure the initial `pibbl` call with `htmlOverlay`, an empty HTML sibling
 immediately after the canvas inside a shared positioned wrapper. Both must occupy
 the same content rectangle with no border, padding, or independent CSS transform.
 Apply page transforms to the wrapper. The runtime does not reparent the canvas.
 See the [copyable HTML Box example](#/examples/composition/html-box) for setup and
 cleanup.
 
-`style` accepts CRC box sizing, padding, layout participation, Group transforms,
-opacity, and overflow (default `clip`). HTML does not determine CRC intrinsic
+`style` accepts Pibbl box sizing, padding, layout participation, Group transforms,
+opacity, and overflow (default `clip`). HTML does not determine Pibbl intrinsic
 sizes. `pointerEvents="none"` disables the host's pointer and focus participation.
 A changed `key` replaces the mounted content; an inline mount callback changing
 identity does not.

@@ -6,8 +6,8 @@ symbols: [reactionDiffusion]
 ---
 
 ```js
-import { reactionDiffusion, useTexture } from "@crc/core/textures";
-// Inside a CRC component:
+import { reactionDiffusion, useTexture } from "@pibbl/core/textures";
+// Inside a Pibbl component:
 const ink = useTexture(reactionDiffusion({ seed: 42, preset: "stripes" }), {
   resolution: { width: 128, height: 48 },
   palette: ["#031a22", "#087c80", "#38c8a5", "#a8f5d8"],
@@ -20,4 +20,4 @@ ink.send({ type: "pause", paused: true });
 
 `InkMessage` includes `pause`, `reset`, `paint`, and `stir`. Paint uses normalized `u` and `v` between zero and one, a radius in texture cells (default 6, greater than zero and at most 128), and strength between zero and one (default 0.8). Reset repeats the configured seed. Stir displaces the existing field; it does not create a fluid solver or reciprocal physics forces.
 
-The texture advances on CRC's scheduler. Do not call `send` during component evaluation. Use an event handler or `useReaction`. The [complete native-button recipe](/guides/native-button/) shows scheduling, pause, sizing, and disposal. [Living Ink in the editor](@PLAYGROUND@#/examples/composition/living-ink) provides paint, reset, and seed controls.
+The texture advances on Pibbl's scheduler. Do not call `send` during component evaluation. Use an event handler or `useReaction`. The [complete native-button recipe](/guides/native-button/) shows scheduling, pause, sizing, and disposal. [Living Ink in the editor](@PLAYGROUND@#/examples/composition/living-ink) provides paint, reset, and seed controls.

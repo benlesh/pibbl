@@ -1,5 +1,5 @@
-/** @jsxImportSource @crc/core */
-import { crc, Group, Text, type CRCController } from "@crc/core";
+/** @jsxImportSource @pibbl/core */
+import { pibbl, Group, Text, type PibblController } from "@pibbl/core";
 import {
   ReactionDiffusion,
   ProceduralTexture,
@@ -12,7 +12,7 @@ import {
   type TexturePalette,
   type TextureBrush,
   type TextureResolution,
-} from "@crc/core/textures";
+} from "@pibbl/core/textures";
 const resolution: TextureResolution = { width: 128, height: 80 };
 const brush: TextureBrush = { radius: 6, strength: 0.8 };
 const kind: TextureKind = "marble";
@@ -38,8 +38,8 @@ const material: ProceduralTextureProps = {
   detail: 0.5,
   render: renderer,
 };
-export function mount(canvas: HTMLCanvasElement): CRCController {
-  return crc(
+export function mount(canvas: HTMLCanvasElement): PibblController {
+  return pibbl(
     canvas,
     <Group>
       <ReactionDiffusion
@@ -55,11 +55,11 @@ export function mount(canvas: HTMLCanvasElement): CRCController {
 // @ts-expect-error The package has a closed material vocabulary.
 const bad = <ProceduralTexture kind="unknown" />;
 // @ts-expect-error No public seek command or private solver is exposed.
-import { InkSimulation } from "@crc/core/textures";
+import { InkSimulation } from "@pibbl/core/textures";
 void bad;
 void InkSimulation;
 
-import { Rectangle, type Texture, type TextureRecipe } from "@crc/core";
+import { Rectangle, type Texture, type TextureRecipe } from "@pibbl/core";
 import {
   tendrils,
   lightning,
@@ -69,7 +69,7 @@ import {
   type TendrilsMessage,
   type TendrilsOptions,
   type LightningMessage,
-} from "@crc/core/textures";
+} from "@pibbl/core/textures";
 const sites: readonly ElectricSource[] = [
   { id: "node-a", point: { x: 0.2, y: 0.3 }, weight: 1 },
   { id: "node-b", point: { x: 0.8, y: 0.7 }, weight: 4 },
@@ -125,7 +125,7 @@ const oldOptions: TendrilsOptions = { termination: "perimeter" };
 void oldCommand;
 void oldOptions;
 
-import { reactionDiffusion, type InkMessage } from "@crc/core/textures";
+import { reactionDiffusion, type InkMessage } from "@pibbl/core/textures";
 const stir: InkMessage = {
   type: "stir",
   u: 0.5,
@@ -147,8 +147,8 @@ export function StirredInkConsumer() {
 const incompleteStir: InkMessage = { type: "stir", u: 0.5, v: 0.5, du: 0.1 };
 void incompleteStir;
 
-import { rainDrops, type RainDropsMessage } from "@crc/core/textures";
-import { displacement } from "@crc/core/filters";
+import { rainDrops, type RainDropsMessage } from "@pibbl/core/textures";
+import { displacement } from "@pibbl/core/filters";
 export function RainGlassConsumer() {
   const rain = useTexture(rainDrops({ condensation: 0.8, trailPersistence: 20, irregularity: 1 }));
   const finger: RainDropsMessage = { type: "finger", x: 0.5, y: 0.5, radius: 0.05 };

@@ -1,15 +1,15 @@
 import {
-  crc,
+  pibbl,
   Manipulable,
   Rectangle,
   useSignal,
   degrees,
-  type CRCManipulableProps,
-  type CRCManipulationBox,
-} from "@crc/core";
+  type PibblManipulableProps,
+  type PibblManipulationBox,
+} from "@pibbl/core";
 
 function Scene() {
-  const box = useSignal<CRCManipulationBox>({
+  const box = useSignal<PibblManipulationBox>({
     left: 80,
     top: 70,
     width: 180,
@@ -17,7 +17,7 @@ function Scene() {
   });
   const rotation = useSignal(degrees(10));
   const { width, height } = box.get();
-  const props: CRCManipulableProps = {
+  const props: PibblManipulableProps = {
     style: box,
     rotation,
     draggable: true,
@@ -34,5 +34,5 @@ const canvas = document.createElement("canvas");
 canvas.width = 420;
 canvas.height = 280;
 document.body.append(canvas);
-const controller = crc(canvas, <Scene />);
+const controller = pibbl(canvas, <Scene />);
 window.addEventListener("pagehide", () => controller.dispose(), { once: true });

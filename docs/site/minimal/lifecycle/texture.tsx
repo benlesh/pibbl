@@ -1,5 +1,5 @@
 import {
-  crc,
+  pibbl,
   Rectangle,
   defineTexture,
   useTexture,
@@ -11,7 +11,7 @@ import {
   type TextureOptions,
   type TexturePlacement,
   type TexturePaint,
-} from "@crc/core";
+} from "@pibbl/core";
 
 type Config = { speed: number };
 type State = { hue: number; speed: number };
@@ -63,7 +63,7 @@ const canvas = document.createElement("canvas");
 canvas.width = 320;
 canvas.height = 180;
 document.body.append(canvas);
-const controller = crc(canvas, <Scene />);
+const controller = pibbl(canvas, <Scene />);
 const button = document.createElement("button");
 button.textContent = "Send pink hue";
 button.onclick = () => texture?.send({ hue: 330 });

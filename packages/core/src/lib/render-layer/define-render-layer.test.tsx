@@ -4,12 +4,12 @@ import {
   Group,
   Rectangle,
   defineRenderLayer,
-  type CRCRenderLayerHit,
-  type CRCRenderLayerInteractionSnapshot,
-  type CRCRenderLayerTarget,
+  type PibblRenderLayerHit,
+  type PibblRenderLayerInteractionSnapshot,
+  type PibblRenderLayerTarget,
 } from "../../index.js";
-import { crc } from "../crc.js";
-import { clearSharedState, getCRCInstance } from "../global-state.js";
+import { pibbl } from "../pibbl.js";
+import { clearSharedState, getPibblInstance } from "../global-state.js";
 import {
   installSchedulerDriverForTest,
   ManualSchedulerDriver,
@@ -56,7 +56,7 @@ describe("defineRenderLayer", () => {
     const driver = new ManualSchedulerDriver();
     const restore = installSchedulerDriverForTest(driver);
     const canvas = createCanvas();
-    const controller = crc(
+    const controller = pibbl(
       canvas,
       <TestLayer color="red" style={{ width: 20, height: 10 }} />,
       {
@@ -68,11 +68,11 @@ describe("defineRenderLayer", () => {
       driver.flush(100);
       expect(calls).toEqual(["create:red", "resize:20x10@40x20", "render:1:0"]);
 
-      crc(canvas, <TestLayer color="blue" style={{ width: 20, height: 10 }} />);
+      pibbl(canvas, <TestLayer color="blue" style={{ width: 20, height: 10 }} />);
       driver.flush(120);
       expect(calls.slice(-2)).toEqual(["update:blue", "render:2:20"]);
 
-      crc(canvas, <TestLayer color="blue" style={{ width: 30, height: 10 }} />);
+      pibbl(canvas, <TestLayer color="blue" style={{ width: 30, height: 10 }} />);
       driver.flush(140);
       expect(calls.slice(-2)).toEqual(["resize:30x10@60x20", "render:3:20"]);
     } finally {
@@ -104,7 +104,7 @@ describe("defineRenderLayer", () => {
       },
       render() {},
     });
-    const controller = crc(
+    const controller = pibbl(
       createCanvas(),
       <Layer style={{ width: 20, height: 10 }} />,
       { pixelRatio: "device" },
@@ -143,7 +143,7 @@ describe("defineRenderLayer", () => {
         renders++;
       },
     });
-    const controller = crc(
+    const controller = pibbl(
       createCanvas(),
       <Layer style={{ width: 20, height: 10 }} />,
     );
@@ -176,7 +176,7 @@ describe("defineRenderLayer", () => {
         if (frames.length < 3) frame.invalidate();
       },
     });
-    const controller = crc(
+    const controller = pibbl(
       createCanvas(),
       <Layer style={{ width: 20, height: 10 }} />,
     );
@@ -209,11 +209,11 @@ describe("defineRenderLayer", () => {
       render() {},
     });
     const canvas = createCanvas();
-    const controller = crc(canvas, <Layer style={{ width: 20, height: 10 }} />);
+    const controller = pibbl(canvas, <Layer style={{ width: 20, height: 10 }} />);
     try {
       driver.flush(10);
       expect(transfer).toHaveBeenCalledTimes(1);
-      crc(canvas, <Layer style={{ width: 20, height: 10 }} />);
+      pibbl(canvas, <Layer style={{ width: 20, height: 10 }} />);
       driver.flush(20);
       expect(transfer).toHaveBeenCalledTimes(1);
     } finally {
@@ -237,13 +237,13 @@ describe("defineRenderLayer", () => {
       render() {},
     });
     const canvas = createCanvas();
-    const controller = crc(
+    const controller = pibbl(
       canvas,
       <Layer once={1} style={{ width: 20, height: 10 }} />,
     );
     try {
       driver.flush(10);
-      crc(canvas, <Layer once={2} style={{ width: 20, height: 10 }} />);
+      pibbl(canvas, <Layer once={2} style={{ width: 20, height: 10 }} />);
       driver.flush(20);
       expect(updates).toEqual([2]);
     } finally {
@@ -266,7 +266,7 @@ describe("defineRenderLayer", () => {
     };
     const Layer = defineRenderLayer(definition);
     definition.render = replacement;
-    const controller = crc(
+    const controller = pibbl(
       createCanvas(),
       <Layer style={{ width: 20, height: 10 }} />,
     );
@@ -297,14 +297,14 @@ describe("defineRenderLayer", () => {
       } as any;
       const Layer = defineRenderLayer<{ value: number }, {}>(definition);
       const canvas = createCanvas();
-      const controller = crc(
+      const controller = pibbl(
         canvas,
         <Layer value={0} style={{ width: 20, height: 10 }} />,
       );
       try {
         if (callback === "update") {
           driver.flush(5);
-          crc(canvas, <Layer value={1} style={{ width: 20, height: 10 }} />);
+          pibbl(canvas, <Layer value={1} style={{ width: 20, height: 10 }} />);
         }
         expect(() => driver.flush(10)).toThrowError(
           `defineRenderLayer ${callback}() must be synchronous.`,
@@ -330,10 +330,10 @@ describe("defineRenderLayer", () => {
       },
     });
     const canvas = createCanvas();
-    const controller = crc(canvas, <Layer style={{ width: 20, height: 10 }} />);
+    const controller = pibbl(canvas, <Layer style={{ width: 20, height: 10 }} />);
     try {
       driver.flush(10);
-      const refs = Array.from(getCRCInstance(canvas).refs.values())[0]!;
+      const refs = Array.from(getPibblInstance(canvas).refs.values())[0]!;
       expect(() =>
         (refs.refs[0] as { dispose(): void }).dispose(),
       ).toThrowError("defineRenderLayer dispose() must be synchronous.");
@@ -354,7 +354,7 @@ describe("defineRenderLayer", () => {
       render() {},
       dispose,
     });
-    const controller = crc(
+    const controller = pibbl(
       createCanvas(),
       <Layer style={{ width: 20, height: 10 }} />,
     );
@@ -388,7 +388,7 @@ describe("defineRenderLayer", () => {
         if (fail) throw new Error("render failed");
       },
     });
-    const controller = crc(
+    const controller = pibbl(
       createCanvas(),
       <Layer style={{ width: 20, height: 10 }} />,
     );
@@ -438,7 +438,7 @@ describe("defineRenderLayer", () => {
         if (fail) throw applicationError;
       },
     });
-    const controller = crc(
+    const controller = pibbl(
       createCanvas(),
       <Layer style={{ width: 20, height: 10 }} />,
     );
@@ -539,7 +539,7 @@ describe("defineRenderLayer", () => {
     }
   });
 
-  it("does not deliver input when later CRC paint wins", () => {
+  it("does not deliver input when later Pibbl paint wins", () => {
     const trace: string[] = [];
     const Layer = interactionLayer(
       { kind: "block" },
@@ -680,11 +680,11 @@ describe("defineRenderLayer", () => {
       <Layer target={oldTarget} style={{ width: 100, height: 60 }} />,
     );
     const oldRegistration = Array.from(
-      getCRCInstance(mounted.canvas).eventRoot.targets,
+      getPibblInstance(mounted.canvas).eventRoot.targets,
     )[0];
     let observedDuringCandidate = false;
     function RejectAfterObserving() {
-      const instance = getCRCInstance(mounted.canvas);
+      const instance = getPibblInstance(mounted.canvas);
       observedDuringCandidate = instance.eventRoot.targets.has(
         oldRegistration!,
       );
@@ -696,7 +696,7 @@ describe("defineRenderLayer", () => {
       return undefined;
     }
     try {
-      crc(
+      pibbl(
         mounted.canvas,
         <>
           <Layer target={newTarget} style={{ width: 100, height: 60 }} />
@@ -740,7 +740,7 @@ describe("defineRenderLayer", () => {
     try {
       click(mounted.canvas, 10, 5);
       trace.length = 0;
-      crc(mounted.canvas, scene("#222222"));
+      pibbl(mounted.canvas, scene("#222222"));
       mounted.driver.flush(20);
       mounted.canvas.dispatchEvent(
         new KeyboardEvent("keydown", {
@@ -782,12 +782,12 @@ describe("defineRenderLayer", () => {
       click(mounted.canvas, 30, 20);
       expect(trace).toEqual(["lower"]);
       expect(
-        Array.from(getCRCInstance(mounted.canvas).eventRoot.targets).some(
+        Array.from(getPibblInstance(mounted.canvas).eventRoot.targets).some(
           (target) => target.keyboardFocusable,
         ),
       ).toBe(false);
 
-      crc(
+      pibbl(
         mounted.canvas,
         <FocusManagement>
           <Group style={{ translateX: 25, translateY: 15 }}>
@@ -803,7 +803,7 @@ describe("defineRenderLayer", () => {
       );
       mounted.driver.flush(20);
       const focusTarget = Array.from(
-        getCRCInstance(mounted.canvas).eventRoot.targets,
+        getPibblInstance(mounted.canvas).eventRoot.targets,
       ).find((target) => target.keyboardFocusable);
       expect(focusTarget && resolveTargetRootBounds(focusTarget)).toEqual({
         x: 27,
@@ -856,13 +856,13 @@ describe("defineRenderLayer", () => {
       click(mounted.canvas, 20, 20);
       expect(trace).toEqual(["lower"]);
       trace.length = 0;
-      crc(mounted.canvas, scene("target-layer"));
+      pibbl(mounted.canvas, scene("target-layer"));
       mounted.driver.flush(20);
       click(mounted.canvas, 20, 20);
       expect(trace).toEqual(["layer"]);
       expect(renders).toBe(1);
       trace.length = 0;
-      crc(mounted.canvas, scene("block"));
+      pibbl(mounted.canvas, scene("block"));
       mounted.driver.flush(30);
       click(mounted.canvas, 20, 20);
       expect(trace).toEqual([]);
@@ -911,7 +911,7 @@ describe("defineRenderLayer", () => {
     const mounted = mountInteraction(scene(true));
     try {
       pointer(mounted.canvas, "pointerdown", 20, 20);
-      crc(mounted.canvas, scene(false));
+      pibbl(mounted.canvas, scene(false));
       mounted.driver.flush(20);
       pointer(mounted.canvas, "pointerup", 80, 50);
       pointer(mounted.canvas, "pointermove", 80, 50);
@@ -999,7 +999,7 @@ describe("defineRenderLayer", () => {
     );
     try {
       const target = Array.from(
-        getCRCInstance(mounted.canvas).eventRoot.targets,
+        getPibblInstance(mounted.canvas).eventRoot.targets,
       ).find((candidate) => candidate.keyboardFocusable);
       expect(target && resolveTargetRootBounds(target)).toEqual({
         x: 25,
@@ -1024,10 +1024,10 @@ describe("defineRenderLayer", () => {
 });
 
 function interactionLayer<Target extends object>(
-  hit: CRCRenderLayerHit<Target>,
+  hit: PibblRenderLayerHit<Target>,
   options: {
-    readonly targets?: readonly CRCRenderLayerTarget<Target>[];
-    readonly onInput?: CRCRenderLayerInteractionSnapshot<Target>["onInput"];
+    readonly targets?: readonly PibblRenderLayerTarget<Target>[];
+    readonly onInput?: PibblRenderLayerInteractionSnapshot<Target>["onInput"];
   } = {},
 ) {
   return defineRenderLayer<{}, {}, Target>({
@@ -1049,7 +1049,7 @@ function interactionLayer<Target extends object>(
 }
 
 function mountInteraction(
-  root: Parameters<typeof crc>[1],
+  root: Parameters<typeof pibbl>[1],
   flush = true,
 ): {
   readonly canvas: HTMLCanvasElement;
@@ -1059,7 +1059,7 @@ function mountInteraction(
   const driver = new ManualSchedulerDriver();
   const restore = installSchedulerDriverForTest(driver);
   const canvas = createCanvas(100, 60);
-  const controller = crc(canvas, root);
+  const controller = pibbl(canvas, root);
   if (flush) driver.flush(10);
   return {
     canvas,

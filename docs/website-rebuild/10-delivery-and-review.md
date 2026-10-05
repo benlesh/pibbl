@@ -36,17 +36,17 @@ Then run proportional documentation, export, source/build, package-consumer, bro
 
 ## Acceptance matrix for the future site
 
-| Surface           | Observable evidence                                                                                                 |
-| ----------------- | ------------------------------------------------------------------------------------------------------------------- |
-| Homepage          | A visitor identifies CRC, completes one interaction, reaches a relevant example; page remains useful without motion |
-| API               | Reader finds a symbol, import, contract, exact runnable snippet, and related type; no undocumented export is lost   |
-| Gallery           | Actual screenshots; card and playground actions work with mouse and keyboard; filters and empty state work          |
-| Example           | Teaching point, gesture, edit prompt, source, and playground project agree                                          |
-| Playground        | Built-in and edited projects run; errors preserve code; Stop releases preview resources                             |
-| Sharing           | A valid link restores the intended snapshot; malformed/oversized/version-mismatched input has a clear recovery path |
-| ZIP               | Download includes the current project and runs outside the website in the documented environment                    |
-| Migration         | Existing routes, anchors, and shared-code links have verified outcomes                                              |
-| Responsive access | Narrow screens, keyboard paths, zoom, motion preferences, and rendering fallbacks have deliberate behavior          |
+| Surface           | Observable evidence                                                                                                   |
+| ----------------- | --------------------------------------------------------------------------------------------------------------------- |
+| Homepage          | A visitor identifies Pibbl, completes one interaction, reaches a relevant example; page remains useful without motion |
+| API               | Reader finds a symbol, import, contract, exact runnable snippet, and related type; no undocumented export is lost     |
+| Gallery           | Actual screenshots; card and playground actions work with mouse and keyboard; filters and empty state work            |
+| Example           | Teaching point, gesture, edit prompt, source, and playground project agree                                            |
+| Playground        | Built-in and edited projects run; errors preserve code; Stop releases preview resources                               |
+| Sharing           | A valid link restores the intended snapshot; malformed/oversized/version-mismatched input has a clear recovery path   |
+| ZIP               | Download includes the current project and runs outside the website in the documented environment                      |
+| Migration         | Existing routes, anchors, and shared-code links have verified outcomes                                                |
+| Responsive access | Narrow screens, keyboard paths, zoom, motion preferences, and rendering fallbacks have deliberate behavior            |
 
 ## Inventory worksheet for later migration
 

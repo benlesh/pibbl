@@ -13,8 +13,8 @@ import {
   segmentShape2D,
   transformShape2D,
   wedgeShape2D,
-  type CRCPhysicsAabb2D,
-  type CRCPhysicsShape2D,
+  type PibblPhysicsAabb2D,
+  type PibblPhysicsShape2D,
 } from '../../2d-geometry.js';
 import { requireShapeRecord2D } from './shape-records.js';
 
@@ -34,7 +34,7 @@ describe('immutable 2D shape factories', () => {
     const chainPoints: [number, number][] = [[0, 0], [2, 0], [2, 2]];
     const polygonPoints: [number, number][] = [[0, 0], [3, 0], [0, 3]];
 
-    const cases: readonly [CRCPhysicsShape2D, CRCPhysicsAabb2D][] = [
+    const cases: readonly [PibblPhysicsShape2D, PibblPhysicsAabb2D][] = [
       [circleShape2D({ radius: 1, center: circleCenter }), bounds(0, 1, 2, 3)],
       [ellipseShape2D({ radiusX: 2, radiusY: 1, center: ellipseCenter }), bounds(0, 2, 4, 4)],
       [boxShape2D({ width: 2, height: 4, center: boxCenter }), bounds(2, 2, 4, 6)],
@@ -283,7 +283,7 @@ describe('2D shape transforms and bounds', () => {
   });
 
   it('rejects malformed shape lookalikes and nonfinite transforms', () => {
-    expect(() => boundsOfShape2D({} as CRCPhysicsShape2D)).toThrow('shape must be a CRC physics 2D shape');
+    expect(() => boundsOfShape2D({} as PibblPhysicsShape2D)).toThrow('shape must be a Pibbl physics 2D shape');
     expect(() => transformShape2D(circleShape2D({ radius: 1 }), { position: [0, 0], rotationDegrees: Number.NaN })).toThrow();
     expect(() => boundsOfShape2D(circleShape2D({ radius: 1 }), { position: [Number.NaN, 0], rotationDegrees: 0 })).toThrow();
   });
@@ -294,7 +294,7 @@ function bounds(
   minY: number,
   maxX: number,
   maxY: number,
-): CRCPhysicsAabb2D {
+): PibblPhysicsAabb2D {
   return {
     min: [minX, minY],
     max: [maxX, maxY],

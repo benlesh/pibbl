@@ -7,15 +7,15 @@ import {
   Path,
   Text,
   batch,
-  crc,
+  pibbl,
   useLayoutBox,
   useSignal,
-  type CRCController,
-  type CRCPointerEvent,
-  type CRCEventTarget,
+  type PibblController,
+  type PibblPointerEvent,
+  type PibblEventTarget,
   type WritableSignal,
-} from "@crc/core";
-import { Axis, LineSeries, Scale, ScaleAdjust, useScale } from "@crc/core/viz";
+} from "@pibbl/core";
+import { Axis, LineSeries, ScaleAdjust, useLinearScale, LinearScale } from "@pibbl/core/viz";
 
 type Window = readonly [number, number];
 type PanelSnapshot = { width: number; height: number; domain: Window };
@@ -637,7 +637,7 @@ function Brush({
   window: WritableSignal<Window>;
   changeWindow: (range: Window) => void;
 }) {
-  const x = useScale("x").get();
+  const x = useLinearScale("x").get();
   const { width, height } = useLayoutBox();
   const [start, end] = window.get();
   type Drag = {
@@ -645,13 +645,13 @@ function Brush({
     pointerId: number;
     anchor: number;
     range: Window;
-    owner: CRCEventTarget;
+    owner: PibblEventTarget;
   };
   const drag = useSignal<Drag | undefined>(undefined);
   const monthAt = (rootX: number) => x.invert(rootX - 24);
   const clamp = (value: number, low: number, high: number) =>
     Math.max(low, Math.min(high, value));
-  function begin(event: CRCPointerEvent, mode: Drag["mode"]) {
+  function begin(event: PibblPointerEvent, mode: Drag["mode"]) {
     if (event.button !== 0 || drag.get()) return;
     event.preventDefault();
     event.currentTarget.setPointerCapture(event.pointerId);
@@ -663,7 +663,7 @@ function Brush({
       owner: event.currentTarget,
     });
   }
-  function move(event: CRCPointerEvent) {
+  function move(event: PibblPointerEvent) {
     const active = drag.get();
     if (!active || active.pointerId !== event.pointerId) return;
     const delta = Math.round(monthAt(event.x) - active.anchor);
@@ -676,7 +676,7 @@ function Brush({
       changeWindow([from, from + b - a]);
     }
   }
-  function finish(event: CRCPointerEvent) {
+  function finish(event: PibblPointerEvent) {
     const active = drag.get();
     if (!active || active.pointerId !== event.pointerId) return;
     drag.set(undefined);
@@ -840,8 +840,8 @@ function Plot({
   changeWindow: (range: Window) => void;
   onSnapshot?: Fixture["onSnapshot"];
 }) {
-  const x = useScale("x").get(),
-    y = useScale("y").get();
+  const x = useLinearScale("x").get(),
+    y = useLinearScale("y").get();
   const [start, end] = window.get();
   const selection = selected.get();
   const frame = useLayoutBox();
@@ -1086,16 +1086,16 @@ function Scene({ fixture }: { fixture: Fixture }) {
       />
       <Group style={{ translateX: 64, translateY: 182 }}>
         <Absolute style={{ width: plotWidth, height: plotHeight }}>
-          <Scale
+          <LinearScale
             id="x"
-            type="linear"
+
             domain={window}
             range="width"
             style={{ width: "100%", height: "100%" }}
           >
-            <Scale
+            <LinearScale
               id="y"
-              type="linear"
+
               domain={[low, high]}
               range="height"
               reverse
@@ -1108,8 +1108,8 @@ function Scene({ fixture }: { fixture: Fixture }) {
                 changeWindow={changeWindow}
                 onSnapshot={fixture.onSnapshot}
               />
-            </Scale>
-          </Scale>
+            </LinearScale>
+          </LinearScale>
         </Absolute>
       </Group>
       <Label
@@ -1127,16 +1127,16 @@ function Scene({ fixture }: { fixture: Fixture }) {
       />
       <Group style={{ translateX: 24, translateY: box.height - 88 }}>
         <Absolute style={{ width: Math.max(1, box.width - 48), height: 40 }}>
-          <Scale
+          <LinearScale
             id="x"
-            type="linear"
+
             domain={[0, last]}
             range="width"
             style={{ width: "100%", height: "100%" }}
           >
-            <Scale
+            <LinearScale
               id="y"
-              type="linear"
+
               domain={[330, 430]}
               range="height"
               reverse
@@ -1149,8 +1149,8 @@ function Scene({ fixture }: { fixture: Fixture }) {
                 changeWindow={changeWindow}
                 onSnapshot={fixture.onSnapshot}
               />
-            </Scale>
-          </Scale>
+            </LinearScale>
+          </LinearScale>
         </Absolute>
       </Group>
       <Label
@@ -1170,6 +1170,6 @@ function Scene({ fixture }: { fixture: Fixture }) {
 export default function mount(
   canvas: HTMLCanvasElement,
   fixture: Fixture = {},
-): CRCController {
-  return crc(canvas, <Scene fixture={fixture} />, { viewport: "responsive" });
+): PibblController {
+  return pibbl(canvas, <Scene fixture={fixture} />, { viewport: "responsive" });
 }

@@ -1,6 +1,6 @@
 import type { TextureRecipe } from '../../../lib/textures/texture.js';
 import { rasterizeField, releaseField } from "./wasm/memory.js";
-import { defineTexture, type TextureContext } from "@crc/core";
+import { defineTexture, type TextureContext } from "@pibbl/core";
 import {
   marbleField,
   paperField,
@@ -9,7 +9,7 @@ import {
 } from "./material-field.js";
 import { InkSimulation } from "./simulation.js";
 import { paletteLut, texturePalettes, validateSeed } from "./palette.js";
-export { useTexture } from "@crc/core";
+export { useTexture } from "@pibbl/core";
 /**
  * Seed, feature scale, and detail controls shared by static material recipes.
  *

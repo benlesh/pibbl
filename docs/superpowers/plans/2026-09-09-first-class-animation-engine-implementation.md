@@ -4,11 +4,11 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Build CRC's complete deterministic animation surface—seekable definitions, stateful steppers, composable programs, writer leases, component-owned playback, update-driven transitions, milestones, debugging traces, and public scenario evidence—on the single signal graph and frame scheduler.
+**Goal:** Build Pibbl's complete deterministic animation surface—seekable definitions, stateful steppers, composable programs, writer leases, component-owned playback, update-driven transitions, milestones, debugging traces, and public scenario evidence—on the single signal graph and frame scheduler.
 
 **Architecture:** Immutable definitions describe typed values over local time, immutable programs bind definitions to writable signals and compose them in sequence/parallel/repeat trees, and one component-owned playback run resolves activation snapshots plus control state. Playback registers with the realm scheduler's Advance phase, stages user and metadata values into its shared signal transaction, and delivers milestones only after Commit, renderer planning, and Render. Seekable definitions sample logical time directly; steppers replay exact fixed steps. Writer leases reserve every reachable output for a run, preventing ambiguous writers while allowing transaction-local sequential stages.
 
-**Tech Stack:** TypeScript, CRC signals and centralized scheduler, HTML Canvas 2D and `OffscreenCanvas` Layers, synchronous CRC hooks, deterministic analytic/fixed-step math, Vitest Browser with Playwright Chromium, pnpm 11.21.0.
+**Tech Stack:** TypeScript, Pibbl signals and centralized scheduler, HTML Canvas 2D and `OffscreenCanvas` Layers, synchronous Pibbl hooks, deterministic analytic/fixed-step math, Vitest Browser with Playwright Chromium, pnpm 11.21.0.
 
 **Spec:** `docs/superpowers/specs/2026-09-09-first-class-signals-and-animation-design.md`
 
@@ -22,7 +22,7 @@
 - Do not introduce another `requestAnimationFrame`, timer loop, renderer clock, or per-playback scheduler. Every animation advances in the existing realm scheduler's Advance phase.
 - Definitions and programs are immutable normalized snapshots. Caller mutation after construction cannot affect current or future runs.
 - Keep public definition/program types nominal and opaque. Only `defineAnimation` and `stepper` expose custom callbacks.
-- Built-in interpolation is number-only. Every other `T` requires an explicit `CRCInterpolator<T>`.
+- Built-in interpolation is number-only. Every other `T` requires an explicit `PibblInterpolator<T>`.
 - Time-based definitions sample logical time, not accumulated display-frame deltas. Only stateful steppers integrate fixed deltas.
 - Stage every user-output, playback-status, and playback-time write before the single Commit phase. No renderer or callback may observe a partially advanced frame.
 - Reserve every reachable writable signal for the whole accepted run. Sequential same-signal tracks are valid; simultaneous program overlap is rejected; competing active runs fail unless replacement is explicit.
@@ -85,7 +85,7 @@ finished. A stepper without `done` is statically infinite.
 
 **Interfaces:**
 
-- Produces public `CRCEasing`, `CRCInterpolator<T>`, `CRCAnimationDefinition<T>`, `easing`, `tween`, `keyframes`, `defineAnimation`, and `stepper` construction.
+- Produces public `PibblEasing`, `PibblInterpolator<T>`, `PibblAnimationDefinition<T>`, `easing`, `tween`, `keyframes`, `defineAnimation`, and `stepper` construction.
 - Produces private immutable definition metadata and `sampleSeekableDefinition`.
 - `stepper` is validated and normalized here; its stateful execution is Task 5.
 
@@ -138,7 +138,7 @@ depend on browser CSS timing APIs.
 
 - [ ] **Step 5: Implement opaque definition records**
 
-Store runtime records in a private `WeakMap<CRCAnimationDefinition<unknown>,
+Store runtime records in a private `WeakMap<PibblAnimationDefinition<unknown>,
 DefinitionRecord<unknown>>`; expose only a frozen nominal token object. Copy and
 freeze keyframe values, offsets, and easing arrays. Normalize omitted offsets
 once. Validate static fields at construction.
@@ -180,7 +180,7 @@ git commit -m "feat(core): define seekable animation values"
 
 **Interfaces:**
 
-- Produces public `spring(options): CRCAnimationDefinition<number>`.
+- Produces public `spring(options): PibblAnimationDefinition<number>`.
 - Produces private `sampleSpring(record, seconds)` returning position and velocity plus `resolveSpringDuration(record)`.
 
 - [ ] **Step 1: Write failing validation and default tests**
@@ -277,7 +277,7 @@ git commit -m "feat(core): add analytic spring animations"
 
 **Interfaces:**
 
-- Produces public `CRCAnimationProgram`, `track`, `sequence`, `parallel`, `wait`, `marker`, and `repeat`.
+- Produces public `PibblAnimationProgram`, `track`, `sequence`, `parallel`, `wait`, `marker`, and `repeat`.
 - Produces private program records, duration classification, writer spans, stable paths, and reachable output sets.
 
 - [ ] **Step 1: Write failing constructor and immutability tests**
@@ -315,7 +315,7 @@ Expected: FAIL because the program module is absent.
 
 - [ ] **Step 5: Implement a private immutable program tree**
 
-Use a private `WeakMap<CRCAnimationProgram, ProgramRecord>`. Every constructor
+Use a private `WeakMap<PibblAnimationProgram, ProgramRecord>`. Every constructor
 returns a frozen opaque token. Store child-index paths as frozen numeric arrays;
 root path is empty. `track` is the only user-output writer node.
 
@@ -721,7 +721,7 @@ git commit -m "feat(core): run playback in scheduler phases"
 
 **Interfaces:**
 
-- Produces public `CRCPlaybackStatus`, `CRCPlaybackEvent`, `CRCPlayback`, `CRCPlaybackOptions`, and `usePlayback`.
+- Produces public `PibblPlaybackStatus`, `PibblPlaybackEvent`, `PibblPlayback`, `PibblPlaybackOptions`, and `usePlayback`.
 - Consumes the latest successfully rendered program/options for future runs while active runs retain their snapshot.
 
 - [ ] **Step 1: Write failing stable-handle and render-adoption tests**
@@ -789,7 +789,7 @@ Expected: FAIL because `usePlayback` is missing.
 - [ ] **Step 6: Implement one hook slot and successful-render adoption**
 
 Create one internal controller on mount and follow the component teardown. On
-every render, register a callback with the inherited `CRCRenderTransaction`;
+every render, register a callback with the inherited `PibblRenderTransaction`;
 only `success === true` installs the latest program/options. Mount success also
 queues autoplay once. Event/error delivery reads the latest callbacks from the
 still-live slot, but checks controller generation and component identity before
@@ -826,7 +826,7 @@ git commit -m "feat(core): add component-owned playback"
 
 **Interfaces:**
 
-- Produces public `CRCTweenTransitionOptions<T>`, `CRCSpringTransitionOptions`, and both `useTransition` overloads.
+- Produces public `PibblTweenTransitionOptions<T>`, `PibblSpringTransitionOptions`, and both `useTransition` overloads.
 - Uses one component-owned internal transition slot and the same scheduler/playback engine.
 
 - [ ] **Step 1: Write failing mount and retarget tests**
@@ -970,14 +970,14 @@ git commit -m "test(core): integrate animation rendering"
 
 **Interfaces:**
 
-- Consumes: only root `@crc/core` public imports in scenario/example source.
+- Consumes: only root `@pibbl/core` public imports in scenario/example source.
 - Produces learning route `#/examples/composition/signals-and-animation` and lab route `#/testing/animation`.
 - Produces actions `play`, `pause`, `step`, `seek-start`, `seek-middle`, `seek-end`, `reverse`, `retarget`, `repeat`, `simulate`, `show-layer`, `show-shared-roots`, `cancel`, `remove-owner`, and `reset`.
 
 - [ ] **Step 1: Add failing catalog and public-source tests**
 
 Expect both routes, exact action IDs, source identifiers, public imports, and no
-`@crc/core/internal`, `lib`, or source imports. Add the learning slug to the
+`@pibbl/core/internal`, `lib`, or source imports. Add the learning slug to the
 composition-section expectations.
 
 - [ ] **Step 2: Run catalog tests and confirm missing sources**
@@ -1047,8 +1047,8 @@ git commit -m "test(core): prove animation through public scenarios"
 - Modify: `playground/package-consumer/index.ts`
 - Modify: `playground/package-consumer/jsx.tsx`
 - Modify: `playground/package-consumer/runtime.mjs`
-- Modify: `playground/src/crc-editor-types.txt`
-- Modify: `tooling/crc-studio-runtime-entry.ts`
+- Modify: `playground/src/pibbl-editor-types.txt`
+- Modify: `tooling/pibbl-studio-runtime-entry.ts`
 - Modify: `tooling/verify-studio-types.mjs`
 - Create: `docs/design/animation-contract.md`
 - Modify: `docs/design/signals-and-scheduling-contract.md`
@@ -1067,7 +1067,7 @@ git commit -m "test(core): prove animation through public scenarios"
 
 - [ ] **Step 1: Add failing type and runtime package assertions**
 
-Import every animation type and runtime value from `@crc/core`. Add positive
+Import every animation type and runtime value from `@pibbl/core`. Add positive
 inference for number tween/spring, object tween with interpolator, keyframes,
 program composition, playback, and both transitions. Include deliberate
 failures:
@@ -1079,7 +1079,7 @@ const objectOutput = signal({ x: 0 });
 const numberDefinition = tween({ to: 10, duration: 100 });
 // @ts-expect-error a numeric definition cannot write an object signal
 track(objectOutput, numberDefinition);
-type CoreExports = typeof import("@crc/core");
+type CoreExports = typeof import("@pibbl/core");
 // @ts-expect-error no free playback function is exported
 type FreePlay = CoreExports["play"];
 ```
@@ -1155,7 +1155,7 @@ Expected: all seven checks PASS.
 - [ ] **Step 7: Commit the public surface and contracts**
 
 ```bash
-git add packages/core/type-tests/final-public-vocabulary.tsx playground/package-consumer/index.ts playground/package-consumer/jsx.tsx playground/package-consumer/runtime.mjs playground/src/crc-editor-types.txt tooling/crc-studio-runtime-entry.ts tooling/verify-studio-types.mjs docs/design/animation-contract.md docs/design/signals-and-scheduling-contract.md docs/design/runtime-hooks-contract.md docs/design/runtime-resource-ownership.md docs/guides/signals-and-animation.md docs/api-reference.md docs/library-status.md AGENTS.md docs/superpowers/specs/2026-09-09-first-class-signals-and-animation-design.md
+git add packages/core/type-tests/final-public-vocabulary.tsx playground/package-consumer/index.ts playground/package-consumer/jsx.tsx playground/package-consumer/runtime.mjs playground/src/pibbl-editor-types.txt tooling/pibbl-studio-runtime-entry.ts tooling/verify-studio-types.mjs docs/design/animation-contract.md docs/design/signals-and-scheduling-contract.md docs/design/runtime-hooks-contract.md docs/design/runtime-resource-ownership.md docs/guides/signals-and-animation.md docs/api-reference.md docs/library-status.md AGENTS.md docs/superpowers/specs/2026-09-09-first-class-signals-and-animation-design.md
 git commit -m "docs: publish animation contracts"
 ```
 

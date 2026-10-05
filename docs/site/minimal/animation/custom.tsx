@@ -1,5 +1,5 @@
 import {
-  crc,
+  pibbl,
   Circle,
   useSignal,
   usePlayback,
@@ -7,23 +7,23 @@ import {
   parallel,
   defineAnimation,
   stepper,
-  type CRCAnimationOptions,
-  type CRCAnimationSampleInput,
-  type CRCStepperOptions,
-} from "@crc/core";
+  type PibblAnimationOptions,
+  type PibblAnimationSampleInput,
+  type PibblStepperOptions,
+} from "@pibbl/core";
 
 const canvas = document.createElement("canvas");
 canvas.width = 420;
 canvas.height = 200;
 document.body.append(canvas);
-const wave: CRCAnimationOptions<number> = {
+const wave: PibblAnimationOptions<number> = {
   duration: 6000,
-  sample({ initialValue, localTime }: CRCAnimationSampleInput<number>) {
+  sample({ initialValue, localTime }: PibblAnimationSampleInput<number>) {
     return initialValue + Math.sin(localTime / 350) * 60;
   },
 };
 type State = { x: number; velocity: number };
-const integration: CRCStepperOptions<State, number> = {
+const integration: PibblStepperOptions<State, number> = {
   stepMilliseconds: 16,
   maxElapsedMilliseconds: 64,
   initial: (x) => ({ x, velocity: 70 }),
@@ -43,5 +43,5 @@ function Scene() {
   );
   return <Circle style={{ radius: 15, left: x, top: y, fill: "#3369bb" }} />;
 }
-const controller = crc(canvas, <Scene />);
+const controller = pibbl(canvas, <Scene />);
 window.addEventListener("pagehide", () => controller.dispose(), { once: true });

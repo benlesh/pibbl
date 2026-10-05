@@ -5,7 +5,7 @@ import {
 } from './displacement-math.js';
 
 describe('displacement map math', () => {
-  it('maps CRC RG bytes to exact signed extrema and neutral', () => {
+  it('maps Pibbl RG bytes to exact signed extrema and neutral', () => {
     expect(decodeDisplacementChannel(0)).toBe(-1);
     expect(decodeDisplacementChannel(128)).toBe(0);
     expect(decodeDisplacementChannel(255)).toBe(1);

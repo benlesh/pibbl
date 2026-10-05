@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { crc } from '../crc';
+import { pibbl } from '../pibbl';
 import { clearSharedState } from '../global-state';
 import { useLinePath } from './use-line-path';
 import { useConst } from './use-const';
@@ -60,13 +60,13 @@ describe('memoized path hooks', () => {
           phase === 2 ? { cornerRadii: [0, 4, 4, 4] } :
             { cornerRadii: [0, 4, 3, 4] }) as unknown as FakePath2D);
     };
-    const controller = crc(canvas, createElement(Probe, { phase: 0 }));
+    const controller = pibbl(canvas, createElement(Probe, { phase: 0 }));
     await nextFrame();
-    crc(canvas, createElement(Probe, { phase: 1 }));
+    pibbl(canvas, createElement(Probe, { phase: 1 }));
     await nextFrame();
-    crc(canvas, createElement(Probe, { phase: 2 }));
+    pibbl(canvas, createElement(Probe, { phase: 2 }));
     await nextFrame();
-    crc(canvas, createElement(Probe, { phase: 3 }));
+    pibbl(canvas, createElement(Probe, { phase: 3 }));
     await nextFrame();
 
     expect(paths[0].commands).toEqual(['rect:1,2,3,4']);
@@ -82,7 +82,7 @@ describe('memoized path hooks', () => {
     const Probe = () => {
       useRectPath(0, 0, 1, 1, { cornerRadius: -1 });
     };
-    const controller = crc(canvas, createElement(Probe, {}));
+    const controller = pibbl(canvas, createElement(Probe, {}));
     expect(() => frames.flush()).toThrow(/cornerRadius.*nonnegative/);
     controller.dispose();
     frames.restore();
@@ -98,7 +98,7 @@ describe('memoized path hooks', () => {
         cornerRadius: 9,
       }) as unknown as FakePath2D);
     };
-    const controller = crc(canvas, createElement(Probe, {}));
+    const controller = pibbl(canvas, createElement(Probe, {}));
     await nextFrame();
 
     expect(paths[0].commands).toEqual(['roundRect:0.5,1.5,4,5,9,9,9,9']);
@@ -118,11 +118,11 @@ describe('memoized path hooks', () => {
         lineWidth,
       }));
     };
-    const controller = crc(canvas, createElement(Probe, { width: 3, lineWidth: 1 }));
+    const controller = pibbl(canvas, createElement(Probe, { width: 3, lineWidth: 1 }));
     await nextFrame();
-    crc(canvas, createElement(Probe, { width: 3, lineWidth: 1 }));
+    pibbl(canvas, createElement(Probe, { width: 3, lineWidth: 1 }));
     await nextFrame();
-    crc(canvas, createElement(Probe, { width: 5, lineWidth: 1 }));
+    pibbl(canvas, createElement(Probe, { width: 5, lineWidth: 1 }));
     await nextFrame();
 
     expect(paths[1]).toBe(paths[0]);
@@ -140,22 +140,22 @@ describe('memoized path hooks', () => {
     const Probe = ({ closePath, coords }: LineProbeProps) => {
       paths.push(useLinePath(coords, { closePath }) as unknown as FakePath2D);
     };
-    const controller = crc(canvas, createElement(Probe, {
+    const controller = pibbl(canvas, createElement(Probe, {
       coords: [[0, 0], [10, 10]],
       closePath: false,
     }));
     await nextFrame();
-    crc(canvas, createElement(Probe, {
+    pibbl(canvas, createElement(Probe, {
       coords: [[0, 0], [10, 10]],
       closePath: false,
     }));
     await nextFrame();
-    crc(canvas, createElement(Probe, {
+    pibbl(canvas, createElement(Probe, {
       coords: [[0, 0], [10, 10]],
       closePath: true,
     }));
     await nextFrame();
-    crc(canvas, createElement(Probe, {
+    pibbl(canvas, createElement(Probe, {
       coords: [[0, 0], [20, 10]],
       closePath: true,
     }));
@@ -174,16 +174,16 @@ describe('memoized path hooks', () => {
     const Probe = ({ data }: { data: string }) => {
       paths.push(useSvgPath(data) as unknown as FakePath2D);
     };
-    const controller = crc(canvas, createElement(Probe, { data: 'M0 0L10 10' }));
+    const controller = pibbl(canvas, createElement(Probe, { data: 'M0 0L10 10' }));
     await nextFrame();
-    crc(canvas, createElement(Probe, { data: 'M0 0L10 10' }));
+    pibbl(canvas, createElement(Probe, { data: 'M0 0L10 10' }));
     await nextFrame();
-    crc(canvas, createElement(Probe, { data: 'not-crc-validated' }));
+    pibbl(canvas, createElement(Probe, { data: 'not-pibbl-validated' }));
     await nextFrame();
 
     expect(paths[1]).toBe(paths[0]);
     expect(paths[2]).not.toBe(paths[0]);
-    expect(paths[2].data).toBe('not-crc-validated');
+    expect(paths[2].data).toBe('not-pibbl-validated');
     controller.dispose();
   });
 
@@ -200,10 +200,10 @@ describe('memoized path hooks', () => {
     const Probe = ({ data }: { data: string }) => {
       useSvgPath(data);
     };
-    const controller = crc(canvas, createElement(Probe, { data: 'bad' }));
+    const controller = pibbl(canvas, createElement(Probe, { data: 'bad' }));
     expect(() => frames.flush()).toThrowError('invalid SVG path');
 
-    crc(canvas, createElement(Probe, { data: 'M0 0' }));
+    pibbl(canvas, createElement(Probe, { data: 'M0 0' }));
     expect(() => frames.flush()).not.toThrow();
     controller.dispose();
     frames.restore();
@@ -216,9 +216,9 @@ describe('memoized path hooks', () => {
       if (path) useRectPath(0, 0, 1, 1);
       else useConst(() => new Path2D());
     };
-    const controller = crc(canvas, createElement(Probe, { path: false }));
+    const controller = pibbl(canvas, createElement(Probe, { path: false }));
     frames.flush();
-    crc(canvas, createElement(Probe, { path: true }));
+    pibbl(canvas, createElement(Probe, { path: true }));
     expect(() => frames.flush()).toThrowError(/hook order changed/i);
     controller.dispose();
     frames.restore();
@@ -243,7 +243,7 @@ class ManualFrames {
 
   flush(): void {
     const entry = Array.from(this.callbacks.entries()).at(-1);
-    if (!entry) throw new Error('No pending CRC frame');
+    if (!entry) throw new Error('No pending Pibbl frame');
     const [id, callback] = entry;
     this.callbacks.delete(id);
     callback(performance.now());

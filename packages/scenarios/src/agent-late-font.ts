@@ -1,4 +1,4 @@
-import { crc, createElement, signal } from '@crc/core';
+import { pibbl, createElement, signal } from '@pibbl/core';
 import { AgentLateFontScene } from './agent-late-font.example';
 const fontUrl = new URL('./assets/agent-space-grotesk.woff2', import.meta.url).href;
 import type { ScenarioDefinition } from './types';
@@ -19,16 +19,16 @@ export const agentLateFontScenario: ScenarioDefinition<AgentLateFontState> = {
  async mount({canvas,referenceHost,onStateChange}) {
   if(!canvas.getContext('2d'))throw new Error('Font fixture requires Canvas 2D.');
   const source=import.meta.env.DEV&&import.meta.env.MODE!=='built'?await import('../../../tooling/agent-verification/targeting'):null;
-  const family=`CRCLateFont${++nextFamily}`;const revision=signal(0);
+  const family=`PibblLateFont${++nextFamily}`;const revision=signal(0);
   let face=new FontFace(family,`url("${fontUrl}")`);
   let disposed=false,inFlight:Promise<void>|null=null,cancelWait:(()=>void)|null=null;
   let evaluations=0, evaluated:{width:number;fontSize:number}|null=null,fontLoadedAtEvaluation:boolean|null=null;
-  let controller:ReturnType<typeof crc>|undefined,inspector:ReturnType<NonNullable<typeof source>['createTargetingInspector']>|undefined;
+  let controller:ReturnType<typeof pibbl>|undefined,inspector:ReturnType<NonNullable<typeof source>['createTargetingInspector']>|undefined;
   const originalWidth=canvas.style.width;
   const measureContext=document.createElement('canvas').getContext('2d')!;
   const evidence=document.createElement('pre');evidence.dataset.testid='agent-late-font-evidence';evidence.style.cssText='max-width:100%;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere';referenceHost?.append(evidence);
   let state:AgentLateFontState={status:'pending',action:'mount',revision:0,font:'unloaded',sample:null,before:null,diagnosis:'pending',observationWindow:'two-host-frames-not-future-guarantee'};
-  const publish=()=>{evidence.textContent=JSON.stringify({schema:'crc-late-font-fixture/1',provenance:'source-development-no-build-attestation',state});onStateChange?.(structuredClone(state));};
+  const publish=()=>{evidence.textContent=JSON.stringify({schema:'pibbl-late-font-fixture/1',provenance:'source-development-no-build-attestation',state});onStateChange?.(structuredClone(state));};
   const sample=():Sample=>{
    const generation=inspector?.snapshot().generation;
    measureContext.font=`${evaluated?.fontSize??24}px "${family}", monospace`;
@@ -67,11 +67,11 @@ export const agentLateFontScenario: ScenarioDefinition<AgentLateFontState> = {
     const requested=before.requested!==null&&after.requested!==null&&after.requested>before.requested;
     const diagnosis=after.requested===null?'scheduler-observation-unavailable':action==='load-font'&&!rendered&&!requested?'font-ready-without-render':action==='repaint'&&rendered&&requested?'application-requested-render':(action==='narrow'||action==='wide')&&rendered&&requested?'resize-requested-render':'observed-state';
     state={...state,status:'ready',font:face.status,sample:after,diagnosis};publish();
-   }).catch(error=>{if(!disposed){state={...state,status:'error',font:face.status,sample:null,diagnosis:'observation-failed'};evidence.textContent=JSON.stringify({schema:'crc-late-font-fixture/1',provenance:'source-development-no-build-attestation',state});}throw error;}).finally(()=>{inFlight=null;});
+   }).catch(error=>{if(!disposed){state={...state,status:'error',font:face.status,sample:null,diagnosis:'observation-failed'};evidence.textContent=JSON.stringify({schema:'pibbl-late-font-fixture/1',provenance:'source-development-no-build-attestation',state});}throw error;}).finally(()=>{inFlight=null;});
    inFlight=operation;return operation;
   }
   async function dispose(){if(disposed)return;disposed=true;cancelWait?.();controller?.dispose();inspector?.dispose();document.fonts.delete(face);canvas.style.width=originalWidth;evidence.remove();state={...state,status:'disposed',sample:null,diagnosis:'disposed'};}
-  try{controller=crc(canvas,createElement(AgentLateFontScene,{revision,family,onEvaluation(value:{width:number;fontSize:number}){evaluated=value;evaluations++;fontLoadedAtEvaluation=document.fonts.has(face)&&face.status==='loaded';}}),{viewport:'responsive',pixelRatio:1});inspector=source?.createTargetingInspector(canvas);await perform('reset');}
+  try{controller=pibbl(canvas,createElement(AgentLateFontScene,{revision,family,onEvaluation(value:{width:number;fontSize:number}){evaluated=value;evaluations++;fontLoadedAtEvaluation=document.fonts.has(face)&&face.status==='loaded';}}),{viewport:'responsive',pixelRatio:1});inspector=source?.createTargetingInspector(canvas);await perform('reset');}
   catch(error){await dispose();throw error;}
   return {getState:()=>structuredClone(state),perform,reset:()=>perform('reset'),settled:async()=>{if(disposed)throw new Error('Font fixture disposed.');await inFlight;},dispose};
  },

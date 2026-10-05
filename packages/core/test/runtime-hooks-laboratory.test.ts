@@ -1,11 +1,11 @@
 import type {
   RuntimeHooksState,
   ScenarioController,
-} from '@crc/scenarios';
+} from '@pibbl/scenarios';
 import {
   loadScenario,
   runtimeHooksScenarioEntry,
-} from '@crc/scenarios';
+} from '@pibbl/scenarios';
 import { afterEach, describe, expect, it } from 'vitest';
 import runtimeHooksSource from '../../scenarios/src/runtime-hooks.example.tsx?raw';
 import { loadScenarioSource } from '../../../playground/src/scenario-sources';
@@ -39,7 +39,7 @@ function expectTemporaryRenderStateReleased(): void {
     componentHookIndex: 0,
     componentIsMounting: false,
     componentRefs: undefined,
-    currentCRCInstance: undefined,
+    currentPibblInstance: undefined,
     renderContext: undefined,
     seenIds: undefined,
     seenKeys: undefined,
@@ -272,7 +272,7 @@ describe('shared runtime and hooks laboratory', () => {
       hookCleanups: 0,
       memoCreates: 1,
       misuseErrors: 9,
-      misuseMessage: 'CRC hooks can only be called while rendering a component.',
+      misuseMessage: 'Pibbl hooks can only be called while rendering a component.',
       misuseName: 'Error × 9',
       pathIdentities: [2, 3, 4],
       refIdentity: 1,
@@ -284,13 +284,13 @@ describe('shared runtime and hooks laboratory', () => {
     expect(pixelAt(canvas, 30, 35)).toEqual([37, 99, 235, 255]);
     expect(definition.formatState(controller.getState())).toContainEqual({
       label: 'Misuse errors',
-      value: '9 · Error × 9 · CRC hooks can only be called while rendering a component.',
+      value: '9 · Error × 9 · Pibbl hooks can only be called while rendering a component.',
     });
 
     await controller.perform('increment-state');
     expect(controller.getState()).toMatchObject({
       misuseErrors: 9,
-      misuseMessage: 'CRC hooks can only be called while rendering a component.',
+      misuseMessage: 'Pibbl hooks can only be called while rendering a component.',
       misuseName: 'Error × 9',
       renders: 3,
       stateValue: 1,

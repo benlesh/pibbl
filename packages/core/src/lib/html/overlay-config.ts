@@ -1,8 +1,8 @@
-import type { CRCInstance } from '../types.js';
+import type { PibblInstance } from '../types.js';
 
-const leases = new WeakMap<HTMLElement, CRCInstance>();
+const leases = new WeakMap<HTMLElement, PibblInstance>();
 
-export function reserveHtmlOverlay(instance: CRCInstance, overlay: HTMLElement): void {
+export function reserveHtmlOverlay(instance: PibblInstance, overlay: HTMLElement): void {
   const canvas = instance.eventRoot.canvas;
   if (!canvas || instance.parent) throw new Error('htmlOverlay requires an HTMLCanvasElement root, not a Layer.');
   if (overlay?.nodeType !== 1 || overlay.namespaceURI !== 'http://www.w3.org/1999/xhtml' ||
@@ -10,7 +10,7 @@ export function reserveHtmlOverlay(instance: CRCInstance, overlay: HTMLElement):
       canvas.parentElement !== overlay.parentElement || canvas.nextElementSibling !== overlay) {
     throw new Error('htmlOverlay must be a connected HTML element immediately after the canvas in the same parent and document.');
   }
-  if (leases.has(overlay) || overlay.childNodes.length) throw new Error('htmlOverlay must be empty and exclusively owned by one CRC root.');
+  if (leases.has(overlay) || overlay.childNodes.length) throw new Error('htmlOverlay must be empty and exclusively owned by one Pibbl root.');
   leases.set(overlay, instance);
   instance.eventRoot.htmlOverlay = overlay;
   instance.mainTeardowns.add(() => {

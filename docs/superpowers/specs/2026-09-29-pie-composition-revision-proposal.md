@@ -49,7 +49,7 @@ remain for hardening after feedback. Current public details are in
 
 ## Problem
 
-The first slice proves pure angle calculation and normal CRC composition, but
+The first slice proves pure angle calculation and normal Pibbl composition, but
 requires applications to recreate radial label geometry and placement policy.
 The small-slice example hard-codes a top lane and an 8% cutoff. It does not prove
 usable labels around an arbitrary pie. Generic anchored boxes alone do not know
@@ -65,13 +65,13 @@ Inspection content should remain outside the pie whenever space permits.
    and original datum references. Rename its current unshipped `PieSlice` record
    type to `PieSliceGeometry` to distinguish geometry from the component.
 2. `PieSlice`: one visualization mark consuming one geometry record. Receives
-   radius/center and paint style plus normal CRC event/focus props. Reuses core
+   radius/center and paint style plus normal Pibbl event/focus props. Reuses core
    Wedge for a solid sector. It creates no labels, legend, signals, or scheduler.
    Zero-area slices remain non-targetable. Explicit keys preserve mounted state.
 3. `PieLabels`: a collection-level label layout and renderer. It needs all label
    boxes to prevent collisions; independent `PieLabel` siblings cannot guarantee
    this without hidden registration or a shared parent. Prefer this collective
-   primitive first. Custom render callbacks provide ordinary CRC nodes and must
+   primitive first. Custom render callbacks provide ordinary Pibbl nodes and must
    declare outer sizes; ordinary text labels can use core text measurement.
 
 A standalone `PieLabel` could later be a lightweight renderer of one resolved

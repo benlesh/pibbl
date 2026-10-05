@@ -8,12 +8,12 @@ import { render } from './render.js';
 import { initializeCurrentWorldTransformAnchor } from './render-target.js';
 import {
   Canvas,
-  type CRCNode,
+  type PibblNode,
 } from './types.js';
 import type {
-  CRCBackendFrame,
+  PibblBackendFrame,
 } from './backend/types.js';
-import type { CRCFrameSnapshot } from './scheduler/types.js';
+import type { PibblFrameSnapshot } from './scheduler/types.js';
 import { withSignalWriteForbidden } from './signals/graph.js';
 
 /**
@@ -24,27 +24,27 @@ import { withSignalWriteForbidden } from './signals/graph.js';
 export function executeRender(
   canvas: Canvas,
   renderTimestamp: number,
-  updatedRoot?: CRCNode | typeof NO_PENDING_ROOT,
+  updatedRoot?: PibblNode | typeof NO_PENDING_ROOT,
   _updateParents = false,
-  frameSnapshot?: CRCFrameSnapshot,
+  frameSnapshot?: PibblFrameSnapshot,
 ): void {
   if (!canvas) {
     throw new Error('No canvas element provided');
   }
 
-  const crcInstance = GLOBAL_STATE.crcInstances.get(canvas);
+  const pibblInstance = GLOBAL_STATE.pibblInstances.get(canvas);
 
-  if (!crcInstance) {
-    throw new Error('CRC is not mounted on this element');
+  if (!pibblInstance) {
+    throw new Error('Pibbl is not mounted on this element');
   }
 
-  if (crcInstance.mainTeardowns.closed) return;
+  if (pibblInstance.mainTeardowns.closed) return;
 
-  const inheritedTransaction = crcInstance.eventRoot.renderTransaction;
+  const inheritedTransaction = pibblInstance.eventRoot.renderTransaction;
   const renderTransaction = inheritedTransaction ?? new RootRenderTransaction();
   const ownsRenderTransaction = !inheritedTransaction;
   if (ownsRenderTransaction) {
-    crcInstance.eventRoot.renderTransaction = renderTransaction;
+    pibblInstance.eventRoot.renderTransaction = renderTransaction;
   }
   let transactionFinished = false;
   const finishTransaction = (success: boolean) => {
@@ -53,7 +53,7 @@ export function executeRender(
     (renderTransaction as RootRenderTransaction).finish(success);
   };
 
-  const prevCurrentCRCInstance = GLOBAL_STATE.currentCRCInstance;
+  const prevCurrentPibblInstance = GLOBAL_STATE.currentPibblInstance;
   const prevCanvas = GLOBAL_STATE.canvas;
   const prevRenderContext = GLOBAL_STATE.renderContext;
   const prevRenderTarget = GLOBAL_STATE.renderTarget;
@@ -76,7 +76,7 @@ export function executeRender(
   const prevBackendDriver = GLOBAL_STATE.backendDriver;
   const prevBackendFrame = GLOBAL_STATE.backendFrame;
   const prevBackendEnvironment = GLOBAL_STATE.backendEnvironment;
-  let frame: CRCBackendFrame<unknown> | undefined;
+  let frame: PibblBackendFrame<unknown> | undefined;
   let frameSuccess = false;
   let renderSeenIds: Set<string> | undefined;
   let renderSeenKeys: Set<string> | undefined;
@@ -91,31 +91,31 @@ export function executeRender(
         })
     );
     GLOBAL_STATE.frameSnapshot = activeFrameSnapshot;
-    GLOBAL_STATE.currentCRCInstance = crcInstance;
-    for (const service of crcInstance.optionalServices.values()) service.beginRender?.();
+    GLOBAL_STATE.currentPibblInstance = pibblInstance;
+    for (const service of pibblInstance.optionalServices.values()) service.beginRender?.();
     GLOBAL_STATE.renderTransaction = renderTransaction;
-    GLOBAL_STATE.currentCRCInstance.renderTimestamp = activeFrameSnapshot.logicalTime;
+    GLOBAL_STATE.currentPibblInstance.renderTimestamp = activeFrameSnapshot.logicalTime;
     GLOBAL_STATE.canvas = canvas;
     const rootNode = arguments.length >= 3 && updatedRoot !== NO_PENDING_ROOT ?
       updatedRoot :
-      GLOBAL_STATE.currentCRCInstance.root;
-    GLOBAL_STATE.currentCRCInstance.root = rootNode;
-    const driver = crcInstance.backendDriver;
+      GLOBAL_STATE.currentPibblInstance.root;
+    GLOBAL_STATE.currentPibblInstance.root = rootNode;
+    const driver = pibblInstance.backendDriver;
     GLOBAL_STATE.backendDriver = driver;
     frame = driver.beginFrame({
       canvas,
-      logicalWidth: crcInstance.rootLayoutBox.width,
-      logicalHeight: crcInstance.rootLayoutBox.height,
+      logicalWidth: pibblInstance.rootLayoutBox.width,
+      logicalHeight: pibblInstance.rootLayoutBox.height,
       backingWidth: canvas.width,
       backingHeight: canvas.height,
       renderTimestamp: activeFrameSnapshot.logicalTime,
     });
     if (!frame) {
-      crcInstance.eventRoot.html?.suspend(crcInstance);
+      pibblInstance.eventRoot.html?.suspend(pibblInstance);
       finishTransaction(true);
       return;
     }
-    crcInstance.eventRoot.html?.beginRender(crcInstance);
+    pibblInstance.eventRoot.html?.beginRender(pibblInstance);
     GLOBAL_STATE.backendFrame = frame;
     GLOBAL_STATE.backendEnvironment = frame.environment;
     GLOBAL_STATE.renderContext = frame.context2D;
@@ -133,15 +133,15 @@ export function executeRender(
       initializeCurrentWorldTransformAnchor(frame.worldBaseTransform);
     }
     GLOBAL_STATE.clippingStack = [];
-    const surface = crcInstance.surface.snapshot;
-    const logicalWidth = surface?.logicalWidth ?? crcInstance.rootLayoutBox.width;
-    const logicalHeight = surface?.logicalHeight ?? crcInstance.rootLayoutBox.height;
-    const previousRootBox = crcInstance.rootLayoutBox;
+    const surface = pibblInstance.surface.snapshot;
+    const logicalWidth = surface?.logicalWidth ?? pibblInstance.rootLayoutBox.width;
+    const logicalHeight = surface?.logicalHeight ?? pibblInstance.rootLayoutBox.height;
+    const previousRootBox = pibblInstance.rootLayoutBox;
     if (
       previousRootBox.width !== logicalWidth ||
       previousRootBox.height !== logicalHeight
     ) {
-      crcInstance.rootLayoutBox = Object.freeze({
+      pibblInstance.rootLayoutBox = Object.freeze({
         x: 0,
         y: 0,
         width: logicalWidth,
@@ -149,13 +149,13 @@ export function executeRender(
       });
     }
     GLOBAL_STATE.layoutStack = [{
-      allocation: crcInstance.rootLayoutBox,
-      percentageBasis: crcInstance.rootLayoutBox,
+      allocation: pibblInstance.rootLayoutBox,
+      percentageBasis: pibblInstance.rootLayoutBox,
     }];
 
-    const renderGeneration = ++crcInstance.renderGeneration;
-    renderSeenIds = crcInstance.renderSeenIds;
-    renderSeenKeys = crcInstance.renderSeenKeys;
+    const renderGeneration = ++pibblInstance.renderGeneration;
+    renderSeenIds = pibblInstance.renderSeenIds;
+    renderSeenKeys = pibblInstance.renderSeenKeys;
     renderSeenIds.clear();
     renderSeenKeys.clear();
     GLOBAL_STATE.seenIds = renderSeenIds;
@@ -163,31 +163,31 @@ export function executeRender(
     const id = 'root';
     renderSeenIds.add(id);
     withSignalWriteForbidden(
-      'CRC render',
+      'Pibbl render',
       () => render(rootNode, id, undefined),
     );
 
-    for (const [id, componentRefs] of crcInstance.refs) {
+    for (const [id, componentRefs] of pibblInstance.refs) {
       if (componentRefs.renderGeneration === renderGeneration) continue;
       componentRefs.teardowns.execute();
-      crcInstance.refs.delete(id);
+      pibblInstance.refs.delete(id);
     }
     frameSuccess = true;
-    for (const service of crcInstance.optionalServices.values()) service.endRender?.(true);
+    for (const service of pibblInstance.optionalServices.values()) service.endRender?.(true);
     driver.finishFrame(frame, true);
     finishTransaction(true);
   } catch (error) {
-    for (const service of crcInstance.optionalServices.values()) service.endRender?.(false);
+    for (const service of pibblInstance.optionalServices.values()) service.endRender?.(false);
     finishTransaction(false);
-    for (const refs of crcInstance.refs.values()) {
+    for (const refs of pibblInstance.refs.values()) {
       refs.teardowns.execute();
     }
-    crcInstance.refs.clear();
+    pibblInstance.refs.clear();
     throw error;
   } finally {
     try {
       if (frame && !frameSuccess) {
-        crcInstance.backendDriver.finishFrame(frame, false);
+        pibblInstance.backendDriver.finishFrame(frame, false);
       }
     } finally {
       try {
@@ -198,15 +198,15 @@ export function executeRender(
           try {
             finishTransaction(false);
           } finally {
-            if (crcInstance.eventRoot.renderTransaction === renderTransaction) {
-              crcInstance.eventRoot.renderTransaction = undefined;
+            if (pibblInstance.eventRoot.renderTransaction === renderTransaction) {
+              pibblInstance.eventRoot.renderTransaction = undefined;
             }
           }
         }
       } finally {
         renderSeenIds?.clear();
         renderSeenKeys?.clear();
-        GLOBAL_STATE.currentCRCInstance = prevCurrentCRCInstance;
+        GLOBAL_STATE.currentPibblInstance = prevCurrentPibblInstance;
         GLOBAL_STATE.canvas = prevCanvas;
         GLOBAL_STATE.renderContext = prevRenderContext;
         GLOBAL_STATE.renderTarget = prevRenderTarget;

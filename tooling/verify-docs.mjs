@@ -177,7 +177,7 @@ const publicSiteMarkdownPaths = [
   "docs/site/api/components/vertical-line.md",
   "docs/site/api/components/wedge.md",
   "docs/site/api/functions/batch.md",
-  "docs/site/api/functions/crc.md",
+  "docs/site/api/functions/pibbl.md",
   "docs/site/api/functions/computed.md",
   "docs/site/api/functions/create-arc-path.md",
   "docs/site/api/functions/create-circle-path.md",
@@ -279,6 +279,7 @@ const currentMarkdownPaths = [
   "AGENTS.md",
   "README.md",
   "packages/core/README.md",
+  "packages/pibbl/README.md",
   "packages/core/src/features/viz/README.md",
   "packages/core/src/features/particles/README.md",
   "packages/core/src/features/physics/README.md",
@@ -338,6 +339,7 @@ const operationalMarkdownPaths = new Set([
   ...trackedRepositoryFiles([
     "docs/website-rebuild/*.md",
     "games/kube-inferno/*.md",
+    "games/brick-climb/assets/*.md",
   ]),
   "tooling/fancy-transition-wasm/README.md",
   "tooling/transition-wasm-spike/README.md",
@@ -781,7 +783,7 @@ function extractApiSnippets(sources) {
         id,
         path,
         language: fences.some((match) => match[1] === "tsx") ? "tsx" : "ts",
-        source: appendCrcComponentChecks(
+        source: appendPibblComponentChecks(
           fences.map((match) => match[2]).join("\n"),
         ),
       });
@@ -791,7 +793,7 @@ function extractApiSnippets(sources) {
   return snippets;
 }
 
-function appendCrcComponentChecks(source) {
+function appendPibblComponentChecks(source) {
   const componentNames = new Set(
     [
       ...source.matchAll(
@@ -804,7 +806,7 @@ function appendCrcComponentChecks(source) {
     .sort()
     .map(
       (name) =>
-        `const __crcComponentCheck_${name}: import("@crc/core").CRCComponent<any> = ${name};`,
+        `const __pibblComponentCheck_${name}: import("@pibbl/core").PibblComponent<any> = ${name};`,
     )
     .join("\n")}\n`;
 }
@@ -863,7 +865,7 @@ async function typecheckCompleteSnippets(snippets) {
   const typeScriptSnippets = [...snippets.values()].filter((snippet) =>
     /^(?:ts|tsx)$/u.test(snippet.language),
   );
-  const temporaryDirectory = await mkdtemp(join(tmpdir(), "crc-docs-check-"));
+  const temporaryDirectory = await mkdtemp(join(tmpdir(), "pibbl-docs-check-"));
   try {
     const files = [];
     for (const snippet of typeScriptSnippets) {
@@ -882,7 +884,7 @@ async function typecheckCompleteSnippets(snippets) {
           compilerOptions: {
             allowImportingTsExtensions: true,
             jsx: "react-jsx",
-            jsxImportSource: "@crc/core",
+            jsxImportSource: "@pibbl/core",
             lib: ["ESNext", "DOM"],
             module: "ESNext",
             moduleDetection: "force",
@@ -933,7 +935,7 @@ function importedPublicNames(source, filename) {
   for (const statement of parseModule(source, filename).program.body) {
     if (
       statement.type !== "ImportDeclaration" ||
-      statement.source.value !== "@crc/core"
+      statement.source.value !== "@pibbl/core"
     ) {
       continue;
     }
@@ -965,7 +967,7 @@ export function assertNonJsxCoverage(source) {
     ["focus management policy", /createElement\(\s*FocusManagement,/u],
     ["keyboard navigation policy", /createElement\(\s*KeyboardNavigation,/u],
     ["hook lifecycle", /useSignal\(/u],
-    ["root mounting", /\bcrc\(canvas,/u],
+    ["root mounting", /\bpibbl\(canvas,/u],
     ["mount disposal", /controller\.dispose\(\)/u],
   ]);
   for (const [label, pattern] of requirements) {
@@ -1137,7 +1139,7 @@ function assertNonJsxEvidence(source) {
     if (node.type === "JSXElement" || node.type === "JSXFragment")
       hasJsx = true;
     if (callName(node) === "useReaction") hasLifecycle = true;
-    if (callName(node) === "crc") hasMount = true;
+    if (callName(node) === "pibbl") hasMount = true;
     if (
       node.type === "CallExpression" &&
       memberName(node.callee) === "map" &&
@@ -1357,7 +1359,7 @@ function babelOptionsFromGuide(source) {
     "Babel configuration must name @babel/plugin-transform-react-jsx",
   );
   assert.equal(entry[1]?.runtime, "automatic");
-  assert.equal(entry[1]?.importSource, "@crc/core");
+  assert.equal(entry[1]?.importSource, "@pibbl/core");
   return entry[1];
 }
 
@@ -1374,26 +1376,26 @@ export async function assertAutomaticRuntimeTransforms(source, babelOptions) {
   );
   assert.match(
     babelResult.code,
-    /from "@crc\/core\/jsx-runtime"/u,
-    "Babel did not select the documented CRC automatic runtime",
+    /from "@pibbl\/core\/jsx-runtime"/u,
+    "Babel did not select the documented Pibbl automatic runtime",
   );
   assert.doesNotMatch(
     babelResult.code,
     /react(?:\/jsx-runtime)?/u,
-    "Babel emitted a React dependency for CRC JSX",
+    "Babel emitted a React dependency for Pibbl JSX",
   );
 
   const esbuildResult = await transform(source, {
     format: "esm",
     jsx: "automatic",
-    jsxImportSource: "@crc/core",
+    jsxImportSource: "@pibbl/core",
     loader: "jsx",
     sourcefile: "documented-runtime.jsx",
   });
   assert.match(
     esbuildResult.code,
-    /from "@crc\/core\/jsx-runtime"/u,
-    "esbuild did not select the documented CRC automatic runtime",
+    /from "@pibbl\/core\/jsx-runtime"/u,
+    "esbuild did not select the documented Pibbl automatic runtime",
   );
 }
 
@@ -1548,7 +1550,7 @@ export function assertCurrentVocabulary(path, source) {
   if (path.startsWith("docs/site/") && path !== "docs/site/learn/guides/package-migration.md") {
     assert.doesNotMatch(
       source,
-      /@crc\/(?:viz|particles|physics|textures|types|webgl)(?=[/`'"\s.,;:)]|$)/u,
+      /@pibbl\/(?:viz|particles|physics|textures|types|webgl)(?=[/`'"\s.,;:)]|$)/u,
       `${path} recommends a retired package; use current package entries`,
     );
   }
@@ -1583,8 +1585,8 @@ for (const path of currentMarkdownPaths) {
   );
   assert.doesNotMatch(
     source,
-    /CRC(?:'s)? mouse-only contract/giu,
-    `${path} claims CRC has only a mouse contract`,
+    /Pibbl(?:'s)? mouse-only contract/giu,
+    `${path} claims Pibbl has only a mouse contract`,
   );
 }
 for (const path of presentationSourcePaths) {
@@ -1692,22 +1694,22 @@ assertSameNames(
 assertSameNames(
   [...documentedApiSymbols].filter((name) => threeExports.values.has(name)),
   threeExports.values,
-  "Documented @crc/three runtime values",
+  "Documented @pibbl/three runtime values",
 );
 assertSameNames(
   [...documentedApiSymbols].filter((name) => threeExports.types.has(name)),
   threeExports.types,
-  "Documented @crc/three types",
+  "Documented @pibbl/three types",
 );
 assertSameNames(
   [...documentedApiSymbols].filter((name) => particleExports.values.has(name)),
   particleExports.values,
-  "Documented @crc/core/particles runtime values",
+  "Documented @pibbl/core/particles runtime values",
 );
 assertSameNames(
   [...documentedApiSymbols].filter((name) => particleExports.types.has(name)),
   particleExports.types,
-  "Documented @crc/core/particles types",
+  "Documented @pibbl/core/particles types",
 );
 const vizSource = await readFile(
   join(repositoryRoot, "packages/core/src/features/viz/index.ts"),
@@ -1721,7 +1723,7 @@ for (const kind of ["values", "types"])
   assertSameNames(
     [...documentedApiSymbols].filter((name) => vizExports[kind].has(name)),
     vizExports[kind],
-    `Documented @crc/core/viz ${kind}`,
+    `Documented @pibbl/core/viz ${kind}`,
   );
 const filterSource = await readFile(
   join(repositoryRoot, "packages/core/src/filters.ts"),
@@ -1735,7 +1737,7 @@ for (const kind of ["values", "types"])
   assertSameNames(
     [...documentedApiSymbols].filter((name) => filterExports[kind].has(name)),
     filterExports[kind],
-    `Documented @crc/core/filters ${kind}`,
+    `Documented @pibbl/core/filters ${kind}`,
   );
 const textureSource = await readFile(
   join(repositoryRoot, "packages/core/src/features/textures/index.ts"),
@@ -1749,7 +1751,7 @@ for (const kind of ["values", "types"])
   assertSameNames(
     [...documentedApiSymbols].filter((name) => textureExports[kind].has(name)),
     textureExports[kind],
-    `Documented @crc/core/textures ${kind}`,
+    `Documented @pibbl/core/textures ${kind}`,
   );
 const namespaceMembers = jsxNamespaceMembers(
   runtimeSource,
@@ -1778,7 +1780,7 @@ for (const entry of [
 ]) {
   assert.ok(
     coreManifest.exports[entry],
-    `@crc/core package exports is missing ${entry}`,
+    `@pibbl/core package exports is missing ${entry}`,
   );
 }
 for (const dependencies of [
@@ -1786,7 +1788,7 @@ for (const dependencies of [
   coreManifest.devDependencies,
   coreManifest.peerDependencies,
 ]) {
-  assert.ok(!dependencies?.react, "@crc/core must not depend on React.");
+  assert.ok(!dependencies?.react, "@pibbl/core must not depend on React.");
 }
 assert.match(coreManifest.description, /JSX.*createElement/u);
 const threeManifest = JSON.parse(
@@ -1795,17 +1797,17 @@ const threeManifest = JSON.parse(
 assert.deepEqual(
   Object.keys(threeManifest.exports),
   [".", "./package.json"],
-  "@crc/three must expose only its adapter root and manifest entries.",
+  "@pibbl/three must expose only its adapter root and manifest entries.",
 );
 assert.deepEqual(
   threeManifest.peerDependencies,
-  { "@crc/core": "0.0.1", three: "^0.186.0" },
-  "@crc/three must peer on the matching @crc/core release and application's Three.js.",
+  { "@pibbl/core": "0.0.1", three: "^0.186.0" },
+  "@pibbl/three must peer on the matching @pibbl/core release and application's Three.js.",
 );
 assert.equal(
   threeManifest.dependencies,
   undefined,
-  "@crc/three must not ship a second renderer dependency graph.",
+  "@pibbl/three must not ship a second renderer dependency graph.",
 );
 assert.equal(threeManifest.sideEffects, false);
 for (const dependencies of [
@@ -1813,10 +1815,10 @@ for (const dependencies of [
   threeManifest.devDependencies,
   threeManifest.peerDependencies,
 ]) {
-  assert.ok(!dependencies?.react, "@crc/three must not depend on React.");
+  assert.ok(!dependencies?.react, "@pibbl/three must not depend on React.");
   assert.ok(
-    !dependencies?.["@crc/types"],
-    "@crc/three must not depend on @crc/types.",
+    !dependencies?.["@pibbl/types"],
+    "@pibbl/three must not depend on @pibbl/types.",
   );
 }
 for (const entry of [
@@ -1885,7 +1887,7 @@ assert.equal(
 );
 assert.equal(
   rootManifest.scripts["test:studio-docs:production-boundary"],
-  "VITE_CRC_STUDIO_ACCEPTANCE_SEARCH_FAIL_ONCE=1 corepack pnpm@11.21.0 playground:build && node tooling/verify-studio-production-output.mjs",
+  "VITE_PIBBL_STUDIO_ACCEPTANCE_SEARCH_FAIL_ONCE=1 corepack pnpm@11.21.0 playground:build && node tooling/verify-studio-production-output.mjs",
   "The production boundary regression must build ordinary output with a hostile stale VITE value.",
 );
 assert.match(
@@ -1929,7 +1931,7 @@ assert.match(
 );
 assert.doesNotMatch(
   studioDocsRunner,
-  /VITE_CRC_STUDIO_ACCEPTANCE_SEARCH_FAIL_ONCE/u,
+  /VITE_PIBBL_STUDIO_ACCEPTANCE_SEARCH_FAIL_ONCE/u,
   "Studio acceptance must derive retry behavior from its build mode, not an ambient VITE value.",
 );
 const studioMain = await readFile(
@@ -1938,17 +1940,17 @@ const studioMain = await readFile(
 );
 assert.match(
   studioMain,
-  /__CRC_STUDIO_DOCS_ACCEPTANCE__/u,
+  /__PIBBL_STUDIO_DOCS_ACCEPTANCE__/u,
   "Studio retry composition must use the private mode-defined constant.",
 );
 assert.doesNotMatch(
   studioMain,
-  /import\.meta\.env\.(?!VITE_CRC_WEBSITE_URL\b)|VITE_CRC_STUDIO_ACCEPTANCE_SEARCH_FAIL_ONCE/u,
+  /import\.meta\.env\.(?!VITE_PIBBL_WEBSITE_URL\b)|VITE_PIBBL_STUDIO_ACCEPTANCE_SEARCH_FAIL_ONCE/u,
   "Studio retry composition must not read ambient VITE values; the website destination is configurable.",
 );
 assert.match(
   studioMain,
-  /import\.meta\.env\.VITE_CRC_WEBSITE_URL/u,
+  /import\.meta\.env\.VITE_PIBBL_WEBSITE_URL/u,
   "Studio documentation redirects must have an explicit website URL setting.",
 );
 const studioViteConfig = await readFile(
@@ -1957,7 +1959,7 @@ const studioViteConfig = await readFile(
 );
 assert.match(
   studioViteConfig,
-  /define:[\s\S]*__CRC_STUDIO_DOCS_ACCEPTANCE__/u,
+  /define:[\s\S]*__PIBBL_STUDIO_DOCS_ACCEPTANCE__/u,
   "Vite must define the private retry flag from studio-docs-acceptance mode.",
 );
 const productionOutputVerifier = await readFile(
@@ -1965,7 +1967,7 @@ const productionOutputVerifier = await readFile(
   "utf8",
 );
 for (const marker of [
-  "crcStudioSearchRetry",
+  "pibblStudioSearchRetry",
   "Intentional verifier search loader failure.",
   "createAcceptanceSearchLoaderOptions",
 ]) {
@@ -1995,13 +1997,13 @@ const configuring = currentSources.get(
   "docs/site/learn/guides/configure-jsx.md",
 );
 for (const marker of [
-  "@crc/core/jsx-runtime",
-  "@crc/core/jsx-dev-runtime",
+  "@pibbl/core/jsx-runtime",
+  "@pibbl/core/jsx-dev-runtime",
   "## Vite and esbuild",
   "--jsx=automatic",
   "## Babel automatic runtime",
   'runtime: "automatic"',
-  'importSource: "@crc/core"',
+  'importSource: "@pibbl/core"',
   "## JavaScript",
   "## One runtime per file",
 ]) {
@@ -2040,7 +2042,7 @@ const requiredGuideMarkers = new Map([
   ],
   [
     "docs/site/learn/guides/react-integration.md",
-    ["one JSX runtime", "createCRCElement", "expression-level pragma"],
+    ["one JSX runtime", "createPibblElement", "expression-level pragma"],
   ],
   [
     "docs/site/learn/guides/signals-and-animation.md",
@@ -2048,7 +2050,7 @@ const requiredGuideMarkers = new Map([
       "## Pass signals to their receivers",
       "## Event-triggered playback",
       "## One frame transaction",
-      "CRC never automatically promotes components",
+      "Pibbl never automatically promotes components",
     ],
   ],
   [
@@ -2094,9 +2096,9 @@ const contractPrecisionRequirements = new Map([
       "a dirty external render layer updates, renders, and settles interaction before ancestor Canvas composition",
       "Finalize successful transactions, release ended runs/leases",
       "accept them\ndirectly at declared inputs",
-      "CRC never automatically promotes\na stable component",
-      "External render layers and the official `@crc/three` adapter use this same",
-      "CRC exposes no public scheduler clock, frame-step API,\ntrace history",
+      "Pibbl never automatically promotes\na stable component",
+      "External render layers and the official `@pibbl/three` adapter use this same",
+      "Pibbl exposes no public scheduler clock, frame-step API,\ntrace history",
       "Worker or WASM number crunching may use packed buffers only if Begin",
     ],
   ],
@@ -2121,7 +2123,7 @@ const contractPrecisionRequirements = new Map([
       "Each frame has six ordered active phases",
       "Managed Layers are scheduler\ninstances, never separately registered top-level roots",
       "Errors are collected and thrown singly or as an aggregate only after Complete",
-      "The friend entry is not a stable third-party API, is not re-exported by\n`@crc/core`, and is intentionally absent from the ordinary Studio declaration\nand runtime surface",
+      "The friend entry is not a stable third-party API, is not re-exported by\n`@pibbl/core`, and is intentionally absent from the ordinary Studio declaration\nand runtime surface",
       "| Signal-to-component edge",
       "| Computed-to-source edge",
       "Exact component consumer",
@@ -2162,7 +2164,7 @@ const contractPrecisionRequirements = new Map([
       "callers may ignore it",
       "measurement is nested during\nan active render",
       "consuming or reordering the parent component's hook slots",
-      '`<Receiver> received duplicate CRC key "<key>" as a CRC child.`',
+      '`<Receiver> received duplicate Pibbl key "<key>" as a Pibbl child.`',
     ],
   ],
   [
@@ -2590,12 +2592,12 @@ for (const path of requestedContractEvidencePaths) {
   );
 }
 
-const provenanceRequirement = process.env.CRC_VERIFY_CONTRACT_PROVENANCE;
+const provenanceRequirement = process.env.PIBBL_VERIFY_CONTRACT_PROVENANCE;
 assert.ok(
   provenanceRequirement === undefined ||
     provenanceRequirement === "0" ||
     provenanceRequirement === "1",
-  "CRC_VERIFY_CONTRACT_PROVENANCE must be 0, 1, or unset.",
+  "PIBBL_VERIFY_CONTRACT_PROVENANCE must be 0, 1, or unset.",
 );
 const baselineObject = spawnSync(
   "git",
@@ -2611,7 +2613,7 @@ if (
   assert.fail(
     `Contract provenance was required, but Git commit ${CONTRACT_BASELINE_COMMIT} ` +
       "is unavailable. Fetch full history (for example, checkout with fetch-depth: 0) " +
-      "or run without CRC_VERIFY_CONTRACT_PROVENANCE=1 to validate the embedded, " +
+      "or run without PIBBL_VERIFY_CONTRACT_PROVENANCE=1 to validate the embedded, " +
       "digest-locked semantic baseline.",
   );
 }
@@ -2649,7 +2651,7 @@ const contractPreservationResult = auditHistoricalPreservation
   : undefined;
 
 const readme = currentSources.get("README.md");
-const advancedStart = readme.indexOf("## Learn CRC");
+const advancedStart = readme.indexOf("## Learn Pibbl");
 assert.ok(readme.indexOf("## Quick start") >= 0, "README needs a quick start.");
 assert.ok(
   advancedStart > readme.indexOf("## Quick start"),
@@ -2659,7 +2661,7 @@ export function assertFixedConfigSignal(source) {
   assert.match(
     source,
     /fixed logical viewport with optional `fit`,\s*`pixelRatio`, and `signal`/u,
-    "Canvas/runtime types must document signal for fixed CRCConfig as well as responsive CRCConfig",
+    "Canvas/runtime types must document signal for fixed PibblConfig as well as responsive PibblConfig",
   );
 }
 assertFixedConfigSignal(canvasRuntimeTypes);
@@ -3069,21 +3071,21 @@ export async function verifyMutationProbes() {
       ),
     "Numeric intervals must not be mistaken for Markdown links",
   );
-  const crcPathApiPath = "docs/site/api/hooks/use-rect-path.md";
-  const brokenCrcPathSources = new Map(currentSources);
-  const crcPathSource = currentSources.get(crcPathApiPath);
-  const brokenCrcPathSource = crcPathSource.replace(
+  const pibblPathApiPath = "docs/site/api/hooks/use-rect-path.md";
+  const brokenPibblPathSources = new Map(currentSources);
+  const pibblPathSource = currentSources.get(pibblPathApiPath);
+  const brokenPibblPathSource = pibblPathSource.replace(
     'return <Path style={{ d: path, fill: "#2563eb" }} />;',
     "return path;",
   );
   assert.notEqual(
-    brokenCrcPathSource,
-    crcPathSource,
+    brokenPibblPathSource,
+    pibblPathSource,
     "useRectPath component-return mutation fixture did not change",
   );
-  brokenCrcPathSources.set(crcPathApiPath, brokenCrcPathSource);
+  brokenPibblPathSources.set(pibblPathApiPath, brokenPibblPathSource);
   await rejects(
-    () => typecheckCompleteSnippets(extractApiSnippets(brokenCrcPathSources)),
+    () => typecheckCompleteSnippets(extractApiSnippets(brokenPibblPathSources)),
     /failed typecheck/u,
   );
   if (auditHistoricalPreservation) {
@@ -3349,7 +3351,7 @@ export async function verifyMutationProbes() {
     weakenedPublicPackageAnchors.translations.find(
       ({ id }) =>
         id === "design-runtime-hooks-contract-md-public-package-boundary",
-    ).sharedAnchors = ["package", "crc"];
+    ).sharedAnchors = ["package", "pibbl"];
     throws(
       () => assertMixedLegacyTask9Preservation(weakenedPublicPackageAnchors),
       /must retain its distinctive relevance anchors/u,
@@ -3529,7 +3531,7 @@ export async function verifyMutationProbes() {
           "`fit` and `pixelRatio`",
         ),
       ),
-    /fixed CRCConfig/u,
+    /fixed PibblConfig/u,
   );
 
   throws(
@@ -4101,7 +4103,7 @@ export async function verifyMutationProbes() {
     ["lifecycle", nonJsx.replace("useSignal(", "missingSignal(")],
     [
       "mount",
-      nonJsx.replace("return crc(canvas,", "return missingMount(canvas,"),
+      nonJsx.replace("return pibbl(canvas,", "return missingMount(canvas,"),
     ],
     [
       "disposal",
@@ -4125,7 +4127,7 @@ export async function verifyMutationProbes() {
         language: "tsx",
         path: "mutation probe",
         source:
-          'import { Rectangle } from "@crc/core";\nconst broken = <MissingIdentifier />;\nvoid Rectangle;\nvoid broken;',
+          'import { Rectangle } from "@pibbl/core";\nconst broken = <MissingIdentifier />;\nvoid Rectangle;\nvoid broken;',
       },
     ],
   ]);
@@ -4137,7 +4139,7 @@ export async function verifyMutationProbes() {
     () =>
       assertAutomaticRuntimeTransforms(
         javascriptSnippet.source.replace(
-          "/** @jsxImportSource @crc/core */",
+          "/** @jsxImportSource @pibbl/core */",
           "",
         ),
         {

@@ -1,11 +1,11 @@
-import type { CRCManipulationGeometry } from './controller-types.js';
+import type { PibblManipulationGeometry } from './controller-types.js';
 /**
  * Convert a finite degree angle to radians.
  *
  * @param value - Angle in degrees.
  * @returns The equivalent angle in radians.
  *
- * @see {@link CRCManipulationGeometry}
+ * @see {@link PibblManipulationGeometry}
  */
 export function degrees(value: number): number {
   if (!Number.isFinite(value))

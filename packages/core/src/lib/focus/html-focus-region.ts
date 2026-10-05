@@ -1,5 +1,5 @@
 import type { LayoutBox } from "../layout/types.js";
-import type { CRCInstance } from "../types.js";
+import type { PibblInstance } from "../types.js";
 
 /**
  * The focus-facing part of one published HtmlBox.  The HTML service owns the
@@ -12,8 +12,8 @@ import type { CRCInstance } from "../types.js";
 export interface HtmlFocusRegion {
   /** Stable component-owned identity, including across projection updates. */
   readonly identity: object;
-  readonly owner: CRCInstance;
-  /** The CRC-owned content DIV, assigned before a successful transaction finishes. */
+  readonly owner: PibblInstance;
+  /** The Pibbl-owned content DIV, assigned before a successful transaction finishes. */
   readonly content: HTMLElement | undefined;
   /** Root-logical border-box used for directional scoring. */
   readonly rootBounds: Readonly<LayoutBox> | undefined;

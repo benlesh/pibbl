@@ -6,24 +6,15 @@ import {
   Rectangle,
   Text,
   batch,
-  crc,
+  pibbl,
   useLayoutBox,
   useSignal,
-  type CRCController,
+  type PibblController,
   type BoxStyle,
   type LayoutItemStyle,
   type WritableSignal,
-} from "@crc/core";
-import {
-  Axis,
-  HoverData,
-  HoverCard,
-  PointSeries,
-  PlotSeries,
-  Scale,
-  nearestPoint,
-  useScale,
-} from "@crc/core/viz";
+} from "@pibbl/core";
+import { Axis, HoverData, HoverCard, PointSeries, PlotSeries, nearestPoint, useLinearScale, LinearScale } from "@pibbl/core/viz";
 
 type Row = {
   id: string;
@@ -496,8 +487,8 @@ function Plot({
   index: number;
   origin: { x: number; y: number };
 }) {
-  const xs = useScale("x").get(),
-    ys = useScale("y").get();
+  const xs = useLinearScale("x").get(),
+    ys = useLinearScale("y").get();
   const data = controls.rows.get();
   const selected = controls.selected.get();
   const anchors = data
@@ -676,16 +667,16 @@ function Panel({
         Body mass (g)
       </Text>
       <Absolute>
-        <Scale
+        <LinearScale
           id="x"
-          type="linear"
+
           domain={controls.fixture.xDomain ?? [170, 240]}
           range="width"
           style={{ left: 44, top: 64, width, height }}
         >
-          <Scale
+          <LinearScale
             id="y"
-            type="linear"
+
             domain={controls.fixture.yDomain ?? [2500, 6500]}
             range="height"
             reverse
@@ -695,8 +686,8 @@ function Panel({
               index={index}
               origin={{ x: origin.x + 44, y: origin.y + 64 }}
             />
-          </Scale>
-        </Scale>
+          </LinearScale>
+        </LinearScale>
       </Absolute>
     </Group>
   );
@@ -891,7 +882,7 @@ function Scene({ fixture }: { fixture: Fixture }) {
 export default function mount(
   canvas: HTMLCanvasElement,
   fixture: Fixture = {},
-): CRCController {
+): PibblController {
   const previousMinHeight = canvas.style.minHeight;
   const previousTouchAction = canvas.style.touchAction;
   canvas.style.minHeight = "720px";
@@ -902,7 +893,7 @@ export default function mount(
   const previousOverflow = host?.style.overflow;
   if (host) host.style.overflow = "auto";
   try {
-    const controller = crc(canvas, <Scene fixture={fixture} />, {
+    const controller = pibbl(canvas, <Scene fixture={fixture} />, {
       viewport: "responsive",
     });
     return {

@@ -16,7 +16,7 @@ Looking for ways to edit, bend, or warp a path? See
 for the complete operation map, detailed references, and runnable examples.
 
 ```ts
-import { Path } from "@crc/core";
+import { Path } from "@pibbl/core";
 ```
 
 `Path` uses [`PathProps`](#/api/types/elements-components#pathprops) and [`PathStyle`](#/api/types/styles#pathstyle). Its required `d` is a `Path2D` or `PathGeometry`; it

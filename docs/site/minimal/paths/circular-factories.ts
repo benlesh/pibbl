@@ -7,7 +7,7 @@ import {
   type CirclePathOptions,
   type EllipsePathOptions,
   type WedgePathOptions,
-} from "@crc/core";
+} from "@pibbl/core";
 
 const circleOptions: CirclePathOptions = { cx: 70, cy: 70, radius: 32 };
 const ellipseOptions: EllipsePathOptions = {

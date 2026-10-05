@@ -2,24 +2,24 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { auditCorePeerPins, readCorePeerAudit } from './core-peer-compatibility.mjs';
 
-const core = { name: '@crc/core', version: '0.0.1' };
-const peer = { name: '@crc/three', version: '0.0.1', peerDependencies: { '@crc/core': '0.0.1' } };
+const core = { name: '@pibbl/core', version: '0.0.1' };
+const peer = { name: '@pibbl/three', version: '0.0.1', peerDependencies: { '@pibbl/core': '0.0.1' } };
 test('checks declared core peer pins without confusing package versions with peer compatibility', () => {
   assert.equal(auditCorePeerPins(core, [peer]).status, 'compatible');
   const mismatch = auditCorePeerPins({ ...core, version: '0.0.2' }, [peer]);
   assert.equal(mismatch.status, 'incompatible');
-  assert.deepEqual(mismatch.packages[0], { name: '@crc/three', version: '0.0.1', requiredCore: '0.0.1', observedCore: '0.0.2', status: 'incompatible' });
+  assert.deepEqual(mismatch.packages[0], { name: '@pibbl/three', version: '0.0.1', requiredCore: '0.0.1', observedCore: '0.0.2', status: 'incompatible' });
   assert.equal(auditCorePeerPins(core, [{ ...peer, version: '99.0.0' }]).status, 'compatible');
 });
 
 test('does not infer compatibility from unsupported ranges, missing declarations or duplicate manifests', () => {
   for (const requirement of ['^0.0.1', 'workspace:*', '*', undefined]) {
-    const result = auditCorePeerPins(core, [{ ...peer, peerDependencies: { '@crc/core': requirement } }]);
+    const result = auditCorePeerPins(core, [{ ...peer, peerDependencies: { '@pibbl/core': requirement } }]);
     assert.equal(result.status, 'unavailable');
   }
   assert.throws(() => auditCorePeerPins(core, [peer, peer]), /duplicate/i);
   assert.throws(() => auditCorePeerPins(core, []), /1 through 32/);
-  assert.throws(() => auditCorePeerPins({ name: '@crc/not-core', version: '0.0.1' }, [peer]), /core manifest/);
+  assert.throws(() => auditCorePeerPins({ name: '@pibbl/not-core', version: '0.0.1' }, [peer]), /core manifest/);
 });
 
 test('audits current official manifests with provenance and explicitly limited scope', async () => {
@@ -39,19 +39,19 @@ test('CLI retains incompatible peer evidence and exits nonzero for a mismatched 
   const { join, resolve } = await import('node:path');
   const { execFile } = await import('node:child_process');
   const { promisify } = await import('node:util');
-  const root = await mkdtemp(join(tmpdir(), 'crc-peer-audit-'));
+  const root = await mkdtemp(join(tmpdir(), 'pibbl-peer-audit-'));
   try {
     for (const name of ['core', 'three', 'text']) {
       const directory = join(root, 'packages', name); await mkdir(directory, { recursive: true });
       await writeFile(join(directory, 'package.json'), JSON.stringify(name === 'core' ? core : {
-        name: `@crc/${name}`, version: '0.0.1', peerDependencies: { '@crc/core': name === 'three' ? '0.0.2' : '0.0.1' },
+        name: `@pibbl/${name}`, version: '0.0.1', peerDependencies: { '@pibbl/core': name === 'three' ? '0.0.2' : '0.0.1' },
       }));
     }
     await assert.rejects(promisify(execFile)(process.execPath, [resolve('tooling/agent-verification/core-peer-compatibility.mjs'), root]), error => {
       assert.equal(error.code, 1);
       const result = JSON.parse(error.stdout);
       assert.equal(result.status, 'incompatible');
-      assert.equal(result.packages.find(item => item.name === '@crc/three').requiredCore, '0.0.2');
+      assert.equal(result.packages.find(item => item.name === '@pibbl/three').requiredCore, '0.0.2');
       assert.equal(result.manifests.length, 3);
       return true;
     });
@@ -60,10 +60,10 @@ test('CLI retains incompatible peer evidence and exits nonzero for a mismatched 
 
 test('accepts exact beta pins and rejects different prereleases and invalid semver', () => {
   const beta = { ...core, version: '0.1.0-beta.0' };
-  const adapter = { ...peer, peerDependencies: { '@crc/core': beta.version } };
+  const adapter = { ...peer, peerDependencies: { '@pibbl/core': beta.version } };
   assert.equal(auditCorePeerPins(beta, [adapter]).status, 'compatible');
   assert.equal(auditCorePeerPins({ ...beta, version: '0.1.0-beta.1' }, [adapter]).status, 'incompatible');
   for (const version of ['v0.1.0', '0.1.0-beta.01', '^0.1.0-beta.0', ' 0.1.0']) {
-    assert.equal(auditCorePeerPins(beta, [{ ...adapter, peerDependencies: { '@crc/core': version } }]).status, 'unavailable');
+    assert.equal(auditCorePeerPins(beta, [{ ...adapter, peerDependencies: { '@pibbl/core': version } }]).status, 'unavailable');
   }
 });

@@ -1,12 +1,12 @@
 import {
-  crc,
+  pibbl,
   useEventListener,
   useSignal,
   Rectangle,
   Text,
-  type CRCController,
-  type CRCPointerEvent,
-} from "@crc/core";
+  type PibblController,
+  type PibblPointerEvent,
+} from "@pibbl/core";
 type CancellationMode =
   "none" | "prevent-default" | "stop-propagation" | "stop-immediate";
 interface PropagationProps {
@@ -15,7 +15,7 @@ interface PropagationProps {
 }
 function eventLine(
   label: string,
-  event: CRCPointerEvent,
+  event: PibblPointerEvent,
   target: string,
   currentTarget: string,
 ): string {
@@ -199,6 +199,6 @@ function PropagationAndCancellationStudy() {
     </Text>,
   ];
 }
-export default function mount(canvas: HTMLCanvasElement): CRCController {
-  return crc(canvas, <PropagationAndCancellationStudy />);
+export default function mount(canvas: HTMLCanvasElement): PibblController {
+  return pibbl(canvas, <PropagationAndCancellationStudy />);
 }

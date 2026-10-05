@@ -19,7 +19,7 @@ const store = dirname(
   parse(readFileSync(join(root, "node_modules/.modules.yaml"), "utf8"))
     .storeDir,
 );
-const temp = mkdtempSync(join(tmpdir(), "crc-packed-textures-"));
+const temp = mkdtempSync(join(tmpdir(), "pibbl-packed-textures-"));
 const pnpm = (args, cwd = root) =>
   execFileSync("corepack", ["pnpm@11.21.0", ...args], {
     cwd,
@@ -33,7 +33,7 @@ try {
       ["pack", "--out", join(temp, `${name}.tgz`)],
       join(root, "packages", name),
     );
-    tarballs[`@crc/${name}`] = `file:${join(temp, `${name}.tgz`)}`;
+    tarballs[`@pibbl/${name}`] = `file:${join(temp, `${name}.tgz`)}`;
   }
   const consumer = join(temp, "consumer");
   mkdirSync(consumer);
@@ -57,11 +57,11 @@ try {
     consumer,
   );
   const installed = createRequire(join(consumer, "probe.mjs"));
-  const entry = installed.resolve("@crc/core/textures");
+  const entry = installed.resolve("@pibbl/core/textures");
   const fromTextures = createRequire(entry);
   assert.equal(
-    realpathSync(fromTextures.resolve("@crc/core")),
-    realpathSync(installed.resolve("@crc/core")),
+    realpathSync(fromTextures.resolve("@pibbl/core")),
+    realpathSync(installed.resolve("@pibbl/core")),
   );
   const textures = await import(pathToFileURL(entry).href);
   const names = [
@@ -83,14 +83,14 @@ try {
   if (process.argv.includes("--self-test-missing-export"))
     assert.equal(typeof textures.MissingTexture, "function");
   for (const path of [
-    "@crc/core/textures/internal",
-    "@crc/core/textures/src/index.ts",
-    "@crc/core/textures/lib/simulation",
+    "@pibbl/core/textures/internal",
+    "@pibbl/core/textures/src/index.ts",
+    "@pibbl/core/textures/lib/simulation",
   ])
     assert.throws(() => installed.resolve(path), {
       code: "ERR_PACKAGE_PATH_NOT_EXPORTED",
     });
-  const manifest = JSON.parse(readFileSync(installed.resolve("@crc/core/package.json"), "utf8"));
+  const manifest = JSON.parse(readFileSync(installed.resolve("@pibbl/core/package.json"), "utf8"));
   assert.equal(Object.keys(manifest.dependencies ?? {}).length, 0);
   writeFileSync(
     join(consumer, "public.tsx"),
@@ -109,7 +109,7 @@ try {
           skipLibCheck: false,
           types: [],
           jsx: "react-jsx",
-          jsxImportSource: "@crc/core",
+          jsxImportSource: "@pibbl/core",
           module: mode === "Bundler" ? "ESNext" : "NodeNext",
           moduleResolution: mode,
         },

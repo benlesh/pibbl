@@ -1,4 +1,4 @@
-declare module "virtual:crc-studio-docs" {
+declare module "virtual:pibbl-studio-docs" {
   import type { NavigationDocumentation } from "./app/navigation";
 
   export const documentation: NavigationDocumentation;
@@ -6,7 +6,7 @@ declare module "virtual:crc-studio-docs" {
   export const legacyRouteToRoute: Readonly<Record<string, string>>;
 }
 
-declare module "virtual:crc-studio-search" {
+declare module "virtual:pibbl-studio-search" {
   import type { SearchRecord } from "../../tooling/studio-docs/search-index";
 
   export const serializedSearchIndex: string;

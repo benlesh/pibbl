@@ -1,4 +1,4 @@
-# CRC focus and keyboard-navigation design
+# Pibbl focus and keyboard-navigation design
 
 > **Historical status: IMPLEMENTED DESIGN RECORD.** Original proposal or approval wording below is preserved; current behavior lives in `docs/design/`.
 
@@ -11,9 +11,9 @@ Depends on:
 
 ## Summary
 
-CRC will provide optional internal focus management and keyboard navigation for
+Pibbl will provide optional internal focus management and keyboard navigation for
 explicit event targets. The HTML Canvas remains the single native DOM focus
-host. CRC tracks which one of its logical targets is currently focused and uses
+host. Pibbl tracks which one of its logical targets is currently focused and uses
 the shared event dispatcher for logical focus, keyboard, pointer, and click
 behavior.
 
@@ -23,14 +23,14 @@ added with `withKeyboardNavigation`. Both are element enhancers: they annotate
 existing elements without changing component identity, parentage, layout,
 measurement, source order, or painting.
 
-CRC does not create or synchronize semantic DOM descendants. Applications that
+Pibbl does not create or synchronize semantic DOM descendants. Applications that
 require screen-reader semantics own an alternative accessible implementation
 using their framework of choice, including fallback content inside the Canvas
 when appropriate.
 
 ## Goals
 
-- Track one arbitrary logical CRC event target as focused while the Canvas owns
+- Track one arbitrary logical Pibbl event target as focused while the Canvas owns
   DOM focus.
 - Make Tab and Shift+Tab cross the Canvas naturally within surrounding native
   DOM controls.
@@ -39,11 +39,11 @@ when appropriate.
   diagrams, and arbitrary spatial arrangements.
 - Let pointer, mouse, pen, and touch interaction update logical focus through
   the common event system.
-- Preserve explicit target ownership and CRC component identity.
+- Preserve explicit target ownership and Pibbl component identity.
 - Trigger rendering and familiar logical focus events when focus changes.
 - Keep focus and keyboard-navigation implementation code out of application
   bundles when neither enhancer is used.
-- Export every public API from `@crc/core` without deep imports.
+- Export every public API from `@pibbl/core` without deep imports.
 
 ## Non-goals
 
@@ -58,7 +58,7 @@ when appropriate.
 - Programmatic leaf refs with an imperative `focus()` method.
 - A CSS cascade, pseudo-class engine, or Tailwind-style focus syntax in the
   first delivery.
-- Automatically integrating focus between CRC targets and application-owned DOM
+- Automatically integrating focus between Pibbl targets and application-owned DOM
   alternatives.
 
 ## Public composition
@@ -67,14 +67,14 @@ Applications enable the behavior through named root exports:
 
 ```ts
 import {
-  crc,
+  pibbl,
   flow,
   grid,
   withFocusManagement,
   withKeyboardNavigation,
-} from "@crc/core";
+} from "@pibbl/core";
 
-crc(
+pibbl(
   canvas,
   withFocusManagement(
     flow({
@@ -99,7 +99,7 @@ subtree and activates the Canvas focus host. `withKeyboardNavigation(element,
 { mode: "directional" })` marks a descendant navigation boundary. Neither call
 creates a component or render wrapper.
 
-A CRC root has at most one focus-management boundary. A second boundary on the
+A Pibbl root has at most one focus-management boundary. A second boundary on the
 same root produces a targeted error rather than competing for the Canvas focus
 host. A keyboard-navigation boundary must be inside that focus boundary; using
 one without a focus manager also produces a targeted error.
@@ -127,16 +127,16 @@ The default enrollment rule is:
 - `keyboardFocusable: true` explicitly includes another event target;
 - `keyboardFocusable: false` explicitly excludes an otherwise automatic target.
 
-`keyboardFocusable` is a capability adjective. It never commands CRC to focus a
+`keyboardFocusable` is a capability adjective. It never commands Pibbl to focus a
 target during render.
 
 Each candidate uses the event target's stable identity: mounted component
 identity plus the target hook or built-in interaction slot. The same target
 remains focused across ordinary rerenders. Keyed children preserve focus when
 reordered under the same parent. Reparenting or remounting creates a new target,
-following CRC's existing identity contract.
+following Pibbl's existing identity contract.
 
-Source traversal determines focus order. CRC does not use geometry or numeric
+Source traversal determines focus order. Pibbl does not use geometry or numeric
 `tabIndex` values for Tab ordering.
 
 ## Native and logical focus state
@@ -145,7 +145,7 @@ The browser owns DOM focus. While active:
 
 ```text
 document.activeElement === canvas
-CRC focused target === one live event target or none
+Pibbl focused target === one live event target or none
 ```
 
 The focus manager owns:
@@ -161,7 +161,7 @@ The focus manager owns:
 When at least one candidate exists, the manager makes the HTML Canvas a native
 Tab stop. It snapshots the Canvas's previous focusability state and restores it
 exactly on removal or root disposal. If all candidates disappear, the Canvas no
-longer remains a dead CRC-created Tab stop.
+longer remains a dead Pibbl-created Tab stop.
 
 A focus change dispatches logical events through the common dispatcher:
 
@@ -170,13 +170,13 @@ previous target: focusout (bubbles) -> blur (does not bubble)
 next target:     focusin  (bubbles) -> focus (does not bubble)
 ```
 
-`relatedTarget` identifies the other live logical target when one exists. CRC
+`relatedTarget` identifies the other live logical target when one exists. Pibbl
 schedules one ordinary coalesced render after the transition so the target
 snapshot and any future focus-style consumer can update.
 
 When the Canvas loses DOM focus, logical focus becomes inactive and the current
 target is cleared. Application-owned DOM descendants or alternatives are not
-silently folded into the CRC focus index.
+silently folded into the Pibbl focus index.
 
 ## Entering and leaving the Canvas with Tab
 
@@ -192,7 +192,7 @@ siblings.
   and calls `preventDefault()`.
 - Tab from the last target and Shift+Tab from the first target are not canceled;
   the browser resumes native DOM traversal outside the Canvas.
-- If DOM focus enters programmatically without a known direction, CRC uses
+- If DOM focus enters programmatically without a known direction, Pibbl uses
   forward entry.
 - If the Canvas is focused with no current target, Tab chooses the first target
   and Shift+Tab chooses the last before allowing an exit on a later key press.
@@ -250,7 +250,7 @@ activation:
 - Preventing the relevant keyboard event suppresses the default click.
 - Moving focus, cancellation, blur, or unmount before Space release cancels the
   pending activation.
-- CRC does not synthesize an extra click when the browser has already supplied
+- Pibbl does not synthesize an extra click when the browser has already supplied
   the logical activation.
 
 The logical click uses a synthetic `MouseEvent` with `detail: 0` as
@@ -268,7 +268,7 @@ Targets use their rendered root-logical navigation rectangles. Built-in
 targets provide bounds from their known geometry or allocated box. A custom
 event target supplies `keyboardNavigationBounds` in its component-local
 coordinate space when its arbitrary `Path2D` does not have a reliable native
-bounding-box API; CRC captures the current transform and converts all four
+bounding-box API; Pibbl captures the current transform and converts all four
 corners to a root-logical axis-aligned envelope. A focusable target without
 bounds remains in Tab order but is not an arrow-navigation candidate.
 
@@ -327,7 +327,7 @@ clear high-contrast focus indicator and must not rely on color alone.
 ## Accessibility boundary and guidance
 
 Internal focus is a keyboard interaction facility, not an accessibility tree.
-CRC will not create persistent semantic descendants, assign ARIA roles, mutate
+Pibbl will not create persistent semantic descendants, assign ARIA roles, mutate
 hidden Canvas text, use `aria-activedescendant`, or repeatedly refocus generated
 DOM to force announcements.
 
@@ -348,7 +348,7 @@ than merely a prose description of the Canvas. The Canvas itself should have an
 accessible name and concise usage instructions whenever it remains a keyboard
 surface.
 
-CRC documentation must be candid: using `withFocusManagement` does not make a
+Pibbl documentation must be candid: using `withFocusManagement` does not make a
 Canvas application screen-reader accessible.
 
 ## Optionality and bundle boundary
@@ -368,7 +368,7 @@ implementation. The focus module reaches into the event system through a small
 internal policy interface; the base event dispatcher never imports the focus
 module.
 
-Root named exports from `@crc/core` remain the only supported import site. ESM
+Root named exports from `@pibbl/core` remain the only supported import site. ESM
 module boundaries and `sideEffects: false` must let consumer bundlers eliminate
 unused focus code even though the names are re-exported from the package root.
 
@@ -407,7 +407,7 @@ Canvas:
 native DOM control after the Canvas
 ```
 
-The button-like controls and squares are private scenario components, not CRC
+The button-like controls and squares are private scenario components, not Pibbl
 exports. They demonstrate the documented forwarding or explicit hook patterns.
 
 The scenario proves:
@@ -449,9 +449,9 @@ Required evidence includes:
 - focus/focusin/blur/focusout order, propagation, related targets, and scheduled
   render tests;
 - focus-visible modality transitions and high-contrast demo evidence;
-- public `@crc/core` imports in source, declarations, Bundler, NodeNext, packed
+- public `@pibbl/core` imports in source, declarations, Bundler, NodeNext, packed
   consumer, source-browser, built-browser, and Studio editor declarations;
-- an optimized packed consumer that uses ordinary CRC but not the enhancers and
+- an optimized packed consumer that uses ordinary Pibbl but not the enhancers and
   proves focus implementation markers are absent;
 - an optimized packed consumer using both enhancers and proving the expected
   implementation is present and operational;

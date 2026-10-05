@@ -1,22 +1,22 @@
 ---
 id: api-component-grid
 title: Grid
-summary: Places direct children in CRC's explicit Grid subset.
+summary: Places direct children in Pibbl's explicit Grid subset.
 kind: api
 slug: grid
 apiCategory: component
 symbols: [Grid]
-relatedTypes: [CRCNode, GridItemStyle, GridProps, GridStyle]
+relatedTypes: [PibblNode, GridItemStyle, GridProps, GridStyle]
 ---
 
 # Grid
 
 ```ts
-import { Grid, Rectangle } from "@crc/core";
+import { Grid, Rectangle } from "@pibbl/core";
 ```
 
 `Grid` uses [`GridProps`](#/api/types/layout#gridprops) and [`GridStyle`](#/api/types/layout#gridstyle); children may provide [`GridItemStyle`](#/api/types/layout#griditemstyle).
-It accepts recursive [`CRCNode`](#/api/types/elements-components#crcnode) children and places explicit tracks with finite
+It accepts recursive [`PibblNode`](#/api/types/elements-components#pibblnode) children and places explicit tracks with finite
 allocation. CSS auto-placement, advanced intrinsic sizing, and scrolling are
 not supported.
 

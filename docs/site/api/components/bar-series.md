@@ -18,7 +18,7 @@ symbols:
 
 # BarSeries
 
-Import from `@crc/core/viz`. This component supports vertical and horizontal value
+Import from `@pibbl/core/viz`. This component supports vertical and horizontal value
 and range bars. For value bars use `data`, `category` (category key/accessor),
 `value` (numeric key/accessor), `categoryScale` (band), and `valueScale`
 (linear). `orientation` is `"vertical"` (default) or `"horizontal"`.
@@ -41,7 +41,7 @@ Each row renders an ordinary core Rectangle in source order. Series handlers
 bubble through their parent Group. Hit geometry is ordinary rectangle paint
 geometry, including stroke; padding and omitted rows do not create targets.
 Coordinates remain root-logical. There is no datum-enriched event: inspect via
-`useScale(id, "band")`, data, and ordinary events. Per-row nodes have ordinary
+`useBarScale(id)`, data, and ordinary events. Per-row nodes have ordinary
 component cost; this slice makes no large-data batching guarantee.
 
 The former bar coordinate props (`x`, `y`, `xScale`, `yScale`, `yStart`,
@@ -73,21 +73,20 @@ Supply `group` (a category key/accessor) and `groupScale` together. The inner
 band scale defines group order and spacing within each outer category:
 
 ```tsx
-import { BarSeries, Scale } from "@crc/core/viz";
+import { BarSeries, BarScale, LinearScale } from "@pibbl/core/viz";
 const rows = [
   { month: "Jan", team: "East", sales: 72, category: "Jan", value: 320_000 },
   { month: "Jan", team: "West", sales: 55, category: "Feb", value: -40_000 },
 ];
 const grouped = (
-  <Scale id="month" type="band" domain={["Jan", "Feb"]} range="width">
-    <Scale
+  <BarScale id="month" domain={["Jan", "Feb"]} range="width">
+    <BarScale
       id="team"
-      type="band"
       domain={["East", "West"]}
       range={{ bandwidthOf: "month" }}
       paddingInner={0.15}
     >
-      <Scale id="sales" type="linear" domain={[0, 100]} range="height" reverse>
+      <LinearScale id="sales" domain={[0, 100]} range="height" reverse>
         <BarSeries
           data={rows}
           category="month"
@@ -98,9 +97,9 @@ const grouped = (
           groupScale="team"
           style={(row) => ({ fill: row.team === "East" ? "teal" : "orange" })}
         />
-      </Scale>
-    </Scale>
-  </Scale>
+      </LinearScale>
+    </BarScale>
+  </BarScale>
 );
 void grouped;
 ```

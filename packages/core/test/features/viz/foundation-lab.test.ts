@@ -1,5 +1,5 @@
 import { expect, it } from "vitest";
-import { getScenarioBySlug, loadScenario } from "@crc/scenarios";
+import { getScenarioBySlug, loadScenario } from "@pibbl/scenarios";
 
 it("explores a fixed NOAA snapshot through independently allocated detail and overview plots", async () => {
   const canvas = document.createElement("canvas");

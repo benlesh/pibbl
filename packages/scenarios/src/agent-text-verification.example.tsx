@@ -1,4 +1,4 @@
-import { Group, Text } from '@crc/core';
+import { Group, Text } from '@pibbl/core';
 export const AGENT_TEXT_SOURCE_ID = 'agent-text-verification-example';
 export function AgentTextScene({ repaired }: { repaired: boolean }) {
   return <Group>

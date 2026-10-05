@@ -12,7 +12,7 @@ relatedTypes: [Canvas, RectStyle, RectangleProps]
 # Rectangle
 
 ```ts
-import { Rectangle } from "@crc/core";
+import { Rectangle } from "@pibbl/core";
 ```
 
 `Rectangle` uses [`RectangleProps`](#/api/types/elements-components#rectangleprops) and [`RectStyle`](#/api/types/styles#rectstyle). It rejects children and

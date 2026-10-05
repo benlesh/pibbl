@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { createElement } from '../element/create-element';
 import { getPrimitiveDefinition } from '../element/metadata';
-import { getCRCInstance } from '../global-state';
+import { getPibblInstance } from '../global-state';
 import { useSignal } from '../hooks/use-signal';
 import { measureElement } from '../layout/measure';
 import { LayoutDiagnostic } from '../style/diagnostics';
@@ -130,7 +130,7 @@ describe('Circle', () => {
       keyboardNavigationBounds: bounds,
     }));
 
-    const target = [...getCRCInstance(canvas.element).eventRoot.targets][0];
+    const target = [...getPibblInstance(canvas.element).eventRoot.targets][0];
     expect(target.keyboardNavigationBounds).toEqual(bounds);
   });
 

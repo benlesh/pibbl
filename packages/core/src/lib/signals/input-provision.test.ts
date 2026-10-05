@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { CRCRenderTransaction } from '../types.js';
+import type { PibblRenderTransaction } from '../types.js';
 import {
   disposeSignalRenderConsumer,
   collectComponentSignalReads,
@@ -64,7 +64,7 @@ describe('receiver input provisions', () => {
   });
 });
 
-function testTransaction(): CRCRenderTransaction & {
+function testTransaction(): PibblRenderTransaction & {
   finish(success: boolean): void;
 } {
   const callbacks: Array<(success: boolean) => void> = [];

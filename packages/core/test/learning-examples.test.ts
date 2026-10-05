@@ -5,8 +5,8 @@ import {
   learningExampleCatalog,
   loadLearningExample,
   validateLearningExampleCatalog,
-} from "@crc/scenarios";
-import type { LearningBrowseGroup } from "@crc/scenarios";
+} from "@pibbl/scenarios";
+import type { LearningBrowseGroup } from "@pibbl/scenarios";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   learningSourcePaths,
@@ -186,8 +186,8 @@ describe("learning example catalog", () => {
 
   it("permits Three imports only for the two attributed Three lessons", () => {
     const baseSource = `
-      import { crc, type CRCController } from "@crc/core";
-      import { defineThreeLayer } from "@crc/three";
+      import { pibbl, type PibblController } from "@pibbl/core";
+      import { defineThreeLayer } from "@pibbl/three";
       import { PerspectiveCamera, Scene } from "three";
       const Layer = defineThreeLayer({
         create() {
@@ -197,8 +197,8 @@ describe("learning example catalog", () => {
       function SceneExample() {
         return <Layer style={{ width: 320, height: 180 }} />;
       }
-      export default function mount(canvas: HTMLCanvasElement): CRCController {
-        return crc(canvas, <SceneExample />);
+      export default function mount(canvas: HTMLCanvasElement): PibblController {
+        return pibbl(canvas, <SceneExample />);
       }
     `;
 
@@ -223,7 +223,7 @@ describe("learning example catalog", () => {
         authoring: "jsx",
         label: "rectangle",
       }),
-    ).toThrow(/only from @crc\/core/u);
+    ).toThrow(/only from @pibbl\/core/u);
 
     const controlsSource = baseSource
       .replace(
@@ -250,8 +250,8 @@ describe("learning example catalog", () => {
 
   it("permits only the exact physics lesson to import the public 2D entry", () => {
     const source = `
-      import { Circle, crc, type CRCController } from "@crc/core";
-      import { PhysicsWorld2D, dynamicBody2D } from "@crc/core/physics/2d";
+      import { Circle, pibbl, type PibblController } from "@pibbl/core";
+      import { PhysicsWorld2D, dynamicBody2D } from "@pibbl/core/physics/2d";
       function Scene() {
         return (
           <PhysicsWorld2D>
@@ -259,8 +259,8 @@ describe("learning example catalog", () => {
           </PhysicsWorld2D>
         );
       }
-      export default function mount(canvas: HTMLCanvasElement): CRCController {
-        return crc(canvas, <Scene />);
+      export default function mount(canvas: HTMLCanvasElement): PibblController {
+        return pibbl(canvas, <Scene />);
       }
     `;
 
@@ -282,37 +282,37 @@ describe("learning example catalog", () => {
         authoring: "jsx",
         label: "circle",
       }),
-    ).toThrow(/only from @crc\/core/u);
+    ).toThrow(/only from @pibbl\/core/u);
     expect(() =>
       validateLearningSourceText(
-        source.replace("@crc/core/physics/2d", "@crc/core/physics/src/2d"),
+        source.replace("@pibbl/core/physics/2d", "@pibbl/core/physics/src/2d"),
         {
           authoring: "jsx",
           label: "fixture",
           sourcePath: physicsLessonSourcePath,
         },
       ),
-    ).toThrow(/both @crc\/core and @crc\/core\/physics\/2d/u);
+    ).toThrow(/both @pibbl\/core and @pibbl\/core\/physics\/2d/u);
   });
 
   it.each([
     ["fragment", "<>fragment</>"],
-    ["member expression", "<CRC.Rectangle />"],
-    ["namespaced name", "<crc:Rectangle />"],
+    ["member expression", "<Pibbl.Rectangle />"],
+    ["namespaced name", "<pibbl:Rectangle />"],
   ])("detects JSX %s syntax structurally", (_name, source) => {
     expect(learningSourceContainsJsx(source)).toBe(true);
   });
 
   it("does not confuse legal TypeScript with JSX", () => {
     const source = `
-      import { crc, createElement, Group, type CRCController } from "@crc/core";
+      import { pibbl, createElement, Group, type PibblController } from "@pibbl/core";
       interface Widget { value: number }
       function identity<T>(value: T): T { return value; }
-      export default function mount(canvas: HTMLCanvasElement): CRCController {
+      export default function mount(canvas: HTMLCanvasElement): PibblController {
         const widget = identity<Widget>({ value: 1 });
         const asserted = widget as Widget;
         const compared = asserted.value < 2 && asserted.value > 0;
-        return crc(canvas, createElement(Group, { key: compared ? "yes" : "no" }));
+        return pibbl(canvas, createElement(Group, { key: compared ? "yes" : "no" }));
       }
     `;
 
@@ -322,7 +322,7 @@ describe("learning example catalog", () => {
 
   it("rejects an imported createElement call mixed into a JSX lesson", () => {
     const source = `
-      import { crc, createElement, Group, Rectangle, type CRCController } from "@crc/core";
+      import { pibbl, createElement, Group, Rectangle, type PibblController } from "@pibbl/core";
       function Scene() {
         return (
           <Group>
@@ -330,8 +330,8 @@ describe("learning example catalog", () => {
           </Group>
         );
       }
-      export default function mount(canvas: HTMLCanvasElement): CRCController {
-        return crc(canvas, <Scene />);
+      export default function mount(canvas: HTMLCanvasElement): PibblController {
+        return pibbl(canvas, <Scene />);
       }
     `;
 
@@ -351,11 +351,11 @@ describe("learning example catalog", () => {
     "counts an imported createElement %s as createElement authoring in a JSX lesson",
     (_name, construction) => {
       const source = `
-        import { crc, createElement, Group, type CRCController } from "@crc/core";
+        import { pibbl, createElement, Group, type PibblController } from "@pibbl/core";
         function Scene() { return <Group />; }
         const child = ${construction};
-        export default function mount(canvas: HTMLCanvasElement): CRCController {
-          return crc(canvas, <Group>{child as never}</Group>);
+        export default function mount(canvas: HTMLCanvasElement): PibblController {
+          return pibbl(canvas, <Group>{child as never}</Group>);
         }
       `;
 
@@ -376,11 +376,11 @@ describe("learning example catalog", () => {
     "rejects an imported createElement %s in the non-JSX lesson",
     (_name, construction) => {
       const source = `
-        import { crc, createElement, Group, type CRCController } from "@crc/core";
+        import { pibbl, createElement, Group, type PibblController } from "@pibbl/core";
         function Scene() { return createElement(Group, null); }
         const child = ${construction};
-        export default function mount(canvas: HTMLCanvasElement): CRCController {
-          return crc(canvas, createElement(Group, null, child as never));
+        export default function mount(canvas: HTMLCanvasElement): PibblController {
+          return pibbl(canvas, createElement(Group, null, child as never));
         }
       `;
 
@@ -406,11 +406,11 @@ describe("learning example catalog", () => {
     ],
   ])("inspects %s on an optional createElement call", (_name, setup) => {
     const source = `
-      import { crc, createElement, Group, type CRCController } from "@crc/core";
+      import { pibbl, createElement, Group, type PibblController } from "@pibbl/core";
       function Scene() { return createElement(Group, null); }
       ${setup}
-      export default function mount(canvas: HTMLCanvasElement): CRCController {
-        return crc(canvas, createElement(Group, null, child as never));
+      export default function mount(canvas: HTMLCanvasElement): PibblController {
+        return pibbl(canvas, createElement(Group, null, child as never));
       }
     `;
 
@@ -426,19 +426,19 @@ describe("learning example catalog", () => {
     [
       "namespace legacy member",
       `
-        import * as CRC from "@crc/core";
-        type CRCController = CRC.CRCController;
-        export default function mount(canvas: HTMLCanvasElement): CRCController {
-          return CRC.crc(canvas, CRC.createElement(CRC.rect, { width: 10, height: 10 }));
+        import * as Pibbl from "@pibbl/core";
+        type PibblController = Pibbl.PibblController;
+        export default function mount(canvas: HTMLCanvasElement): PibblController {
+          return Pibbl.pibbl(canvas, Pibbl.createElement(Pibbl.rect, { width: 10, height: 10 }));
         }
       `,
     ],
     [
       "default import",
       `
-        import CRC, { createElement, Group, type CRCController } from "@crc/core";
-        export default function mount(canvas: HTMLCanvasElement): CRCController {
-          return CRC.crc(canvas, createElement(Group, null));
+        import Pibbl, { createElement, Group, type PibblController } from "@pibbl/core";
+        export default function mount(canvas: HTMLCanvasElement): PibblController {
+          return Pibbl.pibbl(canvas, createElement(Group, null));
         }
       `,
     ],
@@ -446,9 +446,9 @@ describe("learning example catalog", () => {
       "side-effect import",
       `
         import "./helper";
-        import { crc, createElement, Group, type CRCController } from "@crc/core";
-        export default function mount(canvas: HTMLCanvasElement): CRCController {
-          return crc(canvas, createElement(Group, null));
+        import { pibbl, createElement, Group, type PibblController } from "@pibbl/core";
+        export default function mount(canvas: HTMLCanvasElement): PibblController {
+          return pibbl(canvas, createElement(Group, null));
         }
       `,
     ],
@@ -456,56 +456,56 @@ describe("learning example catalog", () => {
       "named helper import",
       `
         import { helper } from "./helper";
-        import { crc, createElement, Group, type CRCController } from "@crc/core";
-        export default function mount(canvas: HTMLCanvasElement): CRCController {
+        import { pibbl, createElement, Group, type PibblController } from "@pibbl/core";
+        export default function mount(canvas: HTMLCanvasElement): PibblController {
           helper();
-          return crc(canvas, createElement(Group, null));
+          return pibbl(canvas, createElement(Group, null));
         }
       `,
     ],
     [
       "dynamic import",
       `
-        import { crc, createElement, Group, type CRCController } from "@crc/core";
+        import { pibbl, createElement, Group, type PibblController } from "@pibbl/core";
         void import("./helper");
-        export default function mount(canvas: HTMLCanvasElement): CRCController {
-          return crc(canvas, createElement(Group, null));
+        export default function mount(canvas: HTMLCanvasElement): PibblController {
+          return pibbl(canvas, createElement(Group, null));
         }
       `,
     ],
     [
       "aliased legacy import",
       `
-        import { crc, createElement, rect as Draw, type CRCController } from "@crc/core";
-        export default function mount(canvas: HTMLCanvasElement): CRCController {
-          return crc(canvas, createElement(Draw, { width: 10, height: 10 }));
+        import { pibbl, createElement, rect as Draw, type PibblController } from "@pibbl/core";
+        export default function mount(canvas: HTMLCanvasElement): PibblController {
+          return pibbl(canvas, createElement(Draw, { width: 10, height: 10 }));
         }
       `,
     ],
     [
       "aliased legacy focus import",
       `
-        import { crc, createElement, Group, ${removedFocusWrapper} as FocusPolicy, type CRCController } from "@crc/core";
-        export default function mount(canvas: HTMLCanvasElement): CRCController {
-          return crc(canvas, FocusPolicy(createElement(Group, null)));
+        import { pibbl, createElement, Group, ${removedFocusWrapper} as FocusPolicy, type PibblController } from "@pibbl/core";
+        export default function mount(canvas: HTMLCanvasElement): PibblController {
+          return pibbl(canvas, FocusPolicy(createElement(Group, null)));
         }
       `,
     ],
     [
       "legacy local alias",
       `
-        import { crc, createElement, Rectangle as rect, type CRCController } from "@crc/core";
-        export default function mount(canvas: HTMLCanvasElement): CRCController {
-          return crc(canvas, createElement(rect, { width: 10, height: 10 }));
+        import { pibbl, createElement, Rectangle as rect, type PibblController } from "@pibbl/core";
+        export default function mount(canvas: HTMLCanvasElement): PibblController {
+          return pibbl(canvas, createElement(rect, { width: 10, height: 10 }));
         }
       `,
     ],
     [
       "type-only core import",
       `
-        import type { CRCController } from "@crc/core";
+        import type { PibblController } from "@pibbl/core";
         function createElement(): never { throw new Error("unused"); }
-        export default function mount(canvas: HTMLCanvasElement): CRCController {
+        export default function mount(canvas: HTMLCanvasElement): PibblController {
           void canvas;
           return createElement();
         }
@@ -514,21 +514,21 @@ describe("learning example catalog", () => {
     [
       "source-marker scaffolding",
       `
-        import { crc, createElement, Group, type CRCController } from "@crc/core";
+        import { pibbl, createElement, Group, type PibblController } from "@pibbl/core";
         const SOURCE_ID = "fixture";
-        export default function mount(canvas: HTMLCanvasElement): CRCController {
-          return crc(canvas, createElement(Group, { key: SOURCE_ID }));
+        export default function mount(canvas: HTMLCanvasElement): PibblController {
+          return pibbl(canvas, createElement(Group, { key: SOURCE_ID }));
         }
       `,
     ],
     [
       "test-call scaffolding",
       `
-        import { crc, createElement, Group, type CRCController } from "@crc/core";
+        import { pibbl, createElement, Group, type PibblController } from "@pibbl/core";
         function test(): void {}
         test();
-        export default function mount(canvas: HTMLCanvasElement): CRCController {
-          return crc(canvas, createElement(Group, null));
+        export default function mount(canvas: HTMLCanvasElement): PibblController {
+          return pibbl(canvas, createElement(Group, null));
         }
       `,
     ],
@@ -536,13 +536,13 @@ describe("learning example catalog", () => {
     expectInvalidNonJsxSource(source);
   });
 
-  it("ignores legacy-looking words outside resolved CRC authoring", () => {
+  it("ignores legacy-looking words outside resolved Pibbl authoring", () => {
     const source = `
-      import { crc, createElement, Group, type CRCController } from "@crc/core";
+      import { pibbl, createElement, Group, type PibblController } from "@pibbl/core";
       interface Notes { text: string; render: string }
-      export default function mount(canvas: HTMLCanvasElement): CRCController {
+      export default function mount(canvas: HTMLCanvasElement): PibblController {
         const notes: Notes = { text: "${removedDefinitionWrapper}", render: "${removedFocusWrapper}" };
-        return crc(canvas, createElement(Group, { key: notes.text }));
+        return pibbl(canvas, createElement(Group, { key: notes.text }));
       }
     `;
 
@@ -554,9 +554,9 @@ describe("learning example catalog", () => {
       "aliased Text style.text",
       "jsx" as const,
       `
-        import { crc, Text as Label, type CRCController } from "@crc/core";
-        export default function mount(canvas: HTMLCanvasElement): CRCController {
-          return crc(canvas, <Label style={{ text: "legacy" }} />);
+        import { pibbl, Text as Label, type PibblController } from "@pibbl/core";
+        export default function mount(canvas: HTMLCanvasElement): PibblController {
+          return pibbl(canvas, <Label style={{ text: "legacy" }} />);
         }
       `,
     ],
@@ -564,9 +564,9 @@ describe("learning example catalog", () => {
       "aliased Layer render prop",
       "jsx" as const,
       `
-        import { crc, Layer as Surface, Rectangle, type CRCController } from "@crc/core";
-        export default function mount(canvas: HTMLCanvasElement): CRCController {
-          return crc(canvas, <Surface render={<Rectangle style={{ width: 10, height: 10 }} />} />);
+        import { pibbl, Layer as Surface, Rectangle, type PibblController } from "@pibbl/core";
+        export default function mount(canvas: HTMLCanvasElement): PibblController {
+          return pibbl(canvas, <Surface render={<Rectangle style={{ width: 10, height: 10 }} />} />);
         }
       `,
     ],
@@ -574,9 +574,9 @@ describe("learning example catalog", () => {
       "createElement Text style.text",
       "createElement" as const,
       `
-        import { crc, createElement, Text as Label, type CRCController } from "@crc/core";
-        export default function mount(canvas: HTMLCanvasElement): CRCController {
-          return crc(canvas, createElement(Label, { style: { text: "legacy" } }));
+        import { pibbl, createElement, Text as Label, type PibblController } from "@pibbl/core";
+        export default function mount(canvas: HTMLCanvasElement): PibblController {
+          return pibbl(canvas, createElement(Label, { style: { text: "legacy" } }));
         }
       `,
     ],
@@ -584,9 +584,9 @@ describe("learning example catalog", () => {
       "createElement Layer render prop",
       "createElement" as const,
       `
-        import { crc, createElement, Group, Layer as Surface, type CRCController } from "@crc/core";
-        export default function mount(canvas: HTMLCanvasElement): CRCController {
-          return crc(canvas, createElement(Surface, { render: createElement(Group, null) }));
+        import { pibbl, createElement, Group, Layer as Surface, type PibblController } from "@pibbl/core";
+        export default function mount(canvas: HTMLCanvasElement): PibblController {
+          return pibbl(canvas, createElement(Surface, { render: createElement(Group, null) }));
         }
       `,
     ],
@@ -602,10 +602,10 @@ describe("learning example catalog", () => {
       "a local component alias",
       "jsx" as const,
       `
-        import { crc, Text, type CRCController } from "@crc/core";
+        import { pibbl, Text, type PibblController } from "@pibbl/core";
         const Label = Text;
-        export default function mount(canvas: HTMLCanvasElement): CRCController {
-          return crc(canvas, <Label style={{ text: "legacy" }}>Legacy</Label>);
+        export default function mount(canvas: HTMLCanvasElement): PibblController {
+          return pibbl(canvas, <Label style={{ text: "legacy" }}>Legacy</Label>);
         }
       `,
     ],
@@ -613,11 +613,11 @@ describe("learning example catalog", () => {
       "a destructured component alias",
       "jsx" as const,
       `
-        import { crc, Layer, Rectangle, type CRCController } from "@crc/core";
+        import { pibbl, Layer, Rectangle, type PibblController } from "@pibbl/core";
         const { Layer: Surface } = { Layer };
         const props = { render: <Rectangle style={{ width: 10, height: 10 }} /> };
-        export default function mount(canvas: HTMLCanvasElement): CRCController {
-          return crc(canvas, <Surface {...props} />);
+        export default function mount(canvas: HTMLCanvasElement): PibblController {
+          return pibbl(canvas, <Surface {...props} />);
         }
       `,
     ],
@@ -625,12 +625,12 @@ describe("learning example catalog", () => {
       "a shadowed createElement binding",
       "createElement" as const,
       `
-        import { crc, createElement, type CRCController } from "@crc/core";
+        import { pibbl, createElement, type PibblController } from "@pibbl/core";
         function Scene(createElement: () => never): never {
           return createElement();
         }
-        export default function mount(canvas: HTMLCanvasElement): CRCController {
-          return crc(canvas, Scene(() => { throw new Error("fixture"); }));
+        export default function mount(canvas: HTMLCanvasElement): PibblController {
+          return pibbl(canvas, Scene(() => { throw new Error("fixture"); }));
         }
       `,
     ],
@@ -638,11 +638,11 @@ describe("learning example catalog", () => {
       "a reassigned createElement binding",
       "createElement" as const,
       `
-        import { crc, createElement, Group, type CRCController } from "@crc/core";
+        import { pibbl, createElement, Group, type PibblController } from "@pibbl/core";
         function localCreateElement(): never { throw new Error("fixture"); }
         createElement = localCreateElement;
-        export default function mount(canvas: HTMLCanvasElement): CRCController {
-          return crc(canvas, createElement(Group, null));
+        export default function mount(canvas: HTMLCanvasElement): PibblController {
+          return pibbl(canvas, createElement(Group, null));
         }
       `,
     ],
@@ -691,10 +691,10 @@ describe("learning example catalog", () => {
     "rejects a createElement binding shadowed by an %s parameter",
     (_name, setup) => {
       const source = `
-      import { crc, createElement, Group, type CRCController } from "@crc/core";
+      import { pibbl, createElement, Group, type PibblController } from "@pibbl/core";
       ${setup}
-      export default function mount(canvas: HTMLCanvasElement): CRCController {
-        return crc(canvas, scene as never);
+      export default function mount(canvas: HTMLCanvasElement): PibblController {
+        return pibbl(canvas, scene as never);
       }
     `;
 
@@ -709,7 +709,7 @@ describe("learning example catalog", () => {
 
   it("allows unrelated object, class, and private method parameters", () => {
     expectValidNonJsxSource(`
-      import { crc, createElement, Group, type CRCController } from "@crc/core";
+      import { pibbl, createElement, Group, type PibblController } from "@pibbl/core";
       const objectBuilder = {
         build(factory: () => unknown): unknown {
           return factory();
@@ -725,8 +725,8 @@ describe("learning example catalog", () => {
       }
       void objectBuilder;
       void Builder;
-      export default function mount(canvas: HTMLCanvasElement): CRCController {
-        return crc(canvas, createElement(Group, null));
+      export default function mount(canvas: HTMLCanvasElement): PibblController {
+        return pibbl(canvas, createElement(Group, null));
       }
     `);
   });
@@ -736,10 +736,10 @@ describe("learning example catalog", () => {
       "a JSX style variable",
       "jsx" as const,
       `
-        import { crc, Text, type CRCController } from "@crc/core";
+        import { pibbl, Text, type PibblController } from "@pibbl/core";
         const style = { text: "legacy" };
-        export default function mount(canvas: HTMLCanvasElement): CRCController {
-          return crc(canvas, <Text style={style}>Visible</Text>);
+        export default function mount(canvas: HTMLCanvasElement): PibblController {
+          return pibbl(canvas, <Text style={style}>Visible</Text>);
         }
       `,
     ],
@@ -747,10 +747,10 @@ describe("learning example catalog", () => {
       "a JSX props spread",
       "jsx" as const,
       `
-        import { crc, Text, type CRCController } from "@crc/core";
+        import { pibbl, Text, type PibblController } from "@pibbl/core";
         const props = { style: { text: "legacy" } };
-        export default function mount(canvas: HTMLCanvasElement): CRCController {
-          return crc(canvas, <Text {...props}>Visible</Text>);
+        export default function mount(canvas: HTMLCanvasElement): PibblController {
+          return pibbl(canvas, <Text {...props}>Visible</Text>);
         }
       `,
     ],
@@ -758,10 +758,10 @@ describe("learning example catalog", () => {
       "a JSX style object spread",
       "jsx" as const,
       `
-        import { crc, Rectangle, type CRCController } from "@crc/core";
+        import { pibbl, Rectangle, type PibblController } from "@pibbl/core";
         const box = { width: 10, height: 10 };
-        export default function mount(canvas: HTMLCanvasElement): CRCController {
-          return crc(canvas, <Rectangle style={{ ...box }} />);
+        export default function mount(canvas: HTMLCanvasElement): PibblController {
+          return pibbl(canvas, <Rectangle style={{ ...box }} />);
         }
       `,
     ],
@@ -769,10 +769,10 @@ describe("learning example catalog", () => {
       "an indirect createElement style",
       "createElement" as const,
       `
-        import { crc, createElement, Text, type CRCController } from "@crc/core";
+        import { pibbl, createElement, Text, type PibblController } from "@pibbl/core";
         const style = { text: "legacy" };
-        export default function mount(canvas: HTMLCanvasElement): CRCController {
-          return crc(canvas, createElement(Text, { style }, "Visible"));
+        export default function mount(canvas: HTMLCanvasElement): PibblController {
+          return pibbl(canvas, createElement(Text, { style }, "Visible"));
         }
       `,
     ],
@@ -780,10 +780,10 @@ describe("learning example catalog", () => {
       "indirect createElement props",
       "createElement" as const,
       `
-        import { crc, createElement, Layer, Group, type CRCController } from "@crc/core";
+        import { pibbl, createElement, Layer, Group, type PibblController } from "@pibbl/core";
         const props = { render: createElement(Group, null) };
-        export default function mount(canvas: HTMLCanvasElement): CRCController {
-          return crc(canvas, createElement(Layer, props));
+        export default function mount(canvas: HTMLCanvasElement): PibblController {
+          return pibbl(canvas, createElement(Layer, props));
         }
       `,
     ],
@@ -791,10 +791,10 @@ describe("learning example catalog", () => {
       "a createElement props object spread",
       "createElement" as const,
       `
-        import { crc, createElement, Text, type CRCController } from "@crc/core";
+        import { pibbl, createElement, Text, type PibblController } from "@pibbl/core";
         const props = { style: { text: "legacy" } };
-        export default function mount(canvas: HTMLCanvasElement): CRCController {
-          return crc(canvas, createElement(Text, { ...props }, "Visible"));
+        export default function mount(canvas: HTMLCanvasElement): PibblController {
+          return pibbl(canvas, createElement(Text, { ...props }, "Visible"));
         }
       `,
     ],
@@ -816,10 +816,10 @@ describe("learning example catalog", () => {
     ],
   ])("rejects %s", (_name, extraModuleSyntax) => {
     expectInvalidNonJsxSource(`
-      import { crc, createElement, Group, type CRCController } from "@crc/core";
+      import { pibbl, createElement, Group, type PibblController } from "@pibbl/core";
       ${extraModuleSyntax}
-      export default function mount(canvas: HTMLCanvasElement): CRCController {
-        return crc(canvas, createElement(Group, null));
+      export default function mount(canvas: HTMLCanvasElement): PibblController {
+        return pibbl(canvas, createElement(Group, null));
       }
     `);
   });
@@ -847,9 +847,9 @@ describe("learning example catalog", () => {
   ])("rejects direct invocation of the %s component", (componentName) => {
     expectInvalidLearningSource(
       `
-        import { crc, ${componentName}, type CRCController } from "@crc/core";
-        export default function mount(canvas: HTMLCanvasElement): CRCController {
-          return crc(canvas, <>{${componentName}({})}</>);
+        import { pibbl, ${componentName}, type PibblController } from "@pibbl/core";
+        export default function mount(canvas: HTMLCanvasElement): PibblController {
+          return pibbl(canvas, <>{${componentName}({})}</>);
         }
       `,
       "jsx",
@@ -858,9 +858,9 @@ describe("learning example catalog", () => {
 
   it("rejects a component call mixed into the createElement lesson", () => {
     expectInvalidNonJsxSource(`
-      import { crc, createElement, Group, Rectangle, type CRCController } from "@crc/core";
-      export default function mount(canvas: HTMLCanvasElement): CRCController {
-        return crc(canvas, createElement(Group, null, Rectangle({})));
+      import { pibbl, createElement, Group, Rectangle, type PibblController } from "@pibbl/core";
+      export default function mount(canvas: HTMLCanvasElement): PibblController {
+        return pibbl(canvas, createElement(Group, null, Rectangle({})));
       }
     `);
   });
@@ -872,42 +872,42 @@ describe("learning example catalog", () => {
     ["TypeScript-wrapped optional call", "(Group as any)?.({})"],
   ])("rejects a descriptive component %s", (_name, invocation) => {
     expectInvalidNonJsxSource(`
-      import { crc, createElement, Group, type CRCController } from "@crc/core";
+      import { pibbl, createElement, Group, type PibblController } from "@pibbl/core";
       const invalid = ${invocation};
-      export default function mount(canvas: HTMLCanvasElement): CRCController {
-        return crc(canvas, createElement(Group, { key: String(invalid) }));
+      export default function mount(canvas: HTMLCanvasElement): PibblController {
+        return pibbl(canvas, createElement(Group, { key: String(invalid) }));
       }
     `);
   });
 
-  it("keeps tagged-template use of other CRC values outside the learning contract", () => {
+  it("keeps tagged-template use of other Pibbl values outside the learning contract", () => {
     expect(() =>
       validateLearningSourceText(
         `
-          import { crc, createElement, Group, type CRCController } from "@crc/core";
-          const invalid = crc\`fixture\`;
-          export default function mount(canvas: HTMLCanvasElement): CRCController {
+          import { pibbl, createElement, Group, type PibblController } from "@pibbl/core";
+          const invalid = pibbl\`fixture\`;
+          export default function mount(canvas: HTMLCanvasElement): PibblController {
             void invalid;
-            return crc(canvas, createElement(Group, null));
+            return pibbl(canvas, createElement(Group, null));
           }
         `,
         { authoring: "createElement", label: "fixture" },
       ),
-    ).toThrow(/direct @crc\/core bindings/u);
+    ).toThrow(/direct @pibbl\/core bindings/u);
   });
 
-  it("allows direct calls to CRC runtime functions and hooks", () => {
+  it("allows direct calls to Pibbl runtime functions and hooks", () => {
     expectValidLearningSource(
       `
         import {
-          crc,
+          pibbl,
           useComputed,
           useSignal,
           measureElement,
           resolveLength,
           Text,
-          type CRCController,
-        } from "@crc/core";
+          type PibblController,
+        } from "@pibbl/core";
         function RuntimeFunctionStudy() {
           const count = useSignal(1);
           const doubled = useComputed(() => count.get() * 2);
@@ -920,8 +920,8 @@ describe("learning example catalog", () => {
           const y = measurement.status === "measured" ? measurement.size.height : 20;
           return <Text style={{ x: length, y }}>{doubled}</Text>;
         }
-        export default function mount(canvas: HTMLCanvasElement): CRCController {
-          return crc(canvas, <RuntimeFunctionStudy />);
+        export default function mount(canvas: HTMLCanvasElement): PibblController {
+          return pibbl(canvas, <RuntimeFunctionStudy />);
         }
       `,
       "jsx",
@@ -946,9 +946,9 @@ describe("learning example catalog", () => {
     ],
   ])("rejects %s as an uninspectable props object", (_name, scene, imports) => {
     expectUninspectableNonJsxSource(`
-      import { crc, createElement, ${imports}, type CRCController } from "@crc/core";
-      export default function mount(canvas: HTMLCanvasElement): CRCController {
-        return crc(canvas, ${scene});
+      import { pibbl, createElement, ${imports}, type PibblController } from "@pibbl/core";
+      export default function mount(canvas: HTMLCanvasElement): PibblController {
+        return pibbl(canvas, ${scene});
       }
     `);
   });
@@ -998,17 +998,17 @@ describe("learning example catalog", () => {
     (_name, declarations) => {
       expectValidNonJsxSource(`
       import {
-        crc,
+        pibbl,
         createElement,
         Group,
         Text,
         Rectangle,
         FocusManagement,
-        type CRCController,
-      } from "@crc/core";
+        type PibblController,
+      } from "@pibbl/core";
       ${declarations}
-      export default function mount(canvas: HTMLCanvasElement): CRCController {
-        return crc(canvas, createElement(Group, null));
+      export default function mount(canvas: HTMLCanvasElement): PibblController {
+        return pibbl(canvas, createElement(Group, null));
       }
     `);
     },
@@ -1016,10 +1016,10 @@ describe("learning example catalog", () => {
 
   it("still treats a computed key as a component value reference", () => {
     expectInvalidNonJsxSource(`
-      import { crc, createElement, Group, Text, type CRCController } from "@crc/core";
+      import { pibbl, createElement, Group, Text, type PibblController } from "@pibbl/core";
       const vocabulary = { [Text]: "text" };
-      export default function mount(canvas: HTMLCanvasElement): CRCController {
-        return crc(canvas, createElement(Group, { key: String(vocabulary) }));
+      export default function mount(canvas: HTMLCanvasElement): PibblController {
+        return pibbl(canvas, createElement(Group, { key: String(vocabulary) }));
       }
     `);
   });
@@ -1040,7 +1040,7 @@ describe("learning example catalog", () => {
     ],
   ])("rejects CommonJS %s", (_name, commonJsSyntax) => {
     expectInvalidNonJsxSource(`
-      import { crc, createElement, Group, type CRCController } from "@crc/core";
+      import { pibbl, createElement, Group, type PibblController } from "@pibbl/core";
       declare const require: {
         (id: string): unknown;
         resolve(id: string): string;
@@ -1048,8 +1048,8 @@ describe("learning example catalog", () => {
       declare const module: { exports: unknown };
       declare const exports: Record<string, unknown>;
       ${commonJsSyntax}
-      export default function mount(canvas: HTMLCanvasElement): CRCController {
-        return crc(canvas, createElement(Group, null));
+      export default function mount(canvas: HTMLCanvasElement): PibblController {
+        return pibbl(canvas, createElement(Group, null));
       }
     `);
   });
@@ -1082,10 +1082,10 @@ describe("learning example catalog", () => {
     expect(() =>
       validateLearningSourceText(
         `
-          import { crc, createElement, Group, type CRCController } from "@crc/core";
+          import { pibbl, createElement, Group, type PibblController } from "@pibbl/core";
           ${commonJsSyntax}
-          export default function mount(canvas: HTMLCanvasElement): CRCController {
-            return crc(canvas, createElement(Group, null));
+          export default function mount(canvas: HTMLCanvasElement): PibblController {
+            return pibbl(canvas, createElement(Group, null));
           }
         `,
         { authoring: "createElement", label: "fixture" },
@@ -1146,10 +1146,10 @@ describe("learning example catalog", () => {
     expect(() =>
       validateLearningSourceText(
         `
-          import { crc, createElement, Group, type CRCController } from "@crc/core";
+          import { pibbl, createElement, Group, type PibblController } from "@pibbl/core";
           ${commonJsSyntax}
-          export default function mount(canvas: HTMLCanvasElement): CRCController {
-            return crc(canvas, createElement(Group, null));
+          export default function mount(canvas: HTMLCanvasElement): PibblController {
+            return pibbl(canvas, createElement(Group, null));
           }
         `,
         { authoring: "createElement", label: "fixture" },
@@ -1159,7 +1159,7 @@ describe("learning example catalog", () => {
 
   it("allows CommonJS property names on unrelated objects", () => {
     expectValidNonJsxSource(`
-      import { crc, createElement, Group, type CRCController } from "@crc/core";
+      import { pibbl, createElement, Group, type PibblController } from "@pibbl/core";
       const loader = {
         require(id: string): string { return id; },
         module: { exports: {} },
@@ -1176,15 +1176,15 @@ describe("learning example catalog", () => {
       loader[\`module\`][\`exports\`] = {};
       void (globalThis as any)[\`location\`];
       void (globalThis as any)[(\`location\` as const)];
-      export default function mount(canvas: HTMLCanvasElement): CRCController {
-        return crc(canvas, createElement(Group, null));
+      export default function mount(canvas: HTMLCanvasElement): PibblController {
+        return pibbl(canvas, createElement(Group, null));
       }
     `);
   });
 
   it("allows CommonJS spellings that are only declarations or static keys", () => {
     expectValidNonJsxSource(`
-      import { crc, createElement, Group, type CRCController } from "@crc/core";
+      import { pibbl, createElement, Group, type PibblController } from "@pibbl/core";
       interface Vocabulary { require: string; module(): string; exports: string }
       class Labels { require = "require"; module(): string { return "module"; } }
       function label(require: string): string { return "static"; }
@@ -1192,8 +1192,8 @@ describe("learning example catalog", () => {
       void vocabulary.require;
       void new Labels().module();
       void label("require");
-      export default function mount(canvas: HTMLCanvasElement): CRCController {
-        return crc(canvas, createElement(Group, null));
+      export default function mount(canvas: HTMLCanvasElement): PibblController {
+        return pibbl(canvas, createElement(Group, null));
       }
     `);
   });
@@ -1464,8 +1464,8 @@ describe("learning example catalog", () => {
       "#/examples/start/signals",
     );
     const signalsSource = await loadWorkbenchSource(signals!);
-    expect(signalsSource).toMatch(/from ["']@crc\/core["']/u);
-    expect(signalsSource).not.toMatch(/@crc\/core\/(?:internal|lib|src)\b/u);
+    expect(signalsSource).toMatch(/from ["']@pibbl\/core["']/u);
+    expect(signalsSource).not.toMatch(/@pibbl\/core\/(?:internal|lib|src)\b/u);
     expect(signalsSource).toContain("x,");
     expect(signalsSource).toContain("fill: color");
     expect(signalsSource).toContain("{signalSummary}");
@@ -1556,7 +1556,7 @@ describe("learning example catalog", () => {
       }),
     ).not.toThrow();
     expect(source).toContain("createElement(");
-    expect(source).toMatch(/crc\(\s*canvas,\s*createElement\(/u);
+    expect(source).toMatch(/pibbl\(\s*canvas,\s*createElement\(/u);
   });
 
   it("mounts and drives fragments, keyed dynamic children, text zero, focus policies, and lifecycle without JSX", async () => {
@@ -1660,7 +1660,7 @@ describe("learning example catalog", () => {
       expect(entry).toBeDefined();
       const source = await loadWorkbenchSource(entry!);
       expect(source.match(/from ["'][^"']+["']/g)).toEqual([
-        expect.stringMatching(/from ["']@crc\/core["']/),
+        expect.stringMatching(/from ["']@pibbl\/core["']/),
       ]);
 
       const { canvas } = await renderLearningExample(slug);
@@ -1737,7 +1737,7 @@ describe("learning example catalog", () => {
       expect(entry.objectives).toHaveLength(2);
       const source = await loadWorkbenchSource(entry);
       expect(source.match(/from ["'][^"']+["']/g)).toEqual([
-        expect.stringMatching(/from ["']@crc\/core["']/),
+        expect.stringMatching(/from ["']@pibbl\/core["']/),
       ]);
       expect(source).not.toMatch(/test|fixture|diagnostic/i);
     }
@@ -1826,14 +1826,14 @@ describe("learning example catalog", () => {
         "ProceduralTexture",
         "loadOutlineFont",
         "createTextGeometry",
-        "Scale",
+        "LinearScale", "BarScale", "UTCScale",
         "Axis",
         "LineSeries",
         "BarSeries",
         "PointSeries",
         "PlotSeries",
         "ScaleAdjust",
-        "useScale",
+        "useLinearScale", "useBarScale", "useUTCScale",
         "HoverData",
         "HoverCard",
         "AnchoredLayout",
@@ -1883,7 +1883,7 @@ describe("learning example catalog", () => {
         "Group",
         "Clip",
         "Layer",
-        "CRCFilter",
+        "PibblFilter",
         "useTexture",
         "defineTexture",
         "defineThreeLayer",
@@ -1919,7 +1919,7 @@ describe("learning example catalog", () => {
         "dynamicBody2D",
         "staticBody2D",
         "collider2D",
-        "crcPhysicsBody2D",
+        "pibblPhysicsBody2D",
         "useRef",
         "useSignal",
         "setPointerCapture",

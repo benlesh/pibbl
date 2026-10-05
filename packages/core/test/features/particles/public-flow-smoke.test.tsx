@@ -1,21 +1,21 @@
 import { afterEach, expect, it } from "vitest";
-import { crc, Rectangle, signal } from "@crc/core";
+import { pibbl, Rectangle, signal } from "@pibbl/core";
 import {
   PhysicsWorld2D,
-  crcPhysicsWorld2D,
+  pibblPhysicsWorld2D,
   physicsObstacles2D,
   staticBody2D,
-} from "@crc/core/physics/2d";
+} from "@pibbl/core/physics/2d";
 import {
   Particles2D,
   defineParticleEffect2D,
   useParticleSystem,
   useFlowField2D,
   useFlowSource2D,
-  type CRCFlowField2D,
-} from "@crc/core/particles";
+  type PibblFlowField2D,
+} from "@pibbl/core/particles";
 
-let root: ReturnType<typeof crc> | undefined;
+let root: ReturnType<typeof pibbl> | undefined;
 afterEach(() => {
   root?.dispose();
   root = undefined;
@@ -30,7 +30,7 @@ it("composes smoke with optional committed physics obstacles through source and 
   canvas.width = canvas.height = 120;
   document.body.appendChild(canvas);
   const left = signal(40);
-  let field!: CRCFlowField2D;
+  let field!: PibblFlowField2D;
   let obstacles!: ReturnType<typeof physicsObstacles2D>;
   const effect = defineParticleEffect2D({
     emitters: [
@@ -45,7 +45,7 @@ it("composes smoke with optional committed physics obstacles through source and 
     ],
   });
   function Scene() {
-    obstacles = physicsObstacles2D(crcPhysicsWorld2D());
+    obstacles = physicsObstacles2D(pibblPhysicsWorld2D());
     field = useFlowField2D({
       bounds: { width: 120, height: 120 },
       resolution: [24, 24],
@@ -72,7 +72,7 @@ it("composes smoke with optional committed physics obstacles through source and 
       </>
     );
   }
-  root = crc(
+  root = pibbl(
     canvas,
     <PhysicsWorld2D gravity={[0, 0]}>
       <Scene />
@@ -103,5 +103,5 @@ it("composes smoke with optional committed physics obstacles through source and 
   expect(() =>
     field.sampleBatch(new Float32Array(2), new Float32Array(2), 1),
   ).toThrow(/disposed/);
-  expect(() => obstacles.read()).toThrow(/live CRC physics/);
+  expect(() => obstacles.read()).toThrow(/live Pibbl physics/);
 });

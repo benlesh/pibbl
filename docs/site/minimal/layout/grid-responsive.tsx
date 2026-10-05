@@ -1,17 +1,17 @@
 import {
   Grid,
   Rectangle,
-  crc,
+  pibbl,
   signal,
-  type CRCResponsiveStyle,
-  type CRCSizeQuery,
-  type CRCStyleRule,
+  type PibblResponsiveStyle,
+  type PibblSizeQuery,
+  type PibblStyleRule,
   type GridItemStyle,
   type GridProps,
   type GridStyle,
   type GridTrack,
   type RectStyle,
-} from "@crc/core";
+} from "@pibbl/core";
 
 const columns: readonly GridTrack[] = ["1fr", "2fr"];
 const row: GridItemStyle = {
@@ -19,12 +19,12 @@ const row: GridItemStyle = {
   gridColumnSpan: 2,
   gridRowStart: 1,
 };
-const query: CRCSizeQuery = { maxWidth: 280 };
-const narrowRule: CRCStyleRule<RectStyle> = {
+const query: PibblSizeQuery = { maxWidth: 280 };
+const narrowRule: PibblStyleRule<RectStyle> = {
   query,
   style: { fill: "#f97316" },
 };
-const responsive: CRCResponsiveStyle<RectStyle> = {
+const responsive: PibblResponsiveStyle<RectStyle> = {
   width: "100%",
   height: "100%",
   fill: "#0f766e",
@@ -76,7 +76,7 @@ button.addEventListener("click", () => {
   gridWidth.set(narrow ? 260 : 320);
   button.textContent = narrow ? "Wide" : "Narrow";
 });
-const app = crc(
+const app = pibbl(
   canvas,
   <Grid {...gridProps} style={{ ...gridStyle, width: gridWidth }} />,
 );

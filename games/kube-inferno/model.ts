@@ -1,4 +1,4 @@
-/** Deterministic, bounded business simulation. No browser or CRC dependencies. */
+/** Deterministic, bounded business simulation. No browser or Pibbl dependencies. */
 export type Kind =
   "small" | "large" | "cache" | "database" | "shield" | "gateway";
 export const catalog: Record<

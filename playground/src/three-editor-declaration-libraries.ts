@@ -20,7 +20,7 @@ function onlyDeclaration(
 ): readonly [string, string] {
   const entries = Object.entries(declarations);
   if (entries.length !== 1) {
-    throw new Error(`CRC Studio must load exactly one ${label} declaration.`);
+    throw new Error(`Pibbl Studio must load exactly one ${label} declaration.`);
   }
   return entries[0]!;
 }
@@ -59,7 +59,7 @@ export function threeDeclarationLibraries(): EditorDeclarationLibrary[] {
   );
   if (sourceLibraries.length !== 535) {
     throw new Error(
-      `CRC Studio must load exactly 535 Three source declarations, received ${sourceLibraries.length}.`,
+      `Pibbl Studio must load exactly 535 Three source declarations, received ${sourceLibraries.length}.`,
     );
   }
   return [

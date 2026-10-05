@@ -1,6 +1,6 @@
 # Searchable Studio documentation
 
-CRC's documentation experience is the Interactive Examples Studio in the
+Pibbl's documentation experience is the Interactive Examples Studio in the
 existing Vite playground. It is one application and one deployment surface,
 not a second framework, publication pipeline, backend, or hosted-search
 integration.

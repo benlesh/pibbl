@@ -18,7 +18,7 @@ import {
   type HoverSeriesMap,
   type InterpolateXOptions,
   type ResolvedLinearScale,
-} from "@crc/core/viz";
+} from "@pibbl/core/viz";
 
 type Reading = { time: number; value: number };
 const readings: readonly Reading[] = [

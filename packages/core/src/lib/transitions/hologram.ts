@@ -2,7 +2,7 @@ import { lazyTransitionKernel } from './wasm/kernel.js';
 import { bytes } from './wasm/hologram-bytes.js';
 const createKernel = lazyTransitionKernel(bytes);
 import { opacity } from '../../filters/native.js';
-import { defineTransitionEffect, type CRCTransitionEffect } from './fade.js';
+import { defineTransitionEffect, type PibblTransitionEffect } from './fade.js';
 import { captureTransition, clamp, finite, regionSnapshot, type TransitionRegion } from './capture.js';
 
 /**
@@ -10,46 +10,46 @@ import { captureTransition, clamp, finite, regionSnapshot, type TransitionRegion
  *
  * @see {@link hologram}
  */
-export interface CRCHologramOptions {
+export interface PibblHologramOptions {
   /** Logical region over which the effect is evaluated. See {@link TransitionRegion}. */
   readonly region: TransitionRegion;
-  /** Entry location or direction used by the transition. See {@link CRCHologramOptions}. */
+  /** Entry location or direction used by the transition. See {@link PibblHologramOptions}. */
   readonly entry?: Readonly<{
     /**
      * Horizontal coordinate or displacement in the containing coordinate system. See
-     * {@link CRCHologramOptions}.
+     * {@link PibblHologramOptions}.
      */
     x: number;
     /**
      * Vertical coordinate or displacement in the containing coordinate system. See
-     * {@link CRCHologramOptions}.
+     * {@link PibblHologramOptions}.
      */
     y: number;
   }>;
-  /** Hue control for the transition's emitted color. See {@link CRCHologramOptions}. */
+  /** Hue control for the transition's emitted color. See {@link PibblHologramOptions}. */
   readonly hue?: number;
-  /** Brightness control for the transition effect. See {@link CRCHologramOptions}. */
+  /** Brightness control for the transition effect. See {@link PibblHologramOptions}. */
   readonly brightness?: number;
-  /** Fog intensity used by the hologram effect. See {@link CRCHologramOptions}. */
+  /** Fog intensity used by the hologram effect. See {@link PibblHologramOptions}. */
   readonly fog?: number;
-  /** Distortion intensity used by the hologram effect. See {@link CRCHologramOptions}. */
+  /** Distortion intensity used by the hologram effect. See {@link PibblHologramOptions}. */
   readonly glitch?: number;
   /**
    * Seed used for deterministic sampling or simulation initialization. See
-   * {@link CRCHologramOptions}.
+   * {@link PibblHologramOptions}.
    */
   readonly seed?: number;
 }
 /**
  * A diffuse scan reconstructs the captured subject while interference settles.
  *
- * @param options - Hologram appearance and animation settings. See {@link CRCHologramOptions}.
- * @returns A hologram transition effect. See {@link CRCTransitionEffect}.
+ * @param options - Hologram appearance and animation settings. See {@link PibblHologramOptions}.
+ * @returns A hologram transition effect. See {@link PibblTransitionEffect}.
  *
- * @see {@link CRCHologramOptions}
- * @see {@link CRCTransitionEffect}
+ * @see {@link PibblHologramOptions}
+ * @see {@link PibblTransitionEffect}
  */
-export function hologram(options: CRCHologramOptions): CRCTransitionEffect {
+export function hologram(options: PibblHologramOptions): PibblTransitionEffect {
   const r = regionSnapshot(options.region);
   const entry = { x: finite(options.entry?.x ?? r.x + r.width / 2, 'entry.x'), y: finite(options.entry?.y ?? r.y + r.height, 'entry.y') };
   const hue = finite(options.hue ?? 183, 'hue'), brightness = finite(options.brightness ?? 1, 'brightness', 0);

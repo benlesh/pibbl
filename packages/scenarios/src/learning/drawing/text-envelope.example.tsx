@@ -1,9 +1,9 @@
 import {
-  crc, Group, Path, PathGeometry, Circle, Line, Rectangle, Text, HtmlBox, signal,
+  pibbl, Group, Path, PathGeometry, Circle, Line, Rectangle, Text, HtmlBox, signal,
   envelopeTransform, affineTransform, composeTransforms, transformPath,
-  type CRCController, type CRCPointerEvent, type HtmlMountCallback, type PathPoint, type PathRect,
-} from '@crc/core';
-import { loadOutlineFont, createTextGeometry, type OutlineFont } from '@crc/text';
+  type PibblController, type PibblPointerEvent, type HtmlMountCallback, type PathPoint, type PathRect,
+} from '@pibbl/core';
+import { loadOutlineFont, createTextGeometry, type OutlineFont } from '@pibbl/text';
 
 type Curve = [PathPoint, PathPoint, PathPoint, PathPoint];
 const colors = ['#dc6743', '#4d9089', '#9065b0', '#bb8b31', '#4478b2'];
@@ -30,7 +30,7 @@ function preset(name: string): Curve[] {
   ];
 }
 
-export default function mount(canvas: HTMLCanvasElement): CRCController {
+export default function mount(canvas: HTMLCanvasElement): PibblController {
   const abort = new AbortController(), generation = signal(0);
   let font: OutlineFont | undefined, disposed = false;
   let curves = preset('Ribbon'), content = 'BEND THE RULES', rotation = 0, skew = 0, showGuides = true;
@@ -100,7 +100,7 @@ export default function mount(canvas: HTMLCanvasElement): CRCController {
     toggle.addEventListener('change', () => { showGuides = toggle.checked; generation.update(n => n + 1); }, { signal: lifetime }); label.append(toggle, ' Show guides'); row.append(label);
     return () => {};
   };
-  const stop = (event: CRCPointerEvent) => {
+  const stop = (event: PibblPointerEvent) => {
     if (drag?.pointer !== event.pointerId) return; drag = undefined;
     if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
   };
@@ -140,7 +140,7 @@ export default function mount(canvas: HTMLCanvasElement): CRCController {
   const overlay = document.createElement('div'); overlay.style.cssText = 'position:absolute;inset:0;z-index:1;pointer-events:none';
   const previousStyle = canvas.getAttribute('style'); canvas.style.cssText = 'display:block;width:100%;height:100%;touch-action:none';
   placeholder.after(wrapper); wrapper.append(canvas, overlay);
-  let controller: CRCController | undefined;
+  let controller: PibblController | undefined;
   const dispose = () => {
     if (disposed) return; disposed = true; abort.abort(); font?.dispose(); drag = undefined;
     try { controller?.dispose(); } finally {
@@ -149,9 +149,9 @@ export default function mount(canvas: HTMLCanvasElement): CRCController {
       wrapper.remove(); placeholder.remove();
     }
   };
-  try { controller = crc(canvas, <Scene />, { viewport: { width: 960, height: 700 }, htmlOverlay: overlay }); }
+  try { controller = pibbl(canvas, <Scene />, { viewport: { width: 960, height: 700 }, htmlOverlay: overlay }); }
   catch (error) { dispose(); throw error; }
-  void loadOutlineFont(new URL('/crc-text/Lato-Regular.ttf', document.baseURI), { signal: abort.signal }).then(value => {
+  void loadOutlineFont(new URL('/pibbl-text/Lato-Regular.ttf', document.baseURI), { signal: abort.signal }).then(value => {
     if (disposed) { value.dispose(); return; } font = value; shape();
   }).catch(error => { if (!disposed) { message = `Font loading failed: ${String(error)}`; generation.update(n => n + 1); } });
   return { dispose };

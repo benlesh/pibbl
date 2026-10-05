@@ -4,7 +4,7 @@ import { resolve } from "node:path";
 import {
   learningExampleCatalog,
   tutorialSnapshotCatalog,
-} from "@crc/scenarios";
+} from "@pibbl/scenarios";
 
 import { buildStudioDocumentation } from "./build";
 import {
@@ -61,10 +61,10 @@ const input = {
     },
     {
       route: "#/api/types/filters",
-      plainText: "Filter types\nCRCFilter\nDescribes typed filters.",
+      plainText: "Filter types\nPibblFilter\nDescribes typed filters.",
       headings: [
         { id: "filter-types", level: 1, text: "Filter types" },
-        { id: "crcfilter", level: 2, text: "CRCFilter" },
+        { id: "pibblfilter", level: 2, text: "PibblFilter" },
       ],
       sections: [
         {
@@ -72,7 +72,7 @@ const input = {
           plainText: "",
         },
         {
-          heading: { id: "crcfilter", level: 2, text: "CRCFilter" },
+          heading: { id: "pibblfilter", level: 2, text: "PibblFilter" },
           plainText: "Describes typed filters.",
         },
       ],
@@ -84,7 +84,7 @@ const input = {
         slug: "filters",
         apiCategory: "types",
         typeDomain: "filters",
-        symbols: ["CRCFilter"],
+        symbols: ["PibblFilter"],
       },
     },
     {
@@ -108,7 +108,7 @@ const input = {
       shortTitle: "Filters",
       browseGroup: "drawing",
       summary: "Compare typed Canvas filters.",
-      api: ["Group", "CRCFilter"],
+      api: ["Group", "PibblFilter"],
       objectives: ["Apply filters", "Compare filter order"],
       apiNotes: ["Filters are local typed style."],
     },
@@ -143,7 +143,7 @@ assert.equal(
 );
 assert.equal(
   first.searchRecords.some(
-    ({ url }) => url === "#/api/types/filters#crcfilter",
+    ({ url }) => url === "#/api/types/filters#pibblfilter",
   ),
   true,
 );
@@ -164,8 +164,8 @@ assert.equal(
   "#/api/hooks/use-reaction",
 );
 assert.equal(
-  searchSearchBundle(first, "CRCFilter")[0]?.url,
-  "#/api/types/filters#crcfilter",
+  searchSearchBundle(first, "PibblFilter")[0]?.url,
+  "#/api/types/filters#pibblfilter",
   "A type symbol must prefer its owned heading over its type-domain root.",
 );
 assert.equal(
@@ -242,14 +242,14 @@ for (const [symbol, destination] of Object.entries(
   );
 }
 assert.equal(
-  searchSearchBundle(realBundle, "CRCRef")[0]?.url,
-  "#/api/types/canvas-runtime#crcref",
-  "The public CRCRef type must beat the lower-case useRef hook.",
+  searchSearchBundle(realBundle, "PibblRef")[0]?.url,
+  "#/api/types/canvas-runtime#pibblref",
+  "The public PibblRef type must beat the lower-case useRef hook.",
 );
 assert.equal(
-  searchSearchBundle(realBundle, "CRCPointerEvent")[0]?.url,
-  "#/api/types/events#crcpointerevent",
-  "The public CRCPointerEvent type must resolve directly to its anchor.",
+  searchSearchBundle(realBundle, "PibblPointerEvent")[0]?.url,
+  "#/api/types/events#pibblpointerevent",
+  "The public PibblPointerEvent type must resolve directly to its anchor.",
 );
 assert.equal(
   searchSearchBundle(realBundle, "pointer capture diagram editor").some(

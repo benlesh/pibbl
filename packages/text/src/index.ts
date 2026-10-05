@@ -2,7 +2,7 @@ import { activeProfile } from "./lib/profiling.js";
 import { validateFontContainer } from "./lib/font-container.js";
 import { fontBytes } from "./lib/font-bytes.js";
 import { getEngine, type Engine } from "./lib/engine.js";
-import { PathGeometry } from "@crc/core";
+import { PathGeometry } from "@pibbl/core";
 import { inkBounds, type InkBounds } from "./lib/bounds.js";
 export type { InkBounds } from "./lib/bounds.js";
 
@@ -187,7 +187,7 @@ export async function loadOutlineFont(
   let handle: number;
   try {
     engine.HEAPU8.set(bytes, pointer);
-    handle = engine._crc_font_create(pointer, bytes.length);
+    handle = engine._pibbl_font_create(pointer, bytes.length);
   } finally {
     engine._free(pointer);
   }
@@ -198,13 +198,13 @@ export async function loadOutlineFont(
       const state = owners.get(font);
       if (!state) return;
       owners.delete(font);
-      state.engine._crc_font_release(state.handle);
+      state.engine._pibbl_font_release(state.handle);
     },
     [Symbol.dispose]() {
       font.dispose();
     },
   };
-  owners.set(font, { engine, handle, upem: engine._crc_font_upem(handle) });
+  owners.set(font, { engine, handle, upem: engine._pibbl_font_upem(handle) });
   return font;
 }
 /**
@@ -313,9 +313,9 @@ export function createTextGeometry(
     if (languageTag !== undefined) internedLanguages.add(languageTag);
     if (profile) {
       profile.inputMs = performance.now() - phaseStart;
-      engine._crc_profile_enabled(1);
+      engine._pibbl_profile_enabled(1);
     }
-    result = engine._crc_shape(
+    result = engine._pibbl_shape(
       handle,
       pointer,
       text.length,
@@ -329,10 +329,10 @@ export function createTextGeometry(
     );
   } finally {
     if (profile) {
-      profile.nativeSetupMs = engine._crc_profile_time(0);
-      profile.shapingMs = engine._crc_profile_time(1);
-      profile.outlineMs = engine._crc_profile_time(2);
-      engine._crc_profile_enabled(0);
+      profile.nativeSetupMs = engine._pibbl_profile_time(0);
+      profile.shapingMs = engine._pibbl_profile_time(1);
+      profile.outlineMs = engine._pibbl_profile_time(2);
+      engine._pibbl_profile_enabled(0);
     }
     engine._free(pointer);
   }
@@ -344,15 +344,15 @@ export function createTextGeometry(
         "Text exceeded the outline work or output segment limit.",
         "Native shaping allocation failed.",
         "Font glyph has no valid supported outline.",
-      ][engine._crc_error()] ?? "Text conversion failed.",
+      ][engine._pibbl_error()] ?? "Text conversion failed.",
     );
   try {
     if (profile) phaseStart = performance.now();
     const lengths = [0, 1, 2, 3].map((field) =>
-      engine._crc_result_length(result, field),
+      engine._pibbl_result_length(result, field),
     );
     const offsets = [0, 1, 2, 3].map((field) =>
-      engine._crc_result_data(result, field),
+      engine._pibbl_result_data(result, field),
     );
     const memory = engine.HEAPU8.buffer;
     const commands = new Uint8Array(memory, offsets[0], lengths[0]);
@@ -453,11 +453,11 @@ export function createTextGeometry(
       inkBounds: bounds,
       glyphs: Object.freeze(glyphs),
       advance: Object.freeze({
-        x: finite(engine._crc_result_advance(result, 0) * scale),
-        y: finite(-engine._crc_result_advance(result, 1) * scale),
+        x: finite(engine._pibbl_result_advance(result, 0) * scale),
+        y: finite(-engine._pibbl_result_advance(result, 1) * scale),
       }),
     });
   } finally {
-    engine._crc_result_release(result);
+    engine._pibbl_result_release(result);
   }
 }

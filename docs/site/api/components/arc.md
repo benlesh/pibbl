@@ -12,7 +12,7 @@ relatedTypes: [ArcProps, ArcStyle]
 # Arc
 
 ```ts
-import { Arc } from "@crc/core";
+import { Arc } from "@pibbl/core";
 ```
 
 `Arc` draws an open circular sweep. Its props are [`ArcProps`](#/api/types/elements-components#arcprops); its local style

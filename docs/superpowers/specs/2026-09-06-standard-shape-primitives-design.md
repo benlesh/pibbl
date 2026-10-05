@@ -6,13 +6,13 @@ Status: approved for implementation on 2026-09-06.
 
 ## Summary
 
-CRC will add five descriptive drawing leaves: `Circle`, `Ellipse`, `Arc`,
+Pibbl will add five descriptive drawing leaves: `Circle`, `Ellipse`, `Arc`,
 `Wedge`, and `Polygon`. Each value is a dedicated public `definePrimitive`
 component with its own props and style types. The implementations construct
 immediate `Path2D` geometry and reuse the existing `renderPath` paint and
 interaction pipeline.
 
-The additions expand CRC's conventional drawing vocabulary without creating a
+The additions expand Pibbl's conventional drawing vocabulary without creating a
 retained shape system, a generalized public path builder, or data-visualization
 semantics. Line interpolation, pie-chart data transformation, annular sectors,
 and other chart marks remain future work built above these primitives.
@@ -21,7 +21,7 @@ and other chart marks remain future work built above these primitives.
 
 - Provide discoverable JSX and `createElement` values for five conventional
   shapes currently possible only through `Path2D` or SVG path strings.
-- Preserve CRC's local closed style language, declared-box layout,
+- Preserve Pibbl's local closed style language, declared-box layout,
   immediate-mode traversal, source paint order, and shared paint/interaction
   geometry.
 - Resolve percentage geometry predictably against the primitive's existing
@@ -43,7 +43,7 @@ and other chart marks remain future work built above these primitives.
 
 ## Public surface
 
-The root `@crc/core` entry will export these values and types:
+The root `@pibbl/core` entry will export these values and types:
 
 - `Circle`, `CircleProps`, and `CircleStyle`
 - `Ellipse`, `EllipseProps`, and `EllipseStyle`
@@ -133,7 +133,7 @@ Numeric geometry is expressed in local logical Canvas units. Percentage
 resolution retains the existing finite and definite-basis diagnostics.
 
 Radii must resolve to finite nonnegative numbers. Negative radii fail during
-style resolution with a `LayoutDiagnostic`; CRC does not expose a native
+style resolution with a `LayoutDiagnostic`; Pibbl does not expose a native
 `Path2D` radius exception as the validation contract. Angles and ellipse
 rotation must be finite and fail with the same contextual diagnostic family.
 

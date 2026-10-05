@@ -12,7 +12,7 @@ relatedTypes: [WedgePathOptions]
 # createWedgePath
 
 ```ts
-import { createWedgePath, Path } from "@crc/core";
+import { createWedgePath, Path } from "@pibbl/core";
 ```
 
 [`WedgePathOptions`](#/api/types/elements-components#wedgepathoptions) is accepted by `createWedgePath(options): Path2D`, which creates a fresh numeric

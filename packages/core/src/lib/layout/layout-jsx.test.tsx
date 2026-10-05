@@ -8,7 +8,7 @@ import {
   Overlay,
   Rectangle,
   Text,
-  crc,
+  pibbl,
   useCanvasContext,
   useLayoutBox,
   useConst,
@@ -16,16 +16,16 @@ import {
   measureElement,
   signal,
   type BoxStyle,
-  type CRCController,
-  type CRCNode,
+  type PibblController,
+  type PibblNode,
   type LayoutBox,
   type LayoutItemStyle,
   type SystemStyle,
-} from '@crc/core';
+} from '@pibbl/core';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { getCRCInstance } from '../global-state.js';
+import { getPibblInstance } from '../global-state.js';
 import { executeRender } from '../execute-render.js';
-import { mountCRC } from '../mount-crc.js';
+import { mountPibbl } from '../mount-pibbl.js';
 import { signalGraphSnapshot } from '../signals/graph.js';
 
 interface CardStyle extends BoxStyle, LayoutItemStyle {}
@@ -50,7 +50,7 @@ interface CardProps {
   readonly style: Readonly<CardStyle>;
 }
 
-function Card(props: CardProps): CRCNode {
+function Card(props: CardProps): PibblNode {
   const box = useLayoutBox();
   const mount = useConst(() => ++props.capture.mounts);
   const transform = useCanvasContext().getTransform();
@@ -86,7 +86,7 @@ interface RenderLayoutCase {
     reverse: boolean,
     execution: { runs: number },
   ): Readonly<{
-    node: CRCNode;
+    node: PibblNode;
     styles: Readonly<Record<'a' | 'b', Readonly<CardStyle>>>;
   }>;
 }
@@ -110,7 +110,7 @@ const renderLayoutCases: readonly RenderLayoutCase[] = [
         <Card key="a" capture={capture} fill="#ef4444" name="a" style={styles.a} />,
         <Card key="b" capture={capture} fill="#22c55e" name="b" style={styles.b} />,
       ];
-      function* children(): Generator<CRCNode> {
+      function* children(): Generator<PibblNode> {
         execution.runs++;
         yield [reverse ? cards.toReversed() : cards, [false, null]];
         yield execution.runs > 0 && (
@@ -166,7 +166,7 @@ const renderLayoutCases: readonly RenderLayoutCase[] = [
           style={styles.b}
         />,
       ];
-      function* children(): Generator<CRCNode> {
+      function* children(): Generator<PibblNode> {
         execution.runs++;
         yield [[reverse ? cards.toReversed() : cards], false];
         yield (
@@ -222,7 +222,7 @@ const renderLayoutCases: readonly RenderLayoutCase[] = [
         <Card key="a" capture={capture} fill="#ef4444" name="a" style={styles.a} />,
         <Card key="b" capture={capture} fill="#22c55e" name="b" style={styles.b} />,
       ];
-      function* children(): Generator<CRCNode> {
+      function* children(): Generator<PibblNode> {
         execution.runs++;
         yield [[reverse ? cards.toReversed() : cards], [false, '']];
         yield (
@@ -272,7 +272,7 @@ const renderLayoutCases: readonly RenderLayoutCase[] = [
         <Card key="a" capture={capture} fill="#ef4444" name="a" style={styles.a} />,
         <Card key="b" capture={capture} fill="#22c55e" name="b" style={styles.b} />,
       ];
-      function* children(): Generator<CRCNode> {
+      function* children(): Generator<PibblNode> {
         execution.runs++;
         yield [[reverse ? cards.toReversed() : cards], [false, undefined]];
         yield (
@@ -334,7 +334,7 @@ const renderLayoutCases: readonly RenderLayoutCase[] = [
         <Card key="a" capture={capture} fill="#ef4444" name="a" style={styles.a} />,
         <Card key="b" capture={capture} fill="#22c55e" name="b" style={styles.b} />,
       ];
-      function* children(): Generator<CRCNode> {
+      function* children(): Generator<PibblNode> {
         execution.runs++;
         yield [[reverse ? cards.toReversed() : cards], [false, null]];
         yield (
@@ -381,7 +381,7 @@ interface MeasurementCapture {
 interface NestedLayoutCase {
   readonly name: 'Flow' | 'Flex' | 'Grid';
   readonly expectedChildMeasurements: number;
-  build(children: CRCNode): CRCNode;
+  build(children: PibblNode): PibblNode;
 }
 
 const nestedLayoutCases: readonly NestedLayoutCase[] = [
@@ -425,7 +425,7 @@ interface MeasuredProbeStyle extends BoxStyle, LayoutItemStyle {}
 
 function renderMeasuredProbe(
   props: Readonly<MeasuredProbeProps>,
-): CRCNode {
+): PibblNode {
   props.capture.renders++;
   const box = useLayoutBox();
   props.capture.box = box;
@@ -445,7 +445,7 @@ const MeasuredProbe = definePrimitive<
   },
 });
 
-const controllers = new Set<CRCController>();
+const controllers = new Set<PibblController>();
 
 const signalLayoutCases = [
   {
@@ -540,9 +540,9 @@ describe('JSX layout boundaries', () => {
     async layoutCase => {
       const baseline = signalGraphSnapshot();
       const canvas = createCanvas();
-      controllers.add(crc(canvas, layoutCase.build()));
+      controllers.add(pibbl(canvas, layoutCase.build()));
       await nextFrame();
-      const refs = Array.from(getCRCInstance(canvas).refs.values());
+      const refs = Array.from(getPibblInstance(canvas).refs.values());
 
       expect(refs.find(ref => ref.element.type === layoutCase.type)?.signalConsumer)
         .toBeUndefined();
@@ -559,7 +559,7 @@ describe('JSX layout boundaries', () => {
     const label = signal('measured label');
     const baseline = signalGraphSnapshot();
     const canvas = createCanvas();
-    controllers.add(crc(canvas, (
+    controllers.add(pibbl(canvas, (
       <Flow style={{ width: 200, height: 40 }}>
         <Text style={{ width: 'auto', height: 'auto', fill: 'black' }}>
           {label}
@@ -567,7 +567,7 @@ describe('JSX layout boundaries', () => {
       </Flow>
     )));
     await nextFrame();
-    const refs = Array.from(getCRCInstance(canvas).refs.values());
+    const refs = Array.from(getPibblInstance(canvas).refs.values());
 
     expect(refs.find(ref => ref.element.type === Flow)?.signalConsumer)
       .toBeUndefined();
@@ -583,7 +583,7 @@ describe('JSX layout boundaries', () => {
     const baseline = signalGraphSnapshot();
     const firstStyle = signal({ width: 20, height: 10 });
     const canvas = createCanvas();
-    const controller = mountCRC(canvas, (
+    const controller = mountPibbl(canvas, (
       <Absolute style={{ width: 100, height: 40 }}>
         <Rectangle style={firstStyle} />
         <Rectangle style={{ height: 10 } as never} />
@@ -614,7 +614,7 @@ describe('JSX layout boundaries', () => {
         b: Object.entries(initial.styles.b),
       };
       const canvas = createCanvas();
-      const controller = crc(canvas, initial.node);
+      const controller = pibbl(canvas, initial.node);
       controllers.add(controller);
       await nextFrame();
 
@@ -644,7 +644,7 @@ describe('JSX layout boundaries', () => {
         a: Object.entries(reordered.styles.a),
         b: Object.entries(reordered.styles.b),
       };
-      crc(canvas, reordered.node);
+      pibbl(canvas, reordered.node);
       await nextFrame();
 
       expect(execution.runs).toBe(2);
@@ -664,7 +664,7 @@ describe('JSX layout boundaries', () => {
   it.each([
     {
       name: 'Flow',
-      build: (child: CRCNode) => (
+      build: (child: PibblNode) => (
         <Flow style={{ width: 100, height: 40, alignItems: 'start' }}>
           {child}
         </Flow>
@@ -672,7 +672,7 @@ describe('JSX layout boundaries', () => {
     },
     {
       name: 'Flex',
-      build: (child: CRCNode) => (
+      build: (child: PibblNode) => (
         <Flex style={{ width: 100, height: 40, alignItems: 'flex-start' }}>
           {child}
         </Flex>
@@ -680,7 +680,7 @@ describe('JSX layout boundaries', () => {
     },
     {
       name: 'Grid',
-      build: (child: CRCNode) => (
+      build: (child: PibblNode) => (
         <Grid
           style={{
             width: 100,
@@ -701,7 +701,7 @@ describe('JSX layout boundaries', () => {
   }) => {
     const capture: MeasurementCapture = { measurements: 0, renders: 0 };
     let generatorRuns = 0;
-    function* children(): Generator<CRCNode> {
+    function* children(): Generator<PibblNode> {
       generatorRuns++;
       yield [[
         <MeasuredProbe
@@ -719,7 +719,7 @@ describe('JSX layout boundaries', () => {
       ], false];
     }
     const canvas = createCanvas();
-    controllers.add(crc(canvas, build(children())));
+    controllers.add(pibbl(canvas, build(children())));
     await nextFrame();
 
     expect(generatorRuns).toBe(1);
@@ -733,13 +733,13 @@ describe('JSX layout boundaries', () => {
     async layoutCase => {
       const capture: MeasurementCapture = { measurements: 0, renders: 0 };
       let generatorRuns = 0;
-      function* children(): Generator<CRCNode> {
+      function* children(): Generator<PibblNode> {
         generatorRuns++;
         yield nestedMeasuredProbe(layoutCase.name, capture);
       }
       const nested = layoutCase.build(children());
       const canvas = createCanvas();
-      controllers.add(crc(canvas, outerMeasuringFlow(nested)));
+      controllers.add(pibbl(canvas, outerMeasuringFlow(nested)));
       await nextFrame();
 
       expect(generatorRuns).toBe(1);
@@ -759,7 +759,7 @@ describe('JSX layout boundaries', () => {
         renders: 0,
       } satisfies MeasurementCapture));
       let iterations = 0;
-      const children: Iterable<CRCNode> = {
+      const children: Iterable<PibblNode> = {
         [Symbol.iterator]() {
           const capture = captures[iterations++];
           return [nestedMeasuredProbe(layoutCase.name, capture)][Symbol.iterator]();
@@ -767,7 +767,7 @@ describe('JSX layout boundaries', () => {
       };
       const shared = layoutCase.build(children);
       const canvas = createCanvas();
-      controllers.add(crc(canvas, outerMeasuringFlow([shared, shared])));
+      controllers.add(pibbl(canvas, outerMeasuringFlow([shared, shared])));
       await nextFrame();
 
       expect(iterations).toBe(2);
@@ -787,7 +787,7 @@ describe('JSX layout boundaries', () => {
         renders: 0,
       } satisfies MeasurementCapture));
       let iterations = 0;
-      const children: Iterable<CRCNode> = {
+      const children: Iterable<PibblNode> = {
         [Symbol.iterator]() {
           const capture = captures[iterations++];
           return [nestedMeasuredProbe(layoutCase.name, capture)][Symbol.iterator]();
@@ -795,9 +795,9 @@ describe('JSX layout boundaries', () => {
       };
       const shared = layoutCase.build(children);
       const canvas = createCanvas();
-      controllers.add(crc(canvas, outerMeasuringFlow(shared)));
+      controllers.add(pibbl(canvas, outerMeasuringFlow(shared)));
       await nextFrame();
-      crc(canvas, outerMeasuringFlow(shared));
+      pibbl(canvas, outerMeasuringFlow(shared));
       await nextFrame();
 
       expect(iterations).toBe(2);
@@ -825,7 +825,7 @@ describe('JSX layout boundaries', () => {
   it.each([
     {
       name: 'Flow',
-      build: (children: CRCNode) => (
+      build: (children: PibblNode) => (
         <Flow style={{ width: 'auto', height: 'auto' }}>{children}</Flow>
       ),
       expected: { width: 18, height: 12 },
@@ -833,7 +833,7 @@ describe('JSX layout boundaries', () => {
     },
     {
       name: 'Flex',
-      build: (children: CRCNode) => (
+      build: (children: PibblNode) => (
         <Flex style={{ width: 'auto', height: 'auto' }}>{children}</Flex>
       ),
       expected: { width: 18, height: 12 },
@@ -841,7 +841,7 @@ describe('JSX layout boundaries', () => {
     },
     {
       name: 'Grid',
-      build: (children: CRCNode) => (
+      build: (children: PibblNode) => (
         <Grid
           style={{
             width: 'auto',
@@ -864,7 +864,7 @@ describe('JSX layout boundaries', () => {
   }) => {
     const capture: MeasurementCapture = { measurements: 0, renders: 0 };
     let generatorRuns = 0;
-    function* children(): Generator<CRCNode> {
+    function* children(): Generator<PibblNode> {
       generatorRuns++;
       yield [[
         <MeasuredProbe
@@ -913,7 +913,7 @@ describe('JSX layout boundaries', () => {
     vi.spyOn(CanvasRenderingContext2D.prototype, 'fillText')
       .mockImplementation(value => values.push(value));
     const canvas = createCanvas();
-    controllers.add(crc(canvas, (
+    controllers.add(pibbl(canvas, (
       <Flow style={{ width: 200, height: 40 }}>
         {[shared, shared]}
       </Flow>
@@ -926,7 +926,7 @@ describe('JSX layout boundaries', () => {
 
   it('does not execute a retained layout iterable when Layer reuses its snapshot', async () => {
     let generatorRuns = 0;
-    function* children(): Generator<CRCNode> {
+    function* children(): Generator<PibblNode> {
       generatorRuns++;
       yield <Rectangle style={{ width: 20, height: 10, fill: '#7c3aed' }} />;
     }
@@ -935,12 +935,12 @@ describe('JSX layout boundaries', () => {
     );
     const retainedLayer = <Layer style={{ width: 80, height: 40 }}>{layout}</Layer>;
     const canvas = createCanvas();
-    controllers.add(crc(canvas, <Group>{retainedLayer}</Group>));
+    controllers.add(pibbl(canvas, <Group>{retainedLayer}</Group>));
     await nextFrame();
     expect(generatorRuns).toBe(1);
     expect(pixel(canvas, 5, 5)).toEqual([124, 58, 237, 255]);
 
-    crc(canvas, <Group>{retainedLayer}</Group>);
+    pibbl(canvas, <Group>{retainedLayer}</Group>);
     await nextFrame();
     expect(generatorRuns).toBe(1);
   });
@@ -986,7 +986,7 @@ function expectObservations(
 function nestedMeasuredProbe(
   layout: NestedLayoutCase['name'],
   capture: MeasurementCapture,
-): CRCNode {
+): PibblNode {
   return (
     <MeasuredProbe
       capture={capture}
@@ -1005,7 +1005,7 @@ function nestedMeasuredProbe(
   );
 }
 
-function outerMeasuringFlow(children: CRCNode): CRCNode {
+function outerMeasuringFlow(children: PibblNode): PibblNode {
   return (
     <Flow style={{ width: 200, height: 40, alignItems: 'start' }}>
       {children}

@@ -4,11 +4,11 @@
 
 > **Historical status: READY IMPLEMENTATION PLAN.** This plan covers Project 1 of the approved particle-effects design. Stateful CPU execution, stateful GPU execution, advanced effects, and presets require later plans.
 
-**Goal:** Ship the optional @crc/particles package with immutable 2D/3D effect definitions, deterministic component-owned systems, stateless analytic execution, an allocation-stable Canvas2D renderer, and settled-scene WebGL point/billboard rendering.
+**Goal:** Ship the optional @pibbl/particles package with immutable 2D/3D effect definitions, deterministic component-owned systems, stateless analytic execution, an allocation-stable Canvas2D renderer, and settled-scene WebGL point/billboard rendering.
 
-**Architecture:** One frozen definition compiler produces backend-neutral emitter plans plus explicit capability results. One hook-owned particle system accepts commands in Begin, advances logical run state in Advance, publishes status in Commit, dirties only its bound renderer in Plan, and delivers diagnostics in Complete. Particles2D owns a preallocated analytic birth ledger and draws all particles from one private Canvas primitive. Particles3D contributes immutable instanced recipes during scene composition; @crc/webgl settles transform, opacity, material, depth, culling, and pass order before its renderer touches WebGL.
+**Architecture:** One frozen definition compiler produces backend-neutral emitter plans plus explicit capability results. One hook-owned particle system accepts commands in Begin, advances logical run state in Advance, publishes status in Commit, dirties only its bound renderer in Plan, and delivers diagnostics in Complete. Particles2D owns a preallocated analytic birth ledger and draws all particles from one private Canvas primitive. Particles3D contributes immutable instanced recipes during scene composition; @pibbl/webgl settles transform, opacity, material, depth, culling, and pass order before its renderer touches WebGL.
 
-**Tech Stack:** TypeScript 7, CRC JSX/createElement runtime, CRC signals and realm scheduler, HTML Canvas 2D, OffscreenCanvas Layers and filters, WebGL2 settled scenes, Vitest Browser with Playwright Chromium, esbuild, pnpm 11.21.0, Node 24.15 or newer.
+**Tech Stack:** TypeScript 7, Pibbl JSX/createElement runtime, Pibbl signals and realm scheduler, HTML Canvas 2D, OffscreenCanvas Layers and filters, WebGL2 settled scenes, Vitest Browser with Playwright Chromium, esbuild, pnpm 11.21.0, Node 24.15 or newer.
 
 **Spec:** docs/superpowers/specs/2026-09-13-first-class-particle-effects-design.md
 
@@ -20,7 +20,7 @@
 - Add a failing test before each production behavior change and run that test once to observe the expected failure.
 - This is Project 1 only. Do not implement world-space particles, moving-emitter history, distance emission, collisions, pointer fields, noise, arbitrary per-particle callbacks, sub-emitters, trails, ribbons, mesh particles, transform feedback, soft particles, automatic adaptive quality, or preset entry points.
 - Particles are components. Keep emission, capacity, lifetime, motion, appearance, renderer, depth, and blend settings out of style.
-- Keep every individual particle outside CRC component identity, hooks, refs, events, focus, and layout. One mounted system owns one population and one component-level target at most.
+- Keep every individual particle outside Pibbl component identity, hooks, refs, events, focus, and layout. One mounted system owns one population and one component-level target at most.
 - Definitions are deeply frozen nominal values with no clock, scheduler registration, decoded asset, Canvas surface, or GPU handle.
 - Use one realm scheduler registration per running system and no independent requestAnimationFrame, timer, worker, or hidden WebGL context.
 - Commands enter Begin in realm invocation order. Observable status and execution values publish in Commit. Milestones and isolated errors deliver in Complete after a successful render transaction. For each delivery, the system-option callback runs before the currently bound component callback; one callback failure is collected without suppressing the other or later deliveries.
@@ -32,7 +32,7 @@
 - Particles2D uses ordinary resolved allocation, layout placement, ancestor Group transforms, Clip, Layer, filter capture, opacity, source paint order, and one declared-box event target. It has no intrinsic measurement.
 - Particles3D performs no WebGL work during component composition. It contributes immutable CPU-owned descriptions to the current WebGLLayer scene.
 - WebGL settlement, not particle code, finalizes effective transform, opacity, material/pass classification, depth state, transparent ordering, culling, pick/focus projection, and post-processing participation.
-- The WebGL renderer owns all programs, textures, buffers, vertex arrays, framebuffers, and context-generation disposal. @crc/particles never exposes or retains a WebGL2RenderingContext.
+- The WebGL renderer owns all programs, textures, buffers, vertex arrays, framebuffers, and context-generation disposal. @pibbl/particles never exposes or retains a WebGL2RenderingContext.
 - Canvas and WebGL may differ in pixels and floating-point rounding. They must agree on seed channels, birth times, normalized lifetime, analytic equations, curve lookup rules, capacity policy, and milestone ordering within documented tolerances.
 - Prefer semantic counts, times, bounds, pass order, draw counts, and ownership assertions before screenshot evidence. Inspect expected, actual, and diff output before accepting an intentional visual baseline.
 - Use Node 24.15 or newer, pnpm 11.21.0, and Playwright Chromium for final evidence.
@@ -45,7 +45,7 @@
 - Modify packages/core/src/lib/scheduler/renderer-participant.ts: add owner-scoped Begin, Advance, Commit, Complete, render-request, render-finish, and paint-target adapters for matching official packages.
 - Modify packages/core/src/internal.ts: export only the new version-coupled friend values and types.
 - Create packages/core/src/lib/scheduler/renderer-participant-particles.test.tsx: prove phase order, owner liveness, cancellation, transaction adoption, and target participation.
-- Modify playground/package-consumer/index.ts and playground/package-consumer/runtime.mjs: lock the expanded internal entry without leaking it from @crc/core.
+- Modify playground/package-consumer/index.ts and playground/package-consumer/runtime.mjs: lock the expanded internal entry without leaking it from @pibbl/core.
 
 ### Package and public definition language
 
@@ -84,7 +84,7 @@
 
 ### Delayed WebGL tranche
 
-- Create packages/webgl/src/internal.ts and modify packages/webgl/package.json plus packages/webgl/tsconfig.build.json: version-coupled @crc/webgl/internal scene-contribution entry.
+- Create packages/webgl/src/internal.ts and modify packages/webgl/package.json plus packages/webgl/tsconfig.build.json: version-coupled @pibbl/webgl/internal scene-contribution entry.
 - Modify packages/webgl/src/lib/scene/{types,composer,settle,renderer}.ts: accept closed instanced submissions and settle them with ordinary scene material/pass behavior.
 - Modify packages/webgl/src/lib/gpu/renderer-resources.ts: transactionally own instanced programs, static geometry, curve/gradient textures, sprite textures, and vertex arrays.
 - Create packages/webgl/src/lib/scene/instanced-contributor.test.ts and packages/webgl/src/lib/scene/instanced-renderer.test.ts: CPU-only composition plus GPU command/rollback evidence.
@@ -98,7 +98,7 @@
 - Modify packages/scenarios/src/{catalog,learning-catalog,index}.ts and packages/scenarios/package.json: register public examples and package dependency.
 - Create packages/scenarios/src/learning/composition/particle-effects.example.tsx: concise component-vs-style, implicit-vs-explicit, and acceleration-vs-general-animation lesson.
 - Create packages/core/test/{particle-celebration-lab,webgl-particle-ambient-lab,particle-ownership,particle-performance}.test.ts: public API, lifecycle, and structural evidence.
-- Modify package.json, pnpm-lock.yaml, playground/package-consumer/{index.ts,jsx.tsx,runtime.mjs}, tooling/verify-packed-consumer.mjs, playground/src/crc-editor-types.txt, and tooling/verify-studio-types.mjs: workspace, packed, Bundler, NodeNext, runtime, and editor declarations.
+- Modify package.json, pnpm-lock.yaml, playground/package-consumer/{index.ts,jsx.tsx,runtime.mjs}, tooling/verify-packed-consumer.mjs, playground/src/pibbl-editor-types.txt, and tooling/verify-studio-types.mjs: workspace, packed, Bundler, NodeNext, runtime, and editor declarations.
 - Create docs/site/api/components/{particles-2d,particles-3d}.md, docs/site/api/functions/{define-particle-effect-2d,define-particle-effect-3d,particle}.md, docs/site/api/hooks/use-particle-system.md, docs/site/api/types/particles.md, and docs/site/learn/guides/particle-effects.md: public API and learning surface.
 - Modify docs/design/{animation-contract,signals-and-scheduling-contract,canvas-surface-contract,runtime-hooks-contract,drawing-components-contract,style-system-contract,layout-system-contract,user-events-contract,focus-and-keyboard-navigation-contract,mouse-interaction-contract,event-resource-ownership,runtime-resource-ownership}.md.
 - Modify README.md, packages/core/README.md, packages/webgl/README.md, docs/library-status.md, AGENTS.md, docs/scenario-index.md, tooling/verify-docs.mjs, tooling/docs-contract-preservation-baseline.json, tooling/studio-docs/api-exports.ts, tooling/studio-docs/api-exports.check.ts, and a new tooling/studio-docs/fixtures/api/particles.ts.
@@ -117,16 +117,17 @@ The WebGL entry exports two runtime values:
 export { defineParticleEffect3D, Particles3D };
 ```
 
-Project 1 does not publish @crc/particles/presets or @crc/particles/presets/webgl. Those subpaths are added only by Project 4.
+Project 1 does not publish @pibbl/particles/presets or @pibbl/particles/presets/webgl. Those subpaths are added only by Project 4.
 
 The nominal and inference boundary is:
 
 ```ts
 declare const particleEffectBrand: unique symbol;
 
-export interface CRCParticleEffect2D<
+export interface PibblParticleEffect2D<
   EmitterName extends string = string,
-  Parameters extends CRCParticleParameterValues = CRCParticleParameterValues,
+  Parameters extends PibblParticleParameterValues =
+    PibblParticleParameterValues,
 > {
   readonly dimension: 2;
   readonly [particleEffectBrand]: {
@@ -135,9 +136,10 @@ export interface CRCParticleEffect2D<
   };
 }
 
-export interface CRCParticleEffect3D<
+export interface PibblParticleEffect3D<
   EmitterName extends string = string,
-  Parameters extends CRCParticleParameterValues = CRCParticleParameterValues,
+  Parameters extends PibblParticleParameterValues =
+    PibblParticleParameterValues,
 > {
   readonly dimension: 3;
   readonly [particleEffectBrand]: {
@@ -146,8 +148,8 @@ export interface CRCParticleEffect3D<
   };
 }
 
-export type CRCParticleValueFor<
-  Definition extends CRCParticleParameterDefinition,
+export type PibblParticleValueFor<
+  Definition extends PibblParticleParameterDefinition,
 > = Definition["type"] extends "number"
   ? number
   : Definition["type"] extends "vector2"
@@ -158,23 +160,23 @@ export type CRCParticleValueFor<
         ? string
         : never;
 
-export type CRCParticleValuesOf<
-  Definitions extends CRCParticleParameterDefinitions | undefined,
-> = Definitions extends CRCParticleParameterDefinitions
+export type PibblParticleValuesOf<
+  Definitions extends PibblParticleParameterDefinitions | undefined,
+> = Definitions extends PibblParticleParameterDefinitions
   ? Readonly<{
-      [Name in keyof Definitions]: CRCParticleValueFor<Definitions[Name]>;
+      [Name in keyof Definitions]: PibblParticleValueFor<Definitions[Name]>;
     }>
   : Readonly<Record<never, never>>;
 
 export function defineParticleEffect2D<
-  const Input extends CRCParticleEffect2DInput,
+  const Input extends PibblParticleEffect2DInput,
 >(
   input: Input,
-): CRCParticleEffect2D<
+): PibblParticleEffect2D<
   Input["emitters"][number]["name"],
-  CRCParticleValuesOf<
+  PibblParticleValuesOf<
     Input extends { readonly parameters: infer Definitions }
-      ? Extract<Definitions, CRCParticleParameterDefinitions>
+      ? Extract<Definitions, PibblParticleParameterDefinitions>
       : undefined
   >
 >;
@@ -185,7 +187,7 @@ The public controller remains hook-owned:
 ```ts
 declare const particleSystemBrand: unique symbol;
 
-export type CRCParticleSystemStatus =
+export type PibblParticleSystemStatus =
   | "idle"
   | "scheduled"
   | "running"
@@ -194,7 +196,7 @@ export type CRCParticleSystemStatus =
   | "finished"
   | "disposed";
 
-export type CRCParticleExecution =
+export type PibblParticleExecution =
   | "unbound"
   | "stateless-canvas"
   | "stateful-canvas"
@@ -202,22 +204,22 @@ export type CRCParticleExecution =
   | "stateful-cpu-webgl"
   | "stateful-gpu-webgl";
 
-export type CRCParticleSystemEvent =
-  | CRCParticleStartEvent
-  | CRCParticleBurstAcceptedEvent
-  | CRCParticleBurstRejectedEvent
-  | CRCParticleDrainStartEvent
-  | CRCParticleFinishEvent;
+export type PibblParticleSystemEvent =
+  | PibblParticleStartEvent
+  | PibblParticleBurstAcceptedEvent
+  | PibblParticleBurstRejectedEvent
+  | PibblParticleDrainStartEvent
+  | PibblParticleFinishEvent;
 
-export interface CRCParticleSystemOptions {
+export interface PibblParticleSystemOptions {
   readonly autoplay?: boolean;
   readonly seed?: number;
   readonly debugName?: string;
-  readonly onEvent?: (event: CRCParticleSystemEvent) => void;
+  readonly onEvent?: (event: PibblParticleSystemEvent) => void;
   readonly onError?: (error: unknown) => void;
 }
 
-export interface CRCParticleBurstOverrides {
+export interface PibblParticleBurstOverrides {
   readonly count?: number;
   readonly position?:
     readonly [number, number] | readonly [number, number, number];
@@ -227,70 +229,72 @@ export interface CRCParticleBurstOverrides {
   >;
 }
 
-export interface CRCParticleSystem<
+export interface PibblParticleSystem<
   EmitterName extends string = string,
-  Parameters extends CRCParticleParameterValues = CRCParticleParameterValues,
+  Parameters extends PibblParticleParameterValues =
+    PibblParticleParameterValues,
   Dimension extends 2 | 3 = 2 | 3,
 > {
   readonly [particleSystemBrand]: {
     readonly parameters: Parameters;
     readonly dimension: Dimension;
   };
-  readonly status: Signal<CRCParticleSystemStatus>;
-  readonly execution: Signal<CRCParticleExecution>;
+  readonly status: Signal<PibblParticleSystemStatus>;
+  readonly execution: Signal<PibblParticleExecution>;
   play(): void;
   pause(): void;
   resume(): void;
   restart(options?: Readonly<{ seed?: number }>): void;
-  emit(emitter: EmitterName, options?: CRCParticleBurstOverrides): void;
+  emit(emitter: EmitterName, options?: PibblParticleBurstOverrides): void;
   stop(options?: Readonly<{ mode?: "drain" | "clear" }>): void;
 }
 
 export function useParticleSystem<
   EmitterName extends string,
-  Parameters extends CRCParticleParameterValues,
+  Parameters extends PibblParticleParameterValues,
 >(
-  effect: CRCParticleEffect2D<EmitterName, Parameters>,
-  options?: CRCParticleSystemOptions,
-): CRCParticleSystem<EmitterName, Parameters, 2>;
+  effect: PibblParticleEffect2D<EmitterName, Parameters>,
+  options?: PibblParticleSystemOptions,
+): PibblParticleSystem<EmitterName, Parameters, 2>;
 export function useParticleSystem<
   EmitterName extends string,
-  Parameters extends CRCParticleParameterValues,
+  Parameters extends PibblParticleParameterValues,
 >(
-  effect: CRCParticleEffect3D<EmitterName, Parameters>,
-  options?: CRCParticleSystemOptions,
-): CRCParticleSystem<EmitterName, Parameters, 3>;
+  effect: PibblParticleEffect3D<EmitterName, Parameters>,
+  options?: PibblParticleSystemOptions,
+): PibblParticleSystem<EmitterName, Parameters, 3>;
 ```
 
 The discriminated component modes are:
 
 ```ts
-export interface CRCParticleCommonProps<
-  Parameters extends CRCParticleParameterValues,
+export interface PibblParticleCommonProps<
+  Parameters extends PibblParticleParameterValues,
 >
-  extends CRCEventHandlers, CRCEventParticipationOptions {
+  extends PibblEventHandlers, PibblEventParticipationOptions {
   readonly parameters?: Readonly<Partial<Parameters>>;
   readonly keyboardFocusable?: boolean;
   readonly keyboardNavigationBounds?: Readonly<LayoutBox>;
-  readonly onEvent?: (event: CRCParticleSystemEvent) => void;
+  readonly onEvent?: (event: PibblParticleSystemEvent) => void;
   readonly onError?: (error: unknown) => void;
 }
 
 export type Particles2DProps<
   EmitterName extends string = string,
-  Parameters extends CRCParticleParameterValues = CRCParticleParameterValues,
-> = CRCParticleCommonProps<Parameters> & {
+  Parameters extends PibblParticleParameterValues =
+    PibblParticleParameterValues,
+> = PibblParticleCommonProps<Parameters> & {
   readonly style?: Particles2DStyle;
 } & (
     | {
-        readonly effect: CRCParticleEffect2D<EmitterName, Parameters>;
+        readonly effect: PibblParticleEffect2D<EmitterName, Parameters>;
         readonly system?: never;
         readonly autoplay?: boolean;
         readonly seed?: number;
       }
     | {
         readonly effect?: never;
-        readonly system: CRCParticleSystem<EmitterName, Parameters, 2>;
+        readonly system: PibblParticleSystem<EmitterName, Parameters, 2>;
         readonly autoplay?: never;
         readonly seed?: never;
       }
@@ -303,27 +307,28 @@ export interface Particles2DStyle
 
 export type Particles3DProps<
   EmitterName extends string = string,
-  Parameters extends CRCParticleParameterValues = CRCParticleParameterValues,
-> = CRCParticleCommonProps<Parameters> & {
+  Parameters extends PibblParticleParameterValues =
+    PibblParticleParameterValues,
+> = PibblParticleCommonProps<Parameters> & {
   readonly style?: Particles3DStyle;
   readonly execution?: "auto" | "cpu" | "gpu";
-  readonly interactionBounds?: CRCParticleBounds3D;
+  readonly interactionBounds?: PibblParticleBounds3D;
 } & (
     | {
-        readonly effect: CRCParticleEffect3D<EmitterName, Parameters>;
+        readonly effect: PibblParticleEffect3D<EmitterName, Parameters>;
         readonly system?: never;
         readonly autoplay?: boolean;
         readonly seed?: number;
       }
     | {
         readonly effect?: never;
-        readonly system: CRCParticleSystem<EmitterName, Parameters, 3>;
+        readonly system: PibblParticleSystem<EmitterName, Parameters, 3>;
         readonly autoplay?: never;
         readonly seed?: never;
       }
   );
 
-export interface Particles3DStyle extends CRCWebGLTransformStyle {
+export interface Particles3DStyle extends PibblWebGLTransformStyle {
   readonly opacity?: number;
   readonly cursor?: string;
   readonly filter?: never;
@@ -337,52 +342,52 @@ Runtime validation rejects both/neither effect and system, implicit-only options
 Parameter definitions always contain a default, so omitted binding values use the copied default. Supplying an unknown key, a nonfinite scalar/vector component, or a value of the wrong dimension rejects the candidate before adoption.
 
 ```ts
-export type CRCParticleParameterTiming = "spawn" | "simulation" | "render";
+export type PibblParticleParameterTiming = "spawn" | "simulation" | "render";
 
-export type CRCParticleParameterDefinition =
+export type PibblParticleParameterDefinition =
   | Readonly<{
       type: "number";
       default: number;
-      timing: CRCParticleParameterTiming;
+      timing: PibblParticleParameterTiming;
     }>
   | Readonly<{
       type: "vector2";
       default: readonly [number, number];
-      timing: CRCParticleParameterTiming;
+      timing: PibblParticleParameterTiming;
     }>
   | Readonly<{
       type: "vector3";
       default: readonly [number, number, number];
-      timing: CRCParticleParameterTiming;
+      timing: PibblParticleParameterTiming;
     }>
   | Readonly<{
       type: "color";
       default: string;
-      timing: CRCParticleParameterTiming;
+      timing: PibblParticleParameterTiming;
     }>;
 
-export type CRCParticleScalar =
+export type PibblParticleScalar =
   | number
-  | CRCParticleRange
-  | CRCParticleIntegerRange
-  | CRCParticleChoice<number>
-  | CRCParticleParameterReference<string>;
+  | PibblParticleRange
+  | PibblParticleIntegerRange
+  | PibblParticleChoice<number>
+  | PibblParticleParameterReference<string>;
 
-export type CRCParticleVector2 = readonly [
-  CRCParticleScalar,
-  CRCParticleScalar,
+export type PibblParticleVector2 = readonly [
+  PibblParticleScalar,
+  PibblParticleScalar,
 ];
-export type CRCParticleVector3 = readonly [
-  CRCParticleScalar,
-  CRCParticleScalar,
-  CRCParticleScalar,
+export type PibblParticleVector3 = readonly [
+  PibblParticleScalar,
+  PibblParticleScalar,
+  PibblParticleScalar,
 ];
 ```
 
 Emission sources use these exact records. repeat.count is the total number of cycles including the first. A finite rate requires durationMilliseconds. Omitting duration makes the rate infinite. Probability is sampled independently for every potential birth and lies in [0, 1].
 
 ```ts
-export type CRCParticleEmission =
+export type PibblParticleEmission =
   | Readonly<{
       type: "rate";
       particlesPerSecond: number;
@@ -397,7 +402,7 @@ export type CRCParticleEmission =
   | Readonly<{
       type: "burst";
       atMilliseconds: number;
-      count: number | CRCParticleIntegerRange;
+      count: number | PibblParticleIntegerRange;
       probability?: number;
       repeat?: Readonly<{
         everyMilliseconds: number;
@@ -406,7 +411,7 @@ export type CRCParticleEmission =
     }>
   | Readonly<{
       type: "manual";
-      count?: number | CRCParticleIntegerRange;
+      count?: number | PibblParticleIntegerRange;
     }>;
 ```
 
@@ -415,7 +420,7 @@ Manual count defaults to 1. An emit override replaces that count for the command
 The Project 1 shape unions are:
 
 ```ts
-export type CRCParticleShape2D =
+export type PibblParticleShape2D =
   | Readonly<{ type: "point"; position?: readonly [number, number] }>
   | Readonly<{
       type: "line";
@@ -439,7 +444,7 @@ export type CRCParticleShape2D =
       outerRadius: number;
     }>;
 
-export type CRCParticleShape3D =
+export type PibblParticleShape3D =
   | Readonly<{ type: "point"; position?: readonly [number, number, number] }>
   | Readonly<{
       type: "line";
@@ -474,48 +479,48 @@ export type CRCParticleShape3D =
 Initial values and analytic modules remain dimension-specific. Vector-valued modules accept a matching constant tuple or parameter reference. Scalar fields accept the scalar language above.
 
 ```ts
-export interface CRCParticleInitial2D {
-  readonly lifetimeMilliseconds: CRCParticleScalar;
-  readonly velocity?: CRCParticleVector2;
-  readonly size?: CRCParticleScalar | CRCParticleVector2;
-  readonly rotationDegrees?: CRCParticleScalar;
-  readonly angularVelocityDegreesPerSecond?: CRCParticleScalar;
-  readonly color?: string | CRCParticleChoice<string>;
-  readonly opacity?: CRCParticleScalar;
+export interface PibblParticleInitial2D {
+  readonly lifetimeMilliseconds: PibblParticleScalar;
+  readonly velocity?: PibblParticleVector2;
+  readonly size?: PibblParticleScalar | PibblParticleVector2;
+  readonly rotationDegrees?: PibblParticleScalar;
+  readonly angularVelocityDegreesPerSecond?: PibblParticleScalar;
+  readonly color?: string | PibblParticleChoice<string>;
+  readonly opacity?: PibblParticleScalar;
 }
 
-export interface CRCParticleInitial3D {
-  readonly lifetimeMilliseconds: CRCParticleScalar;
-  readonly velocity?: CRCParticleVector3 | CRCParticleConeVelocity3D;
-  readonly size?: CRCParticleScalar | CRCParticleVector2;
-  readonly rotationDegrees?: CRCParticleScalar;
-  readonly angularVelocityDegreesPerSecond?: CRCParticleScalar;
-  readonly color?: string | CRCParticleChoice<string>;
-  readonly opacity?: CRCParticleScalar;
+export interface PibblParticleInitial3D {
+  readonly lifetimeMilliseconds: PibblParticleScalar;
+  readonly velocity?: PibblParticleVector3 | PibblParticleConeVelocity3D;
+  readonly size?: PibblParticleScalar | PibblParticleVector2;
+  readonly rotationDegrees?: PibblParticleScalar;
+  readonly angularVelocityDegreesPerSecond?: PibblParticleScalar;
+  readonly color?: string | PibblParticleChoice<string>;
+  readonly opacity?: PibblParticleScalar;
 }
 
-export type CRCParticleMotion2D =
-  | Readonly<{ type: "acceleration" | "gravity"; value: CRCParticleVector2 }>
-  | Readonly<{ type: "drag"; amount: CRCParticleScalar }>
-  | Readonly<{ type: "drift"; velocity: CRCParticleVector2 }>
+export type PibblParticleMotion2D =
+  | Readonly<{ type: "acceleration" | "gravity"; value: PibblParticleVector2 }>
+  | Readonly<{ type: "drag"; amount: PibblParticleScalar }>
+  | Readonly<{ type: "drift"; velocity: PibblParticleVector2 }>
   | Readonly<{
       type: "radialAcceleration";
       center: readonly [number, number];
-      amount: CRCParticleScalar;
+      amount: PibblParticleScalar;
     }>
   | Readonly<{
       type: "orbit";
       center: readonly [number, number];
-      degreesPerSecond: CRCParticleScalar;
+      degreesPerSecond: PibblParticleScalar;
     }>
   | Readonly<{
       type: "sway";
-      amplitude: CRCParticleScalar;
-      frequency: CRCParticleScalar | readonly [number, number];
+      amplitude: PibblParticleScalar;
+      frequency: PibblParticleScalar | readonly [number, number];
     }>
   | Readonly<{
       type: "angularVelocity";
-      degreesPerSecond: CRCParticleScalar;
+      degreesPerSecond: PibblParticleScalar;
     }>;
 ```
 
@@ -524,14 +529,14 @@ webgl-types.ts defines the same named 3D module variants with vector3 centers/di
 Appearance and renderer records are:
 
 ```ts
-export interface CRCParticleAppearance {
-  readonly size?: CRCParticleCurve<number | readonly [number, number]>;
-  readonly rotationDegrees?: CRCParticleCurve<number>;
-  readonly color?: CRCParticleGradient;
-  readonly opacity?: CRCParticleCurve<number>;
+export interface PibblParticleAppearance {
+  readonly size?: PibblParticleCurve<number | readonly [number, number]>;
+  readonly rotationDegrees?: PibblParticleCurve<number>;
+  readonly color?: PibblParticleGradient;
+  readonly opacity?: PibblParticleCurve<number>;
 }
 
-export type CRCParticleRenderer2D =
+export type PibblParticleRenderer2D =
   | Readonly<{ type: "circle"; blend?: "source-over" | "additive" }>
   | Readonly<{
       type: "rectangle";
@@ -550,7 +555,7 @@ export type CRCParticleRenderer2D =
       blend?: "source-over" | "additive";
     }>;
 
-export type CRCParticleRenderer3D =
+export type PibblParticleRenderer3D =
   | Readonly<{
       type: "point";
       material: "unlit" | "emissive";
@@ -603,51 +608,56 @@ Project 1 rejects distance sorting at WebGL binding and does not expose atlas fr
 **Interfaces:**
 
 ```ts
-export interface CRCInternalSignalBatch {
+export interface PibblInternalSignalBatch {
   read<T>(signal: WritableSignal<T>): T;
   stage<T>(signal: WritableSignal<T>, value: T, writer: object): void;
   discardWriter(writer: object): void;
 }
 
-export interface CRCInternalCommandHandle {
+export interface PibblInternalCommandHandle {
   readonly sequence: number;
   cancel(): void;
 }
 
-export function crcInternalAssertCommandAllowed(): void;
-export function crcInternalQueueBegin(
-  owner: CRCInternalRenderOwner,
+export function pibblInternalAssertCommandAllowed(): void;
+export function pibblInternalQueueBegin(
+  owner: PibblInternalRenderOwner,
   callback: (
-    frame: CRCInternalFrame,
-    batch: CRCInternalSignalBatch,
+    frame: PibblInternalFrame,
+    batch: PibblInternalSignalBatch,
     sequence: number,
   ) => void,
-): CRCInternalCommandHandle;
-export function crcInternalRegisterAdvance(
-  owner: CRCInternalRenderOwner,
-  callback: (frame: CRCInternalFrame, batch: CRCInternalSignalBatch) => void,
-): () => void;
-export function crcInternalQueueCurrentCommit(
-  owner: CRCInternalRenderOwner,
+): PibblInternalCommandHandle;
+export function pibblInternalRegisterAdvance(
+  owner: PibblInternalRenderOwner,
   callback: (
-    frame: CRCInternalFrame,
+    frame: PibblInternalFrame,
+    batch: PibblInternalSignalBatch,
+  ) => void,
+): () => void;
+export function pibblInternalQueueCurrentCommit(
+  owner: PibblInternalRenderOwner,
+  callback: (
+    frame: PibblInternalFrame,
     outcome: Readonly<{ applied: boolean }>,
   ) => void,
 ): void;
-export function crcInternalQueueCurrentComplete(
-  owner: CRCInternalRenderOwner,
-  callback: (frame: CRCInternalFrame) => void,
+export function pibblInternalQueueCurrentComplete(
+  owner: PibblInternalRenderOwner,
+  callback: (frame: PibblInternalFrame) => void,
 ): void;
-export function crcInternalRequestRender(owner: CRCInternalRenderOwner): void;
-export function crcInternalOnRenderFinish(
-  owner: CRCInternalRenderOwner,
+export function pibblInternalRequestRender(
+  owner: PibblInternalRenderOwner,
+): void;
+export function pibblInternalOnRenderFinish(
+  owner: PibblInternalRenderOwner,
   callback: (success: boolean) => void,
 ): void;
-export function crcInternalPaintTarget(
-  handlers: CRCEventHandlers,
-  options: CRCEventTargetOptions,
-  pointerEvents?: CRCPointerEvents,
-): CRCEventTargetSnapshot;
+export function pibblInternalPaintTarget(
+  handlers: PibblEventHandlers,
+  options: PibblEventTargetOptions,
+  pointerEvents?: PibblPointerEvents,
+): PibblEventTargetSnapshot;
 ```
 
 - [ ] Add failing browser tests proving Begin → Advance → Commit → Plan/Render → Complete ordering, one owner-scoped registration, command cancellation, inert callbacks after owner disposal, current-instance render requests, successful/failed render-finish callbacks, and default paint-target participation with explicit pointerEvents none.
@@ -674,9 +684,9 @@ corepack pnpm@11.21.0 vitest run packages/core/src/lib/scheduler/renderer-partic
 
 - [ ] Add assertSignalCommandAllowed in graph.ts. It must invoke the active direct-write policy against one private unleased sentinel node so component, primitive, computed, and Advance guards retain their current messages without mutating a signal.
 - [ ] Implement the owner adapters in renderer-participant.ts by resolving the existing active owner state, delegating to the realm scheduler, and checking owner liveness again inside every queued callback. Teardown must cancel queued Begin work and unregister Advance work exactly once.
-- [ ] Implement crcInternalOnRenderFinish against the current render transaction and require that the supplied owner is the currently evaluating owner.
-- [ ] Implement crcInternalPaintTarget as the narrow friend wrapper over the existing paint-target hook; do not create a second event registration implementation.
-- [ ] Export the exact friend functions/types from internal.ts, add compile-only use to package-consumer/index.ts, and update runtime.mjs expectedInternal without changing @crc/core root exports.
+- [ ] Implement pibblInternalOnRenderFinish against the current render transaction and require that the supplied owner is the currently evaluating owner.
+- [ ] Implement pibblInternalPaintTarget as the narrow friend wrapper over the existing paint-target hook; do not create a second event registration implementation.
+- [ ] Export the exact friend functions/types from internal.ts, add compile-only use to package-consumer/index.ts, and update runtime.mjs expectedInternal without changing @pibbl/core root exports.
 - [ ] Re-run the focused browser test and package-consumer checks.
 
 ```sh
@@ -691,7 +701,7 @@ git add packages/core/src/lib/signals/graph.ts packages/core/src/lib/scheduler/r
 git commit -m "feat(core): expose official scheduled-renderer seam"
 ```
 
-### Task 2: Scaffold @crc/particles and lock its public types
+### Task 2: Scaffold @pibbl/particles and lock its public types
 
 **Files:**
 
@@ -710,7 +720,7 @@ git commit -m "feat(core): expose official scheduled-renderer seam"
 
 ```json
 {
-  "name": "@crc/particles",
+  "name": "@pibbl/particles",
   "type": "module",
   "version": "0.0.1",
   "sideEffects": false,
@@ -726,11 +736,11 @@ git commit -m "feat(core): expose official scheduled-renderer seam"
     "./package.json": "./package.json"
   },
   "peerDependencies": {
-    "@crc/core": "0.0.1",
-    "@crc/webgl": "0.0.1"
+    "@pibbl/core": "0.0.1",
+    "@pibbl/webgl": "0.0.1"
   },
   "peerDependenciesMeta": {
-    "@crc/webgl": {
+    "@pibbl/webgl": {
       "optional": true
     }
   }
@@ -758,11 +768,11 @@ system.emit("unknown");
 corepack pnpm@11.21.0 tsc -p packages/particles/tsconfig.build.json
 ```
 
-- [ ] Create the package manifest with root and webgl entries, exact core peer, optional exact webgl peer, and build externalization for @crc/core, @crc/core/internal, @crc/webgl, and @crc/webgl/internal. Include only dist in packed files.
+- [ ] Create the package manifest with root and webgl entries, exact core peer, optional exact webgl peer, and build externalization for @pibbl/core, @pibbl/core/internal, @pibbl/webgl, and @pibbl/webgl/internal. Include only dist in packed files.
 - [ ] Add public closed unions for parameters, spawn values, curves, gradients, 2D/3D emissions, shapes, analytic motion, appearances, renderers, bounds, events, diagnostics, systems, props, and styles. Do not export normalized records or compiler plans.
 - [ ] Use readonly tuples and const generics so 2D and 3D vector dimensions cannot mix. Include named error classes only where callers can reasonably branch; otherwise publish discriminated diagnostic records.
 - [ ] Export type declarations from index.ts and webgl.ts. Tasks 3, 5, 7, and 11 add the six runtime values after their implementations exist. Add no jsx-runtime subpath.
-- [ ] Add @crc/particles as a root development dependency, regenerate only the lockfile changes caused by the workspace package, and run typecheck.
+- [ ] Add @pibbl/particles as a root development dependency, regenerate only the lockfile changes caused by the workspace package, and run typecheck.
 
 ```sh
 corepack pnpm@11.21.0 install --lockfile-only
@@ -794,22 +804,22 @@ git commit -m "feat(particles): scaffold public package and types"
 
 ```ts
 export const particle = Object.freeze({
-  between(min: number, max: number): CRCParticleRange;
-  integer(min: number, max: number): CRCParticleIntegerRange;
+  between(min: number, max: number): PibblParticleRange;
+  integer(min: number, max: number): PibblParticleIntegerRange;
   choice<const T>(
     choices: readonly Readonly<{ value: T; weight: number }>[],
-  ): CRCParticleChoice<T>;
+  ): PibblParticleChoice<T>;
   parameter<const Name extends string>(
     name: Name,
-  ): CRCParticleParameterReference<Name>;
-  curve<const T extends CRCParticleCurveValue>(
+  ): PibblParticleParameterReference<Name>;
+  curve<const T extends PibblParticleCurveValue>(
     keys: readonly (readonly [time: number, value: T])[],
-    options?: CRCParticleCurveOptions,
-  ): CRCParticleCurve<T>;
+    options?: PibblParticleCurveOptions,
+  ): PibblParticleCurve<T>;
   gradient(
     keys: readonly (readonly [time: number, color: string])[],
-    options?: CRCParticleCurveOptions,
-  ): CRCParticleGradient;
+    options?: PibblParticleCurveOptions,
+  ): PibblParticleGradient;
 });
 ```
 
@@ -831,7 +841,7 @@ corepack pnpm@11.21.0 vitest run packages/particles/src/lib/particle.test.ts pac
 
 ```sh
 corepack pnpm@11.21.0 vitest run packages/particles/src/lib/particle.test.ts packages/particles/src/lib/definition.test.ts packages/particles/src/lib/webgl-definition.test.ts --browser.headless --browser.ui=false
-corepack pnpm@11.21.0 --filter @crc/particles build
+corepack pnpm@11.21.0 --filter @pibbl/particles build
 ```
 
 - [ ] Commit only Task 3 files.
@@ -932,7 +942,7 @@ corepack pnpm@11.21.0 vitest run packages/particles/src/lib/random.test.ts packa
 
 - [ ] Implement FNV-1a plus mix32 using Math.imul and unsigned shifts. Assign channel ids from normalized property paths, never from traversal-time object identity.
 - [ ] Normalize colors with a pure portable parser during definition construction into finite [0, 1] sRGB RGBA. Accept hex forms, modern and legacy rgb()/rgba(), hsl()/hsla(), transparent, and the CSS named-color table; reject contextual currentColor/system references and color syntaxes outside this Project 1 grammar. Cache identical source strings and never read pixels.
-- [ ] Sample every CRCEasing into 257 immutable points during construction. No easing, choice, or user callback may run inside a particle hot loop or WebGL shader.
+- [ ] Sample every PibblEasing into 257 immutable points during construction. No easing, choice, or user callback may run inside a particle hot loop or WebGL shader.
 - [ ] Compile rate sources into exact birth intervals and scheduled bursts into sorted stable records. Repeat count means total finite cycles; equal timestamps retain declaration order. Probability rejects a potential birth without renumbering later potential ordinals.
 - [ ] Classify completion as finite, automatic-infinite, or manual-open. Store maximum lifetime, earliest/latest automatic birth, conservative potentially-live ordinal window, and explicit reasons for every unavailable execution tier.
 - [ ] Compile parameter references into fixed numeric offsets and separate spawn, simulation, and render masks. Unknown references or dimension mismatches fail before a definition is published.
@@ -942,7 +952,7 @@ corepack pnpm@11.21.0 vitest run packages/particles/src/lib/random.test.ts packa
 
 ```sh
 corepack pnpm@11.21.0 vitest run packages/particles/src/lib/random.test.ts packages/particles/src/lib/color.test.ts packages/particles/src/lib/curve.test.ts packages/particles/src/lib/emission.test.ts packages/particles/src/lib/compiler.test.ts packages/particles/src/lib/sample.test.ts --browser.headless --browser.ui=false
-corepack pnpm@11.21.0 --filter @crc/particles build
+corepack pnpm@11.21.0 --filter @pibbl/particles build
 ```
 
 - [ ] Commit only Task 4 files.
@@ -969,9 +979,9 @@ git commit -m "feat(particles): compile deterministic analytic effects"
 
 ```ts
 export interface ParticleBindingCandidate {
-  readonly owner: CRCInternalRenderOwner;
+  readonly owner: PibblInternalRenderOwner;
   readonly backend: "canvas" | "webgl";
-  readonly execution: CRCParticleExecution;
+  readonly execution: PibblParticleExecution;
   readonly compiled: CompiledParticleEffect;
   readonly parameters: Readonly<Float64Array>;
   requestRender(): void;
@@ -987,7 +997,7 @@ export interface ParticleSystemFrame {
   readonly effectTimeMilliseconds: number;
   readonly previousEffectTimeMilliseconds: number;
   readonly seed: number;
-  readonly status: CRCParticleSystemStatus;
+  readonly status: PibblParticleSystemStatus;
 }
 ```
 
@@ -999,8 +1009,8 @@ export interface ParticleSystemFrame {
 corepack pnpm@11.21.0 vitest run packages/particles/src/lib/system/binding.test.ts packages/particles/src/lib/system/controller.test.ts packages/particles/src/lib/system/hook.test.tsx --browser.headless --browser.ui=false
 ```
 
-- [ ] Implement a stable handle around private writable status/execution signals exposed through asReadonly. Controller methods first call crcInternalAssertCommandAllowed, validate arguments synchronously, then queue one owner-scoped Begin command.
-- [ ] Apply play/pause/resume/restart/emit/stop only in Begin. Stage status and execution through CRCInternalSignalBatch. Queue commit acknowledgement and deliver events/errors only from Complete when the corresponding transaction applied. A manual emit while paused queues a burst-rejected diagnostic with accepted count zero and does not touch birth storage.
+- [ ] Implement a stable handle around private writable status/execution signals exposed through asReadonly. Controller methods first call pibblInternalAssertCommandAllowed, validate arguments synchronously, then queue one owner-scoped Begin command.
+- [ ] Apply play/pause/resume/restart/emit/stop only in Begin. Stage status and execution through PibblInternalSignalBatch. Queue commit acknowledgement and deliver events/errors only from Complete when the corresponding transaction applied. A manual emit while paused queues a burst-rejected diagnostic with accepted count zero and does not touch birth storage.
 - [ ] Track effect logical time as an anchor pair rather than accumulated deltas. Pause preserves effect time. Resume establishes a new logical-time anchor. Restart returns time and ordinals to zero with the original or explicit normalized seed.
 - [ ] Keep one Advance registration only while automatic emission, live particles, draining, or pending accepted work requires future frames. Paused, cleared, finished, and unbound systems release it.
 - [ ] Add a compact effect-level parameter epoch ledger. Spawn values bind to the epoch active at birth, simulation values affect current analytic sampling, and render values affect the next successful draw. Prune epochs once no accepted live birth references them.
@@ -1093,8 +1103,8 @@ git commit -m "feat(particles): add fixed-capacity canvas births"
 ```ts
 export function Particles2D<
   EmitterName extends string,
-  Parameters extends CRCParticleParameterValues,
->(props: Particles2DProps<EmitterName, Parameters>): CRCNode {
+  Parameters extends PibblParticleParameterValues,
+>(props: Particles2DProps<EmitterName, Parameters>): PibblNode {
   // Own or bind the system and adopt candidates transactionally.
   // Return exactly one private drawing primitive.
 }
@@ -1116,7 +1126,7 @@ corepack pnpm@11.21.0 vitest run packages/particles/src/lib/canvas/raster-cache.
 ```
 
 - [ ] Resolve the current finite allocation through useLayoutBox. Forward BoxStyle/LayoutItemStyle/filter to the private primitive, multiply style.opacity into sampled alpha once, and return unsupported measurement from the primitive so particles never claim intrinsic size.
-- [ ] Always reserve the same hook order. In the private primitive, register one memoized resolved-border-box target with crcInternalPaintTarget; pass empty handlers and pointerEvents none for decorative mode, and pass current handlers plus cursor/focus options for auto mode. Draw particles inside the resolved content box and never derive target geometry from current particle pixels.
+- [ ] Always reserve the same hook order. In the private primitive, register one memoized resolved-border-box target with pibblInternalPaintTarget; pass empty handlers and pointerEvents none for decorative mode, and pass current handlers plus cursor/focus options for auto mode. Draw particles inside the resolved content box and never derive target geometry from current particle pixels.
 - [ ] Give each binding one reusable Float64Array sampler register file. Iterate only occupied or conservatively potentially-live slots and draw without per-particle arrays/objects.
 - [ ] Implement circle and rectangle with direct path commands. Draw immutable Path2D directly for low reuse and use the bounded raster cache for repeated complex paths/sprites at quantized useful sizes.
 - [ ] Bound each executor cache to 16 raster entries per distinct renderer source. Use deterministic least-recently-used eviction, close owned ImageBitmap values, and never close caller-owned source assets.
@@ -1127,7 +1137,7 @@ corepack pnpm@11.21.0 vitest run packages/particles/src/lib/canvas/raster-cache.
 
 ```sh
 corepack pnpm@11.21.0 vitest run packages/particles/src/lib/canvas/raster-cache.test.ts packages/particles/src/lib/canvas/executor.test.ts packages/particles/src/lib/canvas/component.test.tsx --browser.headless --browser.ui=false
-corepack pnpm@11.21.0 --filter @crc/particles build
+corepack pnpm@11.21.0 --filter @pibbl/particles build
 ```
 
 - [ ] Commit only Task 7 files.
@@ -1156,11 +1166,11 @@ git commit -m "feat(particles): render canvas particle components"
 
 ```ts
 export interface ParticleCelebrationLabState {
-  readonly status: CRCParticleSystemStatus;
-  readonly execution: CRCParticleExecution;
+  readonly status: PibblParticleSystemStatus;
+  readonly execution: PibblParticleExecution;
   readonly acceptedBursts: number;
   readonly rejectedParticles: number;
-  readonly lastEvent: CRCParticleSystemEvent["type"] | "mount";
+  readonly lastEvent: PibblParticleSystemEvent["type"] | "mount";
   readonly owner: "mounted" | "removed";
   readonly staleHandleInert: boolean;
 }
@@ -1175,8 +1185,8 @@ corepack pnpm@11.21.0 vitest run packages/core/test/particle-celebration-lab.tes
 
 - [ ] Author a visible 640×360 celebration using one explicit system, one impact emitter, circle and rectangle renderers in separate named emitters, a 300-particle combined capacity, pointerEvents auto, an outer Clip, and a toggleable core filter/Layer.
 - [ ] Expose laboratory actions for burst, pause, resume, restart, drain, clear, remove-owner, and reset. State publication must use public signals/events only.
-- [ ] Author the learning example with one autoplay ambient effect and one explicit click-burst system. Explain in source comments that acceleration is particle-domain math, while moving the component itself uses ordinary CRC animation/signals.
-- [ ] Register validated public metadata, add the workspace particle dependency to @crc/scenarios, update its lockfile importer, and keep lab-only controls out of the learning catalog. Regenerate the scenario index with the repository tool.
+- [ ] Author the learning example with one autoplay ambient effect and one explicit click-burst system. Explain in source comments that acceleration is particle-domain math, while moving the component itself uses ordinary Pibbl animation/signals.
+- [ ] Register validated public metadata, add the workspace particle dependency to @pibbl/scenarios, update its lockfile importer, and keep lab-only controls out of the learning catalog. Regenerate the scenario index with the repository tool.
 
 ```sh
 corepack pnpm@11.21.0 scenarios:write-index
@@ -1192,7 +1202,7 @@ git add packages/scenarios/src/particle-celebration-lab.example.tsx packages/sce
 git commit -m "test(particles): add canvas celebration scenario"
 ```
 
-### Task 9: Pass the WebGL dependency checkpoint and add @crc/webgl/internal
+### Task 9: Pass the WebGL dependency checkpoint and add @pibbl/webgl/internal
 
 **Files:**
 
@@ -1217,7 +1227,7 @@ corepack pnpm@11.21.0 vitest run packages/webgl/src/lib/scene/composer.test.ts p
 **Interfaces:**
 
 ```ts
-export interface CRCWebGLInstancedRecipe {
+export interface PibblWebGLInstancedRecipe {
   readonly key: object;
   readonly topology: "points" | "triangles";
   readonly vertexSource: string;
@@ -1225,36 +1235,38 @@ export interface CRCWebGLInstancedRecipe {
   readonly verticesPerInstance: number;
   readonly capacity: number;
   readonly staticVertexData?: Readonly<Float32Array>;
-  readonly lookupTables: readonly CRCWebGLLookupTableRecipe[];
-  readonly sprite?: CRCWebGLSpriteRecipe;
+  readonly lookupTables: readonly PibblWebGLLookupTableRecipe[];
+  readonly sprite?: PibblWebGLSpriteRecipe;
 }
 
-export interface CRCWebGLInstancedSubmission {
+export interface PibblWebGLInstancedSubmission {
   readonly kind: "instanced";
   readonly componentName: string;
-  readonly source: CRCElementSource | undefined;
+  readonly source: PibblElementSource | undefined;
   readonly localModel: Readonly<Float32Array>;
-  readonly localBounds: CRCWebGLBounds;
+  readonly localBounds: PibblWebGLBounds;
   readonly opacity: number;
-  readonly material: CRCWebGLSceneMaterialIntent;
+  readonly material: PibblWebGLSceneMaterialIntent;
   readonly depthTest: boolean;
   readonly depthWrite: boolean;
   readonly sorting: "none" | "oldest-first" | "youngest-first";
-  readonly target: CRCEventTargetRegistration | undefined;
-  readonly recipe: CRCWebGLInstancedRecipe;
+  readonly target: PibblEventTargetRegistration | undefined;
+  readonly recipe: PibblWebGLInstancedRecipe;
   readonly frameUniforms: Readonly<Float32Array>;
 }
 
-export function submitWebGLInstanced(input: CRCWebGLInstancedSubmission): void;
+export function submitWebGLInstanced(
+  input: PibblWebGLInstancedSubmission,
+): void;
 ```
 
 - [ ] Add failing CPU-only tests proving an instanced submission snapshots model ancestry, source metadata, bounds, target, material intent, opacity, depth, recipe identity, and frame uniforms without GL calls or mutable-array aliasing.
 - [ ] Add failing settlement tests proving frustum culling, effective opacity multiplication once, ordinary unlit/emissive pass classification, stable source ties, projected component-level interaction bounds, and batching only within one submission.
 - [ ] Run focused tests and confirm the internal entry/submission kind are missing.
-- [ ] Add @crc/webgl/internal as an official version-coupled export with declaration/runtime files and no public-root re-export. Build it alongside index.ts and externalize @crc/core/internal.
+- [ ] Add @pibbl/webgl/internal as an official version-coupled export with declaration/runtime files and no public-root re-export. Build it alongside index.ts and externalize @pibbl/core/internal.
 - [ ] Extend the settled scene entry union with the closed instanced record. Composer assigns sourceIndex and copies arrays. Settlement uses the ordinary material/pass functions rather than a particle-only pass.
 - [ ] Validate shader/recipe records as trusted official-package data without making them public application APIs. No callback in the recipe receives a WebGL context.
-- [ ] Update package consumer compile/runtime expectations and prove @crc/webgl/internal resolves one packed @crc/webgl identity without leaking into @crc/webgl root.
+- [ ] Update package consumer compile/runtime expectations and prove @pibbl/webgl/internal resolves one packed @pibbl/webgl identity without leaking into @pibbl/webgl root.
 
 ```sh
 corepack pnpm@11.21.0 vitest run packages/webgl/src/lib/scene/instanced-contributor.test.ts --browser.headless --browser.ui=false
@@ -1363,7 +1375,7 @@ corepack pnpm@11.21.0 vitest run packages/particles/src/lib/webgl/shader.test.ts
 
 ```sh
 corepack pnpm@11.21.0 vitest run packages/particles/src/lib/webgl/shader.test.ts packages/particles/src/lib/webgl/recipe.test.ts packages/particles/src/lib/webgl/component.test.tsx --browser.headless --browser.ui=false
-corepack pnpm@11.21.0 --filter @crc/particles build
+corepack pnpm@11.21.0 --filter @pibbl/particles build
 ```
 
 - [ ] Commit only Task 11 files.
@@ -1477,18 +1489,18 @@ git commit -m "test(particles): lock ownership and structural cost"
 - Modify: playground/package-consumer/tsconfig.bundler.json
 - Modify: playground/package-consumer/tsconfig.nodenext.json
 - Modify: tooling/verify-packed-consumer.mjs
-- Modify: playground/src/crc-editor-types.txt
+- Modify: playground/src/pibbl-editor-types.txt
 - Modify: tooling/verify-studio-types.mjs
 - Modify: packages/particles/package.json
 - Modify: packages/particles/README.md
 
 **Interfaces:**
 
-- Proves the exact @crc/particles and @crc/particles/webgl runtime/type entry points in workspace, Bundler, NodeNext, packed, source-Studio, and built-Studio consumers while retaining one core and one WebGL nominal identity.
+- Proves the exact @pibbl/particles and @pibbl/particles/webgl runtime/type entry points in workspace, Bundler, NodeNext, packed, source-Studio, and built-Studio consumers while retaining one core and one WebGL nominal identity.
 
 - [ ] Add failing consumer coverage for all six runtime values, the named public types, JSX implicit/explicit modes, emitter inference, optional WebGL peer behavior, root-only tree shaking, and runtime nominal identity.
-- [ ] Make the packed verifier install one particles tarball first without @crc/webgl and prove @crc/particles root works, then with matching @crc/webgl and prove @crc/particles/webgl plus @crc/webgl/internal resolve one official package/core identity.
-- [ ] Assert tarballs contain dist declarations/runtime/maps and no src tree. Assert the particles root bundle does not include WebGL shader strings, @crc/webgl, preset code, a second scheduler, or a second core element identity.
+- [ ] Make the packed verifier install one particles tarball first without @pibbl/webgl and prove @pibbl/particles root works, then with matching @pibbl/webgl and prove @pibbl/particles/webgl plus @pibbl/webgl/internal resolve one official package/core identity.
+- [ ] Assert tarballs contain dist declarations/runtime/maps and no src tree. Assert the particles root bundle does not include WebGL shader strings, @pibbl/webgl, preset code, a second scheduler, or a second core element identity.
 - [ ] Run consumer checks and observe the expected failures before updating build/export declarations.
 
 ```sh
@@ -1510,7 +1522,7 @@ corepack pnpm@11.21.0 playground:build:built
 - [ ] Commit only Task 14 files.
 
 ```sh
-git add playground/package-consumer/index.ts playground/package-consumer/jsx.tsx playground/package-consumer/runtime.mjs playground/package-consumer/tsconfig.bundler.json playground/package-consumer/tsconfig.nodenext.json tooling/verify-packed-consumer.mjs playground/src/crc-editor-types.txt tooling/verify-studio-types.mjs packages/particles/package.json packages/particles/README.md
+git add playground/package-consumer/index.ts playground/package-consumer/jsx.tsx playground/package-consumer/runtime.mjs playground/package-consumer/tsconfig.bundler.json playground/package-consumer/tsconfig.nodenext.json tooling/verify-packed-consumer.mjs playground/src/pibbl-editor-types.txt tooling/verify-studio-types.mjs packages/particles/package.json packages/particles/README.md
 git commit -m "test(particles): verify package consumers"
 ```
 
@@ -1560,12 +1572,12 @@ corepack pnpm@11.21.0 studio-docs:check
 ```
 
 - [ ] Update normative contracts with the implemented phase ordering, logical-time equations, command/status semantics, definition/parameter adoption, capacity policy, component ownership, Canvas paint/filter/layout/event behavior, WebGL scene submission/material/pass behavior, and exact failure/teardown rules.
-- [ ] State explicitly in the animation contract and guide that particle acceleration/gravity/drag are closed population-domain descriptors, WebGL does not standardize them, and ordinary transforms/cameras/materials continue to use CRC signals plus tween/keyframes/spring/defineAnimation/stepper.
+- [ ] State explicitly in the animation contract and guide that particle acceleration/gravity/drag are closed population-domain descriptors, WebGL does not standardize them, and ordinary transforms/cameras/materials continue to use Pibbl signals plus tween/keyframes/spring/defineAnimation/stepper.
 - [ ] Document the Project 1 capability boundary: Canvas manual births work; stateless WebGL accepts automatic rate/scheduled births with fixed spawn/simulation parameters; stateful-only definitions produce actionable capability diagnostics until Project 2.
 - [ ] Document performance guidance without claiming Canvas GPU acceleration: tight Layer isolation is situational, WebGL uses instancing, capacity is a resource commitment, bounds are required, additive/none sorting is the fast path, and wall-clock results are environment-specific.
 - [ ] Keep docs/strategy/particle-effects-research.md non-normative. This task does not rewrite the approved historical spec; current shipped behavior is expressed by docs/design and docs/site.
 - [ ] Update README/library status/AGENTS.md source-of-truth and package maps. Register only docs/site content for public Studio search.
-- [ ] Extend crcPublicEntryPaths with particles and particlesWebgl, add the fixture and coverage assertions, and register every new page in verify-docs.mjs. Update the preservation baseline only after reviewing each deliberately changed normative sentence.
+- [ ] Extend pibblPublicEntryPaths with particles and particlesWebgl, add the fixture and coverage assertions, and register every new page in verify-docs.mjs. Update the preservation baseline only after reviewing each deliberately changed normative sentence.
 - [ ] Run docs, catalog, links, formatting, and type inventory checks.
 
 ```sh
@@ -1629,7 +1641,7 @@ corepack pnpm@11.21.0 trust
 - [ ] Run a final public-surface scan proving no raw GL context, preset subpath, stateful execution implementation, particle callback, per-particle target, or source-path import leaked.
 
 ```sh
-rg -n "WebGL2RenderingContext|requestAnimationFrame|setInterval|setTimeout|onParticle|activeCount|@crc/core/lib|@crc/webgl/src|presets" packages/particles/src packages/particles/dist playground/package-consumer
+rg -n "WebGL2RenderingContext|requestAnimationFrame|setInterval|setTimeout|onParticle|activeCount|@pibbl/core/lib|@pibbl/webgl/src|presets" packages/particles/src packages/particles/dist playground/package-consumer
 ```
 
 - [ ] Commit final evidence and any inspected intentional particle baselines.
@@ -1643,7 +1655,7 @@ git commit -m "test(particles): record aggregate verification"
 
 Project 1 is complete only when:
 
-- @crc/particles root works without @crc/webgl installed, while @crc/particles/webgl requires the matching official WebGL peer;
+- @pibbl/particles root works without @pibbl/webgl installed, while @pibbl/particles/webgl requires the matching official WebGL peer;
 - immutable definitions, seeded values, curves, gradients, emission, bounds, and capability reasons are covered by public and internal tests;
 - one system owns every command, scheduler registration, population, binding, callback, and teardown;
 - Particles2D passes layout, transform, clip, Layer, filter, paint-order, opacity, interaction, failure, and allocation evidence;

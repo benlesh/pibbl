@@ -2,92 +2,92 @@ import type { ArcProps } from '../components/arc.js';
 import type { CircleProps } from '../components/circle.js';
 import type { EllipseProps } from '../components/ellipse.js';
 import type { useEventTarget } from '../hooks/use-event-target.js';
-import type { CRCRenderLayerTarget } from '../render-layer/types.js';
+import type { PibblRenderLayerTarget } from '../render-layer/types.js';
 import type { LayoutBox } from '../layout/types.js';
 import type { PathGeometry } from '../geometry/path-geometry.js';
 
 /**
- * Base CRC event with logical targeting, propagation, and native-event access.
+ * Base Pibbl event with logical targeting, propagation, and native-event access.
  *
- * @see {@link CRCEventTarget}
- * @see {@link CRCEventPhase}
- * @see {@link CRCClipboardEvent}
- * @see {@link CRCCompositionEvent}
- * @see {@link CRCEventMap}
+ * @see {@link PibblEventTarget}
+ * @see {@link PibblEventPhase}
+ * @see {@link PibblClipboardEvent}
+ * @see {@link PibblCompositionEvent}
+ * @see {@link PibblEventMap}
  */
-export interface CRCEvent<TOriginal extends Event = Event> {
-  /** Native-style name identifying the event being dispatched. See {@link CRCEvent}. */
+export interface PibblEvent<TOriginal extends Event = Event> {
+  /** Native-style name identifying the event being dispatched. See {@link PibblEvent}. */
   readonly type: string;
-  /** The selected logical target or target configuration. See {@link CRCEventTarget}. */
-  readonly target: CRCEventTarget;
-  /** The logical target whose handler is currently being dispatched. See {@link CRCEventTarget}. */
-  readonly currentTarget: CRCEventTarget;
+  /** The selected logical target or target configuration. See {@link PibblEventTarget}. */
+  readonly target: PibblEventTarget;
+  /** The logical target whose handler is currently being dispatched. See {@link PibblEventTarget}. */
+  readonly currentTarget: PibblEventTarget;
   /**
    * The other logical target involved in a focus or boundary transition. See
-   * {@link CRCEventTarget}.
+   * {@link PibblEventTarget}.
    */
-  readonly relatedTarget: CRCEventTarget | null;
-  /** Current capture, target, or bubble phase of event propagation. See {@link CRCEventPhase}. */
-  readonly eventPhase: CRCEventPhase;
-  /** Whether the event propagates through bubble handlers. See {@link CRCEvent}. */
+  readonly relatedTarget: PibblEventTarget | null;
+  /** Current capture, target, or bubble phase of event propagation. See {@link PibblEventPhase}. */
+  readonly eventPhase: PibblEventPhase;
+  /** Whether the event propagates through bubble handlers. See {@link PibblEvent}. */
   readonly bubbles: boolean;
   /**
-   * Whether the originating event permits cancellation of its default action. See {@link CRCEvent}
+   * Whether the originating event permits cancellation of its default action. See {@link PibblEvent}
    * .
    */
   readonly cancelable: boolean;
-  /** Whether the default action has been prevented. See {@link CRCEvent}. */
+  /** Whether the default action has been prevented. See {@link PibblEvent}. */
   readonly defaultPrevented: boolean;
-  /** Timestamp of the event in the browser event time coordinate system. See {@link CRCEvent}. */
+  /** Timestamp of the event in the browser event time coordinate system. See {@link PibblEvent}. */
   readonly timeStamp: number;
-  /** The originating browser event. See {@link CRCEvent}. */
+  /** The originating browser event. See {@link PibblEvent}. */
   readonly originalEvent: TOriginal;
-  /** The native event retained as the source of this logical event. See {@link CRCEvent}. */
+  /** The native event retained as the source of this logical event. See {@link PibblEvent}. */
   readonly sourceEvent?: Event;
   /**
-   * Returns the logical propagation path of the event. See {@link CRCEventTarget}.
-   * @returns The logical event propagation path. See {@link CRCEventTarget}.
+   * Returns the logical propagation path of the event. See {@link PibblEventTarget}.
+   * @returns The logical event propagation path. See {@link PibblEventTarget}.
    */
-  composedPath(): readonly CRCEventTarget[];
+  composedPath(): readonly PibblEventTarget[];
   /**
    * Prevents the originating event's default action when cancellation is supported. See
-   * {@link CRCEvent}.
+   * {@link PibblEvent}.
    */
   preventDefault(): void;
-  /** Stops propagation to subsequent logical ancestors. See {@link CRCEvent}. */
+  /** Stops propagation to subsequent logical ancestors. See {@link PibblEvent}. */
   stopPropagation(): void;
-  /** Stops remaining handlers at this target and further propagation. See {@link CRCEvent}. */
+  /** Stops remaining handlers at this target and further propagation. See {@link PibblEvent}. */
   stopImmediatePropagation(): void;
 }
 
 /**
- * The capture, target, or bubble phase of CRC event dispatch.
+ * The capture, target, or bubble phase of Pibbl event dispatch.
  *
- * @see {@link CRCEvent}
+ * @see {@link PibblEvent}
  */
-export type CRCEventPhase = 1 | 2 | 3;
+export type PibblEventPhase = 1 | 2 | 3;
 
 /**
- * A logical target identity used by CRC event dispatch and focus management.
+ * A logical target identity used by Pibbl event dispatch and focus management.
  *
- * @see {@link CRCEvent}
+ * @see {@link PibblEvent}
  */
-export interface CRCEventTarget {
+export interface PibblEventTarget {
   /**
    * Captures the pointer for this logical target until release or cancellation. See
-   * {@link CRCEventTarget}.
+   * {@link PibblEventTarget}.
    * @param pointerId - Pointer identifier from the routed pointer event.
    */
   setPointerCapture(pointerId: number): void;
   /**
    * Reports whether this target currently owns capture of the identified pointer. See
-   * {@link CRCEventTarget}.
+   * {@link PibblEventTarget}.
    * @param pointerId - Pointer identifier to check.
    * @returns Whether this target currently owns capture for that pointer.
    */
   hasPointerCapture(pointerId: number): boolean;
   /**
-   * Releases this target's capture of the identified pointer. See {@link CRCEventTarget}.
+   * Releases this target's capture of the identified pointer. See {@link PibblEventTarget}.
    * @param pointerId - Pointer identifier from the routed pointer event.
    */
   releasePointerCapture(pointerId: number): void;
@@ -98,42 +98,42 @@ export interface CRCEventTarget {
  *
  * @see {@link useEventTarget}
  */
-export interface CRCEventTargetSnapshot {
-  /** Whether this target currently holds logical focus. See {@link CRCEventTargetSnapshot}. */
+export interface PibblEventTargetSnapshot {
+  /** Whether this target currently holds logical focus. See {@link PibblEventTargetSnapshot}. */
   readonly isFocused: boolean;
-  /** Whether focus should be presented as keyboard-visible. See {@link CRCEventTargetSnapshot}. */
+  /** Whether focus should be presented as keyboard-visible. See {@link PibblEventTargetSnapshot}. */
   readonly isFocusVisible: boolean;
 }
 
 /**
  * Whether paint participates in coordinate targeting or is skipped as decoration.
  *
- * @see {@link CRCEventParticipationOptions}
- * @see {@link CRCRenderLayerTarget}
+ * @see {@link PibblEventParticipationOptions}
+ * @see {@link PibblRenderLayerTarget}
  */
-export type CRCPointerEvents = 'auto' | 'none';
+export type PibblPointerEvents = 'auto' | 'none';
 
 /**
  * Controls whether a primitive participates in pointer targeting.
  *
- * @see {@link CRCPointerEvents}
+ * @see {@link PibblPointerEvents}
  * @see {@link ArcProps}
  * @see {@link CircleProps}
  * @see {@link EllipseProps}
  */
-export interface CRCEventParticipationOptions {
-  /** Whether this content participates in pointer targeting. See {@link CRCPointerEvents}. */
-  readonly pointerEvents?: CRCPointerEvents;
+export interface PibblEventParticipationOptions {
+  /** Whether this content participates in pointer targeting. See {@link PibblPointerEvents}. */
+  readonly pointerEvents?: PibblPointerEvents;
 }
 
 /**
  * Keyboard focus and directional-navigation geometry shared by interactive components.
  *
- * @see {@link CRCEventTargetOptions}
+ * @see {@link PibblEventTargetOptions}
  * @see {@link LayoutBox}
  */
-export interface CRCEventFocusOptions {
-  /** Whether the target may receive keyboard focus. See {@link CRCEventFocusOptions}. */
+export interface PibblEventFocusOptions {
+  /** Whether the target may receive keyboard focus. See {@link PibblEventFocusOptions}. */
   readonly keyboardFocusable?: boolean;
   /** Logical rectangle used for directional keyboard navigation. See {@link LayoutBox}. */
   readonly keyboardNavigationBounds?: Readonly<LayoutBox>;
@@ -145,21 +145,21 @@ export interface CRCEventFocusOptions {
  * @see {@link PathGeometry}
  * @see {@link useEventTarget}
  */
-export interface CRCEventTargetOptions extends CRCEventFocusOptions {
+export interface PibblEventTargetOptions extends PibblEventFocusOptions {
   /** Path geometry used by this operation. See {@link PathGeometry}. */
   readonly path: Path2D | PathGeometry;
   /**
    * Whether the path's filled interior participates in hit testing. See
-   * {@link CRCEventTargetOptions}.
+   * {@link PibblEventTargetOptions}.
    */
   readonly fill?: boolean;
   /**
    * Width used for line hit testing independently of the visible stroke width. See
-   * {@link CRCEventTargetOptions}.
+   * {@link PibblEventTargetOptions}.
    */
   readonly lineInteractionWidth?: number;
   /**
-   * Cursor shown while this target owns pointer presentation. See {@link CRCEventTargetOptions}.
+   * Cursor shown while this target owns pointer presentation. See {@link PibblEventTargetOptions}.
    */
   readonly cursor?: string;
 }
@@ -167,367 +167,367 @@ export interface CRCEventTargetOptions extends CRCEventFocusOptions {
 /**
  * Keyboard modifier state shared by mouse, pointer, wheel, and keyboard events.
  *
- * @see {@link CRCKeyboardEvent}
- * @see {@link CRCLogicalMouseEvent}
+ * @see {@link PibblKeyboardEvent}
+ * @see {@link PibblLogicalMouseEvent}
  */
-interface CRCModifierEvent<TOriginal extends Event> extends CRCEvent<TOriginal> {
-  /** Whether Alt was held when the event occurred. See {@link CRCModifierEvent}. */
+interface PibblModifierEvent<TOriginal extends Event> extends PibblEvent<TOriginal> {
+  /** Whether Alt was held when the event occurred. See {@link PibblModifierEvent}. */
   readonly altKey: boolean;
-  /** Whether Control was held when the event occurred. See {@link CRCModifierEvent}. */
+  /** Whether Control was held when the event occurred. See {@link PibblModifierEvent}. */
   readonly ctrlKey: boolean;
   /**
-   * Whether the platform Meta key was held when the event occurred. See {@link CRCModifierEvent}.
+   * Whether the platform Meta key was held when the event occurred. See {@link PibblModifierEvent}.
    */
   readonly metaKey: boolean;
-  /** Whether Shift was held when the event occurred. See {@link CRCModifierEvent}. */
+  /** Whether Shift was held when the event occurred. See {@link PibblModifierEvent}. */
   readonly shiftKey: boolean;
 }
 
 /**
- * Mouse event coordinates and buttons expressed in CRC's logical coordinate system.
+ * Mouse event coordinates and buttons expressed in Pibbl's logical coordinate system.
  *
- * @see {@link CRCDragEvent}
- * @see {@link CRCEventMap}
- * @see {@link CRCPointerEvent}
+ * @see {@link PibblDragEvent}
+ * @see {@link PibblEventMap}
+ * @see {@link PibblPointerEvent}
  */
-export interface CRCLogicalMouseEvent<
+export interface PibblLogicalMouseEvent<
   TOriginal extends MouseEvent = MouseEvent,
-> extends CRCModifierEvent<TOriginal> {
+> extends PibblModifierEvent<TOriginal> {
   /** Root-logical canvas coordinates. */
   readonly x: number;
   /** Root-logical canvas coordinates. */
   readonly y: number;
-  /** Browser client-space horizontal coordinate. See {@link CRCLogicalMouseEvent}. */
+  /** Browser client-space horizontal coordinate. See {@link PibblLogicalMouseEvent}. */
   readonly clientX: number;
-  /** Browser client-space vertical coordinate. See {@link CRCLogicalMouseEvent}. */
+  /** Browser client-space vertical coordinate. See {@link PibblLogicalMouseEvent}. */
   readonly clientY: number;
-  /** Browser screen-space horizontal coordinate. See {@link CRCLogicalMouseEvent}. */
+  /** Browser screen-space horizontal coordinate. See {@link PibblLogicalMouseEvent}. */
   readonly screenX: number;
-  /** Browser screen-space vertical coordinate. See {@link CRCLogicalMouseEvent}. */
+  /** Browser screen-space vertical coordinate. See {@link PibblLogicalMouseEvent}. */
   readonly screenY: number;
   /**
-   * Browser-reported horizontal motion since the previous event. See {@link CRCLogicalMouseEvent}
+   * Browser-reported horizontal motion since the previous event. See {@link PibblLogicalMouseEvent}
    * .
    */
   readonly movementX: number;
   /**
-   * Browser-reported vertical motion since the previous event. See {@link CRCLogicalMouseEvent}.
+   * Browser-reported vertical motion since the previous event. See {@link PibblLogicalMouseEvent}.
    */
   readonly movementY: number;
   /**
    * The button that changed state for this mouse or pointer event. See
-   * {@link CRCLogicalMouseEvent}.
+   * {@link PibblLogicalMouseEvent}.
    */
   readonly button: number;
   /**
-   * Bit mask of buttons held during this mouse or pointer event. See {@link CRCLogicalMouseEvent}
+   * Bit mask of buttons held during this mouse or pointer event. See {@link PibblLogicalMouseEvent}
    * .
    */
   readonly buttons: number;
-  /** Browser mouse-event detail, such as the click count. See {@link CRCLogicalMouseEvent}. */
+  /** Browser mouse-event detail, such as the click count. See {@link PibblLogicalMouseEvent}. */
   readonly detail: number;
 }
 
 /**
- * CRC's logical pointer event, retaining the corresponding native event payload.
+ * Pibbl's logical pointer event, retaining the corresponding native event payload.
  *
- * @see {@link CRCLogicalMouseEvent}
- * @see {@link CRCEventMap}
+ * @see {@link PibblLogicalMouseEvent}
+ * @see {@link PibblEventMap}
  */
-export interface CRCPointerEvent extends CRCLogicalMouseEvent<PointerEvent> {
-  /** Browser identifier of the active pointer. See {@link CRCPointerEvent}. */
+export interface PibblPointerEvent extends PibblLogicalMouseEvent<PointerEvent> {
+  /** Browser identifier of the active pointer. See {@link PibblPointerEvent}. */
   readonly pointerId: number;
   /**
    * Horizontal extent in the units of the containing geometry or surface. See
-   * {@link CRCPointerEvent}.
+   * {@link PibblPointerEvent}.
    */
   readonly width: number;
   /**
    * Vertical extent in the units of the containing geometry or surface. See
-   * {@link CRCPointerEvent}.
+   * {@link PibblPointerEvent}.
    */
   readonly height: number;
-  /** Normalized pressure reported by the pointer device. See {@link CRCPointerEvent}. */
+  /** Normalized pressure reported by the pointer device. See {@link PibblPointerEvent}. */
   readonly pressure: number;
-  /** Normalized tangential pressure reported by the pointer device. See {@link CRCPointerEvent}. */
+  /** Normalized tangential pressure reported by the pointer device. See {@link PibblPointerEvent}. */
   readonly tangentialPressure: number;
-  /** Pointer tilt relative to the x axis, in degrees. See {@link CRCPointerEvent}. */
+  /** Pointer tilt relative to the x axis, in degrees. See {@link PibblPointerEvent}. */
   readonly tiltX: number;
-  /** Pointer tilt relative to the y axis, in degrees. See {@link CRCPointerEvent}. */
+  /** Pointer tilt relative to the y axis, in degrees. See {@link PibblPointerEvent}. */
   readonly tiltY: number;
-  /** Pointer rotation around its own axis, in degrees. See {@link CRCPointerEvent}. */
+  /** Pointer rotation around its own axis, in degrees. See {@link PibblPointerEvent}. */
   readonly twist: number;
-  /** Browser-reported pointer device category. See {@link CRCPointerEvent}. */
+  /** Browser-reported pointer device category. See {@link PibblPointerEvent}. */
   readonly pointerType: string;
-  /** Whether this is the primary pointer of its device category. See {@link CRCPointerEvent}. */
+  /** Whether this is the primary pointer of its device category. See {@link PibblPointerEvent}. */
   readonly isPrimary: boolean;
 }
 
 /**
- * CRC's logical touch event, retaining the corresponding native event payload.
+ * Pibbl's logical touch event, retaining the corresponding native event payload.
  *
- * @see {@link CRCEventMap}
+ * @see {@link PibblEventMap}
  */
-export interface CRCTouchEvent extends CRCModifierEvent<TouchEvent> {
+export interface PibblTouchEvent extends PibblModifierEvent<TouchEvent> {
   /** Root-logical coordinates from the first changed touch. */
   readonly x: number;
   /** Root-logical coordinates from the first changed touch. */
   readonly y: number;
-  /** All active browser touch contacts. See {@link CRCTouchEvent}. */
+  /** All active browser touch contacts. See {@link PibblTouchEvent}. */
   readonly touches: TouchList;
-  /** Active browser touch contacts associated with the event target. See {@link CRCTouchEvent}. */
+  /** Active browser touch contacts associated with the event target. See {@link PibblTouchEvent}. */
   readonly targetTouches: TouchList;
-  /** Browser touch contacts changed by this event. See {@link CRCTouchEvent}. */
+  /** Browser touch contacts changed by this event. See {@link PibblTouchEvent}. */
   readonly changedTouches: TouchList;
 }
 
 /**
- * CRC's logical wheel event, retaining the corresponding native event payload.
+ * Pibbl's logical wheel event, retaining the corresponding native event payload.
  *
- * @see {@link CRCLogicalMouseEvent}
- * @see {@link CRCEventMap}
+ * @see {@link PibblLogicalMouseEvent}
+ * @see {@link PibblEventMap}
  */
-export interface CRCWheelEvent extends CRCLogicalMouseEvent<WheelEvent> {
+export interface PibblWheelEvent extends PibblLogicalMouseEvent<WheelEvent> {
   /**
-   * Horizontal wheel displacement in the units identified by deltaMode. See {@link CRCWheelEvent}
+   * Horizontal wheel displacement in the units identified by deltaMode. See {@link PibblWheelEvent}
    * .
    */
   readonly deltaX: number;
   /**
-   * Vertical wheel displacement in the units identified by deltaMode. See {@link CRCWheelEvent}.
+   * Vertical wheel displacement in the units identified by deltaMode. See {@link PibblWheelEvent}.
    */
   readonly deltaY: number;
-  /** Depth wheel displacement in the units identified by deltaMode. See {@link CRCWheelEvent}. */
+  /** Depth wheel displacement in the units identified by deltaMode. See {@link PibblWheelEvent}. */
   readonly deltaZ: number;
-  /** The browser unit convention for wheel deltas. See {@link CRCWheelEvent}. */
+  /** The browser unit convention for wheel deltas. See {@link PibblWheelEvent}. */
   readonly deltaMode: number;
 }
 
 /**
- * CRC's logical keyboard event, retaining the corresponding native event payload.
+ * Pibbl's logical keyboard event, retaining the corresponding native event payload.
  *
- * @see {@link CRCEventMap}
+ * @see {@link PibblEventMap}
  */
-export interface CRCKeyboardEvent extends CRCModifierEvent<KeyboardEvent> {
-  /** Logical key value reported by the browser. See {@link CRCKeyboardEvent}. */
+export interface PibblKeyboardEvent extends PibblModifierEvent<KeyboardEvent> {
+  /** Logical key value reported by the browser. See {@link PibblKeyboardEvent}. */
   readonly key: string;
-  /** Physical key code reported by the browser. See {@link CRCKeyboardEvent}. */
+  /** Physical key code reported by the browser. See {@link PibblKeyboardEvent}. */
   readonly code: string;
-  /** Browser-reported location of the key on the keyboard. See {@link CRCKeyboardEvent}. */
+  /** Browser-reported location of the key on the keyboard. See {@link PibblKeyboardEvent}. */
   readonly location: number;
-  /** Whether the browser reported an auto-repeated key press. See {@link CRCKeyboardEvent}. */
+  /** Whether the browser reported an auto-repeated key press. See {@link PibblKeyboardEvent}. */
   readonly repeat: boolean;
   /**
    * Whether the event occurred during an active text-composition session. See
-   * {@link CRCKeyboardEvent}.
+   * {@link PibblKeyboardEvent}.
    */
   readonly isComposing: boolean;
 }
 
 /**
- * CRC's logical focus event, retaining the corresponding native event payload.
+ * Pibbl's logical focus event, retaining the corresponding native event payload.
  *
- * @see {@link CRCEvent}
- * @see {@link CRCEventMap}
+ * @see {@link PibblEvent}
+ * @see {@link PibblEventMap}
  */
-export interface CRCFocusEvent extends CRCEvent<FocusEvent> {}
+export interface PibblFocusEvent extends PibblEvent<FocusEvent> {}
 
 /**
- * CRC's logical input event, retaining the corresponding native event payload.
+ * Pibbl's logical input event, retaining the corresponding native event payload.
  *
- * @see {@link CRCEvent}
- * @see {@link CRCEventMap}
+ * @see {@link PibblEvent}
+ * @see {@link PibblEventMap}
  */
-export interface CRCInputEvent extends CRCEvent<InputEvent> {
+export interface PibblInputEvent extends PibblEvent<InputEvent> {
   /**
-   * Application data supplied to the component or reported by the event. See {@link CRCInputEvent}
+   * Application data supplied to the component or reported by the event. See {@link PibblInputEvent}
    * .
    */
   readonly data: string | null;
   /**
    * Drag-and-drop or input transfer payload from the originating browser event. See
-   * {@link CRCInputEvent}.
+   * {@link PibblInputEvent}.
    */
   readonly dataTransfer: DataTransfer | null;
-  /** The editing operation reported by the browser input event. See {@link CRCInputEvent}. */
+  /** The editing operation reported by the browser input event. See {@link PibblInputEvent}. */
   readonly inputType: string;
   /**
    * Whether the event occurred during an active text-composition session. See
-   * {@link CRCInputEvent}.
+   * {@link PibblInputEvent}.
    */
   readonly isComposing: boolean;
 }
 
 /**
- * CRC's logical composition event, retaining the corresponding native event payload.
+ * Pibbl's logical composition event, retaining the corresponding native event payload.
  *
- * @see {@link CRCEvent}
- * @see {@link CRCEventMap}
+ * @see {@link PibblEvent}
+ * @see {@link PibblEventMap}
  */
-export interface CRCCompositionEvent extends CRCEvent<CompositionEvent> {
+export interface PibblCompositionEvent extends PibblEvent<CompositionEvent> {
   /**
    * Application data supplied to the component or reported by the event. See
-   * {@link CRCCompositionEvent}.
+   * {@link PibblCompositionEvent}.
    */
   readonly data: string;
 }
 
 /**
- * CRC's logical clipboard event, retaining the corresponding native event payload.
+ * Pibbl's logical clipboard event, retaining the corresponding native event payload.
  *
- * @see {@link CRCEvent}
- * @see {@link CRCEventMap}
+ * @see {@link PibblEvent}
+ * @see {@link PibblEventMap}
  */
-export interface CRCClipboardEvent extends CRCEvent<ClipboardEvent> {
-  /** Clipboard payload supplied by the originating browser event. See {@link CRCClipboardEvent}. */
+export interface PibblClipboardEvent extends PibblEvent<ClipboardEvent> {
+  /** Clipboard payload supplied by the originating browser event. See {@link PibblClipboardEvent}. */
   readonly clipboardData: DataTransfer | null;
 }
 
 /**
- * CRC's logical drag event, retaining the corresponding native event payload.
+ * Pibbl's logical drag event, retaining the corresponding native event payload.
  *
- * @see {@link CRCLogicalMouseEvent}
- * @see {@link CRCEventMap}
+ * @see {@link PibblLogicalMouseEvent}
+ * @see {@link PibblEventMap}
  */
-export interface CRCDragEvent extends CRCLogicalMouseEvent<DragEvent> {
+export interface PibblDragEvent extends PibblLogicalMouseEvent<DragEvent> {
   /**
    * Drag-and-drop or input transfer payload from the originating browser event. See
-   * {@link CRCDragEvent}.
+   * {@link PibblDragEvent}.
    */
   readonly dataTransfer: DataTransfer | null;
 }
 
 /**
- * Maps supported native-style event names to their CRC event payload types.
+ * Maps supported native-style event names to their Pibbl event payload types.
  *
- * @see {@link CRCPointerEvent}
- * @see {@link CRCLogicalMouseEvent}
- * @see {@link CRCTouchEvent}
- * @see {@link CRCWheelEvent}
- * @see {@link CRCKeyboardEvent}
- * @see {@link CRCFocusEvent}
- * @see {@link CRCInputEvent}
- * @see {@link CRCEvent}
- * @see {@link CRCCompositionEvent}
- * @see {@link CRCClipboardEvent}
- * @see {@link CRCDragEvent}
+ * @see {@link PibblPointerEvent}
+ * @see {@link PibblLogicalMouseEvent}
+ * @see {@link PibblTouchEvent}
+ * @see {@link PibblWheelEvent}
+ * @see {@link PibblKeyboardEvent}
+ * @see {@link PibblFocusEvent}
+ * @see {@link PibblInputEvent}
+ * @see {@link PibblEvent}
+ * @see {@link PibblCompositionEvent}
+ * @see {@link PibblClipboardEvent}
+ * @see {@link PibblDragEvent}
  */
-export interface CRCEventMap {
-  /** The typed CRC payload for the pointerover event. See {@link CRCPointerEvent}. */
-  pointerover: CRCPointerEvent;
-  /** The typed CRC payload for the pointerenter event. See {@link CRCPointerEvent}. */
-  pointerenter: CRCPointerEvent;
-  /** The typed CRC payload for the pointerdown event. See {@link CRCPointerEvent}. */
-  pointerdown: CRCPointerEvent;
-  /** The typed CRC payload for the pointermove event. See {@link CRCPointerEvent}. */
-  pointermove: CRCPointerEvent;
-  /** The typed CRC payload for the pointerrawupdate event. See {@link CRCPointerEvent}. */
-  pointerrawupdate: CRCPointerEvent;
-  /** The typed CRC payload for the pointerup event. See {@link CRCPointerEvent}. */
-  pointerup: CRCPointerEvent;
-  /** The typed CRC payload for the pointercancel event. See {@link CRCPointerEvent}. */
-  pointercancel: CRCPointerEvent;
-  /** The typed CRC payload for the pointerout event. See {@link CRCPointerEvent}. */
-  pointerout: CRCPointerEvent;
-  /** The typed CRC payload for the pointerleave event. See {@link CRCPointerEvent}. */
-  pointerleave: CRCPointerEvent;
-  /** The typed CRC payload for the gotpointercapture event. See {@link CRCPointerEvent}. */
-  gotpointercapture: CRCPointerEvent;
-  /** The typed CRC payload for the lostpointercapture event. See {@link CRCPointerEvent}. */
-  lostpointercapture: CRCPointerEvent;
-  /** The typed CRC payload for the click event. See {@link CRCLogicalMouseEvent}. */
-  click: CRCLogicalMouseEvent;
-  /** The typed CRC payload for the dblclick event. See {@link CRCLogicalMouseEvent}. */
-  dblclick: CRCLogicalMouseEvent;
-  /** The typed CRC payload for the auxclick event. See {@link CRCLogicalMouseEvent}. */
-  auxclick: CRCLogicalMouseEvent;
-  /** The typed CRC payload for the contextmenu event. See {@link CRCLogicalMouseEvent}. */
-  contextmenu: CRCLogicalMouseEvent;
-  /** The typed CRC payload for the mouseover event. See {@link CRCLogicalMouseEvent}. */
-  mouseover: CRCLogicalMouseEvent;
-  /** The typed CRC payload for the mouseenter event. See {@link CRCLogicalMouseEvent}. */
-  mouseenter: CRCLogicalMouseEvent;
-  /** The typed CRC payload for the mousedown event. See {@link CRCLogicalMouseEvent}. */
-  mousedown: CRCLogicalMouseEvent;
-  /** The typed CRC payload for the mousemove event. See {@link CRCLogicalMouseEvent}. */
-  mousemove: CRCLogicalMouseEvent;
-  /** The typed CRC payload for the mouseup event. See {@link CRCLogicalMouseEvent}. */
-  mouseup: CRCLogicalMouseEvent;
-  /** The typed CRC payload for the mouseout event. See {@link CRCLogicalMouseEvent}. */
-  mouseout: CRCLogicalMouseEvent;
-  /** The typed CRC payload for the mouseleave event. See {@link CRCLogicalMouseEvent}. */
-  mouseleave: CRCLogicalMouseEvent;
-  /** The typed CRC payload for the touchstart event. See {@link CRCTouchEvent}. */
-  touchstart: CRCTouchEvent;
-  /** The typed CRC payload for the touchmove event. See {@link CRCTouchEvent}. */
-  touchmove: CRCTouchEvent;
-  /** The typed CRC payload for the touchend event. See {@link CRCTouchEvent}. */
-  touchend: CRCTouchEvent;
-  /** The typed CRC payload for the touchcancel event. See {@link CRCTouchEvent}. */
-  touchcancel: CRCTouchEvent;
-  /** The typed CRC payload for the wheel event. See {@link CRCWheelEvent}. */
-  wheel: CRCWheelEvent;
-  /** The typed CRC payload for the keydown event. See {@link CRCKeyboardEvent}. */
-  keydown: CRCKeyboardEvent;
-  /** The typed CRC payload for the keyup event. See {@link CRCKeyboardEvent}. */
-  keyup: CRCKeyboardEvent;
-  /** The typed CRC payload for the focus event. See {@link CRCFocusEvent}. */
-  focus: CRCFocusEvent;
-  /** The typed CRC payload for the blur event. See {@link CRCFocusEvent}. */
-  blur: CRCFocusEvent;
-  /** The typed CRC payload for the focusin event. See {@link CRCFocusEvent}. */
-  focusin: CRCFocusEvent;
-  /** The typed CRC payload for the focusout event. See {@link CRCFocusEvent}. */
-  focusout: CRCFocusEvent;
-  /** The typed CRC payload for the beforeinput event. See {@link CRCInputEvent}. */
-  beforeinput: CRCInputEvent;
-  /** The typed CRC payload for the input event. See {@link CRCInputEvent}. */
-  input: CRCInputEvent;
-  /** The typed CRC payload for the change event. See {@link CRCEvent}. */
-  change: CRCEvent;
-  /** The typed CRC payload for the compositionstart event. See {@link CRCCompositionEvent}. */
-  compositionstart: CRCCompositionEvent;
-  /** The typed CRC payload for the compositionupdate event. See {@link CRCCompositionEvent}. */
-  compositionupdate: CRCCompositionEvent;
-  /** The typed CRC payload for the compositionend event. See {@link CRCCompositionEvent}. */
-  compositionend: CRCCompositionEvent;
-  /** The typed CRC payload for the select event. See {@link CRCEvent}. */
-  select: CRCEvent;
-  /** The typed CRC payload for the selectionchange event. See {@link CRCEvent}. */
-  selectionchange: CRCEvent;
-  /** The typed CRC payload for the copy event. See {@link CRCClipboardEvent}. */
-  copy: CRCClipboardEvent;
-  /** The typed CRC payload for the cut event. See {@link CRCClipboardEvent}. */
-  cut: CRCClipboardEvent;
-  /** The typed CRC payload for the paste event. See {@link CRCClipboardEvent}. */
-  paste: CRCClipboardEvent;
-  /** The typed CRC payload for the dragstart event. See {@link CRCDragEvent}. */
-  dragstart: CRCDragEvent;
-  /** The typed CRC payload for the drag event. See {@link CRCDragEvent}. */
-  drag: CRCDragEvent;
-  /** The typed CRC payload for the dragend event. See {@link CRCDragEvent}. */
-  dragend: CRCDragEvent;
-  /** The typed CRC payload for the dragenter event. See {@link CRCDragEvent}. */
-  dragenter: CRCDragEvent;
-  /** The typed CRC payload for the dragleave event. See {@link CRCDragEvent}. */
-  dragleave: CRCDragEvent;
-  /** The typed CRC payload for the dragover event. See {@link CRCDragEvent}. */
-  dragover: CRCDragEvent;
-  /** The typed CRC payload for the drop event. See {@link CRCDragEvent}. */
-  drop: CRCDragEvent;
+export interface PibblEventMap {
+  /** The typed Pibbl payload for the pointerover event. See {@link PibblPointerEvent}. */
+  pointerover: PibblPointerEvent;
+  /** The typed Pibbl payload for the pointerenter event. See {@link PibblPointerEvent}. */
+  pointerenter: PibblPointerEvent;
+  /** The typed Pibbl payload for the pointerdown event. See {@link PibblPointerEvent}. */
+  pointerdown: PibblPointerEvent;
+  /** The typed Pibbl payload for the pointermove event. See {@link PibblPointerEvent}. */
+  pointermove: PibblPointerEvent;
+  /** The typed Pibbl payload for the pointerrawupdate event. See {@link PibblPointerEvent}. */
+  pointerrawupdate: PibblPointerEvent;
+  /** The typed Pibbl payload for the pointerup event. See {@link PibblPointerEvent}. */
+  pointerup: PibblPointerEvent;
+  /** The typed Pibbl payload for the pointercancel event. See {@link PibblPointerEvent}. */
+  pointercancel: PibblPointerEvent;
+  /** The typed Pibbl payload for the pointerout event. See {@link PibblPointerEvent}. */
+  pointerout: PibblPointerEvent;
+  /** The typed Pibbl payload for the pointerleave event. See {@link PibblPointerEvent}. */
+  pointerleave: PibblPointerEvent;
+  /** The typed Pibbl payload for the gotpointercapture event. See {@link PibblPointerEvent}. */
+  gotpointercapture: PibblPointerEvent;
+  /** The typed Pibbl payload for the lostpointercapture event. See {@link PibblPointerEvent}. */
+  lostpointercapture: PibblPointerEvent;
+  /** The typed Pibbl payload for the click event. See {@link PibblLogicalMouseEvent}. */
+  click: PibblLogicalMouseEvent;
+  /** The typed Pibbl payload for the dblclick event. See {@link PibblLogicalMouseEvent}. */
+  dblclick: PibblLogicalMouseEvent;
+  /** The typed Pibbl payload for the auxclick event. See {@link PibblLogicalMouseEvent}. */
+  auxclick: PibblLogicalMouseEvent;
+  /** The typed Pibbl payload for the contextmenu event. See {@link PibblLogicalMouseEvent}. */
+  contextmenu: PibblLogicalMouseEvent;
+  /** The typed Pibbl payload for the mouseover event. See {@link PibblLogicalMouseEvent}. */
+  mouseover: PibblLogicalMouseEvent;
+  /** The typed Pibbl payload for the mouseenter event. See {@link PibblLogicalMouseEvent}. */
+  mouseenter: PibblLogicalMouseEvent;
+  /** The typed Pibbl payload for the mousedown event. See {@link PibblLogicalMouseEvent}. */
+  mousedown: PibblLogicalMouseEvent;
+  /** The typed Pibbl payload for the mousemove event. See {@link PibblLogicalMouseEvent}. */
+  mousemove: PibblLogicalMouseEvent;
+  /** The typed Pibbl payload for the mouseup event. See {@link PibblLogicalMouseEvent}. */
+  mouseup: PibblLogicalMouseEvent;
+  /** The typed Pibbl payload for the mouseout event. See {@link PibblLogicalMouseEvent}. */
+  mouseout: PibblLogicalMouseEvent;
+  /** The typed Pibbl payload for the mouseleave event. See {@link PibblLogicalMouseEvent}. */
+  mouseleave: PibblLogicalMouseEvent;
+  /** The typed Pibbl payload for the touchstart event. See {@link PibblTouchEvent}. */
+  touchstart: PibblTouchEvent;
+  /** The typed Pibbl payload for the touchmove event. See {@link PibblTouchEvent}. */
+  touchmove: PibblTouchEvent;
+  /** The typed Pibbl payload for the touchend event. See {@link PibblTouchEvent}. */
+  touchend: PibblTouchEvent;
+  /** The typed Pibbl payload for the touchcancel event. See {@link PibblTouchEvent}. */
+  touchcancel: PibblTouchEvent;
+  /** The typed Pibbl payload for the wheel event. See {@link PibblWheelEvent}. */
+  wheel: PibblWheelEvent;
+  /** The typed Pibbl payload for the keydown event. See {@link PibblKeyboardEvent}. */
+  keydown: PibblKeyboardEvent;
+  /** The typed Pibbl payload for the keyup event. See {@link PibblKeyboardEvent}. */
+  keyup: PibblKeyboardEvent;
+  /** The typed Pibbl payload for the focus event. See {@link PibblFocusEvent}. */
+  focus: PibblFocusEvent;
+  /** The typed Pibbl payload for the blur event. See {@link PibblFocusEvent}. */
+  blur: PibblFocusEvent;
+  /** The typed Pibbl payload for the focusin event. See {@link PibblFocusEvent}. */
+  focusin: PibblFocusEvent;
+  /** The typed Pibbl payload for the focusout event. See {@link PibblFocusEvent}. */
+  focusout: PibblFocusEvent;
+  /** The typed Pibbl payload for the beforeinput event. See {@link PibblInputEvent}. */
+  beforeinput: PibblInputEvent;
+  /** The typed Pibbl payload for the input event. See {@link PibblInputEvent}. */
+  input: PibblInputEvent;
+  /** The typed Pibbl payload for the change event. See {@link PibblEvent}. */
+  change: PibblEvent;
+  /** The typed Pibbl payload for the compositionstart event. See {@link PibblCompositionEvent}. */
+  compositionstart: PibblCompositionEvent;
+  /** The typed Pibbl payload for the compositionupdate event. See {@link PibblCompositionEvent}. */
+  compositionupdate: PibblCompositionEvent;
+  /** The typed Pibbl payload for the compositionend event. See {@link PibblCompositionEvent}. */
+  compositionend: PibblCompositionEvent;
+  /** The typed Pibbl payload for the select event. See {@link PibblEvent}. */
+  select: PibblEvent;
+  /** The typed Pibbl payload for the selectionchange event. See {@link PibblEvent}. */
+  selectionchange: PibblEvent;
+  /** The typed Pibbl payload for the copy event. See {@link PibblClipboardEvent}. */
+  copy: PibblClipboardEvent;
+  /** The typed Pibbl payload for the cut event. See {@link PibblClipboardEvent}. */
+  cut: PibblClipboardEvent;
+  /** The typed Pibbl payload for the paste event. See {@link PibblClipboardEvent}. */
+  paste: PibblClipboardEvent;
+  /** The typed Pibbl payload for the dragstart event. See {@link PibblDragEvent}. */
+  dragstart: PibblDragEvent;
+  /** The typed Pibbl payload for the drag event. See {@link PibblDragEvent}. */
+  drag: PibblDragEvent;
+  /** The typed Pibbl payload for the dragend event. See {@link PibblDragEvent}. */
+  dragend: PibblDragEvent;
+  /** The typed Pibbl payload for the dragenter event. See {@link PibblDragEvent}. */
+  dragenter: PibblDragEvent;
+  /** The typed Pibbl payload for the dragleave event. See {@link PibblDragEvent}. */
+  dragleave: PibblDragEvent;
+  /** The typed Pibbl payload for the dragover event. See {@link PibblDragEvent}. */
+  dragover: PibblDragEvent;
+  /** The typed Pibbl payload for the drop event. See {@link PibblDragEvent}. */
+  drop: PibblDragEvent;
 }
 
 /**
- * The supported event names in the CRC event map.
+ * The supported event names in the Pibbl event map.
  *
- * @see {@link CRCEventMap}
- * @see {@link CRCEventHandler}
- * @see {@link CRCEventHandlers}
- * @see {@link CRCEventPropName}
+ * @see {@link PibblEventMap}
+ * @see {@link PibblEventHandler}
+ * @see {@link PibblEventHandlers}
+ * @see {@link PibblEventPropName}
  */
-export type CRCEventType = keyof CRCEventMap;
+export type PibblEventType = keyof PibblEventMap;
 
-interface CRCEventPropMap {
+interface PibblEventPropMap {
   pointerover: 'onPointerOver';
   pointerenter: 'onPointerEnter';
   pointerdown: 'onPointerDown';
@@ -584,40 +584,40 @@ interface CRCEventPropMap {
 /**
  * The bubble-handler prop name corresponding to a supported event type.
  *
- * @see {@link CRCEventType}
- * @see {@link CRCEventCapturePropName}
+ * @see {@link PibblEventType}
+ * @see {@link PibblEventCapturePropName}
  */
-export type CRCEventPropName = CRCEventPropMap[CRCEventType];
+export type PibblEventPropName = PibblEventPropMap[PibblEventType];
 /**
  * The capture-handler prop name corresponding to a supported event type.
  *
- * @see {@link CRCEventPropName}
+ * @see {@link PibblEventPropName}
  */
-export type CRCEventCapturePropName = `${CRCEventPropName}Capture`;
+export type PibblEventCapturePropName = `${PibblEventPropName}Capture`;
 
 /**
- * A typed callback for a CRC event.
+ * A typed callback for a Pibbl event.
  *
- * @param event - Typed CRC event being dispatched to this handler. See {@link CRCEventMap}.
+ * @param event - Typed Pibbl event being dispatched to this handler. See {@link PibblEventMap}.
  *
- * @see {@link CRCEventType}
- * @see {@link CRCEventMap}
- * @see {@link CRCEventHandlers}
+ * @see {@link PibblEventType}
+ * @see {@link PibblEventMap}
+ * @see {@link PibblEventHandlers}
  */
-export type CRCEventHandler<K extends CRCEventType> = (
-  event: CRCEventMap[K],
+export type PibblEventHandler<K extends PibblEventType> = (
+  event: PibblEventMap[K],
 ) => void;
 
 /**
  * Optional typed event props for capture and bubble dispatch.
  *
- * @see {@link CRCEventType}
- * @see {@link CRCEventHandler}
+ * @see {@link PibblEventType}
+ * @see {@link PibblEventHandler}
  * @see {@link ArcProps}
  * @see {@link CircleProps}
  */
-export type CRCEventHandlers = Partial<{
-  [K in CRCEventType as CRCEventPropMap[K]]: CRCEventHandler<K>;
+export type PibblEventHandlers = Partial<{
+  [K in PibblEventType as PibblEventPropMap[K]]: PibblEventHandler<K>;
 } & {
-  [K in CRCEventType as `${CRCEventPropMap[K]}Capture`]: CRCEventHandler<K>;
+  [K in PibblEventType as `${PibblEventPropMap[K]}Capture`]: PibblEventHandler<K>;
 }>;

@@ -1,15 +1,15 @@
 import {
-  crc,
+  pibbl,
   useEventTarget,
   useSignal,
   FocusManagement,
   Rectangle,
   Text,
-  type CRCClipboardEvent,
-  type CRCCompositionEvent,
-  type CRCController,
-  type CRCInputEvent,
-} from "@crc/core";
+  type PibblClipboardEvent,
+  type PibblCompositionEvent,
+  type PibblController,
+  type PibblInputEvent,
+} from "@pibbl/core";
 function boxPath(x: number, y: number, width: number, height: number): Path2D {
   const path = new Path2D();
   path.rect(x, y, width, height);
@@ -71,26 +71,26 @@ function EditingCompositionClipboardLesson({
   };
   const snapshot = useEventTarget(
     {
-      onBeforeInput: (event: CRCInputEvent) =>
+      onBeforeInput: (event: PibblInputEvent) =>
         record(`beforeinput ${event.inputType}: ${event.data ?? "null"}`),
       onChange: () => record("change"),
-      onCompositionEnd: (event: CRCCompositionEvent) =>
+      onCompositionEnd: (event: PibblCompositionEvent) =>
         record(`compositionend: ${event.data}`),
-      onCompositionStart: (event: CRCCompositionEvent) =>
+      onCompositionStart: (event: PibblCompositionEvent) =>
         record(`compositionstart: ${event.data}`),
-      onCompositionUpdate: (event: CRCCompositionEvent) =>
+      onCompositionUpdate: (event: PibblCompositionEvent) =>
         record(`compositionupdate: ${event.data}`),
-      onCopy: (event: CRCClipboardEvent) =>
+      onCopy: (event: PibblClipboardEvent) =>
         record(
           `copy (${event.clipboardData ? "clipboard data available" : "no clipboard data"})`,
         ),
-      onCut: (event: CRCClipboardEvent) =>
+      onCut: (event: PibblClipboardEvent) =>
         record(
           `cut (${event.clipboardData ? "clipboard data available" : "no clipboard data"})`,
         ),
-      onInput: (event: CRCInputEvent) =>
+      onInput: (event: PibblInputEvent) =>
         record(`input ${event.inputType}: ${event.data ?? "null"}`),
-      onPaste: (event: CRCClipboardEvent) =>
+      onPaste: (event: PibblClipboardEvent) =>
         record(
           `paste (${event.clipboardData?.getData("text/plain") || "browser data"})`,
         ),
@@ -244,8 +244,8 @@ function EditingCompositionClipboardLesson({
     </Text>,
   ];
 }
-export default function mount(canvas: HTMLCanvasElement): CRCController {
-  return crc(
+export default function mount(canvas: HTMLCanvasElement): PibblController {
+  return pibbl(
     canvas,
     <FocusManagement>
       <EditingCompositionClipboardLesson canvas={canvas} />

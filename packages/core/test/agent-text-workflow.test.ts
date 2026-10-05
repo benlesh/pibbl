@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest';
-import { getScenarioBySlug, loadScenario } from '@crc/scenarios';
+import { getScenarioBySlug, loadScenario } from '@pibbl/scenarios';
 
 it('shares redacted text assertions across seed, repair and independent evidence snapshots', async () => {
   const entry = getScenarioBySlug('agent-text-verification');

@@ -16,15 +16,15 @@ A component using `isFocused` or `isFocusVisible` could therefore paint stale
 focus pixels immediately before commit destroyed the released manager, with no
 later focus transition available to schedule a corrective render.
 
-`CRCFocusManager.snapshot()` now returns the shared unfocused snapshot once its
+`PibblFocusManager.snapshot()` now returns the shared unfocused snapshot once its
 owner has been released. The change is limited to render snapshots; manager
 replacement, failed-render cleanup, retained-layer replay, focus transitions,
 and coordinator commit/rollback behavior are unchanged.
 
 ## TDD evidence
 
-The new browser regression uses the public `crc`, `crcState`,
-`crcEventTarget`, and `withFocusManagement` APIs with real Tab input. The same
+The new browser regression uses the public `pibbl`, `pibblState`,
+`pibblEventTarget`, and `withFocusManagement` APIs with real Tab input. The same
 target is first rendered with the identity-transparent manager enhancer, paints
 a green focus-visible state after Tab entry, and is then rerendered without the
 enhancer. The successful removal render must expose both focus flags as false,
@@ -59,7 +59,7 @@ Lifecycle ownership suites:
 
 Typecheck: passed
 Lint and formatting: passed
-@crc/core build: passed
+@pibbl/core build: passed
 Packed consumer and tree shaking: passed
   marker absent without focus and present with focus
   103186 no-focus bytes vs 126469 with-focus bytes

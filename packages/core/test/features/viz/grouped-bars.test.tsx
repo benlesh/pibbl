@@ -1,5 +1,5 @@
-import { Absolute, crc, signal } from "@crc/core";
-import { BarSeries, Scale, useScale, type ResolvedBandScale } from "@crc/core/viz";
+import { Absolute, pibbl, signal } from "@pibbl/core";
+import { BarSeries, type ResolvedBandScale, useBarScale, BarScale, LinearScale, useLinearScale } from "@pibbl/core/viz";
 import { afterEach, expect, it } from "vitest";
 import { testRuntime } from "./support/runtime.js";
 let runtime: ReturnType<typeof testRuntime>;
@@ -19,31 +19,31 @@ it("composes reactive inner bands and styled grouped bars in one allocated frame
   let inner!: ResolvedBandScale;
   let hits = 0;
   function Probe() {
-    inner = useScale("group", "band").get();
+    inner = useBarScale("group").get();
   }
   function Scene() {
     return (
       <Absolute>
-        <Scale
+        <BarScale
           id="month"
-          type="band"
+
           domain={["Jan", "Feb"]}
           range="width"
           paddingInner={0.2}
           paddingOuter={0.1}
           style={allocation}
         >
-          <Scale
+          <BarScale
             id="group"
-            type="band"
+
             domain={groups}
             range={{ bandwidthOf: "month" }}
             paddingInner={0.2}
             paddingOuter={0.1}
           >
-            <Scale
+            <LinearScale
               id="value"
-              type="linear"
+
               domain={[-10, 10]}
               range="height"
               reverse
@@ -62,9 +62,9 @@ it("composes reactive inner bands and styled grouped bars in one allocated frame
                 })}
                 onPointerDown={() => hits++}
               />
-            </Scale>
-          </Scale>
-        </Scale>
+            </LinearScale>
+          </BarScale>
+        </BarScale>
       </Absolute>
     );
   }
@@ -105,7 +105,7 @@ it("composes reactive inner bands and styled grouped bars in one allocated frame
   expect(inner.bandwidth).toBeCloseTo(32);
   expect(pixel(70, 30)).toEqual([0, 128, 0, 255]);
   expect(pixel(30, 70)).toEqual([0, 0, 255, 255]);
-  crc(canvas, <Scene />);
+  pibbl(canvas, <Scene />);
   runtime.flush();
   expect(inner.range).toEqual([0, 80]);
 });
@@ -119,15 +119,15 @@ it("keeps three slots stable for missing groups, custom widths, reversed domains
     { c: "A", g: "two", v: null },
   ];
   const canvas = runtime.mount(
-    <Scale id="c" type="band" domain={["A"]} range={[0, 300]}>
-      <Scale
+    <BarScale id="c"  domain={["A"]} range={[0, 300]}>
+      <BarScale
         id="g"
-        type="band"
+
         domain={["one", "two", "three"]}
         range={{ bandwidthOf: "c" }}
         reverse
       >
-        <Scale id="v" type="linear" domain={[-10, 10]} range={[200, 0]}>
+        <LinearScale id="v"  domain={[-10, 10]} range={[200, 0]}>
           <BarSeries
             data={data}
             category="c"
@@ -139,9 +139,9 @@ it("keeps three slots stable for missing groups, custom widths, reversed domains
             baseline={2}
             style={{ bandwidth: 40, fill: "#ff0000" }}
           />
-        </Scale>
-      </Scale>
-    </Scale>,
+        </LinearScale>
+      </BarScale>
+    </BarScale>,
   );
   runtime.flush();
   const alpha = (x: number, y: number) =>
@@ -159,12 +159,12 @@ it("collapses nested bands without painted or interactive bars and restores them
   const domains = signal<readonly string[]>(["one"]);
   let inner!: ResolvedBandScale;
   function Probe() {
-    inner = useScale("g", "band").get();
+    inner = useBarScale("g").get();
   }
   const canvas = runtime.mount(
-    <Scale id="c" type="band" domain={["A"]} range={extent}>
-      <Scale id="g" type="band" domain={domains} range={{ bandwidthOf: "c" }}>
-        <Scale id="v" type="linear" domain={[0, 10]} range={[100, 0]}>
+    <BarScale id="c"  domain={["A"]} range={extent}>
+      <BarScale id="g"  domain={domains} range={{ bandwidthOf: "c" }}>
+        <LinearScale id="v"  domain={[0, 10]} range={[100, 0]}>
           <Probe />
           <BarSeries
             data={[{ c: "A", g: "one", v: 8 }]}
@@ -176,9 +176,9 @@ it("collapses nested bands without painted or interactive bars and restores them
             groupScale="g"
             style={{ fill: "#ff0000", bandwidth: 20 }}
           />
-        </Scale>
-      </Scale>
-    </Scale>,
+        </LinearScale>
+      </BarScale>
+    </BarScale>,
   );
   runtime.flush();
   expect(inner.bandwidth).toBe(0);
@@ -200,23 +200,23 @@ it.each(["missing", "linear"] as const)(
   (kind) => {
     runtime = testRuntime();
     function Probe() {
-      useScale("g", "band").get();
+      useBarScale("g").get();
     }
     expect(() => {
       runtime.mount(
-        <Scale id="parent" type="linear" domain={[0, 1]} range="width">
-          <Scale
+        <LinearScale id="parent"  domain={[0, 1]} range="width">
+          <BarScale
             id="g"
-            type="band"
+
             domain={["A"]}
             range={{ bandwidthOf: kind === "missing" ? "absent" : "parent" }}
           >
             <Probe />
-          </Scale>
-        </Scale>,
+          </BarScale>
+        </LinearScale>,
       );
       runtime.flush();
-    }).toThrow(kind === "missing" ? /unknown scale/ : /type=band/);
+    }).toThrow(kind === "missing" ? /unknown scale/ : /ancestor band scale/);
   },
 );
 
@@ -224,35 +224,35 @@ it("keeps captured scale signals synchronous when numeric ranges or parent paddi
   runtime = testRuntime();
   const range = signal<readonly [number, number]>([0, 300]);
   const padding = signal(0);
-  let numeric!: import("@crc/core").Signal<
-    import("@crc/core/viz").ResolvedLinearScale
+  let numeric!: import("@pibbl/core").Signal<
+    import("@pibbl/core/viz").ResolvedLinearScale
   >;
-  let nested!: import("@crc/core").Signal<ResolvedBandScale>;
+  let nested!: import("@pibbl/core").Signal<ResolvedBandScale>;
   function Probe() {
-    numeric = useScale("v");
-    nested = useScale("g", "band");
+    numeric = useLinearScale("v");
+    nested = useBarScale("g");
     numeric.get();
     nested.get();
   }
   runtime.mount(
-    <Scale
+    <BarScale
       id="c"
-      type="band"
+
       domain={["A", "B"]}
       range={range}
       paddingInner={padding}
     >
-      <Scale
+      <BarScale
         id="g"
-        type="band"
+
         domain={["one", "two"]}
         range={{ bandwidthOf: "c" }}
       >
-        <Scale id="v" type="linear" domain={[0, 10]} range={range}>
+        <LinearScale id="v"  domain={[0, 10]} range={range}>
           <Probe />
-        </Scale>
-      </Scale>
-    </Scale>,
+        </LinearScale>
+      </BarScale>
+    </BarScale>,
   );
   runtime.flush();
   range.set([0, 200]);
@@ -266,25 +266,25 @@ it("switches bandwidth references and detaches old ancestor dependencies", () =>
   runtime = testRuntime();
   const first = signal<readonly [number, number]>([0, 100]);
   const second = signal<readonly [number, number]>([0, 200]);
-  const range = signal<import("@crc/core/viz").BandScaleRange>({
+  const range = signal<import("@pibbl/core/viz").BandScaleRange>({
     bandwidthOf: "first",
   });
   let inner!: ResolvedBandScale;
-  let captured!: import("@crc/core").Signal<ResolvedBandScale>;
+  let captured!: import("@pibbl/core").Signal<ResolvedBandScale>;
   let renders = 0;
   function Probe() {
-    captured = useScale("g", "band");
+    captured = useBarScale("g");
     inner = captured.get();
     renders++;
   }
   runtime.mount(
-    <Scale id="first" type="band" domain={["A"]} range={first}>
-      <Scale id="second" type="band" domain={["B"]} range={second}>
-        <Scale id="g" type="band" domain={["one", "two"]} range={range}>
+    <BarScale id="first"  domain={["A"]} range={first}>
+      <BarScale id="second"  domain={["B"]} range={second}>
+        <BarScale id="g"  domain={["one", "two"]} range={range}>
           <Probe />
-        </Scale>
-      </Scale>
-    </Scale>,
+        </BarScale>
+      </BarScale>
+    </BarScale>,
   );
   runtime.flush();
   expect(inner.bandwidth).toBe(50);
@@ -316,12 +316,12 @@ it.each(["signal", "promise", "hook", "unknown"] as const)(
       if (kind === "signal") return { fill: signal("red") };
       if (kind === "promise") return Promise.resolve({ fill: "red" });
       if (kind === "hook")
-        return { fill: useScale("v").get() ? "red" : "blue" };
+        return { fill: useLinearScale("v").get() ? "red" : "blue" };
       return { nonsense: 1 };
     };
     runtime.mount(
-      <Scale id="c" type="band" domain={["A"]} range={[0, 100]}>
-        <Scale id="v" type="linear" domain={[0, 10]} range={[100, 0]}>
+      <BarScale id="c"  domain={["A"]} range={[0, 100]}>
+        <LinearScale id="v"  domain={[0, 10]} range={[100, 0]}>
           <BarSeries
             data={[{ c: "A", v: 8 }]}
             category="c"
@@ -329,14 +329,14 @@ it.each(["signal", "promise", "hook", "unknown"] as const)(
             categoryScale="c"
             valueScale="v"
             style={
-              invalid as unknown as import("@crc/core/viz").BarStyleResolver<{
+              invalid as unknown as import("@pibbl/core/viz").BarStyleResolver<{
                 c: string;
                 v: number;
               }>
             }
           />
-        </Scale>
-      </Scale>,
+        </LinearScale>
+      </BarScale>,
     );
     expect(() => runtime.flush()).toThrow();
   },
@@ -344,9 +344,9 @@ it.each(["signal", "promise", "hook", "unknown"] as const)(
 
 it("restores captured nested scopes after a failed render transaction", () => {
   runtime = testRuntime();
-  let captured!: import("@crc/core").Signal<ResolvedBandScale>;
+  let captured!: import("@pibbl/core").Signal<ResolvedBandScale>;
   function Probe() {
-    captured = useScale("inner", "band");
+    captured = useBarScale("inner");
     captured.get();
   }
   function Fail({ fail }: { fail: boolean }) {
@@ -354,26 +354,26 @@ it("restores captured nested scopes after a failed render transaction", () => {
   }
   function Scene({ end, fail = false }: { end: number; fail?: boolean }) {
     return (
-      <Scale id="outer" type="band" domain={["A"]} range={[0, end]}>
-        <Scale
+      <BarScale id="outer"  domain={["A"]} range={[0, end]}>
+        <BarScale
           id="inner"
-          type="band"
+
           domain={["one", "two"]}
           range={{ bandwidthOf: "outer" }}
         >
           <Probe />
           <Fail fail={fail} />
-        </Scale>
-      </Scale>
+        </BarScale>
+      </BarScale>
     );
   }
   const canvas = runtime.mount(<Scene end={100} />);
   runtime.flush();
   const original = captured;
-  crc(canvas, <Scene end={300} fail />);
+  pibbl(canvas, <Scene end={300} fail />);
   expect(() => runtime.flush()).toThrow("candidate failed");
   expect(original.get().bandwidth).toBe(50);
-  crc(canvas, <Scene end={200} />);
+  pibbl(canvas, <Scene end={200} />);
   runtime.flush();
   // A failed root closes its refs; the next explicit render mounts fresh hooks.
   expect(captured).not.toBe(original);

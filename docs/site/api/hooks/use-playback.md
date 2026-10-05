@@ -6,7 +6,7 @@ kind: api
 slug: use-playback
 apiCategory: hook
 symbols: [usePlayback]
-relatedTypes: [CRCPlayback, CRCPlaybackOptions, CRCAnimationProgram]
+relatedTypes: [PibblPlayback, PibblPlaybackOptions, PibblAnimationProgram]
 ---
 
 # usePlayback
@@ -19,6 +19,6 @@ callbacks, commands, and stepper state, leaving retained controls inert.
 
 See the [animation contract](../../../design/animation-contract.md).
 
-Related types: [`CRCPlayback`](#/api/types/canvas-runtime#crcplayback),
-[`CRCPlaybackOptions`](#/api/types/canvas-runtime#crcplaybackoptions), and
-[`CRCAnimationProgram`](#/api/types/canvas-runtime#crcanimationprogram).
+Related types: [`PibblPlayback`](#/api/types/canvas-runtime#pibblplayback),
+[`PibblPlaybackOptions`](#/api/types/canvas-runtime#pibblplaybackoptions), and
+[`PibblAnimationProgram`](#/api/types/canvas-runtime#pibblanimationprogram).

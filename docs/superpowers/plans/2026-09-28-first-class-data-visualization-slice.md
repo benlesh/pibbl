@@ -12,7 +12,7 @@ revision were accepted. Mobile is explicitly deferred. The initial blocked audit
 and first feedback milestone below are historical.
 
 **Goal:** Deliver a responsive public line-chart composition and its headless
-counterpart through the official `@crc/viz` API, then stop for hands-on feedback.
+counterpart through the official `@pibbl/viz` API, then stop for hands-on feedback.
 
 **Architecture:** Nested Scale providers expose stable core computed signals
 derived from declared inputs and local allocation. Axis and one batched
@@ -36,7 +36,7 @@ below it does not add implementation tasks.
   from an earlier snapshot. Stage only owned changes if committing.
 - Assume the approved signals contract will land; verify it before production
   work. Do not implement missing shared signal machinery in viz or core.
-- One official `@crc/viz` package, matching core peer, no visualization runtime
+- One official `@pibbl/viz` package, matching core peer, no visualization runtime
   dependencies, no second JSX runtime or public private-source imports.
 - Initial exports: Scale, useScale, ScaleAdjust, Axis, LineSeries and the exact
   types in the approved specification. Linear scales and linear curves only.
@@ -134,14 +134,14 @@ scale, use-scale, and scale tests from the file map. Modify root `package.json`,
 `pnpm-lock.yaml`, `tsconfig.json`, and `vitest.config.ts` only for package
 registration and source test resolution.
 
-**Interfaces:** Produces `Scale(props: ScaleProps): CRCNode`,
+**Interfaces:** Produces `Scale(props: ScaleProps): PibblNode`,
 `useScale(id: ScaleId): Signal<ResolvedScale>`, and
 `ResolvedLinearScale` with `map`, `invert`, `ticks`, domain/range/frame.
 The only family is `type: "linear"`.
 
-- [ ] Write `scale.test.tsx` using imports from `@crc/core` and `@crc/viz`.
+- [ ] Write `scale.test.tsx` using imports from `@pibbl/core` and `@pibbl/viz`.
       A probe component reads useScale and stores the returned signal/snapshot
-      in test-owned ordinary variables. Mount via crc with public elements.
+      in test-owned ordinary variables. Mount via pibbl with public elements.
       The first focused contract allocates a 240×120 plot below a larger root:
       x domain `[0, 10]` with width maps 5 to 120; y domain `[0, 100]` with
       height/reverse maps 25 to 90; ticks(3) gives `[0, 5, 10]`.
@@ -187,9 +187,9 @@ The only family is `type: "linear"`.
 `packages/viz/test/composition.test.tsx`; extend public types/exports and the
 compile-only public probes.
 
-**Interfaces:** Produces `Axis(props: AxisProps): CRCNode`,
-`LineSeries<D>(props: LineSeriesProps<D>): CRCNode`, and
-`ScaleAdjust(props: ScaleAdjustProps): CRCNode` using Task 1's scale signal.
+**Interfaces:** Produces `Axis(props: AxisProps): PibblNode`,
+`LineSeries<D>(props: LineSeriesProps<D>): PibblNode`, and
+`ScaleAdjust(props: ScaleAdjustProps): PibblNode` using Task 1's scale signal.
 
 - [ ] Write the composition RED test with a 200×100 allocation, x/y domains
       `[0, 10]`, and reversed y. Rows `(0,0), (2,2), (4,null), (6,6), (10,10)`
@@ -236,14 +236,14 @@ compile-only public probes.
 `src/learning-catalog.ts`; regenerate `docs/scenario-index.md`.
 Modify `playground/package.json`, `playground/vite.config.ts`,
 `playground/src/sandbox-module.ts`, `playground/src/editor-declaration-libraries.ts`,
-`playground/src/crc-editor-types.txt`, `tooling/crc-runtime-source.ts`,
-`tooling/crc-studio-runtime-entry.ts`, `tooling/assert-built-core.ts`, and
+`playground/src/pibbl-editor-types.txt`, `tooling/pibbl-runtime-source.ts`,
+`tooling/pibbl-studio-runtime-entry.ts`, `tooling/assert-built-core.ts`, and
 `tooling/verify-studio-types.mjs`. Create the foundation-lab and studio tests.
 Recheck concurrent edits before changing each shared file.
 
 **Interfaces:** The default lesson mount accepts the Canvas and optional
 ordinary fixture options: data/domain signals and a scale-snapshot callback.
-Its default invocation needs only the Canvas and returns CRCController.
+Its default invocation needs only the Canvas and returns PibblController.
 The private lab implements existing ScenarioDefinition/ScenarioController
 contracts, mounts that exact scene, drives the supplied signals, and records
 snapshots. It adds no runtime viz export or public test controls.
@@ -251,7 +251,7 @@ snapshots. It adds no runtime viz export or public test controls.
 - [ ] Write a catalog/Studio RED probe in `studio.test.ts`: public lesson slug
       `viz-responsive-line` resolves under existing `composition`; lab ID
       `viz-foundation-lab` is test-only. The sandbox accepts the five viz imports,
-      rejects `@crc/viz/internal`, and provides their editor declarations.
+      rejects `@pibbl/viz/internal`, and provides their editor declarations.
 - [ ] Write a lab RED test mounting the shared scene in responsive mode. Use
       unequal `1fr`/`2fr` Grid panels with explicit placement and reserved
       48-pixel left/32-pixel bottom gutters. At two CSS sizes, assert each plot's
@@ -266,7 +266,7 @@ snapshots. It adds no runtime viz export or public test controls.
       input small and ordinary; no test counters or hooks in public metadata/UI.
       The lab imports the default mount so it tests the same composition, not
       a parallel reimplementation. Keep lesson imports within supported packages.
-- [ ] Register `@crc/viz` in the sandbox whitelist, runtime entry and source/built
+- [ ] Register `@pibbl/viz` in the sandbox whitelist, runtime entry and source/built
       entry resolver, single-core assertions, editor module path and declaration
       bundle, and Studio type verifier. Add focused export parity checks rather
       than advertising future viz names. Do not expose core/internal to lessons.
@@ -548,7 +548,7 @@ exposed different font fallback from the normal suite navigation context, so
 the accepted captures use the normal route sequence. No font mask was added.
 
 The full visual check subsequently reached an unrelated existing mismatch:
-`studio-webgl-lighting.expected.png` displays the old `crcOrbitCamera` API tag;
+`studio-webgl-lighting.expected.png` displays the old `pibblOrbitCamera` API tag;
 current HEAD already uses `useOrbitCamera`. The difference is 110 pixels bounded
 by x=490–510, y=416–423. That baseline remains unchanged. Therefore the aggregate
 trust gate is **not green**; this record does not claim a successful complete
@@ -559,7 +559,7 @@ unrelated baselines. The safer alternative updated only each inspected, affected
 preview from its normal-order capture; unrelated baselines were preserved.
 
 Final scoped visual command: `node tooling/verify-studio-visuals.mjs` with
-`--route` selections for learn-landing, api-crc, examples-landing, filters,
+`--route` selections for learn-landing, api-pibbl, examples-landing, filters,
 diagram-editor-landing, diagram-editor-finished, search-open, and test-lab:
 **all 8 baselines matched**. Final `pnpm docs:check` passed all 1,015 mutation
 probes; final `pnpm lint` and `git diff --check` passed. The unrelated WebGL tag

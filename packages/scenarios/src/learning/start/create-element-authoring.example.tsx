@@ -2,15 +2,15 @@ import {
   FocusManagement,
   Fragment,
   KeyboardNavigation,
-  crc,
+  pibbl,
   createElement,
   useSignal,
   useReaction,
   Group,
   Rectangle,
   Text,
-  type CRCController,
-} from "@crc/core";
+  type PibblController,
+} from "@pibbl/core";
 
 let liveLifecycleGenerations = 0;
 
@@ -128,8 +128,8 @@ function CreateElementPoster(_props: Record<never, never>) {
   );
 }
 
-export default function mount(canvas: HTMLCanvasElement): CRCController {
-  return crc(
+export default function mount(canvas: HTMLCanvasElement): PibblController {
+  return pibbl(
     canvas,
     createElement(
       FocusManagement,

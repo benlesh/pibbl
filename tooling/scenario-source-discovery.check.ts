@@ -13,7 +13,7 @@ import {
   discoverExampleSourcePaths,
 } from './scenario-source-discovery';
 
-const fixtureRoot = await mkdtemp(join(tmpdir(), 'crc-scenario-discovery-'));
+const fixtureRoot = await mkdtemp(join(tmpdir(), 'pibbl-scenario-discovery-'));
 const sourceDirectory = join(fixtureRoot, 'packages/scenarios/src');
 const catalogedPath = 'packages/scenarios/src/cataloged.example.tsx';
 const legacyPath = 'packages/scenarios/src/orphan.example.ts';

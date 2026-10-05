@@ -1,6 +1,6 @@
 import type { SignalCommitBatch } from '../signals/graph.js';
 
-export type CRCFramePhase =
+export type PibblFramePhase =
   | 'idle'
   | 'begin'
   | 'advance'
@@ -9,42 +9,42 @@ export type CRCFramePhase =
   | 'render'
   | 'complete';
 
-export interface CRCFrameSnapshot {
+export interface PibblFrameSnapshot {
   readonly frameId: number;
   readonly hostTime: number;
   readonly logicalTime: number;
 }
 
-export type CRCAdvanceLane = 'animation' | 'physics';
+export type PibblAdvanceLane = 'animation' | 'physics';
 
-export type CRCAdvanceParticipant = (
-  snapshot: CRCFrameSnapshot,
+export type PibblAdvanceParticipant = (
+  snapshot: PibblFrameSnapshot,
   batch: SignalCommitBatch,
 ) => void;
 
-export type CRCBeginCommand = (
-  snapshot: CRCFrameSnapshot,
+export type PibblBeginCommand = (
+  snapshot: PibblFrameSnapshot,
   batch: SignalCommitBatch,
   sequence: number,
 ) => void;
 
-export interface CRCBeginCommandHandle {
+export interface PibblBeginCommandHandle {
   readonly sequence: number;
   cancel(): void;
 }
 
-export type CRCFrameCompletion = (snapshot: CRCFrameSnapshot) => void;
+export type PibblFrameCompletion = (snapshot: PibblFrameSnapshot) => void;
 
-export interface CRCCommitOutcome {
+export interface PibblCommitOutcome {
   readonly applied: boolean;
 }
 
-export type CRCFrameCommitAcknowledgement = (
-  snapshot: CRCFrameSnapshot,
-  outcome: CRCCommitOutcome,
+export type PibblFrameCommitAcknowledgement = (
+  snapshot: PibblFrameSnapshot,
+  outcome: PibblCommitOutcome,
 ) => void;
 
-export type CRCSchedulerTraceRecord =
+export type PibblSchedulerTraceRecord =
   | {
       readonly kind: 'scheduler-phase';
       readonly collectedErrors: number;
@@ -52,7 +52,7 @@ export type CRCSchedulerTraceRecord =
       readonly commitApplied?: boolean;
       /** Only present on idle: entries collected for subsequent error delivery. */
       readonly errorCount?: number;
-      readonly phase: CRCFramePhase;
+      readonly phase: PibblFramePhase;
       readonly frameId: number;
       readonly hostTime: number;
       readonly logicalTime: number;
@@ -111,7 +111,7 @@ export type CRCSchedulerTraceRecord =
       readonly error: unknown;
     };
 
-export type CRCSchedulerTraceCollector = (record: CRCSchedulerTraceRecord) => void;
+export type PibblSchedulerTraceCollector = (record: PibblSchedulerTraceRecord) => void;
 
 export interface SchedulerDriver {
   requestFrame(callback: FrameRequestCallback): number;
@@ -119,7 +119,7 @@ export interface SchedulerDriver {
 }
 
 export interface RealmSchedulerSnapshot {
-  readonly phase: CRCFramePhase;
+  readonly phase: PibblFramePhase;
   readonly pendingHostFrames: number;
   readonly registeredRoots: number;
   readonly advanceParticipants: number;
@@ -136,5 +136,5 @@ export interface RealmSchedulerSnapshot {
   readonly queuedFrameCompletions: number;
   readonly queuedReactionCompletions: number;
   readonly queuedBeginCommands: number;
-  readonly currentFrame: CRCFrameSnapshot | undefined;
+  readonly currentFrame: PibblFrameSnapshot | undefined;
 }

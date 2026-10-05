@@ -120,7 +120,7 @@ export function buildSearchBundle(
 }
 
 /**
- * Queries one already-restored MiniSearch instance using CRC's public ranking
+ * Queries one already-restored MiniSearch instance using Pibbl's public ranking
  * contract. This is browser-safe: all source imports other than MiniSearch are
  * type-only, so the lazy browser search can use it without build-time tooling.
  */

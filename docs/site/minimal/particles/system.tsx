@@ -1,18 +1,18 @@
-import { crc } from "@crc/core";
+import { pibbl } from "@pibbl/core";
 import {
   defineParticleEffect2D,
   particleRange,
   Particles2D,
   useParticleSystem,
-  type CRCParticleBurstOverrides,
-  type CRCParticleCommonProps,
-  type CRCParticleExecution,
-  type CRCParticleSystem,
-  type CRCParticleSystemOptions,
-  type CRCParticleSystemStatus,
+  type PibblParticleBurstOverrides,
+  type PibblParticleCommonProps,
+  type PibblParticleExecution,
+  type PibblParticleSystem,
+  type PibblParticleSystemOptions,
+  type PibblParticleSystemStatus,
   type Particles2DProps,
   type Particles2DStyle,
-} from "@crc/core/particles";
+} from "@pibbl/core/particles";
 
 const effect = defineParticleEffect2D({
   emitters: [
@@ -40,18 +40,18 @@ document.body.append(output);
 const burstButton = document.createElement("button");
 burstButton.textContent = "Burst";
 document.body.append(burstButton);
-const burst: CRCParticleBurstOverrides = { count: 20, position: [160, 135] };
-let activeSystem: CRCParticleSystem<"spark"> | undefined;
+const burst: PibblParticleBurstOverrides = { count: 20, position: [160, 135] };
+let activeSystem: PibblParticleSystem<"spark"> | undefined;
 burstButton.addEventListener("click", () => activeSystem?.emit("spark", burst));
 
 function App() {
-  const options: CRCParticleSystemOptions = { seed: 7, autoplay: true };
-  const system: CRCParticleSystem<"spark"> = useParticleSystem(effect, options);
+  const options: PibblParticleSystemOptions = { seed: 7, autoplay: true };
+  const system: PibblParticleSystem<"spark"> = useParticleSystem(effect, options);
   activeSystem = system;
-  const status: CRCParticleSystemStatus = system.status.get();
-  const execution: CRCParticleExecution = system.execution.get();
+  const status: PibblParticleSystemStatus = system.status.get();
+  const execution: PibblParticleExecution = system.execution.get();
   const style: Particles2DStyle = { width: 320, height: 220 };
-  const common: CRCParticleCommonProps<Record<string, never>> = {
+  const common: PibblParticleCommonProps<Record<string, never>> = {
     onEvent: (event) => {
       if (event.type === "burst-accepted" || event.type === "burst-rejected") {
         output.textContent = `Particle event: ${event.type}`;
@@ -72,5 +72,5 @@ function App() {
   );
 }
 
-const app = crc(canvas, <App />);
+const app = pibbl(canvas, <App />);
 window.addEventListener("pagehide", () => app.dispose(), { once: true });

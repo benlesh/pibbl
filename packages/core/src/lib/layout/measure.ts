@@ -18,7 +18,7 @@ import type {
   CanvasMeasurementService,
   MeasureResult,
 } from '../types.js';
-import type { CRCElement } from '../element/types.js';
+import type { PibblElement } from '../element/types.js';
 import { prepareElementPolicies } from '../element/children.js';
 import type { Constraints } from './types.js';
 import { untracked, withSignalWriteForbidden } from '../signals/graph.js';
@@ -32,19 +32,19 @@ export type {
 /**
  * Measures an element against finite constraints using the supplied Canvas measurement service.
  *
- * @param element - Element whose declared measurement capability is used. See {@link CRCElement}.
+ * @param element - Element whose declared measurement capability is used. See {@link PibblElement}.
  * @param constraints - Available size constraints in logical units. See {@link Constraints}.
  * @param service - Canvas text measurement service. See {@link CanvasMeasurementService}.
  * @returns Measured dimensions, or an unsupported result with its reason. See
  * {@link MeasureResult} .
  *
- * @see {@link CRCElement}
+ * @see {@link PibblElement}
  * @see {@link Constraints}
  * @see {@link CanvasMeasurementService}
  * @see {@link MeasureResult}
  */
 export function measureElement(
-  element: CRCElement<any>,
+  element: PibblElement<any>,
   constraints: Readonly<Constraints>,
   service: CanvasMeasurementService,
 ): MeasureResult {
@@ -54,7 +54,7 @@ export function measureElement(
   };
   const mode = getStyleMeasurementMode() ? 'recursive' :
     GLOBAL_STATE.componentRefs ? 'mounted-intrinsic' : 'standalone-root';
-  return withSignalWriteForbidden('Signal writes are forbidden during CRC measurement', () =>
+  return withSignalWriteForbidden('Signal writes are forbidden during Pibbl measurement', () =>
     withStyleMeasurement(mode, () => withIsolatedRenderState(() =>
       measureElementInternal(element, constraints, service, context),
     )),
@@ -62,12 +62,12 @@ export function measureElement(
 }
 
 interface MeasurementContext {
-  active: Set<CRCElement<any>>;
-  stack: CRCElement<any>[];
+  active: Set<PibblElement<any>>;
+  stack: PibblElement<any>[];
 }
 
 function measureElementInternal(
-  element: CRCElement<any>,
+  element: PibblElement<any>,
   constraints: Readonly<Constraints>,
   service: CanvasMeasurementService,
   context: MeasurementContext,
@@ -148,7 +148,7 @@ function measureElementInternal(
 
 function withIsolatedRenderState<T>(work: () => T): T {
   const snapshot = {
-    currentCRCInstance: GLOBAL_STATE.currentCRCInstance,
+    currentPibblInstance: GLOBAL_STATE.currentPibblInstance,
     componentRefs: GLOBAL_STATE.componentRefs,
     canvas: GLOBAL_STATE.canvas,
     componentIsMounting: GLOBAL_STATE.componentIsMounting,
@@ -160,7 +160,7 @@ function withIsolatedRenderState<T>(work: () => T): T {
     clippingStack: GLOBAL_STATE.clippingStack,
     layoutStack: GLOBAL_STATE.layoutStack,
   };
-  GLOBAL_STATE.currentCRCInstance = undefined;
+  GLOBAL_STATE.currentPibblInstance = undefined;
   GLOBAL_STATE.componentRefs = undefined;
   GLOBAL_STATE.canvas = undefined;
   GLOBAL_STATE.componentIsMounting = false;

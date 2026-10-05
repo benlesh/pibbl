@@ -4,7 +4,7 @@ import type {
   ScenarioDefinition,
   ScenarioMountContext,
 } from './types';
-import { crc } from '@crc/core';
+import { pibbl } from '@pibbl/core';
 import {
   formatContractTrace,
   formatOrderingPolicy,
@@ -47,7 +47,7 @@ async function mountMouseContractScenario(
     if (!contractCase) {
       throw new Error(`Unknown mouse contract case "${state.caseId}".`);
     }
-    crc(context.canvas, createMouseContractScene(contractCase, (target) => {
+    pibbl(context.canvas, createMouseContractScene(contractCase, (target) => {
       state = {
         ...state,
         interactionCount: state.interactionCount + 1,
@@ -118,7 +118,7 @@ export const mouseContractScenario: ScenarioDefinition<MouseContractScenarioStat
       { label: 'Case', value: contractCase.title },
       { label: 'Gesture', value: contractCase.gesture },
       { label: 'Native reference', value: formatContractTrace(contractCase.nativeTrace) },
-      { label: 'Approved CRC (logical route)', value: formatContractTrace(contractCase.crcTrace) },
+      { label: 'Approved Pibbl (logical route)', value: formatContractTrace(contractCase.pibblTrace) },
       { label: 'Ordering', value: formatOrderingPolicy(contractCase.ordering) },
       {
         label: 'Target policy',

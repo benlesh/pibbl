@@ -1,4 +1,4 @@
-import { useReaction, Image, Layer, Rectangle } from '@crc/core';
+import { useReaction, Image, Layer, Rectangle } from '@pibbl/core';
 export const CLEANUP_STRESS_SOURCE_ID = 'runtime-cleanup-stress-example';
 /**
  * Named image assets used to exercise image ownership and cleanup.

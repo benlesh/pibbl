@@ -8,9 +8,9 @@ sources:
 
 ## Decide whether this boundary fits
 
-Use [defineRenderLayer](/reference/functions/define-render-layer/) for a framework-neutral external renderer, or [defineThreeLayer](/reference/functions/define-three-layer/) from `@crc/three` for ordinary Three scenes. Read [the Three guide](/guides/three-js/) first. The adapter is not a Three JSX reconciler or a parallel retained scene graph.
+Use [defineRenderLayer](/reference/functions/define-render-layer/) for a framework-neutral external renderer, or [defineThreeLayer](/reference/functions/define-three-layer/) from `@pibbl/three` for ordinary Three scenes. Read [the Three guide](/guides/three-js/) first. The adapter is not a Three JSX reconciler or a parallel retained scene graph.
 
-The result is one composited bitmap at one position in Canvas paint order. CRC primitives can paint before or after it; they cannot interleave among individual Three objects. HtmlBox remains above Canvas. External layers require `OffscreenCanvas`, `transferToImageBitmap()`, and the selected renderer's capabilities. WebXR is outside the ordinary composited-layer contract.
+The result is one composited bitmap at one position in Canvas paint order. Pibbl primitives can paint before or after it; they cannot interleave among individual Three objects. HtmlBox remains above Canvas. External layers require `OffscreenCanvas`, `transferToImageBitmap()`, and the selected renderer's capabilities. WebXR is outside the ordinary composited-layer contract.
 
 ## Ownership and lifecycle
 
@@ -18,19 +18,19 @@ Define the layer once at module scope. Each mounted identity owns one persistent
 
 Use `create` for initial resources, `update` for changed props, `resize` for camera/projection and renderer-dependent sizing, and `dispose` for application resources. The adapter disposes its renderer and bridge. Do not assume disposing a scene frees its geometry or materials. Track shared assets explicitly so they are neither leaked nor disposed twice.
 
-An asynchronous loader may finish after the owner is gone. The application must prevent publishing that stale result and release late resources. Use the actual loader's cancellation mechanism when it provides one; do not invent a CRC loader API. Keep a useful fallback while assets are unavailable.
+An asynchronous loader may finish after the owner is gone. The application must prevent publishing that stale result and release late resources. Use the actual loader's cancellation mechanism when it provides one; do not invent a Pibbl loader API. Keep a useful fallback while assets are unavailable.
 
 ## Frames and interaction
 
-Advance controls, mixers, or effects from the supplied CRC frame. Request another frame only while work remains. Do not start another `requestAnimationFrame` loop or call Three's `setAnimationLoop` for a normal CRC integration.
+Advance controls, mixers, or effects from the supplied Pibbl frame. Request another frame only while work remains. Do not start another `requestAnimationFrame` loop or call Three's `setAnimationLoop` for a normal Pibbl integration.
 
-Default raycasting distinguishes target, block, and miss. A registered object or descendant becomes its logical CRC target. Other hit geometry blocks lower Canvas paint. Miss behavior chooses pass-through, block, or target-layer. A visually empty region is not necessarily a pass-through region unless configured that way.
+Default raycasting distinguishes target, block, and miss. A registered object or descendant becomes its logical Pibbl target. Other hit geometry blocks lower Canvas paint. Miss behavior chooses pass-through, block, or target-layer. A visually empty region is not necessarily a pass-through region unless configured that way.
 
-Connect DOM-style controls through `context.input` as documented. CRC still owns coordinate arbitration, capture/bubble routing, pointer capture, focus, and the outer composition. Do not independently bind controls to the visible Canvas and thereby bypass CRC's competing targets.
+Connect DOM-style controls through `context.input` as documented. Pibbl still owns coordinate arbitration, capture/bubble routing, pointer capture, focus, and the outer composition. Do not independently bind controls to the visible Canvas and thereby bypass Pibbl's competing targets.
 
 ## Complete example and assets
 
-The source below is the existing Three Layer lesson. [Open it in Studio](@PLAYGROUND@#/examples/three/three-layer). Install matching `@crc/core`, `@crc/three`, and `three` packages, compile with CRC JSX, and call its default mount on an attached canvas. This example builds geometry procedurally, so it does not require a model download. Preserve its material/geometry cleanup when substituting a loaded model.
+The source below is the existing Three Layer lesson. [Open it in Studio](@PLAYGROUND@#/examples/three/three-layer). Install matching `@pibbl/core`, `@pibbl/three`, and `three` packages, compile with Pibbl JSX, and call its default mount on an attached canvas. This example builds geometry procedurally, so it does not require a model download. Preserve its material/geometry cleanup when substituting a loaded model.
 
 For product assets, specify format, origin/CORS needs, dimensions or bounding box, intended camera framing, loading state, failure state, and ownership. A concept image is not proof a loader or effect has been integrated.
 
@@ -38,4 +38,4 @@ For product assets, specify format, origin/CORS needs, dimensions or bounding bo
 
 Assert one create per mounted identity and an update on prop changes. Resize at two aspect ratios and verify camera projection plus logical/backing dimensions. Test target, unregistered occluder, and empty-space miss separately, including a Canvas target behind the layer.
 
-Test focus and controls without duplicate native listeners. Remove/remount during asset loading and confirm late resources are released. Confirm animation stops when idle and all application resources dispose once. Inspect full composition pixels after state/ownership checks; a nonblank WebGL canvas alone does not prove CRC composition or input routing.
+Test focus and controls without duplicate native listeners. Remove/remount during asset loading and confirm late resources are released. Confirm animation stops when idle and all application resources dispose once. Inspect full composition pixels after state/ownership checks; a nonblank WebGL canvas alone does not prove Pibbl composition or input routing.

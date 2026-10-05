@@ -1,9 +1,9 @@
-import { Circle, Group, crc, type CRCController } from "@crc/core";
-/** @jsxImportSource @crc/core */
+import { Circle, Group, pibbl, type PibblController } from "@pibbl/core";
+/** @jsxImportSource @pibbl/core */
 import {
   PhysicsWorld2D,
   collider2D,
-  crcPhysicsWorld2D,
+  pibblPhysicsWorld2D,
   staticBody2D,
 } from "../../../2d.js";
 import { circleShape2D } from "../../../2d-geometry.js";
@@ -11,7 +11,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 let callbacks: Map<number, FrameRequestCallback>;
 let nextId: number;
-const mounts: CRCController[] = [];
+const mounts: PibblController[] = [];
 
 beforeEach(() => {
   document.body.innerHTML = "";
@@ -38,7 +38,7 @@ describe("PhysicsWorld2D render scopes", () => {
   it("returns the nearest world handle to descendants and restores sibling scope", () => {
     const seen: unknown[] = [];
     const Child = () => {
-      seen.push(crcPhysicsWorld2D());
+      seen.push(pibblPhysicsWorld2D());
       return undefined;
     };
     mount(
@@ -66,7 +66,7 @@ describe("PhysicsWorld2D render scopes", () => {
 
     const seen: unknown[] = [];
     const Child = () => {
-      seen.push(crcPhysicsWorld2D());
+      seen.push(pibblPhysicsWorld2D());
       return undefined;
     };
     mount(
@@ -99,13 +99,13 @@ describe("PhysicsWorld2D render scopes", () => {
   });
 });
 
-function mount(root: Parameters<typeof crc>[1]): CRCController {
+function mount(root: Parameters<typeof pibbl>[1]): PibblController {
   const canvas = document.createElement("canvas");
   canvas.width = 100;
   canvas.height = 100;
   canvas.style.cssText = "display:block;width:100px;height:100px";
   document.body.appendChild(canvas);
-  const controller = crc(canvas, root);
+  const controller = pibbl(canvas, root);
   mounts.push(controller);
   return controller;
 }
@@ -113,7 +113,7 @@ function mount(root: Parameters<typeof crc>[1]): CRCController {
 function flush(time: number): void {
   const entry = callbacks.entries().next().value as
     readonly [number, FrameRequestCallback] | undefined;
-  if (!entry) throw new Error("No CRC host frame is pending.");
+  if (!entry) throw new Error("No Pibbl host frame is pending.");
   callbacks.delete(entry[0]);
   entry[1](time);
 }

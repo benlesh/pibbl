@@ -1,5 +1,5 @@
-import type { JSX as DevelopmentJSX } from '@crc/core/jsx-dev-runtime';
-import type { JSX as ProductionJSX } from '@crc/core/jsx-runtime';
+import type { JSX as DevelopmentJSX } from '@pibbl/core/jsx-dev-runtime';
+import type { JSX as ProductionJSX } from '@pibbl/core/jsx-runtime';
 
 export type CompilerSubpathElements = [
   ProductionJSX.Element,
@@ -7,8 +7,8 @@ export type CompilerSubpathElements = [
 ];
 
 // @ts-expect-error internal declaration modules are outside the public export map
-import type { CRCElement as InternalElement } from '@crc/core/lib/element/types';
+import type { PibblElement as InternalElement } from '@pibbl/core/lib/element/types';
 // @ts-expect-error package source modules are outside the public export map
-import type { CRCElementSource } from '@crc/core/src/lib/element/metadata';
+import type { PibblElementSource } from '@pibbl/core/src/lib/element/metadata';
 void (undefined as unknown as InternalElement);
-void (undefined as unknown as CRCElementSource);
+void (undefined as unknown as PibblElementSource);

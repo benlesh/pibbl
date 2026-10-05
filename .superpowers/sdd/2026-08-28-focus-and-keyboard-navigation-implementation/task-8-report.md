@@ -4,22 +4,22 @@
 
 ## Outcome
 
-`@crc/core` now exports `withFocusManagement`,
+`@pibbl/core` now exports `withFocusManagement`,
 `withKeyboardNavigation`, and the type-only
-`CRCKeyboardNavigationOptions`. No internal manager, candidate, modality, or
+`PibblKeyboardNavigationOptions`. No internal manager, candidate, modality, or
 directional-boundary types were added to the public surface. Both enhancers
 preserve the enhanced element's type, props, style, and key.
 
 The packed consumer now proves the API through strict Bundler and NodeNext
-compilation, the `@crc/core/types` compatibility boundary, and a runtime
+compilation, the `@pibbl/core/types` compatibility boundary, and a runtime
 identity smoke check. The Studio declaration surface and its strict consumer
 carry the same approved API.
 
 The focus implementation contains the stable marker
-`CRC_FOCUS_MANAGEMENT_V1` in the real duplicate-enhancer error path. The packed
+`PIBBL_FOCUS_MANAGEMENT_V1` in the real duplicate-enhancer error path. The packed
 verifier creates minified browser ESM bundles with esbuild and proves the marker
 is absent when an application imports only `rect`, but present when it uses
-`withFocusManagement`. `render.ts`, `crc.ts`, event registration, and built-in
+`withFocusManagement`. `render.ts`, `pibbl.ts`, event registration, and built-in
 components have no runtime import from `lib/focus/*`; the optional modules are
 reachable only from the public barrel and enhancer use.
 
@@ -28,10 +28,10 @@ reachable only from the public barrel and enhancer use.
 The public and packaging checks were written first and observed failing under
 Node 24.15.0:
 
-- the public browser import failed because `@crc/core` did not export
+- the public browser import failed because `@pibbl/core` did not export
   `withFocusManagement`;
 - the packed Bundler consumer failed on both enhancer imports and
-  `CRCKeyboardNavigationOptions`, including `@crc/core/types`;
+  `PibblKeyboardNavigationOptions`, including `@pibbl/core/types`;
 - the Studio strict consumer failed on the same missing declarations.
 
 After the minimal root exports, marker, consumer updates, and Studio

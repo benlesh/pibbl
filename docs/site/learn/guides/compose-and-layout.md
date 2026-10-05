@@ -10,7 +10,7 @@ keywords: [layout, group, clip, layer, flex, grid]
 
 # Compose and lay out scenes
 
-CRC composes immediate Canvas rendering with five declared-box layout
+Pibbl composes immediate Canvas rendering with five declared-box layout
 components and three non-layout containers. All accept recursive synchronous
 children and preserve source paint order.
 
@@ -19,7 +19,7 @@ children and preserve source paint order.
 - `Absolute` independently places definite direct children with `left` and
   `top`.
 - `Overlay` shares one allocation and aligns each child.
-- `Flow` performs CRC-native horizontal or vertical sequential placement and
+- `Flow` performs Pibbl-native horizontal or vertical sequential placement and
   optional wrapping.
 - `Flex` implements the documented Flexbox subset.
 - `Grid` uses explicit tracks and explicit one-based item placement; there is
@@ -32,7 +32,7 @@ import {
   useLayoutBox,
   type BoxStyle,
   type FlexItemStyle,
-} from "@crc/core";
+} from "@pibbl/core";
 
 interface TileProps {
   color: string;
@@ -77,7 +77,7 @@ target geometry without creating scrolling.
 ### Forwarding a placed style
 
 An `Absolute` child can forward its received `style` to a returned drawing
-child with `{ ...style }`. CRC consumes the resolved `left` and `top` once for
+child with `{ ...style }`. Pibbl consumes the resolved `left` and `top` once for
 that forwarding path. The rule is value-based: assigning the same resolved
 `left` or `top` again still forwards parent placement, while a different value
 becomes the returned child's local offset. A new style object that does not
@@ -114,7 +114,7 @@ components. Measurement is pure and opt-in. See the [layout
 contract](../../../design/layout-system-contract.md) for every supported Flex, Flow,
 Grid, Overlay, and Absolute value.
 
-Layout fields may be signals. During a mounted layout prepass, CRC attributes
+Layout fields may be signals. During a mounted layout prepass, Pibbl attributes
 such a read to the eventual receiving child rather than to the layout parent.
 The receiver adopts that provisional dependency only after successful
 evaluation. Standalone `measureElement()` resolves the same declared inputs
@@ -126,7 +126,7 @@ provision or resolved-style copy.
 `Group` composes Canvas transforms around any number of children:
 
 ```tsx docs:complete-snippet=layout-group
-import { Group, Rectangle, Text } from "@crc/core";
+import { Group, Rectangle, Text } from "@pibbl/core";
 
 const transformed = (
   <Group
@@ -154,7 +154,7 @@ isolates siblings.
 `Clip` applies one `Path2D` to all children. Nested clips intersect:
 
 ```tsx docs:complete-snippet=layout-clip
-import { Clip, Image, createRegularPolygonPath } from "@crc/core";
+import { Clip, Image, createRegularPolygonPath } from "@pibbl/core";
 
 const src = "/landscape.png";
 
@@ -175,18 +175,18 @@ const clipped = (
 
 The captured clip geometry applies to hit testing as well as paint. Creators
 return fresh paths; call `useConst` when one path should have mount-lifetime
-identity, or `useComputed` when a path is derived from reactive geometry. CRC
+identity, or `useComputed` when a path is derived from reactive geometry. Pibbl
 does not add a dedicated memo hook per shape.
 
 ## Layer
 
-`Layer` owns a persistent offscreen CRC instance and accepts ordinary
+`Layer` owns a persistent offscreen Pibbl instance and accepts ordinary
 multi-child content:
 
 ```tsx docs:complete-snippet=layout-layer
-import { Layer, Rectangle, Text, type CRCNode } from "@crc/core";
+import { Layer, Rectangle, Text, type PibblNode } from "@pibbl/core";
 
-function Chart(): CRCNode {
+function Chart(): PibblNode {
   return (
     <Rectangle
       style={{ left: 40, top: 60, width: 220, height: 80, fill: "navy" }}
@@ -223,7 +223,7 @@ Outer `Group` transforms, `Clip`, layout overflow, `Layer`, alpha/compositing,
 and filters apply to the complete external bitmap. Objects inside that bitmap
 cannot interleave around an external Canvas sibling. Use two render layers when
 Canvas content must appear between a back and front 3D pass. See [Use Three.js
-inside CRC](#/learn/guides/three-js).
+inside Pibbl](#/learn/guides/three-js).
 
 ## Filters across layout and composition
 
@@ -242,9 +242,9 @@ The receiving container's presentation happens outside its own local filter:
   while an ancestor clip constrains the completed result;
 - a filter on `Layer` consumes the combined cached Layer bitmap. Changing only
   that or an outer filter can reuse the Layer cache, while filters inside the
-  Layer belong to its child CRC instance.
+  Layer belong to its child Pibbl instance.
 - a filter on an external render layer consumes the complete committed bitmap.
-  Inner Three objects use Three materials and post-processing rather than CRC
+  Inner Three objects use Three materials and post-processing rather than Pibbl
   Canvas filter descriptors.
 
 The full order is `local subtree paint -> receiving filter -> receiving clip ->

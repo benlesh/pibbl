@@ -1,18 +1,18 @@
 import {
-  crc,
+  pibbl,
   useSignal,
   Rectangle,
   Text,
-  type CRCController,
-  type CRCPointerEvent,
-} from "@crc/core";
-function pointerSummary(event: CRCPointerEvent): string {
+  type PibblController,
+  type PibblPointerEvent,
+} from "@pibbl/core";
+function pointerSummary(event: PibblPointerEvent): string {
   return `${event.type} #${event.pointerId} ${event.pointerType} ${Math.round(event.x)},${Math.round(event.y)} p=${event.pressure.toFixed(2)} ${event.width}×${event.height} tilt=${event.tiltX}/${event.tiltY} twist=${event.twist} b=${event.button}/${event.buttons} ${event.isPrimary ? "primary" : "secondary"}`;
 }
 function PointerEventsStudy() {
   const trace = useSignal<readonly string[]>([]);
   const inside = useSignal(false);
-  const record = (event: CRCPointerEvent) => {
+  const record = (event: PibblPointerEvent) => {
     trace.update((current) => [...current.slice(-3), pointerSummary(event)]);
   };
   return [
@@ -131,6 +131,6 @@ function PointerEventsStudy() {
     </Text>,
   ];
 }
-export default function mount(canvas: HTMLCanvasElement): CRCController {
-  return crc(canvas, <PointerEventsStudy />);
+export default function mount(canvas: HTMLCanvasElement): PibblController {
+  return pibbl(canvas, <PointerEventsStudy />);
 }

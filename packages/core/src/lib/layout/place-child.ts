@@ -2,7 +2,7 @@ import { rectangleSvg } from '../html/portable-clips.js';
 import { definePrimitive } from '../define-primitive.js';
 import { createElement } from '../element/create-element.js';
 import { setPlacementIdentityHint } from '../element/metadata.js';
-import type { CRCElement } from '../element/types.js';
+import type { PibblElement } from '../element/types.js';
 import { GLOBAL_STATE } from '../global-state.js';
 import type { InternalIdentityHint, RenderingContext2D } from '../types.js';
 import { pushClippingPath } from '../util/push-clipping-path.js';
@@ -11,7 +11,7 @@ import { recordLayoutPlacement } from './diagnostics.js';
 import type { LayoutBox } from './types.js';
 
 interface PlacedChildProps {
-  element: CRCElement<any>;
+  element: PibblElement<any>;
   box: Readonly<LayoutBox>;
   clipInChildSpace?: Readonly<LayoutBox>;
   identityHint: InternalIdentityHint;
@@ -68,14 +68,14 @@ function PlacedChild(
 
 const PlacedChildPrimitive = definePrimitive<PlacedChildProps>(PlacedChild);
 
-export function placeChild(props: PlacedChildProps): CRCElement<any> {
+export function placeChild(props: PlacedChildProps): PibblElement<any> {
   const element = createElement(PlacedChildPrimitive, props);
   setPlacementIdentityHint(element, props.identityHint);
   return element;
 }
 
 export function createPlacementIdentityHint(
-  element: CRCElement<any>,
+  element: PibblElement<any>,
   occurrence: number,
 ): InternalIdentityHint {
   if (!Number.isInteger(occurrence) || occurrence < 0) {

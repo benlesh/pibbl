@@ -1,4 +1,4 @@
-import type { CRCRef, WritableSignal } from '@crc/core';
+import type { PibblRef, WritableSignal } from '@pibbl/core';
 import {
   useCursor,
   useEventListener,
@@ -11,7 +11,7 @@ import {
   useReaction,
   Path,
   Rectangle,
-} from '@crc/core';
+} from '@pibbl/core';
 export const RUNTIME_HOOKS_SOURCE_ID = 'runtime-hooks-laboratory-example';
 /**
  * Supported runtime hooks root variant values: `"a"`, `"b"`.
@@ -124,7 +124,7 @@ export interface RuntimeHooksMetrics {
   pathIdentities: readonly [number, number, number];
   refIdentity: number;
   refObject:
-    | CRCRef<{
+    | PibblRef<{
         identity: number;
         value: number;
       }>

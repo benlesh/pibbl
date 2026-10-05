@@ -1,15 +1,15 @@
-import { crc } from '@crc/core';
+import { pibbl } from '@pibbl/core';
 import { cdp, userEvent } from 'vitest/browser';
 import { afterEach, beforeEach } from 'vitest';
-import { getCRCInstance } from '../global-state';
-import type { CRCElement, CRCController } from '../types';
+import { getPibblInstance } from '../global-state';
+import type { PibblElement, PibblController } from '../types';
 
-const activeControllers = new Set<CRCController>();
+const activeControllers = new Set<PibblController>();
 
 export class TestCanvas {
   constructor(
     public readonly element: HTMLCanvasElement,
-    private readonly controller: CRCController,
+    private readonly controller: PibblController,
   ) {}
 
   dispose(): void {
@@ -59,9 +59,9 @@ export class TestCanvas {
   }
 
   private getElementPosition(position: { x: number; y: number }) {
-    const surface = getCRCInstance(this.element).surface.snapshot;
+    const surface = getPibblInstance(this.element).surface.snapshot;
     if (!surface) {
-      throw new Error('The CRC test surface is not visible.');
+      throw new Error('The Pibbl test surface is not visible.');
     }
     const backing = surface.renderTransform.transformPoint(
       new DOMPoint(position.x, position.y),
@@ -189,7 +189,7 @@ afterEach(() => {
   activeControllers.clear();
 });
 
-export async function componentTest(comp: CRCElement<any>, options: {
+export async function componentTest(comp: PibblElement<any>, options: {
   width?: number;
   height?: number;
 } = {}) {
@@ -200,7 +200,7 @@ export async function componentTest(comp: CRCElement<any>, options: {
   canvas.style.margin = '5px';
   document.body.appendChild(canvas);
 
-  const controller = crc(canvas, comp);
+  const controller = pibbl(canvas, comp);
   activeControllers.add(controller);
   await animationFrame();
 

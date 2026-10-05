@@ -1,7 +1,7 @@
 ---
 id: guide-components-props-children
 title: Understand components, props, and children
-summary: Compose synchronous CRC components with clear props, recursive children, fragments, lists, and stable keys.
+summary: Compose synchronous Pibbl components with clear props, recursive children, fragments, lists, and stable keys.
 kind: guide
 slug: components-props-and-children
 order: 30
@@ -10,12 +10,12 @@ keywords: [components, props, children, fragments, lists, keys]
 
 # Understand components, props, and children
 
-CRC components are ordinary synchronous TypeScript or JavaScript functions.
+Pibbl components are ordinary synchronous TypeScript or JavaScript functions.
 The function itself is runtime identity. No wrapper, registration call, class,
 or JSX-specific component base is required.
 
 ```tsx
-import { Group, Rectangle, Text, type CRCNode } from "@crc/core";
+import { Group, Rectangle, Text, type PibblNode } from "@pibbl/core";
 
 interface CardProps {
   title: string;
@@ -23,7 +23,7 @@ interface CardProps {
   onSelect: () => void;
 }
 
-function Card({ title, selected, onSelect }: CardProps): CRCNode {
+function Card({ title, selected, onSelect }: CardProps): PibblNode {
   return (
     <Group>
       <Rectangle
@@ -45,7 +45,7 @@ function Card({ title, selected, onSelect }: CardProps): CRCNode {
 
 `title`, `selected`, and `onSelect` are behavioral or application props.
 `children` is declared only by components that accept it. `key` is construction
-metadata: CRC normalizes strings and numbers to a string and never delivers it
+metadata: Pibbl normalizes strings and numbers to a string and never delivers it
 in props.
 
 Drawing components participate in coordinate targeting by default. The card's
@@ -53,20 +53,20 @@ decorative `Text` uses `pointerEvents="none"` so its glyph bounds do not hide
 the clickable rectangle behind it.
 
 Call a component through JSX or `createElement`; a direct JavaScript call does
-not create a CRC element or establish render context. For the closed local
+not create a Pibbl element or establish render context. For the closed local
 style language, drawing geometry, filters, and shape options used by built-ins,
 see [Style and draw](#/learn/guides/style-and-draw).
 
 ## Signal-valued props belong to receivers
 
-CRC-provided components accept `T | Signal<T>` at declared reactive input
+Pibbl-provided components accept `T | Signal<T>` at declared reactive input
 positions. Passing the signal object makes the receiving component the
 consumer; passing `signal.get()` makes the enclosing component the consumer.
 
 Custom components opt in explicitly:
 
 ```tsx
-import { resolveSignalValue, type SignalValue } from "@crc/core";
+import { resolveSignalValue, type SignalValue } from "@pibbl/core";
 
 function CardTitle({ title }: { title: SignalValue<string> }) {
   const resolvedTitle = resolveSignalValue(title);
@@ -81,9 +81,9 @@ do not resolve it.
 
 ## Recursive children
 
-CRC accepts recursive, synchronous child structures. Arrays and finite
+Pibbl accepts recursive, synchronous child structures. Arrays and finite
 synchronous iterables flatten recursively, so ordinary elements, conditionals,
-and mapped lists can sit beside one another. Iterables must be finite: CRC
+and mapped lists can sit beside one another. Iterables must be finite: Pibbl
 materializes a receiving iterable once per render or measurement operation, and
 does not promise to detect infinite iterables.
 
@@ -97,7 +97,7 @@ values inside `Text` instead.
 `Text` has a separate recursive content algebra. It accepts strings, numbers,
 empty values, nested arrays, and finite synchronous iterables, then
 concatenates them exactly as JSX supplies them. Numeric zero renders as `"0"`
-inside `Text`, while booleans, `null`, and `undefined` add no text. A CRC
+inside `Text`, while booleans, `null`, and `undefined` add no text. A Pibbl
 element, Promise, async iterable, function, symbol, foreign element, or
 unsupported object is invalid textual content.
 
@@ -108,7 +108,7 @@ Text input also accepts signals at positions in that declared grammar:
 ```
 
 Traversal resolves those direct entries. A signal whose value is itself an
-array containing signals is resolved once; CRC does not recursively unwrap the
+array containing signals is resolved once; Pibbl does not recursively unwrap the
 signals hidden inside the returned application value.
 
 `wrap`, `lineHeight`, optional `width`/`height`, and `fit` (`visible`,
@@ -122,11 +122,11 @@ nested arrays are transparent, so their children join the surrounding sibling
 sequence. Use the imported `Fragment` value for a keyed fragment:
 
 ```tsx
-import { Fragment, type CRCNode } from "@crc/core";
+import { Fragment, type PibblNode } from "@pibbl/core";
 
 function groupSections(
-  sections: readonly { id: string; elements: CRCNode }[],
-): CRCNode {
+  sections: readonly { id: string; elements: PibblNode }[],
+): PibblNode {
   return sections.map((section) => (
     <Fragment key={section.id}>{section.elements}</Fragment>
   ));

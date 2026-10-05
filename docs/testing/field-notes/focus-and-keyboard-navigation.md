@@ -49,7 +49,7 @@ Canvas listeners, enhancers, manager, frame, candidates, boundaries, pending
 activation, and pointer capture. Two document-listener acquisitions balance
 two releases with zero duplicate release. An original application
 `tabindex="-2"` is restored after abort; a later application change to
-`tabindex="7"` causes CRC to relinquish ownership and survives double disposal.
+`tabindex="7"` causes Pibbl to relinquish ownership and survives double disposal.
 
 The ordinary event performance fixtures additionally prove that an unenhanced
 empty root and 100 unenhanced pointer targets retain zero document listeners,
@@ -61,7 +61,7 @@ reproduced that structure in 1.44 seconds.
 ## Packed optionality evidence
 
 The packed verifier built two minified browser ESM consumers with esbuild.
-The ordinary `rect` consumer omitted `CRC_FOCUS_MANAGEMENT_V1` and measured
+The ordinary `rect` consumer omitted `PIBBL_FOCUS_MANAGEMENT_V1` and measured
 102,986 bytes. The otherwise equivalent consumer using
 `withFocusManagement` retained the marker and measured 125,760 bytes. The
 no-focus bundle was therefore 22,774 bytes smaller. Bundler and NodeNext type
@@ -90,7 +90,7 @@ repository. The existing validated Studio override was used without disturbing
 that process:
 
 ```sh
-/usr/bin/time -p env CRC_STUDIO_PREVIEW_PORT=4274 fnm exec --using 24.15.0 -- corepack pnpm@11.21.0 trust
+/usr/bin/time -p env PIBBL_STUDIO_PREVIEW_PORT=4274 fnm exec --using 24.15.0 -- corepack pnpm@11.21.0 trust
 ```
 
 The aggregate exited 0 in 51.70 seconds. Fresh component evidence was 28
@@ -142,7 +142,7 @@ Playwright Chromium `151.0.7922.34` also passed:
 - `typecheck`: exit 0 with no TypeScript diagnostics.
 - `lint`: exit 0; ESLint and Prettier clean.
 - `test:package-consumer:packed`: exit 0; the no-focus bundle omitted
-  `CRC_FOCUS_MANAGEMENT_V1` at 102,986 bytes and the focus bundle retained it
+  `PIBBL_FOCUS_MANAGEMENT_V1` at 102,986 bytes and the focus bundle retained it
   at 125,760 bytes.
 
 The aggregate `trust` gate and visual suite were not rerun for this test-only

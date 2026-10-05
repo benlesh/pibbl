@@ -1,4 +1,4 @@
-import { PathGeometry, toSvgPathData, type BendTransformOptions, type TransformPathOptions, transformPath, pathBendTransform, arcBendTransform } from '@crc/core';
+import { PathGeometry, toSvgPathData, type BendTransformOptions, type TransformPathOptions, transformPath, pathBendTransform, arcBendTransform } from '@pibbl/core';
 
 import { describe, expect, it } from 'vitest';
 

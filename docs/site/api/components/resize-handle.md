@@ -8,17 +8,17 @@ apiCategory: component
 symbols: [ResizeHandle]
 relatedTypes:
   [
-    CRCResizeHandleStyle,
-    CRCManipulationReadoutStyle,
-    CRCResizeHandleProps,
-    CRCResizePosition,
+    PibblResizeHandleStyle,
+    PibblManipulationReadoutStyle,
+    PibblResizeHandleProps,
+    PibblResizePosition,
   ]
 ---
 
 # ResizeHandle
 
 ```ts
-import { ResizeHandle, useManipulation, useSignal } from "@crc/core";
+import { ResizeHandle, useManipulation, useSignal } from "@pibbl/core";
 ```
 
 `ResizeHandle` draws a small frame-corner or frame-edge control and uses a
@@ -32,10 +32,10 @@ const manipulation = useManipulation({ box, resize: {} });
 <ResizeHandle controller={manipulation} position="bottom-right" />;
 ```
 
-Related types: [CRCResizeHandleProps](#/api/types/events#crcresizehandleprops), [CRCResizePosition](#/api/types/events#crcresizeposition).
+Related types: [PibblResizeHandleProps](#/api/types/events#pibblresizehandleprops), [PibblResizePosition](#/api/types/events#pibblresizeposition).
 
 Readout presentation uses `style.readout` with local inactive/focused/active overrides.
 Use `formatReadout` for application-defined units; labels remain inside the visible canvas.
 See [handle guides and readouts](#/learn/guides/manipulation#handle-guides-and-readouts).
 
-Related presentation types: [CRCResizeHandleStyle](#/api/types/events#crcresizehandlestyle), [CRCManipulationReadoutStyle](#/api/types/events#crcmanipulationreadoutstyle).
+Related presentation types: [PibblResizeHandleStyle](#/api/types/events#pibblresizehandlestyle), [PibblManipulationReadoutStyle](#/api/types/events#pibblmanipulationreadoutstyle).

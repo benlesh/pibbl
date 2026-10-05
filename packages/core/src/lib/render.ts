@@ -4,7 +4,7 @@ import {
   GLOBAL_STATE,
 } from './global-state.js';
 import { Teardowns } from './teardowns.js';
-import { CRCComponentRefs } from './types.js';
+import { PibblComponentRefs } from './types.js';
 import type { LayoutBox } from './layout/types.js';
 import { finalizeHookSlots } from './hooks/hook-slot.js';
 import { resolveElementStyle, takePreNormalizedStyle } from './style/resolve-dispatch.js';
@@ -30,11 +30,11 @@ import {
 import { resolvePrimitiveInputs } from './element/resolve-primitive-inputs.js';
 import { materializeContainerChildren } from './element/children.js';
 import { isFragmentElement } from './element/fragment.js';
-import type { CRCElement, CRCNode, CRCNodeInput } from './element/types.js';
+import type { PibblElement, PibblNode, PibblNodeInput } from './element/types.js';
 import {
   backendMismatchError,
-  type CRCBackendDriver,
-  type CRCBackendFrame,
+  type PibblBackendDriver,
+  type PibblBackendFrame,
 } from './backend/types.js';
 import {
   collectComponentSignalReads,
@@ -49,18 +49,18 @@ import {
 } from './render-target.js';
 
 export function render(
-  node: CRCNode,
+  node: PibblNode,
   parentId: string,
-  parent: CRCComponentRefs<any> | undefined,
+  parent: PibblComponentRefs<any> | undefined,
 ): void {
-  const elements = materializeContainerChildren(node, 'CRC root');
+  const elements = materializeContainerChildren(node, 'Pibbl root');
   renderPreparedChildren(elements, parentId, parent);
 }
 
 function renderPreparedChildren(
-  elements: readonly CRCElement<any>[],
+  elements: readonly PibblElement<any>[],
   parentId: string,
-  parent: CRCComponentRefs<any> | undefined,
+  parent: PibblComponentRefs<any> | undefined,
 ): void {
   for (const element of elements) {
     renderPreparedElement(element, parentId, parent);
@@ -68,9 +68,9 @@ function renderPreparedChildren(
 }
 
 function renderPreparedElement(
-  element: CRCElement<any>,
+  element: PibblElement<any>,
   parentId: string,
-  parent: CRCComponentRefs<any> | undefined,
+  parent: PibblComponentRefs<any> | undefined,
 ): void {
   if (isFragmentElement(element)) {
     renderKeyedFragment(element, parentId, parent);
@@ -80,9 +80,9 @@ function renderPreparedElement(
 }
 
 function renderKeyedFragment(
-  element: CRCElement<any>,
+  element: PibblElement<any>,
   parentId: string,
-  parent: CRCComponentRefs<any> | undefined,
+  parent: PibblComponentRefs<any> | undefined,
 ): void {
   try {
     const componentRefs = prepareComponentScope(
@@ -92,7 +92,7 @@ function renderKeyedFragment(
     );
     reconcileElementEnhancers(
       componentRefs,
-      GLOBAL_STATE.currentCRCInstance!,
+      GLOBAL_STATE.currentPibblInstance!,
     );
     const enteredEnhancers = enterElementEnhancers(componentRefs);
     let enhancerSuccess = false;
@@ -134,9 +134,9 @@ function renderKeyedFragment(
 }
 
 function renderComponentElement<P>(
-  element: CRCElement<P>,
+  element: PibblElement<P>,
   parentId: string,
-  parent: CRCComponentRefs<any> | undefined,
+  parent: PibblComponentRefs<any> | undefined,
 ): void {
   try {
     const componentRefs = prepareComponentScope(element, parentId, parent);
@@ -149,7 +149,7 @@ function renderComponentElement<P>(
 
     reconcileElementEnhancers(
       componentRefs,
-      GLOBAL_STATE.currentCRCInstance!,
+      GLOBAL_STATE.currentPibblInstance!,
       definition !== undefined,
     );
     const enteredEnhancers = enterElementEnhancers(componentRefs);
@@ -175,11 +175,11 @@ function renderComponentElement<P>(
             GLOBAL_STATE.renderTransaction,
             receiverToken,
           );
-          const renderProgram = (invoke: () => CRCNodeInput | void) => {
+          const renderProgram = (invoke: () => PibblNodeInput | void) => {
             try {
               const previousReceiverToken = GLOBAL_STATE.primitiveReceiverToken;
               GLOBAL_STATE.primitiveReceiverToken = receiverToken;
-              let result: CRCNodeInput | void;
+              let result: PibblNodeInput | void;
               try {
                 result = invoke();
               } finally {
@@ -190,7 +190,7 @@ function renderComponentElement<P>(
               onAfterRender = componentRefs.onAfterRender;
               componentRefs.onAfterRender = undefined;
               const children = materializeContainerChildren(
-                result as CRCNodeInput,
+                result as PibblNodeInput,
                 componentRefs.element,
               );
               commitSignalReads();
@@ -327,21 +327,21 @@ function renderComponentElement<P>(
 }
 
 function componentSignalReadOptions(
-  componentRefs: CRCComponentRefs<any>,
+  componentRefs: PibblComponentRefs<any>,
 ) {
-  const crcInstance = GLOBAL_STATE.currentCRCInstance!;
+  const pibblInstance = GLOBAL_STATE.currentPibblInstance!;
   return {
     debugName: `${componentRefs.element.type.name || 'Anonymous'} (${componentRefs.id})`,
     invalidate: () => {
       if (
-        GLOBAL_STATE.crcInstances.get(crcInstance.canvas) !== crcInstance ||
-        crcInstance.mainTeardowns.closed ||
+        GLOBAL_STATE.pibblInstances.get(pibblInstance.canvas) !== pibblInstance ||
+        pibblInstance.mainTeardowns.closed ||
         componentRefs.teardowns.closed ||
-        crcInstance.refs.get(componentRefs.id) !== componentRefs
+        pibblInstance.refs.get(componentRefs.id) !== componentRefs
       ) {
         return;
       }
-      requestInstanceRender(crcInstance);
+      requestInstanceRender(pibblInstance);
     },
     onMaterialize: () => {
       if (componentRefs.signalConsumerTeardownAttached) return;
@@ -358,13 +358,13 @@ function componentSignalReadOptions(
 }
 
 function requireBackendFrame(): {
-  driver: CRCBackendDriver<unknown>;
-  frame: CRCBackendFrame<unknown>;
+  driver: PibblBackendDriver<unknown>;
+  frame: PibblBackendFrame<unknown>;
 } {
   const driver = GLOBAL_STATE.backendDriver;
   const frame = GLOBAL_STATE.backendFrame;
   if (!driver || !frame) {
-    throw new Error('CRC component traversal requires an active backend frame.');
+    throw new Error('Pibbl component traversal requires an active backend frame.');
   }
   return { driver, frame };
 }
@@ -375,25 +375,25 @@ function enterBackendComponent(): () => void {
 }
 
 function prepareComponentScope<P>(
-  element: CRCElement<P>,
+  element: PibblElement<P>,
   parentId: string,
-  parent: CRCComponentRefs<any> | undefined,
-): CRCComponentRefs<P> {
-  const crcInstance = GLOBAL_STATE.currentCRCInstance!;
+  parent: PibblComponentRefs<any> | undefined,
+): PibblComponentRefs<P> {
+  const pibblInstance = GLOBAL_STATE.currentPibblInstance!;
   const typeName = getElementTypeName(element, parentId);
   const id = ensureUniqueId(parentId, typeName);
   GLOBAL_STATE.seenIds!.add(id);
-  let componentRefs = crcInstance.refs.get(id) as
-    CRCComponentRefs<P> | undefined;
+  let componentRefs = pibblInstance.refs.get(id) as
+    PibblComponentRefs<P> | undefined;
   GLOBAL_STATE.componentIsMounting = componentRefs === undefined;
   if (componentRefs === undefined) {
     const teardowns = new Teardowns();
-    teardowns.follow(crcInstance.mainTeardowns);
-    const mountedRefs: CRCComponentRefs<P> = {
+    teardowns.follow(pibblInstance.mainTeardowns);
+    const mountedRefs: PibblComponentRefs<P> = {
       id,
       parent,
       element,
-      renderGeneration: crcInstance.renderGeneration,
+      renderGeneration: pibblInstance.renderGeneration,
       refs: [],
       hooks: [],
       signalConsumer: undefined,
@@ -401,13 +401,13 @@ function prepareComponentScope<P>(
       teardowns,
       onAfterRender: undefined,
     };
-    crcInstance.refs.set(id, mountedRefs);
+    pibblInstance.refs.set(id, mountedRefs);
     componentRefs = mountedRefs;
   }
 
   componentRefs.parent = parent;
   componentRefs.element = element;
-  componentRefs.renderGeneration = crcInstance.renderGeneration;
+  componentRefs.renderGeneration = pibblInstance.renderGeneration;
   const layout = GLOBAL_STATE.layoutStack?.at(-1);
   if (!layout) componentRefs.layoutEntry = undefined;
   else {
@@ -428,9 +428,9 @@ function captureLayoutBox(previous: Readonly<LayoutBox> | undefined, box: Readon
   return Object.freeze({ x: box.x, y: box.y, width: box.width, height: box.height });
 }
 
-function getElementTypeName(element: CRCElement<any>, parentId: string): string {
+function getElementTypeName(element: PibblElement<any>, parentId: string): string {
   const identityHint = getPlacementIdentityHint<{
-    type: CRCElement<any>['type'];
+    type: PibblElement<any>['type'];
     key: string | undefined;
     occurrence: number;
   }>(element);
@@ -446,7 +446,7 @@ function getElementTypeName(element: CRCElement<any>, parentId: string): string 
   const encodedKey = encodeURIComponent(key);
   const siblingKey = `${parentId}/${encodedKey}`;
   if (GLOBAL_STATE.seenKeys!.has(siblingKey)) {
-    throw new Error(`Duplicate CRC key "${key}" under "${parentId}"`);
+    throw new Error(`Duplicate Pibbl key "${key}" under "${parentId}"`);
   }
   GLOBAL_STATE.seenKeys!.add(siblingKey);
   return `${typeName}:${typeIdentity}[${encodedKey}]`;

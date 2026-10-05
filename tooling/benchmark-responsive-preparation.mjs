@@ -30,7 +30,7 @@ ${workload === "whole" ? "const wholeGet=source.get; source.get=()=>{reads++;ret
   return {samples,median:sorted[100],p95:sorted[190],checksum,reads,setupMs,tick};
 };`;
 const frameEntry = (root) => `
-import { crc, createElement, Rectangle, signal } from '${root}/index.ts';
+import { pibbl, createElement, Rectangle, signal } from '${root}/index.ts';
 import { ManualSchedulerDriver, installSchedulerDriverForTest } from '${root}/lib/scheduler/testing.ts';
 import { signalGraphSnapshot } from '${root}/lib/signals/graph.ts';
 window.run = () => {
@@ -45,7 +45,7 @@ window.run = () => {
     return Array.from({length:1000},(_,index)=>createElement(Rectangle,{key:index,style:
       kind==='whole'?whole:kind==='field'?{x:position,y:index%640,width:1,height:1,fill:'black'}:{x:index,y:value%640,width:1,height:1,fill:'black'}}));
   }
-  const setupStart=performance.now();const controller=crc(canvas,createElement(Root,{}),{pixelRatio:1});driver.flush(0);
+  const setupStart=performance.now();const controller=pibbl(canvas,createElement(Root,{}),{pixelRatio:1});driver.flush(0);
   const setupMs=performance.now()-setupStart;
   function update(){next++;if(kind==='whole')whole.set({x:next%1000,y:0,width:1,height:1,fill:'black'});else position.set(next%1000);driver.flush(next);}
   for(let i=0;i<100;i++)update();
@@ -69,7 +69,7 @@ window.run = () => {
   return {samples,median:sorted[100],p95:sorted[190],checksum,setupMs,tick,ownership:{edges:ownership.rendererEdges,consumers:ownership.rendererConsumers},cleanup:{edges:after.rendererEdges,consumers:after.rendererConsumers}};
 };`;
 const queryFrameEntry = (root, queried) => `
-import { crc, createElement, Rectangle, definePrimitive, signal } from '${root}/index.ts';
+import { pibbl, createElement, Rectangle, definePrimitive, signal } from '${root}/index.ts';
 import { getPrimitiveDefinition } from '${root}/lib/element/metadata.ts';
 import { getLayoutBox } from '${root}/lib/layout/context.ts';
 import { ManualSchedulerDriver, installSchedulerDriverForTest } from '${root}/lib/scheduler/testing.ts';
@@ -91,7 +91,7 @@ window.run = () => {
     },
   });
   function Root(){const value=position.get();return Array.from({length:1000},(_,index)=>createElement(Box,{key:index,style:{x:index,y:value%640,width:baseWidth,height:1,fill:'black'${queried ? ',when' : ''}}}));}
-  const setupStart=performance.now();const controller=crc(canvas,createElement(Root,{}),{pixelRatio:1});driver.flush(0);const setupMs=performance.now()-setupStart;
+  const setupStart=performance.now();const controller=pibbl(canvas,createElement(Root,{}),{pixelRatio:1});driver.flush(0);const setupMs=performance.now()-setupStart;
   function update(){next++;position.set(next%1000);driver.flush(next);}
   for(let i=0;i<100;i++)update();
   const samples=[];

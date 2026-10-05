@@ -1,19 +1,19 @@
-import { PathGeometry } from '@crc/core';
+import { PathGeometry } from '@pibbl/core';
 import { describe, expect, it } from 'vitest';
 import { defineParticleEffect2D } from '../index.js';
 import { particle } from './particle.js';
 import { compileParticleEffect2D } from './compiler.js';
 import { getParticleEffect2DRecord } from './definition-records.js';
 import type {
-  CRCParticleEmitter2D,
-  CRCParticleMotion2D,
-  CRCParticleRenderer2D,
-  CRCParticleShape2D,
+  PibblParticleEmitter2D,
+  PibblParticleMotion2D,
+  PibblParticleRenderer2D,
+  PibblParticleShape2D,
 } from './types.js';
 
 function emitter(
-  overrides: Partial<CRCParticleEmitter2D> = {},
-): CRCParticleEmitter2D {
+  overrides: Partial<PibblParticleEmitter2D> = {},
+): PibblParticleEmitter2D {
   return {
     name: 'sparks',
     capacity: 64,
@@ -196,7 +196,7 @@ describe('defineParticleEffect2D', () => {
   ] as const)('rejects invalid shape %#', (shape, property) => {
     expect(() => defineParticleEffect2D({
       debugName: 'bad shape',
-      emitters: [emitter({ shape: shape as CRCParticleShape2D })],
+      emitters: [emitter({ shape: shape as PibblParticleShape2D })],
     })).toThrowError(new RegExp(`bad shape.*sparks.*shape.*${property}`, 'i'));
   });
 
@@ -239,7 +239,7 @@ describe('defineParticleEffect2D', () => {
       emitters: [null as never],
     })).toThrowError(/malformed effect.*emitter.*record/i);
 
-    const malformed: readonly [Partial<CRCParticleEmitter2D>, string][] = [
+    const malformed: readonly [Partial<PibblParticleEmitter2D>, string][] = [
       [{ shape: null as never }, 'shape'],
       [{ initial: null as never }, 'initial'],
       [{ emission: [null as never] }, 'emission\\[0\\]'],
@@ -314,7 +314,7 @@ describe('defineParticleEffect2D', () => {
 
   it('copies caller records, deeply freezes normalized storage, and retains sprite identity', () => {
     const velocity: [number, number] = [3, -4];
-    const motion: CRCParticleMotion2D[] = [{ type: 'acceleration', value: [1, 2] }];
+    const motion: PibblParticleMotion2D[] = [{ type: 'acceleration', value: [1, 2] }];
     const emission = [{ type: 'burst' as const, atMilliseconds: 0, count: 8 }];
     const parameters = {
       strength: { type: 'number' as const, default: 1, timing: 'spawn' as const },
@@ -389,14 +389,14 @@ describe('defineParticleEffect2D', () => {
   });
 
   it('accepts every closed 2D shape, motion, and renderer variant', () => {
-    const shapes: CRCParticleShape2D[] = [
+    const shapes: PibblParticleShape2D[] = [
       { type: 'point' },
       { type: 'line', from: [0, 0], to: [1, 1] },
       { type: 'rectangle', width: 2, height: 3, sample: 'edge' },
       { type: 'circle', radius: 2, sample: 'circumference' },
       { type: 'ring', innerRadius: 1, outerRadius: 2 },
     ];
-    const motions: CRCParticleMotion2D[] = [
+    const motions: PibblParticleMotion2D[] = [
       { type: 'acceleration', value: [1, 2] },
       { type: 'gravity', value: [0, 9.8] },
       { type: 'drag', amount: 0.1 },
@@ -406,7 +406,7 @@ describe('defineParticleEffect2D', () => {
       { type: 'sway', amplitude: 2, frequency: [1, 2] },
       { type: 'angularVelocity', degreesPerSecond: 30 },
     ];
-    const renderers: CRCParticleRenderer2D[] = [
+    const renderers: PibblParticleRenderer2D[] = [
       { type: 'circle' },
       { type: 'rectangle', aspectRatio: 2, blend: 'additive' },
       { type: 'path', path: new Path2D() },

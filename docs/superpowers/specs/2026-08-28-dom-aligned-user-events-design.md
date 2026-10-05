@@ -1,4 +1,4 @@
-# CRC DOM-aligned user events design
+# Pibbl DOM-aligned user events design
 
 > **Historical status: IMPLEMENTED DESIGN RECORD.** Original proposal or approval wording below is preserved; current behavior lives in `docs/design/`.
 
@@ -8,12 +8,12 @@ Date: 2026-08-28
 
 ## Summary
 
-CRC will expand its current mouse-only interaction support into one DOM-aligned
+Pibbl will expand its current mouse-only interaction support into one DOM-aligned
 user-event system. Native Canvas events enter small family adapters, pass
-through one shared logical dispatcher, and reach one explicit CRC event target
+through one shared logical dispatcher, and reach one explicit Pibbl event target
 through capture, target, and bubble phases.
 
-The design extends CRC's original immediate-mode technique rather than adding a
+The design extends Pibbl's original immediate-mode technique rather than adding a
 retained DOM or scene graph. Components and hooks explicitly register the
 minimum interaction state that must survive rendering. Hit testing and event
 paths are derived when an event occurs. Rendering remains synchronous and does
@@ -27,7 +27,7 @@ keyboard-navigation layer is specified separately in
 
 - Support the pertinent DOM user-event families with familiar event names and
   ordering.
-- Resolve one topmost logical target using CRC's existing transformed, clipped,
+- Resolve one topmost logical target using Pibbl's existing transformed, clipped,
   global paint ledger.
 - Support capture, target, and bubble propagation through existing component
   ancestry.
@@ -36,7 +36,7 @@ keyboard-navigation layer is specified separately in
 - Provide direct DOM-style event props on built-in drawing components.
 - Give custom components explicit hooks for registering hit targets and
   propagation listeners.
-- Preserve CRC's immediate-mode rendering, component identity, source paint
+- Preserve Pibbl's immediate-mode rendering, component identity, source paint
   order, layer behavior, and scheduled updates.
 - Establish the event substrate needed by optional focus management without
   embedding focus policy into the dispatcher.
@@ -49,7 +49,7 @@ keyboard-navigation layer is specified separately in
 - A built-in widget library or semantic controls such as buttons, forms, or
   listboxes.
 - Reimplementing browser event families that cannot meaningfully reach a Canvas
-  or a future explicit CRC input adapter.
+  or a future explicit Pibbl input adapter.
 - Simulating obsolete or vendor-specific events.
 - Making every painted primitive intercept pointer events by default.
 - A generalized plugin framework for event policies.
@@ -58,7 +58,7 @@ keyboard-navigation layer is specified separately in
 
 ## Governing architectural principle
 
-CRC already renders the complete component tree while retaining only
+Pibbl already renders the complete component tree while retaining only
 identity-bound hook state and runtime resources. User events use the same
 pattern:
 
@@ -72,13 +72,13 @@ render traversal
 
 The implementation may maintain indexes required for hit testing and resource
 ownership, but it must not retain Canvas drawing commands or create semantic
-descendants. The phrase **event tree** is intentionally avoided. CRC has a
+descendants. The phrase **event tree** is intentionally avoided. Pibbl has a
 sparse interaction registry, and a propagation path exists only for the
 duration of one dispatch.
 
 ## Event-family contract
 
-CRC supports these event types and their DOM-style `onX` and `onXCapture`
+Pibbl supports these event types and their DOM-style `onX` and `onXCapture`
 handler names where capture is meaningful.
 
 ### Pointer events
@@ -96,7 +96,7 @@ handler names where capture is meaningful.
 - `lostpointercapture`
 
 Pointer data preserves the browser's mouse, pen, or touch `pointerType` and the
-native pointer properties. CRC does not invent device classes beyond the
+native pointer properties. Pibbl does not invent device classes beyond the
 browser values.
 
 ### Activation and mouse compatibility events
@@ -113,7 +113,7 @@ browser values.
 - `mouseout`
 - `mouseleave`
 
-CRC forwards the compatibility sequence supplied by the browser. It does not
+Pibbl forwards the compatibility sequence supplied by the browser. It does not
 synthesize a second mouse sequence after pointer events and does not suppress a
 native sequence merely because the application subscribed to both families.
 
@@ -138,7 +138,7 @@ lists even when Pointer Events are preferred for new interaction code.
 - `focusout`
 
 The obsolete `keypress` event is not supported. Focus events in this subsystem
-are logical transport; the optional focus manager decides which CRC target is
+are logical transport; the optional focus manager decides which Pibbl target is
 focused.
 
 ### Editing and composition events
@@ -153,8 +153,8 @@ focused.
 - `selectionchange` when supplied by an explicit input adapter
 
 A plain Canvas does not natively behave like an editable control. These events
-are available to future explicit CRC input controls and adapters through the
-same dispatcher; their existence does not cause CRC to create hidden editable
+are available to future explicit Pibbl input controls and adapters through the
+same dispatcher; their existence does not cause Pibbl to create hidden editable
 DOM.
 
 ### Clipboard events
@@ -176,7 +176,7 @@ DOM.
 ### Explicit exclusions
 
 Lifecycle, media, network, animation, transition, storage, and obsolete vendor
-events are not part of the user-input subsystem. CRC may support another event
+events are not part of the user-input subsystem. Pibbl may support another event
 category later without routing it through geometric hit testing.
 
 Semantic-control events such as `submit`, `reset`, `invalid`, `toggle`, and
@@ -205,9 +205,9 @@ rect({
 
 Capture handlers use the `Capture` suffix, such as `onClickCapture` and
 `onPointerDownCapture`. Handler types are exported by family and as one composed
-event-handler interface from `@crc/core`; type-only imports add no runtime code.
+event-handler interface from `@pibbl/core`; type-only imports add no runtime code.
 
-CRC does not inspect arbitrary custom-component props for event-looking names.
+Pibbl does not inspect arbitrary custom-component props for event-looking names.
 A custom component declares only the events it chooses to support, then either:
 
 1. forwards those handlers to a drawing component that owns the hit geometry;
@@ -272,14 +272,14 @@ preventing several event hooks from accidentally representing several
 conceptual targets. Migration may implement the old hook through the same
 dispatcher, but must retain its documented public behavior.
 
-All public functions and types are exported from `@crc/core`. Supported code
+All public functions and types are exported from `@pibbl/core`. Supported code
 does not use deep imports.
 
 ## Sparse registrations and identity
 
 An event-target registration contains only:
 
-- its owning CRC instance and mounted component;
+- its owning Pibbl instance and mounted component;
 - its hook or built-in interaction slot;
 - its current handler map;
 - its current hit path and hit-test options, when geometric;
@@ -290,7 +290,7 @@ An event-target registration contains only:
 
 Rerender updates a live registration in place. Replacing handlers does not
 replace target identity. Keyed children retain target identity when reordered
-within the same parent. Reparenting and remounting follow CRC's existing
+within the same parent. Reparenting and remounting follow Pibbl's existing
 identity contract and therefore create a new target.
 
 Components with no event target, event listener, cursor, or optional event
@@ -304,7 +304,7 @@ transforms, clipping stacks, layers, fill/stroke semantics, and interaction
 widths used by current mouse interaction.
 
 A painted object without an event registration does not automatically occlude a
-registered target underneath it. This preserves CRC's explicit interaction
+registered target underneath it. This preserves Pibbl's explicit interaction
 model: drawing alone does not opt into user interaction.
 
 Pointer capture overrides coordinate hit testing for the captured pointer.
@@ -322,7 +322,7 @@ not introduce retained drag-source state.
 
 ## Temporary propagation path
 
-After resolving a target, CRC walks the existing mounted-component parent
+After resolving a target, Pibbl walks the existing mounted-component parent
 references and collects only matching event-listener registrations. The path is
 used for one dispatch:
 
@@ -341,7 +341,7 @@ root listeners -> ancestor listeners -> target -> ancestor listeners -> root
 - `pointerenter`, `pointerleave`, `mouseenter`, and `mouseleave` do not bubble.
 - `pointerover`, `pointerout`, `mouseover`, and `mouseout` do bubble.
 
-Movement between targets compares the old and new ancestry paths. CRC emits
+Movement between targets compares the old and new ancestry paths. Pibbl emits
 boundary events only for the portions actually exited or entered, so movement
 between descendants does not falsely leave and re-enter their shared ancestor.
 
@@ -350,7 +350,7 @@ The propagation path is not saved after dispatch.
 ## Activation targeting
 
 Down and up events independently resolve their logical targets. When the
-browser supplies `click`, `auxclick`, or `dblclick`, CRC uses the live down/up
+browser supplies `click`, `auxclick`, or `dblclick`, Pibbl uses the live down/up
 history and component ancestry to mirror DOM activation targeting as closely as
 its explicit registrations permit:
 
@@ -366,8 +366,8 @@ manager, not the core event dispatcher.
 
 ## Event objects
 
-CRC uses one lightweight event facade rather than subclassing native browser
-events or constructing a family-specific retained object hierarchy. Every CRC
+Pibbl uses one lightweight event facade rather than subclassing native browser
+events or constructing a family-specific retained object hierarchy. Every Pibbl
 event provides familiar DOM-shaped fields and methods:
 
 ```ts
@@ -389,12 +389,12 @@ event.stopPropagation();
 event.stopImmediatePropagation();
 ```
 
-`target`, `currentTarget`, and `composedPath()` refer to opaque logical CRC
+`target`, `currentTarget`, and `composedPath()` refer to opaque logical Pibbl
 targets, not DOM nodes or component refs. They expose only target operations
 that have a DOM analogue, initially pointer-capture operations. They do not
 expose `focus()`.
 
-Coordinate events also provide CRC root-logical `x` and `y`, preserving the
+Coordinate events also provide Pibbl root-logical `x` and `y`, preserving the
 current public coordinate contract. Family facades expose the commonly used
 native fields, such as pointer identity and pressure, mouse buttons and
 modifiers, keyboard key/code/repeat/composition state, wheel deltas, touch
@@ -409,7 +409,7 @@ source native event are cancelable. `preventDefault()` updates the logical
 facade and forwards to the native event only under that conjunction, so a
 non-cancelable synthesized boundary never cancels its movement source.
 `stopPropagation()` and
-`stopImmediatePropagation()` stop the CRC path and forward to the native event
+`stopImmediatePropagation()` stop the Pibbl path and forward to the native event
 so later DOM bubbling beyond the Canvas is stopped when the browser still
 permits it.
 
@@ -423,12 +423,12 @@ event.currentTarget.hasPointerCapture(event.pointerId);
 event.currentTarget.releasePointerCapture(event.pointerId);
 ```
 
-CRC calls native pointer capture on the root Canvas and records the logical
+Pibbl calls native pointer capture on the root Canvas and records the logical
 target for that pointer ID. Subsequent pointer events target that logical owner
 until release, cancellation, unmount, or native capture loss. Capture is per
 pointer, not global.
 
-When a pointer's logical owner changes from A to B on the same root Canvas, CRC
+When a pointer's logical owner changes from A to B on the same root Canvas, Pibbl
 keeps the active and pending logical owners distinct. Before the next pointer
 event other than native got/lost notification, it exposes pending ownership to
 `hasPointerCapture`, dispatches one `lostpointercapture` to A with ownership
@@ -461,7 +461,7 @@ last requester releases it. Cancellable wheel and touch listeners are
 registered so `preventDefault()` remains effective.
 
 Native user-event collection requires an `HTMLCanvasElement` root. Offscreen
-layers continue to share their root HTML Canvas's interaction system, but a CRC
+layers continue to share their root HTML Canvas's interaction system, but a Pibbl
 mount whose root is itself an `OffscreenCanvas` has no DOM event source. A
 future explicit event-injection API would require its own design; this delivery
 does not pretend that an `OffscreenCanvas` can receive browser UI events.
@@ -481,10 +481,10 @@ phase, rather than once for an entire native-event sequence.
 - A target added during dispatch does not join the current path.
 - Handler replacement on a live registration is visible to later logical events
   in the same native sequence.
-- An exception from one application handler is reported through CRC's existing
+- An exception from one application handler is reported through Pibbl's existing
   asynchronous error-isolation mechanism and does not corrupt dispatcher state
   or suppress unrelated handlers.
-- Event handlers may schedule ordinary CRC state updates; rendering remains
+- Event handlers may schedule ordinary Pibbl state updates; rendering remains
   coalesced through the existing animation-frame scheduler.
 
 ## Compatibility with shipped mouse behavior
@@ -513,7 +513,7 @@ are complete.
 
 The implementation does not add public controls. Documentation may use small
 local components to demonstrate forwarding handlers and registering hit paths;
-those examples remain application patterns, not CRC exports.
+those examples remain application patterns, not Pibbl exports.
 
 ## Verification
 
@@ -533,7 +533,7 @@ Executable evidence must include:
   composition, clipboard, and drag/drop tests;
 - mutation and thrown-handler isolation tests;
 - exact native-listener installation and teardown counters;
-- public `@crc/core` type and runtime imports in Bundler and NodeNext consumers;
+- public `@pibbl/core` type and runtime imports in Bundler and NodeNext consumers;
 - packed-package and source/built browser tests;
 - a representative public scenario used both manually and headlessly.
 

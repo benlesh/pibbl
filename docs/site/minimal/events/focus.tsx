@@ -4,13 +4,13 @@ import {
   KeyboardNavigation,
   Rectangle,
   Text,
-  crc,
+  pibbl,
   useEventTarget,
   useRectPath,
-  type CRCKeyboardNavigationOptions,
+  type PibblKeyboardNavigationOptions,
   type FocusManagementProps,
   type KeyboardNavigationProps,
-} from '@crc/core';
+} from '@pibbl/core';
 
 const canvas = document.createElement('canvas');
 canvas.width = 320;
@@ -40,7 +40,7 @@ function Tile({ label, x }: { label: string; x: number }) {
   </>;
 }
 
-const options: CRCKeyboardNavigationOptions = { mode: 'directional' };
+const options: PibblKeyboardNavigationOptions = { mode: 'directional' };
 const navigation: KeyboardNavigationProps = {
   ...options,
   children: <Group><Tile label="First" x={24} /><Tile label="Second" x={176} /></Group>,
@@ -48,5 +48,5 @@ const navigation: KeyboardNavigationProps = {
 const focus: FocusManagementProps = {
   children: <Group><KeyboardNavigation {...navigation} /></Group>,
 };
-const controller = crc(canvas, <FocusManagement {...focus} />);
+const controller = pibbl(canvas, <FocusManagement {...focus} />);
 window.addEventListener('pagehide', () => controller.dispose(), { once: true });

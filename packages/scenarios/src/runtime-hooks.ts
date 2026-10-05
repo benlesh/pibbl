@@ -9,7 +9,7 @@ import type {
   ScenarioDefinition,
   ScenarioMountContext,
 } from './types';
-import { crc } from '@crc/core';
+import { pibbl } from '@pibbl/core';
 import {
   createRuntimeHooksScene,
   getRuntimeHooksSiblingOrder,
@@ -125,7 +125,7 @@ async function mountRuntimeHooks(
   const publish = () => context.onStateChange?.(snapshotState(model, metrics));
   const render = async () => {
     assertActive();
-    crc(context.canvas, createRuntimeHooksScene({ metrics, model }), {
+    pibbl(context.canvas, createRuntimeHooksScene({ metrics, model }), {
       signal: abortController.signal,
     });
     pendingRender = nextFrame();

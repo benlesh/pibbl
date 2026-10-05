@@ -11,19 +11,19 @@ styles draft. No runtime verification is claimed by this document.
 
 Continue the [approved visualization foundation](2026-09-24-first-class-data-visualization-foundation.md)
 after its accepted desktop line-chart slice. The goal remains composable,
-interactive visualization through ordinary CRC components, without D3, a Chart
+interactive visualization through ordinary Pibbl components, without D3, a Chart
 container, or a second interaction/runtime system. Built-in series batch marks;
 custom plotted elements explicitly opt into ordinary per-datum component trees.
 
 The recommended next slice is `PointSeries`, `PlotSeries`, and pure nearest-data lookup:
 one dataset displayed as points, and another displayed as a line with points,
-plus user-authored CRC marks, with inspection and selection through ordinary CRC handlers. Existing linear
+plus user-authored Pibbl marks, with inspection and selection through ordinary Pibbl handlers. Existing linear
 scales are sufficient. This follows the foundation's recorded continuation
 point and the user's requested custom-element expansion. The API details below are approved.
 
 The request for custom elements deliberately expands the foundation's earlier
 batched-series-only boundary: `PointSeries` keeps that performance contract;
-`PlotSeries` provides full CRC composition at the normal cost of those elements.
+`PlotSeries` provides full Pibbl composition at the normal cost of those elements.
 Do not implement PointSeries by creating one Circle component per row through
 PlotSeries.
 
@@ -41,7 +41,7 @@ financial series, force layouts, geography, and chart conveniences remain deferr
 
 ## Existing behavior to preserve
 
-Current `@crc/viz` exports `Scale`, `useScale`, `ScaleAdjust`, `Axis`, and
+Current `@pibbl/viz` exports `Scale`, `useScale`, `ScaleAdjust`, `Axis`, and
 `LineSeries`. Scales are linear immutable snapshots in core-owned signals;
 providers resolve local allocation, restore lexical scope, and reject lookup
 across rendering-instance/managed-Layer boundaries. Axes reserve no gutters;
@@ -97,7 +97,7 @@ export type PointStyleResolver<D> = (
 ) => Readonly<PointMarkStyle>;
 
 export interface PointSeriesProps<D>
-  extends CRCEventHandlers, CRCEventParticipationOptions {
+  extends PibblEventHandlers, PibblEventParticipationOptions {
   readonly data: SignalValue<readonly D[]>;
   readonly x: PointAccessor<D>;
   readonly y: PointAccessor<D>;
@@ -117,7 +117,7 @@ custom elements meanwhile. Defaults are
 radius 3, fill `#2563eb`, no stroke, strokeWidth 1, opacity 1, no cursor.
 Radius/stroke width must be finite and nonnegative; opacity must be in [0, 1].
 Core paint validation applies to fill and stroke. Zero radius emits no mark and
-no hit geometry. Zero opacity retains geometry, following ordinary CRC behavior.
+no hit geometry. Zero opacity retains geometry, following ordinary Pibbl behavior.
 
 Resolve the outer data once in the receiving series. Visit rows in source order;
 evaluate `defined` first and skip false rows without evaluating coordinates or
@@ -163,10 +163,10 @@ focus targets, lazy `event.nearestDatum()`, and enlarged point hit radii are
 deferred. Authors can put a handler on explicit plot geometry for inspection
 across empty space, as in the accepted line example.
 
-## PlotSeries: custom CRC elements at data coordinates
+## PlotSeries: custom Pibbl elements at data coordinates
 
 `PlotSeries` maps each eligible datum through the same named x/y scales, then
-renders author-supplied CRC nodes with local origin `(0, 0)` at that point.
+renders author-supplied Pibbl nodes with local origin `(0, 0)` at that point.
 It can return a shape, text, an image, a reusable component, or a composition
 of elements. It owns placement; the returned elements own their paint, geometry,
 styles, state, and event behavior. There is no default mark when `render` is
@@ -198,7 +198,7 @@ omitted: use PointSeries for default dots.
 ```
 
 `createElement(PlotSeries, { data, x, y, xScale, yScale, keyBy, render })`
-is the equivalent construction. The callback returns ordinary CRC nodes;
+is the equivalent construction. The callback returns ordinary Pibbl nodes;
 there is no function-child protocol or special element vocabulary.
 
 ```ts
@@ -206,7 +206,7 @@ export type PlotKeyAccessor<D> =
   | { [K in keyof D]-?: D[K] extends string | number ? K : never }[keyof D]
   | ((datum: D, index: number, data: readonly D[]) => string | number);
 
-export interface PlotSeriesProps<D> extends CRCEventHandlers {
+export interface PlotSeriesProps<D> extends PibblEventHandlers {
   readonly data: SignalValue<readonly D[]>;
   readonly x: PointAccessor<D>;
   readonly y: PointAccessor<D>;
@@ -214,7 +214,7 @@ export interface PlotSeriesProps<D> extends CRCEventHandlers {
   readonly yScale: ScaleId;
   readonly defined?: (datum: D, index: number, data: readonly D[]) => boolean;
   readonly keyBy?: PlotKeyAccessor<D>;
-  readonly render: (datum: D, index: number, data: readonly D[]) => CRCNode;
+  readonly render: (datum: D, index: number, data: readonly D[]) => PibblNode;
 }
 ```
 
@@ -236,7 +236,7 @@ an author establishes a new allocated container inside the mark. PlotSeries has
 no intrinsic measurement and does not reserve gutters or label space.
 
 Invoke `render` once per eligible row evaluation, inside a stable internal row
-component under that row's translation. It is synchronous: supported CRCNode
+component under that row's translation. It is synchronous: supported PibblNode
 forms, including arrays/fragments and null, follow core's recursive protocol;
 promises and foreign elements receive ordinary core diagnostics. Returning null
 paints nothing but preserves the row wrapper while the row remains eligible.
@@ -270,7 +270,7 @@ series owner. Signal writes during any render remain forbidden.
 
 PlotSeries is structural: series handler props register propagation listeners,
 without an independent hit target. Returned drawing elements participate in
-ordinary CRC targeting, source paint order, clipping, cursor, capture, and
+ordinary Pibbl targeting, source paint order, clipping, cursor, capture, and
 opt-in focus/navigation. Handlers on those elements can close over their datum;
 no enriched event or datum registry is necessary. Later overlapping rows paint
 and target above earlier rows according to core rules.
@@ -356,7 +356,7 @@ read signals at their intended use site. A handler should use data and scale
 snapshots from the same successful render when inspecting displayed geometry,
 rather than mixing newly written data with an older displayed frame.
 
-Coordinate conversion is explicit. CRC events expose root-logical x/y; the
+Coordinate conversion is explicit. Pibbl events expose root-logical x/y; the
 helpers consume the scales' shared local frame. For a translation-only plot,
 subtract the known plot origin. For transformed plots, apply the inverse of the
 known application transform before querying. Do not infer an origin from
@@ -387,18 +387,18 @@ export interface HoverQueryContext {
 export type HoverQuery<T> = (context: HoverQueryContext) => T | undefined;
 export interface HoverDataProps<T> {
   readonly query: HoverQuery<T>;
-  readonly children: (result: T | undefined) => CRCNode;
+  readonly children: (result: T | undefined) => PibblNode;
 }
-export function HoverData<T>(props: HoverDataProps<T>): CRCNode;
+export function HoverData<T>(props: HoverDataProps<T>): PibblNode;
 ```
 
 `HoverData` invokes query once per receiving component evaluation, then invokes
 children once, including when the result is undefined. An empty query result does
-not dictate UI: the callback can return null, an empty-state node, or other CRC
+not dictate UI: the callback can return null, an empty-state node, or other Pibbl
 content. Result types, including arbitrary custom records and discriminated
 unions, flow into children without casts. Equivalent non-JSX authoring passes
 `children` explicitly in `createElement(HoverData, { query, children })`.
-This function-child input belongs to HoverData only; it does not change CRCNode
+This function-child input belongs to HoverData only; it does not change PibblNode
 or PlotSeries's existing render prop.
 
 Context scale lookup reads the current resolved snapshot under the receiving
@@ -416,7 +416,7 @@ removal, failure, and disposal release them. Normal render write guards apply.
 Do not use function identity as subtree identity: replacing a query or callback
 preserves same-type/key returned components under the same parent. Returning no
 nodes still unmounts prior descendants normally. Render callback output follows
-normal CRCNode validation; async query results get an actionable diagnostic.
+normal PibblNode validation; async query results get an actionable diagnostic.
 
 ### Series inputs and function-producing helpers
 
@@ -559,7 +559,7 @@ HoverCard is independent of query resolution and drawing series. Proposed inputs
 (default 0), `gap?: SignalValue<number>` (default 8),
 `placement?: "auto" | "above" | "below" | "right" | "left"` (default auto),
 `bounds?: SignalValue<Readonly<{x:number;y:number;width:number;height:number}>>`,
-`style`, and ordinary CRCNode children. Bounds default to the incoming allocation's
+`style`, and ordinary PibblNode children. Bounds default to the incoming allocation's
 local `[0,width] × [0,height]` rectangle. Anchor/bounds are in that same local
 frame: mount the card at plot origin, not inside an already-translated mark.
 
@@ -588,7 +588,7 @@ This is conservative circle exclusion, independent of the painted point shape.
 Rectangular protected marks and automatic multi-card collision avoidance are
 future extensions; multiple cards can choose different preferred sides explicitly.
 
-The built-in background is pointerEvents=none. CRC structural containers do not
+The built-in background is pointerEvents=none. Pibbl structural containers do not
 recursively disable descendant targets: authored Text/shape decorations must also
 use pointerEvents=none, as the documented card examples will do. Interactive
 children retain normal explicitly authored core targets; do not invent a recursive
@@ -657,7 +657,7 @@ directly. Once responsive styles land, their `style.when` patches query the
 inherited plot allocation, unless the mark explicitly establishes a smaller
 container. Moving a point does not change its query basis. A renderer can return
 different structures using ordinary component logic; resulting identity changes
-follow the same rules as any CRC subtree. Responsive styling support inside
+follow the same rules as any Pibbl subtree. Responsive styling support inside
 custom marks must not be confused with support on PointSeries's own style input.
 
 ## First runnable slice and evidence
@@ -705,7 +705,7 @@ the repository trust gate. Design-time inspection is not test evidence.
 
 ## Review boundary
 
-The approved scope includes batched dots, custom plotted CRC subtrees, pure
+The approved scope includes batched dots, custom plotted Pibbl subtrees, pure
 inspection, and the function-based hover-query/card extension above. It specifies radius rather than area,
 one PointSeries target versus ordinary custom-element targets, keyed row
 identity, source-order compositing, local nearest-anchor distance, opaque datum

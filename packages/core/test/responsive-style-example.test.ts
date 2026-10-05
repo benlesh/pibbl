@@ -1,7 +1,7 @@
 import { afterEach, expect, it, vi } from 'vitest';
 import mount from '../../scenarios/src/learning/layout/responsive-styles.example';
-import type { CRCController } from '@crc/core';
-let controller: CRCController | undefined;
+import type { PibblController } from '@pibbl/core';
+let controller: PibblController | undefined;
 afterEach(() => {
   controller?.dispose();
   vi.restoreAllMocks();

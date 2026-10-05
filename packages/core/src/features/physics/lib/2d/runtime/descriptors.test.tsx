@@ -1,6 +1,6 @@
-import { signal } from "@crc/core";
+import { signal } from "@pibbl/core";
 import { circleShape2D } from "../../../2d-geometry.js";
-/** @jsxImportSource @crc/core */
+/** @jsxImportSource @pibbl/core */
 import {
   collider2D,
   dynamicBody2D,
@@ -179,6 +179,6 @@ describe("2D physics attachment descriptors", () => {
           options: {},
         }) as never,
       ),
-    ).toThrow(/registered CRC physics 2D attachment/i);
+    ).toThrow(/registered Pibbl physics 2D attachment/i);
   });
 });

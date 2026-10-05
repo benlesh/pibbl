@@ -8,71 +8,73 @@
     "symbols": [
       {
         "name": "Arc",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "ArcProps",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "ArcStyle",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "Circle",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "CircleProps",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "CircleStyle",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
-      { "name": "CursorStyle", "importPath": "@crc/core" },
-      { "name": "FillStyle", "importPath": "@crc/core" },
-      { "name": "PaintStyle", "importPath": "@crc/core" },
+      { "name": "CursorStyle", "importPath": "@pibbl/core" },
+      { "name": "FillStyle", "importPath": "@pibbl/core" },
+      { "name": "PaintStyle", "importPath": "@pibbl/core" },
       {
         "name": "Ellipse",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "EllipseProps",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "EllipseStyle",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "Rectangle",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "RectangleProps",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "RectStyle",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
-      { "name": "RoundedCornerStyle", "importPath": "@crc/core" },
-      { "name": "StrokeStyle", "importPath": "@crc/core" },
+      { "name": "RoundedCornerStyle", "importPath": "@pibbl/core" },
+      { "name": "StrokeStyle", "importPath": "@pibbl/core" },
       {
         "name": "Wedge",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "WedgeProps",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "WedgeStyle",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       }
     ],
-    "notes": ["Creates its own canvas and disposes the CRC mount on pagehide."]
+    "notes": [
+      "Creates its own canvas and disposes the Pibbl mount on pagehide."
+    ]
   },
   {
     "id": "polygons",
@@ -83,42 +85,44 @@
     "symbols": [
       {
         "name": "Polygon",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "PolygonProps",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "PolygonStyle",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "RegularPolygon",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "RegularPolygonProps",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "RegularPolygonStyle",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "Star",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "StarProps",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "StarStyle",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       }
     ],
-    "notes": ["Creates its own canvas and disposes the CRC mount on pagehide."]
+    "notes": [
+      "Creates its own canvas and disposes the Pibbl mount on pagehide."
+    ]
   },
   {
     "id": "strokes-paths",
@@ -129,66 +133,68 @@
     "symbols": [
       {
         "name": "HorizontalLine",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "HorizontalLineProps",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "HorizontalLineStyle",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "Line",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "LineProps",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "LineStyle",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "Path",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "PathProps",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "PathStyle",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "SvgPath",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "SvgPathProps",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "SvgPathStyle",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "VerticalLine",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "VerticalLineProps",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "VerticalLineStyle",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       }
     ],
-    "notes": ["Creates its own canvas and disposes the CRC mount on pagehide."]
+    "notes": [
+      "Creates its own canvas and disposes the Pibbl mount on pagehide."
+    ]
   },
   {
     "id": "composition",
@@ -199,68 +205,68 @@
     "symbols": [
       {
         "name": "Clip",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "ClipProps",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "ClipStyle",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "Group",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "GroupProps",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "GStyle",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "Image",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "ImageProps",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "ImgStyle",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "Layer",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "LayerProps",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "LayerStyle",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "Text",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "TextProps",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
-      { "name": "TextFit", "importPath": "@crc/core" },
+      { "name": "TextFit", "importPath": "@pibbl/core" },
       {
         "name": "TextStyle",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       }
     ],
     "notes": [
-      "Creates its own canvas and disposes the CRC mount on pagehide.",
+      "Creates its own canvas and disposes the Pibbl mount on pagehide.",
       "The image uses an embedded PNG data URL; no external asset request is needed."
     ]
   }

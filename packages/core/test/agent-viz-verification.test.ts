@@ -1,4 +1,4 @@
-import { getScenarioBySlug, loadScenario, type ScenarioController } from '@crc/scenarios';
+import { getScenarioBySlug, loadScenario, type ScenarioController } from '@pibbl/scenarios';
 import { afterEach, expect, it } from 'vitest';
 import { moveMouse } from './support/mouse-input';
 let controller: ScenarioController<any> | undefined;
@@ -33,7 +33,7 @@ it('verifies interpolated values and coordinates across a native hover and data 
   expect(changed.results.find((value: any) => value.series === 'adjusted')?.y).toBe(20);
   expect(first.results[0].y).toBe(20);
   const evidence = evidenceHost.querySelector('[data-testid="agent-viz-evidence"]');
-  expect(JSON.parse(evidence!.textContent!)).toMatchObject({ schema: 'crc-viz-fixture/1', state: changed });
+  expect(JSON.parse(evidence!.textContent!)).toMatchObject({ schema: 'pibbl-viz-fixture/1', state: changed });
   await controller.perform('missing-data');
   const missing = controller.getState();
   expect(missing.generation).toBe(2);

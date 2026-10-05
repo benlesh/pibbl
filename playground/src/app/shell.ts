@@ -45,7 +45,7 @@ export function createStudioShell(options: StudioShellOptions): StudioShell {
   const mobileBrand = document.createElement("a");
   mobileBrand.href = "#/examples";
   mobileBrand.className = "studio-mobile-brand";
-  mobileBrand.textContent = "CRC / STUDIO";
+  mobileBrand.textContent = "Pibbl / STUDIO";
   const mobileSearchButton = createSearchTrigger("studio-search-trigger--mobile");
   mobileBar.append(menuButton, mobileBrand, mobileSearchButton);
 
@@ -67,7 +67,7 @@ export function createStudioShell(options: StudioShellOptions): StudioShell {
   brand.href = "#/examples";
   brand.className = "studio-brand";
   brand.innerHTML =
-    '<span class="studio-brand__mark" aria-hidden="true"><i></i><b></b><em></em></span><span>CRC<br><small>Studio</small></span>';
+    '<span class="studio-brand__mark" aria-hidden="true"><i></i><b></b><em></em></span><span>Pibbl<br><small>Studio</small></span>';
   const desktopSearchButton = createSearchTrigger("studio-search-trigger--desktop");
   const navigationHost = document.createElement("nav");
   navigationHost.ariaLabel = "Documentation";
@@ -288,7 +288,7 @@ export function createStudioShell(options: StudioShellOptions): StudioShell {
       }
     },
     finishRoute(title, focus = true) {
-      document.title = `${title} · CRC Studio`;
+      document.title = `${title} · Pibbl Studio`;
       routeAnnouncements.textContent = `${title} loaded`;
       if (focus) main.querySelector<HTMLElement>("h1")?.focus({ preventScroll: true });
     },

@@ -6,7 +6,7 @@
 
 Task 8 is implemented and ready to commit.
 
-- Workspace: `/private/tmp/crc-jsx-component-authoring`
+- Workspace: `/private/tmp/pibbl-jsx-component-authoring`
 - Branch: `codex/jsx-component-authoring`
 - Required start: `ee12465`
 - Runtime: Node `v26.7.0`, pnpm `11.21.0`
@@ -17,7 +17,7 @@ Task 8 is implemented and ready to commit.
 
 Public `FocusManagement` and `KeyboardNavigation` component values replace the
 two root-exported enhancer functions. They are preparation-only descriptors:
-each removes empty child values, requires exactly one remaining branded CRC
+each removes empty child values, requires exactly one remaining branded Pibbl
 element, and appends the existing private lifecycle descriptor to a clone of
 that child before component identity is assigned.
 
@@ -39,7 +39,7 @@ or used through the public package surface.
 - Pending policies are applied outer-to-inner to the final child. Each policy
   uses the existing append operation, so existing private child metadata stays
   first while nested JSX policies retain declaration-order entry.
-- Each append uses `cloneCRCElement`; all Task 7 source, style, receiver,
+- Each append uses `clonePibblElement`; all Task 7 source, style, receiver,
   identity-hint, and registered clone metadata is preserved. The enhancer clone
   handler also copies its frozen descriptor array.
 - Policy values are built by a conditionally pure factory initializer. This
@@ -56,7 +56,7 @@ or used through the public package surface.
   text, unsupported values, and foreign React-like elements with the receiving
   policy name and JSX development source when available.
 - Direct calls to either component produce the approved diagnostic directing
-  authors to CRC JSX or `createElement`.
+  authors to Pibbl JSX or `createElement`.
 - Directional-mode validation, keyboard-without-focus validation, duplicate
   focus/directional policy validation, and OffscreenCanvas focus-host
   diagnostics now use the public policy vocabulary.
@@ -101,7 +101,7 @@ The focused evidence covers:
 ### RED
 
 `policy-components.test.tsx` and the JSX type fixtures were written before the
-production implementation. The focused runtime run failed because `@crc/core`
+production implementation. The focused runtime run failed because `@pibbl/core`
 did not export `FocusManagement`; `typecheck` failed on both missing policy
 exports and their not-yet-defined props contracts.
 
@@ -116,7 +116,7 @@ The first packed consumer run then failed its existing focus-elimination guard:
 Optimized no-focus bundle retained focus implementation code.
 ```
 
-A direct esbuild trace showed `CRC_FOCUS_MANAGEMENT_V1` in a rect-only bundle.
+A direct esbuild trace showed `PIBBL_FOCUS_MANAGEMENT_V1` in a rect-only bundle.
 The cause was two unconditional top-level WeakMap registrations. Moving
 registration into the policy value's conditionally pure initializer made a
 rect-only probe omit both the marker and registration while a
@@ -128,7 +128,7 @@ not establish the existing mouse activation sequence. Reusing the established
 production change.
 
 The first scenario check rejected a transitional local helper import because
-learning examples may import only `@crc/core`. Inlining the public
+learning examples may import only `@pibbl/core`. Inlining the public
 `createElement` policy descriptors into the five focus lessons restored that
 contract. Regenerating the index then resolved the expected stale generated
 catalog after focus API tags changed.

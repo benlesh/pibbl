@@ -1,6 +1,6 @@
-/** @jsxImportSource @crc/core */
+/** @jsxImportSource @pibbl/core */
 import {
-  crc,
+  pibbl,
   Rectangle,
   Ellipse,
   Polygon,
@@ -9,11 +9,11 @@ import {
   useComputed,
   useManipulation,
   ManipulationFrame,
-} from "@crc/core";
+} from "@pibbl/core";
 import { afterEach, expect, it } from "vitest";
 import {
   PhysicsWorld2D,
-  crcPhysicsWorld2D,
+  pibblPhysicsWorld2D,
   physicsObstacles2D,
   staticBody2D,
   kinematicBody2D,
@@ -37,7 +37,7 @@ it("publishes declared boxes through the public source and invalidates on dispos
   const x = signal(40);
   let source!: ReturnType<typeof physicsObstacles2D>;
   function Content() {
-    const next = physicsObstacles2D(crcPhysicsWorld2D());
+    const next = physicsObstacles2D(pibblPhysicsWorld2D());
     if (source) expect(next).toBe(source);
     source = next;
     return (
@@ -49,7 +49,7 @@ it("publishes declared boxes through the public source and invalidates on dispos
   }
   const canvas = document.createElement("canvas");
   document.body.appendChild(canvas);
-  const root = crc(
+  const root = pibbl(
     canvas,
     <PhysicsWorld2D>
       <Content />
@@ -71,15 +71,15 @@ it("publishes declared boxes through the public source and invalidates on dispos
   expect(source.read().boxes).toBe(first.boxes);
   expect(source.read().boxes[0]).toBe(110);
   root.dispose();
-  expect(() => source.read()).toThrow(/live CRC physics/i);
+  expect(() => source.read()).toThrow(/live Pibbl physics/i);
 });
 
-it("exports ellipse and triangle geometry from mounted CRC shapes", () => {
+it("exports ellipse and triangle geometry from mounted Pibbl shapes", () => {
   const driver = new ManualSchedulerDriver();
   const restore = installSchedulerDriverForTest(driver);
   let source!: ReturnType<typeof physicsObstacles2D>;
   function Content() {
-    source = physicsObstacles2D(crcPhysicsWorld2D());
+    source = physicsObstacles2D(pibblPhysicsWorld2D());
     return (
       <>
         <Ellipse
@@ -101,7 +101,7 @@ it("exports ellipse and triangle geometry from mounted CRC shapes", () => {
   }
   const canvas = document.createElement("canvas");
   document.body.appendChild(canvas);
-  const root = crc(
+  const root = pibbl(
     canvas,
     <PhysicsWorld2D>
       <Content />
@@ -128,7 +128,7 @@ it("keeps a manipulated ellipse collider aligned after move, resize, and rotatio
   const rotation = signal(0);
   let source!: ReturnType<typeof physicsObstacles2D>;
   function Content() {
-    source = physicsObstacles2D(crcPhysicsWorld2D());
+    source = physicsObstacles2D(pibblPhysicsWorld2D());
     const manipulation = useManipulation({
       box,
       rotation,
@@ -171,7 +171,7 @@ it("keeps a manipulated ellipse collider aligned after move, resize, and rotatio
   }
   const canvas = document.createElement("canvas");
   document.body.appendChild(canvas);
-  const root = crc(
+  const root = pibbl(
     canvas,
     <PhysicsWorld2D space="local" gravity={[0, 0]}>
       <Content />
@@ -209,7 +209,7 @@ it("exports a rounded shelf as an exact union of boxes and circles", () => {
     restore = installSchedulerDriverForTest(driver);
   let source!: ReturnType<typeof physicsObstacles2D>;
   function Content() {
-    source = physicsObstacles2D(crcPhysicsWorld2D());
+    source = physicsObstacles2D(pibblPhysicsWorld2D());
     return (
       <Rectangle
         physics={staticBody2D()}
@@ -219,7 +219,7 @@ it("exports a rounded shelf as an exact union of boxes and circles", () => {
   }
   const canvas = document.createElement("canvas");
   document.body.append(canvas);
-  const root = crc(
+  const root = pibbl(
     canvas,
     <PhysicsWorld2D>
       <Content />

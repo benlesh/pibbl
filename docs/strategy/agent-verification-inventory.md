@@ -4,7 +4,7 @@
   implementation plan or a claim that these capabilities exist.
 - **Date:** 2026-09-28.
 - **Last reconciled against code:** 2026-09-29, checkout `e8a1cf29`.
-- **Primary audience:** Agents building, changing, debugging, and verifying CRC
+- **Primary audience:** Agents building, changing, debugging, and verifying Pibbl
   applications. Human inspection is a secondary consumer of the same evidence.
 - **Scope:** Complex Canvas 2D applications and data visualization, including
   signals, scheduling, animation, hybrid DOM applications, and optional renderers.
@@ -20,7 +20,7 @@ understand why it does something else, make a targeted repair, and demonstrate
 that the repair did not break another behavior. Seeing a plausible screenshot
 and receiving a successful build are insufficient.
 
-This inventory aims for exhaustive coverage of that workflow within CRC's
+This inventory aims for exhaustive coverage of that workflow within Pibbl's
 application boundary. It is deliberately broader than any sensible first
 implementation. Exhaustiveness cannot cover unknown future capabilities; new
 packages and application domains must supply their own verification facets.
@@ -66,7 +66,7 @@ rejected. “Not selected” is not a test failure.
 
 | Owner            | Responsibility                                                                                     |
 | ---------------- | -------------------------------------------------------------------------------------------------- |
-| Runtime/tooling  | Facts only CRC can reliably know; optional bounded instrumentation and read-only queries           |
+| Runtime/tooling  | Facts only Pibbl can reliably know; optional bounded instrumentation and read-only queries         |
 | Browser/harness  | Real input, viewport, host timing, assets, process isolation, screenshots, execution and artifacts |
 | Application      | Business meaning, data identity, expected outcomes, commands, semantic alternatives and fixtures   |
 | Build/package    | Types, exports, dependency identity, production output and reproducible setup                      |
@@ -112,7 +112,7 @@ should consume a smaller shared evidence boundary rather than define it.
 
 **Owners:** Build/package, browser/harness, runtime/tooling.
 
-- **ENV-01:** Identify exact CRC and sibling-package versions, source revision,
+- **ENV-01:** Identify exact Pibbl and sibling-package versions, source revision,
   dirty-worktree fingerprint, build mode, and source-versus-built resolution.
 - **ENV-02:** Discover available inspection facets, schema versions, optional
   packages, unsupported operations, and whether instrumentation was enabled
@@ -335,7 +335,7 @@ should consume a smaller shared evidence boundary rather than define it.
 - **AST-02:** Verify that a late completion for an old source cannot replace the
   current image or schedule work for a disposed owner.
 - **AST-03:** Control successful, delayed, failed and out-of-order asset completion
-  using harness fixtures, without adding a production network scheduler to CRC.
+  using harness fixtures, without adding a production network scheduler to Pibbl.
 - **AST-04:** Distinguish transport, decode, format, CORS/taint and render failures;
   report when screenshots or readbacks cannot inspect an asset.
 - **AST-05:** Verify destination sizing, cropping and transforms against decoded
@@ -344,7 +344,7 @@ should consume a smaller shared evidence boundary rather than define it.
   bitmaps, object URLs, textures and model assets where those resources exist.
 - **AST-07:** Record asset identities or fixture hashes sufficient to reproduce
   output without exporting credentials, signed URLs or private payloads.
-- **AST-08:** Separate application loading policy from CRC readiness; distinguish
+- **AST-08:** Separate application loading policy from Pibbl readiness; distinguish
   an intentionally displayed placeholder from a failed asset gate.
 
 ## 10. Coordinate targeting and actual input delivery
@@ -512,7 +512,7 @@ not implied by those authoring APIs; inspect actual tooling coverage separately.
 - **ANI-09:** Verify teardown, exceptions and stale callbacks release owned state
   and do not keep requesting frames after the last active participant is gone.
 - **ANI-10:** Test application reduced-motion behavior, hidden-page/resume behavior
-  and frame gaps only against an explicit policy; CRC cannot infer product intent.
+  and frame gaps only against an explicit policy; Pibbl cannot infer product intent.
 
 ## 16. Layers, caches and isolated surfaces
 
@@ -544,7 +544,7 @@ not implied by those authoring APIs; inspect actual tooling coverage separately.
 **Owners:** Application, optional visualization package, browser/harness.
 The linear-scale, line/point/custom-series and hover-query surface is implemented.
 Additional chart families and data-pipeline operations remain capability-specific;
-this inventory does not imply that all listed operations ship in `@crc/viz`.
+this inventory does not imply that all listed operations ship in `@pibbl/viz`.
 
 - **DAT-01:** Identify dataset version, stable row keys, schema, units, source and
   freshness expectations without requiring full data disclosure.
@@ -598,7 +598,7 @@ Apply each entry only to implemented scale/series families.
   requiring a component, signal observer or hit record for every datum.
 - **VIZ-10:** Verify styling precedence and resolver behavior for supported constant,
   per-datum or per-segment styles, including their effect on batching.
-- **VIZ-11:** Compare custom annotations and ordinary CRC primitives with series
+- **VIZ-11:** Compare custom annotations and ordinary Pibbl primitives with series
   mappings so all geometry uses the same local frame and scale generation.
 - **VIZ-12:** Verify explicit plot clipping, overflow and gutters; do not assume a
   scale provider creates a chart box, padding, hit region or clipping boundary.
@@ -653,7 +653,7 @@ Apply each entry only to implemented scale/series families.
   one shared core identity, scheduler and event model where that is promised.
 - **REN-05:** For external renderers, correlate the committed layer generation
   with renderer-supplied camera/projection, transforms and bounds where available.
-  Three owns its scene and render queues; CRC does not reconstruct the removed
+  Three owns its scene and render queues; Pibbl does not reconstruct the removed
   custom WebGL settled-scene model or promise private queue inspection.
 - **REN-06:** Distinguish source order, depth-aware raster order, transparent sorting,
   pick order and focus order; do not force them into one universal z-order.
@@ -662,7 +662,7 @@ Apply each entry only to implemented scale/series families.
 - **REN-08:** Inspect renderer-supplied material, lighting and background evidence
   where supported; distinguish missing geometry from an appearance explained by
   those inputs. Shadow-cache explanations require explicit renderer evidence,
-  not assumptions inherited from CRC's removed custom renderer.
+  not assumptions inherited from Pibbl's removed custom renderer.
 - **REN-09:** Verify context loss/restoration, resize, transfer/composite failure
   and stale GPU generations with controlled backend tests and browser evidence.
 - **REN-10:** Inspect resource counts and logical ownership without exposing public
@@ -676,8 +676,8 @@ Apply each entry only to implemented scale/series families.
 
 **Owners:** Optional package, application, browser/harness.
 These are optional facets, not prerequisites for ordinary 2D verification.
-CRC owns a 2D physics runtime and Canvas 2D particles. Pure 3D geometry remains,
-but there is no CRC-owned 3D world or renderer-coupled 3D particle runtime.
+Pibbl owns a 2D physics runtime and Canvas 2D particles. Pure 3D geometry remains,
+but there is no Pibbl-owned 3D world or renderer-coupled 3D particle runtime.
 Third-party simulation inside Three belongs to an application/adapter facet.
 
 - **SIM-01:** Distinguish authoritative simulation state, interpolated presentation
@@ -692,7 +692,7 @@ Third-party simulation inside Three belongs to an application/adapter facet.
   births/deaths and effect age; do not require per-particle components or observers.
 - **SIM-06:** Verify fixed-step, clamping, repeatability and bounded catch-up under
   controlled conditions without promising cross-platform bit-identical simulation.
-  The existing `@crc/physics/2d/testing` harness advances requested host frames;
+  The existing `@pibbl/physics/2d/testing` harness advances requested host frames;
   one host frame must not be reported as one guaranteed physics tick.
 - **SIM-07:** Detect double-driving a value through physics, animation and direct
   writes where ownership rules prohibit that combination.
@@ -714,7 +714,7 @@ Third-party simulation inside Three belongs to an application/adapter facet.
 - **APP-04:** Verify anchoring after resize, page scroll, transforms and density
   changes, including focus entry/exit and overlay removal.
 - **APP-05:** Verify text entry, IME, selection and clipboard through actual editable
-  DOM adapters when present; CRC event facades alone do not establish editing support.
+  DOM adapters when present; Pibbl event facades alone do not establish editing support.
 - **APP-06:** Verify scrolling/virtualization supplied by the app or a future package:
   visible range, stable row identity, navigation and retained versus recycled state.
 - **APP-07:** Inspect browser accessibility roles, names, states and relationships
@@ -872,7 +872,7 @@ Third-party simulation inside Three belongs to an application/adapter facet.
   devices or input modalities; emulation is not evidence of all real hardware behavior.
 - **HAR-13:** Serialize or explicitly coordinate competing test actors. Record
   manual intervention, concurrent agent input and external changes that invalidate
-  a reproduction instead of attributing them to CRC nondeterminism.
+  a reproduction instead of attributing them to Pibbl nondeterminism.
 - **HAR-14:** Use an external watchdog for hung rendering, infinite application
   loops or a crashed browser; an inspector on the blocked page cannot diagnose
   itself reliably. Preserve available evidence before bounded process cleanup.
@@ -1084,7 +1084,7 @@ verification needs. A later concrete use case can justify a separate proposal.
 
 | Tempting demand                                       | Why it does not make sense as a universal requirement                                          | Useful narrower requirement                                                          |
 | ----------------------------------------------------- | ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
-| A complete mutable retained scene graph               | Changes CRC's rendering and ownership model; inspection does not require it                    | Bounded recorded facts about observed frames                                         |
+| A complete mutable retained scene graph               | Changes Pibbl's rendering and ownership model; inspection does not require it                  | Bounded recorded facts about observed frames                                         |
 | One inspect call returning everything                 | Unbounded cost, ambiguous generations, data leakage and excessive agent context                | Scoped summaries, queries and optional facets                                        |
 | Exact visible area for every object                   | Custom drawing, blends, filters and occlusion make universal geometric answers unreliable      | Proven exclusion reasons, conservative bounds and targeted raster evidence           |
 | Perfect per-pixel provenance                          | Expensive or impossible across arbitrary native/backend operations                             | Logical paint attribution plus clearly scoped pixel probes                           |
@@ -1100,9 +1100,9 @@ verification needs. A later concrete use case can justify a separate proposal.
 | Global idle before every assertion                    | Animated/streaming applications may never idle                                                 | Scoped update completion and application readiness predicates                        |
 | Treating every overlap or unhandled event as a bug    | Often intentional; the runtime does not know product intent                                    | Facts plus explicit application assertions and high-confidence diagnostics           |
 | Testing every possible state combination              | Infinite/unmanageable and often redundant                                                      | Risk-based boundary coverage, generated cases and targeted interaction matrices      |
-| Duplicating the entire browser test platform in CRC   | Wrong ownership boundary and substantial maintenance                                           | Existing browser tools plus the facts only CRC can supply                            |
+| Duplicating the entire browser test platform in Pibbl | Wrong ownership boundary and substantial maintenance                                           | Existing browser tools plus the facts only Pibbl can supply                          |
 | An MCP server or a specific test-runner DSL first     | Transport and syntax do not establish trustworthy facts                                        | Protocol-neutral evidence and thin adapters after a real consumer exists             |
-| A universal business/data correctness oracle          | CRC cannot infer units, denominators, validity or intended user outcomes                       | Application schemas, fixtures and independent expected results                       |
+| A universal business/data correctness oracle          | Pibbl cannot infer units, denominators, validity or intended user outcomes                     | Application schemas, fixtures and independent expected results                       |
 | A promise to serialize/reconstruct native Path2D      | Native paths do not expose universal command inspection                                        | Known-path fixtures, optional construction recording and point/geometry queries      |
 | Every inventory item in production core               | Many needs belong to the app, harness, build system or an optional package                     | Explicit ownership and opt-in tooling boundaries                                     |
 
@@ -1123,7 +1123,7 @@ from source files or another chat's historical report.
 | Targeting prototype       | Branch `codex/agent-verification`, commit `51821c12` plus uncommitted hardening         | Bounded root-path snapshots and active probes exist separately; integration and fresh verification remain outstanding here                 |
 | Signals                   | `packages/core/src/index.ts`, signal graph and owned hook sources                       | Receiver-owned inputs, batch, useComputed, useConst and useReaction are implemented; general signal tracing is separate work               |
 | Visualization             | `packages/viz/src/index.ts` and `packages/viz/test/`                                    | Scales, axes, line/point/custom series, hover queries/cards and anchored layout exist; do not duplicate their calculations in an inspector |
-| External rendering        | `docs/design/render-layer-and-three-contract.md`, core and Three public entries         | Inspect CRC composition/lifecycle and request optional Three facts; no removed custom WebGL package or 3D runtime should be recreated      |
+| External rendering        | `docs/design/render-layer-and-three-contract.md`, core and Three public entries         | Inspect Pibbl composition/lifecycle and request optional Three facts; no removed custom WebGL package or 3D runtime should be recreated    |
 | Physics observations      | `packages/physics/src/2d.ts`, `packages/physics/src/2d-testing.ts` and physics contract | inspectPhysics2D, PhysicsDebug2D and the isolated host-frame harness already serve part of the simulation requirements                     |
 | Ownership/performance     | Runtime ownership contract and trust-gate policy                                        | Existing internal counters/tests are candidates for evidence reuse, not proof of an external inspection API                                |
 | Browser/scenario evidence | Trust gate and test-tooling opportunities                                               | Preserve shared manual/headless scenarios and native input verification                                                                    |

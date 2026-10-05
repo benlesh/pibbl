@@ -8,34 +8,34 @@ apiCategory: hook
 symbols:
   [
     defineTransition,
-    CRCTransitionDefinition,
-    CRCTransitionRenderFrame,
+    PibblTransitionDefinition,
+    PibblTransitionRenderFrame,
     slide,
     zoom,
     wipe,
     blurReveal,
     dissolve,
-    CRCSlideOptions,
-    CRCZoomOptions,
-    CRCWipeOptions,
-    CRCBlurRevealOptions,
-    CRCDissolveOptions,
+    PibblSlideOptions,
+    PibblZoomOptions,
+    PibblWipeOptions,
+    PibblBlurRevealOptions,
+    PibblDissolveOptions,
     hologram,
-    CRCHologramOptions,
+    PibblHologramOptions,
     bifrost,
-    CRCBifrostOptions,
+    PibblBifrostOptions,
     embers,
-    CRCEmbersOptions,
-    CRCEmbersPhysicsOptions,
-    CRCEmberCollision,
+    PibblEmbersOptions,
+    PibblEmbersPhysicsOptions,
+    PibblEmberCollision,
     useVisibilityTransition,
     fade,
-    CRCTransitionBinding,
-    CRCTransitionEffect,
-    CRCVisibilityTransition,
-    CRCVisibilityTransitionOptions,
-    CRCVisibilityTransitionResult,
-    CRCVisibilityTransitionStatus,
+    PibblTransitionBinding,
+    PibblTransitionEffect,
+    PibblVisibilityTransition,
+    PibblVisibilityTransitionOptions,
+    PibblVisibilityTransitionResult,
+    PibblVisibilityTransitionStatus,
   ]
 ---
 
@@ -49,7 +49,7 @@ returns a stable controller. Bind `controller.binding` to one primitive's
 animation; an effect's configured tail still runs. Configuration is mount-time in
 this slice; rerendering does not reconfigure an existing controller.
 
-A binding belongs to its hook owner and CRC root, and supports one mounted
+A binding belongs to its hook owner and Pibbl root, and supports one mounted
 receiver. Wrap multiple children in a `Group` to transition them together. Managed
 Layers within that root are supported. Removing the receiver releases its binding;
 removing the hook owner disposes the controller. Effect definitions can be shared
@@ -96,10 +96,10 @@ These change captured pixels only. Presentation transforms and regions do not al
 
 ## Custom effects and WASM
 
-`defineTransition({ render, linger? })` makes an inert reusable definition. CRC owns capture, scheduling, completion, and pooled surfaces. `render(frame)` is synchronous and receives `progress`, `phase`, a forward `elapsed` clock, historical `progressAt(time)`, the borrowed `context` and `source`, local `sourceBounds`, and `drawSource()`. Settled endpoints bypass the callback. With a nonzero tail, the callback also runs at progress 0 or 1 until the tail finishes; it must keep the material hidden or visible appropriately while drawing its remaining particles.
+`defineTransition({ render, linger? })` makes an inert reusable definition. Pibbl owns capture, scheduling, completion, and pooled surfaces. `render(frame)` is synchronous and receives `progress`, `phase`, a forward `elapsed` clock, historical `progressAt(time)`, the borrowed `context` and `source`, local `sourceBounds`, and `drawSource()`. Settled endpoints bypass the callback. With a nonzero tail, the callback also runs at progress 0 or 1 until the tail finishes; it must keep the material hidden or visible appropriately while drawing its remaining particles.
 
 ```ts
-import { defineTransition } from "@crc/core";
+import { defineTransition } from "@pibbl/core";
 
 const effect = defineTransition({
   render({ context, progress, drawSource }) {
@@ -111,7 +111,7 @@ const effect = defineTransition({
 
 The numeric calculation can call an already-initialized WASM export instead. WASM initialization happens before creating the definition; buffers/modules belong to the application. The browser Canvas drawing bridge remains JavaScript. Bifrost, Embers, and Hologram lazily load embedded WASM kernels for their patch, burn/particle, and fog/glitch calculations. Each used definition owns fixed memory with reused views and no network fetch: 128 KiB for Embers, 64 KiB for Bifrost and Hologram. Embers uses 1,200 airborne particle slots, with bright starts and gradual cooling and fading. Embers batches particle birth times into the JavaScript controller’s history lookup before sampling its WASM descriptors. Simple built-in effects remain JavaScript. WASM is not claimed to accelerate native Canvas drawing. Environments with a restrictive Content Security Policy must permit WebAssembly compilation (for example, `wasm-unsafe-eval`); compilation errors follow normal render failure cleanup.
 
-Callbacks must not write signals, start clocks, return promises, retain borrowed frames/surfaces, mutate the source canvas, or rely on an exact callback count. Keep computation seekable from the supplied inputs. When drawing `source` directly, map its pixels to `sourceBounds` in the local context. Pixels outside the current capture window are not available. Exceptions propagate through CRC's normal render failure handling. Layout and event geometry remain unchanged.
+Callbacks must not write signals, start clocks, return promises, retain borrowed frames/surfaces, mutate the source canvas, or rely on an exact callback count. Keep computation seekable from the supplied inputs. When drawing `source` directly, map its pixels to `sourceBounds` in the local context. Pixels outside the current capture window are not available. Exceptions propagate through Pibbl's normal render failure handling. Layout and event geometry remain unchanged.
 
 `elapsed` and `progressAt(time)` use milliseconds from the current run's start.
 Reversals preserve the run clock and all earlier progress segments, including any
@@ -122,7 +122,7 @@ request during a tail cancels the previous request and restarts that tail.
 
 Transitions compose with ordinary filters, clipping, transforms, and nested
 managed Layers under the existing filter executor restrictions. A custom-renderer
-failure follows normal CRC failure cleanup: the hook owner is torn down, pending
+failure follows normal Pibbl failure cleanup: the hook owner is torn down, pending
 requests resolve as `disposed`, and its animation participants are released.
 
 ## Opt-in Ember physics
@@ -134,7 +134,7 @@ drag uses inverse seconds. `linger` must be positive. Gravity defaults to `[0,-6
 wind to `[0,-45]`, drag to 4, and restitution to 0.5.
 
 For a local physics world, use `physics: { obstacles: physicsObstacles2D(world) }`
-with `physicsObstacles2D` imported from `@crc/core/physics/2d`. The receiver and
+with `physicsObstacles2D` imported from `@pibbl/core/physics/2d`. The receiver and
 world must share local coordinates. The source is read once per advancing frame;
 changed packed geometry is copied directly into fixed WASM memory. All 1,200
 particle sweeps and bounce calculations run in one WASM call per substep. Boxes,

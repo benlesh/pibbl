@@ -1,4 +1,4 @@
-# CRC runtime and hook contract
+# Pibbl runtime and hook contract
 
 Status: current implemented contract, updated for first-class signals, the realm
 scheduler, and external render layers on 2026-09-28.
@@ -10,8 +10,8 @@ contract](./runtime-resource-ownership.md) defines exact release rules and the
 
 ## Component and tree identity
 
-`CRCElement` is an opaque immutable description branded at runtime with
-`Symbol.for("@crc/core.element")` and nominally in TypeScript. It contains a
+`PibblElement` is an opaque immutable description branded at runtime with
+`Symbol.for("@pibbl/core.element")` and nominally in TypeScript. It contains a
 component type, shallow-readonly props, and an optional key normalized to a
 string. JSX and `createElement(type, props, ...children)` use the same internal
 constructor and create indistinguishable descriptors. Element creation is
@@ -20,7 +20,7 @@ side-effect free.
 Ordinary components are synchronous functions:
 
 ```ts
-type CRCComponent<P> = (props: P) => CRCNode | void;
+type PibblComponent<P> = (props: P) => PibblNode | void;
 ```
 
 No definition wrapper, base class, or registration step is required. The
@@ -33,7 +33,7 @@ act like a React element ref. Compiler-supplied children live in props.
 Development `jsxDEV` descriptors retain source filename, line, and column for
 diagnostics; production descriptors do not.
 
-`CRCNode` is recursive: a branded element, an empty value, a readonly array, or
+`PibblNode` is recursive: a branded element, an empty value, a readonly array, or
 a finite synchronous iterable. Arrays and unkeyed fragments flatten
 transparently. Empty values are `false`, `true`, `null`, `undefined`, the empty
 string, and numeric zero. Non-empty raw strings, nonzero numbers, Promises,
@@ -41,7 +41,7 @@ async iterables, functions, symbols, foreign elements, and unsupported objects
 are contextual errors. `Text` has its separate recursive scalar-content
 contract in the [drawing contract](./drawing-components-contract.md).
 
-`crc(canvas, root, config?)` accepts a complete `CRCNode`, so a collection,
+`pibbl(canvas, root, config?)` accepts a complete `PibblNode`, so a collection,
 fragment, or empty root is valid. The first call owns the mount configuration
 and returns a stable controller. Later calls queue root replacement on that
 same mount and return the controller. Later calls cannot change the initial
@@ -53,7 +53,7 @@ keeping a disposed scene instance alive.
 
 ## Traversal and identity
 
-On a scheduled frame CRC:
+On a scheduled frame Pibbl:
 
 1. prepares the root's recursive synchronous node structure;
 2. resolves sibling identity;
@@ -90,11 +90,11 @@ Keys must be unique after transparent flattening in their sibling scope.
 Reparenting or adding a component/keyed-fragment wrapper creates a different
 scope; a key does not preserve identity across parents.
 Ordinary traversal rejects duplicates during recursive child preflight with the
-public diagnostic `<Receiver> received duplicate CRC key "<key>" as a CRC child.`
-At the root, `<Receiver>` is `CRC root`; for a component result it is the
+public diagnostic `<Receiver> received duplicate Pibbl key "<key>" as a Pibbl child.`
+At the root, `<Receiver>` is `Pibbl root`; for a component result it is the
 component display name plus JSX development source location when available. A
 lower-level prepared-identity guard retains
-`Duplicate CRC key "<key>" under "<parent>"` as an internal fallback. Removing a
+`Duplicate Pibbl key "<key>" under "<parent>"` as an internal fallback. Removing a
 component, changing its key or type, replacing its root type, or disposing the
 instance releases that identity and every hook resource it owns.
 
@@ -128,16 +128,16 @@ frame.
 
 ## Hook sequence invariant
 
-Hooks run only synchronously while CRC invokes a mounted component. Ordinary
+Hooks run only synchronously while Pibbl invokes a mounted component. Ordinary
 hooks outside render report:
 
 ```text
-CRC hooks can only be called while rendering a component.
+Pibbl hooks can only be called while rendering a component.
 ```
 
 Each component owns ordered, typed slots. Every successful update must call
-the same number and kinds in the same order. CRC reports a changed kind, added
-slot, or fewer hooks deterministically. Before reporting fewer hooks, CRC
+the same number and kinds in the same order. Pibbl reports a changed kind, added
+slot, or fewer hooks deterministically. Before reporting fewer hooks, Pibbl
 releases the abandoned slots' owned resources. A
 failed render closes the instance's component refs, clears the partial tree,
 and restores temporary globals. This is a fail-closed reset, not pixel rollback;
@@ -145,21 +145,21 @@ a later explicit render remounts cleanly.
 
 ## Public hook contracts
 
-| API                                     | Supported contract                                                                                                                                                                                                                                                                                                                                           | Direct evidence                                               |
-| --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------- |
-| `useSignal(initial, options?)`          | Owns one stable writable signal for the mounted slot. Initial value, equality, and debug name are mount-only. Reads participate in the normal signal graph; removal detaches scheduling edges while a retained cell remains independently readable and writable.                                                                                             | `use-signal.test.ts`, signal graph and laboratory suites      |
-| `useComputed(compute, deps?, options?)` | Owns one lazy readonly computed signal. Signal reads are dynamic graph dependencies; the optional dependency array compares captured non-signal values with `Object.is`. A successful render adopts the candidate formula, while failure retains the last successful generation. Result equality is a downstream invalidation barrier.                       | `use-computed.test.ts`, signal graph and laboratory suites    |
-| `useConst(create)`                      | Runs one untracked factory for the mounted slot and preserves that direct value until removal. It creates no graph node, scheduling edge, or automatic cleanup. A signal read in the factory is a mount-time snapshot.                                                                                                                                       | `use-const.test.ts`, hook-contract tests                      |
-| `useRef(init?)`                         | Creates one stable mutable `{ current }` object for the slot. Mutating it does not schedule a render. The initializer is used only on mount; key/type/root removal creates a fresh ref.                                                                                                                                                                      | `use-ref.test.ts`, `hook-contract.test.ts`, shared laboratory |
-| `useReaction(setup, deps?, options?)`   | Owns Complete-phase imperative setup and optional cleanup. Signal reads inside setup drive only the reaction. The optional dependency array compares captured non-signal values with `Object.is`; successful render adopts the latest setup, cleanup runs before replacement and once on final release, and writes are forbidden during setup/cleanup.       | `use-reaction.test.ts`, scheduler and cleanup laboratories    |
-| `useRectPath(...)`                      | Memoizes a `Path2D` over all rectangle geometry and pixel-grid inputs. Equal effective inputs preserve identity; changed geometry creates a new path.                                                                                                                                                                                                        | `crc-path-hooks.test.ts`, shared laboratory                   |
-| `useLinePath(...)`                      | Memoizes over every coordinate and `closePath`; changing either creates a new `Path2D`.                                                                                                                                                                                                                                                                      | `crc-path-hooks.test.ts`, shared laboratory                   |
-| `useSvgPath(data)`                      | Memoizes exact SVG path data. Parsing is delegated to platform `Path2D`; malformed data propagates the platform error and participates in normal render recovery.                                                                                                                                                                                            | `crc-path-hooks.test.ts`, shared laboratory                   |
-| `useEventTarget(...)`                   | Groups one explicit geometric target and its focus snapshot with exact per-render ownership.                                                                                                                                                                                                                                                                 | event-target and focus suites                                 |
-| `useEventListener(...)`                 | Adds one non-geometric capture/bubble listener participant with no implicit target.                                                                                                                                                                                                                                                                          | propagation and ownership suites                              |
-| `useCursor(...)`                        | Owns a typed cursor hook slot and follows target/fallback ownership rules. Switching path/global modes keeps hook order valid.                                                                                                                                                                                                                               | `hook-contract.test.ts`, cleanup laboratory                   |
-| `useLayoutBox()`                        | Returns the current component's stable readonly local allocation `{ x: 0, y: 0, width, height }`. Equal allocation preserves object identity. Reading does not schedule work. Unlike ordinary hooks, calling it outside a live layout context—including during pure measurement—throws `No CRC layout context is available`, not the shared hook diagnostic. | layout foundation and measurement-isolation suites            |
-| `useCanvasContext()`                    | Returns the current isolated Canvas 2D context without allocating a hook slot. It is unavailable outside render and during pure measurement.                                                                                                                                                                                                                 | plain-component and measurement-isolation suites              |
+| API                                     | Supported contract                                                                                                                                                                                                                                                                                                                                             | Direct evidence                                               |
+| --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| `useSignal(initial, options?)`          | Owns one stable writable signal for the mounted slot. Initial value, equality, and debug name are mount-only. Reads participate in the normal signal graph; removal detaches scheduling edges while a retained cell remains independently readable and writable.                                                                                               | `use-signal.test.ts`, signal graph and laboratory suites      |
+| `useComputed(compute, deps?, options?)` | Owns one lazy readonly computed signal. Signal reads are dynamic graph dependencies; the optional dependency array compares captured non-signal values with `Object.is`. A successful render adopts the candidate formula, while failure retains the last successful generation. Result equality is a downstream invalidation barrier.                         | `use-computed.test.ts`, signal graph and laboratory suites    |
+| `useConst(create)`                      | Runs one untracked factory for the mounted slot and preserves that direct value until removal. It creates no graph node, scheduling edge, or automatic cleanup. A signal read in the factory is a mount-time snapshot.                                                                                                                                         | `use-const.test.ts`, hook-contract tests                      |
+| `useRef(init?)`                         | Creates one stable mutable `{ current }` object for the slot. Mutating it does not schedule a render. The initializer is used only on mount; key/type/root removal creates a fresh ref.                                                                                                                                                                        | `use-ref.test.ts`, `hook-contract.test.ts`, shared laboratory |
+| `useReaction(setup, deps?, options?)`   | Owns Complete-phase imperative setup and optional cleanup. Signal reads inside setup drive only the reaction. The optional dependency array compares captured non-signal values with `Object.is`; successful render adopts the latest setup, cleanup runs before replacement and once on final release, and writes are forbidden during setup/cleanup.         | `use-reaction.test.ts`, scheduler and cleanup laboratories    |
+| `useRectPath(...)`                      | Memoizes a `Path2D` over all rectangle geometry and pixel-grid inputs. Equal effective inputs preserve identity; changed geometry creates a new path.                                                                                                                                                                                                          | `pibbl-path-hooks.test.ts`, shared laboratory                 |
+| `useLinePath(...)`                      | Memoizes over every coordinate and `closePath`; changing either creates a new `Path2D`.                                                                                                                                                                                                                                                                        | `pibbl-path-hooks.test.ts`, shared laboratory                 |
+| `useSvgPath(data)`                      | Memoizes exact SVG path data. Parsing is delegated to platform `Path2D`; malformed data propagates the platform error and participates in normal render recovery.                                                                                                                                                                                              | `pibbl-path-hooks.test.ts`, shared laboratory                 |
+| `useEventTarget(...)`                   | Groups one explicit geometric target and its focus snapshot with exact per-render ownership.                                                                                                                                                                                                                                                                   | event-target and focus suites                                 |
+| `useEventListener(...)`                 | Adds one non-geometric capture/bubble listener participant with no implicit target.                                                                                                                                                                                                                                                                            | propagation and ownership suites                              |
+| `useCursor(...)`                        | Owns a typed cursor hook slot and follows target/fallback ownership rules. Switching path/global modes keeps hook order valid.                                                                                                                                                                                                                                 | `hook-contract.test.ts`, cleanup laboratory                   |
+| `useLayoutBox()`                        | Returns the current component's stable readonly local allocation `{ x: 0, y: 0, width, height }`. Equal allocation preserves object identity. Reading does not schedule work. Unlike ordinary hooks, calling it outside a live layout context—including during pure measurement—throws `No Pibbl layout context is available`, not the shared hook diagnostic. | layout foundation and measurement-isolation suites            |
+| `useCanvasContext()`                    | Returns the current isolated Canvas 2D context without allocating a hook slot. It is unavailable outside render and during pure measurement.                                                                                                                                                                                                                   | plain-component and measurement-isolation suites              |
 
 The three memoized path helpers are distinct slot kinds. Reordering them is a
 hook-order error even though all return `Path2D`.
@@ -170,7 +170,7 @@ hook-order error even though all return `Path2D`.
 passes. They normalize style and may recursively measure elements, but cannot
 invoke render callbacks, hooks, `useLayoutBox`, `useCanvasContext`, create or
 render an external layer, paint, register interaction, load images, or acquire
-resources. CRC clears and
+resources. Pibbl clears and
 restores temporary render state in `finally`. When measurement is nested during
 an active render, that isolation prevents attempted measurement hooks from
 consuming or reordering the parent component's hook slots. Direct or indirect
@@ -183,11 +183,11 @@ render callback.
 
 ## Canvas isolation, errors, and disposal
 
-CRC saves/restores Canvas state around every Canvas component subtree.
+Pibbl saves/restores Canvas state around every Canvas component subtree.
 Component throws release runtime ownership and refs and restore global state; a
 failed external-layer candidate is not committed, while pixels already painted
 earlier in the wider Canvas frame remain. Signal writes
-are forbidden while CRC evaluates components or primitive render callbacks,
+are forbidden while Pibbl evaluates components or primitive render callbacks,
 even for equality no-ops, and the guard runs before an updater or equality
 function. The controller's `dispose()` is idempotent, removes that root and its
 pending work from the realm scheduler, releases every owned resource, and cannot
@@ -197,22 +197,22 @@ affect a replacement mount or unrelated roots. Abort uses the same guarded path.
 
 Core exports the runtime, controller and surface types, components,
 hooks, hook values, and compiler-only
-`@crc/core/jsx-runtime` and `@crc/core/jsx-dev-runtime` entries. Strict Bundler,
-NodeNext, built, and packed consumers verify those entries, the CRC/React type
+`@pibbl/core/jsx-runtime` and `@pibbl/core/jsx-dev-runtime` entries. Strict Bundler,
+NodeNext, built, and packed consumers verify those entries, the Pibbl/React type
 boundary, and blocked private subpaths. The `runtime-hooks-laboratory`, JSX
 authoring tests, lifecycle stress suite, and cleanup ledgers cover traversal,
 identity, hook order, recovery, and disposal through public elements.
 
-`@crc/three` consumes `defineRenderLayer` from the public core entry and peers on
+`@pibbl/three` consumes `defineRenderLayer` from the public core entry and peers on
 the application's `three` installation. It exports no second JSX runtime,
 element constructor, fragment, or competing core hook/event vocabulary. The
-explicit `@crc/core/internal` friend entry supports matching official CRC
+explicit `@pibbl/core/internal` friend entry supports matching official Pibbl
 packages only.
 It is version-coupled, absent from the application API reference, and carries
 no independent semantic-versioning or compatibility promise. Applications must
 not import it.
 
-The root `@crc/core` entry also exports `Signal`, `WritableSignal`,
+The root `@pibbl/core` entry also exports `Signal`, `WritableSignal`,
 `SignalOptions`, `SignalEquals`, `SignalValue`, `signal`, `computed`, `batch`,
 `untracked`, `isSignal`, `resolveSignalValue`, `useSignal`, `useComputed`,
 `useConst`, and `useReaction`.
@@ -249,7 +249,7 @@ failures.
   not public runtime identifiers.
 - The removed `useState`, `useMemo`, `useWhenChanged`, and `StateUpdater`
   exports have no compatibility aliases.
-- A thrown render fails closed and requires a later explicit render. CRC does
+- A thrown render fails closed and requires a later explicit render. Pibbl does
   not retain or restore a transactional snapshot of the previous Canvas tree.
 - Drawing, layout, events, and ownership retain their exact behavior in their
   dedicated contracts rather than being redefined here.
@@ -278,12 +278,12 @@ publish in one Commit, and specialized behavior lives in the [animation
 contract](./animation-contract.md).
 
 `signal().set()` treats a function as data; `signal().update()` is the explicit
-updater operation. CRC-provided components resolve signals only at declared
+updater operation. Pibbl-provided components resolve signals only at declared
 prop, style, child, animation, and sibling-package input positions. Passing
 `.get()` intentionally assigns the dependency to the enclosing component;
 arbitrary application data is never recursively unwrapped.
 
-`@crc/core/internal` is a separate version-coupled friend entry for official
+`@pibbl/core/internal` is a separate version-coupled friend entry for official
 lockstep renderer packages. It is neither re-exported at the root nor available
 to ordinary Studio examples.
 

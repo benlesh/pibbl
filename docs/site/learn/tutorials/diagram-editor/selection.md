@@ -38,7 +38,7 @@ describe the DOM-aligned handler surface.
 ## Predict and try
 
 Click Idea and predict when the status changes. The handler updates the signal, but
-it does not synchronously repaint pixels: CRC coalesces the request into a
+it does not synchronously repaint pixels: Pibbl coalesces the request into a
 future scheduled frame. Then change `onSelect` so a matching selected ID
 becomes `null`; clicking the same body again should show `NO SELECTION`.
 

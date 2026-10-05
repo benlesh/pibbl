@@ -1,10 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Fragment } from '../index.js';
-import { crc } from './crc.js';
+import { pibbl } from './pibbl.js';
 import { definePrimitive } from './define-primitive.js';
 import { materializeContainerChildren } from './element/children.js';
 import { executeRender } from './execute-render.js';
-import { clearSharedState, getCRCInstance } from './global-state.js';
+import { clearSharedState, getPibblInstance } from './global-state.js';
 import { useCursor } from './hooks/use-cursor.js';
 import { useEventListener } from './hooks/use-event-listener.js';
 import { useEventTarget } from './hooks/use-event-target.js';
@@ -22,7 +22,7 @@ import {
   placeDirectChildren,
 } from './layout/absolute.js';
 import type { BoxStyle } from './style/types.js';
-import type { CRCNode } from './types.js';
+import type { PibblNode } from './types.js';
 
 interface IdentityProbeProps {
   label: string;
@@ -47,7 +47,7 @@ const LeafProbe = definePrimitive<{
 });
 
 const PlacementProbe = definePrimitive<{
-  children: CRCNode;
+  children: PibblNode;
 }>(function renderPlacementProbe({ children }) {
   const container = useLayoutBox();
   return placeDirectChildren(
@@ -81,7 +81,7 @@ describe('plain function component dispatch', () => {
     const paths: Path2D[][] = [];
     let updateState: WritableSignal<number> | undefined;
 
-    function HookProbe(props: { revision: number; children: CRCNode }): CRCNode {
+    function HookProbe(props: { revision: number; children: PibblNode }): PibblNode {
       argumentCounts.push(arguments.length);
       expect(Object.isFrozen(props)).toBe(import.meta.env.DEV);
       expect(Object.prototype.hasOwnProperty.call(props, 'key')).toBe(false);
@@ -107,7 +107,7 @@ describe('plain function component dispatch', () => {
     }
 
     const canvas = createCanvas(200, 80);
-    const controller = crc(canvas, (
+    const controller = pibbl(canvas, (
       <HookProbe key="author-key" revision={1}>
         <LeafProbe onRender={leafRenders} />
       </HookProbe>
@@ -126,7 +126,7 @@ describe('plain function component dispatch', () => {
     expect(paths[1][2]).toBe(paths[0][2]);
     expect(leafRenders).toHaveBeenCalledTimes(2);
 
-    const hookProbeRefs = Array.from(getCRCInstance(canvas).refs.values())
+    const hookProbeRefs = Array.from(getPibblInstance(canvas).refs.values())
       .find(ref => ref.element.type === HookProbe)!;
     expect(hookProbeRefs.hooks.map(hook => hook.kind)).toEqual([
       'signal',
@@ -158,7 +158,7 @@ describe('plain function component dispatch', () => {
     }
 
     const canvas = createCanvas(240, 120);
-    const controller = crc(
+    const controller = pibbl(
       canvas,
       <PlacementProbe>
         <Card style={specified} title="specified" />
@@ -182,17 +182,17 @@ describe('plain function component dispatch', () => {
     }
 
     const canvas = createCanvas();
-    const controller = crc(canvas, <Failing fail={false} />);
+    const controller = pibbl(canvas, <Failing fail={false} />);
     await nextFrame();
 
     expect(() => executeRender(canvas, 1, <Failing fail />))
       .toThrowError('plain failure');
     expect(cleanups).toHaveBeenCalledOnce();
-    expect(getCRCInstance(canvas).refs.size).toBe(0);
+    expect(getPibblInstance(canvas).refs.size).toBe(0);
 
-    crc(canvas, <Failing fail={false} />);
+    pibbl(canvas, <Failing fail={false} />);
     await nextFrame();
-    expect(getCRCInstance(canvas).refs.size).toBe(1);
+    expect(getPibblInstance(canvas).refs.size).toBe(1);
 
     controller.dispose();
     expect(cleanups).toHaveBeenCalledTimes(2);
@@ -217,10 +217,10 @@ describe('plain function component identity', () => {
         />
       </Fragment>
     );
-    const controller = crc(canvas, tree(0));
+    const controller = pibbl(canvas, tree(0));
     await nextFrame();
 
-    const instance = getCRCInstance(canvas);
+    const instance = getPibblInstance(canvas);
     const retainedRefs = Array.from(instance.refs.values());
     const originalKeys = instance.refs.keys;
     let retainedKeysetCopies = 0;
@@ -229,7 +229,7 @@ describe('plain function component identity', () => {
       return originalKeys.call(instance.refs);
     }) as typeof instance.refs.keys;
 
-    crc(canvas, tree(1));
+    pibbl(canvas, tree(1));
     await nextFrame();
 
     expect(retainedKeysetCopies).toBe(0);
@@ -240,14 +240,14 @@ describe('plain function component identity', () => {
   it('keeps parentage stable through nested arrays and unkeyed Fragments', async () => {
     const canvas = createCanvas();
     const observations = new Map<string, number>();
-    const controller = crc(
+    const controller = pibbl(
       canvas,
       <IdentityProbe key="stable" label="initial" observations={observations} />,
     );
     await nextFrame();
     const initial = observations.get('initial');
 
-    crc(canvas, [[
+    pibbl(canvas, [[
       <><IdentityProbe
         key="stable"
         label="nested"
@@ -268,15 +268,15 @@ describe('plain function component identity', () => {
         <IdentityProbe key="child" label={label} observations={observations} />
       </Fragment>
     );
-    const controller = crc(canvas, scoped('initial'));
+    const controller = pibbl(canvas, scoped('initial'));
     await nextFrame();
     const initial = observations.get('initial');
 
-    crc(canvas, scoped('same-scope'));
+    pibbl(canvas, scoped('same-scope'));
     await nextFrame();
     expect(observations.get('same-scope')).toBe(initial);
 
-    crc(canvas, <IdentityProbe
+    pibbl(canvas, <IdentityProbe
       key="child"
       label="without-scope"
       observations={observations}
@@ -292,12 +292,12 @@ describe('plain function component identity', () => {
     const keyed = (label: string) => (
       <IdentityProbe key={label} label={label} observations={observations} />
     );
-    const controller = crc(canvas, [keyed('a'), [<>{keyed('b')}</>]]);
+    const controller = pibbl(canvas, [keyed('a'), [<>{keyed('b')}</>]]);
     await nextFrame();
     const a = observations.get('a');
     const b = observations.get('b');
 
-    crc(canvas, <>{[[keyed('b')], keyed('a')]}</>);
+    pibbl(canvas, <>{[[keyed('b')], keyed('a')]}</>);
     await nextFrame();
 
     expect(observations.get('a')).toBe(a);
@@ -311,12 +311,12 @@ describe('plain function component identity', () => {
     const unkeyed = (label: string) => (
       <IdentityProbe label={label} observations={observations} />
     );
-    const controller = crc(canvas, [unkeyed('a'), [<>{unkeyed('b')}</>]]);
+    const controller = pibbl(canvas, [unkeyed('a'), [<>{unkeyed('b')}</>]]);
     await nextFrame();
     const firstSlot = observations.get('a');
     const secondSlot = observations.get('b');
 
-    crc(canvas, <>{[
+    pibbl(canvas, <>{[
       [unkeyed('inserted')],
       <>{unkeyed('a')}</>,
       unkeyed('b'),
@@ -349,11 +349,11 @@ describe('plain function component identity', () => {
         /> : null}
       </Fragment>,
     ];
-    const controller = crc(canvas, tree(false, 'left'));
+    const controller = pibbl(canvas, tree(false, 'left'));
     await nextFrame();
     const leftIdentity = observations.get('left');
 
-    crc(canvas, tree(true, 'right'));
+    pibbl(canvas, tree(true, 'right'));
     await nextFrame();
 
     expect(observations.get('right')).not.toBe(leftIdentity);
@@ -369,10 +369,10 @@ describe('plain function component identity', () => {
       values.push(useRef('second').current!);
     };
     const canvas = createCanvas();
-    const controller = crc(canvas, <First />);
+    const controller = pibbl(canvas, <First />);
     await nextFrame();
 
-    crc(canvas, <Second />);
+    pibbl(canvas, <Second />);
     await nextFrame();
 
     expect(values).toEqual(['first', 'second']);

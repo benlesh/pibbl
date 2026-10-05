@@ -3,7 +3,7 @@ import { lazyKernel } from "./wasm/memory.js";
 import { bytes } from "./wasm/tendrils-bytes.js";
 const wasmModule = /* @__PURE__ */ lazyKernel(bytes);
 import { boundary } from "./electric-boundary.js";
-import { defineTexture } from "@crc/core";
+import { defineTexture } from "@pibbl/core";
 import { validateSeed } from "./palette.js";
 import {
   electricOptions,

@@ -1,14 +1,14 @@
 import {
-  crc,
+  pibbl,
   createElement,
   Rectangle,
   signal,
   useLayoutBox,
   useReaction,
-} from "@crc/core";
-import { useTexture, reactionDiffusion } from "@crc/core/textures";
+} from "@pibbl/core";
+import { useTexture, reactionDiffusion } from "@pibbl/core/textures";
 
-// Application integration code, not a CRC-exported widget.
+// Application integration code, not a Pibbl-exported widget.
 export function mountInkButton(button, canvas) {
   const events = new AbortController();
   const motion = matchMedia("(prefers-reduced-motion: reduce)");
@@ -187,7 +187,7 @@ export function mountInkButton(button, canvas) {
     intersection.observe(button);
     sync();
     canvas.hidden = false;
-    controller = crc(canvas, createElement(Background, {}), {
+    controller = pibbl(canvas, createElement(Background, {}), {
       viewport: "responsive",
       pixelRatio: Math.min(devicePixelRatio || 1, 2),
     });

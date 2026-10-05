@@ -1,5 +1,5 @@
 {
-  "schema": "crc-signal-mutation-replay/1",
+  "schema": "pibbl-signal-mutation-replay/1",
   "status": "pass",
   "url": "http://127.0.0.1:5182/#/testing/agent-signal-mutation",
   "requiredChecks": [
@@ -484,7 +484,7 @@
   "errors": [],
   "droppedErrors": 0,
   "run": {
-    "schema": "crc-replay-run/1",
+    "schema": "pibbl-replay-run/1",
     "runId": "3fd6cfe9-6577-4cf0-b739-72a78a836e51",
     "kind": "signal-mutation",
     "startedAt": "2026-10-02T15:32:59.505Z",
@@ -531,7 +531,7 @@
       "cwd": "/Users/benlesh/GitHub/crc",
       "environment": {},
       "unsetEnvironment": [
-        "CRC_VERIFY_BROWSER_ENDPOINT"
+        "PIBBL_VERIFY_BROWSER_ENDPOINT"
       ],
       "outputPolicy": "fresh-default-directory",
       "preconditions": [
@@ -540,14 +540,14 @@
       ]
     },
     "toolIdentity": {
-      "schema": "crc-replay-tool-identity/1",
+      "schema": "pibbl-replay-tool-identity/1",
       "revision": "1d1a2ec49f6bca52be99abf24bd34e1b3cb3f16e",
       "sha256": "1ede9a238fd197cf02c35cbb3700bfbe49d28c8354ccef84551bf09b3e4bbb7d",
       "files": 11,
       "scope": "Replay and declared local dependencies on disk; not loaded-module or installed-dependency attestation."
     },
     "toolIdentityAfter": {
-      "schema": "crc-replay-tool-identity/1",
+      "schema": "pibbl-replay-tool-identity/1",
       "revision": "1d1a2ec49f6bca52be99abf24bd34e1b3cb3f16e",
       "sha256": "1ede9a238fd197cf02c35cbb3700bfbe49d28c8354ccef84551bf09b3e4bbb7d",
       "files": 11,
@@ -555,7 +555,7 @@
     }
   },
   "expectedIdentity": {
-    "schema": "crc-targeting-identity/1",
+    "schema": "pibbl-targeting-identity/1",
     "revision": "1d1a2ec49f6bca52be99abf24bd34e1b3cb3f16e",
     "sha256": "3f39d0b64bc019bcbafefdcd1c545e7e216f098d9f7edbd4e426c7e5fb59c665",
     "files": 340

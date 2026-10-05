@@ -13,7 +13,7 @@ const first = geometry.getSegment(0);
 font.dispose();
 let browser, studio, productionOutput;
 try {
-  let origin = process.env.CRC_TEXT_STUDIO_URL;
+  let origin = process.env.PIBBL_TEXT_STUDIO_URL;
   if (!origin) {
     const { build, createServer, preview } = await import("vite");
     const root = fileURLToPath(
@@ -27,7 +27,7 @@ try {
     };
     if (process.argv.includes("--production")) {
       // Own the prerequisite instead of depending on another gate's stale dist.
-      productionOutput = await mkdtemp(join(tmpdir(), "crc-text-studio-"));
+      productionOutput = await mkdtemp(join(tmpdir(), "pibbl-text-studio-"));
       options.build = { outDir: productionOutput, emptyOutDir: true };
       await build(options);
       studio = await preview({
@@ -52,10 +52,10 @@ try {
   const ownership = [];
   page.on("console", (message) => {
     const value = message.text();
-    if (value.startsWith("__CRC_TEXT_OWNER__"))
-      ownership.push(JSON.parse(value.slice("__CRC_TEXT_OWNER__".length)));
+    if (value.startsWith("__PIBBL_TEXT_OWNER__"))
+      ownership.push(JSON.parse(value.slice("__PIBBL_TEXT_OWNER__".length)));
   });
-  await page.route("**/crc-text/engine.mjs", async (route) => {
+  await page.route("**/pibbl-text/engine.mjs", async (route) => {
     const response = await route.fetch();
     const source = await response.text();
     assert.ok(
@@ -66,9 +66,9 @@ try {
       "export default Module;",
       `export default async function(...args) {
     const engine=await Module(...args);
-    for(const key of ['_crc_font_create','_crc_font_release']) {
+    for(const key of ['_pibbl_font_create','_pibbl_font_release']) {
       const original=engine[key];
-      const wrapped=(...values)=>{const result=original(...values);engine[key]=wrapped;console.debug('__CRC_TEXT_OWNER__'+JSON.stringify({fonts:engine._crc_live_fonts(),results:engine._crc_live_results()}));return result;};
+      const wrapped=(...values)=>{const result=original(...values);engine[key]=wrapped;console.debug('__PIBBL_TEXT_OWNER__'+JSON.stringify({fonts:engine._pibbl_live_fonts(),results:engine._pibbl_live_results()}));return result;};
       engine[key]=wrapped;
     }
     return engine;
@@ -141,8 +141,8 @@ try {
   assert.ok(ownership.some((state) => state.fonts === 1));
   const release = page.waitForEvent("console", {
     predicate: (message) =>
-      message.text().startsWith("__CRC_TEXT_OWNER__") &&
-      JSON.parse(message.text().slice("__CRC_TEXT_OWNER__".length)).fonts === 0,
+      message.text().startsWith("__PIBBL_TEXT_OWNER__") &&
+      JSON.parse(message.text().slice("__PIBBL_TEXT_OWNER__".length)).fonts === 0,
     timeout: 5000,
   });
   await page.evaluate(() => {

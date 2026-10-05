@@ -1,9 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { crc, createElement, signal, type CRCNode } from "@crc/core";
+import { pibbl, createElement, signal, type PibblNode } from "@pibbl/core";
 import {
-  crcInternalRequestRender,
-  type CRCInternalRenderOwner,
-} from "@crc/core/internal";
+  pibblInternalRequestRender,
+  type PibblInternalRenderOwner,
+} from "@pibbl/core/internal";
 import { clearSharedState } from "../../../../lib/global-state.js";
 import {
   installSchedulerDriverForTest,
@@ -12,7 +12,7 @@ import {
 import { compileParticleEffect2D } from "../compiler.js";
 import { defineParticleEffect2D } from "../definition.js";
 import { particle } from "../particle.js";
-import type { CRCParticleEffect2D, CRCParticleSystem } from "../types.js";
+import type { PibblParticleEffect2D, PibblParticleSystem } from "../types.js";
 import {
   type ParticleBindingCandidate,
   type ParticleSystemFrame,
@@ -24,7 +24,7 @@ import { particleSystemOwnershipSnapshot } from "./ownership.js";
 
 let driver: ManualSchedulerDriver;
 let restoreDriver: () => void;
-const roots = new Set<ReturnType<typeof crc>>();
+const roots = new Set<ReturnType<typeof pibbl>>();
 
 beforeEach(() => {
   document.body.replaceChildren();
@@ -48,8 +48,8 @@ interface TestCandidate extends ParticleBindingCandidate {
 
 function candidate(
   label: string,
-  owner: CRCInternalRenderOwner,
-  effect: CRCParticleEffect2D,
+  owner: PibblInternalRenderOwner,
+  effect: PibblParticleEffect2D,
   parameters = compileParticleEffect2D(effect).parameterLayout.defaults,
 ): TestCandidate {
   return {
@@ -62,7 +62,7 @@ function candidate(
     frames: [],
     disposeCount: 0,
     requestRender() {
-      crcInternalRequestRender(owner);
+      pibblInternalRequestRender(owner);
     },
     adoptFrame(frame) {
       this.frames.push(frame);
@@ -109,16 +109,16 @@ function effectWithParameters(debugName = "parameter effect") {
 describe("particle system binding transactions", () => {
   it("catches allocation before conflict detection and permits binding after removal", () => {
     const effect = effectWithParameters();
-    let system!: CRCParticleSystem;
+    let system!: PibblParticleSystem;
     let allocatedA = 0;
     let allocatedB = 0;
     let first!: TestCandidate;
     let second!: TestCandidate;
-    const SystemOwner = (): CRCNode => {
+    const SystemOwner = (): PibblNode => {
       system = useParticleSystem(effect);
       return null;
     };
-    const FirstBinding = (_props: {}): CRCNode => {
+    const FirstBinding = (_props: {}): PibblNode => {
       useParticleSystemBinding({
         system,
         backend: "canvas",
@@ -129,7 +129,7 @@ describe("particle system binding transactions", () => {
       });
       return null;
     };
-    const SecondBinding = (_props: {}): CRCNode => {
+    const SecondBinding = (_props: {}): PibblNode => {
       useParticleSystemBinding({
         system,
         backend: "canvas",
@@ -176,16 +176,16 @@ describe("particle system binding transactions", () => {
   it("catches a failed cross-system replacement destroying the committed binding during evaluation", () => {
     const definition = effectWithParameters();
     const selected = signal<"first" | "second">("first");
-    let firstSystem!: CRCParticleSystem;
-    let secondSystem!: CRCParticleSystem;
+    let firstSystem!: PibblParticleSystem;
+    let secondSystem!: PibblParticleSystem;
     let first!: TestCandidate;
     let replacementError: unknown;
-    const Systems = (): CRCNode => {
+    const Systems = (): PibblNode => {
       firstSystem = useParticleSystem(definition);
       secondSystem = useParticleSystem(definition);
       return null;
     };
-    const Binding = (): CRCNode => {
+    const Binding = (): PibblNode => {
       const selectedSystem =
         selected.get() === "first" ? firstSystem : secondSystem;
       try {
@@ -235,15 +235,15 @@ describe("particle system binding transactions", () => {
   it("catches adoption of mismatched definitions or malformed parameters after a failed render", () => {
     const effect = effectWithParameters("committed");
     const other = effectWithParameters("other");
-    let system!: CRCParticleSystem;
+    let system!: PibblParticleSystem;
     let committed!: TestCandidate;
     let failed!: TestCandidate;
-    let owner!: CRCInternalRenderOwner;
-    const SystemOwner = (): CRCNode => {
+    let owner!: PibblInternalRenderOwner;
+    const SystemOwner = (): PibblNode => {
       system = useParticleSystem(effect);
       return null;
     };
-    const Binding = (): CRCNode => {
+    const Binding = (): PibblNode => {
       useParticleSystemBinding({
         system,
         backend: "canvas",
@@ -309,9 +309,9 @@ describe("particle system binding transactions", () => {
   it("catches pre-render parameter mutation and prunes spawn epochs only after live references release", () => {
     const effect = effectWithParameters();
     const values = signal<readonly [number, number, number]>([1, 2, 3]);
-    let system!: CRCParticleSystem;
+    let system!: PibblParticleSystem;
     let current!: TestCandidate;
-    const Root = (): CRCNode => {
+    const Root = (): PibblNode => {
       system = useParticleSystem(effect);
       const next = values.get();
       useParticleSystemBinding({
@@ -378,10 +378,10 @@ describe("particle system binding transactions", () => {
     const definition = effectWithParameters();
     const values = signal(1);
     const observed: string[] = [];
-    let system!: CRCParticleSystem;
+    let system!: PibblParticleSystem;
     let first!: TestCandidate;
     let current!: TestCandidate;
-    const Root = (): CRCNode => {
+    const Root = (): PibblNode => {
       const value = values.get();
       system = useParticleSystem(definition, {
         onError(error) {
@@ -443,10 +443,10 @@ describe("particle system binding transactions", () => {
   });
 });
 
-function mount(node: CRCNode) {
+function mount(node: PibblNode) {
   const canvas = document.createElement("canvas");
   document.body.appendChild(canvas);
-  const root = crc(canvas, node);
+  const root = pibbl(canvas, node);
   roots.add(root);
   return root;
 }

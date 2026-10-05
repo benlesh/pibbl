@@ -7,7 +7,7 @@ import { tmpdir } from "node:os";
 const root = new URL("../packages/core/", import.meta.url);
 const require = createRequire(new URL("package.json", root));
 const compiler = require.resolve("assemblyscript/bin/asc.js");
-const temp = await mkdtemp(join(tmpdir(), "crc-water-surface-wasm-"));
+const temp = await mkdtemp(join(tmpdir(), "pibbl-water-surface-wasm-"));
 try {
   const input = join(temp, "water-surface.ts");
   await writeFile(

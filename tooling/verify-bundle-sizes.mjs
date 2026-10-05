@@ -6,9 +6,9 @@ import { resolve } from 'node:path';
 // Built public entries only: no source aliases, installs, browser, or rebuild.
 const root = resolve(import.meta.dirname, '..');
 const fixtures = {
-  core: `import { PhysicsWorld2D } from '@crc/core/physics/2d'; import { crc, createElement, Rectangle } from '@crc/core'; export const mount = canvas => crc(canvas, createElement(Rectangle, { style: { width: 20, height: 20, fill: 'red' } }));`,
-  geometry: `export { circleShape2D, raycastShape2D } from '@crc/core/physics/2d/geometry';`,
-  physics: `import { crc, createElement } from '@crc/core'; import { PhysicsWorld2D } from '@crc/core/physics/2d'; export const mount = canvas => crc(canvas, createElement(PhysicsWorld2D, { children: [] }));`,
+  core: `import { PhysicsWorld2D } from '@pibbl/core/physics/2d'; import { pibbl, createElement, Rectangle } from '@pibbl/core'; export const mount = canvas => pibbl(canvas, createElement(Rectangle, { style: { width: 20, height: 20, fill: 'red' } }));`,
+  geometry: `export { circleShape2D, raycastShape2D } from '@pibbl/core/physics/2d/geometry';`,
+  physics: `import { pibbl, createElement } from '@pibbl/core'; import { PhysicsWorld2D } from '@pibbl/core/physics/2d'; export const mount = canvas => pibbl(canvas, createElement(PhysicsWorld2D, { children: [] }));`,
 };
 for (const [name, contents] of Object.entries(fixtures)) {
   const result = await build({

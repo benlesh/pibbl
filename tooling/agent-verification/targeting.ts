@@ -1,12 +1,12 @@
-import type { CRCInstance, CRCClippingStackEntry } from '../../packages/core/src/lib/types.js';
-/** Repository-local source-mode prototype. Not a supported @crc/core entry.
- * Reads only CRC-owned fields; never walks element props, signals or user objects.
+import type { PibblInstance, PibblClippingStackEntry } from '../../packages/core/src/lib/types.js';
+/** Repository-local source-mode prototype. Not a supported @pibbl/core entry.
+ * Reads only Pibbl-owned fields; never walks element props, signals or user objects.
  * Native geometry probes are explicit, separate from passive snapshots.
  */
-import type { CRCEventTarget } from '@crc/core';
-import { CRCFocusManager } from '../../packages/core/src/lib/focus/focus-manager.js';
+import type { PibblEventTarget } from '@pibbl/core';
+import { PibblFocusManager } from '../../packages/core/src/lib/focus/focus-manager.js';
 import { GLOBAL_STATE } from '../../packages/core/src/lib/global-state.js';
-import { CRCPaintEntryKind, type CRCPaintEntry, type CRCPathPaintEntry } from '../../packages/core/src/lib/events/paint-entry.js';
+import { PibblPaintEntryKind, type PibblPaintEntry, type PibblPathPaintEntry } from '../../packages/core/src/lib/events/paint-entry.js';
 import { snapshotRealmScheduler } from '../../packages/core/src/lib/scheduler/realm-scheduler.js';
 
 export interface TargetingGeneration {
@@ -35,7 +35,7 @@ export interface PointerCaptureObservation {
   readonly records: readonly Readonly<{ pointerId: number; targetId: number; live: boolean }>[];
 }
 export interface FocusObservation {
-  readonly policy: Readonly<{ kind: 'crc-focus-management'; tab: 'source-order-exit'; keyboardActivation: 'enter-space' }> | null;
+  readonly policy: Readonly<{ kind: 'pibbl-focus-management'; tab: 'source-order-exit'; keyboardActivation: 'enter-space' }> | null;
   readonly boundsSemantics: Readonly<{
     coordinateSpace: 'root-logical';
     representation: 'axis-aligned-envelope';
@@ -79,7 +79,7 @@ export interface TargetingSnapshot {
   readonly surface: SurfaceObservation;
   readonly focus: FocusObservation;
   readonly pointerCapture: PointerCaptureObservation;
-  readonly schema: 'crc-targeting-prototype/1';
+  readonly schema: 'pibbl-targeting-prototype/1';
   readonly status: 'ready' | 'pending' | 'unavailable' | 'disposed' | 'stale-root';
   readonly generation: TargetingGeneration | null;
   readonly completeness: 'complete' | 'truncated' | 'unavailable';
@@ -114,7 +114,7 @@ export interface TargetingExclusion {
   readonly localToSurface: readonly number[];
   readonly geometry: 'opaque-path';
 }
-interface ObservedClip extends CRCClippingStackEntry {
+interface ObservedClip extends PibblClippingStackEntry {
   readonly evidence: TargetingExclusion;
 }
 export interface TargetingCandidate {
@@ -157,12 +157,12 @@ const CLIP_REFERENCE_LIMIT = 128;
 let nextSession = 0;
 
 /** Ephemeral traversal: all records and native-call budgets include descendants. */
-function collectEntries(root: CRCInstance, recordLimit = RECORD_LIMIT, clipLimit = CLIP_REFERENCE_LIMIT) {
-  const entries: { entry: CRCPaintEntry; transform: DOMMatrix; clips: readonly ObservedClip[]; surfacePath: readonly number[] }[] = [];
+function collectEntries(root: PibblInstance, recordLimit = RECORD_LIMIT, clipLimit = CLIP_REFERENCE_LIMIT) {
+  const entries: { entry: PibblPaintEntry; transform: DOMMatrix; clips: readonly ObservedClip[]; surfacePath: readonly number[] }[] = [];
   let truncated = false;
   let clipReferences = 0;
   let pending = false;
-  const walk = (owner: CRCInstance, parent: DOMMatrix, inherited: readonly ObservedClip[], surfacePath: readonly number[]) => {
+  const walk = (owner: PibblInstance, parent: DOMMatrix, inherited: readonly ObservedClip[], surfacePath: readonly number[]) => {
     if (owner.mainTeardowns.closed) return;
     if (owner.requestedRenderRevision !== owner.completedRenderRevision) pending = true;
     for (const entry of owner.paintEntries) {
@@ -183,7 +183,7 @@ function collectEntries(root: CRCInstance, recordLimit = RECORD_LIMIT, clipLimit
         return { ...clip, transform: clipTransform, evidence: describe('clip', clipTransform, clip.transform, clip.fillRule, index) };
       })];
       entries.push({ entry, transform, clips, surfacePath });
-      if (entry.paintKind === CRCPaintEntryKind.NestedInstance) {
+      if (entry.paintKind === PibblPaintEntryKind.NestedInstance) {
         walk(entry.instance, transform, [...clips, { path: entry.bounds, transform, fillRule: 'nonzero', evidence: describe('surface-bounds', transform, entry.transform, 'nonzero', null) }], [...surfacePath, order]);
         if (truncated) return;
       }
@@ -196,11 +196,11 @@ function collectEntries(root: CRCInstance, recordLimit = RECORD_LIMIT, clipLimit
 /** No listener, scheduler, signal-consumer, surface or callback is installed. */
 export function createTargetingInspector(canvas: HTMLCanvasElement) {
   const session = ++nextSession;
-  const instance = GLOBAL_STATE.crcInstances.get(canvas);
-  // Retaining an inspector must not keep a removed CRC mount or Canvas alive.
+  const instance = GLOBAL_STATE.pibblInstances.get(canvas);
+  // Retaining an inspector must not keep a removed Pibbl mount or Canvas alive.
   const rootRef = instance ? new WeakRef(instance) : undefined;
   const canvasRef = new WeakRef(canvas);
-  let targetIds = new WeakMap<CRCEventTarget, number>();
+  let targetIds = new WeakMap<PibblEventTarget, number>();
   let nextTarget = 0;
   let boundaryIds = new WeakMap<object, number>();
   let nextBoundary = 0;
@@ -212,7 +212,7 @@ export function createTargetingInspector(canvas: HTMLCanvasElement) {
   }
   let disposed = false;
 
-  function identifyTarget(target: CRCEventTarget): number {
+  function identifyTarget(target: PibblEventTarget): number {
     if (disposed) return 0;
     let id = targetIds.get(target);
     if (id === undefined) targetIds.set(target, id = ++nextTarget);
@@ -224,7 +224,7 @@ export function createTargetingInspector(canvas: HTMLCanvasElement) {
     const host = canvasRef.deref();
     const scheduler = snapshotRealmScheduler();
     let status: TargetingSnapshot['status'] = disposed ? 'disposed' : !root || !host ? 'unavailable' :
-      root.mainTeardowns.closed || GLOBAL_STATE.crcInstances.get(host) !== root ? 'stale-root' :
+      root.mainTeardowns.closed || GLOBAL_STATE.pibblInstances.get(host) !== root ? 'stale-root' :
       !root.surface.snapshot || root.renderGeneration === 0 ? 'unavailable' :
       scheduler.phase !== 'idle' || root.requestedRenderRevision !== root.completedRenderRevision ? 'pending' : 'ready';
     const collected = status === 'ready' ? collectEntries(root!, recordLimit, clipLimit) : null;
@@ -237,10 +237,10 @@ export function createTargetingInspector(canvas: HTMLCanvasElement) {
     const totalRecords = status === 'ready' && !collected!.truncated ? collected!.entries.length : null;
     if (status === 'ready') {
       for (const { entry, transform, clips, surfacePath } of collected!.entries) {
-        const path = entry.paintKind === CRCPaintEntryKind.Path;
+        const path = entry.paintKind === PibblPaintEntryKind.Path;
         records.push(Object.freeze({
           order: records.length,
-          kind: path ? 'path' : entry.paintKind === CRCPaintEntryKind.NestedInstance ? 'nested-surface' : 'resolver',
+          kind: path ? 'path' : entry.paintKind === PibblPaintEntryKind.NestedInstance ? 'nested-surface' : 'resolver',
           targetId: path ? identifyTarget(entry.target.publicTarget) : null,
           surfacePath: Object.freeze([...surfacePath]),
           clipCount: clips.length,
@@ -265,14 +265,14 @@ export function createTargetingInspector(canvas: HTMLCanvasElement) {
       records: Object.freeze(captureRecords),
     });
     const policy = root?.eventRoot.focusPolicy;
-    const manager = status === 'ready' && policy instanceof CRCFocusManager && !policy.isDestroyed && !policy.ownerWasReleased ? policy : undefined;
+    const manager = status === 'ready' && policy instanceof PibblFocusManager && !policy.isDestroyed && !policy.ownerWasReleased ? policy : undefined;
     const focused = host?.ownerDocument.activeElement;
     const focusRecords = manager ? manager.candidates.slice(0, 64).map(candidate => Object.freeze({
       targetId: identifyTarget(candidate.target.publicTarget), sourceIndex: candidate.sourceIndex, directionalBoundaryId: identifyBoundary(candidate.directionalBoundary),
       bounds: candidate.rootBounds ? Object.freeze({ x: candidate.rootBounds.x, y: candidate.rootBounds.y, width: candidate.rootBounds.width, height: candidate.rootBounds.height }) : null,
     })) : [];
     const focus: FocusObservation = Object.freeze({
-      policy: manager ? Object.freeze({ kind: 'crc-focus-management', tab: 'source-order-exit', keyboardActivation: 'enter-space' }) : null,
+      policy: manager ? Object.freeze({ kind: 'pibbl-focus-management', tab: 'source-order-exit', keyboardActivation: 'enter-space' }) : null,
       boundsSemantics: Object.freeze({ coordinateSpace: 'root-logical', representation: 'axis-aligned-envelope', source: 'navigation-metadata', paintedGeometryRelation: 'unknown', hitGeometryRelation: 'unknown' }),
       status: manager ? 'ready' : status === 'ready' && !policy ? 'unconfigured' : 'unavailable',
       nativeFocus: focused === host ? 'canvas' : focused ? 'other' : 'none', nativeScope: 'owner-document',
@@ -300,7 +300,7 @@ export function createTargetingInspector(canvas: HTMLCanvasElement) {
       surface,
       focus,
       pointerCapture,
-      schema: 'crc-targeting-prototype/1', status, generation,
+      schema: 'pibbl-targeting-prototype/1', status, generation,
       completeness: status !== 'ready' ? 'unavailable' : collected!.truncated ? 'truncated' : 'complete',
       totalRecords, records: Object.freeze(records), visibility: 'unavailable',
       coordinateSpace: 'root-logical', recordLimit,
@@ -413,19 +413,19 @@ export function createTargetingInspector(canvas: HTMLCanvasElement) {
     const root = rootRef!.deref()!;
     const host = canvasRef.deref()!;
     // Reject opaque boundaries before executing any geometry. Never call resolveLocal.
-    const paths: { entry: CRCPathPaintEntry; order: number; clips: readonly ObservedClip[] }[] = [];
+    const paths: { entry: PibblPathPaintEntry; order: number; clips: readonly ObservedClip[] }[] = [];
     let maximumCalls = 0;
     for (const [order, item] of collectEntries(root).entries.entries()) {
       const { entry, transform, clips } = item;
-      if (entry.paintKind === CRCPaintEntryKind.NestedInstance) continue;
-      if (entry.paintKind !== CRCPaintEntryKind.Path) {
+      if (entry.paintKind === PibblPaintEntryKind.NestedInstance) continue;
+      if (entry.paintKind !== PibblPaintEntryKind.Path) {
         return result('unsupported', null, 'Renderer resolvers are outside this prototype.');
       }
       maximumCalls += clips.length + Number(entry.fill) + Number(entry.lineInteractionWidth > 0);
       if (maximumCalls > NATIVE_CALL_LIMIT) return result('truncated', null, 'Query exceeds the 128-native-call budget.');
       paths.push({ order, clips, entry: { ...entry, transform, clippingStack: clips } });
     }
-    // crc already owns this context; this does not allocate a scratch surface.
+    // pibbl already owns this context; this does not allocate a scratch surface.
     const context = host.getContext('2d');
     if (!context) return result('unavailable', null, 'No existing Canvas 2D context.');
     let winner: number | null = null;

@@ -1,4 +1,4 @@
-import type { CRCRenderTransaction } from '../types.js';
+import type { PibblRenderTransaction } from '../types.js';
 import { GLOBAL_STATE } from '../global-state.js';
 import { getPrimitiveReceiverToken } from '../element/metadata.js';
 import {
@@ -18,12 +18,12 @@ interface ReceiverInputProvision {
 }
 
 const transactionProvisions = new WeakMap<
-  CRCRenderTransaction,
+  PibblRenderTransaction,
   WeakMap<object, ReceiverInputProvision>
 >();
 
 export function withReceiverInputProvision<T>(
-  transaction: CRCRenderTransaction | undefined,
+  transaction: PibblRenderTransaction | undefined,
   receiver: object | undefined,
   callback: () => T,
 ): T {
@@ -43,7 +43,7 @@ export function withReceiverInputProvision<T>(
 }
 
 export function adoptReceiverInputProvision(
-  transaction: CRCRenderTransaction | undefined,
+  transaction: PibblRenderTransaction | undefined,
   receiver: object,
 ): void {
   if (!transaction) return;
@@ -59,7 +59,7 @@ export function adoptReceiverInputProvision(
 }
 
 function createProvision(
-  transaction: CRCRenderTransaction,
+  transaction: PibblRenderTransaction,
   receiver: object,
 ): ReceiverInputProvision {
   let receivers = transactionProvisions.get(transaction);

@@ -6,7 +6,7 @@ kind: tutorial
 slug: canvas-scene
 tutorial: diagram-editor
 order: 1
-keywords: [diagram editor, tutorial, crc, canvas, disposal]
+keywords: [diagram editor, tutorial, pibbl, canvas, disposal]
 exampleSlug: diagram-editor-canvas-scene
 ---
 
@@ -22,7 +22,7 @@ of your own and watch that one fixed Canvas region update.
 ## How it works
 
 `DiagramEditor` is an ordinary synchronous component function. On a render,
-CRC evaluates the tree and traverses all of its returned primitives in paint
+Pibbl evaluates the tree and traverses all of its returned primitives in paint
 order: the toolbar, its label, the workspace, its copy, then the status strip
 and status copy. There is no generated DOM or retained scene graph behind this
 first frame.
@@ -30,7 +30,7 @@ first frame.
 ## Build the change
 
 The snapshot ends by mounting the component with
-`crc(canvas, <DiagramEditor />)`. [`crc`](#/api/functions/crc) returns one
+`pibbl(canvas, <DiagramEditor />)`. [`pibbl`](#/api/functions/pibbl) returns one
 stable controller for that Canvas, which is the object that owns the mounted
 scene and later disposes it. The toolbar and workspace are plain
 [`Rectangle`](#/api/components/rectangle) primitives; their labels are
@@ -41,7 +41,7 @@ scene and later disposes it. The toolbar and workspace are plain
 This chapter declares a 960 by 600 logical Canvas. The toolbar occupies y=0
 through y=56, the workspace runs to y=568, and the 32-pixel status strip fills
 the remainder. Change `WORKFLOW MAP` to your own title, then try changing the
-Canvas CSS presentation size. CRC can scale the logical viewport, but the
+Canvas CSS presentation size. Pibbl can scale the logical viewport, but the
 positions in this source still use the same 960 by 600 coordinate system.
 
 ## Check your result
@@ -52,7 +52,7 @@ size does not change this chapter's fixed logical coordinate system.
 
 ## What you learned
 
-`crc` schedules the initial paint; mounting does not require a manual render
+`pibbl` schedules the initial paint; mounting does not require a manual render
 loop. When the scene is no longer needed, call the controller's `dispose()`.
 It is idempotent, so cleanup code may call it more than once without creating a
 second teardown. For using this snapshot in an application, see

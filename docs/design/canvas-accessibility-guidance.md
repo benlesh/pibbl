@@ -2,7 +2,7 @@
 
 Status: current guidance, updated for JSX-era authoring on 2026-09-03.
 
-CRC logical focus is not screen-reader semantics. Wrapping one CRC scene in
+Pibbl logical focus is not screen-reader semantics. Wrapping one Pibbl scene in
 `<FocusManagement>` makes explicit Canvas targets operable through a shared
 keyboard focus host; the transparent policy does not give those targets DOM roles, accessible
 names, states, relationships, text selection, or screen-reader announcements.
@@ -12,7 +12,7 @@ It does not make a Canvas application accessible by itself.
 
 When meaningful information or operations exist only in Canvas pixels, the
 application must provide an equivalent semantic experience. Use the
-application framework or DOM strategy already appropriate to the product. CRC
+application framework or DOM strategy already appropriate to the product. Pibbl
 does not require a framework and does not prescribe a persistent DOM descendant
 for every drawn target.
 
@@ -30,7 +30,7 @@ The application-owned experience should expose:
 
 Canvas fallback content may be a useful host for the alternative DOM. A nearby
 or mode-switched semantic view can also be appropriate. The right structure
-depends on the application's information and workflow, not on CRC internals.
+depends on the application's information and workflow, not on Pibbl internals.
 
 ## Synchronize one product state
 
@@ -42,7 +42,7 @@ alternative, and an equivalent DOM action should update the Canvas.
 
 Do not infer semantic state from pixels after painting. Keep that state in the
 application model and render both experiences from it. Likewise, do not use
-CRC's opaque logical target object as a semantic identifier; use stable
+Pibbl's opaque logical target object as a semantic identifier; use stable
 application-owned IDs and labels.
 
 ## Avoid duplicate keyboard paths
@@ -57,7 +57,7 @@ the same logical operation twice.
 This does not mean that only one representation may exist. A visual Canvas and
 a semantic DOM view may coexist when their purpose and focus behavior are
 clear. The application owns entry, exit, focus restoration, view switching,
-and announcements across those surfaces; CRC does not silently merge
+and announcements across those surfaces; Pibbl does not silently merge
 application DOM into its logical focus index.
 
 ## Prefer equivalent operations over a DOM mirror
@@ -70,7 +70,7 @@ an alternative interaction mode. The useful semantic grouping may differ from
 the Canvas paint tree while still representing the same information and
 operations.
 
-CRC intentionally does not generate persistent semantic descendants, assign
+Pibbl intentionally does not generate persistent semantic descendants, assign
 ARIA roles, maintain `aria-activedescendant`, mutate hidden Canvas text, or
 repeatedly refocus generated DOM for announcements. Those choices require
 application semantics that a general Canvas runtime cannot safely infer.
@@ -92,7 +92,7 @@ Before shipping a focus-managed Canvas experience, verify that:
   technology combinations.
 
 The [focus and keyboard-navigation contract](./focus-and-keyboard-navigation-contract.md)
-defines CRC's logical interaction behavior. Accessibility remains a product
+defines Pibbl's logical interaction behavior. Accessibility remains a product
 responsibility shared by application design, semantics, content, and testing.
 The Studio focus and editing-transport lessons make this boundary visible in
 their code and Canvas copy; they are interaction examples, not substitutes for

@@ -1,5 +1,5 @@
 {
-  "schema": "crc-layout-studio-smoke/1",
+  "schema": "pibbl-layout-studio-smoke/1",
   "status": "fail",
   "provenance": "controlled-local-studio-no-served-build-attestation",
   "steps": [],

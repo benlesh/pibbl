@@ -3,7 +3,7 @@ import { parse } from "@babel/parser";
 function isThreeModule(moduleName: unknown): moduleName is string {
   return (
     typeof moduleName === "string" &&
-    (moduleName === "@crc/three" ||
+    (moduleName === "@pibbl/three" ||
       moduleName === "three" ||
       moduleName.startsWith("three/"))
   );
@@ -11,7 +11,7 @@ function isThreeModule(moduleName: unknown): moduleName is string {
 
 /** Returns true only when source contains a real static Three module import. */
 export function sourceImportsThree(source: string): boolean {
-  // Avoid parsing the overwhelmingly common CRC-only lesson.
+  // Avoid parsing the overwhelmingly common Pibbl-only lesson.
   if (!source.includes("three")) return false;
 
   try {

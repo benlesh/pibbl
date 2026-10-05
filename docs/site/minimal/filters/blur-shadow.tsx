@@ -1,20 +1,20 @@
-import { crc, Group, Circle, Rectangle, Text } from "@crc/core";
+import { pibbl, Group, Circle, Rectangle, Text } from "@pibbl/core";
 import {
   blur,
   dropShadow,
-  type CRCFilter,
-  type CRCBlurFilterOptions,
-  type CRCDropShadowFilterOptions,
-} from "@crc/core/filters";
+  type PibblFilter,
+  type PibblBlurFilterOptions,
+  type PibblDropShadowFilterOptions,
+} from "@pibbl/core/filters";
 
-const softEdge: CRCBlurFilterOptions = { radius: 4 };
-const shadow: CRCDropShadowFilterOptions = {
+const softEdge: PibblBlurFilterOptions = { radius: 4 };
+const shadow: PibblDropShadowFilterOptions = {
   offsetX: 8,
   offsetY: 10,
   blurRadius: 6,
   color: "#17211d88",
 };
-const comparisons: [string, CRCFilter | undefined][] = [
+const comparisons: [string, PibblFilter | undefined][] = [
   ["Original", undefined],
   ["Blur 4px", blur(softEdge)],
   ["Drop shadow", dropShadow(shadow)],
@@ -41,7 +41,7 @@ function Subject() {
           fill: "#fff",
         }}
       >
-        CRC
+        Pibbl
       </Text>
     </>
   );
@@ -60,7 +60,7 @@ const controllers = comparisons.map(([label, filter]) => {
   canvas.height = 156;
   figure.append(caption, canvas);
   grid.append(figure);
-  return crc(
+  return pibbl(
     canvas,
     <>
       <Rectangle style={{ width: 224, height: 156, fill: "#f1f4f5" }} />

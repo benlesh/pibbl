@@ -8,7 +8,7 @@ It is not a performance promise or a default correctness gate.
 Run the opt-in Chromium probe sequentially:
 
 ```sh
-VITE_CRC_DISPLACEMENT_BENCH=1 corepack pnpm@11.21.0 exec vitest run packages/core/test/displacement-cost.bench.test.ts --browser=chromium --browser.headless
+VITE_PIBBL_DISPLACEMENT_BENCH=1 corepack pnpm@11.21.0 exec vitest run packages/core/test/displacement-cost.bench.test.ts --browser=chromium --browser.headless
 ```
 
 The probe mounts public `waterWaves` and `displacement` over 64 rectangles at
@@ -18,7 +18,7 @@ CSS canvas size to the logical size and asserts the backing store is
 then measures 30 synchronous `flush()` calls at 60 Hz logical time.
 
 The emitted JSON records median and p95 CPU submission durations for the whole
-CRC flush, water recipe rasterization (including generation), source subtree traversal and drawing, offscreen Canvas copies, final root Canvas composition, WebGL texture-upload submission,
+Pibbl flush, water recipe rasterization (including generation), source subtree traversal and drawing, offscreen Canvas copies, final root Canvas composition, WebGL texture-upload submission,
 WebGL draw submission, and image-bitmap transfer. The stage timings overlap the
 whole flush and one another, so they must never be added together. GPU elapsed
 time is unavailable: this probe deliberately does not use timer queries and

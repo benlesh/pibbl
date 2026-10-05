@@ -23,14 +23,14 @@ function validObservedEnvironment(value) {
 export function compareReplayReports(before, after) {
   const reasons = [];
   for (const [side, value] of [['before', before], ['after', after]]) {
-    if (!['crc-targeting-replay/1', 'crc-viz-replay/1'].includes(value?.schema)) { reasons.push(`${side}:unsupported-schema`); continue; }
+    if (!['pibbl-targeting-replay/1', 'pibbl-viz-replay/1'].includes(value?.schema)) { reasons.push(`${side}:unsupported-schema`); continue; }
     if (!['pass', 'fail'].includes(value.status)) reasons.push(`${side}:not-final-outcome`);
-    if (!identity(value.expectedIdentity, 'crc-targeting-identity/1') || !identity(value.servedIdentity, 'crc-targeting-identity/1') ||
+    if (!identity(value.expectedIdentity, 'pibbl-targeting-identity/1') || !identity(value.servedIdentity, 'pibbl-targeting-identity/1') ||
       !isDeepStrictEqual(value.expectedIdentity, value.servedIdentity)) reasons.push(`${side}:fixture-provenance-incomplete-or-inconsistent`);
-    if (!identity(value.run?.toolIdentity, 'crc-replay-tool-identity/1') || !identity(value.run?.toolIdentityAfter, 'crc-replay-tool-identity/1') ||
+    if (!identity(value.run?.toolIdentity, 'pibbl-replay-tool-identity/1') || !identity(value.run?.toolIdentityAfter, 'pibbl-replay-tool-identity/1') ||
       !isDeepStrictEqual(value.run.toolIdentity, value.run.toolIdentityAfter)) reasons.push(`${side}:tool-provenance-incomplete-or-inconsistent`);
-    if (value.run?.schema !== 'crc-replay-run/1' || typeof value.run.runId !== 'string' || value.run.runId.length > 128 ||
-      value.run.kind !== (value.schema === 'crc-viz-replay/1' ? 'viz' : 'targeting')) reasons.push(`${side}:run-manifest-incomplete`);
+    if (value.run?.schema !== 'pibbl-replay-run/1' || typeof value.run.runId !== 'string' || value.run.runId.length > 128 ||
+      value.run.kind !== (value.schema === 'pibbl-viz-replay/1' ? 'viz' : 'targeting')) reasons.push(`${side}:run-manifest-incomplete`);
     const environment = value.run?.environment;
     if (!environment || !['node', 'platform', 'architecture'].every(key => typeof environment[key] === 'string') || !environment.browserContext ||
       !['width', 'height'].every(key => Number.isFinite(environment.browserContext.viewport?.[key]) && environment.browserContext.viewport[key] > 0) ||
@@ -63,7 +63,7 @@ export function compareReplayReports(before, after) {
     ['browser', before?.browser, after?.browser], ['fixture-url', before?.url, after?.url], ['action-manifest', before?.requiredActions, after?.requiredActions],
     ['check-manifest', before?.requiredChecks, after?.requiredChecks],
   ]) if (!isDeepStrictEqual(left, right)) reasons.push(`${name}:differs`);
-  const base = { schema: 'crc-replay-comparison/1', verification: 'saved-evidence-only',
+  const base = { schema: 'pibbl-replay-comparison/1', verification: 'saved-evidence-only',
     environmentScope: before?.run?.environment?.observedPage === undefined && after?.run?.environment?.observedPage === undefined ? 'declared-only' : 'declared-and-initial-page-observation',
     runs: { before: typeof before?.run?.runId === 'string' ? before.run.runId.slice(0, 128) : null, after: typeof after?.run?.runId === 'string' ? after.run.runId.slice(0, 128) : null },
     scope: 'Exact recorded action data under matching declared provenance; not causal or pixel-equivalence proof.' };
@@ -91,7 +91,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
     process.stdout.write(JSON.stringify({ ...comparison, sources: { before: before.source, after: after.source } }) + '\n');
     if (comparison.status !== 'comparable') process.exitCode = 1;
   } catch (error) {
-    process.stdout.write(JSON.stringify({ schema: 'crc-replay-comparison/1', status: 'unavailable', message: error.message.slice(0, 1024) }) + '\n');
+    process.stdout.write(JSON.stringify({ schema: 'pibbl-replay-comparison/1', status: 'unavailable', message: error.message.slice(0, 1024) }) + '\n');
     process.exitCode = 1;
   }
 }

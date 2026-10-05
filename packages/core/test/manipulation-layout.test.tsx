@@ -5,17 +5,17 @@ import {
   ManipulationFrame,
   Rectangle,
   ResizeHandles,
-  crc,
+  pibbl,
   signal,
   useConst,
   useLayoutBox,
   useManipulation,
   type BoxStyle,
-  type CRCController,
-  type CRCNode,
+  type PibblController,
+  type PibblNode,
   type FlexItemStyle,
   type GridItemStyle,
-} from '@crc/core';
+} from '@pibbl/core';
 import { afterEach, describe, expect, it } from 'vitest';
 import { commands } from 'vitest/browser';
 
@@ -23,7 +23,7 @@ type ItemStyle = BoxStyle & FlexItemStyle & GridItemStyle;
 type LayoutKind = 'flex' | 'flow' | 'grid';
 type ItemReport = { readonly identity: number; readonly box: Readonly<{ x: number; y: number; width: number; height: number }> };
 
-let controller: CRCController | undefined;
+let controller: PibblController | undefined;
 let nextIdentity = 0;
 
 afterEach(async () => {
@@ -33,14 +33,14 @@ afterEach(async () => {
   document.body.replaceChildren();
 });
 
-function Item({ id, reports }: { id: string; reports: Map<string, ItemReport>; style: ItemStyle }): CRCNode {
+function Item({ id, reports }: { id: string; reports: Map<string, ItemReport>; style: ItemStyle }): PibblNode {
   const identity = useConst(() => ++nextIdentity);
   const box = useLayoutBox();
   reports.set(id, { identity, box: { ...box } });
   return <Rectangle style={{ width: box.width, height: box.height, fill: id === 'first' ? '#dc2626' : '#16a34a' }} />;
 }
 
-function FrameContent({ kind, reports }: { kind: LayoutKind; reports: Map<string, ItemReport> }): CRCNode {
+function FrameContent({ kind, reports }: { kind: LayoutKind; reports: Map<string, ItemReport> }): PibblNode {
   if (kind === 'flex') {
     return <Flex style={{ flexDirection: 'column' }}>
       <Item key="first" id="first" reports={reports} style={{ width: 100, height: 0, minHeight: 0, flexGrow: 1 }} />
@@ -59,7 +59,7 @@ function FrameContent({ kind, reports }: { kind: LayoutKind; reports: Map<string
   </Grid>;
 }
 
-function Scene({ kind, box, reports }: { kind: LayoutKind; box: ReturnType<typeof signal<{ left: number; top: number; width: number; height: number }>>; reports: Map<string, ItemReport> }): CRCNode {
+function Scene({ kind, box, reports }: { kind: LayoutKind; box: ReturnType<typeof signal<{ left: number; top: number; width: number; height: number }>>; reports: Map<string, ItemReport> }): PibblNode {
   const manipulation = useManipulation({ box, resize: {} });
   return <ManipulationFrame {...manipulation.frameProps}>
     <FrameContent kind={kind} reports={reports} />
@@ -75,7 +75,7 @@ async function mount(kind: LayoutKind) {
   document.body.append(canvas);
   const box = signal({ left: 32, top: 40, width: 100, height: 80 });
   const reports = new Map<string, ItemReport>();
-  controller = crc(canvas, <Scene kind={kind} box={box} reports={reports} />, { pixelRatio: 1 });
+  controller = pibbl(canvas, <Scene kind={kind} box={box} reports={reports} />, { pixelRatio: 1 });
   await settle();
   return { canvas, box, reports };
 }

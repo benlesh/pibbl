@@ -6,7 +6,7 @@ kind: api
 slug: manipulation-frame
 apiCategory: component
 symbols: [ManipulationFrame]
-relatedTypes: [CRCManipulationController, CRCManipulationFrameProps]
+relatedTypes: [PibblManipulationController, PibblManipulationFrameProps]
 ---
 
 # ManipulationFrame
@@ -17,7 +17,7 @@ import {
   Rectangle,
   useManipulation,
   useSignal,
-} from "@crc/core";
+} from "@pibbl/core";
 ```
 
 `ManipulationFrame` establishes the local box and coordinate space for one
@@ -33,4 +33,4 @@ const manipulation = useManipulation({ box });
 </ManipulationFrame>;
 ```
 
-Related types: [CRCManipulationController](#/api/types/events#crcmanipulationcontroller), [CRCManipulationFrameProps](#/api/types/events#crcmanipulationframeprops).
+Related types: [PibblManipulationController](#/api/types/events#pibblmanipulationcontroller), [PibblManipulationFrameProps](#/api/types/events#pibblmanipulationframeprops).

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { Rectangle } from '../components/rect';
-import { crc } from '../crc';
+import { pibbl } from '../pibbl';
 import { componentTest } from '../test-utils/component-test';
 import { useCursor } from './use-cursor';
 import { createElement } from '../element/create-element';
@@ -64,7 +64,7 @@ describe('useCursor', () => {
     await canvas.mouseMove({ position: { x: 80, y: 80 } });
     expect(getComputedStyle(canvas.element).cursor).toBe('help');
 
-    crc(canvas.element, createElement(Scene, { second: false }));
+    pibbl(canvas.element, createElement(Scene, { second: false }));
     await nextFrame();
 
     expect(getComputedStyle(canvas.element).cursor).toBe('wait');
@@ -79,7 +79,7 @@ describe('useCursor', () => {
     await canvas.mouseMove({ position: { x: 80, y: 80 } });
     expect(getComputedStyle(canvas.element).cursor).toBe('wait');
 
-    crc(canvas.element, createElement(Scene, { second: true }));
+    pibbl(canvas.element, createElement(Scene, { second: true }));
     await nextFrame();
 
     expect(getComputedStyle(canvas.element).cursor).toBe('help');
@@ -94,7 +94,7 @@ describe('useCursor', () => {
     await canvas.mouseMove({ position: { x: 80, y: 80 } });
     expect(getComputedStyle(canvas.element).cursor).toBe('wait');
 
-    crc(canvas.element, createElement(Scene, { swapped: true }));
+    pibbl(canvas.element, createElement(Scene, { swapped: true }));
     await nextFrame();
 
     expect(getComputedStyle(canvas.element).cursor).toBe('help');
@@ -120,7 +120,7 @@ describe('useCursor', () => {
     await canvas.mouseMove({ position: { x: 80, y: 80 } });
     expect(getComputedStyle(canvas.element).cursor).toBe('wait');
 
-    crc(canvas.element, createElement(Scene, { region: false }));
+    pibbl(canvas.element, createElement(Scene, { region: false }));
     await nextFrame();
 
     expect(getComputedStyle(canvas.element).cursor).toBe('wait');
@@ -142,7 +142,7 @@ describe('useCursor', () => {
     await canvas.mouseMove({ position: { x: 80, y: 80 } });
     expect(canvas.element.style.cursor).toBe('');
 
-    crc(canvas.element, createElement(Scene, { enabled: true }));
+    pibbl(canvas.element, createElement(Scene, { enabled: true }));
     await nextFrame();
 
     expect(getComputedStyle(canvas.element).cursor).toBe('pointer');
@@ -156,7 +156,7 @@ describe('useCursor', () => {
     await canvas.mouseMove({ position: { x: 80, y: 80 } });
     canvas.element.style.cursor = 'progress';
 
-    crc(canvas.element, createElement(Scene, { enabled: false }));
+    pibbl(canvas.element, createElement(Scene, { enabled: false }));
     await nextFrame();
 
     expect(canvas.element.style.cursor).toBe('progress');

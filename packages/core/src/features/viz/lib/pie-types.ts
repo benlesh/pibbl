@@ -1,15 +1,15 @@
 import type { PieLabel, PieSlice } from './pie-layout.js';
 import type {
-  CRCNode,
-  CRCEventHandlers,
-  CRCEventParticipationOptions,
+  PibblNode,
+  PibblEventHandlers,
+  PibblEventParticipationOptions,
   SignalValue,
   FillStyle,
   StrokeStyle,
   WedgeProps,
   WedgeStyle,
-} from "@crc/core";
-import type { SignalStyle } from "@crc/core/internal";
+} from "@pibbl/core";
+import type { SignalStyle } from "@pibbl/core/internal";
 import type { PieOptions, PieSliceGeometry } from "./pie-slices.js";
 import type { HoverBounds } from "./hover-placement.js";
 /**
@@ -122,7 +122,7 @@ export interface PieLayoutStyle {
  * @see {@link SignalStyle}
  * @see {@link PieLayoutStyle}
  * @see {@link PieLayoutSlice}
- * @see {@link CRCNode}
+ * @see {@link PibblNode}
  */
 export interface PieLayoutProps<D> extends PieOptions<D> {
   /**
@@ -154,11 +154,11 @@ export interface PieLayoutProps<D> extends PieOptions<D> {
   readonly style?: SignalValue<SignalStyle<PieLayoutStyle>>;
   /**
    * Descendant content or the callback that supplies it. See {@link PieLayoutSlice},
-   * {@link CRCNode}.
+   * {@link PibblNode}.
    * @param slice - Slice geometry and layout metadata. See {@link PieLayoutSlice}.
-   * @returns CRC content representing the slice. See {@link CRCNode}.
+   * @returns Pibbl content representing the slice. See {@link PibblNode}.
    */
-  readonly children: (slice: PieLayoutSlice<D>) => CRCNode;
+  readonly children: (slice: PieLayoutSlice<D>) => PibblNode;
 }
 /**
  * Supported geometry and presentation properties for PieSlice.
@@ -178,7 +178,7 @@ export type PieSliceStyle = Omit<
  * @see {@link SignalValue}
  * @see {@link SignalStyle}
  * @see {@link PieSliceStyle}
- * @see {@link CRCNode}
+ * @see {@link PibblNode}
  * @see {@link PieSlice}
  */
 export interface PieSliceProps<D> extends WedgeProps {
@@ -189,8 +189,8 @@ export interface PieSliceProps<D> extends WedgeProps {
    * {@link PieSliceStyle}.
    */
   readonly style?: SignalValue<SignalStyle<PieSliceStyle>>;
-  /** Descendant content or the callback that supplies it. See {@link CRCNode}. */
-  readonly children?: CRCNode;
+  /** Descendant content or the callback that supplies it. See {@link PibblNode}. */
+  readonly children?: PibblNode;
 }
 /**
  * Supported geometry and presentation properties for PieLabel.
@@ -210,15 +210,15 @@ export interface PieLabelStyle {
 /**
  * Authored inputs for PieLabel, including the declared data and presentation options.
  *
- * @see {@link CRCEventHandlers}
- * @see {@link CRCEventParticipationOptions}
+ * @see {@link PibblEventHandlers}
+ * @see {@link PibblEventParticipationOptions}
  * @see {@link PieLayoutSlice}
  * @see {@link SignalValue}
  * @see {@link SignalStyle}
  * @see {@link PieLabelStyle}
  * @see {@link PieLabel}
  */
-export interface PieLabelProps<D> extends CRCEventHandlers, CRCEventParticipationOptions {
+export interface PieLabelProps<D> extends PibblEventHandlers, PibblEventParticipationOptions {
   /** Resolved pie geometry and label placement to present. See {@link PieLayoutSlice}. */
   readonly slice: PieLayoutSlice<D>;
   /**

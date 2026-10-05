@@ -2,24 +2,24 @@ import type { PathGeometry } from '../geometry/path-geometry.js';
 import {
   createTarget,
   updateCursorTarget,
-  type CRCEventTargetRegistration,
+  type PibblEventTargetRegistration,
 } from '../events/registrations.js';
 import { removeInteractionRegion } from '../events/dispatch.js';
-import type { CRCInstance } from '../types.js';
+import type { PibblInstance } from '../types.js';
 import { GLOBAL_STATE } from '../global-state.js';
 import { requireHookContext } from './hook-slot.js';
 
 export function createRegion(
-  instance: CRCInstance,
+  instance: PibblInstance,
   component = requireHookContext().componentRefs,
   slot = Math.max(0, GLOBAL_STATE.componentHookIndex - 1),
-): CRCEventTargetRegistration {
+): PibblEventTargetRegistration {
   return createTarget(instance, component, slot);
 }
 
 export function updateRegion(
-  instance: CRCInstance,
-  region: CRCEventTargetRegistration,
+  instance: PibblInstance,
+  region: PibblEventTargetRegistration,
   {
     path,
     fill = false,
@@ -44,8 +44,8 @@ export function updateRegion(
 }
 
 export function releaseRegion(
-  instance: CRCInstance,
-  region: CRCEventTargetRegistration,
+  instance: PibblInstance,
+  region: PibblEventTargetRegistration,
 ): void {
   removeInteractionRegion(instance, region);
 }

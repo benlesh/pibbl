@@ -8,30 +8,32 @@
     "symbols": [
       {
         "name": "Absolute",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "AbsoluteProps",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "AbsoluteStyle",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "Overlay",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "OverlayProps",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "OverlayStyle",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       }
     ],
-    "notes": ["Creates its own canvas and disposes the CRC mount on pagehide."]
+    "notes": [
+      "Creates its own canvas and disposes the Pibbl mount on pagehide."
+    ]
   },
   {
     "id": "flow-flex",
@@ -42,34 +44,36 @@
     "symbols": [
       {
         "name": "Flow",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "FlowProps",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "FlowStyle",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "Flex",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "FlexProps",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "FlexStyle",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "FlexItemStyle",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       }
     ],
-    "notes": ["Creates its own canvas and disposes the CRC mount on pagehide."]
+    "notes": [
+      "Creates its own canvas and disposes the Pibbl mount on pagehide."
+    ]
   },
   {
     "id": "grid-responsive",
@@ -80,35 +84,35 @@
     "symbols": [
       {
         "name": "Grid",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "GridProps",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "GridStyle",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "GridTrack",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "GridItemStyle",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
-        "name": "CRCResponsiveStyle",
-        "importPath": "@crc/core"
+        "name": "PibblResponsiveStyle",
+        "importPath": "@pibbl/core"
       },
       {
-        "name": "CRCSizeQuery",
-        "importPath": "@crc/core"
+        "name": "PibblSizeQuery",
+        "importPath": "@pibbl/core"
       },
       {
-        "name": "CRCStyleRule",
-        "importPath": "@crc/core"
+        "name": "PibblStyleRule",
+        "importPath": "@pibbl/core"
       }
     ],
     "notes": [
@@ -124,67 +128,67 @@
     "symbols": [
       {
         "name": "LayoutDiagnostic",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "layoutDiagnostic",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "normalizeEdges",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "resolveBox",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "resolveLength",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "BoxStyle",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "Constraints",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "EdgeValues",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "Edges",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "LayoutBox",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "LayoutDiagnosticContext",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "LayoutDiagnosticInput",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "Length",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "Percentage",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "ResolvedBoxStyle",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "Size",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       }
     ],
     "notes": ["Displays resolved edges and box geometry in the document."]
@@ -198,23 +202,23 @@
     "symbols": [
       {
         "name": "measureElement",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "CanvasMeasurementService",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "Constraints",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "MeasureInput",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "MeasureResult",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       }
     ],
     "notes": ["Displays the measured Text dimensions in the document."]
@@ -228,13 +232,15 @@
     "symbols": [
       {
         "name": "useLayoutBox",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "LayoutItemStyle",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       }
     ],
-    "notes": ["Creates its own canvas and disposes the CRC mount on pagehide."]
+    "notes": [
+      "Creates its own canvas and disposes the Pibbl mount on pagehide."
+    ]
   }
 ]

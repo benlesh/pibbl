@@ -1,6 +1,6 @@
 import { expect, it, vi } from "vitest";
-import { crc, Rectangle, useTexture } from "@crc/core";
-import { tendrils, lightning } from "@crc/core/textures";
+import { pibbl, Rectangle, useTexture } from "@pibbl/core";
+import { tendrils, lightning } from "@pibbl/core/textures";
 import {
   ManualSchedulerDriver,
   installSchedulerDriverForTest,
@@ -30,7 +30,7 @@ it("allocates fixed WASM memory for both electric generators and reuses it throu
       </>
     );
   }
-  const controller = crc(canvas, <Scene />);
+  const controller = pibbl(canvas, <Scene />);
   try {
     driver.flush(0);
     expect(memory).toHaveBeenCalledTimes(2);
@@ -51,7 +51,7 @@ it("allocates fixed WASM memory for both electric generators and reuses it throu
   expect(driver.pendingHostFrames).toBe(0);
 });
 
-import { type Texture, type TextureRecipe } from "@crc/core";
+import { type Texture, type TextureRecipe } from "@pibbl/core";
 import { tendrils as jsTendrils } from "../../../../../tooling/texture-wasm-spike/reference-electric/tendrils.js";
 import { lightning as jsLightning } from "../../../../../tooling/texture-wasm-spike/reference-electric/lightning.js";
 function replay(
@@ -71,7 +71,7 @@ function replay(
   const lines = vi.spyOn(OffscreenCanvasRenderingContext2D.prototype, "lineTo");
   const arcs = vi.spyOn(OffscreenCanvasRenderingContext2D.prototype, "arc");
   const snapshots: number[][] = [];
-  const controller = crc(canvas, <Scene />);
+  const controller = pibbl(canvas, <Scene />);
   try {
     for (let frame = 0; frame <= 320; frame++) {
       moves.mockClear();

@@ -1,36 +1,36 @@
-import type { CRCEventRoot } from '../types.js';
-import type { CRCEventNode } from './registrations.js';
+import type { PibblEventRoot } from '../types.js';
+import type { PibblEventNode } from './registrations.js';
 
-interface CRCPointerCaptureState {
-  readonly activeCaptures: Map<number, CRCPointerCaptureRecord>;
-  readonly pendingTransfers: Map<number, CRCPointerCaptureTransfer>;
+interface PibblPointerCaptureState {
+  readonly activeCaptures: Map<number, PibblPointerCaptureRecord>;
+  readonly pendingTransfers: Map<number, PibblPointerCaptureTransfer>;
   readonly processingTransfers: Set<number>;
-  readonly pendingLossOwners: Map<number, CRCEventNode>;
-  readonly releaseTransactions: Map<number, CRCPointerReleaseTransaction>;
+  readonly pendingLossOwners: Map<number, PibblEventNode>;
+  readonly releaseTransactions: Map<number, PibblPointerReleaseTransaction>;
   nativeReleases: readonly (() => void)[] | undefined;
 }
 
-interface CRCPointerCaptureRecord {
-  readonly owner: CRCEventNode;
+interface PibblPointerCaptureRecord {
+  readonly owner: PibblEventNode;
   activated: boolean;
 }
 
-interface CRCPointerCaptureTransfer {
-  readonly from: CRCEventNode | undefined;
+interface PibblPointerCaptureTransfer {
+  readonly from: PibblEventNode | undefined;
 }
 
-interface CRCPointerReleaseTransaction {
-  readonly owner: CRCEventNode | undefined;
-  readonly requestedBy: CRCEventNode;
+interface PibblPointerReleaseTransaction {
+  readonly owner: PibblEventNode | undefined;
+  readonly requestedBy: PibblEventNode;
   readonly wasActivated: boolean;
   gotObserved: boolean;
   lossObserved: boolean;
 }
 
-const captureStates = new WeakMap<CRCEventRoot, CRCPointerCaptureState>();
+const captureStates = new WeakMap<PibblEventRoot, PibblPointerCaptureState>();
 
 /** @internal Structural ownership evidence for lifecycle tests. */
-export function getPointerCaptureStateCounts(eventRoot: CRCEventRoot): {
+export function getPointerCaptureStateCounts(eventRoot: PibblEventRoot): {
   readonly activated: number;
   readonly nativeListenerRequests: number;
   readonly pendingLoss: number;
@@ -54,7 +54,7 @@ export function getPointerCaptureStateCounts(eventRoot: CRCEventRoot): {
 }
 
 export function setLogicalPointerCapture(
-  target: CRCEventNode,
+  target: PibblEventNode,
   pointerId: number,
 ): void {
   if (!isLiveNode(target)) return;
@@ -74,7 +74,7 @@ export function setLogicalPointerCapture(
     activeOwner !== undefined;
   const nextTransfer = hadActiveOverride && activeOwner !== target ?
     { from: activeOwner } : undefined;
-  const nextCapture: CRCPointerCaptureRecord = nextTransfer ?
+  const nextCapture: PibblPointerCaptureRecord = nextTransfer ?
     activeOwner ? previousCapture! : { owner: target, activated: false } :
     { owner: target, activated: activeOwner === target };
   state.pendingLossOwners.delete(pointerId);
@@ -116,7 +116,7 @@ export function setLogicalPointerCapture(
 }
 
 export function hasLogicalPointerCapture(
-  target: CRCEventNode,
+  target: PibblEventNode,
   pointerId: number,
 ): boolean {
   const eventRoot = target.owner.eventRoot;
@@ -125,7 +125,7 @@ export function hasLogicalPointerCapture(
 }
 
 export function releaseLogicalPointerCapture(
-  target: CRCEventNode,
+  target: PibblEventNode,
   pointerId: number,
 ): void {
   const eventRoot = target.owner.eventRoot;
@@ -140,7 +140,7 @@ export function releaseLogicalPointerCapture(
   const previousPendingOwner = state.pendingLossOwners.get(pointerId);
   const lossOwner = transfer ? transfer.from :
     capture?.activated ? capture.owner : target;
-  const transaction: CRCPointerReleaseTransaction = {
+  const transaction: PibblPointerReleaseTransaction = {
     owner: lossOwner,
     requestedBy: target,
     wasActivated: transfer !== undefined || capture?.activated === true,
@@ -192,7 +192,7 @@ export function releaseLogicalPointerCapture(
   releaseUnusedNativeOwnership(eventRoot, state);
 }
 
-export function clearPointerCapturesForTarget(target: CRCEventNode): void {
+export function clearPointerCapturesForTarget(target: PibblEventNode): void {
   const eventRoot = target.owner.eventRoot;
   const state = captureStates.get(eventRoot);
   if (!state) return;
@@ -252,9 +252,9 @@ export function clearPointerCapturesForTarget(target: CRCEventNode): void {
 }
 
 export function getLogicalPointerCapture(
-  eventRoot: CRCEventRoot,
+  eventRoot: PibblEventRoot,
   pointerId: number,
-): CRCEventNode | undefined {
+): PibblEventNode | undefined {
   const target = eventRoot.pointerCaptures.get(pointerId);
   if (!target || isLiveNode(target)) return target;
   clearPointerCapturesForTarget(target);
@@ -263,9 +263,9 @@ export function getLogicalPointerCapture(
 
 /** Records native activation before exposing the logical got callback. */
 export function activateLogicalPointerCapture(
-  eventRoot: CRCEventRoot,
+  eventRoot: PibblEventRoot,
   pointerId: number,
-): CRCEventNode | undefined {
+): PibblEventNode | undefined {
   const state = captureStates.get(eventRoot);
   const transfer = state?.pendingTransfers.get(pointerId);
   if (transfer?.from) return undefined;
@@ -294,7 +294,7 @@ export function activateLogicalPointerCapture(
 
 /** Clears active routing while retaining the owner for native loss delivery. */
 export function cancelLogicalPointerCapture(
-  eventRoot: CRCEventRoot,
+  eventRoot: PibblEventRoot,
   pointerId: number,
 ): void {
   const pendingTarget = eventRoot.pointerCaptures.get(pointerId);
@@ -315,9 +315,9 @@ export function cancelLogicalPointerCapture(
 
 /** Removes native-loss state before exposing the logical loss callback. */
 export function consumeLogicalPointerCaptureLoss(
-  eventRoot: CRCEventRoot,
+  eventRoot: PibblEventRoot,
   pointerId: number,
-): CRCEventNode | undefined {
+): PibblEventNode | undefined {
   const state = captureStates.get(eventRoot);
   const transaction = state?.releaseTransactions.get(pointerId);
   if (transaction) transaction.lossObserved = true;
@@ -337,10 +337,10 @@ export function consumeLogicalPointerCaptureLoss(
 
 /** Processes one pending logical owner change before a non-capture PointerEvent. */
 export function processPendingLogicalPointerCapture(
-  eventRoot: CRCEventRoot,
+  eventRoot: PibblEventRoot,
   pointerId: number,
-  dispatchLost: (target: CRCEventNode) => void,
-  dispatchGot: (target: CRCEventNode) => void,
+  dispatchLost: (target: PibblEventNode) => void,
+  dispatchGot: (target: PibblEventNode) => void,
 ): void {
   const state = captureStates.get(eventRoot);
   if (
@@ -388,7 +388,7 @@ export function processPendingLogicalPointerCapture(
   }
 }
 
-function getCaptureState(eventRoot: CRCEventRoot): CRCPointerCaptureState {
+function getCaptureState(eventRoot: PibblEventRoot): PibblPointerCaptureState {
   let state = captureStates.get(eventRoot);
   if (!state) {
     state = {
@@ -405,8 +405,8 @@ function getCaptureState(eventRoot: CRCEventRoot): CRCPointerCaptureState {
 }
 
 function ensureNativeOwnership(
-  eventRoot: CRCEventRoot,
-  state: CRCPointerCaptureState,
+  eventRoot: PibblEventRoot,
+  state: PibblPointerCaptureState,
 ): void {
   if (state.nativeReleases) return;
   const hub = eventRoot.nativeListeners;
@@ -419,8 +419,8 @@ function ensureNativeOwnership(
 }
 
 function releaseUnusedNativeOwnership(
-  eventRoot: CRCEventRoot,
-  state: CRCPointerCaptureState,
+  eventRoot: PibblEventRoot,
+  state: PibblPointerCaptureState,
 ): void {
   if (
     eventRoot.pointerCaptures.size > 0 ||
@@ -440,9 +440,9 @@ function releaseUnusedNativeOwnership(
 }
 
 function livePendingOwner(
-  eventRoot: CRCEventRoot,
+  eventRoot: PibblEventRoot,
   pointerId: number,
-): CRCEventNode | undefined {
+): PibblEventNode | undefined {
   const target = eventRoot.pointerCaptures.get(pointerId);
   if (!target || isLiveNode(target)) return target;
   eventRoot.pointerCaptures.delete(pointerId);
@@ -464,6 +464,6 @@ function releaseNativeCapture(
   }
 }
 
-function isLiveNode(target: CRCEventNode): boolean {
+function isLiveNode(target: PibblEventNode): boolean {
   return target.live && !target.owner.mainTeardowns.closed;
 }

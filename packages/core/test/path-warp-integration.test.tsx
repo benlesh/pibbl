@@ -1,4 +1,4 @@
-import { Clip, Path, PathGeometry, Rectangle, toPath2D, toSvgPathData, transformPath, quadTransform } from '@crc/core';
+import { Clip, Path, PathGeometry, Rectangle, toPath2D, toSvgPathData, transformPath, quadTransform } from '@pibbl/core';
 
 import { expect, it, vi } from 'vitest';
 import { componentTest } from '../src/lib/test-utils/component-test';

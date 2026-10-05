@@ -1,4 +1,4 @@
-import { Axis, Scale, type AxisProps } from "@crc/core/viz";
+import { Axis, type AxisProps, BarScale, LinearScale } from "@pibbl/core/viz";
 import { afterEach, expect, it, vi } from "vitest";
 import { testRuntime } from "./support/runtime.js";
 
@@ -14,9 +14,9 @@ it("emits the singleton category once with the default tick count", () => {
     },
   );
   runtime.mount(
-    <Scale id="category" type="band" domain={["only"]} range={[0, 100]}>
+    <BarScale id="category"  domain={["only"]} range={[0, 100]}>
       <Axis scale="category" position="left" />
-    </Scale>,
+    </BarScale>,
   );
   runtime.flush();
   expect(labels).toEqual(["only"]);
@@ -35,9 +35,9 @@ it("rejects mutually exclusive tick inputs and invalid positions before drawing"
   for (const props of invalid) {
     runtime = testRuntime();
     runtime.mount(
-      <Scale id="category" type="band" domain={["only"]} range={[0, 100]}>
+      <BarScale id="category"  domain={["only"]} range={[0, 100]}>
         <Axis {...props} />
-      </Scale>,
+      </BarScale>,
     );
     expect(() => runtime.flush()).toThrow(/tickValues.*tickCount|position/);
     runtime.dispose();
@@ -53,9 +53,9 @@ it("preserves explicit band tick order and validates explicit domains before for
     },
   );
   runtime.mount(
-    <Scale id="category" type="band" domain={["A", "B", "C"]} range={[0, 300]}>
+    <BarScale id="category"  domain={["A", "B", "C"]} range={[0, 300]}>
       <Axis scale="category" position="left" tickValues={["C", "A"]} />
-    </Scale>,
+    </BarScale>,
   );
   runtime.flush();
   expect(labels).toEqual(["C", "A"]);
@@ -63,9 +63,9 @@ it("preserves explicit band tick order and validates explicit domains before for
   const format = vi.fn((value: number | string) => String(value));
   runtime = testRuntime();
   runtime.mount(
-    <Scale id="value" type="linear" domain={[0, 10]} range={[0, 100]}>
+    <LinearScale id="value"  domain={[0, 10]} range={[0, 100]}>
       <Axis scale="value" position="bottom" tickValues={[11]} tickFormat={format} />
-    </Scale>,
+    </LinearScale>,
   );
   expect(() => runtime.flush()).toThrow(/tickValues/);
   expect(format).not.toHaveBeenCalled();
@@ -73,9 +73,9 @@ it("preserves explicit band tick order and validates explicit domains before for
 
   runtime = testRuntime();
   runtime.mount(
-    <Scale id="category" type="band" domain={["A"]} range={[0, 100]}>
+    <BarScale id="category"  domain={["A"]} range={[0, 100]}>
       <Axis scale="category" position="left" tickValues={["missing"]} tickFormat={format} />
-    </Scale>,
+    </BarScale>,
   );
   expect(() => runtime.flush()).toThrow(/tickValues/);
   expect(format).not.toHaveBeenCalled();
@@ -89,9 +89,9 @@ it("bounds generated tick counts and emits zero or one tick deliberately", () =>
       function (this: CanvasRenderingContext2D, text) { labels.push(String(text)); },
     );
     runtime.mount(
-      <Scale id="category" type="band" domain={["A", "B", "C"]} range={[0, 300]}>
+      <BarScale id="category"  domain={["A", "B", "C"]} range={[0, 300]}>
         <Axis scale="category" position="left" tickCount={count} />
-      </Scale>,
+      </BarScale>,
     );
     runtime.flush();
     expect(labels).toEqual(expected);
@@ -99,21 +99,21 @@ it("bounds generated tick counts and emits zero or one tick deliberately", () =>
   }
   runtime = testRuntime();
   runtime.mount(
-    <Scale id="category" type="band" domain={["A"]} range={[0, 100]}>
+    <BarScale id="category"  domain={["A"]} range={[0, 100]}>
       <Axis scale="category" position="left" tickCount={101} />
-    </Scale>,
+    </BarScale>,
   );
   expect(() => runtime.flush()).toThrow(/tickCount/);
 
   runtime = testRuntime();
   runtime.mount(
-    <Scale id="value" type="linear" domain={[0, 200]} range={[0, 200]}>
+    <LinearScale id="value"  domain={[0, 200]} range={[0, 200]}>
       <Axis
         scale="value"
         position="bottom"
         tickValues={Array.from({ length: 101 }, (_, index) => index)}
       />
-    </Scale>,
+    </LinearScale>,
   );
   expect(() => runtime.flush()).toThrow(/tickValues/);
 });

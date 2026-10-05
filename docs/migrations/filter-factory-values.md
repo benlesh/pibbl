@@ -2,7 +2,7 @@
 
 Status: implemented, 2026-10-01.
 
-Filters are now opaque factory values imported from @crc/core/filters. The former
+Filters are now opaque factory values imported from @pibbl/core/filters. The former
 object descriptors are not accepted, including values with a type, kind, or
 filter-like shape. This is intentionally source-breaking so unused filter
 engines can be omitted from an application bundle.
@@ -16,7 +16,7 @@ Before:
 After:
 
 ```tsx
-import { blur, dropShadow } from "@crc/core/filters";
+import { blur, dropShadow } from "@pibbl/core/filters";
 
 <Group
   style={{
@@ -30,15 +30,15 @@ import { blur, dropShadow } from "@crc/core/filters";
 
 A single factory result and a readonly ordered list are both supported. Lists
 run forward in the order written. An empty list remains a direct-path no-op.
-Import CRCFilter from @crc/core, and import individual option types with their
-factory from @crc/core/filters.
+Import PibblFilter from @pibbl/core, and import individual option types with their
+factory from @pibbl/core/filters.
 
 Use the new optional displacement effect only with a mounted texture paint:
 
 ```tsx
-import { Group, useTexture } from "@crc/core";
-import { displacement } from "@crc/core/filters";
-import { waterWaves } from "@crc/core/textures";
+import { Group, useTexture } from "@pibbl/core";
+import { displacement } from "@pibbl/core/filters";
+import { waterWaves } from "@pibbl/core/textures";
 
 const water = useTexture(waterWaves({ speed: 0.7 }));
 const map = water.paint({ mode: "repeat", tileWidth: 96, tileHeight: 96 });

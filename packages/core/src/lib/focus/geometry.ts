@@ -1,15 +1,15 @@
-import type { CRCEventTargetRegistration } from '../events/registrations.js';
+import type { PibblEventTargetRegistration } from '../events/registrations.js';
 import { GLOBAL_STATE } from '../global-state.js';
 import type { LayoutBox } from '../layout/types.js';
-import type { CRCInstance } from '../types.js';
+import type { PibblInstance } from '../types.js';
 import {
-  CRCPaintEntryKind,
-  type CRCNestedPaintEntry,
+  PibblPaintEntryKind,
+  type PibblNestedPaintEntry,
 } from '../events/paint-entry.js';
 
 /** Converts one target-local navigation rectangle to root-logical space. */
 export function resolveTargetRootBounds(
-  target: CRCEventTargetRegistration,
+  target: PibblEventTargetRegistration,
 ): Readonly<LayoutBox> | undefined {
   const bounds = target.keyboardNavigationBounds;
   const points = target.keyboardNavigationPoints ?? (bounds ? [
@@ -44,7 +44,7 @@ export function resolveTargetRootBounds(
 }
 
 function resolveRootTransform(
-  target: CRCEventTargetRegistration,
+  target: PibblEventTargetRegistration,
 ): DOMMatrix | undefined {
   let owner = target.owner;
   // Geometry-independent backend targets publish layer-local focus rectangles.
@@ -57,7 +57,7 @@ function resolveRootTransform(
   while (owner !== root) {
     const parentCanvas = owner.parent;
     if (!parentCanvas) return undefined;
-    const parent = GLOBAL_STATE.crcInstances.get(parentCanvas);
+    const parent = GLOBAL_STATE.pibblInstances.get(parentCanvas);
     if (!parent) return undefined;
     const bridge = findNestedInstanceBridge(parent, owner);
     if (!bridge) return undefined;
@@ -68,9 +68,9 @@ function resolveRootTransform(
 }
 
 function findNestedInstanceBridge(
-  parent: CRCInstance,
-  child: CRCInstance,
-): CRCNestedPaintEntry | undefined {
+  parent: PibblInstance,
+  child: PibblInstance,
+): PibblNestedPaintEntry | undefined {
   if (
     parent.mainTeardowns.closed ||
     child.mainTeardowns.closed ||
@@ -81,8 +81,8 @@ function findNestedInstanceBridge(
   if (focusBridge?.instance === child) return focusBridge;
   for (const entry of parent.paintEntries) {
     if (
-      (entry.paintKind === CRCPaintEntryKind.NestedInstance ||
-        entry.paintKind === CRCPaintEntryKind.Resolver) &&
+      (entry.paintKind === PibblPaintEntryKind.NestedInstance ||
+        entry.paintKind === PibblPaintEntryKind.Resolver) &&
       entry.instance === child
     ) return entry;
   }

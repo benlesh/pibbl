@@ -6,9 +6,9 @@ symbols: [blur]
 ---
 
 ```js
-import { crc, createElement, Circle } from "@crc/core";
-import { blur } from "@crc/core/filters";
-const controller = crc(
+import { pibbl, createElement, Circle } from "@pibbl/core";
+import { blur } from "@pibbl/core/filters";
+const controller = pibbl(
   canvas,
   createElement(Circle, {
     style: {
@@ -22,8 +22,8 @@ const controller = crc(
 );
 ```
 
-Use a 300 by 200 canvas. The required `radius` is a finite nonnegative logical-pixel value; eight gives a soft edge in this example. Zero is valid. Related option type: `CRCBlurFilterOptions`.
+Use a 300 by 200 canvas. The required `radius` is a finite nonnegative logical-pixel value; eight gives a soft edge in this example. Zero is valid. Related option type: `PibblBlurFilterOptions`.
 
 A filter captures the receiving primitive plus descendants as one silhouette. A list runs in forward order; nested boundaries run inside out. Layout, hit testing, focus bounds, and pointer coordinates keep their original geometry. Canvas blur cannot filter an HTML button or `HtmlBox` subtree. Browser Canvas filter support is required for the native blur executor.
 
-Larger captures and multiple boundaries cost more transient surface work. Start with one bounded region. Compare the [unfiltered and filtered circles](/catalogs/filters/blur/) or [edit the existing filter example](@PLAYGROUND@#/examples/drawing/filters). Dispose the CRC controller when the host is removed.
+Larger captures and multiple boundaries cost more transient surface work. Start with one bounded region. Compare the [unfiltered and filtered circles](/catalogs/filters/blur/) or [edit the existing filter example](@PLAYGROUND@#/examples/drawing/filters). Dispose the Pibbl controller when the host is removed.

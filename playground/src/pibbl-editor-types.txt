@@ -1,0 +1,1828 @@
+/* @pibbl-studio-module @pibbl/core */
+
+  export interface TexturePaint { readonly __pibblTexturePaint: unique symbol; }
+  export interface TexturePlacement { readonly mode?: 'repeat' | 'stretch'; readonly tileWidth?: number; readonly tileHeight?: number; readonly offsetX?: number; readonly offsetY?: number; readonly rotation?: number; }
+  export interface Texture<Message = never> extends TexturePaint { send(message: Message): void; paint(placement: TexturePlacement): TexturePaint; }
+  export interface TextureOptions { readonly resolution?: {readonly width: number; readonly height: number}; readonly palette?: readonly string[]; }
+  export interface TextureRecipe<Message = never> {readonly __pibblTextureRecipe: (message: Message) => Message;}
+  export interface TextureContext {readonly canvas: OffscreenCanvas; readonly palette: readonly string[] | undefined; invalidate(): void; requestFrame(): void;}
+  export interface TextureFrame {readonly delta: number; readonly time: number;}
+  export interface TextureDefinition<Config, State, Message = never> {
+    readonly defaultPlacement?: TexturePlacement;
+    create(context: TextureContext, config: Readonly<Config>): State;
+    update?(state: State, config: Readonly<Config>, context: TextureContext): void;
+    receive?(state: State, message: Message, context: TextureContext): void;
+    advance?(state: State, frame: TextureFrame, context: TextureContext): void;
+    rasterize(state: State, context: TextureContext): void;
+    dispose?(state: State, context: TextureContext): void;
+  }
+  export function defineTexture<Config, State, Message = never>(definition: TextureDefinition<Config, State, Message>): (config: Config) => TextureRecipe<Message>;
+  export function useTexture<Message>(recipe: TextureRecipe<Message>, options?: TextureOptions): Texture<Message>;
+  export type PathSegment =
+    | { type: 'move' | 'line'; x: number; y: number }
+    | { type: 'quadratic'; cpx: number; cpy: number; x: number; y: number }
+    | { type: 'cubic'; cp1x: number; cp1y: number; cp2x: number; cp2y: number; x: number; y: number }
+    | { type: 'arc'; cx: number; cy: number; ux: number; uy: number; vx: number; vy: number; startAngle: number; sweep: number }
+    | { type: 'close' };
+  export class PathGeometry implements Iterable<PathSegment> {
+    constructor(source?: PathGeometry);
+    readonly revision: number;
+    readonly segmentCount: number;
+    clone(): PathGeometry;
+    clear(): void;
+    moveTo(x: number, y: number): void;
+    lineTo(x: number, y: number): void;
+    quadraticCurveTo(cpx: number, cpy: number, x: number, y: number): void;
+    bezierCurveTo(cp1x: number, cp1y: number, cp2x: number, cp2y: number, x: number, y: number): void;
+    closePath(): void;
+    arc(x: number, y: number, radius: number, startAngle: number, endAngle: number, counterclockwise?: boolean): void;
+    ellipse(x: number, y: number, radiusX: number, radiusY: number, rotation: number, startAngle: number, endAngle: number, counterclockwise?: boolean): void;
+    arcTo(x1: number, y1: number, x2: number, y2: number, radius: number): void;
+    "rect"(x: number, y: number, width: number, height: number): void;
+    roundRect(x: number, y: number, width: number, height: number, radii?: number | DOMPointInit | (number | DOMPointInit)[]): void;
+    addPath(other: PathGeometry, matrix?: DOMMatrix2DInit): void;
+    spliceSegments(start: number, deleteCount: number, segments?: readonly PathSegment[]): void;
+    getSegment(index: number): PathSegment;
+    setSegment(index: number, segment: PathSegment): void;
+    transform(matrix: DOMMatrix2DInit): void;
+    [Symbol.iterator](): IterableIterator<PathSegment>;
+  }
+  export function toPath2D(geometry: PathGeometry): Path2D;
+  export function toSvgPathData(geometry: PathGeometry): string;
+  export interface FlattenPathOptions { readonly tolerance: number; readonly maxSegments?: number }
+  export interface SimplifyPathOptions { readonly tolerance: number; readonly maxSegments?: number }
+  export interface SubdividePathOptions { readonly divisions: number; readonly maxSegments?: number }
+
+export interface PathPoint { readonly x: number; readonly y: number }
+export interface PathRect extends PathPoint { readonly width: number; readonly height: number }
+export interface PathQuadCorners { readonly topLeft: PathPoint; readonly topRight: PathPoint; readonly bottomLeft: PathPoint; readonly bottomRight: PathPoint }
+export type PathQuadMode = 'bilinear' | 'perspective';
+export interface PathBendArc { readonly cx: number; readonly cy: number; readonly radius: number; readonly startAngle: number; readonly sweep: number }
+export type PathBendAlign = 'start' | 'center' | 'end';
+export type PathBendBaseline = 'center' | 'top' | 'bottom' | number;
+export type PathBendFit = 'none' | 'stretch';
+export type PathBendOverflow = 'error' | 'extend' | 'wrap';
+export interface BendTransformOptions { readonly source: PathRect; readonly align?: PathBendAlign; readonly baseline?: PathBendBaseline; readonly fit?: PathBendFit; readonly offset?: number; readonly normalOffset?: number; readonly overflow?: PathBendOverflow }
+export interface ArcBendTransformOptions extends BendTransformOptions { readonly arc: PathBendArc }
+export interface PathBendTransformOptions extends BendTransformOptions { readonly guide: PathGeometry }
+export interface QuadTransformOptions { readonly source: PathRect; readonly destination: PathQuadCorners; readonly mode?: PathQuadMode }
+export interface TransformPathOptions { readonly tolerance: number; readonly maxSegments?: number }
+declare const transformBrand: unique symbol;
+export interface PathTransform { readonly [transformBrand]: true; mapPoint(point: PathPoint, options?: {readonly tolerance?: number}): PathPoint }
+export function transformPath(path: PathGeometry, transform: PathTransform, options: TransformPathOptions): PathGeometry;
+export function composeTransforms(...transforms: readonly PathTransform[]): PathTransform;
+export function affineTransform(matrix?: DOMMatrix2DInit): PathTransform;
+export function quadTransform(options: QuadTransformOptions): PathTransform;
+export function envelopeTransform(options: EnvelopeTransformOptions): PathTransform;
+export function meshTransform(options: MeshTransformOptions): PathTransform;
+export function arcBendTransform(options: ArcBendTransformOptions): PathTransform;
+export function pathBendTransform(options: PathBendTransformOptions): PathTransform;
+export interface PathGuideStation { readonly at: number; readonly distance: number }
+export interface PathGuideOptions {
+  readonly path: PathGeometry;
+  readonly reverse?: boolean;
+  readonly stations?: readonly PathGuideStation[];
+}
+export type PathGuide = PathGeometry | PathGuideOptions;
+export interface EnvelopeGuide { readonly at: number; readonly path: PathGuide }
+export type EnvelopeTransformOptions = {
+  readonly source: PathRect;
+  readonly interpolation?: 'linear';
+} & ({ readonly top: PathGuide; readonly bottom: PathGuide; readonly guides?: never } |
+  { readonly guides: readonly EnvelopeGuide[]; readonly top?: never; readonly bottom?: never });
+export interface MeshTransformOptions {
+  readonly source: PathRect;
+  readonly columns: readonly number[];
+  readonly rows: readonly number[];
+  /** Boundary rows; each contains columns.length - 1 left-to-right edges. */
+  readonly horizontal: readonly (readonly PathGuide[])[];
+  /** Boundary columns; each contains rows.length - 1 top-to-bottom edges. */
+  readonly vertical: readonly (readonly PathGuide[])[];
+}
+  export interface FlattenPathOptions { readonly tolerance: number; readonly maxSegments?: number }
+  export interface SimplifyPathOptions { readonly tolerance: number; readonly maxSegments?: number }
+  export interface SubdividePathOptions { readonly divisions: number; readonly maxSegments?: number }
+  export function flattenPathWang(path: PathGeometry, options: Readonly<FlattenPathOptions>): PathGeometry;
+  export function simplifyPathRadial(path: PathGeometry, options: Readonly<SimplifyPathOptions>): PathGeometry;
+  export function flattenPath(path: PathGeometry, options: Readonly<FlattenPathOptions>): PathGeometry;
+  export function simplifyPath(path: PathGeometry, options: Readonly<SimplifyPathOptions>): PathGeometry;
+  export function subdividePath(path: PathGeometry, options: Readonly<SubdividePathOptions>): PathGeometry;
+
+  export interface PibblController {
+    dispose(): void;
+  }
+
+  export type PibblFit = 'contain' | 'cover' | 'fill' | 'none' | 'scale-down';
+  export type PibblPixelRatio = 'device' | number;
+  export interface PibblFixedViewportConfig {
+    htmlOverlay?: HTMLElement;
+    signal?: AbortSignal;
+    viewport?: Readonly<{ width: number; height: number }>;
+    fit?: PibblFit;
+    pixelRatio?: PibblPixelRatio;
+  }
+  export interface PibblResponsiveViewportConfig {
+    htmlOverlay?: HTMLElement;
+    signal?: AbortSignal;
+    viewport: 'responsive';
+    pixelRatio?: PibblPixelRatio;
+  }
+  export type PibblConfig = PibblFixedViewportConfig | PibblResponsiveViewportConfig;
+
+  export type Canvas = HTMLCanvasElement | OffscreenCanvas;
+  export type RenderingContext2D = CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
+  declare const pibblElementTypeBrand: unique symbol;
+  declare const pibblPrimitiveComponentBrand: unique symbol;
+  export type PibblKey = string | number;
+  export type PibblEmptyNode = undefined | false | true | null | '' | 0;
+  export interface PibblElement<P = unknown> {
+    readonly [pibblElementTypeBrand]: true;
+    readonly type: PibblElementType<P>;
+    readonly props: Readonly<P>;
+    readonly key?: string;
+  }
+  export type PibblNode = PibblElement<any> | PibblEmptyNode | readonly PibblNode[] | Iterable<PibblNode>;
+  export type PibblNodeInput = SignalValue<PibblNode> | readonly PibblNodeInput[] | Iterable<PibblNodeInput>;
+  export type PibblTextInput = SignalValue<PibblTextChild> | readonly PibblTextInput[] | Iterable<PibblTextInput>;
+  export type PibblContainerChild = PibblNodeInput;
+  export type PibblTextChild = string | number | boolean | null | undefined | readonly PibblTextChild[] | Iterable<PibblTextChild>;
+  export type PibblRenderResult = PibblNodeInput | void;
+  export type PibblComponent<P = Record<string, never>> = (props: P) => PibblRenderResult;
+  export type PibblElementType<P = any> = PibblComponent<P>;
+  export type PibblPrimitiveComponent<P = Record<string, never>, I = P> = PibblComponent<I> & {
+    readonly [pibblPrimitiveComponentBrand]: { readonly input: I; readonly programProps: P };
+  };
+  export type PrimitiveInputOf<C> = C extends PibblPrimitiveComponent<any, infer I> ? I : never;
+
+  export type PibblEventPhase = 1 | 2 | 3;
+  export interface PibblEventTarget {
+    setPointerCapture(pointerId: number): void;
+    hasPointerCapture(pointerId: number): boolean;
+    releasePointerCapture(pointerId: number): void;
+  }
+  export interface PibblEvent<TOriginal extends Event = Event> {
+    readonly type: string;
+    readonly target: PibblEventTarget;
+    readonly currentTarget: PibblEventTarget;
+    readonly relatedTarget: PibblEventTarget | null;
+    readonly eventPhase: PibblEventPhase;
+    readonly bubbles: boolean;
+    readonly cancelable: boolean;
+    readonly defaultPrevented: boolean;
+    readonly timeStamp: number;
+    readonly originalEvent: TOriginal;
+    readonly sourceEvent?: Event;
+    composedPath(): readonly PibblEventTarget[];
+    preventDefault(): void;
+    stopPropagation(): void;
+    stopImmediatePropagation(): void;
+  }
+  export interface PibblEventTargetSnapshot { readonly isFocused: boolean; readonly isFocusVisible: boolean }
+  export type PibblPointerEvents = 'auto' | 'none';
+  export interface PibblEventParticipationOptions { readonly pointerEvents?: PibblPointerEvents }
+  export interface PibblKeyboardNavigationOptions { readonly mode: 'directional' }
+  type PibblPolicyChild = PibblElement<any> | PibblEmptyNode | readonly PibblPolicyChild[] | (Iterable<PibblPolicyChild> & { readonly charAt?: never });
+  export interface FocusManagementProps { readonly children: PibblPolicyChild }
+  export interface KeyboardNavigationProps extends PibblKeyboardNavigationOptions { readonly children: PibblPolicyChild }
+  interface PibblEventFocusOptions {
+    readonly keyboardFocusable?: boolean;
+    readonly keyboardNavigationBounds?: Readonly<LayoutBox>;
+  }
+  export interface PibblEventTargetOptions extends PibblEventFocusOptions {
+    readonly path: Path2D | PathGeometry;
+    readonly fill?: boolean;
+    readonly lineInteractionWidth?: number;
+    readonly cursor?: string;
+  }
+  interface PibblModifierEvent<TOriginal extends Event> extends PibblEvent<TOriginal> {
+    readonly altKey: boolean;
+    readonly ctrlKey: boolean;
+    readonly metaKey: boolean;
+    readonly shiftKey: boolean;
+  }
+  export interface PibblLogicalMouseEvent<TOriginal extends MouseEvent = MouseEvent> extends PibblModifierEvent<TOriginal> {
+    readonly x: number; readonly y: number;
+    readonly clientX: number; readonly clientY: number;
+    readonly screenX: number; readonly screenY: number;
+    readonly movementX: number; readonly movementY: number;
+    readonly button: number; readonly buttons: number; readonly detail: number;
+  }
+  export interface PibblPointerEvent extends PibblLogicalMouseEvent<PointerEvent> {
+    readonly pointerId: number; readonly width: number; readonly height: number;
+    readonly pressure: number; readonly tangentialPressure: number;
+    readonly tiltX: number; readonly tiltY: number; readonly twist: number;
+    readonly pointerType: string; readonly isPrimary: boolean;
+  }
+  export interface PibblTouchEvent extends PibblModifierEvent<TouchEvent> {
+    readonly x: number; readonly y: number;
+    readonly touches: TouchList; readonly targetTouches: TouchList; readonly changedTouches: TouchList;
+  }
+  export interface PibblWheelEvent extends PibblLogicalMouseEvent<WheelEvent> {
+    readonly deltaX: number; readonly deltaY: number; readonly deltaZ: number; readonly deltaMode: number;
+  }
+  export interface PibblKeyboardEvent extends PibblModifierEvent<KeyboardEvent> {
+    readonly key: string; readonly code: string; readonly location: number;
+    readonly repeat: boolean; readonly isComposing: boolean;
+  }
+  export interface PibblFocusEvent extends PibblEvent<FocusEvent> {}
+  export interface PibblInputEvent extends PibblEvent<InputEvent> {
+    readonly data: string | null; readonly dataTransfer: DataTransfer | null;
+    readonly inputType: string; readonly isComposing: boolean;
+  }
+  export interface PibblCompositionEvent extends PibblEvent<CompositionEvent> { readonly data: string }
+  export interface PibblClipboardEvent extends PibblEvent<ClipboardEvent> { readonly clipboardData: DataTransfer | null }
+  export interface PibblDragEvent extends PibblLogicalMouseEvent<DragEvent> { readonly dataTransfer: DataTransfer | null }
+  export interface PibblEventMap {
+    pointerover: PibblPointerEvent; pointerenter: PibblPointerEvent; pointerdown: PibblPointerEvent;
+    pointermove: PibblPointerEvent; pointerrawupdate: PibblPointerEvent; pointerup: PibblPointerEvent;
+    pointercancel: PibblPointerEvent; pointerout: PibblPointerEvent; pointerleave: PibblPointerEvent;
+    gotpointercapture: PibblPointerEvent; lostpointercapture: PibblPointerEvent;
+    click: PibblLogicalMouseEvent; dblclick: PibblLogicalMouseEvent; auxclick: PibblLogicalMouseEvent; contextmenu: PibblLogicalMouseEvent;
+    mouseover: PibblLogicalMouseEvent; mouseenter: PibblLogicalMouseEvent; mousedown: PibblLogicalMouseEvent;
+    mousemove: PibblLogicalMouseEvent; mouseup: PibblLogicalMouseEvent; mouseout: PibblLogicalMouseEvent; mouseleave: PibblLogicalMouseEvent;
+    touchstart: PibblTouchEvent; touchmove: PibblTouchEvent; touchend: PibblTouchEvent; touchcancel: PibblTouchEvent;
+    wheel: PibblWheelEvent; keydown: PibblKeyboardEvent; keyup: PibblKeyboardEvent;
+    focus: PibblFocusEvent; blur: PibblFocusEvent; focusin: PibblFocusEvent; focusout: PibblFocusEvent;
+    beforeinput: PibblInputEvent; input: PibblInputEvent; change: PibblEvent;
+    compositionstart: PibblCompositionEvent; compositionupdate: PibblCompositionEvent; compositionend: PibblCompositionEvent;
+    select: PibblEvent; selectionchange: PibblEvent;
+    copy: PibblClipboardEvent; cut: PibblClipboardEvent; paste: PibblClipboardEvent;
+    dragstart: PibblDragEvent; drag: PibblDragEvent; dragend: PibblDragEvent;
+    dragenter: PibblDragEvent; dragleave: PibblDragEvent; dragover: PibblDragEvent; drop: PibblDragEvent;
+  }
+  export type PibblEventType = keyof PibblEventMap;
+  interface PibblEventPropMap {
+    pointerover: 'onPointerOver'; pointerenter: 'onPointerEnter'; pointerdown: 'onPointerDown';
+    pointermove: 'onPointerMove'; pointerrawupdate: 'onPointerRawUpdate'; pointerup: 'onPointerUp';
+    pointercancel: 'onPointerCancel'; pointerout: 'onPointerOut'; pointerleave: 'onPointerLeave';
+    gotpointercapture: 'onGotPointerCapture'; lostpointercapture: 'onLostPointerCapture';
+    click: 'onClick'; dblclick: 'onDblClick'; auxclick: 'onAuxClick'; contextmenu: 'onContextMenu';
+    mouseover: 'onMouseOver'; mouseenter: 'onMouseEnter'; mousedown: 'onMouseDown';
+    mousemove: 'onMouseMove'; mouseup: 'onMouseUp'; mouseout: 'onMouseOut'; mouseleave: 'onMouseLeave';
+    touchstart: 'onTouchStart'; touchmove: 'onTouchMove'; touchend: 'onTouchEnd'; touchcancel: 'onTouchCancel';
+    wheel: 'onWheel'; keydown: 'onKeyDown'; keyup: 'onKeyUp';
+    focus: 'onFocus'; blur: 'onBlur'; focusin: 'onFocusIn'; focusout: 'onFocusOut';
+    beforeinput: 'onBeforeInput'; input: 'onInput'; change: 'onChange';
+    compositionstart: 'onCompositionStart'; compositionupdate: 'onCompositionUpdate'; compositionend: 'onCompositionEnd';
+    select: 'onSelect'; selectionchange: 'onSelectionChange';
+    copy: 'onCopy'; cut: 'onCut'; paste: 'onPaste';
+    dragstart: 'onDragStart'; drag: 'onDrag'; dragend: 'onDragEnd';
+    dragenter: 'onDragEnter'; dragleave: 'onDragLeave'; dragover: 'onDragOver'; drop: 'onDrop';
+  }
+  export type PibblEventPropName = PibblEventPropMap[PibblEventType];
+  export type PibblEventCapturePropName = `${PibblEventPropName}Capture`;
+  export type PibblEventHandler<K extends PibblEventType> = (event: PibblEventMap[K]) => void;
+  export type PibblEventHandlers = Partial<{
+    [K in PibblEventType as PibblEventPropMap[K]]: PibblEventHandler<K>;
+  } & {
+    [K in PibblEventType as `${PibblEventPropMap[K]}Capture`]: PibblEventHandler<K>;
+  }>;
+
+  declare const pibblFilterBrand: unique symbol;
+  export interface PibblFilter { readonly [pibblFilterBrand]: true }
+  export interface SystemStyle { transition?: PibblTransitionBinding; custom?: unknown; filter?: PibblFilter | readonly PibblFilter[] }
+  export interface PibblPhysics2DPropExtension {}
+  type PrimitiveReservedKey = 'key' | 'style';
+  type UnionKeys<T> = T extends unknown ? keyof T : never;
+  export type PrimitiveProgramProps<P> = 0 extends (1 & P) ? P : Extract<UnionKeys<P>, PrimitiveReservedKey> extends never ? P : never;
+  type RequiredKeys<T> = T extends unknown ? { [K in keyof T]-?: Pick<T, K> extends Required<Pick<T, K>> ? K : never }[keyof T] : never;
+  type StyleField<S> = [RequiredKeys<S>] extends [never] ? { style?: SignalValue<S | undefined> } : { style: SignalValue<S> };
+  type AllocationValue = `${number}%` | 'auto';
+  type DeclaredStyleValue<S> = S extends unknown ? S[Exclude<keyof S, 'custom'>] : never;
+  type RequiresResolver<S> = [Extract<DeclaredStyleValue<S>, AllocationValue>] extends [never] ? false : true;
+  export type SpecifiedStyle<S extends SystemStyle> = Readonly<S>;
+  export type NormalizedStyle<S extends SystemStyle> = Readonly<S>;
+  export type ResolvedStyle<S extends SystemStyle> = Readonly<S>;
+  type SignalProgramValue<T> = [T] extends [Signal<any>] ? T : SignalValue<T>;
+  type SignalProgramProps<P> = [PrimitiveProgramProps<P>] extends [never] ? never : Readonly<{ [K in keyof PrimitiveProgramProps<P>]: K extends 'children' ? PrimitiveProgramProps<P>[K] : SignalProgramValue<PrimitiveProgramProps<P>[K]> }>;
+  type SignalStyle<S> = Readonly<{ [K in keyof S]: K extends 'custom' ? S[K] : SignalValue<S[K]> }>;
+  export type PibblSizeQuery = Readonly<{
+    minWidth?: number; maxWidth?: number; minHeight?: number; maxHeight?: number;
+  } & ({ minWidth: number } | { maxWidth: number } | { minHeight: number } | { maxHeight: number })>;
+  export type PibblStyleRule<S extends SystemStyle> = Readonly<{
+    query: PibblSizeQuery;
+    style: Partial<SignalStyle<S>> & { readonly when?: never };
+  }>;
+  export type PibblResponsiveStyle<S extends SystemStyle> = SignalStyle<S> & Readonly<{
+    /** Ordered local patches against containing size; use inner rules for assigned-cell adaptation. */
+    when?: readonly PibblStyleRule<S>[];
+  }>;
+  type DeclaresWhen<S> = S extends unknown ? 'when' extends keyof S ? true : false : never;
+  type PrimitiveStyleGuard<S, N, R> = true extends DeclaresWhen<S> | DeclaresWhen<N> | DeclaresWhen<R> ? {
+    readonly 'Pibbl: style.when is framework-owned; remove when from the primitive style type': never;
+  } : unknown;
+  export type PrimitiveInput<P, S extends SystemStyle = SystemStyle> = SignalProgramProps<P> & StyleField<PibblResponsiveStyle<SpecifiedStyle<S>>>;
+  export type PrimitiveRender<P, R extends SystemStyle = SystemStyle> = (props: Readonly<PrimitiveProgramProps<P>>, style: ResolvedStyle<R>, context: RenderingContext2D) => PibblNode[] | PibblNode | void;
+  export interface PrimitiveCapabilities<P, S extends SystemStyle = SystemStyle, N extends SystemStyle = S, R extends SystemStyle = N> {
+    normalizeStyle?: (style: SpecifiedStyle<S>) => NormalizedStyle<N>;
+    resolveStyle?: (style: NormalizedStyle<N>, context: Readonly<StyleResolutionContext>) => ResolvedStyle<R>;
+    measure?: (input: MeasureInput<PrimitiveProgramProps<P>, N>) => MeasureResult;
+  }
+  type PrimitiveCapabilityArguments<P, S extends SystemStyle, N extends SystemStyle, R extends SystemStyle> = RequiresResolver<R> extends true ? [capabilities: never] : RequiresResolver<S> extends true ? [capabilities: Readonly<PrimitiveCapabilities<P, S, N, R>> & { resolveStyle: NonNullable<PrimitiveCapabilities<P, S, N, R>['resolveStyle']> }] : [capabilities?: Readonly<PrimitiveCapabilities<P, S, N, R>>];
+  export type PixelGridAlignment = 'none' | 'round' | 'ceil' | 'floor';
+  export type FillStyle = CanvasRenderingContext2D['fillStyle'] | TexturePaint;
+  export type StrokeStyle = CanvasRenderingContext2D['strokeStyle'] | TexturePaint;
+
+  export type Percentage = `${number}%`;
+  export type Length = number | Percentage | 'auto';
+  export interface RoundedCornerStyle { cornerRadius?: Exclude<Length, 'auto'>; cornerRadii?: readonly (Exclude<Length, 'auto'> | null | undefined)[] }
+  export interface RoundedCornerPathOptions { cornerRadius?: number; cornerRadii?: readonly (number | null | undefined)[] }
+  export type EdgeValues = number | Readonly<{ top?: number; right?: number; bottom?: number; left?: number }>;
+  export interface Size { width: number; height: number }
+  export interface LayoutBox extends Size { x: number; y: number }
+  export interface Edges { top: number; right: number; bottom: number; left: number }
+  export interface Constraints { minWidth: number; maxWidth: number; minHeight: number; maxHeight: number }
+  export interface StyleResolutionContext { allocation: Readonly<LayoutBox>; percentageBasis: Readonly<LayoutBox>; constraints: Readonly<Constraints>; component: string; algorithm: 'render-dispatch' }
+  export interface BoxStyle extends SystemStyle {
+    width?: Length; height?: Length;
+    minWidth?: Exclude<Length, 'auto'>; maxWidth?: Exclude<Length, 'auto'>;
+    minHeight?: Exclude<Length, 'auto'>; maxHeight?: Exclude<Length, 'auto'>;
+    padding?: EdgeValues; overflow?: 'visible' | 'clip';
+  }
+  export interface ResolvedBoxStyle { borderBox: LayoutBox; contentBox: LayoutBox }
+  export interface LayoutItemStyle {
+    left?: Exclude<Length, 'auto'>; top?: Exclude<Length, 'auto'>;
+    alignSelf?: 'auto' | 'start' | 'end' | 'center' | 'stretch' | 'flex-start' | 'flex-end';
+    justifySelf?: 'auto' | 'start' | 'end' | 'center' | 'stretch';
+    flexBasis?: Length; flexGrow?: number; flexShrink?: number;
+    gridColumnStart?: number; gridColumnSpan?: number; gridRowStart?: number; gridRowSpan?: number;
+  }
+  export type FlexItemStyle = Pick<LayoutItemStyle, 'flexBasis' | 'flexGrow' | 'flexShrink'> & { alignSelf?: 'auto' | 'stretch' | 'flex-start' | 'flex-end' | 'center' };
+  export interface GridItemStyle extends SystemStyle {
+    gridColumnStart?: number; gridColumnSpan?: number; gridRowStart?: number; gridRowSpan?: number;
+    alignSelf?: 'auto' | 'stretch' | 'start' | 'center' | 'end';
+    justifySelf?: 'auto' | 'stretch' | 'start' | 'center' | 'end';
+  }
+  export interface PaintStyle extends SystemStyle { fill?: FillStyle; stroke?: StrokeStyle; strokeWidth?: number; opacity?: number }
+  export interface CursorStyle extends SystemStyle { cursor?: string }
+  export interface PathStyle extends PaintStyle, CursorStyle, BoxStyle, LayoutItemStyle { d: Path2D | PathGeometry; lineInteractionWidth?: number }
+  export interface RectStyle extends RoundedCornerStyle, PaintStyle, CursorStyle, BoxStyle, LayoutItemStyle { width: Length; height: Length; alignToPixelGrid?: PixelGridAlignment; lineInteractionWidth?: number }
+  export interface CircleStyle extends PaintStyle, CursorStyle, BoxStyle, LayoutItemStyle { radius: Exclude<Length, 'auto'>; cx?: Exclude<Length, 'auto'>; cy?: Exclude<Length, 'auto'>; lineInteractionWidth?: number }
+  export interface EllipseStyle extends PaintStyle, CursorStyle, BoxStyle, LayoutItemStyle { radiusX: Exclude<Length, 'auto'>; radiusY: Exclude<Length, 'auto'>; cx?: Exclude<Length, 'auto'>; cy?: Exclude<Length, 'auto'>; rotation?: number; lineInteractionWidth?: number }
+  export interface ArcStyle extends Omit<PaintStyle, 'fill'>, CursorStyle, BoxStyle, LayoutItemStyle { radius: Exclude<Length, 'auto'>; startAngle: number; endAngle: number; cx?: Exclude<Length, 'auto'>; cy?: Exclude<Length, 'auto'>; counterclockwise?: boolean; lineInteractionWidth?: number }
+  export interface WedgeStyle extends PaintStyle, CursorStyle, BoxStyle, LayoutItemStyle { radius: Exclude<Length, 'auto'>; startAngle: number; endAngle: number; cx?: Exclude<Length, 'auto'>; cy?: Exclude<Length, 'auto'>; counterclockwise?: boolean; lineInteractionWidth?: number }
+  export interface PolygonStyle extends RoundedCornerStyle, PaintStyle, CursorStyle, BoxStyle, LayoutItemStyle { coords: [number, number][]; lineInteractionWidth?: number }
+  type RegularPolygonCommonStyle = RoundedCornerStyle & { sides: number; cx?: Exclude<Length, 'auto'>; cy?: Exclude<Length, 'auto'>; rotation?: number; lineInteractionWidth?: number };
+  type RegularPolygonSizeStyle = { circumradius: Exclude<Length, 'auto'>; inradius?: never; sideLength?: never } | { circumradius?: never; inradius: Exclude<Length, 'auto'>; sideLength?: never } | { circumradius?: never; inradius?: never; sideLength: Exclude<Length, 'auto'> };
+  export type RegularPolygonStyle = RegularPolygonCommonStyle & RegularPolygonSizeStyle & SystemStyle & PaintStyle & CursorStyle & BoxStyle & LayoutItemStyle;
+  export interface StarStyle extends RoundedCornerStyle, SystemStyle, PaintStyle, CursorStyle, BoxStyle, LayoutItemStyle { points: number; cx?: Exclude<Length, 'auto'>; cy?: Exclude<Length, 'auto'>; outerRadius: Exclude<Length, 'auto'>; innerRadius: Exclude<Length, 'auto'>; rotation?: number; lineInteractionWidth?: number }
+  export interface SvgPathStyle extends PaintStyle, CursorStyle, BoxStyle, LayoutItemStyle { d: string; lineInteractionWidth?: number }
+  export interface LineStyle extends SystemStyle, CursorStyle, BoxStyle, LayoutItemStyle { coords: [number, number][]; stroke?: StrokeStyle; strokeWidth?: number; opacity?: number; lineInteractionWidth?: number }
+  export interface HorizontalLineStyle extends SystemStyle, CursorStyle, BoxStyle, LayoutItemStyle { y: Exclude<Length, 'auto'>; x1?: Exclude<Length, 'auto'>; x2?: Exclude<Length, 'auto'>; stroke?: StrokeStyle; strokeWidth?: number; opacity?: number; alignToPixelGrid?: PixelGridAlignment; lineInteractionWidth?: number }
+  export interface VerticalLineStyle extends SystemStyle, CursorStyle, BoxStyle, LayoutItemStyle { x: Exclude<Length, 'auto'>; y1?: Exclude<Length, 'auto'>; y2?: Exclude<Length, 'auto'>; stroke?: StrokeStyle; strokeWidth?: number; opacity?: number; alignToPixelGrid?: PixelGridAlignment; lineInteractionWidth?: number }
+  export type TextFit = 'visible' | 'squish' | 'ellipsis' | 'clip';
+  export interface TextStyle extends PaintStyle, CursorStyle, BoxStyle, LayoutItemStyle { lineHeight?: number; wrap?: boolean; fit?: TextFit; font?: string; textBaseline?: CanvasTextBaseline; textAlign?: CanvasTextAlign }
+  export interface ImgStyle extends CursorStyle, BoxStyle, LayoutItemStyle { src: string; stroke?: StrokeStyle; strokeWidth?: number; opacity?: number; alignToPixelGrid?: PixelGridAlignment }
+  export interface GStyle extends BoxStyle, LayoutItemStyle { scaleX?: number; scaleY?: number; rotationDegrees?: number; rotationOrigin?: [number, number]; translateX?: number; translateY?: number; skewX?: number; skewY?: number }
+  export interface ClipStyle extends BoxStyle, LayoutItemStyle { d: Path2D | PathGeometry; fillRule?: CanvasFillRule }
+  export interface LayerStyle extends BoxStyle, LayoutItemStyle {}
+
+  export interface PibblManipulationBox { readonly left: number; readonly top: number; readonly width: number; readonly height: number }
+  export interface PibblManipulationPoint { readonly x: number; readonly y: number }
+  export type PibblManipulationWhen = 'always' | 'shift' | 'alt' | 'ctrl' | 'meta';
+  export type PibblResizePosition = 'top-left' | 'top' | 'top-right' | 'right' | 'bottom-right' | 'bottom' | 'bottom-left' | 'left';
+  export interface PibblManipulationMoveInput { readonly enabled?: SignalValue<boolean>; readonly axis?: 'both' | 'x' | 'y'; readonly bounds?: PibblManipulationBox; readonly snap?: Readonly<{ enabled?: SignalValue<boolean>; when?: PibblManipulationWhen; step: number | Readonly<{ x: number; y: number }>; origin?: Readonly<{ x?: number; y?: number }> }> }
+  export type PibblManipulationResizeInput = Readonly<{ readonly enabled?: SignalValue<boolean>; readonly minWidth?: number; readonly minHeight?: number; readonly maxWidth?: number; readonly maxHeight?: number; readonly bounds?: PibblManipulationBox; readonly aspectRatio?: Readonly<{ value: 'initial' | number; when?: PibblManipulationWhen }>; readonly snap?: Readonly<{ target?: 'size'; enabled?: SignalValue<boolean>; when?: PibblManipulationWhen; step: number | Readonly<{ width: number; height: number }> }> }> | Readonly<{ readonly enabled?: SignalValue<boolean>; readonly minWidth?: number; readonly minHeight?: number; readonly maxWidth?: number; readonly maxHeight?: number; readonly bounds?: PibblManipulationBox; readonly aspectRatio?: Readonly<{ value: 'initial' | number; when?: PibblManipulationWhen }>; readonly snap?: Readonly<{ target: 'grid'; enabled?: SignalValue<boolean>; when?: PibblManipulationWhen; step: number | Readonly<{ x: number; y: number }>; origin?: Readonly<{ x?: number; y?: number }> }> }>;
+  export interface PibblManipulationRotateInput { readonly enabled?: SignalValue<boolean>; readonly snap?: Readonly<{ enabled?: SignalValue<boolean>; when?: PibblManipulationWhen; step: number; origin?: number }> }
+  export interface PibblRotationHandleProps { readonly controller: PibblManipulationController; readonly hitSize?: number; readonly readoutUnit?: "degrees" | "radians"; readonly formatReadout?: (value: { readonly rotation: number }) => string; readonly children?: PibblNode }
+  export interface PibblManipulableProps extends Pick<PibblManipulationOptions, 'rotation' | 'onStart' | 'onChange' | 'onCommit' | 'onCancel'> { readonly style: WritableSignal<PibblManipulationBox>; readonly draggable?: boolean | PibblManipulationMoveInput; readonly dragHandle?: Omit<PibblDragHandleProps, "controller" | "children"> & { readonly style?: PibblDragHandleStyle }; readonly resizable?: boolean | PibblManipulationResizeInput; readonly rotatable?: boolean | PibblManipulationRotateInput; readonly resizeHandles?: PibblResizeHandlesProps['positions'] | Omit<PibblResizeHandlesProps, 'controller'>; readonly rotationHandle?: Omit<PibblRotationHandleProps, 'controller' | 'children'> & { readonly style?: PibblRotationHandleStyle }; readonly children?: PibblNode }
+  export interface PibblManipulationGeometry { readonly box: PibblManipulationBox; readonly rotation: number }
+  export type PibblManipulationOperation = 'move' | 'resize' | 'rotate';
+  export type PibblManipulationCancelReason = 'explicit' | 'escape' | 'pointer-cancel' | 'capture-lost' | 'disabled' | 'external-change' | 'coordinate-space-changed' | 'constraints-unsatisfiable';
+  export interface PibblManipulationActive { readonly operation: PibblManipulationOperation; readonly handle: PibblResizePosition | null; readonly pointerId: number }
+  export interface PibblManipulationSnapshot { readonly operation: PibblManipulationOperation; readonly handle: PibblResizePosition | null; readonly initial: PibblManipulationGeometry; readonly proposed: PibblManipulationGeometry; readonly applied: PibblManipulationGeometry; readonly snapActive: boolean; readonly snapSatisfied: boolean }
+  export interface PibblManipulationEvent extends PibblManipulationSnapshot { readonly before: PibblManipulationGeometry; readonly after: PibblManipulationGeometry }
+  export interface PibblManipulationCommitEvent extends PibblManipulationEvent { readonly changed: boolean }
+  export interface PibblManipulationCancelEvent extends PibblManipulationEvent { readonly reason: PibblManipulationCancelReason }
+  export interface PibblManipulationOptions { readonly box: WritableSignal<PibblManipulationBox>; readonly rotation?: WritableSignal<number>; readonly move?: PibblManipulationMoveInput; readonly resize?: PibblManipulationResizeInput; readonly rotate?: PibblManipulationRotateInput; readonly onStart?: (event: PibblManipulationEvent) => void; readonly onChange?: (event: PibblManipulationEvent) => void; readonly onCommit?: (event: PibblManipulationCommitEvent) => void; readonly onCancel?: (event: PibblManipulationCancelEvent) => void }
+  export interface PibblManipulationFrameProps { readonly controller: PibblManipulationController; readonly style: WritableSignal<PibblManipulationBox>; readonly children?: PibblNode }
+  export interface PibblManipulationController { readonly active: Signal<PibblManipulationActive | null>; readonly snapshot: Signal<PibblManipulationSnapshot | null>; readonly frameProps: PibblManipulationFrameProps; cancel(): void }
+  export interface PibblDragHandleProps { readonly formatReadout?: (value: {readonly left: number; readonly top: number}) => string; readonly controller: PibblManipulationController; readonly children?: PibblNode }
+  export interface PibblDragHandleStyle extends GStyle { readonly readout?: false | true | PibblManipulationReadoutStyle; }
+  export interface PibblManipulationReadoutStateStyle { readonly gap?: number; readonly font?: string; readonly fill?: string; readonly stroke?: string; readonly strokeWidth?: number; readonly opacity?: number; readonly visible?: boolean; }
+  export interface PibblManipulationReadoutStyle extends PibblManipulationReadoutStateStyle { readonly inactive?: PibblManipulationReadoutStateStyle; readonly focused?: PibblManipulationReadoutStateStyle; readonly active?: PibblManipulationReadoutStateStyle; }
+  export interface PibblResizeHandleStyle extends SystemStyle { readonly readout?: false | true | PibblManipulationReadoutStyle; }
+  export interface PibblRotationConnectorStyle { readonly stroke?: string; readonly strokeWidth?: number; readonly opacity?: number; }
+  export interface PibblRotationArcStyle { readonly color?: string; readonly sweep?: number; readonly strokeWidth?: number; readonly opacity?: number; }
+  export interface PibblRotationHandleStyle extends SystemStyle { readonly connector?: false | true | PibblRotationConnectorStyle; readonly arc?: false | true | PibblRotationArcStyle; readonly readout?: false | true | PibblManipulationReadoutStyle; }
+  export interface PibblResizeHandleProps { readonly controller: PibblManipulationController; readonly position: PibblResizePosition; readonly hitSize?: number; readonly formatReadout?: (value: { readonly width: number; readonly height: number }) => string; readonly children?: PibblNode }
+  export interface PibblResizeHandlesProps { readonly controller: PibblManipulationController; readonly positions?: 'corners' | 'edges-and-corners' | readonly PibblResizePosition[]; readonly hitSize?: number; readonly style?: PibblResizeHandleStyle; readonly formatReadout?: PibblResizeHandleProps['formatReadout'] }
+
+  export interface PathProps extends PibblEventHandlers, PibblEventFocusOptions, PibblEventParticipationOptions, PibblPhysics2DPropExtension {}
+  export interface RectangleProps extends PibblEventHandlers, PibblEventFocusOptions, PibblEventParticipationOptions, PibblPhysics2DPropExtension {}
+  export interface CircleProps extends PibblEventHandlers, PibblEventFocusOptions, PibblEventParticipationOptions, PibblPhysics2DPropExtension {}
+  export interface EllipseProps extends PibblEventHandlers, PibblEventFocusOptions, PibblEventParticipationOptions, PibblPhysics2DPropExtension {}
+  export interface ArcProps extends PibblEventHandlers, PibblEventFocusOptions, PibblEventParticipationOptions, PibblPhysics2DPropExtension {}
+  export interface WedgeProps extends PibblEventHandlers, PibblEventFocusOptions, PibblEventParticipationOptions, PibblPhysics2DPropExtension {}
+  export interface PolygonProps extends PibblEventHandlers, PibblEventFocusOptions, PibblEventParticipationOptions, PibblPhysics2DPropExtension {}
+  export interface RegularPolygonProps extends PibblEventHandlers, PibblEventFocusOptions, PibblEventParticipationOptions, PibblPhysics2DPropExtension {}
+  export interface StarProps extends PibblEventHandlers, PibblEventFocusOptions, PibblEventParticipationOptions, PibblPhysics2DPropExtension {}
+  export interface SvgPathProps extends PathProps {}
+  export interface LineProps extends PibblEventHandlers, PibblEventFocusOptions, PibblEventParticipationOptions, PibblPhysics2DPropExtension {}
+  export interface HorizontalLineProps extends PibblEventHandlers, PibblEventFocusOptions, PibblEventParticipationOptions, PibblPhysics2DPropExtension {}
+  export interface VerticalLineProps extends PibblEventHandlers, PibblEventFocusOptions, PibblEventParticipationOptions, PibblPhysics2DPropExtension {}
+  export interface TextProps extends PibblEventHandlers, PibblEventFocusOptions, PibblEventParticipationOptions, PibblPhysics2DPropExtension { children?: PibblTextInput }
+  export interface ImageProps extends PibblEventHandlers, PibblEventFocusOptions, PibblEventParticipationOptions, PibblPhysics2DPropExtension {}
+  export interface GroupProps extends PibblEventHandlers, PibblPhysics2DPropExtension { children: PibblNodeInput }
+  export interface ClipProps extends PibblEventHandlers { children: PibblNodeInput }
+  export interface LayerProps extends PibblEventHandlers { children: PibblNodeInput }
+
+  export interface RectanglePathOptions extends RoundedCornerPathOptions { x?: number; y?: number; width: number; height: number }
+  export interface CirclePathOptions { cx?: number; cy?: number; radius: number }
+  export interface EllipsePathOptions { cx?: number; cy?: number; radiusX: number; radiusY: number; rotation?: number }
+  export interface ArcPathOptions { cx?: number; cy?: number; radius: number; startAngle: number; endAngle: number; counterclockwise?: boolean }
+  export type WedgePathOptions = ArcPathOptions;
+  export interface LinePathOptions { coords: readonly (readonly [number, number])[]; closePath?: boolean }
+  export interface PolygonPathOptions extends RoundedCornerPathOptions { coords: readonly (readonly [number, number])[] }
+  export interface RegularPolygonPathPosition { sides: number; cx?: number; cy?: number; rotation?: number }
+  export type RegularPolygonNumericSize = { circumradius: number; inradius?: never; sideLength?: never } | { circumradius?: never; inradius: number; sideLength?: never } | { circumradius?: never; inradius?: never; sideLength: number };
+  export type RegularPolygonPathOptions = RegularPolygonPathPosition & RegularPolygonNumericSize & RoundedCornerPathOptions;
+  export interface StarPathOptions extends RoundedCornerPathOptions { points: number; cx?: number; cy?: number; outerRadius: number; innerRadius: number; rotation?: number }
+  export interface SvgPathOptions { d: string }
+
+  export type AbsoluteStyle = BoxStyle & LayoutItemStyle;
+  export interface AbsoluteProps extends PibblEventHandlers { children: PibblNodeInput }
+  export interface OverlayStyle extends BoxStyle, LayoutItemStyle { justifyItems?: 'stretch' | 'start' | 'center' | 'end'; alignItems?: 'stretch' | 'start' | 'center' | 'end' }
+  export interface OverlayProps extends PibblEventHandlers { children: PibblNodeInput }
+  export interface FlowStyle extends BoxStyle, LayoutItemStyle { direction?: 'horizontal' | 'vertical'; wrap?: boolean; gap?: number; lineGap?: number; alignItems?: 'start' | 'center' | 'end' | 'stretch' }
+  export interface FlowProps extends PibblEventHandlers { children: PibblNodeInput }
+  export interface FlexStyle extends BoxStyle, LayoutItemStyle { flexDirection?: 'row' | 'column'; flexWrap?: 'nowrap' | 'wrap'; justifyContent?: 'flex-start' | 'flex-end' | 'center' | 'space-between' | 'space-around' | 'space-evenly'; alignItems?: 'stretch' | 'flex-start' | 'flex-end' | 'center'; alignContent?: 'stretch' | 'flex-start' | 'flex-end' | 'center' | 'space-between' | 'space-around' | 'space-evenly'; gap?: number; rowGap?: number; columnGap?: number }
+  export interface FlexProps extends PibblEventHandlers { children: PibblNodeInput }
+  export type GridTrack = number | `${number}%` | `${number}fr`;
+  export interface GridStyle extends BoxStyle, LayoutItemStyle { gridTemplateColumns: readonly GridTrack[]; gridTemplateRows: readonly GridTrack[]; justifyItems?: 'stretch' | 'start' | 'center' | 'end'; alignItems?: 'stretch' | 'start' | 'center' | 'end'; gap?: number; rowGap?: number; columnGap?: number }
+  export interface GridProps extends PibblEventHandlers { children: PibblNodeInput }
+
+  export interface CanvasMeasurementService { measureText(text: string, font: string): TextMetrics }
+  export type MeasureResult = { status: 'measured'; size: Readonly<Size> } | { status: 'unsupported'; reason: string };
+  export interface MeasureInput<P, S extends SystemStyle = SystemStyle> { props: Readonly<P>; style: NormalizedStyle<S>; constraints: Readonly<Constraints>; service: CanvasMeasurementService; measureElement(element: PibblElement<any>, constraints: Readonly<Constraints>): MeasureResult }
+  export interface LayoutDiagnosticContext { component?: string; algorithm?: string; constraints?: Readonly<Constraints> }
+  export interface LayoutDiagnosticInput extends LayoutDiagnosticContext { property: string; value: unknown; reason: string }
+  export class LayoutDiagnostic extends Error { readonly component: string; readonly property: string; readonly suppliedValue: unknown; readonly algorithm: string; readonly constraints: Readonly<Constraints> | undefined; constructor(input: LayoutDiagnosticInput) }
+
+  export interface PibblRef<T> { current: T | undefined }
+  export type SignalEquals<T> = (previous: T, next: T) => boolean;
+  declare const signalBrand: unique symbol;
+  export interface SignalOptions<T> { equals?: SignalEquals<T>; debugName?: string }
+  export interface Signal<T> { readonly [signalBrand]: T; get(): T }
+  export type SignalValue<T> = T | Signal<T>;
+  export interface WritableSignal<T> extends Signal<T> { set(value: T): void; update(update: (current: T) => T): void; asReadonly(): Signal<T> }
+  export interface PibblReactionOptions { readonly debugName?: string }
+  export type PibblEasing = (progress: number) => number;
+  export type PibblInterpolator<T> = (from: T, to: T, progress: number) => T;
+  declare const pibblAnimationDefinitionBrand: unique symbol;
+  declare const pibblAnimationProgramBrand: unique symbol;
+  export interface PibblAnimationDefinition<T> { readonly [pibblAnimationDefinitionBrand]: T }
+  export interface PibblAnimationProgram { readonly [pibblAnimationProgramBrand]: true }
+  export type PibblAnimationRepeatDirection = 'normal' | 'reverse' | 'alternate' | 'alternate-reverse';
+  export interface PibblAnimationRepeatOptions { readonly iterations: number; readonly direction?: PibblAnimationRepeatDirection }
+  export interface PibblTweenOptions<T> { readonly from?: T; readonly to: T; readonly duration: number; readonly easing?: PibblEasing; readonly interpolate?: PibblInterpolator<T>; readonly debugName?: string }
+  export interface PibblKeyframesOptions<T> { readonly values: readonly [T, T, ...T[]]; readonly duration: number; readonly offsets?: readonly number[]; readonly easing?: PibblEasing | readonly PibblEasing[]; readonly interpolate?: PibblInterpolator<T>; readonly debugName?: string }
+  export interface PibblSpringOptions { readonly from?: number; readonly to: number; readonly mass?: number; readonly stiffness?: number; readonly damping?: number; readonly initialVelocity?: number; readonly restSpeed?: number; readonly restDelta?: number; readonly maxDuration?: number; readonly debugName?: string }
+  export interface PibblTweenAnimatedValueOptions<T> { readonly type: 'tween'; readonly duration: number; readonly easing?: PibblEasing; readonly interpolate?: PibblInterpolator<T>; readonly equals?: SignalEquals<T>; readonly initial?: T; readonly debugName?: string }
+  export interface PibblSpringAnimatedValueOptions { readonly type: 'spring'; readonly mass?: number; readonly stiffness?: number; readonly damping?: number; readonly initialVelocity?: number; readonly restSpeed?: number; readonly restDelta?: number; readonly maxDuration?: number; readonly equals?: SignalEquals<number>; readonly initial?: number; readonly debugName?: string }
+  export interface PibblAnimationSampleInput<T> { readonly initialValue: T; readonly localTime: number; readonly progress: number }
+  export interface PibblAnimationOptions<T> { readonly duration: number; readonly sample: (input: PibblAnimationSampleInput<T>) => T; readonly debugName?: string }
+  export interface PibblStepperOptions<State, T> { readonly stepMilliseconds: number; readonly maxElapsedMilliseconds?: number; readonly initial: (currentValue: T) => State; readonly step: (state: State, deltaMilliseconds: number) => State; readonly read: (state: State) => T; readonly done?: (state: State) => boolean; readonly debugName?: string }
+  export type PibblPlaybackStatus = 'idle' | 'scheduled' | 'running' | 'paused' | 'finished' | 'cancelled' | 'disposed';
+  export interface PibblPlaybackEvent { readonly type: 'start' | 'iteration' | 'marker' | 'finish' | 'cancel'; readonly logicalTime: number; readonly frameId: number; readonly programPath: readonly number[]; readonly iteration: number; readonly marker?: string }
+  export interface PibblPlayback { readonly status: Signal<PibblPlaybackStatus>; readonly currentTime: Signal<number>; play(options?: { readonly conflict?: 'error' | 'replace' }): void; pause(): void; resume(): void; cancel(): void; finish(): void; seek(milliseconds: number): void; reverse(): void; setPlaybackRate(rate: number): void }
+  export interface PibblPlaybackOptions { readonly autoplay?: boolean; readonly conflict?: 'error' | 'replace'; readonly debugName?: string; readonly onEvent?: (event: PibblPlaybackEvent) => void; readonly onError?: (error: unknown) => void }
+
+  export interface PibblRenderLayerSize {
+    readonly width: number;
+    readonly height: number;
+    readonly backingWidth: number;
+    readonly backingHeight: number;
+    readonly pixelRatioX: number;
+    readonly pixelRatioY: number;
+  }
+  export interface PibblRenderLayerFrame {
+    readonly frameId: number;
+    readonly time: number;
+    readonly delta: number;
+    readonly deltaSeconds: number;
+    invalidate(): void;
+  }
+  export interface PibblRenderLayerContext {
+    readonly canvas: OffscreenCanvas;
+    readonly size: PibblRenderLayerSize;
+    invalidate(): void;
+  }
+  export interface PibblRenderLayerStyle extends SystemStyle, BoxStyle, LayoutItemStyle {}
+  export type PibblRenderLayerHit<Target extends object> =
+    | { readonly kind: 'miss' }
+    | { readonly kind: 'block' }
+    | { readonly kind: 'target'; readonly target: Target };
+  export interface PibblRenderLayerTarget<Target extends object> {
+    readonly target: Target;
+    readonly handlers?: PibblEventHandlers;
+    readonly pointerEvents?: PibblPointerEvents;
+    readonly cursor?: string;
+    readonly keyboardFocusable?: boolean;
+    readonly keyboardNavigationBounds?: Readonly<LayoutBox>;
+  }
+  export interface PibblRenderLayerInput<Target extends object> {
+    readonly type: 'pointerdown' | 'pointermove' | 'pointerup' | 'pointercancel' | 'wheel' | 'contextmenu' | 'click';
+    readonly point: Readonly<{ x: number; y: number }>;
+    readonly hit: PibblRenderLayerHit<Target>;
+    readonly originalEvent: PointerEvent | WheelEvent | MouseEvent;
+    setPointerCapture(pointerId: number): void;
+    releasePointerCapture(pointerId: number): void;
+  }
+  export interface PibblRenderLayerInteractionSnapshot<Target extends object> {
+    readonly targets: Iterable<PibblRenderLayerTarget<Target>>;
+    hitTest(point: Readonly<{ x: number; y: number }>): PibblRenderLayerHit<Target>;
+    onInput?(input: Readonly<PibblRenderLayerInput<Target>>): void;
+  }
+  export interface PibblRenderLayerInteraction<Props, Resources, Target extends object> {
+    settle(resources: Resources, props: Readonly<Props>, size: Readonly<PibblRenderLayerSize>): PibblRenderLayerInteractionSnapshot<Target>;
+  }
+  export interface PibblRenderLayerComponentProps extends PibblEventHandlers, PibblEventFocusOptions, PibblEventParticipationOptions {
+    readonly style?: PibblRenderLayerStyle;
+    readonly missBehavior?: 'pass-through' | 'block' | 'target-layer';
+  }
+  export interface PibblRenderLayerDefinition<Props, Resources, Target extends object = object> {
+    create(context: Readonly<PibblRenderLayerContext>, initialProps: Readonly<Props>): Resources;
+    update?(resources: Resources, props: Readonly<Props>, context: Readonly<PibblRenderLayerContext>): void;
+    resize?(resources: Resources, size: Readonly<PibblRenderLayerSize>, context: Readonly<PibblRenderLayerContext>): void;
+    render(resources: Resources, frame: Readonly<PibblRenderLayerFrame>, context: Readonly<PibblRenderLayerContext>): void;
+    dispose?(resources: Resources, context: Readonly<PibblRenderLayerContext>): void;
+    interaction?: PibblRenderLayerInteraction<Props, Resources, Target>;
+  }
+  type PibblRenderLayerReservedProp = 'key' | 'style' | 'missBehavior' | keyof PibblEventHandlers | keyof PibblEventFocusOptions | keyof PibblEventParticipationOptions;
+  export type PibblRenderLayerProps<Props> = Extract<keyof Props, PibblRenderLayerReservedProp> extends never ? Props & PibblRenderLayerComponentProps : never;
+
+  export function pibbl(canvas: HTMLCanvasElement, element: PibblNode, config?: PibblConfig): PibblController;
+  export function signal<T>(initialValue: T, options?: SignalOptions<T>): WritableSignal<T>;
+  export function computed<T>(compute: () => T, options?: SignalOptions<T>): Signal<T>;
+  export function batch<T>(callback: () => T): T;
+  export function untracked<T>(callback: () => T): T;
+  export function isSignal(value: unknown): value is Signal<unknown>;
+  export function resolveSignalValue<T>(value: SignalValue<T>): T;
+  export const easing: Readonly<{ readonly linear: PibblEasing; readonly easeIn: PibblEasing; readonly easeOut: PibblEasing; readonly easeInOut: PibblEasing; readonly cubicBezier: (x1: number, y1: number, x2: number, y2: number) => PibblEasing; readonly steps: (count: number, position?: 'start' | 'end') => PibblEasing }>;
+  export function tween<T>(options: Readonly<PibblTweenOptions<T>>): PibblAnimationDefinition<T>;
+  export function keyframes<T>(options: Readonly<PibblKeyframesOptions<T>>): PibblAnimationDefinition<T>;
+  export function spring(options: Readonly<PibblSpringOptions>): PibblAnimationDefinition<number>;
+  export function defineAnimation<T>(options: Readonly<PibblAnimationOptions<T>>): PibblAnimationDefinition<T>;
+  export function stepper<State, T>(options: Readonly<PibblStepperOptions<State, T>>): PibblAnimationDefinition<T>;
+  export function drive<T>(output: WritableSignal<T>, definition: PibblAnimationDefinition<T>): PibblAnimationProgram;
+  export function sequence(...children: readonly PibblAnimationProgram[]): PibblAnimationProgram;
+  export function parallel(...children: readonly PibblAnimationProgram[]): PibblAnimationProgram;
+  export function wait(duration: number): PibblAnimationProgram;
+  export function marker(name: string): PibblAnimationProgram;
+  export function repeat(child: PibblAnimationProgram, options: Readonly<PibblAnimationRepeatOptions>): PibblAnimationProgram;
+  type ElementInput<P> = 0 extends (1 & P) ? P & { key?: PibblKey } : 'key' extends UnionKeys<P> ? never : P & { key?: PibblKey };
+  type ElementInputOrNull<P> = [ElementInput<P>] extends [never] ? never : ElementInput<P> | null;
+  type ChildrenForProps<P> = P extends unknown ? 'children' extends keyof P ? P['children'] : never : never;
+  type MultipleChildren<C> = C extends unknown ? C extends readonly (infer Child)[] ? Child[] extends C ? [Child, Child, ...Child[]] : never : C extends Iterable<infer Child> ? Child[] extends C ? [Child, Child, ...Child[]] : never : never : never;
+  type ChildrenArguments<P> = P extends unknown ? 'children' extends keyof P ? [] | [ChildrenForProps<P>] | MultipleChildren<ChildrenForProps<P>> : [] : never;
+  export function createElement<P>(type: PibblElementType<P>, props: ElementInputOrNull<P>, ...children: ChildrenArguments<P>): PibblElement<P>;
+  export function Fragment(props: { children?: PibblNodeInput }): PibblNodeInput;
+  export function definePrimitive<P = Record<string, never>, S extends SystemStyle = SystemStyle, N extends SystemStyle = S, R extends SystemStyle = N>(render: PrimitiveRender<P, R> & PrimitiveStyleGuard<S, N, R> & (PrimitiveInput<P, S> extends never ? never : unknown), ...capabilityArguments: PrimitiveCapabilityArguments<P, S, N, R>): PibblPrimitiveComponent<PrimitiveProgramProps<P>, PrimitiveInput<P, S>>;
+  export function defineRenderLayer<Props, Resources, Target extends object = object>(definition: PibblRenderLayerDefinition<Props, Resources, Target>): PibblComponent<PibblRenderLayerProps<Props>>;
+  export const Rectangle: PibblPrimitiveComponent<RectangleProps, PrimitiveInput<RectangleProps, RectStyle>>;
+  export const Circle: PibblPrimitiveComponent<CircleProps, PrimitiveInput<CircleProps, CircleStyle>>;
+  export const Ellipse: PibblPrimitiveComponent<EllipseProps, PrimitiveInput<EllipseProps, EllipseStyle>>;
+  export const Arc: PibblPrimitiveComponent<ArcProps, PrimitiveInput<ArcProps, ArcStyle>>;
+  export const Wedge: PibblPrimitiveComponent<WedgeProps, PrimitiveInput<WedgeProps, WedgeStyle>>;
+  export const Polygon: PibblPrimitiveComponent<PolygonProps, PrimitiveInput<PolygonProps, PolygonStyle>>;
+  export const RegularPolygon: PibblPrimitiveComponent<RegularPolygonProps, PrimitiveInput<RegularPolygonProps, RegularPolygonStyle>>;
+  export const Star: PibblPrimitiveComponent<StarProps, PrimitiveInput<StarProps, StarStyle>>;
+  export const Path: PibblPrimitiveComponent<PathProps, PrimitiveInput<PathProps, PathStyle>>;
+  export const SvgPath: PibblPrimitiveComponent<SvgPathProps, PrimitiveInput<SvgPathProps, SvgPathStyle>>;
+  export const Line: PibblPrimitiveComponent<LineProps, PrimitiveInput<LineProps, LineStyle>>;
+  export const HorizontalLine: PibblPrimitiveComponent<HorizontalLineProps, PrimitiveInput<HorizontalLineProps, HorizontalLineStyle>>;
+  export const VerticalLine: PibblPrimitiveComponent<VerticalLineProps, PrimitiveInput<VerticalLineProps, VerticalLineStyle>>;
+  export const Text: PibblPrimitiveComponent<TextProps, PrimitiveInput<TextProps, TextStyle>>;
+  export const Image: PibblPrimitiveComponent<ImageProps, PrimitiveInput<ImageProps, ImgStyle>>;
+  export type HtmlUpdateFunction<Props> = (props: Props) => void;
+  export type HtmlMountCallback<Props> = (element: HTMLDivElement, initialProps: Props, signal: AbortSignal) => HtmlUpdateFunction<Props>;
+  export interface HtmlBoxFocusState { readonly isFocusWithin: boolean; readonly isFocusVisible: boolean }
+  export interface HtmlBoxProps<Props> { data: Props; mount: HtmlMountCallback<Props>; pointerEvents?: 'auto' | 'none'; onFocusChange?: (state: Readonly<HtmlBoxFocusState>) => void }
+  export interface HtmlBoxStyle extends GStyle { opacity?: number }
+  export function HtmlBox<Props>(props: Omit<PrimitiveInput<HtmlBoxProps<Props>, HtmlBoxStyle>, 'data' | 'mount'> & Pick<HtmlBoxProps<Props>, 'data' | 'mount'>): PibblRenderResult;
+  export const Group: PibblPrimitiveComponent<GroupProps, PrimitiveInput<GroupProps, GStyle>>;
+  export const Clip: PibblPrimitiveComponent<ClipProps, PrimitiveInput<ClipProps, ClipStyle>>;
+  export const Layer: PibblPrimitiveComponent<LayerProps, PrimitiveInput<LayerProps, LayerStyle>>;
+  export const Absolute: PibblPrimitiveComponent<AbsoluteProps, PrimitiveInput<AbsoluteProps, AbsoluteStyle>>;
+  export const Overlay: PibblPrimitiveComponent<OverlayProps, PrimitiveInput<OverlayProps, OverlayStyle>>;
+  export const Flow: PibblPrimitiveComponent<FlowProps, PrimitiveInput<FlowProps, FlowStyle>>;
+  export const Flex: PibblPrimitiveComponent<FlexProps, PrimitiveInput<FlexProps, FlexStyle>>;
+  export const Grid: PibblPrimitiveComponent<GridProps, PrimitiveInput<GridProps, GridStyle>>;
+  export const ManipulationFrame: PibblPrimitiveComponent<Pick<PibblManipulationFrameProps, 'controller'>, PrimitiveInput<Pick<PibblManipulationFrameProps, 'controller'>, SystemStyle & PibblManipulationBox>>;
+  export const DragHandle: PibblPrimitiveComponent<PibblDragHandleProps, PrimitiveInput<PibblDragHandleProps, PibblDragHandleStyle>>;
+  export const ResizeHandle: PibblPrimitiveComponent<PibblResizeHandleProps, PrimitiveInput<PibblResizeHandleProps, PibblResizeHandleStyle>>;
+  export function ResizeHandles(props: PibblResizeHandlesProps): PibblNode;
+  export const RotationHandle: PibblPrimitiveComponent<PibblRotationHandleProps, PrimitiveInput<PibblRotationHandleProps, PibblRotationHandleStyle>>;
+  export function Manipulable(props: PibblManipulableProps): PibblNode;
+  export function degrees(value: number): number;
+  export function createArcPath(options: Readonly<ArcPathOptions>): Path2D;
+  export function createCirclePath(options: Readonly<CirclePathOptions>): Path2D;
+  export function createEllipsePath(options: Readonly<EllipsePathOptions>): Path2D;
+  export function createLinePath(options: Readonly<LinePathOptions>): Path2D;
+  export function createPolygonPath(options: Readonly<PolygonPathOptions>): Path2D;
+  export function createRectanglePath(options: Readonly<RectanglePathOptions>): Path2D;
+  export function createRegularPolygonPath(options: Readonly<RegularPolygonPathOptions>): Path2D;
+  export function createStarPath(options: Readonly<StarPathOptions>): Path2D;
+  export function createSvgPath(options: Readonly<SvgPathOptions>): Path2D;
+  export function createWedgePath(options: Readonly<WedgePathOptions>): Path2D;
+  export function measureElement(element: PibblElement<any>, constraints: Readonly<Constraints>, service: CanvasMeasurementService): MeasureResult;
+  export const FocusManagement: PibblComponent<FocusManagementProps>;
+  export const KeyboardNavigation: PibblComponent<KeyboardNavigationProps>;
+  export function resolveLength(value: Length, reference: number | undefined, property: string, context?: Readonly<LayoutDiagnosticContext>): number | undefined;
+  export function normalizeEdges(value: EdgeValues | undefined, property: string, context?: Readonly<LayoutDiagnosticContext>): Edges;
+  export function resolveBox(style: Readonly<BoxStyle>, constraints: Readonly<Constraints>, context?: Readonly<LayoutDiagnosticContext>): ResolvedBoxStyle;
+  export function layoutDiagnostic(input: LayoutDiagnosticInput): LayoutDiagnostic;
+  export function useLayoutBox(): Readonly<LayoutBox>;
+  export function useManipulation(options: PibblManipulationOptions): PibblManipulationController;
+  export function useCanvasContext(): RenderingContext2D;
+  export function useConst<T>(create: () => T): T;
+  export function useComputed<T>(compute: () => T, dependencies?: readonly unknown[], options?: SignalOptions<T>): Signal<T>;
+  export function useRef<T>(initial?: T): PibblRef<T>;
+  export function useSignal<T>(initialValue: T, options?: SignalOptions<T>): WritableSignal<T>;
+  export function usePlayback(program: PibblAnimationProgram, options?: PibblPlaybackOptions): PibblPlayback;
+
+  declare const transitionBindingBrand: unique symbol;
+  declare const transitionEffectBrand: unique symbol;
+  export interface PibblTransitionBinding { readonly [transitionBindingBrand]: true }
+  export interface PibblTransitionEffect { readonly [transitionEffectBrand]: true }
+  export type PibblVisibilityTransitionStatus = 'hidden' | 'entering' | 'visible' | 'exiting' | 'disposed';
+  export interface PibblVisibilityTransitionResult { readonly requestId: number; readonly phase: 'enter' | 'exit'; readonly status: 'finished' | 'cancelled' | 'disposed' }
+  export interface PibblVisibilityTransitionOptions { readonly initial?: boolean; readonly enter: PibblTransitionEffect; readonly exit?: PibblTransitionEffect; readonly duration?: number }
+  export interface PibblVisibilityTransition { readonly binding: PibblTransitionBinding; readonly visible: Signal<boolean>; readonly progress: Signal<number>; readonly status: Signal<PibblVisibilityTransitionStatus>; show(): Promise<PibblVisibilityTransitionResult>; hide(): Promise<PibblVisibilityTransitionResult>; finish(): void }
+  export interface PibblEmberCollision { readonly fraction: number; readonly normal: readonly [number, number] }
+  export interface PibblEmbersPhysicsOptions { readonly obstacles?: Readonly<{ read(): Readonly<{ revision: number; boxes: Float64Array; ellipses: Float64Array; polygons: Float64Array }> }>; readonly gravity?: readonly [number, number]; readonly wind?: readonly [number, number]; readonly drag?: number; readonly restitution?: number; readonly collide?: (from: readonly [number, number], to: readonly [number, number]) => PibblEmberCollision | undefined }
+  export interface PibblEmbersOptions { readonly physics?: PibblEmbersPhysicsOptions; readonly region: Readonly<{ x: number; y: number; width: number; height: number }>; readonly charDepth?: number; readonly burnWidth?: number; readonly wind?: number; readonly seed?: number; readonly linger?: number }
+  export function embers(options: PibblEmbersOptions): PibblTransitionEffect;
+  export interface PibblHologramOptions { readonly region: Readonly<{ x: number; y: number; width: number; height: number }>; readonly entry?: Readonly<{ x: number; y: number }>; readonly hue?: number; readonly brightness?: number; readonly fog?: number; readonly glitch?: number; readonly seed?: number }
+  export interface PibblBifrostOptions { readonly region: Readonly<{ x: number; y: number; width: number; height: number }>; readonly entry?: Readonly<{ x: number; y: number }>; readonly hue?: number; readonly brightness?: number; readonly stretch?: number; readonly glow?: number; readonly seed?: number }
+  export function hologram(options: PibblHologramOptions): PibblTransitionEffect;
+  export function bifrost(options: PibblBifrostOptions): PibblTransitionEffect;
+  export interface PibblSlideOptions { readonly x?: number; readonly y?: number }
+  export interface PibblZoomOptions { readonly origin: Readonly<{ x: number; y: number }>; readonly from?: number }
+  export interface PibblWipeOptions { readonly region: Readonly<{ x: number; y: number; width: number; height: number }>; readonly direction?: 'left' | 'right' | 'top' | 'bottom' }
+  export interface PibblBlurRevealOptions { readonly radius?: number }
+  export interface PibblDissolveOptions { readonly region: Readonly<{ x: number; y: number; width: number; height: number }>; readonly cellSize?: number; readonly seed?: number }
+  export function slide(options?: PibblSlideOptions): PibblTransitionEffect;
+  export function zoom(options: PibblZoomOptions): PibblTransitionEffect;
+  export function wipe(options: PibblWipeOptions): PibblTransitionEffect;
+  export function blurReveal(options?: PibblBlurRevealOptions): PibblTransitionEffect;
+  export function dissolve(options: PibblDissolveOptions): PibblTransitionEffect;
+  export interface PibblTransitionRenderFrame { readonly context: OffscreenCanvasRenderingContext2D; readonly source: OffscreenCanvas; readonly sourceBounds: Readonly<{ x: number; y: number; width: number; height: number }>; readonly progress: number; readonly phase: 'enter' | 'exit'; readonly elapsed: number; readonly progressAt: (elapsed: number) => number; readonly drawSource: () => void }
+  export interface PibblTransitionDefinition { readonly render: (frame: Readonly<PibblTransitionRenderFrame>) => void; readonly linger?: number }
+  export function defineTransition(definition: PibblTransitionDefinition): PibblTransitionEffect;
+  export function fade(): PibblTransitionEffect;
+  export function useVisibilityTransition(options: PibblVisibilityTransitionOptions): PibblVisibilityTransition;
+  export function useAnimatedValue(target: number, options: PibblSpringAnimatedValueOptions): Signal<number>;
+  export function useAnimatedValue<T>(target: T, options: PibblTweenAnimatedValueOptions<T>): Signal<T>;
+  export function useReaction(setup: () => void | (() => void), dependencies?: readonly unknown[], options?: PibblReactionOptions): void;
+  export function useCursor(options: { style?: string; path?: Path2D | PathGeometry; fill?: boolean; lineInteractionWidth?: number }): void;
+  export function useEventListener(handlers: PibblEventHandlers): void;
+  export function useEventTarget(handlers: PibblEventHandlers, options: PibblEventTargetOptions): PibblEventTargetSnapshot;
+  export function useLinePath(coords: [number, number][], config?: { closePath?: boolean }): Path2D;
+  export function useRectPath(x: number, y: number, width: number, height: number, config?: { alignToPixelGrid?: PixelGridAlignment; lineWidth?: number; cornerRadius?: number; cornerRadii?: readonly (number | null | undefined)[] }): Path2D;
+  export function useSvgPath(data: string): Path2D;
+
+/* @pibbl-studio-module @pibbl/core/jsx-runtime */
+  import type { PibblElement, PibblElementType, PibblKey, PibblPrimitiveComponent, PrimitiveInputOf } from '@pibbl/core';
+  export { Fragment } from '@pibbl/core';
+  export function jsx<P>(type: PibblElementType<P>, props: P, key?: PibblKey): PibblElement<P>;
+  export const jsxs: typeof jsx;
+  export namespace JSX {
+    export type Element = PibblElement;
+    export type ElementType = PibblElementType;
+    export interface ElementChildrenAttribute { children: unknown }
+    export interface IntrinsicAttributes { key?: PibblKey }
+    export interface IntrinsicElements {}
+    export type LibraryManagedAttributes<C, P> = C extends PibblPrimitiveComponent<any, any> ? PrimitiveInputOf<C> : 'key' extends keyof P ? never : P;
+  }
+
+/* @pibbl-studio-module @pibbl/core/jsx-dev-runtime */
+  import type { PibblElement, PibblElementType, PibblKey, PibblPrimitiveComponent, PrimitiveInputOf } from '@pibbl/core';
+  export { Fragment } from '@pibbl/core';
+  export function jsxDEV<P>(type: PibblElementType<P>, props: P, key: PibblKey | undefined, isStaticChildren: boolean, source: { readonly fileName: string; readonly lineNumber: number; readonly columnNumber: number } | undefined, self: unknown): PibblElement<P>;
+  export namespace JSX {
+    export type Element = PibblElement;
+    export type ElementType = PibblElementType;
+    export interface ElementChildrenAttribute { children: unknown }
+    export interface IntrinsicAttributes { key?: PibblKey }
+    export interface IntrinsicElements {}
+    export type LibraryManagedAttributes<C, P> = C extends PibblPrimitiveComponent<any, any> ? PrimitiveInputOf<C> : 'key' extends keyof P ? never : P;
+  }
+
+/* @pibbl-studio-module @pibbl/core/physics/2d/geometry */
+  export type PibblPhysicsVector2 = readonly [x: number, y: number];
+  export interface PibblPhysicsPose2D { readonly position: PibblPhysicsVector2; readonly rotationDegrees: number }
+  export type PibblPhysicsTransform2D = PibblPhysicsPose2D;
+  export interface PibblPhysicsAabb2D { readonly min: PibblPhysicsVector2; readonly max: PibblPhysicsVector2 }
+  export interface PibblPhysicsRay2D { readonly origin: PibblPhysicsVector2; readonly direction: PibblPhysicsVector2; readonly maxDistance: number }
+  declare const physicsShape2DBrand: unique symbol;
+  export interface PibblPhysicsShape2D { readonly [physicsShape2DBrand]: true }
+  export interface PibblPhysicsMassProperties2D { readonly area: number; readonly centroid: PibblPhysicsVector2; readonly mass: number; readonly rotationalInertia: number }
+  export interface PibblPhysicsDistance2D { readonly separation: number; readonly pointOnFirst: PibblPhysicsVector2; readonly pointOnSecond: PibblPhysicsVector2; readonly normal: PibblPhysicsVector2 }
+  export interface PibblPhysicsContactPoint2D { readonly pointOnFirst: PibblPhysicsVector2; readonly pointOnSecond: PibblPhysicsVector2; readonly separation: number }
+  export interface PibblPhysicsShapeContact2D { readonly normal: PibblPhysicsVector2; readonly points: readonly PibblPhysicsContactPoint2D[] }
+  export interface PibblPhysicsShapeHit2D { readonly point: PibblPhysicsVector2; readonly normal: PibblPhysicsVector2; readonly distance: number; readonly timeOfImpact: number }
+
+  export function circleShape2D(input: Readonly<{ radius: number; center?: PibblPhysicsVector2 }>): PibblPhysicsShape2D;
+  export function ellipseShape2D(input: Readonly<{ radiusX: number; radiusY: number; center?: PibblPhysicsVector2; rotationDegrees?: number }>): PibblPhysicsShape2D;
+  export function boxShape2D(input: Readonly<{ width: number; height: number; center?: PibblPhysicsVector2 }>): PibblPhysicsShape2D;
+  export function roundedBoxShape2D(input: Readonly<{ width: number; height: number; radius: number | readonly [topLeft: number, topRight: number, bottomRight: number, bottomLeft: number]; center?: PibblPhysicsVector2 }>): PibblPhysicsShape2D;
+  export function capsuleShape2D(input: Readonly<{ start: PibblPhysicsVector2; end: PibblPhysicsVector2; radius: number }>): PibblPhysicsShape2D;
+  export function arcShape2D(input: Readonly<{ center?: PibblPhysicsVector2; radius: number; startAngleRadians: number; endAngleRadians: number; counterclockwise?: boolean; thickness: number }>): PibblPhysicsShape2D;
+  export function wedgeShape2D(input: Readonly<{ center?: PibblPhysicsVector2; radius: number; startAngleRadians: number; endAngleRadians: number; counterclockwise?: boolean }>): PibblPhysicsShape2D;
+  export function segmentShape2D(input: Readonly<{ start: PibblPhysicsVector2; end: PibblPhysicsVector2 }>): PibblPhysicsShape2D;
+  export function chainShape2D(input: Readonly<{ points: readonly PibblPhysicsVector2[]; closed?: boolean; radius?: number }>): PibblPhysicsShape2D;
+  export function polygonShape2D(input: Readonly<{ points: readonly PibblPhysicsVector2[] }>): PibblPhysicsShape2D;
+  export function boundsOfShape2D(shape: PibblPhysicsShape2D, pose?: PibblPhysicsPose2D): PibblPhysicsAabb2D;
+  export function massProperties2D(shape: PibblPhysicsShape2D, options?: Readonly<{ density?: number }>): PibblPhysicsMassProperties2D;
+  export function transformShape2D(shape: PibblPhysicsShape2D, transform: PibblPhysicsTransform2D): PibblPhysicsShape2D;
+  export function raycastShape2D(shape: PibblPhysicsShape2D, pose: PibblPhysicsPose2D, ray: PibblPhysicsRay2D, options?: Readonly<{ includeInitialOverlap?: boolean }>): PibblPhysicsShapeHit2D | null;
+  export function shapeCastAgainstShape2D(moving: PibblPhysicsShape2D, from: PibblPhysicsPose2D, translation: PibblPhysicsVector2, target: PibblPhysicsShape2D, targetPose: PibblPhysicsPose2D, options?: Readonly<{ includeInitialOverlap?: boolean }>): PibblPhysicsShapeHit2D | null;
+  export function containsPoint2D(shape: PibblPhysicsShape2D, pose: PibblPhysicsPose2D, point: PibblPhysicsVector2): boolean;
+  export function distanceBetweenShapes2D(first: PibblPhysicsShape2D, firstPose: PibblPhysicsPose2D, second: PibblPhysicsShape2D, secondPose: PibblPhysicsPose2D): PibblPhysicsDistance2D;
+  export function overlapShapes2D(first: PibblPhysicsShape2D, firstPose: PibblPhysicsPose2D, second: PibblPhysicsShape2D, secondPose: PibblPhysicsPose2D): boolean;
+  export function contactBetweenShapes2D(first: PibblPhysicsShape2D, firstPose: PibblPhysicsPose2D, second: PibblPhysicsShape2D, secondPose: PibblPhysicsPose2D): PibblPhysicsShapeContact2D | null;
+
+/* @pibbl-studio-module @pibbl/core/physics/2d */
+  import type { BoxStyle, PibblEventHandlers, PibblEventParticipationOptions, PibblNode, PibblPrimitiveComponent, CursorStyle, LayoutBox, LayoutItemStyle, PaintStyle, PrimitiveInput, Signal, SystemStyle } from '@pibbl/core';
+  import type { PibblPhysicsAabb2D, PibblPhysicsContactPoint2D, PibblPhysicsPose2D, PibblPhysicsRay2D, PibblPhysicsShape2D, PibblPhysicsShapeHit2D, PibblPhysicsVector2 } from '@pibbl/core/physics/2d/geometry';
+  export { arcShape2D, boundsOfShape2D, boxShape2D, capsuleShape2D, chainShape2D, circleShape2D, contactBetweenShapes2D, containsPoint2D, distanceBetweenShapes2D, ellipseShape2D, massProperties2D, overlapShapes2D, polygonShape2D, raycastShape2D, roundedBoxShape2D, segmentShape2D, shapeCastAgainstShape2D, transformShape2D, wedgeShape2D } from '@pibbl/core/physics/2d/geometry';
+  export type { PibblPhysicsAabb2D, PibblPhysicsContactPoint2D, PibblPhysicsDistance2D, PibblPhysicsMassProperties2D, PibblPhysicsPose2D, PibblPhysicsRay2D, PibblPhysicsShape2D, PibblPhysicsShapeContact2D, PibblPhysicsShapeHit2D, PibblPhysicsTransform2D, PibblPhysicsVector2 } from '@pibbl/core/physics/2d/geometry';
+
+  export interface PibblPhysicsCollisionFilter { readonly category?: number; readonly mask?: number; readonly group?: number }
+  export type PibblPhysicsCollisionHandler2D = (event: PibblPhysicsCollisionEvent2D) => void;
+  export type PibblPhysicsHitHandler2D = (event: PibblPhysicsCollisionEvent2D) => void;
+  export type PibblPhysicsOverlapHandler2D = (event: PibblPhysicsOverlapEvent2D) => void;
+  export type PibblPhysicsBodyStateHandler2D = (event: PibblPhysicsBodyStateEvent2D) => void;
+  export interface PibblPhysicsColliderConfiguration2D { readonly shape?: 'self' | PibblPhysicsShape2D; readonly offset?: PibblPhysicsVector2; readonly rotationDegrees?: number; readonly density?: number; readonly friction?: number; readonly restitution?: number; readonly sensor?: boolean; readonly contributesToMass?: boolean; readonly collisionFilter?: PibblPhysicsCollisionFilter; readonly tag?: unknown; readonly onCollisionStart?: PibblPhysicsCollisionHandler2D; readonly onCollisionEnd?: PibblPhysicsCollisionHandler2D; readonly onHit?: PibblPhysicsHitHandler2D; readonly onOverlapStart?: PibblPhysicsOverlapHandler2D; readonly onOverlapEnd?: PibblPhysicsOverlapHandler2D }
+  export interface PibblPhysicsDynamicBody2DOptions { readonly enabled?: boolean; readonly handle?: PibblPhysicsBodyHandle2D; readonly linearVelocity?: PibblPhysicsVector2; readonly angularVelocityDegreesPerSecond?: number; readonly linearDamping?: number; readonly angularDamping?: number; readonly gravityScale?: number; readonly mass?: 'auto' | number; readonly fixedRotation?: boolean; readonly allowSleep?: boolean; readonly ccd?: boolean; readonly reenableVelocity?: 'zero' | 'preserve'; readonly collider?: false | PibblPhysicsColliderConfiguration2D | PibblPhysicsShape2D }
+  export interface PibblPhysicsStaticBody2DOptions { readonly enabled?: boolean; readonly handle?: PibblPhysicsBodyHandle2D; readonly collider?: false | PibblPhysicsColliderConfiguration2D | PibblPhysicsShape2D }
+  export interface PibblPhysicsKinematicTarget2D { readonly position?: Signal<PibblPhysicsVector2>; readonly rotationDegrees?: Signal<number> }
+  export interface PibblPhysicsKinematicBody2DOptions { readonly enabled?: boolean; readonly handle?: PibblPhysicsBodyHandle2D; readonly target?: PibblPhysicsKinematicTarget2D; readonly allowSleep?: boolean; readonly collider?: false | PibblPhysicsColliderConfiguration2D | PibblPhysicsShape2D }
+  declare const physicsAttachment2DBrand: unique symbol;
+  export interface PibblPhysicsBodyAttachment2D { readonly [physicsAttachment2DBrand]: 'body' }
+  export interface PibblPhysicsColliderAttachment2D { readonly [physicsAttachment2DBrand]: 'collider' }
+  export type PibblPhysicsAttachment2D = PibblPhysicsBodyAttachment2D | PibblPhysicsColliderAttachment2D;
+  declare module '@pibbl/core' { interface PibblPhysics2DPropExtension { readonly physics?: PibblPhysicsAttachment2D } }
+  export interface PibblPhysicsSolverOptions { readonly velocityIterations?: number; readonly positionIterations?: number }
+  export interface PibblPhysicsWorld2DProps { readonly space?: "root" | "local"; readonly gravity?: PibblPhysicsVector2; readonly fixedStepMilliseconds?: number; readonly maxCatchUpSteps?: number; readonly interpolation?: 'linear' | 'none'; readonly sleeping?: boolean; readonly solver?: PibblPhysicsSolverOptions; readonly onSleep?: PibblPhysicsBodyStateHandler2D; readonly onWake?: PibblPhysicsBodyStateHandler2D; readonly onError?: (error: unknown) => void; readonly children?: PibblNode }
+  export interface PibblPhysicsPrimitiveProps2D extends PibblEventHandlers, PibblEventParticipationOptions { readonly keyboardFocusable?: boolean; readonly keyboardNavigationBounds?: Readonly<LayoutBox>; readonly physics?: PibblPhysicsAttachment2D }
+  export interface PhysicsShape2DProps extends PibblPhysicsPrimitiveProps2D {}
+  export interface PhysicsShape2DStyle extends SystemStyle, PaintStyle, CursorStyle, BoxStyle, LayoutItemStyle { readonly shape: PibblPhysicsShape2D; readonly lineInteractionWidth?: number }
+  export interface Capsule2DProps extends PibblPhysicsPrimitiveProps2D {}
+  export interface Capsule2DStyle extends SystemStyle, PaintStyle, CursorStyle, BoxStyle, LayoutItemStyle { readonly start: PibblPhysicsVector2; readonly end: PibblPhysicsVector2; readonly radius: number; readonly lineInteractionWidth?: number }
+  export interface Segment2DProps extends PibblPhysicsPrimitiveProps2D {}
+  export interface Segment2DStyle extends SystemStyle, Omit<PaintStyle, 'fill'>, CursorStyle, BoxStyle, LayoutItemStyle { readonly start: PibblPhysicsVector2; readonly end: PibblPhysicsVector2; readonly lineInteractionWidth?: number }
+  export interface Chain2DProps extends PibblPhysicsPrimitiveProps2D {}
+  export interface Chain2DStyle extends SystemStyle, PaintStyle, CursorStyle, BoxStyle, LayoutItemStyle { readonly points: readonly PibblPhysicsVector2[]; readonly closed?: boolean; readonly radius?: number; readonly lineInteractionWidth?: number }
+  declare const bodyHandle2DBrand: unique symbol;
+  export interface PibblPhysicsBodyHandle2D { readonly [bodyHandle2DBrand]: true; readonly position: Signal<PibblPhysicsVector2>; readonly rotationDegrees: Signal<number>; readonly linearVelocity: Signal<PibblPhysicsVector2>; readonly angularVelocityDegreesPerSecond: Signal<number>; readonly sleeping: Signal<boolean>; readonly enabled: Signal<boolean>; readonly generation: Signal<number> }
+  declare const colliderHandle2DBrand: unique symbol;
+  export interface PibblPhysicsColliderHandle2D { readonly [colliderHandle2DBrand]: true }
+  declare const worldHandle2DBrand: unique symbol;
+  export interface PibblPhysicsWorldHandle2D { readonly [worldHandle2DBrand]: true; readonly revision: Signal<number> }
+  export type PibblPhysicsQueryMode = 'closest' | 'any' | 'all';
+  export interface PibblPhysicsQueryOptions2D<Mode extends PibblPhysicsQueryMode = 'closest'> { readonly mode?: Mode; readonly sensors?: 'include' | 'exclude' | 'only'; readonly collisionFilter?: PibblPhysicsCollisionFilter; readonly excludeBody?: PibblPhysicsBodyHandle2D; readonly excludeCollider?: PibblPhysicsColliderHandle2D }
+  export interface PibblPhysicsQueryHit2D extends PibblPhysicsShapeHit2D { readonly body: PibblPhysicsBodyHandle2D; readonly collider: PibblPhysicsColliderHandle2D; readonly bodyGeneration: number; readonly colliderGeneration: number; readonly tag: unknown }
+  export interface PibblPhysicsQueryMatch2D { readonly body: PibblPhysicsBodyHandle2D; readonly collider: PibblPhysicsColliderHandle2D; readonly bodyGeneration: number; readonly colliderGeneration: number; readonly tag: unknown }
+  export type PibblPhysicsQueryResult2D<Mode extends PibblPhysicsQueryMode, Result> = Mode extends 'any' ? boolean : Mode extends 'all' ? readonly Result[] : Result | null;
+  export interface PibblPhysicsCollisionEvent2D { readonly selfBody: PibblPhysicsBodyHandle2D; readonly selfCollider: PibblPhysicsColliderHandle2D; readonly otherBody: PibblPhysicsBodyHandle2D; readonly otherCollider: PibblPhysicsColliderHandle2D; readonly normal: PibblPhysicsVector2; readonly points: readonly PibblPhysicsContactPoint2D[]; readonly totalNormalImpulse: number; readonly tick: number; readonly selfTag: unknown; readonly otherTag: unknown }
+  export interface PibblPhysicsOverlapEvent2D { readonly selfBody: PibblPhysicsBodyHandle2D; readonly selfCollider: PibblPhysicsColliderHandle2D; readonly otherBody: PibblPhysicsBodyHandle2D; readonly otherCollider: PibblPhysicsColliderHandle2D; readonly tick: number; readonly selfTag: unknown; readonly otherTag: unknown }
+  export interface PibblPhysicsBodyStateEvent2D { readonly body: PibblPhysicsBodyHandle2D; readonly sleeping: boolean; readonly tick: number }
+
+  export const PhysicsWorld2D: (props: PibblPhysicsWorld2DProps) => PibblNode;
+  export const PhysicsShape2D: PibblPrimitiveComponent<PhysicsShape2DProps, PrimitiveInput<PhysicsShape2DProps, PhysicsShape2DStyle>>;
+  export const Capsule2D: PibblPrimitiveComponent<Capsule2DProps, PrimitiveInput<Capsule2DProps, Capsule2DStyle>>;
+  export const Segment2D: PibblPrimitiveComponent<Segment2DProps, PrimitiveInput<Segment2DProps, Segment2DStyle>>;
+  export const Chain2D: PibblPrimitiveComponent<Chain2DProps, PrimitiveInput<Chain2DProps, Chain2DStyle>>;
+  export function dynamicBody2D(options?: PibblPhysicsDynamicBody2DOptions): PibblPhysicsBodyAttachment2D;
+  export function staticBody2D(options?: PibblPhysicsStaticBody2DOptions): PibblPhysicsBodyAttachment2D;
+  export function kinematicBody2D(options?: PibblPhysicsKinematicBody2DOptions): PibblPhysicsBodyAttachment2D;
+  export function collider2D(options?: PibblPhysicsColliderConfiguration2D): PibblPhysicsColliderAttachment2D;
+  export function withPhysicsShape2D<P, I, ResolvedStyle>(component: PibblPrimitiveComponent<P, I>, options: Readonly<{ resolveShape(style: Readonly<ResolvedStyle>): PibblPhysicsShape2D }>): PibblPrimitiveComponent<P & PibblPhysicsPrimitiveProps2D, I & { readonly physics?: PibblPhysicsAttachment2D }>;
+  export function pibblPhysicsBody2D(): PibblPhysicsBodyHandle2D;
+  export function pibblPhysicsWorld2D(): PibblPhysicsWorldHandle2D;
+
+  export interface PibblPhysicsBodyInspection2D {
+    readonly id: number;
+    readonly generation: number;
+    readonly type: 'dynamic' | 'kinematic' | 'static';
+    readonly enabled: boolean;
+    readonly sleeping: boolean;
+    readonly pose: PibblPhysicsPose2D;
+    readonly presentationPose: PibblPhysicsPose2D;
+    readonly centerOfMass: PibblPhysicsVector2;
+    readonly linearVelocity: PibblPhysicsVector2;
+    readonly angularVelocityDegreesPerSecond: number;
+    readonly mass: number | null;
+  }
+  export interface PibblPhysicsColliderInspection2D {
+    readonly id: number;
+    readonly generation: number;
+    readonly bodyId: number;
+    readonly sensor: boolean;
+    /** String tags only. Arbitrary application objects are never serialized. */
+    readonly label: string | null;
+    readonly shapeKinds: readonly string[];
+    readonly bounds: PibblPhysicsAabb2D;
+  }
+  export interface PibblPhysicsContactInspection2D {
+    readonly firstColliderId: number;
+    readonly secondColliderId: number;
+    readonly sensor: boolean;
+    readonly normal: PibblPhysicsVector2;
+    readonly points: readonly PibblPhysicsContactPoint2D[];
+    readonly normalImpulse: number;
+  }
+  /** Read-only observations, not an engine serialization/restore format. */
+  export interface PibblPhysicsInspection2D {
+    readonly engine: 'rapier-2d@0.21.0';
+    readonly space: 'root' | 'local';
+    readonly revision: number;
+    readonly tick: number;
+    readonly advancing: boolean;
+    readonly failedFrames: number;
+    readonly lastFailure: string | null;
+    readonly bodies: readonly PibblPhysicsBodyInspection2D[];
+    readonly colliders: readonly PibblPhysicsColliderInspection2D[];
+    readonly contacts: readonly PibblPhysicsContactInspection2D[];
+  }
+  export function inspectPhysics2D(world: PibblPhysicsWorldHandle2D): PibblPhysicsInspection2D;
+  export function inspectPhysics2D(body: PibblPhysicsBodyHandle2D): PibblPhysicsBodyInspection2D | undefined;
+  export interface PibblPhysicsDebug2DProps { readonly world: PibblPhysicsWorldHandle2D; readonly color?: string; }
+  export const PhysicsDebug2D: PibblPrimitiveComponent<PibblPhysicsDebug2DProps, PrimitiveInput<PibblPhysicsDebug2DProps, SystemStyle>>;
+  export function toPhysicsPoint2D(world: PibblPhysicsWorldHandle2D, point: PibblPhysicsVector2): PibblPhysicsVector2;
+  export function fromPhysicsPoint2D(world: PibblPhysicsWorldHandle2D, point: PibblPhysicsVector2): PibblPhysicsVector2;
+  export function applyForce2D(body: PibblPhysicsBodyHandle2D, force: PibblPhysicsVector2, options?: Readonly<{ at?: PibblPhysicsVector2; wake?: boolean }>): void;
+  export function applyImpulse2D(body: PibblPhysicsBodyHandle2D, impulse: PibblPhysicsVector2, options?: Readonly<{ at?: PibblPhysicsVector2; wake?: boolean }>): void;
+  export function applyTorque2D(body: PibblPhysicsBodyHandle2D, torque: number): void;
+  export function disableBody2D(body: PibblPhysicsBodyHandle2D): void;
+  export function enableBody2D(body: PibblPhysicsBodyHandle2D, options?: Readonly<{ velocity?: 'zero' | 'preserve' }>): void;
+  export function setAngularVelocity2D(body: PibblPhysicsBodyHandle2D, degreesPerSecond: number): void;
+  export function setLinearVelocity2D(body: PibblPhysicsBodyHandle2D, velocity: PibblPhysicsVector2): void;
+  export function sleepBody2D(body: PibblPhysicsBodyHandle2D): void;
+  export function teleportBody2D(body: PibblPhysicsBodyHandle2D, pose: PibblPhysicsPose2D): void;
+  export function wakeBody2D(body: PibblPhysicsBodyHandle2D): void;
+  export function raycast2D<Mode extends PibblPhysicsQueryMode = 'closest'>(world: PibblPhysicsWorldHandle2D, ray: PibblPhysicsRay2D, options?: PibblPhysicsQueryOptions2D<Mode>): PibblPhysicsQueryResult2D<Mode, PibblPhysicsQueryHit2D>;
+  export function shapeCast2D<Mode extends PibblPhysicsQueryMode = 'closest'>(world: PibblPhysicsWorldHandle2D, shape: PibblPhysicsShape2D, from: PibblPhysicsPose2D, translation: PibblPhysicsVector2, options?: PibblPhysicsQueryOptions2D<Mode>): PibblPhysicsQueryResult2D<Mode, PibblPhysicsQueryHit2D>;
+  export function overlapShape2D<Mode extends PibblPhysicsQueryMode = 'closest'>(world: PibblPhysicsWorldHandle2D, shape: PibblPhysicsShape2D, pose: PibblPhysicsPose2D, options?: PibblPhysicsQueryOptions2D<Mode>): PibblPhysicsQueryResult2D<Mode, PibblPhysicsQueryMatch2D>;
+  export function queryAabb2D<Mode extends PibblPhysicsQueryMode = 'closest'>(world: PibblPhysicsWorldHandle2D, bounds: PibblPhysicsAabb2D, options?: PibblPhysicsQueryOptions2D<Mode>): PibblPhysicsQueryResult2D<Mode, PibblPhysicsQueryMatch2D>;
+  export function queryPoint2D<Mode extends PibblPhysicsQueryMode = 'closest'>(world: PibblPhysicsWorldHandle2D, point: PibblPhysicsVector2, options?: PibblPhysicsQueryOptions2D<Mode>): PibblPhysicsQueryResult2D<Mode, PibblPhysicsQueryMatch2D>;
+
+  export function physicsObstacles2D(world: PibblPhysicsWorldHandle2D): Readonly<{ read(): Readonly<{ revision: number; boxes: Float64Array; ellipses: Float64Array; polygons: Float64Array }> }>;
+
+/* @pibbl-studio-module @pibbl/core/particles */
+  import type {
+    BoxStyle,
+    PibblEventHandlers,
+    PibblEventParticipationOptions,
+    PibblNode,
+    CursorStyle,
+    LayoutBox,
+    LayoutItemStyle,
+    Signal,
+    SignalValue,
+    SystemStyle,
+  } from '@pibbl/core';
+
+  export type PibblParticleParameterTiming = 'spawn' | 'simulation' | 'render';
+  export type PibblParticleParameterDefinition =
+    | Readonly<{ type: 'number'; default: number; timing: PibblParticleParameterTiming }>
+    | Readonly<{ type: 'vector2'; default: readonly [number, number]; timing: PibblParticleParameterTiming }>
+    | Readonly<{ type: 'color'; default: string; timing: PibblParticleParameterTiming }>;
+  export type PibblParticleParameterDefinitions = Readonly<Record<string, PibblParticleParameterDefinition>>;
+  export type PibblParticleValueFor<Definition extends PibblParticleParameterDefinition> =
+    Definition['type'] extends 'number' ? number :
+    Definition['type'] extends 'vector2' ? readonly [number, number] :
+    Definition['type'] extends 'color' ? string : never;
+  export type PibblParticleValuesOf<Definitions extends PibblParticleParameterDefinitions | undefined> =
+    Definitions extends PibblParticleParameterDefinitions
+      ? Readonly<{ [Name in keyof Definitions]: PibblParticleValueFor<Definitions[Name]> }>
+      : Readonly<Record<never, never>>;
+  export type PibblParticleParameterValue = number | string | readonly [number, number];
+  export type PibblParticleParameterValues = Readonly<Record<string, PibblParticleParameterValue>>;
+
+  export interface PibblParticleRange { readonly type: 'between'; readonly min: number; readonly max: number }
+  export interface PibblParticleIntegerRange { readonly type: 'integer'; readonly min: number; readonly max: number }
+  export interface PibblParticleChoice<T> {
+    readonly type: 'choice';
+    readonly choices: readonly Readonly<{ value: T; weight: number }>[];
+  }
+  export interface PibblParticleParameterReference<Name extends string> { readonly type: 'parameter'; readonly name: Name }
+  export type PibblParticleScalar = number | PibblParticleRange | PibblParticleIntegerRange | PibblParticleChoice<number> | PibblParticleParameterReference<string>;
+  export type PibblParticleVector2 = readonly [PibblParticleScalar, PibblParticleScalar] | PibblParticleParameterReference<string>;
+  export type PibblParticleCurveValue = number | readonly [number, number];
+  export interface PibblParticleCurveOptions { readonly easing?: import('@pibbl/core').PibblEasing }
+  export interface PibblParticleCurve<T extends PibblParticleCurveValue> {
+    readonly type: 'curve';
+    readonly keys: readonly (readonly [time: number, value: T])[];
+    readonly options?: PibblParticleCurveOptions;
+  }
+  export interface PibblParticleGradient {
+    readonly type: 'gradient';
+    readonly keys: readonly (readonly [time: number, color: string])[];
+    readonly options?: PibblParticleCurveOptions;
+  }
+
+  export type PibblParticleEmission =
+    | Readonly<{
+        type: 'rate';
+        particlesPerSecond: number;
+        startMilliseconds?: number;
+        durationMilliseconds?: number;
+        probability?: number;
+        repeat?: Readonly<{ everyMilliseconds: number; count: number }>;
+      }>
+    | Readonly<{
+        type: 'burst';
+        atMilliseconds: number;
+        count: number | PibblParticleIntegerRange;
+        probability?: number;
+        repeat?: Readonly<{ everyMilliseconds: number; count: number }>;
+      }>
+    | Readonly<{ type: 'manual'; count?: number | PibblParticleIntegerRange }>;
+  export type PibblParticleShape2D =
+    | Readonly<{ type: 'point'; position?: readonly [number, number] }>
+    | Readonly<{ type: 'line'; from: readonly [number, number]; to: readonly [number, number] }>
+    | Readonly<{ type: 'rectangle'; width: number; height: number; sample: 'interior' | 'edge' }>
+    | Readonly<{ type: 'circle'; radius: number; sample: 'interior' | 'circumference' }>
+    | Readonly<{ type: 'ring'; innerRadius: number; outerRadius: number }>;
+  export interface PibblParticleInitial2D {
+    readonly lifetimeMilliseconds: PibblParticleScalar;
+    readonly velocity?: PibblParticleVector2;
+    readonly size?: PibblParticleScalar | PibblParticleVector2;
+    readonly rotationDegrees?: PibblParticleScalar;
+    readonly angularVelocityDegreesPerSecond?: PibblParticleScalar;
+    readonly color?: string | PibblParticleChoice<string> | PibblParticleParameterReference<string>;
+    readonly opacity?: PibblParticleScalar;
+  }
+  export type PibblParticleMotion2D =
+    | Readonly<{ type: 'acceleration' | 'gravity'; value: PibblParticleVector2 }>
+    | Readonly<{ type: 'drag'; amount: PibblParticleScalar }>
+    | Readonly<{ type: 'drift'; velocity: PibblParticleVector2 }>
+    | Readonly<{ type: 'radialAcceleration'; center: readonly [number, number]; amount: PibblParticleScalar }>
+    | Readonly<{ type: 'orbit'; center: readonly [number, number]; degreesPerSecond: PibblParticleScalar }>
+    | Readonly<{ type: 'sway'; amplitude: PibblParticleScalar; frequency: PibblParticleScalar | readonly [number, number] }>
+    | Readonly<{ type: 'angularVelocity'; degreesPerSecond: PibblParticleScalar }>;
+  export interface PibblParticleAppearance {
+    readonly size?: PibblParticleCurve<number | readonly [number, number]>;
+    readonly rotationDegrees?: PibblParticleCurve<number>;
+    readonly color?: PibblParticleGradient;
+    readonly opacity?: PibblParticleCurve<number>;
+  }
+  export type PibblParticleRenderer2D =
+    | Readonly<{ type: 'circle'; blend?: 'source-over' | 'additive' }>
+    | Readonly<{ type: 'rectangle'; aspectRatio?: number; blend?: 'source-over' | 'additive' }>
+    | Readonly<{ type: 'path'; path: Path2D | import('@pibbl/core').PathGeometry; blend?: 'source-over' | 'additive' }>
+    | Readonly<{ type: 'sprite'; source: CanvasImageSource; anchor?: readonly [number, number]; blend?: 'source-over' | 'additive' }>;
+  export interface PibblParticleBounds2D { readonly min: readonly [number, number]; readonly max: readonly [number, number] }
+  export type PibblParticleOverflow = 'reject-newest' | 'recycle-oldest';
+  export interface PibblParticleEmitter2D {
+    readonly name: string;
+    readonly capacity: number;
+    readonly overflow?: PibblParticleOverflow;
+    readonly space?: 'local';
+    readonly emission: readonly PibblParticleEmission[];
+    readonly shape: PibblParticleShape2D;
+    readonly initial: PibblParticleInitial2D;
+    readonly motion?: readonly PibblParticleMotion2D[];
+    readonly appearance?: PibblParticleAppearance;
+    readonly renderer: PibblParticleRenderer2D;
+    readonly bounds?: PibblParticleBounds2D;
+  }
+  export interface PibblParticleEffect2DInput {
+    readonly debugName?: string;
+    readonly parameters?: PibblParticleParameterDefinitions;
+    readonly emitters: readonly [PibblParticleEmitter2D, ...PibblParticleEmitter2D[]];
+  }
+  declare const particleEffectBrand: unique symbol;
+  export interface PibblParticleEffect2D<
+    EmitterName extends string = string,
+    Parameters extends PibblParticleParameterValues = PibblParticleParameterValues,
+  > {
+    readonly dimension: 2;
+    readonly [particleEffectBrand]: { readonly emitterName: EmitterName; readonly parameters: Parameters };
+  }
+
+  export type PibblParticleSystemStatus = 'idle' | 'scheduled' | 'running' | 'paused' | 'draining' | 'finished' | 'disposed';
+  export type PibblParticleExecution = 'unbound' | 'stateless-canvas' | 'flow-canvas';
+  export interface PibblParticleStartEvent { readonly type: 'start' }
+  export interface PibblParticleBurstAcceptedEvent { readonly type: 'burst-accepted'; readonly emitter: string; readonly requested: number; readonly accepted: number }
+  export interface PibblParticleBurstRejectedEvent { readonly type: 'burst-rejected'; readonly emitter: string; readonly requested: number; readonly accepted: number; readonly reason: 'capacity' | 'paused' | 'stopped' | 'disposed' }
+  export interface PibblParticleDrainStartEvent { readonly type: 'drain-start' }
+  export interface PibblParticleFinishEvent { readonly type: 'finish' }
+  export type PibblParticleSystemEvent = PibblParticleStartEvent | PibblParticleBurstAcceptedEvent | PibblParticleBurstRejectedEvent | PibblParticleDrainStartEvent | PibblParticleFinishEvent;
+  export type PibblParticleDiagnostic =
+    | Readonly<{ type: 'definition-invalid'; message: string; effect?: string; emitter?: string; property?: string }>
+    | Readonly<{ type: 'capability-unsupported'; message: string; capability: string; effect?: string; emitter?: string }>
+    | Readonly<{ type: 'asset-invalid' | 'binding-conflict' | 'backend-mismatch'; message: string; effect?: string; emitter?: string }>
+    | Readonly<{ type: 'capacity-rejected' | 'execution-failed' | 'disposed'; message: string; effect?: string; emitter?: string }>;
+  export interface PibblParticleSystemOptions {
+    readonly flow?: PibblFlowField2D;
+    readonly autoplay?: boolean;
+    readonly seed?: number;
+    readonly debugName?: string;
+    readonly onEvent?: (event: PibblParticleSystemEvent) => void;
+    readonly onError?: (error: unknown) => void;
+  }
+  export interface PibblParticleBurstOverrides {
+    readonly count?: number;
+    readonly position?: readonly [number, number];
+    readonly seedSalt?: number;
+    readonly parameters?: Readonly<Record<string, number | readonly number[] | string>>;
+  }
+  declare const particleSystemBrand: unique symbol;
+  export interface PibblParticleSystem<
+    EmitterName extends string = string,
+    Parameters extends PibblParticleParameterValues = PibblParticleParameterValues,
+  > {
+    readonly [particleSystemBrand]: { readonly parameters: Parameters; readonly dimension: 2 };
+    readonly status: Signal<PibblParticleSystemStatus>;
+    readonly execution: Signal<PibblParticleExecution>;
+    play(): void;
+    pause(): void;
+    resume(): void;
+    restart(options?: Readonly<{ seed?: number }>): void;
+    emit(emitter: EmitterName, options?: PibblParticleBurstOverrides): void;
+    stop(options?: Readonly<{ mode?: 'drain' | 'clear' }>): void;
+  }
+  export interface PibblParticleCommonProps<Parameters extends PibblParticleParameterValues>
+    extends PibblEventHandlers, PibblEventParticipationOptions {
+    readonly parameters?: Readonly<Partial<Parameters>>;
+    readonly keyboardFocusable?: boolean;
+    readonly keyboardNavigationBounds?: Readonly<LayoutBox>;
+    readonly onEvent?: (event: PibblParticleSystemEvent) => void;
+    readonly onError?: (error: unknown) => void;
+  }
+  export interface Particles2DStyle extends SystemStyle, BoxStyle, LayoutItemStyle, CursorStyle { readonly opacity?: number }
+  export type Particles2DProps<
+    EmitterName extends string = string,
+    Parameters extends PibblParticleParameterValues = PibblParticleParameterValues,
+  > = PibblParticleCommonProps<Parameters> & { readonly style?: Particles2DStyle } & (
+    | { readonly effect: PibblParticleEffect2D<EmitterName, Parameters>; readonly system?: never; readonly autoplay?: boolean; readonly seed?: number }
+    | { readonly effect?: never; readonly system: PibblParticleSystem<EmitterName, Parameters>; readonly autoplay?: never; readonly seed?: never }
+  );
+
+  export declare function defineParticleEffect2D<const Input extends PibblParticleEffect2DInput>(
+    input: Input,
+  ): PibblParticleEffect2D<
+    Input['emitters'][number]['name'],
+    PibblParticleValuesOf<Input extends { readonly parameters: infer Definitions }
+      ? Extract<Definitions, PibblParticleParameterDefinitions>
+      : undefined>
+  >;
+  export declare function particleRange(min: number, max: number): PibblParticleRange;
+  export declare function particleInteger(min: number, max: number): PibblParticleIntegerRange;
+  export declare function particleChoice<const T>(choices: readonly Readonly<{ value: T; weight: number }>[]): PibblParticleChoice<T>;
+  export declare function particleParameter<const Name extends string>(name: Name): PibblParticleParameterReference<Name>;
+  export declare function particleCurve<const T extends PibblParticleCurveValue>(keys: readonly (readonly [time: number, value: T])[], options?: PibblParticleCurveOptions): PibblParticleCurve<T>;
+  export declare function particleGradient(keys: readonly (readonly [time: number, color: string])[], options?: PibblParticleCurveOptions): PibblParticleGradient;
+  export declare function useParticleSystem<
+    EmitterName extends string,
+    Parameters extends PibblParticleParameterValues,
+  >(
+    effect: PibblParticleEffect2D<EmitterName, Parameters>,
+    options?: PibblParticleSystemOptions,
+  ): PibblParticleSystem<EmitterName, Parameters>;
+  export declare function Particles2D<
+    EmitterName extends string,
+    Parameters extends PibblParticleParameterValues,
+  >(props: Particles2DProps<EmitterName, Parameters>): PibblNode;
+
+  export interface PibblFlowObstacleBatch2D { readonly revision: number; readonly boxes: Float64Array; readonly ellipses?: Float64Array; readonly polygons?: Float64Array; }
+  export interface PibblFlowObstacleSource2D { read(): PibblFlowObstacleBatch2D; }
+  export interface PibblFlowFieldOptions2D {
+    readonly bounds: Readonly<{ width: number; height: number }>;
+    readonly resolution: readonly [number, number];
+    readonly obstacles?: PibblFlowObstacleSource2D;
+    readonly buoyancy?: number;
+  }
+  declare const flowBrand: unique symbol;
+  export interface PibblFlowField2D {
+    readonly [flowBrand]: true;
+    readonly revision: Signal<number>;
+    sampleBatch(positions: Float32Array, velocities: Float32Array, count: number): void;
+  }
+  export interface PibblFlowSourceOptions2D {
+    readonly position: SignalValue<readonly [number, number]>;
+    readonly radius: SignalValue<number>;
+    readonly acceleration?: SignalValue<readonly [number, number]>;
+    readonly heat?: SignalValue<number>;
+    readonly enabled?: SignalValue<boolean>;
+  }
+  export declare function useFlowField2D(options: PibblFlowFieldOptions2D): PibblFlowField2D;
+  export declare function useFlowSource2D(field: PibblFlowField2D, options: PibblFlowSourceOptions2D): void;
+
+/* @pibbl-studio-module @pibbl/three */
+  import type * as THREE from 'three';
+  import type {
+    PibblComponent,
+    PibblEventHandlers,
+    PibblPointerEvents,
+    PibblRenderLayerContext,
+    PibblRenderLayerFrame,
+    PibblRenderLayerHit,
+    PibblRenderLayerProps,
+    PibblRenderLayerSize,
+    LayoutBox,
+  } from '@pibbl/core';
+
+  export interface PibblThreeLayerResources {
+    readonly scene: THREE.Scene;
+    readonly camera: THREE.Camera;
+  }
+  export interface PibblThreeTarget {
+    readonly object: THREE.Object3D;
+    readonly handlers?: PibblEventHandlers;
+    readonly pointerEvents?: PibblPointerEvents;
+    readonly cursor?: string;
+    readonly keyboardFocusable?: boolean;
+    readonly keyboardNavigationBounds?: Readonly<LayoutBox>;
+  }
+  export type PibblThreePickResult = PibblRenderLayerHit<THREE.Object3D>;
+  export type PibblThreeRendererOptions = Omit<THREE.WebGLRendererParameters, 'canvas' | 'alpha'>;
+  export interface PibblThreeInputBridge {
+    connect<Control>(create: (element: HTMLElement) => Control): Control;
+  }
+  export type PibblThreePicker = (point: Readonly<{ x: number; y: number }>) => PibblThreePickResult;
+  export interface PibblThreeLayerContext extends PibblRenderLayerContext {
+    readonly renderer: THREE.WebGLRenderer;
+    readonly input: PibblThreeInputBridge;
+  }
+  export interface PibblThreeLayerDefinition<Props, Resources extends PibblThreeLayerResources> {
+    readonly renderer?: PibblThreeRendererOptions;
+    create(context: PibblThreeLayerContext, initialProps: Readonly<Props>): Resources;
+    update?(resources: Resources, props: Readonly<Props>, context: PibblThreeLayerContext): void;
+    resize?(resources: Resources, size: PibblRenderLayerSize, context: PibblThreeLayerContext): void;
+    render?(resources: Resources, frame: PibblRenderLayerFrame, context: PibblThreeLayerContext): void;
+    targets?(resources: Resources, props: Readonly<Props>): Iterable<PibblThreeTarget>;
+    pick?(resources: Resources, context: PibblThreeLayerContext): PibblThreePicker;
+    dispose?(resources: Resources, context: PibblThreeLayerContext): void;
+  }
+  export function defineThreeLayer<Props, Resources extends PibblThreeLayerResources>(definition: PibblThreeLayerDefinition<Props, Resources>): PibblComponent<PibblRenderLayerProps<Props>>;
+
+/* @pibbl-studio-module @pibbl/core/viz */
+import type { BoxStyle, PibblNode, LayoutItemStyle, LayoutBox, SignalValue } from '@pibbl/core';
+type SignalStyle<S> = Readonly<{ [K in keyof S]: K extends "custom" ? S[K] : SignalValue<S[K]> }>;
+export type ScaleId = string | symbol;
+export type LinearDomain = readonly [number, number];
+export type ScaleRange = 'width' | 'height' | readonly [number, number];
+export type BandScaleRange = ScaleRange | { readonly bandwidthOf: ScaleId };
+export type ScaleLayoutStyle = Pick<BoxStyle, 'width' | 'height'> & LayoutItemStyle;
+export interface LinearScaleProps {
+  readonly id: ScaleId;
+  readonly domain: SignalValue<LinearDomain>;
+  readonly range: SignalValue<ScaleRange>;
+  readonly reverse?: SignalValue<boolean>;
+  readonly style?: SignalValue<SignalStyle<ScaleLayoutStyle>>;
+  readonly children?: PibblNode;
+}
+export type BandCategory = string | number;
+export type BandDomain = readonly BandCategory[];
+export interface BarScaleProps extends Omit<LinearScaleProps, "domain" | "range"> {
+  readonly domain: SignalValue<BandDomain>;
+  readonly range: SignalValue<BandScaleRange>;
+  readonly paddingInner?: SignalValue<number>;
+  readonly paddingOuter?: SignalValue<number>;
+}
+export type NumericDomain = LinearDomain;
+export type UtcDomain = LinearDomain;
+export interface UTCScaleProps extends LinearScaleProps { }
+export interface ResolvedBandScale {
+  readonly type: "band";
+  readonly domain: BandDomain;
+  readonly range: readonly [number, number];
+  readonly frame: Readonly<LayoutBox>;
+  readonly bandwidth: number;
+  readonly step: number;
+  map(value: BandCategory): number | undefined;
+}
+
+export interface ResolvedLinearScale {
+  readonly type: 'linear';
+  readonly domain: LinearDomain;
+  readonly range: readonly [number, number];
+  readonly frame: Readonly<LayoutBox>;
+  map(value: number): number;
+  invert(pixel: number): number;
+  ticks(count?: number): readonly number[];
+}
+export interface ResolvedUtcScale extends Omit<ResolvedLinearScale, "type"> {
+  readonly type: "utc";
+  formatTick(value: number): string;
+}
+export type ResolvedContinuousScale = ResolvedLinearScale | ResolvedUtcScale;
+export type ResolvedScale = ResolvedContinuousScale | ResolvedBandScale;
+export declare function extent<D>(data: readonly D[], value: (datum: D, index: number, data: readonly D[]) => number | null | undefined): NumericDomain | undefined;
+export declare function niceUTCDomain(domain: NumericDomain, options?: { readonly count?: number }): NumericDomain;
+
+import type { PibblEventHandlers, PibblEventParticipationOptions, FillStyle, StrokeStyle } from '@pibbl/core';
+export interface AxisStyle { readonly stroke?: StrokeStyle; readonly strokeWidth?: number; readonly fill?: FillStyle; readonly font?: string; readonly opacity?: number }
+interface AxisBaseProps {
+  readonly scale: ScaleId;
+  readonly position: "bottom" | "left" | "top" | "right";
+  readonly tickFormat?: (value: number | string, index: number) => string;
+  readonly style?: SignalValue<SignalStyle<AxisStyle>>;
+}
+export type AxisProps = AxisBaseProps & (
+  | { readonly tickValues: SignalValue<readonly (number | string)[]>; readonly tickCount?: never }
+  | { readonly tickValues?: never; readonly tickCount?: SignalValue<number> }
+);
+
+export type LineCoordinate = number | null | undefined;
+export type LineAccessor<D> = { [K in keyof D]-?: D[K] extends LineCoordinate ? K : never }[keyof D] | ((datum: D, index: number, data: readonly D[]) => LineCoordinate);
+export type LineCurve = 'linear';
+export interface LineSeriesStyle { readonly stroke?: StrokeStyle; readonly strokeWidth?: number; readonly opacity?: number; readonly cursor?: string; readonly lineInteractionWidth?: number }
+export interface LineSeriesProps<D> extends PibblEventHandlers, PibblEventParticipationOptions {
+  readonly data: SignalValue<readonly D[]>;
+  readonly x: LineAccessor<D>; readonly y: LineAccessor<D>;
+  readonly xScale: ScaleId; readonly yScale: ScaleId;
+  readonly defined?: (datum: D, index: number, data: readonly D[]) => boolean;
+  readonly curve?: LineCurve;
+  readonly style?: SignalValue<SignalStyle<LineSeriesStyle>>;
+}
+type ScaleAdjustX = { readonly x: SignalValue<number>; readonly xScale: ScaleId } | { readonly x?: never; readonly xScale?: never };
+type ScaleAdjustY = { readonly y: SignalValue<number>; readonly yScale: ScaleId } | { readonly y?: never; readonly yScale?: never };
+export type ScaleAdjustProps = ScaleAdjustX & ScaleAdjustY & { readonly children?: PibblNode };
+
+import type { Signal } from "@pibbl/core";
+export declare function useLinearScale(id: ScaleId): Signal<ResolvedLinearScale>;
+export declare function useBarScale(id: ScaleId): Signal<ResolvedBandScale>;
+export declare function useUTCScale(id: ScaleId): Signal<ResolvedUtcScale>;
+export declare function LinearScale(props: LinearScaleProps): PibblNode;
+export declare function BarScale(props: BarScaleProps): PibblNode;
+export declare function UTCScale(props: UTCScaleProps): PibblNode;
+export declare function Axis(props: AxisProps): PibblNode;
+export declare function LineSeries<D>(props: LineSeriesProps<D>): PibblNode;
+export declare function ScaleAdjust(props: ScaleAdjustProps): PibblNode;
+
+export type PointAccessor<D> = LineAccessor<D>;
+export interface PointMarkStyle {
+  readonly radius?: number;
+  readonly fill?: FillStyle;
+  readonly stroke?: StrokeStyle;
+  readonly strokeWidth?: number;
+  readonly opacity?: number;
+}
+export interface PointSeriesStyle extends PointMarkStyle { readonly cursor?: string; }
+export type PointStyleResolver<D> = (datum: D, index: number, data: readonly D[]) => Readonly<PointMarkStyle>;
+export interface PointSeriesProps<D> extends PibblEventHandlers, PibblEventParticipationOptions {
+  readonly data: SignalValue<readonly D[]>;
+  readonly x: PointAccessor<D>;
+  readonly y: PointAccessor<D>;
+  readonly xScale: ScaleId;
+  readonly yScale: ScaleId;
+  readonly defined?: (datum: D, index: number, data: readonly D[]) => boolean;
+  readonly style?: SignalValue<SignalStyle<PointSeriesStyle> | PointStyleResolver<D>>;
+}
+
+export type PlotKeyAccessor<D> =
+ | { [K in keyof D]-?: D[K] extends string|number ? K : never }[keyof D]
+ | ((datum:D,index:number,data:readonly D[])=>string|number);
+export interface PlotSeriesProps<D> extends PibblEventHandlers {
+ readonly data: SignalValue<readonly D[]>;
+ readonly x:PointAccessor<D>;
+ readonly y:PointAccessor<D>;
+ readonly xScale:ScaleId;
+ readonly yScale:ScaleId;
+ readonly defined?:(datum:D,index:number,data:readonly D[])=>boolean;
+ readonly keyBy?:PlotKeyAccessor<D>;
+ readonly render:(datum:D,index:number,data:readonly D[])=>PibblNode;
+}
+
+export declare function PointSeries<D>(props:PointSeriesProps<D>):PibblNode;
+export declare function PlotSeries<D>(props:PlotSeriesProps<D>):PibblNode;
+export interface NearestPointOptions<D> { readonly x:PointAccessor<D>; readonly y:PointAccessor<D>; readonly xScale:ResolvedContinuousScale; readonly yScale:ResolvedContinuousScale; readonly defined?:(datum:D,index:number,data:readonly D[])=>boolean; readonly maxDistance?:number; }
+export interface NearestPoint<D> {readonly datum:D; readonly index:number; readonly x:number; readonly y:number; readonly distance:number;}
+export declare function nearestDomainValue(values:readonly number[],rangeValue:number,scale:ResolvedContinuousScale):number|undefined;
+export declare function nearestPoint<D>(data:readonly D[],point:Readonly<{x:number;y:number}>,options:NearestPointOptions<D>):NearestPoint<D>|undefined;
+
+export interface HoverQueryContext {
+  scale(id: ScaleId): ResolvedContinuousScale;
+}
+export type HoverQuery<T> = (context: HoverQueryContext) => T | undefined;
+export interface HoverDataProps<T> {
+  readonly query: HoverQuery<T> &
+    (T extends PromiseLike<unknown> ? never : unknown);
+  readonly children: (result: T | undefined) => PibblNode;
+}
+export interface HoverSeries<D> {
+  readonly data: SignalValue<readonly D[]>;
+  readonly x: PointAccessor<D>;
+  readonly y: PointAccessor<D>;
+  readonly defined?: (datum: D, index: number, data: readonly D[]) => boolean;
+}
+export interface HoverPoint {
+  readonly x: number;
+  readonly y: number;
+}
+export interface HoverHit<D> {
+  readonly datum: D;
+  readonly index: number;
+  readonly x: number;
+  readonly y: number;
+  readonly anchor: HoverPoint;
+}
+// The constraint permits independently typed descriptors; the mapped result below
+// restores the exact association between a series key and its original datum.
+export type HoverSeriesMap = Readonly<Record<string, HoverSeries<any>>>;
+export type ClosestPointHit<S extends HoverSeriesMap> = {
+  [K in keyof S & string]: S[K] extends HoverSeries<infer D>
+    ? HoverHit<D> & { readonly series: K; readonly distance: number }
+    : never;
+}[keyof S & string];
+export interface ClosestPointOptions<S extends HoverSeriesMap> {
+  readonly series: S;
+  readonly position: SignalValue<HoverPoint | null>;
+  readonly xScale: ScaleId;
+  readonly yScale: ScaleId;
+  readonly maxDistance?: number;
+}
+
+export declare function HoverData<T>(props: HoverDataProps<T>): PibblNode;
+export declare function defineSeries<D>(options: HoverSeries<D>): HoverSeries<D>;
+export declare function closestPoint<S extends HoverSeriesMap>(options: ClosestPointOptions<S>): HoverQuery<ClosestPointHit<S>>;
+
+export interface HoverCardStyle {
+  readonly width: Exclude<BoxStyle["width"], undefined | "auto">;
+  readonly height: Exclude<BoxStyle["height"], undefined | "auto">;
+  readonly padding?: BoxStyle["padding"];
+  readonly fill?: FillStyle;
+  readonly stroke?: StrokeStyle;
+  readonly strokeWidth?: number;
+  readonly cornerRadius?: number;
+  readonly opacity?: number;
+  readonly filter?: never;
+  readonly custom?: never;
+}
+export interface HoverCardProps {
+  readonly anchor: SignalValue<HoverPoint>;
+  readonly anchorRadius?: SignalValue<number>;
+  readonly gap?: SignalValue<number>;
+  readonly bounds?: SignalValue<HoverBounds>;
+  readonly placement?: HoverPlacement;
+  readonly style: SignalValue<SignalStyle<HoverCardStyle>>;
+  readonly children?: PibblNode;
+}
+
+export type HoverPlacement = "auto" | "above" | "below" | "right" | "left";
+export interface HoverBounds { readonly x:number; readonly y:number; readonly width:number; readonly height:number; }
+export declare function HoverCard(props: HoverCardProps): PibblNode;
+
+export interface ClosestXOptions<D> {
+  readonly series: HoverSeries<D>;
+  readonly x: SignalValue<number | null>;
+  readonly xScale: ScaleId;
+  readonly yScale: ScaleId;
+  readonly maxDelta?: number;
+}
+export interface ClosestXHit<D> extends HoverHit<D> {
+  readonly delta: number;
+}
+export type HoverInterpolation = (
+  beforeY: number,
+  afterY: number,
+  fraction: number,
+) => number;
+export interface InterpolateXOptions<D> extends Omit<
+  ClosestXOptions<D>,
+  "maxDelta"
+> {
+  readonly interpolation: HoverInterpolation;
+  readonly maxGap?: number;
+  readonly duplicateX?: "error" | "first" | "last";
+}
+export type HoverSample<D> =
+  | (HoverHit<D> & { readonly kind: "exact" })
+  | {
+      readonly kind: "interpolated";
+      readonly x: number;
+      readonly y: number;
+      readonly before: D;
+      readonly after: D;
+      readonly beforeIndex: number;
+      readonly afterIndex: number;
+      readonly fraction: number;
+      readonly anchor: HoverPoint;
+    };
+
+export declare function closestX<D>(options: ClosestXOptions<D>): HoverQuery<ClosestXHit<D>>;
+export declare function interpolateX<D>(options: InterpolateXOptions<D>): HoverQuery<HoverSample<D>>;
+export declare function linearInterpolation(): HoverInterpolation;
+
+export interface AnchoredItem {
+  readonly key: string | number;
+  readonly anchor: Readonly<{ x: number; y: number }>;
+  readonly anchorRadius?: number;
+  readonly width: number;
+  readonly height: number;
+}
+export interface AnchoredPlacement {
+  readonly x: number;
+  readonly y: number;
+  readonly width: number;
+  readonly height: number;
+}
+export interface AnchoredLayoutProps<T extends AnchoredItem> {
+  readonly items: SignalValue<readonly T[]>;
+  readonly direction?: 'vertical' | 'horizontal';
+  readonly gap?: SignalValue<number>;
+  readonly bounds?: SignalValue<AnchoredPlacement>;
+  readonly children: (item: T, placement: AnchoredPlacement) => PibblNode;
+}
+
+export declare function AnchoredLayout<T extends AnchoredItem>(props: AnchoredLayoutProps<T>): PibblNode;
+
+export type BarCategoryAccessor<D> =
+  | { [K in keyof D]-?: D[K] extends BandCategory | null | undefined ? K : never }[keyof D]
+  | ((datum: D, index: number, data: readonly D[]) => BandCategory | null | undefined);
+export interface BarThresholdFill { readonly type: "threshold"; readonly thresholds: readonly number[]; readonly colors: readonly string[]; }
+export interface BarSeriesStyle {
+  readonly bandwidth?: number | "auto";
+  readonly fill?: FillStyle | BarThresholdFill;
+  readonly stroke?: StrokeStyle;
+  readonly strokeWidth?: number;
+  readonly opacity?: number;
+  readonly cursor?: string;
+}
+export type BarStyleResolver<D> = (datum: D, index: number, data: readonly D[]) => BarSeriesStyle;
+interface BarSeriesBaseProps<D> extends PibblEventHandlers, PibblEventParticipationOptions {
+  readonly data: SignalValue<readonly D[]>;
+  readonly orientation?: "vertical" | "horizontal";
+  readonly category: BarCategoryAccessor<D>;
+  readonly categoryScale: ScaleId;
+  readonly valueScale: ScaleId;
+  readonly defined?: (datum: D, index: number, data: readonly D[]) => boolean;
+  readonly style?: SignalValue<SignalStyle<BarSeriesStyle> | BarStyleResolver<D>>;
+}
+export type BarSeriesProps<D> = BarSeriesBaseProps<D> & (
+    | { readonly value: LineAccessor<D>; readonly baseline?: SignalValue<number>; readonly valueStart?: never; readonly valueEnd?: never }
+    | { readonly value?: never; readonly baseline?: never; readonly valueStart: LineAccessor<D>; readonly valueEnd: LineAccessor<D> }
+  ) & ({ readonly group: BarCategoryAccessor<D>; readonly groupScale: ScaleId } | { readonly group?: never; readonly groupScale?: never });
+export declare function BarSeries<D>(props: BarSeriesProps<D>): PibblNode;
+
+export interface PieOptions<D> {
+  readonly value: LineAccessor<D>;
+  readonly keyBy?: PlotKeyAccessor<D>;
+}
+export interface PieSliceGeometry<D> {
+  readonly datum: D;
+  readonly index: number;
+  readonly key: string;
+  readonly value: number;
+  readonly fraction: number;
+  readonly startAngle: number;
+  readonly endAngle: number;
+}
+export declare function pieSlices<D>(data: readonly D[], options: PieOptions<D>): readonly PieSliceGeometry<D>[];
+
+import type { WedgeProps, WedgeStyle } from "@pibbl/core";
+export type PieLabelPlacement = "inside" | "outside" | "auto";
+export type PieLabelLayout = Readonly<{
+  status: "hidden";
+  reason: "empty" | "inside-fit" | "space";
+  text: string;
+}> | Readonly<{
+  status: "placed";
+  placement: "inside" | "outside";
+  text: string;
+  font: string;
+  x: number; y: number; width: number; height: number;
+  textX: number; textY: number;
+  leader?: readonly (readonly [number, number])[];
+}>;
+export interface PieLayoutSlice<D> extends PieSliceGeometry<D> {
+  readonly cx: number;
+  readonly cy: number;
+  readonly radius: number;
+  readonly innerRadius: number;
+  readonly label?: PieLabelLayout;
+}
+export interface PieLayoutStyle {
+  readonly innerRadius?: number;
+  readonly cx?: number;
+  readonly cy?: number;
+  readonly radius?: number;
+  readonly labelFont?: string;
+  readonly labelGap?: number;
+}
+export interface PieLayoutProps<D> extends PieOptions<D> {
+  readonly revision?: SignalValue<number>;
+  readonly data: SignalValue<readonly D[]>;
+  readonly label?: (slice: PieSliceGeometry<D>) => string;
+  readonly placement?: SignalValue<PieLabelPlacement>;
+  readonly bounds?: SignalValue<HoverBounds>;
+  readonly style?: SignalValue<SignalStyle<PieLayoutStyle>>;
+  readonly children: (slice: PieLayoutSlice<D>) => PibblNode;
+}
+export type PieSliceStyle = Omit<WedgeStyle, "cx" | "cy" | "radius" | "startAngle" | "endAngle" | "counterclockwise">;
+export interface PieSliceProps<D> extends WedgeProps {
+  readonly slice: PieLayoutSlice<D>;
+  readonly style?: SignalValue<SignalStyle<PieSliceStyle>>;
+  readonly children?: PibblNode;
+}
+export interface PieLabelStyle {
+  readonly fill?: FillStyle;
+  readonly leaderStroke?: StrokeStyle;
+  readonly leaderWidth?: number;
+}
+export interface PieLabelProps<D> extends PibblEventHandlers, PibblEventParticipationOptions {
+  readonly slice: PieLayoutSlice<D>;
+  readonly style?: SignalValue<SignalStyle<PieLabelStyle>>;
+}
+
+export declare function PieLayout<D>(props: PieLayoutProps<D>): PibblNode;
+export declare function PieSlice<D>(props: PieSliceProps<D>): PibblNode;
+export declare function PieLabel<D>(props: PieLabelProps<D>): PibblNode;
+
+/* @pibbl-studio-module @pibbl/text */
+import { PathGeometry } from '@pibbl/core';
+
+export interface InkBounds {
+    readonly x: number;
+    readonly y: number;
+    readonly width: number;
+    readonly height: number;
+}
+export interface OutlineFont extends Disposable {
+    dispose(): void;
+}
+export interface OutlineFontOptions {
+    signal?: AbortSignal;
+    monochromeFallback?: boolean;
+}
+export interface TextGeometryOptions {
+    fontSize: number;
+    maxSegments?: number;
+    missingGlyphs?: 'error' | 'notdef';
+    direction?: 'ltr' | 'rtl';
+    script?: string;
+    language?: string;
+    features?: Readonly<Record<string, boolean>>;
+}
+export interface TextGlyph {
+    readonly glyphId: number;
+    readonly cluster: number;
+    readonly segmentStart: number;
+    readonly segmentCount: number;
+    readonly x: number;
+    readonly y: number;
+    readonly xAdvance: number;
+    readonly yAdvance: number;
+}
+export interface TextGeometryResult {
+    readonly geometry: PathGeometry;
+    readonly inkBounds: Readonly<InkBounds> | null;
+    readonly advance: Readonly<{
+        x: number;
+        y: number;
+    }>;
+    readonly glyphs: readonly TextGlyph[];
+}
+export declare function loadOutlineFont(source: string | URL | ArrayBuffer | Uint8Array, options?: OutlineFontOptions): Promise<OutlineFont>;
+export declare function createTextGeometry(font: OutlineFont, text: string, options: TextGeometryOptions): TextGeometryResult;
+
+/* @pibbl-studio-module @pibbl/core/textures */
+  export interface ElectricPoint { readonly x: number; readonly y: number; }
+  export interface ElectricOptions { readonly seed?: number; readonly branching?: number; readonly glow?: number; }
+  export type ElectricControl = { readonly type: 'pause'; readonly paused: boolean } | { readonly type: 'reset'; readonly seed?: number };
+  export interface ElectricSource { readonly id: string; readonly point: ElectricPoint; readonly weight: number; }
+  export type ElectricSourceMessage = { readonly type: 'upsert-source'; readonly source: ElectricSource } | { readonly type: 'remove-source'; readonly id: string } | { readonly type: 'set-sources'; readonly sources: readonly ElectricSource[] };
+  export interface TendrilsOptions extends ElectricOptions { readonly center?: ElectricPoint; readonly sources?: readonly ElectricSource[]; readonly boundary?: readonly ElectricPoint[]; readonly count?: number; readonly rise?: number; readonly crackle?: number; readonly frequency?: number; }
+  export type TendrilsMessage = ElectricControl | ElectricSourceMessage | { readonly type: 'configure'; readonly branching?: number; readonly glow?: number; readonly rise?: number; readonly crackle?: number; readonly frequency?: number };
+  export interface LightningOptions extends ElectricOptions { readonly positive?: ElectricPoint; readonly negative?: ElectricPoint; readonly edge?: 'top' | 'right' | 'bottom' | 'left'; readonly active?: boolean; readonly frequency?: number; readonly contactCore?: boolean; }
+  export type LightningMessage = ElectricControl | { readonly type: 'connect'; readonly id: string; readonly positive: ElectricPoint; readonly negative: ElectricPoint } | { readonly type: 'disconnect'; readonly id: string } | { readonly type: 'configure'; readonly positive?: ElectricPoint; readonly negative?: ElectricPoint; readonly edge?: LightningOptions['edge']; readonly active?: boolean; readonly branching?: number; readonly glow?: number; readonly frequency?: number };
+  export function tendrils(options?: TendrilsOptions): import('@pibbl/core').TextureRecipe<TendrilsMessage>;
+  export function lightning(options?: LightningOptions): import('@pibbl/core').TextureRecipe<LightningMessage>;
+  export {useTexture} from '@pibbl/core';
+  export interface MaterialOptions {readonly seed?: number; readonly scale?: number; readonly detail?: number;}
+  export interface ReactionDiffusionOptions {readonly seed?: number; readonly preset?: 'spots' | 'stripes';}
+  export type InkMessage = {readonly type: 'stir'; readonly u: number; readonly v: number; readonly du: number; readonly dv: number; readonly radius?: number} | {readonly type: 'paint'; readonly u: number; readonly v: number; readonly radius?: number; readonly strength?: number} | {readonly type: 'pause'; readonly paused: boolean} | {readonly type: 'reset'};
+  export function marble(options?: MaterialOptions): import('@pibbl/core').TextureRecipe;
+  export function paper(options?: MaterialOptions): import('@pibbl/core').TextureRecipe;
+  export function cellular(options?: MaterialOptions): import('@pibbl/core').TextureRecipe;
+  export function reactionDiffusion(options?: ReactionDiffusionOptions): import('@pibbl/core').TextureRecipe<InkMessage>;
+import type { PibblComponent, PibblRenderLayerComponentProps } from '@pibbl/core';
+export type TexturePalette = readonly string[];
+export interface TextureResolution { readonly width: number; readonly height: number; }
+export interface TextureBrush { readonly radius: number; readonly strength: number; }
+export interface ReactionDiffusionProps {
+  readonly render?: TextureRenderer;
+  readonly resolution?: TextureResolution;
+  readonly seed?: number;
+  readonly preset?: 'spots' | 'stripes';
+  readonly palette?: TexturePalette;
+  readonly paused?: boolean;
+  readonly resetRevision?: number;
+  readonly brush?: TextureBrush | false;
+}
+export const ReactionDiffusion: PibblComponent<ReactionDiffusionProps & PibblRenderLayerComponentProps>;
+export const texturePalettes: Readonly<{ lagoon: TexturePalette; porcelain: TexturePalette; ember: TexturePalette }>;
+
+export type TextureKind = 'marble' | 'paper' | 'cellular';
+export interface TextureRenderFrame {
+  readonly source: OffscreenCanvas;
+  readonly mask: OffscreenCanvas;
+  readonly width: number;
+  readonly height: number;
+  readonly textureWidth: number;
+  readonly textureHeight: number;
+}
+export type TextureRenderer = (context: OffscreenCanvasRenderingContext2D, texture: Readonly<TextureRenderFrame>) => void;
+export interface ProceduralTextureProps {
+  readonly kind: TextureKind;
+  readonly seed?: number;
+  readonly resolution?: TextureResolution;
+  readonly scale?: number;
+  readonly detail?: number;
+  readonly palette?: TexturePalette;
+  readonly render?: TextureRenderer;
+}
+export const ProceduralTexture: PibblComponent<ProceduralTextureProps & PibblRenderLayerComponentProps>;
+  export interface RainDropsOptions { readonly condensation?: number; readonly trailPersistence?: number; readonly trailStrength?: number; readonly irregularity?: number; readonly seed?: number; readonly rainRate?: number; readonly gravity?: number; readonly initialDrops?: number; readonly paused?: boolean; }
+  export type RainDropsMessage = { readonly type: 'finger'; readonly x: number; readonly y: number; readonly radius?: number } | { readonly type: 'release' } | { readonly type: 'pause'; readonly paused: boolean } | { readonly type: 'reset' } | { readonly type: 'nudge'; readonly x: number; readonly y: number; readonly dx: number; readonly dy: number; readonly radius?: number };
+  export function rainDrops(options?: RainDropsOptions): import('@pibbl/core').TextureRecipe<RainDropsMessage>;
+export interface WaterWavesOptions { readonly rippleStrength?: number; readonly seed?: number; readonly speed?: number; readonly scale?: number; readonly paused?: boolean; }
+export type WaterWavesMessage = { readonly type: 'pause'; readonly paused: boolean } | { readonly type: 'reset' } | { readonly type: 'ripple'; readonly x: number; readonly y: number };
+export function waterWaves(options?: WaterWavesOptions): import('@pibbl/core').TextureRecipe<WaterWavesMessage>;
+export interface WaterSurfaceObstacle { readonly x: number; readonly y: number; readonly width: number; readonly height: number; }
+export interface WaterSurfaceOptions { readonly viscosity?: number; readonly rippleStrength?: number; readonly seed?: number; readonly speed?: number; readonly scale?: number; readonly paused?: boolean; readonly obstacles?: readonly WaterSurfaceObstacle[]; }
+export type WaterSurfaceMessage = { readonly type: 'pause'; readonly paused: boolean } | { readonly type: 'reset' } | { readonly type: 'ripple'; readonly x: number; readonly y: number };
+export function waterSurface(options?: WaterSurfaceOptions): import('@pibbl/core').TextureRecipe<WaterSurfaceMessage>;
+/* @pibbl-studio-module @pibbl/core/filters */
+import type { PibblFilter, SignalValue } from '@pibbl/core';
+export type { PibblFilter } from '@pibbl/core';
+export interface PibblBlurFilterOptions { readonly radius: SignalValue<number> }
+export interface PibblBrightnessFilterOptions { readonly amount: SignalValue<number> }
+export interface PibblContrastFilterOptions { readonly amount: SignalValue<number> }
+export interface PibblDropShadowFilterOptions { readonly offsetX: SignalValue<number>; readonly offsetY: SignalValue<number>; readonly blurRadius?: SignalValue<number>; readonly color: SignalValue<string> }
+export interface PibblGrayscaleFilterOptions { readonly amount: SignalValue<number> }
+export interface PibblHueRotateFilterOptions { readonly degrees: SignalValue<number> }
+export interface PibblInvertFilterOptions { readonly amount: SignalValue<number> }
+export interface PibblOpacityFilterOptions { readonly amount: SignalValue<number> }
+export interface PibblSaturateFilterOptions { readonly amount: SignalValue<number> }
+export interface PibblSepiaFilterOptions { readonly amount: SignalValue<number> }
+export function blur(options: Readonly<PibblBlurFilterOptions>): PibblFilter;
+export function brightness(options: Readonly<PibblBrightnessFilterOptions>): PibblFilter;
+export function contrast(options: Readonly<PibblContrastFilterOptions>): PibblFilter;
+export function dropShadow(options: Readonly<PibblDropShadowFilterOptions>): PibblFilter;
+export function grayscale(options: Readonly<PibblGrayscaleFilterOptions>): PibblFilter;
+export function hueRotate(options: Readonly<PibblHueRotateFilterOptions>): PibblFilter;
+export function invert(options: Readonly<PibblInvertFilterOptions>): PibblFilter;
+export function opacity(options: Readonly<PibblOpacityFilterOptions>): PibblFilter;
+export function saturate(options: Readonly<PibblSaturateFilterOptions>): PibblFilter;
+export function sepia(options: Readonly<PibblSepiaFilterOptions>): PibblFilter;
+
+export interface PibblDisplacementFilterOptions { readonly blurRadius?: SignalValue<number>; readonly map: SignalValue<import('@pibbl/core').TexturePaint>; readonly strength: SignalValue<number>; readonly region: Readonly<{ x: number; y: number; width: number; height: number }>; }
+export function displacement(options: Readonly<PibblDisplacementFilterOptions>): PibblFilter;
+export type PibblReflectedLightSource = string | import('@pibbl/core').TexturePaint | HTMLImageElement | ImageBitmap;
+export interface PibblReflectedLightFilterOptions { readonly map: SignalValue<import('@pibbl/core').TexturePaint>; readonly region: Readonly<{x:number;y:number;width:number;height:number}>; readonly source?: SignalValue<PibblReflectedLightSource>; readonly opacity?: SignalValue<number>; readonly threshold?: SignalValue<number>; readonly softness?: SignalValue<number>; readonly direction?: readonly [number,number]; }
+export function reflectedLight(options: PibblReflectedLightFilterOptions): PibblFilter;
+
+/* @pibbl-studio-module @pibbl/core/machines */
+  import type { Signal } from '@pibbl/core';
+
+  /** An event accepted by a machine. */
+  export interface MachineEvent { readonly type: string; }
+  /** Routes each event discriminator to its narrowed transition. */
+  export type MachineEventRoutes<Context, Event extends MachineEvent, Input, State extends string> = {
+    readonly [Type in Event['type']]?: MachineTransition<Context, Extract<Event, { readonly type: Type }>, Input, State>;
+  };
+  /** Lifecycle state of a machine actor. */
+  export type MachineStatus = 'not-started' | 'active' | 'stopped' | 'error';
+  /** Atomically published state value, immutable context, and actor status. */
+  export interface MachineSnapshot<Context, State extends string = string> {
+    readonly value: State;
+    readonly context: Readonly<Context>;
+    readonly status: MachineStatus;
+    readonly error: unknown | undefined;
+    matches(state: State): boolean;
+  }
+  /** Cleanup for a callback task when its state exits. */
+  export type MachineTaskCleanup = () => void;
+  /** Values given to entry, exit, and transition actions. */
+  export interface MachineActionContext<Context, Event extends MachineEvent | undefined, Input, SentEvent extends MachineEvent = MachineEvent> {
+    readonly context: Readonly<Context>;
+    readonly event: Event;
+    readonly input: Input;
+    send(event: SentEvent): void;
+  }
+  /** Synchronous effect run by a transition or state lifecycle. */
+  export type MachineAction<Context, Event extends MachineEvent | undefined, Input, SentEvent extends MachineEvent = MachineEvent> = (context: MachineActionContext<Context, Event, Input, SentEvent>) => void;
+  /** One action or an ordered action list. */
+  export type MachineActions<Context, Event extends MachineEvent | undefined, Input, SentEvent extends MachineEvent = MachineEvent> = MachineAction<Context, Event, Input, SentEvent> | readonly MachineAction<Context, Event, Input, SentEvent>[];
+  /** Values supplied to one state-owned task. */
+  export interface MachineTaskContext<Context, Event extends MachineEvent, Input> {
+    readonly context: Readonly<Context>;
+    readonly event: Event | undefined;
+    readonly input: Input;
+    readonly signal: AbortSignal;
+    send(event: Event): void;
+  }
+  /** Cancelable state work. A resolved promise selects its invocation's onDone route. */
+  export type MachineTask<Context, Event extends MachineEvent, Input, Output = unknown> = (context: MachineTaskContext<Context, Event, Input>) => void | MachineTaskCleanup | Promise<Output>;
+  /** Event sent internally when an invoked promise resolves. */
+  export interface MachineTaskDoneEvent<Output = unknown> extends MachineEvent { readonly type: '@pibbl/machine.done'; readonly output: Output; }
+  /** Event sent internally when an invoked task fails. */
+  export interface MachineTaskErrorEvent extends MachineEvent { readonly type: '@pibbl/machine.error'; readonly error: unknown; }
+  /** State-owned task and its optional completion routes. */
+  export interface MachineInvocation<Context, Event extends MachineEvent, Input, State extends string> {
+    readonly id?: string;
+    readonly task: MachineTask<Context, Event, Input>;
+    readonly onDone?: MachineTransition<Context, MachineTaskDoneEvent, Input, State, Event>;
+    readonly onError?: MachineTransition<Context, MachineTaskErrorEvent, Input, State, Event>;
+  }
+  /** One guarded transition route. */
+  export interface MachineTransitionConfig<Context, Event extends MachineEvent, Input, State extends string, SentEvent extends MachineEvent = Event> {
+    readonly target?: State;
+    readonly guard?: (context: MachineActionContext<Context, Event, Input, SentEvent>) => boolean;
+    readonly actions?: MachineActions<Context, Event, Input, SentEvent>;
+    readonly reenter?: boolean;
+  }
+  /** Target shorthand, one route, or first-match guarded routes. */
+  export type MachineTransition<Context, Event extends MachineEvent, Input, State extends string, SentEvent extends MachineEvent = Event> = State | MachineTransitionConfig<Context, Event, Input, State, SentEvent> | readonly MachineTransitionConfig<Context, Event, Input, State, SentEvent>[];
+  /** One flat state with lifecycle actions, invoked work, and local event routes. */
+  export interface MachineState<Context, Event extends MachineEvent, Input, State extends string> {
+    readonly entry?: MachineActions<Context, Event | undefined, Input, Event>;
+    readonly exit?: MachineActions<Context, Event, Input, Event>;
+    readonly invoke?: MachineInvocation<Context, Event, Input, State> | readonly MachineInvocation<Context, Event, Input, State>[];
+    readonly on?: MachineEventRoutes<Context, Event, Input, State>;
+  }
+  /** Reusable flat-state behavior. Definitions create no actor or scheduled work. */
+  export interface MachineDefinition<Context, Event extends MachineEvent, Input = undefined, State extends string = string> {
+    readonly initial: State;
+    readonly context: Context | ((context: Readonly<{ input: Input }>) => Context);
+    readonly states: Readonly<Record<State, MachineState<Context, Event, Input, State>>>;
+    readonly on?: MachineEventRoutes<Context, Event, Input, State>;
+  }
+  /** Input supplied when creating an explicitly owned actor. */
+  export interface CreateMachineOptions<Input> { readonly input: Input; }
+  /** Explicit machine execution with a readonly signal snapshot. */
+  export interface MachineActor<Context, Event extends MachineEvent, _Input, State extends string = string> {
+    readonly snapshot: Signal<MachineSnapshot<Context, State>>;
+    start(): void;
+    send(event: Event): void;
+    stop(): void;
+  }
+  /** Creates an action that shallowly merges a context patch. */
+  export function assign<Context extends object, Event extends MachineEvent, Input>(update: (context: MachineActionContext<Context, Event, Input>) => Partial<Context>): MachineAction<Context, Event, Input>;
+  /** Marks callback-style cancelable work as a state-owned task. */
+  export function fromCallback<Context, Event extends MachineEvent, Input>(callback: MachineTask<Context, Event, Input>): MachineTask<Context, Event, Input>;
+  /** Validates and returns a reusable machine definition without creating an actor. */
+  export function defineMachine<Context, Event extends MachineEvent, Input = undefined, State extends string = string>(definition: MachineDefinition<Context, Event, Input, State>): MachineDefinition<Context, Event, Input, State>;
+  /** Creates an idle explicitly owned actor; call start and stop to control its lifetime. */
+  export function createMachine<Context, Event extends MachineEvent, Input, State extends string = string>(definition: MachineDefinition<Context, Event, Input, State>, options: CreateMachineOptions<Input>): MachineActor<Context, Event, Input, State>;
+  /** Creates a component-owned actor that starts after mount and stops on unmount. */
+  export function useMachine<Context, Event extends MachineEvent, Input, State extends string>(definition: MachineDefinition<Context, Event, Input, State>, options: { readonly input: Input }): MachineActor<Context, Event, Input, State>;
+
+/* @pibbl-studio-module @pibbl/core/machines/animation */
+  import type { PibblAnimationProgram } from '@pibbl/core';
+  import type { MachineEvent, MachineTask, MachineTaskContext } from '@pibbl/core/machines';
+
+  /** Playback configuration for state-owned animation work. */
+  export interface MachineAnimationOptions { readonly conflict?: 'error' | 'replace'; readonly debugName?: string; }
+  /** Builds one animation program when a state invocation starts. */
+  export type MachineAnimationProgramFactory<Context, Event extends MachineEvent, Input> = (context: MachineTaskContext<Context, Event, Input>) => PibblAnimationProgram;
+  /** Adapts a finite or repeating Pibbl animation into cancelable state-owned work. */
+  export function playAnimation<Context, Event extends MachineEvent, Input>(program: MachineAnimationProgramFactory<Context, Event, Input>, options?: MachineAnimationOptions): MachineTask<Context, Event, Input, void>;
+
+/* @pibbl-studio-module @pibbl/core/sprites */
+  import type { ImageProps, PibblAnimationDefinition, PibblPrimitiveComponent, PrimitiveInput, SystemStyle } from '@pibbl/core';
+
+  /** Pixel rectangle in an atlas page or original sprite frame. */
+  export interface SpriteRectangle { readonly x: number; readonly y: number; readonly width: number; readonly height: number; }
+  /** Normalized metadata for one sprite atlas frame. */
+  export interface SpriteFrameData { readonly name: string; readonly page?: number; readonly rect: SpriteRectangle; readonly sourceSize?: Readonly<{ readonly width: number; readonly height: number }>; readonly trim?: Readonly<{ readonly x: number; readonly y: number }>; readonly rotated?: boolean; }
+  /** A named atlas frame with its display duration in milliseconds. */
+  export interface SpriteAnimationFrameData { readonly frame: string; readonly duration: number; }
+  /** Metadata supplied by an explicit atlas format adapter. */
+  export interface SpriteSheetData { readonly images: readonly string[]; readonly frames: readonly SpriteFrameData[]; readonly animations?: Readonly<Record<string, readonly SpriteAnimationFrameData[]>>; }
+  /** Parses one atlas format without registering it globally. */
+  export interface SpriteSheetFormat { readonly parse: (data: unknown) => SpriteSheetData; }
+  /** Immutable frame identity obtained from a loaded sprite sheet. */
+  export class SpriteFrame { readonly width: number; readonly height: number; readonly name: string; }
+  /** A decoded atlas and its immutable frames and clips. */
+  export interface SpriteSheet { readonly frames: Readonly<Record<string | number, SpriteFrame>>; readonly animations: Readonly<Record<string, PibblAnimationDefinition<SpriteFrame>>>; dispose(): void; }
+  /** Dimensions and optional gutters for a regular-grid sprite image. */
+  export interface SpriteGrid { readonly frameWidth: number; readonly frameHeight: number; readonly margin?: number; readonly spacing?: number; }
+  /** Drawing props for a single shared sprite frame. */
+  export interface SpriteProps extends ImageProps { readonly frame: SpriteFrame; readonly sampling?: 'nearest' | 'linear'; readonly anchor?: Readonly<{ readonly x: number; readonly y: number }>; readonly flipX?: boolean; readonly flipY?: boolean; }
+  /** Logical sprite sizing and opacity. */
+  export interface SpriteStyle extends SystemStyle { readonly width?: number; readonly height?: number; readonly opacity?: number; }
+  /** Draws an atlas frame while preserving its logical geometry. */
+  export const Sprite: PibblPrimitiveComponent<SpriteProps, PrimitiveInput<SpriteProps, SpriteStyle>>;
+  /** Loads a grid image or an explicitly selected atlas metadata adapter. */
+  export function loadSpriteSheet(url: string, options: { readonly grid: SpriteGrid } | { readonly format: SpriteSheetFormat }): Promise<SpriteSheet>;
+  /** Defines a finite discrete animation from frames and FPS or explicit durations. */
+  export function defineSpriteAnimation(options: { readonly frames: readonly SpriteFrame[]; readonly fps: number; } | { readonly frames: readonly Readonly<{ readonly frame: SpriteFrame; readonly duration: number; }>[]; }): PibblAnimationDefinition<SpriteFrame>;
+
+/* @pibbl-studio-module @pibbl/core/sprites/formats/aseprite */
+  import type { SpriteSheetFormat } from '@pibbl/core/sprites';
+  /** Creates a tree-shakable adapter for Aseprite JSON exports. */
+  export function aseprite(): SpriteSheetFormat;
+
+/* @pibbl-studio-module @pibbl/core/sprites/formats/texture-packer */
+  import type { SpriteSheetFormat } from '@pibbl/core/sprites';
+  /** Creates a tree-shakable adapter for TexturePacker JSON exports. */
+  export function texturePacker(): SpriteSheetFormat;

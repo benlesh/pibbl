@@ -1,8 +1,8 @@
-# CRC performance remediation orchestration prompt
+# Pibbl performance remediation orchestration prompt
 
 > **Historical status: Dated audit evidence and remediation proposals; current behavior is defined by runtime contracts.**
 
-Copy the following prompt into a new CRC execution chat. This file records instructions for that future run; it does not start implementation by itself.
+Copy the following prompt into a new Pibbl execution chat. This file records instructions for that future run; it does not start implementation by itself.
 
 ---
 
@@ -14,7 +14,7 @@ I authorize you to implement the documented fixes and justified optimizations, u
 
 Read applicable AGENTS.md instructions, the audit index, all issue documents, relevant current contracts, and the project-plan workflow. This user request selects the audit remediation queue as the execution scope; it does not authorize overwriting the unrelated active HtmlBox plan or its status. Track this queue in its own index and issue completion records.
 
-Inspect Git status, branch, remotes, existing attached worktrees, active processes, and available agent slots. Verify that origin is the intended `benlesh/crc` repository and that `main` is the integration target. Fetch normally and inspect local/remote divergence before writing. Never force-push, discard changes, rewrite published history, or merge unrelated work to make this task easier.
+Inspect Git status, branch, remotes, existing attached worktrees, active processes, and available agent slots. Verify that origin is the intended `benlesh/pibbl` repository and that `main` is the integration target. Fetch normally and inspect local/remote divergence before writing. Never force-push, discard changes, rewrite published history, or merge unrelated work to make this task easier.
 
 The audit was conducted on a heavily dirty `codex/physics-2d-quality` checkout, including uncommitted package consolidation and HTML integration. Worktrees based on main do not inherit those changes. Compare current source with the evidence manifest and issue descriptions. If the relevant runtime has since been integrated or superseded, use current supported code and explicitly record the mapping. Do not restore an obsolete implementation just to match a historical path.
 

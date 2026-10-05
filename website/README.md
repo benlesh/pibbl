@@ -1,4 +1,4 @@
-# CRC documentation website
+# Pibbl documentation website
 
 ## Visual galleries
 
@@ -40,7 +40,7 @@ After changing programs, regenerate content and run the browser checks:
 
 ```sh
 node --import tsx website/prepare-content.mjs
-corepack pnpm@11.21.0 --filter @crc/website check:examples
+corepack pnpm@11.21.0 --filter @pibbl/website check:examples
 node tooling/website-minimal-browser.mjs
 ```
 
@@ -48,29 +48,29 @@ Pass family names to the browser checker for a focused run, for example
 `node tooling/website-minimal-browser.mjs paths layout`. It checks painted
 pixels or meaningful HTML, runtime errors, and representative interactions.
 
-Foundation: Astro + Starlight. Starlight supplies documentation navigation and readable static pages; CRC demos use public imports and the existing CRC TSX learning sources, with `createElement` in the small custom previews. See the [official setup](https://starlight.astro.build/manual-setup/) and [configuration](https://starlight.astro.build/reference/configuration/).
+Foundation: Astro + Starlight. Starlight supplies documentation navigation and readable static pages; Pibbl demos use public imports and the existing Pibbl TSX learning sources, with `createElement` in the small custom previews. See the [official setup](https://starlight.astro.build/manual-setup/) and [configuration](https://starlight.astro.build/reference/configuration/).
 
 Public website and agent copy lives in `docs/site/website/**/*.mdx` (plain Markdown syntax). Existing API, guide, and tutorial Markdown is reused directly from `docs/site/api/` and `docs/site/learn/`; edit those canonical sources to update both sites. `documentation.mjs` uses the existing public-document parser and TypeScript semantic export inventory, rewrites documentation links, and reports export destinations. `prepare-content.mjs` produces Starlight pages, clean Markdown counterparts, indexes, and source-expanded agent examples. Generated files are ignored. The `.mdx` extension keeps the older Studio Markdown collector unchanged. No plans or test labs enter this inventory. Search is deferred; Starlight Pagefind is disabled and existing Studio MiniSearch is unchanged.
 
 Run from the repository:
 
 ```sh
-corepack pnpm@11.21.0 --filter @crc/website dev
+corepack pnpm@11.21.0 --filter @pibbl/website dev
 corepack pnpm@11.21.0 playground
 ```
 
-The site defaults to port 4321 and its configured editor URL to `http://localhost:5173/`. Set `CRC_PLAYGROUND_URL` if the second server uses another URL. Restart the website after changing authored documentation; source expansion runs at startup.
+The site defaults to port 4321 and its configured editor URL to `http://localhost:5173/`. Set `PIBBL_PLAYGROUND_URL` if the second server uses another URL. Restart the website after changing authored documentation; source expansion runs at startup.
 
 ```sh
-corepack pnpm@11.21.0 --filter @crc/website build
+corepack pnpm@11.21.0 --filter @pibbl/website build
 node --test tooling/website-slice.test.mjs tooling/website-documentation.test.mjs
 node tooling/website-browser.mjs
 node tooling/website-documentation-browser.mjs
 ```
 
-The browser check uses `CRC_WEBSITE_URL` if supplied. It captures screenshots in `/tmp`, not source control. Examples use built public packages; build `@crc/core`, `@crc/three`, and `@crc/text` first if their distributions are absent or stale. The website declares these dependencies so recursive workspace builds order them correctly.
+The browser check uses `PIBBL_WEBSITE_URL` if supplied. It captures screenshots in `/tmp`, not source control. Examples use built public packages; build `@pibbl/core`, `@pibbl/three`, and `@pibbl/text` first if their distributions are absent or stale. The website declares these dependencies so recursive workspace builds order them correctly.
 
-Deploy `dist/` as static files with real 404 handling. Before deployment, configure the hosted Studio URL and its reciprocal `VITE_CRC_WEBSITE_URL`. Studio documentation hashes redirect to the website; examples and tutorial workbenches remain in Studio. Deployment, final canonical origin/sitemap, base-path rollout, individual expansion of grouped APIs, website search, and visual design remain follow-up work. This preview does not replace the deployed site.
+Deploy `dist/` as static files with real 404 handling. Before deployment, configure the hosted Studio URL and its reciprocal `VITE_PIBBL_WEBSITE_URL`. Studio documentation hashes redirect to the website; examples and tutorial workbenches remain in Studio. Deployment, final canonical origin/sitemap, base-path rollout, individual expansion of grouped APIs, website search, and visual design remain follow-up work. This preview does not replace the deployed site.
 
 The coverage JSON records reference and minimal-example destinations, not a claim of exhaustive behavior testing or freshly executed browser results. The documentation browser check parses every generated page to verify heading links and static images, then exercises no-JavaScript reference, agent, minimal-example, and Markdown reading paths. Agent topics distinguish recommended verification from executed evidence. New sources should use supported public imports, include host setup, and preserve canonical example ownership.
 

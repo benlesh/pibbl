@@ -2,14 +2,14 @@ import {
   Polygon,
   RegularPolygon,
   Star,
-  crc,
+  pibbl,
   type PolygonProps,
   type PolygonStyle,
   type RegularPolygonProps,
   type RegularPolygonStyle,
   type StarProps,
   type StarStyle,
-} from "@crc/core";
+} from "@pibbl/core";
 
 const triangleProps: PolygonProps = { pointerEvents: "auto" };
 const triangleStyle: PolygonStyle = {
@@ -44,7 +44,7 @@ const canvas = document.createElement("canvas");
 canvas.width = 340;
 canvas.height = 220;
 document.body.append(canvas);
-const app = crc(
+const app = pibbl(
   canvas,
   <>
     <Polygon {...triangleProps} style={triangleStyle} />

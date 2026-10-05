@@ -1,6 +1,6 @@
 # Playground product brief
 
-The playground should feel like a small, purposeful browser IDE: a full-page workspace for editing a complete CRC example beside its running preview. Its primary loop is load, inspect, change, run, share or download. The initial product has no database, accounts, or automatic persistence.
+The playground should feel like a small, purposeful browser IDE: a full-page workspace for editing a complete Pibbl example beside its running preview. Its primary loop is load, inspect, change, run, share or download. The initial product has no database, accounts, or automatic persistence.
 
 ## Workspace layout
 
@@ -28,7 +28,7 @@ An optional auto-run mode can follow once restart, cleanup, and error behavior a
 
 Recommend a small project format with named TS/TSX, HTML, CSS, and declared local assets, plus metadata for entrypoint and compatible runtime/dependency versions. Keep a single-file default for focused examples. The format must be sufficient for every example selected for launch, including native HTML and Three scenes.
 
-Start with a supported dependency set aligned with CRC examples. Arbitrary npm installation, server code, terminals, secrets, cloud assets, and collaborative editing are outside the initial scope. An asset-heavy showcase must still have a complete playable project and ZIP; its canonical built-in link can load bundled assets without putting them all into a URL.
+Start with a supported dependency set aligned with Pibbl examples. Arbitrary npm installation, server code, terminals, secrets, cloud assets, and collaborative editing are outside the initial scope. An asset-heavy showcase must still have a complete playable project and ZIP; its canonical built-in link can load bundled assets without putting them all into a URL.
 
 ## URL sharing
 

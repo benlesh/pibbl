@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest';
-import { getScenarioBySlug, loadScenario } from '@crc/scenarios';
+import { getScenarioBySlug, loadScenario } from '@pibbl/scenarios';
 import { analyzeBoxRelations } from '../../../tooling/agent-verification/layout-box-relations.mjs';
 
 it('relates live allocation and declared drawing without labeling allowed overflow an error', async () => {

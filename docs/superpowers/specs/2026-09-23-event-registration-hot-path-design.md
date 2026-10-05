@@ -18,7 +18,7 @@ and teardown contract.
 
 Chrome DevTools Protocol CPU and allocation profiles were captured in separate
 runs over 200 warmed sparse-1,000 rerenders. The same dominant stack appeared
-in the existing performance laboratory and an equivalent uninstrumented CRC
+in the existing performance laboratory and an equivalent uninstrumented Pibbl
 mount.
 
 For the uninstrumented mount:
@@ -40,7 +40,7 @@ the sampled bytes remain live or constitute a retained-memory leak.
 Before this change, `updateTarget()` performed the following work for every
 target on every render:
 
-1. scans every `CRC_EVENT_DEFINITIONS` entry to create normalized handlers;
+1. scans every `PIBBL_EVENT_DEFINITIONS` entry to create normalized handlers;
 2. scans every definition again to build a handled-type `Set`;
 3. allocates and mutates another `Set` for required native types;
 4. calls `updateTargetRegistration()`, which scans every definition a third
@@ -55,19 +55,19 @@ work is dominated by absent event properties and temporary collections.
 
 ### Terminology and representation
 
-CRC has four related but distinct pieces of registration state:
+Pibbl has four related but distinct pieces of registration state:
 
 | State                       | Meaning                                                                                | Used for                                                                 |
 | --------------------------- | -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
 | Normalized handler object   | Current callback values under keys such as `mousemove` and `mousemoveCapture`          | Event propagation and latest-closure semantics                           |
-| Logical handler mask pair   | Logical CRC event types for which at least one bubble or capture callback is present   | Constant-time “does this registration have handlers?” checks             |
+| Logical handler mask pair   | Logical Pibbl event types for which at least one bubble or capture callback is present | Constant-time “does this registration have handlers?” checks             |
 | Required native mask pair   | Native Canvas event types needed for those logical callbacks and optional cursor state | Desired root listener ownership                                          |
 | Reconciled native mask pair | The last required signature processed for this registration                            | Constant-time unchanged-ownership detection and exact added/removed diff |
 
 The masks are private transient runtime state. They are neither public values
 nor serialized compatibility data.
 
-`CRC_EVENT_DEFINITIONS` assigns each logical/native event type its in-memory
+`PIBBL_EVENT_DEFINITIONS` assigns each logical/native event type its in-memory
 bit position. JavaScript bitwise operations coerce numbers to signed 32-bit
 integers, so one number cannot represent all 52 current definitions. Every
 signature is consequently stored as two words:
@@ -77,7 +77,7 @@ index < 32 ? { low: 1 << index, high: 0 } : { low: 0, high: 1 << (index - 32) };
 ```
 
 Bit 31 can make a word numerically negative, but its sign has no semantic
-meaning. CRC treats both numbers as opaque bit sets and only compares or
+meaning. Pibbl treats both numbers as opaque bit sets and only compares or
 combines them using 32-bit operations. A module-load assertion rejects more
 than 64 definitions instead of silently aliasing bit positions.
 
@@ -98,8 +98,8 @@ Module initialization builds a null-prototype `eventPropMetadata` table with
 one entry for every supported bubble and capture prop. Each entry contains:
 
 ```ts
-interface CRCEventPropMetadata {
-  normalizedKey: CRCEventType | `${CRCEventType}Capture`;
+interface PibblEventPropMetadata {
+  normalizedKey: PibblEventType | `${PibblEventType}Capture`;
   handlerTypesLow: number;
   handlerTypesHigh: number;
   requiredNativeTypesLow: number;
@@ -172,7 +172,7 @@ if (previousLow === nextLow && previousHigh === nextHigh) return;
 Callback closures can therefore refresh without touching root native-listener
 reference counts.
 
-When requirements change, CRC calculates exact set differences with Boolean
+When requirements change, Pibbl calculates exact set differences with Boolean
 algebra:
 
 ```ts
@@ -183,7 +183,7 @@ addedLow = nextLow & ~previousLow;
 addedHigh = nextHigh & ~previousHigh;
 ```
 
-For each difference word, CRC walks only its set bits:
+For each difference word, Pibbl walks only its set bits:
 
 ```ts
 const bit = word & -word; // isolate the lowest set bit
@@ -264,7 +264,7 @@ order, or replace normalized handler storage.
 
 When extending the event vocabulary:
 
-1. add the definition to `CRC_EVENT_DEFINITIONS`; its position becomes its
+1. add the definition to `PIBBL_EVENT_DEFINITIONS`; its position becomes its
    transient bit index for that loaded module;
 2. keep the count at or below 64, or deliberately replace the two-word
    representation and its guard;
@@ -280,7 +280,7 @@ When extending the event vocabulary:
 Bit positions may move between releases because masks never cross a module or
 serialization boundary. Within one loaded runtime, every metadata lookup,
 registration signature, and definition-index conversion must use the same
-`CRC_EVENT_DEFINITIONS` ordering.
+`PIBBL_EVENT_DEFINITIONS` ordering.
 
 ### Unchanged contracts
 
@@ -313,9 +313,9 @@ Performance is measured in separate processes:
 
 Results compare three states where evidence is available:
 
-- original pre-optimization CRC;
-- current generation-reconciliation CRC; and
-- event-mask/native-ownership CRC.
+- original pre-optimization Pibbl;
+- current generation-reconciliation Pibbl; and
+- event-mask/native-ownership Pibbl.
 
 No performance budget will be weakened. The profiling hooks remain
 environment-gated and do not run in normal tests.
@@ -339,7 +339,7 @@ the independent sparse-100 dispatch guard (0.144 ms measured versus 0.100 ms),
 which this renderer-registration change does not relax or claim to solve.
 
 Allocation sampling ran separately over 200 warmed renders. Estimated traffic
-was 1,824.2 MiB for original CRC, 1,759.1 MiB after generation reconciliation,
+was 1,824.2 MiB for original Pibbl, 1,759.1 MiB after generation reconciliation,
 and 775.0, 785.7, and 781.2 MiB across three event-mask runs. The middle
 event-mask result is 3.91 MiB per render, 57.2% below original and 55.6% below
 the generation-only state. These figures describe extrapolated allocation

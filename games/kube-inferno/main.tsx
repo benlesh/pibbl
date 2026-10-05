@@ -1,5 +1,5 @@
 import {
-  crc,
+  pibbl,
   signal,
   useSignal,
   useConst,
@@ -7,8 +7,8 @@ import {
   useReaction,
   drive,
   stepper,
-  type CRCPlayback,
-} from "@crc/core";
+  type PibblPlayback,
+} from "@pibbl/core";
 import {
   createGame,
   advance,
@@ -39,7 +39,7 @@ root.innerHTML = `
  <div class="map" id="map"><canvas id="canvas" width="1200" height="720" aria-label="Interactive infrastructure map. Use the machine selector and build controls for keyboard operation."></canvas><div class="map-title"><span class="live-dot"></span> EMBER / US-EAST <span class="subtle">CLUSTER 01</span></div><div class="map-controls"><button id="zoom-out" aria-label="Zoom out">−</button><button id="fit">FIT</button><button id="zoom-in" aria-label="Zoom in">+</button></div><div class="map-help" id="map-help">Drag a machine into the cluster · Connect its ports · Keep the lights on</div><div id="toast" role="status"></div></div>
  <aside class="inspector"><div class="inspector-top"><span>INSPECT COMPONENT</span><span class="live-dot"></span></div><select id="selection" aria-label="Select a machine"></select><div id="status" class="status">OVERLOADED</div><dl><div><dt>CPU PRESSURE</dt><dd id="load">98%</dd></div><div class="meter"><i id="load-bar"></i></div><div><dt>QUEUED REQUESTS</dt><dd id="queue">342</dd></div><div><dt>RUNNING COST</dt><dd id="running">$2/s</dd></div><div><dt>CAPACITY</dt><dd id="capacity">240 req/s</dd></div></dl><p id="explanation" class="explanation"></p><div class="actions"><button id="investigate">⌕ &nbsp; Investigate <small>$250 · 25s</small></button><button id="replica">+ &nbsp; Add replica <small>$100 · 3s</small></button><button id="retire" class="danger">− &nbsp; Retire component</button></div><div class="route-control"><label for="route">CONNECT SELECTED TO</label><div><select id="route" aria-label="Connection destination"></select><button id="connect" aria-label="Connect selected machines">↗</button></div><button id="disconnect">Disconnect selected route</button></div><div class="records"><label>PERSONAL BEST</label><div><span>Peak users</span><b id="peak-users">12,480</b></div><div><span>Peak bank</span><b id="peak-bank">$24,850</b></div></div></aside>
 </section>
-<footer class="dock"><div class="event-log"><label>OPERATIONS LOG</label><ol id="log"></ol></div><div class="build-tray" id="build-tray"></div><div class="simulation"><label>SIMULATION SPEED</label><div class="speed-controls"><button id="pause" aria-label="Pause simulation">Ⅱ</button><button data-speed="1" class="active">1×</button><button data-speed="2">2×</button></div><button id="effects" class="quiet" aria-pressed="false">Reduce effects</button><button id="restart" class="quiet">New run ↗</button></div></footer><div class="statusbar"><span>CRC / CANVAS 2D</span><span id="instruction">Keep systems online. Grow something worth saving.</span><button id="help">How to play</button></div>
+<footer class="dock"><div class="event-log"><label>OPERATIONS LOG</label><ol id="log"></ol></div><div class="build-tray" id="build-tray"></div><div class="simulation"><label>SIMULATION SPEED</label><div class="speed-controls"><button id="pause" aria-label="Pause simulation">Ⅱ</button><button data-speed="1" class="active">1×</button><button data-speed="2">2×</button></div><button id="effects" class="quiet" aria-pressed="false">Reduce effects</button><button id="restart" class="quiet">New run ↗</button></div></footer><div class="statusbar"><span>Pibbl / CANVAS 2D</span><span id="instruction">Keep systems online. Grow something worth saving.</span><button id="help">How to play</button></div>
 <dialog id="help-dialog"><button class="close" aria-label="Close instructions">×</button><span class="eyebrow">WELCOME TO YOUR NEXT INCIDENT</span><h2>Build. Scale. Survive.</h2><p>Your customers pay when requests succeed. Slow service loses sales—and eventually customers.</p><ol><li><b>Build capacity.</b> Drag a card onto the map, or click one then click an empty location. Construction costs money and time.</li><li><b>Connect it.</b> Click a machine’s right port, then a destination’s left port. App servers need an incoming gateway route and a path to a database. The inspector also has keyboard-friendly connection controls.</li><li><b>Invest wisely.</b> Investigate to remove redundant queries. Retire excess servers when demand drops. Retiring immediately removes the machine in this first playable version.</li><li><b>Read the map.</b> Orange means pressure, flames mean overload, sparks mean a dead machine. Every minute brings a new market event.</li></ol><p class="subtle">This first slice uses a simplified capacity model. Machines bundle compute and workload capacity; it is not a Kubernetes emulator.</p><button id="replay-tips" class="primary">Replay quick tips</button><button class="primary close">Keep the lights on →</button></dialog>`;
 const $ = <T extends HTMLElement = HTMLElement>(id: string) =>
   document.getElementById(id) as T;
@@ -58,7 +58,7 @@ const atlas = new window.Image();
 atlas.onload = () => loaded.set(true);
 atlas.onerror = () => toast("Machine artwork could not load. Reload to retry.");
 atlas.src = machineUrl;
-let playback: CRCPlayback | undefined,
+let playback: PibblPlayback | undefined,
   lastClock = 0,
   lastHud = -1,
   lastSave = -1,
@@ -291,7 +291,7 @@ function App() {
   );
 }
 const canvas = $<HTMLCanvasElement>("canvas");
-const controller = crc(canvas, <App />, {
+const controller = pibbl(canvas, <App />, {
   viewport: { width: 1200, height: 720 },
   fit: "contain",
 });

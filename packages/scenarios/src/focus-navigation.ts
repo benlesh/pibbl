@@ -1,4 +1,4 @@
-import { crc, type CRCController, type CRCLogicalMouseEvent } from '@crc/core';
+import { pibbl, type PibblController, type PibblLogicalMouseEvent } from '@pibbl/core';
 import {
   createFocusNavigationScene,
   FOCUS_NAVIGATION_SOURCE_ID,
@@ -26,7 +26,7 @@ function settledFrames(): Promise<void> {
   return new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
 }
 
-function activationSource(event: CRCLogicalMouseEvent): FocusNavigationActivationSource {
+function activationSource(event: PibblLogicalMouseEvent): FocusNavigationActivationSource {
   if (!(event.sourceEvent instanceof KeyboardEvent)) return 'click';
   return event.sourceEvent.key === 'Enter' ? 'enter' : 'space';
 }
@@ -34,7 +34,7 @@ function activationSource(event: CRCLogicalMouseEvent): FocusNavigationActivatio
 function createBoundaryButton(canvas: HTMLCanvasElement, position: 'after' | 'before'): HTMLButtonElement {
   const button = canvas.ownerDocument.createElement('button');
   button.type = 'button';
-  button.dataset.crcFocusNavigation = position;
+  button.dataset.pibblFocusNavigation = position;
   button.textContent = position === 'before' ? 'Native control before' : 'Native control after';
   return button;
 }
@@ -47,7 +47,7 @@ async function mountFocusNavigationScenario(
   context.canvas.before(before);
   context.canvas.after(after);
   let disposed = false;
-  let runtime: CRCController | undefined;
+  let runtime: PibblController | undefined;
   let state = initialState();
   let squareLabels = [...INITIAL_SQUARES];
   let pending = Promise.resolve();
@@ -67,7 +67,7 @@ async function mountFocusNavigationScenario(
   };
   const render = () => {
     assertActive();
-    runtime = crc(context.canvas, createFocusNavigationScene({
+    runtime = pibbl(context.canvas, createFocusNavigationScene({
       squareLabels,
       state,
       onActivation: (target, event) => {

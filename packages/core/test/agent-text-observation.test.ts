@@ -1,4 +1,4 @@
-import { crc, createElement, Text } from "@crc/core";
+import { pibbl, createElement, Text } from "@pibbl/core";
 import { expect, it } from "vitest";
 import { createTextRecorder } from "../../../tooling/agent-verification/text";
 import {
@@ -24,7 +24,7 @@ it("redacts private resolved text while permitting exact fixture labels without 
       yield "PRIVATE_ACCOUNT_493";
     },
   };
-  const controller = crc(
+  const controller = pibbl(
     canvas,
     createElement(Text, {
       children,

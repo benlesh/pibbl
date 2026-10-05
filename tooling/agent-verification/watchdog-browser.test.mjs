@@ -9,7 +9,7 @@ test(
   "parent terminates its browser when the page and replay both stop responding",
   { timeout: 20000, skip: process.platform === "win32" },
   async () => {
-    const directory = await mkdtemp(join(tmpdir(), "crc-browser-watchdog-"));
+    const directory = await mkdtemp(join(tmpdir(), "pibbl-browser-watchdog-"));
     try {
       const script = join(directory, "hang.mjs");
       const output = join(directory, "result");
@@ -19,7 +19,7 @@ test(
       import { chromium } from ${JSON.stringify(import.meta.resolve("playwright"))};
       import { writeFileSync } from 'node:fs';
       import { execFileSync } from 'node:child_process';
-      const browser = await chromium.connect(process.env.CRC_VERIFY_BROWSER_ENDPOINT);
+      const browser = await chromium.connect(process.env.PIBBL_VERIFY_BROWSER_ENDPOINT);
       const page = await browser.newPage();
       await page.setContent('<canvas></canvas>');
       await page.evaluate(() => { setTimeout(() => { while (true) {} }, 0); });

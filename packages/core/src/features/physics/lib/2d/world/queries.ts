@@ -1,10 +1,10 @@
 import {
   boundsOfShape2D,
-  type CRCPhysicsAabb2D,
-  type CRCPhysicsPose2D,
-  type CRCPhysicsRay2D,
-  type CRCPhysicsShape2D,
-  type CRCPhysicsVector2,
+  type PibblPhysicsAabb2D,
+  type PibblPhysicsPose2D,
+  type PibblPhysicsRay2D,
+  type PibblPhysicsShape2D,
+  type PibblPhysicsVector2,
 } from "../../../2d-geometry.js";
 import { copyFiniteVector2, requireNonnegativeNumber } from "../../shared/validation.js";
 import { containsPointInShape2D, overlapPreparedShapes2D } from "../collision/pairs.js";
@@ -12,14 +12,14 @@ import { raycastShape2D, shapeCastAgainstShape2D } from "../collision/casts.js";
 import { RADIANS_TO_DEGREES } from "../numeric-policy.js";
 import { createShape2D, type ShapeRecord2D } from "../shape-records.js";
 import type {
-  CRCPhysicsBodyHandle2D,
-  CRCPhysicsColliderHandle2D,
-  CRCPhysicsCollisionFilter,
-  CRCPhysicsQueryHit2D,
-  CRCPhysicsQueryMatch2D,
-  CRCPhysicsQueryMode,
-  CRCPhysicsQueryOptions2D,
-  CRCPhysicsQueryResult2D,
+  PibblPhysicsBodyHandle2D,
+  PibblPhysicsColliderHandle2D,
+  PibblPhysicsCollisionFilter,
+  PibblPhysicsQueryHit2D,
+  PibblPhysicsQueryMatch2D,
+  PibblPhysicsQueryMode,
+  PibblPhysicsQueryOptions2D,
+  PibblPhysicsQueryResult2D,
 } from "../types.js";
 import type { DynamicAabbBroadPhase2D } from "./broad-phase.js";
 import { collisionFiltersAllow2D } from "./ccd.js";
@@ -36,16 +36,16 @@ export interface CommittedWorldQueriesOptions2D {
   readonly bodies: BodyStore2D;
   readonly colliders: ColliderStore2D;
   readonly broadPhase: DynamicAabbBroadPhase2D;
-  readonly materializeBody: (index: number, generation: number) => CRCPhysicsBodyHandle2D;
-  readonly materializeCollider: (index: number, generation: number) => CRCPhysicsColliderHandle2D;
-  readonly resolveBody: (handle: CRCPhysicsBodyHandle2D) => HandleIdentity2D | null;
-  readonly resolveCollider: (handle: CRCPhysicsColliderHandle2D) => HandleIdentity2D | null;
+  readonly materializeBody: (index: number, generation: number) => PibblPhysicsBodyHandle2D;
+  readonly materializeCollider: (index: number, generation: number) => PibblPhysicsColliderHandle2D;
+  readonly resolveBody: (handle: PibblPhysicsBodyHandle2D) => HandleIdentity2D | null;
+  readonly resolveCollider: (handle: PibblPhysicsColliderHandle2D) => HandleIdentity2D | null;
 }
 
 interface PreparedQueryOptions2D {
-  readonly mode: CRCPhysicsQueryMode;
+  readonly mode: PibblPhysicsQueryMode;
   readonly sensors: "include" | "exclude" | "only";
-  readonly collisionFilter: CRCPhysicsCollisionFilter | null;
+  readonly collisionFilter: PibblPhysicsCollisionFilter | null;
   readonly excludeBody: HandleIdentity2D | null;
   readonly excludeCollider: HandleIdentity2D | null;
   readonly valid: boolean;
@@ -65,7 +65,7 @@ export class CommittedWorldQueries2D {
   private hitDistances: Float64Array;
   private hitTimes: Float64Array;
   private hitCount = 0;
-  private readonly shapeShells = new WeakMap<ShapeRecord2D, CRCPhysicsShape2D>();
+  private readonly shapeShells = new WeakMap<ShapeRecord2D, PibblPhysicsShape2D>();
 
   constructor(private readonly options: CommittedWorldQueriesOptions2D) {
     const capacity = normalizedCapacity(options.broadPhase.proxyCapacity);
@@ -87,11 +87,11 @@ export class CommittedWorldQueries2D {
     this.hitCount = 0;
   }
 
-  raycast<Mode extends CRCPhysicsQueryMode = "closest">(
+  raycast<Mode extends PibblPhysicsQueryMode = "closest">(
     worldGeneration: number,
-    ray: CRCPhysicsRay2D,
-    queryOptions?: CRCPhysicsQueryOptions2D<Mode>,
-  ): CRCPhysicsQueryResult2D<Mode, CRCPhysicsQueryHit2D> {
+    ray: PibblPhysicsRay2D,
+    queryOptions?: PibblPhysicsQueryOptions2D<Mode>,
+  ): PibblPhysicsQueryResult2D<Mode, PibblPhysicsQueryHit2D> {
     const prepared = this.prepareOptions(queryOptions);
     if (!this.isUsable(worldGeneration, prepared)) return emptyResult(prepared.mode);
     const origin = copyFiniteVector2(ray.origin, "ray.origin");
@@ -113,19 +113,19 @@ export class CommittedWorldQueries2D {
       if (collider === null) continue;
       const hit = raycastShape2D(collider.shape, collider.pose, ray);
       if (hit === null) continue;
-      if (prepared.mode === "any") return true as CRCPhysicsQueryResult2D<Mode, CRCPhysicsQueryHit2D>;
+      if (prepared.mode === "any") return true as PibblPhysicsQueryResult2D<Mode, PibblPhysicsQueryHit2D>;
       this.appendHit(collider, hit.point, hit.normal, hit.distance, hit.timeOfImpact);
     }
     return this.finishHits<Mode>(prepared.mode);
   }
 
-  shapeCast<Mode extends CRCPhysicsQueryMode = "closest">(
+  shapeCast<Mode extends PibblPhysicsQueryMode = "closest">(
     worldGeneration: number,
-    shape: CRCPhysicsShape2D,
-    from: CRCPhysicsPose2D,
-    translation: CRCPhysicsVector2,
-    queryOptions?: CRCPhysicsQueryOptions2D<Mode>,
-  ): CRCPhysicsQueryResult2D<Mode, CRCPhysicsQueryHit2D> {
+    shape: PibblPhysicsShape2D,
+    from: PibblPhysicsPose2D,
+    translation: PibblPhysicsVector2,
+    queryOptions?: PibblPhysicsQueryOptions2D<Mode>,
+  ): PibblPhysicsQueryResult2D<Mode, PibblPhysicsQueryHit2D> {
     const prepared = this.prepareOptions(queryOptions);
     if (!this.isUsable(worldGeneration, prepared)) return emptyResult(prepared.mode);
     const copiedTranslation = copyFiniteVector2(translation, "translation");
@@ -146,29 +146,29 @@ export class CommittedWorldQueries2D {
       if (collider === null) continue;
       const hit = shapeCastAgainstShape2D(shape, from, copiedTranslation, collider.shape, collider.pose);
       if (hit === null) continue;
-      if (prepared.mode === "any") return true as CRCPhysicsQueryResult2D<Mode, CRCPhysicsQueryHit2D>;
+      if (prepared.mode === "any") return true as PibblPhysicsQueryResult2D<Mode, PibblPhysicsQueryHit2D>;
       this.appendHit(collider, hit.point, hit.normal, hit.distance, hit.timeOfImpact);
     }
     return this.finishHits<Mode>(prepared.mode);
   }
 
-  overlapShape<Mode extends CRCPhysicsQueryMode = "closest">(
+  overlapShape<Mode extends PibblPhysicsQueryMode = "closest">(
     worldGeneration: number,
-    shape: CRCPhysicsShape2D,
-    pose: CRCPhysicsPose2D,
-    queryOptions?: CRCPhysicsQueryOptions2D<Mode>,
-  ): CRCPhysicsQueryResult2D<Mode, CRCPhysicsQueryMatch2D> {
+    shape: PibblPhysicsShape2D,
+    pose: PibblPhysicsPose2D,
+    queryOptions?: PibblPhysicsQueryOptions2D<Mode>,
+  ): PibblPhysicsQueryResult2D<Mode, PibblPhysicsQueryMatch2D> {
     const bounds = this.isGenerationLive(worldGeneration) ? boundsOfShape2D(shape, pose) : null;
     return this.runMatchQuery(worldGeneration, bounds, queryOptions, (collider) =>
       overlapPreparedShapes2D(shape, pose, collider.shape, collider.pose),
     );
   }
 
-  queryAabb<Mode extends CRCPhysicsQueryMode = "closest">(
+  queryAabb<Mode extends PibblPhysicsQueryMode = "closest">(
     worldGeneration: number,
-    bounds: CRCPhysicsAabb2D,
-    queryOptions?: CRCPhysicsQueryOptions2D<Mode>,
-  ): CRCPhysicsQueryResult2D<Mode, CRCPhysicsQueryMatch2D> {
+    bounds: PibblPhysicsAabb2D,
+    queryOptions?: PibblPhysicsQueryOptions2D<Mode>,
+  ): PibblPhysicsQueryResult2D<Mode, PibblPhysicsQueryMatch2D> {
     if (!this.isGenerationLive(worldGeneration)) {
       return emptyResult(modeOf(queryOptions));
     }
@@ -179,11 +179,11 @@ export class CommittedWorldQueries2D {
     });
   }
 
-  queryPoint<Mode extends CRCPhysicsQueryMode = "closest">(
+  queryPoint<Mode extends PibblPhysicsQueryMode = "closest">(
     worldGeneration: number,
-    point: CRCPhysicsVector2,
-    queryOptions?: CRCPhysicsQueryOptions2D<Mode>,
-  ): CRCPhysicsQueryResult2D<Mode, CRCPhysicsQueryMatch2D> {
+    point: PibblPhysicsVector2,
+    queryOptions?: PibblPhysicsQueryOptions2D<Mode>,
+  ): PibblPhysicsQueryResult2D<Mode, PibblPhysicsQueryMatch2D> {
     if (!this.isGenerationLive(worldGeneration)) {
       return emptyResult(modeOf(queryOptions));
     }
@@ -194,12 +194,12 @@ export class CommittedWorldQueries2D {
     );
   }
 
-  private runMatchQuery<Mode extends CRCPhysicsQueryMode>(
+  private runMatchQuery<Mode extends PibblPhysicsQueryMode>(
     worldGeneration: number,
-    bounds: CRCPhysicsAabb2D | null,
-    queryOptions: CRCPhysicsQueryOptions2D<Mode> | undefined,
+    bounds: PibblPhysicsAabb2D | null,
+    queryOptions: PibblPhysicsQueryOptions2D<Mode> | undefined,
     matches: (collider: SemanticCollider2D) => boolean,
-  ): CRCPhysicsQueryResult2D<Mode, CRCPhysicsQueryMatch2D> {
+  ): PibblPhysicsQueryResult2D<Mode, PibblPhysicsQueryMatch2D> {
     const prepared = this.prepareOptions(queryOptions);
     if (bounds === null || !this.isUsable(worldGeneration, prepared)) {
       return emptyResult(prepared.mode);
@@ -210,15 +210,15 @@ export class CommittedWorldQueries2D {
       const collider = this.semanticColliderAt(candidate, prepared);
       if (collider === null || !matches(collider)) continue;
       if (prepared.mode === "any") {
-        return true as CRCPhysicsQueryResult2D<Mode, CRCPhysicsQueryMatch2D>;
+        return true as PibblPhysicsQueryResult2D<Mode, PibblPhysicsQueryMatch2D>;
       }
       this.appendMatch(collider);
     }
     return this.finishMatches<Mode>(prepared.mode);
   }
 
-  private prepareOptions<Mode extends CRCPhysicsQueryMode>(
-    queryOptions: CRCPhysicsQueryOptions2D<Mode> | undefined,
+  private prepareOptions<Mode extends PibblPhysicsQueryMode>(
+    queryOptions: PibblPhysicsQueryOptions2D<Mode> | undefined,
   ): PreparedQueryOptions2D {
     const mode = modeOf(queryOptions);
     const sensors = queryOptions?.sensors ?? "include";
@@ -303,8 +303,8 @@ export class CommittedWorldQueries2D {
 
   private appendHit(
     collider: SemanticCollider2D,
-    point: CRCPhysicsVector2,
-    normal: CRCPhysicsVector2,
+    point: PibblPhysicsVector2,
+    normal: PibblPhysicsVector2,
     distance: number,
     time: number,
   ): void {
@@ -331,47 +331,47 @@ export class CommittedWorldQueries2D {
     this.hitBodyGenerations[target] = collider.bodyGeneration;
   }
 
-  private finishHits<Mode extends CRCPhysicsQueryMode>(
-    mode: CRCPhysicsQueryMode,
-  ): CRCPhysicsQueryResult2D<Mode, CRCPhysicsQueryHit2D> {
+  private finishHits<Mode extends PibblPhysicsQueryMode>(
+    mode: PibblPhysicsQueryMode,
+  ): PibblPhysicsQueryResult2D<Mode, PibblPhysicsQueryHit2D> {
     this.sortHits(true);
     if (mode === "any") {
-      return false as CRCPhysicsQueryResult2D<Mode, CRCPhysicsQueryHit2D>;
+      return false as PibblPhysicsQueryResult2D<Mode, PibblPhysicsQueryHit2D>;
     }
     if (mode === "closest") {
-      return (this.hitCount === 0 ? null : this.materializeHit(0)) as CRCPhysicsQueryResult2D<
+      return (this.hitCount === 0 ? null : this.materializeHit(0)) as PibblPhysicsQueryResult2D<
         Mode,
-        CRCPhysicsQueryHit2D
+        PibblPhysicsQueryHit2D
       >;
     }
-    const results: CRCPhysicsQueryHit2D[] = [];
+    const results: PibblPhysicsQueryHit2D[] = [];
     for (let index = 0; index < this.hitCount; index += 1) {
       results.push(this.materializeHit(index));
     }
-    return Object.freeze(results) as CRCPhysicsQueryResult2D<Mode, CRCPhysicsQueryHit2D>;
+    return Object.freeze(results) as PibblPhysicsQueryResult2D<Mode, PibblPhysicsQueryHit2D>;
   }
 
-  private finishMatches<Mode extends CRCPhysicsQueryMode>(
-    mode: CRCPhysicsQueryMode,
-  ): CRCPhysicsQueryResult2D<Mode, CRCPhysicsQueryMatch2D> {
+  private finishMatches<Mode extends PibblPhysicsQueryMode>(
+    mode: PibblPhysicsQueryMode,
+  ): PibblPhysicsQueryResult2D<Mode, PibblPhysicsQueryMatch2D> {
     this.sortHits(false);
     if (mode === "any") {
-      return false as CRCPhysicsQueryResult2D<Mode, CRCPhysicsQueryMatch2D>;
+      return false as PibblPhysicsQueryResult2D<Mode, PibblPhysicsQueryMatch2D>;
     }
     if (mode === "closest") {
-      return (this.hitCount === 0 ? null : this.materializeMatch(0)) as CRCPhysicsQueryResult2D<
+      return (this.hitCount === 0 ? null : this.materializeMatch(0)) as PibblPhysicsQueryResult2D<
         Mode,
-        CRCPhysicsQueryMatch2D
+        PibblPhysicsQueryMatch2D
       >;
     }
-    const results: CRCPhysicsQueryMatch2D[] = [];
+    const results: PibblPhysicsQueryMatch2D[] = [];
     for (let index = 0; index < this.hitCount; index += 1) {
       results.push(this.materializeMatch(index));
     }
-    return Object.freeze(results) as CRCPhysicsQueryResult2D<Mode, CRCPhysicsQueryMatch2D>;
+    return Object.freeze(results) as PibblPhysicsQueryResult2D<Mode, PibblPhysicsQueryMatch2D>;
   }
 
-  private materializeHit(index: number): CRCPhysicsQueryHit2D {
+  private materializeHit(index: number): PibblPhysicsQueryHit2D {
     return Object.freeze({
       ...this.materializeMatch(index),
       point: freezeVector(this.hitPointX[index]!, this.hitPointY[index]!),
@@ -381,7 +381,7 @@ export class CommittedWorldQueries2D {
     });
   }
 
-  private materializeMatch(index: number): CRCPhysicsQueryMatch2D {
+  private materializeMatch(index: number): PibblPhysicsQueryMatch2D {
     const bodyIndex = this.hitBodyIndices[index]!;
     const bodyGeneration = this.hitBodyGenerations[index]!;
     const colliderIndex = this.hitColliderIndices[index]!;
@@ -432,7 +432,7 @@ export class CommittedWorldQueries2D {
     swapFloat64(this.hitTimes, first, second);
   }
 
-  private shapeShell(record: ShapeRecord2D): CRCPhysicsShape2D {
+  private shapeShell(record: ShapeRecord2D): PibblPhysicsShape2D {
     let shell = this.shapeShells.get(record);
     if (shell === undefined) {
       shell = createShape2D(record);
@@ -463,13 +463,13 @@ interface SemanticCollider2D {
   readonly colliderGeneration: number;
   readonly bodyIndex: number;
   readonly bodyGeneration: number;
-  readonly shape: CRCPhysicsShape2D;
-  readonly pose: CRCPhysicsPose2D;
+  readonly shape: PibblPhysicsShape2D;
+  readonly pose: PibblPhysicsPose2D;
 }
 
-function modeOf<Mode extends CRCPhysicsQueryMode>(
-  options: CRCPhysicsQueryOptions2D<Mode> | undefined,
-): CRCPhysicsQueryMode {
+function modeOf<Mode extends PibblPhysicsQueryMode>(
+  options: PibblPhysicsQueryOptions2D<Mode> | undefined,
+): PibblPhysicsQueryMode {
   const mode = options?.mode ?? "closest";
   if (mode !== "closest" && mode !== "any" && mode !== "all") {
     throw new RangeError("query mode must be closest, any, or all.");
@@ -477,17 +477,17 @@ function modeOf<Mode extends CRCPhysicsQueryMode>(
   return mode;
 }
 
-function emptyResult<Mode extends CRCPhysicsQueryMode, Result>(
-  mode: CRCPhysicsQueryMode,
-): CRCPhysicsQueryResult2D<Mode, Result> {
-  return (mode === "any" ? false : mode === "all" ? Object.freeze([]) : null) as CRCPhysicsQueryResult2D<Mode, Result>;
+function emptyResult<Mode extends PibblPhysicsQueryMode, Result>(
+  mode: PibblPhysicsQueryMode,
+): PibblPhysicsQueryResult2D<Mode, Result> {
+  return (mode === "any" ? false : mode === "all" ? Object.freeze([]) : null) as PibblPhysicsQueryResult2D<Mode, Result>;
 }
 
 function sameIdentity(identity: HandleIdentity2D | null, index: number, generation: number): boolean {
   return identity !== null && identity.index === index && identity.generation === generation;
 }
 
-function publicPose(x: number, y: number, rotationRadians: number): CRCPhysicsPose2D {
+function publicPose(x: number, y: number, rotationRadians: number): PibblPhysicsPose2D {
   return {
     position: [x, y],
     rotationDegrees: rotationRadians * RADIANS_TO_DEGREES,
@@ -497,7 +497,7 @@ function publicPose(x: number, y: number, rotationRadians: number): CRCPhysicsPo
 function publicBodyOriginPose(
   bodies: BodyStore2D,
   index: number,
-): CRCPhysicsPose2D {
+): PibblPhysicsPose2D {
   const rotationRadians = bodies.rotationRadians[index]!;
   const cosine = Math.cos(rotationRadians);
   const sine = Math.sin(rotationRadians);
@@ -510,7 +510,7 @@ function publicBodyOriginPose(
   );
 }
 
-function copyAabb(bounds: CRCPhysicsAabb2D): CRCPhysicsAabb2D {
+function copyAabb(bounds: PibblPhysicsAabb2D): PibblPhysicsAabb2D {
   const min = copyFiniteVector2(bounds.min, "bounds.min");
   const max = copyFiniteVector2(bounds.max, "bounds.max");
   if (min[0] > max[0] || min[1] > max[1]) {
@@ -519,7 +519,7 @@ function copyAabb(bounds: CRCPhysicsAabb2D): CRCPhysicsAabb2D {
   return Object.freeze({ min, max });
 }
 
-function aabbsOverlap(first: CRCPhysicsAabb2D, second: CRCPhysicsAabb2D): boolean {
+function aabbsOverlap(first: PibblPhysicsAabb2D, second: PibblPhysicsAabb2D): boolean {
   return (
     first.min[0] <= second.max[0] &&
     first.max[0] >= second.min[0] &&
@@ -528,7 +528,7 @@ function aabbsOverlap(first: CRCPhysicsAabb2D, second: CRCPhysicsAabb2D): boolea
   );
 }
 
-function freezeVector(x: number, y: number): CRCPhysicsVector2 {
+function freezeVector(x: number, y: number): PibblPhysicsVector2 {
   return Object.freeze([x, y] as const);
 }
 

@@ -1,4 +1,4 @@
-import { crc, type CRCController, type LayoutBox } from '@crc/core';
+import { pibbl, type PibblController, type LayoutBox } from '@pibbl/core';
 import {
   CANVAS_SURFACE_SOURCE_ID,
   createCanvasSurfaceScene,
@@ -40,7 +40,7 @@ async function mountCanvasSurface(
   let disposed = false;
   let state = initialState();
   let mountAbort: AbortController | undefined;
-  let runtime: CRCController | undefined;
+  let runtime: PibblController | undefined;
   let pending = Promise.resolve();
 
   const assertActive = () => {
@@ -68,7 +68,7 @@ async function mountCanvasSurface(
     mountAbort?.abort();
     mountAbort = new AbortController();
     state = { ...state, mode };
-    runtime = crc(
+    runtime = pibbl(
       context.canvas,
       createCanvasSurfaceScene({
         mode,

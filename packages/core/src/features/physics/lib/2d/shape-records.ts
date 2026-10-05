@@ -1,4 +1,4 @@
-import type { CRCPhysicsShape2D } from '../../2d-geometry.js';
+import type { PibblPhysicsShape2D } from '../../2d-geometry.js';
 import { IDENTITY_POSE_2D, type InternalPose2D } from './math.js';
 
 interface LeafBase2D {
@@ -76,8 +76,8 @@ const shapeRecords2D = new WeakMap<object, ShapeRecord2D>();
 export function createShape2D(
   record: Omit<ShapeRecord2D, 'localPose'> &
     Readonly<{ localPose?: InternalPose2D }>,
-): CRCPhysicsShape2D {
-  const shell = Object.freeze({}) as CRCPhysicsShape2D;
+): PibblPhysicsShape2D {
+  const shell = Object.freeze({}) as PibblPhysicsShape2D;
   shapeRecords2D.set(
     shell,
     Object.freeze({
@@ -91,13 +91,13 @@ export function createShape2D(
   return shell;
 }
 
-export function requireShapeRecord2D(shape: CRCPhysicsShape2D): ShapeRecord2D {
+export function requireShapeRecord2D(shape: PibblPhysicsShape2D): ShapeRecord2D {
   const record =
     typeof shape === 'object' && shape !== null
       ? shapeRecords2D.get(shape)
       : undefined;
   if (record === undefined) {
-    throw new TypeError('shape must be a CRC physics 2D shape.');
+    throw new TypeError('shape must be a Pibbl physics 2D shape.');
   }
   return record;
 }

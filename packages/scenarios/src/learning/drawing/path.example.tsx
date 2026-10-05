@@ -1,11 +1,11 @@
 import {
-  crc,
+  pibbl,
   useSignal,
   Path,
   Rectangle,
   Text,
-  type CRCController,
-} from "@crc/core";
+  type PibblController,
+} from "@pibbl/core";
 function PathStudy() {
   const inside = useSignal(false);
   const star = new Path2D();
@@ -58,6 +58,6 @@ function PathStudy() {
     </Text>,
   ];
 }
-export default function mount(canvas: HTMLCanvasElement): CRCController {
-  return crc(canvas, <PathStudy />);
+export default function mount(canvas: HTMLCanvasElement): PibblController {
+  return pibbl(canvas, <PathStudy />);
 }

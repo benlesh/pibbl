@@ -1,4 +1,4 @@
-import { crc, useSignal, Rectangle, Text, type CRCController } from "@crc/core";
+import { pibbl, useSignal, Rectangle, Text, type PibblController } from "@pibbl/core";
 function EventSequenceStudy() {
   const events = useSignal<readonly string[]>([]);
   const record = (value: string) =>
@@ -70,6 +70,6 @@ function EventSequenceStudy() {
     </Text>,
   ];
 }
-export default function mount(canvas: HTMLCanvasElement): CRCController {
-  return crc(canvas, <EventSequenceStudy />);
+export default function mount(canvas: HTMLCanvasElement): PibblController {
+  return pibbl(canvas, <EventSequenceStudy />);
 }

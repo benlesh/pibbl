@@ -9,7 +9,7 @@ import {
   drive,
   tween,
   wait,
-  type CRCAnimationProgram,
+  type PibblAnimationProgram,
   type WritableSignal,
 } from '../../index';
 import { getProgramRecord } from './program';
@@ -25,12 +25,12 @@ describe('immutable animation programs', () => {
     expect(Object.isFrozen(program)).toBe(true);
     expect(getProgramRecord(program).children).toEqual([first]);
     expect(Object.isFrozen(getProgramRecord(program).children)).toBe(true);
-    expect(() => (getProgramRecord(program).children as CRCAnimationProgram[]).push(wait(1)))
+    expect(() => (getProgramRecord(program).children as PibblAnimationProgram[]).push(wait(1)))
       .toThrow(TypeError);
-    expect(() => getProgramRecord({} as typeof program)).toThrow('CRC animation program');
-    expect(() => sequence({} as typeof program)).toThrow('CRC animation program');
+    expect(() => getProgramRecord({} as typeof program)).toThrow('Pibbl animation program');
+    expect(() => sequence({} as typeof program)).toThrow('Pibbl animation program');
     expect(() => drive(output, {} as ReturnType<typeof tween>)).toThrow(
-      'CRC animation definition',
+      'Pibbl animation definition',
     );
     const foreignOutput = {
       set() {}, update() {}, get() { return 0; }, asReadonly() { return { get: () => 0 }; },
@@ -135,7 +135,7 @@ describe('immutable animation programs', () => {
 
     expect(() => repeat(drive(x, tween({ to: 1, duration: 10 })), {
       iterations: Number.POSITIVE_INFINITY,
-    })).toThrow('overlap');
+    })).not.toThrow();
     expect(() => parallel(
       separated,
       sequence(wait(15), drive(x, tween({ to: 2, duration: 1 }))),

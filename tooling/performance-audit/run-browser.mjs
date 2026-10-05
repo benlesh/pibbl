@@ -30,7 +30,7 @@ const reactionDiffusionSha256 = createHash('sha256').update(
   await readFile(resolve(root, 'packages/textures/src/lib/reaction-diffusion.ts')),
 ).digest('hex');
 const report = {
-  schema: 'crc-current-performance-audit/1',
+  schema: 'pibbl-current-performance-audit/1',
   baseline, reactionDiffusionSha256, timestamp: new Date().toISOString(),
   environment: { node: process.version, platform: platform(), architecture: arch(), baseUrl, cycles, frames },
   meaning: 'Source-mode, local descriptive measurements. Explicit resource release and weak reachability are separate observations; neither demonstrates native or GPU reclamation.',
@@ -47,12 +47,12 @@ try {
   browser = await chromium.launch({ headless: true });
   report.environment.browser = browser.version();
   const page = await browser.newPage({ viewport: { width: 960, height: 640 } });
-  await page.exposeFunction('__crcAuditRecord', record => {
+  await page.exposeFunction('__pibblAuditRecord', record => {
     report.cases.push(record);
     appendFileSync(partialOutput, `${JSON.stringify(record)}\n`);
   });
-  await page.route('**/crc-audit.html', route => route.fulfill({ contentType: 'text/html', body: '<!doctype html><title>CRC audit</title>' }));
-  await page.goto(`${baseUrl}/crc-audit.html`, { waitUntil: 'domcontentloaded' });
+  await page.route('**/pibbl-audit.html', route => route.fulfill({ contentType: 'text/html', body: '<!doctype html><title>Pibbl audit</title>' }));
+  await page.goto(`${baseUrl}/pibbl-audit.html`, { waitUntil: 'domcontentloaded' });
   const pageErrors = [];
   page.on('pageerror', error => pageErrors.push(error.message));
   const mainSuite = await page.evaluate(async ({ workspace, frames, cycles }) => {
@@ -90,7 +90,7 @@ try {
       const canvas = document.createElement('canvas'); canvas.width = 512; canvas.height = 320; document.body.replaceChildren(canvas);
       const before = counter(), flushDurations = [], errors = []; let idleFrames = 0, controller;
       try {
-        controller = core.crc(canvas, scene());
+        controller = core.pibbl(canvas, scene());
         for (let index = 0; index < frameCount; index++) {
           const actionMeasurement = frame?.({ index, canvas, driver });
           if (driver.pendingHostFrames) {
@@ -104,7 +104,7 @@ try {
       finally { controller?.dispose(); restore(); }
       const summarize = values => ({ samples: values.length, median: percentile(values, .5), p95: percentile(values, .95), max: Math.max(0, ...values) });
       const observation = { name, frameCount, warmupFrames: Math.min(10, frameCount), idleFrames, before, after: counter(), scheduler: scheduler.snapshotRealmScheduler(), errors, flushDurationMs: summarize(flushDurations) };
-      if (record) void window.__crcAuditRecord?.(observation);
+      if (record) void window.__pibblAuditRecord?.(observation);
       return observation;
     };
     const safe = (name, execute) => { try { return execute(); } catch (error) { return { name, errors: [error instanceof Error ? error.message : String(error)] }; } };
@@ -174,8 +174,8 @@ try {
   // This deliberately failing public recipe is terminal and isolated: an
   // initialization leak must remain visible in its own fresh page state.
   const faultPage = await browser.newPage();
-  await faultPage.route('**/crc-audit-fault.html', route => route.fulfill({ contentType: 'text/html', body: '<!doctype html><title>CRC audit fault</title>' }));
-  await faultPage.goto(`${baseUrl}/crc-audit-fault.html`, { waitUntil: 'domcontentloaded' });
+  await faultPage.route('**/pibbl-audit-fault.html', route => route.fulfill({ contentType: 'text/html', body: '<!doctype html><title>Pibbl audit fault</title>' }));
+  await faultPage.goto(`${baseUrl}/pibbl-audit-fault.html`, { waitUntil: 'domcontentloaded' });
   try {
     report.cases.push(await faultPage.evaluate(async ({ workspace }) => {
       const base = `/@fs${workspace}/`;
@@ -189,7 +189,7 @@ try {
         const texture = textures.useTexture(textures.reactionDiffusion({ seed: 42 }), { resolution: { width: 128, height: 80 }, palette: ['#ffffff'] });
         return core.createElement(core.Rectangle, { style: { width: 128, height: 80, fill: texture.paint({ mode: 'stretch' }) } });
       }
-      try { controller = core.crc(canvas, core.createElement(Fault, {})); driver.flush(0); }
+      try { controller = core.pibbl(canvas, core.createElement(Fault, {})); driver.flush(0); }
       catch (caught) { error = caught instanceof Error ? caught.message : String(caught); }
       finally { controller?.dispose(); }
       const schedulerAfterDispose = scheduler.snapshotRealmScheduler(); let restoreError;
@@ -198,8 +198,8 @@ try {
     }, { workspace: root }));
   } finally { await faultPage.close(); await save(); }
   const rasterFaultPage = await browser.newPage();
-  await rasterFaultPage.route('**/crc-audit-raster-fault.html', route => route.fulfill({ contentType: 'text/html', body: '<!doctype html><title>CRC audit raster fault</title>' }));
-  await rasterFaultPage.goto(`${baseUrl}/crc-audit-raster-fault.html`, { waitUntil: 'domcontentloaded' });
+  await rasterFaultPage.route('**/pibbl-audit-raster-fault.html', route => route.fulfill({ contentType: 'text/html', body: '<!doctype html><title>Pibbl audit raster fault</title>' }));
+  await rasterFaultPage.goto(`${baseUrl}/pibbl-audit-raster-fault.html`, { waitUntil: 'domcontentloaded' });
   try {
     report.cases.push(await rasterFaultPage.evaluate(async ({ workspace }) => {
       const base = `/@fs${workspace}/`;
@@ -212,7 +212,7 @@ try {
       simulation.InkSimulation.prototype.dispose = function (...args) { simulationDisposals++; return nativeDispose.apply(this, args); };
       const canvas = document.createElement('canvas'); document.body.append(canvas); let controller, error; const followupErrors = [];
       function Fault() { const texture = textures.useTexture(textures.reactionDiffusion({ seed: 42 }), { resolution: { width: 128, height: 80 } }); return core.createElement(core.Rectangle, { style: { width: 128, height: 80, fill: texture.paint({ mode: 'stretch' }) } }); }
-      try { controller = core.crc(canvas, core.createElement(Fault, {})); driver.flush(0); }
+      try { controller = core.pibbl(canvas, core.createElement(Fault, {})); driver.flush(0); }
       catch (caught) { error = caught instanceof Error ? caught.message : String(caught); }
       finally { controller?.dispose(); }
       const schedulerImmediatelyAfterDispose = scheduler.snapshotRealmScheduler();

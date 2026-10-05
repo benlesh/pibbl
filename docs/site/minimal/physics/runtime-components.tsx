@@ -1,4 +1,4 @@
-import { Group, crc, definePrimitive, signal, type CRCPhysics2DPropExtension, type SystemStyle } from '@crc/core';
+import { Group, pibbl, definePrimitive, signal, type PibblPhysics2DPropExtension, type SystemStyle } from '@pibbl/core';
 import {
   Capsule2D,
   Chain2D,
@@ -13,18 +13,18 @@ import {
   type Capsule2DStyle,
   type Chain2DProps,
   type Chain2DStyle,
-  type CRCPhysicsAttachment2D,
-  type CRCPhysicsBodyAttachment2D,
-  type CRCPhysicsColliderAttachment2D,
-  type CRCPhysicsKinematicBody2DOptions,
-  type CRCPhysicsKinematicTarget2D,
-  type CRCPhysicsPrimitiveProps2D,
-  type CRCPhysicsVector2,
+  type PibblPhysicsAttachment2D,
+  type PibblPhysicsBodyAttachment2D,
+  type PibblPhysicsColliderAttachment2D,
+  type PibblPhysicsKinematicBody2DOptions,
+  type PibblPhysicsKinematicTarget2D,
+  type PibblPhysicsPrimitiveProps2D,
+  type PibblPhysicsVector2,
   type PhysicsShape2DProps,
   type PhysicsShape2DStyle,
   type Segment2DProps,
   type Segment2DStyle,
-} from '@crc/core/physics/2d';
+} from '@pibbl/core/physics/2d';
 
 const canvas = document.createElement('canvas');
 canvas.width = 360;
@@ -43,7 +43,7 @@ const chainStyle: Chain2DStyle = {
 const shapeStyle: PhysicsShape2DStyle = {
   shape: boxShape2D({ width: 34, height: 26, center: [185, 130] }), fill: '#f59e0b',
 };
-const decorative: CRCPhysicsPrimitiveProps2D = { pointerEvents: 'none' };
+const decorative: PibblPhysicsPrimitiveProps2D = { pointerEvents: 'none' };
 const capsuleProps: Capsule2DProps = decorative;
 const segmentProps: Segment2DProps = decorative;
 const chainProps: Chain2DProps = decorative;
@@ -65,13 +65,13 @@ const Diamond = withPhysicsShape2D(RawDiamond, {
   resolveShape: (style: Readonly<DiamondStyle>) => boxShape2D({ width: style.size, height: style.size }),
 });
 
-const position = signal<CRCPhysicsVector2>([260, 70]);
-const target: CRCPhysicsKinematicTarget2D = { position };
-const kinematicOptions: CRCPhysicsKinematicBody2DOptions = { target, collider: false };
-const bodyAttachment: CRCPhysicsBodyAttachment2D = kinematicBody2D(kinematicOptions);
-const colliderAttachment: CRCPhysicsColliderAttachment2D = collider2D({ tag: 'moving-diamond' });
-const attachment: CRCPhysicsAttachment2D = colliderAttachment;
-const diamondPhysics: CRCPhysics2DPropExtension = { physics: attachment };
+const position = signal<PibblPhysicsVector2>([260, 70]);
+const target: PibblPhysicsKinematicTarget2D = { position };
+const kinematicOptions: PibblPhysicsKinematicBody2DOptions = { target, collider: false };
+const bodyAttachment: PibblPhysicsBodyAttachment2D = kinematicBody2D(kinematicOptions);
+const colliderAttachment: PibblPhysicsColliderAttachment2D = collider2D({ tag: 'moving-diamond' });
+const attachment: PibblPhysicsAttachment2D = colliderAttachment;
+const diamondPhysics: PibblPhysics2DPropExtension = { physics: attachment };
 
 function MovingDiamond() {
   const [x, y] = position.get();
@@ -80,7 +80,7 @@ function MovingDiamond() {
   </Group>;
 }
 
-const controller = crc(canvas,
+const controller = pibbl(canvas,
   <PhysicsWorld2D gravity={[0, 0]}>
     <Capsule2D {...capsuleProps} style={capsuleStyle} />
     <Segment2D {...segmentProps} style={segmentStyle} />

@@ -9,8 +9,8 @@ import {
   useComputed,
   useCanvasContext,
   useLayoutBox,
-} from "@crc/core";
-import { resolveTexturePaint, withHooksForbidden } from "@crc/core/internal";
+} from "@pibbl/core";
+import { resolveTexturePaint, withHooksForbidden } from "@pibbl/core/internal";
 import type {
   PieLayoutProps,
   PieLayoutSlice,
@@ -31,7 +31,7 @@ function finite(value: number, name: string, nonnegative = false) {
  * Computes pie geometry and label placement, then renders children for each resolved slice.
  *
  * @param props - Data, pie geometry, label policy, and child renderer. See {@link PieLayoutProps}.
- * @returns CRC content arranged as pie slices.
+ * @returns Pibbl content arranged as pie slices.
  *
  * @see {@link PieLayoutProps}
  */
@@ -82,7 +82,7 @@ export function PieLayout<D>(props: PieLayoutProps<D>) {
     );
   if (typeof props.children !== "function")
     throw new TypeError(
-      "PieLayout: children must be a function returning CRC elements.",
+      "PieLayout: children must be a function returning Pibbl elements.",
     );
   const revision =
     props.revision === undefined ? undefined : resolveSignalValue(props.revision);
@@ -179,7 +179,7 @@ export function PieLayout<D>(props: PieLayoutProps<D>) {
  * Draws a resolved pie slice using wedge geometry and the supplied paint style.
  *
  * @param props - Slice geometry, appearance, handlers, and children. See {@link PieSliceProps}.
- * @returns CRC nodes drawing one pie slice and its children.
+ * @returns Pibbl nodes drawing one pie slice and its children.
  *
  * @see {@link PieSliceProps}
  */
@@ -329,7 +329,7 @@ function positiveModulo(value: number, divisor: number) {
 
 const LabelText = definePrimitive<
   { label: Extract<PieLabelLayout, { status: "placed" }> },
-  { readonly custom?: never; fill: import("@crc/core").FillStyle }
+  { readonly custom?: never; fill: import("@pibbl/core").FillStyle }
 >(({ label }, style, context) => {
   context.font = label.font;
   context.textAlign = "left";
@@ -345,7 +345,7 @@ const LabelText = definePrimitive<
  *
  * @param props - Slice geometry, label appearance, and interaction options. See
  * {@link PieLabelProps} .
- * @returns CRC content drawing the slice label, or null when the label was not placed.
+ * @returns Pibbl content drawing the slice label, or null when the label was not placed.
  *
  * @see {@link PieLabelProps}
  */

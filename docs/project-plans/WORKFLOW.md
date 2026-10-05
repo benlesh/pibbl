@@ -1,6 +1,6 @@
 # Active project plan workflow
 
-This directory is the execution queue for CRC project work. The active plan is authoritative for what to do next; completed plans remain unchanged as historical records.
+This directory is the execution queue for Pibbl project work. The active plan is authoritative for what to do next; completed plans remain unchanged as historical records.
 
 ## Start of a work session
 
@@ -28,7 +28,7 @@ Keep exactly one `[NEXT]` marker in the active numbered plan. The detailed step 
 - For web-like interaction semantics, gather evidence in this order:
   1. executable native-browser characterization;
   2. current W3C UI Events / Pointer Events behavior;
-  3. an explicit CRC-specific decision where Canvas has no native equivalent.
+  3. an explicit Pibbl-specific decision where Canvas has no native equivalent.
 - Record public or architectural decisions in the plan’s decision log before depending on them in later steps.
 - Prefer deterministic counters and ownership assertions for leak tests. Heap/garbage-collection observations may supplement those tests but must not be the only gate.
 - Every step must satisfy the active plan’s integration/visual test contract before it can become `[DONE]`:

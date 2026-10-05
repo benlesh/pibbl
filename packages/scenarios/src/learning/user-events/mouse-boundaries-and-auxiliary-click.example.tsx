@@ -1,19 +1,19 @@
 import {
-  crc,
+  pibbl,
   useSignal,
   Rectangle,
   Text,
-  type CRCController,
-  type CRCLogicalMouseEvent,
-} from "@crc/core";
-function mouseSummary(event: CRCLogicalMouseEvent): string {
+  type PibblController,
+  type PibblLogicalMouseEvent,
+} from "@pibbl/core";
+function mouseSummary(event: PibblLogicalMouseEvent): string {
   return `${event.type} at ${Math.round(event.x)},${Math.round(event.y)} button=${event.button} buttons=${event.buttons} detail=${event.detail}`;
 }
 function MouseBoundariesAndAuxiliaryClickStudy() {
   const inside = useSignal(false);
   const auxiliaryCount = useSignal(0);
   const trace = useSignal<readonly string[]>([]);
-  const record = (event: CRCLogicalMouseEvent) =>
+  const record = (event: PibblLogicalMouseEvent) =>
     trace.update((current) => [...current.slice(-3), mouseSummary(event)]);
   return [
     <Rectangle
@@ -144,6 +144,6 @@ function MouseBoundariesAndAuxiliaryClickStudy() {
     </Text>,
   ];
 }
-export default function mount(canvas: HTMLCanvasElement): CRCController {
-  return crc(canvas, <MouseBoundariesAndAuxiliaryClickStudy />);
+export default function mount(canvas: HTMLCanvasElement): PibblController {
+  return pibbl(canvas, <MouseBoundariesAndAuxiliaryClickStudy />);
 }

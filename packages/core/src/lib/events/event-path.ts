@@ -1,21 +1,21 @@
 import type {
-  CRCEventNode,
+  PibblEventNode,
 } from './registrations.js';
 import { GLOBAL_STATE } from '../global-state.js';
-import type { CRCComponentRefs, CRCInstance } from '../types.js';
+import type { PibblComponentRefs, PibblInstance } from '../types.js';
 
-interface CRCEventPathComponent {
-  readonly component: CRCComponentRefs<any>;
-  readonly owner: CRCInstance;
+interface PibblEventPathComponent {
+  readonly component: PibblComponentRefs<any>;
+  readonly owner: PibblInstance;
 }
 
 /** Builds one immutable root-to-target snapshot for a logical dispatch. */
 export function buildEventPath(
-  target: CRCEventNode,
-): readonly CRCEventNode[] {
-  const components: CRCEventPathComponent[] = [];
+  target: PibblEventNode,
+): readonly PibblEventNode[] {
+  const components: PibblEventPathComponent[] = [];
   let owner = target.owner;
-  let component: CRCComponentRefs<any> | undefined = target.component;
+  let component: PibblComponentRefs<any> | undefined = target.component;
   while (component) {
     components.push({ component, owner });
     if (component.parent) {
@@ -25,7 +25,7 @@ export function buildEventPath(
 
     const eventParent = owner.eventParent;
     const parentOwner = owner.parent ?
-      GLOBAL_STATE.crcInstances.get(owner.parent) :
+      GLOBAL_STATE.pibblInstances.get(owner.parent) :
       undefined;
     if (!eventParent || !parentOwner) break;
     component = eventParent;
@@ -33,7 +33,7 @@ export function buildEventPath(
   }
   components.reverse();
 
-  const path: CRCEventNode[] = [];
+  const path: PibblEventNode[] = [];
   for (const { component, owner } of components) {
     const listeners = owner.eventRoot.listenersByComponent.get(
       component.id,

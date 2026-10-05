@@ -8,19 +8,19 @@
     "symbols": [
       {
         "name": "Manipulable",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
-        "name": "CRCManipulableProps",
-        "importPath": "@crc/core"
+        "name": "PibblManipulableProps",
+        "importPath": "@pibbl/core"
       },
       {
-        "name": "CRCManipulationBox",
-        "importPath": "@crc/core"
+        "name": "PibblManipulationBox",
+        "importPath": "@pibbl/core"
       },
       {
         "name": "degrees",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       }
     ],
     "notes": [
@@ -36,95 +36,95 @@
     "symbols": [
       {
         "name": "useManipulation",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "ManipulationFrame",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "DragHandle",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "ResizeHandle",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
-        "name": "CRCManipulationController",
-        "importPath": "@crc/core"
+        "name": "PibblManipulationController",
+        "importPath": "@pibbl/core"
       },
       {
-        "name": "CRCManipulationOptions",
-        "importPath": "@crc/core"
+        "name": "PibblManipulationOptions",
+        "importPath": "@pibbl/core"
       },
       {
-        "name": "CRCManipulationFrameProps",
-        "importPath": "@crc/core"
+        "name": "PibblManipulationFrameProps",
+        "importPath": "@pibbl/core"
       },
       {
-        "name": "CRCManipulationMoveInput",
-        "importPath": "@crc/core"
+        "name": "PibblManipulationMoveInput",
+        "importPath": "@pibbl/core"
       },
       {
-        "name": "CRCManipulationResizeInput",
-        "importPath": "@crc/core"
+        "name": "PibblManipulationResizeInput",
+        "importPath": "@pibbl/core"
       },
       {
-        "name": "CRCManipulationRotateInput",
-        "importPath": "@crc/core"
+        "name": "PibblManipulationRotateInput",
+        "importPath": "@pibbl/core"
       },
       {
-        "name": "CRCManipulationWhen",
-        "importPath": "@crc/core"
+        "name": "PibblManipulationWhen",
+        "importPath": "@pibbl/core"
       },
       {
-        "name": "CRCManipulationPoint",
-        "importPath": "@crc/core"
+        "name": "PibblManipulationPoint",
+        "importPath": "@pibbl/core"
       },
       {
-        "name": "CRCResizePosition",
-        "importPath": "@crc/core"
+        "name": "PibblResizePosition",
+        "importPath": "@pibbl/core"
       },
       {
-        "name": "CRCManipulationGeometry",
-        "importPath": "@crc/core"
+        "name": "PibblManipulationGeometry",
+        "importPath": "@pibbl/core"
       },
       {
-        "name": "CRCManipulationOperation",
-        "importPath": "@crc/core"
+        "name": "PibblManipulationOperation",
+        "importPath": "@pibbl/core"
       },
       {
-        "name": "CRCManipulationActive",
-        "importPath": "@crc/core"
+        "name": "PibblManipulationActive",
+        "importPath": "@pibbl/core"
       },
       {
-        "name": "CRCManipulationSnapshot",
-        "importPath": "@crc/core"
+        "name": "PibblManipulationSnapshot",
+        "importPath": "@pibbl/core"
       },
       {
-        "name": "CRCManipulationEvent",
-        "importPath": "@crc/core"
+        "name": "PibblManipulationEvent",
+        "importPath": "@pibbl/core"
       },
       {
-        "name": "CRCManipulationCommitEvent",
-        "importPath": "@crc/core"
+        "name": "PibblManipulationCommitEvent",
+        "importPath": "@pibbl/core"
       },
       {
-        "name": "CRCManipulationCancelEvent",
-        "importPath": "@crc/core"
+        "name": "PibblManipulationCancelEvent",
+        "importPath": "@pibbl/core"
       },
       {
-        "name": "CRCManipulationCancelReason",
-        "importPath": "@crc/core"
+        "name": "PibblManipulationCancelReason",
+        "importPath": "@pibbl/core"
       },
       {
-        "name": "CRCDragHandleProps",
-        "importPath": "@crc/core"
+        "name": "PibblDragHandleProps",
+        "importPath": "@pibbl/core"
       },
       {
-        "name": "CRCResizeHandleProps",
-        "importPath": "@crc/core"
+        "name": "PibblResizeHandleProps",
+        "importPath": "@pibbl/core"
       }
     ],
     "notes": [
@@ -140,51 +140,51 @@
     "symbols": [
       {
         "name": "ResizeHandles",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "RotationHandle",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
-        "name": "CRCDragHandleStyle",
-        "importPath": "@crc/core"
+        "name": "PibblDragHandleStyle",
+        "importPath": "@pibbl/core"
       },
       {
-        "name": "CRCResizeHandleStyle",
-        "importPath": "@crc/core"
+        "name": "PibblResizeHandleStyle",
+        "importPath": "@pibbl/core"
       },
       {
-        "name": "CRCResizeHandlesProps",
-        "importPath": "@crc/core"
+        "name": "PibblResizeHandlesProps",
+        "importPath": "@pibbl/core"
       },
       {
-        "name": "CRCRotationHandleProps",
-        "importPath": "@crc/core"
+        "name": "PibblRotationHandleProps",
+        "importPath": "@pibbl/core"
       },
       {
-        "name": "CRCRotationHandleStyle",
-        "importPath": "@crc/core"
+        "name": "PibblRotationHandleStyle",
+        "importPath": "@pibbl/core"
       },
       {
-        "name": "CRCManipulationReadoutStyle",
-        "importPath": "@crc/core"
+        "name": "PibblManipulationReadoutStyle",
+        "importPath": "@pibbl/core"
       },
       {
-        "name": "CRCManipulationReadoutStateStyle",
-        "importPath": "@crc/core"
+        "name": "PibblManipulationReadoutStateStyle",
+        "importPath": "@pibbl/core"
       },
       {
-        "name": "CRCRotationConnectorStyle",
-        "importPath": "@crc/core"
+        "name": "PibblRotationConnectorStyle",
+        "importPath": "@pibbl/core"
       },
       {
-        "name": "CRCRotationArcStyle",
-        "importPath": "@crc/core"
+        "name": "PibblRotationArcStyle",
+        "importPath": "@pibbl/core"
       }
     ],
     "notes": [
-      "Handle hit sizes and readout spacing are CSS pixels; the manipulated box remains in CRC logical coordinates."
+      "Handle hit sizes and readout spacing are CSS pixels; the manipulated box remains in Pibbl logical coordinates."
     ]
   }
 ]

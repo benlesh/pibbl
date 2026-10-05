@@ -16,7 +16,7 @@ import { dirname, join, resolve } from "node:path";
 import { build } from "esbuild";
 
 const root = resolve(import.meta.dirname, "..");
-const temp = mkdtempSync(join(tmpdir(), "crc-packed-pivot-"));
+const temp = mkdtempSync(join(tmpdir(), "pibbl-packed-pivot-"));
 const tarballs = join(temp, "tarballs");
 mkdirSync(tarballs);
 const require = createRequire(import.meta.url);
@@ -68,7 +68,7 @@ function install(name, dependencies, extra = {}) {
   writeFileSync(
     join(directory, "package.json"),
     JSON.stringify({
-      name: `crc-${name}`,
+      name: `pibbl-${name}`,
       private: true,
       type: "module",
       dependencies,
@@ -99,7 +99,7 @@ async function bundle(source, directory) {
     platform: "browser",
     minify: true,
     jsx: "automatic",
-    jsxImportSource: "@crc/core",
+    jsxImportSource: "@pibbl/core",
     metafile: true,
     stdin: { contents: source, loader: "tsx", resolveDir: directory },
     write: false,
@@ -140,14 +140,14 @@ try {
     core.entries.every((entry) => !entry.includes("3d-geometry") && !entry.includes("/physics/lib/3d/")),
     "Packed core must not contain retired 3D geometry artifacts.",
   );
-  const geometryDir = install("geometry", { "@crc/core": `file:${core.file}` });
+  const geometryDir = install("geometry", { "@pibbl/core": `file:${core.file}` });
   assert.ok(!existsSync(join(geometryDir, "node_modules/@dimforge/rapier2d-compat")));
   const geometryRequire = createRequire(join(geometryDir, "runtime.mjs"));
-  for (const specifier of ["@crc/core/physics", "@crc/core/physics/3d", "@crc/core/physics/3d/geometry"])
+  for (const specifier of ["@pibbl/core/physics", "@pibbl/core/physics/3d", "@pibbl/core/physics/3d/geometry"])
     assertBlocked(geometryRequire, specifier);
   assert.ok(!existsSync(join(geometryDir, "node_modules/three")));
   const geometrySource = `
-    import { circleShape2D, raycastShape2D } from '@crc/core/physics/2d/geometry';
+    import { circleShape2D, raycastShape2D } from '@pibbl/core/physics/2d/geometry';
     const hit = raycastShape2D(circleShape2D({ radius: 1 }), { position: [0, 0], rotationDegrees: 0 }, { origin: [-2, 0], direction: [1, 0], maxDistance: 4 });
     if (hit?.distance !== 1) throw new Error('Pure 2D geometry result changed');
   `;
@@ -168,17 +168,17 @@ try {
   );
 
   const particleDir = install("particles-only", {
-    "@crc/core": `file:${core.file}`,
+    "@pibbl/core": `file:${core.file}`,
   });
   assert.ok(!existsSync(join(particleDir, "node_modules/three")));
-  assert.ok(!existsSync(join(particleDir, "node_modules/@crc/core/physics")));
+  assert.ok(!existsSync(join(particleDir, "node_modules/@pibbl/core/physics")));
   const particleBundle = await bundle(
-    `import { defineParticleEffect2D, particleRange, useFlowField2D, useFlowSource2D } from '@crc/core/particles'; console.log(useFlowField2D, useFlowSource2D, defineParticleEffect2D({ emitters: [{ name: 'spark', capacity: 1, emission: [{ type: 'rate', particlesPerSecond: 1 }], shape: { type: 'point' }, initial: { lifetimeMilliseconds: particleRange(100, 200) }, renderer: { type: 'circle' } }] }).dimension);`,
+    `import { defineParticleEffect2D, particleRange, useFlowField2D, useFlowSource2D } from '@pibbl/core/particles'; console.log(useFlowField2D, useFlowSource2D, defineParticleEffect2D({ emitters: [{ name: 'spark', capacity: 1, emission: [{ type: 'rate', particlesPerSecond: 1 }], shape: { type: 'point' }, initial: { lifetimeMilliseconds: particleRange(100, 200) }, renderer: { type: 'circle' } }] }).dimension);`,
     particleDir,
   );
   assert.ok(
     particleBundle.inputs.every(
-      (input) => !input.includes("/node_modules/three/") && !input.includes("/node_modules/@crc/core/physics/"),
+      (input) => !input.includes("/node_modules/three/") && !input.includes("/node_modules/@pibbl/core/physics/"),
     ),
   );
   assert.ok(!particleBundle.code.includes("gl_InstanceID"));
@@ -186,48 +186,48 @@ try {
   const consumer = install(
     "consumer",
     {
-      "@crc/core": `file:${core.file}`,
-      "@crc/three": `file:${adapter.file}`,
+      "@pibbl/core": `file:${core.file}`,
+      "@pibbl/three": `file:${adapter.file}`,
       three: `file:${three.file}`,
     },
     { "@types/three": `link:${threeTypes}` },
   );
   const fromConsumer = createRequire(join(consumer, "runtime.mjs"));
-  const installedCore = realpathSync(fromConsumer.resolve("@crc/core"));
+  const installedCore = realpathSync(fromConsumer.resolve("@pibbl/core"));
   const installedThree = realpathSync(fromConsumer.resolve("three"));
   for (const specifier of [
-    "@crc/core/particles",
-    "@crc/core/physics/2d",
-    "@crc/core/physics/2d/testing",
-    "@crc/three",
-    "@crc/core/viz",
+    "@pibbl/core/particles",
+    "@pibbl/core/physics/2d",
+    "@pibbl/core/physics/2d/testing",
+    "@pibbl/three",
+    "@pibbl/core/viz",
   ]) {
     const entry = fromConsumer.resolve(specifier);
     assert.equal(
-      realpathSync(createRequire(entry).resolve("@crc/core")),
+      realpathSync(createRequire(entry).resolve("@pibbl/core")),
       installedCore,
       `${specifier} loaded a second core`,
     );
   }
   assert.equal(
     realpathSync(
-      createRequire(fromConsumer.resolve("@crc/three")).resolve("three"),
+      createRequire(fromConsumer.resolve("@pibbl/three")).resolve("three"),
     ),
     installedThree,
   );
   for (const specifier of [
-    "@crc/core/physics/3d",
-    "@crc/core/physics/3d/geometry",
-    "@crc/core/particles/webgl",
-    "@crc/webgl",
-    "@crc/webgl/gltf",
-    "@crc/webgl/internal",
+    "@pibbl/core/physics/3d",
+    "@pibbl/core/physics/3d/geometry",
+    "@pibbl/core/particles/webgl",
+    "@pibbl/webgl",
+    "@pibbl/webgl/gltf",
+    "@pibbl/webgl/internal",
   ])
     assertBlocked(fromConsumer, specifier);
   for (const specifier of [
-    "@crc/core/lib/crc",
-    "@crc/three/src/index",
-    "@crc/core/physics/src/3d-geometry",
+    "@pibbl/core/lib/pibbl",
+    "@pibbl/three/src/index",
+    "@pibbl/core/physics/src/3d-geometry",
   ])
     assertBlocked(fromConsumer, specifier);
 
@@ -261,14 +261,14 @@ try {
   await verifyPathTreeShaking(installedCore, "packed");
   const shared = await bundle(
     `
-    import { crc, Rectangle, createElement } from '@crc/core';
-    import { defineThreeLayer } from '@crc/three';
+    import { pibbl, Rectangle, createElement } from '@pibbl/core';
+    import { defineThreeLayer } from '@pibbl/three';
     import { Scene, PerspectiveCamera } from 'three';
     import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-    import { Particles2D } from '@crc/core/particles';
-    import { PhysicsWorld2D } from '@crc/core/physics/2d';
-    import { createPhysicsTestHarness2D } from '@crc/core/physics/2d/testing';
-    console.log(crc, createElement(Rectangle, { style: { width: 1, height: 1 } }), defineThreeLayer, new Scene(), new PerspectiveCamera(), OrbitControls, Particles2D, PhysicsWorld2D, createPhysicsTestHarness2D);
+    import { Particles2D } from '@pibbl/core/particles';
+    import { PhysicsWorld2D } from '@pibbl/core/physics/2d';
+    import { createPhysicsTestHarness2D } from '@pibbl/core/physics/2d/testing';
+    console.log(pibbl, createElement(Rectangle, { style: { width: 1, height: 1 } }), defineThreeLayer, new Scene(), new PerspectiveCamera(), OrbitControls, Particles2D, PhysicsWorld2D, createPhysicsTestHarness2D);
   `,
     consumer,
   );
@@ -277,7 +277,7 @@ try {
     "packed consumer reached workspace source",
   );
   assert.equal(
-    shared.code.split("@crc/core.element").length - 1,
+    shared.code.split("@pibbl/core.element").length - 1,
     1,
     "packed consumer duplicated the core brand",
   );

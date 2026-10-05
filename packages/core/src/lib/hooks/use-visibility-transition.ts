@@ -2,98 +2,98 @@ import { signal } from '../signals/graph.js';
 import type { Signal } from '../signals/types.js';
 import { drive } from '../animation/program.js';
 import { defineAnimation, tween } from '../animation/definition.js';
-import type { CRCPlayback } from '../animation/types.js';
-import { createTransitionBinding, type CRCTransitionBinding } from '../transitions/binding.js';
-import { createTransitionRuntime, transitionEffectSampler, transitionEffectTail, type CRCTransitionEffect } from '../transitions/fade.js';
+import type { PibblPlayback } from '../animation/types.js';
+import { createTransitionBinding, type PibblTransitionBinding } from '../transitions/binding.js';
+import { createTransitionRuntime, transitionEffectSampler, transitionEffectTail, type PibblTransitionEffect } from '../transitions/fade.js';
 import { useHookSlot } from './hook-slot.js';
 import { queueBeginCommand } from '../scheduler/realm-scheduler.js';
-import type { CRCBeginCommandHandle } from '../scheduler/types.js';
+import type { PibblBeginCommandHandle } from '../scheduler/types.js';
 import { usePlayback } from './use-playback.js';
 
 /**
  * The current hidden, entering, visible, exiting, or disposed transition state.
  *
- * @see {@link CRCVisibilityTransition}
+ * @see {@link PibblVisibilityTransition}
  */
-export type CRCVisibilityTransitionStatus = 'hidden' | 'entering' | 'visible' | 'exiting' | 'disposed';
+export type PibblVisibilityTransitionStatus = 'hidden' | 'entering' | 'visible' | 'exiting' | 'disposed';
 /**
  * Settlement of one show or hide request, including its request identifier, phase, and outcome.
  *
- * @see {@link CRCVisibilityTransition}
+ * @see {@link PibblVisibilityTransition}
  */
-export interface CRCVisibilityTransitionResult {
+export interface PibblVisibilityTransitionResult {
   /**
    * Monotonic identifier of the visibility request that produced this result. See
-   * {@link CRCVisibilityTransitionResult}.
+   * {@link PibblVisibilityTransitionResult}.
    */
   readonly requestId: number;
-  /** Selects `"enter"`, `"exit"` for phase. See {@link CRCVisibilityTransitionResult}. */
+  /** Selects `"enter"`, `"exit"` for phase. See {@link PibblVisibilityTransitionResult}. */
   readonly phase: 'enter' | 'exit';
-  /** How this specific show or hide request settled. See {@link CRCVisibilityTransitionResult}. */
+  /** How this specific show or hide request settled. See {@link PibblVisibilityTransitionResult}. */
   readonly status: 'finished' | 'cancelled' | 'disposed';
 }
 /**
  * Enter and exit effects and lifecycle configuration for visibility transitions.
  *
- * @see {@link CRCTransitionEffect}
+ * @see {@link PibblTransitionEffect}
  * @see {@link useVisibilityTransition}
  */
-export interface CRCVisibilityTransitionOptions {
+export interface PibblVisibilityTransitionOptions {
   /** Mount-time options in the first slice. */
   readonly initial?: boolean;
-  /** Effect used when moving toward visible. See {@link CRCTransitionEffect}. */
-  readonly enter: CRCTransitionEffect;
+  /** Effect used when moving toward visible. See {@link PibblTransitionEffect}. */
+  readonly enter: PibblTransitionEffect;
   /**
    * Effect used when moving toward hidden; defaults to the enter effect. See
-   * {@link CRCTransitionEffect}.
+   * {@link PibblTransitionEffect}.
    */
-  readonly exit?: CRCTransitionEffect;
+  readonly exit?: PibblTransitionEffect;
   /**
    * Transition duration in milliseconds; defaults to 300. See
-   * {@link CRCVisibilityTransitionOptions}.
+   * {@link PibblVisibilityTransitionOptions}.
    */
   readonly duration?: number;
 }
 /**
  * Mount-owned visibility controls, reactive progress and status, and a primitive presentation binding.
  *
- * @see {@link CRCTransitionBinding}
+ * @see {@link PibblTransitionBinding}
  * @see {@link Signal}
- * @see {@link CRCVisibilityTransitionStatus}
- * @see {@link CRCVisibilityTransitionResult}
+ * @see {@link PibblVisibilityTransitionStatus}
+ * @see {@link PibblVisibilityTransitionResult}
  * @see {@link useVisibilityTransition}
  */
-export interface CRCVisibilityTransition {
+export interface PibblVisibilityTransition {
   /**
    * Presentation binding to assign to the receiving primitive's style.transition. See
-   * {@link CRCTransitionBinding}.
+   * {@link PibblTransitionBinding}.
    */
-  readonly binding: CRCTransitionBinding;
+  readonly binding: PibblTransitionBinding;
   /** Readonly view of the requested visibility target. See {@link Signal}. */
   readonly visible: Signal<boolean>;
   /** Normalized progress through the current animation or transition. See {@link Signal}. */
   readonly progress: Signal<number>;
   /**
    * Reactive visibility-transition lifecycle state. See {@link Signal},
-   * {@link CRCVisibilityTransitionStatus}.
+   * {@link PibblVisibilityTransitionStatus}.
    */
-  readonly status: Signal<CRCVisibilityTransitionStatus>;
+  readonly status: Signal<PibblVisibilityTransitionStatus>;
   /**
    * Requests entry and resolves with the request's finished, cancelled, or disposed outcome. See
-   * {@link CRCVisibilityTransitionResult}.
+   * {@link PibblVisibilityTransitionResult}.
    * @returns A promise settling with the request's completion or interruption result. See
-   * {@link CRCVisibilityTransitionResult} .
+   * {@link PibblVisibilityTransitionResult} .
    */
-  show(): Promise<CRCVisibilityTransitionResult>;
+  show(): Promise<PibblVisibilityTransitionResult>;
   /**
    * Requests exit and resolves with the request's finished, cancelled, or disposed outcome. See
-   * {@link CRCVisibilityTransitionResult}.
+   * {@link PibblVisibilityTransitionResult}.
    * @returns A promise settling with the request's completion or interruption result. See
-   * {@link CRCVisibilityTransitionResult} .
+   * {@link PibblVisibilityTransitionResult} .
    */
-  hide(): Promise<CRCVisibilityTransitionResult>;
+  hide(): Promise<PibblVisibilityTransitionResult>;
   /**
-   * Forces the currently requested transition to its endpoint. See {@link CRCVisibilityTransition}
+   * Forces the currently requested transition to its endpoint. See {@link PibblVisibilityTransition}
    * .
    */
   finish(): void;
@@ -103,14 +103,14 @@ export interface CRCVisibilityTransition {
  * Explicitly controlled visibility. It does not retain unmounted content or alter targeting.
  *
  * @param options - Visibility signal, effect, timing, and lifecycle options. See
- * {@link CRCVisibilityTransitionOptions} .
+ * {@link PibblVisibilityTransitionOptions} .
  * @returns Stable mount-owned controls for visibility and transition completion. See
- * {@link CRCVisibilityTransition} .
+ * {@link PibblVisibilityTransition} .
  *
- * @see {@link CRCVisibilityTransitionOptions}
- * @see {@link CRCVisibilityTransition}
+ * @see {@link PibblVisibilityTransitionOptions}
+ * @see {@link PibblVisibilityTransition}
  */
-export function useVisibilityTransition(options: CRCVisibilityTransitionOptions): CRCVisibilityTransition {
+export function useVisibilityTransition(options: PibblVisibilityTransitionOptions): PibblVisibilityTransition {
   const duration = options.duration ?? 300;
   if (!Number.isFinite(duration) || duration < 0) throw new RangeError('Visibility transition duration must be finite and nonnegative.');
   if (options.initial !== undefined && typeof options.initial !== 'boolean') throw new TypeError('Visibility transition initial must be boolean.');
@@ -124,16 +124,16 @@ export function useVisibilityTransition(options: CRCVisibilityTransitionOptions)
     const enter = enterRuntime.sample, exit = exitRuntime.sample;
     const visible = signal(options.initial ?? true);
     const progress = signal(visible.get() ? 1 : 0);
-    const status = signal<CRCVisibilityTransitionStatus>(visible.get() ? 'visible' : 'hidden');
+    const status = signal<PibblVisibilityTransitionStatus>(visible.get() ? 'visible' : 'hidden');
     let disposed = false, serial = 0;
-    let pending: { id: number; target: boolean; resolve: (result: CRCVisibilityTransitionResult) => void } | undefined;
+    let pending: { id: number; target: boolean; resolve: (result: PibblVisibilityTransitionResult) => void } | undefined;
     const elapsed = signal(0), tailTime = signal(0);
     const maxTail = Math.max(enterTail, exitTail);
-    let playback!: CRCPlayback, clock!: CRCPlayback, tail!: CRCPlayback;
+    let playback!: PibblPlayback, clock!: PibblPlayback, tail!: PibblPlayback;
     let tailRunning = false;
     const forced = signal(false);
     let runStart = 0, runInitial = progress.get();
-    const historyCommands = new Set<CRCBeginCommandHandle>();
+    const historyCommands = new Set<PibblBeginCommandHandle>();
     let history: { time: number; progress: number; direction: number }[] = [];
     const progressAt = (time: number) => {
       if (!Number.isFinite(time)) throw new RangeError('progressAt requires a finite time.');
@@ -143,14 +143,14 @@ export function useVisibilityTransition(options: CRCVisibilityTransitionOptions)
       return Math.max(0, Math.min(1, segment.progress + segment.direction * (duration === 0 ? 1 : (time - segment.time) / duration)));
     };
     let direction: 'enter' | 'exit' = 'enter';
-    const settle = (outcome: CRCVisibilityTransitionResult['status']) => {
+    const settle = (outcome: PibblVisibilityTransitionResult['status']) => {
       const request = pending; pending = undefined;
       request?.resolve(Object.freeze({ requestId: request.id, phase: request.target ? 'enter' : 'exit', status: outcome }));
     };
-    const request = (target: boolean): Promise<CRCVisibilityTransitionResult> => {
+    const request = (target: boolean): Promise<PibblVisibilityTransitionResult> => {
       const id = ++serial, phase = target ? 'enter' : 'exit';
       if (disposed) return Promise.resolve({ requestId: id, phase, status: 'disposed' });
-      // The signal write also enforces CRC's prohibition on commands during rendering.
+      // The signal write also enforces Pibbl's prohibition on commands during rendering.
       visible.set(target);
       const wasActive = pending !== undefined;
       const wasTailing = tailRunning;
@@ -160,12 +160,12 @@ export function useVisibilityTransition(options: CRCVisibilityTransitionOptions)
         status.set(target ? 'visible' : 'hidden');
         return Promise.resolve({ requestId: id, phase, status: 'finished' });
       }
-      const promise = new Promise<CRCVisibilityTransitionResult>(resolve => { pending = { id, target, resolve }; });
+      const promise = new Promise<PibblVisibilityTransitionResult>(resolve => { pending = { id, target, resolve }; });
       status.set(target ? 'entering' : 'exiting');
       if (!wasActive) clock.play();
       if (!wasActive || wasTailing || direction !== phase) {
         const at = wasActive ? elapsed.get() : 0, from = progress.get();
-        let command!: CRCBeginCommandHandle;
+        let command!: PibblBeginCommandHandle;
         command = queueBeginCommand(snapshot => {
           historyCommands.delete(command);
           if (disposed) return;
@@ -207,7 +207,7 @@ export function useVisibilityTransition(options: CRCVisibilityTransitionOptions)
         active, elapsed: active ? elapsed.get() : 0, progressAt,
       });
     });
-    const handle: CRCVisibilityTransition = Object.freeze({
+    const handle: PibblVisibilityTransition = Object.freeze({
       binding, visible: visible.asReadonly(), progress: progress.asReadonly(), status: status.asReadonly(),
       show: () => request(true), hide: () => request(false), finish: () => { if (!disposed && pending) { forced.set(true); if (tailRunning) tail.finish(); else if (pending.target) playback.finish(); else playback.seek(0); } },
     });
@@ -219,7 +219,7 @@ export function useVisibilityTransition(options: CRCVisibilityTransitionOptions)
         return localTime;
       } })),
       tailProgram: drive(tailTime, tween({ from: 0, to: 1, duration: maxTail })),
-      setPlayback(value: CRCPlayback, clockValue: CRCPlayback, tailValue: CRCPlayback) { playback = value; clock = clockValue; tail = tailValue; },
+      setPlayback(value: PibblPlayback, clockValue: PibblPlayback, tailValue: PibblPlayback) { playback = value; clock = clockValue; tail = tailValue; },
       fail() { disposed = true; for (const runtime of runtimes) runtime.dispose?.(); forced.set(true); status.set('disposed'); settle('disposed'); playback.cancel(); clock.cancel(); tail.cancel(); },
       startTail,
       completeTail() { if (tailRunning) complete(); },

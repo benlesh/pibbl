@@ -12,7 +12,7 @@ relatedTypes: [StarPathOptions]
 # createStarPath
 
 ```ts
-import { createStarPath, Path } from "@crc/core";
+import { createStarPath, Path } from "@pibbl/core";
 ```
 
 [`StarPathOptions`](#/api/types/elements-components#starpathoptions) is accepted by `createStarPath(options): Path2D`, which validates integer points and

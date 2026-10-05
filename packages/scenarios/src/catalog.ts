@@ -329,9 +329,9 @@ const smokeMetadata: ScenarioMetadata = {
   id: "baseline-smoke",
   slug: "baseline-smoke",
   title: "Baseline smoke",
-  summary: "Mount, render, update, click, and reset one public-API CRC scene.",
+  summary: "Mount, render, update, click, and reset one public-API Pibbl scene.",
   category: "Getting started",
-  apiTags: ["crc", "Rectangle", "Text"],
+  apiTags: ["pibbl", "Rectangle", "Text"],
   conceptTags: ["mount", "render", "state update", "mouse click"],
   manualSteps: [
     {
@@ -777,7 +777,7 @@ const focusNavigationMetadata: ScenarioMetadata = {
     },
   ],
   knownLimitations: [
-    "CRC logical Canvas focus is keyboard interaction, not screen-reader semantics; applications must provide and synchronize an equivalent semantic DOM experience.",
+    "Pibbl logical Canvas focus is keyboard interaction, not screen-reader semantics; applications must provide and synchronize an equivalent semantic DOM experience.",
     "Directional navigation does not wrap or escape from the nearest boundary, and positive numeric tabindex ordering is not supported.",
   ],
   learningOrder: 65,
@@ -820,7 +820,7 @@ const interactionLabMetadata: ScenarioMetadata = {
     "Drive propagation, capture, touch retention, cancellation, keyboard, composition, clipboard, drag/drop, and mouse targeting through shared public-API fixtures.",
   category: "Interaction contracts",
   apiTags: [
-    "crc",
+    "pibbl",
     "useEventListener",
     "useEventTarget",
     "Path",
@@ -863,7 +863,7 @@ const interactionLabMetadata: ScenarioMetadata = {
       action:
         "Inspect the Keyboard fields, Composition, and Clipboard headless contract fixtures; their automated cases use internal headless contract transport.",
       expected:
-        "The internal tests preserve key/code/repeat/composition state, composition data, and clipboard payload without claiming a public adapter or CRC creating hidden editable DOM.",
+        "The internal tests preserve key/code/repeat/composition state, composition data, and clipboard payload without claiming a public adapter or Pibbl creating hidden editable DOM.",
     },
     {
       action:
@@ -903,9 +903,9 @@ const interactionLabMetadata: ScenarioMetadata = {
     },
   ],
   knownLimitations: [
-    "A plain Canvas has no logical keyboard, editing, or clipboard target; no public input adapter exists, and CRC does not create hidden editable DOM.",
+    "A plain Canvas has no logical keyboard, editing, or clipboard target; no public input adapter exists, and Pibbl does not create hidden editable DOM.",
     "This ordering laboratory intentionally uses an untransformed root Canvas; the shared geometry matrix covers CSS scale, transforms, clips, and offscreen layers.",
-    "A CRC rerender requested from a handler settles on the next animation frame; narrow dispatcher tests separately prove synchronous live-registry mutation semantics.",
+    "A Pibbl rerender requested from a handler settles on the next animation frame; narrow dispatcher tests separately prove synchronous live-registry mutation semantics.",
     "New logical event facades expose opaque related targets; the mouse fixtures present readable target labels rather than public target identities.",
     "Context-menu ordering follows the active browser instead of being normalized.",
   ],
@@ -972,9 +972,9 @@ const mouseContractMetadata: ScenarioMetadata = {
   slug: "mouse-interaction-contract",
   title: "Mouse interaction contract",
   summary:
-    "Explore the approved native evidence and the target/order rules implemented by CRC’s dispatcher.",
+    "Explore the approved native evidence and the target/order rules implemented by Pibbl’s dispatcher.",
   category: "Interaction contracts",
-  apiTags: ["crc", "mouse events", "Rectangle", "Layer", "Clip", "Group"],
+  apiTags: ["pibbl", "mouse events", "Rectangle", "Layer", "Clip", "Group"],
   conceptTags: [
     "event order",
     "topmost target",
@@ -985,7 +985,7 @@ const mouseContractMetadata: ScenarioMetadata = {
     {
       action: "Select Enter, Move within, Switch, and Exit cases.",
       expected:
-        "The approved CRC sequence reports boundary transitions before movement.",
+        "The approved Pibbl sequence reports boundary transitions before movement.",
     },
     {
       action: "Select overlap, nested child, clip, transform, and layer cases.",
@@ -1102,7 +1102,7 @@ const agentTextScenarioEntry: ScenarioCatalogEntry<import('./agent-text-verifica
   metadata: {
     id: 'agent-text-verification', slug: 'agent-text-verification', title: 'Agent text verification',
     summary: 'Verify an exact fixture label while redacting private text from machine evidence.', category: 'Diagnostics',
-    apiTags: ['crc', 'Text'], conceptTags: ['text', 'redaction', 'inspection'],
+    apiTags: ['pibbl', 'Text'], conceptTags: ['text', 'redaction', 'inspection'],
     manualSteps: [{ action: 'Inspect the seeded label, then choose Repair.', expected: 'The assertion changes from fail to pass; the second string stays redacted in evidence.' }],
     knownLimitations: ['Source development only; successful calls are not proof of glyph visibility, font selection or clipping.'],
     learningOrder: 76, visibility: 'test-laboratory', visibilityReason: 'Controlled private and fixture text for agent assertions.', maturity: 'contract',
@@ -1119,7 +1119,7 @@ const agentTargetingVerificationMetadata: ScenarioMetadata = {
   summary:
     "Diagnose a decorative Canvas overlay that intercepts an intended item selection, then verify its repair with the same native click.",
   category: "Diagnostics",
-  apiTags: ["crc", "Rectangle", "signal", "pointerEvents"],
+  apiTags: ["pibbl", "Rectangle", "signal", "pointerEvents"],
   conceptTags: ["targeting", "paint order", "native input", "inspection"],
   manualSteps: [
     {
@@ -1197,7 +1197,7 @@ const lifecycleLabMetadata: ScenarioMetadata = {
   summary:
     "Exercise rerender, handler, subtree, layer, abort, dispose, remount, and stale-cleanup ownership flows.",
   category: "Diagnostics",
-  apiTags: ["crc", "CRCController", "Rectangle", "Layer", "mouse events"],
+  apiTags: ["pibbl", "PibblController", "Rectangle", "Layer", "mouse events"],
   conceptTags: ["event ownership", "teardown", "dispose", "remount"],
   manualSteps: [
     {
@@ -1282,7 +1282,7 @@ const geometryMatrixMetadata: ScenarioMetadata = {
     "Probe intrinsic coordinates, nested transforms and clips, global layer paint order, layer bounds, and stroke interaction geometry.",
   category: "Interaction contracts",
   apiTags: [
-    "crc",
+    "pibbl",
     "Group",
     "Clip",
     "Layer",
@@ -1381,7 +1381,7 @@ const performanceLabMetadata: ScenarioMetadata = {
   summary:
     "Measure hit-test structure and live dispatch latency across shared zero, sparse, dense, clipped, transformed, layered, cursor, and rerender workloads.",
   category: "Diagnostics",
-  apiTags: ["crc", "Group", "Clip", "Layer", "Rectangle", "mouse events"],
+  apiTags: ["pibbl", "Group", "Clip", "Layer", "Rectangle", "mouse events"],
   conceptTags: [
     "hit-test cost",
     "dispatch latency",
@@ -1459,7 +1459,7 @@ const cleanupStressMetadata: ScenarioMetadata = {
   summary:
     "Exercise pending frames, image races, nested layers, synchronous hook cleanup, component/root identity, runtime disposal, and repeated mount cycles.",
   category: "Diagnostics",
-  apiTags: ["crc", "useReaction", "Image", "Layer", "Rectangle"],
+  apiTags: ["pibbl", "useReaction", "Image", "Layer", "Rectangle"],
   conceptTags: [
     "resource ownership",
     "async cleanup",
@@ -1558,7 +1558,7 @@ const runtimeHooksMetadata: ScenarioMetadata = {
     "Exercise state, memo, ref, synchronous change cleanup, memoized paths, keyed siblings, root identity, falsy children, and public hook misuse.",
   category: "Diagnostics",
   apiTags: [
-    "crc",
+    "pibbl",
     "useSignal",
     "useComputed",
     "useRef",
@@ -1720,7 +1720,7 @@ const canvasSurfaceMetadata: ScenarioMetadata = {
   summary:
     "Verify fixed fitting, responsive logical reflow, high-density backing stores, and logical mouse coordinates.",
   category: "Rendering",
-  apiTags: ["crc", "useLayoutBox", "Rectangle", "Text", "mouse events"],
+  apiTags: ["pibbl", "useLayoutBox", "Rectangle", "Text", "mouse events"],
   conceptTags: [
     "device pixel ratio",
     "responsive Canvas",
@@ -1762,7 +1762,7 @@ const filterLabMetadata: ScenarioMetadata = {
   summary:
     "Compare every supported filter, order-sensitive chains, nested boundaries, transforms, clips, and cached Layer interaction.",
   category: "Rendering",
-  apiTags: ["Group", "Clip", "Layer", "Image", "CRCFilter"],
+  apiTags: ["Group", "Clip", "Layer", "Image", "PibblFilter"],
   conceptTags: [
     "filter order",
     "combined silhouette",
@@ -1836,7 +1836,7 @@ const threeInstancingLabMetadata: ScenarioMetadata = {
   slug: "three-instancing",
   title: "Three.js instancing integration laboratory",
   summary:
-    "Prove mixed CRC and Three paint order, instanced blocking, registered targets, miss policies, bridged orbit input, focus, clip/filter composition, resize, and cleanup.",
+    "Prove mixed Pibbl and Three paint order, instanced blocking, registered targets, miss policies, bridged orbit input, focus, clip/filter composition, resize, and cleanup.",
   category: "Rendering",
   apiTags: [
     "defineThreeLayer",
@@ -1848,7 +1848,7 @@ const threeInstancingLabMetadata: ScenarioMetadata = {
     "flattened Three layer",
     "interaction arbitration",
     "registered Three target",
-    "CRC scheduling",
+    "Pibbl scheduling",
     "Canvas composition",
   ],
   manualSteps: [
@@ -1862,18 +1862,18 @@ const threeInstancingLabMetadata: ScenarioMetadata = {
       action:
         "Cycle pass-through to block and target-layer, then drag across the empty gap.",
       expected:
-        "Block leaves the lower tile untouched; target-layer routes the empty-space drag to OrbitControls through CRC and reports a camera change.",
+        "Block leaves the lower tile untouched; target-layer routes the empty-space drag to OrbitControls through Pibbl and reports a camera change.",
     },
     {
       action:
         "Tab to the registered target and press Enter or Space, then choose Resize layer.",
       expected:
-        "Keyboard activation follows the same CRC propagation trace and the existing Three resources resize into a newly composed bitmap.",
+        "Keyboard activation follows the same Pibbl propagation trace and the existing Three resources resize into a newly composed bitmap.",
     },
   ],
   knownLimitations: [
     "The proving scene requires WebGL2, OffscreenCanvas, and ImageBitmap transfer in the host browser.",
-    "The instanced mesh intentionally remains one blocking Three object rather than registering every instance as a CRC target.",
+    "The instanced mesh intentionally remains one blocking Three object rather than registering every instance as a Pibbl target.",
   ],
   learningOrder: 177,
   visibility: "test-laboratory",
@@ -1912,9 +1912,9 @@ const signalsLabMetadata: ScenarioMetadata = {
   slug: "signals",
   title: "First-class signals laboratory",
   summary:
-    "Prove receiver-owned inputs, batching, reactions, computed barriers, shared roots, Layer isolation, and consumer cleanup through public CRC APIs.",
+    "Prove receiver-owned inputs, batching, reactions, computed barriers, shared roots, Layer isolation, and consumer cleanup through public Pibbl APIs.",
   category: "Rendering",
-  apiTags: ["crc", "signal", "computed", "useSignal", "Layer"],
+  apiTags: ["pibbl", "signal", "computed", "useSignal", "Layer"],
   conceptTags: [
     "explicit dependency",
     "equal write",
@@ -1999,7 +1999,7 @@ const animationLabMetadata: ScenarioMetadata = {
   slug: "animation",
   title: "First-class animation laboratory",
   summary:
-    "Drive deterministic playback, transitions, composition, simulation, Layer reuse, shared roots, and owner teardown through public CRC APIs.",
+    "Drive deterministic playback, transitions, composition, simulation, Layer reuse, shared roots, and owner teardown through public Pibbl APIs.",
   category: "Rendering",
   apiTags: [
     "usePlayback",
@@ -2096,7 +2096,7 @@ const particleCelebrationLabMetadata: ScenarioMetadata = {
   slug: "particle-celebration",
   title: "Canvas particle celebration laboratory",
   summary:
-    "Place launch points and trigger a colorful Canvas particle celebration through public CRC APIs.",
+    "Place launch points and trigger a colorful Canvas particle celebration through public Pibbl APIs.",
   category: "Rendering",
   apiTags: [
     "defineParticleEffect2D",
@@ -2177,7 +2177,7 @@ const physics2DLabMetadata: ScenarioMetadata = {
   slug: "physics-2d",
   title: "First-class 2D physics laboratory",
   summary:
-    "Drive rigid bodies, sensors, queries, a kinematic animation target, and explicit animation-to-physics pose ownership through public CRC APIs.",
+    "Drive rigid bodies, sensors, queries, a kinematic animation target, and explicit animation-to-physics pose ownership through public Pibbl APIs.",
   category: "Simulation",
   apiTags: [
     "PhysicsWorld2D",
@@ -2185,8 +2185,8 @@ const physics2DLabMetadata: ScenarioMetadata = {
     "staticBody2D",
     "kinematicBody2D",
     "collider2D",
-    "crcPhysicsBody2D",
-    "crcPhysicsWorld2D",
+    "pibblPhysicsBody2D",
+    "pibblPhysicsWorld2D",
     "applyImpulse2D",
     "disableBody2D",
     "enableBody2D",
@@ -2216,7 +2216,7 @@ const physics2DLabMetadata: ScenarioMetadata = {
     {
       action: "Choose Disable handoff, then Transfer animation.",
       expected:
-        "The orange ball keeps its presented pose, moves under a CRC tween while disabled, and returns to physics with zero velocity after completion.",
+        "The orange ball keeps its presented pose, moves under a Pibbl tween while disabled, and returns to physics with zero velocity after completion.",
     },
     {
       action: "Choose Re-enable handoff, Remove owner, or Reset.",
@@ -2306,7 +2306,7 @@ export const vizFoundationScenarioEntry: ScenarioCatalogEntry<
     summary:
       "Observe the static NOAA record through linked detail and overview plots.",
     category: "Visualization",
-    apiTags: ["Scale", "LineSeries", "Axis"],
+    apiTags: ["LinearScale", "LineSeries", "Axis"],
     conceptTags: ["local allocation", "signals"],
     manualSteps: [
       {

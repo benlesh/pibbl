@@ -85,7 +85,7 @@
       "actionId": "intentional-block"
     }
   ],
-  "schema": "crc-targeting-replay/1",
+  "schema": "pibbl-targeting-replay/1",
   "status": "pass",
   "url": "http://127.0.0.1:5199/#/testing/agent-targeting-verification",
   "node": "v24.15.0",
@@ -125,7 +125,7 @@
         "runtimeCompatibility": {
           "status": "accepted",
           "diagnostic": {
-            "schema": "crc-runtime-comparison/1",
+            "schema": "pibbl-runtime-comparison/1",
             "scope": "explicit-in-process-bindings",
             "relation": "same-runtime",
             "schedulers": "shared",
@@ -155,7 +155,7 @@
         "scenePage": null,
         "componentChanges": null,
         "schedulerHistory": {
-          "schema": "crc-scheduler-history/1",
+          "schema": "pibbl-scheduler-history/1",
           "scope": "loaded-runtime-realm",
           "status": "recording",
           "capacity": 128,
@@ -164,7 +164,7 @@
           "frames": []
         },
         "eventTrace": {
-          "schema": "crc-event-trace/1",
+          "schema": "pibbl-event-trace/1",
           "traceId": 1,
           "status": "recording",
           "scope": "wrapped-handlers-only",
@@ -211,7 +211,7 @@
         },
         "focusObservationError": null,
         "browserProbe": {
-          "schema": "crc-browser-point/1",
+          "schema": "pibbl-browser-point/1",
           "scope": "owner-document",
           "coordinateSpace": "client-css",
           "ancestorFrames": "unavailable",
@@ -224,9 +224,9 @@
         },
         "capturedDelivery": null,
         "signalInspection": {
-          "schema": "crc-signal-observation/1",
+          "schema": "pibbl-signal-observation/1",
           "scheduler": {
-            "schema": "crc-scheduler-observation/1",
+            "schema": "pibbl-scheduler-observation/1",
             "scope": "loaded-runtime-realm",
             "phase": "idle",
             "frame": null,
@@ -666,7 +666,7 @@
                   "typeId": 6,
                   "surfaceId": 2,
                   "surfaceKind": "layer",
-                  "runtimePath": "root/Fragment:Anon4[crc-layer-root]",
+                  "runtimePath": "root/Fragment:Anon4[pibbl-layer-root]",
                   "runtimePathTruncated": false,
                   "renderGeneration": 1,
                   "hasSignalConsumer": false,
@@ -708,7 +708,7 @@
                   "typeId": 2,
                   "surfaceId": 2,
                   "surfaceKind": "layer",
-                  "runtimePath": "root/Fragment:Anon4[crc-layer-root]/Rectangle:Anon1",
+                  "runtimePath": "root/Fragment:Anon4[pibbl-layer-root]/Rectangle:Anon1",
                   "runtimePathTruncated": false,
                   "renderGeneration": 1,
                   "hasSignalConsumer": false,
@@ -750,7 +750,7 @@
                   "typeId": 2,
                   "surfaceId": 2,
                   "surfaceKind": "layer",
-                  "runtimePath": "root/Fragment:Anon4[crc-layer-root]/Rectangle:Anon1_1",
+                  "runtimePath": "root/Fragment:Anon4[pibbl-layer-root]/Rectangle:Anon1_1",
                   "runtimePathTruncated": false,
                   "renderGeneration": 1,
                   "hasSignalConsumer": false,
@@ -1141,7 +1141,7 @@
             "completeness": "complete",
             "records": []
           },
-          "schema": "crc-targeting-prototype/1",
+          "schema": "pibbl-targeting-prototype/1",
           "status": "ready",
           "generation": {
             "session": 1,
@@ -1310,7 +1310,7 @@
         "runtimeCompatibility": {
           "status": "accepted",
           "diagnostic": {
-            "schema": "crc-runtime-comparison/1",
+            "schema": "pibbl-runtime-comparison/1",
             "scope": "explicit-in-process-bindings",
             "relation": "same-runtime",
             "schedulers": "shared",
@@ -1358,7 +1358,7 @@
         "scenePage": null,
         "componentChanges": null,
         "schedulerHistory": {
-          "schema": "crc-scheduler-history/1",
+          "schema": "pibbl-scheduler-history/1",
           "scope": "loaded-runtime-realm",
           "status": "recording",
           "capacity": 128,
@@ -1367,7 +1367,7 @@
           "frames": []
         },
         "eventTrace": {
-          "schema": "crc-event-trace/1",
+          "schema": "pibbl-event-trace/1",
           "traceId": 1,
           "status": "recording",
           "scope": "wrapped-handlers-only",
@@ -1571,7 +1571,7 @@
         },
         "focusObservationError": null,
         "browserProbe": {
-          "schema": "crc-browser-point/1",
+          "schema": "pibbl-browser-point/1",
           "scope": "owner-document",
           "coordinateSpace": "client-css",
           "ancestorFrames": "unavailable",
@@ -1584,9 +1584,9 @@
         },
         "capturedDelivery": null,
         "signalInspection": {
-          "schema": "crc-signal-observation/1",
+          "schema": "pibbl-signal-observation/1",
           "scheduler": {
-            "schema": "crc-scheduler-observation/1",
+            "schema": "pibbl-scheduler-observation/1",
             "scope": "loaded-runtime-realm",
             "phase": "idle",
             "frame": null,
@@ -2026,7 +2026,7 @@
                   "typeId": 6,
                   "surfaceId": 2,
                   "surfaceKind": "layer",
-                  "runtimePath": "root/Fragment:Anon4[crc-layer-root]",
+                  "runtimePath": "root/Fragment:Anon4[pibbl-layer-root]",
                   "runtimePathTruncated": false,
                   "renderGeneration": 1,
                   "hasSignalConsumer": false,
@@ -2068,7 +2068,7 @@
                   "typeId": 2,
                   "surfaceId": 2,
                   "surfaceKind": "layer",
-                  "runtimePath": "root/Fragment:Anon4[crc-layer-root]/Rectangle:Anon1",
+                  "runtimePath": "root/Fragment:Anon4[pibbl-layer-root]/Rectangle:Anon1",
                   "runtimePathTruncated": false,
                   "renderGeneration": 1,
                   "hasSignalConsumer": false,
@@ -2110,7 +2110,7 @@
                   "typeId": 2,
                   "surfaceId": 2,
                   "surfaceKind": "layer",
-                  "runtimePath": "root/Fragment:Anon4[crc-layer-root]/Rectangle:Anon1_1",
+                  "runtimePath": "root/Fragment:Anon4[pibbl-layer-root]/Rectangle:Anon1_1",
                   "runtimePathTruncated": false,
                   "renderGeneration": 1,
                   "hasSignalConsumer": false,
@@ -2501,7 +2501,7 @@
             "completeness": "complete",
             "records": []
           },
-          "schema": "crc-targeting-prototype/1",
+          "schema": "pibbl-targeting-prototype/1",
           "status": "ready",
           "generation": {
             "session": 1,
@@ -2661,7 +2661,7 @@
         }
       },
       "schedulerHistory": {
-        "schema": "crc-scheduler-history/1",
+        "schema": "pibbl-scheduler-history/1",
         "scope": "loaded-runtime-realm",
         "status": "recording",
         "capacity": 128,
@@ -2770,9 +2770,9 @@
         ]
       },
       "signalEvidence": {
-        "schema": "crc-signal-observation/1",
+        "schema": "pibbl-signal-observation/1",
         "scheduler": {
-          "schema": "crc-scheduler-observation/1",
+          "schema": "pibbl-scheduler-observation/1",
           "scope": "loaded-runtime-realm",
           "phase": "idle",
           "frame": null,
@@ -3172,7 +3172,7 @@
                 "typeId": 6,
                 "surfaceId": 2,
                 "surfaceKind": "layer",
-                "runtimePath": "root/Fragment:Anon4[crc-layer-root]",
+                "runtimePath": "root/Fragment:Anon4[pibbl-layer-root]",
                 "runtimePathTruncated": false,
                 "renderGeneration": 2,
                 "hasSignalConsumer": false,
@@ -3209,7 +3209,7 @@
                 "typeId": 2,
                 "surfaceId": 2,
                 "surfaceKind": "layer",
-                "runtimePath": "root/Fragment:Anon4[crc-layer-root]/Rectangle:Anon1",
+                "runtimePath": "root/Fragment:Anon4[pibbl-layer-root]/Rectangle:Anon1",
                 "runtimePathTruncated": false,
                 "renderGeneration": 2,
                 "hasSignalConsumer": false,
@@ -3246,7 +3246,7 @@
                 "typeId": 2,
                 "surfaceId": 2,
                 "surfaceKind": "layer",
-                "runtimePath": "root/Fragment:Anon4[crc-layer-root]/Rectangle:Anon1_1",
+                "runtimePath": "root/Fragment:Anon4[pibbl-layer-root]/Rectangle:Anon1_1",
                 "runtimePathTruncated": false,
                 "renderGeneration": 2,
                 "hasSignalConsumer": false,
@@ -3554,7 +3554,7 @@
         "runtimeCompatibility": {
           "status": "accepted",
           "diagnostic": {
-            "schema": "crc-runtime-comparison/1",
+            "schema": "pibbl-runtime-comparison/1",
             "scope": "explicit-in-process-bindings",
             "relation": "same-runtime",
             "schedulers": "shared",
@@ -3589,7 +3589,7 @@
           "changes": []
         },
         "schedulerHistory": {
-          "schema": "crc-scheduler-history/1",
+          "schema": "pibbl-scheduler-history/1",
           "scope": "loaded-runtime-realm",
           "status": "recording",
           "capacity": 128,
@@ -3796,7 +3796,7 @@
           ]
         },
         "eventTrace": {
-          "schema": "crc-event-trace/1",
+          "schema": "pibbl-event-trace/1",
           "traceId": 1,
           "status": "recording",
           "scope": "wrapped-handlers-only",
@@ -4000,7 +4000,7 @@
         },
         "focusObservationError": null,
         "browserProbe": {
-          "schema": "crc-browser-point/1",
+          "schema": "pibbl-browser-point/1",
           "scope": "owner-document",
           "coordinateSpace": "client-css",
           "ancestorFrames": "unavailable",
@@ -4013,9 +4013,9 @@
         },
         "capturedDelivery": null,
         "signalInspection": {
-          "schema": "crc-signal-observation/1",
+          "schema": "pibbl-signal-observation/1",
           "scheduler": {
-            "schema": "crc-scheduler-observation/1",
+            "schema": "pibbl-scheduler-observation/1",
             "scope": "loaded-runtime-realm",
             "phase": "idle",
             "frame": null,
@@ -4415,7 +4415,7 @@
                   "typeId": 6,
                   "surfaceId": 2,
                   "surfaceKind": "layer",
-                  "runtimePath": "root/Fragment:Anon4[crc-layer-root]",
+                  "runtimePath": "root/Fragment:Anon4[pibbl-layer-root]",
                   "runtimePathTruncated": false,
                   "renderGeneration": 3,
                   "hasSignalConsumer": false,
@@ -4452,7 +4452,7 @@
                   "typeId": 2,
                   "surfaceId": 2,
                   "surfaceKind": "layer",
-                  "runtimePath": "root/Fragment:Anon4[crc-layer-root]/Rectangle:Anon1",
+                  "runtimePath": "root/Fragment:Anon4[pibbl-layer-root]/Rectangle:Anon1",
                   "runtimePathTruncated": false,
                   "renderGeneration": 3,
                   "hasSignalConsumer": false,
@@ -4489,7 +4489,7 @@
                   "typeId": 2,
                   "surfaceId": 2,
                   "surfaceKind": "layer",
-                  "runtimePath": "root/Fragment:Anon4[crc-layer-root]/Rectangle:Anon1_1",
+                  "runtimePath": "root/Fragment:Anon4[pibbl-layer-root]/Rectangle:Anon1_1",
                   "runtimePathTruncated": false,
                   "renderGeneration": 3,
                   "hasSignalConsumer": false,
@@ -4880,7 +4880,7 @@
             "completeness": "complete",
             "records": []
           },
-          "schema": "crc-targeting-prototype/1",
+          "schema": "pibbl-targeting-prototype/1",
           "status": "ready",
           "generation": {
             "session": 1,
@@ -4996,7 +4996,7 @@
         "runtimeCompatibility": {
           "status": "accepted",
           "diagnostic": {
-            "schema": "crc-runtime-comparison/1",
+            "schema": "pibbl-runtime-comparison/1",
             "scope": "explicit-in-process-bindings",
             "relation": "same-runtime",
             "schedulers": "shared",
@@ -5049,7 +5049,7 @@
           "changes": []
         },
         "schedulerHistory": {
-          "schema": "crc-scheduler-history/1",
+          "schema": "pibbl-scheduler-history/1",
           "scope": "loaded-runtime-realm",
           "status": "recording",
           "capacity": 128,
@@ -5256,7 +5256,7 @@
           ]
         },
         "eventTrace": {
-          "schema": "crc-event-trace/1",
+          "schema": "pibbl-event-trace/1",
           "traceId": 1,
           "status": "recording",
           "scope": "wrapped-handlers-only",
@@ -5616,7 +5616,7 @@
         },
         "focusObservationError": null,
         "browserProbe": {
-          "schema": "crc-browser-point/1",
+          "schema": "pibbl-browser-point/1",
           "scope": "owner-document",
           "coordinateSpace": "client-css",
           "ancestorFrames": "unavailable",
@@ -5629,9 +5629,9 @@
         },
         "capturedDelivery": null,
         "signalInspection": {
-          "schema": "crc-signal-observation/1",
+          "schema": "pibbl-signal-observation/1",
           "scheduler": {
-            "schema": "crc-scheduler-observation/1",
+            "schema": "pibbl-scheduler-observation/1",
             "scope": "loaded-runtime-realm",
             "phase": "idle",
             "frame": null,
@@ -6031,7 +6031,7 @@
                   "typeId": 6,
                   "surfaceId": 2,
                   "surfaceKind": "layer",
-                  "runtimePath": "root/Fragment:Anon4[crc-layer-root]",
+                  "runtimePath": "root/Fragment:Anon4[pibbl-layer-root]",
                   "runtimePathTruncated": false,
                   "renderGeneration": 3,
                   "hasSignalConsumer": false,
@@ -6068,7 +6068,7 @@
                   "typeId": 2,
                   "surfaceId": 2,
                   "surfaceKind": "layer",
-                  "runtimePath": "root/Fragment:Anon4[crc-layer-root]/Rectangle:Anon1",
+                  "runtimePath": "root/Fragment:Anon4[pibbl-layer-root]/Rectangle:Anon1",
                   "runtimePathTruncated": false,
                   "renderGeneration": 3,
                   "hasSignalConsumer": false,
@@ -6105,7 +6105,7 @@
                   "typeId": 2,
                   "surfaceId": 2,
                   "surfaceKind": "layer",
-                  "runtimePath": "root/Fragment:Anon4[crc-layer-root]/Rectangle:Anon1_1",
+                  "runtimePath": "root/Fragment:Anon4[pibbl-layer-root]/Rectangle:Anon1_1",
                   "runtimePathTruncated": false,
                   "renderGeneration": 3,
                   "hasSignalConsumer": false,
@@ -6496,7 +6496,7 @@
             "completeness": "complete",
             "records": []
           },
-          "schema": "crc-targeting-prototype/1",
+          "schema": "pibbl-targeting-prototype/1",
           "status": "ready",
           "generation": {
             "session": 1,
@@ -6603,7 +6603,7 @@
         }
       },
       "schedulerHistory": {
-        "schema": "crc-scheduler-history/1",
+        "schema": "pibbl-scheduler-history/1",
         "scope": "loaded-runtime-realm",
         "status": "recording",
         "capacity": 128,
@@ -6908,9 +6908,9 @@
         ]
       },
       "signalEvidence": {
-        "schema": "crc-signal-observation/1",
+        "schema": "pibbl-signal-observation/1",
         "scheduler": {
-          "schema": "crc-scheduler-observation/1",
+          "schema": "pibbl-scheduler-observation/1",
           "scope": "loaded-runtime-realm",
           "phase": "idle",
           "frame": null,
@@ -7310,7 +7310,7 @@
                 "typeId": 6,
                 "surfaceId": 2,
                 "surfaceKind": "layer",
-                "runtimePath": "root/Fragment:Anon4[crc-layer-root]",
+                "runtimePath": "root/Fragment:Anon4[pibbl-layer-root]",
                 "runtimePathTruncated": false,
                 "renderGeneration": 4,
                 "hasSignalConsumer": false,
@@ -7347,7 +7347,7 @@
                 "typeId": 2,
                 "surfaceId": 2,
                 "surfaceKind": "layer",
-                "runtimePath": "root/Fragment:Anon4[crc-layer-root]/Rectangle:Anon1",
+                "runtimePath": "root/Fragment:Anon4[pibbl-layer-root]/Rectangle:Anon1",
                 "runtimePathTruncated": false,
                 "renderGeneration": 4,
                 "hasSignalConsumer": false,
@@ -7384,7 +7384,7 @@
                 "typeId": 2,
                 "surfaceId": 2,
                 "surfaceKind": "layer",
-                "runtimePath": "root/Fragment:Anon4[crc-layer-root]/Rectangle:Anon1_1",
+                "runtimePath": "root/Fragment:Anon4[pibbl-layer-root]/Rectangle:Anon1_1",
                 "runtimePathTruncated": false,
                 "renderGeneration": 4,
                 "hasSignalConsumer": false,
@@ -7693,7 +7693,7 @@
         "runtimeCompatibility": {
           "status": "accepted",
           "diagnostic": {
-            "schema": "crc-runtime-comparison/1",
+            "schema": "pibbl-runtime-comparison/1",
             "scope": "explicit-in-process-bindings",
             "relation": "same-runtime",
             "schedulers": "shared",
@@ -7728,7 +7728,7 @@
           "changes": []
         },
         "schedulerHistory": {
-          "schema": "crc-scheduler-history/1",
+          "schema": "pibbl-scheduler-history/1",
           "scope": "loaded-runtime-realm",
           "status": "recording",
           "capacity": 128,
@@ -8131,7 +8131,7 @@
           ]
         },
         "eventTrace": {
-          "schema": "crc-event-trace/1",
+          "schema": "pibbl-event-trace/1",
           "traceId": 1,
           "status": "recording",
           "scope": "wrapped-handlers-only",
@@ -8491,7 +8491,7 @@
         },
         "focusObservationError": null,
         "browserProbe": {
-          "schema": "crc-browser-point/1",
+          "schema": "pibbl-browser-point/1",
           "scope": "owner-document",
           "coordinateSpace": "client-css",
           "ancestorFrames": "unavailable",
@@ -8504,9 +8504,9 @@
         },
         "capturedDelivery": null,
         "signalInspection": {
-          "schema": "crc-signal-observation/1",
+          "schema": "pibbl-signal-observation/1",
           "scheduler": {
-            "schema": "crc-scheduler-observation/1",
+            "schema": "pibbl-scheduler-observation/1",
             "scope": "loaded-runtime-realm",
             "phase": "idle",
             "frame": null,
@@ -8906,7 +8906,7 @@
                   "typeId": 6,
                   "surfaceId": 2,
                   "surfaceKind": "layer",
-                  "runtimePath": "root/Fragment:Anon4[crc-layer-root]",
+                  "runtimePath": "root/Fragment:Anon4[pibbl-layer-root]",
                   "runtimePathTruncated": false,
                   "renderGeneration": 5,
                   "hasSignalConsumer": false,
@@ -8943,7 +8943,7 @@
                   "typeId": 2,
                   "surfaceId": 2,
                   "surfaceKind": "layer",
-                  "runtimePath": "root/Fragment:Anon4[crc-layer-root]/Rectangle:Anon1",
+                  "runtimePath": "root/Fragment:Anon4[pibbl-layer-root]/Rectangle:Anon1",
                   "runtimePathTruncated": false,
                   "renderGeneration": 5,
                   "hasSignalConsumer": false,
@@ -8980,7 +8980,7 @@
                   "typeId": 2,
                   "surfaceId": 2,
                   "surfaceKind": "layer",
-                  "runtimePath": "root/Fragment:Anon4[crc-layer-root]/Rectangle:Anon1_1",
+                  "runtimePath": "root/Fragment:Anon4[pibbl-layer-root]/Rectangle:Anon1_1",
                   "runtimePathTruncated": false,
                   "renderGeneration": 5,
                   "hasSignalConsumer": false,
@@ -9357,7 +9357,7 @@
             "completeness": "complete",
             "records": []
           },
-          "schema": "crc-targeting-prototype/1",
+          "schema": "pibbl-targeting-prototype/1",
           "status": "ready",
           "generation": {
             "session": 1,
@@ -9526,7 +9526,7 @@
         "runtimeCompatibility": {
           "status": "accepted",
           "diagnostic": {
-            "schema": "crc-runtime-comparison/1",
+            "schema": "pibbl-runtime-comparison/1",
             "scope": "explicit-in-process-bindings",
             "relation": "same-runtime",
             "schedulers": "shared",
@@ -9579,7 +9579,7 @@
           "changes": []
         },
         "schedulerHistory": {
-          "schema": "crc-scheduler-history/1",
+          "schema": "pibbl-scheduler-history/1",
           "scope": "loaded-runtime-realm",
           "status": "recording",
           "capacity": 128,
@@ -9982,7 +9982,7 @@
           ]
         },
         "eventTrace": {
-          "schema": "crc-event-trace/1",
+          "schema": "pibbl-event-trace/1",
           "traceId": 1,
           "status": "recording",
           "scope": "wrapped-handlers-only",
@@ -10498,7 +10498,7 @@
         },
         "focusObservationError": null,
         "browserProbe": {
-          "schema": "crc-browser-point/1",
+          "schema": "pibbl-browser-point/1",
           "scope": "owner-document",
           "coordinateSpace": "client-css",
           "ancestorFrames": "unavailable",
@@ -10511,9 +10511,9 @@
         },
         "capturedDelivery": null,
         "signalInspection": {
-          "schema": "crc-signal-observation/1",
+          "schema": "pibbl-signal-observation/1",
           "scheduler": {
-            "schema": "crc-scheduler-observation/1",
+            "schema": "pibbl-scheduler-observation/1",
             "scope": "loaded-runtime-realm",
             "phase": "idle",
             "frame": null,
@@ -10913,7 +10913,7 @@
                   "typeId": 6,
                   "surfaceId": 2,
                   "surfaceKind": "layer",
-                  "runtimePath": "root/Fragment:Anon4[crc-layer-root]",
+                  "runtimePath": "root/Fragment:Anon4[pibbl-layer-root]",
                   "runtimePathTruncated": false,
                   "renderGeneration": 5,
                   "hasSignalConsumer": false,
@@ -10950,7 +10950,7 @@
                   "typeId": 2,
                   "surfaceId": 2,
                   "surfaceKind": "layer",
-                  "runtimePath": "root/Fragment:Anon4[crc-layer-root]/Rectangle:Anon1",
+                  "runtimePath": "root/Fragment:Anon4[pibbl-layer-root]/Rectangle:Anon1",
                   "runtimePathTruncated": false,
                   "renderGeneration": 5,
                   "hasSignalConsumer": false,
@@ -10987,7 +10987,7 @@
                   "typeId": 2,
                   "surfaceId": 2,
                   "surfaceKind": "layer",
-                  "runtimePath": "root/Fragment:Anon4[crc-layer-root]/Rectangle:Anon1_1",
+                  "runtimePath": "root/Fragment:Anon4[pibbl-layer-root]/Rectangle:Anon1_1",
                   "runtimePathTruncated": false,
                   "renderGeneration": 5,
                   "hasSignalConsumer": false,
@@ -11364,7 +11364,7 @@
             "completeness": "complete",
             "records": []
           },
-          "schema": "crc-targeting-prototype/1",
+          "schema": "pibbl-targeting-prototype/1",
           "status": "ready",
           "generation": {
             "session": 1,
@@ -11524,7 +11524,7 @@
         }
       },
       "schedulerHistory": {
-        "schema": "crc-scheduler-history/1",
+        "schema": "pibbl-scheduler-history/1",
         "scope": "loaded-runtime-realm",
         "status": "recording",
         "capacity": 128,
@@ -12025,9 +12025,9 @@
         ]
       },
       "signalEvidence": {
-        "schema": "crc-signal-observation/1",
+        "schema": "pibbl-signal-observation/1",
         "scheduler": {
-          "schema": "crc-scheduler-observation/1",
+          "schema": "pibbl-scheduler-observation/1",
           "scope": "loaded-runtime-realm",
           "phase": "idle",
           "frame": null,
@@ -12427,7 +12427,7 @@
                 "typeId": 6,
                 "surfaceId": 2,
                 "surfaceKind": "layer",
-                "runtimePath": "root/Fragment:Anon4[crc-layer-root]",
+                "runtimePath": "root/Fragment:Anon4[pibbl-layer-root]",
                 "runtimePathTruncated": false,
                 "renderGeneration": 6,
                 "hasSignalConsumer": false,
@@ -12464,7 +12464,7 @@
                 "typeId": 2,
                 "surfaceId": 2,
                 "surfaceKind": "layer",
-                "runtimePath": "root/Fragment:Anon4[crc-layer-root]/Rectangle:Anon1",
+                "runtimePath": "root/Fragment:Anon4[pibbl-layer-root]/Rectangle:Anon1",
                 "runtimePathTruncated": false,
                 "renderGeneration": 6,
                 "hasSignalConsumer": false,
@@ -12501,7 +12501,7 @@
                 "typeId": 2,
                 "surfaceId": 2,
                 "surfaceKind": "layer",
-                "runtimePath": "root/Fragment:Anon4[crc-layer-root]/Rectangle:Anon1_1",
+                "runtimePath": "root/Fragment:Anon4[pibbl-layer-root]/Rectangle:Anon1_1",
                 "runtimePathTruncated": false,
                 "renderGeneration": 6,
                 "hasSignalConsumer": false,
@@ -12798,7 +12798,7 @@
         "runtimeCompatibility": {
           "status": "accepted",
           "diagnostic": {
-            "schema": "crc-runtime-comparison/1",
+            "schema": "pibbl-runtime-comparison/1",
             "scope": "explicit-in-process-bindings",
             "relation": "same-runtime",
             "schedulers": "shared",
@@ -12833,7 +12833,7 @@
           "changes": []
         },
         "schedulerHistory": {
-          "schema": "crc-scheduler-history/1",
+          "schema": "pibbl-scheduler-history/1",
           "scope": "loaded-runtime-realm",
           "status": "stopped",
           "capacity": 128,
@@ -13334,7 +13334,7 @@
           ]
         },
         "eventTrace": {
-          "schema": "crc-event-trace/1",
+          "schema": "pibbl-event-trace/1",
           "traceId": 1,
           "status": "stopped",
           "scope": "wrapped-handlers-only",
@@ -13850,7 +13850,7 @@
         },
         "focusObservationError": null,
         "browserProbe": {
-          "schema": "crc-browser-point/1",
+          "schema": "pibbl-browser-point/1",
           "scope": "owner-document",
           "coordinateSpace": "client-css",
           "ancestorFrames": "unavailable",
@@ -13863,9 +13863,9 @@
         },
         "capturedDelivery": null,
         "signalInspection": {
-          "schema": "crc-signal-observation/1",
+          "schema": "pibbl-signal-observation/1",
           "scheduler": {
-            "schema": "crc-scheduler-observation/1",
+            "schema": "pibbl-scheduler-observation/1",
             "scope": "loaded-runtime-realm",
             "phase": "idle",
             "frame": null,
@@ -14265,7 +14265,7 @@
                   "typeId": 6,
                   "surfaceId": 2,
                   "surfaceKind": "layer",
-                  "runtimePath": "root/Fragment:Anon4[crc-layer-root]",
+                  "runtimePath": "root/Fragment:Anon4[pibbl-layer-root]",
                   "runtimePathTruncated": false,
                   "renderGeneration": 7,
                   "hasSignalConsumer": false,
@@ -14302,7 +14302,7 @@
                   "typeId": 2,
                   "surfaceId": 2,
                   "surfaceKind": "layer",
-                  "runtimePath": "root/Fragment:Anon4[crc-layer-root]/Rectangle:Anon1",
+                  "runtimePath": "root/Fragment:Anon4[pibbl-layer-root]/Rectangle:Anon1",
                   "runtimePathTruncated": false,
                   "renderGeneration": 7,
                   "hasSignalConsumer": false,
@@ -14339,7 +14339,7 @@
                   "typeId": 2,
                   "surfaceId": 2,
                   "surfaceKind": "layer",
-                  "runtimePath": "root/Fragment:Anon4[crc-layer-root]/Rectangle:Anon1_1",
+                  "runtimePath": "root/Fragment:Anon4[pibbl-layer-root]/Rectangle:Anon1_1",
                   "runtimePathTruncated": false,
                   "renderGeneration": 7,
                   "hasSignalConsumer": false,
@@ -14710,7 +14710,7 @@
             "completeness": "complete",
             "records": []
           },
-          "schema": "crc-targeting-prototype/1",
+          "schema": "pibbl-targeting-prototype/1",
           "status": "ready",
           "generation": {
             "session": 1,
@@ -14921,7 +14921,7 @@
         "runtimeCompatibility": {
           "status": "accepted",
           "diagnostic": {
-            "schema": "crc-runtime-comparison/1",
+            "schema": "pibbl-runtime-comparison/1",
             "scope": "explicit-in-process-bindings",
             "relation": "same-runtime",
             "schedulers": "shared",
@@ -14956,7 +14956,7 @@
           "changes": []
         },
         "schedulerHistory": {
-          "schema": "crc-scheduler-history/1",
+          "schema": "pibbl-scheduler-history/1",
           "scope": "loaded-runtime-realm",
           "status": "stopped",
           "capacity": 128,
@@ -15457,7 +15457,7 @@
           ]
         },
         "eventTrace": {
-          "schema": "crc-event-trace/1",
+          "schema": "pibbl-event-trace/1",
           "traceId": 1,
           "status": "stopped",
           "scope": "wrapped-handlers-only",
@@ -15973,7 +15973,7 @@
         },
         "focusObservationError": null,
         "browserProbe": {
-          "schema": "crc-browser-point/1",
+          "schema": "pibbl-browser-point/1",
           "scope": "owner-document",
           "coordinateSpace": "client-css",
           "ancestorFrames": "unavailable",
@@ -15986,9 +15986,9 @@
         },
         "capturedDelivery": null,
         "signalInspection": {
-          "schema": "crc-signal-observation/1",
+          "schema": "pibbl-signal-observation/1",
           "scheduler": {
-            "schema": "crc-scheduler-observation/1",
+            "schema": "pibbl-scheduler-observation/1",
             "scope": "loaded-runtime-realm",
             "phase": "idle",
             "frame": null,
@@ -16388,7 +16388,7 @@
                   "typeId": 6,
                   "surfaceId": 2,
                   "surfaceKind": "layer",
-                  "runtimePath": "root/Fragment:Anon4[crc-layer-root]",
+                  "runtimePath": "root/Fragment:Anon4[pibbl-layer-root]",
                   "runtimePathTruncated": false,
                   "renderGeneration": 7,
                   "hasSignalConsumer": false,
@@ -16425,7 +16425,7 @@
                   "typeId": 2,
                   "surfaceId": 2,
                   "surfaceKind": "layer",
-                  "runtimePath": "root/Fragment:Anon4[crc-layer-root]/Rectangle:Anon1",
+                  "runtimePath": "root/Fragment:Anon4[pibbl-layer-root]/Rectangle:Anon1",
                   "runtimePathTruncated": false,
                   "renderGeneration": 7,
                   "hasSignalConsumer": false,
@@ -16462,7 +16462,7 @@
                   "typeId": 2,
                   "surfaceId": 2,
                   "surfaceKind": "layer",
-                  "runtimePath": "root/Fragment:Anon4[crc-layer-root]/Rectangle:Anon1_1",
+                  "runtimePath": "root/Fragment:Anon4[pibbl-layer-root]/Rectangle:Anon1_1",
                   "runtimePathTruncated": false,
                   "renderGeneration": 7,
                   "hasSignalConsumer": false,
@@ -16833,7 +16833,7 @@
             "completeness": "complete",
             "records": []
           },
-          "schema": "crc-targeting-prototype/1",
+          "schema": "pibbl-targeting-prototype/1",
           "status": "ready",
           "generation": {
             "session": 1,
@@ -17051,7 +17051,7 @@
         "runtimeCompatibility": {
           "status": "accepted",
           "diagnostic": {
-            "schema": "crc-runtime-comparison/1",
+            "schema": "pibbl-runtime-comparison/1",
             "scope": "explicit-in-process-bindings",
             "relation": "same-runtime",
             "schedulers": "shared",
@@ -17081,7 +17081,7 @@
         "scenePage": null,
         "componentChanges": null,
         "schedulerHistory": {
-          "schema": "crc-scheduler-history/1",
+          "schema": "pibbl-scheduler-history/1",
           "scope": "loaded-runtime-realm",
           "status": "stopped",
           "capacity": 128,
@@ -17582,7 +17582,7 @@
           ]
         },
         "eventTrace": {
-          "schema": "crc-event-trace/1",
+          "schema": "pibbl-event-trace/1",
           "traceId": 1,
           "status": "stopped",
           "scope": "wrapped-handlers-only",
@@ -18187,7 +18187,7 @@
               }
             ]
           },
-          "schema": "crc-targeting-prototype/1",
+          "schema": "pibbl-targeting-prototype/1",
           "status": "ready",
           "generation": {
             "session": 1,
@@ -18321,7 +18321,7 @@
         "runtimeCompatibility": {
           "status": "accepted",
           "diagnostic": {
-            "schema": "crc-runtime-comparison/1",
+            "schema": "pibbl-runtime-comparison/1",
             "scope": "explicit-in-process-bindings",
             "relation": "same-runtime",
             "schedulers": "shared",
@@ -18356,7 +18356,7 @@
           "changes": []
         },
         "schedulerHistory": {
-          "schema": "crc-scheduler-history/1",
+          "schema": "pibbl-scheduler-history/1",
           "scope": "loaded-runtime-realm",
           "status": "stopped",
           "capacity": 128,
@@ -18857,7 +18857,7 @@
           ]
         },
         "eventTrace": {
-          "schema": "crc-event-trace/1",
+          "schema": "pibbl-event-trace/1",
           "traceId": 1,
           "status": "stopped",
           "scope": "wrapped-handlers-only",
@@ -19373,7 +19373,7 @@
         },
         "focusObservationError": null,
         "browserProbe": {
-          "schema": "crc-browser-point/1",
+          "schema": "pibbl-browser-point/1",
           "scope": "owner-document",
           "coordinateSpace": "client-css",
           "ancestorFrames": "unavailable",
@@ -19391,9 +19391,9 @@
           "y": 112
         },
         "signalInspection": {
-          "schema": "crc-signal-observation/1",
+          "schema": "pibbl-signal-observation/1",
           "scheduler": {
-            "schema": "crc-scheduler-observation/1",
+            "schema": "pibbl-scheduler-observation/1",
             "scope": "loaded-runtime-realm",
             "phase": "idle",
             "frame": null,
@@ -19793,7 +19793,7 @@
                   "typeId": 6,
                   "surfaceId": 2,
                   "surfaceKind": "layer",
-                  "runtimePath": "root/Fragment:Anon4[crc-layer-root]",
+                  "runtimePath": "root/Fragment:Anon4[pibbl-layer-root]",
                   "runtimePathTruncated": false,
                   "renderGeneration": 8,
                   "hasSignalConsumer": false,
@@ -19830,7 +19830,7 @@
                   "typeId": 2,
                   "surfaceId": 2,
                   "surfaceKind": "layer",
-                  "runtimePath": "root/Fragment:Anon4[crc-layer-root]/Rectangle:Anon1",
+                  "runtimePath": "root/Fragment:Anon4[pibbl-layer-root]/Rectangle:Anon1",
                   "runtimePathTruncated": false,
                   "renderGeneration": 8,
                   "hasSignalConsumer": false,
@@ -19867,7 +19867,7 @@
                   "typeId": 2,
                   "surfaceId": 2,
                   "surfaceKind": "layer",
-                  "runtimePath": "root/Fragment:Anon4[crc-layer-root]/Rectangle:Anon1_1",
+                  "runtimePath": "root/Fragment:Anon4[pibbl-layer-root]/Rectangle:Anon1_1",
                   "runtimePathTruncated": false,
                   "renderGeneration": 8,
                   "hasSignalConsumer": false,
@@ -20258,7 +20258,7 @@
             "completeness": "complete",
             "records": []
           },
-          "schema": "crc-targeting-prototype/1",
+          "schema": "pibbl-targeting-prototype/1",
           "status": "ready",
           "generation": {
             "session": 1,
@@ -20374,7 +20374,7 @@
         "runtimeCompatibility": {
           "status": "accepted",
           "diagnostic": {
-            "schema": "crc-runtime-comparison/1",
+            "schema": "pibbl-runtime-comparison/1",
             "scope": "explicit-in-process-bindings",
             "relation": "same-runtime",
             "schedulers": "shared",
@@ -20409,7 +20409,7 @@
           "changes": []
         },
         "schedulerHistory": {
-          "schema": "crc-scheduler-history/1",
+          "schema": "pibbl-scheduler-history/1",
           "scope": "loaded-runtime-realm",
           "status": "stopped",
           "capacity": 128,
@@ -20910,7 +20910,7 @@
           ]
         },
         "eventTrace": {
-          "schema": "crc-event-trace/1",
+          "schema": "pibbl-event-trace/1",
           "traceId": 1,
           "status": "stopped",
           "scope": "wrapped-handlers-only",
@@ -21426,7 +21426,7 @@
         },
         "focusObservationError": null,
         "browserProbe": {
-          "schema": "crc-browser-point/1",
+          "schema": "pibbl-browser-point/1",
           "scope": "owner-document",
           "coordinateSpace": "client-css",
           "ancestorFrames": "unavailable",
@@ -21439,9 +21439,9 @@
         },
         "capturedDelivery": null,
         "signalInspection": {
-          "schema": "crc-signal-observation/1",
+          "schema": "pibbl-signal-observation/1",
           "scheduler": {
-            "schema": "crc-scheduler-observation/1",
+            "schema": "pibbl-scheduler-observation/1",
             "scope": "loaded-runtime-realm",
             "phase": "idle",
             "frame": null,
@@ -21841,7 +21841,7 @@
                   "typeId": 6,
                   "surfaceId": 2,
                   "surfaceKind": "layer",
-                  "runtimePath": "root/Fragment:Anon4[crc-layer-root]",
+                  "runtimePath": "root/Fragment:Anon4[pibbl-layer-root]",
                   "runtimePathTruncated": false,
                   "renderGeneration": 9,
                   "hasSignalConsumer": false,
@@ -21878,7 +21878,7 @@
                   "typeId": 2,
                   "surfaceId": 2,
                   "surfaceKind": "layer",
-                  "runtimePath": "root/Fragment:Anon4[crc-layer-root]/Rectangle:Anon1",
+                  "runtimePath": "root/Fragment:Anon4[pibbl-layer-root]/Rectangle:Anon1",
                   "runtimePathTruncated": false,
                   "renderGeneration": 9,
                   "hasSignalConsumer": false,
@@ -21915,7 +21915,7 @@
                   "typeId": 2,
                   "surfaceId": 2,
                   "surfaceKind": "layer",
-                  "runtimePath": "root/Fragment:Anon4[crc-layer-root]/Rectangle:Anon1_1",
+                  "runtimePath": "root/Fragment:Anon4[pibbl-layer-root]/Rectangle:Anon1_1",
                   "runtimePathTruncated": false,
                   "renderGeneration": 9,
                   "hasSignalConsumer": false,
@@ -22306,7 +22306,7 @@
             "completeness": "complete",
             "records": []
           },
-          "schema": "crc-targeting-prototype/1",
+          "schema": "pibbl-targeting-prototype/1",
           "status": "ready",
           "generation": {
             "session": 1,
@@ -22416,7 +22416,7 @@
         "runtimeCompatibility": {
           "status": "accepted",
           "diagnostic": {
-            "schema": "crc-runtime-comparison/1",
+            "schema": "pibbl-runtime-comparison/1",
             "scope": "explicit-in-process-bindings",
             "relation": "same-runtime",
             "schedulers": "shared",
@@ -22451,7 +22451,7 @@
           "changes": []
         },
         "schedulerHistory": {
-          "schema": "crc-scheduler-history/1",
+          "schema": "pibbl-scheduler-history/1",
           "scope": "loaded-runtime-realm",
           "status": "stopped",
           "capacity": 128,
@@ -22952,7 +22952,7 @@
           ]
         },
         "eventTrace": {
-          "schema": "crc-event-trace/1",
+          "schema": "pibbl-event-trace/1",
           "traceId": 1,
           "status": "stopped",
           "scope": "wrapped-handlers-only",
@@ -23468,7 +23468,7 @@
         },
         "focusObservationError": null,
         "browserProbe": {
-          "schema": "crc-browser-point/1",
+          "schema": "pibbl-browser-point/1",
           "scope": "owner-document",
           "coordinateSpace": "client-css",
           "ancestorFrames": "unavailable",
@@ -23481,9 +23481,9 @@
         },
         "capturedDelivery": null,
         "signalInspection": {
-          "schema": "crc-signal-observation/1",
+          "schema": "pibbl-signal-observation/1",
           "scheduler": {
-            "schema": "crc-scheduler-observation/1",
+            "schema": "pibbl-scheduler-observation/1",
             "scope": "loaded-runtime-realm",
             "phase": "idle",
             "frame": null,
@@ -23883,7 +23883,7 @@
                   "typeId": 6,
                   "surfaceId": 2,
                   "surfaceKind": "layer",
-                  "runtimePath": "root/Fragment:Anon4[crc-layer-root]",
+                  "runtimePath": "root/Fragment:Anon4[pibbl-layer-root]",
                   "runtimePathTruncated": false,
                   "renderGeneration": 9,
                   "hasSignalConsumer": false,
@@ -23920,7 +23920,7 @@
                   "typeId": 2,
                   "surfaceId": 2,
                   "surfaceKind": "layer",
-                  "runtimePath": "root/Fragment:Anon4[crc-layer-root]/Rectangle:Anon1",
+                  "runtimePath": "root/Fragment:Anon4[pibbl-layer-root]/Rectangle:Anon1",
                   "runtimePathTruncated": false,
                   "renderGeneration": 9,
                   "hasSignalConsumer": false,
@@ -23957,7 +23957,7 @@
                   "typeId": 2,
                   "surfaceId": 2,
                   "surfaceKind": "layer",
-                  "runtimePath": "root/Fragment:Anon4[crc-layer-root]/Rectangle:Anon1_1",
+                  "runtimePath": "root/Fragment:Anon4[pibbl-layer-root]/Rectangle:Anon1_1",
                   "runtimePathTruncated": false,
                   "renderGeneration": 9,
                   "hasSignalConsumer": false,
@@ -24348,7 +24348,7 @@
             "completeness": "complete",
             "records": []
           },
-          "schema": "crc-targeting-prototype/1",
+          "schema": "pibbl-targeting-prototype/1",
           "status": "ready",
           "generation": {
             "session": 1,
@@ -24458,7 +24458,7 @@
         "runtimeCompatibility": {
           "status": "accepted",
           "diagnostic": {
-            "schema": "crc-runtime-comparison/1",
+            "schema": "pibbl-runtime-comparison/1",
             "scope": "explicit-in-process-bindings",
             "relation": "same-runtime",
             "schedulers": "shared",
@@ -24511,7 +24511,7 @@
           "changes": []
         },
         "schedulerHistory": {
-          "schema": "crc-scheduler-history/1",
+          "schema": "pibbl-scheduler-history/1",
           "scope": "loaded-runtime-realm",
           "status": "stopped",
           "capacity": 128,
@@ -25012,7 +25012,7 @@
           ]
         },
         "eventTrace": {
-          "schema": "crc-event-trace/1",
+          "schema": "pibbl-event-trace/1",
           "traceId": 1,
           "status": "stopped",
           "scope": "wrapped-handlers-only",
@@ -25528,7 +25528,7 @@
         },
         "focusObservationError": null,
         "browserProbe": {
-          "schema": "crc-browser-point/1",
+          "schema": "pibbl-browser-point/1",
           "scope": "owner-document",
           "coordinateSpace": "client-css",
           "ancestorFrames": "unavailable",
@@ -25541,9 +25541,9 @@
         },
         "capturedDelivery": null,
         "signalInspection": {
-          "schema": "crc-signal-observation/1",
+          "schema": "pibbl-signal-observation/1",
           "scheduler": {
-            "schema": "crc-scheduler-observation/1",
+            "schema": "pibbl-scheduler-observation/1",
             "scope": "loaded-runtime-realm",
             "phase": "idle",
             "frame": null,
@@ -25943,7 +25943,7 @@
                   "typeId": 6,
                   "surfaceId": 2,
                   "surfaceKind": "layer",
-                  "runtimePath": "root/Fragment:Anon4[crc-layer-root]",
+                  "runtimePath": "root/Fragment:Anon4[pibbl-layer-root]",
                   "runtimePathTruncated": false,
                   "renderGeneration": 9,
                   "hasSignalConsumer": false,
@@ -25980,7 +25980,7 @@
                   "typeId": 2,
                   "surfaceId": 2,
                   "surfaceKind": "layer",
-                  "runtimePath": "root/Fragment:Anon4[crc-layer-root]/Rectangle:Anon1",
+                  "runtimePath": "root/Fragment:Anon4[pibbl-layer-root]/Rectangle:Anon1",
                   "runtimePathTruncated": false,
                   "renderGeneration": 9,
                   "hasSignalConsumer": false,
@@ -26017,7 +26017,7 @@
                   "typeId": 2,
                   "surfaceId": 2,
                   "surfaceKind": "layer",
-                  "runtimePath": "root/Fragment:Anon4[crc-layer-root]/Rectangle:Anon1_1",
+                  "runtimePath": "root/Fragment:Anon4[pibbl-layer-root]/Rectangle:Anon1_1",
                   "runtimePathTruncated": false,
                   "renderGeneration": 9,
                   "hasSignalConsumer": false,
@@ -26408,7 +26408,7 @@
             "completeness": "complete",
             "records": []
           },
-          "schema": "crc-targeting-prototype/1",
+          "schema": "pibbl-targeting-prototype/1",
           "status": "ready",
           "generation": {
             "session": 1,
@@ -26530,7 +26530,7 @@
         "runtimeCompatibility": {
           "status": "accepted",
           "diagnostic": {
-            "schema": "crc-runtime-comparison/1",
+            "schema": "pibbl-runtime-comparison/1",
             "scope": "explicit-in-process-bindings",
             "relation": "same-runtime",
             "schedulers": "shared",
@@ -26581,7 +26581,7 @@
         "scenePage": null,
         "componentChanges": null,
         "schedulerHistory": {
-          "schema": "crc-scheduler-history/1",
+          "schema": "pibbl-scheduler-history/1",
           "scope": "loaded-runtime-realm",
           "status": "stopped",
           "capacity": 128,
@@ -27082,7 +27082,7 @@
           ]
         },
         "eventTrace": {
-          "schema": "crc-event-trace/1",
+          "schema": "pibbl-event-trace/1",
           "traceId": 1,
           "status": "stopped",
           "scope": "wrapped-handlers-only",
@@ -27620,7 +27620,7 @@
           },
           "focus": {
             "policy": {
-              "kind": "crc-focus-management",
+              "kind": "pibbl-focus-management",
               "tab": "source-order-exit",
               "keyboardActivation": "enter-space"
             },
@@ -27653,7 +27653,7 @@
             "completeness": "complete",
             "records": []
           },
-          "schema": "crc-targeting-prototype/1",
+          "schema": "pibbl-targeting-prototype/1",
           "status": "ready",
           "generation": {
             "session": 1,
@@ -30078,7 +30078,7 @@
   ],
   "checkpointRunId": "6ca5ecbc-0aef-430b-b1ff-2c5063a91c6e",
   "run": {
-    "schema": "crc-replay-run/1",
+    "schema": "pibbl-replay-run/1",
     "runId": "6ca5ecbc-0aef-430b-b1ff-2c5063a91c6e",
     "kind": "targeting",
     "startedAt": "2026-10-02T03:57:04.018Z",
@@ -30125,7 +30125,7 @@
       "cwd": "/Users/benlesh/GitHub/crc",
       "environment": {},
       "unsetEnvironment": [
-        "CRC_VERIFY_BROWSER_ENDPOINT"
+        "PIBBL_VERIFY_BROWSER_ENDPOINT"
       ],
       "outputPolicy": "fresh-default-directory",
       "preconditions": [
@@ -30134,14 +30134,14 @@
       ]
     },
     "toolIdentity": {
-      "schema": "crc-replay-tool-identity/1",
+      "schema": "pibbl-replay-tool-identity/1",
       "revision": "c838c434159efe602583f1cc2bf5383b57c15db5",
       "sha256": "8b0b1d8ff5aa7231503f1a2da16f2388726c05f08b230c718cd1d241837652cd",
       "files": 11,
       "scope": "Replay and declared local dependencies on disk; not loaded-module or installed-dependency attestation."
     },
     "toolIdentityAfter": {
-      "schema": "crc-replay-tool-identity/1",
+      "schema": "pibbl-replay-tool-identity/1",
       "revision": "c838c434159efe602583f1cc2bf5383b57c15db5",
       "sha256": "8b0b1d8ff5aa7231503f1a2da16f2388726c05f08b230c718cd1d241837652cd",
       "files": 11,
@@ -30159,13 +30159,13 @@
     "sha256": "0234e7816a15a7c66b8f49346f4d75f6a69a6567afa275135f3fc44e95c07e91"
   },
   "expectedIdentity": {
-    "schema": "crc-targeting-identity/1",
+    "schema": "pibbl-targeting-identity/1",
     "revision": "c838c434159efe602583f1cc2bf5383b57c15db5",
     "sha256": "ab60249d04096945334bdf8834e48395f46f4c33e7b6d92517625b79d69fce81",
     "files": 215
   },
   "servedIdentity": {
-    "schema": "crc-targeting-identity/1",
+    "schema": "pibbl-targeting-identity/1",
     "revision": "c838c434159efe602583f1cc2bf5383b57c15db5",
     "sha256": "ab60249d04096945334bdf8834e48395f46f4c33e7b6d92517625b79d69fce81",
     "files": 215
@@ -30173,7 +30173,7 @@
   "runtimeCompatibility": {
     "status": "accepted",
     "diagnostic": {
-      "schema": "crc-runtime-comparison/1",
+      "schema": "pibbl-runtime-comparison/1",
       "scope": "explicit-in-process-bindings",
       "relation": "same-runtime",
       "schedulers": "shared",

@@ -1,7 +1,7 @@
 import { afterEach, expect, it, vi } from "vitest";
 import { commands } from "vitest/browser";
-import * as CRC from "@crc/core";
-let mount: CRC.CRCController | undefined;
+import * as Pibbl from "@pibbl/core";
+let mount: Pibbl.PibblController | undefined;
 const settle = () =>
   new Promise<void>((resolve) =>
     requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
@@ -33,41 +33,41 @@ async function drag(x: number, y: number) {
 it.each(["circle", "clip", "empty", "opt-out", "gap"] as const)(
   "uses actual child hit geometry: %s",
   async (kind) => {
-    const box = CRC.signal({ left: 40, top: 50, width: 200, height: 140 });
+    const box = Pibbl.signal({ left: 40, top: 50, width: 200, height: 140 });
     const canvas = surface();
     const clip = new Path2D();
     clip.rect(20, 20, 20, 40);
-    function Shape(): CRC.CRCNode {
+    function Shape(): Pibbl.PibblNode {
       return (
-        <CRC.Circle
+        <Pibbl.Circle
           keyboardFocusable
           pointerEvents={kind === "opt-out" ? "none" : "auto"}
           style={{ cx: 40, cy: 40, radius: 20, fill: "blue" }}
         />
       );
     }
-    function Scene(): CRC.CRCNode {
-      const control = CRC.useManipulation({ box, move: {} });
+    function Scene(): Pibbl.PibblNode {
+      const control = Pibbl.useManipulation({ box, move: {} });
       return (
-        <CRC.ManipulationFrame {...control.frameProps}>
-          <CRC.DragHandle controller={control} style={{ translateX: 20 }}>
+        <Pibbl.ManipulationFrame {...control.frameProps}>
+          <Pibbl.DragHandle controller={control} style={{ translateX: 20 }}>
             {kind === "empty" ? null : kind === "clip" ? (
-              <CRC.Clip style={{ d: clip }}>
+              <Pibbl.Clip style={{ d: clip }}>
                 <Shape />
-              </CRC.Clip>
+              </Pibbl.Clip>
             ) : (
               <Shape />
             )}
             {kind === "gap" && (
-              <CRC.Circle
+              <Pibbl.Circle
                 style={{ cx: 120, cy: 40, radius: 20, fill: "blue" }}
               />
             )}
-          </CRC.DragHandle>
-        </CRC.ManipulationFrame>
+          </Pibbl.DragHandle>
+        </Pibbl.ManipulationFrame>
       );
     }
-    mount = CRC.crc(canvas, <Scene />, { pixelRatio: 1 });
+    mount = Pibbl.pibbl(canvas, <Scene />, { pixelRatio: 1 });
     await settle();
     const miss =
       kind === "clip"
@@ -89,7 +89,7 @@ it.each([false, true])(
   "bubbles Escape from the focused child and styles its readout as focused (clipped=%s)",
   async (clipped) => {
     const canvas = surface();
-    const box = CRC.signal({ left: 40, top: 50, width: 160, height: 100 });
+    const box = Pibbl.signal({ left: 40, top: 50, width: 160, height: 100 });
     const labels: { text: string; fill: unknown }[] = [];
     const ctx = canvas.getContext("2d")!;
     const draw = ctx.fillText.bind(ctx);
@@ -100,34 +100,34 @@ it.each([false, true])(
     const focusClip = new Path2D();
     focusClip.rect(20, 20, 20, 40);
     const circle = (
-      <CRC.Circle
+      <Pibbl.Circle
         keyboardFocusable
         style={{ cx: 40, cy: 40, radius: 20, fill: "blue" }}
       />
     );
-    function Scene(): CRC.CRCNode {
-      const control = CRC.useManipulation({ box, move: {} });
+    function Scene(): Pibbl.PibblNode {
+      const control = Pibbl.useManipulation({ box, move: {} });
       return (
-        <CRC.ManipulationFrame {...control.frameProps}>
-          <CRC.DragHandle
+        <Pibbl.ManipulationFrame {...control.frameProps}>
+          <Pibbl.DragHandle
             controller={control}
             formatReadout={() => "position"}
             style={{ readout: { focused: { visible: true, fill: "#ff0000" } } }}
           >
             {clipped ? (
-              <CRC.Clip style={{ d: focusClip }}>{circle}</CRC.Clip>
+              <Pibbl.Clip style={{ d: focusClip }}>{circle}</Pibbl.Clip>
             ) : (
               circle
             )}
-          </CRC.DragHandle>
-        </CRC.ManipulationFrame>
+          </Pibbl.DragHandle>
+        </Pibbl.ManipulationFrame>
       );
     }
-    mount = CRC.crc(
+    mount = Pibbl.pibbl(
       canvas,
-      <CRC.FocusManagement>
+      <Pibbl.FocusManagement>
         <Scene />
-      </CRC.FocusManagement>,
+      </Pibbl.FocusManagement>,
       { pixelRatio: 1 },
     );
     await settle();

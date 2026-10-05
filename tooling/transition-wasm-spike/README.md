@@ -14,7 +14,7 @@ The experiment does not modify production code or exports. Production Bifrost no
 ## Question and comparison
 
 Does batching Bifrost's 56 color-patch descriptors into one WASM call improve
-rendering compared with JavaScript? Three paths use identical CRC capture,
+rendering compared with JavaScript? Three paths use identical Pibbl capture,
 Canvas gradients, blur, tint, clipping, and compositing:
 
 1. Current Bifrost implementation, including repeated seeded calculations.
@@ -34,7 +34,7 @@ variant. Kernel measurements use seven rotated trials of 20,000 calls, discardin
 the first trial. Results include medians and frame p95, not a correctness timing
 threshold.
 
-Submission time includes the CRC scheduler and Canvas command submission. The
+Submission time includes the Pibbl scheduler and Canvas command submission. The
 synchronized measurement additionally reads the entire canvas to force drawing
 completion. That readback is benchmark instrumentation, not production behavior;
 these numbers are not display-refresh FPS or a mobile/GPU benchmark. Headless

@@ -9,8 +9,8 @@
     "noEmitOnError": true,
     "outDir": "./dist",
     "paths": {
-      "@crc/core": ["./src/index.ts"],
-      "@crc/core/internal": ["./src/internal.ts"]
+      "@pibbl/core": ["./src/index.ts"],
+      "@pibbl/core/internal": ["./src/internal.ts"]
     },
     "rootDir": "./src",
     "types": []
@@ -25,6 +25,11 @@
     "src/features/particles/index.ts",
     "src/features/viz/index.ts",
     "src/features/textures/index.ts",
+    "src/features/machines/index.ts",
+    "src/features/machines/animation.ts",
+    "src/features/sprites/index.ts",
+    "src/features/sprites/formats/aseprite.ts",
+    "src/features/sprites/formats/texture-packer.ts",
     "src/features/physics/2d.ts",
     "src/features/physics/2d-geometry.ts",
     "src/features/physics/2d-testing.ts"

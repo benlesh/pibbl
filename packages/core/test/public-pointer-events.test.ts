@@ -1,8 +1,8 @@
 import {
-  crc,
+  pibbl,
   createElement,
   Rectangle,
-} from '@crc/core';
+} from '@pibbl/core';
 import { describe, expect, it, vi } from 'vitest';
 
 describe('public pointer events', () => {
@@ -23,14 +23,14 @@ describe('public pointer events', () => {
         pointerEvents,
       }),
     ];
-    const controller = crc(canvas, createElement(Scene, { pointerEvents: 'auto' }));
+    const controller = pibbl(canvas, createElement(Scene, { pointerEvents: 'auto' }));
 
     try {
       await nextFrame();
       dispatchClick(canvas, 50, 50);
       expect(rearClick).not.toHaveBeenCalled();
 
-      crc(canvas, createElement(Scene, { pointerEvents: 'none' }));
+      pibbl(canvas, createElement(Scene, { pointerEvents: 'none' }));
       await nextFrame();
       dispatchClick(canvas, 50, 50);
       expect(rearClick).toHaveBeenCalledOnce();

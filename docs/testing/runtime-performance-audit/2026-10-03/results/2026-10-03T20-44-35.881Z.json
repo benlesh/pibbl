@@ -1,5 +1,5 @@
 {
-  "schema": "crc-current-performance-audit/1",
+  "schema": "pibbl-current-performance-audit/1",
   "baseline": "fe2fcab343fa0a0296659a28e68436380fce4557",
   "reactionDiffusionSha256": "697319e7b125d053c1a6d2047671027e91f4e183a125054e77ad4b02d154e6c3",
   "timestamp": "2026-10-03T20:44:35.887Z",

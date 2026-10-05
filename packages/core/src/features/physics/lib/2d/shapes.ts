@@ -1,10 +1,10 @@
 import type {
-  CRCPhysicsAabb2D,
-  CRCPhysicsMassProperties2D,
-  CRCPhysicsPose2D,
-  CRCPhysicsShape2D,
-  CRCPhysicsTransform2D,
-  CRCPhysicsVector2,
+  PibblPhysicsAabb2D,
+  PibblPhysicsMassProperties2D,
+  PibblPhysicsPose2D,
+  PibblPhysicsShape2D,
+  PibblPhysicsTransform2D,
+  PibblPhysicsVector2,
 } from '../../2d-geometry.js';
 import {
   copyFiniteVector2,
@@ -40,15 +40,15 @@ const FULL_TURN_RADIANS = Math.PI * 2;
 /**
  * Creates an immutable circle collision shape without initializing a physics world.
  *
- * @param input - Circle radius and optional center. See {@link CRCPhysicsVector2}.
- * @returns An immutable circle collision shape. See {@link CRCPhysicsShape2D}.
+ * @param input - Circle radius and optional center. See {@link PibblPhysicsVector2}.
+ * @returns An immutable circle collision shape. See {@link PibblPhysicsShape2D}.
  *
- * @see {@link CRCPhysicsVector2}
- * @see {@link CRCPhysicsShape2D}
+ * @see {@link PibblPhysicsVector2}
+ * @see {@link PibblPhysicsShape2D}
  */
 export function circleShape2D(
-  input: Readonly<{ radius: number; center?: CRCPhysicsVector2 }>,
-): CRCPhysicsShape2D {
+  input: Readonly<{ radius: number; center?: PibblPhysicsVector2 }>,
+): PibblPhysicsShape2D {
   const radius = requirePositiveNumber(input.radius, 'circle.radius');
   const center = ownedVector(input.center ?? [0, 0], 'circle.center');
   const area = Math.PI * radius * radius;
@@ -65,20 +65,20 @@ export function circleShape2D(
  * Creates an immutable ellipse collision shape without initializing a physics world.
  *
  * @param input - Ellipse radii, optional center, and rotation in degrees. See
- * {@link CRCPhysicsVector2} .
- * @returns An immutable ellipse collision shape. See {@link CRCPhysicsShape2D}.
+ * {@link PibblPhysicsVector2} .
+ * @returns An immutable ellipse collision shape. See {@link PibblPhysicsShape2D}.
  *
- * @see {@link CRCPhysicsVector2}
- * @see {@link CRCPhysicsShape2D}
+ * @see {@link PibblPhysicsVector2}
+ * @see {@link PibblPhysicsShape2D}
  */
 export function ellipseShape2D(
   input: Readonly<{
     radiusX: number;
     radiusY: number;
-    center?: CRCPhysicsVector2;
+    center?: PibblPhysicsVector2;
     rotationDegrees?: number;
   }>,
-): CRCPhysicsShape2D {
+): PibblPhysicsShape2D {
   const radiusX = requirePositiveNumber(input.radiusX, 'ellipse.radiusX');
   const radiusY = requirePositiveNumber(input.radiusY, 'ellipse.radiusY');
   const center = ownedVector(input.center ?? [0, 0], 'ellipse.center');
@@ -98,19 +98,19 @@ export function ellipseShape2D(
 /**
  * Creates an immutable box collision shape without initializing a physics world.
  *
- * @param input - Box width, height, and optional center. See {@link CRCPhysicsVector2}.
- * @returns An immutable box collision shape. See {@link CRCPhysicsShape2D}.
+ * @param input - Box width, height, and optional center. See {@link PibblPhysicsVector2}.
+ * @returns An immutable box collision shape. See {@link PibblPhysicsShape2D}.
  *
- * @see {@link CRCPhysicsVector2}
- * @see {@link CRCPhysicsShape2D}
+ * @see {@link PibblPhysicsVector2}
+ * @see {@link PibblPhysicsShape2D}
  */
 export function boxShape2D(
   input: Readonly<{
     width: number;
     height: number;
-    center?: CRCPhysicsVector2;
+    center?: PibblPhysicsVector2;
   }>,
-): CRCPhysicsShape2D {
+): PibblPhysicsShape2D {
   const width = requirePositiveNumber(input.width, 'box.width');
   const height = requirePositiveNumber(input.height, 'box.height');
   const center = ownedVector(input.center ?? [0, 0], 'box.center');
@@ -128,11 +128,11 @@ export function boxShape2D(
  * Creates an immutable rounded box collision shape without initializing a physics world.
  *
  * @param input - Box dimensions, center, and uniform or per-corner radii. See
- * {@link CRCPhysicsVector2} .
- * @returns An immutable rounded-box collision shape. See {@link CRCPhysicsShape2D}.
+ * {@link PibblPhysicsVector2} .
+ * @returns An immutable rounded-box collision shape. See {@link PibblPhysicsShape2D}.
  *
- * @see {@link CRCPhysicsVector2}
- * @see {@link CRCPhysicsShape2D}
+ * @see {@link PibblPhysicsVector2}
+ * @see {@link PibblPhysicsShape2D}
  */
 export function roundedBoxShape2D(
   input: Readonly<{
@@ -146,9 +146,9 @@ export function roundedBoxShape2D(
           bottomRight: number,
           bottomLeft: number,
         ];
-    center?: CRCPhysicsVector2;
+    center?: PibblPhysicsVector2;
   }>,
-): CRCPhysicsShape2D {
+): PibblPhysicsShape2D {
   const width = requirePositiveNumber(input.width, 'roundedBox.width');
   const height = requirePositiveNumber(input.height, 'roundedBox.height');
   const center = ownedVector(input.center ?? [0, 0], 'roundedBox.center');
@@ -190,19 +190,19 @@ export function roundedBoxShape2D(
 /**
  * Creates an immutable capsule collision shape without initializing a physics world.
  *
- * @param input - Capsule centerline endpoints and radius. See {@link CRCPhysicsVector2}.
- * @returns An immutable capsule collision shape. See {@link CRCPhysicsShape2D}.
+ * @param input - Capsule centerline endpoints and radius. See {@link PibblPhysicsVector2}.
+ * @returns An immutable capsule collision shape. See {@link PibblPhysicsShape2D}.
  *
- * @see {@link CRCPhysicsVector2}
- * @see {@link CRCPhysicsShape2D}
+ * @see {@link PibblPhysicsVector2}
+ * @see {@link PibblPhysicsShape2D}
  */
 export function capsuleShape2D(
   input: Readonly<{
-    start: CRCPhysicsVector2;
-    end: CRCPhysicsVector2;
+    start: PibblPhysicsVector2;
+    end: PibblPhysicsVector2;
     radius: number;
   }>,
-): CRCPhysicsShape2D {
+): PibblPhysicsShape2D {
   const start = ownedVector(input.start, 'capsule.start');
   const end = ownedVector(input.end, 'capsule.end');
   const radius = requirePositiveNumber(input.radius, 'capsule.radius');
@@ -223,22 +223,22 @@ export function capsuleShape2D(
  * Creates an immutable arc collision shape without initializing a physics world.
  *
  * @param input - Arc center, radius, angular endpoints in radians, sweep direction, and thickness.
- * See {@link CRCPhysicsVector2} .
- * @returns An immutable thick-arc collision shape. See {@link CRCPhysicsShape2D}.
+ * See {@link PibblPhysicsVector2} .
+ * @returns An immutable thick-arc collision shape. See {@link PibblPhysicsShape2D}.
  *
- * @see {@link CRCPhysicsVector2}
- * @see {@link CRCPhysicsShape2D}
+ * @see {@link PibblPhysicsVector2}
+ * @see {@link PibblPhysicsShape2D}
  */
 export function arcShape2D(
   input: Readonly<{
-    center?: CRCPhysicsVector2;
+    center?: PibblPhysicsVector2;
     radius: number;
     startAngleRadians: number;
     endAngleRadians: number;
     counterclockwise?: boolean;
     thickness: number;
   }>,
-): CRCPhysicsShape2D {
+): PibblPhysicsShape2D {
   const center = ownedVector(input.center ?? [0, 0], 'arc.center');
   const radius = requirePositiveNumber(input.radius, 'arc.radius');
   const startAngle = requireFiniteNumber(input.startAngleRadians, 'arc.startAngleRadians');
@@ -254,21 +254,21 @@ export function arcShape2D(
  * Creates an immutable wedge collision shape without initializing a physics world.
  *
  * @param input - Wedge center, radius, angular endpoints in radians, and sweep direction. See
- * {@link CRCPhysicsVector2} .
- * @returns An immutable wedge collision shape. See {@link CRCPhysicsShape2D}.
+ * {@link PibblPhysicsVector2} .
+ * @returns An immutable wedge collision shape. See {@link PibblPhysicsShape2D}.
  *
- * @see {@link CRCPhysicsVector2}
- * @see {@link CRCPhysicsShape2D}
+ * @see {@link PibblPhysicsVector2}
+ * @see {@link PibblPhysicsShape2D}
  */
 export function wedgeShape2D(
   input: Readonly<{
-    center?: CRCPhysicsVector2;
+    center?: PibblPhysicsVector2;
     radius: number;
     startAngleRadians: number;
     endAngleRadians: number;
     counterclockwise?: boolean;
   }>,
-): CRCPhysicsShape2D {
+): PibblPhysicsShape2D {
   const center = ownedVector(input.center ?? [0, 0], 'wedge.center');
   const radius = requirePositiveNumber(input.radius, 'wedge.radius');
   const startAngle = requireFiniteNumber(input.startAngleRadians, 'wedge.startAngleRadians');
@@ -280,7 +280,7 @@ export function wedgeShape2D(
   if (Math.abs(sweep) <= GEOMETRY_EPSILON) {
     throw new RangeError('wedge angles must describe a nonzero sweep.');
   }
-  const contourSource: CRCPhysicsVector2[] = Math.abs(sweep) >= FULL_TURN_RADIANS
+  const contourSource: PibblPhysicsVector2[] = Math.abs(sweep) >= FULL_TURN_RADIANS
     ? points.slice(0, -1).map(asReadonlyVector)
     : [asReadonlyVector(center), ...points.map(asReadonlyVector)];
   const contour = canonicalizeContour2D(contourSource, {
@@ -304,15 +304,15 @@ export function wedgeShape2D(
 /**
  * Creates an immutable segment collision shape without initializing a physics world.
  *
- * @param input - Segment endpoints. See {@link CRCPhysicsVector2}.
- * @returns An immutable line-segment collision shape. See {@link CRCPhysicsShape2D}.
+ * @param input - Segment endpoints. See {@link PibblPhysicsVector2}.
+ * @returns An immutable line-segment collision shape. See {@link PibblPhysicsShape2D}.
  *
- * @see {@link CRCPhysicsVector2}
- * @see {@link CRCPhysicsShape2D}
+ * @see {@link PibblPhysicsVector2}
+ * @see {@link PibblPhysicsShape2D}
  */
 export function segmentShape2D(
-  input: Readonly<{ start: CRCPhysicsVector2; end: CRCPhysicsVector2 }>,
-): CRCPhysicsShape2D {
+  input: Readonly<{ start: PibblPhysicsVector2; end: PibblPhysicsVector2 }>,
+): PibblPhysicsShape2D {
   const start = ownedVector(input.start, 'segment.start');
   const end = ownedVector(input.end, 'segment.end');
   return createShapeFromLeaves(
@@ -328,19 +328,19 @@ export function segmentShape2D(
  * Creates an immutable chain collision shape without initializing a physics world.
  *
  * @param input - Ordered chain points, closure policy, and optional radius. See
- * {@link CRCPhysicsVector2} .
- * @returns An immutable chain collision shape. See {@link CRCPhysicsShape2D}.
+ * {@link PibblPhysicsVector2} .
+ * @returns An immutable chain collision shape. See {@link PibblPhysicsShape2D}.
  *
- * @see {@link CRCPhysicsVector2}
- * @see {@link CRCPhysicsShape2D}
+ * @see {@link PibblPhysicsVector2}
+ * @see {@link PibblPhysicsShape2D}
  */
 export function chainShape2D(
   input: Readonly<{
-    points: readonly CRCPhysicsVector2[];
+    points: readonly PibblPhysicsVector2[];
     closed?: boolean;
     radius?: number;
   }>,
-): CRCPhysicsShape2D {
+): PibblPhysicsShape2D {
   if (input.points.length < 2) {
     throw new RangeError('chain.points must contain at least two points.');
   }
@@ -354,15 +354,15 @@ export function chainShape2D(
 /**
  * Creates an immutable polygon collision shape without initializing a physics world.
  *
- * @param input - Ordered polygon vertices. See {@link CRCPhysicsVector2}.
- * @returns An immutable polygon collision shape. See {@link CRCPhysicsShape2D}.
+ * @param input - Ordered polygon vertices. See {@link PibblPhysicsVector2}.
+ * @returns An immutable polygon collision shape. See {@link PibblPhysicsShape2D}.
  *
- * @see {@link CRCPhysicsVector2}
- * @see {@link CRCPhysicsShape2D}
+ * @see {@link PibblPhysicsVector2}
+ * @see {@link PibblPhysicsShape2D}
  */
 export function polygonShape2D(
-  input: Readonly<{ points: readonly CRCPhysicsVector2[] }>,
-): CRCPhysicsShape2D {
+  input: Readonly<{ points: readonly PibblPhysicsVector2[] }>,
+): PibblPhysicsShape2D {
   const vertices = canonicalizeContour2D(input.points, {
     strictlyConvex: true,
     path: 'polygon.points',
@@ -380,18 +380,18 @@ export function polygonShape2D(
 /**
  * Computes axis-aligned bounds for an immutable shape at an optional pose.
  *
- * @param shape - Shape whose bounds are needed. See {@link CRCPhysicsShape2D}.
- * @param pose - Optional pose at which to evaluate the shape. See {@link CRCPhysicsPose2D}.
- * @returns Axis-aligned bounds of the posed shape. See {@link CRCPhysicsAabb2D}.
+ * @param shape - Shape whose bounds are needed. See {@link PibblPhysicsShape2D}.
+ * @param pose - Optional pose at which to evaluate the shape. See {@link PibblPhysicsPose2D}.
+ * @returns Axis-aligned bounds of the posed shape. See {@link PibblPhysicsAabb2D}.
  *
- * @see {@link CRCPhysicsShape2D}
- * @see {@link CRCPhysicsPose2D}
- * @see {@link CRCPhysicsAabb2D}
+ * @see {@link PibblPhysicsShape2D}
+ * @see {@link PibblPhysicsPose2D}
+ * @see {@link PibblPhysicsAabb2D}
  */
 export function boundsOfShape2D(
-  shape: CRCPhysicsShape2D,
-  pose?: CRCPhysicsPose2D,
-): CRCPhysicsAabb2D {
+  shape: PibblPhysicsShape2D,
+  pose?: PibblPhysicsPose2D,
+): PibblPhysicsAabb2D {
   const record = requireShapeRecord2D(shape);
   const outerPose = copyPose2D(pose, 'pose');
   return boundsForLeaves(record.leaves, composePose2D(outerPose, record.localPose));
@@ -400,18 +400,18 @@ export function boundsOfShape2D(
 /**
  * Computes shape area, centroid, mass, and rotational inertia at the requested density.
  *
- * @param shape - Shape whose mass properties are needed. See {@link CRCPhysicsShape2D}.
+ * @param shape - Shape whose mass properties are needed. See {@link PibblPhysicsShape2D}.
  * @param options - Optional material density.
- * @returns Mass, center of mass, and inertia for the shape. See {@link CRCPhysicsMassProperties2D}
+ * @returns Mass, center of mass, and inertia for the shape. See {@link PibblPhysicsMassProperties2D}
  * .
  *
- * @see {@link CRCPhysicsShape2D}
- * @see {@link CRCPhysicsMassProperties2D}
+ * @see {@link PibblPhysicsShape2D}
+ * @see {@link PibblPhysicsMassProperties2D}
  */
 export function massProperties2D(
-  shape: CRCPhysicsShape2D,
+  shape: PibblPhysicsShape2D,
   options?: Readonly<{ density?: number }>,
-): CRCPhysicsMassProperties2D {
+): PibblPhysicsMassProperties2D {
   const record = requireShapeRecord2D(shape);
   const density = requirePositiveNumber(options?.density ?? 1, 'options.density');
   const transformedCentroid = new Float64Array(2);
@@ -436,17 +436,17 @@ export function massProperties2D(
 /**
  * Returns independent shape geometry transformed by a rigid 2D pose.
  *
- * @param shape - Source shape; it is not modified. See {@link CRCPhysicsShape2D}.
- * @param transform - Transform to apply to the shape. See {@link CRCPhysicsTransform2D}.
- * @returns A shape containing the transformed geometry. See {@link CRCPhysicsShape2D}.
+ * @param shape - Source shape; it is not modified. See {@link PibblPhysicsShape2D}.
+ * @param transform - Transform to apply to the shape. See {@link PibblPhysicsTransform2D}.
+ * @returns A shape containing the transformed geometry. See {@link PibblPhysicsShape2D}.
  *
- * @see {@link CRCPhysicsShape2D}
- * @see {@link CRCPhysicsTransform2D}
+ * @see {@link PibblPhysicsShape2D}
+ * @see {@link PibblPhysicsTransform2D}
  */
 export function transformShape2D(
-  shape: CRCPhysicsShape2D,
-  transform: CRCPhysicsTransform2D,
-): CRCPhysicsShape2D {
+  shape: PibblPhysicsShape2D,
+  transform: PibblPhysicsTransform2D,
+): PibblPhysicsShape2D {
   const source = requireShapeRecord2D(shape);
   const localPose = composePose2D(copyPose2D(transform, 'transform'), source.localPose);
   const localBounds = mutableBoundsForLeaves(source.leaves, localPose);
@@ -467,7 +467,7 @@ function createShapeFromLeaves(
   centroidX: number,
   centroidY: number,
   unitInertia: number,
-): CRCPhysicsShape2D {
+): PibblPhysicsShape2D {
   return createShape2D({
     leaves,
     localBounds: mutableBoundsForLeaves(leaves, IDENTITY_POSE_2D),
@@ -482,7 +482,7 @@ function chainFromOwnedPoints(
   points: readonly Float64Array[],
   closed: boolean,
   radius: number,
-): CRCPhysicsShape2D {
+): PibblPhysicsShape2D {
   const segmentCount = points.length === 1 ? 0 : points.length - 1 + (closed ? 1 : 0);
   const leaves: ConvexLeaf2D[] = [];
   for (let index = 0; index < segmentCount; index += 1) {
@@ -523,7 +523,7 @@ function chainFromOwnedPoints(
 function boundsForLeaves(
   leaves: readonly ConvexLeaf2D[],
   pose: InternalPose2D,
-): CRCPhysicsAabb2D {
+): PibblPhysicsAabb2D {
   const bounds = mutableBoundsForLeaves(leaves, pose);
   return freezeBounds2D(bounds[0]!, bounds[1]!, bounds[2]!, bounds[3]!);
 }
@@ -831,11 +831,11 @@ function pointOnCircle(
   ]);
 }
 
-function ownedVector(value: CRCPhysicsVector2, path: string): Float64Array {
+function ownedVector(value: PibblPhysicsVector2, path: string): Float64Array {
   const copied = copyFiniteVector2(value, path);
   return new Float64Array(copied);
 }
 
-function asReadonlyVector(value: Float64Array): CRCPhysicsVector2 {
+function asReadonlyVector(value: Float64Array): PibblPhysicsVector2 {
   return [value[0]!, value[1]!] as const;
 }

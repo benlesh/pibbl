@@ -2,12 +2,12 @@ import type {
   EventTraceEntry,
   InteractionLabState,
   ScenarioController,
-} from '@crc/scenarios';
+} from '@pibbl/scenarios';
 import {
   getMouseContractCase,
   interactionLabScenarioEntry,
   loadScenario,
-} from '@crc/scenarios';
+} from '@pibbl/scenarios';
 import { page } from 'vitest/browser';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import interactionLabSource from '../../scenarios/src/interaction-lab.example.tsx?raw';
@@ -42,7 +42,7 @@ function expectedRoute(
   if (!contractCase) {
     throw new Error(`Unknown mouse contract case "${caseId}".`);
   }
-  return contractCase.crcTrace.map(({ type, target }) => ({
+  return contractCase.pibblTrace.map(({ type, target }) => ({
     type,
     target: targets[target] ?? target,
   }));

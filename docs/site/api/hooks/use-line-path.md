@@ -11,7 +11,7 @@ symbols: [useLinePath]
 # useLinePath
 
 ```ts
-import { useLinePath, Path } from "@crc/core";
+import { useLinePath, Path } from "@pibbl/core";
 ```
 
 `useLinePath(coords, { closePath? }?)` is render-only and memoizes a fresh

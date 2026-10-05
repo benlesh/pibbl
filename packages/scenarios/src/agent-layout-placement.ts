@@ -1,4 +1,4 @@
-import { crc, createElement, signal } from '@crc/core';
+import { pibbl, createElement, signal } from '@pibbl/core';
 import { AgentLayoutPlacementScene, AGENT_LAYOUT_PLACEMENT_SOURCE_ID, type LayoutPlacementMode } from './agent-layout-placement.example';
 import type { TargetingProbe, TargetingGeneration } from '../../../tooling/agent-verification/targeting';
 import type { analyzeBoxRelations } from '../../../tooling/agent-verification/layout-box-relations.mjs';
@@ -27,13 +27,13 @@ export const agentLayoutPlacementScenario: ScenarioDefinition<AgentLayoutPlaceme
     const relationTools = source ? await import('../../../tooling/agent-verification/layout-box-relations.mjs') : null;
     const mode = signal<LayoutPlacementMode>('clipped');
     let allocation: Box | null = null, disposed = false;
-    let controller: ReturnType<typeof crc> | undefined;
+    let controller: ReturnType<typeof pibbl> | undefined;
     let inspector: ReturnType<NonNullable<typeof source>['createTargetingInspector']> | undefined;
     let inFlight: Promise<void> | null = null, cancelWait: (() => void) | null = null;
     const evidence = document.createElement('pre'); evidence.dataset.testid = 'agent-layout-placement-evidence'; referenceHost?.append(evidence);
     const declaration = (value: LayoutPlacementMode): AgentLayoutPlacementState['declared'] => ({ provenance: 'controlled-application-inputs', parentPlacement: { left: 30, top: 20 }, shapeLocal: { x: value === 'clipped' || value === 'overflow-visible' ? 90 : 0, y: 0, width: 20, height: 20 }, overflow: value === 'overflow-visible' ? 'visible' : 'clip' });
     let state: AgentLayoutPlacementState = { status: 'pending', mode: 'clipped', revision: 0, clicks: 0, lastActivated: null, relations: null, assertion: 'unavailable', diagnosis: 'pending', declared: declaration('clipped'), allocation: null, observed: null, explanation: '' };
-    const publish = () => { evidence.textContent = JSON.stringify({ schema: 'crc-layout-placement-fixture/1', provenance: 'source-development-fixture-no-build-attestation', state }); onStateChange?.(structuredClone(state)); };
+    const publish = () => { evidence.textContent = JSON.stringify({ schema: 'pibbl-layout-placement-fixture/1', provenance: 'source-development-fixture-no-build-attestation', state }); onStateChange?.(structuredClone(state)); };
     function Scene() { return createElement(AgentLayoutPlacementScene, { mode: mode.get(), onAllocation(box: Box) { allocation = box; }, onActivate(id: 'primary' | 'peer') { if (!disposed) { state = { ...state, clicks: state.clicks + 1, lastActivated: id }; publish(); } } }); }
     const wait = () => new Promise<void>((resolve, reject) => {
       let frame = 0, count = 0;
@@ -68,11 +68,11 @@ export const agentLayoutPlacementScenario: ScenarioDefinition<AgentLayoutPlaceme
         state = { ...state, status: 'ready', allocation, observed, relations, assertion: !observed || !relations || relations.status !== 'available' ? 'unavailable' : target && !relationFailure ? 'pass' : 'fail', diagnosis,
           explanation: 'The app expects the shape center to be targetable. Parent left=30/top=20 places a local 20x20 allocation; Rectangle x is an additional local drawing offset. Translation (40,30) and scale 2 map these coordinates into root space. Allocation is not a paint bound. Declared overflow controls clipping; geometry probes do not prove pixel visibility. Box relations describe declared rectangles in one common local space. Overlap becomes an error only when separation is explicitly required.' };
         publish();
-      }).catch(error => { if (!disposed) { state = { ...state, status: 'error', assertion: 'unavailable', observed: null, allocation: null, relations: null, diagnosis: 'observation-failed' }; evidence.textContent = JSON.stringify({ schema: 'crc-layout-placement-fixture/1', state }); } throw error; }).finally(() => { inFlight = null; });
+      }).catch(error => { if (!disposed) { state = { ...state, status: 'error', assertion: 'unavailable', observed: null, allocation: null, relations: null, diagnosis: 'observation-failed' }; evidence.textContent = JSON.stringify({ schema: 'pibbl-layout-placement-fixture/1', state }); } throw error; }).finally(() => { inFlight = null; });
       inFlight = operation; return operation;
     }
     async function dispose() { if (disposed) return; disposed = true; cancelWait?.(); inspector?.dispose(); controller?.dispose(); evidence.remove(); state = { ...state, status: 'disposed', assertion: 'unavailable', observed: null, allocation: null, relations: null, diagnosis: 'disposed' }; }
-    try { controller = crc(canvas, createElement(Scene, {}), { viewport: { width: 400, height: 240 }, fit: 'contain' }); inspector = source?.createTargetingInspector(canvas); await perform('clipped'); }
+    try { controller = pibbl(canvas, createElement(Scene, {}), { viewport: { width: 400, height: 240 }, fit: 'contain' }); inspector = source?.createTargetingInspector(canvas); await perform('clipped'); }
     catch (error) { await dispose(); throw error; }
     return { getState: () => structuredClone(state), perform, reset: () => perform('clipped'), settled: async () => { if (disposed) throw new Error('Layout fixture disposed.'); await inFlight; }, dispose };
   },

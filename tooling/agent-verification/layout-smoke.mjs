@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { writeFile } from 'node:fs/promises';
 const [url, output] = process.argv.slice(2);
 assert.ok(url && output, 'Provide source Studio URL and a new report path.');
-const report = { schema: 'crc-layout-studio-smoke/1', status: 'incomplete', provenance: 'controlled-local-studio-no-served-build-attestation', steps: [], errors: [] };
+const report = { schema: 'pibbl-layout-studio-smoke/1', status: 'incomplete', provenance: 'controlled-local-studio-no-served-build-attestation', steps: [], errors: [] };
 const browser = await chromium.launch();
 try {
   const page = await browser.newPage({ viewport: { width: 1200, height: 900 } });

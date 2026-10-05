@@ -1,6 +1,6 @@
 import { page } from 'vitest/browser';
 import { describe, expect, it, vi } from 'vitest';
-import { crc } from '../crc.js';
+import { pibbl } from '../pibbl.js';
 import { createElement } from '../element/create-element.js';
 import { Flow } from '../layout/flow.js';
 import { measureElement } from '../layout/measure.js';
@@ -27,7 +27,7 @@ describe('text', () => {
     const fillText = vi.spyOn(CanvasRenderingContext2D.prototype, 'fillText');
     const canvas = document.createElement('canvas');
     document.body.appendChild(canvas);
-    const controller = crc(canvas, createElement(Text, {
+    const controller = pibbl(canvas, createElement(Text, {
       children: label as never,
       style: { fill: 'black' },
     }));
@@ -56,12 +56,12 @@ describe('text', () => {
     const fillText = vi.spyOn(CanvasRenderingContext2D.prototype, 'fillText');
     const canvas = document.createElement('canvas');
     document.body.appendChild(canvas);
-    const controller = crc(canvas, element);
+    const controller = pibbl(canvas, element);
 
     try {
       await nextFrame();
       children[0] = 'second';
-      crc(canvas, element);
+      pibbl(canvas, element);
       await nextFrame();
 
       expect(fillText.mock.calls.map(([value]) => value)).toEqual([
@@ -102,7 +102,7 @@ describe('text', () => {
       measurementConstraints,
       measurementService([]),
     )).toThrowError(
-      'Text received a CRC element inside textual content as a CRC child.',
+      'Text received a Pibbl element inside textual content as a Pibbl child.',
     );
   });
 
@@ -213,11 +213,11 @@ describe('text', () => {
       });
     const canvas = document.createElement('canvas');
     document.body.appendChild(canvas);
-    const controller = crc(canvas, scene);
+    const controller = pibbl(canvas, scene);
 
     try {
       expect(() => pendingFrame?.(0)).toThrowError(
-        'Text received a CRC element inside textual content as a CRC child.',
+        'Text received a Pibbl element inside textual content as a Pibbl child.',
       );
       expect(iterableReads).toBe(2);
     } finally {
@@ -242,7 +242,7 @@ describe('text', () => {
     const fillText = vi.spyOn(CanvasRenderingContext2D.prototype, 'fillText');
     const canvas = document.createElement('canvas');
     document.body.appendChild(canvas);
-    const controller = crc(canvas, scene);
+    const controller = pibbl(canvas, scene);
 
     try {
       await nextFrame();

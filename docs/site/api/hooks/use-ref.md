@@ -6,16 +6,16 @@ kind: api
 slug: use-ref
 apiCategory: hook
 symbols: [useRef]
-relatedTypes: [CRCRef]
+relatedTypes: [PibblRef]
 ---
 
 # useRef
 
 ```ts
-import { useRef, Text } from "@crc/core";
+import { useRef, Text } from "@pibbl/core";
 ```
 
-`useRef(init?)` is render-only and returns one stable [`CRCRef`](#/api/types/canvas-runtime#crcref) with a generic mutable
+`useRef(init?)` is render-only and returns one stable [`PibblRef`](#/api/types/canvas-runtime#pibblref) with a generic mutable
 `current` field for the component identity. Updating `current` does not schedule
 a render. Its normal hook slot lifetime ends when the component unmounts; do
 not use it to preserve state across a changed component identity.

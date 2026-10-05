@@ -1,18 +1,18 @@
 import type { BarCategoryAccessor } from './bar-series.js';
-import type { Scale } from './scale.js';
+import type { LinearScale } from './linear-scale-component.js';
 import type { nearestDomainValue } from './nearest.js';
-import type { useScale } from './use-scale.js';
+import type { useLinearScale } from './use-linear-scale.js';
 import type { Axis } from './axis.js';
 import type { PointAccessor } from './point-types.js';
 import type { ScaleAdjust } from './scale-adjust.js';
 import type {
   BoxStyle,
-  CRCNode,
+  PibblNode,
   LayoutItemStyle,
   LayoutBox,
   SignalValue,
-} from "@crc/core";
-import type { SignalStyle } from "@crc/core/internal";
+} from "@pibbl/core";
+import type { SignalStyle } from "@pibbl/core/internal";
 /**
  * A string or symbol identifying a scale within visualization context.
  *
@@ -40,7 +40,7 @@ export type ScaleRange = "width" | "height" | readonly [number, number];
  *
  * @see {@link ScaleRange}
  * @see {@link ScaleId}
- * @see {@link BandScaleProps}
+ * @see {@link BarScaleProps}
  */
 export type BandScaleRange =
   | ScaleRange
@@ -66,14 +66,12 @@ export type ScaleLayoutStyle = Pick<BoxStyle, "width" | "height"> &
  * @see {@link ScaleRange}
  * @see {@link SignalStyle}
  * @see {@link ScaleLayoutStyle}
- * @see {@link CRCNode}
- * @see {@link BandScaleProps}
+ * @see {@link PibblNode}
+ * @see {@link BarScaleProps}
  */
 export interface LinearScaleProps {
   /** Stable identifier of this resource or connection. See {@link ScaleId}. */
   readonly id: ScaleId;
-  /** The literal "linear" identifying this variant. See {@link LinearScaleProps}. */
-  readonly type: "linear";
   /**
    * Data values or endpoints accepted by the scale. See {@link SignalValue}, {@link LinearDomain}
    * .
@@ -91,8 +89,8 @@ export interface LinearScaleProps {
    * {@link ScaleLayoutStyle}.
    */
   readonly style?: SignalValue<SignalStyle<ScaleLayoutStyle>>;
-  /** Descendant content or the callback that supplies it. See {@link CRCNode}. */
-  readonly children?: CRCNode;
+  /** Descendant content or the callback that supplies it. See {@link PibblNode}. */
+  readonly children?: PibblNode;
 }
 /**
  * A string or number used as a discrete band-scale category.
@@ -106,7 +104,7 @@ export type BandCategory = string | number;
  * The ordered categories allocated by a band scale.
  *
  * @see {@link BandCategory}
- * @see {@link BandScaleProps}
+ * @see {@link BarScaleProps}
  * @see {@link ResolvedBandScale}
  */
 export type BandDomain = readonly BandCategory[];
@@ -117,14 +115,12 @@ export type BandDomain = readonly BandCategory[];
  * @see {@link SignalValue}
  * @see {@link BandDomain}
  * @see {@link BandScaleRange}
- * @see {@link ScaleProps}
+ * @see {@link LinearScaleProps}
  */
-export interface BandScaleProps extends Omit<
+export interface BarScaleProps extends Omit<
   LinearScaleProps,
-  "type" | "domain" | "range"
+  "domain" | "range"
 > {
-  /** The literal "band" identifying this variant. See {@link BandScaleProps}. */
-  readonly type: "band";
   /**
    * Data values or endpoints accepted by the scale. See {@link SignalValue}, {@link BandDomain}.
    */
@@ -143,10 +139,15 @@ export interface BandScaleProps extends Omit<
  * Authored inputs for Scale, including the declared data and presentation options.
  *
  * @see {@link LinearScaleProps}
- * @see {@link BandScaleProps}
- * @see {@link Scale}
+ * @see {@link BarScaleProps}
+ * @see {@link LinearScale}
  */
-export type ScaleProps = LinearScaleProps | BandScaleProps;
+/** UTC timestamps use numeric epoch milliseconds. See {@link LinearDomain}. */
+export type UtcDomain = LinearDomain;
+/** Numeric endpoints shared by continuous scales. See {@link LinearDomain}. */
+export type NumericDomain = LinearDomain;
+/** Calendar-aware UTC scale inputs. See {@link LinearScaleProps}. */
+export type UTCScaleProps = LinearScaleProps;
 /**
  * A resolved categorical mapping with its frame, bandwidth, and step.
  *
@@ -219,16 +220,30 @@ export interface ResolvedLinearScale {
  *
  * @see {@link ResolvedLinearScale}
  * @see {@link ResolvedBandScale}
- * @see {@link useScale}
+ * @see {@link useLinearScale}
  */
-export type ResolvedScale = ResolvedLinearScale | ResolvedBandScale;
+/** UTC continuous mapping with stateless ISO formatting. See {@link ResolvedLinearScale}. */
+export interface ResolvedUtcScale extends Omit<ResolvedLinearScale, "type"> {
+  /** UTC calendar scale discriminant. See {@link UTCScaleProps}. */
+  readonly type: "utc";
+  /**
+   * Formats a timestamp as full UTC ISO text without changing tick geometry.
+   * @param value - Finite epoch milliseconds inside the Date range.
+   * @returns ISO text with millisecond precision. See {@link ResolvedUtcScale}.
+   */
+  formatTick(value: number): string;
+}
+/** Any supported numeric mapping. See {@link ResolvedUtcScale}. */
+export type ResolvedContinuousScale = ResolvedLinearScale | ResolvedUtcScale;
+/** A numeric or categorical mapping snapshot. See {@link ResolvedContinuousScale}. */
+export type ResolvedScale = ResolvedContinuousScale | ResolvedBandScale;
 
 import type {
-  CRCEventHandlers,
-  CRCEventParticipationOptions,
+  PibblEventHandlers,
+  PibblEventParticipationOptions,
   FillStyle,
   StrokeStyle,
-} from "@crc/core";
+} from "@pibbl/core";
 /**
  * Supported geometry and presentation properties for Axis.
  *
@@ -345,8 +360,8 @@ export interface LineSeriesStyle {
 /**
  * Authored inputs for LineSeries, including the declared data and presentation options.
  *
- * @see {@link CRCEventHandlers}
- * @see {@link CRCEventParticipationOptions}
+ * @see {@link PibblEventHandlers}
+ * @see {@link PibblEventParticipationOptions}
  * @see {@link SignalValue}
  * @see {@link LineAccessor}
  * @see {@link ScaleId}
@@ -355,7 +370,7 @@ export interface LineSeriesStyle {
  * @see {@link LineSeriesStyle}
  */
 export interface LineSeriesProps<D>
-  extends CRCEventHandlers, CRCEventParticipationOptions {
+  extends PibblEventHandlers, PibblEventParticipationOptions {
   /**
    * Application data supplied to the component or reported by the event. See {@link SignalValue}.
    */
@@ -432,11 +447,11 @@ type ScaleAdjustY =
 /**
  * Authored inputs for ScaleAdjust, including the declared data and presentation options.
  *
- * @see {@link CRCNode}
+ * @see {@link PibblNode}
  * @see {@link ScaleAdjust}
  */
 export type ScaleAdjustProps = ScaleAdjustX &
   ScaleAdjustY & {
-    /** Descendant content or the callback that supplies it. See {@link CRCNode}. */
-    readonly children?: CRCNode;
+    /** Descendant content or the callback that supplies it. See {@link PibblNode}. */
+    readonly children?: PibblNode;
   };

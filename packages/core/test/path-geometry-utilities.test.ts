@@ -3,7 +3,7 @@ import {
   PathGeometry,
   simplifyPath,
   subdividePath,
-} from '@crc/core';
+} from '@pibbl/core';
 import { describe, expect, it } from 'vitest';
 
 describe('editable path geometry utilities', () => {

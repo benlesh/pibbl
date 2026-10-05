@@ -3,12 +3,12 @@ import {
   Overlay,
   Rectangle,
   Text,
-  crc,
+  pibbl,
   type AbsoluteProps,
   type AbsoluteStyle,
   type OverlayProps,
   type OverlayStyle,
-} from "@crc/core";
+} from "@pibbl/core";
 
 const absoluteStyle: AbsoluteStyle = { width: 320, height: 220 };
 const overlayStyle: OverlayStyle = {
@@ -50,5 +50,5 @@ const canvas = document.createElement("canvas");
 canvas.width = 320;
 canvas.height = 220;
 document.body.append(canvas);
-const app = crc(canvas, <Absolute {...absoluteProps} style={absoluteStyle} />);
+const app = pibbl(canvas, <Absolute {...absoluteProps} style={absoluteStyle} />);
 window.addEventListener("pagehide", () => app.dispose(), { once: true });

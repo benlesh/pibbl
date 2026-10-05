@@ -1,4 +1,4 @@
-# CRC mouse interaction contract
+# Pibbl mouse interaction contract
 
 Status: current geometry, coordinates, and cursor contract, updated
 for external render-layer and Three.js interaction on 2026-09-28.
@@ -15,29 +15,29 @@ This document defines the behavior implemented and verified by TFC-03 through TF
 
 ## Evidence and interpretation
 
-CRC regions are synthetic targets inside one DOM Canvas. Native browser behavior therefore supplies user expectations for event order, hit selection, mutation, and activation, but cannot supply Canvas-only rules such as layer paint order or clipping.
+Pibbl regions are synthetic targets inside one DOM Canvas. Native browser behavior therefore supplies user expectations for event order, hit selection, mutation, and activation, but cannot supply Canvas-only rules such as layer paint order or clipping.
 
 Evidence priority:
 
 1. traces measured in the TFC-01 native Chromium reference;
 2. current W3C Pointer Events, UI Events algorithms, CSSOM View, and WHATWG DOM;
-3. the smallest explicit CRC rule needed where no DOM analogue exists.
+3. the smallest explicit Pibbl rule needed where no DOM analogue exists.
 
-The platform evidence is consistent on the important shape: mouse events target the deepest/topmost hit, boundary transitions precede the associated move, differing down/up targets click their nearest common inclusive DOM ancestor, removed targets do not receive later activation events, and listener dispatch isolates thrown exceptions. CRC intentionally adopts the coherent subset its current event type can express.
+The platform evidence is consistent on the important shape: mouse events target the deepest/topmost hit, boundary transitions precede the associated move, differing down/up targets click their nearest common inclusive DOM ancestor, removed targets do not receive later activation events, and listener dispatch isolates thrown exceptions. Pibbl intentionally adopts the coherent subset its current event type can express.
 
 ## Terms
 
 - **Paint target:** a default-participating Canvas path, committed render-layer target, or explicit Canvas target registration. Its identity is the owning mounted component plus that target slot, not a particular handler function.
 - **Logical target:** the one live paint/custom target selected for a native mouse event.
-- **Paint order:** the order in which CRC composites interactive paths, including layers. Later paint is visually above earlier paint.
+- **Paint order:** the order in which Pibbl composites interactive paths, including layers. Later paint is visually above earlier paint.
 - **Live target:** a region still owned by the current rendered tree with the target generation selected for dispatch.
-- **Root coordinates:** coordinates in the mounted logical viewport exposed as `CRCLogicalMouseEvent.x/y`.
+- **Root coordinates:** coordinates in the mounted logical viewport exposed as `PibblLogicalMouseEvent.x/y`.
 - **Boundary transition:** logical over/out and enter/leave events derived from
-  movement between CRC targets. Over/out bubble; enter/leave do not.
+  movement between Pibbl targets. Over/out bubble; enter/leave do not.
 
 ## Target selection
 
-CRC resolves at most one logical target for each native event. Target identity
+Pibbl resolves at most one logical target for each native event. Target identity
 is independent of the native event type: a passive upper drawing or one with
 only `onClick` occludes a lower target with `onMouseMove`. Replacing handlers
 without replacing the keyed/tree-slot component preserves identity.
@@ -64,12 +64,12 @@ is still a fill hit area, and zero opacity does not disable interaction. A
 Canvas path with neither a fill hit area nor a positive stroke interaction
 width remains a miss.
 
-Likewise, `useCursor` with no path is a Canvas-wide fallback rather than a geometric target. The last live default wins when no targeted region supplies a cursor. Entering a targeted cursor region temporarily overrides it; leaving or removing that region restores the current fallback. CRC clears only the exact inline style it owns, so an external style change is not overwritten. Pointer-presence state is tracked independently from CSS ownership so fallback replacement during a settled rerender reconciles immediately even when the registry is briefly empty.
+Likewise, `useCursor` with no path is a Canvas-wide fallback rather than a geometric target. The last live default wins when no targeted region supplies a cursor. Entering a targeted cursor region temporarily overrides it; leaving or removing that region restores the current fallback. Pibbl clears only the exact inline style it owns, so an external style change is not overwritten. Pointer-presence state is tracked independently from CSS ownership so fallback replacement during a settled rerender reconciles immediately even when the registry is briefly empty.
 
 DOM ancestors learn about child input only through explicit
 `useEventListener` registrations. The current facade exposes logical `target`,
 `currentTarget`, `relatedTarget`, phases, cancellation, and pointer capture as
-defined by the user-event contract; CRC still never invokes every overlapping
+defined by the user-event contract; Pibbl still never invokes every overlapping
 geometric hit or infers an ancestor from paint.
 
 ## TFC-04 implementation boundary
@@ -80,7 +80,7 @@ refreshes its reverse-paint-order position without changing logical identity.
 Removing the component or switching to `pointerEvents="none"` releases the
 target and any hover, activation, focus, or cursor state it owns.
 
-Pathless observers remain ordered per-type Sets outside the target registry. A public `crc()` rerender requested by a handler settles on the next animation frame, so the current dispatch plan completes before the new tree is visible. Narrow dispatcher tests separately prove the synchronous rule for direct live-registry mutation: removed callbacks/targets are skipped, newly added callbacks wait for the next native event, and a reported exception does not stop the remaining plan.
+Pathless observers remain ordered per-type Sets outside the target registry. A public `pibbl()` rerender requested by a handler settles on the next animation frame, so the current dispatch plan completes before the new tree is visible. Narrow dispatcher tests separately prove the synchronous rule for direct live-registry mutation: removed callbacks/targets are skipped, newly added callbacks wait for the next native event, and a reported exception does not stop the remaining plan.
 
 ## TFC-05 composition boundary
 
@@ -112,7 +112,7 @@ while preserving keyed region identity and exact resource ownership.
 
 One native `mousemove` performs one target resolution, compares it with the previous live target, and emits:
 
-| Previous target     | New target              | Approved CRC sequence                                                           |
+| Previous target     | New target              | Approved Pibbl sequence                                                         |
 | ------------------- | ----------------------- | ------------------------------------------------------------------------------- |
 | none                | A                       | `mouseover(A, logicalRelated=canvas-background) → mousemove(A)`                 |
 | A                   | A                       | `mousemove(A)`                                                                  |
@@ -123,13 +123,13 @@ One native `mousemove` performs one target resolution, compares it with the prev
 
 Exit always precedes entry, and every boundary transition precedes movement. Moving between overlapping shapes still targets only the topmost winner.
 
-`CRCLogicalMouseEvent.relatedTarget` is the opposite opaque logical CRC target,
+`PibblLogicalMouseEvent.relatedTarget` is the opposite opaque logical Pibbl target,
 or `null` for Canvas background/outside-root relationships. The native
 `originalEvent.relatedTarget` remains the DOM Canvas relationship.
 
 ### Decision on the four disputed ordering expectations
 
-The historical untracked event test named by the plan is no longer present. The baseline recorded four failing instances of the same entry-order disagreement—current CRC emitted movement before entry—across fill/stroke/interaction-width geometry variants. The exact deleted cases cannot be reconstructed more strongly. The approved oracle therefore covers fill, stroke, and expanded interaction-width hits explicitly and requires `mouseover → mousemove` for each. TFC-01 independently proves the same defect on entry and region switching. These are implementation defects for TFC-04, not reasons to weaken this contract.
+The historical untracked event test named by the plan is no longer present. The baseline recorded four failing instances of the same entry-order disagreement—current Pibbl emitted movement before entry—across fill/stroke/interaction-width geometry variants. The exact deleted cases cannot be reconstructed more strongly. The approved oracle therefore covers fill, stroke, and expanded interaction-width hits explicitly and requires `mouseover → mousemove` for each. TFC-01 independently proves the same defect on entry and region switching. These are implementation defects for TFC-04, not reasons to weaken this contract.
 
 ## Buttons and activation
 
@@ -139,13 +139,13 @@ The historical untracked event test named by the plan is no longer present. The 
 
 ### Primary click
 
-A trusted native click invokes a CRC region's `onClick` only when:
+A trusted native click invokes a Pibbl region's `onClick` only when:
 
 - the preceding primary down resolved to that region;
 - the corresponding primary up resolved to the same still-live region; and
 - the click event still resolves to that region.
 
-The browser determines normal click hysteresis. In the executable reference Chromium fixture, leaving A for Canvas background and re-entering A before release still produces `click(A)` when down, up, and the generated click all resolve to that same live target. CRC preserves that measured behavior; it does not make every intermediate `mouseout` an independent cancellation signal. Down on A/up on sibling B can activate their deepest shared still-live `useEventListener` when it also lies on the browser click's current coordinate path. Without an explicit shared listener, no sibling-region click is emitted.
+The browser determines normal click hysteresis. In the executable reference Chromium fixture, leaving A for Canvas background and re-entering A before release still produces `click(A)` when down, up, and the generated click all resolve to that same live target. Pibbl preserves that measured behavior; it does not make every intermediate `mouseout` an independent cancellation signal. Down on A/up on sibling B can activate their deepest shared still-live `useEventListener` when it also lies on the browser click's current coordinate path. Without an explicit shared listener, no sibling-region click is emitted.
 
 If the down target is removed, up targets whatever is now topmost and no click
 is delivered to the removed region. Keyboard-generated logical clicks do not
@@ -163,11 +163,11 @@ The reference sequence is:
 
 ### Secondary/context menu
 
-Each native `mousedown`, `contextmenu`, and `mouseup` independently targets the topmost live region at that event's coordinate. Reference Chromium on macOS measured `mousedown(button=2) → contextmenu → mouseup`; that sequence is reference evidence, not a universal approved CRC order. The platform permits browser/OS differences, so CRC preserves the native sequence it receives rather than synthesizing or accepting only one universal sequence.
+Each native `mousedown`, `contextmenu`, and `mouseup` independently targets the topmost live region at that event's coordinate. Reference Chromium on macOS measured `mousedown(button=2) → contextmenu → mouseup`; that sequence is reference evidence, not a universal approved Pibbl order. The platform permits browser/OS differences, so Pibbl preserves the native sequence it receives rather than synthesizing or accepting only one universal sequence.
 
 ## Mutation and errors during dispatch
 
-For each native event, CRC resolves the geometric target and builds the ordered logical-event sequence. Immediately before each logical `mouseout`, `mouseover`, or primary event dispatch, it snapshots the current handlers for the intended still-live target. This is intentionally per logical event, matching DOM listener invocation more closely than one snapshot for an entire native-move plan.
+For each native event, Pibbl resolves the geometric target and builds the ordered logical-event sequence. Immediately before each logical `mouseout`, `mouseover`, or primary event dispatch, it snapshots the current handlers for the intended still-live target. This is intentionally per logical event, matching DOM listener invocation more closely than one snapshot for an entire native-move plan.
 
 - Handler replacement does not affect the handler list already being invoked, but does affect the next logical event, even when that event belongs to the same native movement.
 - A handler or region removed before its planned logical event is skipped. If the intended new target disappears during `mouseout`, its planned `mouseover` and `mousemove` are skipped and targeting reconciles on the next native movement.
@@ -183,7 +183,7 @@ bubble phases now follow the user-event contract.
 ## Coordinates and geometry
 
 Public coordinates are root-logical coordinates with fractional precision.
-CRC measures the point inside the CSS content box, converts through backing
+Pibbl measures the point inside the CSS content box, converts through backing
 space, and applies the inverse root surface transform:
 
 ```text
@@ -218,11 +218,11 @@ The shared oracle covers:
 - handler replacement/removal, target removal during a move plan, and thrown-handler isolation;
 - double click and a reference-browser context-menu sequence plus native-order policy.
 
-The explorer visual target, native trace when analogous, CRC trace, gesture, and rule all come from the same data consumed by the headless suite. Canvas-specific cases are labeled instead of inventing a native comparison.
+The explorer visual target, native trace when analogous, Pibbl trace, gesture, and rule all come from the same data consumed by the headless suite. Canvas-specific cases are labeled instead of inventing a native comparison.
 
 ## Retained differences from DOM
 
-- CRC exposes opaque logical targets and a temporary explicit-registration
+- Pibbl exposes opaque logical targets and a temporary explicit-registration
   path, not DOM nodes or a retained event tree.
 - It never invokes all overlapping hits or infers hit geometry from raster
   opacity; built-in drawing uses declared geometry by default.
@@ -232,7 +232,7 @@ The explorer visual target, native trace when analogous, CRC trace, gesture, and
 
 ## Mouse-specific non-goals and follow-ups
 
-- Compatibility mouse suppression: CRC forwards the native pointer and mouse
+- Compatibility mouse suppression: Pibbl forwards the native pointer and mouse
   event sequences the browser supplies without duplicate synthesis. The
   optional focus policy separately deduplicates the focus default for a
   represented pointer press.
@@ -245,7 +245,7 @@ TFC-03 established resource and mutation safety. TFC-04 established ordering,
 topmost targeting, click identity, cursor parity, and repeatability. TFC-05
 established CSS scale, transforms, clips, `Group`/`Layer` composition, and
 stroke-width geometry. Current public examples construct all components with
-JSX or `createElement` over branded `CRCElement` descriptors.
+JSX or `createElement` over branded `PibblElement` descriptors.
 
 ## Primary sources
 

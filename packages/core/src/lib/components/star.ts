@@ -1,8 +1,8 @@
 import { definePrimitive } from '../define-primitive.js';
 import type {
-  CRCEventFocusOptions,
-  CRCEventHandlers,
-  CRCEventParticipationOptions,
+  PibblEventFocusOptions,
+  PibblEventHandlers,
+  PibblEventParticipationOptions,
 } from '../events/types.js';
 import {
   resolveStarGeometry,
@@ -26,7 +26,7 @@ import type {
   RoundedCornerStyle,
 } from '../style/types.js';
 import type { RenderingContext2D, SystemStyle } from '../types.js';
-import type { CRCPhysics2DPropExtension } from '../types.js';
+import type { PibblPhysics2DPropExtension } from '../types.js';
 import { renderPath } from './path.js';
 import { resolveRoundedCornerStyle } from './rounded-corner-style.js';
 import {
@@ -39,12 +39,12 @@ import {
 /**
  * Authored inputs for Star, including the declared data and presentation options.
  *
- * @see {@link CRCEventHandlers}
- * @see {@link CRCEventParticipationOptions}
- * @see {@link CRCPhysics2DPropExtension}
+ * @see {@link PibblEventHandlers}
+ * @see {@link PibblEventParticipationOptions}
+ * @see {@link PibblPhysics2DPropExtension}
  * @see {@link Star}
  */
-export interface StarProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions, CRCPhysics2DPropExtension {}
+export interface StarProps extends PibblEventHandlers, PibblEventFocusOptions, PibblEventParticipationOptions, PibblPhysics2DPropExtension {}
 
 /**
  * Supported geometry and presentation properties for Star.
@@ -140,7 +140,7 @@ function renderStar(
  *
  * @param props - Authored component inputs, supplied through JSX or createElement. See the linked
  * props and style types.
- * @throws When called directly; CRC mounts this component through JSX or createElement.
+ * @throws When called directly; Pibbl mounts this component through JSX or createElement.
  *
  * @see {@link StarProps}
  * @see {@link StarStyle}

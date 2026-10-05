@@ -1,4 +1,4 @@
-import { crc, createElement, Rectangle } from '@crc/core';
+import { pibbl, createElement, Rectangle } from '@pibbl/core';
 import { createRuntimeCheckedInspector } from '../../../tooling/agent-verification/runtime-inspection';
 import { ManualSchedulerDriver, installSchedulerDriverForTest } from '../src/lib/scheduler/testing';
 import { expect, it } from 'vitest';
@@ -33,7 +33,7 @@ it('distinguishes an actual iframe runtime without scheduling work in the inspec
 it('requires a matching application binding before exposing targeting operations', () => {
   const driver = new ManualSchedulerDriver(); const restore = installSchedulerDriverForTest(driver);
   const canvas = document.createElement('canvas'); canvas.width = 100; canvas.height = 100; document.body.append(canvas);
-  const controller = crc(canvas, createElement(Rectangle, { style: { width: 50, height: 50, fill: 'red' }, onClick: () => undefined }));
+  const controller = pibbl(canvas, createElement(Rectangle, { style: { width: 50, height: 50, fill: 'red' }, onClick: () => undefined }));
   driver.flush(1);
   try {
     const binding = captureRuntimeBinding(); const before = snapshotRealmScheduler();

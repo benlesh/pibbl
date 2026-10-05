@@ -1,15 +1,15 @@
 import { definePrimitive } from '../define-primitive.js';
 import type {
-  CRCEventFocusOptions,
-  CRCEventHandlers,
-  CRCEventParticipationOptions,
+  PibblEventFocusOptions,
+  PibblEventHandlers,
+  PibblEventParticipationOptions,
 } from '../events/types.js';
 import {
   PixelGridAlignment,
   RenderingContext2D,
   SystemStyle,
 } from '../types.js';
-import type { CRCPhysics2DPropExtension } from '../types.js';
+import type { PibblPhysics2DPropExtension } from '../types.js';
 import { adjustForPixelGrid } from '../util/pixel-grid-adjustments.js';
 import {
   resolveLocalOffset,
@@ -28,13 +28,13 @@ import { renderLine, type LineStyle } from './line.js';
 /**
  * Authored inputs for VerticalLine, including the declared data and presentation options.
  *
- * @see {@link CRCEventHandlers}
- * @see {@link CRCEventParticipationOptions}
- * @see {@link CRCPhysics2DPropExtension}
+ * @see {@link PibblEventHandlers}
+ * @see {@link PibblEventParticipationOptions}
+ * @see {@link PibblPhysics2DPropExtension}
  * @see {@link VerticalLine}
  */
 export interface VerticalLineProps
-  extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions, CRCPhysics2DPropExtension {}
+  extends PibblEventHandlers, PibblEventFocusOptions, PibblEventParticipationOptions, PibblPhysics2DPropExtension {}
 
 /**
  * Supported geometry and presentation properties for VerticalLine.
@@ -120,7 +120,7 @@ function renderVerticalLine(
  *
  * @param props - Authored component inputs, supplied through JSX or createElement. See the linked
  * props and style types.
- * @throws When called directly; CRC mounts this component through JSX or createElement.
+ * @throws When called directly; Pibbl mounts this component through JSX or createElement.
  *
  * @see {@link VerticalLineProps}
  * @see {@link VerticalLineStyle}

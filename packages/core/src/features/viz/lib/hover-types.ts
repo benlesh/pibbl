@@ -1,22 +1,22 @@
 import type { closestPoint, closestX, interpolateX, linearInterpolation } from './hover-queries.js';
 import type { HoverData } from './hover-data.js';
-import type { CRCNode, SignalValue } from "@crc/core";
+import type { PibblNode, SignalValue } from "@pibbl/core";
 import type { PointAccessor } from "./point-types.js";
-import type { ResolvedLinearScale, ScaleId } from "./types.js";
+import type { ResolvedContinuousScale, ScaleId } from "./types.js";
 /**
  * Scale lookup context supplied when evaluating a hover query.
  *
  * @see {@link ScaleId}
- * @see {@link ResolvedLinearScale}
+ * @see {@link ResolvedContinuousScale}
  * @see {@link HoverQuery}
  */
 export interface HoverQueryContext {
   /**
-   * Looks up a resolved linear scale by its identifier. See {@link ResolvedLinearScale}.
+   * Looks up a resolved continuous scale by its identifier. See {@link ResolvedContinuousScale}.
    * @param id - Identity of the scale needed by the query. See {@link ScaleId}.
-   * @returns The resolved linear scale. See {@link ResolvedLinearScale}.
+   * @returns The resolved continuous scale. See {@link ResolvedContinuousScale}.
    */
-  scale(id: ScaleId): ResolvedLinearScale;
+  scale(id: ScaleId): ResolvedContinuousScale;
 }
 /**
  * A query that resolves reactive hover input into a hit or no result.
@@ -34,18 +34,18 @@ export type HoverQuery<T> = (context: HoverQueryContext) => T | undefined;
  * Authored inputs for HoverData, including the declared data and presentation options.
  *
  * @see {@link HoverQuery}
- * @see {@link CRCNode}
+ * @see {@link PibblNode}
  * @see {@link HoverData}
  */
 export interface HoverDataProps<T> {
   /** Query that selects a style rule or resolves a hover result. See {@link HoverQuery}. */
   readonly query: HoverQuery<T> & (T extends PromiseLike<unknown> ? never : unknown);
   /**
-   * Descendant content or the callback that supplies it. See {@link CRCNode}.
+   * Descendant content or the callback that supplies it. See {@link PibblNode}.
    * @param result - Current query match, or undefined when there is no match.
-   * @returns CRC content to render for the hover state. See {@link CRCNode}.
+   * @returns Pibbl content to render for the hover state. See {@link PibblNode}.
    */
-  readonly children: (result: T | undefined) => CRCNode;
+  readonly children: (result: T | undefined) => PibblNode;
 }
 /**
  * Data and coordinate accessors describing one series available to hover queries.

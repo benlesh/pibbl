@@ -1,4 +1,4 @@
-$ corepack pnpm@11.21.0 test:lifecycle && corepack pnpm@11.21.0 test:performance && corepack pnpm@11.21.0 --filter @crc/text run test
+$ corepack pnpm@11.21.0 test:lifecycle && corepack pnpm@11.21.0 test:performance && corepack pnpm@11.21.0 --filter @pibbl/text run test
 $ vitest run packages/core/test/lifecycle-ownership.test.ts packages/core/test/runtime-cleanup-stress.test.ts packages/core/test/filter-ownership.test.ts packages/core/test/signal-scheduler-ownership.test.ts packages/core/test/animation-ownership.test.ts packages/core/test/particle-ownership.test.ts packages/particles/src/lib/canvas/component.test.tsx packages/particles/src/lib/canvas/raster-cache.test.ts --browser.headless --browser.ui=false
 (!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
   - import "./build" without a file extension (tooling/studio-docs/vite-plugin.ts:11:8). Add the file extension
@@ -16,7 +16,7 @@ $ vitest run packages/core/test/lifecycle-ownership.test.ts packages/core/test/r
   - import "./model" without a file extension (tooling/studio-docs/markdown.ts:13:46). Add the file extension
 Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
 
- RUN  v4.1.10 /Users/benlesh/.codex/worktrees/runtime-perf-audit/crc
+ RUN  v4.1.10 /Users/benlesh/.codex/worktrees/runtime-perf-audit/pibbl
 
 (!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
   - import "./build" without a file extension (tooling/studio-docs/vite-plugin.ts:11:8). Add the file extension
@@ -56,7 +56,7 @@ $ vitest run packages/core/test/event-performance.test.ts packages/core/test/fil
   - import "./model" without a file extension (tooling/studio-docs/markdown.ts:13:46). Add the file extension
 Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
 
- RUN  v4.1.10 /Users/benlesh/.codex/worktrees/runtime-perf-audit/crc
+ RUN  v4.1.10 /Users/benlesh/.codex/worktrees/runtime-perf-audit/pibbl
 
 (!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
   - import "./build" without a file extension (tooling/studio-docs/vite-plugin.ts:11:8). Add the file extension

@@ -19,7 +19,7 @@ await reserveEvidenceDirectory(output);
 const sampleCount = 30;
 const warmupCount = 5;
 const report = {
-  schema: 'crc-three-picking-cost/1', timestamp: new Date().toISOString(),
+  schema: 'pibbl-three-picking-cost/1', timestamp: new Date().toISOString(),
   environment: { node: process.version, platform: platform(), architecture: arch(), cpu: cpus()[0]?.model, threeRevision: REVISION },
   sourceSha256: createHash('sha256').update(await readFile(resolve(repository, 'packages/three/src/lib/picking-snapshot.ts'))).digest('hex'),
   sampleCount, warmupCount,

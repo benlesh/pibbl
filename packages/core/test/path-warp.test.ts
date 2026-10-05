@@ -1,4 +1,4 @@
-import { PathGeometry, transformPath, quadTransform } from '@crc/core';
+import { PathGeometry, transformPath, quadTransform } from '@pibbl/core';
 
 import { expect, it } from 'vitest';
 

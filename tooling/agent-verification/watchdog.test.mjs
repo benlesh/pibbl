@@ -6,7 +6,7 @@ import { join } from "node:path";
 import { runWithWatchdog } from "./watchdog.mjs";
 
 async function fixture(run) {
-  const directory = await mkdtemp(join(tmpdir(), "crc-watchdog-"));
+  const directory = await mkdtemp(join(tmpdir(), "pibbl-watchdog-"));
   try {
     await run(directory);
   } finally {

@@ -6,7 +6,7 @@ import { join } from 'node:path';
 import { fingerprint, assertIdentity } from './identity.mjs';
 
 test('served identity rejects different fixture bytes even with the same revision', async () => {
-  const root = await mkdtemp(join(tmpdir(), 'crc-identity-'));
+  const root = await mkdtemp(join(tmpdir(), 'pibbl-identity-'));
   try {
     await mkdir(join(root, 'fixture'));
     await writeFile(join(root, 'fixture/app.ts'), 'export const selected = 1;');
@@ -15,7 +15,7 @@ test('served identity rejects different fixture bytes even with the same revisio
     await writeFile(join(root, 'fixture/app.ts'), 'export const selected = 2;');
     const served = await fingerprint(root, ['fixture/app.ts'], 'revision-a');
     assert.throws(() => assertIdentity(expected, served), /identity mismatch/);
-    assert.throws(() => assertIdentity(expected, null), { code: 'CRC_FIXTURE_IDENTITY_UNAVAILABLE' });
+    assert.throws(() => assertIdentity(expected, null), { code: 'PIBBL_FIXTURE_IDENTITY_UNAVAILABLE' });
     assert.throws(() => assertIdentity(expected, { ...expected, revision: 'other' }), /identity mismatch/);
   } finally { await rm(root, { recursive: true, force: true }); }
 });
@@ -49,11 +49,11 @@ test('identity is embedded in the loaded fixture only for source development', a
 });
 
 test('native replay blocks a mismatched served fixture before exercising actions', { timeout: 30000 }, async () => {
-  const output = await mkdtemp(join(tmpdir(), 'crc-mismatch-'));
+  const output = await mkdtemp(join(tmpdir(), 'pibbl-mismatch-'));
   const wrong = { ...(await sourceIdentity(repository)), sha256: '0'.repeat(64) };
   const server = createServer((_request, response) => {
     response.setHeader('Content-Type', 'text/html');
-    response.end(`<script type="application/json" data-testid="agent-targeting-evidence">${JSON.stringify({ schema: 'crc-targeting-fixture/1', identity: wrong, state: {} })}</script>`);
+    response.end(`<script type="application/json" data-testid="agent-targeting-evidence">${JSON.stringify({ schema: 'pibbl-targeting-fixture/1', identity: wrong, state: {} })}</script>`);
   });
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
   try {
@@ -71,7 +71,7 @@ test('native replay blocks a mismatched served fixture before exercising actions
     assert.deepEqual(report.run.toolIdentityAfter, report.run.toolIdentity);
     assert.equal(report.toolVerification.status, 'matching-on-disk');
     assert.match(report.failure.message, /identity mismatch/);
-    assert.equal(report.failure.code, 'CRC_FIXTURE_IDENTITY_MISMATCH');
+    assert.equal(report.failure.code, 'PIBBL_FIXTURE_IDENTITY_MISMATCH');
     assert.equal(report.run.environment.observedPage.status, 'observed');
     assert.deepEqual(report.run.environment.observedPage.viewportCss, { width: 1280, height: 1000 });
     assert.deepEqual(report.steps, []);
@@ -83,11 +83,11 @@ test('native replay blocks a mismatched served fixture before exercising actions
 });
 
 test('visualization replay blocks a mismatched served fixture before exercising actions', { timeout: 30000 }, async () => {
-  const output = await mkdtemp(join(tmpdir(), 'crc-mismatch-'));
+  const output = await mkdtemp(join(tmpdir(), 'pibbl-mismatch-'));
   const wrong = { ...(await sourceIdentity(repository, 'viz')), sha256: '0'.repeat(64) };
   const server = createServer((_request, response) => {
     response.setHeader('Content-Type', 'text/html');
-    response.end(`<script type="application/json" data-testid="agent-viz-evidence">${JSON.stringify({ schema: 'crc-viz-fixture/1', identity: wrong, state: {} })}</script>`);
+    response.end(`<script type="application/json" data-testid="agent-viz-evidence">${JSON.stringify({ schema: 'pibbl-viz-fixture/1', identity: wrong, state: {} })}</script>`);
   });
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
   try {
@@ -105,7 +105,7 @@ test('visualization replay blocks a mismatched served fixture before exercising 
     assert.deepEqual(report.run.toolIdentityAfter, report.run.toolIdentity);
     assert.equal(report.toolVerification.status, 'matching-on-disk');
     assert.match(report.failure.message, /identity mismatch/);
-    assert.equal(report.failure.code, 'CRC_FIXTURE_IDENTITY_MISMATCH');
+    assert.equal(report.failure.code, 'PIBBL_FIXTURE_IDENTITY_MISMATCH');
     assert.equal(report.run.environment.observedPage.status, 'observed');
     assert.deepEqual(report.run.environment.observedPage.viewportCss, { width: 1280, height: 1000 });
     assert.deepEqual(report.steps, []);
@@ -118,12 +118,12 @@ test('visualization replay blocks a mismatched served fixture before exercising 
 
 
 test('native replay retains structured assertion evidence from a controlled fixture', { timeout: 30000 }, async () => {
-  const output = await mkdtemp(join(tmpdir(), 'crc-assertion-evidence-'));
+  const output = await mkdtemp(join(tmpdir(), 'pibbl-assertion-evidence-'));
   const identity = await sourceIdentity(repository);
   const server = createServer((_request, response) => {
     response.setHeader('Content-Type', 'text/html');
     response.end(`<script type="application/json" data-testid="agent-targeting-evidence">${JSON.stringify({
-      schema: 'crc-targeting-fixture/1', identity, state: { runtimeCompatibility: { status: 'accepted', diagnostic: { relation: 'same-runtime', versions: 'matching' } }, inspectionAvailability: 'unsupported-test-fixture' },
+      schema: 'pibbl-targeting-fixture/1', identity, state: { runtimeCompatibility: { status: 'accepted', diagnostic: { relation: 'same-runtime', versions: 'matching' } }, inspectionAvailability: 'unsupported-test-fixture' },
     })}</script>`);
   });
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));

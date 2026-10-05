@@ -3,7 +3,7 @@ import type { ComponentObservation, createSignalOwnershipObserver } from './sign
 type Components = ReturnType<ReturnType<typeof createSignalOwnershipObserver>['snapshot']>['components'];
 type Change = Readonly<{ componentId: number; kind: 'added' | 'removed' | 'changed' | 'newly-observed' | 'unobserved'; fields: readonly string[] }>;
 
-/** Only accepts the CRC-owned component facets supplied by the inspector. */
+/** Only accepts the Pibbl-owned component facets supplied by the inspector. */
 export function compareComponentFacts(before: Components, after: Components) {
   const changes: Change[] = [];
   const result = (status: 'ready' | 'unavailable') => Object.freeze({ status,

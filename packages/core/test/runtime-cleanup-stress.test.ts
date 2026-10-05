@@ -1,29 +1,29 @@
 import type {
   CleanupStressState,
   ScenarioController,
-} from '@crc/scenarios';
+} from '@pibbl/scenarios';
 import {
   CLEANUP_IMAGE_SOURCES,
   cleanupStressScenarioEntry,
   loadScenario,
-} from '@crc/scenarios';
+} from '@pibbl/scenarios';
 import { afterEach, describe, expect, it } from 'vitest';
 import cleanupStressSource from '../../scenarios/src/cleanup-stress.example.tsx?raw';
-import { Absolute, Rectangle, type CRCController } from '../src/index';
+import { Absolute, Rectangle, type PibblController } from '../src/index';
 import { executeRender } from '../src/lib/execute-render';
-import { GLOBAL_STATE, getCRCInstance } from '../src/lib/global-state';
+import { GLOBAL_STATE, getPibblInstance } from '../src/lib/global-state';
 import {
   resetLayoutDiagnostics,
   snapshotLayoutDiagnostics,
 } from '../src/lib/layout/diagnostics';
-import { mountCRC } from '../src/lib/mount-crc';
-import type { Canvas, CRCInstance } from '../src/lib/types';
+import { mountPibbl } from '../src/lib/mount-pibbl';
+import type { Canvas, PibblInstance } from '../src/lib/types';
 import { RuntimeDiagnostics } from './support/runtime-diagnostics';
-import { CRC_EVENT_TYPES } from '../src/lib/events/event-definitions';
+import { PIBBL_EVENT_TYPES } from '../src/lib/events/event-definitions';
 import { createElement } from '../src/lib/element/create-element';
 
 const EMPTY_HANDLERS = Object.fromEntries(
-  CRC_EVENT_TYPES.map(type => [type, 0]),
+  PIBBL_EVENT_TYPES.map(type => [type, 0]),
 );
 
 const EMPTY_FOCUS_DIAGNOSTICS = {
@@ -107,17 +107,17 @@ interface StructureLedgerSnapshot {
 }
 
 interface RefMapRecord {
-  map: CRCInstance['refs'];
-  originalClear: CRCInstance['refs']['clear'];
-  originalDelete: CRCInstance['refs']['delete'];
-  originalSet: CRCInstance['refs']['set'];
+  map: PibblInstance['refs'];
+  originalClear: PibblInstance['refs']['clear'];
+  originalDelete: PibblInstance['refs']['delete'];
+  originalSet: PibblInstance['refs']['set'];
 }
 
 class StructureDiagnostics {
   private readonly records = new Set<RefMapRecord>();
-  private readonly originalClear = GLOBAL_STATE.crcInstances.clear;
-  private readonly originalDelete = GLOBAL_STATE.crcInstances.delete;
-  private readonly originalSet = GLOBAL_STATE.crcInstances.set;
+  private readonly originalClear = GLOBAL_STATE.pibblInstances.clear;
+  private readonly originalDelete = GLOBAL_STATE.pibblInstances.delete;
+  private readonly originalSet = GLOBAL_STATE.pibblInstances.set;
   private instancesAcquired = 0;
   private instancesReleased = 0;
   private refsAcquired = 0;
@@ -125,8 +125,8 @@ class StructureDiagnostics {
   private restored = false;
 
   constructor() {
-    const instances = GLOBAL_STATE.crcInstances;
-    instances.set = ((canvas: Canvas, instance: CRCInstance) => {
+    const instances = GLOBAL_STATE.pibblInstances;
+    instances.set = ((canvas: Canvas, instance: PibblInstance) => {
       if (!instances.has(canvas)) {
         this.instancesAcquired++;
         this.observeRefs(instance.refs);
@@ -153,7 +153,7 @@ class StructureDiagnostics {
     return {
       instances: {
         acquired: this.instancesAcquired,
-        live: GLOBAL_STATE.crcInstances.size,
+        live: GLOBAL_STATE.pibblInstances.size,
         released: this.instancesReleased,
       },
       refs: {
@@ -169,7 +169,7 @@ class StructureDiagnostics {
       return;
     }
     this.restored = true;
-    const instances = GLOBAL_STATE.crcInstances;
+    const instances = GLOBAL_STATE.pibblInstances;
     instances.set = this.originalSet;
     instances.delete = this.originalDelete;
     instances.clear = this.originalClear;
@@ -181,7 +181,7 @@ class StructureDiagnostics {
     this.records.clear();
   }
 
-  private observeRefs(refs: CRCInstance['refs']): void {
+  private observeRefs(refs: PibblInstance['refs']): void {
     const record: RefMapRecord = {
       map: refs,
       originalClear: refs.clear,
@@ -212,7 +212,7 @@ const activeControllers = new Set<ScenarioController<CleanupStressState>>();
 const activeDiagnostics = new Set<RuntimeDiagnostics>();
 const activeImages = new Set<ControlledImages>();
 const activeStructureDiagnostics = new Set<StructureDiagnostics>();
-const activeRuntimeControllers = new Set<CRCController>();
+const activeRuntimeControllers = new Set<PibblController>();
 
 function pixelAt(canvas: HTMLCanvasElement, x: number, y: number): readonly number[] {
   const context = canvas.getContext('2d');
@@ -294,7 +294,7 @@ function expectTemporaryRenderStateReleased(): void {
     componentHookIndex: 0,
     componentIsMounting: false,
     componentRefs: undefined,
-    currentCRCInstance: undefined,
+    currentPibblInstance: undefined,
     renderContext: undefined,
     seenIds: undefined,
   });
@@ -357,7 +357,7 @@ describe('shared runtime cleanup stress laboratory', () => {
       })],
     });
     resetLayoutDiagnostics();
-    const controller = mountCRC(canvas, createScene());
+    const controller = mountPibbl(canvas, createScene());
     activeRuntimeControllers.add(controller);
     executeRender(canvas, 0);
     const resourceBaseline = diagnostics.snapshot();
@@ -522,7 +522,7 @@ describe('shared runtime cleanup stress laboratory', () => {
 
   it('releases single and nested layer instances with no stale pixels or references', async () => {
     const { canvas, controller, diagnostics } = await mountLab();
-    const root = getCRCInstance(canvas);
+    const root = getPibblInstance(canvas);
     const baseline = diagnostics.snapshot();
 
     await controller.perform('add-layer');
@@ -534,7 +534,7 @@ describe('shared runtime cleanup stress laboratory', () => {
     await controller.perform('add-nested-layer');
     expect(controller.getState().layerMode).toBe('nested');
     expect(diagnostics.snapshot().instances).toBe(3);
-    expect(GLOBAL_STATE.crcInstances.size).toBe(3);
+    expect(GLOBAL_STATE.pibblInstances.size).toBe(3);
     expect(pixelAt(canvas, 200, 60)).toEqual([248, 250, 252, 255]);
     expect(pixelAt(canvas, 350, 60)).toEqual([16, 185, 129, 255]);
 
@@ -542,7 +542,7 @@ describe('shared runtime cleanup stress laboratory', () => {
     expect(controller.getState().layerMode).toBe('hidden');
     expect(diagnostics.snapshot()).toEqual(baseline);
     expect(root.paintEntries.size).toBe(0);
-    expect(GLOBAL_STATE.crcInstances.size).toBe(1);
+    expect(GLOBAL_STATE.pibblInstances.size).toBe(1);
     expect(pixelAt(canvas, 350, 60)).toEqual([248, 250, 252, 255]);
 
     for (let index = 0; index < 25; index++) {
@@ -643,7 +643,7 @@ describe('shared runtime cleanup stress laboratory', () => {
       structureDiagnostics: true,
     });
     const baseline = diagnostics.snapshot();
-    const baselineRefs = getCRCInstance(canvas).refs.size;
+    const baselineRefs = getPibblInstance(canvas).refs.size;
     diagnostics.ledgerSnapshot();
 
     await controller.perform('cycle-runtime-1000');
@@ -692,7 +692,7 @@ describe('shared runtime cleanup stress laboratory', () => {
       runtime: 'mounted',
     });
     expect(diagnostics.snapshot()).toEqual(baseline);
-    expect(getCRCInstance(canvas).mainTeardowns.closed).toBe(false);
+    expect(getPibblInstance(canvas).mainTeardowns.closed).toBe(false);
     expect(pixelAt(canvas, 50, 60)).toEqual([124, 58, 237, 255]);
 
     await controller.perform('change-hook-dependency');

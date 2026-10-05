@@ -5,7 +5,7 @@ import {createHash} from 'node:crypto';
 import os from 'node:os';
 
 const verifyOnly=process.argv.includes('--verify-only');
-const output=(verifyOnly?undefined:process.argv[2])??'/private/tmp/crc-texture-interaction-results.json';
+const output=(verifyOnly?undefined:process.argv[2])??'/private/tmp/pibbl-texture-interaction-results.json';
 const browser=await chromium.launch({headless:true});
 const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 try {
@@ -17,7 +17,7 @@ try {
   await page.waitForFunction(()=>document.querySelector('#status').textContent==='Ready');
   assert.match(await page.title(),/interactive texture WASM/);
   assert.match(await page.locator('h1').innerText(),/Paint/);
-  // Genuine browser mouse events exercise CRC hit testing, interpolation and capture.
+  // Genuine browser mouse events exercise Pibbl hit testing, interpolation and capture.
   for(const mode of ['current-js','wasm-direct']) {
     await page.evaluate(mode=>window.interactive.start({mode,width:128,height:96,steps:8,paused:true,quiet:true}),mode);
     await page.waitForFunction(()=>window.interactive.report().frames.count>0);
@@ -52,7 +52,7 @@ try {
   await page.mouse.move(desktopBox.x+100,desktopBox.y+80);await page.mouse.down();
   await page.mouse.move(desktopBox.x+600,desktopBox.y+250);await page.mouse.up();
   await page.waitForFunction(()=>window.interactive.report().completed>0);
-  await page.screenshot({path:'/private/tmp/crc-texture-interaction-desktop.png'});
+  await page.screenshot({path:'/private/tmp/pibbl-texture-interaction-desktop.png'});
   await page.evaluate(()=>window.interactive.stop());
   // UI control path, including a narrow viewport and brush control.
   await page.setViewportSize({width:390,height:844});
@@ -68,7 +68,7 @@ try {
   await page.mouse.move(mobileBox.x+60,mobileBox.y+40);await page.mouse.down();
   await page.mouse.move(mobileBox.x+180,mobileBox.y+75);await page.mouse.up();
   await page.waitForFunction(()=>window.interactive.report().completed>0);
-  await page.screenshot({path:'/private/tmp/crc-texture-interaction-mobile.png'});
+  await page.screenshot({path:'/private/tmp/pibbl-texture-interaction-mobile.png'});
   await page.evaluate(()=>window.interactive.stop());
   assert.deepEqual(errors,[]);
   console.warn('Verified painted field/pixel parity, capture outside bounds, release, pause, engine/workload/brush controls, mobile layout.');
@@ -111,7 +111,7 @@ try {
     assert.deepEqual(errors,[]);
     const sourceHashes={};
     for(const name of ['kernel.asc','kernel.wasm','runtime.mjs','interactive.mjs','browser.mjs','measure-interaction.mjs','./reference-simulation.ts','../../packages/core/src/lib/render-layer/controller.ts'])sourceHashes[name]=createHash('sha256').update(await readFile(new URL(name,import.meta.url))).digest('hex');
-    const report={timestamp:new Date().toISOString(),environment:{node:process.version,platform:os.platform(),arch:os.arch(),cpu:os.cpus()[0].model,browser:browser.version()},rounds,moves,inputHz:60,display:'832x400@1',endpoint:'End of CRC synchronous frame, after Complete; excludes physical presentation',sourceHashes,results};
+    const report={timestamp:new Date().toISOString(),environment:{node:process.version,platform:os.platform(),arch:os.arch(),cpu:os.cpus()[0].model,browser:browser.version()},rounds,moves,inputHz:60,display:'832x400@1',endpoint:'End of Pibbl synchronous frame, after Complete; excludes physical presentation',sourceHashes,results};
     await writeFile(output,JSON.stringify(report,null,2)+'\n');
     console.warn(`Saved ${results.length} interactive cases to ${output}`);
   }

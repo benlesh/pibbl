@@ -3,7 +3,7 @@ import type { resolveBox } from './box.js';
 import type { LayoutDiagnosticContext } from '../style/diagnostics.js';
 import type { normalizeEdges } from '../style/normalize.js';
 import type { BoxStyle, ResolvedBoxStyle } from '../style/types.js';
-import type { CRCRenderLayerTarget } from '../render-layer/types.js';
+import type { PibblRenderLayerTarget } from '../render-layer/types.js';
 import type { useLayoutBox } from '../hooks/use-layout-box.js';
 import type { MeasureResult } from '../types.js';
 /**
@@ -41,7 +41,7 @@ export interface Constraints {
  * An axis-aligned rectangle in the layout coordinate system.
  *
  * @see {@link Size}
- * @see {@link CRCRenderLayerTarget}
+ * @see {@link PibblRenderLayerTarget}
  * @see {@link ResolvedBoxStyle}
  * @see {@link useLayoutBox}
  */

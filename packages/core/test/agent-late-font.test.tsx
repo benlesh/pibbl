@@ -1,4 +1,4 @@
-import { crc, signal } from '@crc/core';
+import { pibbl, signal } from '@pibbl/core';
 import { expect, it } from 'vitest';
 import { AgentLateFontScene } from '../../scenarios/src/agent-late-font.example';
 import fontUrl from '../../scenarios/src/assets/agent-space-grotesk.woff2?url';
@@ -7,9 +7,9 @@ const twoFrames = () => new Promise<void>(resolve => requestAnimationFrame(() =>
 it('records absent font-arrival redraw, explicit application invalidation and responsive resize', async () => {
  const driver=new ManualSchedulerDriver();const restore=installSchedulerDriverForTest(driver);
  const canvas=document.createElement('canvas');canvas.style.cssText='width:400px;height:120px';document.body.append(canvas);
- const revision=signal(0);const family='CRCLateFontVerification';const font=new FontFace(family,`url("${fontUrl}")`);
+ const revision=signal(0);const family='PibblLateFontVerification';const font=new FontFace(family,`url("${fontUrl}")`);
  const observations:{width:number;fontSize:number}[]=[];
- const mount=crc(canvas,<AgentLateFontScene revision={revision} family={family} onEvaluation={value=>observations.push(value)}/>,{viewport:'responsive',pixelRatio:1});
+ const mount=pibbl(canvas,<AgentLateFontScene revision={revision} family={family} onEvaluation={value=>observations.push(value)}/>,{viewport:'responsive',pixelRatio:1});
  const pixels=()=>Array.from(canvas.getContext('2d')!.getImageData(0,0,canvas.width,canvas.height).data);
  const measure=()=>{const ctx=document.createElement('canvas').getContext('2d')!;ctx.font=`24px "${family}", monospace`;return ctx.measureText('MMMM').width;};
  try{

@@ -1,7 +1,7 @@
 import { isSignal, recordPlainInputResolution, recordSignalInputResolution } from '../signals/graph.js';
 import { getLayoutBox } from '../layout/context.js';
 import { getElementSource } from '../element/metadata.js';
-import type { CRCElement } from '../element/types.js';
+import type { PibblElement } from '../element/types.js';
 import { layoutDiagnostic } from './diagnostics.js';
 
 export interface QueryBasis { readonly width: number; readonly height: number }
@@ -25,15 +25,15 @@ export function withStyleMeasurement<T>(mode: StyleMeasurementMode, work: () => 
   try { return work(); } finally { measurementMode = previous; }
 }
 export class UnsupportedResponsiveMeasurement extends Error {}
-export function rejectResponsiveMeasurement(element?: CRCElement<any>): never {
+export function rejectResponsiveMeasurement(element?: PibblElement<any>): never {
   throw new UnsupportedResponsiveMeasurement(queryDiagnostic(
-    element, 'style.when', 'nonempty rule list', 'CRC_STYLE_QUERY_MEASUREMENT',
+    element, 'style.when', 'nonempty rule list', 'PIBBL_STYLE_QUERY_MEASUREMENT',
     'Give this item definite dimensions or a definite allocation, ' +
     'and put responsive styles inside that allocated component.',
   ).message);
 }
 function queryDiagnostic(
-  element: CRCElement<any> | undefined,
+  element: PibblElement<any> | undefined,
   property: string,
   value: unknown,
   code: string,
@@ -53,7 +53,7 @@ export function responsiveStyleSnapshot() { return { ...counters }; }
 const bounds = ['minWidth', 'maxWidth', 'minHeight', 'maxHeight'] as const;
 
 function failQuery(
-  element: CRCElement<any> | undefined,
+  element: PibblElement<any> | undefined,
   preparation: 'render' | 'layout',
   code: string,
   property: string,
@@ -66,16 +66,16 @@ function queryRecord(
   value: unknown,
   index: number,
   suffix: string,
-  element: CRCElement<any> | undefined,
+  element: PibblElement<any> | undefined,
   preparation: 'render' | 'layout',
 ): Record<string, unknown> {
-  if (isSignal(value)) failQuery(element, preparation, 'CRC_STYLE_QUERY_SIGNAL', `style.when[${index}]${suffix}`, 'Signal', 'Put the signal on the whole style or on a base/patch field.');
+  if (isSignal(value)) failQuery(element, preparation, 'PIBBL_STYLE_QUERY_SIGNAL', `style.when[${index}]${suffix}`, 'Signal', 'Put the signal on the whole style or on a base/patch field.');
   if (!value || typeof value !== 'object' || Array.isArray(value)) {
-    failQuery(element, preparation, 'CRC_STYLE_QUERY_SHAPE', `style.when[${index}]${suffix}`, value, 'Use a plain data record.');
+    failQuery(element, preparation, 'PIBBL_STYLE_QUERY_SHAPE', `style.when[${index}]${suffix}`, value, 'Use a plain data record.');
   }
   const prototype = Object.getPrototypeOf(value);
   if (prototype !== Object.prototype && prototype !== null) {
-    failQuery(element, preparation, 'CRC_STYLE_QUERY_SHAPE', `style.when[${index}]${suffix}`, value, 'Use a plain data record.');
+    failQuery(element, preparation, 'PIBBL_STYLE_QUERY_SHAPE', `style.when[${index}]${suffix}`, value, 'Use a plain data record.');
   }
   return value as Record<string, unknown>;
 }
@@ -83,13 +83,13 @@ function queryRecord(
 /** Selects a closed local rule list; ordinary styles bypass this function. */
 export function resolveResponsiveStyle(
   source: Readonly<Record<PropertyKey, unknown>>,
-  element?: CRCElement<any>,
+  element?: PibblElement<any>,
   suppliedBasis?: QueryBasis,
 ): Readonly<Record<PropertyKey, unknown>> | ResponsiveStylePreparation {
   const preparation = suppliedBasis ? 'layout' : 'render';
   const list = source.when;
-  if (isSignal(list)) failQuery(element, preparation, 'CRC_STYLE_QUERY_SIGNAL', 'style.when', 'Signal', 'Put the signal on the whole style or on a base/patch field.');
-  if (!Array.isArray(list)) failQuery(element, preparation, 'CRC_STYLE_QUERY_SHAPE', 'style.when', list, 'Use a readonly list of query/style records.');
+  if (isSignal(list)) failQuery(element, preparation, 'PIBBL_STYLE_QUERY_SIGNAL', 'style.when', 'Signal', 'Put the signal on the whole style or on a base/patch field.');
+  if (!Array.isArray(list)) failQuery(element, preparation, 'PIBBL_STYLE_QUERY_SHAPE', 'style.when', list, 'Use a readonly list of query/style records.');
   const rules = list as unknown[];
   let result: Record<PropertyKey, unknown> | undefined;
   let basis: QueryBasis | undefined;
@@ -104,24 +104,24 @@ export function resolveResponsiveStyle(
     counters.rules++;
     const rule = queryRecord(rules[index], index, '', element, preparation);
     for (const key of Object.keys(rule)) {
-      if (key !== 'query' && key !== 'style') failQuery(element, preparation, 'CRC_STYLE_QUERY_KEY', `style.when[${index}].${key}`, rule[key], 'Use only query and style in a rule.');
+      if (key !== 'query' && key !== 'style') failQuery(element, preparation, 'PIBBL_STYLE_QUERY_KEY', `style.when[${index}].${key}`, rule[key], 'Use only query and style in a rule.');
     }
     const query = queryRecord(rule.query, index, '.query', element, preparation);
     const patch = queryRecord(rule.style, index, '.style', element, preparation);
-    if ('when' in patch) failQuery(element, preparation, 'CRC_STYLE_QUERY_NESTED', `style.when[${index}].style.when`, patch.when, "Flatten rules into the receiving style's when list.");
+    if ('when' in patch) failQuery(element, preparation, 'PIBBL_STYLE_QUERY_NESTED', `style.when[${index}].style.when`, patch.when, "Flatten rules into the receiving style's when list.");
     let hasBound = false;
     for (const key of Object.keys(query)) {
-      if (!(bounds as readonly string[]).includes(key)) failQuery(element, preparation, 'CRC_STYLE_QUERY_KEY', `style.when[${index}].query.${key}`, query[key], 'Use minWidth, maxWidth, minHeight, or maxHeight.');
+      if (!(bounds as readonly string[]).includes(key)) failQuery(element, preparation, 'PIBBL_STYLE_QUERY_KEY', `style.when[${index}].query.${key}`, query[key], 'Use minWidth, maxWidth, minHeight, or maxHeight.');
       const value = query[key];
       if (value === undefined) continue;
-      if (isSignal(value)) failQuery(element, preparation, 'CRC_STYLE_QUERY_SIGNAL', `style.when[${index}].query.${key}`, 'Signal', 'Put the signal on the whole style or on a base/patch field.');
-      if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) failQuery(element, preparation, 'CRC_STYLE_QUERY_BOUND', `style.when[${index}].query.${key}`, value, 'Use a finite nonnegative bound.');
+      if (isSignal(value)) failQuery(element, preparation, 'PIBBL_STYLE_QUERY_SIGNAL', `style.when[${index}].query.${key}`, 'Signal', 'Put the signal on the whole style or on a base/patch field.');
+      if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) failQuery(element, preparation, 'PIBBL_STYLE_QUERY_BOUND', `style.when[${index}].query.${key}`, value, 'Use a finite nonnegative bound.');
       hasBound = true;
     }
-    if (!hasBound) failQuery(element, preparation, 'CRC_STYLE_QUERY_KEY', `style.when[${index}].query`, query, 'Supply at least one size bound.');
+    if (!hasBound) failQuery(element, preparation, 'PIBBL_STYLE_QUERY_KEY', `style.when[${index}].query`, query, 'Supply at least one size bound.');
     const { minWidth, maxWidth, minHeight, maxHeight } = query as { [K in typeof bounds[number]]?: number };
-    if (minWidth !== undefined && maxWidth !== undefined && minWidth > maxWidth) failQuery(element, preparation, 'CRC_STYLE_QUERY_RANGE', `style.when[${index}].query`, query, 'Set minWidth less than or equal to maxWidth.');
-    if (minHeight !== undefined && maxHeight !== undefined && minHeight > maxHeight) failQuery(element, preparation, 'CRC_STYLE_QUERY_RANGE', `style.when[${index}].query`, query, 'Set minHeight less than or equal to maxHeight.');
+    if (minWidth !== undefined && maxWidth !== undefined && minWidth > maxWidth) failQuery(element, preparation, 'PIBBL_STYLE_QUERY_RANGE', `style.when[${index}].query`, query, 'Set minWidth less than or equal to maxWidth.');
+    if (minHeight !== undefined && maxHeight !== undefined && minHeight > maxHeight) failQuery(element, preparation, 'PIBBL_STYLE_QUERY_RANGE', `style.when[${index}].query`, query, 'Set minHeight less than or equal to maxHeight.');
     const ruleAxes = (minWidth !== undefined || maxWidth !== undefined ? 1 : 0) |
       (minHeight !== undefined || maxHeight !== undefined ? 2 : 0);
     axes |= ruleAxes;
@@ -138,7 +138,7 @@ export function resolveResponsiveStyle(
   if (unavailable) {
     throw new UnsupportedResponsiveMeasurement(queryDiagnostic(
       element, unavailable.property, unavailable.axis === 'Width' ? basis!.width : basis!.height,
-      'CRC_STYLE_QUERY_BASIS', `Supply a finite max${unavailable.axis} to standalone measureElement.`,
+      'PIBBL_STYLE_QUERY_BASIS', `Supply a finite max${unavailable.axis} to standalone measureElement.`,
     ).message);
   }
   if (checkEligibilityFirst && rules.length) {

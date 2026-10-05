@@ -21,8 +21,8 @@ The later evidence commit changes only this note.
 
 ## Delivered surface
 
-The implementation adds the optional `@crc/particles` package with separate
-root and `@crc/particles/webgl` entry points. The public definition helpers are
+The implementation adds the optional `@pibbl/particles` package with separate
+root and `@pibbl/particles/webgl` entry points. The public definition helpers are
 direct, tree-shakeable exports: `particleRange`, `particleInteger`,
 `particleChoice`, `particleParameter`, `particleCurve`, and
 `particleGradient`. They produce immutable particle-domain values rather than
@@ -49,7 +49,7 @@ The following source-mode routes were exercised in Chromium:
   a burst; bursts render particles; controls and state use user-facing language;
   and the duplicate reset control is removed.
 - `#/examples/composition/particle-effects`: the editor resolves
-  `@crc/particles` and runs the Canvas example.
+  `@pibbl/particles` and runs the Canvas example.
 - `#/examples/webgl/embers`: the three-dimensional ember field renders and
   animates.
 - `#/examples/webgl/fireflies`: the three-dimensional firefly field renders and
@@ -78,8 +78,8 @@ It exited zero. Fresh results included:
   WebGL values, 33 WebGL types, 11 particle values, and 57 particle types;
 - typecheck, lint, formatting, package builds, source and built Studio builds,
   Studio documentation acceptance, and production-boundary verification;
-- packed Bundler and NodeNext consumers for `@crc/core`, `@crc/webgl`, and
-  `@crc/particles`, including declarations, runtime exports, blocked deep
+- packed Bundler and NodeNext consumers for `@pibbl/core`, `@pibbl/webgl`, and
+  `@pibbl/particles`, including declarations, runtime exports, blocked deep
   imports, no-source checks, one shared core identity, and focus elimination;
 - complete Chromium suite: 216 files, 2,795 passing tests, and 2 intentionally
   skipped tests out of 2,797 in 70.57 seconds;
@@ -92,7 +92,7 @@ It exited zero. Fresh results included:
 
 The visual pass accepted only inspected Studio changes: the Learn and search
 views include the new WebGL lighting guide, and the baseline-smoke view now
-captures the CRC logo after it paints. The capture harness resets scroll before
+captures the Pibbl logo after it paints. The capture harness resets scroll before
 each route and isolates the WebGL lighting document from the preceding search
 dialog. Two repeated captures established pixel-identical search and lighting
 images before their baselines were accepted.

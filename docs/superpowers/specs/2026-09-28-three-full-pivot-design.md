@@ -9,36 +9,36 @@ Date: 2026-09-28
 
 ## Decision
 
-CRC is a Canvas 2D component runtime with framework-neutral external render
+Pibbl is a Canvas 2D component runtime with framework-neutral external render
 layers. Three.js is the official 3D integration and remains ordinary Three.js.
-CRC does not own a competing scene graph, material system, lighting system,
+Pibbl does not own a competing scene graph, material system, lighting system,
 asset loader, camera controller, shadow renderer, particle renderer, or 3D JSX
 vocabulary.
 
 The completed public 3D surface is:
 
-- `defineRenderLayer()` in `@crc/core` for integrating any external renderer;
-- `defineThreeLayer()` in `@crc/three` for Three-owned scenes, cameras,
+- `defineRenderLayer()` in `@pibbl/core` for integrating any external renderer;
+- `defineThreeLayer()` in `@pibbl/three` for Three-owned scenes, cameras,
   resources, rendering, raycasting, controls, input arbitration, focus, and
   deterministic teardown;
 - normal imports from `three` and `three/addons/*` for all Three capabilities;
 - renderer-independent 3D math and collision geometry from
-  `@crc/physics/3d/geometry`.
+  `@pibbl/physics/3d/geometry`.
 
 The following active surfaces are removed without compatibility aliases:
 
-- the complete `@crc/webgl` package and its root, GLTF, and internal entries;
-- CRC WebGL scene components, materials, lights, shadows, loaders, orbit hook,
+- the complete `@pibbl/webgl` package and its root, GLTF, and internal entries;
+- Pibbl WebGL scene components, materials, lights, shadows, loaders, orbit hook,
   frame hook, custom geometry, and renderer internals;
-- `@crc/particles/webgl`, `Particles3D`, and `defineParticleEffect3D`;
-- the WebGL-coupled `@crc/physics/3d` runtime, component attachments,
+- `@pibbl/particles/webgl`, `Particles3D`, and `defineParticleEffect3D`;
+- the WebGL-coupled `@pibbl/physics/3d` runtime, component attachments,
   presentation components, and hooks;
 - all current website lessons, guides, API pages, fixtures, tests, visual
   routes, declarations, and package-consumer assertions that teach or require
   those surfaces.
 
-CRC retains `@crc/particles` Canvas particles, `@crc/physics/2d`,
-`@crc/physics/2d/geometry`, and `@crc/physics/3d/geometry`. Keeping the existing
+Pibbl retains `@pibbl/particles` Canvas particles, `@pibbl/physics/2d`,
+`@pibbl/physics/2d/geometry`, and `@pibbl/physics/3d/geometry`. Keeping the existing
 3D runtime would require a new retained-object binding API and would expand the
 pivot beyond the approved thin Three adapter. A future Three physics binding
 can be designed independently against ordinary `THREE.Object3D` values.
@@ -49,27 +49,27 @@ The website teaches a small, direct lifecycle:
 
 1. Define a reusable layer component once with `defineThreeLayer()`.
 2. Create ordinary Three scene resources in `create()`.
-3. Copy current CRC props into those resources in `update()`.
+3. Copy current Pibbl props into those resources in `update()`.
 4. resize the camera in `resize()`;
-5. render through CRC's frame callback and invalidate only when another frame
+5. render through Pibbl's frame callback and invalidate only when another frame
    is needed;
-6. declare optional Three object targets for CRC events and focus;
+6. declare optional Three object targets for Pibbl events and focus;
 7. dispose application-owned GPU resources in `dispose()`.
 
 The existing adapted Three instancing/raycasting example remains the advanced
 showcase. A smaller introductory example becomes the primary Three guide and
-demonstrates one Three object covering a clickable CRC rectangle: a hit blocks
-the rectangle even without a CRC handler, a registered object receives CRC
+demonstrates one Three object covering a clickable Pibbl rectangle: a hit blocks
+the rectangle even without a Pibbl handler, a registered object receives Pibbl
 events and focus, and empty pixels obey the layer's miss policy.
 
-Website navigation and search describe the section as Three.js, not CRC
+Website navigation and search describe the section as Three.js, not Pibbl
 WebGL. Lighting, materials, shadows, GLTF, controls, post-processing, and other
 features are described as ordinary Three or Three-addon capabilities that can
-be used inside the same layer lifecycle; CRC does not mirror their APIs.
+be used inside the same layer lifecycle; Pibbl does not mirror their APIs.
 
 ## Runtime contracts kept from the prototype
 
-- CRC owns the only ordinary animation-frame scheduler. Composited layers do
+- Pibbl owns the only ordinary animation-frame scheduler. Composited layers do
   not call `requestAnimationFrame()` or `renderer.setAnimationLoop()`.
 - One mounted layer identity creates one `WebGLRenderer` and one application
   resource value. Component updates do not recreate either.
@@ -78,22 +78,22 @@ be used inside the same layer lifecycle; CRC does not mirror their APIs.
 - Default Three raycasting resolves a visible hit as block or as the nearest
   registered ancestor target. Empty pixels use `pass-through`, `block`, or
   `target-layer`.
-- CRC remains authoritative for capture/target/bubble propagation, pointer
+- Pibbl remains authoritative for capture/target/bubble propagation, pointer
   capture, logical focus, keyboard navigation, layout, clips, outer filters,
   transforms, and teardown.
 - Three controls receive input through the adapter bridge; their event system
-  does not bypass CRC's hit arbitration.
+  does not bypass Pibbl's hit arbitration.
 - The application owns Three resources returned from `create()` and disposes
   them explicitly. The adapter always disposes its input bridge and renderer.
 
 ## Repository migration
 
-Active code and distribution metadata must have no `@crc/webgl` or
-`@crc/particles/webgl` reference. `packages/webgl` is deleted. Particles build
+Active code and distribution metadata must have no `@pibbl/webgl` or
+`@pibbl/particles/webgl` reference. `packages/webgl` is deleted. Particles build
 only its Canvas root. Physics publishes 2D runtime/geometry plus 3D geometry,
 without WebGL peers or runtime exports.
 
-Studio source and built modes expose `@crc/three`, `three`, and the explicitly
+Studio source and built modes expose `@pibbl/three`, `three`, and the explicitly
 supported Three addon modules used by editable examples. Their editor
 declarations and runtime identities must match. Packed consumers prove
 Bundler/NodeNext declarations and a single external Three identity.

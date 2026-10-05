@@ -1,8 +1,8 @@
-import type { CRCInstance } from '../../types.js';
+import type { PibblInstance } from '../../types.js';
 import { getMouseCoordinates } from '../../util/get-mouse-coordinates.js';
-import type { CRCEventType } from '../types.js';
+import type { PibblEventType } from '../types.js';
 
-export interface CRCAdaptedWheelEvent {
+export interface PibblAdaptedWheelEvent {
   readonly type: 'wheel';
   readonly originalEvent: WheelEvent;
   readonly x: number;
@@ -10,15 +10,15 @@ export interface CRCAdaptedWheelEvent {
 }
 
 export function isNativeWheelEventType(
-  type: CRCEventType,
+  type: PibblEventType,
 ): type is 'wheel' {
   return type === 'wheel';
 }
 
 export function adaptWheelEvent(
-  root: CRCInstance,
+  root: PibblInstance,
   event: Event,
-): CRCAdaptedWheelEvent | undefined {
+): PibblAdaptedWheelEvent | undefined {
   if (
     typeof WheelEvent === 'undefined' ||
     !(event instanceof WheelEvent) ||

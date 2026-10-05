@@ -1,5 +1,5 @@
 import { afterEach, expect, it, vi } from "vitest";
-import { crc, defineRenderLayer } from "@crc/core";
+import { pibbl, defineRenderLayer } from "@pibbl/core";
 import { clearSharedState } from "../src/lib/global-state.js";
 import { installSchedulerDriverForTest, ManualSchedulerDriver, snapshotRealmScheduler } from "../src/lib/scheduler/testing.js";
 
@@ -36,7 +36,7 @@ it.each(["normal", "create", "render", "dispose"] as const)(
     const canvas = document.createElement("canvas");
     canvas.width = canvas.height = 32;
     document.body.append(canvas);
-    const controller = crc(canvas, <TestLayer style={{ width: 20, height: 10 }} />, { pixelRatio: 1 });
+    const controller = pibbl(canvas, <TestLayer style={{ width: 20, height: 10 }} />, { pixelRatio: 1 });
     try {
       if (failure === "create") expect(() => driver.flush(0)).toThrow("create fault");
       else {

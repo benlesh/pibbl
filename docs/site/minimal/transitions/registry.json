@@ -2,151 +2,151 @@
   {
     "id": "fade",
     "title": "fade enter and exit",
-    "description": "Show and hide a captured CRC subtree with the fade transition.",
+    "description": "Show and hide a captured Pibbl subtree with the fade transition.",
     "source": "fade.tsx",
     "environment": "browser",
     "symbols": [
       {
         "name": "fade",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
         "name": "useVisibilityTransition",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
-        "name": "CRCTransitionEffect",
-        "importPath": "@crc/core"
+        "name": "PibblTransitionEffect",
+        "importPath": "@pibbl/core"
       },
       {
-        "name": "CRCVisibilityTransition",
-        "importPath": "@crc/core"
+        "name": "PibblVisibilityTransition",
+        "importPath": "@pibbl/core"
       },
       {
-        "name": "CRCVisibilityTransitionOptions",
-        "importPath": "@crc/core"
+        "name": "PibblVisibilityTransitionOptions",
+        "importPath": "@pibbl/core"
       },
       {
-        "name": "CRCVisibilityTransitionResult",
-        "importPath": "@crc/core"
+        "name": "PibblVisibilityTransitionResult",
+        "importPath": "@pibbl/core"
       },
       {
-        "name": "CRCVisibilityTransitionStatus",
-        "importPath": "@crc/core"
+        "name": "PibblVisibilityTransitionStatus",
+        "importPath": "@pibbl/core"
       },
       {
-        "name": "CRCTransitionBinding",
-        "importPath": "@crc/core"
+        "name": "PibblTransitionBinding",
+        "importPath": "@pibbl/core"
       }
     ],
     "notes": [
       "Transitions affect pixels, not hit testing or native HTML. Keep the subject mounted until hide() resolves with status finished before removing it.",
-      "Mount-time transition options are stable. The CRC mount owns playback and effect cleanup."
+      "Mount-time transition options are stable. The Pibbl mount owns playback and effect cleanup."
     ]
   },
   {
     "id": "slide",
     "title": "slide enter and exit",
-    "description": "Show and hide a captured CRC subtree with the slide transition.",
+    "description": "Show and hide a captured Pibbl subtree with the slide transition.",
     "source": "slide.tsx",
     "environment": "browser",
     "symbols": [
       {
         "name": "slide",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
-        "name": "CRCSlideOptions",
-        "importPath": "@crc/core"
+        "name": "PibblSlideOptions",
+        "importPath": "@pibbl/core"
       }
     ],
     "notes": [
       "Transitions affect pixels, not hit testing or native HTML. Keep the subject mounted until hide() resolves with status finished before removing it.",
-      "Mount-time transition options are stable. The CRC mount owns playback and effect cleanup."
+      "Mount-time transition options are stable. The Pibbl mount owns playback and effect cleanup."
     ]
   },
   {
     "id": "zoom",
     "title": "zoom enter and exit",
-    "description": "Show and hide a captured CRC subtree with the zoom transition.",
+    "description": "Show and hide a captured Pibbl subtree with the zoom transition.",
     "source": "zoom.tsx",
     "environment": "browser",
     "symbols": [
       {
         "name": "zoom",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
-        "name": "CRCZoomOptions",
-        "importPath": "@crc/core"
+        "name": "PibblZoomOptions",
+        "importPath": "@pibbl/core"
       }
     ],
     "notes": [
       "Transitions affect pixels, not hit testing or native HTML. Keep the subject mounted until hide() resolves with status finished before removing it.",
-      "Mount-time transition options are stable. The CRC mount owns playback and effect cleanup."
+      "Mount-time transition options are stable. The Pibbl mount owns playback and effect cleanup."
     ]
   },
   {
     "id": "wipe",
     "title": "wipe enter and exit",
-    "description": "Show and hide a captured CRC subtree with the wipe transition.",
+    "description": "Show and hide a captured Pibbl subtree with the wipe transition.",
     "source": "wipe.tsx",
     "environment": "browser",
     "symbols": [
       {
         "name": "wipe",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
-        "name": "CRCWipeOptions",
-        "importPath": "@crc/core"
+        "name": "PibblWipeOptions",
+        "importPath": "@pibbl/core"
       }
     ],
     "notes": [
       "Transitions affect pixels, not hit testing or native HTML. Keep the subject mounted until hide() resolves with status finished before removing it.",
-      "Mount-time transition options are stable. The CRC mount owns playback and effect cleanup."
+      "Mount-time transition options are stable. The Pibbl mount owns playback and effect cleanup."
     ]
   },
   {
     "id": "blur-reveal",
     "title": "blurReveal enter and exit",
-    "description": "Show and hide a captured CRC subtree with the blurReveal transition.",
+    "description": "Show and hide a captured Pibbl subtree with the blurReveal transition.",
     "source": "blur-reveal.tsx",
     "environment": "browser",
     "symbols": [
       {
         "name": "blurReveal",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
-        "name": "CRCBlurRevealOptions",
-        "importPath": "@crc/core"
+        "name": "PibblBlurRevealOptions",
+        "importPath": "@pibbl/core"
       }
     ],
     "notes": [
       "Transitions affect pixels, not hit testing or native HTML. Keep the subject mounted until hide() resolves with status finished before removing it.",
-      "Mount-time transition options are stable. The CRC mount owns playback and effect cleanup."
+      "Mount-time transition options are stable. The Pibbl mount owns playback and effect cleanup."
     ]
   },
   {
     "id": "dissolve",
     "title": "dissolve enter and exit",
-    "description": "Show and hide a captured CRC subtree with the dissolve transition.",
+    "description": "Show and hide a captured Pibbl subtree with the dissolve transition.",
     "source": "dissolve.tsx",
     "environment": "browser",
     "symbols": [
       {
         "name": "dissolve",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
-        "name": "CRCDissolveOptions",
-        "importPath": "@crc/core"
+        "name": "PibblDissolveOptions",
+        "importPath": "@pibbl/core"
       }
     ],
     "notes": [
       "Transitions affect pixels, not hit testing or native HTML. Keep the subject mounted until hide() resolves with status finished before removing it.",
-      "Mount-time transition options are stable. The CRC mount owns playback and effect cleanup."
+      "Mount-time transition options are stable. The Pibbl mount owns playback and effect cleanup."
     ]
   },
   {
@@ -158,16 +158,16 @@
     "symbols": [
       {
         "name": "bifrost",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
-        "name": "CRCBifrostOptions",
-        "importPath": "@crc/core"
+        "name": "PibblBifrostOptions",
+        "importPath": "@pibbl/core"
       }
     ],
     "notes": [
       "Transitions affect pixels, not hit testing or native HTML. Keep the subject mounted until hide() resolves with status finished before removing it.",
-      "Mount-time transition options are stable. The CRC mount owns playback and effect cleanup."
+      "Mount-time transition options are stable. The Pibbl mount owns playback and effect cleanup."
     ]
   },
   {
@@ -179,16 +179,16 @@
     "symbols": [
       {
         "name": "hologram",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
-        "name": "CRCHologramOptions",
-        "importPath": "@crc/core"
+        "name": "PibblHologramOptions",
+        "importPath": "@pibbl/core"
       }
     ],
     "notes": [
       "Transitions affect pixels, not hit testing or native HTML. Keep the subject mounted until hide() resolves with status finished before removing it.",
-      "Mount-time transition options are stable. The CRC mount owns playback and effect cleanup."
+      "Mount-time transition options are stable. The Pibbl mount owns playback and effect cleanup."
     ]
   },
   {
@@ -200,24 +200,24 @@
     "symbols": [
       {
         "name": "embers",
-        "importPath": "@crc/core"
+        "importPath": "@pibbl/core"
       },
       {
-        "name": "CRCEmbersOptions",
-        "importPath": "@crc/core"
+        "name": "PibblEmbersOptions",
+        "importPath": "@pibbl/core"
       },
       {
-        "name": "CRCEmbersPhysicsOptions",
-        "importPath": "@crc/core"
+        "name": "PibblEmbersPhysicsOptions",
+        "importPath": "@pibbl/core"
       },
       {
-        "name": "CRCEmberCollision",
-        "importPath": "@crc/core"
+        "name": "PibblEmberCollision",
+        "importPath": "@pibbl/core"
       }
     ],
     "notes": [
       "Transitions affect pixels, not hit testing or native HTML. Keep the subject mounted until hide() resolves with status finished before removing it.",
-      "Mount-time transition options are stable. The CRC mount owns playback and effect cleanup."
+      "Mount-time transition options are stable. The Pibbl mount owns playback and effect cleanup."
     ]
   },
   {
@@ -227,9 +227,9 @@
     "source": "custom.tsx",
     "environment": "browser",
     "symbols": [
-      { "name": "defineTransition", "importPath": "@crc/core" },
-      { "name": "CRCTransitionDefinition", "importPath": "@crc/core" },
-      { "name": "CRCTransitionRenderFrame", "importPath": "@crc/core" }
+      { "name": "defineTransition", "importPath": "@pibbl/core" },
+      { "name": "PibblTransitionDefinition", "importPath": "@pibbl/core" },
+      { "name": "PibblTransitionRenderFrame", "importPath": "@pibbl/core" }
     ],
     "notes": [
       "The context and source are borrowed only for the synchronous render callback. Do not retain them or mutate signals while rendering."

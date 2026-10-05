@@ -7,7 +7,7 @@ import { createCheckpointWriter } from "./checkpoint.mjs";
 import { runWithWatchdog } from "./watchdog.mjs";
 
 test("checkpoints remain partial and an invalid replacement preserves the last complete file", async () => {
-  const output = await mkdtemp(join(tmpdir(), "crc-checkpoint-"));
+  const output = await mkdtemp(join(tmpdir(), "pibbl-checkpoint-"));
   try {
     const checkpoint = createCheckpointWriter(output);
     const report = { status: "pass", steps: [{ status: "pass", value: 20 }] };
@@ -50,7 +50,7 @@ test(
   "forced replay termination retains completed checks and the last incomplete action",
   { timeout: 10000 },
   async () => {
-    const directory = await mkdtemp(join(tmpdir(), "crc-checkpoint-kill-"));
+    const directory = await mkdtemp(join(tmpdir(), "pibbl-checkpoint-kill-"));
     try {
       const script = join(directory, "hang.mjs");
       const output = join(directory, "result");
@@ -93,16 +93,16 @@ test(
 );
 
 test('checkpoint elapsed time stays monotonic when wall time moves backward', async () => {
-  const output = await mkdtemp(join(tmpdir(), 'crc-checkpoint-clock-'));
+  const output = await mkdtemp(join(tmpdir(), 'pibbl-checkpoint-clock-'));
   let monotonic = 100;
   let wall = '2026-09-30T12:00:00.000Z';
   try {
     const checkpoint = createCheckpointWriter(output, { monotonicNow: () => monotonic, wallNow: () => wall });
     monotonic = 125;
-    await checkpoint({ schema: 'crc-viz-replay/1', status: 'pass', steps: [] }, 'first');
+    await checkpoint({ schema: 'pibbl-viz-replay/1', status: 'pass', steps: [] }, 'first');
     const first = JSON.parse(await readFile(join(output, 'checkpoint.json'), 'utf8'));
     monotonic = 150; wall = '2026-09-29T12:00:00.000Z';
-    await checkpoint({ schema: 'crc-viz-replay/1', status: 'pass', steps: [] }, 'second');
+    await checkpoint({ schema: 'pibbl-viz-replay/1', status: 'pass', steps: [] }, 'second');
     const second = JSON.parse(await readFile(join(output, 'checkpoint.json'), 'utf8'));
     assert.equal(first.timing.elapsedMs, 25);
     assert.equal(second.timing.elapsedMs, 50);

@@ -2,7 +2,7 @@ import {
   defineTexture,
   type TextureContext,
   type TextureRecipe,
-} from "@crc/core";
+} from "@pibbl/core";
 import { bytes } from "./wasm/water-waves-bytes.js";
 import { validateSeed } from "./palette.js";
 

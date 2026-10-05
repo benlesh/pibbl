@@ -30,7 +30,7 @@ export function validateRequirementLedger(inventory, ledger) {
     }
     if (row.status === 'complete') {
       const closure = row.closure;
-      assert.equal(closure?.schema, 'crc-requirement-closure/1', `${row.id}: missing closure`);
+      assert.equal(closure?.schema, 'pibbl-requirement-closure/1', `${row.id}: missing closure`);
       assert.ok(hash(closure.inventorySha256));
       assert.equal(closure.inventorySha256, ledger.inventorySha256, `${row.id}: outdated inventory binding`);
       assert.equal(closure.requirementText, texts.get(row.id), `${row.id}: closure must quote the full current requirement`);

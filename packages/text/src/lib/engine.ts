@@ -1,19 +1,19 @@
 export type Engine = {
   HEAPU8: Uint8Array;
-  _crc_protocol(): number;
-  _crc_profile_enabled(enabled: number): void;
-  _crc_profile_time(phase: number): number;
-  _crc_live_fonts(): number;
-  _crc_live_results(): number;
-  _crc_heap_used(): number;
-  _crc_test_fail_setup(phase: number): void;
-  _crc_test_fail_draw_after(count: number): void;
+  _pibbl_protocol(): number;
+  _pibbl_profile_enabled(enabled: number): void;
+  _pibbl_profile_time(phase: number): number;
+  _pibbl_live_fonts(): number;
+  _pibbl_live_results(): number;
+  _pibbl_heap_used(): number;
+  _pibbl_test_fail_setup(phase: number): void;
+  _pibbl_test_fail_draw_after(count: number): void;
   _malloc(size: number): number;
   _free(pointer: number): void;
-  _crc_font_create(pointer: number, length: number): number;
-  _crc_font_release(handle: number): void;
-  _crc_font_upem(handle: number): number;
-  _crc_shape(
+  _pibbl_font_create(pointer: number, length: number): number;
+  _pibbl_font_release(handle: number): void;
+  _pibbl_font_upem(handle: number): number;
+  _pibbl_shape(
     handle: number,
     text: number,
     length: number,
@@ -25,11 +25,11 @@ export type Engine = {
     count: number,
     missingGlyphs: number,
   ): number;
-  _crc_error(): number;
-  _crc_result_data(handle: number, field: number): number;
-  _crc_result_length(handle: number, field: number): number;
-  _crc_result_advance(handle: number, axis: number): number;
-  _crc_result_release(handle: number): void;
+  _pibbl_error(): number;
+  _pibbl_result_data(handle: number, field: number): number;
+  _pibbl_result_length(handle: number, field: number): number;
+  _pibbl_result_advance(handle: number, axis: number): number;
+  _pibbl_result_release(handle: number): void;
 };
 let enginePromise: Promise<Engine> | undefined;
 export function getEngine(): Promise<Engine> {
@@ -37,8 +37,8 @@ export function getEngine(): Promise<Engine> {
     .then((module) => module.default() as Promise<Engine>)
     .then((engine) => {
       if (
-        typeof engine._crc_protocol !== "function" ||
-        engine._crc_protocol() !== 2
+        typeof engine._pibbl_protocol !== "function" ||
+        engine._pibbl_protocol() !== 2
       )
         throw new Error(
           "Text engine protocol mismatch; deploy matching JavaScript and WASM assets.",

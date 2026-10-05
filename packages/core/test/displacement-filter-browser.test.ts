@@ -1,7 +1,7 @@
-import { createElement, crc, defineTexture, FocusManagement, Group, Rectangle, useTexture } from '@crc/core';
-import { blur, brightness, displacement, opacity } from '@crc/core/filters';
+import { createElement, pibbl, defineTexture, FocusManagement, Group, Rectangle, useTexture } from '@pibbl/core';
+import { blur, brightness, displacement, opacity } from '@pibbl/core/filters';
 import { describe, expect, it } from 'vitest';
-import { getCRCInstance } from '../src/lib/global-state';
+import { getPibblInstance } from '../src/lib/global-state';
 import { peekDisplacementGpu } from '../src/filters/render-displacement-boundary';
 import { clickMouse, moveMouse } from './support/mouse-input';
 
@@ -27,16 +27,16 @@ describe('public displacement filters', () => {
       const texture = useTexture(map({}));
       return createElement(Group, { style: { filter: displacement({ map: texture, strength: 2, region: { x: 0, y: 0, width: 40, height: 40 } }) }, children: createElement(Rectangle, { style: { left: 10, top: 10, width: 10, height: 10, fill: 'red' } }) });
     }
-    const controller = crc(canvas, createElement(Filtered, {}));
+    const controller = pibbl(canvas, createElement(Filtered, {}));
     await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
-    const instance = getCRCInstance(canvas);
+    const instance = getPibblInstance(canvas);
     const gpu = peekDisplacementGpu(instance)!;
     const gl = (gpu as unknown as { canvas: OffscreenCanvas }).canvas.getContext('webgl2')!;
     const lose = gl.getExtension('WEBGL_lose_context');
     expect(lose).not.toBeNull();
     lose!.loseContext();
     await new Promise<void>(resolve => setTimeout(resolve, 50));
-    crc(canvas, createElement(Rectangle, { style: { left: 10, top: 10, width: 10, height: 10, fill: 'red' } }));
+    pibbl(canvas, createElement(Rectangle, { style: { left: 10, top: 10, width: 10, height: 10, fill: 'red' } }));
     await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
     expect(peekDisplacementGpu(instance)).toBeUndefined();
     const revision = instance.requestedRenderRevision;
@@ -52,9 +52,9 @@ describe('public displacement filters', () => {
       const texture = useTexture(map({}));
       return createElement(Group, { style: { filter: displacement({ map: texture, strength: 2, region: { x: 0, y: 0, width: 40, height: 40 } }) }, children: createElement(Rectangle, { style: { left: 10, top: 10, width: 10, height: 10, fill: 'red' } }) });
     }
-    const controller = crc(canvas, createElement(Scene, {}));
+    const controller = pibbl(canvas, createElement(Scene, {}));
     await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
-    const instance = getCRCInstance(canvas);
+    const instance = getPibblInstance(canvas);
     const gpu = peekDisplacementGpu(instance)!;
     const gl = (gpu as unknown as { canvas: OffscreenCanvas }).canvas.getContext('webgl2')!;
     const lose = gl.getExtension('WEBGL_lose_context');
@@ -78,7 +78,7 @@ describe('public displacement filters', () => {
       const texture = useTexture(map({}));
       return createElement(Group, { style: { filter: [brightness({ amount: 1 }), displacement({ map: texture, strength: 2, region: { x: 0, y: 0, width: 40, height: 40 } }), opacity({ amount: 1 }), displacement({ map: texture, strength: 2, region: { x: 0, y: 0, width: 40, height: 40 } })] }, children: createElement(Rectangle, { style: { left: 10, top: 10, width: 10, height: 10, fill: 'red' }, onClick: () => { clicks += 1; } }) });
     }
-    const controller = crc(canvas, createElement(Scene, {}));
+    const controller = pibbl(canvas, createElement(Scene, {}));
     await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
     expect(canvas.getContext('2d')!.getImageData(12, 12, 1, 1).data[0]).toBeGreaterThan(200);
     await clickMouse(canvas, { x: 12, y: 12 });
@@ -93,7 +93,7 @@ describe('public displacement filters', () => {
       const texture = useTexture(rightMap({}));
       return createElement(Group, { style: { filter: [brightness({ amount: 0.5 }), displacement({ map: texture, strength: 2, region: { x: 0, y: 0, width: 40, height: 40 } }), opacity({ amount: 0.5 })] }, children: createElement(Rectangle, { style: { left: 10, top: 10, width: 10, height: 10, fill: 'red' }, onClick: () => { clicks += 1; } }) });
     }
-    const controller = crc(canvas, createElement(Scene, {}));
+    const controller = pibbl(canvas, createElement(Scene, {}));
     await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
     const context = canvas.getContext('2d')!;
     const displaced = context.getImageData(8, 12, 1, 1).data;
@@ -129,13 +129,13 @@ describe('public displacement filters', () => {
         }),
       ] }) });
     }
-    const controller = crc(canvas, createElement(Scene, {}));
+    const controller = pibbl(canvas, createElement(Scene, {}));
     try {
       await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
       const context = canvas.getContext('2d')!;
       expect(context.getImageData(7, 12, 1, 1).data[3]).toBeGreaterThan(200);
       expect(context.getImageData(18, 12, 1, 1).data[3]).toBe(0);
-      const instance = getCRCInstance(canvas);
+      const instance = getPibblInstance(canvas);
       const targets = Array.from(instance.eventRoot.targets);
       const policy = instance.eventRoot.focusPolicy as unknown as {
         readonly candidates: readonly { readonly target: unknown }[];
@@ -174,7 +174,7 @@ it('preserves noncommuting blur and displacement order', async () => {
       const soften = blur({ radius: 2 });
       return createElement(Group, { style: { filter: blurFirst ? [soften, distortion] : [distortion, soften] }, children: createElement(Rectangle, { style: { left: 10, top: 0, width: 10, height: 30, fill: 'red' } }) });
     }
-    const controller = crc(canvas, createElement(Scene, {}));
+    const controller = pibbl(canvas, createElement(Scene, {}));
     try {
       await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
       return canvas.getContext('2d')!.getImageData(14, 15, 1, 1).data[3];

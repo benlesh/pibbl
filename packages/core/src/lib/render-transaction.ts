@@ -1,7 +1,7 @@
-import type { CRCRenderTransaction } from './types.js';
+import type { PibblRenderTransaction } from './types.js';
 
 /** Root-wide publication precedes focus/policy commit in both render paths. */
-export class RootRenderTransaction implements CRCRenderTransaction {
+export class RootRenderTransaction implements PibblRenderTransaction {
   private publications = new Set<() => void>();
   private callbacks = new Set<(success: boolean) => void>();
   private result: boolean | undefined;
@@ -33,6 +33,6 @@ export class RootRenderTransaction implements CRCRenderTransaction {
       try { callback(success); } catch (error) { errors.push(error); }
     }
     if (errors.length === 1) throw errors[0];
-    if (errors.length) throw new AggregateError(errors, 'CRC render completion failed.');
+    if (errors.length) throw new AggregateError(errors, 'Pibbl render completion failed.');
   }
 }

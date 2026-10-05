@@ -1,23 +1,23 @@
-import { Fragment, FocusManagement, KeyboardNavigation, LayoutDiagnostic, Rectangle, Text, createElement, useEventTarget, useSignal, measureElement, type CanvasMeasurementService, type CRCElement, type CRCNode } from '@crc/core';
+import { Fragment, FocusManagement, KeyboardNavigation, LayoutDiagnostic, Rectangle, Text, createElement, useEventTarget, useSignal, measureElement, type CanvasMeasurementService, type PibblElement, type PibblNode } from '@pibbl/core';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   appendElementEnhancer,
   getElementEnhancerDescriptors,
 } from '../element-enhancers';
 import { materializeContainerChildren } from '../element/children';
-import { cloneCRCElement } from '../element/create-element';
+import { clonePibblElement } from '../element/create-element';
 import { jsxDEV } from '../element/jsx-runtime';
 import { executeRender } from '../execute-render';
 import {
   clearSharedState,
   getComponentRefs,
-  getCRCInstance,
+  getPibblInstance,
 } from '../global-state';
-import { mountCRC } from '../mount-crc';
-import type { CRCController } from '../types';
-import { definePrimitive } from '@crc/core';
+import { mountPibbl } from '../mount-pibbl';
+import type { PibblController } from '../types';
+import { definePrimitive } from '@pibbl/core';
 
-const activeControllers = new Set<CRCController>();
+const activeControllers = new Set<PibblController>();
 
 beforeEach(() => {
   document.body.replaceChildren();
@@ -70,11 +70,11 @@ describe('transparent focus policy preparation', () => {
       descriptor.key.description
     )).toEqual([
       'existing child policy',
-      'CRC focus management',
-      'CRC keyboard navigation',
+      'Pibbl focus management',
+      'Pibbl keyboard navigation',
     ]);
 
-    const cloned = cloneCRCElement(prepared);
+    const cloned = clonePibblElement(prepared);
     expect(getElementEnhancerDescriptors(cloned)).toEqual(
       getElementEnhancerDescriptors(prepared),
     );
@@ -85,7 +85,7 @@ describe('transparent focus policy preparation', () => {
 
   it('materializes a nested iterable once and retains policies on a keyed Fragment', () => {
     let iterations = 0;
-    function* children(): Iterable<CRCNode> {
+    function* children(): Iterable<PibblNode> {
       iterations++;
       yield [false, (
         <Fragment key="stable-scope">
@@ -109,8 +109,8 @@ describe('transparent focus policy preparation', () => {
     expect(getElementEnhancerDescriptors(prepared).map(descriptor =>
       descriptor.key.description
     )).toEqual([
-      'CRC focus management',
-      'CRC keyboard navigation',
+      'Pibbl focus management',
+      'Pibbl keyboard navigation',
     ]);
   });
 
@@ -143,7 +143,7 @@ describe('transparent focus policy preparation', () => {
       readonly state: number;
     }> = [];
     let setState: ((value: number) => void) | undefined;
-    function Target(): CRCNode {
+    function Target(): PibblNode {
       const refs = getComponentRefs();
       const state = useSignal(0);
       setState = value => state.set(value);
@@ -161,7 +161,7 @@ describe('transparent focus policy preparation', () => {
       });
       return <Rectangle style={{ width: 20, height: 10 }} />;
     }
-    const build = (mode: 'policies' | 'enhancer' | 'plain'): CRCNode => {
+    const build = (mode: 'policies' | 'enhancer' | 'plain'): PibblNode => {
       let fragment = (
         <Fragment key="stable-scope">
           <Target />
@@ -179,12 +179,12 @@ describe('transparent focus policy preparation', () => {
       ) : fragment;
     };
     const canvas = createCanvas();
-    const controller = mountCRC(canvas, build('policies'));
+    const controller = mountPibbl(canvas, build('policies'));
     activeControllers.add(controller);
 
     executeRender(canvas, 1);
 
-    const instance = getCRCInstance(canvas);
+    const instance = getPibblInstance(canvas);
     const manager = instance.eventRoot.focusPolicy as unknown as {
       readonly candidates: readonly [{ readonly directionalBoundary?: object }];
     };
@@ -257,7 +257,7 @@ describe('transparent focus policy preparation', () => {
         };
       },
     };
-    function Broken(): CRCNode {
+    function Broken(): PibblNode {
       throw new Error('keyed Fragment child failed');
     }
     const fragment = appendElementEnhancer(
@@ -266,7 +266,7 @@ describe('transparent focus policy preparation', () => {
     );
     const scene = <FocusManagement>{fragment}</FocusManagement>;
     const canvas = createCanvas();
-    const controller = mountCRC(canvas, scene);
+    const controller = mountPibbl(canvas, scene);
     activeControllers.add(controller);
 
     expect(() => executeRender(canvas, 1)).toThrowError(
@@ -279,7 +279,7 @@ describe('transparent focus policy preparation', () => {
       'exit:false',
       'dispose',
     ]);
-    expect(getCRCInstance(canvas).eventRoot.focusPolicy).toBeUndefined();
+    expect(getPibblInstance(canvas).eventRoot.focusPolicy).toBeUndefined();
   });
 
   it.each([
@@ -296,18 +296,18 @@ describe('transparent focus policy preparation', () => {
     const policy = createElement(FocusManagement, { children });
 
     expect(() => materializeContainerChildren(policy, 'test root'))
-      .toThrowError(/FocusManagement.*exactly one CRC element child/i);
+      .toThrowError(/FocusManagement.*exactly one Pibbl element child/i);
   });
 
   it('rejects raw text and foreign JSX with contextual source metadata', () => {
     const source = {
-      fileName: 'focus-scene.crc.tsx',
+      fileName: 'focus-scene.pibbl.tsx',
       lineNumber: 17,
       columnNumber: 9,
     };
     const textPolicy = jsxDEV(
       FocusManagement,
-      { children: 'focus me' as unknown as CRCNode },
+      { children: 'focus me' as unknown as PibblNode },
       undefined,
       false,
       source,
@@ -315,14 +315,14 @@ describe('transparent focus policy preparation', () => {
     );
     expect(() => materializeContainerChildren(textPolicy, 'test root'))
       .toThrowError(
-        /FocusManagement at focus-scene\.crc\.tsx:17:9 received a non-empty string/i,
+        /FocusManagement at focus-scene\.pibbl\.tsx:17:9 received a non-empty string/i,
       );
 
     const reactElement = {
       $$typeof: Symbol.for('react.transitional.element'),
       type: Rectangle,
       props: {},
-    } as unknown as CRCNode;
+    } as unknown as PibblNode;
     const foreignPolicy = jsxDEV(
       KeyboardNavigation,
       { mode: 'directional', children: reactElement },
@@ -333,7 +333,7 @@ describe('transparent focus policy preparation', () => {
     );
     expect(() => materializeContainerChildren(foreignPolicy, 'test root'))
       .toThrowError(
-        /React JSX runtime[\s\S]*Received by KeyboardNavigation at focus-scene\.crc\.tsx:17:9/i,
+        /React JSX runtime[\s\S]*Received by KeyboardNavigation at focus-scene\.pibbl\.tsx:17:9/i,
       );
   });
 
@@ -341,16 +341,16 @@ describe('transparent focus policy preparation', () => {
     const child = <Rectangle style={{ width: 1, height: 1 }} />;
 
     expect(() => FocusManagement({ children: child })).toThrowError(
-      'FocusManagement is a CRC component and was invoked outside the CRC renderer.\n' +
-      'Use <FocusManagement ... /> in a CRC JSX file or ' +
+      'FocusManagement is a Pibbl component and was invoked outside the Pibbl renderer.\n' +
+      'Use <FocusManagement ... /> in a Pibbl JSX file or ' +
       'createElement(FocusManagement, props).',
     );
     expect(() => KeyboardNavigation({
       mode: 'directional',
       children: child,
     })).toThrowError(
-      'KeyboardNavigation is a CRC component and was invoked outside the CRC renderer.\n' +
-      'Use <KeyboardNavigation ... /> in a CRC JSX file or ' +
+      'KeyboardNavigation is a Pibbl component and was invoked outside the Pibbl renderer.\n' +
+      'Use <KeyboardNavigation ... /> in a Pibbl JSX file or ' +
       'createElement(KeyboardNavigation, props).',
     );
   });
@@ -363,7 +363,7 @@ describe('transparent focus policy preparation', () => {
       </KeyboardNavigation>
     );
     const keyboardCanvas = createCanvas();
-    const keyboardController = mountCRC(keyboardCanvas, keyboardOnly);
+    const keyboardController = mountPibbl(keyboardCanvas, keyboardOnly);
     activeControllers.add(keyboardController);
     expect(() => executeRender(keyboardCanvas, 1))
       .toThrowError(/KeyboardNavigation requires.*FocusManagement.*focus manager/i);
@@ -374,7 +374,7 @@ describe('transparent focus policy preparation', () => {
       </FocusManagement>
     );
     expect(() => materializeContainerChildren(duplicate, 'test root'))
-      .toThrowError(/FocusManagement.*more than once.*same CRC element/i);
+      .toThrowError(/FocusManagement.*more than once.*same Pibbl element/i);
   });
 
   it('does not let a keyed Fragment bypass manager validation', () => {
@@ -385,7 +385,7 @@ describe('transparent focus policy preparation', () => {
       </KeyboardNavigation>
     );
     const keyboardCanvas = createCanvas();
-    const keyboardController = mountCRC(keyboardCanvas, keyboardOnly);
+    const keyboardController = mountPibbl(keyboardCanvas, keyboardOnly);
     activeControllers.add(keyboardController);
     expect(() => executeRender(keyboardCanvas, 1))
       .toThrowError(/KeyboardNavigation requires.*FocusManagement.*focus manager/i);
@@ -398,10 +398,10 @@ describe('transparent focus policy preparation', () => {
       </FocusManagement>
     );
     const duplicateCanvas = createCanvas();
-    const duplicateController = mountCRC(duplicateCanvas, duplicate);
+    const duplicateController = mountPibbl(duplicateCanvas, duplicate);
     activeControllers.add(duplicateController);
     expect(() => executeRender(duplicateCanvas, 1))
-      .toThrowError(/FocusManagement.*only one focus manager.*CRC root/i);
+      .toThrowError(/FocusManagement.*only one focus manager.*Pibbl root/i);
   });
 });
 
@@ -424,7 +424,7 @@ describe('transparent focus policy measurement', () => {
 
   it('matches unwrapped public primitive and measurable plain-component results without rendering or acquiring focus', () => {
     const addDocumentListener = vi.spyOn(document, 'addEventListener');
-    const text = <Text style={{ font: '12px sans-serif' }}>CRC</Text>;
+    const text = <Text style={{ font: '12px sans-serif' }}>Pibbl</Text>;
     const textPolicy = (
       <FocusManagement>
         <KeyboardNavigation mode="directional">{text}</KeyboardNavigation>
@@ -435,7 +435,7 @@ describe('transparent focus policy measurement', () => {
     );
 
     let renders = 0;
-    function Plain(): CRCNode {
+    function Plain(): PibblNode {
       renders++;
       return undefined;
     }
@@ -465,7 +465,7 @@ describe('transparent focus policy measurement', () => {
 
   it('materializes nested policy iterables once per measurement and keeps contextual validation', () => {
     let iterations = 0;
-    function* children(): Iterable<CRCNode> {
+    function* children(): Iterable<PibblNode> {
       iterations++;
       yield [null, <Text style={{ font: '12px sans-serif' }}>once</Text>];
     }
@@ -485,25 +485,25 @@ describe('transparent focus policy measurement', () => {
 
     const invalid = jsxDEV(
       FocusManagement,
-      { children: 'raw' as unknown as CRCNode },
+      { children: 'raw' as unknown as PibblNode },
       undefined,
       false,
       {
-        fileName: 'measured-policy.crc.tsx',
+        fileName: 'measured-policy.pibbl.tsx',
         lineNumber: 8,
         columnNumber: 5,
       },
       undefined,
     );
     expect(() => measureElement(invalid, constraints, service)).toThrowError(
-      /FocusManagement at measured-policy\.crc\.tsx:8:5 received a non-empty string/i,
+      /FocusManagement at measured-policy\.pibbl\.tsx:8:5 received a non-empty string/i,
     );
   });
 
   it('preserves the keyed Fragment measurement boundary', () => {
     const fragment = (
       <Fragment key="measurement-scope">
-        <Text style={{ font: '12px sans-serif' }}>CRC</Text>
+        <Text style={{ font: '12px sans-serif' }}>Pibbl</Text>
       </Fragment>
     );
     const policy = <FocusManagement>{fragment}</FocusManagement>;
@@ -518,7 +518,7 @@ describe('transparent focus policy measurement', () => {
   });
 
   it('preserves cyclic measurement identity through policy clones', () => {
-    let wrapped: CRCElement<any>;
+    let wrapped: PibblElement<any>;
     const Direct = definePrimitive<{}>(() => undefined, {
       measure: (input) => input.measureElement(
         wrapped,

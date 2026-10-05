@@ -1,7 +1,7 @@
 import { FieldMemory, lazyKernel } from "./wasm/memory.js";
 import { bytes } from "./wasm/ink-bytes.js";
 const module = /* @__PURE__ */ lazyKernel(bytes);
-/** Private WASM Gray–Scott state. CRC owns the clock and resource lifetime. */
+/** Private WASM Gray–Scott state. Pibbl owns the clock and resource lifetime. */
 export class InkSimulation {
   a: Float32Array;
   b: Float32Array;

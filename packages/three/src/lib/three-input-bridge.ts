@@ -1,6 +1,6 @@
-import type { CRCRenderLayerContext, CRCRenderLayerInput } from "@crc/core";
+import type { PibblRenderLayerContext, PibblRenderLayerInput } from "@pibbl/core";
 import type { Object3D } from "three";
-import type { CRCThreeInputBridge } from "./types.js";
+import type { PibblThreeInputBridge } from "./types.js";
 
 interface ListenerRecord {
   readonly type: string;
@@ -63,7 +63,7 @@ class CompatibilityElementTarget extends CompatibilityEventTarget {
   constructor(
     readonly ownerDocument: CompatibilityDocumentTarget,
     private readonly bridge: ThreeInputBridgeController,
-    private readonly context: Readonly<CRCRenderLayerContext>,
+    private readonly context: Readonly<PibblRenderLayerContext>,
   ) {
     super();
   }
@@ -97,10 +97,10 @@ class CompatibilityElementTarget extends CompatibilityEventTarget {
   }
 }
 
-export interface ThreeInputBridgeController extends CRCThreeInputBridge {
+export interface ThreeInputBridgeController extends PibblThreeInputBridge {
   readonly connected: boolean;
   finishCreate(): void;
-  deliver(input: Readonly<CRCRenderLayerInput<Object3D>>): void;
+  deliver(input: Readonly<PibblRenderLayerInput<Object3D>>): void;
   dispose(): void;
   setPointerCapture(pointerId: number): void;
   releasePointerCapture(pointerId: number): void;
@@ -108,13 +108,13 @@ export interface ThreeInputBridgeController extends CRCThreeInputBridge {
 }
 
 export function createThreeInputBridge(
-  context: Readonly<CRCRenderLayerContext>,
+  context: Readonly<PibblRenderLayerContext>,
 ): ThreeInputBridgeController {
   const documentTarget = new CompatibilityDocumentTarget();
   let creating = true;
   let disposed = false;
   let connected = false;
-  let currentInput: Readonly<CRCRenderLayerInput<Object3D>> | undefined;
+  let currentInput: Readonly<PibblRenderLayerInput<Object3D>> | undefined;
   const captures = new Map<number, () => void>();
   let element: CompatibilityElementTarget;
 
@@ -125,7 +125,7 @@ export function createThreeInputBridge(
     connect(create) {
       if (!creating || disposed) {
         throw new Error(
-          "CRC Three input controls may only connect during create().",
+          "Pibbl Three input controls may only connect during create().",
         );
       }
       connected = true;
@@ -181,7 +181,7 @@ export function createThreeInputBridge(
     setPointerCapture(pointerId) {
       if (!currentInput) {
         throw new Error(
-          "CRC Three pointer capture is only available while handling input.",
+          "Pibbl Three pointer capture is only available while handling input.",
         );
       }
       currentInput.setPointerCapture(pointerId);
@@ -208,7 +208,7 @@ export function createThreeInputBridge(
 }
 
 function createCompatibilityEvent(
-  input: Readonly<CRCRenderLayerInput<Object3D>>,
+  input: Readonly<PibblRenderLayerInput<Object3D>>,
 ): Event {
   const original = input.originalEvent;
   const common = {

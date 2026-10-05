@@ -1,12 +1,12 @@
-# CRC DOM-Aligned User Events Implementation Plan
+# Pibbl DOM-Aligned User Events Implementation Plan
 
 > **Historical status: IMPLEMENTED PLAN.** Agent instructions and unchecked-looking task syntax below are preserved as dated evidence, not active work.
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Replace CRC's eager mouse-only interaction path with one lazy, DOM-aligned user-event dispatcher supporting explicit targets, propagation, pointer capture, and the pertinent browser user-event families.
+**Goal:** Replace Pibbl's eager mouse-only interaction path with one lazy, DOM-aligned user-event dispatcher supporting explicit targets, propagation, pointer capture, and the pertinent browser user-event families.
 
-**Architecture:** Keep CRC immediate-mode: render-time hooks update sparse event target/listener registrations, coordinate events resolve one target through the existing global paint ledger, and dispatch derives a temporary component-ancestry path. Small native-family adapters feed one facade and propagation engine; the root HTML Canvas owns lazy listeners, while legacy `useEvent` behavior remains compatible.
+**Architecture:** Keep Pibbl immediate-mode: render-time hooks update sparse event target/listener registrations, coordinate events resolve one target through the existing global paint ledger, and dispatch derives a temporary component-ancestry path. Small native-family adapters feed one facade and propagation engine; the root HTML Canvas owns lazy listeners, while legacy `useEvent` behavior remains compatible.
 
 **Tech Stack:** TypeScript 5, Canvas 2D, DOM Pointer/Mouse/Touch/UI/Input/Clipboard/Drag APIs, Vitest Browser Mode with Playwright Chromium, pnpm 11.21.0, esbuild package verification.
 
@@ -21,7 +21,7 @@
 - Every event resource has one explicit owner and idempotent release path.
 - Native event collection requires an `HTMLCanvasElement`; root `OffscreenCanvas` mounts remain without a DOM event source.
 - Keep the existing singular `useEvent` public behavior compatible.
-- Export all supported runtime functions and types from `@crc/core`; do not add deep-import requirements.
+- Export all supported runtime functions and types from `@pibbl/core`; do not add deep-import requirements.
 - Add a failing observable contract test before each production change.
 - Do not update visual baselines unless inspected semantic evidence proves an intentional pixel change.
 
@@ -46,7 +46,7 @@ New event units:
 Existing integration points:
 
 - `packages/core/src/lib/types.ts` keeps general runtime types and imports/re-exports event types.
-- `packages/core/src/lib/mount-crc.ts` creates the event root and no longer eagerly installs eight mouse listeners.
+- `packages/core/src/lib/mount-pibbl.ts` creates the event root and no longer eagerly installs eight mouse listeners.
 - `packages/core/src/lib/global-state.ts` clears the new root-owned event resources.
 - `packages/core/src/lib/hooks/use-region.ts` becomes the built-in compatibility adapter over grouped targets.
 - `packages/core/src/lib/hooks/use-event.ts` preserves singular observer/path behavior through the new event root.
@@ -67,8 +67,8 @@ Existing integration points:
 
 **Interfaces:**
 
-- Produces: `CRCEventType`, `CRCEventMap`, `CRCEventHandlers`, `CRCEventHandler<K>`, `CRCEvent`, `CRCPointerEvent`, `CRCMouseEvent`, `CRCTouchEvent`, `CRCWheelEvent`, `CRCKeyboardEvent`, `CRCFocusEvent`, `CRCInputEvent`, `CRCCompositionEvent`, `CRCClipboardEvent`, `CRCDragEvent`, `CRCEventTarget`, `CRCEventTargetOptions`, and `CRCEventTargetSnapshot`.
-- Produces: `CRC_EVENT_DEFINITIONS`, `CRC_EVENT_TYPES`, and `getCRCEventDefinition(type)` for all later tasks.
+- Produces: `PibblEventType`, `PibblEventMap`, `PibblEventHandlers`, `PibblEventHandler<K>`, `PibblEvent`, `PibblPointerEvent`, `PibblMouseEvent`, `PibblTouchEvent`, `PibblWheelEvent`, `PibblKeyboardEvent`, `PibblFocusEvent`, `PibblInputEvent`, `PibblCompositionEvent`, `PibblClipboardEvent`, `PibblDragEvent`, `PibblEventTarget`, `PibblEventTargetOptions`, and `PibblEventTargetSnapshot`.
+- Produces: `PIBBL_EVENT_DEFINITIONS`, `PIBBL_EVENT_TYPES`, and `getPibblEventDefinition(type)` for all later tasks.
 
 - [ ] **Step 1: Write the failing vocabulary and type tests**
 
@@ -129,15 +129,17 @@ const EXPECTED_TYPES = [
   "drop",
 ] as const;
 
-expect(CRC_EVENT_TYPES).toEqual(EXPECTED_TYPES);
-expect(getCRCEventDefinition("pointerenter")).toMatchObject({ bubbles: false });
-expect(getCRCEventDefinition("focusin")).toMatchObject({ bubbles: true });
-expect(getCRCEventDefinition("keypress" as never)).toBeUndefined();
+expect(PIBBL_EVENT_TYPES).toEqual(EXPECTED_TYPES);
+expect(getPibblEventDefinition("pointerenter")).toMatchObject({
+  bubbles: false,
+});
+expect(getPibblEventDefinition("focusin")).toMatchObject({ bubbles: true });
+expect(getPibblEventDefinition("keypress" as never)).toBeUndefined();
 ```
 
 Add compile-time assignments proving `onPointerDownCapture` receives a
-`CRCPointerEvent`, `onBeforeInput` receives a `CRCInputEvent`, and `keypress`
-is not a key of `CRCEventMap`.
+`PibblPointerEvent`, `onBeforeInput` receives a `PibblInputEvent`, and `keypress`
+is not a key of `PibblEventMap`.
 
 - [ ] **Step 2: Run the focused test and verify it fails**
 
@@ -154,10 +156,10 @@ Expected: FAIL because the event modules do not exist.
 Define each entry with this exact shape:
 
 ```ts
-export interface CRCEventDefinition {
-  readonly type: CRCEventType;
-  readonly prop: CRCEventPropName;
-  readonly captureProp: CRCEventCapturePropName;
+export interface PibblEventDefinition {
+  readonly type: PibblEventType;
+  readonly prop: PibblEventPropName;
+  readonly captureProp: PibblEventCapturePropName;
   readonly family:
     | "pointer"
     | "mouse"
@@ -186,35 +188,35 @@ flag from the corresponding platform contract.
 Use a generic base rather than copying native event objects:
 
 ```ts
-export interface CRCEvent<TOriginal extends Event = Event> {
+export interface PibblEvent<TOriginal extends Event = Event> {
   readonly type: string;
-  readonly target: CRCEventTarget;
-  readonly currentTarget: CRCEventTarget;
-  readonly relatedTarget: CRCEventTarget | null;
+  readonly target: PibblEventTarget;
+  readonly currentTarget: PibblEventTarget;
+  readonly relatedTarget: PibblEventTarget | null;
   readonly eventPhase: 1 | 2 | 3;
   readonly bubbles: boolean;
   readonly cancelable: boolean;
   readonly defaultPrevented: boolean;
   readonly timeStamp: number;
   readonly originalEvent: TOriginal;
-  composedPath(): readonly CRCEventTarget[];
+  composedPath(): readonly PibblEventTarget[];
   preventDefault(): void;
   stopPropagation(): void;
   stopImmediatePropagation(): void;
 }
 
-export interface CRCEventTarget {
+export interface PibblEventTarget {
   setPointerCapture(pointerId: number): void;
   hasPointerCapture(pointerId: number): boolean;
   releasePointerCapture(pointerId: number): void;
 }
 
-export interface CRCEventTargetSnapshot {
+export interface PibblEventTargetSnapshot {
   readonly isFocused: boolean;
   readonly isFocusVisible: boolean;
 }
 
-export interface CRCEventTargetOptions {
+export interface PibblEventTargetOptions {
   readonly path: Path2D;
   readonly fill?: boolean;
   readonly lineInteractionWidth?: number;
@@ -226,7 +228,7 @@ export interface CRCEventTargetOptions {
 
 Family interfaces expose the common native fields required by the spec while
 retaining `originalEvent` for everything else. Preserve the existing public
-`CRCMouseEvent` name and its root-logical `x`/`y` fields.
+`PibblMouseEvent` name and its root-logical `x`/`y` fields.
 
 - [ ] **Step 5: Run focused tests and typecheck**
 
@@ -255,16 +257,16 @@ git commit -m "feat(events): define DOM-aligned event vocabulary"
 - Create: `packages/core/src/lib/events/native-listener-hub.ts`
 - Create: `packages/core/src/lib/events/native-listener-hub.test.ts`
 - Modify: `packages/core/src/lib/types.ts`
-- Modify: `packages/core/src/lib/mount-crc.ts`
+- Modify: `packages/core/src/lib/mount-pibbl.ts`
 - Modify: `packages/core/src/lib/global-state.ts`
 - Modify: `packages/core/test/support/runtime-diagnostics.ts`
 - Modify: `packages/core/test/lifecycle-ownership.test.ts`
 
 **Interfaces:**
 
-- Consumes: `CRCEventType` and `CRCEventDefinition` from Task 1.
+- Consumes: `PibblEventType` and `PibblEventDefinition` from Task 1.
 - Produces: `createNativeListenerHub(canvas, dispatch, teardowns)`, returning `acquire(type): () => void`, `count(type): number`, and `dispose(): void`.
-- Produces: `CRCInstance.eventRoot.nativeListeners` for later registration tasks.
+- Produces: `PibblInstance.eventRoot.nativeListeners` for later registration tasks.
 
 - [ ] **Step 1: Write failing reference-count and mount tests**
 
@@ -292,7 +294,7 @@ to zero.
 corepack pnpm@11.21.0 exec vitest run packages/core/src/lib/events/native-listener-hub.test.ts packages/core/test/lifecycle-ownership.test.ts --browser.headless --browser.ui=false
 ```
 
-Expected: FAIL because `mountCRC` still installs all mouse listeners eagerly.
+Expected: FAIL because `mountPibbl` still installs all mouse listeners eagerly.
 
 - [ ] **Step 3: Implement the listener hub**
 
@@ -306,8 +308,8 @@ interface NativeListenerRecord {
 }
 
 export interface NativeListenerHub {
-  acquire(type: CRCEventType): () => void;
-  count(type: CRCEventType): number;
+  acquire(type: PibblEventType): () => void;
+  count(type: PibblEventType): number;
   dispose(): void;
 }
 ```
@@ -322,13 +324,16 @@ release closure is idempotent.
 Initialize one root-owned structure:
 
 ```ts
-interface CRCEventRoot {
+interface PibblEventRoot {
   readonly canvas: HTMLCanvasElement | undefined;
   readonly nativeListeners: NativeListenerHub | undefined;
-  readonly targets: Set<CRCEventTargetRegistration>;
-  readonly listenersByComponent: Map<string, Set<CRCEventListenerRegistration>>;
-  readonly observers: Map<CRCEventType, Set<CRCNativeObserver>>;
-  readonly pointerCaptures: Map<number, CRCEventNode>;
+  readonly targets: Set<PibblEventTargetRegistration>;
+  readonly listenersByComponent: Map<
+    string,
+    Set<PibblEventListenerRegistration>
+  >;
+  readonly observers: Map<PibblEventType, Set<PibblNativeObserver>>;
+  readonly pointerCaptures: Map<number, PibblEventNode>;
 }
 ```
 
@@ -339,7 +344,7 @@ sets/maps after running owned teardowns.
 - [ ] **Step 5: Update diagnostics and run lifecycle tests**
 
 Make diagnostics derive handler counts from `eventRoot` and
-`CRC_EVENT_TYPES`, then run:
+`PIBBL_EVENT_TYPES`, then run:
 
 ```bash
 corepack pnpm@11.21.0 exec vitest run packages/core/src/lib/events/native-listener-hub.test.ts packages/core/test/lifecycle-ownership.test.ts packages/core/test/runtime-cleanup-stress.test.ts --browser.headless --browser.ui=false
@@ -351,7 +356,7 @@ the last subscriber.
 - [ ] **Step 6: Commit**
 
 ```bash
-git add packages/core/src/lib/events/native-listener-hub.ts packages/core/src/lib/events/native-listener-hub.test.ts packages/core/src/lib/types.ts packages/core/src/lib/mount-crc.ts packages/core/src/lib/global-state.ts packages/core/test/support/runtime-diagnostics.ts packages/core/test/lifecycle-ownership.test.ts
+git add packages/core/src/lib/events/native-listener-hub.ts packages/core/src/lib/events/native-listener-hub.test.ts packages/core/src/lib/types.ts packages/core/src/lib/mount-pibbl.ts packages/core/src/lib/global-state.ts packages/core/test/support/runtime-diagnostics.ts packages/core/test/lifecycle-ownership.test.ts
 git commit -m "refactor(events): install native listeners lazily"
 ```
 
@@ -372,7 +377,7 @@ git commit -m "refactor(events): install native listeners lazily"
 **Interfaces:**
 
 - Consumes: Task 1 handler/target types and Task 2 listener hub.
-- Produces: `useEventTarget(handlers, options): CRCEventTargetSnapshot`.
+- Produces: `useEventTarget(handlers, options): PibblEventTargetSnapshot`.
 - Produces: `useEventListener(handlers): void`.
 - Produces internal `createTarget`, `updateTarget`, `releaseTarget`, `createListener`, `updateListener`, and `releaseListener` functions.
 
@@ -383,7 +388,7 @@ removing the last handler/cursor, hook-order failures, and no descendant
 geometry inference:
 
 ```ts
-const Composite = defineComp<{ onClick: CRCEventHandlers["onClick"] }>(
+const Composite = defineComp<{ onClick: PibblEventHandlers["onClick"] }>(
   ({ onClick }) => {
     useEventListener({ onClick });
     return rect({ style: { width: 40, height: 40, fill: "#000" } });
@@ -411,18 +416,18 @@ Expected: FAIL because the hooks and grouped registration do not exist.
 Use this internal record:
 
 ```ts
-export interface CRCEventTargetRegistration {
+export interface PibblEventTargetRegistration {
   readonly kind: "target";
-  readonly owner: CRCInstance;
+  readonly owner: PibblInstance;
   readonly component: CompRefs<any>;
   readonly slot: number;
-  readonly publicTarget: CRCEventTarget;
-  handlers: CRCNormalizedHandlers;
+  readonly publicTarget: PibblEventTarget;
+  handlers: PibblNormalizedHandlers;
   path: Path2D;
   fill: boolean;
   lineInteractionWidth: number;
   transform: DOMMatrix;
-  clippingStack: readonly CRCClippingStackEntry[];
+  clippingStack: readonly PibblClippingStackEntry[];
   cursor: string | undefined;
   keyboardFocusable: boolean | undefined;
   keyboardNavigationBounds: Readonly<LayoutBox> | undefined;
@@ -446,7 +451,7 @@ slot has one teardown.
 - [ ] **Step 5: Adapt `useRegion` to grouped target ownership**
 
 Keep `useRegion` internal and preserve its current call sites. It should update
-one `CRCEventTargetRegistration` and retain cursor-only regions. Keep temporary
+one `PibblEventTargetRegistration` and retain cursor-only regions. Keep temporary
 type aliases where needed so existing mouse tests compile before the dispatcher
 migration.
 
@@ -480,9 +485,9 @@ git commit -m "feat(events): add explicit target and listener hooks"
 **Interfaces:**
 
 - Consumes: target/listener registrations from Task 3.
-- Produces: `buildEventPath(target): CRCEventNode[]`.
-- Produces: `createCRCEvent(input): CRCEvent`.
-- Produces: `dispatchEventPath(input): CRCEvent`.
+- Produces: `buildEventPath(target): PibblEventNode[]`.
+- Produces: `createPibblEvent(input): PibblEvent`.
+- Produces: `dispatchEventPath(input): PibblEvent`.
 
 - [ ] **Step 1: Write failing propagation tests**
 
@@ -565,7 +570,7 @@ git commit -m "feat(events): dispatch capture target and bubble phases"
 - Create: `packages/core/src/lib/events/adapters/mouse.ts`
 - Create: `packages/core/src/lib/events/mouse-dispatch.test.ts`
 - Modify: `packages/core/src/lib/interaction-dispatch.ts`
-- Modify: `packages/core/src/lib/mount-crc.ts`
+- Modify: `packages/core/src/lib/mount-pibbl.ts`
 - Modify: `packages/core/src/lib/hooks/use-region.ts`
 - Modify: `packages/core/test/interaction-dispatch.test.ts`
 - Modify: `packages/core/test/mouse-contract.test.ts`
@@ -573,7 +578,7 @@ git commit -m "feat(events): dispatch capture target and bubble phases"
 **Interfaces:**
 
 - Consumes: Task 4 propagation engine.
-- Produces: `resolveCoordinateTarget(eventRoot, point): CRCEventTargetRegistration | undefined`.
+- Produces: `resolveCoordinateTarget(eventRoot, point): PibblEventTargetRegistration | undefined`.
 - Produces: `dispatchNativeEvent(root, type, nativeEvent): void`.
 - Preserves: cursor refresh/removal functions currently imported from `interaction-dispatch.ts`.
 
@@ -637,7 +642,7 @@ Expected: PASS.
 - [ ] **Step 8: Commit**
 
 ```bash
-git add packages/core/src/lib/events packages/core/src/lib/interaction-dispatch.ts packages/core/src/lib/mount-crc.ts packages/core/src/lib/hooks/use-region.ts packages/core/test/interaction-dispatch.test.ts packages/core/test/mouse-contract.test.ts
+git add packages/core/src/lib/events packages/core/src/lib/interaction-dispatch.ts packages/core/src/lib/mount-pibbl.ts packages/core/src/lib/hooks/use-region.ts packages/core/test/interaction-dispatch.test.ts packages/core/test/mouse-contract.test.ts
 git commit -m "feat(events): route mouse input through logical propagation"
 ```
 
@@ -658,7 +663,7 @@ git commit -m "feat(events): route mouse input through logical propagation"
 **Interfaces:**
 
 - Produces: `setLogicalPointerCapture`, `hasLogicalPointerCapture`, `releaseLogicalPointerCapture`, and `clearPointerCapturesForTarget`.
-- Consumes: the `CRCEventTarget` methods defined in Task 1.
+- Consumes: the `PibblEventTarget` methods defined in Task 1.
 
 - [ ] **Step 1: Write failing pointer/capture tests**
 
@@ -678,11 +683,11 @@ Expected: FAIL because pointer adapters and logical capture do not exist.
 
 - [ ] **Step 3: Implement logical capture over native Canvas capture**
 
-Map `pointerId -> live CRC event node`. Call native
+Map `pointerId -> live Pibbl event node`. Call native
 `canvas.setPointerCapture(pointerId)` and `releasePointerCapture(pointerId)`;
 route later pointer events to the logical owner before geometric hit testing.
 Release one pointer without disturbing others. Target teardown clears its
-entries before any later callback can run. When capture moves between two CRC
+entries before any later callback can run. When capture moves between two Pibbl
 owners on the same Canvas, retain distinct active and pending logical owners
 and process exactly one old-owner loss followed by one new-owner gain before
 the next non-capture pointer event; the shared native Canvas capture itself
@@ -734,7 +739,7 @@ git commit -m "feat(events): add pointer capture and wheel dispatch"
 **Interfaces:**
 
 - Consumes: target resolver and propagation from Tasks 4-6.
-- Produces: adapter coverage for every event in `CRC_EVENT_TYPES`.
+- Produces: adapter coverage for every event in `PIBBL_EVENT_TYPES`.
 - Produces an internal `dispatchToLogicalTarget(type, target, originalEvent)` entry for the later focus policy.
 
 - [ ] **Step 1: Write failing family-adapter tests**
@@ -783,7 +788,7 @@ delivery does not add drag-source state.
 
 - [ ] **Step 6: Prove every definition has exactly one adapter route**
 
-Add an assertion that iterates `CRC_EVENT_TYPES` and verifies the dispatcher
+Add an assertion that iterates `PIBBL_EVENT_TYPES` and verifies the dispatcher
 classifies every entry, with no `default` branch silently dropping a supported
 type.
 
@@ -848,9 +853,9 @@ corepack pnpm@11.21.0 exec vitest run packages/core/src/lib/components packages/
 
 Expected: FAIL on missing props/exports and cross-layer ancestry.
 
-- [ ] **Step 3: Replace `CRCBasicMouseEvents` with composed event-handler props**
+- [ ] **Step 3: Replace `PibblBasicMouseEvents` with composed event-handler props**
 
-Built-in drawing prop interfaces extend `CRCEventHandlers`. The shared wiring
+Built-in drawing prop interfaces extend `PibblEventHandlers`. The shared wiring
 function normalizes `onX`/`onXCapture` once and calls one grouped region/target
 registration with the primitive's explicit path. Keep cursor-only targets.
 
@@ -864,7 +869,7 @@ replacement/removal and thrown-observer isolation retain the shipped contract.
 
 - [ ] **Step 5: Bridge layer ancestry**
 
-When `layer` creates its child CRC instance, record the live parent layer
+When `layer` creates its child Pibbl instance, record the live parent layer
 component as `eventParent`. `buildEventPath` jumps from the child root to this
 parent without changing render identity or IDs. Layer disposal clears the
 bridge before child teardown.
@@ -888,7 +893,7 @@ Expected: PASS.
 - [ ] **Step 8: Commit**
 
 ```bash
-git add packages/core/src playground/src/crc-editor-types.txt
+git add packages/core/src playground/src/pibbl-editor-types.txt
 git commit -m "feat(core): expose DOM-aligned user events"
 ```
 
@@ -911,7 +916,7 @@ git commit -m "feat(core): expose DOM-aligned user events"
 
 **Interfaces:**
 
-- Consumes: public `@crc/core` event APIs only.
+- Consumes: public `@pibbl/core` event APIs only.
 - Produces: one manual/headless shared event laboratory and the implemented contract documentation.
 
 - [ ] **Step 1: Add failing catalog and scenario expectations**
@@ -973,7 +978,7 @@ git commit -m "docs(events): add shared user-event contract scenario"
 - Modify: `packages/core/test/runtime-cleanup-stress.test.ts`
 - Modify: `playground/package-consumer/index.ts`
 - Modify: `tooling/verify-packed-consumer.mjs`
-- Modify: `playground/src/crc-editor-types.txt`
+- Modify: `playground/src/pibbl-editor-types.txt`
 - Modify: `docs/testing/` field note selected for this delivery
 
 **Interfaces:**
@@ -983,7 +988,7 @@ git commit -m "docs(events): add shared user-event contract scenario"
 
 - [ ] **Step 1: Add failing structural performance assertions**
 
-Assert an empty CRC root owns zero native UI listeners and zero targets; one
+Assert an empty Pibbl root owns zero native UI listeners and zero targets; one
 event type owns one native listener regardless of target count; a topmost hit
 still stops after the first successful region; and a miss performs one path test
 per live geometric candidate with no propagation allocation retained afterward.
@@ -1001,7 +1006,7 @@ the old region shape.
 - [ ] **Step 3: Update packed-consumer coverage**
 
 Import `useEventTarget`, `useEventListener`, and representative event types from
-`@crc/core` in the strict Bundler/NodeNext consumer. Extend the packed verifier
+`@pibbl/core` in the strict Bundler/NodeNext consumer. Extend the packed verifier
 to confirm no `src/` files, no deep imports, valid runtime loading, and public
 declarations for every event family.
 
@@ -1036,6 +1041,6 @@ never copy historical totals from earlier plans.
 - [ ] **Step 7: Commit final evidence**
 
 ```bash
-git add packages/core/test playground/package-consumer playground/src/crc-editor-types.txt tooling/verify-packed-consumer.mjs docs/testing
+git add packages/core/test playground/package-consumer playground/src/pibbl-editor-types.txt tooling/verify-packed-consumer.mjs docs/testing
 git commit -m "test(events): prove public event delivery"
 ```

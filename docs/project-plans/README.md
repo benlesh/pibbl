@@ -1,12 +1,24 @@
-# CRC project plans
+# Pibbl project plans
 
 ## Active plan
 
-[004 — HtmlBox](./004-html-box.md) is active.
+[007 — Visualization charting](./007-visualization-charting.md) is active.
+
+[004 — HtmlBox](./004-html-box.md) retains unfinished work and its existing
+evidence; this queue switch does not mark it complete.
+
+## Visualization planning
+
+- [Current visualization priorities and visual-quality bar](./viz-charting-priorities.md) — 2026-10-05 user-directed priorities: basic charting first; execution tracked in Plan 007.
+- [Historical visualization roadmap and approvals](./remaining-viz-roadmap.md)
+- [Approved UTC scale contract](./viz-utc-contract-proposal.md)
+- [Approved custom pie label contract](./viz-pie-label-contract-proposal.md)
+
+These documents do not replace the active numbered plan.
 
 ## Strategy input
 
-- [`CRC product strategy and future opportunities`](../strategy/README.md)
+- [`Pibbl product strategy and future opportunities`](../strategy/README.md)
 
 The strategy document is food for thought, not an active plan. When new work is
 approved, identify the strategy question, evidence, smallest credible slice,
@@ -16,7 +28,7 @@ may instead state that it does not advance a strategy initiative.
 ## Archive
 
 - [`001 — Trustworthy existing features`](./001-trustworthy-existing-features.md)
-- [`002 — CRC interactive examples studio`](./002-crc-interactive-examples-studio.md)
+- [`002 — Pibbl interactive examples studio`](./002-pibbl-interactive-examples-studio.md)
 - [`003 — First-class style and layout`](./003-first-class-style-and-layout.md)
 - [`005 — Package consolidation`](./005-package-consolidation.md)
 

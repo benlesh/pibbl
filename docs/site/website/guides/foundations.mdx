@@ -5,13 +5,13 @@ description: Understand ownership before composing effects.
 
 ## One mount, one owner
 
-Call `crc` after the canvas exists. Keep the controller in the host's lifecycle and call `dispose()` before removing its surface. Hook-owned resources such as textures are released with their components. Application listeners, observers, and external resources also need explicit owners.
+Call `pibbl` after the canvas exists. Keep the controller in the host's lifecycle and call `dispose()` before removing its surface. Hook-owned resources such as textures are released with their components. Application listeners, observers, and external resources also need explicit owners.
 
 ## Signals and scheduling
 
-Signals are synchronous values. A component that reads `.get()` becomes a consumer; writes schedule the relevant CRC work. Declared signal-aware primitive inputs may receive signals directly. Writes are forbidden during component evaluation. Use events for user-driven writes and `useReaction` for an imperative response after a successful render.
+Signals are synchronous values. A component that reads `.get()` becomes a consumer; writes schedule the relevant Pibbl work. Declared signal-aware primitive inputs may receive signals directly. Writes are forbidden during component evaluation. Use events for user-driven writes and `useReaction` for an imperative response after a successful render.
 
-CRC owns scheduling for rendering, textures, animation, and physics. The button recipe never starts `requestAnimationFrame`. Keep one mounted identity through hover and focus changes.
+Pibbl owns scheduling for rendering, textures, animation, and physics. The button recipe never starts `requestAnimationFrame`. Keep one mounted identity through hover and focus changes.
 
 ## Logical size and pixels
 
@@ -23,9 +23,9 @@ Texture resolution controls simulation/raster cost. Stretching a small simulatio
 
 Source order is Canvas paint order. `Group` applies transforms and styles, `Clip` limits paint, and `Layer` is an explicit retained bitmap boundary. Filters capture a receiving primitive and descendants; they change pixels but not layout, hit geometry, or focus bounds.
 
-Native HTML is not Canvas paint. In an HTML application, position a decorative canvas behind native content with CSS. In a CRC-centered application, [HtmlBox](/reference/html-box/) requires an explicit overlay and stays above Canvas paint. Neither path captures live DOM into a texture.
+Native HTML is not Canvas paint. In an HTML application, position a decorative canvas behind native content with CSS. In a Pibbl-centered application, [HtmlBox](/reference/html-box/) requires an explicit overlay and stays above Canvas paint. Neither path captures live DOM into a texture.
 
-`defineRenderLayer` flattens one external renderer into one bitmap boundary. The official `@crc/three` adapter uses ordinary Three scenes and application-owned resources. Canvas primitives cannot be interleaved between individual Three objects.
+`defineRenderLayer` flattens one external renderer into one bitmap boundary. The official `@pibbl/three` adapter uses ordinary Three scenes and application-owned resources. Canvas primitives cannot be interleaved between individual Three objects.
 
 ## Try the boundaries
 

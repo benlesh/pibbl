@@ -3,8 +3,8 @@ import { relative, resolve } from "node:path";
 
 import {
   collectPublicExports,
-  crcPublicCompilerOptions,
-  crcStudioPublicEntryPaths,
+  pibblPublicCompilerOptions,
+  pibblStudioPublicEntryPaths,
   validateApiCoverage,
   type ApiCoverage,
   type ApiCoverageDestination,
@@ -156,7 +156,7 @@ export async function buildStudioDocumentation(
 
   const inventory =
     options.apiInventory ??
-    (await collectPublicExports(crcStudioPublicEntryPaths, crcPublicCompilerOptions));
+    (await collectPublicExports(pibblStudioPublicEntryPaths, pibblPublicCompilerOptions));
   const apiCoverage = validateApiCoverage(
     inventory,
     pages

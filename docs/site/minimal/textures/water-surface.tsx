@@ -1,12 +1,12 @@
-import { crc, Group, Rectangle, Circle, Text, signal } from "@crc/core";
-import { displacement } from "@crc/core/filters";
+import { pibbl, Group, Rectangle, Circle, Text, signal } from "@pibbl/core";
+import { displacement } from "@pibbl/core/filters";
 import {
   waterSurface,
   useTexture,
   type WaterSurfaceOptions,
   type WaterSurfaceMessage,
   type WaterSurfaceObstacle,
-} from "@crc/core/textures";
+} from "@pibbl/core/textures";
 
 const width = 360,
   height = 240;
@@ -88,7 +88,7 @@ function Basin() {
             fill: "#ffffff",
           }}
         >
-          CRC
+          Pibbl
         </Text>
       </Group>
       <Rectangle
@@ -116,5 +116,5 @@ function Basin() {
     </>
   );
 }
-const controller = crc(canvas, <Basin />);
+const controller = pibbl(canvas, <Basin />);
 window.addEventListener("pagehide", () => controller.dispose(), { once: true });

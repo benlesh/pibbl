@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { crc } from '../crc.js';
+import { pibbl } from '../pibbl.js';
 import { clearSharedState } from '../global-state.js';
 import { signal } from '../signals/graph.js';
 import { useRef } from './use-ref.js';
@@ -28,11 +28,11 @@ describe('useConst', () => {
       }));
     }
 
-    const controller = crc(canvas, <Probe generation={1} key="stable" />);
+    const controller = pibbl(canvas, <Probe generation={1} key="stable" />);
     frames.flush();
-    crc(canvas, <Probe generation={2} key="stable" />);
+    pibbl(canvas, <Probe generation={2} key="stable" />);
     frames.flush();
-    crc(canvas, <Probe generation={3} key="replacement" />);
+    pibbl(canvas, <Probe generation={3} key="replacement" />);
     frames.flush();
 
     expect(factories).toEqual([1, 3]);
@@ -50,7 +50,7 @@ describe('useConst', () => {
       snapshots.push(useConst(() => source.get()));
     }
 
-    const controller = crc(createCanvas(), <Probe />);
+    const controller = pibbl(createCanvas(), <Probe />);
     frames.flush();
     source.set(2);
 
@@ -67,15 +67,15 @@ describe('useConst', () => {
       if (useMutable) useRef(1);
       else useConst(() => 1);
     }
-    const controller = crc(canvas, <Ordered useMutable={false} />);
+    const controller = pibbl(canvas, <Ordered useMutable={false} />);
     frames.flush();
-    crc(canvas, <Ordered useMutable />);
+    pibbl(canvas, <Ordered useMutable />);
     expect(() => frames.flush()).toThrowError(/expected const, received ref/iu);
 
     function NestedHook() {
       useConst(() => useSignal(1));
     }
-    crc(canvas, <NestedHook />);
+    pibbl(canvas, <NestedHook />);
     expect(() => frames.flush()).toThrowError(/hooks.*useConst factory/iu);
     controller.dispose();
     frames.restore();
@@ -104,7 +104,7 @@ class ManualFrames {
 
   flush(): void {
     const entry = Array.from(this.callbacks.entries()).at(-1);
-    if (!entry) throw new Error('No pending CRC frame');
+    if (!entry) throw new Error('No pending Pibbl frame');
     const [id, callback] = entry;
     this.callbacks.delete(id);
     callback(performance.now());

@@ -26,17 +26,17 @@ in 15 files. This is first integrated evidence, not the final trust gate.
 The copyable lesson runs at `#/examples/composition/html-box`. The local review
 server is http://127.0.0.1:5176/. Desktop browser verification at 1440x1000 checked
 page identity, meaningful content, no runtime/editor error overlay, zero page
-errors, typed “Hello CRC”, clicked its native button, and rotated it through the
+errors, typed “Hello Pibbl”, clicked its native button, and rotated it through the
 Canvas control. Text and click count survived. Screenshot evidence was inspected
-at `/private/tmp/crc-html-box-working.png`, outside committed source.
+at `/private/tmp/pibbl-html-box-working.png`, outside committed source.
 
 Manual review: open the lesson; type in the labelled input; click the native
 counter; press Rotate, Move and Scale; verify curved clipping and retained text.
 Tab forward/backward across Canvas controls and both native controls. Native
-arrows should edit text, not move CRC focus. Disposal restores the supplied canvas
+arrows should edit text, not move Pibbl focus. Disposal restores the supplied canvas
 and removes owned hosts/clips/listeners.
 
-Tests initially exposed incorrect test assumptions: CRC explicit box dimensions
+Tests initially exposed incorrect test assumptions: Pibbl explicit box dimensions
 are content dimensions plus padding (100 + 10 yields a 110 border box), and blur
 uses an options object. Those expectations were corrected to existing contracts.
 The shared lesson is driven headlessly using an actual native click.

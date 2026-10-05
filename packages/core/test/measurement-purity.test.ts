@@ -1,4 +1,4 @@
-import { createElement, definePrimitive, measureElement, signal, Text } from '@crc/core';
+import { createElement, definePrimitive, measureElement, signal, Text } from '@pibbl/core';
 import { expect, it } from 'vitest';
 
 const constraints = { minWidth: 0, maxWidth: 100, minHeight: 0, maxHeight: 100 };

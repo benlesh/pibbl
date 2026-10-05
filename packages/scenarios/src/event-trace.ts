@@ -80,7 +80,7 @@ export interface EventTraceEntry {
   /** Order recorded or configured by this scenario. See {@link EventTraceEntry}. */
   order: number;
   /** Source recorded or configured by this scenario. See {@link EventTraceEntry}. */
-  source: 'crc' | 'native';
+  source: 'pibbl' | 'native';
   /** Type recorded or configured by this scenario. See {@link TraceEventType}. */
   type: TraceEventType;
   /** Target recorded or configured by this scenario. See {@link EventTraceEntry}. */

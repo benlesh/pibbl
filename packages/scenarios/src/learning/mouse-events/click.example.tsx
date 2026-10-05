@@ -1,4 +1,4 @@
-import { crc, useSignal, Rectangle, Text, type CRCController } from "@crc/core";
+import { pibbl, useSignal, Rectangle, Text, type PibblController } from "@pibbl/core";
 function ClickStudy() {
   const picks = useSignal(0);
   const sleeve = (x: number, color: string, value: number) => (
@@ -51,6 +51,6 @@ function ClickStudy() {
     </Text>,
   ];
 }
-export default function mount(canvas: HTMLCanvasElement): CRCController {
-  return crc(canvas, <ClickStudy />);
+export default function mount(canvas: HTMLCanvasElement): PibblController {
+  return pibbl(canvas, <ClickStudy />);
 }

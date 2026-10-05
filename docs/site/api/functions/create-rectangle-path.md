@@ -12,7 +12,7 @@ relatedTypes: [Canvas, RectanglePathOptions]
 # createRectanglePath
 
 ```ts
-import { Clip, createRectanglePath, Rectangle } from "@crc/core";
+import { Clip, createRectanglePath, Rectangle } from "@pibbl/core";
 ```
 
 [`RectanglePathOptions`](#/api/types/elements-components#rectanglepathoptions) is accepted by `createRectanglePath(options): Path2D`, which creates a fresh

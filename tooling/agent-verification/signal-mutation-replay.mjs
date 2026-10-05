@@ -25,7 +25,7 @@ const recipe = [
   ['reset', 'reset', 10, 10, 'pass', 'application-observation', 2, 2],
 ];
 const subjects = ['application-intent', 'equality-diagnosis', 'publication-evaluation', 'bounded-window', 'bar-pixels'];
-const report = { schema: 'crc-signal-mutation-replay/1', status: 'incomplete', url,
+const report = { schema: 'pibbl-signal-mutation-replay/1', status: 'incomplete', url,
   requiredChecks: recipe.flatMap(([actionId]) => subjects.map(subject => ({ actionId, checkId: `${actionId}.${subject}` }))),
   scope: 'Explicit default Object.is fixture; bounded two-frame observation, not a universal deep mutation detector.', steps: [], errors: [], droppedErrors: 0 };
 const checkpoint = createCheckpointWriter(output);
@@ -52,7 +52,7 @@ try {
       return state?.status === 'ready' && state.revision === revision;
     }, index + 1);
     const raw = await evidence.textContent(); assert.ok(raw && Buffer.byteLength(raw) < 16384, 'Bounded fixture evidence required.');
-    const envelope = JSON.parse(raw); assert.equal(envelope.schema, 'crc-signal-mutation-fixture/1');
+    const envelope = JSON.parse(raw); assert.equal(envelope.schema, 'pibbl-signal-mutation-fixture/1');
     assertIdentity(report.expectedIdentity, envelope.identity);
     const state = envelope.state;
     const step = { actionId, action: action ?? 'mount', status: 'incomplete', transport: action ? 'native-playwright-pointer' : 'page-navigation' };

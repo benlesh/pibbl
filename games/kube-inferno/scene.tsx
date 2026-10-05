@@ -1,5 +1,5 @@
-import { definePrimitive } from "@crc/core";
-import type { RenderingContext2D, SystemStyle } from "@crc/core";
+import { definePrimitive } from "@pibbl/core";
+import type { RenderingContext2D, SystemStyle } from "@pibbl/core";
 import { catalog, type Game, type Machine } from "./model";
 import { framePlacement, type SpriteFrame } from "./sprite-geometry";
 export const frames: SpriteFrame[] = Array.from({ length: 6 }, (_, i) => ({

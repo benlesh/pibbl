@@ -21,21 +21,21 @@ when release policy requires one.
 
 ## Fresh focused results
 
-| Command                                                                    | Exit | Result                                                                                                                                                 |     Wall |
-| -------------------------------------------------------------------------- | ---: | ------------------------------------------------------------------------------------------------------------------------------------------------------ | -------: |
-| `corepack pnpm@11.21.0 scenarios:check`                                    |    0 | 42 lessons; 16 labs                                                                                                                                    |  0.513 s |
-| `corepack pnpm@11.21.0 typecheck`                                          |    0 | no diagnostics                                                                                                                                         |  0.317 s |
-| `corepack pnpm@11.21.0 lint`                                               |    0 | ESLint/Prettier clean                                                                                                                                  |  1.660 s |
-| `corepack pnpm@11.21.0 build`                                              |    0 | workspace packages built                                                                                                                               |  0.572 s |
-| `corepack pnpm@11.21.0 playground:build`                                   |    0 | source Studio and 112-type declaration parity                                                                                                          |  1.882 s |
-| `corepack pnpm@11.21.0 playground:build:built`                             |    0 | built-package Studio and declaration parity                                                                                                            |  2.461 s |
-| `corepack pnpm@11.21.0 test:package-consumer:packed`                       |    0 | Bundler, NodeNext, declarations, compiler entries, deep-import rejection, no-source output, and focus elimination passed; 111,125 versus 134,769 bytes |  1.846 s |
-| `corepack pnpm@11.21.0 test:ci`                                            |    0 | 84 files; 1,175 passed and 2 skipped of 1,177; Vitest 21.61 s                                                                                          | 21.890 s |
-| `CRC_STUDIO_PREVIEW_PORT=4175 corepack pnpm@11.21.0 test:visual-safeguard` |    0 | drill rejected, baseline bytes preserved, green recovered                                                                                              |  3.240 s |
-| `CRC_STUDIO_PREVIEW_PORT=4175 corepack pnpm@11.21.0 test:studio-visual`    |    0 | 5 baselines matched                                                                                                                                    |  4.250 s |
-| `corepack pnpm@11.21.0 test:smoke:built`                                   |    0 | 1/1 passed; Vitest 650 ms                                                                                                                              |  1.534 s |
-| `corepack pnpm@11.21.0 test:lifecycle`                                     |    0 | 2 files; 14/14 passed; Vitest 9.69 s                                                                                                                   |  9.911 s |
-| `corepack pnpm@11.21.0 test:performance`                                   |    0 | 9 passed and 2 opt-in skips of 11; Vitest 1.49 s                                                                                                       |  1.710 s |
+| Command                                                                      | Exit | Result                                                                                                                                                 |     Wall |
+| ---------------------------------------------------------------------------- | ---: | ------------------------------------------------------------------------------------------------------------------------------------------------------ | -------: |
+| `corepack pnpm@11.21.0 scenarios:check`                                      |    0 | 42 lessons; 16 labs                                                                                                                                    |  0.513 s |
+| `corepack pnpm@11.21.0 typecheck`                                            |    0 | no diagnostics                                                                                                                                         |  0.317 s |
+| `corepack pnpm@11.21.0 lint`                                                 |    0 | ESLint/Prettier clean                                                                                                                                  |  1.660 s |
+| `corepack pnpm@11.21.0 build`                                                |    0 | workspace packages built                                                                                                                               |  0.572 s |
+| `corepack pnpm@11.21.0 playground:build`                                     |    0 | source Studio and 112-type declaration parity                                                                                                          |  1.882 s |
+| `corepack pnpm@11.21.0 playground:build:built`                               |    0 | built-package Studio and declaration parity                                                                                                            |  2.461 s |
+| `corepack pnpm@11.21.0 test:package-consumer:packed`                         |    0 | Bundler, NodeNext, declarations, compiler entries, deep-import rejection, no-source output, and focus elimination passed; 111,125 versus 134,769 bytes |  1.846 s |
+| `corepack pnpm@11.21.0 test:ci`                                              |    0 | 84 files; 1,175 passed and 2 skipped of 1,177; Vitest 21.61 s                                                                                          | 21.890 s |
+| `PIBBL_STUDIO_PREVIEW_PORT=4175 corepack pnpm@11.21.0 test:visual-safeguard` |    0 | drill rejected, baseline bytes preserved, green recovered                                                                                              |  3.240 s |
+| `PIBBL_STUDIO_PREVIEW_PORT=4175 corepack pnpm@11.21.0 test:studio-visual`    |    0 | 5 baselines matched                                                                                                                                    |  4.250 s |
+| `corepack pnpm@11.21.0 test:smoke:built`                                     |    0 | 1/1 passed; Vitest 650 ms                                                                                                                              |  1.534 s |
+| `corepack pnpm@11.21.0 test:lifecycle`                                       |    0 | 2 files; 14/14 passed; Vitest 9.69 s                                                                                                                   |  9.911 s |
+| `corepack pnpm@11.21.0 test:performance`                                     |    0 | 9 passed and 2 opt-in skips of 11; Vitest 1.49 s                                                                                                       |  1.710 s |
 
 Initial sandbox runs could not open the `tsx` IPC socket or bind local browser
 ports and exited 1 without an assertion failure. The identical commands were
@@ -44,7 +44,7 @@ rerun promptly with local-process approval; the table records those passes.
 ## Aggregate result
 
 ```sh
-/usr/bin/time -p env CRC_STUDIO_PREVIEW_PORT=4175 corepack pnpm@11.21.0 trust
+/usr/bin/time -p env PIBBL_STUDIO_PREVIEW_PORT=4175 corepack pnpm@11.21.0 trust
 ```
 
 Exit 0 in 56.40 seconds (`user` 69.88 s; `sys` 15.47 s). The fresh run passed
@@ -66,7 +66,7 @@ Studio declaration verifier, direct Bundler and NodeNext package consumers, 741
 documentation RED probes, and lint/format all exited 0.
 
 The one requested aggregate command,
-`env CRC_STUDIO_PREVIEW_PORT=4175 corepack pnpm@11.21.0 trust`, exited 0 in
+`env PIBBL_STUDIO_PREVIEW_PORT=4175 corepack pnpm@11.21.0 trust`, exited 0 in
 52.31 seconds. It passed 42 lessons and 16 labs; exact source/built Studio types
 and builds; packed consumers; 84 browser files with 1,176 passed and 2 skipped
 tests of 1,178 in 21.44 seconds; the visual safeguard; 5 Studio baselines; 1
@@ -109,15 +109,15 @@ A temporary esbuild consumer using a React stub runtime produced the expected
 root diagnostic:
 
 ```text
-CRC received a React element. This file is using the React JSX runtime.
-Set jsxImportSource to "@crc/core" or add /** @jsxImportSource @crc/core */.
-Received by CRC root.
+Pibbl received a React element. This file is using the React JSX runtime.
+Set jsxImportSource to "@pibbl/core" or add /** @jsxImportSource @pibbl/core */.
+Received by Pibbl root.
 ```
 
 The focused development-runtime case retained
-`ResultsGrid at results.crc.tsx:44:9`. The packed gate compiled
-`mixed-runtime/react-host.tsx`, which mounts a typed CRC scene from a React-host
-file through aliased `createCRCElement`.
+`ResultsGrid at results.pibbl.tsx:44:9`. The packed gate compiled
+`mixed-runtime/react-host.tsx`, which mounts a typed Pibbl scene from a React-host
+file through aliased `createPibblElement`.
 
 ## Visual inspection and baseline reconciliation
 

@@ -34,7 +34,7 @@ The public surface now includes:
 - `false | "low" | "medium" | "high"` layer shadow quality, with the documented
   medium default and independent mesh/light participation controls; and
 - `useOrbitCamera()`, which returns plain `position`, `lookAt`, and stable event
-  handlers that can be attached to ordinary CRC event participants while the
+  handlers that can be attached to ordinary Pibbl event participants while the
   layer continues to receive a plain perspective-camera object.
 
 All twelve public lighting lessons use the same base cube, sphere, plane,
@@ -114,7 +114,7 @@ It exited zero. Fresh output recorded:
   historical/work records, and all 987 documentation mutation probes;
 - typecheck, lint/format, package builds, source and built Studio builds,
   Studio documentation acceptance, and production-boundary checks;
-- the packed `@crc/core` and `@crc/webgl` consumer across Bundler and NodeNext,
+- the packed `@pibbl/core` and `@pibbl/webgl` consumer across Bundler and NodeNext,
   declarations, runtime exports, blocked deep imports, no-source checks, shared
   core identity, and optimized focus elimination;
 - the complete browser suite: 190 files, 2,590 passed and 2 intentionally

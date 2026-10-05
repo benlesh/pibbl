@@ -7,7 +7,7 @@ import {
   envelopeTransform,
   PathGeometry,
   transformPath,
-} from '@crc/core';
+} from '@pibbl/core';
 import { expect, it } from 'vitest';
 
 it('composes a text-envelope mapping left to right, snapshots guides, and preserves closing edges', () => {

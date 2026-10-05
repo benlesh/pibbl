@@ -3,18 +3,18 @@
 Status: implemented 2026-10-02; final verification and independent review are
 recorded in [Plan 004](../project-plans/004-html-box.md).
 
-`HtmlBox` is a native HTML boundary in a CRC allocation. It has no Canvas pixels
+`HtmlBox` is a native HTML boundary in a Pibbl allocation. It has no Canvas pixels
 or synthetic click target. All HTML hosts are above Canvas paint; hosts stack in
-CRC source order. Native semantics apply to mounted HTML, not to other Canvas
-content. Supported authoring is JSX or `createElement` through `@crc/core`.
+Pibbl source order. Native semantics apply to mounted HTML, not to other Canvas
+content. Supported authoring is JSX or `createElement` through `@pibbl/core`.
 
 ## Authoring and lifetime
 
-The mount-only `CRCConfig.htmlOverlay` is a dedicated empty HTML element directly
+The mount-only `PibblConfig.htmlOverlay` is a dedicated empty HTML element directly
 after the canvas in the same connected parent/document. The application owns
 this shared positioned wrapper and matching overlay/content rectangles. Canvas
 and overlay have no border, padding, or independent CSS transforms. They inherit
-common-ancestor page transforms. CRC owns only its inserted host/clip/focus nodes
+common-ancestor page transforms. Pibbl owns only its inserted host/clip/focus nodes
 and reserves the overlay for one live root. Offscreen roots cannot host HTML.
 
 `HtmlMountCallback<Props>(element, initialProps, signal)` runs once with a connected
@@ -24,20 +24,20 @@ renders; the initial props are not repeated. `data` is opaque, including a signa
 passed directly. Use `.get()` to subscribe the component. An inline mount function
 changing identity does not replace the host; change `key` to remount it.
 
-CRC aborts the signal once before removing the DIV on removal, root disposal,
+Pibbl aborts the signal once before removing the DIV on removal, root disposal,
 failed mount/invalid return, or later update failure. Register DOM listeners using
 `{ signal }` and other resource cleanup with an abort event listener. Abort event
 errors follow native browser reporting; cleanup continues and does not depend on
 synchronously catching them through abort(). Lifecycle callbacks and synchronous
-abort cleanup cannot write CRC signals. Native input and focus notification
-handlers may schedule CRC work.
+abort cleanup cannot write Pibbl signals. Native input and focus notification
+handlers may schedule Pibbl work.
 
 ## Geometry and presentation
 
 Layout uses existing box/layout fields and Group-order affine transforms.
-Existing CRC box sizing applies: explicit content width/height plus padding form
+Existing Pibbl box sizing applies: explicit content width/height plus padding form
 the border box. The supplied DIV occupies the resolved content rectangle. DOM
-content does not feed intrinsic sizes back into CRC. Overflow defaults to clip.
+content does not feed intrinsic sizes back into Pibbl. Overflow defaults to clip.
 
 Projection is inverse effective backing density multiplied by root surface
 projection and world geometry. CSS matrices retain fractional translation,
@@ -50,11 +50,11 @@ beside its Canvas path. Layout and Layer bounds provide portable rectangles.
 SVG clipPath references intersect ancestor clips in host-local user-space
 coordinates; changing clip depth does not reparent content. A raw Path2D ancestor
 clip is rejected only when HTML requires projection. Mutations require a normal
-CRC render request before refreshed geometry is published.
+Pibbl render request before refreshed geometry is published.
 
 Opacity affects HTML as its own group. Canvas filters and non-default composition
 enclosing HTML are rejected; CSS effects within HTML remain native. Raw custom
-Canvas clips unregistered with CRC are unsupported. Canvas and HTML do not form a
+Canvas clips unregistered with Pibbl are unsupported. Canvas and HTML do not form a
 shared filter/blend silhouette, and Canvas screenshots do not include HTML.
 
 ## Scheduling and caches
@@ -76,13 +76,13 @@ DOM/accessibility reading order is intentionally not rearranged by keyed reorder
 The overlay background is pointer-transparent. Active content receives native
 input. `pointerEvents="none"` makes that host inert and removes pointer/focus
 participation. Native pointer capture and native editing/composition/clipboard
-behavior are preserved; CRC does not synthesize duplicate HTML activation.
+behavior are preserved; Pibbl does not synthesize duplicate HTML activation.
 
 Without FocusManagement, native browser focus order applies. With the existing
 single focus manager, HTML regions and Canvas targets share source-order
 navigation. Tab enters the first eligible native control, reverse Tab the last;
 internal native traversal stays native, and region boundaries transfer to the
-next CRC candidate. Entry/exit sentinels provide one-key movement into/out of the
+next Pibbl candidate. Entry/exit sentinels provide one-key movement into/out of the
 whole surface. Native descendants' focus() calls synchronize region ownership.
 
 Directional navigation scores the host rectangle on entry. Inside HTML, arrows,

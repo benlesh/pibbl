@@ -8,7 +8,7 @@ import {
   loadScenario,
   type AnimationLabState,
   type ScenarioController,
-} from '@crc/scenarios';
+} from '@pibbl/scenarios';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
   installSchedulerDriverForTest,
@@ -146,8 +146,8 @@ describe('first-class animation public scenarios', () => {
       loadScenarioSource(animationLabScenarioEntry),
     ]);
     for (const source of [learningSource, labSource]) {
-      expect(source).toMatch(/from ['"]@crc\/core['"]/u);
-      expect(source).not.toMatch(/@crc\/core\/(?:internal|lib|src)\b/u);
+      expect(source).toMatch(/from ['"]@pibbl\/core['"]/u);
+      expect(source).not.toMatch(/@pibbl\/core\/(?:internal|lib|src)\b/u);
     }
     expect(learningSource).toContain('.get()');
     expect(labSource).toContain('.get()');

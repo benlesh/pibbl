@@ -1,22 +1,22 @@
 import {
-  crc,
+  pibbl,
   Group,
   Rectangle,
   Text,
   useVisibilityTransition,
   blurReveal,
-  type CRCBlurRevealOptions,
-  type CRCTransitionEffect,
-  type CRCVisibilityTransition,
-  type CRCVisibilityTransitionOptions,
-  type CRCVisibilityTransitionResult,
-  type CRCVisibilityTransitionStatus,
-  type CRCTransitionBinding,
-} from "@crc/core";
+  type PibblBlurRevealOptions,
+  type PibblTransitionEffect,
+  type PibblVisibilityTransition,
+  type PibblVisibilityTransitionOptions,
+  type PibblVisibilityTransitionResult,
+  type PibblVisibilityTransitionStatus,
+  type PibblTransitionBinding,
+} from "@pibbl/core";
 
-const options: CRCBlurRevealOptions = { radius: 20 };
-const effect: CRCTransitionEffect = blurReveal(options);
-const visibility: CRCVisibilityTransitionOptions = {
+const options: PibblBlurRevealOptions = { radius: 20 };
+const effect: PibblTransitionEffect = blurReveal(options);
+const visibility: PibblVisibilityTransitionOptions = {
   initial: true,
   enter: effect,
   duration: 1200,
@@ -26,12 +26,12 @@ canvas.width = 360;
 canvas.height = 220;
 const output = document.createElement("output");
 document.body.append(canvas, output);
-let handle: CRCVisibilityTransition | undefined;
+let handle: PibblVisibilityTransition | undefined;
 function Scene() {
   const transition = useVisibilityTransition(visibility);
   handle = transition;
-  const binding: CRCTransitionBinding = transition.binding;
-  const status: CRCVisibilityTransitionStatus = transition.status.get();
+  const binding: PibblTransitionBinding = transition.binding;
+  const status: PibblVisibilityTransitionStatus = transition.status.get();
   return (
     <>
       <Group style={{ transition: binding }}>
@@ -58,12 +58,12 @@ function Scene() {
     </>
   );
 }
-const controller = crc(canvas, <Scene />);
+const controller = pibbl(canvas, <Scene />);
 for (const action of ["show", "hide"] as const) {
   const button = document.createElement("button");
   button.textContent = action;
   button.onclick = async () => {
-    const result: CRCVisibilityTransitionResult | undefined =
+    const result: PibblVisibilityTransitionResult | undefined =
       await handle?.[action]();
     if (result) output.textContent = result.phase + ": " + result.status;
   };

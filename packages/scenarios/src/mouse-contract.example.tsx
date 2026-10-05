@@ -1,6 +1,6 @@
 import type { mouseContractScenarioEntry } from './catalog.js';
 import type { mouseContractScenario } from './mouse-contract-scenario.js';
-import type { CRCLogicalMouseEvent } from '@crc/core';
+import type { PibblLogicalMouseEvent } from '@pibbl/core';
 import type { MouseContractCase } from './mouse-contract';
 import {
   Clip,
@@ -10,7 +10,7 @@ import {
   Path,
   Rectangle,
   Text,
-} from '@crc/core';
+} from '@pibbl/core';
 export const MOUSE_CONTRACT_SOURCE_ID = 'mouse-interaction-contract-example';
 /**
  * Observable state exposed by the mouse contract scenario scenario for controls and assertions.
@@ -57,7 +57,7 @@ function caseVisual(
   };
   const interactive = (target: string) => ({
     cursor: 'crosshair',
-    onMouseMove: (_event: CRCLogicalMouseEvent) => recordTarget(target),
+    onMouseMove: (_event: PibblLogicalMouseEvent) => recordTarget(target),
   });
   const region = (
     target: string,

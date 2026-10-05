@@ -2,13 +2,13 @@ import type {
   ScenarioController,
   ScenarioDefinition,
   SmokeScenarioState,
-} from '@crc/scenarios';
+} from '@pibbl/scenarios';
 import {
   loadScenario,
   scenarioCatalog,
   smokeScenarioEntry,
   validateScenarioCatalog,
-} from '@crc/scenarios';
+} from '@pibbl/scenarios';
 import { page, userEvent } from 'vitest/browser';
 import { afterEach, describe, expect, it } from 'vitest';
 import smokeSource from '../../scenarios/src/smoke.example.tsx?raw';
@@ -172,10 +172,10 @@ describe('shared smoke scenario', () => {
     });
     expect(pixelAt(canvas, 200, 150)).toEqual([37, 99, 235, 255]);
 
-    if (import.meta.env.VITE_CRC_VISUAL_DRILL === '1') {
+    if (import.meta.env.VITE_PIBBL_VISUAL_DRILL === '1') {
       await controller.perform('update');
     }
-    if (import.meta.env.VITE_CRC_VISUAL_DRILL === 'mask-gap') {
+    if (import.meta.env.VITE_PIBBL_VISUAL_DRILL === 'mask-gap') {
       const context = canvas.getContext('2d')!;
       context.fillStyle = '#ff0000';
       context.fillRect(60, 100, 12, 6);
@@ -205,7 +205,7 @@ describe('shared smoke scenario', () => {
         { x: 498, y: 193, width: 44, height: 20, reason: 'DOM action value: platform-sensitive glyph rasterization; inter-line backgrounds and borders remain checked.' },
       ],
     });
-    if (import.meta.env.VITE_CRC_VISUAL_DRILL === '1') {
+    if (import.meta.env.VITE_PIBBL_VISUAL_DRILL === '1') {
       await controller.reset();
     }
 

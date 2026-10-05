@@ -9,10 +9,10 @@ const update = process.argv.includes("--update");
 const requestedRouteNames = process.argv
   .filter((argument) => argument.startsWith("--route="))
   .map((argument) => argument.slice("--route=".length));
-const previewPort = process.env.CRC_STUDIO_PREVIEW_PORT ?? "4174";
+const previewPort = process.env.PIBBL_STUDIO_PREVIEW_PORT ?? "4174";
 if (!/^[1-9]\d{0,4}$/.test(previewPort) || Number(previewPort) > 65_535) {
   throw new Error(
-    `CRC_STUDIO_PREVIEW_PORT must be an integer from 1 through 65535; received ${JSON.stringify(previewPort)}.`,
+    `PIBBL_STUDIO_PREVIEW_PORT must be an integer from 1 through 65535; received ${JSON.stringify(previewPort)}.`,
   );
 }
 const origin = `http://127.0.0.1:${previewPort}`;
@@ -43,7 +43,7 @@ const unknownRouteNames = requestedRouteNames.filter(
 );
 if (unknownRouteNames.length > 0) {
   throw new Error(
-    `Unknown CRC Studio visual route(s): ${unknownRouteNames.join(", ")}.`,
+    `Unknown Pibbl Studio visual route(s): ${unknownRouteNames.join(", ")}.`,
   );
 }
 const requestedRouteNameSet = new Set(requestedRouteNames);
@@ -261,7 +261,7 @@ try {
     await page.close();
   }
   process.stdout.write(
-    `${update ? "Updated and inspected" : "Matched"} ${routes.length} CRC studio visual baselines.\n`,
+    `${update ? "Updated and inspected" : "Matched"} ${routes.length} Pibbl studio visual baselines.\n`,
   );
 } catch (error) {
   if (serverOutput) process.stderr.write(serverOutput);

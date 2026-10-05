@@ -44,7 +44,7 @@ export interface RapierCheckpoint2D {
   colliders: Map<number, ColliderBinding>;
 }
 
-/** Private engine bridge. CRC retains identity, transactions, commands and time. */
+/** Private engine bridge. Pibbl retains identity, transactions, commands and time. */
 export class RapierSimulation2D {
   private world = new RAPIER.World({ x: 0, y: 0 });
   private disposed = false;

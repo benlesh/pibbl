@@ -8,7 +8,7 @@ The [October 4 architecture](12-documentation-architecture.md) refines the group
 
 | Surface    | User question                                 | Primary action                        |
 | ---------- | --------------------------------------------- | ------------------------------------- |
-| Home       | What can I make, and why CRC?                 | Explore examples                      |
+| Home       | What can I make, and why Pibbl?               | Explore examples                      |
 | Learn      | How do I get started or understand a concept? | Follow a short guide                  |
 | API        | What does this symbol accept and do?          | Read a contract and try a snippet     |
 | Examples   | What does this look like in practice?         | Open a demo or its playground project |
@@ -22,7 +22,7 @@ Use capability groups as the main navigation. Within a group, put components, ho
 
 | Group                   | Scope and representative entries                                   |
 | ----------------------- | ------------------------------------------------------------------ |
-| Setup and authoring     | `crc`, JSX setup, `createElement`, elements, controller disposal   |
+| Setup and authoring     | `pibbl`, JSX setup, `createElement`, elements, controller disposal |
 | Drawing and text        | Shapes, paths, images, `Text`, paint and geometry helpers          |
 | Composition and effects | `Group`, `Clip`, `Layer`, transforms, filters                      |
 | Layout and measurement  | Absolute, Overlay, Flow, Flex, Grid, measurement and allocation    |
@@ -39,7 +39,7 @@ Use capability groups as the main navigation. Within a group, put components, ho
 
 Compiler exports and specialized testing helpers belong in a clearly labeled advanced reference section, still searchable. Pure 3D geometry needs an explicit label so readers do not infer a 3D physics runtime. Exact group membership should come from an export inventory before migration; this table is a proposed browsing model, not a complete symbol list.
 
-Keep import paths visible on every API page. Capability groups must not invent packages: particles, textures, physics, and visualization are current `@crc/core` subpaths; `@crc/three` is an adapter package.
+Keep import paths visible on every API page. Capability groups must not invent packages: particles, textures, physics, and visualization are current `@pibbl/core` subpaths; `@pibbl/three` is an adapter package.
 
 ## Learn structure
 

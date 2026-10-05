@@ -1,4 +1,4 @@
-# CRC runtime resource ownership
+# Pibbl runtime resource ownership
 
 Status: current implemented contract, updated for first-class signals,
 animation, the realm scheduler, and external render-layer ownership on
@@ -12,7 +12,7 @@ This contract extends the [event resource ownership contract](./event-resource-o
 | ----------------------------------------- | ------------------------------------------------ | ------------------------------------------------ | ------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Teardown entry                            | `Teardowns.add()`                                | One teardown collection                          | Explicit removal or the collection's first execution                                       | It runs at most once; later execution is inert.                                                                                                                   |
 | Follower link                             | `child.follow(parent)`                           | Child collection                                 | Child or parent execution                                                                  | The child closes once and detaches from the parent.                                                                                                               |
-| Root instance and refs                    | First `crc()` mount and render                   | Identity-guarded controller                      | Abort or controller disposal                                                               | The exact map entry and every owned component ref are absent; a remount is untouched.                                                                             |
+| Root instance and refs                    | First `pibbl()` mount and render                 | Identity-guarded controller                      | Abort or controller disposal                                                               | The exact map entry and every owned component ref are absent; a remount is untouched.                                                                             |
 | Component refs                            | First render of one component path/key           | Component teardown collection                    | Key, subtree, or root replacement; instance disposal                                       | The ref leaves the instance map after its teardown closes.                                                                                                        |
 | `useReaction` generation                  | Successful render adopts setup; Complete runs it | Exact mounted reaction hook slot                 | Source/dependency invalidation, replacement, component teardown, or disposal               | Setup runs only after successful render; exact cleanup runs before replacement and once on final release; stale work cannot run.                                  |
 | `useComputed` formula generation          | Successful render of its hook slot               | Exact mounted computed hook slot                 | Successful replacement or component/root teardown                                          | Failed candidates roll back; a retained computed keeps the last committed formula without scheduling a removed owner.                                             |
@@ -25,10 +25,10 @@ This contract extends the [event resource ownership contract](./event-resource-o
 | Render-layer candidate bitmap/interaction | Completed external render and bitmap transfer    | Current uncommitted layer transaction            | Successful parent Canvas composite/commit, or any transfer/composite failure               | Bitmap and interaction metadata commit together; an uncommitted bitmap closes and its metadata is discarded.                                                      |
 | Render-layer committed generation         | Successful parent Canvas composition             | Owning layer generation                          | Successful replacement, layer removal, invalidation that discards output, or disposal      | Visible bitmap and selectable/focus metadata always describe the same generation; replaced bitmap closes once.                                                    |
 | Three renderer/input bridge               | Mounted `defineThreeLayer` component             | Exact Three adapter resources                    | Layer removal, failure teardown, or disposal                                               | Adapter listeners and bridge state detach, renderer disposes, stale callbacks become inert, and application resources release through the definition's `dispose`. |
-| Native filter scratch pool                | First active native-filter boundary              | Optional service on that CRC instance            | Last service release or instance main teardown                                             | Every reusable source/result canvas and context reference is released; a remount receives a distinct pool.                                                        |
+| Native filter scratch pool                | First active native-filter boundary              | Optional service on that Pibbl instance          | Last service release or instance main teardown                                             | Every reusable source/result canvas and context reference is released; a remount receives a distinct pool.                                                        |
 | Filter surface-pair lease                 | Start of one active nonempty filter boundary     | Current synchronous boundary                     | Boundary `finally`, including validation/render/composite failure, or owning pool disposal | Source and result slots return together in strict LIFO order; no active pair or user reference survives.                                                          |
 | Root surface observers                    | First root mount                                 | Root instance main teardown                      | Abort, controller disposal, or failed mount                                                | Resize, window-resize, and resolution-query listeners are detached; stale notifications cannot schedule the replacement.                                          |
-| Intrinsic-size stabilization              | Backing resize that changes CSS size             | Root surface state                               | Root disposal while CRC still owns the inline value                                        | The prior inline width/height is restored without overwriting a later external style change.                                                                      |
+| Intrinsic-size stabilization              | Backing resize that changes CSS size             | Root surface state                               | Root disposal while Pibbl still owns the inline value                                      | The prior inline width/height is restored without overwriting a later external style change.                                                                      |
 | Temporary render globals                  | `executeRender()` entry                          | Current synchronous render                       | `finally` on success or failure                                                            | Canvas, refs, instance, contexts, seen/unseen sets, hook index, mounting flag, and clip stack return to the prior baseline.                                       |
 
 ## Collection semantics
@@ -55,7 +55,7 @@ next consecutive source/result pair in constant time; nested boundaries use the
 next pair and completed siblings reuse the current pair. Capacity is exactly two
 surface slots per maximum active filter depth, independent of sibling count and
 the number of functions in a list. Filter capture does not create a component,
-hook frame, event root, nested CRC mount, or Layer-like cache.
+hook frame, event root, nested Pibbl mount, or Layer-like cache.
 
 Fresh and resized slots are already transparent. Same-size reuse clears the
 exact active source and result bitmaps, resets Canvas state and the current
@@ -147,7 +147,7 @@ composite, no default pixel readback/ID pass, and exact bitmap/renderer closure.
 
 ## Deliberate boundaries
 
-- Browser fetch/decode internals are not exposed as a deterministic resource count. CRC owns and detaches its handlers, clears the element source, source-tags published state, and proves that late completion cannot schedule or draw.
+- Browser fetch/decode internals are not exposed as a deterministic resource count. Pibbl owns and detaches its handlers, clears the element source, source-tags published state, and proves that late completion cannot schedule or draw.
 - Heap snapshots are optional diagnostics, not a pass condition.
 - TFC-08 completed the full component type/key/hook-order identity semantics. TFC-07 proves cleanup for an explicit key change and for replacement by two distinct root component identities; the runtime/hook contract proves the remaining identity matrix.
 
@@ -190,7 +190,7 @@ postconditions.
 ## Editable geometry snapshots
 
 Application-owned PathGeometry holds private typed buffers and a numeric
-revision. Public native conversions are independently caller-owned. CRC's
+revision. Public native conversions are independently caller-owned. Pibbl's
 module-local WeakMap retains only the latest successful native snapshot per
 live geometry; it introduces no scheduler participant, listeners, or explicit
 resource leases. Historical paint/clip records retain their own native snapshot
@@ -211,7 +211,7 @@ A manipulation controller owns native pointer capture, bounded source
 observations, and its temporary session until a terminal event, frame removal,
 component teardown, or root disposal. Release is idempotent. Teardown restores
 only a preview still owned by that session and invokes no disposed callback. If
-a signal write guard prevents immediate restoration, CRC queues one
+a signal write guard prevents immediate restoration, Pibbl queues one
 generation-checked Begin cleanup record; a newer external write or later owner
 generation invalidates it. See the
 [component-manipulation contract](./component-manipulation-contract.md).

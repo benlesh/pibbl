@@ -1,4 +1,4 @@
-CRC - Canvas Render Components (alpha)
+Pibbl - Canvas Render Components (alpha)
 
 MIT License
 

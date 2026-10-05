@@ -8,17 +8,17 @@ import {
   Rectangle,
   ResizeHandle,
   RotationHandle,
-  crc,
+  pibbl,
   signal,
   useManipulation,
-  type CRCController,
-  type CRCNode,
-} from '@crc/core';
-import { blur } from '@crc/core/filters';
+  type PibblController,
+  type PibblNode,
+} from '@pibbl/core';
+import { blur } from '@pibbl/core/filters';
 import { afterEach, expect, it } from 'vitest';
 import { commands } from 'vitest/browser';
 
-let controller: CRCController | undefined;
+let controller: PibblController | undefined;
 
 afterEach(async () => {
   controller?.dispose();
@@ -35,7 +35,7 @@ it('keeps a custom resize child aligned and active through fit, density, Layer, 
   canvas.style.cssText = 'display:block; width:160px; height:120px';
   canvas.dataset.manipulationTest = '';
   document.body.append(canvas);
-  function Scene(): CRCNode {
+  function Scene(): PibblNode {
     const manipulation = useManipulation({ box, resize: {} });
     return <Layer style={{ width: 320, height: 240 }}>
       <Group style={{
@@ -57,7 +57,7 @@ it('keeps a custom resize child aligned and active through fit, density, Layer, 
       </Group>
     </Layer>;
   }
-  controller = crc(canvas, <Scene />, {
+  controller = pibbl(canvas, <Scene />, {
     viewport: { width: 320, height: 240 },
     fit: 'contain',
     pixelRatio: 2,
@@ -95,7 +95,7 @@ it('keeps content-only clips out of handle targeting while an ancestor Clip bloc
   canvas.height = 180;
   canvas.dataset.manipulationTest = '';
   document.body.append(canvas);
-  controller = crc(canvas,
+  controller = pibbl(canvas,
     <Clip style={{ d: rectanglePath(0, 0, 100, 100) }}>
       <Manipulable style={box} resizable>
         <Clip style={{ d: rectanglePath(0, 0, 60, 50) }}>
@@ -127,7 +127,7 @@ it('lets a custom rotation child receive its pointer event without replacing the
   canvas.height = 240;
   canvas.dataset.manipulationTest = '';
   document.body.append(canvas);
-  function Scene(): CRCNode {
+  function Scene(): PibblNode {
     const manipulation = useManipulation({ box, rotation, rotate: {} });
     return <ManipulationFrame {...manipulation.frameProps}>
       <RotationHandle controller={manipulation}>
@@ -138,7 +138,7 @@ it('lets a custom rotation child receive its pointer event without replacing the
       </RotationHandle>
     </ManipulationFrame>;
   }
-  controller = crc(canvas, <Scene />, { pixelRatio: 1 });
+  controller = pibbl(canvas, <Scene />, { pixelRatio: 1 });
   await settle();
 
   await commands.manipulationPointer([
@@ -161,7 +161,7 @@ it('paints custom handle children in CSS-pixel local coordinates under a scaled 
   canvas.style.cssText = 'display:block; width:160px; height:120px';
   canvas.dataset.manipulationTest = '';
   document.body.append(canvas);
-  function Scene(): CRCNode {
+  function Scene(): PibblNode {
     const manipulation = useManipulation({ box, resize: {} });
     return <Group style={{ scaleX: 3, scaleY: 3 }}>
       <ManipulationFrame {...manipulation.frameProps}>
@@ -171,7 +171,7 @@ it('paints custom handle children in CSS-pixel local coordinates under a scaled 
       </ManipulationFrame>
     </Group>;
   }
-  controller = crc(canvas, <Scene />, {
+  controller = pibbl(canvas, <Scene />, {
     viewport: { width: 320, height: 240 },
     fit: 'contain',
     pixelRatio: 2,
@@ -201,7 +201,7 @@ it("replaces a keyed frame attachment without remounting its controller", async 
   canvas.height = 240;
   canvas.dataset.manipulationTest = "";
   document.body.append(canvas);
-  function Scene(): CRCNode {
+  function Scene(): PibblNode {
     const manipulation = useManipulation({ box, move: {} });
     return (
       <ManipulationFrame
@@ -218,7 +218,7 @@ it("replaces a keyed frame attachment without remounting its controller", async 
       </ManipulationFrame>
     );
   }
-  controller = crc(canvas, <Scene />, { pixelRatio: 1 });
+  controller = pibbl(canvas, <Scene />, { pixelRatio: 1 });
   await settle();
   replacement.set(true);
   await settle();
@@ -244,7 +244,7 @@ it("cancels the next captured move when an ancestor or root CSS mapping changes"
   canvas.style.cssText = "display:block; width:200px; height:150px";
   canvas.dataset.manipulationTest = "";
   document.body.append(canvas);
-  function Scene(): CRCNode {
+  function Scene(): PibblNode {
     const manipulation = useManipulation({
       box,
       move: {},
@@ -264,7 +264,7 @@ it("cancels the next captured move when an ancestor or root CSS mapping changes"
       </Group>
     );
   }
-  controller = crc(canvas, <Scene />, {
+  controller = pibbl(canvas, <Scene />, {
     viewport: { width: 400, height: 300 },
     pixelRatio: 1,
   });
@@ -379,7 +379,7 @@ it("replaces an active controller when one mounted frame receives a different co
   canvas.height = 240;
   canvas.dataset.manipulationTest = "";
   document.body.append(canvas);
-  function Scene(): CRCNode {
+  function Scene(): PibblNode {
     first = useManipulation({ box: firstBox, move: {} });
     second = useManipulation({ box: secondBox, move: {} });
     const current = showSecond.get() ? second : first;
@@ -404,7 +404,7 @@ it("replaces an active controller when one mounted frame receives a different co
       </ManipulationFrame>
     );
   }
-  controller = crc(canvas, <Scene />, { pixelRatio: 1 });
+  controller = pibbl(canvas, <Scene />, { pixelRatio: 1 });
   await settle();
 
   await commands.manipulationPointer([
@@ -438,7 +438,7 @@ it("keeps default resize-handle chrome at an eight CSS-pixel extent under scale"
   canvas.height = 240;
   canvas.dataset.manipulationTest = "";
   document.body.append(canvas);
-  function Scene(): CRCNode {
+  function Scene(): PibblNode {
     const manipulation = useManipulation({ box, resize: {} });
     return (
       <Group style={{ scaleX: 3, scaleY: 3 }}>
@@ -448,7 +448,7 @@ it("keeps default resize-handle chrome at an eight CSS-pixel extent under scale"
       </Group>
     );
   }
-  controller = crc(canvas, <Scene />, { pixelRatio: 1 });
+  controller = pibbl(canvas, <Scene />, { pixelRatio: 1 });
   await settle();
 
   expect(paintedAlphaBounds(canvas)).toEqual({ left: 146, top: 116, width: 8, height: 8 });

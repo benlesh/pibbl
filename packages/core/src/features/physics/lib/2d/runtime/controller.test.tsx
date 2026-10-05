@@ -1,35 +1,35 @@
-import { opacity } from "@crc/core/filters";
-/** @jsxImportSource @crc/core */
+import { opacity } from "@pibbl/core/filters";
+/** @jsxImportSource @pibbl/core */
 import {
   Circle,
   Fragment,
   Group,
-  crc,
+  pibbl,
   usePlayback,
   signal,
   drive,
   tween,
-  type CRCController,
-  type CRCPlayback,
+  type PibblController,
+  type PibblPlayback,
   type WritableSignal,
-} from "@crc/core";
+} from "@pibbl/core";
 import {
-  crcInternalCurrentSimulationOwner,
-  crcInternalRegisterSimulationAdvance,
+  pibblInternalCurrentSimulationOwner,
+  pibblInternalRegisterSimulationAdvance,
   useInternalHookSlot,
-} from "@crc/core/internal";
+} from "@pibbl/core/internal";
 import {
   PhysicsWorld2D,
   collider2D,
-  crcPhysicsBody2D,
-  crcPhysicsWorld2D,
+  pibblPhysicsBody2D,
+  pibblPhysicsWorld2D,
   dynamicBody2D,
   kinematicBody2D,
   setAngularVelocity2D,
   sleepBody2D,
   staticBody2D,
-  type CRCPhysicsBodyHandle2D,
-  type CRCPhysicsWorldHandle2D,
+  type PibblPhysicsBodyHandle2D,
+  type PibblPhysicsWorldHandle2D,
 } from "../../../2d.js";
 import { circleShape2D, segmentShape2D } from "../../../2d-geometry.js";
 import {
@@ -41,7 +41,7 @@ import { snapshotPhysicsBodyFrameCountForTest } from "./descriptors.js";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 let frames: ManualFrames;
-const mounts: CRCController[] = [];
+const mounts: PibblController[] = [];
 
 beforeEach(() => {
   document.body.innerHTML = "";
@@ -57,9 +57,9 @@ afterEach(() => {
 describe("PhysicsWorld2D controller scheduling and topology", () => {
   it("releases presentation frames when keyed bodies unmount from a live world", () => {
     const present = signal(true);
-    let world!: CRCPhysicsWorldHandle2D;
+    let world!: PibblPhysicsWorldHandle2D;
     const Scene = () => {
-      world = crcPhysicsWorld2D();
+      world = pibblPhysicsWorld2D();
       return present.get() ? (
         <Group
           key="transient"
@@ -69,7 +69,7 @@ describe("PhysicsWorld2D controller scheduling and topology", () => {
         </Group>
       ) : undefined;
     };
-    mountCRC(
+    mountPibbl(
       <PhysicsWorld2D gravity={[0, 0]}>
         <Scene />
       </PhysicsWorld2D>,
@@ -87,12 +87,12 @@ describe("PhysicsWorld2D controller scheduling and topology", () => {
   it("rejects zero-area automatic mass before admitting topology while preserving explicit and non-dynamic mass authority", () => {
     const circle = circleShape2D({ radius: 2 });
     const segment = segmentShape2D({ start: [0, 0], end: [4, 0] });
-    let rejectedWorld!: CRCPhysicsWorldHandle2D;
+    let rejectedWorld!: PibblPhysicsWorldHandle2D;
     const CaptureRejected = () => {
-      rejectedWorld = crcPhysicsWorld2D();
+      rejectedWorld = pibblPhysicsWorld2D();
       return undefined;
     };
-    mountCRC(
+    mountPibbl(
       <PhysicsWorld2D>
         <CaptureRejected />
         <Group physics={dynamicBody2D({ collider: false })}>
@@ -124,12 +124,12 @@ describe("PhysicsWorld2D controller scheduling and topology", () => {
       counters: { bodyAllocations: 0, colliderAllocations: 0 },
     });
 
-    let acceptedWorld!: CRCPhysicsWorldHandle2D;
+    let acceptedWorld!: PibblPhysicsWorldHandle2D;
     const CaptureAccepted = () => {
-      acceptedWorld = crcPhysicsWorld2D();
+      acceptedWorld = pibblPhysicsWorld2D();
       return undefined;
     };
-    mountCRC(
+    mountPibbl(
       <PhysicsWorld2D>
         <CaptureAccepted />
         <Group physics={dynamicBody2D({ collider: false, mass: 2 })}>
@@ -161,12 +161,12 @@ describe("PhysicsWorld2D controller scheduling and topology", () => {
   });
 
   it("derives a density-weighted center and parallel-axis inertia for compound bodies", () => {
-    let world!: CRCPhysicsWorldHandle2D;
+    let world!: PibblPhysicsWorldHandle2D;
     const Capture = () => {
-      world = crcPhysicsWorld2D();
+      world = pibblPhysicsWorld2D();
       return undefined;
     };
-    mountCRC(
+    mountPibbl(
       <PhysicsWorld2D>
         <Capture />
         <Group
@@ -198,11 +198,11 @@ describe("PhysicsWorld2D controller scheduling and topology", () => {
 
   it("preserves or zeros velocity explicitly when a dynamic body is re-enabled", () => {
     const shape = circleShape2D({ radius: 2 });
-    let world!: CRCPhysicsWorldHandle2D;
+    let world!: PibblPhysicsWorldHandle2D;
     let enabled = true;
     let reenableVelocity: "zero" | "preserve" = "preserve";
     const Capture = () => {
-      world = crcPhysicsWorld2D();
+      world = pibblPhysicsWorld2D();
       return undefined;
     };
     const root = () => (
@@ -219,7 +219,7 @@ describe("PhysicsWorld2D controller scheduling and topology", () => {
         />
       </PhysicsWorld2D>
     );
-    const mount = mountCRC(root());
+    const mount = mountPibbl(root());
     frames.flush(0);
     frames.flush(0);
     const controller = requirePhysicsWorld2DController(world);
@@ -236,11 +236,11 @@ describe("PhysicsWorld2D controller scheduling and topology", () => {
     frames.flush(0);
 
     enabled = false;
-    crc(canvasOf(mount), root());
+    pibbl(canvasOf(mount), root());
     frames.flush(0);
     frames.flush(0);
     enabled = true;
-    crc(canvasOf(mount), root());
+    pibbl(canvasOf(mount), root());
     frames.flush(0);
     frames.flush(0);
     expect(snapshot(world).kernel.bodies[0]).toMatchObject({
@@ -250,12 +250,12 @@ describe("PhysicsWorld2D controller scheduling and topology", () => {
     });
 
     enabled = false;
-    crc(canvasOf(mount), root());
+    pibbl(canvasOf(mount), root());
     frames.flush(0);
     frames.flush(0);
     enabled = true;
     reenableVelocity = "zero";
-    crc(canvasOf(mount), root());
+    pibbl(canvasOf(mount), root());
     frames.flush(0);
     frames.flush(0);
     expect(snapshot(world).kernel.bodies[0]).toMatchObject({
@@ -267,10 +267,10 @@ describe("PhysicsWorld2D controller scheduling and topology", () => {
 
   it("renders authored content first, applies complete topology at next Begin, and retains IDs for equivalent descriptors", () => {
     const shape = circleShape2D({ radius: 3 });
-    let world!: CRCPhysicsWorldHandle2D;
+    let world!: PibblPhysicsWorldHandle2D;
     const observed: number[] = [];
     const Capture = () => {
-      world = crcPhysicsWorld2D();
+      world = pibblPhysicsWorld2D();
       observed.push(world.revision.get());
       return undefined;
     };
@@ -283,7 +283,7 @@ describe("PhysicsWorld2D controller scheduling and topology", () => {
       </PhysicsWorld2D>
     );
 
-    const mount = mountCRC(root());
+    const mount = mountPibbl(root());
     frames.flush(0);
     expect(snapshot(world)).toMatchObject({
       revision: 0,
@@ -303,7 +303,7 @@ describe("PhysicsWorld2D controller scheduling and topology", () => {
     expect(observed).toEqual([0, 1, 1]);
     expect(frames.pending).toBe(0);
 
-    crc(canvasOf(mount), root());
+    pibbl(canvasOf(mount), root());
     frames.flush(3);
     expect(frames.pending).toBe(0);
     const equivalent = snapshot(world);
@@ -319,11 +319,11 @@ describe("PhysicsWorld2D controller scheduling and topology", () => {
 
   it("updates changed options once and releases removed descendants before their body", () => {
     const shape = circleShape2D({ radius: 2 });
-    let world!: CRCPhysicsWorldHandle2D;
+    let world!: PibblPhysicsWorldHandle2D;
     let friction = 0.25;
     let include = true;
     const Capture = () => {
-      world = crcPhysicsWorld2D();
+      world = pibblPhysicsWorld2D();
       return undefined;
     };
     const root = () => (
@@ -339,12 +339,12 @@ describe("PhysicsWorld2D controller scheduling and topology", () => {
         ) : undefined}
       </PhysicsWorld2D>
     );
-    const mount = mountCRC(root());
+    const mount = mountPibbl(root());
     frames.flush(0);
     frames.flush(1);
 
     friction = 0.75;
-    crc(canvasOf(mount), root());
+    pibbl(canvasOf(mount), root());
     frames.flush(2);
     frames.flush(3);
     expect(snapshot(world).kernel.counters).toMatchObject({
@@ -355,7 +355,7 @@ describe("PhysicsWorld2D controller scheduling and topology", () => {
     });
 
     include = false;
-    crc(canvasOf(mount), root());
+    pibbl(canvasOf(mount), root());
     frames.flush(4);
     frames.flush(5);
     expect(snapshot(world).kernel).toMatchObject({
@@ -370,17 +370,17 @@ describe("PhysicsWorld2D controller scheduling and topology", () => {
 
   it("reads staged kinematic targets after animation-lane writes and publishes revision only at Commit", () => {
     const target = signal<readonly [number, number]>([0, 0]);
-    let world!: CRCPhysicsWorldHandle2D;
+    let world!: PibblPhysicsWorldHandle2D;
     const revisions: number[] = [];
     const Capture = () => {
-      world = crcPhysicsWorld2D();
+      world = pibblPhysicsWorld2D();
       revisions.push(world.revision.get());
       return undefined;
     };
     const Animate = () => {
-      const owner = crcInternalCurrentSimulationOwner();
+      const owner = pibblInternalCurrentSimulationOwner();
       useInternalHookSlot("task11AnimationProbe", (teardowns) => {
-        const release = crcInternalRegisterSimulationAdvance(
+        const release = pibblInternalRegisterSimulationAdvance(
           owner,
           "animation",
           (_frame, batch) => {
@@ -409,7 +409,7 @@ describe("PhysicsWorld2D controller scheduling and topology", () => {
         />
       </PhysicsWorld2D>
     );
-    const mount = mountCRC(root);
+    const mount = mountPibbl(root);
     frames.flush(0);
     frames.flush(100);
 
@@ -420,9 +420,9 @@ describe("PhysicsWorld2D controller scheduling and topology", () => {
 
   it("reaches an animation target in the terminal frame when a target-bound kinematic Group renders from that signal after dynamics sleep", () => {
     const position = signal<readonly [number, number]>([220, 142]);
-    let playback!: CRCPlayback;
-    let body!: CRCPhysicsBodyHandle2D;
-    let sleeper!: CRCPhysicsBodyHandle2D;
+    let playback!: PibblPlayback;
+    let body!: PibblPhysicsBodyHandle2D;
+    let sleeper!: PibblPhysicsBodyHandle2D;
     const AnimationOwner = () => {
       playback = usePlayback(
         drive(
@@ -441,7 +441,7 @@ describe("PhysicsWorld2D controller scheduling and topology", () => {
       return undefined;
     };
     const SettledBody = () => {
-      sleeper = crcPhysicsBody2D();
+      sleeper = pibblPhysicsBody2D();
       return (
         <Circle
           physics={dynamicBody2D({ handle: sleeper, mass: 1 })}
@@ -450,7 +450,7 @@ describe("PhysicsWorld2D controller scheduling and topology", () => {
       );
     };
     const Platform = () => {
-      body = crcPhysicsBody2D();
+      body = pibblPhysicsBody2D();
       const authoredPosition = position.get();
       return (
         <Group
@@ -474,7 +474,7 @@ describe("PhysicsWorld2D controller scheduling and topology", () => {
       return undefined;
     };
 
-    mountCRC(
+    mountPibbl(
       <PhysicsWorld2D fixedStepMilliseconds={50} maxCatchUpSteps={3}>
         <AnimationOwner />
         <SettledBody />
@@ -501,15 +501,15 @@ describe("PhysicsWorld2D controller scheduling and topology", () => {
   });
 
   it("keeps a rotating dynamic descendant Circle's local mass and collider allocation stable across presentation renders", () => {
-    let world!: CRCPhysicsWorldHandle2D;
-    let body!: CRCPhysicsBodyHandle2D;
+    let world!: PibblPhysicsWorldHandle2D;
+    let body!: PibblPhysicsBodyHandle2D;
     const Capture = () => {
-      world = crcPhysicsWorld2D();
+      world = pibblPhysicsWorld2D();
       world.revision.get();
       return undefined;
     };
     const Ball = () => {
-      body = crcPhysicsBody2D();
+      body = pibblPhysicsBody2D();
       return (
         <Group
           physics={dynamicBody2D({
@@ -525,7 +525,7 @@ describe("PhysicsWorld2D controller scheduling and topology", () => {
       );
     };
 
-    mountCRC(
+    mountPibbl(
       <PhysicsWorld2D fixedStepMilliseconds={50} sleeping={false}>
         <Capture />
         <Ball />
@@ -559,17 +559,17 @@ describe("PhysicsWorld2D controller scheduling and topology", () => {
   });
 
   it("stabilizes a rotating dynamic nested collider's roundoff without hiding a meaningful authored transform", () => {
-    let world!: CRCPhysicsWorldHandle2D;
-    let body!: CRCPhysicsBodyHandle2D;
+    let world!: PibblPhysicsWorldHandle2D;
+    let body!: PibblPhysicsBodyHandle2D;
     const scaleX = signal(1);
     const translateX = signal(0);
     const Capture = () => {
-      world = crcPhysicsWorld2D();
+      world = pibblPhysicsWorld2D();
       world.revision.get();
       return undefined;
     };
     const Ball = () => {
-      body = crcPhysicsBody2D();
+      body = pibblPhysicsBody2D();
       return (
         <Group
           physics={dynamicBody2D({
@@ -598,7 +598,7 @@ describe("PhysicsWorld2D controller scheduling and topology", () => {
       );
     };
 
-    mountCRC(
+    mountPibbl(
       <PhysicsWorld2D fixedStepMilliseconds={50} sleeping={false}>
         <Capture />
         <Ball />
@@ -658,9 +658,9 @@ describe("PhysicsWorld2D controller scheduling and topology", () => {
   it("retains the target-bound kinematic origin without a sub-step reset when its unbound rotation changes", () => {
     const position = signal<readonly [number, number]>([30, 20]);
     let authoredRotation = 0;
-    let body!: CRCPhysicsBodyHandle2D;
+    let body!: PibblPhysicsBodyHandle2D;
     const Platform = () => {
-      body = crcPhysicsBody2D();
+      body = pibblPhysicsBody2D();
       const authoredPosition = position.get();
       return (
         <Group
@@ -687,12 +687,12 @@ describe("PhysicsWorld2D controller scheduling and topology", () => {
         <Platform />
       </PhysicsWorld2D>
     );
-    const mount = mountCRC(root());
+    const mount = mountPibbl(root());
     frames.flush(0);
     frames.flush(50);
 
     authoredRotation = 45;
-    crc(canvasOf(mount), root());
+    pibbl(canvasOf(mount), root());
     frames.flush(75);
 
     expect(body.position.get()[0]).toBeCloseTo(30, 12);
@@ -707,9 +707,9 @@ describe("PhysicsWorld2D controller scheduling and topology", () => {
   it("retains the target-bound kinematic rotation without a sub-step reset when its unbound origin changes", () => {
     const rotationDegrees = signal(0);
     let authoredPosition: readonly [number, number] = [30, 20];
-    let body!: CRCPhysicsBodyHandle2D;
+    let body!: PibblPhysicsBodyHandle2D;
     const Platform = () => {
-      body = crcPhysicsBody2D();
+      body = pibblPhysicsBody2D();
       return (
         <Group
           physics={kinematicBody2D({
@@ -735,12 +735,12 @@ describe("PhysicsWorld2D controller scheduling and topology", () => {
         <Platform />
       </PhysicsWorld2D>
     );
-    const mount = mountCRC(root());
+    const mount = mountPibbl(root());
     frames.flush(0);
     frames.flush(50);
 
     authoredPosition = [90, 60];
-    crc(canvasOf(mount), root());
+    pibbl(canvasOf(mount), root());
     frames.flush(75);
 
     expect(body.position.get()).toEqual([30, 20]);
@@ -751,13 +751,13 @@ describe("PhysicsWorld2D controller scheduling and topology", () => {
   });
 
   it("preserves an intentional tiny descendant translation in a dynamic body's canonical collider shape", () => {
-    let world!: CRCPhysicsWorldHandle2D;
+    let world!: PibblPhysicsWorldHandle2D;
     const Capture = () => {
-      world = crcPhysicsWorld2D();
+      world = pibblPhysicsWorld2D();
       world.revision.get();
       return undefined;
     };
-    mountCRC(
+    mountPibbl(
       <PhysicsWorld2D fixedStepMilliseconds={50} sleeping={false}>
         <Capture />
         <Group
@@ -784,12 +784,12 @@ describe("PhysicsWorld2D controller scheduling and topology", () => {
   });
 
   it("releases its sole Advance registration after sleep and a queued command wakes it", () => {
-    let world!: CRCPhysicsWorldHandle2D;
+    let world!: PibblPhysicsWorldHandle2D;
     const Capture = () => {
-      world = crcPhysicsWorld2D();
+      world = pibblPhysicsWorld2D();
       return undefined;
     };
-    mountCRC(
+    mountPibbl(
       <PhysicsWorld2D fixedStepMilliseconds={100}>
         <Capture />
         <Group physics={dynamicBody2D({ collider: false, mass: 1 })} />
@@ -820,14 +820,14 @@ describe("PhysicsWorld2D controller scheduling and topology", () => {
       sleeping: signal(false),
       enabled: signal(true),
       generation: signal(0),
-    } as unknown as CRCPhysicsBodyHandle2D;
-    let world!: CRCPhysicsWorldHandle2D;
+    } as unknown as PibblPhysicsBodyHandle2D;
+    let world!: PibblPhysicsWorldHandle2D;
     const events: unknown[] = [];
     const Capture = () => {
-      world = crcPhysicsWorld2D();
+      world = pibblPhysicsWorld2D();
       return undefined;
     };
-    mountCRC(
+    mountPibbl(
       <PhysicsWorld2D
         fixedStepMilliseconds={100}
         onSleep={(event) => {
@@ -853,13 +853,13 @@ describe("PhysicsWorld2D controller scheduling and topology", () => {
   it("isolates a failed world candidate from a sibling world in the same host frame", () => {
     const error = new Error("first world failed");
     const onError = vi.fn();
-    const handles: CRCPhysicsWorldHandle2D[] = [];
+    const handles: PibblPhysicsWorldHandle2D[] = [];
     const Capture = () => {
-      const world = crcPhysicsWorld2D();
+      const world = pibblPhysicsWorld2D();
       if (!handles.includes(world)) handles.push(world);
       return undefined;
     };
-    mountCRC(
+    mountPibbl(
       <Fragment>
         <PhysicsWorld2D onError={onError}>
           <Capture />
@@ -892,26 +892,26 @@ describe("PhysicsWorld2D controller scheduling and topology", () => {
   });
 });
 
-function snapshot(world: CRCPhysicsWorldHandle2D) {
+function snapshot(world: PibblPhysicsWorldHandle2D) {
   return snapshotPhysicsWorld2DControllerForTest(
     requirePhysicsWorld2DController(world),
   );
 }
 
-function mountCRC(root: Parameters<typeof crc>[1]): CRCController {
+function mountPibbl(root: Parameters<typeof pibbl>[1]): PibblController {
   const canvas = document.createElement("canvas");
   canvas.width = 100;
   canvas.height = 100;
   canvas.style.cssText = "display:block;width:100px;height:100px";
   document.body.appendChild(canvas);
-  const mount = crc(canvas, root);
+  const mount = pibbl(canvas, root);
   Object.assign(mount, { __canvas: canvas });
   mounts.push(mount);
   return mount;
 }
 
-function canvasOf(mount: CRCController): HTMLCanvasElement {
-  return (mount as CRCController & { __canvas: HTMLCanvasElement }).__canvas;
+function canvasOf(mount: PibblController): HTMLCanvasElement {
+  return (mount as PibblController & { __canvas: HTMLCanvasElement }).__canvas;
 }
 
 class ManualFrames {
@@ -938,7 +938,7 @@ class ManualFrames {
   flush(time: number): void {
     const entry = this.callbacks.entries().next().value as
       readonly [number, FrameRequestCallback] | undefined;
-    if (!entry) throw new Error("No CRC host frame is pending.");
+    if (!entry) throw new Error("No Pibbl host frame is pending.");
     this.callbacks.delete(entry[0]);
     entry[1](time);
   }

@@ -1,11 +1,11 @@
 import { expect, it } from "vitest";
 import {
-  crc,
+  pibbl,
   defineTexture,
   Rectangle,
   useTexture,
   type Texture,
-} from "@crc/core";
+} from "@pibbl/core";
 import {
   ManualSchedulerDriver,
   installSchedulerDriverForTest,
@@ -34,7 +34,7 @@ it("replaces transparent pixels and alpha when reusing texture publication canva
   const canvas = document.createElement("canvas");
   canvas.width = canvas.height = 8;
   document.body.append(canvas);
-  const controller = crc(canvas, <Scene />);
+  const controller = pibbl(canvas, <Scene />);
   try {
     driver.flush(0);
     const ctx = canvas.getContext("2d")!;

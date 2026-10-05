@@ -4,16 +4,16 @@ import type {
   GeometryMatrixPoint,
   GeometryMatrixState,
   ScenarioController,
-} from '@crc/scenarios';
+} from '@pibbl/scenarios';
 import {
   GEOMETRY_MATRIX_CASES,
   geometryMatrixScenarioEntry,
   loadScenario,
-} from '@crc/scenarios';
+} from '@pibbl/scenarios';
 import { page } from 'vitest/browser';
 import { afterEach, describe, expect, it } from 'vitest';
 import geometryMatrixSource from '../../scenarios/src/geometry-matrix.example.tsx?raw';
-import { Absolute, Clip, crc, Group, Layer, Rectangle, type CRCController } from '../src/index';
+import { Absolute, Clip, pibbl, Group, Layer, Rectangle, type PibblController } from '../src/index';
 import {
   clickMouse,
   backingPointForLogical,
@@ -24,7 +24,7 @@ import { expectVisualMatch } from './visual-compare';
 import { createElement } from '../src/lib/element/create-element';
 
 const activeControllers = new Set<ScenarioController<GeometryMatrixState>>();
-const activeRuntimeControllers = new Set<CRCController>();
+const activeRuntimeControllers = new Set<PibblController>();
 const BACKGROUND = { x: 470, y: 220 } as const;
 
 function route(trace: readonly EventTraceEntry[]) {
@@ -118,7 +118,7 @@ describe('geometry interaction matrix', () => {
     canvas.height = 120;
     document.body.replaceChildren(canvas);
     const moves: string[] = [];
-    const controller = crc(canvas, createElement(Group, {
+    const controller = pibbl(canvas, createElement(Group, {
       style: {
         scaleX: 1.5,
         scaleY: 1.25,
@@ -180,7 +180,7 @@ describe('geometry interaction matrix', () => {
     const clippingPath = new Path2D();
     clippingPath.rect(30, 20, 40, 40);
     const moves: string[] = [];
-    const controller = crc(canvas, createElement(Clip, {
+    const controller = pibbl(canvas, createElement(Clip, {
       style: { d: clippingPath },
       children: [createElement(Layer, {
         style: { width: 120, height: 90 },
@@ -446,7 +446,7 @@ describe('geometry visual matrix', () => {
       await controller.settled();
 
       if (
-        import.meta.env.VITE_CRC_GEOMETRY_VISUAL_DRILL === '1' &&
+        import.meta.env.VITE_PIBBL_GEOMETRY_VISUAL_DRILL === '1' &&
         caseId === 'compound-transform-clip'
       ) {
         const context = canvas.getContext('2d');

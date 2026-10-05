@@ -50,14 +50,14 @@ solid-pie overhead, not a performance equivalence between pies and donuts.
 To reproduce in the repository root with the documented Node environment:
 
 ```sh
-VITE_CRC_VIZ_PERF=1 VITE_CRC_VIZ_RESULT="$PWD/viz-perf-result.json" \
+VITE_PIBBL_VIZ_PERF=1 VITE_PIBBL_VIZ_RESULT="$PWD/viz-perf-result.json" \
   corepack pnpm@11.21.0 exec vitest run \
   packages/viz/test/first-wave-performance.test.tsx \
   --browser.headless --browser.ui=false --maxWorkers=1
 ```
 
 For the baseline checkout, copy the same probe and additionally set
-`VITE_CRC_VIZ_LEGACY=1`. Provision/build both locked checkouts first. Do not run
+`VITE_PIBBL_VIZ_LEGACY=1`. Provision/build both locked checkouts first. Do not run
 another browser suite concurrently. The probe is skipped in ordinary trust
 runs; structural/ownership tests remain ordinary correctness gates.
 

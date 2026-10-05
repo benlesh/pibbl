@@ -1,7 +1,7 @@
 import { compileNativeFilters, type NativePreparedFilter } from '../../filters/native-operations';
-import { grayscale, dropShadow, hueRotate, blur, brightness, contrast, invert, opacity, saturate, sepia } from '@crc/core/filters';
+import { grayscale, dropShadow, hueRotate, blur, brightness, contrast, invert, opacity, saturate, sepia } from '@pibbl/core/filters';
 import { describe, expect, it } from 'vitest';
-import type { CRCFilter } from './filter-types';
+import type { PibblFilter } from './filter-types';
 import {
   getResolvedFilterList,
   resolveFilterList,
@@ -55,7 +55,7 @@ describe('filter lists', () => {
     [sepia({ amount: 0.5 }), 'sepia(0.5)'],
   ] as const)(
     'normalizes and compiles %o',
-    (value: CRCFilter, expected: string) => {
+    (value: PibblFilter, expected: string) => {
       const resolved = resolveFilterList(value, context)!;
 
       expect(compileNativeFilters(resolved.values as readonly NativePreparedFilter[], 2)).toBe(expected);
@@ -83,7 +83,7 @@ describe('filter lists', () => {
   });
 
   it('does not mutate caller-owned lists or descriptors and returns immutable normalized values', () => {
-    const descriptor: CRCFilter = grayscale({ amount: 2 });
+    const descriptor: PibblFilter = grayscale({ amount: 2 });
     const values = [descriptor] as const;
 
     const resolved = resolveFilterList(values, context)!;
@@ -106,14 +106,14 @@ describe('filter lists', () => {
   ] as const)(
     'rejects invalid numeric filter values',
     (value, property, reason) => {
-      expect(() => resolveFilterList(value as CRCFilter, context)).toThrow(
+      expect(() => resolveFilterList(value as PibblFilter, context)).toThrow(
         new RegExp(`${property}.*${reason}`),
       );
     },
   );
 
   it('rejects an explicitly null drop-shadow blur radius', () => {
-    expect(() => resolveFilterList(dropShadow({ offsetX: 0, offsetY: 0, blurRadius: null as unknown as number, color: 'black' }) as unknown as CRCFilter, context)).toThrow(/filter\.blurRadius.*finite/);
+    expect(() => resolveFilterList(dropShadow({ offsetX: 0, offsetY: 0, blurRadius: null as unknown as number, color: 'black' }) as unknown as PibblFilter, context)).toThrow(/filter\.blurRadius.*finite/);
   });
 
   it('reports indexed property paths and unsupported discriminators', () => {
@@ -123,9 +123,9 @@ describe('filter lists', () => {
       grayscale({ amount: -1 }),
     ], context)).toThrow(/filter\[2\]\.amount.*nonnegative/);
     expect(() => resolveFilterList(
-      { type: 'url', value: '#unsupported' } as unknown as CRCFilter,
+      { type: 'url', value: '#unsupported' } as unknown as PibblFilter,
       context,
-    )).toThrow(/filter.*removed descriptor.*@crc\/core\/filters/);
+    )).toThrow(/filter.*removed descriptor.*@pibbl\/core\/filters/);
   });
 
   it.each([
@@ -200,7 +200,7 @@ describe('filter lists', () => {
 
   it('gets an already-resolved nonempty filter list from system style', () => {
     const resolved = resolveFilterList(blur({ radius: 2 }), context)!;
-    const style: SystemStyle = { filter: resolved.values as unknown as readonly CRCFilter[] };
+    const style: SystemStyle = { filter: resolved.values as unknown as readonly PibblFilter[] };
 
     expect(getResolvedFilterList(style)?.values).toBe(resolved.values);
     expect(getResolvedFilterList({ filter: [] })).toBeUndefined();

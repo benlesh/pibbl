@@ -1,14 +1,14 @@
-import { blur, brightness, contrast, dropShadow, grayscale, hueRotate, invert, opacity, saturate, sepia } from '@crc/core/filters';
+import { blur, brightness, contrast, dropShadow, grayscale, hueRotate, invert, opacity, saturate, sepia } from '@pibbl/core/filters';
 import {
   Circle,
-  crc,
+  pibbl,
   Group,
   Rectangle,
   SvgPath,
   Text,
-  type CRCController,
-  type CRCFilter,
-} from "@crc/core";
+  type PibblController,
+  type PibblFilter,
+} from "@pibbl/core";
 
 const SAMPLE_WIDTH = 160;
 
@@ -68,7 +68,7 @@ const FILTER_SAMPLES = [
 ] satisfies readonly {
   label: string;
   detail: string;
-  filter: CRCFilter;
+  filter: PibblFilter;
 }[];
 
 const ORDERED_FILTERS = [
@@ -81,7 +81,7 @@ const ORDERED_FILTERS = [
     blurRadius: 3,
     color: "rgb(15 23 42)",
   }),
-] satisfies readonly CRCFilter[];
+] satisfies readonly PibblFilter[];
 
 const NESTED_SHADOW = dropShadow({
   
@@ -89,7 +89,7 @@ const NESTED_SHADOW = dropShadow({
   offsetY: 6,
   blurRadius: 3,
   color: "rgb(15 23 42)",
-}) satisfies CRCFilter;
+}) satisfies PibblFilter;
 
 interface GradientArtworkProps {
   gradient: CanvasGradient;
@@ -184,7 +184,7 @@ function TileHeading({ label, detail }: TileHeadingProps) {
 }
 
 interface FilterTileProps extends TileHeadingProps {
-  filter?: CRCFilter;
+  filter?: PibblFilter;
   gradient: CanvasGradient;
   x: number;
   y: number;
@@ -352,7 +352,7 @@ function createSharedGradient(canvas: HTMLCanvasElement): CanvasGradient {
   return gradient;
 }
 
-export default function mount(canvas: HTMLCanvasElement): CRCController {
+export default function mount(canvas: HTMLCanvasElement): PibblController {
   const gradient = createSharedGradient(canvas);
-  return crc(canvas, <FilterGallery gradient={gradient} />);
+  return pibbl(canvas, <FilterGallery gradient={gradient} />);
 }

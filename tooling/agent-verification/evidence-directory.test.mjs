@@ -6,7 +6,7 @@ import { join } from 'node:path';
 import { reserveEvidenceDirectory } from './evidence-directory.mjs';
 
 test('only one concurrent replay can reserve an output directory', async () => {
-  const output = await mkdtemp(join(tmpdir(), 'crc-output-owner-'));
+  const output = await mkdtemp(join(tmpdir(), 'pibbl-output-owner-'));
   try {
     const results = await Promise.allSettled([reserveEvidenceDirectory(output), reserveEvidenceDirectory(output)]);
     assert.equal(results.filter(result => result.status === 'fulfilled').length, 1);
@@ -16,7 +16,7 @@ test('only one concurrent replay can reserve an output directory', async () => {
 });
 
 test('legacy evidence and unrelated files are preserved; watchdog preparation is allowed', async () => {
-  const output = await mkdtemp(join(tmpdir(), 'crc-output-legacy-'));
+  const output = await mkdtemp(join(tmpdir(), 'pibbl-output-legacy-'));
   try {
     await writeFile(join(output, 'report.json'), 'previous report');
     await assert.rejects(reserveEvidenceDirectory(output), /nonempty/);
@@ -25,7 +25,7 @@ test('legacy evidence and unrelated files are preserved; watchdog preparation is
     await writeFile(join(output, 'watchdog.json'), 'parent preparation');
     await reserveEvidenceDirectory(output);
     assert.equal(await readFile(join(output, 'watchdog.json'), 'utf8'), 'parent preparation');
-    const reservation = JSON.parse(await readFile(join(output, '.crc-evidence-reservation.json'), 'utf8'));
+    const reservation = JSON.parse(await readFile(join(output, '.pibbl-evidence-reservation.json'), 'utf8'));
     assert.equal(reservation.meaning, 'persistent-reservation-not-liveness');
   } finally { await rm(output, { recursive: true, force: true }); }
 });
@@ -34,7 +34,7 @@ import { spawnSync } from 'node:child_process';
 import { runWithWatchdog } from './watchdog.mjs';
 
 test('both direct replay commands reject old evidence before browser startup', async () => {
-  const output = await mkdtemp(join(tmpdir(), 'crc-output-cli-'));
+  const output = await mkdtemp(join(tmpdir(), 'pibbl-output-cli-'));
   try {
     await writeFile(join(output, 'report.json'), 'previous report');
     for (const runner of ['replay.mjs', 'viz-replay.mjs']) {
@@ -47,7 +47,7 @@ test('both direct replay commands reject old evidence before browser startup', a
 });
 
 test('watchdog child reserves its prepared directory and evidence survives exit', async () => {
-  const directory = await mkdtemp(join(tmpdir(), 'crc-output-watchdog-'));
+  const directory = await mkdtemp(join(tmpdir(), 'pibbl-output-watchdog-'));
   try {
     const script = join(directory, 'child.mjs');
     const output = join(directory, 'evidence');

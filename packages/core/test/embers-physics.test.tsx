@@ -1,11 +1,11 @@
 import { expect, it, vi } from "vitest";
 import {
-  crc,
+  pibbl,
   Rectangle,
   embers,
   useVisibilityTransition,
-  type CRCVisibilityTransition,
-} from "@crc/core";
+  type PibblVisibilityTransition,
+} from "@pibbl/core";
 import {
   installSchedulerDriverForTest,
   ManualSchedulerDriver,
@@ -18,7 +18,7 @@ it("opts into local forces and collision in Advance, keeps reversal history, and
   canvas.width = 240;
   canvas.height = 240;
   document.body.append(canvas);
-  let handle!: CRCVisibilityTransition,
+  let handle!: PibblVisibilityTransition,
     queries = 0,
     hits = 0;
   const effect = embers({
@@ -59,7 +59,7 @@ it("opts into local forces and collision in Advance, keeps reversal history, and
       />
     );
   }
-  const root = crc(canvas, <Scene />);
+  const root = pibbl(canvas, <Scene />);
   try {
     driver.flush(0);
     expect(queries).toBe(0);
@@ -91,7 +91,7 @@ it("settles as disposed and releases animation when a physics callback fails", a
     restore = installSchedulerDriverForTest(driver);
   const canvas = document.createElement("canvas");
   document.body.append(canvas);
-  let handle!: CRCVisibilityTransition;
+  let handle!: PibblVisibilityTransition;
   function Scene() {
     handle = useVisibilityTransition({
       enter: embers({
@@ -116,7 +116,7 @@ it("settles as disposed and releases animation when a physics callback fails", a
       />
     );
   }
-  const root = crc(canvas, <Scene />);
+  const root = pibbl(canvas, <Scene />);
   try {
     driver.flush(0);
     const pending = handle.hide();
@@ -138,7 +138,7 @@ it("reads packed obstacles once per advance, not once per ember or substep", () 
     restore = installSchedulerDriverForTest(driver);
   const canvas = document.createElement("canvas");
   document.body.append(canvas);
-  let handle!: CRCVisibilityTransition,
+  let handle!: PibblVisibilityTransition,
     reads = 0;
   const NativeMemory = WebAssembly.Memory;
   let memory: WebAssembly.Memory | undefined;
@@ -183,7 +183,7 @@ it("reads packed obstacles once per advance, not once per ember or substep", () 
       />
     );
   }
-  const root = crc(canvas, <Scene />);
+  const root = pibbl(canvas, <Scene />);
   try {
     driver.flush(0);
     void handle.hide();

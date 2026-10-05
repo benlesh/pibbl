@@ -1,5 +1,5 @@
-import { crc } from "@crc/core";
-import { defineThreeLayer, type CRCThreeInputBridge } from "@crc/three";
+import { pibbl } from "@pibbl/core";
+import { defineThreeLayer, type PibblThreeInputBridge } from "@pibbl/three";
 import {
   BoxGeometry,
   Mesh,
@@ -35,7 +35,7 @@ const OrbitLayer = defineThreeLayer<
       new MeshNormalMaterial(),
     );
     scene.add(mesh);
-    const input: CRCThreeInputBridge = context.input;
+    const input: PibblThreeInputBridge = context.input;
     const controls = input.connect(
       (element) => new OrbitControls(camera, element),
     );
@@ -59,7 +59,7 @@ const OrbitLayer = defineThreeLayer<
   },
 });
 
-const controller = crc(
+const controller = pibbl(
   canvas,
   <OrbitLayer style={{ width: 320, height: 220 }} />,
 );
