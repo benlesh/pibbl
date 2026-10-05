@@ -3,6 +3,19 @@ import { readFile } from "node:fs/promises";
 import { test } from "node:test";
 
 test("text previews ship the matching engine, font, and license", async () => {
+  const manifest = JSON.parse(
+    await readFile(new URL("../website/package.json", import.meta.url), "utf8"),
+  );
+  assert.equal(
+    manifest.dependencies["@crc/text"],
+    "workspace:*",
+    "build the text engine before website previews",
+  );
+  assert.equal(
+    manifest.dependencies["@crc/three"],
+    "workspace:*",
+    "build the renderer adapter before website previews",
+  );
   const base = new URL(
     "../website/public/generated/crc-text/",
     import.meta.url,

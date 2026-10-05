@@ -16,6 +16,11 @@ test("coverage requires a public import and actual usage, not a named placeholde
       ),
     /public import/,
   );
+  for (const code of [
+    "import { signal } from '@crc/core'; const object = { signal: 1 };",
+    "import { signal } from '@crc/core'; function unrelated(signal) { return signal; }",
+  ])
+    assert.throws(() => validateExampleSource(entry, code), /not used/);
   assert.doesNotThrow(() =>
     validateExampleSource(
       entry,

@@ -6,7 +6,7 @@ const examples = JSON.parse(await readFile(resolve(process.cwd(), 'public/genera
 const example = examples.find(example => example.id === id);
 ---
 {example?.environment === 'browser' && <section data-minimal-preview>
-  <div><button type="button" data-run>Run</button> <button type="button" data-stop>Stop</button></div>
+  <div><button type="button" data-run>Run</button> <button type="button" data-stop>Stop</button> <a href={`/minimal-runtime/${id}.html`}>Open full page</a></div>
   <iframe title={`${example.title} live example`} data-src={`/minimal-runtime/${id}.html`} sandbox="allow-scripts allow-same-origin"></iframe>
 </section>}
 <style>

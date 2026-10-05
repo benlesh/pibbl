@@ -74,6 +74,12 @@ try {
   );
   assert.equal(markdown.status(), 200);
   assert.match(await markdown.text(), /Complete source/);
+  await page.goto(`${base}/minimal-examples/`);
+  await page
+    .getByRole("link", { name: "Tween playback controls", exact: true })
+    .click();
+  assert.match(await page.locator("main").innerText(), /controller.dispose/);
+  await page.getByRole("link", { name: "Plain source", exact: true }).waitFor();
   await page.goto(`${base}/agents/`);
   await page.screenshot({ path: "/tmp/crc-agents-desktop.png" });
   await page.setViewportSize({ width: 390, height: 844 });
@@ -93,6 +99,26 @@ try {
     true,
   );
   const interactive = await browser.newPage();
+  await interactive.goto(`${base}/minimal-examples/animation/tween/`);
+  await interactive
+    .locator("[data-minimal-preview] [data-run][disabled]")
+    .waitFor();
+  await interactive
+    .frameLocator("[data-minimal-preview] iframe")
+    .getByRole("button", { name: "Pause", exact: true })
+    .waitFor();
+  await interactive.locator("[data-minimal-preview] [data-stop]").click();
+  assert.equal(
+    await interactive
+      .locator("[data-minimal-preview] iframe")
+      .getAttribute("src"),
+    "about:blank",
+  );
+  await interactive.locator("[data-minimal-preview] [data-run]").click();
+  await interactive
+    .frameLocator("[data-minimal-preview] iframe")
+    .getByRole("button", { name: "Pause", exact: true })
+    .waitFor();
   await interactive.goto(`${base}/experience/regular-polygon/`);
   await interactive
     .locator("[data-status]")

@@ -57,7 +57,8 @@ for (const example of registeredExamples) {
     // Re-exported names share one implementation and one usage example.
     if (!exampleBySymbol.has(symbol.name))
       exampleBySymbol.set(symbol.name, { ...example, sourceURL });
-    minimalExamples.set(symbol.name, sourceURL);
+    if (!minimalExamples.has(symbol.name))
+      minimalExamples.set(symbol.name, sourceURL);
   }
   records.push({
     id: `minimal-examples/${example.id}`,
@@ -71,6 +72,29 @@ for (const example of registeredExamples) {
     content: `${example.description}\n\n## APIs demonstrated\n\n${related.join("\n")}\n\n## Complete example\n\n[Plain source](${sourceURL}). ${example.environment === "browser" ? 'Run as a browser module after the document body exists. TSX uses `jsx: "react-jsx"` and `jsxImportSource: "@crc/core"`.' : "This example demonstrates a type-level or host-specific contract; it is checked with TypeScript rather than presented as an animated preview."}\n\n\`\`\`${example.source.endsWith(".tsx") ? "tsx" : "ts"}\n${example.code}\n\`\`\`\n\n## Usage notes\n\n${(example.notes ?? []).map((note) => `- ${note}`).join("\n")}\n`,
   });
 }
+records.push({
+  id: "minimal-examples",
+  meta: {
+    title: "Minimal API Examples",
+    description: "Complete small programs grouped by capability.",
+    kind: "index",
+  },
+  content:
+    "Start with one complete program, then follow its API links for exact options and limitations. Browser examples include live previews; type-level and host-specific examples are labeled explicitly. Every source uses public package imports.\n\n" +
+    [...new Set(registeredExamples.map((example) => example.id.split("/")[0]))]
+      .map(
+        (family) =>
+          `## ${family.replaceAll("-", " ")}\n\n` +
+          registeredExamples
+            .filter((example) => example.id.startsWith(family + "/"))
+            .map(
+              (example) =>
+                `- [${example.title}](/minimal-examples/${example.id}/): ${example.description} (${example.environment === "browser" ? "live preview" : "typechecked source"})`,
+            )
+            .join("\n"),
+      )
+      .join("\n\n"),
+});
 await writeFile(
   resolve(publicDir, "minimal-examples.json"),
   JSON.stringify(
@@ -143,7 +167,7 @@ for (const slug of galleries.find((gallery) => gallery.id === "shapes").slugs) {
   const url = `/minimal/${slug}.tsx`;
   await mkdir(resolve(publicDir, "minimal"), { recursive: true });
   await writeFile(resolve(publicDir, `minimal/${slug}.tsx`), code);
-  minimalExamples.set(symbol, url);
+  if (!minimalExamples.has(symbol)) minimalExamples.set(symbol, url);
   record.content += `\n## Complete minimal example\n\nCompile this TSX module with \`jsx: "react-jsx"\` and \`jsxImportSource: "@crc/core"\`, then load it from a browser entry point after the document body exists. It creates and mounts one canvas; dispose the controller before removing or replacing that canvas. The interactive study linked below adds controls beyond this minimal use case.\n\n[Download source](${url})\n\n\`\`\`tsx\n${code}\`\`\`\n`;
 }
 for (const gallery of galleries) {
@@ -339,7 +363,7 @@ await writeFile(
       schemaVersion: 1,
       compatibility,
       meaning:
-        "Export-to-reference destinations only. exampleCandidates are discovery links; minimalExample and exampleReview explicitly track the unverified per-symbol requirement.",
+        "Public export inventory with complete minimal source and page links. exampleCandidates are discovery links, not verified minimal programs. Registration and typechecking do not imply exhaustive behavioral coverage.",
       entries: imported.entries,
       missing: imported.entries.filter((entry) => !entry.url),
     },
@@ -441,13 +465,16 @@ await writeFile(
           "catalogs",
           "guides",
           "agents",
+          "minimal-examples",
           "guides/native-button",
           "agents/native-button",
           "examples/stirred-ink",
         ].includes(entry.id),
     )
     .map((entry) => `- [${entry.title}](${entry.markdown})`)
-    .join("\n")}\n`,
+    .join(
+      "\n",
+    )}\n\n- [Public exports and minimal source URLs](/agents/coverage.json)\n- [Minimal example manifest](/minimal-examples.json)\n`,
 );
 execFileSync("tar", [
   "-czf",

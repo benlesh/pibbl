@@ -39,6 +39,11 @@ try {
       example.id,
     );
     await page.waitForTimeout(500);
+    if (example.id === "text/outline") {
+      await page.waitForFunction(() =>
+        document.querySelector("p")?.textContent?.startsWith("9 glyphs;"),
+      );
+    }
     assert.deepEqual(errors, [], example.id);
     const meaningful = await page.evaluate(() => {
       const text = [...document.body.children]
@@ -60,9 +65,71 @@ try {
           return false;
         },
       );
-      return Boolean(text || painted);
+      return document.querySelector("canvas") ? painted : Boolean(text);
     });
     assert.ok(meaningful, `${example.id} has no rendered result`);
+    if (example.id === "lifecycle/signals") {
+      await page.getByRole("button").click();
+      assert.match(
+        await page.locator("pre").innerText(),
+        /Count: 3; doubled: 6/,
+      );
+    }
+    if (example.id === "lifecycle/html") {
+      await page.getByRole("button", { name: "Native clicks: 0" }).click();
+      await page.getByRole("button", { name: "Native clicks: 1" }).waitFor();
+      await page.keyboard.press("Enter");
+      await page.getByRole("button", { name: "Native clicks: 2" }).waitFor();
+    }
+    if (example.id === "animation/tween") {
+      await page.getByRole("button", { name: "Pause", exact: true }).click();
+      await page.waitForTimeout(100);
+      const paused = await page
+        .locator("canvas")
+        .evaluate((canvas) => canvas.toDataURL());
+      await page.waitForTimeout(150);
+      assert.equal(
+        await page.locator("canvas").evaluate((canvas) => canvas.toDataURL()),
+        paused,
+      );
+      await page.getByRole("button", { name: "Resume", exact: true }).click();
+      await page.waitForTimeout(150);
+      assert.notEqual(
+        await page.locator("canvas").evaluate((canvas) => canvas.toDataURL()),
+        paused,
+      );
+    }
+    if (
+      example.id.startsWith("transitions/") &&
+      example.id !== "transitions/custom"
+    ) {
+      await page.getByRole("button", { name: "hide", exact: true }).click();
+      await page.waitForFunction(
+        () =>
+          document.querySelector("output")?.textContent === "exit: finished",
+      );
+      await page.getByRole("button", { name: "show", exact: true }).click();
+      await page.waitForFunction(
+        () =>
+          document.querySelector("output")?.textContent === "enter: finished",
+      );
+    }
+    if (example.id === "manipulation/controller") {
+      const bounds = await page.locator("canvas").boundingBox();
+      await page.mouse.move(bounds.x + 120, bounds.y + 100);
+      await page.mouse.down();
+      await page.mouse.move(bounds.x + 150, bounds.y + 115, { steps: 4 });
+      await page.mouse.up();
+      await page.waitForFunction(() =>
+        document.querySelector("pre")?.textContent?.includes("committed=true"),
+      );
+    }
+    if (example.id === "text/outline") {
+      await page.waitForFunction(() =>
+        document.querySelector("p")?.textContent?.startsWith("9 glyphs;"),
+      );
+    }
+    assert.deepEqual(errors, [], `${example.id} after interaction`);
     process.stdout.write(`PASS ${example.id}\n`);
   }
 } finally {

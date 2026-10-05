@@ -1,6 +1,7 @@
 import { readFile, readdir } from "node:fs/promises";
 import { resolve, dirname, relative } from "node:path";
 import { parse } from "@babel/parser";
+import { traverse } from "@babel/core";
 
 export function validateExampleSource(entry, code) {
   const ast = parse(code, {
@@ -34,14 +35,32 @@ export function validateExampleSource(entry, code) {
       }
       return;
     }
-    if (node.type === "Identifier" || node.type === "JSXIdentifier")
-      used.add(node.name);
     for (const value of Object.values(node)) {
       if (Array.isArray(value)) value.forEach(walk);
       else if (value && typeof value === "object") walk(value);
     }
   }
   walk(ast.program);
+  traverse(ast, {
+    "Identifier|JSXIdentifier"(path) {
+      const parent = path.parent;
+      const typedReference =
+        (parent.type === "TSTypeReference" && path.key === "typeName") ||
+        (parent.type === "TSQualifiedName" && path.key === "left") ||
+        (parent.type === "TSTypeQuery" && path.key === "exprName") ||
+        (parent.type === "TSExpressionWithTypeArguments" &&
+          path.key === "expression");
+      const jsxReference =
+        ((parent.type === "JSXOpeningElement" ||
+          parent.type === "JSXClosingElement") &&
+          path.key === "name") ||
+        (parent.type === "JSXMemberExpression" && path.key === "object");
+      if (!typedReference && !jsxReference && !path.isReferencedIdentifier())
+        return;
+      const binding = path.scope.getBinding(path.node.name);
+      if (binding?.path.isImportSpecifier()) used.add(path.node.name);
+    },
+  });
   for (const symbol of entry.symbols) {
     const local = imports.get(`${symbol.importPath}:${symbol.name}`);
     if (!local)
