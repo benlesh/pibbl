@@ -1,0 +1,100 @@
+import { readFile, readdir } from "node:fs/promises";
+import { resolve, dirname, relative } from "node:path";
+import { parse } from "@babel/parser";
+
+export function validateExampleSource(entry, code) {
+  const ast = parse(code, {
+    sourceType: "module",
+    plugins: ["typescript", "jsx"],
+  });
+  const imports = new Map();
+  const used = new Set();
+  function walk(node) {
+    if (!node || typeof node !== "object") return;
+    if (node.type === "ImportDeclaration") {
+      if (
+        !/^@crc\/(core(?:\/(?:filters|types|textures|particles|viz|jsx-runtime|jsx-dev-runtime|physics\/2d(?:\/(?:geometry|testing))?))?|three|text)$/.test(
+          node.source.value,
+        ) &&
+        !/^three(?:\/addons\/)/.test(node.source.value) &&
+        node.source.value !== "three"
+      ) {
+        throw new Error(
+          `Examples must use a public import: ${node.source.value}`,
+        );
+      }
+      for (const specifier of node.specifiers) {
+        if (specifier.type === "ImportSpecifier")
+          imports.set(
+            `${node.source.value}:${specifier.imported.name}`,
+            specifier.local.name,
+          );
+        if (specifier.type === "ImportNamespaceSpecifier")
+          imports.set(`${node.source.value}:*`, specifier.local.name);
+      }
+      return;
+    }
+    if (node.type === "Identifier" || node.type === "JSXIdentifier")
+      used.add(node.name);
+    for (const value of Object.values(node)) {
+      if (Array.isArray(value)) value.forEach(walk);
+      else if (value && typeof value === "object") walk(value);
+    }
+  }
+  walk(ast.program);
+  for (const symbol of entry.symbols) {
+    const local = imports.get(`${symbol.importPath}:${symbol.name}`);
+    if (!local)
+      throw new Error(
+        `${symbol.name} needs its public import from ${symbol.importPath}`,
+      );
+    if (!used.has(local))
+      throw new Error(`${symbol.name} is imported but not used`);
+  }
+}
+
+export async function loadMinimalExamples(root) {
+  const directory = resolve(root, "docs/site/minimal");
+  const files = await readdir(directory, { recursive: true }).catch((error) => {
+    if (error.code === "ENOENT") return [];
+    throw error;
+  });
+  const examples = [];
+  const ids = new Set();
+  for (const file of files
+    .filter((file) => file.endsWith("/registry.json"))
+    .sort()) {
+    const family = dirname(file);
+    const registry = JSON.parse(
+      await readFile(resolve(directory, file), "utf8"),
+    );
+    for (const record of registry) {
+      if (
+        !/^[a-z0-9-]+$/.test(record.id) ||
+        !/^[a-z0-9-]+\.tsx?$/.test(record.source)
+      )
+        throw new Error(`Invalid minimal example path in ${file}`);
+      if (
+        !["browser", "typecheck"].includes(record.environment) ||
+        !record.symbols?.length ||
+        !record.description ||
+        !record.title
+      )
+        throw new Error(`Incomplete minimal example metadata in ${file}`);
+      const id = `${family}/${record.id}`;
+      if (ids.has(id)) throw new Error(`Duplicate minimal example ${id}`);
+      ids.add(id);
+      const path = resolve(directory, family, record.source);
+      const code = await readFile(path, "utf8");
+      validateExampleSource(record, code);
+      examples.push({
+        ...record,
+        id,
+        path,
+        sourcePath: relative(root, path),
+        code,
+      });
+    }
+  }
+  return examples;
+}

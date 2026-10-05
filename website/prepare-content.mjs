@@ -1,5 +1,7 @@
 import { readFile, readdir, mkdir, writeFile, rm, cp } from "node:fs/promises";
-import { resolve, dirname } from "node:path";
+import { resolve, dirname, basename } from "node:path";
+import { build } from "esbuild";
+import { loadMinimalExamples } from "./minimal-examples.mjs";
 import { execFileSync } from "node:child_process";
 import {
   loadDocumentation,
@@ -31,6 +33,84 @@ const catalog = [];
 const imported = await loadDocumentation(root, playground);
 const records = [...(await loadAuthored(root)), ...imported.records];
 const minimalExamples = new Map();
+const registeredExamples = await loadMinimalExamples(root);
+const exampleBySymbol = new Map();
+for (const example of registeredExamples) {
+  const sourceURL = `/minimal/${example.id}.${example.source.endsWith(".tsx") ? "tsx" : "ts"}`;
+  await mkdir(dirname(resolve(publicDir, `.${sourceURL}`)), {
+    recursive: true,
+  });
+  await writeFile(resolve(publicDir, `.${sourceURL}`), example.code);
+  const related = [];
+  for (const symbol of example.symbols) {
+    const exported = imported.entries.find(
+      (entry) =>
+        entry.symbol === symbol.name && entry.importPath === symbol.importPath,
+    );
+    if (!exported)
+      throw new Error(
+        `Unknown exported symbol ${symbol.importPath}:${symbol.name}`,
+      );
+    related.push(
+      `- [${symbol.name}](${exported.url}) from \`${symbol.importPath}\``,
+    );
+    // Re-exported names share one implementation and one usage example.
+    if (!exampleBySymbol.has(symbol.name))
+      exampleBySymbol.set(symbol.name, { ...example, sourceURL });
+    minimalExamples.set(symbol.name, sourceURL);
+  }
+  records.push({
+    id: `minimal-examples/${example.id}`,
+    meta: {
+      title: example.title,
+      description: example.description,
+      kind: "minimal-example",
+      symbols: example.symbols.map((symbol) => symbol.name),
+      source: example.sourcePath,
+    },
+    content: `${example.description}\n\n## APIs demonstrated\n\n${related.join("\n")}\n\n## Complete example\n\n[Plain source](${sourceURL}). ${example.environment === "browser" ? 'Run as a browser module after the document body exists. TSX uses `jsx: "react-jsx"` and `jsxImportSource: "@crc/core"`.' : "This example demonstrates a type-level or host-specific contract; it is checked with TypeScript rather than presented as an animated preview."}\n\n\`\`\`${example.source.endsWith(".tsx") ? "tsx" : "ts"}\n${example.code}\n\`\`\`\n\n## Usage notes\n\n${(example.notes ?? []).map((note) => `- ${note}`).join("\n")}\n`,
+  });
+}
+await writeFile(
+  resolve(publicDir, "minimal-examples.json"),
+  JSON.stringify(
+    registeredExamples.map(({ id, title, environment, symbols }) => ({
+      id,
+      title,
+      environment,
+      symbols,
+    })),
+    null,
+    2,
+  ),
+);
+const browserExamples = registeredExamples.filter(
+  (example) => example.environment === "browser",
+);
+if (browserExamples.length) {
+  await build({
+    entryPoints: Object.fromEntries(
+      browserExamples.map((example) => [example.id, example.path]),
+    ),
+    outdir: resolve(publicDir, "minimal-runtime"),
+    bundle: true,
+    splitting: true,
+    format: "esm",
+    platform: "browser",
+    target: "es2022",
+    chunkNames: "_shared/[name]-[hash]",
+    tsconfigRaw: {
+      compilerOptions: { jsx: "react-jsx", jsxImportSource: "@crc/core" },
+    },
+  });
+  for (const example of browserExamples) {
+    const html = `<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><style>body{margin:12px;font:16px/1.5 system-ui;color:#17232b;background:#fff}canvas{max-width:100%;height:auto}pre{white-space:pre-wrap;overflow-wrap:anywhere}</style><body><script type="module">try { await import('./${basename(example.id)}.js'); document.body.dataset.exampleReady='true'; } catch(error) { document.body.dataset.exampleError=String(error); const output=document.createElement('pre'); output.textContent=String(error); document.body.append(output); }</script></body></html>`;
+    await writeFile(
+      resolve(publicDir, `minimal-runtime/${example.id}.html`),
+      html,
+    );
+  }
+}
 for (const slug of galleries.find((gallery) => gallery.id === "shapes").slugs) {
   const record = imported.records.find(
     (record) => record.id === `reference/components/${slug}`,
@@ -104,6 +184,23 @@ for (const example of galleryExamples) {
   record.content += `\n## Related APIs\n\n${apiLinks.join("\n")}\n`;
 }
 for (const record of imported.records) {
+  const minimal = [
+    ...new Map(
+      (record.meta.symbols ?? []).flatMap((symbol) => {
+        const example = exampleBySymbol.get(symbol);
+        return example ? [[example.id, example]] : [];
+      }),
+    ).values(),
+  ];
+  if (minimal.length)
+    record.content +=
+      "\n## Complete minimal examples\n\n" +
+      minimal
+        .map(
+          (example) =>
+            `- [${example.title}](/minimal-examples/${example.id}/): ${example.description} [Plain source](${example.sourceURL})`,
+        )
+        .join("\n");
   const examples = galleryExamples.filter((example) =>
     example.api.some((symbol) => record.meta.symbols?.includes(symbol)),
   );
@@ -122,6 +219,9 @@ for (const entry of imported.entries) {
     .filter((example) => example.api.includes(entry.symbol))
     .map((example) => `/examples/${example.slug}/`);
   entry.minimalExample = minimalExamples.get(entry.symbol) ?? null;
+  entry.minimalPage = exampleBySymbol.has(entry.symbol)
+    ? `/minimal-examples/${exampleBySymbol.get(entry.symbol).id}/`
+    : null;
   entry.exampleReview = entry.minimalExample
     ? "complete-minimal-source"
     : "pending";
@@ -136,7 +236,7 @@ records.push({
     source: "website/prepare-content.mjs",
   },
   content:
-    `Every public API needs an explanation, its simplest complete code example, and appropriate verification. Visual APIs should also have live previews. Types need usage examples rather than meaningless standalone canvases.\n\nThe inventory currently contains ${new Set(imported.entries.map((entry) => entry.symbol)).size} distinct symbol names. ${minimalExamples.size} shape APIs have complete minimal programs checked by the minimal-example test. **The remaining per-symbol minimal-example work is incomplete.** Grouped documentation is not counted as proof of a complete minimal example.\n\n[Machine-readable inventory](/agents/coverage.json) includes example candidates from the learning catalog. These are discovery links, not certifications of minimality or verification. A null minimalExample means a complete minimal program has not yet been supplied.\n\n## Review queue\n\n` +
+    `Every public API needs an explanation, its simplest complete code example, and appropriate verification. Visual APIs should also have live previews. Types need usage examples rather than meaningless standalone canvases.\n\nThe inventory currently contains ${new Set(imported.entries.map((entry) => entry.symbol)).size} distinct symbol names. ${minimalExamples.size} have complete example programs registered for the minimal-example checks. ${[...new Set(imported.entries.filter((entry) => !entry.minimalExample).map((entry) => entry.symbol))].length} remain pending. Grouped documentation alone is not counted as a complete example.\n\n[Machine-readable inventory](/agents/coverage.json) distinguishes registered minimal sources from unreviewed learning-example candidates. A null minimalExample means a complete program has not yet been supplied.\n\n## Review queue\n\n` +
     [
       ...new Map(
         imported.entries.map((entry) => [entry.symbol, entry]),

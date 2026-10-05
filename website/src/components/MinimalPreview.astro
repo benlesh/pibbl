@@ -1,0 +1,28 @@
+---
+import { readFile } from 'node:fs/promises';
+import { resolve } from 'node:path';
+const { id } = Astro.props;
+const examples = JSON.parse(await readFile(resolve(process.cwd(), 'public/generated/minimal-examples.json'), 'utf8'));
+const example = examples.find(example => example.id === id);
+---
+{example?.environment === 'browser' && <section data-minimal-preview>
+  <div><button type="button" data-run>Run</button> <button type="button" data-stop>Stop</button></div>
+  <iframe title={`${example.title} live example`} data-src={`/minimal-runtime/${id}.html`} sandbox="allow-scripts allow-same-origin"></iframe>
+</section>}
+<style>
+  iframe { display: block; width: 100%; height: 380px; border: 1px solid #a9b7bd; margin-top: 0.5rem; background: white; }
+</style>
+<script>
+  for (const host of document.querySelectorAll('[data-minimal-preview]')) {
+    const frame = host.querySelector('iframe')!;
+    const run = host.querySelector<HTMLButtonElement>('[data-run]')!;
+    const stop = host.querySelector<HTMLButtonElement>('[data-stop]')!;
+    function start() { frame.src = frame.dataset.src!; run.disabled = true; stop.disabled = false; }
+    function end() { frame.src = 'about:blank'; run.disabled = false; stop.disabled = true; }
+    run.addEventListener('click', start);
+    stop.addEventListener('click', end);
+    window.addEventListener('pagehide', end);
+    if (!matchMedia('(prefers-reduced-motion: reduce)').matches) start();
+    else end();
+  }
+</script>

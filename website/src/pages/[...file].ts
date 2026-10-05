@@ -4,12 +4,14 @@ const generated = resolve(process.cwd(), "public/generated");
 export async function getStaticPaths() {
   const paths = await readdir(generated, { recursive: true });
   return paths
-    .filter((path) => /\.(md|txt|json|gz|tsx)$/.test(path))
+    .filter((path) => /\.(md|txt|json|gz|tsx?|js|html)$/.test(path))
     .map((file) => ({ params: { file }, props: { file } }));
 }
 export async function GET({ props }: { props: { file: string } }) {
   const content = await readFile(resolve(generated, props.file));
-  const type = props.file.endsWith(".json")
+  const type = props.file.endsWith('.js') ? 'text/javascript; charset=utf-8'
+    : props.file.endsWith('.html') ? 'text/html; charset=utf-8'
+    : props.file.endsWith(".json")
     ? "application/json"
     : props.file.endsWith(".gz")
       ? "application/gzip"
