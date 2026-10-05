@@ -1,0 +1,151 @@
+[
+  {
+    "id": "texture-procedural-component",
+    "title": "Render a procedural material",
+    "description": "Paint a marble material with a typed palette, resolution, and synchronous renderer.",
+    "source": "procedural-component.tsx",
+    "environment": "browser",
+    "symbols": [
+      { "name": "ProceduralTexture", "importPath": "@crc/core/textures" },
+      { "name": "ProceduralTextureProps", "importPath": "@crc/core/textures" },
+      { "name": "texturePalettes", "importPath": "@crc/core/textures" },
+      { "name": "TextureKind", "importPath": "@crc/core/textures" },
+      { "name": "TexturePalette", "importPath": "@crc/core/textures" },
+      { "name": "TextureResolution", "importPath": "@crc/core/textures" },
+      { "name": "TextureRenderer", "importPath": "@crc/core/textures" },
+      { "name": "TextureRenderFrame", "importPath": "@crc/core/textures" }
+    ],
+    "notes": [
+      "The borrowed source and mask canvases are used only inside the render callback."
+    ]
+  },
+  {
+    "id": "texture-reaction-component",
+    "title": "Paint reaction diffusion",
+    "description": "Mount an interactive reaction-diffusion layer with a typed brush.",
+    "source": "reaction-component.tsx",
+    "environment": "browser",
+    "symbols": [
+      { "name": "ReactionDiffusion", "importPath": "@crc/core/textures" },
+      { "name": "ReactionDiffusionProps", "importPath": "@crc/core/textures" },
+      { "name": "TextureBrush", "importPath": "@crc/core/textures" }
+    ],
+    "notes": [
+      "The layer owns its simulation until the CRC controller is disposed."
+    ]
+  },
+  {
+    "id": "texture-material-recipes",
+    "title": "Compare three material recipes",
+    "description": "Mount marble, paper, and cellular textures as adjacent Canvas fills.",
+    "source": "material-recipes.tsx",
+    "environment": "browser",
+    "symbols": [
+      { "name": "marble", "importPath": "@crc/core/textures" },
+      { "name": "paper", "importPath": "@crc/core/textures" },
+      { "name": "cellular", "importPath": "@crc/core/textures" },
+      { "name": "useTexture", "importPath": "@crc/core/textures" },
+      { "name": "MaterialOptions", "importPath": "@crc/core/textures" }
+    ],
+    "notes": [
+      "Each hook slot owns one texture resource; the returned handle is directly usable as fill."
+    ]
+  },
+  {
+    "id": "texture-ink-recipe",
+    "title": "Send paint to a living ink texture",
+    "description": "Create a reaction-diffusion recipe and send a typed paint command on click.",
+    "source": "ink-recipe.tsx",
+    "environment": "browser",
+    "symbols": [
+      { "name": "reactionDiffusion", "importPath": "@crc/core/textures" },
+      {
+        "name": "ReactionDiffusionOptions",
+        "importPath": "@crc/core/textures"
+      },
+      { "name": "InkMessage", "importPath": "@crc/core/textures" }
+    ],
+    "notes": [
+      "Messages are sent from the event handler, outside component evaluation."
+    ]
+  },
+  {
+    "id": "texture-water-waves",
+    "title": "Ripple a wave map",
+    "description": "Refract a painted rectangle through a periodic numeric wave texture.",
+    "source": "water-waves.tsx",
+    "environment": "browser",
+    "symbols": [
+      { "name": "waterWaves", "importPath": "@crc/core/textures" },
+      { "name": "WaterWavesOptions", "importPath": "@crc/core/textures" },
+      { "name": "WaterWavesMessage", "importPath": "@crc/core/textures" }
+    ],
+    "notes": ["Click the shape to add a normalized ripple to the map."]
+  },
+  {
+    "id": "texture-water-surface",
+    "title": "Ripple around an obstacle",
+    "description": "Use a bounded water surface with a normalized rectangular obstacle.",
+    "source": "water-surface.tsx",
+    "environment": "browser",
+    "symbols": [
+      { "name": "waterSurface", "importPath": "@crc/core/textures" },
+      { "name": "WaterSurfaceObstacle", "importPath": "@crc/core/textures" },
+      { "name": "WaterSurfaceOptions", "importPath": "@crc/core/textures" },
+      { "name": "WaterSurfaceMessage", "importPath": "@crc/core/textures" }
+    ],
+    "notes": [
+      "The obstacle affects the visual height field, not Canvas hit testing."
+    ]
+  },
+  {
+    "id": "texture-rain-drops",
+    "title": "Refract through rain glass",
+    "description": "Use a rain map for displacement and localized condensation blur.",
+    "source": "rain-drops.tsx",
+    "environment": "browser",
+    "symbols": [
+      { "name": "rainDrops", "importPath": "@crc/core/textures" },
+      { "name": "RainDropsOptions", "importPath": "@crc/core/textures" },
+      { "name": "RainDropsMessage", "importPath": "@crc/core/textures" }
+    ],
+    "notes": [
+      "A click sends a typed nudge while the texture continues to animate through CRC scheduling."
+    ]
+  },
+  {
+    "id": "texture-tendrils",
+    "title": "Add a weighted filament source",
+    "description": "Attach electric filaments to typed source sites and add one on click.",
+    "source": "tendrils.tsx",
+    "environment": "browser",
+    "symbols": [
+      { "name": "tendrils", "importPath": "@crc/core/textures" },
+      { "name": "TendrilsOptions", "importPath": "@crc/core/textures" },
+      { "name": "TendrilsMessage", "importPath": "@crc/core/textures" },
+      { "name": "ElectricSource", "importPath": "@crc/core/textures" },
+      { "name": "ElectricSourceMessage", "importPath": "@crc/core/textures" }
+    ],
+    "notes": [
+      "Source coordinates are normalized to the complete texture, including its padding."
+    ]
+  },
+  {
+    "id": "texture-lightning",
+    "title": "Connect two electric points",
+    "description": "Render a lightning recipe and reset its deterministic seed on click.",
+    "source": "lightning.tsx",
+    "environment": "browser",
+    "symbols": [
+      { "name": "lightning", "importPath": "@crc/core/textures" },
+      { "name": "LightningOptions", "importPath": "@crc/core/textures" },
+      { "name": "LightningMessage", "importPath": "@crc/core/textures" },
+      { "name": "ElectricPoint", "importPath": "@crc/core/textures" },
+      { "name": "ElectricOptions", "importPath": "@crc/core/textures" },
+      { "name": "ElectricControl", "importPath": "@crc/core/textures" }
+    ],
+    "notes": [
+      "The texture owns its animation through CRC; no application frame loop is needed."
+    ]
+  }
+]

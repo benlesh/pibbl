@@ -1,0 +1,104 @@
+[
+  {
+    "id": "filter-blur-shadow",
+    "title": "Blur and cast a shadow",
+    "description": "Filter one painted rectangle with a soft edge and combined silhouette shadow.",
+    "source": "blur-shadow.tsx",
+    "environment": "browser",
+    "symbols": [
+      { "name": "blur", "importPath": "@crc/core/filters" },
+      { "name": "dropShadow", "importPath": "@crc/core/filters" },
+      { "name": "CRCBlurFilterOptions", "importPath": "@crc/core/filters" },
+      {
+        "name": "CRCDropShadowFilterOptions",
+        "importPath": "@crc/core/filters"
+      },
+      { "name": "CRCFilter", "importPath": "@crc/core/filters" }
+    ],
+    "notes": [
+      "Filters change pixels; the rectangle's logical hit geometry stays fixed."
+    ]
+  },
+  {
+    "id": "filter-tone",
+    "title": "Adjust brightness, contrast, and saturation",
+    "description": "Compose three native color controls on a single Canvas shape.",
+    "source": "tone.tsx",
+    "environment": "browser",
+    "symbols": [
+      { "name": "brightness", "importPath": "@crc/core/filters" },
+      { "name": "contrast", "importPath": "@crc/core/filters" },
+      { "name": "saturate", "importPath": "@crc/core/filters" },
+      {
+        "name": "CRCBrightnessFilterOptions",
+        "importPath": "@crc/core/filters"
+      },
+      { "name": "CRCContrastFilterOptions", "importPath": "@crc/core/filters" },
+      { "name": "CRCSaturateFilterOptions", "importPath": "@crc/core/filters" }
+    ],
+    "notes": ["The list applies filters in declaration order."]
+  },
+  {
+    "id": "filter-color",
+    "title": "Shift a color treatment",
+    "description": "Apply partial grayscale, hue rotation, and inversion to one shape.",
+    "source": "color.tsx",
+    "environment": "browser",
+    "symbols": [
+      { "name": "grayscale", "importPath": "@crc/core/filters" },
+      { "name": "hueRotate", "importPath": "@crc/core/filters" },
+      { "name": "invert", "importPath": "@crc/core/filters" },
+      {
+        "name": "CRCGrayscaleFilterOptions",
+        "importPath": "@crc/core/filters"
+      },
+      {
+        "name": "CRCHueRotateFilterOptions",
+        "importPath": "@crc/core/filters"
+      },
+      { "name": "CRCInvertFilterOptions", "importPath": "@crc/core/filters" }
+    ],
+    "notes": [
+      "The option objects are typed before their factories create opaque filters."
+    ]
+  },
+  {
+    "id": "filter-finish",
+    "title": "Warm and fade a shape",
+    "description": "Combine sepia with raster opacity without changing layout opacity.",
+    "source": "finish.tsx",
+    "environment": "browser",
+    "symbols": [
+      { "name": "sepia", "importPath": "@crc/core/filters" },
+      { "name": "opacity", "importPath": "@crc/core/filters" },
+      { "name": "CRCSepiaFilterOptions", "importPath": "@crc/core/filters" },
+      { "name": "CRCOpacityFilterOptions", "importPath": "@crc/core/filters" }
+    ],
+    "notes": [
+      "Filter opacity applies to the captured result of the receiving primitive."
+    ]
+  },
+  {
+    "id": "filter-water-light",
+    "title": "Refract and light water",
+    "description": "Use one numeric texture map for displacement and reflected highlights.",
+    "source": "water-light.tsx",
+    "environment": "browser",
+    "symbols": [
+      { "name": "displacement", "importPath": "@crc/core/filters" },
+      { "name": "reflectedLight", "importPath": "@crc/core/filters" },
+      {
+        "name": "CRCDisplacementFilterOptions",
+        "importPath": "@crc/core/filters"
+      },
+      {
+        "name": "CRCReflectedLightFilterOptions",
+        "importPath": "@crc/core/filters"
+      },
+      { "name": "CRCReflectedLightSource", "importPath": "@crc/core/filters" }
+    ],
+    "notes": [
+      "The map is a mount-owned texture; both filters use the same local region."
+    ]
+  }
+]
