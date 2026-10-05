@@ -88,6 +88,15 @@ const browserExamples = registeredExamples.filter(
   (example) => example.environment === "browser",
 );
 if (browserExamples.length) {
+  // Preserve the text engine's sibling WASM URL instead of bundling its loader.
+  await mkdir(resolve(publicDir, "crc-text"), { recursive: true });
+  for (const [name, source] of [
+    ["engine.mjs", "packages/text/dist/engine.mjs"],
+    ["engine.wasm", "packages/text/dist/engine.wasm"],
+    ["ABeeZee-Regular.ttf", "packages/text/test/fixtures/ABeeZee-Regular.ttf"],
+    ["OFL.txt", "packages/text/test/fixtures/OFL.txt"],
+  ])
+    await cp(resolve(root, source), resolve(publicDir, "crc-text", name));
   await build({
     entryPoints: Object.fromEntries(
       browserExamples.map((example) => [example.id, example.path]),
@@ -99,6 +108,17 @@ if (browserExamples.length) {
     platform: "browser",
     target: "es2022",
     chunkNames: "_shared/[name]-[hash]",
+    plugins: [
+      {
+        name: "public-text-engine",
+        setup(build) {
+          build.onResolve({ filter: /engine\.mjs$/ }, (args) => {
+            if (args.importer.includes("/packages/text/"))
+              return { path: "/crc-text/engine.mjs", external: true };
+          });
+        },
+      },
+    ],
     tsconfigRaw: {
       compilerOptions: { jsx: "react-jsx", jsxImportSource: "@crc/core" },
     },

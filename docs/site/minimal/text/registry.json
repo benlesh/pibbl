@@ -1,0 +1,22 @@
+[
+  {
+    "id": "outline",
+    "title": "Text outline",
+    "description": "Load an outline font, shape a text run, and paint its editable path with glyph metrics.",
+    "source": "outline.tsx",
+    "environment": "browser",
+    "symbols": [
+      { "name": "loadOutlineFont", "importPath": "@crc/text" },
+      { "name": "createTextGeometry", "importPath": "@crc/text" },
+      { "name": "InkBounds", "importPath": "@crc/text" },
+      { "name": "OutlineFont", "importPath": "@crc/text" },
+      { "name": "OutlineFontOptions", "importPath": "@crc/text" },
+      { "name": "TextGeometryOptions", "importPath": "@crc/text" },
+      { "name": "TextGeometryResult", "importPath": "@crc/text" },
+      { "name": "TextGlyph", "importPath": "@crc/text" }
+    ],
+    "notes": [
+      "The browser example requires the existing Studio /crc-text/ABeeZee-Regular.ttf asset and the @crc/text WASM loader asset; retain and dispose the font explicitly."
+    ]
+  }
+]

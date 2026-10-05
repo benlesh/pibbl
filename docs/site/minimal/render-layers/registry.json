@@ -1,0 +1,51 @@
+[
+  {
+    "id": "bitmap-layer",
+    "title": "Interactive bitmap layer",
+    "description": "Draw a dot into an OffscreenCanvas and route clicks through CRC's event boundary.",
+    "source": "bitmap-layer.tsx",
+    "environment": "browser",
+    "symbols": [
+      { "name": "defineRenderLayer", "importPath": "@crc/core" },
+      { "name": "CRCRenderLayerComponentProps", "importPath": "@crc/core" },
+      { "name": "CRCRenderLayerContext", "importPath": "@crc/core" },
+      { "name": "CRCRenderLayerDefinition", "importPath": "@crc/core" },
+      { "name": "CRCRenderLayerFrame", "importPath": "@crc/core" },
+      { "name": "CRCRenderLayerHit", "importPath": "@crc/core" },
+      { "name": "CRCRenderLayerInput", "importPath": "@crc/core" },
+      { "name": "CRCRenderLayerInteraction", "importPath": "@crc/core" },
+      {
+        "name": "CRCRenderLayerInteractionSnapshot",
+        "importPath": "@crc/core"
+      },
+      { "name": "CRCRenderLayerProps", "importPath": "@crc/core" },
+      { "name": "CRCRenderLayerSize", "importPath": "@crc/core" },
+      { "name": "CRCRenderLayerStyle", "importPath": "@crc/core" },
+      { "name": "CRCRenderLayerTarget", "importPath": "@crc/core" }
+    ],
+    "notes": [
+      "Requires browser OffscreenCanvas and transferToImageBitmap support."
+    ]
+  },
+  {
+    "id": "three-layer",
+    "title": "Three.js scene layer",
+    "description": "Mount an ordinary Three.js cube with routed controls and raycast picking.",
+    "source": "three-layer.tsx",
+    "environment": "browser",
+    "symbols": [
+      { "name": "defineThreeLayer", "importPath": "@crc/three" },
+      { "name": "CRCThreeInputBridge", "importPath": "@crc/three" },
+      { "name": "CRCThreeLayerContext", "importPath": "@crc/three" },
+      { "name": "CRCThreeLayerDefinition", "importPath": "@crc/three" },
+      { "name": "CRCThreeLayerResources", "importPath": "@crc/three" },
+      { "name": "CRCThreePicker", "importPath": "@crc/three" },
+      { "name": "CRCThreePickResult", "importPath": "@crc/three" },
+      { "name": "CRCThreeRendererOptions", "importPath": "@crc/three" },
+      { "name": "CRCThreeTarget", "importPath": "@crc/three" }
+    ],
+    "notes": [
+      "Requires the `three` peer dependency, WebGL, and browser OffscreenCanvas support; application-created Three resources are disposed explicitly."
+    ]
+  }
+]

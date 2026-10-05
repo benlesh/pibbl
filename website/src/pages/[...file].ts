@@ -4,17 +4,23 @@ const generated = resolve(process.cwd(), "public/generated");
 export async function getStaticPaths() {
   const paths = await readdir(generated, { recursive: true });
   return paths
-    .filter((path) => /\.(md|txt|json|gz|tsx?|js|html)$/.test(path))
+    .filter((path) => /\.(md|txt|json|gz|tsx?|m?js|html|wasm|ttf)$/.test(path))
     .map((file) => ({ params: { file }, props: { file } }));
 }
 export async function GET({ props }: { props: { file: string } }) {
   const content = await readFile(resolve(generated, props.file));
-  const type = props.file.endsWith('.js') ? 'text/javascript; charset=utf-8'
-    : props.file.endsWith('.html') ? 'text/html; charset=utf-8'
-    : props.file.endsWith(".json")
-    ? "application/json"
-    : props.file.endsWith(".gz")
-      ? "application/gzip"
-      : "text/plain; charset=utf-8";
+  const type = /\.m?js$/.test(props.file)
+    ? "text/javascript; charset=utf-8"
+    : props.file.endsWith(".wasm")
+      ? "application/wasm"
+      : props.file.endsWith(".ttf")
+        ? "font/ttf"
+        : props.file.endsWith(".html")
+          ? "text/html; charset=utf-8"
+          : props.file.endsWith(".json")
+            ? "application/json"
+            : props.file.endsWith(".gz")
+              ? "application/gzip"
+              : "text/plain; charset=utf-8";
   return new Response(content, { headers: { "Content-Type": type } });
 }
