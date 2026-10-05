@@ -220,11 +220,70 @@ export function getParticleDescriptorRecord(value: unknown): ParticleDescriptorR
   return typeof value === 'object' && value !== null ? descriptorRecords.get(value) : undefined;
 }
 
+/**
+ * Describes a continuous random range for particle sampling.
+ *
+ * @param min - Finite lower bound, no greater than max.
+ * @param max - Finite upper bound; the span must also be finite.
+ * @returns An immutable continuous sampling descriptor. See {@link CRCParticleRange}.
+ *
+ * @see {@link CRCParticleRange}
+ */
 export const particleRange = between;
+/**
+ * Describes a random integer range for particle sampling.
+ *
+ * @param min - Inclusive lower bound, a safe integer.
+ * @param max - Inclusive upper bound; the inclusive span must be a safe integer.
+ * @returns An immutable integer sampling descriptor. See {@link CRCParticleIntegerRange}.
+ *
+ * @see {@link CRCParticleIntegerRange}
+ */
 export const particleInteger = integer;
+/**
+ * Describes weighted choices sampled by a particle effect.
+ *
+ * @param choices - Nonempty weighted values; every weight and their total must be positive and
+ * finite.
+ * @returns An immutable descriptor containing copied choices. See {@link CRCParticleChoice}.
+ *
+ * @see {@link CRCParticleChoice}
+ */
 export const particleChoice = choice;
+/**
+ * References a named parameter declared by a particle effect.
+ *
+ * @param name - Nonempty name of a parameter declared by the effect.
+ * @returns A typed parameter reference. See {@link CRCParticleParameterReference}.
+ *
+ * @see {@link CRCParticleParameterReference}
+ */
 export const particleParameter = parameter;
+/**
+ * Describes keyframed scalar or vector values over normalized particle lifetime.
+ *
+ * @param keys - Scalar or 2D-vector keys with strictly increasing normalized times, starting at 0
+ * and ending at 1.
+ * @param options - Optional segment easing. See {@link CRCParticleCurveOptions}.
+ * @returns An immutable lifetime curve containing copied keys. See {@link CRCParticleCurve}.
+ *
+ * @see {@link CRCParticleCurveOptions}
+ * @see {@link CRCParticleCurve}
+ * @see {@link CRCParticleCurveValue}
+ */
 export const particleCurve = curve;
+/**
+ * Describes keyframed colors over normalized particle lifetime.
+ *
+ * @param keys - Color keys with strictly increasing normalized times, starting at 0 and ending at
+ * 1.
+ * @param options - Optional segment easing. See {@link CRCParticleCurveOptions}.
+ * @returns An immutable lifetime color gradient containing copied keys. See
+ * {@link CRCParticleGradient} .
+ *
+ * @see {@link CRCParticleCurveOptions}
+ * @see {@link CRCParticleGradient}
+ */
 export const particleGradient = gradient;
 
 /** @internal Legacy test convenience; not exported from the public package entry. */

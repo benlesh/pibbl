@@ -51,6 +51,20 @@ interface PreparedCastShape2D {
   readonly pose: InternalPose2D;
 }
 
+/**
+ * Casts a ray against one posed shape and returns its first hit or null.
+ *
+ * @param shape - Shape to intersect. See {@link CRCPhysicsShape2D}.
+ * @param publicPose - Target shape pose. See {@link CRCPhysicsPose2D}.
+ * @param ray - Ray origin, direction, and travel limit. See {@link CRCPhysicsRay2D}.
+ * @param options - Whether initial overlap counts as a hit.
+ * @returns The first shape hit, or null when there is no hit. See {@link CRCPhysicsShapeHit2D}.
+ *
+ * @see {@link CRCPhysicsShape2D}
+ * @see {@link CRCPhysicsPose2D}
+ * @see {@link CRCPhysicsRay2D}
+ * @see {@link CRCPhysicsShapeHit2D}
+ */
 export function raycastShape2D(
   shape: CRCPhysicsShape2D,
   publicPose: CRCPhysicsPose2D,
@@ -117,6 +131,22 @@ export function raycastShape2D(
   return selected === null ? null : publicHit(selected);
 }
 
+/**
+ * Sweeps a posed shape along a translation against another posed shape and returns a hit or null.
+ *
+ * @param moving - Shape to sweep. See {@link CRCPhysicsShape2D}.
+ * @param publicFrom - Initial pose of the moving shape. See {@link CRCPhysicsPose2D}.
+ * @param publicTranslation - Translation vector for the sweep. See {@link CRCPhysicsVector2}.
+ * @param target - Stationary shape to test against. See {@link CRCPhysicsShape2D}.
+ * @param publicTargetPose - Pose of the stationary shape. See {@link CRCPhysicsPose2D}.
+ * @param options - Whether initial overlap counts as a hit.
+ * @returns The first sweep hit, or null when there is no hit. See {@link CRCPhysicsShapeHit2D}.
+ *
+ * @see {@link CRCPhysicsShape2D}
+ * @see {@link CRCPhysicsPose2D}
+ * @see {@link CRCPhysicsVector2}
+ * @see {@link CRCPhysicsShapeHit2D}
+ */
 export function shapeCastAgainstShape2D(
   moving: CRCPhysicsShape2D,
   publicFrom: CRCPhysicsPose2D,

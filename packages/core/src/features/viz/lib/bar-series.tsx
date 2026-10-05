@@ -20,6 +20,18 @@ import type { BandCategory, LineAccessor, ScaleId } from "./types.js";
 import { useScale } from "./use-scale.js";
 import { pointAccessor, pointData, finiteCoordinate } from "./point-data.js";
 import { opacity, width } from "./paint.js";
+/**
+ * A data property or callback that extracts a category, with nullish values treated as missing.
+ *
+ * @param datum - Datum whose category is being read.
+ * @param index - Zero-based index in the source data.
+ * @param data - Complete source data array.
+ * @returns The category, or null/undefined to indicate a missing category. See
+ * {@link BandCategory} .
+ *
+ * @see {@link BandCategory}
+ * @see {@link BarSeriesProps}
+ */
 export type BarCategoryAccessor<D> =
   | {
       [K in keyof D]-?: D[K] extends BandCategory | null | undefined
@@ -33,51 +45,147 @@ export type BarCategoryAccessor<D> =
     ) => BandCategory | null | undefined);
 import { barFill, type BarThresholdFill } from "./bar-fill.js";
 export type { BarThresholdFill } from "./bar-fill.js";
+/**
+ * Supported geometry and presentation properties for BarSeries.
+ *
+ * @see {@link FillStyle}
+ * @see {@link BarThresholdFill}
+ * @see {@link StrokeStyle}
+ * @see {@link BarStyleResolver}
+ */
 export interface BarSeriesStyle {
+  /** Width allocated to one categorical band. See {@link BarSeriesStyle}. */
   readonly bandwidth?: number | "auto";
+  /** Paint used for the interior. See {@link FillStyle}, {@link BarThresholdFill}. */
   readonly fill?: FillStyle | BarThresholdFill;
+  /** Paint used for the outline. See {@link StrokeStyle}. */
   readonly stroke?: StrokeStyle;
+  /** Width of the painted outline. See {@link BarSeriesStyle}. */
   readonly strokeWidth?: number;
+  /** Opacity of the painted result. See {@link BarSeriesStyle}. */
   readonly opacity?: number;
+  /** Cursor shown while this target owns pointer presentation. See {@link BarSeriesStyle}. */
   readonly cursor?: string;
 }
+/**
+ * Computes bar styling from the datum, index, and source data.
+ *
+ * @param datum - Datum being styled.
+ * @param index - Zero-based index in the source data.
+ * @param data - Complete source data array.
+ * @returns Style for this datum's bar. See {@link BarSeriesStyle}.
+ *
+ * @see {@link BarSeriesStyle}
+ */
 export type BarStyleResolver<D> = (
   datum: D,
   index: number,
   data: readonly D[],
 ) => BarSeriesStyle;
-interface BarSeriesBaseProps<D>
-  extends CRCEventHandlers, CRCEventParticipationOptions {
+/**
+ * Shared data, category/value scales, orientation, filtering, and styling for bar variants.
+ *
+ * @see {@link BarCategoryAccessor}
+ * @see {@link BarSeriesStyle}
+ * @see {@link BarSeriesProps}
+ */
+interface BarSeriesBaseProps<D> extends CRCEventHandlers, CRCEventParticipationOptions {
+  /**
+   * Application data supplied to the component or reported by the event. See {@link SignalValue}.
+   */
   readonly data: SignalValue<readonly D[]>;
+  /** Selects `"vertical"`, `"horizontal"` for orientation. See {@link BarSeriesBaseProps}. */
   readonly orientation?: "vertical" | "horizontal";
+  /** Property or callback extracting a bar's discrete category. See {@link BarCategoryAccessor}. */
   readonly category: BarCategoryAccessor<D>;
+  /** Band scale used to place categories. See {@link ScaleId}. */
   readonly categoryScale: ScaleId;
+  /** Numeric scale used to map bar values. See {@link ScaleId}. */
   readonly valueScale: ScaleId;
+  /**
+   * Selects the records that participate in the bar series. See {@link BarSeriesProps}.
+   * @param datum - Record to test.
+   * @param index - Zero-based index in the source array.
+   * @param data - Complete source data array.
+   * @returns Whether this record should contribute a bar.
+   */
   readonly defined?: (datum: D, index: number, data: readonly D[]) => boolean;
-  readonly style?: SignalValue<
-    SignalStyle<BarSeriesStyle> | BarStyleResolver<D>
-  >;
+  /**
+   * Declared presentation and layout properties. See {@link SignalValue}, {@link SignalStyle},
+   * {@link BarSeriesStyle}, {@link BarStyleResolver}.
+   */
+  readonly style?: SignalValue<SignalStyle<BarSeriesStyle> | BarStyleResolver<D>>;
 }
+/**
+ * Authored inputs for BarSeries, including the declared data and presentation options.
+ *
+ * @see {@link LineAccessor}
+ * @see {@link SignalValue}
+ * @see {@link BarCategoryAccessor}
+ * @see {@link ScaleId}
+ * @see {@link BarSeries}
+ */
 export type BarSeriesProps<D> = BarSeriesBaseProps<D> &
   (
     | {
+        /** Value associated with this sample, input, or result. See {@link LineAccessor}. */
         readonly value: LineAccessor<D>;
+        /** Numeric value from which each ordinary bar starts. See {@link SignalValue}. */
         readonly baseline?: SignalValue<number>;
+        /**
+         * Not accepted in this variant; use the alternative fields instead. See
+         * {@link BarSeriesProps}.
+         */
         readonly valueStart?: never;
+        /**
+         * Not accepted in this variant; use the alternative fields instead. See
+         * {@link BarSeriesProps}.
+         */
         readonly valueEnd?: never;
       }
     | {
+        /**
+         * Not accepted in this variant; use the alternative fields instead. See
+         * {@link BarSeriesProps}.
+         */
         readonly value?: never;
+        /**
+         * Not accepted in this variant; use the alternative fields instead. See
+         * {@link BarSeriesProps}.
+         */
         readonly baseline?: never;
+        /** Accessor for the beginning of a range bar. See {@link LineAccessor}. */
         readonly valueStart: LineAccessor<D>;
+        /** Accessor for the end of a range bar. See {@link LineAccessor}. */
         readonly valueEnd: LineAccessor<D>;
       }
   ) &
   (
-    | { readonly group: BarCategoryAccessor<D>; readonly groupScale: ScaleId }
-    | { readonly group?: never; readonly groupScale?: never }
+    | {
+        /** Accessor identifying the subgroup of each bar. See {@link BarCategoryAccessor}. */
+        readonly group: BarCategoryAccessor<D>;
+        /** Band scale used to place subgroups within a category. See {@link ScaleId}. */
+        readonly groupScale: ScaleId;
+      }
+    | {
+        /** Accessor identifying the subgroup of each bar. See {@link BarSeriesProps}. */
+        readonly group?: never;
+        /**
+         * Not accepted in this variant; use the alternative fields instead. See
+         * {@link BarSeriesProps}.
+         */
+        readonly groupScale?: never;
+      }
   );
-/** Value bars in source order; rectangles supply ordinary paint and event geometry. */
+/**
+ * Value bars in source order; rectangles supply ordinary paint and event geometry.
+ *
+ * @param props - Data, category and value accessors, scales, grouping, and styling. See
+ * {@link BarSeriesProps} .
+ * @returns CRC nodes drawing the bars.
+ *
+ * @see {@link BarSeriesProps}
+ */
 export function BarSeries<D>({
   data: input,
   orientation = "vertical",

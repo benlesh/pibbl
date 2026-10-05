@@ -20,6 +20,11 @@ interface CRCCursorDefaultSlot {
 /**
  * Hook: wires a CSS cursor to the same logical target resolver used by mouse
  * events. The cursor is released when this hook slot is replaced or removed.
+ *
+ * @param options - Cursor style and optional fill or stroke hit region for the current component.
+ * See {@link PathGeometry} .
+ *
+ * @see {@link PathGeometry}
  */
 export function useCursor({
   path,

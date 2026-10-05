@@ -29,6 +29,19 @@ interface ThreeAdapterResources<
   props: Readonly<Props>;
 }
 
+/**
+ * Defines a CRC external layer using ordinary Three.js scenes and resources. Each mount owns one
+ * transparent renderer; dispose must release application-created resources, and animation uses
+ * CRC's supplied frame and invalidation.
+ *
+ * @param definition - Resource lifecycle, rendering overrides, targets, and picking configuration.
+ * See {@link CRCThreeLayerDefinition} .
+ * @returns A CRC component mounting a persistent Three.js scene boundary with an adapter-owned
+ * renderer.
+ *
+ * @see {@link CRCThreeLayerDefinition}
+ * @see {@link CRCThreeLayerResources}
+ */
 export function defineThreeLayer<
   Props,
   Resources extends CRCThreeLayerResources,

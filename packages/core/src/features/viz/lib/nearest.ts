@@ -1,24 +1,71 @@
 import type { ResolvedLinearScale } from "./types.js";
 import type { PointAccessor } from "./point-types.js";
 import { finiteCoordinate, pointAccessor, pointData } from "./point-data.js";
+/**
+ * Coordinate accessors, resolved scales, and candidate filtering for a nearest-point search.
+ *
+ * @see {@link PointAccessor}
+ * @see {@link ResolvedLinearScale}
+ * @see {@link nearestPoint}
+ */
 export interface NearestPointOptions<D> {
+  /** Property key or callback extracting the horizontal domain coordinate. See {@link PointAccessor}. */
   readonly x: PointAccessor<D>;
+  /** Property key or callback extracting the vertical domain coordinate. See {@link PointAccessor}. */
   readonly y: PointAccessor<D>;
+  /** The scale used to map horizontal data coordinates. See {@link ResolvedLinearScale}. */
   readonly xScale: ResolvedLinearScale;
+  /** The scale used to map vertical data coordinates. See {@link ResolvedLinearScale}. */
   readonly yScale: ResolvedLinearScale;
+  /**
+   * Returns whether a datum contributes drawable or queryable coordinates. See
+   * {@link NearestPointOptions}.
+   * @param datum - Datum to test.
+   * @param index - Zero-based index in the source data.
+   * @param data - Complete source data array.
+   * @returns Whether this datum should participate in the series or query.
+   */
   readonly defined?: (datum: D, index: number, data: readonly D[]) => boolean;
+  /** Maximum distance accepted by the query. See {@link NearestPointOptions}. */
   readonly maxDistance?: number;
 }
+/**
+ * The selected datum, source index, mapped coordinates, and distance from the query point.
+ *
+ * @see {@link nearestPoint}
+ */
 export interface NearestPoint<D> {
+  /** The original data item selected by this result. See {@link NearestPoint}. */
   readonly datum: D;
+  /** Index of the selected datum in its source data. See {@link NearestPoint}. */
   readonly index: number;
+  /**
+   * Horizontal coordinate or displacement in the containing coordinate system. See
+   * {@link NearestPoint}.
+   */
   readonly x: number;
+  /**
+   * Vertical coordinate or displacement in the containing coordinate system. See
+   * {@link NearestPoint}.
+   */
   readonly y: number;
+  /** Distance measured in this query or guide's coordinate system. See {@link NearestPoint}. */
   readonly distance: number;
 }
 function finite(value: unknown, name: string): asserts value is number {
   if (!finiteCoordinate(value)) throw new RangeError(`${name} must be finite.`);
 }
+/**
+ * Finds the domain value nearest to a logical range coordinate; returns undefined for no
+ * candidate.
+ *
+ * @param values - Candidate domain values.
+ * @param rangeValue - Pointer coordinate in the scale's range.
+ * @param scale - Scale mapping candidates into range coordinates. See {@link ResolvedLinearScale}.
+ * @returns The nearest domain value, or undefined when no candidate can be selected.
+ *
+ * @see {@link ResolvedLinearScale}
+ */
 export function nearestDomainValue(
   values: readonly number[],
   rangeValue: number,
@@ -39,6 +86,19 @@ export function nearestDomainValue(
   }
   return best;
 }
+/**
+ * Finds the nearest defined datum in scaled coordinates, subject to an optional maximum distance.
+ *
+ * @param data - Candidate data records.
+ * @param point - Query point in plotted range coordinates.
+ * @param options - Accessors, scales, eligibility, and distance settings. See
+ * {@link NearestPointOptions} .
+ * @returns The nearest matching point, or undefined when no candidate qualifies. See
+ * {@link NearestPoint} .
+ *
+ * @see {@link NearestPointOptions}
+ * @see {@link NearestPoint}
+ */
 export function nearestPoint<D>(
   data: readonly D[],
   point: Readonly<{ x: number; y: number }>,

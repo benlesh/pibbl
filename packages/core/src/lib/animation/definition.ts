@@ -513,7 +513,16 @@ function normalizeEasings(
   return Object.freeze(Array.from({ length: segmentCount }, () => ease));
 }
 
-/** Returns an opaque immutable tween definition. */
+/**
+ * Returns an opaque immutable tween definition.
+ *
+ * @param options - Start and end values, duration, easing, and interpolation settings. See
+ * {@link CRCTweenOptions} .
+ * @returns An immutable tween definition. See {@link CRCAnimationDefinition}.
+ *
+ * @see {@link CRCTweenOptions}
+ * @see {@link CRCAnimationDefinition}
+ */
 export function tween<T>(options: Readonly<CRCTweenOptions<T>>): CRCAnimationDefinition<T> {
   assertDuration(options.duration, options.debugName);
   if (typeof options.easing !== 'undefined' && typeof options.easing !== 'function') {
@@ -536,7 +545,17 @@ export function tween<T>(options: Readonly<CRCTweenOptions<T>>): CRCAnimationDef
   });
 }
 
-/** Returns an opaque immutable keyframe definition. */
+/**
+ * Returns an opaque immutable keyframe definition.
+ *
+ * @param options - Keyframe values, timing, easing, and interpolation settings. See
+ * {@link CRCKeyframesOptions} .
+ * @returns An immutable animation definition sampling the keyframes. See
+ * {@link CRCAnimationDefinition} .
+ *
+ * @see {@link CRCKeyframesOptions}
+ * @see {@link CRCAnimationDefinition}
+ */
 export function keyframes<T>(
   options: Readonly<CRCKeyframesOptions<T>>,
 ): CRCAnimationDefinition<T> {
@@ -564,14 +583,32 @@ export function keyframes<T>(
   });
 }
 
-/** Returns an opaque immutable analytic one-dimensional spring definition. */
+/**
+ * Returns an opaque immutable analytic one-dimensional spring definition.
+ *
+ * @param options - Target, initial conditions, and spring parameters. See {@link CRCSpringOptions}
+ * .
+ * @returns An analytic numeric spring definition. See {@link CRCAnimationDefinition}.
+ *
+ * @see {@link CRCSpringOptions}
+ * @see {@link CRCAnimationDefinition}
+ */
 export function spring(
   options: Readonly<CRCSpringOptions>,
 ): CRCAnimationDefinition<number> {
   return createDefinition(createSpringRecord(options));
 }
 
-/** Returns an opaque immutable definition from a custom seekable sampler. */
+/**
+ * Returns an opaque immutable definition from a custom seekable sampler.
+ *
+ * @param options - Duration and pure sampling callback for the animation. See
+ * {@link CRCAnimationOptions} .
+ * @returns An immutable, seekable animation definition. See {@link CRCAnimationDefinition}.
+ *
+ * @see {@link CRCAnimationOptions}
+ * @see {@link CRCAnimationDefinition}
+ */
 export function defineAnimation<T>(
   options: Readonly<CRCAnimationOptions<T>>,
 ): CRCAnimationDefinition<T> {
@@ -590,6 +627,14 @@ export function defineAnimation<T>(
 /**
  * Returns an opaque immutable stepper definition. Steppers are evaluated by
  * the playback engine, not by the seekable sampler.
+ *
+ * @param options - Initial state, fixed-step integration, value reader, and completion predicate.
+ * See {@link CRCStepperOptions} .
+ * @returns A stateful animation definition advanced by fixed simulation steps. See
+ * {@link CRCAnimationDefinition} .
+ *
+ * @see {@link CRCStepperOptions}
+ * @see {@link CRCAnimationDefinition}
  */
 export function stepper<State, T>(
   options: Readonly<CRCStepperOptions<State, T>>,

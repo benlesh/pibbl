@@ -12,12 +12,24 @@ import {
   type GeometryErrorFactory,
 } from './validation.js';
 
+/**
+ * Geometry and construction options for a star path.
+ *
+ * @see {@link RoundedCornerPathOptions}
+ * @see {@link createStarPath}
+ */
 export interface StarPathOptions extends RoundedCornerPathOptions {
+  /** Points defining the geometry or reported by the contact query. See {@link StarPathOptions}. */
   points: number;
+  /** Horizontal coordinate of the center. See {@link StarPathOptions}. */
   cx?: number;
+  /** Vertical coordinate of the center. See {@link StarPathOptions}. */
   cy?: number;
+  /** Radius of the outer boundary. See {@link StarPathOptions}. */
   outerRadius: number;
+  /** Radius of the inner boundary. See {@link StarPathOptions}. */
   innerRadius: number;
+  /** Rotation applied to the containing geometry. See {@link StarPathOptions}. */
   rotation?: number;
 }
 
@@ -106,6 +118,15 @@ export function resolveStarGeometry(
   };
 }
 
+/**
+ * Creates a Canvas Path2D for star geometry from validated options.
+ *
+ * @param options - Star center, inner and outer radii, point count, and rotation. See
+ * {@link StarPathOptions} .
+ * @returns A native Canvas path containing the star.
+ *
+ * @see {@link StarPathOptions}
+ */
 export function createStarPath(
   options: Readonly<StarPathOptions>,
 ): Path2D {

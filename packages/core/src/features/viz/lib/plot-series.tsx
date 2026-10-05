@@ -16,7 +16,16 @@ function PlotRow<D>({
 }): CRCNode {
   return render(datum, index, data);
 }
-/** Places keyed custom CRC subtrees at local data coordinates. */
+/**
+ * Places keyed custom CRC subtrees at local data coordinates.
+ *
+ * @param props - Data, coordinate accessors, scales, keys, and per-datum renderer. See
+ * {@link PlotSeriesProps} .
+ * @returns CRC nodes placing each rendered datum at its mapped coordinates. See {@link CRCNode}.
+ *
+ * @see {@link PlotSeriesProps}
+ * @see {@link CRCNode}
+ */
 export function PlotSeries<D>({
   data: input,
   x: xInput,

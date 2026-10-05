@@ -3,16 +3,50 @@ import { opacity } from '../../filters/native.js';
 import { defineTransitionEffect, type CRCTransitionEffect } from './fade.js';
 import { captureTransition, clamp, finite, regionSnapshot, type TransitionRegion } from './capture.js';
 
+/**
+ * Color and motion controls for a bifrost visibility transition.
+ *
+ * @see {@link bifrost}
+ */
 export interface CRCBifrostOptions {
+  /** Logical region over which the effect is evaluated. See {@link TransitionRegion}. */
   readonly region: TransitionRegion;
-  readonly entry?: Readonly<{ x: number; y: number }>;
+  /** Entry location or direction used by the transition. See {@link CRCBifrostOptions}. */
+  readonly entry?: Readonly<{
+    /**
+     * Horizontal coordinate or displacement in the containing coordinate system. See
+     * {@link CRCBifrostOptions}.
+     */
+    x: number;
+    /**
+     * Vertical coordinate or displacement in the containing coordinate system. See
+     * {@link CRCBifrostOptions}.
+     */
+    y: number;
+  }>;
+  /** Brightness control for the transition effect. See {@link CRCBifrostOptions}. */
   readonly brightness?: number;
+  /** Hue control for the transition's emitted color. See {@link CRCBifrostOptions}. */
   readonly hue?: number;
+  /** Amount of stretching applied by the transition. See {@link CRCBifrostOptions}. */
   readonly stretch?: number;
+  /** Intensity of the electrical halo around the core. See {@link CRCBifrostOptions}. */
   readonly glow?: number;
+  /**
+   * Seed used for deterministic sampling or simulation initialization. See
+   * {@link CRCBifrostOptions}.
+   */
   readonly seed?: number;
 }
-/** A prismatic beam stretches a white-hot captured subject toward its entry point. */
+/**
+ * A prismatic beam stretches a white-hot captured subject toward its entry point.
+ *
+ * @param options - Bifrost appearance and animation settings. See {@link CRCBifrostOptions}.
+ * @returns A bifrost transition effect. See {@link CRCTransitionEffect}.
+ *
+ * @see {@link CRCBifrostOptions}
+ * @see {@link CRCTransitionEffect}
+ */
 export function bifrost(options: CRCBifrostOptions): CRCTransitionEffect {
   const r = regionSnapshot(options.region), ax = r.x + r.width / 2, ay = r.y + r.height;
   const ex = finite(options.entry?.x ?? ax, 'entry.x'), ey = finite(options.entry?.y ?? r.y - r.height * 2, 'entry.y');

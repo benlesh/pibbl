@@ -15,6 +15,11 @@ import type {
   ScenarioMountContext,
 } from './types';
 
+/**
+ * Stable action identifiers accepted by the signals lab scenario.
+ *
+ * @see {@link SignalsLabAction}
+ */
 export const SIGNALS_LAB_ACTION_IDS = [
   'direct-write',
   'equal-write',

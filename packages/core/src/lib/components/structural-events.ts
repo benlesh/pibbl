@@ -1,7 +1,11 @@
 import type { CRCEventHandlers } from '../events/types.js';
 import { useEventListener } from '../hooks/use-event-listener.js';
 
-/** Event props shared by child-bearing Canvas built-ins. */
+/**
+ * Event props shared by child-bearing Canvas built-ins.
+ *
+ * @see {@link CRCEventHandlers}
+ */
 export interface CRCStructuralEventProps extends CRCEventHandlers {}
 
 /** Registers a structural ancestor without creating hit-test geometry. */

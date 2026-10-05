@@ -1,8 +1,26 @@
+import type { TextGeometryResult } from '../index.js';
 import type { PathGeometry } from "@crc/core";
+/**
+ * Axis-aligned bounds of visible glyph outlines in logical output coordinates.
+ *
+ * @see {@link TextGeometryResult}
+ */
 export interface InkBounds {
+  /**
+   * Horizontal coordinate or displacement in the containing coordinate system. See
+   * {@link InkBounds}.
+   */
   readonly x: number;
+  /**
+   * Vertical coordinate or displacement in the containing coordinate system. See {@link InkBounds}
+   * .
+   */
   readonly y: number;
+  /**
+   * Horizontal extent in the units of the containing geometry or surface. See {@link InkBounds}.
+   */
   readonly width: number;
+  /** Vertical extent in the units of the containing geometry or surface. See {@link InkBounds}. */
   readonly height: number;
 }
 /** Curve extrema, not control-point bounds. One linear traversal; no flattening. */

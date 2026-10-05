@@ -1,9 +1,17 @@
+import type { BarSeriesStyle } from './bar-series.js';
 import type { FillStyle } from "@crc/core";
 
-/** Domain thresholds divide the bar fill into sharp, ordered color intervals. */
+/**
+ * Domain thresholds divide the bar fill into sharp, ordered color intervals.
+ *
+ * @see {@link BarSeriesStyle}
+ */
 export interface BarThresholdFill {
+  /** The literal "threshold" identifying this variant. See {@link BarThresholdFill}. */
   readonly type: "threshold";
+  /** Ordered numeric boundaries separating fill-color intervals. See {@link BarThresholdFill}. */
   readonly thresholds: readonly number[];
+  /** Colors assigned to successive threshold intervals. See {@link BarThresholdFill}. */
   readonly colors: readonly string[];
 }
 

@@ -1,3 +1,4 @@
+import type { CRCManipulationFrameProps } from './controller-types.js';
 import { createElement } from "../element/create-element.js";
 import { Group } from "../components/g.js";
 import { definePrimitive } from "../define-primitive.js";
@@ -60,6 +61,15 @@ function releaseManipulationFrame(
   detachManipulationFrame(state);
 }
 
+/**
+ * Provides a manipulation controller and its presentation frame to descendant handles.
+ *
+ * @param props - Authored component inputs, supplied through JSX or createElement. See the linked
+ * props and style types.
+ * @throws When called directly; CRC mounts this component through JSX or createElement.
+ *
+ * @see {@link CRCManipulationFrameProps}
+ */
 export const ManipulationFrame = definePrimitive<FrameProps, FrameStyle>(
   function ManipulationFrame(props, style) {
     const state = manipulationState(props.controller);

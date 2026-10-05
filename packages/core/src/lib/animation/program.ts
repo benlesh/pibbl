@@ -762,7 +762,18 @@ function parallelDuration(records: readonly ProgramRecord[]): ProgramDuration {
   )));
 }
 
-/** Binds one animation definition to one writable signal. */
+/**
+ * Binds one animation definition to one writable signal.
+ *
+ * @param output - Writable signal that receives sampled values. See {@link WritableSignal}.
+ * @param definition - Animation definition to sample into the signal. See
+ * {@link CRCAnimationDefinition} .
+ * @returns A program that animates the supplied output signal. See {@link CRCAnimationProgram}.
+ *
+ * @see {@link WritableSignal}
+ * @see {@link CRCAnimationDefinition}
+ * @see {@link CRCAnimationProgram}
+ */
 export function drive<T>(
   output: WritableSignal<T>,
   definition: CRCAnimationDefinition<T>,
@@ -785,7 +796,15 @@ export function drive<T>(
   });
 }
 
-/** Activates children in source order. */
+/**
+ * Activates children in source order.
+ *
+ * @param children - Programs in execution order. See {@link CRCAnimationProgram}.
+ * @returns A program that runs each child after its predecessor completes. See
+ * {@link CRCAnimationProgram} .
+ *
+ * @see {@link CRCAnimationProgram}
+ */
 export function sequence(...children: readonly CRCAnimationProgram[]): CRCAnimationProgram {
   const records = children.map(getProgramRecord);
   const duration = sequenceDuration(records);
@@ -808,7 +827,14 @@ export function sequence(...children: readonly CRCAnimationProgram[]): CRCAnimat
   });
 }
 
-/** Activates all children from one shared local origin. */
+/**
+ * Activates all children from one shared local origin.
+ *
+ * @param children - Programs to begin together. See {@link CRCAnimationProgram}.
+ * @returns A program whose children run concurrently. See {@link CRCAnimationProgram}.
+ *
+ * @see {@link CRCAnimationProgram}
+ */
 export function parallel(...children: readonly CRCAnimationProgram[]): CRCAnimationProgram {
   const records = children.map(getProgramRecord);
   validateParallelChildren(records);
@@ -826,7 +852,14 @@ export function parallel(...children: readonly CRCAnimationProgram[]): CRCAnimat
   });
 }
 
-/** Adds finite nonnegative local time without writing an output. */
+/**
+ * Adds finite nonnegative local time without writing an output.
+ *
+ * @param duration - Delay in milliseconds.
+ * @returns A program that advances time without writing a value. See {@link CRCAnimationProgram}.
+ *
+ * @see {@link CRCAnimationProgram}
+ */
 export function wait(duration: number): CRCAnimationProgram {
   if (!Number.isFinite(duration) || duration < 0) {
     throw new RangeError('CRC animation wait duration must be finite and nonnegative.');
@@ -842,7 +875,14 @@ export function wait(duration: number): CRCAnimationProgram {
   });
 }
 
-/** Queues one named playback milestone without invoking user code. */
+/**
+ * Queues one named playback milestone without invoking user code.
+ *
+ * @param name - Name delivered when playback reaches this milestone.
+ * @returns A zero-duration marker program. See {@link CRCAnimationProgram}.
+ *
+ * @see {@link CRCAnimationProgram}
+ */
 export function marker(name: string): CRCAnimationProgram {
   if (typeof name !== 'string' || name.length === 0) {
     throw new TypeError('CRC animation marker name must be nonempty.');
@@ -859,7 +899,16 @@ export function marker(name: string): CRCAnimationProgram {
   });
 }
 
-/** Repeats one child a total number of iterations. */
+/**
+ * Repeats one child a total number of iterations.
+ *
+ * @param child - Program to repeat. See {@link CRCAnimationProgram}.
+ * @param options - Repeat count and repetition policy. See {@link CRCAnimationRepeatOptions}.
+ * @returns A program representing the requested repetitions. See {@link CRCAnimationProgram}.
+ *
+ * @see {@link CRCAnimationProgram}
+ * @see {@link CRCAnimationRepeatOptions}
+ */
 export function repeat(
   child: CRCAnimationProgram,
   options: Readonly<CRCAnimationRepeatOptions>,

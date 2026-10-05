@@ -1,3 +1,4 @@
+import type { SvgPathProps } from './svg-path.js';
 import { drawSimpleStretchedTexture, resolveTexturePaint } from '../textures/texture-protocol.js';
 import { getLayoutBox } from '../layout/context.js';
 import { resolvePath } from '../geometry/resolve-path.js';
@@ -16,6 +17,15 @@ import type { StyleResolutionContext } from '../types.js';
 import { isTransparent } from '../util/is-transparent.js';
 import { wireCommonEvents } from '../util/wire-common-events.js';
 
+/**
+ * Authored inputs for Path, including the declared data and presentation options.
+ *
+ * @see {@link CRCEventHandlers}
+ * @see {@link CRCEventParticipationOptions}
+ * @see {@link CRCPhysics2DPropExtension}
+ * @see {@link Path}
+ * @see {@link SvgPathProps}
+ */
 export interface PathProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions, CRCPhysics2DPropExtension {}
 
 export function renderPath(
@@ -60,6 +70,13 @@ export function renderPath(
 
 /**
  * Describes a Canvas path primitive for JSX or createElement authoring.
+ *
+ * @param props - Authored component inputs, supplied through JSX or createElement. See the linked
+ * props and style types.
+ * @throws When called directly; CRC mounts this component through JSX or createElement.
+ *
+ * @see {@link PathProps}
+ * @see {@link PathStyle}
  */
 export const Path = definePrimitive<
   PathProps,

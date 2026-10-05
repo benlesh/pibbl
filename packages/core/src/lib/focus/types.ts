@@ -1,10 +1,21 @@
+import type { KeyboardNavigation, KeyboardNavigationProps } from './policy-components.js';
 import type { CRCEventTargetRegistration } from "../events/registrations.js";
 import type { LayoutBox } from "../layout/types.js";
 import type { HtmlFocusRegion } from "./html-focus-region.js";
 
 export type CRCFocusModality = "keyboard" | "pointer";
 
+/**
+ * Directional keyboard-navigation policy for a focus scope.
+ *
+ * @see {@link KeyboardNavigation}
+ * @see {@link KeyboardNavigationProps}
+ */
 export interface CRCKeyboardNavigationOptions {
+  /**
+   * Selects the supported mapping, placement, or result policy. See
+   * {@link CRCKeyboardNavigationOptions}.
+   */
   readonly mode: "directional";
 }
 

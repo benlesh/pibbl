@@ -1,3 +1,4 @@
+import type { manipulationLabScenarioEntry } from './catalog.js';
 import {
   DragHandle,
   ManipulationFrame,
@@ -14,19 +15,50 @@ import {
 
 export const MANIPULATION_LAB_SOURCE_ID = "component-manipulation-laboratory-example";
 
+/**
+ * Actions supported by the manipulation lab scenario's public controller.
+ *
+ * @see {@link ManipulationLabState}
+ */
 export type ManipulationLabAction =
   | "toggle-snap"
   | "cancel"
   | "external-write"
   | "reset";
 
+/**
+ * Observable state exposed by the manipulation lab scenario for controls and assertions.
+ *
+ * @see {@link CRCManipulationCancelReason}
+ * @see {@link ManipulationLabAction}
+ * @see {@link manipulationLabScenarioEntry}
+ */
 export interface ManipulationLabState {
-  readonly box: Readonly<{ left: number; top: number; width: number; height: number }>;
+  /** Box recorded or configured by this scenario. See {@link ManipulationLabState}. */
+  readonly box: Readonly<{
+    /** Left recorded or configured by this scenario. See {@link ManipulationLabState}. */
+    left: number;
+    /** Top recorded or configured by this scenario. See {@link ManipulationLabState}. */
+    top: number;
+    /** Width recorded or configured by this scenario. See {@link ManipulationLabState}. */
+    width: number;
+    /** Height recorded or configured by this scenario. See {@link ManipulationLabState}. */
+    height: number;
+  }>;
+  /** Snap enabled recorded or configured by this scenario. See {@link ManipulationLabState}. */
   readonly snapEnabled: boolean;
+  /** Active recorded or configured by this scenario. See {@link ManipulationLabState}. */
   readonly active: "idle" | "move" | "resize" | "rotate";
+  /** Changes recorded or configured by this scenario. See {@link ManipulationLabState}. */
   readonly changes: number;
+  /** Commits recorded or configured by this scenario. See {@link ManipulationLabState}. */
   readonly commits: number;
+  /**
+   * Cancellation recorded or configured by this scenario. See {@link CRCManipulationCancelReason}
+   * .
+   */
   readonly cancellation: CRCManipulationCancelReason | null;
+  /** Last action recorded or configured by this scenario. See {@link ManipulationLabAction}. */
   readonly lastAction: "mount" | ManipulationLabAction;
 }
 

@@ -13,33 +13,69 @@ import {
   type ElectricPoint,
 } from "./electric-shared.js";
 
+/**
+ * Electrical appearance, electrode positions, topology frequency, and base-connection controls.
+ *
+ * @see {@link ElectricOptions}
+ * @see {@link ElectricPoint}
+ * @see {@link lightning}
+ * @see {@link LightningMessage}
+ */
 export interface LightningOptions extends ElectricOptions {
+  /** Position of the positive electrode. See {@link ElectricPoint}. */
   readonly positive?: ElectricPoint;
+  /** Position of the negative electrode. See {@link ElectricPoint}. */
   readonly negative?: ElectricPoint;
+  /** Boundary edge used as the electrical connection's origin. See {@link LightningOptions}. */
   readonly edge?: "top" | "right" | "bottom" | "left";
   /** Enables the configured base connection; manual connections remain independent. */
   readonly active?: boolean;
   /** Topology refreshes per second, 1..30. Connections survive several refreshes. */
   readonly frequency?: number;
+  /** Whether to draw the electrode contact core. See {@link LightningOptions}. */
   readonly contactCore?: boolean;
 }
+/**
+ * Control, connection management, and live configuration commands for a lightning texture.
+ *
+ * @see {@link ElectricControl}
+ * @see {@link ElectricPoint}
+ * @see {@link LightningOptions}
+ */
 export type LightningMessage =
   | ElectricControl
   | {
+      /** The literal "connect" identifying this variant. See {@link LightningMessage}. */
       readonly type: "connect";
+      /** Stable identifier of this resource or connection. See {@link LightningMessage}. */
       readonly id: string;
+      /** Position of the positive electrode. See {@link ElectricPoint}. */
       readonly positive: ElectricPoint;
+      /** Position of the negative electrode. See {@link ElectricPoint}. */
       readonly negative: ElectricPoint;
     }
-  | { readonly type: "disconnect"; readonly id: string }
   | {
+      /** The literal "disconnect" identifying this variant. See {@link LightningMessage}. */
+      readonly type: "disconnect";
+      /** Stable identifier of this resource or connection. See {@link LightningMessage}. */
+      readonly id: string;
+    }
+  | {
+      /** The literal "configure" identifying this variant. See {@link LightningMessage}. */
       readonly type: "configure";
+      /** Position of the positive electrode. See {@link ElectricPoint}. */
       readonly positive?: ElectricPoint;
+      /** Position of the negative electrode. See {@link ElectricPoint}. */
       readonly negative?: ElectricPoint;
+      /** Boundary edge used as the electrical connection's origin. See {@link LightningOptions}. */
       readonly edge?: LightningOptions["edge"];
+      /** Current active operation or its presentation configuration. See {@link LightningMessage}. */
       readonly active?: boolean;
+      /** Amount of secondary electrical branching. See {@link LightningMessage}. */
       readonly branching?: number;
+      /** Intensity of the electrical halo around the core. See {@link LightningMessage}. */
       readonly glow?: number;
+      /** Rate at which the pattern or motion repeats. See {@link LightningMessage}. */
       readonly frequency?: number;
     };
 function options(o: LightningOptions) {
@@ -182,7 +218,15 @@ const recipe = /* @__PURE__ */ defineTexture<
     s.kernel.dispose();
   },
 });
-/** Persistent branching arcs between artistic positive/negative points. */
+/**
+ * Persistent branching arcs between artistic positive/negative points.
+ *
+ * @param config - Lightning geometry, timing, and appearance settings. See
+ * {@link LightningOptions} .
+ * @returns A lightning texture recipe for useTexture.
+ *
+ * @see {@link LightningOptions}
+ */
 export function lightning(config: LightningOptions = {}) {
   return recipe(config);
 }

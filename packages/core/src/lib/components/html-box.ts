@@ -1,3 +1,4 @@
+import type { HtmlMountCallback } from '../html/types.js';
 import type { ResolvedDrawingStyle } from '../style/types.js';
 import { definePrimitive } from '../define-primitive.js';
 import { GLOBAL_STATE } from '../global-state.js';
@@ -52,5 +53,11 @@ type HtmlBoxInput<Props> = Omit<PrimitiveInput<HtmlBoxProps<Props>, HtmlBoxStyle
 type HtmlBoxComponent = {
   <Props>(props: HtmlBoxInput<Props>): CRCRenderResult;
 };
-/** A persistent native HTML box projected into CRC layout, transforms and clips. */
+/**
+ * A persistent native HTML box projected into CRC layout, transforms and clips.
+ *
+ * @see {@link HtmlBoxProps}
+ * @see {@link HtmlBoxStyle}
+ * @see {@link HtmlMountCallback}
+ */
 export const HtmlBox = primitive as HtmlBoxComponent;

@@ -1,7 +1,13 @@
+import type { ProceduralTextureProps } from './procedural-texture.js';
 import { reuseFieldMemory, lazyKernel } from "./wasm/memory.js";
 import { bytes as marbleBytes } from "./wasm/marble-bytes.js";
 import { bytes as paperBytes } from "./wasm/paper-bytes.js";
 import { bytes as cellularBytes } from "./wasm/cellular-bytes.js";
+/**
+ * The supported static material generators: marble, paper, and cellular.
+ *
+ * @see {@link ProceduralTextureProps}
+ */
 export type TextureKind = "marble" | "paper" | "cellular";
 export type MaterialGenerator = (
   width: number,

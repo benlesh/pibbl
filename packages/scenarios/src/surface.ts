@@ -7,6 +7,11 @@ import type {
 
 const STYLE_ID = 'crc-scenario-surface-styles';
 
+/**
+ * Shared DOM presentation styles for scenario controls and observations.
+ *
+ * @see {@link ScenarioSurface}
+ */
 export const scenarioSurfaceStyles = `
   .scenario-detail {
     display: grid;
@@ -216,12 +221,28 @@ interface MountScenarioSurfaceOptions<TState> {
   sourceText: string;
 }
 
+/**
+ * The mounted scenario shell and its lifecycle controls.
+ *
+ * @see {@link ScenarioController}
+ * @see {@link scenarioSurfaceStyles}
+ * @see {@link mountScenarioSurface}
+ */
 export interface ScenarioSurface<TState> {
+  /** Controller recorded or configured by this scenario. See {@link ScenarioController}. */
   controller: ScenarioController<TState>;
+  /** Canvas recorded or configured by this scenario. See {@link ScenarioSurface}. */
   canvas: HTMLCanvasElement;
+  /** Visual recorded or configured by this scenario. See {@link ScenarioSurface}. */
   visual: HTMLElement;
+  /** Action buttons recorded or configured by this scenario. See {@link ScenarioSurface}. */
   actionButtons: ReadonlyMap<string, HTMLButtonElement>;
+  /** Reset button recorded or configured by this scenario. See {@link ScenarioSurface}. */
   resetButton: HTMLButtonElement;
+  /**
+   * Dispose recorded or configured by this scenario. See {@link ScenarioSurface}.
+   * @returns A promise that resolves after the mounted surface releases its resources.
+   */
   dispose: () => Promise<void>;
 }
 
@@ -265,6 +286,16 @@ function createTagList(tags: readonly string[]): HTMLUListElement {
   return list;
 }
 
+/**
+ * Mounts the shared scenario shell and loaded scenario, returning their owned cleanup controls.
+ *
+ * @param options - Host surface, scenario definition, and mounting configuration. See
+ * {@link MountScenarioSurfaceOptions} .
+ * @returns A promise for the mounted scenario surface and its disposal controls. See
+ * {@link ScenarioSurface} .
+ *
+ * @see {@link ScenarioSurface}
+ */
 export async function mountScenarioSurface<TState>(
   options: MountScenarioSurfaceOptions<TState>,
 ): Promise<ScenarioSurface<TState>> {

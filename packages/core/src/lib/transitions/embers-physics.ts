@@ -1,11 +1,23 @@
+import type { CRCEmbersOptions } from './embers.js';
 import { finite } from "./capture.js";
 import type { lazyTransitionKernel } from "./wasm/kernel.js";
+/**
+ * Collision information produced by an ember's physical interaction.
+ *
+ * @see {@link CRCEmbersPhysicsOptions}
+ */
 export interface CRCEmberCollision {
   /** Fraction of the swept segment at impact, from zero to one. */
   readonly fraction: number;
   /** Outward surface normal in the receiving primitive's local coordinates. */
   readonly normal: readonly [number, number];
 }
+/**
+ * Collision and physical motion options for transition embers.
+ *
+ * @see {@link CRCEmberCollision}
+ * @see {@link CRCEmbersOptions}
+ */
 export interface CRCEmbersPhysicsOptions {
   /** Local units/second². Default [0, -60]. */
   readonly gravity?: readonly [number, number];
@@ -20,14 +32,38 @@ export interface CRCEmbersPhysicsOptions {
    * Sweeps run as one WASM batch; mutually exclusive with collide.
    */
   readonly obstacles?: Readonly<{
+    /**
+     * Reads the current committed values required by this integration. See
+     * {@link CRCEmbersPhysicsOptions}.
+     * @returns The current obstacle revision and packed geometry arrays.
+     */
     read(): Readonly<{
+      /**
+       * Revision used to detect changes to the underlying state or geometry. See
+       * {@link CRCEmbersPhysicsOptions}.
+       */
       revision: number;
+      /** Packed box obstacle data consumed by the simulation. See {@link CRCEmbersPhysicsOptions}. */
       boxes: Float64Array;
+      /**
+       * Packed ellipse obstacle data consumed by the simulation. See
+       * {@link CRCEmbersPhysicsOptions}.
+       */
       ellipses: Float64Array;
+      /**
+       * Packed polygon obstacle data consumed by the simulation. See
+       * {@link CRCEmbersPhysicsOptions}.
+       */
       polygons: Float64Array;
     }>;
   }>;
-  /** Synchronous point sweep, called in Advance. Return the closest hit, if any. */
+  /**
+   * Synchronous point sweep, called in Advance. Return the closest hit, if any.
+   * @param from - Previous particle position.
+   * @param to - Proposed particle position.
+   * @returns Collision information, or undefined when motion is unobstructed. See
+   * {@link CRCEmberCollision} .
+   */
   readonly collide?: (
     from: readonly [number, number],
     to: readonly [number, number],

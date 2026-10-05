@@ -7,6 +7,13 @@ type Point = readonly [number, number];
  * Simplifies line-only paths with a radial-distance prepass followed by the
  * default Douglas--Peucker implementation. Each stage receives half of the
  * requested error budget, so their errors compose within `tolerance`.
+ *
+ * @param path - Source geometry; it is not modified. See {@link PathGeometry}.
+ * @param options - Simplification tolerance and work limits. See {@link SimplifyPathOptions}.
+ * @returns Independent geometry with redundant line vertices removed. See {@link PathGeometry}.
+ *
+ * @see {@link PathGeometry}
+ * @see {@link SimplifyPathOptions}
  */
 export function simplifyPathRadial(path: PathGeometry, options: Readonly<SimplifyPathOptions>): PathGeometry {
   const tolerance = requiredPositive(options.tolerance, 'tolerance');

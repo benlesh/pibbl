@@ -1,3 +1,4 @@
+import type { tween } from './definition.js';
 import type { CRCEasing } from './types.js';
 
 const NEWTON_ITERATIONS = 8;
@@ -84,11 +85,53 @@ function steps(count: number, position: 'start' | 'end' = 'end'): CRCEasing {
   };
 }
 
+/**
+ * Built-in easing functions for mapping normalized animation progress.
+ *
+ * @see {@link CRCEasing}
+ * @see {@link tween}
+ */
 export const easing = Object.freeze({
+  /**
+   * Returns clamped progress unchanged. See {@link CRCEasing}.
+   * @param progress - Input progress, clamped to the interval [0, 1].
+   * @returns The clamped progress.
+   */
   linear: (progress: number): number => clampProgress(progress),
+  /**
+   * Creates a cubic Bézier easing; control-point x coordinates must be finite and within [0, 1].
+   * See {@link CRCEasing}.
+   * @param x1 - First control point horizontal coordinate, in [0, 1].
+   * @param y1 - Finite first control point vertical coordinate.
+   * @param x2 - Second control point horizontal coordinate, in [0, 1].
+   * @param y2 - Finite second control point vertical coordinate.
+   * @returns A cubic Bézier easing function. See {@link CRCEasing}.
+   */
   cubicBezier,
+  /**
+   * Accelerates from rest using the CSS ease-in control points. See {@link easing}.
+   * @param progress - Input progress, clamped to [0, 1].
+   * @returns Eased progress. See {@link CRCEasing}.
+   */
   easeIn: cubicBezier(0.42, 0, 1, 1),
+  /**
+   * Decelerates toward rest using the CSS ease-out control points. See {@link easing}.
+   * @param progress - Input progress, clamped to [0, 1].
+   * @returns Eased progress. See {@link CRCEasing}.
+   */
   easeOut: cubicBezier(0, 0, 0.58, 1),
+  /**
+   * Accelerates then decelerates using the CSS ease-in-out control points. See {@link easing}.
+   * @param progress - Input progress, clamped to [0, 1].
+   * @returns Eased progress. See {@link CRCEasing}.
+   */
   easeInOut: cubicBezier(0.42, 0, 0.58, 1),
+  /**
+   * Creates a stepped easing with a positive integer count and start or end jump placement. See
+   * {@link easing}.
+   * @param count - Positive integer number of steps.
+   * @param position - Whether jumps occur at the start or end of each interval; defaults to end.
+   * @returns A stepped easing function. See {@link CRCEasing}.
+   */
   steps,
 });

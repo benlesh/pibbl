@@ -180,6 +180,17 @@ function dispose(state: ManipulationState): void {
   state.alive = false;
   detachManipulationFrame(state);
 }
+/**
+ * Creates a mount-owned controller for moving, resizing, and rotating declared geometry.
+ *
+ * @param options - Target state, enabled operations, constraints, and lifecycle callbacks. See
+ * {@link CRCManipulationOptions} .
+ * @returns Stable controls and state for the mounted manipulation interaction. See
+ * {@link CRCManipulationController} .
+ *
+ * @see {@link CRCManipulationOptions}
+ * @see {@link CRCManipulationController}
+ */
 export function useManipulation(
   options: CRCManipulationOptions,
 ): CRCManipulationController {

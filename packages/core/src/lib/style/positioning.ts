@@ -116,8 +116,16 @@ export function getPlacementSignalHandoff(
   return getPlacementSignalHandoffStyle(element);
 }
 
+/**
+ * Offsets in the parent layout coordinate system; percentages resolve against the containing box.
+ *
+ * @see {@link Length}
+ * @see {@link SystemStyle}
+ */
 export interface PositioningStyle extends SystemStyle {
+  /** Left edge coordinate or inset. See {@link Length}. */
   left?: Exclude<Length, 'auto'>;
+  /** Top edge value or top envelope guide. See {@link Length}. */
   top?: Exclude<Length, 'auto'>;
 }
 

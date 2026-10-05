@@ -7,7 +7,15 @@ import type {
   HoverSeries,
   HoverSeriesMap,
 } from "./hover-types.js";
-/** Creates a data descriptor without observing or copying its dataset. */
+/**
+ * Creates a data descriptor without observing or copying its dataset.
+ *
+ * @param options - Data, accessors, and scales describing a hoverable series. See
+ * {@link HoverSeries} .
+ * @returns The series descriptor with its datum type preserved. See {@link HoverSeries}.
+ *
+ * @see {@link HoverSeries}
+ */
 export function defineSeries<D>(options: HoverSeries<D>): HoverSeries<D> {
   return Object.freeze({ ...options });
 }
@@ -19,7 +27,19 @@ function limit(value: number | undefined, name: string): void {
   finite(value, name);
   if (value < 0) throw new RangeError(`${name} must be nonnegative.`);
 }
-/** Creates an ordinary query function for the closest mapped recorded point. */
+/**
+ * Creates an ordinary query function for the closest mapped recorded point.
+ *
+ * @param options - Series and distance policy for the hover query. See {@link ClosestPointOptions}
+ * .
+ * @returns A query that selects the closest eligible point, or yields undefined when none
+ * qualifies. See {@link HoverQuery} , {@link ClosestPointHit} .
+ *
+ * @see {@link ClosestPointOptions}
+ * @see {@link HoverQuery}
+ * @see {@link ClosestPointHit}
+ * @see {@link HoverSeriesMap}
+ */
 export function closestPoint<S extends HoverSeriesMap>(
   options: ClosestPointOptions<S>,
 ): HoverQuery<ClosestPointHit<S>> {
@@ -75,7 +95,17 @@ import type {
   InterpolateXOptions,
   HoverSample,
 } from "./hover-types.js";
-/** Selects a recorded observation by domain-x distance, independently of pointer y. */
+/**
+ * Selects a recorded observation by domain-x distance, independently of pointer y.
+ *
+ * @param options - Series and horizontal-distance policy. See {@link ClosestXOptions}.
+ * @returns A query selecting the nearest horizontal match, or undefined when none qualifies. See
+ * {@link HoverQuery} , {@link ClosestXHit} .
+ *
+ * @see {@link ClosestXOptions}
+ * @see {@link HoverQuery}
+ * @see {@link ClosestXHit}
+ */
 export function closestX<D>(
   options: ClosestXOptions<D>,
 ): HoverQuery<ClosestXHit<D>> {
@@ -118,7 +148,14 @@ export function closestX<D>(
     return best;
   };
 }
-/** Returns a plain data-space linear interpolation function. */
+/**
+ * Returns a plain data-space linear interpolation function.
+ *
+ * @returns A linear interpolator for values bracketing a sample position. See
+ * {@link HoverInterpolation} .
+ *
+ * @see {@link HoverInterpolation}
+ */
 export function linearInterpolation(): HoverInterpolation {
   return (before, after, fraction) => {
     finite(before, "linearInterpolation before");
@@ -129,7 +166,18 @@ export function linearInterpolation(): HoverInterpolation {
     return result;
   };
 }
-/** Samples sorted recorded observations without bridging explicit data gaps. */
+/**
+ * Samples sorted recorded observations without bridging explicit data gaps.
+ *
+ * @param options - Series, horizontal sampling, and interpolation policy. See
+ * {@link InterpolateXOptions} .
+ * @returns A query producing an interpolated sample, or undefined when sampling is unavailable.
+ * See {@link HoverQuery} , {@link HoverSample} .
+ *
+ * @see {@link InterpolateXOptions}
+ * @see {@link HoverQuery}
+ * @see {@link HoverSample}
+ */
 export function interpolateX<D>(
   options: InterpolateXOptions<D>,
 ): HoverQuery<HoverSample<D>> {

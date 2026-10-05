@@ -14,6 +14,11 @@ const introductionRoutes = {
   signals: "#/examples/start/signals",
 } as const;
 
+/**
+ * Ordered public learning sections used to group example navigation.
+ *
+ * @see {@link LearningSection}
+ */
 export const learningSections = [
   {
     id: "start",
@@ -2197,6 +2202,15 @@ function validateText(value: string, field: string, slug: string): void {
     throw new Error(`Learning example "${slug}" has an empty ${field}.`);
 }
 
+/**
+ * Validates public example metadata and relationships, throwing for inconsistent entries.
+ *
+ * @param catalog - Learning catalog to validate. See {@link LearningExampleCatalogEntry}.
+ * @returns The supplied catalog after successful validation; invalid metadata throws. See
+ * {@link LearningExampleCatalogEntry} .
+ *
+ * @see {@link LearningExampleCatalogEntry}
+ */
 export function validateLearningExampleCatalog(
   catalog: readonly LearningExampleCatalogEntry[],
 ): readonly LearningExampleCatalogEntry[] {
@@ -2323,6 +2337,11 @@ const orderedDrafts = [...drafts].sort(
   (left, right) => left.order - right.order,
 );
 
+/**
+ * Public learning-example metadata and lazy module loaders used by the Studio.
+ *
+ * @see {@link LearningExampleCatalogEntry}
+ */
 export const learningExampleCatalog = validateLearningExampleCatalog(
   orderedDrafts.map((draft, index): LearningExampleCatalogEntry => {
     const browseGroup = browseGroupFor(draft.section, draft.slug);
@@ -2341,12 +2360,30 @@ export const learningExampleCatalog = validateLearningExampleCatalog(
   }),
 );
 
+/**
+ * Finds a public learning example by its canonical slug, or returns undefined.
+ *
+ * @param slug - Learning-example URL slug to look up.
+ * @returns The matching example, or undefined when absent. See {@link LearningExampleCatalogEntry}
+ * .
+ *
+ * @see {@link LearningExampleCatalogEntry}
+ */
 export function getLearningExampleBySlug(
   slug: string,
 ): LearningExampleCatalogEntry | undefined {
   return learningExampleCatalog.find((entry) => entry.slug === slug);
 }
 
+/**
+ * Returns the public Studio route of a learning example.
+ *
+ * @param entry - Example metadata containing its route identity. See
+ * {@link LearningExampleMetadata} .
+ * @returns The example's canonical route.
+ *
+ * @see {@link LearningExampleMetadata}
+ */
 export function getLearningExampleRoute(
   entry: LearningExampleMetadata,
 ): string {
@@ -2363,6 +2400,15 @@ export function getLearningExampleRoute(
   return introductionRoute;
 }
 
+/**
+ * Returns preserved legacy routes that lead to a learning example.
+ *
+ * @param entry - Example metadata containing legacy route identities. See
+ * {@link LearningExampleMetadata} .
+ * @returns Legacy routes associated with this example.
+ *
+ * @see {@link LearningExampleMetadata}
+ */
 export function getLearningExampleLegacyRoutes(
   entry: LearningExampleMetadata,
 ): readonly string[] {
@@ -2370,12 +2416,30 @@ export function getLearningExampleLegacyRoutes(
   return legacyRoute === getLearningExampleRoute(entry) ? [] : [legacyRoute];
 }
 
+/**
+ * Returns public examples assigned to a learning section.
+ *
+ * @param section - Learning section used to filter the catalog. See {@link LearningSectionId}.
+ * @returns Examples belonging to that section. See {@link LearningExampleCatalogEntry}.
+ *
+ * @see {@link LearningSectionId}
+ * @see {@link LearningExampleCatalogEntry}
+ */
 export function getLearningExamplesBySection(
   section: LearningSectionId,
 ): readonly LearningExampleCatalogEntry[] {
   return learningExampleCatalog.filter((entry) => entry.section === section);
 }
 
+/**
+ * Returns public examples assigned to a browse group.
+ *
+ * @param group - Browse group used to filter the catalog. See {@link LearningBrowseGroup}.
+ * @returns Examples belonging to that browse group. See {@link LearningExampleCatalogEntry}.
+ *
+ * @see {@link LearningBrowseGroup}
+ * @see {@link LearningExampleCatalogEntry}
+ */
 export function getLearningExamplesByBrowseGroup(
   group: LearningBrowseGroup,
 ): readonly LearningExampleCatalogEntry[] {
@@ -2386,6 +2450,15 @@ export function getLearningExamplesByBrowseGroup(
     );
 }
 
+/**
+ * Loads a learning example's module on demand from its catalog entry.
+ *
+ * @param entry - Catalog entry whose lazy loader should run. See
+ * {@link LearningExampleCatalogEntry} .
+ * @returns A promise for the loaded learning-example module.
+ *
+ * @see {@link LearningExampleCatalogEntry}
+ */
 export async function loadLearningExample(entry: LearningExampleCatalogEntry) {
   const module = await entry.load();
   if (typeof module.default !== "function") {

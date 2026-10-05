@@ -26,6 +26,11 @@ import type {
   ScenarioMountContext,
 } from "./types";
 
+/**
+ * Stable action identifiers accepted by the physics 2 d lab scenario.
+ *
+ * @see {@link Physics2DLabAction}
+ */
 export const PHYSICS_2D_LAB_ACTION_IDS = [
   "settle",
   "impulse",
@@ -302,6 +307,12 @@ async function mountPhysics2DLab(
   };
 }
 
+/**
+ * Runnable physics2 d lab scenario with observable state and deterministic actions.
+ *
+ * @see {@link ScenarioDefinition}
+ * @see {@link Physics2DLabState}
+ */
 export const physics2DLabScenario: ScenarioDefinition<Physics2DLabState> = {
   id: "first-class-physics-2d",
   sourceId: PHYSICS_2D_LAB_SOURCE_ID,

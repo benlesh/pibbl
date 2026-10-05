@@ -1,3 +1,4 @@
+import type { crcInternalQueueSimulationBegin } from './simulation-participant.js';
 import {
   GLOBAL_STATE,
 } from '../global-state.js';
@@ -33,23 +34,77 @@ import {
 
 declare const internalRenderOwnerBrand: unique symbol;
 
+/**
+ * Opaque ownership identity for renderer scheduling and cleanup.
+ *
+ * @see {@link crcInternalCreateSignalConsumer}
+ * @see {@link crcInternalCurrentRenderOwner}
+ * @see {@link crcInternalOnRenderFinish}
+ */
 export interface CRCInternalRenderOwner {
   readonly [internalRenderOwnerBrand]: true;
 }
 
+/**
+ * Shared scheduler frame identity, logical timing, and admission context.
+ *
+ * @see {@link crcInternalCurrentFrame}
+ * @see {@link crcInternalQueueBegin}
+ * @see {@link crcInternalQueueComplete}
+ */
 export interface CRCInternalFrame {
+  /** Identifier of the shared scheduler frame. See {@link CRCInternalFrame}. */
   readonly frameId: number;
+  /** Logical scheduler time in milliseconds. See {@link CRCInternalFrame}. */
   readonly logicalTime: number;
 }
 
+/**
+ * Staged signal writes published together during scheduler Commit.
+ *
+ * @see {@link WritableSignal}
+ * @see {@link crcInternalQueueBegin}
+ * @see {@link crcInternalRegisterAdvance}
+ * @see {@link crcInternalQueueSimulationBegin}
+ */
 export interface CRCInternalSignalBatch {
+  /**
+   * Reads the current committed values required by this integration. See
+   * {@link CRCInternalSignalBatch}.
+   * @param signal - Signal whose staged or committed value should be read. See
+   * {@link WritableSignal} .
+   * @returns The current batch value, falling back to the committed signal value.
+   */
   read<T>(signal: WritableSignal<T>): T;
+  /**
+   * Stages a signal write for publication during Commit. See {@link CRCInternalSignalBatch}.
+   * @param signal - Signal that will receive the value during Commit. See {@link WritableSignal}.
+   * @param value - Value to stage.
+   * @param writer - Identity used to attribute and discard staged writes.
+   */
   stage<T>(signal: WritableSignal<T>, value: T, writer: object): void;
+  /**
+   * Discards writes belonging to the specified writer. See {@link CRCInternalSignalBatch}.
+   * @param writer - Writer identity whose pending writes should be discarded.
+   */
   discardWriter(writer: object): void;
 }
 
+/**
+ * Sequence identity and cancellation capability for a queued scheduler command.
+ *
+ * @see {@link crcInternalQueueBegin}
+ */
 export interface CRCInternalCommandHandle {
+  /**
+   * Sequence number assigned when the scheduler command is queued. See
+   * {@link CRCInternalCommandHandle}.
+   */
   readonly sequence: number;
+  /**
+   * Cancels this queued command before it is admitted by the scheduler. See
+   * {@link CRCInternalCommandHandle}.
+   */
   cancel(): void;
 }
 
@@ -62,12 +117,30 @@ export interface CRCInternalCommandHandle {
  * root are retried on the next realm frame. Complete callbacks for those
  * retried owners are deferred until a successful frame. Other owners and roots
  * still complete normally.
+ *
+ * @see {@link crcInternalRequestRendererWork}
  */
 export type CRCInternalRendererWorkKind = 'resource' | 'draw' | 'compose';
 
+/**
+ * Dependency tracking and disposal operations for an integration-owned signal consumer.
+ *
+ * @see {@link crcInternalCreateSignalConsumer}
+ */
 export interface CRCInternalSignalConsumer {
+  /**
+   * Evaluates a callback while collecting signal dependencies for this consumer. See
+   * {@link CRCInternalSignalConsumer}.
+   * @param read - Synchronous computation whose signal dependencies are collected.
+   * @returns The computation's return value.
+   */
   collect<T>(read: () => T): T;
+  /**
+   * Acknowledges the consumer's current invalidation as processed. See
+   * {@link CRCInternalSignalConsumer}.
+   */
   markClean(): void;
+  /** Releases resources owned by this mounted object. See {@link CRCInternalSignalConsumer}. */
   dispose(): void;
 }
 
@@ -87,6 +160,13 @@ const ownersByComponent = new WeakMap<
 >();
 const ownerStates = new WeakMap<CRCInternalRenderOwner, RenderOwnerState>();
 
+/**
+ * Returns the active render owner required by official integration scheduling operations.
+ *
+ * @returns The render owner for the current runtime context. See {@link CRCInternalRenderOwner}.
+ *
+ * @see {@link CRCInternalRenderOwner}
+ */
 export function crcInternalCurrentRenderOwner(): CRCInternalRenderOwner {
   const component = GLOBAL_STATE.componentRefs;
   const instance = GLOBAL_STATE.currentCRCInstance;
@@ -120,6 +200,17 @@ export function crcInternalCurrentRenderOwner(): CRCInternalRenderOwner {
   return owner;
 }
 
+/**
+ * Creates an owner-scoped dependency consumer for an official renderer integration.
+ *
+ * @param options - Render owner, optional diagnostic name, and invalidation callback. See
+ * {@link CRCInternalRenderOwner} .
+ * @returns A consumer that tracks signal dependencies and owns their cleanup. See
+ * {@link CRCInternalSignalConsumer} .
+ *
+ * @see {@link CRCInternalRenderOwner}
+ * @see {@link CRCInternalSignalConsumer}
+ */
 export function crcInternalCreateSignalConsumer(options: {
   owner: CRCInternalRenderOwner;
   debugName?: string;
@@ -158,6 +249,17 @@ export function crcInternalCreateSignalConsumer(options: {
   return consumer;
 }
 
+/**
+ * Requests keyed renderer work in the shared scheduler without creating a second frame loop.
+ *
+ * @param owner - Owner whose renderer work is being requested. See {@link CRCInternalRenderOwner}.
+ * @param request - Work identity, renderer category, and frame callback. See
+ * {@link CRCInternalRendererWorkKind} , {@link CRCInternalFrame} .
+ *
+ * @see {@link CRCInternalRenderOwner}
+ * @see {@link CRCInternalRendererWorkKind}
+ * @see {@link CRCInternalFrame}
+ */
 export function crcInternalRequestRendererWork(
   owner: CRCInternalRenderOwner,
   request: {
@@ -170,10 +272,28 @@ export function crcInternalRequestRendererWork(
   requestRendererParticipantWork(state.schedulerOwner, request);
 }
 
+/**
+ * Rejects commands issued from runtime evaluation contexts that forbid mutation.
+ *
+ * @see {@link crcInternalQueueBegin}
+ */
 export function crcInternalAssertCommandAllowed(): void {
   assertSignalCommandAllowed();
 }
 
+/**
+ * Queues an owner-scoped Begin command and returns a cancellation handle.
+ *
+ * @param owner - Owner admitting the command. See {@link CRCInternalRenderOwner}.
+ * @param callback - Begin-phase callback receiving frame, staged writes, and command sequence. See
+ * {@link CRCInternalFrame} , {@link CRCInternalSignalBatch} .
+ * @returns A handle that can cancel the queued command. See {@link CRCInternalCommandHandle}.
+ *
+ * @see {@link CRCInternalRenderOwner}
+ * @see {@link CRCInternalFrame}
+ * @see {@link CRCInternalSignalBatch}
+ * @see {@link CRCInternalCommandHandle}
+ */
 export function crcInternalQueueBegin(
   owner: CRCInternalRenderOwner,
   callback: (
@@ -200,6 +320,18 @@ export function crcInternalQueueBegin(
   return handle;
 }
 
+/**
+ * Registers renderer work for shared-frame Advance and returns its unregister callback.
+ *
+ * @param owner - Owner of the advancing work. See {@link CRCInternalRenderOwner}.
+ * @param callback - Advance callback receiving the frame and staged signal writes. See
+ * {@link CRCInternalFrame} , {@link CRCInternalSignalBatch} .
+ * @returns A function unregistering the Advance callback.
+ *
+ * @see {@link CRCInternalRenderOwner}
+ * @see {@link CRCInternalFrame}
+ * @see {@link CRCInternalSignalBatch}
+ */
 export function crcInternalRegisterAdvance(
   owner: CRCInternalRenderOwner,
   callback: (frame: CRCInternalFrame, batch: CRCInternalSignalBatch) => void,
@@ -220,6 +352,16 @@ export function crcInternalRegisterAdvance(
   return release;
 }
 
+/**
+ * Registers acknowledgement of the current frame's committed staged writes.
+ *
+ * @param owner - Owner of the pending commit. See {@link CRCInternalRenderOwner}.
+ * @param callback - Callback receiving the frame and whether the commit was applied. See
+ * {@link CRCInternalFrame} .
+ *
+ * @see {@link CRCInternalRenderOwner}
+ * @see {@link CRCInternalFrame}
+ */
 export function crcInternalQueueCurrentCommit(
   owner: CRCInternalRenderOwner,
   callback: (
@@ -234,6 +376,16 @@ export function crcInternalQueueCurrentCommit(
   });
 }
 
+/**
+ * Queues an owner-scoped completion callback in the current scheduler transaction.
+ *
+ * @param owner - Owner of the completion work. See {@link CRCInternalRenderOwner}.
+ * @param callback - Callback invoked during Complete with the shared frame. See
+ * {@link CRCInternalFrame} .
+ *
+ * @see {@link CRCInternalRenderOwner}
+ * @see {@link CRCInternalFrame}
+ */
 export function crcInternalQueueCurrentComplete(
   owner: CRCInternalRenderOwner,
   callback: (frame: CRCInternalFrame) => void,
@@ -245,11 +397,26 @@ export function crcInternalQueueCurrentComplete(
   });
 }
 
+/**
+ * Marks the owning renderer dirty and requests shared scheduler work.
+ *
+ * @param owner - Owner whose renderer should become dirty. See {@link CRCInternalRenderOwner}.
+ *
+ * @see {@link CRCInternalRenderOwner}
+ */
 export function crcInternalRequestRender(owner: CRCInternalRenderOwner): void {
   const state = requireActiveOwner(owner);
   requestInstanceRender(state.instance);
 }
 
+/**
+ * Registers a callback reporting the outcome of the owner's render transaction.
+ *
+ * @param owner - Owner of the rendering transaction. See {@link CRCInternalRenderOwner}.
+ * @param callback - Callback receiving whether the transaction succeeded.
+ *
+ * @see {@link CRCInternalRenderOwner}
+ */
 export function crcInternalOnRenderFinish(
   owner: CRCInternalRenderOwner,
   callback: (success: boolean) => void,
@@ -270,6 +437,20 @@ export function crcInternalOnRenderFinish(
   });
 }
 
+/**
+ * Registers one painted logical target with its handlers, geometry, and participation policy.
+ *
+ * @param handlers - Handlers for the painted target. See {@link CRCEventHandlers}.
+ * @param options - Hit geometry and focus metadata. See {@link CRCEventTargetOptions}.
+ * @param pointerEvents - Pointer participation policy; defaults to auto. See
+ * {@link CRCPointerEvents} .
+ * @returns The painted event target snapshot. See {@link CRCEventTargetSnapshot}.
+ *
+ * @see {@link CRCEventHandlers}
+ * @see {@link CRCEventTargetOptions}
+ * @see {@link CRCPointerEvents}
+ * @see {@link CRCEventTargetSnapshot}
+ */
 export function crcInternalPaintTarget(
   handlers: CRCEventHandlers,
   options: CRCEventTargetOptions,
@@ -278,6 +459,13 @@ export function crcInternalPaintTarget(
   return usePaintTarget(handlers, options, pointerEvents);
 }
 
+/**
+ * Returns timing and phase information for the current shared scheduler frame.
+ *
+ * @returns The shared scheduler frame for the active phase. See {@link CRCInternalFrame}.
+ *
+ * @see {@link CRCInternalFrame}
+ */
 export function crcInternalCurrentFrame(): CRCInternalFrame {
   const frame = getCurrentFrameSnapshot();
   if (!frame) {
@@ -286,6 +474,16 @@ export function crcInternalCurrentFrame(): CRCInternalFrame {
   return frame;
 }
 
+/**
+ * Queues an owner-scoped callback for a scheduler Complete phase.
+ *
+ * @param owner - Owner of the completion work. See {@link CRCInternalRenderOwner}.
+ * @param callback - Callback invoked during Complete with the shared frame. See
+ * {@link CRCInternalFrame} .
+ *
+ * @see {@link CRCInternalRenderOwner}
+ * @see {@link CRCInternalFrame}
+ */
 export function crcInternalQueueComplete(
   owner: CRCInternalRenderOwner,
   callback: (frame: CRCInternalFrame) => void,

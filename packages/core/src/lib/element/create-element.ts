@@ -42,7 +42,19 @@ type ChildrenArguments<P> = P extends unknown ?
   [] :
   never;
 
-/** Public constructor used by direct element authoring. */
+/**
+ * Public constructor used by direct element authoring.
+ *
+ * @param type - CRC component or fragment to instantiate. See {@link CRCElementType}.
+ * @param props - Authored props, or null when allowed by the component's input type. See
+ * {@link ElementInputOrNull} .
+ * @param children - Child nodes supplied in source order. See {@link ChildrenArguments}.
+ * @returns A branded CRC element descriptor; rendering occurs when it is mounted. See
+ * {@link CRCElement} .
+ *
+ * @see {@link CRCElementType}
+ * @see {@link CRCElement}
+ */
 export function createElement<P>(
   type: CRCElementType<P>,
   props: ElementInputOrNull<P>,

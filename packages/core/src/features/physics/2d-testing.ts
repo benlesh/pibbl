@@ -12,28 +12,58 @@ import {
   crcInternalSnapshotRealmScheduler,
 } from "@crc/core/internal";
 
+/**
+ * Caller-owned canvas, root factory, and observation callback for deterministic physics testing.
+ *
+ * @see {@link CRCNode}
+ * @see {@link createPhysicsTestHarness2D}
+ */
 export interface CRCPhysicsTestHarness2DOptions<Observation> {
   /** The caller owns this canvas; disposing the harness never removes it. */
   readonly canvas: HTMLCanvasElement;
-  /** Creates a new public CRC root for the initial mount and each reset. */
+  /**
+   * Creates a new public CRC root for the initial mount and each reset.
+   * @returns The CRC root tree mounted by the test harness. See {@link CRCNode}.
+   */
   readonly root: () => CRCNode;
-  /** Reads application state after a frame or action. */
+  /**
+   * Reads application state after a frame or action.
+   * @returns The semantic state to expose through the harness's observe method.
+   */
   readonly observe: () => Observation;
 }
 
+/**
+ * A disposable test mount with explicit host-frame advancement and public-state observations.
+ *
+ * @see {@link createPhysicsTestHarness2D}
+ */
 export interface CRCPhysicsTestHarness2D<Observation> {
   /** Number of host callbacks currently requested by CRC (zero or one). */
   readonly pendingFrames: number;
-  /** Delivers one already-requested host frame at the current host time. */
+  /**
+   * Delivers one already-requested host frame at the current host time.
+   * @returns Whether a pending frame was flushed.
+   */
   flush(): boolean;
   /**
    * Advances up to `count` requested host frames by `milliseconds` each.
    * This advances the host clock, not a guaranteed count of physics fixed ticks.
+   * @param count - Number of frames to advance.
+   * @param milliseconds - Duration of each frame in milliseconds.
+   * @returns The number of frames advanced.
    */
   advanceFrames(count: number, milliseconds?: number): number;
-  /** Runs an application action and delivers one resulting frame at the current time. */
+  /**
+   * Runs an application action and delivers one resulting frame at the current time.
+   * @param callback - Action to run within the harness's deterministic scheduling context.
+   * @returns The action's return value.
+   */
   act<Result>(callback: () => Result): Result;
-  /** Reads the caller-provided public observation without scheduling work. */
+  /**
+   * Reads the caller-provided public observation without scheduling work.
+   * @returns The current observation from the configured observer.
+   */
   observe(): Observation;
   /** Disposes the mounted root and mounts a new one without moving host time backward. */
   reset(): void;
@@ -48,6 +78,14 @@ const DEFAULT_FRAME_MILLISECONDS = 1000 / 60;
  *
  * It refuses a realm with an existing root because a CRC realm deliberately has
  * one scheduler. Use ordinary browser tests when a test needs multiple roots.
+ *
+ * @param options - Caller-owned canvas, root factory, and semantic state observer. See
+ * {@link CRCPhysicsTestHarness2DOptions} .
+ * @returns A harness owning the test mount and scheduler lifetime; dispose it after use. See
+ * {@link CRCPhysicsTestHarness2D} .
+ *
+ * @see {@link CRCPhysicsTestHarness2DOptions}
+ * @see {@link CRCPhysicsTestHarness2D}
  */
 export function createPhysicsTestHarness2D<Observation>(
   options: CRCPhysicsTestHarness2DOptions<Observation>,

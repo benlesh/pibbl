@@ -27,6 +27,14 @@ function finite(value: number, name: string, nonnegative = false) {
     );
   return value;
 }
+/**
+ * Computes pie geometry and label placement, then renders children for each resolved slice.
+ *
+ * @param props - Data, pie geometry, label policy, and child renderer. See {@link PieLayoutProps}.
+ * @returns CRC content arranged as pie slices.
+ *
+ * @see {@link PieLayoutProps}
+ */
 export function PieLayout<D>(props: PieLayoutProps<D>) {
   const allocation = useLayoutBox();
   const context = useCanvasContext();
@@ -167,6 +175,14 @@ export function PieLayout<D>(props: PieLayoutProps<D>) {
       </Group>
     ));
 }
+/**
+ * Draws a resolved pie slice using wedge geometry and the supplied paint style.
+ *
+ * @param props - Slice geometry, appearance, handlers, and children. See {@link PieSliceProps}.
+ * @returns CRC nodes drawing one pie slice and its children.
+ *
+ * @see {@link PieSliceProps}
+ */
 export function PieSlice<D>({
   slice,
   style: input,
@@ -322,6 +338,17 @@ const LabelText = definePrimitive<
   context.fillText(label.text, label.textX, label.textY);
 });
 
+/**
+ * Draws a resolved slice label and optional leader line; decorative labels ignore pointer
+ * targeting
+ * by default.
+ *
+ * @param props - Slice geometry, label appearance, and interaction options. See
+ * {@link PieLabelProps} .
+ * @returns CRC content drawing the slice label, or null when the label was not placed.
+ *
+ * @see {@link PieLabelProps}
+ */
 export function PieLabel<D>({
   slice,
   style: input,

@@ -51,18 +51,43 @@ type MainAlignment =
   | 'space-evenly';
 type CrossAlignment = 'stretch' | 'flex-start' | 'flex-end' | 'center';
 
+/**
+ * Supported geometry and presentation properties for Flex.
+ *
+ * @see {@link BoxStyle}
+ * @see {@link LayoutItemStyle}
+ * @see {@link Flex}
+ */
 export interface FlexStyle extends BoxStyle, LayoutItemStyle {
+  /** The main axis along which flex children are placed. See {@link FlexDirection}. */
   flexDirection?: FlexDirection;
+  /** Whether children may wrap onto additional flex lines. See {@link FlexWrap}. */
   flexWrap?: FlexWrap;
+  /** Distribution of children along the main axis. See {@link MainAlignment}. */
   justifyContent?: MainAlignment;
+  /** Default alignment of children on the cross or block axis. See {@link CrossAlignment}. */
   alignItems?: CrossAlignment;
+  /**
+   * Distribution of wrapped flex lines within the available cross-axis space. See
+   * {@link CrossAlignment}, {@link MainAlignment}.
+   */
   alignContent?: CrossAlignment | MainAlignment;
+  /** Spacing between adjacent items. See {@link FlexStyle}. */
   gap?: number;
+  /** Space between adjacent rows or items on the row axis. See {@link FlexStyle}. */
   rowGap?: number;
+  /** Space between adjacent columns or items on the column axis. See {@link FlexStyle}. */
   columnGap?: number;
 }
 
+/**
+ * Authored inputs for Flex, including the declared data and presentation options.
+ *
+ * @see {@link CRCNodeInput}
+ * @see {@link Flex}
+ */
 export interface FlexProps extends CRCStructuralEventProps {
+  /** Descendant content or the callback that supplies it. See {@link CRCNodeInput}. */
   children: CRCNodeInput;
 }
 
@@ -165,7 +190,16 @@ function renderFlex(
   );
 }
 
-/** Describes the supported Flexbox subset for JSX or createElement authoring. */
+/**
+ * Describes the supported Flexbox subset for JSX or createElement authoring.
+ *
+ * @param props - Authored component inputs, supplied through JSX or createElement. See the linked
+ * props and style types.
+ * @throws When called directly; CRC mounts this component through JSX or createElement.
+ *
+ * @see {@link FlexProps}
+ * @see {@link FlexStyle}
+ */
 export const Flex = definePrimitive<
   FlexProps,
   FlexStyle,

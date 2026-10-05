@@ -1,3 +1,4 @@
+import type { CRCParticleSystemOptions } from '../types.js';
 import {
   resolveSignalValue,
   signal,
@@ -15,38 +16,109 @@ import {
 } from "@crc/core/internal";
 import { FlowFieldKernel2D, type FlowSource2D } from "./field.js";
 
+/**
+ * Committed obstacle geometry and motion packed into borrowed numeric buffers.
+ *
+ * @see {@link CRCFlowObstacleSource2D}
+ */
 export interface CRCFlowObstacleBatch2D {
+  /**
+   * Revision used to detect changes to the underlying state or geometry. See
+   * {@link CRCFlowObstacleBatch2D}.
+   */
   readonly revision: number;
   /** cx, cy, halfWidth, halfHeight, radians, vx, vy, omega, COM x/y. */
   readonly boxes: Float64Array;
+  /**
+   * Packed ellipse obstacle data consumed by the simulation. See {@link CRCFlowObstacleBatch2D}.
+   */
   readonly ellipses?: Float64Array;
+  /**
+   * Packed polygon obstacle data consumed by the simulation. See {@link CRCFlowObstacleBatch2D}.
+   */
   readonly polygons?: Float64Array;
 }
+/**
+ * Supplies committed obstacle batches to a flow field without transferring buffer ownership.
+ *
+ * @see {@link CRCFlowObstacleBatch2D}
+ * @see {@link CRCFlowFieldOptions2D}
+ */
 export interface CRCFlowObstacleSource2D {
-  /** Returns committed simulation state. Buffers are borrowed for this call only. */
+  /**
+   * Returns committed simulation state. Buffers are borrowed for this call only.
+   * @returns The current obstacle revision and packed obstacle geometry. See
+   * {@link CRCFlowObstacleBatch2D} .
+   */
   read(): CRCFlowObstacleBatch2D;
 }
+/**
+ * Logical bounds, grid resolution, obstacle source, and buoyancy for a flow field.
+ *
+ * @see {@link CRCFlowObstacleSource2D}
+ * @see {@link useFlowField2D}
+ */
 export interface CRCFlowFieldOptions2D {
-  readonly bounds: Readonly<{ width: number; height: number }>;
+  /** Logical region constraining the content or query. See {@link CRCFlowFieldOptions2D}. */
+  readonly bounds: Readonly<{
+    /**
+     * Horizontal extent in the units of the containing geometry or surface. See
+     * {@link CRCFlowFieldOptions2D}.
+     */
+    width: number;
+    /**
+     * Vertical extent in the units of the containing geometry or surface. See
+     * {@link CRCFlowFieldOptions2D}.
+     */
+    height: number;
+  }>;
+  /** Dimensions of the simulation or raster grid. See {@link CRCFlowFieldOptions2D}. */
   readonly resolution: readonly [columns: number, rows: number];
+  /**
+   * Obstacle geometry used by the flow or water simulation. See {@link CRCFlowObstacleSource2D}.
+   */
   readonly obstacles?: CRCFlowObstacleSource2D;
+  /** Strength of heat-driven upward motion in the flow field. See {@link CRCFlowFieldOptions2D}. */
   readonly buoyancy?: number;
 }
 declare const flowBrand: unique symbol;
+/**
+ * A mount-owned flow field with revision tracking and batched velocity sampling.
+ *
+ * @see {@link Signal}
+ * @see {@link useFlowField2D}
+ * @see {@link useFlowSource2D}
+ * @see {@link CRCParticleSystemOptions}
+ */
 export interface CRCFlowField2D {
   readonly [flowBrand]: true;
+  /** Revision used to detect changes to the underlying state or geometry. See {@link Signal}. */
   readonly revision: Signal<number>;
-  sampleBatch(
-    positions: Float32Array,
-    velocities: Float32Array,
-    count: number,
-  ): void;
+  /**
+   * Samples velocities for packed position pairs into caller-provided output storage. See
+   * {@link CRCFlowField2D}.
+   * @param positions - Packed input positions, with two floats per particle.
+   * @param velocities - Output buffer receiving sampled velocities, with two floats per particle.
+   * @param count - Number of position pairs to sample.
+   */
+  sampleBatch(positions: Float32Array, velocities: Float32Array, count: number): void;
 }
+/**
+ * Reactive position, radius, acceleration, heat, and enablement of a flow source.
+ *
+ * @see {@link SignalValue}
+ * @see {@link useFlowSource2D}
+ */
 export interface CRCFlowSourceOptions2D {
+  /** Position of the geometry, source, or selected resize handle. See {@link SignalValue}. */
   readonly position: SignalValue<readonly [number, number]>;
+  /** Radius in the coordinate system of this geometry or effect. See {@link SignalValue}. */
   readonly radius: SignalValue<number>;
+  /** Acceleration injected by this flow source. See {@link SignalValue}. */
   readonly acceleration?: SignalValue<readonly [number, number]>;
+  /** Heat injected by this flow source. See {@link SignalValue}. */
   readonly heat?: SignalValue<number>;
+  /** Whether this operation or resource participates in updates. See {@link SignalValue}. */
   readonly enabled?: SignalValue<boolean>;
 }
 const controllers = new WeakMap<CRCFlowField2D, FlowController2D>();
@@ -214,6 +286,16 @@ export class FlowController2D {
   }
 }
 
+/**
+ * Creates a mount-owned 2D flow field with configured bounds, resolution, and optional obstacles.
+ *
+ * @param options - Field dimensions, sampling, decay, and obstacle settings. See
+ * {@link CRCFlowFieldOptions2D} .
+ * @returns A mount-owned 2D flow field sampled by particle effects. See {@link CRCFlowField2D}.
+ *
+ * @see {@link CRCFlowFieldOptions2D}
+ * @see {@link CRCFlowField2D}
+ */
 export function useFlowField2D(options: CRCFlowFieldOptions2D): CRCFlowField2D {
   const simulationOwner = crcInternalCurrentSimulationOwner();
   const renderOwner = crcInternalCurrentRenderOwner();
@@ -229,6 +311,16 @@ export function useFlowField2D(options: CRCFlowFieldOptions2D): CRCFlowField2D {
   return controller.handle;
 }
 
+/**
+ * Registers a mount-owned source of acceleration or heat in a flow field.
+ *
+ * @param field - Flow field receiving this source. See {@link CRCFlowField2D}.
+ * @param options - Source position, influence, and strength settings. See
+ * {@link CRCFlowSourceOptions2D} .
+ *
+ * @see {@link CRCFlowField2D}
+ * @see {@link CRCFlowSourceOptions2D}
+ */
 export function useFlowSource2D(
   field: CRCFlowField2D,
   options: CRCFlowSourceOptions2D,

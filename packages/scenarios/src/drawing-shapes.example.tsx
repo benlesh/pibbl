@@ -1,3 +1,4 @@
+import type { drawingShapesScenarioEntry } from './catalog.js';
 import {
   Arc,
   Circle,
@@ -13,6 +14,11 @@ import {
   Wedge,
 } from '@crc/core';
 export const DRAWING_SHAPES_SOURCE_ID = 'drawing-shapes-example';
+/**
+ * Actions supported by the drawing shapes scenario's public controller.
+ *
+ * @see {@link DrawingShapesState}
+ */
 export type DrawingShapesAction =
   | 'mount'
   | 'reset'
@@ -21,13 +27,26 @@ export type DrawingShapesAction =
   | 'rounded-cut-miss'
   | 'clipped-hit'
   | 'clipped-miss';
+/**
+ * Observable state exposed by the drawing shapes scenario for controls and assertions.
+ *
+ * @see {@link DrawingShapesAction}
+ * @see {@link drawingShapesScenarioEntry}
+ */
 export interface DrawingShapesState {
+  /** Clipped hits recorded or configured by this scenario. See {@link DrawingShapesState}. */
   clippedHits: number;
+  /** Clipped misses recorded or configured by this scenario. See {@link DrawingShapesState}. */
   clippedMisses: number;
+  /** Last action recorded or configured by this scenario. See {@link DrawingShapesAction}. */
   lastAction: DrawingShapesAction;
+  /** Revision recorded or configured by this scenario. See {@link DrawingShapesState}. */
   revision: number;
+  /** Rounded cut misses recorded or configured by this scenario. See {@link DrawingShapesState}. */
   roundedCutMisses: number;
+  /** Star hits recorded or configured by this scenario. See {@link DrawingShapesState}. */
   starHits: number;
+  /** Updated recorded or configured by this scenario. See {@link DrawingShapesState}. */
   updated: boolean;
 }
 interface DrawingShapesSceneProps {

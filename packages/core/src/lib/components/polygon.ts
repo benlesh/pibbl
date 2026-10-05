@@ -25,8 +25,27 @@ import type { StyleResolutionContext } from '../types.js';
 import { renderPath } from './path.js';
 import { resolveRoundedCornerStyle } from './rounded-corner-style.js';
 
+/**
+ * Authored inputs for Polygon, including the declared data and presentation options.
+ *
+ * @see {@link CRCEventHandlers}
+ * @see {@link CRCEventParticipationOptions}
+ * @see {@link CRCPhysics2DPropExtension}
+ * @see {@link Polygon}
+ */
 export interface PolygonProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions, CRCPhysics2DPropExtension {}
 
+/**
+ * Supported geometry and presentation properties for Polygon.
+ *
+ * @see {@link RoundedCornerStyle}
+ * @see {@link SystemStyle}
+ * @see {@link PaintStyle}
+ * @see {@link CursorStyle}
+ * @see {@link BoxStyle}
+ * @see {@link LayoutItemStyle}
+ * @see {@link Polygon}
+ */
 export interface PolygonStyle
   extends
     RoundedCornerStyle,
@@ -35,7 +54,12 @@ export interface PolygonStyle
     CursorStyle,
     BoxStyle,
     LayoutItemStyle {
+  /** Ordered coordinate pairs describing the path vertices. See {@link PolygonStyle}. */
   coords: [number, number][];
+  /**
+   * Width used for line hit testing independently of the visible stroke width. See
+   * {@link PolygonStyle}.
+   */
   lineInteractionWidth?: number;
 }
 
@@ -87,6 +111,13 @@ function renderPolygon(
 
 /**
  * Describes a polygon primitive for JSX or createElement authoring.
+ *
+ * @param props - Authored component inputs, supplied through JSX or createElement. See the linked
+ * props and style types.
+ * @throws When called directly; CRC mounts this component through JSX or createElement.
+ *
+ * @see {@link PolygonProps}
+ * @see {@link PolygonStyle}
  */
 export const Polygon = definePrimitive<
   PolygonProps,

@@ -11,15 +11,35 @@ import {
 import { TextureRaster, type TextureRenderer } from "./presentation.js";
 import { materialField, type TextureKind } from "./material-field.js";
 
+/**
+ * Authored inputs for ProceduralTexture, including the declared data and presentation options.
+ *
+ * @see {@link TextureKind}
+ * @see {@link TextureResolution}
+ * @see {@link TexturePalette}
+ * @see {@link TextureRenderer}
+ * @see {@link ProceduralTexture}
+ */
 export interface ProceduralTextureProps {
+  /** Selects the kind of geometry, material, or result. See {@link TextureKind}. */
   readonly kind: TextureKind;
+  /**
+   * Seed used for deterministic sampling or simulation initialization. See
+   * {@link ProceduralTextureProps}.
+   */
   readonly seed?: number;
+  /** Dimensions of the simulation or raster grid. See {@link TextureResolution}. */
   readonly resolution?: TextureResolution;
   /** Feature frequency across the texture, from 1 to 32. */
   readonly scale?: number;
   /** Distortion, grain strength, or cellular jitter, from 0 to 1. */
   readonly detail?: number;
+  /** Ordered colors used to present texture intensity. See {@link TexturePalette}. */
   readonly palette?: TexturePalette;
+  /**
+   * Renders the current data or resources using the supplied context. See {@link TextureRenderer}
+   * .
+   */
   readonly render?: TextureRenderer;
 }
 function normalize(p: ProceduralTextureProps) {
@@ -69,7 +89,15 @@ function generate(o: Options, previous?: Float32Array) {
   );
 }
 
-/** A seeded static material. It requests no continuing animation frames. */
+/**
+ * A seeded static material. It requests no continuing animation frames.
+ *
+ * @param props - Authored component inputs, supplied through JSX or createElement. See the linked
+ * props and style types.
+ * @throws When called directly; CRC mounts this component through JSX or createElement.
+ *
+ * @see {@link ProceduralTextureProps}
+ */
 export const ProceduralTexture = /* @__PURE__ */ defineRenderLayer<
   ProceduralTextureProps,
   Resources

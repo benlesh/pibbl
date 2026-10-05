@@ -17,6 +17,18 @@ const UNFOCUSED_SNAPSHOT: CRCEventTargetSnapshot = Object.freeze({
   isFocusVisible: false,
 });
 
+/**
+ * Registers a logical event target and returns its current focus and interaction snapshot.
+ *
+ * @param handlers - Handlers for this logical event target. See {@link CRCEventHandlers}.
+ * @param options - Hit geometry, focus, and target participation options. See
+ * {@link CRCEventTargetOptions} .
+ * @returns The registered target's snapshot. See {@link CRCEventTargetSnapshot}.
+ *
+ * @see {@link CRCEventHandlers}
+ * @see {@link CRCEventTargetOptions}
+ * @see {@link CRCEventTargetSnapshot}
+ */
 export function useEventTarget(
   handlers: CRCEventHandlers,
   options: CRCEventTargetOptions,

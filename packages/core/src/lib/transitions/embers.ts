@@ -11,15 +11,56 @@ import { CRC_FILTER_EXECUTOR, type CRCFilterExecutor } from '../style/filter-typ
 import type { CRCInstance } from '../types.js';
 import { defineTransitionEffect, type CRCTransitionEffect } from './fade.js';
 
+/**
+ * Appearance, motion, and timing controls for an ember visibility transition.
+ *
+ * @see {@link CRCEmbersPhysicsOptions}
+ * @see {@link embers}
+ */
 export interface CRCEmbersOptions {
   /** Local coordinates enclosing the subject; the burn travels upward through this area. */
-  readonly region: Readonly<{ x: number; y: number; width: number; height: number }>;
+  readonly region: Readonly<{
+    /**
+     * Horizontal coordinate or displacement in the containing coordinate system. See
+     * {@link CRCEmbersOptions}.
+     */
+    x: number;
+    /**
+     * Vertical coordinate or displacement in the containing coordinate system. See
+     * {@link CRCEmbersOptions}.
+     */
+    y: number;
+    /**
+     * Horizontal extent in the units of the containing geometry or surface. See
+     * {@link CRCEmbersOptions}.
+     */
+    width: number;
+    /**
+     * Vertical extent in the units of the containing geometry or surface. See
+     * {@link CRCEmbersOptions}.
+     */
+    height: number;
+  }>;
+  /**
+   * Depth of the darkened char region along the ember transition boundary. See
+   * {@link CRCEmbersOptions}.
+   */
   readonly charDepth?: number;
+  /**
+   * Width of the glowing burn region along the transition boundary. See {@link CRCEmbersOptions}.
+   */
   readonly burnWidth?: number;
   /** Horizontal drift in local units; negative blows left. */
   readonly wind?: number;
+  /**
+   * Seed used for deterministic sampling or simulation initialization. See
+   * {@link CRCEmbersOptions}.
+   */
   readonly seed?: number;
-  /** Maximum airborne particle lifetime in milliseconds; completion includes this tail. Default 700. */
+  /**
+   * Maximum airborne particle lifetime in milliseconds; completion includes this tail. Default
+   * 700.
+   */
   readonly linger?: number;
   /** Opt-in local force simulation and collision. Requires a positive linger. */
   readonly physics?: CRCEmbersPhysicsOptions;
@@ -52,7 +93,16 @@ class EmberSurfaces {
 }
 const clamp = (value: number) => Math.max(0, Math.min(1, value));
 
-/** A seeded burn/char front over one captured subtree, with outward drifting fragments. */
+/**
+ * A seeded burn/char front over one captured subtree, with outward drifting fragments.
+ *
+ * @param options - Ember emission, motion, appearance, and optional collision settings. See
+ * {@link CRCEmbersOptions} .
+ * @returns An ember transition effect. See {@link CRCTransitionEffect}.
+ *
+ * @see {@link CRCEmbersOptions}
+ * @see {@link CRCTransitionEffect}
+ */
 export function embers(options: CRCEmbersOptions): CRCTransitionEffect {
   const region = Object.freeze({ ...options.region });
   const charDepth = options.charDepth ?? 65, burnWidth = options.burnWidth ?? 12;

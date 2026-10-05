@@ -1,16 +1,44 @@
+import type { TendrilsMessage, TendrilsOptions } from './tendrils.js';
 import { point, range, type ElectricPoint } from "./electric-shared.js";
 
-/** A weighted attachment site in normalized texture coordinates. */
+/**
+ * A weighted attachment site in normalized texture coordinates.
+ *
+ * @see {@link ElectricPoint}
+ * @see {@link ElectricSourceMessage}
+ * @see {@link TendrilsOptions}
+ */
 export interface ElectricSource {
+  /** Stable identifier of this resource or connection. See {@link ElectricSource}. */
   readonly id: string;
+  /** A point in the operation's coordinate system. See {@link ElectricPoint}. */
   readonly point: ElectricPoint;
+  /** Relative sampling weight or source intensity. See {@link ElectricSource}. */
   readonly weight: number;
 }
+/**
+ * Upserts, removes, or replaces the named source electrodes of an electrical texture.
+ *
+ * @see {@link ElectricSource}
+ * @see {@link TendrilsMessage}
+ */
 export type ElectricSourceMessage =
-  | { readonly type: "upsert-source"; readonly source: ElectricSource }
-  | { readonly type: "remove-source"; readonly id: string }
   | {
+      /** The literal "upsert-source" identifying this variant. See {@link ElectricSourceMessage}. */
+      readonly type: "upsert-source";
+      /** Named electrode to insert or replace. See {@link ElectricSource}. */
+      readonly source: ElectricSource;
+    }
+  | {
+      /** The literal "remove-source" identifying this variant. See {@link ElectricSourceMessage}. */
+      readonly type: "remove-source";
+      /** Stable identifier of this resource or connection. See {@link ElectricSourceMessage}. */
+      readonly id: string;
+    }
+  | {
+      /** The literal "set-sources" identifying this variant. See {@link ElectricSourceMessage}. */
       readonly type: "set-sources";
+      /** Named electrical source electrodes. See {@link ElectricSource}. */
       readonly sources: readonly ElectricSource[];
     };
 

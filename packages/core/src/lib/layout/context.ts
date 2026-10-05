@@ -17,6 +17,15 @@ export function getPercentageBasis(): Readonly<LayoutBox> {
   return context.percentageBasis;
 }
 
+/**
+ * Pushes a layout allocation for nested evaluation and returns the callback that restores the
+ * previous allocation.
+ *
+ * @param box - Parent allocation to expose to child layout hooks. See {@link LayoutBox}.
+ * @returns A function restoring the previous layout box.
+ *
+ * @see {@link LayoutBox}
+ */
 export function pushLayoutBox(box: Readonly<LayoutBox>): () => void {
   const stack = GLOBAL_STATE.layoutStack;
   if (!stack) {

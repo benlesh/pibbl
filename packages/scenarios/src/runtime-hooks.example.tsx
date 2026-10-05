@@ -13,8 +13,23 @@ import {
   Rectangle,
 } from '@crc/core';
 export const RUNTIME_HOOKS_SOURCE_ID = 'runtime-hooks-laboratory-example';
+/**
+ * Supported runtime hooks root variant values: `"a"`, `"b"`.
+ *
+ * @see {@link RuntimeHooksState}
+ */
 export type RuntimeHooksRootVariant = 'a' | 'b';
+/**
+ * Supported runtime hooks sibling key values: `"a"`, `"b"`, `"c"`.
+ *
+ * @see {@link RuntimeHooksState}
+ */
 export type RuntimeHooksSiblingKey = 'a' | 'b' | 'c';
+/**
+ * Actions supported by the runtime hooks scenario's public controller.
+ *
+ * @see {@link RuntimeHooksState}
+ */
 export type RuntimeHooksAction =
   | 'change-dependency'
   | 'increment-state'
@@ -30,27 +45,58 @@ export type RuntimeHooksAction =
   | 'replace-root'
   | 'reset'
   | 'restore-component';
+/**
+ * Observable state exposed by the runtime hooks scenario for controls and assertions.
+ *
+ * @see {@link RuntimeHooksAction}
+ * @see {@link RuntimeHooksRootVariant}
+ * @see {@link RuntimeHooksSiblingKey}
+ */
 export interface RuntimeHooksState {
+  /** Component key recorded or configured by this scenario. See {@link RuntimeHooksState}. */
   componentKey: number;
+  /** Component visible recorded or configured by this scenario. See {@link RuntimeHooksState}. */
   componentVisible: boolean;
+  /** Dependency recorded or configured by this scenario. See {@link RuntimeHooksState}. */
   dependency: number;
+  /** Falsy children recorded or configured by this scenario. See {@link RuntimeHooksState}. */
   falsyChildren: number;
+  /** Hook acquisitions recorded or configured by this scenario. See {@link RuntimeHooksState}. */
   hookAcquisitions: number;
+  /** Hook cleanups recorded or configured by this scenario. See {@link RuntimeHooksState}. */
   hookCleanups: number;
+  /** Hook order recorded or configured by this scenario. See {@link RuntimeHooksState}. */
   hookOrder: string;
+  /** Last action recorded or configured by this scenario. See {@link RuntimeHooksAction}. */
   lastAction: RuntimeHooksAction;
+  /** Memo creates recorded or configured by this scenario. See {@link RuntimeHooksState}. */
   memoCreates: number;
+  /** Memo identity recorded or configured by this scenario. See {@link RuntimeHooksState}. */
   memoIdentity: string;
+  /** Misuse errors recorded or configured by this scenario. See {@link RuntimeHooksState}. */
   misuseErrors: number;
+  /** Misuse message recorded or configured by this scenario. See {@link RuntimeHooksState}. */
   misuseMessage: string | null;
+  /** Misuse name recorded or configured by this scenario. See {@link RuntimeHooksState}. */
   misuseName: string | null;
+  /** Path identities recorded or configured by this scenario. See {@link RuntimeHooksState}. */
   pathIdentities: readonly [number, number, number];
+  /** Ref identity recorded or configured by this scenario. See {@link RuntimeHooksState}. */
   refIdentity: number;
+  /** Ref value recorded or configured by this scenario. See {@link RuntimeHooksState}. */
   refValue: number;
+  /** Renders recorded or configured by this scenario. See {@link RuntimeHooksState}. */
   renders: number;
+  /** Root variant recorded or configured by this scenario. See {@link RuntimeHooksRootVariant}. */
   rootVariant: RuntimeHooksRootVariant;
+  /**
+   * Sibling identities recorded or configured by this scenario. See {@link RuntimeHooksSiblingKey}
+   * .
+   */
   siblingIdentities: Readonly<Record<RuntimeHooksSiblingKey, number | null>>;
+  /** Sibling order recorded or configured by this scenario. See {@link RuntimeHooksSiblingKey}. */
   siblingOrder: readonly RuntimeHooksSiblingKey[];
+  /** State value recorded or configured by this scenario. See {@link RuntimeHooksState}. */
   stateValue: number;
 }
 export interface RuntimeHooksModel {

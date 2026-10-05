@@ -17,39 +17,144 @@ import {
 export type { TexturePaint, TexturePlacement } from "./texture-protocol.js";
 
 declare const recipeBrand: unique symbol;
+/**
+ * A mount-owned texture handle that provides paint and accepts recipe messages.
+ *
+ * @see {@link TexturePaint}
+ * @see {@link TexturePlacement}
+ * @see {@link useTexture}
+ */
 export interface Texture<Message = never> extends TexturePaint {
+  /**
+   * Delivers a typed message to the mounted recipe instance. See {@link Texture}.
+   * @param message - Message delivered to the texture definition's receive callback.
+   */
   send(message: Message): void;
+  /**
+   * Returns a paint view with the requested placement while retaining the same texture ownership.
+   * See {@link TexturePaint}.
+   * @param placement - Destination bounds and texture placement policy. See
+   * {@link TexturePlacement} .
+   * @returns A paint descriptor referencing this mounted texture. See {@link TexturePaint}.
+   */
   paint(placement: TexturePlacement): TexturePaint;
 }
+/**
+ * Resolution and runtime configuration for a mounted texture recipe.
+ *
+ * @see {@link useTexture}
+ */
 export interface TextureOptions {
-  readonly resolution?: { readonly width: number; readonly height: number };
+  /** Dimensions of the simulation or raster grid. See {@link TextureOptions}. */
+  readonly resolution?: {
+    /**
+     * Horizontal extent in the units of the containing geometry or surface. See
+     * {@link TextureOptions}.
+     */
+    readonly width: number;
+    /**
+     * Vertical extent in the units of the containing geometry or surface. See
+     * {@link TextureOptions}.
+     */
+    readonly height: number;
+  };
+  /** Ordered colors used to present texture intensity. See {@link TextureOptions}. */
   readonly palette?: readonly string[];
 }
+/**
+ * Surface and invalidation facilities supplied to texture lifecycle callbacks.
+ *
+ * @see {@link TextureDefinition}
+ */
 export interface TextureContext {
+  /** Canvas surface associated with this resource or mount. See {@link TextureContext}. */
   readonly canvas: OffscreenCanvas;
+  /** Ordered colors used to present texture intensity. See {@link TextureContext}. */
   readonly palette: readonly string[] | undefined;
   /** Marks the source pixels dirty and requests a CRC update. */
   invalidate(): void;
   /** Requests another CRC frame; implementations stop by not requesting again. */
   requestFrame(): void;
 }
+/**
+ * Shared logical time and elapsed milliseconds supplied while advancing a texture.
+ *
+ * @see {@link TextureDefinition}
+ */
 export interface TextureFrame {
+  /** Elapsed time since the preceding texture frame, in milliseconds. See {@link TextureFrame}. */
   readonly delta: number;
+  /** Current shared logical time, in milliseconds. See {@link TextureFrame}. */
   readonly time: number;
 }
+/**
+ * Lifecycle callbacks for creating, updating, painting, and disposing texture resources.
+ *
+ * @see {@link TexturePlacement}
+ * @see {@link TextureContext}
+ * @see {@link TextureFrame}
+ * @see {@link defineTexture}
+ */
 export interface TextureDefinition<Config, State, Message = never> {
+  /**
+   * Texture placement used when no paint-specific override is supplied. See
+   * {@link TexturePlacement}.
+   */
   readonly defaultPlacement?: TexturePlacement;
+  /**
+   * Allocates state for a mounted texture recipe. See {@link TextureDefinition}.
+   * @param context - Texture-owned drawing surface and scheduling services. See
+   * {@link TextureContext} .
+   * @param config - Initial recipe configuration.
+   * @returns State retained for this mounted texture lifetime.
+   */
   create(context: TextureContext, config: Readonly<Config>): State;
-  update?(
-    state: State,
-    config: Readonly<Config>,
-    context: TextureContext,
-  ): void;
+  /**
+   * Updates existing state when the recipe configuration changes. See {@link TextureDefinition}.
+   * @param state - State returned by create.
+   * @param config - Latest recipe configuration.
+   * @param context - Texture-owned drawing surface and scheduling services. See
+   * {@link TextureContext} .
+   */
+  update?(state: State, config: Readonly<Config>, context: TextureContext): void;
+  /**
+   * Handles a typed application message for this recipe instance. See {@link TextureDefinition}.
+   * @param state - State returned by create.
+   * @param message - Message sent through the mounted texture handle.
+   * @param context - Texture-owned drawing surface and scheduling services. See
+   * {@link TextureContext} .
+   */
   receive?(state: State, message: Message, context: TextureContext): void;
+  /**
+   * Advances simulation using the shared CRC frame timing. See {@link TextureDefinition}.
+   * @param state - State returned by create.
+   * @param frame - Shared animation time and delta. See {@link TextureFrame}.
+   * @param context - Texture-owned drawing surface and scheduling services. See
+   * {@link TextureContext} .
+   */
   advance?(state: State, frame: TextureFrame, context: TextureContext): void;
+  /**
+   * Draws current texture pixels into the owned offscreen surface. See {@link TextureDefinition}.
+   * @param state - State returned by create.
+   * @param context - Texture-owned drawing surface and scheduling services. See
+   * {@link TextureContext} .
+   */
   rasterize(state: State, context: TextureContext): void;
+  /**
+   * Releases state and resources when the mounted texture is disposed. See
+   * {@link TextureDefinition}.
+   * @param state - State returned by create.
+   * @param context - Texture-owned drawing surface and scheduling services. See
+   * {@link TextureContext} .
+   */
   dispose?(state: State, context: TextureContext): void;
 }
+/**
+ * A reusable texture definition together with the options used to instantiate it.
+ *
+ * @see {@link defineTexture}
+ * @see {@link useTexture}
+ */
 export interface TextureRecipe<Message = never> {
   readonly [recipeBrand]: (message: Message) => Message;
 }
@@ -60,7 +165,17 @@ interface Recipe {
 }
 const recipes = new WeakMap<object, Recipe>();
 
-/** Defines a pure recipe factory; resource allocation starts at useTexture. */
+/**
+ * Defines a pure recipe factory; resource allocation starts at useTexture.
+ *
+ * @param definition - State creation, update, simulation, rasterization, and disposal callbacks.
+ * See {@link TextureDefinition} .
+ * @returns A configuration-to-recipe factory; resources are allocated when a recipe is mounted.
+ * See {@link TextureRecipe} .
+ *
+ * @see {@link TextureDefinition}
+ * @see {@link TextureRecipe}
+ */
 export function defineTexture<Config, State, Message = never>(
   definition: TextureDefinition<Config, State, Message>,
 ): (config: Config) => TextureRecipe<Message> {
@@ -434,7 +549,19 @@ class Resource {
   }
 }
 
-/** Owns one persistent texture resource for the current mounted hook slot. */
+/**
+ * Owns one persistent texture resource for the current mounted hook slot.
+ *
+ * @param input - Texture recipe to mount or update. See {@link TextureRecipe}.
+ * @param options - Resolution and lifecycle options for the mounted texture. See
+ * {@link TextureOptions} .
+ * @returns A mount-owned texture handle for sending messages and creating paint placements. See
+ * {@link Texture} .
+ *
+ * @see {@link TextureRecipe}
+ * @see {@link TextureOptions}
+ * @see {@link Texture}
+ */
 export function useTexture<Message>(
   input: TextureRecipe<Message>,
   options: TextureOptions = {},

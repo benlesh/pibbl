@@ -7,6 +7,21 @@ import { resolveLength } from '../style/resolve-length.js';
 import type { BoxStyle, Length, ResolvedBoxStyle } from '../style/types.js';
 import type { Constraints } from './types.js';
 
+/**
+ * Resolves declared box sizing and padding into border and content boxes under parent constraints.
+ *
+ * @param style - Declared box sizing and edge properties. See {@link BoxStyle}.
+ * @param constraints - Available dimensions used to resolve percentages and constraints. See
+ * {@link Constraints} .
+ * @param context - Component and property context for diagnostic messages. See
+ * {@link LayoutDiagnosticContext} .
+ * @returns Resolved box dimensions and edge values. See {@link ResolvedBoxStyle}.
+ *
+ * @see {@link BoxStyle}
+ * @see {@link Constraints}
+ * @see {@link LayoutDiagnosticContext}
+ * @see {@link ResolvedBoxStyle}
+ */
 export function resolveBox(
   style: Readonly<BoxStyle>,
   constraints: Readonly<Constraints>,

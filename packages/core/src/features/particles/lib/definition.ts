@@ -592,6 +592,20 @@ function normalizeEmitter(
   });
 }
 
+/**
+ * Validates and brands a reusable Canvas 2D particle effect while preserving emitter names and
+ * parameter types.
+ *
+ * @param input - Emitter definitions, parameter declarations, and effect configuration.
+ * @returns A validated particle effect preserving emitter names and parameter types. See
+ * {@link CRCParticleEffect2D} , {@link CRCParticleValuesOf} ,
+ * {@link CRCParticleParameterDefinitions} .
+ *
+ * @see {@link CRCParticleEffect2D}
+ * @see {@link CRCParticleValuesOf}
+ * @see {@link CRCParticleParameterDefinitions}
+ * @see {@link CRCParticleEffect2DInput}
+ */
 export function defineParticleEffect2D<
   const Input extends CRCParticleEffect2DInput,
 >(

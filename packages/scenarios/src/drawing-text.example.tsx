@@ -1,11 +1,27 @@
+import type { drawingTextScenarioEntry } from './catalog.js';
 import { Rectangle, Text } from '@crc/core';
 export const DRAWING_TEXT_SOURCE_ID = 'drawing-text-example';
+/**
+ * Actions supported by the drawing text scenario's public controller.
+ *
+ * @see {@link DrawingTextState}
+ */
 export type DrawingTextAction =
   'click-centered' | 'mount' | 'reset' | 'update-copy';
+/**
+ * Observable state exposed by the drawing text scenario for controls and assertions.
+ *
+ * @see {@link DrawingTextAction}
+ * @see {@link drawingTextScenarioEntry}
+ */
 export interface DrawingTextState {
+  /** Centered clicks recorded or configured by this scenario. See {@link DrawingTextState}. */
   centeredClicks: number;
+  /** Last action recorded or configured by this scenario. See {@link DrawingTextAction}. */
   lastAction: DrawingTextAction;
+  /** Revision recorded or configured by this scenario. See {@link DrawingTextState}. */
   revision: number;
+  /** Updated recorded or configured by this scenario. See {@link DrawingTextState}. */
   updated: boolean;
 }
 interface DrawingTextSceneProps {

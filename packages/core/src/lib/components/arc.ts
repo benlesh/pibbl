@@ -31,21 +31,45 @@ import {
   resolveNonnegativeShapeLength,
 } from "./shape-style.js";
 
+/**
+ * Authored inputs for Arc, including the declared data and presentation options.
+ *
+ * @see {@link CRCEventHandlers}
+ * @see {@link CRCEventParticipationOptions}
+ * @see {@link CRCPhysics2DPropExtension}
+ * @see {@link Arc}
+ */
 export interface ArcProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions, CRCPhysics2DPropExtension {}
 
+/**
+ * Supported geometry and presentation properties for Arc.
+ *
+ * @see {@link SystemStyle}
+ * @see {@link PaintStyle}
+ * @see {@link CursorStyle}
+ * @see {@link BoxStyle}
+ * @see {@link LayoutItemStyle}
+ * @see {@link Length}
+ * @see {@link Arc}
+ */
 export interface ArcStyle
-  extends
-    SystemStyle,
-    Omit<PaintStyle, "fill">,
-    CursorStyle,
-    BoxStyle,
-    LayoutItemStyle {
+  extends SystemStyle, Omit<PaintStyle, "fill">, CursorStyle, BoxStyle, LayoutItemStyle {
+  /** Radius in the coordinate system of this geometry or effect. See {@link Length}. */
   radius: Exclude<Length, "auto">;
+  /** Angle at which the arc or slice begins. See {@link ArcStyle}. */
   startAngle: number;
+  /** Angle at which the arc or slice ends. See {@link ArcStyle}. */
   endAngle: number;
+  /** Horizontal coordinate of the center. See {@link Length}. */
   cx?: Exclude<Length, "auto">;
+  /** Vertical coordinate of the center. See {@link Length}. */
   cy?: Exclude<Length, "auto">;
+  /** Whether the arc follows the counterclockwise direction. See {@link ArcStyle}. */
   counterclockwise?: boolean;
+  /**
+   * Width used for line hit testing independently of the visible stroke width. See
+   * {@link ArcStyle}.
+   */
   lineInteractionWidth?: number;
 }
 
@@ -104,7 +128,16 @@ function renderArc(
   );
 }
 
-/** Describes an open circular arc primitive for JSX or createElement authoring. */
+/**
+ * Describes an open circular arc primitive for JSX or createElement authoring.
+ *
+ * @param props - Authored component inputs, supplied through JSX or createElement. See the linked
+ * props and style types.
+ * @throws When called directly; CRC mounts this component through JSX or createElement.
+ *
+ * @see {@link ArcProps}
+ * @see {@link ArcStyle}
+ */
 export const Arc = definePrimitive<
   ArcProps,
   ArcStyle,

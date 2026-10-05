@@ -1,3 +1,9 @@
+import type { crc } from '../crc.js';
+/**
+ * How a fixed logical viewport fits inside its displayed canvas surface.
+ *
+ * @see {@link CRCFixedViewportConfig}
+ */
 export type CRCFit =
   | 'contain'
   | 'cover'
@@ -5,26 +11,84 @@ export type CRCFit =
   | 'none'
   | 'scale-down';
 
+/**
+ * Requested backing-store density, either explicit or derived from the device.
+ *
+ * @see {@link CRCFixedViewportConfig}
+ * @see {@link CRCResponsiveViewportConfig}
+ */
 export type CRCPixelRatio = 'device' | number;
 
+/**
+ * Fixed logical viewport dimensions and fitting policy for a canvas mount.
+ *
+ * @see {@link CRCFit}
+ * @see {@link CRCPixelRatio}
+ * @see {@link CRCConfig}
+ */
 export interface CRCFixedViewportConfig {
+  /**
+   * Opt-in host for application-owned HTML regions associated with this canvas. See
+   * {@link CRCFixedViewportConfig}.
+   */
   htmlOverlay?: HTMLElement;
+  /**
+   * Abort signal governing the lifetime of this operation or mount. See
+   * {@link CRCFixedViewportConfig}.
+   */
   signal?: AbortSignal;
+  /** Logical viewport dimensions and fitting configuration. See {@link CRCFixedViewportConfig}. */
   viewport?: Readonly<{
+    /**
+     * Horizontal extent in the units of the containing geometry or surface. See
+     * {@link CRCFixedViewportConfig}.
+     */
     width: number;
+    /**
+     * Vertical extent in the units of the containing geometry or surface. See
+     * {@link CRCFixedViewportConfig}.
+     */
     height: number;
   }>;
+  /** Policy for fitting content within its available box. See {@link CRCFit}. */
   fit?: CRCFit;
+  /** Requested backing-store pixel density. See {@link CRCPixelRatio}. */
   pixelRatio?: CRCPixelRatio;
 }
 
+/**
+ * A viewport that follows the displayed canvas dimensions.
+ *
+ * @see {@link CRCPixelRatio}
+ * @see {@link CRCConfig}
+ */
 export interface CRCResponsiveViewportConfig {
+  /**
+   * Opt-in host for application-owned HTML regions associated with this canvas. See
+   * {@link CRCResponsiveViewportConfig}.
+   */
   htmlOverlay?: HTMLElement;
+  /**
+   * Abort signal governing the lifetime of this operation or mount. See
+   * {@link CRCResponsiveViewportConfig}.
+   */
   signal?: AbortSignal;
+  /**
+   * Logical viewport dimensions and fitting configuration. See {@link CRCResponsiveViewportConfig}
+   * .
+   */
   viewport: 'responsive';
+  /** Requested backing-store pixel density. See {@link CRCPixelRatio}. */
   pixelRatio?: CRCPixelRatio;
 }
 
+/**
+ * Canvas surface sizing, pixel density, and viewport configuration for a CRC mount.
+ *
+ * @see {@link CRCFixedViewportConfig}
+ * @see {@link CRCResponsiveViewportConfig}
+ * @see {@link crc}
+ */
 export type CRCConfig =
   | CRCFixedViewportConfig
   | CRCResponsiveViewportConfig;

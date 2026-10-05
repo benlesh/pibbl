@@ -184,7 +184,20 @@ export function mountCRC(
   return controller;
 }
 
-/** Mounts a private official-backend CRC child under an existing CRC root. */
+/**
+ * Mounts a private official-backend CRC child under an existing CRC root.
+ *
+ * @param canvas - Host canvas for this backend mount. See {@link Canvas}.
+ * @param root - Initial CRC node tree. See {@link CRCNode}.
+ * @param options - Backend driver and mount configuration. See {@link CRCBackendMountOptions}.
+ * @returns Mount controls for rendering, resizing, scheduling, and disposal. See
+ * {@link CRCBackendMount} .
+ *
+ * @see {@link Canvas}
+ * @see {@link CRCNode}
+ * @see {@link CRCBackendMountOptions}
+ * @see {@link CRCBackendMount}
+ */
 export function mountBackendCRC<E>(
   canvas: Canvas,
   root: CRCNode,

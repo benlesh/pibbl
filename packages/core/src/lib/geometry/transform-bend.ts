@@ -26,18 +26,37 @@ import {
   type PathTransform,
 } from './path-transforms.js';
 
+/**
+ * Alignment, fitting, baseline, and overflow controls shared by reusable bend transforms.
+ *
+ * @see {@link PathBendTransformOptions}
+ */
 export type BendTransformOptions = Omit<
   PathBendOptions,
   'tolerance' | 'maxSegments'
 >;
+/**
+ * Circular bending parameters for a reusable arc transform; accuracy is supplied when applying it.
+ *
+ * @see {@link arcBendTransform}
+ */
 export type ArcBendTransformOptions = Omit<
   BendPathAlongArcOptions,
   'tolerance' | 'maxSegments'
 >;
+/**
+ * Guide path and bending parameters for a reusable path transform.
+ *
+ * @see {@link PathGeometry}
+ * @see {@link pathBendTransform}
+ */
 export type PathBendTransformOptions = Omit<
   PathBendOptions,
   'tolerance' | 'maxSegments'
-> & { readonly guide: PathGeometry };
+> & {
+  /** Path used as the bending guide. See {@link PathGeometry}. */
+  readonly guide: PathGeometry;
+};
 function placement(input: Omit<PathBendOptions, 'tolerance' | 'maxSegments'>) {
   const frame = input.source;
   const source = {
@@ -88,6 +107,15 @@ function distances(
     add(sub(input[1], constant(p.baseline)), constant(p.normal)),
   ];
 }
+/**
+ * Creates a reusable mapping that bends source geometry around a circular arc.
+ *
+ * @param options - Source bounds and circular bend geometry. See {@link ArcBendTransformOptions}.
+ * @returns A point mapping that bends the source along a circular arc. See {@link PathTransform}.
+ *
+ * @see {@link ArcBendTransformOptions}
+ * @see {@link PathTransform}
+ */
 export function arcBendTransform(
   options: ArcBendTransformOptions,
 ): PathTransform {
@@ -171,6 +199,16 @@ export function arcBendTransform(
     }),
   ]);
 }
+/**
+ * Creates a reusable mapping that bends source geometry along a guide path.
+ *
+ * @param options - Source bounds, target guide, and alignment along that guide. See
+ * {@link PathBendTransformOptions} .
+ * @returns A point mapping that bends the source along the target path. See {@link PathTransform}.
+ *
+ * @see {@link PathBendTransformOptions}
+ * @see {@link PathTransform}
+ */
 export function pathBendTransform(
   options: PathBendTransformOptions,
 ): PathTransform {

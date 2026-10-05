@@ -5,6 +5,20 @@ import {
 } from './diagnostics.js';
 import type { EdgeValues } from './types.js';
 
+/**
+ * Expands shorthand insets into four validated numeric edges.
+ *
+ * @param value - Edge shorthand to expand; undefined uses the empty edge defaults. See
+ * {@link EdgeValues} .
+ * @param property - Property name used in diagnostics.
+ * @param context - Component and property context for diagnostic messages. See
+ * {@link LayoutDiagnosticContext} .
+ * @returns Explicit top, right, bottom, and left edge values. See {@link Edges}.
+ *
+ * @see {@link EdgeValues}
+ * @see {@link LayoutDiagnosticContext}
+ * @see {@link Edges}
+ */
 export function normalizeEdges(
   value: EdgeValues | undefined,
   property: string,

@@ -45,9 +45,23 @@ import {
 import type { LayoutBox } from './types.js';
 import { withReceiverInputProvision } from '../signals/input-provision.js';
 
+/**
+ * Supported geometry and presentation properties for Absolute.
+ *
+ * @see {@link BoxStyle}
+ * @see {@link LayoutItemStyle}
+ * @see {@link Absolute}
+ */
 export type AbsoluteStyle = BoxStyle & LayoutItemStyle;
 
+/**
+ * Authored inputs for Absolute, including the declared data and presentation options.
+ *
+ * @see {@link CRCNodeInput}
+ * @see {@link Absolute}
+ */
 export interface AbsoluteProps extends CRCStructuralEventProps {
+  /** Descendant content or the callback that supplies it. See {@link CRCNodeInput}. */
   children: CRCNodeInput;
 }
 
@@ -99,7 +113,16 @@ function renderAbsolute(
   );
 }
 
-/** Describes absolute layout for JSX or createElement authoring. */
+/**
+ * Describes absolute layout for JSX or createElement authoring.
+ *
+ * @param props - Authored component inputs, supplied through JSX or createElement. See the linked
+ * props and style types.
+ * @throws When called directly; CRC mounts this component through JSX or createElement.
+ *
+ * @see {@link AbsoluteProps}
+ * @see {@link AbsoluteStyle}
+ */
 export const Absolute = definePrimitive<
   AbsoluteProps,
   AbsoluteStyle,

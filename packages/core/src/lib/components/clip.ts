@@ -15,12 +15,33 @@ import type {
   ResolvedDrawingStyle,
 } from '../style/types.js';
 
+/**
+ * Authored inputs for Clip, including the declared data and presentation options.
+ *
+ * @see {@link CRCNodeInput}
+ * @see {@link Clip}
+ */
 export interface ClipProps extends CRCStructuralEventProps {
+  /** Descendant content or the callback that supplies it. See {@link CRCNodeInput}. */
   children: CRCNodeInput;
 }
 
+/**
+ * Supported geometry and presentation properties for Clip.
+ *
+ * @see {@link SystemStyle}
+ * @see {@link BoxStyle}
+ * @see {@link LayoutItemStyle}
+ * @see {@link PathGeometry}
+ * @see {@link Clip}
+ */
 export interface ClipStyle extends SystemStyle, BoxStyle, LayoutItemStyle {
+  /**
+   * Geometry to draw or clip, supplied in the declared path representation. See
+   * {@link PathGeometry}.
+   */
   d: Path2D | PathGeometry;
+  /** Canvas winding rule used to determine the path interior. See {@link ClipStyle}. */
   fillRule?: CanvasFillRule;
 }
 
@@ -33,7 +54,16 @@ function renderClip(
   return props.children;
 }
 
-/** Describes a clipping container for JSX or createElement authoring. */
+/**
+ * Describes a clipping container for JSX or createElement authoring.
+ *
+ * @param props - Authored component inputs, supplied through JSX or createElement. See the linked
+ * props and style types.
+ * @throws When called directly; CRC mounts this component through JSX or createElement.
+ *
+ * @see {@link ClipProps}
+ * @see {@link ClipStyle}
+ */
 export const Clip = definePrimitive<
   ClipProps,
   ClipStyle,

@@ -66,7 +66,16 @@ const executor: CRCFilterExecutor = {
   render:filterBoundaryExecutor.render,
 };
 
-/** Adds slope-selective surface light without changing scene alpha or geometry. */
+/**
+ * Adds slope-selective surface light without changing scene alpha or geometry.
+ *
+ * @param options - Lighting texture and reflected-light appearance settings. See
+ * {@link CRCReflectedLightFilterOptions} .
+ * @returns A reflected-light filter descriptor for style.filter. See {@link CRCFilter}.
+ *
+ * @see {@link CRCReflectedLightFilterOptions}
+ * @see {@link CRCFilter}
+ */
 export function reflectedLight(options: CRCReflectedLightFilterOptions): CRCFilter {
   const rawOptions = options as unknown as { readonly region: unknown; readonly direction?: unknown };
   const region = rawOptions.region && typeof rawOptions.region === 'object'

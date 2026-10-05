@@ -31,12 +31,27 @@ interface LayerPropertySnapshot {
   readonly value: unknown;
 }
 
+/**
+ * Captured element structure used to compare managed-layer inputs.
+ *
+ * @see {@link haveSameLayerNodeTree}
+ * @see {@link snapshotLayerNodeTree}
+ */
 export type LayerNodeSnapshot =
   | LayerElementSnapshot
   | LayerArraySnapshot
   | LayerOpaqueSnapshot;
 
-/** Materializes retained Layer children once before a private renderer owns them. */
+/**
+ * Materializes retained Layer children once before a private renderer owns them.
+ *
+ * @param node - Recursive child structure to materialize. See {@link CRCNodeInput}.
+ * @param receiver - Receiver name used in invalid-child diagnostics.
+ * @returns The ordered element descriptors retained by the layer. See {@link CRCElement}.
+ *
+ * @see {@link CRCNodeInput}
+ * @see {@link CRCElement}
+ */
 export function materializeRetainedLayerChildren(
   node: CRCNodeInput,
   receiver: string,
@@ -48,6 +63,12 @@ export function materializeRetainedLayerChildren(
  * Captures Layer's successfully rendered tree without retaining mutable
  * author-owned containers. Direct Layer children are already materialized;
  * nested opaque iterables remain identity values and are never evaluated.
+ *
+ * @param node - Node tree to record.
+ * @returns A snapshot used for subsequent structural equality checks. See
+ * {@link LayerNodeSnapshot} .
+ *
+ * @see {@link LayerNodeSnapshot}
  */
 export function snapshotLayerNodeTree(node: unknown): LayerNodeSnapshot {
   if (isCRCElement(node)) {
@@ -76,6 +97,12 @@ export function snapshotLayerNodeTree(node: unknown): LayerNodeSnapshot {
 /**
  * Compares an immutable successful-render snapshot with an already-materialized
  * candidate tree. Opaque nested iterables compare only by identity.
+ *
+ * @param snapshot - Previously recorded node-tree snapshot, if any. See {@link LayerNodeSnapshot}.
+ * @param node - Current node tree to compare.
+ * @returns Whether the current tree matches the retained snapshot.
+ *
+ * @see {@link LayerNodeSnapshot}
  */
 export function haveSameLayerNodeTree(
   snapshot: LayerNodeSnapshot | undefined,

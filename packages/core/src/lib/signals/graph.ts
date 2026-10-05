@@ -353,6 +353,17 @@ export function recordRendererEdgeReleased(): void {
   releasedRendererEdges++;
 }
 
+/**
+ * Runs a synchronous callback while coalescing signal notifications until the outer batch
+ * completes.
+ *
+ * @param callback - Synchronous work whose signal notifications are grouped.
+ * @returns The callback's return value.
+ *
+ * @see {@link signal}
+ * @see {@link computed}
+ * @see {@link WritableSignal}
+ */
 export function batch<T>(callback: () => T): T {
   if (activePublicSignalBatch !== undefined) return callback();
 
@@ -496,6 +507,17 @@ function throwSignalObserverFailures(failures: readonly unknown[]): void {
   }
 }
 
+/**
+ * Creates a synchronous writable signal with configurable equality and an optional diagnostic
+ * name.
+ *
+ * @param initialValue - Value stored before the first write.
+ * @param options - Equality comparison and optional diagnostic name. See {@link SignalOptions}.
+ * @returns A writable signal holding the initial value. See {@link WritableSignal}.
+ *
+ * @see {@link SignalOptions}
+ * @see {@link WritableSignal}
+ */
 export function signal<T>(
   initialValue: T,
   options: SignalOptions<T> = {},
@@ -637,6 +659,17 @@ export function provisionSignalValueForRender<T>(
   publishEffectiveValue(entry);
 }
 
+/**
+ * Creates a lazy, cached readonly signal whose dependencies are tracked during evaluation.
+ *
+ * @param compute - Synchronous calculation whose signal reads become dependencies.
+ * @param options - Equality comparison and optional diagnostic name. See {@link SignalOptions}.
+ * @returns A readonly, lazy, cached signal that recomputes when its dependencies change. See
+ * {@link Signal} .
+ *
+ * @see {@link SignalOptions}
+ * @see {@link Signal}
+ */
 export function computed<T>(
   compute: () => T,
   options: SignalOptions<T> = {},
@@ -1084,6 +1117,15 @@ export function setSignalGraphPlanWorkNotifier(notifier: () => void): void {
   if (pendingComputedValidations.size > 0) notifier();
 }
 
+/**
+ * Runs a callback without recording its signal reads as dependencies of the current consumer.
+ *
+ * @param callback - Synchronous work whose reads should not register dependencies.
+ * @returns The callback's return value.
+ *
+ * @see {@link Signal}
+ * @see {@link computed}
+ */
 export function untracked<T>(callback: () => T): T {
   const previous = activeSignalDependencyCollector;
   activeSignalDependencyCollector = undefined;
@@ -1094,6 +1136,15 @@ export function untracked<T>(callback: () => T): T {
   }
 }
 
+/**
+ * Checks the nominal CRC signal identity rather than accepting objects that merely have a get
+ * method.
+ *
+ * @param value - Value to check for CRC's nominal signal brand.
+ * @returns True if the value is a CRC signal, narrowing its type accordingly. See {@link Signal}.
+ *
+ * @see {@link Signal}
+ */
 export function isSignal(value: unknown): value is Signal<unknown> {
   return typeof value === 'object' && value !== null && signalValues.has(value);
 }

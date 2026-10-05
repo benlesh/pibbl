@@ -12,27 +12,81 @@ import type {
 } from './types.js';
 import type { CRCPresentationTransformLineage } from './global-state.js';
 
+/**
+ * Resolved primitive inputs and transform lineage supplied to an official attachment integration.
+ *
+ * @see {@link CRCElementSource}
+ * @see {@link CRCInternalMountedPropAttachment}
+ */
 export interface CRCInternalPrimitiveAttachmentInput {
+  /**
+   * Component function owning the primitive attachment. See
+   * {@link CRCInternalPrimitiveAttachmentInput}.
+   */
   readonly componentType: Function;
+  /** Component name retained for diagnostics. See {@link CRCInternalPrimitiveAttachmentInput}. */
   readonly componentName: string;
+  /**
+   * Component props supplied to evaluation or measurement. See
+   * {@link CRCInternalPrimitiveAttachmentInput}.
+   */
   readonly props: Readonly<Record<PropertyKey, unknown>>;
+  /**
+   * Declared presentation and layout properties. See {@link CRCInternalPrimitiveAttachmentInput}.
+   */
   readonly style: Readonly<Record<PropertyKey, unknown>>;
+  /** Authoring source location retained for diagnostics. See {@link CRCElementSource}. */
   readonly source: CRCElementSource | undefined;
+  /** World transform at the primitive's parent. See {@link CRCInternalPrimitiveAttachmentInput}. */
   readonly parentWorldTransform: DOMMatrix;
   /** Exact CRC-owned transform lineage at this primitive's parent. */
-  readonly presentationTransformLineage:
-    CRCPresentationTransformLineage | undefined;
+  readonly presentationTransformLineage: CRCPresentationTransformLineage | undefined;
   /** A direct Canvas transform occurred outside the tracked CRC lineage. */
   readonly hasUntrackedCanvasTransform: boolean;
 }
 
+/**
+ * Mount-owned primitive attachment with explicit update and teardown semantics.
+ *
+ * @see {@link CRCInternalPrimitiveAttachmentInput}
+ * @see {@link crcInternalCreatePropAttachment}
+ */
 export interface CRCInternalMountedPropAttachment {
+  /**
+   * Updates the mounted attachment using the latest resolved primitive inputs. See
+   * {@link CRCInternalMountedPropAttachment}.
+   * @param value - Latest attachment descriptor supplied by the component.
+   */
   update(value: unknown): void;
+  /**
+   * Enters the attachment's scope before primitive evaluation. See
+   * {@link CRCInternalMountedPropAttachment}.
+   */
   enter(): void;
-  preparePrimitive(
-    input: CRCInternalPrimitiveAttachmentInput,
-  ): Readonly<{ readonly presentationTransform2D?: DOMMatrix }> | void;
+  /**
+   * Prepares the attachment against the primitive's resolved inputs. See
+   * {@link CRCInternalMountedPropAttachment}.
+   * @param input - Primitive props, style, and geometry for attachment preparation. See
+   * {@link CRCInternalPrimitiveAttachmentInput} .
+   * @returns An optional presentation transform for the primitive.
+   */
+  preparePrimitive(input: CRCInternalPrimitiveAttachmentInput): Readonly<{
+    /**
+     * Transform applied to the primitive's presented Canvas geometry. See
+     * {@link CRCInternalMountedPropAttachment}.
+     */
+    readonly presentationTransform2D?: DOMMatrix;
+  }> | void;
+  /**
+   * Restores the surrounding scope after primitive evaluation. See
+   * {@link CRCInternalMountedPropAttachment}.
+   * @param success - Whether the attached component completed successfully.
+   */
   exit(success: boolean): void;
+  /**
+   * Releases resources owned by this mounted object. See {@link CRCInternalMountedPropAttachment}
+   * .
+   */
   dispose(): void;
 }
 
@@ -105,7 +159,17 @@ export function appendElementEnhancer(
   return enhanced;
 }
 
-/** Registers one closed official-package attachment without mutating its public value. */
+/**
+ * Registers one closed official-package attachment without mutating its public value.
+ *
+ * @param property - Reserved prop name receiving the attachment.
+ * @param publicValue - Public descriptor exposed to component authors.
+ * @param mount - Factory creating the mounted attachment lifetime. See
+ * {@link CRCInternalMountedPropAttachment} .
+ * @returns The public descriptor associated with the private mount factory.
+ *
+ * @see {@link CRCInternalMountedPropAttachment}
+ */
 export function crcInternalCreatePropAttachment<T extends object>(
   property: 'physics',
   publicValue: T,

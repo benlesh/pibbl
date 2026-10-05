@@ -21,9 +21,21 @@ import type {
   CRCInternalSignalBatch,
 } from "./renderer-participant.js";
 
+/**
+ * The scheduler lane in which an official simulation integration advances.
+ *
+ * @see {@link crcInternalRegisterSimulationAdvance}
+ */
 export type CRCInternalAdvanceLane = CRCAdvanceLane;
 
 declare const internalSimulationOwnerBrand: unique symbol;
+/**
+ * Opaque ownership identity tying simulation work to a mounted runtime resource.
+ *
+ * @see {@link crcInternalCurrentSimulationOwner}
+ * @see {@link crcInternalOnSimulationRenderTransactionFinish}
+ * @see {@link crcInternalQueueSimulationBegin}
+ */
 export interface CRCInternalSimulationOwner {
   readonly [internalSimulationOwnerBrand]: true;
 }
@@ -42,6 +54,14 @@ const ownerStates = new WeakMap<
 const batchViews = new WeakMap<SignalCommitBatch, CRCInternalSignalBatch>();
 let currentSimulationOwner: CRCInternalSimulationOwner | undefined;
 
+/**
+ * Returns the active mount's simulation owner for a matching official integration.
+ *
+ * @returns The simulation owner for the active runtime context. See
+ * {@link CRCInternalSimulationOwner} .
+ *
+ * @see {@link CRCInternalSimulationOwner}
+ */
 export function crcInternalCurrentSimulationOwner(): CRCInternalSimulationOwner {
   const { componentRefs, crcInstance } = requireHookContext();
   const slot = useInternalHookSlot<CRCInternalSimulationOwner>(
@@ -62,6 +82,18 @@ export function crcInternalCurrentSimulationOwner(): CRCInternalSimulationOwner 
   return slot.value;
 }
 
+/**
+ * Queues a cancellable simulation command for the shared scheduler's Begin phase.
+ *
+ * @param owner - Simulation owner admitting this command. See {@link CRCInternalSimulationOwner}.
+ * @param command - Begin-phase work receiving frame, staged signal writes, and command sequence.
+ * See {@link CRCInternalFrame} , {@link CRCInternalSignalBatch} .
+ * @returns A command sequence and cancellation handle.
+ *
+ * @see {@link CRCInternalSimulationOwner}
+ * @see {@link CRCInternalFrame}
+ * @see {@link CRCInternalSignalBatch}
+ */
 export function crcInternalQueueSimulationBegin(
   owner: CRCInternalSimulationOwner,
   command: (
@@ -100,6 +132,22 @@ export function crcInternalQueueSimulationBegin(
   return Object.freeze({ sequence: handle.sequence, cancel });
 }
 
+/**
+ * Registers work in a simulation Advance lane and returns its unregister callback.
+ *
+ * @param owner - Simulation owner registering the work. See {@link CRCInternalSimulationOwner}.
+ * @param lane - Advance lane controlling execution order. See {@link CRCInternalAdvanceLane}.
+ * @param advance - Advance callback receiving frame timing and staged signal writes. See
+ * {@link CRCInternalFrame} , {@link CRCInternalSignalBatch} .
+ * @param requestsFrames - Whether this participant requests subsequent host frames; defaults to
+ * true.
+ * @returns A function that unregisters the participant.
+ *
+ * @see {@link CRCInternalSimulationOwner}
+ * @see {@link CRCInternalAdvanceLane}
+ * @see {@link CRCInternalFrame}
+ * @see {@link CRCInternalSignalBatch}
+ */
 export function crcInternalRegisterSimulationAdvance(
   owner: CRCInternalSimulationOwner,
   lane: CRCInternalAdvanceLane,
@@ -137,6 +185,16 @@ export function crcInternalRegisterSimulationAdvance(
   return release;
 }
 
+/**
+ * Reports whether the current simulation frame's staged writes were committed.
+ *
+ * @param owner - Owner of the pending commit. See {@link CRCInternalSimulationOwner}.
+ * @param callback - Callback receiving the frame and whether the commit was applied. See
+ * {@link CRCInternalFrame} .
+ *
+ * @see {@link CRCInternalSimulationOwner}
+ * @see {@link CRCInternalFrame}
+ */
 export function crcInternalQueueSimulationCommitAcknowledgement(
   owner: CRCInternalSimulationOwner,
   callback: (
@@ -162,6 +220,16 @@ export function crcInternalQueueSimulationCommitAcknowledgement(
   state.cancellations.add(cancel);
 }
 
+/**
+ * Queues an owner-scoped callback for the scheduler's Complete phase.
+ *
+ * @param owner - Owner of the completion work. See {@link CRCInternalSimulationOwner}.
+ * @param callback - Callback invoked during Complete with the shared frame. See
+ * {@link CRCInternalFrame} .
+ *
+ * @see {@link CRCInternalSimulationOwner}
+ * @see {@link CRCInternalFrame}
+ */
 export function crcInternalQueueSimulationComplete(
   owner: CRCInternalSimulationOwner,
   callback: (frame: CRCInternalFrame) => void,
@@ -184,6 +252,13 @@ export function crcInternalQueueSimulationComplete(
   state.cancellations.add(cancel);
 }
 
+/**
+ * Invalidates the renderer associated with a simulation owner.
+ *
+ * @param owner - Owner whose renderer should become dirty. See {@link CRCInternalSimulationOwner}.
+ *
+ * @see {@link CRCInternalSimulationOwner}
+ */
 export function crcInternalRequestSimulationRender(
   owner: CRCInternalSimulationOwner,
 ): void {
@@ -191,6 +266,14 @@ export function crcInternalRequestSimulationRender(
   requestInstanceRender(state.instance);
 }
 
+/**
+ * Registers a callback reporting whether the owner's current render transaction succeeded.
+ *
+ * @param owner - Owner of the rendering transaction. See {@link CRCInternalSimulationOwner}.
+ * @param callback - Callback receiving whether the transaction succeeded.
+ *
+ * @see {@link CRCInternalSimulationOwner}
+ */
 export function crcInternalOnSimulationRenderTransactionFinish(
   owner: CRCInternalSimulationOwner,
   callback: (success: boolean) => void,

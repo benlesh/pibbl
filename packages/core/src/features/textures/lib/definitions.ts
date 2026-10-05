@@ -1,3 +1,4 @@
+import type { TextureRecipe } from '../../../lib/textures/texture.js';
 import { rasterizeField, releaseField } from "./wasm/memory.js";
 import { defineTexture, type TextureContext } from "@crc/core";
 import {
@@ -9,35 +10,83 @@ import {
 import { InkSimulation } from "./simulation.js";
 import { paletteLut, texturePalettes, validateSeed } from "./palette.js";
 export { useTexture } from "@crc/core";
+/**
+ * Seed, feature scale, and detail controls shared by static material recipes.
+ *
+ * @see {@link marble}
+ * @see {@link paper}
+ * @see {@link cellular}
+ */
 export interface MaterialOptions {
+  /**
+   * Seed used for deterministic sampling or simulation initialization. See {@link MaterialOptions}
+   * .
+   */
   readonly seed?: number;
+  /** Feature frequency across the generated material. See {@link MaterialOptions}. */
   readonly scale?: number;
+  /** Material-specific distortion, grain strength, or cellular jitter. See {@link MaterialOptions}. */
   readonly detail?: number;
 }
+/**
+ * Seed and pattern preset for a reaction-diffusion recipe.
+ *
+ * @see {@link reactionDiffusion}
+ */
 export interface ReactionDiffusionOptions {
+  /**
+   * Seed used for deterministic sampling or simulation initialization. See
+   * {@link ReactionDiffusionOptions}.
+   */
   readonly seed?: number;
+  /**
+   * Named pattern configuration used to initialize the simulation. See
+   * {@link ReactionDiffusionOptions}.
+   */
   readonly preset?: "spots" | "stripes";
 }
+/**
+ * Paint, stir, pause, or reset commands accepted by a reaction-diffusion texture.
+ *
+ * @see {@link reactionDiffusion}
+ */
 export type InkMessage =
   | {
+      /** The literal "paint" identifying this variant. See {@link InkMessage}. */
       readonly type: "paint";
+      /** Normalized horizontal texture coordinate. See {@link InkMessage}. */
       readonly u: number;
+      /** Normalized vertical texture coordinate. See {@link InkMessage}. */
       readonly v: number;
+      /** Radius in the coordinate system of this geometry or effect. See {@link InkMessage}. */
       readonly radius?: number;
+      /** Magnitude of the displacement or brush effect. See {@link InkMessage}. */
       readonly strength?: number;
     }
   | {
+      /** The literal "stir" identifying this variant. See {@link InkMessage}. */
       readonly type: "stir";
+      /** Normalized horizontal texture coordinate. See {@link InkMessage}. */
       readonly u: number;
+      /** Normalized vertical texture coordinate. See {@link InkMessage}. */
       readonly v: number;
       /** Normalized displacement of the existing field, not a paint dose. */
       readonly du: number;
+      /** Normalized vertical displacement of the texture field. See {@link InkMessage}. */
       readonly dv: number;
       /** Influence radius in texture cells. */
       readonly radius?: number;
     }
-  | { readonly type: "pause"; readonly paused: boolean }
-  | { readonly type: "reset" };
+  | {
+      /** The literal "pause" identifying this variant. See {@link InkMessage}. */
+      readonly type: "pause";
+      /** Whether simulation or playback advancement is suspended. See {@link InkMessage}. */
+      readonly paused: boolean;
+    }
+  | {
+      /** The literal "reset" identifying this variant. See {@link InkMessage}. */
+      readonly type: "reset";
+    };
 function colorize(field: Float32Array, context: TextureContext, gain = 1) {
   const ctx = context.canvas.getContext("2d")!;
   const lut = paletteLut(context.palette ?? texturePalettes.porcelain);
@@ -102,8 +151,35 @@ function material(generate: MaterialGenerator) {
   });
   return (options: MaterialOptions = {}) => recipe(options);
 }
+/**
+ * Creates a seeded marble texture recipe with configurable feature scale and distortion.
+ *
+ * @param options - Seed, feature scale, and detail settings. See {@link MaterialOptions}.
+ * @returns A procedural material recipe for useTexture. See {@link TextureRecipe}.
+ *
+ * @see {@link MaterialOptions}
+ * @see {@link TextureRecipe}
+ */
 export const marble = /* @__PURE__ */ material(marbleField);
+/**
+ * Creates a seeded paper texture recipe with configurable feature scale and grain.
+ *
+ * @param options - Seed, feature scale, and detail settings. See {@link MaterialOptions}.
+ * @returns A procedural material recipe for useTexture. See {@link TextureRecipe}.
+ *
+ * @see {@link MaterialOptions}
+ * @see {@link TextureRecipe}
+ */
 export const paper = /* @__PURE__ */ material(paperField);
+/**
+ * Creates a seeded cellular texture recipe with configurable feature scale and jitter.
+ *
+ * @param options - Seed, feature scale, and detail settings. See {@link MaterialOptions}.
+ * @returns A procedural material recipe for useTexture. See {@link TextureRecipe}.
+ *
+ * @see {@link MaterialOptions}
+ * @see {@link TextureRecipe}
+ */
 export const cellular = /* @__PURE__ */ material(cellularField);
 function inkConfig(input: ReactionDiffusionOptions) {
   const seed = validateSeed(input.seed),
@@ -236,6 +312,17 @@ const inkRecipe = /* @__PURE__ */ defineTexture<
     state.simulation.dispose();
   },
 });
+/**
+ * Creates a stateful reaction-diffusion texture recipe supporting paint, stirring, pause, and
+ * reset
+ * messages.
+ *
+ * @param options - Reaction and diffusion parameters, initialization, and rendering options. See
+ * {@link ReactionDiffusionOptions} .
+ * @returns A reaction-diffusion texture recipe for useTexture.
+ *
+ * @see {@link ReactionDiffusionOptions}
+ */
 export function reactionDiffusion(options: ReactionDiffusionOptions = {}) {
   return inkRecipe(options);
 }

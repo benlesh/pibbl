@@ -6,36 +6,132 @@ import { PathGeometry } from "@crc/core";
 import { inkBounds, type InkBounds } from "./lib/bounds.js";
 export type { InkBounds } from "./lib/bounds.js";
 
+/**
+ * An explicitly owned native font loaded for text shaping. Dispose it when no more geometry will be
+ * created from it; disposal is idempotent.
+ *
+ * @see {@link loadOutlineFont}
+ * @see {@link createTextGeometry}
+ */
 export interface OutlineFont extends Disposable {
+  /**
+   * Releases the native font owner; repeated calls are harmless and later shaping with this font
+   * fails. See {@link OutlineFont}.
+   */
   dispose(): void;
 }
+/**
+ * Cancellation and monochrome-fallback policy used when loading an outline font.
+ *
+ * @see {@link loadOutlineFont}
+ */
 export interface OutlineFontOptions {
+  /** Abort signal for font loading and validation. See {@link OutlineFontOptions}. */
   signal?: AbortSignal;
+  /**
+   * Allows supported monochrome outlines when the font includes color glyph data. See
+   * {@link OutlineFontOptions}.
+   */
   monochromeFallback?: boolean;
 }
+/**
+ * Font size, shaping direction, OpenType features, and work limits for one text run.
+ *
+ * @see {@link createTextGeometry}
+ */
 export interface TextGeometryOptions {
+  /** Positive finite output font size in logical units. See {@link TextGeometryOptions}. */
   fontSize: number;
+  /** Upper bound on the number of output path segments. See {@link TextGeometryOptions}. */
   maxSegments?: number;
+  /**
+   * Whether an absent glyph fails shaping or uses the font's .notdef glyph. See
+   * {@link TextGeometryOptions}.
+   */
   missingGlyphs?: "error" | "notdef";
+  /**
+   * Explicit left-to-right or right-to-left shaping direction; omitted direction is inferred. See
+   * {@link TextGeometryOptions}.
+   */
   direction?: "ltr" | "rtl";
+  /**
+   * Four-character OpenType script tag overriding script inference. See
+   * {@link TextGeometryOptions}.
+   */
   script?: string;
+  /**
+   * Language tag used for shaping; distinct interned tags are bounded by the engine. See
+   * {@link TextGeometryOptions}.
+   */
   language?: string;
+  /** OpenType feature overrides keyed by four-character tags. See {@link TextGeometryOptions}. */
   features?: Readonly<Record<string, boolean>>;
 }
+/**
+ * Shaped glyph identity, UTF-16 source cluster, outline segment range, and scaled placement metrics.
+ *
+ * @see {@link TextGeometryResult}
+ */
 export interface TextGlyph {
+  /** Font-specific identifier of the shaped glyph. See {@link TextGlyph}. */
   readonly glyphId: number;
+  /** UTF-16 offset of the source cluster associated with this glyph. See {@link TextGlyph}. */
   readonly cluster: number;
+  /** Index of the glyph's first segment in the returned geometry. See {@link TextGlyph}. */
   readonly segmentStart: number;
+  /** Number of outline segments belonging to this glyph. See {@link TextGlyph}. */
   readonly segmentCount: number;
+  /**
+   * Horizontal coordinate or displacement in the containing coordinate system. See
+   * {@link TextGlyph}.
+   */
   readonly x: number;
+  /**
+   * Vertical coordinate or displacement in the containing coordinate system. See {@link TextGlyph}
+   * .
+   */
   readonly y: number;
+  /** Horizontal pen advance in scaled logical units. See {@link TextGlyph}. */
   readonly xAdvance: number;
+  /** Vertical pen advance in Canvas-oriented logical units. See {@link TextGlyph}. */
   readonly yAdvance: number;
 }
+/**
+ * Independent path geometry, optional ink bounds, advances, and glyph metadata for a shaped text run.
+ *
+ * @see {@link PathGeometry}
+ * @see {@link InkBounds}
+ * @see {@link TextGlyph}
+ * @see {@link createTextGeometry}
+ */
 export interface TextGeometryResult {
+  /**
+   * Independent mutable outline geometry in Canvas-oriented output coordinates. See
+   * {@link PathGeometry}.
+   */
   readonly geometry: PathGeometry;
+  /** Bounds of visible outlines, or null when the run has no ink. See {@link InkBounds}. */
   readonly inkBounds: Readonly<InkBounds> | null;
-  readonly advance: Readonly<{ x: number; y: number }>;
+  /**
+   * Final pen displacement, including glyph advances even when no ink is drawn. See
+   * {@link TextGeometryResult}.
+   */
+  readonly advance: Readonly<{
+    /**
+     * Horizontal coordinate or displacement in the containing coordinate system. See
+     * {@link TextGeometryResult}.
+     */
+    x: number;
+    /**
+     * Vertical coordinate or displacement in the containing coordinate system. See
+     * {@link TextGeometryResult}.
+     */
+    y: number;
+  }>;
+  /**
+   * Ordered shaped-glyph metadata corresponding to the returned outline segments. See
+   * {@link TextGlyph}.
+   */
   readonly glyphs: readonly TextGlyph[];
 }
 // HarfBuzz interns languages until module teardown. Bound that shared lifetime
@@ -45,6 +141,19 @@ const owners = new WeakMap<
   OutlineFont,
   { engine: Engine; handle: number; upem: number }
 >();
+/**
+ * Loads and validates font bytes from a URL or buffer and returns an explicitly disposable font.
+ * Rejects on cancellation, unsupported font data, or allocation failure.
+ *
+ * @param source - Font URL to fetch, or in-memory font bytes to copy into the shaping engine.
+ * @param options - Cancellation signal and explicit monochrome fallback policy. See
+ * {@link OutlineFontOptions} .
+ * @returns A promise for an owned font; dispose it when no further shaping will use it. See
+ * {@link OutlineFont} .
+ *
+ * @see {@link OutlineFontOptions}
+ * @see {@link OutlineFont}
+ */
 export async function loadOutlineFont(
   source: string | URL | ArrayBuffer | Uint8Array,
   options: OutlineFontOptions = {},
@@ -98,6 +207,22 @@ export async function loadOutlineFont(
   owners.set(font, { engine, handle, upem: engine._crc_font_upem(handle) });
   return font;
 }
+/**
+ * Synchronously shapes a single text run into independent Canvas-oriented outlines. The font must
+ * be live, fontSize positive and finite, and text must not contain line breaks or tabs.
+ *
+ * @param font - Live font returned by loadOutlineFont; it must not have been disposed. See
+ * {@link OutlineFont} .
+ * @param text - Text to shape as one run.
+ * @param options - Font size, shaping overrides, missing-glyph policy, and work limits. See
+ * {@link TextGeometryOptions} .
+ * @returns Independent mutable path geometry plus glyph placements, ink bounds, and advances; the
+ * result remains usable after font disposal. See {@link TextGeometryResult} .
+ *
+ * @see {@link OutlineFont}
+ * @see {@link TextGeometryOptions}
+ * @see {@link TextGeometryResult}
+ */
 export function createTextGeometry(
   font: OutlineFont,
   text: string,

@@ -9,6 +9,11 @@ import {
 } from "./manipulation-lab.example";
 import type { ScenarioDefinition, ScenarioMountContext } from "./types";
 
+/**
+ * Stable action identifiers accepted by the manipulation lab scenario.
+ *
+ * @see {@link ManipulationLabAction}
+ */
 export const MANIPULATION_LAB_ACTION_IDS = [
   "toggle-snap",
   "cancel",

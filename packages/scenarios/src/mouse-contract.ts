@@ -1,41 +1,113 @@
 import type { TraceEventType } from './event-trace';
 
+/**
+ * An expected semantic mouse event in a deterministic contract trace.
+ *
+ * @see {@link TraceEventType}
+ * @see {@link formatContractTrace}
+ * @see {@link MouseContractCase}
+ */
 export interface MouseContractTraceEvent {
+  /** Type recorded or configured by this scenario. See {@link TraceEventType}. */
   type: TraceEventType;
+  /** Target recorded or configured by this scenario. See {@link MouseContractTraceEvent}. */
   target: string;
+  /**
+   * Logical related target recorded or configured by this scenario. See
+   * {@link MouseContractTraceEvent}.
+   */
   logicalRelatedTarget: string | null;
 }
 
+/**
+ * The capture, target, and bubble ordering policy expected by a mouse fixture.
+ *
+ * @see {@link formatOrderingPolicy}
+ * @see {@link MouseContractCase}
+ */
 export type MouseContractOrderingPolicy =
-  | { kind: 'fixed' }
   | {
-    kind: 'browser-dependent';
-    referenceEnvironment: string;
-  };
+      /** Kind recorded or configured by this scenario. See {@link MouseContractOrderingPolicy}. */
+      kind: 'fixed';
+    }
+  | {
+      /** Kind recorded or configured by this scenario. See {@link MouseContractOrderingPolicy}. */
+      kind: 'browser-dependent';
+      /**
+       * Reference environment recorded or configured by this scenario. See
+       * {@link MouseContractOrderingPolicy}.
+       */
+      referenceEnvironment: string;
+    };
 
+/**
+ * Expected logical targeting behavior for a mouse-contract fixture.
+ *
+ * @see {@link MouseContractCase}
+ */
 export interface MouseContractTargeting {
+  /**
+   * Candidate policy recorded or configured by this scenario. See {@link MouseContractTargeting}.
+   */
   candidatePolicy: 'any-mouse-handler-or-cursor';
+  /**
+   * Identity policy recorded or configured by this scenario. See {@link MouseContractTargeting}.
+   */
   identityPolicy: 'stable-logical-region';
+  /** Candidates recorded or configured by this scenario. See {@link MouseContractTargeting}. */
   candidates: readonly string[];
 }
 
+/**
+ * A logical probe location used to exercise a mouse-contract fixture.
+ *
+ * @see {@link MouseContractCase}
+ */
 export interface MouseContractVisualProbe {
+  /** X recorded or configured by this scenario. See {@link MouseContractVisualProbe}. */
   x: number;
+  /** Y recorded or configured by this scenario. See {@link MouseContractVisualProbe}. */
   y: number;
+  /**
+   * Expected target recorded or configured by this scenario. See {@link MouseContractVisualProbe}
+   * .
+   */
   expectedTarget: string | null;
 }
 
+/**
+ * A deterministic targeting and event-order fixture with expected trace and visual probes.
+ *
+ * @see {@link MouseContractTraceEvent}
+ * @see {@link MouseContractOrderingPolicy}
+ * @see {@link MouseContractTargeting}
+ * @see {@link MouseContractVisualProbe}
+ * @see {@link getMouseContractCase}
+ * @see {@link MOUSE_CONTRACT_CASES}
+ * @see {@link validateMouseContractCases}
+ */
 export interface MouseContractCase {
+  /** Id recorded or configured by this scenario. See {@link MouseContractCase}. */
   id: string;
+  /** Title recorded or configured by this scenario. See {@link MouseContractCase}. */
   title: string;
+  /** Phase recorded or configured by this scenario. See {@link MouseContractCase}. */
   phase: 'reference-only' | 'tfc-04' | 'tfc-05';
+  /** Gesture recorded or configured by this scenario. See {@link MouseContractCase}. */
   gesture: string;
+  /** Native trace recorded or configured by this scenario. See {@link MouseContractTraceEvent}. */
   nativeTrace: readonly MouseContractTraceEvent[] | null;
+  /** Crc trace recorded or configured by this scenario. See {@link MouseContractTraceEvent}. */
   crcTrace: readonly MouseContractTraceEvent[];
+  /** Ordering recorded or configured by this scenario. See {@link MouseContractOrderingPolicy}. */
   ordering: MouseContractOrderingPolicy;
+  /** Targeting recorded or configured by this scenario. See {@link MouseContractTargeting}. */
   targeting: MouseContractTargeting;
+  /** Rule recorded or configured by this scenario. See {@link MouseContractCase}. */
   rule: string;
+  /** Visual target recorded or configured by this scenario. See {@link MouseContractCase}. */
   visualTarget: 'a' | 'b' | 'canvas-root' | 'child' | 'layer' | 'none' | 'top';
+  /** Visual probe recorded or configured by this scenario. See {@link MouseContractVisualProbe}. */
   visualProbe: MouseContractVisualProbe;
 }
 
@@ -482,6 +554,14 @@ function assignContractPhases<const Cases extends readonly MouseContractCaseInpu
   }));
 }
 
+/**
+ * Validates deterministic mouse-contract fixtures and returns the typed case collection.
+ *
+ * @param cases - Contract cases whose identifiers and metadata should be validated.
+ * @returns The supplied cases after successful validation.
+ *
+ * @see {@link MouseContractCase}
+ */
 export function validateMouseContractCases<const Cases extends readonly MouseContractCase[]>(
   cases: Cases,
 ): Cases {
@@ -552,14 +632,41 @@ export function validateMouseContractCases<const Cases extends readonly MouseCon
   return cases;
 }
 
+/**
+ * Validated deterministic fixtures for mouse targeting and event ordering.
+ *
+ * @see {@link MouseContractCase}
+ */
 export const MOUSE_CONTRACT_CASES = validateMouseContractCases(assignContractPhases(CONTRACT_CASES));
 
+/**
+ * A stable identifier of a deterministic mouse-contract fixture.
+ *
+ * @see {@link MouseContractCase}
+ */
 export type MouseContractCaseId = (typeof MOUSE_CONTRACT_CASES)[number]['id'];
 
+/**
+ * Finds a mouse contract fixture by identifier, or returns undefined.
+ *
+ * @param id - Contract case identifier.
+ * @returns The matching case, or undefined when absent. See {@link MouseContractCase}.
+ *
+ * @see {@link MouseContractCase}
+ */
 export function getMouseContractCase(id: string): MouseContractCase | undefined {
   return MOUSE_CONTRACT_CASES.find(contractCase => contractCase.id === id);
 }
 
+/**
+ * Formats an expected mouse-event trace for inspection, including the absent-trace case.
+ *
+ * @param trace - Recorded events, or null when no trace is available. See
+ * {@link MouseContractTraceEvent} .
+ * @returns Human-readable event trace text.
+ *
+ * @see {@link MouseContractTraceEvent}
+ */
 export function formatContractTrace(trace: readonly MouseContractTraceEvent[] | null): string {
   if (trace === null) {
     return 'Canvas-specific';
@@ -572,6 +679,14 @@ export function formatContractTrace(trace: readonly MouseContractTraceEvent[] | 
   ).join(' → ');
 }
 
+/**
+ * Formats the ordering policy of a mouse-event contract case.
+ *
+ * @param ordering - Expected event ordering policy. See {@link MouseContractOrderingPolicy}.
+ * @returns Human-readable text describing the ordering policy.
+ *
+ * @see {@link MouseContractOrderingPolicy}
+ */
 export function formatOrderingPolicy(ordering: MouseContractOrderingPolicy): string {
   return ordering.kind === 'fixed' ?
     'Fixed contract order' :

@@ -66,7 +66,14 @@ const externalBindings = new WeakMap<
   }
 >();
 
-/** Returns one stable, component-owned 2D body endpoint for this hook slot. */
+/**
+ * Returns one stable, component-owned 2D body endpoint for this hook slot.
+ *
+ * @returns A stable body handle that can be attached to a physics body. See
+ * {@link CRCPhysicsBodyHandle2D} .
+ *
+ * @see {@link CRCPhysicsBodyHandle2D}
+ */
 export function crcPhysicsBody2D(): CRCPhysicsBodyHandle2D {
   const owner = crcInternalCurrentSimulationOwner();
   const slot = useInternalHookSlot("physicsBody2DHandle", (teardowns) => {
@@ -77,6 +84,17 @@ export function crcPhysicsBody2D(): CRCPhysicsBodyHandle2D {
   return slot.value;
 }
 
+/**
+ * Queues a force on a body, optionally at a world point and with wake-up control.
+ *
+ * @param body - Body receiving the force. See {@link CRCPhysicsBodyHandle2D}.
+ * @param force - Force vector in the world's public coordinate system. See
+ * {@link CRCPhysicsVector2} .
+ * @param options - Optional application point and wake policy. See {@link CRCPhysicsVector2}.
+ *
+ * @see {@link CRCPhysicsBodyHandle2D}
+ * @see {@link CRCPhysicsVector2}
+ */
 export function applyForce2D(
   body: CRCPhysicsBodyHandle2D,
   force: CRCPhysicsVector2,
@@ -98,6 +116,17 @@ export function applyForce2D(
   });
 }
 
+/**
+ * Queues an instantaneous momentum change, optionally at a world point and with wake-up control.
+ *
+ * @param body - Body receiving the impulse. See {@link CRCPhysicsBodyHandle2D}.
+ * @param impulse - Impulse vector in the world's public coordinate system. See
+ * {@link CRCPhysicsVector2} .
+ * @param options - Optional application point and wake policy. See {@link CRCPhysicsVector2}.
+ *
+ * @see {@link CRCPhysicsBodyHandle2D}
+ * @see {@link CRCPhysicsVector2}
+ */
 export function applyImpulse2D(
   body: CRCPhysicsBodyHandle2D,
   impulse: CRCPhysicsVector2,
@@ -119,6 +148,14 @@ export function applyImpulse2D(
   });
 }
 
+/**
+ * Queues torque on a dynamic body through the shared scheduler.
+ *
+ * @param body - Body receiving the torque. See {@link CRCPhysicsBodyHandle2D}.
+ * @param torque - Torque to apply in the world's public units.
+ *
+ * @see {@link CRCPhysicsBodyHandle2D}
+ */
 export function applyTorque2D(
   body: CRCPhysicsBodyHandle2D,
   torque: number,
@@ -130,6 +167,16 @@ export function applyTorque2D(
   });
 }
 
+/**
+ * Queues a body's linear velocity in physics units per second.
+ *
+ * @param body - Body whose linear velocity changes. See {@link CRCPhysicsBodyHandle2D}.
+ * @param velocity - Velocity vector in public distance units per second. See
+ * {@link CRCPhysicsVector2} .
+ *
+ * @see {@link CRCPhysicsBodyHandle2D}
+ * @see {@link CRCPhysicsVector2}
+ */
 export function setLinearVelocity2D(
   body: CRCPhysicsBodyHandle2D,
   velocity: CRCPhysicsVector2,
@@ -143,6 +190,14 @@ export function setLinearVelocity2D(
   });
 }
 
+/**
+ * Queues a body's angular velocity in degrees per second.
+ *
+ * @param body - Body whose angular velocity changes. See {@link CRCPhysicsBodyHandle2D}.
+ * @param degreesPerSecond - Angular speed in degrees per second.
+ *
+ * @see {@link CRCPhysicsBodyHandle2D}
+ */
 export function setAngularVelocity2D(
   body: CRCPhysicsBodyHandle2D,
   degreesPerSecond: number,
@@ -157,6 +212,16 @@ export function setAngularVelocity2D(
   });
 }
 
+/**
+ * Queues an immediate pose change for a body at the next admitted simulation command phase.
+ *
+ * @param body - Body to reposition. See {@link CRCPhysicsBodyHandle2D}.
+ * @param pose - Destination position and rotation in public coordinates. See
+ * {@link CRCPhysicsPose2D} .
+ *
+ * @see {@link CRCPhysicsBodyHandle2D}
+ * @see {@link CRCPhysicsPose2D}
+ */
 export function teleportBody2D(
   body: CRCPhysicsBodyHandle2D,
   pose: CRCPhysicsPose2D,
@@ -174,14 +239,36 @@ export function teleportBody2D(
   });
 }
 
+/**
+ * Queues a request to wake a sleeping body.
+ *
+ * @param body - Body to wake. See {@link CRCPhysicsBodyHandle2D}.
+ *
+ * @see {@link CRCPhysicsBodyHandle2D}
+ */
 export function wakeBody2D(body: CRCPhysicsBodyHandle2D): void {
   queueBodyCommand(body, { kind: "wake", bodyId: 0 });
 }
 
+/**
+ * Queues a request to put a body to sleep.
+ *
+ * @param body - Body to put to sleep. See {@link CRCPhysicsBodyHandle2D}.
+ *
+ * @see {@link CRCPhysicsBodyHandle2D}
+ */
 export function sleepBody2D(body: CRCPhysicsBodyHandle2D): void {
   queueBodyCommand(body, { kind: "sleep", bodyId: 0 });
 }
 
+/**
+ * Queues re-enabling a body with the requested velocity-preservation policy.
+ *
+ * @param body - Body to re-enable. See {@link CRCPhysicsBodyHandle2D}.
+ * @param options - Whether to zero or preserve velocity when enabling.
+ *
+ * @see {@link CRCPhysicsBodyHandle2D}
+ */
 export function enableBody2D(
   body: CRCPhysicsBodyHandle2D,
   options: Readonly<{ velocity?: "zero" | "preserve" }> = {},
@@ -193,6 +280,13 @@ export function enableBody2D(
   queueBodyCommand(body, { kind: "enable", bodyId: 0, velocity });
 }
 
+/**
+ * Queues removal of a body's active participation in the simulation.
+ *
+ * @param body - Body to disable. See {@link CRCPhysicsBodyHandle2D}.
+ *
+ * @see {@link CRCPhysicsBodyHandle2D}
+ */
 export function disableBody2D(body: CRCPhysicsBodyHandle2D): void {
   queueBodyCommand(body, { kind: "disable", bodyId: 0 });
 }

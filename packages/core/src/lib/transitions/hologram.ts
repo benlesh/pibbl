@@ -5,16 +5,50 @@ import { opacity } from '../../filters/native.js';
 import { defineTransitionEffect, type CRCTransitionEffect } from './fade.js';
 import { captureTransition, clamp, finite, regionSnapshot, type TransitionRegion } from './capture.js';
 
+/**
+ * Color, scanning, and distortion controls for a hologram visibility transition.
+ *
+ * @see {@link hologram}
+ */
 export interface CRCHologramOptions {
+  /** Logical region over which the effect is evaluated. See {@link TransitionRegion}. */
   readonly region: TransitionRegion;
-  readonly entry?: Readonly<{ x: number; y: number }>;
+  /** Entry location or direction used by the transition. See {@link CRCHologramOptions}. */
+  readonly entry?: Readonly<{
+    /**
+     * Horizontal coordinate or displacement in the containing coordinate system. See
+     * {@link CRCHologramOptions}.
+     */
+    x: number;
+    /**
+     * Vertical coordinate or displacement in the containing coordinate system. See
+     * {@link CRCHologramOptions}.
+     */
+    y: number;
+  }>;
+  /** Hue control for the transition's emitted color. See {@link CRCHologramOptions}. */
   readonly hue?: number;
+  /** Brightness control for the transition effect. See {@link CRCHologramOptions}. */
   readonly brightness?: number;
+  /** Fog intensity used by the hologram effect. See {@link CRCHologramOptions}. */
   readonly fog?: number;
+  /** Distortion intensity used by the hologram effect. See {@link CRCHologramOptions}. */
   readonly glitch?: number;
+  /**
+   * Seed used for deterministic sampling or simulation initialization. See
+   * {@link CRCHologramOptions}.
+   */
   readonly seed?: number;
 }
-/** A diffuse scan reconstructs the captured subject while interference settles. */
+/**
+ * A diffuse scan reconstructs the captured subject while interference settles.
+ *
+ * @param options - Hologram appearance and animation settings. See {@link CRCHologramOptions}.
+ * @returns A hologram transition effect. See {@link CRCTransitionEffect}.
+ *
+ * @see {@link CRCHologramOptions}
+ * @see {@link CRCTransitionEffect}
+ */
 export function hologram(options: CRCHologramOptions): CRCTransitionEffect {
   const r = regionSnapshot(options.region);
   const entry = { x: finite(options.entry?.x ?? r.x + r.width / 2, 'entry.x'), y: finite(options.entry?.y ?? r.y + r.height, 'entry.y') };

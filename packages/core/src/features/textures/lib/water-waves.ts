@@ -6,18 +6,57 @@ import {
 import { bytes } from "./wasm/water-waves-bytes.js";
 import { validateSeed } from "./palette.js";
 
+/**
+ * Seed, animation speed, feature scale, ripple strength, and initial pause state of water waves.
+ *
+ * @see {@link waterWaves}
+ */
 export interface WaterWavesOptions {
+  /**
+   * Seed used for deterministic sampling or simulation initialization. See
+   * {@link WaterWavesOptions}.
+   */
   readonly seed?: number;
+  /** Multiplier controlling the simulation's animation rate. See {@link WaterWavesOptions}. */
   readonly speed?: number;
+  /** Spatial scale of the generated wave pattern. See {@link WaterWavesOptions}. */
   readonly scale?: number;
+  /** Strength of injected wave disturbances. See {@link WaterWavesOptions}. */
   readonly rippleStrength?: number;
+  /** Whether simulation or playback advancement is suspended. See {@link WaterWavesOptions}. */
   readonly paused?: boolean;
 }
 
+/**
+ * Ripple, pause, and reset commands for a water-wave texture.
+ *
+ * @see {@link waterWaves}
+ */
 export type WaterWavesMessage =
-  | { readonly type: "pause"; readonly paused: boolean }
-  | { readonly type: "reset" }
-  | { readonly type: "ripple"; readonly x: number; readonly y: number };
+  | {
+      /** The literal "pause" identifying this variant. See {@link WaterWavesMessage}. */
+      readonly type: "pause";
+      /** Whether simulation or playback advancement is suspended. See {@link WaterWavesMessage}. */
+      readonly paused: boolean;
+    }
+  | {
+      /** The literal "reset" identifying this variant. See {@link WaterWavesMessage}. */
+      readonly type: "reset";
+    }
+  | {
+      /** The literal "ripple" identifying this variant. See {@link WaterWavesMessage}. */
+      readonly type: "ripple";
+      /**
+       * Horizontal coordinate or displacement in the containing coordinate system. See
+       * {@link WaterWavesMessage}.
+       */
+      readonly x: number;
+      /**
+       * Vertical coordinate or displacement in the containing coordinate system. See
+       * {@link WaterWavesMessage}.
+       */
+      readonly y: number;
+    };
 
 interface Config {
   seed: number;
@@ -197,6 +236,17 @@ const recipe = /* @__PURE__ */ defineTexture<
   },
 });
 
+/**
+ * Creates an animated water-wave texture recipe that accepts ripple, pause, and reset commands.
+ *
+ * @param options - Wave simulation and rendering settings. See {@link WaterWavesOptions}.
+ * @returns A water-wave texture recipe accepting wave messages. See {@link TextureRecipe} ,
+ * {@link WaterWavesMessage} .
+ *
+ * @see {@link WaterWavesOptions}
+ * @see {@link TextureRecipe}
+ * @see {@link WaterWavesMessage}
+ */
 export function waterWaves(
   options: WaterWavesOptions = {},
 ): TextureRecipe<WaterWavesMessage> {

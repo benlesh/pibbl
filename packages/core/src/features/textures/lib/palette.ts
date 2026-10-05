@@ -1,7 +1,24 @@
+import type { ProceduralTextureProps } from './procedural-texture.js';
+import type { ReactionDiffusionProps } from './reaction-diffusion.js';
+/**
+ * Ordered colors forming a texture's presentation ramp.
+ *
+ * @see {@link texturePalettes}
+ * @see {@link ProceduralTextureProps}
+ * @see {@link ReactionDiffusionProps}
+ */
 export type TexturePalette = readonly string[];
+/**
+ * Built-in immutable color ramps for procedural texture presentation.
+ *
+ * @see {@link TexturePalette}
+ */
 export const texturePalettes = Object.freeze({
+  /** Dark blue through teal to pale yellow. See {@link texturePalettes}. */
   lagoon: Object.freeze(["#081e2c", "#125568", "#50b8ad", "#e5efb3"]),
+  /** Warm ivory through lavender to deep blue. See {@link texturePalettes}. */
   porcelain: Object.freeze(["#f2e7d4", "#b7a9c0", "#536194", "#172955"]),
+  /** Dark violet through coral to pale yellow. See {@link texturePalettes}. */
   ember: Object.freeze(["#241526", "#893955", "#e88470", "#ffe3aa"]),
 });
 
@@ -29,8 +46,23 @@ export function paletteLut(palette: TexturePalette): Uint8ClampedArray {
   return lut;
 }
 
+/**
+ * The width and height of a texture's raster grid.
+ *
+ * @see {@link TexturePalette}
+ * @see {@link ReactionDiffusionProps}
+ * @see {@link ProceduralTextureProps}
+ */
 export interface TextureResolution {
+  /**
+   * Horizontal extent in the units of the containing geometry or surface. See
+   * {@link TextureResolution}.
+   */
   readonly width: number;
+  /**
+   * Vertical extent in the units of the containing geometry or surface. See
+   * {@link TextureResolution}.
+   */
   readonly height: number;
 }
 export function validateResolution(

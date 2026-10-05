@@ -52,7 +52,20 @@ function controllerOptions(
   };
 }
 
-/** Creates one component-owned animation playback handle for a hook slot. */
+/**
+ * Creates one component-owned animation playback handle for a hook slot.
+ *
+ * @param programInput - Animation program, optionally supplied by a signal. See
+ * {@link SignalValue} , {@link CRCAnimationProgram} .
+ * @param optionsInput - Playback configuration, optionally supplied by a signal. See
+ * {@link SignalValue} , {@link CRCPlaybackOptionsInput} .
+ * @returns Stable mount-owned playback controls and reactive status/time values. See
+ * {@link CRCPlayback} .
+ *
+ * @see {@link SignalValue}
+ * @see {@link CRCAnimationProgram}
+ * @see {@link CRCPlayback}
+ */
 export function usePlayback(
   programInput: SignalValue<CRCAnimationProgram>,
   optionsInput: SignalValue<CRCPlaybackOptionsInput> = {},

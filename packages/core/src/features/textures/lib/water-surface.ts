@@ -6,28 +6,90 @@ import {
 import { validateSeed } from "./palette.js";
 import { bytes } from "./wasm/water-surface-bytes.js";
 
+/**
+ * An axis-aligned obstacle rectangle in a water-surface simulation.
+ *
+ * @see {@link WaterSurfaceOptions}
+ */
 export interface WaterSurfaceObstacle {
+  /**
+   * Horizontal coordinate or displacement in the containing coordinate system. See
+   * {@link WaterSurfaceObstacle}.
+   */
   readonly x: number;
+  /**
+   * Vertical coordinate or displacement in the containing coordinate system. See
+   * {@link WaterSurfaceObstacle}.
+   */
   readonly y: number;
+  /**
+   * Horizontal extent in the units of the containing geometry or surface. See
+   * {@link WaterSurfaceObstacle}.
+   */
   readonly width: number;
+  /**
+   * Vertical extent in the units of the containing geometry or surface. See
+   * {@link WaterSurfaceObstacle}.
+   */
   readonly height: number;
 }
 
+/**
+ * Water simulation controls including wave motion, viscosity, pause state, and obstacles.
+ *
+ * @see {@link WaterSurfaceObstacle}
+ * @see {@link waterSurface}
+ */
 export interface WaterSurfaceOptions {
+  /**
+   * Seed used for deterministic sampling or simulation initialization. See
+   * {@link WaterSurfaceOptions}.
+   */
   readonly seed?: number;
+  /** Multiplier controlling the simulation's animation rate. See {@link WaterSurfaceOptions}. */
   readonly speed?: number;
+  /** Spatial scale of the generated water pattern. See {@link WaterSurfaceOptions}. */
   readonly scale?: number;
+  /** Strength of injected wave disturbances. See {@link WaterSurfaceOptions}. */
   readonly rippleStrength?: number;
   /** Artistic thickness from 0 (water) to 1 (slow, strongly damped). */
   readonly viscosity?: number;
+  /** Whether simulation or playback advancement is suspended. See {@link WaterSurfaceOptions}. */
   readonly paused?: boolean;
+  /** Obstacle geometry used by the flow or water simulation. See {@link WaterSurfaceObstacle}. */
   readonly obstacles?: readonly WaterSurfaceObstacle[];
 }
 
+/**
+ * Ripple, pause, and reset commands for a water-surface simulation.
+ *
+ * @see {@link waterSurface}
+ */
 export type WaterSurfaceMessage =
-  | { readonly type: "pause"; readonly paused: boolean }
-  | { readonly type: "reset" }
-  | { readonly type: "ripple"; readonly x: number; readonly y: number };
+  | {
+      /** The literal "pause" identifying this variant. See {@link WaterSurfaceMessage}. */
+      readonly type: "pause";
+      /** Whether simulation or playback advancement is suspended. See {@link WaterSurfaceMessage}. */
+      readonly paused: boolean;
+    }
+  | {
+      /** The literal "reset" identifying this variant. See {@link WaterSurfaceMessage}. */
+      readonly type: "reset";
+    }
+  | {
+      /** The literal "ripple" identifying this variant. See {@link WaterSurfaceMessage}. */
+      readonly type: "ripple";
+      /**
+       * Horizontal coordinate or displacement in the containing coordinate system. See
+       * {@link WaterSurfaceMessage}.
+       */
+      readonly x: number;
+      /**
+       * Vertical coordinate or displacement in the containing coordinate system. See
+       * {@link WaterSurfaceMessage}.
+       */
+      readonly y: number;
+    };
 
 interface Config {
   readonly seed: number;
@@ -541,7 +603,17 @@ const recipe = /* @__PURE__ */ defineTexture<
   },
 });
 
-/** A WASM-only, bounded reflective height-field displacement map. */
+/**
+ * A WASM-only, bounded reflective height-field displacement map.
+ *
+ * @param options - Water appearance and simulation settings. See {@link WaterSurfaceOptions}.
+ * @returns A water-surface texture recipe accepting surface messages. See {@link TextureRecipe} ,
+ * {@link WaterSurfaceMessage} .
+ *
+ * @see {@link WaterSurfaceOptions}
+ * @see {@link TextureRecipe}
+ * @see {@link WaterSurfaceMessage}
+ */
 export function waterSurface(
   options: WaterSurfaceOptions = {},
 ): TextureRecipe<WaterSurfaceMessage> {

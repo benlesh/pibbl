@@ -1,3 +1,4 @@
+import type { ManualSchedulerDriver } from './testing.js';
 import { RootRenderTransaction } from '../render-transaction.js';
 import { executeRender } from "../execute-render.js";
 import { GLOBAL_STATE, NO_PENDING_ROOT } from "../global-state.js";
@@ -422,6 +423,13 @@ export function getCurrentFrameSnapshot(): CRCFrameSnapshot | undefined {
   return GLOBAL_STATE.frameSnapshot ?? currentFrame;
 }
 
+/**
+ * Returns a diagnostic snapshot of the shared realm scheduler without advancing it.
+ *
+ * @returns Current scheduler counters and pending-work state. See {@link RealmSchedulerSnapshot}.
+ *
+ * @see {@link ManualSchedulerDriver}
+ */
 export function snapshotRealmScheduler(): RealmSchedulerSnapshot {
   return Object.freeze({
     phase,

@@ -83,7 +83,15 @@ export const CRC_EVENT_TYPES = Object.freeze(
   CRC_EVENT_DEFINITIONS.map(definition => definition.type),
 );
 
-/** Returns whether an object supplies any supported CRC event callback. */
+/**
+ * Returns whether an object supplies any supported CRC event callback.
+ *
+ * @param handlers - Object that may contain CRC event handler properties. See
+ * {@link CRCEventHandlers} .
+ * @returns Whether at least one CRC event handler is present.
+ *
+ * @see {@link CRCEventHandlers}
+ */
 export function hasCRCEventHandler(
   handlers: Readonly<Record<PropertyKey, unknown>> | CRCEventHandlers,
 ): boolean {

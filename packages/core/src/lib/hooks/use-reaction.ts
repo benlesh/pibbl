@@ -29,7 +29,13 @@ import {
   withHooksForbidden,
 } from './hook-slot.js';
 
+/**
+ * Options controlling when a signal reaction runs and how it is named for diagnostics.
+ *
+ * @see {@link useReaction}
+ */
 export interface CRCReactionOptions {
+  /** Optional label used in diagnostics. See {@link CRCReactionOptions}. */
   readonly debugName?: string;
 }
 
@@ -56,7 +62,15 @@ interface CRCReactionHookSlot {
   setup: () => void | (() => void);
 }
 
-/** Owns one Complete-phase imperative reaction for a mounted hook slot. */
+/**
+ * Owns one Complete-phase imperative reaction for a mounted hook slot.
+ *
+ * @param setup - Setup callback; its optional returned cleanup runs when replaced or disposed.
+ * @param dependencies - Values controlling when setup is repeated.
+ * @param options - Optional diagnostic name for this reaction. See {@link CRCReactionOptions}.
+ *
+ * @see {@link CRCReactionOptions}
+ */
 export function useReaction(
   setup: () => void | (() => void),
   dependencies?: readonly unknown[],

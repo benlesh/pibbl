@@ -19,11 +19,22 @@ export type {
 } from './three-instancing-lab.example';
 export { THREE_INSTANCING_LAB_PROBES } from './three-instancing-lab.example';
 
+/**
+ * Stable action identifiers accepted by the three instancing lab scenario.
+ *
+ * @see {@link ThreeInstancingLabAction}
+ */
 export const THREE_INSTANCING_LAB_ACTION_IDS = [
   'cycle-miss-behavior',
   'resize-layer',
 ] as const;
 
+/**
+ * Actions supported by the three instancing lab scenario's public controller.
+ *
+ * @see {@link ThreeInstancingLabState}
+ * @see {@link THREE_INSTANCING_LAB_ACTION_IDS}
+ */
 export type ThreeInstancingLabAction =
   (typeof THREE_INSTANCING_LAB_ACTION_IDS)[number];
 
@@ -207,6 +218,12 @@ async function mountThreeInstancingLab(
   };
 }
 
+/**
+ * Runnable three instancing lab scenario with observable state and deterministic actions.
+ *
+ * @see {@link ScenarioDefinition}
+ * @see {@link ThreeInstancingLabState}
+ */
 export const threeInstancingLabScenario: ScenarioDefinition<ThreeInstancingLabState> = {
   id: 'three-instancing',
   sourceId: THREE_INSTANCING_LAB_SOURCE_ID,

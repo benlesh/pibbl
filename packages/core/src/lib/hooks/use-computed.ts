@@ -29,7 +29,17 @@ interface CRCComputedHookSlot<T> {
   renderRevision: number;
 }
 
-/** Creates one component-owned lazy computed signal for a mounted hook slot. */
+/**
+ * Creates one component-owned lazy computed signal for a mounted hook slot.
+ *
+ * @param compute - Synchronous calculation whose signal reads are tracked.
+ * @param dependencies - Values controlling replacement of the captured computation.
+ * @param options - Equality comparison and optional diagnostic name. See {@link SignalOptions}.
+ * @returns A mount-owned readonly computed signal. See {@link Signal}.
+ *
+ * @see {@link SignalOptions}
+ * @see {@link Signal}
+ */
 export function useComputed<T>(
   compute: () => T,
   dependencies?: readonly unknown[],

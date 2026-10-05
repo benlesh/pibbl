@@ -24,28 +24,53 @@ import {
   type SourceSite,
 } from "./electric-sources.js";
 
+/**
+ * Electrical appearance, source electrodes, boundary, rise, and discharge controls for tendrils.
+ *
+ * @see {@link ElectricOptions}
+ * @see {@link ElectricPoint}
+ * @see {@link ElectricSource}
+ * @see {@link tendrils}
+ */
 export interface TendrilsOptions extends ElectricOptions {
   /** Common electrode. Sources seed the outer endpoints. */
   readonly center?: ElectricPoint;
+  /** Named electrical source electrodes. See {@link ElectricSource}. */
   readonly sources?: readonly ElectricSource[];
   /** Optional simple closed vessel outline in normalized texture coordinates. */
   readonly boundary?: readonly ElectricPoint[];
+  /**
+   * Number of particles or sources requested by this configuration. See {@link TendrilsOptions}.
+   */
   readonly count?: number;
   /** Continuous upward drift speed, 0..1. No circular boundary is assumed. */
   readonly rise?: number;
   /** Terminal discharge size, 0..1. Source weight also scales the discharge. */
   readonly crackle?: number;
+  /** Rate at which the pattern or motion repeats. See {@link TendrilsOptions}. */
   readonly frequency?: number;
 }
+/**
+ * Control, source-editing, and live appearance commands for a tendrils texture.
+ *
+ * @see {@link ElectricControl}
+ * @see {@link ElectricSourceMessage}
+ */
 export type TendrilsMessage =
   | ElectricControl
   | ElectricSourceMessage
   | {
+      /** The literal "configure" identifying this variant. See {@link TendrilsMessage}. */
       readonly type: "configure";
+      /** Amount of secondary electrical branching. See {@link TendrilsMessage}. */
       readonly branching?: number;
+      /** Intensity of the electrical halo around the core. See {@link TendrilsMessage}. */
       readonly glow?: number;
+      /** Upward drift strength of the tendrils. See {@link TendrilsMessage}. */
       readonly rise?: number;
+      /** Intensity of terminal discharges. See {@link TendrilsMessage}. */
       readonly crackle?: number;
+      /** Rate at which the pattern or motion repeats. See {@link TendrilsMessage}. */
       readonly frequency?: number;
     };
 function options(o: TendrilsOptions) {
@@ -260,7 +285,14 @@ const recipe = /* @__PURE__ */ defineTexture<
     s.config.sources.length = 0;
   },
 });
-/** Weighted attachment sites and persistent filaments, independent of vessel geometry. */
+/**
+ * Weighted attachment sites and persistent filaments, independent of vessel geometry.
+ *
+ * @param config - Tendril motion and appearance settings. See {@link TendrilsOptions}.
+ * @returns A tendril texture recipe for useTexture.
+ *
+ * @see {@link TendrilsOptions}
+ */
 export function tendrils(config: TendrilsOptions = {}) {
   return recipe(config);
 }

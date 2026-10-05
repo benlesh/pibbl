@@ -1,3 +1,5 @@
+import type { MeshTransformOptions } from './transform-mesh.js';
+import type { EnvelopeGuide, EnvelopeTransformOptions } from './path-transforms.js';
 import { PathGeometry } from './path-geometry.js';
 import {
   bendSpans,
@@ -16,15 +18,44 @@ import {
   interval,
 } from './transform-math.js';
 
+/**
+ * A station mapping normalized guide position to normalized arc-length distance along its path.
+ *
+ * @see {@link PathGuideOptions}
+ */
 export interface PathGuideStation {
+  /** Normalized station position. See {@link PathGuideStation}. */
   readonly at: number;
+  /** Normalized arc-length distance from 0 to 1. See {@link PathGuideStation}. */
   readonly distance: number;
 }
+/**
+ * Geometry and stations that define how a transformation samples a guide.
+ *
+ * @see {@link PathGeometry}
+ * @see {@link PathGuideStation}
+ * @see {@link PathGuide}
+ */
 export interface PathGuideOptions {
+  /** Path geometry used by this operation. See {@link PathGeometry}. */
   readonly path: PathGeometry;
+  /** Whether to reverse the direction of the mapping or guide. See {@link PathGuideOptions}. */
   readonly reverse?: boolean;
+  /**
+   * Explicit correspondence between normalized stations and guide distance. See
+   * {@link PathGuideStation}.
+   */
   readonly stations?: readonly PathGuideStation[];
 }
+/**
+ * A geometry path or a path with explicit guide-sampling configuration.
+ *
+ * @see {@link PathGeometry}
+ * @see {@link PathGuideOptions}
+ * @see {@link MeshTransformOptions}
+ * @see {@link EnvelopeTransformOptions}
+ * @see {@link EnvelopeGuide}
+ */
 export type PathGuide = PathGeometry | PathGuideOptions;
 export interface GuideSnapshot {
   readonly spans: readonly BendSpan[];

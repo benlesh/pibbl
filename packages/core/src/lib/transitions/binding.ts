@@ -1,10 +1,15 @@
+import type { CRCVisibilityTransition } from '../hooks/use-visibility-transition.js';
 import { GLOBAL_STATE } from '../global-state.js';
 import { requireHookContext } from '../hooks/hook-slot.js';
 import type { CRCComponentRefs, CRCEventRoot, CRCInstance } from '../types.js';
 import type { CRCFilter } from '../style/filter-types.js';
 
 declare const bindingBrand: unique symbol;
-/** An opaque connection between one transition controller and its painted subject. */
+/**
+ * An opaque connection between one transition controller and its painted subject.
+ *
+ * @see {@link CRCVisibilityTransition}
+ */
 export interface CRCTransitionBinding { readonly [bindingBrand]: true }
 interface BindingRecord {
   readonly resolve: () => readonly CRCFilter[];
