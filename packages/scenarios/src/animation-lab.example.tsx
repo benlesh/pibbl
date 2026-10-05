@@ -10,7 +10,7 @@ import {
   sequence,
   signal,
   stepper,
-  track,
+  drive,
   tween,
   wait,
   type CRCAnimationProgram,
@@ -139,18 +139,18 @@ export function createAnimationLabModel(): AnimationLabModel {
 function entranceProgram(model: AnimationLabModel): CRCAnimationProgram {
   return sequence(
     parallel(
-      track(model.x, tween({ from: 0, to: 180, duration: 200 })),
-      track(model.opacity, tween({ from: 1, to: 0.4, duration: 200 })),
+      drive(model.x, tween({ from: 0, to: 180, duration: 200 })),
+      drive(model.opacity, tween({ from: 1, to: 0.4, duration: 200 })),
     ),
     marker('arrived'),
-    track(model.pulseScale, tween({ from: 1, to: 1.25, duration: 100 })),
+    drive(model.pulseScale, tween({ from: 1, to: 1.25, duration: 100 })),
   );
 }
 
 function repeatProgram(model: AnimationLabModel): CRCAnimationProgram {
   return repeat(
     sequence(
-      track(model.x, tween({ from: 0, to: 120, duration: 90 })),
+      drive(model.x, tween({ from: 0, to: 120, duration: 90 })),
       marker('turn'),
       wait(10),
     ),
@@ -159,7 +159,7 @@ function repeatProgram(model: AnimationLabModel): CRCAnimationProgram {
 }
 
 function simulationProgram(model: AnimationLabModel): CRCAnimationProgram {
-  return track(model.stepper, stepper({
+  return drive(model.stepper, stepper({
     stepMilliseconds: 10,
     maxElapsedMilliseconds: 30,
     initial: (): AnimationLabStepperProjection => Object.freeze({

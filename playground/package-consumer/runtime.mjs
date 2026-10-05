@@ -111,7 +111,7 @@ const expected = [
   "signal",
   "spring",
   "stepper",
-  "track",
+  "drive",
   "tween",
   "untracked",
   "useCanvasContext",

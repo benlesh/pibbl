@@ -215,7 +215,7 @@ const publicSiteMarkdownPaths = [
   "docs/site/api/functions/signal.md",
   "docs/site/api/functions/spring.md",
   "docs/site/api/functions/stepper.md",
-  "docs/site/api/functions/track.md",
+  "docs/site/api/functions/drive.md",
   "docs/site/api/functions/tween.md",
   "docs/site/api/functions/untracked.md",
   "docs/site/api/functions/wait.md",

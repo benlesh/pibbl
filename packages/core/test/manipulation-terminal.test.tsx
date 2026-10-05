@@ -211,7 +211,7 @@ it("rejects a manipulation press while an active animation owns its box signal",
   function Scene(): CRCNode {
     control = CRC.useManipulation({ box, move: {} });
     playback = CRC.usePlayback(
-      CRC.track(
+      CRC.drive(
         box,
         CRC.tween({
           from: { left: 40, top: 50, width: 100, height: 80 },

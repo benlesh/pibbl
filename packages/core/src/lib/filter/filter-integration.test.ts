@@ -11,7 +11,7 @@ import {
   createElement,
   definePrimitive,
   signal,
-  track,
+  drive,
   tween,
   type CRCController,
   type CRCNode,
@@ -906,7 +906,7 @@ describe('filter integration', () => {
     let playback!: CRCPlayback;
     const AnimatedFilter = (_props: {}): CRCNode => {
       playback = usePlayback(
-        track(radius, tween({ from: 2, to: 10, duration: 100 })),
+        drive(radius, tween({ from: 2, to: 10, duration: 100 })),
       );
       return focusManaged(createElement(Rectangle, {
         style: {

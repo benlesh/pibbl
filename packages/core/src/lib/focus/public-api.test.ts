@@ -187,6 +187,11 @@ const obsoleteRuntimeExportParts = [
 ] as const;
 
 describe('public CRC API', () => {
+  it('exports drive without the removed track alias', () => {
+    expect(CRC_CORE_ROOT).toHaveProperty('drive');
+    expect(CRC_CORE_ROOT).not.toHaveProperty('track');
+  });
+
   it('exports exactly the final runtime authoring surface', () => {
     expect(Object.keys(CRC_CORE_ROOT).sort()).toEqual([
       'Absolute',
@@ -250,6 +255,7 @@ describe('public CRC API', () => {
       'defineTransition',
       'degrees',
       'dissolve',
+      'drive',
       'easing',
       'embers',
       'envelopeTransform',
@@ -281,7 +287,6 @@ describe('public CRC API', () => {
       'subdividePath',
       'toPath2D',
       'toSvgPathData',
-      'track',
       'transformPath',
       'tween',
       'untracked',

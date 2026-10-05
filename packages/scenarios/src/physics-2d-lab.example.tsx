@@ -9,7 +9,7 @@ import {
   Text,
   usePlayback,
   signal,
-  track,
+  drive,
   tween,
   type CRCNode,
   type CRCPlayback,
@@ -400,7 +400,7 @@ function SensorMover({ model }: { readonly model: Physics2DLabModel }) {
 
 function AnimationOwners({ model }: { readonly model: Physics2DLabModel }) {
   model.platformPlayback = usePlayback(
-    track(
+    drive(
       model.platformPosition,
       tween({
         to: PLATFORM_DESTINATION,
@@ -412,7 +412,7 @@ function AnimationOwners({ model }: { readonly model: Physics2DLabModel }) {
     { debugName: "physics laboratory platform playback" },
   );
   model.handoffPlayback = usePlayback(
-    track(
+    drive(
       model.handoffPosition,
       tween({
         to: HANDOFF_DESTINATION,

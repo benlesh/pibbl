@@ -7,7 +7,7 @@ import {
   useAnimatedValue,
   parallel,
   signal,
-  track,
+  drive,
   tween,
   type CRCController,
   type CRCNode,
@@ -58,8 +58,8 @@ describe('animation rendering integration', () => {
 
     function FirstRoot(): CRCNode {
       firstPlayback = usePlayback(parallel(
-        track(x, tween({ from: 0, to: 20, duration: 100 })),
-        track(opacity, tween({ from: 1, to: 0, duration: 100 })),
+        drive(x, tween({ from: 0, to: 20, duration: 100 })),
+        drive(opacity, tween({ from: 1, to: 0, duration: 100 })),
       ));
       const currentX = x.get();
       const currentY = y.get();
@@ -88,7 +88,7 @@ describe('animation rendering integration', () => {
 
     function SecondRoot(): CRCNode {
       secondPlayback = usePlayback(
-        track(y, tween({ from: 0, to: 10, duration: 100 })),
+        drive(y, tween({ from: 0, to: 10, duration: 100 })),
       );
       const currentX = x.get();
       const currentY = y.get();
@@ -221,9 +221,9 @@ describe('animation rendering integration', () => {
 
     function Scene(): CRCNode {
       playback = usePlayback(parallel(
-        track(translateX, tween({ from: 0, to: 10, duration: 100 })),
-        track(rectangleX, tween({ from: 0, to: 10, duration: 100 })),
-        track(layoutLeft, tween({ from: 40, to: 60, duration: 100 })),
+        drive(translateX, tween({ from: 0, to: 10, duration: 100 })),
+        drive(rectangleX, tween({ from: 0, to: 10, duration: 100 })),
+        drive(layoutLeft, tween({ from: 40, to: 60, duration: 100 })),
       ));
       const currentTranslateX = translateX.get();
       const currentRectangleX = rectangleX.get();

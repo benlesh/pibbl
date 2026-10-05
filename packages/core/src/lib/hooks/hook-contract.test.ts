@@ -21,7 +21,7 @@ import { useSignal } from './use-signal';
 import { useSvgPath } from './use-svg-path';
 import { createElement } from '../element/create-element';
 import { definePrimitive } from '../define-primitive';
-import { track } from '../animation/program';
+import { drive } from '../animation/program';
 import { tween } from '../animation/definition';
 import { signal } from '../signals/graph';
 
@@ -161,7 +161,7 @@ describe('hook ordering and render errors', () => {
       () => useComputed(() => 1),
       () => useRef(0),
       () => useReaction(() => undefined),
-      () => usePlayback(track(signal(0), tween({ to: 1, duration: 1 }))),
+      () => usePlayback(drive(signal(0), tween({ to: 1, duration: 1 }))),
       () => useAnimatedValue(1, { type: 'tween', duration: 1 }),
       () => useRectPath(0, 0, 1, 1),
       () => useLinePath([[0, 0], [1, 1]]),

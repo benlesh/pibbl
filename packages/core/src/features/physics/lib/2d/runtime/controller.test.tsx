@@ -7,7 +7,7 @@ import {
   crc,
   usePlayback,
   signal,
-  track,
+  drive,
   tween,
   type CRCController,
   type CRCPlayback,
@@ -425,7 +425,7 @@ describe("PhysicsWorld2D controller scheduling and topology", () => {
     let sleeper!: CRCPhysicsBodyHandle2D;
     const AnimationOwner = () => {
       playback = usePlayback(
-        track(
+        drive(
           position,
           tween({
             to: [310, 142] as const,

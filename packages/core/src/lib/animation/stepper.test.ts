@@ -6,7 +6,7 @@ import {
   marker,
   signal,
   stepper,
-  track,
+  drive,
   wait,
 } from '../../index';
 import { createSignalCommitBatch } from '../signals/graph';
@@ -61,7 +61,7 @@ describe('stateful fixed-step animation evaluation', () => {
     const output = signal({ position: 0, velocity: 1 });
     const stepCounts: number[] = [];
     let reads = 0;
-    const program = track(output, stepper({
+    const program = drive(output, stepper({
       stepMilliseconds: 10,
       maxElapsedMilliseconds: 100,
       initial: (current: { position: number; velocity: number }) => current,
@@ -121,7 +121,7 @@ describe('stateful fixed-step animation evaluation', () => {
       step: state => ({ value: state.value + 1 }),
       read: state => state.value,
     });
-    const program = track(output, definition);
+    const program = drive(output, definition);
     const first = activateProgram(program, {});
     const second = activateProgram(program, {});
 
@@ -137,7 +137,7 @@ describe('stateful fixed-step animation evaluation', () => {
     const output = signal(0);
     let reads = 0;
     const program = sequence(
-      track(output, stepper({
+      drive(output, stepper({
         stepMilliseconds: 10,
         initial: (current: number) => current,
         step: state => state + 1,
@@ -173,7 +173,7 @@ describe('stateful fixed-step animation evaluation', () => {
   it('keys repeated state by immutable path and occurrence and releases every terminal record', () => {
     const output = signal(0);
     let initials = 0;
-    const program = repeat(track(output, stepper({
+    const program = repeat(drive(output, stepper({
       stepMilliseconds: 10,
       initial: (current: number) => {
         initials++;
@@ -207,7 +207,7 @@ describe('stateful fixed-step animation evaluation', () => {
         }
         return value;
       }
-      const program = track(output, stepper({
+      const program = drive(output, stepper({
         debugName: 'dangerous integration',
         stepMilliseconds: 10,
         initial: (current: number) => invoke('initial', current),
@@ -245,7 +245,7 @@ describe('stateful fixed-step animation evaluation', () => {
 
   it('releases every state and invalidates the activation when its run is released', () => {
     const output = signal(0);
-    const activation = activateProgram(track(output, stepper({
+    const activation = activateProgram(drive(output, stepper({
       stepMilliseconds: 10,
       initial: (current: number) => current,
       step: state => state + 1,
@@ -294,7 +294,7 @@ describe('stateful fixed-step animation evaluation', () => {
         },
         done: state => state === 1,
       });
-      const activation = activateProgram(track(output, definition), {});
+      const activation = activateProgram(drive(output, definition), {});
       const batch = createSignalCommitBatch();
       const callerWriter = {};
       batch.stage(output, 99, callerWriter);
@@ -321,7 +321,7 @@ describe('stateful fixed-step animation evaluation', () => {
   it('keeps infinite normal-repeat state, terminal facts, traces, and work bounded', () => {
     const output = signal(0);
     let steps = 0;
-    const activation = activateProgram(repeat(track(output, stepper({
+    const activation = activateProgram(repeat(drive(output, stepper({
       stepMilliseconds: 10,
       initial: (current: number) => ({ value: current, steps: 0 }),
       step: state => {
@@ -347,7 +347,7 @@ describe('stateful fixed-step animation evaluation', () => {
   it('shares one clamped contribution across repeated occurrences of one track path', () => {
     const output = signal(0);
     let steps = 0;
-    const activation = activateProgram(repeat(track(output, stepper({
+    const activation = activateProgram(repeat(drive(output, stepper({
       stepMilliseconds: 10,
       maxElapsedMilliseconds: 100,
       initial: (current: number) => ({ value: current, steps: 0 }),
@@ -394,7 +394,7 @@ describe('stateful fixed-step animation evaluation', () => {
       done: state => state.steps === 1,
     });
     const activation = activateProgram(repeat(
-      repeat(track(output, definition), { iterations: 2 }),
+      repeat(drive(output, definition), { iterations: 2 }),
       { iterations: 20 },
     ), {});
 
@@ -411,7 +411,7 @@ describe('stateful fixed-step animation evaluation', () => {
     const two = signal(0);
     const steps = [0, 0];
     const branch = (output: ReturnType<typeof signal<number>>, index: number) =>
-      repeat(track(output, stepper({
+      repeat(drive(output, stepper({
         stepMilliseconds: 10,
         maxElapsedMilliseconds: 100,
         initial: (current: number) => ({ value: current, steps: 0 }),
@@ -440,7 +440,7 @@ describe('stateful fixed-step animation evaluation', () => {
 
   it('reports an initial clamp discard once when a bare stepper terminates early', () => {
     const output = signal(0);
-    const activation = activateProgram(track(output, stepper({
+    const activation = activateProgram(drive(output, stepper({
       stepMilliseconds: 10,
       maxElapsedMilliseconds: 100,
       initial: (current: number) => current,
@@ -462,7 +462,7 @@ describe('stateful fixed-step animation evaluation', () => {
 
   it('reports one initial clamp discard when a finite repeat terminates early', () => {
     const output = signal(0);
-    const activation = activateProgram(repeat(track(output, stepper({
+    const activation = activateProgram(repeat(drive(output, stepper({
       stepMilliseconds: 10,
       maxElapsedMilliseconds: 100,
       initial: (current: number) => ({ value: current, steps: 0 }),
@@ -491,7 +491,7 @@ describe('stateful fixed-step animation evaluation', () => {
     const one = signal(0);
     const two = signal(0);
     const branch = (output: ReturnType<typeof signal<number>>) =>
-      track(output, stepper({
+      drive(output, stepper({
         stepMilliseconds: 10,
         maxElapsedMilliseconds: 100,
         initial: (current: number) => current,
@@ -520,7 +520,7 @@ describe('stateful fixed-step animation evaluation', () => {
     const one = signal(0);
     const two = signal(0);
     const activation = activateProgram(sequence(
-      track(instant, stepper({
+      drive(instant, stepper({
         stepMilliseconds: 10,
         initial: (current: number) => ({ value: current, done: true }),
         step: state => state,
@@ -528,14 +528,14 @@ describe('stateful fixed-step animation evaluation', () => {
         done: state => state.done,
       })),
       parallel(
-        track(one, stepper({
+        drive(one, stepper({
           stepMilliseconds: 10,
           initial: (current: number) => ({ value: current, steps: 0 }),
           step: state => ({ value: state.value + 1, steps: state.steps + 1 }),
           read: state => state.value,
           done: state => state.steps === 1,
         })),
-        track(two, stepper({
+        drive(two, stepper({
           stepMilliseconds: 10,
           initial: (current: number) => ({ value: current, steps: 0 }),
           step: state => ({ value: state.value + 1, steps: state.steps + 1 }),
@@ -574,7 +574,7 @@ describe('zero-duration stateful occurrence budget', () => {
     output: ReturnType<typeof signal<number>>,
     counters: { initials: number; dones: number; reads: number },
   ) {
-    return track(output, stepper({
+    return drive(output, stepper({
       debugName: 'instant increment',
       stepMilliseconds: 10,
       initial: (current: number) => {
@@ -710,7 +710,7 @@ describe('zero-duration stateful occurrence budget', () => {
       { initials: 0, dones: 0, reads: 0 },
     ];
     const guardedInstant = (output: ReturnType<typeof signal<number>>, index: number) =>
-      track(output, stepper({
+      drive(output, stepper({
         debugName: `guarded instant ${index}`,
         stepMilliseconds: 10,
         initial: (current: number) => {
@@ -776,7 +776,7 @@ describe('zero-duration stateful occurrence budget', () => {
 describe('stateful fixed-step replay', () => {
   it('resets backward and forward seeks and matches a fresh fixed-step replay', () => {
     const output = signal(0);
-    const program = track(output, stepper({
+    const program = drive(output, stepper({
       stepMilliseconds: 10,
       initial: (current: number) => ({ value: current }),
       step: state => ({ value: state.value + 0.1 }),
@@ -801,7 +801,7 @@ describe('stateful fixed-step replay', () => {
 
   it('replays direct target time without applying the host-gap clamp', () => {
     const output = signal(0);
-    const activation = activateProgram(track(output, stepper({
+    const activation = activateProgram(drive(output, stepper({
       stepMilliseconds: 10,
       maxElapsedMilliseconds: 20,
       initial: (current: number) => current,
@@ -821,7 +821,7 @@ describe('stateful fixed-step replay', () => {
 
   it('rejects reverse-from-idle and finish until done reveals a terminal endpoint', () => {
     const output = signal(0);
-    const activation = activateProgram(track(output, stepper({
+    const activation = activateProgram(drive(output, stepper({
       stepMilliseconds: 10,
       initial: (current: number) => current,
       step: state => state + 1,
@@ -855,7 +855,7 @@ describe('stateful fixed-step replay', () => {
 
   it('replays normal stepper repeat occurrences at exact boundaries', () => {
     const createProgram = (output: ReturnType<typeof signal<number>>) =>
-      repeat(track(output, stepper({
+      repeat(drive(output, stepper({
         stepMilliseconds: 10,
         initial: (current: number) => ({ value: current, steps: 0 }),
         step: state => ({ value: state.value + 1, steps: state.steps + 1 }),
@@ -901,7 +901,7 @@ describe('stateful fixed-step replay', () => {
     direction => {
       const output = signal(0);
       const calls = { initial: 0, step: 0, read: 0, done: 0 };
-      const activation = activateProgram(repeat(track(output, stepper({
+      const activation = activateProgram(repeat(drive(output, stepper({
         debugName: 'unresolved reverse',
         stepMilliseconds: 10,
         initial: (current: number) => {
@@ -944,7 +944,7 @@ describe('stateful fixed-step replay', () => {
   it('rejects a statically infinite reversed stepper before every callback', () => {
     const output = signal(0);
     let callbacks = 0;
-    const activation = activateProgram(repeat(track(output, stepper({
+    const activation = activateProgram(repeat(drive(output, stepper({
       debugName: 'infinite reverse',
       stepMilliseconds: Number.MAX_VALUE,
       initial: (current: number) => {
@@ -970,7 +970,7 @@ describe('stateful fixed-step replay', () => {
   it('rejects an unresolved never-done reverse without searching callbacks', () => {
     const output = signal(0);
     let callbacks = 0;
-    const activation = activateProgram(repeat(track(output, stepper({
+    const activation = activateProgram(repeat(drive(output, stepper({
       debugName: 'never done reverse',
       stepMilliseconds: Number.MAX_VALUE,
       initial: (current: number) => {
@@ -999,7 +999,7 @@ describe('stateful fixed-step replay', () => {
 
   it('reuses a forward endpoint only when the reversed occurrence has the exact input', () => {
     const createProgram = (output: ReturnType<typeof signal<number>>) =>
-      repeat(track(output, stepper({
+      repeat(drive(output, stepper({
         stepMilliseconds: 10,
         initial: (current: number) => ({ initial: current, value: current, steps: 0 }),
         step: state => ({
@@ -1033,7 +1033,7 @@ describe('stateful fixed-step replay', () => {
 
   it('rejects an alternate reverse occurrence when the forward endpoint input changed', () => {
     const output = signal(0);
-    const activation = activateProgram(repeat(track(output, stepper({
+    const activation = activateProgram(repeat(drive(output, stepper({
       debugName: 'changed alternate input',
       stepMilliseconds: 10,
       initial: (current: number) => ({ value: current, steps: 0 }),
@@ -1062,7 +1062,7 @@ describe('stateful fixed-step replay', () => {
   it('rolls back cached reversed-occurrence replay when a callback fails', () => {
     const output = signal(0);
     let shouldFail = false;
-    const activation = activateProgram(repeat(track(output, stepper({
+    const activation = activateProgram(repeat(drive(output, stepper({
       debugName: 'reversed failure',
       stepMilliseconds: 10,
       initial: (current: number) => ({ initial: current, value: current, steps: 0 }),
@@ -1104,7 +1104,7 @@ describe('stateful repeat milestones', () => {
     output: ReturnType<typeof signal<number>>,
     options: { direction?: 'normal' | 'alternate'; maxElapsedMilliseconds?: number } = {},
   ) {
-    return repeat(track(output, stepper({
+    return repeat(drive(output, stepper({
       stepMilliseconds: 10,
       maxElapsedMilliseconds: options.maxElapsedMilliseconds ?? 100,
       initial: (current: number) => ({ initial: current, value: current, steps: 0 }),
@@ -1152,7 +1152,7 @@ describe('stateful repeat milestones', () => {
   it('preserves nested marker and iteration source order at tied boundaries', () => {
     const output = signal(0);
     const child = sequence(
-      track(output, stepper({
+      drive(output, stepper({
         stepMilliseconds: 10,
         initial: (current: number) => ({ value: current, steps: 0 }),
         step: state => ({ value: state.value + 1, steps: state.steps + 1 }),

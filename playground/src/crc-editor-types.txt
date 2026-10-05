@@ -565,7 +565,7 @@ export interface MeshTransformOptions {
   export function spring(options: Readonly<CRCSpringOptions>): CRCAnimationDefinition<number>;
   export function defineAnimation<T>(options: Readonly<CRCAnimationOptions<T>>): CRCAnimationDefinition<T>;
   export function stepper<State, T>(options: Readonly<CRCStepperOptions<State, T>>): CRCAnimationDefinition<T>;
-  export function track<T>(output: WritableSignal<T>, definition: CRCAnimationDefinition<T>): CRCAnimationProgram;
+  export function drive<T>(output: WritableSignal<T>, definition: CRCAnimationDefinition<T>): CRCAnimationProgram;
   export function sequence(...children: readonly CRCAnimationProgram[]): CRCAnimationProgram;
   export function parallel(...children: readonly CRCAnimationProgram[]): CRCAnimationProgram;
   export function wait(duration: number): CRCAnimationProgram;

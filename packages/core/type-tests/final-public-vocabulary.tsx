@@ -50,7 +50,7 @@ import {
   SvgPath,
   Star,
   Text,
-  track,
+  drive,
   tween,
   untracked,
   VerticalLine,
@@ -151,7 +151,7 @@ const importedFinalVocabulary = {
   SvgPath,
   Star,
   Text,
-  track,
+  drive,
   tween,
   untracked,
   VerticalLine,
@@ -380,18 +380,18 @@ const stepperDefinition = stepper<{ value: number }, number>({
 });
 const animationProgram: CRCAnimationProgram = sequence(
   parallel(
-    track(numericOutput, tweenDefinition),
-    track(objectOutput, objectDefinition),
+    drive(numericOutput, tweenDefinition),
+    drive(objectOutput, objectDefinition),
   ),
   marker('halfway'),
-  track(numericOutput, keyframeDefinition),
+  drive(numericOutput, keyframeDefinition),
   wait(10),
-  repeat(track(numericOutput, springDefinition), {
+  repeat(drive(numericOutput, springDefinition), {
     iterations: 2,
     direction: 'alternate',
   }),
-  track(numericOutput, customDefinition),
-  track(numericOutput, stepperDefinition),
+  drive(numericOutput, customDefinition),
+  drive(numericOutput, stepperDefinition),
 );
 const easingValue: CRCEasing = easing.linear;
 const repeatDirection: CRCAnimationRepeatDirection = 'alternate-reverse';
@@ -447,7 +447,7 @@ function AnimationHookScene(): CRCNode {
 spring({ to: 'done' });
 const numberDefinition = tween({ to: 10, duration: 100 });
 // @ts-expect-error a numeric definition cannot write an object signal
-track(objectOutput, numberDefinition);
+drive(objectOutput, numberDefinition);
 type CoreExports = typeof import('@crc/core');
 // @ts-expect-error no free playback function is exported
 type FreePlay = CoreExports['play'];

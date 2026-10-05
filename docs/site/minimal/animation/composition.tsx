@@ -5,7 +5,7 @@ import {
   usePlayback,
   keyframes,
   spring,
-  track,
+  drive,
   sequence,
   parallel,
   wait,
@@ -41,7 +41,7 @@ function Scene() {
   const cycles: CRCAnimationRepeatOptions = { iterations: 3, direction };
   const program: CRCAnimationProgram = repeat(
     sequence(
-      parallel(track(x, keyframes(keys)), track(y, spring(bounce))),
+      parallel(drive(x, keyframes(keys)), drive(y, spring(bounce))),
       marker("arrived"),
       wait(300),
     ),

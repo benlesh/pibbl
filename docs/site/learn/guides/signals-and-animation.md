@@ -70,11 +70,11 @@ A program binds definitions to writable outputs and composes their timing:
 function entrance(x: WritableSignal<number>, opacity: WritableSignal<number>) {
   return sequence(
     parallel(
-      track(
+      drive(
         x,
         tween({ from: -24, to: 0, duration: 180, easing: easing.easeOut }),
       ),
-      track(opacity, tween({ from: 0, to: 1, duration: 140 })),
+      drive(opacity, tween({ from: 0, to: 1, duration: 140 })),
     ),
     marker("arrived"),
   );

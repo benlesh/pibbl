@@ -1,6 +1,6 @@
 import { signal } from '../signals/graph.js';
 import type { Signal } from '../signals/types.js';
-import { track } from '../animation/program.js';
+import { drive } from '../animation/program.js';
 import { defineAnimation, tween } from '../animation/definition.js';
 import type { CRCPlayback } from '../animation/types.js';
 import { createTransitionBinding, type CRCTransitionBinding } from '../transitions/binding.js';
@@ -137,12 +137,12 @@ export function useVisibilityTransition(options: CRCVisibilityTransitionOptions)
     });
     teardowns.add(() => { disposed = true; for (const runtime of runtimes) runtime.dispose?.(); history = []; for (const command of historyCommands) command.cancel(); historyCommands.clear(); status.set('disposed'); settle('disposed'); });
     return {
-      handle, program: track(progress, duration === 0 ? defineAnimation({ duration: 0, sample: () => Number(visible.get()) }) : tween({ from: 0, to: 1, duration })),
-      clockProgram: track(elapsed, defineAnimation({ duration: 1e12, sample: ({ localTime }) => {
+      handle, program: drive(progress, duration === 0 ? defineAnimation({ duration: 0, sample: () => Number(visible.get()) }) : tween({ from: 0, to: 1, duration })),
+      clockProgram: drive(elapsed, defineAnimation({ duration: 1e12, sample: ({ localTime }) => {
         if (pending && !forced.get()) (visible.get() ? enterRuntime : exitRuntime).advance?.(localTime, progressAt);
         return localTime;
       } })),
-      tailProgram: track(tailTime, tween({ from: 0, to: 1, duration: maxTail })),
+      tailProgram: drive(tailTime, tween({ from: 0, to: 1, duration: maxTail })),
       setPlayback(value: CRCPlayback, clockValue: CRCPlayback, tailValue: CRCPlayback) { playback = value; clock = clockValue; tail = tailValue; },
       fail() { disposed = true; for (const runtime of runtimes) runtime.dispose?.(); forced.set(true); status.set('disposed'); settle('disposed'); playback.cancel(); clock.cancel(); tail.cancel(); },
       startTail,

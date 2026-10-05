@@ -38,7 +38,7 @@ import {
   signal,
   sequence,
   spring,
-  track,
+  drive,
   tween,
   untracked,
 } from '@crc/core';
@@ -156,9 +156,9 @@ export const visualizationSignalInputs: CRCElement = <VisualizationContract />;
 function AnimatedLabel(): CRCNode {
   const x = useSignal(0);
   const program: CRCAnimationProgram = sequence(
-    track(x, tween({ to: 40, duration: 120 })),
+    drive(x, tween({ to: 40, duration: 120 })),
     marker('arrived'),
-    track(x, spring({ to: 0 })),
+    drive(x, spring({ to: 0 })),
   );
   const player = usePlayback(program);
   const transitioned = useAnimatedValue(x.get(), {

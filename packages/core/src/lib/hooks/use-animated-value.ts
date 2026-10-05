@@ -3,7 +3,7 @@ import {
   type AnimationPlaybackController,
 } from '../animation/playback.js';
 import { spring, tween } from '../animation/definition.js';
-import { track } from '../animation/program.js';
+import { drive } from '../animation/program.js';
 import type {
   CRCAnimationProgram,
   CRCSpringAnimatedValueOptions,
@@ -118,7 +118,7 @@ function programFor<T>(
 ): CRCAnimationProgram {
   const options = candidate.options;
   if (options.type === 'spring') {
-    return track(output as unknown as WritableSignal<number>, spring({
+    return drive(output as unknown as WritableSignal<number>, spring({
       from: from as number,
       to: candidate.target as number,
       mass: options.mass,
@@ -131,7 +131,7 @@ function programFor<T>(
       debugName: options.debugName,
     }));
   }
-  return track(output, tween({
+  return drive(output, tween({
     from,
     to: candidate.target,
     duration: options.duration,

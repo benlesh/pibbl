@@ -13,7 +13,7 @@ import {
   defineAnimation,
   parallel,
   signal,
-  track,
+  drive,
   tween,
   type CRCPlayback,
 } from '../index';
@@ -636,7 +636,7 @@ describe('crc root updates', () => {
     const healthyCanvas = createCanvas();
     const FailingRoot = (_props: {}) => {
       failedPlayback = usePlayback(
-        track(failedOutput, tween({ from: 0, to: 10, duration: 100 })),
+        drive(failedOutput, tween({ from: 0, to: 10, duration: 100 })),
       );
       const value = failedOutput.get();
       failedRenders.push(value);
@@ -647,7 +647,7 @@ describe('crc root updates', () => {
     };
     const HealthyRoot = (_props: {}) => {
       healthyPlayback = usePlayback(
-        track(healthyOutput, tween({ from: 0, to: 10, duration: 100 })),
+        drive(healthyOutput, tween({ from: 0, to: 10, duration: 100 })),
       );
       const value = healthyOutput.get();
       healthyRenders.push(value);
@@ -732,11 +732,11 @@ describe('crc root updates', () => {
     let healthyPlayback!: CRCPlayback;
     const FailingRoot = (_props: {}) => {
       failedPlayback = usePlayback(parallel(
-        track(firstFailedOutput, defineAnimation({
+        drive(firstFailedOutput, defineAnimation({
           duration: 100,
           sample: ({ localTime }) => localTime + 1,
         })),
-        track(secondFailedOutput, defineAnimation({
+        drive(secondFailedOutput, defineAnimation({
           duration: 100,
           sample: ({ localTime }) => {
             if (localTime >= 50) throw new Error('integration sampler failed');
@@ -766,7 +766,7 @@ describe('crc root updates', () => {
     };
     const HealthyRoot = (_props: {}) => {
       healthyPlayback = usePlayback(
-        track(healthyOutput, tween({ from: 0, to: 10, duration: 100 })),
+        drive(healthyOutput, tween({ from: 0, to: 10, duration: 100 })),
       );
       const value = healthyOutput.get();
       healthyRenders.push(value);

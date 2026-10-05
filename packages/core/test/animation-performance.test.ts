@@ -13,7 +13,7 @@ import {
   signal,
   spring,
   stepper,
-  track,
+  drive,
   tween,
   type CRCController,
   type CRCNode,
@@ -64,7 +64,7 @@ describe('animation structural performance', () => {
       traversals += 1;
       handles.length = 0;
       for (const [index, output] of outputs.entries()) {
-        handles.push(usePlayback(track(output, tween({
+        handles.push(usePlayback(drive(output, tween({
           from: 0,
           to: index + 1,
           duration: 100,
@@ -128,7 +128,7 @@ describe('animation structural performance', () => {
     const output = signal(0, { debugName: 'sequential output' });
     const before = writerLeaseSnapshot();
     const tracks = Array.from({ length: 100 }, (_, index) =>
-      track(output, tween({
+      drive(output, tween({
         from: index,
         to: index + 1,
         duration: 1,
@@ -225,7 +225,7 @@ describe('animation structural performance', () => {
     let steps = 0;
     let playback!: CRCPlayback;
     function Root(): CRCNode {
-      playback = usePlayback(track(output, stepper({
+      playback = usePlayback(drive(output, stepper({
         stepMilliseconds: 10,
         maxElapsedMilliseconds: 40,
         initial: current => current,
@@ -290,7 +290,7 @@ describe('animation structural performance', () => {
     const output = signal(0);
     let playback!: CRCPlayback;
     function Root(): CRCNode {
-      playback = usePlayback(track(output, tween({
+      playback = usePlayback(drive(output, tween({
         from: 0,
         to: 10,
         duration: 100,
@@ -333,7 +333,7 @@ describe('animation structural performance', () => {
     }
     function Root(): CRCNode {
       rootTraversals += 1;
-      playback = usePlayback(track(offset, tween({
+      playback = usePlayback(drive(offset, tween({
         from: 0,
         to: 4,
         duration: 100,

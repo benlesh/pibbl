@@ -35,7 +35,7 @@ export const topics = {
   animation: {
     title: "Animation and scheduling",
     match:
-      /animation|animated|playback|tween|spring|easing|keyframe|track|sequence|parallel|repeat|marker|stepper|wait$/,
+      /animation|animated|playback|tween|spring|easing|keyframe|drive|sequence|parallel|repeat|marker|stepper|wait$/,
   },
   textures: {
     title: "Textures and reaction-diffusion",

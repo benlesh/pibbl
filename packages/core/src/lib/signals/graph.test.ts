@@ -5,7 +5,7 @@ import {
   computed,
   isSignal,
   signal,
-  track,
+  drive,
   tween,
   untracked,
   type SignalEquals,
@@ -708,7 +708,7 @@ describe('signal commit batches', () => {
     const value = signal(1, { debugName: 'commit-owned value' });
     const token = {};
     const lease = acquireProgramWriterLeases(
-      track(value, tween({ to: 2, duration: 10 })),
+      drive(value, tween({ to: 2, duration: 10 })),
       {},
       {
         token,
@@ -732,7 +732,7 @@ describe('signal commit batches', () => {
     const oldToken = {};
     let oldLease: ProgramWriterLease;
     oldLease = acquireProgramWriterLeases(
-      track(leased, tween({ to: 2, duration: 10 })),
+      drive(leased, tween({ to: 2, duration: 10 })),
       {},
       {
         token: oldToken,
@@ -746,7 +746,7 @@ describe('signal commit batches', () => {
     batch.stage(leased, 2, oldToken);
     oldLease.release();
     const replacement = acquireProgramWriterLeases(
-      track(leased, tween({ to: 3, duration: 10 })),
+      drive(leased, tween({ to: 3, duration: 10 })),
       {},
       {
         token: {},

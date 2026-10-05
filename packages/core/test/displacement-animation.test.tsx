@@ -1,5 +1,5 @@
 /** @jsxImportSource @crc/core */
-import { crc, defineTexture, Group, Rectangle, signal, track, tween, usePlayback, useTexture, type CRCPlayback } from '@crc/core';
+import { crc, defineTexture, Group, Rectangle, signal, drive, tween, usePlayback, useTexture, type CRCPlayback } from '@crc/core';
 import { displacement } from '@crc/core/filters';
 import { expect, it } from 'vitest';
 import { ManualSchedulerDriver, installSchedulerDriverForTest } from '../src/lib/scheduler/testing';
@@ -14,7 +14,7 @@ it('changes presentation without changing animation samples at identical logical
   });
   function Scene() {
     const texture = useTexture(map({}), { resolution: { width: 8, height: 8 } });
-    playback = usePlayback(track(offset, tween({ from: 10, to: 30, duration: 100 })));
+    playback = usePlayback(drive(offset, tween({ from: 10, to: 30, duration: 100 })));
     return <Group style={{ filter: enabled.get() ? displacement({ map: texture, strength: 4, region: { x: 0, y: 0, width: 50, height: 30 } }) : [] }}>
       <Rectangle style={{ left: offset, top: 10, width: 8, height: 8, fill: 'red' }} />
     </Group>;

@@ -355,7 +355,7 @@ API. Exact current behavior lives in
 
 The implemented 2026-09-11 animation work adds numeric tweening, keyframes,
 analytic springs, custom seekable definitions, and fixed-step stateful
-steppers. Immutable programs compose `track`, `sequence`, `parallel`, `wait`,
+steppers. Immutable programs compose `drive`, `sequence`, `parallel`, `wait`,
 `marker`, and `repeat`; whole-run writer leases reject ambiguous writers unless
 replacement is explicit. `usePlayback` owns stable controls/status/current time
 for one mounted hook slot, while `useAnimatedValue` provides explicit target-driven

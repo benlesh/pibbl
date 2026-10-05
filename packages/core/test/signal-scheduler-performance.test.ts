@@ -94,7 +94,7 @@ describe('signal and scheduler structural performance', () => {
       traversals += 1;
       value.get();
     };
-    const controller = track(crc(createCanvas(), createElement(Root, {})));
+    const controller = drive(crc(createCanvas(), createElement(Root, {})));
     driver.flush(1);
     traversals = 0;
     const requestsBefore = driver.requestCount;
@@ -119,7 +119,7 @@ describe('signal and scheduler structural performance', () => {
       traversals++;
       value.get();
     };
-    const controller = track(crc(createCanvas(), createElement(Reader, {})));
+    const controller = drive(crc(createCanvas(), createElement(Reader, {})));
     driver.flush(1);
     traversals = 0;
     const graphBefore = snapshotSignalGraph();
@@ -150,7 +150,7 @@ describe('signal and scheduler structural performance', () => {
     };
 
     for (const index of expectedOrder) {
-      track(crc(createCanvas(), createElement(Root, { index })));
+      drive(crc(createCanvas(), createElement(Root, { index })));
     }
     expect(driver.requestCount).toBe(1);
     driver.flush(1);
@@ -180,7 +180,7 @@ describe('signal and scheduler structural performance', () => {
       traversals += 1;
       parity.get();
     };
-    const controller = track(crc(createCanvas(), createElement(Root, {})));
+    const controller = drive(crc(createCanvas(), createElement(Root, {})));
     driver.flush(1);
     traversals = 0;
 
@@ -237,7 +237,7 @@ describe('signal and scheduler structural performance', () => {
       rootTraversals += 1;
       return layers;
     };
-    const controller = track(crc(createCanvas(40, 40), createElement(Root, {})));
+    const controller = drive(crc(createCanvas(40, 40), createElement(Root, {})));
     driver.flush(1);
 
     expect(rootTraversals).toBe(1);
@@ -339,7 +339,7 @@ describe('signal and scheduler structural performance', () => {
       'transferToImageBitmap',
     );
     const baseline = snapshotSignalGraph();
-    const plain = track(crc(
+    const plain = drive(crc(
       createCanvas(400, 4),
       Array.from({ length: 100 }, (_, index) =>
         createElement(Rectangle, {
@@ -365,7 +365,7 @@ describe('signal and scheduler structural performance', () => {
     plain.dispose();
 
     const beforeLayout = snapshotSignalGraph();
-    const layout = track(crc(
+    const layout = drive(crc(
       createCanvas(400, 4),
       createElement(Absolute, {
         style: { width: 400, height: 4 },
@@ -434,7 +434,7 @@ describe('signal and scheduler structural performance', () => {
         style: { width: 4, height: 4 },
       });
     };
-    const controller = track(crc(createCanvas(), createElement(Root, {})));
+    const controller = drive(crc(createCanvas(), createElement(Root, {})));
     driver.flush(1);
     expect({ reactions, cleanups }).toEqual({ reactions: 1, cleanups: 0 });
     traversals = 0;
@@ -458,7 +458,7 @@ describe('signal and scheduler structural performance', () => {
         shared.get();
       };
       const before = snapshotSignalGraph();
-      const controller = track(
+      const controller = drive(
         crc(
           createCanvas(),
           Array.from({ length: fanout }, (_, index) =>
@@ -511,7 +511,7 @@ function observeStateSlotWorkload(
       createElement(Cell, { key: `slot-${index}`, index }),
     );
   };
-  const controller = track(crc(createCanvas(), createElement(Root, {})));
+  const controller = drive(crc(createCanvas(), createElement(Root, {})));
   driver.flush(1);
   const samples = sampleManualUpdates(updateValue, () => {
     traversals = 0;
@@ -552,7 +552,7 @@ function observePrimitiveInputWorkload(
       createElement(DataSink, { key: 'data', data: rows }),
     ];
   };
-  const controller = track(crc(createCanvas(), createElement(Root, {})));
+  const controller = drive(crc(createCanvas(), createElement(Root, {})));
   driver.flush(1);
   const samples = sampleManualUpdates(updateValue, () => {
     traversals = 0;
@@ -619,7 +619,7 @@ function observeReceiverInputWorkload(
       }),
     ];
   };
-  const controller = track(crc(createCanvas(), createElement(Root, {})));
+  const controller = drive(crc(createCanvas(), createElement(Root, {})));
   driver.flush(1);
   const samples = sampleManualUpdates(updateValue, () => {
     traversals = 0;
@@ -703,7 +703,7 @@ function reportObservation(label: string, observation: unknown): void {
   }
 }
 
-function track(controller: CRCController): CRCController {
+function drive(controller: CRCController): CRCController {
   activeControllers.add(controller);
   return controller;
 }

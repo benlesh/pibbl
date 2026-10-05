@@ -12,7 +12,7 @@ import {
   signal,
   spring,
   stepper,
-  track,
+  drive,
   tween,
   wait,
   type CRCAnimationProgram,
@@ -110,7 +110,7 @@ describe('scheduler-integrated animation playback', () => {
     order.length = 0;
     snapshots.length = 0;
 
-    firstController = playback(track(firstValue, defineAnimation({
+    firstController = playback(drive(firstValue, defineAnimation({
       duration: 50,
       sample: ({ localTime }) => {
         order.push('advance:1');
@@ -121,7 +121,7 @@ describe('scheduler-integrated animation playback', () => {
         return localTime + 1;
       },
     })), { onEvent: event => order.push(`complete:1:${event.type}`) });
-    secondController = playback(track(secondValue, defineAnimation({
+    secondController = playback(drive(secondValue, defineAnimation({
       duration: 50,
       sample: ({ localTime }) => {
         order.push('advance:2');
@@ -192,7 +192,7 @@ describe('scheduler-integrated animation playback', () => {
 
   it('restarts play from the currently committed output snapshot', () => {
     const value = signal(0);
-    const controller = playback(track(value, tween({ to: 10, duration: 100 })));
+    const controller = playback(drive(value, tween({ to: 10, duration: 100 })));
 
     controller.handle.play();
     driver.flush(0);
@@ -209,14 +209,14 @@ describe('scheduler-integrated animation playback', () => {
   it('preflights an adopted restart before cancelling the active run', () => {
     const output = signal({ value: 0 }, { debugName: 'restart output' });
     const failures: unknown[] = [];
-    const controller = playback(track(output, defineAnimation({
+    const controller = playback(drive(output, defineAnimation({
       duration: 100,
       sample: ({ localTime }) => ({ value: localTime / 100 }),
     })), { onError: error => failures.push(error) });
     controller.handle.play();
     driver.flush(0);
 
-    controller.adopt(track(output, tween({
+    controller.adopt(drive(output, tween({
       to: { value: 2 },
       duration: 100,
       debugName: 'invalid adopted restart',
@@ -241,7 +241,7 @@ describe('scheduler-integrated animation playback', () => {
     const externalEvents: string[] = [];
     const failures: unknown[] = [];
     const first = playback(
-      track(firstOutput, tween({ to: 10, duration: 100 })),
+      drive(firstOutput, tween({ to: 10, duration: 100 })),
       {
         debugName: 'restarting playback',
         onEvent: event => firstEvents.push(event.type),
@@ -249,7 +249,7 @@ describe('scheduler-integrated animation playback', () => {
       },
     );
     const external = playback(
-      track(externalOutput, tween({ to: 20, duration: 100 })),
+      drive(externalOutput, tween({ to: 20, duration: 100 })),
       {
         debugName: 'external playback',
         onEvent: event => externalEvents.push(event.type),
@@ -261,8 +261,8 @@ describe('scheduler-integrated animation playback', () => {
     driver.flush(20);
 
     first.adopt(parallel(
-      track(firstOutput, tween({ to: 100, duration: 100 })),
-      track(externalOutput, tween({ to: 200, duration: 100 })),
+      drive(firstOutput, tween({ to: 100, duration: 100 })),
+      drive(externalOutput, tween({ to: 200, duration: 100 })),
     ), {
       debugName: 'restarting playback',
       onEvent: event => firstEvents.push(event.type),
@@ -307,7 +307,7 @@ describe('scheduler-integrated animation playback', () => {
     });
     const events: string[] = [];
     const controller = playback(
-      track(value, tween({ from: 0, to: 10, duration: 100 })),
+      drive(value, tween({ from: 0, to: 10, duration: 100 })),
       { onEvent: event => events.push(event.type) },
     );
     controller.handle.play();
@@ -315,7 +315,7 @@ describe('scheduler-integrated animation playback', () => {
     driver.flush(20);
     expect(value.get()).toBe(2);
 
-    controller.adopt(track(value, tween({ to: 20, duration: 100 })), {
+    controller.adopt(drive(value, tween({ to: 20, duration: 100 })), {
       onEvent: event => events.push(event.type),
     });
     rejectRestart = true;
@@ -350,13 +350,13 @@ describe('scheduler-integrated animation playback', () => {
       },
     });
     const controller = playback(
-      track(previousValue, tween({ from: 0, to: 10, duration: 100 })),
+      drive(previousValue, tween({ from: 0, to: 10, duration: 100 })),
     );
     controller.handle.play();
     driver.flush(0);
     driver.flush(20);
 
-    controller.adopt(track(adoptedValue, tween({ to: 20, duration: 100 })));
+    controller.adopt(drive(adoptedValue, tween({ to: 20, duration: 100 })));
     controller.handle.play();
     expect(() => driver.flush(30)).toThrow(/disjoint restart rejected/iu);
 
@@ -380,12 +380,12 @@ describe('scheduler-integrated animation playback', () => {
     };
     let controller!: AnimationPlaybackController;
     controller = playback(
-      track(previousValue, tween({ from: 0, to: 10, duration: 100 })),
+      drive(previousValue, tween({ from: 0, to: 10, duration: 100 })),
     );
     controller.handle.play();
     driver.flush(0);
 
-    controller.adopt(track(adoptedValue, defineAnimation({
+    controller.adopt(drive(adoptedValue, defineAnimation({
       duration: 100,
       sample: () => {
         controller.dispose();
@@ -419,11 +419,11 @@ describe('scheduler-integrated animation playback', () => {
     const value = signal(0, { debugName: 'provisional replacement output' });
     const events: string[] = [];
     const first = playback(
-      track(value, tween({ from: 0, to: 10, duration: 100 })),
+      drive(value, tween({ from: 0, to: 10, duration: 100 })),
       { debugName: 'restored owner', onEvent: event => events.push(`first:${event.type}`) },
     );
     const second = playback(
-      track(value, tween({ to: 20, duration: 100 })),
+      drive(value, tween({ to: 20, duration: 100 })),
       { debugName: 'provisional owner', onEvent: event => events.push(`second:${event.type}`) },
     );
     first.handle.play();
@@ -473,8 +473,8 @@ describe('scheduler-integrated animation playback', () => {
         return Object.is(previous, next);
       },
     });
-    const first = playback(track(value, tween({ from: 0, to: 10, duration: 100 })));
-    const second = playback(track(value, tween({ to: 20, duration: 100 })));
+    const first = playback(drive(value, tween({ from: 0, to: 10, duration: 100 })));
+    const second = playback(drive(value, tween({ to: 20, duration: 100 })));
     first.handle.play();
     driver.flush(0);
     driver.flush(20);
@@ -510,20 +510,20 @@ describe('scheduler-integrated animation playback', () => {
     const candidateErrors: unknown[] = [];
     const paused = playback(
       parallel(
-        track(y, tween({ from: 0, to: 10, duration: 100 })),
-        track(z, tween({ from: 100, to: 110, duration: 100 })),
+        drive(y, tween({ from: 0, to: 10, duration: 100 })),
+        drive(z, tween({ from: 100, to: 110, duration: 100 })),
       ),
       { onEvent: event => pausedEvents.push(event.type) },
     );
     const ending = playback(
-      track(x, tween({ from: 0, to: 20, duration: 100 })),
+      drive(x, tween({ from: 0, to: 20, duration: 100 })),
       { onEvent: event => endingEvents.push(event.type) },
     );
     const candidate = playback(
       parallel(
-        track(x, tween({ to: 30, duration: 100 })),
-        track(y, tween({ to: 40, duration: 100 })),
-        track(z, tween({ to: 140, duration: 100 })),
+        drive(x, tween({ to: 30, duration: 100 })),
+        drive(y, tween({ to: 40, duration: 100 })),
+        drive(z, tween({ to: 140, duration: 100 })),
       ),
       {
         onEvent: event => candidateEvents.push(event.type),
@@ -584,9 +584,9 @@ describe('scheduler-integrated animation playback', () => {
       },
     });
     const before = writerLeaseSnapshot();
-    const first = playback(track(value, tween({ from: 0, to: 10, duration: 100 })));
-    const second = playback(track(value, tween({ to: 20, duration: 100 })));
-    const third = playback(track(value, tween({ to: 30, duration: 100 })));
+    const first = playback(drive(value, tween({ from: 0, to: 10, duration: 100 })));
+    const second = playback(drive(value, tween({ to: 20, duration: 100 })));
+    const third = playback(drive(value, tween({ to: 30, duration: 100 })));
     first.handle.play();
     driver.flush(0);
     driver.flush(20);
@@ -625,9 +625,9 @@ describe('scheduler-integrated animation playback', () => {
       },
     });
     const before = writerLeaseSnapshot();
-    const first = playback(track(value, tween({ from: 0, to: 10, duration: 100 })));
+    const first = playback(drive(value, tween({ from: 0, to: 10, duration: 100 })));
     let disposed = false;
-    const second = playback(track(value, defineAnimation({
+    const second = playback(drive(value, defineAnimation({
       duration: 100,
       sample: ({ localTime }) => {
         if (!disposed) {
@@ -676,15 +676,15 @@ describe('scheduler-integrated animation playback', () => {
     const before = writerLeaseSnapshot();
     const events: string[] = [];
     const first = playback(
-      track(value, tween({ from: 0, to: 10, duration: 100 })),
+      drive(value, tween({ from: 0, to: 10, duration: 100 })),
       { onEvent: event => events.push(`first:${event.type}`) },
     );
     const second = playback(
-      track(value, tween({ to: 20, duration: 100 })),
+      drive(value, tween({ to: 20, duration: 100 })),
       { onEvent: event => events.push(`second:${event.type}`) },
     );
     const third = playback(
-      track(value, tween({ to: 30, duration: 100 })),
+      drive(value, tween({ to: 30, duration: 100 })),
       { onEvent: event => events.push(`third:${event.type}`) },
     );
     first.handle.play();
@@ -721,7 +721,7 @@ describe('scheduler-integrated animation playback', () => {
   it('pauses without a jump, retains leases, and resumes from a fresh anchor', () => {
     const value = signal(0);
     const before = writerLeaseSnapshot();
-    const controller = playback(track(value, tween({ to: 10, duration: 100 })));
+    const controller = playback(drive(value, tween({ to: 10, duration: 100 })));
 
     controller.handle.play();
     driver.flush(0);
@@ -748,7 +748,7 @@ describe('scheduler-integrated animation playback', () => {
     const value = signal(0);
     const events: string[] = [];
     const controller = playback(
-      track(value, tween({ from: 0, to: 10, duration: 100 })),
+      drive(value, tween({ from: 0, to: 10, duration: 100 })),
       { onEvent: event => events.push(event.type) },
     );
 
@@ -774,7 +774,7 @@ describe('scheduler-integrated animation playback', () => {
     });
     const events: string[] = [];
     const controller = playback(
-      track(value, tween({ from: 0, to: 10, duration: 100 })),
+      drive(value, tween({ from: 0, to: 10, duration: 100 })),
       { onEvent: event => events.push(event.type) },
     );
     let unregister = () => {};
@@ -798,7 +798,7 @@ describe('scheduler-integrated animation playback', () => {
 
   it('seeks fresh idle, cancelled, and finished handles into a paused run', () => {
     const value = signal(0);
-    const controller = playback(track(value, tween({ to: 10, duration: 100 })));
+    const controller = playback(drive(value, tween({ to: 10, duration: 100 })));
 
     controller.handle.seek(150);
     driver.flush(1);
@@ -825,7 +825,7 @@ describe('scheduler-integrated animation playback', () => {
 
   it('reverses and changes playback rate without changing the presented position', () => {
     const value = signal(0);
-    const controller = playback(track(value, tween({ from: 0, to: 10, duration: 100 })));
+    const controller = playback(drive(value, tween({ from: 0, to: 10, duration: 100 })));
 
     controller.handle.play();
     driver.flush(0);
@@ -849,7 +849,7 @@ describe('scheduler-integrated animation playback', () => {
 
   it('samples seekable time from a stable control anchor regardless of frame cadence', () => {
     const jumpedValue = signal(0);
-    const jumped = playback(track(jumpedValue, tween({
+    const jumped = playback(drive(jumpedValue, tween({
       from: 0,
       to: 1_000,
       duration: 1_000,
@@ -862,7 +862,7 @@ describe('scheduler-integrated animation playback', () => {
     jumped.dispose();
 
     const cadencedValue = signal(0);
-    const cadenced = playback(track(cadencedValue, tween({
+    const cadenced = playback(drive(cadencedValue, tween({
       from: 0,
       to: 1_000,
       duration: 1_000,
@@ -881,7 +881,7 @@ describe('scheduler-integrated animation playback', () => {
 
   it('reanchors stable logical time only when pause-resume, reverse, or rate controls require it', () => {
     const value = signal(0);
-    const controller = playback(track(value, tween({
+    const controller = playback(drive(value, tween({
       from: 0,
       to: 1_000,
       duration: 1_000,
@@ -913,7 +913,7 @@ describe('scheduler-integrated animation playback', () => {
   it('starts a fresh finite seekable program in reverse from its resolved terminal', () => {
     const value = signal(0);
     const controller = playback(
-      track(value, tween({ from: 0, to: 10, duration: 100 })),
+      drive(value, tween({ from: 0, to: 10, duration: 100 })),
     );
 
     controller.handle.reverse();
@@ -927,7 +927,7 @@ describe('scheduler-integrated animation playback', () => {
 
   it('finishes an activation-resolved finite spring from a fresh handle', () => {
     const value = signal(2);
-    const controller = playback(track(value, spring({
+    const controller = playback(drive(value, spring({
       to: 10,
       stiffness: 170,
       damping: 26,
@@ -948,7 +948,7 @@ describe('scheduler-integrated animation playback', () => {
     const before = writerLeaseSnapshot();
     const events: string[] = [];
     const controller = playback(
-      track(value, tween({ to: 10, duration: 100 })),
+      drive(value, tween({ to: 10, duration: 100 })),
       { onEvent: event => events.push(event.type) },
     );
 
@@ -976,7 +976,7 @@ describe('scheduler-integrated animation playback', () => {
 
   it('does not resurrect a cancelled run and lets a later seek create a fresh paused run', () => {
     const firstValue = signal(0);
-    const first = playback(track(firstValue, tween({ to: 10, duration: 100 })));
+    const first = playback(drive(firstValue, tween({ to: 10, duration: 100 })));
     first.handle.play();
     driver.flush(0);
     first.handle.pause();
@@ -988,7 +988,7 @@ describe('scheduler-integrated animation playback', () => {
     expect(first.handle.status.get()).toBe('cancelled');
 
     const secondValue = signal(0);
-    const second = playback(track(secondValue, tween({ to: 10, duration: 100 })));
+    const second = playback(drive(secondValue, tween({ to: 10, duration: 100 })));
     second.handle.play();
     driver.flush(30);
     second.handle.pause();
@@ -1016,7 +1016,7 @@ describe('scheduler-integrated animation playback', () => {
     driver.flush(2);
 
     let stepCalls = 0;
-    const stateful = playback(track(value, stepper({
+    const stateful = playback(drive(value, stepper({
       stepMilliseconds: 10,
       initial: current => current,
       step: state => {
@@ -1052,19 +1052,19 @@ describe('scheduler-integrated animation playback', () => {
       },
     });
     const owner = playback(
-      track(leased, tween({ from: 0, to: 10, duration: 100 })),
+      drive(leased, tween({ from: 0, to: 10, duration: 100 })),
       { debugName: 'diagnostic owner' },
     );
     const preflightErrors: unknown[] = [];
     const stalePreflightErrors: unknown[] = [];
-    const preflightProgram = track(leased, tween({ from: 0, to: 20, duration: 100 }));
+    const preflightProgram = drive(leased, tween({ from: 0, to: 20, duration: 100 }));
     const preflight = playback(preflightProgram, {
       debugName: 'preflight contender',
       onError: error => stalePreflightErrors.push(error),
     });
     const acquisitionErrors: unknown[] = [];
     const acquisition = playback(
-      track(leased, tween({ from: 0, to: 30, duration: 100 })),
+      drive(leased, tween({ from: 0, to: 30, duration: 100 })),
       { debugName: 'acquisition contender', onError: error => acquisitionErrors.push(error) },
     );
     const unavailableErrors: unknown[] = [];
@@ -1155,7 +1155,7 @@ describe('scheduler-integrated animation playback', () => {
   it('samples seekable definitions directly after dropped frames and clamps stepper work with trace evidence', () => {
     const tweened = signal(0);
     const tweenController = playback(
-      track(tweened, tween({ from: 0, to: 100, duration: 1_000 })),
+      drive(tweened, tween({ from: 0, to: 100, duration: 1_000 })),
     );
     tweenController.handle.play();
     driver.flush(0);
@@ -1167,7 +1167,7 @@ describe('scheduler-integrated animation playback', () => {
     const stepped = signal(0);
     const traces: CRCSchedulerTraceRecord[] = [];
     const restoreTrace = installSchedulerTraceCollectorForTest(record => traces.push(record));
-    const stepperController = playback(track(stepped, stepper({
+    const stepperController = playback(drive(stepped, stepper({
       stepMilliseconds: 10,
       maxElapsedMilliseconds: 100,
       initial: current => current,
@@ -1191,7 +1191,7 @@ describe('scheduler-integrated animation playback', () => {
     const advanceValue = signal(0);
     let advanceController!: AnimationPlaybackController;
     let queuedFromAdvance = false;
-    advanceController = playback(track(advanceValue, defineAnimation({
+    advanceController = playback(drive(advanceValue, defineAnimation({
       duration: 100,
       sample: ({ localTime }) => {
         if (localTime > 0 && !queuedFromAdvance) {
@@ -1210,7 +1210,7 @@ describe('scheduler-integrated animation playback', () => {
     expect(advanceController.handle.status.get()).toBe('paused');
 
     const renderValue = signal(0);
-    const renderController = playback(track(renderValue, tween({ to: 10, duration: 100 })));
+    const renderController = playback(drive(renderValue, tween({ to: 10, duration: 100 })));
     let queuedFromRender = false;
     root(createElement(() => {
       if (renderValue.get() > 0 && !queuedFromRender) {
@@ -1229,7 +1229,7 @@ describe('scheduler-integrated animation playback', () => {
     const completeValue = signal(0);
     let completeController!: AnimationPlaybackController;
     completeController = playback(
-      track(completeValue, tween({ to: 10, duration: 100 })),
+      drive(completeValue, tween({ to: 10, duration: 100 })),
       { onEvent: event => {
         if (event.type === 'start') completeController.handle.pause();
       } },
@@ -1267,7 +1267,7 @@ describe('scheduler-integrated animation playback', () => {
     ), { onEvent: event => events.push(`older:${event.marker ?? event.type}`) });
     const newerValue = signal(0);
     const newer = playback(
-      track(newerValue, tween({ to: 10, duration: 100 })),
+      drive(newerValue, tween({ to: 10, duration: 100 })),
       { onEvent: event => events.push(`newer:${event.type}`) },
     );
     older.handle.play();
@@ -1297,7 +1297,7 @@ describe('scheduler-integrated animation playback', () => {
       wait(10),
       marker('first owner marker'),
       marker('second owner marker'),
-      track(statefulValue, stepper({
+      drive(statefulValue, stepper({
         stepMilliseconds: 10,
         initial: current => current,
         step: state => state + 1,
@@ -1337,14 +1337,14 @@ describe('scheduler-integrated animation playback', () => {
     const failed = signal(0);
     const healthy = signal(0);
     const errors: unknown[] = [];
-    const failedController = playback(track(failed, defineAnimation({
+    const failedController = playback(drive(failed, defineAnimation({
       duration: 100,
       sample: ({ localTime }) => {
         if (localTime >= 10) throw new Error('sample exploded');
         return 5;
       },
     })), { onError: error => errors.push(error) });
-    const healthyController = playback(track(healthy, tween({ to: 10, duration: 100 })));
+    const healthyController = playback(drive(healthy, tween({ to: 10, duration: 100 })));
     failedController.handle.play();
     healthyController.handle.play();
     driver.flush(0);
@@ -1372,7 +1372,7 @@ describe('scheduler-integrated animation playback', () => {
     const events: string[] = [];
     const before = writerLeaseSnapshot();
     const controller = playback(
-      track(value, tween({ from: 0, to: 10, duration: 10 })),
+      drive(value, tween({ from: 0, to: 10, duration: 10 })),
       { onEvent: event => events.push(event.type) },
     );
     controller.handle.play();
@@ -1411,7 +1411,7 @@ describe('scheduler-integrated animation playback', () => {
       leases: writerLeaseSnapshot().active,
       playbacks: animationPlaybackSnapshot().activePlaybacks,
     };
-    const controller = playback(track(value, stepper({
+    const controller = playback(drive(value, stepper({
       stepMilliseconds: 10,
       initial: current => current,
       step: state => state + 1,
@@ -1449,7 +1449,7 @@ describe('scheduler-integrated animation playback', () => {
     const events: string[] = [];
     const traces: CRCSchedulerTraceRecord[] = [];
     const restoreTrace = installSchedulerTraceCollectorForTest(record => traces.push(record));
-    const controller = playback(repeat(track(value, stepper({
+    const controller = playback(repeat(drive(value, stepper({
       stepMilliseconds: 10,
       initial: (current: number) => ({ value: current, steps: 0 }),
       step: state => ({ value: state.value, steps: state.steps + 1 }),
@@ -1496,7 +1496,7 @@ describe('scheduler-integrated animation playback', () => {
       },
     });
     const failures: unknown[] = [];
-    const controller = playback(track(value, stepper({
+    const controller = playback(drive(value, stepper({
       debugName: 'transactional terminal',
       stepMilliseconds: 10,
       initial: current => current,
@@ -1525,7 +1525,7 @@ describe('scheduler-integrated animation playback', () => {
     const controller = playback(sequence(
       wait(5),
       marker('committed marker'),
-      track(value, tween({ from: 0, to: 20, duration: 15 })),
+      drive(value, tween({ from: 0, to: 20, duration: 15 })),
     ), { onEvent: event => events.push(event.marker ?? event.type) });
     controller.handle.play();
     driver.flush(0);
@@ -1555,7 +1555,7 @@ describe('scheduler-integrated animation playback', () => {
     const value = signal(0, { debugName: 'cancel retry output' });
     const events: string[] = [];
     const controller = playback(
-      track(value, tween({ from: 0, to: 10, duration: 100 })),
+      drive(value, tween({ from: 0, to: 10, duration: 100 })),
       { onEvent: event => events.push(event.type) },
     );
     controller.handle.play();
@@ -1584,7 +1584,7 @@ describe('scheduler-integrated animation playback', () => {
   it('restores registration and retries a pause rejected by Commit', () => {
     const value = signal(0, { debugName: 'pause retry output' });
     const controller = playback(
-      track(value, tween({ from: 0, to: 10, duration: 100 })),
+      drive(value, tween({ from: 0, to: 10, duration: 100 })),
     );
     controller.handle.play();
     driver.flush(0);
@@ -1613,7 +1613,7 @@ describe('scheduler-integrated animation playback', () => {
   it('restores a paused run and retries resume when Commit rejects it', () => {
     const value = signal(0, { debugName: 'resume retry output' });
     const controller = playback(
-      track(value, tween({ from: 0, to: 10, duration: 100 })),
+      drive(value, tween({ from: 0, to: 10, duration: 100 })),
     );
     controller.handle.play();
     driver.flush(0);
@@ -1648,7 +1648,7 @@ describe('scheduler-integrated animation playback', () => {
     const events: string[] = [];
     const before = writerLeaseSnapshot();
     const controller = playback(
-      track(value, tween({ from: 0, to: 10, duration: 10 })),
+      drive(value, tween({ from: 0, to: 10, duration: 10 })),
       { onEvent: event => events.push(event.type) },
     );
     controller.handle.play();
@@ -1673,11 +1673,11 @@ describe('scheduler-integrated animation playback', () => {
     const events: string[] = [];
     const conflicts: unknown[] = [];
     const first = playback(
-      track(value, tween({ to: 10, duration: 100 })),
+      drive(value, tween({ to: 10, duration: 100 })),
       { debugName: 'first', onEvent: event => events.push(`first:${event.type}`) },
     );
     const second = playback(
-      track(value, tween({ to: 20, duration: 100 })),
+      drive(value, tween({ to: 20, duration: 100 })),
       {
         debugName: 'second',
         onEvent: event => events.push(`second:${event.type}`),
@@ -1710,7 +1710,7 @@ describe('scheduler-integrated animation playback', () => {
   it('discards a playback output when its controller is disposed from its own sampler', () => {
     const value = signal(0);
     let controller!: AnimationPlaybackController;
-    controller = playback(track(value, defineAnimation({
+    controller = playback(drive(value, defineAnimation({
       duration: 100,
       sample: ({ localTime }) => {
         if (localTime > 0) controller.dispose();
@@ -1731,7 +1731,7 @@ describe('scheduler-integrated animation playback', () => {
   it('makes a disposed controller and all already queued commands inert', () => {
     const value = signal(0);
     const before = animationPlaybackSnapshot();
-    const controller = playback(track(value, tween({ to: 10, duration: 100 })));
+    const controller = playback(drive(value, tween({ to: 10, duration: 100 })));
     controller.handle.play();
     controller.dispose();
 
@@ -1757,7 +1757,7 @@ describe('scheduler-integrated animation playback', () => {
     const value = signal(0);
     const records: CRCSchedulerTraceRecord[] = [];
     const restoreTrace = installSchedulerTraceCollectorForTest(record => records.push(record));
-    const controller = playback(track(value, tween({ to: 10, duration: 100 })));
+    const controller = playback(drive(value, tween({ to: 10, duration: 100 })));
 
     controller.handle.play();
     controller.handle.pause();
@@ -1780,8 +1780,8 @@ describe('scheduler-integrated animation playback', () => {
     const records: CRCSchedulerTraceRecord[] = [];
     const restoreTrace = installSchedulerTraceCollectorForTest(record => records.push(record));
     const controller = playback(sequence(
-      track(active, tween({ to: 10, duration: 100 })),
-      track(future, tween({ to: 10, duration: 100 })),
+      drive(active, tween({ to: 10, duration: 100 })),
+      drive(future, tween({ to: 10, duration: 100 })),
     ));
 
     controller.handle.play();
@@ -1825,7 +1825,7 @@ describe('scheduler-integrated animation playback', () => {
     const events: string[] = [];
     const before = writerLeaseSnapshot();
     const controller = playback(
-      track(value, tween({ from: 0, to: 10, duration: 10 })),
+      drive(value, tween({ from: 0, to: 10, duration: 10 })),
       { onEvent: event => events.push(event.type) },
     );
     const restoreTrace = installSchedulerTraceCollectorForTest(record => {
@@ -1850,7 +1850,7 @@ describe('scheduler-integrated animation playback', () => {
     const markerEvents: string[] = [];
     const markerController = playback(sequence(
       marker('trace marker'),
-      track(markerValue, tween({ from: 0, to: 10, duration: 10 })),
+      drive(markerValue, tween({ from: 0, to: 10, duration: 10 })),
     ), { onEvent: event => markerEvents.push(event.marker ?? event.type) });
     let restoreTrace = installSchedulerTraceCollectorForTest(record => {
       if (record.kind === 'animation-milestone' && record.event === 'marker') {
@@ -1869,7 +1869,7 @@ describe('scheduler-integrated animation playback', () => {
 
     const stepped = signal(0);
     const stepperEvents: string[] = [];
-    const stepperController = playback(track(stepped, stepper({
+    const stepperController = playback(drive(stepped, stepper({
       stepMilliseconds: 10,
       initial: current => current,
       step: state => state + 1,
@@ -1897,7 +1897,7 @@ describe('scheduler-integrated animation playback', () => {
     const events: string[] = [];
     const errors: unknown[] = [];
     const before = writerLeaseSnapshot();
-    const controller = playback(track(value, defineAnimation({
+    const controller = playback(drive(value, defineAnimation({
       duration: 100,
       sample: ({ localTime }) => {
         if (localTime >= 10) throw new Error('sampler exploded');

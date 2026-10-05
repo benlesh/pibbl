@@ -180,7 +180,7 @@ export {
   parallel,
   repeat,
   sequence,
-  track,
+  drive,
   wait,
 } from './lib/animation/program.js';
 export type {

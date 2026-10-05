@@ -11,7 +11,7 @@ import {
   sequence,
   spring,
   Text,
-  track,
+  drive,
   tween,
   type CRCController,
 } from "@crc/core";
@@ -36,7 +36,7 @@ function AnimatedCard() {
 
   const entrance = sequence(
     parallel(
-      track(
+      drive(
         x,
         tween({
           from: 110,
@@ -45,7 +45,7 @@ function AnimatedCard() {
           debugName: "learning entrance x",
         }),
       ),
-      track(
+      drive(
         opacity,
         tween({
           from: 0.2,
@@ -54,7 +54,7 @@ function AnimatedCard() {
           debugName: "learning entrance opacity",
         }),
       ),
-      track(
+      drive(
         pulseScale,
         tween({
           from: 1,
@@ -65,7 +65,7 @@ function AnimatedCard() {
       ),
     ),
     marker("arrived"),
-    track(
+    drive(
       pulseScale,
       spring({
         from: 1,

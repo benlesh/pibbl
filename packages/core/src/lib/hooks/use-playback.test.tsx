@@ -14,7 +14,7 @@ import {
   repeat,
   sequence,
   signal,
-  track,
+  drive,
   tween,
   wait,
   type CRCAnimationProgram,
@@ -62,7 +62,7 @@ describe('usePlayback', () => {
     const output = signal(0);
     const events: string[] = [];
     const program = signal<CRCAnimationProgram>(
-      track(output, tween({ to: 10, duration: 100 })),
+      drive(output, tween({ to: 10, duration: 100 })),
     );
     const onEvent = signal<(event: CRCPlaybackEvent) => void>(
       event => events.push(`first:${event.type}`),
@@ -82,7 +82,7 @@ describe('usePlayback', () => {
     expect(output.get()).toBe(10);
     expect(events).toEqual(['first:start', 'first:finish']);
 
-    program.set(track(output, tween({ from: 10, to: 20, duration: 100 })));
+    program.set(drive(output, tween({ from: 10, to: 20, duration: 100 })));
     onEvent.set(event => events.push(`second:${event.type}`));
     driver.flush(101);
     handle.play();
@@ -102,7 +102,7 @@ describe('usePlayback', () => {
     const output = signal(0);
     const handles: CRCPlayback[] = [];
     function Probe({ to }: { to: number }) {
-      handles.push(usePlayback(track(output, tween({ to, duration: 100 }))));
+      handles.push(usePlayback(drive(output, tween({ to, duration: 100 }))));
     }
 
     const canvas = document.createElement('canvas');
@@ -124,7 +124,7 @@ describe('usePlayback', () => {
     const output = signal(0);
     let handle!: CRCPlayback;
     function Probe({ to }: { to: number }) {
-      handle = usePlayback(track(output, tween({ to, duration: 100 })));
+      handle = usePlayback(drive(output, tween({ to, duration: 100 })));
     }
 
     const canvas = document.createElement('canvas');
@@ -155,7 +155,7 @@ describe('usePlayback', () => {
     let handle!: CRCPlayback;
     function Probe({ callback }: { callback: string }) {
       handle = usePlayback(
-        track(output, tween({ to: 10, duration: 100 })),
+        drive(output, tween({ to: 10, duration: 100 })),
         { onEvent: event => events.push(`${callback}:${event.type}`) },
       );
     }
@@ -184,7 +184,7 @@ describe('usePlayback', () => {
     let handle!: CRCPlayback;
     function Probe() {
       handle = usePlayback(
-        track(output, tween({ to: 10, duration: 100 })),
+        drive(output, tween({ to: 10, duration: 100 })),
         options,
       );
       options.onEvent = event => events.push(`mutated:${event.type}`);
@@ -207,7 +207,7 @@ describe('usePlayback', () => {
     const workKey = {};
     function Probe({ to, callback }: { to: number; callback: string }) {
       handle = usePlayback(
-        track(output, tween({ from: 0, to, duration: 100 })),
+        drive(output, tween({ from: 0, to, duration: 100 })),
         { onEvent: event => events.push(`${callback}:${event.type}`) },
       );
       owner ??= crcInternalCurrentRenderOwner();
@@ -242,7 +242,7 @@ describe('usePlayback', () => {
   for (const invalidCandidate of ['program', 'onEvent'] as const) {
     it(`fails closed during render for an update-time invalid ${invalidCandidate} candidate`, () => {
       const output = signal(0);
-      const validProgram = track(
+      const validProgram = drive(
         output,
         tween({ from: 0, to: 10, duration: 100 }),
       );
@@ -313,7 +313,7 @@ describe('usePlayback', () => {
     const events: string[] = [];
     let handle!: CRCPlayback;
     function Probe({ to }: { to: number }) {
-      handle = usePlayback(track(output, tween({ to, duration: 100 })), {
+      handle = usePlayback(drive(output, tween({ to, duration: 100 })), {
         autoplay: true,
         onEvent: event => events.push(event.type),
       });
@@ -345,7 +345,7 @@ describe('usePlayback', () => {
     let failComposition = false;
     const workKey = {};
     function Child() {
-      handle = usePlayback(track(output, tween({ to: 10, duration: 100 })), {
+      handle = usePlayback(drive(output, tween({ to: 10, duration: 100 })), {
         autoplay: true,
       });
     }
@@ -383,7 +383,7 @@ describe('usePlayback', () => {
     const output = signal(0);
     let handle!: CRCPlayback;
     function Probe({ autoplay }: { autoplay: boolean }) {
-      handle = usePlayback(track(output, tween({ to: 10, duration: 100 })), {
+      handle = usePlayback(drive(output, tween({ to: 10, duration: 100 })), {
         autoplay,
       });
     }
@@ -407,7 +407,7 @@ describe('usePlayback', () => {
       const beforeLeases = writerLeaseSnapshot();
       let handle!: CRCPlayback;
       function Probe() {
-        handle = usePlayback(track(output, tween({ to: 10, duration: 100 })));
+        handle = usePlayback(drive(output, tween({ to: 10, duration: 100 })));
       }
 
       const canvas = document.createElement('canvas');
@@ -498,7 +498,7 @@ describe('usePlayback', () => {
     let handle!: CRCPlayback;
     function Probe() {
       const playback = usePlayback(sequence(
-        track(output, tween({ from: 0, to: 10, duration: 100 })),
+        drive(output, tween({ from: 0, to: 10, duration: 100 })),
         repeat(sequence(wait(50), marker('arrived'), wait(50)), {
           iterations: 2,
         }),
@@ -625,7 +625,7 @@ describe('usePlayback', () => {
     let handle!: CRCPlayback;
     function Probe() {
       const playback = usePlayback(
-        track(output, tween({ from: 0, to: 10, duration: 100 })),
+        drive(output, tween({ from: 0, to: 10, duration: 100 })),
         { onEvent: event => {
           if (event.type !== 'start') return;
           callbackSnapshots.push(renders.at(-1)!);
@@ -674,11 +674,11 @@ describe('usePlayback', () => {
     let healthy!: CRCPlayback;
     function FailingRoot() {
       failed = usePlayback(parallel(
-        track(firstFailedOutput, defineAnimation({
+        drive(firstFailedOutput, defineAnimation({
           duration: 100,
           sample: ({ localTime }) => localTime + 1,
         })),
-        track(secondFailedOutput, defineAnimation({
+        drive(secondFailedOutput, defineAnimation({
           duration: 100,
           sample: ({ localTime }) => {
             if (localTime >= 10) throw new Error('sampler exploded');
@@ -692,7 +692,7 @@ describe('usePlayback', () => {
     }
     function HealthyRoot() {
       healthy = usePlayback(
-        track(healthyOutput, tween({ from: 0, to: 10, duration: 100 })),
+        drive(healthyOutput, tween({ from: 0, to: 10, duration: 100 })),
       );
       healthyRenders.push(healthyOutput.get());
       healthy.status.get();
@@ -760,7 +760,7 @@ describe('usePlayback', () => {
     let failing!: CRCPlayback;
     let healthy!: CRCPlayback;
     function Probe() {
-      failing = usePlayback(track(failedOutput, defineAnimation({
+      failing = usePlayback(drive(failedOutput, defineAnimation({
         duration: 100,
         sample: ({ localTime }) => {
           if (localTime >= 10) throw new Error('definition exploded');

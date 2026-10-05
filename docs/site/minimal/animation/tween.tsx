@@ -4,7 +4,7 @@ import {
   Text,
   useSignal,
   usePlayback,
-  track,
+  drive,
   tween,
   easing,
   type CRCEasing,
@@ -43,7 +43,7 @@ const playbackOptions: CRCPlaybackOptions = {
 let controls: CRCPlayback | undefined;
 function Scene() {
   const x = useSignal(30);
-  const playback = usePlayback(track(x, definition), playbackOptions);
+  const playback = usePlayback(drive(x, definition), playbackOptions);
   controls = playback;
   const status: CRCPlaybackStatus = playback.status.get();
   return (

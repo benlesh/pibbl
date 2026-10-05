@@ -6,7 +6,7 @@ import type { SystemStyle } from '../types';
 import {
   usePlayback,
   parallel,
-  track,
+  drive,
   tween,
   type CRCPlayback,
 } from '@crc/core';
@@ -353,11 +353,11 @@ describe('Layer children and retained subtree contract', () => {
     const Root = (_props: {}): CRCNode => {
       renders.root++;
       childPlayback = usePlayback(
-        track(childX, tween({ from: 0, to: 20, duration: 100 })),
+        drive(childX, tween({ from: 0, to: 20, duration: 100 })),
       );
       presentationPlayback = usePlayback(parallel(
-        track(parentOffset, tween({ from: 0, to: 10, duration: 100 })),
-        track(parentOpacity, tween({ from: 1, to: 0.5, duration: 100 })),
+        drive(parentOffset, tween({ from: 0, to: 10, duration: 100 })),
+        drive(parentOpacity, tween({ from: 1, to: 0.5, duration: 100 })),
       ));
       const offset = parentOffset.get();
       const opacityAmount = parentOpacity.get();

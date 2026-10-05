@@ -17,7 +17,7 @@ Numbers interpolate linearly by default; other value types require an explicit
 interpolator. `from` may be omitted so playback captures the output's activation
 value.
 
-Use [`track`](#/api/functions/track) to bind the definition to a writable signal.
+Use [`drive`](#/api/functions/drive) to bind the definition to a writable signal.
 
 Related types: [`CRCTweenOptions`](#/api/types/canvas-runtime#crctweenoptions)
 and [`CRCInterpolator`](#/api/types/canvas-runtime#crcinterpolator).

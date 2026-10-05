@@ -9,7 +9,7 @@ import {
   useRef,
   useTexture,
   usePlayback,
-  track,
+  drive,
   tween,
   repeat,
   sequence,
@@ -42,7 +42,7 @@ export default function mount(canvas: HTMLCanvasElement): CRCController {
     usePlayback(
       repeat(
         sequence(
-          track(detail, tween({ from: 0.2, to: 0.9, duration: 3000 })),
+          drive(detail, tween({ from: 0.2, to: 0.9, duration: 3000 })),
           wait(16),
         ),
         { iterations: Infinity, direction: "alternate" },

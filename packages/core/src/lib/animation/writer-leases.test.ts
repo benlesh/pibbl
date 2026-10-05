@@ -6,7 +6,7 @@ import {
   repeat,
   sequence,
   signal,
-  track,
+  drive,
   tween,
   wait,
 } from '../../index';
@@ -52,15 +52,15 @@ describe('animation writer leases', () => {
     const before = writerLeaseSnapshot();
     const firstLease = acquireProgramWriterLeases(
       parallel(
-        track(first, tween({ to: 1, duration: 10 })),
-        track(second, tween({ to: 1, duration: 10 })),
+        drive(first, tween({ to: 1, duration: 10 })),
+        drive(second, tween({ to: 1, duration: 10 })),
       ),
       {},
       owner('first playback', 1),
     );
 
     expect(() => acquireProgramWriterLeases(
-      track(second, tween({ to: 2, duration: 10 })),
+      drive(second, tween({ to: 2, duration: 10 })),
       {},
       owner('second playback', 2),
     )).toThrow(/second output.*first playback/iu);
@@ -83,8 +83,8 @@ describe('animation writer leases', () => {
     const output = signal(0, { debugName: 'shared output' });
     const before = writerLeaseSnapshot();
     const lease = acquireProgramWriterLeases(sequence(
-      track(output, tween({ to: 1, duration: 10 })),
-      track(output, tween({ to: 2, duration: 10 })),
+      drive(output, tween({ to: 1, duration: 10 })),
+      drive(output, tween({ to: 2, duration: 10 })),
     ), {}, owner('sequential playback', 1));
 
     expect(lease.outputs).toEqual([output]);
@@ -105,7 +105,7 @@ describe('animation writer leases', () => {
     const output = signal(0, { debugName: `${reason} output` });
     const before = writerLeaseSnapshot();
     const lease = acquireProgramWriterLeases(
-      track(output, tween({ to: 1, duration: 10 })),
+      drive(output, tween({ to: 1, duration: 10 })),
       {},
       owner(`${reason} playback`, 1),
     );
@@ -127,7 +127,7 @@ describe('animation writer leases', () => {
     let oldLease: ProgramWriterLease;
     const oldOwner = owner('old playback', 1, () => oldLease.release());
     oldLease = acquireProgramWriterLeases(
-      track(output, tween({ to: 10, duration: 10 })),
+      drive(output, tween({ to: 10, duration: 10 })),
       {},
       oldOwner,
     );
@@ -149,7 +149,7 @@ describe('animation writer leases', () => {
     stale.stage(output, 8, oldOwner.token);
     oldLease.release();
     const replacement = acquireProgramWriterLeases(
-      track(output, tween({ to: 20, duration: 10 })),
+      drive(output, tween({ to: 20, duration: 10 })),
       {},
       owner('new playback', 2),
     );
@@ -177,14 +177,14 @@ describe('animation writer leases', () => {
       lateLease.release();
     });
     lateLease = acquireProgramWriterLeases(
-      track(second, tween({ to: 4, duration: 10 })),
+      drive(second, tween({ to: 4, duration: 10 })),
       {},
       late,
     );
     earlyLease = acquireProgramWriterLeases(
       parallel(
-        track(first, tween({ to: 5, duration: 10 })),
-        track(extra, tween({ to: 6, duration: 10 })),
+        drive(first, tween({ to: 5, duration: 10 })),
+        drive(extra, tween({ to: 6, duration: 10 })),
       ),
       {},
       early,
@@ -192,14 +192,14 @@ describe('animation writer leases', () => {
     const beforeReplacement = writerLeaseSnapshot();
     const replacingOwner = owner('replacement playback', 30);
     const program = parallel(
-      track(second, defineAnimation({
+      drive(second, defineAnimation({
         duration: 10,
         sample: ({ initialValue }) => {
           events.push(`sample second:${writerLeaseSnapshot().activeOutputs.join(',')}`);
           return initialValue + 10;
         },
       })),
-      track(first, defineAnimation({
+      drive(first, defineAnimation({
         duration: 10,
         sample: ({ initialValue }) => {
           events.push(`sample first:${writerLeaseSnapshot().activeOutputs.join(',')}`);
@@ -258,7 +258,7 @@ describe('animation writer leases', () => {
       existingLease.release();
     });
     existingLease = acquireProgramWriterLeases(
-      track(output, tween({
+      drive(output, tween({
         from: { value: 0 },
         to: { value: 1 },
         duration: 10,
@@ -272,7 +272,7 @@ describe('animation writer leases', () => {
     const before = writerLeaseSnapshot();
 
     expect(() => acquireProgramWriterLeases(
-      track(output, tween({
+      drive(output, tween({
         to: { value: 2 },
         duration: 10,
         debugName: 'invalid omitted start',
@@ -298,7 +298,7 @@ describe('animation writer leases', () => {
       previousLease.release();
     });
     previousLease = acquireProgramWriterLeases(
-      track(output, tween({ to: 5, duration: 10 })),
+      drive(output, tween({ to: 5, duration: 10 })),
       {},
       previousOwner,
     );
@@ -307,7 +307,7 @@ describe('animation writer leases', () => {
     committed.commit();
 
     const replacement = acquireProgramWriterLeases(
-      track(output, tween({ to: 9, duration: 10 })),
+      drive(output, tween({ to: 9, duration: 10 })),
       {},
       owner('recapturing playback', 2),
       { conflict: 'replace' },
@@ -330,18 +330,18 @@ describe('animation writer leases', () => {
       existingLease.release();
     });
     existingLease = acquireProgramWriterLeases(
-      track(output, tween({ from: 0, to: 1, duration: 10 })),
+      drive(output, tween({ from: 0, to: 1, duration: 10 })),
       {},
       existingOwner,
     );
     const before = writerLeaseSnapshot();
     const program = sequence(
-      track(output, keyframes<number | string>({
+      drive(output, keyframes<number | string>({
         values: ['a', 'b'],
         duration: 10,
         interpolate: (from, to, progress) => progress < 1 ? from : to,
       })),
-      track(output, tween({
+      drive(output, tween({
         to: 2,
         duration: 10,
         debugName: 'future omitted numeric',
@@ -367,7 +367,7 @@ describe('animation writer leases', () => {
     });
     let interpolationCalls = 0;
     const program = sequence(
-      track(output, keyframes<number | string>({
+      drive(output, keyframes<number | string>({
         values: [0, 1],
         duration: 10,
         interpolate: (from, to, progress) => {
@@ -375,7 +375,7 @@ describe('animation writer leases', () => {
           return progress < 1 ? from : to;
         },
       })),
-      track(output, tween({
+      drive(output, tween({
         to: 2,
         duration: 10,
         debugName: 'valid future omitted numeric',
@@ -397,17 +397,17 @@ describe('animation writer leases', () => {
   it('propagates zero-duration sequence boundaries before validating omitted starts', () => {
     const invalid = signal<number | string>(0);
     const invalidProgram = sequence(
-      track(invalid, keyframes<number | string>({
+      drive(invalid, keyframes<number | string>({
         values: [0, 1],
         duration: 0,
         interpolate: (from, to, progress) => progress < 1 ? from : to,
       })),
-      track(invalid, keyframes<number | string>({
+      drive(invalid, keyframes<number | string>({
         values: ['before', 'after'],
         duration: 0,
         interpolate: (from, to, progress) => progress < 1 ? from : to,
       })),
-      track(invalid, tween({ to: 2, duration: 1, debugName: 'zero invalid' })),
+      drive(invalid, tween({ to: 2, duration: 1, debugName: 'zero invalid' })),
     );
     expect(() => acquireProgramWriterLeases(
       invalidProgram,
@@ -417,17 +417,17 @@ describe('animation writer leases', () => {
 
     const valid = signal<number | string>('initial');
     const validProgram = sequence(
-      track(valid, keyframes<number | string>({
+      drive(valid, keyframes<number | string>({
         values: ['before', 'after'],
         duration: 0,
         interpolate: (from, to, progress) => progress < 1 ? from : to,
       })),
-      track(valid, keyframes<number | string>({
+      drive(valid, keyframes<number | string>({
         values: [0, 1],
         duration: 0,
         interpolate: (from, to, progress) => progress < 1 ? from : to,
       })),
-      track(valid, tween({ to: 2, duration: 1, debugName: 'zero valid' })),
+      drive(valid, tween({ to: 2, duration: 1, debugName: 'zero valid' })),
     );
     const lease = acquireProgramWriterLeases(
       validProgram,
@@ -451,19 +451,19 @@ describe('animation writer leases', () => {
       const output = signal<number | string>('initial');
       const program = sequence(
         repeat(sequence(
-          track(output, tween<number | string>({
+          drive(output, tween<number | string>({
             from: 0,
             to: 1,
             duration: 1,
           })),
-          track(output, keyframes<number | string>({
+          drive(output, keyframes<number | string>({
             values: ['a', 'b'],
             duration: 1,
             interpolate: (from, to, progress) => progress < 1 ? from : to,
           })),
           wait(1),
         ), { iterations, direction }),
-        track(output, tween({
+        drive(output, tween({
           to: 2,
           duration: 1,
           debugName: `${direction} ${iterations} repeat terminal`,
@@ -490,14 +490,14 @@ describe('animation writer leases', () => {
   it('uses the chronologically latest parallel terminal regardless of branch order', () => {
     for (const reverseBranches of [false, true]) {
       const output = signal<number | string>('initial');
-      const early = track(output, keyframes<number | string>({
+      const early = drive(output, keyframes<number | string>({
         values: ['a', 'b'],
         duration: 10,
         interpolate: (from, to, progress) => progress < 1 ? from : to,
       }));
       const late = sequence(
         wait(11),
-        track(output, keyframes<number | string>({
+        drive(output, keyframes<number | string>({
           values: [0, 1],
           duration: 1,
           interpolate: (from, to, progress) => progress < 1 ? from : to,
@@ -506,7 +506,7 @@ describe('animation writer leases', () => {
       const branches = reverseBranches ? [late, early] : [early, late];
       const program = sequence(
         parallel(...branches),
-        track(output, tween({
+        drive(output, tween({
           to: 2,
           duration: 1,
           debugName: 'parallel future omitted numeric',
@@ -527,14 +527,14 @@ describe('animation writer leases', () => {
     let sampleCalls = 0;
     const before = writerLeaseSnapshot();
     const program = sequence(
-      track(output, defineAnimation({
+      drive(output, defineAnimation({
         duration: 10,
         sample: () => {
           sampleCalls++;
           return 'opaque';
         },
       })),
-      track(output, tween({
+      drive(output, tween({
         to: 2,
         duration: 1,
         debugName: 'opaque future omitted',

@@ -12,11 +12,42 @@ Read [signals and animation](/guides/signals-and-animation/), then the exact ref
 
 CRC animation has three layers: definitions describe values, programs bind definitions to writable signals, and a mounted playback hook owns the run. Definitions/programs are immutable and do not start work merely by being created. Keep continuing work on CRC's scheduler.
 
+## Watch this example
+
+**Click the blue card in the preview above.** Run mounts the example; the card click starts the animation. With reduced motion enabled, first choose Run to opt into the preview. [Open full page](/experience/signals-and-animation/) for more room, or [open the playground](@PLAYGROUND@#/examples/composition/signals-and-animation) to edit the source.
+
+The card begins at X = 110 with its blue rectangle at 20% opacity. Clicking moves it right to X = 178 and fades that rectangle to full opacity over 360 milliseconds, simultaneously. Then the `arrived` marker changes the message and a spring grows the card's scale multiplier from 1 to 1.08. A separate target-driven spring toggles between 1 and 0.96 on each click; the two scale values are multiplied when drawing. The label text is not part of the rectangle's opacity animation.
+
+## Where entrance is used
+
+`entrance` is the program description, not a running animation. Its direct consumer is **`usePlayback(entrance, ...)`** in `AnimatedCard`. The returned `playback` owns the mounted run. The blue rectangle's `onClick` handler calls **`playback.play({ conflict: "replace" })`** to start it.
+
+This excerpt isolates the connections in the complete source below; it is not a second standalone example:
+
+```tsx
+const entrance = sequence(/* tracks and marker shown in the complete source */);
+const playback = usePlayback(entrance, {/* marker callback */});
+
+// Reading the outputs makes this component update as playback publishes values.
+const currentX = x.get();
+const currentOpacity = opacity.get();
+
+// Inside the returned scene:
+<Group style={{ translateX: currentX }}>
+  <Rectangle
+    style={{ width: 364, height: 172, opacity: currentOpacity }}
+    onClick={() => playback.play({ conflict: "replace" })}
+  />
+</Group>;
+```
+
+Follow the chain: playback of `drive(x, tween(...))` writes `x`; `x.get()` reads it; `Group.style.translateX` moves the card. The program driving opacity similarly reaches `Rectangle.style.opacity`. `pulseScale` and `presentedScale` feed the group's `scaleX` and `scaleY`. None of these programs draws anything by itself.
+
 ## Values, time, and ownership
 
 Durations are milliseconds and must be finite and nonnegative. Numeric interpolation is built in; colors, points, and objects require an explicit interpolator. An omitted tween `from` captures the output when that occurrence activates. Springs are analytic seekable numeric definitions; stateful steppers use fixed steps and have different seeking constraints. Choose the documented model rather than integrating velocity in a render function.
 
-`track` binds a definition to an output. `sequence`, `parallel`, `wait`, `marker`, and `repeat` compose timing. A whole run reserves its writers. Two ambiguous writers are rejected unless explicit replacement is selected. Give each visual property a clear owner; a drag handler and playback must not accidentally compete for the same signal.
+`drive` binds a definition to an output. `sequence`, `parallel`, `wait`, `marker`, and `repeat` compose timing. A whole run reserves its writers. Two ambiguous writers are rejected unless explicit replacement is selected. Give each visual property a clear owner; a drag handler and playback must not accidentally compete for the same signal.
 
 Commands enter Begin, sampling occurs in Advance, writes publish atomically in Commit, and rendering follows planning. Milestones and errors deliver in Complete. Calls made in an event are scheduled commands, not permission to inspect uncommitted future pixels immediately.
 
@@ -24,7 +55,7 @@ For `useAnimatedValue`, an unspecified initial value presents the target immedia
 
 ## Complete example and adaptation
 
-The source below is the existing Signals and Animation lesson. [Open its controls](@PLAYGROUND@#/examples/composition/signals-and-animation). It demonstrates stable playback controls, signal-valued styles, and coordinated motion. Use the canvas dimensions from its mount setup and CRC's JSX import source. No external assets are required.
+The source below is exactly the Signals and Animation lesson running above. It demonstrates stable playback controls, explicitly read signal values, and coordinated motion. Use a 720 by 420 logical canvas and CRC's JSX import source. No external assets are required. [Example documentation](/examples/signals-and-animation/) also links its complete source and full-page view.
 
 When adapting, list every output signal and its owner before adding tracks. Preserve the hook lifetime through rerenders. Change one definition or timing parameter at a time. The host must apply a reduced-motion policy appropriate to the product; an example with animation does not automatically establish that policy for your application.
 

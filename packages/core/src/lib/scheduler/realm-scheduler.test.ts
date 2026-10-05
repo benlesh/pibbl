@@ -5,7 +5,7 @@ import {
   defineAnimation,
   marker,
   sequence,
-  track,
+  drive,
   type CRCPlayback,
 } from "../../index";
 import { crc } from "../crc";
@@ -807,7 +807,7 @@ describe("realm scheduler", () => {
     const Root = (_props: {}) => {
       playback = usePlayback(
         sequence(
-          track(
+          drive(
             output,
             defineAnimation({
               duration: 50,

@@ -5,7 +5,7 @@ import {
   useConst,
   usePlayback,
   useReaction,
-  track,
+  drive,
   stepper,
   type CRCPlayback,
 } from "@crc/core";
@@ -208,7 +208,7 @@ function saveRecords() {
 function App() {
   const time = useSignal(0);
   const program = useConst(() =>
-    track(
+    drive(
       time,
       stepper({
         initial: () => 0,

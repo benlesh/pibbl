@@ -25,7 +25,7 @@ component identity or independent clock. A program becomes stateful only when
 There is no free `play(program)` function.
 
 The root `@crc/core` entry exports the runtime values `easing`, `tween`,
-`keyframes`, `spring`, `defineAnimation`, `stepper`, `track`, `sequence`,
+`keyframes`, `spring`, `defineAnimation`, `stepper`, `drive`, `sequence`,
 `parallel`, `wait`, `marker`, `repeat`, `usePlayback`, and `useAnimatedValue`, plus
 their named public types. Private definition samplers, activation records,
 program records, playback controllers, scheduler drivers, and trace collectors
@@ -122,7 +122,7 @@ growth without silently dropping accepted events.
 
 ## Programs and duration
 
-`track(output, definition)` is the only ordinary program node that writes a user
+`drive(output, definition)` is the only ordinary program node that writes a user
 signal. `sequence(...children)` runs children in source order;
 `parallel(...children)` gives children one local origin and ends at the longest
 child; empty groups complete immediately. `wait(duration)` adds finite
@@ -344,11 +344,11 @@ a factory that accepts its outputs and returns a freshly bound program:
 ```ts
 function entrance(x: WritableSignal<number>, opacity: WritableSignal<number>) {
   return parallel(
-    track(
+    drive(
       x,
       tween({ from: -24, to: 0, duration: 180, easing: easing.easeOut }),
     ),
-    track(opacity, tween({ from: 0, to: 1, duration: 140 })),
+    drive(opacity, tween({ from: 0, to: 1, duration: 140 })),
   );
 }
 ```

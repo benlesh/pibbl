@@ -221,7 +221,7 @@ function createHarness() {
   return { canvas, diagnostics };
 }
 
-function track(controller: CRCController): CRCController {
+function drive(controller: CRCController): CRCController {
   activeControllers.add(controller);
   return controller;
 }
@@ -274,7 +274,7 @@ describe('event lifecycle ownership', () => {
     const { canvas, diagnostics } = createHarness();
     const calls: number[] = [];
     const abortController = new AbortController();
-    track(crc(canvas, createElement(ProbeScene, { calls, enabled: true, generation: 0, show: true }), {
+    drive(crc(canvas, createElement(ProbeScene, { calls, enabled: true, generation: 0, show: true }), {
       signal: abortController.signal,
     }));
     await nextFrame();
@@ -305,7 +305,7 @@ describe('event lifecycle ownership', () => {
   it('replaces, removes, and unmounts handlers without ghost calls', async () => {
     const { canvas, diagnostics } = createHarness();
     const calls: number[] = [];
-    const controller = track(crc(
+    const controller = drive(crc(
       canvas,
       createElement(ProbeScene, { calls, enabled: true, generation: 1, show: true }),
     ));
@@ -338,7 +338,7 @@ describe('event lifecycle ownership', () => {
 
   it('cancels immediate work and disposes a no-signal mount idempotently', () => {
     const { canvas, diagnostics } = createHarness();
-    const controller = track(crc(
+    const controller = drive(crc(
       canvas,
       createElement(ProbeScene, { calls: [], enabled: true, generation: 1, show: true }),
     ));
@@ -368,7 +368,7 @@ describe('event lifecycle ownership', () => {
 
     try {
       const canvas = document.createElement('canvas');
-      const controller = track(crc(
+      const controller = drive(crc(
         canvas,
         createElement(ProbeScene, { calls: [], enabled: true, generation: 1, show: true }),
       ));
@@ -386,7 +386,7 @@ describe('event lifecycle ownership', () => {
     const { canvas, diagnostics } = createHarness();
     const calls: number[] = [];
     const staleAbort = new AbortController();
-    const staleController = track(crc(
+    const staleController = drive(crc(
       canvas,
       createElement(ProbeScene, { calls, enabled: true, generation: 1, show: true }),
       { signal: staleAbort.signal },
@@ -394,7 +394,7 @@ describe('event lifecycle ownership', () => {
     await nextFrame();
     staleController.dispose();
 
-    const liveController = track(crc(
+    const liveController = drive(crc(
       canvas,
       createElement(ProbeScene, { calls, enabled: true, generation: 2, show: true }),
     ));
@@ -416,7 +416,7 @@ describe('event lifecycle ownership', () => {
     const calls: number[] = [];
     const mountAbort = new AbortController();
     const updateAbort = new AbortController();
-    const controller = track(crc(
+    const controller = drive(crc(
       canvas,
       createElement(ProbeScene, { calls, enabled: true, generation: 1, show: true }),
       { signal: mountAbort.signal },
@@ -443,7 +443,7 @@ describe('event lifecycle ownership', () => {
   it('releases nested layer instances when their subtree disappears', async () => {
     const { canvas, diagnostics } = createHarness();
     const calls: number[] = [];
-    const controller = track(crc(
+    const controller = drive(crc(
       canvas,
       createElement(ToggleNestedLayerScene, { calls, enabled: true, generation: 1, show: true }),
     ));
@@ -468,7 +468,7 @@ describe('event lifecycle ownership', () => {
   it('releases layered paint entries and root cursor defaults', async () => {
     const { canvas, diagnostics } = createHarness();
     const calls: string[] = [];
-    const controller = track(crc(canvas, createElement(LayerGlobalResourcesScene, { calls, show: true })));
+    const controller = drive(crc(canvas, createElement(LayerGlobalResourcesScene, { calls, show: true })));
     await nextFrame();
     const root = getCRCInstance(canvas);
 
@@ -498,7 +498,7 @@ describe('event lifecycle ownership', () => {
   it('updates handlers inside a persistent layer and removes them without ghosts', async () => {
     const { canvas, diagnostics } = createHarness();
     const calls: number[] = [];
-    const controller = track(crc(
+    const controller = drive(crc(
       canvas,
       createElement(PersistentLayerScene, { calls, enabled: true, generation: 1, show: true }),
     ));
@@ -524,7 +524,7 @@ describe('event lifecycle ownership', () => {
   it('replaces a persistent layer root when its component type changes', async () => {
     const { canvas, diagnostics } = createHarness();
     const calls: string[] = [];
-    const controller = track(crc(canvas, createElement(SwitchingLayerScene, { calls, second: false })));
+    const controller = drive(crc(canvas, createElement(SwitchingLayerScene, { calls, second: false })));
     await nextFrame();
     clickCanvas(canvas, 40, 40);
 
@@ -539,7 +539,7 @@ describe('event lifecycle ownership', () => {
 
   it('does not clear a cursor value replaced by another owner', async () => {
     const { canvas, diagnostics } = createHarness();
-    const controller = track(crc(canvas, createElement(CursorOwnershipScene, {})));
+    const controller = drive(crc(canvas, createElement(CursorOwnershipScene, {})));
     await nextFrame();
 
     canvas.dispatchEvent(new MouseEvent('mousemove', { clientX: 40, clientY: 40 }));

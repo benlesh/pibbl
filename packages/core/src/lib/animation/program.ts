@@ -763,7 +763,7 @@ function parallelDuration(records: readonly ProgramRecord[]): ProgramDuration {
 }
 
 /** Binds one animation definition to one writable signal. */
-export function track<T>(
+export function drive<T>(
   output: WritableSignal<T>,
   definition: CRCAnimationDefinition<T>,
 ): CRCAnimationProgram {

@@ -1,4 +1,4 @@
-import { crc, definePrimitive, Group, Rectangle, Text, useSignal, useRef, usePlayback, repeat, sequence, wait, track, tween, type CRCController, type CRCPointerEvent } from '@crc/core';
+import { crc, definePrimitive, Group, Rectangle, Text, useSignal, useRef, usePlayback, repeat, sequence, wait, drive, tween, type CRCController, type CRCPointerEvent } from '@crc/core';
 
 // A visual study built entirely on public CRC APIs, not a new filter contract.
 type Effect = 'bifrost' | 'hologram' | 'embers';
@@ -257,8 +257,8 @@ function Study({ initial }: { initial: StudyOptions }) {
   const brightness = useSignal(1), hue = useSignal(0), entry = useSignal(0), width = useSignal(180);
   const entering = useSignal(true);
   const dragging = useRef<number>();
-  const flowProgram = useRef(repeat(sequence(track(time, tween({ from: 0, to: 60, duration: 60000 })), wait(16)), { iterations: Infinity }));
-  const revealProgram = useRef(track(progress, tween({ from: 0, to: 1, duration: transitionDuration })));
+  const flowProgram = useRef(repeat(sequence(drive(time, tween({ from: 0, to: 60, duration: 60000 })), wait(16)), { iterations: Infinity }));
+  const revealProgram = useRef(drive(progress, tween({ from: 0, to: 1, duration: transitionDuration })));
   const clock = usePlayback(flowProgram.current!, { autoplay: initial.autoplay !== false });
   const playback = usePlayback(revealProgram.current!, { autoplay: initial.autoplay !== false });
   const labels = { bifrost: 'BIFROST', hologram: 'HOLOGRAM', embers: 'EMBERS / ASH' };

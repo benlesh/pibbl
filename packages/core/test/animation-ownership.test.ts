@@ -5,7 +5,7 @@ import {
   defineAnimation,
   signal,
   stepper,
-  track,
+  drive,
   tween,
   type CRCController,
   type CRCNode,
@@ -82,7 +82,7 @@ describe('animation lifecycle ownership', () => {
     let replacement!: CRCPlayback;
 
     function Owner(): CRCNode {
-      stepping = usePlayback(track(output, stepper({
+      stepping = usePlayback(drive(output, stepper({
         stepMilliseconds: 10,
         maxElapsedMilliseconds: 40,
         initial: current => current,
@@ -94,7 +94,7 @@ describe('animation lifecycle ownership', () => {
         debugName: 'stepping owner',
         onEvent: event => events.push(`stepping:${event.type}`),
       });
-      replacement = usePlayback(track(output, tween({
+      replacement = usePlayback(drive(output, tween({
         from: 0,
         to: 100,
         duration: 100,
@@ -244,7 +244,7 @@ describe('animation lifecycle ownership', () => {
     let failing!: CRCPlayback;
 
     function FailingOwner(): CRCNode {
-      failing = usePlayback(track(failedOutput, defineAnimation({
+      failing = usePlayback(drive(failedOutput, defineAnimation({
         duration: 100,
         sample: ({ localTime }) => {
           if (localTime >= 10) throw new Error('owned sampler failed');
@@ -270,7 +270,7 @@ describe('animation lifecycle ownership', () => {
     const rootFailureOutput = signal(0);
     let brokenPlayback!: CRCPlayback;
     function BrokenOwner(): CRCNode {
-      brokenPlayback = usePlayback(track(rootFailureOutput, tween({
+      brokenPlayback = usePlayback(drive(rootFailureOutput, tween({
         from: 0,
         to: 10,
         duration: 100,
@@ -292,7 +292,7 @@ describe('animation lifecycle ownership', () => {
     const abortController = new AbortController();
     const abortedOutput = signal(0);
     function AbortedOwner(): CRCNode {
-      usePlayback(track(abortedOutput, tween({
+      usePlayback(drive(abortedOutput, tween({
         from: 0,
         to: 10,
         duration: 100,
@@ -320,7 +320,7 @@ describe('animation lifecycle ownership', () => {
     for (let cycle = 0; cycle < 5; cycle += 1) {
       const output = signal(0);
       function FreshOwner(): CRCNode {
-        usePlayback(track(output, tween({
+        usePlayback(drive(output, tween({
           from: 0,
           to: 1,
           duration: 100,

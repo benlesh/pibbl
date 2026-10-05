@@ -18,7 +18,7 @@ export {
   sequence,
   spring,
   stepper,
-  track,
+  drive,
   tween,
   wait,
 } from "@crc/core";

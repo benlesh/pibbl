@@ -290,7 +290,7 @@ import {
   signal,
   spring,
   stepper,
-  track,
+  drive,
   tween,
   untracked,
   wait,
@@ -1510,18 +1510,18 @@ const fixedStepper = stepper<{ value: number }, number>({
 });
 const animationProgram: CRCAnimationProgram = sequence(
   parallel(
-    track(animationOutput, tweenDefinition),
-    track(objectAnimationOutput, objectDefinition),
+    drive(animationOutput, tweenDefinition),
+    drive(objectAnimationOutput, objectDefinition),
   ),
   marker('middle'),
-  track(animationOutput, keyframeDefinition),
+  drive(animationOutput, keyframeDefinition),
   wait(10),
-  repeat(track(animationOutput, springDefinition), {
+  repeat(drive(animationOutput, springDefinition), {
     iterations: 2,
     direction: 'alternate',
   }),
-  track(animationOutput, customDefinition),
-  track(animationOutput, fixedStepper),
+  drive(animationOutput, customDefinition),
+  drive(animationOutput, fixedStepper),
 );
 const easingFunction: CRCEasing = easing.linear;
 const repeatDirection: CRCAnimationRepeatDirection = 'alternate-reverse';
@@ -1576,7 +1576,7 @@ createElement(AnimationProbe, {});
 spring({ to: 'done' });
 const numberDefinition = tween({ to: 10, duration: 100 });
 // @ts-expect-error a numeric definition cannot write an object signal
-track(objectAnimationOutput, numberDefinition);
+drive(objectAnimationOutput, numberDefinition);
 type CoreExports = typeof import('@crc/core');
 // @ts-expect-error no free playback function is exported
 type FreePlay = CoreExports['play'];

@@ -66,6 +66,7 @@ export const galleries = [
       "physics-panels",
       "text-envelope",
       "text-geometry",
+      "signals-and-animation",
     ],
   },
 ];

@@ -3,7 +3,7 @@ import {
   Circle,
   useSignal,
   usePlayback,
-  track,
+  drive,
   parallel,
   defineAnimation,
   stepper,
@@ -38,7 +38,7 @@ function Scene() {
   const y = useSignal(100);
   const x = useSignal(30);
   usePlayback(
-    parallel(track(y, defineAnimation(wave)), track(x, stepper(integration))),
+    parallel(drive(y, defineAnimation(wave)), drive(x, stepper(integration))),
     { autoplay: true },
   );
   return <Circle style={{ radius: 15, left: x, top: y, fill: "#3369bb" }} />;

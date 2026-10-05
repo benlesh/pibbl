@@ -67,7 +67,7 @@ describe('signal graph and realm scheduler ownership', () => {
       Array.from({ length: 1_000 }, (_, index) =>
         createElement(Leaf, { key: `leaf-${index}`, read: read && index === 0 })
       );
-    const controller = track(crc(canvas, createElement(Tree, { read: false })));
+    const controller = drive(crc(canvas, createElement(Tree, { read: false })));
 
     driver.flush(1);
     expect(snapshotSignalGraph()).toMatchObject({
@@ -145,7 +145,7 @@ describe('signal graph and realm scheduler ownership', () => {
         undefined,
     ];
     const scene = createElement(Scene, {});
-    const firstController = track(crc(canvas, scene));
+    const firstController = drive(crc(canvas, scene));
 
     // Repeating crc() while the Canvas is live updates one mount rather than
     // acquiring another root registration.
@@ -233,7 +233,7 @@ describe('signal graph and realm scheduler ownership', () => {
       retainedComputed.get();
     };
     const abortController = new AbortController();
-    const abortControllerHandle = track(crc(
+    const abortControllerHandle = drive(crc(
       createCanvas(),
       createElement(ComputedReader, {}),
       { signal: abortController.signal },
@@ -258,14 +258,14 @@ describe('signal graph and realm scheduler ownership', () => {
 
     // A fresh mount on the same Canvas owns a distinct registration and
     // consumer generation.
-    const freshController = track(crc(canvas, createElement(SharedReader, {})));
+    const freshController = drive(crc(canvas, createElement(SharedReader, {})));
     driver.flush(9);
     freshController.dispose();
 
     // Repeated fresh mounts make acquisition/release totals deterministic
     // without relying on heap timing or garbage collection.
     for (let cycle = 0; cycle < 25; cycle += 1) {
-      const controller = track(crc(canvas, createElement(SharedReader, {})));
+      const controller = drive(crc(canvas, createElement(SharedReader, {})));
       driver.flush(10 + cycle);
       controller.dispose();
     }
@@ -303,7 +303,7 @@ describe('signal graph and realm scheduler ownership', () => {
     const Healthy = (_props: {}) => {
       outer.get();
     };
-    const controller = track(crc(canvas, createElement(Broken, {})));
+    const controller = drive(crc(canvas, createElement(Broken, {})));
 
     expect(() => driver.flush(1)).toThrow(failure);
     expect(snapshotSignalGraph()).toMatchObject({
@@ -385,7 +385,7 @@ function getSignalNodeForTest<T>(value: import('@crc/core').Signal<T>) {
   return getNode!(value);
 }
 
-function track(controller: CRCController): CRCController {
+function drive(controller: CRCController): CRCController {
   activeControllers.add(controller);
   return controller;
 }
