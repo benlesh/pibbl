@@ -1,6 +1,6 @@
 import {
   Overlay, Circle, Group, Line, Rectangle, Text, pibbl, useLayoutBox, useSignal,
-  type PibblController, type PibblPointerEvent,
+  type PibblController, type PibblPointerEvent, type PibblResponsiveStyle, type TextStyle,
 } from "@pibbl/core";
 import { Axis, LineSeries, extent, useUTCScale, useLinearScale, UTCScale, LinearScale } from "@pibbl/core/viz";
 
@@ -525,10 +525,15 @@ const dateLabel = new Intl.DateTimeFormat("en-US", { month: "short", year: "nume
 const yearLabel = (value: number | string) => String(new Date(Number(value)).getUTCFullYear());
 const ink = "#172f3d", muted = "#617783", teal = "#087f8c";
 
-function Label({ x, y, text, size = 13, color = muted, weight = 400 }: { x: number; y: number; text: string; size?: number; color?: string; weight?: number }) {
-  return <Text pointerEvents="none" style={{ left: x, top: y, font: `${weight} ${size}px sans-serif`, fill: color, textBaseline: "alphabetic" }}>{text}</Text>;
+const narrow = { maxWidth: 619 };
+const short = { maxHeight: 540 };
+const spaciousOnly = { when: [{ query: short, style: { opacity: 0 } }] };
+
+function Label({ x, y, text, size = 13, color = muted, weight = 400, style }: { x: number; y: number; text: string; size?: number; color?: string; weight?: number; style?: PibblResponsiveStyle<TextStyle> }) {
+  return <Text pointerEvents="none" style={{ left: x, top: y, font: `${weight} ${size}px sans-serif`, fill: color, textBaseline: "alphabetic", ...style }}>{text}</Text>;
 }
-function Chart({ left, width, height, recent, adjusted }: { left: number; width: number; height: number; recent: boolean; adjusted: boolean }) {
+function Chart({ left, recent, adjusted, compact }: { left: number; recent: boolean; adjusted: boolean; compact: boolean }) {
+  const { width, height } = useLayoutBox();
   const x = useUTCScale("date").get();
   const y = useLinearScale("ppm").get();
   const selected = useSignal(rows.length - 1);
@@ -542,7 +547,7 @@ function Chart({ left, width, height, recent, adjusted }: { left: number; width:
   // Keep the endpoints; omit an interior label if it crowds either edge label.
   const dateTicks = candidates.filter((time, i) => i === 0 || i === candidates.length - 1 ||
     (Math.abs(x.map(time) - x.range[0]) >= 55 && Math.abs(x.map(time) - x.range[1]) >= 55));
-  const ticks = recent ? [390, 400, 410, 420] : [330, 350, 370, 390, 410, 430];
+  const ticks = height < 160 ? (recent ? [390, 405, 420] : [330, 380, 430]) : recent ? [390, 400, 410, 420] : [330, 350, 370, 390, 410, 430];
   const inspect = (event: PibblPointerEvent) => {
     const time = x.invert(Math.max(0, Math.min(width, event.x - left)));
     let nearest = recent ? 384 : 0;
@@ -557,8 +562,8 @@ function Chart({ left, width, height, recent, adjusted }: { left: number; width:
     <LineSeries data={visible} x="time" y={adjusted ? "adjusted" : "ppm"} xScale="date" yScale="ppm" pointerEvents="none" style={{ stroke: teal, strokeWidth: 2.5 }} />
     <Line pointerEvents="none" style={{ coords: [[px, 0], [px, height]], stroke: "#9aafb6", strokeWidth: 1 }} />
     <Circle pointerEvents="none" style={{ cx: px, cy: py, radius: 5, fill: teal, stroke: "#ffffff", strokeWidth: 2 }} />
-    <Label x={0} y={-45} text={`${dateLabel.format(row.time)} · ${current.toFixed(2)} ppm`} size={17} color={ink} weight={600} />
-    <Label x={0} y={-24} text={pinned.get() ? "Pinned · tap again to explore" : "Hover or tap to inspect · ← → to step"} size={11} />
+    <Label x={0} y={compact ? -14 : -45} text={`${dateLabel.format(row.time)} · ${current.toFixed(2)} ppm`} size={compact ? 12 : 17} color={ink} weight={600} style={{ when: [{ query: { maxWidth: 310 }, style: { font: compact ? "600 12px sans-serif" : "600 14px sans-serif" } }, { query: { maxHeight: 150 }, style: { top: -14, font: "600 12px sans-serif" } }] }} />
+    <Label x={0} y={-24} text={pinned.get() ? "Pinned · tap again to explore" : "Hover or tap to inspect · ← → to step"} size={11} style={{ opacity: compact ? 0 : 1, when: [{ query: { maxHeight: 150 }, style: { opacity: 0 } }, { query: { maxWidth: 300 }, style: { font: "10px sans-serif" } }] }} />
     <Rectangle
       keyboardFocusable
       onPointerMove={event => { if (!pinned.get()) inspect(event); }}
@@ -574,46 +579,45 @@ function Chart({ left, width, height, recent, adjusted }: { left: number; width:
     />
   </>;
 }
-function Button({ x, text, active, toggle, compact, buttonWidth }: { x: number; text: string; active: boolean; toggle: () => void; compact: boolean; buttonWidth: number }) {
-    return <Group style={{ translateX: x, translateY: compact ? 221 : 188 }}>
-      <Rectangle keyboardFocusable onClick={toggle} onKeyDown={event => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); toggle(); } }}
-        style={{ width: buttonWidth, height: 36, cornerRadius: 6, fill: active ? ink : "#ffffff", stroke: active ? ink : "#cad8dd", strokeWidth: 1, cursor: "pointer" }} />
-      <Label x={12} y={23} text={text} size={12} color={active ? "#ffffff" : ink} weight={600} />
-    </Group>;
-  }
+function Button({ x, text, active, toggle, buttonWidth }: { x: number; text: string; active: boolean; toggle: () => void; buttonWidth: number }) {
+  return <Group style={{ translateX: x, translateY: 188, when: [{ query: narrow, style: { translateY: 221 } }, { query: short, style: { translateY: 40 } }] }}>
+    <Rectangle keyboardFocusable onClick={toggle} onKeyDown={event => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); toggle(); } }}
+      style={{ width: buttonWidth, height: 44, cornerRadius: 7, fill: active ? ink : "#ffffff", stroke: active ? ink : "#cad8dd", strokeWidth: 1, cursor: "pointer" }} />
+    <Label x={buttonWidth / 2} y={27} text={text} size={12} color={active ? "#ffffff" : ink} weight={600} style={{ textAlign: "center", when: [{ query: { maxWidth: 350 }, style: { font: "600 11px sans-serif" } }] }} />
+  </Group>;
+}
 function Scene() {
   const { width, height } = useLayoutBox();
   const recent = useSignal(false), adjusted = useSignal(false);
-  const compact = width < 620;
-  const pad = compact ? 22 : 46;
-  const left = compact ? 53 : 78;
-  const top = compact ? 332 : 304;
-  const plotWidth = Math.max(180, width - left - 35);
-  const plotHeight = Math.max(140, height - top - 88);
-  const buttonWidth = compact ? 145 : 174;
+  // Only coordinate geometry depends on numbers. Presentation responds to the
+  // containing allocation through style queries, including shallow embed areas.
+  const pad = width < 620 ? 16 : 46;
+  const left = width < 620 ? 44 : 78;
+  const plotWidth = Math.max(1, width - left - 24);
+  const buttonWidth = Math.min(174, (width - pad * 2 - 8) / 2);
   const first = rows[0].ppm, last = rows[rows.length - 1].ppm;
 
   return <>
     <Rectangle style={{ width, height, fill: "#f7faf9" }} />
-    <Label x={pad} y={32} text="THE ATMOSPHERIC RECORD" size={11} color={teal} weight={700} />
-    <Label x={pad} y={compact ? 68 : 78} text="A rising baseline." size={compact ? 30 : 44} color={ink} weight={600} />
-    <Label x={pad} y={compact ? 95 : 106} text="42 years of carbon dioxide at Mauna Loa" size={compact ? 13 : 16} />
-    <Label x={pad} y={compact ? 140 : 151} text={`${last.toFixed(2)} ppm`} size={compact ? 30 : 34} color={ink} weight={600} />
-    <Label x={compact ? pad : 310} y={compact ? 170 : 147} text={`+${(last - first).toFixed(2)} ppm since January 1980`} size={13} color={teal} weight={600} />
-    <Label x={pad} y={compact ? 191 : 171} text="December 2021 · monthly mean · archived observations" size={11} />
-    <Button compact={compact} buttonWidth={buttonWidth} x={pad} text={recent.get() ? "2012–2021 · reset" : "Zoom to 2012–2021"} active={recent.get()} toggle={() => recent.update(v => !v)} />
-    <Button compact={compact} buttonWidth={buttonWidth} x={pad + buttonWidth + 10} text={adjusted.get() ? "Seasonally adjusted" : "Show adjusted trend"} active={adjusted.get()} toggle={() => adjusted.update(v => !v)} />
-    <Group style={{ translateX: left, translateY: top }}>
-      <Overlay style={{ width: plotWidth, height: plotHeight }}>
-        <UTCScale style={{ width: plotWidth, height: plotHeight }} id="date"  domain={recent.get() ? shortDomain : fullDomain} range="width">
-          <LinearScale id="ppm"  domain={recent.get() ? [390, 420] : [330, 430]} range="height" reverse>
-            <Chart left={left} width={plotWidth} height={plotHeight} recent={recent.get()} adjusted={adjusted.get()} />
+    <Label x={pad} y={32} text="THE ATMOSPHERIC RECORD" size={11} color={teal} weight={700} style={spaciousOnly} />
+    <Label x={pad} y={78} text="A rising baseline." size={44} color={ink} weight={600} style={{ when: [{ query: narrow, style: { top: 68, font: "600 30px sans-serif" } }, { query: short, style: { top: 26, font: "600 20px sans-serif" } }] }} />
+    <Label x={pad} y={106} text="42 years of carbon dioxide at Mauna Loa" size={16} style={{ when: [{ query: narrow, style: { top: 95, font: "13px sans-serif" } }, ...spaciousOnly.when] }} />
+    <Label x={pad} y={151} text={`${last.toFixed(2)} ppm`} size={34} color={ink} weight={600} style={{ when: [{ query: narrow, style: { top: 140, font: "600 30px sans-serif" } }, ...spaciousOnly.when] }} />
+    <Label x={310} y={147} text={`+${(last - first).toFixed(2)} ppm since January 1980`} size={13} color={teal} weight={600} style={{ when: [{ query: narrow, style: { left: pad, top: 170 } }, ...spaciousOnly.when] }} />
+    <Label x={pad} y={171} text="December 2021 · monthly mean · archived observations" size={11} style={{ when: [{ query: narrow, style: { top: 191, font: "10px sans-serif" } }, ...spaciousOnly.when] }} />
+    <Button buttonWidth={buttonWidth} x={pad} text={recent.get() ? "2012–2021 · reset" : "Zoom to 2012–2021"} active={recent.get()} toggle={() => recent.update(v => !v)} />
+    <Button buttonWidth={buttonWidth} x={pad + buttonWidth + 8} text={adjusted.get() ? "Seasonally adjusted" : "Show adjusted trend"} active={adjusted.get()} toggle={() => adjusted.update(v => !v)} />
+    <Group style={{ translateX: left, translateY: 304, when: [{ query: narrow, style: { translateY: 332 } }, { query: short, style: { translateY: 122 } }] }}>
+      <Overlay style={{ width: plotWidth, height: Math.max(1, height - 392), when: [{ query: narrow, style: { height: Math.max(1, height - 420) } }, { query: short, style: { height: Math.max(1, height - 174) } }] }}>
+        <UTCScale style={{ width: "100%", height: "100%" }} id="date" domain={recent.get() ? shortDomain : fullDomain} range="width">
+          <LinearScale id="ppm" domain={recent.get() ? [390, 420] : [330, 430]} range="height" reverse>
+            <Chart left={left} compact={height <= short.maxHeight} recent={recent.get()} adjusted={adjusted.get()} />
           </LinearScale>
         </UTCScale>
       </Overlay>
     </Group>
-    <Label x={pad} y={height - 36} text="NOAA GML / Scripps · 504 monthly observations" size={compact ? 10 : 11} />
-    <Label x={pad} y={height - 18} text="1980–2021 · calendar dates in UTC · April 1984 interpolated" size={compact ? 9 : 11} />
+    <Label x={pad} y={height - 36} text="NOAA / Scripps · 504 monthly observations" size={11} style={{ when: [{ query: narrow, style: { font: "10px sans-serif" } }, { query: short, style: { top: height - 10, font: "10px sans-serif" } }] }} />
+    <Label x={pad} y={height - 18} text="1980–2021 · UTC · April 1984 interpolated" size={11} style={{ when: [{ query: narrow, style: { font: "10px sans-serif" } }, ...spaciousOnly.when] }} />
   </>;
 }
 export default function mount(canvas: HTMLCanvasElement): PibblController {
