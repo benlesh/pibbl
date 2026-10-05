@@ -1,13 +1,12 @@
+import { bindAnimationTarget } from '../animation/definition.js';
+import { drive } from '../animation/program.js';
+import { withSignalWriteForbidden } from '../signals/graph.js';
 import {
   createAnimationPlaybackController,
   type AnimationPlaybackController,
 } from '../animation/playback.js';
-import { spring, tween } from '../animation/definition.js';
-import { drive } from '../animation/program.js';
 import type {
-  PibblAnimationProgram,
-  PibblSpringAnimatedValueOptions,
-  PibblTweenAnimatedValueOptions,
+  PibblAnimatedValueOptions,
 } from '../animation/types.js';
 import { GLOBAL_STATE } from '../global-state.js';
 import {
@@ -24,24 +23,14 @@ import type {
   WritableSignal,
 } from '../signals/types.js';
 import type { PibblComponentRefs, PibblInstance } from '../types.js';
-import { requireHookContext, useHookSlot } from './hook-slot.js';
+import { requireHookContext, useHookSlot, withHooksForbidden } from './hook-slot.js';
 
-type PibblTransitionOptions<T> =
-  | PibblTweenAnimatedValueOptions<T>
-  | PibblSpringAnimatedValueOptions;
-
-type PibblTransitionOptionsInput<T> =
-  | {
-      readonly [K in keyof PibblTweenAnimatedValueOptions<T>]:
-        SignalValue<PibblTweenAnimatedValueOptions<T>[K]>;
-    }
-  | {
-      readonly [K in keyof PibblSpringAnimatedValueOptions]:
-        SignalValue<PibblSpringAnimatedValueOptions[K]>;
-    };
+type AnimatedValueInputs<T> = {
+  readonly [K in keyof PibblAnimatedValueOptions<T>]: SignalValue<PibblAnimatedValueOptions<T>[K]>;
+};
 
 interface PibblTransitionCandidate<T> {
-  readonly options: PibblTransitionOptions<T>;
+  readonly options: PibblAnimatedValueOptions<T>;
   readonly equals: SignalEquals<T>;
   readonly hasInitial: boolean;
   readonly initial: T;
@@ -59,86 +48,25 @@ interface PibblTransitionHookSlot<T> {
   target: T;
 }
 
-function hasOwn(value: object, key: PropertyKey): boolean {
-  return Object.prototype.hasOwnProperty.call(value, key);
-}
-
 function normalizeCandidate<T>(
   target: T,
-  options: PibblTransitionOptions<T>,
+  options: PibblAnimatedValueOptions<T>,
 ): PibblTransitionCandidate<T> {
   if (typeof options !== 'object' || options === null) {
-    throw new TypeError('Pibbl transition options must be an object.');
-  }
-  if (options.type !== 'tween' && options.type !== 'spring') {
-    throw new TypeError('Pibbl transition type must be "tween" or "spring".');
+    throw new TypeError('useAnimatedValue options must be an object.');
   }
   if (options.equals !== undefined && typeof options.equals !== 'function') {
     throw new TypeError('Pibbl transition equals must be a function.');
   }
-  const snapshot = Object.freeze({ ...options }) as PibblTransitionOptions<T>;
-  if (snapshot.type === 'spring') {
-    spring({
-      from: target as number,
-      to: target as number,
-      mass: snapshot.mass,
-      stiffness: snapshot.stiffness,
-      damping: snapshot.damping,
-      initialVelocity: snapshot.initialVelocity,
-      restSpeed: snapshot.restSpeed,
-      restDelta: snapshot.restDelta,
-      maxDuration: snapshot.maxDuration,
-      debugName: snapshot.debugName,
-    });
-  } else {
-    tween({
-      from: target,
-      to: target,
-      duration: snapshot.duration,
-      easing: snapshot.easing,
-      interpolate: snapshot.interpolate,
-      debugName: snapshot.debugName,
-    });
-  }
-  const hasInitial = hasOwn(options, 'initial');
+  const snapshot = Object.freeze({ ...options });
+  const hasInitial = Object.prototype.hasOwnProperty.call(options, 'initial');
   return Object.freeze({
     options: snapshot,
-    equals: (snapshot.equals ?? Object.is) as SignalEquals<T>,
+    equals: snapshot.equals ?? Object.is,
     hasInitial,
     initial: (hasInitial ? snapshot.initial : target) as T,
     target,
   });
-}
-
-function programFor<T>(
-  output: WritableSignal<T>,
-  from: T,
-  candidate: PibblTransitionCandidate<T>,
-  springVelocity?: number,
-): PibblAnimationProgram {
-  const options = candidate.options;
-  if (options.type === 'spring') {
-    return drive(output as unknown as WritableSignal<number>, spring({
-      from: from as number,
-      to: candidate.target as number,
-      mass: options.mass,
-      stiffness: options.stiffness,
-      damping: options.damping,
-      initialVelocity: springVelocity ?? options.initialVelocity,
-      restSpeed: options.restSpeed,
-      restDelta: options.restDelta,
-      maxDuration: options.maxDuration,
-      debugName: options.debugName,
-    }));
-  }
-  return drive(output, tween({
-    from,
-    to: candidate.target,
-    duration: options.duration,
-    easing: options.easing,
-    interpolate: options.interpolate,
-    debugName: options.debugName,
-  }));
 }
 
 function isCurrentSlot<T>(slot: PibblTransitionHookSlot<T>): boolean {
@@ -149,57 +77,21 @@ function isCurrentSlot<T>(slot: PibblTransitionHookSlot<T>): boolean {
 }
 
 /**
- * Animates a numeric target using an analytic spring. See {@link PibblSpringAnimatedValueOptions}
- * and {@link Signal}.
- * @param target - Target value or signal whose changes start transitions. See {@link SignalValue}.
- * @param options - Spring or tween configuration, including signal-backed fields. See
- * {@link SignalValue} , {@link PibblSpringAnimatedValueOptions} .
- * @returns A readonly signal containing the animated value. See {@link Signal}.
- */
-export function useAnimatedValue(
-  target: SignalValue<number>,
-  options: SignalValue<{
-    readonly [K in keyof PibblSpringAnimatedValueOptions]:
-      SignalValue<PibblSpringAnimatedValueOptions[K]>;
-  }>,
-): Signal<number>;
-/**
- * Animates a target using a tween and optional custom interpolation. See
- * {@link PibblTweenAnimatedValueOptions} and {@link Signal}.
- * @param target - Target value or signal whose changes start transitions. See {@link SignalValue}.
- * @param options - Spring or tween configuration, including signal-backed fields. See
- * {@link SignalValue} , {@link PibblTweenAnimatedValueOptions} .
- * @returns A readonly signal containing the animated value. See {@link Signal}.
- */
-export function useAnimatedValue<T>(
-  target: SignalValue<T>,
-  options: SignalValue<{
-    readonly [K in keyof PibblTweenAnimatedValueOptions<T>]:
-      SignalValue<PibblTweenAnimatedValueOptions<T>[K]>;
-  }>,
-): Signal<T>;
-/**
- * Returns a mount-owned signal that animates toward the current target using the supplied
- * transition options.
- *
- * @param targetInput - Target value or signal whose changes start transitions. See
- * {@link SignalValue} .
- * @param optionsInput - Spring or tween configuration, including signal-backed fields. See
- * {@link SignalValue} , {@link PibblTransitionOptionsInput} .
- * @returns A readonly signal containing the animated value. See {@link Signal}.
- *
- * @see {@link SignalValue}
- * @see {@link Signal}
+ * Presents a target through an immutable animation definition or a pure animation factory.
+ * @param targetInput - Target value or signal. See {@link SignalValue}.
+ * @param optionsInput - Animation definition, initial value, equality, and diagnostic settings;
+ * fields and the options object may be signals. See {@link PibblAnimatedValueOptions}.
+ * @returns One stable readonly animated signal. See {@link Signal}.
  */
 export function useAnimatedValue<T>(
   targetInput: SignalValue<T>,
-  optionsInput: SignalValue<PibblTransitionOptionsInput<T>>,
+  optionsInput: SignalValue<AnimatedValueInputs<NoInfer<T>>>,
 ): Signal<T> {
   const { componentRefs, pibblInstance } = requireHookContext();
   const target = resolveSignalValue(targetInput);
-  const options = resolveTransitionOptions(optionsInput);
+  const options = resolveTransitionOptions<T>(optionsInput);
   const candidate = normalizeCandidate(target, options);
-  const slot = useHookSlot<PibblTransitionHookSlot<T>>('transition', teardowns => {
+  const slot = useHookSlot<PibblTransitionHookSlot<T>>('animatedValue', teardowns => {
     const output = signal(candidate.initial);
     const program = programFor(output, candidate.initial, candidate);
     const controller = createAnimationPlaybackController(program, {
@@ -220,6 +112,12 @@ export function useAnimatedValue<T>(
     teardowns.add(() => controller.dispose());
     return value;
   }).value;
+
+  // Prepare user-defined work while Render can still fail transactionally. No factory runs
+  // in onFinish, where a late exception could otherwise adopt only part of the update.
+  const program = programFor(slot.output,
+    slot.settled ? untracked(() => slot.output.get()) : candidate.initial,
+    candidate, slot.settled ? slot.controller.committedSpringSnapshot()?.velocity : undefined);
 
   const shouldEnter = !slot.settled && candidate.hasInitial &&
     !candidate.equals(candidate.initial, candidate.target);
@@ -243,7 +141,7 @@ export function useAnimatedValue<T>(
     slot.target = candidate.target;
     if (!shouldEnter && !shouldRetarget) {
       slot.controller.adopt(
-        programFor(slot.output, slot.output.get(), candidate),
+        program,
         {
           conflict: 'replace',
           debugName: candidate.options.debugName,
@@ -251,14 +149,6 @@ export function useAnimatedValue<T>(
       );
       return;
     }
-    const springVelocity = candidate.options.type === 'spring' ?
-      slot.controller.committedSpringSnapshot()?.velocity : undefined;
-    const program = programFor(
-      slot.output,
-      slot.output.get(),
-      candidate,
-      springVelocity,
-    );
     slot.controller.retarget(program, {
       conflict: 'replace',
       debugName: candidate.options.debugName,
@@ -268,8 +158,8 @@ export function useAnimatedValue<T>(
 }
 
 function resolveTransitionOptions<T>(
-  input: SignalValue<PibblTransitionOptionsInput<T>>,
-): PibblTransitionOptions<T> {
+  input: SignalValue<AnimatedValueInputs<T>>,
+): PibblAnimatedValueOptions<T> {
   const source = resolveSignalValue(input);
   let resolved: Record<PropertyKey, unknown> | undefined;
   for (const key in source) {
@@ -278,5 +168,17 @@ function resolveTransitionOptions<T>(
     resolved ??= { ...source };
     resolved[key] = resolveSignalValue(value as SignalValue<unknown>);
   }
-  return (resolved ?? source) as PibblTransitionOptions<T>;
+  return (resolved ?? source) as PibblAnimatedValueOptions<T>;
+}
+
+function programFor<T>(
+  output: WritableSignal<T>, from: T, candidate: PibblTransitionCandidate<T>, velocity?: number,
+) {
+  const context = Object.freeze({ from, to: candidate.target, velocity });
+  const animation = candidate.options.animation;
+  const definition = typeof animation === 'function'
+    ? withHooksForbidden('Animation factories cannot call hooks.', () =>
+      withSignalWriteForbidden('Animation factories cannot write to signals.', () => animation(context)))
+    : animation;
+  return drive(output, bindAnimationTarget(definition, context));
 }

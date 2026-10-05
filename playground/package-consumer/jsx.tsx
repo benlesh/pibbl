@@ -12,7 +12,7 @@ import type {
   SignalValue,
   SystemStyle,
 } from '@pibbl/core';
-import {
+import { tween, spring,
   Absolute,
   Flex,
   Flow,
@@ -37,9 +37,7 @@ import {
   marker,
   signal,
   sequence,
-  spring,
   drive,
-  tween,
   untracked,
 } from '@pibbl/core';
 import {
@@ -161,10 +159,7 @@ function AnimatedLabel(): PibblNode {
     drive(x, spring({ to: 0 })),
   );
   const player = usePlayback(program);
-  const transitioned = useAnimatedValue(x.get(), {
-    type: 'tween',
-    duration: 80,
-  });
+  const transitioned = useAnimatedValue(x.get(), { animation: tween({ duration: 80 }) });
   return (
     <Group style={{ translateX: transitioned.get() }}>
       <Rectangle
@@ -182,7 +177,6 @@ const jsxFilterTypes = [
   brightness({  amount: 1.25 }) satisfies PibblFilter,
   contrast({  amount: 0.8 }) satisfies PibblFilter,
   dropShadow({
-    
     offsetX: 3,
     offsetY: 4,
     color: 'black',

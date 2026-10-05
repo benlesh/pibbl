@@ -131,3 +131,18 @@ state publication and Canvas rendering have real costs. Do not turn one machine'
 p95 into a universal CI requirement. Structural tests protect O(1) per-body reads,
 idle scheduling and owned-resource cleanup. Debug snapshots/overlays intentionally
 allocate and are opt-in diagnostics, not per-body rendering dependencies.
+
+## Named query operations
+
+World query functions have fixed return contracts. `raycastAny2D` and
+`shapeCastAny2D` return booleans; their `Closest2D` variants return one hit or
+`null`; their `All2D` variants return frozen hit arrays. `hasShapeOverlap2D`,
+`hasAabbMatch2D`, and `hasPointMatch2D` return booleans. Corresponding `find…`
+functions return one match or `null`, and `findAll…` functions return frozen
+arrays. Query options contain filters only, with no result-mode selector.
+
+Boolean queries stop at the first match. Cast ordering is time of impact,
+distance, then collider index and generation. Overlap, bounds, and point queries
+order by collider index and generation; one-match queries use that deterministic
+order, not a distance metric. These operations preserve committed-world reads,
+filtering, handle identity, stale-handle behavior, and resource ownership.

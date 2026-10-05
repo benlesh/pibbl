@@ -1,5 +1,5 @@
 import type { boundsOfShape2D, massProperties2D, transformShape2D } from './lib/2d/shapes.js';
-import type { queryAabb2D, raycast2D } from './2d.js';
+import type { findAabbMatch2D, raycastClosest2D } from './2d.js';
 import type { raycastShape2D, shapeCastAgainstShape2D } from './lib/2d/collision/casts.js';
 import type { PibblPhysicsCollisionEvent2D, PibblPhysicsQueryHit2D } from './lib/2d/types.js';
 import type { PibblPhysicsContactInspection2D } from './lib/2d/inspection-types.js';
@@ -39,7 +39,7 @@ export type PibblPhysicsTransform2D = PibblPhysicsPose2D;
  *
  * @see {@link PibblPhysicsVector2}
  * @see {@link boundsOfShape2D}
- * @see {@link queryAabb2D}
+ * @see {@link findAabbMatch2D}
  */
 export interface PibblPhysicsAabb2D {
   /** Lower bound of the coordinate or sampling interval. See {@link PibblPhysicsVector2}. */
@@ -53,7 +53,7 @@ export interface PibblPhysicsAabb2D {
  *
  * @see {@link PibblPhysicsVector2}
  * @see {@link raycastShape2D}
- * @see {@link raycast2D}
+ * @see {@link raycastClosest2D}
  */
 export interface PibblPhysicsRay2D {
   /** Origin of the transform or geometric query. See {@link PibblPhysicsVector2}. */

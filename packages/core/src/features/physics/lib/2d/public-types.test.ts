@@ -153,8 +153,8 @@ const completeSurfaceFixture = `
     withPhysicsShape2D, pibblPhysicsBody2D, pibblPhysicsWorld2D,
     applyForce2D, applyImpulse2D, applyTorque2D, setLinearVelocity2D,
     setAngularVelocity2D, teleportBody2D, wakeBody2D, sleepBody2D,
-    enableBody2D, disableBody2D, raycast2D, shapeCast2D,
-    overlapShape2D, queryAabb2D, queryPoint2D,
+    enableBody2D, disableBody2D, raycastAny2D, shapeCastAll2D,
+    findShapeOverlap2D, findAllAabbMatches2D, hasPointMatch2D,
     type PibblPhysicsCollisionFilter, type PibblPhysicsCollisionHandler2D,
     type PibblPhysicsHitHandler2D, type PibblPhysicsOverlapHandler2D,
     type PibblPhysicsBodyStateHandler2D,
@@ -172,9 +172,9 @@ const completeSurfaceFixture = `
     type Segment2DProps, type Segment2DStyle,
     type Chain2DProps, type Chain2DStyle,
     type PibblPhysicsBodyHandle2D, type PibblPhysicsColliderHandle2D,
-    type PibblPhysicsWorldHandle2D, type PibblPhysicsQueryMode,
+    type PibblPhysicsWorldHandle2D,
     type PibblPhysicsQueryOptions2D, type PibblPhysicsQueryHit2D,
-    type PibblPhysicsQueryMatch2D, type PibblPhysicsQueryResult2D,
+    type PibblPhysicsQueryMatch2D,
     type PibblPhysicsCollisionEvent2D, type PibblPhysicsOverlapEvent2D,
     type PibblPhysicsBodyStateEvent2D,
   } from '@pibbl/core/physics/2d';
@@ -189,8 +189,8 @@ const completeSurfaceFixture = `
     collider2D, withPhysicsShape2D, pibblPhysicsBody2D, pibblPhysicsWorld2D,
     applyForce2D, applyImpulse2D, applyTorque2D, setLinearVelocity2D,
     setAngularVelocity2D, teleportBody2D, wakeBody2D, sleepBody2D,
-    enableBody2D, disableBody2D, raycast2D, shapeCast2D, overlapShape2D,
-    queryAabb2D, queryPoint2D];
+    enableBody2D, disableBody2D, raycastAny2D, shapeCastAll2D, findShapeOverlap2D,
+    findAllAabbMatches2D, hasPointMatch2D];
 
   type GeometryTypes = [PibblPhysicsVector2, PibblPhysicsPose2D,
     PibblPhysicsTransform2D, PibblPhysicsAabb2D, PibblPhysicsRay2D,
@@ -209,9 +209,9 @@ const completeSurfaceFixture = `
     Capsule2DProps, Capsule2DStyle, Segment2DProps, Segment2DStyle,
     Chain2DProps, Chain2DStyle, PibblPhysicsBodyHandle2D,
     PibblPhysicsColliderHandle2D, PibblPhysicsWorldHandle2D,
-    PibblPhysicsQueryMode, PibblPhysicsQueryOptions2D,
+    PibblPhysicsQueryOptions2D,
     PibblPhysicsQueryHit2D, PibblPhysicsQueryMatch2D,
-    PibblPhysicsQueryResult2D<'closest', PibblPhysicsQueryMatch2D>,
+    PibblPhysicsQueryMatch2D | null,
     PibblPhysicsCollisionEvent2D, PibblPhysicsOverlapEvent2D,
     PibblPhysicsBodyStateEvent2D];
   declare const geometryTypes: GeometryTypes;
@@ -243,14 +243,14 @@ const completeSurfaceFixture = `
   const invalidSegmentInput: Parameters<typeof Segment2D>[0] = { style: { start: [0, 0], end: [1, 0], fill: 'black' } };
   void [physicsShapeInput, capsuleInput, segmentInput, chainInput,
     invalidCapsuleInput, invalidSegmentInput];
-  const anyHit: boolean = raycast2D(world, ray, { mode: 'any' });
+  const anyHit: boolean = raycastAny2D(world, ray);
   const allHits: readonly PibblPhysicsQueryHit2D[] =
-    shapeCast2D(world, shape, pose, [1, 0], { mode: 'all' });
+    shapeCastAll2D(world, shape, pose, [1, 0]);
   const closestOverlap: PibblPhysicsQueryMatch2D | null =
-    overlapShape2D(world, shape, pose);
+    findShapeOverlap2D(world, shape, pose);
   const allBounds: readonly PibblPhysicsQueryMatch2D[] =
-    queryAabb2D(world, bounds, { mode: 'all' });
-  const anyPoint: boolean = queryPoint2D(world, point, { mode: 'any' });
+    findAllAabbMatches2D(world, bounds);
+  const anyPoint: boolean = hasPointMatch2D(world, point);
   void [anyHit, allHits, closestOverlap, allBounds, anyPoint];
 `;
 

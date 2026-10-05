@@ -254,12 +254,7 @@ function AnimationOwner({ model }: { readonly model: AnimationLabModel }) {
       model.publish?.();
     },
   });
-  const presentedScale = useAnimatedValue(model.transitionTarget.get(), {
-    type: 'tween',
-    duration: 120,
-    initial: 1,
-    debugName: 'animation laboratory transition',
-  });
+  const presentedScale = useAnimatedValue(model.transitionTarget.get(), { animation: tween({ duration: 120 }), initial: 1, debugName: 'animation laboratory transition' });
   model.playback = playback;
   model.presentedScale = presentedScale;
 

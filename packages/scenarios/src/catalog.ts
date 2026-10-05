@@ -2190,7 +2190,7 @@ const physics2DLabMetadata: ScenarioMetadata = {
     "applyImpulse2D",
     "disableBody2D",
     "enableBody2D",
-    "queryAabb2D",
+    "findAllAabbMatches2D",
     "tween",
   ],
   conceptTags: [

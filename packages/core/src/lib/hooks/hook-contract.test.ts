@@ -162,7 +162,7 @@ describe('hook ordering and render errors', () => {
       () => useRef(0),
       () => useReaction(() => undefined),
       () => usePlayback(drive(signal(0), tween({ to: 1, duration: 1 }))),
-      () => useAnimatedValue(1, { type: 'tween', duration: 1 }),
+      () => useAnimatedValue(1, { animation: tween({ duration: 1 }) }),
       () => useRectPath(0, 0, 1, 1),
       () => useLinePath([[0, 0], [1, 1]]),
       () => useSvgPath('M0 0'),

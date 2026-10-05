@@ -228,7 +228,7 @@ These fixtures are deterministic evidence for browser verification. Their visibi
 - **pibblPhysicsWorld2D:** [First-class 2D physics laboratory](#first-class-physics-2d)
 - **pointer events:** [Focus and keyboard navigation](#focus-and-keyboard-navigation), [User-event contract laboratory](#interaction-trace-lab)
 - **pointerEvents:** [Agent targeting verification](#agent-targeting-verification)
-- **queryAabb2D:** [First-class 2D physics laboratory](#first-class-physics-2d)
+- **findAllAabbMatches2D:** [First-class 2D physics laboratory](#first-class-physics-2d)
 - **repeat:** [First-class animation laboratory](#first-class-animation)
 - **sequence:** [First-class animation laboratory](#first-class-animation)
 - **signal:** [Agent targeting verification](#agent-targeting-verification), [Signal mutation diagnosis](#agent-signal-mutation), [Late font readiness diagnosis](#agent-late-font), [Responsive style thresholds](#responsive-styles), [Component manipulation laboratory](#component-manipulation), [First-class signals laboratory](#first-class-signals)

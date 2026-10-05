@@ -10,14 +10,14 @@ import {
   disableBody2D,
   dynamicBody2D,
   enableBody2D,
-  overlapShape2D,
-  queryAabb2D,
-  queryPoint2D,
-  raycast2D,
+  findAllShapeOverlaps2D,
+  hasAabbMatch2D,
+  hasPointMatch2D, findAllPointMatches2D, findPointMatch2D,
+  raycastClosest2D,
   setAngularVelocity2D,
   setLinearVelocity2D,
   sleepBody2D,
-  shapeCast2D,
+  shapeCastClosest2D,
   staticBody2D,
   teleportBody2D,
   wakeBody2D,
@@ -362,7 +362,7 @@ describe("2D physics body handles", () => {
     frames.flush(2);
     expect(frames.pending).toBe(0);
 
-    const hit = raycast2D(world, {
+    const hit = raycastClosest2D(world, {
       origin: [-5, 0],
       direction: [1, 0],
       maxDistance: 10,
@@ -377,7 +377,7 @@ describe("2D physics body handles", () => {
     expect(hit!.body.generation.get()).toBe(hit!.bodyGeneration);
     expect(frames.pending).toBe(0);
     expect(
-      shapeCast2D(
+      shapeCastClosest2D(
         world,
         shape,
         { position: [-5, 0], rotationDegrees: 0 },
@@ -385,20 +385,19 @@ describe("2D physics body handles", () => {
       ),
     ).toMatchObject({ tag });
     expect(
-      overlapShape2D(
+      findAllShapeOverlaps2D(
         world,
         shape,
         { position: [0, 0], rotationDegrees: 0 },
-        { mode: "all" },
+        {  },
       ),
     ).toHaveLength(1);
     expect(
-      queryAabb2D(world, { min: [-1, -1], max: [1, 1] }, { mode: "any" }),
+      hasAabbMatch2D(world, { min: [-1, -1], max: [1, 1] }, {  }),
     ).toBe(true);
-    expect(queryPoint2D(world, [0, 0], { mode: "any" })).toBe(true);
+    expect(hasPointMatch2D(world, [0, 0], {  })).toBe(true);
     expect(
-      queryPoint2D(world, [0, 0], {
-        mode: "all",
+      findAllPointMatches2D(world, [0, 0], {
         excludeBody: hit!.body,
       }),
     ).toEqual([]);
@@ -408,11 +407,11 @@ describe("2D physics body handles", () => {
     expect(frames.pending).toBe(1);
     frames.flush(3);
     expect(hit!.body.enabled.get()).toBe(false);
-    expect(queryPoint2D(world, [0, 0], { mode: "any" })).toBe(false);
+    expect(hasPointMatch2D(world, [0, 0], {  })).toBe(false);
 
     mount.dispose();
     expect(snapshotPhysicsBodyHandle2DForTest(hit!.body).bound).toBe(false);
-    expect(() => queryPoint2D(world, [0, 0])).toThrow(/live.*world handle/i);
+    expect(() => findPointMatch2D(world, [0, 0])).toThrow(/live.*world handle/i);
   });
 
   it("evicts retired query handles while preserving live query identity", () => {
@@ -434,9 +433,9 @@ describe("2D physics body handles", () => {
     const mount = mountPibbl(<Root />);
     frames.flush(0);
     frames.flush(1);
-    const first = queryPoint2D(world, [0, 0], { mode: "all" });
+    const first = findAllPointMatches2D(world, [0, 0], {  });
     expect(first).toHaveLength(1_000);
-    const repeated = queryPoint2D(world, [0, 0], { mode: "all" });
+    const repeated = findAllPointMatches2D(world, [0, 0], {  });
     expect(repeated[0]!.body).toBe(first[0]!.body);
     expect(repeated[0]!.collider).toBe(first[0]!.collider);
     expect(snapshotWorld(world)).toMatchObject({
@@ -448,7 +447,7 @@ describe("2D physics body handles", () => {
     pibbl(canvasOf(mount), <Root />);
     frames.flush(2);
     frames.flush(3);
-    expect(queryPoint2D(world, [0, 0], { mode: "all" })).toEqual([]);
+    expect(findAllPointMatches2D(world, [0, 0], {  })).toEqual([]);
     expect(snapshotWorld(world)).toMatchObject({
       materializedBodyHandles: 0,
       materializedColliderHandles: 0,
@@ -458,7 +457,7 @@ describe("2D physics body handles", () => {
     pibbl(canvasOf(mount), <Root />);
     frames.flush(4);
     frames.flush(5);
-    const replacement = queryPoint2D(world, [0, 0], { mode: "all" });
+    const replacement = findAllPointMatches2D(world, [0, 0], {  });
     expect(replacement).toHaveLength(1_000);
     expect(replacement[0]!.body).not.toBe(first[0]!.body);
     expect(replacement[0]!.collider).not.toBe(first[0]!.collider);
@@ -496,7 +495,7 @@ describe("2D physics body handles", () => {
     frames.flush(0);
     frames.flush(1);
     for (let cycle = 0; cycle < 100; cycle += 1) {
-      expect(queryPoint2D(world, [0, 0], { mode: "all" })).toHaveLength(1);
+      expect(findAllPointMatches2D(world, [0, 0], {  })).toHaveLength(1);
       expect(snapshotWorld(world)).toMatchObject({
         materializedBodyHandles: 1,
         materializedColliderHandles: 1,
@@ -535,7 +534,7 @@ describe("2D physics body handles", () => {
     const mount = mountPibbl(<Root />);
     frames.flush(0);
     frames.flush(1);
-    const before = queryPoint2D(world, [0, 0], { mode: "all" });
+    const before = findAllPointMatches2D(world, [0, 0], {  });
     include = false;
     pibbl(canvasOf(mount), <Root />);
     frames.flush(2);
@@ -549,7 +548,7 @@ describe("2D physics body handles", () => {
     } finally {
       restoreFailure();
     }
-    const after = queryPoint2D(world, [0, 0], { mode: "all" });
+    const after = findAllPointMatches2D(world, [0, 0], {  });
     expect(after[0]!.body).toBe(before[0]!.body);
     expect(after[0]!.collider).toBe(before[0]!.collider);
     expect(snapshotWorld(world)).toMatchObject({

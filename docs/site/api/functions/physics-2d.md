@@ -36,18 +36,28 @@ symbols:
     inspectPhysics2D,
     kinematicBody2D,
     massProperties2D,
-    overlapShape2D,
+    hasShapeOverlap2D,
+    findShapeOverlap2D,
+    findAllShapeOverlaps2D,
     overlapShapes2D,
     polygonShape2D,
-    queryAabb2D,
-    queryPoint2D,
-    raycast2D,
+    hasAabbMatch2D,
+    findAabbMatch2D,
+    findAllAabbMatches2D,
+    hasPointMatch2D,
+    findPointMatch2D,
+    findAllPointMatches2D,
+    raycastAny2D,
+    raycastClosest2D,
+    raycastAll2D,
     raycastShape2D,
     roundedBoxShape2D,
     segmentShape2D,
     setAngularVelocity2D,
     setLinearVelocity2D,
-    shapeCast2D,
+    shapeCastAny2D,
+    shapeCastClosest2D,
+    shapeCastAll2D,
     shapeCastAgainstShape2D,
     sleepBody2D,
     staticBody2D,
@@ -239,34 +249,90 @@ sweep. Re-enabling uses zero velocity unless `preserve` is selected.
 ## Mounted-world queries and observation
 
 ```text
-function raycast2D<Mode extends PibblPhysicsQueryMode = "closest">(
+function raycastAny2D(
   world: PibblPhysicsWorldHandle2D,
   ray: PibblPhysicsRay2D,
-  options?: PibblPhysicsQueryOptions2D<Mode>,
-): PibblPhysicsQueryResult2D<Mode, PibblPhysicsQueryHit2D>;
-function shapeCast2D<Mode extends PibblPhysicsQueryMode = "closest">(
+  options?: PibblPhysicsQueryOptions2D,
+): boolean;
+function raycastClosest2D(
+  world: PibblPhysicsWorldHandle2D,
+  ray: PibblPhysicsRay2D,
+  options?: PibblPhysicsQueryOptions2D,
+): PibblPhysicsQueryHit2D | null;
+function raycastAll2D(
+  world: PibblPhysicsWorldHandle2D,
+  ray: PibblPhysicsRay2D,
+  options?: PibblPhysicsQueryOptions2D,
+): readonly PibblPhysicsQueryHit2D[];
+function shapeCastAny2D(
   world: PibblPhysicsWorldHandle2D,
   shape: PibblPhysicsShape2D,
   from: PibblPhysicsPose2D,
   translation: PibblPhysicsVector2,
-  options?: PibblPhysicsQueryOptions2D<Mode>,
-): PibblPhysicsQueryResult2D<Mode, PibblPhysicsQueryHit2D>;
-function overlapShape2D<Mode extends PibblPhysicsQueryMode = "closest">(
+  options?: PibblPhysicsQueryOptions2D,
+): boolean;
+function shapeCastClosest2D(
+  world: PibblPhysicsWorldHandle2D,
+  shape: PibblPhysicsShape2D,
+  from: PibblPhysicsPose2D,
+  translation: PibblPhysicsVector2,
+  options?: PibblPhysicsQueryOptions2D,
+): PibblPhysicsQueryHit2D | null;
+function shapeCastAll2D(
+  world: PibblPhysicsWorldHandle2D,
+  shape: PibblPhysicsShape2D,
+  from: PibblPhysicsPose2D,
+  translation: PibblPhysicsVector2,
+  options?: PibblPhysicsQueryOptions2D,
+): readonly PibblPhysicsQueryHit2D[];
+function hasShapeOverlap2D(
   world: PibblPhysicsWorldHandle2D,
   shape: PibblPhysicsShape2D,
   pose: PibblPhysicsPose2D,
-  options?: PibblPhysicsQueryOptions2D<Mode>,
-): PibblPhysicsQueryResult2D<Mode, PibblPhysicsQueryMatch2D>;
-function queryAabb2D<Mode extends PibblPhysicsQueryMode = "closest">(
+  options?: PibblPhysicsQueryOptions2D,
+): boolean;
+function findShapeOverlap2D(
+  world: PibblPhysicsWorldHandle2D,
+  shape: PibblPhysicsShape2D,
+  pose: PibblPhysicsPose2D,
+  options?: PibblPhysicsQueryOptions2D,
+): PibblPhysicsQueryMatch2D | null;
+function findAllShapeOverlaps2D(
+  world: PibblPhysicsWorldHandle2D,
+  shape: PibblPhysicsShape2D,
+  pose: PibblPhysicsPose2D,
+  options?: PibblPhysicsQueryOptions2D,
+): readonly PibblPhysicsQueryMatch2D[];
+function hasAabbMatch2D(
   world: PibblPhysicsWorldHandle2D,
   bounds: PibblPhysicsAabb2D,
-  options?: PibblPhysicsQueryOptions2D<Mode>,
-): PibblPhysicsQueryResult2D<Mode, PibblPhysicsQueryMatch2D>;
-function queryPoint2D<Mode extends PibblPhysicsQueryMode = "closest">(
+  options?: PibblPhysicsQueryOptions2D,
+): boolean;
+function findAabbMatch2D(
+  world: PibblPhysicsWorldHandle2D,
+  bounds: PibblPhysicsAabb2D,
+  options?: PibblPhysicsQueryOptions2D,
+): PibblPhysicsQueryMatch2D | null;
+function findAllAabbMatches2D(
+  world: PibblPhysicsWorldHandle2D,
+  bounds: PibblPhysicsAabb2D,
+  options?: PibblPhysicsQueryOptions2D,
+): readonly PibblPhysicsQueryMatch2D[];
+function hasPointMatch2D(
   world: PibblPhysicsWorldHandle2D,
   point: PibblPhysicsVector2,
-  options?: PibblPhysicsQueryOptions2D<Mode>,
-): PibblPhysicsQueryResult2D<Mode, PibblPhysicsQueryMatch2D>;
+  options?: PibblPhysicsQueryOptions2D,
+): boolean;
+function findPointMatch2D(
+  world: PibblPhysicsWorldHandle2D,
+  point: PibblPhysicsVector2,
+  options?: PibblPhysicsQueryOptions2D,
+): PibblPhysicsQueryMatch2D | null;
+function findAllPointMatches2D(
+  world: PibblPhysicsWorldHandle2D,
+  point: PibblPhysicsVector2,
+  options?: PibblPhysicsQueryOptions2D,
+): readonly PibblPhysicsQueryMatch2D[];
 function toPhysicsPoint2D(
   world: PibblPhysicsWorldHandle2D,
   point: PibblPhysicsVector2,
@@ -283,8 +349,8 @@ function inspectPhysics2D(
 ): PibblPhysicsBodyInspection2D | undefined;
 ```
 
-Queries read the committed world and accept filtering options. Modes produce a
-closest nullable record, a boolean, or all records. The point helpers cross
+Queries read the committed world and accept filtering options. Each named operation returns a
+fixed boolean, nullable record, or readonly array contract. The point helpers cross
 between root-logical and simulation coordinates. `inspectPhysics2D(world)`
 returns an immutable JSON-safe world observation without advancing, restoring,
 or scheduling. `inspectPhysics2D(body)` returns only that body's observation;
@@ -350,3 +416,21 @@ function shapeCastAgainstShape2D(
 These deterministic functions need neither a mounted world nor Pibbl core.
 `transformShape2D` returns a new descriptor. Contact normals point from the
 second shape toward the first.
+
+## Fixed query return contracts
+
+| Query        | Boolean             | One result or `null` | Readonly result array    |
+| ------------ | ------------------- | -------------------- | ------------------------ |
+| raycast      | `raycastAny2D`      | `raycastClosest2D`   | `raycastAll2D`           |
+| shapeCast    | `shapeCastAny2D`    | `shapeCastClosest2D` | `shapeCastAll2D`         |
+| overlapShape | `hasShapeOverlap2D` | `findShapeOverlap2D` | `findAllShapeOverlaps2D` |
+| queryAabb    | `hasAabbMatch2D`    | `findAabbMatch2D`    | `findAllAabbMatches2D`   |
+| queryPoint   | `hasPointMatch2D`   | `findPointMatch2D`   | `findAllPointMatches2D`  |
+
+All functions accept `PibblPhysicsQueryOptions2D` for sensor policy, collision
+filtering, and exclusions. There is no `mode` option. Boolean queries stop at
+the first match. Cast results sort by time of impact, distance, then collider
+index and generation. Overlap, bounds, and point results sort by collider index
+and generation; `find…` returns the first in that order, not a nearest match.
+Returned result arrays are frozen; no matches produce `false`, `null`, or an
+empty array according to the named operation.

@@ -170,7 +170,9 @@ Read exact contracts before changing these areas:
   boolean flags do not fix a selector-driven public design. Do not disguise
   multiple return contracts with a broad union or a common wrapper either.
 - Prefer named functions or typed strategy/definition objects for distinct
-  algorithms. Do not add a required single-value selector in anticipation of
+  algorithms. When algorithms share one operation and return contract, prefer
+  composition, such as `useAnimatedValue(target, { animation: spring() })`, over
+  adding one hook per algorithm. Do not add a required single-value selector in anticipation of
   future variants; name the supported operation directly.
 - Ordinary data and policy values (IDs, event names, alignment, direction,
   placement) and discriminated data/event/result unions are allowed when they
@@ -387,8 +389,9 @@ analytic springs, custom seekable definitions, and fixed-step stateful
 steppers. Immutable programs compose `drive`, `sequence`, `parallel`, `wait`,
 `marker`, and `repeat`; whole-run writer leases reject ambiguous writers unless
 replacement is explicit. `usePlayback` owns stable controls/status/current time
-for one mounted hook slot, while `useAnimatedValue` provides explicit target-driven
-spring and tween values. Signals may flow directly into declared Pibbl style and
+for one mounted hook slot, while `useAnimatedValue` provides
+explicit target-driven values through immutable definitions or pure animation
+factories. Signals may flow directly into declared Pibbl style and
 component inputs; `.get()` remains the way to make the enclosing component the
 consumer.
 

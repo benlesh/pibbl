@@ -138,11 +138,7 @@ describe('animation rendering integration', () => {
     const workKey = {};
 
     function TransitionChild({ initial, target }: { initial: number; target: number }) {
-      output = useAnimatedValue(target, {
-        type: 'tween',
-        duration: 100,
-        initial,
-      });
+      output = useAnimatedValue(target, { animation: tween({ duration: 100 }), initial });
       output.get();
     }
 

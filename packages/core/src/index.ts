@@ -190,7 +190,8 @@ export type {
   PibblAnimationRepeatDirection,
   PibblAnimationRepeatOptions,
   PibblAnimationSampleInput,
-  PibblSpringAnimatedValueOptions,
+  PibblAnimatedValueOptions,
+  PibblAnimationTarget,
   PibblPlayback,
   PibblPlaybackEvent,
   PibblPlaybackOptions,
@@ -201,7 +202,6 @@ export type {
   PibblSpringOptions,
   PibblStepperOptions,
   PibblTweenOptions,
-  PibblTweenAnimatedValueOptions,
 } from './lib/animation/types.js';
 export type {
   PibblConfig,

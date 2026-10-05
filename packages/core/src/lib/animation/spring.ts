@@ -88,7 +88,7 @@ function defaulted(value: number | undefined, fallback: number): number {
   return value === undefined ? fallback : value;
 }
 
-function normalizedSpring(options: Readonly<PibblSpringOptions>): SpringWithoutDuration {
+function normalizedSpring(options: Readonly<PibblSpringOptions & { readonly to: number }>): SpringWithoutDuration {
   const debugName = options.debugName;
   const hasFrom = options.from !== undefined;
   return {
@@ -381,7 +381,7 @@ export function resolveSpringDuration(record: SpringWithoutDuration): number {
 
 /** @internal Creates the fully normalized immutable spring definition record. */
 export function createSpringRecord(
-  options: Readonly<PibblSpringOptions>,
+  options: Readonly<PibblSpringOptions & { readonly to: number }>,
 ): SpringDefinitionRecord {
   const normalized = normalizedSpring(options);
   return Object.freeze({

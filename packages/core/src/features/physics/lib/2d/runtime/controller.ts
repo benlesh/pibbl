@@ -1,3 +1,4 @@
+import type { QueryMode, QueryOptions, QueryResult } from '../query-types.js';
 import { CommittedObstacles2D } from "./obstacles.js";
 import { boundsOfShape2D } from "../../../2d-geometry.js";
 import { createShape2D } from "../shape-records.js";
@@ -33,9 +34,6 @@ import type {
   PibblPhysicsColliderHandle2D,
   PibblPhysicsQueryHit2D,
   PibblPhysicsQueryMatch2D,
-  PibblPhysicsQueryMode,
-  PibblPhysicsQueryOptions2D,
-  PibblPhysicsQueryResult2D,
   PibblPhysicsWorldHandle2D,
 } from "../types.js";
 import type { PibblResolvedPhysicsWorld2DProps } from "./world-props.js";
@@ -449,45 +447,45 @@ export class PhysicsWorld2DController {
       : undefined;
   }
 
-  raycast<Mode extends PibblPhysicsQueryMode = "closest">(
+  raycast<Mode extends QueryMode = "closest">(
     ray: PibblPhysicsRay2D,
-    options?: PibblPhysicsQueryOptions2D<Mode>,
-  ): PibblPhysicsQueryResult2D<Mode, PibblPhysicsQueryHit2D> {
+    options?: QueryOptions<Mode>,
+  ): QueryResult<Mode, PibblPhysicsQueryHit2D> {
     this.assertActive();
     return this.queries.raycast(1, ray, options);
   }
 
-  shapeCast<Mode extends PibblPhysicsQueryMode = "closest">(
+  shapeCast<Mode extends QueryMode = "closest">(
     shape: PibblPhysicsShape2D,
     from: PibblPhysicsPose2D,
     translation: PibblPhysicsVector2,
-    options?: PibblPhysicsQueryOptions2D<Mode>,
-  ): PibblPhysicsQueryResult2D<Mode, PibblPhysicsQueryHit2D> {
+    options?: QueryOptions<Mode>,
+  ): QueryResult<Mode, PibblPhysicsQueryHit2D> {
     this.assertActive();
     return this.queries.shapeCast(1, shape, from, translation, options);
   }
 
-  overlapShape<Mode extends PibblPhysicsQueryMode = "closest">(
+  overlapShape<Mode extends QueryMode = "closest">(
     shape: PibblPhysicsShape2D,
     pose: PibblPhysicsPose2D,
-    options?: PibblPhysicsQueryOptions2D<Mode>,
-  ): PibblPhysicsQueryResult2D<Mode, PibblPhysicsQueryMatch2D> {
+    options?: QueryOptions<Mode>,
+  ): QueryResult<Mode, PibblPhysicsQueryMatch2D> {
     this.assertActive();
     return this.queries.overlapShape(1, shape, pose, options);
   }
 
-  queryAabb<Mode extends PibblPhysicsQueryMode = "closest">(
+  queryAabb<Mode extends QueryMode = "closest">(
     bounds: PibblPhysicsAabb2D,
-    options?: PibblPhysicsQueryOptions2D<Mode>,
-  ): PibblPhysicsQueryResult2D<Mode, PibblPhysicsQueryMatch2D> {
+    options?: QueryOptions<Mode>,
+  ): QueryResult<Mode, PibblPhysicsQueryMatch2D> {
     this.assertActive();
     return this.queries.queryAabb(1, bounds, options);
   }
 
-  queryPoint<Mode extends PibblPhysicsQueryMode = "closest">(
+  queryPoint<Mode extends QueryMode = "closest">(
     point: PibblPhysicsVector2,
-    options?: PibblPhysicsQueryOptions2D<Mode>,
-  ): PibblPhysicsQueryResult2D<Mode, PibblPhysicsQueryMatch2D> {
+    options?: QueryOptions<Mode>,
+  ): QueryResult<Mode, PibblPhysicsQueryMatch2D> {
     this.assertActive();
     return this.queries.queryPoint(1, point, options);
   }

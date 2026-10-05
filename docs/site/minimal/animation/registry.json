@@ -163,11 +163,15 @@
         "importPath": "@pibbl/core"
       },
       {
-        "name": "PibblTweenAnimatedValueOptions",
+        "name": "spring",
         "importPath": "@pibbl/core"
       },
       {
-        "name": "PibblSpringAnimatedValueOptions",
+        "name": "tween",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PibblAnimatedValueOptions",
         "importPath": "@pibbl/core"
       }
     ],

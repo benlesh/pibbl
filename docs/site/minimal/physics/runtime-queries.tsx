@@ -3,12 +3,12 @@ import {
   PhysicsWorld2D,
   pibblPhysicsWorld2D,
   fromPhysicsPoint2D,
-  overlapShape2D,
+  findAllShapeOverlaps2D, hasShapeOverlap2D, findShapeOverlap2D,
   physicsObstacles2D,
-  queryAabb2D,
-  queryPoint2D,
-  raycast2D,
-  shapeCast2D,
+  findAllAabbMatches2D, hasAabbMatch2D, findAabbMatch2D,
+  findAllPointMatches2D, hasPointMatch2D, findPointMatch2D,
+  raycastClosest2D, raycastAny2D, raycastAll2D,
+  shapeCastClosest2D, shapeCastAny2D, shapeCastAll2D,
   staticBody2D,
   toPhysicsPoint2D,
   circleShape2D,
@@ -16,9 +16,7 @@ import {
   type PibblPhysicsColliderHandle2D,
   type PibblPhysicsQueryHit2D,
   type PibblPhysicsQueryMatch2D,
-  type PibblPhysicsQueryMode,
   type PibblPhysicsQueryOptions2D,
-  type PibblPhysicsQueryResult2D,
   type PibblPhysicsWorldHandle2D,
 } from '@pibbl/core/physics/2d';
 
@@ -44,22 +42,29 @@ const controller = pibbl(canvas,
 
 function inspect() {
   if (!world) return;
-  const mode: PibblPhysicsQueryMode = 'all';
-  const options: PibblPhysicsQueryOptions2D<'all'> = { mode, sensors: 'exclude' };
+  const options: PibblPhysicsQueryOptions2D = { sensors: 'exclude' };
   const bounds: PibblPhysicsAabb2D = { min: [100, 40], max: [210, 140] };
-  const region: PibblPhysicsQueryResult2D<'all', PibblPhysicsQueryMatch2D> = queryAabb2D(world, bounds, options);
-  const pointMatches: readonly PibblPhysicsQueryMatch2D[] = queryPoint2D(world, [150, 90], options);
+  const region: readonly PibblPhysicsQueryMatch2D[] = findAllAabbMatches2D(world, bounds, options);
+  const pointMatches: readonly PibblPhysicsQueryMatch2D[] = findAllPointMatches2D(world, [150, 90], options);
   const firstCollider: PibblPhysicsColliderHandle2D | undefined = pointMatches[0]?.collider;
-  const ray: PibblPhysicsQueryHit2D | null = raycast2D(world, {
+  const ray: PibblPhysicsQueryHit2D | null = raycastClosest2D(world, {
     origin: [0, 90], direction: [1, 0], maxDistance: 300,
   });
   const circle = circleShape2D({ radius: 8 });
-  const cast = shapeCast2D(world, circle, { position: [10, 90], rotationDegrees: 0 }, [200, 0]);
-  const overlaps = overlapShape2D(world, circle, { position: [150, 90], rotationDegrees: 0 }, options);
+  const cast = shapeCastClosest2D(world, circle, { position: [10, 90], rotationDegrees: 0 }, [200, 0]);
+  const overlaps = findAllShapeOverlaps2D(world, circle, { position: [150, 90], rotationDegrees: 0 }, options);
   const local = toPhysicsPoint2D(world, [150, 90]);
   const back = fromPhysicsPoint2D(world, local);
   const obstacles = physicsObstacles2D(world).read();
+  const rayInput = { origin: [0, 90], direction: [1, 0], maxDistance: 300 } as const;
+  const castPose = { position: [10, 90], rotationDegrees: 0 } as const;
+  const overlapPose = { position: [150, 90], rotationDegrees: 0 } as const;
   output.textContent = [
+    `Ray exists: ${raycastAny2D(world, rayInput)}; total: ${raycastAll2D(world, rayInput).length}`,
+    `Cast exists: ${shapeCastAny2D(world, circle, castPose, [200, 0])}; total: ${shapeCastAll2D(world, circle, castPose, [200, 0]).length}`,
+    `Overlap exists: ${hasShapeOverlap2D(world, circle, overlapPose)}; first: ${findShapeOverlap2D(world, circle, overlapPose)?.colliderGeneration ?? 'none'}`,
+    `Bounds exist: ${hasAabbMatch2D(world, bounds)}; first: ${findAabbMatch2D(world, bounds)?.colliderGeneration ?? 'none'}`,
+    `Point exists: ${hasPointMatch2D(world, [150, 90])}; first: ${findPointMatch2D(world, [150, 90])?.colliderGeneration ?? 'none'}`,
     `AABB matches: ${region.length}; point matches: ${pointMatches.length}`,
     `First collider generation: ${firstCollider ? pointMatches[0]!.colliderGeneration : 'none'}`,
     `Ray: ${ray?.distance.toFixed(1) ?? 'miss'}; cast: ${cast?.timeOfImpact.toFixed(2) ?? 'miss'}`,

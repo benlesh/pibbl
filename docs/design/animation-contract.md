@@ -21,7 +21,8 @@ component-owned playback advances a program through the realm scheduler
 
 Definitions and programs are nominal, opaque, immutable values. They contain no
 component identity or independent clock. A program becomes stateful only when
-`usePlayback` or `useAnimatedValue` creates a run owned by a mounted hook slot.
+`usePlayback` or `useAnimatedValue` creates a run owned by a
+mounted hook slot.
 There is no free `play(program)` function.
 
 The root `@pibbl/core` entry exports the runtime values `easing`, `tween`,
@@ -231,10 +232,25 @@ shared-Commit rejection and are delivered exactly once.
 
 ## Update-driven transitions
 
-`useAnimatedValue(target, options)` returns one stable readonly signal. Spring
-options are number-only; tween options are generic and use the same explicit
-interpolator rule. Both accept `initial`, `equals`, and `debugName`; equality
-defaults to `Object.is`.
+`useAnimatedValue(target, { animation, initial?, equals?, debugName? })` returns
+one stable readonly signal. `animation` is an immutable definition or a pure
+factory receiving `{ from, to, velocity }`. Spring definitions are numeric;
+tween definitions support generic values with an explicit interpolator.
+Equality defaults to `Object.is`.
+
+The hook supplies endpoints to spring and tween definitions, overriding their
+authored endpoints without mutating the reusable definition. Their `to` option
+may be omitted for use with this hook; `drive` requires a concrete destination
+and rejects definitions without one. Other definitions retain their authored
+samples. Custom factories can return `defineAnimation`, keyframes, or steppers
+whose behavior depends on the supplied target.
+
+Factories are evaluated synchronously during render preparation, before any
+candidate is adopted. They may run more than once, must be pure, and cannot call
+hooks or write signals. Factory errors reject the render and clean up normally.
+No user factory runs from the successful-render completion callback. Options
+and individual hook fields may be signals; use a computed definition for
+reactive algorithm parameters.
 
 On mount, omitted `initial` presents the target and does not animate. A distinct
 explicit initial value is presented by the mounting render and queues entrance
@@ -290,7 +306,7 @@ directly at declared inputs:
 
 ```tsx
 function MovingCard() {
-  const x = useAnimatedValue(120, { type: "spring", initial: 0 });
+  const x = useAnimatedValue(120, { animation: spring(), initial: 0 });
   return <Rectangle style={{ x, width: 48, height: 32 }} />;
 }
 ```

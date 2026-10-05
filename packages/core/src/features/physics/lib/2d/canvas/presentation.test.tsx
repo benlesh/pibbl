@@ -11,7 +11,7 @@ import {
   dynamicBody2D,
   enableBody2D,
   kinematicBody2D,
-  queryPoint2D,
+  findAllPointMatches2D, hasPointMatch2D,
   setLinearVelocity2D,
   staticBody2D,
   teleportBody2D,
@@ -486,11 +486,10 @@ describe("Canvas 2D physics pose presentation", () => {
       expect(painted).not.toBeNull();
       expect(Math.abs(painted![0] - position[0])).toBeLessThanOrEqual(2);
       expect(Math.abs(painted![1] - position[1])).toBeLessThanOrEqual(2);
-      const matches = queryPoint2D(world, position, { mode: "all" });
+      const matches = findAllPointMatches2D(world, position, {  });
       expect(matches.some((match) => match.tag === "ball")).toBe(true);
       expect(
-        queryPoint2D(world, [position[0] * 2 - 210, position[1] * 2 - 110], {
-          mode: "any",
+        hasPointMatch2D(world, [position[0] * 2 - 210, position[1] * 2 - 110], {
         }),
       ).toBe(false);
       expect(position[0]).toBeLessThanOrEqual(666.01);

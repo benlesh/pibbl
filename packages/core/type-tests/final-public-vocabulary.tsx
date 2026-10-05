@@ -1,4 +1,4 @@
-import {
+import { tween, spring,
   Absolute,
   batch,
   Clip,
@@ -45,13 +45,11 @@ import {
   repeat,
   sequence,
   signal,
-  spring,
   stepper,
   SvgPath,
   Star,
   Text,
   drive,
-  tween,
   untracked,
   VerticalLine,
   wait,
@@ -78,10 +76,10 @@ import {
   type PibblReactionOptions,
   type RectStyle,
   type PibblSpringOptions,
-  type PibblSpringAnimatedValueOptions,
+  type PibblAnimatedValueOptions,
   type PibblStepperOptions,
   type PibblTweenOptions,
-  type PibblTweenAnimatedValueOptions,
+
   type Signal,
   type SignalEquals,
   type SignalOptions,
@@ -429,12 +427,8 @@ const stepperOptions: PibblStepperOptions<{ value: number }, number> = {
 const playbackOptions: PibblPlaybackOptions = { autoplay: false };
 const playbackStatus: PibblPlaybackStatus = 'idle';
 const playbackEvent = null as PibblPlaybackEvent | null;
-const tweenTransitionOptions: PibblTweenAnimatedValueOptions<{ x: number }> = {
-  type: 'tween',
-  duration: 100,
-  interpolate: objectInterpolator,
-};
-const springTransitionOptions: PibblSpringAnimatedValueOptions = { type: 'spring' };
+const tweenTransitionOptions: PibblAnimatedValueOptions<{ x: number }> = { animation: tween({ duration: 100, interpolate: objectInterpolator }) };
+const springTransitionOptions: PibblAnimatedValueOptions<number> = { animation: spring({  }) };
 
 function AnimationHookScene(): PibblNode {
   const player: PibblPlayback = usePlayback(animationProgram, playbackOptions);
