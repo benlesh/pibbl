@@ -72,7 +72,7 @@
   {
     "id": "texture-water-waves",
     "title": "Ripple a wave map",
-    "description": "Refract a tiled sign through a periodic wave texture, with an unfiltered comparison toggle.",
+    "description": "Refract and light a tiled sign through fine, fast-moving waves, with an unfiltered comparison toggle.",
     "source": "water-waves.tsx",
     "environment": "browser",
     "symbols": [
@@ -81,7 +81,7 @@
       { "name": "WaterWavesMessage", "importPath": "@crc/core/textures" }
     ],
     "notes": [
-      "Press anywhere on the image to add a ripple at that position. Turn off Refraction to see the undistorted source."
+      "Press anywhere on the image to add a ripple at that position. Turn off Refraction + reflections to see the undistorted source. Scale 10 produces finer periodic waves; speed 2.4 animates them more quickly. Both filters share the same numeric wave map and region."
     ]
   },
   {

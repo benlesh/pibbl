@@ -175,18 +175,9 @@ export default defineConfig(({ mode }) => ({
       ".superpowers/**",
       ".worktrees/**",
       "tooling/surviving-package-entries.test.ts",
-      // Node-runner suites own browser processes; they cannot run inside Chromium.
-      // Kept in test:agent-verification:{requirements,identity,watchdog}.
-      "tooling/agent-verification/**/*.test.mjs",
-      // Node-only checks run in trust:static and trust:package.
-      "tooling/trust-workflow.test.mjs",
-      "tooling/run-browser-contracts.test.mjs",
-      "tooling/filter-authoring.test.mjs",
-      "tooling/filter-validation.test.mjs",
-      "tooling/optional-import-inertness.test.mjs",
-      "tooling/texture-import-inertness.test.mjs",
+      // Tooling .mjs suites use node:test and run in their owning trust stages.
+      "tooling/**/*.test.mjs",
       "packages/core/src/features/physics/lib/2d/public-types.test.ts",
-      "packages/core/src/features/physics/lib/3d/public-types.test.ts",
     ],
     browser: {
       commands: {

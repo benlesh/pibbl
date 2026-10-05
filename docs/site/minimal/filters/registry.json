@@ -100,7 +100,7 @@
       { "name": "CRCReflectedLightSource", "importPath": "@crc/core/filters" }
     ],
     "notes": [
-      "The map is a mount-owned texture; both filters use the same local region."
+      "The map is a mount-owned texture; both filters use the same local region. Waves run at speed 3 so motion is clear. This comparison is automatic; [Ripple a wave map](/minimal-examples/textures/texture-water-waves/) demonstrates pointer-driven ripples."
     ]
   }
 ]

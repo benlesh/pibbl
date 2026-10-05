@@ -12,7 +12,6 @@ import {
 } from './types.js';
 import type {
   CRCBackendFrame,
-  CRCBackendMount,
 } from './backend/types.js';
 import type { CRCFrameSnapshot } from './scheduler/types.js';
 import { withSignalWriteForbidden } from './signals/graph.js';
@@ -231,13 +230,4 @@ export function executeRender(
       }
     }
   }
-}
-
-/** Executes one synchronous private-backend render through its owned mount. */
-export function executeBackendCRC(
-  mount: CRCBackendMount,
-  root: CRCNode,
-  timestamp: number,
-): void {
-  mount.render(root, timestamp);
 }

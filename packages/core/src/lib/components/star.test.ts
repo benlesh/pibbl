@@ -347,7 +347,7 @@ describe('Star', () => {
       style: Record<string, unknown>,
       context: object,
     ) => object;
-    const render = definition.render as (
+    const render = definition.program as (
       props: object,
       style: object,
       context: CanvasRenderingContext2D,

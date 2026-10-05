@@ -2,7 +2,7 @@ import {
   crc,
   Group,
   Rectangle,
-  Circle,
+  SvgPath,
   Text,
   useVisibilityTransition,
   hologram,
@@ -16,8 +16,8 @@ import {
 } from "@crc/core";
 
 const options: CRCHologramOptions = {
-  region: { x: 100, y: 100, width: 280, height: 100 },
-  entry: { x: 240, y: 250 },
+  region: { x: 138, y: 44, width: 204, height: 204 },
+  entry: { x: 240, y: 258 },
   brightness: 0.8,
 };
 const effect: CRCTransitionEffect = hologram(options);
@@ -47,44 +47,28 @@ function Scene() {
     <>
       <Rectangle style={{ width: 480, height: 300, fill: "#11151c" }} />
       <Group style={{ transition: binding }}>
-        <Circle
+        <SvgPath
           style={{
-            cx: 146,
-            cy: 148,
-            radius: 32,
-            stroke: "#64e0b5",
-            strokeWidth: 8,
-          }}
-        />
-        <Rectangle
-          style={{
-            left: 138,
-            top: 132,
-            width: 16,
-            height: 32,
+            // The window winds opposite the hull, leaving a real transparent hole.
+            d: "M240 50 Q278 85 276 130 L336 194 L282 182 L262 156 L262 196 L218 196 L218 156 L198 182 L144 194 L204 130 Q202 85 240 50 Z M240 88 A16 16 0 1 0 240 120 A16 16 0 1 0 240 88 Z",
             fill: "#64e0b5",
+            stroke: "#c6fff0",
+            strokeWidth: 3,
           }}
         />
-        <Text
+        <SvgPath
           style={{
-            left: 204,
-            top: 151,
-            font: "bold 30px sans-serif",
-            fill: "#ffffff",
+            d: "M210 141 L172 182 M270 141 L308 182 M240 136 L240 181",
+            stroke: "#176c67",
+            strokeWidth: 4,
           }}
-        >
-          CRC
-        </Text>
-        <Text
+        />
+        <SvgPath
           style={{
-            left: 204,
-            top: 179,
-            font: "16px sans-serif",
-            fill: "#c8d3dc",
+            d: "M224 208 L232 222 L224 237 L216 222 Z M240 212 L247 228 L240 246 L233 228 Z M256 208 L264 222 L256 237 L248 222 Z",
+            fill: "#f6c66a",
           }}
-        >
-          hologram
-        </Text>
+        />
       </Group>
       <Text
         style={{ left: 20, top: 279, fill: "#c8d3dc", font: "14px sans-serif" }}

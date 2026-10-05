@@ -7,7 +7,8 @@ Canvas effects, and the `@crc/core/viz` subpath provides [composable data
 visualization](docs/site/learn/guides/data-visualization.md).
 JSX is the preferred authoring
 syntax, but CRC has its own renderer, hooks, element brand, and lifecycle: it
-does not depend on React and it does not create DOM nodes.
+does not depend on React. Canvas drawing stays on Canvas; opt-in `HtmlBox`
+regions host application-owned DOM content.
 
 ## Quick start
 

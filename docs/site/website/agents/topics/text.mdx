@@ -1,0 +1,54 @@
+---
+title: Agent guide to text outlines and typography
+description: Exact imports, shaping boundaries, multi-path envelope composition, font assets, ownership, and verification.
+topic: text
+---
+
+## Read and run
+
+Read the [human guide](/guides/text-geometry/), then the [complete API reference](/reference/functions/text-geometry/). Begin with the [minimal outline program](/minimal-examples/text/outline/). For editable points use [Text outlines](/examples/text-geometry/); for bending between two or more curves use [Text envelope](/examples/text-envelope/). These pages publish complete source and link the full-page experience and playground. Browse their visual results in the [Text gallery](/catalogs/text/).
+
+## Complete public package surface
+
+All eight exports below come from `@crc/text`, not `@crc/core`. Their detailed definitions and constraints are in [Text geometry](/reference/functions/text-geometry/).
+
+| Export                | Role                                                                                                    |
+| --------------------- | ------------------------------------------------------------------------------------------------------- |
+| `loadOutlineFont`     | Asynchronously load explicit URL/bytes; returns an owned font.                                          |
+| `createTextGeometry`  | Synchronously shape a single run into independent geometry and metadata.                                |
+| `OutlineFont`         | Font owner with idempotent `dispose()` and `Symbol.dispose`.                                            |
+| `OutlineFontOptions`  | Abort signal and explicit monochrome fallback policy.                                                   |
+| `TextGeometryOptions` | Positive font size, shaping features, direction, script, language, missing-glyph policy, segment limit. |
+| `TextGeometryResult`  | Mutable geometry plus conversion-time advance, ink bounds, and glyph records.                           |
+| `TextGlyph`           | Glyph ID, UTF-16 cluster, segment range, position, and advance.                                         |
+| `InkBounds`           | Curve-extrema ink rectangle, distinct from layout advance.                                              |
+
+Ordinary `Text`, `Path`, `PathGeometry`, `envelopeTransform`, `transformPath`, `composeTransforms`, and `affineTransform` come from `@crc/core`. Do not invent `TextOnPath`, a text-displacement API, or a private font-engine import.
+
+## Geometry pipeline
+
+Shape the run once. Keep the source geometry immutable by convention while transforming copies. For envelope bending, use nonempty `inkBounds` as `source`; provide normalized guide positions with the first at 0 and last at 1. The existing playground adds intermediate guides, permits crossed/folded curves, and composes envelope mapping with affine rotation/skew before one `transformPath` approximation.
+
+This changes real path geometry. It is different from a Canvas filter that only changes captured pixels. Increasing approximation precision can increase segment count and cost; retain explicit tolerance and segment limits. Guide dragging should recompute the transformation, not reload a font or reshape unchanged text. In-place path edits require a signal/state update to schedule repaint.
+
+## Assets and lifetime
+
+- Serve an explicitly licensed outline TTF/OTF. CSS font names, WOFF/WOFF2, and system-font lookup are not accepted.
+- Deploy the matching packaged engine and WASM. Verify a production build and non-root base path; the reference explains plain-esbuild placement. A successful development preview does not prove deployed asset URLs.
+- Start async loading outside synchronous components. Use an AbortController on teardown, and dispose any font returned after its owner was removed.
+- Retain a font across edits; dispose it after the last conversion. Geometry and metadata are JavaScript-owned and remain valid afterward.
+- Dispose the CRC mount, native controls/listeners, and owned overlays when removing a demo. `HtmlBox` controls remain native HTML; they are not warped or captured by the Canvas effect.
+
+## Do not infer unsupported behavior
+
+One run is not paragraph layout: no automatic fallback, wrapping, paragraph bidi, rich text, caret mapping, or variable-axis selection. Missing glyphs throw by default. Clusters are UTF-16 source offsets, not characters or carets. Metrics and segment ranges describe the initial conversion and do not update after path mutation. Empty/whitespace-only ink needs an explicit no-envelope state.
+
+## Verify adaptations
+
+1. Check font and WASM requests, license deployment, and browser errors in production output.
+2. Generate supported text, then exercise missing glyphs and empty/whitespace input without stale successful output.
+3. Confirm a guide drag visibly changes the path while leaving original text geometry intact. Add a third guide and verify that it influences the interior.
+4. Exercise typing, presets, rotation, skew, reset, and native keyboard controls. Check the full-page view at narrow widths.
+5. Stop/restart or navigate away during font loading; confirm controls/overlays are removed and font/controller cleanup runs.
+
+Use [coverage.json](/agents/coverage.json) for exact installed-checkout symbol destinations and [llms.txt](/llms.txt) for static documentation discovery. Example availability is not evidence that every arbitrary font or guide arrangement is supported.

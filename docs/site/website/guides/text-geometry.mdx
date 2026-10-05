@@ -1,0 +1,56 @@
+---
+title: Text outlines and multi-path bending
+description: Shape text with @crc/text, edit its geometry, and bend it between multiple guide paths.
+---
+
+## Choose the right text tool
+
+Use core [Text](/reference/components/text/) for ordinary Canvas labels. Use the optional `@crc/text` package when you need editable glyph outlines, path transformations, or custom-shaped typography. Neither creates semantic HTML: keep accessible labels and editable input in native HTML.
+
+The [Text gallery](/catalogs/text/) includes ordinary text, [editable outlines](/examples/text-geometry/), and the [multi-path envelope playground](/examples/text-envelope/). Each has complete source, a full-page experience, and a playground link.
+
+## From a font to an editable path
+
+1. Install compatible versions of `@crc/core` and `@crc/text`.
+2. Load explicit outline TTF or OTF bytes with `loadOutlineFont`. Loading is asynchronous and belongs outside component evaluation.
+3. Call `createTextGeometry(font, text, { fontSize })` to shape one horizontal run. It returns ordinary `PathGeometry`, glyph metadata, layout advance, and ink bounds.
+4. Draw the geometry with `Path`, edit its segments, or transform a copy. Signal/state updates schedule repaint after mutation.
+5. Dispose the font after the last conversion. The returned geometry remains usable independently.
+
+Start from the [complete minimal outline program](/minimal-examples/text/outline/). The [full API reference](/reference/functions/text-geometry/) documents every option, result field, supported font format, and ownership rule.
+
+## Bend between multiple paths
+
+This is **geometry deformation with `envelopeTransform`**, not the pixel-based `displacement` filter. Shape the text once; use its nonempty `inkBounds` as the source rectangle, then map it between guide paths. Two guides define the top and bottom; intermediate guides control the interior.
+
+In the [full-page envelope playground](/experience/text-envelope/), type a phrase, drag endpoints or curve handles, and use **+ Guide** to add intermediate paths. Try Ribbon, Wave, Pinch, or Straight, then compose rotation and skew. The demo supports two to five guides; that is its UI limit, not a universal API limit.
+
+The essential mapping below is an excerpt, not a standalone program. `result` is a shaped text result and `top`, `middle`, and `bottom` are `PathGeometry` guide paths:
+
+```ts
+import { envelopeTransform, transformPath } from "@crc/core";
+
+if (result.inkBounds) {
+  const mapping = envelopeTransform({
+    source: result.inkBounds,
+    guides: [
+      { at: 0, path: top },
+      { at: 0.5, path: middle },
+      { at: 1, path: bottom },
+    ],
+  });
+  const bent = transformPath(result.geometry, mapping, {
+    tolerance: 0.45,
+    maxSegments: 80_000,
+  });
+  // Paint bent with Path; retain result.geometry as the unmodified source.
+}
+```
+
+The [complete envelope source](/examples/text-envelope/) also demonstrates `composeTransforms` and `affineTransform`. It reshapes only when the text changes, not while dragging guide handles.
+
+## Assets and boundaries
+
+Serve a licensed outline font and the matching `@crc/text` engine/WASM assets. The website demos use ABeeZee and Lato; their local asset URLs are demo hosting choices, not public CDN endpoints. Follow the [browser deployment instructions](/reference/functions/text-geometry/#browser-assets) for your bundler and production base path.
+
+WOFF/WOFF2, system-font lookup, automatic fallback, paragraph layout, and rich text are not supported by `@crc/text`. Whitespace can have advance but no ink, so check `inkBounds` before constructing an envelope. Transforming geometry does not update the original glyph metrics. See the [agent implementation companion](/agents/topics/text/) for adaptation and verification.

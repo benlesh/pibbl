@@ -3,9 +3,10 @@ import { open } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-// Official CRC packages currently pin core to an exact numeric release. Refuse
-// unsupported ranges rather than implement an incomplete semver interpretation.
-const exactRelease = value => typeof value === 'string' && value.length <= 64 && /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/.test(value);
+import { valid } from 'semver';
+
+// Keep exact lockstep pins, including beta releases; ranges remain unsupported.
+const exactRelease = value => typeof value === 'string' && value.length <= 64 && valid(value) === value;
 const label = value => typeof value === 'string' && value.length > 0 && value.length <= 128;
 export function auditCorePeerPins(core, peers) {
   if (core?.name !== '@crc/core' || !exactRelease(core.version)) throw new Error('Invalid or unsupported core manifest.');
@@ -30,7 +31,7 @@ export function auditCorePeerPins(core, peers) {
 export async function readCorePeerAudit(root) {
   const manifests = [];
   const values = [];
-  for (const name of ['core', 'three']) {
+  for (const name of ['core', 'three', 'text']) {
     const path = `packages/${name}/package.json`;
     const file = await open(resolve(root, path), 'r');
     let bytes;

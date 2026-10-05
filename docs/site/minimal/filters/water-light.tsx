@@ -13,7 +13,7 @@ function Scene({
 }: {
   mode: "original" | "displacement" | "light" | "both";
 }) {
-  const waves = useTexture(waterWaves({ seed: 7, speed: 0.5 }));
+  const waves = useTexture(waterWaves({ seed: 7, speed: 3 }));
   const map = waves.paint({ mode: "stretch" });
   const region = { x: 0, y: 0, width: 224, height: 156 };
   const refraction: CRCDisplacementFilterOptions = {

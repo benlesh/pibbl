@@ -18,7 +18,7 @@ symbols:
 
 # BarSeries
 
-Import from `@crc/viz`. This component supports vertical and horizontal value
+Import from `@crc/core/viz`. This component supports vertical and horizontal value
 and range bars. For value bars use `data`, `category` (category key/accessor),
 `value` (numeric key/accessor), `categoryScale` (band), and `valueScale`
 (linear). `orientation` is `"vertical"` (default) or `"horizontal"`.

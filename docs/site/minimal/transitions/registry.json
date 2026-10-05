@@ -173,7 +173,7 @@
   {
     "id": "hologram",
     "title": "hologram enter and exit",
-    "description": "Project a transparent logo with Hologram on a dark stage. The first entrance runs automatically; Show and Hide replay either direction.",
+    "description": "Project a spacecraft with swept wings, a transparent window, and detached exhaust shapes. Hologram follows the painted silhouette, not a filled rectangle. The first entrance runs automatically; Show and Hide replay either direction.",
     "source": "hologram.tsx",
     "environment": "browser",
     "symbols": [

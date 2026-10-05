@@ -1,5 +1,5 @@
 import { crc, Group, Rectangle, Circle, Text, signal } from "@crc/core";
-import { displacement } from "@crc/core/filters";
+import { displacement, reflectedLight } from "@crc/core/filters";
 import {
   waterWaves,
   useTexture,
@@ -20,23 +20,30 @@ toggle.type = "checkbox";
 toggle.checked = true;
 toggle.onchange = () => enabled.set(toggle.checked);
 const label = document.createElement("label");
-label.append(toggle, "Refraction");
+label.append(toggle, "Refraction + reflections");
 document.body.append(label);
 function Waves() {
   const options: WaterWavesOptions = {
     seed: 7,
-    speed: 0.6,
+    speed: 2.4,
+    scale: 10,
     rippleStrength: 1.2,
   };
   const water = useTexture(waterWaves(options), {
-    resolution: { width: 240, height: 160 },
+    resolution: { width, height },
   });
   const map = water.paint({ mode: "stretch" });
-  const filter = displacement({
-    map,
-    strength: 12,
-    region: { x: 0, y: 0, width, height },
-  });
+  const region = { x: 0, y: 0, width, height };
+  const filters = [
+    displacement({ map, strength: 8, region }),
+    reflectedLight({
+      map,
+      region,
+      source: "#ffffff",
+      opacity: 0.65,
+      direction: [-0.6, -0.8],
+    }),
+  ];
   const send = (x: number, y: number) => {
     const message: WaterWavesMessage = {
       type: "ripple",
@@ -47,7 +54,7 @@ function Waves() {
   };
   return (
     <>
-      <Group style={{ filter: enabled.get() ? filter : undefined }}>
+      <Group style={{ filter: enabled.get() ? filters : undefined }}>
         <Rectangle style={{ width, height, fill: "#c3e7e8" }} />
         {Array.from({ length: 54 }, (_, i) => (
           <Rectangle

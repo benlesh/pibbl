@@ -119,6 +119,8 @@ if (browserExamples.length) {
     ["engine.wasm", "packages/text/dist/engine.wasm"],
     ["ABeeZee-Regular.ttf", "packages/text/test/fixtures/ABeeZee-Regular.ttf"],
     ["OFL.txt", "packages/text/test/fixtures/OFL.txt"],
+    ["Lato-Regular.ttf", "packages/text/test/fixtures/lato/Lato-Regular.ttf"],
+    ["Lato-OFL.txt", "packages/text/test/fixtures/lato/OFL.txt"],
   ])
     await cp(resolve(root, source), resolve(publicDir, "crc-text", name));
   await build({

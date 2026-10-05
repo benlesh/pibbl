@@ -36,6 +36,20 @@ browser; it is infrastructure protection, not a performance benchmark. Discovery
 errors, empty inventories, test failures, and crashes all fail the gate without
 retries. CI logs failed browser request URLs and Chromium error codes.
 
+## Preparing a beta release
+
+Run `corepack pnpm@11.21.0 release 0.1.0-beta.0` to prepare the three published
+packages (`@crc/core`, `@crc/three`, and `@crc/text`). This updates their versions
+and exact core peer pins together. It does not commit, tag, push, or publish;
+the private workspace version remains unchanged. An exact stable version such
+as `0.1.0` is also accepted when that is the intended release.
+
+Run the complete trust gate against the prepared versions. After reviewing the
+result, publish a beta explicitly with
+`corepack pnpm@11.21.0 publish:ci --tag beta`. The tag is required to keep a beta
+off npm's default `latest` channel. Published text assets are precompiled;
+private text-testing entry points are excluded from its tarball.
+
 ## Gate contents
 
 `trust:static` checks:

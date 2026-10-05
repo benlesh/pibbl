@@ -161,7 +161,6 @@ import { PhysicsWorld2D, crcPhysicsWorld2D, physicsObstacles2D } from '@crc/core
 import {
   createBackendToken,
   defineBackendPrimitive,
-  executeBackendCRC,
   getBackendEnvironment,
   getCurrentFrameTimestamp,
   getCurrentLogicalViewport,
@@ -409,7 +408,6 @@ void packageConsumerMount;
 void packageConsumerResolver;
 void packageConsumerBackend;
 void [
-  executeBackendCRC,
   getBackendEnvironment,
   getCurrentFrameTimestamp,
   haveSameLayerNodeTree,

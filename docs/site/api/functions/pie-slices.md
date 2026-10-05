@@ -10,7 +10,7 @@ symbols: [pieSlices, PieSliceGeometry, PieOptions]
 
 # pieSlices
 
-Import `pieSlices` from `@crc/viz`. Call `pieSlices(data, { value, keyBy? })`.
+Import `pieSlices` from `@crc/core/viz`. Call `pieSlices(data, { value, keyBy? })`.
 `value` is a numeric property key or `(datum, index, data)` accessor; `keyBy`
 uses the same property/function convention as `PlotSeries`.
 

@@ -13,6 +13,10 @@ import MarkdownIt from "markdown-it";
 
 const markdown = new MarkdownIt();
 export const topics = {
+  text: {
+    title: "Text outlines and typography",
+    match: /text-geometry|text-envelope|outline-font/,
+  },
   lifecycle: {
     title: "Authoring, signals, and lifecycle",
     match:
@@ -53,6 +57,7 @@ export function topicFor(id) {
   // Specific domains precede broad names such as "text" and "layer".
   for (const key of [
     "external-renderers",
+    "text",
     "textures",
     "physics",
     "particles",

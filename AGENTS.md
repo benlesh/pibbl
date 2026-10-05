@@ -11,7 +11,8 @@ provides automatic JSX and equivalent `createElement` authoring, scheduled
 rendering, first-class synchronous signals, hook state, DOM-aligned user events,
 focus/keyboard management, transforms, clipping, offscreen layers, typed
 filters, animation, layout, Canvas particles, 2D physics, and visualization
-without React or generated DOM.
+without React. Canvas drawing does not generate DOM; opt-in `HtmlBox` regions
+host application-owned HTML.
 
 CRC's public external-renderer boundary is `defineRenderLayer()`. The official
 `@crc/three` adapter mounts ordinary Three.js scenes, cameras, objects,
@@ -54,6 +55,8 @@ either as the current result unless a fresh run reproduces it.
   baselines.
 - `packages/three`: official thin `@crc/three` adapter over ordinary Three.js
   resources, implemented through the public render-layer lifecycle.
+- `packages/text`: optional public `@crc/text` text-to-path shaping package with
+  precompiled HarfBuzz WASM and explicit font ownership.
 - `packages/core/src/features`: first-party particles, visualization, textures,
   and physics, published as core subpaths. Physics includes private bundled
   Rapier; pure geometry entries do not initialize it.
@@ -129,7 +132,7 @@ binding.
 
 CRC does not promise a Three JSX reconciler, retained Three scene graph,
 Canvas/Three subprimitive interleaving, WebXR, automatic semantic DOM,
-accessibility tree, rich text, scrolling, complete CSS compatibility, worker
+accessibility tree, rich text editing, scrolling, complete CSS compatibility, worker
 rendering, cross-context GPU sharing, or a second scheduler. External layers
 require browser `OffscreenCanvas`, `transferToImageBitmap()`, and the
 capabilities of the selected renderer.

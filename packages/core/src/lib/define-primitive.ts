@@ -120,7 +120,6 @@ export function defineBackendPrimitive<
   setPrimitiveDefinition(component, {
     backend,
     program,
-    render: program,
     preserveSignalProps: capabilities.preserveSignalProps,
     childInput: capabilities.childInput,
     normalizeStyle: capabilities.normalizeStyle,

@@ -263,14 +263,6 @@ export function mountBackendCRC<E>(
         }
       });
     },
-    cancelFrame(): void {
-      requireActiveInstance();
-      cancelFrame();
-    },
-    retainRoot(nextRoot: CRCNode): void {
-      requireActiveInstance();
-      instance.root = nextRoot;
-    },
     dispose(): void {
       cancelFrame();
       controller.dispose();

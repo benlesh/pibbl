@@ -1545,6 +1545,13 @@ const staleLowercaseValue = new RegExp(
 );
 
 export function assertCurrentVocabulary(path, source) {
+  if (path.startsWith("docs/site/") && path !== "docs/site/learn/guides/package-migration.md") {
+    assert.doesNotMatch(
+      source,
+      /@crc\/(?:viz|particles|physics|textures|types|webgl)(?=[/`'"\s.,;:)]|$)/u,
+      `${path} recommends a retired package; use current package entries`,
+    );
+  }
   for (const identifier of staleIdentifiers) {
     assert.doesNotMatch(
       source,

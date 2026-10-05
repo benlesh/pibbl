@@ -219,7 +219,7 @@ changing the bar geometry. Missing-value behavior is covered in the tests.
 </Scale>
 ```
 
-Import `BarSeries` from `@crc/viz`. `useScale("channels", "band").get()` exposes
+Import `BarSeries` from `@crc/core/viz`. `useScale("channels", "band").get()` exposes
 band starts and bandwidth for composed labels and inspection. Categories are
 strings or finite numbers; order is explicit, duplicates reject, and unknowns
 map to undefined. Padding and domain can be signals. Value and range bars support both orientations. With `orientation="horizontal"`,

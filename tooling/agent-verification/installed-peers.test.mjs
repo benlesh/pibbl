@@ -68,3 +68,10 @@ test('does not call an installed but broken optional peer absent', async () => {
     assert.equal(result.status, 'unavailable'); assert.equal(result.peers[0].status, 'unavailable');
   });
 });
+
+test('default CLI audits both published core consumers', async () => {
+  const { execFileSync } = await import('node:child_process');
+  const result = JSON.parse(execFileSync(process.execPath, [resolve('tooling/agent-verification/installed-peers.mjs')], { encoding: 'utf8' }));
+  assert.deepEqual(result.consumers.map(consumer => consumer.name).sort(), ['@crc/text', '@crc/three']);
+  assert.equal(result.peers.length, 3);
+});

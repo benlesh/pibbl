@@ -13,7 +13,8 @@
     "./package.json": "./package.json"
   },
   "files": [
-    "dist"
+    "dist",
+    "!dist/testing.mjs"
   ],
   "scripts": {
     "setup": "node scripts/setup.mjs",
@@ -25,7 +26,8 @@
     "test:browser": "node test/studio.browser.mjs",
     "bench:browser": "node scripts/bench-browser.mjs",
     "verify:reproducible": "node scripts/reproducible.mjs",
-    "reference": "node scripts/reference.mjs"
+    "reference": "node scripts/reference.mjs",
+    "prepublishOnly": "pnpm run build"
   },
   "peerDependencies": {
     "@crc/core": "0.0.1"
@@ -35,5 +37,13 @@
   },
   "browser": {
     "./dist/engine.mjs": "./dist/engine-browser.mjs"
-  }
+  },
+  "author": "Ben Lesh <ben@benlesh.com>",
+  "homepage": "https://github.com/benlesh/crc",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/benlesh/crc.git",
+    "directory": "packages/text"
+  },
+  "bugs": "https://github.com/benlesh/crc/issues"
 }

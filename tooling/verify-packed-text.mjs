@@ -62,6 +62,7 @@ try {
   );
   const installed = createRequire(join(consumer, "probe.mjs"));
   const entry = installed.resolve("@crc/text");
+  assert.ok(!readdirSync(dirname(entry)).includes("testing.mjs"), "Private text testing entry must not ship");
   const manifest = JSON.parse(
     readFileSync(installed.resolve("@crc/text/package.json"), "utf8"),
   );

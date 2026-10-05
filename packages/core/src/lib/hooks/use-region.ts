@@ -4,7 +4,7 @@ import {
   updateCursorTarget,
   type CRCEventTargetRegistration,
 } from '../events/registrations.js';
-import { removeInteractionRegion } from '../interaction-dispatch.js';
+import { removeInteractionRegion } from '../events/dispatch.js';
 import type { CRCInstance } from '../types.js';
 import { GLOBAL_STATE } from '../global-state.js';
 import { requireHookContext } from './hook-slot.js';

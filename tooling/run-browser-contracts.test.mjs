@@ -71,3 +71,14 @@ test("a failed or crashed shard fails without retrying or running later shards",
     assert.equal(calls, 3);
   }
 });
+
+test('browser discovery includes runtime tests and excludes Node-runner tooling', async () => {
+  const { execFileSync } = await import('node:child_process');
+  const { createRequire } = await import('node:module');
+  const { dirname, join } = await import('node:path');
+  const require = createRequire(import.meta.url);
+  const cli = join(dirname(require.resolve('vitest/package.json')), 'vitest.mjs');
+  const files = JSON.parse(execFileSync(process.execPath, [cli, 'list', '--filesOnly', '--json'], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }));
+  assert.ok(files.some(({ file }) => file.endsWith('/packages/core/test/smoke-scenario.test.ts')));
+  assert.deepEqual(files.filter(({ file }) => file.includes('/tooling/') && file.endsWith('.test.mjs')), []);
+});

@@ -35,8 +35,19 @@ describe("Studio editor declaration libraries", () => {
     const libraries = declarationLibraries();
     const filePaths = new Set(libraries.map(({ filePath }) => filePath));
 
-    expect(libraries).toHaveLength(12);
-    expect(filePaths.size).toBe(12);
+    expect(libraries.map(({ filePath }) => filePath).sort()).toEqual([
+      "file:///node_modules/@crc/core/index.d.ts",
+      "file:///node_modules/@crc/core/filters.d.ts",
+      "file:///node_modules/@crc/core/jsx-runtime.d.ts",
+      "file:///node_modules/@crc/core/jsx-dev-runtime.d.ts",
+      "file:///node_modules/@crc/core/particles/index.d.ts",
+      "file:///node_modules/@crc/core/physics/2d.d.ts",
+      "file:///node_modules/@crc/core/physics/2d/geometry.d.ts",
+      "file:///node_modules/@crc/core/textures/index.d.ts",
+      "file:///node_modules/@crc/core/viz/index.d.ts",
+      "file:///node_modules/@crc/text/index.d.ts",
+      "file:///node_modules/@crc/three/index.d.ts",
+    ].sort());
     expect(filePaths).toContain("file:///node_modules/@crc/core/filters.d.ts");
     expect(filePaths).toContain("file:///node_modules/@crc/core/textures/index.d.ts");
     expect(filePaths).toContain("file:///node_modules/@crc/text/index.d.ts");

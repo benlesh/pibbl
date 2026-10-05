@@ -27,9 +27,3 @@ export interface HtmlFocusRegionSnapshot {
   readonly isFocusWithin: boolean;
   readonly isFocusVisible: boolean;
 }
-
-export const UNFOCUSED_HTML_REGION_SNAPSHOT: HtmlFocusRegionSnapshot =
-  Object.freeze({
-    isFocusWithin: false,
-    isFocusVisible: false,
-  });

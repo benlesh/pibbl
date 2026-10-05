@@ -18,7 +18,13 @@ describe("consolidated package entries", () => {
     expect(core.sideEffects).toBe(false);
   });
   it("keeps Three as an adapter with the application's renderer peer", () => {
-    expect(manifest("three").peerDependencies).toEqual({ "@crc/core": "0.0.1", three: "^0.186.0" });
+    expect(manifest("three").peerDependencies).toEqual({ "@crc/core": manifest("core").version, three: "^0.186.0" });
+  });
+  it("keeps text and Three versions and exact core peers in lockstep", () => {
+    for (const name of ["three", "text"]) {
+      expect(manifest(name).version).toBe(manifest("core").version);
+      expect(manifest(name).peerDependencies["@crc/core"]).toBe(manifest("core").version);
+    }
   });
   it("does not publish retired feature, types, or renderer packages", () => {
     for (const name of ["particles", "physics", "viz", "textures", "types", "webgl"])

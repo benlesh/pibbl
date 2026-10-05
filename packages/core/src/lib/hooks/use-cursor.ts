@@ -4,7 +4,7 @@ import {
   refreshCursorDefault,
   removeCursorDefault,
   updateCursorDefault,
-} from '../interaction-dispatch.js';
+} from '../events/dispatch.js';
 import type {
   CRCCursorDefault,
   CRCInteractionRegion,

@@ -62,8 +62,6 @@ export interface CRCBackendPrimitiveDefinition<
   readonly preserveSignalProps?: readonly PreservedSignalPropKey<P>[];
   readonly childInput?: 'structural' | 'text';
   readonly program: CRCBackendPrimitiveProgram<P, R, E>;
-  /** @internal Legacy metadata name retained for focused primitive tests. */
-  readonly render: CRCBackendPrimitiveProgram<P, R, E>;
   readonly normalizeStyle?: (
     style: SpecifiedStyle<S>,
   ) => NormalizedStyle<N>;
@@ -106,10 +104,6 @@ export interface CRCBackendMount {
   resize(logicalWidth: number, logicalHeight: number): void;
   render(root: CRCNode, timestamp: number): void;
   requestFrame(updateParents: boolean): void;
-  /** @internal Cancels queued work without disposing retained backend state. */
-  cancelFrame(): void;
-  /** @internal Replaces the retained root without scheduling traversal. */
-  retainRoot(root: CRCNode): void;
   dispose(): void;
 }
 

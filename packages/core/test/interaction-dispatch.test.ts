@@ -15,7 +15,7 @@ import {
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { executeRender } from '../src/lib/execute-render';
 import { GLOBAL_STATE } from '../src/lib/global-state';
-import { removeInteractionRegion } from '../src/lib/interaction-dispatch';
+import { removeInteractionRegion } from '../src/lib/events/dispatch';
 import { mountCRC } from '../src/lib/mount-crc';
 import {
   createTarget,

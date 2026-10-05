@@ -6,7 +6,7 @@
     "prepare:content": "node --import tsx prepare-content.mjs",
     "dev": "node --import tsx prepare-content.mjs && astro dev --host localhost",
     "build": "node --import tsx prepare-content.mjs && pnpm run check:examples && astro build",
-    "check:examples": "node --test ../tooling/minimal-example-registry.test.mjs ../tooling/website-minimal-coverage.test.mjs ../tooling/website-minimal-examples.test.mjs ../tooling/website-text-assets.test.mjs",
+    "check:examples": "node --test ../tooling/minimal-example-registry.test.mjs ../tooling/website-minimal-coverage.test.mjs ../tooling/website-minimal-examples.test.mjs ../tooling/website-text-assets.test.mjs ../tooling/website-text-discovery.test.mjs",
     "preview": "astro preview --host localhost"
   },
   "dependencies": {

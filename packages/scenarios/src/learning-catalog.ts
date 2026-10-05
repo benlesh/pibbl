@@ -738,7 +738,7 @@ const drafts = [
     section: "drawing",
     order: 319,
     summary: "Type your own words and freely drag curve handles to shape them between two or more paths.",
-    api: ["PathGeometry", "transformPath", "envelopeTransform", "composeTransforms", "affineTransform", "Path", "Text", "HtmlBox"],
+    api: ["loadOutlineFont", "createTextGeometry", "PathGeometry", "transformPath", "envelopeTransform", "composeTransforms", "affineTransform", "Path", "Text", "HtmlBox"],
     objectives: ["Deform real text outlines between editable guides.", "Compose mappings before approximating the final shape."],
     prompts: {
       gesture: "Type your text, drag the curve handles, add guides, and try rotation or skew.",

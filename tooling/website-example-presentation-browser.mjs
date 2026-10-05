@@ -13,6 +13,36 @@ try {
       () => document.body.dataset.exampleReady === "true",
     );
   }
+  await open("textures/texture-rain-drops");
+  assert.match(await page.locator("body").innerText(), /drag.*wipe/i);
+  await open("textures/texture-water-waves");
+  assert.equal(
+    await page
+      .getByRole("checkbox", { name: "Refraction + reflections", exact: true })
+      .count(),
+    1,
+  );
+  await open("transitions/hologram");
+  await page.waitForTimeout(1900);
+  const silhouette = await page.locator("canvas").evaluate((canvas) => {
+    const context = canvas.getContext("2d");
+    const pixel = (x, y) => [...context.getImageData(x, y, 1, 1).data];
+    return {
+      hull: pixel(240, 70),
+      hole: pixel(240, 104),
+      outside: pixel(140, 70),
+    };
+  });
+  assert.notDeepEqual(
+    silhouette.hull,
+    silhouette.outside,
+    "hologram subject has a tall irregular silhouette",
+  );
+  assert.deepEqual(
+    silhouette.hole,
+    silhouette.outside,
+    "hologram subject preserves a genuinely transparent window",
+  );
   await open("lifecycle/texture");
   const canvasBox = await page.locator("canvas").boundingBox();
   const buttonBox = await page.getByRole("button").boundingBox();

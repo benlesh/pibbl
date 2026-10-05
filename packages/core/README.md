@@ -1,8 +1,8 @@
 # @crc/core
 
 The ESM Canvas 2D component runtime for CRC, with an automatic JSX runtime and
-an equivalent `createElement` API. It has no React dependency and generates no
-DOM.
+an equivalent `createElement` API. It has no React dependency. Drawing stays on
+Canvas; opt-in `HtmlBox` regions host application-owned DOM content.
 
 ```json
 {

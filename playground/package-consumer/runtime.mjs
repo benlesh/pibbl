@@ -151,7 +151,6 @@ for (const removedName of ["useState", "useMemo", "useWhenChanged"]) {
 const expectedInternal = [
   "CRCInternalManualSchedulerDriver",
   "borrowTextureRaster",
-  "cancelBackendMountFrame",
   "crcInternalAssertCommandAllowed",
   "crcInternalCreatePropAttachment",
   "crcInternalCreateSignalConsumer",
@@ -180,7 +179,6 @@ const expectedInternal = [
   "createBackendToken",
   "defineBackendPrimitive",
   "derivePrimitive",
-  "executeBackendCRC",
   "getBackendEnvironment",
   "getCurrentBackendHostCanvas",
   "getCurrentElementSource",
@@ -198,7 +196,6 @@ const expectedInternal = [
   "releaseBackendEventTarget",
   "requestCurrentInstanceFrame",
   "resolveTexturePaint",
-  "retainBackendMountRoot",
   "setCurrentComponentAfterRender",
   "snapshotLayerNodeTree",
   "useBackendEventTarget",

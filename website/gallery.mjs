@@ -2,6 +2,11 @@ import { learningExampleCatalog } from "../packages/scenarios/src/learning-catal
 
 export const galleries = [
   {
+    id: "text",
+    title: "Text and typography",
+    slugs: ["text", "text-geometry", "text-envelope"],
+  },
+  {
     id: "shapes",
     title: "Shapes",
     slugs: [
@@ -38,7 +43,13 @@ export const galleries = [
   {
     id: "path-geometry",
     title: "PathGeometry transformations",
-    slugs: ["path-geometry", "path-warp", "path-bending", "along-path"],
+    slugs: [
+      "path-geometry",
+      "path-warp",
+      "path-bending",
+      "along-path",
+      "text-envelope",
+    ],
   },
   { id: "filters", title: "Filters", slugs: ["filters", "optional-filters"] },
   {
@@ -53,6 +64,8 @@ export const galleries = [
       "energy-transitions",
       "fire-and-flow",
       "physics-panels",
+      "text-envelope",
+      "text-geometry",
     ],
   },
 ];

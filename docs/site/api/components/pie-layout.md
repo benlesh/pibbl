@@ -25,7 +25,7 @@ symbols:
 # PieLayout, PieSlice, and PieLabel
 
 `PieLayout` calculates geometry and label placements before rendering its function
-children once per source row. Import these components from `@crc/viz`.
+children once per source row. Import these components from `@crc/core/viz`.
 
 Pass `data`, `value`, optional `keyBy`, and a `label(slice)` callback returning
 single-line text. Style accepts numeric `cx`, `cy`, `radius`, `innerRadius`, and `labelGap`,
