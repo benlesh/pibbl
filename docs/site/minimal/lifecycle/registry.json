@@ -1,0 +1,69 @@
+[
+  {
+    "id": "signals",
+    "title": "Read and update signals",
+    "description": "Use writable, readonly, and computed values with synchronous batching.",
+    "source": "signals.ts",
+    "environment": "browser",
+    "symbols": [
+      { "name": "signal", "importPath": "@crc/core" },
+      { "name": "computed", "importPath": "@crc/core" },
+      { "name": "batch", "importPath": "@crc/core" },
+      { "name": "untracked", "importPath": "@crc/core" },
+      { "name": "isSignal", "importPath": "@crc/core" },
+      { "name": "resolveSignalValue", "importPath": "@crc/core" },
+      { "name": "Signal", "importPath": "@crc/core" },
+      { "name": "WritableSignal", "importPath": "@crc/core" },
+      { "name": "SignalValue", "importPath": "@crc/core" },
+      { "name": "SignalEquals", "importPath": "@crc/core" },
+      { "name": "SignalOptions", "importPath": "@crc/core" }
+    ],
+    "notes": [
+      "Untracked reads do not attach dependency edges. This example refreshes the DOM explicitly; CRC component reads subscribe automatically."
+    ]
+  },
+  {
+    "id": "hooks",
+    "title": "Component-owned state and reactions",
+    "description": "Click to update a signal, derive a value, and publish an imperative effect after commit.",
+    "source": "hooks.tsx",
+    "environment": "browser",
+    "symbols": [
+      { "name": "useSignal", "importPath": "@crc/core" },
+      { "name": "useComputed", "importPath": "@crc/core" },
+      { "name": "useConst", "importPath": "@crc/core" },
+      { "name": "useRef", "importPath": "@crc/core" },
+      { "name": "useReaction", "importPath": "@crc/core" },
+      { "name": "CRCRef", "importPath": "@crc/core" },
+      { "name": "CRCReactionOptions", "importPath": "@crc/core" }
+    ],
+    "notes": [
+      "Hooks run inside a mounted synchronous component. A ref mutation does not request rendering. Reaction setup and cleanup must not write signals."
+    ]
+  },
+  {
+    "id": "elements",
+    "title": "Typed components and recursive children",
+    "description": "Build a component with createElement, group its children in a Fragment, and render textual children.",
+    "source": "elements.tsx",
+    "environment": "browser",
+    "symbols": [
+      { "name": "createElement", "importPath": "@crc/core" },
+      { "name": "Fragment", "importPath": "@crc/core" },
+      { "name": "CRCComponent", "importPath": "@crc/core" },
+      { "name": "CRCElement", "importPath": "@crc/core" },
+      { "name": "CRCElementType", "importPath": "@crc/core" },
+      { "name": "CRCKey", "importPath": "@crc/core" },
+      { "name": "CRCNode", "importPath": "@crc/core" },
+      { "name": "CRCNodeInput", "importPath": "@crc/core" },
+      { "name": "CRCContainerChild", "importPath": "@crc/core" },
+      { "name": "CRCEmptyNode", "importPath": "@crc/core" },
+      { "name": "CRCTextChild", "importPath": "@crc/core" },
+      { "name": "CRCTextInput", "importPath": "@crc/core" },
+      { "name": "CRCRenderResult", "importPath": "@crc/core" }
+    ],
+    "notes": [
+      "Textual values belong inside Text; arbitrary strings are not general scene nodes. Components are synchronous and createElement is equivalent to automatic JSX."
+    ]
+  }
+]
