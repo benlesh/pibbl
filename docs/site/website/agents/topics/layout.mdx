@@ -1,0 +1,46 @@
+---
+title: Agent guide - drawing, layout, and effects
+description: Keep declared layout, local drawing, root events, and pixel effects in their correct coordinate spaces.
+kind: agent-guide
+sources:
+  - packages/scenarios/src/learning/layout/flex.example.tsx
+---
+
+## Choose a composition boundary
+
+Read [layout](/guides/compose-and-layout/), [drawing styles](/guides/style-and-draw/), and [responsive styles](/guides/responsive-styles/) before adapting a scene. A `Group` is not an HTML layout container. Choose `Absolute` for independently placed children, `Overlay` for a shared allocation, `Flow` for sequential layout, `Flex` for the supported flex subset, or `Grid` for explicit tracks and one-based placements. Grid auto-placement is not supported.
+
+`Group`, `Clip`, and `Layer` preserve source paint order. A Layer is an explicit retained bitmap boundary. Do not assume ordinary components cache their pixels or that CRC automatically promotes expensive content into layers.
+
+## Coordinates and ownership
+
+| Space            | Meaning                                       | Read it from                                  |
+| ---------------- | --------------------------------------------- | --------------------------------------------- |
+| Logical root     | Scene units and CRC pointer event coordinates | Canvas configuration; event `x` and `y`       |
+| Local allocation | Finite space assigned by a parent             | `useLayoutBox()` during component evaluation  |
+| CSS display      | Browser content-box dimensions                | The HTML host's layout                        |
+| Backing pixels   | Raster storage at selected density            | Canvas width/height, owned by CRC after mount |
+
+A fixed viewport defaults to the canvas's initial attributes and centered contain fitting. A responsive viewport uses CSS content-box pixels as logical units and does not accept `fit`. The default density tracks the device; a numeric density is fixed. Set explicit CSS dimensions and let CRC own backing-store resizing. A zero-sized responsive host suspends presentation until positive dimensions return.
+
+The child receives declared author style, not a mutated layout result. Read its computed allocation with `useLayoutBox`. Parent placement uses `left`/`top`; drawing-local geometry uses `x`/`y`. Forwarding `{ ...style }` follows the documented placement-consumption rule. An independently constructed style object is local geometry even if its numeric offsets happen to match the parent.
+
+## Effects and limitations
+
+Use real factories from `@crc/core/filters`, not invented objects such as `{ type: 'blur' }`. A filter captures the receiving primitive and descendants as one silhouette. Lists execute forward; nesting executes inside out. Filters affect pixels only: hit testing, measurement, layout, and focus use original geometry. See [filter options and exact units](/reference/types/filters/).
+
+HTML from HtmlBox stays above Canvas and cannot join a Canvas filter or blend silhouette. External render layers are flattened pixels at one position in paint order. CRC does not capture live DOM. Clipping does not implement scrolling. Margins, reverse/reordered flex, intrinsic CSS layout, and auto-grid placement are not implied by familiar names.
+
+## Complete example and adaptation
+
+The source below is the existing Flex lesson. It mounts on a 720 by 420 canvas and uses `useLayoutBox` to draw within assigned allocations. [Open Flex](@PLAYGROUND@#/examples/layout/flex). Change one width, growth factor, or gap at a time and inspect resulting allocations before applying filters.
+
+Use `@crc/core` as the JSX import source; retain and dispose the default mount's controller. No image asset is required. For custom shapes, use the appropriate public path/shape reference rather than reaching into `lib/`.
+
+## Verification
+
+Measure root and child rectangles at two host sizes and a higher pixel density. Assert finite nonnegative allocations and correct logical placement. Exercise zero size followed by restore. Confirm an unchanged mount retains its state through resize.
+
+Test a target before and after blur: the soft halo must not become a larger hit area. Check transformed/clipped pointer targeting in root-logical coordinates. Capture screenshots only after those geometry assertions pass. A filter comparison should hold geometry, fill, viewport, and density constant.
+
+If content is doubled in position, inspect style forwarding. If it appears stretched, inspect fixed fit versus responsive allocation. If text clips, inspect actual font metrics and allocated bounds rather than scaling all typography with viewport width.

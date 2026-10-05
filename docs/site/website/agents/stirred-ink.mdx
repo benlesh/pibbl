@@ -1,0 +1,18 @@
+---
+title: Stirred Ink companion
+description: Read and adapt the advanced example without confusing visual coupling with physics.
+---
+
+The [example page](/examples/stirred-ink/) expands the complete canonical TSX source and links to the runnable editor. Its public imports cover Canvas drawing, signals, reactions, textures, playback, and the optional 2D physics entry.
+
+## File and data map
+
+The example is one TSX module with a default `mount(canvas)` returning `CRCController`. `Materials` owns the procedural swatches and playback. `Ink` owns the reaction-diffusion handle and reads the body position in a reaction. The root owns the physics world and Canvas controls.
+
+Read the source's coordinate mapping before changing layout: the display rectangle begins 180 units below the origin, and its dimensions differ from simulation resolution. The previous sample includes a generation marker, so replacement is distinguishable from ordinary movement.
+
+## Safe changes
+
+Change palette first, then seed, then motion speed. For each change verify the body remains in bounds, stirring follows its visible position, pause stops advancement, and disposal ends the composition. Change the rectangle and coordinate bridge together when adapting its size.
+
+This source is a composition reference, not a copyable native form or button. Its painted controls do not provide an HTML accessibility tree. For integration into an HTML application, extract the bounded visual region and keep native controls outside it, following the [button ownership pattern](/agents/native-button/).

@@ -1,0 +1,34 @@
+:root {
+  --sl-font: system-ui, sans-serif;
+  --sl-content-width: 52rem;
+}
+html {
+  letter-spacing: 0;
+}
+.sl-markdown-content pre {
+  font-size: 0.9rem;
+}
+.recipe-demo {
+  margin-block: 1.5rem;
+  padding-block: 1rem;
+  border-block: 1px solid #8b9298;
+}
+.recipe-demo label {
+  display: block;
+  margin-block: 1rem;
+}
+.recipe-demo canvas[hidden] {
+  display: none;
+}
+.sl-markdown-content .ink-button-host > button {
+  margin: 0;
+}
+.demo-canvas {
+  display: block;
+  width: 100%;
+  height: 200px;
+}
+.sl-markdown-content img {
+  max-width: 100%;
+  height: auto;
+}

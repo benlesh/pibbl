@@ -1,0 +1,23 @@
+---
+title: Circle
+description: Draw a center-and-radius circle with local paint and interaction.
+kind: reference
+symbols: [Circle]
+---
+
+```js
+import { crc, createElement, Circle } from "@crc/core";
+const controller = crc(
+  document.querySelector("canvas"),
+  createElement(Circle, {
+    style: { cx: 150, cy: 100, radius: 60, fill: "#267d7c" },
+  }),
+);
+// controller.dispose() when the host is removed.
+```
+
+Use a canvas with `width="600" height="200"` for this example. `radius` is required; `cx` and `cy` default to zero. Percentage radii use the smaller available axis. Circle rejects children. The same logical geometry determines paint and coordinate targeting; filters do not enlarge it.
+
+Use `style.fill` and `style.stroke` for paint. Set `pointerEvents: 'none'` for decorative paint. A Canvas circle is not an accessible native button.
+
+Related types are `CircleProps` and `CircleStyle`, available through the public declarations. See the [visual entry](/catalogs/shapes/circle/) and [editable example](@PLAYGROUND@#/examples/drawing/circle).

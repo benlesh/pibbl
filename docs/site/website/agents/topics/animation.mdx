@@ -1,0 +1,37 @@
+---
+title: Agent guide - animation and scheduling
+description: Bind animations to signals, choose one writer, and control playback through CRC's scheduler.
+kind: agent-guide
+sources:
+  - packages/scenarios/src/learning/composition/signals-and-animation.example.tsx
+---
+
+## Select the right tool
+
+Read [signals and animation](/guides/signals-and-animation/), then the exact reference for [useAnimatedValue](/reference/hooks/use-animated-value/) or [usePlayback](/reference/hooks/use-playback/). Use `useAnimatedValue` for target-driven movement; use programs and playback for coordinated sequences, timelines, and explicit controls. Do not invent a standalone `play(program)` function or use the removed `useTransition` name.
+
+CRC animation has three layers: definitions describe values, programs bind definitions to writable signals, and a mounted playback hook owns the run. Definitions/programs are immutable and do not start work merely by being created. Keep continuing work on CRC's scheduler.
+
+## Values, time, and ownership
+
+Durations are milliseconds and must be finite and nonnegative. Numeric interpolation is built in; colors, points, and objects require an explicit interpolator. An omitted tween `from` captures the output when that occurrence activates. Springs are analytic seekable numeric definitions; stateful steppers use fixed steps and have different seeking constraints. Choose the documented model rather than integrating velocity in a render function.
+
+`track` binds a definition to an output. `sequence`, `parallel`, `wait`, `marker`, and `repeat` compose timing. A whole run reserves its writers. Two ambiguous writers are rejected unless explicit replacement is selected. Give each visual property a clear owner; a drag handler and playback must not accidentally compete for the same signal.
+
+Commands enter Begin, sampling occurs in Advance, writes publish atomically in Commit, and rendering follows planning. Milestones and errors deliver in Complete. Calls made in an event are scheduled commands, not permission to inspect uncommitted future pixels immediately.
+
+For `useAnimatedValue`, an unspecified initial value presents the target immediately. An explicit different initial value is painted first and starts motion only after successful mounting. Tween retargeting starts a new duration from the committed value; spring retargeting carries committed velocity. Passing a signal directly to a declared input avoids subscribing the whole enclosing component unnecessarily.
+
+## Complete example and adaptation
+
+The source below is the existing Signals and Animation lesson. [Open its controls](@PLAYGROUND@#/examples/composition/signals-and-animation). It demonstrates stable playback controls, signal-valued styles, and coordinated motion. Use the canvas dimensions from its mount setup and CRC's JSX import source. No external assets are required.
+
+When adapting, list every output signal and its owner before adding tracks. Preserve the hook lifetime through rerenders. Change one definition or timing parameter at a time. The host must apply a reduced-motion policy appropriate to the product; an example with animation does not automatically establish that policy for your application.
+
+## Verification
+
+Assert starting values, an intermediate sample, completion, pause/resume, restart, and retargeting. Use a controlled browser clock rather than wall-clock sleeps for timing claims. Confirm callbacks happen once at their documented point and that unmount stops the run. Test zero duration and repeated commands if your interaction permits them.
+
+Test reduced motion with a useful static destination, not an unreadable half-finished frame. Verify that interactions remain native where HTML owns them. Do not infer performance from a moving screenshot: ordinary Canvas roots repaint immediately; explicit Layers and external render layers are the retained bitmap boundaries.
+
+For a “jumps on every render” bug, inspect identity, signal recreation, and program bindings first. For competing-writer failures, identify the second owner and explicitly stop or replace it. For stutter after backgrounding, use CRC's time policy instead of layering another host frame loop on top.

@@ -1,0 +1,17 @@
+---
+title: Blur comparison
+description: Compare the same circle before and after an eight-pixel blur.
+---
+
+The left circle has no filter. The right circle has `blur({ radius: 8 })`. Both have radius 60 and fill `#267d7c`; only the pixels differ. The preview uses a 600 by 200 logical surface.
+
+```js
+import { blur } from '@crc/core/filters';
+// On the right circle:
+style: { cx: 450, cy: 100, radius: 60, fill: '#267d7c',
+  filter: [blur({ radius: 8 })] }
+```
+
+Notice the softened edge. Blur does not enlarge the circle's hit geometry or layout box. A filter on a parent combines that primitive and its descendants, so moving the boundary changes the result.
+
+[Full blur reference](/reference/blur/) · [Open editable filters](@PLAYGROUND@#/examples/drawing/filters) · [Composition boundaries](/guides/foundations/)

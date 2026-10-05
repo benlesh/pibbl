@@ -371,3 +371,7 @@ _bmad-output/
 .superpowers/brainstorm/
 .worktrees/
 .studio-docs-acceptance-dist/
+website/.astro/
+website/src/content/docs/
+website/public/generated/
+website/public/tutorials/

@@ -1,0 +1,16 @@
+---
+import '../../../docs/website-rebuild/claude-design-kit/native-button/button.css';
+---
+<section class="recipe-demo" aria-label="Native button demonstration">
+  <h2>Try the native button</h2>
+  <span class="ink-button-host">
+    <canvas id="ink-canvas" aria-hidden="true" hidden></canvas>
+    <button id="ink-button" type="button">Try CRC</button>
+  </span>
+  <label><input id="disabled" type="checkbox" /> Disable button</label>
+  <label><input id="effect" type="checkbox" checked /> Enable effect</label>
+  <p id="result" role="status">Not activated yet</p>
+</section>
+<script>
+  import '../../../docs/website-rebuild/claude-design-kit/native-button/main.js';
+</script>

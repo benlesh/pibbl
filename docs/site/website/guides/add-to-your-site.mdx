@@ -1,0 +1,22 @@
+---
+title: Add CRC to your site
+description: Keep native HTML and enhance one bounded visual region.
+---
+
+An HTML application can own its navigation, layout, forms, text, and accessibility while CRC draws one selected region. No application rewrite is needed. Start with a [native button with a living background](/guides/native-button/).
+
+## Decorative Canvas behind HTML
+
+Use a positioned wrapper, a canvas with `aria-hidden="true"` and `pointer-events: none`, and native content above it. The host owns hover, focus, pressed, and disabled state. A small application bridge passes those changes to CRC. Keep the native control usable if the canvas is absent.
+
+## Interactive Canvas beside HTML
+
+For a chart or image comparison, explicitly choose which region receives Canvas input. Keep surrounding labels and equivalent controls in HTML. State the coordinate mapping and communicate selection through a small application-owned interface.
+
+## HTML inside a CRC application
+
+If CRC should place native controls inside its layout, use [HtmlBox](/reference/html-box/) with the required overlay. This is the opposite ownership direction. HTML remains above all Canvas paint, cannot join a Canvas filter, and does not automatically determine intrinsic CRC size.
+
+## First implementation
+
+The [button recipe](/guides/native-button/) includes the full host, CSS, CRC component, state bridge, and teardown. Its [agent companion](/agents/native-button/) explains adaptation and verification. Plasma forms, image reveals, and a store hero rotator remain unimplemented roadmap concepts in the design kit, awaiting feedback on the button.

@@ -1,0 +1,39 @@
+---
+title: Agent guide - input, focus, and native HTML
+description: Preserve event ownership, root coordinates, logical focus, and genuine native semantics.
+kind: agent-guide
+sources:
+  - packages/scenarios/src/learning/composition/html-box.example.tsx
+---
+
+## Decide who owns interaction
+
+For an HTML site, native HTML should own links, form submission, text entry, focus outlines, and disabled state. Put decorative CRC pixels behind it with `aria-hidden="true"` and `pointer-events: none`. The [native button](/guides/native-button/) demonstrates this direction with pointer stirring, native click activation, fallback, and cleanup.
+
+For a CRC-centered surface, use the runtime's event targets and focus policies. Read [focus and keyboard](/guides/focus-and-keyboard/) and the [event types](/reference/types/events/). Keyboard support on Canvas does not create native semantic elements or an accessibility tree. Provide meaningful HTML alternatives for information and controls where needed.
+
+## Event and coordinate rules
+
+Source traversal is paint order; coordinate targeting walks it in reverse and chooses at most one topmost logical target. Decorative paint should opt out. Do not dispatch a second native click from a CRC click handler unless the host explicitly requires that separate action. Native default behavior and CRC synthetic routing are different ownership domains.
+
+CRC pointer coordinates are root-logical. Do not treat `event.x` and `event.y` as local to a transformed Group or a physics world. Convert explicitly at the system boundary. Pointer capture belongs to a pointer session: acquire it at the start, handle move, and release/reset on up, cancel, and teardown. Touch must not rely on hover.
+
+## Focus and HTML allocation
+
+`FocusManagement` and `KeyboardNavigation` are transparent policy components, not drawing or layout nodes. Each accepts one element after empty nodes are removed. Directional navigation requires focus management on the same root. Enrollment and navigation bounds come from logical targets; painted labels alone do not create targets.
+
+Use [HtmlBox](/reference/components/html-box/) when CRC should allocate native HTML. Configure an empty HTML overlay immediately after the canvas in a shared positioned wrapper; their content rectangles must match. Mount returns an optional synchronous update function. The supplied AbortSignal is the native resource lifetime: use it for listeners and observer cleanup. Native events can write signals; mount/update lifecycle callbacks cannot.
+
+HTML hosts remain above all Canvas paint, cannot participate in Canvas filters, and do not determine intrinsic CRC layout. Moving a keyed HtmlBox preserves nodes but is not a promise to reorder accessibility reading order. Shadow DOM/iframe focus internals and top-layer portals are outside the ordinary light-DOM guarantee.
+
+## Complete example and ownership
+
+The source below is the existing HTML Box lesson, including the overlay host setup, Canvas mounting, and teardown. [Open HTML Box](@PLAYGROUND@#/examples/composition/html-box). Compile its TSX using `@crc/core` and call the default mount on an attached canvas. Its returned controller is the owner's cleanup handle. No private helper or external asset is required.
+
+Do not transplant that overlay setup into an HTML-owned button recipe: CSS sibling composition is sufficient there. Keep the two integration directions explicit in an agent's implementation plan.
+
+## Verification
+
+Test pointer, Enter, Space, Tab, Shift+Tab, disabled state, and focus restoration after removal. Confirm each action fires once. For a form, assert the original native submit/validation behavior still occurs. Test IME/editing in the native input rather than replacing it with Canvas text.
+
+At two sizes and transforms, assert the native host and intended CRC allocation agree. Use a full-page screenshot to inspect HTML plus Canvas; exporting only Canvas excludes the HTML region. Remove and remount repeatedly, verifying the mount AbortSignal aborts and listeners no longer respond. Test decoration absent and reduced motion separately from full animation.

@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Native button with CRC ink</title>
+    <link rel="stylesheet" href="./button.css" />
+  </head>
+  <body>
+    <h1>Native button with CRC ink</h1>
+    <span class="ink-button-host">
+      <canvas id="ink-canvas" aria-hidden="true" hidden></canvas>
+      <button id="ink-button" type="button">Try CRC</button>
+    </span>
+    <p>
+      <label><input id="disabled" type="checkbox" /> Disable button</label>
+    </p>
+    <p>
+      <label><input id="effect" type="checkbox" checked /> Enable effect</label>
+    </p>
+    <p id="result" role="status">Not activated yet</p>
+    <script type="module" src="./main.js"></script>
+  </body>
+</html>

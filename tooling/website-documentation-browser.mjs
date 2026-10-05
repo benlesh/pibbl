@@ -1,0 +1,100 @@
+import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
+import { chromium } from "playwright";
+
+const output = new URL("../website/dist/", import.meta.url);
+const base = process.env.CRC_WEBSITE_URL ?? "http://localhost:4321";
+const catalog = JSON.parse(
+  await readFile(new URL("catalog.json", output), "utf8"),
+);
+const browser = await chromium.launch();
+try {
+  const page = await browser.newPage({ javaScriptEnabled: false });
+  const documents = [];
+  for (const entry of catalog.entries)
+    documents.push({
+      url: entry.url,
+      html: await readFile(new URL(`.${entry.url}index.html`, output), "utf8"),
+    });
+  const parsed = await page.evaluate(
+    (documents) =>
+      documents.map(({ url, html }) => {
+        const doc = new DOMParser().parseFromString(html, "text/html");
+        return {
+          url,
+          headings: doc.querySelectorAll("h1").length,
+          ids: [...doc.querySelectorAll("[id]")].map((node) => node.id),
+          links: [...doc.querySelectorAll("main a[href]")].map((node) =>
+            node.getAttribute("href"),
+          ),
+          images: [...doc.querySelectorAll("main img[src]")].map((node) =>
+            node.getAttribute("src"),
+          ),
+        };
+      }),
+    documents,
+  );
+  const byURL = new Map(parsed.map((doc) => [doc.url, doc]));
+  const broken = [];
+  for (const doc of parsed) {
+    assert.equal(doc.headings, 1, doc.url);
+    for (const href of doc.links) {
+      const target = new URL(href, `${base}${doc.url}`);
+      if (target.origin !== base) continue;
+      if (
+        target.hash &&
+        byURL.has(target.pathname) &&
+        !byURL
+          .get(target.pathname)
+          .ids.includes(decodeURIComponent(target.hash.slice(1)))
+      )
+        broken.push(`${doc.url} -> ${href}`);
+    }
+    for (const image of doc.images.filter((src) => src.startsWith("/")))
+      await readFile(new URL(`.${image}`, output));
+  }
+  assert.deepEqual(broken, [], "all internal heading links resolve");
+  await page.goto(`${base}/reference/`);
+  await page
+    .getByRole("link", { name: "Drawing, layout, and effects", exact: true })
+    .click();
+  await page.getByRole("link", { name: "Group", exact: true }).click();
+  await page
+    .getByRole("link", { name: "Drawing, layout, and effects companion" })
+    .click();
+  await page
+    .getByRole("heading", { name: "Verification", exact: true })
+    .waitFor();
+  const markdownLink = page.getByRole("link", {
+    name: "Read as Markdown",
+    exact: true,
+  });
+  const markdown = await page.request.get(
+    new URL(await markdownLink.getAttribute("href"), base).href,
+  );
+  assert.equal(markdown.status(), 200);
+  assert.match(await markdown.text(), /Complete source/);
+  await page.goto(`${base}/agents/`);
+  await page.screenshot({ path: "/tmp/crc-agents-desktop.png" });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.screenshot({ path: "/tmp/crc-agents-mobile.png" });
+  assert.equal(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+    true,
+  );
+  await page.goto(`${base}/reference/`);
+  await page.screenshot({ path: "/tmp/crc-reference-mobile.png" });
+  assert.equal(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+    true,
+  );
+  process.stdout.write(
+    `PASS: ${parsed.length} pages, heading links, static images, no-JS reference-to-agent navigation, Markdown retrieval, desktop/mobile layout.\n`,
+  );
+} finally {
+  await browser.close();
+}

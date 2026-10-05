@@ -1,0 +1,25 @@
+---
+const { kind } = Astro.props;
+---
+<section class="recipe-demo" aria-label="Live CRC preview">
+  <h2>Live preview</h2>
+  <canvas class="demo-canvas" data-kind={kind} width="600" height="200" aria-label={`${kind} preview`}></canvas>
+</section>
+<script>
+  import { crc, createElement as h, Circle, Group, Rectangle } from '@crc/core';
+  import { blur } from '@crc/core/filters';
+  import { useTexture, marble } from '@crc/core/textures';
+  const controllers = [];
+  for (const canvas of document.querySelectorAll<HTMLCanvasElement>('.demo-canvas')) {
+    function Scene() {
+      if (canvas.dataset.kind === 'marble') {
+        const fill = useTexture(marble({ seed: 42, scale: 6, detail: 0.65 }), { resolution: { width: 128, height: 64 }, palette: ['#f0f4f4', '#779e9c', '#164f55'] });
+        return h(Rectangle, { style: { width: 600, height: 200, fill } });
+      }
+      return h(Group, {}, h(Circle, { style: { cx: 150, cy: 100, radius: 60, fill: '#267d7c' } }),
+        ...(canvas.dataset.kind === 'blur' ? [h(Circle, { style: { cx: 450, cy: 100, radius: 60, fill: '#267d7c', filter: [blur({ radius: 8 })] } })] : []));
+    }
+    controllers.push(crc(canvas, h(Scene, {})));
+  }
+  window.addEventListener('pagehide', () => controllers.forEach(controller => controller.dispose()), { once: true });
+</script>

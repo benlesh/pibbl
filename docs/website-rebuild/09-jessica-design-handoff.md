@@ -2,6 +2,14 @@
 
 Jessica, this is a product and content brief for a new CRC website. Ben wants a complete rethink, but wants to settle the content rules and product surfaces separately from visual design. Your design exploration can use Claude Design or your preferred workflow; this pack does not prescribe tooling, colors, fonts, or an existing aesthetic.
 
+## October 4 content direction
+
+Ben has refined the priority: make CRC comprehensively documented for agents while retaining a concise visual reading experience for people. Design against the [updated documentation architecture](12-documentation-architecture.md), including separate shapes, filters, textures, and reaction-diffusion catalogs; advanced guides; and Agents & Skills. Detailed companion notes should have a small visible link rather than occupy the default page layout. The [platform recommendation](14-documentation-platform-options.md) proposes evaluating Astro/Starlight; it does not lock the visual identity or authorize implementation. Earlier navigation references below should be read in light of this update.
+
+## Two adoption paths to communicate
+
+Present both **Build with CRC** and **Add CRC to your site**. The second path should visibly demonstrate CRC enhancing native HTML buttons, forms, images, and product heroes, with complete integration recipes. This is a distinct entry into the same documentation system, not another product or a requirement to redesign the host application. See the [integration section and idea bank](15-add-crc-to-your-site.md).
+
 ## What CRC is
 
 CRC is a Canvas 2D component runtime with JSX authoring, synchronous signals, animation, layout, interaction, particles, physics, and procedural textures. It can compose native HTML controls and ordinary Three.js scenes through explicit integration boundaries. The website should make that range tangible while making the code approachable.

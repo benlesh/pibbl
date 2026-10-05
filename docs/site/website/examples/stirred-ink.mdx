@@ -1,0 +1,32 @@
+---
+title: Stirred Ink
+description: Connect committed 2D body motion to a living texture.
+sources:
+  - packages/scenarios/src/learning/composition/stirred-ink.example.tsx
+---
+
+**Advanced CRC application.** [Open Stirred Ink in the editor](@PLAYGROUND@#/examples/composition/stirred-ink). The example already exists in the learning catalog; this page reuses its canonical source.
+
+## What to inspect
+
+Watch the moving body disturb the ink and compare the material swatches. Pause the simulation and toggle stirring in the existing controls. Changing the connection between motion and texture should change the visual field, not turn the texture into a physics solver.
+
+## Prerequisites
+
+Understand [texture ownership](/reference/use-texture/), [reaction-diffusion messages](/reference/reaction-diffusion/), and [composition boundaries](/guides/foundations/). The source imports only public CRC entries, including `@crc/core/physics/2d`; no private helpers or external image assets are needed. The physics runtime is supplied by the package.
+
+## How the composition works
+
+The physics body exposes committed position and generation signals. A `useReaction` maps the position into the texture region, which starts at `(0, 180)` and spans 600 by 300 logical units. `u = x / 600` and `v = (y - 180) / 300` are normalized coordinates. Displacement becomes `du` and `dv`, scaled by an application-chosen factor of 2.5.
+
+The bridge skips the first sample, a generation change, zero motion, and a jump larger than 40 units. These guards prevent a reset or teleport from smearing across the entire texture. They are recipe choices, not universal CRC thresholds.
+
+The ink's 256 by 128 simulation is independent of the display size. The same root owns the texture, physics world, and playback. Dispose its returned controller to release the composition. The source shows pause control explicitly.
+
+## Adapt carefully
+
+When moving or resizing the ink region, update the coordinate conversion as well as the rectangle. When changing body speed, inspect bounded stir displacement and teleport handling. Test pause, reset, resize, and repeated mount/dispose before adding another body.
+
+This is a one-way visual coupling. Texture forces do not move the body, and the field is not a physical fluid simulation. The existing showcase is Canvas-centered; its painted controls do not create native HTML semantics. For a public HTML site, keep control semantics in native HTML as in the [button recipe](/guides/native-button/).
+
+[Detailed companion](/agents/stirred-ink/) · [Playground instructions](/playground/)

@@ -1,0 +1,37 @@
+---
+title: Agent guide - Canvas particle effects
+description: Choose bounded populations, explicit coordinate ownership, and deterministic verification.
+kind: agent-guide
+sources:
+  - packages/scenarios/src/learning/composition/particle-effects.example.tsx
+---
+
+## Scope and reading path
+
+Import particle APIs from `@crc/core/particles`. This is a Canvas 2D feature, not the removed renderer-coupled 3D particle system. Use ordinary Three particle techniques inside a Three layer for a 3D scene. Read [the particle guide](/guides/particle-effects/), [Particles2D](/reference/components/particles-2d/), and [particle types](/reference/types/particles/) before changing an effect.
+
+## Definition and ownership
+
+`defineParticleEffect2D` describes an immutable population. `useParticleSystem` owns its mounted system; `Particles2D` binds it into CRC composition. Descriptor functions such as `particleRange`, `particleChoice`, and `particleCurve` describe deterministic channels rather than sampling immediately. Configure a seed when comparing runs.
+
+Capacity is allocated up front in fixed typed arrays. Choose a realistic capacity and an explicit overflow policy. Conservative bounds must include shape, size, speed, acceleration, and lifetime so culling does not cut the effect short. Increasing capacity is not a substitute for deciding how many particles the interaction needs.
+
+Ordinary particles calculate motion analytically at logical age. Component transforms and application values still belong to CRC animation/signals. Do not use particle motion as a replacement for animating a UI property, or start a separate host frame loop.
+
+## Shared flow and physics boundaries
+
+For stateful transport, one `useFlowField2D` field can serve multiple particle systems. Add sources through `useFlowSource2D` and pass the field to the system. Flow-bound particles use the field for translation: put wind/upward force on the source rather than also supplying competing translational particle velocity or motion modules.
+
+`physicsObstacles2D` connects committed numerical obstacle information to flow. It does not create shared WASM memory or reciprocal smoke forces on rigid bodies. Both systems must use the same coordinates. Soft sprites may extend visually beyond obstacle boundaries even when particle centers do not cross them; this is not volumetric lighting or depth-aware clipping.
+
+## Complete example and adaptation
+
+The source below is the existing Particle Effects lesson. [Open it in the editor](@PLAYGROUND@#/examples/composition/particle-effects). Host setup and full source follow. The example uses procedural marks and public imports; no private helper is required.
+
+For a native success button, keep confirmation state and activation in HTML, then trigger a bounded burst only after the real operation succeeds. Decorative particles should opt out of input targeting. Respect reduced motion by choosing a static confirmation or omitting the burst. Do not claim a named application helper such as `useFireAndSmoke` is a CRC export.
+
+## Verification
+
+Hold seed and clock constant and assert emitted counts, capacity behavior, and lifetime completion before comparing pixels. Exercise overflow, repeated activation, pause/resume if used, and removal during an active burst. Verify the owning root releases the system and its flow sources.
+
+Test bounds and coordinate mapping under Group transforms and layout changes. A particle at a pointer should start at the intended logical point, not CSS coordinates accidentally interpreted as local units. For flow, test replay/timing separately from ordinary analytical motion; read [useFlowField2D](/reference/hooks/use-flow-field/) for its stateful limits. Report whether the test covers a simple burst or a flow-coupled system.

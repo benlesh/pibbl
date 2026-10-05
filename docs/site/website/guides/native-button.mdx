@@ -1,0 +1,39 @@
+---
+title: Native button with living ink
+description: A complete HTML-owned integration with a reaction-diffusion background.
+sources:
+  - docs/website-rebuild/claude-design-kit/native-button/index.html
+  - docs/website-rebuild/claude-design-kit/native-button/button.css
+  - docs/website-rebuild/claude-design-kit/native-button/ink-button.js
+  - docs/website-rebuild/claude-design-kit/native-button/main.js
+---
+
+Keep the button's label, click, keyboard activation, focus ring, and disabled state native. CRC supplies only the decorative background. This example uses plain modules and `createElement`, so it does not need CRC JSX or a framework-specific adapter.
+
+## Try it
+
+Activate the live button with a pointer or Enter/Space. Disable it, then switch its effect off and on. The activation count is ordinary HTML application state. Disabling the effect disposes CRC while preserving the button.
+
+Without JavaScript, the control retains its CSS background and native semantics. A real application's action belongs in its own click/submit handler. This demo uses `type="button"`; use `type="submit"` inside your existing form when submission is intended. The effect never cancels events or forwards synthetic clicks.
+
+## Setup and assets
+
+Download the [Claude Design integration kit](/claude-design-kit.tar.gz) and open `native-button/`. Its README explains installing a packed copy of this checkout and running Vite. No external images, fonts, private repository helpers, or shaders are required. The texture runtime includes its own required assets.
+
+The existing editor remains available for [Living Ink](@PLAYGROUND@#/examples/composition/living-ink), which teaches the same public texture API. The HTML-owned recipe runs here and as the standalone folder; it is not yet imported into the Canvas-only editor workflow.
+
+## Mount, update, dispose
+
+`mountInkButton(button, canvas)` mounts once and returns `{ update, dispose }`. Native events update a signal. A `useReaction` reads it and sends texture messages after rendering. Disabled attribute changes are observed; `update()` is also available after host state changes. Call `dispose()` before removing the host during route or framework teardown.
+
+CRC's responsive viewport observes the canvas content box. `useLayoutBox` fills that allocation. CSS matches the canvas to the native button; density is capped at two while simulation resolution stays 128 by 48. The host clips with a border radius, and the canvas never intercepts input.
+
+## Motion, fallback, and cost
+
+Reduced motion, disabled state, document visibility, and intersection pause the texture. Reduced motion shows a frozen seeded field and suppresses interaction paint doses. Disabling the effect removes it entirely. If mounting fails, the HTML control and dark CSS background remain usable.
+
+This is one small simulation. Do not multiply it across a product grid without measuring representative devices. CRC owns its frame loop; the host creates none. Cleanup aborts event listeners, disconnects observers, and disposes the root and its hook-owned texture.
+
+## Related documentation
+
+[Detailed companion](/agents/native-button/) · [reactionDiffusion](/reference/reaction-diffusion/) · [useTexture](/reference/use-texture/) · [crc](/reference/crc/) · [Visual catalog](/catalogs/reaction-diffusion/button/)

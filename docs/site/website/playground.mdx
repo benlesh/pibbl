@@ -1,0 +1,17 @@
+---
+title: Playground
+description: Reuse the existing source editor and live preview.
+---
+
+[Open the existing Studio editor](@PLAYGROUND@#/examples/drawing/circle). The editor and its live Canvas preview are reused for this milestone. Choose an example below, edit its public-API source, and inspect the result.
+
+- [Circle](@PLAYGROUND@#/examples/drawing/circle)
+- [Filters](@PLAYGROUND@#/examples/drawing/filters)
+- [Material Lab](@PLAYGROUND@#/examples/composition/material-lab)
+- [Living Ink](@PLAYGROUND@#/examples/composition/living-ink)
+- [Stirred Ink](@PLAYGROUND@#/examples/composition/stirred-ink)
+- [HTML Box](@PLAYGROUND@#/examples/composition/html-box)
+
+The [native HTML button](/guides/native-button/) runs on its recipe page and in the downloadable standalone project. Its host HTML is deliberately separate from the existing editor's Canvas mount contract.
+
+For this local preview the editor runs as a second development server. A deployment must set `CRC_PLAYGROUND_URL` to its hosted Studio address before generating the site. No new editor, account system, or persistence backend is introduced here.

@@ -1,0 +1,11 @@
+---
+import Default from '@astrojs/starlight/components/MarkdownContent.astro';
+import ButtonDemo from './ButtonDemo.astro';
+import CatalogDemo from './CatalogDemo.astro';
+const route = Astro.url.pathname.replace(/\/$/, '');
+---
+<Default>
+  {route === '/guides/native-button' && <ButtonDemo />}
+  {['/catalogs/shapes/circle', '/catalogs/filters/blur', '/catalogs/textures/marble'].includes(route) && <CatalogDemo kind={route.split('/').at(-1)} />}
+  <slot />
+</Default>

@@ -103,7 +103,7 @@ controls; decorative effects opt out of pointer targeting.
 For interacting smoke, create one field with `useFlowField2D`, add force/heat
 sources with `useFlowSource2D`, and pass it to `useParticleSystem(effect, { flow })`.
 Many particles can sample that shared field without owning rigid bodies. With
-optional `@crc/physics/2d`, `physicsObstacles2D(crcPhysicsWorld2D())` provides
+optional `@crc/core/physics/2d`, `physicsObstacles2D(crcPhysicsWorld2D())` provides
 committed box, ellipse, and polygon geometry and motion. Both systems must use
 the same coordinates. The adapter copies numerical data and does not depend on
 shared WASM memory or apply smoke forces back to the physics world.

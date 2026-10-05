@@ -62,3 +62,7 @@ This is a content outline, not proposed replacement code. During the rewrite, ex
 - Has public export coverage been checked so less glamorous APIs are not omitted?
 
 Later implementation should typecheck and run snippets from their canonical source. Generated signatures can help prevent drift, but prose must still explain the contract. Do not turn this planning phase into a documentation generator project.
+
+## Agent reference companions
+
+Every public reference entry must be discoverable through the versioned public catalog and available as clean Markdown without running JavaScript. Keep concise human pages linked to detailed companions covering the relevant lifecycle, edge cases, adaptation and verification guidance. Share signatures, defaults and canonical snippet sources across representations; do not maintain conflicting duplicate contracts. Apply the [agent documentation plan](13-agent-documentation-and-skills.md).
