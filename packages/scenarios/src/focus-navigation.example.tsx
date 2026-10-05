@@ -11,8 +11,18 @@ import {
 } from '@crc/core';
 export const FOCUS_NAVIGATION_SOURCE_ID =
   'focus-and-keyboard-navigation-example';
+/**
+ * Actions supported by the focus navigation scenario's public controller.
+ *
+ * @see {@link FocusNavigationState}
+ */
 export type FocusNavigationAction =
   'remove-current-square' | 'reorder-squares' | 'restore-squares';
+/**
+ * A stable logical focus target in the keyboard-navigation scenario.
+ *
+ * @see {@link FocusNavigationState}
+ */
 export type FocusNavigationTarget =
   | 'none'
   | 'top-primary'
@@ -20,13 +30,41 @@ export type FocusNavigationTarget =
   | `square-${number}`
   | 'bottom-primary'
   | 'bottom-secondary';
+/**
+ * Supported focus navigation activation source values: `"none"`, `"click"`, `"enter"`, `"space"`.
+ *
+ * @see {@link FocusNavigationState}
+ */
 export type FocusNavigationActivationSource =
   'none' | 'click' | 'enter' | 'space';
+/**
+ * Supported focus navigation modality values: `"none"`, `"keyboard"`, `"pointer"`.
+ *
+ * @see {@link FocusNavigationState}
+ */
 export type FocusNavigationModality = 'none' | 'keyboard' | 'pointer';
+/**
+ * Observable state exposed by the focus navigation scenario for controls and assertions.
+ *
+ * @see {@link FocusNavigationTarget}
+ * @see {@link FocusNavigationActivationSource}
+ * @see {@link FocusNavigationModality}
+ * @see {@link FocusNavigationAction}
+ */
 export interface FocusNavigationState {
+  /** Current target recorded or configured by this scenario. See {@link FocusNavigationTarget}. */
   currentTarget: FocusNavigationTarget;
+  /**
+   * Last activation source recorded or configured by this scenario. See
+   * {@link FocusNavigationActivationSource}.
+   */
   lastActivationSource: FocusNavigationActivationSource;
+  /** Activation count recorded or configured by this scenario. See {@link FocusNavigationState}. */
   activationCount: number;
+  /**
+   * Focus visible modality recorded or configured by this scenario. See
+   * {@link FocusNavigationModality}.
+   */
   focusVisibleModality: FocusNavigationModality;
 }
 export interface FocusNavigationSceneProps {

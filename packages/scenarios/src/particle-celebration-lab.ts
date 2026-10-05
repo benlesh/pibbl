@@ -15,6 +15,11 @@ import type {
   ScenarioMountContext,
 } from './types';
 
+/**
+ * Stable action identifiers accepted by the particle celebration lab scenario.
+ *
+ * @see {@link ParticleCelebrationLabAction}
+ */
 export const PARTICLE_CELEBRATION_LAB_ACTION_IDS = [
   'launch',
   'pause',

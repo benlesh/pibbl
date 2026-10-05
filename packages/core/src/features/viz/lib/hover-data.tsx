@@ -3,7 +3,15 @@ import { withHooksForbidden } from "@crc/core/internal";
 import type { HoverDataProps, HoverQueryContext } from "./hover-types.js";
 import type { ResolvedLinearScale, ScaleId } from "./types.js";
 import { readScale } from "./scale-context.js";
-/** Evaluates an ordinary synchronous query under the current scale scope. */
+/**
+ * Evaluates an ordinary synchronous query under the current scale scope.
+ *
+ * @param props - Hover query and child renderer receiving its result. See {@link HoverDataProps}.
+ * @returns Content rendered from the current hover query result. See {@link CRCNode}.
+ *
+ * @see {@link HoverDataProps}
+ * @see {@link CRCNode}
+ */
 export function HoverData<T>({ query, children }: HoverDataProps<T>): CRCNode {
   if (typeof query !== "function" || typeof children !== "function")
     throw new TypeError("HoverData requires query and children functions.");

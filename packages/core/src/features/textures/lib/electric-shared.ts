@@ -1,21 +1,68 @@
+import type { ElectricSource } from './electric-sources.js';
+import type { LightningMessage, LightningOptions } from './lightning.js';
+import type { TendrilsMessage, TendrilsOptions } from './tendrils.js';
 import type { TextureContext } from "@crc/core";
 import { validateSeed } from "./palette.js";
 
-/** Coordinates are normalized to the complete texture, including its halo padding. */
+/**
+ * Coordinates are normalized to the complete texture, including its halo padding.
+ *
+ * @see {@link ElectricSource}
+ * @see {@link LightningOptions}
+ * @see {@link TendrilsOptions}
+ * @see {@link LightningMessage}
+ */
 export interface ElectricPoint {
+  /**
+   * Horizontal coordinate or displacement in the containing coordinate system. See
+   * {@link ElectricPoint}.
+   */
   readonly x: number;
+  /**
+   * Vertical coordinate or displacement in the containing coordinate system. See
+   * {@link ElectricPoint}.
+   */
   readonly y: number;
 }
+/**
+ * Deterministic seed, branching, and glow shared by electrical texture recipes.
+ *
+ * @see {@link TendrilsOptions}
+ * @see {@link LightningOptions}
+ */
 export interface ElectricOptions {
+  /**
+   * Seed used for deterministic sampling or simulation initialization. See {@link ElectricOptions}
+   * .
+   */
   readonly seed?: number;
   /** 0..1, controls the number of secondary branches. */
   readonly branching?: number;
   /** 0..2, scales the soft halo without widening the white core. */
   readonly glow?: number;
 }
+/**
+ * Pause or reseed/reset commands shared by electrical textures.
+ *
+ * @see {@link TendrilsMessage}
+ * @see {@link LightningMessage}
+ */
 export type ElectricControl =
-  | { readonly type: "pause"; readonly paused: boolean }
-  | { readonly type: "reset"; readonly seed?: number };
+  | {
+      /** The literal "pause" identifying this variant. See {@link ElectricControl}. */
+      readonly type: "pause";
+      /** Whether simulation or playback advancement is suspended. See {@link ElectricControl}. */
+      readonly paused: boolean;
+    }
+  | {
+      /** The literal "reset" identifying this variant. See {@link ElectricControl}. */
+      readonly type: "reset";
+      /**
+       * Seed used for deterministic sampling or simulation initialization. See
+       * {@link ElectricControl}.
+       */
+      readonly seed?: number;
+    };
 export function range(value: number, min: number, max: number, name: string) {
   if (!Number.isFinite(value) || value < min || value > max)
     throw new RangeError(`${name} must be ${min}..${max}.`);

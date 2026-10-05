@@ -8,6 +8,13 @@ import type { ResolvedSvgPathStyle, SvgPathStyle } from '../style/types.js';
 import { renderPath } from './path.js';
 import type { PathProps } from './path.js';
 
+/**
+ * Authored inputs for SvgPath, including the declared data and presentation options.
+ *
+ * @see {@link PathProps}
+ * @see {@link CRCPhysics2DPropExtension}
+ * @see {@link SvgPath}
+ */
 export interface SvgPathProps extends PathProps, CRCPhysics2DPropExtension {}
 
 function renderSvgPath(
@@ -29,6 +36,13 @@ function renderSvgPath(
 
 /**
  * Describes an SVG-data path primitive for JSX or createElement authoring.
+ *
+ * @param props - Authored component inputs, supplied through JSX or createElement. See the linked
+ * props and style types.
+ * @throws When called directly; CRC mounts this component through JSX or createElement.
+ *
+ * @see {@link SvgPathProps}
+ * @see {@link SvgPathStyle}
  */
 export const SvgPath = definePrimitive<
   SvgPathProps,

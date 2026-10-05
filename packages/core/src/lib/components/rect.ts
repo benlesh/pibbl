@@ -17,6 +17,14 @@ import { renderPath } from './path.js';
 import { createRectanglePath } from '../geometry/rectangle.js';
 import { resolveRoundedCornerStyle } from './rounded-corner-style.js';
 
+/**
+ * Authored inputs for Rectangle, including the declared data and presentation options.
+ *
+ * @see {@link CRCEventHandlers}
+ * @see {@link CRCEventParticipationOptions}
+ * @see {@link CRCPhysics2DPropExtension}
+ * @see {@link Rectangle}
+ */
 export interface RectangleProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions, CRCPhysics2DPropExtension {}
 
 function renderRectangle(
@@ -77,6 +85,13 @@ function renderRectangle(
 
 /**
  * Describes a rectangle primitive for JSX or createElement authoring.
+ *
+ * @param props - Authored component inputs, supplied through JSX or createElement. See the linked
+ * props and style types.
+ * @throws When called directly; CRC mounts this component through JSX or createElement.
+ *
+ * @see {@link RectangleProps}
+ * @see {@link RectStyle}
  */
 export const Rectangle = definePrimitive<
   RectangleProps,

@@ -1,3 +1,4 @@
+import { preserveDeclarationJsdoc } from '../../../tooling/preserve-declaration-jsdoc.mjs';
 import {
   mkdir,
   readFile,
@@ -195,6 +196,8 @@ await withDirectoryLock(resolve(cache, "tooling.lock"), async () => {
       2,
     ) + "\n",
   );
+  preserveDeclarationJsdoc(resolve(root, "src"), output);
+
   const destination = resolve(root, "dist"),
     previous = resolve(cache, "previous-dist");
   // Keep the previous usable output until all compilers have succeeded.

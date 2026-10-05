@@ -1,8 +1,25 @@
+import type { lifecycleLabScenarioEntry } from './catalog.js';
 import { Layer, Rectangle, Text } from '@crc/core';
 export const LIFECYCLE_LAB_SOURCE_ID = 'event-lifecycle-lab-example';
+/**
+ * Supported lifecycle lab runtime values: `"mounted"`, `"aborted"`, `"disposed"`.
+ *
+ * @see {@link LifecycleLabState}
+ */
 export type LifecycleLabRuntime = 'mounted' | 'aborted' | 'disposed';
+/**
+ * Supported lifecycle lab target values: `"primary"`, `"subtree"`, `"throwing"`, `"safe"`, `"layer"`.
+ *
+ * @see {@link LifecycleLabLastAction}
+ * @see {@link LifecycleLabState}
+ */
 export type LifecycleLabTarget =
   'primary' | 'subtree' | 'throwing' | 'safe' | 'layer';
+/**
+ * Actions supported by the lifecycle lab scenario's public controller.
+ *
+ * @see {@link LifecycleLabLastAction}
+ */
 export type LifecycleLabAction =
   | 'mount'
   | 'rerender-1000'
@@ -17,21 +34,52 @@ export type LifecycleLabAction =
   | 'remount-runtime'
   | 'cleanup-stale'
   | 'reset';
+/**
+ * Actions supported by the lifecycle lab last scenario's public controller.
+ *
+ * @see {@link LifecycleLabAction}
+ * @see {@link LifecycleLabTarget}
+ * @see {@link LifecycleLabState}
+ */
 export type LifecycleLabLastAction =
   LifecycleLabAction | `click-${LifecycleLabTarget}`;
+/**
+ * Observable state exposed by the lifecycle lab scenario for controls and assertions.
+ *
+ * @see {@link LifecycleLabRuntime}
+ * @see {@link LifecycleLabTarget}
+ * @see {@link LifecycleLabLastAction}
+ * @see {@link lifecycleLabScenarioEntry}
+ */
 export interface LifecycleLabState {
+  /** Runtime recorded or configured by this scenario. See {@link LifecycleLabRuntime}. */
   runtime: LifecycleLabRuntime;
+  /** Mount generation recorded or configured by this scenario. See {@link LifecycleLabState}. */
   mountGeneration: number;
+  /** Revision recorded or configured by this scenario. See {@link LifecycleLabState}. */
   revision: number;
+  /** Handler generation recorded or configured by this scenario. See {@link LifecycleLabState}. */
   handlerGeneration: number;
+  /** Handler removed recorded or configured by this scenario. See {@link LifecycleLabState}. */
   handlerRemoved: boolean;
+  /** Subtree visible recorded or configured by this scenario. See {@link LifecycleLabState}. */
   subtreeVisible: boolean;
+  /** Layer visible recorded or configured by this scenario. See {@link LifecycleLabState}. */
   layerVisible: boolean;
+  /** Calls recorded or configured by this scenario. See {@link LifecycleLabState}. */
   calls: number;
+  /** Target calls recorded or configured by this scenario. See {@link LifecycleLabTarget}. */
   targetCalls: Readonly<Record<LifecycleLabTarget, number>>;
+  /** Last target recorded or configured by this scenario. See {@link LifecycleLabTarget}. */
   lastTarget: LifecycleLabTarget | null;
+  /**
+   * Last handler generation recorded or configured by this scenario. See {@link LifecycleLabState}
+   * .
+   */
   lastHandlerGeneration: number | null;
+  /** Cleanup requests recorded or configured by this scenario. See {@link LifecycleLabState}. */
   cleanupRequests: number;
+  /** Last action recorded or configured by this scenario. See {@link LifecycleLabLastAction}. */
   lastAction: LifecycleLabLastAction;
 }
 interface LifecycleLabSceneProps {

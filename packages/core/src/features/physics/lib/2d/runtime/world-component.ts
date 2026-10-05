@@ -39,10 +39,22 @@ const renderPhysicsWorld2D: CRCComponent<CRCPhysicsWorld2DProps> = (props) => {
 
 const WORLD_STRUCTURAL_FIELDS = new Set<PropertyKey>(["children"]);
 
-/** Owns one transparent, component-scoped 2D physics world. */
+/**
+ * Owns one transparent, component-scoped 2D physics world.
+ *
+ * @see {@link CRCComponent}
+ * @see {@link CRCPhysicsWorld2DProps}
+ */
 export const PhysicsWorld2D = renderPhysicsWorld2D;
 
-/** Returns the nearest 2D physics world while a descendant is evaluating. */
+/**
+ * Returns the nearest 2D physics world while a descendant is evaluating.
+ *
+ * @returns A stable world handle that can be attached to a physics world. See
+ * {@link CRCPhysicsWorldHandle2D} .
+ *
+ * @see {@link CRCPhysicsWorldHandle2D}
+ */
 export function crcPhysicsWorld2D(): CRCPhysicsWorldHandle2D {
   return requireCurrentPhysicsWorld2D().handle;
 }

@@ -14,6 +14,11 @@ import type {
   ScenarioMountContext,
 } from './types';
 
+/**
+ * Stable action identifiers accepted by the animation lab scenario.
+ *
+ * @see {@link AnimationLabAction}
+ */
 export const ANIMATION_LAB_ACTION_IDS = [
   'play',
   'pause',

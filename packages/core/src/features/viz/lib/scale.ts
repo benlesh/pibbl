@@ -3,6 +3,15 @@ import type { ScaleProps, ScaleRange } from "./types.js";
 import { equalScale, resolveLinearScale } from "./linear-scale.js";
 import { resolveBandScale } from "./band-scale.js";
 import { captureScaleLookup, provideScale } from "./scale-context.js";
+/**
+ * Declares a named linear or band scale in the current layout for descendant visualization
+ * components.
+ *
+ * @param props - Scale identity, domain, range, and child content. See {@link ScaleProps}.
+ * @returns The scale's child content with the scale registered for descendants.
+ *
+ * @see {@link ScaleProps}
+ */
 export function Scale(props: ScaleProps) {
   if (
     (typeof props.id !== "string" || props.id.length === 0) &&

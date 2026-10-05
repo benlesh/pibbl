@@ -1,3 +1,4 @@
+import type { particleCelebrationLabScenarioEntry } from './catalog.js';
 import { dropShadow } from '@crc/core/filters';
 import {
   Circle,
@@ -22,16 +23,40 @@ import {
 // prettier-ignore
 export const PARTICLE_CELEBRATION_LAB_SOURCE_ID = 'first-class-particle-celebration-laboratory-example';
 
+/**
+ * Actions supported by the particle celebration lab scenario's public controller.
+ *
+ * @see {@link ParticleCelebrationLabState}
+ */
 export type ParticleCelebrationLabAction =
   'launch' | 'pause' | 'resume' | 'replay' | 'clear' | 'toggle-glow';
 
 export type CelebrationPoint = readonly [x: number, y: number];
 
+/**
+ * Observable state exposed by the particle celebration lab scenario for controls and assertions.
+ *
+ * @see {@link ParticleCelebrationLabAction}
+ * @see {@link particleCelebrationLabScenarioEntry}
+ */
 export interface ParticleCelebrationLabState {
+  /** Animation recorded or configured by this scenario. See {@link ParticleCelebrationLabState}. */
   readonly animation: 'ready' | 'playing' | 'paused';
+  /**
+   * Selected points recorded or configured by this scenario. See
+   * {@link ParticleCelebrationLabState}.
+   */
   readonly selectedPoints: number;
+  /**
+   * Celebrations recorded or configured by this scenario. See {@link ParticleCelebrationLabState}
+   * .
+   */
   readonly celebrations: number;
+  /**
+   * Last action recorded or configured by this scenario. See {@link ParticleCelebrationLabState}.
+   */
   readonly lastAction: string;
+  /** Glow recorded or configured by this scenario. See {@link ParticleCelebrationLabState}. */
   readonly glow: boolean;
 }
 
@@ -200,7 +225,7 @@ function ParticleCelebrationOwner({
         height: 360,
         filter: glowEnabled
           ? dropShadow({
-              
+
               offsetX: 0,
               offsetY: 5,
               blurRadius: 5,

@@ -45,10 +45,25 @@ import {
   wireStructuralEvents,
 } from './structural-events.js';
 
+/**
+ * Authored inputs for Layer, including the declared data and presentation options.
+ *
+ * @see {@link CRCNodeInput}
+ * @see {@link Layer}
+ */
 export interface LayerProps extends CRCStructuralEventProps {
+  /** Descendant content or the callback that supplies it. See {@link CRCNodeInput}. */
   children: CRCNodeInput;
 }
 
+/**
+ * Supported geometry and presentation properties for Layer.
+ *
+ * @see {@link SystemStyle}
+ * @see {@link BoxStyle}
+ * @see {@link LayoutItemStyle}
+ * @see {@link Layer}
+ */
 export interface LayerStyle extends SystemStyle, BoxStyle, LayoutItemStyle {}
 
 type ResolvedLayerStyle = ResolvedDrawingStyle<LayerStyle> & {
@@ -194,7 +209,16 @@ function renderLayer(
 
 }
 
-/** Describes a retained offscreen composition layer. */
+/**
+ * Describes a retained offscreen composition layer.
+ *
+ * @param props - Authored component inputs, supplied through JSX or createElement. See the linked
+ * props and style types.
+ * @throws When called directly; CRC mounts this component through JSX or createElement.
+ *
+ * @see {@link LayerProps}
+ * @see {@link LayerStyle}
+ */
 export const Layer = definePrimitive<
   LayerProps,
   LayerStyle,

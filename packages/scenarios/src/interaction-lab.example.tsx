@@ -1,3 +1,5 @@
+import type { INTERACTION_LAB_ACTION_IDS } from './interaction-lab.js';
+import type { interactionLabScenarioEntry } from './catalog.js';
 import type {
   CRCClipboardEvent,
   CRCCompositionEvent,
@@ -23,6 +25,15 @@ import {
   Text,
 } from '@crc/core';
 export const INTERACTION_LAB_SOURCE_ID = 'interaction-trace-lab-example';
+/**
+ * Supported interaction lab fixture values: `"clipboard"`, `"composition"`, `"drag-drop"`,
+ * `"fill"`, `"fill-stroke"`, `"interaction-width"`, `"keyboard-fields"`, `"nested"`, `"no-hit"`,
+ * `"overlap"`, `"pointer-capture"`, `"propagation"`, `"remove-target-after-transition"`,
+ * `"regions"`, `"stroke"`, `"touch-retention"`, `"transparent"`, `"wheel-cancellation"`.
+ *
+ * @see {@link InteractionLabAction}
+ * @see {@link InteractionLabState}
+ */
 export type InteractionLabFixture =
   | 'clipboard'
   | 'composition'
@@ -42,6 +53,13 @@ export type InteractionLabFixture =
   | 'touch-retention'
   | 'transparent'
   | 'wheel-cancellation';
+/**
+ * Actions supported by the interaction lab scenario's public controller.
+ *
+ * @see {@link InteractionLabFixture}
+ * @see {@link InteractionLabState}
+ * @see {@link INTERACTION_LAB_ACTION_IDS}
+ */
 export type InteractionLabAction =
   | 'clear-trace'
   | 'mount'
@@ -51,15 +69,40 @@ export type InteractionLabAction =
   | 'replace-handler'
   | 'reset'
   | `show-${InteractionLabFixture}`;
+/**
+ * Observable state exposed by the interaction lab scenario for controls and assertions.
+ *
+ * @see {@link InteractionLabFixture}
+ * @see {@link InteractionLabAction}
+ * @see {@link EventTraceEntry}
+ * @see {@link interactionLabScenarioEntry}
+ */
 export interface InteractionLabState {
+  /** Fixture recorded or configured by this scenario. See {@link InteractionLabFixture}. */
   fixture: InteractionLabFixture;
+  /**
+   * Handler generation recorded or configured by this scenario. See {@link InteractionLabState}.
+   */
   handlerGeneration: number;
+  /** Last action recorded or configured by this scenario. See {@link InteractionLabAction}. */
   lastAction: InteractionLabAction;
+  /**
+   * Last handler generation recorded or configured by this scenario. See
+   * {@link InteractionLabState}.
+   */
   lastHandlerGeneration: number | null;
+  /**
+   * Left handler enabled recorded or configured by this scenario. See {@link InteractionLabState}
+   * .
+   */
   leftHandlerEnabled: boolean;
+  /** Right visible recorded or configured by this scenario. See {@link InteractionLabState}. */
   rightVisible: boolean;
+  /** Top painted last recorded or configured by this scenario. See {@link InteractionLabState}. */
   topPaintedLast: boolean;
+  /** Top visible recorded or configured by this scenario. See {@link InteractionLabState}. */
   topVisible: boolean;
+  /** Trace recorded or configured by this scenario. See {@link EventTraceEntry}. */
   trace: readonly EventTraceEntry[];
 }
 export interface InteractionLabRecord {

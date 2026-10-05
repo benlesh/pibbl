@@ -27,50 +27,154 @@ import {
   type PathWarpMode,
 } from './path-warp.js';
 
+/**
+ * A point in source or destination path coordinates.
+ *
+ * @see {@link PathTransform}
+ * @see {@link PathRect}
+ */
 export interface PathPoint {
+  /**
+   * Horizontal coordinate or displacement in the containing coordinate system. See
+   * {@link PathPoint}.
+   */
   readonly x: number;
+  /**
+   * Vertical coordinate or displacement in the containing coordinate system. See {@link PathPoint}
+   * .
+   */
   readonly y: number;
 }
+/**
+ * A source rectangle with an origin and finite positive dimensions.
+ *
+ * @see {@link PathPoint}
+ * @see {@link QuadTransformOptions}
+ * @see {@link EnvelopeTransformOptions}
+ */
 export interface PathRect extends PathPoint {
+  /** Horizontal extent in the units of the containing geometry or surface. See {@link PathRect}. */
   readonly width: number;
+  /** Vertical extent in the units of the containing geometry or surface. See {@link PathRect}. */
   readonly height: number;
 }
 declare const transformBrand: unique symbol;
+/**
+ * A constructor-created, reusable coordinate mapping for path transformation.
+ *
+ * @see {@link PathPoint}
+ * @see {@link transformPath}
+ * @see {@link composeTransforms}
+ * @see {@link affineTransform}
+ */
 export interface PathTransform {
   readonly [transformBrand]: true;
-  /** Evaluate in ordinary source/destination coordinates. Guide approximation is bounded by tolerance. */
+  /**
+   * Evaluate in ordinary source/destination coordinates. Guide approximation is bounded by
+   * tolerance.
+   * @param point - Source point in the transform's input coordinate system. See {@link PathPoint}.
+   * @param options - Optional approximation tolerance for evaluating the mapping.
+   * @returns The mapped point in the transform's output coordinate system. See {@link PathPoint}.
+   */
   mapPoint(
     point: PathPoint,
-    options?: { readonly tolerance?: number },
+    options?: {
+      /** Positive maximum geometric approximation error. See {@link PathTransform}. */
+      readonly tolerance?: number;
+    },
   ): PathPoint;
 }
+/**
+ * Accuracy and output-segment limits for applying a path transform.
+ *
+ * @see {@link transformPath}
+ */
 export interface TransformPathOptions {
+  /** Positive maximum geometric approximation error. See {@link TransformPathOptions}. */
   readonly tolerance: number;
+  /** Upper bound on the number of output path segments. See {@link TransformPathOptions}. */
   readonly maxSegments?: number;
 }
+/**
+ * The four destination corners used by a quadrilateral path transform.
+ *
+ * @see {@link QuadTransformOptions}
+ */
 export type PathQuadCorners = PathWarpCorners;
+/**
+ * Selects bilinear or perspective interpolation for a quadrilateral transform.
+ *
+ * @see {@link QuadTransformOptions}
+ */
 export type PathQuadMode = PathWarpMode;
+/**
+ * Source rectangle, destination corners, and interpolation mode for a quadrilateral transform.
+ *
+ * @see {@link PathRect}
+ * @see {@link PathQuadCorners}
+ * @see {@link PathQuadMode}
+ * @see {@link quadTransform}
+ */
 export interface QuadTransformOptions {
+  /** Source rectangle mapped to the destination quadrilateral. See {@link PathRect}. */
   readonly source: PathRect;
+  /** Destination corners into which the source rectangle maps. See {@link PathQuadCorners}. */
   readonly destination: PathQuadCorners;
+  /** Selects the supported mapping, placement, or result policy. See {@link PathQuadMode}. */
   readonly mode?: PathQuadMode;
 }
+/**
+ * A guide path positioned at a normalized station across an envelope.
+ *
+ * @see {@link PathGuide}
+ * @see {@link EnvelopeTransformOptions}
+ */
 export interface EnvelopeGuide {
+  /** Normalized station position. See {@link EnvelopeGuide}. */
   readonly at: number;
+  /** Path geometry used by this operation. See {@link PathGuide}. */
   readonly path: PathGuide;
 }
+/**
+ * Source rectangle and either a top/bottom pair or ordered envelope guides.
+ *
+ * @see {@link PathRect}
+ * @see {@link PathGuide}
+ * @see {@link EnvelopeGuide}
+ * @see {@link envelopeTransform}
+ */
 export type EnvelopeTransformOptions = {
+  /** Source rectangle mapped between the envelope guides. See {@link PathRect}. */
   readonly source: PathRect;
+  /** Interpolation between successive guide paths; only linear interpolation is supported. See {@link EnvelopeTransformOptions}. */
   readonly interpolation?: 'linear';
 } & (
   | {
+      /** Top edge value or top envelope guide. See {@link PathGuide}. */
       readonly top: PathGuide;
+      /** Bottom edge value or bottom envelope guide. See {@link PathGuide}. */
       readonly bottom: PathGuide;
+      /**
+       * Not accepted in this variant; use the alternative fields instead. See
+       * {@link EnvelopeTransformOptions}.
+       */
       readonly guides?: never;
     }
   | {
+      /**
+       * Ordered guide paths defining the envelope from its first to last station. See
+       * {@link EnvelopeGuide}.
+       */
       readonly guides: readonly EnvelopeGuide[];
+      /**
+       * Not accepted in this variant; use the alternative fields instead. See
+       * {@link EnvelopeTransformOptions}.
+       */
       readonly top?: never;
+      /**
+       * Not accepted in this variant; use the alternative fields instead. See
+       * {@link EnvelopeTransformOptions}.
+       */
       readonly bottom?: never;
     }
 );
@@ -160,12 +264,28 @@ function definition(value: PathTransform): readonly Factory[] {
     throw new TypeError('Expected a constructor-created PathTransform.');
   return result;
 }
-/** Apply mappings in the order written. Empty composition is identity. */
+/**
+ * Apply mappings in the order written. Empty composition is identity.
+ *
+ * @param transforms - Point mappings in the order they should be applied. See
+ * {@link PathTransform} .
+ * @returns One mapping that applies each supplied transform in order. See {@link PathTransform}.
+ *
+ * @see {@link PathTransform}
+ */
 export function composeTransforms(
   ...transforms: readonly PathTransform[]
 ): PathTransform {
   return make(transforms.flatMap((t) => [...definition(t)]));
 }
+/**
+ * Creates a reusable 2D affine mapping; an omitted matrix produces identity.
+ *
+ * @param matrix - Affine matrix coefficients; omitted coefficients use the identity matrix.
+ * @returns A point mapping applying the matrix. See {@link PathTransform}.
+ *
+ * @see {@link PathTransform}
+ */
 export function affineTransform(matrix: DOMMatrix2DInit = {}): PathTransform {
   const m = affineMatrix(matrix);
   return make([
@@ -179,6 +299,18 @@ export function affineTransform(matrix: DOMMatrix2DInit = {}): PathTransform {
     }),
   ]);
 }
+/**
+ * Maps a source rectangle into four destination corners using bilinear or perspective
+ * interpolation.
+ *
+ * @param options - Source rectangle and destination corner positions. See
+ * {@link QuadTransformOptions} .
+ * @returns A point mapping from the source rectangle to the destination quadrilateral. See
+ * {@link PathTransform} .
+ *
+ * @see {@link QuadTransformOptions}
+ * @see {@link PathTransform}
+ */
 export function quadTransform(options: QuadTransformOptions): PathTransform {
   const source = rectangle(options.source),
     mode = options.mode === undefined ? 'bilinear' : options.mode;
@@ -249,6 +381,16 @@ export function quadTransform(options: QuadTransformOptions): PathTransform {
     }),
   ]);
 }
+/**
+ * Maps a source rectangle between ordered guide paths using linear interpolation.
+ *
+ * @param options - Source bounds and envelope guides defining the deformation. See
+ * {@link EnvelopeTransformOptions} .
+ * @returns A point mapping that deforms the source into the envelope. See {@link PathTransform}.
+ *
+ * @see {@link EnvelopeTransformOptions}
+ * @see {@link PathTransform}
+ */
 export function envelopeTransform(
   options: EnvelopeTransformOptions,
 ): PathTransform {
@@ -366,7 +508,19 @@ function evaluate(
   }
   return { value, error, domain };
 }
-/** Return independent geometry. Nonlinear mappings approximate the final composed curve once. */
+/**
+ * Return independent geometry. Nonlinear mappings approximate the final composed curve once.
+ *
+ * @param path - Source geometry; it is not modified. See {@link PathGeometry}.
+ * @param transform - Point mapping to apply to the source. See {@link PathTransform}.
+ * @param options - Approximation tolerance and work limits for transformed curves. See
+ * {@link TransformPathOptions} .
+ * @returns Independent geometry containing the transformed path. See {@link PathGeometry}.
+ *
+ * @see {@link PathGeometry}
+ * @see {@link PathTransform}
+ * @see {@link TransformPathOptions}
+ */
 export function transformPath(
   path: PathGeometry,
   transform: PathTransform,

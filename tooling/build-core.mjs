@@ -1,3 +1,4 @@
+import { preserveDeclarationJsdoc } from './preserve-declaration-jsdoc.mjs';
 import { build } from 'esbuild';
 import { writeFile, readFile } from 'node:fs/promises';
 import { resolve, basename } from 'node:path';
@@ -37,3 +38,5 @@ await build({
   outfile: 'dist/features/physics/lib/2d/world/rapier-engine.js', sourcemap: true,
 });
 await Promise.all([...entries, ...features.map(entry => `features/${entry}`)].map(entry => writeFile(resolve(root, `dist/${entry}.mjs`), `export * from './${basename(entry)}.js';\n`)));
+
+preserveDeclarationJsdoc(resolve(root, 'src'), resolve(root, 'dist'));

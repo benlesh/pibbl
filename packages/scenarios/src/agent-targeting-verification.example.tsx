@@ -1,3 +1,4 @@
+import type { AgentTargetingState } from './agent-targeting-verification.js';
 import {
   computed,
   FocusManagement,
@@ -14,7 +15,18 @@ import {
 
 export const AGENT_TARGETING_VERIFICATION_SOURCE_ID = 'agent-targeting-verification-example';
 
+/**
+ * Supported agent targeting mode values: `"pagination"`, `"seed"`, `"repair"`,
+ * `"intentional-block"`, `"capture-drag"`, `"keyboard-focus"`.
+ *
+ * @see {@link AgentTargetingState}
+ */
 export type AgentTargetingMode = 'pagination' | 'seed' | 'repair' | 'intentional-block' | 'capture-drag' | 'keyboard-focus';
+/**
+ * The event-delivery record observed by the targeting verification scenario.
+ *
+ * @see {@link AgentTargetingState}
+ */
 export type AgentTargetingDelivery = 'action' | 'decoration' | null;
 
 export interface AgentTargetingSceneProps {

@@ -22,6 +22,11 @@ export type {
   FilterLabTarget,
 } from './filter-lab.example';
 
+/**
+ * Stable action identifiers accepted by the filter lab scenario.
+ *
+ * @see {@link FilterLabState}
+ */
 export const FILTER_LAB_ACTION_IDS = [
   'show-all',
   'show-ordered',

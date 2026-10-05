@@ -101,6 +101,12 @@ async function mountMouseContractScenario(
   };
 }
 
+/**
+ * Runnable mouse contract scenario with observable state and deterministic actions.
+ *
+ * @see {@link ScenarioDefinition}
+ * @see {@link MouseContractScenarioState}
+ */
 export const mouseContractScenario: ScenarioDefinition<MouseContractScenarioState> = {
   id: 'mouse-interaction-contract',
   sourceId: MOUSE_CONTRACT_SOURCE_ID,

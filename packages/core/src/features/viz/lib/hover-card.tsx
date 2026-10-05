@@ -23,25 +23,81 @@ import {
   type HoverPlacement,
 } from "./hover-placement.js";
 export type { HoverBounds, HoverPlacement } from "./hover-placement.js";
+/**
+ * Supported geometry and presentation properties for HoverCard.
+ *
+ * @see {@link BoxStyle}
+ * @see {@link FillStyle}
+ * @see {@link StrokeStyle}
+ * @see {@link HoverCardProps}
+ */
 export interface HoverCardStyle {
+  /** Horizontal extent in the units of the containing geometry or surface. See {@link BoxStyle}. */
   readonly width: Exclude<BoxStyle["width"], undefined | "auto">;
+  /** Vertical extent in the units of the containing geometry or surface. See {@link BoxStyle}. */
   readonly height: Exclude<BoxStyle["height"], undefined | "auto">;
+  /** Insets between the border box and content box. See {@link BoxStyle}. */
   readonly padding?: BoxStyle["padding"];
+  /** Paint used for the interior. See {@link FillStyle}. */
   readonly fill?: FillStyle;
+  /** Paint used for the outline. See {@link StrokeStyle}. */
   readonly stroke?: StrokeStyle;
+  /** Width of the painted outline. See {@link HoverCardStyle}. */
   readonly strokeWidth?: number;
+  /**
+   * Uniform corner radius used where no per-corner override is supplied. See
+   * {@link HoverCardStyle}.
+   */
   readonly cornerRadius?: number;
+  /** Opacity of the painted result. See {@link HoverCardStyle}. */
   readonly opacity?: number;
+  /**
+   * Not accepted in this variant; use the alternative fields instead. See {@link HoverCardStyle}.
+   */
   readonly filter?: never;
+  /**
+   * Not accepted in this variant; use the alternative fields instead. See {@link HoverCardStyle}.
+   */
   readonly custom?: never;
 }
+/**
+ * Authored inputs for HoverCard, including the declared data and presentation options.
+ *
+ * @see {@link SignalValue}
+ * @see {@link HoverPoint}
+ * @see {@link HoverBounds}
+ * @see {@link HoverPlacement}
+ * @see {@link SignalStyle}
+ * @see {@link HoverCardStyle}
+ * @see {@link CRCNode}
+ * @see {@link HoverCard}
+ */
 export interface HoverCardProps {
+  /**
+   * Logical point to which the content or result is anchored. See {@link SignalValue},
+   * {@link HoverPoint}.
+   */
   readonly anchor: SignalValue<HoverPoint>;
+  /** Clearance around the anchor before placing the item. See {@link SignalValue}. */
   readonly anchorRadius?: SignalValue<number>;
+  /** Spacing between adjacent items. See {@link SignalValue}. */
   readonly gap?: SignalValue<number>;
+  /**
+   * Logical region constraining the content or query. See {@link SignalValue},
+   * {@link HoverBounds}.
+   */
   readonly bounds?: SignalValue<HoverBounds>;
+  /**
+   * Preferred placement relative to the anchor or containing geometry. See {@link HoverPlacement}
+   * .
+   */
   readonly placement?: HoverPlacement;
+  /**
+   * Declared presentation and layout properties. See {@link SignalValue}, {@link SignalStyle},
+   * {@link HoverCardStyle}.
+   */
   readonly style: SignalValue<SignalStyle<HoverCardStyle>>;
+  /** Descendant content or the callback that supplies it. See {@link CRCNode}. */
   readonly children?: CRCNode;
 }
 type CardInputs = Omit<
@@ -186,7 +242,15 @@ const fields = new Set([
   "cornerRadius",
   "opacity",
 ]);
-/** Positions a declared card outside a protected anchor, allowing overflow if needed. */
+/**
+ * Positions a declared card outside a protected anchor, allowing overflow if needed.
+ *
+ * @param props - Anchor, placement, style, and hover-card content. See {@link HoverCardProps}.
+ * @returns CRC content placed as a hover card. See {@link CRCNode}.
+ *
+ * @see {@link HoverCardProps}
+ * @see {@link CRCNode}
+ */
 export function HoverCard(props: HoverCardProps): CRCNode {
   const style = resolveSignalValue(props.style);
   if (!style || typeof style !== "object")

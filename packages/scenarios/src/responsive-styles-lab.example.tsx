@@ -1,3 +1,4 @@
+import type { responsiveStylesScenarioEntry } from './catalog.js';
 import {
   crc, Flow, Grid, Group, Rectangle, Text, signal, useCanvasContext, useConst, useLayoutBox,
   type BoxStyle, type CRCResponsiveStyle, type FlowStyle, type LayoutItemStyle,
@@ -12,8 +13,15 @@ export interface ResponsiveRegionState {
   y: number;
   identity: number;
 }
+/**
+ * Observable state exposed by the responsive styles scenario for controls and assertions.
+ *
+ * @see {@link responsiveStylesScenarioEntry}
+ */
 export interface ResponsiveStylesState {
+  /** Root recorded or configured by this scenario. See {@link ResponsiveRegionState}. */
   root: ResponsiveRegionState | null;
+  /** Cell recorded or configured by this scenario. See {@link ResponsiveRegionState}. */
   cell: ResponsiveRegionState | null;
 }
 export const RESPONSIVE_STYLE_ACTIONS = [

@@ -10,30 +10,106 @@ import { queueBeginCommand } from '../scheduler/realm-scheduler.js';
 import type { CRCBeginCommandHandle } from '../scheduler/types.js';
 import { usePlayback } from './use-playback.js';
 
+/**
+ * The current hidden, entering, visible, exiting, or disposed transition state.
+ *
+ * @see {@link CRCVisibilityTransition}
+ */
 export type CRCVisibilityTransitionStatus = 'hidden' | 'entering' | 'visible' | 'exiting' | 'disposed';
+/**
+ * Settlement of one show or hide request, including its request identifier, phase, and outcome.
+ *
+ * @see {@link CRCVisibilityTransition}
+ */
 export interface CRCVisibilityTransitionResult {
+  /**
+   * Monotonic identifier of the visibility request that produced this result. See
+   * {@link CRCVisibilityTransitionResult}.
+   */
   readonly requestId: number;
+  /** Selects `"enter"`, `"exit"` for phase. See {@link CRCVisibilityTransitionResult}. */
   readonly phase: 'enter' | 'exit';
+  /** How this specific show or hide request settled. See {@link CRCVisibilityTransitionResult}. */
   readonly status: 'finished' | 'cancelled' | 'disposed';
 }
+/**
+ * Enter and exit effects and lifecycle configuration for visibility transitions.
+ *
+ * @see {@link CRCTransitionEffect}
+ * @see {@link useVisibilityTransition}
+ */
 export interface CRCVisibilityTransitionOptions {
   /** Mount-time options in the first slice. */
   readonly initial?: boolean;
+  /** Effect used when moving toward visible. See {@link CRCTransitionEffect}. */
   readonly enter: CRCTransitionEffect;
+  /**
+   * Effect used when moving toward hidden; defaults to the enter effect. See
+   * {@link CRCTransitionEffect}.
+   */
   readonly exit?: CRCTransitionEffect;
+  /**
+   * Transition duration in milliseconds; defaults to 300. See
+   * {@link CRCVisibilityTransitionOptions}.
+   */
   readonly duration?: number;
 }
+/**
+ * Mount-owned visibility controls, reactive progress and status, and a primitive presentation binding.
+ *
+ * @see {@link CRCTransitionBinding}
+ * @see {@link Signal}
+ * @see {@link CRCVisibilityTransitionStatus}
+ * @see {@link CRCVisibilityTransitionResult}
+ * @see {@link useVisibilityTransition}
+ */
 export interface CRCVisibilityTransition {
+  /**
+   * Presentation binding to assign to the receiving primitive's style.transition. See
+   * {@link CRCTransitionBinding}.
+   */
   readonly binding: CRCTransitionBinding;
+  /** Readonly view of the requested visibility target. See {@link Signal}. */
   readonly visible: Signal<boolean>;
+  /** Normalized progress through the current animation or transition. See {@link Signal}. */
   readonly progress: Signal<number>;
+  /**
+   * Reactive visibility-transition lifecycle state. See {@link Signal},
+   * {@link CRCVisibilityTransitionStatus}.
+   */
   readonly status: Signal<CRCVisibilityTransitionStatus>;
+  /**
+   * Requests entry and resolves with the request's finished, cancelled, or disposed outcome. See
+   * {@link CRCVisibilityTransitionResult}.
+   * @returns A promise settling with the request's completion or interruption result. See
+   * {@link CRCVisibilityTransitionResult} .
+   */
   show(): Promise<CRCVisibilityTransitionResult>;
+  /**
+   * Requests exit and resolves with the request's finished, cancelled, or disposed outcome. See
+   * {@link CRCVisibilityTransitionResult}.
+   * @returns A promise settling with the request's completion or interruption result. See
+   * {@link CRCVisibilityTransitionResult} .
+   */
   hide(): Promise<CRCVisibilityTransitionResult>;
+  /**
+   * Forces the currently requested transition to its endpoint. See {@link CRCVisibilityTransition}
+   * .
+   */
   finish(): void;
 }
 
-/** Explicitly controlled visibility. It does not retain unmounted content or alter targeting. */
+/**
+ * Explicitly controlled visibility. It does not retain unmounted content or alter targeting.
+ *
+ * @param options - Visibility signal, effect, timing, and lifecycle options. See
+ * {@link CRCVisibilityTransitionOptions} .
+ * @returns Stable mount-owned controls for visibility and transition completion. See
+ * {@link CRCVisibilityTransition} .
+ *
+ * @see {@link CRCVisibilityTransitionOptions}
+ * @see {@link CRCVisibilityTransition}
+ */
 export function useVisibilityTransition(options: CRCVisibilityTransitionOptions): CRCVisibilityTransition {
   const duration = options.duration ?? 300;
   if (!Number.isFinite(duration) || duration < 0) throw new RangeError('Visibility transition duration must be finite and nonnegative.');

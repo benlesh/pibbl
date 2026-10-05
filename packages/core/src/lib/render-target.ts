@@ -64,6 +64,15 @@ export function getCurrentPaintTransform(): DOMMatrix {
     target.inverseRenderTransform.multiply(canvasTransform);
 }
 
+/**
+ * Returns the current logical world transform, optionally incorporating a supplied paint
+ * transform.
+ *
+ * @param paintTransform - Optional paint transform to include in the world transform.
+ * @returns The transform mapping local geometry into world coordinates.
+ *
+ * @see {@link LayoutBox}
+ */
 export function getCurrentWorldTransform(paintTransform?: DOMMatrix): DOMMatrix {
   const exactWorld = GLOBAL_STATE.worldExactTransform;
   const paintAnchor = GLOBAL_STATE.worldPaintAnchorTransform;

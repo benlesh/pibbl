@@ -31,16 +31,45 @@ import {
   resolveNonnegativeShapeLength,
 } from "./shape-style.js";
 
+/**
+ * Authored inputs for Wedge, including the declared data and presentation options.
+ *
+ * @see {@link CRCEventHandlers}
+ * @see {@link CRCEventParticipationOptions}
+ * @see {@link CRCPhysics2DPropExtension}
+ * @see {@link Wedge}
+ */
 export interface WedgeProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions, CRCPhysics2DPropExtension {}
 
+/**
+ * Supported geometry and presentation properties for Wedge.
+ *
+ * @see {@link SystemStyle}
+ * @see {@link PaintStyle}
+ * @see {@link CursorStyle}
+ * @see {@link BoxStyle}
+ * @see {@link LayoutItemStyle}
+ * @see {@link Length}
+ * @see {@link Wedge}
+ */
 export interface WedgeStyle
   extends SystemStyle, PaintStyle, CursorStyle, BoxStyle, LayoutItemStyle {
+  /** Radius in the coordinate system of this geometry or effect. See {@link Length}. */
   radius: Exclude<Length, "auto">;
+  /** Angle at which the arc or slice begins. See {@link WedgeStyle}. */
   startAngle: number;
+  /** Angle at which the arc or slice ends. See {@link WedgeStyle}. */
   endAngle: number;
+  /** Horizontal coordinate of the center. See {@link Length}. */
   cx?: Exclude<Length, "auto">;
+  /** Vertical coordinate of the center. See {@link Length}. */
   cy?: Exclude<Length, "auto">;
+  /** Whether the arc follows the counterclockwise direction. See {@link WedgeStyle}. */
   counterclockwise?: boolean;
+  /**
+   * Width used for line hit testing independently of the visible stroke width. See
+   * {@link WedgeStyle}.
+   */
   lineInteractionWidth?: number;
 }
 
@@ -101,7 +130,16 @@ function renderWedge(
   );
 }
 
-/** Describes a center-closed circular wedge primitive for JSX or createElement authoring. */
+/**
+ * Describes a center-closed circular wedge primitive for JSX or createElement authoring.
+ *
+ * @param props - Authored component inputs, supplied through JSX or createElement. See the linked
+ * props and style types.
+ * @throws When called directly; CRC mounts this component through JSX or createElement.
+ *
+ * @see {@link WedgeProps}
+ * @see {@link WedgeStyle}
+ */
 export const Wedge = definePrimitive<
   WedgeProps,
   WedgeStyle,

@@ -11,25 +11,95 @@ import {
   withHooksForbidden,
 } from "@crc/core/internal";
 
-/** Declared outer box and protected anchor, all in the parent's local coordinates. */
+/**
+ * Declared outer box and protected anchor, all in the parent's local coordinates.
+ *
+ * @see {@link AnchoredLayout}
+ * @see {@link AnchoredLayoutProps}
+ */
 export interface AnchoredItem {
+  /** Stable identity used by the containing protocol. See {@link AnchoredItem}. */
   readonly key: string | number;
-  readonly anchor: Readonly<{ x: number; y: number }>;
+  /** Logical point to which the content or result is anchored. See {@link AnchoredItem}. */
+  readonly anchor: Readonly<{
+    /**
+     * Horizontal coordinate or displacement in the containing coordinate system. See
+     * {@link AnchoredItem}.
+     */
+    x: number;
+    /**
+     * Vertical coordinate or displacement in the containing coordinate system. See
+     * {@link AnchoredItem}.
+     */
+    y: number;
+  }>;
+  /** Clearance around the anchor before placing the item. See {@link AnchoredItem}. */
   readonly anchorRadius?: number;
+  /**
+   * Horizontal extent in the units of the containing geometry or surface. See {@link AnchoredItem}
+   * .
+   */
   readonly width: number;
+  /**
+   * Vertical extent in the units of the containing geometry or surface. See {@link AnchoredItem}.
+   */
   readonly height: number;
 }
+/**
+ * The resolved logical rectangle assigned to an anchored item.
+ *
+ * @see {@link AnchoredLayoutProps}
+ */
 export interface AnchoredPlacement {
+  /**
+   * Horizontal coordinate or displacement in the containing coordinate system. See
+   * {@link AnchoredPlacement}.
+   */
   readonly x: number;
+  /**
+   * Vertical coordinate or displacement in the containing coordinate system. See
+   * {@link AnchoredPlacement}.
+   */
   readonly y: number;
+  /**
+   * Horizontal extent in the units of the containing geometry or surface. See
+   * {@link AnchoredPlacement}.
+   */
   readonly width: number;
+  /**
+   * Vertical extent in the units of the containing geometry or surface. See
+   * {@link AnchoredPlacement}.
+   */
   readonly height: number;
 }
+/**
+ * Authored inputs for AnchoredLayout, including the declared data and presentation options.
+ *
+ * @see {@link AnchoredItem}
+ * @see {@link SignalValue}
+ * @see {@link AnchoredPlacement}
+ * @see {@link CRCNode}
+ * @see {@link AnchoredLayout}
+ */
 export interface AnchoredLayoutProps<T extends AnchoredItem> {
+  /** Items to place around their declared anchors. See {@link SignalValue}. */
   readonly items: SignalValue<readonly T[]>;
+  /** Direction in which this operation proceeds. See {@link AnchoredLayoutProps}. */
   readonly direction?: "vertical" | "horizontal";
+  /** Spacing between adjacent items. See {@link SignalValue}. */
   readonly gap?: SignalValue<number>;
+  /**
+   * Logical region constraining the content or query. See {@link SignalValue},
+   * {@link AnchoredPlacement}.
+   */
   readonly bounds?: SignalValue<AnchoredPlacement>;
+  /**
+   * Descendant content or the callback that supplies it. See {@link AnchoredPlacement},
+   * {@link CRCNode}.
+   * @param item - Item being placed.
+   * @param placement - Computed anchor and placement geometry. See {@link AnchoredPlacement}.
+   * @returns CRC content for that item. See {@link CRCNode}.
+   */
   readonly children: (item: T, placement: AnchoredPlacement) => CRCNode;
 }
 function finite(value: number, name: string, nonnegative = false) {
@@ -171,7 +241,17 @@ function Item<T extends AnchoredItem>({
     () => render(item, placement),
   );
 }
-/** Arranges keyed CRC content together, clear of every supplied anchor. */
+/**
+ * Arranges keyed CRC content together, clear of every supplied anchor.
+ *
+ * @param props - Anchored items, placement constraints, and child renderer. See
+ * {@link AnchoredLayoutProps} .
+ * @returns CRC content positioned using the computed placements. See {@link CRCNode}.
+ *
+ * @see {@link AnchoredLayoutProps}
+ * @see {@link CRCNode}
+ * @see {@link AnchoredItem}
+ */
 export function AnchoredLayout<T extends AnchoredItem>(
   props: AnchoredLayoutProps<T>,
 ): CRCNode {

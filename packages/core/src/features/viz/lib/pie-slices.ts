@@ -1,23 +1,57 @@
+import type { PieLayoutProps, PieLayoutSlice } from './pie-types.js';
 import type { LineAccessor } from "./types.js";
 import type { PlotKeyAccessor } from "./plot-types.js";
 import { pointAccessor, pointData } from "./point-data.js";
 
+/**
+ * Value and stable-key accessors used to derive pie-slice geometry.
+ *
+ * @see {@link LineAccessor}
+ * @see {@link PlotKeyAccessor}
+ * @see {@link pieSlices}
+ * @see {@link PieLayoutProps}
+ */
 export interface PieOptions<D> {
+  /** Value associated with this sample, input, or result. See {@link LineAccessor}. */
   readonly value: LineAccessor<D>;
+  /** Property or callback supplying stable identity for each datum. See {@link PlotKeyAccessor}. */
   readonly keyBy?: PlotKeyAccessor<D>;
 }
 
+/**
+ * A datum's key, value, fraction, and angular interval in a pie layout.
+ *
+ * @see {@link pieSlices}
+ * @see {@link PieLayoutProps}
+ * @see {@link PieLayoutSlice}
+ */
 export interface PieSliceGeometry<D> {
+  /** The original data item selected by this result. See {@link PieSliceGeometry}. */
   readonly datum: D;
+  /** Index of the selected datum in its source data. See {@link PieSliceGeometry}. */
   readonly index: number;
+  /** Stable identity used by the containing protocol. See {@link PieSliceGeometry}. */
   readonly key: string;
+  /** Value associated with this sample, input, or result. See {@link PieSliceGeometry}. */
   readonly value: number;
+  /** Normalized share or position represented by this value. See {@link PieSliceGeometry}. */
   readonly fraction: number;
+  /** Angle at which the arc or slice begins. See {@link PieSliceGeometry}. */
   readonly startAngle: number;
+  /** Angle at which the arc or slice ends. See {@link PieSliceGeometry}. */
   readonly endAngle: number;
 }
 
-/** Pure source-ordered full-circle layout. Angles use Canvas radians, clockwise from the top. */
+/**
+ * Pure source-ordered full-circle layout. Angles use Canvas radians, clockwise from the top.
+ *
+ * @param data - Records whose values determine slice proportions.
+ * @param options - Value accessor and optional stable key accessor. See {@link PieOptions}.
+ * @returns Ordered slice geometry associated with the input records. See {@link PieSliceGeometry}.
+ *
+ * @see {@link PieOptions}
+ * @see {@link PieSliceGeometry}
+ */
 export function pieSlices<D>(
   data: readonly D[],
   { value: input, keyBy }: PieOptions<D>,

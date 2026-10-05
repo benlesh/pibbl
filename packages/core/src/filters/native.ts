@@ -37,6 +37,16 @@ function blurInfluence(radius: number, output: Readonly<PixelBounds>, density: n
   const extent = Math.ceil(radius * density * BLUR_EXTENT_FACTOR);
   return { x: output.x - extent, y: output.y - extent, width: output.width + 2 * extent, height: output.height + 2 * extent };
 }
+/**
+ * Creates a blur filter descriptor for a primitive's style.filter list. Filtering changes pixels
+ * without changing layout or hit geometry.
+ *
+ * @param options - Blur radius in logical units. See {@link CRCBlurFilterOptions}.
+ * @returns A blur filter descriptor for style.filter. See {@link CRCFilter}.
+ *
+ * @see {@link CRCBlurFilterOptions}
+ * @see {@link CRCFilter}
+ */
 export function blur(options: CRCBlurFilterOptions): CRCFilter {
   const radiusInput = options.radius;
   return filter({ prepare(executor, property, context) { const radius = number(radiusInput, `${property}.radius`, context, true); return prepared(executor, density => `blur(${radius * density}px)`, (output, density) => blurInfluence(radius, output, density)); } });
@@ -45,14 +55,105 @@ function amountFilter(type: string, input: { readonly amount: unknown }, clamp: 
   const amountInput = input.amount;
   return filter({ prepare(executor, property, context) { const amount = clamp ? Math.min(1, number(amountInput, `${property}.amount`, context, true)) : number(amountInput, `${property}.amount`, context, true); return prepared(executor, () => `${type}(${amount})`, unchanged); } });
 }
+/**
+ * Creates a brightness filter descriptor for a primitive's style.filter list. Filtering changes
+ * pixels without changing layout or hit geometry.
+ *
+ * @param options - Brightness multiplier. See {@link CRCBrightnessFilterOptions}.
+ * @returns A brightness filter descriptor for style.filter. See {@link CRCFilter}.
+ *
+ * @see {@link CRCBrightnessFilterOptions}
+ * @see {@link CRCFilter}
+ */
 export function brightness(options: CRCBrightnessFilterOptions): CRCFilter { return amountFilter('brightness', options, false); }
+/**
+ * Creates a contrast filter descriptor for a primitive's style.filter list. Filtering changes
+ * pixels without changing layout or hit geometry.
+ *
+ * @param options - Contrast multiplier. See {@link CRCContrastFilterOptions}.
+ * @returns A contrast filter descriptor for style.filter. See {@link CRCFilter}.
+ *
+ * @see {@link CRCContrastFilterOptions}
+ * @see {@link CRCFilter}
+ */
 export function contrast(options: CRCContrastFilterOptions): CRCFilter { return amountFilter('contrast', options, false); }
+/**
+ * Creates a grayscale filter descriptor for a primitive's style.filter list. Filtering changes
+ * pixels without changing layout or hit geometry.
+ *
+ * @param options - Grayscale amount. See {@link CRCGrayscaleFilterOptions}.
+ * @returns A grayscale filter descriptor for style.filter. See {@link CRCFilter}.
+ *
+ * @see {@link CRCGrayscaleFilterOptions}
+ * @see {@link CRCFilter}
+ */
 export function grayscale(options: CRCGrayscaleFilterOptions): CRCFilter { return amountFilter('grayscale', options, true); }
+/**
+ * Creates a invert filter descriptor for a primitive's style.filter list. Filtering changes pixels
+ * without changing layout or hit geometry.
+ *
+ * @param options - Color inversion amount. See {@link CRCInvertFilterOptions}.
+ * @returns An inversion filter descriptor for style.filter. See {@link CRCFilter}.
+ *
+ * @see {@link CRCInvertFilterOptions}
+ * @see {@link CRCFilter}
+ */
 export function invert(options: CRCInvertFilterOptions): CRCFilter { return amountFilter('invert', options, true); }
+/**
+ * Creates a opacity filter descriptor for a primitive's style.filter list. Filtering changes
+ * pixels
+ * without changing layout or hit geometry.
+ *
+ * @param options - Opacity multiplier. See {@link CRCOpacityFilterOptions}.
+ * @returns An opacity filter descriptor for style.filter. See {@link CRCFilter}.
+ *
+ * @see {@link CRCOpacityFilterOptions}
+ * @see {@link CRCFilter}
+ */
 export function opacity(options: CRCOpacityFilterOptions): CRCFilter { return amountFilter('opacity', options, true); }
+/**
+ * Creates a saturate filter descriptor for a primitive's style.filter list. Filtering changes
+ * pixels without changing layout or hit geometry.
+ *
+ * @param options - Saturation multiplier. See {@link CRCSaturateFilterOptions}.
+ * @returns A saturation filter descriptor for style.filter. See {@link CRCFilter}.
+ *
+ * @see {@link CRCSaturateFilterOptions}
+ * @see {@link CRCFilter}
+ */
 export function saturate(options: CRCSaturateFilterOptions): CRCFilter { return amountFilter('saturate', options, false); }
+/**
+ * Creates a sepia filter descriptor for a primitive's style.filter list. Filtering changes pixels
+ * without changing layout or hit geometry.
+ *
+ * @param options - Sepia amount. See {@link CRCSepiaFilterOptions}.
+ * @returns A sepia filter descriptor for style.filter. See {@link CRCFilter}.
+ *
+ * @see {@link CRCSepiaFilterOptions}
+ * @see {@link CRCFilter}
+ */
 export function sepia(options: CRCSepiaFilterOptions): CRCFilter { return amountFilter('sepia', options, true); }
+/**
+ * Creates a hue rotate filter descriptor for a primitive's style.filter list. Filtering changes
+ * pixels without changing layout or hit geometry.
+ *
+ * @param options - Hue rotation angle. See {@link CRCHueRotateFilterOptions}.
+ * @returns A hue-rotation filter descriptor for style.filter. See {@link CRCFilter}.
+ *
+ * @see {@link CRCHueRotateFilterOptions}
+ * @see {@link CRCFilter}
+ */
 export function hueRotate(options: CRCHueRotateFilterOptions): CRCFilter { const degreesInput = options.degrees; return filter({ prepare(executor, property, context) { const degrees = number(degreesInput, `${property}.degrees`, context); return prepared(executor, () => `hue-rotate(${degrees}deg)`, unchanged); } }); }
+/**
+ * Creates a drop shadow filter descriptor for a primitive's style.filter list. Filtering changes
+ * pixels without changing layout or hit geometry.
+ *
+ * @param options - Shadow offsets, blur, and color. See {@link CRCDropShadowFilterOptions}.
+ * @returns A drop-shadow filter descriptor for style.filter. See {@link CRCFilter}.
+ *
+ * @see {@link CRCDropShadowFilterOptions}
+ * @see {@link CRCFilter}
+ */
 export function dropShadow(options: CRCDropShadowFilterOptions): CRCFilter {
   const offsetXInput = options.offsetX; const offsetYInput = options.offsetY; const radiusInput = options.blurRadius === undefined ? 0 : options.blurRadius; const colorInput = options.color;
   return filter({ prepare(executor, property, context) {

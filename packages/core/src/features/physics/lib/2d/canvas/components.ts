@@ -65,6 +65,17 @@ function renderChain2D(
   renderShape(props, style, chainShape2D(style), context);
 }
 
+/**
+ * Draws an immutable physics shape as a Canvas primitive with optional body or collider
+ * attachment.
+ *
+ * @param props - Authored component inputs, supplied through JSX or createElement. See the linked
+ * props and style types.
+ * @throws When called directly; CRC mounts this component through JSX or createElement.
+ *
+ * @see {@link PhysicsShape2DProps}
+ * @see {@link PhysicsShape2DStyle}
+ */
 export const PhysicsShape2D = definePrimitive<
   PhysicsShape2DProps,
   PhysicsShape2DStyle,
@@ -72,6 +83,16 @@ export const PhysicsShape2D = definePrimitive<
   PhysicsShape2DStyle
 >(renderPhysicsShape2D, { resolveStyle: resolvePhysicsShapeStyle });
 
+/**
+ * Draws a capsule between two endpoints with optional physics attachment.
+ *
+ * @param props - Authored component inputs, supplied through JSX or createElement. See the linked
+ * props and style types.
+ * @throws When called directly; CRC mounts this component through JSX or createElement.
+ *
+ * @see {@link Capsule2DProps}
+ * @see {@link Capsule2DStyle}
+ */
 export const Capsule2D = definePrimitive<
   Capsule2DProps,
   Capsule2DStyle,
@@ -84,6 +105,16 @@ export const Capsule2D = definePrimitive<
   radius: positive(style.radius, 'Capsule2D.radius'),
 }) });
 
+/**
+ * Draws a line segment with optional physics attachment.
+ *
+ * @param props - Authored component inputs, supplied through JSX or createElement. See the linked
+ * props and style types.
+ * @throws When called directly; CRC mounts this component through JSX or createElement.
+ *
+ * @see {@link Segment2DProps}
+ * @see {@link Segment2DStyle}
+ */
 export const Segment2D = definePrimitive<
   Segment2DProps,
   Segment2DStyle,
@@ -95,6 +126,16 @@ export const Segment2D = definePrimitive<
   end: copyPoint(style.end, 'Segment2D.end'),
 }) });
 
+/**
+ * Draws an open or closed point chain with optional physics attachment.
+ *
+ * @param props - Authored component inputs, supplied through JSX or createElement. See the linked
+ * props and style types.
+ * @throws When called directly; CRC mounts this component through JSX or createElement.
+ *
+ * @see {@link Chain2DProps}
+ * @see {@link Chain2DStyle}
+ */
 export const Chain2D = definePrimitive<
   Chain2DProps,
   Chain2DStyle,

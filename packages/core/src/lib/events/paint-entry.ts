@@ -1,3 +1,4 @@
+import type { CRCNestedResolverInput } from '../backend/types.js';
 import type { CRCClippingStackEntry, CRCInstance } from '../types.js';
 import type { CRCEventTargetRegistration } from './registrations.js';
 import type { CRCResolverInputWinner } from './resolver-input.js';
@@ -13,8 +14,21 @@ export interface CRCHitTestInput {
   rootY: number;
 }
 
+/**
+ * The result of evaluating one paint entry's logical hit test.
+ *
+ * @see {@link CRCEventTargetRegistration}
+ * @see {@link CRCNestedResolverInput}
+ */
 export interface CRCHitTestOutput {
+  /**
+   * Whether the hit test selects a target, blocks lower paint, or passes through. See
+   * {@link CRCHitDisposition}.
+   */
   disposition: CRCHitDisposition;
+  /**
+   * The selected logical target or target configuration. See {@link CRCEventTargetRegistration}.
+   */
   target: CRCEventTargetRegistration | null;
   /** @internal Resolver identity for winner-only external input delivery. */
   winner?: CRCResolverInputWinner;

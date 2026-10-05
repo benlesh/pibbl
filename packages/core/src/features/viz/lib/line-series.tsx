@@ -10,6 +10,15 @@ function accessor<D>(
     ? input
     : (datum) => datum[input] as LineCoordinate;
 }
+/**
+ * Draws a scaled line through defined data values, leaving gaps for undefined values.
+ *
+ * @param props - Data, coordinate accessors, scales, and line styling. See {@link LineSeriesProps}
+ * .
+ * @returns CRC nodes drawing the data as a line series.
+ *
+ * @see {@link LineSeriesProps}
+ */
 export function LineSeries<D>({
   data: dataInput,
   x: xInput,

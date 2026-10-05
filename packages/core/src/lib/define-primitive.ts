@@ -64,7 +64,22 @@ type CapabilityArguments<
     capabilities?: PrimitiveCapabilitiesInput<P, S, N, R>,
   ] : [capabilities: PrimitiveCapabilitiesInput<P, S, N, R>];
 
-/** Defines a platform component with private style and measurement behavior. */
+/**
+ * Defines a platform component with private style and measurement behavior.
+ *
+ * @param render - Synchronous primitive renderer receiving props, resolved style, and Canvas
+ * context. See {@link PrimitiveRender} , {@link PrimitiveStyleGuard} , {@link PrimitiveInput} .
+ * @param capabilityArguments - Style normalization, resolution, and measurement capabilities
+ * required by the primitive. See {@link CapabilityArguments} .
+ * @returns A primitive component usable with JSX or createElement. See
+ * {@link CRCPrimitiveComponent} , {@link PrimitiveProgramProps} , {@link PrimitiveInput} .
+ *
+ * @see {@link PrimitiveRender}
+ * @see {@link PrimitiveInput}
+ * @see {@link CRCPrimitiveComponent}
+ * @see {@link PrimitiveProgramProps}
+ * @see {@link SystemStyle}
+ */
 export function definePrimitive<
   P = Record<string, never>,
   S extends SystemStyle = SystemStyle,
@@ -83,7 +98,25 @@ export function definePrimitive<
   );
 }
 
-/** Defines a primitive owned by one official CRC rendering backend. */
+/**
+ * Defines a primitive owned by one official CRC rendering backend.
+ *
+ * @param backend - Identity of the backend that can execute this primitive. See
+ * {@link CRCBackendToken} .
+ * @param program - Synchronous program using the active backend environment. See
+ * {@link CRCBackendPrimitiveProgram} , {@link PrimitiveStyleGuard} , {@link PrimitiveInput} .
+ * @param capabilityArguments - Style and measurement capabilities for the primitive. See
+ * {@link CapabilityArguments} .
+ * @returns A primitive component bound to the specified backend. See {@link CRCPrimitiveComponent}
+ * , {@link PrimitiveProgramProps} , {@link PrimitiveInput} .
+ *
+ * @see {@link CRCBackendToken}
+ * @see {@link CRCBackendPrimitiveProgram}
+ * @see {@link PrimitiveInput}
+ * @see {@link CRCPrimitiveComponent}
+ * @see {@link PrimitiveProgramProps}
+ * @see {@link SystemStyle}
+ */
 export function defineBackendPrimitive<
   P = Record<string, never>,
   S extends SystemStyle = SystemStyle,
@@ -129,7 +162,14 @@ export function defineBackendPrimitive<
   return component;
 }
 
-/** Derives a new official-package primitive identity with the source behavior. */
+/**
+ * Derives a new official-package primitive identity with the source behavior.
+ *
+ * @param source - Primitive whose rendering and capabilities are reused.
+ * @returns A derived primitive with its own component identity.
+ *
+ * @see {@link CRCPrimitiveComponent}
+ */
 export function derivePrimitive<T extends CRCPrimitiveComponent<any, any>>(
   source: T,
 ): T {
@@ -153,7 +193,14 @@ export function derivePrimitive<T extends CRCPrimitiveComponent<any, any>>(
   return derived;
 }
 
-/** Runs one official-package primitive resolver without render side-effect authority. */
+/**
+ * Runs one official-package primitive resolver without render side-effect authority.
+ *
+ * @param callback - Synchronous resolver to evaluate with hooks and signal writes forbidden.
+ * @returns The resolver's return value.
+ *
+ * @see {@link PrimitiveCapabilities}
+ */
 export function crcInternalRunPurePrimitiveResolver<T>(callback: () => T): T {
   const previousComponentRefs = GLOBAL_STATE.componentRefs;
   const previousComponentHookIndex = GLOBAL_STATE.componentHookIndex;

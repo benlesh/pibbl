@@ -1,3 +1,7 @@
+import type { VizFoundationState } from "./viz-foundation-lab.js";
+import type { VizPointsState } from "./viz-points-lab.js";
+import type { VizHoverState } from "./viz-hover-lab.js";
+import type { ThreePickingState } from "./three-picking-lab.example";
 import {
   RESPONSIVE_STYLE_ACTIONS,
   type ResponsiveStylesState,
@@ -129,6 +133,14 @@ function sameValues(
   );
 }
 
+/**
+ * Validates scenario metadata and returns the catalog, throwing for inconsistent entries.
+ *
+ * @param catalog - Catalog whose metadata and identities should be checked.
+ * @returns The supplied catalog after successful validation; invalid metadata throws.
+ *
+ * @see {@link ScenarioCatalogRecord}
+ */
 export function validateScenarioCatalog<
   TCatalog extends readonly ScenarioCatalogRecord[],
 >(catalog: TCatalog): TCatalog {
@@ -237,6 +249,15 @@ function groupCatalog(
     }));
 }
 
+/**
+ * Builds slug and grouping indexes over validated deterministic scenario metadata.
+ *
+ * @param catalog - Scenario metadata and loaders to index. See {@link AnyScenarioCatalogEntry}.
+ * @returns An index of the supplied catalog entries. See {@link ScenarioCatalogIndex}.
+ *
+ * @see {@link AnyScenarioCatalogEntry}
+ * @see {@link ScenarioCatalogIndex}
+ */
 export function createScenarioCatalogIndex(
   catalog: readonly AnyScenarioCatalogEntry[],
 ): ScenarioCatalogIndex {
@@ -259,10 +280,28 @@ export function createScenarioCatalogIndex(
   };
 }
 
+/**
+ * Returns the Studio route for a deterministic scenario catalog record.
+ *
+ * @param entry - Scenario metadata containing its route identity. See
+ * {@link ScenarioCatalogRecord} .
+ * @returns The scenario's application route.
+ *
+ * @see {@link ScenarioCatalogRecord}
+ */
 export function getScenarioRoute(entry: ScenarioCatalogRecord): string {
   return `#/testing/${entry.metadata.slug}`;
 }
 
+/**
+ * Loads a scenario implementation from its catalog entry on demand.
+ *
+ * @param entry - Catalog entry whose lazy loader should run. See {@link ScenarioCatalogEntry}.
+ * @returns A promise for the loaded scenario definition. See {@link ScenarioDefinition}.
+ *
+ * @see {@link ScenarioCatalogEntry}
+ * @see {@link ScenarioDefinition}
+ */
 export async function loadScenario<TState>(
   entry: ScenarioCatalogEntry<TState>,
 ): Promise<ScenarioDefinition<TState>> {
@@ -325,6 +364,12 @@ const smokeMetadata: ScenarioMetadata = {
   maturity: "baseline",
 };
 
+/**
+ * Catalog metadata and lazy loader for the smoke scenario.
+ *
+ * @see {@link ScenarioCatalogEntry}
+ * @see {@link SmokeScenarioState}
+ */
 export const smokeScenarioEntry: ScenarioCatalogEntry<SmokeScenarioState> = {
   metadata: smokeMetadata,
   canvas: {
@@ -402,6 +447,12 @@ const drawingShapesMetadata: ScenarioMetadata = {
   maturity: "contract",
 };
 
+/**
+ * Catalog metadata and lazy loader for the drawing shapes scenario.
+ *
+ * @see {@link ScenarioCatalogEntry}
+ * @see {@link DrawingShapesState}
+ */
 export const drawingShapesScenarioEntry: ScenarioCatalogEntry<DrawingShapesState> =
   {
     metadata: drawingShapesMetadata,
@@ -453,6 +504,12 @@ const drawingLinesMetadata: ScenarioMetadata = {
   maturity: "contract",
 };
 
+/**
+ * Catalog metadata and lazy loader for the drawing lines scenario.
+ *
+ * @see {@link ScenarioCatalogEntry}
+ * @see {@link DrawingLinesState}
+ */
 export const drawingLinesScenarioEntry: ScenarioCatalogEntry<DrawingLinesState> =
   {
     metadata: drawingLinesMetadata,
@@ -511,6 +568,12 @@ const drawingTextMetadata: ScenarioMetadata = {
   maturity: "contract",
 };
 
+/**
+ * Catalog metadata and lazy loader for the drawing text scenario.
+ *
+ * @see {@link ScenarioCatalogEntry}
+ * @see {@link DrawingTextState}
+ */
 export const drawingTextScenarioEntry: ScenarioCatalogEntry<DrawingTextState> =
   {
     metadata: drawingTextMetadata,
@@ -569,6 +632,12 @@ const drawingImagesMetadata: ScenarioMetadata = {
   maturity: "contract",
 };
 
+/**
+ * Catalog metadata and lazy loader for the drawing images scenario.
+ *
+ * @see {@link ScenarioCatalogEntry}
+ * @see {@link DrawingImagesState}
+ */
 export const drawingImagesScenarioEntry: ScenarioCatalogEntry<DrawingImagesState> =
   {
     metadata: drawingImagesMetadata,
@@ -634,6 +703,12 @@ const drawingCompositionMetadata: ScenarioMetadata = {
   maturity: "contract",
 };
 
+/**
+ * Catalog metadata and lazy loader for the drawing composition scenario.
+ *
+ * @see {@link ScenarioCatalogEntry}
+ * @see {@link DrawingCompositionState}
+ */
 export const drawingCompositionScenarioEntry: ScenarioCatalogEntry<DrawingCompositionState> =
   {
     metadata: drawingCompositionMetadata,
@@ -712,6 +787,12 @@ const focusNavigationMetadata: ScenarioMetadata = {
   maturity: "contract",
 };
 
+/**
+ * Catalog metadata and lazy loader for the focus navigation scenario.
+ *
+ * @see {@link ScenarioCatalogEntry}
+ * @see {@link FocusNavigationState}
+ */
 export const focusNavigationScenarioEntry: ScenarioCatalogEntry<FocusNavigationState> =
   {
     metadata: focusNavigationMetadata,
@@ -835,6 +916,12 @@ const interactionLabMetadata: ScenarioMetadata = {
   maturity: "trusted",
 };
 
+/**
+ * Catalog metadata and lazy loader for the interaction lab scenario.
+ *
+ * @see {@link ScenarioCatalogEntry}
+ * @see {@link InteractionLabState}
+ */
 export const interactionLabScenarioEntry: ScenarioCatalogEntry<InteractionLabState> =
   {
     metadata: interactionLabMetadata,
@@ -928,6 +1015,12 @@ const mouseContractMetadata: ScenarioMetadata = {
   maturity: "contract",
 };
 
+/**
+ * Catalog metadata and lazy loader for the mouse contract scenario.
+ *
+ * @see {@link ScenarioCatalogEntry}
+ * @see {@link MouseContractScenarioState}
+ */
 export const mouseContractScenarioEntry: ScenarioCatalogEntry<MouseContractScenarioState> =
   {
     metadata: mouseContractMetadata,
@@ -1057,6 +1150,12 @@ const agentTargetingVerificationMetadata: ScenarioMetadata = {
   maturity: "contract",
 };
 
+/**
+ * Catalog metadata and lazy loader for the agent targeting verification scenario.
+ *
+ * @see {@link ScenarioCatalogEntry}
+ * @see {@link AgentTargetingState}
+ */
 export const agentTargetingVerificationScenarioEntry: ScenarioCatalogEntry<AgentTargetingState> = {
   metadata: agentTargetingVerificationMetadata,
   canvas: { width: 480, height: 240 },
@@ -1143,6 +1242,12 @@ const lifecycleLabMetadata: ScenarioMetadata = {
   maturity: "trusted",
 };
 
+/**
+ * Catalog metadata and lazy loader for the lifecycle lab scenario.
+ *
+ * @see {@link ScenarioCatalogEntry}
+ * @see {@link LifecycleLabState}
+ */
 export const lifecycleLabScenarioEntry: ScenarioCatalogEntry<LifecycleLabState> =
   {
     metadata: lifecycleLabMetadata,
@@ -1241,6 +1346,12 @@ const geometryMatrixMetadata: ScenarioMetadata = {
   maturity: "trusted",
 };
 
+/**
+ * Catalog metadata and lazy loader for the geometry matrix scenario.
+ *
+ * @see {@link ScenarioCatalogEntry}
+ * @see {@link GeometryMatrixState}
+ */
 export const geometryMatrixScenarioEntry: ScenarioCatalogEntry<GeometryMatrixState> =
   {
     metadata: geometryMatrixMetadata,
@@ -1314,6 +1425,12 @@ const performanceLabMetadata: ScenarioMetadata = {
   maturity: "trusted",
 };
 
+/**
+ * Catalog metadata and lazy loader for the performance lab scenario.
+ *
+ * @see {@link ScenarioCatalogEntry}
+ * @see {@link PerformanceLabState}
+ */
 export const performanceLabScenarioEntry: ScenarioCatalogEntry<PerformanceLabState> =
   {
     metadata: performanceLabMetadata,
@@ -1393,6 +1510,12 @@ const cleanupStressMetadata: ScenarioMetadata = {
   maturity: "trusted",
 };
 
+/**
+ * Catalog metadata and lazy loader for the cleanup stress scenario.
+ *
+ * @see {@link ScenarioCatalogEntry}
+ * @see {@link CleanupStressState}
+ */
 export const cleanupStressScenarioEntry: ScenarioCatalogEntry<CleanupStressState> =
   {
     metadata: cleanupStressMetadata,
@@ -1492,6 +1615,12 @@ const runtimeHooksMetadata: ScenarioMetadata = {
   maturity: "trusted",
 };
 
+/**
+ * Catalog metadata and lazy loader for the runtime hooks scenario.
+ *
+ * @see {@link ScenarioCatalogEntry}
+ * @see {@link RuntimeHooksState}
+ */
 export const runtimeHooksScenarioEntry: ScenarioCatalogEntry<RuntimeHooksState> =
   {
     metadata: runtimeHooksMetadata,
@@ -1564,6 +1693,12 @@ const layoutFoundationMetadata: ScenarioMetadata = {
   maturity: "contract",
 };
 
+/**
+ * Catalog metadata and lazy loader for the layout foundation scenario.
+ *
+ * @see {@link ScenarioCatalogEntry}
+ * @see {@link LayoutFoundationState}
+ */
 export const layoutFoundationScenarioEntry: ScenarioCatalogEntry<LayoutFoundationState> =
   {
     metadata: layoutFoundationMetadata,
@@ -1669,6 +1804,12 @@ const filterLabMetadata: ScenarioMetadata = {
   maturity: "trusted",
 };
 
+/**
+ * Catalog metadata and lazy loader for the filter lab scenario.
+ *
+ * @see {@link ScenarioCatalogEntry}
+ * @see {@link FilterLabState}
+ */
 export const filterLabScenarioEntry: ScenarioCatalogEntry<FilterLabState> = {
   metadata: filterLabMetadata,
   canvas: { width: 480, height: 240 },
@@ -1741,6 +1882,12 @@ const threeInstancingLabMetadata: ScenarioMetadata = {
   maturity: "contract",
 };
 
+/**
+ * Catalog metadata and lazy loader for the three instancing lab scenario.
+ *
+ * @see {@link ScenarioCatalogEntry}
+ * @see {@link ThreeInstancingLabState}
+ */
 export const threeInstancingLabScenarioEntry: ScenarioCatalogEntry<ThreeInstancingLabState> =
   {
     metadata: threeInstancingLabMetadata,
@@ -1817,6 +1964,12 @@ const signalsLabMetadata: ScenarioMetadata = {
   maturity: "trusted",
 };
 
+/**
+ * Catalog metadata and lazy loader for the signals lab scenario.
+ *
+ * @see {@link ScenarioCatalogEntry}
+ * @see {@link SignalsLabState}
+ */
 export const signalsLabScenarioEntry: ScenarioCatalogEntry<SignalsLabState> = {
   metadata: signalsLabMetadata,
   canvas: { width: 480, height: 240 },
@@ -1901,6 +2054,12 @@ const animationLabMetadata: ScenarioMetadata = {
   maturity: "trusted",
 };
 
+/**
+ * Catalog metadata and lazy loader for the animation lab scenario.
+ *
+ * @see {@link ScenarioCatalogEntry}
+ * @see {@link AnimationLabState}
+ */
 export const animationLabScenarioEntry: ScenarioCatalogEntry<AnimationLabState> =
   {
     metadata: animationLabMetadata,
@@ -1983,6 +2142,12 @@ const particleCelebrationLabMetadata: ScenarioMetadata = {
   maturity: "contract",
 };
 
+/**
+ * Catalog metadata and lazy loader for the particle celebration lab scenario.
+ *
+ * @see {@link ScenarioCatalogEntry}
+ * @see {@link ParticleCelebrationLabState}
+ */
 export const particleCelebrationLabScenarioEntry: ScenarioCatalogEntry<ParticleCelebrationLabState> =
   {
     metadata: particleCelebrationLabMetadata,
@@ -2070,6 +2235,12 @@ const physics2DLabMetadata: ScenarioMetadata = {
   maturity: "contract",
 };
 
+/**
+ * Catalog metadata and lazy loader for the physics2 d lab scenario.
+ *
+ * @see {@link ScenarioCatalogEntry}
+ * @see {@link Physics2DLabState}
+ */
 export const physics2DLabScenarioEntry: ScenarioCatalogEntry<Physics2DLabState> =
   {
     metadata: physics2DLabMetadata,
@@ -2095,6 +2266,12 @@ export const physics2DLabScenarioEntry: ScenarioCatalogEntry<Physics2DLabState> 
     load: async () => (await import("./physics-2d-lab")).physics2DLabScenario,
   };
 
+/**
+ * Catalog metadata and lazy loader for the canvas surface scenario.
+ *
+ * @see {@link ScenarioCatalogEntry}
+ * @see {@link CanvasSurfaceState}
+ */
 export const canvasSurfaceScenarioEntry: ScenarioCatalogEntry<CanvasSurfaceState> =
   {
     metadata: canvasSurfaceMetadata,
@@ -2113,6 +2290,12 @@ export const canvasSurfaceScenarioEntry: ScenarioCatalogEntry<CanvasSurfaceState
     load: async () => (await import("./canvas-surface")).canvasSurfaceScenario,
   };
 
+/**
+ * Catalog metadata and lazy loader for the viz foundation scenario.
+ *
+ * @see {@link ScenarioCatalogEntry}
+ * @see {@link VizFoundationState}
+ */
 export const vizFoundationScenarioEntry: ScenarioCatalogEntry<
   import("./viz-foundation-lab.js").VizFoundationState
 > = {
@@ -2157,6 +2340,12 @@ export const vizFoundationScenarioEntry: ScenarioCatalogEntry<
     (await import("./viz-foundation-lab.js")).vizFoundationScenario,
 };
 
+/**
+ * Catalog metadata and lazy loader for the manipulation lab scenario.
+ *
+ * @see {@link ScenarioCatalogEntry}
+ * @see {@link ManipulationLabState}
+ */
 export const manipulationLabScenarioEntry: ScenarioCatalogEntry<ManipulationLabState> = {
   metadata: {
     id: "component-manipulation",
@@ -2220,6 +2409,12 @@ export const manipulationLabScenarioEntry: ScenarioCatalogEntry<ManipulationLabS
   load: async () => (await import("./manipulation-lab")).manipulationLabScenario,
 };
 
+/**
+ * Catalog metadata and lazy loader for the viz points scenario.
+ *
+ * @see {@link ScenarioCatalogEntry}
+ * @see {@link VizPointsState}
+ */
 export const vizPointsScenarioEntry: ScenarioCatalogEntry<
   import("./viz-points-lab.js").VizPointsState
 > = {
@@ -2262,6 +2457,12 @@ export const vizPointsScenarioEntry: ScenarioCatalogEntry<
   load: async () => (await import("./viz-points-lab.js")).vizPointsScenario,
 };
 
+/**
+ * Catalog metadata and lazy loader for the viz hover scenario.
+ *
+ * @see {@link ScenarioCatalogEntry}
+ * @see {@link VizHoverState}
+ */
 export const vizHoverScenarioEntry: ScenarioCatalogEntry<
   import("./viz-hover-lab.js").VizHoverState
 > = {
@@ -2324,6 +2525,12 @@ export const vizHoverScenarioEntry: ScenarioCatalogEntry<
   load: async () => (await import("./viz-hover-lab.js")).vizHoverScenario,
 };
 
+/**
+ * Catalog metadata and lazy loader for the responsive styles scenario.
+ *
+ * @see {@link ScenarioCatalogEntry}
+ * @see {@link ResponsiveStylesState}
+ */
 export const responsiveStylesScenarioEntry: ScenarioCatalogEntry<ResponsiveStylesState> =
   {
     metadata: {
@@ -2365,6 +2572,12 @@ export const responsiveStylesScenarioEntry: ScenarioCatalogEntry<ResponsiveStyle
         .responsiveStylesScenario,
   };
 
+/**
+ * Catalog metadata and lazy loader for the three picking scenario.
+ *
+ * @see {@link ScenarioCatalogEntry}
+ * @see {@link ThreePickingState}
+ */
 export const threePickingScenarioEntry: ScenarioCatalogEntry<import('./three-picking-lab.example').ThreePickingState> = {
   metadata: {
     id: 'three-picking-generation', slug: 'three-picking-generation',
@@ -2385,6 +2598,11 @@ export const threePickingScenarioEntry: ScenarioCatalogEntry<import('./three-pic
   load: async () => (await import('./three-picking-lab.example')).threePickingScenario,
 };
 
+/**
+ * The deterministic test-lab catalog, kept separate from public learning metadata.
+ *
+ * @see {@link AnyScenarioCatalogEntry}
+ */
 export const scenarioCatalog: readonly AnyScenarioCatalogEntry[] =
   validateScenarioCatalog([
     responsiveStylesScenarioEntry,
@@ -2422,8 +2640,22 @@ export const scenarioCatalog: readonly AnyScenarioCatalogEntry[] =
     physics2DLabScenarioEntry,
   ] as const);
 
+/**
+ * Precomputed indexes for deterministic scenario lookup and grouping.
+ *
+ * @see {@link ScenarioCatalogIndex}
+ */
 export const scenarioCatalogIndex = createScenarioCatalogIndex(scenarioCatalog);
 
+/**
+ * Finds a deterministic scenario by its canonical slug, or returns undefined.
+ *
+ * @param slug - Scenario URL slug to look up.
+ * @returns The matching scenario entry, or undefined when absent. See
+ * {@link AnyScenarioCatalogEntry} .
+ *
+ * @see {@link AnyScenarioCatalogEntry}
+ */
 export function getScenarioBySlug(
   slug: string,
 ): AnyScenarioCatalogEntry | undefined {

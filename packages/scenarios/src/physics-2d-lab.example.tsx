@@ -48,8 +48,18 @@ export const PHYSICS_2D_LAB_BODY_IDS = [
   "handoff",
 ] as const;
 
+/**
+ * A stable body identifier used by the physics lab's observations and actions.
+ *
+ * @see {@link Physics2DLabState}
+ */
 export type Physics2DLabBodyId = (typeof PHYSICS_2D_LAB_BODY_IDS)[number];
 
+/**
+ * Actions supported by the physics2 d lab scenario's public controller.
+ *
+ * @see {@link Physics2DLabState}
+ */
 export type Physics2DLabAction =
   | "settle"
   | "impulse"
@@ -61,29 +71,69 @@ export type Physics2DLabAction =
   | "reenable-handoff"
   | "remove-owner";
 
+/**
+ * Observed pose and motion of one body in the physics lab.
+ *
+ * @see {@link CRCPhysicsVector2}
+ * @see {@link Physics2DLabState}
+ */
 export interface Physics2DLabBodySnapshot {
+  /** Position recorded or configured by this scenario. See {@link CRCPhysicsVector2}. */
   readonly position: CRCPhysicsVector2;
+  /**
+   * Rotation degrees recorded or configured by this scenario. See {@link Physics2DLabBodySnapshot}
+   * .
+   */
   readonly rotationDegrees: number;
+  /** Linear velocity recorded or configured by this scenario. See {@link CRCPhysicsVector2}. */
   readonly linearVelocity: CRCPhysicsVector2;
+  /**
+   * Angular velocity degrees per second recorded or configured by this scenario. See
+   * {@link Physics2DLabBodySnapshot}.
+   */
   readonly angularVelocityDegreesPerSecond: number;
+  /** Sleeping recorded or configured by this scenario. See {@link Physics2DLabBodySnapshot}. */
   readonly sleeping: boolean;
+  /** Enabled recorded or configured by this scenario. See {@link Physics2DLabBodySnapshot}. */
   readonly enabled: boolean;
+  /** Generation recorded or configured by this scenario. See {@link Physics2DLabBodySnapshot}. */
   readonly generation: number;
+  /** Presented position recorded or configured by this scenario. See {@link CRCPhysicsVector2}. */
   readonly presentedPosition: CRCPhysicsVector2;
+  /**
+   * Presentation offset recorded or configured by this scenario. See
+   * {@link Physics2DLabBodySnapshot}.
+   */
   readonly presentationOffset: number;
 }
 
+/**
+ * Observable state exposed by the physics2 d lab scenario for controls and assertions.
+ *
+ * @see {@link Physics2DLabBodyId}
+ * @see {@link Physics2DLabBodySnapshot}
+ * @see {@link Physics2DLabAction}
+ */
 export interface Physics2DLabState {
-  readonly bodies: Readonly<
-    Record<Physics2DLabBodyId, Physics2DLabBodySnapshot>
-  >;
+  /**
+   * Bodies recorded or configured by this scenario. See {@link Physics2DLabBodyId},
+   * {@link Physics2DLabBodySnapshot}.
+   */
+  readonly bodies: Readonly<Record<Physics2DLabBodyId, Physics2DLabBodySnapshot>>;
+  /** World revision recorded or configured by this scenario. See {@link Physics2DLabState}. */
   readonly worldRevision: number;
+  /** Contacts recorded or configured by this scenario. See {@link Physics2DLabState}. */
   readonly contacts: readonly string[];
+  /** Overlaps recorded or configured by this scenario. See {@link Physics2DLabState}. */
   readonly overlaps: readonly string[];
+  /** Query tags recorded or configured by this scenario. See {@link Physics2DLabState}. */
   readonly queryTags: readonly string[];
+  /** Owner recorded or configured by this scenario. See {@link Physics2DLabState}. */
   readonly owner: "mounted" | "removed";
+  /** Transfer stage recorded or configured by this scenario. See {@link Physics2DLabState}. */
   readonly transferStage:
     "physics" | "disabled" | "animating" | "reenable-pending" | "removed";
+  /** Last action recorded or configured by this scenario. See {@link Physics2DLabAction}. */
   readonly lastAction: "mount" | "reset" | Physics2DLabAction;
 }
 

@@ -148,6 +148,14 @@ function isCurrentSlot<T>(slot: CRCTransitionHookSlot<T>): boolean {
     slot.crcInstance.refs.get(slot.componentRefs.id) === slot.componentRefs;
 }
 
+/**
+ * Animates a numeric target using an analytic spring. See {@link CRCSpringAnimatedValueOptions}
+ * and {@link Signal}.
+ * @param target - Target value or signal whose changes start transitions. See {@link SignalValue}.
+ * @param options - Spring or tween configuration, including signal-backed fields. See
+ * {@link SignalValue} , {@link CRCSpringAnimatedValueOptions} .
+ * @returns A readonly signal containing the animated value. See {@link Signal}.
+ */
 export function useAnimatedValue(
   target: SignalValue<number>,
   options: SignalValue<{
@@ -155,6 +163,14 @@ export function useAnimatedValue(
       SignalValue<CRCSpringAnimatedValueOptions[K]>;
   }>,
 ): Signal<number>;
+/**
+ * Animates a target using a tween and optional custom interpolation. See
+ * {@link CRCTweenAnimatedValueOptions} and {@link Signal}.
+ * @param target - Target value or signal whose changes start transitions. See {@link SignalValue}.
+ * @param options - Spring or tween configuration, including signal-backed fields. See
+ * {@link SignalValue} , {@link CRCTweenAnimatedValueOptions} .
+ * @returns A readonly signal containing the animated value. See {@link Signal}.
+ */
 export function useAnimatedValue<T>(
   target: SignalValue<T>,
   options: SignalValue<{
@@ -162,6 +178,19 @@ export function useAnimatedValue<T>(
       SignalValue<CRCTweenAnimatedValueOptions<T>[K]>;
   }>,
 ): Signal<T>;
+/**
+ * Returns a mount-owned signal that animates toward the current target using the supplied
+ * transition options.
+ *
+ * @param targetInput - Target value or signal whose changes start transitions. See
+ * {@link SignalValue} .
+ * @param optionsInput - Spring or tween configuration, including signal-backed fields. See
+ * {@link SignalValue} , {@link CRCTransitionOptionsInput} .
+ * @returns A readonly signal containing the animated value. See {@link Signal}.
+ *
+ * @see {@link SignalValue}
+ * @see {@link Signal}
+ */
 export function useAnimatedValue<T>(
   targetInput: SignalValue<T>,
   optionsInput: SignalValue<CRCTransitionOptionsInput<T>>,

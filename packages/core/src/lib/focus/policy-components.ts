@@ -66,15 +66,36 @@ type CRCPolicyChild =
   | readonly CRCPolicyChild[]
   | (Iterable<CRCPolicyChild> & { readonly charAt?: never });
 
+/**
+ * Authored inputs for FocusManagement, including the declared data and presentation options.
+ *
+ * @see {@link FocusManagement}
+ */
 export interface FocusManagementProps {
+  /** The single child receiving a logical focus manager. See {@link CRCPolicyChild}. */
   readonly children: CRCPolicyChild;
 }
 
+/**
+ * Authored inputs for KeyboardNavigation, including the declared data and presentation options.
+ *
+ * @see {@link CRCKeyboardNavigationOptions}
+ * @see {@link KeyboardNavigation}
+ */
 export interface KeyboardNavigationProps extends CRCKeyboardNavigationOptions {
+  /** The single child receiving a directional keyboard-navigation boundary. See {@link CRCPolicyChild}. */
   readonly children: CRCPolicyChild;
 }
 
-/** Adds one logical focus manager to exactly one child without adding identity. */
+/**
+ * Adds one logical focus manager to exactly one child without adding identity.
+ *
+ * @param props - Authored component inputs, supplied through JSX or createElement. See the linked
+ * props and style types.
+ * @throws When called directly; CRC mounts this component through JSX or createElement.
+ *
+ * @see {@link FocusManagementProps}
+ */
 export const FocusManagement = /* @__PURE__ */ definePolicyComponent<FocusManagementProps>(
   'FocusManagement',
   (_policy, child) => {
@@ -88,7 +109,15 @@ export const FocusManagement = /* @__PURE__ */ definePolicyComponent<FocusManage
   },
 );
 
-/** Adds one directional-navigation boundary without adding identity. */
+/**
+ * Adds one directional-navigation boundary without adding identity.
+ *
+ * @param props - Authored component inputs, supplied through JSX or createElement. See the linked
+ * props and style types.
+ * @throws When called directly; CRC mounts this component through JSX or createElement.
+ *
+ * @see {@link KeyboardNavigationProps}
+ */
 export const KeyboardNavigation = /* @__PURE__ */ definePolicyComponent<KeyboardNavigationProps>(
   'KeyboardNavigation',
   (policy, child) => {

@@ -1,3 +1,4 @@
+import type { animationLabScenarioEntry } from './catalog.js';
 import {
   usePlayback,
   useAnimatedValue,
@@ -23,6 +24,11 @@ import {
 
 export const ANIMATION_LAB_SOURCE_ID = 'first-class-animation-laboratory-example';
 
+/**
+ * Actions supported by the animation lab scenario's public controller.
+ *
+ * @see {@link AnimationLabState}
+ */
 export type AnimationLabAction =
   | 'play'
   | 'pause'
@@ -40,32 +46,73 @@ export type AnimationLabAction =
   | 'remove-owner'
   | 'reset';
 
+/**
+ * Observable state exposed by the animation lab scenario for controls and assertions.
+ *
+ * @see {@link CRCPlaybackStatus}
+ * @see {@link AnimationLabAction}
+ * @see {@link animationLabScenarioEntry}
+ */
 export interface AnimationLabState {
+  /** Status recorded or configured by this scenario. See {@link CRCPlaybackStatus}. */
   readonly status: CRCPlaybackStatus;
+  /** Current time recorded or configured by this scenario. See {@link AnimationLabState}. */
   readonly currentTime: number;
+  /** X recorded or configured by this scenario. See {@link AnimationLabState}. */
   readonly x: number;
+  /** Opacity recorded or configured by this scenario. See {@link AnimationLabState}. */
   readonly opacity: number;
+  /** Target scale recorded or configured by this scenario. See {@link AnimationLabState}. */
   readonly targetScale: number;
+  /** Presented scale recorded or configured by this scenario. See {@link AnimationLabState}. */
   readonly presentedScale: number;
+  /** Pulse scale recorded or configured by this scenario. See {@link AnimationLabState}. */
   readonly pulseScale: number;
+  /** Iteration recorded or configured by this scenario. See {@link AnimationLabState}. */
   readonly iteration: number;
+  /** Milestones recorded or configured by this scenario. See {@link AnimationLabState}. */
   readonly milestones: readonly string[];
-  readonly stepper: Readonly<{ value: number; steps: number }>;
-  readonly rootRenders: Readonly<{ primary: number; secondary: number }>;
+  /** Stepper recorded or configured by this scenario. See {@link AnimationLabState}. */
+  readonly stepper: Readonly<{
+    /** Value recorded or configured by this scenario. See {@link AnimationLabState}. */
+    value: number;
+    /** Steps recorded or configured by this scenario. See {@link AnimationLabState}. */
+    steps: number;
+  }>;
+  /** Root renders recorded or configured by this scenario. See {@link AnimationLabState}. */
+  readonly rootRenders: Readonly<{
+    /** Primary recorded or configured by this scenario. See {@link AnimationLabState}. */
+    primary: number;
+    /** Secondary recorded or configured by this scenario. See {@link AnimationLabState}. */
+    secondary: number;
+  }>;
+  /** Layer recorded or configured by this scenario. See {@link AnimationLabState}. */
   readonly layer: Readonly<{
+    /** Visible recorded or configured by this scenario. See {@link AnimationLabState}. */
     visible: boolean;
+    /** Child renders recorded or configured by this scenario. See {@link AnimationLabState}. */
     childRenders: number;
+    /** Presentations recorded or configured by this scenario. See {@link AnimationLabState}. */
     presentations: number;
   }>;
+  /** Shared roots recorded or configured by this scenario. See {@link AnimationLabState}. */
   readonly sharedRoots: Readonly<{
+    /** Visible recorded or configured by this scenario. See {@link AnimationLabState}. */
     visible: boolean;
+    /** Value recorded or configured by this scenario. See {@link AnimationLabState}. */
     value: number;
+    /** Primary renders recorded or configured by this scenario. See {@link AnimationLabState}. */
     primaryRenders: number;
+    /** Secondary renders recorded or configured by this scenario. See {@link AnimationLabState}. */
     secondaryRenders: number;
   }>;
+  /** Owner recorded or configured by this scenario. See {@link AnimationLabState}. */
   readonly owner: 'mounted' | 'removed';
+  /** Stale status recorded or configured by this scenario. See {@link CRCPlaybackStatus}. */
   readonly staleStatus: CRCPlaybackStatus | 'none';
+  /** Stale action inert recorded or configured by this scenario. See {@link AnimationLabState}. */
   readonly staleActionInert: boolean;
+  /** Last action recorded or configured by this scenario. See {@link AnimationLabAction}. */
   readonly lastAction: 'mount' | AnimationLabAction;
 }
 

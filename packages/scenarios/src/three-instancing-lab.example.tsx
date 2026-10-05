@@ -1,3 +1,5 @@
+import type { threeInstancingLabScenarioEntry } from './catalog.js';
+import type { ThreeInstancingLabAction } from './three-instancing-lab.js';
 import { dropShadow } from '@crc/core/filters';
 /** @jsxImportSource @crc/core */
 // Adapted from Three.js "webgl_instancing_raycast":
@@ -29,11 +31,22 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
 export const THREE_INSTANCING_LAB_SOURCE_ID = 'three-instancing-laboratory-example';
 
+/**
+ * Supported three instancing miss behavior values: `"pass-through"`, `"block"`, `"target-layer"`.
+ *
+ * @see {@link ThreeInstancingLabState}
+ */
 export type ThreeInstancingMissBehavior =
   | 'pass-through'
   | 'block'
   | 'target-layer';
 
+/**
+ * Supported three instancing resolution values: `"none"`, `"CRC tile"`, `"Three blocked"`, `"Three
+ * target"`, `"Toolbar"`.
+ *
+ * @see {@link ThreeInstancingLabState}
+ */
 export type ThreeInstancingResolution =
   | 'none'
   | 'CRC tile'
@@ -41,30 +54,130 @@ export type ThreeInstancingResolution =
   | 'Three target'
   | 'Toolbar';
 
+/**
+ * Observable state exposed by the three instancing lab scenario for controls and assertions.
+ *
+ * @see {@link ThreeInstancingMissBehavior}
+ * @see {@link ThreeInstancingResolution}
+ * @see {@link ThreeInstancingLabPoint}
+ * @see {@link threeInstancingLabScenarioEntry}
+ * @see {@link ThreeInstancingLabAction}
+ */
 export interface ThreeInstancingLabState {
+  /**
+   * Miss behavior recorded or configured by this scenario. See {@link ThreeInstancingMissBehavior}
+   * .
+   */
   readonly missBehavior: ThreeInstancingMissBehavior;
+  /**
+   * Last resolution recorded or configured by this scenario. See {@link ThreeInstancingResolution}
+   * .
+   */
   readonly lastResolution: ThreeInstancingResolution;
+  /** Tile clicks recorded or configured by this scenario. See {@link ThreeInstancingLabState}. */
   readonly tileClicks: number;
+  /**
+   * Three target clicks recorded or configured by this scenario. See
+   * {@link ThreeInstancingLabState}.
+   */
   readonly threeTargetClicks: number;
+  /**
+   * Blocked three inputs recorded or configured by this scenario. See
+   * {@link ThreeInstancingLabState}.
+   */
   readonly blockedThreeInputs: number;
+  /**
+   * Camera changes recorded or configured by this scenario. See {@link ThreeInstancingLabState}.
+   */
   readonly cameraChanges: number;
+  /**
+   * Target propagation trace recorded or configured by this scenario. See
+   * {@link ThreeInstancingLabState}.
+   */
   readonly targetPropagationTrace: readonly string[];
+  /** Revision recorded or configured by this scenario. See {@link ThreeInstancingLabState}. */
   readonly revision: number;
 }
 
+/**
+ * A logical coordinate pair used by the three instancing lab scenario.
+ *
+ * @see {@link ThreeInstancingLabState}
+ * @see {@link THREE_INSTANCING_LAB_PROBES}
+ */
 export interface ThreeInstancingLabPoint {
+  /** X recorded or configured by this scenario. See {@link ThreeInstancingLabPoint}. */
   readonly x: number;
+  /** Y recorded or configured by this scenario. See {@link ThreeInstancingLabPoint}. */
   readonly y: number;
 }
 
+/**
+ * Deterministic geometry probe locations for the three instancing lab scenario.
+ *
+ * @see {@link ThreeInstancingLabPoint}
+ */
 export const THREE_INSTANCING_LAB_PROBES = {
-  exposedTile: { x: 34, y: 326 },
-  unregisteredInstance: { x: 193, y: 171 },
-  registeredTarget: { x: 418, y: 171 },
-  emptyGap: { x: 520, y: 260 },
-  foregroundToolbar: { x: 320, y: 72 },
-  clippedAway: { x: 74, y: 171 },
-  filteredShadow: { x: 108, y: 193 },
+  /**
+   * Probe for exposed tile in the deterministic scenario. See {@link THREE_INSTANCING_LAB_PROBES}
+   * .
+   */
+  exposedTile: {
+  /** Horizontal coordinate of the probe. See {@link THREE_INSTANCING_LAB_PROBES}. */
+  x: 34,
+  /** Vertical coordinate of the probe. See {@link THREE_INSTANCING_LAB_PROBES}. */
+  y: 326 },
+  /**
+   * Probe for unregistered instance in the deterministic scenario. See
+   * {@link THREE_INSTANCING_LAB_PROBES}.
+   */
+  unregisteredInstance: {
+  /** Horizontal coordinate of the probe. See {@link THREE_INSTANCING_LAB_PROBES}. */
+  x: 193,
+  /** Vertical coordinate of the probe. See {@link THREE_INSTANCING_LAB_PROBES}. */
+  y: 171 },
+  /**
+   * Probe for registered target in the deterministic scenario. See
+   * {@link THREE_INSTANCING_LAB_PROBES}.
+   */
+  registeredTarget: {
+  /** Horizontal coordinate of the probe. See {@link THREE_INSTANCING_LAB_PROBES}. */
+  x: 418,
+  /** Vertical coordinate of the probe. See {@link THREE_INSTANCING_LAB_PROBES}. */
+  y: 171 },
+  /** Probe for empty gap in the deterministic scenario. See {@link THREE_INSTANCING_LAB_PROBES}. */
+  emptyGap: {
+  /** Horizontal coordinate of the probe. See {@link THREE_INSTANCING_LAB_PROBES}. */
+  x: 520,
+  /** Vertical coordinate of the probe. See {@link THREE_INSTANCING_LAB_PROBES}. */
+  y: 260 },
+  /**
+   * Probe for foreground toolbar in the deterministic scenario. See
+   * {@link THREE_INSTANCING_LAB_PROBES}.
+   */
+  foregroundToolbar: {
+  /** Horizontal coordinate of the probe. See {@link THREE_INSTANCING_LAB_PROBES}. */
+  x: 320,
+  /** Vertical coordinate of the probe. See {@link THREE_INSTANCING_LAB_PROBES}. */
+  y: 72 },
+  /**
+   * Probe for clipped away in the deterministic scenario. See {@link THREE_INSTANCING_LAB_PROBES}
+   * .
+   */
+  clippedAway: {
+  /** Horizontal coordinate of the probe. See {@link THREE_INSTANCING_LAB_PROBES}. */
+  x: 74,
+  /** Vertical coordinate of the probe. See {@link THREE_INSTANCING_LAB_PROBES}. */
+  y: 171 },
+  /**
+   * Probe for filtered shadow in the deterministic scenario. See
+   * {@link THREE_INSTANCING_LAB_PROBES}.
+   */
+  filteredShadow: {
+  /** Horizontal coordinate of the probe. See {@link THREE_INSTANCING_LAB_PROBES}. */
+  x: 108,
+  /** Vertical coordinate of the probe. See {@link THREE_INSTANCING_LAB_PROBES}. */
+  y: 193 },
 } as const satisfies Readonly<Record<string, ThreeInstancingLabPoint>>;
 
 interface InstancingProps {
@@ -338,7 +451,7 @@ export function createThreeInstancingLabScene(
           onClick={props.onThreeTargetBubble}
           style={{
             filter: dropShadow({
-              
+
               offsetX: 10,
               offsetY: 7,
               blurRadius: 5,

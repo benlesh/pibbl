@@ -25,6 +25,20 @@ type ResolvedRenderLayerStyle = CRCRenderLayerStyle & {
   readonly height: number;
 };
 
+/**
+ * Defines a CRC component backed by a persistent external-renderer surface and resource lifetime.
+ * CRC schedules frames and commits the bitmap and interaction snapshot together; the definition
+ * owns application-resource cleanup.
+ *
+ * @param definition - Synchronous resource lifecycle, rendering, and interaction implementation.
+ * See {@link CRCRenderLayerDefinition} .
+ * @returns A CRC component that owns one external-renderer boundary per mounted identity. See
+ * {@link CRCComponent} , {@link CRCRenderLayerProps} .
+ *
+ * @see {@link CRCRenderLayerDefinition}
+ * @see {@link CRCComponent}
+ * @see {@link CRCRenderLayerProps}
+ */
 export function defineRenderLayer<
   Props,
   Resources,

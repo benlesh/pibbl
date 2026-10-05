@@ -1,9 +1,26 @@
+import type { smokeScenarioEntry } from './catalog.js';
+import type { smokeScenario } from './smoke.js';
 import { Rectangle, Text } from '@crc/core';
 export const SMOKE_SOURCE_ID = 'baseline-smoke-example';
+/**
+ * Actions supported by the smoke scenario scenario's public controller.
+ *
+ * @see {@link SmokeScenarioState}
+ */
 export type SmokeScenarioAction = 'mount' | 'update' | 'click' | 'reset';
+/**
+ * Observable state exposed by the smoke scenario scenario for controls and assertions.
+ *
+ * @see {@link SmokeScenarioAction}
+ * @see {@link smokeScenarioEntry}
+ * @see {@link smokeScenario}
+ */
 export interface SmokeScenarioState {
+  /** Revision recorded or configured by this scenario. See {@link SmokeScenarioState}. */
   revision: number;
+  /** Clicks recorded or configured by this scenario. See {@link SmokeScenarioState}. */
   clicks: number;
+  /** Last action recorded or configured by this scenario. See {@link SmokeScenarioAction}. */
   lastAction: SmokeScenarioAction;
 }
 interface SmokeSceneProps {

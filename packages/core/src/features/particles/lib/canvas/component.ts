@@ -160,7 +160,17 @@ function prepareImplicitSystem(
   return { controller, effectCandidate };
 }
 
-/** Renders one 2D effect through exactly one private Canvas drawing primitive. */
+/**
+ * Renders one 2D effect through exactly one private Canvas drawing primitive.
+ *
+ * @param props - Particle system, drawing configuration, and event handlers. See
+ * {@link Particles2DProps} .
+ * @returns CRC nodes that paint the system's Canvas particles. See {@link CRCNode}.
+ *
+ * @see {@link Particles2DProps}
+ * @see {@link CRCNode}
+ * @see {@link CRCParticleParameterValues}
+ */
 export function Particles2D<
   EmitterName extends string,
   Parameters extends CRCParticleParameterValues,

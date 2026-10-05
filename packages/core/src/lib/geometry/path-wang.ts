@@ -12,6 +12,14 @@ type Point = readonly [number, number];
  * This trades adaptive placement for a known output count and independent point
  * evaluation. It is most useful when predictable allocation or parallel output
  * generation matters more than minimizing the number of line segments.
+ *
+ * @param path - Source geometry; it is not modified. See {@link PathGeometry}.
+ * @param options - Maximum approximation error and flattening work limits. See
+ * {@link FlattenPathOptions} .
+ * @returns Independent geometry with curves replaced by line segments. See {@link PathGeometry}.
+ *
+ * @see {@link PathGeometry}
+ * @see {@link FlattenPathOptions}
  */
 export function flattenPathWang(path: PathGeometry, options: Readonly<FlattenPathOptions>): PathGeometry {
   const tolerance = requiredPositive(options.tolerance, 'tolerance');

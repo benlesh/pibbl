@@ -1,9 +1,37 @@
+import type { HoverCardProps } from './hover-card.js';
+import type { PieLayoutProps } from './pie-types.js';
 import type { HoverPoint } from "./hover-types.js";
+/**
+ * Preferred side of an anchor, or automatic placement within available bounds.
+ *
+ * @see {@link HoverCardProps}
+ */
 export type HoverPlacement = "auto" | "above" | "below" | "right" | "left";
+/**
+ * Logical bounds used to constrain hover-card placement.
+ *
+ * @see {@link HoverCardProps}
+ * @see {@link PieLayoutProps}
+ */
 export interface HoverBounds {
+  /**
+   * Horizontal coordinate or displacement in the containing coordinate system. See
+   * {@link HoverBounds}.
+   */
   readonly x: number;
+  /**
+   * Vertical coordinate or displacement in the containing coordinate system. See
+   * {@link HoverBounds}.
+   */
   readonly y: number;
+  /**
+   * Horizontal extent in the units of the containing geometry or surface. See {@link HoverBounds}
+   * .
+   */
   readonly width: number;
+  /**
+   * Vertical extent in the units of the containing geometry or surface. See {@link HoverBounds}.
+   */
   readonly height: number;
 }
 export function placeHoverCard(input: {

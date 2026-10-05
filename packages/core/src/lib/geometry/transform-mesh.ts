@@ -22,15 +22,42 @@ import {
   type PathTransform,
 } from './path-transforms.js';
 
+/**
+ * Source rectangle, normalized cell boundaries, and horizontal/vertical path guides for a mesh
+ * transform.
+ *
+ * @see {@link PathRect}
+ * @see {@link PathGuide}
+ * @see {@link meshTransform}
+ */
 export interface MeshTransformOptions {
+  /** Source rectangle whose normalized cells are mapped through the guide mesh. See {@link PathRect}. */
   readonly source: PathRect;
+  /**
+   * Strictly increasing normalized column boundaries, beginning at 0 and ending at 1. See
+   * {@link MeshTransformOptions}.
+   */
   readonly columns: readonly number[];
+  /**
+   * Strictly increasing normalized row boundaries, beginning at 0 and ending at 1. See
+   * {@link MeshTransformOptions}.
+   */
   readonly rows: readonly number[];
   /** Boundary rows; each contains columns.length - 1 left-to-right edges. */
   readonly horizontal: readonly (readonly PathGuide[])[];
   /** Boundary columns; each contains rows.length - 1 top-to-bottom edges. */
   readonly vertical: readonly (readonly PathGuide[])[];
 }
+/**
+ * Creates a mapping through a mesh bounded by horizontal and vertical path guides.
+ *
+ * @param options - Source rectangle and the four boundary guides used to deform it. See
+ * {@link MeshTransformOptions} .
+ * @returns A point mapping suitable for transformPath. See {@link PathTransform}.
+ *
+ * @see {@link MeshTransformOptions}
+ * @see {@link PathTransform}
+ */
 export function meshTransform(options: MeshTransformOptions): PathTransform {
   const source = rectangle(options.source);
   const axis = (values: readonly number[]) => {

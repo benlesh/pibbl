@@ -1,3 +1,4 @@
+import type { signalsLabScenarioEntry } from './catalog.js';
 import {
   computed,
   Group,
@@ -14,6 +15,11 @@ import {
 
 export const SIGNALS_LAB_SOURCE_ID = 'first-class-signals-laboratory-example';
 
+/**
+ * Actions supported by the signals lab scenario's public controller.
+ *
+ * @see {@link SignalsLabState}
+ */
 export type SignalsLabAction =
   | 'direct-write'
   | 'equal-write'
@@ -26,34 +32,78 @@ export type SignalsLabAction =
   | 'reaction-only'
   | 'reset';
 
+/**
+ * Observable state exposed by the signals lab scenario for controls and assertions.
+ *
+ * @see {@link SignalsLabAction}
+ * @see {@link signalsLabScenarioEntry}
+ */
 export interface SignalsLabState {
+  /** Direct recorded or configured by this scenario. See {@link SignalsLabState}. */
   direct: number;
+  /** Derived source recorded or configured by this scenario. See {@link SignalsLabState}. */
   derivedSource: number;
+  /** Left recorded or configured by this scenario. See {@link SignalsLabState}. */
   left: number;
+  /** Right recorded or configured by this scenario. See {@link SignalsLabState}. */
   right: number;
+  /** Shared recorded or configured by this scenario. See {@link SignalsLabState}. */
   shared: number;
+  /** Layer a recorded or configured by this scenario. See {@link SignalsLabState}. */
   layerA: number;
+  /** Layer b recorded or configured by this scenario. See {@link SignalsLabState}. */
   layerB: number;
+  /** Retained recorded or configured by this scenario. See {@link SignalsLabState}. */
   retained: number;
+  /** Selected source recorded or configured by this scenario. See {@link SignalsLabState}. */
   selectedSource: 'left' | 'right';
+  /** Computed recorded or configured by this scenario. See {@link SignalsLabState}. */
   computed: number;
+  /** Computed evaluations recorded or configured by this scenario. See {@link SignalsLabState}. */
   computedEvaluations: number;
+  /** Writes recorded or configured by this scenario. See {@link SignalsLabState}. */
   writes: number;
+  /** Input resolutions recorded or configured by this scenario. See {@link SignalsLabState}. */
   inputResolutions: number;
+  /** Receiver ids recorded or configured by this scenario. See {@link SignalsLabState}. */
   receiverIds: number;
+  /** Provisions recorded or configured by this scenario. See {@link SignalsLabState}. */
   provisions: number;
+  /** Adoptions recorded or configured by this scenario. See {@link SignalsLabState}. */
   adoptions: number;
+  /** Shallow copies recorded or configured by this scenario. See {@link SignalsLabState}. */
   shallowCopies: number;
+  /** Batch flushes recorded or configured by this scenario. See {@link SignalsLabState}. */
   batchFlushes: number;
+  /** Computed validations recorded or configured by this scenario. See {@link SignalsLabState}. */
   computedValidations: number;
+  /** Reaction runs recorded or configured by this scenario. See {@link SignalsLabState}. */
   reactionRuns: number;
+  /** Reaction cleanups recorded or configured by this scenario. See {@link SignalsLabState}. */
   reactionCleanups: number;
+  /** Component traversals recorded or configured by this scenario. See {@link SignalsLabState}. */
   componentTraversals: number;
+  /** Layer repaints recorded or configured by this scenario. See {@link SignalsLabState}. */
   layerRepaints: number;
+  /** Composites recorded or configured by this scenario. See {@link SignalsLabState}. */
   composites: number;
-  rootRenders: Readonly<{ a: number; b: number }>;
-  layerChildRenders: Readonly<{ a: number; b: number }>;
+  /** Root renders recorded or configured by this scenario. See {@link SignalsLabState}. */
+  rootRenders: Readonly<{
+    /** A recorded or configured by this scenario. See {@link SignalsLabState}. */
+    a: number;
+    /** B recorded or configured by this scenario. See {@link SignalsLabState}. */
+    b: number;
+  }>;
+  /** Layer child renders recorded or configured by this scenario. See {@link SignalsLabState}. */
+  layerChildRenders: Readonly<{
+    /** A recorded or configured by this scenario. See {@link SignalsLabState}. */
+    a: number;
+    /** B recorded or configured by this scenario. See {@link SignalsLabState}. */
+    b: number;
+  }>;
+  /** Consumer count recorded or configured by this scenario. See {@link SignalsLabState}. */
   consumerCount: number;
+  /** Last action recorded or configured by this scenario. See {@link SignalsLabAction}. */
   lastAction: 'mount' | SignalsLabAction;
 }
 

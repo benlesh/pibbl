@@ -11,6 +11,22 @@ import type {
 import { requireShapeRecord2D } from '../shape-records.js';
 import { installCustomShapeResolver2D } from './inference.js';
 
+/**
+ * Adds physics-attachment support to a custom primitive using its resolved-style shape callback.
+ *
+ * @param component - Primitive whose rendered style determines its collision shape. See
+ * {@link CRCPrimitiveComponent} .
+ * @param options - Pure resolver deriving collision geometry from resolved style. See
+ * {@link CRCPhysicsShape2D} .
+ * @returns A derived primitive accepting the public physics attachment prop. See
+ * {@link CRCPrimitiveComponent} , {@link CRCPhysicsPrimitiveProps2D} ,
+ * {@link CRCPhysicsAttachment2D} .
+ *
+ * @see {@link CRCPrimitiveComponent}
+ * @see {@link CRCPhysicsShape2D}
+ * @see {@link CRCPhysicsPrimitiveProps2D}
+ * @see {@link CRCPhysicsAttachment2D}
+ */
 export function withPhysicsShape2D<P, I, ResolvedStyle>(
   component: CRCPrimitiveComponent<P, I>,
   options: Readonly<{

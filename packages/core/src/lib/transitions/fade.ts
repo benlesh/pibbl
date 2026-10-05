@@ -1,8 +1,16 @@
+import type { CRCVisibilityTransitionOptions } from '../hooks/use-visibility-transition.js';
+import type { embers } from './embers.js';
 import { opacity } from '../../filters/native.js';
 import type { CRCFilter } from '../style/filter-types.js';
 
 declare const effectBrand: unique symbol;
-/** Immutable, inert visual definition; mounted state belongs to its controller. */
+/**
+ * Immutable, inert visual definition; mounted state belongs to its controller.
+ *
+ * @see {@link fade}
+ * @see {@link CRCVisibilityTransitionOptions}
+ * @see {@link embers}
+ */
 export interface CRCTransitionEffect { readonly [effectBrand]: true }
 export interface TransitionFrame {
   readonly active: boolean;
@@ -11,7 +19,13 @@ export interface TransitionFrame {
 }
 export type TransitionSampler = (progress: number, phase: 'enter' | 'exit', frame: TransitionFrame) => readonly CRCFilter[];
 const definitions = new WeakMap<CRCTransitionEffect, { sample: TransitionSampler; tail: number; create?: () => TransitionRuntime }>();
-/** A uniform fade of the receiving primitive and all of its descendants together. */
+/**
+ * A uniform fade of the receiving primitive and all of its descendants together.
+ *
+ * @returns A fade effect to use with a visibility transition. See {@link CRCTransitionEffect}.
+ *
+ * @see {@link CRCTransitionEffect}
+ */
 export function fade(): CRCTransitionEffect {
   return defineTransitionEffect(progress => progress === 1 ? [] : [opacity({ amount: progress })]);
 }

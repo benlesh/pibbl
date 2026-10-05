@@ -26,13 +26,39 @@ import {
 import { renderPath } from './path.js';
 import { createCirclePath } from '../geometry/circle.js';
 
+/**
+ * Authored inputs for Circle, including the declared data and presentation options.
+ *
+ * @see {@link CRCEventHandlers}
+ * @see {@link CRCEventParticipationOptions}
+ * @see {@link CRCPhysics2DPropExtension}
+ * @see {@link Circle}
+ */
 export interface CircleProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions, CRCPhysics2DPropExtension {}
 
+/**
+ * Supported geometry and presentation properties for Circle.
+ *
+ * @see {@link SystemStyle}
+ * @see {@link PaintStyle}
+ * @see {@link CursorStyle}
+ * @see {@link BoxStyle}
+ * @see {@link LayoutItemStyle}
+ * @see {@link Length}
+ * @see {@link Circle}
+ */
 export interface CircleStyle
   extends SystemStyle, PaintStyle, CursorStyle, BoxStyle, LayoutItemStyle {
+  /** Radius in the coordinate system of this geometry or effect. See {@link Length}. */
   radius: Exclude<Length, 'auto'>;
+  /** Horizontal coordinate of the center. See {@link Length}. */
   cx?: Exclude<Length, 'auto'>;
+  /** Vertical coordinate of the center. See {@link Length}. */
   cy?: Exclude<Length, 'auto'>;
+  /**
+   * Width used for line hit testing independently of the visible stroke width. See
+   * {@link CircleStyle}.
+   */
   lineInteractionWidth?: number;
 }
 
@@ -64,7 +90,16 @@ function renderCircle(
   }, ctx);
 }
 
-/** Describes a circle primitive for JSX or createElement authoring. */
+/**
+ * Describes a circle primitive for JSX or createElement authoring.
+ *
+ * @param props - Authored component inputs, supplied through JSX or createElement. See the linked
+ * props and style types.
+ * @throws When called directly; CRC mounts this component through JSX or createElement.
+ *
+ * @see {@link CircleProps}
+ * @see {@link CircleStyle}
+ */
 export const Circle = definePrimitive<
   CircleProps,
   CircleStyle,

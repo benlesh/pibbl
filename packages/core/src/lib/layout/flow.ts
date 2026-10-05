@@ -38,15 +38,34 @@ import type { Constraints, LayoutBox } from './types.js';
 type FlowDirection = 'horizontal' | 'vertical';
 type FlowAlignment = 'start' | 'center' | 'end' | 'stretch';
 
+/**
+ * Supported geometry and presentation properties for Flow.
+ *
+ * @see {@link BoxStyle}
+ * @see {@link LayoutItemStyle}
+ * @see {@link Flow}
+ */
 export interface FlowStyle extends BoxStyle, LayoutItemStyle {
+  /** Direction in which this operation proceeds. See {@link FlowDirection}. */
   direction?: FlowDirection;
+  /** Whether content may wrap into additional lines. See {@link FlowStyle}. */
   wrap?: boolean;
+  /** Spacing between adjacent items. See {@link FlowStyle}. */
   gap?: number;
+  /** Space between wrapped flow lines. See {@link FlowStyle}. */
   lineGap?: number;
+  /** Default alignment of children on the cross or block axis. See {@link FlowAlignment}. */
   alignItems?: FlowAlignment;
 }
 
+/**
+ * Authored inputs for Flow, including the declared data and presentation options.
+ *
+ * @see {@link CRCNodeInput}
+ * @see {@link Flow}
+ */
 export interface FlowProps extends CRCStructuralEventProps {
+  /** Descendant content or the callback that supplies it. See {@link CRCNodeInput}. */
   children: CRCNodeInput;
 }
 
@@ -133,7 +152,16 @@ function renderFlow(
   );
 }
 
-/** Describes sequential flow layout for JSX or createElement authoring. */
+/**
+ * Describes sequential flow layout for JSX or createElement authoring.
+ *
+ * @param props - Authored component inputs, supplied through JSX or createElement. See the linked
+ * props and style types.
+ * @throws When called directly; CRC mounts this component through JSX or createElement.
+ *
+ * @see {@link FlowProps}
+ * @see {@link FlowStyle}
+ */
 export const Flow = definePrimitive<
   FlowProps,
   FlowStyle,

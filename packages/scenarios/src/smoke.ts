@@ -92,6 +92,12 @@ async function mountSmokeScenario(
   };
 }
 
+/**
+ * Runnable smoke scenario with observable state and deterministic actions.
+ *
+ * @see {@link ScenarioDefinition}
+ * @see {@link SmokeScenarioState}
+ */
 export const smokeScenario: ScenarioDefinition<SmokeScenarioState> = {
   id: 'baseline-smoke',
   sourceId: SMOKE_SOURCE_ID,

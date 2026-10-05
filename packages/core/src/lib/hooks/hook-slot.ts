@@ -24,7 +24,15 @@ export function requireHookContext(): HookContext {
   return { componentRefs, crcInstance };
 }
 
-/** @internal Prevents hook calls from nested user callbacks. */
+/**
+ * @internal Prevents hook calls from nested user callbacks.
+ *
+ * @param reason - Diagnostic explanation reported if the callback tries to use a hook.
+ * @param callback - Synchronous work to run with hooks forbidden.
+ * @returns The callback's return value.
+ *
+ * @see {@link useInternalHookSlot}
+ */
 export function withHooksForbidden<T>(
   reason: string,
   callback: () => T,
@@ -64,7 +72,15 @@ export function useHookSlot<T>(
   return slot;
 }
 
-/** Official-renderer friend hook for component-owned values and teardowns. */
+/**
+ * Official-renderer friend hook for component-owned values and teardowns.
+ *
+ * @param kind - Hook kind used to validate stable hook ordering.
+ * @param initialize - Initializer receiving the slot's teardown collection. See {@link Teardowns}.
+ * @returns The current mounted hook slot. See {@link CRCHookSlot}.
+ *
+ * @see {@link withHooksForbidden}
+ */
 export function useInternalHookSlot<T>(
   kind: string,
   initialize: (teardowns: Teardowns) => T,

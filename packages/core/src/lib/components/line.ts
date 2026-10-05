@@ -1,3 +1,5 @@
+import type { HorizontalLineStyle } from './horizontal-line.js';
+import type { VerticalLineStyle } from './vertical-line.js';
 import { definePrimitive } from '../define-primitive.js';
 import type {
   CRCEventFocusOptions,
@@ -24,15 +26,36 @@ import { validateCoordinates } from '../geometry/validation.js';
 import type { StyleResolutionContext } from '../types.js';
 import { renderPath } from './path.js';
 
+/**
+ * Authored inputs for Line, including the declared data and presentation options.
+ *
+ * @see {@link CRCEventHandlers}
+ * @see {@link CRCEventParticipationOptions}
+ * @see {@link CRCPhysics2DPropExtension}
+ * @see {@link Line}
+ */
 export interface LineProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions, CRCPhysics2DPropExtension {}
 
+/**
+ * Supported geometry and presentation properties for Line.
+ *
+ * @see {@link SystemStyle}
+ * @see {@link BoxStyle}
+ * @see {@link LayoutItemStyle}
+ * @see {@link PaintStyle}
+ * @see {@link CursorStyle}
+ * @see {@link Line}
+ * @see {@link HorizontalLineStyle}
+ * @see {@link VerticalLineStyle}
+ */
 export interface LineStyle
-  extends SystemStyle,
-  BoxStyle,
-  LayoutItemStyle,
-  Omit<PaintStyle, 'fill'>,
-  CursorStyle {
+  extends SystemStyle, BoxStyle, LayoutItemStyle, Omit<PaintStyle, 'fill'>, CursorStyle {
+  /** Ordered coordinate pairs describing the path vertices. See {@link LineStyle}. */
   coords: [number, number][];
+  /**
+   * Width used for line hit testing independently of the visible stroke width. See
+   * {@link LineStyle}.
+   */
   lineInteractionWidth?: number;
 }
 
@@ -74,6 +97,13 @@ export function renderLine(
 
 /**
  * Describes a polyline primitive for JSX or createElement authoring.
+ *
+ * @param props - Authored component inputs, supplied through JSX or createElement. See the linked
+ * props and style types.
+ * @throws When called directly; CRC mounts this component through JSX or createElement.
+ *
+ * @see {@link LineProps}
+ * @see {@link LineStyle}
  */
 export const Line = definePrimitive<
   LineProps,

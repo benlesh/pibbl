@@ -59,6 +59,17 @@ const displacementExecutor: CRCFilterExecutor = {
   render: filterBoundaryExecutor.render,
 };
 
+/**
+ * Creates a displacement filter descriptor for a primitive's style.filter list. Filtering changes
+ * pixels without changing layout or hit geometry.
+ *
+ * @param options - Displacement texture, channel selection, and displacement scale. See
+ * {@link CRCDisplacementFilterOptions} .
+ * @returns A displacement filter descriptor for style.filter. See {@link CRCFilter}.
+ *
+ * @see {@link CRCDisplacementFilterOptions}
+ * @see {@link CRCFilter}
+ */
 export function displacement(options: CRCDisplacementFilterOptions): CRCFilter {
   const definition = Object.freeze({ map: options.map, strength: options.strength, blurRadius: options.blurRadius, region: Object.freeze({ ...options.region }) });
   const value = Object.freeze({ [CRC_FILTER_EXECUTOR]: displacementExecutor });

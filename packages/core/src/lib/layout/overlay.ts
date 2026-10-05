@@ -28,12 +28,28 @@ import type { LayoutBox } from './types.js';
 
 type OverlayAlignment = 'start' | 'center' | 'end' | 'stretch';
 
+/**
+ * Supported geometry and presentation properties for Overlay.
+ *
+ * @see {@link BoxStyle}
+ * @see {@link LayoutItemStyle}
+ * @see {@link Overlay}
+ */
 export interface OverlayStyle extends BoxStyle, LayoutItemStyle {
+  /** Default alignment of children on the cross or block axis. See {@link OverlayAlignment}. */
   alignItems?: OverlayAlignment;
+  /** Default inline-axis alignment of grid or overlay children. See {@link OverlayAlignment}. */
   justifyItems?: OverlayAlignment;
 }
 
+/**
+ * Authored inputs for Overlay, including the declared data and presentation options.
+ *
+ * @see {@link CRCNodeInput}
+ * @see {@link Overlay}
+ */
 export interface OverlayProps extends CRCStructuralEventProps {
+  /** Descendant content or the callback that supplies it. See {@link CRCNodeInput}. */
   children: CRCNodeInput;
 }
 
@@ -81,7 +97,16 @@ function renderOverlay(
   );
 }
 
-/** Describes overlay layout for JSX or createElement authoring. */
+/**
+ * Describes overlay layout for JSX or createElement authoring.
+ *
+ * @param props - Authored component inputs, supplied through JSX or createElement. See the linked
+ * props and style types.
+ * @throws When called directly; CRC mounts this component through JSX or createElement.
+ *
+ * @see {@link OverlayProps}
+ * @see {@link OverlayStyle}
+ */
 export const Overlay = definePrimitive<
   OverlayProps,
   OverlayStyle,

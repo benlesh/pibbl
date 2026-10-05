@@ -1,3 +1,6 @@
+import type { CRCBackendPrimitiveInput } from '../backend/types.js';
+import type { CRCInternalPrimitiveAttachmentInput } from '../element-enhancers.js';
+import type { getCurrentElementSource } from '../../internal.js';
 import type {
   CRCRenderTransaction,
   SystemStyle,
@@ -6,9 +9,19 @@ import type { CRCElement } from './types.js';
 import type { PrimitivePresentation } from '../primitive-presentation.js';
 import type { CRCBackendPrimitiveDefinition } from '../backend/types.js';
 
+/**
+ * Authoring source location attached to an element for diagnostics.
+ *
+ * @see {@link CRCBackendPrimitiveInput}
+ * @see {@link CRCInternalPrimitiveAttachmentInput}
+ * @see {@link getCurrentElementSource}
+ */
 export interface CRCElementSource {
+  /** Source filename recorded for diagnostics. See {@link CRCElementSource}. */
   readonly fileName: string;
+  /** Source line recorded for diagnostics. See {@link CRCElementSource}. */
   readonly lineNumber: number;
+  /** Source column recorded for diagnostics. See {@link CRCElementSource}. */
   readonly columnNumber: number;
 }
 

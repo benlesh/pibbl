@@ -29,6 +29,20 @@ export type {
   MeasureResult,
 } from '../types.js';
 
+/**
+ * Measures an element against finite constraints using the supplied Canvas measurement service.
+ *
+ * @param element - Element whose declared measurement capability is used. See {@link CRCElement}.
+ * @param constraints - Available size constraints in logical units. See {@link Constraints}.
+ * @param service - Canvas text measurement service. See {@link CanvasMeasurementService}.
+ * @returns Measured dimensions, or an unsupported result with its reason. See
+ * {@link MeasureResult} .
+ *
+ * @see {@link CRCElement}
+ * @see {@link Constraints}
+ * @see {@link CanvasMeasurementService}
+ * @see {@link MeasureResult}
+ */
 export function measureElement(
   element: CRCElement<any>,
   constraints: Readonly<Constraints>,

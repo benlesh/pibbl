@@ -25,6 +25,14 @@ import type { ImgStyle, ResolvedImgStyle } from '../style/types.js';
 import { adjustRectangleToPixelGrid } from '../util/pixel-grid-adjustments.js';
 import { wireCommonEvents } from '../util/wire-common-events.js';
 
+/**
+ * Authored inputs for Image, including the declared data and presentation options.
+ *
+ * @see {@link CRCEventHandlers}
+ * @see {@link CRCEventParticipationOptions}
+ * @see {@link CRCPhysics2DPropExtension}
+ * @see {@link Image}
+ */
 export interface ImageProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions, CRCPhysics2DPropExtension {}
 
 interface LoadedImage {
@@ -128,6 +136,13 @@ function renderImage(
 
 /**
  * Describes a Canvas image primitive for JSX or createElement authoring.
+ *
+ * @param props - Authored component inputs, supplied through JSX or createElement. See the linked
+ * props and style types.
+ * @throws When called directly; CRC mounts this component through JSX or createElement.
+ *
+ * @see {@link ImageProps}
+ * @see {@link ImgStyle}
  */
 export const Image = definePrimitive<
   ImageProps,

@@ -11,7 +11,13 @@ import type { CRCConfig } from './surface/types.js';
  * the root element until that controller is disposed.
  * @param canvas The canvas to render on
  * @param element The CRC element to render
- * @param config The mount lifetime, logical viewport, fit, and pixel density
+ * @param config The mount lifetime, logical viewport, fit, and pixel density. See
+ * {@link CRCConfig} .
+ * @returns The stable {@link CRCController} for this canvas; dispose it to release the mount.
+ *
+ * @see {@link CRCNode}
+ * @see {@link CRCConfig}
+ * @see {@link CRCController}
  */
 export function crc(
   canvas: HTMLCanvasElement,

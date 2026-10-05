@@ -1,3 +1,4 @@
+import type { geometryMatrixScenarioEntry } from './catalog.js';
 import type { CRCKey, CRCLogicalMouseEvent } from '@crc/core';
 import type {
   EventTraceEntry,
@@ -12,26 +13,61 @@ const GREEN = [16, 185, 129, 255] as const;
 const ORANGE = [245, 158, 11, 255] as const;
 const PURPLE = [124, 58, 237, 255] as const;
 const SKY = [147, 197, 253, 255] as const;
+/**
+ * A logical coordinate pair used by the geometry matrix scenario.
+ *
+ * @see {@link GeometryMatrixProbe}
+ */
 export interface GeometryMatrixPoint {
+  /** X recorded or configured by this scenario. See {@link GeometryMatrixPoint}. */
   x: number;
+  /** Y recorded or configured by this scenario. See {@link GeometryMatrixPoint}. */
   y: number;
 }
+/**
+ * A logical probe point and its expected geometry-matrix observation.
+ *
+ * @see {@link GeometryMatrixPoint}
+ * @see {@link GeometryMatrixCase}
+ */
 export interface GeometryMatrixProbe {
+  /** Id recorded or configured by this scenario. See {@link GeometryMatrixProbe}. */
   id: string;
+  /** Point recorded or configured by this scenario. See {@link GeometryMatrixPoint}. */
   point: GeometryMatrixPoint;
+  /** Expected target recorded or configured by this scenario. See {@link GeometryMatrixProbe}. */
   expectedTarget: string | null;
+  /** Expected pixel recorded or configured by this scenario. See {@link GeometryMatrixProbe}. */
   expectedPixel: readonly [number, number, number, number];
 }
+/**
+ * A drawing fixture with expected logical geometry and probe locations.
+ *
+ * @see {@link GeometryMatrixProbe}
+ * @see {@link GEOMETRY_MATRIX_CASES}
+ */
 export interface GeometryMatrixCase {
+  /** Id recorded or configured by this scenario. See {@link GeometryMatrixCase}. */
   id: string;
+  /** Title recorded or configured by this scenario. See {@link GeometryMatrixCase}. */
   title: string;
+  /** Css size recorded or configured by this scenario. See {@link GeometryMatrixCase}. */
   cssSize: {
+    /** Width recorded or configured by this scenario. See {@link GeometryMatrixCase}. */
     width: number;
+    /** Height recorded or configured by this scenario. See {@link GeometryMatrixCase}. */
     height: number;
   };
+  /** Contract case ids recorded or configured by this scenario. See {@link GeometryMatrixCase}. */
   contractCaseIds: readonly string[];
+  /** Probes recorded or configured by this scenario. See {@link GeometryMatrixProbe}. */
   probes: readonly GeometryMatrixProbe[];
 }
+/**
+ * Geometry fixtures and probe expectations used by the drawing matrix lab.
+ *
+ * @see {@link GeometryMatrixCase}
+ */
 export const GEOMETRY_MATRIX_CASES = [
   {
     id: 'root-fill',
@@ -327,16 +363,43 @@ export const GEOMETRY_MATRIX_CASES = [
     ],
   },
 ] as const satisfies readonly GeometryMatrixCase[];
+/**
+ * A stable identifier of a geometry-matrix fixture.
+ *
+ * @see {@link GeometryMatrixAction}
+ * @see {@link GeometryMatrixState}
+ */
 export type GeometryMatrixCaseId = (typeof GEOMETRY_MATRIX_CASES)[number]['id'];
+/**
+ * Actions supported by the geometry matrix scenario's public controller.
+ *
+ * @see {@link GeometryMatrixCaseId}
+ * @see {@link GeometryMatrixState}
+ */
 export type GeometryMatrixAction =
   'clear-trace' | 'mount' | 'reset' | `show-${GeometryMatrixCaseId}`;
+/**
+ * Observable state exposed by the geometry matrix scenario for controls and assertions.
+ *
+ * @see {@link GeometryMatrixCaseId}
+ * @see {@link GeometryMatrixAction}
+ * @see {@link EventTraceEntry}
+ * @see {@link geometryMatrixScenarioEntry}
+ */
 export interface GeometryMatrixState {
+  /** Case id recorded or configured by this scenario. See {@link GeometryMatrixCaseId}. */
   caseId: GeometryMatrixCaseId;
+  /** Css height recorded or configured by this scenario. See {@link GeometryMatrixState}. */
   cssHeight: number;
+  /** Css width recorded or configured by this scenario. See {@link GeometryMatrixState}. */
   cssWidth: number;
+  /** Last action recorded or configured by this scenario. See {@link GeometryMatrixAction}. */
   lastAction: GeometryMatrixAction;
+  /** Last coordinates recorded or configured by this scenario. See {@link GeometryMatrixState}. */
   lastCoordinates: readonly [number, number] | null;
+  /** Last target recorded or configured by this scenario. See {@link GeometryMatrixState}. */
   lastTarget: string | null;
+  /** Trace recorded or configured by this scenario. See {@link EventTraceEntry}. */
   trace: readonly EventTraceEntry[];
 }
 export interface GeometryMatrixRecord {

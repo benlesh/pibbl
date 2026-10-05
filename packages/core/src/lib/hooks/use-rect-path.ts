@@ -7,7 +7,15 @@ import { useValueMemoSlot } from './use-value-memo-slot.js';
 /**
  * Creates a memoized Path2D for a rectangle. Useful when
  * defining events efficiently.
+ * @param x - Horizontal rectangle origin.
+ * @param y - Vertical rectangle origin.
+ * @param width - Horizontal extent in logical units.
+ * @param height - Vertical extent in logical units.
+ * @param config - Pixel alignment, stroke width, and uniform or per-corner rounding. See
+ * {@link PixelGridAlignment} .
  * @returns A memoized Path2D
+ *
+ * @see {@link PixelGridAlignment}
  */
 export function useRectPath(
   x: number,

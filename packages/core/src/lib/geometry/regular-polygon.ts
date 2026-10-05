@@ -12,18 +12,79 @@ import {
   type GeometryErrorFactory,
 } from './validation.js';
 
+/**
+ * Center, side count, and rotation for a regular polygon path.
+ *
+ * @see {@link RegularPolygonPathOptions}
+ */
 export interface RegularPolygonPathPosition {
+  /** Number of sides of the regular polygon. See {@link RegularPolygonPathPosition}. */
   sides: number;
+  /** Horizontal coordinate of the center. See {@link RegularPolygonPathPosition}. */
   cx?: number;
+  /** Vertical coordinate of the center. See {@link RegularPolygonPathPosition}. */
   cy?: number;
+  /** Rotation applied to the containing geometry. See {@link RegularPolygonPathPosition}. */
   rotation?: number;
 }
 
+/**
+ * Exactly one size measure for a regular polygon: circumradius, inradius, or side length.
+ *
+ * @see {@link RegularPolygonPathOptions}
+ */
 export type RegularPolygonNumericSize =
-  | { circumradius: number; inradius?: never; sideLength?: never }
-  | { circumradius?: never; inradius: number; sideLength?: never }
-  | { circumradius?: never; inradius?: never; sideLength: number };
+  | {
+      /** Distance from the polygon center to a vertex. See {@link RegularPolygonNumericSize}. */
+      circumradius: number;
+      /**
+       * Not accepted in this variant; use the alternative fields instead. See
+       * {@link RegularPolygonNumericSize}.
+       */
+      inradius?: never;
+      /**
+       * Not accepted in this variant; use the alternative fields instead. See
+       * {@link RegularPolygonNumericSize}.
+       */
+      sideLength?: never;
+    }
+  | {
+      /**
+       * Not accepted in this variant; use the alternative fields instead. See
+       * {@link RegularPolygonNumericSize}.
+       */
+      circumradius?: never;
+      /** Distance from the polygon center to an edge. See {@link RegularPolygonNumericSize}. */
+      inradius: number;
+      /**
+       * Not accepted in this variant; use the alternative fields instead. See
+       * {@link RegularPolygonNumericSize}.
+       */
+      sideLength?: never;
+    }
+  | {
+      /**
+       * Not accepted in this variant; use the alternative fields instead. See
+       * {@link RegularPolygonNumericSize}.
+       */
+      circumradius?: never;
+      /**
+       * Not accepted in this variant; use the alternative fields instead. See
+       * {@link RegularPolygonNumericSize}.
+       */
+      inradius?: never;
+      /** Length of one polygon edge. See {@link RegularPolygonNumericSize}. */
+      sideLength: number;
+    };
 
+/**
+ * Geometry and construction options for a regular polygon path.
+ *
+ * @see {@link RegularPolygonPathPosition}
+ * @see {@link RegularPolygonNumericSize}
+ * @see {@link RoundedCornerPathOptions}
+ * @see {@link createRegularPolygonPath}
+ */
 export type RegularPolygonPathOptions = RegularPolygonPathPosition &
   RegularPolygonNumericSize &
   RoundedCornerPathOptions;
@@ -94,6 +155,15 @@ export function resolveRegularPolygonGeometry(
   };
 }
 
+/**
+ * Creates a Canvas Path2D for regular polygon geometry from validated options.
+ *
+ * @param options - Polygon center, radius, side count, and rotation. See
+ * {@link RegularPolygonPathOptions} .
+ * @returns A native Canvas path containing the regular polygon.
+ *
+ * @see {@link RegularPolygonPathOptions}
+ */
 export function createRegularPolygonPath(
   options: Readonly<RegularPolygonPathOptions>,
 ): Path2D {

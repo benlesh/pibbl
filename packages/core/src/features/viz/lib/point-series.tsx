@@ -58,7 +58,15 @@ function normalized(style: PointSeriesStyle) {
     cursor: style.cursor,
   };
 }
-/** Batched circles in source paint order with one ordinary CRC target. */
+/**
+ * Batched circles in source paint order with one ordinary CRC target.
+ *
+ * @param props - Data, coordinate accessors, scales, and point styling. See
+ * {@link PointSeriesProps} .
+ * @returns CRC nodes drawing the point marks.
+ *
+ * @see {@link PointSeriesProps}
+ */
 export function PointSeries<D>({
   data: input,
   x: xInput,

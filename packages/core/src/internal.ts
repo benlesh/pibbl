@@ -1,3 +1,5 @@
+import type { CRCInternalFrame, crcInternalOnRenderFinish, crcInternalRequestRender } from './lib/scheduler/renderer-participant.js';
+import type { CRCConfig, CRCPixelRatio } from './lib/surface/types.js';
 /**
  * @packageDocumentation
  * Reserved for official CRC packages that are released in lockstep with
@@ -107,7 +109,14 @@ const frameRequestsByComponent = new WeakMap<
   CRCComponentRefs<any>,
   CurrentInstanceFrameRequestState
 >();
-/** Reads the selected official backend's current frame environment. */
+/**
+ * Reads the selected official backend's current frame environment.
+ *
+ * @param token - Backend identity required by the caller. See {@link CRCBackendToken}.
+ * @returns The active environment for that backend.
+ *
+ * @see {@link CRCBackendToken}
+ */
 export function getBackendEnvironment<E>(token: CRCBackendToken): E {
   const driver = GLOBAL_STATE.backendDriver;
   const frame = GLOBAL_STATE.backendFrame;
@@ -117,23 +126,48 @@ export function getBackendEnvironment<E>(token: CRCBackendToken): E {
   return frame.environment as E;
 }
 
-/** Returns the timestamp shared by the current CRC render transaction. */
+/**
+ * Returns the timestamp shared by the current CRC render transaction.
+ *
+ * @returns The active frame timestamp in milliseconds.
+ *
+ * @see {@link CRCInternalFrame}
+ */
 export function getCurrentFrameTimestamp(): number {
   return getCurrentCRCInstance().renderTimestamp;
 }
 
-/** Returns the active instance's owning Canvas, never a transient filter target. */
+/**
+ * Returns the active instance's owning Canvas, never a transient filter target.
+ *
+ * @returns The host canvas of the active backend mount. See {@link Canvas}.
+ *
+ * @see {@link Canvas}
+ */
 export function getCurrentBackendHostCanvas(): Canvas {
   return getCurrentCRCInstance().canvas;
 }
 
-/** Returns development JSX source metadata for the current component. */
+/**
+ * Returns development JSX source metadata for the current component.
+ *
+ * @returns Source metadata for the current element, or undefined when unavailable. See
+ * {@link CRCElementSource} .
+ *
+ * @see {@link CRCElementSource}
+ */
 export function getCurrentElementSource(): CRCElementSource | undefined {
   const { componentRefs } = requireHookContext();
   return getElementSource(componentRefs.element);
 }
 
-/** Returns the active surface's independent effective backing densities. */
+/**
+ * Returns the active surface's independent effective backing densities.
+ *
+ * @returns Backing pixels per logical unit on each axis.
+ *
+ * @see {@link CRCPixelRatio}
+ */
 export function getCurrentSurfaceDensity(): Readonly<{ x: number; y: number }> {
   const surface = getSurfaceSnapshot(getCurrentCRCInstance());
   return Object.freeze({
@@ -142,7 +176,13 @@ export function getCurrentSurfaceDensity(): Readonly<{ x: number; y: number }> {
   });
 }
 
-/** Returns the active root-logical viewport for an official renderer hook. */
+/**
+ * Returns the active root-logical viewport for an official renderer hook.
+ *
+ * @returns The current logical viewport width and height.
+ *
+ * @see {@link CRCConfig}
+ */
 export function getCurrentLogicalViewport(): Readonly<{
   width: number;
   height: number;
@@ -154,7 +194,13 @@ export function getCurrentLogicalViewport(): Readonly<{
   });
 }
 
-/** Registers a callback on the root-wide transaction containing this render. */
+/**
+ * Registers a callback on the root-wide transaction containing this render.
+ *
+ * @param callback - Callback receiving whether the current render transaction succeeded.
+ *
+ * @see {@link crcInternalOnRenderFinish}
+ */
 export function onCurrentRenderFinish(
   callback: (success: boolean) => void,
 ): void {
@@ -166,7 +212,13 @@ export function onCurrentRenderFinish(
   transaction.onFinish(callback);
 }
 
-/** Requests a coalesced frame for the current private backend instance. */
+/**
+ * Requests a coalesced frame for the current private backend instance.
+ *
+ * @param updateParents - Whether ancestor compositions should also receive a frame request.
+ *
+ * @see {@link crcInternalRequestRender}
+ */
 export function requestCurrentInstanceFrame(updateParents: boolean): void {
   const { componentRefs, crcInstance } = requireHookContext();
   let state = frameRequestsByComponent.get(componentRefs);
@@ -198,7 +250,21 @@ export function requestCurrentInstanceFrame(updateParents: boolean): void {
   });
 }
 
-/** Retains one geometry-independent target for an official backend picker. */
+/**
+ * Retains one geometry-independent target for an official backend picker.
+ *
+ * @param handlers - Handlers for the backend target. See {@link CRCEventHandlers}.
+ * @param options - Backend geometry and focus metadata. See {@link CRCBackendEventTargetOptions}.
+ * @param pointerEvents - Pointer participation policy; defaults to auto. See
+ * {@link CRCPointerEvents} .
+ * @returns The live registration, or undefined when registration is unnecessary. See
+ * {@link CRCEventTargetRegistration} .
+ *
+ * @see {@link CRCEventHandlers}
+ * @see {@link CRCBackendEventTargetOptions}
+ * @see {@link CRCPointerEvents}
+ * @see {@link CRCEventTargetRegistration}
+ */
 export function useBackendEventTarget(
   handlers: CRCEventHandlers,
   options: CRCBackendEventTargetOptions = {},
@@ -230,7 +296,15 @@ export function useBackendEventTarget(
   return target;
 }
 
-/** Tests whether an official backend target can still win coordinate picking. */
+/**
+ * Tests whether an official backend target can still win coordinate picking.
+ *
+ * @param target - Registration whose ownership is being checked. See
+ * {@link CRCEventTargetRegistration} .
+ * @returns Whether the target registration is still live.
+ *
+ * @see {@link CRCEventTargetRegistration}
+ */
 export function isBackendEventTargetLive(
   target: CRCEventTargetRegistration,
 ): boolean {
@@ -242,7 +316,13 @@ export function isBackendEventTargetLive(
   );
 }
 
-/** Temporarily releases one backend target; its retained hook may enroll it again. */
+/**
+ * Temporarily releases one backend target; its retained hook may enroll it again.
+ *
+ * @param target - Target registration to release. See {@link CRCEventTargetRegistration}.
+ *
+ * @see {@link CRCEventTargetRegistration}
+ */
 export function releaseBackendEventTarget(
   target: CRCEventTargetRegistration,
 ): void {
@@ -251,7 +331,13 @@ export function releaseBackendEventTarget(
   target.keyboardNavigationPoints = undefined;
 }
 
-/** Registers work that runs after this component's rendered descendants. */
+/**
+ * Registers work that runs after this component's rendered descendants.
+ *
+ * @param callback - Callback to execute after the current component renders.
+ *
+ * @see {@link crcInternalOnRenderFinish}
+ */
 export function setCurrentComponentAfterRender(callback: () => void): void {
   const { componentRefs } = requireHookContext();
   const previous = componentRefs.onAfterRender;
@@ -266,7 +352,14 @@ export function setCurrentComponentAfterRender(callback: () => void): void {
     : callback;
 }
 
-/** Installs one stable nested backend resolver in the current Canvas paint order. */
+/**
+ * Installs one stable nested backend resolver in the current Canvas paint order.
+ *
+ * @param input - Nested coordinate resolver and its target metadata. See
+ * {@link CRCNestedResolverInput} .
+ *
+ * @see {@link CRCNestedResolverInput}
+ */
 export function registerNestedInteractionResolver(
   input: CRCNestedResolverInput,
 ): void {

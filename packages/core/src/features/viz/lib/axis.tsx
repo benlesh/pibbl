@@ -57,6 +57,14 @@ function position(scale: ResolvedScale, value: Tick): number {
     : scale.map(value as number);
 }
 
+/**
+ * Draws ticks and labels using a named scale and the configured orientation and style.
+ *
+ * @param props - Scale, orientation, tick, label, and styling options. See {@link AxisProps}.
+ * @returns CRC nodes drawing the axis.
+ *
+ * @see {@link AxisProps}
+ */
 export function Axis(props: AxisProps) {
   if (
     props.position !== "bottom" &&

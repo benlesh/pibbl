@@ -1,3 +1,4 @@
+import type { filterLabScenarioEntry } from './catalog.js';
 import { blur, brightness, contrast, dropShadow, grayscale, hueRotate, invert, opacity, saturate, sepia } from '@crc/core/filters';
 import {
   Circle,
@@ -12,6 +13,13 @@ import {
 
 export const FILTER_LAB_SOURCE_ID = 'first-class-filters-laboratory-example';
 
+/**
+ * Supported filter lab mode values: `"all"`, `"ordered"`, `"nested"`, `"transformed"`, `"clipped"`,
+ * `"layered"`.
+ *
+ * @see {@link FilterLabState}
+ * @see {@link FILTER_LAB_PROBES}
+ */
 export type FilterLabMode =
   | 'all'
   | 'ordered'
@@ -20,18 +28,41 @@ export type FilterLabMode =
   | 'clipped'
   | 'layered';
 
+/**
+ * Supported filter lab order values: `"none"`, `"grayscale-then-shadow"`,
+ * `"shadow-then-grayscale"`, `"inside-out"`.
+ *
+ * @see {@link FilterLabState}
+ */
 export type FilterLabOrder =
   | 'none'
   | 'grayscale-then-shadow'
   | 'shadow-then-grayscale'
   | 'inside-out';
 
+/**
+ * A selectable primitive or composition target in the filter lab.
+ *
+ * @see {@link FilterLabState}
+ */
 export type FilterLabTarget = 'layered-source';
 
+/**
+ * Observable state exposed by the filter lab scenario for controls and assertions.
+ *
+ * @see {@link FilterLabMode}
+ * @see {@link FilterLabOrder}
+ * @see {@link FilterLabTarget}
+ * @see {@link filterLabScenarioEntry}
+ */
 export interface FilterLabState {
+  /** Mode recorded or configured by this scenario. See {@link FilterLabMode}. */
   mode: FilterLabMode;
+  /** Order recorded or configured by this scenario. See {@link FilterLabOrder}. */
   order: FilterLabOrder;
+  /** Revision recorded or configured by this scenario. See {@link FilterLabState}. */
   revision: number;
+  /** Last target recorded or configured by this scenario. See {@link FilterLabTarget}. */
   lastTarget: FilterLabTarget | null;
 }
 
@@ -46,11 +77,34 @@ interface FilterLabProbes {
   shadow: FilterLabPoint;
 }
 
+/**
+ * Deterministic geometry probe locations for the filter lab scenario.
+ *
+ * @see {@link FilterLabMode}
+ */
 export const FILTER_LAB_PROBES: Readonly<Record<FilterLabMode, FilterLabProbes>> & {
-  readonly ordered: FilterLabProbes & { readonly orderSample: FilterLabPoint };
-  readonly clipped: FilterLabProbes & { readonly visibleCenters: readonly FilterLabPoint[] };
+  /**
+   * Ordered recorded or configured by this scenario. See {@link FilterLabProbes},
+   * {@link FilterLabPoint}.
+   */
+  readonly ordered: FilterLabProbes & {
+  /** Order sample recorded or configured by this scenario. See {@link FilterLabPoint}. */
+  readonly orderSample: FilterLabPoint };
+  /**
+   * Clipped recorded or configured by this scenario. See {@link FilterLabProbes},
+   * {@link FilterLabPoint}.
+   */
+  readonly clipped: FilterLabProbes & {
+  /** Visible centers recorded or configured by this scenario. See {@link FilterLabPoint}. */
+  readonly visibleCenters: readonly FilterLabPoint[] };
+  /**
+   * Layered recorded or configured by this scenario. See {@link FilterLabProbes},
+   * {@link FilterLabPoint}.
+   */
   readonly layered: FilterLabProbes & {
+    /** Source recorded or configured by this scenario. See {@link FilterLabPoint}. */
     readonly source: FilterLabPoint;
+    /** Shadow only recorded or configured by this scenario. See {@link FilterLabPoint}. */
     readonly shadowOnly: FilterLabPoint;
   };
 } = {
@@ -150,7 +204,7 @@ function allFiltersScene() {
 }
 
 const ORDERED_SHADOW: CRCFilter = dropShadow({
-  
+
   offsetX: 16,
   offsetY: 0,
   blurRadius: 0,

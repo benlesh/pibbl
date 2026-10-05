@@ -297,6 +297,12 @@ async function mountLifecycleLab(
   };
 }
 
+/**
+ * Runnable lifecycle lab scenario with observable state and deterministic actions.
+ *
+ * @see {@link ScenarioDefinition}
+ * @see {@link LifecycleLabState}
+ */
 export const lifecycleLabScenario: ScenarioDefinition<LifecycleLabState> = {
   id: 'event-lifecycle-lab',
   sourceId: LIFECYCLE_LAB_SOURCE_ID,

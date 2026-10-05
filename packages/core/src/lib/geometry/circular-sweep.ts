@@ -10,15 +10,33 @@ export interface CircularSweep {
   readonly fullCircle: boolean;
 }
 
+/**
+ * Geometry and construction options for a arc path.
+ *
+ * @see {@link createArcPath}
+ * @see {@link WedgePathOptions}
+ */
 export interface ArcPathOptions {
+  /** Horizontal coordinate of the center. See {@link ArcPathOptions}. */
   cx?: number;
+  /** Vertical coordinate of the center. See {@link ArcPathOptions}. */
   cy?: number;
+  /** Radius in the coordinate system of this geometry or effect. See {@link ArcPathOptions}. */
   radius: number;
+  /** Angle at which the arc or slice begins. See {@link ArcPathOptions}. */
   startAngle: number;
+  /** Angle at which the arc or slice ends. See {@link ArcPathOptions}. */
   endAngle: number;
+  /** Whether the arc follows the counterclockwise direction. See {@link ArcPathOptions}. */
   counterclockwise?: boolean;
 }
 
+/**
+ * Geometry and construction options for a wedge path.
+ *
+ * @see {@link ArcPathOptions}
+ * @see {@link createWedgePath}
+ */
 export type WedgePathOptions = ArcPathOptions;
 
 export function resolveCircularSweep(
@@ -48,6 +66,14 @@ export function resolveCircularSweep(
   };
 }
 
+/**
+ * Creates a Canvas Path2D for arc geometry from validated options.
+ *
+ * @param options - Circle center, radius, angles, and sweep direction. See {@link ArcPathOptions}.
+ * @returns A native Canvas path containing the arc.
+ *
+ * @see {@link ArcPathOptions}
+ */
 export function createArcPath(options: Readonly<ArcPathOptions>): Path2D {
   const normalized = validateArcOptions(options);
   const sweep = resolveCircularSweep(
@@ -58,6 +84,15 @@ export function createArcPath(options: Readonly<ArcPathOptions>): Path2D {
   return buildArcPath(normalized.cx, normalized.cy, normalized.radius, sweep);
 }
 
+/**
+ * Creates a Canvas Path2D for wedge geometry from validated options.
+ *
+ * @param options - Circle center, radius, angles, and sweep direction. See
+ * {@link WedgePathOptions} .
+ * @returns A native Canvas path containing the closed wedge.
+ *
+ * @see {@link WedgePathOptions}
+ */
 export function createWedgePath(options: Readonly<WedgePathOptions>): Path2D {
   const normalized = validateArcOptions(options);
   const sweep = resolveCircularSweep(

@@ -44,6 +44,11 @@ const FIXTURES: readonly InteractionLabFixture[] = [
   'remove-target-after-transition',
 ];
 
+/**
+ * Stable action identifiers accepted by the interaction lab scenario.
+ *
+ * @see {@link InteractionLabAction}
+ */
 export const INTERACTION_LAB_ACTION_IDS: readonly Exclude<
   InteractionLabAction,
   'mount' | 'reset'
@@ -310,6 +315,12 @@ function formatTrace(state: Readonly<InteractionLabState>): string {
   }).join(' → ');
 }
 
+/**
+ * Runnable interaction lab scenario with observable state and deterministic actions.
+ *
+ * @see {@link ScenarioDefinition}
+ * @see {@link InteractionLabState}
+ */
 export const interactionLabScenario: ScenarioDefinition<InteractionLabState> = {
   id: 'interaction-trace-lab',
   sourceId: INTERACTION_LAB_SOURCE_ID,

@@ -1,13 +1,24 @@
 import { defineTexture, type TextureContext, type TextureRecipe } from "@crc/core";
 import { validateSeed } from "./palette.js";
 
+/**
+ * Rain rate, gravity, initial drops, condensation, trail, and outline controls for a raindrop texture.
+ *
+ * @see {@link rainDrops}
+ */
 export interface RainDropsOptions {
+  /**
+   * Seed used for deterministic sampling or simulation initialization. See
+   * {@link RainDropsOptions}.
+   */
   readonly seed?: number;
   /** New beads per second, from 0 through 120. */
   readonly rainRate?: number;
   /** Downward acceleration multiplier, from 0 through 10. */
   readonly gravity?: number;
+  /** Number of drops seeded before continuous rain starts. See {@link RainDropsOptions}. */
   readonly initialDrops?: number;
+  /** Whether simulation or playback advancement is suspended. See {@link RainDropsOptions}. */
   readonly paused?: boolean;
   /** Fine droplet film coverage, from 0 (clear) through 1 (mist). */
   readonly condensation?: number;
@@ -19,14 +30,64 @@ export interface RainDropsOptions {
   readonly irregularity?: number;
 }
 
+/**
+ * Pause, reset, finger-wipe, release, and localized nudge commands for a raindrop texture.
+ *
+ * @see {@link rainDrops}
+ */
 export type RainDropsMessage =
-  | { readonly type: "pause"; readonly paused: boolean }
-  | { readonly type: "reset" }
+  | {
+      /** The literal "pause" identifying this variant. See {@link RainDropsMessage}. */
+      readonly type: "pause";
+      /** Whether simulation or playback advancement is suspended. See {@link RainDropsMessage}. */
+      readonly paused: boolean;
+    }
+  | {
+      /** The literal "reset" identifying this variant. See {@link RainDropsMessage}. */
+      readonly type: "reset";
+    }
   /** Begin or move one finger contact; successive positions wipe a continuous path. */
-  | { readonly type: "finger"; readonly x: number; readonly y: number; readonly radius?: number }
-  | { readonly type: "release" }
+  | {
+      /** The literal "finger" identifying this variant. See {@link RainDropsMessage}. */
+      readonly type: "finger";
+      /**
+       * Horizontal coordinate or displacement in the containing coordinate system. See
+       * {@link RainDropsMessage}.
+       */
+      readonly x: number;
+      /**
+       * Vertical coordinate or displacement in the containing coordinate system. See
+       * {@link RainDropsMessage}.
+       */
+      readonly y: number;
+      /** Radius in the coordinate system of this geometry or effect. See {@link RainDropsMessage}. */
+      readonly radius?: number;
+    }
+  | {
+      /** The literal "release" identifying this variant. See {@link RainDropsMessage}. */
+      readonly type: "release";
+    }
   /** Center and movement use normalized width/height; radius uses the shorter side. */
-  | { readonly type: "nudge"; readonly x: number; readonly y: number; readonly dx: number; readonly dy: number; readonly radius?: number };
+  | {
+      /** The literal "nudge" identifying this variant. See {@link RainDropsMessage}. */
+      readonly type: "nudge";
+      /**
+       * Horizontal coordinate or displacement in the containing coordinate system. See
+       * {@link RainDropsMessage}.
+       */
+      readonly x: number;
+      /**
+       * Vertical coordinate or displacement in the containing coordinate system. See
+       * {@link RainDropsMessage}.
+       */
+      readonly y: number;
+      /** Horizontal displacement applied by the interaction. See {@link RainDropsMessage}. */
+      readonly dx: number;
+      /** Vertical displacement applied by the interaction. See {@link RainDropsMessage}. */
+      readonly dy: number;
+      /** Radius in the coordinate system of this geometry or effect. See {@link RainDropsMessage}. */
+      readonly radius?: number;
+    };
 
 interface Drop { x: number; y: number; radius: number; vx: number; vy: number; phase: number }
 interface Config { seed: number; rainRate: number; gravity: number; initialDrops: number; paused: boolean; condensation: number; trailPersistence: number; trailStrength: number; irregularity: number }
@@ -326,5 +387,15 @@ const recipe = defineTexture<RainDropsOptions, State, RainDropsMessage>({
   },
 });
 
-/** A seeded rain-on-glass displacement map, advanced by CRC's scheduler. */
+/**
+ * A seeded rain-on-glass displacement map, advanced by CRC's scheduler.
+ *
+ * @param options - Raindrop simulation and appearance settings. See {@link RainDropsOptions}.
+ * @returns A raindrop texture recipe accepting raindrop messages. See {@link TextureRecipe} ,
+ * {@link RainDropsMessage} .
+ *
+ * @see {@link RainDropsOptions}
+ * @see {@link TextureRecipe}
+ * @see {@link RainDropsMessage}
+ */
 export function rainDrops(options: RainDropsOptions = {}): TextureRecipe<RainDropsMessage> { return recipe(options); }

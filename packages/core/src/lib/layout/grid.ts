@@ -41,6 +41,11 @@ import { assertSupportedChildPosition } from './positioning-diagnostics.js';
 import { measureElement } from './measure.js';
 import type { Constraints, LayoutBox } from './types.js';
 
+/**
+ * A fixed logical size, percentage of available space, or fractional share of remaining grid space.
+ *
+ * @see {@link GridStyle}
+ */
 export type GridTrack = number | `${number}%` | `${number}fr`;
 type GridAlignment = 'stretch' | 'start' | 'center' | 'end';
 type ParsedGridTrack =
@@ -48,17 +53,39 @@ type ParsedGridTrack =
   | Readonly<{ kind: 'percentage'; factor: number }>
   | Readonly<{ kind: 'fraction'; factor: number }>;
 
+/**
+ * Supported geometry and presentation properties for Grid.
+ *
+ * @see {@link BoxStyle}
+ * @see {@link LayoutItemStyle}
+ * @see {@link GridTrack}
+ * @see {@link Grid}
+ */
 export interface GridStyle extends BoxStyle, LayoutItemStyle {
+  /** Explicit grid column track definitions. See {@link GridTrack}. */
   gridTemplateColumns: readonly GridTrack[];
+  /** Explicit grid row track definitions. See {@link GridTrack}. */
   gridTemplateRows: readonly GridTrack[];
+  /** Default inline-axis alignment of grid or overlay children. See {@link GridAlignment}. */
   justifyItems?: GridAlignment;
+  /** Default alignment of children on the cross or block axis. See {@link GridAlignment}. */
   alignItems?: GridAlignment;
+  /** Spacing between adjacent items. See {@link GridStyle}. */
   gap?: number;
+  /** Space between adjacent rows or items on the row axis. See {@link GridStyle}. */
   rowGap?: number;
+  /** Space between adjacent columns or items on the column axis. See {@link GridStyle}. */
   columnGap?: number;
 }
 
+/**
+ * Authored inputs for Grid, including the declared data and presentation options.
+ *
+ * @see {@link CRCNodeInput}
+ * @see {@link Grid}
+ */
 export interface GridProps extends CRCStructuralEventProps {
+  /** Descendant content or the callback that supplies it. See {@link CRCNodeInput}. */
   children: CRCNodeInput;
 }
 
@@ -134,7 +161,16 @@ function renderGrid(
   );
 }
 
-/** Describes explicit Grid layout for JSX or createElement authoring. */
+/**
+ * Describes explicit Grid layout for JSX or createElement authoring.
+ *
+ * @param props - Authored component inputs, supplied through JSX or createElement. See the linked
+ * props and style types.
+ * @throws When called directly; CRC mounts this component through JSX or createElement.
+ *
+ * @see {@link GridProps}
+ * @see {@link GridStyle}
+ */
 export const Grid = definePrimitive<
   GridProps,
   GridStyle,

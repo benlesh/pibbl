@@ -1,9 +1,24 @@
+import type { drawingCompositionScenarioEntry } from './catalog.js';
 import { Clip, Group, Layer, Rectangle, SvgPath } from '@crc/core';
 export const DRAWING_COMPOSITION_SOURCE_ID = 'drawing-composition-example';
+/**
+ * Actions supported by the drawing composition scenario's public controller.
+ *
+ * @see {@link DrawingCompositionState}
+ */
 export type DrawingCompositionAction = 'mount' | 'reset' | 'update-composition';
+/**
+ * Observable state exposed by the drawing composition scenario for controls and assertions.
+ *
+ * @see {@link DrawingCompositionAction}
+ * @see {@link drawingCompositionScenarioEntry}
+ */
 export interface DrawingCompositionState {
+  /** Last action recorded or configured by this scenario. See {@link DrawingCompositionAction}. */
   lastAction: DrawingCompositionAction;
+  /** Revision recorded or configured by this scenario. See {@link DrawingCompositionState}. */
   revision: number;
+  /** Updated recorded or configured by this scenario. See {@link DrawingCompositionState}. */
   updated: boolean;
 }
 interface DrawingCompositionSceneProps {

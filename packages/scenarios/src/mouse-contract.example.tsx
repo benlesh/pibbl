@@ -1,3 +1,5 @@
+import type { mouseContractScenarioEntry } from './catalog.js';
+import type { mouseContractScenario } from './mouse-contract-scenario.js';
 import type { CRCLogicalMouseEvent } from '@crc/core';
 import type { MouseContractCase } from './mouse-contract';
 import {
@@ -10,10 +12,29 @@ import {
   Text,
 } from '@crc/core';
 export const MOUSE_CONTRACT_SOURCE_ID = 'mouse-interaction-contract-example';
+/**
+ * Observable state exposed by the mouse contract scenario scenario for controls and assertions.
+ *
+ * @see {@link MouseContractCase}
+ * @see {@link mouseContractScenarioEntry}
+ * @see {@link mouseContractScenario}
+ */
 export interface MouseContractScenarioState {
+  /** Case id recorded or configured by this scenario. See {@link MouseContractScenarioState}. */
   caseId: string;
+  /**
+   * Last action recorded or configured by this scenario. See {@link MouseContractScenarioState}.
+   */
   lastAction: 'mount' | 'select' | 'reset';
+  /**
+   * Interaction count recorded or configured by this scenario. See
+   * {@link MouseContractScenarioState}.
+   */
   interactionCount: number;
+  /**
+   * Last interaction target recorded or configured by this scenario. See
+   * {@link MouseContractScenarioState}.
+   */
   lastInteractionTarget: string | null;
 }
 interface MouseContractSceneProps {

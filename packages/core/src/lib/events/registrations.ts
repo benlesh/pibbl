@@ -1,3 +1,5 @@
+import type { CRCHitTestOutput } from './paint-entry.js';
+import type { isBackendEventTargetLive, useBackendEventTarget } from '../../internal.js';
 import { CRC_EVENT_DEFINITIONS } from "./event-definitions.js";
 import type {
   CRCEventHandler,
@@ -33,29 +35,82 @@ export type CRCNormalizedHandlers = Partial<
   }
 >;
 
+/**
+ * Mount-owned event target registration and cleanup state.
+ *
+ * @see {@link CRCEventTarget}
+ * @see {@link LayoutBox}
+ * @see {@link CRCHitTestOutput}
+ * @see {@link useBackendEventTarget}
+ * @see {@link isBackendEventTargetLive}
+ */
 export interface CRCEventTargetRegistration {
+  /** Selects the kind of geometry, material, or result. See {@link CRCEventTargetRegistration}. */
   readonly kind: "target";
+  /** Mount or runtime resource owning this registration. See {@link CRCInstance}. */
   readonly owner: CRCInstance;
+  /**
+   * Component identity or diagnostic name associated with this value. See {@link CRCComponentRefs}
+   * .
+   */
   readonly component: CRCComponentRefs<any>;
+  /** Mount-local hook or registration slot. See {@link CRCEventTargetRegistration}. */
   readonly slot: number;
+  /** Logical target exposed to application event handlers. See {@link CRCEventTarget}. */
   readonly publicTarget: CRCEventTarget;
+  /** Paint-ledger entry associated with this registration. See {@link CRCPathPaintEntry}. */
   paintEntry: CRCPathPaintEntry | undefined;
+  /** Event handlers dispatched for this logical target. See {@link CRCNormalizedHandlers}. */
   handlers: CRCNormalizedHandlers;
   /** Logical event types currently present in `handlers`, split across two 32-bit words. */
   handlerTypesLow: number;
+  /**
+   * High event-mask bits identifying registered handler types. See
+   * {@link CRCEventTargetRegistration}.
+   */
   handlerTypesHigh: number;
   /** Native event dependency signature derived from the current handlers and cursor. */
   requiredNativeTypesLow: number;
+  /**
+   * High event-mask bits identifying required native listeners. See
+   * {@link CRCEventTargetRegistration}.
+   */
   requiredNativeTypesHigh: number;
   /** Last native signature reconciled with `nativeReleases`. */
   ownedNativeTypesLow: number;
+  /**
+   * High event-mask bits identifying native listeners owned by this registration. See
+   * {@link CRCEventTargetRegistration}.
+   */
   ownedNativeTypesHigh: number;
+  /**
+   * Cursor shown while this target owns pointer presentation. See
+   * {@link CRCEventTargetRegistration}.
+   */
   cursor: string | undefined;
+  /** Whether the target may receive keyboard focus. See {@link CRCEventTargetRegistration}. */
   keyboardFocusable: boolean | undefined;
+  /** Logical rectangle used for directional keyboard navigation. See {@link LayoutBox}. */
   keyboardNavigationBounds: Readonly<LayoutBox> | undefined;
   /** @internal Backend-projected points retained until root-space resolution. */
   keyboardNavigationPoints:
-    readonly Readonly<{ x: number; y: number }>[] | undefined;
+    | readonly Readonly<{
+        /**
+         * Horizontal coordinate or displacement in the containing coordinate system. See
+         * {@link CRCEventTargetRegistration}.
+         */
+        x: number;
+        /**
+         * Vertical coordinate or displacement in the containing coordinate system. See
+         * {@link CRCEventTargetRegistration}.
+         */
+        y: number;
+      }>[]
+    | undefined;
+  /**
+   * Whether this registration is currently attached to a live owner. See
+   * {@link CRCEventTargetRegistration}.
+   */
   live: boolean;
 }
 

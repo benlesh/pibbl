@@ -37,6 +37,15 @@ import {
 
 const FULL_TURN_RADIANS = Math.PI * 2;
 
+/**
+ * Creates an immutable circle collision shape without initializing a physics world.
+ *
+ * @param input - Circle radius and optional center. See {@link CRCPhysicsVector2}.
+ * @returns An immutable circle collision shape. See {@link CRCPhysicsShape2D}.
+ *
+ * @see {@link CRCPhysicsVector2}
+ * @see {@link CRCPhysicsShape2D}
+ */
 export function circleShape2D(
   input: Readonly<{ radius: number; center?: CRCPhysicsVector2 }>,
 ): CRCPhysicsShape2D {
@@ -52,6 +61,16 @@ export function circleShape2D(
   );
 }
 
+/**
+ * Creates an immutable ellipse collision shape without initializing a physics world.
+ *
+ * @param input - Ellipse radii, optional center, and rotation in degrees. See
+ * {@link CRCPhysicsVector2} .
+ * @returns An immutable ellipse collision shape. See {@link CRCPhysicsShape2D}.
+ *
+ * @see {@link CRCPhysicsVector2}
+ * @see {@link CRCPhysicsShape2D}
+ */
 export function ellipseShape2D(
   input: Readonly<{
     radiusX: number;
@@ -76,6 +95,15 @@ export function ellipseShape2D(
   );
 }
 
+/**
+ * Creates an immutable box collision shape without initializing a physics world.
+ *
+ * @param input - Box width, height, and optional center. See {@link CRCPhysicsVector2}.
+ * @returns An immutable box collision shape. See {@link CRCPhysicsShape2D}.
+ *
+ * @see {@link CRCPhysicsVector2}
+ * @see {@link CRCPhysicsShape2D}
+ */
 export function boxShape2D(
   input: Readonly<{
     width: number;
@@ -96,6 +124,16 @@ export function boxShape2D(
   );
 }
 
+/**
+ * Creates an immutable rounded box collision shape without initializing a physics world.
+ *
+ * @param input - Box dimensions, center, and uniform or per-corner radii. See
+ * {@link CRCPhysicsVector2} .
+ * @returns An immutable rounded-box collision shape. See {@link CRCPhysicsShape2D}.
+ *
+ * @see {@link CRCPhysicsVector2}
+ * @see {@link CRCPhysicsShape2D}
+ */
 export function roundedBoxShape2D(
   input: Readonly<{
     width: number;
@@ -149,6 +187,15 @@ export function roundedBoxShape2D(
   );
 }
 
+/**
+ * Creates an immutable capsule collision shape without initializing a physics world.
+ *
+ * @param input - Capsule centerline endpoints and radius. See {@link CRCPhysicsVector2}.
+ * @returns An immutable capsule collision shape. See {@link CRCPhysicsShape2D}.
+ *
+ * @see {@link CRCPhysicsVector2}
+ * @see {@link CRCPhysicsShape2D}
+ */
 export function capsuleShape2D(
   input: Readonly<{
     start: CRCPhysicsVector2;
@@ -172,6 +219,16 @@ export function capsuleShape2D(
   );
 }
 
+/**
+ * Creates an immutable arc collision shape without initializing a physics world.
+ *
+ * @param input - Arc center, radius, angular endpoints in radians, sweep direction, and thickness.
+ * See {@link CRCPhysicsVector2} .
+ * @returns An immutable thick-arc collision shape. See {@link CRCPhysicsShape2D}.
+ *
+ * @see {@link CRCPhysicsVector2}
+ * @see {@link CRCPhysicsShape2D}
+ */
 export function arcShape2D(
   input: Readonly<{
     center?: CRCPhysicsVector2;
@@ -193,6 +250,16 @@ export function arcShape2D(
   return chainFromOwnedPoints(points, false, thickness / 2);
 }
 
+/**
+ * Creates an immutable wedge collision shape without initializing a physics world.
+ *
+ * @param input - Wedge center, radius, angular endpoints in radians, and sweep direction. See
+ * {@link CRCPhysicsVector2} .
+ * @returns An immutable wedge collision shape. See {@link CRCPhysicsShape2D}.
+ *
+ * @see {@link CRCPhysicsVector2}
+ * @see {@link CRCPhysicsShape2D}
+ */
 export function wedgeShape2D(
   input: Readonly<{
     center?: CRCPhysicsVector2;
@@ -234,6 +301,15 @@ export function wedgeShape2D(
   );
 }
 
+/**
+ * Creates an immutable segment collision shape without initializing a physics world.
+ *
+ * @param input - Segment endpoints. See {@link CRCPhysicsVector2}.
+ * @returns An immutable line-segment collision shape. See {@link CRCPhysicsShape2D}.
+ *
+ * @see {@link CRCPhysicsVector2}
+ * @see {@link CRCPhysicsShape2D}
+ */
 export function segmentShape2D(
   input: Readonly<{ start: CRCPhysicsVector2; end: CRCPhysicsVector2 }>,
 ): CRCPhysicsShape2D {
@@ -248,6 +324,16 @@ export function segmentShape2D(
   );
 }
 
+/**
+ * Creates an immutable chain collision shape without initializing a physics world.
+ *
+ * @param input - Ordered chain points, closure policy, and optional radius. See
+ * {@link CRCPhysicsVector2} .
+ * @returns An immutable chain collision shape. See {@link CRCPhysicsShape2D}.
+ *
+ * @see {@link CRCPhysicsVector2}
+ * @see {@link CRCPhysicsShape2D}
+ */
 export function chainShape2D(
   input: Readonly<{
     points: readonly CRCPhysicsVector2[];
@@ -265,6 +351,15 @@ export function chainShape2D(
   return chainFromOwnedPoints(points, input.closed === true, radius);
 }
 
+/**
+ * Creates an immutable polygon collision shape without initializing a physics world.
+ *
+ * @param input - Ordered polygon vertices. See {@link CRCPhysicsVector2}.
+ * @returns An immutable polygon collision shape. See {@link CRCPhysicsShape2D}.
+ *
+ * @see {@link CRCPhysicsVector2}
+ * @see {@link CRCPhysicsShape2D}
+ */
 export function polygonShape2D(
   input: Readonly<{ points: readonly CRCPhysicsVector2[] }>,
 ): CRCPhysicsShape2D {
@@ -282,6 +377,17 @@ export function polygonShape2D(
   );
 }
 
+/**
+ * Computes axis-aligned bounds for an immutable shape at an optional pose.
+ *
+ * @param shape - Shape whose bounds are needed. See {@link CRCPhysicsShape2D}.
+ * @param pose - Optional pose at which to evaluate the shape. See {@link CRCPhysicsPose2D}.
+ * @returns Axis-aligned bounds of the posed shape. See {@link CRCPhysicsAabb2D}.
+ *
+ * @see {@link CRCPhysicsShape2D}
+ * @see {@link CRCPhysicsPose2D}
+ * @see {@link CRCPhysicsAabb2D}
+ */
 export function boundsOfShape2D(
   shape: CRCPhysicsShape2D,
   pose?: CRCPhysicsPose2D,
@@ -291,6 +397,17 @@ export function boundsOfShape2D(
   return boundsForLeaves(record.leaves, composePose2D(outerPose, record.localPose));
 }
 
+/**
+ * Computes shape area, centroid, mass, and rotational inertia at the requested density.
+ *
+ * @param shape - Shape whose mass properties are needed. See {@link CRCPhysicsShape2D}.
+ * @param options - Optional material density.
+ * @returns Mass, center of mass, and inertia for the shape. See {@link CRCPhysicsMassProperties2D}
+ * .
+ *
+ * @see {@link CRCPhysicsShape2D}
+ * @see {@link CRCPhysicsMassProperties2D}
+ */
 export function massProperties2D(
   shape: CRCPhysicsShape2D,
   options?: Readonly<{ density?: number }>,
@@ -316,6 +433,16 @@ export function massProperties2D(
   });
 }
 
+/**
+ * Returns independent shape geometry transformed by a rigid 2D pose.
+ *
+ * @param shape - Source shape; it is not modified. See {@link CRCPhysicsShape2D}.
+ * @param transform - Transform to apply to the shape. See {@link CRCPhysicsTransform2D}.
+ * @returns A shape containing the transformed geometry. See {@link CRCPhysicsShape2D}.
+ *
+ * @see {@link CRCPhysicsShape2D}
+ * @see {@link CRCPhysicsTransform2D}
+ */
 export function transformShape2D(
   shape: CRCPhysicsShape2D,
   transform: CRCPhysicsTransform2D,

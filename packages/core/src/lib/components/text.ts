@@ -27,7 +27,22 @@ import { pushClippingPath } from '../util/push-clipping-path.js';
 import { resolveTextClipBounds, resolveTextLayout } from './text-layout.js';
 import { withReceiverInputProvision } from '../signals/input-provision.js';
 
-export interface TextProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions, CRCPhysics2DPropExtension {
+/**
+ * Authored inputs for Text, including the declared data and presentation options.
+ *
+ * @see {@link CRCEventHandlers}
+ * @see {@link CRCEventParticipationOptions}
+ * @see {@link CRCPhysics2DPropExtension}
+ * @see {@link CRCTextInput}
+ * @see {@link Text}
+ */
+export interface TextProps
+  extends
+    CRCEventHandlers,
+    CRCEventFocusOptions,
+    CRCEventParticipationOptions,
+    CRCPhysics2DPropExtension {
+  /** Descendant content or the callback that supplies it. See {@link CRCTextInput}. */
   children?: CRCTextInput;
 }
 
@@ -121,6 +136,17 @@ function renderText(
   }
 }
 
+/**
+ * Draws Canvas text from textual children using the resolved font, wrapping, fitting, and paint
+ * style.
+ *
+ * @param props - Authored component inputs, supplied through JSX or createElement. See the linked
+ * props and style types.
+ * @throws When called directly; CRC mounts this component through JSX or createElement.
+ *
+ * @see {@link TextProps}
+ * @see {@link TextStyle}
+ */
 export const Text = definePrimitive<
   TextProps,
   TextStyle,

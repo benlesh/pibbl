@@ -1,3 +1,4 @@
+import type { agentTargetingVerificationScenarioEntry } from './catalog.js';
 import type { createRuntimeCheckedInspector } from '../../../tooling/agent-verification/runtime-inspection.js';
 import type { createEventTrace } from '../../../tooling/agent-verification/events.js';
 import type { createSchedulerHistory } from '../../../tooling/agent-verification/scheduler.js';
@@ -24,6 +25,11 @@ import type {
   ScenarioMountContext,
 } from './types.js';
 
+/**
+ * Actions supported by the agent targeting scenario's public controller.
+ *
+ * @see {@link AGENT_TARGETING_ACTION_IDS}
+ */
 export type AgentTargetingAction =
   | 'capture-sources'
   | 'trace-start'
@@ -57,34 +63,136 @@ export interface AgentTargetingDeliveryRecord {
   } | null;
 }
 
+/**
+ * Observable state exposed by the agent targeting scenario for controls and assertions.
+ *
+ * @see {@link AgentTargetingMode}
+ * @see {@link AgentTargetingDelivery}
+ * @see {@link agentTargetingVerificationScenarioEntry}
+ */
 export interface AgentTargetingState {
-  readonly runtimeCompatibility: Omit<ReturnType<typeof createRuntimeCheckedInspector>, 'inspector'> | null;
+  /**
+   * Runtime compatibility recorded or configured by this scenario. See {@link AgentTargetingState}
+   * .
+   */
+  readonly runtimeCompatibility: Omit<
+    ReturnType<typeof createRuntimeCheckedInspector>,
+    'inspector'
+  > | null;
+  /** Scene page recorded or configured by this scenario. See {@link TargetingPage}. */
   readonly scenePage: TargetingPage | null;
-  readonly componentChanges: ReturnType<ReturnType<typeof createSignalInspector>['compareComponents']> | null;
+  /** Component changes recorded or configured by this scenario. See {@link AgentTargetingState}. */
+  readonly componentChanges: ReturnType<
+    ReturnType<typeof createSignalInspector>['compareComponents']
+  > | null;
+  /** Event trace recorded or configured by this scenario. See {@link AgentTargetingState}. */
   readonly eventTrace: ReturnType<ReturnType<typeof createEventTrace>['snapshot']> | null;
-  readonly schedulerHistory: ReturnType<ReturnType<typeof createSchedulerHistory>['snapshot']> | null;
-  readonly coordinateMappings: { readonly backing: CoordinateConversion; readonly cssContent: CoordinateConversion } | null;
-  readonly signalInspection: ReturnType<ReturnType<typeof createSignalInspector>['snapshot']> | null;
+  /** Scheduler history recorded or configured by this scenario. See {@link AgentTargetingState}. */
+  readonly schedulerHistory: ReturnType<
+    ReturnType<typeof createSchedulerHistory>['snapshot']
+  > | null;
+  /**
+   * Coordinate mappings recorded or configured by this scenario. See {@link CoordinateConversion}
+   * .
+   */
+  readonly coordinateMappings: {
+    /** Backing recorded or configured by this scenario. See {@link CoordinateConversion}. */
+    readonly backing: CoordinateConversion;
+    /** Css content recorded or configured by this scenario. See {@link CoordinateConversion}. */
+    readonly cssContent: CoordinateConversion;
+  } | null;
+  /** Signal inspection recorded or configured by this scenario. See {@link AgentTargetingState}. */
+  readonly signalInspection: ReturnType<
+    ReturnType<typeof createSignalInspector>['snapshot']
+  > | null;
+  /**
+   * Focus observation error recorded or configured by this scenario. See
+   * {@link AgentTargetingState}.
+   */
   readonly focusObservationError: string | null;
+  /** Browser probe recorded or configured by this scenario. See {@link AgentTargetingState}. */
   readonly browserProbe: ReturnType<typeof probeHostPoint> | null;
+  /**
+   * Dom overlay clicks recorded or configured by this scenario. See {@link AgentTargetingState}.
+   */
   readonly domOverlayClicks: number;
-  readonly capturedDelivery: { readonly pointerId: number; readonly targetId: number | null; readonly x: number; readonly y: number } | null;
+  /** Captured delivery recorded or configured by this scenario. See {@link AgentTargetingState}. */
+  readonly capturedDelivery: {
+    /** Pointer id recorded or configured by this scenario. See {@link AgentTargetingState}. */
+    readonly pointerId: number;
+    /** Target id recorded or configured by this scenario. See {@link AgentTargetingState}. */
+    readonly targetId: number | null;
+    /** X recorded or configured by this scenario. See {@link AgentTargetingState}. */
+    readonly x: number;
+    /** Y recorded or configured by this scenario. See {@link AgentTargetingState}. */
+    readonly y: number;
+  } | null;
+  /** Point search recorded or configured by this scenario. See {@link InteractionPointSearch}. */
   readonly pointSearch: InteractionPointSearch | null;
-  readonly probePoint: { readonly x: number; readonly y: number } | null;
+  /** Probe point recorded or configured by this scenario. See {@link AgentTargetingState}. */
+  readonly probePoint: {
+    /** X recorded or configured by this scenario. See {@link AgentTargetingState}. */
+    readonly x: number;
+    /** Y recorded or configured by this scenario. See {@link AgentTargetingState}. */
+    readonly y: number;
+  } | null;
+  /** Mode recorded or configured by this scenario. See {@link AgentTargetingMode}. */
   readonly mode: AgentTargetingMode;
+  /**
+   * Expected selection recorded or configured by this scenario. See {@link AgentTargetingState}.
+   */
   readonly expectedSelection: boolean;
+  /** Selected item recorded or configured by this scenario. See {@link AgentTargetingState}. */
   readonly selectedItem: 'item-a' | null;
+  /** Selections recorded or configured by this scenario. See {@link AgentTargetingState}. */
   readonly selections: number;
+  /** Delivered to recorded or configured by this scenario. See {@link AgentTargetingDelivery}. */
   readonly deliveredTo: AgentTargetingDelivery;
+  /** Delivery recorded or configured by this scenario. See {@link AgentTargetingDeliveryRecord}. */
   readonly delivery: AgentTargetingDeliveryRecord;
-  readonly inspection: TargetingSnapshot | { readonly status: 'unavailable'; readonly generation: null };
-  readonly probe: TargetingProbe | { readonly status: 'unavailable'; readonly targetId: null; readonly candidates: readonly [] };
+  /** Inspection recorded or configured by this scenario. See {@link TargetingSnapshot}. */
+  readonly inspection:
+    | TargetingSnapshot
+    | {
+        /** Status recorded or configured by this scenario. See {@link AgentTargetingState}. */
+        readonly status: 'unavailable';
+        /** Generation recorded or configured by this scenario. See {@link AgentTargetingState}. */
+        readonly generation: null;
+      };
+  /** Probe recorded or configured by this scenario. See {@link TargetingProbe}. */
+  readonly probe:
+    | TargetingProbe
+    | {
+        /** Status recorded or configured by this scenario. See {@link AgentTargetingState}. */
+        readonly status: 'unavailable';
+        /** Target id recorded or configured by this scenario. See {@link AgentTargetingState}. */
+        readonly targetId: null;
+        /** Candidates recorded or configured by this scenario. See {@link AgentTargetingState}. */
+        readonly candidates: readonly [];
+      };
+  /**
+   * Inspection enabled recorded or configured by this scenario. See {@link AgentTargetingState}.
+   */
   readonly inspectionEnabled: boolean;
+  /**
+   * Inspection availability recorded or configured by this scenario. See
+   * {@link AgentTargetingState}.
+   */
   readonly inspectionAvailability: 'source-runtime' | 'unsupported-build';
+  /** Render count recorded or configured by this scenario. See {@link AgentTargetingState}. */
   readonly renderCount: number;
+  /**
+   * Dormant metric evaluations recorded or configured by this scenario. See
+   * {@link AgentTargetingState}.
+   */
   readonly dormantMetricEvaluations: number;
 }
 
+/**
+ * Stable action identifiers accepted by the agent targeting scenario.
+ *
+ * @see {@link AgentTargetingAction}
+ */
 export const AGENT_TARGETING_ACTION_IDS: readonly AgentTargetingAction[] = [
   'keyboard-focus',
   'dom-overlay',

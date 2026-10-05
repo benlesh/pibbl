@@ -1,3 +1,6 @@
+import type { CRCResizePosition } from "./types.js";
+import type { CRCManipulationWhen } from './types.js';
+import type { CRCManipulableProps } from './manipulable.js';
 import { createElement } from "../element/create-element.js";
 import {
   createGroupTransform,
@@ -24,15 +27,44 @@ import {
 } from "./controller.js";
 import { requireManipulationFrame } from "./frame.js";
 
+/**
+ * Authored inputs for DragHandle, including the declared data and presentation options.
+ *
+ * @see {@link CRCManipulationController}
+ * @see {@link CRCNode}
+ * @see {@link DragHandle}
+ * @see {@link CRCManipulationWhen}
+ */
 export interface CRCDragHandleProps {
+  /**
+   * Formats the value shown by the manipulation readout. See {@link CRCDragHandleProps}.
+   * @param value - Current left and top coordinates.
+   * @returns Text to display in the drag readout.
+   */
   readonly formatReadout?: (value: {
+    /** Left edge coordinate or inset. See {@link CRCDragHandleProps}. */
     readonly left: number;
+    /** Top edge value or top envelope guide. See {@link CRCDragHandleProps}. */
     readonly top: number;
   }) => string;
+  /**
+   * Controller owning the current interaction or mounted scenario. See
+   * {@link CRCManipulationController}.
+   */
   readonly controller: CRCManipulationController;
+  /** Descendant content or the callback that supplies it. See {@link CRCNode}. */
   readonly children?: CRCNode;
 }
+/**
+ * Supported geometry and presentation properties for DragHandle.
+ *
+ * @see {@link GStyle}
+ * @see {@link CRCManipulationReadoutStyle}
+ * @see {@link DragHandle}
+ * @see {@link CRCManipulableProps}
+ */
 export interface CRCDragHandleStyle extends GStyle {
+  /** Presentation of the manipulation value readout. See {@link CRCManipulationReadoutStyle}. */
   readonly readout?: false | true | CRCManipulationReadoutStyle;
 }
 type ResolvedDragStyle = ResolvedDrawingStyle<CRCDragHandleStyle>;
@@ -56,6 +88,16 @@ setPrimitivePresentation<CssHandleContentStyle>(CssHandleContent, (style) => ({
   transform: style.transform,
 }));
 
+/**
+ * Draws an interactive handle that starts translation of its manipulation target.
+ *
+ * @param props - Authored component inputs, supplied through JSX or createElement. See the linked
+ * props and style types.
+ * @throws When called directly; CRC mounts this component through JSX or createElement.
+ *
+ * @see {@link CRCDragHandleProps}
+ * @see {@link CRCDragHandleStyle}
+ */
 export const DragHandle = definePrimitive<
   CRCDragHandleProps,
   CRCDragHandleStyle,
@@ -134,58 +176,182 @@ const DragReadout = definePrimitive<
   );
 });
 
+/**
+ * Supported geometry and presentation properties for ManipulationReadoutState.
+ *
+ * @see {@link CRCManipulationReadoutStyle}
+ */
 export interface CRCManipulationReadoutStateStyle {
   /** Minimum outward spacing in CSS pixels; defaults to 40 for drag, 5 otherwise. */
   readonly gap?: number;
+  /**
+   * Canvas font string used to draw or measure text. See {@link CRCManipulationReadoutStateStyle}
+   * .
+   */
   readonly font?: string;
+  /** Paint used for the interior. See {@link CRCManipulationReadoutStateStyle}. */
   readonly fill?: string;
+  /** Paint used for the outline. See {@link CRCManipulationReadoutStateStyle}. */
   readonly stroke?: string;
+  /** Width of the painted outline. See {@link CRCManipulationReadoutStateStyle}. */
   readonly strokeWidth?: number;
+  /** Opacity of the painted result. See {@link CRCManipulationReadoutStateStyle}. */
   readonly opacity?: number;
+  /** Whether this presentation is visible. See {@link CRCManipulationReadoutStateStyle}. */
   readonly visible?: boolean;
 }
+/**
+ * Supported geometry and presentation properties for ManipulationReadout.
+ *
+ * @see {@link CRCManipulationReadoutStateStyle}
+ * @see {@link CRCDragHandleStyle}
+ * @see {@link CRCResizeHandleStyle}
+ * @see {@link CRCRotationHandleStyle}
+ */
 export interface CRCManipulationReadoutStyle extends CRCManipulationReadoutStateStyle {
+  /**
+   * Readout presentation while no interaction is active. See
+   * {@link CRCManipulationReadoutStateStyle}.
+   */
   readonly inactive?: CRCManipulationReadoutStateStyle;
+  /**
+   * Readout presentation while the handle has keyboard focus. See
+   * {@link CRCManipulationReadoutStateStyle}.
+   */
   readonly focused?: CRCManipulationReadoutStateStyle;
+  /**
+   * Current active operation or its presentation configuration. See
+   * {@link CRCManipulationReadoutStateStyle}.
+   */
   readonly active?: CRCManipulationReadoutStateStyle;
 }
+/**
+ * Supported geometry and presentation properties for ResizeHandle.
+ *
+ * @see {@link SystemStyle}
+ * @see {@link CRCManipulationReadoutStyle}
+ * @see {@link ResizeHandle}
+ * @see {@link CRCResizeHandlesProps}
+ */
 export interface CRCResizeHandleStyle extends SystemStyle {
+  /** Presentation of the manipulation value readout. See {@link CRCManipulationReadoutStyle}. */
   readonly readout?: false | true | CRCManipulationReadoutStyle;
 }
+/**
+ * Supported geometry and presentation properties for RotationConnector.
+ *
+ * @see {@link CRCRotationHandleStyle}
+ */
 export interface CRCRotationConnectorStyle {
+  /** Paint used for the outline. See {@link CRCRotationConnectorStyle}. */
   readonly stroke?: string;
+  /** Width of the painted outline. See {@link CRCRotationConnectorStyle}. */
   readonly strokeWidth?: number;
+  /** Opacity of the painted result. See {@link CRCRotationConnectorStyle}. */
   readonly opacity?: number;
 }
+/**
+ * Supported geometry and presentation properties for RotationArc.
+ *
+ * @see {@link CRCRotationHandleStyle}
+ */
 export interface CRCRotationArcStyle {
+  /** Color used by the mark or effect. See {@link CRCRotationArcStyle}. */
   readonly color?: string;
+  /** Angular extent of the arc. See {@link CRCRotationArcStyle}. */
   readonly sweep?: number;
+  /** Width of the painted outline. See {@link CRCRotationArcStyle}. */
   readonly strokeWidth?: number;
+  /** Opacity of the painted result. See {@link CRCRotationArcStyle}. */
   readonly opacity?: number;
 }
+/**
+ * Supported geometry and presentation properties for RotationHandle.
+ *
+ * @see {@link SystemStyle}
+ * @see {@link CRCRotationConnectorStyle}
+ * @see {@link CRCRotationArcStyle}
+ * @see {@link CRCManipulationReadoutStyle}
+ * @see {@link RotationHandle}
+ * @see {@link CRCManipulableProps}
+ */
 export interface CRCRotationHandleStyle extends SystemStyle {
+  /**
+   * Presentation of the line connecting the rotation handle to its target. See
+   * {@link CRCRotationConnectorStyle}.
+   */
   readonly connector?: false | true | CRCRotationConnectorStyle;
+  /** Presentation of the rotation-angle arc. See {@link CRCRotationArcStyle}. */
   readonly arc?: false | true | CRCRotationArcStyle;
+  /** Presentation of the manipulation value readout. See {@link CRCManipulationReadoutStyle}. */
   readonly readout?: false | true | CRCManipulationReadoutStyle;
 }
+/**
+ * Authored inputs for ResizeHandle, including the declared data and presentation options.
+ *
+ * @see {@link CRCManipulationController}
+ * @see {@link CRCNode}
+ * @see {@link ResizeHandle}
+ * @see {@link CRCResizeHandlesProps}
+ * @see {@link CRCResizePosition}
+ */
 export interface CRCResizeHandleProps {
+  /**
+   * Controller owning the current interaction or mounted scenario. See
+   * {@link CRCManipulationController}.
+   */
   readonly controller: CRCManipulationController;
+  /**
+   * Position of the geometry, source, or selected resize handle. See {@link CRCResizeHandleProps}
+   * .
+   */
   readonly position: import("./types.js").CRCResizePosition;
+  /** Size of the handle's interactive hit region. See {@link CRCResizeHandleProps}. */
   readonly hitSize?: number;
+  /**
+   * Formats the value shown by the manipulation readout. See {@link CRCResizeHandleProps}.
+   * @param value - Current width and height.
+   * @returns Text to display in the resize readout.
+   */
   readonly formatReadout?: (value: {
+    /**
+     * Horizontal extent in the units of the containing geometry or surface. See
+     * {@link CRCResizeHandleProps}.
+     */
     readonly width: number;
+    /**
+     * Vertical extent in the units of the containing geometry or surface. See
+     * {@link CRCResizeHandleProps}.
+     */
     readonly height: number;
   }) => string;
+  /** Descendant content or the callback that supplies it. See {@link CRCNode}. */
   readonly children?: CRCNode;
 }
+/**
+ * Authored inputs for ResizeHandles, including the declared data and presentation options.
+ *
+ * @see {@link CRCManipulationController}
+ * @see {@link CRCResizeHandleStyle}
+ * @see {@link CRCResizeHandleProps}
+ * @see {@link ResizeHandles}
+ * @see {@link CRCManipulableProps}
+ * @see {@link CRCResizePosition}
+ */
 export interface CRCResizeHandlesProps {
+  /**
+   * Controller owning the current interaction or mounted scenario. See
+   * {@link CRCManipulationController}.
+   */
   readonly controller: CRCManipulationController;
+  /** Edges and corners at which resize handles are created. See {@link CRCResizeHandlesProps}. */
   readonly positions?:
-    | "corners"
-    | "edges-and-corners"
-    | readonly import("./types.js").CRCResizePosition[];
+    "corners" | "edges-and-corners" | readonly import("./types.js").CRCResizePosition[];
+  /** Size of the handle's interactive hit region. See {@link CRCResizeHandlesProps}. */
   readonly hitSize?: number;
+  /** Declared presentation and layout properties. See {@link CRCResizeHandleStyle}. */
   readonly style?: CRCResizeHandleStyle;
+  /** Formats the value shown by the manipulation readout. See {@link CRCResizeHandleProps}. */
   readonly formatReadout?: CRCResizeHandleProps["formatReadout"];
 }
 const corners = [
@@ -232,6 +398,16 @@ const ResizeCollection = definePrimitive<{
   { childInput: "structural" },
 );
 
+/**
+ * Draws an interactive handle for one edge or corner of a manipulation target.
+ *
+ * @param props - Authored component inputs, supplied through JSX or createElement. See the linked
+ * props and style types.
+ * @throws When called directly; CRC mounts this component through JSX or createElement.
+ *
+ * @see {@link CRCResizeHandleProps}
+ * @see {@link CRCResizeHandleStyle}
+ */
 export const ResizeHandle = definePrimitive<
   CRCResizeHandleProps,
   CRCResizeHandleStyle
@@ -297,6 +473,16 @@ export const ResizeHandle = definePrimitive<
     });
   paintDefaultHandle(ctx, state, x, y);
 });
+/**
+ * Creates the configured collection of resize handles around a manipulation target.
+ *
+ * @param props - Controller, handle placement, and presentation options. See
+ * {@link CRCResizeHandlesProps} .
+ * @returns CRC nodes rendering the resize handles. See {@link CRCNode}.
+ *
+ * @see {@link CRCResizeHandlesProps}
+ * @see {@link CRCNode}
+ */
 export function ResizeHandles(props: CRCResizeHandlesProps): CRCNode {
   const positions = (
     props.positions === undefined || props.positions === "corners"
@@ -382,13 +568,46 @@ const ResizeCollectionReadout = definePrimitive<{
   );
 });
 
+/**
+ * Authored inputs for RotationHandle, including the declared data and presentation options.
+ *
+ * @see {@link CRCManipulationController}
+ * @see {@link CRCNode}
+ * @see {@link RotationHandle}
+ * @see {@link CRCManipulableProps}
+ */
 export interface CRCRotationHandleProps {
+  /**
+   * Controller owning the current interaction or mounted scenario. See
+   * {@link CRCManipulationController}.
+   */
   readonly controller: CRCManipulationController;
+  /** Size of the handle's interactive hit region. See {@link CRCRotationHandleProps}. */
   readonly hitSize?: number;
+  /** Selects `"degrees"`, `"radians"` for readout unit. See {@link CRCRotationHandleProps}. */
   readonly readoutUnit?: "degrees" | "radians";
-  readonly formatReadout?: (value: { readonly rotation: number }) => string;
+  /**
+   * Formats the value shown by the manipulation readout. See {@link CRCRotationHandleProps}.
+   * @param value - Current rotation.
+   * @returns Text to display in the rotation readout.
+   */
+  readonly formatReadout?: (value: {
+    /** Rotation applied to the containing geometry. See {@link CRCRotationHandleProps}. */
+    readonly rotation: number;
+  }) => string;
+  /** Descendant content or the callback that supplies it. See {@link CRCNode}. */
   readonly children?: CRCNode;
 }
+/**
+ * Draws an interactive handle for rotating a manipulation target.
+ *
+ * @param props - Authored component inputs, supplied through JSX or createElement. See the linked
+ * props and style types.
+ * @throws When called directly; CRC mounts this component through JSX or createElement.
+ *
+ * @see {@link CRCRotationHandleProps}
+ * @see {@link CRCRotationHandleStyle}
+ */
 export const RotationHandle = definePrimitive<
   CRCRotationHandleProps,
   CRCRotationHandleStyle

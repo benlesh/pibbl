@@ -1,14 +1,42 @@
+import type { ReactionDiffusionProps } from './reaction-diffusion.js';
+import type { ProceduralTextureProps } from './procedural-texture.js';
 import { rasterizeField } from "./wasm/memory.js";
-/** Borrowed sources are valid only during the synchronous renderer callback. */
+/**
+ * Borrowed sources are valid only during the synchronous renderer callback.
+ *
+ * @see {@link TextureRenderer}
+ */
 export interface TextureRenderFrame {
+  /** Current offscreen texture raster available to the presentation callback. See {@link TextureRenderFrame}. */
   readonly source: OffscreenCanvas;
   /** White with texture intensity as alpha, allocated lazily on first access. */
   readonly mask: OffscreenCanvas;
+  /**
+   * Horizontal extent in the units of the containing geometry or surface. See
+   * {@link TextureRenderFrame}.
+   */
   readonly width: number;
+  /**
+   * Vertical extent in the units of the containing geometry or surface. See
+   * {@link TextureRenderFrame}.
+   */
   readonly height: number;
+  /** Width of the underlying texture raster in pixels. See {@link TextureRenderFrame}. */
   readonly textureWidth: number;
+  /** Height of the underlying texture raster in pixels. See {@link TextureRenderFrame}. */
   readonly textureHeight: number;
 }
+/**
+ * Custom presentation callback receiving an offscreen context and the current texture raster
+ * frame.
+ *
+ * @param context - Offscreen drawing context to paint into.
+ * @param texture - Current texture surface and frame metadata. See {@link TextureRenderFrame}.
+ *
+ * @see {@link TextureRenderFrame}
+ * @see {@link ReactionDiffusionProps}
+ * @see {@link ProceduralTextureProps}
+ */
 export type TextureRenderer = (
   context: OffscreenCanvasRenderingContext2D,
   texture: Readonly<TextureRenderFrame>,

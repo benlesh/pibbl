@@ -10,18 +10,59 @@ import {
   type TextureResolution,
 } from "./palette.js";
 
+/**
+ * Radius and strength of a reaction-diffusion brush stroke.
+ *
+ * @see {@link ReactionDiffusionProps}
+ */
 export interface TextureBrush {
+  /** Radius in the coordinate system of this geometry or effect. See {@link TextureBrush}. */
   readonly radius: number;
+  /** Magnitude of the displacement or brush effect. See {@link TextureBrush}. */
   readonly strength: number;
 }
+/**
+ * Authored inputs for ReactionDiffusion, including the declared data and presentation options.
+ *
+ * @see {@link TextureRenderer}
+ * @see {@link TextureResolution}
+ * @see {@link TexturePalette}
+ * @see {@link TextureBrush}
+ * @see {@link ReactionDiffusion}
+ */
 export interface ReactionDiffusionProps {
+  /**
+   * Renders the current data or resources using the supplied context. See {@link TextureRenderer}
+   * .
+   */
   readonly render?: TextureRenderer;
+  /** Dimensions of the simulation or raster grid. See {@link TextureResolution}. */
   readonly resolution?: TextureResolution;
+  /**
+   * Seed used for deterministic sampling or simulation initialization. See
+   * {@link ReactionDiffusionProps}.
+   */
   readonly seed?: number;
+  /**
+   * Named pattern configuration used to initialize the simulation. See
+   * {@link ReactionDiffusionProps}.
+   */
   readonly preset?: "spots" | "stripes";
+  /** Ordered colors used to present texture intensity. See {@link TexturePalette}. */
   readonly palette?: TexturePalette;
+  /**
+   * Whether simulation or playback advancement is suspended. See {@link ReactionDiffusionProps}.
+   */
   readonly paused?: boolean;
+  /**
+   * Changing this revision requests a fresh simulation initialization. See
+   * {@link ReactionDiffusionProps}.
+   */
   readonly resetRevision?: number;
+  /**
+   * Brush configuration for interactive reaction-diffusion input, or false to disable it. See
+   * {@link TextureBrush}.
+   */
   readonly brush?: TextureBrush | false;
 }
 interface Options {
@@ -168,7 +209,15 @@ function input(
   r.invalidate();
 }
 
-/** An independently sized, persistent Gray–Scott surface, advanced by CRC's scheduler. */
+/**
+ * An independently sized, persistent Gray–Scott surface, advanced by CRC's scheduler.
+ *
+ * @param props - Authored component inputs, supplied through JSX or createElement. See the linked
+ * props and style types.
+ * @throws When called directly; CRC mounts this component through JSX or createElement.
+ *
+ * @see {@link ReactionDiffusionProps}
+ */
 export const ReactionDiffusion = /* @__PURE__ */ defineRenderLayer<
   ReactionDiffusionProps,
   Resources

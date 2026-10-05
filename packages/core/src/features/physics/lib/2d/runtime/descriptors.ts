@@ -148,6 +148,17 @@ type RegisteredAttachment2D = Readonly<{
   readonly [attachmentRecord2DSymbol]: PhysicsAttachment2DDescriptor;
 }>;
 
+/**
+ * Creates a declarative body attachment whose motion is advanced by the physics solver.
+ *
+ * @param options - Dynamic body, collider, and initial motion configuration. See
+ * {@link CRCPhysicsDynamicBody2DOptions} .
+ * @returns A dynamic-body attachment for a supported primitive's physics prop. See
+ * {@link CRCPhysicsBodyAttachment2D} .
+ *
+ * @see {@link CRCPhysicsDynamicBody2DOptions}
+ * @see {@link CRCPhysicsBodyAttachment2D}
+ */
 export function dynamicBody2D(
   options: CRCPhysicsDynamicBody2DOptions = {},
 ): CRCPhysicsBodyAttachment2D {
@@ -195,6 +206,17 @@ export function dynamicBody2D(
   });
 }
 
+/**
+ * Creates a declarative body attachment that remains fixed in the simulation.
+ *
+ * @param options - Static body and collider configuration. See
+ * {@link CRCPhysicsStaticBody2DOptions} .
+ * @returns A static-body attachment for a supported primitive's physics prop. See
+ * {@link CRCPhysicsBodyAttachment2D} .
+ *
+ * @see {@link CRCPhysicsStaticBody2DOptions}
+ * @see {@link CRCPhysicsBodyAttachment2D}
+ */
 export function staticBody2D(
   options: CRCPhysicsStaticBody2DOptions = {},
 ): CRCPhysicsBodyAttachment2D {
@@ -209,6 +231,17 @@ export function staticBody2D(
   });
 }
 
+/**
+ * Creates a declarative body attachment driven by application-supplied target signals.
+ *
+ * @param options - Kinematic body, collider, and motion configuration. See
+ * {@link CRCPhysicsKinematicBody2DOptions} .
+ * @returns A kinematic-body attachment for a supported primitive's physics prop. See
+ * {@link CRCPhysicsBodyAttachment2D} .
+ *
+ * @see {@link CRCPhysicsKinematicBody2DOptions}
+ * @see {@link CRCPhysicsBodyAttachment2D}
+ */
 export function kinematicBody2D(
   options: CRCPhysicsKinematicBody2DOptions = {},
 ): CRCPhysicsBodyAttachment2D {
@@ -238,6 +271,17 @@ export function kinematicBody2D(
   });
 }
 
+/**
+ * Creates a declarative collider attachment for a primitive within a physics body.
+ *
+ * @param options - Collider shape, material, filtering, and sensor configuration. See
+ * {@link CRCPhysicsColliderConfiguration2D} .
+ * @returns A collider attachment for a supported primitive's physics prop. See
+ * {@link CRCPhysicsColliderAttachment2D} .
+ *
+ * @see {@link CRCPhysicsColliderConfiguration2D}
+ * @see {@link CRCPhysicsColliderAttachment2D}
+ */
 export function collider2D(
   options: CRCPhysicsColliderConfiguration2D = {},
 ): CRCPhysicsColliderAttachment2D {

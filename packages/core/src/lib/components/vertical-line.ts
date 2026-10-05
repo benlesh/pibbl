@@ -25,18 +25,47 @@ import type {
 } from '../style/types.js';
 import { renderLine, type LineStyle } from './line.js';
 
+/**
+ * Authored inputs for VerticalLine, including the declared data and presentation options.
+ *
+ * @see {@link CRCEventHandlers}
+ * @see {@link CRCEventParticipationOptions}
+ * @see {@link CRCPhysics2DPropExtension}
+ * @see {@link VerticalLine}
+ */
 export interface VerticalLineProps
   extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions, CRCPhysics2DPropExtension {}
 
+/**
+ * Supported geometry and presentation properties for VerticalLine.
+ *
+ * @see {@link SystemStyle}
+ * @see {@link BoxStyle}
+ * @see {@link LayoutItemStyle}
+ * @see {@link LineStyle}
+ * @see {@link Length}
+ * @see {@link PixelGridAlignment}
+ * @see {@link VerticalLine}
+ */
 export interface VerticalLineStyle
-  extends SystemStyle,
-  BoxStyle,
-  LayoutItemStyle,
-  Omit<LineStyle, 'coords'> {
+  extends SystemStyle, BoxStyle, LayoutItemStyle, Omit<LineStyle, 'coords'> {
+  /**
+   * Horizontal coordinate or displacement in the containing coordinate system. See {@link Length}
+   * .
+   */
   x: Exclude<Length, 'auto'>;
+  /** Vertical coordinate of the first endpoint. See {@link Length}. */
   y1?: Exclude<Length, 'auto'>;
+  /** Vertical coordinate of the second endpoint. See {@link Length}. */
   y2?: Exclude<Length, 'auto'>;
+  /**
+   * Pixel-grid alignment policy applied to the resolved geometry. See {@link PixelGridAlignment}.
+   */
   alignToPixelGrid?: PixelGridAlignment;
+  /**
+   * Width used for line hit testing independently of the visible stroke width. See
+   * {@link VerticalLineStyle}.
+   */
   lineInteractionWidth?: number;
 }
 
@@ -88,6 +117,13 @@ function renderVerticalLine(
 
 /**
  * Describes a vertical-line primitive for JSX or createElement authoring.
+ *
+ * @param props - Authored component inputs, supplied through JSX or createElement. See the linked
+ * props and style types.
+ * @throws When called directly; CRC mounts this component through JSX or createElement.
+ *
+ * @see {@link VerticalLineProps}
+ * @see {@link VerticalLineStyle}
  */
 export const VerticalLine = definePrimitive<
   VerticalLineProps,

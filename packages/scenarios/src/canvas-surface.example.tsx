@@ -1,3 +1,4 @@
+import type { canvasSurfaceScenarioEntry } from './catalog.js';
 import {
   useLayoutBox,
   useRef,
@@ -6,7 +7,17 @@ import {
   type LayoutBox,
 } from '@crc/core';
 export const CANVAS_SURFACE_SOURCE_ID = 'canvas-surface-example';
+/**
+ * Supported canvas surface mode values: `"fixed"`, `"responsive"`.
+ *
+ * @see {@link CanvasSurfaceState}
+ */
 export type CanvasSurfaceMode = 'fixed' | 'responsive';
+/**
+ * Actions supported by the canvas surface scenario's public controller.
+ *
+ * @see {@link CanvasSurfaceState}
+ */
 export type CanvasSurfaceAction =
   | 'mount'
   | 'resize-fixed'
@@ -14,18 +25,37 @@ export type CanvasSurfaceAction =
   | 'resize-responsive'
   | 'mousemove'
   | 'reset';
+/**
+ * Observable state exposed by the canvas surface scenario for controls and assertions.
+ *
+ * @see {@link CanvasSurfaceMode}
+ * @see {@link CanvasSurfaceAction}
+ * @see {@link canvasSurfaceScenarioEntry}
+ */
 export interface CanvasSurfaceState {
+  /** Mode recorded or configured by this scenario. See {@link CanvasSurfaceMode}. */
   mode: CanvasSurfaceMode;
+  /** Css width recorded or configured by this scenario. See {@link CanvasSurfaceState}. */
   cssWidth: number;
+  /** Css height recorded or configured by this scenario. See {@link CanvasSurfaceState}. */
   cssHeight: number;
+  /** Logical width recorded or configured by this scenario. See {@link CanvasSurfaceState}. */
   logicalWidth: number;
+  /** Logical height recorded or configured by this scenario. See {@link CanvasSurfaceState}. */
   logicalHeight: number;
+  /** Backing width recorded or configured by this scenario. See {@link CanvasSurfaceState}. */
   backingWidth: number;
+  /** Backing height recorded or configured by this scenario. See {@link CanvasSurfaceState}. */
   backingHeight: number;
+  /** Pixel ratio recorded or configured by this scenario. See {@link CanvasSurfaceState}. */
   pixelRatio: number;
+  /** Identity recorded or configured by this scenario. See {@link CanvasSurfaceState}. */
   identity: number;
+  /** Renders recorded or configured by this scenario. See {@link CanvasSurfaceState}. */
   renders: number;
+  /** Last coordinates recorded or configured by this scenario. See {@link CanvasSurfaceState}. */
   lastCoordinates: readonly [number, number] | null;
+  /** Last action recorded or configured by this scenario. See {@link CanvasSurfaceAction}. */
   lastAction: CanvasSurfaceAction;
 }
 interface CanvasSurfaceSceneProps {
