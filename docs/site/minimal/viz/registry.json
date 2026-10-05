@@ -278,7 +278,7 @@
     "title": "Nearest-point lookup",
     "description": "Locate the nearest observation in pixel and domain space.",
     "source": "nearest.ts",
-    "environment": "typecheck",
+    "environment": "browser",
     "symbols": [
       {
         "name": "nearestDomainValue",
@@ -297,14 +297,16 @@
         "importPath": "@crc/core/viz"
       }
     ],
-    "notes": []
+    "notes": [
+      "Displays the nearest value and domain coordinate in the document."
+    ]
   },
   {
     "id": "hover-queries",
     "title": "Hover query helpers",
     "description": "Run closest-point, closest-x, and interpolated-x queries against a scale context.",
     "source": "hover-queries.ts",
-    "environment": "typecheck",
+    "environment": "browser",
     "symbols": [
       {
         "name": "defineSeries",
@@ -379,7 +381,7 @@
         "importPath": "@crc/core/viz"
       }
     ],
-    "notes": []
+    "notes": ["Displays three query results in the document."]
   },
   {
     "id": "hover-card",

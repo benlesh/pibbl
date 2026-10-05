@@ -32,8 +32,14 @@ const motion: CRCParticleMotion2D = {
   value: [0, 120],
 };
 const appearance: CRCParticleAppearance = {
-  opacity: particleCurve([[0, 1], [1, 0]]),
-  color: particleGradient([[0, "#facc15"], [1, "#ef4444"]]),
+  opacity: particleCurve([
+    [0, 1],
+    [1, 0],
+  ]),
+  color: particleGradient([
+    [0, "#facc15"],
+    [1, "#ef4444"],
+  ]),
 };
 const renderer: CRCParticleRenderer2D = { type: "circle" };
 const bounds: CRCParticleBounds2D = {
@@ -56,4 +62,6 @@ const emitter: CRCParticleEmitter2D = {
 const input: CRCParticleEffect2DInput = { emitters: [emitter] };
 const effect: CRCParticleEffect2D = defineParticleEffect2D(input);
 
-console.log(effect.dimension);
+const output = document.createElement("pre");
+output.textContent = `Created ${effect.dimension}D effect with ${input.emitters.length} emitter.`;
+document.body.append(output);

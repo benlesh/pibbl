@@ -69,4 +69,10 @@ const context: HoverQueryContext = { scale: () => scale };
 const hit: HoverHit<Reading> | undefined = pointQuery(context);
 const nearest: ClosestXHit<Reading> | undefined = xQuery(context);
 const sample: HoverSample<Reading> | undefined = sampleQuery(context);
-console.log(hit?.datum.value, nearest?.delta, sample?.y);
+const output = document.createElement("pre");
+output.textContent = [
+  `Closest point: ${hit?.datum.value ?? "none"}`,
+  `Closest x delta: ${nearest?.delta ?? "none"}`,
+  `Interpolated y: ${sample?.y ?? "none"}`,
+].join("\n");
+document.body.append(output);

@@ -25,14 +25,29 @@ const colors: CRCParticleChoice<string> = particleChoice([
 ]);
 const wind: CRCParticleParameterReference<"wind"> = particleParameter("wind");
 const velocity: CRCParticleVector2 = [wind, speed];
-const opacity: CRCParticleCurve<number> = particleCurve([[0, 1], [1, 0]]);
+const opacity: CRCParticleCurve<number> = particleCurve([
+  [0, 1],
+  [1, 0],
+]);
 const color: CRCParticleGradient = particleGradient([
   [0, "#facc15"],
   [1, "#ef4444"],
 ]);
 const sizeValue: CRCParticleCurveValue = [12, 18];
 const smooth: CRCParticleCurveOptions = { easing: (t) => t * t };
-const size = particleCurve([[0, sizeValue], [1, [0, 0]]], smooth);
+const size = particleCurve(
+  [
+    [0, sizeValue],
+    [1, [0, 0]],
+  ],
+  smooth,
+);
 const lifetime: CRCParticleScalar = particleRange(500, 900);
 
-console.log({ count, colors, velocity, opacity, color, size, lifetime });
+const output = document.createElement("pre");
+output.textContent = JSON.stringify(
+  { count, colors, velocity, opacity, color, size, lifetime },
+  null,
+  2,
+);
+document.body.append(output);

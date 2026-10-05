@@ -10,16 +10,26 @@ import {
 
 const started: CRCParticleStartEvent = { type: "start" };
 const accepted: CRCParticleBurstAcceptedEvent = {
-  type: "burst-accepted", emitter: "spark", requested: 12, accepted: 12,
+  type: "burst-accepted",
+  emitter: "spark",
+  requested: 12,
+  accepted: 12,
 };
 const rejected: CRCParticleBurstRejectedEvent = {
-  type: "burst-rejected", emitter: "spark", requested: 12,
-  accepted: 0, reason: "capacity",
+  type: "burst-rejected",
+  emitter: "spark",
+  requested: 12,
+  accepted: 0,
+  reason: "capacity",
 };
 const draining: CRCParticleDrainStartEvent = { type: "drain-start" };
 const finished: CRCParticleFinishEvent = { type: "finish" };
 const events: CRCParticleSystemEvent[] = [
-  started, accepted, rejected, draining, finished,
+  started,
+  accepted,
+  rejected,
+  draining,
+  finished,
 ];
 const diagnostic: CRCParticleDiagnostic = {
   type: "capacity-rejected",
@@ -27,5 +37,9 @@ const diagnostic: CRCParticleDiagnostic = {
   emitter: rejected.emitter,
 };
 
-for (const event of events) console.log(event.type);
-console.warn(diagnostic.message);
+const output = document.createElement("pre");
+output.textContent = [
+  ...events.map((event) => event.type),
+  diagnostic.message,
+].join("\n");
+document.body.append(output);

@@ -28,14 +28,16 @@ const sourceOptions: CRCFlowSourceOptions2D = {
   acceleration: [0, -180],
 };
 const effect = defineParticleEffect2D({
-  emitters: [{
-    name: "mist",
-    capacity: 180,
-    emission: [{ type: "rate", particlesPerSecond: 25 }],
-    shape: { type: "point", position: [160, 180] },
-    initial: { lifetimeMilliseconds: 2400, size: 5, color: "#38bdf8" },
-    renderer: { type: "circle" },
-  }],
+  emitters: [
+    {
+      name: "mist",
+      capacity: 180,
+      emission: [{ type: "rate", particlesPerSecond: 25 }],
+      shape: { type: "point", position: [160, 180] },
+      initial: { lifetimeMilliseconds: 2400, size: 5, color: "#38bdf8" },
+      renderer: { type: "circle" },
+    },
+  ],
 });
 const canvas = document.createElement("canvas");
 canvas.width = 320;

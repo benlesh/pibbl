@@ -42,4 +42,6 @@ const time = nearestDomainValue(
   140,
   horizontal,
 );
-console.log(hit?.datum.value, time);
+const output = document.createElement("pre");
+output.textContent = `Nearest value: ${hit?.datum.value ?? "none"}\nNearest time: ${time ?? "none"}`;
+document.body.append(output);

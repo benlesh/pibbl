@@ -353,7 +353,7 @@
     "title": "Deterministic physics test",
     "description": "Advance a public physics scene through controlled host frames.",
     "source": "testing-harness.tsx",
-    "environment": "typecheck",
+    "environment": "browser",
     "symbols": [
       {
         "name": "createPhysicsTestHarness2D",

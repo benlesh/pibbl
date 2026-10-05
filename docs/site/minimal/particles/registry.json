@@ -4,7 +4,7 @@
     "title": "Particle descriptors",
     "description": "Define randomized spawn values and lifespan curves.",
     "source": "descriptors.ts",
-    "environment": "typecheck",
+    "environment": "browser",
     "symbols": [
       {
         "name": "particleChoice",
@@ -71,14 +71,14 @@
         "importPath": "@crc/core/particles"
       }
     ],
-    "notes": []
+    "notes": ["Displays the resulting descriptor values in the document."]
   },
   {
     "id": "effect",
     "title": "Particle effect configuration",
     "description": "Compose a typed ember emitter from emission, motion, appearance, and bounds.",
     "source": "effect.ts",
-    "environment": "typecheck",
+    "environment": "browser",
     "symbols": [
       {
         "name": "defineParticleEffect2D",
@@ -129,14 +129,16 @@
         "importPath": "@crc/core/particles"
       }
     ],
-    "notes": []
+    "notes": [
+      "Displays the effect dimension and emitter count in the document."
+    ]
   },
   {
     "id": "parameters",
     "title": "Effect parameters",
     "description": "Define typed spawn and render parameters and use them in an effect.",
     "source": "parameters.ts",
-    "environment": "typecheck",
+    "environment": "browser",
     "symbols": [
       {
         "name": "CRCParticleParameterDefinition",
@@ -167,7 +169,7 @@
         "importPath": "@crc/core/particles"
       }
     ],
-    "notes": []
+    "notes": ["Displays the typed parameter values in the document."]
   },
   {
     "id": "system",
@@ -217,9 +219,7 @@
         "importPath": "@crc/core/particles"
       }
     ],
-    "notes": [
-      "Creates its own canvas and disposes the CRC mount on pagehide."
-    ]
+    "notes": ["Creates its own canvas and disposes the CRC mount on pagehide."]
   },
   {
     "id": "flow",
@@ -257,16 +257,14 @@
         "importPath": "@crc/core/particles"
       }
     ],
-    "notes": [
-      "Creates its own canvas and disposes the CRC mount on pagehide."
-    ]
+    "notes": ["Creates its own canvas and disposes the CRC mount on pagehide."]
   },
   {
     "id": "events",
     "title": "Particle lifecycle events",
     "description": "Handle the discriminated event and diagnostic records.",
     "source": "events.ts",
-    "environment": "typecheck",
+    "environment": "browser",
     "symbols": [
       {
         "name": "CRCParticleBurstAcceptedEvent",
@@ -297,6 +295,6 @@
         "importPath": "@crc/core/particles"
       }
     ],
-    "notes": []
+    "notes": ["Displays the event sequence and diagnostic in the document."]
   }
 ]
