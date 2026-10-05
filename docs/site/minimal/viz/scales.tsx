@@ -1,4 +1,4 @@
-import { crc } from "@crc/core";
+import { crc, Overlay } from "@crc/core";
 import {
   Axis,
   Scale,
@@ -27,7 +27,7 @@ const months: BandDomain = ["Apr", "May", category];
 const yDomain: LinearDomain = [0, 100];
 const xRange: BandScaleRange = "width";
 const yRange: ScaleRange = "height";
-const layout: ScaleLayoutStyle = { width: 320, height: 220 };
+const layout: ScaleLayoutStyle = { width: 230, height: 170 };
 const x: BandScaleProps = {
   id: xId,
   type: "band",
@@ -55,9 +55,14 @@ function Probe() {
   const resolved: ResolvedScale = useScale(yId).get();
   const linear: ResolvedLinearScale = useScale(yId, "linear").get();
   const band: ResolvedBandScale = useScale(xId, "band").get();
-  const label =
+  const count =
     resolved.type === "linear" ? linear.ticks(5).length : band.domain.length;
-  return <Axis {...axis} tickFormat={(value) => `${value} (${label})`} />;
+  return (
+    <>
+      {count > 0 && <Axis {...axis} />}
+      <Axis scale={xId} position="bottom" tickValues={band.domain} />
+    </>
+  );
 }
 
 const canvas = document.createElement("canvas");
@@ -66,10 +71,12 @@ canvas.height = 220;
 document.body.append(canvas);
 const app = crc(
   canvas,
-  <Scale {...scaleProps}>
-    <Scale {...y}>
-      <Probe />
+  <Overlay style={{ left: 70, top: 15, width: 230, height: 170 }}>
+    <Scale {...scaleProps}>
+      <Scale {...y}>
+        <Probe />
+      </Scale>
     </Scale>
-  </Scale>,
+  </Overlay>,
 );
 window.addEventListener("pagehide", () => app.dispose(), { once: true });

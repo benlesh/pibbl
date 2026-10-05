@@ -2,6 +2,7 @@ import {
   Grid,
   Rectangle,
   crc,
+  signal,
   type CRCResponsiveStyle,
   type CRCSizeQuery,
   type CRCStyleRule,
@@ -37,6 +38,7 @@ const gridStyle: GridStyle = {
   gap: 8,
   padding: 10,
 };
+const gridWidth = signal(320);
 const gridProps: GridProps = {
   children: (
     <>
@@ -66,5 +68,16 @@ const canvas = document.createElement("canvas");
 canvas.width = 320;
 canvas.height = 220;
 document.body.append(canvas);
-const app = crc(canvas, <Grid {...gridProps} style={gridStyle} />);
+const button = document.createElement("button");
+button.textContent = "Narrow";
+document.body.append(button);
+button.addEventListener("click", () => {
+  const narrow = gridWidth.get() === 320;
+  gridWidth.set(narrow ? 260 : 320);
+  button.textContent = narrow ? "Wide" : "Narrow";
+});
+const app = crc(
+  canvas,
+  <Grid {...gridProps} style={{ ...gridStyle, width: gridWidth }} />,
+);
 window.addEventListener("pagehide", () => app.dispose(), { once: true });

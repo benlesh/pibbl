@@ -68,6 +68,32 @@ try {
       return document.querySelector("canvas") ? painted : Boolean(text);
     });
     assert.ok(meaningful, `${example.id} has no rendered result`);
+    if (example.id === "particles/system") {
+      await page.getByRole("button", { name: "Burst" }).click();
+      await page.waitForFunction(() =>
+        document.querySelector("p")?.textContent?.includes("burst-accepted"),
+      );
+    }
+    if (example.id === "particles/flow") {
+      await page.waitForTimeout(2000);
+      const spread = await page.locator("canvas").evaluate((canvas) => {
+        const { width, height } = canvas;
+        const pixels = canvas
+          .getContext("2d")
+          .getImageData(0, 0, width, height).data;
+        let left = width;
+        let right = -1;
+        for (let y = 0; y < height; y++) {
+          for (let x = 0; x < width; x++) {
+            if (pixels[(y * width + x) * 4 + 3] < 16) continue;
+            left = Math.min(left, x);
+            right = Math.max(right, x);
+          }
+        }
+        return right - left + 1;
+      });
+      assert.ok(spread > 40, "particles/flow has no sustained plume spread");
+    }
     if (example.id === "lifecycle/signals") {
       await page.getByRole("button").click();
       assert.match(

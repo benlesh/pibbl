@@ -193,7 +193,7 @@
   {
     "id": "composition",
     "title": "Drawing composition",
-    "description": "Group, cache, and clip a drawing, then add text and a tiny embedded image.",
+    "description": "Group, cache, and clip a drawing, then add text and an embedded thumbnail.",
     "source": "composition.tsx",
     "environment": "browser",
     "symbols": [

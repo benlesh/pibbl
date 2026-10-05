@@ -219,7 +219,9 @@
         "importPath": "@crc/core/particles"
       }
     ],
-    "notes": ["Creates its own canvas and disposes the CRC mount on pagehide."]
+    "notes": [
+      "Press Burst or click the canvas to emit another spread of particles."
+    ]
   },
   {
     "id": "flow",
@@ -257,7 +259,9 @@
         "importPath": "@crc/core/particles"
       }
     ],
-    "notes": ["Creates its own canvas and disposes the CRC mount on pagehide."]
+    "notes": [
+      "Flow-bound particles take their velocity from the field; set acceleration on useFlowSource2D, not initial.velocity."
+    ]
   },
   {
     "id": "events",

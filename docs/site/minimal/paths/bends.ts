@@ -46,16 +46,16 @@ const alongGuide = transformPath(letters, pathBendTransform(pathOptions), {
   tolerance: 0.5,
 });
 const canvas = document.createElement("canvas");
-canvas.width = 280;
+canvas.width = 370;
 canvas.height = 230;
 document.body.append(canvas);
 const context = canvas.getContext("2d")!;
-context.translate(10, 10);
+context.translate(55, 10);
 context.lineWidth = 3;
 context.strokeStyle = "#94a3b8";
 context.stroke(toPath2D(letters));
 context.strokeStyle = "#0f766e";
 context.stroke(toPath2D(aroundArc));
-context.translate(135, 0);
+context.translate(160, 0);
 context.strokeStyle = "#f97316";
 context.stroke(toPath2D(alongGuide));

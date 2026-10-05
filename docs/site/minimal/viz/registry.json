@@ -121,7 +121,9 @@
         "importPath": "@crc/core/viz"
       }
     ],
-    "notes": ["Creates its own canvas and disposes the CRC mount on pagehide."]
+    "notes": [
+      "Shows isolated line marks and a nullable gap, not a complete chart with axes."
+    ]
   },
   {
     "id": "points",
@@ -167,7 +169,9 @@
         "importPath": "@crc/core/viz"
       }
     ],
-    "notes": ["Creates its own canvas and disposes the CRC mount on pagehide."]
+    "notes": [
+      "Shows isolated point marks and keyed content, not a complete chart with axes."
+    ]
   },
   {
     "id": "bars",

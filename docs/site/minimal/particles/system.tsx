@@ -1,6 +1,7 @@
 import { crc } from "@crc/core";
 import {
   defineParticleEffect2D,
+  particleRange,
   Particles2D,
   useParticleSystem,
   type CRCParticleBurstOverrides,
@@ -19,11 +20,11 @@ const effect = defineParticleEffect2D({
       name: "spark",
       capacity: 80,
       emission: [{ type: "rate", particlesPerSecond: 12 }, { type: "manual" }],
-      shape: { type: "point", position: [160, 130] },
+      shape: { type: "line", from: [135, 135], to: [185, 135] },
       initial: {
-        lifetimeMilliseconds: 900,
-        velocity: [0, -60],
-        size: 7,
+        lifetimeMilliseconds: 1200,
+        velocity: [particleRange(-35, 35), particleRange(-95, -45)],
+        size: particleRange(4, 7),
         color: "#f97316",
       },
       renderer: { type: "circle" },
@@ -36,17 +37,25 @@ canvas.height = 220;
 document.body.append(canvas);
 const output = document.createElement("p");
 document.body.append(output);
+const burstButton = document.createElement("button");
+burstButton.textContent = "Burst";
+document.body.append(burstButton);
+const burst: CRCParticleBurstOverrides = { count: 20, position: [160, 135] };
+let activeSystem: CRCParticleSystem<"spark"> | undefined;
+burstButton.addEventListener("click", () => activeSystem?.emit("spark", burst));
 
 function App() {
   const options: CRCParticleSystemOptions = { seed: 7, autoplay: true };
   const system: CRCParticleSystem<"spark"> = useParticleSystem(effect, options);
-  const burst: CRCParticleBurstOverrides = { count: 20, position: [160, 130] };
+  activeSystem = system;
   const status: CRCParticleSystemStatus = system.status.get();
   const execution: CRCParticleExecution = system.execution.get();
   const style: Particles2DStyle = { width: 320, height: 220 };
   const common: CRCParticleCommonProps<Record<string, never>> = {
     onEvent: (event) => {
-      output.textContent = `Particle event: ${event.type}`;
+      if (event.type === "burst-accepted" || event.type === "burst-rejected") {
+        output.textContent = `Particle event: ${event.type}`;
+      }
     },
   };
   const props: Particles2DProps<"spark"> = { system, style, ...common };

@@ -25,16 +25,23 @@ const fieldOptions: CRCFlowFieldOptions2D = {
 const sourceOptions: CRCFlowSourceOptions2D = {
   position: [160, 180],
   radius: 55,
-  acceleration: [0, -180],
+  acceleration: [0, -35],
 };
 const effect = defineParticleEffect2D({
   emitters: [
     {
       name: "mist",
       capacity: 180,
-      emission: [{ type: "rate", particlesPerSecond: 25 }],
-      shape: { type: "point", position: [160, 180] },
-      initial: { lifetimeMilliseconds: 2400, size: 5, color: "#38bdf8" },
+      emission: [
+        { type: "burst", atMilliseconds: 0, count: 40 },
+        { type: "rate", particlesPerSecond: 12 },
+      ],
+      shape: { type: "line", from: [125, 180], to: [195, 180] },
+      initial: {
+        lifetimeMilliseconds: 4000,
+        size: 5,
+        color: "#38bdf8",
+      },
       renderer: { type: "circle" },
     },
   ],

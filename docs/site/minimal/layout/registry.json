@@ -111,7 +111,9 @@
         "importPath": "@crc/core"
       }
     ],
-    "notes": ["Creates its own canvas and disposes the CRC mount on pagehide."]
+    "notes": [
+      "Use Narrow/Wide to cross the local width query and change the top mark's color."
+    ]
   },
   {
     "id": "box-helpers",

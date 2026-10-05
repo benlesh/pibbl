@@ -1,4 +1,4 @@
-import { crc } from "@crc/core";
+import { crc, Overlay } from "@crc/core";
 import {
   Axis,
   BarSeries,
@@ -41,18 +41,25 @@ canvas.height = 220;
 document.body.append(canvas);
 const app = crc(
   canvas,
-  <Scale
-    id="month"
-    type="band"
-    domain={sales.map((sale) => sale.month)}
-    range="width"
-    paddingInner={0.2}
-    style={{ width: 320, height: 220 }}
-  >
-    <Scale id="amount" type="linear" domain={[0, 80]} range="height" reverse>
-      <BarSeries {...bars} />
-      <Axis scale="amount" position="left" tickCount={4} />
+  <Overlay style={{ left: 70, top: 15, width: 230, height: 170 }}>
+    <Scale
+      id="month"
+      type="band"
+      domain={sales.map((sale) => sale.month)}
+      range="width"
+      paddingInner={0.2}
+      style={{ width: 230, height: 170 }}
+    >
+      <Scale id="amount" type="linear" domain={[0, 80]} range="height" reverse>
+        <BarSeries {...bars} />
+        <Axis scale="amount" position="left" tickValues={[0, 20, 40, 60, 80]} />
+        <Axis
+          scale="month"
+          position="bottom"
+          tickValues={sales.map((sale) => sale.month)}
+        />
+      </Scale>
     </Scale>
-  </Scale>,
+  </Overlay>,
 );
 window.addEventListener("pagehide", () => app.dispose(), { once: true });
