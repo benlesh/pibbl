@@ -1,0 +1,374 @@
+[
+  {
+    "id": "geometry-shapes",
+    "title": "Shape measurements",
+    "description": "Compare bounds, area, and mass for four common 2D shapes.",
+    "source": "geometry-shapes.ts",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "circleShape2D",
+        "importPath": "@crc/core/physics/2d/geometry"
+      },
+      {
+        "name": "ellipseShape2D",
+        "importPath": "@crc/core/physics/2d/geometry"
+      },
+      { "name": "boxShape2D", "importPath": "@crc/core/physics/2d/geometry" },
+      {
+        "name": "roundedBoxShape2D",
+        "importPath": "@crc/core/physics/2d/geometry"
+      },
+      {
+        "name": "boundsOfShape2D",
+        "importPath": "@crc/core/physics/2d/geometry"
+      },
+      {
+        "name": "massProperties2D",
+        "importPath": "@crc/core/physics/2d/geometry"
+      },
+      {
+        "name": "CRCPhysicsVector2",
+        "importPath": "@crc/core/physics/2d/geometry"
+      },
+      {
+        "name": "CRCPhysicsPose2D",
+        "importPath": "@crc/core/physics/2d/geometry"
+      },
+      {
+        "name": "CRCPhysicsShape2D",
+        "importPath": "@crc/core/physics/2d/geometry"
+      },
+      {
+        "name": "CRCPhysicsAabb2D",
+        "importPath": "@crc/core/physics/2d/geometry"
+      },
+      {
+        "name": "CRCPhysicsMassProperties2D",
+        "importPath": "@crc/core/physics/2d/geometry"
+      }
+    ],
+    "notes": ["Mass uses density 2; the shapes remain immutable and reusable."]
+  },
+  {
+    "id": "geometry-paths",
+    "title": "Path-like shapes",
+    "description": "Create curved, stroked, and polygonal shapes and transform them.",
+    "source": "geometry-paths.ts",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "capsuleShape2D",
+        "importPath": "@crc/core/physics/2d/geometry"
+      },
+      {
+        "name": "segmentShape2D",
+        "importPath": "@crc/core/physics/2d/geometry"
+      },
+      { "name": "chainShape2D", "importPath": "@crc/core/physics/2d/geometry" },
+      {
+        "name": "polygonShape2D",
+        "importPath": "@crc/core/physics/2d/geometry"
+      },
+      { "name": "arcShape2D", "importPath": "@crc/core/physics/2d/geometry" },
+      { "name": "wedgeShape2D", "importPath": "@crc/core/physics/2d/geometry" },
+      {
+        "name": "transformShape2D",
+        "importPath": "@crc/core/physics/2d/geometry"
+      },
+      {
+        "name": "CRCPhysicsTransform2D",
+        "importPath": "@crc/core/physics/2d/geometry"
+      }
+    ],
+    "notes": ["Each row reports the world bounds after one shared transform."]
+  },
+  {
+    "id": "geometry-queries",
+    "title": "Geometry queries",
+    "description": "Check point containment, separation, overlap, contact, and casts.",
+    "source": "geometry-queries.ts",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "containsPoint2D",
+        "importPath": "@crc/core/physics/2d/geometry"
+      },
+      {
+        "name": "distanceBetweenShapes2D",
+        "importPath": "@crc/core/physics/2d/geometry"
+      },
+      {
+        "name": "overlapShapes2D",
+        "importPath": "@crc/core/physics/2d/geometry"
+      },
+      {
+        "name": "contactBetweenShapes2D",
+        "importPath": "@crc/core/physics/2d/geometry"
+      },
+      {
+        "name": "raycastShape2D",
+        "importPath": "@crc/core/physics/2d/geometry"
+      },
+      {
+        "name": "shapeCastAgainstShape2D",
+        "importPath": "@crc/core/physics/2d/geometry"
+      },
+      {
+        "name": "CRCPhysicsDistance2D",
+        "importPath": "@crc/core/physics/2d/geometry"
+      },
+      {
+        "name": "CRCPhysicsContactPoint2D",
+        "importPath": "@crc/core/physics/2d/geometry"
+      },
+      {
+        "name": "CRCPhysicsShapeContact2D",
+        "importPath": "@crc/core/physics/2d/geometry"
+      },
+      {
+        "name": "CRCPhysicsRay2D",
+        "importPath": "@crc/core/physics/2d/geometry"
+      },
+      {
+        "name": "CRCPhysicsShapeHit2D",
+        "importPath": "@crc/core/physics/2d/geometry"
+      }
+    ],
+    "notes": ["The pure geometry entry works without mounting a physics world."]
+  },
+  {
+    "id": "runtime-world",
+    "title": "Live physics world",
+    "description": "Mount a falling ball, inspect it, and control its body with buttons.",
+    "source": "runtime-world.tsx",
+    "environment": "browser",
+    "symbols": [
+      { "name": "PhysicsWorld2D", "importPath": "@crc/core/physics/2d" },
+      { "name": "PhysicsDebug2D", "importPath": "@crc/core/physics/2d" },
+      { "name": "crcPhysicsWorld2D", "importPath": "@crc/core/physics/2d" },
+      { "name": "crcPhysicsBody2D", "importPath": "@crc/core/physics/2d" },
+      { "name": "dynamicBody2D", "importPath": "@crc/core/physics/2d" },
+      { "name": "staticBody2D", "importPath": "@crc/core/physics/2d" },
+      { "name": "collider2D", "importPath": "@crc/core/physics/2d" },
+      { "name": "inspectPhysics2D", "importPath": "@crc/core/physics/2d" },
+      { "name": "applyForce2D", "importPath": "@crc/core/physics/2d" },
+      { "name": "applyImpulse2D", "importPath": "@crc/core/physics/2d" },
+      { "name": "applyTorque2D", "importPath": "@crc/core/physics/2d" },
+      { "name": "setLinearVelocity2D", "importPath": "@crc/core/physics/2d" },
+      { "name": "setAngularVelocity2D", "importPath": "@crc/core/physics/2d" },
+      { "name": "teleportBody2D", "importPath": "@crc/core/physics/2d" },
+      { "name": "sleepBody2D", "importPath": "@crc/core/physics/2d" },
+      { "name": "wakeBody2D", "importPath": "@crc/core/physics/2d" },
+      { "name": "disableBody2D", "importPath": "@crc/core/physics/2d" },
+      { "name": "enableBody2D", "importPath": "@crc/core/physics/2d" },
+      {
+        "name": "CRCPhysicsBodyHandle2D",
+        "importPath": "@crc/core/physics/2d"
+      },
+      {
+        "name": "CRCPhysicsWorldHandle2D",
+        "importPath": "@crc/core/physics/2d"
+      },
+      {
+        "name": "CRCPhysicsBodyInspection2D",
+        "importPath": "@crc/core/physics/2d"
+      },
+      {
+        "name": "CRCPhysicsDebug2DProps",
+        "importPath": "@crc/core/physics/2d"
+      },
+      {
+        "name": "CRCPhysicsInspection2D",
+        "importPath": "@crc/core/physics/2d"
+      },
+      {
+        "name": "CRCPhysicsSolverOptions",
+        "importPath": "@crc/core/physics/2d"
+      }
+    ],
+    "notes": [
+      "Body commands queue for CRC's physics scheduler; inspection reads the committed state."
+    ]
+  },
+  {
+    "id": "runtime-queries",
+    "title": "World queries",
+    "description": "Query a static collider by ray, moving shape, overlap, point, and bounds.",
+    "source": "runtime-queries.tsx",
+    "environment": "browser",
+    "symbols": [
+      { "name": "raycast2D", "importPath": "@crc/core/physics/2d" },
+      { "name": "shapeCast2D", "importPath": "@crc/core/physics/2d" },
+      { "name": "overlapShape2D", "importPath": "@crc/core/physics/2d" },
+      { "name": "queryAabb2D", "importPath": "@crc/core/physics/2d" },
+      { "name": "queryPoint2D", "importPath": "@crc/core/physics/2d" },
+      { "name": "toPhysicsPoint2D", "importPath": "@crc/core/physics/2d" },
+      { "name": "fromPhysicsPoint2D", "importPath": "@crc/core/physics/2d" },
+      { "name": "physicsObstacles2D", "importPath": "@crc/core/physics/2d" },
+      {
+        "name": "CRCPhysicsColliderHandle2D",
+        "importPath": "@crc/core/physics/2d"
+      },
+      { "name": "CRCPhysicsQueryMode", "importPath": "@crc/core/physics/2d" },
+      {
+        "name": "CRCPhysicsQueryOptions2D",
+        "importPath": "@crc/core/physics/2d"
+      },
+      { "name": "CRCPhysicsQueryHit2D", "importPath": "@crc/core/physics/2d" },
+      {
+        "name": "CRCPhysicsQueryMatch2D",
+        "importPath": "@crc/core/physics/2d"
+      },
+      {
+        "name": "CRCPhysicsQueryResult2D",
+        "importPath": "@crc/core/physics/2d"
+      }
+    ],
+    "notes": [
+      "Queries read committed world state and do not advance the simulation."
+    ]
+  },
+  {
+    "id": "runtime-components",
+    "title": "Physics drawing components",
+    "description": "Draw four physics shapes and move a custom kinematic collider.",
+    "source": "runtime-components.tsx",
+    "environment": "browser",
+    "symbols": [
+      { "name": "PhysicsShape2D", "importPath": "@crc/core/physics/2d" },
+      { "name": "Capsule2D", "importPath": "@crc/core/physics/2d" },
+      { "name": "Segment2D", "importPath": "@crc/core/physics/2d" },
+      { "name": "Chain2D", "importPath": "@crc/core/physics/2d" },
+      { "name": "kinematicBody2D", "importPath": "@crc/core/physics/2d" },
+      { "name": "withPhysicsShape2D", "importPath": "@crc/core/physics/2d" },
+      {
+        "name": "CRCPhysicsKinematicBody2DOptions",
+        "importPath": "@crc/core/physics/2d"
+      },
+      {
+        "name": "CRCPhysicsKinematicTarget2D",
+        "importPath": "@crc/core/physics/2d"
+      },
+      {
+        "name": "CRCPhysicsAttachment2D",
+        "importPath": "@crc/core/physics/2d"
+      },
+      {
+        "name": "CRCPhysicsBodyAttachment2D",
+        "importPath": "@crc/core/physics/2d"
+      },
+      {
+        "name": "CRCPhysicsColliderAttachment2D",
+        "importPath": "@crc/core/physics/2d"
+      },
+      {
+        "name": "CRCPhysicsPrimitiveProps2D",
+        "importPath": "@crc/core/physics/2d"
+      },
+      { "name": "PhysicsShape2DProps", "importPath": "@crc/core/physics/2d" },
+      { "name": "PhysicsShape2DStyle", "importPath": "@crc/core/physics/2d" },
+      { "name": "Capsule2DProps", "importPath": "@crc/core/physics/2d" },
+      { "name": "Capsule2DStyle", "importPath": "@crc/core/physics/2d" },
+      { "name": "Segment2DProps", "importPath": "@crc/core/physics/2d" },
+      { "name": "Segment2DStyle", "importPath": "@crc/core/physics/2d" },
+      { "name": "Chain2DProps", "importPath": "@crc/core/physics/2d" },
+      { "name": "Chain2DStyle", "importPath": "@crc/core/physics/2d" }
+    ],
+    "notes": [
+      "The derived primitive supplies collider geometry through a pure shape resolver."
+    ]
+  },
+  {
+    "id": "runtime-events",
+    "title": "Physics events",
+    "description": "Record collisions, sensor overlap, body sleep, and contact inspection.",
+    "source": "runtime-events.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "CRCPhysicsCollisionFilter",
+        "importPath": "@crc/core/physics/2d"
+      },
+      {
+        "name": "CRCPhysicsCollisionHandler2D",
+        "importPath": "@crc/core/physics/2d"
+      },
+      {
+        "name": "CRCPhysicsHitHandler2D",
+        "importPath": "@crc/core/physics/2d"
+      },
+      {
+        "name": "CRCPhysicsOverlapHandler2D",
+        "importPath": "@crc/core/physics/2d"
+      },
+      {
+        "name": "CRCPhysicsBodyStateHandler2D",
+        "importPath": "@crc/core/physics/2d"
+      },
+      {
+        "name": "CRCPhysicsColliderConfiguration2D",
+        "importPath": "@crc/core/physics/2d"
+      },
+      {
+        "name": "CRCPhysicsDynamicBody2DOptions",
+        "importPath": "@crc/core/physics/2d"
+      },
+      {
+        "name": "CRCPhysicsStaticBody2DOptions",
+        "importPath": "@crc/core/physics/2d"
+      },
+      {
+        "name": "CRCPhysicsWorld2DProps",
+        "importPath": "@crc/core/physics/2d"
+      },
+      {
+        "name": "CRCPhysicsCollisionEvent2D",
+        "importPath": "@crc/core/physics/2d"
+      },
+      {
+        "name": "CRCPhysicsOverlapEvent2D",
+        "importPath": "@crc/core/physics/2d"
+      },
+      {
+        "name": "CRCPhysicsBodyStateEvent2D",
+        "importPath": "@crc/core/physics/2d"
+      },
+      {
+        "name": "CRCPhysicsColliderInspection2D",
+        "importPath": "@crc/core/physics/2d"
+      },
+      {
+        "name": "CRCPhysicsContactInspection2D",
+        "importPath": "@crc/core/physics/2d"
+      }
+    ],
+    "notes": [
+      "Event callbacks report committed physics ticks; a sensor reports overlap without a solid response."
+    ]
+  },
+  {
+    "id": "testing-harness",
+    "title": "Deterministic physics test",
+    "description": "Advance a public physics scene through controlled host frames.",
+    "source": "testing-harness.tsx",
+    "environment": "typecheck",
+    "symbols": [
+      {
+        "name": "createPhysicsTestHarness2D",
+        "importPath": "@crc/core/physics/2d/testing"
+      },
+      {
+        "name": "CRCPhysicsTestHarness2D",
+        "importPath": "@crc/core/physics/2d/testing"
+      },
+      {
+        "name": "CRCPhysicsTestHarness2DOptions",
+        "importPath": "@crc/core/physics/2d/testing"
+      }
+    ],
+    "notes": [
+      "Create this harness in an isolated CRC realm with no other mounted roots."
+    ]
+  }
+]
