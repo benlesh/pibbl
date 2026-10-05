@@ -140,7 +140,7 @@ const actual = Object.keys(core).sort();
 if (JSON.stringify(actual) !== JSON.stringify(expected)) {
   throw new Error(`Unexpected @pibbl/core exports: ${actual.join(", ")}`);
 }
-for (const removedName of ["useState", "useMemo", "useWhenChanged"]) {
+for (const removedName of ["useState", "useMemo", "useWhenChanged", "useSpringValue", "useTweenValue"]) {
   if (removedName in core) {
     throw new Error(
       `Removed @pibbl/core export is still present: ${removedName}`,
@@ -506,3 +506,16 @@ const verticalA = new core.PathGeometry(); verticalA.moveTo(0,0); verticalA.line
 const verticalB = new core.PathGeometry(); verticalB.moveTo(10,0); verticalB.lineTo(20,10);
 const mesh = core.meshTransform({source:{x:0,y:0,width:1,height:1},columns:[0,1],rows:[0,1],horizontal:[[upper],[lower]],vertical:[[verticalA],[verticalB]]});
 if (Math.abs(mesh.mapPoint({x:0.5,y:0.5}).x-7.5)>0.0001) throw new Error('Packed mesh mapping failed.');
+
+for (const name of [
+  'raycastAny2D', 'raycastClosest2D', 'raycastAll2D',
+  'shapeCastAny2D', 'shapeCastClosest2D', 'shapeCastAll2D',
+  'hasShapeOverlap2D', 'findShapeOverlap2D', 'findAllShapeOverlaps2D',
+  'hasAabbMatch2D', 'findAabbMatch2D', 'findAllAabbMatches2D',
+  'hasPointMatch2D', 'findPointMatch2D', 'findAllPointMatches2D',
+]) {
+  if (typeof physics2d[name] !== 'function') throw new Error(`Missing named query: ${name}`);
+}
+for (const name of ['raycast2D', 'shapeCast2D', 'overlapShape2D', 'queryAabb2D', 'queryPoint2D']) {
+  if (name in physics2d) throw new Error(`Removed selector-driven query remains: ${name}`);
+}

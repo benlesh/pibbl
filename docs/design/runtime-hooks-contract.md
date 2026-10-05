@@ -266,9 +266,10 @@ mount-only. Explicit `get()` reads subscribe the evaluating component. Removal
 detaches that owner; a retained signal remains readable and writable but cannot
 schedule the removed owner. Focused `use-signal`, signal graph,
 component-consumer, scheduler, Layer, and error-isolation suites cover these
-rules. `usePlayback(program, options?)` and `useAnimatedValue(target, options)` are
-ordered render-only hook slots. The first returns a stable component-owned
-handle; the second returns a stable readonly signal backed by private playback.
+rules. `usePlayback(program, options?)` and
+`useAnimatedValue(target, options)` are ordered render-only hook slots. Playback
+returns a stable component-owned handle; each value hook returns a stable
+readonly signal backed by private playback.
 Only successful renders adopt candidates or queue autoplay, entrance, and
 retarget work. Teardown releases registrations, writer leases, evaluator and
 stepper state, queued commands and milestones, and live callbacks exactly once;

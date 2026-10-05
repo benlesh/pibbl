@@ -3,7 +3,7 @@ import {
   applyImpulse2D,
   disableBody2D,
   enableBody2D,
-  queryAabb2D,
+  findAllAabbMatches2D,
   setLinearVelocity2D,
   teleportBody2D,
   type PibblPhysicsBodyHandle2D,
@@ -199,10 +199,10 @@ async function mountPhysics2DLab(
         const world = model.world;
         if (!world)
           throw new Error("Physics laboratory world has not rendered yet.");
-        const matches = queryAabb2D(
+        const matches = findAllAabbMatches2D(
           world,
           { min: [0, 70], max: [480, 240] },
-          { mode: "all", sensors: "include" },
+          {  sensors: "include" },
         );
         model.queryTags.splice(
           0,

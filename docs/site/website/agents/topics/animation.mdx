@@ -8,7 +8,7 @@ sources:
 
 ## Select the right tool
 
-Read [signals and animation](/guides/signals-and-animation/), then the exact reference for [useAnimatedValue](/reference/hooks/use-animated-value/) or [usePlayback](/reference/hooks/use-playback/). Use `useAnimatedValue` for target-driven movement; use programs and playback for coordinated sequences, timelines, and explicit controls. Do not invent a standalone `play(program)` function or use the removed `useTransition` name.
+Read [signals and animation](/guides/signals-and-animation/), then the exact reference for [useAnimatedValue](/reference/hooks/use-animated-value/) or [usePlayback](/reference/hooks/use-playback/). Use `useAnimatedValue` with an animation definition or pure factory for target-driven movement; use programs and playback for coordinated sequences, timelines, and explicit controls. Do not invent a standalone `play(program)` function or use the removed `useTransition` name.
 
 Pibbl animation has three layers: definitions describe values, programs bind definitions to writable signals, and a mounted playback hook owns the run. Definitions/programs are immutable and do not start work merely by being created. Keep continuing work on Pibbl's scheduler.
 

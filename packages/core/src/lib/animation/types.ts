@@ -15,7 +15,6 @@ declare const pibblAnimationProgramBrand: unique symbol;
  *
  * @see {@link PibblKeyframesOptions}
  * @see {@link PibblTweenOptions}
- * @see {@link PibblTweenAnimatedValueOptions}
  */
 export type PibblEasing = (progress: number) => number;
 
@@ -29,7 +28,6 @@ export type PibblEasing = (progress: number) => number;
  *
  * @see {@link PibblKeyframesOptions}
  * @see {@link PibblTweenOptions}
- * @see {@link PibblTweenAnimatedValueOptions}
  */
 export type PibblInterpolator<T> = (from: T, to: T, progress: number) => T;
 
@@ -89,8 +87,8 @@ export interface PibblAnimationRepeatOptions {
 export interface PibblTweenOptions<T> {
   /** Starting endpoint or value. See {@link PibblTweenOptions}. */
   readonly from?: T;
-  /** Destination endpoint or value. See {@link PibblTweenOptions}. */
-  readonly to: T;
+  /** Destination endpoint; omit when useAnimatedValue supplies the target. See {@link PibblTweenOptions}. */
+  readonly to?: T;
   /** Duration of the animation or transition in milliseconds. See {@link PibblTweenOptions}. */
   readonly duration: number;
   /** Maps normalized progress before interpolation. See {@link PibblEasing}. */
@@ -139,8 +137,8 @@ export interface PibblKeyframesOptions<T> {
 export interface PibblSpringOptions {
   /** Starting endpoint or value. See {@link PibblSpringOptions}. */
   readonly from?: number;
-  /** Destination endpoint or value. See {@link PibblSpringOptions}. */
-  readonly to: number;
+  /** Destination endpoint; omit when useAnimatedValue supplies the target. See {@link PibblSpringOptions}. */
+  readonly to?: number;
   /** Mass used by the spring or physics calculation. See {@link PibblSpringOptions}. */
   readonly mass?: number;
   /** Spring stiffness controlling acceleration toward the target. See {@link PibblSpringOptions}. */
@@ -169,80 +167,38 @@ export interface PibblSpringOptions {
 }
 
 /**
- * Target-driven tween configuration for an animated value hook.
- *
- * @see {@link PibblEasing}
- * @see {@link PibblInterpolator}
- * @see {@link SignalEquals}
+ * Current endpoints and optional committed spring velocity supplied to an animation factory.
+ * @see {@link PibblAnimatedValueOptions}
  */
-export interface PibblTweenAnimatedValueOptions<T> {
-  /** The literal "tween" identifying this variant. See {@link PibblTweenAnimatedValueOptions}. */
-  readonly type: 'tween';
-  /**
-   * Duration of the animation or transition in milliseconds. See
-   * {@link PibblTweenAnimatedValueOptions}.
-   */
-  readonly duration: number;
-  /** Maps normalized progress before interpolation. See {@link PibblEasing}. */
-  readonly easing?: PibblEasing;
-  /**
-   * Produces a value between two endpoints at the supplied progress. See {@link PibblInterpolator}.
-   */
-  readonly interpolate?: PibblInterpolator<T>;
-  /**
-   * Compares old and new values to suppress equivalent updates. See
-   * {@link PibblTweenAnimatedValueOptions}.
-   */
-  readonly equals?: import('../signals/types.js').SignalEquals<T>;
-  /** Initial animated value used when the hook mounts. See {@link PibblTweenAnimatedValueOptions}. */
-  readonly initial?: T;
-  /** Optional label used in diagnostics. See {@link PibblTweenAnimatedValueOptions}. */
-  readonly debugName?: string;
+export interface PibblAnimationTarget<T> {
+  /** Last presented value, or the explicit mount initial value. See {@link useAnimatedValue}. */
+  readonly from: T;
+  /** Latest requested target. See {@link useAnimatedValue}. */
+  readonly to: T;
+  /** Committed analytic spring velocity, when the previous run is a spring. See {@link spring}. */
+  readonly velocity?: number;
 }
 
 /**
- * Target-driven spring configuration for an animated value hook.
- *
+ * Definition-based target animation with mount-owned equality and initial presentation.
  * @see {@link useAnimatedValue}
- * @see {@link SignalEquals}
+ * @see {@link PibblAnimationDefinition}
  */
-export interface PibblSpringAnimatedValueOptions {
-  /** The literal "spring" identifying this variant. See {@link PibblSpringAnimatedValueOptions}. */
-  readonly type: 'spring';
-  /** Mass used by the spring or physics calculation. See {@link PibblSpringAnimatedValueOptions}. */
-  readonly mass?: number;
+export interface PibblAnimatedValueOptions<T> {
   /**
-   * Spring stiffness controlling acceleration toward the target. See
-   * {@link PibblSpringAnimatedValueOptions}.
+   * Immutable definition or pure factory receiving the hook-owned endpoints. Factories run
+   * synchronously during render and cannot write signals or call hooks.
+   * @see {@link PibblAnimationTarget}
+   * @see {@link PibblAnimationDefinition}
+   * @param target - Current endpoints and previous spring velocity. See {@link PibblAnimationTarget}.
+   * @returns A concrete animation definition. See {@link PibblAnimationDefinition}.
    */
-  readonly stiffness?: number;
-  /** Spring damping controlling the loss of velocity. See {@link PibblSpringAnimatedValueOptions}. */
-  readonly damping?: number;
-  /** Starting velocity of the spring. See {@link PibblSpringAnimatedValueOptions}. */
-  readonly initialVelocity?: number;
-  /**
-   * Velocity threshold used to determine when the spring has settled. See
-   * {@link PibblSpringAnimatedValueOptions}.
-   */
-  readonly restSpeed?: number;
-  /**
-   * Distance-from-target threshold used to determine when the spring has settled. See
-   * {@link PibblSpringAnimatedValueOptions}.
-   */
-  readonly restDelta?: number;
-  /**
-   * Maximum duration allowed before the spring is forced to complete. See
-   * {@link PibblSpringAnimatedValueOptions}.
-   */
-  readonly maxDuration?: number;
-  /**
-   * Compares old and new values to suppress equivalent updates. See
-   * {@link PibblSpringAnimatedValueOptions}.
-   */
-  readonly equals?: import('../signals/types.js').SignalEquals<number>;
-  /** Initial animated value used when the hook mounts. See {@link PibblSpringAnimatedValueOptions}. */
-  readonly initial?: number;
-  /** Optional label used in diagnostics. See {@link PibblSpringAnimatedValueOptions}. */
+  readonly animation: PibblAnimationDefinition<T> | ((target: PibblAnimationTarget<T>) => PibblAnimationDefinition<T>);
+  /** Comparison used to suppress equal targets. See {@link SignalEquals}. */
+  readonly equals?: SignalEquals<T>;
+  /** Initial presented value; omitted initial values present the target without entrance motion. See {@link useAnimatedValue}. */
+  readonly initial?: T;
+  /** Optional playback diagnostic label. See {@link useAnimatedValue}. */
   readonly debugName?: string;
 }
 

@@ -42,10 +42,10 @@ symbols:
     PibblRenderLayerStyle,
     PibblRenderLayerTarget,
     PibblResponsiveViewportConfig,
-    PibblSpringAnimatedValueOptions,
+    PibblAnimatedValueOptions,
     PibblSpringOptions,
     PibblStepperOptions,
-    PibblTweenAnimatedValueOptions,
+    PibblAnimationTarget,
     PibblTweenOptions,
     RenderingContext2D,
     Signal,
@@ -234,10 +234,10 @@ Pibbl handlers, cursor participation, and optional focus geometry.
 signal? }`. Its logical root follows CSS content-box pixels instead of a fixed
 captured viewport.
 
-## PibblSpringAnimatedValueOptions
+## PibblAnimatedValueOptions
 
-`PibblSpringAnimatedValueOptions` configures a number transition with `type:
-"spring"`, equality, optional initial value, and spring parameters.
+`PibblAnimatedValueOptions<T>` supplies an animation definition or pure factory,
+optional initial value, equality comparison, and diagnostic label.
 
 ## PibblSpringOptions
 
@@ -249,10 +249,10 @@ captured viewport.
 step/read callbacks, optional completion predicate, elapsed clamp, and debug
 name.
 
-## PibblTweenAnimatedValueOptions
+## PibblAnimationTarget
 
-`PibblTweenAnimatedValueOptions<T>` configures a transition with `type: "tween"`,
-duration, equality, optional initial value, easing, and interpolation.
+`PibblAnimationTarget<T>` provides `from`, `to`, and optional committed spring
+`velocity` to a custom animation factory.
 
 ## PibblTweenOptions
 

@@ -37,9 +37,7 @@ symbols:
     PibblPhysicsPrimitiveProps2D,
     PibblPhysicsQueryHit2D,
     PibblPhysicsQueryMatch2D,
-    PibblPhysicsQueryMode,
     PibblPhysicsQueryOptions2D,
-    PibblPhysicsQueryResult2D,
     PibblPhysicsRay2D,
     PibblPhysicsShape2D,
     PibblPhysicsShapeContact2D,
@@ -193,19 +191,9 @@ Nominal identity used in query filtering and returned records.
 
 ## Query and event contracts
 
-## `PibblPhysicsQueryMode`
-
-`"closest"`, `"any"`, and `"all"` return a nullable record, boolean, or
-readonly records. Options filter sensors, collision categories, and a body or
-collider exclusion; the conditional result type follows the mode.
-
 ## `PibblPhysicsQueryOptions2D`
 
 Sensor, collision-filter, and body/collider-exclusion input for a world query.
-
-## `PibblPhysicsQueryResult2D`
-
-Conditional query result: nullable closest record, boolean, or readonly array.
 
 ## `PibblPhysicsQueryHit2D`
 

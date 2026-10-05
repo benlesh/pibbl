@@ -475,11 +475,11 @@ export interface MeshTransformOptions {
   export interface PibblAnimationProgram { readonly [pibblAnimationProgramBrand]: true }
   export type PibblAnimationRepeatDirection = 'normal' | 'reverse' | 'alternate' | 'alternate-reverse';
   export interface PibblAnimationRepeatOptions { readonly iterations: number; readonly direction?: PibblAnimationRepeatDirection }
-  export interface PibblTweenOptions<T> { readonly from?: T; readonly to: T; readonly duration: number; readonly easing?: PibblEasing; readonly interpolate?: PibblInterpolator<T>; readonly debugName?: string }
+  export interface PibblTweenOptions<T> { readonly from?: T; readonly to?: T; readonly duration: number; readonly easing?: PibblEasing; readonly interpolate?: PibblInterpolator<T>; readonly debugName?: string }
   export interface PibblKeyframesOptions<T> { readonly values: readonly [T, T, ...T[]]; readonly duration: number; readonly offsets?: readonly number[]; readonly easing?: PibblEasing | readonly PibblEasing[]; readonly interpolate?: PibblInterpolator<T>; readonly debugName?: string }
-  export interface PibblSpringOptions { readonly from?: number; readonly to: number; readonly mass?: number; readonly stiffness?: number; readonly damping?: number; readonly initialVelocity?: number; readonly restSpeed?: number; readonly restDelta?: number; readonly maxDuration?: number; readonly debugName?: string }
-  export interface PibblTweenAnimatedValueOptions<T> { readonly type: 'tween'; readonly duration: number; readonly easing?: PibblEasing; readonly interpolate?: PibblInterpolator<T>; readonly equals?: SignalEquals<T>; readonly initial?: T; readonly debugName?: string }
-  export interface PibblSpringAnimatedValueOptions { readonly type: 'spring'; readonly mass?: number; readonly stiffness?: number; readonly damping?: number; readonly initialVelocity?: number; readonly restSpeed?: number; readonly restDelta?: number; readonly maxDuration?: number; readonly equals?: SignalEquals<number>; readonly initial?: number; readonly debugName?: string }
+  export interface PibblSpringOptions { readonly from?: number; readonly to?: number; readonly mass?: number; readonly stiffness?: number; readonly damping?: number; readonly initialVelocity?: number; readonly restSpeed?: number; readonly restDelta?: number; readonly maxDuration?: number; readonly debugName?: string }
+  export interface PibblAnimationTarget<T> { readonly from: T; readonly to: T; readonly velocity?: number; }
+  export interface PibblAnimatedValueOptions<T> { readonly animation: PibblAnimationDefinition<T> | ((target: PibblAnimationTarget<T>) => PibblAnimationDefinition<T>); readonly initial?: T; readonly equals?: SignalEquals<T>; readonly debugName?: string; }
   export interface PibblAnimationSampleInput<T> { readonly initialValue: T; readonly localTime: number; readonly progress: number }
   export interface PibblAnimationOptions<T> { readonly duration: number; readonly sample: (input: PibblAnimationSampleInput<T>) => T; readonly debugName?: string }
   export interface PibblStepperOptions<State, T> { readonly stepMilliseconds: number; readonly maxElapsedMilliseconds?: number; readonly initial: (currentValue: T) => State; readonly step: (state: State, deltaMilliseconds: number) => State; readonly read: (state: State) => T; readonly done?: (state: State) => boolean; readonly debugName?: string }
@@ -560,9 +560,9 @@ export interface MeshTransformOptions {
   export function isSignal(value: unknown): value is Signal<unknown>;
   export function resolveSignalValue<T>(value: SignalValue<T>): T;
   export const easing: Readonly<{ readonly linear: PibblEasing; readonly easeIn: PibblEasing; readonly easeOut: PibblEasing; readonly easeInOut: PibblEasing; readonly cubicBezier: (x1: number, y1: number, x2: number, y2: number) => PibblEasing; readonly steps: (count: number, position?: 'start' | 'end') => PibblEasing }>;
-  export function tween<T>(options: Readonly<PibblTweenOptions<T>>): PibblAnimationDefinition<T>;
+  export function tween<T = number>(options: Readonly<PibblTweenOptions<T>>): PibblAnimationDefinition<T>;
   export function keyframes<T>(options: Readonly<PibblKeyframesOptions<T>>): PibblAnimationDefinition<T>;
-  export function spring(options: Readonly<PibblSpringOptions>): PibblAnimationDefinition<number>;
+  export function spring(options?: Readonly<PibblSpringOptions>): PibblAnimationDefinition<number>;
   export function defineAnimation<T>(options: Readonly<PibblAnimationOptions<T>>): PibblAnimationDefinition<T>;
   export function stepper<State, T>(options: Readonly<PibblStepperOptions<State, T>>): PibblAnimationDefinition<T>;
   export function drive<T>(output: WritableSignal<T>, definition: PibblAnimationDefinition<T>): PibblAnimationProgram;
@@ -673,8 +673,7 @@ export interface MeshTransformOptions {
   export function defineTransition(definition: PibblTransitionDefinition): PibblTransitionEffect;
   export function fade(): PibblTransitionEffect;
   export function useVisibilityTransition(options: PibblVisibilityTransitionOptions): PibblVisibilityTransition;
-  export function useAnimatedValue(target: number, options: PibblSpringAnimatedValueOptions): Signal<number>;
-  export function useAnimatedValue<T>(target: T, options: PibblTweenAnimatedValueOptions<T>): Signal<T>;
+  export function useAnimatedValue<T>(target: SignalValue<T>, options: SignalValue<{ readonly [K in keyof PibblAnimatedValueOptions<NoInfer<T>>]: SignalValue<PibblAnimatedValueOptions<NoInfer<T>>[K]> }>): Signal<T>;
   export function useReaction(setup: () => void | (() => void), dependencies?: readonly unknown[], options?: PibblReactionOptions): void;
   export function useCursor(options: { style?: string; path?: Path2D | PathGeometry; fill?: boolean; lineInteractionWidth?: number }): void;
   export function useEventListener(handlers: PibblEventHandlers): void;
@@ -782,11 +781,9 @@ export interface MeshTransformOptions {
   export interface PibblPhysicsColliderHandle2D { readonly [colliderHandle2DBrand]: true }
   declare const worldHandle2DBrand: unique symbol;
   export interface PibblPhysicsWorldHandle2D { readonly [worldHandle2DBrand]: true; readonly revision: Signal<number> }
-  export type PibblPhysicsQueryMode = 'closest' | 'any' | 'all';
-  export interface PibblPhysicsQueryOptions2D<Mode extends PibblPhysicsQueryMode = 'closest'> { readonly mode?: Mode; readonly sensors?: 'include' | 'exclude' | 'only'; readonly collisionFilter?: PibblPhysicsCollisionFilter; readonly excludeBody?: PibblPhysicsBodyHandle2D; readonly excludeCollider?: PibblPhysicsColliderHandle2D }
+  export interface PibblPhysicsQueryOptions2D { readonly sensors?: 'include' | 'exclude' | 'only'; readonly collisionFilter?: PibblPhysicsCollisionFilter; readonly excludeBody?: PibblPhysicsBodyHandle2D; readonly excludeCollider?: PibblPhysicsColliderHandle2D }
   export interface PibblPhysicsQueryHit2D extends PibblPhysicsShapeHit2D { readonly body: PibblPhysicsBodyHandle2D; readonly collider: PibblPhysicsColliderHandle2D; readonly bodyGeneration: number; readonly colliderGeneration: number; readonly tag: unknown }
   export interface PibblPhysicsQueryMatch2D { readonly body: PibblPhysicsBodyHandle2D; readonly collider: PibblPhysicsColliderHandle2D; readonly bodyGeneration: number; readonly colliderGeneration: number; readonly tag: unknown }
-  export type PibblPhysicsQueryResult2D<Mode extends PibblPhysicsQueryMode, Result> = Mode extends 'any' ? boolean : Mode extends 'all' ? readonly Result[] : Result | null;
   export interface PibblPhysicsCollisionEvent2D { readonly selfBody: PibblPhysicsBodyHandle2D; readonly selfCollider: PibblPhysicsColliderHandle2D; readonly otherBody: PibblPhysicsBodyHandle2D; readonly otherCollider: PibblPhysicsColliderHandle2D; readonly normal: PibblPhysicsVector2; readonly points: readonly PibblPhysicsContactPoint2D[]; readonly totalNormalImpulse: number; readonly tick: number; readonly selfTag: unknown; readonly otherTag: unknown }
   export interface PibblPhysicsOverlapEvent2D { readonly selfBody: PibblPhysicsBodyHandle2D; readonly selfCollider: PibblPhysicsColliderHandle2D; readonly otherBody: PibblPhysicsBodyHandle2D; readonly otherCollider: PibblPhysicsColliderHandle2D; readonly tick: number; readonly selfTag: unknown; readonly otherTag: unknown }
   export interface PibblPhysicsBodyStateEvent2D { readonly body: PibblPhysicsBodyHandle2D; readonly sleeping: boolean; readonly tick: number }
@@ -864,11 +861,21 @@ export interface MeshTransformOptions {
   export function sleepBody2D(body: PibblPhysicsBodyHandle2D): void;
   export function teleportBody2D(body: PibblPhysicsBodyHandle2D, pose: PibblPhysicsPose2D): void;
   export function wakeBody2D(body: PibblPhysicsBodyHandle2D): void;
-  export function raycast2D<Mode extends PibblPhysicsQueryMode = 'closest'>(world: PibblPhysicsWorldHandle2D, ray: PibblPhysicsRay2D, options?: PibblPhysicsQueryOptions2D<Mode>): PibblPhysicsQueryResult2D<Mode, PibblPhysicsQueryHit2D>;
-  export function shapeCast2D<Mode extends PibblPhysicsQueryMode = 'closest'>(world: PibblPhysicsWorldHandle2D, shape: PibblPhysicsShape2D, from: PibblPhysicsPose2D, translation: PibblPhysicsVector2, options?: PibblPhysicsQueryOptions2D<Mode>): PibblPhysicsQueryResult2D<Mode, PibblPhysicsQueryHit2D>;
-  export function overlapShape2D<Mode extends PibblPhysicsQueryMode = 'closest'>(world: PibblPhysicsWorldHandle2D, shape: PibblPhysicsShape2D, pose: PibblPhysicsPose2D, options?: PibblPhysicsQueryOptions2D<Mode>): PibblPhysicsQueryResult2D<Mode, PibblPhysicsQueryMatch2D>;
-  export function queryAabb2D<Mode extends PibblPhysicsQueryMode = 'closest'>(world: PibblPhysicsWorldHandle2D, bounds: PibblPhysicsAabb2D, options?: PibblPhysicsQueryOptions2D<Mode>): PibblPhysicsQueryResult2D<Mode, PibblPhysicsQueryMatch2D>;
-  export function queryPoint2D<Mode extends PibblPhysicsQueryMode = 'closest'>(world: PibblPhysicsWorldHandle2D, point: PibblPhysicsVector2, options?: PibblPhysicsQueryOptions2D<Mode>): PibblPhysicsQueryResult2D<Mode, PibblPhysicsQueryMatch2D>;
+  export function raycastAny2D( world: PibblPhysicsWorldHandle2D, ray: PibblPhysicsRay2D, options?: PibblPhysicsQueryOptions2D, ): boolean;
+  export function raycastClosest2D( world: PibblPhysicsWorldHandle2D, ray: PibblPhysicsRay2D, options?: PibblPhysicsQueryOptions2D, ): PibblPhysicsQueryHit2D | null;
+  export function raycastAll2D( world: PibblPhysicsWorldHandle2D, ray: PibblPhysicsRay2D, options?: PibblPhysicsQueryOptions2D, ): readonly PibblPhysicsQueryHit2D[];
+  export function shapeCastAny2D( world: PibblPhysicsWorldHandle2D, shape: PibblPhysicsShape2D, from: PibblPhysicsPose2D, translation: PibblPhysicsVector2, options?: PibblPhysicsQueryOptions2D, ): boolean;
+  export function shapeCastClosest2D( world: PibblPhysicsWorldHandle2D, shape: PibblPhysicsShape2D, from: PibblPhysicsPose2D, translation: PibblPhysicsVector2, options?: PibblPhysicsQueryOptions2D, ): PibblPhysicsQueryHit2D | null;
+  export function shapeCastAll2D( world: PibblPhysicsWorldHandle2D, shape: PibblPhysicsShape2D, from: PibblPhysicsPose2D, translation: PibblPhysicsVector2, options?: PibblPhysicsQueryOptions2D, ): readonly PibblPhysicsQueryHit2D[];
+  export function hasShapeOverlap2D( world: PibblPhysicsWorldHandle2D, shape: PibblPhysicsShape2D, pose: PibblPhysicsPose2D, options?: PibblPhysicsQueryOptions2D, ): boolean;
+  export function findShapeOverlap2D( world: PibblPhysicsWorldHandle2D, shape: PibblPhysicsShape2D, pose: PibblPhysicsPose2D, options?: PibblPhysicsQueryOptions2D, ): PibblPhysicsQueryMatch2D | null;
+  export function findAllShapeOverlaps2D( world: PibblPhysicsWorldHandle2D, shape: PibblPhysicsShape2D, pose: PibblPhysicsPose2D, options?: PibblPhysicsQueryOptions2D, ): readonly PibblPhysicsQueryMatch2D[];
+  export function hasAabbMatch2D( world: PibblPhysicsWorldHandle2D, bounds: PibblPhysicsAabb2D, options?: PibblPhysicsQueryOptions2D, ): boolean;
+  export function findAabbMatch2D( world: PibblPhysicsWorldHandle2D, bounds: PibblPhysicsAabb2D, options?: PibblPhysicsQueryOptions2D, ): PibblPhysicsQueryMatch2D | null;
+  export function findAllAabbMatches2D( world: PibblPhysicsWorldHandle2D, bounds: PibblPhysicsAabb2D, options?: PibblPhysicsQueryOptions2D, ): readonly PibblPhysicsQueryMatch2D[];
+  export function hasPointMatch2D( world: PibblPhysicsWorldHandle2D, point: PibblPhysicsVector2, options?: PibblPhysicsQueryOptions2D, ): boolean;
+  export function findPointMatch2D( world: PibblPhysicsWorldHandle2D, point: PibblPhysicsVector2, options?: PibblPhysicsQueryOptions2D, ): PibblPhysicsQueryMatch2D | null;
+  export function findAllPointMatches2D( world: PibblPhysicsWorldHandle2D, point: PibblPhysicsVector2, options?: PibblPhysicsQueryOptions2D, ): readonly PibblPhysicsQueryMatch2D[];
 
   export function physicsObstacles2D(world: PibblPhysicsWorldHandle2D): Readonly<{ read(): Readonly<{ revision: number; boxes: Float64Array; ellipses: Float64Array; polygons: Float64Array }> }>;
 

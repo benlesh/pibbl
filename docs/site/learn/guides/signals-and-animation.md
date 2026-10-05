@@ -22,7 +22,7 @@ Pibbl drawing components accept signals directly at declared inputs:
 ```tsx
 function Card({ targetX }: { targetX: number }) {
   const x = useAnimatedValue(targetX, {
-    type: "spring",
+    animation: spring(),
     initial: 0,
   });
 

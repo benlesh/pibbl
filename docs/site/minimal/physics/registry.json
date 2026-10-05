@@ -14,7 +14,10 @@
         "name": "ellipseShape2D",
         "importPath": "@pibbl/core/physics/2d/geometry"
       },
-      { "name": "boxShape2D", "importPath": "@pibbl/core/physics/2d/geometry" },
+      {
+        "name": "boxShape2D",
+        "importPath": "@pibbl/core/physics/2d/geometry"
+      },
       {
         "name": "roundedBoxShape2D",
         "importPath": "@pibbl/core/physics/2d/geometry"
@@ -73,7 +76,10 @@
         "name": "polygonShape2D",
         "importPath": "@pibbl/core/physics/2d/geometry"
       },
-      { "name": "arcShape2D", "importPath": "@pibbl/core/physics/2d/geometry" },
+      {
+        "name": "arcShape2D",
+        "importPath": "@pibbl/core/physics/2d/geometry"
+      },
       {
         "name": "wedgeShape2D",
         "importPath": "@pibbl/core/physics/2d/geometry"
@@ -150,27 +156,78 @@
     "source": "runtime-world.tsx",
     "environment": "browser",
     "symbols": [
-      { "name": "PhysicsWorld2D", "importPath": "@pibbl/core/physics/2d" },
-      { "name": "PhysicsDebug2D", "importPath": "@pibbl/core/physics/2d" },
-      { "name": "pibblPhysicsWorld2D", "importPath": "@pibbl/core/physics/2d" },
-      { "name": "pibblPhysicsBody2D", "importPath": "@pibbl/core/physics/2d" },
-      { "name": "dynamicBody2D", "importPath": "@pibbl/core/physics/2d" },
-      { "name": "staticBody2D", "importPath": "@pibbl/core/physics/2d" },
-      { "name": "collider2D", "importPath": "@pibbl/core/physics/2d" },
-      { "name": "inspectPhysics2D", "importPath": "@pibbl/core/physics/2d" },
-      { "name": "applyForce2D", "importPath": "@pibbl/core/physics/2d" },
-      { "name": "applyImpulse2D", "importPath": "@pibbl/core/physics/2d" },
-      { "name": "applyTorque2D", "importPath": "@pibbl/core/physics/2d" },
-      { "name": "setLinearVelocity2D", "importPath": "@pibbl/core/physics/2d" },
+      {
+        "name": "PhysicsWorld2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "PhysicsDebug2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "pibblPhysicsWorld2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "pibblPhysicsBody2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "dynamicBody2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "staticBody2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "collider2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "inspectPhysics2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "applyForce2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "applyImpulse2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "applyTorque2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "setLinearVelocity2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
       {
         "name": "setAngularVelocity2D",
         "importPath": "@pibbl/core/physics/2d"
       },
-      { "name": "teleportBody2D", "importPath": "@pibbl/core/physics/2d" },
-      { "name": "sleepBody2D", "importPath": "@pibbl/core/physics/2d" },
-      { "name": "wakeBody2D", "importPath": "@pibbl/core/physics/2d" },
-      { "name": "disableBody2D", "importPath": "@pibbl/core/physics/2d" },
-      { "name": "enableBody2D", "importPath": "@pibbl/core/physics/2d" },
+      {
+        "name": "teleportBody2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "sleepBody2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "wakeBody2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "disableBody2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "enableBody2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
       {
         "name": "PibblPhysicsBodyHandle2D",
         "importPath": "@pibbl/core/physics/2d"
@@ -207,20 +264,80 @@
     "source": "runtime-queries.tsx",
     "environment": "browser",
     "symbols": [
-      { "name": "raycast2D", "importPath": "@pibbl/core/physics/2d" },
-      { "name": "shapeCast2D", "importPath": "@pibbl/core/physics/2d" },
-      { "name": "overlapShape2D", "importPath": "@pibbl/core/physics/2d" },
-      { "name": "queryAabb2D", "importPath": "@pibbl/core/physics/2d" },
-      { "name": "queryPoint2D", "importPath": "@pibbl/core/physics/2d" },
-      { "name": "toPhysicsPoint2D", "importPath": "@pibbl/core/physics/2d" },
-      { "name": "fromPhysicsPoint2D", "importPath": "@pibbl/core/physics/2d" },
-      { "name": "physicsObstacles2D", "importPath": "@pibbl/core/physics/2d" },
       {
-        "name": "PibblPhysicsColliderHandle2D",
+        "name": "raycastAny2D",
         "importPath": "@pibbl/core/physics/2d"
       },
       {
-        "name": "PibblPhysicsQueryMode",
+        "name": "raycastClosest2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "raycastAll2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "shapeCastAny2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "shapeCastClosest2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "shapeCastAll2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "hasShapeOverlap2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "findShapeOverlap2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "findAllShapeOverlaps2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "hasAabbMatch2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "findAabbMatch2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "findAllAabbMatches2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "hasPointMatch2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "findPointMatch2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "findAllPointMatches2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "toPhysicsPoint2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "fromPhysicsPoint2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "physicsObstacles2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "PibblPhysicsColliderHandle2D",
         "importPath": "@pibbl/core/physics/2d"
       },
       {
@@ -233,10 +350,6 @@
       },
       {
         "name": "PibblPhysicsQueryMatch2D",
-        "importPath": "@pibbl/core/physics/2d"
-      },
-      {
-        "name": "PibblPhysicsQueryResult2D",
         "importPath": "@pibbl/core/physics/2d"
       }
     ],
@@ -251,12 +364,30 @@
     "source": "runtime-components.tsx",
     "environment": "browser",
     "symbols": [
-      { "name": "PhysicsShape2D", "importPath": "@pibbl/core/physics/2d" },
-      { "name": "Capsule2D", "importPath": "@pibbl/core/physics/2d" },
-      { "name": "Segment2D", "importPath": "@pibbl/core/physics/2d" },
-      { "name": "Chain2D", "importPath": "@pibbl/core/physics/2d" },
-      { "name": "kinematicBody2D", "importPath": "@pibbl/core/physics/2d" },
-      { "name": "withPhysicsShape2D", "importPath": "@pibbl/core/physics/2d" },
+      {
+        "name": "PhysicsShape2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "Capsule2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "Segment2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "Chain2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "kinematicBody2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "withPhysicsShape2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
       {
         "name": "PibblPhysicsKinematicBody2DOptions",
         "importPath": "@pibbl/core/physics/2d"
@@ -281,15 +412,42 @@
         "name": "PibblPhysicsPrimitiveProps2D",
         "importPath": "@pibbl/core/physics/2d"
       },
-      { "name": "PibblPhysics2DPropExtension", "importPath": "@pibbl/core" },
-      { "name": "PhysicsShape2DProps", "importPath": "@pibbl/core/physics/2d" },
-      { "name": "PhysicsShape2DStyle", "importPath": "@pibbl/core/physics/2d" },
-      { "name": "Capsule2DProps", "importPath": "@pibbl/core/physics/2d" },
-      { "name": "Capsule2DStyle", "importPath": "@pibbl/core/physics/2d" },
-      { "name": "Segment2DProps", "importPath": "@pibbl/core/physics/2d" },
-      { "name": "Segment2DStyle", "importPath": "@pibbl/core/physics/2d" },
-      { "name": "Chain2DProps", "importPath": "@pibbl/core/physics/2d" },
-      { "name": "Chain2DStyle", "importPath": "@pibbl/core/physics/2d" }
+      {
+        "name": "PibblPhysics2DPropExtension",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PhysicsShape2DProps",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "PhysicsShape2DStyle",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "Capsule2DProps",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "Capsule2DStyle",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "Segment2DProps",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "Segment2DStyle",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "Chain2DProps",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "Chain2DStyle",
+        "importPath": "@pibbl/core/physics/2d"
+      }
     ],
     "notes": [
       "The derived primitive supplies collider geometry through a pure shape resolver."

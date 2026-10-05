@@ -1,3 +1,4 @@
+import type { QueryMode, QueryOptions, QueryResult } from '../query-types.js';
 import {
   boundsOfShape2D,
   type PibblPhysicsAabb2D,
@@ -17,9 +18,6 @@ import type {
   PibblPhysicsCollisionFilter,
   PibblPhysicsQueryHit2D,
   PibblPhysicsQueryMatch2D,
-  PibblPhysicsQueryMode,
-  PibblPhysicsQueryOptions2D,
-  PibblPhysicsQueryResult2D,
 } from "../types.js";
 import type { DynamicAabbBroadPhase2D } from "./broad-phase.js";
 import { collisionFiltersAllow2D } from "./ccd.js";
@@ -43,7 +41,7 @@ export interface CommittedWorldQueriesOptions2D {
 }
 
 interface PreparedQueryOptions2D {
-  readonly mode: PibblPhysicsQueryMode;
+  readonly mode: QueryMode;
   readonly sensors: "include" | "exclude" | "only";
   readonly collisionFilter: PibblPhysicsCollisionFilter | null;
   readonly excludeBody: HandleIdentity2D | null;
@@ -87,11 +85,11 @@ export class CommittedWorldQueries2D {
     this.hitCount = 0;
   }
 
-  raycast<Mode extends PibblPhysicsQueryMode = "closest">(
+  raycast<Mode extends QueryMode = "closest">(
     worldGeneration: number,
     ray: PibblPhysicsRay2D,
-    queryOptions?: PibblPhysicsQueryOptions2D<Mode>,
-  ): PibblPhysicsQueryResult2D<Mode, PibblPhysicsQueryHit2D> {
+    queryOptions?: QueryOptions<Mode>,
+  ): QueryResult<Mode, PibblPhysicsQueryHit2D> {
     const prepared = this.prepareOptions(queryOptions);
     if (!this.isUsable(worldGeneration, prepared)) return emptyResult(prepared.mode);
     const origin = copyFiniteVector2(ray.origin, "ray.origin");
@@ -113,19 +111,19 @@ export class CommittedWorldQueries2D {
       if (collider === null) continue;
       const hit = raycastShape2D(collider.shape, collider.pose, ray);
       if (hit === null) continue;
-      if (prepared.mode === "any") return true as PibblPhysicsQueryResult2D<Mode, PibblPhysicsQueryHit2D>;
+      if (prepared.mode === "any") return true as QueryResult<Mode, PibblPhysicsQueryHit2D>;
       this.appendHit(collider, hit.point, hit.normal, hit.distance, hit.timeOfImpact);
     }
     return this.finishHits<Mode>(prepared.mode);
   }
 
-  shapeCast<Mode extends PibblPhysicsQueryMode = "closest">(
+  shapeCast<Mode extends QueryMode = "closest">(
     worldGeneration: number,
     shape: PibblPhysicsShape2D,
     from: PibblPhysicsPose2D,
     translation: PibblPhysicsVector2,
-    queryOptions?: PibblPhysicsQueryOptions2D<Mode>,
-  ): PibblPhysicsQueryResult2D<Mode, PibblPhysicsQueryHit2D> {
+    queryOptions?: QueryOptions<Mode>,
+  ): QueryResult<Mode, PibblPhysicsQueryHit2D> {
     const prepared = this.prepareOptions(queryOptions);
     if (!this.isUsable(worldGeneration, prepared)) return emptyResult(prepared.mode);
     const copiedTranslation = copyFiniteVector2(translation, "translation");
@@ -146,29 +144,29 @@ export class CommittedWorldQueries2D {
       if (collider === null) continue;
       const hit = shapeCastAgainstShape2D(shape, from, copiedTranslation, collider.shape, collider.pose);
       if (hit === null) continue;
-      if (prepared.mode === "any") return true as PibblPhysicsQueryResult2D<Mode, PibblPhysicsQueryHit2D>;
+      if (prepared.mode === "any") return true as QueryResult<Mode, PibblPhysicsQueryHit2D>;
       this.appendHit(collider, hit.point, hit.normal, hit.distance, hit.timeOfImpact);
     }
     return this.finishHits<Mode>(prepared.mode);
   }
 
-  overlapShape<Mode extends PibblPhysicsQueryMode = "closest">(
+  overlapShape<Mode extends QueryMode = "closest">(
     worldGeneration: number,
     shape: PibblPhysicsShape2D,
     pose: PibblPhysicsPose2D,
-    queryOptions?: PibblPhysicsQueryOptions2D<Mode>,
-  ): PibblPhysicsQueryResult2D<Mode, PibblPhysicsQueryMatch2D> {
+    queryOptions?: QueryOptions<Mode>,
+  ): QueryResult<Mode, PibblPhysicsQueryMatch2D> {
     const bounds = this.isGenerationLive(worldGeneration) ? boundsOfShape2D(shape, pose) : null;
     return this.runMatchQuery(worldGeneration, bounds, queryOptions, (collider) =>
       overlapPreparedShapes2D(shape, pose, collider.shape, collider.pose),
     );
   }
 
-  queryAabb<Mode extends PibblPhysicsQueryMode = "closest">(
+  queryAabb<Mode extends QueryMode = "closest">(
     worldGeneration: number,
     bounds: PibblPhysicsAabb2D,
-    queryOptions?: PibblPhysicsQueryOptions2D<Mode>,
-  ): PibblPhysicsQueryResult2D<Mode, PibblPhysicsQueryMatch2D> {
+    queryOptions?: QueryOptions<Mode>,
+  ): QueryResult<Mode, PibblPhysicsQueryMatch2D> {
     if (!this.isGenerationLive(worldGeneration)) {
       return emptyResult(modeOf(queryOptions));
     }
@@ -179,11 +177,11 @@ export class CommittedWorldQueries2D {
     });
   }
 
-  queryPoint<Mode extends PibblPhysicsQueryMode = "closest">(
+  queryPoint<Mode extends QueryMode = "closest">(
     worldGeneration: number,
     point: PibblPhysicsVector2,
-    queryOptions?: PibblPhysicsQueryOptions2D<Mode>,
-  ): PibblPhysicsQueryResult2D<Mode, PibblPhysicsQueryMatch2D> {
+    queryOptions?: QueryOptions<Mode>,
+  ): QueryResult<Mode, PibblPhysicsQueryMatch2D> {
     if (!this.isGenerationLive(worldGeneration)) {
       return emptyResult(modeOf(queryOptions));
     }
@@ -194,12 +192,12 @@ export class CommittedWorldQueries2D {
     );
   }
 
-  private runMatchQuery<Mode extends PibblPhysicsQueryMode>(
+  private runMatchQuery<Mode extends QueryMode>(
     worldGeneration: number,
     bounds: PibblPhysicsAabb2D | null,
-    queryOptions: PibblPhysicsQueryOptions2D<Mode> | undefined,
+    queryOptions: QueryOptions<Mode> | undefined,
     matches: (collider: SemanticCollider2D) => boolean,
-  ): PibblPhysicsQueryResult2D<Mode, PibblPhysicsQueryMatch2D> {
+  ): QueryResult<Mode, PibblPhysicsQueryMatch2D> {
     const prepared = this.prepareOptions(queryOptions);
     if (bounds === null || !this.isUsable(worldGeneration, prepared)) {
       return emptyResult(prepared.mode);
@@ -210,15 +208,15 @@ export class CommittedWorldQueries2D {
       const collider = this.semanticColliderAt(candidate, prepared);
       if (collider === null || !matches(collider)) continue;
       if (prepared.mode === "any") {
-        return true as PibblPhysicsQueryResult2D<Mode, PibblPhysicsQueryMatch2D>;
+        return true as QueryResult<Mode, PibblPhysicsQueryMatch2D>;
       }
       this.appendMatch(collider);
     }
     return this.finishMatches<Mode>(prepared.mode);
   }
 
-  private prepareOptions<Mode extends PibblPhysicsQueryMode>(
-    queryOptions: PibblPhysicsQueryOptions2D<Mode> | undefined,
+  private prepareOptions<Mode extends QueryMode>(
+    queryOptions: QueryOptions<Mode> | undefined,
   ): PreparedQueryOptions2D {
     const mode = modeOf(queryOptions);
     const sensors = queryOptions?.sensors ?? "include";
@@ -331,15 +329,15 @@ export class CommittedWorldQueries2D {
     this.hitBodyGenerations[target] = collider.bodyGeneration;
   }
 
-  private finishHits<Mode extends PibblPhysicsQueryMode>(
-    mode: PibblPhysicsQueryMode,
-  ): PibblPhysicsQueryResult2D<Mode, PibblPhysicsQueryHit2D> {
+  private finishHits<Mode extends QueryMode>(
+    mode: QueryMode,
+  ): QueryResult<Mode, PibblPhysicsQueryHit2D> {
     this.sortHits(true);
     if (mode === "any") {
-      return false as PibblPhysicsQueryResult2D<Mode, PibblPhysicsQueryHit2D>;
+      return false as QueryResult<Mode, PibblPhysicsQueryHit2D>;
     }
     if (mode === "closest") {
-      return (this.hitCount === 0 ? null : this.materializeHit(0)) as PibblPhysicsQueryResult2D<
+      return (this.hitCount === 0 ? null : this.materializeHit(0)) as QueryResult<
         Mode,
         PibblPhysicsQueryHit2D
       >;
@@ -348,18 +346,18 @@ export class CommittedWorldQueries2D {
     for (let index = 0; index < this.hitCount; index += 1) {
       results.push(this.materializeHit(index));
     }
-    return Object.freeze(results) as PibblPhysicsQueryResult2D<Mode, PibblPhysicsQueryHit2D>;
+    return Object.freeze(results) as QueryResult<Mode, PibblPhysicsQueryHit2D>;
   }
 
-  private finishMatches<Mode extends PibblPhysicsQueryMode>(
-    mode: PibblPhysicsQueryMode,
-  ): PibblPhysicsQueryResult2D<Mode, PibblPhysicsQueryMatch2D> {
+  private finishMatches<Mode extends QueryMode>(
+    mode: QueryMode,
+  ): QueryResult<Mode, PibblPhysicsQueryMatch2D> {
     this.sortHits(false);
     if (mode === "any") {
-      return false as PibblPhysicsQueryResult2D<Mode, PibblPhysicsQueryMatch2D>;
+      return false as QueryResult<Mode, PibblPhysicsQueryMatch2D>;
     }
     if (mode === "closest") {
-      return (this.hitCount === 0 ? null : this.materializeMatch(0)) as PibblPhysicsQueryResult2D<
+      return (this.hitCount === 0 ? null : this.materializeMatch(0)) as QueryResult<
         Mode,
         PibblPhysicsQueryMatch2D
       >;
@@ -368,7 +366,7 @@ export class CommittedWorldQueries2D {
     for (let index = 0; index < this.hitCount; index += 1) {
       results.push(this.materializeMatch(index));
     }
-    return Object.freeze(results) as PibblPhysicsQueryResult2D<Mode, PibblPhysicsQueryMatch2D>;
+    return Object.freeze(results) as QueryResult<Mode, PibblPhysicsQueryMatch2D>;
   }
 
   private materializeHit(index: number): PibblPhysicsQueryHit2D {
@@ -467,9 +465,9 @@ interface SemanticCollider2D {
   readonly pose: PibblPhysicsPose2D;
 }
 
-function modeOf<Mode extends PibblPhysicsQueryMode>(
-  options: PibblPhysicsQueryOptions2D<Mode> | undefined,
-): PibblPhysicsQueryMode {
+function modeOf<Mode extends QueryMode>(
+  options: QueryOptions<Mode> | undefined,
+): QueryMode {
   const mode = options?.mode ?? "closest";
   if (mode !== "closest" && mode !== "any" && mode !== "all") {
     throw new RangeError("query mode must be closest, any, or all.");
@@ -477,10 +475,10 @@ function modeOf<Mode extends PibblPhysicsQueryMode>(
   return mode;
 }
 
-function emptyResult<Mode extends PibblPhysicsQueryMode, Result>(
-  mode: PibblPhysicsQueryMode,
-): PibblPhysicsQueryResult2D<Mode, Result> {
-  return (mode === "any" ? false : mode === "all" ? Object.freeze([]) : null) as PibblPhysicsQueryResult2D<Mode, Result>;
+function emptyResult<Mode extends QueryMode, Result>(
+  mode: QueryMode,
+): QueryResult<Mode, Result> {
+  return (mode === "any" ? false : mode === "all" ? Object.freeze([]) : null) as QueryResult<Mode, Result>;
 }
 
 function sameIdentity(identity: HandleIdentity2D | null, index: number, generation: number): boolean {

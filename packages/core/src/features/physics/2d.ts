@@ -9,9 +9,7 @@ import type {
 import type {
   PibblPhysicsQueryHit2D,
   PibblPhysicsQueryMatch2D,
-  PibblPhysicsQueryMode,
   PibblPhysicsQueryOptions2D,
-  PibblPhysicsQueryResult2D,
   PibblPhysicsBodyHandle2D,
   PibblPhysicsWorldHandle2D,
 } from "./lib/2d/types.js";
@@ -80,141 +78,261 @@ export {
 };
 
 /**
- * Queries the committed world with a ray using the selected result mode and filters.
+ * Tests whether the committed world has any ray match, stopping at the first match.
  *
  * @param world - World to query. See {@link PibblPhysicsWorldHandle2D}.
  * @param ray - Ray origin, direction, and travel limit. See {@link PibblPhysicsRay2D}.
- * @param options - Result mode and collider filtering. See {@link PibblPhysicsQueryOptions2D}.
- * @returns A boolean for any mode, one hit or null for closest mode, or ordered hits for all mode.
- * See {@link PibblPhysicsQueryResult2D} , {@link PibblPhysicsQueryHit2D} .
- *
- * @see {@link PibblPhysicsWorldHandle2D}
- * @see {@link PibblPhysicsRay2D}
- * @see {@link PibblPhysicsQueryOptions2D}
- * @see {@link PibblPhysicsQueryResult2D}
- * @see {@link PibblPhysicsQueryHit2D}
- * @see {@link PibblPhysicsQueryMode}
+ * @param options - Sensor policy and collider filtering. See {@link PibblPhysicsQueryOptions2D}.
+ * @returns Whether a matching collider exists.
  */
-export function raycast2D<Mode extends PibblPhysicsQueryMode = "closest">(
+export function raycastAny2D(
   world: PibblPhysicsWorldHandle2D,
   ray: PibblPhysicsRay2D,
-  options?: PibblPhysicsQueryOptions2D<Mode>,
-): PibblPhysicsQueryResult2D<Mode, PibblPhysicsQueryHit2D> {
-  return requirePhysicsWorld2DController(world).raycast(ray, options);
+  options?: PibblPhysicsQueryOptions2D,
+): boolean {
+  return requirePhysicsWorld2DController(world).raycast(ray, { ...options, mode: "any" });
 }
 
 /**
- * Sweeps a shape through the committed world using the selected result mode and filters.
+ * Returns the first ray result ordered by time of impact, distance, then collider identity, or null.
+ *
+ * @param world - World to query. See {@link PibblPhysicsWorldHandle2D}.
+ * @param ray - Ray origin, direction, and travel limit. See {@link PibblPhysicsRay2D}.
+ * @param options - Sensor policy and collider filtering. See {@link PibblPhysicsQueryOptions2D}.
+ * @returns One result or null. See {@link PibblPhysicsQueryHit2D}.
+ */
+export function raycastClosest2D(
+  world: PibblPhysicsWorldHandle2D,
+  ray: PibblPhysicsRay2D,
+  options?: PibblPhysicsQueryOptions2D,
+): PibblPhysicsQueryHit2D | null {
+  return requirePhysicsWorld2DController(world).raycast(ray, { ...options, mode: "closest" });
+}
+
+/**
+ * Returns all ray results ordered by time of impact, distance, then collider identity as a frozen array.
+ *
+ * @param world - World to query. See {@link PibblPhysicsWorldHandle2D}.
+ * @param ray - Ray origin, direction, and travel limit. See {@link PibblPhysicsRay2D}.
+ * @param options - Sensor policy and collider filtering. See {@link PibblPhysicsQueryOptions2D}.
+ * @returns Frozen results, empty when no collider matches. See {@link PibblPhysicsQueryHit2D}.
+ */
+export function raycastAll2D(
+  world: PibblPhysicsWorldHandle2D,
+  ray: PibblPhysicsRay2D,
+  options?: PibblPhysicsQueryOptions2D,
+): readonly PibblPhysicsQueryHit2D[] {
+  return requirePhysicsWorld2DController(world).raycast(ray, { ...options, mode: "all" });
+}
+
+/**
+ * Tests whether the committed world has any shape sweep match, stopping at the first match.
  *
  * @param world - World to query. See {@link PibblPhysicsWorldHandle2D}.
  * @param shape - Shape to sweep. See {@link PibblPhysicsShape2D}.
  * @param from - Initial shape pose. See {@link PibblPhysicsPose2D}.
  * @param translation - Translation vector for the sweep. See {@link PibblPhysicsVector2}.
- * @param options - Result mode and collider filtering. See {@link PibblPhysicsQueryOptions2D}.
- * @returns A boolean for any mode, one hit or null for closest mode, or ordered hits for all mode.
- * See {@link PibblPhysicsQueryResult2D} , {@link PibblPhysicsQueryHit2D} .
- *
- * @see {@link PibblPhysicsWorldHandle2D}
- * @see {@link PibblPhysicsShape2D}
- * @see {@link PibblPhysicsPose2D}
- * @see {@link PibblPhysicsVector2}
- * @see {@link PibblPhysicsQueryOptions2D}
- * @see {@link PibblPhysicsQueryResult2D}
- * @see {@link PibblPhysicsQueryHit2D}
- * @see {@link PibblPhysicsQueryMode}
+ * @param options - Sensor policy and collider filtering. See {@link PibblPhysicsQueryOptions2D}.
+ * @returns Whether a matching collider exists.
  */
-export function shapeCast2D<Mode extends PibblPhysicsQueryMode = "closest">(
+export function shapeCastAny2D(
   world: PibblPhysicsWorldHandle2D,
   shape: PibblPhysicsShape2D,
   from: PibblPhysicsPose2D,
   translation: PibblPhysicsVector2,
-  options?: PibblPhysicsQueryOptions2D<Mode>,
-): PibblPhysicsQueryResult2D<Mode, PibblPhysicsQueryHit2D> {
-  return requirePhysicsWorld2DController(world).shapeCast(
-    shape,
-    from,
-    translation,
-    options,
-  );
+  options?: PibblPhysicsQueryOptions2D,
+): boolean {
+  return requirePhysicsWorld2DController(world).shapeCast(shape, from, translation, { ...options, mode: "any" });
 }
 
 /**
- * Queries committed world colliders overlapping a posed shape.
+ * Returns the first shape sweep result ordered by time of impact, distance, then collider identity, or null.
  *
  * @param world - World to query. See {@link PibblPhysicsWorldHandle2D}.
- * @param shape - Shape to test for overlaps. See {@link PibblPhysicsShape2D}.
- * @param pose - Shape pose. See {@link PibblPhysicsPose2D}.
- * @param options - Result mode and collider filtering. See {@link PibblPhysicsQueryOptions2D}.
- * @returns A boolean for any mode, one match or null for closest mode, or matches for all mode.
- * See {@link PibblPhysicsQueryResult2D} , {@link PibblPhysicsQueryMatch2D} .
- *
- * @see {@link PibblPhysicsWorldHandle2D}
- * @see {@link PibblPhysicsShape2D}
- * @see {@link PibblPhysicsPose2D}
- * @see {@link PibblPhysicsQueryOptions2D}
- * @see {@link PibblPhysicsQueryResult2D}
- * @see {@link PibblPhysicsQueryMatch2D}
- * @see {@link PibblPhysicsQueryMode}
+ * @param shape - Shape to sweep. See {@link PibblPhysicsShape2D}.
+ * @param from - Initial shape pose. See {@link PibblPhysicsPose2D}.
+ * @param translation - Translation vector for the sweep. See {@link PibblPhysicsVector2}.
+ * @param options - Sensor policy and collider filtering. See {@link PibblPhysicsQueryOptions2D}.
+ * @returns One result or null. See {@link PibblPhysicsQueryHit2D}.
  */
-export function overlapShape2D<Mode extends PibblPhysicsQueryMode = "closest">(
+export function shapeCastClosest2D(
+  world: PibblPhysicsWorldHandle2D,
+  shape: PibblPhysicsShape2D,
+  from: PibblPhysicsPose2D,
+  translation: PibblPhysicsVector2,
+  options?: PibblPhysicsQueryOptions2D,
+): PibblPhysicsQueryHit2D | null {
+  return requirePhysicsWorld2DController(world).shapeCast(shape, from, translation, { ...options, mode: "closest" });
+}
+
+/**
+ * Returns all shape sweep results ordered by time of impact, distance, then collider identity as a frozen array.
+ *
+ * @param world - World to query. See {@link PibblPhysicsWorldHandle2D}.
+ * @param shape - Shape to sweep. See {@link PibblPhysicsShape2D}.
+ * @param from - Initial shape pose. See {@link PibblPhysicsPose2D}.
+ * @param translation - Translation vector for the sweep. See {@link PibblPhysicsVector2}.
+ * @param options - Sensor policy and collider filtering. See {@link PibblPhysicsQueryOptions2D}.
+ * @returns Frozen results, empty when no collider matches. See {@link PibblPhysicsQueryHit2D}.
+ */
+export function shapeCastAll2D(
+  world: PibblPhysicsWorldHandle2D,
+  shape: PibblPhysicsShape2D,
+  from: PibblPhysicsPose2D,
+  translation: PibblPhysicsVector2,
+  options?: PibblPhysicsQueryOptions2D,
+): readonly PibblPhysicsQueryHit2D[] {
+  return requirePhysicsWorld2DController(world).shapeCast(shape, from, translation, { ...options, mode: "all" });
+}
+
+/**
+ * Tests whether the committed world has any shape overlap match, stopping at the first match.
+ *
+ * @param world - World to query. See {@link PibblPhysicsWorldHandle2D}.
+ * @param shape - Shape to test. See {@link PibblPhysicsShape2D}.
+ * @param pose - Shape pose. See {@link PibblPhysicsPose2D}.
+ * @param options - Sensor policy and collider filtering. See {@link PibblPhysicsQueryOptions2D}.
+ * @returns Whether a matching collider exists.
+ */
+export function hasShapeOverlap2D(
   world: PibblPhysicsWorldHandle2D,
   shape: PibblPhysicsShape2D,
   pose: PibblPhysicsPose2D,
-  options?: PibblPhysicsQueryOptions2D<Mode>,
-): PibblPhysicsQueryResult2D<Mode, PibblPhysicsQueryMatch2D> {
-  return requirePhysicsWorld2DController(world).overlapShape(
-    shape,
-    pose,
-    options,
-  );
+  options?: PibblPhysicsQueryOptions2D,
+): boolean {
+  return requirePhysicsWorld2DController(world).overlapShape(shape, pose, { ...options, mode: "any" });
 }
 
 /**
- * Queries committed world colliders intersecting an axis-aligned region.
+ * Returns the first shape overlap result ordered by collider index, then generation, or null.
  *
  * @param world - World to query. See {@link PibblPhysicsWorldHandle2D}.
- * @param bounds - Axis-aligned query bounds in public coordinates. See {@link PibblPhysicsAabb2D}.
- * @param options - Result mode and collider filtering. See {@link PibblPhysicsQueryOptions2D}.
- * @returns A boolean for any mode, one match or null for closest mode, or matches for all mode.
- * See {@link PibblPhysicsQueryResult2D} , {@link PibblPhysicsQueryMatch2D} .
- *
- * @see {@link PibblPhysicsWorldHandle2D}
- * @see {@link PibblPhysicsAabb2D}
- * @see {@link PibblPhysicsQueryOptions2D}
- * @see {@link PibblPhysicsQueryResult2D}
- * @see {@link PibblPhysicsQueryMatch2D}
- * @see {@link PibblPhysicsQueryMode}
+ * @param shape - Shape to test. See {@link PibblPhysicsShape2D}.
+ * @param pose - Shape pose. See {@link PibblPhysicsPose2D}.
+ * @param options - Sensor policy and collider filtering. See {@link PibblPhysicsQueryOptions2D}.
+ * @returns One result or null. See {@link PibblPhysicsQueryMatch2D}.
  */
-export function queryAabb2D<Mode extends PibblPhysicsQueryMode = "closest">(
+export function findShapeOverlap2D(
+  world: PibblPhysicsWorldHandle2D,
+  shape: PibblPhysicsShape2D,
+  pose: PibblPhysicsPose2D,
+  options?: PibblPhysicsQueryOptions2D,
+): PibblPhysicsQueryMatch2D | null {
+  return requirePhysicsWorld2DController(world).overlapShape(shape, pose, { ...options, mode: "closest" });
+}
+
+/**
+ * Returns all shape overlap results ordered by collider index, then generation as a frozen array.
+ *
+ * @param world - World to query. See {@link PibblPhysicsWorldHandle2D}.
+ * @param shape - Shape to test. See {@link PibblPhysicsShape2D}.
+ * @param pose - Shape pose. See {@link PibblPhysicsPose2D}.
+ * @param options - Sensor policy and collider filtering. See {@link PibblPhysicsQueryOptions2D}.
+ * @returns Frozen results, empty when no collider matches. See {@link PibblPhysicsQueryMatch2D}.
+ */
+export function findAllShapeOverlaps2D(
+  world: PibblPhysicsWorldHandle2D,
+  shape: PibblPhysicsShape2D,
+  pose: PibblPhysicsPose2D,
+  options?: PibblPhysicsQueryOptions2D,
+): readonly PibblPhysicsQueryMatch2D[] {
+  return requirePhysicsWorld2DController(world).overlapShape(shape, pose, { ...options, mode: "all" });
+}
+
+/**
+ * Tests whether the committed world has any bounds intersection match, stopping at the first match.
+ *
+ * @param world - World to query. See {@link PibblPhysicsWorldHandle2D}.
+ * @param bounds - Axis-aligned query bounds. See {@link PibblPhysicsAabb2D}.
+ * @param options - Sensor policy and collider filtering. See {@link PibblPhysicsQueryOptions2D}.
+ * @returns Whether a matching collider exists.
+ */
+export function hasAabbMatch2D(
   world: PibblPhysicsWorldHandle2D,
   bounds: PibblPhysicsAabb2D,
-  options?: PibblPhysicsQueryOptions2D<Mode>,
-): PibblPhysicsQueryResult2D<Mode, PibblPhysicsQueryMatch2D> {
-  return requirePhysicsWorld2DController(world).queryAabb(bounds, options);
+  options?: PibblPhysicsQueryOptions2D,
+): boolean {
+  return requirePhysicsWorld2DController(world).queryAabb(bounds, { ...options, mode: "any" });
 }
 
 /**
- * Queries committed world colliders containing a point.
+ * Returns the first bounds intersection result ordered by collider index, then generation, or null.
  *
  * @param world - World to query. See {@link PibblPhysicsWorldHandle2D}.
- * @param point - Point in public coordinates. See {@link PibblPhysicsVector2}.
- * @param options - Result mode and collider filtering. See {@link PibblPhysicsQueryOptions2D}.
- * @returns A boolean for any mode, one match or null for closest mode, or matches for all mode.
- * See {@link PibblPhysicsQueryResult2D} , {@link PibblPhysicsQueryMatch2D} .
- *
- * @see {@link PibblPhysicsWorldHandle2D}
- * @see {@link PibblPhysicsVector2}
- * @see {@link PibblPhysicsQueryOptions2D}
- * @see {@link PibblPhysicsQueryResult2D}
- * @see {@link PibblPhysicsQueryMatch2D}
- * @see {@link PibblPhysicsQueryMode}
+ * @param bounds - Axis-aligned query bounds. See {@link PibblPhysicsAabb2D}.
+ * @param options - Sensor policy and collider filtering. See {@link PibblPhysicsQueryOptions2D}.
+ * @returns One result or null. See {@link PibblPhysicsQueryMatch2D}.
  */
-export function queryPoint2D<Mode extends PibblPhysicsQueryMode = "closest">(
+export function findAabbMatch2D(
+  world: PibblPhysicsWorldHandle2D,
+  bounds: PibblPhysicsAabb2D,
+  options?: PibblPhysicsQueryOptions2D,
+): PibblPhysicsQueryMatch2D | null {
+  return requirePhysicsWorld2DController(world).queryAabb(bounds, { ...options, mode: "closest" });
+}
+
+/**
+ * Returns all bounds intersection results ordered by collider index, then generation as a frozen array.
+ *
+ * @param world - World to query. See {@link PibblPhysicsWorldHandle2D}.
+ * @param bounds - Axis-aligned query bounds. See {@link PibblPhysicsAabb2D}.
+ * @param options - Sensor policy and collider filtering. See {@link PibblPhysicsQueryOptions2D}.
+ * @returns Frozen results, empty when no collider matches. See {@link PibblPhysicsQueryMatch2D}.
+ */
+export function findAllAabbMatches2D(
+  world: PibblPhysicsWorldHandle2D,
+  bounds: PibblPhysicsAabb2D,
+  options?: PibblPhysicsQueryOptions2D,
+): readonly PibblPhysicsQueryMatch2D[] {
+  return requirePhysicsWorld2DController(world).queryAabb(bounds, { ...options, mode: "all" });
+}
+
+/**
+ * Tests whether the committed world has any point containment match, stopping at the first match.
+ *
+ * @param world - World to query. See {@link PibblPhysicsWorldHandle2D}.
+ * @param point - Point in simulation coordinates. See {@link PibblPhysicsVector2}.
+ * @param options - Sensor policy and collider filtering. See {@link PibblPhysicsQueryOptions2D}.
+ * @returns Whether a matching collider exists.
+ */
+export function hasPointMatch2D(
   world: PibblPhysicsWorldHandle2D,
   point: PibblPhysicsVector2,
-  options?: PibblPhysicsQueryOptions2D<Mode>,
-): PibblPhysicsQueryResult2D<Mode, PibblPhysicsQueryMatch2D> {
-  return requirePhysicsWorld2DController(world).queryPoint(point, options);
+  options?: PibblPhysicsQueryOptions2D,
+): boolean {
+  return requirePhysicsWorld2DController(world).queryPoint(point, { ...options, mode: "any" });
+}
+
+/**
+ * Returns the first point containment result ordered by collider index, then generation, or null.
+ *
+ * @param world - World to query. See {@link PibblPhysicsWorldHandle2D}.
+ * @param point - Point in simulation coordinates. See {@link PibblPhysicsVector2}.
+ * @param options - Sensor policy and collider filtering. See {@link PibblPhysicsQueryOptions2D}.
+ * @returns One result or null. See {@link PibblPhysicsQueryMatch2D}.
+ */
+export function findPointMatch2D(
+  world: PibblPhysicsWorldHandle2D,
+  point: PibblPhysicsVector2,
+  options?: PibblPhysicsQueryOptions2D,
+): PibblPhysicsQueryMatch2D | null {
+  return requirePhysicsWorld2DController(world).queryPoint(point, { ...options, mode: "closest" });
+}
+
+/**
+ * Returns all point containment results ordered by collider index, then generation as a frozen array.
+ *
+ * @param world - World to query. See {@link PibblPhysicsWorldHandle2D}.
+ * @param point - Point in simulation coordinates. See {@link PibblPhysicsVector2}.
+ * @param options - Sensor policy and collider filtering. See {@link PibblPhysicsQueryOptions2D}.
+ * @returns Frozen results, empty when no collider matches. See {@link PibblPhysicsQueryMatch2D}.
+ */
+export function findAllPointMatches2D(
+  world: PibblPhysicsWorldHandle2D,
+  point: PibblPhysicsVector2,
+  options?: PibblPhysicsQueryOptions2D,
+): readonly PibblPhysicsQueryMatch2D[] {
+  return requirePhysicsWorld2DController(world).queryPoint(point, { ...options, mode: "all" });
 }
 
 /**

@@ -8,6 +8,7 @@ import {
 } from './spring.js';
 import type {
   PibblAnimationDefinition,
+  PibblAnimationTarget,
   PibblAnimationOptions,
   PibblAnimationSampleInput,
   PibblEasing,
@@ -86,6 +87,32 @@ const definitionRecords = new WeakMap<
   PibblAnimationDefinition<unknown>,
   DefinitionRecord<unknown>
 >();
+// Binding is carried by the definition, so the hook does not select algorithms.
+const targetBindings = new WeakMap<object, {
+  readonly unbound: boolean;
+  readonly bind: (target: PibblAnimationTarget<any>) => PibblAnimationDefinition<any>;
+}>();
+
+function targetDefinition<T>(
+  definition: PibblAnimationDefinition<T>,
+  unbound: boolean,
+  bind: (target: PibblAnimationTarget<T>) => PibblAnimationDefinition<T>,
+): PibblAnimationDefinition<T> {
+  targetBindings.set(definition, { unbound, bind });
+  return definition;
+}
+
+/** @internal Resolves hook-owned endpoints using the definition's implementation. */
+export function bindAnimationTarget<T>(
+  definition: PibblAnimationDefinition<T>,
+  target: PibblAnimationTarget<T>,
+): PibblAnimationDefinition<T> {
+  const binding = targetBindings.get(definition);
+  if (binding) return binding.bind(target);
+  getDefinitionRecord(definition);
+  return definition;
+}
+
 const seekableActivationRecords = new WeakMap<
   SeekableDefinitionActivation<unknown>,
   SeekableDefinitionActivationRecord<unknown>
@@ -523,7 +550,7 @@ function normalizeEasings(
  * @see {@link PibblTweenOptions}
  * @see {@link PibblAnimationDefinition}
  */
-export function tween<T>(options: Readonly<PibblTweenOptions<T>>): PibblAnimationDefinition<T> {
+export function tween<T = number>(options: Readonly<PibblTweenOptions<T>>): PibblAnimationDefinition<T> {
   assertDuration(options.duration, options.debugName);
   if (typeof options.easing !== 'undefined' && typeof options.easing !== 'function') {
     throw new TypeError(`${definitionLabel(options.debugName)} easing must be a function.`);
@@ -533,16 +560,19 @@ export function tween<T>(options: Readonly<PibblTweenOptions<T>>): PibblAnimatio
   }
   const hasFrom = hasOwn(options, 'from');
   const snapshots = new WeakMap<object, unknown>();
-  return createDefinition({
+  const record: TweenDefinitionRecord<T> = {
     kind: 'tween',
     duration: options.duration,
     debugName: options.debugName,
     hasFrom,
     from: hasFrom ? snapshotAnimationValue(options.from as T, snapshots) : undefined,
-    to: snapshotAnimationValue(options.to, snapshots),
+    to: snapshotAnimationValue(options.to as T, snapshots),
     easing: options.easing ?? easing.linear,
     interpolate: options.interpolate,
-  });
+  };
+  return targetDefinition(createDefinition(record), !hasOwn(options, 'to'), ({ from, to }) =>
+    tween({ from, to, duration: record.duration, easing: record.easing,
+      interpolate: record.interpolate, debugName: record.debugName }));
 }
 
 /**
@@ -594,9 +624,12 @@ export function keyframes<T>(
  * @see {@link PibblAnimationDefinition}
  */
 export function spring(
-  options: Readonly<PibblSpringOptions>,
+  options: Readonly<PibblSpringOptions> = {},
 ): PibblAnimationDefinition<number> {
-  return createDefinition(createSpringRecord(options));
+  const unbound = !hasOwn(options, 'to');
+  const record = createSpringRecord({ ...options, to: unbound ? 0 : options.to as number });
+  return targetDefinition(createDefinition<number>(record), unbound, ({ from, to, velocity }) =>
+    spring({ ...record, from, to, initialVelocity: velocity ?? record.initialVelocity }));
 }
 
 /**
@@ -675,6 +708,9 @@ export function stepper<State, T>(
 export function getDefinitionRecord<T>(
   definition: PibblAnimationDefinition<T>,
 ): DefinitionRecord<T> {
+  if (targetBindings.get(definition)?.unbound) {
+    throw new TypeError('Animation definition needs a target: supply to for drive(), or pass it to useAnimatedValue().');
+  }
   const record = definitionRecords.get(definition as PibblAnimationDefinition<unknown>);
   if (record === undefined) throw new TypeError('Expected a Pibbl animation definition.');
   return record as DefinitionRecord<T>;

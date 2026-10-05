@@ -1,7 +1,7 @@
 import type { collider2D, dynamicBody2D, kinematicBody2D, staticBody2D } from './runtime/descriptors.js';
 import type { PhysicsWorld2D, pibblPhysicsWorld2D } from './runtime/world-component.js';
 import type { Capsule2D, Chain2D, PhysicsShape2D, Segment2D } from './canvas/components.js';
-import type { overlapShape2D, queryAabb2D, raycast2D, shapeCast2D } from '../../2d.js';
+import type { findShapeOverlap2D, findAabbMatch2D, raycastClosest2D, shapeCastClosest2D } from '../../2d.js';
 import type {
   BoxStyle,
   PibblEventHandlers,
@@ -573,8 +573,8 @@ declare const worldHandle2DBrand: unique symbol;
  *
  * @see {@link Signal}
  * @see {@link pibblPhysicsWorld2D}
- * @see {@link raycast2D}
- * @see {@link shapeCast2D}
+ * @see {@link raycastClosest2D}
+ * @see {@link shapeCastClosest2D}
  */
 export interface PibblPhysicsWorldHandle2D {
   readonly [worldHandle2DBrand]: true;
@@ -583,28 +583,13 @@ export interface PibblPhysicsWorldHandle2D {
 }
 
 /**
- * Whether a query returns its closest match, any-match boolean, or all matches.
+ * Sensor policy, collision filtering, and body/collider exclusions for world queries.
  *
- * @see {@link PibblPhysicsQueryOptions2D}
- * @see {@link PibblPhysicsQueryResult2D}
- * @see {@link raycast2D}
- */
-export type PibblPhysicsQueryMode = "closest" | "any" | "all";
-
-/**
- * Result mode, sensor policy, collision filtering, and body/collider exclusions for world queries.
- *
- * @see {@link PibblPhysicsQueryMode}
  * @see {@link PibblPhysicsCollisionFilter}
  * @see {@link PibblPhysicsBodyHandle2D}
  * @see {@link PibblPhysicsColliderHandle2D}
  */
-export interface PibblPhysicsQueryOptions2D<Mode extends PibblPhysicsQueryMode = "closest"> {
-  /**
-   * Selects the supported mapping, placement, or result policy. See
-   * {@link PibblPhysicsQueryOptions2D}.
-   */
-  readonly mode?: Mode;
+export interface PibblPhysicsQueryOptions2D {
   /**
    * Selects `"include"` , `"exclude"` , `"only"` for sensors. See {@link PibblPhysicsQueryOptions2D}
    * .
@@ -627,7 +612,7 @@ export interface PibblPhysicsQueryOptions2D<Mode extends PibblPhysicsQueryMode =
  * @see {@link PibblPhysicsShapeHit2D}
  * @see {@link PibblPhysicsBodyHandle2D}
  * @see {@link PibblPhysicsColliderHandle2D}
- * @see {@link raycast2D}
+ * @see {@link raycastClosest2D}
  */
 export interface PibblPhysicsQueryHit2D extends PibblPhysicsShapeHit2D {
   /** Body identity associated with this event or result. See {@link PibblPhysicsBodyHandle2D}. */
@@ -653,8 +638,8 @@ export interface PibblPhysicsQueryHit2D extends PibblPhysicsShapeHit2D {
  *
  * @see {@link PibblPhysicsBodyHandle2D}
  * @see {@link PibblPhysicsColliderHandle2D}
- * @see {@link overlapShape2D}
- * @see {@link queryAabb2D}
+ * @see {@link findShapeOverlap2D}
+ * @see {@link findAabbMatch2D}
  */
 export interface PibblPhysicsQueryMatch2D {
   /** Body identity associated with this event or result. See {@link PibblPhysicsBodyHandle2D}. */
@@ -674,22 +659,6 @@ export interface PibblPhysicsQueryMatch2D {
    */
   readonly tag: unknown;
 }
-
-/**
- * Selects a boolean, readonly result list, or nullable closest result from the query mode.
- *
- * @see {@link PibblPhysicsQueryMode}
- * @see {@link raycast2D}
- * @see {@link shapeCast2D}
- */
-export type PibblPhysicsQueryResult2D<
-  Mode extends PibblPhysicsQueryMode,
-  Result,
-> = Mode extends "any"
-  ? boolean
-  : Mode extends "all"
-    ? readonly Result[]
-    : Result | null;
 
 /**
  * Bodies, colliders, contact geometry, impulse, tags, and tick for a collision event.

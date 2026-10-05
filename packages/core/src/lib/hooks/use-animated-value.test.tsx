@@ -6,7 +6,7 @@ import {
   type PibblInternalRenderOwner,
 } from '@pibbl/core/internal';
 import {
-  pibbl,
+  tween, spring, pibbl,
   computed,
   useConst,
   useAnimatedValue,
@@ -55,16 +55,12 @@ function mount(node: Parameters<typeof pibbl>[1]): {
   return { canvas, controller };
 }
 
-describe('useAnimatedValue mount behavior', () => {
+describe('animated value hooks mount behavior', () => {
   it('resolves signal-valued targets, option objects, and direct option fields', () => {
     const target = signal(10);
     const duration = signal(100);
     const initial = signal(0);
-    const options = signal({
-      type: 'tween' as const,
-      duration,
-      initial,
-    });
+    const options = signal({ animation: computed(() => tween({ duration: duration.get() })), initial });
     let output!: Signal<number>;
     function Probe() {
       output = useAnimatedValue(target, options);
@@ -90,7 +86,7 @@ describe('useAnimatedValue mount behavior', () => {
     const values: number[] = [];
     const outputs: Signal<number>[] = [];
     function Probe({ target }: { target: number }) {
-      const output = useAnimatedValue(target, { type: 'tween', duration: 100 });
+      const output = useAnimatedValue(target, { animation: tween({ duration: 100 }) });
       outputs.push(output);
       values.push(output.get());
     }
@@ -117,11 +113,7 @@ describe('useAnimatedValue mount behavior', () => {
     const values: number[] = [];
     let output!: Signal<number>;
     function Probe() {
-      output = useAnimatedValue(10, {
-        type: 'tween',
-        duration: 100,
-        initial: 0,
-      });
+      output = useAnimatedValue(10, { animation: tween({ duration: 100 }), initial: 0 });
       values.push(output.get());
     }
 
@@ -145,12 +137,7 @@ describe('useAnimatedValue mount behavior', () => {
     const beforePlaybacks = animationPlaybackSnapshot();
     let output!: Signal<number>;
     function Probe({ target }: { target: number }) {
-      output = useAnimatedValue(target, {
-        type: 'tween',
-        duration: 100,
-        initial: 1.2,
-        equals: (previous, next) => Math.floor(previous) === Math.floor(next),
-      });
+      output = useAnimatedValue(target, { animation: tween({ duration: 100 }), initial: 1.2, equals: (previous, next) => Math.floor(previous) === Math.floor(next) });
       output.get();
     }
 
@@ -168,15 +155,11 @@ describe('useAnimatedValue mount behavior', () => {
   });
 });
 
-describe('useAnimatedValue retargeting', () => {
+describe('animated value hooks retargeting', () => {
   it('restarts a tween at full duration from the last committed presented value', () => {
     let output!: Signal<number>;
     function Probe({ target }: { target: number }) {
-      output = useAnimatedValue(target, {
-        type: 'tween',
-        duration: 100,
-        initial: 0,
-      });
+      output = useAnimatedValue(target, { animation: tween({ duration: 100 }), initial: 0 });
       output.get();
     }
 
@@ -199,7 +182,7 @@ describe('useAnimatedValue retargeting', () => {
   it('coalesces successful target changes before Begin to one latest retarget', () => {
     let output!: Signal<number>;
     function Probe({ target }: { target: number }) {
-      output = useAnimatedValue(target, { type: 'tween', duration: 100 });
+      output = useAnimatedValue(target, { animation: tween({ duration: 100 }) });
       output.get();
     }
 
@@ -219,7 +202,7 @@ describe('useAnimatedValue retargeting', () => {
 
   it('validates changed options during render even when the target is equal', () => {
     function Probe({ duration }: { duration: number }) {
-      useAnimatedValue(10, { type: 'tween', duration }).get();
+      useAnimatedValue(10, { animation: tween({ duration }) }).get();
     }
 
     const { canvas } = mount(<Probe duration={100} />);
@@ -235,15 +218,7 @@ describe('useAnimatedValue retargeting', () => {
   });
 
   it('carries the last committed analytic spring velocity into a retarget', () => {
-    const springOptions = {
-      type: 'spring' as const,
-      stiffness: 100,
-      damping: 1,
-      restSpeed: 0.001,
-      restDelta: 0.001,
-      maxDuration: 2_000,
-      initial: 0,
-    };
+    const springOptions = { animation: spring({ stiffness: 100, damping: 1, restSpeed: 0.001, restDelta: 0.001, maxDuration: 2_000 }), initial: 0 };
     let output!: Signal<number>;
     function Probe({ target }: { target: number }) {
       output = useAnimatedValue(target, springOptions);
@@ -263,11 +238,11 @@ describe('useAnimatedValue retargeting', () => {
     const zeroVelocity = sampleSpring(createSpringRecord({
       from: committed,
       to: 0,
-      stiffness: springOptions.stiffness,
-      damping: springOptions.damping,
-      restSpeed: springOptions.restSpeed,
-      restDelta: springOptions.restDelta,
-      maxDuration: springOptions.maxDuration,
+      stiffness: 100,
+      damping: 1,
+      restSpeed: 0.001,
+      restDelta: 0.001,
+      maxDuration: 2_000,
       initialVelocity: 0,
     }), 0.01).position;
     expect(zeroVelocity).toBeLessThan(committed);
@@ -278,7 +253,7 @@ describe('useAnimatedValue retargeting', () => {
   it('uses successful option-only changes for the next target without restarting early', () => {
     let output!: Signal<number>;
     function Probe({ duration, target }: { duration: number; target: number }) {
-      output = useAnimatedValue(target, { type: 'tween', duration });
+      output = useAnimatedValue(target, { animation: tween({ duration }) });
       output.get();
     }
 
@@ -300,12 +275,7 @@ describe('useAnimatedValue retargeting', () => {
       if (record.kind === 'animation-sample') sampleNames.push(record.debugName);
     });
     function Probe({ debugName }: { debugName: string }) {
-      useAnimatedValue(10, {
-        type: 'tween',
-        duration: 100,
-        initial: 0,
-        debugName,
-      }).get();
+      useAnimatedValue(10, { animation: tween({ duration: 100 }), initial: 0, debugName }).get();
     }
 
     try {
@@ -325,13 +295,32 @@ describe('useAnimatedValue retargeting', () => {
     }
   });
 
+  it('does not adopt a target when its animation factory fails', () => {
+    let output!: Signal<number>;
+    function Probe({ target, fail = false }: { target: number; fail?: boolean }) {
+      output = useAnimatedValue(target, {
+        animation: () => {
+          if (fail) throw new Error('expected factory failure');
+          return tween({ duration: 100 });
+        },
+      });
+    }
+    const { canvas } = mount(<Probe target={0} />);
+    driver.flush(0);
+    pibbl(canvas, <Probe target={10} fail />);
+    expect(() => driver.flush(10)).toThrow('expected factory failure');
+    expect(output.get()).toBe(0);
+    expect(animationPlaybackSnapshot().queuedCommands).toBe(0);
+    expect(animationPlaybackSnapshot().activePlaybacks).toBe(0);
+  });
+
   it('adopts no target from a failed shared root transaction', () => {
     let output!: Signal<number>;
     let owner!: PibblInternalRenderOwner;
     let failComposition = false;
     const workKey = {};
     function Probe({ target }: { target: number }) {
-      output = useAnimatedValue(target, { type: 'tween', duration: 100 });
+      output = useAnimatedValue(target, { animation: tween({ duration: 100 }) });
       output.get();
       owner ??= pibblInternalCurrentRenderOwner();
     }
@@ -365,14 +354,10 @@ describe('useAnimatedValue retargeting', () => {
     let equalityCalls = 0;
     let output!: Signal<number>;
     function Probe({ fail, target }: { fail: boolean; target: number }) {
-      output = useAnimatedValue(target, {
-        type: 'tween',
-        duration: 100,
-        equals: fail ? () => {
+      output = useAnimatedValue(target, { animation: tween({ duration: 100 }), equals: fail ? () => {
           equalityCalls++;
           throw failure;
-        } : Object.is,
-      });
+        } : Object.is });
       output.get();
     }
 
@@ -396,14 +381,10 @@ describe('useAnimatedValue retargeting', () => {
   it('runs target equality under the Render signal-write guard', () => {
     const external = signal(0);
     function Probe({ target, write }: { target: number; write: boolean }) {
-      useAnimatedValue(target, {
-        type: 'tween',
-        duration: 100,
-        equals: write ? () => {
+      useAnimatedValue(target, { animation: tween({ duration: 100 }), equals: write ? () => {
           external.set(1);
           return false;
-        } : Object.is,
-      }).get();
+        } : Object.is }).get();
     }
 
     const { canvas } = mount(<Probe target={0} write={false} />);
@@ -429,8 +410,8 @@ describe('useAnimatedValue retargeting', () => {
     const workKey = {};
     function Child({ initial, target }: { initial?: number; target: number }) {
       const output = initial === undefined ?
-        useAnimatedValue(target, { type: 'tween', duration: 100 }) :
-        useAnimatedValue(target, { type: 'tween', duration: 100, initial });
+        useAnimatedValue(target, { animation: tween({ duration: 100 }) }) :
+        useAnimatedValue(target, { animation: tween({ duration: 100 }), initial });
       const doubled = useConst(() => computed(() => output.get() * 2));
       if (observedOutput === undefined) {
         observedOutput = output;
@@ -488,27 +469,22 @@ describe('useAnimatedValue retargeting', () => {
   });
 });
 
-describe('useAnimatedValue public types and lifecycle', () => {
+describe('animated value hooks public types and lifecycle', () => {
   it('returns readonly signals, keeps spring numeric, and supports generic tween interpolation', () => {
     const tweenTransition = () => useAnimatedValue(
       { x: 10 },
-      {
-        type: 'tween',
-        duration: 100,
-        initial: { x: 0 },
-        interpolate: (from, to, progress) => ({
+      { animation: tween({ duration: 100, interpolate: (from, to, progress) => ({
           x: from.x + (to.x - from.x) * progress,
-        }),
-      },
+        }) }), initial: { x: 0 } },
     );
-    const springTransition = () => useAnimatedValue(10, { type: 'spring' });
+    const springTransition = () => useAnimatedValue(10, { animation: spring({  }) });
 
     expectTypeOf(tweenTransition).returns.toEqualTypeOf<Signal<{ x: number }>>();
     expectTypeOf(springTransition).returns.toEqualTypeOf<Signal<number>>();
     const invalidTypeExamples = () => {
       // @ts-expect-error spring transitions accept only numeric targets
-      useAnimatedValue('ten', { type: 'spring' });
-      const readonly = useAnimatedValue(1, { type: 'spring' });
+      useAnimatedValue('ten', { animation: spring({  }) });
+      const readonly = useAnimatedValue(1, { animation: spring({  }) });
       // @ts-expect-error transition outputs deliberately expose no write method
       readonly.set(2);
     };
@@ -522,11 +498,7 @@ describe('useAnimatedValue public types and lifecycle', () => {
       const beforeGraph = signalGraphSnapshot();
       let output!: Signal<number>;
       function Probe() {
-        output = useAnimatedValue(10, {
-          type: 'tween',
-          duration: 100,
-          initial: 0,
-        });
+        output = useAnimatedValue(10, { animation: tween({ duration: 100 }), initial: 0 });
         output.get();
       }
 
