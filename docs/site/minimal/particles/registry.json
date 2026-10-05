@@ -1,0 +1,302 @@
+[
+  {
+    "id": "descriptors",
+    "title": "Particle descriptors",
+    "description": "Define randomized spawn values and lifespan curves.",
+    "source": "descriptors.ts",
+    "environment": "typecheck",
+    "symbols": [
+      {
+        "name": "particleChoice",
+        "importPath": "@crc/core/particles"
+      },
+      {
+        "name": "particleCurve",
+        "importPath": "@crc/core/particles"
+      },
+      {
+        "name": "particleGradient",
+        "importPath": "@crc/core/particles"
+      },
+      {
+        "name": "particleInteger",
+        "importPath": "@crc/core/particles"
+      },
+      {
+        "name": "particleParameter",
+        "importPath": "@crc/core/particles"
+      },
+      {
+        "name": "particleRange",
+        "importPath": "@crc/core/particles"
+      },
+      {
+        "name": "CRCParticleChoice",
+        "importPath": "@crc/core/particles"
+      },
+      {
+        "name": "CRCParticleCurve",
+        "importPath": "@crc/core/particles"
+      },
+      {
+        "name": "CRCParticleCurveOptions",
+        "importPath": "@crc/core/particles"
+      },
+      {
+        "name": "CRCParticleCurveValue",
+        "importPath": "@crc/core/particles"
+      },
+      {
+        "name": "CRCParticleGradient",
+        "importPath": "@crc/core/particles"
+      },
+      {
+        "name": "CRCParticleIntegerRange",
+        "importPath": "@crc/core/particles"
+      },
+      {
+        "name": "CRCParticleParameterReference",
+        "importPath": "@crc/core/particles"
+      },
+      {
+        "name": "CRCParticleRange",
+        "importPath": "@crc/core/particles"
+      },
+      {
+        "name": "CRCParticleScalar",
+        "importPath": "@crc/core/particles"
+      },
+      {
+        "name": "CRCParticleVector2",
+        "importPath": "@crc/core/particles"
+      }
+    ],
+    "notes": []
+  },
+  {
+    "id": "effect",
+    "title": "Particle effect configuration",
+    "description": "Compose a typed ember emitter from emission, motion, appearance, and bounds.",
+    "source": "effect.ts",
+    "environment": "typecheck",
+    "symbols": [
+      {
+        "name": "defineParticleEffect2D",
+        "importPath": "@crc/core/particles"
+      },
+      {
+        "name": "CRCParticleAppearance",
+        "importPath": "@crc/core/particles"
+      },
+      {
+        "name": "CRCParticleBounds2D",
+        "importPath": "@crc/core/particles"
+      },
+      {
+        "name": "CRCParticleEffect2D",
+        "importPath": "@crc/core/particles"
+      },
+      {
+        "name": "CRCParticleEffect2DInput",
+        "importPath": "@crc/core/particles"
+      },
+      {
+        "name": "CRCParticleEmission",
+        "importPath": "@crc/core/particles"
+      },
+      {
+        "name": "CRCParticleEmitter2D",
+        "importPath": "@crc/core/particles"
+      },
+      {
+        "name": "CRCParticleInitial2D",
+        "importPath": "@crc/core/particles"
+      },
+      {
+        "name": "CRCParticleMotion2D",
+        "importPath": "@crc/core/particles"
+      },
+      {
+        "name": "CRCParticleOverflow",
+        "importPath": "@crc/core/particles"
+      },
+      {
+        "name": "CRCParticleRenderer2D",
+        "importPath": "@crc/core/particles"
+      },
+      {
+        "name": "CRCParticleShape2D",
+        "importPath": "@crc/core/particles"
+      }
+    ],
+    "notes": []
+  },
+  {
+    "id": "parameters",
+    "title": "Effect parameters",
+    "description": "Define typed spawn and render parameters and use them in an effect.",
+    "source": "parameters.ts",
+    "environment": "typecheck",
+    "symbols": [
+      {
+        "name": "CRCParticleParameterDefinition",
+        "importPath": "@crc/core/particles"
+      },
+      {
+        "name": "CRCParticleParameterDefinitions",
+        "importPath": "@crc/core/particles"
+      },
+      {
+        "name": "CRCParticleParameterTiming",
+        "importPath": "@crc/core/particles"
+      },
+      {
+        "name": "CRCParticleParameterValue",
+        "importPath": "@crc/core/particles"
+      },
+      {
+        "name": "CRCParticleParameterValues",
+        "importPath": "@crc/core/particles"
+      },
+      {
+        "name": "CRCParticleValueFor",
+        "importPath": "@crc/core/particles"
+      },
+      {
+        "name": "CRCParticleValuesOf",
+        "importPath": "@crc/core/particles"
+      }
+    ],
+    "notes": []
+  },
+  {
+    "id": "system",
+    "title": "Mounted particle system",
+    "description": "Mount a manual burst effect and trigger it with pointer input.",
+    "source": "system.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "Particles2D",
+        "importPath": "@crc/core/particles"
+      },
+      {
+        "name": "useParticleSystem",
+        "importPath": "@crc/core/particles"
+      },
+      {
+        "name": "CRCParticleBurstOverrides",
+        "importPath": "@crc/core/particles"
+      },
+      {
+        "name": "CRCParticleCommonProps",
+        "importPath": "@crc/core/particles"
+      },
+      {
+        "name": "CRCParticleExecution",
+        "importPath": "@crc/core/particles"
+      },
+      {
+        "name": "CRCParticleSystem",
+        "importPath": "@crc/core/particles"
+      },
+      {
+        "name": "CRCParticleSystemOptions",
+        "importPath": "@crc/core/particles"
+      },
+      {
+        "name": "CRCParticleSystemStatus",
+        "importPath": "@crc/core/particles"
+      },
+      {
+        "name": "Particles2DProps",
+        "importPath": "@crc/core/particles"
+      },
+      {
+        "name": "Particles2DStyle",
+        "importPath": "@crc/core/particles"
+      }
+    ],
+    "notes": [
+      "Creates its own canvas and disposes the CRC mount on pagehide."
+    ]
+  },
+  {
+    "id": "flow",
+    "title": "Flow-driven particles",
+    "description": "Advect mist through a mount-owned flow field and source.",
+    "source": "flow.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "useFlowField2D",
+        "importPath": "@crc/core/particles"
+      },
+      {
+        "name": "useFlowSource2D",
+        "importPath": "@crc/core/particles"
+      },
+      {
+        "name": "CRCFlowField2D",
+        "importPath": "@crc/core/particles"
+      },
+      {
+        "name": "CRCFlowFieldOptions2D",
+        "importPath": "@crc/core/particles"
+      },
+      {
+        "name": "CRCFlowObstacleBatch2D",
+        "importPath": "@crc/core/particles"
+      },
+      {
+        "name": "CRCFlowObstacleSource2D",
+        "importPath": "@crc/core/particles"
+      },
+      {
+        "name": "CRCFlowSourceOptions2D",
+        "importPath": "@crc/core/particles"
+      }
+    ],
+    "notes": [
+      "Creates its own canvas and disposes the CRC mount on pagehide."
+    ]
+  },
+  {
+    "id": "events",
+    "title": "Particle lifecycle events",
+    "description": "Handle the discriminated event and diagnostic records.",
+    "source": "events.ts",
+    "environment": "typecheck",
+    "symbols": [
+      {
+        "name": "CRCParticleBurstAcceptedEvent",
+        "importPath": "@crc/core/particles"
+      },
+      {
+        "name": "CRCParticleBurstRejectedEvent",
+        "importPath": "@crc/core/particles"
+      },
+      {
+        "name": "CRCParticleDiagnostic",
+        "importPath": "@crc/core/particles"
+      },
+      {
+        "name": "CRCParticleDrainStartEvent",
+        "importPath": "@crc/core/particles"
+      },
+      {
+        "name": "CRCParticleFinishEvent",
+        "importPath": "@crc/core/particles"
+      },
+      {
+        "name": "CRCParticleStartEvent",
+        "importPath": "@crc/core/particles"
+      },
+      {
+        "name": "CRCParticleSystemEvent",
+        "importPath": "@crc/core/particles"
+      }
+    ],
+    "notes": []
+  }
+]

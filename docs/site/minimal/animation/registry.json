@@ -1,0 +1,178 @@
+[
+  {
+    "id": "tween",
+    "title": "Tween playback controls",
+    "description": "Animate a signal and control the mounted playback with native buttons.",
+    "source": "tween.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "tween",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "track",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "easing",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "usePlayback",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "CRCEasing",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "CRCInterpolator",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "CRCTweenOptions",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "CRCAnimationDefinition",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "CRCPlayback",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "CRCPlaybackOptions",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "CRCPlaybackEvent",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "CRCPlaybackStatus",
+        "importPath": "@crc/core"
+      }
+    ],
+    "notes": [
+      "Playback owns the animation; disposing the CRC mount releases it. Commands are applied by CRC's shared scheduler."
+    ]
+  },
+  {
+    "id": "composition",
+    "title": "Compose keyframes and springs",
+    "description": "Run two independent tracks together, then mark, wait, and repeat.",
+    "source": "composition.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "keyframes",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "spring",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "sequence",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "parallel",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "wait",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "marker",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "repeat",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "CRCAnimationProgram",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "CRCAnimationRepeatDirection",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "CRCAnimationRepeatOptions",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "CRCKeyframesOptions",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "CRCSpringOptions",
+        "importPath": "@crc/core"
+      }
+    ],
+    "notes": [
+      "Parallel tracks must not ambiguously write the same signal. Definitions and programs are immutable."
+    ]
+  },
+  {
+    "id": "custom",
+    "title": "Custom sampling and fixed steps",
+    "description": "Combine a time-sampled sine wave with a fixed-step state machine.",
+    "source": "custom.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "defineAnimation",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "stepper",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "CRCAnimationOptions",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "CRCAnimationSampleInput",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "CRCStepperOptions",
+        "importPath": "@crc/core"
+      }
+    ],
+    "notes": [
+      "Custom samples are seekable; stateful steppers integrate clamped elapsed time and are not generally seekable."
+    ]
+  },
+  {
+    "id": "targets",
+    "title": "Animate changing targets",
+    "description": "Compare a tween and spring as the same target changes.",
+    "source": "targets.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "useAnimatedValue",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "CRCTweenAnimatedValueOptions",
+        "importPath": "@crc/core"
+      },
+      {
+        "name": "CRCSpringAnimatedValueOptions",
+        "importPath": "@crc/core"
+      }
+    ],
+    "notes": [
+      "Read the target during component evaluation. The mounted hook owns the animated value and cleanup."
+    ]
+  }
+]
