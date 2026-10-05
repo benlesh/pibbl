@@ -17,8 +17,24 @@ const example = examples.find(example => example.id === id);
     const frame = host.querySelector('iframe')!;
     const run = host.querySelector<HTMLButtonElement>('[data-run]')!;
     const stop = host.querySelector<HTMLButtonElement>('[data-stop]')!;
+    let observer: ResizeObserver | undefined;
+    frame.addEventListener('load', () => {
+      observer?.disconnect();
+      if (frame.src === 'about:blank') return;
+      const body = frame.contentDocument?.body;
+      if (!body || !frame.contentWindow) return;
+      const fit = () => {
+        const style = frame.contentWindow!.getComputedStyle(body);
+        const height = body.getBoundingClientRect().height + parseFloat(style.marginTop) + parseFloat(style.marginBottom);
+        const border = frame.offsetHeight - frame.clientHeight;
+        frame.style.height = `${Math.max(180, Math.ceil(height + border))}px`;
+      };
+      observer = new ResizeObserver(fit);
+      observer.observe(body);
+      fit();
+    });
     function start() { frame.src = frame.dataset.src!; run.disabled = true; stop.disabled = false; }
-    function end() { frame.src = 'about:blank'; run.disabled = false; stop.disabled = true; }
+    function end() { observer?.disconnect(); frame.src = 'about:blank'; run.disabled = false; stop.disabled = true; }
     run.addEventListener('click', start);
     stop.addEventListener('click', end);
     window.addEventListener('pagehide', end);

@@ -148,7 +148,7 @@ if (browserExamples.length) {
     },
   });
   for (const example of browserExamples) {
-    const html = `<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><style>body{margin:12px;font:16px/1.5 system-ui;color:#17232b;background:#fff}canvas{max-width:100%;height:auto}pre{white-space:pre-wrap;overflow-wrap:anywhere}</style><body><script type="module">try { await import('./${basename(example.id)}.js'); document.body.dataset.exampleReady='true'; } catch(error) { document.body.dataset.exampleError=String(error); const output=document.createElement('pre'); output.textContent=String(error); document.body.append(output); }</script></body></html>`;
+    const html = `<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><style>body{margin:12px;font:16px/1.5 system-ui;color:#17232b;background:#fff}canvas{display:block;max-width:100%;height:auto}pre{white-space:pre-wrap;overflow-wrap:anywhere}</style><body><script type="module">try { await import('./${basename(example.id)}.js'); document.body.dataset.exampleReady='true'; } catch(error) { document.body.dataset.exampleError=String(error); const output=document.createElement('pre'); output.textContent=String(error); document.body.append(output); }</script></body></html>`;
     await writeFile(
       resolve(publicDir, `minimal-runtime/${example.id}.html`),
       html,
