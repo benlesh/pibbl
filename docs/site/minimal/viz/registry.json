@@ -1,0 +1,448 @@
+[
+  {
+    "id": "scales",
+    "title": "Scales and axes",
+    "description": "Create band and linear scales with a typed axis and inspect resolved mappings.",
+    "source": "scales.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "Scale",
+        "importPath": "@crc/core/viz"
+      },
+      {
+        "name": "useScale",
+        "importPath": "@crc/core/viz"
+      },
+      {
+        "name": "ScaleId",
+        "importPath": "@crc/core/viz"
+      },
+      {
+        "name": "LinearDomain",
+        "importPath": "@crc/core/viz"
+      },
+      {
+        "name": "BandCategory",
+        "importPath": "@crc/core/viz"
+      },
+      {
+        "name": "BandDomain",
+        "importPath": "@crc/core/viz"
+      },
+      {
+        "name": "BandScaleProps",
+        "importPath": "@crc/core/viz"
+      },
+      {
+        "name": "BandScaleRange",
+        "importPath": "@crc/core/viz"
+      },
+      {
+        "name": "ResolvedBandScale",
+        "importPath": "@crc/core/viz"
+      },
+      {
+        "name": "ScaleRange",
+        "importPath": "@crc/core/viz"
+      },
+      {
+        "name": "ScaleLayoutStyle",
+        "importPath": "@crc/core/viz"
+      },
+      {
+        "name": "LinearScaleProps",
+        "importPath": "@crc/core/viz"
+      },
+      {
+        "name": "ScaleProps",
+        "importPath": "@crc/core/viz"
+      },
+      {
+        "name": "ResolvedLinearScale",
+        "importPath": "@crc/core/viz"
+      },
+      {
+        "name": "ResolvedScale",
+        "importPath": "@crc/core/viz"
+      },
+      {
+        "name": "Axis",
+        "importPath": "@crc/core/viz"
+      },
+      {
+        "name": "AxisStyle",
+        "importPath": "@crc/core/viz"
+      },
+      {
+        "name": "AxisProps",
+        "importPath": "@crc/core/viz"
+      }
+    ],
+    "notes": ["Creates its own canvas and disposes the CRC mount on pagehide."]
+  },
+  {
+    "id": "lines",
+    "title": "Line series",
+    "description": "Plot readings with a nullable gap and a scale-adjusted marker.",
+    "source": "lines.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "LineSeries",
+        "importPath": "@crc/core/viz"
+      },
+      {
+        "name": "ScaleAdjust",
+        "importPath": "@crc/core/viz"
+      },
+      {
+        "name": "LineCoordinate",
+        "importPath": "@crc/core/viz"
+      },
+      {
+        "name": "LineAccessor",
+        "importPath": "@crc/core/viz"
+      },
+      {
+        "name": "LineCurve",
+        "importPath": "@crc/core/viz"
+      },
+      {
+        "name": "LineSeriesStyle",
+        "importPath": "@crc/core/viz"
+      },
+      {
+        "name": "LineSeriesProps",
+        "importPath": "@crc/core/viz"
+      },
+      {
+        "name": "ScaleAdjustProps",
+        "importPath": "@crc/core/viz"
+      }
+    ],
+    "notes": ["Creates its own canvas and disposes the CRC mount on pagehide."]
+  },
+  {
+    "id": "points",
+    "title": "Point and custom plot series",
+    "description": "Render styled point marks and custom keyed point content.",
+    "source": "points.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "PointSeries",
+        "importPath": "@crc/core/viz"
+      },
+      {
+        "name": "PointAccessor",
+        "importPath": "@crc/core/viz"
+      },
+      {
+        "name": "PointMarkStyle",
+        "importPath": "@crc/core/viz"
+      },
+      {
+        "name": "PointSeriesStyle",
+        "importPath": "@crc/core/viz"
+      },
+      {
+        "name": "PointStyleResolver",
+        "importPath": "@crc/core/viz"
+      },
+      {
+        "name": "PointSeriesProps",
+        "importPath": "@crc/core/viz"
+      },
+      {
+        "name": "PlotSeries",
+        "importPath": "@crc/core/viz"
+      },
+      {
+        "name": "PlotSeriesProps",
+        "importPath": "@crc/core/viz"
+      },
+      {
+        "name": "PlotKeyAccessor",
+        "importPath": "@crc/core/viz"
+      }
+    ],
+    "notes": ["Creates its own canvas and disposes the CRC mount on pagehide."]
+  },
+  {
+    "id": "bars",
+    "title": "Threshold-colored bars",
+    "description": "Render category bars with a typed style resolver and threshold fill.",
+    "source": "bars.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "BarSeries",
+        "importPath": "@crc/core/viz"
+      },
+      {
+        "name": "BarThresholdFill",
+        "importPath": "@crc/core/viz"
+      },
+      {
+        "name": "BarCategoryAccessor",
+        "importPath": "@crc/core/viz"
+      },
+      {
+        "name": "BarSeriesStyle",
+        "importPath": "@crc/core/viz"
+      },
+      {
+        "name": "BarStyleResolver",
+        "importPath": "@crc/core/viz"
+      },
+      {
+        "name": "BarSeriesProps",
+        "importPath": "@crc/core/viz"
+      }
+    ],
+    "notes": ["Creates its own canvas and disposes the CRC mount on pagehide."]
+  },
+  {
+    "id": "pie",
+    "title": "Pie chart composition",
+    "description": "Compute pie geometry and render labeled donut slices.",
+    "source": "pie.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "pieSlices",
+        "importPath": "@crc/core/viz"
+      },
+      {
+        "name": "PieOptions",
+        "importPath": "@crc/core/viz"
+      },
+      {
+        "name": "PieSliceGeometry",
+        "importPath": "@crc/core/viz"
+      },
+      {
+        "name": "PieLayout",
+        "importPath": "@crc/core/viz"
+      },
+      {
+        "name": "PieSlice",
+        "importPath": "@crc/core/viz"
+      },
+      {
+        "name": "PieLabel",
+        "importPath": "@crc/core/viz"
+      },
+      {
+        "name": "PieLayoutProps",
+        "importPath": "@crc/core/viz"
+      },
+      {
+        "name": "PieLayoutStyle",
+        "importPath": "@crc/core/viz"
+      },
+      {
+        "name": "PieLayoutSlice",
+        "importPath": "@crc/core/viz"
+      },
+      {
+        "name": "PieLabelPlacement",
+        "importPath": "@crc/core/viz"
+      },
+      {
+        "name": "PieLabelLayout",
+        "importPath": "@crc/core/viz"
+      },
+      {
+        "name": "PieSliceProps",
+        "importPath": "@crc/core/viz"
+      },
+      {
+        "name": "PieSliceStyle",
+        "importPath": "@crc/core/viz"
+      },
+      {
+        "name": "PieLabelProps",
+        "importPath": "@crc/core/viz"
+      },
+      {
+        "name": "PieLabelStyle",
+        "importPath": "@crc/core/viz"
+      }
+    ],
+    "notes": ["Creates its own canvas and disposes the CRC mount on pagehide."]
+  },
+  {
+    "id": "nearest",
+    "title": "Nearest-point lookup",
+    "description": "Locate the nearest observation in pixel and domain space.",
+    "source": "nearest.ts",
+    "environment": "typecheck",
+    "symbols": [
+      {
+        "name": "nearestDomainValue",
+        "importPath": "@crc/core/viz"
+      },
+      {
+        "name": "nearestPoint",
+        "importPath": "@crc/core/viz"
+      },
+      {
+        "name": "NearestPointOptions",
+        "importPath": "@crc/core/viz"
+      },
+      {
+        "name": "NearestPoint",
+        "importPath": "@crc/core/viz"
+      }
+    ],
+    "notes": []
+  },
+  {
+    "id": "hover-queries",
+    "title": "Hover query helpers",
+    "description": "Run closest-point, closest-x, and interpolated-x queries against a scale context.",
+    "source": "hover-queries.ts",
+    "environment": "typecheck",
+    "symbols": [
+      {
+        "name": "defineSeries",
+        "importPath": "@crc/core/viz"
+      },
+      {
+        "name": "closestPoint",
+        "importPath": "@crc/core/viz"
+      },
+      {
+        "name": "closestX",
+        "importPath": "@crc/core/viz"
+      },
+      {
+        "name": "interpolateX",
+        "importPath": "@crc/core/viz"
+      },
+      {
+        "name": "linearInterpolation",
+        "importPath": "@crc/core/viz"
+      },
+      {
+        "name": "HoverQueryContext",
+        "importPath": "@crc/core/viz"
+      },
+      {
+        "name": "HoverQuery",
+        "importPath": "@crc/core/viz"
+      },
+      {
+        "name": "HoverSeries",
+        "importPath": "@crc/core/viz"
+      },
+      {
+        "name": "HoverPoint",
+        "importPath": "@crc/core/viz"
+      },
+      {
+        "name": "HoverHit",
+        "importPath": "@crc/core/viz"
+      },
+      {
+        "name": "HoverSeriesMap",
+        "importPath": "@crc/core/viz"
+      },
+      {
+        "name": "ClosestPointHit",
+        "importPath": "@crc/core/viz"
+      },
+      {
+        "name": "ClosestPointOptions",
+        "importPath": "@crc/core/viz"
+      },
+      {
+        "name": "ClosestXOptions",
+        "importPath": "@crc/core/viz"
+      },
+      {
+        "name": "ClosestXHit",
+        "importPath": "@crc/core/viz"
+      },
+      {
+        "name": "HoverInterpolation",
+        "importPath": "@crc/core/viz"
+      },
+      {
+        "name": "InterpolateXOptions",
+        "importPath": "@crc/core/viz"
+      },
+      {
+        "name": "HoverSample",
+        "importPath": "@crc/core/viz"
+      }
+    ],
+    "notes": []
+  },
+  {
+    "id": "hover-card",
+    "title": "Hover inspection card",
+    "description": "Display a measured point in a bounded hover card.",
+    "source": "hover-card.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "HoverData",
+        "importPath": "@crc/core/viz"
+      },
+      {
+        "name": "HoverDataProps",
+        "importPath": "@crc/core/viz"
+      },
+      {
+        "name": "HoverCard",
+        "importPath": "@crc/core/viz"
+      },
+      {
+        "name": "HoverCardProps",
+        "importPath": "@crc/core/viz"
+      },
+      {
+        "name": "HoverCardStyle",
+        "importPath": "@crc/core/viz"
+      },
+      {
+        "name": "HoverBounds",
+        "importPath": "@crc/core/viz"
+      },
+      {
+        "name": "HoverPlacement",
+        "importPath": "@crc/core/viz"
+      }
+    ],
+    "notes": ["Creates its own canvas and disposes the CRC mount on pagehide."]
+  },
+  {
+    "id": "anchored",
+    "title": "Anchored callouts",
+    "description": "Arrange labeled callouts while clearing their anchor points.",
+    "source": "anchored.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "AnchoredLayout",
+        "importPath": "@crc/core/viz"
+      },
+      {
+        "name": "AnchoredItem",
+        "importPath": "@crc/core/viz"
+      },
+      {
+        "name": "AnchoredPlacement",
+        "importPath": "@crc/core/viz"
+      },
+      {
+        "name": "AnchoredLayoutProps",
+        "importPath": "@crc/core/viz"
+      }
+    ],
+    "notes": ["Creates its own canvas and disposes the CRC mount on pagehide."]
+  }
+]
