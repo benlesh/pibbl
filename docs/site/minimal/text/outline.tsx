@@ -20,7 +20,7 @@ document.body.append(canvas, status);
 const abort = new AbortController();
 const fontOptions: OutlineFontOptions = { signal: abort.signal };
 const shapeOptions: TextGeometryOptions = {
-  fontSize: 108,
+  fontSize: 72,
   direction: 'ltr',
   features: { kern: true, liga: true },
 };
