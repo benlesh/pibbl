@@ -30,12 +30,11 @@
   {
     "id": "three-layer",
     "title": "Three.js scene layer",
-    "description": "Mount an ordinary Three.js cube with routed controls and raycast picking.",
+    "description": "Mount a lit Three.js cube with CRC target clicks and raycast picking.",
     "source": "three-layer.tsx",
     "environment": "browser",
     "symbols": [
       { "name": "defineThreeLayer", "importPath": "@crc/three" },
-      { "name": "CRCThreeInputBridge", "importPath": "@crc/three" },
       { "name": "CRCThreeLayerContext", "importPath": "@crc/three" },
       { "name": "CRCThreeLayerDefinition", "importPath": "@crc/three" },
       { "name": "CRCThreeLayerResources", "importPath": "@crc/three" },
@@ -46,6 +45,18 @@
     ],
     "notes": [
       "Requires the `three` peer dependency, WebGL, and browser OffscreenCanvas support; application-created Three resources are disposed explicitly."
+    ]
+  },
+  {
+    "id": "orbit-controls",
+    "title": "Three.js orbit controls",
+    "description": "Drag a cube using OrbitControls connected to CRC-routed input.",
+    "source": "orbit-controls.tsx",
+    "environment": "browser",
+    "symbols": [{ "name": "CRCThreeInputBridge", "importPath": "@crc/three" }],
+    "notes": [
+      "This controls example demonstrates drag input. The separate cube example demonstrates CRC target clicks; connected controls and target clicks currently do not coexist reliably in Chromium.",
+      "Requires the `three` peer dependency, WebGL, and browser OffscreenCanvas support."
     ]
   }
 ]

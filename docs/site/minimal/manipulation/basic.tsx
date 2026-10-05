@@ -16,6 +16,7 @@ function Scene() {
     height: 100,
   });
   const rotation = useSignal(degrees(10));
+  const { width, height } = box.get();
   const props: CRCManipulableProps = {
     style: box,
     rotation,
@@ -25,7 +26,7 @@ function Scene() {
   };
   return (
     <Manipulable {...props}>
-      <Rectangle style={{ width: "100%", height: "100%", fill: "#087e8b" }} />
+      <Rectangle style={{ width, height, fill: "#087e8b" }} />
     </Manipulable>
   );
 }
