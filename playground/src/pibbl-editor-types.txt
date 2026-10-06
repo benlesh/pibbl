@@ -1219,9 +1219,13 @@ export interface ResolvedUtcScale extends Omit<ResolvedLinearScale, "type"> {
   readonly type: "utc";
   formatTick(value: number): string;
 }
-export type ResolvedContinuousScale = ResolvedLinearScale | ResolvedUtcScale;
+export type ResolvedContinuousScale = ResolvedLinearScale | ResolvedUtcScale | ResolvedLogScale;
 export type ResolvedScale = ResolvedContinuousScale | ResolvedBandScale;
 export declare function extent<D>(data: readonly D[], value: (datum: D, index: number, data: readonly D[]) => number | null | undefined): NumericDomain | undefined;
+export interface LogScaleProps extends LinearScaleProps { readonly base?: SignalValue<number>; }
+export interface ResolvedLogScale extends Omit<ResolvedLinearScale, "type"> { readonly type: "log"; readonly base: number; }
+export declare function LogScale(props: LogScaleProps): PibblNode;
+export declare function useLogScale(id: ScaleId): Signal<ResolvedLogScale>;
 export interface UTCTickLabelOptions { readonly locale?: string; }
 export declare function utcTickLabels(values: readonly number[], options?: UTCTickLabelOptions): readonly string[];
 export interface LinearTickOptions { readonly count?: number; }

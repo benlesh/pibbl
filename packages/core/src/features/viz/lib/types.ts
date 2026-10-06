@@ -234,7 +234,19 @@ export interface ResolvedUtcScale extends Omit<ResolvedLinearScale, "type"> {
   formatTick(value: number): string;
 }
 /** Any supported numeric mapping. See {@link ResolvedUtcScale}. */
-export type ResolvedContinuousScale = ResolvedLinearScale | ResolvedUtcScale;
+export type ResolvedContinuousScale = ResolvedLinearScale | ResolvedUtcScale | ResolvedLogScale;
+/** Positive logarithmic provider inputs. See {@link LinearScaleProps}. */
+export interface LogScaleProps extends LinearScaleProps {
+  /** Base for power ticks; finite and greater than one, default 10. Mapping is base-independent. */
+  readonly base?: SignalValue<number>;
+}
+/** Positive logarithmic mapping with numeric inverse. See {@link ResolvedLinearScale}. */
+export interface ResolvedLogScale extends Omit<ResolvedLinearScale, "type"> {
+  /** Logarithmic mapping discriminant. See {@link LogScaleProps}. */
+  readonly type: "log";
+  /** Resolved base used for power ticks. See {@link LogScaleProps}. */
+  readonly base: number;
+}
 /** A numeric or categorical mapping snapshot. See {@link ResolvedContinuousScale}. */
 export type ResolvedScale = ResolvedContinuousScale | ResolvedBandScale;
 

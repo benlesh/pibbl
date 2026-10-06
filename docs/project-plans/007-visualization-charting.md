@@ -172,3 +172,56 @@ long-label policies await visual feedback before broader hardening.
 2026-10-05: User accepted the contextual UTC/long-label slice and authorized its
 commit. Dedicated scales are the next active slice. Broader package and
 integration verification remains pending; no merge or push is authorized.
+
+### 2026-10-05 — dedicated logarithmic scale slice
+
+Accepted label slice committed as `bd8bbb7d`. The next runnable slice adds
+`LogScale` / `useLogScale` with a fixed `Signal<ResolvedLogScale>` contract and
+independent implementation/hook modules. Positive finite ascending/descending
+domains map equal ratios to equal distances; nonpositive values reject, inverse
+coordinates extrapolate, and collapsed ranges reject inversion. Tick output
+includes original endpoints plus bounded integer powers of an explicit base
+(default 10). Nicening/clamping is not implicit. Close/unrepresentable floating
+point cases and all options/errors/signals are documented in the public API.
+
+The minimal provider/hook demo exercises mapping, inversion, and ticks. The NASA
+composition checks in the ten mass values from the Planetary Fact Sheet dated
+18 March 2025 (verified against the primary NASA source on 5 October 2026).
+It uses equal-size PointSeries dots, public nearestPoint inspection, explicit
+units, an Earth-relative unit toggle, and width/height `style.when` queries.
+
+- http://127.0.0.1:5195/#/examples/composition/viz-log-basics
+- http://127.0.0.1:5195/#/examples/composition/viz-log-masses
+
+Focused Chromium checks: 7 tests pass (log-scale and log-example) on Node 24.15.0,
+pnpm 11.21.0. Geometry tests cover ratios, inversion, ticks, descending domains,
+existing marks, signal updates, and disposal. The example is tested at 360×300,
+560×300, and 1000×660 with text bounds, unit control, native Tab/arrow navigation,
+and touch selection. Source Studio visual inspection covers desktop and narrow
+shallow allocation with no page errors. Four source scale families independently
+tree shake; packed export expectations and consumer type evidence are extended.
+
+Status: logarithmic slice ready for visual feedback, uncommitted, not feature
+complete. SymlogScale/useSymlogScale and PointScale/usePointScale remain next,
+then reusable furniture. Broad integration/aggregate trust remains pending.
+
+Additional log-slice package evidence: core build, repository typecheck, and
+focused ESLint passed. The same 7 focused tests passed in built browser mode.
+`node tooling/verify-viz-scale-tree-shaking.mjs` confirms four independent
+families in source and built bundles. `node tooling/verify-packed-viz.mjs` passed
+packed Bundler/NodeNext consumers, exact runtime exports, shared core identity,
+private boundaries, and packed family-isolation checks. The offline consumer
+install required access to the local pnpm store outside the sandbox; its retry
+passed. This is proportional package evidence, not an aggregate trust result.
+
+Log-slice visual feedback: user rejected category-label omission in shallow
+allocations. The NASA chart now preserves all ten body names and reallocates
+space from the editorial header to the plot. Width/height queries retain the
+unit control, selected-value readout, instructions, and source. Regression tests
+assert every body name is present and names do not overlap, in addition to bounds
+and touch/keyboard behavior, down to 320×260. Numeric tick density remains a
+separate policy. Public axis guidance records why categorical identities must
+not be silently removed as a responsive strategy. No new commit was requested.
+
+2026-10-05: User accepted the logarithmic slice after the compact-label fix and
+authorized its commit. Symlog and point scales are next.

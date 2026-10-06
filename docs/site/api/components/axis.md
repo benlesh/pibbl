@@ -123,3 +123,14 @@ optional values supplied with `"allow"`.
 
 Use [the long-label example](#/examples/composition/viz-long-labels) to compare
 wrapping and truncation in narrow panels and shallow embeds.
+
+### Preserve identity in responsive charts
+
+Collision skipping is an opt-in density tool, not a general responsive layout
+strategy. Numeric axes can often omit intermediate labels while retaining
+readable scale context. Categorical labels identify marks: removing names can
+make an otherwise unclipped chart unreadable. Preserve those labels by allocating
+more plot space, reducing decorative header space, wrapping, changing orientation,
+or offering an explicit paged/detail presentation when the full dataset cannot
+fit. Do not merely switch off collision handling while leaving overlapping text.
+Test both label completeness and non-overlap at narrow and shallow allocations.

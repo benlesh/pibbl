@@ -109,3 +109,7 @@ export type { LinearTickOptions, NumberFormatOptions } from "./lib/numeric-ticks
 
 export { utcTickLabels } from "./lib/utc-labels.js";
 export type { UTCTickLabelOptions } from "./lib/utc-labels.js";
+
+export { LogScale } from "./lib/log-scale-component.js";
+export { useLogScale } from "./lib/use-log-scale.js";
+export type { LogScaleProps, ResolvedLogScale } from "./lib/types.js";

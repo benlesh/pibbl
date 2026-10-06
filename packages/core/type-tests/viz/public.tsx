@@ -470,3 +470,15 @@ void useLinearScale("x").get().formatTick(0);
 void useBarScale("category").get().invert(0);
 // @ts-expect-error providers do not accept a type selector
 void <LinearScale {...props} type="utc" />;
+
+// Every logarithmic caller receives one fixed mapping type, with no family selector.
+import { LogScale, useLogScale, type ResolvedLogScale, type LogScaleProps } from "@pibbl/core/viz";
+function LogProbe() {
+  const log: import("@pibbl/core").Signal<ResolvedLogScale> = useLogScale("log");
+  const value: number = log.get().invert(50);
+  void value;
+  // @ts-expect-error the dedicated hook accepts only an ID
+  useLogScale("log", "linear");
+}
+const logProps: LogScaleProps = { id: "log", domain: signal<readonly [number, number]>([1, 1000]), range: "width", base: signal(10) };
+void (<LogScale {...logProps}><LogProbe /><Axis scale="log" position="bottom" /></LogScale>);

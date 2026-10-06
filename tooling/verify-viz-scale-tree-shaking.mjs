@@ -4,7 +4,7 @@ import { resolve } from "node:path";
 
 /** Prove that selecting one family does not retain another family's implementation. */
 export async function verifyScaleTreeShaking(entry) {
-  for (const family of ["Linear", "Bar", "UTC"]) {
+  for (const family of ["Linear", "Bar", "UTC", "Log"]) {
     const { metafile } = await build({
       stdin: { contents: `export { ${family}Scale, use${family}Scale } from ${JSON.stringify(entry)};`, resolveDir: process.cwd() },
       bundle: true, format: "esm", platform: "browser", write: false, metafile: true,
@@ -12,6 +12,7 @@ export async function verifyScaleTreeShaking(entry) {
     });
     const retained = Object.values(metafile.outputs).flatMap(output => Object.entries(output.inputs).filter(([, value]) => value.bytesInOutput > 0).map(([path]) => path));
     const modules = retained.join("\n");
+    if (family !== "Log") assert.doesNotMatch(modules, /\/(?:log-scale|use-log-scale)(?:-component)?\.[jt]s/, `${family} retained logarithmic scales`);
     if (family !== "UTC") assert.doesNotMatch(modules, /\/(?:utc-scale|use-utc-scale)(?:-component)?\.[jt]s/, `${family} retained UTC`);
     if (family !== "Bar") assert.doesNotMatch(modules, /\/(?:bar-scale|band-scale|use-bar-scale)\.[jt]s/, `${family} retained bands`);
     if (family !== "Linear") assert.doesNotMatch(modules, /\/(?:linear-scale-component|use-linear-scale)\.[jt]s/, `${family} retained the linear public API`);
@@ -21,5 +22,5 @@ export async function verifyScaleTreeShaking(entry) {
 if (process.argv[1] === import.meta.filename) {
   await verifyScaleTreeShaking(resolve("packages/core/src/features/viz/index.ts"));
   await verifyScaleTreeShaking(resolve("packages/core/dist/features/viz/index.mjs"));
-  process.stdout.write("Scale tree shaking: 3 families isolated in source and built bundles.\n");
+  process.stdout.write("Scale tree shaking: 4 families isolated in source and built bundles.\n");
 }
