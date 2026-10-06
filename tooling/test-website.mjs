@@ -14,6 +14,7 @@ try {
   const base = `http://127.0.0.1:${address.port}`;
   for (const script of [
     "website-documentation-browser.mjs",
+    "website-brick-climb-browser.mjs",
     "website-unified-browser.mjs",
     "website-minimal-browser.mjs",
   ]) {

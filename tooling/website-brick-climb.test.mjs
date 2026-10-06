@@ -45,12 +45,31 @@ test("Brick Climb is discoverable as a standalone showcase with a focused sprite
     /\/examples\/brick-climb\//,
   );
   assert.match(page.content, /#\/examples\/composition\/sprites/);
-  assert.match(page.content, /pnpm@11\.21\.0 brick-climb/);
-  assert.match(page.content, /5191/);
+  assert.match(
+    page.content,
+    /<iframe[^>]+title="Brick Climb game"[^>]+src="\/generated\/games\/brick-climb\/\?embed"/,
+  );
+  assert.match(
+    page.content,
+    /\[Play Brick Climb[^\]]*\]\(\/generated\/games\/brick-climb\/\)/,
+  );
+  assert.doesNotMatch(page.content, /5191|provisioned repository|pnpm@/);
   assert.ok(page.meta.sources.includes("games/brick-climb/scene.tsx"));
   const guide = await readFile(
     new URL("../docs/site/learn/guides/sprites.md", import.meta.url),
     "utf8",
   );
   assert.match(guide, /\/examples\/brick-climb\//);
+});
+
+test("website preparation bundles a playable Brick Climb with relative assets", async () => {
+  const html = await readFile(
+    new URL(
+      "../website/public/generated/games/brick-climb/index.html",
+      import.meta.url,
+    ),
+    "utf8",
+  );
+  assert.match(html, /src="\.\/assets\/[^"]+\.js"/);
+  assert.doesNotMatch(html, /src="\/main.tsx"/);
 });

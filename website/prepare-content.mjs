@@ -1,6 +1,7 @@
 import { readFile, readdir, mkdir, writeFile, rm, cp } from "node:fs/promises";
 import { resolve, dirname, basename } from "node:path";
 import { build } from "esbuild";
+import { build as buildGame } from "vite";
 import { loadMinimalExamples } from "./minimal-examples.mjs";
 import { execFileSync } from "node:child_process";
 import {
@@ -51,6 +52,11 @@ const showcaseSources = new Set(
 await rm(publicDir, { recursive: true, force: true });
 await mkdir(generated, { recursive: true });
 await mkdir(publicDir, { recursive: true });
+await buildGame({
+  configFile: resolve(root, "games/brick-climb/vite.config.ts"),
+  base: "./",
+  build: { outDir: resolve(publicDir, "games/brick-climb"), emptyOutDir: true },
+});
 const catalog = [];
 const imported = await loadDocumentation(root, playground);
 const legacyRoutes = { "#/": "/", "#/examples": playground };
