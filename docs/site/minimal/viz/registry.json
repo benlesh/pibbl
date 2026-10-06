@@ -395,7 +395,9 @@
         "importPath": "@pibbl/core/viz"
       }
     ],
-    "notes": ["Displays three query results in the document."]
+    "notes": [
+      "Displays three query results in the document."
+    ]
   },
   {
     "id": "hover-card",
@@ -504,8 +506,8 @@
   },
   {
     "id": "utc-numeric",
-    "title": "UTC axes and numeric ticks",
-    "description": "Draw a UTC calendar axis and format readable numeric ticks.",
+    "title": "UTC dates across New Year",
+    "description": "Keep month, day, and year visible when a calendar axis crosses into a new year.",
     "source": "utc-numeric.tsx",
     "environment": "browser",
     "symbols": [
@@ -521,6 +523,111 @@
         "name": "Axis",
         "importPath": "@pibbl/core/viz"
       },
+      {
+        "name": "utcTickLabels",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "UTCTickLabelOptions",
+        "importPath": "@pibbl/core/viz"
+      }
+    ],
+    "notes": [
+      "The dates run from December 30, 2025 through January 2, 2026. Tick labels always use UTC, regardless of the browser\u2019s local time zone.",
+      "Creates its own canvas and disposes the mount on pagehide."
+    ]
+  },
+  {
+    "id": "log-scale",
+    "title": "File sizes across orders of magnitude",
+    "description": "Multiplying the size by ten moves the same distance.",
+    "source": "log-scale.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "LogScale",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "useLogScale",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "LogScaleProps",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "ResolvedLogScale",
+        "importPath": "@pibbl/core/viz"
+      }
+    ],
+    "notes": [
+      "Compare 1, 10, 100, and 1,000 KB: equal ratios occupy equal distances. LogScale requires a strictly positive domain; use SymlogScale when values cross zero."
+    ]
+  },
+  {
+    "id": "symlog-scale",
+    "title": "Daily inventory changes",
+    "description": "Negative means shipped; positive means received.",
+    "source": "symlog-scale.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "SymlogScale",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "useSymlogScale",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "SymlogScaleProps",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "ResolvedSymlogScale",
+        "importPath": "@pibbl/core/viz"
+      }
+    ],
+    "notes": [
+      "Compare inventory changes of \u2212100, \u221210, 0, +10, and +100 units. The constant of 10 keeps the region near zero more linear while compressing larger changes. These are illustrative changes, not a time series."
+    ]
+  },
+  {
+    "id": "point-scale",
+    "title": "Checkpoints in a review",
+    "description": "Categories have equal spacing, not numeric distance.",
+    "source": "point-scale.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "PointScale",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "usePointScale",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "PointScaleProps",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "ResolvedPointScale",
+        "importPath": "@pibbl/core/viz"
+      }
+    ],
+    "notes": [
+      "Draft, Review, and Approved are ordered categories. PointScale assigns zero-width positions with equal spacing; it does not imply equal elapsed time. Use BarScale when marks need category widths."
+    ]
+  },
+  {
+    "id": "numeric-ticks",
+    "title": "Readable numeric ticks",
+    "description": "Round a temperature range outward and format evenly spaced tick labels with units.",
+    "source": "numeric-ticks.ts",
+    "environment": "browser",
+    "symbols": [
       {
         "name": "linearTicks",
         "importPath": "@pibbl/core/viz"
@@ -543,7 +650,7 @@
       }
     ],
     "notes": [
-      "Uses public package imports. Browser resources are released on pagehide."
+      "These illustrative temperature bounds demonstrate numeric axis preparation. No dates or time zones are involved."
     ]
   }
 ]

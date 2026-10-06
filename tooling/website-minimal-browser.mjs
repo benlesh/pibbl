@@ -68,6 +68,33 @@ try {
       return document.querySelector("canvas") ? painted : Boolean(text);
     });
     assert.ok(meaningful, `${example.id} has no rendered result`);
+    const scalePositions = {
+      "viz/log-scale": [0, 430 / 3, 860 / 3, 430],
+      "viz/symlog-scale": [
+        0,
+        215 - (215 * Math.log(2)) / Math.log(11),
+        215,
+        215 + (215 * Math.log(2)) / Math.log(11),
+        430,
+      ],
+      "viz/point-scale": [430 / 6, 215, (430 * 5) / 6],
+    }[example.id];
+    if (scalePositions) {
+      const pixels = await page
+        .locator("canvas")
+        .evaluate((canvas, positions) => {
+          const context = canvas.getContext("2d");
+          return positions.map((x) => [
+            ...context.getImageData(Math.round(65 + x), 110, 1, 1).data,
+          ]);
+        }, scalePositions);
+      for (const pixel of pixels)
+        assert.deepEqual(
+          pixel,
+          [8, 127, 140, 255],
+          `${example.id}: mapped mark position`,
+        );
+    }
     if (example.id === "particles/system") {
       await page.getByRole("button", { name: "Burst" }).click();
       await page.waitForFunction(() =>
