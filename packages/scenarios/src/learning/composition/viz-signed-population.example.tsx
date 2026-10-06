@@ -1,5 +1,5 @@
 import { FocusManagement, Circle, Group, Line, Overlay, Rectangle, Text, pibbl, useLayoutBox, useSignal, type PibblController, type WritableSignal } from "@pibbl/core";
-import { ReferenceBand, GridLines, ReferenceLine, Axis, PointScale, SymlogScale, ScaleAdjust, usePointScale, useSymlogScale, formatNumber } from "@pibbl/core/viz";
+import { LegendItem, ReferenceBand, GridLines, ReferenceLine, Axis, PointScale, SymlogScale, ScaleAdjust, usePointScale, useSymlogScale, formatNumber } from "@pibbl/core/viz";
 // US Census Bureau, Vintage 2023 estimates, published 19 December 2023.
 // Six most populous states; population change July 1, 2022–July 1, 2023, people.
 // https://www.census.gov/newsroom/press-releases/2023/population-trends-return-to-pre-pandemic-norms.html
@@ -54,11 +54,15 @@ function Scene() {
     <Text style={{ left: 24, top: 189, font: "600 16px sans-serif", fill: ink, when: [{ query: narrow, style: { font: "600 13px sans-serif" } }, { query: shallow, style: { top: 66, font: "600 13px sans-serif" } }] }}>{`${row.name} · ${formatNumber(row.value, { signDisplay: "always" })} people`}</Text>
     <Text style={{ left: 24, top: 212, font: "11px sans-serif", fill: muted, when: [{ query: shallow, style: { top: 87, font: "10px sans-serif" } }] }}>{`Symlog c = ${formatNumber(constant)} · tap or Tab + ← →`}</Text>
     <Group style={{ translateX: left, translateY: 234, when: [{ query: shallow, style: { translateY: 108 } }] }}>
-      <Overlay style={{ width: Math.max(1, width - left - 24), height: Math.max(1, height - 310), when: [{ query: shallow, style: { height: Math.max(1, height - 164) } }] }}>
+      <Overlay style={{ width: Math.max(1, width - left - 24), height: Math.max(1, height - 310), when: [{ query: shallow, style: { height: Math.max(1, height - 184) } }] }}>
         <PointScale id="state" domain={rows.map(row => row.name)} range="width" padding={0.5} style={{ width: "100%", height: "100%" }}>
           <SymlogScale id="change" domain={[-110000, 500000]} range="height" reverse constant={constant}><Plot selected={selected} left={left} compact={width <= 600} /></SymlogScale>
         </PointScale>
       </Overlay>
+    </Group>
+    <Group style={{ translateX: 58, translateY: height - 52 }}>
+      <LegendItem label="Gain" color={gain} swatchSize={10} style={{ font: "10px sans-serif" }} />
+      <Group style={{ translateX: 72 }}><LegendItem label="Loss" color={loss} swatchSize={10} style={{ font: "10px sans-serif" }} /></Group>
     </Group>
     <Text style={{ left: 24, top: height - 29, font: "10px sans-serif", fill: muted }}>US Census Bureau · Vintage 2023 estimates</Text>
     <Text style={{ left: 24, top: height - 14, font: "10px sans-serif", fill: muted }}>2022–2023 · shaded = loss · nonlinear axis</Text>

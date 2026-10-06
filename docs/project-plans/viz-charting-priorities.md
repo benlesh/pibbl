@@ -269,3 +269,8 @@ Reference-band slice is now runnable in the Census chart: a shaded loss region,
 explicitly described in its source note. Grid/reference lines are accepted and
 committed (`7b7c2f6f`); the band is feedback-ready and uncommitted. Text furniture
 and legends remain outstanding.
+
+Reference bands accepted and committed (`3f03540e`). A composable `LegendItem`
+slice now shows gain/loss swatches in the Census chart with caller-owned layout;
+focused geometry, cleanup, and compact interaction checks pass. Feedback-ready,
+uncommitted; text furniture and broader hardening remain pending.

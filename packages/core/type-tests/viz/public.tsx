@@ -507,3 +507,8 @@ import { ReferenceBand } from "@pibbl/core/viz";
 void <ReferenceBand scale="y" direction="horizontal" span={[0, 200]} values={signal<readonly [number, number]>([-10, 0])} />;
 // @ts-expect-error reference bands require numeric intervals
 void <ReferenceBand scale="y" direction="horizontal" span={[0, 200]} values={["A", "B"]} />;
+
+import { LegendItem } from "@pibbl/core/viz";
+void <LegendItem label={signal("Gain")} color={signal("#087f8c")} style={{ opacity: signal(0.8) }} />;
+// @ts-expect-error legend labels are text
+void <LegendItem label={10} color="red" />;

@@ -125,3 +125,5 @@ export { GridLines, ReferenceLine } from "./lib/chart-lines.js";
 export type { ChartLineProps, GridLinesProps, ReferenceLineProps } from "./lib/chart-lines.js";
 export { ReferenceBand } from "./lib/reference-band.js";
 export type { ReferenceBandProps } from "./lib/reference-band.js";
+export { LegendItem } from "./lib/legend-item.js";
+export type { LegendItemProps } from "./lib/legend-item.js";

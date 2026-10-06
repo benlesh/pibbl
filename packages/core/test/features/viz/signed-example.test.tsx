@@ -21,7 +21,7 @@ it.each([[320, 260], [360, 300], [560, 300], [1000, 640]])("preserves all state 
   const app = mount(canvas);
   try {
     runtime.flush(); expect(labels).toContain("Texas · +473,453 people");
-    for (const name of axisNames) expect(labels).toContain(name);
+    for (const name of [...axisNames, "Gain", "Loss"]) expect(labels).toContain(name);
     for (let i = 1; i < axisNames.length; i++) expect(boxes.get(axisNames[i])!.left).toBeGreaterThan(boxes.get(axisNames[i - 1])!.right);
     before.focus(); await tab(); runtime.flush(); await pressKey("Enter"); runtime.flush(); expect(labels).toContain("Restore compression");
     await tab(); runtime.flush(); await pressKey("ArrowRight"); runtime.flush(); expect(labels).toContain("Florida · +365,205 people");

@@ -314,3 +314,25 @@ browser verification and aggregate gate remain pending. Text furniture and legen
 remain next. Concurrent minimal-viz documentation work was preserved unstaged.
 Packed ReferenceBand verification also passed: Bundler/NodeNext type consumers,
 exact runtime exports, core identity/private boundaries, and scale-family isolation.
+
+### 2026-10-05 — composable legend-item slice
+
+Reference bands accepted and committed as `3f03540e`. No merge or push.
+`LegendItem` provides a signal-aware square swatch and single-line label, with
+explicit swatch size/gap and label paint. It is decorative and allocates no layout;
+caller-owned core Groups/layouts arrange entries and reserve plot space. This
+keeps interactive series controls separate and avoids a monolithic chart wrapper.
+Census composition now includes Gain/Loss entries, preserving all category labels
+and source notes at narrow/shallow sizes down to 320×260.
+
+Runnable at `http://127.0.0.1:5195/#/examples/composition/viz-signed-population`.
+Fresh Node 24.15.0 / pnpm 11.21.0 evidence: five focused source Chromium tests pass
+(label geometry/signals/cleanup and four responsive touch/keyboard layouts).
+Core build, repository typecheck and focused lint pass. Desktop/compact Studio
+renders inspected, no page errors. API page includes defaults, errors, signals,
+explicit layout limitations, and runnable demo; editor declarations/type probes
+updated. Status: **slice ready for feedback**, uncommitted; no aggregate trust
+claim. Axis titles/units and title/caption/source-note composition remain next;
+legend hardening and built-browser coverage remain pending.
+Packed LegendItem checks also passed: Bundler/NodeNext consumers, exact exports,
+shared core identity/private boundaries, and scale-family isolation.
