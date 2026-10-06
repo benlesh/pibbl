@@ -1,5 +1,7 @@
 # Auxiliary outputs and canvas image sources
 
+> **Historical status: Deferred design direction; not implemented or normative.**
+
 Status: saved design direction from the 2026-10-06 discussion; implementation
 deferred. This is not an implementation commitment or a shipped behavior contract.
 The user may choose to implement only selected parts; confirm that scope before
