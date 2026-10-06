@@ -336,3 +336,26 @@ claim. Axis titles/units and title/caption/source-note composition remain next;
 legend hardening and built-browser coverage remain pending.
 Packed LegendItem checks also passed: Bundler/NodeNext consumers, exact exports,
 shared core identity/private boundaries, and scale-family isolation.
+
+### 2026-10-05 — axis title and units slice
+
+Accepted legend items committed as `2421411d`; no merge or push.
+`AxisTitle` adds scale-range-centered text at an explicit plot edge and offset,
+with optional signal-valued units. Vertical titles rotate along the axis. The
+caller owns the margin; title placement changes neither ticks nor mark geometry.
+Census composition reserves a wider left margin and retains a compact People
+label when its editorial heading is hidden.
+
+Runnable: `http://127.0.0.1:5195/#/examples/composition/viz-signed-population`.
+Fresh Node 24.15.0 / pnpm 11.21.0 evidence: five focused source Chromium tests pass
+(range-centered text, unit signals, cleanup, four responsive interaction sizes).
+Core build, repository typecheck and focused lint pass. Desktop/compact Studio
+renders inspected with no page errors. Public documentation includes signatures,
+defaults/errors/signals, placement ownership, and a runnable minimal demo;
+editor declarations and public type probes include AxisTitle.
+
+Status: **slice ready for feedback**, uncommitted. Chart title/caption/source-note
+composition and final cross-slice hardening remain outstanding. No aggregate gate
+claim; full edge/rotation/error matrix and built-browser coverage remain pending.
+Packed AxisTitle checks passed: Bundler/NodeNext consumers, exact runtime exports,
+shared core identity/private boundaries, and scale-family isolation.

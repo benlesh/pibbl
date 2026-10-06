@@ -127,3 +127,5 @@ export { ReferenceBand } from "./lib/reference-band.js";
 export type { ReferenceBandProps } from "./lib/reference-band.js";
 export { LegendItem } from "./lib/legend-item.js";
 export type { LegendItemProps } from "./lib/legend-item.js";
+export { AxisTitle } from "./lib/axis-title.js";
+export type { AxisTitleProps } from "./lib/axis-title.js";

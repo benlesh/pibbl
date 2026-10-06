@@ -69,7 +69,7 @@ try {
   const names = [
     "extent", "linearTicks", "niceLinearDomain", "formatNumber", "utcTickLabels", "LogScale", "useLogScale",
     "SymlogScale", "useSymlogScale", "PointScale", "usePointScale",
-    "GridLines", "ReferenceLine", "ReferenceBand", "LegendItem",
+    "GridLines", "ReferenceLine", "ReferenceBand", "LegendItem", "AxisTitle",
     "niceUTCDomain",
     "pieSlices",
     "PieLayout",

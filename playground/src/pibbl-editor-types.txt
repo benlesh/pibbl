@@ -1172,6 +1172,15 @@ export interface MeshTransformOptions {
 /* @pibbl-studio-module @pibbl/core/viz */
 import type { BoxStyle, PibblNode, LayoutItemStyle, LayoutBox, SignalValue } from '@pibbl/core';
 type SignalStyle<S> = Readonly<{ [K in keyof S]: K extends "custom" ? S[K] : SignalValue<S[K]> }>;
+export interface AxisTitleProps {
+  readonly scale: ScaleId;
+  readonly position: AxisProps["position"];
+  readonly label: SignalValue<string>;
+  readonly unit?: SignalValue<string>;
+  readonly offset?: SignalValue<number>;
+  readonly style?: SignalValue<SignalStyle<Pick<AxisStyle, "font" | "fill" | "opacity">>>;
+}
+export declare function AxisTitle(props: AxisTitleProps): PibblNode;
 export interface LegendItemProps {
   readonly label: SignalValue<string>;
   readonly color: SignalValue<NonNullable<AxisStyle["fill"]>>;

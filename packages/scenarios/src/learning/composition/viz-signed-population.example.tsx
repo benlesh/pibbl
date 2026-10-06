@@ -1,5 +1,5 @@
 import { FocusManagement, Circle, Group, Line, Overlay, Rectangle, Text, pibbl, useLayoutBox, useSignal, type PibblController, type WritableSignal } from "@pibbl/core";
-import { LegendItem, ReferenceBand, GridLines, ReferenceLine, Axis, PointScale, SymlogScale, ScaleAdjust, usePointScale, useSymlogScale, formatNumber } from "@pibbl/core/viz";
+import { AxisTitle, LegendItem, ReferenceBand, GridLines, ReferenceLine, Axis, PointScale, SymlogScale, ScaleAdjust, usePointScale, useSymlogScale, formatNumber } from "@pibbl/core/viz";
 // US Census Bureau, Vintage 2023 estimates, published 19 December 2023.
 // Six most populous states; population change July 1, 2022–July 1, 2023, people.
 // https://www.census.gov/newsroom/press-releases/2023/population-trends-return-to-pre-pandemic-norms.html
@@ -17,6 +17,7 @@ function Plot({ selected, left, compact }: { selected: WritableSignal<number>; l
     <ReferenceBand scale="change" direction="horizontal" span={[0, x.frame.width]} values={[-110000, 0]} style={{ fill: loss, opacity: 0.07 }} />
     <GridLines scale="change" direction="horizontal" span={[0, x.frame.width]} tickValues={[-100000, 100000, 500000]} />
     <ReferenceLine scale="change" direction="horizontal" span={[0, x.frame.width]} value={0} style={{ stroke: "#82999f" }} />
+    <AxisTitle scale="change" position="left" label={compact ? "People" : "Population change"} unit={compact ? undefined : "people"} offset={64} style={{ font: "11px sans-serif" }} />
     <Axis scale="change" position="left" tickValues={[-100000, 0, 100000, 500000]} labelOverlap="skip" labelGap={8}
       tickFormat={value => Number(value) === 0 ? "0" : `${Number(value) / 1000}k`} style={{ stroke: "#bdced3", fill: muted, font: "11px sans-serif" }} />
     <Axis scale="state" position="bottom" tickValues={rows.map(row => row.name)} tickFormat={value => compact ? abbreviations[String(value)] : String(value)} style={{ strokeWidth: 0, fill: muted, font: "12px sans-serif" }} />
@@ -41,7 +42,7 @@ function Scene() {
   const selected = useSignal(0), wider = useSignal(false);
   const constant = wider.get() ? 100000 : 10000, row = rows[selected.get()];
   const shallow = { maxHeight: 400 }, narrow = { maxWidth: 600 };
-  const left = 58;
+  const left = 80;
   return <>
     <Rectangle style={{ width, height, fill: "#f7faf9" }} />
     <Text style={{ left: 24, top: 24, font: "700 11px sans-serif", fill: gain, when: [{ query: shallow, style: { opacity: 0 } }] }}>A YEAR OF POPULATION CHANGE</Text>
@@ -60,7 +61,7 @@ function Scene() {
         </PointScale>
       </Overlay>
     </Group>
-    <Group style={{ translateX: 58, translateY: height - 52 }}>
+    <Group style={{ translateX: 80, translateY: height - 52 }}>
       <LegendItem label="Gain" color={gain} swatchSize={10} style={{ font: "10px sans-serif" }} />
       <Group style={{ translateX: 72 }}><LegendItem label="Loss" color={loss} swatchSize={10} style={{ font: "10px sans-serif" }} /></Group>
     </Group>

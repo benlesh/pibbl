@@ -274,3 +274,8 @@ Reference bands accepted and committed (`3f03540e`). A composable `LegendItem`
 slice now shows gain/loss swatches in the Census chart with caller-owned layout;
 focused geometry, cleanup, and compact interaction checks pass. Feedback-ready,
 uncommitted; text furniture and broader hardening remain pending.
+
+Legend items accepted and committed (`2421411d`). Axis titles/units are now a
+feedback-ready slice in the Census composition, with explicit caller-owned margins
+and compact unit labeling. Title/caption/source-note composition and cross-slice
+hardening remain outstanding.

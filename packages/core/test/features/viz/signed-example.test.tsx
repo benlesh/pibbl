@@ -26,7 +26,7 @@ it.each([[320, 260], [360, 300], [560, 300], [1000, 640]])("preserves all state 
     before.focus(); await tab(); runtime.flush(); await pressKey("Enter"); runtime.flush(); expect(labels).toContain("Restore compression");
     await tab(); runtime.flush(); await pressKey("ArrowRight"); runtime.flush(); expect(labels).toContain("Florida · +365,205 people");
     const box = canvas.getBoundingClientRect();
-    canvas.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, pointerType: "touch", clientX: box.left + (58 + (width - 82) / 12), clientY: box.top + (height <= 400 ? 130 : 260) }));
+    canvas.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, pointerType: "touch", clientX: box.left + (80 + (width - 104) / 12), clientY: box.top + (height <= 400 ? 130 : 260) }));
     runtime.flush(); expect(labels).toContain("Texas · +473,453 people");
   } finally { app.dispose(); expect(runtime.pending).toBe(0); runtime.dispose(); }
 });
