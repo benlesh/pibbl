@@ -1,6 +1,6 @@
 # Pibbl
 
-> **ALPHA — NOT FOR PRODUCTION USE.** Pibbl 0.0.1 is experimental. APIs may change or be removed without notice. Use it only for evaluation and experimentation.
+> **ALPHA — NOT FOR PRODUCTION USE.** Pibbl 0.0.2 is experimental. APIs may change or be removed without notice. Use it only for evaluation and experimentation.
 
 `pibbl` mirrors every entry point of `@pibbl/core` and forwards to the same runtime instance.
 

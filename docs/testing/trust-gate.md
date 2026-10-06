@@ -38,7 +38,7 @@ retries. CI logs failed browser request URLs and Chromium error codes.
 
 ## Preparing the alpha release
 
-Run `corepack pnpm@11.21.0 release 0.0.1` to prepare the four published
+Run `corepack pnpm@11.21.0 release 0.0.2` to prepare the four published
 packages: `@pibbl/core`, `@pibbl/three`, `@pibbl/text`, and `pibbl`. This updates
 versions, exact core peer pins, and the mirror's exact core dependency together.
 Preparation does not commit, tag, push, or publish; the private workspace version

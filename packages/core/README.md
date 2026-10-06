@@ -1,6 +1,6 @@
 # @pibbl/core
 
-> **ALPHA — NOT FOR PRODUCTION USE.** Pibbl 0.0.1 is experimental. APIs may change or be removed without notice. Use it only for evaluation and experimentation.
+> **ALPHA — NOT FOR PRODUCTION USE.** Pibbl 0.0.2 is experimental. APIs may change or be removed without notice. Use it only for evaluation and experimentation.
 
 The ESM Canvas 2D component runtime for Pibbl, with an automatic JSX runtime and
 an equivalent `createElement` API. It has no React dependency. Drawing stays on

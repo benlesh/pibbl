@@ -9,6 +9,8 @@ evidence; this queue switch does not mark it complete.
 
 ## Visualization planning
 
+- [Detailed chart API execution plan](./viz-foundations-next-execution.md) — foundation closeout, everyday marks, exploration, and data-driven encodings; current step tracked in Plan 007.
+
 - [Current visualization priorities and visual-quality bar](./viz-charting-priorities.md) — 2026-10-05 user-directed priorities: basic charting first; execution tracked in Plan 007.
 - [Historical visualization roadmap and approvals](./remaining-viz-roadmap.md)
 - [Approved UTC scale contract](./viz-utc-contract-proposal.md)

@@ -1,7 +1,7 @@
 {
   "name": "@pibbl/core",
   "type": "module",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Canvas 2D component runtime with JSX and createElement authoring",
   "author": "Ben Lesh <ben@benlesh.com>",
   "license": "MIT",

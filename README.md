@@ -1,6 +1,6 @@
 # Pibbl — Canvas Rendering Components
 
-> **ALPHA — NOT FOR PRODUCTION USE.** Pibbl 0.0.1 is experimental. APIs may change or be removed without notice. Use it only for evaluation and experimentation.
+> **ALPHA — NOT FOR PRODUCTION USE.** Pibbl 0.0.2 is experimental. APIs may change or be removed without notice. Use it only for evaluation and experimentation.
 
 Pibbl is a small functional component runtime for the HTML Canvas 2D API, with a
 public external-render-layer lifecycle and an optional first-class `@pibbl/three`
@@ -14,7 +14,7 @@ regions host application-owned DOM content.
 
 ## Alpha packages
 
-Version `0.0.1` is an **alpha release, not for production use**, including when
+Version `0.0.2` is an **alpha release, not for production use**, including when
 installed through the `latest` or `next` npm tag.
 
 - `pibbl` mirrors all `@pibbl/core` entry points and shares its runtime instance.

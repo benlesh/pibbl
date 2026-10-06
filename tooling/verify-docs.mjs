@@ -1822,7 +1822,7 @@ assert.deepEqual(
 );
 assert.deepEqual(
   threeManifest.peerDependencies,
-  { "@pibbl/core": "0.0.1", three: "^0.186.0" },
+  { "@pibbl/core": coreManifest.version, three: "^0.186.0" },
   "@pibbl/three must peer on the matching @pibbl/core release and application's Three.js.",
 );
 assert.equal(

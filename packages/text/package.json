@@ -1,6 +1,6 @@
 {
   "name": "@pibbl/text",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "type": "module",
   "description": "Editable text outlines for Pibbl, powered by HarfBuzz WASM",
   "license": "MIT",
@@ -30,7 +30,7 @@
     "prepublishOnly": "pnpm run build"
   },
   "peerDependencies": {
-    "@pibbl/core": "0.0.1"
+    "@pibbl/core": "0.0.2"
   },
   "devDependencies": {
     "@pibbl/core": "workspace:*"

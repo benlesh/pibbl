@@ -1,6 +1,6 @@
 {
   "name": "pibbl",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "type": "module",
   "description": "Pibbl Canvas component runtime — the unscoped mirror of @pibbl/core",
   "author": "Ben Lesh <ben@benlesh.com>",
@@ -146,6 +146,6 @@
     "prepublishOnly": "pnpm run build"
   },
   "dependencies": {
-    "@pibbl/core": "workspace:0.0.1"
+    "@pibbl/core": "workspace:0.0.2"
   }
 }

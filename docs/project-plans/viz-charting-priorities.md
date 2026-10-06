@@ -5,17 +5,19 @@
 > API correction approved 2026-10-05: **every scale family has a dedicated
 > provider and hook**, with a fixed return type and no family-selector argument.
 > Current families: `LinearScale` / `useLinearScale`, `BarScale` / `useBarScale`,
-> `UTCScale` / `useUTCScale`. UTC nicening is `niceUTCDomain(domain, { count? })`.
+> `UTCScale` / `useUTCScale`, `LogScale` / `useLogScale`,
+> `SymlogScale` / `useSymlogScale`, `PointScale` / `usePointScale`. UTC nicening is `niceUTCDomain(domain, { count? })`.
 > Generic `Scale`, `ScaleProps`, and `useScale` are removed, without aliases.
-> Future log, symlog, power, square-root, point, ordinal, local-time, sequential,
+> Future power, square-root, ordinal, local-time, sequential,
 > diverging, quantile, quantize, and threshold variations must follow this rule;
 > listing them here does not claim implementation. Family modules must tree shake
 > independently. This decision supersedes selector-based API examples below.
 
-Date: 2026-10-05.
+Date: 2026-10-06.
 Status: user-directed priorities; implementation is tracked in
 [Plan 007](007-visualization-charting.md). The responsive NOAA UTC slice was accepted and merged into local main.
-Reusable axis presentation and remaining foundations are in progress. Proposed component names are illustrative, not new public APIs.
+Numeric/UTC/category axis presentation, log/symlog/point families and scale-based furniture are implemented and accepted; final verification remains.
+The [detailed next execution plan](viz-foundations-next-execution.md) specifies marks, exploration and encodings. Proposed names are illustrative, not new public APIs.
 
 ## Direction and authority
 
@@ -48,8 +50,11 @@ mark series, horizontal/vertical value and range bars, grouping and threshold
 fills, pie/donut geometry with coordinated string labels, nearest-data queries,
 hover cards, and anchored layout. Stacking is an explicit data transform.
 
-Not yet exported: log/symlog/point scales, local-calendar time scales, general area/band series, automatic
-legends or chart furniture, reusable brush/zoom/linked selection, graph/hierarchy
+Now also exported: log/symlog/point scales, GridLines, ReferenceLine, ReferenceBand,
+AxisTitle, readable numeric tick/nicening helpers and contextual UTC labels.
+
+Not yet exported: local-calendar time scales, general area/band series, data-derived
+legends, reusable brush/zoom/linked selection, graph/hierarchy
 layouts, or geographic components. The line explorer's brush and the diagram
 editor's connections are application examples, not reusable public APIs. Core
 responsive styles and logical focus do not establish responsive viz marks or

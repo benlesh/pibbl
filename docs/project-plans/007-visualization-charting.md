@@ -2,72 +2,81 @@
 
 > **Historical status: Planning and implementation work record; current code and public contracts define shipped behavior.**
 
-> API correction approved 2026-10-05: **every scale family has a dedicated
-> provider and hook**, with a fixed return type and no family-selector argument.
-> Current families: `LinearScale` / `useLinearScale`, `BarScale` / `useBarScale`,
-> `UTCScale` / `useUTCScale`. UTC nicening is `niceUTCDomain(domain, { count? })`.
-> Generic `Scale`, `ScaleProps`, and `useScale` are removed, without aliases.
-> Future log, symlog, power, square-root, point, ordinal, local-time, sequential,
-> diverging, quantile, quantize, and threshold variations must follow this rule;
-> listing them here does not claim implementation. Family modules must tree shake
-> independently. This decision supersedes selector-based API examples below.
+Status: active, updated 2026-10-06. Current execution is governed by the
+[detailed chart API execution plan](viz-foundations-next-execution.md).
+Older field notes below are dated evidence, not the current status board.
 
-Status: active, 2026-10-05. User requests planning and implementation of the
-[visualization roadmap](viz-charting-priorities.md), complete API explanations,
-minimal demos for each public feature, and compelling real-data examples.
+## Baseline and approved scope
 
-## Baseline and scope
+Dedicated Linear/Bar/UTC/Log/Symlog/Point providers and hooks are implemented.
+Readable numeric ticks/nicening, UTC context labels, allocation-aware axis labels,
+GridLines, ReferenceLine, ReferenceBand and AxisTitle have accepted public examples.
+ChartText and LegendItem were removed as redundant. Chart prose and simple legends
+use core Text/shapes/layout. No generic Scale/useScale or family-selector API.
 
-Preserve unrelated animation/machines, game, package, and Studio edits in this
-shared checkout. The charting priorities document supplies ordering and visual
-acceptance; its advanced families remain in scope after basic charting. Existing
-UTC and pie-label approvals remain authoritative. New contracts are resolved
-only as needed for each slice. No commit or push is requested.
+The user approved detailed planning and execution of foundation closeout, everyday
+marks, reusable exploration and data-driven encodings on 2026-10-06. All new APIs
+must add scale/data/geometry/inspection value. Preserve unrelated checkout work.
+Do not commit, merge or push new work without explicit user authorization.
 
-## Status board
+## Current status board
 
-| Step                                             | State                            |
-| ------------------------------------------------ | -------------------------------- |
-| UTC scales, helpers, minimal demo and NOAA chart | Accepted; merged into local main |
-| Numeric/categorical scales and axis presentation | Next                             |
-| Chart furniture and shared visual defaults       | Queued                           |
-| Everyday marks, curves, areas and bands          | Queued                           |
-| Responsive exploration and shared selection      | Queued                           |
-| Statistics, diagrams, hierarchies, geography     | Queued                           |
-| Accepted-slice hardening and integration         | Per slice                        |
+| Work                                                        | State                    | Next evidence                                            |
+| ----------------------------------------------------------- | ------------------------ | -------------------------------------------------------- |
+| UTC/NOAA, numeric and categorical labels                    | Accepted and implemented | Integrated closeout                                      |
+| Log, symlog, point families                                 | Accepted and implemented | Integrated closeout                                      |
+| Scale-based furniture and AxisTitle                         | Accepted and implemented | Integrated closeout                                      |
+| Foundation verification (F0)                                | Next                     | Fresh trust result after merge; reconcile blockers/skips |
+| Area series (M1)                                            | Queued                   | Baseline/gap contract and first runnable example         |
+| Interval bands, curves, categorical marks (M2–M6)           | Queued                   | Per-slice contract, demo and feedback                    |
+| Inspection, selection, brush, zoom, small multiples (I1–I5) | Queued                   | Controlled state and lifecycle evidence                  |
+| Size/symbol/color encodings and scale-derived keys (E1–E3)  | Queued                   | API-value audit and truthful mapping                     |
+| Final closeout (V0)                                         | Queued                   | All accepted slices verified and documented              |
+| Statistics/diagrams/hierarchies/geography                   | Deferred                 | Separate prioritization                                  |
 
-## [ACCEPTED] UTC scale vertical slice
+## [NEXT] F0 — foundation verification closeout
 
-Implement the approved epoch-number UTC scale, continuous lookup, pure extent
-and UTC nice-domain helpers. Preserve linear/band compatibility. Add a focused
-failing public test, minimal API demo, and a real NOAA CO2 example using the
-attributed checked-in snapshot. Verify the same example headlessly and visually.
-Done for feedback when focused checks pass and the exact Studio URL is supplied.
-Broader edge cases, competitor review and package evidence follow feedback.
+Follow section 3 of the detailed execution plan. First rerun the aggregate trust
+gate on the merged tree; independently confirm viz source/built suites, packed
+consumers, editor/minimal demos, docs/links and family tree shaking as needed.
+Record exact failures without declaring historical blockers still current.
 
-## [IN PROGRESS] Numeric/categorical scales and axis presentation
+Done when chart-specific evidence is complete, examples remain accepted, and
+repository-wide gate status is accurately reconciled. If an unrelated gate truly
+blocks closeout, retain that explicit blocker and select independent M1 work.
 
-Resolve domain/tick policies, implement focused examples for numeric niceness,
-log/symlog, point/category coordinates and label-density presentation. Include
-minimal demos and public API docs for each addition. Keep existing semantics
-unless a change is explicitly designed and documented.
+## [TODO] M1 — baseline-filled area series
 
-## Queued slices
+First new API slice after F0; see detailed plan section 4 for baseline semantics,
+gaps, geometry, data selection and tests. Proposed names are not final contracts.
+Start with one failing public geometry test and one meaningful real-data example;
+provide the exact runnable URL before broad hardening.
 
-Follow P0.3–P4 in the priorities document. Every new public API gets a minimal
-runnable demo, documented signatures/options/defaults/errors and one realistic
-composition showing why it exists. Reuse attributed snapshots, record units,
-dates, source and transformations; never present synthetic values as measured.
+## [TODO] M2–M6 — everyday marks
 
-## Integration and visual test contract
+Execute sequentially: interval bands, step curves, monotone curves, categorical
+series coordinates, then demonstrated segment styling/stacking needs. Reuse
+existing components and pure data recipes before adding APIs.
 
-Use supported public imports and the same scenarios manually/headlessly. Assert
-semantic values and geometry before screenshots. Inspect desktop and phone
-allocations and interaction states. Preserve one scheduler and exact ownership.
-Provide runnable feedback before broad hardening. Feature completion requires
-accepted appearance, docs/declarations, packed Bundler/NodeNext consumers, Studio
-source/built evidence, proportional checks and final integrated trust. Do not
-claim all roadmap features complete after one slice.
+## [TODO] I1–I5 — reusable exploration
+
+Unify inspection, then pinning/shared selection, brush/overview, controlled
+pan/zoom, and small-multiple compositions. Keep application state and layout
+ownership explicit. Avoid a chart-global interaction manager.
+
+## [TODO] E1–E3 — data-driven encodings
+
+Audit existing radius/custom-mark support; add only missing reusable mappings.
+Dedicated color families need explicit validation and boundary semantics.
+A legend API requires scale-derived meaning; ordinary swatches remain core.
+
+## [TODO] V0 — integrated closeout
+
+Each slice needs a minimal runnable demo, complete docs, public types/runtime,
+editor and packed evidence, semantic geometry, responsive input and teardown.
+Use 1000×640, 560×300, 360×300 and 320×260 allocations plus a narrow tall panel.
+No visual baseline changes without inspection. Distinguish runnable slices from
+fully verified features. Run final aggregate trust and record any external blocker.
 
 ## Session log
 
@@ -453,3 +462,27 @@ These are not chart-feature failures and no aggregate-green claim is made.
 Unrelated concurrent minimal-example/website edits remain preserved. This
 hardening batch remains uncommitted; no merge/push. Remaining verification includes
 completion of repository-wide gates once their external blockers are resolved.
+
+### 2026-10-06 — detailed next-phase planning and closeout started
+
+User requested detailed planning and execution of remaining chart APIs. Added
+viz-foundations-next-execution.md, linked it from the plan index, reconciled stale
+scale/furniture status, and bounded scope to foundation closeout, everyday marks,
+exploration and encodings. Each slice records API-value checks, design decisions,
+dependencies, public tests, data/example requirements and completion criteria.
+No runtime API added; candidate names are explicitly provisional.
+
+Started fresh aggregate trust on the merged checkout using Node 24.15.0 and
+pnpm 11.21.0, logging to /private/tmp/pibbl-viz-trust-2026-10-06.log. First run
+caught the new planning document's required historical-status banner; corrected
+it and restarted. Former scenario-import and documentation classification blockers
+are no longer present: scenario and docs checks passed in this run. Two skipped
+viz cases are opt-in workload timing (VITE_PIBBL_VIZ_PERF) and dense-pie structural
+comparison (VITE_PIBBL_VIZ_STRUCTURE), not disabled correctness contracts.
+
+The fresh aggregate run subsequently passed Studio documentation, repository
+builds, production-boundary checks, typecheck and code lint, then stopped on
+formatting in Plan 007 and the new execution plan. Formatted both files; remaining
+aggregate stages have not yet run in this closeout. F0 stays selected until the
+aggregate continuation and chart-specific evidence are reconciled. Plans remain
+uncommitted; no merge or push.

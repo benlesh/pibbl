@@ -1,7 +1,7 @@
 {
   "name": "@pibbl/three",
   "type": "module",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Three.js render layers for the Pibbl Canvas component runtime",
   "author": "Ben Lesh <ben@benlesh.com>",
   "license": "MIT",
@@ -48,7 +48,7 @@
     "test": "vitest"
   },
   "peerDependencies": {
-    "@pibbl/core": "0.0.1",
+    "@pibbl/core": "0.0.2",
     "three": "^0.186.0"
   },
   "devDependencies": {

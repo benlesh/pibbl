@@ -195,7 +195,7 @@ importers:
   packages/pibbl:
     dependencies:
       '@pibbl/core':
-        specifier: workspace:0.0.1
+        specifier: workspace:0.0.2
         version: link:../core
 
   packages/scenarios:

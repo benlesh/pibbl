@@ -1,6 +1,6 @@
 # @pibbl/text
 
-> **ALPHA — NOT FOR PRODUCTION USE.** Pibbl 0.0.1 is experimental. APIs may change or be removed without notice. Use it only for evaluation and experimentation.
+> **ALPHA — NOT FOR PRODUCTION USE.** Pibbl 0.0.2 is experimental. APIs may change or be removed without notice. Use it only for evaluation and experimentation.
 
 An optional Pibbl package for converting shaped text into editable `PathGeometry`.
 It uses a Pibbl-owned HarfBuzz WASM bridge, preserves quadratic/cubic curves, and

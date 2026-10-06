@@ -7,7 +7,7 @@ test('Pibbl release names and versions are aligned', () => {
   for (const name of ['core', 'three', 'text', 'pibbl']) {
     const pkg = manifest(name);
     assert.equal(pkg.name, name === 'pibbl' ? 'pibbl' : `@pibbl/${name}`);
-    assert.equal(pkg.version, '0.0.1');
+    assert.equal(pkg.version, manifest('core').version);
   }
 });
 test('pibbl forwards every core subpath to one exact core dependency', () => {

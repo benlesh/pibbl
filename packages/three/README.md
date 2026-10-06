@@ -1,6 +1,6 @@
 # `@pibbl/three`
 
-> **ALPHA — NOT FOR PRODUCTION USE.** Pibbl 0.0.1 is experimental. APIs may change or be removed without notice. Use it only for evaluation and experimentation.
+> **ALPHA — NOT FOR PRODUCTION USE.** Pibbl 0.0.2 is experimental. APIs may change or be removed without notice. Use it only for evaluation and experimentation.
 
 `@pibbl/three` embeds an ordinary Three.js scene as one composited render layer in
 the Pibbl Canvas runtime. The application continues to own its scene, camera,

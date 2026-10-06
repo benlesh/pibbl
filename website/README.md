@@ -87,12 +87,24 @@ Run `corepack pnpm@11.21.0 test:website` from the repository root for a fresh we
 
 When running individual browser scripts directly, the browser check uses `PIBBL_WEBSITE_URL` if supplied. It captures screenshots in `/tmp`, not source control. Examples use built public packages; build `@pibbl/core`, `@pibbl/three`, and `@pibbl/text` first if their distributions are absent or stale. The website declares these dependencies so recursive workspace builds order them correctly.
 
-Deploy `dist/` as static files with real 404 handling. Documentation and playground
-links are same-site paths. Old root-hash documentation and shared-example URLs redirect within the website.
-Deployment, redirects from any separately hosted legacy Studio origin, final canonical
-origin/sitemap, base-path rollout, individual expansion of grouped APIs, and
-visual design remain follow-up work. This preview does not replace
-the deployed site.
+## Deployment
+
+Cloudflare Pages serves `website/dist/` at `https://pibbl.com`, including the
+playground at `/playground/`. The production branch is `main`. Build from the
+repository root with `NODE_VERSION=24.15.0` and
+`SKIP_DEPENDENCY_INSTALL=true`:
+
+```sh
+npm install --global corepack@0.35.0
+corepack pnpm@11.21.0 install --frozen-lockfile
+corepack pnpm@11.21.0 --filter @pibbl/website... build
+```
+
+The filtered workspace build includes core, Three, and the native text engine
+before the website. Cloudflare serves the generated `404.html` for missing
+routes. Astro's canonical origin and sitemap use `https://pibbl.com`.
+Documentation and playground links are same-site paths. Old root-hash
+documentation and shared-example URLs redirect within the website.
 
 The coverage JSON records reference and minimal-example destinations, not a claim of exhaustive behavior testing or freshly executed browser results. The documentation browser check parses every generated page to verify heading links and static images, then exercises no-JavaScript reference, agent, minimal-example, and Markdown reading paths. Agent topics distinguish recommended verification from executed evidence. New sources should use supported public imports, include host setup, and preserve canonical example ownership.
 

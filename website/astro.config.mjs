@@ -4,6 +4,7 @@ import { pibblRuntimeSource } from "../tooling/pibbl-runtime-source.ts";
 import { textAssets } from "../tooling/text-assets.ts";
 
 export default defineConfig({
+  site: "https://pibbl.com",
   output: "static",
   devToolbar: { enabled: false },
   vite: {
