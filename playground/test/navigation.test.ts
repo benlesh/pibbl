@@ -131,6 +131,8 @@ describe("Studio navigation", () => {
       "useSignal",
     ]);
     expect(api.children?.[4]?.children?.map(({ label }) => label)).toEqual([
+      "State machines",
+      "Sprites",
       "Canvas and runtime",
       "Elements and components",
       "Events",
@@ -141,6 +143,8 @@ describe("Studio navigation", () => {
       "Three.js",
     ]);
     expect(api.children?.[4]?.children?.map(({ href }) => href)).toEqual([
+      "#/api/types/machines",
+      "#/api/types/sprites",
       "#/api/types/canvas-runtime",
       "#/api/types/elements-components",
       "#/api/types/events",

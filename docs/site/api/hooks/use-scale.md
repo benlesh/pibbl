@@ -14,6 +14,13 @@ Import from `@pibbl/core/viz`. Each hook accepts only an ancestor scale ID and
 returns a stable, shared readonly core signal:
 
 ```ts
+import type { Signal } from "@pibbl/core";
+import type {
+  ScaleId,
+  ResolvedLinearScale,
+  ResolvedBandScale,
+  ResolvedUtcScale,
+} from "@pibbl/core/viz";
 declare function useLinearScale(id: ScaleId): Signal<ResolvedLinearScale>;
 declare function useBarScale(id: ScaleId): Signal<ResolvedBandScale>;
 declare function useUTCScale(id: ScaleId): Signal<ResolvedUtcScale>;

@@ -47,13 +47,21 @@ subscriptions detach on removal or disposal.
 import { Group, pibbl } from "@pibbl/core";
 import { Axis, AxisTitle, LinearScale } from "@pibbl/core/viz";
 export default function mount(canvas: HTMLCanvasElement) {
-  return pibbl(canvas,
+  return pibbl(
+    canvas,
     <Group style={{ translateX: 80, translateY: 30 }}>
       <LinearScale id="y" domain={[0, 100]} range={[150, 0]}>
         <Axis scale="y" position="left" />
-        <AxisTitle scale="y" position="left" label="Mass" unit="kg" offset={55} />
+        <AxisTitle
+          scale="y"
+          position="left"
+          label="Mass"
+          unit="kg"
+          offset={55}
+        />
       </LinearScale>
-    </Group>);
+    </Group>,
+  );
 }
 ```
 
@@ -71,16 +79,37 @@ both the text and plot. For example:
 ```tsx
 import { Group, Text, pibbl } from "@pibbl/core";
 export default function mount(canvas: HTMLCanvasElement) {
-  return pibbl(canvas, <>
-    <Text style={{ left: 20, top: 20, width: 280, font: "600 24px sans-serif", fill: "#172f3d" }}>
-      Population change
-    </Text>
-    <Group style={{ translateX: 20, translateY: 80 }}>
-      <Text style={{ width: 280, height: 48, wrap: true, lineHeight: 16, fit: "ellipsis", font: "12px sans-serif", fill: "#617783" }}>
-        Source: US Census Bureau, Vintage 2023. July 2022–July 2023; people.
+  return pibbl(
+    canvas,
+    <>
+      <Text
+        style={{
+          left: 20,
+          top: 20,
+          width: 280,
+          font: "600 24px sans-serif",
+          fill: "#172f3d",
+        }}
+      >
+        Population change
       </Text>
-    </Group>
-  </>);
+      <Group style={{ translateX: 20, translateY: 80 }}>
+        <Text
+          style={{
+            width: 280,
+            height: 48,
+            wrap: true,
+            lineHeight: 16,
+            fit: "ellipsis",
+            font: "12px sans-serif",
+            fill: "#617783",
+          }}
+        >
+          Source: US Census Bureau, Vintage 2023. July 2022–July 2023; people.
+        </Text>
+      </Group>
+    </>,
+  );
 }
 ```
 

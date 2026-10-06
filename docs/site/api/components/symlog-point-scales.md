@@ -5,7 +5,17 @@ summary: Signed numeric mappings through zero and evenly spaced categorical posi
 kind: api
 slug: symlog-point-scales
 apiCategory: component
-symbols: [SymlogScale, useSymlogScale, SymlogScaleProps, ResolvedSymlogScale, PointScale, usePointScale, PointScaleProps, ResolvedPointScale]
+symbols:
+  [
+    SymlogScale,
+    useSymlogScale,
+    SymlogScaleProps,
+    ResolvedSymlogScale,
+    PointScale,
+    usePointScale,
+    PointScaleProps,
+    ResolvedPointScale,
+  ]
 ---
 
 # Symlog and point scales
@@ -98,17 +108,25 @@ also demonstrates both families and categorical custom-mark placement:
 import { Circle, Group, pibbl } from "@pibbl/core";
 import { Axis, PointScale, SymlogScale, ScaleAdjust } from "@pibbl/core/viz";
 export default function mount(canvas: HTMLCanvasElement) {
-  return pibbl(canvas, <Group style={{ translateX: 60, translateY: 30 }}>
-    <PointScale id="state" domain={["A", "B", "C"]} range={[0, 120]}>
-      <SymlogScale id="change" domain={[-100, 100]} range={[0, 240]} constant={10}>
-        <Axis scale="state" position="left" tickValues={["A", "B", "C"]} />
-        <Axis scale="change" position="top" />
-        <ScaleAdjust x={-30} xScale="change" y="B" yScale="state">
-          <Circle style={{ radius: 5, fill: "teal" }} />
-        </ScaleAdjust>
-      </SymlogScale>
-    </PointScale>
-  </Group>);
+  return pibbl(
+    canvas,
+    <Group style={{ translateX: 60, translateY: 30 }}>
+      <PointScale id="state" domain={["A", "B", "C"]} range={[0, 120]}>
+        <SymlogScale
+          id="change"
+          domain={[-100, 100]}
+          range={[0, 240]}
+          constant={10}
+        >
+          <Axis scale="state" position="left" tickValues={["A", "B", "C"]} />
+          <Axis scale="change" position="top" />
+          <ScaleAdjust x={-30} xScale="change" y="B" yScale="state">
+            <Circle style={{ radius: 5, fill: "teal" }} />
+          </ScaleAdjust>
+        </SymlogScale>
+      </PointScale>
+    </Group>,
+  );
 }
 ```
 

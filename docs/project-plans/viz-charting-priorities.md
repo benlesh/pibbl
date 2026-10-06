@@ -1,5 +1,7 @@
 # Visualization priorities and visual-quality bar
 
+> **Historical status: Planning and implementation work record; current code and public contracts define shipped behavior.**
+
 > API correction approved 2026-10-05: **every scale family has a dedicated
 > provider and hook**, with a fixed return type and no family-selector argument.
 > Current families: `LinearScale` / `useLinearScale`, `BarScale` / `useBarScale`,
@@ -250,7 +252,6 @@ This historical next-step note is superseded by the accepted UTC/NOAA slice.
 Current order: excellent numeric/time/category labels, dedicated log/symlog/point
 scales, then composable chart furniture. Track runnable versus hardened status
 in Plan 007.
-
 
 2026-10-05 delivery update: numeric and contextual UTC/category label slices are
 committed. The accepted logarithmic slice, including preservation of compact

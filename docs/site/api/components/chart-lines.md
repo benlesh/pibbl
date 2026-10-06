@@ -5,7 +5,16 @@ summary: Decorative scale-aligned guides with explicit composition-owned spans.
 kind: api
 slug: chart-lines
 apiCategory: component
-symbols: [GridLines, ReferenceLine, ChartLineProps, GridLinesProps, ReferenceLineProps, ReferenceBand, ReferenceBandProps]
+symbols:
+  [
+    GridLines,
+    ReferenceLine,
+    ChartLineProps,
+    GridLinesProps,
+    ReferenceLineProps,
+    ReferenceBand,
+    ReferenceBandProps,
+  ]
 ---
 
 # Grid and reference lines
@@ -50,11 +59,24 @@ subscription ownership ends on removal or disposal.
 import { pibbl } from "@pibbl/core";
 import { LinearScale, GridLines, ReferenceLine } from "@pibbl/core/viz";
 export default function mount(canvas: HTMLCanvasElement) {
-  return pibbl(canvas,
+  return pibbl(
+    canvas,
     <LinearScale id="y" domain={[-10, 10]} range={[180, 20]}>
-      <GridLines scale="y" direction="horizontal" span={[20, 280]} tickValues={[-10, 0, 10]} />
-      <ReferenceLine scale="y" direction="horizontal" span={[20, 280]} value={0} style={{ stroke: "#087f8c", strokeWidth: 2 }} />
-    </LinearScale>);
+      <GridLines
+        scale="y"
+        direction="horizontal"
+        span={[20, 280]}
+        tickValues={[-10, 0, 10]}
+      />
+      <ReferenceLine
+        scale="y"
+        direction="horizontal"
+        span={[20, 280]}
+        value={0}
+        style={{ stroke: "#087f8c", strokeWidth: 2 }}
+      />
+    </LinearScale>,
+  );
 }
 ```
 
@@ -85,10 +107,18 @@ Minimal runnable band demo:
 import { pibbl } from "@pibbl/core";
 import { LinearScale, ReferenceBand } from "@pibbl/core/viz";
 export default function mount(canvas: HTMLCanvasElement) {
-  return pibbl(canvas,
+  return pibbl(
+    canvas,
     <LinearScale id="y" domain={[-10, 10]} range={[180, 20]}>
-      <ReferenceBand scale="y" direction="horizontal" span={[20, 280]} values={[-10, 0]} style={{ fill: "#b65a35", opacity: 0.1 }} />
-    </LinearScale>);
+      <ReferenceBand
+        scale="y"
+        direction="horizontal"
+        span={[20, 280]}
+        values={[-10, 0]}
+        style={{ fill: "#b65a35", opacity: 0.1 }}
+      />
+    </LinearScale>,
+  );
 }
 ```
 

@@ -21,12 +21,24 @@ or select a field with `useComputed`. The initial render can observe `not-starte
 entry effects and tasks start only after the render succeeds.
 
 ```tsx
-const actor = useMachine(menu, { input: undefined });
-return (
-  <Text onClick={() => actor.send({ type: "TOGGLE" })}>
-    {actor.snapshot.get().value}
-  </Text>
-);
+import { Text } from "@pibbl/core";
+import { defineMachine, useMachine } from "@pibbl/core/machines";
+const menu = defineMachine<undefined, { type: "TOGGLE" }>({
+  initial: "closed",
+  context: () => undefined,
+  states: {
+    closed: { on: { TOGGLE: "open" } },
+    open: { on: { TOGGLE: "closed" } },
+  },
+});
+function Menu() {
+  const actor = useMachine(menu, { input: undefined });
+  return (
+    <Text onClick={() => actor.send({ type: "TOGGLE" })}>
+      {actor.snapshot.get().value}
+    </Text>
+  );
+}
 ```
 
 See [machine authoring](#/learn/guides/state-machines) and

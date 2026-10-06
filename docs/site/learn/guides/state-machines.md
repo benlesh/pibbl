@@ -98,21 +98,23 @@ Tasks receive entry context, the initiating event, actor input, an `AbortSignal`
 and `send`. The initial entry has no initiating event.
 
 ```ts
-loading: {
-  invoke: {
-    task: async ({ input, signal }) => {
-      const response = await fetch(input.url, { signal });
-      if (!response.ok) throw new Error(`Load failed: ${response.status}`);
-      return response.text();
+const states = {
+  loading: {
+    invoke: {
+      task: async ({ input, signal }) => {
+        const response = await fetch(input.url, { signal });
+        if (!response.ok) throw new Error(`Load failed: ${response.status}`);
+        return response.text();
+      },
+      onDone: {
+        target: "ready",
+        actions: assign(({ event }) => ({ result: String(event.output) })),
+      },
+      onError: "failed",
     },
-    onDone: {
-      target: 'ready',
-      actions: assign(({ event }) => ({ result: String(event.output) })),
-    },
-    onError: 'failed',
+    on: { CANCEL: "idle" },
   },
-  on: { CANCEL: 'idle' },
-}
+};
 ```
 
 Leaving the state aborts the signal and calls callback cleanup. Tasks must honor

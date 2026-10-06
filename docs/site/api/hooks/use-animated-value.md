@@ -15,13 +15,17 @@ relatedTypes: [Signal, PibblAnimatedValueOptions, PibblAnimationTarget]
 one stable readonly signal. Supply an immutable definition or a pure factory:
 
 ```tsx
-const x = useAnimatedValue(targetX, {
-  animation: spring({ stiffness: 180, damping: 12 }),
-  initial: 0,
-});
-const opacity = useAnimatedValue(targetOpacity, {
-  animation: tween({ duration: 200, easing: easing.easeOut }),
-});
+import { useAnimatedValue, spring, tween, easing } from "@pibbl/core";
+function useMotion(targetX: number, targetOpacity: number) {
+  const x = useAnimatedValue(targetX, {
+    animation: spring({ stiffness: 180, damping: 12 }),
+    initial: 0,
+  });
+  const opacity = useAnimatedValue(targetOpacity, {
+    animation: tween({ duration: 200, easing: easing.easeOut }),
+  });
+  return { x, opacity };
+}
 ```
 
 The hook supplies the current and target endpoints to spring and tween

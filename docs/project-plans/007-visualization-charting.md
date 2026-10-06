@@ -1,5 +1,7 @@
 # Plan 007 — Visualization charting
 
+> **Historical status: Planning and implementation work record; current code and public contracts define shipped behavior.**
+
 > API correction approved 2026-10-05: **every scale family has a dedicated
 > provider and hook**, with a fixed return type and no family-selector argument.
 > Current families: `LinearScale` / `useLinearScale`, `BarScale` / `useBarScale`,
@@ -225,7 +227,6 @@ not be silently removed as a responsive strategy. No new commit was requested.
 
 2026-10-05: User accepted the logarithmic slice after the compact-label fix and
 authorized its commit. Symlog and point scales are next.
-
 
 ### 2026-10-05 — signed and categorical point slice
 

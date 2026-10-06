@@ -1,5 +1,7 @@
 # Native state machines
 
+> **Historical status: Design record retained as implementation evidence; current code and public contracts define shipped behavior.**
+
 Status: approved API direction from the 2026-10-05 conversation. Not a shipped
 contract. Performance and bundle-size requirements below are acceptance criteria,
 not measured results.

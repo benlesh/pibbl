@@ -1,5 +1,7 @@
 # UTC charting feedback slice — 2026-10-05
 
+> **Historical status: Dated verification record; current code and fresh checks define the present state.**
+
 Status: slice ready for feedback, not feature complete. Implements the first
 step of [Plan 007](../../project-plans/007-visualization-charting.md).
 

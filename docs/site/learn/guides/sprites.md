@@ -32,7 +32,10 @@ export async function mountSprite(canvas: HTMLCanvasElement) {
     grid: { frameWidth: 32, frameHeight: 32 },
   });
   try {
-    const app = pibbl(canvas, <Sprite frame={sheet.frames[0]} sampling="nearest" />);
+    const app = pibbl(
+      canvas,
+      <Sprite frame={sheet.frames[0]} sampling="nearest" />,
+    );
     return () => {
       app.dispose(); // Unmount consumers before releasing their images.
       sheet.dispose();
@@ -116,7 +119,9 @@ TexturePacker scale/multipack metadata fails explicitly.
 import { loadSpriteSheet } from "@pibbl/core/sprites";
 import { texturePacker } from "@pibbl/core/sprites/formats/texture-packer";
 
-const sheet = await loadSpriteSheet("/terrain.json", { format: texturePacker() });
+const sheet = await loadSpriteSheet("/terrain.json", {
+  format: texturePacker(),
+});
 // Use sheet.frames with the exact frame names from the exported JSON.
 ```
 

@@ -26,8 +26,26 @@ Import from `@pibbl/core/viz`. UTC positions are numeric epoch milliseconds, not
 `Date` objects. No runtime data fetching is required.
 
 ```ts
-declare function extent<D>(data: readonly D[], value: (datum: D, index: number, data: readonly D[]) => number | null | undefined): NumericDomain | undefined;
-declare function niceUTCDomain(domain: NumericDomain, options?: { count?: number }): NumericDomain;
+import {
+  UTCScale,
+  Axis,
+  useUTCScale,
+  utcTickLabels,
+  type NumericDomain,
+} from "@pibbl/core/viz";
+const domain: NumericDomain = [Date.UTC(2025, 0, 1), Date.UTC(2026, 0, 1)];
+declare function extent<D>(
+  data: readonly D[],
+  value: (
+    datum: D,
+    index: number,
+    data: readonly D[],
+  ) => number | null | undefined,
+): NumericDomain | undefined;
+declare function niceUTCDomain(
+  domain: NumericDomain,
+  options?: { count?: number },
+): NumericDomain;
 ```
 
 `extent` calls the accessor once per row, skips null/undefined, rejects other
@@ -107,17 +125,17 @@ component/computed value to recompute; it acquires no resources or subscriptions
 
 ```tsx
 function DateAxis() {
-const ticks = useUTCScale("date").get().ticks(5);
-const labels = utcTickLabels(ticks);
-return (
-  <Axis
-    scale="date"
-    position="bottom"
-    tickValues={ticks}
-    tickFormat={(_, index) => labels[index]}
-    labelOverlap="skip"
-  />
-);
+  const ticks = useUTCScale("date").get().ticks(5);
+  const labels = utcTickLabels(ticks);
+  return (
+    <Axis
+      scale="date"
+      position="bottom"
+      tickValues={ticks}
+      tickFormat={(_, index) => labels[index]}
+      labelOverlap="skip"
+    />
+  );
 }
 ```
 

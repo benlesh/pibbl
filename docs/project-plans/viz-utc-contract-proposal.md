@@ -1,5 +1,7 @@
 # UTC scale contract (approved)
 
+> **Historical status: Design proposal retained as work evidence; current code and public contracts define shipped behavior.**
+
 > API correction approved 2026-10-05: **every scale family has a dedicated
 > provider and hook**, with a fixed return type and no family-selector argument.
 > Current families: `LinearScale` / `useLinearScale`, `BarScale` / `useBarScale`,

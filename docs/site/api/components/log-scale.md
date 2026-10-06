@@ -14,9 +14,10 @@ Import `LogScale` and `useLogScale` from `@pibbl/core/viz`. Equal ratios map to
 equal distances. There is no generic scale-family selector.
 
 ```tsx
+import { LogScale, Axis } from "@pibbl/core/viz";
 <LogScale id="mass" domain={[1, 1000]} range="width" base={10}>
   <Axis scale="mass" position="bottom" />
-</LogScale>
+</LogScale>;
 ```
 
 ## Provider signature and defaults

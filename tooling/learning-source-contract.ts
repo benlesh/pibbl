@@ -66,6 +66,8 @@ const THREE_ORBIT_CONTROLS_MODULE = "three/addons/controls/OrbitControls.js";
 const WEBGL_MODULE = ["@pibbl", "webgl"].join("/");
 const LEARNING_VALUE_MODULES = new Set([
   "@pibbl/text",
+  "@pibbl/core/machines",
+  "@pibbl/core/sprites",
   "@pibbl/core/filters",
   VIZ_MODULE,
   "@pibbl/core/textures",
@@ -1570,7 +1572,9 @@ export function validateLearningSourceText(
         !inspection.hasPhysics3DValueImport &&
         !inspection.hasNamedValueWebGLImport &&
         basePackageCount === 3
-      : isVizLesson ||
+      : inspection.packageImportModules.includes("@pibbl/core/machines") ||
+          inspection.packageImportModules.includes("@pibbl/core/sprites") ||
+          isVizLesson ||
           isTextLesson ||
           inspection.packageImportModules.includes("@pibbl/core/textures")
         ? inspection.hasNamedValueCoreImport && basePackageCount === 2

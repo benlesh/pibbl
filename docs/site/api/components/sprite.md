@@ -16,13 +16,24 @@ relatedTypes: [SpriteProps, SpriteStyle, SpriteFrame]
 alive until all consumers unmount.
 
 ```tsx
-<Sprite
-  frame={frame}
-  sampling="nearest"
-  flipX={facingLeft}
-  anchor={{ x: 0.5, y: 1 }}
-  style={{ width: 48, height: 64 }}
-/>
+import { Sprite, type SpriteFrame } from "@pibbl/core/sprites";
+function Avatar({
+  frame,
+  facingLeft,
+}: {
+  frame: SpriteFrame;
+  facingLeft: boolean;
+}) {
+  return (
+    <Sprite
+      frame={frame}
+      sampling="nearest"
+      flipX={facingLeft}
+      anchor={{ x: 0.5, y: 1 }}
+      style={{ width: 48, height: 64 }}
+    />
+  );
+}
 ```
 
 `sampling` defaults to linear. `anchor` defaults to top-left and uses normalized

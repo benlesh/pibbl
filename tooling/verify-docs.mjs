@@ -106,6 +106,17 @@ const publicGuidePaths = [
   "docs/site/learn/guides/manipulation.md",
 ];
 const publicSiteMarkdownPaths = [
+  "docs/site/api/components/sprite.md",
+  "docs/site/api/functions/machines.md",
+  "docs/site/api/functions/play-animation.md",
+  "docs/site/api/functions/sprite-sheets.md",
+  "docs/site/api/hooks/use-machine.md",
+  "docs/site/api/types/machines.md",
+  "docs/site/api/types/sprites.md",
+  "docs/site/learn/guides/machine-animation.md",
+  "docs/site/learn/guides/sprites.md",
+  "docs/site/learn/guides/state-machines.md",
+
   "docs/site/api/functions/path-transforms.md",
   "docs/site/api/hooks/use-visibility-transition.md",
   "docs/site/api/components/html-box.md",
@@ -677,6 +688,10 @@ export async function assertLocalLinks(
 }
 
 function resolvePublicAssetPath(decodedFile) {
+  if (/^\/[a-z0-9-]+(?:\/[a-z0-9-]+)*\/$/.test(decodedFile)) {
+    const page = resolve(repositoryRoot, "docs/site/website", `${decodedFile.slice(1, -1)}.mdx`);
+    if (existsSync(page)) return page;
+  }
   const publicAssetRoot = resolve(repositoryRoot, "playground/public");
   const localPath = resolve(
     publicAssetRoot,
@@ -783,15 +798,15 @@ function extractApiSnippets(sources) {
   for (const [path, source] of sources) {
     if (!path.startsWith("docs/site/api/")) continue;
     const fences = [...source.matchAll(/^```(ts|tsx)\n([\s\S]*?)^```$/gmu)];
-    if (fences.length > 0) {
-      const id = `api-snippet-${path.replaceAll(/[^a-z0-9]+/giu, "-")}`;
+    const groups = fences.length > 1 && fences.every(match => /export default/.test(match[2]))
+      ? fences.map(fence => [fence]) : [fences];
+    for (const [index, group] of groups.entries()) {
+      if (!group.length) continue;
+      const id = `api-snippet-${path.replaceAll(/[^a-z0-9]+/giu, "-")}-${index}`;
       snippets.set(id, {
-        id,
-        path,
-        language: fences.some((match) => match[1] === "tsx") ? "tsx" : "ts",
-        source: appendPibblComponentChecks(
-          fences.map((match) => match[2]).join("\n"),
-        ),
+        id, path,
+        language: group.some(match => match[1] === "tsx") ? "tsx" : "ts",
+        source: appendPibblComponentChecks(group.map(match => match[2]).join("\n")),
       });
     }
     assertNoBareApiPseudoLinks(path, source);
