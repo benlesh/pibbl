@@ -36,3 +36,19 @@ test("browser trust includes the unified website against a fresh build", () => {
     "corepack pnpm@11.21.0 website:build && node tooling/test-website.mjs",
   );
 });
+
+test("package trust builds generated exports before checking release forwarding", () => {
+  const commands = scripts["trust:package"].split(" && ");
+  const buildIndex = commands.findIndex((command) =>
+    command.endsWith(" test:package-consumer:packed"),
+  );
+  const releaseIndex = commands.findIndex((command) =>
+    command.includes("tooling/pibbl-release.test.mjs"),
+  );
+  assert.ok(buildIndex >= 0 && releaseIndex > buildIndex);
+  assert.ok(
+    scripts["test:package-consumer:packed"].startsWith(
+      "corepack pnpm@11.21.0 build && ",
+    ),
+  );
+});
