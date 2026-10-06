@@ -1,0 +1,142 @@
+[
+  {
+    "id": "tasks",
+    "title": "Cancelable machine tasks",
+    "description": "Run a state-owned task, observe completion, and release actors and listeners.",
+    "source": "tasks.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "assign",
+        "importPath": "@pibbl/core/machines"
+      },
+      {
+        "name": "createMachine",
+        "importPath": "@pibbl/core/machines"
+      },
+      {
+        "name": "defineMachine",
+        "importPath": "@pibbl/core/machines"
+      },
+      {
+        "name": "fromCallback",
+        "importPath": "@pibbl/core/machines"
+      },
+      {
+        "name": "useMachine",
+        "importPath": "@pibbl/core/machines"
+      },
+      {
+        "name": "CreateMachineOptions",
+        "importPath": "@pibbl/core/machines"
+      },
+      {
+        "name": "MachineAction",
+        "importPath": "@pibbl/core/machines"
+      },
+      {
+        "name": "MachineActionContext",
+        "importPath": "@pibbl/core/machines"
+      },
+      {
+        "name": "MachineActions",
+        "importPath": "@pibbl/core/machines"
+      },
+      {
+        "name": "MachineActor",
+        "importPath": "@pibbl/core/machines"
+      },
+      {
+        "name": "MachineDefinition",
+        "importPath": "@pibbl/core/machines"
+      },
+      {
+        "name": "MachineEvent",
+        "importPath": "@pibbl/core/machines"
+      },
+      {
+        "name": "MachineEventRoutes",
+        "importPath": "@pibbl/core/machines"
+      },
+      {
+        "name": "MachineInvocation",
+        "importPath": "@pibbl/core/machines"
+      },
+      {
+        "name": "MachineSnapshot",
+        "importPath": "@pibbl/core/machines"
+      },
+      {
+        "name": "MachineState",
+        "importPath": "@pibbl/core/machines"
+      },
+      {
+        "name": "MachineStatus",
+        "importPath": "@pibbl/core/machines"
+      },
+      {
+        "name": "MachineTask",
+        "importPath": "@pibbl/core/machines"
+      },
+      {
+        "name": "MachineTaskCleanup",
+        "importPath": "@pibbl/core/machines"
+      },
+      {
+        "name": "MachineTaskContext",
+        "importPath": "@pibbl/core/machines"
+      },
+      {
+        "name": "MachineTaskDoneEvent",
+        "importPath": "@pibbl/core/machines"
+      },
+      {
+        "name": "MachineTaskErrorEvent",
+        "importPath": "@pibbl/core/machines"
+      },
+      {
+        "name": "MachineTransition",
+        "importPath": "@pibbl/core/machines"
+      },
+      {
+        "name": "MachineTransitionConfig",
+        "importPath": "@pibbl/core/machines"
+      }
+    ],
+    "notes": [
+      "Uses public package imports. Browser resources are released on pagehide."
+    ]
+  },
+  {
+    "id": "animation",
+    "title": "State-owned animation",
+    "description": "Move a circle with a machine-owned animation task that completes into the next state.",
+    "source": "animation.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "defineMachine",
+        "importPath": "@pibbl/core/machines"
+      },
+      {
+        "name": "useMachine",
+        "importPath": "@pibbl/core/machines"
+      },
+      {
+        "name": "playAnimation",
+        "importPath": "@pibbl/core/machines/animation"
+      },
+      {
+        "name": "MachineAnimationOptions",
+        "importPath": "@pibbl/core/machines/animation"
+      },
+      {
+        "name": "MachineAnimationProgramFactory",
+        "importPath": "@pibbl/core/machines/animation"
+      }
+    ],
+    "notes": [
+      "Uses public package imports. Browser resources are released on pagehide."
+    ]
+  }
+]

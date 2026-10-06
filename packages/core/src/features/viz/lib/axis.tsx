@@ -1,4 +1,4 @@
-import { Path, Text, resolveSignalValue } from "@pibbl/core";
+import { Path, Text, resolveSignalValue, useCanvasContext } from "@pibbl/core";
 import type { AxisProps, BandCategory, ResolvedScale } from "./types.js";
 import { lookupScale } from "./scale-context.js";
 import { width, opacity } from "./paint.js";
@@ -88,6 +88,35 @@ export function Axis(props: AxisProps) {
     ? props.position === "bottom" ? scale.frame.height : 0
     : props.position === "right" ? scale.frame.width : 0;
   const selected = ticks(scale, props);
+  const context = useCanvasContext();
+  const overlap = resolveSignalValue(props.labelOverlap ?? "allow");
+  const gap = resolveSignalValue(props.labelGap ?? 8);
+  if (overlap !== "allow" && overlap !== "skip") throw new TypeError("Axis labelOverlap must be allow or skip.");
+  if (!Number.isFinite(gap) || gap < 0) throw new RangeError("Axis labelGap must be finite and nonnegative.");
+  const occupied: { start: number; end: number }[] = [];
+  const visible = new Set<number>();
+  const texts = selected.map((value, index) => {
+    const label = props.tickFormat ? props.tickFormat(value, index)
+      : scale.type === "utc" ? scale.formatTick(value as number)
+      : typeof value === "number" ? String(Number(value.toPrecision(6))) : value;
+    if (typeof label !== "string") throw new TypeError("Axis tickFormat must return a string.");
+    return label;
+  });
+  // Endpoints have priority; sort by physical position for reversed ranges too.
+  const order = selected.map((value, index) => ({ index, p: position(scale, value) })).sort((a, b) => a.p - b.p);
+  const priority = order.length > 1 ? [order[0], order[order.length - 1], ...order.slice(1, -1)] : order;
+  context.save();
+  try {
+    context.font = font;
+    for (const { index, p } of priority) {
+      const metrics = context.measureText(texts[index]);
+      const size = horizontal ? metrics.width : metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent;
+      const interval = { start: p - size / 2, end: p + size / 2 };
+      if (overlap === "allow" || occupied.every(other => interval.end + gap <= other.start || interval.start >= other.end + gap)) {
+        visible.add(index); occupied.push(interval);
+      }
+    }
+  } finally { context.restore(); }
   const path = new Path2D();
   if (horizontal) {
     path.moveTo(scale.range[0], baseline);
@@ -105,15 +134,8 @@ export function Axis(props: AxisProps) {
       path.moveTo(baseline, p);
       path.lineTo(baseline + outward * 6, p);
     }
-    const label = props.tickFormat
-      ? props.tickFormat(value, index)
-      : scale.type === "utc"
-        ? scale.formatTick(value as number)
-        : typeof value === "number"
-        ? String(Number(value.toPrecision(6)))
-        : value;
-    if (typeof label !== "string")
-      throw new TypeError("Axis tickFormat must return a string.");
+    if (!visible.has(index)) return null;
+    const label = texts[index];
     return (
       <Text
         key={index}

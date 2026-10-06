@@ -28,3 +28,28 @@ test("coverage requires a public import and actual usage, not a named placeholde
     ),
   );
 });
+
+test("machine and sprite examples accept only their supported public entries", () => {
+  for (const [name, importPath] of [
+    ["createMachine", "@pibbl/core/machines"],
+    ["playAnimation", "@pibbl/core/machines/animation"],
+    ["loadSpriteSheet", "@pibbl/core/sprites"],
+    ["aseprite", "@pibbl/core/sprites/formats/aseprite"],
+    ["texturePacker", "@pibbl/core/sprites/formats/texture-packer"],
+  ]) {
+    assert.doesNotThrow(() =>
+      validateExampleSource(
+        { symbols: [{ name, importPath }] },
+        `import { ${name} } from '${importPath}'; console.log(${name});`,
+      ),
+    );
+  }
+  assert.throws(
+    () =>
+      validateExampleSource(
+        { symbols: [] },
+        "import { secret } from '@pibbl/core/machines/internal'; console.log(secret);",
+      ),
+    /public import/,
+  );
+});

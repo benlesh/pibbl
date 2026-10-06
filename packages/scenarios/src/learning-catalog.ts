@@ -394,6 +394,17 @@ const drafts = [
       import("./learning/composition/viz-points-and-inspection.example"),
   },
   {
+    slug: "viz-numeric-axis", title: "Readable numeric axes", shortTitle: "Numeric axes",
+    section: "composition", order: 231,
+    summary: "Readable tick intervals, explicit nicening, and collision-aware labels with NOAA data.",
+    api: ["LinearScale", "Axis", "linearTicks", "niceLinearDomain", "formatNumber"],
+    objectives: ["Choose readable ticks without moving data.", "Adapt label density to width and height."],
+    prompts: { gesture: "Resize the canvas to inspect labels.", code: "Change precision, labelGap, or the requested tick count." },
+    apiNotes: ["Source: NOAA GML / Scripps, Jan–Jun 1980 CO₂ in ppm; repository snapshot."],
+    canvas: { width: 620, height: 360 }, related: ["viz-utc-climate"],
+    load: () => import("./learning/composition/viz-numeric-axis.example"),
+  },
+  {
     slug: "viz-utc-basics", title: "A real calendar axis", shortTitle: "UTC basics",
     section: "composition", order: 227,
     summary: "Minimal UTCScale, Axis, extent, niceUTCDomain, and useUTCScale demo with real NOAA observations.",
