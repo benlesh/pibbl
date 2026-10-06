@@ -2,7 +2,8 @@
 
 > **Historical status: Planning and implementation work record; current code and public contracts define shipped behavior.**
 
-Status: active, updated 2026-10-06. Current execution is governed by the
+Status: approved chart scope completed 2026-10-06; aggregate gate blocked only by
+an unrelated shared design draft (see final closeout below). Execution followed the
 [detailed chart API execution plan](viz-foundations-next-execution.md).
 Older field notes below are dated evidence, not the current status board.
 
@@ -21,20 +22,23 @@ Do not commit, merge or push new work without explicit user authorization.
 
 ## Current status board
 
-| Work                                                        | State                    | Next evidence                                            |
-| ----------------------------------------------------------- | ------------------------ | -------------------------------------------------------- |
-| UTC/NOAA, numeric and categorical labels                    | Accepted and implemented | Integrated closeout                                      |
-| Log, symlog, point families                                 | Accepted and implemented | Integrated closeout                                      |
-| Scale-based furniture and AxisTitle                         | Accepted and implemented | Integrated closeout                                      |
-| Foundation verification (F0)                                | Next                     | Fresh trust result after merge; reconcile blockers/skips |
-| Area series (M1)                                            | Queued                   | Baseline/gap contract and first runnable example         |
-| Interval bands, curves, categorical marks (M2–M6)           | Queued                   | Per-slice contract, demo and feedback                    |
-| Inspection, selection, brush, zoom, small multiples (I1–I5) | Queued                   | Controlled state and lifecycle evidence                  |
-| Size/symbol/color encodings and scale-derived keys (E1–E3)  | Queued                   | API-value audit and truthful mapping                     |
-| Final closeout (V0)                                         | Queued                   | All accepted slices verified and documented              |
-| Statistics/diagrams/hierarchies/geography                   | Deferred                 | Separate prioritization                                  |
+| Work                                                        | State                           | Evidence / remaining condition                                               |
+| ----------------------------------------------------------- | ------------------------------- | ---------------------------------------------------------------------------- |
+| UTC/NOAA, numeric and categorical labels                    | Accepted and implemented        | Recorded in final walkthrough                                                |
+| Log, symlog, point families                                 | Accepted and implemented        | Recorded in final walkthrough                                                |
+| Scale-based furniture and AxisTitle                         | Accepted and implemented        | Recorded in final walkthrough                                                |
+| Foundation verification (F0)                                | Done                            | Baseline passed; final blocker and skip reasons recorded                     |
+| Area series (M1)                                            | Done                            | Recorded in final walkthrough                                                |
+| Interval bands and step curves (M2–M3)                      | Done                            | Recorded in final walkthrough                                                |
+| Monotone curves (M4)                                        | Done                            | Recorded in final walkthrough                                                |
+| Categorical marks (M5)                                      | Done                            | Recorded in final walkthrough                                                |
+| Explicit segment/stack recipes (M6)                         | Done                            | Recorded in final walkthrough                                                |
+| Inspection, selection, brush, zoom, small multiples (I1–I5) | Done                            | Recorded in final walkthrough                                                |
+| Size/symbol/color encodings and scale-derived keys (E1–E3)  | Done                            | Recorded in final walkthrough                                                |
+| Final closeout (V0)                                         | Done with external gate blocker | Unrelated auxiliary-output draft banner/format; all unaffected stages passed |
+| Statistics/diagrams/hierarchies/geography                   | Deferred                        | Separate prioritization                                                      |
 
-## [NEXT] F0 — foundation verification closeout
+## [DONE] F0 — foundation verification closeout
 
 Follow section 3 of the detailed execution plan. First rerun the aggregate trust
 gate on the merged tree; independently confirm viz source/built suites, packed
@@ -45,32 +49,32 @@ Done when chart-specific evidence is complete, examples remain accepted, and
 repository-wide gate status is accurately reconciled. If an unrelated gate truly
 blocks closeout, retain that explicit blocker and select independent M1 work.
 
-## [TODO] M1 — baseline-filled area series
+## [DONE] M1 — baseline-filled area series
 
 First new API slice after F0; see detailed plan section 4 for baseline semantics,
 gaps, geometry, data selection and tests. Proposed names are not final contracts.
 Start with one failing public geometry test and one meaningful real-data example;
 provide the exact runnable URL before broad hardening.
 
-## [TODO] M2–M6 — everyday marks
+## [DONE] M6 — explicit segment and stack recipes
 
 Execute sequentially: interval bands, step curves, monotone curves, categorical
 series coordinates, then demonstrated segment styling/stacking needs. Reuse
 existing components and pure data recipes before adding APIs.
 
-## [TODO] I1–I5 — reusable exploration
+## [DONE] I1–I5 — reusable exploration
 
 Unify inspection, then pinning/shared selection, brush/overview, controlled
 pan/zoom, and small-multiple compositions. Keep application state and layout
 ownership explicit. Avoid a chart-global interaction manager.
 
-## [TODO] E1–E3 — data-driven encodings
+## [DONE] E1–E3 — data-driven encodings
 
 Audit existing radius/custom-mark support; add only missing reusable mappings.
 Dedicated color families need explicit validation and boundary semantics.
 A legend API requires scale-derived meaning; ordinary swatches remain core.
 
-## [TODO] V0 — integrated closeout
+## [DONE] V0 — integrated closeout
 
 Each slice needs a minimal runnable demo, complete docs, public types/runtime,
 editor and packed evidence, semantic geometry, responsive input and teardown.
@@ -486,3 +490,43 @@ formatting in Plan 007 and the new execution plan. Formatted both files; remaini
 aggregate stages have not yet run in this closeout. F0 stays selected until the
 aggregate continuation and chart-specific evidence are reconciled. Plans remain
 uncommitted; no merge or push.
+
+### 2026-10-06 — autonomous chart execution
+
+Baseline at `f724a56e` was clean. Fresh Node 24.15.0 / pnpm 11.21.0 aggregate
+trust passed, including all 25 browser shards and native reproducibility.
+Source and built viz each passed 221 tests with two intentional opt-in
+performance/structure skips. Corrected stale scale inventories. Visual QA found
+compact long-label category omission; focused red/green evidence now preserves
+all six identities, attribution, and nonoverlapping text at five allocations.
+
+M1 is runnable at http://127.0.0.1:5198/#/examples/composition/viz-area-basics.
+Six initial focused tests pass; actual Studio editor preview inspected at all
+five required sizes and its gap control exercised. Packed Bundler/NodeNext and
+Studio source/built/editor parity pass. Hardening is ongoing; not feature complete.
+See [execution evidence](../testing/field-notes/2026-10-06-chart-api-execution.md).
+Next: finish M1 edge evidence, then M2 observed interval geometry. No commits,
+merges, pushes, or publishing.
+
+### 2026-10-06 integrated closeout
+
+All approved mark, exploration and encoding slices are implemented. Dedicated
+color mappings were justified; stacks, symbols, selection and brush remain
+recipes. V0 is closed with the explicit external aggregate-gate blocker below. See the [walkthrough](../testing/field-notes/2026-10-06-chart-api-walkthrough.md)
+and [execution evidence](../testing/field-notes/2026-10-06-chart-api-execution.md).
+
+### Final verification — 2026-10-06, 18:56 UTC
+
+The approved scope is complete; no next chart step is selected. Source and built
+viz suites each passed 348 tests with two opt-in diagnostics skipped. All 26
+repository browser batches pass after correcting exact catalog inventories;
+package, editor, builds, lifecycle, structural performance, native reproducibility,
+visual safeguards, and website executable examples passed. No baselines changed.
+
+`corepack pnpm@11.21.0 trust` was actually run and remains **not green** because
+`docs/superpowers/specs/2026-10-06-auxiliary-outputs-design.md`, authored outside
+this task, lacks the required historical banner and separately fails formatting.
+All unaffected stages were completed independently. The final [walkthrough](../testing/field-notes/2026-10-06-chart-api-walkthrough.md)
+contains precise commands, skip reasons, all twelve working Studio URLs, public API
+and source links, limits and shared-checkout status. No commit, merge, push or
+publication was performed. No subsequent plan is authorized by this closeout.

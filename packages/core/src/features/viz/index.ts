@@ -20,12 +20,21 @@ export type {
 } from "./lib/types.js";
 export { Axis } from "./lib/axis.js";
 export { LineSeries } from "./lib/line-series.js";
+export { AreaSeries } from "./lib/area-series.js";
+export type { AreaSeriesProps, AreaSeriesStyle } from "./lib/area-series.js";
+export { IntervalBandSeries } from "./lib/interval-band-series.js";
+export type { IntervalBandSeriesProps } from "./lib/interval-band-series.js";
+export type { SeriesCurve } from "./lib/curve-definition.js";
+export { stepBefore, stepAfter, stepMidpoint } from "./lib/step-curves.js";
+export { monotoneX } from "./lib/monotone-curve.js";
 export { ScaleAdjust } from "./lib/scale-adjust.js";
 export type {
   AxisStyle,
   AxisProps,
   LineCoordinate,
   LineAccessor,
+  SeriesAccessor,
+  SeriesCoordinate,
   LineCurve,
   LineSeriesStyle,
   LineSeriesProps,
@@ -99,13 +108,36 @@ export { pieSlices } from "./lib/pie-slices.js";
 export type { PieOptions, PieSliceGeometry } from "./lib/pie-slices.js";
 
 export { PieLayout, PieSlice, PieLabel } from "./lib/pie-layout.js";
-export type { PieLayoutProps, PieLayoutStyle, PieLayoutSlice, PieLabelPlacement, PieLabelLayout, PieSliceProps, PieSliceStyle, PieLabelProps, PieLabelStyle } from "./lib/pie-types.js";
+export type {
+  PieLayoutProps,
+  PieLayoutStyle,
+  PieLayoutSlice,
+  PieLabelPlacement,
+  PieLabelLayout,
+  PieSliceProps,
+  PieSliceStyle,
+  PieLabelProps,
+  PieLabelStyle,
+} from "./lib/pie-types.js";
 
 export { extent, niceUTCDomain } from "./lib/utc-scale.js";
-export type { NumericDomain, UtcDomain, UTCScaleProps, ResolvedUtcScale, ResolvedContinuousScale } from "./lib/types.js";
+export type {
+  NumericDomain,
+  UtcDomain,
+  UTCScaleProps,
+  ResolvedUtcScale,
+  ResolvedContinuousScale,
+} from "./lib/types.js";
 
-export { linearTicks, niceLinearDomain, formatNumber } from "./lib/numeric-ticks.js";
-export type { LinearTickOptions, NumberFormatOptions } from "./lib/numeric-ticks.js";
+export {
+  linearTicks,
+  niceLinearDomain,
+  formatNumber,
+} from "./lib/numeric-ticks.js";
+export type {
+  LinearTickOptions,
+  NumberFormatOptions,
+} from "./lib/numeric-ticks.js";
 
 export { utcTickLabels } from "./lib/utc-labels.js";
 export type { UTCTickLabelOptions } from "./lib/utc-labels.js";
@@ -122,8 +154,41 @@ export { PointScale } from "./lib/point-scale-component.js";
 export { usePointScale } from "./lib/use-point-scale.js";
 export type { PointScaleProps, ResolvedPointScale } from "./lib/types.js";
 export { GridLines, ReferenceLine } from "./lib/chart-lines.js";
-export type { ChartLineProps, GridLinesProps, ReferenceLineProps } from "./lib/chart-lines.js";
+export type {
+  ChartLineProps,
+  GridLinesProps,
+  ReferenceLineProps,
+} from "./lib/chart-lines.js";
 export { ReferenceBand } from "./lib/reference-band.js";
 export type { ReferenceBandProps } from "./lib/reference-band.js";
 export { AxisTitle } from "./lib/axis-title.js";
 export type { AxisTitleProps } from "./lib/axis-title.js";
+
+export { panDomain, zoomDomain } from "./lib/domain-navigation.js";
+export type { DomainNavigationConstraints, PanDomainOptions, ZoomDomainOptions } from "./lib/domain-navigation.js";
+
+export {
+  SequentialColorScale,
+  useSequentialColorScale,
+} from "./lib/sequential-color-scale.js";
+export {
+  DivergingColorScale,
+  useDivergingColorScale,
+} from "./lib/diverging-color-scale.js";
+export type {
+  ColorScaleStop,
+  SequentialColorScaleProps,
+  DivergingColorScaleProps,
+  ResolvedSequentialColorScale,
+  ResolvedDivergingColorScale,
+} from "./lib/color-types.js";
+
+export {
+  ThresholdColorScale,
+  useThresholdColorScale,
+} from "./lib/threshold-color-scale.js";
+export type {
+  ThresholdColorBand,
+  ThresholdColorScaleProps,
+  ResolvedThresholdColorScale,
+} from "./lib/threshold-color-scale.js";

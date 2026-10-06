@@ -1214,11 +1214,11 @@ describe("learning example catalog", () => {
     );
   });
 
-  it("contains 96 unique, ordered, source-backed routes including rainy window, optional filters, and underwater", async () => {
+  it("contains 108 unique, ordered, source-backed routes including rainy window, optional filters, and underwater", async () => {
     expect(validateLearningExampleCatalog(learningExampleCatalog)).toBe(
       learningExampleCatalog,
     );
-    expect(learningExampleCatalog).toHaveLength(96);
+    expect(learningExampleCatalog).toHaveLength(108);
     expect(
       learningExampleCatalog
         .filter(
@@ -1319,6 +1319,18 @@ describe("learning example catalog", () => {
         "viz-log-basics",
         "viz-log-masses",
         "viz-signed-population",
+        "viz-area-basics",
+        "viz-interval-temperature",
+        "viz-policy-steps",
+        "viz-monotone-climate",
+        "viz-category-series",
+        "viz-threshold-segments",
+        "viz-population-stack",
+        "viz-linked-inspection",
+        "viz-domain-exploration",
+        "viz-small-multiples",
+        "viz-size-symbols",
+        "viz-color-encodings",
 
         "embers-physics",
         "energy-transitions",
@@ -1465,6 +1477,18 @@ describe("learning example catalog", () => {
       "viz-log-basics",
       "viz-log-masses",
       "viz-signed-population",
+      "viz-area-basics",
+      "viz-interval-temperature",
+      "viz-policy-steps",
+      "viz-monotone-climate",
+      "viz-category-series",
+      "viz-population-stack",
+      "viz-threshold-segments",
+      "viz-linked-inspection",
+      "viz-domain-exploration",
+      "viz-small-multiples",
+      "viz-size-symbols",
+      "viz-color-encodings",
     ]);
 
     const startExamples = learningExampleCatalog.filter(
@@ -1963,6 +1987,11 @@ describe("learning example catalog", () => {
         "teleportBody2D",
         "enableBody2D",
         "setLinearVelocity2D",
+        "AreaSeries", "IntervalBandSeries", "ReferenceLine", "SeriesAccessor",
+        "SequentialColorScale", "DivergingColorScale", "ThresholdColorScale",
+        "stepBefore", "stepAfter", "stepMidpoint", "monotoneX",
+        "panDomain", "zoomDomain",
+        "useSequentialColorScale", "useDivergingColorScale", "useThresholdColorScale",
       ]),
     );
 

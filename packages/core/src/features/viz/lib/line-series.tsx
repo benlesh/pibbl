@@ -1,15 +1,17 @@
 import { Path, resolveSignalValue } from "@pibbl/core";
 import { useInternalValueMemoSlot } from "@pibbl/core/internal";
-import type { LineAccessor, LineCoordinate, LineSeriesProps } from "./types.js";
-import { useContinuousScale } from "./use-continuous-scale.js";
+import type { LineSeriesProps } from "./types.js";
+import {
+  appendCurveForward,
+  curveGeometry,
+  resolveSeriesCurve,
+} from "./curve-definition.js";
+import {
+  useSeriesPosition,
+  seriesAccessor,
+  mapSeriesPosition,
+} from "./series-position.js";
 import { width, opacity } from "./paint.js";
-function accessor<D>(
-  input: LineAccessor<D>,
-): (datum: D, index: number, data: readonly D[]) => LineCoordinate {
-  return typeof input === "function"
-    ? input
-    : (datum) => datum[input] as LineCoordinate;
-}
 /**
  * Draws a scaled line through defined data values, leaving gaps for undefined values.
  *
@@ -30,16 +32,19 @@ export function LineSeries<D>({
   style: styleInput,
   ...eventProps
 }: LineSeriesProps<D>) {
-  const xScale = useContinuousScale(xId).get();
-  const yScale = useContinuousScale(yId).get();
-  const x = useInternalValueMemoSlot("vizXAccessor", () => accessor(xInput), [
-    xInput,
-  ]);
-  const y = useInternalValueMemoSlot("vizYAccessor", () => accessor(yInput), [
-    yInput,
-  ]);
-  if (curve !== undefined && curve !== "linear")
-    throw new TypeError('LineSeries supports curve="linear" only.');
+  const xScale = useSeriesPosition(xId);
+  const yScale = useSeriesPosition(yId);
+  const x = useInternalValueMemoSlot(
+    "vizXAccessor",
+    () => seriesAccessor(xInput),
+    [xInput],
+  );
+  const y = useInternalValueMemoSlot(
+    "vizYAccessor",
+    () => seriesAccessor(yInput),
+    [yInput],
+  );
+  const curveDefinition = resolveSeriesCurve(curve);
   const data = resolveSignalValue(dataInput);
   if (!Array.isArray(data))
     throw new TypeError(
@@ -58,35 +63,33 @@ export function LineSeries<D>({
     "LineSeries",
   );
   const path = new Path2D();
-  let previous: readonly [number, number] | undefined;
-  let inRun = false;
+  let run: (readonly [number, number])[] = [];
+  const flushRun = () => {
+    if (run.length >= 2) {
+      const geometry = curveGeometry(curveDefinition, run);
+      path.moveTo(geometry.start[0], geometry.start[1]);
+      appendCurveForward(path, geometry);
+    }
+    run = [];
+  };
   for (let i = 0; i < data.length; i++) {
     const datum = data[i];
     if (defined && !defined(datum, i, data)) {
-      previous = undefined;
-      inRun = false;
+      flushRun();
       continue;
     }
     const xv = x(datum, i, data),
       yv = y(datum, i, data);
-    if (
-      typeof xv !== "number" ||
-      typeof yv !== "number" ||
-      !Number.isFinite(xv) ||
-      !Number.isFinite(yv)
-    ) {
-      previous = undefined;
-      inRun = false;
+    const px = mapSeriesPosition(xScale, xv),
+      py = mapSeriesPosition(yScale, yv);
+    if (px === undefined || py === undefined) {
+      flushRun();
       continue;
     }
-    const point = [xScale.map(xv), yScale.map(yv)] as const;
-    if (previous) {
-      if (!inRun) path.moveTo(previous[0], previous[1]);
-      path.lineTo(point[0], point[1]);
-      inRun = true;
-    }
-    previous = point;
+    const point = [px, py] as const;
+    run.push(point);
   }
+  flushRun();
   return (
     <Path
       {...eventProps}

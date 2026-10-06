@@ -1,5 +1,6 @@
-import type { PlotSeries } from './plot-series.js';
-import type { PieOptions } from './pie-slices.js';
+import type { SeriesAccessor } from "./types.js";
+import type { PlotSeries } from "./plot-series.js";
+import type { PieOptions } from "./pie-slices.js";
 import type { PibblEventHandlers, PibblNode, SignalValue } from "@pibbl/core";
 import type { PointAccessor } from "./point-types.js";
 import type { ScaleId } from "./types.js";
@@ -34,9 +35,9 @@ export interface PlotSeriesProps<D> extends PibblEventHandlers {
    */
   readonly data: SignalValue<readonly D[]>;
   /** Property key or callback extracting the horizontal domain coordinate. See {@link PointAccessor}. */
-  readonly x: PointAccessor<D>;
+  readonly x: SeriesAccessor<D>;
   /** Property key or callback extracting the vertical domain coordinate. See {@link PointAccessor}. */
-  readonly y: PointAccessor<D>;
+  readonly y: SeriesAccessor<D>;
   /** The scale used to map horizontal data coordinates. See {@link ScaleId}. */
   readonly xScale: ScaleId;
   /** The scale used to map vertical data coordinates. See {@link ScaleId}. */

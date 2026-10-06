@@ -28,3 +28,6 @@ Marks inherit the plot allocation and are translated without resizing or
 centering. Percentage lengths retain that allocation until an inner container
 changes it. Each row costs its normal component subtree; use PointSeries for
 large dot batches, optionally overlaid with a few custom PlotSeries annotations.
+
+Numeric and categorical positions use `SeriesAccessor<D>` with continuous scales
+or PointScale. See [categorical position contracts](#/api/components/line-series).

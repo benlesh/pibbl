@@ -35,3 +35,6 @@ the union of dots/rings, with normal Pibbl handlers and `pointerEvents`.
 
 Use PlotSeries for custom Pibbl elements and nearestPoint for explicit inspection.
 No implicit clipping, sorting, domain inference, or per-point focus is added.
+
+Numeric and categorical positions use `SeriesAccessor<D>` with continuous scales
+or PointScale. See [categorical position contracts](#/api/components/line-series).

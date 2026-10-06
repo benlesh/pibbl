@@ -2,7 +2,10 @@
 
 ## Active plan
 
-[007 — Visualization charting](./007-visualization-charting.md) is active.
+[007 — Visualization charting](./007-visualization-charting.md) completed its approved
+scope on 2026-10-06. The [closeout walkthrough](../testing/field-notes/2026-10-06-chart-api-walkthrough.md)
+records an unrelated documentation/formatting blocker in the repository-wide gate;
+all unaffected verification passed. No next plan is selected.
 
 [004 — HtmlBox](./004-html-box.md) retains unfinished work and its existing
 evidence; this queue switch does not mark it complete.
@@ -33,6 +36,7 @@ may instead state that it does not advance a strategy initiative.
 - [`002 — Pibbl interactive examples studio`](./002-pibbl-interactive-examples-studio.md)
 - [`003 — First-class style and layout`](./003-first-class-style-and-layout.md)
 - [`005 — Package consolidation`](./005-package-consolidation.md)
+- [`007 — Visualization charting`](./007-visualization-charting.md) — approved scope complete; external gate blocker documented.
 
 ## Operating protocol
 

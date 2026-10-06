@@ -1,4 +1,4 @@
-import { resolveTexturePaint } from '@pibbl/core/internal';
+import { resolveTexturePaint } from "@pibbl/core/internal";
 import {
   Path,
   isSignal,
@@ -11,8 +11,12 @@ import type {
   PointSeriesProps,
   PointSeriesStyle,
 } from "./point-types.js";
-import { useContinuousScale } from "./use-continuous-scale.js";
-import { finiteCoordinate, pointAccessor, pointData } from "./point-data.js";
+import {
+  useSeriesPosition,
+  seriesAccessor,
+  mapSeriesPosition,
+} from "./series-position.js";
+import { pointData } from "./point-data.js";
 import { appendPointTarget, pointPath } from "./point-geometry.js";
 import { opacity, width } from "./paint.js";
 const fields = ["radius", "fill", "stroke", "strokeWidth", "opacity", "cursor"];
@@ -77,11 +81,11 @@ export function PointSeries<D>({
   style: styleInput,
   ...events
 }: PointSeriesProps<D>) {
-  const xs = useContinuousScale(xId).get(),
-    ys = useContinuousScale(yId).get();
+  const xs = useSeriesPosition(xId),
+    ys = useSeriesPosition(yId);
   const data = pointData(resolveSignalValue(input), "PointSeries");
-  const x = pointAccessor(xInput),
-    y = pointAccessor(yInput);
+  const x = seriesAccessor(xInput),
+    y = seriesAccessor(yInput);
   const specified = resolveSignalValue(styleInput);
   const shared =
     typeof specified === "function"
@@ -94,9 +98,11 @@ export function PointSeries<D>({
     if (defined && !defined(datum, i, data)) continue;
     const xv = x(datum, i, data),
       yv = y(datum, i, data);
-    if (!finiteCoordinate(xv) || !finiteCoordinate(yv)) continue;
-    const px = xs.map(xv),
-      py = ys.map(yv);
+    const mappedX = mapSeriesPosition(xs, xv),
+      mappedY = mapSeriesPosition(ys, yv);
+    if (mappedX === undefined || mappedY === undefined) continue;
+    const px = mappedX,
+      py = mappedY;
     const style =
       shared ??
       normalized(
@@ -123,11 +129,21 @@ export function PointSeries<D>({
     try {
       ctx.globalAlpha *= style.opacity;
       if (style.fill) {
-        ctx.fillStyle = resolveTexturePaint(style.fill, ctx, { x: px - style.radius, y: py - style.radius, width: style.radius * 2, height: style.radius * 2 });
+        ctx.fillStyle = resolveTexturePaint(style.fill, ctx, {
+          x: px - style.radius,
+          y: py - style.radius,
+          width: style.radius * 2,
+          height: style.radius * 2,
+        });
         ctx.fill(path);
       }
       if (style.stroke && style.strokeWidth > 0) {
-        ctx.strokeStyle = resolveTexturePaint(style.stroke, ctx, { x: px - style.radius, y: py - style.radius, width: style.radius * 2, height: style.radius * 2 });
+        ctx.strokeStyle = resolveTexturePaint(style.stroke, ctx, {
+          x: px - style.radius,
+          y: py - style.radius,
+          width: style.radius * 2,
+          height: style.radius * 2,
+        });
         ctx.lineWidth = style.strokeWidth;
         ctx.stroke(path);
       }

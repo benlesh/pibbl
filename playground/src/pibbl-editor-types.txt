@@ -1172,6 +1172,109 @@ export interface MeshTransformOptions {
 /* @pibbl-studio-module @pibbl/core/viz */
 import type { BoxStyle, PibblNode, LayoutItemStyle, LayoutBox, SignalValue } from '@pibbl/core';
 type SignalStyle<S> = Readonly<{ [K in keyof S]: K extends "custom" ? S[K] : SignalValue<S[K]> }>;
+export interface AreaSeriesStyle { readonly fill?: FillStyle; readonly opacity?: number; readonly cursor?: string; }
+export interface AreaSeriesProps<D> extends PibblEventHandlers, PibblEventParticipationOptions {
+  readonly data: LineSeriesProps<D>["data"];
+  readonly x: LineAccessor<D>;
+  readonly y: LineAccessor<D>;
+  readonly xScale: ScaleId;
+  readonly yScale: ScaleId;
+  readonly defined?: LineSeriesProps<D>["defined"];
+  readonly baseline: SignalValue<number>;
+  readonly curve?: LineCurve;
+  readonly style?: SignalValue<SignalStyle<AreaSeriesStyle>>;
+}
+export declare function AreaSeries<D>(props: AreaSeriesProps<D>): PibblNode;
+export interface IntervalBandSeriesProps<D> extends Omit<AreaSeriesProps<D>, "baseline" | "y"> {
+  readonly lower: LineAccessor<D>;
+  readonly upper: LineAccessor<D>;
+}
+export declare function IntervalBandSeries<D>(props: IntervalBandSeriesProps<D>): PibblNode;
+declare const seriesCurveBrand: unique symbol;
+export interface SeriesCurve { readonly [seriesCurveBrand]: true; }
+export declare function stepBefore(): SeriesCurve;
+export declare function stepAfter(): SeriesCurve;
+export declare function stepMidpoint(): SeriesCurve;
+
+/** One authored domain/color association. @see {@link ResolvedSequentialColorScale} */
+export interface ColorScaleStop {
+ /** Numeric data value at the color stop. */ readonly value:number;
+ /** Canonical lowercase six-digit hexadecimal sRGB color. */ readonly color:string;
+}
+/** Readonly continuous two-stop color mapping. @see {@link SequentialColorScaleProps} */
+export interface ResolvedSequentialColorScale {
+ /** Authored finite endpoints, preserving ascending or descending order. */ readonly domain:readonly[number,number];
+ /** Canonical endpoint colors, in authored order. */ readonly colors:readonly[string,string];
+ /** Frozen endpoint/value pairs for scale-derived annotations. */ readonly stops:readonly ColorScaleStop[];
+ /** Maps finite data to a clamped color. @param value - Numeric input. @returns Canonical #rrggbb color. */ map(value:number):string;
+}
+/** Readonly continuous mapping with an explicit center. @see {@link DivergingColorScaleProps} */
+export interface ResolvedDivergingColorScale {
+ /** Strictly monotonic finite endpoints and center, in authored order. */ readonly domain:readonly[number,number,number];
+ /** Canonical endpoint and center colors. */ readonly colors:readonly[string,string,string];
+ /** Frozen endpoint/center pairs for scale-derived annotations. */ readonly stops:readonly ColorScaleStop[];
+ /** Maps finite data through the authored center. @param value - Numeric input. @returns Canonical #rrggbb color. */ map(value:number):string;
+}
+/** Inputs for a dedicated sequential color provider. @see {@link ResolvedSequentialColorScale} */
+export interface SequentialColorScaleProps {
+ /** Identity in the color-scale namespace. See {@link ScaleId}. */ readonly id:ScaleId;
+ /** Finite endpoints; equal endpoints map all finite inputs to the color midpoint. */ readonly domain:SignalValue<readonly[number,number]>;
+ /** Required #RRGGBB endpoint colors. No default palette is chosen. */ readonly colors:SignalValue<readonly[string,string]>;
+ /** Descendants consuming the mapping. See {@link PibblNode}. */ readonly children?:PibblNode;
+}
+/** Inputs for a dedicated diverging color provider. @see {@link ResolvedDivergingColorScale} */
+export interface DivergingColorScaleProps {
+ /** Identity in the color-scale namespace. See {@link ScaleId}. */ readonly id:ScaleId;
+ /** Strictly increasing or decreasing finite endpoints and center. */ readonly domain:SignalValue<readonly[number,number,number]>;
+ /** Required #RRGGBB endpoint and center colors. */ readonly colors:SignalValue<readonly[string,string,string]>;
+ /** Descendants consuming the mapping. See {@link PibblNode}. */ readonly children?:PibblNode;
+}
+/** One lower-inclusive, upper-exclusive threshold color bucket. @see {@link ResolvedThresholdColorScale} */
+export interface ThresholdColorBand {
+  /** Lower inclusive boundary, omitted for the first bucket. */
+  readonly lower: number | undefined;
+  /** Upper exclusive boundary, omitted for the last bucket. */
+  readonly upper: number | undefined;
+  /** Validated #RRGGBB paint for this bucket. */
+  readonly color: string;
+}
+
+/** Immutable resolved threshold mapping shared with descendant marks. @see {@link ThresholdColorScaleProps} */
+export interface ResolvedThresholdColorScale {
+  /** Strictly ascending finite authored bucket boundaries. */
+  readonly thresholds: readonly number[];
+  /** One validated color for every bucket. */
+  readonly colors: readonly string[];
+  /** Readable bucket descriptions in authored order. */
+  readonly bands: readonly ThresholdColorBand[];
+  /** Maps a finite numeric value to its containing bucket paint. @param value - Finite input. @returns Canonical lowercase #rrggbb color. */
+  readonly map: (value: number) => string;
+}
+
+/** Authored threshold boundaries, bucket colors, identity, and descendant content. @see {@link ResolvedThresholdColorScale} */
+export interface ThresholdColorScaleProps {
+  /** Stable provider identity. */
+  readonly id: ScaleId;
+  /** Strictly ascending finite boundaries; each equality belongs to the upper bucket. */
+  readonly thresholds: SignalValue<readonly number[]>;
+  /** Exactly one #RRGGBB color per bucket. */
+  readonly colors: SignalValue<readonly string[]>;
+  /** Descendant content using this dedicated color context. */
+  readonly children?: PibblNode;
+}
+
+export declare function SequentialColorScale(props: SequentialColorScaleProps): PibblNode;
+export declare function useSequentialColorScale(id:ScaleId): Signal<ResolvedSequentialColorScale>;
+export declare function DivergingColorScale(props: DivergingColorScaleProps): PibblNode;
+export declare function useDivergingColorScale(id:ScaleId): Signal<ResolvedDivergingColorScale>;
+export declare function ThresholdColorScale(props: ThresholdColorScaleProps): PibblNode;
+export declare function useThresholdColorScale(id:ScaleId): Signal<ResolvedThresholdColorScale>;
+export interface DomainNavigationConstraints { readonly bounds:LinearDomain; readonly minimumSpanRatio?:number; }
+export interface PanDomainOptions extends DomainNavigationConstraints { readonly rangeDelta:number; }
+export declare function panDomain(scale:ResolvedContinuousScale,options:PanDomainOptions):LinearDomain;
+export interface ZoomDomainOptions extends DomainNavigationConstraints { readonly rangeAnchor:number; readonly factor:number; }
+export declare function zoomDomain(scale:ResolvedContinuousScale,options:ZoomDomainOptions):LinearDomain;
+export declare function monotoneX(): SeriesCurve;
 export interface AxisTitleProps {
   readonly scale: ScaleId;
   readonly position: AxisProps["position"];
@@ -1290,11 +1393,13 @@ export type AxisProps = AxisBaseProps & (
 
 export type LineCoordinate = number | null | undefined;
 export type LineAccessor<D> = { [K in keyof D]-?: D[K] extends LineCoordinate ? K : never }[keyof D] | ((datum: D, index: number, data: readonly D[]) => LineCoordinate);
-export type LineCurve = 'linear';
+export type SeriesCoordinate = number | string | null | undefined;
+export type SeriesAccessor<D> = { [K in keyof D]-?: D[K] extends SeriesCoordinate ? K : never }[keyof D] | ((datum:D,index:number,data:readonly D[])=>SeriesCoordinate);
+export type LineCurve = 'linear' | SeriesCurve;
 export interface LineSeriesStyle { readonly stroke?: StrokeStyle; readonly strokeWidth?: number; readonly opacity?: number; readonly cursor?: string; readonly lineInteractionWidth?: number }
 export interface LineSeriesProps<D> extends PibblEventHandlers, PibblEventParticipationOptions {
   readonly data: SignalValue<readonly D[]>;
-  readonly x: LineAccessor<D>; readonly y: LineAccessor<D>;
+  readonly x: SeriesAccessor<D>; readonly y: SeriesAccessor<D>;
   readonly xScale: ScaleId; readonly yScale: ScaleId;
   readonly defined?: (datum: D, index: number, data: readonly D[]) => boolean;
   readonly curve?: LineCurve;
@@ -1327,8 +1432,8 @@ export interface PointSeriesStyle extends PointMarkStyle { readonly cursor?: str
 export type PointStyleResolver<D> = (datum: D, index: number, data: readonly D[]) => Readonly<PointMarkStyle>;
 export interface PointSeriesProps<D> extends PibblEventHandlers, PibblEventParticipationOptions {
   readonly data: SignalValue<readonly D[]>;
-  readonly x: PointAccessor<D>;
-  readonly y: PointAccessor<D>;
+  readonly x: SeriesAccessor<D>;
+  readonly y: SeriesAccessor<D>;
   readonly xScale: ScaleId;
   readonly yScale: ScaleId;
   readonly defined?: (datum: D, index: number, data: readonly D[]) => boolean;
@@ -1340,8 +1445,8 @@ export type PlotKeyAccessor<D> =
  | ((datum:D,index:number,data:readonly D[])=>string|number);
 export interface PlotSeriesProps<D> extends PibblEventHandlers {
  readonly data: SignalValue<readonly D[]>;
- readonly x:PointAccessor<D>;
- readonly y:PointAccessor<D>;
+ readonly x:SeriesAccessor<D>;
+ readonly y:SeriesAccessor<D>;
  readonly xScale:ScaleId;
  readonly yScale:ScaleId;
  readonly defined?:(datum:D,index:number,data:readonly D[])=>boolean;

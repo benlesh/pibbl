@@ -349,3 +349,17 @@ geometry, missing-data gaps and inspection remain truthful.
 
 Success is a small set of composable, well-tested scale/data operations with
 convincing public examples, not the number of exported component names.
+
+## Execution update — 2026-10-06
+
+F0, M1–M6, I1–I5 and E1–E3 are implemented, hardened and verified. V0 is closed
+with explicit aggregate-gate evidence: the unrelated auxiliary-output design draft
+fails the historical-banner and formatting rules. All unaffected stages passed
+independently, including all 26 browser batches. Final source and built chart
+suites each passed 348 tests with two opt-in diagnostics skipped.
+
+See the [walkthrough](../testing/field-notes/2026-10-06-chart-api-walkthrough.md)
+and [execution note](../testing/field-notes/2026-10-06-chart-api-execution.md).
+No chart implementation step remains open, no next scope is selected, and the
+aggregate gate is not misrepresented as green. Earlier baseline results remain
+dated evidence. No commit, merge, push or publication occurred.

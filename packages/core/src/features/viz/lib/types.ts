@@ -1,10 +1,10 @@
-import type { BarCategoryAccessor } from './bar-series.js';
-import type { LinearScale } from './linear-scale-component.js';
-import type { nearestDomainValue } from './nearest.js';
-import type { useLinearScale } from './use-linear-scale.js';
-import type { Axis } from './axis.js';
-import type { PointAccessor } from './point-types.js';
-import type { ScaleAdjust } from './scale-adjust.js';
+import type { BarCategoryAccessor } from "./bar-series.js";
+import type { LinearScale } from "./linear-scale-component.js";
+import type { nearestDomainValue } from "./nearest.js";
+import type { useLinearScale } from "./use-linear-scale.js";
+import type { Axis } from "./axis.js";
+import type { PointAccessor } from "./point-types.js";
+import type { ScaleAdjust } from "./scale-adjust.js";
 import type {
   BoxStyle,
   PibblNode,
@@ -13,6 +13,7 @@ import type {
   SignalValue,
 } from "@pibbl/core";
 import type { SignalStyle } from "@pibbl/core/internal";
+import type { SeriesCurve } from "./curve-definition.js";
 /**
  * A string or symbol identifying a scale within visualization context.
  *
@@ -234,7 +235,11 @@ export interface ResolvedUtcScale extends Omit<ResolvedLinearScale, "type"> {
   formatTick(value: number): string;
 }
 /** Any supported numeric mapping. See {@link ResolvedUtcScale}. */
-export type ResolvedContinuousScale = ResolvedLinearScale | ResolvedUtcScale | ResolvedLogScale | ResolvedSymlogScale;
+export type ResolvedContinuousScale =
+  | ResolvedLinearScale
+  | ResolvedUtcScale
+  | ResolvedLogScale
+  | ResolvedSymlogScale;
 /** Positive logarithmic provider inputs. See {@link LinearScaleProps}. */
 export interface LogScaleProps extends LinearScaleProps {
   /** Base for power ticks; finite and greater than one, default 10. Mapping is base-independent. */
@@ -248,7 +253,8 @@ export interface ResolvedLogScale extends Omit<ResolvedLinearScale, "type"> {
   readonly base: number;
 }
 /** A numeric or categorical mapping snapshot. See {@link ResolvedContinuousScale}. */
-export type ResolvedScale = ResolvedContinuousScale | ResolvedBandScale | ResolvedPointScale;
+export type ResolvedScale =
+  ResolvedContinuousScale | ResolvedBandScale | ResolvedPointScale;
 /** Signed logarithmic scale inputs. See {@link LinearScaleProps}. */
 export interface SymlogScaleProps extends LinearScaleProps {
   /** Positive linear-to-log transition constant in domain units, default 1. */
@@ -269,7 +275,10 @@ export interface PointScaleProps extends Omit<LinearScaleProps, "domain"> {
   readonly padding?: SignalValue<number>;
 }
 /** Zero-width categorical point positions. See {@link ResolvedBandScale}. */
-export interface ResolvedPointScale extends Omit<ResolvedBandScale, "type" | "bandwidth"> {
+export interface ResolvedPointScale extends Omit<
+  ResolvedBandScale,
+  "type" | "bandwidth"
+> {
   /** Categorical point discriminant. See {@link PointScaleProps}. */
   readonly type: "point";
   /** Resolved outer padding. See {@link PointScaleProps}. */
@@ -392,12 +401,25 @@ export type LineCoordinate = number | null | undefined;
 export type LineAccessor<D> =
   | { [K in keyof D]-?: D[K] extends LineCoordinate ? K : never }[keyof D]
   | ((datum: D, index: number, data: readonly D[]) => LineCoordinate);
+/** A numeric or categorical position, or a missing value. @see {@link SeriesAccessor} */
+export type SeriesCoordinate = number | string | null | undefined;
+/**
+ * Extracts one position for a line, point, or custom mark.
+ * @param datum - Original record.
+ * @param index - Original record index.
+ * @param data - Complete source records.
+ * @returns A numeric or categorical position. See {@link SeriesCoordinate}.
+ * @see {@link LineSeriesProps}
+ */
+export type SeriesAccessor<D> =
+  | { [K in keyof D]-?: D[K] extends SeriesCoordinate ? K : never }[keyof D]
+  | ((datum: D, index: number, data: readonly D[]) => SeriesCoordinate);
 /**
  * The supported interpolation mode for a line series.
  *
  * @see {@link LineSeriesProps}
  */
-export type LineCurve = "linear";
+export type LineCurve = "linear" | SeriesCurve;
 /**
  * Supported geometry and presentation properties for LineSeries.
  *
@@ -438,9 +460,9 @@ export interface LineSeriesProps<D>
    */
   readonly data: SignalValue<readonly D[]>;
   /** Property key or callback extracting the horizontal domain coordinate. See {@link LineAccessor}. */
-  readonly x: LineAccessor<D>;
+  readonly x: SeriesAccessor<D>;
   /** Property key or callback extracting the vertical domain coordinate. See {@link LineAccessor}. */
-  readonly y: LineAccessor<D>;
+  readonly y: SeriesAccessor<D>;
   /** The scale used to map horizontal data coordinates. See {@link ScaleId}. */
   readonly xScale: ScaleId;
   /** The scale used to map vertical data coordinates. See {@link ScaleId}. */

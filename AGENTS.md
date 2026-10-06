@@ -155,6 +155,29 @@ Read exact contracts before changing these areas:
 - `docs/design/event-resource-ownership.md`
 - `docs/design/runtime-resource-ownership.md`
 
+## Function arguments: targets and named options
+
+Apply these defaults throughout the codebase when adding or changing functions:
+
+1. For one argument, pass it directly: `fn(value)`.
+2. For one target plus configuration, put the target first and an options object
+   second: `fn(target, { option })`.
+3. For zero or more targets of the same kind without configuration, use rest
+   arguments: `fn(...targets)`.
+4. For multiple targets plus configuration, accept an `Iterable` of targets first
+   and an options object second: `fn(targets, { option })`.
+5. For multiple arguments with distinct meanings and no single target, use one
+   options object to name the arguments: `fn({ source, destination, amount })`.
+6. Allow deliberate exceptions when positional arguments materially improve
+   readability and terseness, such as `binaryExpression("=", a, b)`.
+
+Choose the shape by the arguments' roles, not just their count. In particular,
+operations on a scale should put the scale first and name navigation settings in
+the second argument. Existing signatures are migration candidates, not precedent
+for new positional arguments with unrelated meanings. Apply this rule alongside
+the fixed-return-contract rules below; an options object does not justify a magic
+operation selector.
+
 ## API design: explicit operations, not magic selectors
 
 - Do not introduce public functions, hooks, factories, or methods whose caller

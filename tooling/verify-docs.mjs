@@ -151,6 +151,11 @@ const publicSiteMarkdownPaths = [
   "docs/site/api/components/symlog-point-scales.md",
   "docs/site/api/functions/utc-domains.md",
   "docs/site/api/components/line-series.md",
+  "docs/site/api/components/area-series.md",
+  "docs/site/api/functions/series-curves.md",
+  "docs/site/api/functions/domain-navigation.md",
+  "docs/site/api/components/color-scales.md",
+  "docs/site/api/components/interval-band-series.md",
   "docs/site/api/components/point-series.md",
   "docs/site/api/components/plot-series.md",
   "docs/site/api/functions/nearest-point.md",
@@ -689,7 +694,11 @@ export async function assertLocalLinks(
 
 function resolvePublicAssetPath(decodedFile) {
   if (/^\/[a-z0-9-]+(?:\/[a-z0-9-]+)*\/$/.test(decodedFile)) {
-    const page = resolve(repositoryRoot, "docs/site/website", `${decodedFile.slice(1, -1)}.mdx`);
+    const page = resolve(
+      repositoryRoot,
+      "docs/site/website",
+      `${decodedFile.slice(1, -1)}.mdx`,
+    );
     if (existsSync(page)) return page;
   }
   const publicAssetRoot = resolve(repositoryRoot, "playground/public");
@@ -798,15 +807,21 @@ function extractApiSnippets(sources) {
   for (const [path, source] of sources) {
     if (!path.startsWith("docs/site/api/")) continue;
     const fences = [...source.matchAll(/^```(ts|tsx)\n([\s\S]*?)^```$/gmu)];
-    const groups = fences.length > 1 && fences.every(match => /export default/.test(match[2]))
-      ? fences.map(fence => [fence]) : [fences];
+    const groups =
+      fences.length > 1 &&
+      fences.every((match) => /export default/.test(match[2]))
+        ? fences.map((fence) => [fence])
+        : [fences];
     for (const [index, group] of groups.entries()) {
       if (!group.length) continue;
       const id = `api-snippet-${path.replaceAll(/[^a-z0-9]+/giu, "-")}-${index}`;
       snippets.set(id, {
-        id, path,
-        language: group.some(match => match[1] === "tsx") ? "tsx" : "ts",
-        source: appendPibblComponentChecks(group.map(match => match[2]).join("\n")),
+        id,
+        path,
+        language: group.some((match) => match[1] === "tsx") ? "tsx" : "ts",
+        source: appendPibblComponentChecks(
+          group.map((match) => match[2]).join("\n"),
+        ),
       });
     }
     assertNoBareApiPseudoLinks(path, source);
@@ -1568,7 +1583,10 @@ const staleLowercaseValue = new RegExp(
 );
 
 export function assertCurrentVocabulary(path, source) {
-  if (path.startsWith("docs/site/") && path !== "docs/site/learn/guides/package-migration.md") {
+  if (
+    path.startsWith("docs/site/") &&
+    path !== "docs/site/learn/guides/package-migration.md"
+  ) {
     assert.doesNotMatch(
       source,
       /@pibbl\/(?:viz|particles|physics|textures|types|webgl)(?=[/`'"\s.,;:)]|$)/u,

@@ -1,4 +1,5 @@
-import type { PlotSeriesProps } from './plot-types.js';
+import type { SeriesAccessor } from "./types.js";
+import type { PlotSeriesProps } from "./plot-types.js";
 import type {
   PibblEventHandlers,
   PibblEventParticipationOptions,
@@ -81,9 +82,9 @@ export interface PointSeriesProps<D>
    */
   readonly data: SignalValue<readonly D[]>;
   /** Property key or callback extracting the horizontal domain coordinate. See {@link PointAccessor}. */
-  readonly x: PointAccessor<D>;
+  readonly x: SeriesAccessor<D>;
   /** Property key or callback extracting the vertical domain coordinate. See {@link PointAccessor}. */
-  readonly y: PointAccessor<D>;
+  readonly y: SeriesAccessor<D>;
   /** The scale used to map horizontal data coordinates. See {@link ScaleId}. */
   readonly xScale: ScaleId;
   /** The scale used to map vertical data coordinates. See {@link ScaleId}. */
@@ -101,5 +102,7 @@ export interface PointSeriesProps<D>
    * Declared presentation and layout properties. See {@link SignalValue}, {@link SignalStyle},
    * {@link PointSeriesStyle}, {@link PointStyleResolver}.
    */
-  readonly style?: SignalValue<SignalStyle<PointSeriesStyle> | PointStyleResolver<D>>;
+  readonly style?: SignalValue<
+    SignalStyle<PointSeriesStyle> | PointStyleResolver<D>
+  >;
 }

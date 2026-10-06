@@ -1,8 +1,12 @@
 import { Group, resolveSignalValue } from "@pibbl/core";
 import type { PibblNode } from "@pibbl/core";
 import type { PlotSeriesProps } from "./plot-types.js";
-import { pointAccessor, pointData, finiteCoordinate } from "./point-data.js";
-import { useContinuousScale } from "./use-continuous-scale.js";
+import { pointData } from "./point-data.js";
+import {
+  useSeriesPosition,
+  seriesAccessor,
+  mapSeriesPosition,
+} from "./series-position.js";
 function PlotRow<D>({
   datum,
   index,
@@ -37,13 +41,13 @@ export function PlotSeries<D>({
   render,
   ...events
 }: PlotSeriesProps<D>): PibblNode {
-  const xs = useContinuousScale(xId).get(),
-    ys = useContinuousScale(yId).get();
+  const xs = useSeriesPosition(xId),
+    ys = useSeriesPosition(yId);
   const data = pointData(resolveSignalValue(input), "PlotSeries");
   if (typeof render !== "function")
     throw new TypeError("PlotSeries: render must be a synchronous function.");
-  const x = pointAccessor(xInput),
-    y = pointAccessor(yInput);
+  const x = seriesAccessor(xInput),
+    y = seriesAccessor(yInput);
   const keys = new Set<string>();
   const nodes: PibblNode[] = [];
   for (let i = 0; i < data.length; i++) {
@@ -51,9 +55,11 @@ export function PlotSeries<D>({
     if (defined && !defined(datum, i, data)) continue;
     const xv = x(datum, i, data),
       yv = y(datum, i, data);
-    if (!finiteCoordinate(xv) || !finiteCoordinate(yv)) continue;
-    const px = xs.map(xv),
-      py = ys.map(yv);
+    const mappedX = mapSeriesPosition(xs, xv),
+      mappedY = mapSeriesPosition(ys, yv);
+    if (mappedX === undefined || mappedY === undefined) continue;
+    const px = mappedX,
+      py = mappedY;
     const key =
       keyBy === undefined
         ? i

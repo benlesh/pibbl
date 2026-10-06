@@ -701,5 +701,204 @@
       "Creates its own canvas and disposes the mount on pagehide.",
       "Axis titles name the measured quantity and units. The composition reserves space outside the plot; AxisTitle does not allocate margins."
     ]
+  },
+  {
+    "id": "area",
+    "title": "Area and gaps",
+    "description": "Fill runs to an explicit reference baseline.",
+    "source": "area.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "AreaSeries",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "AreaSeriesProps",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "AreaSeriesStyle",
+        "importPath": "@pibbl/core/viz"
+      }
+    ],
+    "notes": [
+      "NOAA monthly means; March deliberately omitted to demonstrate a gap. Fill is distance above 330 ppm, not emissions.",
+      "Creates its own canvas and disposes on pagehide."
+    ]
+  },
+  {
+    "id": "interval-band",
+    "title": "Observed interval band",
+    "description": "Map paired published lower/upper observations into a filled band.",
+    "source": "interval-band.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "IntervalBandSeries",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "IntervalBandSeriesProps",
+        "importPath": "@pibbl/core/viz"
+      }
+    ],
+    "notes": [
+      "NOAA daily temperature extrema, not uncertainty. No averaging or aggregation occurs.",
+      "Creates its own canvas and disposes on pagehide."
+    ]
+  },
+  {
+    "id": "steps",
+    "title": "Named step definitions",
+    "description": "Compare before, midpoint, and after jumps between the same endpoints.",
+    "source": "steps.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "SeriesCurve",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "stepBefore",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "stepAfter",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "stepMidpoint",
+        "importPath": "@pibbl/core/viz"
+      }
+    ],
+    "notes": [
+      "Illustrative geometry only. The full policy example supplies attributed held values.",
+      "Creates its own canvas and disposes on pagehide."
+    ]
+  },
+  {
+    "id": "monotone",
+    "title": "Monotone observations",
+    "description": "Smooth measured observations without introducing extrema.",
+    "source": "monotone.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "monotoneX",
+        "importPath": "@pibbl/core/viz"
+      }
+    ]
+  },
+  {
+    "id": "categories",
+    "title": "Categorical series",
+    "description": "Map original category identities with line and point marks.",
+    "source": "categories.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "SeriesAccessor",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "SeriesCoordinate",
+        "importPath": "@pibbl/core/viz"
+      }
+    ]
+  },
+  {
+    "id": "navigation",
+    "title": "Bounded domain navigation",
+    "description": "Pan and zoom by mapping and inverting an explicit continuous scale.",
+    "source": "navigation.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "panDomain",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "zoomDomain",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "DomainNavigationConstraints",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "PanDomainOptions",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "ZoomDomainOptions",
+        "importPath": "@pibbl/core/viz"
+      }
+    ]
+  },
+  {
+    "id": "colors",
+    "title": "Explicit color scales",
+    "description": "Map real observations with dedicated providers and authored palettes.",
+    "source": "colors.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "ColorScaleStop",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "SequentialColorScale",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "useSequentialColorScale",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "SequentialColorScaleProps",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "ResolvedSequentialColorScale",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "DivergingColorScale",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "useDivergingColorScale",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "DivergingColorScaleProps",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "ResolvedDivergingColorScale",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "ThresholdColorScale",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "useThresholdColorScale",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "ThresholdColorScaleProps",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "ResolvedThresholdColorScale",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "ThresholdColorBand",
+        "importPath": "@pibbl/core/viz"
+      }
+    ]
   }
 ]

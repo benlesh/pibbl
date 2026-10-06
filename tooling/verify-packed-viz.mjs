@@ -1,3 +1,7 @@
+import {
+  verifyCurveTreeShaking,
+  verifyColorTreeShaking,
+} from "./verify-viz-curve-tree-shaking.mjs";
 import { verifyScaleTreeShaking } from "./verify-viz-scale-tree-shaking.mjs";
 import assert from "node:assert/strict";
 import { parse } from "yaml";
@@ -42,10 +46,7 @@ try {
     join(consumer, "package.json"),
     JSON.stringify({ private: true, type: "module", dependencies: tarballs }),
   );
-  writeFileSync(
-    join(consumer, "pnpm-workspace.yaml"),
-    `packages:\n  - .\n`,
-  );
+  writeFileSync(join(consumer, "pnpm-workspace.yaml"), `packages:\n  - .\n`);
   pnpm(
     [
       "install",
@@ -60,6 +61,8 @@ try {
   const installed = createRequire(join(consumer, "probe.mjs"));
   const entry = installed.resolve("@pibbl/core/viz");
   await verifyScaleTreeShaking(entry);
+  await verifyCurveTreeShaking(entry);
+  await verifyColorTreeShaking(entry);
   const fromViz = createRequire(entry);
   assert.equal(
     realpathSync(fromViz.resolve("@pibbl/core")),
@@ -67,9 +70,21 @@ try {
   );
   const viz = await import(pathToFileURL(entry).href);
   const names = [
-    "extent", "linearTicks", "niceLinearDomain", "formatNumber", "utcTickLabels", "LogScale", "useLogScale",
-    "SymlogScale", "useSymlogScale", "PointScale", "usePointScale",
-    "GridLines", "ReferenceLine", "ReferenceBand", "AxisTitle",
+    "extent",
+    "linearTicks",
+    "niceLinearDomain",
+    "formatNumber",
+    "utcTickLabels",
+    "LogScale",
+    "useLogScale",
+    "SymlogScale",
+    "useSymlogScale",
+    "PointScale",
+    "usePointScale",
+    "GridLines",
+    "ReferenceLine",
+    "ReferenceBand",
+    "AxisTitle",
     "niceUTCDomain",
     "pieSlices",
     "PieLayout",
@@ -77,9 +92,27 @@ try {
     "PieLabel",
     "Axis",
     "LineSeries",
-    "LinearScale", "BarScale", "UTCScale",
+    "AreaSeries",
+    "IntervalBandSeries",
+    "stepBefore",
+    "stepAfter",
+    "stepMidpoint",
+    "monotoneX",
+    "panDomain",
+    "zoomDomain",
+    "SequentialColorScale",
+    "useSequentialColorScale",
+    "DivergingColorScale",
+    "useDivergingColorScale",
+    "ThresholdColorScale",
+    "useThresholdColorScale",
+    "LinearScale",
+    "BarScale",
+    "UTCScale",
     "ScaleAdjust",
-    "useLinearScale", "useBarScale", "useUTCScale",
+    "useLinearScale",
+    "useBarScale",
+    "useUTCScale",
     "PointSeries",
     "BarSeries",
     "PlotSeries",
@@ -105,7 +138,9 @@ try {
     assert.throws(() => installed.resolve(path), {
       code: "ERR_PACKAGE_PATH_NOT_EXPORTED",
     });
-  const manifest = JSON.parse(readFileSync(installed.resolve("@pibbl/core/package.json"), "utf8"));
+  const manifest = JSON.parse(
+    readFileSync(installed.resolve("@pibbl/core/package.json"), "utf8"),
+  );
   assert.equal(Object.keys(manifest.dependencies ?? {}).length, 0);
   writeFileSync(
     join(consumer, "public.tsx"),
