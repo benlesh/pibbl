@@ -5,13 +5,13 @@
   "description": "Canvas 2D component runtime with JSX and createElement authoring",
   "author": "Ben Lesh <ben@benlesh.com>",
   "license": "MIT",
-  "homepage": "https://github.com/benlesh/crc",
+  "homepage": "https://github.com/benlesh/pibbl",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/benlesh/crc.git",
+    "url": "git+https://github.com/benlesh/pibbl.git",
     "directory": "packages/core"
   },
-  "bugs": "https://github.com/benlesh/crc/issues",
+  "bugs": "https://github.com/benlesh/pibbl/issues",
   "keywords": [
     "canvas",
     "jsx",

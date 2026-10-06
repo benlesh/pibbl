@@ -1,10 +1,12 @@
 import {
-  tween, spring, pibbl,
+  tween,
+  spring,
+  pibbl,
   Circle,
   signal,
   useAnimatedValue,
+  type PibblAnimationTarget,
   type PibblAnimatedValueOptions,
-
 } from "@pibbl/core";
 
 const target = signal(50);
@@ -15,8 +17,13 @@ const canvas = document.createElement("canvas");
 canvas.width = 420;
 canvas.height = 180;
 document.body.append(button, canvas);
-const smooth: PibblAnimatedValueOptions<number> = { animation: tween({ duration: 600 }) };
-const bouncy: PibblAnimatedValueOptions<number> = { animation: spring({ stiffness: 180, damping: 12 }) };
+const smooth: PibblAnimatedValueOptions<number> = {
+  animation: ({ from, to }: PibblAnimationTarget<number>) =>
+    tween({ from, to, duration: 600 }),
+};
+const bouncy: PibblAnimatedValueOptions<number> = {
+  animation: spring({ stiffness: 180, damping: 12 }),
+};
 function Scene() {
   const tweened = useAnimatedValue(target.get(), smooth);
   const sprung = useAnimatedValue(target.get(), bouncy);

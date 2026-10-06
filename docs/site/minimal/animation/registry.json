@@ -173,6 +173,10 @@
       {
         "name": "PibblAnimatedValueOptions",
         "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PibblAnimationTarget",
+        "importPath": "@pibbl/core"
       }
     ],
     "notes": [

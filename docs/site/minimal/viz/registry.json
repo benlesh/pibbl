@@ -501,5 +501,49 @@
         "importPath": "@pibbl/core/viz"
       }
     ]
+  },
+  {
+    "id": "utc-numeric",
+    "title": "UTC axes and numeric ticks",
+    "description": "Draw a UTC calendar axis and format readable numeric ticks.",
+    "source": "utc-numeric.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "UTCScale",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "useUTCScale",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "Axis",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "linearTicks",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "niceLinearDomain",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "formatNumber",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "LinearTickOptions",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "NumberFormatOptions",
+        "importPath": "@pibbl/core/viz"
+      }
+    ],
+    "notes": [
+      "Uses public package imports. Browser resources are released on pagehide."
+    ]
   }
 ]

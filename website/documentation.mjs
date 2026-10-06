@@ -73,6 +73,11 @@ export function topicFor(id) {
 }
 const entryImports = {
   root: "@pibbl/core",
+  machines: "@pibbl/core/machines",
+  machineAnimation: "@pibbl/core/machines/animation",
+  sprites: "@pibbl/core/sprites",
+  aseprite: "@pibbl/core/sprites/formats/aseprite",
+  texturePacker: "@pibbl/core/sprites/formats/texture-packer",
   filters: "@pibbl/core/filters",
   textures: "@pibbl/core/textures",
   text: "@pibbl/text",
@@ -131,7 +136,7 @@ export async function loadDocumentation(root, playground) {
         const absolute = resolve(publicRoot, dirname(doc.path), file);
         target =
           byPath.get(absolute) ??
-          `https://github.com/benlesh/crc/blob/main/${relative(root, absolute)}`;
+          `https://github.com/benlesh/pibbl/blob/main/${relative(root, absolute)}`;
         if (anchor) target += `#${anchor}`;
       }
       body = body.replaceAll(`](${href})`, `](${target})`);

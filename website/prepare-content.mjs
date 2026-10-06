@@ -25,6 +25,16 @@ const core = JSON.parse(
 );
 const compatibility = `Local checkout: @pibbl/core ${core.version}, base revision ${revision}, with working-tree changes. This preview does not assert compatibility with an npm release.`;
 const kit = resolve(root, "docs/website-rebuild/claude-design-kit");
+// Explicitly published showcase sources; other game files are not approved for source expansion.
+const showcaseSources = new Set(
+  [
+    "games/brick-climb/main.tsx",
+    "games/brick-climb/scene.tsx",
+    "games/brick-climb/model.ts",
+    "games/brick-climb/machines.ts",
+    "games/brick-climb/player-machine.ts",
+  ].map((file) => resolve(root, file)),
+);
 // Preserve the content root so a running Astro watcher keeps its collection.
 await rm(publicDir, { recursive: true, force: true });
 await mkdir(generated, { recursive: true });
@@ -191,11 +201,13 @@ for (const gallery of galleries) {
           return `- [${example.title}](/examples/${slug}/): ${example.summary} [Full page](/experience/${slug}/) · [Playground](${playground}#/examples/${example.browseGroup}/${slug})`;
         })
         .join("\n") +
-      (gallery.pages ?? []).map((id) => {
-        const page = records.find((record) => record.id === id);
-        if (!page) throw new Error(`Missing standalone showcase ${id}`);
-        return `\n- [${page.meta.title}](/${id}/): ${page.meta.description}`;
-      }).join(""),
+      (gallery.pages ?? [])
+        .map((id) => {
+          const page = records.find((record) => record.id === id);
+          if (!page) throw new Error(`Missing standalone showcase ${id}`);
+          return `\n- [${page.meta.title}](/${id}/): ${page.meta.description}`;
+        })
+        .join(""),
   });
 }
 const catalogLanding = records.find((record) => record.id === "catalogs");
@@ -391,7 +403,10 @@ for (const { id, meta, content: body } of records) {
       const path = resolve(root, file);
       if (
         !path.startsWith(kit + "/") &&
-        !path.startsWith(resolve(root, "packages/scenarios/src/learning") + "/")
+        !path.startsWith(
+          resolve(root, "packages/scenarios/src/learning") + "/",
+        ) &&
+        !showcaseSources.has(path)
       )
         throw new Error(`Unapproved source ${file}`);
       const code = await readFile(path, "utf8");

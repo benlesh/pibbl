@@ -1,0 +1,86 @@
+[
+  {
+    "id": "atlas",
+    "title": "Animated sprite atlas",
+    "description": "Generate a two-frame atlas, animate a shared sheet, and dispose it after unmounting.",
+    "source": "atlas.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "Sprite",
+        "importPath": "@pibbl/core/sprites"
+      },
+      {
+        "name": "SpriteFrame",
+        "importPath": "@pibbl/core/sprites"
+      },
+      {
+        "name": "loadSpriteSheet",
+        "importPath": "@pibbl/core/sprites"
+      },
+      {
+        "name": "defineSpriteAnimation",
+        "importPath": "@pibbl/core/sprites"
+      },
+      {
+        "name": "SpriteGrid",
+        "importPath": "@pibbl/core/sprites"
+      },
+      {
+        "name": "SpriteSheet",
+        "importPath": "@pibbl/core/sprites"
+      },
+      {
+        "name": "SpriteProps",
+        "importPath": "@pibbl/core/sprites"
+      },
+      {
+        "name": "SpriteStyle",
+        "importPath": "@pibbl/core/sprites"
+      }
+    ],
+    "notes": [
+      "Uses public package imports. Browser resources are released on pagehide."
+    ]
+  },
+  {
+    "id": "formats",
+    "title": "Sprite format adapters",
+    "description": "Compare normalized Aseprite, TexturePacker, and application-owned atlas metadata.",
+    "source": "formats.ts",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "SpriteRectangle",
+        "importPath": "@pibbl/core/sprites"
+      },
+      {
+        "name": "SpriteFrameData",
+        "importPath": "@pibbl/core/sprites"
+      },
+      {
+        "name": "SpriteAnimationFrameData",
+        "importPath": "@pibbl/core/sprites"
+      },
+      {
+        "name": "SpriteSheetData",
+        "importPath": "@pibbl/core/sprites"
+      },
+      {
+        "name": "SpriteSheetFormat",
+        "importPath": "@pibbl/core/sprites"
+      },
+      {
+        "name": "aseprite",
+        "importPath": "@pibbl/core/sprites/formats/aseprite"
+      },
+      {
+        "name": "texturePacker",
+        "importPath": "@pibbl/core/sprites/formats/texture-packer"
+      }
+    ],
+    "notes": [
+      "Parsing metadata does not load images. Pass the adapter to loadSpriteSheet to decode an atlas."
+    ]
+  }
+]
