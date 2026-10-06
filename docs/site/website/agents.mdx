@@ -19,7 +19,7 @@ Start with [llms.txt](/llms.txt), then fetch the relevant page's Markdown link. 
 
 ## Detailed agent topics
 
-These companions are written for implementation, not just API discovery. Each explains ownership, exact boundaries, common failures, and verification; several include complete source expanded from the same examples used in Studio.
+These companions are written for implementation, not just API discovery. Each explains ownership, exact boundaries, common failures, and verification; several include complete source expanded from the same examples available in the playground.
 
 | Task                                                | Read this topic                                          |
 | --------------------------------------------------- | -------------------------------------------------------- |
@@ -51,9 +51,11 @@ Do not import private `lib/` or repository scenario helpers into an application.
 
 [agents/coverage.json](/agents/coverage.json) is generated from TypeScript's semantic export inventory. Each record identifies a symbol, public import path, value/type/compiler kind, documentation destination, and documented/missing status. Multiple exports of one symbol remain separate records. This measures destinations, not prose completeness or fresh execution of every snippet. Grouped type pages may own several related factories; do not assume each symbol has an individual dedicated article.
 
+API references combine authored guidance with signatures, JSDoc, and member details generated from the checkout. Their source links open exact line anchors in a snapshot generated alongside the reference; a GitHub link is included only when that file matches the recorded commit.
+
 Each page identifies the local package version and base revision. Check the consuming project's installed version before adapting code. These pages describe this checkout, including working-tree changes; do not assume a same-numbered published package includes all of them.
 
-The new inventory includes authored website/agent topics under `docs/site/website/` and existing public API, guide, and tutorial sources under `docs/site/api/` and `docs/site/learn/`. Planning documents and internal test labs are excluded. Existing Studio search retains its existing scope; this site has no separate search UI yet. Repository evidence links in migrated documents are supporting material, not runtime dependencies or search content.
+The inventory includes authored website/agent topics under `docs/site/website/` and existing public API, guide, and tutorial sources under `docs/site/api/` and `docs/site/learn/`. Planning documents and internal test labs are excluded. The site’s search includes public documentation, generated JSDoc descriptions and member details, and learning-example metadata. Full implementation snapshots are excluded from search. Repository evidence links in migrated documents are supporting material, not runtime dependencies or search content.
 
 ## Diagnose before changing architecture
 
