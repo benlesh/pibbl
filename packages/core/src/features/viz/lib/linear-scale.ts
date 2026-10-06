@@ -85,6 +85,8 @@ export function resolveLinearScale(
 export function equalScale(a: ResolvedScale, b: ResolvedScale): boolean {
   return (
     a.type === b.type &&
+    (a.type !== "symlog" || (b.type === "symlog" && a.constant === b.constant)) &&
+    (a.type !== "point" || (b.type === "point" && a.padding === b.padding)) &&
     (a.type !== "log" || (b.type === "log" && a.base === b.base)) &&
     a.domain.length === b.domain.length &&
     a.domain.every((value, index) => Object.is(value, b.domain[index])) &&

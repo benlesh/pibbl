@@ -482,3 +482,17 @@ function LogProbe() {
 }
 const logProps: LogScaleProps = { id: "log", domain: signal<readonly [number, number]>([1, 1000]), range: "width", base: signal(10) };
 void (<LogScale {...logProps}><LogProbe /><Axis scale="log" position="bottom" /></LogScale>);
+
+import { SymlogScale, PointScale, useSymlogScale, usePointScale, type ResolvedSymlogScale, type ResolvedPointScale } from "@pibbl/core/viz";
+function SignedProbe() {
+  const signed: import("@pibbl/core").Signal<ResolvedSymlogScale> = useSymlogScale("signed");
+  const points: import("@pibbl/core").Signal<ResolvedPointScale> = usePointScale("points");
+  const category: string | number | undefined = points.get().invert(signed.get().map(0));
+  void category;
+  // @ts-expect-error dedicated hook accepts no family selector
+  usePointScale("points", "bar");
+  // @ts-expect-error dedicated hook accepts no family selector
+  useSymlogScale("signed", "log");
+  return <ScaleAdjust x={-1} xScale="signed" y="A" yScale="points" />;
+}
+void <SymlogScale id="signed" domain={[-10, 10]} range="width" constant={signal(1)}><PointScale id="points" domain={["A", "B"]} range="height" padding={signal(0.5)}><SignedProbe /></PointScale></SymlogScale>;

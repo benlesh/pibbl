@@ -1,5 +1,5 @@
 import { Group, resolveSignalValue } from "@pibbl/core";
-import type { ScaleAdjustProps } from "./types.js";
+import type { ScaleAdjustProps, ResolvedScale, BandCategory } from "./types.js";
 import { lookupScale } from "./scale-context.js";
 /**
  * Adjusts descendant placement using configured x and y scales.
@@ -18,13 +18,18 @@ export function ScaleAdjust(props: ScaleAdjustProps) {
     (props.y === undefined) !== (props.yScale === undefined)
   )
     throw new TypeError("ScaleAdjust coordinates require matching scale IDs.");
-  if ((x && x.get().type === "band") || (y && y.get().type === "band"))
-    throw new TypeError("ScaleAdjust requires continuous scales.");
+  const coordinate = (scale: ResolvedScale, value: BandCategory) => {
+    if (scale.type === "band") throw new TypeError("ScaleAdjust requires continuous or point scales.");
+    if (scale.type !== "point" && typeof value !== "number") throw new TypeError("ScaleAdjust continuous coordinates must be numbers.");
+    const result = scale.type === "point" ? scale.map(value) : scale.map(value as number);
+    if (result === undefined) throw new RangeError("ScaleAdjust point category is not in the domain.");
+    return result;
+  };
   return (
     <Group
       style={{
-        translateX: x ? x.get().map(resolveSignalValue(props.x!)) : 0,
-        translateY: y ? y.get().map(resolveSignalValue(props.y!)) : 0,
+        translateX: x ? coordinate(x.get(), resolveSignalValue(props.x!)) : 0,
+        translateY: y ? coordinate(y.get(), resolveSignalValue(props.y!)) : 0,
       }}
     >
       {props.children}

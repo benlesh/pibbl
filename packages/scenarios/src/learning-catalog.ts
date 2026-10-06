@@ -394,6 +394,17 @@ const drafts = [
       import("./learning/composition/viz-points-and-inspection.example"),
   },
   {
+    slug: "viz-signed-population", title: "Growth moved south", shortTitle: "Signed population change",
+    section: "composition", order: 235,
+    summary: "Signed Census population changes using dedicated symlog and point scales.",
+    api: ["SymlogScale", "useSymlogScale", "PointScale", "usePointScale", "ScaleAdjust", "Axis"],
+    objectives: ["Map gains, losses, and zero with an explicit symlog constant.", "Place and inspect categorical custom marks through point scales."],
+    prompts: { gesture: "Change compression, tap a row, or Tab and use arrow keys.", code: "Change the transition constant or categorical padding." },
+    apiNotes: ["US Census Bureau, Vintage 2023 estimates; change July 2022–July 2023, people. Six largest states."],
+    canvas: { width: 1000, height: 640 }, related: ["viz-log-masses", "viz-band-bars"],
+    load: () => import("./learning/composition/viz-signed-population.example"),
+  },
+  {
     slug: "viz-log-basics", title: "Equal ratios, equal distances", shortTitle: "Log scale basics",
     section: "composition", order: 233,
     summary: "Minimal dedicated logarithmic provider and hook with inversion and power ticks.",

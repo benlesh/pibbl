@@ -234,7 +234,7 @@ export interface ResolvedUtcScale extends Omit<ResolvedLinearScale, "type"> {
   formatTick(value: number): string;
 }
 /** Any supported numeric mapping. See {@link ResolvedUtcScale}. */
-export type ResolvedContinuousScale = ResolvedLinearScale | ResolvedUtcScale | ResolvedLogScale;
+export type ResolvedContinuousScale = ResolvedLinearScale | ResolvedUtcScale | ResolvedLogScale | ResolvedSymlogScale;
 /** Positive logarithmic provider inputs. See {@link LinearScaleProps}. */
 export interface LogScaleProps extends LinearScaleProps {
   /** Base for power ticks; finite and greater than one, default 10. Mapping is base-independent. */
@@ -248,7 +248,45 @@ export interface ResolvedLogScale extends Omit<ResolvedLinearScale, "type"> {
   readonly base: number;
 }
 /** A numeric or categorical mapping snapshot. See {@link ResolvedContinuousScale}. */
-export type ResolvedScale = ResolvedContinuousScale | ResolvedBandScale;
+export type ResolvedScale = ResolvedContinuousScale | ResolvedBandScale | ResolvedPointScale;
+/** Signed logarithmic scale inputs. See {@link LinearScaleProps}. */
+export interface SymlogScaleProps extends LinearScaleProps {
+  /** Positive linear-to-log transition constant in domain units, default 1. */
+  readonly constant?: SignalValue<number>;
+}
+/** Signed logarithmic mapping through zero. See {@link ResolvedLinearScale}. */
+export interface ResolvedSymlogScale extends Omit<ResolvedLinearScale, "type"> {
+  /** Signed logarithmic discriminant. See {@link SymlogScaleProps}. */
+  readonly type: "symlog";
+  /** Positive transition constant. See {@link SymlogScaleProps}. */
+  readonly constant: number;
+}
+/** Equally spaced categorical positions. See {@link LinearScaleProps}. */
+export interface PointScaleProps extends Omit<LinearScaleProps, "domain"> {
+  /** Ordered unique string or finite numeric categories; accepts signals. See {@link BandDomain}. */
+  readonly domain: SignalValue<BandDomain>;
+  /** Nonnegative outer padding in step units, default 0. */
+  readonly padding?: SignalValue<number>;
+}
+/** Zero-width categorical point positions. See {@link ResolvedBandScale}. */
+export interface ResolvedPointScale extends Omit<ResolvedBandScale, "type" | "bandwidth"> {
+  /** Categorical point discriminant. See {@link PointScaleProps}. */
+  readonly type: "point";
+  /** Resolved outer padding. See {@link PointScaleProps}. */
+  readonly padding: number;
+  /**
+   * Finds the nearest category, clamping outside coordinates; ties choose first domain order.
+   * @param pixel - Finite range coordinate.
+   * @returns Category or undefined for an empty domain. See {@link BandCategory}.
+   */
+  invert(pixel: number): BandCategory | undefined;
+  /**
+   * Selects evenly spaced categories including endpoints when count permits.
+   * @param count - Integer maximum count 0–100, default 5.
+   * @returns Frozen categories in domain order. See {@link BandDomain}.
+   */
+  ticks(count?: number): BandDomain;
+}
 
 import type {
   PibblEventHandlers,
@@ -436,7 +474,7 @@ type ScaleAdjustX =
        * Horizontal coordinate or displacement in the containing coordinate system. See
        * {@link SignalValue}.
        */
-      readonly x: SignalValue<number>;
+      readonly x: SignalValue<BandCategory>;
       /** The scale used to map horizontal data coordinates. See {@link ScaleId}. */
       readonly xScale: ScaleId;
     }
@@ -458,7 +496,7 @@ type ScaleAdjustY =
        * Vertical coordinate or displacement in the containing coordinate system. See
        * {@link SignalValue}.
        */
-      readonly y: SignalValue<number>;
+      readonly y: SignalValue<BandCategory>;
       /** The scale used to map vertical data coordinates. See {@link ScaleId}. */
       readonly yScale: ScaleId;
     }

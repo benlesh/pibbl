@@ -225,3 +225,47 @@ not be silently removed as a responsive strategy. No new commit was requested.
 
 2026-10-05: User accepted the logarithmic slice after the compact-label fix and
 authorized its commit. Symlog and point scales are next.
+
+
+### 2026-10-05 — signed and categorical point slice
+
+Accepted logarithmic work committed as `7eb70568`, including the compact
+category-label correction. No merge or push.
+
+New runnable slice: dedicated `SymlogScale`/`useSymlogScale` and
+`PointScale`/`usePointScale`, each with fixed return types and signal inputs.
+Symlog supports signed domains, a positive explicit constant, inversion, and
+readable data-space ticks. Point supports unique ordered categories, padding,
+nearest-category inversion, reversed ranges, and empty/singleton domains.
+Axes accept both; continuous marks accept symlog; `ScaleAdjust` accepts point
+categories for custom marks. Numeric series/inspection remain numeric APIs.
+
+Public Studio: `http://127.0.0.1:5195/#/examples/composition/viz-signed-population`.
+Checked-in Census population changes demonstrate gains/losses and compression;
+all six state identities remain visible in narrow/shallow layouts. The API page
+includes a minimal runnable composition and signatures, defaults, errors, and
+signal behavior. Editor declarations and packed type probes include both families.
+
+Fresh evidence on Node 24.15.0 / pnpm 11.21.0: eight focused Chromium tests passed
+in source and built modes (mapping, signals, degeneracy, cleanup, touch/keyboard,
+and label bounds/nonoverlap at 320×260, 360×300, 560×300, 1000×640). Core build,
+repository typecheck, focused ESLint, packed Bundler/NodeNext/runtime exports,
+and six-family source/built/packed tree-shaking passed. Studio desktop and compact
+renders inspected; successful preview reported no page errors. Documentation
+metadata validation passed. No aggregate trust claim.
+
+Status: **slice ready for feedback**, uncommitted; not fully hardened or feature
+complete. Await experiential feedback before expanding edge-case/integration
+coverage. Reusable chart furniture follows these scale foundations.
+
+Documentation gate limitation: the full Studio docs check continued beyond metadata
+and API coverage, then failed the unrelated `canvas-runtime` alphabetical type-heading
+assertion (`PibblAnimatedValueOptions` / `PibblAnimationTarget`). Concurrent website
+and documentation work was preserved; the complete docs gate is not passing.
+
+Visual feedback incorporated: Census composition now uses vertical stems with
+population change on the vertical axis. States run left to right from greatest
+gain to greatest loss. Compact layouts show all six standard postal abbreviations;
+inspection retains full state names and exact counts. Wide layouts retain full
+names. Four responsive browser contracts pass, including horizontal category
+nonoverlap and left/right keyboard plus touch inspection. No commit requested.

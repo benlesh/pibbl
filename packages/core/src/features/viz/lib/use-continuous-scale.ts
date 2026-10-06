@@ -8,5 +8,5 @@ const views = new WeakMap<Signal<ResolvedScale>, Signal<ResolvedContinuousScale>
  * @returns The reactive mapping. See {@link ResolvedContinuousScale} and {@link Signal}.
  */
 export function useContinuousScale(id: ScaleId): Signal<ResolvedContinuousScale> {
-  return scaleView(views, id, "useContinuousScale", (kind) => kind !== "band");
+  return scaleView(views, id, "useContinuousScale", (kind) => kind !== "band" && kind !== "point");
 }

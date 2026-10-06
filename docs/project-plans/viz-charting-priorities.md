@@ -250,3 +250,12 @@ This historical next-step note is superseded by the accepted UTC/NOAA slice.
 Current order: excellent numeric/time/category labels, dedicated log/symlog/point
 scales, then composable chart furniture. Track runnable versus hardened status
 in Plan 007.
+
+
+2026-10-05 delivery update: numeric and contextual UTC/category label slices are
+committed. The accepted logarithmic slice, including preservation of compact
+category labels, is committed as `7eb70568`. Dedicated symlog and point providers
+and hooks now have a runnable Census composition, focused source/built tests,
+documentation, and packed/tree-shaking evidence. This is a feedback-ready slice,
+not a declaration of complete hardening. Chart furniture remains next; Plan 007
+records exact evidence and outstanding verification.

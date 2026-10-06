@@ -113,3 +113,11 @@ export type { UTCTickLabelOptions } from "./lib/utc-labels.js";
 export { LogScale } from "./lib/log-scale-component.js";
 export { useLogScale } from "./lib/use-log-scale.js";
 export type { LogScaleProps, ResolvedLogScale } from "./lib/types.js";
+
+export { SymlogScale } from "./lib/symlog-scale-component.js";
+export { useSymlogScale } from "./lib/use-symlog-scale.js";
+export type { SymlogScaleProps, ResolvedSymlogScale } from "./lib/types.js";
+
+export { PointScale } from "./lib/point-scale-component.js";
+export { usePointScale } from "./lib/use-point-scale.js";
+export type { PointScaleProps, ResolvedPointScale } from "./lib/types.js";

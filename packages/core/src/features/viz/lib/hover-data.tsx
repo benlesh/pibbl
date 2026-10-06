@@ -28,7 +28,7 @@ export function HoverData<T>({ query, children }: HoverDataProps<T>): PibblNode 
         const value = readScale(id, "HoverData");
         if (!value) throw new TypeError("HoverData requires a scale ID.");
         const resolved = value.get();
-        if (resolved.type === "band")
+        if (resolved.type === "band" || resolved.type === "point")
           throw new TypeError(
             "HoverData numeric queries require continuous scales.",
           );

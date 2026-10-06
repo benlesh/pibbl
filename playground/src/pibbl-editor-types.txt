@@ -1219,9 +1219,17 @@ export interface ResolvedUtcScale extends Omit<ResolvedLinearScale, "type"> {
   readonly type: "utc";
   formatTick(value: number): string;
 }
-export type ResolvedContinuousScale = ResolvedLinearScale | ResolvedUtcScale | ResolvedLogScale;
-export type ResolvedScale = ResolvedContinuousScale | ResolvedBandScale;
+export type ResolvedContinuousScale = ResolvedLinearScale | ResolvedUtcScale | ResolvedLogScale | ResolvedSymlogScale;
+export type ResolvedScale = ResolvedContinuousScale | ResolvedBandScale | ResolvedPointScale;
 export declare function extent<D>(data: readonly D[], value: (datum: D, index: number, data: readonly D[]) => number | null | undefined): NumericDomain | undefined;
+export interface SymlogScaleProps extends LinearScaleProps { readonly constant?: SignalValue<number>; }
+export interface ResolvedSymlogScale extends Omit<ResolvedLinearScale, "type"> { readonly type: "symlog"; readonly constant: number; }
+export interface PointScaleProps extends Omit<LinearScaleProps, "domain"> { readonly domain: SignalValue<BandDomain>; readonly padding?: SignalValue<number>; }
+export interface ResolvedPointScale extends Omit<ResolvedBandScale, "type" | "bandwidth"> { readonly type: "point"; readonly padding: number; invert(pixel: number): BandCategory | undefined; ticks(count?: number): BandDomain; }
+export declare function SymlogScale(props: SymlogScaleProps): PibblNode;
+export declare function PointScale(props: PointScaleProps): PibblNode;
+export declare function useSymlogScale(id: ScaleId): Signal<ResolvedSymlogScale>;
+export declare function usePointScale(id: ScaleId): Signal<ResolvedPointScale>;
 export interface LogScaleProps extends LinearScaleProps { readonly base?: SignalValue<number>; }
 export interface ResolvedLogScale extends Omit<ResolvedLinearScale, "type"> { readonly type: "log"; readonly base: number; }
 export declare function LogScale(props: LogScaleProps): PibblNode;
@@ -1266,8 +1274,8 @@ export interface LineSeriesProps<D> extends PibblEventHandlers, PibblEventPartic
   readonly curve?: LineCurve;
   readonly style?: SignalValue<SignalStyle<LineSeriesStyle>>;
 }
-type ScaleAdjustX = { readonly x: SignalValue<number>; readonly xScale: ScaleId } | { readonly x?: never; readonly xScale?: never };
-type ScaleAdjustY = { readonly y: SignalValue<number>; readonly yScale: ScaleId } | { readonly y?: never; readonly yScale?: never };
+type ScaleAdjustX = { readonly x: SignalValue<BandCategory>; readonly xScale: ScaleId } | { readonly x?: never; readonly xScale?: never };
+type ScaleAdjustY = { readonly y: SignalValue<BandCategory>; readonly yScale: ScaleId } | { readonly y?: never; readonly yScale?: never };
 export type ScaleAdjustProps = ScaleAdjustX & ScaleAdjustY & { readonly children?: PibblNode };
 
 import type { Signal } from "@pibbl/core";

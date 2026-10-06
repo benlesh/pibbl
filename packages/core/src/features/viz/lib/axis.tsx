@@ -20,7 +20,7 @@ function ticks(scale: ResolvedScale, props: AxisProps): readonly Tick[] {
     for (const value of explicit) {
       if (seen.has(value)) throw new RangeError("Axis tickValues must not contain duplicates.");
       seen.add(value);
-      if (scale.type !== "band") {
+      if (scale.type !== "band" && scale.type !== "point") {
         if (typeof value !== "number" || !Number.isFinite(value))
           throw new TypeError("Axis tickValues for a continuous scale must be finite numbers.");
         const [a, b] = scale.domain;
@@ -40,7 +40,7 @@ function ticks(scale: ResolvedScale, props: AxisProps): readonly Tick[] {
   if (!Number.isInteger(count) || count < 0 || count > 100)
     throw new RangeError("Axis tickCount must be an integer from 0 to 100.");
   if (count === 0) return [];
-  if (scale.type !== "band")
+  if (scale.type !== "band" && scale.type !== "point")
     return count === 1 ? [scale.domain[0]] : scale.ticks(count);
   const n = scale.domain.length;
   if (n === 0) return [];
@@ -54,6 +54,7 @@ function ticks(scale: ResolvedScale, props: AxisProps): readonly Tick[] {
 }
 
 function position(scale: ResolvedScale, value: Tick): number {
+  if (scale.type === "point") return scale.map(value as BandCategory)!;
   return scale.type === "band"
     ? scale.map(value as BandCategory)! + scale.bandwidth / 2
     : scale.map(value as number);

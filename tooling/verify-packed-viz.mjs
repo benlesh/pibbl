@@ -68,6 +68,7 @@ try {
   const viz = await import(pathToFileURL(entry).href);
   const names = [
     "extent", "linearTicks", "niceLinearDomain", "formatNumber", "utcTickLabels", "LogScale", "useLogScale",
+    "SymlogScale", "useSymlogScale", "PointScale", "usePointScale",
     "niceUTCDomain",
     "pieSlices",
     "PieLayout",
