@@ -359,3 +359,51 @@ composition and final cross-slice hardening remain outstanding. No aggregate gat
 claim; full edge/rotation/error matrix and built-browser coverage remain pending.
 Packed AxisTitle checks passed: Bundler/NodeNext consumers, exact runtime exports,
 shared core identity/private boundaries, and scale-family isolation.
+
+### 2026-10-05 — reuse core Text for chart prose
+
+Accepted axis titles committed as `6a0da53c`. The proposed ChartText wrapper was
+removed before commit after user review identified duplication: core Text already
+supports measured wrapping, lineHeight, width/height, and fitting. The composition
+uses core Text directly for titles, captions, and source notes. No additional
+chart-prose API is needed. Earlier ChartText test/package results describe the
+withdrawn implementation and are not evidence for a shipped capability.
+Cross-slice hardening and final verification remain outstanding.
+
+### 2026-10-05 — public API value audit and hardening
+
+User requested removal of abstractions without meaningful added value.
+Reviewed numeric/UTC tick helpers, axis label policies, dedicated scale families,
+scale-based furniture, and text/legend additions against core capabilities.
+
+- Removed LegendItem/LegendItemProps, editor declarations, runtime exports, wrapper
+  test, and API page. It merely assembled a rectangle and text; the Census legend
+  now uses those core primitives directly and retains both labels/interaction.
+- ChartText was already removed before commit: core Text owns measured wrapping,
+  fitting, line height and signal-aware text. Documentation now shows core prose
+  composition rather than proposing another component.
+- Retained linearTicks/niceLinearDomain/formatNumber/utcTickLabels: numerical and
+  calendar tick/label operations, distinct from text rendering.
+- Retained Axis label policies: measured allocation/collision decisions preserve
+  scale positions and tick geometry, with explicit category-label policies.
+- Retained Log/Symlog/Point providers/hooks: dedicated mappings, inverses, ticks,
+  validation, and fixed return types.
+- Retained GridLines/ReferenceLine/ReferenceBand: map ticks/domain intervals into
+  geometry and follow signal/allocation changes without taking layout ownership.
+- Retained AxisTitle: derives midpoint and edge/rotation from scale range/frame.
+  Generic chart headings, captions, attribution and simple legends remain core
+  composition. A future legend API needs actual data/scale behavior to justify it.
+
+Moved on to hardening: a failing public regression exposed formatNumber's Latin-
+digit-only rounded-negative-zero test. It now detects the formatter's own zero
+symbol and preserves signs for nonzero values. Regression covers Arabic, Persian,
+Bengali digits and scientific zero. No new public API or commit.
+
+Fresh audit verification (Node 24.15.0 / pnpm 11.21.0): full viz browser suite
+passed in both source and built modes, each 201 passed / 2 skipped across 42 files.
+Core build, repository typecheck, focused lint, packed exact exports and Bundler/
+NodeNext consumers, shared runtime identity and scale-family isolation passed.
+Full docs check validates metadata/API coverage but still fails the unrelated
+canvas-runtime alphabetical type-heading assertion; no aggregate-green claim.
+Removed APIs remain absent from runtime exports and Studio declarations. Cleanup
+and localized-number fix remain uncommitted; unrelated minimal-demo edits preserved.

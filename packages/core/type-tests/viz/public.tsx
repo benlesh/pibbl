@@ -508,10 +508,7 @@ void <ReferenceBand scale="y" direction="horizontal" span={[0, 200]} values={sig
 // @ts-expect-error reference bands require numeric intervals
 void <ReferenceBand scale="y" direction="horizontal" span={[0, 200]} values={["A", "B"]} />;
 
-import { LegendItem } from "@pibbl/core/viz";
-void <LegendItem label={signal("Gain")} color={signal("#087f8c")} style={{ opacity: signal(0.8) }} />;
-// @ts-expect-error legend labels are text
-void <LegendItem label={10} color="red" />;
+
 
 import { AxisTitle } from "@pibbl/core/viz";
 void <AxisTitle scale="y" position="left" label={signal("Mass")} unit={signal("kg")} offset={signal(50)} />;

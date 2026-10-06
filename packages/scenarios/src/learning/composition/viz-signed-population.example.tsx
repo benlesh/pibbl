@@ -1,5 +1,5 @@
 import { FocusManagement, Circle, Group, Line, Overlay, Rectangle, Text, pibbl, useLayoutBox, useSignal, type PibblController, type WritableSignal } from "@pibbl/core";
-import { AxisTitle, LegendItem, ReferenceBand, GridLines, ReferenceLine, Axis, PointScale, SymlogScale, ScaleAdjust, usePointScale, useSymlogScale, formatNumber } from "@pibbl/core/viz";
+import { AxisTitle, ReferenceBand, GridLines, ReferenceLine, Axis, PointScale, SymlogScale, ScaleAdjust, usePointScale, useSymlogScale, formatNumber } from "@pibbl/core/viz";
 // US Census Bureau, Vintage 2023 estimates, published 19 December 2023.
 // Six most populous states; population change July 1, 2022–July 1, 2023, people.
 // https://www.census.gov/newsroom/press-releases/2023/population-trends-return-to-pre-pandemic-norms.html
@@ -46,8 +46,8 @@ function Scene() {
   return <>
     <Rectangle style={{ width, height, fill: "#f7faf9" }} />
     <Text style={{ left: 24, top: 24, font: "700 11px sans-serif", fill: gain, when: [{ query: shallow, style: { opacity: 0 } }] }}>A YEAR OF POPULATION CHANGE</Text>
-    <Text style={{ left: 24, top: 52, font: "600 34px sans-serif", fill: ink, when: [{ query: narrow, style: { font: "600 25px sans-serif" } }, { query: shallow, style: { opacity: 0 } }] }}>Growth moved south.</Text>
-    <Text style={{ left: 24, top: 99, font: "13px sans-serif", fill: muted, when: [{ query: narrow, style: { font: "11px sans-serif" } }, { query: shallow, style: { opacity: 0 } }] }}>Six largest states · July 2022–July 2023 · people</Text>
+    <Group style={{ translateX: 24, translateY: 52 }}><Text pointerEvents="none" style={{ width: width - 48, fit: "ellipsis", font: width <= 600 ? "600 25px sans-serif" : "600 34px sans-serif", fill: ink, opacity: height <= 400 ? 0 : 1 }}>Growth moved south.</Text></Group>
+    <Group style={{ translateX: 24, translateY: 99 }}><Text pointerEvents="none" style={{ width: width - 48, fit: "ellipsis", font: width <= 600 ? "11px sans-serif" : "13px sans-serif", fill: muted, opacity: height <= 400 ? 0 : 1 }}>Six largest states · July 2022–July 2023 · people</Text></Group>
     <Group style={{ translateX: 24, translateY: 130, when: [{ query: shallow, style: { translateY: 12 } }] }}>
       <Rectangle keyboardFocusable onClick={() => wider.update(v => !v)} onKeyDown={event => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); wider.update(v => !v); } }} style={{ width: 180, height: 44, fill: ink, cornerRadius: 6, cursor: "pointer" }} />
       <Text pointerEvents="none" style={{ left: 90, top: 22, textAlign: "center", textBaseline: "middle", font: "600 12px sans-serif", fill: "white" }}>{wider.get() ? "Restore compression" : "Widen linear region"}</Text>
@@ -62,11 +62,12 @@ function Scene() {
       </Overlay>
     </Group>
     <Group style={{ translateX: 80, translateY: height - 52 }}>
-      <LegendItem label="Gain" color={gain} swatchSize={10} style={{ font: "10px sans-serif" }} />
-      <Group style={{ translateX: 72 }}><LegendItem label="Loss" color={loss} swatchSize={10} style={{ font: "10px sans-serif" }} /></Group>
+      <Rectangle pointerEvents="none" style={{ width: 10, height: 10, fill: gain }} />
+      <Text pointerEvents="none" style={{ left: 14, top: 5, textBaseline: "middle", font: "10px sans-serif", fill: muted }}>Gain</Text>
+      <Group style={{ translateX: 72 }}><Rectangle pointerEvents="none" style={{ width: 10, height: 10, fill: loss }} /><Text pointerEvents="none" style={{ left: 14, top: 5, textBaseline: "middle", font: "10px sans-serif", fill: muted }}>Loss</Text></Group>
     </Group>
-    <Text style={{ left: 24, top: height - 29, font: "10px sans-serif", fill: muted }}>US Census Bureau · Vintage 2023 estimates</Text>
-    <Text style={{ left: 24, top: height - 14, font: "10px sans-serif", fill: muted }}>2022–2023 · shaded = loss · nonlinear axis</Text>
+    <Group style={{ translateX: 24, translateY: height - 29 }}><Text pointerEvents="none" style={{ width: width - 48, fit: "ellipsis", font: "10px sans-serif", fill: muted }}>US Census Bureau · Vintage 2023 estimates</Text></Group>
+    <Group style={{ translateX: 24, translateY: height - 14 }}><Text pointerEvents="none" style={{ width: width - 48, fit: "ellipsis", font: "10px sans-serif", fill: muted }}>2022–2023 · shaded = loss · nonlinear axis</Text></Group>
   </>;
 }
 export default function mount(canvas: HTMLCanvasElement): PibblController {

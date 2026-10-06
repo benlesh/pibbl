@@ -60,3 +60,36 @@ export default function mount(canvas: HTMLCanvasElement) {
 The [population example](/examples/composition/viz-signed-population) labels its
 vertical axis with people, keeping the unit visible even when the heading is
 hidden in a shallow embed.
+
+## Chart titles, captions, and source notes
+
+Use core `Text` for chart prose. It already measures and wraps text within an
+explicit box, with `lineHeight` and `fit` policies. No visualization-specific text
+wrapper is needed. Parent layouts or Groups own placement and reserve space for
+both the text and plot. For example:
+
+```tsx
+import { Group, Text, pibbl } from "@pibbl/core";
+export default function mount(canvas: HTMLCanvasElement) {
+  return pibbl(canvas, <>
+    <Text style={{ left: 20, top: 20, width: 280, font: "600 24px sans-serif", fill: "#172f3d" }}>
+      Population change
+    </Text>
+    <Group style={{ translateX: 20, translateY: 80 }}>
+      <Text style={{ width: 280, height: 48, wrap: true, lineHeight: 16, fit: "ellipsis", font: "12px sans-serif", fill: "#617783" }}>
+        Source: US Census Bureau, Vintage 2023. July 2022–July 2023; people.
+      </Text>
+    </Group>
+  </>);
+}
+```
+
+Use `style.when` width/height queries on core Text and its owning layout to adapt
+captions and headings to their allocation. Keep essential units and attribution
+visible in shallow embeds, and explicitly budget sufficient height for wrapped
+text. See the core Text reference for fitting and signal behavior.
+
+Simple legend keys likewise need only core shapes and Text: compose a Rectangle
+or Line using the same paint as the marks, followed by its label. Keep data
+visibility controls explicit. A separate viz component is useful only when it
+adds scale/data behavior beyond that core composition.

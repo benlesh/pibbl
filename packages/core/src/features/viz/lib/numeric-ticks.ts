@@ -75,6 +75,8 @@ export function formatNumber(value: number, options: NumberFormatOptions = {}): 
   const { locale = "en-US", prefix = "", suffix = "", ...intl } = options;
   const formatter = new Intl.NumberFormat(locale, intl);
   const parts = formatter.formatToParts(value);
-  const zero = parts.filter(p => p.type === "integer" || p.type === "fraction").every(p => /^0+$/.test(p.value));
+  const zeroDigit = Array.from(formatter.formatToParts(0).find(p => p.type === "integer")!.value).at(-1)!;
+  const digits = parts.filter(p => p.type === "integer" || p.type === "fraction");
+  const zero = digits.length > 0 && digits.every(p => Array.from(p.value).every(digit => digit === zeroDigit));
   return prefix + formatter.format(zero ? 0 : value) + suffix;
 }

@@ -1181,14 +1181,7 @@ export interface AxisTitleProps {
   readonly style?: SignalValue<SignalStyle<Pick<AxisStyle, "font" | "fill" | "opacity">>>;
 }
 export declare function AxisTitle(props: AxisTitleProps): PibblNode;
-export interface LegendItemProps {
-  readonly label: SignalValue<string>;
-  readonly color: SignalValue<NonNullable<AxisStyle["fill"]>>;
-  readonly swatchSize?: SignalValue<number>;
-  readonly gap?: SignalValue<number>;
-  readonly style?: SignalValue<SignalStyle<Pick<AxisStyle, "font" | "fill" | "opacity">>>;
-}
-export declare function LegendItem(props: LegendItemProps): PibblNode;
+
 export interface ReferenceBandProps extends Omit<ChartLineProps, "style"> {
   readonly values: SignalValue<readonly [number, number]>;
   readonly style?: SignalValue<SignalStyle<Pick<AxisStyle, "fill" | "opacity">>>;

@@ -39,3 +39,12 @@ it("mounts the minimal numeric demo through the public runtime", () => {
   try { expect(() => runtime.flush()).not.toThrow(); }
   finally { app.dispose(); }
 });
+
+it("normalizes rounded negative zero with localized digits and scientific notation", () => {
+  for (const locale of ["ar-EG", "fa-IR", "bn-BD"]) {
+    const options = { locale, maximumFractionDigits: 2 };
+    expect(formatNumber(-0.00001, options)).toBe(formatNumber(0, options));
+    expect(formatNumber(-12.5, options)).not.toBe(formatNumber(12.5, options));
+  }
+  expect(formatNumber(-0, { notation: "scientific" })).toBe(formatNumber(0, { notation: "scientific" }));
+});

@@ -279,3 +279,12 @@ Legend items accepted and committed (`2421411d`). Axis titles/units are now a
 feedback-ready slice in the Census composition, with explicit caller-owned margins
 and compact unit labeling. Title/caption/source-note composition and cross-slice
 hardening remain outstanding.
+
+Axis titles accepted and committed (`6a0da53c`). Titles, captions, and source notes
+reuse core Text's existing wrapping/fitting capabilities. The redundant proposed
+ChartText API was removed before commit. Cross-slice hardening remains next.
+
+API audit correction: removed LegendItem as redundant core shape/text composition;
+ChartText remains withdrawn. Retained only added scale/data/numeric/calendar or
+axis-geometry behavior. Hardening now includes localized negative-zero formatting
+and complete source/built visualization contract runs; see Plan 007 for evidence.
