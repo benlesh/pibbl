@@ -95,6 +95,25 @@ try {
           `${example.id}: mapped mark position`,
         );
     }
+    if (example.id === "viz/chart-guides") {
+      const samples = await page.locator("canvas").evaluate((canvas) => {
+        const ctx = canvas.getContext("2d");
+        return [
+          [165, 155],
+          [165, 165],
+          [65, 189],
+          [265, 162],
+          [465, 136],
+        ].map(([x, y]) => [...ctx.getImageData(x, y, 1, 1).data]);
+      });
+      assert.deepEqual(samples, [
+        [189, 232, 213, 255], // 40–60% zone.
+        [8, 127, 140, 255], // 50% target.
+        [24, 49, 83, 255],
+        [24, 49, 83, 255],
+        [24, 49, 83, 255], // Readings.
+      ]);
+    }
     if (example.id === "particles/system") {
       await page.getByRole("button", { name: "Burst" }).click();
       await page.waitForFunction(() =>

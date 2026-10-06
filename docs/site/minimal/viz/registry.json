@@ -395,9 +395,7 @@
         "importPath": "@pibbl/core/viz"
       }
     ],
-    "notes": [
-      "Displays three query results in the document."
-    ]
+    "notes": ["Displays three query results in the document."]
   },
   {
     "id": "hover-card",
@@ -651,6 +649,48 @@
     ],
     "notes": [
       "These illustrative temperature bounds demonstrate numeric axis preparation. No dates or time zones are involved."
+    ]
+  },
+  {
+    "id": "chart-guides",
+    "title": "A target zone and reference line",
+    "description": "Compare three tank-fill readings with a shaded target zone, a target line, and percentage grid lines.",
+    "source": "chart-guides.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "GridLines",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "ReferenceLine",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "ReferenceBand",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "ChartLineProps",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "GridLinesProps",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "ReferenceLineProps",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "ReferenceBandProps",
+        "importPath": "@pibbl/core/viz"
+      }
+    ],
+    "notes": [
+      "The readings and 40\u201360% target zone are illustrative. The shaded region is a chosen operating zone, not a statistical confidence interval.",
+      "Paint the band first, then grid and target lines, then data marks. Explicit pixel spans keep guides aligned with the plot.",
+      "Creates its own canvas and disposes the mount on pagehide."
     ]
   }
 ]
