@@ -26,8 +26,8 @@ Import from `@pibbl/core/viz`. UTC positions are numeric epoch milliseconds, not
 `Date` objects. No runtime data fetching is required.
 
 ```ts
-extent<D>(data: readonly D[], value: (datum: D, index: number, data: readonly D[]) => number | null | undefined): NumericDomain | undefined;
-niceUTCDomain(domain: NumericDomain, options?: { count?: number }): NumericDomain;
+declare function extent<D>(data: readonly D[], value: (datum: D, index: number, data: readonly D[]) => number | null | undefined): NumericDomain | undefined;
+declare function niceUTCDomain(domain: NumericDomain, options?: { count?: number }): NumericDomain;
 ```
 
 `extent` calls the accessor once per row, skips null/undefined, rejects other
@@ -106,6 +106,7 @@ data. The helper accepts plain values, not signals. Read signal `.get()` in a
 component/computed value to recompute; it acquires no resources or subscriptions.
 
 ```tsx
+function DateAxis() {
 const ticks = useUTCScale("date").get().ticks(5);
 const labels = utcTickLabels(ticks);
 return (
@@ -117,6 +118,7 @@ return (
     labelOverlap="skip"
   />
 );
+}
 ```
 
 The [minimal UTC demo](#/examples/composition/viz-utc-basics) is runnable and

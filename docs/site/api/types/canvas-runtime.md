@@ -9,12 +9,14 @@ typeDomain: canvas-runtime
 symbols:
   [
     Canvas,
+    PibblAnimatedValueOptions,
     PibblAnimationDefinition,
     PibblAnimationOptions,
     PibblAnimationProgram,
     PibblAnimationRepeatDirection,
     PibblAnimationRepeatOptions,
     PibblAnimationSampleInput,
+    PibblAnimationTarget,
     PibblConfig,
     PibblController,
     PibblEasing,
@@ -42,10 +44,8 @@ symbols:
     PibblRenderLayerStyle,
     PibblRenderLayerTarget,
     PibblResponsiveViewportConfig,
-    PibblAnimatedValueOptions,
     PibblSpringOptions,
     PibblStepperOptions,
-    PibblAnimationTarget,
     PibblTweenOptions,
     RenderingContext2D,
     Signal,
@@ -66,6 +66,11 @@ the stable values returned by its runtime and state APIs. Import them with
 
 `Canvas` is the supported host union: `HTMLCanvasElement | OffscreenCanvas`.
 Pibbl owns at most one live mount for a host Canvas.
+
+## PibblAnimatedValueOptions
+
+`PibblAnimatedValueOptions<T>` supplies an animation definition or pure factory,
+optional initial value, equality comparison, and diagnostic label.
 
 ## PibblAnimationDefinition
 
@@ -96,6 +101,11 @@ an optional repeat direction.
 
 `PibblAnimationSampleInput<T>` gives a custom sampler its activation value, local
 time, and normalized progress.
+
+## PibblAnimationTarget
+
+`PibblAnimationTarget<T>` provides `from`, `to`, and optional committed spring
+`velocity` to a custom animation factory.
 
 ## PibblConfig
 
@@ -234,11 +244,6 @@ Pibbl handlers, cursor participation, and optional focus geometry.
 signal? }`. Its logical root follows CSS content-box pixels instead of a fixed
 captured viewport.
 
-## PibblAnimatedValueOptions
-
-`PibblAnimatedValueOptions<T>` supplies an animation definition or pure factory,
-optional initial value, equality comparison, and diagnostic label.
-
 ## PibblSpringOptions
 
 `PibblSpringOptions` configures a number-only analytic spring and its rest bounds.
@@ -248,11 +253,6 @@ optional initial value, equality comparison, and diagnostic label.
 `PibblStepperOptions<State, T>` supplies the fixed step, state initialization,
 step/read callbacks, optional completion predicate, elapsed clamp, and debug
 name.
-
-## PibblAnimationTarget
-
-`PibblAnimationTarget<T>` provides `from`, `to`, and optional committed spring
-`velocity` to a custom animation factory.
 
 ## PibblTweenOptions
 

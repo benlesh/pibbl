@@ -4,14 +4,17 @@ import type { AxisStyle } from "./types.js";
 import type { ChartLineProps } from "./chart-lines.js";
 import { lookupScale } from "./scale-context.js";
 import { opacity } from "./paint.js";
-/** A continuous domain interval painted across an explicit local pixel span. */
+/** A continuous domain interval painted across an explicit local pixel span. See {@link ReferenceBand}. */
 export interface ReferenceBandProps extends Omit<ChartLineProps, "style"> {
   /** Two finite in-domain numeric endpoints; either order, including equal values. */
   readonly values: SignalValue<readonly [number, number]>;
   /** Fill defaults to #dce5e8; opacity defaults to 0.35. */
   readonly style?: SignalValue<SignalStyle<Pick<AxisStyle, "fill" | "opacity">>>;
 }
-/** Paint a decorative interval without owning layout, labels, or hit geometry. */
+/** Paint a decorative interval without owning layout, labels, or hit geometry.
+ * @param props - Scale geometry and presentation. See {@link ReferenceBandProps}.
+ * @returns Decorative chart content in the caller's coordinate space.
+ */
 export function ReferenceBand(props: ReferenceBandProps) {
   if (props.direction !== "horizontal" && props.direction !== "vertical") throw new TypeError("ReferenceBand direction must be horizontal or vertical.");
   const source = lookupScale(props.scale, "ReferenceBand");

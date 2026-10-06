@@ -14,9 +14,9 @@ Import from `@pibbl/core/viz`. Each hook accepts only an ancestor scale ID and
 returns a stable, shared readonly core signal:
 
 ```ts
-useLinearScale(id: ScaleId): Signal<ResolvedLinearScale>;
-useBarScale(id: ScaleId): Signal<ResolvedBandScale>;
-useUTCScale(id: ScaleId): Signal<ResolvedUtcScale>;
+declare function useLinearScale(id: ScaleId): Signal<ResolvedLinearScale>;
+declare function useBarScale(id: ScaleId): Signal<ResolvedBandScale>;
+declare function useUTCScale(id: ScaleId): Signal<ResolvedUtcScale>;
 ```
 
 Call `.get()` to read the immutable mapping and track its dependencies. Consumers

@@ -407,3 +407,48 @@ Full docs check validates metadata/API coverage but still fails the unrelated
 canvas-runtime alphabetical type-heading assertion; no aggregate-green claim.
 Removed APIs remain absent from runtime exports and Studio declarations. Cleanup
 and localized-number fix remain uncommitted; unrelated minimal-demo edits preserved.
+
+### 2026-10-05 — AxisTitle companion audit and geometry hardening
+
+Cleanup/localized-zero fix committed as `f838297f`, excluding unrelated minimal
+example edits. User requested specific scrutiny of AxisTitle's composition value.
+Retained it because it derives midpoint, plot edge and rotation from a named
+scale and allocation; it is a sibling companion to Axis, not a generic Text alias.
+Public tests now prove all four edges with descending ranges, title/Axis alignment
+under a parent transform, reactive width/height reallocation, unchanged mapping,
+and cleanup. Explicit margins/offsets remain caller-owned; no automatic collision
+or margin-reservation promise. Companion usage and limits documented.
+
+Additional hardening covers categorical grid placement at band centers vs point
+positions, vertical logarithmic reference-band geometry, reversed pixel spans,
+and rejection of out-of-domain/nonfinite/overflowing band inputs. Thirteen focused
+source-browser tests passed. No runtime API or implementation changes were needed.
+New tests/docs remain uncommitted; final aggregate gate still pending.
+Fresh expanded built-browser viz run: 211 passed, 2 skipped across 42 files on
+Node 24.15.0 / pnpm 11.21.0. Repository typecheck and focused test lint passed.
+
+### 2026-10-05 — scale precision and documentation hardening
+
+Added public tests for symlog round trips with constants 1e-300, 1, and 1e300,
+overflowing raw ratios with tiny constants, normalized zero, invalid point domains
+and padding, descending-range tie priority, clamped categorical inspection, and
+nonfinite inspection/count errors. Invalid provider tests explicitly consume the
+lazy scale signal; documented that validation boundary. Fourteen focused source
+tests pass; expanded full built viz suite passes 221 tests, 2 skipped in 42 files.
+No additional runtime behavior/API was introduced.
+
+Broader gate work corrected existing canvas-runtime heading/symbol ordering
+without changing section content, added missing public JSDoc on scale furniture,
+classified the new viz API documentation, fixed TypeScript signature/return
+snippets, and corrected Studio example links. Public JSDoc passes (48 entries,
+1104 declarations); typecheck and focused lint pass. Studio documentation gate
+now passes after the ordering correction.
+
+Fresh `corepack pnpm@11.21.0 trust` on Node 24.15.0 stopped in scenarios:check at
+the unrelated state-machines example's direct-core-import requirement (log:
+/private/tmp/pibbl-viz-trust.log). Separate docs:check now passes viz snippet/link
+validation but remains blocked by unclassified machine/sprite documentation.
+These are not chart-feature failures and no aggregate-green claim is made.
+Unrelated concurrent minimal-example/website edits remain preserved. This
+hardening batch remains uncommitted; no merge/push. Remaining verification includes
+completion of repository-wide gates once their external blockers are resolved.

@@ -115,3 +115,7 @@ export default function mount(canvas: HTMLCanvasElement) {
 Keep category identities visible when resizing. Units and the symlog transition
 constant belong in chart context because equal distances do not represent equal
 additive changes.
+
+Scale snapshots are computed lazily. Domain/mapping validation occurs when a
+consumer reads the scale signal (for example, an Axis or a hook's `.get()`),
+not merely because an otherwise unused provider appears in the tree.

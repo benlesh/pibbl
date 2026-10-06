@@ -4,7 +4,7 @@ import type { SignalStyle } from "@pibbl/core/internal";
 import { lookupScale } from "./scale-context.js";
 import { ticks, position } from "./scale-ticks.js";
 import { width, opacity } from "./paint.js";
-/** Shared geometry and paint for decorative chart lines; no layout is allocated. */
+/** Shared geometry and paint for decorative chart lines; no layout is allocated. See {@link GridLines}. */
 export interface ChartLineProps {
   /** Ancestor scale providing the line's mapped coordinate. */
   readonly scale: ScaleId;
@@ -15,12 +15,22 @@ export interface ChartLineProps {
   /** Stroke defaults to #dce5e8, width to 1, opacity to 1. */
   readonly style?: SignalValue<SignalStyle<Pick<AxisStyle, "stroke" | "strokeWidth" | "opacity">>>;
 }
-/** Grid positions use Axis tick rules, independent of Axis label visibility. */
+/** Grid positions use Axis tick rules, independent of Axis label visibility. See {@link GridLines}. */
 export type GridLinesProps = ChartLineProps & (
-  { readonly tickValues: AxisProps["tickValues"]; readonly tickCount?: never } |
-  { readonly tickValues?: never; readonly tickCount?: AxisProps["tickCount"] }
+  {
+    /** Explicit domain ticks; same validation as Axis. */
+    readonly tickValues: AxisProps["tickValues"];
+    /** Mutually exclusive with explicit values. */
+    readonly tickCount?: never;
+  } |
+  {
+    /** Mutually exclusive with generated ticks. */
+    readonly tickValues?: never;
+    /** Requested tick count; defaults to five. */
+    readonly tickCount?: AxisProps["tickCount"];
+  }
 );
-/** A reference value must belong to the selected scale's domain. */
+/** A reference value must belong to the selected scale's domain. See {@link ReferenceLine}. */
 export interface ReferenceLineProps extends ChartLineProps {
   /** Numeric domain value or categorical identity; signals update the line. */
   readonly value: SignalValue<BandCategory>;
@@ -41,7 +51,13 @@ function lines(props: ChartLineProps, selection: Pick<AxisProps, "tickCount" | "
     return <Line key={index} pointerEvents="none" style={{ coords, stroke, strokeWidth, opacity: alpha }} />;
   });
 }
-/** Paint grid lines at scale ticks, without labels or allocation. */
+/** Paint grid lines at scale ticks, without labels or allocation.
+ * @param props - Scale geometry and presentation. See {@link GridLinesProps}.
+ * @returns Decorative chart content in the caller's coordinate space.
+ */
 export function GridLines(props: GridLinesProps) { return lines(props, props); }
-/** Paint one decorative line at a domain value, without labels or allocation. */
+/** Paint one decorative line at a domain value, without labels or allocation.
+ * @param props - Scale geometry and presentation. See {@link ReferenceLineProps}.
+ * @returns Decorative chart content in the caller's coordinate space.
+ */
 export function ReferenceLine(props: ReferenceLineProps) { return lines(props, { tickValues: [resolveSignalValue(props.value)] }); }

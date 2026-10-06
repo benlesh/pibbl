@@ -32,3 +32,47 @@ it("maps reversed reference bands and updates their interval without interceptin
     runtime.dispose(); interval.set([1, 5]); expect(runtime.pending).toBe(0);
   } finally { runtime.dispose(); }
 });
+
+it("centers category guides on bands and preserves point identities", async () => {
+  const { BarScale, PointScale } = await import("@pibbl/core/viz");
+  for (const Provider of [BarScale, PointScale]) {
+    const runtime = testRuntime(), moves = vi.spyOn(Path2D.prototype, "moveTo");
+    try {
+      runtime.mount(<Provider id="c" domain={["A", "B"]} range={[0, 100]}>
+        <GridLines scale="c" direction="vertical" span={[10, 90]} tickValues={["A", "B"]} />
+      </Provider>);
+      runtime.flush();
+      const positions = moves.mock.calls.map(([x]) => x);
+      expect(positions).toHaveLength(2);
+      expect(positions[0]).toBeLessThan(positions[1]);
+      expect(positions[0] + positions[1]).toBeCloseTo(100);
+      if (Provider === PointScale) expect(positions).toEqual([0, 100]);
+      else { expect(positions[0]).toBeGreaterThan(0); expect(positions[1]).toBeLessThan(100); }
+    } finally { runtime.dispose(); }
+  }
+});
+
+it("maps a vertical logarithmic reference interval by scale geometry", async () => {
+  const { ReferenceBand, LogScale } = await import("@pibbl/core/viz");
+  const runtime = testRuntime(), rect = vi.spyOn(Path2D.prototype, "rect");
+  try {
+    runtime.mount(<LogScale id="x" domain={[1, 1000]} range={[0, 300]}>
+      <ReferenceBand scale="x" direction="vertical" span={[90, 10]} values={[10, 100]} />
+    </LogScale>);
+    runtime.flush(); const [x, y, width, height] = rect.mock.calls.at(-1)!;
+    expect(x).toBeCloseTo(100); expect(y).toBe(10); expect(width).toBeCloseTo(100); expect(height).toBe(80);
+  } finally { runtime.dispose(); }
+});
+
+it.each([
+  { values: [-1, 5] as const, span: [0, 100] as const },
+  { values: [0, Infinity] as const, span: [0, 100] as const },
+  { values: [0, 5] as const, span: [-Number.MAX_VALUE, Number.MAX_VALUE] as const },
+])("rejects invalid reference-band geometry %#", async props => {
+  const { ReferenceBand } = await import("@pibbl/core/viz");
+  const runtime = testRuntime();
+  try {
+    runtime.mount(<LinearScale id="x" domain={[0, 10]} range={[0, 100]}><ReferenceBand scale="x" direction="vertical" {...props} /></LinearScale>);
+    expect(() => runtime.flush()).toThrow(RangeError);
+  } finally { runtime.dispose(); }
+});

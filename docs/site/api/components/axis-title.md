@@ -57,7 +57,7 @@ export default function mount(canvas: HTMLCanvasElement) {
 }
 ```
 
-The [population example](/examples/composition/viz-signed-population) labels its
+The [population example](#/examples/composition/viz-signed-population) labels its
 vertical axis with people, keeping the unit visible even when the heading is
 hidden in a shallow embed.
 
@@ -93,3 +93,11 @@ Simple legend keys likewise need only core shapes and Text: compose a Rectangle
 or Line using the same paint as the marks, followed by its label. Keep data
 visibility controls explicit. A separate viz component is useful only when it
 adds scale/data behavior beyond that core composition.
+
+AxisTitle is intended as a sibling companion to Axis under the same scale and
+plot transform. Sharing `scale` and `position` keeps their geometry aligned as
+the allocation changes: Axis paints ticks at that edge, while AxisTitle tracks
+the range midpoint and applies its outward offset. It does not infer an Axis
+from the tree or require one to be mounted. The added value over core Text is
+this scale/frame-derived placement and edge-dependent rotation, not text layout.
+Increase the explicit offset and parent margin when tick labels need more room.

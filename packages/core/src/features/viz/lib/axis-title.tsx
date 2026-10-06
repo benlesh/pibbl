@@ -3,7 +3,7 @@ import type { SignalStyle } from "@pibbl/core/internal";
 import type { AxisProps, AxisStyle, ScaleId } from "./types.js";
 import { lookupScale } from "./scale-context.js";
 import { opacity } from "./paint.js";
-/** Scale-aligned axis text; callers reserve the margin outside the plot. */
+/** Scale-aligned axis text; callers reserve the margin outside the plot. See {@link AxisTitle}. */
 export interface AxisTitleProps {
   /** Ancestor scale whose range supplies the title midpoint. */
   readonly scale: ScaleId;
@@ -18,7 +18,10 @@ export interface AxisTitleProps {
   /** Font defaults to 12px sans-serif, fill to #617783, opacity to 1. */
   readonly style?: SignalValue<SignalStyle<Pick<AxisStyle, "font" | "fill" | "opacity">>>;
 }
-/** Paint an axis title with optional units, without allocating margins or changing ticks. */
+/** Paint an axis title with optional units, without allocating margins or changing ticks.
+ * @param props - Scale geometry and presentation. See {@link AxisTitleProps}.
+ * @returns Decorative chart content in the caller's coordinate space.
+ */
 export function AxisTitle(props: AxisTitleProps) {
   if (!["top", "bottom", "left", "right"].includes(props.position)) throw new TypeError("AxisTitle position must be top, bottom, left, or right.");
   const source = lookupScale(props.scale, "AxisTitle");

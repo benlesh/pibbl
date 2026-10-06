@@ -58,7 +58,7 @@ export default function mount(canvas: HTMLCanvasElement) {
 }
 ```
 
-The [signed population example](/examples/composition/viz-signed-population)
+The [signed population example](#/examples/composition/viz-signed-population)
 uses horizontal guides and a zero reference across responsive symlog geometry.
 
 ## Reference bands
