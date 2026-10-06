@@ -1,5 +1,5 @@
 import { appendFileSync } from 'node:fs';
-import { GithubActionsReporter } from 'vitest/reporters';
+import { GithubActionsReporter } from 'vitest/node';
 
 // Keep Vitest's source annotations, but replace its repeated anonymous summaries.
 const escape = (value) => String(value).replace(/[&<>|\r\n]/g, (character) => ({
