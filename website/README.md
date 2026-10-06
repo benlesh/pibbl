@@ -83,7 +83,9 @@ node tooling/website-documentation-browser.mjs
 node tooling/website-unified-browser.mjs
 ```
 
-The browser check uses `PIBBL_WEBSITE_URL` if supplied. It captures screenshots in `/tmp`, not source control. Examples use built public packages; build `@pibbl/core`, `@pibbl/three`, and `@pibbl/text` first if their distributions are absent or stale. The website declares these dependencies so recursive workspace builds order them correctly.
+Run `corepack pnpm@11.21.0 test:website` from the repository root for a fresh website build followed by documentation and unified-playground browser checks. This command is included in `trust:browser`; it starts an isolated preview on a free local port and closes it when checks finish or fail. The build retains the minimal-example coverage gate.
+
+When running individual browser scripts directly, the browser check uses `PIBBL_WEBSITE_URL` if supplied. It captures screenshots in `/tmp`, not source control. Examples use built public packages; build `@pibbl/core`, `@pibbl/three`, and `@pibbl/text` first if their distributions are absent or stale. The website declares these dependencies so recursive workspace builds order them correctly.
 
 Deploy `dist/` as static files with real 404 handling. Documentation and playground
 links are same-site paths. Old root-hash documentation and shared-example URLs redirect within the website.

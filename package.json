@@ -51,7 +51,7 @@
     "bench": "vitest bench",
     "trust:static": "node --test tooling/trust-workflow.test.mjs tooling/run-browser-contracts.test.mjs && corepack pnpm@11.21.0 test:texture-kernels && corepack pnpm@11.21.0 test:filter-authoring && corepack pnpm@11.21.0 test:agent-verification:requirements && corepack pnpm@11.21.0 scenarios:check && corepack pnpm@11.21.0 docs:check && corepack pnpm@11.21.0 studio-docs:check && corepack pnpm@11.21.0 build && node --import tsx --test tooling/website-documentation.test.mjs tooling/website-effects.test.mjs tooling/website-slice.test.mjs tooling/website-unified.test.mjs && corepack pnpm@11.21.0 test:studio-docs:production-boundary && corepack pnpm@11.21.0 typecheck && corepack pnpm@11.21.0 lint && corepack pnpm@11.21.0 playground:build && corepack pnpm@11.21.0 playground:build:built",
     "trust:package": "node --test tooling/prepare-release.test.mjs tooling/pibbl-release.test.mjs && corepack pnpm@11.21.0 test:package-consumer:packed && corepack pnpm@11.21.0 test:package-entries && corepack pnpm@11.21.0 test:path-tree-shaking && corepack pnpm@11.21.0 test:text-package && corepack pnpm@11.21.0 test:texture-packaging && node tooling/verify-packed-pibbl.mjs",
-    "trust:browser": "corepack pnpm@11.21.0 build && corepack pnpm@11.21.0 test:ci && corepack pnpm@11.21.0 test:studio-docs && corepack pnpm@11.21.0 test:visual-safeguard && corepack pnpm@11.21.0 test:smoke:built && corepack pnpm@11.21.0 test:agent-verification:identity && corepack pnpm@11.21.0 test:agent-verification:watchdog && corepack pnpm@11.21.0 text:test:browser && corepack pnpm@11.21.0 text:test:browser --production",
+    "trust:browser": "corepack pnpm@11.21.0 build && corepack pnpm@11.21.0 test:ci && corepack pnpm@11.21.0 test:studio-docs && corepack pnpm@11.21.0 test:visual-safeguard && corepack pnpm@11.21.0 test:smoke:built && corepack pnpm@11.21.0 test:agent-verification:identity && corepack pnpm@11.21.0 test:agent-verification:watchdog && corepack pnpm@11.21.0 text:test:browser && corepack pnpm@11.21.0 text:test:browser --production && corepack pnpm@11.21.0 test:website",
     "trust:lifecycle": "corepack pnpm@11.21.0 test:lifecycle && corepack pnpm@11.21.0 test:performance",
     "trust": "corepack pnpm@11.21.0 trust:static && corepack pnpm@11.21.0 trust:package && corepack pnpm@11.21.0 trust:browser && corepack pnpm@11.21.0 trust:lifecycle && corepack pnpm@11.21.0 trust:native",
     "test:viz-package": "node tooling/verify-packed-viz.mjs",
@@ -87,7 +87,8 @@
     "brick-climb:build": "vite build --config games/brick-climb/vite.config.ts",
     "brick-climb:check": "node --import tsx --test games/brick-climb/model.check.ts games/brick-climb/machines.check.ts games/brick-climb/boost.check.ts games/brick-climb/pause.check.ts",
     "test:machines": "vitest run packages/core/src/features/machines/runtime.test.ts packages/core/test/features/machines/machine-hook-animation.test.tsx --browser.headless --browser.ui=false",
-    "test:machine-bundles": "node tooling/verify-machine-bundles.mjs"
+    "test:machine-bundles": "node tooling/verify-machine-bundles.mjs",
+    "test:website": "corepack pnpm@11.21.0 website:build && node tooling/test-website.mjs"
   },
   "devDependencies": {
     "@babel/core": "catalog:",

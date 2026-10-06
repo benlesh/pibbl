@@ -28,3 +28,11 @@ test("CI runs every canonical local trust stage without a second check list", ()
   assert.equal(workflow.jobs.contracts.strategy["fail-fast"], false);
   assert.deepEqual(workflow.jobs["trust-gate"].needs, ["contracts"]);
 });
+
+test("browser trust includes the unified website against a fresh build", () => {
+  assert.ok(scripts["trust:browser"].includes(" test:website"));
+  assert.equal(
+    scripts["test:website"],
+    "corepack pnpm@11.21.0 website:build && node tooling/test-website.mjs",
+  );
+});
