@@ -30,7 +30,12 @@ const revision = execFileSync("git", ["rev-parse", "--short", "HEAD"], {
 const core = JSON.parse(
   await readFile(resolve(root, "packages/core/package.json"), "utf8"),
 );
-const compatibility = `Local checkout: @pibbl/core ${core.version}, base revision ${revision}, with working-tree changes. This preview does not assert compatibility with an npm release.`;
+const hasWorkingTreeChanges =
+  execFileSync("git", ["status", "--porcelain", "--untracked-files=no"], {
+    cwd: root,
+    encoding: "utf8",
+  }).trim().length > 0;
+const compatibility = `Documentation built with @pibbl/core ${core.version}, revision ${revision}${hasWorkingTreeChanges ? ", with working-tree changes" : ""}. ALPHA — NOT FOR PRODUCTION USE.`;
 const kit = resolve(root, "docs/website-rebuild/claude-design-kit");
 // Explicitly published showcase sources; other game files are not approved for source expansion.
 const showcaseSources = new Set(
@@ -521,7 +526,7 @@ await writeFile(
 );
 await writeFile(
   resolve(publicDir, "llms.txt"),
-  `# Pibbl documentation preview\n\n${compatibility}\n\nRead individual topics before adapting examples. No installable agent skill is shipped in this slice.\n\n${catalog
+  `# Pibbl documentation\n\n${compatibility}\n\nRead individual topics before adapting examples. No installable agent skill is shipped in this slice.\n\n${catalog
     .filter(
       (entry) =>
         entry.id.startsWith("agents/topics/") ||
