@@ -259,3 +259,8 @@ and hooks now have a runnable Census composition, focused source/built tests,
 documentation, and packed/tree-shaking evidence. This is a feedback-ready slice,
 not a declaration of complete hardening. Chart furniture remains next; Plan 007
 records exact evidence and outstanding verification.
+
+Furniture progress: accepted symlog/point slice committed as `ac035d33`.
+Grid/reference lines now have a runnable Census composition with focused geometry,
+responsive interaction, and package checks. Feedback-ready, not fully hardened;
+reference bands and text/legend furniture remain next.

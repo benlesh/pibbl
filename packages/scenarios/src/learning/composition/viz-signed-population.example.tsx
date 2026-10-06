@@ -1,5 +1,5 @@
 import { FocusManagement, Circle, Group, Line, Overlay, Rectangle, Text, pibbl, useLayoutBox, useSignal, type PibblController, type WritableSignal } from "@pibbl/core";
-import { Axis, PointScale, SymlogScale, ScaleAdjust, usePointScale, useSymlogScale, formatNumber } from "@pibbl/core/viz";
+import { GridLines, ReferenceLine, Axis, PointScale, SymlogScale, ScaleAdjust, usePointScale, useSymlogScale, formatNumber } from "@pibbl/core/viz";
 // US Census Bureau, Vintage 2023 estimates, published 19 December 2023.
 // Six most populous states; population change July 1, 2022–July 1, 2023, people.
 // https://www.census.gov/newsroom/press-releases/2023/population-trends-return-to-pre-pandemic-norms.html
@@ -14,7 +14,8 @@ const ink = "#172f3d", muted = "#617783", gain = "#087f8c", loss = "#b65a35";
 function Plot({ selected, left, compact }: { selected: WritableSignal<number>; left: number; compact: boolean }) {
   const x = usePointScale("state").get(), y = useSymlogScale("change").get();
   return <>
-    <Line pointerEvents="none" style={{ coords: [[0, y.map(0)], [x.frame.width, y.map(0)]], stroke: "#82999f", strokeWidth: 1 }} />
+    <GridLines scale="change" direction="horizontal" span={[0, x.frame.width]} tickValues={[-100000, 100000, 500000]} />
+    <ReferenceLine scale="change" direction="horizontal" span={[0, x.frame.width]} value={0} style={{ stroke: "#82999f" }} />
     <Axis scale="change" position="left" tickValues={[-100000, 0, 100000, 500000]} labelOverlap="skip" labelGap={8}
       tickFormat={value => Number(value) === 0 ? "0" : `${Number(value) / 1000}k`} style={{ stroke: "#bdced3", fill: muted, font: "11px sans-serif" }} />
     <Axis scale="state" position="bottom" tickValues={rows.map(row => row.name)} tickFormat={value => compact ? abbreviations[String(value)] : String(value)} style={{ strokeWidth: 0, fill: muted, font: "12px sans-serif" }} />

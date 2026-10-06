@@ -496,3 +496,9 @@ function SignedProbe() {
   return <ScaleAdjust x={-1} xScale="signed" y="A" yScale="points" />;
 }
 void <SymlogScale id="signed" domain={[-10, 10]} range="width" constant={signal(1)}><PointScale id="points" domain={["A", "B"]} range="height" padding={signal(0.5)}><SignedProbe /></PointScale></SymlogScale>;
+
+import { GridLines, ReferenceLine } from "@pibbl/core/viz";
+void <GridLines scale="y" direction="horizontal" span={signal<readonly [number, number]>([0, 200])} tickCount={5} />;
+void <ReferenceLine scale="y" direction="horizontal" span={[0, 200]} value={signal(0)} />;
+// @ts-expect-error count and explicit ticks are mutually exclusive
+void <GridLines scale="y" direction="horizontal" span={[0, 200]} tickCount={5} tickValues={[0]} />;

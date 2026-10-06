@@ -1172,6 +1172,17 @@ export interface MeshTransformOptions {
 /* @pibbl-studio-module @pibbl/core/viz */
 import type { BoxStyle, PibblNode, LayoutItemStyle, LayoutBox, SignalValue } from '@pibbl/core';
 type SignalStyle<S> = Readonly<{ [K in keyof S]: K extends "custom" ? S[K] : SignalValue<S[K]> }>;
+export interface ChartLineProps {
+  readonly scale: ScaleId;
+  readonly direction: "horizontal" | "vertical";
+  readonly span: SignalValue<readonly [number, number]>;
+  readonly style?: SignalValue<{ readonly stroke?: SignalValue<StrokeStyle>; readonly strokeWidth?: SignalValue<number>; readonly opacity?: SignalValue<number> }>;
+}
+export type GridLinesProps = ChartLineProps & ({ readonly tickValues: AxisProps["tickValues"]; readonly tickCount?: never } | { readonly tickValues?: never; readonly tickCount?: AxisProps["tickCount"] });
+export interface ReferenceLineProps extends ChartLineProps { readonly value: SignalValue<string | number>; }
+export declare function GridLines(props: GridLinesProps): PibblNode;
+export declare function ReferenceLine(props: ReferenceLineProps): PibblNode;
+
 export type ScaleId = string | symbol;
 export type LinearDomain = readonly [number, number];
 export type ScaleRange = 'width' | 'height' | readonly [number, number];

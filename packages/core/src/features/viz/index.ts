@@ -121,3 +121,5 @@ export type { SymlogScaleProps, ResolvedSymlogScale } from "./lib/types.js";
 export { PointScale } from "./lib/point-scale-component.js";
 export { usePointScale } from "./lib/use-point-scale.js";
 export type { PointScaleProps, ResolvedPointScale } from "./lib/types.js";
+export { GridLines, ReferenceLine } from "./lib/chart-lines.js";
+export type { ChartLineProps, GridLinesProps, ReferenceLineProps } from "./lib/chart-lines.js";

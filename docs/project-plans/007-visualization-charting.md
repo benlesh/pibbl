@@ -269,3 +269,28 @@ gain to greatest loss. Compact layouts show all six standard postal abbreviation
 inspection retains full state names and exact counts. Wide layouts retain full
 names. Four responsive browser contracts pass, including horizontal category
 nonoverlap and left/right keyboard plus touch inspection. No commit requested.
+
+### 2026-10-05 — first chart furniture slice
+
+User accepted the vertical, population-change-sorted symlog/point composition;
+committed as `ac035d33`. No merge or push.
+
+`GridLines` and `ReferenceLine` now provide decorative scale-aligned guides with
+explicit caller-owned spans and paint. Shared private tick selection keeps Axis
+and grid geometry consistent without tying guides to label visibility. All scale
+families are supported, including categorical band centers and point positions.
+The Census example replaces its manual zero line and adds faint horizontal guides.
+Studio URL remains `http://127.0.0.1:5195/#/examples/composition/viz-signed-population`.
+
+Fresh Node 24.15.0 / pnpm 11.21.0 evidence: five focused Chromium tests pass
+(reactive guide geometry/cleanup and four responsive touch/keyboard allocations).
+Typecheck, core build, focused lint, packed runtime exports, Bundler/NodeNext
+consumers and family-isolation checks pass. Desktop/compact Studio renders were
+inspected; refreshed runtime reports no page errors. Documentation includes a
+minimal runnable composition, options/defaults/errors/signals; editor declarations
+include both components. A cached Studio runtime required a dev-server refresh
+for the newly added exports. No aggregate trust claim.
+
+Status: **slice ready for feedback**, uncommitted. Reference bands, axis titles and
+units, composable legends/title/caption/source furniture, and broader furniture
+hardening remain outstanding. Composition continues to own layout and paint order.
