@@ -76,3 +76,56 @@ jobs:
         env:
           CONTRACTS_RESULT: ${{ needs.contracts.result }}
         run: test "$CONTRACTS_RESULT" = success
+
+  publish-alpha:
+    name: Publish alpha
+    needs: [trust-gate]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.CONTINUOUS_ALPHA == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: npm-alpha
+    permissions:
+      contents: read
+      id-token: write
+    concurrency:
+      group: npm-alpha
+      cancel-in-progress: false
+    steps:
+      - name: Checkout tested commit
+        uses: actions/checkout@v7
+      - name: Setup Node.js and pnpm
+        uses: pnpm/setup@v2
+        with:
+          runtime: node@24.19.0
+          install: false
+      - name: Install Corepack and OIDC-capable npm
+        run: npm install --global corepack@0.35.0 npm@11
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --strict-peer-dependencies
+      - name: Check published alpha inputs
+        id: alpha-inputs
+        run: node tooling/alpha-inputs.mjs
+      - name: Prepare unique alpha version
+        if: steps.alpha-inputs.outputs.changed == 'true'
+        env:
+          ALPHA_RUN: ${{ github.run_number }}
+          ALPHA_ATTEMPT: ${{ github.run_attempt }}
+        run: |
+          VERSION=$(node --input-type=module -e 'import { readFileSync } from "node:fs"; import { inc } from "semver"; const { version } = JSON.parse(readFileSync("packages/core/package.json")); console.log(`${inc(version, "patch")}-alpha.${process.env.ALPHA_RUN}.${process.env.ALPHA_ATTEMPT}`)')
+          pnpm release "$VERSION"
+          pnpm install --lockfile-only --no-frozen-lockfile
+      - name: Build release packages
+        if: steps.alpha-inputs.outputs.changed == 'true'
+        run: pnpm build
+      - name: Publish current main alpha
+        if: steps.alpha-inputs.outputs.changed == 'true'
+        env:
+          PIBBL_ALPHA_INPUT_HASH: ${{ steps.alpha-inputs.outputs.hash }}
+          TESTED_COMMIT: ${{ github.sha }}
+        run: |
+          HEAD_COMMIT=$(git ls-remote --exit-code origin refs/heads/main | cut -f1)
+          if [ "$HEAD_COMMIT" != "$TESTED_COMMIT" ]; then
+            echo "Skipping superseded commit; a newer main commit will publish after passing trust."
+            exit 0
+          fi
+          pnpm publish:ci --alpha
