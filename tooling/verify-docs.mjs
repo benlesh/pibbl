@@ -357,6 +357,7 @@ const migrationMarkdownPaths = new Set([
   "docs/migrations/jsx-authoring-pivot.md",
 ]);
 const operationalMarkdownPaths = new Set([
+  "docs/alpha-publishing.md",
   "docs/testing/field-notes/visibility-transition-integration.md",
   ...trackedRepositoryFiles([
     "docs/website-rebuild/*.md",
