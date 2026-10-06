@@ -92,3 +92,21 @@ it.each([[320, 260], [360, 320], [560, 300], [360, 480], [360, 541]])("keeps cha
     }
   } finally { app.dispose(); }
 });
+
+it("supports native keyboard inspection in the NOAA chart", async () => {
+  const { tab, pressKey } = await import("../../support/user-input.js");
+  runtime = testRuntime();
+  const labels: string[] = [];
+  vi.spyOn(CanvasRenderingContext2D.prototype, "fillText").mockImplementation(text => { labels.push(text); });
+  const before = document.createElement("button"); before.textContent = "before";
+  const canvas = document.createElement("canvas"); canvas.style.cssText = "width:560px;height:300px";
+  document.body.append(before, canvas);
+  const app = climate(canvas);
+  try {
+    runtime.flush(); before.focus();
+    for (let i = 0; i < 3; i++) { await tab(); runtime.flush(); }
+    expect(document.activeElement).toBe(canvas);
+    await pressKey("ArrowLeft"); runtime.flush();
+    expect(labels).toContain("Nov 2021 · 414.97 ppm");
+  } finally { app.dispose(); }
+});

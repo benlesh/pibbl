@@ -82,6 +82,44 @@ and nonnegative. Invalid policies throw `TypeError`; invalid gaps throw
 Skipping affects label paint only: tick positions, tick strokes, scale domain,
 data marks, and inspection coordinates remain unchanged. Formatting receives
 original tick indices, including hidden labels. Vertical axes measure text
-height; horizontal axes measure width. This does not reserve gutters or wrap
-long labels. Custom fonts must be ready before mounting, or the application must
+height; horizontal axes measure width. This does not reserve gutters. Long-label policies are described below. Custom fonts must be ready before mounting, or the application must
 invalidate after loading them. See [numeric helpers](#/api/components/numeric-ticks).
+
+## Long labels
+
+All the following inputs accept plain values or signals read by Axis:
+
+| Input             | Default                  | Contract                                                             |
+| ----------------- | ------------------------ | -------------------------------------------------------------------- |
+| `labelOverflow`   | `"allow"`                | `"allow"`, `"wrap"`, or `"truncate"`; presentation policy only       |
+| `labelMaxWidth`   | omitted                  | Positive finite logical-pixel line width; required for wrap/truncate |
+| `labelMaxLines`   | `2`                      | Integer 1–20; limits wrapped lines                                   |
+| `labelLineHeight` | measured font height + 4 | Positive finite logical-pixel line advance                           |
+
+Truncation fits a measured ellipsis. Wrapping breaks at whitespace, then at
+Unicode grapheme boundaries for oversized words. Whitespace is normalized for
+wrapping. Excess lines truncate with an ellipsis. If even an ellipsis cannot fit,
+the line is empty. Full values remain in the scale/domain and formatter input;
+provide a visible detail readout or application-owned semantic table where full
+labels are essential. Axis itself is decorative and has no interaction target.
+
+Top/bottom labels extend outward into the caller's gutter, with lines in reading
+order. Left/right labels are vertically centered on their tick. Collision skipping
+measures the final multiline block. A small explicit line height can intentionally
+overlap lines; the default leaves spacing. Invalid policy throws `TypeError`;
+invalid width, line count, or line height throws `RangeError`, including invalid
+optional values supplied with `"allow"`.
+
+```tsx
+<Axis
+  scale="categories"
+  position="left"
+  labelOverflow="wrap"
+  labelMaxWidth={120}
+  labelMaxLines={3}
+  labelOverlap="skip"
+/>
+```
+
+Use [the long-label example](#/examples/composition/viz-long-labels) to compare
+wrapping and truncation in narrow panels and shallow embeds.

@@ -132,3 +132,43 @@ required by the Studio source loader and has been verified in the live editor.
 2026-10-05: User accepted the numeric-axis slice and requested its commit, then
 continued work in priority order. This authorizes the slice commit only; no
 merge or push was requested.
+
+### 2026-10-05 — contextual UTC and long-label slice
+
+Accepted numeric slice committed as `01afbb81`. The following slice remains
+uncommitted and ready for visual feedback, not fully hardened:
+
+- `utcTickLabels(values, { locale? })` returns fixed-type frozen strings with
+  standalone calendar context at year/month/day/sub-day precision. Full-ISO
+  scale formatting remains unchanged.
+- Axis adds signal-capable `labelOverflow`, `labelMaxWidth`, `labelMaxLines`,
+  and `labelLineHeight`. Wrapping and grapheme-safe ellipsis are measured in the
+  actual font on all four edges. Collision checks use the final multiline box;
+  tick and mark geometry never changes.
+- The real NOAA long-label example compares wrap/truncate, preserves a full
+  selected-value readout, and responds to both allocation width and height.
+  Public docs and Studio declarations cover options, defaults, errors, and
+  signals. UTC basics provides the runnable date-label demo.
+- Native keyboard tests exposed the missing FocusManagement policy in NOAA and
+  the new demo. Both now opt in explicitly; Tab and arrow-key inspection pass.
+
+Preview URLs:
+
+- http://127.0.0.1:5195/#/examples/composition/viz-long-labels
+- http://127.0.0.1:5195/#/examples/composition/viz-utc-basics
+
+Fresh focused verification: Node 24.15.0, pnpm 11.21.0, Chromium; 27 tests across
+axis-labels, long-labels-example, axis-runtime, numeric-axis, and utc-example.
+Typecheck passed. Source Studio visual inspection covered desktop and a narrow,
+shallow panel with no page errors. Long-label bounds/control/touch/native keyboard
+checks cover 360×300, 560×300, and 900×640. Signal-policy disposal is checked.
+No broad packed/built/aggregate verification claim is made for this slice.
+
+Next: dedicated log, symlog, and point scales with independent hooks/modules,
+explicit domain/inversion/tick contracts, meaningful logarithmic real data, and
+family-isolation evidence; then reusable furniture. Contextual labels and
+long-label policies await visual feedback before broader hardening.
+
+2026-10-05: User accepted the contextual UTC/long-label slice and authorized its
+commit. Dedicated scales are the next active slice. Broader package and
+integration verification remains pending; no merge or push is authorized.

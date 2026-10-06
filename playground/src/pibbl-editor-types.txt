@@ -1222,6 +1222,8 @@ export interface ResolvedUtcScale extends Omit<ResolvedLinearScale, "type"> {
 export type ResolvedContinuousScale = ResolvedLinearScale | ResolvedUtcScale;
 export type ResolvedScale = ResolvedContinuousScale | ResolvedBandScale;
 export declare function extent<D>(data: readonly D[], value: (datum: D, index: number, data: readonly D[]) => number | null | undefined): NumericDomain | undefined;
+export interface UTCTickLabelOptions { readonly locale?: string; }
+export declare function utcTickLabels(values: readonly number[], options?: UTCTickLabelOptions): readonly string[];
 export interface LinearTickOptions { readonly count?: number; }
 export interface NumberFormatOptions extends Intl.NumberFormatOptions { readonly locale?: string; readonly prefix?: string; readonly suffix?: string; }
 export declare function linearTicks(domain: NumericDomain, options?: LinearTickOptions): readonly number[];
@@ -1237,6 +1239,10 @@ interface AxisBaseProps {
   readonly tickFormat?: (value: number | string, index: number) => string;
   readonly labelOverlap?: SignalValue<"allow" | "skip">;
   readonly labelGap?: SignalValue<number>;
+  readonly labelOverflow?: SignalValue<"allow" | "wrap" | "truncate">;
+  readonly labelMaxWidth?: SignalValue<number>;
+  readonly labelMaxLines?: SignalValue<number>;
+  readonly labelLineHeight?: SignalValue<number>;
   readonly style?: SignalValue<SignalStyle<AxisStyle>>;
 }
 export type AxisProps = AxisBaseProps & (

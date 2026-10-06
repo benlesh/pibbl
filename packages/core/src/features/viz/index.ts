@@ -106,3 +106,6 @@ export type { NumericDomain, UtcDomain, UTCScaleProps, ResolvedUtcScale, Resolve
 
 export { linearTicks, niceLinearDomain, formatNumber } from "./lib/numeric-ticks.js";
 export type { LinearTickOptions, NumberFormatOptions } from "./lib/numeric-ticks.js";
+
+export { utcTickLabels } from "./lib/utc-labels.js";
+export type { UTCTickLabelOptions } from "./lib/utc-labels.js";

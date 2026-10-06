@@ -394,6 +394,17 @@ const drafts = [
       import("./learning/composition/viz-points-and-inspection.example"),
   },
   {
+    slug: "viz-long-labels", title: "Six months, one record", shortTitle: "Long axis labels",
+    section: "composition", order: 232,
+    summary: "Wrap or truncate long NOAA month-and-station labels without changing bar geometry.",
+    api: ["Axis", "BarScale", "LinearScale", "formatNumber"],
+    objectives: ["Fit long category labels with explicit presentation policies.", "Keep full values available through touch and keyboard inspection."],
+    prompts: { gesture: "Toggle wrapping, tap a bar, or Tab and use arrow keys.", code: "Change labelMaxWidth, labelMaxLines, or labelGap." },
+    apiNotes: ["Source: NOAA GML / Scripps monthly means, Jan–Jun 1980, ppm. Bars use a zero baseline."],
+    canvas: { width: 900, height: 640 }, related: ["viz-numeric-axis", "viz-utc-basics"],
+    load: () => import("./learning/composition/viz-long-labels.example"),
+  },
+  {
     slug: "viz-numeric-axis", title: "Readable numeric axes", shortTitle: "Numeric axes",
     section: "composition", order: 231,
     summary: "Readable tick intervals, explicit nicening, and collision-aware labels with NOAA data.",

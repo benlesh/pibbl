@@ -284,6 +284,14 @@ interface AxisBaseProps {
   readonly labelOverlap?: SignalValue<"allow" | "skip">;
   /** Minimum distance between visible labels in logical pixels; defaults to 8. */
   readonly labelGap?: SignalValue<number>;
+  /** Long-label policy, default allow. Wrap/truncate require labelMaxWidth; coordinates remain unchanged. */
+  readonly labelOverflow?: SignalValue<"allow" | "wrap" | "truncate">;
+  /** Maximum measured line width in logical pixels, positive and finite. Required for wrap/truncate. */
+  readonly labelMaxWidth?: SignalValue<number>;
+  /** Maximum wrapped lines, integer 1–20; default 2. Excess text receives an ellipsis. */
+  readonly labelMaxLines?: SignalValue<number>;
+  /** Positive line advance in logical pixels; default is measured font height plus 4. */
+  readonly labelLineHeight?: SignalValue<number>;
   /**
    * Declared presentation and layout properties. See {@link SignalValue}, {@link SignalStyle},
    * {@link AxisStyle}.

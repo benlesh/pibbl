@@ -3,6 +3,8 @@ import type { AxisProps, BandCategory, ResolvedScale } from "./types.js";
 import { lookupScale } from "./scale-context.js";
 import { width, opacity } from "./paint.js";
 
+import { fitAxisLabel } from "./axis-labels.js";
+
 type Tick = number | string;
 
 function ticks(scale: ResolvedScale, props: AxisProps): readonly Tick[] {
@@ -93,6 +95,16 @@ export function Axis(props: AxisProps) {
   const gap = resolveSignalValue(props.labelGap ?? 8);
   if (overlap !== "allow" && overlap !== "skip") throw new TypeError("Axis labelOverlap must be allow or skip.");
   if (!Number.isFinite(gap) || gap < 0) throw new RangeError("Axis labelGap must be finite and nonnegative.");
+  const overflow = resolveSignalValue(props.labelOverflow ?? "allow");
+  const maxWidth = props.labelMaxWidth === undefined ? undefined : resolveSignalValue(props.labelMaxWidth);
+  const maxLines = resolveSignalValue(props.labelMaxLines ?? 2);
+  const lineHeightInput = props.labelLineHeight === undefined ? undefined : resolveSignalValue(props.labelLineHeight);
+  if (!["allow", "wrap", "truncate"].includes(overflow)) throw new TypeError("Axis labelOverflow must be allow, wrap, or truncate.");
+  if ((overflow !== "allow" && maxWidth === undefined) || (maxWidth !== undefined && (!Number.isFinite(maxWidth) || maxWidth <= 0))) throw new RangeError("Axis labelMaxWidth must be positive and finite for wrap/truncate.");
+  if (!Number.isInteger(maxLines) || maxLines < 1 || maxLines > 20) throw new RangeError("Axis labelMaxLines must be an integer from 1 to 20.");
+  if (lineHeightInput !== undefined && (!Number.isFinite(lineHeightInput) || lineHeightInput <= 0)) throw new RangeError("Axis labelLineHeight must be positive and finite.");
+  let lineHeight = 0;
+  const lines: (readonly string[])[] = [];
   const occupied: { start: number; end: number }[] = [];
   const visible = new Set<number>();
   const texts = selected.map((value, index) => {
@@ -108,9 +120,12 @@ export function Axis(props: AxisProps) {
   context.save();
   try {
     context.font = font;
+    const fontMetrics = context.measureText("Mg");
+    lineHeight = lineHeightInput ?? Math.ceil(fontMetrics.actualBoundingBoxAscent + fontMetrics.actualBoundingBoxDescent + 4);
+    for (const text of texts) lines.push(fitAxisLabel(context, text, maxWidth ?? Infinity, overflow, maxLines));
     for (const { index, p } of priority) {
-      const metrics = context.measureText(texts[index]);
-      const size = horizontal ? metrics.width : metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent;
+      const metrics = lines[index].map(text => context.measureText(text));
+      const size = horizontal ? Math.max(...metrics.map(m => m.width)) : (lines[index].length - 1) * lineHeight + Math.max(...metrics.map(m => m.actualBoundingBoxAscent + m.actualBoundingBoxDescent));
       const interval = { start: p - size / 2, end: p + size / 2 };
       if (overlap === "allow" || occupied.every(other => interval.end + gap <= other.start || interval.start >= other.end + gap)) {
         visible.add(index); occupied.push(interval);
@@ -135,14 +150,13 @@ export function Axis(props: AxisProps) {
       path.lineTo(baseline + outward * 6, p);
     }
     if (!visible.has(index)) return null;
-    const label = texts[index];
-    return (
+    return lines[index].map((label, lineIndex) => (
       <Text
-        key={index}
+        key={`${index}:${lineIndex}`}
         pointerEvents="none"
         style={{
           left: horizontal ? p : baseline + outward * 10,
-          top: horizontal ? baseline + outward * 10 : p,
+          top: horizontal ? baseline + outward * 10 + (outward > 0 ? lineIndex : lineIndex - lines[index].length + 1) * lineHeight : p + (lineIndex - (lines[index].length - 1) / 2) * lineHeight,
           fill,
           font,
           opacity: alpha,
@@ -152,7 +166,7 @@ export function Axis(props: AxisProps) {
       >
         {label}
       </Text>
-    );
+    ));
   });
   return [
     <Path

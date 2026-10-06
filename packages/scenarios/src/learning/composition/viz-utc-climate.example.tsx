@@ -1,5 +1,5 @@
 import {
-  Overlay, Circle, Group, Line, Rectangle, Text, pibbl, useLayoutBox, useSignal,
+  FocusManagement, Overlay, Circle, Group, Line, Rectangle, Text, pibbl, useLayoutBox, useSignal,
   type PibblController, type PibblPointerEvent, type PibblResponsiveStyle, type TextStyle,
 } from "@pibbl/core";
 import { Axis, LineSeries, extent, linearTicks, niceLinearDomain, formatNumber, useUTCScale, useLinearScale, UTCScale, LinearScale } from "@pibbl/core/viz";
@@ -618,5 +618,5 @@ function Scene() {
   </>;
 }
 export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(canvas, <Scene />, { viewport: "responsive" });
+  return pibbl(canvas, <FocusManagement><Scene /></FocusManagement>, { viewport: "responsive" });
 }
