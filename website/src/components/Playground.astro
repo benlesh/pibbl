@@ -1,10 +1,16 @@
 ---
 import { learningExampleCatalog } from '../../../packages/scenarios/src/learning-catalog';
+import { tutorialSnapshotCatalog } from '../../../packages/scenarios/src/tutorial-catalog';
 ---
 <section id="website-playground" aria-label="Interactive playground">
   <label for="playground-example">Example</label>
   <select id="playground-example">
-    {learningExampleCatalog.map(entry => <option value={`#/examples/${entry.browseGroup}/${entry.slug}`}>{entry.title}</option>)}
+    <optgroup label="Examples">
+      {learningExampleCatalog.map(entry => <option value={`#/examples/${entry.browseGroup}/${entry.slug}`}>{entry.title}</option>)}
+    </optgroup>
+    <optgroup label="Tutorial steps">
+      {tutorialSnapshotCatalog.map(entry => <option value={`#/workbench/${entry.slug}`}>{entry.title}</option>)}
+    </optgroup>
   </select>
   <h2 id="playground-title">Loading example…</h2>
   <div id="playground-editor" aria-live="polite">Loading the editor…</div>

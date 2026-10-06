@@ -108,11 +108,6 @@ export function mountSearchDialog(
 
   let selectedKinds = new Set<SearchKind>(kinds);
   let currentResults: readonly SearchResult[] = [];
-  let currentCounts: Record<SearchKind, number> = {
-    learn: 0,
-    api: 0,
-    example: 0,
-  };
   let activeResult = -1;
   let requestVersion = 0;
   let invoker: HTMLElement | undefined;
@@ -177,7 +172,6 @@ export function mountSearchDialog(
     message: string,
     counts: Readonly<Record<SearchKind, number>>,
   ) => {
-    currentCounts = { ...counts };
     status.textContent = message;
     retry.hidden = true;
     for (const kind of kinds) {
@@ -224,8 +218,13 @@ export function mountSearchDialog(
     return option;
   };
   const setActiveResult = (index: number) => {
+    if (activeResult === index) return;
     activeResult = index;
-    renderReady(status.textContent ?? "", currentCounts);
+    for (const [position, option] of [...results.children].entries()) {
+      option.classList.toggle("is-active", position === index);
+      option.setAttribute("aria-selected", String(position === index));
+    }
+    input.setAttribute("aria-activedescendant", resultId(index));
   };
   const activate = (index: number) => {
     const result = currentResults[index];

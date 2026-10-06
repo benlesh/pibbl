@@ -27,7 +27,10 @@ export function mountWebsitePlayground(): void {
       select.value = "";
       return;
     }
-    select.value = path;
+    select.value =
+      [...select.options].find(
+        (option) => option.value.split("/").at(-1) === slug,
+      )?.value ?? path;
     title.textContent = entry.title;
     container.textContent = "Loading the editor…";
     try {

@@ -13,6 +13,15 @@ try {
   page.on("console", (message) => {
     if (message.type() === "error") errors.push(message.text());
   });
+  await page.goto(`${base}/#/api/types/canvas-runtime#signaloptions`);
+  await page.waitForURL(/\/reference\/types\/canvas-runtime\/#signaloptions$/);
+  await page.goto(`${base}/reference/functions/signal/`);
+  await page
+    .getByRole("button", { name: "Search documentation", exact: true })
+    .click();
+  await page.getByRole("dialog").getByRole("combobox").fill("SignalOptions");
+  await page.getByRole("dialog").getByRole("option").first().click();
+  await page.waitForURL(/\/reference\/types\/canvas-runtime\/#signaloptions$/);
   await page.goto(`${base}/reference/functions/signal/`);
   await page
     .getByRole("heading", { name: "API details from source", exact: true })
@@ -57,8 +66,9 @@ try {
   await page.keyboard.press("ControlOrMeta+A");
   await page.keyboard.insertText(source.replace("#ff6b57", "#0044ff"));
   await page.waitForURL(/code=v1\./);
-  // Reload the real shared URL; the editor must restore and render the edit.
-  await page.reload();
+  // Old root-hash shares must migrate and restore the actual edited pixels.
+  await page.goto(`${base}/${new URL(page.url()).hash}`);
+  await page.waitForURL(/\/playground\/#\/examples\/drawing\/circle\?code=/);
   await page
     .getByText("Live · changes run automatically", { exact: true })
     .waitFor({ timeout: 90000 });

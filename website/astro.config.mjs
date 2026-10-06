@@ -17,7 +17,10 @@ export default defineConfig({
         "Build Canvas applications or add Pibbl effects to your HTML site.",
       pagefind: false,
       customCss: ["./src/style.css"],
-      components: { MarkdownContent: "./src/components/ContentPanel.astro" },
+      components: {
+        MarkdownContent: "./src/components/ContentPanel.astro",
+        Search: "./src/components/Search.astro",
+      },
       sidebar: [
         { label: "Start", link: "/start/" },
         { label: "Reference", link: "/reference/" },

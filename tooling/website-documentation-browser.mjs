@@ -30,6 +30,9 @@ try {
           images: [...doc.querySelectorAll("main img[src]")].map((node) =>
             node.getAttribute("src"),
           ),
+          playgroundRoutes: [
+            ...doc.querySelectorAll("#playground-example option"),
+          ].map((node) => node.getAttribute("value")),
         };
       }),
     documents,
@@ -41,6 +44,20 @@ try {
     for (const href of doc.links) {
       const target = new URL(href, `${base}${doc.url}`);
       if (target.origin !== base) continue;
+      if (target.pathname === "/playground/" && target.hash.startsWith("#/")) {
+        const route = target.hash.split("?")[0];
+        const routes = byURL.get("/playground/").playgroundRoutes;
+        const valid =
+          routes.includes(route) ||
+          (route.startsWith("#/workbench/") &&
+            routes.some(
+              (candidate) =>
+                candidate.split("/").at(-1) === route.split("/").at(-1),
+            ));
+        if (!valid)
+          broken.push(`${doc.url} -> unknown playground route ${href}`);
+        continue;
+      }
       if (
         target.hash &&
         byURL.has(target.pathname) &&

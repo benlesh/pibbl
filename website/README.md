@@ -50,7 +50,7 @@ pixels or meaningful HTML, runtime errors, and representative interactions.
 
 Foundation: Astro + Starlight. Starlight supplies documentation navigation and readable static pages; Pibbl demos use public imports and the existing Pibbl TSX learning sources, with `createElement` in the small custom previews. See the [official setup](https://starlight.astro.build/manual-setup/) and [configuration](https://starlight.astro.build/reference/configuration/).
 
-Public website and agent copy lives in `docs/site/website/**/*.mdx` (plain Markdown syntax). Existing API, guide, and tutorial Markdown is reused directly from `docs/site/api/` and `docs/site/learn/`; edit those canonical sources to update both sites. `documentation.mjs` uses the existing public-document parser and TypeScript semantic export inventory, rewrites documentation links, and reports export destinations. `prepare-content.mjs` produces Starlight pages, clean Markdown counterparts, indexes, and source-expanded agent examples. Generated files are ignored. The `.mdx` extension keeps the older Studio Markdown collector unchanged. No plans or test labs enter this inventory. Search is deferred; Starlight Pagefind is disabled and existing Studio MiniSearch is unchanged.
+Public website and agent copy lives in `docs/site/website/**/*.mdx` (plain Markdown syntax). Existing API, guide, and tutorial Markdown is reused directly from `docs/site/api/` and `docs/site/learn/`; edit those canonical sources to update the website and development fixtures. `documentation.mjs` uses the existing public-document parser and TypeScript semantic export inventory, rewrites documentation links, and reports export destinations. `prepare-content.mjs` produces Starlight pages, clean Markdown counterparts, indexes, and source-expanded agent examples. Generated files are ignored. The `.mdx` extension keeps the older Studio Markdown collector unchanged. No plans or test labs enter this inventory. Starlight Pagefind is disabled; the website reuses the existing MiniSearch engine.
 
 Run from the repository:
 
@@ -64,25 +64,32 @@ workbenches. No second public server is needed. The standalone Studio remains
 available for development/test labs during migration. Restart the website after
 changing authored documentation; source expansion runs at startup.
 
-The `signal` reference is the first authored/JSDoc integration slice. TypeScript
-resolves its public export to the declaration, signature, parameter and return
-documentation. Source links open a line-addressable snapshot from this build;
-GitHub links are pinned to HEAD and included only if the file matches that commit.
-Other API pages retain their existing reference until this presentation is evaluated.
+TypeScript resolves documented public exports to their declarations, signatures,
+JSDoc parameters, returns, remarks, and related API links. Type properties and
+methods have expandable details and their own source links. Source snapshots
+come from the same compiler snapshot as the extracted details; GitHub links are
+pinned to HEAD and included only if the file matches that commit.
+
+The header search reuses the existing local MiniSearch index and ranking for
+validated public Learn/API documents, generated JSDoc member details, and learning example metadata. It loads on
+search intent and routes results within this website. Source snapshots, test
+labs, internal plans, and repository-only documentation are excluded.
 
 ```sh
 corepack pnpm@11.21.0 --filter @pibbl/website build
 node --test tooling/website-slice.test.mjs tooling/website-documentation.test.mjs
 node tooling/website-browser.mjs
 node tooling/website-documentation-browser.mjs
+node tooling/website-unified-browser.mjs
 ```
 
 The browser check uses `PIBBL_WEBSITE_URL` if supplied. It captures screenshots in `/tmp`, not source control. Examples use built public packages; build `@pibbl/core`, `@pibbl/three`, and `@pibbl/text` first if their distributions are absent or stale. The website declares these dependencies so recursive workspace builds order them correctly.
 
 Deploy `dist/` as static files with real 404 handling. Documentation and playground
-links are same-site paths. Deployment, legacy Studio URL migration, final canonical
-origin/sitemap, base-path rollout, individual expansion of grouped APIs, website
-search, and visual design remain follow-up work. This preview does not replace
+links are same-site paths. Old root-hash documentation and shared-example URLs redirect within the website.
+Deployment, redirects from any separately hosted legacy Studio origin, final canonical
+origin/sitemap, base-path rollout, individual expansion of grouped APIs, and
+visual design remain follow-up work. This preview does not replace
 the deployed site.
 
 The coverage JSON records reference and minimal-example destinations, not a claim of exhaustive behavior testing or freshly executed browser results. The documentation browser check parses every generated page to verify heading links and static images, then exercises no-JavaScript reference, agent, minimal-example, and Markdown reading paths. Agent topics distinguish recommended verification from executed evidence. New sources should use supported public imports, include host setup, and preserve canonical example ownership.

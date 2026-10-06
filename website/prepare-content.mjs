@@ -9,8 +9,15 @@ import {
   topics,
   topicFor,
 } from "./documentation.mjs";
-import { learningExampleCatalog } from "../packages/scenarios/src/learning-catalog.ts";
+import {
+  learningExampleCatalog,
+  getLearningExampleRoute,
+  getLearningExampleLegacyRoutes,
+} from "../packages/scenarios/src/learning-catalog.ts";
+import { tutorialSnapshotCatalog } from "../packages/scenarios/src/tutorial-catalog.ts";
+import { websiteDocumentId } from "../tooling/studio-docs/website-routes.ts";
 import { galleries, galleryExamples } from "./gallery.mjs";
+import { buildSearchBundle } from "../tooling/studio-docs/search-index.ts";
 
 const root = resolve(import.meta.dirname, "..");
 const generated = resolve(import.meta.dirname, "src/content/docs");
@@ -41,6 +48,43 @@ await mkdir(generated, { recursive: true });
 await mkdir(publicDir, { recursive: true });
 const catalog = [];
 const imported = await loadDocumentation(root, playground);
+const legacyRoutes = { "#/": "/", "#/examples": playground };
+for (const page of imported.searchPages) {
+  const destination = `/${websiteDocumentId(page.route)}/`;
+  legacyRoutes[page.route] = destination;
+  for (const alias of page.frontmatter.aliases ?? []) {
+    legacyRoutes[
+      alias.startsWith("#/")
+        ? alias
+        : page.route.slice(0, page.route.lastIndexOf("/") + 1) + alias
+    ] = destination;
+  }
+}
+for (const entry of learningExampleCatalog) {
+  const route = getLearningExampleRoute(entry);
+  for (const alias of [
+    route,
+    ...getLearningExampleLegacyRoutes(entry),
+    `#/workbench/${entry.slug}`,
+  ])
+    legacyRoutes[alias] = playground + route;
+}
+for (const entry of tutorialSnapshotCatalog)
+  legacyRoutes[`#/workbench/${entry.slug}`] =
+    `${playground}#/workbench/${entry.slug}`;
+await writeFile(
+  resolve(publicDir, "legacy-routes.json"),
+  JSON.stringify(legacyRoutes),
+);
+await writeFile(
+  resolve(publicDir, "search.json"),
+  JSON.stringify(
+    buildSearchBundle({
+      pages: imported.searchPages,
+      examples: learningExampleCatalog,
+    }),
+  ),
+);
 const records = [...(await loadAuthored(root)), ...imported.records];
 const minimalExamples = new Map();
 const registeredExamples = await loadMinimalExamples(root);

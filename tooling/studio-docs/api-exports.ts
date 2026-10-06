@@ -14,6 +14,7 @@ import {
 } from "typescript/unstable/sync";
 
 import type { PublicDocFrontmatter } from "./model";
+import { isClassDeclaration, isInterfaceDeclaration, isTypeAliasDeclaration, isPropertyDeclaration, isMethodDeclaration, isGetAccessorDeclaration, isSetAccessorDeclaration, SyntaxKind } from "typescript/unstable/ast";
 
 export interface PublicApiEntryPoint {
   readonly values: readonly string[];
@@ -208,16 +209,48 @@ export async function collectPublicApiDetails(
           const symbol = isAlias(exported) ? checker.getAliasedSymbol(exported) : exported;
           const declaration = symbol.declarations[0]?.resolve();
           if (!declaration) throw new Error(`Missing declaration for ${exported.name}`);
-          const file = declaration.getSourceFile();
-          const text = readFileSync(file.fileName, "utf8");
+          const location = (node: typeof declaration) => {
+            const file = node.getSourceFile();
+            return { file: file.fileName, line: file.getLineAndCharacterOfPosition(node.getStart()).line + 1, source: file.text };
+          };
+          const isType = (symbol.flags & (SymbolFlags.TypeAlias | SymbolFlags.Interface | SymbolFlags.Class)) !== 0;
+          const type = isType ? checker.getDeclaredTypeOfSymbol(symbol) : checker.getTypeOfSymbolAtLocation(symbol, declaration);
+          let signature = `${exported.name}: ${checker.typeToString(type, declaration, 1)}`;
+          if (isInterfaceDeclaration(declaration) || isClassDeclaration(declaration)) {
+            const parameters = declaration.typeParameters?.map(parameter => parameter.getText()).join(", ");
+            const heritage = declaration.heritageClauses?.map(clause => clause.getText()).join(" ");
+            signature = `${isClassDeclaration(declaration) ? "class" : "interface"} ${exported.name}${parameters ? `<${parameters}>` : ""}${heritage ? ` ${heritage}` : ""}`;
+          } else if (isTypeAliasDeclaration(declaration)) {
+            const parameters = declaration.typeParameters?.map(parameter => parameter.getText()).join(", ");
+            signature = `type ${exported.name}${parameters ? `<${parameters}>` : ""} = ${declaration.type.getText()}`;
+          }
+          const members = isType ? checker.getPropertiesOfType(type).flatMap(member => {
+            // Nominal symbol brands are implementation identity, not authorable options.
+            if (member.name.startsWith("__@")) return [];
+            const node = member.declarations[0]?.resolve();
+            if (!node || node.getSourceFile().fileName.includes("/node_modules/")) return [];
+            if (isPropertyDeclaration(node) || isMethodDeclaration(node) || isGetAccessorDeclaration(node) || isSetAccessorDeclaration(node)) {
+              if (node.name.kind === SyntaxKind.PrivateIdentifier || node.modifiers?.some(modifier => modifier.kind === SyntaxKind.PrivateKeyword || modifier.kind === SyntaxKind.ProtectedKeyword)) return [];
+            }
+            return [{
+              name: member.name,
+              optional: (member.flags & SymbolFlags.Optional) !== 0,
+              readonly: /^(?:(?:public|declare|static|abstract|override)\s+)*readonly\b/.test(node.getText()) || (isGetAccessorDeclaration(node) && !member.declarations.some(handle => { const declaration = handle.resolve(); return declaration && isSetAccessorDeclaration(declaration); })),
+              description: member.getDocumentationComment(checker),
+              tags: member.getJsDocTags(checker),
+              signature: checker.typeToString(checker.getTypeOfSymbolAtLocation(member, node), node, 1),
+              ...location(node),
+            }];
+          }) : [];
           return {
             entry,
             name: exported.name,
             description: symbol.getDocumentationComment(checker),
             tags: symbol.getJsDocTags(checker),
-            signature: checker.typeToString(checker.getTypeOfSymbolAtLocation(symbol, declaration), declaration, 1),
-            file: file.fileName,
-            line: text.slice(0, declaration.getStart()).split("\n").length,
+            signature,
+            isType,
+            members,
+            ...location(declaration),
           };
         });
       });

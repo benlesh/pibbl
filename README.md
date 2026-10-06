@@ -150,14 +150,17 @@ then run:
 
 ```sh
 corepack pnpm@11.21.0 install --frozen-lockfile
-corepack pnpm@11.21.0 playground
+corepack pnpm@11.21.0 build
+corepack pnpm@11.21.0 website
 ```
 
-Open <http://localhost:5173/#/examples>. The Pibbl Interactive Examples Studio
-contains 61 focused lessons: 60 use JSX and one demonstrates the complete
-non-JSX API. Every lesson pairs a live Canvas with editable, type-aware source.
-The separate `#/testing` area contains 26 deterministic laboratories used by
-browser verification. Old `#/scenarios` URLs redirect there.
+Open <http://localhost:4321/playground/>. Documentation, API search, examples,
+and the editable live preview share one website. API details incorporate JSDoc
+and link to the exact source snapshot used for the build.
+
+The legacy Studio remains a private development and verification tool:
+`corepack pnpm@11.21.0 studio:dev` serves its test laboratories at
+<http://localhost:5173/#/testing>. It is not needed to run or deploy the website.
 
 To exercise built package output instead of source aliases:
 

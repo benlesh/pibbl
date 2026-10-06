@@ -1,4 +1,19 @@
 /** The website and Studio use the same destination for each public document. */
+export function resolveWebsiteLegacyHash(hash: string, routes: Readonly<Record<string, string>>): string | undefined {
+  const end = hash.slice(1).search(/[?#]/);
+  const route = end < 0 ? hash : hash.slice(0, end + 1);
+  const destination = routes[route];
+  if (destination === undefined) return undefined;
+  const suffix = hash.slice(route.length);
+  // Studio document hashes placed the query after the heading fragment.
+  // Example shares keep that query inside their hash-based editor route.
+  if (!destination.includes("#") && suffix.startsWith("#") && suffix.includes("?")) {
+    const query = suffix.indexOf("?");
+    return destination + suffix.slice(query) + suffix.slice(0, query);
+  }
+  return destination + suffix;
+}
+
 export function websiteDocumentId(studioRoute: string): string {
   if (studioRoute === "#/learn") return "guides/learning-path";
   if (studioRoute === "#/api") return "reference/overview";

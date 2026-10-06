@@ -182,7 +182,15 @@ export async function loadDocumentation(root, playground) {
     ),
   );
   await addApiDetails(root, records);
-  return { records, entries };
+  const searchPages = loaded.map((page) => {
+    const record = records.find((record) => record.id === page.id);
+    return {
+      ...page,
+      plainText: page.plainText + (record?.meta.apiSearchText ?? ""),
+      sections: [...page.sections, ...(record?.meta.apiSearchSections ?? [])],
+    };
+  });
+  return { records, entries, searchPages };
 }
 
 export async function loadAuthored(root) {

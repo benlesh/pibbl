@@ -72,7 +72,7 @@ const fieldBoosts = {
 
 const exactApiSymbolBoost = 1_000_000;
 const publicSearchUrl =
-  /^#\/(?:learn(?:\/(?:guides|tutorials)(?:\/[a-z0-9]+(?:-[a-z0-9]+)*)*)?|api(?:\/(?:components|functions|hooks|types)(?:\/[a-z0-9]+(?:-[a-z0-9]+)*)*)?|examples\/(?:drawing|composition|layout|three|events-and-interaction|focus-and-keyboard)\/[a-z0-9]+(?:-[a-z0-9]+)*)(?:#[a-z0-9]+(?:-[a-z0-9]+)*)?$/u;
+  /^#\/(?:learn(?:\/(?:guides|tutorials)(?:\/[a-z0-9]+(?:-[a-z0-9]+)*)*)?|api(?:\/(?:components|functions|hooks|types)(?:\/[a-z0-9]+(?:-[a-z0-9]+)*)*)?|examples\/(?:drawing|composition|layout|three|events-and-interaction|focus-and-keyboard)\/[a-z0-9]+(?:-[a-z0-9]+)*)(?:#[A-Za-z0-9_-]+)?$/u;
 
 /**
  * The matching configuration must remain identical when the browser restores
