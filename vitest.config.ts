@@ -1,3 +1,4 @@
+import PibblActionsReporter from "./tooling/vitest-actions-reporter.mjs";
 import { writeFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { defineBrowserCommand, playwright } from "@vitest/browser-playwright";
@@ -170,6 +171,9 @@ export default defineConfig(({ mode }) => ({
           ],
   },
   test: {
+    ...(process.env.GITHUB_ACTIONS === "true"
+      ? { reporters: ["default", new PibblActionsReporter()] }
+      : {}),
     exclude: [
       ...configDefaults.exclude,
       "packages/text/.cache/**",

@@ -1,3 +1,4 @@
+import PibblActionsReporter from "./vitest-actions-reporter.mjs";
 import { playwright } from "@vitest/browser-playwright";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
@@ -32,6 +33,9 @@ export default defineConfig({
     ],
   },
   test: {
+    ...(process.env.GITHUB_ACTIONS === "true"
+      ? { reporters: ["default", new PibblActionsReporter()] }
+      : {}),
     environment: "node",
     include: ["tooling/surviving-package-entries.test.ts"],
     browser: {

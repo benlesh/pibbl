@@ -31,14 +31,22 @@ function baselineSnapshot() {
   );
 }
 
+let smokeCheck = 0;
 function runSmoke(environment = {}, testFile = smokeArguments[0]) {
+  const expectedFailure = Boolean(environment.VITE_PIBBL_VISUAL_DRILL || environment.VITE_PIBBL_DRAWING_VISUAL_DRILL);
   const result = spawnSync(
     process.execPath,
     [vitestEntry, 'run', testFile, ...smokeArguments.slice(1)],
     {
       cwd: repositoryRoot,
       encoding: 'utf8',
-      env: { ...process.env, ...environment },
+      env: {
+        ...process.env,
+        ...environment,
+        PIBBL_TEST_REPORT_NAME: `Visual safeguard · check ${++smokeCheck} · ${testFile}`,
+        // Deliberate regressions are verified by this script, not CI failures.
+        ...(expectedFailure ? { GITHUB_ACTIONS: "false" } : {}),
+      },
     },
   );
   const output = `${result.stdout ?? ''}${result.stderr ?? ''}`;
