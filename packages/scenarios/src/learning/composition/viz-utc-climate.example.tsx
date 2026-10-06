@@ -530,7 +530,7 @@ const short = { maxHeight: 540 };
 const spaciousOnly = { when: [{ query: short, style: { opacity: 0 } }] };
 
 function Label({ x, y, text, size = 13, color = muted, weight = 400, style }: { x: number; y: number; text: string; size?: number; color?: string; weight?: number; style?: PibblResponsiveStyle<TextStyle> }) {
-  return <Text pointerEvents="none" style={{ left: x, top: y, font: `${weight} ${size}px sans-serif`, fill: color, textBaseline: "alphabetic", when: style?.when }}>{text}</Text>;
+  return <Text pointerEvents="none" style={{ left: x, top: y, font: `${weight} ${size}px sans-serif`, fill: color, textBaseline: "alphabetic", textAlign: style?.textAlign, opacity: style?.opacity, when: style?.when }}>{text}</Text>;
 }
 function Chart({ left, recent, adjusted, compact }: { left: number; recent: boolean; adjusted: boolean; compact: boolean }) {
   const { width, height } = useLayoutBox();

@@ -36,6 +36,11 @@ describe("Studio editor declaration libraries", () => {
     const filePaths = new Set(libraries.map(({ filePath }) => filePath));
 
     expect(libraries.map(({ filePath }) => filePath).sort()).toEqual([
+      "file:///node_modules/@pibbl/core/machines/animation.d.ts",
+      "file:///node_modules/@pibbl/core/machines/index.d.ts",
+      "file:///node_modules/@pibbl/core/sprites/formats/aseprite.d.ts",
+      "file:///node_modules/@pibbl/core/sprites/formats/texture-packer.d.ts",
+      "file:///node_modules/@pibbl/core/sprites/index.d.ts",
       "file:///node_modules/@pibbl/core/index.d.ts",
       "file:///node_modules/@pibbl/core/filters.d.ts",
       "file:///node_modules/@pibbl/core/jsx-runtime.d.ts",

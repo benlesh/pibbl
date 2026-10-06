@@ -1214,11 +1214,11 @@ describe("learning example catalog", () => {
     );
   });
 
-  it("contains 87 unique, ordered, source-backed routes including rainy window, optional filters, and underwater", async () => {
+  it("contains 96 unique, ordered, source-backed routes including rainy window, optional filters, and underwater", async () => {
     expect(validateLearningExampleCatalog(learningExampleCatalog)).toBe(
       learningExampleCatalog,
     );
-    expect(learningExampleCatalog).toHaveLength(87);
+    expect(learningExampleCatalog).toHaveLength(96);
     expect(
       learningExampleCatalog
         .filter(
@@ -1310,6 +1310,16 @@ describe("learning example catalog", () => {
         "wedge",
       ],
       composition: [
+        "state-machines",
+        "sprites",
+        "viz-utc-basics",
+        "viz-utc-climate",
+        "viz-numeric-axis",
+        "viz-long-labels",
+        "viz-log-basics",
+        "viz-log-masses",
+        "viz-signed-population",
+
         "embers-physics",
         "energy-transitions",
         "visibility-transitions",
@@ -1446,6 +1456,15 @@ describe("learning example catalog", () => {
       "optional-filters",
       "visibility-transitions",
       "embers-physics",
+      "state-machines",
+      "sprites",
+      "viz-utc-basics",
+      "viz-utc-climate",
+      "viz-numeric-axis",
+      "viz-long-labels",
+      "viz-log-basics",
+      "viz-log-masses",
+      "viz-signed-population",
     ]);
 
     const startExamples = learningExampleCatalog.filter(
@@ -1802,6 +1821,23 @@ describe("learning example catalog", () => {
       .flatMap((entry) => entry.api);
     expect(new Set(drawingAndComposition)).toEqual(
       new Set([
+        "LogScale",
+        "PointScale",
+        "Sprite",
+        "SymlogScale",
+        "assign",
+        "defineMachine",
+        "defineSpriteAnimation",
+        "extent",
+        "formatNumber",
+        "linearTicks",
+        "loadSpriteSheet",
+        "niceLinearDomain",
+        "niceUTCDomain",
+        "useLogScale",
+        "useMachine",
+        "usePointScale",
+        "useSymlogScale",
         "affineTransform",
         "bifrost",
         "composeTransforms",
