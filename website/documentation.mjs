@@ -10,6 +10,7 @@ import {
 } from "../tooling/studio-docs/api-exports.ts";
 import { parse } from "yaml";
 import MarkdownIt from "markdown-it";
+import { addApiDetails } from "./api-details.mjs";
 
 const markdown = new MarkdownIt();
 export const topics = {
@@ -180,6 +181,7 @@ export async function loadDocumentation(root, playground) {
       })),
     ),
   );
+  await addApiDetails(root, records);
   return { records, entries };
 }
 

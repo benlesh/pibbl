@@ -5,12 +5,14 @@ import CatalogDemo from './CatalogDemo.astro';
 import EffectDemo from './EffectDemo.astro';
 import Gallery from './Gallery.astro';
 import MinimalPreview from './MinimalPreview.astro';
+import Playground from './Playground.astro';
 import { galleries, galleryExamples } from '../../gallery.mjs';
 const route = Astro.url.pathname.replace(/\/$/, '');
 const slug = route.split('/').at(-1);
 const gallery = galleries.find(gallery => route === `/catalogs/${gallery.id}`);
 ---
 <Default>
+  {route === '/playground' && <Playground />}
   {route.startsWith('/minimal-examples/') && <MinimalPreview id={route.slice('/minimal-examples/'.length)} />}
   {route.startsWith('/examples/') && galleryExamples.some(example => example.slug === slug) && <EffectDemo slug={slug} />}
   {route === '/agents/topics/animation' && <>

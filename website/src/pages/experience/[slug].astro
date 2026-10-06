@@ -5,7 +5,7 @@ export function getStaticPaths() {
   return galleryExamples.map(example => ({ params: { slug: example.slug }, props: { example } }));
 }
 const { example } = Astro.props;
-const playground = import.meta.env.PIBBL_PLAYGROUND_URL ?? 'http://localhost:5174/';
+const playground = '/playground/';
 ---
 <!doctype html>
 <html lang="en">

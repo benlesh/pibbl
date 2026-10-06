@@ -15,7 +15,7 @@ import { galleries, galleryExamples } from "./gallery.mjs";
 const root = resolve(import.meta.dirname, "..");
 const generated = resolve(import.meta.dirname, "src/content/docs");
 const publicDir = resolve(import.meta.dirname, "public/generated");
-const playground = process.env.PIBBL_PLAYGROUND_URL ?? "http://localhost:5173/";
+const playground = "/playground/";
 const revision = execFileSync("git", ["rev-parse", "--short", "HEAD"], {
   cwd: root,
   encoding: "utf8",

@@ -8,6 +8,18 @@ html {
 .sl-markdown-content pre {
   font-size: 0.9rem;
 }
+.api-source span {
+  display: block;
+  scroll-margin-top: 6rem;
+}
+.api-source span:target {
+  background: var(--sl-color-gray-5);
+}
+.api-source a {
+  display: inline-block;
+  min-width: 4ch;
+  text-align: right;
+}
 .recipe-demo {
   margin-block: 1.5rem;
   padding-block: 1rem;

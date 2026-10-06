@@ -1,0 +1,36 @@
+---
+import { learningExampleCatalog } from '../../../packages/scenarios/src/learning-catalog';
+---
+<section id="website-playground" aria-label="Interactive playground">
+  <label for="playground-example">Example</label>
+  <select id="playground-example">
+    {learningExampleCatalog.map(entry => <option value={`#/examples/${entry.browseGroup}/${entry.slug}`}>{entry.title}</option>)}
+  </select>
+  <h2 id="playground-title">Loading example…</h2>
+  <div id="playground-editor" aria-live="polite">Loading the editor…</div>
+  <noscript>The interactive editor requires JavaScript. Guides, API reference, and example source remain readable without it.</noscript>
+</section>
+<script>
+  import { mountWebsitePlayground } from '../playground';
+  if (document.getElementById('website-playground')) mountWebsitePlayground();
+</script>
+<style is:global>
+  #website-playground { min-width: 0; }
+  #website-playground select { max-width: 100%; padding: 0.4rem; font: inherit; }
+  #website-playground .studio-workbench { display: grid; gap: 1rem; }
+  #website-playground .studio-preview,
+  #website-playground .studio-editor { min-width: 0; overflow: hidden; border: 1px solid var(--sl-color-gray-4); }
+  #website-playground .studio-panel-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.5rem; padding: 0.75rem; }
+  #website-playground .studio-panel-heading > div:first-child { display: flex; gap: 0.5rem; }
+  #website-playground .studio-run-status { margin: 0; font-size: 0.8rem; }
+  #website-playground .studio-preview__host { position: relative; width: 100%; background: white; }
+  #website-playground .studio-preview__frame { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+  #website-playground .studio-editor__host { height: 480px; }
+  #website-playground .studio-tools { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+  #website-playground button { padding: 0.35rem 0.65rem; cursor: pointer; }
+  #website-playground .studio-diagnostics,
+  #website-playground .studio-output { padding: 0.75rem; font-size: 0.85rem; }
+  #website-playground .studio-output__list { max-height: 180px; overflow: auto; }
+  #website-playground .studio-workbench :where(*) { margin-top: 0; }
+  #website-playground .monaco-editor { text-align: left; }
+</style>

@@ -56,10 +56,19 @@ Run from the repository:
 
 ```sh
 corepack pnpm@11.21.0 --filter @pibbl/website dev
-corepack pnpm@11.21.0 playground
 ```
 
-The site defaults to port 4321 and its configured editor URL to `http://localhost:5173/`. Set `PIBBL_PLAYGROUND_URL` if the second server uses another URL. Restart the website after changing authored documentation; source expansion runs at startup.
+The site defaults to port 4321. The existing editor now runs at `/playground/`
+inside the documentation site, including shared-code hashes and tutorial
+workbenches. No second public server is needed. The standalone Studio remains
+available for development/test labs during migration. Restart the website after
+changing authored documentation; source expansion runs at startup.
+
+The `signal` reference is the first authored/JSDoc integration slice. TypeScript
+resolves its public export to the declaration, signature, parameter and return
+documentation. Source links open a line-addressable snapshot from this build;
+GitHub links are pinned to HEAD and included only if the file matches that commit.
+Other API pages retain their existing reference until this presentation is evaluated.
 
 ```sh
 corepack pnpm@11.21.0 --filter @pibbl/website build
@@ -70,7 +79,11 @@ node tooling/website-documentation-browser.mjs
 
 The browser check uses `PIBBL_WEBSITE_URL` if supplied. It captures screenshots in `/tmp`, not source control. Examples use built public packages; build `@pibbl/core`, `@pibbl/three`, and `@pibbl/text` first if their distributions are absent or stale. The website declares these dependencies so recursive workspace builds order them correctly.
 
-Deploy `dist/` as static files with real 404 handling. Before deployment, configure the hosted Studio URL and its reciprocal `VITE_PIBBL_WEBSITE_URL`. Studio documentation hashes redirect to the website; examples and tutorial workbenches remain in Studio. Deployment, final canonical origin/sitemap, base-path rollout, individual expansion of grouped APIs, website search, and visual design remain follow-up work. This preview does not replace the deployed site.
+Deploy `dist/` as static files with real 404 handling. Documentation and playground
+links are same-site paths. Deployment, legacy Studio URL migration, final canonical
+origin/sitemap, base-path rollout, individual expansion of grouped APIs, website
+search, and visual design remain follow-up work. This preview does not replace
+the deployed site.
 
 The coverage JSON records reference and minimal-example destinations, not a claim of exhaustive behavior testing or freshly executed browser results. The documentation browser check parses every generated page to verify heading links and static images, then exercises no-JavaScript reference, agent, minimal-example, and Markdown reading paths. Agent topics distinguish recommended verification from executed evidence. New sources should use supported public imports, include host setup, and preserve canonical example ownership.
 

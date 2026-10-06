@@ -41,6 +41,8 @@
     "build": "corepack pnpm@11.21.0 -r run build",
     "dev": "corepack pnpm@11.21.0 -r run dev && corepack pnpm@11.21.0 playground",
     "playground": "corepack pnpm@11.21.0 -C playground run playground:dev",
+    "website": "corepack pnpm@11.21.0 --filter @pibbl/website dev",
+    "website:build": "corepack pnpm@11.21.0 --filter @pibbl/website build",
     "playground:built": "corepack pnpm@11.21.0 build && corepack pnpm@11.21.0 -C playground run playground:built",
     "playground:build": "node tooling/verify-studio-pivot.mjs && corepack pnpm@11.21.0 -C playground run playground:build",
     "playground:build:studio-docs-acceptance": "node tooling/verify-studio-pivot.mjs && corepack pnpm@11.21.0 -C playground run playground:build:studio-docs-acceptance",

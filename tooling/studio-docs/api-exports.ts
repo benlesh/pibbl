@@ -186,6 +186,50 @@ export async function collectPublicExports(
   }
 }
 
+/** Read documentation from resolved public declarations, never from barrel text. */
+export async function collectPublicApiDetails(
+  entryPaths: Readonly<Record<string, string>>,
+  compilerOptions: CompilerOptions,
+  names: readonly string[],
+) {
+  const configuration = await createCompilerConfiguration(entryPaths, compilerOptions);
+  const api = new API({ cwd: process.cwd() });
+  try {
+    const snapshot = api.updateSnapshot({ openProjects: [configuration.path] });
+    try {
+      return Object.entries(entryPaths).flatMap(([entry, path]) => {
+        const project = snapshot.getDefaultProjectForFile(path);
+        if (!project) throw new Error(`Missing documentation project for ${path}`);
+        const { checker, program } = project;
+        const source = program.getSourceFile(path);
+        const module = source && checker.getSymbolAtLocation(source);
+        if (!module) throw new Error(`Missing public entry ${path}`);
+        return checker.getExportsOfModule(module).filter(symbol => names.includes(symbol.name)).map(exported => {
+          const symbol = isAlias(exported) ? checker.getAliasedSymbol(exported) : exported;
+          const declaration = symbol.declarations[0]?.resolve();
+          if (!declaration) throw new Error(`Missing declaration for ${exported.name}`);
+          const file = declaration.getSourceFile();
+          const text = readFileSync(file.fileName, "utf8");
+          return {
+            entry,
+            name: exported.name,
+            description: symbol.getDocumentationComment(checker),
+            tags: symbol.getJsDocTags(checker),
+            signature: checker.typeToString(checker.getTypeOfSymbolAtLocation(symbol, declaration), declaration, 1),
+            file: file.fileName,
+            line: text.slice(0, declaration.getStart()).split("\n").length,
+          };
+        });
+      });
+    } finally {
+      snapshot.dispose();
+    }
+  } finally {
+    api.close();
+    await rm(configuration.directory, { recursive: true, force: true });
+  }
+}
+
 export function analyzeApiCoverage(
   inventory: PublicApiInventory,
   pages: readonly ApiCoveragePage[],

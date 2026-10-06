@@ -1,9 +1,15 @@
 import { defineConfig } from "astro/config";
 import starlight from "@astrojs/starlight";
+import { pibblRuntimeSource } from "../tooling/pibbl-runtime-source.ts";
+import { textAssets } from "../tooling/text-assets.ts";
 
 export default defineConfig({
   output: "static",
   devToolbar: { enabled: false },
+  vite: {
+    plugins: [pibblRuntimeSource("built"), textAssets()],
+    server: { headers: { "Access-Control-Allow-Origin": "*" } },
+  },
   integrations: [
     starlight({
       title: "Pibbl",
