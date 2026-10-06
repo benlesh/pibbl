@@ -294,3 +294,23 @@ for the newly added exports. No aggregate trust claim.
 Status: **slice ready for feedback**, uncommitted. Reference bands, axis titles and
 units, composable legends/title/caption/source furniture, and broader furniture
 hardening remain outstanding. Composition continues to own layout and paint order.
+
+### 2026-10-05 — reference-band slice
+
+Accepted grid/reference-line slice committed as `7b7c2f6f`; no merge or push.
+`ReferenceBand` adds a dedicated continuous interval operation with signal-valued
+numeric endpoints, caller-owned pixel span, direction, fill, and opacity. It
+supports reversed intervals/ranges, rejects categorical scales and out-of-domain
+values, and owns no layout, labels, or hit geometry. Census composition shades
+the loss region, with explicit explanatory text and all categories preserved.
+
+Runnable: `http://127.0.0.1:5195/#/examples/composition/viz-signed-population`.
+Fresh Node 24.15.0 / pnpm 11.21.0 evidence: six focused source Chromium tests pass;
+core build, repository typecheck and focused lint pass. Studio desktop/compact
+renders inspected with no page errors. API documentation includes signature,
+defaults/errors/signals and minimal runnable example; editor/type probes updated.
+Status: **slice ready for feedback**, uncommitted; broader band edge-case/built
+browser verification and aggregate gate remain pending. Text furniture and legends
+remain next. Concurrent minimal-viz documentation work was preserved unstaged.
+Packed ReferenceBand verification also passed: Bundler/NodeNext type consumers,
+exact runtime exports, core identity/private boundaries, and scale-family isolation.

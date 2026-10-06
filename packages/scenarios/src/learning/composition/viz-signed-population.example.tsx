@@ -1,5 +1,5 @@
 import { FocusManagement, Circle, Group, Line, Overlay, Rectangle, Text, pibbl, useLayoutBox, useSignal, type PibblController, type WritableSignal } from "@pibbl/core";
-import { GridLines, ReferenceLine, Axis, PointScale, SymlogScale, ScaleAdjust, usePointScale, useSymlogScale, formatNumber } from "@pibbl/core/viz";
+import { ReferenceBand, GridLines, ReferenceLine, Axis, PointScale, SymlogScale, ScaleAdjust, usePointScale, useSymlogScale, formatNumber } from "@pibbl/core/viz";
 // US Census Bureau, Vintage 2023 estimates, published 19 December 2023.
 // Six most populous states; population change July 1, 2022–July 1, 2023, people.
 // https://www.census.gov/newsroom/press-releases/2023/population-trends-return-to-pre-pandemic-norms.html
@@ -14,6 +14,7 @@ const ink = "#172f3d", muted = "#617783", gain = "#087f8c", loss = "#b65a35";
 function Plot({ selected, left, compact }: { selected: WritableSignal<number>; left: number; compact: boolean }) {
   const x = usePointScale("state").get(), y = useSymlogScale("change").get();
   return <>
+    <ReferenceBand scale="change" direction="horizontal" span={[0, x.frame.width]} values={[-110000, 0]} style={{ fill: loss, opacity: 0.07 }} />
     <GridLines scale="change" direction="horizontal" span={[0, x.frame.width]} tickValues={[-100000, 100000, 500000]} />
     <ReferenceLine scale="change" direction="horizontal" span={[0, x.frame.width]} value={0} style={{ stroke: "#82999f" }} />
     <Axis scale="change" position="left" tickValues={[-100000, 0, 100000, 500000]} labelOverlap="skip" labelGap={8}
@@ -60,7 +61,7 @@ function Scene() {
       </Overlay>
     </Group>
     <Text style={{ left: 24, top: height - 29, font: "10px sans-serif", fill: muted }}>US Census Bureau · Vintage 2023 estimates</Text>
-    <Text style={{ left: 24, top: height - 14, font: "10px sans-serif", fill: muted }}>2022–2023 · signed change · nonlinear axis</Text>
+    <Text style={{ left: 24, top: height - 14, font: "10px sans-serif", fill: muted }}>2022–2023 · shaded = loss · nonlinear axis</Text>
   </>;
 }
 export default function mount(canvas: HTMLCanvasElement): PibblController {

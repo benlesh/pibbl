@@ -264,3 +264,8 @@ Furniture progress: accepted symlog/point slice committed as `ac035d33`.
 Grid/reference lines now have a runnable Census composition with focused geometry,
 responsive interaction, and package checks. Feedback-ready, not fully hardened;
 reference bands and text/legend furniture remain next.
+
+Reference-band slice is now runnable in the Census chart: a shaded loss region,
+explicitly described in its source note. Grid/reference lines are accepted and
+committed (`7b7c2f6f`); the band is feedback-ready and uncommitted. Text furniture
+and legends remain outstanding.

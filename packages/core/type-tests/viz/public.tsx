@@ -502,3 +502,8 @@ void <GridLines scale="y" direction="horizontal" span={signal<readonly [number, 
 void <ReferenceLine scale="y" direction="horizontal" span={[0, 200]} value={signal(0)} />;
 // @ts-expect-error count and explicit ticks are mutually exclusive
 void <GridLines scale="y" direction="horizontal" span={[0, 200]} tickCount={5} tickValues={[0]} />;
+
+import { ReferenceBand } from "@pibbl/core/viz";
+void <ReferenceBand scale="y" direction="horizontal" span={[0, 200]} values={signal<readonly [number, number]>([-10, 0])} />;
+// @ts-expect-error reference bands require numeric intervals
+void <ReferenceBand scale="y" direction="horizontal" span={[0, 200]} values={["A", "B"]} />;

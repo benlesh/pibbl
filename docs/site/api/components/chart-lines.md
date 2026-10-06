@@ -5,7 +5,7 @@ summary: Decorative scale-aligned guides with explicit composition-owned spans.
 kind: api
 slug: chart-lines
 apiCategory: component
-symbols: [GridLines, ReferenceLine, ChartLineProps, GridLinesProps, ReferenceLineProps]
+symbols: [GridLines, ReferenceLine, ChartLineProps, GridLinesProps, ReferenceLineProps, ReferenceBand, ReferenceBandProps]
 ---
 
 # Grid and reference lines
@@ -60,3 +60,37 @@ export default function mount(canvas: HTMLCanvasElement) {
 
 The [signed population example](/examples/composition/viz-signed-population)
 uses horizontal guides and a zero reference across responsive symlog geometry.
+
+## Reference bands
+
+`ReferenceBand(props: ReferenceBandProps)` paints a continuous numeric interval.
+It takes the same required `scale`, `direction`, and signal-valued pixel `span`
+as lines, plus `values: SignalValue<readonly [number, number]>`. Endpoints may
+be ascending, descending, or equal. Reversed ranges work normally. Equal values
+or a zero-length span paint zero area. The interval must stay within the domain;
+there is no implicit clipping or extrapolation. Linear, UTC, log, and symlog
+scales are supported. UTC values are epoch milliseconds.
+
+Its signal-valued `style` accepts signal-valued `fill` (default `#dce5e8`) and
+`opacity` (default 0.35). It paints no border, labels, or hit target. Place it
+before grid lines and marks; the parent owns allocation and source order.
+Signals update geometry and paint, and subscriptions detach on removal/disposal.
+Missing/unknown scale IDs, categorical scales, and invalid directions throw
+`TypeError`; malformed/nonfinite endpoint pairs, out-of-domain values, overflowing
+span length, and invalid opacity throw `RangeError`.
+
+Minimal runnable band demo:
+
+```tsx
+import { pibbl } from "@pibbl/core";
+import { LinearScale, ReferenceBand } from "@pibbl/core/viz";
+export default function mount(canvas: HTMLCanvasElement) {
+  return pibbl(canvas,
+    <LinearScale id="y" domain={[-10, 10]} range={[180, 20]}>
+      <ReferenceBand scale="y" direction="horizontal" span={[20, 280]} values={[-10, 0]} style={{ fill: "#b65a35", opacity: 0.1 }} />
+    </LinearScale>);
+}
+```
+
+The population example shades the negative half of its domain to distinguish
+population loss from gain; this is a sign region, not a confidence interval.

@@ -123,3 +123,5 @@ export { usePointScale } from "./lib/use-point-scale.js";
 export type { PointScaleProps, ResolvedPointScale } from "./lib/types.js";
 export { GridLines, ReferenceLine } from "./lib/chart-lines.js";
 export type { ChartLineProps, GridLinesProps, ReferenceLineProps } from "./lib/chart-lines.js";
+export { ReferenceBand } from "./lib/reference-band.js";
+export type { ReferenceBandProps } from "./lib/reference-band.js";
