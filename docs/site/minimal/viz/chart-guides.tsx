@@ -1,6 +1,8 @@
 import { Group, Overlay, Text, pibbl } from "@pibbl/core";
 import {
   Axis,
+  AxisTitle,
+  type AxisTitleProps,
   LinearScale,
   LineSeries,
   PointSeries,
@@ -35,9 +37,16 @@ const zone: ReferenceBandProps = {
   values: [40, 60],
   style: { fill: "#bde8d5", opacity: 1 },
 };
+const fillTitle: AxisTitleProps = {
+  scale: "fill",
+  position: "left",
+  label: "Tank fill",
+  unit: "%",
+  offset: 50,
+};
 const canvas = document.createElement("canvas");
 canvas.width = 540;
-canvas.height = 330;
+canvas.height = 350;
 canvas.style.cssText = "max-width:100%;height:auto";
 document.body.append(canvas);
 const app = pibbl(
@@ -72,6 +81,14 @@ const app = pibbl(
             range={[160, 0]}
             style={{ width: 400, height: 160 }}
           >
+            <AxisTitle {...fillTitle} />
+            <AxisTitle
+              scale="day"
+              position="bottom"
+              label="Elapsed time"
+              unit="days"
+              offset={42}
+            />
             <ReferenceBand {...zone} />
             <GridLines {...grid} />
             <ReferenceLine {...target} />
@@ -108,7 +125,7 @@ const app = pibbl(
       </Overlay>
     </Group>
     <Text
-      style={{ left: 24, top: 305, font: "12px sans-serif", fill: "#475569" }}
+      style={{ left: 24, top: 330, font: "12px sans-serif", fill: "#475569" }}
     >
       Day 1 below zone · Day 2 inside · Day 3 above
     </Text>

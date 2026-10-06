@@ -41,7 +41,7 @@ try {
     await page.waitForTimeout(500);
     if (example.id === "text/outline") {
       await page.waitForFunction(() =>
-        document.querySelector("p")?.textContent?.startsWith("9 glyphs;"),
+        document.querySelector("p")?.textContent?.startsWith("11 glyphs;"),
       );
     }
     assert.deepEqual(errors, [], example.id);
@@ -198,7 +198,7 @@ try {
     }
     if (example.id === "text/outline") {
       await page.waitForFunction(() =>
-        document.querySelector("p")?.textContent?.startsWith("9 glyphs;"),
+        document.querySelector("p")?.textContent?.startsWith("11 glyphs;"),
       );
     }
     assert.deepEqual(errors, [], `${example.id} after interaction`);

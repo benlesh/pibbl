@@ -15,6 +15,7 @@ try {
   for (const script of [
     "website-documentation-browser.mjs",
     "website-unified-browser.mjs",
+    "website-minimal-browser.mjs",
   ]) {
     await new Promise((resolve, reject) => {
       const child = spawn(

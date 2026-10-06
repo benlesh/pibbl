@@ -685,12 +685,21 @@
       {
         "name": "ReferenceBandProps",
         "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "AxisTitle",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "AxisTitleProps",
+        "importPath": "@pibbl/core/viz"
       }
     ],
     "notes": [
       "The readings and 40\u201360% target zone are illustrative. The shaded region is a chosen operating zone, not a statistical confidence interval.",
       "Paint the band first, then grid and target lines, then data marks. Explicit pixel spans keep guides aligned with the plot.",
-      "Creates its own canvas and disposes the mount on pagehide."
+      "Creates its own canvas and disposes the mount on pagehide.",
+      "Axis titles name the measured quantity and units. The composition reserves space outside the plot; AxisTitle does not allocate margins."
     ]
   }
 ]
