@@ -32,7 +32,8 @@
     "src/features/sprites/formats/texture-packer.ts",
     "src/features/physics/2d.ts",
     "src/features/physics/2d-geometry.ts",
-    "src/features/physics/2d-testing.ts"
+    "src/features/physics/2d-testing.ts",
+    "src/features/viz/inspection.ts"
   ],
   "include": []
 }

@@ -95,6 +95,8 @@ interface BarSeriesBaseProps<D> extends PibblEventHandlers, PibblEventParticipat
    * Application data supplied to the component or reported by the event. See {@link SignalValue}.
    */
   readonly data: SignalValue<readonly D[]>;
+  /** Optional committed bar capture; rendering alone performs no inspection searches. */
+  readonly inspection?: import("../inspection/bar.js").BarInspectionRef<D>;
   /** Selects `"vertical"`, `"horizontal"` for orientation. See {@link BarSeriesBaseProps}. */
   readonly orientation?: "vertical" | "horizontal";
   /** Property or callback extracting a bar's discrete category. See {@link BarCategoryAccessor}. */
@@ -202,6 +204,7 @@ export function BarSeries<D>({
   defined,
   style: styleInput,
   pointerEvents,
+  inspection,
   ...events
 }: BarSeriesProps<D>) {
   const categories = useBarScale(categoryScale).get();
@@ -300,6 +303,7 @@ export function BarSeries<D>({
       ? undefined
       : normalize(specified ?? {}, false);
   const nodes: PibblNode[] = [];
+  const captured: import("../inspection/bar.js").CapturedBarMark<D>[] | undefined = inspection ? [] : undefined;
   for (let i = 0; i < data.length; i++) {
     const datum = data[i];
     if (defined && !defined(datum, i, data)) continue;
@@ -329,6 +333,10 @@ export function BarSeries<D>({
       throw new RangeError("BarSeries value extent must be finite.");
     if (extent === 0) continue;
     const vertical = orientation === "vertical";
+    const markFill = fill(from,v);
+    captured?.push(Object.freeze({datum,sourceIndex:i,category:c,group:g ?? undefined,valueStart:from,valueEnd:v,
+      boundsLocal:Object.freeze({x:vertical?start+(slotWidth-bandwidth)/2:Math.min(base,end),y:vertical?Math.min(base,end):start+(slotWidth-bandwidth)/2,width:vertical?bandwidth:extent,height:vertical?extent:bandwidth}),
+      fill:!!markFill,strokeWidthLocal:stroke?strokeWidth:0}));
     nodes.push(
       <Rectangle
         key={i}
@@ -338,7 +346,7 @@ export function BarSeries<D>({
           top: vertical ? Math.min(base, end) : start + (slotWidth - bandwidth) / 2,
           width: vertical ? bandwidth : extent,
           height: vertical ? extent : bandwidth,
-          fill: fill(from, v),
+          fill: markFill,
           stroke,
           strokeWidth,
           opacity: alpha,
@@ -347,5 +355,6 @@ export function BarSeries<D>({
       />,
     );
   }
+  if (inspection) inspection.capture(captured!);
   return <Group {...events}>{nodes}</Group>;
 }

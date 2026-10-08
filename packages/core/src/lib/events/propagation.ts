@@ -1,6 +1,7 @@
 import { getPibblEventDefinition } from './event-definitions.js';
 import {
   createPibblEvent,
+  finishEventDispatch,
   isPibblImmediatePropagationStopped,
   isPibblPropagationStopped,
   setPibblEventInvocation,
@@ -35,7 +36,7 @@ export function dispatchEventPath<K extends PibblEventType>(
   const path = buildEventPath(input.target);
   const event = createPibblEvent({ ...input, path });
   const targetIndex = path.length - 1;
-
+  try {
   for (let index = 0; index < targetIndex; index++) {
     if (isPibblPropagationStopped(event)) break;
     invoke(path[index], input.type, true, 1, event);
@@ -56,6 +57,7 @@ export function dispatchEventPath<K extends PibblEventType>(
   }
 
   return event;
+  } finally { finishEventDispatch(event); }
 }
 
 function invoke(
