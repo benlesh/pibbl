@@ -70,6 +70,7 @@ const LEARNING_VALUE_MODULES = new Set([
   "@pibbl/core/sprites",
   "@pibbl/core/filters",
   VIZ_MODULE,
+  "@pibbl/core/viz/inspection",
   "@pibbl/core/textures",
   CORE_MODULE,
   PARTICLES_MODULE,
@@ -1553,7 +1554,7 @@ export function validateLearningSourceText(
   // Filter factories compose with every supported example package set.
   // The approved-module and named-import checks below still apply to them.
   const basePackageCount = inspection.packageImportModules.filter(
-    (module) => module !== "@pibbl/core/filters",
+    (module) => module !== "@pibbl/core/filters" && module !== "@pibbl/core/viz/inspection",
   ).length;
   const isStirredInkLesson =
     sourcePath ===

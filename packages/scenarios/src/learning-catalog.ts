@@ -123,6 +123,40 @@ function browseGroupFor(
 }
 
 const drafts = [
+  {slug:"viz-painted-inspection",title:"Painted marks versus nearest data",shortTitle:"Painted marks versus nearest data",section:"composition",order:903,
+    summary:"Click two overlapping orders to compare the nearest center with the top painted mark.",api:["PointSeries","paintedPointAt","withInspection"],
+    objectives:["Distinguish recorded data from geometric paint selection.","Inspect typed original records without enriching ordinary events."],
+    prompts:{gesture:"Click, tap or focus the plot and use the keyboard.",code:"Change simulated records or point paint order."},
+    apiNotes:["Clearly labeled deterministic simulation; no external market feed."],canvas:{width:360,height:280},
+    related:["viz-recorded-inspection","viz-lazy-inspection"],load:()=>import("./learning/composition/viz-painted-inspection.example"),
+  },
+
+  {slug:"viz-inspection-workbench",title:"Inspection Workbench",shortTitle:"Inspection Workbench",section:"composition",order:904,
+    summary:"Compare recorded prices, explicit estimates, executions and categorical risk ranges.",api:["PointSeries","paintedPointAt","withInspection"],
+    objectives:["Distinguish recorded data from geometric paint selection.","Inspect typed original records without enriching ordinary events."],
+    prompts:{gesture:"Click, tap or focus the plot and use the keyboard.",code:"Change simulated records or point paint order."},
+    apiNotes:["Clearly labeled deterministic simulation; no external market feed."],canvas:{width:1000,height:640},
+    related:["viz-recorded-inspection","viz-lazy-inspection"],load:()=>import("./learning/composition/viz-inspection-workbench.example"),
+  },
+
+  {slug: "viz-recorded-inspection", title: "Recorded observations", shortTitle: "Recorded observations", section: "composition", order: 901,
+    summary: "Find the recorded quote nearest an order time, and see why it was selected.", api: ["PointSeries", "usePointInspection", "nearestRecordedX"],
+    objectives: ["Inspect the last successful paint through a public query.", "Keep query results tied to original typed observations."],
+    prompts: {gesture: "Choose an order time; focus a button and use Enter or arrow keys.", code: "Change the quote times and requested order times."},
+    apiNotes: ["Labeled deterministic quotes; original records are selected without interpolation."],
+    canvas: {width: 340, height: 280}, related: ["viz-points-and-inspection"],
+    load: () => import("./learning/composition/viz-recorded-inspection.example"),
+  },
+
+  {slug: "viz-lazy-inspection", title: "Lazy event inspection", shortTitle: "Lazy event inspection", section: "composition", order: 902,
+    summary: "Select a simulated order and see two identical inspection requests execute once.", api: ["PointSeries", "usePointInspection", "nearestRecordedX"],
+    objectives: ["Inspect the last successful paint through a public query.", "Keep query results tied to original typed observations."],
+    prompts: {gesture: "Click or tap the plot; focus it and press Enter.", code: "Change the order data or remove the repeated request."},
+    apiNotes: ["Tiny deterministic observations; values are illustrative."],
+    canvas: {width: 340, height: 280}, related: ["viz-points-and-inspection"],
+    load: () => import("./learning/composition/viz-lazy-inspection.example"),
+  },
+
   {
     slug: "embers-physics",
     title: "Embers Physics",

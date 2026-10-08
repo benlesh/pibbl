@@ -646,6 +646,8 @@ export type FillStyle = CanvasRenderingContext2D["fillStyle"] | import('./textur
 export type StrokeStyle = CanvasRenderingContext2D["strokeStyle"] | import('./textures/texture.js').TexturePaint;
 
 export interface PibblInstance {
+  /** Last root traversal published successfully; failed render attempts do not advance it. */
+  committedRenderGeneration?: number;
   canvas: Canvas;
   controller: PibblController;
   root: PibblNode;

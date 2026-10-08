@@ -459,6 +459,8 @@ export interface LineSeriesProps<D>
    * Application data supplied to the component or reported by the event. See {@link SignalValue}.
    */
   readonly data: SignalValue<readonly D[]>;
+  /** Optional committed numeric observation capture; no query execution during paint. */
+  readonly inspection?: import("../inspection/capture-types.js").NumericInspectionRef<D>;
   /** Property key or callback extracting the horizontal domain coordinate. See {@link LineAccessor}. */
   readonly x: SeriesAccessor<D>;
   /** Property key or callback extracting the vertical domain coordinate. See {@link LineAccessor}. */

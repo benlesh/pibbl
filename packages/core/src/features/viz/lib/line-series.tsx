@@ -28,6 +28,7 @@ export function LineSeries<D>({
   xScale: xId,
   yScale: yId,
   defined,
+  inspection,
   curve,
   style: styleInput,
   ...eventProps
@@ -63,6 +64,9 @@ export function LineSeries<D>({
     "LineSeries",
   );
   const path = new Path2D();
+  const captured: import("../inspection/capture-types.js").CapturedNumericObservation<D>[] | undefined = inspection ? [] : undefined;
+  let runId = 0;
+  if (inspection && (xScale.type === "point" || yScale.type === "point")) throw new TypeError("Numeric line inspection requires numeric continuous scales.");
   let run: (readonly [number, number])[] = [];
   const flushRun = () => {
     if (run.length >= 2) {
@@ -76,6 +80,7 @@ export function LineSeries<D>({
     const datum = data[i];
     if (defined && !defined(datum, i, data)) {
       flushRun();
+      runId++;
       continue;
     }
     const xv = x(datum, i, data),
@@ -84,12 +89,15 @@ export function LineSeries<D>({
       py = mapSeriesPosition(yScale, yv);
     if (px === undefined || py === undefined) {
       flushRun();
+      runId++;
       continue;
     }
+    captured?.push(Object.freeze({datum,sourceIndex:i,domainX:xv as number,domainY:yv as number,anchorLocal:Object.freeze({x:px,y:py}),run:runId}));
     const point = [px, py] as const;
     run.push(point);
   }
   flushRun();
+  if (inspection && xScale.type !== "point" && yScale.type !== "point") inspection.capture({observations:captured!,xScale,yScale});
   return (
     <Path
       {...eventProps}

@@ -2,10 +2,18 @@
 
 ## Active plan
 
+[008 — Financial charting](./008-financial-charting.md) is active. Batch 0's
+three inspection slices are accepted and hardened; the single next step is the
+remaining Batch 1 volume/inspection design checkpoint. The revised inspection
+lessons are accepted and their local commit is authorized. Aggregate checks encounter
+unrelated working-tree blockers, recorded in the dated evidence. The
+discussed inspection design, candle authoring, and trading-time scale proposals
+are accepted. See the plan's dated evidence for current results and limitations.
+
 [007 — Visualization charting](./007-visualization-charting.md) completed its approved
 scope on 2026-10-06. The [closeout walkthrough](../testing/field-notes/2026-10-06-chart-api-walkthrough.md)
 records an unrelated documentation/formatting blocker in the repository-wide gate;
-all unaffected verification passed. No next plan is selected.
+all unaffected verification passed.
 
 [004 — HtmlBox](./004-html-box.md) retains unfinished work and its existing
 evidence; this queue switch does not mark it complete.

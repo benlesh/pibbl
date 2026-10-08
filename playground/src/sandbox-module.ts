@@ -11,6 +11,7 @@ const SUPPORTED_MODULES = new Set([
   "@pibbl/core",
   "@pibbl/core/filters",
   "@pibbl/core/viz",
+  "@pibbl/core/viz/inspection",
   "@pibbl/core/textures",
   "@pibbl/core/jsx-runtime",
   "@pibbl/core/jsx-dev-runtime",

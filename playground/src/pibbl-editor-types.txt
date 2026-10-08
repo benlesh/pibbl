@@ -1373,6 +1373,7 @@ export declare function formatNumber(value: number, options?: NumberFormatOption
 export declare function niceUTCDomain(domain: NumericDomain, options?: { readonly count?: number }): NumericDomain;
 
 import type { PibblEventHandlers, PibblEventParticipationOptions, FillStyle, StrokeStyle } from '@pibbl/core';
+import type { BarInspectionRef, NumericInspectionRef } from '@pibbl/core/viz/inspection';
 export interface AxisStyle { readonly stroke?: StrokeStyle; readonly strokeWidth?: number; readonly fill?: FillStyle; readonly font?: string; readonly opacity?: number }
 interface AxisBaseProps {
   readonly scale: ScaleId;
@@ -1404,6 +1405,7 @@ export interface LineSeriesProps<D> extends PibblEventHandlers, PibblEventPartic
   readonly defined?: (datum: D, index: number, data: readonly D[]) => boolean;
   readonly curve?: LineCurve;
   readonly style?: SignalValue<SignalStyle<LineSeriesStyle>>;
+  readonly inspection?: NumericInspectionRef<D>;
 }
 type ScaleAdjustX = { readonly x: SignalValue<BandCategory>; readonly xScale: ScaleId } | { readonly x?: never; readonly xScale?: never };
 type ScaleAdjustY = { readonly y: SignalValue<BandCategory>; readonly yScale: ScaleId } | { readonly y?: never; readonly yScale?: never };
@@ -1438,6 +1440,7 @@ export interface PointSeriesProps<D> extends PibblEventHandlers, PibblEventParti
   readonly yScale: ScaleId;
   readonly defined?: (datum: D, index: number, data: readonly D[]) => boolean;
   readonly style?: SignalValue<SignalStyle<PointSeriesStyle> | PointStyleResolver<D>>;
+  readonly inspection?: NumericInspectionRef<D>;
 }
 
 export type PlotKeyAccessor<D> =
@@ -1618,6 +1621,7 @@ interface BarSeriesBaseProps<D> extends PibblEventHandlers, PibblEventParticipat
   readonly valueScale: ScaleId;
   readonly defined?: (datum: D, index: number, data: readonly D[]) => boolean;
   readonly style?: SignalValue<SignalStyle<BarSeriesStyle> | BarStyleResolver<D>>;
+  readonly inspection?: BarInspectionRef<D>;
 }
 export type BarSeriesProps<D> = BarSeriesBaseProps<D> & (
     | { readonly value: LineAccessor<D>; readonly baseline?: SignalValue<number>; readonly valueStart?: never; readonly valueEnd?: never }
@@ -1698,6 +1702,106 @@ export interface PieLabelProps<D> extends PibblEventHandlers, PibblEventParticip
 export declare function PieLayout<D>(props: PieLayoutProps<D>): PibblNode;
 export declare function PieSlice<D>(props: PieSliceProps<D>): PibblNode;
 export declare function PieLabel<D>(props: PieLabelProps<D>): PibblNode;
+
+/* @pibbl-studio-module @pibbl/core/viz/inspection */
+import type { LayoutBox, PibblEvent } from '@pibbl/core';
+import type { BarSeriesProps, BandCategory, HoverSeries, ResolvedContinuousScale } from '@pibbl/core/viz';
+
+export interface RenderedSeriesPoint { readonly x: number; readonly y: number; }
+export interface NumericRenderedObservation<D> {
+  readonly datum: D;
+  readonly sourceIndex: number;
+  readonly domainX: number;
+  readonly domainY: number;
+  readonly anchorLocal: Readonly<RenderedSeriesPoint>;
+  readonly anchorRoot: Readonly<RenderedSeriesPoint>;
+  readonly run: number;
+}
+export interface NumericRenderedAnchors {
+  readonly anchorLocal: Readonly<RenderedSeriesPoint>;
+  readonly anchorRoot: Readonly<RenderedSeriesPoint>;
+}
+export interface NumericRenderedSeries<D> {
+  readonly observations: readonly NumericRenderedObservation<D>[];
+  assertLive(): void;
+  domainXAtRoot(point: Readonly<RenderedSeriesPoint>): number | undefined;
+  anchorAtDomain(point: Readonly<{ domainX: number; domainY: number }>): NumericRenderedAnchors;
+  anchorInsideClips(pointLocal: Readonly<RenderedSeriesPoint>): boolean;
+}
+export type RenderedSeries<D> = NumericRenderedSeries<D>;
+export interface InspectionCandidate<D> extends NumericRenderedObservation<D> { anchorInsideClips(): boolean; }
+export type NumericRenderedFilter<D> = (observation: InspectionCandidate<D>) => boolean;
+export interface RecordedNumericHit<D> extends NumericRenderedObservation<D> {}
+export interface NearestRecordedXHit<D> extends RecordedNumericHit<D> { readonly domainDelta: number; }
+export interface NearestRecordedPointHit<D> extends RecordedNumericHit<D> { readonly rootDistance: number; }
+export type NumericDuplicateResolver<D> = (first: NumericRenderedObservation<D>, next: NumericRenderedObservation<D>) => NumericRenderedObservation<D>;
+export type NumericDomainInterpolation = (beforeDomainY: number, afterDomainY: number, fraction: number) => number;
+export type RecordedXSample<D> =
+  | (RecordedNumericHit<D> & { readonly kind: 'exact' })
+  | Readonly<{ kind: 'interpolated'; domainX: number; domainY: number; anchorLocal: Readonly<RenderedSeriesPoint>; anchorRoot: Readonly<RenderedSeriesPoint>; before: NumericRenderedObservation<D>; after: NumericRenderedObservation<D>; fraction: number }>;
+export interface NearestRecordedXOptions<D> { readonly domainX: number | undefined; readonly maxDomainDelta?: number; readonly filter?: NumericRenderedFilter<D>; }
+export interface NearestRecordedPointOptions<D> { readonly rootPoint: Readonly<RenderedSeriesPoint> | undefined; readonly maxRootDistance?: number; readonly filter?: NumericRenderedFilter<D>; }
+export interface SampleRecordedXOptions<D> { readonly domainX: number | undefined; readonly interpolation: NumericDomainInterpolation; readonly resolveDuplicate?: NumericDuplicateResolver<D>; readonly maxDomainGap?: number; readonly filter?: NumericRenderedFilter<D>; }
+export interface InspectionRef<S> { rendered(): S | undefined; }
+export interface InspectionContext {
+  rendered<S>(ref: InspectionRef<S>): S | undefined;
+  request<S, A, R>(query: (rendered: S, options: A) => R, rendered: S, options: A): R;
+}
+interface CapturedNumericObservation<D> {
+  readonly datum: D;
+  readonly sourceIndex: number;
+  readonly domainX: number;
+  readonly domainY: number;
+  readonly anchorLocal: Readonly<RenderedSeriesPoint>;
+  readonly run: number;
+  readonly radiusLocal?: number;
+  readonly fill?: boolean;
+  readonly strokeWidthLocal?: number;
+}
+interface NumericSeriesCapture<D> {
+  readonly observations: readonly CapturedNumericObservation<D>[];
+  readonly xScale: ResolvedContinuousScale;
+  readonly yScale: ResolvedContinuousScale;
+}
+export interface NumericInspectionRef<D> {
+  rendered(): NumericRenderedSeries<D> | undefined;
+  capture(input: NumericSeriesCapture<D>): void;
+}
+export interface PointRenderedSeries<D> extends NumericRenderedSeries<D> {
+  readonly marks: readonly CapturedNumericObservation<D>[];
+  localAtRoot(point: Readonly<RenderedSeriesPoint>): Readonly<RenderedSeriesPoint> | undefined;
+}
+export interface PointInspectionRef<D> extends NumericInspectionRef<D> { rendered(): PointRenderedSeries<D> | undefined; }
+export interface PaintedPointHit<D> extends RecordedNumericHit<D> { readonly radiusLocal: number; readonly strokeWidthLocal: number; }
+export interface PaintedBarHit<D> {
+  readonly datum: D;
+  readonly sourceIndex: number;
+  readonly category: BandCategory;
+  readonly group: BandCategory | undefined;
+  readonly valueStart: number;
+  readonly valueEnd: number;
+  readonly boundsLocal: Readonly<LayoutBox>;
+}
+interface CapturedBarMark<D> extends PaintedBarHit<D> { readonly fill: boolean; readonly strokeWidthLocal: number; }
+export interface BarRenderedSeries<D> {
+  readonly marks: readonly CapturedBarMark<D>[];
+  assertLive(): void;
+  localAtRoot(point: Readonly<RenderedSeriesPoint>): Readonly<RenderedSeriesPoint> | undefined;
+  anchorInsideClips(point: Readonly<RenderedSeriesPoint>): boolean;
+}
+export interface BarInspectionRef<D> { rendered(): BarRenderedSeries<D> | undefined; capture(input: readonly CapturedBarMark<D>[]): void; }
+export declare function useNumericInspection<D>(series: HoverSeries<D>): NumericInspectionRef<D>;
+export declare function usePointInspection<D>(series: HoverSeries<D>): PointInspectionRef<D>;
+export declare function useBarInspection<D>(inputs: Pick<BarSeriesProps<D>, 'data' | 'category'>): BarInspectionRef<D>;
+export declare function withInspection<E extends PibblEvent>(handler: (event: E, context: InspectionContext) => void): (event: E) => void;
+export declare function paintedPointAt<D>(rendered: PointRenderedSeries<D>, options: { rootPoint: Readonly<RenderedSeriesPoint> }): PaintedPointHit<D> | undefined;
+export declare function paintedBarAt<D>(rendered: BarRenderedSeries<D>, options: { rootPoint: Readonly<RenderedSeriesPoint> }): PaintedBarHit<D> | undefined;
+export declare function firstSourceObservation<D>(first: NumericRenderedObservation<D>, next: NumericRenderedObservation<D>): NumericRenderedObservation<D>;
+export declare function lastSourceObservation<D>(first: NumericRenderedObservation<D>, next: NumericRenderedObservation<D>): NumericRenderedObservation<D>;
+export declare function anchorInsideClips<D>(candidate: InspectionCandidate<D>): boolean;
+export declare function nearestRecordedX<D>(rendered: NumericRenderedSeries<D>, options: NearestRecordedXOptions<D>): NearestRecordedXHit<D> | undefined;
+export declare function nearestRecordedPoint<D>(rendered: NumericRenderedSeries<D>, options: NearestRecordedPointOptions<D>): NearestRecordedPointHit<D> | undefined;
+export declare function sampleRecordedX<D>(rendered: NumericRenderedSeries<D>, options: SampleRecordedXOptions<D>): RecordedXSample<D> | undefined;
 
 /* @pibbl-studio-module @pibbl/text */
 import { PathGeometry } from '@pibbl/core';

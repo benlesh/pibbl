@@ -38,6 +38,9 @@
       ],
       "@pibbl/core/machines/animation": [
         "./packages/core/src/features/machines/animation.ts"
+      ],
+      "@pibbl/core/viz/inspection": [
+        "./packages/core/src/features/viz/inspection.ts"
       ]
     },
     "resolveJsonModule": true,

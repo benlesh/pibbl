@@ -81,6 +81,8 @@ export interface PointSeriesProps<D>
    * Application data supplied to the component or reported by the event. See {@link SignalValue}.
    */
   readonly data: SignalValue<readonly D[]>;
+  /** Optional committed numeric inspection capture; rendering alone performs no queries. */
+  readonly inspection?: import("../inspection/capture-types.js").NumericInspectionRef<D>;
   /** Property key or callback extracting the horizontal domain coordinate. See {@link PointAccessor}. */
   readonly x: SeriesAccessor<D>;
   /** Property key or callback extracting the vertical domain coordinate. See {@link PointAccessor}. */

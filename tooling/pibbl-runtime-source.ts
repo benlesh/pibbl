@@ -4,7 +4,7 @@ import { isAbsolute, resolve, sep } from "node:path";
 const VIRTUAL_RUNTIME_ID = "virtual:pibbl-runtime-source";
 const RESOLVED_RUNTIME_ID = `\0${VIRTUAL_RUNTIME_ID}`;
 const PIBBL_ENTRY_POINT =
-  /^@pibbl\/(?:core(?:\/(?:filters|internal|jsx-runtime|jsx-dev-runtime|particles|textures|viz|machines(?:\/animation)?|sprites(?:\/formats\/(?:aseprite|texture-packer))?|physics\/2d(?:\/geometry)?))?|three|text)$/;
+  /^@pibbl\/(?:core(?:\/(?:filters|internal|jsx-runtime|jsx-dev-runtime|particles|textures|viz(?:\/inspection)?|machines(?:\/animation)?|sprites(?:\/formats\/(?:aseprite|texture-packer))?|physics\/2d(?:\/geometry)?))?|three|text)$/;
 const THREE_ENTRY_POINT = /^three(?:\/addons\/controls\/OrbitControls\.js)?$/;
 
 const threeEntryPoints = new Map([
@@ -28,6 +28,7 @@ function pibblEntryPoints(mode: string): ReadonlyMap<string, string> {
   const directory = mode === "built" ? "dist" : "src";
   const extension = mode === "built" ? "mjs" : "ts";
   return new Map([
+    ["@pibbl/core/viz/inspection", resolve(import.meta.dirname, `../packages/core/${directory}/features/viz/inspection.${extension}`)],
     ["@pibbl/core/machines", resolve(import.meta.dirname, `../packages/core/${directory}/features/machines/index.${extension}`)],
     ["@pibbl/core/machines/animation", resolve(import.meta.dirname, `../packages/core/${directory}/features/machines/animation.${extension}`)],
     ["@pibbl/core/sprites", resolve(import.meta.dirname, `../packages/core/${directory}/features/sprites/index.${extension}`)],

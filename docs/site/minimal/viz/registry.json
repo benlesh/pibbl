@@ -900,5 +900,153 @@
         "importPath": "@pibbl/core/viz"
       }
     ]
+  },
+  {
+    "id": "inspection-recorded",
+    "title": "Recorded numeric inspection",
+    "description": "Query the committed observations from numeric and point series with explicit units and interpolation.",
+    "source": "inspection-recorded.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "anchorInsideClips",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "firstSourceObservation",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "lastSourceObservation",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "nearestRecordedPoint",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "nearestRecordedX",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      { "name": "sampleRecordedX", "importPath": "@pibbl/core/viz/inspection" },
+      {
+        "name": "useNumericInspection",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "usePointInspection",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "InspectionCandidate",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "NearestRecordedPointHit",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "NearestRecordedPointOptions",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "NearestRecordedXHit",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "NearestRecordedXOptions",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "NumericDomainInterpolation",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "NumericDuplicateResolver",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "NumericInspectionRef",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "NumericRenderedAnchors",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "NumericRenderedFilter",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "NumericRenderedObservation",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "NumericRenderedSeries",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "PointInspectionRef",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "PointRenderedSeries",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "RecordedNumericHit",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      { "name": "RecordedXSample", "importPath": "@pibbl/core/viz/inspection" },
+      { "name": "RenderedSeries", "importPath": "@pibbl/core/viz/inspection" },
+      {
+        "name": "RenderedSeriesPoint",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "SampleRecordedXOptions",
+        "importPath": "@pibbl/core/viz/inspection"
+      }
+    ]
+  },
+  {
+    "id": "inspection-lazy",
+    "title": "Lazy event inspection",
+    "description": "Request a typed query only inside an ordinary event handler and reuse an equal request within its dispatch.",
+    "source": "inspection-lazy.tsx",
+    "environment": "browser",
+    "symbols": [
+      { "name": "withInspection", "importPath": "@pibbl/core/viz/inspection" },
+      {
+        "name": "InspectionContext",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      { "name": "InspectionRef", "importPath": "@pibbl/core/viz/inspection" }
+    ]
+  },
+  {
+    "id": "inspection-painted",
+    "title": "Painted mark lookup",
+    "description": "Keep painted point and bar hit testing separate from nearest recorded-data selection.",
+    "source": "inspection-painted.tsx",
+    "environment": "browser",
+    "symbols": [
+      { "name": "paintedBarAt", "importPath": "@pibbl/core/viz/inspection" },
+      { "name": "paintedPointAt", "importPath": "@pibbl/core/viz/inspection" },
+      {
+        "name": "useBarInspection",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "BarInspectionRef",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "BarRenderedSeries",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      { "name": "PaintedBarHit", "importPath": "@pibbl/core/viz/inspection" },
+      { "name": "PaintedPointHit", "importPath": "@pibbl/core/viz/inspection" }
+    ]
   }
 ]

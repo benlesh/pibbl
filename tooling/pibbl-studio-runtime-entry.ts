@@ -28,6 +28,7 @@ export { jsxDEV } from "@pibbl/core/jsx-dev-runtime";
 export const __pibblStudioModules = pibblStudioThreeModules;
 
 export * from "@pibbl/core/viz";
+export * from "@pibbl/core/viz/inspection";
 
 export * from "@pibbl/core/textures";
 

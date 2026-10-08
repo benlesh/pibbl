@@ -1,0 +1,652 @@
+# Plan 008 — Financial charting
+
+Status: Batch 0 accepted and hardened on 2026-10-08; aggregate gates encounter unrelated working-tree blockers. The discussed
+inspection design is accepted and its three capabilities are runnable. Candlestick
+authoring and the trading-time scale proposal remain accepted. Broader hardening
+and future batches await experiential feedback; this is not feature-complete
+verification. No commits, publishing, or automatic implementation of future
+batches are authorized.
+
+## Goal and baseline
+
+Deliver composable financial visualization through supported Pibbl public APIs,
+with attractive fintech examples and genuinely small learning examples. Start
+with the two largest missing foundations: candlesticks and trading-time spacing.
+Review approximately three implemented features at a time with the user before
+starting the next batch.
+
+Current runtime exports include line/area/interval/point/custom-mark/categorical
+bar series, dedicated scales, axes, reference lines/bands, hover queries/cards,
+and bounded continuous pan/zoom. There are no dedicated financial series,
+trading-time scale, indicator calculations, or financial data pipeline.
+Existing brush and linked-inspection recipes are useful evidence, not public
+financial components. No new Chart container or second scheduler is implied.
+
+Competitive references checked 2026-10-08:
+
+- [TradingView Lightweight Charts series](https://tradingview.github.io/lightweight-charts/docs/series-types)
+- [TradingView panes](https://tradingview.github.io/lightweight-charts/tutorials/how_to/panes)
+- [Highcharts navigator](https://www.highcharts.com/docs/stock/navigator)
+- [Highcharts data grouping](https://www.highcharts.com/docs/stock/data-grouping)
+- [Highcharts indicators](https://www.highcharts.com/docs/stock/technical-indicator-series)
+- [amCharts Stock](https://www.amcharts.com/docs/v5/charts/stock/)
+
+The ordering is Pibbl-specific judgment, not a claim that every competitor ships
+every proposed feature. This addresses the user-requested market-charting gap;
+it does not depend on a strategy hypothesis authorizing implementation.
+
+## Delivery and feedback agreement
+
+Each numbered batch contains three user-visible capabilities. Documentation,
+minimal demos, public types, package/editor integration, and tests are parts of
+those capabilities, not extra features hidden outside the cap.
+
+1. Resolve the design questions blocking that batch only. Before implementing
+   any new feature, show the user proposed application code: a minimal public-API
+   example and, where useful, its composition in the fintech showcase. Include
+   proposed signatures/types and the important behavior illustrated by the code.
+   Discuss and obtain acceptance of the authoring design before production
+   implementation; do not treat examples shown after implementation as satisfying
+   this checkpoint. Existing acceptance persists unless the proposed API changes
+   materially, in which case show the revised code before implementing it.
+2. Define an observable contract and add focused failing public-API evidence
+   before production changes. Pure calculations also need hand-computed fixtures.
+3. Implement complete slices sequentially; delegate independent work where useful.
+4. Make each slice runnable promptly. At three features, stop implementation of
+   additional features and present the batch for feedback.
+5. Supply the actual running Studio origin and full URLs, minimal-demo locations,
+   a short inspection checklist, known limitations, and fresh focused results.
+   Proposed slugs below are targets, not currently available URLs.
+6. Incorporate feedback, then broaden edge-case, ownership, docs, package, and
+   visual verification. Record a dated field note before marking the batch done.
+7. Start the next batch only after the user's feedback/authorization to continue.
+   If they authorize several batches, still pause to show each set of three.
+
+Milestones remain distinct: **slice ready for feedback**, **batch accepted**, and
+**feature complete after hardening**. A screenshot or passing unit test alone
+does not establish any entire financial subsystem as complete.
+
+## Design discussion: decisions before Batch 1
+
+### D1 — Public surface and ownership
+
+Recommended starting point: existing `@pibbl/core/viz` entry and compositional
+runtime. Use descriptive operations with stable return contracts. Proposed
+`CandlestickSeries`, `TradingTimeScale`, and `useTradingTimeScale` are dedicated
+APIs, not `FinancialSeries({ type })` or `useScale({ kind })`. Decide whether
+financial calculations warrant a separate public subpath only when bundle and
+discoverability evidence justify it; do not introduce a package now by default.
+Application signals own selection, viewport, feed data, and drawings. Core owns
+the existing scheduler, events, focus and disposal. Rendering must not compute
+or mutate application state through side effects.
+
+### D2 — Trading observations versus exchange calendars
+
+Recommended first contract: caller supplies strictly increasing, unique numeric
+UTC millisecond timestamps. Observations occupy consecutive logical slots.
+This compresses absent observations; it does not assert why they are absent.
+Support 24/7 and session markets through the same supplied-observation model.
+Exchange holidays, DST sessions and early closes are a later explicit phase.
+
+Resolve before code: visible logical range units; fractional navigation;
+timestamp-to-slot lookup; exact versus nearest inversion; unknown timestamp
+handling; empty/singleton input; future whitespace; reversed ranges; stable
+viewport anchoring when earlier history is inserted. Timestamp lookup and slot
+navigation need separately named operations if their return semantics differ.
+UTC remains elapsed-time mapping and must not silently become gapless.
+
+### D3 — Compatibility across existing marks and queries
+
+Trading-time support must cover Axis, ScaleAdjust, candles, volume, LineSeries,
+AreaSeries, IntervalBandSeries, PointSeries and PlotSeries where their contracts
+apply. Audit private scale receivers and types before changing them. Area/band
+currently require continuous mapping; point/line receivers and hover queries
+also have distinct assumptions. Do not widen public numeric query contracts to
+ambiguous unions. Define separate exact-bar lookup when necessary.
+Batch 1 must demonstrate a line overlay and custom marker on the same x mapping;
+subsequent consumers are integrated before they are used, not left as surprises.
+
+### D4 — Candle data, geometry and interaction
+
+Recommended input: ordinary caller-owned records with named accessors for time,
+open, high, low and close; volume remains optional application data. No implicit
+sorting or mutation. Establish whether missing fields skip the complete candle,
+and whether malformed finite OHLC raises an actionable error. Enforce low <=
+min(open, close) <= max(open, close) <= high for valid candles.
+Choose up/down/equal semantics, independent body/wick/border paint, doji visibility,
+width relative to slot spacing with a pixel cap, and tiny-scale behavior. Styling
+callbacks remain plain and hook-free. Financial inspection is nearest recorded
+bar, distinct from painted event targeting. Favor batched marks with bounded
+event/component overhead rather than one mounted subtree per candle.
+
+### D5 — Showcase audience and data
+
+Planning default: a market-analysis workstation for fintech engineers and
+investment research. User preference is pending. Use an attributed, versioned,
+redistributable real OHLCV snapshot when available; verify source/license and
+adjustment status before adding it. Deterministic simulation is appropriate for
+streaming and execution examples and must be labeled. No live keys or network
+feed is required to run a learning example. Aesthetics cannot imply predictive
+value or turn simulated events into reported market facts.
+
+## Status board
+
+| Batch | Three capabilities                                                  | State                                           |
+| ----- | ------------------------------------------------------------------- | ----------------------------------------------- |
+| 0     | Typed inspection queries, lazy handler adapter, painted-mark lookup | Accepted; hardened, aggregate blocked           |
+| 1     | Trading time, candles, volume                                       | Scale/candle authoring accepted; volume pending |
+| 2     | Inspection, price labels/formatting, price autoscaling              | Queued                                          |
+| 3     | Linked panes, range controls, comparison returns                    | Queued                                          |
+| 4     | SMA, EMA, Bollinger Bands                                           | Queued                                          |
+| 5     | RSI, MACD, stochastic oscillator                                    | Queued                                          |
+| 6     | OHLC bars, baseline series, event markers                           | Queued                                          |
+| 7     | Live updates, OHLCV aggregation, session VWAP                       | Queued                                          |
+| 8     | Overview navigator, levels/zones, trend-line editing                | Queued                                          |
+| 9     | Channel tools, Fibonacci tools, drawing persistence                 | Queued                                          |
+| 10    | Exchange sessions, history loading, Heikin-Ashi                     | Later design                                    |
+| 11    | Volume profile, market depth, footprint                             | Optional specialist scope                       |
+| 12    | Renko, point-and-figure, replay                                     | Optional specialist scope                       |
+
+Batches 1–9 cover the main requested features and low-hanging fruit. Batches
+10–12 make earlier discussed advanced work explicit, with a fresh scope decision
+before implementation. Batch 10 exchange-session policy is a prerequisite for
+calendar-aware bucket rules, not for the initial gapless scale.
+
+## [DONE] Design checkpoint — inspection authoring
+
+The user accepted the discussed standalone queries, optional lazy inspection,
+painted lookup, and ownership contracts. Preserve the accepted candle and
+trading-time authoring. Discuss remaining Batch 1 integration details only when
+that batch becomes the next authorized work. Batch 0 is an explicit three-feature checkpoint,
+not hidden prerequisite work inside Batch 1. Do not implement a broad data engine
+or spatial index in advance of its first runnable slice.
+
+### [DONE] Review the Batch 0 runnable inspection slices
+
+The user approved the runnable batch on 2026-10-08. Proceed with inspection
+hardening and verification before the remaining Batch 1 design checkpoint. The [accepted inspection proposal](./008-inspection-proposal.md)
+records ownership, coordinates, cost, and the audit of existing series and pie.
+Candlestick and trading-time authoring acceptance persists.
+
+### [DONE] Harden and verify the accepted inspection batch
+
+Characterize cached-Layer transforms, clipping, failed renders, unmount and
+ref reuse; address actual failures with focused tests before production fixes.
+Complete ownership/query boundary evidence and proportional aggregate checks.
+Keep accepted authoring unchanged. Record current results and blockers, then
+show only the unresolved Batch 1 integration designs before new implementation.
+
+### [DONE] Review revised inspection lessons
+
+The user accepted the revised order-time lookup, lazy-query execution counts,
+and nearest-versus-painted overlap on 2026-10-08 and authorized a local commit.
+
+### [NEXT] Review remaining Batch 1 volume and inspection design
+
+Review the [proposed application examples and public contracts](./008-volume-inspection-proposal.md)
+for VolumeSeries and typed candle/volume inspection before implementing them.
+CandlestickSeries authoring and TradingTimeScale remain accepted. Batch 0's
+[dated hardening evidence](../testing/field-notes/2026-10-08-inspection-hardening.md)
+records current tests, ownership fixes, runnable URLs and unrelated aggregate blockers.
+
+## Batch 0 — composable data-inspection foundation
+
+User added this scope after auditing all current series. The aim is less repeated
+application plumbing with no mandatory search, index, subscription, or inspection
+bundle dependency for rendering-only consumers. Ordinary core events and their
+targeting/propagation contract remain unchanged. The discussed inspection authoring was approved on 2026-10-08 before implementation.
+
+1. **Typed standalone inspection contracts.** Reuse existing queries and result
+   types where they fit; add separately named operations only for missing contracts.
+   Distinguish nearest recorded observation by x, nearest recorded point in mapped
+   geometry, and explicitly interpolated samples. Document domain/local/root
+   coordinate units; avoid making another result with ambiguous x/y. Preserve
+   original typed datum, source index, optional stable identity, anchor and
+   distance/delta units. Results must retain both interval/range bounds and area
+   baseline when those are relevant; categorical identity must not be coerced to
+   numeric data. Start with one numeric line/point slice, then prove categorical
+   bars and bands during post-feedback hardening. Existing APIs must not silently
+   change coordinate semantics. A descriptor/typed query definition should share
+   data/accessors with rendering where useful, without requiring a series registry.
+2. **Optional lazy handler adapter.** Explicit import/definition connects an
+   ordinary event handler to a typed inspection context. Compare a separate second
+   callback argument against an opt-in event extension in the proposed code;
+   favor the former unless the event extension proves clearer. No monkey-patching
+   core events or global module augmentation. Query execution occurs only when
+   requested, with memoization per dispatch/series/query/arguments, including no
+   match. Integrate with handlers on plot geometry as well as series geometry so
+   empty-space inspection works. Define how keyboard inspection is supplied an
+   explicit position rather than inventing a pointer. No mandatory HoverData
+   render cycle for a one-off click lookup. Standalone queries and reactive
+   HoverData must continue to share algorithms rather than duplicate them.
+3. **Painted-mark lookup.** A separately named operation identifies the original
+   datum corresponding to a painted discrete mark, distinct from nearest-center
+   or nearest-x selection. First prove overlapping points and categorical bars;
+   PlotSeries and pie callbacks already expose original records and should use
+   that information without adding unnecessary searches. Line/area/band geometry
+   has no universal source datum at every painted position: document this rather
+   than forcing every family into an ambiguous result. Candle/volume support joins
+   in Batch 1 without becoming a fourth Batch 0 feature.
+
+Snapshot and coordinate design: a lookup must use the data/accessor results,
+transforms, clipping and scale geometry associated with the committed visual
+generation being inspected. A handler writing a signal must not make a later
+lookup in that dispatch observe unpainted data. Define synchronous context
+lifetime and result ownership; retained original records are references, not
+deeply immutable copies. Do not promise arbitrary deferred querying of an event.
+Choose local versus root/screen distance explicitly under nonuniform transforms.
+Painted lookup respects source paint order, actual fill/stroke, clipping and
+omitted rows. Nearest queries need an explicit candidate/visibility policy and
+must never be described as the Pibbl event target.
+
+Performance evidence: zero query executions without a request; one execution for
+repeated identical requests; no hidden signal subscriptions or per-datum event
+objects; retained inspection state released on unmount/disposal. Rendering-only
+packed bundles exclude inspection adapters and algorithms; a nearest-x consumer
+does not pull in a spatial index or unrelated query family. Lazy search still has
+its documented algorithmic cost. Sorted x optimization is opt-in or based on a
+validated ordered definition; unsorted input cannot silently use binary search.
+Do not add a spatial index until measured workload evidence calls for one.
+
+Coverage matrix for completion: LineSeries, PointSeries, AreaSeries,
+IntervalBandSeries, BarSeries (value/range/grouped), PlotSeries, PieLayout/PieSlice,
+then CandlestickSeries/VolumeSeries. For each record supported query operations,
+original fields/derived geometry, source index/key, gaps/filtering, tie policy,
+coordinate frame, snapshot behavior, targeting differences and cost. An explicit
+unsupported operation is preferable to a fabricated nearest datum.
+
+Showcase: **Inspection Workbench**, target `viz-inspection-workbench`: useful
+line/point comparison and categorical range bars, with recorded/interpolated
+values clearly differentiated. A minimal example per feature demonstrates lazy
+lookup, no-result handling, and an overlap where painted identity differs from
+nearest center. Public JSDoc and tests explain the distinction. After review,
+financial showcases reuse the same foundation rather than introduce another
+financial-only event model.
+
+## Batch 1 — credible price chart
+
+1. **Trading-time scale.** Dedicated provider/hook with fixed return type,
+   ordered timestamps, fractional viewport and timestamp-aware ticks. Public
+   evidence: Friday/Monday observations have equal slot spacing; exact lookup,
+   nearest selection, pan/zoom and prepend semantics are explicit. Prove minimum
+   line/custom-mark interoperability without a private application import.
+2. **Candlestick series.** Batched OHLC geometry, body/wick styling, dojis,
+   missing/invalid input policy and signal updates. Public geometry fixtures
+   cover rising/falling/equal candles, width, reversal and clipping. Visible
+   price extent must use high/low, not only close. No smoothing of candle data.
+3. **Time-aligned volume columns.** Use existing bars if the common x geometry
+   genuinely fits; otherwise add a descriptive time-column primitive with shared
+   implementation. Do not call categorical columns OHLC bars. Establish whether
+   color means close versus open or versus previous close and show that meaning.
+   Prove price/volume timestamps align with an independent y-scale.
+
+Showcase: **Market Session**, target slug `financial-market-session`: recognizable
+price and volume, readable date/price axes, asset/timeframe/source context, quiet
+grid, clear rising/falling encodings and useful empty state. Integrate Batch 0
+inspection with typed OHLC and original volume/application fields; the full
+crosshair/touch/keyboard/pinning experience remains Batch 2. Minimal demos: 6–10 candles containing a
+doji, a Friday/Monday scale, and five aligned volume records, each independent.
+Review: spacing, candle readability, volume alignment, authoring ergonomics,
+desktop and narrow portrait. This is the first runnable financial milestone.
+
+## Batch 2 — trustworthy inspection and prices
+
+1. **Snapping crosshair with OHLCV readout.** One recorded timestamp drives all
+   fields. Hover, tap, keyboard step and pin/unpin have explicit states. Pointer
+   inversion respects local coordinates; no interpolated OHLC. Readout remains
+   available on touch and keyboard without requiring hover.
+2. **Price guides and financial formatting.** Last price and previous close,
+   data-anchored axis tags, currency/tick precision and compact volume. Compose
+   ReferenceLine/ScaleAdjust/Text first. If a reusable formatter is needed,
+   separate price and volume functions; settle rounding versus minimum tick.
+3. **Visible-window price autoscaling.** Pure visible OHLC extent plus padding,
+   flat/empty domain handling and manual override. Linear/log presentation is
+   included here: nonpositive prices get an explicit unsupported-state policy;
+   the toggle must retain the selected x window and inspection.
+
+Showcase: Market Session becomes an inspection workstation. Minimal demos:
+three-bar keyboard readout; one live price tag; offscreen extreme that does not
+distort visible autoscaling. Review: snapped values, labels, log behavior, pin
+and focus, and whether price changes feel stable.
+
+## Batch 3 — coordinated analysis
+
+1. **Linked panes.** Shared x viewport and inspection signal, independent y
+   scales, identical plot boundaries. Start with a composed recipe; add public
+   pane infrastructure only for demonstrated recurring allocation value. Pane
+   resizing, minimum heights and focus preservation must be discussed first.
+2. **Range controls.** Bounded drag/wheel/pinch or explicit equivalent controls,
+   1M/3M/YTD/all presets, fit/reset and return-to-latest. Define elapsed calendar
+   presets over compressed slots and dataset-edge behavior. Reuse existing pan/
+   zoom where valid; do not overload them with unrelated operation selectors.
+3. **Normalized comparison returns.** Compare instruments at an explicit common
+   base timestamp using percentage returns or indexed-to-100 data helpers with
+   separate contracts. Never silently choose a different base for each asset;
+   nonoverlap, absent base and zero base policies are visible.
+
+Showcase: **Relative Performance Desk**, target `financial-relative-performance`:
+two or three assets, shared inspection, visible base date and readable direct
+labels. Minimal demos: two linked plots; range buttons on a tiny dataset; two
+five-point normalized series. Review alignment, navigation and honest comparison.
+
+## Batch 4 — overlays suitable for independent implementation
+
+1. **SMA.** Pure full-length aligned output with explicit warm-up missing values,
+   positive integer period and input-gap policy; no mutation.
+2. **EMA.** Same alignment discipline, explicit seed and smoothing convention,
+   separately named operation and documented behavior after a gap.
+3. **Bollinger Bands.** Mean plus upper/lower aligned output; lock population
+   versus sample deviation and multiplier. Reuse IntervalBandSeries and lines.
+
+Showcase: **Trend and Volatility**, target `financial-trend-volatility`: selectable
+overlays, parameter labels, inspectable values and legible candle contrast.
+Minimal demo per calculation: tiny hand-checkable input and resulting overlay.
+Review numerical conventions and authoring. Pure helper implementations can be
+delegated independently once their contracts are settled.
+
+## Batch 5 — oscillator analysis
+
+1. **RSI.** Explicit Wilder initialization/smoothing, constant series and zero
+   gain/loss behavior; line pane with visible 30/70 guides.
+2. **MACD.** Explicit fast/slow/signal periods and seeds; aligned MACD, signal and
+   histogram outputs; signed histogram on the trading-time x mapping.
+3. **Stochastic oscillator.** Rolling high/low, %K/%D conventions, smoothing and
+   zero-range behavior; explicit output fields and warm-up lengths.
+
+Showcase: **Momentum Desk**, target `financial-momentum-desk`: price plus one
+selected oscillator or readable linked panes; avoid squeezing all studies into
+phone portrait. Each minimal example proves values and thresholds. Discuss
+study parameter editing and mobile pane order before implementation.
+
+## Batch 6 — alternate marks and financial context
+
+1. **OHLC bars.** Reuse private candle validation/geometry where appropriate;
+   dedicated stable component contract. Open tick left, close tick right; widths
+   and doji semantics verified at narrow zoom levels.
+2. **Two-color baseline series.** Explicit reference value, gain/loss paint and
+   correctly split intersections. Preserve missing runs; resolve step/linear
+   support before adding curves. Two clipped ordinary areas are acceptable only
+   if they establish the complete crossing contract.
+3. **Event/trade markers.** Data-anchored glyph/text composition, exact timestamp
+   and side, selection/readout; define offscreen and coincident marker policy.
+   Earnings/dividend provenance versus simulated trade events stays explicit.
+
+Showcase: **Execution Journal**, target `financial-execution-journal`: OHLC chart
+and readable simulated fills with gain/loss context. Minimal demos: three OHLC
+bars; one baseline crossing; three labeled markers. Review visual semantics.
+
+## Batch 7 — evolving data
+
+1. **Live-bar updates.** Explicit replace-current and append-next operations if
+   public helpers are justified, otherwise a documented signal recipe. Define
+   timestamp corrections, active inspection, follow-latest versus historical
+   browsing, bounded retention and teardown. Use Pibbl scheduling, not another
+   animation loop. Demonstration feed has explicit start/stop controls.
+2. **OHLCV aggregation.** Pure named operation: first open, maximum high,
+   minimum low, last close, summed volume. Discuss bucket anchors, partial bars,
+   missing inputs and session policy. Preserve extremes; do not substitute line
+   downsampling. Initial bucket rules can be explicit UTC or caller-supplied
+   boundaries; exchange-aware rules wait for Batch 10.
+3. **Session VWAP.** State whether input is actual trades or bar approximation,
+   choose typical/close price explicitly, define session resets, zero volume,
+   warm-up and partial sessions. Show approximation caveats next to the chart.
+
+Showcase: **Live Market Monitor**, target `financial-live-monitor`: deterministic
+replay feed, current candle/volume, feed status, timeframe aggregation and VWAP.
+Minimal demos: two append steps; four bars aggregated into two; two VWAP sessions.
+Review following versus browsing, correctness and update responsiveness.
+
+## Batch 8 — navigation and first drawing interactions
+
+1. **Overview navigator.** Full-history overview with a movable/resizable window,
+   pointer capture and keyboard alternatives, synchronized with range controls.
+   Selection uses domain coordinates; interaction draft/commit are explicit.
+2. **Editable levels and zones.** Horizontal level, bounded price region, target/
+   stop presentation; semantic domain values and edit handles. Reuse reference
+   marks; cancel/delete/focus interactions need an approved state machine.
+3. **Trend-line tool.** Two time/price anchors, select/edit/remove/cancel. Explicit
+   arbitration between drawing, panning and inspection; log-scale behavior must
+   be decided. No automatic trading/action integration.
+
+Showcase: **Research Workspace**, target `financial-research-workspace`: navigator,
+support/resistance levels and editable trend line. Minimal demos per tool; tests
+drive public pointer/keyboard events and confirm domain anchors after zoom.
+
+## Batch 9 — drawing family and persistence
+
+1. **Channels.** Trend anchors plus offset; define parallelism in price or screen
+   geometry, especially under log scales. Share private editing mechanics.
+2. **Fibonacci tools.** Explicit levels and anchor direction, domain-based values,
+   labels, visibility and edit behavior. Start with retracement; extensions only
+   if separately approved rather than hidden inside this feature.
+3. **Drawing persistence.** Versioned serializable data-space schema, explicit
+   import validation, stable IDs, symbol/timeframe context and schema migration
+   errors. Save/export and restore as separate stable operations. Demonstrate
+   local persistence; application remains owner of backend/storage.
+
+Showcase: Research Workspace round-trips a small analysis through reload/zoom.
+Minimal demos: one channel; one retracement; one saved/restored trend line.
+Discuss undo/redo requirements before this batch; do not silently add a fourth
+feature. URL viewport state may be a recipe, not a public persistence service.
+
+## Later batches: require a fresh scope/design decision
+
+### Batch 10 — session semantics and historical representations
+
+1. Exchange-calendar/session integration: explicit caller-supplied sessions or
+   reviewed calendar dependency; timezone/DST/holiday/early-close fixtures.
+2. Historical loading: request older data near the viewport boundary, stable
+   timestamp anchoring after prepend, cancellation, empty/error/retry states.
+3. Heikin-Ashi transform: recurrence and seed, distinction from actual prices,
+   update/recompute rules and clearly labeled derived candles.
+
+Showcase: **Session Explorer**. Minimum demos expose one early-close session,
+one prepend without viewport movement and three hand-computed derived candles.
+
+### Batch 11 — specialist market microstructure
+
+1. Volume profile: actual trade distribution versus bar-based estimate, binning,
+   price-axis histogram, viewport/session scope and source caveats.
+2. Market depth: bid/ask cumulative curves or price ladders, book snapshots/deltas,
+   crossed/empty/stale-book handling and bounded updates.
+3. Footprint: bid/ask volume within price bins per bar, attribution policy,
+   dense-cell legibility and aggregation/performance evidence.
+
+Showcase: **Order Flow Lab** with explicitly simulated execution-level data.
+These are not low-hanging fruit and must not be implemented as decorative heat
+maps over OHLC data. Discuss data contracts and performance targets first.
+
+### Batch 12 — specialized chart transforms and replay
+
+1. Renko: brick sizing, reversal rule, gap policy, close-only versus intrabar
+   inputs, and ambiguity of reconstructing movements from OHLC.
+2. Point-and-figure: box size, reversal convention, column semantics and mapping.
+3. Replay: deterministic cursor, seek/reset/speed, reuse of live update pathway,
+   lifecycle ownership and derived-indicator consistency.
+
+Showcase: **Price Structure Lab**. Minimal fixtures calculate every brick/column.
+Both transforms need dedicated authoring and labeling; they do not imply that a
+single timestamp scale can represent every synthetic mark without adaptation.
+
+## Example and documentation contract for every feature
+
+- A minimal public example demonstrates one concept with tiny readable data,
+  no unrelated dashboard scaffolding, meaningful variable names, and explicit
+  mounting/disposal. New APIs have executable TSX/non-JSX evidence where the
+  existing authoring contract requires it. Recipes have minimal recipe pages.
+- A polished showcase has an actual analytical task: price/volume inspection,
+  relative returns, trend/volatility, momentum, fills, or evolving data. Do not
+  make 36 almost-identical dashboards. Each family evolves across batches.
+- Use quiet context, legible tabular numbers, direct labels, visible units,
+  explicit source/adjustment/as-of information, and redundant rising/falling
+  encodings. Default to truthful linear/step financial paths, not decorative
+  smoothing or gradients that obscure data.
+- Test desktop and phone portrait; at minimum use the established 1000x640,
+  560x300, 360x300 and 320x260 allocations plus a narrow tall panel where useful.
+  Essential values must survive without hover. Provide tap, keyboard and focus
+  paths, clear hit areas and chart-adjacent text summaries; do not imply Canvas
+  automatically creates a semantic accessibility tree.
+- Showcase source imports only public entries. Test labs and stress fixtures are
+  separate from learning metadata and public search. Record data source/license,
+  snapshot and transformations; use offline deterministic datasets by default.
+- Public JSDoc covers every exported member: purpose, units, accessors, defaults,
+  invariants, missing/invalid input, return ownership/alignment, signal behavior,
+  errors, complexity where material, and links/examples. Indicator docs specify
+  formulas, seeds, gaps and warm-up. Drawing docs specify anchoring and ownership.
+- Add/maintain API reference, financial authoring guide, minimal-demo registry,
+  learning catalog, declarations visible to the Studio editor, source and packed
+  exports. Keep plan prose out of public API documentation.
+
+## Verification and completion
+
+Before feedback: focused failing-then-passing public semantic/geometry tests,
+hand-calculated numerical fixtures, runnable minimal/showcase examples and narrow
+visual evidence where pixels add information. Headless drivers use the same
+public scenarios. Avoid exhaustive edge matrices before the first observable
+slice. Verify price/volume/inspection alignment semantically before screenshots.
+
+After feedback: broaden only relevant input, geometry, responsiveness, focus,
+signal update and disposal matrices. Inspect baseline diffs rather than rewriting
+them to pass. Use deterministic resource/event counters for ownership. Check
+source and built browser modes, declarations, Bundler/NodeNext and packed
+consumers for new public APIs; pure helpers need tree-shaking/import evidence.
+Run docs/JSDoc/catalog/type/lint checks appropriate to changes. Run the aggregate
+`corepack pnpm@11.21.0 trust` at major integrated closeouts (Batch 3, Batch 6,
+Batch 9, and final accepted scope) unless new risks justify earlier execution.
+Record fresh environment/output; old Plan 007 blockers are not assumed current.
+Document Node 24.15+ on Node 24 LTS, pnpm 11.21.0 and Chromium actually used.
+
+Each batch field note records contract decisions, user feedback, tests, visual
+inspection, known limits and actual runnable URLs. Final completion requires
+accepted behavior, proportional hardening, docs/public-surface parity, targeted
+review and accurate aggregate status. No competitive-parity or performance claim
+without explicit evidence and a measured workload.
+
+## Delegation plan
+
+Primary agent owns scale/series integration, shared files, showcase composition,
+public contract decisions and feedback. At most one implementation subagent and
+one independent reviewer per slice. Independent pure helpers (SMA/EMA/Bollinger,
+formatters, normalization) are good assignments after contracts are locked;
+later indicator batches can reuse that agent. Assign specific files and public
+tests. The primary agent integrates exports/catalog/editor changes to prevent
+shared-file collisions. Do not delegate scale-dependent volume integration until
+the x-scale contract is settled. Review after a runnable slice, targeting changed
+code and unresolved findings. Every delegated feature counts toward the same
+three-feature cap. Subagents do not independently launch the next batch.
+
+## Session log
+
+- 2026-10-08: Continued the inspection design checkpoint. Inspected current public
+  query/series code, event contracts, package exports and query test source;
+  delegated a read-only all-series/pie audit. Recorded the proposed application
+  authoring and ownership contracts in
+  [008-inspection-proposal.md](./008-inspection-proposal.md). Design awaits user
+  acceptance; no production changes, tests run or runnable slice claimed.
+  Preserved unrelated working-tree changes. Single next step: review the proposal.
+
+- 2026-10-08: User approved CandlestickSeries authoring and TradingTimeScale.
+  Subsequent all-series audit confirmed lazy nearest-x data existed in
+  ember-nf-graph, while Pibbl intentionally deferred event enrichment. User added
+  improved data inspection to this body of work. Added explicit Batch 0 with three
+  capabilities and made inspection code examples/design the next step. No
+  inspection API or implementation has been approved or shipped.
+
+- 2026-10-08: User requires proposed code examples before implementing new
+  features. Added an explicit pre-implementation authoring-design checkpoint for
+  every feature, including delegated work.
+
+- 2026-10-08: User requested detailed phased planning, approximately three
+  features per feedback checkpoint, independent low-hanging-fruit delegation,
+  compelling fintech examples, minimal examples and JSDoc. Baseline inspected;
+  unrelated untracked `output/` preserved. This document is a plan, not evidence
+  of implemented capabilities. Audience/calendar preferences requested; design
+  discussion remains next.
+
+- 2026-10-08: User accepted the discussed inspection design. Naming revised to
+  `RenderedSeries`/`rendered()`; optional `filter` replaces candidate string
+  policies, and explicit resolver functions replace new duplicate-x policy
+  strings. Initial public capture/query test added before production code.
+  Implementation begins with the first numeric line/point slice.
+
+## 2026-10-08 — Batch 0 slice evidence
+
+Implemented the accepted optional `@pibbl/core/viz/inspection` entry: typed
+committed numeric queries, lazy `withInspection`, and separate point/bar geometric
+paint lookup. Line/point/bar capture is opt-in; original records and indices are
+preserved. Context memoization is dispatch-owned, and borrowed records become
+stale on a new successful root generation or disposal. Generation checks do not
+clone geometry on each request. Capture installs no signal subscription.
+
+Running Studio origin: `http://127.0.0.1:5176`.
+
+- [Standalone minimal](http://127.0.0.1:5176/#/examples/composition/viz-recorded-inspection)
+- [Lazy-handler minimal](http://127.0.0.1:5176/#/examples/composition/viz-lazy-inspection)
+- [Painted-lookup minimal](http://127.0.0.1:5176/#/examples/composition/viz-painted-inspection)
+- [Deterministic fintech showcase](http://127.0.0.1:5176/#/examples/composition/viz-inspection-workbench)
+
+Fresh evidence on host Node **26.9.0**, pnpm **11.21.0**, Playwright Chromium:
+
+- Focused Vitest run of six `inspection-*` test files: **12/12 passed**. Includes
+  exact source rows/values, transformed clips, singular transforms, gaps/ties,
+  duplicate resolution, memoized misses, signal-before-paint behavior, stale
+  records, native click/keyboard showcase composition, and disposal.
+- `node tooling/verify-inspection-studio.mjs`: all four Studio examples passed
+  desktop click, mobile touch, keyboard repaint, compiler and clean runtime-error
+  checks. Captures saved to `/tmp/pibbl-inspection-evidence/`; visual evidence
+  followed semantic geometry verification. No baselines were rewritten.
+- `node tooling/verify-inspection-bundles.mjs`: render-only excludes inspection
+  modules; nearest-x-only is 832 minified bytes and excludes optional capture,
+  adapter and painted-query code (structural evidence, not a timing benchmark).
+- `node tooling/verify-packed-viz.mjs`: packed Bundler/NodeNext typed composition,
+  runtime numeric/point/bar query smoke, identity and private boundary passed.
+- Root TypeScript, core declaration emit, focused ESLint, public JSDoc, scenario
+  catalog, Studio docs/search, and Studio source/built/editor parity passed.
+
+Limitations for feedback: deterministic simulation rather than market data;
+mobile Studio scales the broad showcase while the minimal lessons are sized for
+mobile; searches are linear and no speculative spatial index exists. Painted
+lookup is receiver-local geometric paint, without scene-wide occlusion or pixel
+alpha analysis. Area/band baseline/bounds query authoring remains a future design
+checkpoint; custom Plot/pie retain their existing datum callbacks. Candles/volume
+join this same foundation in Batch 1. Cached-Layer failure/rebase edge cases and
+broader aggregate verification remain post-feedback hardening. Node 24 LTS was
+not available for this run; no aggregate trust result is claimed.
+
+Milestone: **slice ready for feedback**, not **feature complete**. Stop adding
+features and collect user feedback.
+
+### 2026-10-08 — accepted inspection hardening
+
+User accepted Batch 0 and authorized continued work. Test-first fixes cover cached
+Layer rebase, keyed receiver replacement, failed-render teardown, five compact
+allocations and stale keyboard pointer readouts. Final focused checks: 7 files,
+25 tests passed on Node 24.19.0/pnpm 11.21.0/Chromium; final Studio desktop/touch
+checks passed for all four examples. Public build, source/built Studio, packed
+consumers, tree-shaking, lifecycle and structural performance passed. Aggregate
+trust/browser/lint checks encounter unrelated brand working-tree files; no full
+pass is claimed. See the [complete dated evidence](../testing/field-notes/2026-10-08-inspection-hardening.md).
+
+Remaining Batch 1 volume/financial-inspection examples are proposed for acceptance;
+no new financial APIs were implemented. Previously accepted candle authoring and
+TradingTimeScale persist. The single next step is that design review.
+
+### 2026-10-08 — inspection lesson feedback
+
+User found the examples too minimal and the standalone confusing. Revise the
+three existing learning lessons without adding capabilities or changing the
+accepted inspection API. Standalone now presents simulated recorded quotes and
+explicit order times, outlines the selected quote, and reports the time delta
+without interpolation. Lazy and painted lessons label their marks and separate
+results from instructions. Focused tests drive the same public lessons before
+visual verification. See the [feedback field note](../testing/field-notes/2026-10-08-inspection-lesson-feedback.md).
+The next step is feedback on these revisions; the volume design remains pending.
+
+### 2026-10-08 — inspection examples accepted and commit authorized
+
+User accepted the revised learning examples and requested “commit and continue.”
+Commit the inspection foundation, examples, documentation, public packaging and
+focused evidence as one batch; preserve unrelated working-tree changes. Batch 1
+scale/candle acceptance persists. The remaining volume/financial-inspection
+proposal is still recorded as pending acceptance; clarify whether the continuation
+also accepts those contracts before new API implementation.
