@@ -1,0 +1,1718 @@
+[
+  {
+    "mode": "baseline",
+    "width": 640,
+    "height": 450,
+    "frameBytes": 1152000,
+    "requestedMs": 3000,
+    "observedMs": 3000.800000190735,
+    "renderedFrames": 360,
+    "captureAttempts": 0,
+    "sentFrames": 0,
+    "dropped": 0,
+    "storageFull": 0,
+    "intervalMs": {
+      "count": 359,
+      "mean": 8.332869080779945,
+      "median": 8.300000190734863,
+      "p95": 8.800000190734863,
+      "max": 9.300000190734863
+    },
+    "readbackMs": {
+      "count": 0,
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+    },
+    "dispatchMs": {
+      "count": 0,
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+    },
+    "roundTripMs": {
+      "count": 0,
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+    },
+    "wasmInputCopyMs": {
+      "count": 0,
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+    },
+    "wasmStoreMs": {
+      "count": 0,
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+    },
+    "wasmAllocationMs": {
+      "count": 0,
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+    },
+    "storedFrames": 0,
+    "storedBytes": 0,
+    "allocatedBytes": 0,
+    "workload": "comparison",
+    "environment": {
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.7922.34 Safari/537.36",
+      "dpr": 1,
+      "visibility": "visible"
+    }
+  },
+  {
+    "mode": "readback",
+    "width": 640,
+    "height": 450,
+    "frameBytes": 1152000,
+    "requestedMs": 3000,
+    "observedMs": 3000.300000190735,
+    "renderedFrames": 360,
+    "captureAttempts": 360,
+    "sentFrames": 0,
+    "dropped": 0,
+    "storageFull": 0,
+    "intervalMs": {
+      "count": 359,
+      "mean": 8.333426183312715,
+      "median": 8.300000190734863,
+      "p95": 8.5,
+      "max": 9.400000095367432
+    },
+    "readbackMs": {
+      "count": 360,
+      "mean": 0.31611113415824044,
+      "median": 0.3000001907348633,
+      "p95": 0.40000009536743164,
+      "max": 0.5999999046325684
+    },
+    "dispatchMs": {
+      "count": 0,
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+    },
+    "roundTripMs": {
+      "count": 0,
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+    },
+    "wasmInputCopyMs": {
+      "count": 0,
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+    },
+    "wasmStoreMs": {
+      "count": 0,
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+    },
+    "wasmAllocationMs": {
+      "count": 0,
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+    },
+    "storedFrames": 0,
+    "storedBytes": 0,
+    "allocatedBytes": 0,
+    "workload": "comparison",
+    "environment": {
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.7922.34 Safari/537.36",
+      "dpr": 1,
+      "visibility": "visible"
+    }
+  },
+  {
+    "mode": "transfer",
+    "width": 640,
+    "height": 450,
+    "frameBytes": 1152000,
+    "requestedMs": 3000,
+    "observedMs": 3002.199999809265,
+    "renderedFrames": 361,
+    "captureAttempts": 361,
+    "sentFrames": 361,
+    "dropped": 0,
+    "storageFull": 0,
+    "intervalMs": {
+      "count": 360,
+      "mean": 8.333611112170749,
+      "median": 8.300000190734863,
+      "p95": 8.799999713897705,
+      "max": 9.5
+    },
+    "readbackMs": {
+      "count": 361,
+      "mean": 0.3110803316174452,
+      "median": 0.3000001907348633,
+      "p95": 0.40000009536743164,
+      "max": 0.5
+    },
+    "dispatchMs": {
+      "count": 361,
+      "mean": 0.01717451074446998,
+      "median": 0,
+      "p95": 0.09999990463256836,
+      "max": 0.10000038146972656
+    },
+    "roundTripMs": {
+      "count": 361,
+      "mean": 0.3168975177564119,
+      "median": 0.3000001907348633,
+      "p95": 0.5,
+      "max": 0.5999999046325684
+    },
+    "wasmInputCopyMs": {
+      "count": 0,
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+    },
+    "wasmStoreMs": {
+      "count": 0,
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+    },
+    "wasmAllocationMs": {
+      "count": 0,
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+    },
+    "type": "finished",
+    "storedFrames": 0,
+    "storedBytes": 0,
+    "allocatedBytes": 65536,
+    "workload": "comparison",
+    "environment": {
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.7922.34 Safari/537.36",
+      "dpr": 1,
+      "visibility": "visible"
+    }
+  },
+  {
+    "mode": "wasm",
+    "width": 640,
+    "height": 450,
+    "frameBytes": 1152000,
+    "requestedMs": 3000,
+    "observedMs": 3000.9000000953674,
+    "renderedFrames": 360,
+    "captureAttempts": 360,
+    "sentFrames": 360,
+    "dropped": 0,
+    "storageFull": 0,
+    "intervalMs": {
+      "count": 359,
+      "mean": 8.332869080779945,
+      "median": 8.300000190734863,
+      "p95": 9.200000286102295,
+      "max": 9.5
+    },
+    "readbackMs": {
+      "count": 360,
+      "mean": 0.3211111108462016,
+      "median": 0.3000001907348633,
+      "p95": 0.40000009536743164,
+      "max": 0.5999999046325684
+    },
+    "dispatchMs": {
+      "count": 360,
+      "mean": 0.014166667726304797,
+      "median": 0,
+      "p95": 0.09999990463256836,
+      "max": 0.10000038146972656
+    },
+    "roundTripMs": {
+      "count": 360,
+      "mean": 0.356111110581292,
+      "median": 0.39999961853027344,
+      "p95": 0.5,
+      "max": 0.5999999046325684
+    },
+    "wasmInputCopyMs": {
+      "count": 360,
+      "mean": 0.018333334392971464,
+      "median": 0,
+      "p95": 0.09999990463256836,
+      "max": 0.19999980926513672
+    },
+    "wasmStoreMs": {
+      "count": 360,
+      "mean": 0.08694443305333456,
+      "median": 0.09999990463256836,
+      "p95": 0.19999980926513672,
+      "max": 0.20000028610229492
+    },
+    "wasmAllocationMs": {
+      "count": 360,
+      "mean": 0.040833335452609594,
+      "median": 0,
+      "p95": 0.10000038146972656,
+      "max": 0.20000028610229492
+    },
+    "type": "finished",
+    "storedFrames": 360,
+    "storedBytes": 414720000,
+    "allocatedBytes": 415891456,
+    "workload": "comparison",
+    "environment": {
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.7922.34 Safari/537.36",
+      "dpr": 1,
+      "visibility": "visible"
+    }
+  },
+  {
+    "mode": "wasm",
+    "width": 640,
+    "height": 450,
+    "frameBytes": 1152000,
+    "requestedMs": 3000,
+    "observedMs": 3001.5,
+    "renderedFrames": 360,
+    "captureAttempts": 360,
+    "sentFrames": 360,
+    "dropped": 0,
+    "storageFull": 0,
+    "intervalMs": {
+      "count": 359,
+      "mean": 8.332869080779945,
+      "median": 8.300000190734863,
+      "p95": 8.599999904632568,
+      "max": 9.399999618530273
+    },
+    "readbackMs": {
+      "count": 360,
+      "mean": 0.30861111879348757,
+      "median": 0.3000001907348633,
+      "p95": 0.40000009536743164,
+      "max": 0.6000003814697266
+    },
+    "dispatchMs": {
+      "count": 360,
+      "mean": 0.011944447623358832,
+      "median": 0,
+      "p95": 0.09999990463256836,
+      "max": 0.10000038146972656
+    },
+    "roundTripMs": {
+      "count": 360,
+      "mean": 0.328055563237932,
+      "median": 0.3000001907348633,
+      "p95": 0.5,
+      "max": 0.5999999046325684
+    },
+    "wasmInputCopyMs": {
+      "count": 360,
+      "mean": 0.021666661898295084,
+      "median": 0,
+      "p95": 0.09999990463256836,
+      "max": 0.20000028610229492
+    },
+    "wasmStoreMs": {
+      "count": 360,
+      "mean": 0.08305556774139404,
+      "median": 0.09999990463256836,
+      "p95": 0.19999980926513672,
+      "max": 0.20000028610229492
+    },
+    "wasmAllocationMs": {
+      "count": 360,
+      "mean": 0.02999999788072374,
+      "median": 0,
+      "p95": 0.10000038146972656,
+      "max": 0.3000001907348633
+    },
+    "type": "finished",
+    "storedFrames": 360,
+    "storedBytes": 414720000,
+    "allocatedBytes": 415891456,
+    "workload": "comparison",
+    "environment": {
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.7922.34 Safari/537.36",
+      "dpr": 1,
+      "visibility": "visible"
+    }
+  },
+  {
+    "mode": "transfer",
+    "width": 640,
+    "height": 450,
+    "frameBytes": 1152000,
+    "requestedMs": 3000,
+    "observedMs": 3000.7000002861023,
+    "renderedFrames": 360,
+    "captureAttempts": 360,
+    "sentFrames": 360,
+    "dropped": 0,
+    "storageFull": 0,
+    "intervalMs": {
+      "count": 359,
+      "mean": 8.33314763204633,
+      "median": 8.300000190734863,
+      "p95": 8.800000190734863,
+      "max": 9.200000286102295
+    },
+    "readbackMs": {
+      "count": 360,
+      "mean": 0.5263888703452216,
+      "median": 0.5,
+      "p95": 0.7000002861022949,
+      "max": 1.0999999046325684
+    },
+    "dispatchMs": {
+      "count": 360,
+      "mean": 0.02361112435658773,
+      "median": 0,
+      "p95": 0.10000038146972656,
+      "max": 0.19999980926513672
+    },
+    "roundTripMs": {
+      "count": 360,
+      "mean": 0.4519444558355543,
+      "median": 0.40000009536743164,
+      "p95": 0.9000000953674316,
+      "max": 1.200000286102295
+    },
+    "wasmInputCopyMs": {
+      "count": 0,
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+    },
+    "wasmStoreMs": {
+      "count": 0,
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+    },
+    "wasmAllocationMs": {
+      "count": 0,
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+    },
+    "type": "finished",
+    "storedFrames": 0,
+    "storedBytes": 0,
+    "allocatedBytes": 65536,
+    "workload": "comparison",
+    "environment": {
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.7922.34 Safari/537.36",
+      "dpr": 1,
+      "visibility": "visible"
+    }
+  },
+  {
+    "mode": "readback",
+    "width": 640,
+    "height": 450,
+    "frameBytes": 1152000,
+    "requestedMs": 3000,
+    "observedMs": 3000.7000002861023,
+    "renderedFrames": 360,
+    "captureAttempts": 360,
+    "sentFrames": 0,
+    "dropped": 0,
+    "storageFull": 0,
+    "intervalMs": {
+      "count": 359,
+      "mean": 8.33314763204633,
+      "median": 8.300000190734863,
+      "p95": 8.700000286102295,
+      "max": 9.300000190734863
+    },
+    "readbackMs": {
+      "count": 360,
+      "mean": 0.5319444298744201,
+      "median": 0.5,
+      "p95": 0.7000002861022949,
+      "max": 1.0999999046325684
+    },
+    "dispatchMs": {
+      "count": 0,
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+    },
+    "roundTripMs": {
+      "count": 0,
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+    },
+    "wasmInputCopyMs": {
+      "count": 0,
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+    },
+    "wasmStoreMs": {
+      "count": 0,
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+    },
+    "wasmAllocationMs": {
+      "count": 0,
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+    },
+    "storedFrames": 0,
+    "storedBytes": 0,
+    "allocatedBytes": 0,
+    "workload": "comparison",
+    "environment": {
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.7922.34 Safari/537.36",
+      "dpr": 1,
+      "visibility": "visible"
+    }
+  },
+  {
+    "mode": "baseline",
+    "width": 640,
+    "height": 450,
+    "frameBytes": 1152000,
+    "requestedMs": 3000,
+    "observedMs": 3001.0999999046326,
+    "renderedFrames": 360,
+    "captureAttempts": 0,
+    "sentFrames": 0,
+    "dropped": 0,
+    "storageFull": 0,
+    "intervalMs": {
+      "count": 359,
+      "mean": 8.33314763204633,
+      "median": 8.300000190734863,
+      "p95": 9.299999713897705,
+      "max": 9.700000286102295
+    },
+    "readbackMs": {
+      "count": 0,
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+    },
+    "dispatchMs": {
+      "count": 0,
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+    },
+    "roundTripMs": {
+      "count": 0,
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+    },
+    "wasmInputCopyMs": {
+      "count": 0,
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+    },
+    "wasmStoreMs": {
+      "count": 0,
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+    },
+    "wasmAllocationMs": {
+      "count": 0,
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+    },
+    "storedFrames": 0,
+    "storedBytes": 0,
+    "allocatedBytes": 0,
+    "workload": "comparison",
+    "environment": {
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.7922.34 Safari/537.36",
+      "dpr": 1,
+      "visibility": "visible"
+    }
+  },
+  {
+    "mode": "baseline",
+    "width": 640,
+    "height": 450,
+    "frameBytes": 1152000,
+    "requestedMs": 3000,
+    "observedMs": 3001.4000000953674,
+    "renderedFrames": 360,
+    "captureAttempts": 0,
+    "sentFrames": 0,
+    "dropped": 0,
+    "storageFull": 0,
+    "intervalMs": {
+      "count": 359,
+      "mean": 8.333426183312715,
+      "median": 8.300000190734863,
+      "p95": 9.099999904632568,
+      "max": 9.599999904632568
+    },
+    "readbackMs": {
+      "count": 0,
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+    },
+    "dispatchMs": {
+      "count": 0,
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+    },
+    "roundTripMs": {
+      "count": 0,
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+    },
+    "wasmInputCopyMs": {
+      "count": 0,
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+    },
+    "wasmStoreMs": {
+      "count": 0,
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+    },
+    "wasmAllocationMs": {
+      "count": 0,
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+    },
+    "storedFrames": 0,
+    "storedBytes": 0,
+    "allocatedBytes": 0,
+    "workload": "comparison",
+    "environment": {
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.7922.34 Safari/537.36",
+      "dpr": 1,
+      "visibility": "visible"
+    }
+  },
+  {
+    "mode": "readback",
+    "width": 640,
+    "height": 450,
+    "frameBytes": 1152000,
+    "requestedMs": 3000,
+    "observedMs": 3001,
+    "renderedFrames": 360,
+    "captureAttempts": 360,
+    "sentFrames": 0,
+    "dropped": 0,
+    "storageFull": 0,
+    "intervalMs": {
+      "count": 359,
+      "mean": 8.333426183312715,
+      "median": 8.300000190734863,
+      "p95": 9,
+      "max": 9.400000095367432
+    },
+    "readbackMs": {
+      "count": 360,
+      "mean": 0.5119444515970019,
+      "median": 0.5,
+      "p95": 0.7999997138977051,
+      "max": 0.9000000953674316
+    },
+    "dispatchMs": {
+      "count": 0,
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+    },
+    "roundTripMs": {
+      "count": 0,
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+    },
+    "wasmInputCopyMs": {
+      "count": 0,
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+    },
+    "wasmStoreMs": {
+      "count": 0,
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+    },
+    "wasmAllocationMs": {
+      "count": 0,
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+    },
+    "storedFrames": 0,
+    "storedBytes": 0,
+    "allocatedBytes": 0,
+    "workload": "comparison",
+    "environment": {
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.7922.34 Safari/537.36",
+      "dpr": 1,
+      "visibility": "visible"
+    }
+  },
+  {
+    "mode": "transfer",
+    "width": 640,
+    "height": 450,
+    "frameBytes": 1152000,
+    "requestedMs": 3000,
+    "observedMs": 3000.699999809265,
+    "renderedFrames": 360,
+    "captureAttempts": 360,
+    "sentFrames": 360,
+    "dropped": 0,
+    "storageFull": 0,
+    "intervalMs": {
+      "count": 359,
+      "mean": 8.332869080779945,
+      "median": 8.300000190734863,
+      "p95": 9.299999713897705,
+      "max": 9.5
+    },
+    "readbackMs": {
+      "count": 360,
+      "mean": 0.4077777703603109,
+      "median": 0.40000009536743164,
+      "p95": 0.5999999046325684,
+      "max": 0.8000001907348633
+    },
+    "dispatchMs": {
+      "count": 360,
+      "mean": 0.018611107932196724,
+      "median": 0,
+      "p95": 0.09999990463256836,
+      "max": 0.10000038146972656
+    },
+    "roundTripMs": {
+      "count": 360,
+      "mean": 0.4930555568801032,
+      "median": 0.5,
+      "p95": 0.7000002861022949,
+      "max": 1.1999998092651367
+    },
+    "wasmInputCopyMs": {
+      "count": 0,
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+    },
+    "wasmStoreMs": {
+      "count": 0,
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+    },
+    "wasmAllocationMs": {
+      "count": 0,
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+    },
+    "type": "finished",
+    "storedFrames": 0,
+    "storedBytes": 0,
+    "allocatedBytes": 65536,
+    "workload": "comparison",
+    "environment": {
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.7922.34 Safari/537.36",
+      "dpr": 1,
+      "visibility": "visible"
+    }
+  },
+  {
+    "mode": "wasm",
+    "width": 640,
+    "height": 450,
+    "frameBytes": 1152000,
+    "requestedMs": 3000,
+    "observedMs": 3001.5,
+    "renderedFrames": 360,
+    "captureAttempts": 360,
+    "sentFrames": 360,
+    "dropped": 0,
+    "storageFull": 0,
+    "intervalMs": {
+      "count": 359,
+      "mean": 8.333426184640954,
+      "median": 8.300000190734863,
+      "p95": 9.199999809265137,
+      "max": 9.5
+    },
+    "readbackMs": {
+      "count": 360,
+      "mean": 0.47638888359069825,
+      "median": 0.5,
+      "p95": 0.6999998092651367,
+      "max": 0.8999996185302734
+    },
+    "dispatchMs": {
+      "count": 360,
+      "mean": 0.022222222222222223,
+      "median": 0,
+      "p95": 0.09999990463256836,
+      "max": 0.19999980926513672
+    },
+    "roundTripMs": {
+      "count": 360,
+      "mean": 0.610277775923411,
+      "median": 0.5999999046325684,
+      "p95": 0.7999997138977051,
+      "max": 1.4000000953674316
+    },
+    "wasmInputCopyMs": {
+      "count": 360,
+      "mean": 0.03472221824857924,
+      "median": 0,
+      "p95": 0.10000038146972656,
+      "max": 0.20000028610229492
+    },
+    "wasmStoreMs": {
+      "count": 360,
+      "mean": 0.14972221453984577,
+      "median": 0.10000038146972656,
+      "p95": 0.3000001907348633,
+      "max": 0.5
+    },
+    "wasmAllocationMs": {
+      "count": 360,
+      "mean": 0.0666666587193807,
+      "median": 0.09999990463256836,
+      "p95": 0.19999980926513672,
+      "max": 0.3000001907348633
+    },
+    "type": "finished",
+    "storedFrames": 360,
+    "storedBytes": 414720000,
+    "allocatedBytes": 415891456,
+    "workload": "comparison",
+    "environment": {
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.7922.34 Safari/537.36",
+      "dpr": 1,
+      "visibility": "visible"
+    }
+  },
+  {
+    "mode": "baseline",
+    "width": 640,
+    "height": 450,
+    "frameBytes": 1152000,
+    "requestedMs": 3000,
+    "observedMs": 3001.4000000953674,
+    "renderedFrames": 360,
+    "captureAttempts": 0,
+    "sentFrames": 0,
+    "dropped": 0,
+    "storageFull": 0,
+    "intervalMs": {
+      "count": 359,
+      "mean": 8.331197771853391,
+      "median": 8.300000190734863,
+      "p95": 9.199999809265137,
+      "max": 10
+    },
+    "readbackMs": {
+      "count": 0,
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+    },
+    "dispatchMs": {
+      "count": 0,
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+    },
+    "roundTripMs": {
+      "count": 0,
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+    },
+    "wasmInputCopyMs": {
+      "count": 0,
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+    },
+    "wasmStoreMs": {
+      "count": 0,
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+    },
+    "wasmAllocationMs": {
+      "count": 0,
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+    },
+    "storedFrames": 0,
+    "storedBytes": 0,
+    "allocatedBytes": 0,
+    "workload": "isolated",
+    "environment": {
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.7922.34 Safari/537.36",
+      "dpr": 1,
+      "visibility": "visible"
+    }
+  },
+  {
+    "mode": "readback",
+    "width": 640,
+    "height": 450,
+    "frameBytes": 1152000,
+    "requestedMs": 3000,
+    "observedMs": 3000.9000000953674,
+    "renderedFrames": 360,
+    "captureAttempts": 360,
+    "sentFrames": 0,
+    "dropped": 0,
+    "storageFull": 0,
+    "intervalMs": {
+      "count": 359,
+      "mean": 8.332590529513558,
+      "median": 8.300000190734863,
+      "p95": 9.199999809265137,
+      "max": 9.700000286102295
+    },
+    "readbackMs": {
+      "count": 360,
+      "mean": 0.5619444383515252,
+      "median": 0.5999999046325684,
+      "p95": 0.9000000953674316,
+      "max": 1.299999713897705
+    },
+    "dispatchMs": {
+      "count": 0,
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+    },
+    "roundTripMs": {
+      "count": 0,
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+    },
+    "wasmInputCopyMs": {
+      "count": 0,
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+    },
+    "wasmStoreMs": {
+      "count": 0,
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+    },
+    "wasmAllocationMs": {
+      "count": 0,
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+    },
+    "storedFrames": 0,
+    "storedBytes": 0,
+    "allocatedBytes": 0,
+    "workload": "isolated",
+    "environment": {
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.7922.34 Safari/537.36",
+      "dpr": 1,
+      "visibility": "visible"
+    }
+  },
+  {
+    "mode": "transfer",
+    "width": 640,
+    "height": 450,
+    "frameBytes": 1152000,
+    "requestedMs": 3000,
+    "observedMs": 3001.300000190735,
+    "renderedFrames": 360,
+    "captureAttempts": 360,
+    "sentFrames": 360,
+    "dropped": 0,
+    "storageFull": 0,
+    "intervalMs": {
+      "count": 359,
+      "mean": 8.33314763204633,
+      "median": 8.300000190734863,
+      "p95": 9.200000286102295,
+      "max": 9.5
+    },
+    "readbackMs": {
+      "count": 360,
+      "mean": 0.3374999894036187,
+      "median": 0.3000001907348633,
+      "p95": 0.40000009536743164,
+      "max": 0.5999999046325684
+    },
+    "dispatchMs": {
+      "count": 360,
+      "mean": 0.021666669845581056,
+      "median": 0,
+      "p95": 0.09999990463256836,
+      "max": 0.10000038146972656
+    },
+    "roundTripMs": {
+      "count": 360,
+      "mean": 0.3475000090069241,
+      "median": 0.3000001907348633,
+      "p95": 0.40000009536743164,
+      "max": 0.5
+    },
+    "wasmInputCopyMs": {
+      "count": 0,
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+    },
+    "wasmStoreMs": {
+      "count": 0,
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+    },
+    "wasmAllocationMs": {
+      "count": 0,
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+    },
+    "type": "finished",
+    "storedFrames": 0,
+    "storedBytes": 0,
+    "allocatedBytes": 65536,
+    "workload": "isolated",
+    "environment": {
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.7922.34 Safari/537.36",
+      "dpr": 1,
+      "visibility": "visible"
+    }
+  },
+  {
+    "mode": "wasm",
+    "width": 640,
+    "height": 450,
+    "frameBytes": 1152000,
+    "requestedMs": 3000,
+    "observedMs": 3000.9000000953674,
+    "renderedFrames": 360,
+    "captureAttempts": 360,
+    "sentFrames": 360,
+    "dropped": 0,
+    "storageFull": 0,
+    "intervalMs": {
+      "count": 359,
+      "mean": 8.330640667992382,
+      "median": 8.300000190734863,
+      "p95": 9.299999713897705,
+      "max": 9.5
+    },
+    "readbackMs": {
+      "count": 360,
+      "mean": 0.5749999814563327,
+      "median": 0.5999999046325684,
+      "p95": 0.9000000953674316,
+      "max": 1.200000286102295
+    },
+    "dispatchMs": {
+      "count": 360,
+      "mean": 0.027222222752041288,
+      "median": 0,
+      "p95": 0.10000038146972656,
+      "max": 0.20000028610229492
+    },
+    "roundTripMs": {
+      "count": 360,
+      "mean": 0.5180555701255798,
+      "median": 0.5,
+      "p95": 0.8999996185302734,
+      "max": 1.200000286102295
+    },
+    "wasmInputCopyMs": {
+      "count": 360,
+      "mean": 0.03722221718894111,
+      "median": 0,
+      "p95": 0.10000038146972656,
+      "max": 0.20000028610229492
+    },
+    "wasmStoreMs": {
+      "count": 360,
+      "mean": 0.16972222063276504,
+      "median": 0.19999980926513672,
+      "p95": 0.3000001907348633,
+      "max": 0.5999999046325684
+    },
+    "wasmAllocationMs": {
+      "count": 360,
+      "mean": 0.07611112727059258,
+      "median": 0.09999990463256836,
+      "p95": 0.20000028610229492,
+      "max": 0.3000001907348633
+    },
+    "type": "finished",
+    "storedFrames": 360,
+    "storedBytes": 414720000,
+    "allocatedBytes": 415891456,
+    "workload": "isolated",
+    "environment": {
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.7922.34 Safari/537.36",
+      "dpr": 1,
+      "visibility": "visible"
+    }
+  },
+  {
+    "mode": "wasm",
+    "width": 640,
+    "height": 450,
+    "frameBytes": 1152000,
+    "requestedMs": 3000,
+    "observedMs": 3000.199999809265,
+    "renderedFrames": 360,
+    "captureAttempts": 360,
+    "sentFrames": 360,
+    "dropped": 0,
+    "storageFull": 0,
+    "intervalMs": {
+      "count": 359,
+      "mean": 8.330919220587004,
+      "median": 8.300000190734863,
+      "p95": 9.199999809265137,
+      "max": 9.900000095367432
+    },
+    "readbackMs": {
+      "count": 360,
+      "mean": 0.666388890478346,
+      "median": 0.6000003814697266,
+      "p95": 0.9000000953674316,
+      "max": 1.3000001907348633
+    },
+    "dispatchMs": {
+      "count": 360,
+      "mean": 0.03722222248713176,
+      "median": 0,
+      "p95": 0.10000038146972656,
+      "max": 0.20000028610229492
+    },
+    "roundTripMs": {
+      "count": 360,
+      "mean": 0.6225000143051147,
+      "median": 0.5999999046325684,
+      "p95": 1,
+      "max": 1.4000000953674316
+    },
+    "wasmInputCopyMs": {
+      "count": 360,
+      "mean": 0.05305556588702732,
+      "median": 0,
+      "p95": 0.19999980926513672,
+      "max": 0.40000009536743164
+    },
+    "wasmStoreMs": {
+      "count": 360,
+      "mean": 0.19694444206025866,
+      "median": 0.19999980926513672,
+      "p95": 0.39999961853027344,
+      "max": 0.6999998092651367
+    },
+    "wasmAllocationMs": {
+      "count": 360,
+      "mean": 0.07972223096423679,
+      "median": 0.09999990463256836,
+      "p95": 0.20000028610229492,
+      "max": 0.3000001907348633
+    },
+    "type": "finished",
+    "storedFrames": 360,
+    "storedBytes": 414720000,
+    "allocatedBytes": 415891456,
+    "workload": "isolated",
+    "environment": {
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.7922.34 Safari/537.36",
+      "dpr": 1,
+      "visibility": "visible"
+    }
+  },
+  {
+    "mode": "transfer",
+    "width": 640,
+    "height": 450,
+    "frameBytes": 1152000,
+    "requestedMs": 3000,
+    "observedMs": 3000.9000000953674,
+    "renderedFrames": 360,
+    "captureAttempts": 360,
+    "sentFrames": 360,
+    "dropped": 0,
+    "storageFull": 0,
+    "intervalMs": {
+      "count": 359,
+      "mean": 8.334818942301121,
+      "median": 8.300000190734863,
+      "p95": 9.200000286102295,
+      "max": 9.899999618530273
+    },
+    "readbackMs": {
+      "count": 360,
+      "mean": 0.6222222275204129,
+      "median": 0.5999999046325684,
+      "p95": 1,
+      "max": 1.1999998092651367
+    },
+    "dispatchMs": {
+      "count": 360,
+      "mean": 0.0358333322736952,
+      "median": 0,
+      "p95": 0.10000038146972656,
+      "max": 0.20000028610229492
+    },
+    "roundTripMs": {
+      "count": 360,
+      "mean": 0.5447222140100267,
+      "median": 0.5,
+      "p95": 0.8999996185302734,
+      "max": 1.0999999046325684
+    },
+    "wasmInputCopyMs": {
+      "count": 0,
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+    },
+    "wasmStoreMs": {
+      "count": 0,
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+    },
+    "wasmAllocationMs": {
+      "count": 0,
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+    },
+    "type": "finished",
+    "storedFrames": 0,
+    "storedBytes": 0,
+    "allocatedBytes": 65536,
+    "workload": "isolated",
+    "environment": {
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.7922.34 Safari/537.36",
+      "dpr": 1,
+      "visibility": "visible"
+    }
+  },
+  {
+    "mode": "readback",
+    "width": 640,
+    "height": 450,
+    "frameBytes": 1152000,
+    "requestedMs": 3000,
+    "observedMs": 3000.4000000953674,
+    "renderedFrames": 360,
+    "captureAttempts": 360,
+    "sentFrames": 0,
+    "dropped": 0,
+    "storageFull": 0,
+    "intervalMs": {
+      "count": 359,
+      "mean": 8.331197770525154,
+      "median": 8.300000190734863,
+      "p95": 9.200000286102295,
+      "max": 9.599999904632568
+    },
+    "readbackMs": {
+      "count": 360,
+      "mean": 0.6363889124658373,
+      "median": 0.5999999046325684,
+      "p95": 0.9000000953674316,
+      "max": 1.200000286102295
+    },
+    "dispatchMs": {
+      "count": 0,
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+    },
+    "roundTripMs": {
+      "count": 0,
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+    },
+    "wasmInputCopyMs": {
+      "count": 0,
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+    },
+    "wasmStoreMs": {
+      "count": 0,
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+    },
+    "wasmAllocationMs": {
+      "count": 0,
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+    },
+    "storedFrames": 0,
+    "storedBytes": 0,
+    "allocatedBytes": 0,
+    "workload": "isolated",
+    "environment": {
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.7922.34 Safari/537.36",
+      "dpr": 1,
+      "visibility": "visible"
+    }
+  },
+  {
+    "mode": "baseline",
+    "width": 640,
+    "height": 450,
+    "frameBytes": 1152000,
+    "requestedMs": 3000,
+    "observedMs": 3001.2999997138977,
+    "renderedFrames": 360,
+    "captureAttempts": 0,
+    "sentFrames": 0,
+    "dropped": 0,
+    "storageFull": 0,
+    "intervalMs": {
+      "count": 359,
+      "mean": 8.333147633374567,
+      "median": 8.300000190734863,
+      "p95": 9.199999809265137,
+      "max": 9.800000190734863
+    },
+    "readbackMs": {
+      "count": 0,
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+    },
+    "dispatchMs": {
+      "count": 0,
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+    },
+    "roundTripMs": {
+      "count": 0,
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+    },
+    "wasmInputCopyMs": {
+      "count": 0,
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+    },
+    "wasmStoreMs": {
+      "count": 0,
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+    },
+    "wasmAllocationMs": {
+      "count": 0,
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+    },
+    "storedFrames": 0,
+    "storedBytes": 0,
+    "allocatedBytes": 0,
+    "workload": "isolated",
+    "environment": {
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.7922.34 Safari/537.36",
+      "dpr": 1,
+      "visibility": "visible"
+    }
+  },
+  {
+    "mode": "baseline",
+    "width": 640,
+    "height": 450,
+    "frameBytes": 1152000,
+    "requestedMs": 3000,
+    "observedMs": 3000.300000190735,
+    "renderedFrames": 360,
+    "captureAttempts": 0,
+    "sentFrames": 0,
+    "dropped": 0,
+    "storageFull": 0,
+    "intervalMs": {
+      "count": 359,
+      "mean": 8.334540389706497,
+      "median": 8.300000190734863,
+      "p95": 9.099999904632568,
+      "max": 9.599999904632568
+    },
+    "readbackMs": {
+      "count": 0,
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+    },
+    "dispatchMs": {
+      "count": 0,
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+    },
+    "roundTripMs": {
+      "count": 0,
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+    },
+    "wasmInputCopyMs": {
+      "count": 0,
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+    },
+    "wasmStoreMs": {
+      "count": 0,
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+    },
+    "wasmAllocationMs": {
+      "count": 0,
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+    },
+    "storedFrames": 0,
+    "storedBytes": 0,
+    "allocatedBytes": 0,
+    "workload": "isolated",
+    "environment": {
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.7922.34 Safari/537.36",
+      "dpr": 1,
+      "visibility": "visible"
+    }
+  },
+  {
+    "mode": "readback",
+    "width": 640,
+    "height": 450,
+    "frameBytes": 1152000,
+    "requestedMs": 3000,
+    "observedMs": 3001.199999809265,
+    "renderedFrames": 360,
+    "captureAttempts": 360,
+    "sentFrames": 0,
+    "dropped": 0,
+    "storageFull": 0,
+    "intervalMs": {
+      "count": 359,
+      "mean": 8.333983287173725,
+      "median": 8.300000190734863,
+      "p95": 9.099999904632568,
+      "max": 9.599999904632568
+    },
+    "readbackMs": {
+      "count": 360,
+      "mean": 0.5708333253860474,
+      "median": 0.5999999046325684,
+      "p95": 0.8000001907348633,
+      "max": 1.0999999046325684
+    },
+    "dispatchMs": {
+      "count": 0,
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+    },
+    "roundTripMs": {
+      "count": 0,
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+    },
+    "wasmInputCopyMs": {
+      "count": 0,
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+    },
+    "wasmStoreMs": {
+      "count": 0,
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+    },
+    "wasmAllocationMs": {
+      "count": 0,
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+    },
+    "storedFrames": 0,
+    "storedBytes": 0,
+    "allocatedBytes": 0,
+    "workload": "isolated",
+    "environment": {
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.7922.34 Safari/537.36",
+      "dpr": 1,
+      "visibility": "visible"
+    }
+  },
+  {
+    "mode": "transfer",
+    "width": 640,
+    "height": 450,
+    "frameBytes": 1152000,
+    "requestedMs": 3000,
+    "observedMs": 3002.0999999046326,
+    "renderedFrames": 361,
+    "captureAttempts": 361,
+    "sentFrames": 361,
+    "dropped": 0,
+    "storageFull": 0,
+    "intervalMs": {
+      "count": 360,
+      "mean": 8.333611110846201,
+      "median": 8.300000190734863,
+      "p95": 8.900000095367432,
+      "max": 9.400000095367432
+    },
+    "readbackMs": {
+      "count": 361,
+      "mean": 0.5268698002823172,
+      "median": 0.5,
+      "p95": 0.7000002861022949,
+      "max": 1
+    },
+    "dispatchMs": {
+      "count": 361,
+      "mean": 0.027423819016221488,
+      "median": 0,
+      "p95": 0.09999990463256836,
+      "max": 0.19999980926513672
+    },
+    "roundTripMs": {
+      "count": 361,
+      "mean": 0.5063712127981423,
+      "median": 0.5,
+      "p95": 0.7000002861022949,
+      "max": 1.6999998092651367
+    },
+    "wasmInputCopyMs": {
+      "count": 0,
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+    },
+    "wasmStoreMs": {
+      "count": 0,
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+    },
+    "wasmAllocationMs": {
+      "count": 0,
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+    },
+    "type": "finished",
+    "storedFrames": 0,
+    "storedBytes": 0,
+    "allocatedBytes": 65536,
+    "workload": "isolated",
+    "environment": {
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.7922.34 Safari/537.36",
+      "dpr": 1,
+      "visibility": "visible"
+    }
+  },
+  {
+    "mode": "wasm",
+    "width": 640,
+    "height": 450,
+    "frameBytes": 1152000,
+    "requestedMs": 3000,
+    "observedMs": 3000.800000190735,
+    "renderedFrames": 360,
+    "captureAttempts": 360,
+    "sentFrames": 360,
+    "dropped": 0,
+    "storageFull": 0,
+    "intervalMs": {
+      "count": 359,
+      "mean": 8.33314763204633,
+      "median": 8.300000190734863,
+      "p95": 9.199999809265137,
+      "max": 9.5
+    },
+    "readbackMs": {
+      "count": 360,
+      "mean": 0.5861111084620158,
+      "median": 0.5999999046325684,
+      "p95": 0.8999996185302734,
+      "max": 1.3000001907348633
+    },
+    "dispatchMs": {
+      "count": 360,
+      "mean": 0.030555554231007895,
+      "median": 0,
+      "p95": 0.10000038146972656,
+      "max": 0.20000028610229492
+    },
+    "roundTripMs": {
+      "count": 360,
+      "mean": 0.6013888862397936,
+      "median": 0.5999999046325684,
+      "p95": 1,
+      "max": 1.5999999046325684
+    },
+    "wasmInputCopyMs": {
+      "count": 360,
+      "mean": 0.04444444179534912,
+      "median": 0,
+      "p95": 0.10000038146972656,
+      "max": 0.40000009536743164
+    },
+    "wasmStoreMs": {
+      "count": 360,
+      "mean": 0.17666666507720946,
+      "median": 0.19999980926513672,
+      "p95": 0.3000001907348633,
+      "max": 0.5
+    },
+    "wasmAllocationMs": {
+      "count": 360,
+      "mean": 0.06527776983049181,
+      "median": 0.09999990463256836,
+      "p95": 0.19999980926513672,
+      "max": 0.40000009536743164
+    },
+    "type": "finished",
+    "storedFrames": 360,
+    "storedBytes": 414720000,
+    "allocatedBytes": 415891456,
+    "workload": "isolated",
+    "environment": {
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.7922.34 Safari/537.36",
+      "dpr": 1,
+      "visibility": "visible"
+    }
+  }
+]

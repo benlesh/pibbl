@@ -3,18 +3,20 @@
   "identity": "Big Bubbles",
   "version": "2.0",
   "date": "2026-10-08",
-  "fileCountExcludingManifestAndChecksums": 192,
+  "fileCountExcludingManifestAndChecksums": 247,
   "formats": {
     ".pdf": 17,
     ".png": 88,
-    ".md": 2,
-    ".json": 6,
+    ".md": 8,
+    ".json": 11,
+    ".gif": 8,
+    ".html": 5,
+    ".mjs": 31,
+    ".mts": 2,
+    ".py": 4,
     ".svg": 48,
-    ".html": 2,
     ".jpg": 4,
     ".eps": 16,
-    ".mjs": 1,
-    ".py": 3,
     ".css": 1,
     ".ico": 1,
     ".webp": 2,
@@ -23,8 +25,8 @@
   "files": [
     {
       "file": "Pibbl-Big-Bubbles-Brand-Guide.pdf",
-      "bytes": 13867,
-      "sha256": "51b0bd3480cb0d3513d9977483b1cd873419cf1f7f799c7602cdf1412eb534c9"
+      "bytes": 13885,
+      "sha256": "02287185af103cf386d7a099c8b9c0862d6170dc9c6323e41000d31d65b86958"
     },
     {
       "file": "Pibbl-Big-Bubbles-Kit-Overview.png",
@@ -33,18 +35,293 @@
     },
     {
       "file": "README.md",
-      "bytes": 3419,
-      "sha256": "cc293f43ab14356394fe29248547a7a0c9f5588d47f9161533033fb9bec4e51b"
+      "bytes": 3638,
+      "sha256": "5a8ff7219b9fe25de69592b1253e070624f3393e285f27a4fbdd6f2218da27b5"
     },
     {
       "file": "animation/README.md",
-      "bytes": 1334,
-      "sha256": "f884314f99f479702cc7024c0971eb9c3e6d0d292e58794a8959c6acf2dd66e4"
+      "bytes": 1952,
+      "sha256": "b5ecc5fba7c112e5922433f897352aa2ab407bf38582536d9e353884ca72218a"
     },
     {
       "file": "animation/animation-parts.json",
       "bytes": 4374,
       "sha256": "cc55d4096a7c038b1137ad149ea98b6e718ebc2497879eefa16a35782cd32639"
+    },
+    {
+      "file": "animation/gif/EXPORTS.json",
+      "bytes": 1423,
+      "sha256": "9657a7cd1062506079d5cc665f8abe8fc7b98c2684681e05e4d0dff6764addcf"
+    },
+    {
+      "file": "animation/gif/pibbl-finish-dark-512.gif",
+      "bytes": 886602,
+      "sha256": "39257eec5705468bea3c30bc99ee3f045f81b524a52d09ca3868cfb40c55ced8"
+    },
+    {
+      "file": "animation/gif/pibbl-finish-white-512.gif",
+      "bytes": 847212,
+      "sha256": "1c6884cd9532345e0fbe1097bf7de85263e8c17718ac3ffabd7684854457002e"
+    },
+    {
+      "file": "animation/gif/pibbl-loop-dark-1024.gif",
+      "bytes": 974068,
+      "sha256": "adc9ac2315808268a4d987adbe948e46f572dbea573e2dc71b1b5beb647b27f9"
+    },
+    {
+      "file": "animation/gif/pibbl-loop-dark-256.gif",
+      "bytes": 500604,
+      "sha256": "f5d57a5e8e478a6624fdb8aa1a716e9896bfc76208c02d9b055f2ebb41a0c9e1"
+    },
+    {
+      "file": "animation/gif/pibbl-loop-dark-512.gif",
+      "bytes": 764740,
+      "sha256": "730c4c5c89ae7be4c51129d8595231b7488a0093d348db8b15d5d3431d2c7609"
+    },
+    {
+      "file": "animation/gif/pibbl-loop-white-1024.gif",
+      "bytes": 977771,
+      "sha256": "6a5ee561ee91f155f0d86a69c65fe05c45edca62973c7f3e6db19da0c2f5d924"
+    },
+    {
+      "file": "animation/gif/pibbl-loop-white-256.gif",
+      "bytes": 478595,
+      "sha256": "caded4949cded53b8a239d3eb203ad60d43da38b8d67d7709754279252d40a1a"
+    },
+    {
+      "file": "animation/gif/pibbl-loop-white-512.gif",
+      "bytes": 728679,
+      "sha256": "b6ffea3d6c713af1d116266be61dd3d9aaad56bcbcd609307664355fcc6c7ab7"
+    },
+    {
+      "file": "animation/loader/CANVAS.md",
+      "bytes": 7154,
+      "sha256": "5ef7887d748481a64ab88cb0f942d3d7fd2c8bc50e09e22cff8235c50ea59e8c"
+    },
+    {
+      "file": "animation/loader/PIBBL-PORT.md",
+      "bytes": 11096,
+      "sha256": "0e19177623ced647c1c7ce6a5c9ea99897fbed3e4e2dc5c0c80f0a8c3f5a55ef"
+    },
+    {
+      "file": "animation/loader/README.md",
+      "bytes": 5386,
+      "sha256": "dfabaa412043aa3dfe773f043b6c6f9f7107405a53b33ed95eec6131312d6861"
+    },
+    {
+      "file": "animation/loader/RECORDING-API.md",
+      "bytes": 6708,
+      "sha256": "02b5fbb01c0655d93f3c1c18ca2fef6bbe9d048062d78a93e86881c16298d37a"
+    },
+    {
+      "file": "animation/loader/RECORDING.md",
+      "bytes": 7070,
+      "sha256": "8ec652ca04578f17318ffee24e2699e5e13cd0a2f24b69c4e37bd84aa3dd39e0"
+    },
+    {
+      "file": "animation/loader/VERIFICATION.md",
+      "bytes": 2063,
+      "sha256": "9a656cf02ca9e39dd56990c0cda979957f66e3a75f4dfde0336655d731a0f4ba"
+    },
+    {
+      "file": "animation/loader/browser-check.html",
+      "bytes": 2360,
+      "sha256": "4f29911cd11dc70ec61ba941db87f01d728c7eef5ce59d018160ef3e317d62e0"
+    },
+    {
+      "file": "animation/loader/canvas-browser-check.mjs",
+      "bytes": 3118,
+      "sha256": "bc4694bac54655e786aba244e4b36de2c3d43cd33591097a8b2e63897735764e"
+    },
+    {
+      "file": "animation/loader/canvas-comparison.html",
+      "bytes": 4779,
+      "sha256": "dcd0e1ee37ba9444a7f26cfbc8b3defe37b0c1c154e6f27c34cb902285fdb4a4"
+    },
+    {
+      "file": "animation/loader/canvas-evidence.mjs",
+      "bytes": 8446,
+      "sha256": "99a768bd69a47973167906b835bd8b13f06f8f06ff293b996d0c8c15e243205f"
+    },
+    {
+      "file": "animation/loader/canvas-loader.d.mts",
+      "bytes": 1554,
+      "sha256": "6bcabe218f9362496b5cad6bdbc586d8b5e0c0345a79a021c28d83efa1a4c342"
+    },
+    {
+      "file": "animation/loader/canvas-loader.mjs",
+      "bytes": 6826,
+      "sha256": "b80c0fbe7d40e6fa5fda972e89541f92f7449ca9890c32b4931a06f28ee2a1cf"
+    },
+    {
+      "file": "animation/loader/canvas-model.test.mjs",
+      "bytes": 1602,
+      "sha256": "4b777dbf17be669828a3e910047a1be13f709dc209a271a5a5c068fa612161af"
+    },
+    {
+      "file": "animation/loader/canvas-score.mjs",
+      "bytes": 811,
+      "sha256": "0b0445bffe3ec60dac6b3e201a33da4c8c49479b9999bb5e2ca42a4ca698d605"
+    },
+    {
+      "file": "animation/loader/canvas-usage.mts",
+      "bytes": 917,
+      "sha256": "c757ba8e0e7a3bec5371336152b90aa7187252d45b2a014c6d2e2488231a2423"
+    },
+    {
+      "file": "animation/loader/canvas-vite.config.mjs",
+      "bytes": 625,
+      "sha256": "dab415c4eb715747d3aa49dd358d67dea3f1771525c07b046c0e90efb106a86a"
+    },
+    {
+      "file": "animation/loader/collision.mjs",
+      "bytes": 1806,
+      "sha256": "d669325117509a4829af1f606afba805fbd641ba87e1063680e19cb39e25b317"
+    },
+    {
+      "file": "animation/loader/contact-motion.test.mjs",
+      "bytes": 1065,
+      "sha256": "464bc74261344b3b0fb61809b63047f33d7d243654470ff04ea1a2000b9af1a0"
+    },
+    {
+      "file": "animation/loader/demo.html",
+      "bytes": 2648,
+      "sha256": "dfeaf0922d511406f6d8a0bcdb69900463b2562f9ec9b360bbe5bd57a0410936"
+    },
+    {
+      "file": "animation/loader/encode-gif.py",
+      "bytes": 1722,
+      "sha256": "02f94a5877f26300a5716ce1206048e33471e42d7d03bbc97505761cddd8cccc"
+    },
+    {
+      "file": "animation/loader/export-gif.mjs",
+      "bytes": 953,
+      "sha256": "1fbf0e905ed25dadc699dd5ceeaf66985567cc66d1adee3d1a7aa490db804ef2"
+    },
+    {
+      "file": "animation/loader/gravity.test.mjs",
+      "bytes": 722,
+      "sha256": "08e55b201c83c6126d93d7e5edc706902cae49ae0d925f22b2fc7ed047e75e4b"
+    },
+    {
+      "file": "animation/loader/identity.mjs",
+      "bytes": 4871,
+      "sha256": "5d91569446e19cb981338bab2666bf3b22373f5e40e9df586baa4f7b08738ad4"
+    },
+    {
+      "file": "animation/loader/motion.mjs",
+      "bytes": 8831,
+      "sha256": "d9282322b1f95f3715f59709cef6282be88c02da44f132830a63e310f7a1a948"
+    },
+    {
+      "file": "animation/loader/motion.test.mjs",
+      "bytes": 573,
+      "sha256": "e4f9e1e3da19e0ac68fe254548a4bef8d9024f0232af265f78aa68eaa391dd09"
+    },
+    {
+      "file": "animation/loader/no-overlap.test.mjs",
+      "bytes": 728,
+      "sha256": "04fdd7f0c97495384062f427557ba7c29550b366b38765bb197021d3dea677b5"
+    },
+    {
+      "file": "animation/loader/packaging.test.mjs",
+      "bytes": 992,
+      "sha256": "7556165d79389ea4a79ddd4f6aafae8d24324b4414d94720457291c7381733db"
+    },
+    {
+      "file": "animation/loader/personality.test.mjs",
+      "bytes": 2110,
+      "sha256": "e39ccdabf39c53f38102cc337bff6cf8364b3d968422e584320200dfc0b85b9a"
+    },
+    {
+      "file": "animation/loader/pibbl-loader.mjs",
+      "bytes": 2701,
+      "sha256": "6074f98a287b3484b1d18680e7b283137e2599275fb05f77203984fc4a69d172"
+    },
+    {
+      "file": "animation/loader/playback.mjs",
+      "bytes": 2500,
+      "sha256": "a6b875c79980843021bdda3a80c4d59d6eb6d7f7e28cc83b4aeaf62080e8e6d0"
+    },
+    {
+      "file": "animation/loader/playback.test.mjs",
+      "bytes": 1033,
+      "sha256": "3f72ab88da25b36a007c4ae6c6f13871972827a2b93cc59d39900978dc84cbb1"
+    },
+    {
+      "file": "animation/loader/recording-api-browser-check.mjs",
+      "bytes": 4148,
+      "sha256": "7100863dd710c9cb45237e23e21f6462ceaaad3d8def241dab5098be421f092d"
+    },
+    {
+      "file": "animation/loader/recording-api-results.json",
+      "bytes": 412,
+      "sha256": "23d9f37e725764c908f0ebfec16346a64fe649f0b55a2b9f8b1e2fd81dcc91be"
+    },
+    {
+      "file": "animation/loader/recording-api-ui.mjs",
+      "bytes": 5904,
+      "sha256": "766d6443b3a177076d09257de9d0f7dac224525c11707e26a9a95d797bc34928"
+    },
+    {
+      "file": "animation/loader/recording-benchmark.mjs",
+      "bytes": 7374,
+      "sha256": "bdf37e50195140bcbc979c30759238a9fdc56d65fc2ccca20cf65a218db9116d"
+    },
+    {
+      "file": "animation/loader/recording-browser-check.mjs",
+      "bytes": 2955,
+      "sha256": "228913724a5c87432846b6efbd4099b87f6e3acda2c548f58629eb5ae165998a"
+    },
+    {
+      "file": "animation/loader/recording-metrics.mjs",
+      "bytes": 1217,
+      "sha256": "e8518e79443e093480589524e29fb8c15bde65c0960038117c9912bcde9a1c1f"
+    },
+    {
+      "file": "animation/loader/recording-metrics.test.mjs",
+      "bytes": 1676,
+      "sha256": "d5f30d6abc0d96c9245163718f83cdef7eb672c5a68c98a80c39675c15b3cd71"
+    },
+    {
+      "file": "animation/loader/recording-results-fresh.json",
+      "bytes": 45466,
+      "sha256": "7423cb6b896e28c335a661a7bd7e32f5207242de5e2b93db67f11c5e2dc52db0"
+    },
+    {
+      "file": "animation/loader/recording-results-long.json",
+      "bytes": 1967,
+      "sha256": "3ebfd96cf7caff68805a1c90fb14c6a0960ab3129b59cb2963a9ff6ba7142192"
+    },
+    {
+      "file": "animation/loader/recording-results-warm.json",
+      "bytes": 38981,
+      "sha256": "04b33bfcf4e0ab63ad6d7b531af713668f5d323087b057f653f3704cecb86980"
+    },
+    {
+      "file": "animation/loader/recording-ui.mjs",
+      "bytes": 4462,
+      "sha256": "b48675d24db731259c6401d2630c5911d252391256ca0945a834e3aee0f5ff61"
+    },
+    {
+      "file": "animation/loader/recording-wasm.mjs",
+      "bytes": 535,
+      "sha256": "47f673cd52dbcf564e0122b3e501d929815e54e0ff6af2baac82535640d78d2c"
+    },
+    {
+      "file": "animation/loader/recording-worker.mjs",
+      "bytes": 2577,
+      "sha256": "8ec8d02d689708e102a51f5cae899667b76e057029ba1e8793bcbf54b94e8aa2"
+    },
+    {
+      "file": "animation/loader/return.test.mjs",
+      "bytes": 531,
+      "sha256": "025bd182844e01e709c05aabf8ef89f3d7f761ad5a0b683d5464005d59f89754"
+    },
+    {
+      "file": "animation/loader/svg.mjs",
+      "bytes": 1620,
+      "sha256": "13cd83a07bc7387db95065f758a76c6ad018159a081954fa314ecf417f4113db"
     },
     {
       "file": "animation/parts/bowl-with-cutouts.svg",
@@ -118,8 +395,8 @@
     },
     {
       "file": "index.html",
-      "bytes": 22275,
-      "sha256": "bf77a929814a4e8dad419fe23173062e504a9e810221ab2ace651c1ef55663c6"
+      "bytes": 23554,
+      "sha256": "2aca7368badd1c7ece07ba727b38c510b95d4bf227f409a818de7118240db792"
     },
     {
       "file": "marketing/email/pibbl-email-logo-2x.png",
@@ -793,8 +1070,8 @@
     },
     {
       "file": "source/build_pdf.py",
-      "bytes": 8740,
-      "sha256": "5c0dc8cf127b68c9908b7e7db159979485bcc5ed7c377dbb963e71bd7ad58a2b"
+      "bytes": 8900,
+      "sha256": "d06d78164cd36490cf61261eec49c3d6b2925b915a2154e2d2aa90ab6b30404d"
     },
     {
       "file": "source/export-catalog.json",

@@ -159,7 +159,7 @@
     "THIRD_PARTY_NOTICES.txt"
   ],
   "scripts": {
-    "build": "node ../../tooling/build-transition-wasm.mjs --check && rimraf dist && tsc -p tsconfig.build.json && node ../../tooling/build-core.mjs",
+    "build": "node ../../tooling/build-transition-wasm.mjs --check && node ../../tooling/build-recording-wasm.mjs --check && node ../../tooling/build-recording-worker.mjs --check && rimraf dist && tsc -p tsconfig.build.json && node ../../tooling/build-core.mjs",
     "dev": "pnpm run build",
     "prepublishOnly": "pnpm run build",
     "test": "vitest"

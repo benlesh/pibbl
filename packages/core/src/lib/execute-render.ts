@@ -157,6 +157,9 @@ export function executeRender(
     if (!pibblInstance.parent) {
       renderTransaction.onFinish((success) => {
         if (success) pibblInstance.committedRenderGeneration = renderGeneration;
+        if (pibblInstance.rootFrameObservers) {
+          for (const observer of pibblInstance.rootFrameObservers) observer(success);
+        }
       });
     }
     renderSeenIds = pibblInstance.renderSeenIds;
