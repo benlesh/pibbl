@@ -1,0 +1,100 @@
+{
+  "schema": "pibbl-agent-workflow-run/1",
+  "status": "incomplete",
+  "requirementId": "HIT-12",
+  "requirementCompletion": "not-established",
+  "scope": "Controlled reference workflow only; not arbitrary application or full requirement verification.",
+  "scenario": "agent-targeting-verification",
+  "url": "http://127.0.0.1:5199/#/testing/agent-targeting-verification",
+  "sources": [
+    "packages/scenarios/src/agent-targeting-verification.ts",
+    "packages/core/test/agent-targeting-verification.test.ts",
+    "tooling/agent-verification/targeting.ts"
+  ],
+  "remaining": "Extend prediction-versus-delivery agreement to other primitives, renderers and race cases; querying alone remains insufficient.",
+  "acceptance": [
+    "Seed delivers to the decoration and does not select item-a.",
+    "Repair selects item-a exactly once.",
+    "Blue pixel (144,112) remains [37,99,235,255] across seed and repair.",
+    "Intentional blocking keeps item-a unselected."
+  ],
+  "watchdog": {
+    "status": "exited",
+    "exitCode": 1,
+    "browserCleanup": {
+      "status": "terminated",
+      "pid": 89585,
+      "processExited": true
+    }
+  },
+  "evidence": {
+    "schema": "pibbl-replay-evidence-view/1",
+    "sourceSchema": "pibbl-targeting-replay/1",
+    "source": "/Users/benlesh/GitHub/crc/docs/strategy/agent-verification-evidence/application-2026-10-08/targeting-native/replay/report.json",
+    "verification": "saved-evidence-only",
+    "kind": "final-report",
+    "claimedStatus": "blocked",
+    "runId": "ac5120e2-3b67-4f27-85a2-e5101edd5358",
+    "view": "summary",
+    "actionCount": 0,
+    "firstFailedCheck": null,
+    "requiredCheckCount": 21,
+    "checkCount": 2,
+    "checks": [
+      {
+        "checkId": "protected-action-permissions",
+        "status": "not-applicable",
+        "required": false,
+        "reason": "This controlled fixture invokes no clipboard, fullscreen or other permission-gated action."
+      },
+      {
+        "checkId": "real-hardware-input",
+        "status": "skipped",
+        "required": false,
+        "reason": "This run uses Playwright Chromium automation; physical touch/pen hardware is not exercised."
+      }
+    ],
+    "omittedChecks": 0,
+    "actions": [],
+    "omittedActions": 0,
+    "failure": {
+      "category": "operation-error",
+      "code": null,
+      "stage": "navigation",
+      "reason": null,
+      "actionId": null,
+      "message": "page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:5199/#/testing/agent-targeting-verification\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:5199/#/testing/agent-targeting-verification\", waiting until \"load\"\u001b[22m\n"
+    },
+    "otherFailures": {
+      "observation": null,
+      "check": null,
+      "checkCompletion": "incomplete-required-checks",
+      "completion": null,
+      "checkpoint": null,
+      "cleanup": null,
+      "verifier": null
+    },
+    "recordedPageErrors": 0,
+    "droppedPageErrors": 0,
+    "manifestAvailable": true,
+    "checkpoint": null,
+    "truncatedFields": []
+  },
+  "readFailure": null,
+  "checkpointFailure": null,
+  "evidencePath": "/Users/benlesh/GitHub/crc/docs/strategy/agent-verification-evidence/application-2026-10-08/targeting-native/replay/report.json",
+  "artifacts": {
+    "report": "/Users/benlesh/GitHub/crc/docs/strategy/agent-verification-evidence/application-2026-10-08/targeting-native/replay/report.json",
+    "watchdog": "/Users/benlesh/GitHub/crc/docs/strategy/agent-verification-evidence/application-2026-10-08/targeting-native/watchdog.json"
+  },
+  "next": {
+    "executable": "/Users/benlesh/.local/share/fnm/node-versions/v26.9.0/installation/bin/node",
+    "arguments": [
+      "/Users/benlesh/GitHub/crc/tooling/agent-verification/evidence-reader.mjs",
+      "/Users/benlesh/GitHub/crc/docs/strategy/agent-verification-evidence/application-2026-10-08/targeting-native/replay/report.json",
+      "--page",
+      "actions"
+    ],
+    "unavailableSelections": []
+  }
+}

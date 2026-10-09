@@ -4146,3 +4146,21 @@ Content reconciliation used current public exports, manifests, current contracts
 and the separate prototype source. Mechanical checks must verify unique IDs,
 range coverage, relative link targets and Markdown formatting. These document
 checks do not validate the prototype runtime or mark the overall goal complete.
+
+## Bounded application exercise — 2026-10-08
+
+A new user request validated the existing targeting, visualization, signal, and
+layout paths against the current checkout, then reused one interactive chart
+for a controlled same-reference dataset mutation and immutable repair. All four
+existing paths pass; the application replay passes 26 independent checks. A
+focused test failed before the repair, and 11 focused browser checks pass after.
+No compatibility fix was needed in the existing paths. The exhaustive inventory
+and October 1 closure accounting were not resumed or refreshed.
+
+Commands, manual Studio URL, diagnosis, independent expectations, saved failure
+and repair queries, and inspection limits are documented in the
+[bounded application exercise](../../tooling/agent-verification/README.md).
+Evidence is in `agent-verification-evidence/application-2026-10-08/`. A fresh
+Node 24.15.0 aggregate attempt stops at unrelated brand-output documentation
+classification; later gates are unverified. No aggregate-green claim is made.
+The stop rule remains in force; this requested exercise ends here.

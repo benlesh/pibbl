@@ -1,0 +1,5382 @@
+{
+  "schema": "pibbl-viz-replay/1",
+  "status": "fail",
+  "scope": "One cooperating application reusing hover-comparison; not the fixed native viz replay or requirement closure.",
+  "node": "v24.15.0",
+  "steps": [
+    {
+      "actionId": "initial",
+      "status": "pass",
+      "state": {
+        "application": {
+          "source": [
+            {
+              "id": "start",
+              "x": 0,
+              "y": 10
+            },
+            {
+              "id": "middle",
+              "x": 5,
+              "y": 20
+            },
+            {
+              "id": "end",
+              "x": 10,
+              "y": 30
+            }
+          ],
+          "domain": [
+            0,
+            10
+          ],
+          "rendered": {
+            "duplicateX": "error",
+            "generation": 0,
+            "viewport": {
+              "width": 1000,
+              "height": 620
+            },
+            "mode": "nearest-per-line",
+            "inspection": 5,
+            "pointer": {
+              "x": 458.5,
+              "y": 187.5
+            },
+            "results": [
+              {
+                "series": "monthly",
+                "kind": "recorded",
+                "x": 5,
+                "y": 20,
+                "anchor": {
+                  "x": 458.5,
+                  "y": 187.5
+                },
+                "provenance": {
+                  "kind": "recorded",
+                  "index": 1,
+                  "id": "middle"
+                },
+                "distance": {
+                  "space": "domain-x",
+                  "value": 0
+                }
+              }
+            ],
+            "plot": {
+              "x": 55,
+              "y": 175,
+              "width": 917,
+              "height": 375
+            }
+          },
+          "evaluations": 2
+        },
+        "signals": {
+          "schema": "pibbl-signal-observation/1",
+          "scheduler": {
+            "schema": "pibbl-scheduler-observation/1",
+            "scope": "loaded-runtime-realm",
+            "phase": "idle",
+            "frame": null,
+            "work": {
+              "pendingComputedValidations": 0,
+              "pendingHostFrames": 0,
+              "registeredRoots": 1,
+              "dirtyRoots": 0,
+              "dirtyInstances": 0,
+              "advanceParticipants": 0,
+              "queuedBeginCommands": 0,
+              "completionCallbacks": 0,
+              "queuedFrameCompletions": 0,
+              "queuedReactionCompletions": 0
+            },
+            "applicationReadiness": "unknown",
+            "externalTasks": "unobserved"
+          },
+          "session": 1,
+          "status": "ready",
+          "completeness": "complete",
+          "scope": "explicitly-registered",
+          "ownership": {
+            "scope": "bound-canvas-components",
+            "completeness": "complete",
+            "limits": {
+              "surfaces": 64,
+              "components": 256,
+              "paintEntries": 256
+            },
+            "visited": {
+              "surfaces": 1,
+              "components": 54,
+              "paintEntries": 8
+            },
+            "components": {
+              "completeness": "complete",
+              "limit": 64,
+              "removals": {
+                "scope": "previous-snapshot-handles",
+                "limit": 64,
+                "dropped": 0,
+                "records": []
+              },
+              "records": [
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 1,
+                  "typeId": 1,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": true,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 1
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 2,
+                  "typeId": 2,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": false,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 2
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 3,
+                  "typeId": 3,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Rectangle:Anon2",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": false,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 2
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 4,
+                  "typeId": 4,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Text:Anon3",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": false,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 2
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 5,
+                  "typeId": 4,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Text:Anon3_1",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": false,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 2
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 6,
+                  "typeId": 2,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Group:Anon1[closest-point]",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": false,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 6
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 7,
+                  "typeId": 3,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Group:Anon1[closest-point]/Rectangle:Anon2",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": false,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 6
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 8,
+                  "typeId": 4,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Group:Anon1[closest-point]/Text:Anon3",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": false,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 2
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 9,
+                  "typeId": 2,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Group:Anon1[nearest-per-line]",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": false,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 9
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 10,
+                  "typeId": 3,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Group:Anon1[nearest-per-line]/Rectangle:Anon2",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": false,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 9
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 11,
+                  "typeId": 4,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Group:Anon1[nearest-per-line]/Text:Anon3",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": false,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 2
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 12,
+                  "typeId": 2,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Group:Anon1[interpolated-x]",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": false,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 12
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 13,
+                  "typeId": 3,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Group:Anon1[interpolated-x]/Rectangle:Anon2",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": false,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 12
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 14,
+                  "typeId": 4,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Group:Anon1[interpolated-x]/Text:Anon3",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": false,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 2
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 15,
+                  "typeId": 4,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Text:Anon3_2",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": false,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 2
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 16,
+                  "typeId": 5,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Absolute:Anon4",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": false,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "missing"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 16
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 17,
+                  "typeId": 6,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Absolute:Anon4/LinearScale:Anon5",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": false,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 17
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 18,
+                  "typeId": 7,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Absolute:Anon4/LinearScale:Anon5/LinearScale:Anon5",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": false,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 917,
+                      "height": 375
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 18
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 19,
+                  "typeId": 7,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Absolute:Anon4/LinearScale:Anon5/LinearScale:Anon5/LinearScale:Anon5",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": false,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 917,
+                      "height": 375
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 19
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 20,
+                  "typeId": 8,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Absolute:Anon4/LinearScale:Anon5/LinearScale:Anon5/LinearScale:Anon5/Plot:Anon6",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": true,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 917,
+                      "height": 375
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 20
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 21,
+                  "typeId": 2,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Absolute:Anon4/LinearScale:Anon5/LinearScale:Anon5/LinearScale:Anon5/Plot:Anon6/Group:Anon1",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": false,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 917,
+                      "height": 375
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 21
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 22,
+                  "typeId": 3,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Absolute:Anon4/LinearScale:Anon5/LinearScale:Anon5/LinearScale:Anon5/Plot:Anon6/Group:Anon1/Rectangle:Anon2",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": false,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 917,
+                      "height": 375
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 21
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 23,
+                  "typeId": 9,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Absolute:Anon4/LinearScale:Anon5/LinearScale:Anon5/LinearScale:Anon5/Plot:Anon6/Group:Anon1/Axis:Anon7",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": true,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 917,
+                      "height": 375
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 23
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 24,
+                  "typeId": 10,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Absolute:Anon4/LinearScale:Anon5/LinearScale:Anon5/LinearScale:Anon5/Plot:Anon6/Group:Anon1/Axis:Anon7/Path:Anon8[axis]",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": false,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 917,
+                      "height": 375
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 23
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 25,
+                  "typeId": 4,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Absolute:Anon4/LinearScale:Anon5/LinearScale:Anon5/LinearScale:Anon5/Plot:Anon6/Group:Anon1/Axis:Anon7/Text:Anon3[0%3A0]",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": false,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 917,
+                      "height": 375
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 23
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 26,
+                  "typeId": 4,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Absolute:Anon4/LinearScale:Anon5/LinearScale:Anon5/LinearScale:Anon5/Plot:Anon6/Group:Anon1/Axis:Anon7/Text:Anon3[1%3A0]",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": false,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 917,
+                      "height": 375
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 23
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 27,
+                  "typeId": 4,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Absolute:Anon4/LinearScale:Anon5/LinearScale:Anon5/LinearScale:Anon5/Plot:Anon6/Group:Anon1/Axis:Anon7/Text:Anon3[2%3A0]",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": false,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 917,
+                      "height": 375
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 23
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 28,
+                  "typeId": 4,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Absolute:Anon4/LinearScale:Anon5/LinearScale:Anon5/LinearScale:Anon5/Plot:Anon6/Group:Anon1/Axis:Anon7/Text:Anon3[3%3A0]",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": false,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 917,
+                      "height": 375
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 23
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 29,
+                  "typeId": 4,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Absolute:Anon4/LinearScale:Anon5/LinearScale:Anon5/LinearScale:Anon5/Plot:Anon6/Group:Anon1/Axis:Anon7/Text:Anon3[4%3A0]",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": false,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 917,
+                      "height": 375
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 21
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 30,
+                  "typeId": 9,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Absolute:Anon4/LinearScale:Anon5/LinearScale:Anon5/LinearScale:Anon5/Plot:Anon6/Group:Anon1/Axis:Anon7_1",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": true,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 917,
+                      "height": 375
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 30
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 31,
+                  "typeId": 10,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Absolute:Anon4/LinearScale:Anon5/LinearScale:Anon5/LinearScale:Anon5/Plot:Anon6/Group:Anon1/Axis:Anon7_1/Path:Anon8[axis]",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": false,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 917,
+                      "height": 375
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 30
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 32,
+                  "typeId": 4,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Absolute:Anon4/LinearScale:Anon5/LinearScale:Anon5/LinearScale:Anon5/Plot:Anon6/Group:Anon1/Axis:Anon7_1/Text:Anon3[0%3A0]",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": false,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 917,
+                      "height": 375
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 30
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 33,
+                  "typeId": 4,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Absolute:Anon4/LinearScale:Anon5/LinearScale:Anon5/LinearScale:Anon5/Plot:Anon6/Group:Anon1/Axis:Anon7_1/Text:Anon3[1%3A0]",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": false,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 917,
+                      "height": 375
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 30
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 34,
+                  "typeId": 4,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Absolute:Anon4/LinearScale:Anon5/LinearScale:Anon5/LinearScale:Anon5/Plot:Anon6/Group:Anon1/Axis:Anon7_1/Text:Anon3[2%3A0]",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": false,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 917,
+                      "height": 375
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 30
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 35,
+                  "typeId": 4,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Absolute:Anon4/LinearScale:Anon5/LinearScale:Anon5/LinearScale:Anon5/Plot:Anon6/Group:Anon1/Axis:Anon7_1/Text:Anon3[3%3A0]",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": false,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 917,
+                      "height": 375
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 30
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 36,
+                  "typeId": 4,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Absolute:Anon4/LinearScale:Anon5/LinearScale:Anon5/LinearScale:Anon5/Plot:Anon6/Group:Anon1/Axis:Anon7_1/Text:Anon3[4%3A0]",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": false,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 917,
+                      "height": 375
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 21
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 37,
+                  "typeId": 11,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Absolute:Anon4/LinearScale:Anon5/LinearScale:Anon5/LinearScale:Anon5/Plot:Anon6/Group:Anon1/LineSeries:Anon9",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": true,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 917,
+                      "height": 375
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 37
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 38,
+                  "typeId": 10,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Absolute:Anon4/LinearScale:Anon5/LinearScale:Anon5/LinearScale:Anon5/Plot:Anon6/Group:Anon1/LineSeries:Anon9/Path:Anon8",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": false,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 917,
+                      "height": 375
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 21
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 39,
+                  "typeId": 11,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Absolute:Anon4/LinearScale:Anon5/LinearScale:Anon5/LinearScale:Anon5/Plot:Anon6/Group:Anon1/LineSeries:Anon9_1",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": true,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 917,
+                      "height": 375
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 39
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 40,
+                  "typeId": 10,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Absolute:Anon4/LinearScale:Anon5/LinearScale:Anon5/LinearScale:Anon5/Plot:Anon6/Group:Anon1/LineSeries:Anon9_1/Path:Anon8",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": false,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 917,
+                      "height": 375
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 21
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 41,
+                  "typeId": 12,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Absolute:Anon4/LinearScale:Anon5/LinearScale:Anon5/LinearScale:Anon5/Plot:Anon6/Group:Anon1/Line:Anon10",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": false,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 917,
+                      "height": 375
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 21
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 42,
+                  "typeId": 13,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Absolute:Anon4/LinearScale:Anon5/LinearScale:Anon5/LinearScale:Anon5/Plot:Anon6/Group:Anon1/HoverData:Anon11",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": true,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 917,
+                      "height": 375
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 42
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 43,
+                  "typeId": 2,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Absolute:Anon4/LinearScale:Anon5/LinearScale:Anon5/LinearScale:Anon5/Plot:Anon6/Group:Anon1/HoverData:Anon11/Group:Anon1[monthly]",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": false,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 917,
+                      "height": 375
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 43
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 44,
+                  "typeId": 14,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Absolute:Anon4/LinearScale:Anon5/LinearScale:Anon5/LinearScale:Anon5/Plot:Anon6/Group:Anon1/HoverData:Anon11/Group:Anon1[monthly]/Circle:Anon12",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": false,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 917,
+                      "height": 375
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 42
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 45,
+                  "typeId": 15,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Absolute:Anon4/LinearScale:Anon5/LinearScale:Anon5/LinearScale:Anon5/Plot:Anon6/Group:Anon1/HoverData:Anon11/AnchoredLayout:Anon13",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": false,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 917,
+                      "height": 375
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 45
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 46,
+                  "typeId": 2,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Absolute:Anon4/LinearScale:Anon5/LinearScale:Anon5/LinearScale:Anon5/Plot:Anon6/Group:Anon1/HoverData:Anon11/AnchoredLayout:Anon13/Group:Anon1[monthly]",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": false,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 917,
+                      "height": 375
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 46
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 47,
+                  "typeId": 16,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Absolute:Anon4/LinearScale:Anon5/LinearScale:Anon5/LinearScale:Anon5/Plot:Anon6/Group:Anon1/HoverData:Anon11/AnchoredLayout:Anon13/Group:Anon1[monthly]/Item:Anon14",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": true,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 917,
+                      "height": 375
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 47
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 48,
+                  "typeId": 12,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Absolute:Anon4/LinearScale:Anon5/LinearScale:Anon5/LinearScale:Anon5/Plot:Anon6/Group:Anon1/HoverData:Anon11/AnchoredLayout:Anon13/Group:Anon1[monthly]/Item:Anon14/Line:Anon10",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": false,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 184,
+                      "height": 68
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 184,
+                      "height": 68
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 47
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 49,
+                  "typeId": 3,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Absolute:Anon4/LinearScale:Anon5/LinearScale:Anon5/LinearScale:Anon5/Plot:Anon6/Group:Anon1/HoverData:Anon11/AnchoredLayout:Anon13/Group:Anon1[monthly]/Item:Anon14/Rectangle:Anon2",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": false,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 184,
+                      "height": 68
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 184,
+                      "height": 68
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 47
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 50,
+                  "typeId": 2,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Absolute:Anon4/LinearScale:Anon5/LinearScale:Anon5/LinearScale:Anon5/Plot:Anon6/Group:Anon1/HoverData:Anon11/AnchoredLayout:Anon13/Group:Anon1[monthly]/Item:Anon14/Group:Anon1",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": false,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 184,
+                      "height": 68
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 184,
+                      "height": 68
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 50
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 51,
+                  "typeId": 4,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Absolute:Anon4/LinearScale:Anon5/LinearScale:Anon5/LinearScale:Anon5/Plot:Anon6/Group:Anon1/HoverData:Anon11/AnchoredLayout:Anon13/Group:Anon1[monthly]/Item:Anon14/Group:Anon1/Text:Anon3",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": false,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 184,
+                      "height": 68
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 184,
+                      "height": 68
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 50
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 52,
+                  "typeId": 4,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Absolute:Anon4/LinearScale:Anon5/LinearScale:Anon5/LinearScale:Anon5/Plot:Anon6/Group:Anon1/HoverData:Anon11/AnchoredLayout:Anon13/Group:Anon1[monthly]/Item:Anon14/Group:Anon1/Text:Anon3_1",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": false,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 184,
+                      "height": 68
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 184,
+                      "height": 68
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 50
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 53,
+                  "typeId": 4,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Absolute:Anon4/LinearScale:Anon5/LinearScale:Anon5/LinearScale:Anon5/Plot:Anon6/Group:Anon1/HoverData:Anon11/AnchoredLayout:Anon13/Group:Anon1[monthly]/Item:Anon14/Group:Anon1/Text:Anon3_2",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": false,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 184,
+                      "height": 68
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 184,
+                      "height": 68
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 2
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 54,
+                  "typeId": 4,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Text:Anon3_3",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": false,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "records": [
+            {
+              "id": 1,
+              "status": "available",
+              "kind": "source",
+              "debugName": null,
+              "version": 0,
+              "observerCount": 2,
+              "cache": "value",
+              "validation": "source",
+              "dependencies": {
+                "count": 0,
+                "completeness": "complete",
+                "edges": []
+              },
+              "observers": {
+                "scope": "direct-subscriptions",
+                "completeness": "complete",
+                "records": [
+                  {
+                    "consumerId": 1,
+                    "kind": "render",
+                    "owner": {
+                      "componentId": 37,
+                      "runtimePath": "root/Scene:Anon0/Group:Anon1/Absolute:Anon4/LinearScale:Anon5/LinearScale:Anon5/LinearScale:Anon5/Plot:Anon6/Group:Anon1/LineSeries:Anon9",
+                      "runtimePathTruncated": false,
+                      "debugName": "LineSeries (root/Scene:Anon0/Group:Anon1/Absolute:Anon4/LinearScale:Anon5/LinearScale:Anon5/LinearScale:Anon5/Plot:Anon6/Group:Anon1/LineSeries:Anon9)",
+                      "surfaceId": 1,
+                      "surfaceKind": "root",
+                      "renderGeneration": 2,
+                      "requestedRevision": 2,
+                      "completedRevision": 2
+                    },
+                    "registeredSignalId": null,
+                    "observedVersion": 0,
+                    "dirty": false
+                  },
+                  {
+                    "consumerId": 2,
+                    "kind": "render",
+                    "owner": {
+                      "componentId": 42,
+                      "runtimePath": "root/Scene:Anon0/Group:Anon1/Absolute:Anon4/LinearScale:Anon5/LinearScale:Anon5/LinearScale:Anon5/Plot:Anon6/Group:Anon1/HoverData:Anon11",
+                      "runtimePathTruncated": false,
+                      "debugName": "HoverData (root/Scene:Anon0/Group:Anon1/Absolute:Anon4/LinearScale:Anon5/LinearScale:Anon5/LinearScale:Anon5/Plot:Anon6/Group:Anon1/HoverData:Anon11)",
+                      "surfaceId": 1,
+                      "surfaceKind": "root",
+                      "renderGeneration": 2,
+                      "requestedRevision": 2,
+                      "completedRevision": 2
+                    },
+                    "registeredSignalId": null,
+                    "observedVersion": 0,
+                    "dirty": false
+                  }
+                ]
+              },
+              "preview": {
+                "kind": "opaque",
+                "type": "object"
+              }
+            },
+            {
+              "id": 2,
+              "status": "available",
+              "kind": "source",
+              "debugName": null,
+              "version": 0,
+              "observerCount": 3,
+              "cache": "value",
+              "validation": "source",
+              "dependencies": {
+                "count": 0,
+                "completeness": "complete",
+                "edges": []
+              },
+              "observers": {
+                "scope": "direct-subscriptions",
+                "completeness": "complete",
+                "records": [
+                  {
+                    "consumerId": 3,
+                    "kind": "render",
+                    "owner": {
+                      "componentId": 1,
+                      "runtimePath": "root/Scene:Anon0",
+                      "runtimePathTruncated": false,
+                      "debugName": "Scene (root/Scene:Anon0)",
+                      "surfaceId": 1,
+                      "surfaceKind": "root",
+                      "renderGeneration": 2,
+                      "requestedRevision": 2,
+                      "completedRevision": 2
+                    },
+                    "registeredSignalId": null,
+                    "observedVersion": 0,
+                    "dirty": false
+                  },
+                  {
+                    "consumerId": 4,
+                    "kind": "render",
+                    "owner": {
+                      "componentId": 23,
+                      "runtimePath": "root/Scene:Anon0/Group:Anon1/Absolute:Anon4/LinearScale:Anon5/LinearScale:Anon5/LinearScale:Anon5/Plot:Anon6/Group:Anon1/Axis:Anon7",
+                      "runtimePathTruncated": false,
+                      "debugName": "Axis (root/Scene:Anon0/Group:Anon1/Absolute:Anon4/LinearScale:Anon5/LinearScale:Anon5/LinearScale:Anon5/Plot:Anon6/Group:Anon1/Axis:Anon7)",
+                      "surfaceId": 1,
+                      "surfaceKind": "root",
+                      "renderGeneration": 2,
+                      "requestedRevision": 2,
+                      "completedRevision": 2
+                    },
+                    "registeredSignalId": null,
+                    "observedVersion": 0,
+                    "dirty": false
+                  },
+                  {
+                    "consumerId": 5,
+                    "kind": "render",
+                    "owner": {
+                      "componentId": 47,
+                      "runtimePath": "root/Scene:Anon0/Group:Anon1/Absolute:Anon4/LinearScale:Anon5/LinearScale:Anon5/LinearScale:Anon5/Plot:Anon6/Group:Anon1/HoverData:Anon11/AnchoredLayout:Anon13/Group:Anon1[monthly]/Item:Anon14",
+                      "runtimePathTruncated": false,
+                      "debugName": "Item (root/Scene:Anon0/Group:Anon1/Absolute:Anon4/LinearScale:Anon5/LinearScale:Anon5/LinearScale:Anon5/Plot:Anon6/Group:Anon1/HoverData:Anon11/AnchoredLayout:Anon13/Group:Anon1[monthly]/Item:Anon14)",
+                      "surfaceId": 1,
+                      "surfaceKind": "root",
+                      "renderGeneration": 2,
+                      "requestedRevision": 2,
+                      "completedRevision": 2
+                    },
+                    "registeredSignalId": null,
+                    "observedVersion": 0,
+                    "dirty": false
+                  }
+                ]
+              },
+              "preview": {
+                "kind": "opaque",
+                "type": "object"
+              }
+            }
+          ]
+        },
+        "committed": {
+          "surface": {
+            "status": "available",
+            "scope": "committed-root-surface",
+            "hostGeometry": "unavailable",
+            "geometry": {
+              "configuredPixelRatio": "device",
+              "mode": "responsive",
+              "fit": "fill",
+              "logical": {
+                "width": 1000,
+                "height": 620
+              },
+              "cssContent": {
+                "width": 1000,
+                "height": 620
+              },
+              "backing": {
+                "width": 1000,
+                "height": 620
+              },
+              "backingPerCss": {
+                "x": 1,
+                "y": 1
+              },
+              "backingPerLogical": {
+                "x": 1,
+                "y": 1
+              },
+              "logicalToBacking": [
+                1,
+                0,
+                0,
+                1,
+                0,
+                0
+              ],
+              "backingToLogical": [
+                1,
+                0,
+                0,
+                1,
+                0,
+                0
+              ]
+            }
+          },
+          "focus": {
+            "policy": null,
+            "boundsSemantics": {
+              "coordinateSpace": "root-logical",
+              "representation": "axis-aligned-envelope",
+              "source": "navigation-metadata",
+              "paintedGeometryRelation": "unknown",
+              "hitGeometryRelation": "unknown"
+            },
+            "status": "unconfigured",
+            "nativeFocus": "other",
+            "nativeScope": "owner-document",
+            "targetId": null,
+            "visible": null,
+            "completeness": "complete",
+            "records": []
+          },
+          "pointerCapture": {
+            "scope": "canvas-logical-owners",
+            "nativeActivation": "unavailable",
+            "externalRendererCapture": "unavailable",
+            "completeness": "complete",
+            "records": []
+          },
+          "schema": "pibbl-targeting-prototype/1",
+          "status": "ready",
+          "generation": {
+            "session": 1,
+            "render": 2,
+            "requested": 2,
+            "completed": 2
+          },
+          "completeness": "complete",
+          "totalRecords": 8,
+          "records": [
+            {
+              "order": 0,
+              "kind": "path",
+              "targetId": 1,
+              "surfacePath": [],
+              "clipCount": 0,
+              "clips": [],
+              "fill": true,
+              "strokeInteractionWidth": 0,
+              "transform": [
+                1,
+                0,
+                0,
+                1,
+                24,
+                20
+              ]
+            },
+            {
+              "order": 1,
+              "kind": "path",
+              "targetId": 2,
+              "surfacePath": [],
+              "clipCount": 0,
+              "clips": [],
+              "fill": true,
+              "strokeInteractionWidth": 0,
+              "transform": [
+                1,
+                0,
+                0,
+                1,
+                24,
+                55
+              ]
+            },
+            {
+              "order": 2,
+              "kind": "path",
+              "targetId": 3,
+              "surfacePath": [],
+              "clipCount": 0,
+              "clips": [],
+              "fill": true,
+              "strokeInteractionWidth": 0,
+              "transform": [
+                1,
+                0,
+                0,
+                1,
+                24,
+                85
+              ]
+            },
+            {
+              "order": 3,
+              "kind": "path",
+              "targetId": 4,
+              "surfacePath": [],
+              "clipCount": 0,
+              "clips": [],
+              "fill": true,
+              "strokeInteractionWidth": 0,
+              "transform": [
+                1,
+                0,
+                0,
+                1,
+                214,
+                85
+              ]
+            },
+            {
+              "order": 4,
+              "kind": "path",
+              "targetId": 5,
+              "surfacePath": [],
+              "clipCount": 0,
+              "clips": [],
+              "fill": true,
+              "strokeInteractionWidth": 0,
+              "transform": [
+                1,
+                0,
+                0,
+                1,
+                404,
+                85
+              ]
+            },
+            {
+              "order": 5,
+              "kind": "path",
+              "targetId": 6,
+              "surfacePath": [],
+              "clipCount": 0,
+              "clips": [],
+              "fill": true,
+              "strokeInteractionWidth": 0,
+              "transform": [
+                1,
+                0,
+                0,
+                1,
+                24,
+                145
+              ]
+            },
+            {
+              "order": 6,
+              "kind": "path",
+              "targetId": 7,
+              "surfacePath": [],
+              "clipCount": 0,
+              "clips": [],
+              "fill": true,
+              "strokeInteractionWidth": 0,
+              "transform": [
+                1,
+                0,
+                0,
+                1,
+                55,
+                175
+              ]
+            },
+            {
+              "order": 7,
+              "kind": "path",
+              "targetId": 8,
+              "surfacePath": [],
+              "clipCount": 0,
+              "clips": [],
+              "fill": true,
+              "strokeInteractionWidth": 0,
+              "transform": [
+                1,
+                0,
+                0,
+                1,
+                24,
+                593
+              ]
+            }
+          ],
+          "visibility": "unavailable",
+          "coordinateSpace": "root-logical",
+          "recordLimit": 64,
+          "pendingRealmWork": false
+        },
+        "targeting": {
+          "inside": {
+            "routing": "geometry-only",
+            "status": "target",
+            "generation": {
+              "session": 1,
+              "render": 2,
+              "requested": 2,
+              "completed": 2
+            },
+            "targetId": 7,
+            "candidates": [
+              {
+                "order": 7,
+                "targetId": 8,
+                "outcome": "geometry-miss",
+                "exclusion": null,
+                "geometry": "miss"
+              },
+              {
+                "order": 6,
+                "targetId": 7,
+                "outcome": "hit",
+                "exclusion": null,
+                "geometry": "hit"
+              },
+              {
+                "order": 5,
+                "targetId": 6,
+                "outcome": "geometry-miss",
+                "exclusion": null,
+                "geometry": "miss"
+              },
+              {
+                "order": 4,
+                "targetId": 5,
+                "outcome": "geometry-miss",
+                "exclusion": null,
+                "geometry": "miss"
+              },
+              {
+                "order": 3,
+                "targetId": 4,
+                "outcome": "geometry-miss",
+                "exclusion": null,
+                "geometry": "miss"
+              },
+              {
+                "order": 2,
+                "targetId": 3,
+                "outcome": "geometry-miss",
+                "exclusion": null,
+                "geometry": "miss"
+              },
+              {
+                "order": 1,
+                "targetId": 2,
+                "outcome": "geometry-miss",
+                "exclusion": null,
+                "geometry": "miss"
+              },
+              {
+                "order": 0,
+                "targetId": 1,
+                "outcome": "geometry-miss",
+                "exclusion": null,
+                "geometry": "miss"
+              }
+            ],
+            "captureMode": "active-native-geometry",
+            "nativeCalls": 8,
+            "reason": null,
+            "pendingRealmWork": false
+          },
+          "outside": {
+            "routing": "geometry-only",
+            "status": "miss",
+            "generation": {
+              "session": 1,
+              "render": 2,
+              "requested": 2,
+              "completed": 2
+            },
+            "targetId": null,
+            "candidates": [
+              {
+                "order": 7,
+                "targetId": 8,
+                "outcome": "geometry-miss",
+                "exclusion": null,
+                "geometry": "miss"
+              },
+              {
+                "order": 6,
+                "targetId": 7,
+                "outcome": "geometry-miss",
+                "exclusion": null,
+                "geometry": "miss"
+              },
+              {
+                "order": 5,
+                "targetId": 6,
+                "outcome": "geometry-miss",
+                "exclusion": null,
+                "geometry": "miss"
+              },
+              {
+                "order": 4,
+                "targetId": 5,
+                "outcome": "geometry-miss",
+                "exclusion": null,
+                "geometry": "miss"
+              },
+              {
+                "order": 3,
+                "targetId": 4,
+                "outcome": "geometry-miss",
+                "exclusion": null,
+                "geometry": "miss"
+              },
+              {
+                "order": 2,
+                "targetId": 3,
+                "outcome": "geometry-miss",
+                "exclusion": null,
+                "geometry": "miss"
+              },
+              {
+                "order": 1,
+                "targetId": 2,
+                "outcome": "geometry-miss",
+                "exclusion": null,
+                "geometry": "miss"
+              },
+              {
+                "order": 0,
+                "targetId": 1,
+                "outcome": "geometry-miss",
+                "exclusion": null,
+                "geometry": "miss"
+              }
+            ],
+            "captureMode": "active-native-geometry",
+            "nativeCalls": 8,
+            "reason": null,
+            "pendingRealmWork": false
+          }
+        },
+        "pixels": {
+          "initialSegment": 15,
+          "repairedSegment": 0
+        }
+      }
+    },
+    {
+      "actionId": "same-reference-bug",
+      "status": "pass",
+      "state": {
+        "application": {
+          "source": [
+            {
+              "id": "start",
+              "x": 0,
+              "y": 10
+            },
+            {
+              "id": "middle",
+              "x": 5,
+              "y": 30
+            },
+            {
+              "id": "end",
+              "x": 10,
+              "y": 30
+            }
+          ],
+          "domain": [
+            0,
+            10
+          ],
+          "rendered": {
+            "duplicateX": "error",
+            "generation": 0,
+            "viewport": {
+              "width": 1000,
+              "height": 620
+            },
+            "mode": "nearest-per-line",
+            "inspection": 5,
+            "pointer": {
+              "x": 458.5,
+              "y": 187.5
+            },
+            "results": [
+              {
+                "series": "monthly",
+                "kind": "recorded",
+                "x": 5,
+                "y": 20,
+                "anchor": {
+                  "x": 458.5,
+                  "y": 187.5
+                },
+                "provenance": {
+                  "kind": "recorded",
+                  "index": 1,
+                  "id": "middle"
+                },
+                "distance": {
+                  "space": "domain-x",
+                  "value": 0
+                }
+              }
+            ],
+            "plot": {
+              "x": 55,
+              "y": 175,
+              "width": 917,
+              "height": 375
+            }
+          },
+          "evaluations": 2
+        },
+        "signals": {
+          "schema": "pibbl-signal-observation/1",
+          "scheduler": {
+            "schema": "pibbl-scheduler-observation/1",
+            "scope": "loaded-runtime-realm",
+            "phase": "idle",
+            "frame": null,
+            "work": {
+              "pendingComputedValidations": 0,
+              "pendingHostFrames": 0,
+              "registeredRoots": 1,
+              "dirtyRoots": 0,
+              "dirtyInstances": 0,
+              "advanceParticipants": 0,
+              "queuedBeginCommands": 0,
+              "completionCallbacks": 0,
+              "queuedFrameCompletions": 0,
+              "queuedReactionCompletions": 0
+            },
+            "applicationReadiness": "unknown",
+            "externalTasks": "unobserved"
+          },
+          "session": 1,
+          "status": "ready",
+          "completeness": "complete",
+          "scope": "explicitly-registered",
+          "ownership": {
+            "scope": "bound-canvas-components",
+            "completeness": "complete",
+            "limits": {
+              "surfaces": 64,
+              "components": 256,
+              "paintEntries": 256
+            },
+            "visited": {
+              "surfaces": 1,
+              "components": 54,
+              "paintEntries": 8
+            },
+            "components": {
+              "completeness": "complete",
+              "limit": 64,
+              "removals": {
+                "scope": "previous-snapshot-handles",
+                "limit": 64,
+                "dropped": 0,
+                "records": []
+              },
+              "records": [
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 1,
+                  "typeId": 1,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": true,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 1
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 2,
+                  "typeId": 2,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": false,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 2
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 3,
+                  "typeId": 3,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Rectangle:Anon2",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": false,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 2
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 4,
+                  "typeId": 4,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Text:Anon3",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": false,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 2
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 5,
+                  "typeId": 4,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Text:Anon3_1",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": false,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 2
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 6,
+                  "typeId": 2,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Group:Anon1[closest-point]",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": false,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 6
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 7,
+                  "typeId": 3,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Group:Anon1[closest-point]/Rectangle:Anon2",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": false,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 6
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 8,
+                  "typeId": 4,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Group:Anon1[closest-point]/Text:Anon3",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": false,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 2
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 9,
+                  "typeId": 2,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Group:Anon1[nearest-per-line]",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": false,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 9
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 10,
+                  "typeId": 3,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Group:Anon1[nearest-per-line]/Rectangle:Anon2",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": false,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 9
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 11,
+                  "typeId": 4,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Group:Anon1[nearest-per-line]/Text:Anon3",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": false,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 2
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 12,
+                  "typeId": 2,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Group:Anon1[interpolated-x]",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": false,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 12
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 13,
+                  "typeId": 3,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Group:Anon1[interpolated-x]/Rectangle:Anon2",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": false,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 12
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 14,
+                  "typeId": 4,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Group:Anon1[interpolated-x]/Text:Anon3",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": false,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 2
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 15,
+                  "typeId": 4,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Text:Anon3_2",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": false,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 2
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 16,
+                  "typeId": 5,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Absolute:Anon4",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": false,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "missing"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 16
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 17,
+                  "typeId": 6,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Absolute:Anon4/LinearScale:Anon5",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": false,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 17
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 18,
+                  "typeId": 7,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Absolute:Anon4/LinearScale:Anon5/LinearScale:Anon5",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": false,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 917,
+                      "height": 375
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 18
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 19,
+                  "typeId": 7,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Absolute:Anon4/LinearScale:Anon5/LinearScale:Anon5/LinearScale:Anon5",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": false,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 917,
+                      "height": 375
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 19
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 20,
+                  "typeId": 8,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Absolute:Anon4/LinearScale:Anon5/LinearScale:Anon5/LinearScale:Anon5/Plot:Anon6",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": true,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 917,
+                      "height": 375
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 20
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 21,
+                  "typeId": 2,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Absolute:Anon4/LinearScale:Anon5/LinearScale:Anon5/LinearScale:Anon5/Plot:Anon6/Group:Anon1",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": false,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 917,
+                      "height": 375
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 21
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 22,
+                  "typeId": 3,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Absolute:Anon4/LinearScale:Anon5/LinearScale:Anon5/LinearScale:Anon5/Plot:Anon6/Group:Anon1/Rectangle:Anon2",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": false,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 917,
+                      "height": 375
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 21
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 23,
+                  "typeId": 9,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Absolute:Anon4/LinearScale:Anon5/LinearScale:Anon5/LinearScale:Anon5/Plot:Anon6/Group:Anon1/Axis:Anon7",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": true,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 917,
+                      "height": 375
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 23
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 24,
+                  "typeId": 10,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Absolute:Anon4/LinearScale:Anon5/LinearScale:Anon5/LinearScale:Anon5/Plot:Anon6/Group:Anon1/Axis:Anon7/Path:Anon8[axis]",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": false,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 917,
+                      "height": 375
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 23
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 25,
+                  "typeId": 4,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Absolute:Anon4/LinearScale:Anon5/LinearScale:Anon5/LinearScale:Anon5/Plot:Anon6/Group:Anon1/Axis:Anon7/Text:Anon3[0%3A0]",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": false,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 917,
+                      "height": 375
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 23
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 26,
+                  "typeId": 4,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Absolute:Anon4/LinearScale:Anon5/LinearScale:Anon5/LinearScale:Anon5/Plot:Anon6/Group:Anon1/Axis:Anon7/Text:Anon3[1%3A0]",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": false,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 917,
+                      "height": 375
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 23
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 27,
+                  "typeId": 4,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Absolute:Anon4/LinearScale:Anon5/LinearScale:Anon5/LinearScale:Anon5/Plot:Anon6/Group:Anon1/Axis:Anon7/Text:Anon3[2%3A0]",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": false,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 917,
+                      "height": 375
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 23
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 28,
+                  "typeId": 4,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Absolute:Anon4/LinearScale:Anon5/LinearScale:Anon5/LinearScale:Anon5/Plot:Anon6/Group:Anon1/Axis:Anon7/Text:Anon3[3%3A0]",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": false,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 917,
+                      "height": 375
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 23
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 29,
+                  "typeId": 4,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Absolute:Anon4/LinearScale:Anon5/LinearScale:Anon5/LinearScale:Anon5/Plot:Anon6/Group:Anon1/Axis:Anon7/Text:Anon3[4%3A0]",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": false,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 917,
+                      "height": 375
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 21
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 30,
+                  "typeId": 9,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Absolute:Anon4/LinearScale:Anon5/LinearScale:Anon5/LinearScale:Anon5/Plot:Anon6/Group:Anon1/Axis:Anon7_1",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": true,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 917,
+                      "height": 375
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 30
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 31,
+                  "typeId": 10,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Absolute:Anon4/LinearScale:Anon5/LinearScale:Anon5/LinearScale:Anon5/Plot:Anon6/Group:Anon1/Axis:Anon7_1/Path:Anon8[axis]",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": false,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 917,
+                      "height": 375
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 30
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 32,
+                  "typeId": 4,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Absolute:Anon4/LinearScale:Anon5/LinearScale:Anon5/LinearScale:Anon5/Plot:Anon6/Group:Anon1/Axis:Anon7_1/Text:Anon3[0%3A0]",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": false,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 917,
+                      "height": 375
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 30
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 33,
+                  "typeId": 4,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Absolute:Anon4/LinearScale:Anon5/LinearScale:Anon5/LinearScale:Anon5/Plot:Anon6/Group:Anon1/Axis:Anon7_1/Text:Anon3[1%3A0]",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": false,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 917,
+                      "height": 375
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 30
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 34,
+                  "typeId": 4,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Absolute:Anon4/LinearScale:Anon5/LinearScale:Anon5/LinearScale:Anon5/Plot:Anon6/Group:Anon1/Axis:Anon7_1/Text:Anon3[2%3A0]",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": false,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 917,
+                      "height": 375
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 30
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 35,
+                  "typeId": 4,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Absolute:Anon4/LinearScale:Anon5/LinearScale:Anon5/LinearScale:Anon5/Plot:Anon6/Group:Anon1/Axis:Anon7_1/Text:Anon3[3%3A0]",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": false,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 917,
+                      "height": 375
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 30
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 36,
+                  "typeId": 4,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Absolute:Anon4/LinearScale:Anon5/LinearScale:Anon5/LinearScale:Anon5/Plot:Anon6/Group:Anon1/Axis:Anon7_1/Text:Anon3[4%3A0]",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": false,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 917,
+                      "height": 375
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 21
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 37,
+                  "typeId": 11,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Absolute:Anon4/LinearScale:Anon5/LinearScale:Anon5/LinearScale:Anon5/Plot:Anon6/Group:Anon1/LineSeries:Anon9",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": true,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 917,
+                      "height": 375
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 37
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 38,
+                  "typeId": 10,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Absolute:Anon4/LinearScale:Anon5/LinearScale:Anon5/LinearScale:Anon5/Plot:Anon6/Group:Anon1/LineSeries:Anon9/Path:Anon8",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": false,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 917,
+                      "height": 375
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 21
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 39,
+                  "typeId": 11,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Absolute:Anon4/LinearScale:Anon5/LinearScale:Anon5/LinearScale:Anon5/Plot:Anon6/Group:Anon1/LineSeries:Anon9_1",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": true,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 917,
+                      "height": 375
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 39
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 40,
+                  "typeId": 10,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Absolute:Anon4/LinearScale:Anon5/LinearScale:Anon5/LinearScale:Anon5/Plot:Anon6/Group:Anon1/LineSeries:Anon9_1/Path:Anon8",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": false,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 917,
+                      "height": 375
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 21
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 41,
+                  "typeId": 12,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Absolute:Anon4/LinearScale:Anon5/LinearScale:Anon5/LinearScale:Anon5/Plot:Anon6/Group:Anon1/Line:Anon10",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": false,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 917,
+                      "height": 375
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 21
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 42,
+                  "typeId": 13,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Absolute:Anon4/LinearScale:Anon5/LinearScale:Anon5/LinearScale:Anon5/Plot:Anon6/Group:Anon1/HoverData:Anon11",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": true,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 917,
+                      "height": 375
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 42
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 43,
+                  "typeId": 2,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Absolute:Anon4/LinearScale:Anon5/LinearScale:Anon5/LinearScale:Anon5/Plot:Anon6/Group:Anon1/HoverData:Anon11/Group:Anon1[monthly]",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": false,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 917,
+                      "height": 375
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 43
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 44,
+                  "typeId": 14,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Absolute:Anon4/LinearScale:Anon5/LinearScale:Anon5/LinearScale:Anon5/Plot:Anon6/Group:Anon1/HoverData:Anon11/Group:Anon1[monthly]/Circle:Anon12",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": false,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 917,
+                      "height": 375
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 42
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 45,
+                  "typeId": 15,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Absolute:Anon4/LinearScale:Anon5/LinearScale:Anon5/LinearScale:Anon5/Plot:Anon6/Group:Anon1/HoverData:Anon11/AnchoredLayout:Anon13",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": false,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 917,
+                      "height": 375
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 45
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 46,
+                  "typeId": 2,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Absolute:Anon4/LinearScale:Anon5/LinearScale:Anon5/LinearScale:Anon5/Plot:Anon6/Group:Anon1/HoverData:Anon11/AnchoredLayout:Anon13/Group:Anon1[monthly]",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": false,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 917,
+                      "height": 375
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 46
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 47,
+                  "typeId": 16,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Absolute:Anon4/LinearScale:Anon5/LinearScale:Anon5/LinearScale:Anon5/Plot:Anon6/Group:Anon1/HoverData:Anon11/AnchoredLayout:Anon13/Group:Anon1[monthly]/Item:Anon14",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": true,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 917,
+                      "height": 375
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 47
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 48,
+                  "typeId": 12,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Absolute:Anon4/LinearScale:Anon5/LinearScale:Anon5/LinearScale:Anon5/Plot:Anon6/Group:Anon1/HoverData:Anon11/AnchoredLayout:Anon13/Group:Anon1[monthly]/Item:Anon14/Line:Anon10",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": false,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 184,
+                      "height": 68
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 184,
+                      "height": 68
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 47
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 49,
+                  "typeId": 3,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Absolute:Anon4/LinearScale:Anon5/LinearScale:Anon5/LinearScale:Anon5/Plot:Anon6/Group:Anon1/HoverData:Anon11/AnchoredLayout:Anon13/Group:Anon1[monthly]/Item:Anon14/Rectangle:Anon2",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": false,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 184,
+                      "height": 68
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 184,
+                      "height": 68
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 47
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 50,
+                  "typeId": 2,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Absolute:Anon4/LinearScale:Anon5/LinearScale:Anon5/LinearScale:Anon5/Plot:Anon6/Group:Anon1/HoverData:Anon11/AnchoredLayout:Anon13/Group:Anon1[monthly]/Item:Anon14/Group:Anon1",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": false,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 184,
+                      "height": 68
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 184,
+                      "height": 68
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 50
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 51,
+                  "typeId": 4,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Absolute:Anon4/LinearScale:Anon5/LinearScale:Anon5/LinearScale:Anon5/Plot:Anon6/Group:Anon1/HoverData:Anon11/AnchoredLayout:Anon13/Group:Anon1[monthly]/Item:Anon14/Group:Anon1/Text:Anon3",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": false,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 184,
+                      "height": 68
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 184,
+                      "height": 68
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 50
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 52,
+                  "typeId": 4,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Absolute:Anon4/LinearScale:Anon5/LinearScale:Anon5/LinearScale:Anon5/Plot:Anon6/Group:Anon1/HoverData:Anon11/AnchoredLayout:Anon13/Group:Anon1[monthly]/Item:Anon14/Group:Anon1/Text:Anon3_1",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": false,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 184,
+                      "height": 68
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 184,
+                      "height": 68
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 50
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 53,
+                  "typeId": 4,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Absolute:Anon4/LinearScale:Anon5/LinearScale:Anon5/LinearScale:Anon5/Plot:Anon6/Group:Anon1/HoverData:Anon11/AnchoredLayout:Anon13/Group:Anon1[monthly]/Item:Anon14/Group:Anon1/Text:Anon3_2",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": false,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 184,
+                      "height": 68
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 184,
+                      "height": 68
+                    }
+                  }
+                },
+                {
+                  "label": null,
+                  "source": {
+                    "status": "not-captured"
+                  },
+                  "componentParent": {
+                    "status": "observed",
+                    "componentId": 2
+                  },
+                  "surfaceHost": {
+                    "status": "none",
+                    "componentId": null
+                  },
+                  "componentId": 54,
+                  "typeId": 4,
+                  "surfaceId": 1,
+                  "surfaceKind": "root",
+                  "runtimePath": "root/Scene:Anon0/Group:Anon1/Text:Anon3_3",
+                  "runtimePathTruncated": false,
+                  "renderGeneration": 2,
+                  "hasSignalConsumer": false,
+                  "layout": {
+                    "status": "entry-context",
+                    "allocation": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    },
+                    "percentageBasis": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 1000,
+                      "height": 620
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "records": [
+            {
+              "id": 1,
+              "status": "available",
+              "kind": "source",
+              "debugName": null,
+              "version": 0,
+              "observerCount": 2,
+              "cache": "value",
+              "validation": "source",
+              "dependencies": {
+                "count": 0,
+                "completeness": "complete",
+                "edges": []
+              },
+              "observers": {
+                "scope": "direct-subscriptions",
+                "completeness": "complete",
+                "records": [
+                  {
+                    "consumerId": 1,
+                    "kind": "render",
+                    "owner": {
+                      "componentId": 37,
+                      "runtimePath": "root/Scene:Anon0/Group:Anon1/Absolute:Anon4/LinearScale:Anon5/LinearScale:Anon5/LinearScale:Anon5/Plot:Anon6/Group:Anon1/LineSeries:Anon9",
+                      "runtimePathTruncated": false,
+                      "debugName": "LineSeries (root/Scene:Anon0/Group:Anon1/Absolute:Anon4/LinearScale:Anon5/LinearScale:Anon5/LinearScale:Anon5/Plot:Anon6/Group:Anon1/LineSeries:Anon9)",
+                      "surfaceId": 1,
+                      "surfaceKind": "root",
+                      "renderGeneration": 2,
+                      "requestedRevision": 2,
+                      "completedRevision": 2
+                    },
+                    "registeredSignalId": null,
+                    "observedVersion": 0,
+                    "dirty": false
+                  },
+                  {
+                    "consumerId": 2,
+                    "kind": "render",
+                    "owner": {
+                      "componentId": 42,
+                      "runtimePath": "root/Scene:Anon0/Group:Anon1/Absolute:Anon4/LinearScale:Anon5/LinearScale:Anon5/LinearScale:Anon5/Plot:Anon6/Group:Anon1/HoverData:Anon11",
+                      "runtimePathTruncated": false,
+                      "debugName": "HoverData (root/Scene:Anon0/Group:Anon1/Absolute:Anon4/LinearScale:Anon5/LinearScale:Anon5/LinearScale:Anon5/Plot:Anon6/Group:Anon1/HoverData:Anon11)",
+                      "surfaceId": 1,
+                      "surfaceKind": "root",
+                      "renderGeneration": 2,
+                      "requestedRevision": 2,
+                      "completedRevision": 2
+                    },
+                    "registeredSignalId": null,
+                    "observedVersion": 0,
+                    "dirty": false
+                  }
+                ]
+              },
+              "preview": {
+                "kind": "opaque",
+                "type": "object"
+              }
+            },
+            {
+              "id": 2,
+              "status": "available",
+              "kind": "source",
+              "debugName": null,
+              "version": 0,
+              "observerCount": 3,
+              "cache": "value",
+              "validation": "source",
+              "dependencies": {
+                "count": 0,
+                "completeness": "complete",
+                "edges": []
+              },
+              "observers": {
+                "scope": "direct-subscriptions",
+                "completeness": "complete",
+                "records": [
+                  {
+                    "consumerId": 3,
+                    "kind": "render",
+                    "owner": {
+                      "componentId": 1,
+                      "runtimePath": "root/Scene:Anon0",
+                      "runtimePathTruncated": false,
+                      "debugName": "Scene (root/Scene:Anon0)",
+                      "surfaceId": 1,
+                      "surfaceKind": "root",
+                      "renderGeneration": 2,
+                      "requestedRevision": 2,
+                      "completedRevision": 2
+                    },
+                    "registeredSignalId": null,
+                    "observedVersion": 0,
+                    "dirty": false
+                  },
+                  {
+                    "consumerId": 4,
+                    "kind": "render",
+                    "owner": {
+                      "componentId": 23,
+                      "runtimePath": "root/Scene:Anon0/Group:Anon1/Absolute:Anon4/LinearScale:Anon5/LinearScale:Anon5/LinearScale:Anon5/Plot:Anon6/Group:Anon1/Axis:Anon7",
+                      "runtimePathTruncated": false,
+                      "debugName": "Axis (root/Scene:Anon0/Group:Anon1/Absolute:Anon4/LinearScale:Anon5/LinearScale:Anon5/LinearScale:Anon5/Plot:Anon6/Group:Anon1/Axis:Anon7)",
+                      "surfaceId": 1,
+                      "surfaceKind": "root",
+                      "renderGeneration": 2,
+                      "requestedRevision": 2,
+                      "completedRevision": 2
+                    },
+                    "registeredSignalId": null,
+                    "observedVersion": 0,
+                    "dirty": false
+                  },
+                  {
+                    "consumerId": 5,
+                    "kind": "render",
+                    "owner": {
+                      "componentId": 47,
+                      "runtimePath": "root/Scene:Anon0/Group:Anon1/Absolute:Anon4/LinearScale:Anon5/LinearScale:Anon5/LinearScale:Anon5/Plot:Anon6/Group:Anon1/HoverData:Anon11/AnchoredLayout:Anon13/Group:Anon1[monthly]/Item:Anon14",
+                      "runtimePathTruncated": false,
+                      "debugName": "Item (root/Scene:Anon0/Group:Anon1/Absolute:Anon4/LinearScale:Anon5/LinearScale:Anon5/LinearScale:Anon5/Plot:Anon6/Group:Anon1/HoverData:Anon11/AnchoredLayout:Anon13/Group:Anon1[monthly]/Item:Anon14)",
+                      "surfaceId": 1,
+                      "surfaceKind": "root",
+                      "renderGeneration": 2,
+                      "requestedRevision": 2,
+                      "completedRevision": 2
+                    },
+                    "registeredSignalId": null,
+                    "observedVersion": 0,
+                    "dirty": false
+                  }
+                ]
+              },
+              "preview": {
+                "kind": "opaque",
+                "type": "object"
+              }
+            }
+          ]
+        },
+        "committed": {
+          "surface": {
+            "status": "available",
+            "scope": "committed-root-surface",
+            "hostGeometry": "unavailable",
+            "geometry": {
+              "configuredPixelRatio": "device",
+              "mode": "responsive",
+              "fit": "fill",
+              "logical": {
+                "width": 1000,
+                "height": 620
+              },
+              "cssContent": {
+                "width": 1000,
+                "height": 620
+              },
+              "backing": {
+                "width": 1000,
+                "height": 620
+              },
+              "backingPerCss": {
+                "x": 1,
+                "y": 1
+              },
+              "backingPerLogical": {
+                "x": 1,
+                "y": 1
+              },
+              "logicalToBacking": [
+                1,
+                0,
+                0,
+                1,
+                0,
+                0
+              ],
+              "backingToLogical": [
+                1,
+                0,
+                0,
+                1,
+                0,
+                0
+              ]
+            }
+          },
+          "focus": {
+            "policy": null,
+            "boundsSemantics": {
+              "coordinateSpace": "root-logical",
+              "representation": "axis-aligned-envelope",
+              "source": "navigation-metadata",
+              "paintedGeometryRelation": "unknown",
+              "hitGeometryRelation": "unknown"
+            },
+            "status": "unconfigured",
+            "nativeFocus": "other",
+            "nativeScope": "owner-document",
+            "targetId": null,
+            "visible": null,
+            "completeness": "complete",
+            "records": []
+          },
+          "pointerCapture": {
+            "scope": "canvas-logical-owners",
+            "nativeActivation": "unavailable",
+            "externalRendererCapture": "unavailable",
+            "completeness": "complete",
+            "records": []
+          },
+          "schema": "pibbl-targeting-prototype/1",
+          "status": "ready",
+          "generation": {
+            "session": 1,
+            "render": 2,
+            "requested": 2,
+            "completed": 2
+          },
+          "completeness": "complete",
+          "totalRecords": 8,
+          "records": [
+            {
+              "order": 0,
+              "kind": "path",
+              "targetId": 1,
+              "surfacePath": [],
+              "clipCount": 0,
+              "clips": [],
+              "fill": true,
+              "strokeInteractionWidth": 0,
+              "transform": [
+                1,
+                0,
+                0,
+                1,
+                24,
+                20
+              ]
+            },
+            {
+              "order": 1,
+              "kind": "path",
+              "targetId": 2,
+              "surfacePath": [],
+              "clipCount": 0,
+              "clips": [],
+              "fill": true,
+              "strokeInteractionWidth": 0,
+              "transform": [
+                1,
+                0,
+                0,
+                1,
+                24,
+                55
+              ]
+            },
+            {
+              "order": 2,
+              "kind": "path",
+              "targetId": 3,
+              "surfacePath": [],
+              "clipCount": 0,
+              "clips": [],
+              "fill": true,
+              "strokeInteractionWidth": 0,
+              "transform": [
+                1,
+                0,
+                0,
+                1,
+                24,
+                85
+              ]
+            },
+            {
+              "order": 3,
+              "kind": "path",
+              "targetId": 4,
+              "surfacePath": [],
+              "clipCount": 0,
+              "clips": [],
+              "fill": true,
+              "strokeInteractionWidth": 0,
+              "transform": [
+                1,
+                0,
+                0,
+                1,
+                214,
+                85
+              ]
+            },
+            {
+              "order": 4,
+              "kind": "path",
+              "targetId": 5,
+              "surfacePath": [],
+              "clipCount": 0,
+              "clips": [],
+              "fill": true,
+              "strokeInteractionWidth": 0,
+              "transform": [
+                1,
+                0,
+                0,
+                1,
+                404,
+                85
+              ]
+            },
+            {
+              "order": 5,
+              "kind": "path",
+              "targetId": 6,
+              "surfacePath": [],
+              "clipCount": 0,
+              "clips": [],
+              "fill": true,
+              "strokeInteractionWidth": 0,
+              "transform": [
+                1,
+                0,
+                0,
+                1,
+                24,
+                145
+              ]
+            },
+            {
+              "order": 6,
+              "kind": "path",
+              "targetId": 7,
+              "surfacePath": [],
+              "clipCount": 0,
+              "clips": [],
+              "fill": true,
+              "strokeInteractionWidth": 0,
+              "transform": [
+                1,
+                0,
+                0,
+                1,
+                55,
+                175
+              ]
+            },
+            {
+              "order": 7,
+              "kind": "path",
+              "targetId": 8,
+              "surfacePath": [],
+              "clipCount": 0,
+              "clips": [],
+              "fill": true,
+              "strokeInteractionWidth": 0,
+              "transform": [
+                1,
+                0,
+                0,
+                1,
+                24,
+                593
+              ]
+            }
+          ],
+          "visibility": "unavailable",
+          "coordinateSpace": "root-logical",
+          "recordLimit": 64,
+          "pendingRealmWork": false
+        },
+        "targeting": {
+          "inside": {
+            "routing": "geometry-only",
+            "status": "target",
+            "generation": {
+              "session": 1,
+              "render": 2,
+              "requested": 2,
+              "completed": 2
+            },
+            "targetId": 7,
+            "candidates": [
+              {
+                "order": 7,
+                "targetId": 8,
+                "outcome": "geometry-miss",
+                "exclusion": null,
+                "geometry": "miss"
+              },
+              {
+                "order": 6,
+                "targetId": 7,
+                "outcome": "hit",
+                "exclusion": null,
+                "geometry": "hit"
+              },
+              {
+                "order": 5,
+                "targetId": 6,
+                "outcome": "geometry-miss",
+                "exclusion": null,
+                "geometry": "miss"
+              },
+              {
+                "order": 4,
+                "targetId": 5,
+                "outcome": "geometry-miss",
+                "exclusion": null,
+                "geometry": "miss"
+              },
+              {
+                "order": 3,
+                "targetId": 4,
+                "outcome": "geometry-miss",
+                "exclusion": null,
+                "geometry": "miss"
+              },
+              {
+                "order": 2,
+                "targetId": 3,
+                "outcome": "geometry-miss",
+                "exclusion": null,
+                "geometry": "miss"
+              },
+              {
+                "order": 1,
+                "targetId": 2,
+                "outcome": "geometry-miss",
+                "exclusion": null,
+                "geometry": "miss"
+              },
+              {
+                "order": 0,
+                "targetId": 1,
+                "outcome": "geometry-miss",
+                "exclusion": null,
+                "geometry": "miss"
+              }
+            ],
+            "captureMode": "active-native-geometry",
+            "nativeCalls": 8,
+            "reason": null,
+            "pendingRealmWork": false
+          },
+          "outside": {
+            "routing": "geometry-only",
+            "status": "miss",
+            "generation": {
+              "session": 1,
+              "render": 2,
+              "requested": 2,
+              "completed": 2
+            },
+            "targetId": null,
+            "candidates": [
+              {
+                "order": 7,
+                "targetId": 8,
+                "outcome": "geometry-miss",
+                "exclusion": null,
+                "geometry": "miss"
+              },
+              {
+                "order": 6,
+                "targetId": 7,
+                "outcome": "geometry-miss",
+                "exclusion": null,
+                "geometry": "miss"
+              },
+              {
+                "order": 5,
+                "targetId": 6,
+                "outcome": "geometry-miss",
+                "exclusion": null,
+                "geometry": "miss"
+              },
+              {
+                "order": 4,
+                "targetId": 5,
+                "outcome": "geometry-miss",
+                "exclusion": null,
+                "geometry": "miss"
+              },
+              {
+                "order": 3,
+                "targetId": 4,
+                "outcome": "geometry-miss",
+                "exclusion": null,
+                "geometry": "miss"
+              },
+              {
+                "order": 2,
+                "targetId": 3,
+                "outcome": "geometry-miss",
+                "exclusion": null,
+                "geometry": "miss"
+              },
+              {
+                "order": 1,
+                "targetId": 2,
+                "outcome": "geometry-miss",
+                "exclusion": null,
+                "geometry": "miss"
+              },
+              {
+                "order": 0,
+                "targetId": 1,
+                "outcome": "geometry-miss",
+                "exclusion": null,
+                "geometry": "miss"
+              }
+            ],
+            "captureMode": "active-native-geometry",
+            "nativeCalls": 8,
+            "reason": null,
+            "pendingRealmWork": false
+          }
+        },
+        "pixels": {
+          "initialSegment": 15,
+          "repairedSegment": 0
+        }
+      },
+      "diagnosis": "Source row changed from 20 to 30; signal version and completed generation did not advance; retained hover and pixels still represent 20. Object.is same-reference publication is the application cause."
+    }
+  ],
+  "checks": [
+    {
+      "checkId": "initial.geometry",
+      "actionId": "initial",
+      "status": "pass",
+      "required": true
+    },
+    {
+      "checkId": "initial.identity",
+      "actionId": "initial",
+      "status": "pass",
+      "required": true
+    },
+    {
+      "checkId": "initial.value",
+      "actionId": "initial",
+      "status": "pass",
+      "required": true
+    },
+    {
+      "checkId": "initial.pixels",
+      "actionId": "initial",
+      "status": "pass",
+      "required": true
+    },
+    {
+      "checkId": "bug.source",
+      "actionId": "same-reference-bug",
+      "status": "pass",
+      "required": true
+    },
+    {
+      "checkId": "bug.stale-result",
+      "actionId": "same-reference-bug",
+      "status": "pass",
+      "required": true
+    },
+    {
+      "checkId": "bug.signal-version",
+      "actionId": "same-reference-bug",
+      "status": "pass",
+      "required": true
+    },
+    {
+      "checkId": "bug.render-generation",
+      "actionId": "same-reference-bug",
+      "status": "pass",
+      "required": true
+    },
+    {
+      "checkId": "bug.pixels",
+      "actionId": "same-reference-bug",
+      "status": "pass",
+      "required": true
+    },
+    {
+      "checkId": "application.reading-agreement",
+      "actionId": "same-reference-bug",
+      "status": "fail",
+      "required": true,
+      "reason": "Independent update intent: 30; actual retained hover: 20. Controlled expected failure."
+    }
+  ],
+  "errors": [],
+  "provenance": "Source development; application-owned snapshots plus source-only prototype inspection. No build attestation.",
+  "identity": {
+    "schema": "pibbl-targeting-identity/1",
+    "revision": "66e6ab05ac859db0f65e2dd7558110e1b6ff5013",
+    "sha256": "467152cd5aa952211977de52bea1d2c6d335669f0e5d40b88a102da0747dcc89",
+    "files": 421
+  },
+  "files": {
+    "tooling/agent-verification/chart-application.ts": "36047b682cebc31bb53455fd41dd0ab8664dbf58f89a18788fa0571ad5380fd2",
+    "tooling/agent-verification/chart-application-replay.mjs": "75f58ea4c5a4bb33e53f1261aad9246a66e8213166242eb2bb886a6bef2fefbf"
+  },
+  "browser": "151.0.7922.34",
+  "url": "http://127.0.0.1:5199/#/examples/composition/viz-hover-comparison"
+}

@@ -1,0 +1,45 @@
+{
+  "schema": "pibbl-agent-workflow-run/1",
+  "status": "incomplete",
+  "requirementId": "HIT-12",
+  "requirementCompletion": "not-established",
+  "scope": "Controlled reference workflow only; not arbitrary application or full requirement verification.",
+  "scenario": "agent-targeting-verification",
+  "url": "http://127.0.0.1:5199/#/testing/agent-targeting-verification",
+  "sources": [
+    "packages/scenarios/src/agent-targeting-verification.ts",
+    "packages/core/test/agent-targeting-verification.test.ts",
+    "tooling/agent-verification/targeting.ts"
+  ],
+  "remaining": "Extend prediction-versus-delivery agreement to other primitives, renderers and race cases; querying alone remains insufficient.",
+  "acceptance": [
+    "Seed delivers to the decoration and does not select item-a.",
+    "Repair selects item-a exactly once.",
+    "Blue pixel (144,112) remains [37,99,235,255] across seed and repair.",
+    "Intentional blocking keeps item-a unselected."
+  ],
+  "watchdog": {
+    "status": "launch-error",
+    "exitCode": null,
+    "browserCleanup": {
+      "status": "launch-failed",
+      "pid": null,
+      "processExited": false
+    }
+  },
+  "evidence": null,
+  "readFailure": {
+    "code": "ENOENT",
+    "message": "ENOENT: no such file or directory, open '/Users/benlesh/GitHub/crc/docs/strategy/agent-verification-evidence/application-2026-10-08/targeting/replay/report.json'"
+  },
+  "checkpointFailure": {
+    "code": "ENOENT",
+    "message": "ENOENT: no such file or directory, open '/Users/benlesh/GitHub/crc/docs/strategy/agent-verification-evidence/application-2026-10-08/targeting/replay/checkpoint.json'"
+  },
+  "evidencePath": null,
+  "artifacts": {
+    "report": "/Users/benlesh/GitHub/crc/docs/strategy/agent-verification-evidence/application-2026-10-08/targeting/replay/report.json",
+    "watchdog": "/Users/benlesh/GitHub/crc/docs/strategy/agent-verification-evidence/application-2026-10-08/targeting/watchdog.json"
+  },
+  "next": null
+}

@@ -1,0 +1,1451 @@
+{
+  "schema": "pibbl-viz-replay/1",
+  "status": "pass",
+  "scope": "Explicit instrumented development build; straight root lines only; geometric coverage, not pixel visibility or event targeting.",
+  "url": "http://127.0.0.1:5201/__pibbl/line-attribution",
+  "node": "v24.15.0",
+  "steps": [
+    {
+      "actionId": "initial",
+      "status": "pass",
+      "state": {
+        "source": [
+          {
+            "id": "a",
+            "x": 0,
+            "y": 10
+          },
+          {
+            "id": "b",
+            "x": 5,
+            "y": 20
+          },
+          {
+            "id": "c",
+            "x": 10,
+            "y": 30
+          }
+        ],
+        "domain": [
+          0,
+          10
+        ],
+        "clipped": true,
+        "point": {
+          "x": 205,
+          "y": 240
+        },
+        "error": null,
+        "attribution": {
+          "status": "ready",
+          "generation": 1,
+          "reasons": [],
+          "scope": "root-straight-linear-lines-geometric-coverage",
+          "surface": {
+            "logicalToBacking": [
+              1,
+              0,
+              0,
+              1,
+              0,
+              0
+            ],
+            "backingWidth": 710,
+            "backingHeight": 420
+          },
+          "lines": [
+            {
+              "order": 0,
+              "xScale": {
+                "id": "time",
+                "type": "linear",
+                "domain": [
+                  0,
+                  10
+                ],
+                "range": [
+                  0,
+                  600
+                ]
+              },
+              "yScale": {
+                "id": "value",
+                "type": "linear",
+                "domain": [
+                  0,
+                  40
+                ],
+                "range": [
+                  240,
+                  0
+                ]
+              },
+              "transform": [
+                1,
+                0,
+                0,
+                1,
+                55,
+                90
+              ],
+              "strokeWidth": 4,
+              "clips": [
+                {
+                  "transform": [
+                    1,
+                    0,
+                    0,
+                    1,
+                    55,
+                    90
+                  ],
+                  "fillRule": "nonzero",
+                  "geometry": "captured-path"
+                }
+              ],
+              "segments": [
+                {
+                  "from": {
+                    "index": 0,
+                    "x": 0,
+                    "y": 10
+                  },
+                  "to": {
+                    "index": 1,
+                    "x": 5,
+                    "y": 20
+                  }
+                },
+                {
+                  "from": {
+                    "index": 1,
+                    "x": 5,
+                    "y": 20
+                  },
+                  "to": {
+                    "index": 2,
+                    "x": 10,
+                    "y": 30
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "query": {
+          "status": "segment",
+          "generation": 1,
+          "lineOrder": 0,
+          "segmentIndex": 0,
+          "sourceIndices": [
+            0,
+            1
+          ],
+          "from": {
+            "index": 0,
+            "x": 0,
+            "y": 10
+          },
+          "to": {
+            "index": 1,
+            "x": 5,
+            "y": 20
+          },
+          "sourceReferenceSemantics": "live-application-references-not-captured-values",
+          "fromSourceReference": {
+            "id": "a",
+            "x": 0,
+            "y": 10
+          },
+          "toSourceReference": {
+            "id": "b",
+            "x": 5,
+            "y": 20
+          }
+        },
+        "pixels": {
+          "original": 15,
+          "replacement": 0,
+          "clipped": 0
+        }
+      }
+    },
+    {
+      "actionId": "clip-excluded",
+      "status": "pass",
+      "state": {
+        "source": [
+          {
+            "id": "a",
+            "x": 0,
+            "y": 10
+          },
+          {
+            "id": "b",
+            "x": 5,
+            "y": 20
+          },
+          {
+            "id": "c",
+            "x": 10,
+            "y": 30
+          }
+        ],
+        "domain": [
+          0,
+          10
+        ],
+        "clipped": true,
+        "point": {
+          "x": 505,
+          "y": 180
+        },
+        "error": null,
+        "attribution": {
+          "status": "ready",
+          "generation": 1,
+          "reasons": [],
+          "scope": "root-straight-linear-lines-geometric-coverage",
+          "surface": {
+            "logicalToBacking": [
+              1,
+              0,
+              0,
+              1,
+              0,
+              0
+            ],
+            "backingWidth": 710,
+            "backingHeight": 420
+          },
+          "lines": [
+            {
+              "order": 0,
+              "xScale": {
+                "id": "time",
+                "type": "linear",
+                "domain": [
+                  0,
+                  10
+                ],
+                "range": [
+                  0,
+                  600
+                ]
+              },
+              "yScale": {
+                "id": "value",
+                "type": "linear",
+                "domain": [
+                  0,
+                  40
+                ],
+                "range": [
+                  240,
+                  0
+                ]
+              },
+              "transform": [
+                1,
+                0,
+                0,
+                1,
+                55,
+                90
+              ],
+              "strokeWidth": 4,
+              "clips": [
+                {
+                  "transform": [
+                    1,
+                    0,
+                    0,
+                    1,
+                    55,
+                    90
+                  ],
+                  "fillRule": "nonzero",
+                  "geometry": "captured-path"
+                }
+              ],
+              "segments": [
+                {
+                  "from": {
+                    "index": 0,
+                    "x": 0,
+                    "y": 10
+                  },
+                  "to": {
+                    "index": 1,
+                    "x": 5,
+                    "y": 20
+                  }
+                },
+                {
+                  "from": {
+                    "index": 1,
+                    "x": 5,
+                    "y": 20
+                  },
+                  "to": {
+                    "index": 2,
+                    "x": 10,
+                    "y": 30
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "query": {
+          "status": "clip-excluded",
+          "generation": 1
+        },
+        "pixels": {
+          "original": 15,
+          "replacement": 0,
+          "clipped": 0
+        }
+      }
+    },
+    {
+      "actionId": "clip-revealed",
+      "status": "pass",
+      "state": {
+        "source": [
+          {
+            "id": "a",
+            "x": 0,
+            "y": 10
+          },
+          {
+            "id": "b",
+            "x": 5,
+            "y": 20
+          },
+          {
+            "id": "c",
+            "x": 10,
+            "y": 30
+          }
+        ],
+        "domain": [
+          0,
+          10
+        ],
+        "clipped": false,
+        "point": {
+          "x": 505,
+          "y": 180
+        },
+        "error": null,
+        "attribution": {
+          "status": "ready",
+          "generation": 2,
+          "reasons": [],
+          "scope": "root-straight-linear-lines-geometric-coverage",
+          "surface": {
+            "logicalToBacking": [
+              1,
+              0,
+              0,
+              1,
+              0,
+              0
+            ],
+            "backingWidth": 710,
+            "backingHeight": 420
+          },
+          "lines": [
+            {
+              "order": 0,
+              "xScale": {
+                "id": "time",
+                "type": "linear",
+                "domain": [
+                  0,
+                  10
+                ],
+                "range": [
+                  0,
+                  600
+                ]
+              },
+              "yScale": {
+                "id": "value",
+                "type": "linear",
+                "domain": [
+                  0,
+                  40
+                ],
+                "range": [
+                  240,
+                  0
+                ]
+              },
+              "transform": [
+                1,
+                0,
+                0,
+                1,
+                55,
+                90
+              ],
+              "strokeWidth": 4,
+              "clips": [
+                {
+                  "transform": [
+                    1,
+                    0,
+                    0,
+                    1,
+                    55,
+                    90
+                  ],
+                  "fillRule": "nonzero",
+                  "geometry": "captured-path"
+                }
+              ],
+              "segments": [
+                {
+                  "from": {
+                    "index": 0,
+                    "x": 0,
+                    "y": 10
+                  },
+                  "to": {
+                    "index": 1,
+                    "x": 5,
+                    "y": 20
+                  }
+                },
+                {
+                  "from": {
+                    "index": 1,
+                    "x": 5,
+                    "y": 20
+                  },
+                  "to": {
+                    "index": 2,
+                    "x": 10,
+                    "y": 30
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "query": {
+          "status": "segment",
+          "generation": 2,
+          "lineOrder": 0,
+          "segmentIndex": 1,
+          "sourceIndices": [
+            1,
+            2
+          ],
+          "from": {
+            "index": 1,
+            "x": 5,
+            "y": 20
+          },
+          "to": {
+            "index": 2,
+            "x": 10,
+            "y": 30
+          },
+          "sourceReferenceSemantics": "live-application-references-not-captured-values",
+          "fromSourceReference": {
+            "id": "b",
+            "x": 5,
+            "y": 20
+          },
+          "toSourceReference": {
+            "id": "c",
+            "x": 10,
+            "y": 30
+          }
+        },
+        "pixels": {
+          "original": 15,
+          "replacement": 0,
+          "clipped": 15
+        }
+      }
+    },
+    {
+      "actionId": "data-replaced",
+      "status": "pass",
+      "state": {
+        "source": [
+          {
+            "id": "a",
+            "x": 0,
+            "y": 10
+          },
+          {
+            "id": "b",
+            "x": 5,
+            "y": 30
+          },
+          {
+            "id": "c",
+            "x": 10,
+            "y": 30
+          }
+        ],
+        "domain": [
+          0,
+          10
+        ],
+        "clipped": false,
+        "point": {
+          "x": 205,
+          "y": 210
+        },
+        "error": null,
+        "attribution": {
+          "status": "ready",
+          "generation": 3,
+          "reasons": [],
+          "scope": "root-straight-linear-lines-geometric-coverage",
+          "surface": {
+            "logicalToBacking": [
+              1,
+              0,
+              0,
+              1,
+              0,
+              0
+            ],
+            "backingWidth": 710,
+            "backingHeight": 420
+          },
+          "lines": [
+            {
+              "order": 0,
+              "xScale": {
+                "id": "time",
+                "type": "linear",
+                "domain": [
+                  0,
+                  10
+                ],
+                "range": [
+                  0,
+                  600
+                ]
+              },
+              "yScale": {
+                "id": "value",
+                "type": "linear",
+                "domain": [
+                  0,
+                  40
+                ],
+                "range": [
+                  240,
+                  0
+                ]
+              },
+              "transform": [
+                1,
+                0,
+                0,
+                1,
+                55,
+                90
+              ],
+              "strokeWidth": 4,
+              "clips": [
+                {
+                  "transform": [
+                    1,
+                    0,
+                    0,
+                    1,
+                    55,
+                    90
+                  ],
+                  "fillRule": "nonzero",
+                  "geometry": "captured-path"
+                }
+              ],
+              "segments": [
+                {
+                  "from": {
+                    "index": 0,
+                    "x": 0,
+                    "y": 10
+                  },
+                  "to": {
+                    "index": 1,
+                    "x": 5,
+                    "y": 30
+                  }
+                },
+                {
+                  "from": {
+                    "index": 1,
+                    "x": 5,
+                    "y": 30
+                  },
+                  "to": {
+                    "index": 2,
+                    "x": 10,
+                    "y": 30
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "query": {
+          "status": "segment",
+          "generation": 3,
+          "lineOrder": 0,
+          "segmentIndex": 0,
+          "sourceIndices": [
+            0,
+            1
+          ],
+          "from": {
+            "index": 0,
+            "x": 0,
+            "y": 10
+          },
+          "to": {
+            "index": 1,
+            "x": 5,
+            "y": 30
+          },
+          "sourceReferenceSemantics": "live-application-references-not-captured-values",
+          "fromSourceReference": {
+            "id": "a",
+            "x": 0,
+            "y": 10
+          },
+          "toSourceReference": {
+            "id": "b",
+            "x": 5,
+            "y": 30
+          }
+        },
+        "pixels": {
+          "original": 0,
+          "replacement": 14,
+          "clipped": 0
+        }
+      }
+    },
+    {
+      "actionId": "failed-render",
+      "status": "pass",
+      "state": {
+        "source": [
+          {
+            "id": "a",
+            "x": 0,
+            "y": 10
+          },
+          {
+            "id": "b",
+            "x": 5,
+            "y": 30
+          },
+          {
+            "id": "c",
+            "x": 10,
+            "y": 30
+          }
+        ],
+        "domain": [
+          0,
+          10
+        ],
+        "clipped": false,
+        "point": {
+          "x": 205,
+          "y": 210
+        },
+        "error": "Controlled failure after line paint",
+        "attribution": {
+          "status": "render-failed",
+          "generation": 3,
+          "reasons": [],
+          "scope": "root-straight-linear-lines-geometric-coverage",
+          "surface": {
+            "logicalToBacking": [
+              1,
+              0,
+              0,
+              1,
+              0,
+              0
+            ],
+            "backingWidth": 710,
+            "backingHeight": 420
+          },
+          "lines": [
+            {
+              "order": 0,
+              "xScale": {
+                "id": "time",
+                "type": "linear",
+                "domain": [
+                  0,
+                  10
+                ],
+                "range": [
+                  0,
+                  600
+                ]
+              },
+              "yScale": {
+                "id": "value",
+                "type": "linear",
+                "domain": [
+                  0,
+                  40
+                ],
+                "range": [
+                  240,
+                  0
+                ]
+              },
+              "transform": [
+                1,
+                0,
+                0,
+                1,
+                55,
+                90
+              ],
+              "strokeWidth": 4,
+              "clips": [
+                {
+                  "transform": [
+                    1,
+                    0,
+                    0,
+                    1,
+                    55,
+                    90
+                  ],
+                  "fillRule": "nonzero",
+                  "geometry": "captured-path"
+                }
+              ],
+              "segments": [
+                {
+                  "from": {
+                    "index": 0,
+                    "x": 0,
+                    "y": 10
+                  },
+                  "to": {
+                    "index": 1,
+                    "x": 5,
+                    "y": 30
+                  }
+                },
+                {
+                  "from": {
+                    "index": 1,
+                    "x": 5,
+                    "y": 30
+                  },
+                  "to": {
+                    "index": 2,
+                    "x": 10,
+                    "y": 30
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "query": {
+          "status": "unavailable",
+          "reason": "render-failed",
+          "generation": 3
+        },
+        "pixels": {
+          "original": 0,
+          "replacement": 14,
+          "clipped": 0
+        }
+      }
+    },
+    {
+      "actionId": "retry",
+      "status": "pass",
+      "state": {
+        "source": [
+          {
+            "id": "a",
+            "x": 0,
+            "y": 10
+          },
+          {
+            "id": "b",
+            "x": 5,
+            "y": 30
+          },
+          {
+            "id": "c",
+            "x": 10,
+            "y": 30
+          }
+        ],
+        "domain": [
+          0,
+          10
+        ],
+        "clipped": false,
+        "point": {
+          "x": 205,
+          "y": 210
+        },
+        "error": null,
+        "attribution": {
+          "status": "ready",
+          "generation": 5,
+          "reasons": [],
+          "scope": "root-straight-linear-lines-geometric-coverage",
+          "surface": {
+            "logicalToBacking": [
+              1,
+              0,
+              0,
+              1,
+              0,
+              0
+            ],
+            "backingWidth": 710,
+            "backingHeight": 420
+          },
+          "lines": [
+            {
+              "order": 0,
+              "xScale": {
+                "id": "time",
+                "type": "linear",
+                "domain": [
+                  0,
+                  10
+                ],
+                "range": [
+                  0,
+                  600
+                ]
+              },
+              "yScale": {
+                "id": "value",
+                "type": "linear",
+                "domain": [
+                  0,
+                  40
+                ],
+                "range": [
+                  240,
+                  0
+                ]
+              },
+              "transform": [
+                1,
+                0,
+                0,
+                1,
+                55,
+                90
+              ],
+              "strokeWidth": 4,
+              "clips": [
+                {
+                  "transform": [
+                    1,
+                    0,
+                    0,
+                    1,
+                    55,
+                    90
+                  ],
+                  "fillRule": "nonzero",
+                  "geometry": "captured-path"
+                }
+              ],
+              "segments": [
+                {
+                  "from": {
+                    "index": 0,
+                    "x": 0,
+                    "y": 10
+                  },
+                  "to": {
+                    "index": 1,
+                    "x": 5,
+                    "y": 30
+                  }
+                },
+                {
+                  "from": {
+                    "index": 1,
+                    "x": 5,
+                    "y": 30
+                  },
+                  "to": {
+                    "index": 2,
+                    "x": 10,
+                    "y": 30
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "query": {
+          "status": "segment",
+          "generation": 5,
+          "lineOrder": 0,
+          "segmentIndex": 0,
+          "sourceIndices": [
+            0,
+            1
+          ],
+          "from": {
+            "index": 0,
+            "x": 0,
+            "y": 10
+          },
+          "to": {
+            "index": 1,
+            "x": 5,
+            "y": 30
+          },
+          "sourceReferenceSemantics": "live-application-references-not-captured-values",
+          "fromSourceReference": {
+            "id": "a",
+            "x": 0,
+            "y": 10
+          },
+          "toSourceReference": {
+            "id": "b",
+            "x": 5,
+            "y": 30
+          }
+        },
+        "pixels": {
+          "original": 0,
+          "replacement": 14,
+          "clipped": 0
+        }
+      }
+    },
+    {
+      "actionId": "zoom",
+      "status": "pass",
+      "state": {
+        "source": [
+          {
+            "id": "a",
+            "x": 0,
+            "y": 10
+          },
+          {
+            "id": "b",
+            "x": 5,
+            "y": 30
+          },
+          {
+            "id": "c",
+            "x": 10,
+            "y": 30
+          }
+        ],
+        "domain": [
+          2.5,
+          7.5
+        ],
+        "clipped": false,
+        "point": {
+          "x": 55,
+          "y": 210
+        },
+        "error": null,
+        "attribution": {
+          "status": "ready",
+          "generation": 6,
+          "reasons": [],
+          "scope": "root-straight-linear-lines-geometric-coverage",
+          "surface": {
+            "logicalToBacking": [
+              1,
+              0,
+              0,
+              1,
+              0,
+              0
+            ],
+            "backingWidth": 710,
+            "backingHeight": 420
+          },
+          "lines": [
+            {
+              "order": 0,
+              "xScale": {
+                "id": "time",
+                "type": "linear",
+                "domain": [
+                  2.5,
+                  7.5
+                ],
+                "range": [
+                  0,
+                  600
+                ]
+              },
+              "yScale": {
+                "id": "value",
+                "type": "linear",
+                "domain": [
+                  0,
+                  40
+                ],
+                "range": [
+                  240,
+                  0
+                ]
+              },
+              "transform": [
+                1,
+                0,
+                0,
+                1,
+                55,
+                90
+              ],
+              "strokeWidth": 4,
+              "clips": [
+                {
+                  "transform": [
+                    1,
+                    0,
+                    0,
+                    1,
+                    55,
+                    90
+                  ],
+                  "fillRule": "nonzero",
+                  "geometry": "captured-path"
+                }
+              ],
+              "segments": [
+                {
+                  "from": {
+                    "index": 0,
+                    "x": 0,
+                    "y": 10
+                  },
+                  "to": {
+                    "index": 1,
+                    "x": 5,
+                    "y": 30
+                  }
+                },
+                {
+                  "from": {
+                    "index": 1,
+                    "x": 5,
+                    "y": 30
+                  },
+                  "to": {
+                    "index": 2,
+                    "x": 10,
+                    "y": 30
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "query": {
+          "status": "segment",
+          "generation": 6,
+          "lineOrder": 0,
+          "segmentIndex": 0,
+          "sourceIndices": [
+            0,
+            1
+          ],
+          "from": {
+            "index": 0,
+            "x": 0,
+            "y": 10
+          },
+          "to": {
+            "index": 1,
+            "x": 5,
+            "y": 30
+          },
+          "sourceReferenceSemantics": "live-application-references-not-captured-values",
+          "fromSourceReference": {
+            "id": "a",
+            "x": 0,
+            "y": 10
+          },
+          "toSourceReference": {
+            "id": "b",
+            "x": 5,
+            "y": 30
+          }
+        },
+        "pixels": {
+          "original": 0,
+          "replacement": 0,
+          "clipped": 0
+        }
+      }
+    },
+    {
+      "actionId": "reset",
+      "status": "pass",
+      "state": {
+        "source": [
+          {
+            "id": "a",
+            "x": 0,
+            "y": 10
+          },
+          {
+            "id": "b",
+            "x": 5,
+            "y": 20
+          },
+          {
+            "id": "c",
+            "x": 10,
+            "y": 30
+          }
+        ],
+        "domain": [
+          0,
+          10
+        ],
+        "clipped": true,
+        "point": {
+          "x": 55,
+          "y": 210
+        },
+        "error": null,
+        "attribution": {
+          "status": "ready",
+          "generation": 7,
+          "reasons": [],
+          "scope": "root-straight-linear-lines-geometric-coverage",
+          "surface": {
+            "logicalToBacking": [
+              1,
+              0,
+              0,
+              1,
+              0,
+              0
+            ],
+            "backingWidth": 710,
+            "backingHeight": 420
+          },
+          "lines": [
+            {
+              "order": 0,
+              "xScale": {
+                "id": "time",
+                "type": "linear",
+                "domain": [
+                  0,
+                  10
+                ],
+                "range": [
+                  0,
+                  600
+                ]
+              },
+              "yScale": {
+                "id": "value",
+                "type": "linear",
+                "domain": [
+                  0,
+                  40
+                ],
+                "range": [
+                  240,
+                  0
+                ]
+              },
+              "transform": [
+                1,
+                0,
+                0,
+                1,
+                55,
+                90
+              ],
+              "strokeWidth": 4,
+              "clips": [
+                {
+                  "transform": [
+                    1,
+                    0,
+                    0,
+                    1,
+                    55,
+                    90
+                  ],
+                  "fillRule": "nonzero",
+                  "geometry": "captured-path"
+                }
+              ],
+              "segments": [
+                {
+                  "from": {
+                    "index": 0,
+                    "x": 0,
+                    "y": 10
+                  },
+                  "to": {
+                    "index": 1,
+                    "x": 5,
+                    "y": 20
+                  }
+                },
+                {
+                  "from": {
+                    "index": 1,
+                    "x": 5,
+                    "y": 20
+                  },
+                  "to": {
+                    "index": 2,
+                    "x": 10,
+                    "y": 30
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "query": {
+          "status": "miss",
+          "generation": 7
+        },
+        "pixels": {
+          "original": 15,
+          "replacement": 0,
+          "clipped": 0
+        }
+      }
+    },
+    {
+      "actionId": "disposed",
+      "status": "pass",
+      "state": {
+        "source": [
+          {
+            "id": "a",
+            "x": 0,
+            "y": 10
+          },
+          {
+            "id": "b",
+            "x": 5,
+            "y": 20
+          },
+          {
+            "id": "c",
+            "x": 10,
+            "y": 30
+          }
+        ],
+        "domain": [
+          0,
+          10
+        ],
+        "clipped": true,
+        "point": {
+          "x": 55,
+          "y": 210
+        },
+        "error": null,
+        "attribution": {
+          "status": "disposed",
+          "generation": 7,
+          "reasons": [],
+          "scope": "root-straight-linear-lines-geometric-coverage",
+          "surface": null,
+          "lines": []
+        },
+        "query": {
+          "status": "unavailable",
+          "reason": "disposed",
+          "generation": 7
+        }
+      }
+    }
+  ],
+  "checks": [
+    {
+      "checkId": "initial.sources",
+      "actionId": "initial",
+      "status": "pass",
+      "required": true
+    },
+    {
+      "checkId": "initial.values",
+      "actionId": "initial",
+      "status": "pass",
+      "required": true
+    },
+    {
+      "checkId": "initial.reference-semantics",
+      "actionId": "initial",
+      "status": "pass",
+      "required": true
+    },
+    {
+      "checkId": "initial.identity",
+      "actionId": "initial",
+      "status": "pass",
+      "required": true
+    },
+    {
+      "checkId": "initial.scales",
+      "actionId": "initial",
+      "status": "pass",
+      "required": true
+    },
+    {
+      "checkId": "initial.transform",
+      "actionId": "initial",
+      "status": "pass",
+      "required": true
+    },
+    {
+      "checkId": "initial.pixels",
+      "actionId": "initial",
+      "status": "pass",
+      "required": true
+    },
+    {
+      "checkId": "clip.query",
+      "actionId": "clip-excluded",
+      "status": "pass",
+      "required": true
+    },
+    {
+      "checkId": "clip.pixels",
+      "actionId": "clip-excluded",
+      "status": "pass",
+      "required": true
+    },
+    {
+      "checkId": "clip.reveal-sources",
+      "actionId": "clip-revealed",
+      "status": "pass",
+      "required": true
+    },
+    {
+      "checkId": "clip.reveal-pixels",
+      "actionId": "clip-revealed",
+      "status": "pass",
+      "required": true
+    },
+    {
+      "checkId": "update.value",
+      "actionId": "data-replaced",
+      "status": "pass",
+      "required": true
+    },
+    {
+      "checkId": "update.generation",
+      "actionId": "data-replaced",
+      "status": "pass",
+      "required": true
+    },
+    {
+      "checkId": "update.pixels",
+      "actionId": "data-replaced",
+      "status": "pass",
+      "required": true
+    },
+    {
+      "checkId": "failure.status",
+      "actionId": "failed-render",
+      "status": "pass",
+      "required": true
+    },
+    {
+      "checkId": "failure.publication",
+      "actionId": "failed-render",
+      "status": "pass",
+      "required": true
+    },
+    {
+      "checkId": "failure.query",
+      "actionId": "failed-render",
+      "status": "pass",
+      "required": true
+    },
+    {
+      "checkId": "retry.status",
+      "actionId": "retry",
+      "status": "pass",
+      "required": true
+    },
+    {
+      "checkId": "retry.value",
+      "actionId": "retry",
+      "status": "pass",
+      "required": true
+    },
+    {
+      "checkId": "zoom.domain",
+      "actionId": "zoom",
+      "status": "pass",
+      "required": true
+    },
+    {
+      "checkId": "zoom.anchor",
+      "actionId": "zoom",
+      "status": "pass",
+      "required": true
+    },
+    {
+      "checkId": "reset.domain",
+      "actionId": "reset",
+      "status": "pass",
+      "required": true
+    },
+    {
+      "checkId": "page.errors",
+      "actionId": "reset",
+      "status": "pass",
+      "required": true
+    },
+    {
+      "checkId": "dispose.release",
+      "actionId": "disposed",
+      "status": "pass",
+      "required": true
+    }
+  ],
+  "errors": [],
+  "sourceHashes": {
+    "tooling/line-attribution/capture.ts": "4110fdc4cd7079f5854dd4319d6ea9d4483411cddf864be52743a76f09e21df1",
+    "tooling/line-attribution/plugin.mjs": "c4f7c5b07dcf621a118b2bacf751b9885593277ca3c8bbe9f5754c03939c3181",
+    "tooling/line-attribution/demo.tsx": "465cb6e55bc332c9271cca437178abe7303929cb8e7a64852fb6f7a0a33e8fc8",
+    "packages/core/src/features/viz/lib/line-series.tsx": "da9141c4002f2fa06ac395a7c61dbec37552e7e755deaf765636bdd8457512de",
+    "packages/core/src/lib/components/path.ts": "f5e952c263a5ed6c2d3956246cd66a29eb144bc6dec5d98ab3c2932a89ee626e",
+    "packages/core/src/lib/execute-render.ts": "6f213d3845d397c9137d47ac5a46ad3b8bc6ca83b0b764962f88ff1abd1d3d58"
+  },
+  "browser": "151.0.7922.34"
+}
