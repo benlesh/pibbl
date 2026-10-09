@@ -423,3 +423,13 @@ export { defineTransition } from './lib/transitions/define-transition.js';
 export type { PibblTransitionDefinition, PibblTransitionRenderFrame } from './lib/transitions/define-transition.js';
 
 export type { PibblEmbersPhysicsOptions, PibblEmberCollision } from './lib/transitions/embers-physics.js';
+
+export { recordFrames, exportGif } from './lib/recording/recording.js';
+export type {
+  PibblFrameRecordingOptions,
+  PibblFrameRecordingSession,
+  PibblRecordedFrameInfo,
+  PibblRecordedFrame,
+  PibblFrameRecording,
+  PibblGifExportOptions,
+} from './lib/recording/types.js';

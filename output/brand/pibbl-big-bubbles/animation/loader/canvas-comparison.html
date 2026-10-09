@@ -41,6 +41,14 @@
     input[type="range"] {
       width: min(640px, 90%);
     }
+    td,
+    th {
+      padding: 8px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+      font-size: 13px;
+      white-space: nowrap;
+    }
     h2 {
       font-size: 18px;
     }
@@ -84,21 +92,52 @@
     </section>
   </main>
   <script type="module">
+    import { attachRecordingAPIUI } from "./recording-api-ui.mjs";
+    import { createRecordingBenchmark } from "./recording-benchmark.mjs";
+    import { attachRecordingUI } from "./recording-ui.mjs";
     import { mountLogoLoader } from "./canvas-loader.mjs";
     import { svg, updateSvg } from "./svg.mjs";
     import { loopFrame } from "./canvas-score.mjs";
+    const isolated = new URLSearchParams(location.search).has("isolation");
+    if (isolated) {
+      document.querySelector(".panel").remove();
+      document.querySelector("h1").textContent =
+        "Pibbl Canvas · isolated recording benchmark";
+    }
+    let ui;
+    const benchmark = createRecordingBenchmark(
+      document.querySelector("canvas"),
+      {
+        onStatus: (text) => ui?.status(text),
+        onResult: (value) => ui?.result(value),
+      },
+    );
     const reference = document.querySelector("#reference");
-    reference.innerHTML = svg(loopFrame(0));
+    if (reference) reference.innerHTML = svg(loopFrame(0));
     let completed = 0;
     const loader = mountLogoLoader(document.querySelector("canvas"), {
       onComplete() {
         completed++;
       },
       onFrame(frame) {
-        updateSvg(reference, frame);
+        if (reference) updateSvg(reference, frame);
+        benchmark.afterRender();
         document.querySelector("#status").textContent = frame.phase;
       },
     });
+    const captureUI = attachRecordingAPIUI(document.querySelector("canvas"));
+    window.captureUI = captureUI;
+    ui = attachRecordingUI({ benchmark, loader, isolated });
+    window.addEventListener(
+      "pagehide",
+      () => {
+        captureUI.dispose();
+        benchmark.dispose();
+        loader.dispose();
+      },
+      { once: true },
+    );
+    window.recording = { benchmark, ui };
     window.comparison = {
       loader,
       get completed() {
@@ -108,6 +147,7 @@
     document.querySelectorAll("[data-action]").forEach(
       (b) =>
         (b.onclick = () => {
+          if (benchmark.active) benchmark.cancel();
           loader[b.dataset.action]();
           if (b.dataset.action === "complete")
             document.querySelector("#seek").max = 4000;
@@ -116,6 +156,7 @@
         }),
     );
     document.querySelector("#seek").oninput = (e) => {
+      if (benchmark.active) benchmark.cancel();
       loader.pause();
       loader.seek(Number(e.target.value));
     };

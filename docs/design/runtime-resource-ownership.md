@@ -215,3 +215,18 @@ a signal write guard prevents immediate restoration, Pibbl queues one
 generation-checked Begin cleanup record; a newer external write or later owner
 generation invalidates it. See the
 [component-manipulation contract](./component-manipulation-contract.md).
+
+## Frame recording and GIF export
+
+A live recording owns its root bitmap observer, root teardown link, deadline and
+optional coalesced-capture timer, abort listener, worker, and startup blob URL.
+Stop detaches capture resources and transfers worker ownership to the retained
+recording. Cancel, failed capture, or root disposal while capturing removes all
+links and terminates the worker. A retained recording's dispose cancels pending
+reads/exports, clears worker handlers, and terminates it once. Export abort removes
+its listener and request after worker scratch cleanup while preserving raw frames.
+
+See [the frame recording contract](./frame-recording-contract.md). Deterministic
+resource counters and native Worker termination evidence accompany public-API
+capture, decoded-GIF, cancellation, and repeat-cycle tests. Returned frame copies,
+GIF Blobs, and application-created Blob URLs are application-owned.

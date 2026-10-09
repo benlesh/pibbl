@@ -1,6 +1,7 @@
 """Build vector print masters and the usage guide. Requires reportlab."""
 from pathlib import Path
 import json
+import sys
 import re
 import xml.etree.ElementTree as ET
 from reportlab.pdfgen import canvas
@@ -44,12 +45,13 @@ def svg_drawing(file):
     drawing.add(outer)
     return drawing
 
-for file in sorted((ROOT / 'svg').glob('*.svg')):
-    drawing = svg_drawing(file)
-    for ext, renderer in [('pdf', renderPDF), ('eps', renderPS)]:
-        dest = ROOT / 'print' / ext / f'{file.stem}.{ext}'
-        dest.parent.mkdir(parents=True, exist_ok=True)
-        renderer.drawToFile(drawing, str(dest))
+if '--guide-only' not in sys.argv:
+    for file in sorted((ROOT / 'svg').glob('*.svg')):
+        drawing = svg_drawing(file)
+        for ext, renderer in [('pdf', renderPDF), ('eps', renderPS)]:
+            dest = ROOT / 'print' / ext / f'{file.stem}.{ext}'
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            renderer.drawToFile(drawing, str(dest))
 
 guide = ROOT / 'Pibbl-Big-Bubbles-Brand-Guide.pdf'
 c = canvas.Canvas(str(guide), pagesize=(W, H))
@@ -141,13 +143,13 @@ rows=[('svg/','16 editable masters: horizontal, stacked, icon and wordmark.'),
       ('web/','Favicon SVG/ICO/PNG, touch/app icons, WebP and web manifest.'),
       ('marketing/','Profiles, share cards, banners, slides, square posts, wallpaper,'),
       ('','pattern, sticker artwork and an email signature logo.'),
-      ('animation/','Separate shapes, bubble assets, pivots and release positions.'),
+      ('animation/','SVG loader, three GIF sizes, bubble assets and Pibbl port guidance.'),
       ('source/','Identity specification, path artwork and reproducible export builders.')]
 for n,(a,b) in enumerate(rows):
     y=129+n*29;text(42,y,a,11,font='Helvetica-Bold');text(157,y,b,10)
 box(42,389,758,133,P['white'])
 text(60,406,'Using the files',14,font='Helvetica-Bold')
 paragraph(60,435,'Use SVG for websites and design tools, transparent PNG for slides and quick placement, and PDF/EPS for print workflows. White and color-on-dark logo files are transparent: place them on a dark background. Marketing exports include their background.',105,10)
-paragraph(60,485,'Animation plan: tumble solid shapes while loading, settle into the P, then release the bubbles. Individual assets and exact geometry are included; the animation is not implemented.',105,9,'#5B605D')
+paragraph(60,485,'Approved SVG loader: playful contact motion, then the P and bubble release on Ready. Includes white/dark GIFs and a Pibbl reproduction handoff. This brand implementation stays outside the Pibbl docs.',105,9,'#5B605D')
 c.showPage();c.save()
-print('Created 16 vector PDFs, 16 EPS masters, and a 5-page brand guide.')
+print('Created 5-page brand guide.' if '--guide-only' in sys.argv else 'Created 16 vector PDFs, 16 EPS masters, and a 5-page brand guide.')

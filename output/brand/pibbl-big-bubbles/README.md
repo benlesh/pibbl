@@ -12,7 +12,7 @@ Start with svg/pibbl-horizontal-color.svg for light backgrounds, or svg/pibbl-ho
 - 16 vector PDF and 16 vector EPS print masters. These use RGB artwork; proof the intended print profile and stock before production.
 - Favicon SVG, ICO and 16/32/48 px PNGs, app/touch icons, maskable icon, WebP and web manifest.
 - Four profile images; light/dark share cards, banners, slide covers, square posts and wallpapers; geometric patterns, sticker artwork and email signature logo.
-- Separate solid shapes, final bowl with cutouts, nine individual bubbles, and outlined wordmark for the future animation. Exact paths, pivots and bubble release positions are recorded in animation/animation-parts.json.
+- Separate solid shapes, final bowl with cutouts, nine individual bubbles, and outlined wordmark for animation. Exact paths, pivots and bubble release positions are recorded in animation/animation-parts.json.
 - CSS/JSON color tokens, reproducible builders, asset catalog, checksums and delivery manifest.
 
 ## Usage
@@ -21,9 +21,9 @@ Use the full-detail icon at 64 px high or larger; horizontal logo at 240 px wide
 
 Core SVG and PNG assets have transparent backgrounds. White artwork requires a contrasting background. Marketing exports include their backgrounds. The sticker asset includes a white border; it is artwork, not a vendor-specific technical cut path or bleed specification.
 
-## Future animation
+## Reusable loading animation
 
-Tumble the three solid shapes in a repeating loading loop, settle them into the P when ready, release bubbles and reveal cutouts, then hold the logo. The kit supplies independent pieces and exact geometry; it does not implement the animation. Coral and green bubbles can transition color during release. See animation/README.md for coordinate details.
+The approved 11-second contact choreography is now packaged as a dependency-free `<pibbl-loader>` custom element. It loops until Ready, forms the P, releases the bubbles and holds. See [the demo](animation/loader/demo.html), [integration guide](animation/loader/README.md), and [Pibbl reproduction handoff](animation/loader/PIBBL-PORT.md). The kit includes white/dark GIF loops in three sizes and full finish sequences. This SVG implementation and its study are brand assets only, excluded from Pibbl docs and example catalogs. A Pibbl implementation remains future work.
 
 ## Web installation
 
