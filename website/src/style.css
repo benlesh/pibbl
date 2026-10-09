@@ -5,6 +5,15 @@
 html {
   letter-spacing: 0;
 }
+.site-title img {
+  height: calc((var(--sl-nav-height) - 2 * var(--sl-nav-pad-y)) * 1.25);
+}
+.content-panel:has(.home-page-title) {
+  padding: 0;
+}
+.content-panel:has(.home-page-title) + .content-panel {
+  border-top: 0;
+}
 .sl-markdown-content pre {
   font-size: 0.9rem;
 }
