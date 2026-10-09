@@ -1,0 +1,22 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><title>Loader integration checks</title><h1>Loader integration checks</h1><button id="run">Run checks</button><pre id="results" role="status">Not run</pre><script type="module">
+import './pibbl-loader.mjs';
+const output=document.querySelector('#results');
+document.querySelector('#run').onclick=async()=>{
+ const lines=[],assert=(v,message)=>{if(!v)throw new Error(message);lines.push('PASS '+message);};
+ const a=document.createElement('pibbl-loader'),b=document.createElement('pibbl-loader');const preference=a._motion;
+ try{
+ a.setAttribute('paused','');a.setAttribute('label','Loading a project');document.body.append(a,b);
+ assert(a.paused&&a._raf===null,'initial paused attribute stops scheduling');assert(a.getAttribute('aria-label')==='Loading a project','accessible label');
+ assert(a.shadowRoot!==b.shadowRoot,'instances isolate their SVG');
+ a.resume();assert(a._raf!==null||a.phase==='complete','resume schedules one frame');
+ a.remove();assert(a._raf===null,'disconnect cancels frame');document.body.append(a);a.pause();
+ let events=0;a.addEventListener('pibbl-complete',()=>events++);a.complete();a.playback.advance(15000);a._render();a._schedule();
+ assert(a.phase==='complete'&&a._raf===null,'completion holds and stops scheduling');assert(events===1,'completion event fires once');a.complete();assert(events===1,'repeated Ready is idempotent');
+ assert(a.shadowRoot.querySelector('[data-piece="triangle"]').getAttribute('transform')==='translate(200 110) scale(1 1) rotate(0)','final P geometry');
+ a.restart();assert(!a.ready&&!a.paused,'restart clears controls');
+ assert(b.getAttribute('data-phase')!=='forming','instances do not share phase commands');
+ // Exercise reduced-motion completion without changing the machine preference.
+ a._motion={matches:true,addEventListener(){},removeEventListener(){}};a.restart();assert(a.phase==='complete','reduced motion is a still logo');assert(events===1,'still preview does not signal unrequested readiness');a.complete();assert(events===2,'reduced-motion Ready signals completion');
+ output.textContent=lines.join('\n')+'\nALL CHECKS PASSED';output.dataset.result='passed';
+ }catch(e){output.textContent=lines.join('\n')+'\nFAIL '+e.stack;output.dataset.result='failed';}finally{a._motion=preference;a.remove();b.remove();}
+};</script></html>

@@ -1,0 +1,19 @@
+{
+  "result": "passed",
+  "checks": [
+    "Violet bowl bottom and green rectangle top align exactly at y=140; all SVG masters share the corrected geometry",
+    "Export existence, file decoding and exact raster dimensions",
+    "16 standalone vector SVG masters with path-only lettering and no external resources",
+    "Transparent, unclipped core PNG exports",
+    "16 vector PDFs without raster images; 16 EPS masters with painting and counter operators",
+    "5-page brand guide",
+    "Multiresolution ICO and web manifest icon references",
+    "All local catalog asset links",
+    "All five cutouts are transparent in every colorway",
+    "All nine bubble colors and positions match the approved identity",
+    "All nine independent animation bubble assets exist"
+  ],
+  "exportsInCatalog": 130,
+  "svgExports": 34,
+  "rasterExports": 93
+}

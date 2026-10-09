@@ -81,4 +81,5 @@ test('browser discovery includes runtime tests and excludes Node-runner tooling'
   const files = JSON.parse(execFileSync(process.execPath, [cli, 'list', '--filesOnly', '--json'], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }));
   assert.ok(files.some(({ file }) => file.endsWith('/packages/core/test/smoke-scenario.test.ts')));
   assert.deepEqual(files.filter(({ file }) => file.includes('/tooling/') && file.endsWith('.test.mjs')), []);
+  assert.deepEqual(files.filter(({ file }) => file.includes('/output/brand/')), [], 'Private brand Node tests do not belong to the framework browser suite');
 });
