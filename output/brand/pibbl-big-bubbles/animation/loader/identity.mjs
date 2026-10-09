@@ -1,0 +1,248 @@
+export const identity = {
+  "name": "Pibbl Big Bubbles",
+  "version": "2.0",
+  "date": "2026-10-08",
+  "palette": {
+    "coral": "#FF735E",
+    "green": "#159447",
+    "violet": "#8B5CCB",
+    "ink": "#111211",
+    "white": "#FFFFFF",
+    "dark": "#141820",
+    "paper": "#F5F5F0"
+  },
+  "sourceConcept": "reference/approved-big-bubbles.png",
+  "reconstruction": "Approved Original Tangram geometry with vivid coral, Kelly green, soft violet and organic bubbles. The wordmark is outlined geometric artwork.",
+  "clearSpace": 35,
+  "geometryNote": "The blue bowl's bottom and the coral rectangle's top align exactly at y=140. This approved correction supersedes the bowl height in the raster concept.",
+  "minimumSizes": {
+    "icon": "64 px high for full bubble detail",
+    "horizontal": "240 px wide for full bubble detail",
+    "stacked": "160 px wide",
+    "wordmark": "100 px wide"
+  },
+  "icon": [
+    {
+      "id": "triangle",
+      "color": "coral",
+      "d": "M0 0H128L0 140Z"
+    },
+    {
+      "id": "square",
+      "color": "green",
+      "d": "M0 140H124V280H0Z"
+    },
+    {
+      "id": "bowl",
+      "color": "violet",
+      "d": "M128 0H148C192 0 228 31 228 70C228 109 192 140 148 140H128Z"
+    }
+  ],
+  "forms": {
+    "horizontal": {
+      "width": 940,
+      "height": 370,
+      "icon": [
+        35,
+        41,
+        1
+      ],
+      "wordmark": [
+        350,
+        79,
+        1
+      ]
+    },
+    "icon": {
+      "width": 364,
+      "height": 356,
+      "icon": [
+        35,
+        41,
+        1
+      ]
+    },
+    "stacked": {
+      "width": 650,
+      "height": 655,
+      "icon": [
+        180,
+        41,
+        1
+      ],
+      "wordmark": [
+        50,
+        365,
+        1
+      ]
+    },
+    "wordmark": {
+      "width": 621,
+      "height": 325,
+      "wordmark": [
+        35,
+        35,
+        1
+      ]
+    }
+  },
+  "cutouts": [
+    {
+      "bubbleId": "bubble-1",
+      "x": 216,
+      "y": 32,
+      "r": 12
+    },
+    {
+      "bubbleId": "bubble-2",
+      "x": 228,
+      "y": 65,
+      "r": 10
+    },
+    {
+      "bubbleId": "bubble-3",
+      "x": 211,
+      "y": 105,
+      "r": 9
+    },
+    {
+      "bubbleId": "bubble-4",
+      "x": 187,
+      "y": 52,
+      "r": 8
+    },
+    {
+      "bubbleId": "bubble-5",
+      "x": 183,
+      "y": 91,
+      "r": 6
+    }
+  ],
+  "bubbles": [
+    {
+      "id": "bubble-1",
+      "destination": {
+        "x": 241,
+        "y": 18,
+        "r": 9
+      },
+      "fill": "#8B5CCB",
+      "source": {
+        "x": 216,
+        "y": 32,
+        "r": 12
+      },
+      "release": "cutout grows as bubble exits",
+      "sourceFill": "#8B5CCB",
+      "colorTransition": "none"
+    },
+    {
+      "id": "bubble-2",
+      "destination": {
+        "x": 267,
+        "y": 67,
+        "r": 10
+      },
+      "fill": "#8B5CCB",
+      "source": {
+        "x": 228,
+        "y": 65,
+        "r": 10
+      },
+      "release": "cutout grows as bubble exits",
+      "sourceFill": "#8B5CCB",
+      "colorTransition": "none"
+    },
+    {
+      "id": "bubble-3",
+      "destination": {
+        "x": 228,
+        "y": 121,
+        "r": 7
+      },
+      "fill": "#8B5CCB",
+      "source": {
+        "x": 211,
+        "y": 105,
+        "r": 9
+      },
+      "release": "cutout grows as bubble exits",
+      "sourceFill": "#8B5CCB",
+      "colorTransition": "none"
+    },
+    {
+      "id": "bubble-4",
+      "destination": {
+        "x": 241,
+        "y": 62,
+        "r": 6
+      },
+      "fill": "#FF735E",
+      "source": {
+        "x": 187,
+        "y": 52,
+        "r": 8
+      },
+      "release": "cutout grows as bubble exits",
+      "sourceFill": "#8B5CCB",
+      "colorTransition": "violet to destination color during release"
+    },
+    {
+      "id": "bubble-5",
+      "destination": {
+        "x": 254,
+        "y": 107,
+        "r": 8
+      },
+      "fill": "#159447",
+      "source": {
+        "x": 183,
+        "y": 91,
+        "r": 6
+      },
+      "release": "cutout grows as bubble exits",
+      "sourceFill": "#8B5CCB",
+      "colorTransition": "violet to destination color during release"
+    },
+    {
+      "id": "bubble-6",
+      "destination": {
+        "x": 272,
+        "y": 27,
+        "r": 6
+      },
+      "fill": "#FF735E",
+      "release": "accent dot fades in during bloom"
+    },
+    {
+      "id": "bubble-7",
+      "destination": {
+        "x": 253,
+        "y": -2,
+        "r": 4
+      },
+      "fill": "#159447",
+      "release": "accent dot fades in during bloom"
+    },
+    {
+      "id": "bubble-8",
+      "destination": {
+        "x": 286,
+        "y": 96,
+        "r": 5
+      },
+      "fill": "#8B5CCB",
+      "release": "accent dot fades in during bloom"
+    },
+    {
+      "id": "bubble-9",
+      "destination": {
+        "x": 282,
+        "y": 47,
+        "r": 5
+      },
+      "fill": "#159447",
+      "release": "accent dot fades in during bloom"
+    }
+  ]
+};
