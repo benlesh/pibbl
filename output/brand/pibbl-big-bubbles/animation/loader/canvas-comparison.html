@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+  <meta charset="utf-8" /><meta
+    name="viewport"
+    content="width=device-width"
+  /><title>Pibbl · SVG / Canvas comparison</title>
+  <style>
+    body {
+      font: 16px system-ui;
+      margin: 24px;
+      background: #f5f5f0;
+      color: #111211;
+    }
+    main {
+      display: flex;
+      gap: 24px;
+      flex-wrap: wrap;
+    }
+    .panel {
+      flex: 1;
+      min-width: 280px;
+      max-width: 640px;
+    }
+    .stage {
+      background: repeating-conic-gradient(#eee 0% 25%, white 0% 50%) 0/20px
+        20px;
+    }
+    canvas,
+    svg {
+      display: block;
+      width: 100%;
+      aspect-ratio: 640/450;
+      height: auto;
+    }
+    button,
+    select,
+    input {
+      margin: 6px;
+      padding: 8px;
+    }
+    input[type="range"] {
+      width: min(640px, 90%);
+    }
+    td,
+    th {
+      padding: 8px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+    h2 {
+      font-size: 18px;
+    }
+  </style>
+  <h1>Approved logo loader · renderer comparison</h1>
+  <p>
+    Both panes sample the same Pibbl-owned playback. Seek while paused to
+    inspect contacts and completion.
+  </p>
+  <div id="controls">
+    <button data-action="complete">Ready</button
+    ><button data-action="pause">Pause</button
+    ><button data-action="resume">Resume</button
+    ><button data-action="restart">Restart</button
+    ><button data-action="dispose">Dispose</button
+    ><select id="background">
+      <option value="">Transparent</option>
+      <option value="#fff">White</option>
+      <option value="#141820">Dark</option>
+    </select>
+  </div>
+  <input id="seek" type="range" min="0" max="11000" step="1" value="0" /><output
+    id="status"
+  ></output>
+  <main>
+    <section class="panel">
+      <h2>Approved SVG</h2>
+      <div class="stage" id="reference"></div>
+    </section>
+    <section class="panel">
+      <h2>Pibbl Canvas</h2>
+      <div class="stage">
+        <canvas
+          id="canvas"
+          width="640"
+          height="450"
+          role="img"
+          aria-label="Pibbl"
+        ></canvas>
+      </div>
+    </section>
+  </main>
+  <script type="module">
+    import { attachRecordingAPIUI } from "./recording-api-ui.mjs";
+    import { createRecordingBenchmark } from "./recording-benchmark.mjs";
+    import { attachRecordingUI } from "./recording-ui.mjs";
+    import { mountLogoLoader } from "./canvas-loader.mjs";
+    import { svg, updateSvg } from "./svg.mjs";
+    import { loopFrame } from "./canvas-score.mjs";
+    const isolated = new URLSearchParams(location.search).has("isolation");
+    if (isolated) {
+      document.querySelector(".panel").remove();
+      document.querySelector("h1").textContent =
+        "Pibbl Canvas · isolated recording benchmark";
+    }
+    let ui;
+    const benchmark = createRecordingBenchmark(
+      document.querySelector("canvas"),
+      {
+        onStatus: (text) => ui?.status(text),
+        onResult: (value) => ui?.result(value),
+      },
+    );
+    const reference = document.querySelector("#reference");
+    if (reference) reference.innerHTML = svg(loopFrame(0));
+    let completed = 0;
+    const loader = mountLogoLoader(document.querySelector("canvas"), {
+      onComplete() {
+        completed++;
+      },
+      onFrame(frame) {
+        if (reference) updateSvg(reference, frame);
+        benchmark.afterRender();
+        document.querySelector("#status").textContent = frame.phase;
+      },
+    });
+    const captureUI = attachRecordingAPIUI(document.querySelector("canvas"));
+    window.captureUI = captureUI;
+    ui = attachRecordingUI({ benchmark, loader, isolated });
+    window.addEventListener(
+      "pagehide",
+      () => {
+        captureUI.dispose();
+        benchmark.dispose();
+        loader.dispose();
+      },
+      { once: true },
+    );
+    window.recording = { benchmark, ui };
+    window.comparison = {
+      loader,
+      get completed() {
+        return completed;
+      },
+    };
+    document.querySelectorAll("[data-action]").forEach(
+      (b) =>
+        (b.onclick = () => {
+          if (benchmark.active) benchmark.cancel();
+          loader[b.dataset.action]();
+          if (b.dataset.action === "complete")
+            document.querySelector("#seek").max = 4000;
+          if (b.dataset.action === "restart")
+            document.querySelector("#seek").max = 11000;
+        }),
+    );
+    document.querySelector("#seek").oninput = (e) => {
+      if (benchmark.active) benchmark.cancel();
+      loader.pause();
+      loader.seek(Number(e.target.value));
+    };
+    document.querySelector("#background").onchange = (e) =>
+      document
+        .querySelectorAll(".stage")
+        .forEach((s) => (s.style.background = e.target.value || ""));
+  </script>
+</html>

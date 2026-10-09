@@ -1,0 +1,74 @@
+[
+  {
+    "file": "pibbl-loop-white-256.gif",
+    "width": 256,
+    "height": 180,
+    "durationMs": 11000,
+    "frames": 263,
+    "bytes": 478595,
+    "integrity": "passed"
+  },
+  {
+    "file": "pibbl-loop-white-512.gif",
+    "width": 512,
+    "height": 360,
+    "durationMs": 11000,
+    "frames": 263,
+    "bytes": 728679,
+    "integrity": "passed"
+  },
+  {
+    "file": "pibbl-loop-white-1024.gif",
+    "width": 1024,
+    "height": 720,
+    "durationMs": 11000,
+    "frames": 263,
+    "bytes": 977771,
+    "integrity": "passed"
+  },
+  {
+    "file": "pibbl-finish-white-512.gif",
+    "width": 512,
+    "height": 360,
+    "durationMs": 15000,
+    "frames": 321,
+    "bytes": 847212,
+    "integrity": "passed"
+  },
+  {
+    "file": "pibbl-loop-dark-256.gif",
+    "width": 256,
+    "height": 180,
+    "durationMs": 11000,
+    "frames": 263,
+    "bytes": 500604,
+    "integrity": "passed"
+  },
+  {
+    "file": "pibbl-loop-dark-512.gif",
+    "width": 512,
+    "height": 360,
+    "durationMs": 11000,
+    "frames": 263,
+    "bytes": 764740,
+    "integrity": "passed"
+  },
+  {
+    "file": "pibbl-loop-dark-1024.gif",
+    "width": 1024,
+    "height": 720,
+    "durationMs": 11000,
+    "frames": 263,
+    "bytes": 974068,
+    "integrity": "passed"
+  },
+  {
+    "file": "pibbl-finish-dark-512.gif",
+    "width": 512,
+    "height": 360,
+    "durationMs": 15000,
+    "frames": 321,
+    "bytes": 886602,
+    "integrity": "passed"
+  }
+]

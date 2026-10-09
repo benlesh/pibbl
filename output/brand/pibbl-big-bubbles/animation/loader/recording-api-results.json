@@ -1,0 +1,13 @@
+{
+  "fullStatus": "GIF ready · 869.4 KiB · 608 captured frames. Stored raw frames and worker released.",
+  "output": {
+    "gifBytes": 890308,
+    "frames": 275,
+    "duration": 11000
+  },
+  "acquired": 13,
+  "released": 13,
+  "liveWorkers": 0,
+  "errors": [],
+  "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.7922.34 Safari/537.36"
+}

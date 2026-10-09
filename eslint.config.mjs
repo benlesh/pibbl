@@ -58,6 +58,8 @@ export default defineConfig([
     '**/.nx/**',
     '**/.vite/**',
     '**/*.d.ts',
+    '**/*.d.mts',
+    '**/*.d.cts',
     '**/fixtures/**',
     '**/vendor/**',
     '**/test/out/**',
@@ -94,5 +96,10 @@ export default defineConfig([
       sourceType: 'module',
     },
     rules: typescriptRules,
+  },
+  {
+    // Preserve the approved, hash-checked choreography snapshot byte for byte.
+    files: ['output/brand/pibbl-big-bubbles/animation/loader/motion.mjs'],
+    rules: { 'no-unused-vars': 'off', 'prefer-const': 'off' },
   },
 ]);

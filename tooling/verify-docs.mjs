@@ -106,6 +106,8 @@ const publicGuidePaths = [
   "docs/site/learn/guides/manipulation.md",
 ];
 const publicSiteMarkdownPaths = [
+  "docs/site/api/functions/record-frames.md",
+  "docs/site/api/types/frame-recording.md",
   "docs/site/api/components/sprite.md",
   "docs/site/api/functions/machines.md",
   "docs/site/api/functions/play-animation.md",
@@ -288,6 +290,7 @@ const publicSiteMarkdownPaths = [
   ...publicGuidePaths,
 ];
 const currentMarkdownPaths = [
+  "docs/design/frame-recording-contract.md",
   "website/README.md",
   "docs/design/path-transforms-contract.md",
   "docs/design/component-manipulation-contract.md",
@@ -362,6 +365,8 @@ const operationalMarkdownPaths = new Set([
   "docs/testing/field-notes/visibility-transition-integration.md",
   ...trackedRepositoryFiles([
     "docs/website-rebuild/*.md",
+    // Private brand handoffs and verification are operational assets, never public docs.
+    "output/brand/**/*.md",
     "games/kube-inferno/*.md",
     "games/brick-climb/assets/*.md",
   ]),

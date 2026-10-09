@@ -78,6 +78,8 @@ const expected = [
   "defineRenderLayer",
   "defineTexture",
   "defineTransition",
+  "recordFrames",
+  "exportGif",
   "useVisibilityTransition",
   "fade",
   "bifrost",

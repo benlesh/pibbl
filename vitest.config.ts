@@ -185,6 +185,8 @@ export default defineConfig(({ mode }) => ({
       "tooling/surviving-package-entries.test.ts",
       // Tooling .mjs suites use node:test and run in their owning trust stages.
       "tooling/**/*.test.mjs",
+      // Private brand assets have their own Node-runner verification.
+      "output/brand/**",
       "packages/core/src/features/physics/lib/2d/public-types.test.ts",
     ],
     browser: {
