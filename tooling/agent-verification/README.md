@@ -2182,3 +2182,164 @@ arms; the control passed before and after. Saved output is in
 `docs/strategy/agent-verification-evidence/repair-eval-2026-10-08/`.
 No blind agent comparison has been performed yet. This result establishes
 fixture/oracle plumbing, not attribution's benefit to agents.
+
+### Automated 80/20 scoring
+
+The opt-in runner now prepares all four matched pairs, alternates arm order,
+launches eight fresh ephemeral Codex repair turns, runs the deterministic
+oracle, launches a separate structured reviewer for each valid trial, and saves
+`results.json` plus per-trial source, traces, observations, reviews and reasons.
+It requires the authenticated `codex` CLI and provisioned Chromium:
+
+```sh
+node tooling/repair-eval/run.mjs /tmp/pibbl-repair-automated-01
+# Optional explicit models: NEW_DIRECTORY REPAIR_MODEL JUDGE_MODEL
+node --test tooling/repair-eval/scoring.test.mjs tooling/repair-eval/run.test.mjs
+```
+
+The deterministic score is `80 × passing checks / 15`. Agent review supplies
+four integer scores from zero to five: supported diagnosis, sound minimal
+repair, evidence quality, and honest uncertainty/actionable API friction.
+Each criterion requires a written evidence-based reason. Total score is their
+sum, rounded to two decimals. `deterministicPassed` remains separate: a high
+weighted score must not conceal a functional failure. No release threshold is
+introduced.
+
+Repair turns use automatic approval review within the workspace-write sandbox;
+review turns use the read-only sandbox. Each turn has a ten-minute bound and
+process-group cleanup. Auth, network, approval denial, timeout, invalid judge
+JSON, changed harness files, or blocked browser verification produce a blocked,
+unscored trial. Partial reports are persisted as work completes. Restart with
+a fresh output directory; automatic retries/resumption are deliberately absent
+so they cannot silently grant one arm extra attempts.
+
+The reviewer sees initial/final application source, the intended contract,
+deterministic observations and the repair trace, not the answer key. Explicit
+arm/case labels are omitted from its evidence packet, but tools/paths in a trace
+can reveal the arm; this is a separate-context review, not perfect reviewer
+blinding. Source and trace content are marked untrusted in the review prompt.
+The same model may review by default; pass a distinct judge model when desired.
+Agentic scores remain subjective and can vary. Compare criterion reasons as
+well as totals, and replicate batches before claiming an uplift.
+
+The runner uses an injectable adapter for orchestration tests. Those tests
+validate weighting, review dispatch, saved outputs and blocked handling; they
+are not model repair trials. A full eight-trial batch spends authenticated model
+usage and may take up to sixteen ten-minute turns. No scheduler or recurring
+job is installed; this automation runs once per command.
+
+### Feedback-driven follow-up runs — October 8, 2026
+
+Fresh trials exposed an ambiguous reviewer instruction that forbade tools while
+asking the reviewer to read evidence files. Its original low scores are invalid
+review observations, not repair failures. The corrected prompt explicitly
+permits reading the three supplied files and forbids executing application code,
+editing, or reading other files. Review packets now include the agent's API
+notes, marked self-reported, and explicitly separate coordinator checks from
+verification the repair agent actually performed. The 80/20 weights, fifteen
+checks, and four review criteria remain unchanged.
+
+Re-review a completed batch without retrying any repair or overwriting its
+original evidence:
+
+```sh
+node tooling/repair-eval/rejudge.mjs /tmp/pibbl-repair-batch-20261008-01 /tmp/pibbl-repair-batch-20261008-01-reviewed
+```
+
+The prototype's snapshot now labels root query coordinates, line-local captured
+positions, local-to-root transforms, live source references, opaque clip paths,
+and geometry's distinction from pixels and routed targets. It explicitly labels
+the last successful render as potentially lagging application state. These are
+query-time development-tooling labels; no published runtime source is changed.
+Opaque paths still do not supply serialized clip bounds.
+
+Later fresh trials found browser-import friction and inadequate independent
+pixel evidence despite functional repairs. The runner now supplies the correct
+CommonJS Playwright import shape. Both arms receive the same general evidence
+requirement: derive expected geometry independently, corroborate painted-result
+claims with Canvas pixels, use native pointer input for interaction identity,
+and state missing evidence. This guidance contains no defect diagnosis, hidden
+probe locations, or scoring answers. Capsules are explicitly described as
+non-Git workspaces so a failed Git sanity command cannot be mistaken for repair
+verification.
+
+Results and original/revised review evidence are saved under
+`docs/strategy/agent-verification-evidence/repair-eval-2026-10-08/automated/`.
+The baseline and subsequent rounds are distinct experimental conditions, not
+independent repetitions of one unchanged experiment. Focused later rounds are
+not comparable as whole-suite means. Runtime source receipts and arm order are
+retained. Wall-clock durations are observed repair-turn durations; concurrent
+runs and tool retries make them unsuitable for controlled performance claims.
+Self-reported elapsed time and query counts are not substituted for coordinator
+measurements. Default CLI model identities/settings were not pinned explicitly,
+so these results must not be presented as a reproducible model-version benchmark.
+
+### Final results after stronger interaction verification
+
+The source-diff audit found an unnecessary edit in the second batch's assisted
+clean control. Its agent removed the root-to-plot offset and added reset
+batching; its original reviewer praised both. Independent native probes showed
+that removing the offset regressed hover. Public pointer x/y are root-logical,
+while this chart's scale range is `[0,600]`; subtracting the plot's root origin
+was correct. The reset-batching explanation did not establish a preexisting
+contract failure. This was an agent/reviewer false positive, not a defective
+clean-control fixture.
+
+The first oracle sampled only representative center hover positions. The
+strengthened oracle samples both sides of independently calculated nearest-ID
+midpoints: root x=204/206 around 205 and x=504/506 around 505. It also samples
+zoomed interior x=60/205/355/650, all of which must choose b. These probes live
+inside the existing `hover.identity` and `zoom.hover` checks: fifteen equally
+weighted deterministic checks and the 80/20 split remain unchanged. Original
+center-only results are retained but superseded by rescoring every saved repair.
+No repair got another attempt during rescoring. Valid reviews of unchanged
+passing outcomes are retained; the newly exposed regression received a fresh
+review using the counterevidence.
+
+| Condition | Fresh trials | Ordinary mean | Attribution mean |
+| --- | ---: | ---: | ---: |
+| Baseline, corrected reviews | 8 | 99.50 | 99.00 |
+| Evidence labels and corrected review | 8 | 98.75 | 94.08 |
+| Focused clipping/control, browser-import guidance | 4 | 100.00 | 99.00 |
+| Final signal pair, temporal labels and pixel guidance | 2 | 100.00 | 100.00 |
+
+Of 22 fresh repairs, 21 pass the strengthened oracle; 328 of 330 checks pass.
+Five of six clean controls remain unchanged. The assisted false repair fails
+both interaction checks and scores 69.33 deterministic + 11 review = 80.33,
+with `deterministicPassed: false`. An 80-point total therefore must never be
+interpreted as a functional pass. The old review had scored that trial 99.
+
+This small experiment provides no evidence of a repair-success uplift from
+attribution. Both arms solved the three seeded problems; assisted agents used
+captured scales, clips and generations, but sometimes substituted them for
+pixel evidence or misinterpreted event coordinates. Explicit evidence labels
+and pixel guidance improved the final pair's verification, without establishing
+a causal or statistical improvement. All ordinary runtime bundles and actual
+core source receipts were identical across rounds. No production performance
+or bundle-size claim is inferred from trial duration; the separate disabled
+bundle-isolation checks show zero byte delta for the tooling changes.
+
+The most useful missing inspection capability is a reliable join between an
+actual routed pointer event, its root-to-scale coordinate conversion, and the
+committed series generation. Opaque clip geometry also still requires manual
+source inspection plus inside/outside probes. The most valuable eval improvement
+was independent boundary evidence that can contradict a plausible diagnosis.
+No new inspector or public runtime API was built for this follow-up.
+
+Saved `automated/results.json` includes per-trial failed checks, review reasons,
+and self-reported API notes. Compressed archives preserve original capsules,
+traces, reviews, corrected reviews and rescored evidence; `archives.sha256`
+provides checksums. Calibration distinguishes all three seeded faults from the
+clean control and rejects the false hover repair:
+
+```sh
+node tooling/repair-eval/oracle.check.mjs
+node tooling/repair-eval/smoke.mjs
+node tooling/repair-eval/rescore.mjs /tmp/pibbl-repair-batch-20261008-02 /tmp/pibbl-repair-new-rescore
+node -e 'const r=require("./docs/strategy/agent-verification-evidence/repair-eval-2026-10-08/automated/results.json"); console.log(r.rounds.flatMap(x=>x.trials.filter(t=>!t.deterministicPassed).map(t=>({round:x.id,...t}))))'
+```
+
+The last command is the next query for the exposed regression and its reviewer
+feedback. The earlier totals of 330/330 and “all six controls unchanged” were
+provisional and are explicitly superseded by the source audit and stronger
+oracle. The inventory stop rule and non-gating status remain unchanged.

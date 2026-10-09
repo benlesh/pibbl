@@ -286,6 +286,15 @@ export function createLineAttributionInspector(canvas: HTMLCanvasElement) {
         generation: s.generation,
         reasons: [...s.reasons],
         scope: "root-straight-linear-lines-geometric-coverage",
+        evidence: {
+          queryCoordinates: "root-logical",
+          renderTiming: "last-successful-render-may-lag-application",
+          capturedPositions: "line-local",
+          transforms: "local-to-root-logical",
+          sourceReferences: "live-not-snapshot",
+          coverage: "geometry-not-pixels-or-event-target",
+          clipGeometry: "opaque-path-use-inside-outside-probes",
+        },
         surface: s.surface ? structuredClone(s.surface) : null,
         lines: s.lines.map((line, order) => ({
           order,

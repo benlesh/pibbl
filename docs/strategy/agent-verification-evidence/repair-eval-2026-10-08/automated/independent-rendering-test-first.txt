@@ -1,0 +1,38 @@
+✔ automates two repair/review turns and persists weighted scores (94.313875ms)
+✔ failed agent turns stay blocked and never invoke review (6.63325ms)
+✖ both arms require independent painted-result evidence without a defect hint (4.484292ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 2
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 261.549459
+
+✖ failing tests:
+
+test at tooling/repair-eval/run.test.mjs:77:1
+✖ both arms require independent painted-result evidence without a defect hint (4.484292ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /Independent rendering evidence/. Input:
+  
+  'Validate this Pibbl application against the intended behavior and repair any mismatch. If it already meets the contract, leave app.tsx unchanged and explain your evidence. Work only in app.tsx. Preserve the supported public API and the intended behavior below; do not change the runtime, harness, server or task. You may inspect application source and use the browser freely. This is an API research exercise, not a speed contest.\n' +
+    '\n' +
+    "The 710×420 logical Canvas contains a plot at (55,90), size 600×240. The initial x domain is [0,10], y domain [0,40], with y increasing upward. The line joins records a=(0,10), b=(5,20), c=(10,30). Clip exactly to the plot rectangle. U/update must publish b.y=30 and paint the new line without another interaction. Z/zoom changes x domain to [2.5,7.5]. R/reset restores initial data/domain. Hover reports the nearest record's stable ID by x. Decorative line paint must not intercept the plot input.\n" +
+    '\n' +
+    'Run: node serve.mjs 5210, then open http://127.0.0.1:5210. Reload after edits; the server rebuilds app.tsx. window.applicationState() is cooperating application evidence, not a pixel oracle. Use normal application and browser evidence.\n' +
+    '\n' +
+    'Finish with a concise diagnosis, repair description, actual verification performed, and remaining uncertainty. Save observations.json with elapsedMinutes, browserQueries, editIterations, evidenceUsed, confusingAPIs, missingCapabilities, unsupportedConclusions, and model/settings if known. Do not infer missing measurements.\n' +
+    '\n' +
+    'Blinding protocol: do not read evaluator files, another trial, repository history, or previous conversations about these fixtures. If exposed to an answer key, report contamination and stop this trial. This restriction is procedural, not a filesystem security boundary.\n'
+  
+      at TestContext.<anonymous> (file:///Users/benlesh/GitHub/crc/tooling/repair-eval/run.test.mjs:82:116)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: "Validate this Pibbl application against the intended behavior and repair any mismatch. If it already meets the contract, leave app.tsx unchanged and explain your evidence. Work only in app.tsx. Preserve the supported public API and the intended behavior below; do not change the runtime, harness, server or task. You may inspect application source and use the browser freely. This is an API research exercise, not a speed contest.\n\nThe 710×420 logical Canvas contains a plot at (55,90), size 600×240. The initial x domain is [0,10], y domain [0,40], with y increasing upward. The line joins records a=(0,10), b=(5,20), c=(10,30). Clip exactly to the plot rectangle. U/update must publish b.y=30 and paint the new line without another interaction. Z/zoom changes x domain to [2.5,7.5]. R/reset restores initial data/domain. Hover reports the nearest record's stable ID by x. Decorative line paint must not intercept the plot input.\n\nRun: node serve.mjs 5210, then open http://127.0.0.1:5210. Reload after edits; the server rebuilds app.tsx. window.applicationState() is cooperating application evidence, not a pixel oracle. Use normal application and browser evidence.\n\nFinish with a concise diagnosis, repair description, actual verification performed, and remaining uncertainty. Save observations.json with elapsedMinutes, browserQueries, editIterations, evidenceUsed, confusingAPIs, missingCapabilities, unsupportedConclusions, and model/settings if known. Do not infer missing measurements.\n\nBlinding protocol: do not read evaluator files, another trial, repository history, or previous conversations about these fixtures. If exposed to an answer key, report contamination and stop this trial. This restriction is procedural, not a filesystem security boundary.\n",
+    expected: /Independent rendering evidence/,
+    operator: 'match',
+    diff: 'simple'
+  }
