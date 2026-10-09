@@ -33,7 +33,7 @@ async function bundle(contents) {
   });
 }
 const rendering = await bundle(
-  'export { LineSeries, PointSeries, BarSeries } from "@pibbl/core/viz";',
+  'export { LineSeries, PointSeries, BarSeries, CandlestickSeries, VolumeSeries, TradingTimeScale } from "@pibbl/core/viz";',
 );
 assert(
   !Object.keys(rendering.metafile.inputs).some((path) =>

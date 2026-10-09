@@ -1,11 +1,12 @@
 # Plan 008 — Financial charting
 
-Status: Batch 0 accepted and hardened on 2026-10-08; aggregate gates encounter unrelated working-tree blockers. The discussed
-inspection design is accepted and its three capabilities are runnable. Candlestick
-authoring and the trading-time scale proposal remain accepted. Broader hardening
-and future batches await experiential feedback; this is not feature-complete
-verification. No commits, publishing, or automatic implementation of future
-batches are authorized.
+Status: Batch 0 accepted, hardened and committed as `0ad33084`. Batches 1 and 2
+are accepted; on 2026-10-09 the user approved Batch 2 and requested a local commit,
+then continuation. Commit the approved financial slices and their dependencies
+without unrelated work. Batch 3 authoring design review is the next checkpoint;
+API-first acceptance remains required before new implementation. No push or
+publishing is authorized. Final focused Batch 2 evidence is recorded below; broader
+hardening and aggregate verification remain distinct from slice acceptance.
 
 ## Goal and baseline
 
@@ -15,10 +16,12 @@ with the two largest missing foundations: candlesticks and trading-time spacing.
 Review approximately three implemented features at a time with the user before
 starting the next batch.
 
-Current runtime exports include line/area/interval/point/custom-mark/categorical
+At the original plan baseline, runtime exports included line/area/interval/point/custom-mark/categorical
 bar series, dedicated scales, axes, reference lines/bands, hover queries/cards,
-and bounded continuous pan/zoom. There are no dedicated financial series,
-trading-time scale, indicator calculations, or financial data pipeline.
+and bounded continuous pan/zoom. That baseline had no dedicated financial series,
+trading-time scale, indicator calculations, or financial data pipeline. Batch 1
+now implements financial series and trading time; indicators and a financial
+data pipeline remain deferred.
 Existing brush and linked-inspection recipes are useful evidence, not public
 financial components. No new Chart container or second scheduler is implied.
 
@@ -131,21 +134,21 @@ value or turn simulated events into reported market facts.
 
 ## Status board
 
-| Batch | Three capabilities                                                  | State                                           |
-| ----- | ------------------------------------------------------------------- | ----------------------------------------------- |
-| 0     | Typed inspection queries, lazy handler adapter, painted-mark lookup | Accepted; hardened, aggregate blocked           |
-| 1     | Trading time, candles, volume                                       | Scale/candle authoring accepted; volume pending |
-| 2     | Inspection, price labels/formatting, price autoscaling              | Queued                                          |
-| 3     | Linked panes, range controls, comparison returns                    | Queued                                          |
-| 4     | SMA, EMA, Bollinger Bands                                           | Queued                                          |
-| 5     | RSI, MACD, stochastic oscillator                                    | Queued                                          |
-| 6     | OHLC bars, baseline series, event markers                           | Queued                                          |
-| 7     | Live updates, OHLCV aggregation, session VWAP                       | Queued                                          |
-| 8     | Overview navigator, levels/zones, trend-line editing                | Queued                                          |
-| 9     | Channel tools, Fibonacci tools, drawing persistence                 | Queued                                          |
-| 10    | Exchange sessions, history loading, Heikin-Ashi                     | Later design                                    |
-| 11    | Volume profile, market depth, footprint                             | Optional specialist scope                       |
-| 12    | Renko, point-and-figure, replay                                     | Optional specialist scope                       |
+| Batch | Three capabilities                                                  | State                                 |
+| ----- | ------------------------------------------------------------------- | ------------------------------------- |
+| 0     | Typed inspection queries, lazy handler adapter, painted-mark lookup | Accepted; hardened, aggregate blocked |
+| 1     | Trading time, candles, volume                                       | Retained; continuation authorized     |
+| 2     | Inspection, price labels/formatting, price autoscaling              | Accepted; local commit authorized     |
+| 3     | Linked panes, range controls, comparison returns                    | Queued                                |
+| 4     | SMA, EMA, Bollinger Bands                                           | Queued                                |
+| 5     | RSI, MACD, stochastic oscillator                                    | Queued                                |
+| 6     | OHLC bars, baseline series, event markers                           | Queued                                |
+| 7     | Live updates, OHLCV aggregation, session VWAP                       | Queued                                |
+| 8     | Overview navigator, levels/zones, trend-line editing                | Queued                                |
+| 9     | Channel tools, Fibonacci tools, drawing persistence                 | Queued                                |
+| 10    | Exchange sessions, history loading, Heikin-Ashi                     | Later design                          |
+| 11    | Volume profile, market depth, footprint                             | Optional specialist scope             |
+| 12    | Renko, point-and-figure, replay                                     | Optional specialist scope             |
 
 Batches 1–9 cover the main requested features and low-hanging fruit. Batches
 10–12 make earlier discussed advanced work explicit, with a fresh scope decision
@@ -181,13 +184,40 @@ show only the unresolved Batch 1 integration designs before new implementation.
 The user accepted the revised order-time lookup, lazy-query execution counts,
 and nearest-versus-painted overlap on 2026-10-08 and authorized a local commit.
 
-### [NEXT] Review remaining Batch 1 volume and inspection design
+### [DONE] Review remaining Batch 1 volume and inspection design
 
 Review the [proposed application examples and public contracts](./008-volume-inspection-proposal.md)
 for VolumeSeries and typed candle/volume inspection before implementing them.
 CandlestickSeries authoring and TradingTimeScale remain accepted. Batch 0's
 [dated hardening evidence](../testing/field-notes/2026-10-08-inspection-hardening.md)
 records current tests, ownership fixes, runnable URLs and unrelated aggregate blockers.
+
+### [DONE] Deliver Batch 1 trading-time, candle and volume slices
+
+The user approved the remaining design on 2026-10-08. Deliver the approved three
+capabilities through public examples; share first runnable slices promptly, then
+stop after the batch for feedback. Volume starts on UTC while the dedicated
+trading-time mapping is integrated. Keep financial inspection on Batch 0 ownership.
+
+### [DONE] Review the Batch 1 runnable financial slices
+
+The user authorized the next three financial inspection items on 2026-10-09.
+Existing Batch 1 evidence remains dated and does not establish broader hardening.
+
+### [DONE] Batch 2 authoring design checkpoint
+
+The user approved the [inspection proposal](008-financial-inspection-proposal.md),
+with the explicit requirement to use platform number formatting. Reuse the
+existing `formatNumber` implementation backed by `Intl.NumberFormat`; add only
+`visibleOhlcPriceExtent` and `padLinearDomain` as public helpers.
+
+### [DONE] Review the Batch 2 runnable inspection slices
+
+Inspect synchronized recorded-time crosshairs, pinning/keyboard inspection,
+last-price/preceding-close guides, currency/compact volume labels and visible-window
+autoscaling with manual override and linear/log presentation. Market Session and
+three focused lessons are the public surfaces. Stop at these three capabilities;
+collect experiential feedback before broader hardening or Batch 3.
 
 ## Batch 0 — composable data-inspection foundation
 
@@ -650,3 +680,121 @@ focused evidence as one batch; preserve unrelated working-tree changes. Batch 1
 scale/candle acceptance persists. The remaining volume/financial-inspection
 proposal is still recorded as pending acceptance; clarify whether the continuation
 also accepts those contracts before new API implementation.
+
+### 2026-10-08 — remaining financial design accepted
+
+User approved the volume/financial-inspection design and requested continuation.
+Batch 0 is committed locally as `0ad33084`; unrelated changes remain uncommitted.
+Started focused failing tests for UTC-aligned volume inspection and gapless
+trading-time line/custom-marker/axis composition. Delegated independent pure
+geometry and timestamp/slot calculations, then minimal program support. The batch
+remains limited to trading time, candles and volume.
+
+### 2026-10-08 — Batch 1 slices ready for feedback
+
+Implemented the approved TradingTimeScale, CandlestickSeries and VolumeSeries through
+public exports, optional shared candle/volume inspection, minimal programs and Studio
+editor declarations. Market Session shares one trading-time mapping across candles,
+a closing line, a custom mark and independent volume y geometry. Simulation is labeled.
+Geometry/query helpers and minimal support were delegated; primary retained integration.
+Source-order batching splits conservatively on overlap, preserving translucent paint.
+Focused failing tests preceded renderer, mapping and showcase implementation.
+Fresh source visualization checks: 78 files/393 tests passed, 2 files/tests skipped;
+built focused financial checks: 5 files/7 tests passed. Eight desktop/touch Studio cases,
+root TypeScript, focused lint, public JSDoc, minimal coverage, package consumers and
+inspection exclusion checks passed. See the dated field note for exact commands,
+environment, limits and failed approaches. Stop at this three-feature milestone;
+feedback is the single next step, not automatic work on Batch 2.
+
+### 2026-10-08 — financial example presentation feedback
+
+User found the first Batch 1 examples childish and requested professional polish,
+with contemporary financial library references. Updated only presentation within
+the same three-feature batch. Studied TradingView Lightweight Charts price/volume,
+Highcharts two-pane candlestick/volume, and amCharts stock candlestick examples.
+Adopted white surfaces, compact typography, numeric axes, restrained direction colors,
+thinner marks and subtle grid/separator treatment. Preserve data semantics, public
+APIs and existing touch/keyboard inspection; no Batch 2 functionality is introduced.
+Focused public mount tests establish numeric market context and canvas label bounds
+before visual review. Evidence is in the [presentation feedback note](../testing/field-notes/2026-10-08-financial-presentation-feedback.md).
+The single next step remains user review of the revised Batch 1 examples.
+
+### 2026-10-08 — interactive financial presentation feedback
+
+User requested stronger visual polish and mouse interactions. Studied the actual
+rendered TradingView Lightweight Charts showcase. The same four Batch 1 examples
+now use responsive canvas allocation, restrained dark plots, denser simulated
+windows and lazy native movement inspection. Candles and volume retain original
+record selection, painted lookup and keyboard/touch behavior. No new public API or
+Batch 2 feature is introduced. Responsive label/data geometry and public input
+checks precede fresh screenshots. See the [interactive presentation field note](../testing/field-notes/2026-10-08-financial-interactive-presentation.md).
+The single next step remains user review of these Batch 1 runnable slices.
+
+### 2026-10-08 — light/dark example toggle feedback
+
+User liked the responsive interactive revision and requested a light/dark toggle.
+Added an ordinary focusable toggle to all four existing financial examples, with
+dark as the initial palette. Each mount owns its palette signal; no public theme
+API, registry, subscription, storage or new Batch 2 capability is introduced.
+Click/tap and Enter/Space switch palette without changing data or selection.
+Focused public test failed before implementation; final 3 files/4 tests pass.
+Eight live Studio desktop/touch cases pass both palettes, keyboard switching,
+existing inspection/navigation and editor checking. Root TypeScript and focused
+lint pass. See the updated [interactive field note](../testing/field-notes/2026-10-08-financial-interactive-presentation.md).
+The single next step remains user review of Batch 1 before broader hardening.
+
+### 2026-10-09 — Batch 2 implementation and feedback checkpoint
+
+The user approved the proposed APIs and requested platform number formatting.
+Two reused implementation agents delivered pure autoscale helpers/public integration
+and focused learning lessons; the primary integrated Market Session and browser QA.
+Focused failing tests preceded new helper exports, workstation controls and missing
+volume presentation. No financial formatter wrapper or crosshair framework was added.
+
+Market Session now owns timestamp-based preview/pin state, synchronized price/volume
+crosshairs, bounded responsive OHLCV readouts, last-price and preceding-close guides,
+All/Recent/Earlier observation windows, Auto/Manual domains and Linear/Log providers.
+A deliberate missing volume observation displays an em dash while retaining OHLC.
+Manual holds the current domain; +/− while a plot is focused adjusts it. Window
+buttons demonstrate autoscaling and do not introduce Batch 3 navigation semantics.
+
+Three focused public lessons are `financial-crosshair`, `financial-price-guides`
+and `financial-visible-autoscale`, with corresponding self-contained minimal sources.
+The Studio origin is `http://127.0.0.1:5196`; a public-entry standalone preview at
+`http://127.0.0.1:5197/?example=financial-market-session` keeps the slice reviewable
+while unrelated concurrent texture documentation temporarily blocks Studio reloads.
+
+Dated focused evidence: Node 24.15.0, pnpm 11.21.0 and Playwright Chromium.
+Normal source configuration passed five files / fourteen tests before concurrent
+texture documentation changed. Root typecheck then encountered unrelated texture
+recipe/export errors. Subsequent normal browser collection and Studio reloads
+encountered missing texture API coverage/heading errors. A temporary configuration
+under /tmp excludes only the documentation-build plugin to exercise the unchanged
+runtime/browser settings; this is runtime evidence, not a documentation gate pass.
+The transformed/clipped inspection composition selects one exact timestamp and
+keeps missing volume distinct from nearest available volume. Packed Viz consumers
+and core package build passed for the helper surface. Fresh standalone desktop and
+touch-phone checks exercise all four examples; screenshots are retained under
+/tmp/pibbl-financial-batch2. Final focused results are reported with delivery.
+
+This milestone is slice ready for feedback, not feature complete. Aggregate trust,
+broader adversarial/ownership hardening and Batch 3 remain outside this checkpoint.
+
+Final 2026-10-09 slice verification supersedes the temporary shared blockers above:
+normal repository browser configuration passes seven files / eighteen tests. Root
+TypeScript, focused ESLint, public JSDoc, Studio documentation/API/search checks,
+catalog validation and all 119 minimal-source registry checks pass. Eight final
+Studio cases (four examples, desktop and touch-phone) pass native interaction,
+editor typechecking and zero runtime errors. Final screenshots use the
+`studio-financial-*` prefix under /tmp/pibbl-financial-batch2. Studio is again
+available at port 5196; the port 5197 preview remains a supplementary public-entry
+surface. No aggregate trust or feature-complete claim is made at this checkpoint.
+
+### 2026-10-09 — Batch 2 accepted; commit and continuation authorized
+
+The user approved the runnable batch and requested “Commit, please. Then continue.”
+Commit the approved Batch 1 foundations and Batch 2 additions together, retaining
+unrelated texture, recording, repair-evaluation and brand work outside the commit.
+The next authoring review covers Batch 3 linked panes, range controls and normalized
+comparison returns. Existing API-first design acceptance remains required before
+production work on that batch. No push or publication is requested.

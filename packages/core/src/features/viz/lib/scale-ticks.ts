@@ -2,25 +2,43 @@ import { resolveSignalValue } from "@pibbl/core";
 import type { AxisProps, BandCategory, ResolvedScale } from "./types.js";
 type Tick = number | string;
 
-export function ticks(scale: ResolvedScale, props: Pick<AxisProps, "tickValues" | "tickCount">): readonly Tick[] {
+export function ticks(
+  scale: ResolvedScale,
+  props: Pick<AxisProps, "tickValues" | "tickCount">,
+): readonly Tick[] {
   if (props.tickValues !== undefined && props.tickCount !== undefined)
-    throw new TypeError("Axis tickValues and tickCount are mutually exclusive.");
-  const explicit = props.tickValues === undefined
-    ? undefined
-    : resolveSignalValue(props.tickValues);
+    throw new TypeError(
+      "Axis tickValues and tickCount are mutually exclusive.",
+    );
+  const explicit =
+    props.tickValues === undefined
+      ? undefined
+      : resolveSignalValue(props.tickValues);
   if (explicit !== undefined) {
     if (!Array.isArray(explicit) || explicit.length > 100)
-      throw new RangeError("Axis tickValues must be an array with at most 100 values.");
+      throw new RangeError(
+        "Axis tickValues must be an array with at most 100 values.",
+      );
     const seen = new Set<Tick>();
     for (const value of explicit) {
-      if (seen.has(value)) throw new RangeError("Axis tickValues must not contain duplicates.");
+      if (seen.has(value))
+        throw new RangeError("Axis tickValues must not contain duplicates.");
       seen.add(value);
-      if (scale.type !== "band" && scale.type !== "point") {
+      if (scale.type === "trading-time") {
+        if (typeof value !== "number" || scale.slotAtTime(value) === undefined)
+          throw new RangeError(
+            "Axis trading-time ticks must be supplied timestamps.",
+          );
+      } else if (scale.type !== "band" && scale.type !== "point") {
         if (typeof value !== "number" || !Number.isFinite(value))
-          throw new TypeError("Axis tickValues for a continuous scale must be finite numbers.");
+          throw new TypeError(
+            "Axis tickValues for a continuous scale must be finite numbers.",
+          );
         const [a, b] = scale.domain;
         if (value < Math.min(a, b) || value > Math.max(a, b))
-          throw new RangeError("Axis tickValues must be within the scale domain.");
+          throw new RangeError(
+            "Axis tickValues must be within the scale domain.",
+          );
       } else if (
         (typeof value !== "string" &&
           (typeof value !== "number" || !Number.isFinite(value))) ||
@@ -35,6 +53,7 @@ export function ticks(scale: ResolvedScale, props: Pick<AxisProps, "tickValues" 
   if (!Number.isInteger(count) || count < 0 || count > 100)
     throw new RangeError("Axis tickCount must be an integer from 0 to 100.");
   if (count === 0) return [];
+  if (scale.type === "trading-time") return scale.ticks(count);
   if (scale.type !== "band" && scale.type !== "point")
     return count === 1 ? [scale.domain[0]] : scale.ticks(count);
   const n = scale.domain.length;
@@ -54,4 +73,3 @@ export function position(scale: ResolvedScale, value: Tick): number {
     ? scale.map(value as BandCategory)! + scale.bandwidth / 2
     : scale.map(value as number);
 }
-

@@ -49,3 +49,29 @@ export type {
   NearestRecordedPointOptions,
   SampleRecordedXOptions,
 } from "./inspection/queries.js";
+export {
+  useVolumeInspection,
+  nearestRecordedVolumeX,
+  paintedVolumeAt,
+} from "./inspection/volume.js";
+export type {
+  VolumeObservation,
+  VolumeInspectionCandidate,
+  NearestVolumeHit,
+  PaintedVolumeHit,
+  VolumeInspectionRef,
+  VolumeRenderedSeries,
+} from "./inspection/volume.js";
+export {
+  useCandleInspection,
+  nearestRecordedCandleX,
+  paintedCandleAt,
+} from "./inspection/candle.js";
+export type {
+  CandleObservation,
+  CandleInspectionCandidate,
+  NearestCandleHit,
+  PaintedCandleHit,
+  CandleInspectionRef,
+  CandleRenderedSeries,
+} from "./inspection/candle.js";

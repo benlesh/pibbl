@@ -1,3 +1,4 @@
+import { invertNumericPosition } from "../lib/series-position.js";
 import { useRenderedRef } from "./owned-ref.js";
 import type { HoverSeries } from "../lib/hover-types.js";
 import type {
@@ -26,7 +27,9 @@ function useCapture<D>(): PointInspectionRef<D> {
         anchorInsideClips: geometry.anchorInsideClips,
         domainXAtRoot(point: Readonly<{ x: number; y: number }>) {
           const local = geometry.localAtRoot(point);
-          return local ? candidate.xScale.invert(local.x) : undefined;
+          return local
+            ? invertNumericPosition(candidate.xScale, local.x)
+            : undefined;
         },
         anchorAtDomain(point: Readonly<{ domainX: number; domainY: number }>) {
           geometry.assertLive();

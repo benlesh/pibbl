@@ -1,3 +1,4 @@
+import { useNumericPosition } from "./series-position.js";
 import { Path, resolveSignalValue } from "@pibbl/core";
 import type {
   FillStyle,
@@ -114,7 +115,7 @@ export function AreaSeries<D>({
   style: styleInput,
   ...eventProps
 }: AreaSeriesProps<D>) {
-  const xScale = useContinuousScale(xId).get();
+  const xScale = useNumericPosition(xId);
   const yScale = useContinuousScale(yId).get();
   const curveDefinition = resolveSeriesCurve(curve);
   const x = useInternalValueMemoSlot(

@@ -12,7 +12,10 @@ import { readScale } from "./scale-context.js";
  * @see {@link HoverDataProps}
  * @see {@link PibblNode}
  */
-export function HoverData<T>({ query, children }: HoverDataProps<T>): PibblNode {
+export function HoverData<T>({
+  query,
+  children,
+}: HoverDataProps<T>): PibblNode {
   if (typeof query !== "function" || typeof children !== "function")
     throw new TypeError("HoverData requires query and children functions.");
   const snapshots = new Map<ScaleId, ResolvedContinuousScale>();
@@ -28,7 +31,11 @@ export function HoverData<T>({ query, children }: HoverDataProps<T>): PibblNode 
         const value = readScale(id, "HoverData");
         if (!value) throw new TypeError("HoverData requires a scale ID.");
         const resolved = value.get();
-        if (resolved.type === "band" || resolved.type === "point")
+        if (
+          resolved.type === "band" ||
+          resolved.type === "point" ||
+          resolved.type === "trading-time"
+        )
           throw new TypeError(
             "HoverData numeric queries require continuous scales.",
           );
