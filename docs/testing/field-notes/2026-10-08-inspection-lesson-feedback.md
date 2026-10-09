@@ -1,3 +1,5 @@
+> **Historical status: Feedback record for the October 8, 2026 inspection examples; the final shipping decision is recorded in the October 9 pilot report.**
+
 # Inspection lessons — feedback revision, 2026-10-08
 
 User feedback: the examples were too minimal and not compelling; standalone

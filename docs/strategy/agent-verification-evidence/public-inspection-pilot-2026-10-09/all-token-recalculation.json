@@ -1,0 +1,62 @@
+{
+  "metric": "inputTokens + outputTokens; inputTokens includes cached input tokens",
+  "rows": [
+    {
+      "pair": "repeat-1/decision-01",
+      "ordinaryAllInputPlusOutput": 591726,
+      "inspectionAllInputPlusOutput": 363056,
+      "allTokenReduction": 0.38644575360893385,
+      "ordinaryUncachedProxy": 46062,
+      "inspectionUncachedProxy": 46384,
+      "uncachedProxyReduction": -0.006990577916720942
+    },
+    {
+      "pair": "repeat-1/decision-02",
+      "ordinaryAllInputPlusOutput": 392172,
+      "inspectionAllInputPlusOutput": 280081,
+      "allTokenReduction": 0.2858210173087319,
+      "ordinaryUncachedProxy": 38508,
+      "inspectionUncachedProxy": 26001,
+      "uncachedProxyReduction": 0.3247896540978498
+    },
+    {
+      "pair": "repeat-1/decision-03",
+      "ordinaryAllInputPlusOutput": 407919,
+      "inspectionAllInputPlusOutput": 378115,
+      "allTokenReduction": 0.07306352486645633,
+      "ordinaryUncachedProxy": 45167,
+      "inspectionUncachedProxy": 38531,
+      "uncachedProxyReduction": 0.14692142493413332
+    },
+    {
+      "pair": "repeat-2/decision-03",
+      "ordinaryAllInputPlusOutput": 264994,
+      "inspectionAllInputPlusOutput": 385115,
+      "allTokenReduction": -0.4532970557823951,
+      "ordinaryUncachedProxy": 30498,
+      "inspectionUncachedProxy": 48987,
+      "uncachedProxyReduction": -0.6062364745229195
+    },
+    {
+      "pair": "repeat-2/decision-02",
+      "ordinaryAllInputPlusOutput": 342527,
+      "inspectionAllInputPlusOutput": 336338,
+      "allTokenReduction": 0.01806864860288386,
+      "ordinaryUncachedProxy": 44671,
+      "inspectionUncachedProxy": 33618,
+      "uncachedProxyReduction": 0.2474312193593159
+    },
+    {
+      "pair": "repeat-2/decision-01",
+      "ordinaryAllInputPlusOutput": 310164,
+      "inspectionAllInputPlusOutput": 309956,
+      "allTokenReduction": 0.0006706129660437704,
+      "ordinaryUncachedProxy": 66708,
+      "inspectionUncachedProxy": 31556,
+      "uncachedProxyReduction": 0.5269532889608443
+    }
+  ],
+  "medianAllTokenReduction": 0.045566086734670094,
+  "medianUncachedProxyReduction": 0.19717632214672465,
+  "interpretation": "Uncached proxy is a cost-oriented token measure, not total processed-token count. Cached tokens remain model tokens."
+}

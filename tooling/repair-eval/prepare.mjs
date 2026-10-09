@@ -15,12 +15,13 @@ async function runtime(arm) {
     [
       ["@pibbl/core", "index.ts"],
       ["@pibbl/core/internal", "internal.ts"],
+      ["@pibbl/core/viz/inspection", "features/viz/inspection.ts"],
       ["@pibbl/core/viz", "features/viz/index.ts"],
       ["@pibbl/core/jsx-runtime", "jsx-runtime.ts"],
       ["@pibbl/core/jsx-dev-runtime", "jsx-dev-runtime.ts"],
     ].map(([id, path]) => [id, resolve(repository, "packages/core/src", path)]),
   );
-  const contents = `export * from ${JSON.stringify(entries.get("@pibbl/core"))}; export * from ${JSON.stringify(entries.get("@pibbl/core/viz"))}; export {jsx,jsxs} from ${JSON.stringify(entries.get("@pibbl/core/jsx-runtime"))}; ${arm === "attribution" ? `export {createLineAttributionInspector} from ${JSON.stringify(resolve(repository, "tooling/line-attribution/capture.ts"))};` : ""}`;
+  const contents = `export * from ${JSON.stringify(entries.get("@pibbl/core"))}; export * from ${JSON.stringify(entries.get("@pibbl/core/viz"))}; export * from ${JSON.stringify(entries.get("@pibbl/core/viz/inspection"))}; export {jsx,jsxs} from ${JSON.stringify(entries.get("@pibbl/core/jsx-runtime"))}; ${arm === "attribution" ? `export {createLineAttributionInspector} from ${JSON.stringify(resolve(repository, "tooling/line-attribution/capture.ts"))};` : ""}`;
   const receipt = {};
   const result = await build({
     stdin: { contents, resolveDir: repository, loader: "ts" },
@@ -70,10 +71,16 @@ async function runtime(arm) {
   cache.set(arm, value);
   return value;
 }
-export async function prepareTrial({ caseId, arm, directory }) {
-  if (!["ordinary", "attribution"].includes(arm))
-    throw new Error("Arm must be ordinary or attribution");
-  const app = applicationSource(caseId);
+export async function prepareTrial({
+  caseId,
+  arm,
+  directory,
+  application,
+  contract,
+}) {
+  if (!["ordinary", "attribution", "inspection"].includes(arm))
+    throw new Error("Arm must be ordinary, attribution, or inspection");
+  const app = application ?? applicationSource(caseId);
   directory = resolve(directory);
   await mkdir(directory, { recursive: false });
   const compiled = await runtime(arm);
@@ -103,14 +110,31 @@ canvas.addEventListener('pointermove',()=>{document.querySelector('pre').textCon
 `,
   );
   await writeFile(
+    resolve(directory, "inspection-bridge.mjs"),
+    arm === "inspection"
+      ? `import {useNumericInspection,nearestRecordedX,anchorInsideClips} from '@pibbl/core/viz/inspection';
+export function useOptionalInspection(series){const ref=useNumericInspection(series);window.inspectPlot=point=>{const r=ref.rendered();if(!r)return {available:false};const domainX=r.domainXAtRoot(point);const serialize=h=>h?{id:h.datum.id,sourceIndex:h.sourceIndex,domainX:h.domainX,domainY:h.domainY,anchorLocal:{...h.anchorLocal},anchorRoot:{...h.anchorRoot}}:null;const result={available:true,evidence:'last-successful-render; source datum identity is live; anchors/values captured; geometric not pixels or event target',domainX,observations:r.observations.map(h=>({...serialize(h),insideClips:r.anchorInsideClips(h.anchorLocal)})),nearest:serialize(nearestRecordedX(r,{domainX})),visible:serialize(nearestRecordedX(r,{domainX,filter:anchorInsideClips}))};window.inspectionCalls.push({point,result});return result;};return ref;}`
+      : "export function useOptionalInspection(){return undefined;}",
+  );
+  if (arm === "inspection")
+    await writeFile(
+      resolve(directory, "inspection-api.md"),
+      await readFile(
+        resolve(
+          repository,
+          "docs/site/api/functions/rendered-series-inspection.md",
+        ),
+      ),
+    );
+  await writeFile(
     resolve(directory, "TASK.md"),
     `Validate this Pibbl application against the intended behavior and repair any mismatch. If it already meets the contract, leave app.tsx unchanged and explain your evidence. Work only in app.tsx. Preserve the supported public API and the intended behavior below; do not change the runtime, harness, server or task. You may inspect application source and use the browser freely. This is an API research exercise, not a speed contest.
 
 The 710×420 logical Canvas contains a plot at (55,90), size 600×240. The initial x domain is [0,10], y domain [0,40], with y increasing upward. The line joins records a=(0,10), b=(5,20), c=(10,30). Clip exactly to the plot rectangle. U/update must publish b.y=30 and paint the new line without another interaction. Z/zoom changes x domain to [2.5,7.5]. R/reset restores initial data/domain. Hover reports the nearest record's stable ID by x. Decorative line paint must not intercept the plot input.
 
-Run: node serve.mjs 5210, then open http://127.0.0.1:5210. Reload after edits; the server rebuilds app.tsx. window.applicationState() is cooperating application evidence, not a pixel oracle. ${arm === "attribution" ? "Development attribution is available via window.inspectPlot({x,y}) using root logical coordinates. Its captured values/scales/clips and generation are geometric evidence; original source references are live." : "Use normal application and browser evidence."}
+${contract ?? ""}\n\nRun: node serve.mjs 5210, then open http://127.0.0.1:5210. Reload after edits; the server rebuilds app.tsx. window.applicationState() is cooperating application evidence, not a pixel oracle. ${arm === "attribution" ? "Development attribution is available via window.inspectPlot({x,y}) using root logical coordinates. Its captured values/scales/clips and generation are geometric evidence; original source references are live." : arm === "inspection" ? "Public @pibbl/core/viz/inspection is enabled through inspection-bridge.mjs. window.inspectPlot({x,y}) synchronously serializes captured observations, root-to-domain conversion, and nearest/clip-filtered queries from useNumericInspection. Read inspection-api.md for its public contract. You may use the public inspection API in your repair. Source datum references are live; numeric values and anchors are captured. This is geometry, not a pixel or event-target oracle." : "Use normal application and browser evidence. In the ordinary condition do not import or enable @pibbl/core/viz/inspection; that is the capability being compared."}
 
-Independent rendering evidence: distinguish published source values, evaluated component values, captured render geometry, and actual pixels. Corroborate painted-result claims with independent Canvas pixel observations; use native pointer input for interaction identity. Geometric segment coverage is not a pixel or routed-target oracle. Derive expectations from the declared contract rather than the scale/query implementation. State which evidence you did not obtain. This capsule is intentionally not a Git checkout; use ordinary file comparisons for source changes.\n\nFinish with a concise diagnosis, repair description, actual verification performed, and remaining uncertainty. Save observations.json with elapsedMinutes, browserQueries, editIterations, evidenceUsed, confusingAPIs, missingCapabilities, unsupportedConclusions, and model/settings if known. Do not infer missing measurements.
+Independent rendering evidence: distinguish published source values, evaluated component values, captured render geometry, and actual pixels. Corroborate painted-result claims with independent Canvas pixel observations; use native pointer input for interaction identity. Geometric segment coverage is not a pixel or routed-target oracle. Derive expectations from the declared contract rather than the scale/query implementation. State which evidence you did not obtain. Pointer event x/y is root-logical, including inside translated groups. Inspect the supplied scale range before converting event coordinates; the chart's scale range is plot-local. Attribution query points are also root-logical.\n\nThis capsule is intentionally not a Git checkout; use ordinary file comparisons for source changes.\n\nFinish with a concise diagnosis, repair description, actual verification performed, and remaining uncertainty. Save observations.json with elapsedMinutes, browserQueries, editIterations, evidenceUsed, confusingAPIs, missingCapabilities, unsupportedConclusions, and model/settings if known. Do not infer missing measurements.
 
 Blinding protocol: do not read evaluator files, another trial, repository history, or previous conversations about these fixtures. If exposed to an answer key, report contamination and stop this trial. This restriction is procedural, not a filesystem security boundary.
 `,

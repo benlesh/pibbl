@@ -288,6 +288,7 @@ export function createLineAttributionInspector(canvas: HTMLCanvasElement) {
         scope: "root-straight-linear-lines-geometric-coverage",
         evidence: {
           queryCoordinates: "root-logical",
+          eventCoordinates: "root-logical",
           renderTiming: "last-successful-render-may-lag-application",
           capturedPositions: "line-local",
           transforms: "local-to-root-logical",

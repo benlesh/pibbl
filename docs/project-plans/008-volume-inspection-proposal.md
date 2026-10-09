@@ -1,9 +1,10 @@
+> **Historical status: This October 8, 2026 volume-series proposal was not accepted for implementation and remains outside the shipped inspection API.**
+
 # Plan 008 — remaining Batch 1 design checkpoint
 
-Status: proposed on 2026-10-08; awaiting acceptance before implementation.
-CandlestickSeries authoring and TradingTimeScale remain accepted. This proposal
-adds only time-aligned volume authoring and their shared inspection integration.
-No new financial API has been implemented by this checkpoint.
+Status: proposal only; no volume-series or related financial API is authorized by
+the October 9 inspection shipping decision. CandlestickSeries, TradingTimeScale,
+and volume authoring remain separate work requiring their own feedback.
 
 ## Minimal volume authoring
 

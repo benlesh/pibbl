@@ -1,11 +1,12 @@
+> **Historical status: Proposal and execution record for the October 8, 2026 financial-charting batch; the inspection shipping decision was updated after the October 9 pilot.**
+
 # Plan 008 — Financial charting
 
-Status: Batch 0 accepted and hardened on 2026-10-08; aggregate gates encounter unrelated working-tree blockers. The discussed
-inspection design is accepted and its three capabilities are runnable. Candlestick
-authoring and the trading-time scale proposal remain accepted. Broader hardening
-and future batches await experiential feedback; this is not feature-complete
-verification. No commits, publishing, or automatic implementation of future
-batches are authorized.
+Status: The opt-in chart-inspection API is approved for shipping after the
+October 9 public-API pilot. This approval does not authorize the remaining
+financial-charting batches. Candlestick authoring, trading-time scale work, and
+broader financial hardening remain separate work and require their own user
+feedback and delivery decisions.
 
 ## Goal and baseline
 

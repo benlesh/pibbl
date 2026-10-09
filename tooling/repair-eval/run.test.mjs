@@ -84,6 +84,8 @@ test("both arms require independent painted-result evidence without a defect hin
       const task = await readFile(resolve(pair, arm, "TASK.md"), "utf8");
       assert.match(task, /Independent rendering evidence/);
       assert.match(task, /native pointer input/);
+      assert.match(task, /Pointer event x\/y is root-logical/);
+      assert.match(task, /Inspect the supplied scale range/);
     }
   } finally {
     await rm(parent, { recursive: true, force: true });
