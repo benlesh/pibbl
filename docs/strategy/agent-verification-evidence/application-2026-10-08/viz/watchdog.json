@@ -1,0 +1,27 @@
+{
+  "schema": "pibbl-replay-watchdog/1",
+  "status": "launch-error",
+  "timestamp": "2026-10-08T18:19:01.145Z",
+  "deadlineMs": 60000,
+  "graceMs": 1000,
+  "elapsedMs": 370,
+  "pid": null,
+  "exitCode": null,
+  "exitSignal": null,
+  "childExited": false,
+  "cleanupScope": "Replay child and parent-owned Playwright browser process group; arbitrary escaped descendants are outside scope.",
+  "browserCleanup": {
+    "status": "launch-failed",
+    "pid": null,
+    "processExited": false
+  },
+  "stdout": {
+    "text": "",
+    "truncated": false
+  },
+  "stderr": {
+    "text": "",
+    "truncated": false
+  },
+  "failure": "Protocol error (Browser.getVersion): Internal server error, session closed. Failed to launch browser.\n<launching> /Users/benlesh/Library/Caches/ms-playwright/chromium_headless_shell-1234/chrome-headless-shell-mac-arm64/chrome-headless-shell --disable-field-trial-config --disable-background-networking --disable-background-timer-throttling --disable-backgrounding-occluded-windows --disable-back-forward-cache --disable-breakpad --disable-client-side-phishing-detection --disable-component-extensions-with-background-pages --disable-component-update --no-default-browser-check --disable-default-apps --disable-dev-shm-usage --disable-edgeupdater --disable-extensions --disable-features=AvoidUnnecessaryBeforeUnloadCheckSync,BoundaryEventDispatchTracksNodeRemoval,DestroyProfileOnBrowserClose,DialMediaRouteProvider,GlobalMediaControls,HttpsUpgrades,LensOverlay,MediaRouter,PaintHolding,ThirdPartyStoragePartitioning,BlockOriginHeaderModificationOnRedirect,Translate,AutoDeElevate,OptimizationHints,ms"
+}

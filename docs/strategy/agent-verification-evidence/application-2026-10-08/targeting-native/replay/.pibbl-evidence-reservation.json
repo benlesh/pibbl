@@ -1,0 +1,6 @@
+{
+  "schema": "pibbl-evidence-reservation/1",
+  "id": "6d8fc25e-8b04-4d58-9ec8-3c891be6a5af",
+  "createdAt": "2026-10-08T18:19:16.998Z",
+  "meaning": "persistent-reservation-not-liveness"
+}

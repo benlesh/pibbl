@@ -1,0 +1,1041 @@
+{
+  "schema": "pibbl-layout-studio-smoke/1",
+  "status": "pass",
+  "provenance": "controlled-local-studio-no-served-build-attestation",
+  "steps": [
+    {
+      "action": "clipped",
+      "before": {
+        "status": "ready",
+        "mode": "clipped",
+        "revision": 2,
+        "clicks": 0,
+        "lastActivated": null,
+        "relations": {
+          "schema": "pibbl-layout-box-relations/1",
+          "scope": "declared-axis-aligned-boxes-not-painted-visibility",
+          "status": "available",
+          "coordinateSpace": "placed-child-local",
+          "commonSpace": "caller-declared-not-transformed",
+          "contained": false,
+          "overflow": {
+            "left": 0,
+            "top": 0,
+            "right": 90,
+            "bottom": 0
+          },
+          "overlap": null,
+          "assertions": {
+            "containment": "fail",
+            "separation": "not-requested"
+          }
+        },
+        "assertion": "fail",
+        "diagnosis": "local-offset-outside-parent-clip",
+        "declared": {
+          "provenance": "controlled-application-inputs",
+          "parentPlacement": {
+            "left": 30,
+            "top": 20
+          },
+          "shapeLocal": {
+            "x": 90,
+            "y": 0,
+            "width": 20,
+            "height": 20
+          },
+          "overflow": "clip"
+        },
+        "allocation": {
+          "x": 0,
+          "y": 0,
+          "width": 20,
+          "height": 20
+        },
+        "observed": {
+          "generation": {
+            "session": 1,
+            "render": 1,
+            "requested": 1,
+            "completed": 1
+          },
+          "transform": [
+            2,
+            0,
+            0,
+            2,
+            100,
+            70
+          ],
+          "center": {
+            "x": 300,
+            "y": 90
+          },
+          "probe": {
+            "routing": "geometry-only",
+            "status": "miss",
+            "generation": {
+              "session": 1,
+              "render": 1,
+              "requested": 1,
+              "completed": 1
+            },
+            "targetId": null,
+            "candidates": [
+              {
+                "order": 0,
+                "targetId": 1,
+                "outcome": "clip-excluded",
+                "exclusion": {
+                  "kind": "clip",
+                  "entryOrder": 0,
+                  "stackIndex": 0,
+                  "fillRule": "nonzero",
+                  "surfacePath": [],
+                  "coordinateSpace": "clip-local-to-root-logical",
+                  "geometry": "opaque-path",
+                  "localToSurface": [
+                    2,
+                    0,
+                    0,
+                    2,
+                    100,
+                    70
+                  ],
+                  "transform": [
+                    2,
+                    0,
+                    0,
+                    2,
+                    100,
+                    70
+                  ]
+                },
+                "geometry": "hit"
+              }
+            ],
+            "captureMode": "active-native-geometry",
+            "nativeCalls": 2,
+            "reason": null,
+            "pendingRealmWork": false
+          }
+        },
+        "explanation": "The app expects the shape center to be targetable. Parent left=30/top=20 places a local 20x20 allocation; Rectangle x is an additional local drawing offset. Translation (40,30) and scale 2 map these coordinates into root space. Allocation is not a paint bound. Declared overflow controls clipping; geometry probes do not prove pixel visibility. Box relations describe declared rectangles in one common local space. Overlap becomes an error only when separation is explicitly required."
+      },
+      "after": {
+        "status": "ready",
+        "mode": "clipped",
+        "revision": 2,
+        "clicks": 0,
+        "lastActivated": null,
+        "relations": {
+          "schema": "pibbl-layout-box-relations/1",
+          "scope": "declared-axis-aligned-boxes-not-painted-visibility",
+          "status": "available",
+          "coordinateSpace": "placed-child-local",
+          "commonSpace": "caller-declared-not-transformed",
+          "contained": false,
+          "overflow": {
+            "left": 0,
+            "top": 0,
+            "right": 90,
+            "bottom": 0
+          },
+          "overlap": null,
+          "assertions": {
+            "containment": "fail",
+            "separation": "not-requested"
+          }
+        },
+        "assertion": "fail",
+        "diagnosis": "local-offset-outside-parent-clip",
+        "declared": {
+          "provenance": "controlled-application-inputs",
+          "parentPlacement": {
+            "left": 30,
+            "top": 20
+          },
+          "shapeLocal": {
+            "x": 90,
+            "y": 0,
+            "width": 20,
+            "height": 20
+          },
+          "overflow": "clip"
+        },
+        "allocation": {
+          "x": 0,
+          "y": 0,
+          "width": 20,
+          "height": 20
+        },
+        "observed": {
+          "generation": {
+            "session": 1,
+            "render": 1,
+            "requested": 1,
+            "completed": 1
+          },
+          "transform": [
+            2,
+            0,
+            0,
+            2,
+            100,
+            70
+          ],
+          "center": {
+            "x": 300,
+            "y": 90
+          },
+          "probe": {
+            "routing": "geometry-only",
+            "status": "miss",
+            "generation": {
+              "session": 1,
+              "render": 1,
+              "requested": 1,
+              "completed": 1
+            },
+            "targetId": null,
+            "candidates": [
+              {
+                "order": 0,
+                "targetId": 1,
+                "outcome": "clip-excluded",
+                "exclusion": {
+                  "kind": "clip",
+                  "entryOrder": 0,
+                  "stackIndex": 0,
+                  "fillRule": "nonzero",
+                  "surfacePath": [],
+                  "coordinateSpace": "clip-local-to-root-logical",
+                  "geometry": "opaque-path",
+                  "localToSurface": [
+                    2,
+                    0,
+                    0,
+                    2,
+                    100,
+                    70
+                  ],
+                  "transform": [
+                    2,
+                    0,
+                    0,
+                    2,
+                    100,
+                    70
+                  ]
+                },
+                "geometry": "hit"
+              }
+            ],
+            "captureMode": "active-native-geometry",
+            "nativeCalls": 2,
+            "reason": null,
+            "pendingRealmWork": false
+          }
+        },
+        "explanation": "The app expects the shape center to be targetable. Parent left=30/top=20 places a local 20x20 allocation; Rectangle x is an additional local drawing offset. Translation (40,30) and scale 2 map these coordinates into root space. Allocation is not a paint bound. Declared overflow controls clipping; geometry probes do not prove pixel visibility. Box relations describe declared rectangles in one common local space. Overlap becomes an error only when separation is explicitly required."
+      }
+    },
+    {
+      "action": "overflow-visible",
+      "before": {
+        "status": "ready",
+        "mode": "overflow-visible",
+        "revision": 3,
+        "clicks": 0,
+        "lastActivated": null,
+        "relations": {
+          "schema": "pibbl-layout-box-relations/1",
+          "scope": "declared-axis-aligned-boxes-not-painted-visibility",
+          "status": "available",
+          "coordinateSpace": "placed-child-local",
+          "commonSpace": "caller-declared-not-transformed",
+          "contained": false,
+          "overflow": {
+            "left": 0,
+            "top": 0,
+            "right": 90,
+            "bottom": 0
+          },
+          "overlap": null,
+          "assertions": {
+            "containment": "not-requested",
+            "separation": "not-requested"
+          }
+        },
+        "assertion": "pass",
+        "diagnosis": "overflow-explicitly-allowed",
+        "declared": {
+          "provenance": "controlled-application-inputs",
+          "parentPlacement": {
+            "left": 30,
+            "top": 20
+          },
+          "shapeLocal": {
+            "x": 90,
+            "y": 0,
+            "width": 20,
+            "height": 20
+          },
+          "overflow": "visible"
+        },
+        "allocation": {
+          "x": 0,
+          "y": 0,
+          "width": 20,
+          "height": 20
+        },
+        "observed": {
+          "generation": {
+            "session": 1,
+            "render": 2,
+            "requested": 2,
+            "completed": 2
+          },
+          "transform": [
+            2,
+            0,
+            0,
+            2,
+            100,
+            70
+          ],
+          "center": {
+            "x": 300,
+            "y": 90
+          },
+          "probe": {
+            "routing": "geometry-only",
+            "status": "target",
+            "generation": {
+              "session": 1,
+              "render": 2,
+              "requested": 2,
+              "completed": 2
+            },
+            "targetId": 1,
+            "candidates": [
+              {
+                "order": 0,
+                "targetId": 1,
+                "outcome": "hit",
+                "exclusion": null,
+                "geometry": "hit"
+              }
+            ],
+            "captureMode": "active-native-geometry",
+            "nativeCalls": 1,
+            "reason": null,
+            "pendingRealmWork": false
+          }
+        },
+        "explanation": "The app expects the shape center to be targetable. Parent left=30/top=20 places a local 20x20 allocation; Rectangle x is an additional local drawing offset. Translation (40,30) and scale 2 map these coordinates into root space. Allocation is not a paint bound. Declared overflow controls clipping; geometry probes do not prove pixel visibility. Box relations describe declared rectangles in one common local space. Overlap becomes an error only when separation is explicitly required."
+      },
+      "after": {
+        "status": "ready",
+        "mode": "overflow-visible",
+        "revision": 3,
+        "clicks": 1,
+        "lastActivated": "primary",
+        "relations": {
+          "schema": "pibbl-layout-box-relations/1",
+          "scope": "declared-axis-aligned-boxes-not-painted-visibility",
+          "status": "available",
+          "coordinateSpace": "placed-child-local",
+          "commonSpace": "caller-declared-not-transformed",
+          "contained": false,
+          "overflow": {
+            "left": 0,
+            "top": 0,
+            "right": 90,
+            "bottom": 0
+          },
+          "overlap": null,
+          "assertions": {
+            "containment": "not-requested",
+            "separation": "not-requested"
+          }
+        },
+        "assertion": "pass",
+        "diagnosis": "overflow-explicitly-allowed",
+        "declared": {
+          "provenance": "controlled-application-inputs",
+          "parentPlacement": {
+            "left": 30,
+            "top": 20
+          },
+          "shapeLocal": {
+            "x": 90,
+            "y": 0,
+            "width": 20,
+            "height": 20
+          },
+          "overflow": "visible"
+        },
+        "allocation": {
+          "x": 0,
+          "y": 0,
+          "width": 20,
+          "height": 20
+        },
+        "observed": {
+          "generation": {
+            "session": 1,
+            "render": 2,
+            "requested": 2,
+            "completed": 2
+          },
+          "transform": [
+            2,
+            0,
+            0,
+            2,
+            100,
+            70
+          ],
+          "center": {
+            "x": 300,
+            "y": 90
+          },
+          "probe": {
+            "routing": "geometry-only",
+            "status": "target",
+            "generation": {
+              "session": 1,
+              "render": 2,
+              "requested": 2,
+              "completed": 2
+            },
+            "targetId": 1,
+            "candidates": [
+              {
+                "order": 0,
+                "targetId": 1,
+                "outcome": "hit",
+                "exclusion": null,
+                "geometry": "hit"
+              }
+            ],
+            "captureMode": "active-native-geometry",
+            "nativeCalls": 1,
+            "reason": null,
+            "pendingRealmWork": false
+          }
+        },
+        "explanation": "The app expects the shape center to be targetable. Parent left=30/top=20 places a local 20x20 allocation; Rectangle x is an additional local drawing offset. Translation (40,30) and scale 2 map these coordinates into root space. Allocation is not a paint bound. Declared overflow controls clipping; geometry probes do not prove pixel visibility. Box relations describe declared rectangles in one common local space. Overlap becomes an error only when separation is explicitly required."
+      }
+    },
+    {
+      "action": "repaired",
+      "before": {
+        "status": "ready",
+        "mode": "repaired",
+        "revision": 4,
+        "clicks": 1,
+        "lastActivated": "primary",
+        "relations": {
+          "schema": "pibbl-layout-box-relations/1",
+          "scope": "declared-axis-aligned-boxes-not-painted-visibility",
+          "status": "available",
+          "coordinateSpace": "placed-child-local",
+          "commonSpace": "caller-declared-not-transformed",
+          "contained": true,
+          "overflow": {
+            "left": 0,
+            "top": 0,
+            "right": 0,
+            "bottom": 0
+          },
+          "overlap": null,
+          "assertions": {
+            "containment": "pass",
+            "separation": "not-requested"
+          }
+        },
+        "assertion": "pass",
+        "diagnosis": "local-offset-repaired",
+        "declared": {
+          "provenance": "controlled-application-inputs",
+          "parentPlacement": {
+            "left": 30,
+            "top": 20
+          },
+          "shapeLocal": {
+            "x": 0,
+            "y": 0,
+            "width": 20,
+            "height": 20
+          },
+          "overflow": "clip"
+        },
+        "allocation": {
+          "x": 0,
+          "y": 0,
+          "width": 20,
+          "height": 20
+        },
+        "observed": {
+          "generation": {
+            "session": 1,
+            "render": 3,
+            "requested": 3,
+            "completed": 3
+          },
+          "transform": [
+            2,
+            0,
+            0,
+            2,
+            100,
+            70
+          ],
+          "center": {
+            "x": 120,
+            "y": 90
+          },
+          "probe": {
+            "routing": "geometry-only",
+            "status": "target",
+            "generation": {
+              "session": 1,
+              "render": 3,
+              "requested": 3,
+              "completed": 3
+            },
+            "targetId": 1,
+            "candidates": [
+              {
+                "order": 0,
+                "targetId": 1,
+                "outcome": "hit",
+                "exclusion": null,
+                "geometry": "hit"
+              }
+            ],
+            "captureMode": "active-native-geometry",
+            "nativeCalls": 2,
+            "reason": null,
+            "pendingRealmWork": false
+          }
+        },
+        "explanation": "The app expects the shape center to be targetable. Parent left=30/top=20 places a local 20x20 allocation; Rectangle x is an additional local drawing offset. Translation (40,30) and scale 2 map these coordinates into root space. Allocation is not a paint bound. Declared overflow controls clipping; geometry probes do not prove pixel visibility. Box relations describe declared rectangles in one common local space. Overlap becomes an error only when separation is explicitly required."
+      },
+      "after": {
+        "status": "ready",
+        "mode": "repaired",
+        "revision": 4,
+        "clicks": 2,
+        "lastActivated": "primary",
+        "relations": {
+          "schema": "pibbl-layout-box-relations/1",
+          "scope": "declared-axis-aligned-boxes-not-painted-visibility",
+          "status": "available",
+          "coordinateSpace": "placed-child-local",
+          "commonSpace": "caller-declared-not-transformed",
+          "contained": true,
+          "overflow": {
+            "left": 0,
+            "top": 0,
+            "right": 0,
+            "bottom": 0
+          },
+          "overlap": null,
+          "assertions": {
+            "containment": "pass",
+            "separation": "not-requested"
+          }
+        },
+        "assertion": "pass",
+        "diagnosis": "local-offset-repaired",
+        "declared": {
+          "provenance": "controlled-application-inputs",
+          "parentPlacement": {
+            "left": 30,
+            "top": 20
+          },
+          "shapeLocal": {
+            "x": 0,
+            "y": 0,
+            "width": 20,
+            "height": 20
+          },
+          "overflow": "clip"
+        },
+        "allocation": {
+          "x": 0,
+          "y": 0,
+          "width": 20,
+          "height": 20
+        },
+        "observed": {
+          "generation": {
+            "session": 1,
+            "render": 3,
+            "requested": 3,
+            "completed": 3
+          },
+          "transform": [
+            2,
+            0,
+            0,
+            2,
+            100,
+            70
+          ],
+          "center": {
+            "x": 120,
+            "y": 90
+          },
+          "probe": {
+            "routing": "geometry-only",
+            "status": "target",
+            "generation": {
+              "session": 1,
+              "render": 3,
+              "requested": 3,
+              "completed": 3
+            },
+            "targetId": 1,
+            "candidates": [
+              {
+                "order": 0,
+                "targetId": 1,
+                "outcome": "hit",
+                "exclusion": null,
+                "geometry": "hit"
+              }
+            ],
+            "captureMode": "active-native-geometry",
+            "nativeCalls": 2,
+            "reason": null,
+            "pendingRealmWork": false
+          }
+        },
+        "explanation": "The app expects the shape center to be targetable. Parent left=30/top=20 places a local 20x20 allocation; Rectangle x is an additional local drawing offset. Translation (40,30) and scale 2 map these coordinates into root space. Allocation is not a paint bound. Declared overflow controls clipping; geometry probes do not prove pixel visibility. Box relations describe declared rectangles in one common local space. Overlap becomes an error only when separation is explicitly required."
+      }
+    },
+    {
+      "action": "overlap-allowed",
+      "before": {
+        "status": "ready",
+        "mode": "overlap-allowed",
+        "revision": 5,
+        "clicks": 2,
+        "lastActivated": "primary",
+        "relations": {
+          "schema": "pibbl-layout-box-relations/1",
+          "scope": "declared-axis-aligned-boxes-not-painted-visibility",
+          "status": "available",
+          "coordinateSpace": "placed-child-local",
+          "commonSpace": "caller-declared-not-transformed",
+          "contained": true,
+          "overflow": {
+            "left": 0,
+            "top": 0,
+            "right": 0,
+            "bottom": 0
+          },
+          "overlap": {
+            "relation": "overlap",
+            "area": 200
+          },
+          "assertions": {
+            "containment": "not-requested",
+            "separation": "not-requested"
+          }
+        },
+        "assertion": "pass",
+        "diagnosis": "overlap-explicitly-allowed",
+        "declared": {
+          "provenance": "controlled-application-inputs",
+          "parentPlacement": {
+            "left": 30,
+            "top": 20
+          },
+          "shapeLocal": {
+            "x": 0,
+            "y": 0,
+            "width": 20,
+            "height": 20
+          },
+          "overflow": "clip"
+        },
+        "allocation": {
+          "x": 0,
+          "y": 0,
+          "width": 20,
+          "height": 20
+        },
+        "observed": {
+          "generation": {
+            "session": 1,
+            "render": 4,
+            "requested": 4,
+            "completed": 4
+          },
+          "transform": [
+            2,
+            0,
+            0,
+            2,
+            100,
+            70
+          ],
+          "center": {
+            "x": 120,
+            "y": 90
+          },
+          "probe": {
+            "routing": "geometry-only",
+            "status": "target",
+            "generation": {
+              "session": 1,
+              "render": 4,
+              "requested": 4,
+              "completed": 4
+            },
+            "targetId": 2,
+            "candidates": [
+              {
+                "order": 1,
+                "targetId": 2,
+                "outcome": "hit",
+                "exclusion": null,
+                "geometry": "hit"
+              },
+              {
+                "order": 0,
+                "targetId": 1,
+                "outcome": "hit",
+                "exclusion": null,
+                "geometry": "hit"
+              }
+            ],
+            "captureMode": "active-native-geometry",
+            "nativeCalls": 4,
+            "reason": null,
+            "pendingRealmWork": false
+          }
+        },
+        "explanation": "The app expects the shape center to be targetable. Parent left=30/top=20 places a local 20x20 allocation; Rectangle x is an additional local drawing offset. Translation (40,30) and scale 2 map these coordinates into root space. Allocation is not a paint bound. Declared overflow controls clipping; geometry probes do not prove pixel visibility. Box relations describe declared rectangles in one common local space. Overlap becomes an error only when separation is explicitly required."
+      },
+      "after": {
+        "status": "ready",
+        "mode": "overlap-allowed",
+        "revision": 5,
+        "clicks": 3,
+        "lastActivated": "peer",
+        "relations": {
+          "schema": "pibbl-layout-box-relations/1",
+          "scope": "declared-axis-aligned-boxes-not-painted-visibility",
+          "status": "available",
+          "coordinateSpace": "placed-child-local",
+          "commonSpace": "caller-declared-not-transformed",
+          "contained": true,
+          "overflow": {
+            "left": 0,
+            "top": 0,
+            "right": 0,
+            "bottom": 0
+          },
+          "overlap": {
+            "relation": "overlap",
+            "area": 200
+          },
+          "assertions": {
+            "containment": "not-requested",
+            "separation": "not-requested"
+          }
+        },
+        "assertion": "pass",
+        "diagnosis": "overlap-explicitly-allowed",
+        "declared": {
+          "provenance": "controlled-application-inputs",
+          "parentPlacement": {
+            "left": 30,
+            "top": 20
+          },
+          "shapeLocal": {
+            "x": 0,
+            "y": 0,
+            "width": 20,
+            "height": 20
+          },
+          "overflow": "clip"
+        },
+        "allocation": {
+          "x": 0,
+          "y": 0,
+          "width": 20,
+          "height": 20
+        },
+        "observed": {
+          "generation": {
+            "session": 1,
+            "render": 4,
+            "requested": 4,
+            "completed": 4
+          },
+          "transform": [
+            2,
+            0,
+            0,
+            2,
+            100,
+            70
+          ],
+          "center": {
+            "x": 120,
+            "y": 90
+          },
+          "probe": {
+            "routing": "geometry-only",
+            "status": "target",
+            "generation": {
+              "session": 1,
+              "render": 4,
+              "requested": 4,
+              "completed": 4
+            },
+            "targetId": 2,
+            "candidates": [
+              {
+                "order": 1,
+                "targetId": 2,
+                "outcome": "hit",
+                "exclusion": null,
+                "geometry": "hit"
+              },
+              {
+                "order": 0,
+                "targetId": 1,
+                "outcome": "hit",
+                "exclusion": null,
+                "geometry": "hit"
+              }
+            ],
+            "captureMode": "active-native-geometry",
+            "nativeCalls": 4,
+            "reason": null,
+            "pendingRealmWork": false
+          }
+        },
+        "explanation": "The app expects the shape center to be targetable. Parent left=30/top=20 places a local 20x20 allocation; Rectangle x is an additional local drawing offset. Translation (40,30) and scale 2 map these coordinates into root space. Allocation is not a paint bound. Declared overflow controls clipping; geometry probes do not prove pixel visibility. Box relations describe declared rectangles in one common local space. Overlap becomes an error only when separation is explicitly required."
+      }
+    },
+    {
+      "action": "overlap-prohibited",
+      "before": {
+        "status": "ready",
+        "mode": "overlap-prohibited",
+        "revision": 6,
+        "clicks": 3,
+        "lastActivated": "peer",
+        "relations": {
+          "schema": "pibbl-layout-box-relations/1",
+          "scope": "declared-axis-aligned-boxes-not-painted-visibility",
+          "status": "available",
+          "coordinateSpace": "placed-child-local",
+          "commonSpace": "caller-declared-not-transformed",
+          "contained": true,
+          "overflow": {
+            "left": 0,
+            "top": 0,
+            "right": 0,
+            "bottom": 0
+          },
+          "overlap": {
+            "relation": "overlap",
+            "area": 200
+          },
+          "assertions": {
+            "containment": "not-requested",
+            "separation": "fail"
+          }
+        },
+        "assertion": "fail",
+        "diagnosis": "overlap-violates-separation",
+        "declared": {
+          "provenance": "controlled-application-inputs",
+          "parentPlacement": {
+            "left": 30,
+            "top": 20
+          },
+          "shapeLocal": {
+            "x": 0,
+            "y": 0,
+            "width": 20,
+            "height": 20
+          },
+          "overflow": "clip"
+        },
+        "allocation": {
+          "x": 0,
+          "y": 0,
+          "width": 20,
+          "height": 20
+        },
+        "observed": {
+          "generation": {
+            "session": 1,
+            "render": 5,
+            "requested": 5,
+            "completed": 5
+          },
+          "transform": [
+            2,
+            0,
+            0,
+            2,
+            100,
+            70
+          ],
+          "center": {
+            "x": 120,
+            "y": 90
+          },
+          "probe": {
+            "routing": "geometry-only",
+            "status": "target",
+            "generation": {
+              "session": 1,
+              "render": 5,
+              "requested": 5,
+              "completed": 5
+            },
+            "targetId": 2,
+            "candidates": [
+              {
+                "order": 1,
+                "targetId": 2,
+                "outcome": "hit",
+                "exclusion": null,
+                "geometry": "hit"
+              },
+              {
+                "order": 0,
+                "targetId": 1,
+                "outcome": "hit",
+                "exclusion": null,
+                "geometry": "hit"
+              }
+            ],
+            "captureMode": "active-native-geometry",
+            "nativeCalls": 4,
+            "reason": null,
+            "pendingRealmWork": false
+          }
+        },
+        "explanation": "The app expects the shape center to be targetable. Parent left=30/top=20 places a local 20x20 allocation; Rectangle x is an additional local drawing offset. Translation (40,30) and scale 2 map these coordinates into root space. Allocation is not a paint bound. Declared overflow controls clipping; geometry probes do not prove pixel visibility. Box relations describe declared rectangles in one common local space. Overlap becomes an error only when separation is explicitly required."
+      },
+      "after": {
+        "status": "ready",
+        "mode": "overlap-prohibited",
+        "revision": 6,
+        "clicks": 4,
+        "lastActivated": "peer",
+        "relations": {
+          "schema": "pibbl-layout-box-relations/1",
+          "scope": "declared-axis-aligned-boxes-not-painted-visibility",
+          "status": "available",
+          "coordinateSpace": "placed-child-local",
+          "commonSpace": "caller-declared-not-transformed",
+          "contained": true,
+          "overflow": {
+            "left": 0,
+            "top": 0,
+            "right": 0,
+            "bottom": 0
+          },
+          "overlap": {
+            "relation": "overlap",
+            "area": 200
+          },
+          "assertions": {
+            "containment": "not-requested",
+            "separation": "fail"
+          }
+        },
+        "assertion": "fail",
+        "diagnosis": "overlap-violates-separation",
+        "declared": {
+          "provenance": "controlled-application-inputs",
+          "parentPlacement": {
+            "left": 30,
+            "top": 20
+          },
+          "shapeLocal": {
+            "x": 0,
+            "y": 0,
+            "width": 20,
+            "height": 20
+          },
+          "overflow": "clip"
+        },
+        "allocation": {
+          "x": 0,
+          "y": 0,
+          "width": 20,
+          "height": 20
+        },
+        "observed": {
+          "generation": {
+            "session": 1,
+            "render": 5,
+            "requested": 5,
+            "completed": 5
+          },
+          "transform": [
+            2,
+            0,
+            0,
+            2,
+            100,
+            70
+          ],
+          "center": {
+            "x": 120,
+            "y": 90
+          },
+          "probe": {
+            "routing": "geometry-only",
+            "status": "target",
+            "generation": {
+              "session": 1,
+              "render": 5,
+              "requested": 5,
+              "completed": 5
+            },
+            "targetId": 2,
+            "candidates": [
+              {
+                "order": 1,
+                "targetId": 2,
+                "outcome": "hit",
+                "exclusion": null,
+                "geometry": "hit"
+              },
+              {
+                "order": 0,
+                "targetId": 1,
+                "outcome": "hit",
+                "exclusion": null,
+                "geometry": "hit"
+              }
+            ],
+            "captureMode": "active-native-geometry",
+            "nativeCalls": 4,
+            "reason": null,
+            "pendingRealmWork": false
+          }
+        },
+        "explanation": "The app expects the shape center to be targetable. Parent left=30/top=20 places a local 20x20 allocation; Rectangle x is an additional local drawing offset. Translation (40,30) and scale 2 map these coordinates into root space. Allocation is not a paint bound. Declared overflow controls clipping; geometry probes do not prove pixel visibility. Box relations describe declared rectangles in one common local space. Overlap becomes an error only when separation is explicitly required."
+      }
+    }
+  ],
+  "errors": []
+}

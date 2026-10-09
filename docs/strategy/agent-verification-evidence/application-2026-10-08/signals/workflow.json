@@ -1,0 +1,44 @@
+{
+  "schema": "pibbl-agent-workflow-run/1",
+  "status": "incomplete",
+  "requirementId": "SIG-14",
+  "requirementCompletion": "not-established",
+  "scope": "Controlled reference workflow only; not arbitrary application or full requirement verification.",
+  "scenario": "agent-signal-mutation",
+  "url": "http://127.0.0.1:5199/#/testing/agent-signal-mutation",
+  "sources": [
+    "packages/scenarios/src/agent-signal-mutation.ts",
+    "packages/core/test/agent-signal-mutation.test.ts",
+    "tooling/agent-verification/signal-mutation-replay.mjs"
+  ],
+  "remaining": "",
+  "acceptance": [
+    "Same-reference mutation does not advance the signal revision or evaluate the component.",
+    "Replacement publishes and displays 42; an independent pixel must be blue.",
+    "Native pixel sampling includes contain offsets; finite observation is two host frames."
+  ],
+  "watchdog": {
+    "status": "launch-error",
+    "exitCode": null,
+    "browserCleanup": {
+      "status": "launch-failed",
+      "pid": null,
+      "processExited": false
+    }
+  },
+  "evidence": null,
+  "readFailure": {
+    "code": "ENOENT",
+    "message": "ENOENT: no such file or directory, open '/Users/benlesh/GitHub/crc/docs/strategy/agent-verification-evidence/application-2026-10-08/signals/replay/report.json'"
+  },
+  "checkpointFailure": {
+    "code": "ENOENT",
+    "message": "ENOENT: no such file or directory, open '/Users/benlesh/GitHub/crc/docs/strategy/agent-verification-evidence/application-2026-10-08/signals/replay/checkpoint.json'"
+  },
+  "evidencePath": null,
+  "artifacts": {
+    "report": "/Users/benlesh/GitHub/crc/docs/strategy/agent-verification-evidence/application-2026-10-08/signals/replay/report.json",
+    "watchdog": "/Users/benlesh/GitHub/crc/docs/strategy/agent-verification-evidence/application-2026-10-08/signals/watchdog.json"
+  },
+  "next": null
+}

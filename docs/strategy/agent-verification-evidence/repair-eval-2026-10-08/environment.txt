@@ -1,0 +1,13 @@
+2026-10-08
+Node v24.15.0
+pnpm 11.21.0
+Playwright Chromium (provisioned checkout installation)
+Calibration command: node tooling/repair-eval/smoke.mjs
+Result: exit 0; 8 capsules, 15 checks each after reference repair; 3 seeded failures and 1 clean control in both arms.
+Lint command: corepack pnpm@11.21.0 exec eslint tooling/repair-eval
+Result: exit 0 (no diagnostics).
+Formatting: corepack pnpm@11.21.0 exec prettier --write tooling/repair-eval/*.mjs
+Result: exit 0.
+Pair preparation: node tooling/repair-eval/prepare-pair.mjs case-01 /tmp/pibbl-repair-eval-ready-20261008
+Result: matched initial application source and actual core source receipts.
+This is evaluator calibration, not a blind agent comparison. No effectiveness result claimed.
