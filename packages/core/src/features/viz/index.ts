@@ -138,6 +138,14 @@ export type {
   LinearTickOptions,
   NumberFormatOptions,
 } from "./lib/numeric-ticks.js";
+export {
+  visibleOhlcPriceExtent,
+  padLinearDomain,
+} from "./lib/financial-autoscale.js";
+export type {
+  VisibleOhlcPriceExtentOptions,
+  PadLinearDomainOptions,
+} from "./lib/financial-autoscale.js";
 
 export { utcTickLabels } from "./lib/utc-labels.js";
 export type { UTCTickLabelOptions } from "./lib/utc-labels.js";
@@ -165,7 +173,11 @@ export { AxisTitle } from "./lib/axis-title.js";
 export type { AxisTitleProps } from "./lib/axis-title.js";
 
 export { panDomain, zoomDomain } from "./lib/domain-navigation.js";
-export type { DomainNavigationConstraints, PanDomainOptions, ZoomDomainOptions } from "./lib/domain-navigation.js";
+export type {
+  DomainNavigationConstraints,
+  PanDomainOptions,
+  ZoomDomainOptions,
+} from "./lib/domain-navigation.js";
 
 export {
   SequentialColorScale,
@@ -192,3 +204,25 @@ export type {
   ThresholdColorScaleProps,
   ResolvedThresholdColorScale,
 } from "./lib/threshold-color-scale.js";
+
+export { VolumeSeries } from "./lib/volume-series.js";
+export type {
+  VolumeSeriesProps,
+  VolumeSeriesStyle,
+} from "./lib/volume-series.js";
+
+export {
+  TradingTimeScale,
+  useTradingTimeScale,
+} from "./lib/trading-time-scale.js";
+export type {
+  TradingTimeScaleProps,
+  ResolvedTradingTimeScale,
+} from "./lib/trading-time-scale.js";
+export { CandlestickSeries } from "./lib/candlestick-series.js";
+export type {
+  CandlestickSeriesProps,
+  CandlestickSeriesStyle,
+  CandleBodyStyle,
+  CandleWickStyle,
+} from "./lib/candlestick-series.js";

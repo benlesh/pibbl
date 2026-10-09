@@ -254,7 +254,10 @@ export interface ResolvedLogScale extends Omit<ResolvedLinearScale, "type"> {
 }
 /** A numeric or categorical mapping snapshot. See {@link ResolvedContinuousScale}. */
 export type ResolvedScale =
-  ResolvedContinuousScale | ResolvedBandScale | ResolvedPointScale;
+  | ResolvedContinuousScale
+  | ResolvedBandScale
+  | ResolvedPointScale
+  | import("./trading-time-scale.js").ResolvedTradingTimeScale;
 /** Signed logarithmic scale inputs. See {@link LinearScaleProps}. */
 export interface SymlogScaleProps extends LinearScaleProps {
   /** Positive linear-to-log transition constant in domain units, default 1. */

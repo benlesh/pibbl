@@ -57,7 +57,7 @@ export function Axis(props: AxisProps) {
   const visible = new Set<number>();
   const texts = selected.map((value, index) => {
     const label = props.tickFormat ? props.tickFormat(value, index)
-      : scale.type === "utc" ? scale.formatTick(value as number)
+      : (scale.type === "utc" || scale.type === "trading-time") ? scale.formatTick(value as number)
       : typeof value === "number" ? String(Number(value.toPrecision(6))) : value;
     if (typeof label !== "string") throw new TypeError("Axis tickFormat must return a string.");
     return label;

@@ -1,4 +1,3 @@
-import type { ResolvedContinuousScale } from "../lib/types.js";
 import type {
   NumericRenderedSeries,
   RenderedSeriesPoint,
@@ -31,9 +30,9 @@ export interface NumericSeriesCapture<D> {
   /** Evaluated values and geometry owned by this candidate generation. */
   readonly observations: readonly CapturedNumericObservation<D>[];
   /** Captured numeric x mapping and inversion. */
-  readonly xScale: ResolvedContinuousScale;
+  readonly xScale: import("../lib/series-position.js").NumericPositionScale;
   /** Captured numeric y mapping for explicit interpolation anchors. */
-  readonly yScale: ResolvedContinuousScale;
+  readonly yScale: import("../lib/series-position.js").NumericPositionScale;
 }
 
 /** Optional renderer sink and mount-owned access to the last successful paint.

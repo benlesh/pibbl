@@ -1,10 +1,11 @@
-> **Historical status: This October 8, 2026 volume-series proposal was not accepted for implementation and remains outside the shipped inspection API.**
+> **Historical status: This October 8, 2026 volume-series proposal was separate from the inspection shipping decision. The user later approved its financial implementation, recorded in Plan 008.**
 
 # Plan 008 — remaining Batch 1 design checkpoint
 
-Status: proposal only; no volume-series or related financial API is authorized by
-the October 9 inspection shipping decision. CandlestickSeries, TradingTimeScale,
-and volume authoring remain separate work requiring their own feedback.
+Status: accepted by the user on 2026-10-08; implementation in progress.
+CandlestickSeries authoring and TradingTimeScale remain accepted. This proposal
+adds only time-aligned volume authoring and their shared inspection integration.
+The approved contracts are being implemented as Batch 1 slices.
 
 ## Minimal volume authoring
 
@@ -283,6 +284,7 @@ and custom marker on the same x mapping, clearly labeled deterministic OHLCV,
 mobile layout, and independent minimal demos. Full crosshair/pinning remains
 Batch 2, rather than a fourth feature in this batch.
 
-Acceptance requested: VolumeSeries's time-column contract and these explicit
+Accepted on 2026-10-08: VolumeSeries's time-column contract and these explicit
 financial inspection operations. Candle authoring and TradingTimeScale are
-already accepted and need no renewed approval.
+already accepted and need no renewed approval. The three Batch 1 slices are now runnable;
+review them before broader hardening.

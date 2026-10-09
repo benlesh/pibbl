@@ -169,6 +169,7 @@ const publicSiteMarkdownPaths = [
   "docs/site/api/functions/closest-point.md",
   "docs/site/api/functions/closest-x.md",
   "docs/site/api/functions/rendered-series-inspection.md",
+  "docs/site/api/functions/financial-series.md",
   "docs/site/api/functions/interpolate-x.md",
   "docs/site/api/functions/linear-interpolation.md",
 

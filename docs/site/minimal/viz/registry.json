@@ -1048,5 +1048,114 @@
       { "name": "PaintedBarHit", "importPath": "@pibbl/core/viz/inspection" },
       { "name": "PaintedPointHit", "importPath": "@pibbl/core/viz/inspection" }
     ]
+  },
+  {
+    "id": "financial-crosshair",
+    "title": "Snapped OHLCV inspection",
+    "description": "Compose a recorded-time crosshair that keyboard navigation can retain.",
+    "source": "financial-crosshair.tsx",
+    "environment": "browser",
+    "symbols": [
+      { "name": "ReferenceLine", "importPath": "@pibbl/core/viz" },
+      { "name": "nearestRecordedCandleX", "importPath": "@pibbl/core/viz/inspection" }
+    ]
+  },
+  {
+    "id": "financial-price-guides",
+    "title": "Price guides and formatting",
+    "description": "Format and label supplied price references with composition primitives.",
+    "source": "financial-price-guides.tsx",
+    "environment": "browser",
+    "symbols": [
+      { "name": "ReferenceLine", "importPath": "@pibbl/core/viz" },
+      { "name": "ScaleAdjust", "importPath": "@pibbl/core/viz" },
+      { "name": "formatNumber", "importPath": "@pibbl/core/viz" }
+    ]
+  },
+  {
+    "id": "financial-visible-autoscale",
+    "title": "Visible OHLC autoscaling",
+    "description": "Derive a padded linear domain from complete candles in one visible window.",
+    "source": "financial-visible-autoscale.tsx",
+    "environment": "browser",
+    "symbols": [
+      { "name": "visibleOhlcPriceExtent", "importPath": "@pibbl/core/viz" },
+      { "name": "padLinearDomain", "importPath": "@pibbl/core/viz" }
+    ]
+  },
+  {
+    "id": "financial-volume",
+    "title": "Financial volume columns",
+    "description": "Paint time-aligned nonnegative volume columns with a numeric baseline.",
+    "source": "financial-volume.tsx",
+    "environment": "browser",
+    "symbols": [
+      { "name": "VolumeSeries", "importPath": "@pibbl/core/viz" },
+      { "name": "VolumeSeriesProps", "importPath": "@pibbl/core/viz" },
+      { "name": "VolumeSeriesStyle", "importPath": "@pibbl/core/viz" }
+    ]
+  },
+  {
+    "id": "financial-volume-inspection",
+    "title": "Volume inspection",
+    "description": "Read committed volume observations with typed nearest-time and painted-column queries.",
+    "source": "financial-volume-inspection.tsx",
+    "environment": "browser",
+    "symbols": [
+      { "name": "useVolumeInspection", "importPath": "@pibbl/core/viz/inspection" },
+      { "name": "nearestRecordedVolumeX", "importPath": "@pibbl/core/viz/inspection" },
+      { "name": "paintedVolumeAt", "importPath": "@pibbl/core/viz/inspection" },
+      { "name": "VolumeObservation", "importPath": "@pibbl/core/viz/inspection" },
+      { "name": "VolumeInspectionCandidate", "importPath": "@pibbl/core/viz/inspection" },
+      { "name": "NearestVolumeHit", "importPath": "@pibbl/core/viz/inspection" },
+      { "name": "PaintedVolumeHit", "importPath": "@pibbl/core/viz/inspection" },
+      { "name": "VolumeInspectionRef", "importPath": "@pibbl/core/viz/inspection" },
+      { "name": "VolumeRenderedSeries", "importPath": "@pibbl/core/viz/inspection" }
+    ]
+  },
+  {
+    "id": "financial-trading-time",
+    "title": "Trading-time observation slots",
+    "description": "Place supplied UTC observations in consecutive logical slots without modeling an exchange calendar.",
+    "source": "financial-trading-time.tsx",
+    "environment": "browser",
+    "symbols": [
+      { "name": "TradingTimeScale", "importPath": "@pibbl/core/viz" },
+      { "name": "useTradingTimeScale", "importPath": "@pibbl/core/viz" },
+      { "name": "TradingTimeScaleProps", "importPath": "@pibbl/core/viz" },
+      { "name": "ResolvedTradingTimeScale", "importPath": "@pibbl/core/viz" }
+    ]
+  },
+  {
+    "id": "financial-candles",
+    "title": "Candlestick OHLC marks",
+    "description": "Render named open, high, low, and close values with independently styled bodies and wicks.",
+    "source": "financial-candles.tsx",
+    "environment": "browser",
+    "symbols": [
+      { "name": "CandlestickSeries", "importPath": "@pibbl/core/viz" },
+      { "name": "CandlestickSeriesProps", "importPath": "@pibbl/core/viz" },
+      { "name": "CandlestickSeriesStyle", "importPath": "@pibbl/core/viz" },
+      { "name": "CandleBodyStyle", "importPath": "@pibbl/core/viz" },
+      { "name": "CandleWickStyle", "importPath": "@pibbl/core/viz" }
+    ]
+  },
+  {
+    "id": "financial-candle-inspection",
+    "title": "Candle inspection",
+    "description": "Read committed OHLC records and distinguish body coverage from wick coverage.",
+    "source": "financial-candle-inspection.tsx",
+    "environment": "browser",
+    "symbols": [
+      { "name": "useCandleInspection", "importPath": "@pibbl/core/viz/inspection" },
+      { "name": "nearestRecordedCandleX", "importPath": "@pibbl/core/viz/inspection" },
+      { "name": "paintedCandleAt", "importPath": "@pibbl/core/viz/inspection" },
+      { "name": "CandleObservation", "importPath": "@pibbl/core/viz/inspection" },
+      { "name": "CandleInspectionCandidate", "importPath": "@pibbl/core/viz/inspection" },
+      { "name": "NearestCandleHit", "importPath": "@pibbl/core/viz/inspection" },
+      { "name": "PaintedCandleHit", "importPath": "@pibbl/core/viz/inspection" },
+      { "name": "CandleInspectionRef", "importPath": "@pibbl/core/viz/inspection" },
+      { "name": "CandleRenderedSeries", "importPath": "@pibbl/core/viz/inspection" }
+    ]
   }
 ]

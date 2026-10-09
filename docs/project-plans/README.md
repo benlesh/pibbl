@@ -2,13 +2,12 @@
 
 ## Active plan
 
-[008 — Financial charting](./008-financial-charting.md) is active. Batch 0's
-three inspection slices are accepted and hardened; the single next step is the
-remaining Batch 1 volume/inspection design checkpoint. The revised inspection
-lessons are accepted and their local commit is authorized. Aggregate checks encounter
-unrelated working-tree blockers, recorded in the dated evidence. The
-discussed inspection design, candle authoring, and trading-time scale proposals
-are accepted. See the plan's dated evidence for current results and limitations.
+[008 — Financial charting](./008-financial-charting.md) is active. Batches 1 and 2
+are accepted; the user authorized a local commit and continuation on 2026-10-09.
+The next checkpoint is Batch 3 authoring review: linked panes, range controls and
+normalized returns. Platform Intl number formatting is reused. Final focused
+Batch 2 runtime, desktop/touch Studio, editor, catalog, documentation and TypeScript
+checks pass; no aggregate trust pass is claimed. Unrelated changes remain separate.
 
 [007 — Visualization charting](./007-visualization-charting.md) completed its approved
 scope on 2026-10-06. The [closeout walkthrough](../testing/field-notes/2026-10-06-chart-api-walkthrough.md)

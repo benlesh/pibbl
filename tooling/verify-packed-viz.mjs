@@ -76,6 +76,8 @@ try {
     "linearTicks",
     "niceLinearDomain",
     "formatNumber",
+    "visibleOhlcPriceExtent",
+    "padLinearDomain",
     "utcTickLabels",
     "LogScale",
     "useLogScale",
@@ -111,6 +113,10 @@ try {
     "LinearScale",
     "BarScale",
     "UTCScale",
+    "TradingTimeScale",
+    "useTradingTimeScale",
+    "VolumeSeries",
+    "CandlestickSeries",
     "ScaleAdjust",
     "useLinearScale",
     "useBarScale",
@@ -140,6 +146,12 @@ try {
     "paintedPointAt",
     "sampleRecordedX",
     "useBarInspection",
+    "useCandleInspection",
+    "useVolumeInspection",
+    "nearestRecordedCandleX",
+    "nearestRecordedVolumeX",
+    "paintedCandleAt",
+    "paintedVolumeAt",
     "useNumericInspection",
     "usePointInspection",
     "withInspection",
@@ -230,7 +242,8 @@ try {
     },
   });
   assert.equal(
-    inspection.paintedBarAt(barRendered, { rootPoint: { x: 25, y: 35 } })?.datum,
+    inspection.paintedBarAt(barRendered, { rootPoint: { x: 25, y: 35 } })
+      ?.datum,
     barDatum,
   );
   if (process.argv.includes("--self-test-missing-export"))
@@ -269,6 +282,18 @@ try {
       }
     `,
   );
+  const financialFiles = [
+    "financial-candles.tsx",
+    "financial-candle-inspection.tsx",
+    "financial-volume.tsx",
+    "financial-volume-inspection.tsx",
+    "financial-trading-time.tsx",
+  ];
+  for (const file of financialFiles)
+    writeFileSync(
+      join(consumer, file),
+      readFileSync(join(root, "docs/site/minimal/viz", file), "utf8"),
+    );
   const tsc = join(dirname(require.resolve("typescript")), "tsc.js");
   for (const mode of ["Bundler", "NodeNext"]) {
     writeFileSync(
@@ -286,7 +311,7 @@ try {
           module: mode === "Bundler" ? "ESNext" : "NodeNext",
           moduleResolution: mode,
         },
-        files: ["public.tsx", "inspection.tsx"],
+        files: ["public.tsx", "inspection.tsx", ...financialFiles],
       }),
     );
     execFileSync(
