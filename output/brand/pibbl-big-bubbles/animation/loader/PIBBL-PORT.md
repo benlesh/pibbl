@@ -16,22 +16,22 @@ No faces or limbs: personality comes from anticipation, timing, reciprocal respo
 
 Times are seconds in the 11-second loop. Internal story coordinates are progress × 1.1, so a story coordinate of .08 means 0.8 seconds, not 8% of the final loop.
 
-| Time | Acting / physical relationship |
-| --- | --- |
-| 0–0.8 | Nearby shapes settle; violet rocks an invitation, green responds with a small lean |
-| 0.8–1.8 | Green crouches, extends on takeoff, follows a gravity arc and lands on violet's flat side |
-| 1.8–2.5 | Coral hops into the ramp position while green remains attached |
-| 2.5–3.2 | Violet rolls on the curve carrying green; exact flat-edge contact persists |
-| 3.2–3.9 | Violet crouches and jumps toward coral; attached green compresses for its own push-off |
-| 3.9–4.5 | Green follows one continuous flight, rotating clockwise onto its back; violet completes its own arc |
-| 4.5–5.1 | Green slides down coral's ramp to its edge |
-| 5.1–5.6 | Green pivots over the edge, falls flat and settles |
-| 5.6–6.8 | Violet compresses in giggles; green joins around 5.9, coral around 6.25; amplitudes stay subtle |
-| 6.8–7.2 | Hold a breath after the laugh; avoid rushing the next gag |
-| 7.2–8.0 | Coral's three hops rise 12, 28, 55 units, with increasing airtime and effort |
-| 8.0–9.1 | Coral launches high, with a 26° partial flip; green and violet scoot and compress beneath it |
-| 9.1–9.5 | Point-up pyramid lands; base compresses together and moves coral's support by the same amount |
-| 9.5–11 | Coral dismounts via a gravity arc, green yields, violet rolls home; landing compression and shared rest |
+| Time    | Acting / physical relationship                                                                          |
+| ------- | ------------------------------------------------------------------------------------------------------- |
+| 0–0.8   | Nearby shapes settle; violet rocks an invitation, green responds with a small lean                      |
+| 0.8–1.8 | Green crouches, extends on takeoff, follows a gravity arc and lands on violet's flat side               |
+| 1.8–2.5 | Coral hops into the ramp position while green remains attached                                          |
+| 2.5–3.2 | Violet rolls on the curve carrying green; exact flat-edge contact persists                              |
+| 3.2–3.9 | Violet crouches and jumps toward coral; attached green compresses for its own push-off                  |
+| 3.9–4.5 | Green follows one continuous flight, rotating clockwise onto its back; violet completes its own arc     |
+| 4.5–5.1 | Green slides down coral's ramp to its edge                                                              |
+| 5.1–5.6 | Green pivots over the edge, falls flat and settles                                                      |
+| 5.6–6.8 | Violet compresses in giggles; green joins around 5.9, coral around 6.25; amplitudes stay subtle         |
+| 6.8–7.2 | Hold a breath after the laugh; avoid rushing the next gag                                               |
+| 7.2–8.0 | Coral's three hops rise 12, 28, 55 units, with increasing airtime and effort                            |
+| 8.0–9.1 | Coral launches high, with a 26° partial flip; green and violet scoot and compress beneath it            |
+| 9.1–9.5 | Point-up pyramid lands; base compresses together and moves coral's support by the same amount           |
+| 9.5–11  | Coral dismounts via a gravity arc, green yields, violet rolls home; landing compression and shared rest |
 
 Ready does not interrupt midflight. Safe checkpoints are story coordinates `.08,.18,.25,.32,.39,.45,.51,.56,.68,.72,.80,.91,.95`, divided by 1.1, plus 1. The captured checkpoint poses feed `finishChoreography(from,t)`. Preserve the special route that lifts coral clear when it sits above green. Formation parks pieces with clearance before seating green, coral, then violet. After 1,600ms, the P is exact; the 450ms bubble release is staggered by 30ms across nine bubbles (690ms total). No shadow or visible floor is part of the release.
 

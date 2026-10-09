@@ -12,28 +12,32 @@ Copy this entire `loader` directory to your website; keep its relative module pa
 ```
 
 ```js
-await customElements.whenDefined('pibbl-loader');
-const loader = document.querySelector('#brand-loader');
+await customElements.whenDefined("pibbl-loader");
+const loader = document.querySelector("#brand-loader");
 loader.ready = true; // or loader.complete()
-loader.addEventListener('pibbl-complete', () => {
-  // Optional: reveal the content after the logo's finish.
-}, { once: true });
+loader.addEventListener(
+  "pibbl-complete",
+  () => {
+    // Optional: reveal the content after the logo's finish.
+  },
+  { once: true },
+);
 ```
 
 Listen before setting ready if completion must always be observed, including reduced motion. Do not assign properties before the element is defined; use the HTML attributes during initial rendering instead.
 
 The loader loops indefinitely until told it is ready. It finishes the current encounter at a safe checkpoint, forms the P in 1.6 seconds, releases the bubbles over 0.69 seconds, then holds the completed mark. Calling Ready repeatedly is harmless. The event fires once per run; `restart()` begins a new run. Completion latency is the remainder of the current encounter plus 2.29 seconds. Loading progress is illustrative, not a percentage indicator.
 
-| Control | Behavior |
-| --- | --- |
-| `ready` attribute / boolean property | Request the finish sequence; removing it alone does not restart |
-| `complete()` | Same request; resumes a paused animation |
-| `restart()` | Clear ready/paused, reset to the approved beginning |
-| `paused` attribute / boolean property | Freeze or resume at the same pose |
-| `pause()` / `resume()` | Set or clear paused |
-| `phase` getter / `data-phase` attribute | `loading`, `forming`, `bloom`, `complete` |
-| `label` attribute | Accessible image description; default “Pibbl” |
-| `pibbl-complete` event | Bubbles across shadow DOM; fires after a requested finish |
+| Control                                 | Behavior                                                        |
+| --------------------------------------- | --------------------------------------------------------------- |
+| `ready` attribute / boolean property    | Request the finish sequence; removing it alone does not restart |
+| `complete()`                            | Same request; resumes a paused animation                        |
+| `restart()`                             | Clear ready/paused, reset to the approved beginning             |
+| `paused` attribute / boolean property   | Freeze or resume at the same pose                               |
+| `pause()` / `resume()`                  | Set or clear paused                                             |
+| `phase` getter / `data-phase` attribute | `loading`, `forming`, `bloom`, `complete`                       |
+| `label` attribute                       | Accessible image description; default “Pibbl”                   |
+| `pibbl-complete` event                  | Bubbles across shadow DOM; fires after a requested finish       |
 
 Set CSS width as needed; default is 320px, aspect ratio 640:450. The background is transparent. It works on white or dark surfaces. Multiple instances have isolated SVG masks and independent playback. Removing the element cancels its frame and preference listener; reinsertion resumes without counting time spent detached. Paused and completed instances stop scheduling frames. Background-tab gaps are clamped to 50ms so motion resumes naturally instead of skipping the acting.
 

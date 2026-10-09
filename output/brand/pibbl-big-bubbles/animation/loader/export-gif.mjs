@@ -1,6 +1,5 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import {fileURLToPath} from 'node:url';
 import {createRequire} from 'node:module';
 import {Playback} from './playback.mjs';
 import {svg} from './svg.mjs';
@@ -14,5 +13,5 @@ for(const theme of ['white','dark'])for(const sequence of ['loop','finish']){
  await sharp(Buffer.from(svg(p.frame(),{background:theme==='white'?'#FFFFFF':'#141820'}))).resize(1024,720).png().toFile(path.join(dir,String(i).padStart(4,'0')+'.png'));
  p.advance(40);
  }
- console.log(theme,sequence,count);
+ console.warn(theme,sequence,count);
 }

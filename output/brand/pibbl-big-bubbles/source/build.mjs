@@ -99,7 +99,7 @@ await save('web/favicon.ico',Buffer.concat([icoHeader,...faviconFrames.map(f=>f.
 await save('web/site.webmanifest',JSON.stringify({name:'Pibbl',short_name:'Pibbl',icons:[{src:'pibbl-app-icon-192.png',sizes:'192x192',type:'image/png'},{src:'pibbl-app-icon-512.png',sizes:'512x512',type:'image/png'},{src:'pibbl-app-icon-maskable-512.png',sizes:'512x512',type:'image/png',purpose:'maskable'}],theme_color:P.white,background_color:P.white},null,2)+'\n',{format:'json'});
 
 function campaign(width,height,dark=false) {
-  const bg=dark?P.dark:P.paper, fill=dark?P.white:P.ink;
+  const bg=dark?P.dark:P.paper;
   const f=identity.forms.horizontal;
   const scale=Math.min(width*.82/f.width,height*.64/f.height);
   const x=(width-f.width*scale)/2,y=(height-f.height*scale)/2;
@@ -150,4 +150,4 @@ overview+=overviewTile(1066,648,486,310,'wordmark','white',P.dark,'Wordmark only
 });
 await raster('Pibbl-Big-Bubbles-Kit-Overview.png',svg(1600,1120,overview,'Pibbl Tangram logo suite overview'),1600,1120);
 await save('source/export-catalog.json',JSON.stringify(catalog,null,2)+'\n',{format:'json'});
-console.log(`Exported ${catalog.length} files. SVG masters use paths only; PNGs rendered directly from those masters.`);
+console.warn(`Exported ${catalog.length} files. SVG masters use paths only; PNGs rendered directly from those masters.`);
