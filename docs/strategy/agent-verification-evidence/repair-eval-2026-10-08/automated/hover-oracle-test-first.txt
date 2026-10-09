@@ -1,0 +1,19 @@
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: Coordinate regression must fail, even though center hover remains b
+
+'pass' !== 'fail'
+
+    at file:///Users/benlesh/GitHub/crc/tooling/repair-eval/oracle.check.mjs:13:41
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5) {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: 'pass',
+  expected: 'fail',
+  operator: 'strictEqual',
+  diff: 'simple'
+}
+
+Node.js v24.15.0

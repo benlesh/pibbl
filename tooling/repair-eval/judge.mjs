@@ -149,10 +149,28 @@ export async function scoreTrial(directory) {
       ),
     );
     const box = await page.locator("canvas").boundingBox();
-    await page.mouse.move(box.x + 355, box.y + 210);
-    await settle();
-    const hovered = await capture("hover");
-    check("hover.identity", () => assert.equal(hovered.application.hover, "b"));
+    const hoverSamples = [];
+    // Independent nearest-x midpoints: root 55 + 600*(2.5/10)=205 and 505.
+    for (const [x, expected] of [
+      [70, "a"],
+      [204, "a"],
+      [206, "b"],
+      [355, "b"],
+      [504, "b"],
+      [506, "c"],
+      [640, "c"],
+    ]) {
+      await page.mouse.move(box.x + x, box.y + 210);
+      const state = await capture(`hover-root-${x}`);
+      hoverSamples.push({ x, expected, actual: state.application.hover });
+    }
+    check("hover.identity", () =>
+      assert.deepEqual(
+        hoverSamples.map((s) => s.actual),
+        hoverSamples.map((s) => s.expected),
+        JSON.stringify(hoverSamples),
+      ),
+    );
     // Do not add pointer input between publication and sampling: it could mask a stale signal bug.
     await page.keyboard.press("u");
     const updated = await capture("updated-before-more-input");
@@ -170,7 +188,14 @@ export async function scoreTrial(directory) {
     );
     await page.keyboard.press("z");
     await settle();
-    await page.mouse.move(box.x + 205, box.y + 180);
+    const zoomHover = [];
+    // Zoom domain [2.5,7.5] puts both nearest-ID transitions at plot edges;
+    // every strictly interior probe must choose b.
+    for (const x of [60, 205, 355, 650]) {
+      await page.mouse.move(box.x + x, box.y + 180);
+      const state = await capture(`zoom-hover-root-${x}`);
+      zoomHover.push(state.application.hover);
+    }
     const zoomed = await capture("zoomed");
     check("zoom.domain", () =>
       assert.deepEqual(zoomed.application.domain, [2.5, 7.5]),
@@ -181,7 +206,9 @@ export async function scoreTrial(directory) {
         "Root x=205 maps to data x=3.75 and y=25 after update",
       ),
     );
-    check("zoom.hover", () => assert.equal(zoomed.application.hover, "b"));
+    check("zoom.hover", () =>
+      assert.deepEqual(zoomHover, ["b", "b", "b", "b"]),
+    );
     await page.keyboard.press("r");
     const reset = await capture("reset");
     check("reset.values", () =>
