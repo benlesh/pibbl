@@ -55,3 +55,38 @@ texture algorithms creates a keyed resource owner.
 Studio URL: <http://127.0.0.1:5218/#/examples/composition/geometric-explorer>.
 QA scripts and screenshots are under `/tmp`, outside committed source. This is a
 slice ready for experiential feedback, not an aggregate feature-completion claim.
+
+## Main integration after user approval
+
+The user approved the geometric slice and requested merging all of this thread's
+texture work into main. A clean integration branch replayed the five texture
+commits onto `origin/main` without the interleaved chart commits or dirty work.
+Generated lesson counts were reconciled to 113. The plan listing retains only
+this texture work and existing completed plans.
+
+Fresh integration checks: 24 browser tests across all nine texture/emboss files
+passed; whole-checkout TypeScript, public JSDoc, core build, packed texture
+Bundler/NodeNext consumers, and scenario discovery/catalog checks passed. The
+documentation gate identified missing imports in the plaid example and a required
+historical plan banner; both were repaired. No aggregate trust pass is claimed.
+
+### Aggregate gate reconciliation
+
+CI exposed the pre-texture catalog fixture (108 lessons and its old API list),
+which is updated to 113 with explicit assertions for all five texture routes,
+composition membership/order, and the added APIs. All 262 catalog tests pass.
+Complete website programs now cover every new public texture/emboss export; all
+nine website example tests and the full package/website build pass. The filter
+reference's heading and symbol order is alphabetical again.
+
+The visual gate also exposed pre-existing CRC branding in three Studio goldens.
+Current `origin/main` already says Pibbl (for example,
+`playground/src/examples/example-pages.ts`), and this integration does not change
+that branding code. Expected, actual, and pixel-difference regions were inspected:
+landing differences are brand text at the logo and introduction; filters differ
+only in CRCFilter/CRCController/package-name text, logo, and accessibility copy;
+test-lab differences are its logo, scene description, API token, and smoke title.
+The actual preview geometry is unchanged. Only those three baselines were updated;
+all four Studio baselines subsequently match, including the untouched diagram.
+Comparison crops and logs are in `/tmp`. Another task occupies default port 4174,
+so this local comparison uses `PIBBL_STUDIO_PREVIEW_PORT=5234`.
