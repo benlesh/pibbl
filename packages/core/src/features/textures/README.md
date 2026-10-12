@@ -144,3 +144,11 @@ candidates remain experiments rather than changes to shipped material defaults.
 See [the public guide](../../../../../docs/site/learn/guides/procedural-textures.md),
 [the contract](../../../../../docs/design/textures-contract.md), and Studio's Living Ink,
 Material Lab, Stirred Ink, and Growing Reveal examples.
+
+### Woven fabrics (feedback slice)
+
+`plainWeave`, `twill`, and `herringbone` create seamless woven surfaces with
+`FabricOptions`: thread count (multiple of 8), thread width, rounded relief,
+seeded fine fibers, phase, and speed. Mount with `useTexture` to choose colors and
+resolution; paint placement controls display size and rotation. Zero speed idles.
+Try the public Fabric Explorer at `#/examples/composition/fabric-explorer`.

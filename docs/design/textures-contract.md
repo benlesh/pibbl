@@ -292,3 +292,13 @@ and warmup changes reset seeded initialization; palette changes preserve it.
 Warmup runs synchronously once at initialization and can delay a large-grid mount.
 Periodic solver neighbors do not change existing clipped painting or clamped
 stirring. Exact looping and arbitrary-time seeking remain outside this contract.
+
+## Fabric feedback slice (2026-10-12)
+
+`plainWeave`, `twill`, and `herringbone` are separate factories with the same
+`TextureRecipe<never>` return contract. `FabricOptions` controls seeded thread
+geometry, tonal relief, fine fiber variation, and periodic phase/motion. Threads
+must be a multiple of eight to preserve each over-under structure across repeats.
+They reuse the pattern lifecycle and owned raster buffers; zero speed idles.
+Resolution, recoloring, repeat placement, and teardown use the existing texture
+contract. These are stylized material fields rather than cloth simulation.

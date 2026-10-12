@@ -1,12 +1,16 @@
 ---
 id: api-types-pattern-textures
-title: Stripes, checkers, wood grain, and Gray–Scott presets
+title: Parameterized patterns, fabrics, and Gray–Scott presets
 summary: Seamless parameterized patterns, periodic motion, and expanded living ink chemistry.
 kind: api
 slug: pattern-textures
 apiCategory: types
 symbols:
   [
+    plainWeave,
+    twill,
+    herringbone,
+    FabricOptions,
     stripes,
     checkers,
     woodGrain,
@@ -99,3 +103,33 @@ preserves it. Existing paint/stir/pause/reset commands remain available.
 The simulation uses periodic neighboring cells. Existing paint clipping and
 clamped stirring are unchanged; interactions do not wrap around the tile. Living
 ink is animated, without an exact animation-loop or arbitrary-time seek promise.
+
+## plainWeave
+
+`plainWeave(options)` alternates warp over weft at each crossing.
+
+## twill
+
+`twill(options)` creates two-over, two-under crossings stepping diagonally.
+
+## herringbone
+
+`herringbone(options)` uses a 2/2 broken twill, offsetting the interlacing order
+at each four-column reversal rather than forming a continuous chevron point.
+Its eight-column harness sequence is 1,2,3,4,2,1,4,3, matching the example in
+[CottonWorks Weaving 101, page 23](https://cottonworks.com/wp-content/uploads/2023/03/Weaving-101.pdf).
+
+## FabricOptions
+
+All three factories return `TextureRecipe<never>` and share optional controls:
+`threads` is the thread count on each axis, a multiple of 8 in 8–128 (default 16).
+`threadWidth` is the fraction of spacing occupied by a thread, 0.2–1 (default 0.8).
+`relief` controls rounded thread shading, 0–1 (default 0.65), and `fuzz` controls
+seeded directional fiber variation and softened, uneven yarn edges, 0–1 (default
+0.2). `seed` is unsigned 32-bit (default
+42). Phase and speed follow `PatternMotionOptions`; speed defaults to zero and
+idles. Palette colors form a tonal ramp with lighter warp and darker weft. Gap
+pixels use the dark end. This is a stylized fabric surface, without physical cloth
+simulation or individually simulated fibers. Rotate the complete repeat lattice
+through paint placement. Use enough raster resolution for the chosen thread count;
+small raster or display sizes can alias fine fibers.
