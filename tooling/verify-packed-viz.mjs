@@ -78,6 +78,8 @@ try {
     "formatNumber",
     "visibleOhlcPriceExtent",
     "padLinearDomain",
+    "percentageReturns",
+    "indexTo100",
     "utcTickLabels",
     "LogScale",
     "useLogScale",
@@ -288,6 +290,8 @@ try {
     "financial-volume.tsx",
     "financial-volume-inspection.tsx",
     "financial-trading-time.tsx",
+    "financial-percentage-returns.tsx",
+    "financial-index-to-100.tsx",
   ];
   for (const file of financialFiles)
     writeFileSync(

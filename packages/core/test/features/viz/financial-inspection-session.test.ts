@@ -81,12 +81,12 @@ it("snaps both panes to one recorded OHLCV timestamp and pins independently of m
   const s = scene();
   expect(s.flush()).toContain("Auto");
   const x = (slot: number) => 16 + ((slot + 0.5) / 56) * (760 - 94);
-  expect(s.move(x(6), 140)).toContain("13 Jan 2026");
+  expect(s.move(x(6), 170)).toContain("13 Jan 2026");
   expect(s.click(x(6), 405)).toContain("Pinned");
-  expect(s.move(x(28), 140)).toContain("13 Jan 2026");
+  expect(s.move(x(28), 170)).toContain("13 Jan 2026");
   expect(s.key("ArrowRight")).toContain("14 Jan 2026");
   expect(s.key("Escape")).toContain("Inspect");
-  expect(s.move(x(28), 140)).toContain("12 Feb 2026");
+  expect(s.move(x(28), 170)).toContain("12 Feb 2026");
 });
 
 it("changes the visible domain independently of selection and freezes a manual domain", () => {
@@ -110,6 +110,18 @@ it("changes the visible domain independently of selection and freezes a manual d
   expect(s.click(292, 92)).toContain("Log");
 });
 
+it("adds calendar and bounded navigation while preserving the pinned timestamp", () => {
+  const s = scene();
+  s.flush();
+  const x = 16 + 6.5 / 56 * (760 - 94);
+  s.click(x, 170);
+  const labels = s.click(30, 120);
+  expect(labels).toContain("1M");
+  expect(labels).toContain("13 Jan 2026");
+  expect(labels.some(text => text.includes("outside window"))).toBe(true);
+  expect(s.click(300, 120)).toContain("13 Jan 2026");
+});
+
 it("keeps the OHLCV readout and controls bounded on a narrow phone in both palettes", () => {
   const s = scene(360, 260);
   const labels = s.flush();
@@ -122,7 +134,7 @@ it("keeps the OHLCV readout and controls bounded on a narrow phone in both palet
 it("preserves recorded OHLC when that exact observation has missing volume", () => {
   const s = scene();
   s.flush();
-  const texts = s.move(16 + (18.5 / 56) * (760 - 94), 140);
+  const texts = s.move(16 + (18.5 / 56) * (760 - 94), 170);
   expect(texts).toContain("29 Jan 2026");
   expect(texts.some((text) => text.includes("— shares"))).toBe(true);
   expect(texts.some((text) => text.startsWith("O "))).toBe(true);
