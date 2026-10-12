@@ -2415,3 +2415,30 @@ finished app. For a later saved trial, run `node serve.mjs 5212` inside its
 inspection capsule and call `inspectPlot({x:205,y:210})` in the browser console.
 Captured observations/queries remain geometric evidence, not pixel or routed
 interaction proof.
+
+## Render completion and committed pixel evidence
+
+`render-completion-demo.tsx` is a small public-API exercise joining an
+application update to `recordFrames()` completion notifications, committed
+numeric inspection, and the corresponding copied RGBA frame. Completion
+callbacks run after the root's ordinary finish callbacks, so committed
+inspection can be read there. A frame's `renderGeneration` is the join key;
+its timestamp is wall-clock time, and capture can coalesce renders. A failed
+attempt reports `status: "failed"` and never yields a committed frame.
+
+Run the source Studio and replay from the repository root:
+
+```sh
+corepack pnpm@11.21.0 exec vite --config tooling/agent-verification/render-completion.studio.config.ts --mode inspection --host 127.0.0.1 --port 5202 --strictPort
+node tooling/agent-verification/render-completion-replay.mjs http://127.0.0.1:5202 /tmp/pibbl-render-completion-run
+node tooling/agent-verification/evidence-reader.mjs /tmp/pibbl-render-completion-run/report.json --check generation-join
+```
+
+Manual Studio URL: <http://127.0.0.1:5202/__pibbl/render-completion>. Start
+recording, then try update, zoom, pan, clipping, and the controlled failure / repair
+buttons. The replay checks source and semantic state, independently calculated
+coordinates and raw pixels. It does not use screenshot similarity as its oracle.
+The test and demo verify failed renders are kept distinct from successful
+commits. Normal unrecorded roots still avoid pixel readback and recorder worker
+creation; cancellation, disposal, independent roots, and repeat-run behavior
+remain covered by the recording lifecycle tests.

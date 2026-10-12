@@ -14,6 +14,7 @@ relatedTypes:
     PibblRecordedFrameInfo,
     PibblRecordedFrame,
     PibblGifExportOptions,
+    PibblRenderCompletion,
   ]
 ---
 
@@ -41,9 +42,17 @@ try {
 ```
 
 Capture observes successful, fully composed Pibbl root renders, with the current
-committed bitmap at timestamp zero. It does not schedule rendering or fabricate frames while the app does not
-render. Renders inside the capture-rate interval coalesce into one pending
-capture so the final static bitmap is preserved. Timestamps and the actual recording duration preserve still holds.
+committed bitmap at timestamp zero. `onRenderComplete` receives the committed
+generation after render-owned inspection state publishes; failed attempts are
+reported as `failed` and reject the recording without being labeled as pixel
+evidence. A recording frame's `renderGeneration` identifies the committed bitmap
+that was copied. `onFrameCaptured` runs after that frame's RGBA bytes have been
+copied and reports the same generation; it may run after one or more completion
+callbacks when capture coalesces renders. Timestamps are wall-clock capture times:
+they are not logical animation times or generation IDs. Recording does not
+schedule rendering or fabricate frames while the app does not render. Renders
+inside the capture-rate interval coalesce into one pending capture so the final
+static bitmap is preserved.
 The maximum capture rate defaults to 60; output GIF sampling defaults to 25.
 Dimensions are physical backing pixels, including device pixel ratio.
 
@@ -77,3 +86,4 @@ Export dimensions, maximum colors, dithering, automatic palette sampling effort,
 and an optional exact palette are all controlled through the export options.
 They leave retained pixels intact, allowing repeated exports with different settings.
 Encoding accepts [PibblGifExportOptions](#/api/types/frame-recording#pibblgifexportoptions).
+Completion callbacks use [PibblRenderCompletion](#/api/types/frame-recording#pibblrendercompletion).
