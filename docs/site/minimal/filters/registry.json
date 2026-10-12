@@ -6,14 +6,26 @@
     "source": "blur-shadow.tsx",
     "environment": "browser",
     "symbols": [
-      { "name": "blur", "importPath": "@pibbl/core/filters" },
-      { "name": "dropShadow", "importPath": "@pibbl/core/filters" },
-      { "name": "PibblBlurFilterOptions", "importPath": "@pibbl/core/filters" },
+      {
+        "name": "blur",
+        "importPath": "@pibbl/core/filters"
+      },
+      {
+        "name": "dropShadow",
+        "importPath": "@pibbl/core/filters"
+      },
+      {
+        "name": "PibblBlurFilterOptions",
+        "importPath": "@pibbl/core/filters"
+      },
       {
         "name": "PibblDropShadowFilterOptions",
         "importPath": "@pibbl/core/filters"
       },
-      { "name": "PibblFilter", "importPath": "@pibbl/core/filters" }
+      {
+        "name": "PibblFilter",
+        "importPath": "@pibbl/core/filters"
+      }
     ],
     "notes": [
       "Filters change pixels; the rectangle's logical hit geometry stays fixed."
@@ -26,9 +38,18 @@
     "source": "tone.tsx",
     "environment": "browser",
     "symbols": [
-      { "name": "brightness", "importPath": "@pibbl/core/filters" },
-      { "name": "contrast", "importPath": "@pibbl/core/filters" },
-      { "name": "saturate", "importPath": "@pibbl/core/filters" },
+      {
+        "name": "brightness",
+        "importPath": "@pibbl/core/filters"
+      },
+      {
+        "name": "contrast",
+        "importPath": "@pibbl/core/filters"
+      },
+      {
+        "name": "saturate",
+        "importPath": "@pibbl/core/filters"
+      },
       {
         "name": "PibblBrightnessFilterOptions",
         "importPath": "@pibbl/core/filters"
@@ -53,9 +74,18 @@
     "source": "color.tsx",
     "environment": "browser",
     "symbols": [
-      { "name": "grayscale", "importPath": "@pibbl/core/filters" },
-      { "name": "hueRotate", "importPath": "@pibbl/core/filters" },
-      { "name": "invert", "importPath": "@pibbl/core/filters" },
+      {
+        "name": "grayscale",
+        "importPath": "@pibbl/core/filters"
+      },
+      {
+        "name": "hueRotate",
+        "importPath": "@pibbl/core/filters"
+      },
+      {
+        "name": "invert",
+        "importPath": "@pibbl/core/filters"
+      },
       {
         "name": "PibblGrayscaleFilterOptions",
         "importPath": "@pibbl/core/filters"
@@ -80,8 +110,14 @@
     "source": "finish.tsx",
     "environment": "browser",
     "symbols": [
-      { "name": "sepia", "importPath": "@pibbl/core/filters" },
-      { "name": "opacity", "importPath": "@pibbl/core/filters" },
+      {
+        "name": "sepia",
+        "importPath": "@pibbl/core/filters"
+      },
+      {
+        "name": "opacity",
+        "importPath": "@pibbl/core/filters"
+      },
       {
         "name": "PibblSepiaFilterOptions",
         "importPath": "@pibbl/core/filters"
@@ -102,8 +138,14 @@
     "source": "water-light.tsx",
     "environment": "browser",
     "symbols": [
-      { "name": "displacement", "importPath": "@pibbl/core/filters" },
-      { "name": "reflectedLight", "importPath": "@pibbl/core/filters" },
+      {
+        "name": "displacement",
+        "importPath": "@pibbl/core/filters"
+      },
+      {
+        "name": "reflectedLight",
+        "importPath": "@pibbl/core/filters"
+      },
       {
         "name": "PibblDisplacementFilterOptions",
         "importPath": "@pibbl/core/filters"
@@ -119,6 +161,26 @@
     ],
     "notes": [
       "The map is a mount-owned texture; both filters use the same local region. Waves run at speed 3 so motion is clear. This comparison is automatic; [Ripple a wave map](/minimal-examples/textures/texture-water-waves/) demonstrates pointer-driven ripples."
+    ]
+  },
+  {
+    "id": "filter-emboss",
+    "title": "Light painted canvas relief",
+    "description": "Compare flat paint with highlights and shadows derived from woven surface height.",
+    "source": "emboss.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "emboss",
+        "importPath": "@pibbl/core/filters"
+      },
+      {
+        "name": "PibblEmbossFilterOptions",
+        "importPath": "@pibbl/core/filters"
+      }
+    ],
+    "notes": [
+      "The grayscale height map supplies relief; directional lighting preserves paint color and alpha."
     ]
   }
 ]
