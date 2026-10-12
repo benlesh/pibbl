@@ -2,6 +2,12 @@
 
 ## Active plan
 
+[009 — Parameterized textures](./009-parameterized-textures.md) is the active
+user-directed slice: stripes, checkers, wood grain, and expanded Gray–Scott. The complete
+texture catalog and later simulation directions are recorded there.
+
+## Other ongoing work
+
 [008 — Financial charting](./008-financial-charting.md) is active. Batches 1 and 2
 are accepted; the user authorized a local commit and continuation on 2026-10-09.
 The next checkpoint is Batch 3 authoring review: linked panes, range controls and

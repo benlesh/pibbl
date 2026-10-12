@@ -2411,6 +2411,16 @@ export declare function loadOutlineFont(source: string | URL | ArrayBuffer | Uin
 export declare function createTextGeometry(font: OutlineFont, text: string, options: TextGeometryOptions): TextGeometryResult;
 
 /* @pibbl-studio-module @pibbl/core/textures */
+export interface PatternMotionOptions { readonly phase?: number; readonly speed?: number; }
+export interface StripesOptions extends PatternMotionOptions { readonly bands?: number; readonly dutyCycle?: number; readonly wave?: number; readonly waveCycles?: number; }
+export interface CheckersOptions extends PatternMotionOptions { readonly columns?: number; readonly rows?: number; }
+export interface WoodGrainOptions extends PatternMotionOptions { readonly seed?: number; readonly grain?: number; readonly distortion?: number; readonly roughness?: number; readonly knots?: number; readonly knotSize?: number; }
+export function stripes(options?: StripesOptions): import('@pibbl/core').TextureRecipe;
+export function checkers(options?: CheckersOptions): import('@pibbl/core').TextureRecipe;
+export function woodGrain(options?: WoodGrainOptions): import('@pibbl/core').TextureRecipe;
+export type ReactionDiffusionPreset = 'spots' | 'stripes' | 'coral' | 'worms' | 'labyrinths' | 'mitosis';
+export const grayScottPresets: Readonly<Record<ReactionDiffusionPreset, Readonly<{ feed: number; kill: number }>>>;
+
   export interface ElectricPoint { readonly x: number; readonly y: number; }
   export interface ElectricOptions { readonly seed?: number; readonly branching?: number; readonly glow?: number; }
   export type ElectricControl = { readonly type: 'pause'; readonly paused: boolean } | { readonly type: 'reset'; readonly seed?: number };
@@ -2424,7 +2434,7 @@ export declare function createTextGeometry(font: OutlineFont, text: string, opti
   export function lightning(options?: LightningOptions): import('@pibbl/core').TextureRecipe<LightningMessage>;
   export {useTexture} from '@pibbl/core';
   export interface MaterialOptions {readonly seed?: number; readonly scale?: number; readonly detail?: number;}
-  export interface ReactionDiffusionOptions {readonly seed?: number; readonly preset?: 'spots' | 'stripes';}
+  export interface ReactionDiffusionOptions {readonly seed?: number; readonly preset?: ReactionDiffusionPreset; readonly feed?: number; readonly kill?: number; readonly warmupSteps?: number;}
   export type InkMessage = {readonly type: 'stir'; readonly u: number; readonly v: number; readonly du: number; readonly dv: number; readonly radius?: number} | {readonly type: 'paint'; readonly u: number; readonly v: number; readonly radius?: number; readonly strength?: number} | {readonly type: 'pause'; readonly paused: boolean} | {readonly type: 'reset'};
   export function marble(options?: MaterialOptions): import('@pibbl/core').TextureRecipe;
   export function paper(options?: MaterialOptions): import('@pibbl/core').TextureRecipe;
@@ -2434,11 +2444,11 @@ import type { PibblComponent, PibblRenderLayerComponentProps } from '@pibbl/core
 export type TexturePalette = readonly string[];
 export interface TextureResolution { readonly width: number; readonly height: number; }
 export interface TextureBrush { readonly radius: number; readonly strength: number; }
-export interface ReactionDiffusionProps {
+export interface ReactionDiffusionProps extends ReactionDiffusionOptions {
   readonly render?: TextureRenderer;
   readonly resolution?: TextureResolution;
   readonly seed?: number;
-  readonly preset?: 'spots' | 'stripes';
+  readonly preset?: ReactionDiffusionPreset;
   readonly palette?: TexturePalette;
   readonly paused?: boolean;
   readonly resetRevision?: number;

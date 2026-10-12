@@ -1,4 +1,4 @@
-import type { TextureRecipe } from '../../../lib/textures/texture.js';
+import type { TextureRecipe } from "../../../lib/textures/texture.js";
 import { rasterizeField, releaseField } from "./wasm/memory.js";
 import { defineTexture, type TextureContext } from "@pibbl/core";
 import {
@@ -28,23 +28,11 @@ export interface MaterialOptions {
   /** Material-specific distortion, grain strength, or cellular jitter. See {@link MaterialOptions}. */
   readonly detail?: number;
 }
-/**
- * Seed and pattern preset for a reaction-diffusion recipe.
- *
- * @see {@link reactionDiffusion}
- */
-export interface ReactionDiffusionOptions {
-  /**
-   * Seed used for deterministic sampling or simulation initialization. See
-   * {@link ReactionDiffusionOptions}.
-   */
-  readonly seed?: number;
-  /**
-   * Named pattern configuration used to initialize the simulation. See
-   * {@link ReactionDiffusionOptions}.
-   */
-  readonly preset?: "spots" | "stripes";
-}
+export type { ReactionDiffusionOptions } from "./gray-scott.js";
+import {
+  grayScottConfig,
+  type ReactionDiffusionOptions,
+} from "./gray-scott.js";
 /**
  * Paint, stir, pause, or reset commands accepted by a reaction-diffusion texture.
  *
@@ -181,13 +169,7 @@ export const paper = /* @__PURE__ */ material(paperField);
  * @see {@link TextureRecipe}
  */
 export const cellular = /* @__PURE__ */ material(cellularField);
-function inkConfig(input: ReactionDiffusionOptions) {
-  const seed = validateSeed(input.seed),
-    preset = input.preset ?? "spots";
-  if (preset !== "spots" && preset !== "stripes")
-    throw new TypeError("Unknown ink preset.");
-  return { seed, preset };
-}
+const inkConfig = grayScottConfig;
 interface InkState {
   simulation: InkSimulation;
   config: ReturnType<typeof inkConfig>;
@@ -196,12 +178,11 @@ interface InkState {
   fresh: boolean;
 }
 function reset(state: InkState, context: TextureContext) {
-  const next = new InkSimulation(
-    context.canvas.width,
-    context.canvas.height,
-    state.config.seed,
-    state.config.preset,
-  );
+  const next = new InkSimulation({
+    width: context.canvas.width,
+    height: context.canvas.height,
+    ...state.config,
+  });
   state.simulation.dispose();
   state.simulation = next;
   state.elapsed = 0;
@@ -218,12 +199,11 @@ const inkRecipe = /* @__PURE__ */ defineTexture<
     const config = inkConfig(input);
     context.requestFrame();
     return {
-      simulation: new InkSimulation(
-        context.canvas.width,
-        context.canvas.height,
-        config.seed,
-        config.preset,
-      ),
+      simulation: new InkSimulation({
+        width: context.canvas.width,
+        height: context.canvas.height,
+        ...config,
+      }),
       config,
       paused: false,
       elapsed: 0,
@@ -232,11 +212,7 @@ const inkRecipe = /* @__PURE__ */ defineTexture<
   },
   update(state, input, context) {
     const config = inkConfig(input);
-    if (
-      config.seed === state.config.seed &&
-      config.preset === state.config.preset
-    )
-      return;
+    if (JSON.stringify(config) === JSON.stringify(state.config)) return;
     state.config = config;
     reset(state, context);
   },

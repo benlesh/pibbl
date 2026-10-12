@@ -154,3 +154,19 @@ export function RainGlassConsumer() {
   const finger: RainDropsMessage = { type: "finger", x: 0.5, y: 0.5, radius: 0.05 };
   return <Group children={null} style={{ filter: displacement({ map: rain.paint({ mode: "stretch" }), strength: 18, blurRadius: 16, region: { x: 0, y: 0, width: 200, height: 100 } }) }} onPointerDown={() => rain.send(finger)} onPointerUp={() => rain.send({ type: "release" })} />;
 }
+
+import { stripes, checkers, woodGrain, grayScottPresets, type StripesOptions, type CheckersOptions, type WoodGrainOptions, type ReactionDiffusionPreset, type PatternMotionOptions } from "@pibbl/core/textures";
+const patternMotion: PatternMotionOptions = { speed: 0.1, phase: 0.25 };
+const stripeOptions: StripesOptions = { ...patternMotion, bands: 4, dutyCycle: 0.3, wave: 0.1 };
+const checkerOptions: CheckersOptions = { columns: 4, rows: 8 };
+const woodOptions: WoodGrainOptions = { seed: 42, distortion: 0.8, knots: 2, knotSize: 0.12 };
+const chemicalPreset: ReactionDiffusionPreset = "coral";
+export function PatternConsumer() {
+  const stripeTexture: Texture<never> = useTexture(stripes(stripeOptions));
+  const checks: Texture<never> = useTexture(checkers(checkerOptions));
+  const wood: Texture<never> = useTexture(woodGrain(woodOptions));
+  const chemistry: Texture<InkMessage> = useTexture(reactionDiffusion({ preset: chemicalPreset, ...grayScottPresets.mitosis, warmupSteps: 1200 }));
+  // @ts-expect-error Geometric textures do not accept chemical messages.
+  stripeTexture.send({ type: "pause", paused: true });
+  return <Group><Rectangle style={{ width: 80, height: 80, fill: stripeTexture }} /><Rectangle style={{ width: 80, height: 80, fill: checks }} /><Rectangle style={{ width: 80, height: 80, fill: wood }} /><Rectangle style={{ width: 80, height: 80, fill: chemistry }} /></Group>;
+}
