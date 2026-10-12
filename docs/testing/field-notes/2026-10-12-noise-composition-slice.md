@@ -1,5 +1,7 @@
 # Noise and image composition feedback slice
 
+> **Historical status: Dated verification evidence; current code and fresh checks define shipped behavior.**
+
 Date: 2026-10-12. Environment: Node v26.9.0, pnpm 11.21.0, Playwright Chromium.
 This is a runnable slice for feedback, not the aggregate trust gate.
 

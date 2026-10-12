@@ -1,5 +1,7 @@
 # Geometric textures: feedback slice, 2026-10-12
 
+> **Historical status: Dated verification evidence; current code and fresh checks define shipped behavior.**
+
 Environment: Node v26.9.0, pnpm 11.21.0, Playwright Chromium. The documented
 reference environment remains Node 24.15+.
 

@@ -1,5 +1,7 @@
 # Three reaction–diffusion models: feedback slice
 
+> **Historical status: Dated verification evidence; current code and fresh checks define shipped behavior.**
+
 Date: 2026-10-12. Node v26.9.0, pnpm 11.21.0, Playwright Chromium.
 
 The approved public APIs are named recipe factories and option types for
