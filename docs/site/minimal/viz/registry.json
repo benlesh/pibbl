@@ -1752,5 +1752,51 @@
         "importPath": "@pibbl/core/viz"
       }
     ]
+  },
+  {
+    "id": "trajectory-series",
+    "title": "Participant trajectories with explicit missing visits",
+    "description": "Participant trajectories with explicit missing visits.",
+    "source": "trajectory-series.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "TrajectorySeries",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "TrajectorySeriesProps",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "TrajectorySeriesStyle",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "TrajectoryGroupAccessor",
+        "importPath": "@pibbl/core/viz"
+      }
+    ]
+  },
+  {
+    "id": "paired-series",
+    "title": "Complete paired endpoint connectors",
+    "description": "Complete paired endpoint connectors.",
+    "source": "paired-series.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "PairedSeries",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "PairedSeriesProps",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "PairedSeriesStyle",
+        "importPath": "@pibbl/core/viz"
+      }
+    ]
   }
 ]

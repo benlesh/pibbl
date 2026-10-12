@@ -834,3 +834,29 @@ const colorContract = (
   </SequentialColorScale>
 );
 void colorContract;
+
+
+// Paired and longitudinal public contracts retain datum inference.
+import { TrajectorySeries, PairedSeries,
+  type TrajectorySeriesProps, type TrajectorySeriesStyle, type TrajectoryGroupAccessor,
+  type PairedSeriesProps, type PairedSeriesStyle } from "@pibbl/core/viz";
+const repeated = [{ participant: "P01", week: 0, score: 62 as number | null }];
+const participantIdentity: TrajectoryGroupAccessor<(typeof repeated)[number]> = "participant";
+void participantIdentity;
+const trajectoryStyle: TrajectorySeriesStyle = { stroke: "teal", opacity: 0.3 };
+const trajectoryProps: TrajectorySeriesProps<(typeof repeated)[number]> = {
+  data: repeated, group: "participant", x: "week", y: "score",
+  xScale: "week", yScale: "score", style: trajectoryStyle,
+};
+const paired = [{ participant: "P01", baseline: 62, endpoint: 44 as number | null }];
+const pairedStyle: PairedSeriesStyle = { strokeWidth: 2 };
+const pairedProps: PairedSeriesProps<(typeof paired)[number]> = {
+  data: paired, before: "baseline", after: "endpoint", beforeX: "Baseline",
+  afterX: "Week 12", xScale: "endpoint", yScale: "score", style: pairedStyle,
+};
+void <TrajectorySeries {...trajectoryProps} />;
+void <PairedSeries {...pairedProps} />;
+// @ts-expect-error Participant identity is not a numeric outcome accessor.
+void <TrajectorySeries {...trajectoryProps} y="participant" />;
+// @ts-expect-error Unknown before outcome field is rejected.
+void <PairedSeries {...pairedProps} before="missing" />;

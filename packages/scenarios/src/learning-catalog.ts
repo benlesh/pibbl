@@ -878,6 +878,17 @@ const drafts = [
     load: () => import("./learning/composition/viz-evidence-synthesis.example"),
   },
   {
+    slug: "viz-phase-ii-trajectories", title: "Phase II participant trajectories", shortTitle: "Participant trajectories", section: "composition", order: 931,
+    summary: "Compare scheduled participant change trajectories with paired baseline and week-12 scores while retaining missing visits.",
+    api: ["TrajectorySeries", "PairedSeries", "PointSeries", "LineSeries", "LinearScale"],
+    objectives: ["Compose grouped participant paths from explicit repeated-measures records.", "Keep paired endpoints and unobserved visits distinct from inferred values."],
+    prompts: { gesture: "Choose a participant and toggle individual trajectories.", code: "Change supplied synthetic scores, visits, or missingness." },
+    apiNotes: ["Invented teaching records only; no clinical inference, treatment claim, baseline derivation, or imputation."],
+    canvas: { width: 1040, height: 720 },
+    related: ["viz-clinical-forest", "viz-dose-response", "viz-censored-assay"],
+    load: () => import("./learning/composition/viz-phase-ii-trajectories.example"),
+  },
+  {
     slug: "viz-clinical-forest",
     title: "Clinical forest plot with supplied intervals",
     shortTitle: "Clinical forest plot",

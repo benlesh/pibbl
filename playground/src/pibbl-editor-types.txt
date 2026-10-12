@@ -2382,6 +2382,123 @@ export declare function CensoredPointSeries<D>(props: CensoredPointSeriesProps<D
 export declare function WeightedPointSeries<D>(props: WeightedPointSeriesProps<D>): PibblNode;
 export declare function IntervalDiamondSeries<D>(props: IntervalDiamondSeriesProps<D>): PibblNode;
 
+export interface TrajectorySeriesStyle {
+  /** Path paint. Defaults to `#2563eb`. */
+  readonly stroke?: StrokeStyle;
+  /** Visible path width in local units. Defaults to 2. */
+  readonly strokeWidth?: number;
+  /** Pointer targeting width. Defaults to `strokeWidth`. */
+  readonly lineInteractionWidth?: number;
+  /** Path opacity in [0, 1]. Defaults to 1. */
+  readonly opacity?: number;
+  /** Cursor while the batched path owns pointer presentation. */
+  readonly cursor?: string;
+}
+
+/**
+ * A participant or specimen identity property or callback.
+ *
+ * Nullish identities deliberately omit a row. Numeric identities must be finite.
+ * @param datum - Source observation.
+ * @param index - Zero-based source index.
+ * @param data - Complete source data array.
+ * @returns A finite numeric or string identity, or a nullish omitted identity.
+ * @see {@link TrajectorySeriesProps}
+ */
+export type TrajectoryGroupAccessor<D> =
+  | {
+      [K in keyof D]-?: D[K] extends string | number | null | undefined
+        ? K
+        : never;
+    }[keyof D]
+  | ((
+      datum: D,
+      index: number,
+      data: readonly D[],
+    ) => string | number | null | undefined);
+
+/**
+ * Authoring inputs for {@link TrajectorySeries}.
+ *
+ * Rows are connected in source encounter order within each group. The component
+ * neither sorts time values nor invents visits, summaries, or missing values.
+ */
+export interface TrajectorySeriesProps<D>
+  extends PibblEventHandlers, PibblEventParticipationOptions {
+  /** Source observations or a signal containing them. */
+  readonly data: SignalValue<readonly D[]>;
+  /** Stable participant or specimen identity. Nullish identities omit that row. */
+  readonly group: TrajectoryGroupAccessor<D>;
+  /** Encounter-time or scheduled-visit coordinate. */
+  readonly x: SeriesAccessor<D>;
+  /** Numeric observed outcome coordinate. */
+  readonly y: LineAccessor<D>;
+  /** Scale mapping encounter-time or visit coordinates. */
+  readonly xScale: ScaleId;
+  /** Numeric scale mapping outcomes. */
+  readonly yScale: ScaleId;
+  /**
+   * Ends that group's current run without reading coordinate accessors.
+   * @param datum - Candidate source datum.
+   * @param index - Zero-based source index.
+   * @param data - Complete source data array.
+   * @returns Whether this datum contributes a coordinate to its group.
+   */
+  readonly defined?: (datum: D, index: number, data: readonly D[]) => boolean;
+  /** Shared path style, including whole-object and shallow field signals. */
+  readonly style?: SignalValue<SignalStyle<TrajectorySeriesStyle>>;
+}
+
+interface ResolvedTrajectoryStyle {
+  readonly stroke: StrokeStyle;
+  readonly strokeWidth: number;
+  readonly lineInteractionWidth: number;
+  readonly opacity: number;
+  readonly cursor?: string;
+}
+
+export type PairedSeriesStyle = TrajectorySeriesStyle;
+
+/** Authored wide-record inputs for {@link PairedSeries}. */
+export interface PairedSeriesProps<D>
+  extends PibblEventHandlers, PibblEventParticipationOptions {
+  /** Source records or a signal containing them. */
+  readonly data: SignalValue<readonly D[]>;
+  /** Numeric baseline or first-observation value. */
+  readonly before: LineAccessor<D>;
+  /** Numeric follow-up or second-observation value. */
+  readonly after: LineAccessor<D>;
+  /** Fixed x coordinate used for every `before` endpoint. */
+  readonly beforeX: SeriesCoordinate;
+  /** Fixed x coordinate used for every `after` endpoint. */
+  readonly afterX: SeriesCoordinate;
+  /** Scale mapping the two endpoint coordinates. */
+  readonly xScale: ScaleId;
+  /** Numeric scale mapping both endpoint values. */
+  readonly yScale: ScaleId;
+  /**
+   * Excludes a record before before/after accessors run.
+   * @param datum - Candidate source datum.
+   * @param index - Zero-based source index.
+   * @param data - Complete source data array.
+   * @returns Whether this record contributes a connector.
+   */
+  readonly defined?: (datum: D, index: number, data: readonly D[]) => boolean;
+  /** Shared connector style, including whole-object and shallow field signals. */
+  readonly style?: SignalValue<SignalStyle<PairedSeriesStyle>>;
+}
+
+interface ResolvedPairedStyle {
+  readonly stroke: StrokeStyle;
+  readonly strokeWidth: number;
+  readonly lineInteractionWidth: number;
+  readonly opacity: number;
+  readonly cursor?: string;
+}
+
+export declare function TrajectorySeries<D>(props: TrajectorySeriesProps<D>): PibblNode;
+export declare function PairedSeries<D>(props: PairedSeriesProps<D>): PibblNode;
+
 /* @pibbl-studio-module @pibbl/core/viz/inspection */
 import type { LayoutBox, PibblEvent } from '@pibbl/core';
 import type { BarSeriesProps, BandCategory, HoverSeries, ResolvedContinuousScale, ResolvedTradingTimeScale, VolumeSeriesProps, CandlestickSeriesProps, OhlcBarSeriesProps } from '@pibbl/core/viz';

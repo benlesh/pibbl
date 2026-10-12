@@ -116,6 +116,8 @@ try {
     "HorizontalIntervalSeries",
     "IntervalDiamondSeries",
     "WeightedPointSeries",
+    "TrajectorySeries",
+    "PairedSeries",
     "CensoredPointSeries",
     "VerticalIntervalSeries",
     "stepBefore",
