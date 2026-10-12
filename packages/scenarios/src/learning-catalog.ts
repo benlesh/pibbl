@@ -214,6 +214,13 @@ const drafts = [
     apiNotes:["Seeded synthetic USD OHLC, not a market feed. Bands use population standard deviation, not a confidence interval."],canvas:{width:960,height:620},related:["financial-relative-performance","financial-candles"],load:()=>import("./learning/composition/financial-trend-volatility.example"),
   },
 
+  {slug:"financial-momentum-desk",title:"Momentum Desk",shortTitle:"Momentum Desk",section:"composition",order:922,
+    summary:"Link simulated OHLC price action with RSI, MACD and stochastic oscillator analysis.",api:["relativeStrengthIndex","movingAverageConvergenceDivergence","stochasticOscillator","TradingTimeScale","CandlestickSeries"],
+    objectives:["Inspect price and momentum at one recorded time.","Compare oscillator conventions and explicit warmup after gaps."],
+    prompts:{gesture:"Choose RSI, MACD or Stoch. Visit Shock and Gap, drag/pinch/wheel to navigate, click either pane to pin.",code:"Change periods, seeded market regimes or the missing close."},
+    apiNotes:["Seeded synthetic USD OHLC, not a market feed. RSI uses Wilder smoothing; MACD uses SMA-seeded EMAs; stochastic uses SMA smoothing."],canvas:{width:960,height:680},related:["financial-trend-volatility","financial-linked-panes"],load:()=>import("./learning/composition/financial-momentum-desk.example"),
+  },
+
   {slug: "viz-recorded-inspection", title: "Recorded observations", shortTitle: "Recorded observations", section: "composition", order: 901,
     summary: "Find the recorded quote nearest an order time, and see why it was selected.", api: ["PointSeries", "usePointInspection", "nearestRecordedX"],
     objectives: ["Inspect the last successful paint through a public query.", "Keep query results tied to original typed observations."],

@@ -164,6 +164,20 @@ export type {
   MovingAveragePoint,
   BollingerBandPoint,
 } from "./lib/financial-indicators.js";
+export {
+  relativeStrengthIndex,
+  movingAverageConvergenceDivergence,
+  stochasticOscillator,
+} from "./lib/financial-oscillators.js";
+export type {
+  OscillatorOptions,
+  RelativeStrengthIndexOptions,
+  MovingAverageConvergenceDivergenceOptions,
+  StochasticOscillatorOptions,
+  RelativeStrengthIndexPoint,
+  MovingAverageConvergenceDivergencePoint,
+  StochasticOscillatorPoint,
+} from "./lib/financial-oscillators.js";
 
 export { utcTickLabels } from "./lib/utc-labels.js";
 export type { UTCTickLabelOptions } from "./lib/utc-labels.js";

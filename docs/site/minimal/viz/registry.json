@@ -37,6 +37,27 @@
     ]
   },
   {
+    "id": "financial-oscillators",
+    "title": "Financial oscillators",
+    "description": "Derive source-aligned RSI, MACD, and stochastic values with explicit gap resets.",
+    "source": "financial-oscillators.tsx",
+    "environment": "browser",
+    "symbols": [
+      { "name": "relativeStrengthIndex", "importPath": "@pibbl/core/viz" },
+      {
+        "name": "movingAverageConvergenceDivergence",
+        "importPath": "@pibbl/core/viz"
+      },
+      { "name": "stochasticOscillator", "importPath": "@pibbl/core/viz" },
+      { "name": "RelativeStrengthIndexPoint", "importPath": "@pibbl/core/viz" },
+      {
+        "name": "MovingAverageConvergenceDivergencePoint",
+        "importPath": "@pibbl/core/viz"
+      },
+      { "name": "StochasticOscillatorPoint", "importPath": "@pibbl/core/viz" }
+    ]
+  },
+  {
     "id": "scales",
     "title": "Scales and axes",
     "description": "Create band and linear scales with a typed axis and inspect resolved mappings.",
