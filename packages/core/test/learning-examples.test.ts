@@ -1214,11 +1214,18 @@ describe("learning example catalog", () => {
     );
   });
 
-  it("contains 108 unique, ordered, source-backed routes including rainy window, optional filters, and underwater", async () => {
+  it("contains 113 unique, ordered, source-backed routes including texture explorers and optional filters", async () => {
     expect(validateLearningExampleCatalog(learningExampleCatalog)).toBe(
       learningExampleCatalog,
     );
-    expect(learningExampleCatalog).toHaveLength(108);
+    expect(learningExampleCatalog).toHaveLength(113);
+    expect(learningExampleCatalog.filter(entry => [
+      "texture-explorer", "fabric-explorer", "material-overlay", "chemical-explorer", "geometric-explorer",
+    ].includes(entry.slug)).map(getLearningExampleRoute).sort()).toEqual([
+      "#/examples/composition/chemical-explorer", "#/examples/composition/fabric-explorer",
+      "#/examples/composition/geometric-explorer", "#/examples/composition/material-overlay",
+      "#/examples/composition/texture-explorer",
+    ]);
     expect(
       learningExampleCatalog
         .filter(
@@ -1310,6 +1317,7 @@ describe("learning example catalog", () => {
         "wedge",
       ],
       composition: [
+        "texture-explorer", "fabric-explorer", "material-overlay", "chemical-explorer", "geometric-explorer",
         "state-machines",
         "sprites",
         "viz-utc-basics",
@@ -1489,6 +1497,7 @@ describe("learning example catalog", () => {
       "viz-small-multiples",
       "viz-size-symbols",
       "viz-color-encodings",
+      "texture-explorer", "fabric-explorer", "material-overlay", "chemical-explorer", "geometric-explorer",
     ]);
 
     const startExamples = learningExampleCatalog.filter(
@@ -1881,6 +1890,29 @@ describe("learning example catalog", () => {
         "paper",
         "cellular",
         "reactionDiffusion",
+        "InkMessage",
+        "barkley",
+        "barkleyPresets",
+        "brusselator",
+        "brusselatorPresets",
+        "checkers",
+        "emboss",
+        "grayScottPresets",
+        "halftone",
+        "herringbone",
+        "plaid",
+        "plaidPresets",
+        "plainWeave",
+        "polkaDots",
+        "ridgedNoise",
+        "schnakenberg",
+        "schnakenbergPresets",
+        "softNoise",
+        "stripes",
+        "truchet",
+        "twill",
+        "woodGrain",
+
         "rainDrops",
         "ReactionDiffusion",
         "ProceduralTexture",
