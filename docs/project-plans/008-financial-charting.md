@@ -1261,3 +1261,27 @@ values alone are bounded by the full-history domain.
 The merge is prepared separately from interleaved texture, branding and evaluation
 work. Combined verification is recorded after integration; no push or publication
 is claimed here.
+
+### Main integration verification — 2026-10-12
+
+The eight approved financial visualization batches were replayed onto main in an
+isolated checkout, excluding interleaved texture, branding and evaluation work.
+Integration reconciled the lesson catalog and completed compilable API/minimal
+examples, including explicit public OHLC inspection and indicator-option coverage.
+
+Fresh Node 24.15.0 / pnpm 11.21.0 / Chromium evidence: source and built visualization
+suites each pass 100 files / 484 tests (two skipped); `trust:lifecycle` passes its
+nine-file / 63-test ownership suite and six-file / 48-test structural performance
+suite (four opt-in checks skipped). Typecheck, full lint, documentation checks
+(including 100 compiler-checked API programs), packed visualization Bundler/NodeNext
+consumers, Studio build and website build pass. Native Research Workspace editing,
+rollback, Undo, navigator resizing and touch zoom also pass. The complete aggregate
+trust command is not claimed: verification used these proportional checks after
+repairing documentation and minimal-example failures discovered by its static gate.
+
+The user authorized merging all visualization work in this thread into local main.
+Main's unrelated recording changes are backed up and preserved during integration.
+The broad browser run also exposed stale catalog inventories; the focused catalog
+suite passes all 277 tests after adding the approved routes and public API tags.
+The full browser gate was not rerun after that metadata correction.
+No remote push or publication is included.

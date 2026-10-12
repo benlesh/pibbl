@@ -31,19 +31,37 @@ symbols:
 feed each `onChange` result back through its matching prop.
 
 ```tsx
-<EditableReferenceLine
-  scale="price"
-  direction="horizontal"
-  value={level}
-  span={[plotLeft, plotRight]}
-  selected={selected}
-  keyboardStep={0.25}
-  onSelect={() => setSelected(true)}
-  onChange={setLevel}
-  onCommit={saveLevel}
-  onCancel={discardLevelEdit}
-  style={{ stroke: "#d97706", handleSize: 8, hitSize: 24 }}
-/>
+import { signal } from "@pibbl/core";
+import { EditableReferenceLine, LinearScale } from "@pibbl/core/viz";
+
+const level = signal(102.5);
+const selected = signal(false);
+const plotLeft = 20;
+const plotRight = 180;
+
+function saveLevel(nextLevel: number) {
+  level.set(nextLevel);
+}
+
+function PriceReference() {
+  return (
+    <LinearScale id="price" domain={[95, 110]} range={[160, 20]}>
+      <EditableReferenceLine
+        scale="price"
+        direction="horizontal"
+        value={level}
+        span={[plotLeft, plotRight]}
+        selected={selected}
+        keyboardStep={0.25}
+        onSelect={() => selected.set(true)}
+        onChange={level.set}
+        onCommit={saveLevel}
+        onCancel={() => selected.set(false)}
+        style={{ stroke: "#d97706", handleSize: 8, hitSize: 24 }}
+      />
+    </LinearScale>
+  );
+}
 ```
 
 `RangeNavigator`, `EditableReferenceLine`, and `EditableReferenceBand` require

@@ -1,5 +1,7 @@
 # Plan 008 — Batch 2 financial inspection proposal
 
+> **Historical status: Accepted financial visualization proposal subsequently implemented in Plan 008; current public APIs and executable tests define shipped behavior.**
+
 Date: 2026-10-09. Status: approved by the user on 2026-10-09; runnable implementation tracked in Plan 008.
 Scope: snapping OHLCV inspection, price guides/formatting, visible-window autoscaling.
 User requirement: number formatting must use platform tools; existing formatNumber uses Intl.NumberFormat.

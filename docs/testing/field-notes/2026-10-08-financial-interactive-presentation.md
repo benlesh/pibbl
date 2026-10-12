@@ -1,5 +1,7 @@
 # Financial interactive presentation feedback — 2026-10-08
 
+> **Historical status: Dated financial visualization verification record; later approvals and current executable tests define the shipped state.**
+
 User requested a more compelling, professional revision with mouse interaction,
 after reviewing the first presentation pass. This revises the same four Batch 1
 examples; public APIs and the three-feature limit are unchanged. Batch 2 remains
