@@ -271,19 +271,28 @@ Creates a named-color plaid. The dictionary supplies colors directly; omit the
 other textures.
 
 ```tsx
-const recipe = plaid({
-  colors: { paper: "#f5e9d3", ink: "#304c48", accent: "#c56948" },
-  horizontal: [
-    { width: 8, color: "paper" },
-    { width: 1, color: "accent" },
-  ],
-  vertical: [
-    { width: 3, color: "paper" },
-    { width: 1, color: "ink" },
-  ],
-  crossing: 0.5,
-});
-const texture = useTexture(recipe, { resolution: { width: 256, height: 256 } });
+/** @jsxImportSource @pibbl/core */
+import { Rectangle, useTexture } from "@pibbl/core";
+import { plaid, plaidPresets } from "@pibbl/core/textures";
+
+function PlaidPreview() {
+  const recipe = plaid({
+    colors: { paper: "#f5e9d3", ink: "#304c48", accent: "#c56948" },
+    horizontal: [
+      { width: 8, color: "paper" },
+      { width: 1, color: "accent" },
+    ],
+    vertical: [
+      { width: 3, color: "paper" },
+      { width: 1, color: "ink" },
+    ],
+    crossing: 0.5,
+  });
+  const texture = useTexture(recipe, {
+    resolution: { width: 256, height: 256 },
+  });
+  return <Rectangle style={{ width: 400, height: 300, fill: texture }} />;
+}
 ```
 
 TypeScript checks band color names against the inferred dictionary keys. Runtime

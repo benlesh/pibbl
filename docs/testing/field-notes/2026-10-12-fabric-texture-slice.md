@@ -1,5 +1,7 @@
 # Woven fabric texture feedback slice
 
+> **Historical status: Dated verification evidence; current code and fresh checks define shipped behavior.**
+
 Date: 2026-10-12. Status: accepted by the user; proportional checks recorded below, aggregate trust not claimed.
 
 The accepted first collection was committed as `2a865105`. The user authorized

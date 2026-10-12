@@ -1,5 +1,7 @@
 # Parameterized textures — first feedback slice
 
+> **Historical status: Dated verification evidence; current code and fresh checks define shipped behavior.**
+
 Date: 2026-10-09. [Plan 009](../../project-plans/009-parameterized-textures.md).
 Status: slice ready for feedback; not feature-complete.
 

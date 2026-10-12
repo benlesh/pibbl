@@ -1,5 +1,7 @@
 # Geometric textures: feedback slice, 2026-10-12
 
+> **Historical status: Dated verification evidence; current code and fresh checks define shipped behavior.**
+
 Environment: Node v26.9.0, pnpm 11.21.0, Playwright Chromium. The documented
 reference environment remains Node 24.15+.
 
@@ -53,3 +55,17 @@ texture algorithms creates a keyed resource owner.
 Studio URL: <http://127.0.0.1:5218/#/examples/composition/geometric-explorer>.
 QA scripts and screenshots are under `/tmp`, outside committed source. This is a
 slice ready for experiential feedback, not an aggregate feature-completion claim.
+
+## Main integration after user approval
+
+The user approved the geometric slice and requested merging all of this thread's
+texture work into main. A clean integration branch replayed the five texture
+commits onto `origin/main` without the interleaved chart commits or dirty work.
+Generated lesson counts were reconciled to 113. The plan listing retains only
+this texture work and existing completed plans.
+
+Fresh integration checks: 24 browser tests across all nine texture/emboss files
+passed; whole-checkout TypeScript, public JSDoc, core build, packed texture
+Bundler/NodeNext consumers, and scenario discovery/catalog checks passed. The
+documentation gate identified missing imports in the plaid example and a required
+historical plan banner; both were repaired. No aggregate trust pass is claimed.
