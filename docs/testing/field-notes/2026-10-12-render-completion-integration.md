@@ -1,5 +1,7 @@
 # Render completion integration — 2026-10-12
 
+> **Historical status: Dated verification evidence for the render-completion slice.**
+
 This dated record describes verification of the previously drafted public
 recording completion slice. Current code and the
 [frame recording contract](../../design/frame-recording-contract.md) define behavior.
