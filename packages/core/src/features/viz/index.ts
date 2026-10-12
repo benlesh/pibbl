@@ -164,6 +164,8 @@ export type {
   SessionVwapOptions,
   SessionVwapPoint,
 } from "./lib/financial-aggregation.js";
+export { RangeNavigator, EditableReferenceLine, EditableReferenceBand, EditableTrendLine } from "./lib/editable-chart-elements.js";
+export type { ChartAnchor, RangeNavigatorProps, RangeNavigatorStyle, EditableReferenceLineProps, EditableReferenceLineStyle, EditableReferenceBandProps, EditableReferenceBandStyle, EditableTrendLineProps, EditableTrendLineStyle } from "./lib/editable-chart-elements.js";
 export {
   simpleMovingAverage,
   exponentialMovingAverage,

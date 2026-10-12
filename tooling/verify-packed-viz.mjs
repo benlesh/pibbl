@@ -99,6 +99,10 @@ try {
     "GridLines",
     "ReferenceLine",
     "ReferenceBand",
+    "RangeNavigator",
+    "EditableReferenceLine",
+    "EditableReferenceBand",
+    "EditableTrendLine",
     "AxisTitle",
     "niceUTCDomain",
     "pieSlices",
@@ -299,6 +303,7 @@ try {
     `,
   );
   const financialFiles = [
+    "chart-editing.tsx",
     "financial-candles.tsx",
     "financial-candle-inspection.tsx",
     "financial-ohlc-bars.tsx",

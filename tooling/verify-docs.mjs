@@ -159,6 +159,7 @@ const publicSiteMarkdownPaths = [
   "docs/site/api/functions/domain-navigation.md",
   "docs/site/api/components/color-scales.md",
   "docs/site/api/components/interval-band-series.md",
+  "docs/site/api/components/chart-editing.md",
   "docs/site/api/components/point-series.md",
   "docs/site/api/components/plot-series.md",
   "docs/site/api/functions/nearest-point.md",

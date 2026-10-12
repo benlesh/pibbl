@@ -923,7 +923,6 @@ unrelated pre-existing strategy evidence README. Next planned feature batch is
 SMA, EMA, and Bollinger Bands in the Trend and Volatility showcase, with API
 review before implementation.
 
-
 ## Batch 4 runnable slice — 2026-10-12
 
 The user approved the three pure indicator helpers and authorized implementation.
@@ -972,7 +971,6 @@ Fresh slice verification used Node 24.15.0 and pnpm 11.21.0:
   `docs/strategy/agent-verification-evidence/public-inspection-pilot-2026-10-09/README.md`.
   No aggregate trust result is claimed.
 
-
 ### Batch 4 acceptance and band-fill correction
 
 The user approved and requested a commit on 2026-10-12 after reviewing the slice.
@@ -990,7 +988,6 @@ remains unclaimed because of the previously recorded unrelated shared-tree
 blockers. The next proposed batch is RSI, MACD and stochastic oscillator; review
 initialization, warmup, flat/zero-range conventions and linked-pane authoring with
 the user before implementation.
-
 
 ## Batch 5 runnable slice — 2026-10-12
 
@@ -1031,7 +1028,6 @@ The previously recorded unrelated document classification blocker remains.
 Studio URL: `http://127.0.0.1:5196/#/examples/composition/financial-momentum-desk`.
 No commit, push or publication is claimed for Batch 5.
 
-
 Fresh Batch 5 results: focused Vitest Chromium run passed 2 files / 8 tests;
 `pnpm typecheck`, focused ESLint, public JSDoc verification, core build and packed
 viz verification passed. Packed consumers cover Bundler, NodeNext, runtime exports,
@@ -1039,7 +1035,6 @@ shared core identity and private boundaries. Native source Studio checks passed
 for all three studies and both themes, with desktop wheel/drag and phone pinch.
 Read-only review confirmed units/shared viewport/inspection; an unexposed inherited
 YTD match was removed so preset status only reports selectable calendar controls.
-
 
 ### Batch 5 acceptance — 2026-10-12
 
@@ -1049,7 +1044,6 @@ packed consumer and native Studio checks remain the acceptance evidence.
 Batch 6 is the next proposed work: OHLC bars, a two-color baseline series, and
 financial event/trade markers in Execution Journal. Public APIs require authoring
 review before implementation. No aggregate trust, push or publication is claimed.
-
 
 ## Batch 6 runnable slice — 2026-10-12
 
@@ -1237,3 +1231,31 @@ No aggregate trust, push or publication is claimed.
 Final acceptance rerun: Node 24.15.0 / pnpm 11.21.0 focused Chromium suite
 passed 2 files / 9 tests. Read-only final review found no material contract,
 lifecycle or numeric blocker.
+
+## Batch 8 approved slice — 2026-10-12
+
+The user approved controlled RangeNavigator, EditableReferenceLine,
+EditableReferenceBand and EditableTrendLine APIs, including explicit draft/change,
+commit and cancellation callbacks. Research Workspace composes the navigator over
+full history and retains existing animated preset navigation and direct wheel,
+drag and touch gestures. The application owns drawing creation, selection, Undo
+and deletion. The first slice uses supplied trading-time observations for x and
+linear USD price for y; trend endpoints snap to supplied observations.
+
+Slice ready for feedback at `http://127.0.0.1:5196/#/examples/composition/financial-research-workspace`.
+The user then requested integration of all this thread's visualization work into
+main after completing the slice.
+
+Fresh Node 24.15.0 / pnpm 11.21.0 Chromium checks pass: two focused files / fourteen
+tests. Native browser checks cover drawing drag, Escape rollback, Undo, two-click
+zone/trend creation, navigator move/resize, wheel zoom, chart pan and touch pinch.
+Dark/light/phone renders were inspected. Core build, public JSDoc and scoped lint
+pass; packed viz Bundler/NodeNext and runtime-boundary checks pass. Review-driven
+regressions cover capture loss, second-pointer ownership, frozen mappings,
+nonlinear mapped panning, minimum-span validation and weekend keyboard navigation.
+Offscreen annotations retain their values through the Shock window; navigator
+values alone are bounded by the full-history domain.
+
+The merge is prepared separately from interleaved texture, branding and evaluation
+work. Combined verification is recorded after integration; no push or publication
+is claimed here.
