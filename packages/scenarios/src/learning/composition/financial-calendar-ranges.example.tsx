@@ -5,6 +5,11 @@ import {
   Text,
   pibbl,
   useLayoutBox,
+  useAnimatedValue,
+  tween,
+  easing,
+  useRef,
+  useReaction,
   useSignal,
   type PibblController,
 } from "@pibbl/core";
@@ -15,6 +20,7 @@ import {
   LineSeries,
   TradingTimeScale,
   formatNumber,
+  interpolateNumericRange,
 } from "@pibbl/core/viz";
 
 // Studio lessons are self-contained; the same tested operations are deliberately local here.
@@ -230,7 +236,27 @@ function Control({
 function Lesson() {
   const { width, height } = useLayoutBox();
   const viewport = useSignal<readonly [number, number]>(bounds);
-  const range = viewport.get();
+  const preference = useRef<MediaQueryList>();
+  preference.current ??= window.matchMedia("(prefers-reduced-motion: reduce)");
+  const reducedMotion = useSignal(preference.current.matches);
+  useReaction(() => {
+    const media = preference.current!;
+    const change = () => {
+      reducedMotion.set(media.matches);
+      // A new target identity adopts the new duration even during an active transition.
+      viewport.set([...viewport.get()] as readonly [number, number]);
+    };
+    media.addEventListener("change", change);
+    return () => media.removeEventListener("change", change);
+  }, [preference.current]);
+  const shown = useAnimatedValue(viewport, {
+    animation: tween<readonly [number, number]>({
+      duration: reducedMotion.get() ? 0 : 180,
+      easing: easing.easeOut,
+      interpolate: interpolateNumericRange,
+    }),
+  });
+  const range = shown.get();
   const left = 54,
     right = width - 18,
     top = 89,
@@ -335,7 +361,7 @@ function Lesson() {
       <TradingTimeScale
         id="time"
         timestamps={timestamps}
-        logicalRange={range}
+        logicalRange={shown}
         range={[left, right]}
       >
         <LinearScale id="price" domain={[92, 108]} range={[bottom, top]}>

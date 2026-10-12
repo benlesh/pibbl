@@ -76,6 +76,7 @@ try {
     "linearTicks",
     "niceLinearDomain",
     "formatNumber",
+    "interpolateNumericRange",
     "visibleOhlcPriceExtent",
     "padLinearDomain",
     "percentageReturns",
@@ -292,6 +293,7 @@ try {
     "financial-trading-time.tsx",
     "financial-percentage-returns.tsx",
     "financial-index-to-100.tsx",
+    "numeric-range-interpolation.tsx",
   ];
   for (const file of financialFiles)
     writeFileSync(

@@ -1473,6 +1473,7 @@ export interface NumberFormatOptions extends Intl.NumberFormatOptions { readonly
 export declare function linearTicks(domain: NumericDomain, options?: LinearTickOptions): readonly number[];
 export declare function niceLinearDomain(domain: NumericDomain, options?: LinearTickOptions): NumericDomain;
 export declare function formatNumber(value: number, options?: NumberFormatOptions): string;
+export declare function interpolateNumericRange(from: NumericDomain, to: NumericDomain, progress: number): NumericDomain;
 export declare function niceUTCDomain(domain: NumericDomain, options?: { readonly count?: number }): NumericDomain;
 export interface ComparisonBaseOptions<D> {
  readonly time: LineAccessor<D>;

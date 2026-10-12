@@ -34,22 +34,29 @@ function mount(example: (canvas: HTMLCanvasElement) => { dispose(): void }) {
     labels.push(String(text));
     native(text, ...args);
   });
-  const flush = () => {
+  let time = performance.now();
+  const flush = (elapsed = 40) => {
+    time += elapsed;
     const pending = [...frames.values()];
     frames.clear();
-    pending.forEach((callback) => callback(performance.now()));
+    if (pending.length) labels.length = 0;
+    pending.forEach((callback) => callback(time));
   };
   const controller = example(canvas);
   flush();
-  const click = (x: number, y: number) => {
+  const settle = () => {
+    for (let frame = 0; frame < 8; frame += 1) flush();
+  };
+  const click = (x: number, y: number, finish = true) => {
     labels.length = 0;
     for (const type of ["mousedown", "mouseup", "click"])
       canvas.dispatchEvent(
         new MouseEvent(type, { clientX: x, clientY: y, bubbles: true }),
       );
     flush();
+    if (finish) settle();
   };
-  return { canvas, labels, controller, click };
+  return { canvas, labels, controller, click, flush, settle, frames };
 }
 it("teaches financial units, dates, and inspection across coordinated OHLCV panes", () => {
   const view = mount(linkedMount);
@@ -102,4 +109,27 @@ it("derives matching presets and calendar tick granularity from the current wind
   } finally {
     view.controller.dispose();
   }
+});
+
+it("animates calendar navigation through an intermediate custom range and retargets cleanly", () => {
+  const preference = Object.assign(new EventTarget(), { matches: false });
+  vi.spyOn(window, "matchMedia").mockReturnValue(preference as unknown as MediaQueryList);
+  const view = mount(calendarMount);
+  try {
+    view.click(27, 65, false);
+    view.flush();
+    view.flush();
+    expect(view.labels.some((label) => label.startsWith("Range: Custom"))).toBe(
+      true,
+    );
+    expect(view.frames.size).toBeGreaterThan(0);
+    view.click(159, 65, false);
+    view.settle();
+    expect(
+      view.labels.some((label) => label.startsWith("Range: 3M / All")),
+    ).toBe(true);
+  } finally {
+    view.controller.dispose();
+  }
+  expect(view.frames.size).toBe(0);
 });

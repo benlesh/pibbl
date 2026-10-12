@@ -3,11 +3,12 @@
 # Plan 008 — Financial charting
 
 Status: Batch 0 accepted, hardened and committed as `0ad33084`. Batches 1 and 2
-are accepted and committed as `be31890a`. Batch 3 authoring was accepted and
-independently audited on 2026-10-12; its linked panes, UTC range controls and
-fixed-base comparison slices are ready for feedback. Public comparison signatures
-remain as proposed. Broader hardening and aggregate verification follow experiential
-feedback; no Batch 3 feature-complete claim, push or publication is made.
+are accepted and committed as `be31890a`. Batch 3 linked panes, UTC range controls,
+fixed-base comparisons and adaptive navigation were accepted and committed as
+`cf420e8c`. The follow-up range interpolation helper and animated navigation with
+restored mouse/trackpad/touch interaction were accepted on 2026-10-12. Focused
+verification is recorded below; no aggregate verification, push or publication is
+claimed for these additions. Batch 4 overlays are next for authoring review.
 
 ## Goal and baseline
 
@@ -140,7 +141,7 @@ value or turn simulated events into reported market facts.
 | 0     | Typed inspection queries, lazy handler adapter, painted-mark lookup | Accepted; hardened, aggregate blocked |
 | 1     | Trading time, candles, volume                                       | Retained; continuation authorized     |
 | 2     | Inspection, price labels/formatting, price autoscaling              | Accepted; local commit authorized     |
-| 3     | Linked panes, range controls, comparison returns                    | Queued                                |
+| 3     | Linked panes, range controls, comparison returns                    | Accepted; committed as `cf420e8c`     |
 | 4     | SMA, EMA, Bollinger Bands                                           | Queued                                |
 | 5     | RSI, MACD, stochastic oscillator                                    | Queued                                |
 | 6     | OHLC bars, baseline series, event markers                           | Queued                                |
@@ -896,3 +897,24 @@ ESLint passed. Studio desktop and phone checks passed for all four coordinated
 examples, including editor compilation and no page errors. Real Chromium wheel,
 touch drag, pinch, subsequent tap-to-pin, and preset restoration also passed.
 This is a feedback-ready slice; aggregate trust has not been rerun for this change.
+
+### 2026-10-12 — Animated navigation and interaction accepted
+
+The user accepted the `interpolateNumericRange` helper as composition over existing
+`tween`, `keyframes`, and `useAnimatedValue`, with no animation runtime changes.
+Calendar Windows and Performance Desk animate discrete navigation; the Desk uses
+direct wheel zoom, horizontal/Shift-wheel pan, and captured mouse/touch pan/pinch.
+Pending wheel events accumulate rather than repeatedly restarting navigation from
+a stale displayed range. Drag does not accidentally pin an observation. Reduced
+motion, gesture takeover, animation retargeting, and teardown retain focused public
+coverage. The user accepted the result and requested a commit.
+
+Fresh proportional verification: 16 tests across the range helper, financial axis
+lessons and Desk suites; Node 24.15.0 typecheck, targeted ESLint, core build and
+packed viz checks passed. Native desktop mouse drag, horizontal wheel pan, vertical
+wheel zoom, click suppression and animated preset restoration passed. Native touch
+pan/pinch and later pinning passed. Desktop/phone Studio editor and rendering checks
+passed. Aggregate trust was not run; documentation classification is blocked by an
+unrelated pre-existing strategy evidence README. Next planned feature batch is
+SMA, EMA, and Bollinger Bands in the Trend and Volatility showcase, with API
+review before implementation.
