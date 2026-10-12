@@ -269,3 +269,21 @@ visual acceptance, not the full filter hardening milestone.
 API, and authorized a local commit. The next texture family is additional
 reaction-diffusion models: start with Schnakenberg for spots/labyrinths, followed
 by Barkley for moving excitable fronts and Brusselator for oscillatory patterns.
+
+## Three additional chemical models: feedback slice
+
+2026-10-12: the user approved the proposed named public factories and requested
+all three models with a parameter explorer. `schnakenberg`, `barkley`, and
+`brusselator` share the existing texture lifecycle and InkMessage capability.
+Six immutable presets are available; parameter experiments informed the curated
+Schnakenberg labyrinth and Brusselator spot warmups. The public explorer is at
+`#/examples/composition/chemical-explorer`. Source and built focused tests pass,
+and packed Bundler/NodeNext consumers pass. Await experiential feedback before
+broader numerical, scheduling, resource and performance hardening.
+
+## Additional chemical models accepted
+
+2026-10-12: the user accepted all three models and the parameter explorer, and
+authorized a local commit. The next recommended collection is geometric/decorative
+textures: polka dots and halftone, plaids, and seeded Truchet curves, with seamless
+placement, palette, density, line-weight and motion controls.

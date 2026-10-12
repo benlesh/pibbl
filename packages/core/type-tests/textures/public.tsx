@@ -197,3 +197,16 @@ export function EmbossConsumer() {
   const options: PibblEmbossFilterOptions = { region: {x:0,y:0,width:100,height:100}, depth:3, strength:0.5, direction:[-1,-1] };
   return <Rectangle style={{ width:100, height:100, fill:"#708090", filter:emboss(height.paint({mode:"repeat",tileWidth:64,tileHeight:64}), options) }} />;
 }
+
+
+import { schnakenberg, barkley, brusselator, schnakenbergPresets, barkleyPresets, brusselatorPresets, type SchnakenbergOptions, type BarkleyOptions, type BrusselatorOptions } from "@pibbl/core/textures";
+export function ChemicalConsumer() {
+  const s: SchnakenbergOptions = {...schnakenbergPresets.labyrinths, seed:42, paused:true};
+  const b: BarkleyOptions = {...barkleyPresets.spirals, epsilon:0.02, speed:1};
+  const r: BrusselatorOptions = {...brusselatorPresets.oscillations, initialNoise:0.1};
+  const first:Texture<InkMessage> = useTexture(schnakenberg(s));
+  const second:Texture<InkMessage> = useTexture(barkley(b));
+  const third:Texture<InkMessage> = useTexture(brusselator(r));
+
+  return <Group><Rectangle style={{width:64,height:64,fill:first}} /><Rectangle style={{width:64,height:64,fill:second}} /><Rectangle style={{width:64,height:64,fill:third}} /></Group>;
+}

@@ -482,6 +482,16 @@ const drafts = [
     load: () => import("./learning/composition/fabric-explorer.example"),
   },
   {
+    slug: "chemical-explorer", title: "Reaction–Diffusion Explorer", shortTitle: "Chemical Patterns", section: "composition", order: 256,
+    summary: "Grow Schnakenberg spots, Barkley spirals, and Brusselator patterns with presets and live chemistry controls.",
+    api: ["schnakenberg", "barkley", "brusselator", "schnakenbergPresets", "barkleyPresets", "brusselatorPresets", "useTexture", "InkMessage"],
+    objectives: ["Explore three distinct periodic reaction–diffusion models.", "Tune chemistry, diffusion, noise, warmup and speed; paint and stir across wrapped boundaries."],
+    prompts: {gesture: "Switch models and presets, pause to paint, and compare the repeated field.", code: "Spread a preset into its named factory and customize the palette or resolution."},
+    apiNotes: ["Changing chemistry resets the simulation; colors, tile size, speed and pause preserve it.", "Solver time steps are stability-limited; arbitrary parameters may settle into uniform fields."],
+    canvas: {width:880,height:910}, related: ["texture-explorer","material-overlay","living-ink"],
+    load: () => import("./learning/composition/chemical-explorer.example"),
+  },
+  {
     slug: "material-overlay", title: "Painted Canvas", shortTitle: "Painted Canvas", section: "composition", order: 255,
     summary: "Combine seamless noise and a woven or paper surface to give an image material depth.",
     api: ["softNoise", "ridgedNoise", "plainWeave", "paper", "useTexture", "Image", "definePrimitive", "emboss"],

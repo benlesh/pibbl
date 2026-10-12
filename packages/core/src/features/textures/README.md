@@ -164,3 +164,16 @@ surface normals from a grayscale weave or paper height map, then lights the imag
 with matching highlights and shadows. Relief and light-direction controls expose
 the effect. The example still owns its pigment multiply scope through
 `definePrimitive`.
+
+### Additional reaction–diffusion models (feedback slice)
+
+`schnakenberg`, `barkley`, and `brusselator` are distinct public recipe factories
+with typed options and immutable named preset collections. Mount with `useTexture`
+for palette/resolution and send existing `InkMessage` paint, stir, pause and reset
+commands. Their stepping and brushes wrap; presentation duplicates seam samples.
+The public explorer at `#/examples/composition/chemical-explorer` includes all six
+presets, chemistry/diffusion/noise/warmup/speed controls, colors, tile size, seed,
+pause/reset, painting and stirring. Chemistry changes initialize a new field;
+colors, placement, speed and pause preserve it. Some valid settings converge to
+uniform fields. Numerical stepping currently uses a private CPU implementation;
+no application animation loop or new public solver selector is introduced.
