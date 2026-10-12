@@ -1491,6 +1491,13 @@ export interface IndexedValuePoint<D> {
 export declare function percentageReturns<D>(data: readonly D[], options: ComparisonBaseOptions<D>): readonly PercentageReturnPoint<D>[] | undefined;
 /** Values indexed to 100 at the exact positive base; undefined means unavailable base. */
 export declare function indexTo100<D>(data: readonly D[], options: ComparisonBaseOptions<D>): readonly IndexedValuePoint<D>[] | undefined;
+export interface MovingAverageOptions<D> { readonly value: LineAccessor<D>; readonly period: number; readonly defined?: (datum: D, index: number, data: readonly D[]) => boolean; }
+export interface BollingerBandsOptions<D> extends MovingAverageOptions<D> { readonly multiplier?: number; }
+export interface MovingAveragePoint<D> { readonly datum: D; readonly sourceIndex: number; readonly average: number | null; }
+export interface BollingerBandPoint<D> { readonly datum: D; readonly sourceIndex: number; readonly mean: number | null; readonly lower: number | null; readonly upper: number | null; }
+export declare function simpleMovingAverage<D>(data: readonly D[], options: MovingAverageOptions<D>): readonly MovingAveragePoint<D>[];
+export declare function exponentialMovingAverage<D>(data: readonly D[], options: MovingAverageOptions<D>): readonly MovingAveragePoint<D>[];
+export declare function bollingerBands<D>(data: readonly D[], options: BollingerBandsOptions<D>): readonly BollingerBandPoint<D>[];
 export interface VisibleOhlcPriceExtentOptions<D> {
   readonly time: LineAccessor<D>;
   readonly open: LineAccessor<D>;

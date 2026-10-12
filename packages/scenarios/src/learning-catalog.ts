@@ -207,6 +207,13 @@ const drafts = [
     apiNotes:["USD simulation, not a market feed. Returns are cumulative from 02 Jan 2026."],canvas:{width:760,height:500},related:["financial-normalized-returns","financial-calendar-ranges","financial-linked-panes"],load:()=>import("./learning/composition/financial-relative-performance.example"),
   },
 
+  {slug:"financial-trend-volatility",title:"Trend and Volatility",shortTitle:"Trend and Volatility",section:"composition",order:921,
+    summary:"Inspect simulated OHLC price action with adjustable SMA, EMA and population-standard-deviation Bollinger Bands.",api:["simpleMovingAverage","exponentialMovingAverage","bollingerBands","CandlestickSeries","IntervalBandSeries"],
+    objectives:["Calculate before windowing to preserve indicator history.","Compare trend lag, changing volatility and explicit gap warmup."],
+    prompts:{gesture:"Compare SMA and EMA; change P or σ. Visit Shock and Gap, drag/pinch/wheel to navigate, click to pin.",code:"Change seeded market regimes, indicator periods or the missing close."},
+    apiNotes:["Seeded synthetic USD OHLC, not a market feed. Bands use population standard deviation, not a confidence interval."],canvas:{width:960,height:620},related:["financial-relative-performance","financial-candles"],load:()=>import("./learning/composition/financial-trend-volatility.example"),
+  },
+
   {slug: "viz-recorded-inspection", title: "Recorded observations", shortTitle: "Recorded observations", section: "composition", order: 901,
     summary: "Find the recorded quote nearest an order time, and see why it was selected.", api: ["PointSeries", "usePointInspection", "nearestRecordedX"],
     objectives: ["Inspect the last successful paint through a public query.", "Keep query results tied to original typed observations."],

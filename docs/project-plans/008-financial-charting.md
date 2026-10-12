@@ -8,7 +8,8 @@ fixed-base comparisons and adaptive navigation were accepted and committed as
 `cf420e8c`. The follow-up range interpolation helper and animated navigation with
 restored mouse/trackpad/touch interaction were accepted on 2026-10-12. Focused
 verification is recorded below; no aggregate verification, push or publication is
-claimed for these additions. Batch 4 overlays are next for authoring review.
+claimed for these additions. Batch 4 SMA, EMA and Bollinger Bands were approved
+on 2026-10-12, implemented and accepted after the band-fill contrast revision.
 
 ## Goal and baseline
 
@@ -142,7 +143,7 @@ value or turn simulated events into reported market facts.
 | 1     | Trading time, candles, volume                                       | Retained; continuation authorized     |
 | 2     | Inspection, price labels/formatting, price autoscaling              | Accepted; local commit authorized     |
 | 3     | Linked panes, range controls, comparison returns                    | Accepted; committed as `cf420e8c`     |
-| 4     | SMA, EMA, Bollinger Bands                                           | Queued                                |
+| 4     | SMA, EMA, Bollinger Bands                                           | Accepted; focused verification passed |
 | 5     | RSI, MACD, stochastic oscillator                                    | Queued                                |
 | 6     | OHLC bars, baseline series, event markers                           | Queued                                |
 | 7     | Live updates, OHLCV aggregation, session VWAP                       | Queued                                |
@@ -918,3 +919,71 @@ passed. Aggregate trust was not run; documentation classification is blocked by 
 unrelated pre-existing strategy evidence README. Next planned feature batch is
 SMA, EMA, and Bollinger Bands in the Trend and Volatility showcase, with API
 review before implementation.
+
+
+## Batch 4 runnable slice — 2026-10-12
+
+The user approved the three pure indicator helpers and authorized implementation.
+`simpleMovingAverage`, `exponentialMovingAverage`, and `bollingerBands` preserve
+source order, original datum ownership, and full-length frozen aligned outputs.
+Periods require positive safe integers; missing, excluded and nonfinite values
+reset consecutive-window warmup. EMA uses an SMA seed and alpha `2/(period+1)`;
+bands use population standard deviation and a finite nonnegative multiplier.
+
+The self-contained `financial-trend-volatility` Studio lesson combines 180 seeded
+synthetic weekday OHLC records, price/date axes, shared inspection, independently
+toggled overlays, period and multiplier controls, animated calendar navigation,
+and mouse/wheel/touch navigation. Named drift and volatility regimes include a
+selloff, recovery and one missing close. Simulation and population σ labeling
+remain visible. Indicators are calculated before windowing, so navigation never
+changes their history. The public helpers require no new rendering component or
+animation scheduler.
+
+Focused Chromium tests cover indicator values, reset/warmup, frozen alignment,
+accessors and extreme finite values, plus desktop and phone readouts and controls.
+Native Studio checks cover desktop drag/wheel, phone rendering and gap selection;
+final verification is recorded in the delivery response. The existing learning
+source validator was corrected to accept direct `easing.easeOut` member access;
+a focused regression still rejects aliasing of the imported easing object.
+
+Milestone: **slice ready for feedback**, not user acceptance or aggregate trust.
+Studio URL: `http://127.0.0.1:5196/#/examples/composition/financial-trend-volatility`.
+No commit, push or publication is claimed for Batch 4.
+
+Fresh slice verification used Node 24.15.0 and pnpm 11.21.0:
+
+- Focused Vitest Chromium run for `financial-indicators.test.ts` and
+  `financial-trend-volatility.test.tsx`: 2 files, 6 tests passed.
+- `node --import tsx --test tooling/learning-source-animation.test.mjs`: 2 passed.
+- `pnpm typecheck`, focused ESLint, `node tooling/verify-public-jsdoc.mjs`, core
+  build, and `node tooling/verify-packed-viz.mjs`: passed. Packed verification
+  covers Bundler, NodeNext, runtime exports and shared core identity.
+- `node --import tsx tooling/scenario-catalog.ts --write`: registered 127 lessons;
+  A subsequent catalog check was blocked by concurrent `material-overlay`
+  source changes (inline-props/style-spread contract); the trend source validates.
+- Native Playwright source Studio inspection: desktop 1018×658 and phone
+  360×260 Canvas allocations, gap selection, editor declarations, desktop
+  wheel/drag and phone touch pinch passed; no page errors. Screenshots were
+  inspected for candle contrast, band boundaries, values and labeled axes.
+- `pnpm docs:check` remains blocked by the unrelated unclassified
+  `docs/strategy/agent-verification-evidence/public-inspection-pilot-2026-10-09/README.md`.
+  No aggregate trust result is claimed.
+
+
+### Batch 4 acceptance and band-fill correction
+
+The user approved and requested a commit on 2026-10-12 after reviewing the slice.
+The example's original alpha-bearing fill combined with the band component's
+0.2 default opacity, leaving approximately 3% effective opacity. The example now
+uses an opaque purple color with explicit 0.24 dark-theme / 0.18 light-theme
+opacity. A focused regression failed before the correction and now passes in
+both themes; the full showcase test file has 3 passing Chromium tests. Native
+Studio checks passed in desktop and phone allocations, including both themes,
+with screenshots inspected. This is an example-level presentation correction,
+not a change to the IntervalBandSeries default or indicator APIs.
+
+Batch 4 is accepted with proportional focused verification. Aggregate trust
+remains unclaimed because of the previously recorded unrelated shared-tree
+blockers. The next proposed batch is RSI, MACD and stochastic oscillator; review
+initialization, warmup, flat/zero-range conventions and linked-pane authoring with
+the user before implementation.

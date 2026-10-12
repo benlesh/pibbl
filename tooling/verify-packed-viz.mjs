@@ -81,6 +81,9 @@ try {
     "padLinearDomain",
     "percentageReturns",
     "indexTo100",
+    "simpleMovingAverage",
+    "exponentialMovingAverage",
+    "bollingerBands",
     "utcTickLabels",
     "LogScale",
     "useLogScale",
@@ -293,6 +296,7 @@ try {
     "financial-trading-time.tsx",
     "financial-percentage-returns.tsx",
     "financial-index-to-100.tsx",
+    "financial-indicators.tsx",
     "numeric-range-interpolation.tsx",
   ];
   for (const file of financialFiles)

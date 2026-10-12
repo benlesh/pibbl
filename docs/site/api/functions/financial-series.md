@@ -12,6 +12,13 @@ symbols:
     IndexedValuePoint,
     percentageReturns,
     indexTo100,
+    MovingAverageOptions,
+    BollingerBandsOptions,
+    MovingAveragePoint,
+    BollingerBandPoint,
+    simpleMovingAverage,
+    exponentialMovingAverage,
+    bollingerBands,
     CandlestickSeries,
     CandlestickSeriesProps,
     CandlestickSeriesStyle,
@@ -222,6 +229,34 @@ occurs. Changing the viewport does not change the base.
 For percentage labels use `formatNumber(value, { suffix: "%" })`: these values
 already express percentage points. An Intl percent formatter would multiply them
 by 100 again. Formatting belongs to presentation and uses `Intl.NumberFormat`.
+
+## Consecutive-window indicators
+
+`simpleMovingAverage(data, { value, period, defined? })` and
+`exponentialMovingAverage(data, { value, period, defined? })` return frozen,
+source-aligned `MovingAveragePoint` rows with `datum`, `sourceIndex`, and
+`average`. `period` is a positive safe integer. A result stays `null` until the
+window contains `period` consecutive eligible finite values. Missing, nonfinite,
+and excluded rows return `null` and reset warmup; `defined` runs before `value`.
+
+SMA uses the trailing arithmetic mean. EMA seeds with that first complete SMA and
+then uses `2 / (period + 1)` as its smoothing factor. These helpers do not fill
+gaps, choose dates, sort data, or mutate source rows.
+
+`bollingerBands(data, { value, period, multiplier?, defined? })` uses the same
+consecutive windows and returns frozen `BollingerBandPoint` rows with `mean`,
+`lower`, and `upper`. It uses population standard deviation and a finite
+non-negative `multiplier`, defaulting to `2`. A band result is null during warmup
+or after a reset. Derived nonfinite values reject rather than silently clip.
+
+```ts
+const bands = bollingerBands(prices, {
+  value: "close",
+  period: 20,
+  multiplier: 2,
+});
+// LineSeries: y="mean", y="lower", or y="upper".
+```
 
 ## Candle painting
 
