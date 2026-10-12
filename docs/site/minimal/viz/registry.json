@@ -860,6 +860,23 @@
     ]
   },
   {
+    "id": "numeric-range-interpolation",
+    "title": "Animated numeric ranges",
+    "description": "Compose endpoint interpolation with the existing target-driven animation hook.",
+    "source": "numeric-range-interpolation.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "interpolateNumericRange",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "NumericDomain",
+        "importPath": "@pibbl/core/viz"
+      }
+    ]
+  },
+  {
     "id": "colors",
     "title": "Explicit color scales",
     "description": "Map real observations with dedicated providers and authored palettes.",

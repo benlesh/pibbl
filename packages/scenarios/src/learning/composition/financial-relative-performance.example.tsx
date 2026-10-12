@@ -7,6 +7,9 @@ import {
   pibbl,
   useCanvasContext,
   useLayoutBox,
+  useAnimatedValue,
+  tween,
+  easing,
   useReaction,
   useRef,
   useSignal,
@@ -29,6 +32,7 @@ import {
   niceLinearDomain,
   linearTicks,
   percentageReturns,
+  interpolateNumericRange,
 } from "@pibbl/core/viz";
 import {
   nearestRecordedX,
@@ -252,17 +256,21 @@ function matchingPresets(
   presets: readonly { label: string; range: LogicalRange | undefined }[],
 ): readonly string[] {
   return presets
-    .filter((preset) =>
-      preset.range !== undefined &&
-      Math.abs(range[0] - preset.range[0]) < 0.000001 &&
-      Math.abs(range[1] - preset.range[1]) < 0.000001,
+    .filter(
+      (preset) =>
+        preset.range !== undefined &&
+        Math.abs(range[0] - preset.range[0]) < 0.000001 &&
+        Math.abs(range[1] - preset.range[1]) < 0.000001,
     )
     .map((preset) => preset.label);
 }
 function calendarAxisTicks(
   timestamps: readonly number[],
   { logicalRange, width }: { logicalRange: LogicalRange; width: number },
-): { readonly values: readonly number[]; readonly format: (time: number) => string } {
+): {
+  readonly values: readonly number[];
+  readonly format: (time: number) => string;
+} {
   const visible = timestamps.slice(
     Math.max(0, Math.ceil(logicalRange[0])),
     Math.floor(logicalRange[1]) + 1,
@@ -294,16 +302,19 @@ function calendarAxisTicks(
     previousBucket = bucket;
   }
   const budget = Math.max(2, Math.floor(width / 80));
-  const values = candidates.length <= budget
-    ? candidates
-    : Array.from(
-        { length: budget },
-        (_, index) =>
-          candidates[Math.round((index * (candidates.length - 1)) / (budget - 1))]!,
-      );
+  const values =
+    candidates.length <= budget
+      ? candidates
+      : Array.from(
+          { length: budget },
+          (_, index) =>
+            candidates[
+              Math.round((index * (candidates.length - 1)) / (budget - 1))
+            ]!,
+        );
   return { values, format: (time) => formatter.format(time) };
 }
-interface TouchGesture {
+interface NavigationGesture {
   readonly points: Map<number, { x: number; y: number }>;
   startRange: LogicalRange;
   startX: number;
@@ -427,10 +438,35 @@ function Desk() {
   }, [canvas]);
   const narrow = width < 620;
   const palette = useSignal(false),
-    viewport = useSignal<readonly [number, number]>(bounds);
+    intent = useSignal<readonly [number, number]>(bounds);
+  const direct = useSignal(false);
+  const preference = useRef<MediaQueryList>();
+  preference.current ??= window.matchMedia("(prefers-reduced-motion: reduce)");
+  const reducedMotion = useSignal(preference.current.matches);
+  useReaction(() => {
+    const media = preference.current!;
+    const change = () => {
+      reducedMotion.set(media.matches);
+      // Adopt the new duration even when the destination has not changed.
+      intent.set([...intent.get()] as LogicalRange);
+    };
+    media.addEventListener("change", change);
+    return () => media.removeEventListener("change", change);
+  }, [preference.current]);
+  const viewport = useAnimatedValue(intent, {
+    animation: tween<LogicalRange>({
+      duration: direct.get() || reducedMotion.get() ? 0 : 180,
+      easing: easing.easeOut,
+      interpolate: interpolateNumericRange,
+    }),
+  });
+  const navigate = (next: LogicalRange) => {
+    direct.set(false);
+    intent.set([...next] as LogicalRange);
+  };
   const preview = useSignal<number | undefined>(undefined),
     pinned = useSignal<number | undefined>(undefined);
-  const gesture = useRef<TouchGesture>({
+  const gesture = useRef<NavigationGesture>({
     points: new Map(),
     startRange: bounds,
     startX: 0,
@@ -514,20 +550,20 @@ function Desk() {
   const controls = [
     {
       label: "1M",
-      activate: () => oneMonth && viewport.set(oneMonth),
+      activate: () => oneMonth && navigate(oneMonth),
       disabled: !oneMonth,
     },
     {
       label: "3M",
-      activate: () => threeMonths && viewport.set(threeMonths),
+      activate: () => threeMonths && navigate(threeMonths),
       disabled: !threeMonths,
     },
-    { label: "YTD", activate: () => ytd && viewport.set(ytd), disabled: !ytd },
-    { label: "All", activate: () => viewport.set(bounds) },
+    { label: "YTD", activate: () => ytd && navigate(ytd), disabled: !ytd },
+    { label: "All", activate: () => navigate(bounds) },
     {
       label: "Earlier",
       activate: () =>
-        viewport.set(
+        navigate(
           shiftLogicalRange(viewport.get(), {
             ...navigation,
             delta: -Math.abs(viewport.get()[1] - viewport.get()[0]) * 0.4,
@@ -537,7 +573,7 @@ function Desk() {
     {
       label: "Later",
       activate: () =>
-        viewport.set(
+        navigate(
           shiftLogicalRange(viewport.get(), {
             ...navigation,
             delta: Math.abs(viewport.get()[1] - viewport.get()[0]) * 0.4,
@@ -547,19 +583,21 @@ function Desk() {
     {
       label: "Zoom +",
       activate: () =>
-        viewport.set(zoomLogicalRange(viewport.get(), { ...navigation, factor: 0.7 })),
+        navigate(
+          zoomLogicalRange(viewport.get(), { ...navigation, factor: 0.7 }),
+        ),
     },
     {
       label: "Zoom −",
       activate: () =>
-        viewport.set(
+        navigate(
           zoomLogicalRange(viewport.get(), { ...navigation, factor: 1 / 0.7 }),
         ),
     },
-    { label: "Fit", activate: () => viewport.set(bounds) },
+    { label: "Fit", activate: () => navigate(bounds) },
     {
       label: "Latest",
-      activate: () => viewport.set(latestLogicalRange(viewport.get(), navigation)),
+      activate: () => navigate(latestLogicalRange(viewport.get(), navigation)),
     },
   ];
   const plotPath = new Path2D();
@@ -572,18 +610,43 @@ function Desk() {
   });
   const outside = !visible(index);
   const slotAtX = (x: number, source: LogicalRange) =>
-    source[0] + ((x - left) / Math.max(1, right - left)) * (source[1] - source[0]);
+    source[0] +
+    ((x - left) / Math.max(1, right - left)) * (source[1] - source[0]);
   const wheel = (event: PibblWheelEvent) => {
     event.preventDefault();
-    const current = viewport.get();
-    const factor = Math.exp(Math.max(-400, Math.min(400, event.deltaY)) * 0.002);
-    viewport.set(zoomAt(current, slotAtX(event.x, current), factor, navigation));
+    // Accumulate input not yet presented, but take over an animated preset from its displayed range.
+    const current = direct.get() ? intent.get() : viewport.get();
+    const unit =
+      event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? right - left : 1;
+    const horizontal =
+      !event.ctrlKey &&
+      (event.shiftKey || Math.abs(event.deltaX) > Math.abs(event.deltaY));
+    let next: LogicalRange;
+    if (horizontal) {
+      const pixels = (event.deltaX || event.deltaY) * unit;
+      next = shiftLogicalRange(current, {
+        ...navigation,
+        delta: (pixels / Math.max(1, right - left)) * (current[1] - current[0]),
+      });
+    } else {
+      const factor = Math.exp(
+        Math.max(-400, Math.min(400, event.deltaY * unit)) * 0.002,
+      );
+      next = zoomAt(current, slotAtX(event.x, current), factor, navigation);
+    }
+    direct.set(true);
+    intent.set(next);
   };
-  const beginTouch = (event: PibblPointerEvent) => {
-    if (event.pointerType !== "touch") return;
+  const beginPointer = (event: PibblPointerEvent) => {
+    if (event.pointerType !== "touch" && event.button !== 0) return;
     if (gesture.points.size === 0) {
       gesture.suppressClick = false;
       gesture.dragged = false;
+    }
+    if (gesture.points.size === 0) {
+      direct.set(true);
+      // A gesture takes over from the presented range, never the unseen destination.
+      intent.set([...viewport.get()] as LogicalRange);
     }
     event.currentTarget.setPointerCapture(event.pointerId);
     gesture.points.set(event.pointerId, { x: event.x, y: event.y });
@@ -596,8 +659,8 @@ function Desk() {
       gesture.startDistance = Math.max(1, Math.abs(second!.x - first!.x));
     }
   };
-  const moveTouch = (event: PibblPointerEvent) => {
-    if (event.pointerType !== "touch" || !gesture.points.has(event.pointerId)) return;
+  const movePointer = (event: PibblPointerEvent) => {
+    if (!gesture.points.has(event.pointerId)) return;
     gesture.points.set(event.pointerId, { x: event.x, y: event.y });
     if (gesture.points.size >= 2) {
       const [first, second] = [...gesture.points.values()];
@@ -612,20 +675,28 @@ function Desk() {
           Math.abs(gesture.startRange[1] - gesture.startRange[0]) * factor,
         ),
       );
-      const start = anchor - ((center - left) / Math.max(1, right - left)) * span;
-      viewport.set(shiftLogicalRange([start, start + span], { ...navigation, delta: 0 }));
-      gesture.dragged ||= Math.abs(distance - gesture.startDistance) > 3 || Math.abs(center - gesture.startCenter) > 3;
+      const start =
+        anchor - ((center - left) / Math.max(1, right - left)) * span;
+      intent.set(
+        shiftLogicalRange([start, start + span], { ...navigation, delta: 0 }),
+      );
+      gesture.dragged ||=
+        Math.abs(distance - gesture.startDistance) > 3 ||
+        Math.abs(center - gesture.startCenter) > 3;
       return;
     }
+    if (!gesture.dragged && Math.abs(event.x - gesture.startX) <= 3) return;
     const span = gesture.startRange[1] - gesture.startRange[0];
-    viewport.set(shiftLogicalRange(gesture.startRange, {
-      ...navigation,
-      delta: -((event.x - gesture.startX) / Math.max(1, right - left)) * span,
-    }));
+    intent.set(
+      shiftLogicalRange(gesture.startRange, {
+        ...navigation,
+        delta: -((event.x - gesture.startX) / Math.max(1, right - left)) * span,
+      }),
+    );
     gesture.dragged ||= Math.abs(event.x - gesture.startX) > 3;
   };
-  const endTouch = (event: PibblPointerEvent, cancelled = false) => {
-    if (event.pointerType !== "touch") return;
+  const endPointer = (event: PibblPointerEvent, cancelled = false) => {
+    if (!gesture.points.has(event.pointerId)) return;
     if (!cancelled && event.currentTarget.hasPointerCapture(event.pointerId))
       event.currentTarget.releasePointerCapture(event.pointerId);
     gesture.points.delete(event.pointerId);
@@ -847,10 +918,10 @@ function Desk() {
             onClick={pin}
             onKeyDown={key}
             onWheel={wheel}
-            onPointerDown={beginTouch}
-            onPointerMove={moveTouch}
-            onPointerUp={endTouch}
-            onPointerCancel={(event) => endTouch(event, true)}
+            onPointerDown={beginPointer}
+            onPointerMove={movePointer}
+            onPointerUp={endPointer}
+            onPointerCancel={(event) => endPointer(event, true)}
             style={{
               left,
               top,
@@ -892,7 +963,7 @@ function Desk() {
       >
         {narrow
           ? `Drag / pinch to navigate · tap to pin · arrows to step`
-          : "Wheel to zoom · touch drag / pinch to navigate · click to pin · arrows to step · Northstar has one explicit gap"}
+          : "Drag to pan · wheel to zoom · horizontal / Shift-wheel to pan · touch pinch to zoom · click to pin"}
       </Label>
     </>
   );

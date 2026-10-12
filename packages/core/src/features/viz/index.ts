@@ -138,6 +138,7 @@ export type {
   LinearTickOptions,
   NumberFormatOptions,
 } from "./lib/numeric-ticks.js";
+export { interpolateNumericRange } from "./lib/numeric-range-interpolation.js";
 export {
   visibleOhlcPriceExtent,
   padLinearDomain,
