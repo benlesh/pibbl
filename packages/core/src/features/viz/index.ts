@@ -146,6 +146,12 @@ export type {
   VisibleOhlcPriceExtentOptions,
   PadLinearDomainOptions,
 } from "./lib/financial-autoscale.js";
+export { percentageReturns, indexTo100 } from "./lib/financial-comparison.js";
+export type {
+  ComparisonBaseOptions,
+  PercentageReturnPoint,
+  IndexedValuePoint,
+} from "./lib/financial-comparison.js";
 
 export { utcTickLabels } from "./lib/utc-labels.js";
 export type { UTCTickLabelOptions } from "./lib/utc-labels.js";

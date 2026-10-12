@@ -1,5 +1,28 @@
 [
   {
+    "id": "financial-percentage-returns",
+    "title": "Common-base percentage returns",
+    "description": "Derive cumulative simple returns with explicit null gaps from one exact base.",
+    "source": "financial-percentage-returns.tsx",
+    "environment": "browser",
+    "symbols": [
+      { "name": "percentageReturns", "importPath": "@pibbl/core/viz" },
+      { "name": "ComparisonBaseOptions", "importPath": "@pibbl/core/viz" },
+      { "name": "PercentageReturnPoint", "importPath": "@pibbl/core/viz" }
+    ]
+  },
+  {
+    "id": "financial-index-to-100",
+    "title": "Common-base indexed values",
+    "description": "Index supplied prices to 100 at one exact common base.",
+    "source": "financial-index-to-100.tsx",
+    "environment": "browser",
+    "symbols": [
+      { "name": "indexTo100", "importPath": "@pibbl/core/viz" },
+      { "name": "IndexedValuePoint", "importPath": "@pibbl/core/viz" }
+    ]
+  },
+  {
     "id": "scales",
     "title": "Scales and axes",
     "description": "Create band and linear scales with a typed axis and inspect resolved mappings.",
@@ -1057,7 +1080,10 @@
     "environment": "browser",
     "symbols": [
       { "name": "ReferenceLine", "importPath": "@pibbl/core/viz" },
-      { "name": "nearestRecordedCandleX", "importPath": "@pibbl/core/viz/inspection" }
+      {
+        "name": "nearestRecordedCandleX",
+        "importPath": "@pibbl/core/viz/inspection"
+      }
     ]
   },
   {
@@ -1080,7 +1106,12 @@
     "environment": "browser",
     "symbols": [
       { "name": "visibleOhlcPriceExtent", "importPath": "@pibbl/core/viz" },
-      { "name": "padLinearDomain", "importPath": "@pibbl/core/viz" }
+      { "name": "padLinearDomain", "importPath": "@pibbl/core/viz" },
+      { "name": "PadLinearDomainOptions", "importPath": "@pibbl/core/viz" },
+      {
+        "name": "VisibleOhlcPriceExtentOptions",
+        "importPath": "@pibbl/core/viz"
+      }
     ]
   },
   {
@@ -1102,15 +1133,39 @@
     "source": "financial-volume-inspection.tsx",
     "environment": "browser",
     "symbols": [
-      { "name": "useVolumeInspection", "importPath": "@pibbl/core/viz/inspection" },
-      { "name": "nearestRecordedVolumeX", "importPath": "@pibbl/core/viz/inspection" },
+      {
+        "name": "useVolumeInspection",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "nearestRecordedVolumeX",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
       { "name": "paintedVolumeAt", "importPath": "@pibbl/core/viz/inspection" },
-      { "name": "VolumeObservation", "importPath": "@pibbl/core/viz/inspection" },
-      { "name": "VolumeInspectionCandidate", "importPath": "@pibbl/core/viz/inspection" },
-      { "name": "NearestVolumeHit", "importPath": "@pibbl/core/viz/inspection" },
-      { "name": "PaintedVolumeHit", "importPath": "@pibbl/core/viz/inspection" },
-      { "name": "VolumeInspectionRef", "importPath": "@pibbl/core/viz/inspection" },
-      { "name": "VolumeRenderedSeries", "importPath": "@pibbl/core/viz/inspection" }
+      {
+        "name": "VolumeObservation",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "VolumeInspectionCandidate",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "NearestVolumeHit",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "PaintedVolumeHit",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "VolumeInspectionRef",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "VolumeRenderedSeries",
+        "importPath": "@pibbl/core/viz/inspection"
+      }
     ]
   },
   {
@@ -1147,15 +1202,39 @@
     "source": "financial-candle-inspection.tsx",
     "environment": "browser",
     "symbols": [
-      { "name": "useCandleInspection", "importPath": "@pibbl/core/viz/inspection" },
-      { "name": "nearestRecordedCandleX", "importPath": "@pibbl/core/viz/inspection" },
+      {
+        "name": "useCandleInspection",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "nearestRecordedCandleX",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
       { "name": "paintedCandleAt", "importPath": "@pibbl/core/viz/inspection" },
-      { "name": "CandleObservation", "importPath": "@pibbl/core/viz/inspection" },
-      { "name": "CandleInspectionCandidate", "importPath": "@pibbl/core/viz/inspection" },
-      { "name": "NearestCandleHit", "importPath": "@pibbl/core/viz/inspection" },
-      { "name": "PaintedCandleHit", "importPath": "@pibbl/core/viz/inspection" },
-      { "name": "CandleInspectionRef", "importPath": "@pibbl/core/viz/inspection" },
-      { "name": "CandleRenderedSeries", "importPath": "@pibbl/core/viz/inspection" }
+      {
+        "name": "CandleObservation",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "CandleInspectionCandidate",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "NearestCandleHit",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "PaintedCandleHit",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "CandleInspectionRef",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "CandleRenderedSeries",
+        "importPath": "@pibbl/core/viz/inspection"
+      }
     ]
   }
 ]

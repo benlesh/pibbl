@@ -1474,6 +1474,22 @@ export declare function linearTicks(domain: NumericDomain, options?: LinearTickO
 export declare function niceLinearDomain(domain: NumericDomain, options?: LinearTickOptions): NumericDomain;
 export declare function formatNumber(value: number, options?: NumberFormatOptions): string;
 export declare function niceUTCDomain(domain: NumericDomain, options?: { readonly count?: number }): NumericDomain;
+export interface ComparisonBaseOptions<D> {
+ readonly time: LineAccessor<D>;
+ readonly value: LineAccessor<D>;
+ readonly baseTime: number;
+ readonly defined?: (datum: D, index: number, data: readonly D[]) => boolean;
+}
+export interface PercentageReturnPoint<D> {
+ readonly datum: D; readonly sourceIndex: number; readonly time: number | null; readonly returnPercent: number | null;
+}
+export interface IndexedValuePoint<D> {
+ readonly datum: D; readonly sourceIndex: number; readonly time: number | null; readonly indexValue: number | null;
+}
+/** Cumulative simple return in percentage points from the exact positive base; undefined means unavailable base. */
+export declare function percentageReturns<D>(data: readonly D[], options: ComparisonBaseOptions<D>): readonly PercentageReturnPoint<D>[] | undefined;
+/** Values indexed to 100 at the exact positive base; undefined means unavailable base. */
+export declare function indexTo100<D>(data: readonly D[], options: ComparisonBaseOptions<D>): readonly IndexedValuePoint<D>[] | undefined;
 export interface VisibleOhlcPriceExtentOptions<D> {
   readonly time: LineAccessor<D>;
   readonly open: LineAccessor<D>;

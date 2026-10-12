@@ -1,12 +1,11 @@
 # Plan 008 — Financial charting
 
 Status: Batch 0 accepted, hardened and committed as `0ad33084`. Batches 1 and 2
-are accepted; on 2026-10-09 the user approved Batch 2 and requested a local commit,
-then continuation. Commit the approved financial slices and their dependencies
-without unrelated work. Batch 3 authoring design review is the next checkpoint;
-API-first acceptance remains required before new implementation. No push or
-publishing is authorized. Final focused Batch 2 evidence is recorded below; broader
-hardening and aggregate verification remain distinct from slice acceptance.
+are accepted and committed as `be31890a`. Batch 3 authoring was accepted and
+independently audited on 2026-10-12; its linked panes, UTC range controls and
+fixed-base comparison slices are ready for feedback. Public comparison signatures
+remain as proposed. Broader hardening and aggregate verification follow experiential
+feedback; no Batch 3 feature-complete claim, push or publication is made.
 
 ## Goal and baseline
 
@@ -218,6 +217,25 @@ last-price/preceding-close guides, currency/compact volume labels and visible-wi
 autoscaling with manual override and linear/log presentation. Market Session and
 three focused lessons are the public surfaces. Stop at these three capabilities;
 collect experiential feedback before broader hardening or Batch 3.
+
+### [DONE] Batch 3 authoring audit
+
+The user approved the [coordinated analysis proposal](008-coordinated-analysis-proposal.md)
+conditional on flexibility and agent understandability. Independent review found no
+material API change necessary. Keep application-owned linked pane/navigation state;
+add only `percentageReturns` and `indexTo100` with separate fixed return contracts.
+Document cumulative simple return from an exact common base, not adjacent-period return.
+
+### [NEXT] Review the Batch 3 runnable coordinated slices
+
+Inspect [Relative Performance Desk](http://127.0.0.1:5196/#/examples/composition/financial-relative-performance),
+[linked panes](http://127.0.0.1:5196/#/examples/composition/financial-linked-panes),
+[UTC calendar controls](http://127.0.0.1:5196/#/examples/composition/financial-calendar-ranges)
+and [normalized returns](http://127.0.0.1:5196/#/examples/composition/financial-normalized-returns).
+Market Session also gains 1M/3M/YTD, bounded pan/zoom, fit and return-to-latest controls.
+Check the fixed base across viewport changes, exact shared timestamp readouts, explicit
+missing observation and unavailable-base status, and touch/keyboard use on a phone.
+Stop after these three capabilities for feedback before hardening or Batch 4.
 
 ## Batch 0 — composable data-inspection foundation
 
@@ -798,3 +816,81 @@ unrelated texture, recording, repair-evaluation and brand work outside the commi
 The next authoring review covers Batch 3 linked panes, range controls and normalized
 comparison returns. Existing API-first design acceptance remains required before
 production work on that batch. No push or publication is requested.
+
+### 2026-10-12 — Batch 3 API audit and runnable slice evidence
+
+The user conditionally approved proceeding after an API flexibility/understandability
+review. Independent comparison audit recommended the proposed contracts unchanged.
+One implementation agent delivered the pure transforms; another delivered the independent
+learning examples. Root integrated Relative Performance Desk and Market Session navigation.
+Focused failing public tests preceded production changes. Comparison rows evaluate each
+eligible accessor once, keep source order and null gaps, use exact positive common bases,
+and preserve finite arithmetic for extreme and near-base values without rounding.
+
+All editable lessons use supported public imports and remain self-contained. Local UTC
+month subtraction uses platform Date operations with month-end/leap-year clamping.
+Calendar membership is resolved before logical slot compression. Selected timestamps,
+viewport and comparison base remain independent. Numeric labels use existing formatNumber
+and Intl.NumberFormat. The desk provides dark/light palettes, direct end labels, a known
+Northstar gap, and an unavailable asset missing the exact common base.
+
+Fresh Node 24.15.0 / pnpm 11.21.0 evidence: core build, repository TypeScript, focused
+ESLint, public JSDoc, Studio API/search manifest and packed viz Bundler/NodeNext consumers
+pass. Eight native Studio cases (four new examples on desktop and touch phone) pass
+editor typechecking and interaction with no runtime errors; screenshots are under
+`/tmp/pibbl-financial-batch3`. The final focused browser results are recorded below.
+The broad documentation verifier encounters an unrelated unclassified repair-evaluation
+README; this is not a financial API/doc failure and no aggregate trust result is claimed.
+This milestone is slice ready for feedback, not feature complete.
+
+Final focused verification: normal source configuration passes seven files / 21 tests;
+built public entries pass three files / 11 tests. Eight new Studio cases and eight
+existing financial Studio cases pass native desktop/touch interactions, editor
+checks and zero runtime errors. Node 24.15.0 and pnpm 11.21.0 were used throughout.
+
+### 2026-10-12 — Financial audience presentation feedback
+
+The user requested an explanation of every new API and found the examples too
+simple to be compelling for financial/scientific readers. The public additions
+remain two comparison operations and three associated types; linked panes and
+calendar controls compose existing public APIs.
+
+Updated all four Batch 3 examples with numeric USD/percentage/share axes, UTC
+date ticks, named instruments and simulation notes. Daily series now have
+irregular moves, volatility and discrete shocks. Percentage/indexed comparisons
+identify price-only returns and excluded dividends. Linked marks size to supplied
+session spacing; calendar windows display observation counts rather than internal
+slot coordinates. Missing closes and unavailable common bases remain visible.
+Native Studio verification passes eight desktop/touch cases, editor checking and
+zero runtime errors. Final focused test evidence is recorded after this iteration.
+
+Final presentation checks: eight focused tests across three files pass in the normal
+Chromium configuration. Repository typecheck, focused ESLint and catalog validation
+pass. Actual desktop/phone screenshots were inspected; date/footer collisions and
+crowded fixed-width marks were corrected before delivery. These are example
+presentation changes; the approved public transform contracts are unchanged.
+
+### 2026-10-12 — Calendar ticks and shared gesture viewport feedback
+
+Calendar Windows and Relative Performance Desk now derive date ticks from the
+visible supplied sessions and chart width. Application-local UTC policy uses
+month labels beyond 60 days, weekly session labels beyond 10 days, and individual
+session labels below that, with a width-based label budget. No timestamps are
+invented across gaps. `Axis.tickValues` and `Axis.tickFormat` carry this policy;
+this does not change the public trading scale tick contract.
+
+Preset highlights derive from viewport endpoint matching rather than remembering
+the last button. All equivalent presets highlight; unmatched views report Custom.
+The Desk uses the same viewport for cursor-anchored wheel zoom and captured touch
+pan/pinch. Native touch-action ownership restores the prior canvas style on
+teardown; gestures preserve the fixed comparison base and separate inspection pin,
+handle cancellation, and distinguish dragging from tap-to-pin. These remain
+self-contained application examples, not new public calendar-control or gesture
+controller APIs.
+
+Fresh focused verification under Node 24.15.0 / pnpm 11.21.0 / Chromium: four
+financial example/navigation test files, 16 passing tests; typecheck and targeted
+ESLint passed. Studio desktop and phone checks passed for all four coordinated
+examples, including editor compilation and no page errors. Real Chromium wheel,
+touch drag, pinch, subsequent tap-to-pin, and preset restoration also passed.
+This is a feedback-ready slice; aggregate trust has not been rerun for this change.

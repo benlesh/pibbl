@@ -1,12 +1,17 @@
 ---
 id: api-function-financial-series
 title: Financial series
-summary: Paint time-aligned volume columns and inspect captured original financial records on demand.
+summary: Render and inspect original financial observations and compare cumulative returns from an exact common base.
 kind: api
 slug: financial-series
 apiCategory: function
 symbols:
   [
+    ComparisonBaseOptions,
+    PercentageReturnPoint,
+    IndexedValuePoint,
+    percentageReturns,
+    indexTo100,
     CandlestickSeries,
     CandlestickSeriesProps,
     CandlestickSeriesStyle,
@@ -182,7 +187,43 @@ domains as ordinary application state. For logarithmic presentation, first
 confirm every visible low is positive, pad the logged domain, and exponentiate;
 these helpers do not select a scale mode.
 
-## Candles
+## Fixed-base comparison
+
+`percentageReturns(data, { time, value, baseTime, defined? })` computes cumulative
+simple return from an exact common base observation: `(value - base) / base * 100`.
+This is change from the base, not the return between adjacent observations.
+`indexTo100` accepts the same named inputs and computes `value / base * 100`.
+The base maps exactly to 0 or 100; observations are never rounded.
+
+```ts
+const comparison = percentageReturns(prices, {
+  time: "time",
+  value: "close",
+  baseTime: Date.UTC(2026, 0, 2, 16),
+});
+if (comparison) {
+  // LineSeries: x="time", y="returnPercent". Use the same baseTime for every asset.
+}
+```
+
+The result is a frozen source-ordered array of frozen points containing the original
+`datum`, `sourceIndex`, `time`, and `returnPercent` or `indexValue`. Datum references
+remain caller owned. Missing/nonfinite coordinates or values produce null gaps.
+`defined` runs before accessors and excluded rows become gaps. Known missing
+observations must be explicit null-value rows; these helpers do not infer a calendar.
+
+`baseTime` must be a safe integer UTC millisecond within the platform Date range.
+An absent eligible complete exact base returns `undefined`; render an unavailable
+asset status. Multiple eligible complete base records, a nonpositive base price,
+or a nonfinite derived result throw. Later finite negative prices remain actual
+observations. No nearest-date fallback, per-asset rebasing, sorting or mutation
+occurs. Changing the viewport does not change the base.
+
+For percentage labels use `formatNumber(value, { suffix: "%" })`: these values
+already express percentage points. An Intl percent formatter would multiply them
+by 100 again. Formatting belongs to presentation and uses `Intl.NumberFormat`.
+
+## Candle painting
 
 `CandlestickSeries` accepts original `data`, named `time/open/high/low/close`
 accessors, xScale/yScale IDs, `defined`, named `style.body`/`style.wick`, and optional

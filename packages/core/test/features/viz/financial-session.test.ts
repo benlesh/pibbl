@@ -57,7 +57,7 @@ it("shows responsive market geometry and lazy native mouse/touch-equivalent insp
     canvas.dispatchEvent(
       new MouseEvent("mousemove", {
         clientX: box.left + 16 + (28.5 / 56) * (760 - 94),
-        clientY: box.top + 120,
+        clientY: box.top + 170,
         bubbles: true,
       }),
     );

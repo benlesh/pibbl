@@ -49,7 +49,7 @@ try {
           16 +
           (bounds.width - 68) *
             (slug === "financial-trading-time" ? 0.16 : 0.4),
-        y: slug === "financial-market-session" ? 140 : 100,
+        y: slug === "financial-market-session" ? 170 : 100,
       };
       if (mobile) await canvas.tap({ position });
       else await canvas.hover({ position });

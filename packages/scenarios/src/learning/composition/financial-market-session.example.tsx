@@ -32,6 +32,116 @@ import {
   useVolumeInspection,
   withInspection,
 } from "@pibbl/core/viz/inspection";
+// Application-local UTC and slot navigation; editable examples remain self-contained.
+/** Application-local navigation for supplied observation slots. */
+type LogicalRange = readonly [number, number];
+
+function utcPeriodRange(
+  timestamps: readonly number[],
+  { startTime, endTime }: { startTime: number; endTime: number },
+): LogicalRange | undefined {
+  if (
+    !Number.isFinite(startTime) ||
+    !Number.isFinite(endTime) ||
+    startTime > endTime
+  )
+    throw new Error("utcPeriodRange requires ordered finite UTC times");
+  const first = timestamps.findIndex(
+    (time) => time >= startTime && time <= endTime,
+  );
+  if (first < 0) return undefined;
+  let last = first;
+  for (let index = first + 1; index < timestamps.length; index += 1)
+    if (timestamps[index]! >= startTime && timestamps[index]! <= endTime)
+      last = index;
+  return Object.freeze([first - 0.5, last + 0.5]) as LogicalRange;
+}
+
+function calendarMonthsBefore(asOfTime: number, months: number): number {
+  if (
+    !Number.isSafeInteger(asOfTime) ||
+    !Number.isInteger(months) ||
+    months < 0
+  )
+    throw new Error(
+      "calendarMonthsBefore requires a safe UTC time and whole non-negative months",
+    );
+  const source = new Date(asOfTime);
+  const targetMonth = source.getUTCMonth() - months;
+  const targetYear = source.getUTCFullYear() + Math.floor(targetMonth / 12);
+  const normalizedMonth = ((targetMonth % 12) + 12) % 12;
+  const lastDay = new Date(
+    Date.UTC(targetYear, normalizedMonth + 1, 0),
+  ).getUTCDate();
+  return Date.UTC(
+    targetYear,
+    normalizedMonth,
+    Math.min(source.getUTCDate(), lastDay),
+    source.getUTCHours(),
+    source.getUTCMinutes(),
+    source.getUTCSeconds(),
+    source.getUTCMilliseconds(),
+  );
+}
+
+function normalized(
+  range: LogicalRange,
+  bounds: LogicalRange,
+  minimumSpan: number,
+): LogicalRange {
+  const low = Math.min(...bounds),
+    high = Math.max(...bounds);
+  const maxSpan = high - low;
+  const span = Math.min(
+    maxSpan,
+    Math.max(minimumSpan, Math.abs(range[1] - range[0])),
+  );
+  let start = Math.min(...range);
+  start = Math.max(low, Math.min(high - span, start));
+  return Object.freeze([start, start + span]) as LogicalRange;
+}
+
+function shiftLogicalRange(
+  range: LogicalRange,
+  {
+    delta,
+    bounds,
+    minimumSpan,
+  }: { delta: number; bounds: LogicalRange; minimumSpan: number },
+): LogicalRange {
+  if (!Number.isFinite(delta))
+    throw new Error("shiftLogicalRange delta must be finite");
+  return normalized([range[0] + delta, range[1] + delta], bounds, minimumSpan);
+}
+
+function zoomLogicalRange(
+  range: LogicalRange,
+  {
+    factor,
+    bounds,
+    minimumSpan,
+  }: { factor: number; bounds: LogicalRange; minimumSpan: number },
+): LogicalRange {
+  if (!Number.isFinite(factor) || factor <= 0)
+    throw new Error("zoomLogicalRange factor must be positive");
+  const midpoint = (range[0] + range[1]) / 2;
+  const half =
+    Math.max(minimumSpan, Math.abs(range[1] - range[0]) * factor) / 2;
+  return normalized([midpoint - half, midpoint + half], bounds, minimumSpan);
+}
+
+function latestLogicalRange(
+  range: LogicalRange,
+  { bounds, minimumSpan }: { bounds: LogicalRange; minimumSpan: number },
+): LogicalRange {
+  const span = Math.max(minimumSpan, Math.abs(range[1] - range[0]));
+  return normalized(
+    [Math.max(...bounds) - span, Math.max(...bounds)],
+    bounds,
+    minimumSpan,
+  );
+}
+
 // Fixed simulated weekdays and deterministic price regimes. No live market feed.
 const start = Date.UTC(2026, 0, 5),
   day = 86_400_000;
@@ -201,7 +311,7 @@ function Session() {
   const left = 16,
     right = w - 78,
     pw = right - left,
-    top = 116,
+    top = 144,
     bottom = h - 34;
   const priceBottom = top + (bottom - top - 20) * 0.72,
     volumeTop = priceBottom + 20;
@@ -320,6 +430,89 @@ function Session() {
       step(event.key);
     }
   };
+  const navigationBounds = [-0.5, bars.length - 0.5] as const;
+  const navigation = { bounds: navigationBounds, minimumSpan: 2 };
+  const asOfTime = timestamps.at(-1)!;
+  const selectPeriod = (startTime: number) => {
+    const next = utcPeriodRange(timestamps, { startTime, endTime: asOfTime });
+    if (next) viewport.set(next);
+  };
+  const rangeControls = [
+    {
+      label: "1M",
+      x: 16,
+      width: 30,
+      activate: () => selectPeriod(calendarMonthsBefore(asOfTime, 1)),
+    },
+    {
+      label: "3M",
+      x: 52,
+      width: 30,
+      activate: () => selectPeriod(calendarMonthsBefore(asOfTime, 3)),
+    },
+    {
+      label: "YTD",
+      x: 88,
+      width: 34,
+      activate: () =>
+        selectPeriod(Date.UTC(new Date(asOfTime).getUTCFullYear(), 0, 1)),
+    },
+    {
+      label: "←",
+      x: 128,
+      width: 24,
+      activate: () =>
+        viewport.set(
+          shiftLogicalRange(visibleRange, {
+            ...navigation,
+            delta: -(visibleRange[1] - visibleRange[0]) * 0.4,
+          }),
+        ),
+    },
+    {
+      label: "→",
+      x: 158,
+      width: 24,
+      activate: () =>
+        viewport.set(
+          shiftLogicalRange(visibleRange, {
+            ...navigation,
+            delta: (visibleRange[1] - visibleRange[0]) * 0.4,
+          }),
+        ),
+    },
+    {
+      label: "+",
+      x: 188,
+      width: 24,
+      activate: () =>
+        viewport.set(
+          zoomLogicalRange(visibleRange, { ...navigation, factor: 0.7 }),
+        ),
+    },
+    {
+      label: "−",
+      x: 218,
+      width: 24,
+      activate: () =>
+        viewport.set(
+          zoomLogicalRange(visibleRange, { ...navigation, factor: 1 / 0.7 }),
+        ),
+    },
+    {
+      label: "Fit",
+      x: 248,
+      width: 30,
+      activate: () => viewport.set(navigationBounds),
+    },
+    {
+      label: "Last",
+      x: 284,
+      width: 40,
+      activate: () =>
+        viewport.set(latestLogicalRange(visibleRange, navigation)),
+    },
+  ];
   const toggleManual = () => manual.set(manual.get() ? undefined : domain);
   const changePresentation = () => {
     log.update((value) => !value);
@@ -547,7 +740,9 @@ function Session() {
         x={16}
         width={48}
         label="All"
-        active={visibleRange[0] === -0.5 && visibleRange[1] === bars.length - 0.5}
+        active={
+          visibleRange[0] === -0.5 && visibleRange[1] === bars.length - 0.5
+        }
         colors={colors}
         onActivate={() => viewport.set([-0.5, bars.length - 0.5])}
       />
@@ -582,6 +777,17 @@ function Session() {
         colors={colors}
         onActivate={changePresentation}
       />
+      {rangeControls.map((control) => (
+        <Button
+          key={control.label}
+          x={control.x}
+          y={108}
+          width={control.width}
+          label={control.label}
+          colors={colors}
+          onActivate={control.activate}
+        />
+      ))}
       {w > 650 && domain && (
         <Label
           x={right}

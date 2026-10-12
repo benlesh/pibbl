@@ -77,11 +77,38 @@ it("teaches visible OHLC autoscaling without an off-window extreme", () => {
   try {
     expect(scene.labels).toContain("Visible-window autoscaling");
     expect(scene.labels).toContain("Recent window · $98.50–$104.50");
-    expect(scene.labels.some((label) => label.includes("Recent window · $98.50–$104.50"))).toBe(true);
+    expect(scene.labels).toContain("$98.50");
+    expect(scene.labels).toContain("$104.50");
+    expect(scene.labels).toContain("08 Oct");
+    expect(scene.labels).toContain("09 Oct");
+    scene.labels.length = 0;
     for (const type of ["mousedown", "mouseup", "click"])
-      scene.canvas.dispatchEvent(new MouseEvent(type, { clientX: 40, clientY: 280, bubbles: true }));
+      scene.canvas.dispatchEvent(new MouseEvent(type, { clientX: 240, clientY: 140, bubbles: true }));
     scene.flush();
-    expect(scene.labels.some((label) => label.includes("Earlier window · $33.90–$167.10"))).toBe(true);
+    expect(scene.labels).toContain("Earlier window · $33.90–$167.10");
+    expect(scene.labels).toContain("$33.90");
+    expect(scene.labels).toContain("$167.10");
+    expect(scene.labels).toContain("05 Oct");
+    expect(scene.labels).toContain("07 Oct");
+    expect(scene.labels).not.toContain("08 Oct");
+    scene.labels.length = 0;
+    scene.canvas.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true }));
+    scene.flush();
+    expect(scene.labels).toContain("Recent window · $98.50–$104.50");
+    scene.labels.length = 0;
+    scene.canvas.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowLeft", bubbles: true }));
+    scene.flush();
+    expect(scene.labels).toContain("Earlier window · $33.90–$167.10");
+    scene.labels.length = 0;
+    for (const type of ["mousedown", "mouseup", "click"])
+      scene.canvas.dispatchEvent(new MouseEvent(type, { clientX: 234, clientY: 261, bubbles: true }));
+    scene.flush();
+    expect(scene.labels).toContain("Recent window · $98.50–$104.50");
+    scene.labels.length = 0;
+    for (const type of ["mousedown", "mouseup", "click"])
+      scene.canvas.dispatchEvent(new MouseEvent(type, { clientX: 86, clientY: 261, bubbles: true }));
+    scene.flush();
+    expect(scene.labels).toContain("Earlier window · $33.90–$167.10");
   } finally { scene.controller.dispose(); }
 });
 
