@@ -1,25 +1,25 @@
 import { dispatchToLogicalTarget } from '../events/dispatch.js';
-import type { CRCEventType } from '../events/types.js';
+import type { PibblEventType } from '../events/types.js';
 import { update } from '../update.js';
-import type { CRCFocusManager } from './focus-manager.js';
-import type { CRCFocusModality } from './types.js';
-import type { CRCEventTargetRegistration } from '../events/registrations.js';
+import type { PibblFocusManager } from './focus-manager.js';
+import type { PibblFocusModality } from './types.js';
+import type { PibblEventTargetRegistration } from '../events/registrations.js';
 
 interface FocusTransitionRequest {
-  readonly target: CRCEventTargetRegistration | undefined;
-  readonly modality: CRCFocusModality;
+  readonly target: PibblEventTargetRegistration | undefined;
+  readonly modality: PibblFocusModality;
 }
 
 interface ActiveFocusTransition {
   queued: FocusTransitionRequest | undefined;
 }
 
-const activeTransitions = new WeakMap<CRCFocusManager, ActiveFocusTransition>();
+const activeTransitions = new WeakMap<PibblFocusManager, ActiveFocusTransition>();
 
 export function transitionLogicalFocus(
-  manager: CRCFocusManager,
-  requestedNext: CRCEventTargetRegistration | undefined,
-  modality: CRCFocusModality,
+  manager: PibblFocusManager,
+  requestedNext: PibblEventTargetRegistration | undefined,
+  modality: PibblFocusModality,
 ): void {
   if (manager.isDestroyed) return;
   const active = activeTransitions.get(manager);
@@ -52,9 +52,9 @@ export function transitionLogicalFocus(
 }
 
 function performLogicalFocusTransition(
-  manager: CRCFocusManager,
-  requestedNext: CRCEventTargetRegistration | undefined,
-  modality: CRCFocusModality,
+  manager: PibblFocusManager,
+  requestedNext: PibblEventTargetRegistration | undefined,
+  modality: PibblFocusModality,
 ): boolean {
   const previous = manager.logicalFocusTarget;
   const initialNext = manager.liveFocusCandidate(requestedNext);
@@ -92,9 +92,9 @@ function performLogicalFocusTransition(
 }
 
 function dispatchFocusEvent(
-  type: Extract<CRCEventType, 'blur' | 'focus' | 'focusin' | 'focusout'>,
-  target: CRCEventTargetRegistration,
-  relatedTarget: CRCEventTargetRegistration | undefined,
+  type: Extract<PibblEventType, 'blur' | 'focus' | 'focusin' | 'focusout'>,
+  target: PibblEventTargetRegistration,
+  relatedTarget: PibblEventTargetRegistration | undefined,
 ): void {
   dispatchToLogicalTarget(
     type,
@@ -107,6 +107,6 @@ function dispatchFocusEvent(
   );
 }
 
-function schedule(manager: CRCFocusManager): void {
+function schedule(manager: PibblFocusManager): void {
   if (!manager.isDestroyed) update(manager.canvas);
 }

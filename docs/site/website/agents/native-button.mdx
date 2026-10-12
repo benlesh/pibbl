@@ -1,0 +1,30 @@
+---
+title: Native button integration companion
+description: Adapt and verify the HTML-owned texture recipe.
+---
+
+Read the [complete recipe and source](/guides/native-button/) first. Public imports are `pibbl`, `createElement`, `Rectangle`, `signal`, `useLayoutBox`, and `useReaction` from `@pibbl/core`, plus `useTexture` and `reactionDiffusion` from `@pibbl/core/textures`.
+
+## Ownership and data flow
+
+The host owns its button, action, disabled state, CSS allocation, listeners, observers, and media query. Pibbl owns the canvas mount and hook-owned texture. Native events write one host signal. `useReaction` consumes that signal after a successful render and sends texture messages. A hover update does not replace the mount.
+
+The simulation resolution is 128 by 48. Pointer coordinates are normalized against the native button's bounding rectangle. Motion sends bounded displacement to `stir` and a small paint dose. Activation sends 20 radial paint/stir messages around the pointer, or the center for keyboard activation. The ring's cell offsets are divided separately by 128 and 48 so its texture-space radius is consistent. This is a reaction-diffusion disturbance, not a water-wave solver. The responsive Canvas allocation is measured in CSS pixels; brush radius is measured in texture cells.
+
+## Adaptation procedure
+
+1. Locate the host's lifecycle and its existing native action. Keep its button type and form semantics.
+2. Add the decorative sibling canvas and CSS wrapper. Preserve the visible label and focus outline.
+3. Mount after DOM insertion. Retain the returned object; call `update()` after programmatic native state changes if needed.
+4. Call `dispose()` before route teardown. A framework wrapper is application code, not a Pibbl API.
+5. Confirm the action still works without the effect and without interception by the canvas.
+
+## Verification
+
+Exercise click, Enter, Space, disabled state, a disabled ancestor fieldset, resize, reduced motion, hidden/offscreen pause, effect removal/remount, and host teardown. Confirm there is one native focus target and no Canvas action target. Inspect pixels only after native state and geometry pass. Use full-page screenshots when checking HTML plus Canvas; a canvas export excludes the HTML label.
+
+The recipe catches initial enhancement failure and keeps CSS fallback. Host applications should report later rendering failures through their normal error handling. Test target browsers before deployment. If the control is reparented into a different fieldset, remount the bridge so its ancestor observer ownership matches the new host.
+
+## Boundaries
+
+There is no live DOM capture, arbitrary HTML filtering, or automatic framework adapter. This recipe does not need `HtmlBox`. Do not allocate one simulation per catalog row without a measured budget. Keep the source's pause and cleanup paths when changing appearance.

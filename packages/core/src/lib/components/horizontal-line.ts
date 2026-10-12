@@ -1,15 +1,15 @@
 import { definePrimitive } from '../define-primitive.js';
 import type {
-  CRCEventFocusOptions,
-  CRCEventHandlers,
-  CRCEventParticipationOptions,
+  PibblEventFocusOptions,
+  PibblEventHandlers,
+  PibblEventParticipationOptions,
 } from '../events/types.js';
 import {
   PixelGridAlignment,
   RenderingContext2D,
   SystemStyle,
 } from '../types.js';
-import type { CRCPhysics2DPropExtension } from '../types.js';
+import type { PibblPhysics2DPropExtension } from '../types.js';
 import { adjustForPixelGrid } from '../util/pixel-grid-adjustments.js';
 import {
   resolveLocalOffset,
@@ -25,18 +25,46 @@ import type {
 } from '../style/types.js';
 import { renderLine, type LineStyle } from './line.js';
 
+/**
+ * Authored inputs for HorizontalLine, including the declared data and presentation options.
+ *
+ * @see {@link PibblEventHandlers}
+ * @see {@link PibblEventParticipationOptions}
+ * @see {@link PibblPhysics2DPropExtension}
+ * @see {@link HorizontalLine}
+ */
 export interface HorizontalLineProps
-  extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions, CRCPhysics2DPropExtension {}
+  extends PibblEventHandlers, PibblEventFocusOptions, PibblEventParticipationOptions, PibblPhysics2DPropExtension {}
 
+/**
+ * Supported geometry and presentation properties for HorizontalLine.
+ *
+ * @see {@link SystemStyle}
+ * @see {@link BoxStyle}
+ * @see {@link LayoutItemStyle}
+ * @see {@link LineStyle}
+ * @see {@link Length}
+ * @see {@link PixelGridAlignment}
+ * @see {@link HorizontalLine}
+ */
 export interface HorizontalLineStyle
-  extends SystemStyle,
-  BoxStyle,
-  LayoutItemStyle,
-  Omit<LineStyle, 'coords'> {
+  extends SystemStyle, BoxStyle, LayoutItemStyle, Omit<LineStyle, 'coords'> {
+  /**
+   * Vertical coordinate or displacement in the containing coordinate system. See {@link Length}.
+   */
   y: Exclude<Length, 'auto'>;
+  /** Horizontal coordinate of the first endpoint. See {@link Length}. */
   x1?: Exclude<Length, 'auto'>;
+  /** Horizontal coordinate of the second endpoint. See {@link Length}. */
   x2?: Exclude<Length, 'auto'>;
+  /**
+   * Pixel-grid alignment policy applied to the resolved geometry. See {@link PixelGridAlignment}.
+   */
   alignToPixelGrid?: PixelGridAlignment;
+  /**
+   * Width used for line hit testing independently of the visible stroke width. See
+   * {@link HorizontalLineStyle}.
+   */
   lineInteractionWidth?: number;
 }
 
@@ -87,6 +115,13 @@ function renderHorizontalLine(
 
 /**
  * Describes a horizontal-line primitive for JSX or createElement authoring.
+ *
+ * @param props - Authored component inputs, supplied through JSX or createElement. See the linked
+ * props and style types.
+ * @throws When called directly; Pibbl mounts this component through JSX or createElement.
+ *
+ * @see {@link HorizontalLineProps}
+ * @see {@link HorizontalLineStyle}
  */
 export const HorizontalLine = definePrimitive<
   HorizontalLineProps,

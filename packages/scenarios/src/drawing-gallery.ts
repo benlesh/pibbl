@@ -4,7 +4,7 @@ import type {
   ScenarioMountContext,
   ScenarioStateField,
 } from './types';
-import { crc } from '@crc/core';
+import { pibbl } from '@pibbl/core';
 import type {
   DrawingCompositionAction,
   DrawingCompositionState,
@@ -206,7 +206,7 @@ export const drawingShapesScenario = createLessonDefinition<DrawingShapesState>(
         revision: current.revision + 1,
       }));
     };
-    crc(canvas, createDrawingShapesScene(state, {
+    pibbl(canvas, createDrawingShapesScene(state, {
       onClippedHit: () => record('clipped-hit', 'clippedHits'),
       onClippedMiss: () => record('clipped-miss', 'clippedMisses'),
       onRoundedCutMiss: () => record('rounded-cut-miss', 'roundedCutMisses'),
@@ -239,7 +239,7 @@ export const drawingLinesScenario = createLessonDefinition<DrawingLinesState>({
   sourceId: DRAWING_LINES_SOURCE_ID,
   actionIds: DRAWING_LINES_ACTION_IDS,
   renderScene: (canvas, state, signal) => {
-    crc(canvas, createDrawingLinesScene(state), { signal });
+    pibbl(canvas, createDrawingLinesScene(state), { signal });
   },
   initialState: lastAction => ({
     lastAction: lastAction as DrawingLinesAction,
@@ -263,7 +263,7 @@ export const drawingTextScenario = createLessonDefinition<DrawingTextState>({
   sourceId: DRAWING_TEXT_SOURCE_ID,
   actionIds: DRAWING_TEXT_ACTION_IDS,
   renderScene: (canvas, state, signal, updateState) => {
-    crc(canvas, createDrawingTextScene(state, () => {
+    pibbl(canvas, createDrawingTextScene(state, () => {
       updateState(current => ({
         ...current,
         centeredClicks: current.centeredClicks + 1,
@@ -314,7 +314,7 @@ export const drawingImagesScenario = createLessonDefinition<DrawingImagesState>(
   sourceId: DRAWING_IMAGES_SOURCE_ID,
   actionIds: DRAWING_IMAGES_ACTION_IDS,
   renderScene: (canvas, state, signal) => {
-    crc(canvas, createDrawingImagesScene(state), { signal });
+    pibbl(canvas, createDrawingImagesScene(state), { signal });
   },
   initialState: lastAction => initialImagesState(lastAction as DrawingImagesAction),
   update: (state, actionId) => {
@@ -365,7 +365,7 @@ export const drawingCompositionScenario =
     sourceId: DRAWING_COMPOSITION_SOURCE_ID,
     actionIds: DRAWING_COMPOSITION_ACTION_IDS,
     renderScene: (canvas, state, signal) => {
-      crc(canvas, createDrawingCompositionScene(state), { signal });
+      pibbl(canvas, createDrawingCompositionScene(state), { signal });
     },
     initialState: lastAction => ({
       lastAction: lastAction as DrawingCompositionAction,

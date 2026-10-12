@@ -3,16 +3,16 @@ import { definePrimitive } from '../define-primitive.js';
 import { GLOBAL_STATE } from '../global-state.js';
 import { layoutDiagnostic } from '../style/diagnostics.js';
 import {
-  type CRCStructuralEventProps,
+  type PibblStructuralEventProps,
   wireStructuralEvents,
 } from '../components/structural-events.js';
 import type { BoxStyle, LayoutItemStyle, ResolvedBoxStyle } from '../style/types.js';
 import type {
-  CRCNodeInput,
+  PibblNodeInput,
   RenderingContext2D,
   SystemStyle,
 } from '../types.js';
-import type { CRCElement } from '../element/types.js';
+import type { PibblElement } from '../element/types.js';
 import { getChildPrimitiveReceiverToken } from '../element/metadata.js';
 import {
   childWithUsedSize,
@@ -28,13 +28,29 @@ import type { LayoutBox } from './types.js';
 
 type OverlayAlignment = 'start' | 'center' | 'end' | 'stretch';
 
+/**
+ * Supported geometry and presentation properties for Overlay.
+ *
+ * @see {@link BoxStyle}
+ * @see {@link LayoutItemStyle}
+ * @see {@link Overlay}
+ */
 export interface OverlayStyle extends BoxStyle, LayoutItemStyle {
+  /** Default alignment of children on the cross or block axis. See {@link OverlayAlignment}. */
   alignItems?: OverlayAlignment;
+  /** Default inline-axis alignment of grid or overlay children. See {@link OverlayAlignment}. */
   justifyItems?: OverlayAlignment;
 }
 
-export interface OverlayProps extends CRCStructuralEventProps {
-  children: CRCNodeInput;
+/**
+ * Authored inputs for Overlay, including the declared data and presentation options.
+ *
+ * @see {@link PibblNodeInput}
+ * @see {@link Overlay}
+ */
+export interface OverlayProps extends PibblStructuralEventProps {
+  /** Descendant content or the callback that supplies it. See {@link PibblNodeInput}. */
+  children: PibblNodeInput;
 }
 
 interface ResolvedOverlayStyle extends SystemStyle {
@@ -81,7 +97,16 @@ function renderOverlay(
   );
 }
 
-/** Describes overlay layout for JSX or createElement authoring. */
+/**
+ * Describes overlay layout for JSX or createElement authoring.
+ *
+ * @param props - Authored component inputs, supplied through JSX or createElement. See the linked
+ * props and style types.
+ * @throws When called directly; Pibbl mounts this component through JSX or createElement.
+ *
+ * @see {@link OverlayProps}
+ * @see {@link OverlayStyle}
+ */
 export const Overlay = definePrimitive<
   OverlayProps,
   OverlayStyle,
@@ -99,7 +124,7 @@ export const Overlay = definePrimitive<
 
 export function placeOverlayChild(
   container: Readonly<LayoutBox>,
-  child: CRCElement<any>,
+  child: PibblElement<any>,
   alignment: Readonly<Pick<OverlayStyle, 'alignItems' | 'justifyItems'>> = {},
 ): LayoutBox {
   return resolveOverlayChildPlacement(container, child, alignment).box;
@@ -107,10 +132,10 @@ export function placeOverlayChild(
 
 function resolveOverlayChildPlacement(
   container: Readonly<LayoutBox>,
-  child: CRCElement<any>,
+  child: PibblElement<any>,
   alignment: Readonly<Pick<OverlayStyle, 'alignItems' | 'justifyItems'>> = {},
   receiverToken?: object,
-): { box: LayoutBox; element: CRCElement<any> } {
+): { box: LayoutBox; element: PibblElement<any> } {
   const prepared = prepareDirectChildStyle(child, receiverToken, container);
   const item = preparedStyleValue(prepared) as Readonly<
     BoxStyle & LayoutItemStyle
@@ -176,7 +201,7 @@ function resolveOverlayChildPlacement(
 function resolveItemAlignment(
   item: LayoutItemStyle['alignSelf'] | LayoutItemStyle['justifySelf'],
   fallback: OverlayAlignment,
-  child: CRCElement<any>,
+  child: PibblElement<any>,
   container: Readonly<LayoutBox>,
   property: 'alignSelf' | 'justifySelf',
 ): OverlayAlignment {

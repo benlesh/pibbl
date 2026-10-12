@@ -6,10 +6,10 @@ import { chromium } from "playwright";
 
 const workspaceRoot = resolve(fileURLToPath(new URL("..", import.meta.url)));
 const update = process.argv.includes("--update");
-const previewPort = process.env.CRC_DIAGRAM_TUTORIAL_PREVIEW_PORT ?? "4175";
+const previewPort = process.env.PIBBL_DIAGRAM_TUTORIAL_PREVIEW_PORT ?? "4175";
 if (!/^[1-9]\d{0,4}$/.test(previewPort) || Number(previewPort) > 65_535) {
   throw new Error(
-    `CRC_DIAGRAM_TUTORIAL_PREVIEW_PORT must be an integer from 1 through 65535; received ${JSON.stringify(previewPort)}.`,
+    `PIBBL_DIAGRAM_TUTORIAL_PREVIEW_PORT must be an integer from 1 through 65535; received ${JSON.stringify(previewPort)}.`,
   );
 }
 
@@ -121,7 +121,7 @@ try {
     timezoneId: "UTC",
     deviceScaleFactor: 1,
   });
-  await page.goto(`${origin}/#/learn/tutorials/diagram-editor/finished-editor`);
+  await page.goto(`${origin}/#/workbench/diagram-editor-finished`);
   const frames = page.locator("iframe");
   await frames.first().waitFor({ timeout: 30_000 });
   const frameCount = await frames.count();
@@ -165,6 +165,10 @@ try {
     return element.toDataURL("image/png");
   });
   const actual = Buffer.from(imageDataUrl.slice(imageDataUrl.indexOf(",") + 1), "base64");
+  const artifactDirectory = resolve(workspaceRoot, "test-screenshots/studio");
+  await mkdir(artifactDirectory, { recursive: true });
+  const actualPath = resolve(artifactDirectory, "diagram-editor-teaser.actual.png");
+  await writeFile(actualPath, actual);
 
   if (update) {
     await mkdir(dirname(teaserPath), { recursive: true });
@@ -178,9 +182,16 @@ try {
       );
     }
     const comparison = await pixelDifference(page, expected, actual);
+    await writeFile(resolve(artifactDirectory, "diagram-editor-teaser.expected.png"), expected);
+    await writeFile(resolve(artifactDirectory, "diagram-editor-teaser.comparison.json"), JSON.stringify({
+      platform: process.platform,
+      arch: process.arch,
+      chromium: browser.version(),
+      ...comparison,
+    }, null, 2));
     if (comparison.differentPixels !== 0) {
       throw new Error(
-        `Diagram-editor teaser differs by ${comparison.differentPixels} pixels (${comparison.dimensions}).`,
+        `Diagram-editor teaser differs by ${comparison.differentPixels} pixels (${comparison.dimensions}). Inspect ${actualPath} and its adjacent expected image and comparison metadata.`,
       );
     }
     process.stdout.write(

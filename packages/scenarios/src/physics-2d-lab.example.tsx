@@ -9,29 +9,29 @@ import {
   Text,
   usePlayback,
   signal,
-  track,
+  drive,
   tween,
-  type CRCNode,
-  type CRCPlayback,
+  type PibblNode,
+  type PibblPlayback,
   type WritableSignal,
-} from "@crc/core";
+} from "@pibbl/core";
 import {
   Capsule2D,
   PhysicsWorld2D,
   collider2D,
-  crcPhysicsBody2D,
-  crcPhysicsWorld2D,
+  pibblPhysicsBody2D,
+  pibblPhysicsWorld2D,
   dynamicBody2D,
   enableBody2D,
   kinematicBody2D,
   staticBody2D,
   teleportBody2D,
-  type CRCPhysicsBodyHandle2D,
-  type CRCPhysicsCollisionEvent2D,
-  type CRCPhysicsOverlapEvent2D,
-  type CRCPhysicsVector2,
-  type CRCPhysicsWorldHandle2D,
-} from "@crc/physics/2d";
+  type PibblPhysicsBodyHandle2D,
+  type PibblPhysicsCollisionEvent2D,
+  type PibblPhysicsOverlapEvent2D,
+  type PibblPhysicsVector2,
+  type PibblPhysicsWorldHandle2D,
+} from "@pibbl/core/physics/2d";
 
 // prettier-ignore
 export const PHYSICS_2D_LAB_SOURCE_ID = 'first-class-physics-2d-laboratory-example';
@@ -48,8 +48,18 @@ export const PHYSICS_2D_LAB_BODY_IDS = [
   "handoff",
 ] as const;
 
+/**
+ * A stable body identifier used by the physics lab's observations and actions.
+ *
+ * @see {@link Physics2DLabState}
+ */
 export type Physics2DLabBodyId = (typeof PHYSICS_2D_LAB_BODY_IDS)[number];
 
+/**
+ * Actions supported by the physics2 d lab scenario's public controller.
+ *
+ * @see {@link Physics2DLabState}
+ */
 export type Physics2DLabAction =
   | "settle"
   | "impulse"
@@ -61,36 +71,76 @@ export type Physics2DLabAction =
   | "reenable-handoff"
   | "remove-owner";
 
+/**
+ * Observed pose and motion of one body in the physics lab.
+ *
+ * @see {@link PibblPhysicsVector2}
+ * @see {@link Physics2DLabState}
+ */
 export interface Physics2DLabBodySnapshot {
-  readonly position: CRCPhysicsVector2;
+  /** Position recorded or configured by this scenario. See {@link PibblPhysicsVector2}. */
+  readonly position: PibblPhysicsVector2;
+  /**
+   * Rotation degrees recorded or configured by this scenario. See {@link Physics2DLabBodySnapshot}
+   * .
+   */
   readonly rotationDegrees: number;
-  readonly linearVelocity: CRCPhysicsVector2;
+  /** Linear velocity recorded or configured by this scenario. See {@link PibblPhysicsVector2}. */
+  readonly linearVelocity: PibblPhysicsVector2;
+  /**
+   * Angular velocity degrees per second recorded or configured by this scenario. See
+   * {@link Physics2DLabBodySnapshot}.
+   */
   readonly angularVelocityDegreesPerSecond: number;
+  /** Sleeping recorded or configured by this scenario. See {@link Physics2DLabBodySnapshot}. */
   readonly sleeping: boolean;
+  /** Enabled recorded or configured by this scenario. See {@link Physics2DLabBodySnapshot}. */
   readonly enabled: boolean;
+  /** Generation recorded or configured by this scenario. See {@link Physics2DLabBodySnapshot}. */
   readonly generation: number;
-  readonly presentedPosition: CRCPhysicsVector2;
+  /** Presented position recorded or configured by this scenario. See {@link PibblPhysicsVector2}. */
+  readonly presentedPosition: PibblPhysicsVector2;
+  /**
+   * Presentation offset recorded or configured by this scenario. See
+   * {@link Physics2DLabBodySnapshot}.
+   */
   readonly presentationOffset: number;
 }
 
+/**
+ * Observable state exposed by the physics2 d lab scenario for controls and assertions.
+ *
+ * @see {@link Physics2DLabBodyId}
+ * @see {@link Physics2DLabBodySnapshot}
+ * @see {@link Physics2DLabAction}
+ */
 export interface Physics2DLabState {
-  readonly bodies: Readonly<
-    Record<Physics2DLabBodyId, Physics2DLabBodySnapshot>
-  >;
+  /**
+   * Bodies recorded or configured by this scenario. See {@link Physics2DLabBodyId},
+   * {@link Physics2DLabBodySnapshot}.
+   */
+  readonly bodies: Readonly<Record<Physics2DLabBodyId, Physics2DLabBodySnapshot>>;
+  /** World revision recorded or configured by this scenario. See {@link Physics2DLabState}. */
   readonly worldRevision: number;
+  /** Contacts recorded or configured by this scenario. See {@link Physics2DLabState}. */
   readonly contacts: readonly string[];
+  /** Overlaps recorded or configured by this scenario. See {@link Physics2DLabState}. */
   readonly overlaps: readonly string[];
+  /** Query tags recorded or configured by this scenario. See {@link Physics2DLabState}. */
   readonly queryTags: readonly string[];
+  /** Owner recorded or configured by this scenario. See {@link Physics2DLabState}. */
   readonly owner: "mounted" | "removed";
+  /** Transfer stage recorded or configured by this scenario. See {@link Physics2DLabState}. */
   readonly transferStage:
     "physics" | "disabled" | "animating" | "reenable-pending" | "removed";
+  /** Last action recorded or configured by this scenario. See {@link Physics2DLabAction}. */
   readonly lastAction: "mount" | "reset" | Physics2DLabAction;
 }
 
 export interface Physics2DLabModel {
-  readonly handles: Partial<Record<Physics2DLabBodyId, CRCPhysicsBodyHandle2D>>;
+  readonly handles: Partial<Record<Physics2DLabBodyId, PibblPhysicsBodyHandle2D>>;
   readonly presentedPositions: Partial<
-    Record<Physics2DLabBodyId, CRCPhysicsVector2>
+    Record<Physics2DLabBodyId, PibblPhysicsVector2>
   >;
   readonly contacts: string[];
   readonly overlaps: string[];
@@ -98,24 +148,24 @@ export interface Physics2DLabModel {
   readonly contactHandlers: Map<
     string,
     Readonly<{
-      onStart: (event: CRCPhysicsCollisionEvent2D) => void;
-      onEnd: (event: CRCPhysicsCollisionEvent2D) => void;
+      onStart: (event: PibblPhysicsCollisionEvent2D) => void;
+      onEnd: (event: PibblPhysicsCollisionEvent2D) => void;
     }>
   >;
   readonly overlapHandlers: Map<
     string,
     Readonly<{
-      onStart: (event: CRCPhysicsOverlapEvent2D) => void;
-      onEnd: (event: CRCPhysicsOverlapEvent2D) => void;
+      onStart: (event: PibblPhysicsOverlapEvent2D) => void;
+      onEnd: (event: PibblPhysicsOverlapEvent2D) => void;
     }>
   >;
-  readonly platformPosition: WritableSignal<CRCPhysicsVector2>;
-  readonly handoffPosition: WritableSignal<CRCPhysicsVector2>;
+  readonly platformPosition: WritableSignal<PibblPhysicsVector2>;
+  readonly handoffPosition: WritableSignal<PibblPhysicsVector2>;
   readonly handoffEnabled: WritableSignal<boolean>;
   readonly ownerVisible: WritableSignal<boolean>;
-  world: CRCPhysicsWorldHandle2D | undefined;
-  platformPlayback: CRCPlayback | undefined;
-  handoffPlayback: CRCPlayback | undefined;
+  world: PibblPhysicsWorldHandle2D | undefined;
+  platformPlayback: PibblPlayback | undefined;
+  handoffPlayback: PibblPlayback | undefined;
   handoffCompletionArmed: boolean;
   transferStage: Physics2DLabState["transferStage"];
   publish: (() => void) | undefined;
@@ -127,10 +177,10 @@ const INITIAL_HANDOFF_POSITION = Object.freeze([420, 202] as const);
 const HANDOFF_DESTINATION = Object.freeze([462, 116] as const);
 
 const interpolateVector = (
-  from: CRCPhysicsVector2,
-  to: CRCPhysicsVector2,
+  from: PibblPhysicsVector2,
+  to: PibblPhysicsVector2,
   progress: number,
-): CRCPhysicsVector2 =>
+): PibblPhysicsVector2 =>
   Object.freeze([
     from[0] + (to[0] - from[0]) * progress,
     from[1] + (to[1] - from[1]) * progress,
@@ -145,10 +195,10 @@ export function createPhysics2DLabModel(): Physics2DLabModel {
     queryTags: [],
     contactHandlers: new Map(),
     overlapHandlers: new Map(),
-    platformPosition: signal<CRCPhysicsVector2>(INITIAL_PLATFORM_POSITION, {
+    platformPosition: signal<PibblPhysicsVector2>(INITIAL_PLATFORM_POSITION, {
       debugName: "physics laboratory platform position",
     }),
-    handoffPosition: signal<CRCPhysicsVector2>(INITIAL_HANDOFF_POSITION, {
+    handoffPosition: signal<PibblPhysicsVector2>(INITIAL_HANDOFF_POSITION, {
       debugName: "physics laboratory handoff position",
     }),
     handoffEnabled: signal(true, {
@@ -176,9 +226,9 @@ export function createPhysics2DLabModel(): Physics2DLabModel {
     model.contactHandlers.set(
       id,
       Object.freeze({
-        onStart: (event: CRCPhysicsCollisionEvent2D) =>
+        onStart: (event: PibblPhysicsCollisionEvent2D) =>
           recordContact(model, "start", event),
-        onEnd: (event: CRCPhysicsCollisionEvent2D) =>
+        onEnd: (event: PibblPhysicsCollisionEvent2D) =>
           recordContact(model, "end", event),
       }),
     );
@@ -187,10 +237,10 @@ export function createPhysics2DLabModel(): Physics2DLabModel {
     model.overlapHandlers.set(
       id,
       Object.freeze({
-        onStart: (event: CRCPhysicsOverlapEvent2D) => {
+        onStart: (event: PibblPhysicsOverlapEvent2D) => {
           recordOverlap(model, "start", event);
         },
-        onEnd: (event: CRCPhysicsOverlapEvent2D) =>
+        onEnd: (event: PibblPhysicsOverlapEvent2D) =>
           recordOverlap(model, "end", event),
       }),
     );
@@ -201,7 +251,7 @@ export function createPhysics2DLabModel(): Physics2DLabModel {
 function recordContact(
   model: Physics2DLabModel,
   phase: "start" | "end",
-  event: CRCPhysicsCollisionEvent2D,
+  event: PibblPhysicsCollisionEvent2D,
 ): void {
   model.contacts.push(
     `${String(event.selfTag)}>${String(event.otherTag)}:${phase}`,
@@ -212,7 +262,7 @@ function recordContact(
 function recordOverlap(
   model: Physics2DLabModel,
   phase: "start" | "end",
-  event: CRCPhysicsOverlapEvent2D,
+  event: PibblPhysicsOverlapEvent2D,
 ): void {
   model.overlaps.push(
     `${String(event.selfTag)}>${String(event.otherTag)}:${phase}`,
@@ -221,7 +271,7 @@ function recordOverlap(
 }
 
 function WorldCapture({ model }: { readonly model: Physics2DLabModel }) {
-  model.world = crcPhysicsWorld2D();
+  model.world = pibblPhysicsWorld2D();
   model.world.revision.get();
   return undefined;
 }
@@ -235,11 +285,11 @@ function DynamicBody({
 }: Readonly<{
   id: Exclude<Physics2DLabBodyId, "platform" | "handoff">;
   model: Physics2DLabModel;
-  position: CRCPhysicsVector2;
-  children: CRCNode;
+  position: PibblPhysicsVector2;
+  children: PibblNode;
   gravityScale?: number;
 }>) {
-  const body = crcPhysicsBody2D();
+  const body = pibblPhysicsBody2D();
   model.handles[id] = body;
   return (
     <Group
@@ -265,7 +315,7 @@ function SolidCollider({
 }: Readonly<{
   id: string;
   model: Physics2DLabModel;
-  children: (physics: ReturnType<typeof collider2D>) => CRCNode;
+  children: (physics: ReturnType<typeof collider2D>) => PibblNode;
 }>) {
   const handlers = model.contactHandlers.get(id);
   if (!handlers) throw new Error(`Missing contact handlers for "${id}".`);
@@ -280,7 +330,7 @@ function SolidCollider({
 }
 
 function Platform({ model }: { readonly model: Physics2DLabModel }) {
-  const body = crcPhysicsBody2D();
+  const body = pibblPhysicsBody2D();
   model.handles.platform = body;
   const position = model.platformPosition.get();
   return (
@@ -311,7 +361,7 @@ function Platform({ model }: { readonly model: Physics2DLabModel }) {
 }
 
 function HandoffBall({ model }: { readonly model: Physics2DLabModel }) {
-  const body = crcPhysicsBody2D();
+  const body = pibblPhysicsBody2D();
   model.handles.handoff = body;
   const position = model.handoffPosition.get();
   const enabled = model.handoffEnabled.get();
@@ -400,7 +450,7 @@ function SensorMover({ model }: { readonly model: Physics2DLabModel }) {
 
 function AnimationOwners({ model }: { readonly model: Physics2DLabModel }) {
   model.platformPlayback = usePlayback(
-    track(
+    drive(
       model.platformPosition,
       tween({
         to: PLATFORM_DESTINATION,
@@ -412,7 +462,7 @@ function AnimationOwners({ model }: { readonly model: Physics2DLabModel }) {
     { debugName: "physics laboratory platform playback" },
   );
   model.handoffPlayback = usePlayback(
-    track(
+    drive(
       model.handoffPosition,
       tween({
         to: HANDOFF_DESTINATION,
@@ -596,7 +646,7 @@ export function Physics2DLabRoot({
         pointerEvents="none"
         style={{ left: 18, top: 24, fill: "#0f172a", font: "700 14px Arial" }}
       >
-        2D PHYSICS · SHARED CRC SCHEDULER
+        2D PHYSICS · SHARED Pibbl SCHEDULER
       </Text>
       <Text
         pointerEvents="none"

@@ -1,10 +1,11 @@
+import { signalObserversForTest } from "../../../test/support/signal-observer";
 import { describe, expect, it } from 'vitest';
 import {
   batch,
   computed,
   isSignal,
   signal,
-  track,
+  drive,
   tween,
   untracked,
   type SignalEquals,
@@ -28,6 +29,10 @@ import {
 } from '../animation/writer-leases';
 
 describe('signal', () => {
+  it('does not retain the test-only observer facade on production signal nodes', () => {
+    expect('observers' in getSignalNode(signal(0))).toBe(false);
+  });
+
   it('adopts staged resources before publishing signal values and notifying observers', () => {
     const revision = signal(0);
     const writer = {};
@@ -35,7 +40,7 @@ describe('signal', () => {
     const calls: string[] = [];
     let published = false;
     const observations: unknown[] = [];
-    getSignalNode(revision).observers.add(() => observations.push([revision.get(), published]));
+    signalObserversForTest(getSignalNode(revision)).add(() => observations.push([revision.get(), published]));
     batch.stage(revision, 1, writer);
     batch.registerLifecycle(writer, {
       apply() {
@@ -238,7 +243,7 @@ describe('signal', () => {
     const value = signal(1);
     const node = getSignalNode(value);
     const observations: Array<readonly [number, number]> = [];
-    node.observers.add(() => {
+    signalObserversForTest(node).add(() => {
       observations.push([node.value, node.version]);
     });
 
@@ -253,8 +258,8 @@ describe('signal', () => {
     const failed = signal(1, { equals: () => { throw new Error('failed'); } });
     const failedNode = getSignalNode(failed);
     let notifications = 0;
-    equalNode.observers.add(() => notifications++);
-    failedNode.observers.add(() => notifications++);
+    signalObserversForTest(equalNode).add(() => notifications++);
+    signalObserversForTest(failedNode).add(() => notifications++);
 
     equal.set(1);
     expect(() => failed.set(2)).toThrow('failed');
@@ -267,7 +272,7 @@ describe('signal', () => {
     const doubled = computed(() => value.get() * 2);
     const versions: number[] = [];
     let notifications = 0;
-    getSignalNode(value).observers.add(() => notifications++);
+    signalObserversForTest(getSignalNode(value)).add(() => notifications++);
 
     expect(doubled.get()).toBe(2);
     let finish!: (success: boolean) => void;
@@ -306,7 +311,7 @@ describe('signal', () => {
     const node = getSignalNode(value);
     const versions = [node.version];
     let notifications = 0;
-    node.observers.add(() => notifications++);
+    signalObserversForTest(node).add(() => notifications++);
     const beforeEdges = signalGraphSnapshot().computedSourceEdges;
 
     expect(doubled.get()).toBe(2);
@@ -347,7 +352,7 @@ describe('signal', () => {
     const doubled = computed(() => value.get() * 2);
     const node = getSignalNode(value);
     let notifications = 0;
-    node.observers.add(() => notifications++);
+    signalObserversForTest(node).add(() => notifications++);
 
     expect(doubled.get()).toBe(2);
     const callbacks: Array<(success: boolean) => void> = [];
@@ -373,7 +378,7 @@ describe('signal', () => {
     const doubled = computed(() => value.get() * 2);
     const node = getSignalNode(value);
     let notifications = 0;
-    node.observers.add(() => notifications++);
+    signalObserversForTest(node).add(() => notifications++);
 
     expect(doubled.get()).toBe(2);
     const callbacks: Array<(success: boolean) => void> = [];
@@ -400,7 +405,7 @@ describe('signal', () => {
     const node = getSignalNode(value);
     const beforeEdges = signalGraphSnapshot().computedSourceEdges;
     let notifications = 0;
-    node.observers.add(() => notifications++);
+    signalObserversForTest(node).add(() => notifications++);
 
     expect(doubled.get()).toBe(2);
     const detach = getSignalNode(doubled).observe?.();
@@ -477,7 +482,7 @@ describe('signal', () => {
     const node = getSignalNode(value);
     const callbacks = new Map<string, (success: boolean) => void>();
     let notifications = 0;
-    node.observers.add(() => notifications++);
+    signalObserversForTest(node).add(() => notifications++);
     const beforeEdges = signalGraphSnapshot().computedSourceEdges;
 
     expect(doubled.get()).toBe(2);
@@ -580,7 +585,7 @@ describe('signal commit batches', () => {
     let invalidations = 0;
     const node = getSignalNode(total);
     expect(total.get()).toBe(3);
-    node.observers.add(() => invalidations++);
+    signalObserversForTest(node).add(() => invalidations++);
     const detach = node.observe?.();
     if (detach === undefined) {
       throw new Error('Expected computed signals to support internal observation.');
@@ -626,8 +631,8 @@ describe('signal commit batches', () => {
     const first = signal(1);
     const second = signal(2);
     const notifications: string[] = [];
-    getSignalNode(first).observers.add(() => notifications.push('first'));
-    getSignalNode(second).observers.add(() => notifications.push('second'));
+    signalObserversForTest(getSignalNode(first)).add(() => notifications.push('first'));
+    signalObserversForTest(getSignalNode(second)).add(() => notifications.push('second'));
     const writer = {};
     const batch = createSignalCommitBatch();
 
@@ -665,16 +670,16 @@ describe('signal commit batches', () => {
     const leftFailure = new Error('left observer failed');
     const rightFailure = new Error('right observer failed');
     const notifications: string[] = [];
-    getSignalNode(left).observers.add(() => {
+    signalObserversForTest(getSignalNode(left)).add(() => {
       notifications.push('left failed');
       throw leftFailure;
     });
-    getSignalNode(left).observers.add(() => notifications.push('left later'));
-    getSignalNode(right).observers.add(() => {
+    signalObserversForTest(getSignalNode(left)).add(() => notifications.push('left later'));
+    signalObserversForTest(getSignalNode(right)).add(() => {
       notifications.push('right failed');
       throw rightFailure;
     });
-    getSignalNode(right).observers.add(() => notifications.push('right later'));
+    signalObserversForTest(getSignalNode(right)).add(() => notifications.push('right later'));
     const batch = createSignalCommitBatch();
     const writer = {};
     batch.stage(left, 3, writer);
@@ -703,7 +708,7 @@ describe('signal commit batches', () => {
     const value = signal(1, { debugName: 'commit-owned value' });
     const token = {};
     const lease = acquireProgramWriterLeases(
-      track(value, tween({ to: 2, duration: 10 })),
+      drive(value, tween({ to: 2, duration: 10 })),
       {},
       {
         token,
@@ -727,7 +732,7 @@ describe('signal commit batches', () => {
     const oldToken = {};
     let oldLease: ProgramWriterLease;
     oldLease = acquireProgramWriterLeases(
-      track(leased, tween({ to: 2, duration: 10 })),
+      drive(leased, tween({ to: 2, duration: 10 })),
       {},
       {
         token: oldToken,
@@ -741,7 +746,7 @@ describe('signal commit batches', () => {
     batch.stage(leased, 2, oldToken);
     oldLease.release();
     const replacement = acquireProgramWriterLeases(
-      track(leased, tween({ to: 3, duration: 10 })),
+      drive(leased, tween({ to: 3, duration: 10 })),
       {},
       {
         token: {},
@@ -826,7 +831,7 @@ describe('batch', () => {
   it('nests synchronously, exposes writes immediately, and notifies once', () => {
     const value = signal(0);
     const observations: number[] = [];
-    getSignalNode(value).observers.add(() => observations.push(value.get()));
+    signalObserversForTest(getSignalNode(value)).add(() => observations.push(value.get()));
 
     const result = batch(() => {
       value.set(1);
@@ -849,7 +854,7 @@ describe('batch', () => {
   it('collapses final values equal to batch entry values', () => {
     const value = signal(0);
     let notifications = 0;
-    getSignalNode(value).observers.add(() => notifications++);
+    signalObserversForTest(getSignalNode(value)).add(() => notifications++);
 
     batch(() => {
       value.set(1);
@@ -865,8 +870,8 @@ describe('batch', () => {
     const second = signal(0);
     let notifications = 0;
     const observer = () => notifications++;
-    getSignalNode(first).observers.add(observer);
-    getSignalNode(second).observers.add(observer);
+    signalObserversForTest(getSignalNode(first)).add(observer);
+    signalObserversForTest(getSignalNode(second)).add(observer);
     const before = signalGraphSnapshot();
 
     batch(() => {
@@ -887,7 +892,7 @@ describe('batch', () => {
     expect(doubled.get()).toBe(0);
     const detach = getSignalNode(doubled).observe!();
     const observations: number[] = [];
-    getSignalNode(doubled).observers.add(() => observations.push(doubled.get()));
+    signalObserversForTest(getSignalNode(doubled)).add(() => observations.push(doubled.get()));
 
     batch(() => {
       source.set(1);
@@ -907,7 +912,7 @@ describe('batch', () => {
     expect(parity.get()).toBe(0);
     const detach = getSignalNode(parity).observe!();
     let notifications = 0;
-    getSignalNode(parity).observers.add(() => notifications++);
+    signalObserversForTest(getSignalNode(parity)).add(() => notifications++);
 
     batch(() => {
       source.set(1);
@@ -925,11 +930,11 @@ describe('batch', () => {
     const callbackFailure = new Error('batch callback failed');
     const observerFailure = new Error('batch observer failed');
     const observations: string[] = [];
-    getSignalNode(value).observers.add(() => {
+    signalObserversForTest(getSignalNode(value)).add(() => {
       observations.push('failed');
       throw observerFailure;
     });
-    getSignalNode(value).observers.add(() => observations.push('later'));
+    signalObserversForTest(getSignalNode(value)).add(() => observations.push('later'));
 
     let failure: unknown;
     try {
@@ -1086,10 +1091,10 @@ describe('computed', () => {
     expect(firstFailure).toBeInstanceOf(Error);
     expect(firstFailure).not.toBeInstanceOf(RangeError);
     expect((firstFailure as Error).message).toBe(
-      'CRC computed cycle: direct -> direct',
+      'Pibbl computed cycle: direct -> direct',
     );
     expect(secondFailure).toBe(firstFailure);
-    expect(getSignalNode(direct).observers.size).toBe(0);
+    expect(getSignalNode(direct).observerCount).toBe(0);
   });
 
   it('caches one indirect cycle error without retaining the back edge', () => {
@@ -1104,11 +1109,11 @@ describe('computed', () => {
     expect(firstFailure).toBeInstanceOf(Error);
     expect(firstFailure).not.toBeInstanceOf(RangeError);
     expect((firstFailure as Error).message).toBe(
-      'CRC computed cycle: first -> second -> first',
+      'Pibbl computed cycle: first -> second -> first',
     );
     expect(secondFailure).toBe(firstFailure);
-    expect(getSignalNode(first).observers.size).toBe(0);
-    expect(getSignalNode(second).observers.size).toBe(0);
+    expect(getSignalNode(first).observerCount).toBe(0);
+    expect(getSignalNode(second).observerCount).toBe(0);
   });
 
   it('recovers guarded direct and indirect cycles after the guard changes', () => {
@@ -1119,7 +1124,7 @@ describe('computed', () => {
       { debugName: 'guarded direct' },
     );
     expect(() => direct.get()).toThrow(
-      'CRC computed cycle: guarded direct -> guarded direct',
+      'Pibbl computed cycle: guarded direct -> guarded direct',
     );
 
     const indirectGuard = signal(true);
@@ -1131,7 +1136,7 @@ describe('computed', () => {
       { debugName: 'guarded second' },
     );
     expect(() => first.get()).toThrow(
-      'CRC computed cycle: guarded first -> guarded second -> guarded first',
+      'Pibbl computed cycle: guarded first -> guarded second -> guarded first',
     );
 
     directGuard.set(false);
@@ -1264,20 +1269,20 @@ describe('computed', () => {
     const doubled = computed(() => source.get() * 2);
 
     expect(doubled.get()).toBe(4);
-    expect(getSignalNode(source).observers.size).toBe(0);
+    expect(getSignalNode(source).observerCount).toBe(0);
     expect(signalGraphSnapshot().computedSourceEdges).toBe(
       baseline.computedSourceEdges,
     );
 
     const detach = getSignalNode(doubled).observe!();
-    expect(getSignalNode(source).observers.size).toBe(1);
+    expect(getSignalNode(source).observerCount).toBe(1);
     expect(signalGraphSnapshot()).toMatchObject({
       computedSourceEdges: baseline.computedSourceEdges + 1,
       createdComputedSourceEdges: baseline.createdComputedSourceEdges + 1,
     });
 
     detach();
-    expect(getSignalNode(source).observers.size).toBe(0);
+    expect(getSignalNode(source).observerCount).toBe(0);
     expect(signalGraphSnapshot()).toMatchObject({
       computedSourceEdges: baseline.computedSourceEdges,
       releasedComputedSourceEdges: baseline.releasedComputedSourceEdges + 1,
@@ -1285,7 +1290,7 @@ describe('computed', () => {
 
     source.set(3);
     expect(doubled.get()).toBe(6);
-    expect(getSignalNode(source).observers.size).toBe(0);
+    expect(getSignalNode(source).observerCount).toBe(0);
   });
 
   it('clears queued Plan work when an explicit observed read validates it', () => {
@@ -1314,8 +1319,8 @@ describe('computed', () => {
     expect(signalGraphSnapshot().computedSourceEdges).toBe(
       baseline.computedSourceEdges + 2,
     );
-    expect(getSignalNode(source).observers.size).toBe(1);
-    expect(getSignalNode(inner).observers.size).toBe(1);
+    expect(getSignalNode(source).observerCount).toBe(1);
+    expect(getSignalNode(inner).observerCount).toBe(1);
 
     detach();
     expect(signalGraphSnapshot()).toMatchObject({
@@ -1323,8 +1328,8 @@ describe('computed', () => {
       createdComputedSourceEdges: baseline.createdComputedSourceEdges + 2,
       releasedComputedSourceEdges: baseline.releasedComputedSourceEdges + 2,
     });
-    expect(getSignalNode(source).observers.size).toBe(0);
-    expect(getSignalNode(inner).observers.size).toBe(0);
+    expect(getSignalNode(source).observerCount).toBe(0);
+    expect(getSignalNode(inner).observerCount).toBe(0);
   });
 
   it('replaces observed computed source-edge leases after dependency switching', () => {
@@ -1336,16 +1341,16 @@ describe('computed', () => {
     expect(selected.get()).toBe(1);
     const detach = getSignalNode(selected).observe!();
 
-    expect(getSignalNode(chooseLeft).observers.size).toBe(1);
-    expect(getSignalNode(left).observers.size).toBe(1);
-    expect(getSignalNode(right).observers.size).toBe(0);
+    expect(getSignalNode(chooseLeft).observerCount).toBe(1);
+    expect(getSignalNode(left).observerCount).toBe(1);
+    expect(getSignalNode(right).observerCount).toBe(0);
 
     chooseLeft.set(false);
     flushPendingComputedValidations();
 
     expect(selected.get()).toBe(10);
-    expect(getSignalNode(left).observers.size).toBe(0);
-    expect(getSignalNode(right).observers.size).toBe(1);
+    expect(getSignalNode(left).observerCount).toBe(0);
+    expect(getSignalNode(right).observerCount).toBe(1);
     expect(signalGraphSnapshot()).toMatchObject({
       computedSourceEdges: baseline.computedSourceEdges + 2,
       createdComputedSourceEdges: baseline.createdComputedSourceEdges + 3,

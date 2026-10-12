@@ -1,10 +1,10 @@
 import {
   Rectangle,
-  crc,
-  type CRCComponent,
-  type CRCNode,
-} from '@crc/core';
-import { jsxDEV } from '@crc/core/jsx-dev-runtime';
+  pibbl,
+  type PibblComponent,
+  type PibblNode,
+} from '@pibbl/core';
+import { jsxDEV } from '@pibbl/core/jsx-dev-runtime';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 beforeEach(() => {
@@ -28,11 +28,11 @@ describe('foreign JSX runtime diagnostics', () => {
     };
     const request = vi.spyOn(window, 'requestAnimationFrame');
 
-    expect(() => crc(canvas, reactElement as unknown as CRCNode)).toThrowError(
-      'CRC received a React element. This file is using the React JSX runtime.\n' +
-      'Set jsxImportSource to "@crc/core" or add ' +
-      '/** @jsxImportSource @crc/core */.\n' +
-      'Received by CRC root.',
+    expect(() => pibbl(canvas, reactElement as unknown as PibblNode)).toThrowError(
+      'Pibbl received a React element. This file is using the React JSX runtime.\n' +
+      'Set jsxImportSource to "@pibbl/core" or add ' +
+      '/** @jsxImportSource @pibbl/core */.\n' +
+      'Received by Pibbl root.',
     );
     expect(request).not.toHaveBeenCalled();
   });
@@ -45,27 +45,27 @@ describe('foreign JSX runtime diagnostics', () => {
     };
     const request = vi.spyOn(window, 'requestAnimationFrame');
 
-    expect(() => crc(canvas, foreignElement as unknown as CRCNode))
+    expect(() => pibbl(canvas, foreignElement as unknown as PibblNode))
       .toThrowError(
-        'CRC root received an element-like object that was not created by ' +
-        '@crc/core as a CRC child.\n' +
-        'Check this file\'s JSX runtime and set jsxImportSource to "@crc/core".',
+        'Pibbl root received an element-like object that was not created by ' +
+        '@pibbl/core as a Pibbl child.\n' +
+        'Check this file\'s JSX runtime and set jsxImportSource to "@pibbl/core".',
       );
     expect(request).not.toHaveBeenCalled();
     request.mockRestore();
 
     expect(() => renderNow({ type: 'configuration' }))
-      .toThrowError('CRC root received an unsupported object as a CRC child.');
+      .toThrowError('Pibbl root received an unsupported object as a Pibbl child.');
     expect(() => renderNow({ type: 'configuration' }))
       .not.toThrowError(/JSX runtime|jsxImportSource|React element/);
   });
 
   it('reports receiver component identity and jsxDEV source for foreign element-like children', () => {
-    function Poster(): CRCNode {
+    function Poster(): PibblNode {
       return {
         type: () => undefined,
         props: {},
-      } as unknown as CRCNode;
+      } as unknown as PibblNode;
     }
     const root = jsxDEV(
       Poster,
@@ -73,7 +73,7 @@ describe('foreign JSX runtime diagnostics', () => {
       undefined,
       false,
       {
-        fileName: 'poster.crc.tsx',
+        fileName: 'poster.pibbl.tsx',
         lineNumber: 18,
         columnNumber: 7,
       },
@@ -81,9 +81,9 @@ describe('foreign JSX runtime diagnostics', () => {
     );
 
     expect(() => renderNow(root)).toThrowError(
-      'Poster at poster.crc.tsx:18:7 received an element-like object that ' +
-      'was not created by @crc/core as a CRC child.\n' +
-      'Check this file\'s JSX runtime and set jsxImportSource to "@crc/core".',
+      'Poster at poster.pibbl.tsx:18:7 received an element-like object that ' +
+      'was not created by @pibbl/core as a Pibbl child.\n' +
+      'Check this file\'s JSX runtime and set jsxImportSource to "@pibbl/core".',
     );
   });
 
@@ -92,7 +92,7 @@ describe('foreign JSX runtime diagnostics', () => {
     ['a nonzero number', 42],
     ['a function', () => undefined],
   ])('reports invalid interpolated %s with receiver and source', (description, child) => {
-    const Receiver = (() => child) as CRCComponent<any>;
+    const Receiver = (() => child) as PibblComponent<any>;
     Object.defineProperty(Receiver, 'name', { value: 'ResultsGrid' });
     const root = jsxDEV(
       Receiver,
@@ -100,7 +100,7 @@ describe('foreign JSX runtime diagnostics', () => {
       undefined,
       false,
       {
-        fileName: 'results.crc.tsx',
+        fileName: 'results.pibbl.tsx',
         lineNumber: 31,
         columnNumber: 11,
       },
@@ -108,17 +108,17 @@ describe('foreign JSX runtime diagnostics', () => {
     );
 
     expect(() => renderNow(root)).toThrowError(
-      `ResultsGrid at results.crc.tsx:31:11 received ${description} as a CRC child.`,
+      `ResultsGrid at results.pibbl.tsx:31:11 received ${description} as a Pibbl child.`,
     );
   });
 
   it('reports React runtime guidance together with receiver and jsxDEV source', () => {
-    function ResultsGrid(): CRCNode {
+    function ResultsGrid(): PibblNode {
       return {
         $$typeof: Symbol.for('react.transitional.element'),
         type: 'div',
         props: {},
-      } as unknown as CRCNode;
+      } as unknown as PibblNode;
     }
     const root = jsxDEV(
       ResultsGrid,
@@ -126,7 +126,7 @@ describe('foreign JSX runtime diagnostics', () => {
       undefined,
       false,
       {
-        fileName: 'results.crc.tsx',
+        fileName: 'results.pibbl.tsx',
         lineNumber: 44,
         columnNumber: 9,
       },
@@ -134,18 +134,18 @@ describe('foreign JSX runtime diagnostics', () => {
     );
 
     expect(() => renderNow(root)).toThrowError(
-      'CRC received a React element. This file is using the React JSX runtime.\n' +
-      'Set jsxImportSource to "@crc/core" or add ' +
-      '/** @jsxImportSource @crc/core */.\n' +
-      'Received by ResultsGrid at results.crc.tsx:44:9.',
+      'Pibbl received a React element. This file is using the React JSX runtime.\n' +
+      'Set jsxImportSource to "@pibbl/core" or add ' +
+      '/** @jsxImportSource @pibbl/core */.\n' +
+      'Received by ResultsGrid at results.pibbl.tsx:44:9.',
     );
   });
 
   it('reports direct primitive invocation with both supported constructors', () => {
     expect(() => Rectangle({ style: { width: 10, height: 10 } }))
       .toThrowError(
-        'Rectangle is a CRC component and was invoked outside the CRC renderer.\n' +
-        'Use <Rectangle ... /> in a CRC JSX file or ' +
+        'Rectangle is a Pibbl component and was invoked outside the Pibbl renderer.\n' +
+        'Use <Rectangle ... /> in a Pibbl JSX file or ' +
         'createElement(Rectangle, props).',
       );
   });
@@ -159,9 +159,9 @@ function renderNow(root: unknown): void {
       pending = callback;
       return 1;
     });
-  const controller = crc(canvas, root as CRCNode);
+  const controller = pibbl(canvas, root as PibblNode);
   try {
-    if (!pending) throw new Error('CRC did not schedule a render.');
+    if (!pending) throw new Error('Pibbl did not schedule a render.');
     pending(0);
   } finally {
     controller.dispose();

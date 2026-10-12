@@ -1,0 +1,673 @@
+{
+  "schema": "pibbl-signal-mutation-replay/1",
+  "status": "fail",
+  "url": "http://127.0.0.1:5199/#/testing/agent-signal-mutation",
+  "requiredChecks": [
+    {
+      "actionId": "initial",
+      "checkId": "initial.application-intent"
+    },
+    {
+      "actionId": "initial",
+      "checkId": "initial.equality-diagnosis"
+    },
+    {
+      "actionId": "initial",
+      "checkId": "initial.publication-evaluation"
+    },
+    {
+      "actionId": "initial",
+      "checkId": "initial.bounded-window"
+    },
+    {
+      "actionId": "initial",
+      "checkId": "initial.bar-pixels"
+    },
+    {
+      "actionId": "intentional-noop",
+      "checkId": "intentional-noop.application-intent"
+    },
+    {
+      "actionId": "intentional-noop",
+      "checkId": "intentional-noop.equality-diagnosis"
+    },
+    {
+      "actionId": "intentional-noop",
+      "checkId": "intentional-noop.publication-evaluation"
+    },
+    {
+      "actionId": "intentional-noop",
+      "checkId": "intentional-noop.bounded-window"
+    },
+    {
+      "actionId": "intentional-noop",
+      "checkId": "intentional-noop.bar-pixels"
+    },
+    {
+      "actionId": "mutation",
+      "checkId": "mutation.application-intent"
+    },
+    {
+      "actionId": "mutation",
+      "checkId": "mutation.equality-diagnosis"
+    },
+    {
+      "actionId": "mutation",
+      "checkId": "mutation.publication-evaluation"
+    },
+    {
+      "actionId": "mutation",
+      "checkId": "mutation.bounded-window"
+    },
+    {
+      "actionId": "mutation",
+      "checkId": "mutation.bar-pixels"
+    },
+    {
+      "actionId": "repeat-mutation",
+      "checkId": "repeat-mutation.application-intent"
+    },
+    {
+      "actionId": "repeat-mutation",
+      "checkId": "repeat-mutation.equality-diagnosis"
+    },
+    {
+      "actionId": "repeat-mutation",
+      "checkId": "repeat-mutation.publication-evaluation"
+    },
+    {
+      "actionId": "repeat-mutation",
+      "checkId": "repeat-mutation.bounded-window"
+    },
+    {
+      "actionId": "repeat-mutation",
+      "checkId": "repeat-mutation.bar-pixels"
+    },
+    {
+      "actionId": "replacement",
+      "checkId": "replacement.application-intent"
+    },
+    {
+      "actionId": "replacement",
+      "checkId": "replacement.equality-diagnosis"
+    },
+    {
+      "actionId": "replacement",
+      "checkId": "replacement.publication-evaluation"
+    },
+    {
+      "actionId": "replacement",
+      "checkId": "replacement.bounded-window"
+    },
+    {
+      "actionId": "replacement",
+      "checkId": "replacement.bar-pixels"
+    },
+    {
+      "actionId": "reset",
+      "checkId": "reset.application-intent"
+    },
+    {
+      "actionId": "reset",
+      "checkId": "reset.equality-diagnosis"
+    },
+    {
+      "actionId": "reset",
+      "checkId": "reset.publication-evaluation"
+    },
+    {
+      "actionId": "reset",
+      "checkId": "reset.bounded-window"
+    },
+    {
+      "actionId": "reset",
+      "checkId": "reset.bar-pixels"
+    }
+  ],
+  "scope": "Explicit default Object.is fixture; bounded two-frame observation, not a universal deep mutation detector.",
+  "steps": [
+    {
+      "actionId": "initial",
+      "action": "mount",
+      "status": "pass",
+      "transport": "page-navigation",
+      "state": {
+        "status": "ready",
+        "revision": 1,
+        "action": "reset",
+        "expectedAmount": 10,
+        "sourceAmount": 10,
+        "evaluatedAmount": 10,
+        "componentEvaluations": 1,
+        "signalVersion": 1,
+        "equality": {
+          "policy": "Object.is-default",
+          "sameReference": false,
+          "amountBefore": 10,
+          "amountAfter": 10
+        },
+        "assertion": "pass",
+        "diagnosis": "application-observation",
+        "observationWindow": {
+          "kind": "two-host-animation-frames",
+          "completedFrames": 2,
+          "scope": "finite-observation-not-future-guarantee"
+        }
+      },
+      "pixel": {
+        "logicalPoint": {
+          "x": 200,
+          "y": 80
+        },
+        "rgba": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "capture": "active-single-pixel-readback"
+      }
+    },
+    {
+      "actionId": "intentional-noop",
+      "action": "equal-noop",
+      "status": "pass",
+      "transport": "native-playwright-pointer",
+      "state": {
+        "status": "ready",
+        "revision": 2,
+        "action": "equal-noop",
+        "expectedAmount": 10,
+        "sourceAmount": 10,
+        "evaluatedAmount": 10,
+        "componentEvaluations": 1,
+        "signalVersion": 1,
+        "equality": {
+          "policy": "Object.is-default",
+          "sameReference": true,
+          "amountBefore": 10,
+          "amountAfter": 10
+        },
+        "assertion": "pass",
+        "diagnosis": "intentional-equal-write",
+        "observationWindow": {
+          "kind": "two-host-animation-frames",
+          "completedFrames": 2,
+          "scope": "finite-observation-not-future-guarantee"
+        }
+      },
+      "pixel": {
+        "logicalPoint": {
+          "x": 200,
+          "y": 80
+        },
+        "rgba": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "capture": "active-single-pixel-readback"
+      }
+    },
+    {
+      "actionId": "mutation",
+      "action": "in-place",
+      "status": "pass",
+      "transport": "native-playwright-pointer",
+      "state": {
+        "status": "ready",
+        "revision": 3,
+        "action": "in-place",
+        "expectedAmount": 42,
+        "sourceAmount": 42,
+        "evaluatedAmount": 10,
+        "componentEvaluations": 1,
+        "signalVersion": 1,
+        "equality": {
+          "policy": "Object.is-default",
+          "sameReference": true,
+          "amountBefore": 10,
+          "amountAfter": 42
+        },
+        "assertion": "fail",
+        "diagnosis": "same-reference-mutation-suppressed",
+        "observationWindow": {
+          "kind": "two-host-animation-frames",
+          "completedFrames": 2,
+          "scope": "finite-observation-not-future-guarantee"
+        }
+      },
+      "pixel": {
+        "logicalPoint": {
+          "x": 200,
+          "y": 80
+        },
+        "rgba": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "capture": "active-single-pixel-readback"
+      }
+    },
+    {
+      "actionId": "repeat-mutation",
+      "action": "in-place",
+      "status": "pass",
+      "transport": "native-playwright-pointer",
+      "state": {
+        "status": "ready",
+        "revision": 4,
+        "action": "in-place",
+        "expectedAmount": 42,
+        "sourceAmount": 42,
+        "evaluatedAmount": 10,
+        "componentEvaluations": 1,
+        "signalVersion": 1,
+        "equality": {
+          "policy": "Object.is-default",
+          "sameReference": true,
+          "amountBefore": 42,
+          "amountAfter": 42
+        },
+        "assertion": "fail",
+        "diagnosis": "equal-write-keeps-stale-display",
+        "observationWindow": {
+          "kind": "two-host-animation-frames",
+          "completedFrames": 2,
+          "scope": "finite-observation-not-future-guarantee"
+        }
+      },
+      "pixel": {
+        "logicalPoint": {
+          "x": 200,
+          "y": 80
+        },
+        "rgba": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "capture": "active-single-pixel-readback"
+      }
+    },
+    {
+      "actionId": "replacement",
+      "action": "replace",
+      "status": "incomplete",
+      "transport": "native-playwright-pointer"
+    }
+  ],
+  "errors": [],
+  "droppedErrors": 0,
+  "run": {
+    "schema": "pibbl-replay-run/1",
+    "runId": "597b19bd-293f-4c79-a77d-9aafb55ab825",
+    "kind": "signal-mutation",
+    "startedAt": "2026-10-02T02:17:46.432Z",
+    "clock": "UTC-wall-clock",
+    "environment": {
+      "node": "v24.15.0",
+      "platform": "darwin",
+      "architecture": "arm64",
+      "browserContext": {
+        "viewport": {
+          "width": 1280,
+          "height": 1000
+        },
+        "deviceScaleFactor": 1,
+        "locale": "en-US",
+        "timezoneId": "UTC",
+        "reducedMotion": "reduce",
+        "colorScheme": "light"
+      },
+      "observedPage": {
+        "status": "observed",
+        "scope": "page-reported-at-capture",
+        "viewportCss": {
+          "width": 1280,
+          "height": 1000
+        },
+        "devicePixelRatio": 1,
+        "visualViewportScale": 1,
+        "browserZoom": "unavailable",
+        "language": "en-US",
+        "timezone": "UTC",
+        "preferences": {
+          "dark": false,
+          "reducedMotion": true
+        }
+      }
+    },
+    "rerun": {
+      "executable": "/Users/benlesh/.local/share/fnm/node-versions/v24.15.0/installation/bin/node",
+      "arguments": [
+        "/Users/benlesh/GitHub/crc/tooling/agent-verification/signal-mutation-replay.mjs",
+        "http://127.0.0.1:5199/#/testing/agent-signal-mutation"
+      ],
+      "cwd": "/Users/benlesh/GitHub/crc",
+      "environment": {},
+      "unsetEnvironment": [
+        "PIBBL_VERIFY_BROWSER_ENDPOINT"
+      ],
+      "outputPolicy": "fresh-default-directory",
+      "preconditions": [
+        "Provision the recorded checkout dependencies and Playwright Chromium.",
+        "Serve the source Studio from the intended checkout at the recorded URL; served/local identity checks must pass."
+      ]
+    },
+    "toolIdentity": {
+      "schema": "pibbl-replay-tool-identity/1",
+      "revision": "c838c434159efe602583f1cc2bf5383b57c15db5",
+      "sha256": "442f197e9f846fb7b41837e7254a933db557d49ac0b59a9f5ff34454bc225ad5",
+      "files": 11,
+      "scope": "Replay and declared local dependencies on disk; not loaded-module or installed-dependency attestation."
+    },
+    "toolIdentityAfter": {
+      "schema": "pibbl-replay-tool-identity/1",
+      "revision": "c838c434159efe602583f1cc2bf5383b57c15db5",
+      "sha256": "442f197e9f846fb7b41837e7254a933db557d49ac0b59a9f5ff34454bc225ad5",
+      "files": 11,
+      "scope": "Replay and declared local dependencies on disk; not loaded-module or installed-dependency attestation."
+    }
+  },
+  "expectedIdentity": {
+    "schema": "pibbl-targeting-identity/1",
+    "revision": "c838c434159efe602583f1cc2bf5383b57c15db5",
+    "sha256": "5882050e3615a0750b2a6646722883391ccae122c167467f31d7379a57c8f72f",
+    "files": 199
+  },
+  "browser": "151.0.7922.34",
+  "checks": [
+    {
+      "checkId": "initial.application-intent",
+      "actionId": "initial",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "initial.equality-diagnosis",
+      "actionId": "initial",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "initial.publication-evaluation",
+      "actionId": "initial",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "initial.bounded-window",
+      "actionId": "initial",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "initial.bar-pixels",
+      "actionId": "initial",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "intentional-noop.application-intent",
+      "actionId": "intentional-noop",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "intentional-noop.equality-diagnosis",
+      "actionId": "intentional-noop",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "intentional-noop.publication-evaluation",
+      "actionId": "intentional-noop",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "intentional-noop.bounded-window",
+      "actionId": "intentional-noop",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "intentional-noop.bar-pixels",
+      "actionId": "intentional-noop",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "mutation.application-intent",
+      "actionId": "mutation",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "mutation.equality-diagnosis",
+      "actionId": "mutation",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "mutation.publication-evaluation",
+      "actionId": "mutation",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "mutation.bounded-window",
+      "actionId": "mutation",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "mutation.bar-pixels",
+      "actionId": "mutation",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "repeat-mutation.application-intent",
+      "actionId": "repeat-mutation",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "repeat-mutation.equality-diagnosis",
+      "actionId": "repeat-mutation",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "repeat-mutation.publication-evaluation",
+      "actionId": "repeat-mutation",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "repeat-mutation.bounded-window",
+      "actionId": "repeat-mutation",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "repeat-mutation.bar-pixels",
+      "actionId": "repeat-mutation",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "replacement.application-intent",
+      "actionId": "replacement",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "replacement.equality-diagnosis",
+      "actionId": "replacement",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "replacement.publication-evaluation",
+      "actionId": "replacement",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "replacement.bounded-window",
+      "actionId": "replacement",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "replacement.bar-pixels",
+      "actionId": "replacement",
+      "required": true,
+      "status": "fail",
+      "reason": "Expected values to be strictly deep-equal:\n+ actual - expected\n\n  [\n+   0,\n+   0,\n+   0,\n+   0\n-   37,\n-   99,\n-   235,\n-   255\n  ]\n",
+      "failure": {
+        "message": "Expected values to be strictly deep-equal:\n+ actual - expected\n\n  [\n+   0,\n+   0,\n+   0,\n+   0\n-   37,\n-   99,\n-   235,\n-   255\n  ]\n",
+        "code": "ERR_ASSERTION",
+        "assertion": {
+          "operator": "deepStrictEqual",
+          "expected": {
+            "type": "array",
+            "length": 4,
+            "items": [
+              37,
+              99,
+              235,
+              255
+            ]
+          },
+          "actual": {
+            "type": "array",
+            "length": 4,
+            "items": [
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "layoutDiagnostic": null,
+        "detail": {
+          "limits": {
+            "nodes": 64,
+            "depth": 4,
+            "entries": 16,
+            "string": 1024,
+            "totalString": 8192
+          },
+          "omissions": []
+        }
+      }
+    }
+  ],
+  "firstFailedCheck": {
+    "checkId": "replacement.bar-pixels",
+    "actionId": "replacement"
+  },
+  "failure": {
+    "category": "operation-error",
+    "actionId": "replacement",
+    "lastActionId": "replacement",
+    "message": "Expected values to be strictly deep-equal:\n+ actual - expected\n\n  [\n+   0,\n+   0,\n+   0,\n+   0\n-   37,\n-   99,\n-   235,\n-   255\n  ]\n",
+    "code": "ERR_ASSERTION",
+    "assertion": {
+      "operator": "deepStrictEqual",
+      "expected": {
+        "type": "array",
+        "length": 4,
+        "items": [
+          37,
+          99,
+          235,
+          255
+        ]
+      },
+      "actual": {
+        "type": "array",
+        "length": 4,
+        "items": [
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    "layoutDiagnostic": null,
+    "detail": {
+      "limits": {
+        "nodes": 64,
+        "depth": 4,
+        "entries": 16,
+        "string": 1024,
+        "totalString": 8192
+      },
+      "omissions": []
+    }
+  },
+  "toolVerification": {
+    "status": "matching-on-disk"
+  },
+  "requiredActions": [
+    "initial",
+    "intentional-noop",
+    "mutation",
+    "repeat-mutation",
+    "replacement",
+    "reset"
+  ],
+  "checkFailure": {
+    "category": "unsatisfied-check",
+    "checkId": "replacement.bar-pixels",
+    "status": "fail",
+    "reason": "Expected values to be strictly deep-equal:\n+ actual - expected\n\n  [\n+   0,\n+   0,\n+   0,\n+   0\n-   37,\n-   99,\n-   235,\n-   255\n  ]\n"
+  },
+  "checkCompletionFailure": {
+    "category": "incomplete-required-checks",
+    "missing": [
+      "reset.application-intent",
+      "reset.equality-diagnosis",
+      "reset.publication-evaluation",
+      "reset.bounded-window",
+      "reset.bar-pixels"
+    ],
+    "mismatched": [],
+    "unexpected": []
+  }
+}

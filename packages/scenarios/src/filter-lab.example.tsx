@@ -1,4 +1,5 @@
-import { blur, brightness, contrast, dropShadow, grayscale, hueRotate, invert, opacity, saturate, sepia } from '@crc/core/filters';
+import type { filterLabScenarioEntry } from './catalog.js';
+import { blur, brightness, contrast, dropShadow, grayscale, hueRotate, invert, opacity, saturate, sepia } from '@pibbl/core/filters';
 import {
   Circle,
   Clip,
@@ -7,11 +8,18 @@ import {
   Layer,
   Rectangle,
   Text,
-  type CRCFilter,
-} from '@crc/core';
+  type PibblFilter,
+} from '@pibbl/core';
 
 export const FILTER_LAB_SOURCE_ID = 'first-class-filters-laboratory-example';
 
+/**
+ * Supported filter lab mode values: `"all"`, `"ordered"`, `"nested"`, `"transformed"`, `"clipped"`,
+ * `"layered"`.
+ *
+ * @see {@link FilterLabState}
+ * @see {@link FILTER_LAB_PROBES}
+ */
 export type FilterLabMode =
   | 'all'
   | 'ordered'
@@ -20,18 +28,41 @@ export type FilterLabMode =
   | 'clipped'
   | 'layered';
 
+/**
+ * Supported filter lab order values: `"none"`, `"grayscale-then-shadow"`,
+ * `"shadow-then-grayscale"`, `"inside-out"`.
+ *
+ * @see {@link FilterLabState}
+ */
 export type FilterLabOrder =
   | 'none'
   | 'grayscale-then-shadow'
   | 'shadow-then-grayscale'
   | 'inside-out';
 
+/**
+ * A selectable primitive or composition target in the filter lab.
+ *
+ * @see {@link FilterLabState}
+ */
 export type FilterLabTarget = 'layered-source';
 
+/**
+ * Observable state exposed by the filter lab scenario for controls and assertions.
+ *
+ * @see {@link FilterLabMode}
+ * @see {@link FilterLabOrder}
+ * @see {@link FilterLabTarget}
+ * @see {@link filterLabScenarioEntry}
+ */
 export interface FilterLabState {
+  /** Mode recorded or configured by this scenario. See {@link FilterLabMode}. */
   mode: FilterLabMode;
+  /** Order recorded or configured by this scenario. See {@link FilterLabOrder}. */
   order: FilterLabOrder;
+  /** Revision recorded or configured by this scenario. See {@link FilterLabState}. */
   revision: number;
+  /** Last target recorded or configured by this scenario. See {@link FilterLabTarget}. */
   lastTarget: FilterLabTarget | null;
 }
 
@@ -46,11 +77,34 @@ interface FilterLabProbes {
   shadow: FilterLabPoint;
 }
 
+/**
+ * Deterministic geometry probe locations for the filter lab scenario.
+ *
+ * @see {@link FilterLabMode}
+ */
 export const FILTER_LAB_PROBES: Readonly<Record<FilterLabMode, FilterLabProbes>> & {
-  readonly ordered: FilterLabProbes & { readonly orderSample: FilterLabPoint };
-  readonly clipped: FilterLabProbes & { readonly visibleCenters: readonly FilterLabPoint[] };
+  /**
+   * Ordered recorded or configured by this scenario. See {@link FilterLabProbes},
+   * {@link FilterLabPoint}.
+   */
+  readonly ordered: FilterLabProbes & {
+  /** Order sample recorded or configured by this scenario. See {@link FilterLabPoint}. */
+  readonly orderSample: FilterLabPoint };
+  /**
+   * Clipped recorded or configured by this scenario. See {@link FilterLabProbes},
+   * {@link FilterLabPoint}.
+   */
+  readonly clipped: FilterLabProbes & {
+  /** Visible centers recorded or configured by this scenario. See {@link FilterLabPoint}. */
+  readonly visibleCenters: readonly FilterLabPoint[] };
+  /**
+   * Layered recorded or configured by this scenario. See {@link FilterLabProbes},
+   * {@link FilterLabPoint}.
+   */
   readonly layered: FilterLabProbes & {
+    /** Source recorded or configured by this scenario. See {@link FilterLabPoint}. */
     readonly source: FilterLabPoint;
+    /** Shadow only recorded or configured by this scenario. See {@link FilterLabPoint}. */
     readonly shadowOnly: FilterLabPoint;
   };
 } = {
@@ -104,7 +158,7 @@ interface FilterLabSceneProps {
   recordTarget: FilterLabRecordTarget;
 }
 
-const ALL_FILTERS: readonly { label: string; filter: CRCFilter }[] = [
+const ALL_FILTERS: readonly { label: string; filter: PibblFilter }[] = [
   { label: 'blur', filter: blur({  radius: 3 }) },
   { label: 'bright', filter: brightness({  amount: 1.5 }) },
   { label: 'contrast', filter: contrast({  amount: 1.6 }) },
@@ -130,7 +184,7 @@ function label(text: string, x: number, y: number) {
   }}>{text}</Text>;
 }
 
-function tile(filter: CRCFilter, x: number, y: number, labelText: string) {
+function tile(filter: PibblFilter, x: number, y: number, labelText: string) {
   return [
     <Group key={`tile-${labelText}`} style={{ filter }}>
       <Rectangle style={{ left: x, top: y, width: 48, height: 26, fill: '#2563eb' }} />
@@ -149,8 +203,8 @@ function allFiltersScene() {
   });
 }
 
-const ORDERED_SHADOW: CRCFilter = dropShadow({
-  
+const ORDERED_SHADOW: PibblFilter = dropShadow({
+
   offsetX: 16,
   offsetY: 0,
   blurRadius: 0,
@@ -158,7 +212,7 @@ const ORDERED_SHADOW: CRCFilter = dropShadow({
 });
 
 function orderedScene(order: FilterLabOrder) {
-  const filters: readonly CRCFilter[] = order === 'shadow-then-grayscale'
+  const filters: readonly PibblFilter[] = order === 'shadow-then-grayscale'
     ? [ORDERED_SHADOW, grayscale({  amount: 1 })]
     : [grayscale({  amount: 1 }), ORDERED_SHADOW];
   return [
@@ -214,7 +268,7 @@ function rectangleClip(x: number, y: number, width: number, height: number): Pat
   return path;
 }
 
-const CLIP_FILTER: CRCFilter = dropShadow({
+const CLIP_FILTER: PibblFilter = dropShadow({
    offsetX: 12, offsetY: 0, blurRadius: 0, color: '#0f172a',
 });
 

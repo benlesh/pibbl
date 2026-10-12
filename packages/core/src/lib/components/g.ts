@@ -1,13 +1,15 @@
+import type { PibblDragHandleStyle } from '../manipulation/handles.js';
+import type { HtmlBoxStyle } from '../html/types.js';
 import { definePrimitive } from '../define-primitive.js';
-import { CRCNodeInput, SystemStyle } from '../types.js';
-import type { CRCPhysics2DPropExtension } from '../types.js';
+import { PibblNodeInput, SystemStyle } from '../types.js';
+import type { PibblPhysics2DPropExtension } from '../types.js';
 import {
   createGroupTransform,
   setPrimitivePresentation,
 } from '../primitive-presentation.js';
 import { stripLayoutParticipation } from '../style/resolve-built-in.js';
 import {
-  type CRCStructuralEventProps,
+  type PibblStructuralEventProps,
   wireStructuralEvents,
 } from './structural-events.js';
 import type {
@@ -16,17 +18,40 @@ import type {
   ResolvedDrawingStyle,
 } from '../style/types.js';
 
-export interface GroupProps extends CRCStructuralEventProps, CRCPhysics2DPropExtension {
-  children: CRCNodeInput;
+/**
+ * Authored inputs for Group, including the declared data and presentation options.
+ *
+ * @see {@link PibblPhysics2DPropExtension}
+ * @see {@link PibblNodeInput}
+ * @see {@link Group}
+ */
+export interface GroupProps extends PibblStructuralEventProps, PibblPhysics2DPropExtension {
+  /** Descendant content or the callback that supplies it. See {@link PibblNodeInput}. */
+  children: PibblNodeInput;
 }
 
+/**
+ * Transforms, layout participation, and shared style properties for Group.
+ *
+ * @see {@link SystemStyle}
+ * @see {@link BoxStyle}
+ * @see {@link LayoutItemStyle}
+ * @see {@link Group}
+ * @see {@link PibblDragHandleStyle}
+ * @see {@link HtmlBoxStyle}
+ */
 export interface GStyle extends SystemStyle, BoxStyle, LayoutItemStyle {
+  /** Horizontal scale factor. See {@link GStyle}. */
   scaleX?: number;
+  /** Vertical scale factor. See {@link GStyle}. */
   scaleY?: number;
   /** Clockwise rotation in degrees. */
   rotationDegrees?: number;
+  /** Point around which the rotation is applied. See {@link GStyle}. */
   rotationOrigin?: [number, number];
+  /** Horizontal translation in the current logical coordinate system. See {@link GStyle}. */
   translateX?: number;
+  /** Vertical translation in the current logical coordinate system. See {@link GStyle}. */
   translateY?: number;
   /** Horizontal skew angle in degrees. */
   skewX?: number;
@@ -45,6 +70,13 @@ function renderGroup(
 
 /**
  * Describes a transformation group for JSX or createElement authoring.
+ *
+ * @param props - Authored component inputs, supplied through JSX or createElement. See the linked
+ * props and style types.
+ * @throws When called directly; Pibbl mounts this component through JSX or createElement.
+ *
+ * @see {@link GroupProps}
+ * @see {@link GStyle}
  */
 export const Group = definePrimitive<
   GroupProps,

@@ -1,17 +1,17 @@
-/** @jsxImportSource @crc/core */
+/** @jsxImportSource @pibbl/core */
 import {
-  crc,
+  pibbl,
   Group,
   Rectangle,
   Text,
   FocusManagement,
   useSignal,
   useConst,
-  type CRCPointerEvent,
+  type PibblPointerEvent,
   useReaction,
-  type CRCController,
-} from "@crc/core";
-import { useTexture, reactionDiffusion, texturePalettes } from "@crc/textures";
+  type PibblController,
+} from "@pibbl/core";
+import { useTexture, reactionDiffusion, texturePalettes } from "@pibbl/core/textures";
 
 const palettes = [
   texturePalettes.lagoon,
@@ -90,8 +90,8 @@ function LivingInk({ canvas }: { canvas: HTMLCanvasElement }) {
     u: 0,
     v: 0,
   }));
-  const paint = (event: CRCPointerEvent) => {
-    // CRC coordinates are root-logical. This lesson's panel is at (24,116).
+  const paint = (event: PibblPointerEvent) => {
+    // Pibbl coordinates are root-logical. This lesson's panel is at (24,116).
     const u = (event.x - 24) / 832,
       v = (event.y - 116) / 400;
     const count = Math.min(
@@ -112,7 +112,7 @@ function LivingInk({ canvas }: { canvas: HTMLCanvasElement }) {
     stroke.u = u;
     stroke.v = v;
   };
-  const end = (event: CRCPointerEvent) => {
+  const end = (event: PibblPointerEvent) => {
     if (stroke.id !== event.pointerId) return;
     event.currentTarget.releasePointerCapture(event.pointerId);
     stroke.id = undefined;
@@ -214,7 +214,7 @@ function LivingInk({ canvas }: { canvas: HTMLCanvasElement }) {
                 font: "11px Arial",
               }}
             >
-              Ordinary CRC content, layered over living color.
+              Ordinary Pibbl content, layered over living color.
             </Text>
           </Group>
         </Group>
@@ -285,6 +285,6 @@ function LivingInk({ canvas }: { canvas: HTMLCanvasElement }) {
   );
 }
 
-export default function mount(canvas: HTMLCanvasElement): CRCController {
-  return crc(canvas, <LivingInk canvas={canvas} />);
+export default function mount(canvas: HTMLCanvasElement): PibblController {
+  return pibbl(canvas, <LivingInk canvas={canvas} />);
 }

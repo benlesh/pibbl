@@ -1,8 +1,8 @@
-import { dropShadow } from '@crc/core/filters';
+import { dropShadow } from '@pibbl/core/filters';
 import {
   Absolute,
   Clip,
-  crc,
+  pibbl,
   useEventTarget,
   useLayoutBox,
   useRectPath,
@@ -17,12 +17,12 @@ import {
   Rectangle,
   Text,
   type BoxStyle,
-  type CRCController,
-  type CRCNode,
-  type CRCPointerEvent,
-  type CRCWheelEvent,
+  type PibblController,
+  type PibblNode,
+  type PibblPointerEvent,
+  type PibblWheelEvent,
   type LayoutItemStyle,
-} from "@crc/core";
+} from "@pibbl/core";
 
 type NodeId = "idea" | "sketch" | "build" | "ship";
 interface Point {
@@ -171,15 +171,15 @@ function NodeCard({
   onSelect: () => void;
   onMove: (id: NodeId, x: number, y: number) => void;
   view: ViewTransform;
-}>): CRCNode {
+}>): PibblNode {
   const dragSession = useRef<NodeDragSession | null>(null);
   const dragActive = useSignal(false);
-  const finishDrag = (event: CRCPointerEvent): void => {
+  const finishDrag = (event: PibblPointerEvent): void => {
     if (dragSession.current?.pointerId !== event.pointerId) return;
     dragSession.current = null;
     dragActive.set(false);
   };
-  const onPointerDown = (event: CRCPointerEvent): void => {
+  const onPointerDown = (event: PibblPointerEvent): void => {
     const pointerStart = rootToWorkspace(event, view);
     event.currentTarget.setPointerCapture(event.pointerId);
     dragSession.current = {
@@ -192,7 +192,7 @@ function NodeCard({
     dragActive.set(true);
     onSelect();
   };
-  const onPointerMove = (event: CRCPointerEvent): void => {
+  const onPointerMove = (event: PibblPointerEvent): void => {
     const session = dragSession.current;
     if (!session || session.pointerId !== event.pointerId) return;
     const point = rootToWorkspace(event, view);
@@ -202,7 +202,7 @@ function NodeCard({
       session.nodeStart.y + point.y - session.pointerStart.y,
     );
   };
-  const onPointerUp = (event: CRCPointerEvent): void => {
+  const onPointerUp = (event: PibblPointerEvent): void => {
     if (dragSession.current?.pointerId !== event.pointerId) return;
     if (event.currentTarget.hasPointerCapture(event.pointerId)) {
       event.currentTarget.releasePointerCapture(event.pointerId);
@@ -227,7 +227,7 @@ function NodeCard({
 function NodePaint({
   node,
   selected,
-}: Readonly<{ node: DiagramNode; selected: boolean }>): CRCNode {
+}: Readonly<{ node: DiagramNode; selected: boolean }>): PibblNode {
   return (
     <Group
       style={{
@@ -302,7 +302,7 @@ function NodePaint({
     </Group>
   );
 }
-function FocusVisual({ visible }: Readonly<{ visible: boolean }>): CRCNode {
+function FocusVisual({ visible }: Readonly<{ visible: boolean }>): PibblNode {
   return visible ? (
     <Fragment>
       <Rectangle
@@ -345,12 +345,12 @@ function NodeTarget({
 }: Readonly<{
   dragActive: boolean;
   onClick: () => void;
-  onPointerDown: (event: CRCPointerEvent) => void;
-  onPointerMove: (event: CRCPointerEvent) => void;
-  onPointerUp: (event: CRCPointerEvent) => void;
-  onPointerCancel: (event: CRCPointerEvent) => void;
-  onLostPointerCapture: (event: CRCPointerEvent) => void;
-}>): CRCNode {
+  onPointerDown: (event: PibblPointerEvent) => void;
+  onPointerMove: (event: PibblPointerEvent) => void;
+  onPointerUp: (event: PibblPointerEvent) => void;
+  onPointerCancel: (event: PibblPointerEvent) => void;
+  onLostPointerCapture: (event: PibblPointerEvent) => void;
+}>): PibblNode {
   const targetPath = useRectPath(0, 0, NODE_WIDTH, NODE_HEIGHT, {
     cornerRadius: 16,
   });
@@ -380,7 +380,7 @@ function NodeTarget({
 function Connection({
   edge,
   nodes,
-}: Readonly<{ edge: DiagramEdge; nodes: readonly DiagramNode[] }>): CRCNode {
+}: Readonly<{ edge: DiagramEdge; nodes: readonly DiagramNode[] }>): PibblNode {
   const from = nodes.find((node) => node.id === edge.from);
   const to = nodes.find((node) => node.id === edge.to);
   if (!from || !to) throw new Error(`Unknown node in edge "${edge.id}".`);
@@ -403,7 +403,7 @@ function Connection({
     </Fragment>
   );
 }
-function ResetPaint(): CRCNode {
+function ResetPaint(): PibblNode {
   return (
     <Fragment>
       <Rectangle
@@ -433,7 +433,7 @@ function ResetPaint(): CRCNode {
     </Fragment>
   );
 }
-function ResetTarget({ reset }: Readonly<{ reset: () => void }>): CRCNode {
+function ResetTarget({ reset }: Readonly<{ reset: () => void }>): PibblNode {
   const target = useEventTarget(
     { onClick: reset },
     {
@@ -474,7 +474,7 @@ function ResetTarget({ reset }: Readonly<{ reset: () => void }>): CRCNode {
     <Fragment />
   );
 }
-function ResetView({ reset }: Readonly<{ reset: () => void }>): CRCNode {
+function ResetView({ reset }: Readonly<{ reset: () => void }>): PibblNode {
   return (
     <Group style={{ translateX: 820, translateY: 12 }}>
       <ResetPaint />
@@ -485,7 +485,7 @@ function ResetView({ reset }: Readonly<{ reset: () => void }>): CRCNode {
 function Toolbar({
   style: _style,
   reset,
-}: RegionProps & Readonly<{ reset: () => void }>): CRCNode {
+}: RegionProps & Readonly<{ reset: () => void }>): PibblNode {
   const box = useLayoutBox();
   return (
     <Fragment>
@@ -526,17 +526,17 @@ function Workspace({
     onSelect: (id: NodeId | null) => void;
     onMove: (id: NodeId, x: number, y: number) => void;
     onViewChange: (view: ViewTransform) => void;
-    onWheel: (event: CRCWheelEvent) => void;
-  }>): CRCNode {
+    onWheel: (event: PibblWheelEvent) => void;
+  }>): PibblNode {
   const box = useLayoutBox();
   const panSession = useRef<PanSession | null>(null);
   const panning = useSignal(false);
-  const finishPan = (event: CRCPointerEvent): void => {
+  const finishPan = (event: PibblPointerEvent): void => {
     if (panSession.current?.pointerId !== event.pointerId) return;
     panSession.current = null;
     panning.set(false);
   };
-  const onPointerDown = (event: CRCPointerEvent): void => {
+  const onPointerDown = (event: PibblPointerEvent): void => {
     event.currentTarget.setPointerCapture(event.pointerId);
     panSession.current = {
       kind: "pan",
@@ -546,7 +546,7 @@ function Workspace({
     };
     panning.set(true);
   };
-  const onPointerMove = (event: CRCPointerEvent): void => {
+  const onPointerMove = (event: PibblPointerEvent): void => {
     const session = panSession.current;
     if (!session || session.pointerId !== event.pointerId) return;
     onViewChange({
@@ -555,7 +555,7 @@ function Workspace({
       panY: session.viewStart.panY + event.y - session.pointerStart.y,
     });
   };
-  const onPointerUp = (event: CRCPointerEvent): void => {
+  const onPointerUp = (event: PibblPointerEvent): void => {
     if (panSession.current?.pointerId !== event.pointerId) return;
     if (event.currentTarget.hasPointerCapture(event.pointerId)) {
       event.currentTarget.releasePointerCapture(event.pointerId);
@@ -625,7 +625,7 @@ function StatusBar({
   Readonly<{
     selected: DiagramNode | undefined;
     view: ViewTransform;
-  }>): CRCNode {
+  }>): PibblNode {
   const box = useLayoutBox();
   const message = selected ? `SELECTED · ${selected.title}` : "NO SELECTION";
   return (
@@ -655,7 +655,7 @@ function StatusBar({
     </Fragment>
   );
 }
-function DiagramEditor(): CRCNode {
+function DiagramEditor(): PibblNode {
   const nodes = useSignal<readonly DiagramNode[]>(INITIAL_NODES);
   const selected = useSignal<NodeId | null>("sketch");
   const view = useSignal<ViewTransform>(INITIAL_VIEW);
@@ -695,8 +695,8 @@ function DiagramEditor(): CRCNode {
     </Absolute>
   );
 }
-export default function mount(canvas: HTMLCanvasElement): CRCController {
-  return crc(
+export default function mount(canvas: HTMLCanvasElement): PibblController {
+  return pibbl(
     canvas,
     <FocusManagement>
       <KeyboardNavigation mode="directional">

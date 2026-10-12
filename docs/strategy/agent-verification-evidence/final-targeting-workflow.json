@@ -1,0 +1,224 @@
+{
+  "schema": "pibbl-agent-workflow-run/1",
+  "status": "pass",
+  "requirementId": "HIT-12",
+  "requirementCompletion": "not-established",
+  "scope": "Controlled reference workflow only; not arbitrary application or full requirement verification.",
+  "scenario": "agent-targeting-verification",
+  "url": "http://127.0.0.1:5199/#/testing/agent-targeting-verification",
+  "sources": [
+    "packages/scenarios/src/agent-targeting-verification.ts",
+    "packages/core/test/agent-targeting-verification.test.ts",
+    "tooling/agent-verification/targeting.ts"
+  ],
+  "remaining": "Extend prediction-versus-delivery agreement to other primitives, renderers and race cases; querying alone remains insufficient.",
+  "acceptance": [
+    "Seed delivers to the decoration and does not select item-a.",
+    "Repair selects item-a exactly once.",
+    "Blue pixel (144,112) remains [37,99,235,255] across seed and repair.",
+    "Intentional blocking keeps item-a unselected."
+  ],
+  "watchdog": {
+    "status": "exited",
+    "exitCode": 0,
+    "browserCleanup": {
+      "status": "terminated",
+      "pid": 28539,
+      "processExited": true
+    }
+  },
+  "evidence": {
+    "schema": "pibbl-replay-evidence-view/1",
+    "sourceSchema": "pibbl-targeting-replay/1",
+    "source": "/Users/benlesh/GitHub/crc/packages/core/test/out/agent-workflow/final-targeting/replay/report.json",
+    "verification": "saved-evidence-only",
+    "kind": "final-report",
+    "claimedStatus": "pass",
+    "runId": "6ca5ecbc-0aef-430b-b1ff-2c5063a91c6e",
+    "view": "summary",
+    "actionCount": 8,
+    "firstFailedCheck": null,
+    "requiredCheckCount": 21,
+    "checkCount": 23,
+    "checks": [
+      {
+        "checkId": "protected-action-permissions",
+        "status": "not-applicable",
+        "required": false,
+        "reason": "This controlled fixture invokes no clipboard, fullscreen or other permission-gated action."
+      },
+      {
+        "checkId": "real-hardware-input",
+        "status": "skipped",
+        "required": false,
+        "reason": "This run uses Playwright Chromium automation; physical touch/pen hardware is not exercised."
+      },
+      {
+        "checkId": "seed.pixels",
+        "actionId": "seed",
+        "status": "pass",
+        "required": true,
+        "reason": null
+      },
+      {
+        "checkId": "seed.input-provenance",
+        "actionId": "seed",
+        "status": "pass",
+        "required": true,
+        "reason": null
+      },
+      {
+        "checkId": "seed.selected-entity",
+        "actionId": "seed",
+        "status": "pass",
+        "required": true,
+        "reason": null
+      },
+      {
+        "checkId": "seed.selection-count",
+        "actionId": "seed",
+        "status": "pass",
+        "required": true,
+        "reason": null
+      },
+      {
+        "checkId": "seed.delivery-generation",
+        "actionId": "seed",
+        "status": "pass",
+        "required": true,
+        "reason": null
+      },
+      {
+        "checkId": "seed.delivery-target",
+        "actionId": "seed",
+        "status": "pass",
+        "required": true,
+        "reason": null
+      },
+      {
+        "checkId": "seed.selection-intent",
+        "actionId": "seed",
+        "status": "pass",
+        "required": true,
+        "reason": null
+      },
+      {
+        "checkId": "repair.pixels",
+        "actionId": "repair",
+        "status": "pass",
+        "required": true,
+        "reason": null
+      },
+      {
+        "checkId": "repair.input-provenance",
+        "actionId": "repair",
+        "status": "pass",
+        "required": true,
+        "reason": null
+      },
+      {
+        "checkId": "repair.selected-entity",
+        "actionId": "repair",
+        "status": "pass",
+        "required": true,
+        "reason": null
+      },
+      {
+        "checkId": "repair.selection-count",
+        "actionId": "repair",
+        "status": "pass",
+        "required": true,
+        "reason": null
+      },
+      {
+        "checkId": "repair.delivery-generation",
+        "actionId": "repair",
+        "status": "pass",
+        "required": true,
+        "reason": null
+      },
+      {
+        "checkId": "repair.delivery-target",
+        "actionId": "repair",
+        "status": "pass",
+        "required": true,
+        "reason": null
+      },
+      {
+        "checkId": "repair.selection-intent",
+        "actionId": "repair",
+        "status": "pass",
+        "required": true,
+        "reason": null
+      }
+    ],
+    "omittedChecks": 7,
+    "actions": [
+      {
+        "actionId": "seed",
+        "status": "pass"
+      },
+      {
+        "actionId": "repair",
+        "status": "pass"
+      },
+      {
+        "actionId": "intentional-block",
+        "status": "pass"
+      },
+      {
+        "actionId": "outside-layer",
+        "status": "pass"
+      },
+      {
+        "actionId": "capture-drag",
+        "status": "pass"
+      },
+      {
+        "actionId": "dom-overlay",
+        "status": "pass"
+      },
+      {
+        "actionId": "keyboard-focus",
+        "status": "pass"
+      },
+      {
+        "actionId": "scene-pagination",
+        "status": "pass"
+      }
+    ],
+    "omittedActions": 0,
+    "failure": null,
+    "otherFailures": {
+      "observation": null,
+      "check": null,
+      "checkCompletion": null,
+      "completion": null,
+      "checkpoint": null,
+      "cleanup": null,
+      "verifier": null
+    },
+    "recordedPageErrors": 0,
+    "droppedPageErrors": 0,
+    "manifestAvailable": true,
+    "checkpoint": null,
+    "truncatedFields": []
+  },
+  "readFailure": null,
+  "checkpointFailure": null,
+  "evidencePath": "/Users/benlesh/GitHub/crc/packages/core/test/out/agent-workflow/final-targeting/replay/report.json",
+  "artifacts": {
+    "report": "/Users/benlesh/GitHub/crc/packages/core/test/out/agent-workflow/final-targeting/replay/report.json",
+    "watchdog": "/Users/benlesh/GitHub/crc/packages/core/test/out/agent-workflow/final-targeting/watchdog.json"
+  },
+  "next": {
+    "executable": "/Users/benlesh/.local/share/fnm/node-versions/v24.15.0/installation/bin/node",
+    "arguments": [
+      "/Users/benlesh/GitHub/crc/tooling/agent-verification/evidence-reader.mjs",
+      "/Users/benlesh/GitHub/crc/packages/core/test/out/agent-workflow/final-targeting/replay/report.json",
+      "--page",
+      "actions"
+    ],
+    "unavailableSelections": []
+  }
+}

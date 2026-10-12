@@ -12,7 +12,7 @@ relatedTypes: [PolygonProps, PolygonStyle]
 # Polygon
 
 ```ts
-import { Polygon } from "@crc/core";
+import { Polygon } from "@pibbl/core";
 ```
 
 `Polygon` uses [`PolygonProps`](#/api/types/elements-components#polygonprops) and [`PolygonStyle`](#/api/types/styles#polygonstyle). `coords` is a finite numeric

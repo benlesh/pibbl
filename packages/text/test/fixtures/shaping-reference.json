@@ -4,7 +4,7 @@
     "url": "https://codeload.github.com/harfbuzz/harfbuzz/tar.gz/refs/tags/14.5.0",
     "sha256": "97ec7488a46b974e18e08ee774af93173e7e1dbf738424796eb315ebcb735ec5"
   },
-  "method": "native/reference.cpp; direct native HarfBuzz without CRC wrapper",
+  "method": "native/reference.cpp; direct native HarfBuzz without Pibbl wrapper",
   "glyphColumns": [
     "id",
     "utf16Cluster",

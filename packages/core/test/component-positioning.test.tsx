@@ -1,9 +1,9 @@
-import { Absolute, Flex, Group, Rectangle, crc, signal, type CRCNode, type CRCController } from '@crc/core';
+import { Absolute, Flex, Group, Rectangle, pibbl, signal, type PibblNode, type PibblController } from '@pibbl/core';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import { installSchedulerDriverForTest, ManualSchedulerDriver } from '../src/lib/scheduler/testing';
 
-let controller: CRCController | undefined;
+let controller: PibblController | undefined;
 let restore: (() => void) | undefined;
 
 afterEach(() => {
@@ -12,14 +12,14 @@ afterEach(() => {
   document.body.replaceChildren();
 });
 
-function mount(node: CRCNode) {
+function mount(node: PibblNode) {
   const driver = new ManualSchedulerDriver();
   restore = installSchedulerDriverForTest(driver);
   const canvas = document.createElement('canvas');
   canvas.width = 160;
   canvas.height = 120;
   document.body.append(canvas);
-  controller = crc(canvas, node, { pixelRatio: 1 });
+  controller = pibbl(canvas, node, { pixelRatio: 1 });
   driver.flush(1);
   return canvas;
 }

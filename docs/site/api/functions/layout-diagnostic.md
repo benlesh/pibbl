@@ -12,7 +12,7 @@ relatedTypes: [LayoutDiagnosticContext, LayoutDiagnosticInput]
 # LayoutDiagnostic and layoutDiagnostic
 
 ```ts
-import { LayoutDiagnostic, layoutDiagnostic } from "@crc/core";
+import { LayoutDiagnostic, layoutDiagnostic } from "@pibbl/core";
 ```
 
 `LayoutDiagnostic` is the runtime error class for contextual layout failures.

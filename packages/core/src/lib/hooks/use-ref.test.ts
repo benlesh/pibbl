@@ -59,7 +59,7 @@ describe('useRef', () => {
     expect(onCheckRef).toHaveBeenCalledWith(myReference);
 
     canvas.dispose();
-    expect(GLOBAL_STATE.crcInstances.has(canvas.element)).toBe(false);
+    expect(GLOBAL_STATE.pibblInstances.has(canvas.element)).toBe(false);
   });
 
   it('does not re-render when the ref value changes', async () => {
@@ -106,7 +106,7 @@ describe('useRef', () => {
     expect(renderCount).toBe(1);
 
     canvas.dispose();
-    expect(GLOBAL_STATE.crcInstances.has(canvas.element)).toBe(false);
+    expect(GLOBAL_STATE.pibblInstances.has(canvas.element)).toBe(false);
   });
 
   it('stores multiple refs', async () => {
@@ -154,6 +154,6 @@ describe('useRef', () => {
     expect(onCheckRefs).toHaveBeenCalledWith(value1, value2);
 
     canvas.dispose();
-    expect(GLOBAL_STATE.crcInstances.has(canvas.element)).toBe(false);
+    expect(GLOBAL_STATE.pibblInstances.has(canvas.element)).toBe(false);
   });
 });

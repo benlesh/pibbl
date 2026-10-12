@@ -1,0 +1,34 @@
+✔ summary omits bulky observations; explicit action and manifest views retain exact data (6.273875ms)
+✔ checkpoint views cannot promote a completed subset to final success (1.357ms)
+✔ ambiguous/missing actions and invalid or oversized evidence reject (7.732041ms)
+✔ summary reports omitted actions explicitly and remains compact (2.152666ms)
+✔ summary includes secondary failure categories without conflating them with operation errors (0.789375ms)
+✔ checkpoint summary preserves clock identity and correlation limits (0.663333ms)
+✔ summarizes explicit non-pass check reasons and refuses unknown outcome enums (2.940333ms)
+✔ retrieves one identified assertion failure with its action and operands (2.438792ms)
+✔ exposes declared check expectations separately from completed checks (2.143ms)
+✔ check expectations alone cannot masquerade as a missing run manifest (0.788666ms)
+✔ pages saved action records with content-bound cursors and explicit checkpoint history (2.017083ms)
+✔ bounds pagination and rejects malformed or mismatched cursors instead of silently restarting (1.752ms)
+✔ rejects noncanonical encoded cursors rather than accepting whitespace aliases (2.60075ms)
+✔ reads text and signal mutation evidence through the shared summary and identified check views (2.467208ms)
+✔ projects requested fields from oversized action evidence without returning unrelated payloads (2.338125ms)
+✔ projection uses own JSON fields, escapes pointer tokens, distinguishes special numbers and bounds strings (1.196041ms)
+✔ invalid field selectors and unsupported versions have machine-readable errors (2.209042ms)
+✔ CLI projects real retained signal evidence and exposes structured selector failures (140.171083ms)
+✔ projection bounds object-key previews and enforces output bytes even for worst-case escaping (3.463375ms)
+✔ preserves redacted failure reasons and stages without inventing an assertion message (1.124958ms)
+✔ reads layout smoke actions without inventing per-action success or attestation (5.616917ms)
+✔ connects requirement discovery to a fixed native replay, fresh evidence and bounded retrieval (0.498375ms)
+✔ refuses unmapped and unsupported runners and malformed Studio origins (0.408667ms)
+✔ neither child exit nor saved pass overrides timeout, missing evidence or failed browser cleanup (0.078208ms)
+✔ recovers checkpoint evidence after interruption without hiding a corrupt final report (5.030334ms)
+✔ routes to explicit failed checks or actions without inventing causal conclusions (0.371458ms)
+ℹ tests 26
+ℹ suites 0
+ℹ pass 26
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 234.5155

@@ -1,3 +1,4 @@
+import type { AgentTargetingState } from './agent-targeting-verification.js';
 import {
   computed,
   FocusManagement,
@@ -7,28 +8,39 @@ import {
   Layer,
   Rectangle,
   Text,
-  type CRCLogicalMouseEvent,
-  type CRCPointerEvent,
+  type PibblLogicalMouseEvent,
+  type PibblPointerEvent,
   type Signal,
-} from '@crc/core';
+} from '@pibbl/core';
 
 export const AGENT_TARGETING_VERIFICATION_SOURCE_ID = 'agent-targeting-verification-example';
 
-export type AgentTargetingMode = 'seed' | 'repair' | 'intentional-block' | 'capture-drag' | 'keyboard-focus';
+/**
+ * Supported agent targeting mode values: `"pagination"`, `"seed"`, `"repair"`,
+ * `"intentional-block"`, `"capture-drag"`, `"keyboard-focus"`.
+ *
+ * @see {@link AgentTargetingState}
+ */
+export type AgentTargetingMode = 'pagination' | 'seed' | 'repair' | 'intentional-block' | 'capture-drag' | 'keyboard-focus';
+/**
+ * The event-delivery record observed by the targeting verification scenario.
+ *
+ * @see {@link AgentTargetingState}
+ */
 export type AgentTargetingDelivery = 'action' | 'decoration' | null;
 
 export interface AgentTargetingSceneProps {
-  readonly wrapClick: (label: string, handler: (event: CRCLogicalMouseEvent) => void) => (event: CRCLogicalMouseEvent) => void;
+  readonly wrapClick: (label: string, handler: (event: PibblLogicalMouseEvent) => void) => (event: PibblLogicalMouseEvent) => void;
   readonly mode: Signal<AgentTargetingMode>;
   readonly onFocusEvidence: () => void;
-  readonly onCapturedMove: (event: CRCPointerEvent) => void;
+  readonly onCapturedMove: (event: PibblPointerEvent) => void;
   readonly selectionLabel: Signal<string>;
   readonly selectedItem: Signal<'item-a' | null>;
   readonly selections: Signal<number>;
   readonly deliveredTo: Signal<AgentTargetingDelivery>;
   readonly onDelivery: (
     deliveredTo: Exclude<AgentTargetingDelivery, null>,
-    event: CRCLogicalMouseEvent,
+    event: PibblLogicalMouseEvent,
   ) => void;
   readonly onRender: (state: { mode: AgentTargetingMode; selectedItem: 'item-a' | null; selections: number; deliveredTo: AgentTargetingDelivery }) => void;
 }
@@ -73,6 +85,11 @@ export function AgentTargetingVerificationScene({
         pointerEvents="none"
         style={{ width: 480, height: 240, fill: '#f8fafc' }}
       />
+      {rendered.mode === 'pagination' ? Array.from({ length: 100 }, (_, index) => <Rectangle
+        key={index}
+        style={{ left: 300 + (index % 10) * 6, top: 174 + Math.floor(index / 10) * 6, width: 4, height: 4, fill: '#0f766e' }}
+        onClick={() => undefined}
+      />) : null}
       <Group style={{ translateX: 40, translateY: 32 }}>
       <Layer style={{ width: 240, height: 160 }}>
       {rendered.mode === 'keyboard-focus' ? <KeyboardAction onDelivery={onDelivery} onFocusEvidence={onFocusEvidence} wrapClick={wrapClick} /> : <Rectangle

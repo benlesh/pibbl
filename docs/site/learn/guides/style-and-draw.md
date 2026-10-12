@@ -1,7 +1,7 @@
 ---
 id: guide-style-draw
 title: Style and draw
-summary: Use CRC's closed local style language for drawing, filters, shapes, and declared geometry.
+summary: Use Pibbl's closed local style language for drawing, filters, shapes, and declared geometry.
 kind: guide
 slug: style-and-draw
 order: 40
@@ -10,14 +10,14 @@ keywords: [style, drawing, filters, shapes, geometry]
 
 # Style and draw
 
-CRC drawing components accept explicit, local `style` objects. The style
+Pibbl drawing components accept explicit, local `style` objects. The style
 language is closed: it does not cascade, inherit, use class names, selectors,
 or computed DOM values. This guide preserves the style, filter, shape, and
 allocation material from the earlier components guide; use
 [components, props, and children](#/learn/guides/components-props-and-children)
 for authoring structure.
 
-CRC components are ordinary synchronous TypeScript or JavaScript functions.
+Pibbl components are ordinary synchronous TypeScript or JavaScript functions.
 The function itself is runtime identity. No wrapper, registration call, class,
 or JSX-specific component base is required.
 
@@ -27,9 +27,9 @@ import {
   Rectangle,
   Text,
   type BoxStyle,
-  type CRCNode,
+  type PibblNode,
   type LayoutItemStyle,
-} from "@crc/core";
+} from "@pibbl/core";
 
 interface CardProps {
   title: string;
@@ -38,7 +38,7 @@ interface CardProps {
   style?: BoxStyle & LayoutItemStyle;
 }
 
-function Card({ title, selected, onSelect }: CardProps): CRCNode {
+function Card({ title, selected, onSelect }: CardProps): PibblNode {
   return (
     <Group>
       <Rectangle
@@ -61,7 +61,7 @@ function Card({ title, selected, onSelect }: CardProps): CRCNode {
 `title`, `selected`, and `onSelect` are behavioral or application props.
 Geometry, paint, image source, transforms, clipping, cursor, and layout
 participation belong under `style`. `children` is declared only by components
-that accept it. `key` is construction metadata: CRC normalizes strings and
+that accept it. `key` is construction metadata: Pibbl normalizes strings and
 numbers to a string and never delivers it in props.
 
 ## Local, closed style
@@ -92,7 +92,7 @@ requires `src`. Components whose complete style schema has defaults may omit
 `style`.
 
 `style.custom` is available for application-owned metadata and is not read or
-inherited by CRC. Arbitrary top-level style keys are not accepted.
+inherited by Pibbl. Arbitrary top-level style keys are not accepted.
 
 ## Signal-valued style
 
@@ -113,7 +113,7 @@ const style = useComputed(() => ({
 <Rectangle style={style} />;
 ```
 
-CRC first resolves a whole-style signal once, then shallowly resolves the
+Pibbl first resolves a whole-style signal once, then shallowly resolves the
 fields declared by that primitive. It allocates a resolved copy only when a
 signal field is actually present; all-plain styles keep the direct path. It
 does not inspect `style.custom` or other arbitrary application objects for
@@ -138,8 +138,8 @@ Every primitive, including composition and layout primitives, accepts one
 imported filter value or a readonly ordered list:
 
 ```tsx
-import { Group, Rectangle, type CRCFilter } from "@crc/core";
-import { grayscale, dropShadow } from "@crc/core/filters";
+import { Group, Rectangle, type PibblFilter } from "@pibbl/core";
+import { grayscale, dropShadow } from "@pibbl/core/filters";
 
 const effects = [
   grayscale({ amount: 1 }),
@@ -149,7 +149,7 @@ const effects = [
     blurRadius: 4,
     color: "rgb(0 0 0 / 45%)",
   }),
-] satisfies readonly CRCFilter[];
+] satisfies readonly PibblFilter[];
 
 const filteredCard = (
   <Group style={{ filter: effects }}>
@@ -170,7 +170,7 @@ on the direct rendering path.
 Filters affect pixels only. They do not enlarge layout or measurement, and
 blurred or shadow-only pixels outside original geometry are not clickable or
 focusable. Nonempty filters require browser `OffscreenCanvas` and native Canvas
-filter support. CRC accepts the ten typed descriptors documented in the [style
+filter support. Pibbl accepts the ten typed descriptors documented in the [style
 contract](../../../design/style-system-contract.md), not raw CSS strings, `url()`,
 `backdrop-filter`, or `boxShadow`.
 
@@ -183,7 +183,7 @@ current width/height basis, while `"auto"`, negative values, non-finite values,
 and arrays longer than the shape's corner count reject.
 
 ```tsx
-import { Polygon, Rectangle, RegularPolygon, Star } from "@crc/core";
+import { Polygon, Rectangle, RegularPolygon, Star } from "@pibbl/core";
 
 const shapes = (
   <>
@@ -230,7 +230,7 @@ import {
   useLayoutBox,
   type BoxStyle,
   type FlexItemStyle,
-} from "@crc/core";
+} from "@pibbl/core";
 
 interface TileProps {
   color: string;

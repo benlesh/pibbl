@@ -1,23 +1,23 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   Fragment,
-  crc,
+  pibbl,
   createElement,
   signal,
-} from '@crc/core';
+} from '@pibbl/core';
 import {
-  crcInternalCurrentSimulationOwner,
-  crcInternalOnSimulationRenderTransactionFinish,
-  crcInternalQueueSimulationBegin,
-  crcInternalQueueSimulationCommitAcknowledgement,
-  crcInternalQueueSimulationComplete,
-  crcInternalRegisterSimulationAdvance,
-  crcInternalRequestSimulationRender,
-  type CRCInternalAdvanceLane,
-  type CRCInternalFrame,
-  type CRCInternalSignalBatch,
-  type CRCInternalSimulationOwner,
-} from '@crc/core/internal';
+  pibblInternalCurrentSimulationOwner,
+  pibblInternalOnSimulationRenderTransactionFinish,
+  pibblInternalQueueSimulationBegin,
+  pibblInternalQueueSimulationCommitAcknowledgement,
+  pibblInternalQueueSimulationComplete,
+  pibblInternalRegisterSimulationAdvance,
+  pibblInternalRequestSimulationRender,
+  type PibblInternalAdvanceLane,
+  type PibblInternalFrame,
+  type PibblInternalSignalBatch,
+  type PibblInternalSimulationOwner,
+} from '@pibbl/core/internal';
 import { clearSharedState } from '../global-state';
 import {
   installSchedulerDriverForTest,
@@ -40,18 +40,18 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-describe('@crc/core/internal simulation participants', () => {
+describe('@pibbl/core/internal simulation participants', () => {
   it('runs animation before physics in stable lane order with one shared batch and Commit', () => {
     const target = signal(0);
     const result = signal(0);
     const laneTrace: string[] = [];
     const renderSnapshots: Array<readonly [number, number]> = [];
-    const frames = new Set<CRCInternalFrame>();
-    const batches = new Set<CRCInternalSignalBatch>();
+    const frames = new Set<PibblInternalFrame>();
+    const batches = new Set<PibblInternalSignalBatch>();
     const commitOutcomes: boolean[] = [];
     const completions: number[] = [];
     const transactionOutcomes: boolean[] = [];
-    const registrations = new WeakSet<CRCInternalSimulationOwner>();
+    const registrations = new WeakSet<PibblInternalSimulationOwner>();
     let beginSequence: number | undefined;
     let cancelledBeginRan = false;
 
@@ -62,39 +62,39 @@ describe('@crc/core/internal simulation participants', () => {
       queueBegin = false,
     }: {
       label: string;
-      lane: CRCInternalAdvanceLane;
+      lane: PibblInternalAdvanceLane;
       run?: (
-        owner: CRCInternalSimulationOwner,
-        frame: CRCInternalFrame,
-        batch: CRCInternalSignalBatch,
+        owner: PibblInternalSimulationOwner,
+        frame: PibblInternalFrame,
+        batch: PibblInternalSignalBatch,
       ) => void;
       queueBegin?: boolean;
     }) => {
-      const owner = crcInternalCurrentSimulationOwner();
-      crcInternalOnSimulationRenderTransactionFinish(
+      const owner = pibblInternalCurrentSimulationOwner();
+      pibblInternalOnSimulationRenderTransactionFinish(
         owner,
         success => transactionOutcomes.push(success),
       );
       if (!registrations.has(owner)) {
         registrations.add(owner);
         if (queueBegin) {
-          const handle = crcInternalQueueSimulationBegin(
+          const handle = pibblInternalQueueSimulationBegin(
             owner,
             (_frame, batch, sequence) => {
               beginSequence = sequence;
               expect('commit' in batch).toBe(false);
               expect('clear' in batch).toBe(false);
-              crcInternalRequestSimulationRender(owner);
+              pibblInternalRequestSimulationRender(owner);
             },
           );
           expect(Object.isFrozen(handle)).toBe(true);
-          const cancelled = crcInternalQueueSimulationBegin(owner, () => {
+          const cancelled = pibblInternalQueueSimulationBegin(owner, () => {
             cancelledBeginRan = true;
           });
           cancelled.cancel();
         }
         let release = () => {};
-        release = crcInternalRegisterSimulationAdvance(
+        release = pibblInternalRegisterSimulationAdvance(
           owner,
           lane,
           (frame, batch) => {
@@ -127,14 +127,14 @@ describe('@crc/core/internal simulation participants', () => {
             run: (owner, frame, batch) => {
               expect(batch.read(target)).toBe(8);
               batch.stage(result, 13, owner);
-              crcInternalQueueSimulationCommitAcknowledgement(
+              pibblInternalQueueSimulationCommitAcknowledgement(
                 owner,
                 (committedFrame, outcome) => {
                   expect(committedFrame).toBe(frame);
                   commitOutcomes.push(outcome.applied);
                 },
               );
-              crcInternalQueueSimulationComplete(owner, completedFrame => {
+              pibblInternalQueueSimulationComplete(owner, completedFrame => {
                 expect(completedFrame).toBe(frame);
                 completions.push(completedFrame.frameId);
               });
@@ -144,7 +144,7 @@ describe('@crc/core/internal simulation participants', () => {
       });
     };
 
-    const controller = crc(createCanvas(), createElement(Root, {}));
+    const controller = pibbl(createCanvas(), createElement(Root, {}));
     driver.flush(1);
     renderSnapshots.length = 0;
     transactionOutcomes.length = 0;
@@ -178,7 +178,7 @@ describe('@crc/core/internal simulation participants', () => {
     const failure = new Error('physics owner failed');
     const sharedWriter = Object.freeze({});
     const calls: string[] = [];
-    const registrations = new WeakSet<CRCInternalSimulationOwner>();
+    const registrations = new WeakSet<PibblInternalSimulationOwner>();
     let recordRender = false;
 
     const Probe = ({
@@ -187,18 +187,18 @@ describe('@crc/core/internal simulation participants', () => {
       run,
     }: {
       label: string;
-      lane: CRCInternalAdvanceLane;
+      lane: PibblInternalAdvanceLane;
       run: (
-        owner: CRCInternalSimulationOwner,
-        frame: CRCInternalFrame,
-        batch: CRCInternalSignalBatch,
+        owner: PibblInternalSimulationOwner,
+        frame: PibblInternalFrame,
+        batch: PibblInternalSignalBatch,
       ) => void;
     }) => {
-      const owner = crcInternalCurrentSimulationOwner();
+      const owner = pibblInternalCurrentSimulationOwner();
       if (!registrations.has(owner)) {
         registrations.add(owner);
         let release = () => {};
-        release = crcInternalRegisterSimulationAdvance(
+        release = pibblInternalRegisterSimulationAdvance(
           owner,
           lane,
           (frame, batch) => {
@@ -228,7 +228,7 @@ describe('@crc/core/internal simulation participants', () => {
             lane: 'physics',
             run: (owner, _frame, batch) => {
               batch.stage(discarded, 2, sharedWriter);
-              crcInternalQueueSimulationComplete(owner, () => {
+              pibblInternalQueueSimulationComplete(owner, () => {
                 calls.push('complete');
               });
               throw failure;
@@ -243,7 +243,7 @@ describe('@crc/core/internal simulation participants', () => {
       });
     };
 
-    const controller = crc(createCanvas(), createElement(Root, {}));
+    const controller = pibbl(createCanvas(), createElement(Root, {}));
     driver.flush(1);
     recordRender = true;
 
@@ -263,16 +263,16 @@ describe('@crc/core/internal simulation participants', () => {
 
   it('cancels all queued simulation work when its mounted slot tears down', () => {
     const calls: string[] = [];
-    let owner: CRCInternalSimulationOwner | undefined;
-    const controller = crc(createCanvas(), createElement(() => {
-      owner ??= crcInternalCurrentSimulationOwner();
-      crcInternalQueueSimulationBegin(owner, () => calls.push('begin'));
-      crcInternalRegisterSimulationAdvance(
+    let owner: PibblInternalSimulationOwner | undefined;
+    const controller = pibbl(createCanvas(), createElement(() => {
+      owner ??= pibblInternalCurrentSimulationOwner();
+      pibblInternalQueueSimulationBegin(owner, () => calls.push('begin'));
+      pibblInternalRegisterSimulationAdvance(
         owner,
         'physics',
         () => calls.push('advance'),
       );
-      crcInternalQueueSimulationComplete(owner, () => calls.push('complete'));
+      pibblInternalQueueSimulationComplete(owner, () => calls.push('complete'));
       return undefined;
     }, {}));
     driver.flush(1);
@@ -291,18 +291,18 @@ describe('@crc/core/internal simulation participants', () => {
       completionCallbacks: 0,
     });
     expect(driver.pendingHostFrames).toBe(0);
-    expect(() => crcInternalRequestSimulationRender(owner!)).toThrow(
-      /active CRC internal simulation owner/i,
+    expect(() => pibblInternalRequestSimulationRender(owner!)).toThrow(
+      /active Pibbl internal simulation owner/i,
     );
   });
 
   it('discards writes staged before and after owner teardown during Begin', () => {
     const beforeTeardown = signal(0);
     const afterTeardown = signal(0);
-    let controller: ReturnType<typeof crc>;
+    let controller: ReturnType<typeof pibbl>;
     const Root = () => {
-      const owner = crcInternalCurrentSimulationOwner();
-      crcInternalQueueSimulationBegin(owner, (_frame, batch) => {
+      const owner = pibblInternalCurrentSimulationOwner();
+      pibblInternalQueueSimulationBegin(owner, (_frame, batch) => {
         batch.stage(beforeTeardown, 1, {});
         controller.dispose();
         batch.stage(afterTeardown, 2, {});
@@ -310,7 +310,7 @@ describe('@crc/core/internal simulation participants', () => {
       return undefined;
     };
 
-    controller = crc(createCanvas(), createElement(Root, {}));
+    controller = pibbl(createCanvas(), createElement(Root, {}));
     driver.flush(1);
     driver.flush(2);
 
@@ -321,10 +321,10 @@ describe('@crc/core/internal simulation participants', () => {
   it('discards writes staged before and after owner teardown during Advance', () => {
     const beforeTeardown = signal(0);
     const afterTeardown = signal(0);
-    let controller: ReturnType<typeof crc>;
+    let controller: ReturnType<typeof pibbl>;
     const Root = () => {
-      const owner = crcInternalCurrentSimulationOwner();
-      crcInternalRegisterSimulationAdvance(
+      const owner = pibblInternalCurrentSimulationOwner();
+      pibblInternalRegisterSimulationAdvance(
         owner,
         'physics',
         (_frame, batch) => {
@@ -336,7 +336,7 @@ describe('@crc/core/internal simulation participants', () => {
       return undefined;
     };
 
-    controller = crc(createCanvas(), createElement(Root, {}));
+    controller = pibbl(createCanvas(), createElement(Root, {}));
     driver.flush(1);
     driver.flush(2);
 
@@ -348,20 +348,20 @@ describe('@crc/core/internal simulation participants', () => {
     const retained = signal(0);
     const discarded = signal(0);
     const sharedWriter = Object.freeze({});
-    const registrations = new WeakSet<CRCInternalSimulationOwner>();
+    const registrations = new WeakSet<PibblInternalSimulationOwner>();
 
     const Probe = ({
       lane,
       run,
     }: {
-      lane: CRCInternalAdvanceLane;
-      run: (batch: CRCInternalSignalBatch) => void;
+      lane: PibblInternalAdvanceLane;
+      run: (batch: PibblInternalSignalBatch) => void;
     }) => {
-      const owner = crcInternalCurrentSimulationOwner();
+      const owner = pibblInternalCurrentSimulationOwner();
       if (!registrations.has(owner)) {
         registrations.add(owner);
         let release = () => {};
-        release = crcInternalRegisterSimulationAdvance(
+        release = pibblInternalRegisterSimulationAdvance(
           owner,
           lane,
           (_frame, batch) => {
@@ -393,7 +393,7 @@ describe('@crc/core/internal simulation participants', () => {
       });
     };
 
-    const controller = crc(createCanvas(), createElement(Root, {}));
+    const controller = pibbl(createCanvas(), createElement(Root, {}));
     driver.flush(1);
     driver.flush(2);
 

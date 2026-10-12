@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Fragment } from '../../index.js';
-import { crc } from '../crc.js';
-import { clearSharedState, getCRCInstance } from '../global-state.js';
+import { pibbl } from '../pibbl.js';
+import { clearSharedState, getPibblInstance } from '../global-state.js';
 import { useRef } from '../hooks/use-ref.js';
 import { createElement } from './create-element';
 
@@ -35,14 +35,14 @@ describe('Fragment identity', () => {
   it('keeps parentage stable through nested arrays and unkeyed fragments', async () => {
     const canvas = createCanvas();
     const observations = new Map<string, number>();
-    const controller = crc(
+    const controller = pibbl(
       canvas,
       createElement(IdentityProbe, { key: 'stable', label: 'initial', observations }),
     );
     await nextFrame();
     const initial = observations.get('initial');
 
-    crc(canvas, [[
+    pibbl(canvas, [[
       <>{createElement(IdentityProbe, { key: 'stable', label: 'nested', observations })}</>,
     ]]);
     await nextFrame();
@@ -59,10 +59,10 @@ describe('Fragment identity', () => {
         {createElement(IdentityProbe, { key: 'child', label, observations })}
       </Fragment>
     );
-    const controller = crc(canvas, scoped('initial'));
+    const controller = pibbl(canvas, scoped('initial'));
     await nextFrame();
     const initial = observations.get('initial');
-    const refs = Array.from(getCRCInstance(canvas).refs.values());
+    const refs = Array.from(getPibblInstance(canvas).refs.values());
     const fragmentScopes = refs.filter(ref => ref.element.type === Fragment);
     const childScopes = refs.filter(ref => ref.element.key === 'child');
 
@@ -77,11 +77,11 @@ describe('Fragment identity', () => {
     expect(childScopes).toHaveLength(1);
     expect(childScopes[0].parent).toBe(fragmentScopes[0]);
 
-    crc(canvas, scoped('same-scope'));
+    pibbl(canvas, scoped('same-scope'));
     await nextFrame();
     expect(observations.get('same-scope')).toBe(initial);
 
-    crc(canvas, createElement(IdentityProbe, {
+    pibbl(canvas, createElement(IdentityProbe, {
       key: 'child',
       label: 'without-scope',
       observations,
@@ -99,12 +99,12 @@ describe('Fragment identity', () => {
       label,
       observations,
     });
-    const controller = crc(canvas, [keyed('a'), [<>{keyed('b')}</>]]);
+    const controller = pibbl(canvas, [keyed('a'), [<>{keyed('b')}</>]]);
     await nextFrame();
     const a = observations.get('a');
     const b = observations.get('b');
 
-    crc(canvas, <>{[[keyed('b')], keyed('a')]}</>);
+    pibbl(canvas, <>{[[keyed('b')], keyed('a')]}</>);
     await nextFrame();
 
     expect(observations.get('a')).toBe(a);
@@ -116,12 +116,12 @@ describe('Fragment identity', () => {
     const canvas = createCanvas();
     const observations = new Map<string, number>();
     const unkeyed = (label: string) => createElement(IdentityProbe, { label, observations });
-    const controller = crc(canvas, [unkeyed('a'), [<>{unkeyed('b')}</>]]);
+    const controller = pibbl(canvas, [unkeyed('a'), [<>{unkeyed('b')}</>]]);
     await nextFrame();
     const firstSlot = observations.get('a');
     const secondSlot = observations.get('b');
 
-    crc(canvas, <>{[
+    pibbl(canvas, <>{[
       [unkeyed('inserted')],
       <>{unkeyed('a')}</>,
       unkeyed('b'),
@@ -146,11 +146,11 @@ describe('Fragment identity', () => {
         {right ? createElement(IdentityProbe, { key: 'child', label, observations }) : null}
       </Fragment>,
     ];
-    const controller = crc(canvas, tree(false, 'left'));
+    const controller = pibbl(canvas, tree(false, 'left'));
     await nextFrame();
     const leftIdentity = observations.get('left');
 
-    crc(canvas, tree(true, 'right'));
+    pibbl(canvas, tree(true, 'right'));
     await nextFrame();
 
     expect(observations.get('right')).not.toBe(leftIdentity);

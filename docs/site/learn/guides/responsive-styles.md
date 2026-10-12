@@ -10,7 +10,7 @@ keywords: [responsive, style, allocation, width, height, query, container]
 
 # Responsive local styles
 
-Use `style.when` for ordered patches based on available containing size, in CRC
+Use `style.when` for ordered patches based on available containing size, in Pibbl
 logical units. Bounds are inclusive: `minWidth`, `maxWidth`, `minHeight`, and
 `maxHeight`. Conditions within one rule all need to match.
 
@@ -36,10 +36,10 @@ import {
   signal,
   type BoxStyle,
   type LayoutItemStyle,
-  type CRCResponsiveStyle,
+  type PibblResponsiveStyle,
   type FlowStyle,
   type SignalValue,
-} from "@crc/core";
+} from "@pibbl/core";
 
 const gap = signal(12);
 const contentStyle = {
@@ -54,11 +54,11 @@ const contentStyle = {
     },
     { query: { maxHeight: 120 }, style: { gap: 8 } },
   ],
-} satisfies CRCResponsiveStyle<FlowStyle>;
+} satisfies PibblResponsiveStyle<FlowStyle>;
 
 type ActionsProps = {
   style?: SignalValue<
-    CRCResponsiveStyle<BoxStyle & LayoutItemStyle> | undefined
+    PibblResponsiveStyle<BoxStyle & LayoutItemStyle> | undefined
   >;
 };
 function Actions({ style: placementStyle }: ActionsProps) {
@@ -93,7 +93,7 @@ const narrowPanel = (
 );
 ```
 
-The plain `Actions` function receives its original raw `style` prop; CRC neither
+The plain `Actions` function receives its original raw `style` prop; Pibbl neither
 resolves it for the function nor forwards it to descendants. Its parent inspects
 that prop for placement. Keep it named `style` so the parent can find it.
 
@@ -104,7 +104,7 @@ contexts. No root-size hook, observer, or additional signal is required.
 The equivalent component without JSX uses the same values:
 
 ```ts
-import { createElement, Flow, Rectangle } from "@crc/core";
+import { createElement, Flow, Rectangle } from "@pibbl/core";
 
 function Actions({ style: placementStyle }: ActionsProps) {
   void placementStyle;
@@ -125,7 +125,7 @@ These are alternative declarations, not two functions to paste into one file.
 Try the [store analytics example](#/examples/layout/responsive-styles): select
 30 days, then switch between Dashboard, Sidebar, and Phone. Its revenue card
 retains the selected period while its metrics and chart reflow. A short preview
-uses ordinary host scrolling; responsive styles do not add scrolling to CRC.
+uses ordinary host scrolling; responsive styles do not add scrolling to Pibbl.
 
 ## Selection and signals
 
@@ -147,8 +147,8 @@ basis. Its descendants can adapt to the resulting smaller or larger content box.
 ## Measurement and performance
 
 Give responsive layout items definite sizes or a definite allocated box. If a
-parent needs intrinsic (`auto`) measurement of a query-bearing item, CRC reports
-`CRC_STYLE_QUERY_MEASUREMENT`. Repair it by assigning a definite box and putting
+parent needs intrinsic (`auto`) measurement of a query-bearing item, Pibbl reports
+`PIBBL_STYLE_QUERY_MEASUREMENT`. Repair it by assigning a definite box and putting
 responsive content inside the allocated component, as above. Query-free Text
 children can still be measured inside an allocated responsive Flow.
 

@@ -1,15 +1,15 @@
 /**
- * Model-inference pipeline health — a Moose Riot Glass instrument on CRC Canvas 2D.
+ * Model-inference pipeline health — a Moose Riot Glass instrument on Pibbl Canvas 2D.
  *
  * The scene answers three questions in one 880x620 view:
  *   1. which stages of the serving path are inside their budget, and which are not
  *   2. what the shape of the change looks like, and when each stage turned
  *   3. what the causal readings say, and what to do about the stage at fault
  *
- * Design notes, role mapping and caveats live in notes.md beside this file.
+ * The optional Moose Riot profile lives in .claude/skills/moose-riot-glass-pibbl/.
  *
  * Telemetry is synthetic but model-generated (baseline + jitter + an explicit
- * regime change per stage), never a template scaled to a current total. One stage
+ * regime change per stage), with 100 aligned requests in each time bucket. One stage
  * genuinely stops reporting, so unknown is rendered as a gap and every dependent
  * total is published as a lower bound.
  */
@@ -24,22 +24,24 @@ import {
   Path,
   Rectangle,
   Text,
-  crc,
+  pibbl,
   defineTexture,
   useConst,
   useEventTarget,
   useRectPath,
   useSignal,
   useTexture,
-  useTransition,
-  type CRCController,
-  type CRCKeyboardEvent,
-  type CRCNode,
-  type CRCPointerEvent,
+  useAnimatedValue,
+  spring,
+  tween,
+  type PibblController,
+  type PibblKeyboardEvent,
+  type PibblNode,
+  type PibblPointerEvent,
   type WritableSignal,
-} from "@crc/core";
-import { blur, dropShadow, saturate } from "@crc/core/filters";
-import { Axis, LineSeries, Scale, useScale } from "@crc/viz";
+} from "@pibbl/core";
+import { blur, dropShadow, saturate } from "@pibbl/core/filters";
+import { Axis, LineSeries, LinearScale, useLinearScale } from "@pibbl/core/viz";
 
 /* ------------------------------------------------------------------ tokens */
 
@@ -109,17 +111,50 @@ const LIGHT: Theme = {
   focusRing: "#DE1D3F",
   selection: "#F44F5D26",
   wash: "#0B0B0B0A",
-  observation: { text: "#C9002E", trace: "#DE1D3F", bg: "#FFF0EF", edge: "#FF5B6A59" },
-  healthy: { text: "#293300", trace: "#8CA600", bg: "#DAF774", edge: "#AFCE008C" },
-  uncertain: { text: "#754C00", trace: "#D89700", bg: "#FFF3DF", edge: "#B87C0059" },
-  anomaly: { text: "#C1332C", trace: "#C1332C", bg: "#FFEFEC", edge: "#E54D4259" },
-  inert: { text: "#7C7B77", trace: "#A7A5A1", bg: "#F4F2EF", edge: "#0B0B0B24" },
+  observation: {
+    text: "#C9002E",
+    trace: "#DE1D3F",
+    bg: "#FFF0EF",
+    edge: "#FF5B6A59",
+  },
+  healthy: {
+    text: "#293300",
+    trace: "#8CA600",
+    bg: "#DAF774",
+    edge: "#AFCE008C",
+  },
+  uncertain: {
+    text: "#754C00",
+    trace: "#D89700",
+    bg: "#FFF3DF",
+    edge: "#B87C0059",
+  },
+  anomaly: {
+    text: "#C1332C",
+    trace: "#C1332C",
+    bg: "#FFEFEC",
+    edge: "#E54D4259",
+  },
+  inert: {
+    text: "#7C7B77",
+    trace: "#A7A5A1",
+    bg: "#F4F2EF",
+    edge: "#0B0B0B24",
+  },
   paneTint: "#FBFCFD8F",
   paneSolid: "#FBFAF8",
   controlFill: "#F4F2EF",
   controlHover: "#E7E5E1",
-  specular: [[0, "#FFFFFF52"], [0.28, "#FFFFFF14"], [0.55, "#FFFFFF00"]],
-  rim: [[0, "#FFFFFFD9"], [0.45, "#FFFFFF59"], [1, "#16161624"]],
+  specular: [
+    [0, "#FFFFFF52"],
+    [0.28, "#FFFFFF14"],
+    [0.55, "#FFFFFF00"],
+  ],
+  rim: [
+    [0, "#FFFFFFD9"],
+    [0.45, "#FFFFFF59"],
+    [1, "#16161624"],
+  ],
   raised: { offsetY: 2, blurRadius: 5, color: "#13161B0D" },
   floating: { offsetY: 8, blurRadius: 16, color: "#13161B24" },
 };
@@ -141,35 +176,69 @@ const DARK: Theme = {
   focusRing: "#F44F5D",
   selection: "#F44F5D2E",
   wash: "#FFFFFF0A",
-  observation: { text: "#FF9092", trace: "#F44F5D", bg: "#CA1C392E", edge: "#FF818766" },
-  healthy: { text: "#C8E928", trace: "#C8E928", bg: "#AFCE0029", edge: "#C8E92866" },
-  uncertain: { text: "#ECAE30", trace: "#ECAE30", bg: "#9564002E", edge: "#ECAE3066" },
-  anomaly: { text: "#FF9587", trace: "#FD7466", bg: "#C1332C33", edge: "#FF958766" },
-  inert: { text: "#7C7B77", trace: "#7C7B77", bg: "#FFFFFF0F", edge: "#FFFFFF24" },
+  observation: {
+    text: "#FF9092",
+    trace: "#F44F5D",
+    bg: "#CA1C392E",
+    edge: "#FF818766",
+  },
+  healthy: {
+    text: "#C8E928",
+    trace: "#C8E928",
+    bg: "#AFCE0029",
+    edge: "#C8E92866",
+  },
+  uncertain: {
+    text: "#ECAE30",
+    trace: "#ECAE30",
+    bg: "#9564002E",
+    edge: "#ECAE3066",
+  },
+  anomaly: {
+    text: "#FF9587",
+    trace: "#FD7466",
+    bg: "#C1332C33",
+    edge: "#FF958766",
+  },
+  inert: {
+    text: "#7C7B77",
+    trace: "#7C7B77",
+    bg: "#FFFFFF0F",
+    edge: "#FFFFFF24",
+  },
   paneTint: "#2D2E3080",
   paneSolid: "#141311",
   controlFill: "#403F3C",
   controlHover: "#37383A",
-  specular: [[0, "#FFFFFF24"], [0.28, "#FFFFFF0A"], [0.55, "#FFFFFF00"]],
-  rim: [[0, "#FFFFFF6B"], [0.45, "#FFFFFF1F"], [1, "#00000059"]],
+  specular: [
+    [0, "#FFFFFF24"],
+    [0.28, "#FFFFFF0A"],
+    [0.55, "#FFFFFF00"],
+  ],
+  rim: [
+    [0, "#FFFFFF6B"],
+    [0.45, "#FFFFFF1F"],
+    [1, "#00000059"],
+  ],
   raised: { offsetY: 2, blurRadius: 6, color: "#0000004D" },
   floating: { offsetY: 10, blurRadius: 20, color: "#00000099" },
 };
 
+// The sandbox has no font assets; these portable stacks keep the lesson self-contained.
 const FONT = {
-  title: "700 22px Archivo, sans-serif",
-  h4: "700 20px Archivo, sans-serif",
-  rowName: "600 13px Archivo, sans-serif",
-  body: "14px Archivo, sans-serif",
-  action: "13px Archivo, sans-serif",
-  label: "600 12px Archivo, sans-serif",
-  caption: "500 12px Archivo, sans-serif",
-  legend: "500 11px Archivo, sans-serif",
-  value: '500 20px "IBM Plex Mono", monospace',
-  rowValue: '500 13px "IBM Plex Mono", monospace',
-  mono: '400 12px "IBM Plex Mono", monospace',
-  monoSm: '400 11px "IBM Plex Mono", monospace',
-  eyebrow: '400 10px "IBM Plex Mono", monospace',
+  title: "700 22px sans-serif",
+  h4: "700 20px sans-serif",
+  rowName: "600 13px sans-serif",
+  body: "14px sans-serif",
+  action: "13px sans-serif",
+  label: "600 12px sans-serif",
+  caption: "500 12px sans-serif",
+  legend: "500 11px sans-serif",
+  value: "500 20px monospace",
+  rowValue: "500 13px monospace",
+  mono: "400 12px monospace",
+  monoSm: "400 11px monospace",
+  eyebrow: "400 10px monospace",
 } as const;
 
 /* ------------------------------------------------------------------ geometry */
@@ -202,6 +271,60 @@ const SLO_LABEL_X = 552;
 
 const AXIS_Y = 497;
 const ROWS_BOTTOM = ROWS_TOP + 6 * ROW_H;
+
+/** Private synthetic request telemetry helpers for the pipeline-health lesson. */
+function percentile95(values: readonly number[]): number {
+  if (values.length === 0)
+    throw new RangeError("A percentile needs at least one request.");
+  const sorted = [...values].sort((a, b) => a - b);
+  return sorted[Math.ceil(sorted.length * 0.95) - 1];
+}
+
+/** Each column position is the same request across every stage. */
+function summarizePathLatency(stages: readonly (readonly (number | null)[])[]) {
+  const count = stages[0]?.length ?? 0;
+  if (count === 0 || stages.some((stage) => stage.length !== count)) {
+    throw new RangeError(
+      "Stage telemetry must share one nonempty request cohort.",
+    );
+  }
+  let complete = true;
+  const totals = Array.from({ length: count }, (_, request) =>
+    stages.reduce((sum, stage) => {
+      const duration = stage[request];
+      if (duration === null) {
+        complete = false;
+        return sum;
+      }
+      if (!Number.isFinite(duration) || duration < 0) {
+        throw new RangeError(
+          "Request stage durations must be finite and nonnegative.",
+        );
+      }
+      return sum + duration;
+    }, 0),
+  );
+  return { p95: percentile95(totals), complete };
+}
+
+/** Seeded durations normalized so their stage p95 matches the authored trend. */
+function sampleStageDurations({
+  p95,
+  seed,
+  bucket,
+}: {
+  p95: number;
+  seed: number;
+  bucket: number;
+}): readonly number[] {
+  let state = (seed + bucket * 7919) >>> 0;
+  const values = Array.from({ length: 100 }, () => {
+    state = (Math.imul(state, 1664525) + 1013904223) >>> 0;
+    return 0.55 + (state / 4294967296) * 0.5;
+  });
+  const scale = p95 / percentile95(values);
+  return values.map((value) => value * scale);
+}
 
 /* ------------------------------------------------------------------ the data */
 
@@ -342,7 +465,8 @@ const SPECS: readonly StageSpec[] = [
       { label: "GPU utilisation", value: "71% → 38%", role: "anomaly" },
       { label: "OOM retries", value: "0 → 0", role: "inert" },
     ],
-    action: "Hold GPU scaling. This sits downstream of the cache and should recover with it.",
+    action:
+      "Hold GPU scaling. This sits downstream of the cache and should recover with it.",
     cta: null,
     runbook: null,
   },
@@ -400,6 +524,7 @@ const SPECS: readonly StageSpec[] = [
 interface Sample {
   readonly t: number;
   readonly v: number | null;
+  readonly requests: readonly (number | null)[];
 }
 
 type Role = "healthy" | "uncertain" | "anomaly";
@@ -431,7 +556,8 @@ function rng(seed: number): () => number {
 function buildSeries(spec: StageSpec): readonly Sample[] {
   const next = rng(spec.seed);
   return TIMES.map((t) => {
-    if (spec.lastReport !== null && t > spec.lastReport) return { t, v: null };
+    if (spec.lastReport !== null && t > spec.lastReport)
+      return { t, v: null, requests: Array.from({ length: 100 }, () => null) };
     let level = spec.base;
     if (spec.onset !== null && t >= spec.onset) {
       const ramp = Math.min(1, (t - spec.onset) / 4 + 0.45);
@@ -442,15 +568,24 @@ function buildSeries(spec: StageSpec): readonly Sample[] {
     }
     const noise = (next() - 0.5) * 2 * spec.jitter;
     const wave = Math.sin((t - T0) / 11) * spec.jitter * 0.5;
-    return { t, v: Math.max(0.5, Math.round((level + noise + wave) * 10) / 10) };
+    const v = Math.max(0.5, Math.round((level + noise + wave) * 10) / 10);
+    return {
+      t,
+      v,
+      requests: sampleStageDurations({ p95: v, seed: spec.seed, bucket: t }),
+    };
   });
 }
 
 function buildRow(spec: StageSpec): Row {
   const series = buildSeries(spec);
-  const measured = series.filter((sample): sample is { t: number; v: number } => sample.v !== null);
+  const measured = series.filter(
+    (sample): sample is Sample & { v: number } => sample.v !== null,
+  );
   const covered = measured.filter((sample) => sample.t <= COVERAGE_END);
-  const baseline = covered.reduce((sum, sample) => sum + sample.v, 0) / Math.max(1, covered.length);
+  const baseline =
+    covered.reduce((sum, sample) => sum + sample.v, 0) /
+    Math.max(1, covered.length);
   const peak = measured.reduce((max, sample) => Math.max(max, sample.v), 0);
   const unmeasured = spec.lastReport !== null && spec.lastReport < T1;
   const last = measured[measured.length - 1];
@@ -461,7 +596,11 @@ function buildRow(spec: StageSpec): Row {
     else break;
   }
 
-  const role: Role = unmeasured ? "uncertain" : last.v > spec.slo ? "anomaly" : "healthy";
+  const role: Role = unmeasured
+    ? "uncertain"
+    : last.v > spec.slo
+      ? "anomaly"
+      : "healthy";
   const byMinute = new Map(series.map((sample) => [sample.t, sample]));
 
   return {
@@ -480,19 +619,33 @@ function buildRow(spec: StageSpec): Row {
 
 const ROWS: readonly Row[] = SPECS.map(buildRow);
 
-/** Stages that report for the whole window; their sum is comparable end to end. */
+/** Comparable lower bounds use the same five observed stages at every time. */
 const MEASURED_ROWS = ROWS.filter((row) => row.spec.lastReport === null);
-const GAP_ROW = ROWS.find((row) => row.spec.lastReport !== null);
 
-function measuredTotal(minute: number): number {
-  return MEASURED_ROWS.reduce((sum, row) => sum + (row.at(minute)?.v ?? 0), 0);
+function pathSummary(minute: number, rows: readonly Row[]) {
+  return summarizePathLatency(
+    rows.map((row) => {
+      const sample = row.series.find((sample) => sample.t === minute);
+      if (!sample) throw new Error("Missing request cohort.");
+      return sample.requests;
+    }),
+  );
 }
 
-const TOTAL_SERIES = TIMES.map((t) => ({ t, v: measuredTotal(t) }));
-const TOTAL_NOW = measuredTotal(T1);
+const TOTAL_SERIES = TIMES.map((t) => ({
+  t,
+  v: pathSummary(t, MEASURED_ROWS).p95,
+}));
+const COMPLETE_SERIES = TIMES.filter((t) => t <= COVERAGE_END).map((t) => ({
+  t,
+  v: pathSummary(t, ROWS).p95,
+}));
+const TOTAL_NOW = pathSummary(T1, ROWS).p95;
 const TOTAL_BASELINE =
-  TOTAL_SERIES.filter((point) => point.t <= COVERAGE_END).reduce((sum, point) => sum + point.v, 0) /
-  TOTAL_SERIES.filter((point) => point.t <= COVERAGE_END).length;
+  TOTAL_SERIES.filter((point) => point.t <= COVERAGE_END).reduce(
+    (sum, point) => sum + point.v,
+    0,
+  ) / TOTAL_SERIES.filter((point) => point.t <= COVERAGE_END).length;
 
 /* ------------------------------------------------------------------ format */
 
@@ -543,7 +696,13 @@ function dashedPath(
 }
 
 /** Diagonal hatch, used only inside a Clip that bounds it. */
-function hatchPath(x: number, y: number, width: number, height: number, step = 7): Path2D {
+function hatchPath(
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  step = 7,
+): Path2D {
   const path = new Path2D();
   for (let offset = -height; offset < width + height; offset += step) {
     path.moveTo(x + offset, y + height);
@@ -552,12 +711,16 @@ function hatchPath(x: number, y: number, width: number, height: number, step = 7
   return path;
 }
 
-function rectanglePath(x: number, y: number, width: number, height: number): Path2D {
+function rectanglePath(
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+): Path2D {
   const path = new Path2D();
   path.rect(x, y, width, height);
   return path;
 }
-
 
 function polylinePath(points: readonly (readonly [number, number])[]): Path2D {
   const path = new Path2D();
@@ -576,10 +739,26 @@ interface GradientConfig {
   readonly stops: Stops;
 }
 
-const linearGradient = defineTexture<GradientConfig, { config: GradientConfig }>({
+const linearGradient = defineTexture<
+  GradientConfig,
+  { config: GradientConfig }
+>({
   defaultPlacement: { mode: "stretch" },
   create: (_context, config) => ({ config }),
   update: (state, config, context) => {
+    const previous = state.config;
+    if (
+      previous.stops.length === config.stops.length &&
+      previous.stops.every(
+        ([offset, color], index) =>
+          offset === config.stops[index][0] && color === config.stops[index][1],
+      ) &&
+      previous.from[0] === config.from[0] &&
+      previous.from[1] === config.from[1] &&
+      previous.to[0] === config.to[0] &&
+      previous.to[1] === config.to[1]
+    )
+      return;
     state.config = config;
     context.invalidate();
   },
@@ -594,7 +773,8 @@ const linearGradient = defineTexture<GradientConfig, { config: GradientConfig }>
       config.to[0] * width,
       config.to[1] * height,
     );
-    for (const [offset, color] of config.stops) gradient.addColorStop(offset, color);
+    for (const [offset, color] of config.stops)
+      gradient.addColorStop(offset, color);
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, width, height);
   },
@@ -610,7 +790,14 @@ interface SceneState {
 
 function elevation(level: Elevation, glass: boolean) {
   return glass
-    ? [dropShadow({ offsetX: 0, offsetY: level.offsetY, blurRadius: level.blurRadius, color: level.color })]
+    ? [
+        dropShadow({
+          offsetX: 0,
+          offsetY: level.offsetY,
+          blurRadius: level.blurRadius,
+          color: level.color,
+        }),
+      ]
     : [];
 }
 
@@ -637,14 +824,19 @@ function PathTotalPane({ state }: { readonly state: SceneState }) {
     linearGradient({ from: [0, 0], to: [1, 1], stops: theme.specular }),
     { resolution: { width: 64, height: 64 } },
   );
-  const rim = useTexture(linearGradient({ from: [0, 0], to: [1, 1], stops: theme.rim }), {
-    resolution: { width: 64, height: 64 },
-  });
+  const rim = useTexture(
+    linearGradient({ from: [0, 0], to: [1, 1], stops: theme.rim }),
+    {
+      resolution: { width: 64, height: 64 },
+    },
+  );
 
   const bandX = (minute: number) =>
     BAND.left + ((minute - T0) / (T1 - T0)) * BAND.width;
   const bandY = (value: number) =>
-    BAND.top + BAND.height - (Math.min(value, BAND_MAX) / BAND_MAX) * BAND.height;
+    BAND.top +
+    BAND.height -
+    (Math.min(value, BAND_MAX) / BAND_MAX) * BAND.height;
 
   const topEdge = TOTAL_SERIES.map(
     (point) => [bandX(point.t), bandY(point.v)] as const,
@@ -662,7 +854,10 @@ function PathTotalPane({ state }: { readonly state: SceneState }) {
   const covered = TOTAL_SERIES.filter((point) => point.t <= COVERAGE_END);
   sliverPath.moveTo(bandX(covered[0].t), bandY(covered[0].v));
   for (const point of covered) {
-    sliverPath.lineTo(bandX(point.t), bandY(point.v + (GAP_ROW?.at(point.t)?.v ?? 0)));
+    sliverPath.lineTo(
+      bandX(point.t),
+      bandY(COMPLETE_SERIES.find((sample) => sample.t === point.t)!.v),
+    );
   }
   for (let index = covered.length - 1; index >= 0; index -= 1) {
     sliverPath.lineTo(bandX(covered[index].t), bandY(covered[index].v));
@@ -673,26 +868,49 @@ function PathTotalPane({ state }: { readonly state: SceneState }) {
   const openPoints = TOTAL_SERIES.filter((point) => point.t >= COVERAGE_END);
   const openPath = new Path2D();
   openPath.moveTo(bandX(openPoints[0].t), bandY(openPoints[0].v));
-  for (const point of openPoints) openPath.lineTo(bandX(point.t), bandY(point.v));
+  for (const point of openPoints)
+    openPath.lineTo(bandX(point.t), bandY(point.v));
   openPath.lineTo(bandX(T1), BAND.top);
   openPath.lineTo(bandX(COVERAGE_END), BAND.top);
   openPath.closePath();
 
-  const backdrop: CRCNode = (
+  const backdrop: PibblNode = (
     <Group>
-      <Path pointerEvents="none" style={{ d: areaPath, fill: `${theme.observation.trace}3D` }} />
-      <Path pointerEvents="none" style={{ d: sliverPath, fill: `${theme.uncertain.trace}59` }} />
+      <Path
+        pointerEvents="none"
+        style={{ d: areaPath, fill: `${theme.observation.trace}3D` }}
+      />
+      <Path
+        pointerEvents="none"
+        style={{ d: sliverPath, fill: `${theme.uncertain.trace}59` }}
+      />
     </Group>
   );
 
   return (
     <Group style={{ filter: elevation(theme.raised, glass) }}>
       <Clip style={{ d: panePath }}>
-        {/* Opaque reset plate: CRC paints in source order, so the pane must not
+        {/* Opaque reset plate: Pibbl paints in source order, so the pane must not
             composite a blurred copy over a sharp original. */}
-        <Rectangle pointerEvents="none" style={{ left: PANE.left, top: PANE.top, width: PANE.width, height: PANE.height, fill: theme.canvasMuted }} />
+        <Rectangle
+          pointerEvents="none"
+          style={{
+            left: PANE.left,
+            top: PANE.top,
+            width: PANE.width,
+            height: PANE.height,
+            fill: theme.canvasMuted,
+          }}
+        />
         {glass ? (
-          <Group style={{ filter: [blur({ radius: 5 }), saturate({ amount: theme.mode === "light" ? 1.35 : 1.25 })] }}>
+          <Group
+            style={{
+              filter: [
+                blur({ radius: 5 }),
+                saturate({ amount: theme.mode === "light" ? 1.35 : 1.25 }),
+              ],
+            }}
+          >
             <Layer style={{ width: W, height: 140 }}>{backdrop}</Layer>
           </Group>
         ) : (
@@ -700,12 +918,24 @@ function PathTotalPane({ state }: { readonly state: SceneState }) {
         )}
         <Rectangle
           pointerEvents="none"
-          style={{ left: PANE.left, top: PANE.top, width: PANE.width, height: PANE.height, fill: glass ? theme.paneTint : theme.paneSolid }}
+          style={{
+            left: PANE.left,
+            top: PANE.top,
+            width: PANE.width,
+            height: PANE.height,
+            fill: glass ? theme.paneTint : theme.paneSolid,
+          }}
         />
         {glass && (
           <Rectangle
             pointerEvents="none"
-            style={{ left: PANE.left, top: PANE.top, width: PANE.width, height: PANE.height, fill: specular.paint({ mode: "stretch" }) }}
+            style={{
+              left: PANE.left,
+              top: PANE.top,
+              width: PANE.width,
+              height: PANE.height,
+              fill: specular.paint({ mode: "stretch" }),
+            }}
           />
         )}
 
@@ -713,17 +943,32 @@ function PathTotalPane({ state }: { readonly state: SceneState }) {
         <Path
           pointerEvents="none"
           style={{
-            d: dashedPath(bandX(T0), bandY(PATH_SLO), bandX(T1), bandY(PATH_SLO), 4, 4),
+            d: dashedPath(
+              bandX(T0),
+              bandY(PATH_SLO),
+              bandX(T1),
+              bandY(PATH_SLO),
+              4,
+              4,
+            ),
             stroke: theme.inert.trace,
             strokeWidth: 1,
           }}
         />
-        <Path pointerEvents="none" style={{ d: openPath, fill: theme.uncertain.bg }} />
+        <Path
+          pointerEvents="none"
+          style={{ d: openPath, fill: theme.uncertain.bg }}
+        />
         <Clip style={{ d: openPath }}>
           <Path
             pointerEvents="none"
             style={{
-              d: hatchPath(bandX(COVERAGE_END), BAND.top, BAND.width, BAND.height),
+              d: hatchPath(
+                bandX(COVERAGE_END),
+                BAND.top,
+                BAND.width,
+                BAND.height,
+              ),
               stroke: theme.uncertain.trace,
               strokeWidth: 1,
               opacity: 0.4,
@@ -733,7 +978,14 @@ function PathTotalPane({ state }: { readonly state: SceneState }) {
         <Path
           pointerEvents="none"
           style={{
-            d: dashedPath(bandX(COVERAGE_END), BAND.top + 0.5, bandX(T1), BAND.top + 0.5, 4, 3),
+            d: dashedPath(
+              bandX(COVERAGE_END),
+              BAND.top + 0.5,
+              bandX(T1),
+              BAND.top + 0.5,
+              4,
+              3,
+            ),
             stroke: theme.uncertain.trace,
             strokeWidth: 1,
           }}
@@ -748,18 +1000,32 @@ function PathTotalPane({ state }: { readonly state: SceneState }) {
         />
         <Path
           pointerEvents="none"
-          style={{ d: polylinePath(topEdge), stroke: theme.observation.trace, strokeWidth: 1.4 }}
+          style={{
+            d: polylinePath(topEdge),
+            stroke: theme.observation.trace,
+            strokeWidth: 1.4,
+          }}
         />
 
         <Text
           pointerEvents="none"
-          style={{ left: BAND.left, top: 24, font: FONT.eyebrow, fill: theme.fgFaint }}
+          style={{
+            left: BAND.left,
+            top: 24,
+            font: FONT.eyebrow,
+            fill: theme.fgMuted,
+          }}
         >
           {`PATH TOTAL p95 · SLO ${group(PATH_SLO)} ms`}
         </Text>
         <Text
           pointerEvents="none"
-          style={{ left: BAND.left, top: 34, font: FONT.value, fill: theme.anomaly.text }}
+          style={{
+            left: BAND.left,
+            top: 34,
+            font: FONT.value,
+            fill: theme.anomaly.text,
+          }}
         >
           {`≥ ${msLabel(TOTAL_NOW)}`}
         </Text>
@@ -785,13 +1051,16 @@ function PathTotalPane({ state }: { readonly state: SceneState }) {
             fill: theme.fgMuted,
           }}
         >
-          {`baseline ${msLabel(TOTAL_BASELINE)}`}
+          {`baseline p95 mean: ${msLabel(TOTAL_BASELINE)}`}
         </Text>
       </Clip>
       <Rectangle
         pointerEvents="none"
         style={{
-          left: PANE.left, top: PANE.top, width: PANE.width, height: PANE.height,
+          left: PANE.left,
+          top: PANE.top,
+          width: PANE.width,
+          height: PANE.height,
           cornerRadius: PANE_R,
           stroke: glass ? rim.paint({ mode: "stretch" }) : theme.border,
           strokeWidth: 1,
@@ -812,8 +1081,8 @@ function RowPlot({
   readonly minute: number;
 }) {
   const { theme } = state;
-  const xs = useScale("t").get();
-  const ys = useScale("v").get();
+  const xs = useLinearScale("t").get();
+  const ys = useLinearScale("v").get();
   const tone = theme[row.role];
   const sloY = ys.map(row.spec.slo);
   const sample = row.at(minute);
@@ -823,14 +1092,32 @@ function RowPlot({
     <Group>
       <Rectangle
         pointerEvents="none"
-        style={{ width: PLOT_W, height: PLOT_H, cornerRadius: 4, fill: theme.sunken }}
+        style={{
+          width: PLOT_W,
+          height: PLOT_H,
+          cornerRadius: 4,
+          fill: theme.sunken,
+        }}
       />
       {gapFrom !== null && (
         <Group>
-          <Clip style={{ d: rectanglePath(xs.map(gapFrom), 0, PLOT_W - xs.map(gapFrom), PLOT_H) }}>
+          <Clip
+            style={{
+              d: rectanglePath(
+                xs.map(gapFrom),
+                0,
+                PLOT_W - xs.map(gapFrom),
+                PLOT_H,
+              ),
+            }}
+          >
             <Rectangle
               pointerEvents="none"
-              style={{ width: PLOT_W, height: PLOT_H, fill: theme.uncertain.bg }}
+              style={{
+                width: PLOT_W,
+                height: PLOT_H,
+                fill: theme.uncertain.bg,
+              }}
             />
             <Path
               pointerEvents="none"
@@ -931,28 +1218,55 @@ function RowLabel({
 }) {
   const { theme } = state;
   const top = rowTop(index);
-  const path = useRectPath(LENS_LEFT, top + ROW_INSET, LENS_W, ROW_BAND_H, { cornerRadius: 8 });
+  const path = useRectPath(LENS_LEFT, top + ROW_INSET, LENS_W, ROW_BAND_H, {
+    cornerRadius: 8,
+  });
   const tone = theme[row.role];
   const sample = row.at(minute);
 
-  const scrub = (event: CRCPointerEvent) => {
+  const scrub = (event: PibblPointerEvent) => {
     if (event.x < PLOT_X || event.x > PLOT_X + PLOT_W) return;
     const raw = T0 + ((event.x - PLOT_X) / PLOT_W) * (T1 - T0);
-    const snapped = Math.min(T1, Math.max(T0, T0 + Math.round((raw - T0) / STEP) * STEP));
+    const snapped = Math.min(
+      T1,
+      Math.max(T0, T0 + Math.round((raw - T0) / STEP) * STEP),
+    );
     if (snapped !== cursor.get()) cursor.set(snapped);
   };
 
   const snapshot = useEventTarget(
     {
       onClick: () => selected.set(index),
-      onKeyDown: (event: CRCKeyboardEvent) => {
+      onKeyDown: (event: PibblKeyboardEvent) => {
+        if (
+          ["ArrowLeft", "ArrowRight", "Home", "End", "Escape"].includes(
+            event.key,
+          )
+        ) {
+          event.preventDefault();
+          if (event.key === "Escape") cursor.set(null);
+          else if (event.key === "Home") cursor.set(T0);
+          else if (event.key === "End") cursor.set(T1);
+          else
+            cursor.set(
+              Math.min(
+                T1,
+                Math.max(
+                  T0,
+                  (cursor.get() ?? T1) +
+                    (event.key === "ArrowLeft" ? -STEP : STEP),
+                ),
+              ),
+            );
+          return;
+        }
         if (event.key !== "Enter" && event.key !== " ") return;
         event.preventDefault();
         selected.set(index);
       },
       onPointerEnter: () => hovered.set(index),
       onPointerMove: scrub,
-      onPointerLeave: (event: CRCPointerEvent) => {
+      onPointerLeave: (event: PibblPointerEvent) => {
         if (hovered.get() === index) hovered.set(null);
         const outside =
           event.x < TRELLIS.left ||
@@ -962,10 +1276,11 @@ function RowLabel({
         if (outside) cursor.set(null);
       },
     },
-    { path, fill: true, cursor: "pointer" },
+    { path, fill: true, cursor: "pointer", keyboardFocusable: true },
   );
 
-  const delta = sample !== null && sample.v !== null ? sample.v - row.baseline : null;
+  const delta =
+    sample !== null && sample.v !== null ? sample.v - row.baseline : null;
   // The role bar keeps the stage's current state; the reading is judged at the
   // inspected moment, so scrubbing back shows a breach that had not happened yet.
   const valueTone =
@@ -979,23 +1294,45 @@ function RowLabel({
     <Group>
       <Rectangle
         pointerEvents="none"
-        style={{ left: LENS_LEFT + 4, top: top + 12, width: 3, height: 36, cornerRadius: 2, fill: tone.trace }}
+        style={{
+          left: LENS_LEFT + 4,
+          top: top + 12,
+          width: 3,
+          height: 36,
+          cornerRadius: 2,
+          fill: tone.trace,
+        }}
       />
       <Text
         pointerEvents="none"
-        style={{ left: LENS_LEFT + 14, top: top + 8, font: FONT.rowName, fill: theme.fg }}
+        style={{
+          left: LENS_LEFT + 14,
+          top: top + 8,
+          font: FONT.rowName,
+          fill: theme.fg,
+        }}
       >
         {row.spec.name}
       </Text>
       <Text
         pointerEvents="none"
-        style={{ left: LENS_LEFT + 14, top: top + 24, font: FONT.eyebrow, fill: theme.fgFaint }}
+        style={{
+          left: LENS_LEFT + 14,
+          top: top + 24,
+          font: FONT.eyebrow,
+          fill: theme.fgMuted,
+        }}
       >
         {row.spec.id}
       </Text>
       <Text
         pointerEvents="none"
-        style={{ left: LENS_LEFT + 14, top: top + 38, font: FONT.rowValue, fill: valueTone.text }}
+        style={{
+          left: LENS_LEFT + 14,
+          top: top + 38,
+          font: FONT.rowValue,
+          fill: valueTone.text,
+        }}
       >
         {sample !== null && sample.v !== null ? msLabel(sample.v) : "unknown"}
       </Text>
@@ -1041,16 +1378,25 @@ function Trellis({
   readonly cursor: WritableSignal<number | null>;
 }) {
   const { theme, glass, still } = state;
-  const panelPath = useRectPath(TRELLIS.left, TRELLIS.top, TRELLIS.width, TRELLIS.height, {
-    cornerRadius: PANEL_R,
-  });
+  const panelPath = useRectPath(
+    TRELLIS.left,
+    TRELLIS.top,
+    TRELLIS.width,
+    TRELLIS.height,
+    {
+      cornerRadius: PANEL_R,
+    },
+  );
   const specular = useTexture(
     linearGradient({ from: [0, 0], to: [1, 1], stops: theme.specular }),
     { resolution: { width: 64, height: 64 } },
   );
-  const rim = useTexture(linearGradient({ from: [0, 0], to: [1, 1], stops: theme.rim }), {
-    resolution: { width: 64, height: 64 },
-  });
+  const rim = useTexture(
+    linearGradient({ from: [0, 0], to: [1, 1], stops: theme.rim }),
+    {
+      resolution: { width: 64, height: 64 },
+    },
+  );
 
   const selectedIndex = selected.get();
   const hoveredIndex = hovered.get();
@@ -1058,12 +1404,13 @@ function Trellis({
   const minute = inspected ?? T1;
   // Selection can be interrupted mid-slide, so the lens resolves from its
   // current velocity instead of restarting a fixed curve.
-  const lensTop = useTransition(rowTop(selectedIndex) + ROW_INSET, {
-    type: "spring",
-    stiffness: still ? 2000 : 210,
-    damping: still ? 90 : 26,
-    mass: 1,
+  const lensTarget = rowTop(selectedIndex) + ROW_INSET;
+  const lensPosition = useAnimatedValue(lensTarget, {
+    animation: still
+      ? tween({ duration: 0 })
+      : spring({ stiffness: 210, damping: 26, mass: 1 }),
   });
+  const lensTop = still ? lensTarget : lensPosition;
   const breakX = plotX(BREAK);
   const cursorX = plotX(minute);
 
@@ -1072,7 +1419,14 @@ function Trellis({
       <Group style={{ filter: elevation(theme.floating, glass) }}>
         <Rectangle
           pointerEvents="none"
-          style={{ left: TRELLIS.left, top: TRELLIS.top, width: TRELLIS.width, height: TRELLIS.height, cornerRadius: PANEL_R, fill: theme.surface }}
+          style={{
+            left: TRELLIS.left,
+            top: TRELLIS.top,
+            width: TRELLIS.width,
+            height: TRELLIS.height,
+            cornerRadius: PANEL_R,
+            fill: theme.surface,
+          }}
         />
       </Group>
       <Clip style={{ d: panelPath }}>
@@ -1092,7 +1446,10 @@ function Trellis({
       <Rectangle
         pointerEvents="none"
         style={{
-          left: TRELLIS.left, top: TRELLIS.top, width: TRELLIS.width, height: TRELLIS.height,
+          left: TRELLIS.left,
+          top: TRELLIS.top,
+          width: TRELLIS.width,
+          height: TRELLIS.height,
           cornerRadius: PANEL_R,
           stroke: glass ? rim.paint({ mode: "stretch" }) : theme.border,
           strokeWidth: 1,
@@ -1101,13 +1458,19 @@ function Trellis({
 
       <Text
         pointerEvents="none"
-        style={{ left: 40, top: 112, font: FONT.eyebrow, fill: theme.fgFaint }}
+        style={{ left: 40, top: 112, font: FONT.eyebrow, fill: theme.fgMuted }}
       >
         {`STAGE · p95 AT ${clock(minute)}${inspected === null ? " (NOW)" : ""}`}
       </Text>
       <Text
         pointerEvents="none"
-        style={{ left: SLO_LABEL_X, top: 112, textAlign: "right", font: FONT.eyebrow, fill: theme.fgFaint }}
+        style={{
+          left: SLO_LABEL_X,
+          top: 112,
+          textAlign: "right",
+          font: FONT.eyebrow,
+          fill: theme.fgMuted,
+        }}
       >
         {"SLO"}
       </Text>
@@ -1153,23 +1516,26 @@ function Trellis({
 
       <Absolute>
         {ROWS.map((row, index) => (
-          <Scale
+          <LinearScale
             key={row.spec.key}
             id="t"
-            type="linear"
             domain={[T0, T1]}
             range="width"
-            style={{ left: PLOT_X, top: rowPlotTop(index), width: PLOT_W, height: PLOT_H }}
+            style={{
+              left: PLOT_X,
+              top: rowPlotTop(index),
+              width: PLOT_W,
+              height: PLOT_H,
+            }}
           >
-            <Scale id="v" type="linear" domain={[0, row.yMax]} range="height" reverse>
+            <LinearScale id="v" domain={[0, row.yMax]} range="height" reverse>
               <RowPlot row={row} state={state} minute={minute} />
-            </Scale>
-          </Scale>
+            </LinearScale>
+          </LinearScale>
         ))}
-        <Scale
+        <LinearScale
           key="axis"
           id="t"
-          type="linear"
           domain={[T0, T1]}
           range="width"
           style={{ left: PLOT_X, top: AXIS_Y - 1, width: PLOT_W, height: 1 }}
@@ -1179,9 +1545,13 @@ function Trellis({
             position="bottom"
             tickValues={[780, 800, 820, 840, 860]}
             tickFormat={(value) => clock(Number(value))}
-            style={{ font: FONT.eyebrow, fill: theme.fgFaint, stroke: theme.border }}
+            style={{
+              font: FONT.eyebrow,
+              fill: theme.fgMuted,
+              stroke: theme.border,
+            }}
           />
-        </Scale>
+        </LinearScale>
       </Absolute>
 
       {/* The break crosses every row, so the order of onset is readable. */}
@@ -1234,7 +1604,7 @@ function Trellis({
 
       <Text
         pointerEvents="none"
-        style={{ left: 40, top: 526, font: FONT.eyebrow, fill: theme.fgSubtle }}
+        style={{ left: 40, top: 526, font: FONT.eyebrow, fill: theme.fgMuted }}
       >
         {`onset · embed.cache ${clock(ROWS[2].turned ?? BREAK)} → infer.gpu ${clock(
           ROWS[3].turned ?? BREAK,
@@ -1244,11 +1614,12 @@ function Trellis({
   );
 }
 
-const BADGE: Record<Role, { readonly label: string; readonly width: number }> = {
-  healthy: { label: "IN BUDGET", width: 78 },
-  anomaly: { label: "OVER SLO", width: 72 },
-  uncertain: { label: "NO DATA", width: 66 },
-};
+const BADGE: Record<Role, { readonly label: string; readonly width: number }> =
+  {
+    healthy: { label: "IN BUDGET", width: 78 },
+    anomaly: { label: "OVER SLO", width: 72 },
+    uncertain: { label: "NO DATA", width: 66 },
+  };
 
 function Detail({
   state,
@@ -1278,7 +1649,7 @@ function Detail({
           onClick: request,
           onPointerEnter: () => hover.set(true),
           onPointerLeave: () => hover.set(false),
-          onKeyDown: (event: CRCKeyboardEvent) => {
+          onKeyDown: (event: PibblKeyboardEvent) => {
             if (event.key !== "Enter" && event.key !== " ") return;
             event.preventDefault();
             request();
@@ -1286,8 +1657,13 @@ function Detail({
         }
       : {},
     actionable
-      ? { path: ctaPath, fill: true, cursor: "pointer" }
-      : { path: emptyPath, fill: true },
+      ? {
+          path: ctaPath,
+          fill: true,
+          cursor: "pointer",
+          keyboardFocusable: true,
+        }
+      : { path: emptyPath, fill: true, keyboardFocusable: false },
   );
 
   return (
@@ -1296,7 +1672,10 @@ function Detail({
         <Rectangle
           pointerEvents="none"
           style={{
-            left: DETAIL.left, top: DETAIL.top, width: DETAIL.width, height: DETAIL.height,
+            left: DETAIL.left,
+            top: DETAIL.top,
+            width: DETAIL.width,
+            height: DETAIL.height,
             cornerRadius: PANEL_R,
             fill: theme.surface,
             stroke: theme.border,
@@ -1305,7 +1684,10 @@ function Detail({
         />
       </Group>
 
-      <Text pointerEvents="none" style={{ left: 600, top: 112, font: FONT.eyebrow, fill: theme.fgFaint }}>
+      <Text
+        pointerEvents="none"
+        style={{ left: 600, top: 112, font: FONT.eyebrow, fill: theme.fgMuted }}
+      >
         {"SELECTED STAGE"}
       </Text>
       <Rectangle
@@ -1333,10 +1715,16 @@ function Detail({
       >
         {badge.label}
       </Text>
-      <Text pointerEvents="none" style={{ left: 600, top: 128, font: FONT.h4, fill: theme.fg }}>
+      <Text
+        pointerEvents="none"
+        style={{ left: 600, top: 128, font: FONT.h4, fill: theme.fg }}
+      >
         {spec.name}
       </Text>
-      <Text pointerEvents="none" style={{ left: 600, top: 156, font: FONT.monoSm, fill: theme.fgSubtle }}>
+      <Text
+        pointerEvents="none"
+        style={{ left: 600, top: 156, font: FONT.monoSm, fill: theme.fgMuted }}
+      >
         {spec.id}
       </Text>
       <Text
@@ -1367,14 +1755,22 @@ function Detail({
           strokeWidth: 1,
         }}
       />
-      <Text pointerEvents="none" style={{ left: 600, top: 284, font: FONT.eyebrow, fill: theme.fgFaint }}>
+      <Text
+        pointerEvents="none"
+        style={{ left: 600, top: 284, font: FONT.eyebrow, fill: theme.fgMuted }}
+      >
         {"CAUSAL READINGS"}
       </Text>
       {spec.readings.slice(0, 4).map((reading, index) => (
         <Group key={reading.label}>
           <Text
             pointerEvents="none"
-            style={{ left: 600, top: 302 + index * 22, font: FONT.caption, fill: theme.fgMuted }}
+            style={{
+              left: 600,
+              top: 302 + index * 22,
+              font: FONT.caption,
+              fill: theme.fgMuted,
+            }}
           >
             {reading.label}
           </Text>
@@ -1396,7 +1792,14 @@ function Detail({
       {/* A quiet inset well, not a second card. */}
       <Rectangle
         pointerEvents="none"
-        style={{ left: 592, top: 392, width: 256, height: 136, cornerRadius: 12, fill: theme.sunken }}
+        style={{
+          left: 592,
+          top: 392,
+          width: 256,
+          height: 136,
+          cornerRadius: 12,
+          fill: theme.sunken,
+        }}
       />
       <Path
         pointerEvents="none"
@@ -1409,13 +1812,22 @@ function Detail({
           strokeWidth: 1,
         }}
       />
-      <Text pointerEvents="none" style={{ left: 608, top: 406, font: FONT.eyebrow, fill: theme.fgFaint }}>
-        {"NEXT STEP"}
+      <Text
+        pointerEvents="none"
+        style={{ left: 608, top: 406, font: FONT.eyebrow, fill: theme.fgMuted }}
+      >
+        {"NEXT STEP · SIMULATED"}
       </Text>
       {spec.runbook && (
         <Text
           pointerEvents="none"
-          style={{ left: 832, top: 406, textAlign: "right", font: FONT.eyebrow, fill: theme.fgFaint }}
+          style={{
+            left: 832,
+            top: 406,
+            textAlign: "right",
+            font: FONT.eyebrow,
+            fill: theme.fgMuted,
+          }}
         >
           {spec.runbook}
         </Text>
@@ -1480,7 +1892,15 @@ function Detail({
           )}
         </Group>
       ) : (
-        <Text pointerEvents="none" style={{ left: 608, top: 494, font: FONT.monoSm, fill: theme.fgSubtle }}>
+        <Text
+          pointerEvents="none"
+          style={{
+            left: 608,
+            top: 494,
+            font: FONT.monoSm,
+            fill: theme.fgMuted,
+          }}
+        >
           {"no action · watching"}
         </Text>
       )}
@@ -1507,13 +1927,13 @@ function Toggle({
       onClick: onToggle,
       onPointerEnter: () => hover.set(true),
       onPointerLeave: () => hover.set(false),
-      onKeyDown: (event: CRCKeyboardEvent) => {
+      onKeyDown: (event: PibblKeyboardEvent) => {
         if (event.key !== "Enter" && event.key !== " ") return;
         event.preventDefault();
         onToggle();
       },
     },
-    { path, fill: true, cursor: "pointer" },
+    { path, fill: true, cursor: "pointer", keyboardFocusable: true },
   );
   return (
     <Group>
@@ -1532,7 +1952,13 @@ function Toggle({
       />
       <Text
         pointerEvents="none"
-        style={{ left: left + 42, top: 564, textAlign: "center", font: FONT.eyebrow, fill: theme.fg }}
+        style={{
+          left: left + 42,
+          top: 564,
+          textAlign: "center",
+          font: FONT.eyebrow,
+          fill: theme.fg,
+        }}
       >
         {label}
       </Text>
@@ -1544,7 +1970,12 @@ function Legend({ state }: { readonly state: SceneState }) {
   const { theme } = state;
   // Trace swatches are solid like the traces; the annotation swatch is a dashed
   // rule like the annotation, so hue alone never has to carry the distinction.
-  const items: readonly (readonly [string, string, number, "trace" | "rule"])[] = [
+  const items: readonly (readonly [
+    string,
+    string,
+    number,
+    "trace" | "rule",
+  ])[] = [
     ["Inside budget", theme.healthy.trace, 24, "trace"],
     ["Over SLO", theme.anomaly.trace, 142, "trace"],
     ["Unmeasured", theme.uncertain.trace, 238, "trace"],
@@ -1557,7 +1988,14 @@ function Legend({ state }: { readonly state: SceneState }) {
           {kind === "trace" ? (
             <Rectangle
               pointerEvents="none"
-              style={{ left, top: 558, width: 8, height: 8, cornerRadius: 2, fill: color }}
+              style={{
+                left,
+                top: 558,
+                width: 8,
+                height: 8,
+                cornerRadius: 2,
+                fill: color,
+              }}
             />
           ) : (
             <Path
@@ -1571,7 +2009,12 @@ function Legend({ state }: { readonly state: SceneState }) {
           )}
           <Text
             pointerEvents="none"
-            style={{ left: left + 14, top: 555, font: FONT.legend, fill: theme.fgMuted }}
+            style={{
+              left: left + 14,
+              top: 555,
+              font: FONT.legend,
+              fill: theme.fgMuted,
+            }}
           >
             {label}
           </Text>
@@ -1606,25 +2049,45 @@ function PipelineHealth() {
 
   return (
     <Group>
-      <Rectangle pointerEvents="none" style={{ width: W, height: H, fill: theme.canvas }} />
+      <Rectangle
+        pointerEvents="none"
+        style={{ width: W, height: H, fill: theme.canvas }}
+      />
 
-      <Text pointerEvents="none" style={{ left: 24, top: 22, font: FONT.eyebrow, fill: theme.fgFaint }}>
+      <Text
+        pointerEvents="none"
+        style={{ left: 24, top: 22, font: FONT.eyebrow, fill: theme.fgMuted }}
+      >
         {`SERVING PATH · rt-infer-v4 · us-east-1 · ${clock(T0)}–${clock(T1)}`}
       </Text>
-      <Text pointerEvents="none" style={{ left: 24, top: 38, font: FONT.title, fill: theme.fg }}>
-        {"Two stages over SLO since 14:16"}
+      <Text
+        pointerEvents="none"
+        style={{ left: 24, top: 38, font: FONT.title, fill: theme.fg }}
+      >
+        {"Cache breach 14:16 · inference 14:20"}
       </Text>
-      <Text pointerEvents="none" style={{ left: 24, top: 66, font: FONT.caption, fill: theme.fgMuted }}>
+      <Text
+        pointerEvents="none"
+        style={{ left: 24, top: 66, font: FONT.caption, fill: theme.fgMuted }}
+      >
         {"Six stages, each against its own p95 budget, on one clock."}
       </Text>
 
       <PathTotalPane state={state} />
-      <Trellis state={state} selected={selected} hovered={hovered} cursor={cursor} />
+      <Trellis
+        state={state}
+        selected={selected}
+        hovered={hovered}
+        cursor={cursor}
+      />
       <Detail state={state} selected={selected} requested={requested} />
 
       <Legend state={state} />
-      <Text pointerEvents="none" style={{ left: 24, top: 578, font: FONT.eyebrow, fill: theme.fgFaint }}>
-        {`synthetic telemetry · p95 per 2-min bucket · post.rerank unmeasured since ${clock(
+      <Text
+        pointerEvents="none"
+        style={{ left: 24, top: 578, font: FONT.eyebrow, fill: theme.fgMuted }}
+      >
+        {`100 synthetic requests / 2-min bucket · post.rerank unmeasured since ${clock(
           COVERAGE_END,
         )}`}
       </Text>
@@ -1651,10 +2114,12 @@ function PipelineHealth() {
   );
 }
 
-export default function mount(canvas: HTMLCanvasElement): CRCController {
-  return crc(canvas, (
+export default function mount(canvas: HTMLCanvasElement): PibblController {
+  return pibbl(
+    canvas,
     <FocusManagement>
       <PipelineHealth />
-    </FocusManagement>
-  ), { viewport: { width: W, height: H }, fit: "contain" });
+    </FocusManagement>,
+    { viewport: { width: W, height: H }, fit: "contain" },
+  );
 }

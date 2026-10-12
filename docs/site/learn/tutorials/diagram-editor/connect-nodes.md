@@ -30,7 +30,7 @@ curve.
 ## Build the change
 
 The returned array places the connection path and its small arrowhead before
-either card Group. CRC traverses source in paint order, so later card pixels
+either card Group. Pibbl traverses source in paint order, so later card pixels
 cover the line where they overlap. Both connection primitives use
 `pointerEvents="none"`: the arrow is visual information, not a target that
 should steal future node gestures. [`Group`](#/api/components/group) still

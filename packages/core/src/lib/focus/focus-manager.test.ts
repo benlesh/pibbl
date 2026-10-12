@@ -10,27 +10,27 @@ import { SvgPath } from '../components/svg-path';
 import { Text } from '../components/text';
 import { VerticalLine } from '../components/vertical-line';
 import { materializeContainerChildren } from '../element/children';
-import type { CRCEventTargetRegistration } from '../events/registrations';
+import type { PibblEventTargetRegistration } from '../events/registrations';
 import type {
-  CRCEventHandlers,
-  CRCEventTargetOptions,
-  CRCEventTargetSnapshot,
+  PibblEventHandlers,
+  PibblEventTargetOptions,
+  PibblEventTargetSnapshot,
 } from '../events/types';
 import { executeRender } from '../execute-render';
-import { clearSharedState, getCRCInstance } from '../global-state';
+import { clearSharedState, getPibblInstance } from '../global-state';
 import { useEventListener } from '../hooks/use-event-listener';
 import { useEventTarget } from '../hooks/use-event-target';
 import { useRef } from '../hooks/use-ref';
 import type { LayoutBox } from '../layout/types';
-import { mountCRC } from '../mount-crc';
-import type { CRCElement, CRCController, CRCFocusPolicyBridge } from '../types';
+import { mountPibbl } from '../mount-pibbl';
+import type { PibblElement, PibblController, PibblFocusPolicyBridge } from '../types';
 import { focusManaged } from './policy-test-support';
 import { directionalPolicy } from './policy-test-support';
 import { createElement } from '../element/create-element';
 import { definePrimitive } from '../define-primitive';
 
 interface ObservedCandidate {
-  readonly target: CRCEventTargetRegistration;
+  readonly target: PibblEventTargetRegistration;
   readonly sourceIndex: number;
   readonly directionalBoundary: ObservedDirectionalBoundary | undefined;
   readonly rootBounds: Readonly<LayoutBox> | undefined;
@@ -40,16 +40,16 @@ interface ObservedDirectionalBoundary {
   readonly candidates: readonly ObservedCandidate[];
 }
 
-interface ObservedFocusManager extends CRCFocusPolicyBridge {
+interface ObservedFocusManager extends PibblFocusPolicyBridge {
   readonly candidates: readonly ObservedCandidate[];
   readonly isDestroyed: boolean;
   setFocusState(
-    target: CRCEventTargetRegistration | undefined,
+    target: PibblEventTargetRegistration | undefined,
     focusVisible: boolean,
   ): void;
 }
 
-const activeControllers = new Set<CRCController>();
+const activeControllers = new Set<PibblController>();
 const clickHandler = () => undefined;
 
 beforeEach(() => {
@@ -118,7 +118,7 @@ describe('focus candidate enrollment', () => {
   });
 
   it('keeps no focus manager, candidates, DOM mutation, or imperative snapshot API without the enhancer', () => {
-    const snapshots: CRCEventTargetSnapshot[] = [];
+    const snapshots: PibblEventTargetSnapshot[] = [];
     const Root = (_props: {}) => {
       snapshots.push(useEventTarget(
         { onClick: clickHandler },
@@ -127,14 +127,14 @@ describe('focus candidate enrollment', () => {
     };
     const { canvas } = mountAndRender(createElement(Root, {}), false);
 
-    expect(getCRCInstance(canvas).eventRoot.focusPolicy).toBeUndefined();
+    expect(getPibblInstance(canvas).eventRoot.focusPolicy).toBeUndefined();
     expect(snapshots).toEqual([{ isFocused: false, isFocusVisible: false }]);
     expect('focus' in snapshots[0]).toBe(false);
     expect(canvas.hasAttribute('tabindex')).toBe(false);
   });
 
   it('installs the complete structural bridge and reports manager-backed render snapshots', () => {
-    const snapshots: CRCEventTargetSnapshot[] = [];
+    const snapshots: PibblEventTargetSnapshot[] = [];
     const Root = (_props: {}) => {
       snapshots.push(useEventTarget(
         { onClick: clickHandler },
@@ -219,7 +219,7 @@ describe('candidate identity and atomic render collection', () => {
   });
 
   it('uses exact remounted registrations after reparenting and clears removed focus silently', () => {
-    const Wrapper = ({ child }: { child: CRCElement<any> }) => child;
+    const Wrapper = ({ child }: { child: PibblElement<any> }) => child;
     const Root = ({
       reparented,
       visible,
@@ -288,7 +288,7 @@ describe('candidate identity and atomic render collection', () => {
 
     expect(candidateLabels(manager)).not.toContain('partial');
     expect(manager.resolveKeyboardTarget()).toBeUndefined();
-    expect(getCRCInstance(mounted.canvas).eventRoot.focusPolicy).toBeUndefined();
+    expect(getPibblInstance(mounted.canvas).eventRoot.focusPolicy).toBeUndefined();
   });
 
   it('rejects a second manager on one event root with a targeted error', () => {
@@ -303,7 +303,7 @@ describe('candidate identity and atomic render collection', () => {
       })),
     ];
     const canvas = createCanvas();
-    const controller = mountCRC(canvas, createElement(Root, {}));
+    const controller = mountPibbl(canvas, createElement(Root, {}));
     activeControllers.add(controller);
 
     expect(() => executeRender(canvas, 1)).toThrowError(
@@ -340,7 +340,7 @@ describe('candidate identity and atomic render collection', () => {
       createElement(Root, { replacement: true }),
     )).not.toThrow();
 
-    const newManager = getCRCInstance(mounted.canvas).eventRoot.focusPolicy as
+    const newManager = getPibblInstance(mounted.canvas).eventRoot.focusPolicy as
       ObservedFocusManager;
     expect(newManager).not.toBe(oldManager);
     expect(candidateLabels(newManager)).toEqual(['new']);
@@ -373,15 +373,15 @@ describe('candidate identity and atomic render collection', () => {
 
     executeRender(mounted.canvas, 2, createElement(Root, { second: true }));
 
-    const replacement = getCRCInstance(mounted.canvas).eventRoot.focusPolicy as
+    const replacement = getPibblInstance(mounted.canvas).eventRoot.focusPolicy as
       ObservedFocusManager;
     expect(replacement).not.toBe(prior);
     expect(candidateLabels(replacement)).toEqual(['second']);
   });
 
   it('reconciles a keyed sole manager after reparenting its enhanced element', () => {
-    const Left = ({ child }: { child: CRCElement<any> }) => child;
-    const Right = ({ child }: { child: CRCElement<any> }) => child;
+    const Left = ({ child }: { child: PibblElement<any> }) => child;
+    const Right = ({ child }: { child: PibblElement<any> }) => child;
     const Root = ({ right }: { right: boolean }) => {
       const boundary = focusManaged(createElement(Target, {
         key: 'stable-boundary',
@@ -395,7 +395,7 @@ describe('candidate identity and atomic render collection', () => {
 
     executeRender(mounted.canvas, 2, createElement(Root, { right: true }));
 
-    const replacement = getCRCInstance(mounted.canvas).eventRoot.focusPolicy as
+    const replacement = getPibblInstance(mounted.canvas).eventRoot.focusPolicy as
       ObservedFocusManager;
     expect(replacement).not.toBe(prior);
     expect(candidateLabels(replacement)).toEqual(['stable']);
@@ -424,17 +424,17 @@ describe('candidate identity and atomic render collection', () => {
       createElement(Root, { replacement: true }),
     )).toThrowError('expected replacement failure');
 
-    expect(getCRCInstance(mounted.canvas).eventRoot.focusPolicy).toBeUndefined();
+    expect(getPibblInstance(mounted.canvas).eventRoot.focusPolicy).toBeUndefined();
     expect(prior.isDestroyed).toBe(true);
     expect(prior.candidates).toEqual([]);
 
     executeRender(mounted.canvas, 3, createElement(Root, { replacement: false }));
-    const recovered = getCRCInstance(mounted.canvas).eventRoot.focusPolicy as
+    const recovered = getPibblInstance(mounted.canvas).eventRoot.focusPolicy as
       ObservedFocusManager;
     expect(recovered).not.toBe(prior);
     expect(candidateLabels(recovered)).toEqual(['old']);
 
-    const eventRoot = getCRCInstance(mounted.canvas).eventRoot;
+    const eventRoot = getPibblInstance(mounted.canvas).eventRoot;
     mounted.controller.dispose();
     activeControllers.delete(mounted.controller);
     expect(eventRoot.focusPolicy).toBeUndefined();
@@ -476,7 +476,7 @@ describe('candidate identity and atomic render collection', () => {
       return outerFirst ? [nextOuter, cached] : [cached, nextOuter];
     };
     const mounted = mountAndRender(createElement(Root, { outer: false }));
-    const eventRoot = getCRCInstance(mounted.canvas).eventRoot;
+    const eventRoot = getPibblInstance(mounted.canvas).eventRoot;
     const priorInner = mounted.manager;
     expect(candidateLabels(priorInner)).toEqual(['inner']);
     expect(innerRenders).toBe(1);
@@ -507,7 +507,7 @@ describe('candidate identity and atomic render collection', () => {
   });
 
   it('reports an ineligible focused target as unfocused during that render', () => {
-    const snapshots: CRCEventTargetSnapshot[] = [];
+    const snapshots: PibblEventTargetSnapshot[] = [];
     const Root = ({ eligible }: { eligible: boolean }) => {
       snapshots.push(useEventTarget(
         eligible ? { onClick: clickHandler } : {},
@@ -546,7 +546,7 @@ describe('directional boundaries and root-logical bounds', () => {
       { mode: 'directional' },
     );
     const canvas = createCanvas();
-    const controller = mountCRC(canvas, WithoutManager);
+    const controller = mountPibbl(canvas, WithoutManager);
     activeControllers.add(controller);
     expect(() => executeRender(canvas, 1)).toThrowError(
       /KeyboardNavigation.*focus manager|FocusManagement.*required/i,
@@ -741,10 +741,10 @@ describe('directional boundaries and root-logical bounds', () => {
   });
 
   it.each([
-    ['focus outside', (element: CRCElement<any>) => focusManaged(
+    ['focus outside', (element: PibblElement<any>) => focusManaged(
       directionalPolicy(element, { mode: 'directional' }),
     )],
-    ['directional outside', (element: CRCElement<any>) => directionalPolicy(
+    ['directional outside', (element: PibblElement<any>) => directionalPolicy(
       focusManaged(element),
       { mode: 'directional' },
     )],
@@ -844,8 +844,8 @@ describe('directional boundaries and root-logical bounds', () => {
 
 interface TargetDefinition {
   readonly label: string;
-  readonly handlers: CRCEventHandlers;
-  readonly options?: Omit<CRCEventTargetOptions, 'path'>;
+  readonly handlers: PibblEventHandlers;
+  readonly options?: Omit<PibblEventTargetOptions, 'path'>;
 }
 
 const Target = ({
@@ -859,18 +859,18 @@ const Target = ({
 };
 
 function mountAndRender(
-  element: CRCElement<any>,
+  element: PibblElement<any>,
   expectManager = true,
 ): {
   canvas: HTMLCanvasElement;
-  controller: CRCController;
+  controller: PibblController;
   manager: ObservedFocusManager;
 } {
   const canvas = createCanvas();
-  const controller = mountCRC(canvas, element);
+  const controller = mountPibbl(canvas, element);
   activeControllers.add(controller);
   executeRender(canvas, 1);
-  const policy = getCRCInstance(canvas).eventRoot.focusPolicy;
+  const policy = getPibblInstance(canvas).eventRoot.focusPolicy;
   if (expectManager && !policy) throw new Error('Expected a focus manager');
   return {
     canvas,

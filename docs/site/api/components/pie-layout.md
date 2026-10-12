@@ -1,7 +1,7 @@
 ---
 id: api-component-pie-layout
 title: PieLayout, PieSlice, and PieLabel
-summary: Coordinate radial geometry and label layout while composing ordinary CRC marks.
+summary: Coordinate radial geometry and label layout while composing ordinary Pibbl marks.
 kind: api
 slug: pie-layout
 apiCategory: component
@@ -25,7 +25,7 @@ symbols:
 # PieLayout, PieSlice, and PieLabel
 
 `PieLayout` calculates geometry and label placements before rendering its function
-children once per source row. Import these components from `@crc/viz`.
+children once per source row. Import these components from `@pibbl/core/viz`.
 
 Pass `data`, `value`, optional `keyBy`, and a `label(slice)` callback returning
 single-line text. Style accepts numeric `cx`, `cy`, `radius`, `innerRadius`, and `labelGap`,
@@ -46,7 +46,7 @@ center, outer `radius`, `innerRadius`, and optional `label`. Labels expose `stat
 box, baseline, and leader points, or `status: "hidden"` with reason `empty`,
 `inside-fit`, or `space`. Applications can provide a legend or other fallback.
 
-`PieSlice` takes `slice`, normal CRC events/focus props, paint style, and optional
+`PieSlice` takes `slice`, normal Pibbl events/focus props, paint style, and optional
 children. `PieLabel` takes the same slice and renders its coordinated label and
 leader. Label font belongs to the chart's measurement inputs; its paint style
 accepts `fill`, `leaderStroke`, and `leaderWidth`. Labels are decorative by
@@ -76,7 +76,7 @@ outside lanes and reports `space` if those fail. Empty text or geometry reports
 Data and chart style inputs accept core signals. By default, each PieLayout
 component evaluation reevaluates data/value/key/label callbacks; their stable
 identities do not prove their results unchanged. Plain mutation alone does not
-schedule CRC work. Signal reads inside callbacks are tracked dynamically.
+schedule Pibbl work. Signal reads inside callbacks are tracked dynamically.
 Callbacks cannot call hooks; return components for hooks.
 
 Optional `revision` accepts a signal-capable nonnegative safe integer and opts
@@ -90,8 +90,13 @@ and label callback. Stable revision plus unchanged dependencies allows paint-onl
 selection changes to reuse geometry and measurements.
 
 ```tsx
-import { signal } from "@crc/core";
-import { PieLayout, PieSlice, PieLabel, type PieSliceGeometry } from "@crc/viz";
+import { signal } from "@pibbl/core";
+import {
+  PieLayout,
+  PieSlice,
+  PieLabel,
+  type PieSliceGeometry,
+} from "@pibbl/core/viz";
 
 const rows = [
   { amount: 2, name: "North" },

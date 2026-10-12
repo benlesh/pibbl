@@ -1,14 +1,14 @@
 import {
-  crc,
+  pibbl,
   useEventTarget,
   useSignal,
   FocusManagement,
   KeyboardNavigation,
   Rectangle,
   Text,
-  type CRCController,
-  type CRCKeyboardEvent,
-} from "@crc/core";
+  type PibblController,
+  type PibblKeyboardEvent,
+} from "@pibbl/core";
 function boxPath(x: number, y: number, width: number, height: number): Path2D {
   const path = new Path2D();
   path.rect(x, y, width, height);
@@ -41,7 +41,7 @@ function NavigationTarget({
     {
       onClick: () => onInput("pointer"),
       onFocus: () => onFocusTarget(label, boundary),
-      onKeyDown: (event: CRCKeyboardEvent) => onInput(event.key),
+      onKeyDown: (event: PibblKeyboardEvent) => onInput(event.key),
     },
     {
       path: boxPath(x, y, width, height),
@@ -313,8 +313,8 @@ function NestedDirectionalNavigationLesson() {
     >{`LAST INPUT: ${status.get().input}`}</Text>,
   ];
 }
-export default function mount(canvas: HTMLCanvasElement): CRCController {
-  return crc(
+export default function mount(canvas: HTMLCanvasElement): PibblController {
+  return pibbl(
     canvas,
     <FocusManagement>
       <NestedDirectionalNavigationLesson />

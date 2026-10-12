@@ -12,7 +12,7 @@ relatedTypes: [OverlayProps, OverlayStyle]
 # Overlay
 
 ```ts
-import { Overlay, Rectangle, Text } from "@crc/core";
+import { Overlay, Rectangle, Text } from "@pibbl/core";
 ```
 
 `Overlay` uses [`OverlayProps`](#/api/types/elements-components#overlayprops) and [`OverlayStyle`](#/api/types/layout#overlaystyle) to allocate recursive direct

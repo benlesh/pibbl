@@ -96,7 +96,7 @@ test('classifies identity failures by code rather than similar message text', ()
   const lookalike = { status: 'pass', steps: [] };
   recordReplayFailure(lookalike, new Error('application failed while displaying fixture identity'));
   assert.equal(lookalike.status, 'fail');
-  for (const code of ['CRC_FIXTURE_IDENTITY_UNAVAILABLE', 'CRC_FIXTURE_IDENTITY_MISMATCH']) {
+  for (const code of ['PIBBL_FIXTURE_IDENTITY_UNAVAILABLE', 'PIBBL_FIXTURE_IDENTITY_MISMATCH']) {
     const report = { status: 'pass', steps: [] };
     recordReplayFailure(report, Object.assign(new Error('localized diagnostic text'), { code }));
     assert.equal(report.status, 'blocked');

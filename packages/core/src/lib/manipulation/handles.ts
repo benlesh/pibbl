@@ -1,3 +1,6 @@
+import type { PibblResizePosition } from "./types.js";
+import type { PibblManipulationWhen } from './types.js';
+import type { PibblManipulableProps } from './manipulable.js';
 import { createElement } from "../element/create-element.js";
 import {
   createGroupTransform,
@@ -14,9 +17,9 @@ import type { GStyle } from "../components/g.js";
 import { stripLayoutParticipation } from "../style/resolve-built-in.js";
 import type { ResolvedDrawingStyle } from "../style/types.js";
 import { getLayoutBox } from "../layout/context.js";
-import type { CRCNode } from "../element/types.js";
+import type { PibblNode } from "../element/types.js";
 import type { RenderingContext2D, SystemStyle } from "../types.js";
-import type { CRCManipulationController } from "./controller-types.js";
+import type { PibblManipulationController } from "./controller-types.js";
 import {
   isManipulationSourceActive,
   manipulationHandlers,
@@ -24,20 +27,49 @@ import {
 } from "./controller.js";
 import { requireManipulationFrame } from "./frame.js";
 
-export interface CRCDragHandleProps {
+/**
+ * Authored inputs for DragHandle, including the declared data and presentation options.
+ *
+ * @see {@link PibblManipulationController}
+ * @see {@link PibblNode}
+ * @see {@link DragHandle}
+ * @see {@link PibblManipulationWhen}
+ */
+export interface PibblDragHandleProps {
+  /**
+   * Formats the value shown by the manipulation readout. See {@link PibblDragHandleProps}.
+   * @param value - Current left and top coordinates.
+   * @returns Text to display in the drag readout.
+   */
   readonly formatReadout?: (value: {
+    /** Left edge coordinate or inset. See {@link PibblDragHandleProps}. */
     readonly left: number;
+    /** Top edge value or top envelope guide. See {@link PibblDragHandleProps}. */
     readonly top: number;
   }) => string;
-  readonly controller: CRCManipulationController;
-  readonly children?: CRCNode;
+  /**
+   * Controller owning the current interaction or mounted scenario. See
+   * {@link PibblManipulationController}.
+   */
+  readonly controller: PibblManipulationController;
+  /** Descendant content or the callback that supplies it. See {@link PibblNode}. */
+  readonly children?: PibblNode;
 }
-export interface CRCDragHandleStyle extends GStyle {
-  readonly readout?: false | true | CRCManipulationReadoutStyle;
+/**
+ * Supported geometry and presentation properties for DragHandle.
+ *
+ * @see {@link GStyle}
+ * @see {@link PibblManipulationReadoutStyle}
+ * @see {@link DragHandle}
+ * @see {@link PibblManipulableProps}
+ */
+export interface PibblDragHandleStyle extends GStyle {
+  /** Presentation of the manipulation value readout. See {@link PibblManipulationReadoutStyle}. */
+  readonly readout?: false | true | PibblManipulationReadoutStyle;
 }
-type ResolvedDragStyle = ResolvedDrawingStyle<CRCDragHandleStyle>;
+type ResolvedDragStyle = ResolvedDrawingStyle<PibblDragHandleStyle>;
 interface CssHandleContentProps {
-  readonly children?: CRCNode;
+  readonly children?: PibblNode;
 }
 interface CssHandleContentStyle extends SystemStyle {
   readonly transform: DOMMatrix;
@@ -56,10 +88,20 @@ setPrimitivePresentation<CssHandleContentStyle>(CssHandleContent, (style) => ({
   transform: style.transform,
 }));
 
+/**
+ * Draws an interactive handle that starts translation of its manipulation target.
+ *
+ * @param props - Authored component inputs, supplied through JSX or createElement. See the linked
+ * props and style types.
+ * @throws When called directly; Pibbl mounts this component through JSX or createElement.
+ *
+ * @see {@link PibblDragHandleProps}
+ * @see {@link PibblDragHandleStyle}
+ */
 export const DragHandle = definePrimitive<
-  CRCDragHandleProps,
-  CRCDragHandleStyle,
-  CRCDragHandleStyle,
+  PibblDragHandleProps,
+  PibblDragHandleStyle,
+  PibblDragHandleStyle,
   ResolvedDragStyle
 >(
   function DragHandle(props, style) {
@@ -102,8 +144,8 @@ setPrimitivePresentation<ResolvedDragStyle>(DragHandle, (style) => ({
 }));
 
 const DragReadout = definePrimitive<
-  CRCDragHandleProps & {
-    readonly readout?: false | true | CRCManipulationReadoutStyle;
+  PibblDragHandleProps & {
+    readonly readout?: false | true | PibblManipulationReadoutStyle;
     readonly focused: boolean;
     readonly source: object;
     readonly anchorX: number;
@@ -134,59 +176,183 @@ const DragReadout = definePrimitive<
   );
 });
 
-export interface CRCManipulationReadoutStateStyle {
+/**
+ * Supported geometry and presentation properties for ManipulationReadoutState.
+ *
+ * @see {@link PibblManipulationReadoutStyle}
+ */
+export interface PibblManipulationReadoutStateStyle {
   /** Minimum outward spacing in CSS pixels; defaults to 40 for drag, 5 otherwise. */
   readonly gap?: number;
+  /**
+   * Canvas font string used to draw or measure text. See {@link PibblManipulationReadoutStateStyle}
+   * .
+   */
   readonly font?: string;
+  /** Paint used for the interior. See {@link PibblManipulationReadoutStateStyle}. */
   readonly fill?: string;
+  /** Paint used for the outline. See {@link PibblManipulationReadoutStateStyle}. */
   readonly stroke?: string;
+  /** Width of the painted outline. See {@link PibblManipulationReadoutStateStyle}. */
   readonly strokeWidth?: number;
+  /** Opacity of the painted result. See {@link PibblManipulationReadoutStateStyle}. */
   readonly opacity?: number;
+  /** Whether this presentation is visible. See {@link PibblManipulationReadoutStateStyle}. */
   readonly visible?: boolean;
 }
-export interface CRCManipulationReadoutStyle extends CRCManipulationReadoutStateStyle {
-  readonly inactive?: CRCManipulationReadoutStateStyle;
-  readonly focused?: CRCManipulationReadoutStateStyle;
-  readonly active?: CRCManipulationReadoutStateStyle;
+/**
+ * Supported geometry and presentation properties for ManipulationReadout.
+ *
+ * @see {@link PibblManipulationReadoutStateStyle}
+ * @see {@link PibblDragHandleStyle}
+ * @see {@link PibblResizeHandleStyle}
+ * @see {@link PibblRotationHandleStyle}
+ */
+export interface PibblManipulationReadoutStyle extends PibblManipulationReadoutStateStyle {
+  /**
+   * Readout presentation while no interaction is active. See
+   * {@link PibblManipulationReadoutStateStyle}.
+   */
+  readonly inactive?: PibblManipulationReadoutStateStyle;
+  /**
+   * Readout presentation while the handle has keyboard focus. See
+   * {@link PibblManipulationReadoutStateStyle}.
+   */
+  readonly focused?: PibblManipulationReadoutStateStyle;
+  /**
+   * Current active operation or its presentation configuration. See
+   * {@link PibblManipulationReadoutStateStyle}.
+   */
+  readonly active?: PibblManipulationReadoutStateStyle;
 }
-export interface CRCResizeHandleStyle extends SystemStyle {
-  readonly readout?: false | true | CRCManipulationReadoutStyle;
+/**
+ * Supported geometry and presentation properties for ResizeHandle.
+ *
+ * @see {@link SystemStyle}
+ * @see {@link PibblManipulationReadoutStyle}
+ * @see {@link ResizeHandle}
+ * @see {@link PibblResizeHandlesProps}
+ */
+export interface PibblResizeHandleStyle extends SystemStyle {
+  /** Presentation of the manipulation value readout. See {@link PibblManipulationReadoutStyle}. */
+  readonly readout?: false | true | PibblManipulationReadoutStyle;
 }
-export interface CRCRotationConnectorStyle {
+/**
+ * Supported geometry and presentation properties for RotationConnector.
+ *
+ * @see {@link PibblRotationHandleStyle}
+ */
+export interface PibblRotationConnectorStyle {
+  /** Paint used for the outline. See {@link PibblRotationConnectorStyle}. */
   readonly stroke?: string;
+  /** Width of the painted outline. See {@link PibblRotationConnectorStyle}. */
   readonly strokeWidth?: number;
+  /** Opacity of the painted result. See {@link PibblRotationConnectorStyle}. */
   readonly opacity?: number;
 }
-export interface CRCRotationArcStyle {
+/**
+ * Supported geometry and presentation properties for RotationArc.
+ *
+ * @see {@link PibblRotationHandleStyle}
+ */
+export interface PibblRotationArcStyle {
+  /** Color used by the mark or effect. See {@link PibblRotationArcStyle}. */
   readonly color?: string;
+  /** Angular extent of the arc. See {@link PibblRotationArcStyle}. */
   readonly sweep?: number;
+  /** Width of the painted outline. See {@link PibblRotationArcStyle}. */
   readonly strokeWidth?: number;
+  /** Opacity of the painted result. See {@link PibblRotationArcStyle}. */
   readonly opacity?: number;
 }
-export interface CRCRotationHandleStyle extends SystemStyle {
-  readonly connector?: false | true | CRCRotationConnectorStyle;
-  readonly arc?: false | true | CRCRotationArcStyle;
-  readonly readout?: false | true | CRCManipulationReadoutStyle;
+/**
+ * Supported geometry and presentation properties for RotationHandle.
+ *
+ * @see {@link SystemStyle}
+ * @see {@link PibblRotationConnectorStyle}
+ * @see {@link PibblRotationArcStyle}
+ * @see {@link PibblManipulationReadoutStyle}
+ * @see {@link RotationHandle}
+ * @see {@link PibblManipulableProps}
+ */
+export interface PibblRotationHandleStyle extends SystemStyle {
+  /**
+   * Presentation of the line connecting the rotation handle to its target. See
+   * {@link PibblRotationConnectorStyle}.
+   */
+  readonly connector?: false | true | PibblRotationConnectorStyle;
+  /** Presentation of the rotation-angle arc. See {@link PibblRotationArcStyle}. */
+  readonly arc?: false | true | PibblRotationArcStyle;
+  /** Presentation of the manipulation value readout. See {@link PibblManipulationReadoutStyle}. */
+  readonly readout?: false | true | PibblManipulationReadoutStyle;
 }
-export interface CRCResizeHandleProps {
-  readonly controller: CRCManipulationController;
-  readonly position: import("./types.js").CRCResizePosition;
+/**
+ * Authored inputs for ResizeHandle, including the declared data and presentation options.
+ *
+ * @see {@link PibblManipulationController}
+ * @see {@link PibblNode}
+ * @see {@link ResizeHandle}
+ * @see {@link PibblResizeHandlesProps}
+ * @see {@link PibblResizePosition}
+ */
+export interface PibblResizeHandleProps {
+  /**
+   * Controller owning the current interaction or mounted scenario. See
+   * {@link PibblManipulationController}.
+   */
+  readonly controller: PibblManipulationController;
+  /**
+   * Position of the geometry, source, or selected resize handle. See {@link PibblResizeHandleProps}
+   * .
+   */
+  readonly position: import("./types.js").PibblResizePosition;
+  /** Size of the handle's interactive hit region. See {@link PibblResizeHandleProps}. */
   readonly hitSize?: number;
+  /**
+   * Formats the value shown by the manipulation readout. See {@link PibblResizeHandleProps}.
+   * @param value - Current width and height.
+   * @returns Text to display in the resize readout.
+   */
   readonly formatReadout?: (value: {
+    /**
+     * Horizontal extent in the units of the containing geometry or surface. See
+     * {@link PibblResizeHandleProps}.
+     */
     readonly width: number;
+    /**
+     * Vertical extent in the units of the containing geometry or surface. See
+     * {@link PibblResizeHandleProps}.
+     */
     readonly height: number;
   }) => string;
-  readonly children?: CRCNode;
+  /** Descendant content or the callback that supplies it. See {@link PibblNode}. */
+  readonly children?: PibblNode;
 }
-export interface CRCResizeHandlesProps {
-  readonly controller: CRCManipulationController;
+/**
+ * Authored inputs for ResizeHandles, including the declared data and presentation options.
+ *
+ * @see {@link PibblManipulationController}
+ * @see {@link PibblResizeHandleStyle}
+ * @see {@link PibblResizeHandleProps}
+ * @see {@link ResizeHandles}
+ * @see {@link PibblManipulableProps}
+ * @see {@link PibblResizePosition}
+ */
+export interface PibblResizeHandlesProps {
+  /**
+   * Controller owning the current interaction or mounted scenario. See
+   * {@link PibblManipulationController}.
+   */
+  readonly controller: PibblManipulationController;
+  /** Edges and corners at which resize handles are created. See {@link PibblResizeHandlesProps}. */
   readonly positions?:
-    | "corners"
-    | "edges-and-corners"
-    | readonly import("./types.js").CRCResizePosition[];
+    "corners" | "edges-and-corners" | readonly import("./types.js").PibblResizePosition[];
+  /** Size of the handle's interactive hit region. See {@link PibblResizeHandlesProps}. */
   readonly hitSize?: number;
-  readonly style?: CRCResizeHandleStyle;
-  readonly formatReadout?: CRCResizeHandleProps["formatReadout"];
+  /** Declared presentation and layout properties. See {@link PibblResizeHandleStyle}. */
+  readonly style?: PibblResizeHandleStyle;
+  /** Formats the value shown by the manipulation readout. See {@link PibblResizeHandleProps}. */
+  readonly formatReadout?: PibblResizeHandleProps["formatReadout"];
 }
 const corners = [
   "top-left",
@@ -206,17 +372,17 @@ const allHandles = [
 ] as const;
 type ResizePosition = (typeof allHandles)[number];
 interface CollectionReadout {
-  readonly controller: CRCManipulationController;
+  readonly controller: PibblManipulationController;
   readonly positions: readonly ResizePosition[];
   readonly owner: ResizePosition;
-  readonly style: CRCResizeHandleStyle | undefined;
-  readonly formatReadout: CRCResizeHandleProps["formatReadout"];
+  readonly style: PibblResizeHandleStyle | undefined;
+  readonly formatReadout: PibblResizeHandleProps["formatReadout"];
   readonly focused: Map<ResizePosition, boolean>;
 }
 const collectionStack: CollectionReadout[] = [];
 const ResizeCollection = definePrimitive<{
   readonly collection: CollectionReadout;
-  readonly children?: CRCNode;
+  readonly children?: PibblNode;
 }>(
   function ResizeCollection(props) {
     collectionStack.push(props.collection);
@@ -232,9 +398,19 @@ const ResizeCollection = definePrimitive<{
   { childInput: "structural" },
 );
 
+/**
+ * Draws an interactive handle for one edge or corner of a manipulation target.
+ *
+ * @param props - Authored component inputs, supplied through JSX or createElement. See the linked
+ * props and style types.
+ * @throws When called directly; Pibbl mounts this component through JSX or createElement.
+ *
+ * @see {@link PibblResizeHandleProps}
+ * @see {@link PibblResizeHandleStyle}
+ */
 export const ResizeHandle = definePrimitive<
-  CRCResizeHandleProps,
-  CRCResizeHandleStyle
+  PibblResizeHandleProps,
+  PibblResizeHandleStyle
 >(function ResizeHandle(props, style, ctx) {
   const state = requireManipulationFrame(props.controller);
   const box = getLayoutBox();
@@ -297,7 +473,17 @@ export const ResizeHandle = definePrimitive<
     });
   paintDefaultHandle(ctx, state, x, y);
 });
-export function ResizeHandles(props: CRCResizeHandlesProps): CRCNode {
+/**
+ * Creates the configured collection of resize handles around a manipulation target.
+ *
+ * @param props - Controller, handle placement, and presentation options. See
+ * {@link PibblResizeHandlesProps} .
+ * @returns Pibbl nodes rendering the resize handles. See {@link PibblNode}.
+ *
+ * @see {@link PibblResizeHandlesProps}
+ * @see {@link PibblNode}
+ */
+export function ResizeHandles(props: PibblResizeHandlesProps): PibblNode {
   const positions = (
     props.positions === undefined || props.positions === "corners"
       ? corners
@@ -339,7 +525,7 @@ export function ResizeHandles(props: CRCResizeHandlesProps): CRCNode {
   });
 }
 const ResizeCollectionReadout = definePrimitive<{
-  readonly controller: CRCManipulationController;
+  readonly controller: PibblManipulationController;
   readonly collection: CollectionReadout;
 }>(function ResizeCollectionReadout(props, _style, ctx) {
   const state = requireManipulationFrame(props.controller);
@@ -382,16 +568,49 @@ const ResizeCollectionReadout = definePrimitive<{
   );
 });
 
-export interface CRCRotationHandleProps {
-  readonly controller: CRCManipulationController;
+/**
+ * Authored inputs for RotationHandle, including the declared data and presentation options.
+ *
+ * @see {@link PibblManipulationController}
+ * @see {@link PibblNode}
+ * @see {@link RotationHandle}
+ * @see {@link PibblManipulableProps}
+ */
+export interface PibblRotationHandleProps {
+  /**
+   * Controller owning the current interaction or mounted scenario. See
+   * {@link PibblManipulationController}.
+   */
+  readonly controller: PibblManipulationController;
+  /** Size of the handle's interactive hit region. See {@link PibblRotationHandleProps}. */
   readonly hitSize?: number;
+  /** Selects `"degrees"`, `"radians"` for readout unit. See {@link PibblRotationHandleProps}. */
   readonly readoutUnit?: "degrees" | "radians";
-  readonly formatReadout?: (value: { readonly rotation: number }) => string;
-  readonly children?: CRCNode;
+  /**
+   * Formats the value shown by the manipulation readout. See {@link PibblRotationHandleProps}.
+   * @param value - Current rotation.
+   * @returns Text to display in the rotation readout.
+   */
+  readonly formatReadout?: (value: {
+    /** Rotation applied to the containing geometry. See {@link PibblRotationHandleProps}. */
+    readonly rotation: number;
+  }) => string;
+  /** Descendant content or the callback that supplies it. See {@link PibblNode}. */
+  readonly children?: PibblNode;
 }
+/**
+ * Draws an interactive handle for rotating a manipulation target.
+ *
+ * @param props - Authored component inputs, supplied through JSX or createElement. See the linked
+ * props and style types.
+ * @throws When called directly; Pibbl mounts this component through JSX or createElement.
+ *
+ * @see {@link PibblRotationHandleProps}
+ * @see {@link PibblRotationHandleStyle}
+ */
 export const RotationHandle = definePrimitive<
-  CRCRotationHandleProps,
-  CRCRotationHandleStyle
+  PibblRotationHandleProps,
+  PibblRotationHandleStyle
 >(function RotationHandle(props, style, ctx) {
   const state = requireManipulationFrame(props.controller);
   const box = getLayoutBox();
@@ -546,7 +765,7 @@ function paintRotationDecorations(
   ctx: RenderingContext2D,
   state: ManipulationState,
   anchor: ReturnType<typeof rotationAnchor>,
-  style: CRCRotationHandleStyle,
+  style: PibblRotationHandleStyle,
 ): void {
   validateRotationStyle(style);
   const connector =
@@ -593,7 +812,7 @@ function paintRotationDecorations(
   });
 }
 function validateReadoutStyle(
-  value: false | true | CRCManipulationReadoutStyle | undefined,
+  value: false | true | PibblManipulationReadoutStyle | undefined,
 ): void {
   if (!value || value === true) return;
   for (const style of [value, value.inactive, value.focused, value.active]) {
@@ -621,7 +840,7 @@ function validateReadoutStyle(
       );
   }
 }
-function validateRotationStyle(style: CRCRotationHandleStyle): void {
+function validateRotationStyle(style: PibblRotationHandleStyle): void {
   const connector =
     style.connector && style.connector !== true ? style.connector : undefined;
   const arc = style.arc && style.arc !== true ? style.arc : undefined;
@@ -645,7 +864,7 @@ function validateRotationStyle(style: CRCRotationHandleStyle): void {
 }
 
 function readoutEnabled(
-  readout: false | true | CRCManipulationReadoutStyle | undefined,
+  readout: false | true | PibblManipulationReadoutStyle | undefined,
   formatter: unknown,
 ): boolean {
   return (
@@ -654,7 +873,7 @@ function readoutEnabled(
 }
 function formatResize(
   state: ManipulationState,
-  format: CRCResizeHandleProps["formatReadout"],
+  format: PibblResizeHandleProps["formatReadout"],
 ): string {
   const box = state.options.box.get();
   const value = format
@@ -666,7 +885,7 @@ function formatResize(
 }
 function formatRotation(
   state: ManipulationState,
-  props: CRCRotationHandleProps,
+  props: PibblRotationHandleProps,
 ): string {
   const rotation = state.options.rotation?.get() ?? 0;
   const value = props.formatReadout
@@ -688,7 +907,7 @@ function paintReadout(
   state: ManipulationState,
   anchor: DOMPoint,
   format: () => string,
-  readout: false | true | CRCManipulationReadoutStyle | undefined,
+  readout: false | true | PibblManipulationReadoutStyle | undefined,
   focused: boolean,
   active: boolean,
   position?: ResizePosition,
@@ -786,14 +1005,14 @@ function outwardReadoutOffset(
   );
 }
 function resolveReadout(
-  value: false | true | CRCManipulationReadoutStyle | undefined,
+  value: false | true | PibblManipulationReadoutStyle | undefined,
   inactive: boolean,
   focused: boolean,
   active: boolean,
   defaultGap: number,
-): Required<CRCManipulationReadoutStateStyle> {
+): Required<PibblManipulationReadoutStateStyle> {
   const source = value && value !== true ? value : {};
-  const base: Required<CRCManipulationReadoutStateStyle> = {
+  const base: Required<PibblManipulationReadoutStateStyle> = {
     gap: source.gap ?? defaultGap,
     font: source.font ?? "12px sans-serif",
     fill: source.fill ?? "#1d4ed8",
@@ -802,7 +1021,7 @@ function resolveReadout(
     opacity: source.opacity ?? 1,
     visible: source.visible ?? false,
   };
-  const patch = (next: CRCManipulationReadoutStateStyle | undefined) => {
+  const patch = (next: PibblManipulationReadoutStateStyle | undefined) => {
     if (next) Object.assign(base, next);
   };
   if (inactive) patch(source.inactive);

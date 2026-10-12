@@ -1,4 +1,4 @@
-# CRC Focus and Keyboard Navigation Implementation Plan
+# Pibbl Focus and Keyboard Navigation Implementation Plan
 
 > **Historical status: IMPLEMENTED PLAN.** Agent instructions and unchecked-looking task syntax below are preserved as dated evidence, not active work.
 
@@ -6,9 +6,9 @@
 
 **Goal:** Add an optional, tree-shakable logical focus manager with DOM-integrated Tab traversal, pointer focus, keyboard activation, focus render state, and nested directional navigation.
 
-**Architecture:** The HTML Canvas remains the single native focus host. Element enhancers annotate existing CRC elements without changing identity; one optional root manager observes explicit event targets during successful renders, maintains source-order candidates and directional boundaries, and supplies default actions after shared event dispatch. The base event system communicates through a small optional policy interface and never imports focus implementation modules.
+**Architecture:** The HTML Canvas remains the single native focus host. Element enhancers annotate existing Pibbl elements without changing identity; one optional root manager observes explicit event targets during successful renders, maintains source-order candidates and directional boundaries, and supplies default actions after shared event dispatch. The base event system communicates through a small optional policy interface and never imports focus implementation modules.
 
-**Tech Stack:** TypeScript 5, DOM Focus and Keyboard APIs, CRC's DOM-aligned user-event foundation, Canvas 2D geometry, Vitest Browser Mode with Playwright Chromium, pnpm 11.21.0, esbuild tree-shaking verification.
+**Tech Stack:** TypeScript 5, DOM Focus and Keyboard APIs, Pibbl's DOM-aligned user-event foundation, Canvas 2D geometry, Vitest Browser Mode with Playwright Chromium, pnpm 11.21.0, esbuild tree-shaking verification.
 
 **Spec:** `docs/superpowers/specs/2026-08-28-focus-and-keyboard-navigation-design.md`
 
@@ -18,13 +18,13 @@
 - Use Node.js 24.15 or newer and pnpm 11.21.0.
 - `withFocusManagement` and `withKeyboardNavigation` are element enhancers, not structural wrapper components.
 - Enhancers must not change component identity, parentage, layout, measurement, source order, or painting.
-- A CRC root has at most one focus-management boundary; directional boundaries require that manager.
+- A Pibbl root has at most one focus-management boundary; directional boundaries require that manager.
 - The HTML Canvas is the only DOM focus host; root `OffscreenCanvas` focus installation is an error.
 - Tab order is source order. Geometry is used only for arrow navigation.
 - Do not add numeric positive-`tabIndex` ordering, default wrapping, or inner-edge escape.
 - Do not expose a leaf ref or imperative `focus()` method.
 - Do not create semantic DOM descendants, ARIA mirrors, hidden editable controls, or a public widget library.
-- Export every public API from `@crc/core`; focus implementation must disappear from optimized consumers that do not use either enhancer.
+- Export every public API from `@pibbl/core`; focus implementation must disappear from optimized consumers that do not use either enhancer.
 - Use public scenarios for manual/headless evidence and exact resource-ownership tests for DOM mutations/listeners.
 
 ## File Structure
@@ -68,7 +68,7 @@ Integration points:
 
 **Interfaces:**
 
-- Produces internal `CRCElementEnhancerDescriptor` and `CRCMountedElementEnhancer` lifecycle types.
+- Produces internal `PibblElementEnhancerDescriptor` and `PibblMountedElementEnhancer` lifecycle types.
 - Produces public `withFocusManagement(element)` and `withKeyboardNavigation(element, { mode: 'directional' })` values, initially backed by test descriptors rather than a completed manager.
 - Produces `CompEl.enhancers?` metadata and `CompRefs.mountedEnhancers` ownership.
 
@@ -101,16 +101,16 @@ Expected: FAIL because elements have no enhancer metadata or lifecycle.
 Use these internal interfaces:
 
 ```ts
-export interface CRCElementEnhancerDescriptor {
+export interface PibblElementEnhancerDescriptor {
   readonly key: symbol;
   mount(context: {
     readonly component: CompRefs<any>;
-    readonly instance: CRCInstance;
-  }): CRCMountedElementEnhancer;
+    readonly instance: PibblInstance;
+  }): PibblMountedElementEnhancer;
 }
 
-export interface CRCMountedElementEnhancer {
-  update(next: CRCElementEnhancerDescriptor): void;
+export interface PibblMountedElementEnhancer {
+  update(next: PibblElementEnhancerDescriptor): void;
   enter(): void;
   exit(success: boolean): void;
   dispose(): void;
@@ -170,8 +170,8 @@ git commit -m "feat(focus): add identity-transparent element enhancers"
 **Interfaces:**
 
 - Consumes: event target records and enhancer scopes.
-- Produces: `CRCFocusPolicyBridge.observeTarget`, `removeTarget`, `snapshot`, `resolveKeyboardTarget`, and `afterDispatch`.
-- Produces: committed source-order `CRCFocusCandidate[]` and directional boundary membership.
+- Produces: `PibblFocusPolicyBridge.observeTarget`, `removeTarget`, `snapshot`, `resolveKeyboardTarget`, and `afterDispatch`.
+- Produces: committed source-order `PibblFocusCandidate[]` and directional boundary membership.
 
 - [ ] **Step 1: Write failing enrollment and identity tests**
 
@@ -197,17 +197,17 @@ Expected: FAIL because no focus manager observes target registrations.
 Use an active boundary stack during traversal and this candidate shape:
 
 ```ts
-export interface CRCFocusCandidate {
-  readonly target: CRCEventTargetRegistration;
+export interface PibblFocusCandidate {
+  readonly target: PibblEventTargetRegistration;
   readonly sourceIndex: number;
-  readonly directionalBoundary: CRCDirectionalBoundary | undefined;
+  readonly directionalBoundary: PibblDirectionalBoundary | undefined;
   readonly rootBounds: Readonly<LayoutBox> | undefined;
 }
 ```
 
 At focus-boundary entry, begin a pending candidate frame. Each explicit target
 registration calls `observeTarget`. On successful boundary exit, atomically
-replace the committed list; on failure, discard pending candidates and let CRC's
+replace the committed list; on failure, discard pending candidates and let Pibbl's
 existing render-failure teardown run. If the focused target is absent from the
 new committed list, clear focus without calling the dead target.
 
@@ -272,8 +272,8 @@ git commit -m "feat(focus): collect stable focus candidates"
 Mount a native button, Canvas, and another native button. Assert:
 
 ```text
-forward:  native-before -> first CRC -> ... -> last CRC -> native-after
-reverse:  native-after -> last CRC -> ... -> first CRC -> native-before
+forward:  native-before -> first Pibbl -> ... -> last Pibbl -> native-after
+reverse:  native-after -> last Pibbl -> ... -> first Pibbl -> native-before
 ```
 
 Cover programmatic Canvas focus with no known direction, Canvas focus with no
@@ -293,7 +293,7 @@ Expected: FAIL because Canvas focusability and Tab defaults are absent.
 
 Snapshot `hasAttribute('tabindex')` and `getAttribute('tabindex')`. While live
 candidates exist, ensure the Canvas is a Tab stop. When the list becomes empty,
-restore the pre-manager state so CRC does not leave a dead stop. Final teardown
+restore the pre-manager state so Pibbl does not leave a dead stop. Final teardown
 restores the same snapshot idempotently.
 
 - [ ] **Step 4: Track external Tab direction**
@@ -430,7 +430,7 @@ git commit -m "feat(focus): synchronize logical and pointer focus"
 **Interfaces:**
 
 - Produces: `applyKeyboardActivationDefault(manager, event)`.
-- Produces: `CRCEvent.sourceEvent?: Event` for logical events synthesized from another input event.
+- Produces: `PibblEvent.sourceEvent?: Event` for logical events synthesized from another input event.
 
 - [ ] **Step 1: Write failing activation-order tests**
 
@@ -449,7 +449,7 @@ Expected: FAIL because keyboard activation state is absent.
 
 - [ ] **Step 3: Add synthetic-event provenance without breaking mouse types**
 
-Add optional `sourceEvent` to the base CRC facade. For keyboard activation,
+Add optional `sourceEvent` to the base Pibbl facade. For keyboard activation,
 construct a cancelable synthetic `MouseEvent('click', { bubbles: true,
 detail: 0 })`; expose it as `originalEvent` so `onClick` retains its mouse-event
 contract, and expose the originating `KeyboardEvent` as `sourceEvent`. Native
@@ -493,7 +493,7 @@ git commit -m "feat(focus): activate click targets from keyboard"
 **Interfaces:**
 
 - Produces: `findDirectionalCandidate(current, candidates, direction)`.
-- Produces: `CRCDirection = 'left' | 'right' | 'up' | 'down'`.
+- Produces: `PibblDirection = 'left' | 'right' | 'up' | 'down'`.
 - Consumes: root-logical candidate bounds from Task 2.
 
 - [ ] **Step 1: Write failing scoring tests**
@@ -634,35 +634,35 @@ git commit -m "feat(focus): contain nested directional navigation"
 - Modify: `playground/package-consumer/index.ts`
 - Modify: `playground/package-consumer/runtime.mjs`
 - Modify: `tooling/verify-packed-consumer.mjs`
-- Modify: `playground/src/crc-editor-types.txt`
+- Modify: `playground/src/pibbl-editor-types.txt`
 - Create: `packages/core/src/lib/focus/public-api.test.ts`
 
 **Interfaces:**
 
 - Produces root exports `withFocusManagement`, `withKeyboardNavigation`, and
-  `CRCKeyboardNavigationOptions`; the event plan already exports the target
+  `PibblKeyboardNavigationOptions`; the event plan already exports the target
   snapshot and navigation-bounds types these APIs consume.
 - Produces packed-consumer no-focus and with-focus optimized bundle assertions.
 
 - [ ] **Step 1: Write failing public import tests**
 
-Import both enhancers and all public focus option types from `@crc/core` in
+Import both enhancers and all public focus option types from `@pibbl/core` in
 strict Bundler and NodeNext consumers. Add a runtime smoke call that enhances an
 element and verifies its type/key/style are unchanged.
 
 - [ ] **Step 2: Add failing tree-shaking assertions**
 
 Give the focus module one stable implementation marker used by a real error
-message, for example `CRC_FOCUS_MANAGEMENT_V1`. In the packed verifier, use the
+message, for example `PIBBL_FOCUS_MANAGEMENT_V1`. In the packed verifier, use the
 repository's esbuild API to produce two optimized consumer bundles:
 
 ```ts
 // no-focus entry
-import { rect } from "@crc/core";
+import { rect } from "@pibbl/core";
 console.log(rect({ style: { width: 1, height: 1 } }));
 
 // focus entry
-import { rect, withFocusManagement } from "@crc/core";
+import { rect, withFocusManagement } from "@pibbl/core";
 console.log(withFocusManagement(rect({ style: { width: 1, height: 1 } })));
 ```
 
@@ -680,7 +680,7 @@ Expected: FAIL on missing exports or missing bundle proof.
 - [ ] **Step 4: Export root APIs without a base-runtime import edge**
 
 Re-export the enhancer modules from `packages/core/src/index.ts`. Verify
-`render.ts`, event registration, built-ins, and `crc.ts` contain no runtime
+`render.ts`, event registration, built-ins, and `pibbl.ts` contain no runtime
 import from `lib/focus/*`; they may use erased type imports and optional
 structural callbacks only.
 
@@ -704,7 +704,7 @@ Expected: PASS with focus code absent from the optimized no-focus consumer.
 - [ ] **Step 7: Commit**
 
 ```bash
-git add packages/core/src playground/package-consumer playground/src/crc-editor-types.txt tooling/verify-packed-consumer.mjs
+git add packages/core/src playground/package-consumer playground/src/pibbl-editor-types.txt tooling/verify-packed-consumer.mjs
 git commit -m "feat(core): export tree-shakable focus management"
 ```
 
@@ -726,7 +726,7 @@ git commit -m "feat(core): export tree-shakable focus management"
 
 **Interfaces:**
 
-- Consumes: public `@crc/core` imports only.
+- Consumes: public `@pibbl/core` imports only.
 - Produces: one documentation-candidate scenario driven by the same headless test.
 
 - [ ] **Step 1: Write failing catalog and behavior tests**
@@ -772,7 +772,7 @@ blur, keyed reorder, target removal, and focus-visible rendering.
 
 - [ ] **Step 6: Write implemented contract and candid accessibility guidance**
 
-Document the DOM/CRC focus split, event order, enrollment, Tab, directional
+Document the DOM/Pibbl focus split, event order, enrollment, Tab, directional
 scoring, nested boundaries, activation, visual snapshots, bundle optionality,
 and lifecycle. State plainly that internal focus is not screen-reader semantics.
 Explain application-owned Canvas fallback DOM, state synchronization, names,

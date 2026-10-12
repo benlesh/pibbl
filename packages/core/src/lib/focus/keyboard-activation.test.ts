@@ -1,19 +1,19 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type {
-  CRCEventHandlers,
-  CRCLogicalMouseEvent,
+  PibblEventHandlers,
+  PibblLogicalMouseEvent,
 } from '../events/types';
 import { executeRender } from '../execute-render';
-import { clearSharedState, getCRCInstance } from '../global-state';
+import { clearSharedState, getPibblInstance } from '../global-state';
 import { useEventListener } from '../hooks/use-event-listener';
 import { useEventTarget } from '../hooks/use-event-target';
-import { mountCRC } from '../mount-crc';
-import type { CRCElement, CRCController } from '../types';
-import type { CRCFocusManager } from './focus-manager';
+import { mountPibbl } from '../mount-pibbl';
+import type { PibblElement, PibblController } from '../types';
+import type { PibblFocusManager } from './focus-manager';
 import { focusManaged } from './policy-test-support';
 import { createElement } from '../element/create-element';
 
-const activeControllers = new Set<CRCController>();
+const activeControllers = new Set<PibblController>();
 const noop = () => undefined;
 
 beforeEach(() => {
@@ -31,7 +31,7 @@ afterEach(() => {
 describe('Enter keyboard activation', () => {
   it('runs key propagation before one synthetic click and preserves event provenance', () => {
     const trace: string[] = [];
-    let clickEvent: CRCLogicalMouseEvent | undefined;
+    let clickEvent: PibblLogicalMouseEvent | undefined;
     const Target = targetComponent();
     const Root = (_props: {}) => {
       useEventListener({
@@ -107,7 +107,7 @@ describe('Enter keyboard activation', () => {
   );
 
   it('leaves native click provenance undefined', () => {
-    let clickEvent: CRCLogicalMouseEvent | undefined;
+    let clickEvent: PibblLogicalMouseEvent | undefined;
     const Target = targetComponent();
     const mounted = mountAndRender(focusManaged(createElement(Target, {
       label: 'target',
@@ -125,7 +125,7 @@ describe('Enter keyboard activation', () => {
 
 describe('Space keyboard activation', () => {
   it('activates an onClick-only target from Space keydown and keyup', () => {
-    let clickEvent: CRCLogicalMouseEvent | undefined;
+    let clickEvent: PibblLogicalMouseEvent | undefined;
     const Target = targetComponent();
     const mounted = mountAndRender(focusManaged(createElement(Target, {
       label: 'target',
@@ -145,7 +145,7 @@ describe('Space keyboard activation', () => {
 
   it('prevents scrolling on keydown and activates once after matching keyup propagation', () => {
     const trace: string[] = [];
-    let clickEvent: CRCLogicalMouseEvent | undefined;
+    let clickEvent: PibblLogicalMouseEvent | undefined;
     const Target = targetComponent();
     const mounted = mountAndRender(focusManaged(createElement(Target, {
       label: 'target',
@@ -286,7 +286,7 @@ describe('Space keyboard activation', () => {
     const firstManager = mounted.manager;
 
     executeRender(canvas, 2, focusManaged(createElement(Second, {})));
-    const secondManager = getCRCInstance(canvas).eventRoot.focusPolicy as CRCFocusManager;
+    const secondManager = getPibblInstance(canvas).eventRoot.focusPolicy as PibblFocusManager;
     secondManager.setFocusState(secondManager.candidates[0].target, true);
     canvas.dispatchEvent(keyEvent('keyup', ' ', 'Space'));
 
@@ -301,7 +301,7 @@ describe('Space keyboard activation', () => {
 
 interface TargetProps {
   readonly label: string;
-  readonly handlers: CRCEventHandlers;
+  readonly handlers: PibblEventHandlers;
 }
 
 function targetComponent() {
@@ -315,17 +315,17 @@ function targetComponent() {
 }
 
 function mountAndRender(
-  element: CRCElement<any>,
+  element: PibblElement<any>,
   canvas = createCanvas(),
 ): {
   readonly canvas: HTMLCanvasElement;
-  readonly controller: CRCController;
-  readonly manager: CRCFocusManager;
+  readonly controller: PibblController;
+  readonly manager: PibblFocusManager;
 } {
-  const controller = mountCRC(canvas, element);
+  const controller = mountPibbl(canvas, element);
   activeControllers.add(controller);
   executeRender(canvas, 1);
-  const manager = getCRCInstance(canvas).eventRoot.focusPolicy as CRCFocusManager | undefined;
+  const manager = getPibblInstance(canvas).eventRoot.focusPolicy as PibblFocusManager | undefined;
   if (!manager) throw new Error('Expected a focus manager.');
   return { canvas, controller, manager };
 }

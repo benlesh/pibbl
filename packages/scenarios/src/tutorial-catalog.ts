@@ -22,6 +22,16 @@ const CANONICAL_SNAPSHOTS = [
   ["finished", "finished-editor"],
 ] as const;
 
+/**
+ * Validates tutorial snapshot metadata and returns the catalog.
+ *
+ * @param catalog - Tutorial snapshot catalog to validate. See {@link TutorialSnapshotCatalogEntry}
+ * .
+ * @returns The supplied catalog after successful validation; invalid metadata throws. See
+ * {@link TutorialSnapshotCatalogEntry} .
+ *
+ * @see {@link TutorialSnapshotCatalogEntry}
+ */
 export function validateTutorialSnapshotCatalog(
   catalog: readonly TutorialSnapshotCatalogEntry[],
 ): readonly TutorialSnapshotCatalogEntry[] {
@@ -231,14 +241,38 @@ const drafts = [
   },
 ] satisfies readonly TutorialSnapshotCatalogEntry[];
 
+/**
+ * Executable tutorial snapshots available in the Studio workbench.
+ *
+ * @see {@link TutorialSnapshotCatalogEntry}
+ */
 export const tutorialSnapshotCatalog = validateTutorialSnapshotCatalog(drafts);
 
+/**
+ * Finds a tutorial's executable snapshot by slug, or returns undefined.
+ *
+ * @param slug - Tutorial snapshot URL slug to look up.
+ * @returns The matching snapshot, or undefined when absent. See
+ * {@link TutorialSnapshotCatalogEntry} .
+ *
+ * @see {@link TutorialSnapshotCatalogEntry}
+ */
 export function getTutorialSnapshotBySlug(
   slug: string,
 ): TutorialSnapshotCatalogEntry | undefined {
   return tutorialSnapshotCatalog.find((entry) => entry.slug === slug);
 }
 
+/**
+ * Finds either a learning example or tutorial snapshot for the Studio workbench.
+ *
+ * @param slug - Example or tutorial snapshot URL slug to look up.
+ * @returns The matching workbench entry, or undefined when absent. See
+ * {@link LearningExampleCatalogEntry} , {@link TutorialSnapshotCatalogEntry} .
+ *
+ * @see {@link LearningExampleCatalogEntry}
+ * @see {@link TutorialSnapshotCatalogEntry}
+ */
 export function getWorkbenchEntryBySlug(
   slug: string,
 ): LearningExampleCatalogEntry | TutorialSnapshotCatalogEntry | undefined {
@@ -248,6 +282,16 @@ export function getWorkbenchEntryBySlug(
   );
 }
 
+/**
+ * Loads a tutorial snapshot's executable module on demand.
+ *
+ * @param entry - Snapshot entry whose lazy loader should run. See
+ * {@link TutorialSnapshotCatalogEntry} .
+ * @returns A promise for the loaded snapshot module. See {@link LearningExampleModule}.
+ *
+ * @see {@link TutorialSnapshotCatalogEntry}
+ * @see {@link LearningExampleModule}
+ */
 export async function loadTutorialSnapshot(
   entry: TutorialSnapshotCatalogEntry,
 ): Promise<LearningExampleModule> {

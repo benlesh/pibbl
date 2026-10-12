@@ -1,0 +1,7 @@
+{
+  "schema": "pibbl-layout-studio-smoke/1",
+  "status": "fail",
+  "provenance": "controlled-local-studio-no-served-build-attestation",
+  "steps": [],
+  "error": "TimeoutError: locator.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-scenario-action=\"clipped\"]')\u001b[22m\n"
+}

@@ -6,7 +6,7 @@ kind: api
 slug: wait
 apiCategory: function
 symbols: [wait]
-relatedTypes: [CRCAnimationProgram]
+relatedTypes: [PibblAnimationProgram]
 ---
 
 # wait
@@ -15,4 +15,4 @@ relatedTypes: [CRCAnimationProgram]
 writing signals. Output writer leases remain held across waits in an active
 composed run.
 
-Related type: [`CRCAnimationProgram`](#/api/types/canvas-runtime#crcanimationprogram).
+Related type: [`PibblAnimationProgram`](#/api/types/canvas-runtime#pibblanimationprogram).

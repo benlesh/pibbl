@@ -1,0 +1,74 @@
+[
+  {
+    "id": "target",
+    "title": "Typed event target",
+    "description": "A geometric Canvas target routes pointer, mouse, touch, wheel, keyboard, input, clipboard, and drag events.",
+    "source": "target.tsx",
+    "environment": "browser",
+    "symbols": [
+      { "name": "useCursor", "importPath": "@pibbl/core" },
+      { "name": "useEventListener", "importPath": "@pibbl/core" },
+      { "name": "useEventTarget", "importPath": "@pibbl/core" },
+      { "name": "PibblClipboardEvent", "importPath": "@pibbl/core" },
+      { "name": "PibblCompositionEvent", "importPath": "@pibbl/core" },
+      { "name": "PibblDragEvent", "importPath": "@pibbl/core" },
+      { "name": "PibblEvent", "importPath": "@pibbl/core" },
+      { "name": "PibblEventCapturePropName", "importPath": "@pibbl/core" },
+      { "name": "PibblEventHandler", "importPath": "@pibbl/core" },
+      { "name": "PibblEventHandlers", "importPath": "@pibbl/core" },
+      { "name": "PibblEventMap", "importPath": "@pibbl/core" },
+      { "name": "PibblEventParticipationOptions", "importPath": "@pibbl/core" },
+      { "name": "PibblEventPhase", "importPath": "@pibbl/core" },
+      { "name": "PibblEventPropName", "importPath": "@pibbl/core" },
+      { "name": "PibblEventTarget", "importPath": "@pibbl/core" },
+      { "name": "PibblEventTargetOptions", "importPath": "@pibbl/core" },
+      { "name": "PibblEventTargetSnapshot", "importPath": "@pibbl/core" },
+      { "name": "PibblEventType", "importPath": "@pibbl/core" },
+      { "name": "PibblFocusEvent", "importPath": "@pibbl/core" },
+      { "name": "PibblInputEvent", "importPath": "@pibbl/core" },
+      { "name": "PibblKeyboardEvent", "importPath": "@pibbl/core" },
+      { "name": "PibblLogicalMouseEvent", "importPath": "@pibbl/core" },
+      { "name": "PibblPointerEvent", "importPath": "@pibbl/core" },
+      { "name": "PibblPointerEvents", "importPath": "@pibbl/core" },
+      { "name": "PibblTouchEvent", "importPath": "@pibbl/core" },
+      { "name": "PibblWheelEvent", "importPath": "@pibbl/core" }
+    ],
+    "notes": [
+      "Canvas events remain logical Pibbl events; this example does not create native semantic DOM for the target.",
+      "Clipboard, input, composition, and drag fields are typed callbacks; their native browser events require an appropriate focused host or interaction."
+    ]
+  },
+  {
+    "id": "focus",
+    "title": "Focus and arrow navigation",
+    "description": "Two logical targets participate in Tab focus and directional keyboard navigation.",
+    "source": "focus.tsx",
+    "environment": "browser",
+    "symbols": [
+      { "name": "FocusManagement", "importPath": "@pibbl/core" },
+      { "name": "KeyboardNavigation", "importPath": "@pibbl/core" },
+      { "name": "PibblKeyboardNavigationOptions", "importPath": "@pibbl/core" },
+      { "name": "FocusManagementProps", "importPath": "@pibbl/core" },
+      { "name": "KeyboardNavigationProps", "importPath": "@pibbl/core" }
+    ],
+    "notes": [
+      "FocusManagement uses Canvas as a native focus host; it does not create an accessibility tree or semantic HTML controls."
+    ]
+  },
+  {
+    "id": "paths",
+    "title": "Memoized hit paths",
+    "description": "Rectangle, line, and SVG path hooks define three independent geometric click targets.",
+    "source": "paths.tsx",
+    "environment": "browser",
+    "symbols": [
+      { "name": "useRectPath", "importPath": "@pibbl/core" },
+      { "name": "useLinePath", "importPath": "@pibbl/core" },
+      { "name": "useSvgPath", "importPath": "@pibbl/core" },
+      { "name": "PixelGridAlignment", "importPath": "@pibbl/core" }
+    ],
+    "notes": [
+      "Path hooks are render-only and memoize native Path2D geometry; the painted paths opt out of pointer targeting so the hook targets receive clicks."
+    ]
+  }
+]

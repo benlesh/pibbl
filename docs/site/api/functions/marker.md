@@ -6,7 +6,7 @@ kind: api
 slug: marker
 apiCategory: function
 symbols: [marker]
-relatedTypes: [CRCAnimationProgram, CRCPlaybackEvent]
+relatedTypes: [PibblAnimationProgram, PibblPlaybackEvent]
 ---
 
 # marker
@@ -15,5 +15,5 @@ relatedTypes: [CRCAnimationProgram, CRCPlaybackEvent]
 marker while sampling and delivers its event in Complete, after committed
 values have been planned and rendered.
 
-Related types: [`CRCAnimationProgram`](#/api/types/canvas-runtime#crcanimationprogram)
-and [`CRCPlaybackEvent`](#/api/types/canvas-runtime#crcplaybackevent).
+Related types: [`PibblAnimationProgram`](#/api/types/canvas-runtime#pibblanimationprogram)
+and [`PibblPlaybackEvent`](#/api/types/canvas-runtime#pibblplaybackevent).

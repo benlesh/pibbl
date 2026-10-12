@@ -1,14 +1,15 @@
+import type { SvgPathProps } from './svg-path.js';
 import { drawSimpleStretchedTexture, resolveTexturePaint } from '../textures/texture-protocol.js';
 import { getLayoutBox } from '../layout/context.js';
 import { resolvePath } from '../geometry/resolve-path.js';
 import { definePrimitive } from '../define-primitive.js';
 import type {
-  CRCEventFocusOptions,
-  CRCEventHandlers,
-  CRCEventParticipationOptions,
+  PibblEventFocusOptions,
+  PibblEventHandlers,
+  PibblEventParticipationOptions,
 } from '../events/types.js';
 import { RenderingContext2D } from '../types.js';
-import type { CRCPhysics2DPropExtension } from '../types.js';
+import type { PibblPhysics2DPropExtension } from '../types.js';
 import { stripLayoutParticipation } from '../style/resolve-built-in.js';
 import { registerOpaqueStyleProperties } from '../style/resolve-dispatch.js';
 import type { PathStyle, ResolvedPathStyle } from '../style/types.js';
@@ -16,7 +17,16 @@ import type { StyleResolutionContext } from '../types.js';
 import { isTransparent } from '../util/is-transparent.js';
 import { wireCommonEvents } from '../util/wire-common-events.js';
 
-export interface PathProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions, CRCPhysics2DPropExtension {}
+/**
+ * Authored inputs for Path, including the declared data and presentation options.
+ *
+ * @see {@link PibblEventHandlers}
+ * @see {@link PibblEventParticipationOptions}
+ * @see {@link PibblPhysics2DPropExtension}
+ * @see {@link Path}
+ * @see {@link SvgPathProps}
+ */
+export interface PathProps extends PibblEventHandlers, PibblEventFocusOptions, PibblEventParticipationOptions, PibblPhysics2DPropExtension {}
 
 export function renderPath(
   props: PathProps,
@@ -60,6 +70,13 @@ export function renderPath(
 
 /**
  * Describes a Canvas path primitive for JSX or createElement authoring.
+ *
+ * @param props - Authored component inputs, supplied through JSX or createElement. See the linked
+ * props and style types.
+ * @throws When called directly; Pibbl mounts this component through JSX or createElement.
+ *
+ * @see {@link PathProps}
+ * @see {@link PathStyle}
  */
 export const Path = definePrimitive<
   PathProps,

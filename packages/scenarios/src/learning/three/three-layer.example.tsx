@@ -1,15 +1,15 @@
-import { dropShadow } from '@crc/core/filters';
-/** @jsxImportSource @crc/core */
+import { dropShadow } from '@pibbl/core/filters';
+/** @jsxImportSource @pibbl/core */
 import {
   FocusManagement,
   Group,
   Rectangle,
   Text,
-  crc,
+  pibbl,
   useSignal,
-  type CRCController,
-} from '@crc/core';
-import { defineThreeLayer } from '@crc/three';
+  type PibblController,
+} from '@pibbl/core';
+import { defineThreeLayer } from '@pibbl/three';
 import {
   Color,
   HemisphereLight,
@@ -137,13 +137,13 @@ function ThreeLayerLesson() {
         pointerEvents="none"
         style={{ left: 28, top: 36, fill: '#f8fafc', font: '700 22px Arial' }}
         >
-          Three.js inside CRC
+          Three.js inside Pibbl
         </Text>
         <Text
         pointerEvents="none"
         style={{ left: 28, top: 62, fill: '#bfdbfe', font: '14px Arial' }}
         >
-          Blue blocks the Canvas · gold is a CRC target · empty pixels pass through
+          Blue blocks the Canvas · gold is a Pibbl target · empty pixels pass through
         </Text>
         <Text
         pointerEvents="none"
@@ -156,6 +156,6 @@ function ThreeLayerLesson() {
   );
 }
 
-export default function mount(canvas: HTMLCanvasElement): CRCController {
-  return crc(canvas, <ThreeLayerLesson />);
+export default function mount(canvas: HTMLCanvasElement): PibblController {
+  return pibbl(canvas, <ThreeLayerLesson />);
 }

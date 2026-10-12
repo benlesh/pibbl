@@ -6,16 +6,16 @@ kind: api
 slug: group
 apiCategory: component
 symbols: [Group]
-relatedTypes: [Canvas, CRCNode, GStyle, GroupProps]
+relatedTypes: [Canvas, PibblNode, GStyle, GroupProps]
 ---
 
 # Group
 
 ```ts
-import { Group, Rectangle } from "@crc/core";
+import { Group, Rectangle } from "@pibbl/core";
 ```
 
-`Group` uses [`GroupProps`](#/api/types/elements-components#groupprops) and [`GStyle`](#/api/types/styles#gstyle) to transform recursive [`CRCNode`](#/api/types/elements-components#crcnode)
+`Group` uses [`GroupProps`](#/api/types/elements-components#groupprops) and [`GStyle`](#/api/types/styles#gstyle) to transform recursive [`PibblNode`](#/api/types/elements-components#pibblnode)
 children. Interaction regions, clips, layers, and paint share the transformed
 [`Canvas`](#/api/types/canvas-runtime#canvas) geometry. A receiving filter captures the group's recursive output before its
 own transform is presented.

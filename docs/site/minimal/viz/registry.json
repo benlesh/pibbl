@@ -1,0 +1,904 @@
+[
+  {
+    "id": "scales",
+    "title": "Scales and axes",
+    "description": "Create band and linear scales with a typed axis and inspect resolved mappings.",
+    "source": "scales.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "LinearScale",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "BarScale",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "useLinearScale",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "useBarScale",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "ScaleId",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "LinearDomain",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "BandCategory",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "BandDomain",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "BarScaleProps",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "BandScaleRange",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "ResolvedBandScale",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "ScaleRange",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "ScaleLayoutStyle",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "LinearScaleProps",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "ResolvedLinearScale",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "ResolvedScale",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "Axis",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "AxisStyle",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "AxisProps",
+        "importPath": "@pibbl/core/viz"
+      }
+    ],
+    "notes": [
+      "Creates its own canvas and disposes the Pibbl mount on pagehide."
+    ]
+  },
+  {
+    "id": "lines",
+    "title": "Line series",
+    "description": "Plot readings with a nullable gap and a scale-adjusted marker.",
+    "source": "lines.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "LineSeries",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "ScaleAdjust",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "LineCoordinate",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "LineAccessor",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "LineCurve",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "LineSeriesStyle",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "LineSeriesProps",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "ScaleAdjustProps",
+        "importPath": "@pibbl/core/viz"
+      }
+    ],
+    "notes": [
+      "Shows isolated line marks and a nullable gap, not a complete chart with axes."
+    ]
+  },
+  {
+    "id": "points",
+    "title": "Point and custom plot series",
+    "description": "Render styled point marks and custom keyed point content.",
+    "source": "points.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "PointSeries",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "PointAccessor",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "PointMarkStyle",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "PointSeriesStyle",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "PointStyleResolver",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "PointSeriesProps",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "PlotSeries",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "PlotSeriesProps",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "PlotKeyAccessor",
+        "importPath": "@pibbl/core/viz"
+      }
+    ],
+    "notes": [
+      "Shows isolated point marks and keyed content, not a complete chart with axes."
+    ]
+  },
+  {
+    "id": "bars",
+    "title": "Threshold-colored bars",
+    "description": "Render category bars with a typed style resolver and threshold fill.",
+    "source": "bars.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "BarSeries",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "BarThresholdFill",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "BarCategoryAccessor",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "BarSeriesStyle",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "BarStyleResolver",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "BarSeriesProps",
+        "importPath": "@pibbl/core/viz"
+      }
+    ],
+    "notes": [
+      "Creates its own canvas and disposes the Pibbl mount on pagehide."
+    ]
+  },
+  {
+    "id": "pie",
+    "title": "Pie chart composition",
+    "description": "Compute pie geometry and render labeled donut slices.",
+    "source": "pie.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "pieSlices",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "PieOptions",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "PieSliceGeometry",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "PieLayout",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "PieSlice",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "PieLabel",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "PieLayoutProps",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "PieLayoutStyle",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "PieLayoutSlice",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "PieLabelPlacement",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "PieLabelLayout",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "PieSliceProps",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "PieSliceStyle",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "PieLabelProps",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "PieLabelStyle",
+        "importPath": "@pibbl/core/viz"
+      }
+    ],
+    "notes": [
+      "Creates its own canvas and disposes the Pibbl mount on pagehide."
+    ]
+  },
+  {
+    "id": "nearest",
+    "title": "Nearest-point lookup",
+    "description": "Locate the nearest observation in pixel and domain space.",
+    "source": "nearest.ts",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "nearestDomainValue",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "nearestPoint",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "NearestPointOptions",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "NearestPoint",
+        "importPath": "@pibbl/core/viz"
+      }
+    ],
+    "notes": [
+      "Displays the nearest value and domain coordinate in the document."
+    ]
+  },
+  {
+    "id": "hover-queries",
+    "title": "Hover query helpers",
+    "description": "Run closest-point, closest-x, and interpolated-x queries against a scale context.",
+    "source": "hover-queries.ts",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "defineSeries",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "closestPoint",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "closestX",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "interpolateX",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "linearInterpolation",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "HoverQueryContext",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "HoverQuery",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "HoverSeries",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "HoverPoint",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "HoverHit",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "HoverSeriesMap",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "ClosestPointHit",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "ClosestPointOptions",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "ClosestXOptions",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "ClosestXHit",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "HoverInterpolation",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "InterpolateXOptions",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "HoverSample",
+        "importPath": "@pibbl/core/viz"
+      }
+    ],
+    "notes": ["Displays three query results in the document."]
+  },
+  {
+    "id": "hover-card",
+    "title": "Hover inspection card",
+    "description": "Display a measured point in a bounded hover card.",
+    "source": "hover-card.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "HoverData",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "HoverDataProps",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "HoverCard",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "HoverCardProps",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "HoverCardStyle",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "HoverBounds",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "HoverPlacement",
+        "importPath": "@pibbl/core/viz"
+      }
+    ],
+    "notes": [
+      "Creates its own canvas and disposes the Pibbl mount on pagehide."
+    ]
+  },
+  {
+    "id": "anchored",
+    "title": "Anchored callouts",
+    "description": "Arrange labeled callouts while clearing their anchor points.",
+    "source": "anchored.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "AnchoredLayout",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "AnchoredItem",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "AnchoredPlacement",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "AnchoredLayoutProps",
+        "importPath": "@pibbl/core/viz"
+      }
+    ],
+    "notes": [
+      "Creates its own canvas and disposes the Pibbl mount on pagehide."
+    ]
+  },
+  {
+    "id": "utc",
+    "title": "UTC scales and domain helpers",
+    "description": "Render real NOAA observations with UTC calendar ticks, numeric extents and outward domain rounding.",
+    "source": "utc.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "extent",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "niceUTCDomain",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "NumericDomain",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "UtcDomain",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "UTCScaleProps",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "ResolvedUtcScale",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "ResolvedContinuousScale",
+        "importPath": "@pibbl/core/viz"
+      }
+    ]
+  },
+  {
+    "id": "utc-numeric",
+    "title": "UTC dates across New Year",
+    "description": "Keep month, day, and year visible when a calendar axis crosses into a new year.",
+    "source": "utc-numeric.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "UTCScale",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "useUTCScale",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "Axis",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "utcTickLabels",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "UTCTickLabelOptions",
+        "importPath": "@pibbl/core/viz"
+      }
+    ],
+    "notes": [
+      "The dates run from December 30, 2025 through January 2, 2026. Tick labels always use UTC, regardless of the browser\u2019s local time zone.",
+      "Creates its own canvas and disposes the mount on pagehide."
+    ]
+  },
+  {
+    "id": "log-scale",
+    "title": "File sizes across orders of magnitude",
+    "description": "Multiplying the size by ten moves the same distance.",
+    "source": "log-scale.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "LogScale",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "useLogScale",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "LogScaleProps",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "ResolvedLogScale",
+        "importPath": "@pibbl/core/viz"
+      }
+    ],
+    "notes": [
+      "Compare 1, 10, 100, and 1,000 KB: equal ratios occupy equal distances. LogScale requires a strictly positive domain; use SymlogScale when values cross zero."
+    ]
+  },
+  {
+    "id": "symlog-scale",
+    "title": "Daily inventory changes",
+    "description": "Negative means shipped; positive means received.",
+    "source": "symlog-scale.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "SymlogScale",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "useSymlogScale",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "SymlogScaleProps",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "ResolvedSymlogScale",
+        "importPath": "@pibbl/core/viz"
+      }
+    ],
+    "notes": [
+      "Compare inventory changes of \u2212100, \u221210, 0, +10, and +100 units. The constant of 10 keeps the region near zero more linear while compressing larger changes. These are illustrative changes, not a time series."
+    ]
+  },
+  {
+    "id": "point-scale",
+    "title": "Checkpoints in a review",
+    "description": "Categories have equal spacing, not numeric distance.",
+    "source": "point-scale.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "PointScale",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "usePointScale",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "PointScaleProps",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "ResolvedPointScale",
+        "importPath": "@pibbl/core/viz"
+      }
+    ],
+    "notes": [
+      "Draft, Review, and Approved are ordered categories. PointScale assigns zero-width positions with equal spacing; it does not imply equal elapsed time. Use BarScale when marks need category widths."
+    ]
+  },
+  {
+    "id": "numeric-ticks",
+    "title": "Readable numeric ticks",
+    "description": "Round a temperature range outward and format evenly spaced tick labels with units.",
+    "source": "numeric-ticks.ts",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "linearTicks",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "niceLinearDomain",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "formatNumber",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "LinearTickOptions",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "NumberFormatOptions",
+        "importPath": "@pibbl/core/viz"
+      }
+    ],
+    "notes": [
+      "These illustrative temperature bounds demonstrate numeric axis preparation. No dates or time zones are involved."
+    ]
+  },
+  {
+    "id": "chart-guides",
+    "title": "A target zone and reference line",
+    "description": "Compare three tank-fill readings with a shaded target zone, a target line, and percentage grid lines.",
+    "source": "chart-guides.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "GridLines",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "ReferenceLine",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "ReferenceBand",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "ChartLineProps",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "GridLinesProps",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "ReferenceLineProps",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "ReferenceBandProps",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "AxisTitle",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "AxisTitleProps",
+        "importPath": "@pibbl/core/viz"
+      }
+    ],
+    "notes": [
+      "The readings and 40\u201360% target zone are illustrative. The shaded region is a chosen operating zone, not a statistical confidence interval.",
+      "Paint the band first, then grid and target lines, then data marks. Explicit pixel spans keep guides aligned with the plot.",
+      "Creates its own canvas and disposes the mount on pagehide.",
+      "Axis titles name the measured quantity and units. The composition reserves space outside the plot; AxisTitle does not allocate margins."
+    ]
+  },
+  {
+    "id": "area",
+    "title": "Area and gaps",
+    "description": "Fill runs to an explicit reference baseline.",
+    "source": "area.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "AreaSeries",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "AreaSeriesProps",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "AreaSeriesStyle",
+        "importPath": "@pibbl/core/viz"
+      }
+    ],
+    "notes": [
+      "NOAA monthly means; March deliberately omitted to demonstrate a gap. Fill is distance above 330 ppm, not emissions.",
+      "Creates its own canvas and disposes on pagehide."
+    ]
+  },
+  {
+    "id": "interval-band",
+    "title": "Observed interval band",
+    "description": "Map paired published lower/upper observations into a filled band.",
+    "source": "interval-band.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "IntervalBandSeries",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "IntervalBandSeriesProps",
+        "importPath": "@pibbl/core/viz"
+      }
+    ],
+    "notes": [
+      "NOAA daily temperature extrema, not uncertainty. No averaging or aggregation occurs.",
+      "Creates its own canvas and disposes on pagehide."
+    ]
+  },
+  {
+    "id": "steps",
+    "title": "Named step definitions",
+    "description": "Compare before, midpoint, and after jumps between the same endpoints.",
+    "source": "steps.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "SeriesCurve",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "stepBefore",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "stepAfter",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "stepMidpoint",
+        "importPath": "@pibbl/core/viz"
+      }
+    ],
+    "notes": [
+      "Illustrative geometry only. The full policy example supplies attributed held values.",
+      "Creates its own canvas and disposes on pagehide."
+    ]
+  },
+  {
+    "id": "monotone",
+    "title": "Monotone observations",
+    "description": "Smooth measured observations without introducing extrema.",
+    "source": "monotone.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "monotoneX",
+        "importPath": "@pibbl/core/viz"
+      }
+    ]
+  },
+  {
+    "id": "categories",
+    "title": "Categorical series",
+    "description": "Map original category identities with line and point marks.",
+    "source": "categories.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "SeriesAccessor",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "SeriesCoordinate",
+        "importPath": "@pibbl/core/viz"
+      }
+    ]
+  },
+  {
+    "id": "navigation",
+    "title": "Bounded domain navigation",
+    "description": "Pan and zoom by mapping and inverting an explicit continuous scale.",
+    "source": "navigation.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "panDomain",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "zoomDomain",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "DomainNavigationConstraints",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "PanDomainOptions",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "ZoomDomainOptions",
+        "importPath": "@pibbl/core/viz"
+      }
+    ]
+  },
+  {
+    "id": "colors",
+    "title": "Explicit color scales",
+    "description": "Map real observations with dedicated providers and authored palettes.",
+    "source": "colors.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "ColorScaleStop",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "SequentialColorScale",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "useSequentialColorScale",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "SequentialColorScaleProps",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "ResolvedSequentialColorScale",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "DivergingColorScale",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "useDivergingColorScale",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "DivergingColorScaleProps",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "ResolvedDivergingColorScale",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "ThresholdColorScale",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "useThresholdColorScale",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "ThresholdColorScaleProps",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "ResolvedThresholdColorScale",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "ThresholdColorBand",
+        "importPath": "@pibbl/core/viz"
+      }
+    ]
+  }
+]

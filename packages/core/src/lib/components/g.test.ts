@@ -1,4 +1,4 @@
-import { dropShadow, blur } from '@crc/core/filters';
+import { dropShadow, blur } from '@pibbl/core/filters';
 import { page } from 'vitest/browser';
 import { describe, expect, it, vi } from 'vitest';
 import { componentTest } from '../test-utils/component-test';

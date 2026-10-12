@@ -1,8 +1,8 @@
 import { definePrimitive } from "../define-primitive.js";
 import type {
-  CRCEventFocusOptions,
-  CRCEventHandlers,
-  CRCEventParticipationOptions,
+  PibblEventFocusOptions,
+  PibblEventHandlers,
+  PibblEventParticipationOptions,
 } from "../events/types.js";
 import {
   resolveLocalOffset,
@@ -18,7 +18,7 @@ import type {
   ResolvedDrawingStyle,
 } from "../style/types.js";
 import type { RenderingContext2D, SystemStyle } from "../types.js";
-import type { CRCPhysics2DPropExtension } from "../types.js";
+import type { PibblPhysics2DPropExtension } from "../types.js";
 import { arcBounds } from "./arc-geometry.js";
 import {
   createArcPath,
@@ -31,21 +31,45 @@ import {
   resolveNonnegativeShapeLength,
 } from "./shape-style.js";
 
-export interface ArcProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions, CRCPhysics2DPropExtension {}
+/**
+ * Authored inputs for Arc, including the declared data and presentation options.
+ *
+ * @see {@link PibblEventHandlers}
+ * @see {@link PibblEventParticipationOptions}
+ * @see {@link PibblPhysics2DPropExtension}
+ * @see {@link Arc}
+ */
+export interface ArcProps extends PibblEventHandlers, PibblEventFocusOptions, PibblEventParticipationOptions, PibblPhysics2DPropExtension {}
 
+/**
+ * Supported geometry and presentation properties for Arc.
+ *
+ * @see {@link SystemStyle}
+ * @see {@link PaintStyle}
+ * @see {@link CursorStyle}
+ * @see {@link BoxStyle}
+ * @see {@link LayoutItemStyle}
+ * @see {@link Length}
+ * @see {@link Arc}
+ */
 export interface ArcStyle
-  extends
-    SystemStyle,
-    Omit<PaintStyle, "fill">,
-    CursorStyle,
-    BoxStyle,
-    LayoutItemStyle {
+  extends SystemStyle, Omit<PaintStyle, "fill">, CursorStyle, BoxStyle, LayoutItemStyle {
+  /** Radius in the coordinate system of this geometry or effect. See {@link Length}. */
   radius: Exclude<Length, "auto">;
+  /** Angle at which the arc or slice begins. See {@link ArcStyle}. */
   startAngle: number;
+  /** Angle at which the arc or slice ends. See {@link ArcStyle}. */
   endAngle: number;
+  /** Horizontal coordinate of the center. See {@link Length}. */
   cx?: Exclude<Length, "auto">;
+  /** Vertical coordinate of the center. See {@link Length}. */
   cy?: Exclude<Length, "auto">;
+  /** Whether the arc follows the counterclockwise direction. See {@link ArcStyle}. */
   counterclockwise?: boolean;
+  /**
+   * Width used for line hit testing independently of the visible stroke width. See
+   * {@link ArcStyle}.
+   */
   lineInteractionWidth?: number;
 }
 
@@ -104,7 +128,16 @@ function renderArc(
   );
 }
 
-/** Describes an open circular arc primitive for JSX or createElement authoring. */
+/**
+ * Describes an open circular arc primitive for JSX or createElement authoring.
+ *
+ * @param props - Authored component inputs, supplied through JSX or createElement. See the linked
+ * props and style types.
+ * @throws When called directly; Pibbl mounts this component through JSX or createElement.
+ *
+ * @see {@link ArcProps}
+ * @see {@link ArcStyle}
+ */
 export const Arc = definePrimitive<
   ArcProps,
   ArcStyle,

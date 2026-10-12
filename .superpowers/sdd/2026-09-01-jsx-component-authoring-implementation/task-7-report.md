@@ -6,7 +6,7 @@
 
 Task 7 is implemented and ready to commit.
 
-- Workspace: `/private/tmp/crc-jsx-component-authoring`
+- Workspace: `/private/tmp/pibbl-jsx-component-authoring`
 - Branch: `codex/jsx-component-authoring`
 - Required start: `41f2c4af51b89d5c1e21ff8c1502d8310e59179d`
 - Runtime: Node `v26.7.0`, pnpm `11.21.0`
@@ -17,7 +17,7 @@ Task 7 is implemented and ready to commit.
 
 Public `Absolute`, `Overlay`, `Flow`, `Flex`, and `Grid` are now descriptive
 `definePrimitive` component values. Each accepts the complete recursive
-`CRCNode` child algebra, materializes one finite frozen direct-element array at
+`PibblNode` child algebra, materializes one finite frozen direct-element array at
 its receiving render or measurement boundary, and reuses that same array for
 inspection, measurement, placement, and paint preparation.
 
@@ -51,7 +51,7 @@ converted.
 ### Immutable elements and private placement metadata
 
 - Replaced every layout `{ ...child }` structural clone with
-  `cloneCRCElement`. Measurement and paint clones are branded, immutable CRC
+  `clonePibblElement`. Measurement and paint clones are branded, immutable Pibbl
   elements that preserve props, key, JSX development source, legacy adapter
   props, and other private metadata.
 - Used-size and pre-normalized style overrides remain private WeakMap metadata
@@ -61,11 +61,11 @@ converted.
   tokens.
 - Removed `isPreNormalizedElement` and the child traversal exception that
   authenticated unbranded object spreads through a WeakMap. Child traversal
-  now admits only branded CRC elements.
+  now admits only branded Pibbl elements.
 - Direct-child declared style continues to come from
   `element.props.style`. A plain child receives the same author props and the
   exact same specified style object by identity; its finite used allocation is
-  available only through `crcLayoutBox()` and the private placement wrapper.
+  available only through `pibblLayoutBox()` and the private placement wrapper.
 - Placement identity still preserves the original child component type, key,
   and unkeyed occurrence. Keyed reorder evidence covers every layout
   algorithm.
@@ -133,7 +133,7 @@ RED command then retained all 120 inherited passes and failed the new suite at
 the intended missing public surface:
 
 ```text
-SyntaxError: @crc/core does not provide an export named `Absolute`
+SyntaxError: @pibbl/core does not provide an export named `Absolute`
 Test Files  1 failed | 11 passed (12)
 Tests       120 passed (120)
 ```
@@ -213,7 +213,7 @@ git diff --check
 tsc --noEmit: passed
 ESLint: passed
 Prettier: all matched files use Prettier code style
-@crc/core declarations and ESM bundles: passed
+@pibbl/core declarations and ESM bundles: passed
 git diff --check: no output
 ```
 
@@ -252,7 +252,7 @@ reported `112770` no-focus bytes versus `136083` with-focus bytes.
 - Verified used-size and measurement clones are branded and immutable and that
   no unbranded child exception remains.
 - Verified plain component props and `props.style` identity are unchanged while
-  `crcLayoutBox()` supplies finite local allocation.
+  `pibblLayoutBox()` supplies finite local allocation.
 - Verified primitive style normalization is reused rather than repeated and
   allocation syntax is finite before primitive dispatch.
 - Verified per-occurrence receiver tokens remain distinct for descriptor reuse
@@ -291,7 +291,7 @@ Both review blockers are resolved.
   `measureElement` calls materialize independently. Direct `layoutFlow`,
   `layoutFlex`, and `layoutGrid` calls remain uncached and retain their existing
   one-call semantics.
-- `cloneCRCElement` now copies registered private WeakMap-backed annotations.
+- `clonePibblElement` now copies registered private WeakMap-backed annotations.
   Enhancer/policy descriptor arrays are stored frozen and each clone receives a
   distinct frozen array containing the same readonly descriptor identities.
   Mounted enhancer ownership is deliberately not copied.
@@ -299,7 +299,7 @@ Both review blockers are resolved.
   occur for the final painted element. Absolute, Flow, Flex, and Grid placement
   clones retain custom enhancers. A measured and placed Grid child retains the
   existing `withFocusManagement` plus `withKeyboardNavigation` semantics,
-  component identity, CRC brand, development freeze, and private-only metadata.
+  component identity, Pibbl brand, development freeze, and private-only metadata.
 - No public element field or forgeable object exception was introduced. The
   existing focus functions and lowercase layout adapters remain unchanged for
   Tasks 8 and 12 respectively.

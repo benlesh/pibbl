@@ -1,38 +1,41 @@
 ---
 id: api-component-scale
-title: Scale
-summary: Provides a named reactive linear or band scale in its local allocation.
+title: Scale providers
+summary: Provides a named reactive linear, UTC, or band scale in its local allocation.
 kind: api
 slug: scale
 apiCategory: component
 symbols:
   [
-    Scale,
+    LinearScale,
+    BarScale,
+    UTCScale,
     ScaleId,
     LinearDomain,
     BandCategory,
     BandDomain,
-    BandScaleProps,
+    BarScaleProps,
     BandScaleRange,
     ResolvedBandScale,
     ScaleRange,
     ScaleLayoutStyle,
     LinearScaleProps,
-    ScaleProps,
     ResolvedLinearScale,
     ResolvedScale,
   ]
 keywords: [visualization, scale, domain, range, signals]
 ---
 
-# Scale
+# Scale providers
 
-Import `Scale` and its types from `@crc/viz`. Use the core JSX runtime.
+Import `LinearScale`, `BarScale`, `UTCScale`, and their types from `@pibbl/core/viz`. Use the core JSX runtime.
 
-`ScaleProps` is `LinearScaleProps | BandScaleProps`. Linear scales require `id`, `type: "linear"`,
-`domain`, and `range`; optional `reverse`, `style`, and `children`. `ScaleId` is a
-nonempty string or a symbol. Nested providers shadow the nearest matching ID;
-siblings and independent roots cannot see each other's providers.
+Each provider requires `id`, `domain`, and `range`, with optional `reverse`,
+`style`, and `children`. `BarScale` also accepts `paddingInner` and `paddingOuter`.
+There is no `type` prop. The corresponding props are `LinearScaleProps`,
+`BarScaleProps`, and `UTCScaleProps` (see [UTC domains](#/api/functions/utc-domains)).
+`ScaleId` is a nonempty string or symbol. Nested providers shadow the nearest
+matching ID; siblings and independent roots cannot see each other's providers.
 
 `LinearDomain` contains two finite, unequal numbers, ascending or descending.
 `ScaleRange` is a finite numeric pair, `"width"`, or `"height"`. Allocation ranges
@@ -45,7 +48,7 @@ styles and direct fields may be core signals. Scale does not paint, transform,
 reserve gutters, or create a global chart rectangle. Its children receive the
 same allocation; put gutters and placement in ordinary core layout.
 
-`ResolvedScale` is `ResolvedLinearScale | ResolvedBandScale`. The linear snapshot has:
+`ResolvedScale` is `ResolvedContinuousScale | ResolvedBandScale`. The linear snapshot has:
 
 - `type`, `domain`, and `range` describe the mapping.
 - `frame` has local x/y zero and the allocation's width/height.
@@ -55,18 +58,19 @@ same allocation; put gutters and placement in ordinary core layout.
 - `ticks(count = 5)` returns evenly spaced values including both domain ends.
   Count must be an integer from 2 through 100. These are not calendar or nice ticks.
 
-Use [`useScale`](#/api/hooks/use-scale) to read the scale signal. Definitions are
+Use [`useLinearScale`](#/api/hooks/use-scale) to read the scale signal. Definitions are
 lazy; malformed resolved inputs throw on evaluation. Nonfinite arithmetic results
 also throw. Updating a signal or allocation refreshes the existing scale signal;
 equivalent domain/range/frame values suppress downstream invalidation.
 
 A scale provider and consumer must share one rendering instance. Put the complete
 scale subtree inside a `Layer`; lookup across a Layer boundary is unsupported.
-Time, logarithmic, and auto-domain scales are deferred.
+UTC calendar scales are available; see [UTC domains](#/api/functions/utc-domains).
+Local time, logarithmic, and auto-domain scales remain deferred.
 
 ## Band scales
 
-Use `type="band"` with an explicit ordered `BandDomain` of strings or finite
+Use `BarScale` with an explicit ordered `BandDomain` of strings or finite
 numbers (`BandCategory`). Identity uses SameValueZero: `1` and `"1"` are distinct;
 `-0` and `0` are the same category. Duplicate entries reject. Input order is
 preserved, and empty domains are valid. Unknown categories map to `undefined`.
@@ -78,7 +82,7 @@ Bandwidth = step * (1 - paddingInner); remaining space is centered. Empty domain
 have zero step/bandwidth. Collapsed ranges have zero bandwidth. Reverse changes
 category placement, while each `map(category)` remains the lower pixel edge.
 
-Read `useScale(id, "band").get()` for the immutable `ResolvedBandScale`: `domain`,
+Read `useBarScale(id).get()` for the immutable `ResolvedBandScale`: `domain`,
 `range`, `frame`, `step`, `bandwidth`, and `map(category)`. There is no numeric
 inversion or tick method. Labels can use `map(category) + bandwidth / 2`.
 Domain, padding, reverse, and range accept signals and follow local allocation.
@@ -86,7 +90,7 @@ For nested bands, `BandScaleRange` additionally accepts
 `{ bandwidthOf: ancestorId }`. It resolves to `[0, ancestor.bandwidth]`,
 reacting to ancestor domain, padding, and allocation changes. The reference
 must identify a visible ancestor band scale in the same rendering instance.
-Nearest matching scope wins, as with `useScale`. Missing references and wrong
+Nearest matching scope wins, as with `useLinearScale`. Missing references and wrong
 scale families reject. Ancestor-only lookup prevents circular references.
 Zero ancestor bandwidth produces a collapsed range. The inner frame remains
 the layout allocation; only its range uses the ancestor bandwidth. Linear

@@ -9,7 +9,7 @@
 
 **Goal:** Resume the original composition-first WebGL goal and fold its approved lighting, materials, backgrounds, orbit-camera, and genuine-shadow work into one implementation stream that becomes browser-visible early.
 
-**Architecture:** `WebGLLayer` continues to compose one CPU-only scene, settle the completed declarations, render required light-space depth maps, render the main opaque/transparent queues, transfer one bitmap, and transactionally publish bitmap/pick/focus generations. `useOrbitCamera()` returns plain pose values plus stable ordinary CRC event handlers; it does not create a camera instance or add controls to `WebGLLayer`.
+**Architecture:** `WebGLLayer` continues to compose one CPU-only scene, settle the completed declarations, render required light-space depth maps, render the main opaque/transparent queues, transfer one bitmap, and transactionally publish bitmap/pick/focus generations. `useOrbitCamera()` returns plain pose values plus stable ordinary Pibbl event handlers; it does not create a camera instance or add controls to `WebGLLayer`.
 
 **Binding specs:**
 
@@ -21,16 +21,16 @@
 - Work only in `/Users/benlesh/GitHub/crc/.worktrees/webgl-lighting-materials` on `codex/webgl-lighting-materials`. Never modify the main checkout.
 - Existing commits through `5e9e5e9` already provide settled-scene lighting, Lambert materials/emission, solid backgrounds, and eleven same-scene lessons. Preserve that work.
 - Use a fresh implementation subagent and a separate review subagent for each task. Implementation subagents must not spawn their own agents.
-- Every runtime change starts with focused failing evidence. Tasks 1-4 may run only their named tests/checks and a narrow `@crc/webgl` build.
+- Every runtime change starts with focused failing evidence. Tasks 1-4 may run only their named tests/checks and a narrow `@pibbl/webgl` build.
 - Do not run `trust`, `trust:*`, `test:ci`, packed consumers, broad lifecycle/performance suites, visual aggregates, or baseline updates during Tasks 1-4.
 - After Task 1, start the Studio from this worktree and give the user `http://127.0.0.1:5173/#/examples/webgl/multiple-lights` immediately. Keep the server available while later slices land.
 - Task 1 completes orbit plus genuine directional shadows end to end. Task 2 completes genuine point shadows and updates its same-scene lesson. Task 3 completes genuine spot shadows and updates its same-scene lesson.
 - Task 4 makes all twelve lessons and the deterministic lighting laboratory browser-visible, then stops for the user's visual inspection. Do not begin Task 5 until the user explicitly approves the visible demonstrations.
 - Tasks 5-6 are the post-approval documentation, compatibility, visual-baseline, broad-review, and aggregate-verification tail.
-- `WebGLLayer.camera` remains a plain `CRCWebGLPerspectiveCamera`. Do not add a camera class, a `controls` prop, a WebGL input subsystem, or an independent animation loop.
+- `WebGLLayer.camera` remains a plain `PibblWebGLPerspectiveCamera`. Do not add a camera class, a `controls` prop, a WebGL input subsystem, or an independent animation loop.
 - `useOrbitCamera()` returns exactly `{ position, lookAt, handlers }`. Its handler object/functions are stable for the hook-slot lifetime; unchanged vectors reuse their snapshots; input changes schedule work only when state changes.
 - `WebGLLayer.style.shadows` is `false | "low" | "medium" | "high"`, defaults to `"medium"`, requests 0/512/1024/2048 pixels per view, and uses 0/1/4/9 depth comparisons.
-- Directional, point, and spot lights cast by default. Ambient and hemisphere lights cannot cast. CRC never silently chooses one primary shadow light.
+- Directional, point, and spot lights cast by default. Ambient and hemisphere lights cannot cast. Pibbl never silently chooses one primary shadow light.
 - Opaque meshes cast and receive by default. Partial-alpha meshes receive when lit but do not cast by default. Final-alpha-zero meshes never color-raster or shadow-raster, even under explicit `true`, while existing pick/focus eligibility remains unchanged.
 - Shadowing attenuates only the matching direct light's diffuse Lambert contribution. Ambient, hemisphere, other direct lights, and emission remain independent.
 - Directional and spot lights use one 2D depth view. Point lights use six cube-map depth views. Camera-only orbit reuses valid light-space generations.
@@ -64,7 +64,7 @@
 - Create/modify focused tests beside those files
 - Modify: `packages/webgl/src/lib/lighting-rendering.test.tsx`
 - Modify: `packages/scenarios/src/learning/webgl/{directional-light,multiple-lights}.example.tsx`
-- Modify minimally: `playground/src/crc-editor-types.txt`
+- Modify minimally: `playground/src/pibbl-editor-types.txt`
 
 - [ ] **Step 1: Add the focused RED evidence.**
 
@@ -78,13 +78,13 @@ fnm exec --using=v24.15.0 -- corepack pnpm@11.21.0 exec vitest run packages/webg
 
 - [ ] **Step 3: Implement `useOrbitCamera()`.**
 
-Expose `CRCOrbitCameraOptions`, `CRCOrbitCameraHandlers`, `CRCOrbitCameraResult`, and `useOrbitCamera` from `@crc/webgl`. Add only `getCurrentLogicalViewport()` and `onCurrentRenderFinish(callback)` to `@crc/core/internal`. Required options are `orbitPoint` and `initialPosition`; defaults are min `0.1`, max `Infinity`, and speeds `1`. Vectors must be finite and initial position must differ from the orbit point. Bounds are finite positive values and max cannot be below min; speeds are finite nonnegative values.
+Expose `PibblOrbitCameraOptions`, `PibblOrbitCameraHandlers`, `PibblOrbitCameraResult`, and `useOrbitCamera` from `@pibbl/webgl`. Add only `getCurrentLogicalViewport()` and `onCurrentRenderFinish(callback)` to `@pibbl/core/internal`. Required options are `orbitPoint` and `initialPosition`; defaults are min `0.1`, max `Infinity`, and speeds `1`. Vectors must be finite and initial position must differ from the orbit point. Bounds are finite positive values and max cannot be below min; speeds are finite nonnegative values.
 
 Store azimuth, polar angle, distance, one active pointer, latest committed live options, cached immutable pose vectors, one reactive revision, and one frozen handler bundle in the mounted hook slot. Validate before acquiring the slot. Candidate options affect that render's pose but become handler-visible only after successful render. Primary drag uses `0.01 * rotateSpeed` radians per root-logical pixel and clamps polar to `0.001..PI-0.001`. Wheel uses multipliers pixel=1, line=16, page=root logical height and distance multiplier `exp(deltaY * 0.001 * zoomSpeed)`.
 
 - [ ] **Step 4: Carry shadow quality and participation through composition and settlement.**
 
-Add `CRCWebGLShadowQuality` and `WebGLLayerStyle.shadows`, normalize omission to `"medium"`, and include quality in controller retained equality and the closed scene draft. Add `castShadow?: boolean` only to direct-light styles and assign each mounted direct light one stable private identity. Add `castShadow?`/`receiveShadow?` to mesh styles. Derive effective values from final alpha and `lit` exactly as specified. Leave ambient/hemisphere shadow-field-free.
+Add `PibblWebGLShadowQuality` and `WebGLLayerStyle.shadows`, normalize omission to `"medium"`, and include quality in controller retained equality and the closed scene draft. Add `castShadow?: boolean` only to direct-light styles and assign each mounted direct light one stable private identity. Add `castShadow?`/`receiveShadow?` to mesh styles. Derive effective values from final alpha and `lit` exactly as specified. Leave ambient/hemisphere shadow-field-free.
 
 - [ ] **Step 5: Plan and cache directional depth generations.**
 
@@ -209,13 +209,13 @@ Run Step 2 and the narrow WebGL build. After separate review approval, commit an
 - Modify: `packages/scenarios/package.json`
 - Create: `packages/core/test/webgl-lighting-lab.test.ts`
 - Modify generated: `docs/scenario-index.md`
-- Modify only if needed for visible source acceptance: `playground/src/crc-editor-types.txt`
+- Modify only if needed for visible source acceptance: `playground/src/pibbl-editor-types.txt`
 
 - [ ] **Step 1: Strengthen the source contract and add focused lab evidence.**
 
-Require exactly these ordered IDs: `lit-and-unlit`, `ambient-light`, `hemisphere-light`, `directional-light`, `point-light`, `spot-light`, `emissive-material`, `webgl-background`, `custom-geometry-normals`, `multiple-lights`, `transformed-light`, `shadow-quality`. Require one common hook call, handler Group, transparent 720×420 target, dynamic position/lookAt, identical camera/geometry/material/background outside each concept-delta region, and one `layerShadows: CRCWebGLShadowQuality = "medium"` delta literal. Only the quality lesson changes that literal.
+Require exactly these ordered IDs: `lit-and-unlit`, `ambient-light`, `hemisphere-light`, `directional-light`, `point-light`, `spot-light`, `emissive-material`, `webgl-background`, `custom-geometry-normals`, `multiple-lights`, `transformed-light`, `shadow-quality`. Require one common hook call, handler Group, transparent 720×420 target, dynamic position/lookAt, identical camera/geometry/material/background outside each concept-delta region, and one `layerShadows: PibblWebGLShadowQuality = "medium"` delta literal. Only the quality lesson changes that literal.
 
-The lab uses public imports and test-owned signals to cover every light/background/material mode, transformed lights, custom normals, opaque/partial/zero alpha, lit/unlit/emissive meshes, all quality modes, orbit drag/wheel, direct shadow pixel contrast, ambient/hemisphere non-shadow behavior, point six-direction coverage, cache probes, and disposal. Register scenario id `webgl-lighting`, source id `webgl-lighting-laboratory-example`, route `#/testing/webgl-lighting`, and package subpath `@crc/scenarios/webgl-lighting-lab`.
+The lab uses public imports and test-owned signals to cover every light/background/material mode, transformed lights, custom normals, opaque/partial/zero alpha, lit/unlit/emissive meshes, all quality modes, orbit drag/wheel, direct shadow pixel contrast, ambient/hemisphere non-shadow behavior, point six-direction coverage, cache probes, and disposal. Register scenario id `webgl-lighting`, source id `webgl-lighting-laboratory-example`, route `#/testing/webgl-lighting`, and package subpath `@pibbl/scenarios/webgl-lighting-lab`.
 
 - [ ] **Step 2: Run only the source-contract and lab RED checks.**
 
@@ -258,13 +258,13 @@ Using the already-running Studio, inspect `#/examples/webgl/multiple-lights`, ea
 - Modify: `docs/site/api/README.md`
 - Modify: WebGL component/type/function API pages, including WebGLLayer, Group3D, Mesh/Cube/Sphere, direct lights, WebGL types, and custom geometry
 - Modify: `tooling/studio-docs/fixtures/api/webgl.ts`
-- Modify: `playground/src/crc-editor-types.txt`
+- Modify: `playground/src/pibbl-editor-types.txt`
 - Modify: source, JSX, runtime, and packed package-consumer fixtures
 - Modify: `tooling/verify-studio-visuals.mjs` to register only Studio route `webgl-lighting`
 
 - [ ] **Step 1: Add failing focused static/consumer inventories.**
 
-Exercise every public quality/participation option and all four orbit symbols in source and JSX consumers; pass the returned pose into a plain camera and spread handlers onto CRC event participants. Add runtime/packed export expectations, Studio fixture ownership/related-type links, and the Studio visual route without a baseline.
+Exercise every public quality/participation option and all four orbit symbols in source and JSX consumers; pass the returned pose into a plain camera and spread handlers onto Pibbl event participants. Add runtime/packed export expectations, Studio fixture ownership/related-type links, and the Studio visual route without a baseline.
 
 - [ ] **Step 2: Synchronize normative and public documentation.**
 

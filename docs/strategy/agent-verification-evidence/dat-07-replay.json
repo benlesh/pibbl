@@ -1,0 +1,5407 @@
+{
+  "requiredChecks": [
+    {
+      "checkId": "interpolation-initial.monthly.interpolated-x",
+      "actionId": "interpolation-initial"
+    },
+    {
+      "checkId": "interpolation-initial.monthly.interpolated-y",
+      "actionId": "interpolation-initial"
+    },
+    {
+      "checkId": "interpolation-initial.monthly.interpolated-anchor-x",
+      "actionId": "interpolation-initial"
+    },
+    {
+      "checkId": "interpolation-initial.monthly.interpolated-anchor-y",
+      "actionId": "interpolation-initial"
+    },
+    {
+      "checkId": "interpolation-initial.adjusted.interpolated-x",
+      "actionId": "interpolation-initial"
+    },
+    {
+      "checkId": "interpolation-initial.adjusted.interpolated-y",
+      "actionId": "interpolation-initial"
+    },
+    {
+      "checkId": "interpolation-initial.adjusted.interpolated-anchor-x",
+      "actionId": "interpolation-initial"
+    },
+    {
+      "checkId": "interpolation-initial.adjusted.interpolated-anchor-y",
+      "actionId": "interpolation-initial"
+    },
+    {
+      "checkId": "interpolation-updated.monthly.interpolated-x",
+      "actionId": "interpolation-updated"
+    },
+    {
+      "checkId": "interpolation-updated.monthly.interpolated-y",
+      "actionId": "interpolation-updated"
+    },
+    {
+      "checkId": "interpolation-updated.monthly.interpolated-anchor-x",
+      "actionId": "interpolation-updated"
+    },
+    {
+      "checkId": "interpolation-updated.monthly.interpolated-anchor-y",
+      "actionId": "interpolation-updated"
+    },
+    {
+      "checkId": "interpolation-updated.adjusted.interpolated-x",
+      "actionId": "interpolation-updated"
+    },
+    {
+      "checkId": "interpolation-updated.adjusted.interpolated-y",
+      "actionId": "interpolation-updated"
+    },
+    {
+      "checkId": "interpolation-updated.adjusted.interpolated-anchor-x",
+      "actionId": "interpolation-updated"
+    },
+    {
+      "checkId": "interpolation-updated.adjusted.interpolated-anchor-y",
+      "actionId": "interpolation-updated"
+    },
+    {
+      "checkId": "interpolation-missing.adjusted.interpolated-x",
+      "actionId": "interpolation-missing"
+    },
+    {
+      "checkId": "interpolation-missing.adjusted.interpolated-y",
+      "actionId": "interpolation-missing"
+    },
+    {
+      "checkId": "interpolation-missing.adjusted.interpolated-anchor-x",
+      "actionId": "interpolation-missing"
+    },
+    {
+      "checkId": "interpolation-missing.adjusted.interpolated-anchor-y",
+      "actionId": "interpolation-missing"
+    },
+    {
+      "checkId": "duplicate-first.x-5.duplicate-policy-x",
+      "actionId": "duplicate-first"
+    },
+    {
+      "checkId": "duplicate-first.x-5.duplicate-policy-y",
+      "actionId": "duplicate-first"
+    },
+    {
+      "checkId": "duplicate-first.x-5.duplicate-policy-anchor-x",
+      "actionId": "duplicate-first"
+    },
+    {
+      "checkId": "duplicate-first.x-5.duplicate-policy-anchor-y",
+      "actionId": "duplicate-first"
+    },
+    {
+      "checkId": "duplicate-first.x-5.secondary-series-interpolation",
+      "actionId": "duplicate-first"
+    },
+    {
+      "checkId": "duplicate-first.x-2.5.duplicate-policy-x",
+      "actionId": "duplicate-first"
+    },
+    {
+      "checkId": "duplicate-first.x-2.5.duplicate-policy-y",
+      "actionId": "duplicate-first"
+    },
+    {
+      "checkId": "duplicate-first.x-2.5.duplicate-policy-anchor-x",
+      "actionId": "duplicate-first"
+    },
+    {
+      "checkId": "duplicate-first.x-2.5.duplicate-policy-anchor-y",
+      "actionId": "duplicate-first"
+    },
+    {
+      "checkId": "duplicate-first.x-2.5.secondary-series-interpolation",
+      "actionId": "duplicate-first"
+    },
+    {
+      "checkId": "duplicate-last.x-5.duplicate-policy-x",
+      "actionId": "duplicate-last"
+    },
+    {
+      "checkId": "duplicate-last.x-5.duplicate-policy-y",
+      "actionId": "duplicate-last"
+    },
+    {
+      "checkId": "duplicate-last.x-5.duplicate-policy-anchor-x",
+      "actionId": "duplicate-last"
+    },
+    {
+      "checkId": "duplicate-last.x-5.duplicate-policy-anchor-y",
+      "actionId": "duplicate-last"
+    },
+    {
+      "checkId": "duplicate-last.x-5.secondary-series-interpolation",
+      "actionId": "duplicate-last"
+    },
+    {
+      "checkId": "duplicate-last.x-2.5.duplicate-policy-x",
+      "actionId": "duplicate-last"
+    },
+    {
+      "checkId": "duplicate-last.x-2.5.duplicate-policy-y",
+      "actionId": "duplicate-last"
+    },
+    {
+      "checkId": "duplicate-last.x-2.5.duplicate-policy-anchor-x",
+      "actionId": "duplicate-last"
+    },
+    {
+      "checkId": "duplicate-last.x-2.5.duplicate-policy-anchor-y",
+      "actionId": "duplicate-last"
+    },
+    {
+      "checkId": "duplicate-last.x-2.5.secondary-series-interpolation",
+      "actionId": "duplicate-last"
+    },
+    {
+      "checkId": "duplicate-reordered.x-5.duplicate-policy-x",
+      "actionId": "duplicate-reordered"
+    },
+    {
+      "checkId": "duplicate-reordered.x-5.duplicate-policy-y",
+      "actionId": "duplicate-reordered"
+    },
+    {
+      "checkId": "duplicate-reordered.x-5.duplicate-policy-anchor-x",
+      "actionId": "duplicate-reordered"
+    },
+    {
+      "checkId": "duplicate-reordered.x-5.duplicate-policy-anchor-y",
+      "actionId": "duplicate-reordered"
+    },
+    {
+      "checkId": "duplicate-reordered.x-5.secondary-series-interpolation",
+      "actionId": "duplicate-reordered"
+    },
+    {
+      "checkId": "duplicate-reordered.x-2.5.duplicate-policy-x",
+      "actionId": "duplicate-reordered"
+    },
+    {
+      "checkId": "duplicate-reordered.x-2.5.duplicate-policy-y",
+      "actionId": "duplicate-reordered"
+    },
+    {
+      "checkId": "duplicate-reordered.x-2.5.duplicate-policy-anchor-x",
+      "actionId": "duplicate-reordered"
+    },
+    {
+      "checkId": "duplicate-reordered.x-2.5.duplicate-policy-anchor-y",
+      "actionId": "duplicate-reordered"
+    },
+    {
+      "checkId": "duplicate-reordered.x-2.5.secondary-series-interpolation",
+      "actionId": "duplicate-reordered"
+    },
+    {
+      "checkId": "nearest-unsorted.x-5.y-0.1.nearest-anchor-x",
+      "actionId": "nearest-unsorted"
+    },
+    {
+      "checkId": "nearest-unsorted.x-5.y-0.1.nearest-anchor-y",
+      "actionId": "nearest-unsorted"
+    },
+    {
+      "checkId": "nearest-unsorted.x-5.y-0.9.nearest-anchor-x",
+      "actionId": "nearest-unsorted"
+    },
+    {
+      "checkId": "nearest-unsorted.x-5.y-0.9.nearest-anchor-y",
+      "actionId": "nearest-unsorted"
+    },
+    {
+      "checkId": "nearest-unsorted.x-2.5.y-0.1.nearest-anchor-x",
+      "actionId": "nearest-unsorted"
+    },
+    {
+      "checkId": "nearest-unsorted.x-2.5.y-0.1.nearest-anchor-y",
+      "actionId": "nearest-unsorted"
+    },
+    {
+      "checkId": "nearest-unsorted.x-2.5.y-0.9.nearest-anchor-x",
+      "actionId": "nearest-unsorted"
+    },
+    {
+      "checkId": "nearest-unsorted.x-2.5.y-0.9.nearest-anchor-y",
+      "actionId": "nearest-unsorted"
+    },
+    {
+      "checkId": "nearest-unsorted.x-7.5.y-0.1.nearest-anchor-x",
+      "actionId": "nearest-unsorted"
+    },
+    {
+      "checkId": "nearest-unsorted.x-7.5.y-0.1.nearest-anchor-y",
+      "actionId": "nearest-unsorted"
+    },
+    {
+      "checkId": "nearest-unsorted.x-7.5.y-0.9.nearest-anchor-x",
+      "actionId": "nearest-unsorted"
+    },
+    {
+      "checkId": "nearest-unsorted.x-7.5.y-0.9.nearest-anchor-y",
+      "actionId": "nearest-unsorted"
+    },
+    {
+      "checkId": "closest-point-native.distance-30.closest-point-distance",
+      "actionId": "closest-point-native"
+    },
+    {
+      "checkId": "closest-point-native.distance-40.closest-point-distance",
+      "actionId": "closest-point-native"
+    },
+    {
+      "checkId": "async-loading-old.request-policy",
+      "actionId": "async-loading-old"
+    },
+    {
+      "checkId": "async-loading-old.rendered-generation",
+      "actionId": "async-loading-old"
+    },
+    {
+      "checkId": "async-loading-old.hover-value",
+      "actionId": "async-loading-old"
+    },
+    {
+      "checkId": "async-loading-old.hover-anchor",
+      "actionId": "async-loading-old"
+    },
+    {
+      "checkId": "async-loading-new.request-policy",
+      "actionId": "async-loading-new"
+    },
+    {
+      "checkId": "async-loading-new.rendered-generation",
+      "actionId": "async-loading-new"
+    },
+    {
+      "checkId": "async-loading-new.hover-value",
+      "actionId": "async-loading-new"
+    },
+    {
+      "checkId": "async-loading-new.hover-anchor",
+      "actionId": "async-loading-new"
+    },
+    {
+      "checkId": "async-current-success.request-policy",
+      "actionId": "async-current-success"
+    },
+    {
+      "checkId": "async-current-success.rendered-generation",
+      "actionId": "async-current-success"
+    },
+    {
+      "checkId": "async-current-success.hover-value",
+      "actionId": "async-current-success"
+    },
+    {
+      "checkId": "async-current-success.hover-anchor",
+      "actionId": "async-current-success"
+    },
+    {
+      "checkId": "async-stale-success.request-policy",
+      "actionId": "async-stale-success"
+    },
+    {
+      "checkId": "async-stale-success.rendered-generation",
+      "actionId": "async-stale-success"
+    },
+    {
+      "checkId": "async-stale-success.hover-value",
+      "actionId": "async-stale-success"
+    },
+    {
+      "checkId": "async-stale-success.hover-anchor",
+      "actionId": "async-stale-success"
+    },
+    {
+      "checkId": "async-second-old.request-policy",
+      "actionId": "async-second-old"
+    },
+    {
+      "checkId": "async-second-old.rendered-generation",
+      "actionId": "async-second-old"
+    },
+    {
+      "checkId": "async-second-old.hover-value",
+      "actionId": "async-second-old"
+    },
+    {
+      "checkId": "async-second-old.hover-anchor",
+      "actionId": "async-second-old"
+    },
+    {
+      "checkId": "async-second-new.request-policy",
+      "actionId": "async-second-new"
+    },
+    {
+      "checkId": "async-second-new.rendered-generation",
+      "actionId": "async-second-new"
+    },
+    {
+      "checkId": "async-second-new.hover-value",
+      "actionId": "async-second-new"
+    },
+    {
+      "checkId": "async-second-new.hover-anchor",
+      "actionId": "async-second-new"
+    },
+    {
+      "checkId": "async-stale-error.request-policy",
+      "actionId": "async-stale-error"
+    },
+    {
+      "checkId": "async-stale-error.rendered-generation",
+      "actionId": "async-stale-error"
+    },
+    {
+      "checkId": "async-stale-error.hover-value",
+      "actionId": "async-stale-error"
+    },
+    {
+      "checkId": "async-stale-error.hover-anchor",
+      "actionId": "async-stale-error"
+    },
+    {
+      "checkId": "async-current-error.request-policy",
+      "actionId": "async-current-error"
+    },
+    {
+      "checkId": "async-current-error.rendered-generation",
+      "actionId": "async-current-error"
+    },
+    {
+      "checkId": "async-current-error.hover-value",
+      "actionId": "async-current-error"
+    },
+    {
+      "checkId": "async-current-error.hover-anchor",
+      "actionId": "async-current-error"
+    },
+    {
+      "checkId": "async-retry-loading.request-policy",
+      "actionId": "async-retry-loading"
+    },
+    {
+      "checkId": "async-retry-loading.rendered-generation",
+      "actionId": "async-retry-loading"
+    },
+    {
+      "checkId": "async-retry-loading.hover-value",
+      "actionId": "async-retry-loading"
+    },
+    {
+      "checkId": "async-retry-loading.hover-anchor",
+      "actionId": "async-retry-loading"
+    },
+    {
+      "checkId": "async-retry-success.request-policy",
+      "actionId": "async-retry-success"
+    },
+    {
+      "checkId": "async-retry-success.rendered-generation",
+      "actionId": "async-retry-success"
+    },
+    {
+      "checkId": "async-retry-success.hover-value",
+      "actionId": "async-retry-success"
+    },
+    {
+      "checkId": "async-retry-success.hover-anchor",
+      "actionId": "async-retry-success"
+    },
+    {
+      "checkId": "weighted-data-bug.aggregation-pipeline",
+      "actionId": "weighted-data-bug"
+    },
+    {
+      "checkId": "weighted-data-bug.aggregation-inspection-x",
+      "actionId": "weighted-data-bug"
+    },
+    {
+      "checkId": "weighted-data-bug.aggregate-interpolation",
+      "actionId": "weighted-data-bug"
+    },
+    {
+      "checkId": "weighted-data-bug.aggregate-anchor-x",
+      "actionId": "weighted-data-bug"
+    },
+    {
+      "checkId": "weighted-data-bug.aggregate-anchor-y",
+      "actionId": "weighted-data-bug"
+    },
+    {
+      "checkId": "weighted-data.aggregation-pipeline",
+      "actionId": "weighted-data"
+    },
+    {
+      "checkId": "weighted-data.aggregation-inspection-x",
+      "actionId": "weighted-data"
+    },
+    {
+      "checkId": "weighted-data.aggregate-interpolation",
+      "actionId": "weighted-data"
+    },
+    {
+      "checkId": "weighted-data.aggregate-anchor-x",
+      "actionId": "weighted-data"
+    },
+    {
+      "checkId": "weighted-data.aggregate-anchor-y",
+      "actionId": "weighted-data"
+    },
+    {
+      "checkId": "zero-missing-invalid.policy",
+      "actionId": "zero-missing-invalid"
+    },
+    {
+      "checkId": "zero-missing-invalid.counts",
+      "actionId": "zero-missing-invalid"
+    },
+    {
+      "checkId": "zero-missing-invalid.categories",
+      "actionId": "zero-missing-invalid"
+    },
+    {
+      "checkId": "zero-missing-invalid.generation",
+      "actionId": "zero-missing-invalid"
+    },
+    {
+      "checkId": "zero-missing-invalid.zero",
+      "actionId": "zero-missing-invalid"
+    },
+    {
+      "checkId": "zero-missing-invalid.interpolated",
+      "actionId": "zero-missing-invalid"
+    },
+    {
+      "checkId": "zero-missing-invalid.gap-2.5",
+      "actionId": "zero-missing-invalid"
+    },
+    {
+      "checkId": "zero-missing-invalid.gap-3",
+      "actionId": "zero-missing-invalid"
+    },
+    {
+      "checkId": "zero-missing-invalid.gap-4",
+      "actionId": "zero-missing-invalid"
+    },
+    {
+      "checkId": "zero-missing-invalid.gap-5",
+      "actionId": "zero-missing-invalid"
+    },
+    {
+      "checkId": "zero-missing-invalid.gap-6",
+      "actionId": "zero-missing-invalid"
+    },
+    {
+      "checkId": "zero-missing-invalid.gap-7",
+      "actionId": "zero-missing-invalid"
+    },
+    {
+      "checkId": "zero-missing-invalid.gap-7.5",
+      "actionId": "zero-missing-invalid"
+    }
+  ],
+  "schema": "pibbl-viz-replay/1",
+  "status": "pass",
+  "url": "http://127.0.0.1:5199/#/testing/viz-hover-lab",
+  "node": "v24.15.0",
+  "density": 1,
+  "provenance": "Loaded fixture fingerprint covers core/viz source, fixture/example, identity tooling, dev config and lockfile; not full installed dependency or asset attestation.",
+  "steps": [
+    {
+      "actionId": "interpolation-initial",
+      "generation": 0,
+      "transport": "native-playwright-pointer",
+      "status": "pass",
+      "state": {
+        "duplicateX": "error",
+        "generation": 0,
+        "viewport": {
+          "width": 480,
+          "height": 620
+        },
+        "mode": "interpolated-x",
+        "inspection": 5,
+        "pointer": null,
+        "results": [
+          {
+            "series": "monthly",
+            "kind": "interpolated",
+            "x": 5,
+            "y": 20,
+            "anchor": {
+              "x": 198.5,
+              "y": 157.5
+            },
+            "provenance": {
+              "kind": "interpolated",
+              "beforeIndex": 0,
+              "afterIndex": 1,
+              "beforeId": null,
+              "afterId": null,
+              "fraction": 0.5
+            },
+            "distance": null
+          },
+          {
+            "series": "adjusted",
+            "kind": "interpolated",
+            "x": 5,
+            "y": 20,
+            "anchor": {
+              "x": 198.5,
+              "y": 157.5
+            },
+            "provenance": {
+              "kind": "interpolated",
+              "beforeIndex": 0,
+              "afterIndex": 1,
+              "beforeId": null,
+              "afterId": null,
+              "fraction": 0.5
+            },
+            "distance": null
+          }
+        ],
+        "plot": {
+          "x": 55,
+          "y": 235,
+          "width": 397,
+          "height": 315
+        },
+        "missingness": null,
+        "request": {
+          "policy": "latest-request-wins",
+          "status": "idle",
+          "activeId": null,
+          "pending": 0,
+          "error": null,
+          "lastCompletion": null
+        },
+        "pipeline": null
+      }
+    },
+    {
+      "actionId": "interpolation-updated",
+      "generation": 1,
+      "transport": "native-playwright-pointer",
+      "status": "pass",
+      "state": {
+        "duplicateX": "error",
+        "generation": 1,
+        "viewport": {
+          "width": 480,
+          "height": 620
+        },
+        "mode": "interpolated-x",
+        "inspection": 5,
+        "pointer": {
+          "x": 198.5,
+          "y": 157.5
+        },
+        "results": [
+          {
+            "series": "monthly",
+            "kind": "interpolated",
+            "x": 5,
+            "y": 30,
+            "anchor": {
+              "x": 198.5,
+              "y": 78.75
+            },
+            "provenance": {
+              "kind": "interpolated",
+              "beforeIndex": 0,
+              "afterIndex": 1,
+              "beforeId": null,
+              "afterId": null,
+              "fraction": 0.5
+            },
+            "distance": null
+          },
+          {
+            "series": "adjusted",
+            "kind": "interpolated",
+            "x": 5,
+            "y": 20,
+            "anchor": {
+              "x": 198.5,
+              "y": 157.5
+            },
+            "provenance": {
+              "kind": "interpolated",
+              "beforeIndex": 0,
+              "afterIndex": 1,
+              "beforeId": null,
+              "afterId": null,
+              "fraction": 0.5
+            },
+            "distance": null
+          }
+        ],
+        "plot": {
+          "x": 55,
+          "y": 235,
+          "width": 397,
+          "height": 315
+        },
+        "missingness": null,
+        "request": {
+          "policy": "latest-request-wins",
+          "status": "idle",
+          "activeId": null,
+          "pending": 0,
+          "error": null,
+          "lastCompletion": null
+        },
+        "pipeline": null
+      }
+    },
+    {
+      "actionId": "interpolation-missing",
+      "generation": 2,
+      "transport": "native-playwright-pointer",
+      "status": "pass",
+      "state": {
+        "duplicateX": "error",
+        "generation": 2,
+        "viewport": {
+          "width": 480,
+          "height": 620
+        },
+        "mode": "interpolated-x",
+        "inspection": 5,
+        "pointer": {
+          "x": 198.5,
+          "y": 157.5
+        },
+        "results": [
+          {
+            "series": "adjusted",
+            "kind": "interpolated",
+            "x": 5,
+            "y": 20,
+            "anchor": {
+              "x": 198.5,
+              "y": 157.5
+            },
+            "provenance": {
+              "kind": "interpolated",
+              "beforeIndex": 0,
+              "afterIndex": 1,
+              "beforeId": null,
+              "afterId": null,
+              "fraction": 0.5
+            },
+            "distance": null
+          }
+        ],
+        "plot": {
+          "x": 55,
+          "y": 235,
+          "width": 397,
+          "height": 315
+        },
+        "missingness": null,
+        "request": {
+          "policy": "latest-request-wins",
+          "status": "idle",
+          "activeId": null,
+          "pending": 0,
+          "error": null,
+          "lastCompletion": null
+        },
+        "pipeline": null
+      }
+    },
+    {
+      "actionId": "duplicate-first",
+      "generation": 3,
+      "action": "duplicate-first",
+      "status": "pass",
+      "transport": "native-playwright-pointer",
+      "observations": [
+        {
+          "duplicateX": "first",
+          "generation": 3,
+          "viewport": {
+            "width": 480,
+            "height": 620
+          },
+          "mode": "interpolated-x",
+          "inspection": 5,
+          "pointer": {
+            "x": 198.5,
+            "y": 157.5
+          },
+          "results": [
+            {
+              "series": "monthly",
+              "kind": "exact",
+              "x": 5,
+              "y": 10,
+              "anchor": {
+                "x": 198.5,
+                "y": 236.25
+              },
+              "provenance": {
+                "kind": "recorded",
+                "index": 1,
+                "id": "low"
+              },
+              "distance": null
+            },
+            {
+              "series": "adjusted",
+              "kind": "interpolated",
+              "x": 5,
+              "y": 20,
+              "anchor": {
+                "x": 198.5,
+                "y": 157.5
+              },
+              "provenance": {
+                "kind": "interpolated",
+                "beforeIndex": 0,
+                "afterIndex": 1,
+                "beforeId": null,
+                "afterId": null,
+                "fraction": 0.5
+              },
+              "distance": null
+            }
+          ],
+          "plot": {
+            "x": 55,
+            "y": 235,
+            "width": 397,
+            "height": 315
+          },
+          "missingness": null,
+          "request": {
+            "policy": "latest-request-wins",
+            "status": "idle",
+            "activeId": null,
+            "pending": 0,
+            "error": null,
+            "lastCompletion": null
+          },
+          "pipeline": null
+        },
+        {
+          "duplicateX": "first",
+          "generation": 3,
+          "viewport": {
+            "width": 480,
+            "height": 620
+          },
+          "mode": "interpolated-x",
+          "inspection": 2.5,
+          "pointer": {
+            "x": 99.25,
+            "y": 157.5
+          },
+          "results": [
+            {
+              "series": "monthly",
+              "kind": "interpolated",
+              "x": 2.5,
+              "y": 10,
+              "anchor": {
+                "x": 99.25,
+                "y": 236.25
+              },
+              "provenance": {
+                "kind": "interpolated",
+                "beforeIndex": 0,
+                "afterIndex": 1,
+                "beforeId": "start",
+                "afterId": "low",
+                "fraction": 0.5
+              },
+              "distance": null
+            },
+            {
+              "series": "adjusted",
+              "kind": "interpolated",
+              "x": 2.5,
+              "y": 28.333333333333332,
+              "anchor": {
+                "x": 99.25,
+                "y": 91.87500000000003
+              },
+              "provenance": {
+                "kind": "interpolated",
+                "beforeIndex": 0,
+                "afterIndex": 1,
+                "beforeId": null,
+                "afterId": null,
+                "fraction": 0.08333333333333333
+              },
+              "distance": null
+            }
+          ],
+          "plot": {
+            "x": 55,
+            "y": 235,
+            "width": 397,
+            "height": 315
+          },
+          "missingness": null,
+          "request": {
+            "policy": "latest-request-wins",
+            "status": "idle",
+            "activeId": null,
+            "pending": 0,
+            "error": null,
+            "lastCompletion": null
+          },
+          "pipeline": null
+        }
+      ]
+    },
+    {
+      "actionId": "duplicate-last",
+      "generation": 4,
+      "action": "duplicate-last",
+      "status": "pass",
+      "transport": "native-playwright-pointer",
+      "observations": [
+        {
+          "duplicateX": "last",
+          "generation": 4,
+          "viewport": {
+            "width": 480,
+            "height": 620
+          },
+          "mode": "interpolated-x",
+          "inspection": 5,
+          "pointer": {
+            "x": 198.5,
+            "y": 157.5
+          },
+          "results": [
+            {
+              "series": "monthly",
+              "kind": "exact",
+              "x": 5,
+              "y": 30,
+              "anchor": {
+                "x": 198.5,
+                "y": 78.75
+              },
+              "provenance": {
+                "kind": "recorded",
+                "index": 2,
+                "id": "high"
+              },
+              "distance": null
+            },
+            {
+              "series": "adjusted",
+              "kind": "interpolated",
+              "x": 5,
+              "y": 20,
+              "anchor": {
+                "x": 198.5,
+                "y": 157.5
+              },
+              "provenance": {
+                "kind": "interpolated",
+                "beforeIndex": 0,
+                "afterIndex": 1,
+                "beforeId": null,
+                "afterId": null,
+                "fraction": 0.5
+              },
+              "distance": null
+            }
+          ],
+          "plot": {
+            "x": 55,
+            "y": 235,
+            "width": 397,
+            "height": 315
+          },
+          "missingness": null,
+          "request": {
+            "policy": "latest-request-wins",
+            "status": "idle",
+            "activeId": null,
+            "pending": 0,
+            "error": null,
+            "lastCompletion": null
+          },
+          "pipeline": null
+        },
+        {
+          "duplicateX": "last",
+          "generation": 4,
+          "viewport": {
+            "width": 480,
+            "height": 620
+          },
+          "mode": "interpolated-x",
+          "inspection": 2.5,
+          "pointer": {
+            "x": 99.25,
+            "y": 157.5
+          },
+          "results": [
+            {
+              "series": "monthly",
+              "kind": "interpolated",
+              "x": 2.5,
+              "y": 20,
+              "anchor": {
+                "x": 99.25,
+                "y": 157.5
+              },
+              "provenance": {
+                "kind": "interpolated",
+                "beforeIndex": 0,
+                "afterIndex": 2,
+                "beforeId": "start",
+                "afterId": "high",
+                "fraction": 0.5
+              },
+              "distance": null
+            },
+            {
+              "series": "adjusted",
+              "kind": "interpolated",
+              "x": 2.5,
+              "y": 28.333333333333332,
+              "anchor": {
+                "x": 99.25,
+                "y": 91.87500000000003
+              },
+              "provenance": {
+                "kind": "interpolated",
+                "beforeIndex": 0,
+                "afterIndex": 1,
+                "beforeId": null,
+                "afterId": null,
+                "fraction": 0.08333333333333333
+              },
+              "distance": null
+            }
+          ],
+          "plot": {
+            "x": 55,
+            "y": 235,
+            "width": 397,
+            "height": 315
+          },
+          "missingness": null,
+          "request": {
+            "policy": "latest-request-wins",
+            "status": "idle",
+            "activeId": null,
+            "pending": 0,
+            "error": null,
+            "lastCompletion": null
+          },
+          "pipeline": null
+        }
+      ]
+    },
+    {
+      "actionId": "duplicate-reordered",
+      "generation": 5,
+      "action": "duplicate-reordered",
+      "status": "pass",
+      "transport": "native-playwright-pointer",
+      "observations": [
+        {
+          "duplicateX": "first",
+          "generation": 5,
+          "viewport": {
+            "width": 480,
+            "height": 620
+          },
+          "mode": "interpolated-x",
+          "inspection": 5,
+          "pointer": {
+            "x": 198.5,
+            "y": 157.5
+          },
+          "results": [
+            {
+              "series": "monthly",
+              "kind": "exact",
+              "x": 5,
+              "y": 30,
+              "anchor": {
+                "x": 198.5,
+                "y": 78.75
+              },
+              "provenance": {
+                "kind": "recorded",
+                "index": 1,
+                "id": "high"
+              },
+              "distance": null
+            },
+            {
+              "series": "adjusted",
+              "kind": "interpolated",
+              "x": 5,
+              "y": 20,
+              "anchor": {
+                "x": 198.5,
+                "y": 157.5
+              },
+              "provenance": {
+                "kind": "interpolated",
+                "beforeIndex": 0,
+                "afterIndex": 1,
+                "beforeId": null,
+                "afterId": null,
+                "fraction": 0.5
+              },
+              "distance": null
+            }
+          ],
+          "plot": {
+            "x": 55,
+            "y": 235,
+            "width": 397,
+            "height": 315
+          },
+          "missingness": null,
+          "request": {
+            "policy": "latest-request-wins",
+            "status": "idle",
+            "activeId": null,
+            "pending": 0,
+            "error": null,
+            "lastCompletion": null
+          },
+          "pipeline": null
+        },
+        {
+          "duplicateX": "first",
+          "generation": 5,
+          "viewport": {
+            "width": 480,
+            "height": 620
+          },
+          "mode": "interpolated-x",
+          "inspection": 2.5,
+          "pointer": {
+            "x": 99.25,
+            "y": 157.5
+          },
+          "results": [
+            {
+              "series": "monthly",
+              "kind": "interpolated",
+              "x": 2.5,
+              "y": 20,
+              "anchor": {
+                "x": 99.25,
+                "y": 157.5
+              },
+              "provenance": {
+                "kind": "interpolated",
+                "beforeIndex": 0,
+                "afterIndex": 1,
+                "beforeId": "start",
+                "afterId": "high",
+                "fraction": 0.5
+              },
+              "distance": null
+            },
+            {
+              "series": "adjusted",
+              "kind": "interpolated",
+              "x": 2.5,
+              "y": 28.333333333333332,
+              "anchor": {
+                "x": 99.25,
+                "y": 91.87500000000003
+              },
+              "provenance": {
+                "kind": "interpolated",
+                "beforeIndex": 0,
+                "afterIndex": 1,
+                "beforeId": null,
+                "afterId": null,
+                "fraction": 0.08333333333333333
+              },
+              "distance": null
+            }
+          ],
+          "plot": {
+            "x": 55,
+            "y": 235,
+            "width": 397,
+            "height": 315
+          },
+          "missingness": null,
+          "request": {
+            "policy": "latest-request-wins",
+            "status": "idle",
+            "activeId": null,
+            "pending": 0,
+            "error": null,
+            "lastCompletion": null
+          },
+          "pipeline": null
+        }
+      ]
+    },
+    {
+      "actionId": "nearest-unsorted",
+      "generation": 6,
+      "action": "nearest-unsorted",
+      "status": "pass",
+      "observations": [
+        {
+          "pointerYFraction": 0.1,
+          "state": {
+            "duplicateX": "first",
+            "generation": 6,
+            "viewport": {
+              "width": 480,
+              "height": 620
+            },
+            "mode": "nearest-per-line",
+            "inspection": 5,
+            "pointer": {
+              "x": 198.5,
+              "y": 31.5
+            },
+            "results": [
+              {
+                "series": "monthly",
+                "kind": "recorded",
+                "x": 5,
+                "y": 30,
+                "anchor": {
+                  "x": 198.5,
+                  "y": 78.75
+                },
+                "provenance": {
+                  "kind": "recorded",
+                  "index": 1,
+                  "id": "high"
+                },
+                "distance": {
+                  "space": "domain-x",
+                  "value": 0
+                }
+              },
+              {
+                "series": "adjusted",
+                "kind": "recorded",
+                "x": 2,
+                "y": 30,
+                "anchor": {
+                  "x": 79.4,
+                  "y": 78.75
+                },
+                "provenance": {
+                  "kind": "recorded",
+                  "index": 0,
+                  "id": null
+                },
+                "distance": {
+                  "space": "domain-x",
+                  "value": 3
+                }
+              }
+            ],
+            "plot": {
+              "x": 55,
+              "y": 235,
+              "width": 397,
+              "height": 315
+            },
+            "missingness": null,
+            "request": {
+              "policy": "latest-request-wins",
+              "status": "idle",
+              "activeId": null,
+              "pending": 0,
+              "error": null,
+              "lastCompletion": null
+            },
+            "pipeline": null
+          }
+        },
+        {
+          "pointerYFraction": 0.9,
+          "state": {
+            "duplicateX": "first",
+            "generation": 6,
+            "viewport": {
+              "width": 480,
+              "height": 620
+            },
+            "mode": "nearest-per-line",
+            "inspection": 5,
+            "pointer": {
+              "x": 198.5,
+              "y": 31.5
+            },
+            "results": [
+              {
+                "series": "monthly",
+                "kind": "recorded",
+                "x": 5,
+                "y": 30,
+                "anchor": {
+                  "x": 198.5,
+                  "y": 78.75
+                },
+                "provenance": {
+                  "kind": "recorded",
+                  "index": 1,
+                  "id": "high"
+                },
+                "distance": {
+                  "space": "domain-x",
+                  "value": 0
+                }
+              },
+              {
+                "series": "adjusted",
+                "kind": "recorded",
+                "x": 2,
+                "y": 30,
+                "anchor": {
+                  "x": 79.4,
+                  "y": 78.75
+                },
+                "provenance": {
+                  "kind": "recorded",
+                  "index": 0,
+                  "id": null
+                },
+                "distance": {
+                  "space": "domain-x",
+                  "value": 3
+                }
+              }
+            ],
+            "plot": {
+              "x": 55,
+              "y": 235,
+              "width": 397,
+              "height": 315
+            },
+            "missingness": null,
+            "request": {
+              "policy": "latest-request-wins",
+              "status": "idle",
+              "activeId": null,
+              "pending": 0,
+              "error": null,
+              "lastCompletion": null
+            },
+            "pipeline": null
+          }
+        },
+        {
+          "pointerYFraction": 0.1,
+          "state": {
+            "duplicateX": "first",
+            "generation": 6,
+            "viewport": {
+              "width": 480,
+              "height": 620
+            },
+            "mode": "nearest-per-line",
+            "inspection": 2.5,
+            "pointer": {
+              "x": 99.25,
+              "y": 31.5
+            },
+            "results": [
+              {
+                "series": "monthly",
+                "kind": "recorded",
+                "x": 5,
+                "y": 30,
+                "anchor": {
+                  "x": 198.5,
+                  "y": 78.75
+                },
+                "provenance": {
+                  "kind": "recorded",
+                  "index": 1,
+                  "id": "high"
+                },
+                "distance": {
+                  "space": "domain-x",
+                  "value": 2.5
+                }
+              },
+              {
+                "series": "adjusted",
+                "kind": "recorded",
+                "x": 2,
+                "y": 30,
+                "anchor": {
+                  "x": 79.4,
+                  "y": 78.75
+                },
+                "provenance": {
+                  "kind": "recorded",
+                  "index": 0,
+                  "id": null
+                },
+                "distance": {
+                  "space": "domain-x",
+                  "value": 0.5
+                }
+              }
+            ],
+            "plot": {
+              "x": 55,
+              "y": 235,
+              "width": 397,
+              "height": 315
+            },
+            "missingness": null,
+            "request": {
+              "policy": "latest-request-wins",
+              "status": "idle",
+              "activeId": null,
+              "pending": 0,
+              "error": null,
+              "lastCompletion": null
+            },
+            "pipeline": null
+          }
+        },
+        {
+          "pointerYFraction": 0.9,
+          "state": {
+            "duplicateX": "first",
+            "generation": 6,
+            "viewport": {
+              "width": 480,
+              "height": 620
+            },
+            "mode": "nearest-per-line",
+            "inspection": 2.5,
+            "pointer": {
+              "x": 99.25,
+              "y": 31.5
+            },
+            "results": [
+              {
+                "series": "monthly",
+                "kind": "recorded",
+                "x": 5,
+                "y": 30,
+                "anchor": {
+                  "x": 198.5,
+                  "y": 78.75
+                },
+                "provenance": {
+                  "kind": "recorded",
+                  "index": 1,
+                  "id": "high"
+                },
+                "distance": {
+                  "space": "domain-x",
+                  "value": 2.5
+                }
+              },
+              {
+                "series": "adjusted",
+                "kind": "recorded",
+                "x": 2,
+                "y": 30,
+                "anchor": {
+                  "x": 79.4,
+                  "y": 78.75
+                },
+                "provenance": {
+                  "kind": "recorded",
+                  "index": 0,
+                  "id": null
+                },
+                "distance": {
+                  "space": "domain-x",
+                  "value": 0.5
+                }
+              }
+            ],
+            "plot": {
+              "x": 55,
+              "y": 235,
+              "width": 397,
+              "height": 315
+            },
+            "missingness": null,
+            "request": {
+              "policy": "latest-request-wins",
+              "status": "idle",
+              "activeId": null,
+              "pending": 0,
+              "error": null,
+              "lastCompletion": null
+            },
+            "pipeline": null
+          }
+        },
+        {
+          "pointerYFraction": 0.1,
+          "state": {
+            "duplicateX": "first",
+            "generation": 6,
+            "viewport": {
+              "width": 480,
+              "height": 620
+            },
+            "mode": "nearest-per-line",
+            "inspection": 7.5,
+            "pointer": {
+              "x": 297.75,
+              "y": 31.5
+            },
+            "results": [
+              {
+                "series": "monthly",
+                "kind": "recorded",
+                "x": 10,
+                "y": 30,
+                "anchor": {
+                  "x": 397,
+                  "y": 78.75
+                },
+                "provenance": {
+                  "kind": "recorded",
+                  "index": 0,
+                  "id": "end"
+                },
+                "distance": {
+                  "space": "domain-x",
+                  "value": 2.5
+                }
+              },
+              {
+                "series": "adjusted",
+                "kind": "recorded",
+                "x": 8,
+                "y": 10,
+                "anchor": {
+                  "x": 317.6,
+                  "y": 236.25
+                },
+                "provenance": {
+                  "kind": "recorded",
+                  "index": 1,
+                  "id": null
+                },
+                "distance": {
+                  "space": "domain-x",
+                  "value": 0.5
+                }
+              }
+            ],
+            "plot": {
+              "x": 55,
+              "y": 235,
+              "width": 397,
+              "height": 315
+            },
+            "missingness": null,
+            "request": {
+              "policy": "latest-request-wins",
+              "status": "idle",
+              "activeId": null,
+              "pending": 0,
+              "error": null,
+              "lastCompletion": null
+            },
+            "pipeline": null
+          }
+        },
+        {
+          "pointerYFraction": 0.9,
+          "state": {
+            "duplicateX": "first",
+            "generation": 6,
+            "viewport": {
+              "width": 480,
+              "height": 620
+            },
+            "mode": "nearest-per-line",
+            "inspection": 7.5,
+            "pointer": {
+              "x": 297.75,
+              "y": 31.5
+            },
+            "results": [
+              {
+                "series": "monthly",
+                "kind": "recorded",
+                "x": 10,
+                "y": 30,
+                "anchor": {
+                  "x": 397,
+                  "y": 78.75
+                },
+                "provenance": {
+                  "kind": "recorded",
+                  "index": 0,
+                  "id": "end"
+                },
+                "distance": {
+                  "space": "domain-x",
+                  "value": 2.5
+                }
+              },
+              {
+                "series": "adjusted",
+                "kind": "recorded",
+                "x": 8,
+                "y": 10,
+                "anchor": {
+                  "x": 317.6,
+                  "y": 236.25
+                },
+                "provenance": {
+                  "kind": "recorded",
+                  "index": 1,
+                  "id": null
+                },
+                "distance": {
+                  "space": "domain-x",
+                  "value": 0.5
+                }
+              }
+            ],
+            "plot": {
+              "x": 55,
+              "y": 235,
+              "width": 397,
+              "height": 315
+            },
+            "missingness": null,
+            "request": {
+              "policy": "latest-request-wins",
+              "status": "idle",
+              "activeId": null,
+              "pending": 0,
+              "error": null,
+              "lastCompletion": null
+            },
+            "pipeline": null
+          }
+        }
+      ]
+    },
+    {
+      "actionId": "empty-data",
+      "generation": 7,
+      "action": "empty-data",
+      "status": "pass",
+      "state": {
+        "duplicateX": "first",
+        "generation": 7,
+        "viewport": {
+          "width": 480,
+          "height": 620
+        },
+        "mode": "nearest-per-line",
+        "inspection": 5,
+        "pointer": {
+          "x": 198.5,
+          "y": 157.5
+        },
+        "results": [
+          {
+            "series": "adjusted",
+            "kind": "recorded",
+            "x": 2,
+            "y": 30,
+            "anchor": {
+              "x": 79.4,
+              "y": 78.75
+            },
+            "provenance": {
+              "kind": "recorded",
+              "index": 0,
+              "id": null
+            },
+            "distance": {
+              "space": "domain-x",
+              "value": 3
+            }
+          }
+        ],
+        "plot": {
+          "x": 55,
+          "y": 235,
+          "width": 397,
+          "height": 315
+        },
+        "missingness": null,
+        "request": {
+          "policy": "latest-request-wins",
+          "status": "idle",
+          "activeId": null,
+          "pending": 0,
+          "error": null,
+          "lastCompletion": null
+        },
+        "pipeline": null
+      },
+      "afterLeave": {
+        "duplicateX": "first",
+        "generation": 7,
+        "viewport": {
+          "width": 480,
+          "height": 620
+        },
+        "mode": "nearest-per-line",
+        "inspection": null,
+        "pointer": null,
+        "results": [],
+        "plot": {
+          "x": 55,
+          "y": 235,
+          "width": 397,
+          "height": 315
+        },
+        "missingness": null,
+        "request": {
+          "policy": "latest-request-wins",
+          "status": "idle",
+          "activeId": null,
+          "pending": 0,
+          "error": null,
+          "lastCompletion": null
+        },
+        "pipeline": null
+      }
+    },
+    {
+      "actionId": "closest-point-native",
+      "generation": 8,
+      "action": "closest-point-native",
+      "status": "pass",
+      "observations": [
+        {
+          "duplicateX": "error",
+          "generation": 8,
+          "viewport": {
+            "width": 480,
+            "height": 620
+          },
+          "mode": "closest-point",
+          "inspection": 0.7556675062972293,
+          "pointer": {
+            "x": 30,
+            "y": 236.25
+          },
+          "results": [
+            {
+              "series": "monthly",
+              "kind": "recorded",
+              "x": 0,
+              "y": 10,
+              "anchor": {
+                "x": 0,
+                "y": 236.25
+              },
+              "provenance": {
+                "kind": "recorded",
+                "index": 0,
+                "id": null
+              },
+              "distance": {
+                "space": "plot-pixels",
+                "value": 30
+              }
+            }
+          ],
+          "plot": {
+            "x": 55,
+            "y": 235,
+            "width": 397,
+            "height": 315
+          },
+          "missingness": null,
+          "request": {
+            "policy": "latest-request-wins",
+            "status": "idle",
+            "activeId": null,
+            "pending": 0,
+            "error": null,
+            "lastCompletion": null
+          },
+          "pipeline": null
+        },
+        {
+          "duplicateX": "error",
+          "generation": 8,
+          "viewport": {
+            "width": 480,
+            "height": 620
+          },
+          "mode": "closest-point",
+          "inspection": 1.0075566750629723,
+          "pointer": {
+            "x": 40,
+            "y": 236.25
+          },
+          "results": [
+            {
+              "series": "monthly",
+              "kind": "recorded",
+              "x": 0,
+              "y": 10,
+              "anchor": {
+                "x": 0,
+                "y": 236.25
+              },
+              "provenance": {
+                "kind": "recorded",
+                "index": 0,
+                "id": null
+              },
+              "distance": {
+                "space": "plot-pixels",
+                "value": 40
+              }
+            }
+          ],
+          "plot": {
+            "x": 55,
+            "y": 235,
+            "width": 397,
+            "height": 315
+          },
+          "missingness": null,
+          "request": {
+            "policy": "latest-request-wins",
+            "status": "idle",
+            "activeId": null,
+            "pending": 0,
+            "error": null,
+            "lastCompletion": null
+          },
+          "pipeline": null
+        },
+        {
+          "duplicateX": "error",
+          "generation": 8,
+          "viewport": {
+            "width": 480,
+            "height": 620
+          },
+          "mode": "closest-point",
+          "inspection": 1.0138539042821157,
+          "pointer": {
+            "x": 40.25,
+            "y": 236.25
+          },
+          "results": [],
+          "plot": {
+            "x": 55,
+            "y": 235,
+            "width": 397,
+            "height": 315
+          },
+          "missingness": null,
+          "request": {
+            "policy": "latest-request-wins",
+            "status": "idle",
+            "activeId": null,
+            "pending": 0,
+            "error": null,
+            "lastCompletion": null
+          },
+          "pipeline": null
+        }
+      ]
+    },
+    {
+      "actionId": "weighted-data-bug",
+      "action": "weighted-data-bug",
+      "generation": 9,
+      "status": "pass",
+      "state": {
+        "duplicateX": "error",
+        "generation": 9,
+        "viewport": {
+          "width": 480,
+          "height": 620
+        },
+        "mode": "interpolated-x",
+        "inspection": 2.5,
+        "pointer": {
+          "x": 99.25,
+          "y": 157.5
+        },
+        "results": [
+          {
+            "series": "monthly",
+            "kind": "interpolated",
+            "x": 2.5,
+            "y": 20,
+            "anchor": {
+              "x": 99.25,
+              "y": 157.5
+            },
+            "provenance": {
+              "kind": "interpolated",
+              "beforeIndex": 0,
+              "afterIndex": 1,
+              "beforeId": "weighted-0",
+              "afterId": "weighted-10",
+              "fraction": 0.25
+            },
+            "distance": null
+          },
+          {
+            "series": "adjusted",
+            "kind": "interpolated",
+            "x": 2.5,
+            "y": 28.333333333333332,
+            "anchor": {
+              "x": 99.25,
+              "y": 91.87500000000003
+            },
+            "provenance": {
+              "kind": "interpolated",
+              "beforeIndex": 0,
+              "afterIndex": 1,
+              "beforeId": null,
+              "afterId": null,
+              "fraction": 0.08333333333333333
+            },
+            "distance": null
+          }
+        ],
+        "plot": {
+          "x": 55,
+          "y": 235,
+          "width": 397,
+          "height": 315
+        },
+        "missingness": null,
+        "request": {
+          "policy": "latest-request-wins",
+          "status": "idle",
+          "activeId": null,
+          "pending": 0,
+          "error": null,
+          "lastCompletion": null
+        },
+        "pipeline": {
+          "generation": 9,
+          "operation": "weighted-mean",
+          "units": "score",
+          "rounding": "none",
+          "inputCount": 5,
+          "includedCount": 4,
+          "excludedCount": 1,
+          "outputCount": 2,
+          "groups": [
+            {
+              "x": 0,
+              "count": 2,
+              "weightedSum": 40,
+              "weightSum": 4,
+              "value": 20
+            },
+            {
+              "x": 10,
+              "count": 2,
+              "weightedSum": 120,
+              "weightSum": 4,
+              "value": 20
+            }
+          ],
+          "aggregation": {
+            "policy": {
+              "grouping": "exact-x",
+              "order": "ascending-x",
+              "output": "one-weighted-mean-per-included-group",
+              "preserves": [
+                "included-count",
+                "weight-sum",
+                "weighted-sum-per-group"
+              ],
+              "extrema": "not-preserved",
+              "gaps": "not-present-in-fixture"
+            },
+            "includedTotals": {
+              "count": 4,
+              "weightSum": 8,
+              "weightedSum": 160
+            },
+            "displayedTotals": {
+              "pointCount": 2,
+              "representedCount": 4,
+              "representedWeight": 8,
+              "reconstructedWeightedSum": 160
+            },
+            "includedValueRange": [
+              0,
+              40
+            ],
+            "displayedValueRange": [
+              20,
+              20
+            ],
+            "reconstruction": [
+              {
+                "x": 0,
+                "sourceWeightedSum": 40,
+                "displayedWeightedSum": 80
+              },
+              {
+                "x": 10,
+                "sourceWeightedSum": 120,
+                "displayedWeightedSum": 80
+              }
+            ]
+          }
+        }
+      },
+      "analysis": {
+        "intendedGroupValues": [
+          10,
+          30
+        ],
+        "observedGroupValues": [
+          20,
+          20
+        ],
+        "intendedHoverValue": 15,
+        "observedHoverValue": 20,
+        "result": "intentional-arithmetic-defect-detected",
+        "scope": "Independent fixture arithmetic and semantic geometry; not a general causal inference engine."
+      }
+    },
+    {
+      "actionId": "weighted-data",
+      "action": "weighted-data",
+      "generation": 10,
+      "status": "pass",
+      "state": {
+        "duplicateX": "error",
+        "generation": 10,
+        "viewport": {
+          "width": 480,
+          "height": 620
+        },
+        "mode": "interpolated-x",
+        "inspection": 2.5,
+        "pointer": {
+          "x": 99.25,
+          "y": 157.5
+        },
+        "results": [
+          {
+            "series": "monthly",
+            "kind": "interpolated",
+            "x": 2.5,
+            "y": 15,
+            "anchor": {
+              "x": 99.25,
+              "y": 196.875
+            },
+            "provenance": {
+              "kind": "interpolated",
+              "beforeIndex": 0,
+              "afterIndex": 1,
+              "beforeId": "weighted-0",
+              "afterId": "weighted-10",
+              "fraction": 0.25
+            },
+            "distance": null
+          },
+          {
+            "series": "adjusted",
+            "kind": "interpolated",
+            "x": 2.5,
+            "y": 28.333333333333332,
+            "anchor": {
+              "x": 99.25,
+              "y": 91.87500000000003
+            },
+            "provenance": {
+              "kind": "interpolated",
+              "beforeIndex": 0,
+              "afterIndex": 1,
+              "beforeId": null,
+              "afterId": null,
+              "fraction": 0.08333333333333333
+            },
+            "distance": null
+          }
+        ],
+        "plot": {
+          "x": 55,
+          "y": 235,
+          "width": 397,
+          "height": 315
+        },
+        "missingness": null,
+        "request": {
+          "policy": "latest-request-wins",
+          "status": "idle",
+          "activeId": null,
+          "pending": 0,
+          "error": null,
+          "lastCompletion": null
+        },
+        "pipeline": {
+          "generation": 10,
+          "operation": "weighted-mean",
+          "units": "score",
+          "rounding": "none",
+          "inputCount": 5,
+          "includedCount": 4,
+          "excludedCount": 1,
+          "outputCount": 2,
+          "groups": [
+            {
+              "x": 0,
+              "count": 2,
+              "weightedSum": 40,
+              "weightSum": 4,
+              "value": 10
+            },
+            {
+              "x": 10,
+              "count": 2,
+              "weightedSum": 120,
+              "weightSum": 4,
+              "value": 30
+            }
+          ],
+          "aggregation": {
+            "policy": {
+              "grouping": "exact-x",
+              "order": "ascending-x",
+              "output": "one-weighted-mean-per-included-group",
+              "preserves": [
+                "included-count",
+                "weight-sum",
+                "weighted-sum-per-group"
+              ],
+              "extrema": "not-preserved",
+              "gaps": "not-present-in-fixture"
+            },
+            "includedTotals": {
+              "count": 4,
+              "weightSum": 8,
+              "weightedSum": 160
+            },
+            "displayedTotals": {
+              "pointCount": 2,
+              "representedCount": 4,
+              "representedWeight": 8,
+              "reconstructedWeightedSum": 160
+            },
+            "includedValueRange": [
+              0,
+              40
+            ],
+            "displayedValueRange": [
+              10,
+              30
+            ],
+            "reconstruction": [
+              {
+                "x": 0,
+                "sourceWeightedSum": 40,
+                "displayedWeightedSum": 40
+              },
+              {
+                "x": 10,
+                "sourceWeightedSum": 120,
+                "displayedWeightedSum": 120
+              }
+            ]
+          }
+        }
+      },
+      "analysis": {
+        "intendedGroupValues": [
+          10,
+          30
+        ],
+        "observedGroupValues": [
+          10,
+          30
+        ],
+        "intendedHoverValue": 15,
+        "observedHoverValue": 15,
+        "result": "weighted-calculation-restored",
+        "scope": "Independent fixture arithmetic and semantic geometry; not a general causal inference engine."
+      }
+    },
+    {
+      "actionId": "async-loading-old",
+      "action": "async-start-old",
+      "status": "pass",
+      "transport": "native-playwright-pointer",
+      "state": {
+        "duplicateX": "error",
+        "generation": 10,
+        "viewport": {
+          "width": 480,
+          "height": 620
+        },
+        "mode": "interpolated-x",
+        "inspection": 5,
+        "pointer": {
+          "x": 198.5,
+          "y": 157.5
+        },
+        "results": [
+          {
+            "series": "monthly",
+            "kind": "interpolated",
+            "x": 5,
+            "y": 20,
+            "anchor": {
+              "x": 198.5,
+              "y": 157.5
+            },
+            "provenance": {
+              "kind": "interpolated",
+              "beforeIndex": 0,
+              "afterIndex": 1,
+              "beforeId": "weighted-0",
+              "afterId": "weighted-10",
+              "fraction": 0.5
+            },
+            "distance": null
+          },
+          {
+            "series": "adjusted",
+            "kind": "interpolated",
+            "x": 5,
+            "y": 20,
+            "anchor": {
+              "x": 198.5,
+              "y": 157.5
+            },
+            "provenance": {
+              "kind": "interpolated",
+              "beforeIndex": 0,
+              "afterIndex": 1,
+              "beforeId": null,
+              "afterId": null,
+              "fraction": 0.5
+            },
+            "distance": null
+          }
+        ],
+        "plot": {
+          "x": 55,
+          "y": 235,
+          "width": 397,
+          "height": 315
+        },
+        "missingness": null,
+        "request": {
+          "policy": "latest-request-wins",
+          "status": "loading",
+          "activeId": 1,
+          "pending": 1,
+          "error": null,
+          "lastCompletion": null
+        },
+        "pipeline": {
+          "generation": 10,
+          "operation": "weighted-mean",
+          "units": "score",
+          "rounding": "none",
+          "inputCount": 5,
+          "includedCount": 4,
+          "excludedCount": 1,
+          "outputCount": 2,
+          "groups": [
+            {
+              "x": 0,
+              "count": 2,
+              "weightedSum": 40,
+              "weightSum": 4,
+              "value": 10
+            },
+            {
+              "x": 10,
+              "count": 2,
+              "weightedSum": 120,
+              "weightSum": 4,
+              "value": 30
+            }
+          ],
+          "aggregation": {
+            "policy": {
+              "grouping": "exact-x",
+              "order": "ascending-x",
+              "output": "one-weighted-mean-per-included-group",
+              "preserves": [
+                "included-count",
+                "weight-sum",
+                "weighted-sum-per-group"
+              ],
+              "extrema": "not-preserved",
+              "gaps": "not-present-in-fixture"
+            },
+            "includedTotals": {
+              "count": 4,
+              "weightSum": 8,
+              "weightedSum": 160
+            },
+            "displayedTotals": {
+              "pointCount": 2,
+              "representedCount": 4,
+              "representedWeight": 8,
+              "reconstructedWeightedSum": 160
+            },
+            "includedValueRange": [
+              0,
+              40
+            ],
+            "displayedValueRange": [
+              10,
+              30
+            ],
+            "reconstruction": [
+              {
+                "x": 0,
+                "sourceWeightedSum": 40,
+                "displayedWeightedSum": 40
+              },
+              {
+                "x": 10,
+                "sourceWeightedSum": 120,
+                "displayedWeightedSum": 120
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "actionId": "async-loading-new",
+      "action": "async-start-new",
+      "status": "pass",
+      "transport": "native-playwright-pointer",
+      "state": {
+        "duplicateX": "error",
+        "generation": 10,
+        "viewport": {
+          "width": 480,
+          "height": 620
+        },
+        "mode": "interpolated-x",
+        "inspection": 5,
+        "pointer": {
+          "x": 198.5,
+          "y": 157.5
+        },
+        "results": [
+          {
+            "series": "monthly",
+            "kind": "interpolated",
+            "x": 5,
+            "y": 20,
+            "anchor": {
+              "x": 198.5,
+              "y": 157.5
+            },
+            "provenance": {
+              "kind": "interpolated",
+              "beforeIndex": 0,
+              "afterIndex": 1,
+              "beforeId": "weighted-0",
+              "afterId": "weighted-10",
+              "fraction": 0.5
+            },
+            "distance": null
+          },
+          {
+            "series": "adjusted",
+            "kind": "interpolated",
+            "x": 5,
+            "y": 20,
+            "anchor": {
+              "x": 198.5,
+              "y": 157.5
+            },
+            "provenance": {
+              "kind": "interpolated",
+              "beforeIndex": 0,
+              "afterIndex": 1,
+              "beforeId": null,
+              "afterId": null,
+              "fraction": 0.5
+            },
+            "distance": null
+          }
+        ],
+        "plot": {
+          "x": 55,
+          "y": 235,
+          "width": 397,
+          "height": 315
+        },
+        "missingness": null,
+        "request": {
+          "policy": "latest-request-wins",
+          "status": "loading",
+          "activeId": 2,
+          "pending": 2,
+          "error": null,
+          "lastCompletion": null
+        },
+        "pipeline": {
+          "generation": 10,
+          "operation": "weighted-mean",
+          "units": "score",
+          "rounding": "none",
+          "inputCount": 5,
+          "includedCount": 4,
+          "excludedCount": 1,
+          "outputCount": 2,
+          "groups": [
+            {
+              "x": 0,
+              "count": 2,
+              "weightedSum": 40,
+              "weightSum": 4,
+              "value": 10
+            },
+            {
+              "x": 10,
+              "count": 2,
+              "weightedSum": 120,
+              "weightSum": 4,
+              "value": 30
+            }
+          ],
+          "aggregation": {
+            "policy": {
+              "grouping": "exact-x",
+              "order": "ascending-x",
+              "output": "one-weighted-mean-per-included-group",
+              "preserves": [
+                "included-count",
+                "weight-sum",
+                "weighted-sum-per-group"
+              ],
+              "extrema": "not-preserved",
+              "gaps": "not-present-in-fixture"
+            },
+            "includedTotals": {
+              "count": 4,
+              "weightSum": 8,
+              "weightedSum": 160
+            },
+            "displayedTotals": {
+              "pointCount": 2,
+              "representedCount": 4,
+              "representedWeight": 8,
+              "reconstructedWeightedSum": 160
+            },
+            "includedValueRange": [
+              0,
+              40
+            ],
+            "displayedValueRange": [
+              10,
+              30
+            ],
+            "reconstruction": [
+              {
+                "x": 0,
+                "sourceWeightedSum": 40,
+                "displayedWeightedSum": 40
+              },
+              {
+                "x": 10,
+                "sourceWeightedSum": 120,
+                "displayedWeightedSum": 120
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "actionId": "async-current-success",
+      "action": "async-resolve-new",
+      "status": "pass",
+      "transport": "native-playwright-pointer",
+      "state": {
+        "duplicateX": "error",
+        "generation": 11,
+        "viewport": {
+          "width": 480,
+          "height": 620
+        },
+        "mode": "interpolated-x",
+        "inspection": 5,
+        "pointer": {
+          "x": 198.5,
+          "y": 157.5
+        },
+        "results": [
+          {
+            "series": "monthly",
+            "kind": "interpolated",
+            "x": 5,
+            "y": 30,
+            "anchor": {
+              "x": 198.5,
+              "y": 78.75
+            },
+            "provenance": {
+              "kind": "interpolated",
+              "beforeIndex": 0,
+              "afterIndex": 1,
+              "beforeId": null,
+              "afterId": null,
+              "fraction": 0.5
+            },
+            "distance": null
+          },
+          {
+            "series": "adjusted",
+            "kind": "interpolated",
+            "x": 5,
+            "y": 20,
+            "anchor": {
+              "x": 198.5,
+              "y": 157.5
+            },
+            "provenance": {
+              "kind": "interpolated",
+              "beforeIndex": 0,
+              "afterIndex": 1,
+              "beforeId": null,
+              "afterId": null,
+              "fraction": 0.5
+            },
+            "distance": null
+          }
+        ],
+        "plot": {
+          "x": 55,
+          "y": 235,
+          "width": 397,
+          "height": 315
+        },
+        "missingness": null,
+        "request": {
+          "policy": "latest-request-wins",
+          "status": "success",
+          "activeId": 2,
+          "pending": 1,
+          "error": null,
+          "lastCompletion": {
+            "id": 2,
+            "outcome": "applied"
+          }
+        },
+        "pipeline": null
+      }
+    },
+    {
+      "actionId": "async-stale-success",
+      "action": "async-resolve-old",
+      "status": "pass",
+      "transport": "native-playwright-pointer",
+      "state": {
+        "duplicateX": "error",
+        "generation": 11,
+        "viewport": {
+          "width": 480,
+          "height": 620
+        },
+        "mode": "interpolated-x",
+        "inspection": 5,
+        "pointer": {
+          "x": 198.5,
+          "y": 157.5
+        },
+        "results": [
+          {
+            "series": "monthly",
+            "kind": "interpolated",
+            "x": 5,
+            "y": 30,
+            "anchor": {
+              "x": 198.5,
+              "y": 78.75
+            },
+            "provenance": {
+              "kind": "interpolated",
+              "beforeIndex": 0,
+              "afterIndex": 1,
+              "beforeId": null,
+              "afterId": null,
+              "fraction": 0.5
+            },
+            "distance": null
+          },
+          {
+            "series": "adjusted",
+            "kind": "interpolated",
+            "x": 5,
+            "y": 20,
+            "anchor": {
+              "x": 198.5,
+              "y": 157.5
+            },
+            "provenance": {
+              "kind": "interpolated",
+              "beforeIndex": 0,
+              "afterIndex": 1,
+              "beforeId": null,
+              "afterId": null,
+              "fraction": 0.5
+            },
+            "distance": null
+          }
+        ],
+        "plot": {
+          "x": 55,
+          "y": 235,
+          "width": 397,
+          "height": 315
+        },
+        "missingness": null,
+        "request": {
+          "policy": "latest-request-wins",
+          "status": "success",
+          "activeId": 2,
+          "pending": 0,
+          "error": null,
+          "lastCompletion": {
+            "id": 1,
+            "outcome": "ignored-success"
+          }
+        },
+        "pipeline": null
+      }
+    },
+    {
+      "actionId": "async-second-old",
+      "action": "async-start-old",
+      "status": "pass",
+      "transport": "native-playwright-pointer",
+      "state": {
+        "duplicateX": "error",
+        "generation": 11,
+        "viewport": {
+          "width": 480,
+          "height": 620
+        },
+        "mode": "interpolated-x",
+        "inspection": 5,
+        "pointer": {
+          "x": 198.5,
+          "y": 157.5
+        },
+        "results": [
+          {
+            "series": "monthly",
+            "kind": "interpolated",
+            "x": 5,
+            "y": 30,
+            "anchor": {
+              "x": 198.5,
+              "y": 78.75
+            },
+            "provenance": {
+              "kind": "interpolated",
+              "beforeIndex": 0,
+              "afterIndex": 1,
+              "beforeId": null,
+              "afterId": null,
+              "fraction": 0.5
+            },
+            "distance": null
+          },
+          {
+            "series": "adjusted",
+            "kind": "interpolated",
+            "x": 5,
+            "y": 20,
+            "anchor": {
+              "x": 198.5,
+              "y": 157.5
+            },
+            "provenance": {
+              "kind": "interpolated",
+              "beforeIndex": 0,
+              "afterIndex": 1,
+              "beforeId": null,
+              "afterId": null,
+              "fraction": 0.5
+            },
+            "distance": null
+          }
+        ],
+        "plot": {
+          "x": 55,
+          "y": 235,
+          "width": 397,
+          "height": 315
+        },
+        "missingness": null,
+        "request": {
+          "policy": "latest-request-wins",
+          "status": "loading",
+          "activeId": 3,
+          "pending": 1,
+          "error": null,
+          "lastCompletion": {
+            "id": 1,
+            "outcome": "ignored-success"
+          }
+        },
+        "pipeline": null
+      }
+    },
+    {
+      "actionId": "async-second-new",
+      "action": "async-start-new",
+      "status": "pass",
+      "transport": "native-playwright-pointer",
+      "state": {
+        "duplicateX": "error",
+        "generation": 11,
+        "viewport": {
+          "width": 480,
+          "height": 620
+        },
+        "mode": "interpolated-x",
+        "inspection": 5,
+        "pointer": {
+          "x": 198.5,
+          "y": 157.5
+        },
+        "results": [
+          {
+            "series": "monthly",
+            "kind": "interpolated",
+            "x": 5,
+            "y": 30,
+            "anchor": {
+              "x": 198.5,
+              "y": 78.75
+            },
+            "provenance": {
+              "kind": "interpolated",
+              "beforeIndex": 0,
+              "afterIndex": 1,
+              "beforeId": null,
+              "afterId": null,
+              "fraction": 0.5
+            },
+            "distance": null
+          },
+          {
+            "series": "adjusted",
+            "kind": "interpolated",
+            "x": 5,
+            "y": 20,
+            "anchor": {
+              "x": 198.5,
+              "y": 157.5
+            },
+            "provenance": {
+              "kind": "interpolated",
+              "beforeIndex": 0,
+              "afterIndex": 1,
+              "beforeId": null,
+              "afterId": null,
+              "fraction": 0.5
+            },
+            "distance": null
+          }
+        ],
+        "plot": {
+          "x": 55,
+          "y": 235,
+          "width": 397,
+          "height": 315
+        },
+        "missingness": null,
+        "request": {
+          "policy": "latest-request-wins",
+          "status": "loading",
+          "activeId": 4,
+          "pending": 2,
+          "error": null,
+          "lastCompletion": {
+            "id": 1,
+            "outcome": "ignored-success"
+          }
+        },
+        "pipeline": null
+      }
+    },
+    {
+      "actionId": "async-stale-error",
+      "action": "async-reject-old",
+      "status": "pass",
+      "transport": "native-playwright-pointer",
+      "state": {
+        "duplicateX": "error",
+        "generation": 11,
+        "viewport": {
+          "width": 480,
+          "height": 620
+        },
+        "mode": "interpolated-x",
+        "inspection": 5,
+        "pointer": {
+          "x": 198.5,
+          "y": 157.5
+        },
+        "results": [
+          {
+            "series": "monthly",
+            "kind": "interpolated",
+            "x": 5,
+            "y": 30,
+            "anchor": {
+              "x": 198.5,
+              "y": 78.75
+            },
+            "provenance": {
+              "kind": "interpolated",
+              "beforeIndex": 0,
+              "afterIndex": 1,
+              "beforeId": null,
+              "afterId": null,
+              "fraction": 0.5
+            },
+            "distance": null
+          },
+          {
+            "series": "adjusted",
+            "kind": "interpolated",
+            "x": 5,
+            "y": 20,
+            "anchor": {
+              "x": 198.5,
+              "y": 157.5
+            },
+            "provenance": {
+              "kind": "interpolated",
+              "beforeIndex": 0,
+              "afterIndex": 1,
+              "beforeId": null,
+              "afterId": null,
+              "fraction": 0.5
+            },
+            "distance": null
+          }
+        ],
+        "plot": {
+          "x": 55,
+          "y": 235,
+          "width": 397,
+          "height": 315
+        },
+        "missingness": null,
+        "request": {
+          "policy": "latest-request-wins",
+          "status": "loading",
+          "activeId": 4,
+          "pending": 1,
+          "error": null,
+          "lastCompletion": {
+            "id": 3,
+            "outcome": "ignored-error"
+          }
+        },
+        "pipeline": null
+      }
+    },
+    {
+      "actionId": "async-current-error",
+      "action": "async-reject-new",
+      "status": "pass",
+      "transport": "native-playwright-pointer",
+      "state": {
+        "duplicateX": "error",
+        "generation": 11,
+        "viewport": {
+          "width": 480,
+          "height": 620
+        },
+        "mode": "interpolated-x",
+        "inspection": 5,
+        "pointer": {
+          "x": 198.5,
+          "y": 157.5
+        },
+        "results": [
+          {
+            "series": "monthly",
+            "kind": "interpolated",
+            "x": 5,
+            "y": 30,
+            "anchor": {
+              "x": 198.5,
+              "y": 78.75
+            },
+            "provenance": {
+              "kind": "interpolated",
+              "beforeIndex": 0,
+              "afterIndex": 1,
+              "beforeId": null,
+              "afterId": null,
+              "fraction": 0.5
+            },
+            "distance": null
+          },
+          {
+            "series": "adjusted",
+            "kind": "interpolated",
+            "x": 5,
+            "y": 20,
+            "anchor": {
+              "x": 198.5,
+              "y": 157.5
+            },
+            "provenance": {
+              "kind": "interpolated",
+              "beforeIndex": 0,
+              "afterIndex": 1,
+              "beforeId": null,
+              "afterId": null,
+              "fraction": 0.5
+            },
+            "distance": null
+          }
+        ],
+        "plot": {
+          "x": 55,
+          "y": 235,
+          "width": 397,
+          "height": 315
+        },
+        "missingness": null,
+        "request": {
+          "policy": "latest-request-wins",
+          "status": "error",
+          "activeId": 4,
+          "pending": 0,
+          "error": "Controlled data failure",
+          "lastCompletion": {
+            "id": 4,
+            "outcome": "error"
+          }
+        },
+        "pipeline": null
+      }
+    },
+    {
+      "actionId": "async-retry-loading",
+      "action": "async-start-new",
+      "status": "pass",
+      "transport": "native-playwright-pointer",
+      "state": {
+        "duplicateX": "error",
+        "generation": 11,
+        "viewport": {
+          "width": 480,
+          "height": 620
+        },
+        "mode": "interpolated-x",
+        "inspection": 5,
+        "pointer": {
+          "x": 198.5,
+          "y": 157.5
+        },
+        "results": [
+          {
+            "series": "monthly",
+            "kind": "interpolated",
+            "x": 5,
+            "y": 30,
+            "anchor": {
+              "x": 198.5,
+              "y": 78.75
+            },
+            "provenance": {
+              "kind": "interpolated",
+              "beforeIndex": 0,
+              "afterIndex": 1,
+              "beforeId": null,
+              "afterId": null,
+              "fraction": 0.5
+            },
+            "distance": null
+          },
+          {
+            "series": "adjusted",
+            "kind": "interpolated",
+            "x": 5,
+            "y": 20,
+            "anchor": {
+              "x": 198.5,
+              "y": 157.5
+            },
+            "provenance": {
+              "kind": "interpolated",
+              "beforeIndex": 0,
+              "afterIndex": 1,
+              "beforeId": null,
+              "afterId": null,
+              "fraction": 0.5
+            },
+            "distance": null
+          }
+        ],
+        "plot": {
+          "x": 55,
+          "y": 235,
+          "width": 397,
+          "height": 315
+        },
+        "missingness": null,
+        "request": {
+          "policy": "latest-request-wins",
+          "status": "loading",
+          "activeId": 5,
+          "pending": 1,
+          "error": null,
+          "lastCompletion": {
+            "id": 4,
+            "outcome": "error"
+          }
+        },
+        "pipeline": null
+      }
+    },
+    {
+      "actionId": "async-retry-success",
+      "action": "async-resolve-new",
+      "status": "pass",
+      "transport": "native-playwright-pointer",
+      "state": {
+        "duplicateX": "error",
+        "generation": 12,
+        "viewport": {
+          "width": 480,
+          "height": 620
+        },
+        "mode": "interpolated-x",
+        "inspection": 5,
+        "pointer": {
+          "x": 198.5,
+          "y": 157.5
+        },
+        "results": [
+          {
+            "series": "monthly",
+            "kind": "interpolated",
+            "x": 5,
+            "y": 30,
+            "anchor": {
+              "x": 198.5,
+              "y": 78.75
+            },
+            "provenance": {
+              "kind": "interpolated",
+              "beforeIndex": 0,
+              "afterIndex": 1,
+              "beforeId": null,
+              "afterId": null,
+              "fraction": 0.5
+            },
+            "distance": null
+          },
+          {
+            "series": "adjusted",
+            "kind": "interpolated",
+            "x": 5,
+            "y": 20,
+            "anchor": {
+              "x": 198.5,
+              "y": 157.5
+            },
+            "provenance": {
+              "kind": "interpolated",
+              "beforeIndex": 0,
+              "afterIndex": 1,
+              "beforeId": null,
+              "afterId": null,
+              "fraction": 0.5
+            },
+            "distance": null
+          }
+        ],
+        "plot": {
+          "x": 55,
+          "y": 235,
+          "width": 397,
+          "height": 315
+        },
+        "missingness": null,
+        "request": {
+          "policy": "latest-request-wins",
+          "status": "success",
+          "activeId": 5,
+          "pending": 0,
+          "error": null,
+          "lastCompletion": {
+            "id": 5,
+            "outcome": "applied"
+          }
+        },
+        "pipeline": null
+      }
+    },
+    {
+      "actionId": "zero-missing-invalid",
+      "action": "zero-missing-invalid",
+      "status": "pass",
+      "transport": "native-playwright-pointer",
+      "observations": [
+        {
+          "x": 1,
+          "state": {
+            "duplicateX": "error",
+            "generation": 13,
+            "viewport": {
+              "width": 480,
+              "height": 620
+            },
+            "mode": "interpolated-x",
+            "inspection": 1.0000003074818955,
+            "pointer": {
+              "x": 39.70001220703125,
+              "y": 157.5
+            },
+            "results": [
+              {
+                "series": "monthly",
+                "kind": "interpolated",
+                "x": 1.0000003074818955,
+                "y": 0.0000030748189550067195,
+                "anchor": {
+                  "x": 39.70001220703126,
+                  "y": 314.99997578580076
+                },
+                "provenance": {
+                  "kind": "interpolated",
+                  "beforeIndex": 1,
+                  "afterIndex": 2,
+                  "beforeId": "zero",
+                  "afterId": "before-gap",
+                  "fraction": 3.0748189550067195e-7
+                },
+                "distance": null
+              }
+            ],
+            "plot": {
+              "x": 55,
+              "y": 235,
+              "width": 397,
+              "height": 315
+            },
+            "missingness": {
+              "generation": 13,
+              "policy": "finite-including-zero;missing-and-invalid-break-segments",
+              "counts": {
+                "input": 10,
+                "finite": 5,
+                "zero": 1,
+                "missing": 2,
+                "invalid": 3
+              },
+              "rows": [
+                {
+                  "id": "start",
+                  "x": 0,
+                  "value": {
+                    "kind": "number",
+                    "value": 10
+                  }
+                },
+                {
+                  "id": "zero",
+                  "x": 1,
+                  "value": {
+                    "kind": "number",
+                    "value": 0
+                  }
+                },
+                {
+                  "id": "before-gap",
+                  "x": 2,
+                  "value": {
+                    "kind": "number",
+                    "value": 10
+                  }
+                },
+                {
+                  "id": "null",
+                  "x": 3,
+                  "value": {
+                    "kind": "missing-null"
+                  }
+                },
+                {
+                  "id": "undefined",
+                  "x": 4,
+                  "value": {
+                    "kind": "missing-undefined"
+                  }
+                },
+                {
+                  "id": "nan",
+                  "x": 5,
+                  "value": {
+                    "kind": "invalid-nan"
+                  }
+                },
+                {
+                  "id": "positive-infinity",
+                  "x": 6,
+                  "value": {
+                    "kind": "invalid-positive-infinity"
+                  }
+                },
+                {
+                  "id": "negative-infinity",
+                  "x": 7,
+                  "value": {
+                    "kind": "invalid-negative-infinity"
+                  }
+                },
+                {
+                  "id": "after-gap",
+                  "x": 8,
+                  "value": {
+                    "kind": "number",
+                    "value": 20
+                  }
+                },
+                {
+                  "id": "end",
+                  "x": 10,
+                  "value": {
+                    "kind": "number",
+                    "value": 30
+                  }
+                }
+              ]
+            },
+            "request": {
+              "policy": "latest-request-wins",
+              "status": "success",
+              "activeId": 5,
+              "pending": 0,
+              "error": null,
+              "lastCompletion": {
+                "id": 5,
+                "outcome": "applied"
+              }
+            },
+            "pipeline": null
+          }
+        },
+        {
+          "x": 2.5,
+          "state": {
+            "duplicateX": "error",
+            "generation": 13,
+            "viewport": {
+              "width": 480,
+              "height": 620
+            },
+            "mode": "interpolated-x",
+            "inspection": 2.5,
+            "pointer": {
+              "x": 99.25,
+              "y": 157.5
+            },
+            "results": [
+              {
+                "series": "adjusted",
+                "kind": "interpolated",
+                "x": 2.5,
+                "y": 28.333333333333332,
+                "anchor": {
+                  "x": 99.25,
+                  "y": 91.87500000000003
+                },
+                "provenance": {
+                  "kind": "interpolated",
+                  "beforeIndex": 0,
+                  "afterIndex": 1,
+                  "beforeId": null,
+                  "afterId": null,
+                  "fraction": 0.08333333333333333
+                },
+                "distance": null
+              }
+            ],
+            "plot": {
+              "x": 55,
+              "y": 235,
+              "width": 397,
+              "height": 315
+            },
+            "missingness": {
+              "generation": 13,
+              "policy": "finite-including-zero;missing-and-invalid-break-segments",
+              "counts": {
+                "input": 10,
+                "finite": 5,
+                "zero": 1,
+                "missing": 2,
+                "invalid": 3
+              },
+              "rows": [
+                {
+                  "id": "start",
+                  "x": 0,
+                  "value": {
+                    "kind": "number",
+                    "value": 10
+                  }
+                },
+                {
+                  "id": "zero",
+                  "x": 1,
+                  "value": {
+                    "kind": "number",
+                    "value": 0
+                  }
+                },
+                {
+                  "id": "before-gap",
+                  "x": 2,
+                  "value": {
+                    "kind": "number",
+                    "value": 10
+                  }
+                },
+                {
+                  "id": "null",
+                  "x": 3,
+                  "value": {
+                    "kind": "missing-null"
+                  }
+                },
+                {
+                  "id": "undefined",
+                  "x": 4,
+                  "value": {
+                    "kind": "missing-undefined"
+                  }
+                },
+                {
+                  "id": "nan",
+                  "x": 5,
+                  "value": {
+                    "kind": "invalid-nan"
+                  }
+                },
+                {
+                  "id": "positive-infinity",
+                  "x": 6,
+                  "value": {
+                    "kind": "invalid-positive-infinity"
+                  }
+                },
+                {
+                  "id": "negative-infinity",
+                  "x": 7,
+                  "value": {
+                    "kind": "invalid-negative-infinity"
+                  }
+                },
+                {
+                  "id": "after-gap",
+                  "x": 8,
+                  "value": {
+                    "kind": "number",
+                    "value": 20
+                  }
+                },
+                {
+                  "id": "end",
+                  "x": 10,
+                  "value": {
+                    "kind": "number",
+                    "value": 30
+                  }
+                }
+              ]
+            },
+            "request": {
+              "policy": "latest-request-wins",
+              "status": "success",
+              "activeId": 5,
+              "pending": 0,
+              "error": null,
+              "lastCompletion": {
+                "id": 5,
+                "outcome": "applied"
+              }
+            },
+            "pipeline": null
+          }
+        },
+        {
+          "x": 3,
+          "state": {
+            "duplicateX": "error",
+            "generation": 13,
+            "viewport": {
+              "width": 480,
+              "height": 620
+            },
+            "mode": "interpolated-x",
+            "inspection": 2.999999385036209,
+            "pointer": {
+              "x": 119.0999755859375,
+              "y": 157.5
+            },
+            "results": [
+              {
+                "series": "adjusted",
+                "kind": "interpolated",
+                "x": 2.999999385036209,
+                "y": 26.666668716545967,
+                "anchor": {
+                  "x": 119.09997558593749,
+                  "y": 104.9999838572005
+                },
+                "provenance": {
+                  "kind": "interpolated",
+                  "beforeIndex": 0,
+                  "afterIndex": 1,
+                  "beforeId": null,
+                  "afterId": null,
+                  "fraction": 0.1666665641727015
+                },
+                "distance": null
+              }
+            ],
+            "plot": {
+              "x": 55,
+              "y": 235,
+              "width": 397,
+              "height": 315
+            },
+            "missingness": {
+              "generation": 13,
+              "policy": "finite-including-zero;missing-and-invalid-break-segments",
+              "counts": {
+                "input": 10,
+                "finite": 5,
+                "zero": 1,
+                "missing": 2,
+                "invalid": 3
+              },
+              "rows": [
+                {
+                  "id": "start",
+                  "x": 0,
+                  "value": {
+                    "kind": "number",
+                    "value": 10
+                  }
+                },
+                {
+                  "id": "zero",
+                  "x": 1,
+                  "value": {
+                    "kind": "number",
+                    "value": 0
+                  }
+                },
+                {
+                  "id": "before-gap",
+                  "x": 2,
+                  "value": {
+                    "kind": "number",
+                    "value": 10
+                  }
+                },
+                {
+                  "id": "null",
+                  "x": 3,
+                  "value": {
+                    "kind": "missing-null"
+                  }
+                },
+                {
+                  "id": "undefined",
+                  "x": 4,
+                  "value": {
+                    "kind": "missing-undefined"
+                  }
+                },
+                {
+                  "id": "nan",
+                  "x": 5,
+                  "value": {
+                    "kind": "invalid-nan"
+                  }
+                },
+                {
+                  "id": "positive-infinity",
+                  "x": 6,
+                  "value": {
+                    "kind": "invalid-positive-infinity"
+                  }
+                },
+                {
+                  "id": "negative-infinity",
+                  "x": 7,
+                  "value": {
+                    "kind": "invalid-negative-infinity"
+                  }
+                },
+                {
+                  "id": "after-gap",
+                  "x": 8,
+                  "value": {
+                    "kind": "number",
+                    "value": 20
+                  }
+                },
+                {
+                  "id": "end",
+                  "x": 10,
+                  "value": {
+                    "kind": "number",
+                    "value": 30
+                  }
+                }
+              ]
+            },
+            "request": {
+              "policy": "latest-request-wins",
+              "status": "success",
+              "activeId": 5,
+              "pending": 0,
+              "error": null,
+              "lastCompletion": {
+                "id": 5,
+                "outcome": "applied"
+              }
+            },
+            "pipeline": null
+          }
+        },
+        {
+          "x": 4,
+          "state": {
+            "duplicateX": "error",
+            "generation": 13,
+            "viewport": {
+              "width": 480,
+              "height": 620
+            },
+            "mode": "interpolated-x",
+            "inspection": 3.999999692518105,
+            "pointer": {
+              "x": 158.79998779296875,
+              "y": 157.5
+            },
+            "results": [
+              {
+                "series": "adjusted",
+                "kind": "interpolated",
+                "x": 3.999999692518105,
+                "y": 23.33333435827298,
+                "anchor": {
+                  "x": 158.79998779296875,
+                  "y": 131.24999192860025
+                },
+                "provenance": {
+                  "kind": "interpolated",
+                  "beforeIndex": 0,
+                  "afterIndex": 1,
+                  "beforeId": null,
+                  "afterId": null,
+                  "fraction": 0.3333332820863508
+                },
+                "distance": null
+              }
+            ],
+            "plot": {
+              "x": 55,
+              "y": 235,
+              "width": 397,
+              "height": 315
+            },
+            "missingness": {
+              "generation": 13,
+              "policy": "finite-including-zero;missing-and-invalid-break-segments",
+              "counts": {
+                "input": 10,
+                "finite": 5,
+                "zero": 1,
+                "missing": 2,
+                "invalid": 3
+              },
+              "rows": [
+                {
+                  "id": "start",
+                  "x": 0,
+                  "value": {
+                    "kind": "number",
+                    "value": 10
+                  }
+                },
+                {
+                  "id": "zero",
+                  "x": 1,
+                  "value": {
+                    "kind": "number",
+                    "value": 0
+                  }
+                },
+                {
+                  "id": "before-gap",
+                  "x": 2,
+                  "value": {
+                    "kind": "number",
+                    "value": 10
+                  }
+                },
+                {
+                  "id": "null",
+                  "x": 3,
+                  "value": {
+                    "kind": "missing-null"
+                  }
+                },
+                {
+                  "id": "undefined",
+                  "x": 4,
+                  "value": {
+                    "kind": "missing-undefined"
+                  }
+                },
+                {
+                  "id": "nan",
+                  "x": 5,
+                  "value": {
+                    "kind": "invalid-nan"
+                  }
+                },
+                {
+                  "id": "positive-infinity",
+                  "x": 6,
+                  "value": {
+                    "kind": "invalid-positive-infinity"
+                  }
+                },
+                {
+                  "id": "negative-infinity",
+                  "x": 7,
+                  "value": {
+                    "kind": "invalid-negative-infinity"
+                  }
+                },
+                {
+                  "id": "after-gap",
+                  "x": 8,
+                  "value": {
+                    "kind": "number",
+                    "value": 20
+                  }
+                },
+                {
+                  "id": "end",
+                  "x": 10,
+                  "value": {
+                    "kind": "number",
+                    "value": 30
+                  }
+                }
+              ]
+            },
+            "request": {
+              "policy": "latest-request-wins",
+              "status": "success",
+              "activeId": 5,
+              "pending": 0,
+              "error": null,
+              "lastCompletion": {
+                "id": 5,
+                "outcome": "applied"
+              }
+            },
+            "pipeline": null
+          }
+        },
+        {
+          "x": 5,
+          "state": {
+            "duplicateX": "error",
+            "generation": 13,
+            "viewport": {
+              "width": 480,
+              "height": 620
+            },
+            "mode": "interpolated-x",
+            "inspection": 5,
+            "pointer": {
+              "x": 198.5,
+              "y": 157.5
+            },
+            "results": [
+              {
+                "series": "adjusted",
+                "kind": "interpolated",
+                "x": 5,
+                "y": 20,
+                "anchor": {
+                  "x": 198.5,
+                  "y": 157.5
+                },
+                "provenance": {
+                  "kind": "interpolated",
+                  "beforeIndex": 0,
+                  "afterIndex": 1,
+                  "beforeId": null,
+                  "afterId": null,
+                  "fraction": 0.5
+                },
+                "distance": null
+              }
+            ],
+            "plot": {
+              "x": 55,
+              "y": 235,
+              "width": 397,
+              "height": 315
+            },
+            "missingness": {
+              "generation": 13,
+              "policy": "finite-including-zero;missing-and-invalid-break-segments",
+              "counts": {
+                "input": 10,
+                "finite": 5,
+                "zero": 1,
+                "missing": 2,
+                "invalid": 3
+              },
+              "rows": [
+                {
+                  "id": "start",
+                  "x": 0,
+                  "value": {
+                    "kind": "number",
+                    "value": 10
+                  }
+                },
+                {
+                  "id": "zero",
+                  "x": 1,
+                  "value": {
+                    "kind": "number",
+                    "value": 0
+                  }
+                },
+                {
+                  "id": "before-gap",
+                  "x": 2,
+                  "value": {
+                    "kind": "number",
+                    "value": 10
+                  }
+                },
+                {
+                  "id": "null",
+                  "x": 3,
+                  "value": {
+                    "kind": "missing-null"
+                  }
+                },
+                {
+                  "id": "undefined",
+                  "x": 4,
+                  "value": {
+                    "kind": "missing-undefined"
+                  }
+                },
+                {
+                  "id": "nan",
+                  "x": 5,
+                  "value": {
+                    "kind": "invalid-nan"
+                  }
+                },
+                {
+                  "id": "positive-infinity",
+                  "x": 6,
+                  "value": {
+                    "kind": "invalid-positive-infinity"
+                  }
+                },
+                {
+                  "id": "negative-infinity",
+                  "x": 7,
+                  "value": {
+                    "kind": "invalid-negative-infinity"
+                  }
+                },
+                {
+                  "id": "after-gap",
+                  "x": 8,
+                  "value": {
+                    "kind": "number",
+                    "value": 20
+                  }
+                },
+                {
+                  "id": "end",
+                  "x": 10,
+                  "value": {
+                    "kind": "number",
+                    "value": 30
+                  }
+                }
+              ]
+            },
+            "request": {
+              "policy": "latest-request-wins",
+              "status": "success",
+              "activeId": 5,
+              "pending": 0,
+              "error": null,
+              "lastCompletion": {
+                "id": 5,
+                "outcome": "applied"
+              }
+            },
+            "pipeline": null
+          }
+        },
+        {
+          "x": 6,
+          "state": {
+            "duplicateX": "error",
+            "generation": 13,
+            "viewport": {
+              "width": 480,
+              "height": 620
+            },
+            "mode": "interpolated-x",
+            "inspection": 6.000000307481895,
+            "pointer": {
+              "x": 238.20001220703125,
+              "y": 157.5
+            },
+            "results": [
+              {
+                "series": "adjusted",
+                "kind": "interpolated",
+                "x": 6.000000307481895,
+                "y": 16.66666564172702,
+                "anchor": {
+                  "x": 238.20001220703125,
+                  "y": 183.75000807139972
+                },
+                "provenance": {
+                  "kind": "interpolated",
+                  "beforeIndex": 0,
+                  "afterIndex": 1,
+                  "beforeId": null,
+                  "afterId": null,
+                  "fraction": 0.6666667179136492
+                },
+                "distance": null
+              }
+            ],
+            "plot": {
+              "x": 55,
+              "y": 235,
+              "width": 397,
+              "height": 315
+            },
+            "missingness": {
+              "generation": 13,
+              "policy": "finite-including-zero;missing-and-invalid-break-segments",
+              "counts": {
+                "input": 10,
+                "finite": 5,
+                "zero": 1,
+                "missing": 2,
+                "invalid": 3
+              },
+              "rows": [
+                {
+                  "id": "start",
+                  "x": 0,
+                  "value": {
+                    "kind": "number",
+                    "value": 10
+                  }
+                },
+                {
+                  "id": "zero",
+                  "x": 1,
+                  "value": {
+                    "kind": "number",
+                    "value": 0
+                  }
+                },
+                {
+                  "id": "before-gap",
+                  "x": 2,
+                  "value": {
+                    "kind": "number",
+                    "value": 10
+                  }
+                },
+                {
+                  "id": "null",
+                  "x": 3,
+                  "value": {
+                    "kind": "missing-null"
+                  }
+                },
+                {
+                  "id": "undefined",
+                  "x": 4,
+                  "value": {
+                    "kind": "missing-undefined"
+                  }
+                },
+                {
+                  "id": "nan",
+                  "x": 5,
+                  "value": {
+                    "kind": "invalid-nan"
+                  }
+                },
+                {
+                  "id": "positive-infinity",
+                  "x": 6,
+                  "value": {
+                    "kind": "invalid-positive-infinity"
+                  }
+                },
+                {
+                  "id": "negative-infinity",
+                  "x": 7,
+                  "value": {
+                    "kind": "invalid-negative-infinity"
+                  }
+                },
+                {
+                  "id": "after-gap",
+                  "x": 8,
+                  "value": {
+                    "kind": "number",
+                    "value": 20
+                  }
+                },
+                {
+                  "id": "end",
+                  "x": 10,
+                  "value": {
+                    "kind": "number",
+                    "value": 30
+                  }
+                }
+              ]
+            },
+            "request": {
+              "policy": "latest-request-wins",
+              "status": "success",
+              "activeId": 5,
+              "pending": 0,
+              "error": null,
+              "lastCompletion": {
+                "id": 5,
+                "outcome": "applied"
+              }
+            },
+            "pipeline": null
+          }
+        },
+        {
+          "x": 7,
+          "state": {
+            "duplicateX": "error",
+            "generation": 13,
+            "viewport": {
+              "width": 480,
+              "height": 620
+            },
+            "mode": "interpolated-x",
+            "inspection": 7.00000061496379,
+            "pointer": {
+              "x": 277.9000244140625,
+              "y": 157.5
+            },
+            "results": [
+              {
+                "series": "adjusted",
+                "kind": "interpolated",
+                "x": 7.00000061496379,
+                "y": 13.333331283454033,
+                "anchor": {
+                  "x": 277.9000244140625,
+                  "y": 210.0000161427995
+                },
+                "provenance": {
+                  "kind": "interpolated",
+                  "beforeIndex": 0,
+                  "afterIndex": 1,
+                  "beforeId": null,
+                  "afterId": null,
+                  "fraction": 0.8333334358272984
+                },
+                "distance": null
+              }
+            ],
+            "plot": {
+              "x": 55,
+              "y": 235,
+              "width": 397,
+              "height": 315
+            },
+            "missingness": {
+              "generation": 13,
+              "policy": "finite-including-zero;missing-and-invalid-break-segments",
+              "counts": {
+                "input": 10,
+                "finite": 5,
+                "zero": 1,
+                "missing": 2,
+                "invalid": 3
+              },
+              "rows": [
+                {
+                  "id": "start",
+                  "x": 0,
+                  "value": {
+                    "kind": "number",
+                    "value": 10
+                  }
+                },
+                {
+                  "id": "zero",
+                  "x": 1,
+                  "value": {
+                    "kind": "number",
+                    "value": 0
+                  }
+                },
+                {
+                  "id": "before-gap",
+                  "x": 2,
+                  "value": {
+                    "kind": "number",
+                    "value": 10
+                  }
+                },
+                {
+                  "id": "null",
+                  "x": 3,
+                  "value": {
+                    "kind": "missing-null"
+                  }
+                },
+                {
+                  "id": "undefined",
+                  "x": 4,
+                  "value": {
+                    "kind": "missing-undefined"
+                  }
+                },
+                {
+                  "id": "nan",
+                  "x": 5,
+                  "value": {
+                    "kind": "invalid-nan"
+                  }
+                },
+                {
+                  "id": "positive-infinity",
+                  "x": 6,
+                  "value": {
+                    "kind": "invalid-positive-infinity"
+                  }
+                },
+                {
+                  "id": "negative-infinity",
+                  "x": 7,
+                  "value": {
+                    "kind": "invalid-negative-infinity"
+                  }
+                },
+                {
+                  "id": "after-gap",
+                  "x": 8,
+                  "value": {
+                    "kind": "number",
+                    "value": 20
+                  }
+                },
+                {
+                  "id": "end",
+                  "x": 10,
+                  "value": {
+                    "kind": "number",
+                    "value": 30
+                  }
+                }
+              ]
+            },
+            "request": {
+              "policy": "latest-request-wins",
+              "status": "success",
+              "activeId": 5,
+              "pending": 0,
+              "error": null,
+              "lastCompletion": {
+                "id": 5,
+                "outcome": "applied"
+              }
+            },
+            "pipeline": null
+          }
+        },
+        {
+          "x": 7.5,
+          "state": {
+            "duplicateX": "error",
+            "generation": 13,
+            "viewport": {
+              "width": 480,
+              "height": 620
+            },
+            "mode": "interpolated-x",
+            "inspection": 7.5,
+            "pointer": {
+              "x": 297.75,
+              "y": 157.5
+            },
+            "results": [
+              {
+                "series": "adjusted",
+                "kind": "interpolated",
+                "x": 7.5,
+                "y": 11.666666666666668,
+                "anchor": {
+                  "x": 297.75,
+                  "y": 223.125
+                },
+                "provenance": {
+                  "kind": "interpolated",
+                  "beforeIndex": 0,
+                  "afterIndex": 1,
+                  "beforeId": null,
+                  "afterId": null,
+                  "fraction": 0.9166666666666666
+                },
+                "distance": null
+              }
+            ],
+            "plot": {
+              "x": 55,
+              "y": 235,
+              "width": 397,
+              "height": 315
+            },
+            "missingness": {
+              "generation": 13,
+              "policy": "finite-including-zero;missing-and-invalid-break-segments",
+              "counts": {
+                "input": 10,
+                "finite": 5,
+                "zero": 1,
+                "missing": 2,
+                "invalid": 3
+              },
+              "rows": [
+                {
+                  "id": "start",
+                  "x": 0,
+                  "value": {
+                    "kind": "number",
+                    "value": 10
+                  }
+                },
+                {
+                  "id": "zero",
+                  "x": 1,
+                  "value": {
+                    "kind": "number",
+                    "value": 0
+                  }
+                },
+                {
+                  "id": "before-gap",
+                  "x": 2,
+                  "value": {
+                    "kind": "number",
+                    "value": 10
+                  }
+                },
+                {
+                  "id": "null",
+                  "x": 3,
+                  "value": {
+                    "kind": "missing-null"
+                  }
+                },
+                {
+                  "id": "undefined",
+                  "x": 4,
+                  "value": {
+                    "kind": "missing-undefined"
+                  }
+                },
+                {
+                  "id": "nan",
+                  "x": 5,
+                  "value": {
+                    "kind": "invalid-nan"
+                  }
+                },
+                {
+                  "id": "positive-infinity",
+                  "x": 6,
+                  "value": {
+                    "kind": "invalid-positive-infinity"
+                  }
+                },
+                {
+                  "id": "negative-infinity",
+                  "x": 7,
+                  "value": {
+                    "kind": "invalid-negative-infinity"
+                  }
+                },
+                {
+                  "id": "after-gap",
+                  "x": 8,
+                  "value": {
+                    "kind": "number",
+                    "value": 20
+                  }
+                },
+                {
+                  "id": "end",
+                  "x": 10,
+                  "value": {
+                    "kind": "number",
+                    "value": 30
+                  }
+                }
+              ]
+            },
+            "request": {
+              "policy": "latest-request-wins",
+              "status": "success",
+              "activeId": 5,
+              "pending": 0,
+              "error": null,
+              "lastCompletion": {
+                "id": 5,
+                "outcome": "applied"
+              }
+            },
+            "pipeline": null
+          }
+        },
+        {
+          "x": 9,
+          "state": {
+            "duplicateX": "error",
+            "generation": 13,
+            "viewport": {
+              "width": 480,
+              "height": 620
+            },
+            "mode": "interpolated-x",
+            "inspection": 8.999999692518104,
+            "pointer": {
+              "x": 357.29998779296875,
+              "y": 157.5
+            },
+            "results": [
+              {
+                "series": "monthly",
+                "kind": "interpolated",
+                "x": 8.999999692518104,
+                "y": 24.99999846259052,
+                "anchor": {
+                  "x": 357.2999877929687,
+                  "y": 118.12501210709965
+                },
+                "provenance": {
+                  "kind": "interpolated",
+                  "beforeIndex": 8,
+                  "afterIndex": 9,
+                  "beforeId": "after-gap",
+                  "afterId": "end",
+                  "fraction": 0.499999846259052
+                },
+                "distance": null
+              }
+            ],
+            "plot": {
+              "x": 55,
+              "y": 235,
+              "width": 397,
+              "height": 315
+            },
+            "missingness": {
+              "generation": 13,
+              "policy": "finite-including-zero;missing-and-invalid-break-segments",
+              "counts": {
+                "input": 10,
+                "finite": 5,
+                "zero": 1,
+                "missing": 2,
+                "invalid": 3
+              },
+              "rows": [
+                {
+                  "id": "start",
+                  "x": 0,
+                  "value": {
+                    "kind": "number",
+                    "value": 10
+                  }
+                },
+                {
+                  "id": "zero",
+                  "x": 1,
+                  "value": {
+                    "kind": "number",
+                    "value": 0
+                  }
+                },
+                {
+                  "id": "before-gap",
+                  "x": 2,
+                  "value": {
+                    "kind": "number",
+                    "value": 10
+                  }
+                },
+                {
+                  "id": "null",
+                  "x": 3,
+                  "value": {
+                    "kind": "missing-null"
+                  }
+                },
+                {
+                  "id": "undefined",
+                  "x": 4,
+                  "value": {
+                    "kind": "missing-undefined"
+                  }
+                },
+                {
+                  "id": "nan",
+                  "x": 5,
+                  "value": {
+                    "kind": "invalid-nan"
+                  }
+                },
+                {
+                  "id": "positive-infinity",
+                  "x": 6,
+                  "value": {
+                    "kind": "invalid-positive-infinity"
+                  }
+                },
+                {
+                  "id": "negative-infinity",
+                  "x": 7,
+                  "value": {
+                    "kind": "invalid-negative-infinity"
+                  }
+                },
+                {
+                  "id": "after-gap",
+                  "x": 8,
+                  "value": {
+                    "kind": "number",
+                    "value": 20
+                  }
+                },
+                {
+                  "id": "end",
+                  "x": 10,
+                  "value": {
+                    "kind": "number",
+                    "value": 30
+                  }
+                }
+              ]
+            },
+            "request": {
+              "policy": "latest-request-wins",
+              "status": "success",
+              "activeId": 5,
+              "pending": 0,
+              "error": null,
+              "lastCompletion": {
+                "id": 5,
+                "outcome": "applied"
+              }
+            },
+            "pipeline": null
+          }
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "droppedErrors": 0,
+  "checkpointRunId": "e8f8d572-d292-4244-a7d4-74113c07b9c7",
+  "run": {
+    "schema": "pibbl-replay-run/1",
+    "runId": "e8f8d572-d292-4244-a7d4-74113c07b9c7",
+    "kind": "viz",
+    "startedAt": "2026-10-02T02:48:27.256Z",
+    "clock": "UTC-wall-clock",
+    "environment": {
+      "node": "v24.15.0",
+      "platform": "darwin",
+      "architecture": "arm64",
+      "browserContext": {
+        "viewport": {
+          "width": 1280,
+          "height": 1000
+        },
+        "deviceScaleFactor": 1,
+        "locale": "en-US",
+        "timezoneId": "UTC",
+        "reducedMotion": "reduce",
+        "colorScheme": "light"
+      },
+      "observedPage": {
+        "status": "observed",
+        "scope": "page-reported-at-capture",
+        "viewportCss": {
+          "width": 1280,
+          "height": 1000
+        },
+        "devicePixelRatio": 1,
+        "visualViewportScale": 1,
+        "browserZoom": "unavailable",
+        "language": "en-US",
+        "timezone": "UTC",
+        "preferences": {
+          "dark": false,
+          "reducedMotion": true
+        }
+      }
+    },
+    "rerun": {
+      "executable": "/Users/benlesh/.local/share/fnm/node-versions/v24.15.0/installation/bin/node",
+      "arguments": [
+        "/Users/benlesh/GitHub/crc/tooling/agent-verification/viz-replay.mjs",
+        "http://127.0.0.1:5199/#/testing/viz-hover-lab"
+      ],
+      "cwd": "/Users/benlesh/GitHub/crc",
+      "environment": {
+        "PIBBL_VERIFY_DENSITY": "1"
+      },
+      "unsetEnvironment": [
+        "PIBBL_VERIFY_BROWSER_ENDPOINT"
+      ],
+      "outputPolicy": "fresh-default-directory",
+      "preconditions": [
+        "Provision the recorded checkout dependencies and Playwright Chromium.",
+        "Serve the source Studio from the intended checkout at the recorded URL; served/local identity checks must pass."
+      ]
+    },
+    "toolIdentity": {
+      "schema": "pibbl-replay-tool-identity/1",
+      "revision": "c838c434159efe602583f1cc2bf5383b57c15db5",
+      "sha256": "b67b39289a51688f8060863a4da95bdc7aa9813a5d0bffcd07150e3fae0856c2",
+      "files": 11,
+      "scope": "Replay and declared local dependencies on disk; not loaded-module or installed-dependency attestation."
+    },
+    "toolIdentityAfter": {
+      "schema": "pibbl-replay-tool-identity/1",
+      "revision": "c838c434159efe602583f1cc2bf5383b57c15db5",
+      "sha256": "b67b39289a51688f8060863a4da95bdc7aa9813a5d0bffcd07150e3fae0856c2",
+      "files": 11,
+      "scope": "Replay and declared local dependencies on disk; not loaded-module or installed-dependency attestation."
+    }
+  },
+  "expectedIdentity": {
+    "schema": "pibbl-targeting-identity/1",
+    "revision": "c838c434159efe602583f1cc2bf5383b57c15db5",
+    "sha256": "1cb5e62869969505a0f4a4a0c3b817f13bd135fe3e17b1b8cfd6219526f7f88e",
+    "files": 216
+  },
+  "browser": "151.0.7922.34",
+  "servedIdentity": {
+    "schema": "pibbl-targeting-identity/1",
+    "revision": "c838c434159efe602583f1cc2bf5383b57c15db5",
+    "sha256": "1cb5e62869969505a0f4a4a0c3b817f13bd135fe3e17b1b8cfd6219526f7f88e",
+    "files": 216
+  },
+  "oracle": {
+    "plot": {
+      "x": 55,
+      "y": 235,
+      "width": 397,
+      "height": 315
+    },
+    "x": 5,
+    "initialY": 20,
+    "updatedY": 30
+  },
+  "checks": [
+    {
+      "checkId": "interpolation-initial.monthly.interpolated-x",
+      "actionId": "interpolation-initial",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "interpolation-initial.monthly.interpolated-y",
+      "actionId": "interpolation-initial",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "interpolation-initial.monthly.interpolated-anchor-x",
+      "actionId": "interpolation-initial",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "interpolation-initial.monthly.interpolated-anchor-y",
+      "actionId": "interpolation-initial",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "interpolation-initial.adjusted.interpolated-x",
+      "actionId": "interpolation-initial",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "interpolation-initial.adjusted.interpolated-y",
+      "actionId": "interpolation-initial",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "interpolation-initial.adjusted.interpolated-anchor-x",
+      "actionId": "interpolation-initial",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "interpolation-initial.adjusted.interpolated-anchor-y",
+      "actionId": "interpolation-initial",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "interpolation-updated.monthly.interpolated-x",
+      "actionId": "interpolation-updated",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "interpolation-updated.monthly.interpolated-y",
+      "actionId": "interpolation-updated",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "interpolation-updated.monthly.interpolated-anchor-x",
+      "actionId": "interpolation-updated",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "interpolation-updated.monthly.interpolated-anchor-y",
+      "actionId": "interpolation-updated",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "interpolation-updated.adjusted.interpolated-x",
+      "actionId": "interpolation-updated",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "interpolation-updated.adjusted.interpolated-y",
+      "actionId": "interpolation-updated",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "interpolation-updated.adjusted.interpolated-anchor-x",
+      "actionId": "interpolation-updated",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "interpolation-updated.adjusted.interpolated-anchor-y",
+      "actionId": "interpolation-updated",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "interpolation-missing.adjusted.interpolated-x",
+      "actionId": "interpolation-missing",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "interpolation-missing.adjusted.interpolated-y",
+      "actionId": "interpolation-missing",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "interpolation-missing.adjusted.interpolated-anchor-x",
+      "actionId": "interpolation-missing",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "interpolation-missing.adjusted.interpolated-anchor-y",
+      "actionId": "interpolation-missing",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "duplicate-first.x-5.duplicate-policy-x",
+      "actionId": "duplicate-first",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "duplicate-first.x-5.duplicate-policy-y",
+      "actionId": "duplicate-first",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "duplicate-first.x-5.duplicate-policy-anchor-x",
+      "actionId": "duplicate-first",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "duplicate-first.x-5.duplicate-policy-anchor-y",
+      "actionId": "duplicate-first",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "duplicate-first.x-5.secondary-series-interpolation",
+      "actionId": "duplicate-first",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "duplicate-first.x-2.5.duplicate-policy-x",
+      "actionId": "duplicate-first",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "duplicate-first.x-2.5.duplicate-policy-y",
+      "actionId": "duplicate-first",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "duplicate-first.x-2.5.duplicate-policy-anchor-x",
+      "actionId": "duplicate-first",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "duplicate-first.x-2.5.duplicate-policy-anchor-y",
+      "actionId": "duplicate-first",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "duplicate-first.x-2.5.secondary-series-interpolation",
+      "actionId": "duplicate-first",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "duplicate-last.x-5.duplicate-policy-x",
+      "actionId": "duplicate-last",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "duplicate-last.x-5.duplicate-policy-y",
+      "actionId": "duplicate-last",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "duplicate-last.x-5.duplicate-policy-anchor-x",
+      "actionId": "duplicate-last",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "duplicate-last.x-5.duplicate-policy-anchor-y",
+      "actionId": "duplicate-last",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "duplicate-last.x-5.secondary-series-interpolation",
+      "actionId": "duplicate-last",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "duplicate-last.x-2.5.duplicate-policy-x",
+      "actionId": "duplicate-last",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "duplicate-last.x-2.5.duplicate-policy-y",
+      "actionId": "duplicate-last",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "duplicate-last.x-2.5.duplicate-policy-anchor-x",
+      "actionId": "duplicate-last",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "duplicate-last.x-2.5.duplicate-policy-anchor-y",
+      "actionId": "duplicate-last",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "duplicate-last.x-2.5.secondary-series-interpolation",
+      "actionId": "duplicate-last",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "duplicate-reordered.x-5.duplicate-policy-x",
+      "actionId": "duplicate-reordered",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "duplicate-reordered.x-5.duplicate-policy-y",
+      "actionId": "duplicate-reordered",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "duplicate-reordered.x-5.duplicate-policy-anchor-x",
+      "actionId": "duplicate-reordered",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "duplicate-reordered.x-5.duplicate-policy-anchor-y",
+      "actionId": "duplicate-reordered",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "duplicate-reordered.x-5.secondary-series-interpolation",
+      "actionId": "duplicate-reordered",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "duplicate-reordered.x-2.5.duplicate-policy-x",
+      "actionId": "duplicate-reordered",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "duplicate-reordered.x-2.5.duplicate-policy-y",
+      "actionId": "duplicate-reordered",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "duplicate-reordered.x-2.5.duplicate-policy-anchor-x",
+      "actionId": "duplicate-reordered",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "duplicate-reordered.x-2.5.duplicate-policy-anchor-y",
+      "actionId": "duplicate-reordered",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "duplicate-reordered.x-2.5.secondary-series-interpolation",
+      "actionId": "duplicate-reordered",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "nearest-unsorted.x-5.y-0.1.nearest-anchor-x",
+      "actionId": "nearest-unsorted",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "nearest-unsorted.x-5.y-0.1.nearest-anchor-y",
+      "actionId": "nearest-unsorted",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "nearest-unsorted.x-5.y-0.9.nearest-anchor-x",
+      "actionId": "nearest-unsorted",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "nearest-unsorted.x-5.y-0.9.nearest-anchor-y",
+      "actionId": "nearest-unsorted",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "nearest-unsorted.x-2.5.y-0.1.nearest-anchor-x",
+      "actionId": "nearest-unsorted",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "nearest-unsorted.x-2.5.y-0.1.nearest-anchor-y",
+      "actionId": "nearest-unsorted",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "nearest-unsorted.x-2.5.y-0.9.nearest-anchor-x",
+      "actionId": "nearest-unsorted",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "nearest-unsorted.x-2.5.y-0.9.nearest-anchor-y",
+      "actionId": "nearest-unsorted",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "nearest-unsorted.x-7.5.y-0.1.nearest-anchor-x",
+      "actionId": "nearest-unsorted",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "nearest-unsorted.x-7.5.y-0.1.nearest-anchor-y",
+      "actionId": "nearest-unsorted",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "nearest-unsorted.x-7.5.y-0.9.nearest-anchor-x",
+      "actionId": "nearest-unsorted",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "nearest-unsorted.x-7.5.y-0.9.nearest-anchor-y",
+      "actionId": "nearest-unsorted",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "closest-point-native.distance-30.closest-point-distance",
+      "actionId": "closest-point-native",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "closest-point-native.distance-40.closest-point-distance",
+      "actionId": "closest-point-native",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "weighted-data-bug.aggregation-pipeline",
+      "actionId": "weighted-data-bug",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "weighted-data-bug.aggregation-inspection-x",
+      "actionId": "weighted-data-bug",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "weighted-data-bug.aggregate-interpolation",
+      "actionId": "weighted-data-bug",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "weighted-data-bug.aggregate-anchor-x",
+      "actionId": "weighted-data-bug",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "weighted-data-bug.aggregate-anchor-y",
+      "actionId": "weighted-data-bug",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "weighted-data.aggregation-pipeline",
+      "actionId": "weighted-data",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "weighted-data.aggregation-inspection-x",
+      "actionId": "weighted-data",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "weighted-data.aggregate-interpolation",
+      "actionId": "weighted-data",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "weighted-data.aggregate-anchor-x",
+      "actionId": "weighted-data",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "weighted-data.aggregate-anchor-y",
+      "actionId": "weighted-data",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "async-loading-old.request-policy",
+      "actionId": "async-loading-old",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "async-loading-old.rendered-generation",
+      "actionId": "async-loading-old",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "async-loading-old.hover-value",
+      "actionId": "async-loading-old",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "async-loading-old.hover-anchor",
+      "actionId": "async-loading-old",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "async-loading-new.request-policy",
+      "actionId": "async-loading-new",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "async-loading-new.rendered-generation",
+      "actionId": "async-loading-new",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "async-loading-new.hover-value",
+      "actionId": "async-loading-new",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "async-loading-new.hover-anchor",
+      "actionId": "async-loading-new",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "async-current-success.request-policy",
+      "actionId": "async-current-success",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "async-current-success.rendered-generation",
+      "actionId": "async-current-success",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "async-current-success.hover-value",
+      "actionId": "async-current-success",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "async-current-success.hover-anchor",
+      "actionId": "async-current-success",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "async-stale-success.request-policy",
+      "actionId": "async-stale-success",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "async-stale-success.rendered-generation",
+      "actionId": "async-stale-success",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "async-stale-success.hover-value",
+      "actionId": "async-stale-success",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "async-stale-success.hover-anchor",
+      "actionId": "async-stale-success",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "async-second-old.request-policy",
+      "actionId": "async-second-old",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "async-second-old.rendered-generation",
+      "actionId": "async-second-old",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "async-second-old.hover-value",
+      "actionId": "async-second-old",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "async-second-old.hover-anchor",
+      "actionId": "async-second-old",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "async-second-new.request-policy",
+      "actionId": "async-second-new",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "async-second-new.rendered-generation",
+      "actionId": "async-second-new",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "async-second-new.hover-value",
+      "actionId": "async-second-new",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "async-second-new.hover-anchor",
+      "actionId": "async-second-new",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "async-stale-error.request-policy",
+      "actionId": "async-stale-error",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "async-stale-error.rendered-generation",
+      "actionId": "async-stale-error",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "async-stale-error.hover-value",
+      "actionId": "async-stale-error",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "async-stale-error.hover-anchor",
+      "actionId": "async-stale-error",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "async-current-error.request-policy",
+      "actionId": "async-current-error",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "async-current-error.rendered-generation",
+      "actionId": "async-current-error",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "async-current-error.hover-value",
+      "actionId": "async-current-error",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "async-current-error.hover-anchor",
+      "actionId": "async-current-error",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "async-retry-loading.request-policy",
+      "actionId": "async-retry-loading",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "async-retry-loading.rendered-generation",
+      "actionId": "async-retry-loading",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "async-retry-loading.hover-value",
+      "actionId": "async-retry-loading",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "async-retry-loading.hover-anchor",
+      "actionId": "async-retry-loading",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "async-retry-success.request-policy",
+      "actionId": "async-retry-success",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "async-retry-success.rendered-generation",
+      "actionId": "async-retry-success",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "async-retry-success.hover-value",
+      "actionId": "async-retry-success",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "async-retry-success.hover-anchor",
+      "actionId": "async-retry-success",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "zero-missing-invalid.generation",
+      "actionId": "zero-missing-invalid",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "zero-missing-invalid.policy",
+      "actionId": "zero-missing-invalid",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "zero-missing-invalid.counts",
+      "actionId": "zero-missing-invalid",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "zero-missing-invalid.categories",
+      "actionId": "zero-missing-invalid",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "zero-missing-invalid.zero",
+      "actionId": "zero-missing-invalid",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "zero-missing-invalid.gap-2.5",
+      "actionId": "zero-missing-invalid",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "zero-missing-invalid.gap-3",
+      "actionId": "zero-missing-invalid",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "zero-missing-invalid.gap-4",
+      "actionId": "zero-missing-invalid",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "zero-missing-invalid.gap-5",
+      "actionId": "zero-missing-invalid",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "zero-missing-invalid.gap-6",
+      "actionId": "zero-missing-invalid",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "zero-missing-invalid.gap-7",
+      "actionId": "zero-missing-invalid",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "zero-missing-invalid.gap-7.5",
+      "actionId": "zero-missing-invalid",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "zero-missing-invalid.interpolated",
+      "actionId": "zero-missing-invalid",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    }
+  ],
+  "browserFailure": {
+    "pageCrashed": false,
+    "unexpectedDisconnect": false,
+    "category": null
+  },
+  "toolVerification": {
+    "status": "matching-on-disk"
+  },
+  "requiredActions": [
+    "interpolation-initial",
+    "interpolation-updated",
+    "interpolation-missing",
+    "duplicate-first",
+    "duplicate-last",
+    "duplicate-reordered",
+    "nearest-unsorted",
+    "empty-data",
+    "closest-point-native",
+    "weighted-data-bug",
+    "weighted-data",
+    "async-loading-old",
+    "async-loading-new",
+    "async-current-success",
+    "async-stale-success",
+    "async-second-old",
+    "async-second-new",
+    "async-stale-error",
+    "async-current-error",
+    "async-retry-loading",
+    "async-retry-success",
+    "zero-missing-invalid"
+  ]
+}

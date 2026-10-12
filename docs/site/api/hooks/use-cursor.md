@@ -12,7 +12,7 @@ relatedTypes: [CursorStyle]
 # useCursor
 
 ```ts
-import { useCursor, Text } from "@crc/core";
+import { useCursor, Text } from "@pibbl/core";
 ```
 
 `useCursor({ path?, style?, fill?, lineInteractionWidth? })` is render-only.

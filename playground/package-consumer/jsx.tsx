@@ -1,18 +1,18 @@
-import { blur, brightness, contrast, dropShadow, grayscale, hueRotate, invert, opacity, saturate, sepia } from '@crc/core/filters';
+import { blur, brightness, contrast, dropShadow, grayscale, hueRotate, invert, opacity, saturate, sepia } from '@pibbl/core/filters';
 import type {
-  CRCAnimationProgram,
-  CRCController,
-  CRCElement,
-  CRCFilter,
-  CRCNode,
-  CRCNodeInput,
-  CRCTextChild,
-  CRCTextInput,
+  PibblAnimationProgram,
+  PibblController,
+  PibblElement,
+  PibblFilter,
+  PibblNode,
+  PibblNodeInput,
+  PibblTextChild,
+  PibblTextInput,
   Signal,
   SignalValue,
   SystemStyle,
-} from '@crc/core';
-import {
+} from '@pibbl/core';
+import { tween, spring,
   Absolute,
   Flex,
   Flow,
@@ -26,40 +26,38 @@ import {
   Text,
   computed,
   createElement,
-  crc,
+  pibbl,
   resolveSignalValue,
   useComputed,
   usePlayback,
   useSignal,
-  useTransition,
+  useAnimatedValue,
   definePrimitive,
   isSignal,
   marker,
   signal,
   sequence,
-  spring,
-  track,
-  tween,
+  drive,
   untracked,
-} from '@crc/core';
+} from '@pibbl/core';
 import {
   Particles2D,
   defineParticleEffect2D,
   particleCurve,
   particleRange,
-} from '@crc/particles';
+} from '@pibbl/core/particles';
 import {
   defineThreeLayer,
-  type CRCThreeLayerResources,
-} from '@crc/three';
+  type PibblThreeLayerResources,
+} from '@pibbl/three';
 import { PerspectiveCamera, Scene } from 'three';
 import {
   Fragment as DevelopmentFragment,
   jsxDEV,
   type JSX as DevelopmentJSX,
-} from '@crc/core/jsx-dev-runtime';
+} from '@pibbl/core/jsx-dev-runtime';
 
-function Label(props: { value: string; children?: CRCTextChild }): CRCNode {
+function Label(props: { value: string; children?: PibblTextChild }): PibblNode {
   void props;
   return undefined;
 }
@@ -69,11 +67,11 @@ const jsxDoubled: Signal<number> = computed(() => jsxCount.get() * 2);
 const jsxCallback = signal<() => string>(() => 'ready');
 jsxCallback.set(() => 'updated');
 const jsxLabel = signal('Current');
-const jsxSelectedNode = signal<CRCNode>(
+const jsxSelectedNode = signal<PibblNode>(
   <Rectangle style={{ width: 10, height: 10 }} />,
 );
-const jsxNodeInput: CRCNodeInput = jsxSelectedNode;
-const jsxTextInput: CRCTextInput = ['Label: ', jsxLabel];
+const jsxNodeInput: PibblNodeInput = jsxSelectedNode;
+const jsxTextInput: PibblTextInput = ['Label: ', jsxLabel];
 export const signalChildInputs = (
   <Group>
     {jsxNodeInput}
@@ -81,7 +79,7 @@ export const signalChildInputs = (
   </Group>
 );
 
-function SignalLabel(): CRCNode {
+function SignalLabel(): PibblNode {
   const suffix = useSignal('signals');
   const count = untracked(() => jsxDoubled.get());
   return (
@@ -91,7 +89,7 @@ function SignalLabel(): CRCNode {
   );
 }
 
-export const signalElement: CRCElement = <SignalLabel />;
+export const signalElement: PibblElement = <SignalLabel />;
 void isSignal(jsxCallback.asReadonly());
 
 interface Datum {
@@ -111,14 +109,14 @@ function buildPath(rows: readonly Datum[]): Path2D {
 
 function LineSeries(props: {
   readonly data: SignalValue<readonly Datum[]>;
-}): CRCNode {
+}): PibblNode {
   const rows = resolveSignalValue(props.data);
   return <Path style={{ d: buildPath(rows), stroke: 'black', strokeWidth: 1 }} />;
 }
 
 function Axis(props: {
   readonly domain: SignalValue<readonly [number, number]>;
-}): CRCNode {
+}): PibblNode {
   const domain = resolveSignalValue(props.domain);
   return <Text>{`${domain[0]}–${domain[1]}`}</Text>;
 }
@@ -128,7 +126,7 @@ const visualizationRows = signal<readonly Datum[]>([
   { x: 10, y: 8 },
 ]);
 
-function VisualizationContract(): CRCNode {
+function VisualizationContract(): PibblNode {
   const domain = useComputed(
     () => {
       const rows = visualizationRows.get();
@@ -151,20 +149,17 @@ function VisualizationContract(): CRCNode {
   );
 }
 
-export const visualizationSignalInputs: CRCElement = <VisualizationContract />;
+export const visualizationSignalInputs: PibblElement = <VisualizationContract />;
 
-function AnimatedLabel(): CRCNode {
+function AnimatedLabel(): PibblNode {
   const x = useSignal(0);
-  const program: CRCAnimationProgram = sequence(
-    track(x, tween({ to: 40, duration: 120 })),
+  const program: PibblAnimationProgram = sequence(
+    drive(x, tween({ to: 40, duration: 120 })),
     marker('arrived'),
-    track(x, spring({ to: 0 })),
+    drive(x, spring({ to: 0 })),
   );
   const player = usePlayback(program);
-  const transitioned = useTransition(x.get(), {
-    type: 'tween',
-    duration: 80,
-  });
+  const transitioned = useAnimatedValue(x.get(), { animation: tween({ duration: 80 }) });
   return (
     <Group style={{ translateX: transitioned.get() }}>
       <Rectangle
@@ -175,25 +170,24 @@ function AnimatedLabel(): CRCNode {
   );
 }
 
-export const animatedElement: CRCElement = <AnimatedLabel />;
+export const animatedElement: PibblElement = <AnimatedLabel />;
 
 const jsxFilterTypes = [
-  blur({  radius: 2 }) satisfies CRCFilter,
-  brightness({  amount: 1.25 }) satisfies CRCFilter,
-  contrast({  amount: 0.8 }) satisfies CRCFilter,
+  blur({  radius: 2 }) satisfies PibblFilter,
+  brightness({  amount: 1.25 }) satisfies PibblFilter,
+  contrast({  amount: 0.8 }) satisfies PibblFilter,
   dropShadow({
-    
     offsetX: 3,
     offsetY: 4,
     color: 'black',
-  }) satisfies CRCFilter,
-  grayscale({  amount: 0.5 }) satisfies CRCFilter,
-  hueRotate({  degrees: 45 }) satisfies CRCFilter,
-  invert({  amount: 0.25 }) satisfies CRCFilter,
-  opacity({  amount: 0.75 }) satisfies CRCFilter,
-  saturate({  amount: 1.5 }) satisfies CRCFilter,
-  sepia({  amount: 0.4 }) satisfies CRCFilter,
-] as const satisfies readonly CRCFilter[];
+  }) satisfies PibblFilter,
+  grayscale({  amount: 0.5 }) satisfies PibblFilter,
+  hueRotate({  degrees: 45 }) satisfies PibblFilter,
+  invert({  amount: 0.25 }) satisfies PibblFilter,
+  opacity({  amount: 0.75 }) satisfies PibblFilter,
+  saturate({  amount: 1.5 }) satisfies PibblFilter,
+  sepia({  amount: 0.4 }) satisfies PibblFilter,
+] as const satisfies readonly PibblFilter[];
 
 interface FilterPrimitiveStyle extends SystemStyle {
   width: number;
@@ -205,7 +199,7 @@ const FilterPrimitive = definePrimitive<{}, FilterPrimitiveStyle>(
   },
 );
 
-export const jsxFilterElements: readonly CRCElement[] = [
+export const jsxFilterElements: readonly PibblElement[] = [
   <Rectangle
     style={{ width: 40, height: 20, filter: jsxFilterTypes[0] }}
   />,
@@ -228,14 +222,14 @@ export const jsxFilterElements: readonly CRCElement[] = [
 
 const AutomaticThreeLayer = defineThreeLayer<
   { exposure: number },
-  CRCThreeLayerResources
+  PibblThreeLayerResources
 >({
   create() {
     return { scene: new Scene(), camera: new PerspectiveCamera() };
   },
 });
 
-export const automaticThreeLayerElement: CRCElement = (
+export const automaticThreeLayerElement: PibblElement = (
   <AutomaticThreeLayer
     exposure={1}
     missBehavior="block"
@@ -243,9 +237,9 @@ export const automaticThreeLayerElement: CRCElement = (
   />
 );
 
-export const automaticElement: CRCElement = (
+export const automaticElement: PibblElement = (
   <Label key="automatic" value="ready">
-    CRC
+    Pibbl
   </Label>
 );
 
@@ -272,7 +266,7 @@ interface PosterProps {
   readonly showTitle: boolean;
 }
 
-function Poster({ labels, showTitle }: PosterProps): CRCNode {
+function Poster({ labels, showTitle }: PosterProps): PibblNode {
   return (
     <Grid
       style={{
@@ -311,17 +305,17 @@ function Poster({ labels, showTitle }: PosterProps): CRCNode {
 
 export function mountAutomaticJSXConsumer(
   canvas: HTMLCanvasElement,
-): CRCController {
-  return crc(canvas, <Poster labels={['Bundler', 'NodeNext']} showTitle />);
+): PibblController {
+  return pibbl(canvas, <Poster labels={['Bundler', 'NodeNext']} showTitle />);
 }
 
-function* layoutChildren(): Generator<CRCNode> {
+function* layoutChildren(): Generator<PibblNode> {
   yield [[
     <Rectangle key="child" style={{ width: 10, height: 10 }} />,
   ], false];
 }
 
-export const layoutElements: readonly CRCElement[] = [
+export const layoutElements: readonly PibblElement[] = [
   <Absolute style={{ width: 100, height: 50 }}>{layoutChildren()}</Absolute>,
   <Overlay style={{ width: 100, height: 50 }}>{layoutChildren()}</Overlay>,
   <Flow style={{ width: 100, height: 50 }}>{layoutChildren()}</Flow>,
@@ -338,7 +332,7 @@ export const layoutElements: readonly CRCElement[] = [
   </Grid>,
 ];
 
-export const roundedShapeElements: readonly CRCElement<any>[] = [
+export const roundedShapeElements: readonly PibblElement<any>[] = [
   <RegularPolygon
     style={{ sides: 6, circumradius: 20, cornerRadius: 2, fill: '#0ea5e9' }}
   />,
@@ -385,7 +379,7 @@ const automaticParticleEffect2D = defineParticleEffect2D({
 });
 const automaticParticleEffect2DSignal = signal(automaticParticleEffect2D);
 
-export const automaticParticleScene: CRCElement = (
+export const automaticParticleScene: PibblElement = (
   <Particles2D
     effect={automaticParticleEffect2DSignal}
     autoplay={signal(true)}
@@ -409,3 +403,14 @@ void [
   missingStarRadius,
   automaticCornerRadius,
 ];
+
+// Visibility controllers bind through SystemStyle and expose request-scoped completion.
+import { bifrost, hologram, slide, zoom, wipe, blurReveal, dissolve, defineTransition, embers, fade, useVisibilityTransition, type PibblVisibilityTransitionResult } from '@pibbl/core';
+export function VisibilityConsumer() {
+  const visibility = useVisibilityTransition({ initial: true, enter: fade(), exit: embers({ region: { x: 0, y: 0, width: 100, height: 100 }, wind: -80, seed: 2, linger: 700 }), duration: 150 });
+  const hide = async (): Promise<PibblVisibilityTransitionResult> => visibility.hide();
+  return <Group style={{ transition: visibility.binding }}><Rectangle style={{ width: 10, height: 10, fill: 'red' }} onClick={() => { void hide(); }} /></Group>;
+}
+
+const transitionRegion = { x: 0, y: 0, width: 100, height: 100 };
+void [bifrost({ region: transitionRegion }), hologram({ region: transitionRegion }), slide(), zoom({ origin: { x: 50, y: 50 } }), wipe({ region: transitionRegion }), blurReveal(), dissolve({ region: transitionRegion }), defineTransition({ render({ context, progress, drawSource }) { context.globalAlpha = progress; drawSource(); } })];

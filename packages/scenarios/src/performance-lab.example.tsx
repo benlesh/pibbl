@@ -1,16 +1,30 @@
+import type { performanceLabScenarioEntry } from './catalog.js';
 import {
   Clip,
   Group,
   Layer,
   Rectangle,
-  type CRCElement,
-  type CRCLogicalMouseEvent,
-} from '@crc/core';
+  type PibblElement,
+  type PibblLogicalMouseEvent,
+} from '@pibbl/core';
 export const PERFORMANCE_LAB_SOURCE_ID = 'event-performance-lab-example';
+/**
+ * A logical coordinate pair used by the performance scenario.
+ *
+ * @see {@link PerformanceWorkload}
+ */
 export interface PerformancePoint {
+  /** X recorded or configured by this scenario. See {@link PerformancePoint}. */
   x: number;
+  /** Y recorded or configured by this scenario. See {@link PerformancePoint}. */
   y: number;
 }
+/**
+ * Supported performance counter name values: `"getContext"`, `"matrixMultiply"`, `"pathTests"`,
+ * `"restore"`, `"save"`, `"setTransform"`, `"strokeTests"`.
+ *
+ * @see {@link PerformanceCounters}
+ */
 export type PerformanceCounterName =
   | 'getContext'
   | 'matrixMultiply'
@@ -19,7 +33,19 @@ export type PerformanceCounterName =
   | 'save'
   | 'setTransform'
   | 'strokeTests';
+/**
+ * Deterministic ownership and work measurements exposed by the performance scenario.
+ *
+ * @see {@link PerformanceCounterName}
+ * @see {@link PerformanceLabState}
+ */
 export type PerformanceCounters = Record<PerformanceCounterName, number>;
+/**
+ * Supported performance workload kind values: `"clipped"`, `"cursor"`, `"dense"`, `"layered"`,
+ * `"miss"`, `"sparse"`, `"transformed"`, `"zero"`.
+ *
+ * @see {@link PerformanceWorkload}
+ */
 export type PerformanceWorkloadKind =
   | 'clipped'
   | 'cursor'
@@ -29,18 +55,37 @@ export type PerformanceWorkloadKind =
   | 'sparse'
   | 'transformed'
   | 'zero';
+/**
+ * A deterministic workload's identity, size, and expected structural work.
+ *
+ * @see {@link PerformanceWorkloadKind}
+ * @see {@link PerformancePoint}
+ * @see {@link getPerformanceWorkload}
+ * @see {@link PERFORMANCE_WORKLOADS}
+ */
 export interface PerformanceWorkload {
+  /** Id recorded or configured by this scenario. See {@link PerformanceWorkload}. */
   id: string;
+  /** Title recorded or configured by this scenario. See {@link PerformanceWorkload}. */
   title: string;
+  /** Kind recorded or configured by this scenario. See {@link PerformanceWorkloadKind}. */
   kind: PerformanceWorkloadKind;
+  /** Region count recorded or configured by this scenario. See {@link PerformanceWorkload}. */
   regionCount: number;
+  /** Probe recorded or configured by this scenario. See {@link PerformancePoint}. */
   probe: PerformancePoint;
+  /** Expected target recorded or configured by this scenario. See {@link PerformanceWorkload}. */
   expectedTarget: string | null;
 }
 const SPARSE_PROBE = {
   x: 21.5,
   y: 21,
 } as const;
+/**
+ * Deterministic workload definitions used by the performance lab.
+ *
+ * @see {@link PerformanceWorkload}
+ */
 export const PERFORMANCE_WORKLOADS = [
   {
     id: 'zero',
@@ -168,40 +213,80 @@ export const PERFORMANCE_WORKLOADS = [
     expectedTarget: 'region-0',
   },
 ] as const satisfies readonly PerformanceWorkload[];
+/**
+ * A stable identifier selecting a performance-lab workload.
+ *
+ * @see {@link getPerformanceWorkload}
+ * @see {@link PerformanceLabAction}
+ * @see {@link PerformanceLabState}
+ */
 export type PerformanceWorkloadId =
   (typeof PERFORMANCE_WORKLOADS)[number]['id'];
+/**
+ * Actions supported by the performance lab scenario's public controller.
+ *
+ * @see {@link PerformanceWorkloadId}
+ * @see {@link PerformanceLabState}
+ */
 export type PerformanceLabAction =
   'mount' | 'reset' | 'rerender-25' | `show-${PerformanceWorkloadId}`;
+/**
+ * Observable state exposed by the performance lab scenario for controls and assertions.
+ *
+ * @see {@link PerformanceCounters}
+ * @see {@link PerformanceLabAction}
+ * @see {@link PerformanceWorkloadId}
+ * @see {@link performanceLabScenarioEntry}
+ */
 export interface PerformanceLabState {
+  /** Callbacks recorded or configured by this scenario. See {@link PerformanceLabState}. */
   callbacks: number;
+  /** Completed renders recorded or configured by this scenario. See {@link PerformanceLabState}. */
   completedRenders: number;
+  /** Counters recorded or configured by this scenario. See {@link PerformanceCounters}. */
   counters: PerformanceCounters;
+  /** Dispatches recorded or configured by this scenario. See {@link PerformanceLabState}. */
   dispatches: number;
+  /** Last action recorded or configured by this scenario. See {@link PerformanceLabAction}. */
   lastAction: PerformanceLabAction;
+  /** Last duration ms recorded or configured by this scenario. See {@link PerformanceLabState}. */
   lastDurationMs: number;
+  /**
+   * Last settle latency ms recorded or configured by this scenario. See
+   * {@link PerformanceLabState}.
+   */
   lastSettleLatencyMs: number;
+  /** Last target recorded or configured by this scenario. See {@link PerformanceLabState}. */
   lastTarget: string | null;
+  /** Median ms recorded or configured by this scenario. See {@link PerformanceLabState}. */
   medianMs: number;
+  /** P95 ms recorded or configured by this scenario. See {@link PerformanceLabState}. */
   p95Ms: number;
+  /** P99 ms recorded or configured by this scenario. See {@link PerformanceLabState}. */
   p99Ms: number;
+  /** Region count recorded or configured by this scenario. See {@link PerformanceLabState}. */
   regionCount: number;
+  /** Revision recorded or configured by this scenario. See {@link PerformanceLabState}. */
   revision: number;
+  /** Rendered revision recorded or configured by this scenario. See {@link PerformanceLabState}. */
   renderedRevision: number;
+  /** Sample count recorded or configured by this scenario. See {@link PerformanceLabState}. */
   sampleCount: number;
+  /** Workload id recorded or configured by this scenario. See {@link PerformanceWorkloadId}. */
   workloadId: PerformanceWorkloadId;
 }
 export interface PerformanceSceneProps {
-  recordHit: (target: string, event: CRCLogicalMouseEvent) => void;
+  recordHit: (target: string, event: PibblLogicalMouseEvent) => void;
   recordRender: (revision: number) => void;
   revision: number;
   workloadId: PerformanceWorkloadId;
 }
-type PerformanceNode = CRCElement;
+type PerformanceNode = PibblElement;
 interface RegionFactoryOptions {
   count: number;
   cursor?: string;
   keyPrefix?: string;
-  recordHit: (target: string, event: CRCLogicalMouseEvent) => void;
+  recordHit: (target: string, event: PibblLogicalMouseEvent) => void;
   xOffset?: number;
 }
 function sparseRegions(options: RegionFactoryOptions): PerformanceNode[] {
@@ -269,7 +354,7 @@ function layeredRegions(options: RegionFactoryOptions): PerformanceNode[] {
 }
 function workloadNodes(
   workload: PerformanceWorkload,
-  recordHit: (target: string, event: CRCLogicalMouseEvent) => void,
+  recordHit: (target: string, event: PibblLogicalMouseEvent) => void,
 ): PerformanceNode[] {
   switch (workload.kind) {
     case 'zero':
@@ -329,6 +414,15 @@ function workloadNodes(
       });
   }
 }
+/**
+ * Looks up the deterministic workload configuration for a performance-lab selection.
+ *
+ * @param workloadId - Identifier of the performance workload. See {@link PerformanceWorkloadId}.
+ * @returns The configured workload for that identifier. See {@link PerformanceWorkload}.
+ *
+ * @see {@link PerformanceWorkloadId}
+ * @see {@link PerformanceWorkload}
+ */
 export function getPerformanceWorkload(
   workloadId: PerformanceWorkloadId,
 ): PerformanceWorkload {

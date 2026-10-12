@@ -91,7 +91,7 @@ Existing integration points:
   `path-utilities.ts`: read canonical segment/current-point behavior and existing
   collector conventions; avoid changing these unless a demonstrated need exists.
 - `packages/core/src/lib/focus/public-api.test.ts`: explicit public export list.
-- `playground/src/crc-editor-types.txt`: matching editor-visible declarations.
+- `playground/src/pibbl-editor-types.txt`: matching editor-visible declarations.
 - `packages/scenarios/src/learning-catalog.ts`: public example metadata/loader.
 - `packages/core/test/learning-examples.test.ts`: manual example driven headlessly.
 - `playground/package-consumer/index.ts` and `runtime.mjs`: declaration and
@@ -104,13 +104,13 @@ Existing integration points:
 
 Read current drawing, user-event, and scheduling contracts before modifying demo
 interaction. Apply the frontend testing skill when implementing browser QA; this
-is an addition to the existing CRC Studio, not a new website or React app.
+is an addition to the existing Pibbl Studio, not a new website or React app.
 
 ## Slice 1: bilinear warp with a draggable rocket
 
 ### 1. Establish the public observable contract
 
-- [x] Add one focused failing test importing `warpPath` from `@crc/core`.
+- [x] Add one focused failing test importing `warpPath` from `@pibbl/core`.
       Use an offset source rectangle and a non-parallelogram destination.
       Include a diagonal line, a cubic, and a diagonal closing edge so a
       vertex-only implementation fails. Assert mapped endpoints, line-only
@@ -154,7 +154,7 @@ is an addition to the existing CRC Studio, not a new website or React app.
 - [x] Show the subdued original/source rectangle, contrasting warped shape,
       quadrilateral edges, named handles, and Reset. Start with a convex
       non-parallelogram mapping. Bilinear handles may cross or coincide.
-- [x] Use CRC pointer capture and root-logical coordinates, with cancellation
+- [x] Use Pibbl pointer capture and root-logical coordinates, with cancellation
       and lost-capture cleanup. Do not copy example clamps that prevent corners
       crossing. Decorative overlays opt out of pointer targeting.
 - [x] Publish derived geometry via existing state/signals. Store the last valid
@@ -352,7 +352,7 @@ Fresh verification used Node v24.15.0 and pnpm 11.21.0, Chromium:
   baseline units, 824 current units, 56 evidence mappings. That direct check did
   not claim Git provenance verification. No historical unit was replaced.
 
-Focused early runs used `/tmp/crc-warp-vitest.config.mts`, inheriting repository
+Focused early runs used `/tmp/pibbl-warp-vitest.config.mts`, inheriting repository
 configuration with isolated discovery/cache, because unrestricted discovery tried
 to bundle a native fsevents dependency from unrelated work. Later demo checks ran
 with the unmodified repository config. The focused temporary configuration also

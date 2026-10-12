@@ -1,8 +1,8 @@
-import { createElement, crc, defineTexture, Group, Layer, Rectangle, signal, useTexture } from '@crc/core';
-import { displacement } from '@crc/core/filters';
+import { createElement, pibbl, defineTexture, Group, Layer, Rectangle, signal, useTexture } from '@pibbl/core';
+import { displacement } from '@pibbl/core/filters';
 import { afterEach, expect, it, vi } from 'vitest';
 import { DisplacementGpu } from '../src/filters/displacement-gpu';
-import { getCRCInstance } from '../src/lib/global-state';
+import { getPibblInstance } from '../src/lib/global-state';
 import { peekDisplacementGpu } from '../src/filters/render-displacement-boundary';
 import { ManualSchedulerDriver, installSchedulerDriverForTest } from '../src/lib/scheduler/testing';
 import { clickMouse } from './support/mouse-input';
@@ -39,7 +39,7 @@ it('shares one GPU across root and Layers and releases it after the last consume
       createElement(Layer, { style: { width: 40, height: 40 }, children: createElement(Rectangle, { style: { left: 20, width: 10, height: 10, fill: 'blue', filter } }) }),
     ] });
   }
-  const controller = crc(canvas, createElement(Scene, {}));
+  const controller = pibbl(canvas, createElement(Scene, {}));
   try {
     await frame();
     expect(contexts.mock.calls.filter(([kind]) => kind === 'webgl2')).toHaveLength(1);
@@ -66,10 +66,10 @@ it('restores one root GPU update across an active Layer without changing logical
       createElement(Layer, { style: { width: 40, height: 40 }, children: createElement(Rectangle, { style: { left: 24, top: 2, width: 10, height: 10, fill: 'blue', filter }, onClick: () => { layerClicks += 1; } }) }),
     ] });
   }
-  const controller = crc(canvas, createElement(Scene, {}));
+  const controller = pibbl(canvas, createElement(Scene, {}));
   try {
     await frame();
-    const instance = getCRCInstance(canvas);
+    const instance = getPibblInstance(canvas);
     const gpu = peekDisplacementGpu(instance)!;
     const gl = (gpu as unknown as { canvas: OffscreenCanvas }).canvas.getContext('webgl2')!;
     const lose = gl.getExtension('WEBGL_lose_context');
@@ -99,7 +99,7 @@ it('evaluates a discarded displacement subtree once without acquiring a GPU', as
     const map = useTexture(neutral({}));
     return createElement(Group, { style: { scaleX: 0, filter: displacement({ map, strength: 4, region: { x: 0, y: 0, width: 40, height: 40 } }) }, children: createElement(Child, {}) });
   }
-  const controller = crc(canvas, createElement(Scene, {}));
+  const controller = pibbl(canvas, createElement(Scene, {}));
   try { await frame(); expect(renders).toBe(1); expect(contexts.mock.calls.filter(([kind]) => kind === 'webgl2')).toHaveLength(0); }
   finally { controller.dispose(); }
 });
@@ -113,9 +113,9 @@ it('releases a first-generation GPU service after its pass fails', () => {
     const texture = useTexture(recipe({}), { resolution: { width: 8, height: 8 } });
     return createElement(Rectangle, { style: { width: 10, height: 10, fill: 'red', filter: displacement({ map: texture, strength: 2, region: { x: 0, y: 0, width: 40, height: 40 } }) } });
   }
-  const controller = crc(canvas, createElement(Scene, {}));
+  const controller = pibbl(canvas, createElement(Scene, {}));
   try {
     expect(() => driver.flush(0)).toThrow(/injected GPU pass failure/);
-    expect(peekDisplacementGpu(getCRCInstance(canvas))).toBeUndefined();
+    expect(peekDisplacementGpu(getPibblInstance(canvas))).toBeUndefined();
   } finally { controller.dispose(); apply.mockRestore(); restore(); }
 });

@@ -1,13 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
   Rectangle,
-  crc,
+  pibbl,
   definePrimitive,
   resolveSignalValue,
   signal,
   type SignalValue,
 } from '../../index.js';
-import { clearSharedState, getCRCInstance } from '../global-state.js';
+import { clearSharedState, getPibblInstance } from '../global-state.js';
 import {
   getPrimitiveDefinition,
   getPrimitiveProgramProps,
@@ -34,9 +34,9 @@ describe('primitive signal-valued inputs', () => {
       <Rectangle style={{ left: x, width: 20, height: 20 }} />
     );
     const baseline = signalGraphSnapshot();
-    const controller = crc(canvas, <Outer />);
+    const controller = pibbl(canvas, <Outer />);
     await nextFrame();
-    const refs = Array.from(getCRCInstance(canvas).refs.values());
+    const refs = Array.from(getPibblInstance(canvas).refs.values());
 
     expect(refs.find(ref => ref.element.type === Outer)?.signalConsumer)
       .toBeUndefined();
@@ -56,9 +56,9 @@ describe('primitive signal-valued inputs', () => {
     const Outer = (_props: {}) => (
       <Rectangle style={{ left: x.get(), width: 20, height: 20 }} />
     );
-    const controller = crc(canvas, <Outer />);
+    const controller = pibbl(canvas, <Outer />);
     await nextFrame();
-    const refs = Array.from(getCRCInstance(canvas).refs.values());
+    const refs = Array.from(getPibblInstance(canvas).refs.values());
 
     expect(refs.find(ref => ref.element.type === Outer)?.signalConsumer)
       .toBeDefined();
@@ -80,7 +80,7 @@ describe('primitive signal-valued inputs', () => {
       },
     );
     const before = signalGraphSnapshot();
-    const controller = crc(createCanvas(), (
+    const controller = pibbl(createCanvas(), (
       <Probe value={shared} style={wholeStyle} />
     ));
     await nextFrame();
@@ -93,7 +93,7 @@ describe('primitive signal-valued inputs', () => {
     controller.dispose();
 
     const plainBefore = signalGraphSnapshot();
-    const plainController = crc(createCanvas(), (
+    const plainController = pibbl(createCanvas(), (
       <Probe value={1} style={{ x: 2 }} />
     ));
     await nextFrame();
@@ -126,7 +126,7 @@ describe('primitive signal-valued inputs', () => {
     const Probe = definePrimitive<{}, SystemStyle>((_props, style) => {
       observations.push(style);
     });
-    const controller = crc(createCanvas(), <Probe style={wholeStyle} />);
+    const controller = pibbl(createCanvas(), <Probe style={wholeStyle} />);
     await nextFrame();
 
     expect(observations).toEqual([{}]);
@@ -147,7 +147,7 @@ describe('primitive signal-valued inputs', () => {
       observations.push(props);
     }, { preserveSignalProps: ['valueSignal'] });
     const baseline = signalGraphSnapshot();
-    const controller = crc(createCanvas(), (
+    const controller = pibbl(createCanvas(), (
       <Probe
         handler={handler}
         data={{ nested }}
@@ -176,7 +176,7 @@ describe('primitive signal-valued inputs', () => {
       },
       { preserveSignalProps: ['valueSignal'] },
     );
-    const controller = crc(createCanvas(), <Probe valueSignal={exact} />);
+    const controller = pibbl(createCanvas(), <Probe valueSignal={exact} />);
     await nextFrame();
 
     expect(observations).toEqual([exact]);
@@ -187,7 +187,7 @@ describe('primitive signal-valued inputs', () => {
     const calls: string[] = [];
     const onClick = signal(() => calls.push('clicked'));
     const canvas = createCanvas();
-    const controller = crc(canvas, (
+    const controller = pibbl(canvas, (
       <Rectangle
         onClick={onClick}
         style={{ left: 0, top: 0, width: 20, height: 20, fill: 'red' }}
@@ -213,9 +213,9 @@ describe('primitive signal-valued inputs', () => {
     };
     const baseline = signalGraphSnapshot();
     const canvas = createCanvas();
-    const controller = crc(canvas, <Gauge value={outer} />);
+    const controller = pibbl(canvas, <Gauge value={outer} />);
     await nextFrame();
-    const gaugeRefs = Array.from(getCRCInstance(canvas).refs.values())
+    const gaugeRefs = Array.from(getPibblInstance(canvas).refs.values())
       .find(ref => ref.element.type === Gauge);
 
     expect(resolved).toBe(inner);

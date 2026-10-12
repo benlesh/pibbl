@@ -1,20 +1,19 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { crc } from '../crc';
+import { pibbl } from '../pibbl';
 import {
   clearSharedState,
-  getCRCInstance,
+  getPibblInstance,
   GLOBAL_STATE,
 } from '../global-state';
-import type { CRCMouseEventListener, RenderingContext2D } from '../types';
+import type { RenderingContext2D } from '../types';
 import { useCursor } from './use-cursor';
 import { useComputed } from './use-computed';
 import { useConst } from './use-const';
-import { useEvent } from './use-event';
 import { useEventListener } from './use-event-listener';
 import { useEventTarget } from './use-event-target';
 import { useLinePath } from './use-line-path';
 import { usePlayback } from './use-playback';
-import { useTransition } from './use-transition';
+import { useAnimatedValue } from './use-animated-value';
 import { useRectPath } from './use-rect-path';
 import { useRef } from './use-ref';
 import { useReaction } from './use-reaction';
@@ -22,7 +21,7 @@ import { useSignal } from './use-signal';
 import { useSvgPath } from './use-svg-path';
 import { createElement } from '../element/create-element';
 import { definePrimitive } from '../define-primitive';
-import { track } from '../animation/program';
+import { drive } from '../animation/program';
 import { tween } from '../animation/definition';
 import { signal } from '../signals/graph';
 
@@ -48,11 +47,11 @@ describe('useRef', () => {
       refs.push(ref);
       values.push(ref.current!);
     };
-    const controller = crc(canvas, createElement(RefProbe, { initial: 1, key: 'first' }));
+    const controller = pibbl(canvas, createElement(RefProbe, { initial: 1, key: 'first' }));
     await nextFrame();
-    crc(canvas, createElement(RefProbe, { initial: 2, key: 'first' }));
+    pibbl(canvas, createElement(RefProbe, { initial: 2, key: 'first' }));
     await nextFrame();
-    crc(canvas, createElement(RefProbe, { initial: 3, key: 'second' }));
+    pibbl(canvas, createElement(RefProbe, { initial: 3, key: 'second' }));
     await nextFrame();
 
     expect(values).toEqual([1, 1, 3]);
@@ -71,14 +70,14 @@ describe('hook ordering and render errors', () => {
       useSignal(0);
       if (include) useReaction(() => cleanup, []);
     };
-    const controller = crc(canvas, createElement(Probe, { include: true }));
+    const controller = pibbl(canvas, createElement(Probe, { include: true }));
     frames.flush();
 
-    crc(canvas, createElement(Probe, { include: false }));
-    expect(() => frames.flush()).toThrowError(/fewer CRC hooks/i);
+    pibbl(canvas, createElement(Probe, { include: false }));
+    expect(() => frames.flush()).toThrowError(/fewer Pibbl hooks/i);
     expect(cleanup).toHaveBeenCalledOnce();
 
-    crc(canvas, createElement(Probe, { include: false }));
+    pibbl(canvas, createElement(Probe, { include: false }));
     expect(() => frames.flush()).not.toThrow();
     controller.dispose();
     frames.restore();
@@ -91,11 +90,11 @@ describe('hook ordering and render errors', () => {
       useSignal(0);
       if (more) useRef(0);
     };
-    const controller = crc(canvas, createElement(MoreProbe, { more: false }));
+    const controller = pibbl(canvas, createElement(MoreProbe, { more: false }));
     frames.flush();
-    crc(canvas, createElement(MoreProbe, { more: true }));
-    expect(() => frames.flush()).toThrowError(/more CRC hooks/i);
-    crc(canvas, createElement(MoreProbe, { more: true }));
+    pibbl(canvas, createElement(MoreProbe, { more: true }));
+    expect(() => frames.flush()).toThrowError(/more Pibbl hooks/i);
+    pibbl(canvas, createElement(MoreProbe, { more: true }));
     expect(() => frames.flush()).not.toThrow();
 
     const OrderProbe = ({ swapped }: { swapped: boolean }) => {
@@ -107,11 +106,11 @@ describe('hook ordering and render errors', () => {
         useRef(0);
       }
     };
-    crc(canvas, createElement(OrderProbe, { swapped: false }));
+    pibbl(canvas, createElement(OrderProbe, { swapped: false }));
     frames.flush();
-    crc(canvas, createElement(OrderProbe, { swapped: true }));
+    pibbl(canvas, createElement(OrderProbe, { swapped: true }));
     expect(() => frames.flush()).toThrowError(/hook order changed/i);
-    crc(canvas, createElement(OrderProbe, { swapped: true }));
+    pibbl(canvas, createElement(OrderProbe, { swapped: true }));
     expect(() => frames.flush()).not.toThrow();
     controller.dispose();
     frames.restore();
@@ -131,12 +130,12 @@ describe('hook ordering and render errors', () => {
       transforms.push(ctx.getTransform());
       useSignal(2);
     });
-    const controller = crc(canvas, createElement(Broken, {}));
+    const controller = pibbl(canvas, createElement(Broken, {}));
     expect(() => frames.flush()).toThrow(renderError);
-    expect(GLOBAL_STATE.currentCRCInstance).toBeUndefined();
+    expect(GLOBAL_STATE.currentPibblInstance).toBeUndefined();
     expect(GLOBAL_STATE.componentRefs).toBeUndefined();
 
-    crc(canvas, createElement(Healthy, {}));
+    pibbl(canvas, createElement(Healthy, {}));
     expect(() => frames.flush()).not.toThrow();
     expect(transforms[0].isIdentity).toBe(true);
 
@@ -147,9 +146,9 @@ describe('hook ordering and render errors', () => {
         return 'ok';
       });
     };
-    crc(canvas, createElement(ConstProbe, { fail: true }));
+    pibbl(canvas, createElement(ConstProbe, { fail: true }));
     expect(() => frames.flush()).toThrow(constError);
-    crc(canvas, createElement(ConstProbe, { fail: false }));
+    pibbl(canvas, createElement(ConstProbe, { fail: false }));
     expect(() => frames.flush()).not.toThrow();
     controller.dispose();
     frames.restore();
@@ -162,12 +161,11 @@ describe('hook ordering and render errors', () => {
       () => useComputed(() => 1),
       () => useRef(0),
       () => useReaction(() => undefined),
-      () => usePlayback(track(signal(0), tween({ to: 1, duration: 1 }))),
-      () => useTransition(1, { type: 'tween', duration: 1 }),
+      () => usePlayback(drive(signal(0), tween({ to: 1, duration: 1 }))),
+      () => useAnimatedValue(1, { animation: tween({ duration: 1 }) }),
       () => useRectPath(0, 0, 1, 1),
       () => useLinePath([[0, 0], [1, 1]]),
       () => useSvgPath('M0 0'),
-      () => useEvent('click', () => {}),
       () => useEventListener({ onClick: () => {} }),
       () => useEventTarget(
         { onClick: () => {} },
@@ -178,7 +176,7 @@ describe('hook ordering and render errors', () => {
 
     for (const call of calls) {
       expect(call).toThrowError(
-        'CRC hooks can only be called while rendering a component.',
+        'Pibbl hooks can only be called while rendering a component.',
       );
     }
   });
@@ -197,132 +195,20 @@ describe('hook ordering and render errors', () => {
         useEventListener({ onClick: () => undefined });
       }
     };
-    const controller = crc(canvas, createElement(Probe, { swapped: false }));
+    const controller = pibbl(canvas, createElement(Probe, { swapped: false }));
     frames.flush();
 
-    crc(canvas, createElement(Probe, { swapped: true }));
+    pibbl(canvas, createElement(Probe, { swapped: true }));
     expect(() => frames.flush()).toThrowError(/hook order changed/i);
-    expect(getCRCInstance(canvas).eventRoot.targets.size).toBe(0);
-    expect(getCRCInstance(canvas).eventRoot.listenersByComponent.size).toBe(0);
+    expect(getPibblInstance(canvas).eventRoot.targets.size).toBe(0);
+    expect(getPibblInstance(canvas).eventRoot.listenersByComponent.size).toBe(0);
 
-    crc(canvas, createElement(Probe, { swapped: true }));
+    pibbl(canvas, createElement(Probe, { swapped: true }));
     expect(() => frames.flush()).not.toThrow();
     controller.dispose();
     frames.restore();
   });
 
-  it('keeps event and cursor slots stable when switching between global and path modes', async () => {
-    const canvas = createCanvas();
-    const path = new Path2D();
-    path.rect(0, 0, 20, 20);
-    const Probe = ({ local }: { local: boolean }) => {
-      useEvent('click', () => {}, local ? path : undefined, true);
-      useCursor({ path: local ? path : undefined, style: 'pointer', fill: true });
-    };
-    const controller = crc(canvas, createElement(Probe, { local: false }));
-    await nextFrame();
-    const instance = getCRCInstance(canvas);
-    expect(instance.eventRoot.observers.get('click')?.size).toBe(1);
-    expect(instance.regions.size).toBe(0);
-    expect(instance.cursorDefaults.size).toBe(1);
-
-    crc(canvas, createElement(Probe, { local: true }));
-    await nextFrame();
-    expect(instance.eventRoot.observers.get('click')?.size).toBe(0);
-    expect(instance.regions.size).toBe(2);
-    expect(instance.cursorDefaults.size).toBe(0);
-
-    crc(canvas, createElement(Probe, { local: false }));
-    await nextFrame();
-    expect(instance.eventRoot.observers.get('click')?.size).toBe(1);
-    expect(instance.regions.size).toBe(0);
-    expect(instance.cursorDefaults.size).toBe(1);
-    controller.dispose();
-  });
-
-  it('keeps one legacy target slot while replacing and removing a path-bound useEvent handler', async () => {
-    const canvas = createCanvas();
-    const path = new Path2D();
-    path.rect(0, 0, 20, 20);
-    const trace: string[] = [];
-    const Probe = ({
-      handler,
-    }: {
-      handler: CRCMouseEventListener | undefined;
-    }) => {
-      useEvent('mousemove', handler, path, true);
-    };
-    const firstHandler = () => trace.push('first');
-    const controller = crc(canvas, createElement(Probe, { handler: firstHandler }));
-    await nextFrame();
-    const instance = getCRCInstance(canvas);
-    const firstTarget = Array.from(instance.eventRoot.targets)[0];
-
-    expect(instance.eventRoot.targets.size).toBe(1);
-    expect(instance.regions.size).toBe(1);
-
-    const replacementHandler = () => trace.push('replacement');
-    crc(canvas, createElement(Probe, { handler: replacementHandler }));
-    await nextFrame();
-
-    expect(instance.eventRoot.targets.size).toBe(1);
-    expect(Array.from(instance.eventRoot.targets)[0]).toBe(firstTarget);
-    dispatchMouseMove(canvas, 10, 10);
-    expect(trace).toEqual(['replacement']);
-
-    crc(canvas, createElement(Probe, { handler: undefined }));
-    await nextFrame();
-    expect(instance.eventRoot.targets.size).toBe(0);
-    expect(instance.regions.size).toBe(0);
-    controller.dispose();
-  });
-
-  it('orders no-path useEvent observers after targets and isolates replacement, removal, and throws', async () => {
-    const reportError = vi.spyOn(globalThis, 'reportError').mockImplementation(
-      () => undefined,
-    );
-    const canvas = createCanvas();
-    const path = new Path2D();
-    path.rect(0, 0, 20, 20);
-    const trace: string[] = [];
-    const Probe = ({
-      first,
-      generation,
-    }: {
-      first: boolean;
-      generation: string;
-    }) => {
-      useEventTarget({
-        onMouseMove: () => trace.push('target'),
-      }, { path, fill: true });
-      useEvent('mousemove', first ? () => {
-        trace.push(`first-${generation}`);
-        if (generation === 'throw') {
-          throw new Error('expected observer failure');
-        }
-      } : undefined);
-      useEvent('mousemove', () => trace.push('second'));
-    };
-    const controller = crc(canvas, createElement(Probe, { first: true, generation: 'throw' }));
-    await nextFrame();
-
-    dispatchMouseMove(canvas, 10, 10);
-    expect(trace).toEqual(['target', 'first-throw', 'second']);
-    expect(reportError).toHaveBeenCalledOnce();
-
-    trace.length = 0;
-    crc(canvas, createElement(Probe, { first: true, generation: 'replacement' }));
-    await nextFrame();
-    dispatchMouseMove(canvas, 10, 10);
-    expect(trace).toEqual(['target', 'first-replacement', 'second']);
-
-    trace.length = 0;
-    crc(canvas, createElement(Probe, { first: false, generation: 'removed' }));
-    await nextFrame();
-    dispatchMouseMove(canvas, 10, 10);
-    expect(trace).toEqual(['target', 'second']);
-    controller.dispose();
-  });
 });
 
 class ManualFrames {
@@ -343,7 +229,7 @@ class ManualFrames {
 
   flush(): void {
     const entry = Array.from(this.callbacks.entries()).at(-1);
-    if (!entry) throw new Error('No pending CRC frame');
+    if (!entry) throw new Error('No pending Pibbl frame');
     const [id, callback] = entry;
     this.callbacks.delete(id);
     callback(performance.now());
@@ -363,16 +249,4 @@ function createCanvas(): HTMLCanvasElement {
 
 function nextFrame(): Promise<void> {
   return new Promise(resolve => requestAnimationFrame(() => resolve()));
-}
-
-function dispatchMouseMove(
-  canvas: HTMLCanvasElement,
-  clientX: number,
-  clientY: number,
-): void {
-  canvas.dispatchEvent(new MouseEvent('mousemove', {
-    bubbles: true,
-    clientX,
-    clientY,
-  }));
 }

@@ -5,12 +5,12 @@ import { resolve } from 'node:path';
 
 /** Data-only recipe: consumers pass arguments directly, never concatenate a shell command. */
 export function createReplayManifest({ runId, repository, kind, url, density = 1 }) {
-  if (kind !== 'targeting' && kind !== 'viz') throw new Error('Unknown replay kind.');
-  if ((density !== 1 && density !== 2) || (kind === 'targeting' && density !== 1)) {
+  if (kind !== 'targeting' && kind !== 'viz' && kind !== 'text' && kind !== 'signal-mutation') throw new Error('Unknown replay kind.');
+  if ((density !== 1 && density !== 2) || (kind !== 'viz' && density !== 1)) {
     throw new Error('Unsupported replay density.');
   }
   return {
-    schema: 'crc-replay-run/1',
+    schema: 'pibbl-replay-run/1',
     runId,
     kind,
     startedAt: new Date().toISOString(),
@@ -22,10 +22,10 @@ export function createReplayManifest({ runId, repository, kind, url, density = 1
     },
     rerun: {
       executable: process.execPath,
-      arguments: [resolve(repository, 'tooling/agent-verification', kind === 'viz' ? 'viz-replay.mjs' : 'replay.mjs'), url],
+      arguments: [resolve(repository, 'tooling/agent-verification', kind === 'viz' ? 'viz-replay.mjs' : kind === 'text' ? 'text-replay.mjs' : kind === 'signal-mutation' ? 'signal-mutation-replay.mjs' : 'replay.mjs'), url],
       cwd: repository,
-      environment: kind === 'viz' ? { CRC_VERIFY_DENSITY: String(density) } : {},
-      unsetEnvironment: ['CRC_VERIFY_BROWSER_ENDPOINT'],
+      environment: kind === 'viz' ? { PIBBL_VERIFY_DENSITY: String(density) } : {},
+      unsetEnvironment: ['PIBBL_VERIFY_BROWSER_ENDPOINT'],
       outputPolicy: 'fresh-default-directory',
       preconditions: ['Provision the recorded checkout dependencies and Playwright Chromium.',
         'Serve the source Studio from the intended checkout at the recorded URL; served/local identity checks must pass.'],
@@ -35,17 +35,19 @@ export function createReplayManifest({ runId, repository, kind, url, density = 1
 
 
 export function replayToolFiles(kind) {
-  if (kind !== 'targeting' && kind !== 'viz') throw new Error('Unknown replay kind.');
-  const names = [kind === 'viz' ? 'viz-replay.mjs' : 'replay.mjs', 'run-manifest.mjs',
-    'identity.mjs', 'evidence-directory.mjs', 'checkpoint.mjs', 'replay-outcome.mjs', 'browser-failure.mjs', 'failure-evidence.mjs'];
-  if (kind === 'viz') names.push('numeric-assertion.mjs');
-  else names.push('input-provenance.mjs');
+  if (kind !== 'targeting' && kind !== 'viz' && kind !== 'text' && kind !== 'signal-mutation') throw new Error('Unknown replay kind.');
+  const names = [kind === 'viz' ? 'viz-replay.mjs' : kind === 'text' ? 'text-replay.mjs' : kind === 'signal-mutation' ? 'signal-mutation-replay.mjs' : 'replay.mjs', 'run-manifest.mjs',
+    'required-checks.mjs', 'identity.mjs', 'evidence-directory.mjs', 'checkpoint.mjs', 'replay-outcome.mjs', 'browser-failure.mjs', 'failure-evidence.mjs'];
+  if (kind === 'signal-mutation') names.push('signal-mutation-identity.mjs', 'recorded-check.mjs');
+  else if (kind === 'text') names.push('text-identity.mjs', 'recorded-check.mjs');
+  else if (kind === 'viz') names.push('numeric-assertion.mjs', 'recorded-check.mjs');
+  else names.push('input-provenance.mjs', 'recorded-check.mjs');
   return names.map(name => `tooling/agent-verification/${name}`);
 }
 
 export async function captureReplayToolIdentity(repository, kind, revision) {
   return { ...await fingerprint(repository, replayToolFiles(kind), revision),
-    schema: 'crc-replay-tool-identity/1',
+    schema: 'pibbl-replay-tool-identity/1',
     scope: 'Replay and declared local dependencies on disk; not loaded-module or installed-dependency attestation.',
   };
 }

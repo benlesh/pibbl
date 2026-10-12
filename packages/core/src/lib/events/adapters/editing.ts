@@ -1,6 +1,6 @@
-import type { CRCEventType } from '../types.js';
+import type { PibblEventType } from '../types.js';
 
-export const CRC_NATIVE_EDITING_EVENT_TYPES = Object.freeze([
+export const PIBBL_NATIVE_EDITING_EVENT_TYPES = Object.freeze([
   'beforeinput',
   'input',
   'change',
@@ -9,16 +9,16 @@ export const CRC_NATIVE_EDITING_EVENT_TYPES = Object.freeze([
   'compositionend',
   'select',
   'selectionchange',
-] as const satisfies readonly CRCEventType[]);
+] as const satisfies readonly PibblEventType[]);
 
-export type CRCNativeEditingEventType =
-  (typeof CRC_NATIVE_EDITING_EVENT_TYPES)[number];
+export type PibblNativeEditingEventType =
+  (typeof PIBBL_NATIVE_EDITING_EVENT_TYPES)[number];
 
-const nativeEditingEventTypes = new Set<CRCEventType>(
-  CRC_NATIVE_EDITING_EVENT_TYPES,
+const nativeEditingEventTypes = new Set<PibblEventType>(
+  PIBBL_NATIVE_EDITING_EVENT_TYPES,
 );
 
-export type CRCAdaptedEditingEvent =
+export type PibblAdaptedEditingEvent =
   | {
     readonly type: 'beforeinput' | 'input';
     readonly originalEvent: InputEvent;
@@ -36,15 +36,15 @@ export type CRCAdaptedEditingEvent =
   };
 
 export function isNativeEditingEventType(
-  type: CRCEventType,
-): type is CRCNativeEditingEventType {
+  type: PibblEventType,
+): type is PibblNativeEditingEventType {
   return nativeEditingEventTypes.has(type);
 }
 
 export function adaptEditingEvent(
-  type: CRCNativeEditingEventType,
+  type: PibblNativeEditingEventType,
   event: Event,
-): CRCAdaptedEditingEvent | undefined {
+): PibblAdaptedEditingEvent | undefined {
   switch (type) {
     case 'beforeinput':
     case 'input':

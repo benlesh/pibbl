@@ -1,23 +1,23 @@
 ---
 id: api-function-create-element
 title: createElement
-summary: Creates the branded CRC element descriptor without JSX.
+summary: Creates the branded Pibbl element descriptor without JSX.
 kind: api
 slug: create-element
 apiCategory: function
 symbols: [createElement]
-relatedTypes: [CRCElement, CRCElementType, CRCKey, CRCNode]
+relatedTypes: [PibblElement, PibblElementType, PibblKey, PibblNode]
 ---
 
 # createElement
 
 ```ts
-import { createElement, Rectangle } from "@crc/core";
+import { createElement, Rectangle } from "@pibbl/core";
 ```
 
-`createElement(type, props, ...children)` constructs the branded [`CRCElement`](#/api/types/elements-components#crcelement) explicit equivalent of CRC
-JSX. Its `type` is a [`CRCElementType`](#/api/types/elements-components#crcelementtype); `props` can be `null`; variadic [`CRCNode`](#/api/types/elements-components#crcnode) children override `props.children`, while
-zero variadic children preserve it. `key` accepts a [`CRCKey`](#/api/types/elements-components#crckey), is normalized, and is not delivered to props.
+`createElement(type, props, ...children)` constructs the branded [`PibblElement`](#/api/types/elements-components#pibblelement) explicit equivalent of Pibbl
+JSX. Its `type` is a [`PibblElementType`](#/api/types/elements-components#pibblelementtype); `props` can be `null`; variadic [`PibblNode`](#/api/types/elements-components#pibblnode) children override `props.children`, while
+zero variadic children preserve it. `key` accepts a [`PibblKey`](#/api/types/elements-components#pibblkey), is normalized, and is not delivered to props.
 
 ```ts
 const scene = createElement(Rectangle, {

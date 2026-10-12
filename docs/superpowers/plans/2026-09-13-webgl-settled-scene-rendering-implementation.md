@@ -6,9 +6,9 @@
 
 **Goal:** Replace primitive-at-a-time WebGL drawing with one frame-local compose → settle → render pipeline per `WebGLLayer`, while preserving the existing unlit built-ins and island transaction and removing traversal-time raw WebGL APIs.
 
-**Architecture:** A CPU-only `WebGLSceneComposer` collects immutable mesh submissions during the existing single CRC traversal. `finishFrame(true)` closes and settles that draft, derives opaque/transparent queues plus geometry-backed pick/focus records, and passes the settled scene to a generation-owned renderer. The renderer alone may touch WebGL state or resources; its transactional resident-set cache commits only after a complete render. `WebGLLayerController` keeps the existing bitmap/pick transaction and no longer treats resource-cache contents as scene invalidation state.
+**Architecture:** A CPU-only `WebGLSceneComposer` collects immutable mesh submissions during the existing single Pibbl traversal. `finishFrame(true)` closes and settles that draft, derives opaque/transparent queues plus geometry-backed pick/focus records, and passes the settled scene to a generation-owned renderer. The renderer alone may touch WebGL state or resources; its transactional resident-set cache commits only after a complete render. `WebGLLayerController` keeps the existing bitmap/pick transaction and no longer treats resource-cache contents as scene invalidation state.
 
-**Tech Stack:** TypeScript 7, CRC JSX/createElement runtime, HTML Canvas 2D, `OffscreenCanvas`, WebGL2, Vitest Browser with Playwright Chromium, esbuild, pnpm 11.21.0, Node 24.15 or newer.
+**Tech Stack:** TypeScript 7, Pibbl JSX/createElement runtime, HTML Canvas 2D, `OffscreenCanvas`, WebGL2, Vitest Browser with Playwright Chromium, esbuild, pnpm 11.21.0, Node 24.15 or newer.
 
 **Spec:** `docs/superpowers/specs/2026-09-13-webgl-settled-scene-rendering-design.md`
 
@@ -17,14 +17,14 @@
 - Preserve unrelated working-tree changes and untracked files. In particular, do not modify the pre-existing `tooling/verify-docs.mjs` edit, `docs/strategy/particle-effects-research.md`, or `docs/superpowers/specs/2026-09-13-first-class-particle-effects-design.md` unless a later user request explicitly puts them in scope.
 - This plan covers the settled-scene foundation only. Do not add normals, materials, lights, backgrounds, environment maps, shadows, emission, HDR targets, tone mapping, or bloom here.
 - Keep one `WebGLLayer` as one camera, one private WebGL2 context, one frame-local scene, and one flattened Canvas paint entry. Do not add `Scene3D`, a `lights` prop, multiple viewports, or a retained scene graph.
-- Preserve the current CRC component traversal and identity machinery. Every invalidated component and backend primitive executes exactly once; settlement and rendering may not replay component code.
+- Preserve the current Pibbl component traversal and identity machinery. Every invalidated component and backend primitive executes exactly once; settlement and rendering may not replay component code.
 - `beginFrame()` and child traversal are CPU-only for WebGL: no clear, draw, shader/program creation, vertex-array/buffer creation, upload, or baseline installation may occur before successful traversal finishes.
 - `finishFrame(false)` discards without settling or rendering. `finishFrame(true)` is the only render entry and must perform its own rollback before rethrowing because core has already selected the success completion path.
 - Final alpha is parsed color alpha multiplied by `style.opacity`. Alpha `1` is opaque, `(0, 1)` is transparent, and `0` is absent from raster queues but remains eligible for pick/focus participation.
 - Render opaque submissions in ascending source order with blending disabled and depth writes enabled. Render transparent submissions farthest-to-nearest by transformed geometry-bounds center, with ascending source order as the exact equal-depth tie-breaker, blending enabled, and depth writes disabled.
 - Derive render and pick/focus data from the same immutable mesh submission. Raster reordering must not change event ancestry, Tab order, source indices, or equal-depth picking; the later source index still wins an equal pick depth.
 - Preserve the existing Canvas/WebGL bitmap-and-pick publication transaction. Never publish a partial scene, transfer more than one bitmap for one updated scene, or pair new pixels with old pick/focus metadata.
-- Remove, without aliases, the public `defineWebGLPrimitive`, `crcWebGLContext`, raw context/resource types, custom analytic hit path, and component-owned WebGL resource registry.
+- Remove, without aliases, the public `defineWebGLPrimitive`, `pibblWebGLContext`, raw context/resource types, custom analytic hit path, and component-owned WebGL resource registry.
 - Keep `createWebGLGeometry` public. Ordinary custom shapes remain ordinary components that return `Mesh`.
 - Add a failing test before each production behavior change. Public behavior needs root-package, package-consumer, browser-scenario, lifecycle, and structural-cost evidence.
 - Inspect visual expected/actual/diff output before accepting any baseline update. Never rewrite a baseline merely to make a test pass.
@@ -44,7 +44,7 @@
 - Create `packages/webgl/src/lib/gpu/renderer-resources.ts`: one transactional resident-set cache for one context generation.
 - Create `packages/webgl/src/lib/gpu/renderer-resources.test.ts`: handle sharing, commit/sweep, rollback, partial construction, context loss, and exact disposal.
 - Create `packages/webgl/src/lib/scene/renderer.ts`: lazy baseline creation, one clear, opaque/transparent state, queue execution, and transaction closure.
-- Create `packages/webgl/src/lib/scene/renderer.test.ts`: WebGL command ordering and failure evidence independent of CRC traversal.
+- Create `packages/webgl/src/lib/scene/renderer.test.ts`: WebGL command ordering and failure evidence independent of Pibbl traversal.
 - Modify `packages/webgl/src/lib/gpu/{state.ts,state.test.ts}`: retain the complete baseline installer, remove the traversal-oriented frame-start helper after backend migration, and prove restoration attempts all owned state.
 - Keep `packages/webgl/src/lib/gpu/program.ts` and its tests as the positions-only unlit shader implementation for this project.
 
@@ -59,7 +59,7 @@
 ### Removed traversal-era extension surface
 
 - Delete `packages/webgl/src/lib/define-webgl-primitive.ts` and its test.
-- Delete `packages/webgl/src/lib/hooks/crc-webgl-context.ts` and its test.
+- Delete `packages/webgl/src/lib/hooks/pibbl-webgl-context.ts` and its test.
 - Delete `packages/webgl/src/lib/primitive-metadata.ts`.
 - Delete `packages/webgl/src/lib/render-environment.ts`.
 - Delete `packages/webgl/src/lib/gpu/resources.ts` and its lease-oriented test.
@@ -69,7 +69,7 @@
 
 ### Public consumers, scenarios, and documentation
 
-- Modify `packages/webgl/src/index.ts`, `playground/package-consumer/{index.ts,runtime.mjs}`, `playground/src/crc-editor-types.txt`, `tooling/verify-studio-types.mjs`, and `tooling/studio-docs/{api-exports.check.ts,fixtures/api/webgl.ts}` for the reduced public surface: 7 runtime values and 15 public types.
+- Modify `packages/webgl/src/index.ts`, `playground/package-consumer/{index.ts,runtime.mjs}`, `playground/src/pibbl-editor-types.txt`, `tooling/verify-studio-types.mjs`, and `tooling/studio-docs/{api-exports.check.ts,fixtures/api/webgl.ts}` for the reduced public surface: 7 runtime values and 15 public types.
 - Modify `packages/scenarios/src/{webgl-lab.example.tsx,webgl-lab.ts,catalog.ts}` and `packages/core/test/{webgl-lab,webgl-ownership,webgl-performance}.test.ts` to remove raw-context reporting/restoration controls and add deterministic settled-transparency evidence.
 - Modify `packages/scenarios/src/learning/composition/webgl-islands.example.tsx` to explain the layer as a settled scene while retaining the animated cube/sphere lesson.
 - Regenerate only the scenario/catalog artifacts changed by those sources, including `docs/scenario-index.md` when required.
@@ -91,13 +91,13 @@ export type WebGLRGBA = readonly [
 export interface WebGLMeshSubmission {
   readonly kind: "mesh";
   readonly componentName: string;
-  readonly source: CRCElementSource | undefined;
-  readonly geometry: CRCWebGLGeometry;
+  readonly source: PibblElementSource | undefined;
+  readonly geometry: PibblWebGLGeometry;
   readonly model: Readonly<Float32Array>;
   readonly color: WebGLRGBA;
   readonly sourceIndex: number;
-  readonly target: CRCEventTargetRegistration | undefined;
-  readonly keyboardNavigationBounds: CRCEventTargetRegistration["keyboardNavigationBounds"];
+  readonly target: PibblEventTargetRegistration | undefined;
+  readonly keyboardNavigationBounds: PibblEventTargetRegistration["keyboardNavigationBounds"];
 }
 
 export interface SettledWebGLMesh extends WebGLMeshSubmission {
@@ -114,11 +114,11 @@ export interface SettledWebGLScene {
   readonly meshes: readonly SettledWebGLMesh[];
   readonly opaque: readonly SettledWebGLMesh[];
   readonly transparent: readonly SettledWebGLMesh[];
-  readonly pickEntries: readonly CRCWebGLGeometryPickRecord[];
+  readonly pickEntries: readonly PibblWebGLGeometryPickRecord[];
 }
 ```
 
-No type in this block is exported from `@crc/webgl`.
+No type in this block is exported from `@pibbl/webgl`.
 
 ## Complexity and Ownership Contract
 
@@ -140,24 +140,24 @@ No type in this block is exported from `@crc/webgl`.
 
 **Interfaces:**
 
-- Consumes: `CRCBackendFrameInput`, package-private `ResolvedWebGLCamera`, immutable `CRCWebGLGeometry`, `CRCElementSource`, target registrations, and matrix multiplication helpers.
+- Consumes: `PibblBackendFrameInput`, package-private `ResolvedWebGLCamera`, immutable `PibblWebGLGeometry`, `PibblElementSource`, target registrations, and matrix multiplication helpers.
 - Produces:
 
 ```ts
 export interface CreateWebGLSceneComposerInput {
-  readonly frame: CRCBackendFrameInput;
+  readonly frame: PibblBackendFrameInput;
   readonly camera: ResolvedWebGLCamera;
   readonly contextGeneration: number;
 }
 
 export interface SubmitWebGLMeshInput {
   readonly componentName: string;
-  readonly source?: CRCElementSource;
-  readonly geometry: CRCWebGLGeometry;
+  readonly source?: PibblElementSource;
+  readonly geometry: PibblWebGLGeometry;
   readonly localModel: Readonly<Float32Array>;
   readonly color: WebGLRGBA;
-  readonly target?: CRCEventTargetRegistration;
-  readonly keyboardNavigationBounds?: CRCEventTargetRegistration["keyboardNavigationBounds"];
+  readonly target?: PibblEventTargetRegistration;
+  readonly keyboardNavigationBounds?: PibblEventTargetRegistration["keyboardNavigationBounds"];
 }
 
 export function createWebGLSceneComposer(
@@ -257,7 +257,7 @@ export function settleWebGLScene(
 ): SettledWebGLScene;
 
 export function releaseWebGLPickParticipation(
-  entries: readonly CRCWebGLGeometryPickRecord[],
+  entries: readonly PibblWebGLGeometryPickRecord[],
 ): void;
 ```
 
@@ -329,7 +329,7 @@ export function releaseWebGLPickParticipation(
 export interface WebGLRendererResourceTransaction {
   useProgram(componentName: string): WebGLBuiltInProgram;
   useGeometry(
-    geometry: CRCWebGLGeometry,
+    geometry: PibblWebGLGeometry,
     componentName: string,
   ): WebGLGeometryResource;
   commit(): void;
@@ -488,17 +488,17 @@ export class WebGLSceneRenderer {
 
 **Interfaces:**
 
-- Consumes: core's unchanged `CRCBackendDriver` lifecycle, the composer/settler/renderer, `defineBackendPrimitive`, `getBackendEnvironment`, `getCurrentElementSource`, and `useBackendEventTarget`.
+- Consumes: core's unchanged `PibblBackendDriver` lifecycle, the composer/settler/renderer, `defineBackendPrimitive`, `getBackendEnvironment`, `getCurrentElementSource`, and `useBackendEventTarget`.
 - Produces:
 
 ```ts
 export interface WebGLCompletedFrame {
   readonly renderedGeneration: number;
   readonly contextGeneration: number;
-  readonly pickEntries: readonly CRCWebGLGeometryPickRecord[];
+  readonly pickEntries: readonly PibblWebGLGeometryPickRecord[];
 }
 
-export interface WebGLBackendDriver extends CRCBackendDriver<WebGLSceneComposer> {
+export interface WebGLBackendDriver extends PibblBackendDriver<WebGLSceneComposer> {
   readonly renderedGeneration: number;
   hasCompletedFrame(): boolean;
   takeFailedFrameTimestamp(): number | undefined;
@@ -537,8 +537,8 @@ export interface WebGLBackendDriver extends CRCBackendDriver<WebGLSceneComposer>
   ```ts
   function submitBuiltInMesh(
     componentName: string,
-    props: Readonly<CRCWebGLTargetProps>,
-    geometry: CRCWebGLGeometry,
+    props: Readonly<PibblWebGLTargetProps>,
+    geometry: PibblWebGLGeometry,
     style: Readonly<MeshStyle>,
     uniformScale: number,
   ): void {
@@ -598,8 +598,8 @@ export interface WebGLBackendDriver extends CRCBackendDriver<WebGLSceneComposer>
 
 - Delete: `packages/webgl/src/lib/define-webgl-primitive.ts`
 - Delete: `packages/webgl/src/lib/define-webgl-primitive.test.tsx`
-- Delete: `packages/webgl/src/lib/hooks/crc-webgl-context.ts`
-- Delete: `packages/webgl/src/lib/hooks/crc-webgl-context.test.tsx`
+- Delete: `packages/webgl/src/lib/hooks/pibbl-webgl-context.ts`
+- Delete: `packages/webgl/src/lib/hooks/pibbl-webgl-context.test.tsx`
 - Delete: `packages/webgl/src/lib/primitive-metadata.ts`
 - Delete: `packages/webgl/src/lib/render-environment.ts`
 - Delete: `packages/webgl/src/lib/gpu/resources.ts`
@@ -621,8 +621,8 @@ export interface WebGLBackendDriver extends CRCBackendDriver<WebGLSceneComposer>
 
 **Interfaces:**
 
-- Removes public values: `defineWebGLPrimitive`, `crcWebGLContext`.
-- Removes public types: `CRCWebGLCameraSnapshot`, `CRCWebGLContext`, `CRCWebGLHitCapability`, `CRCWebGLPrimitiveCapabilities`, `CRCWebGLPrimitiveHitInput`, `CRCWebGLPrimitiveInput`, `CRCWebGLPrimitiveRender`, `CRCWebGLProgramProps`.
+- Removes public values: `defineWebGLPrimitive`, `pibblWebGLContext`.
+- Removes public types: `PibblWebGLCameraSnapshot`, `PibblWebGLContext`, `PibblWebGLHitCapability`, `PibblWebGLPrimitiveCapabilities`, `PibblWebGLPrimitiveHitInput`, `PibblWebGLPrimitiveInput`, `PibblWebGLPrimitiveRender`, `PibblWebGLProgramProps`.
 - Retains public values: `WebGLLayer`, `Group3D`, `Mesh`, `Cube`, `Sphere`, `createWebGLGeometry`, `useAnimationFrame`.
 - Retains public declarative types: vectors, perspective camera, geometry input/descriptor, transforms, and all component prop/style types.
 
@@ -646,7 +646,7 @@ export interface WebGLBackendDriver extends CRCBackendDriver<WebGLSceneComposer>
 
 - [ ] **Step 3: Delete raw modules and simplify internal types/picking**
 
-  Remove the files listed above and every import/reference in `packages/webgl/src`. Define `ResolvedWebGLCamera` directly in `math/camera.ts`; do not export its matrices from the package root. Reduce `CRCWebGLPickRecord` to the geometry record and remove custom value cloning, custom camera snapshots, and analytic resolution branches from `pick-ledger.ts`/`scene-picker.ts`.
+  Remove the files listed above and every import/reference in `packages/webgl/src`. Define `ResolvedWebGLCamera` directly in `math/camera.ts`; do not export its matrices from the package root. Reduce `PibblWebGLPickRecord` to the geometry record and remove custom value cloning, custom camera snapshots, and analytic resolution branches from `pick-ledger.ts`/`scene-picker.ts`.
 
   Remove `beginWebGLFrame` after confirming the new renderer is its only conceptual replacement; keep `createWebGLStateBaseline` and `installWebGLStateBaseline` package-private.
 
@@ -662,7 +662,7 @@ export interface WebGLBackendDriver extends CRCBackendDriver<WebGLSceneComposer>
 
   ```bash
   corepack pnpm@11.21.0 exec vitest run packages/webgl/src/lib --browser.headless --browser.ui=false
-  corepack pnpm@11.21.0 --filter @crc/webgl run build
+  corepack pnpm@11.21.0 --filter @pibbl/webgl run build
   ```
 
   Expected: PASS, with no source reference to the removed APIs or traversal environment.
@@ -670,7 +670,7 @@ export interface WebGLBackendDriver extends CRCBackendDriver<WebGLSceneComposer>
 - [ ] **Step 7: Scan the WebGL source for forbidden architecture remnants**
 
   ```bash
-  rg -n "defineWebGLPrimitive|crcWebGLContext|CRCWebGLContext|CRCWebGLHitCapability|WebGLResourceGenerationRegistry|ownedResourceGeneration|recordCustomWebGLPick|beginWebGLFrame" packages/webgl/src
+  rg -n "defineWebGLPrimitive|pibblWebGLContext|PibblWebGLContext|PibblWebGLHitCapability|WebGLResourceGenerationRegistry|ownedResourceGeneration|recordCustomWebGLPick|beginWebGLFrame" packages/webgl/src
   ```
 
   Expected: no matches.
@@ -688,7 +688,7 @@ export interface WebGLBackendDriver extends CRCBackendDriver<WebGLSceneComposer>
 
 - Modify: `playground/package-consumer/index.ts`
 - Modify: `playground/package-consumer/runtime.mjs`
-- Modify: `playground/src/crc-editor-types.txt`
+- Modify: `playground/src/pibbl-editor-types.txt`
 - Modify: `tooling/verify-studio-types.mjs`
 - Modify: `tooling/studio-docs/api-exports.check.ts`
 - Modify: `tooling/studio-docs/fixtures/api/webgl.ts`
@@ -725,50 +725,53 @@ export interface WebGLBackendDriver extends CRCBackendDriver<WebGLSceneComposer>
   Remove positive use of the two raw values/eight raw types. Import the package as value and type namespaces in `playground/package-consumer/index.ts`, then add explicit negative probes for every removed name:
 
   ```ts
-  import * as WebGLRuntime from "@crc/webgl";
-  import type * as WebGLTypes from "@crc/webgl";
+  import * as WebGLRuntime from "@pibbl/webgl";
+  import type * as WebGLTypes from "@pibbl/webgl";
 
   // @ts-expect-error traversal-time raw GL construction is not public
   void WebGLRuntime.defineWebGLPrimitive;
   // @ts-expect-error traversal-time raw GL context access is not public
-  void WebGLRuntime.crcWebGLContext;
+  void WebGLRuntime.pibblWebGLContext;
 
   // @ts-expect-error resolved camera matrices are package-private
-  type RemovedCameraSnapshot = WebGLTypes.CRCWebGLCameraSnapshot;
+  type RemovedCameraSnapshot = WebGLTypes.PibblWebGLCameraSnapshot;
   // @ts-expect-error traversal-time raw GL context is not public
-  type RemovedContext = WebGLTypes.CRCWebGLContext;
+  type RemovedContext = WebGLTypes.PibblWebGLContext;
   // @ts-expect-error raw primitive hit capability is not public
-  type RemovedHitCapability = WebGLTypes.CRCWebGLHitCapability<
+  type RemovedHitCapability = WebGLTypes.PibblWebGLHitCapability<
     unknown,
     unknown
   >;
   // @ts-expect-error raw primitive capabilities are not public
-  type RemovedCapabilities = WebGLTypes.CRCWebGLPrimitiveCapabilities<
+  type RemovedCapabilities = WebGLTypes.PibblWebGLPrimitiveCapabilities<
     unknown,
     never,
     never,
     never
   >;
   // @ts-expect-error custom analytic hit input is not public
-  type RemovedHitInput = WebGLTypes.CRCWebGLPrimitiveHitInput<unknown, unknown>;
+  type RemovedHitInput = WebGLTypes.PibblWebGLPrimitiveHitInput<
+    unknown,
+    unknown
+  >;
   // @ts-expect-error backend primitive input is not public
-  type RemovedPrimitiveInput = WebGLTypes.CRCWebGLPrimitiveInput<
+  type RemovedPrimitiveInput = WebGLTypes.PibblWebGLPrimitiveInput<
     unknown,
     never,
     never
   >;
   // @ts-expect-error raw primitive render callback is not public
-  type RemovedPrimitiveRender = WebGLTypes.CRCWebGLPrimitiveRender<
+  type RemovedPrimitiveRender = WebGLTypes.PibblWebGLPrimitiveRender<
     unknown,
     unknown
   >;
   // @ts-expect-error raw backend program props are not public
-  type RemovedProgramProps = WebGLTypes.CRCWebGLProgramProps<unknown, never>;
+  type RemovedProgramProps = WebGLTypes.PibblWebGLProgramProps<unknown, never>;
   ```
 
   Update `runtime.mjs` to assert the exact seven-value export list and construct a scene only from retained declarative APIs.
 
-  In `api-exports.check.ts`, make the fixture prove the retained `CRCWebGLPerspectiveCamera` type rather than the removed context type, then change the expected counts to `7` and `15`.
+  In `api-exports.check.ts`, make the fixture prove the retained `PibblWebGLPerspectiveCamera` type rather than the removed context type, then change the expected counts to `7` and `15`.
 
 - [ ] **Step 2: Run consumer and Studio checks and confirm stale declarations/docs fail**
 
@@ -782,11 +785,11 @@ export interface WebGLBackendDriver extends CRCBackendDriver<WebGLSceneComposer>
 
 - [ ] **Step 3: Update generated-facing declarations and retained usage examples**
 
-  Remove all raw API declarations from `crc-editor-types.txt` and the Studio verifier's synthetic programs/export arrays. Keep exact component props, camera, geometry, transform, and animation-frame declarations. Update package consumers for Bundler, NodeNext, and runtime use of the seven supported values.
+  Remove all raw API declarations from `pibbl-editor-types.txt` and the Studio verifier's synthetic programs/export arrays. Keep exact component props, camera, geometry, transform, and animation-frame declarations. Update package consumers for Bundler, NodeNext, and runtime use of the seven supported values.
 
 - [ ] **Step 4: Replace public raw-context laboratory controls with transparency evidence**
 
-  Remove `ContextReporter`, `CRCWebGLContext`, `contextGeneration`, `context-restored`, and `restore-context` from the public WebGL lab. Add a `transparency` mode/action containing overlapping near/far semi-transparent meshes submitted in intentionally unhelpful source order. Add stable probe points and semantic state so the test can distinguish the expected back-to-front blend from the old immediate depth-write result.
+  Remove `ContextReporter`, `PibblWebGLContext`, `contextGeneration`, `context-restored`, and `restore-context` from the public WebGL lab. Add a `transparency` mode/action containing overlapping near/far semi-transparent meshes submitted in intentionally unhelpful source order. Add stable probe points and semantic state so the test can distinguish the expected back-to-front blend from the old immediate depth-write result.
 
   Keep context-loss/restoration evidence in package-internal lifecycle tests, where the controller legitimately owns the surface/context.
 
@@ -817,7 +820,7 @@ export interface WebGLBackendDriver extends CRCBackendDriver<WebGLSceneComposer>
 - [ ] **Step 8: Commit consumers and public evidence**
 
   ```bash
-  git add playground/package-consumer/index.ts playground/package-consumer/runtime.mjs playground/src/crc-editor-types.txt tooling/verify-studio-types.mjs tooling/studio-docs/api-exports.check.ts tooling/studio-docs/fixtures/api/webgl.ts packages/scenarios/src/webgl-lab.example.tsx packages/scenarios/src/webgl-lab.ts packages/scenarios/src/catalog.ts packages/scenarios/src/learning/composition/webgl-islands.example.tsx packages/core/test/webgl-lab.test.ts packages/core/test/webgl-ownership.test.ts packages/core/test/webgl-performance.test.ts docs/scenario-index.md
+  git add playground/package-consumer/index.ts playground/package-consumer/runtime.mjs playground/src/pibbl-editor-types.txt tooling/verify-studio-types.mjs tooling/studio-docs/api-exports.check.ts tooling/studio-docs/fixtures/api/webgl.ts packages/scenarios/src/webgl-lab.example.tsx packages/scenarios/src/webgl-lab.ts packages/scenarios/src/catalog.ts packages/scenarios/src/learning/composition/webgl-islands.example.tsx packages/core/test/webgl-lab.test.ts packages/core/test/webgl-ownership.test.ts packages/core/test/webgl-performance.test.ts docs/scenario-index.md
   git commit -m "test(webgl): prove settled scene public behavior"
   ```
 
@@ -826,7 +829,7 @@ export interface WebGLBackendDriver extends CRCBackendDriver<WebGLSceneComposer>
 **Files:**
 
 - Delete: `docs/site/api/functions/define-webgl-primitive.md`
-- Delete: `docs/site/api/hooks/crc-webgl-context.md`
+- Delete: `docs/site/api/hooks/pibbl-webgl-context.md`
 - Modify: `docs/site/api/index.md`
 - Modify: `docs/site/api/types/webgl.md`
 - Modify: `docs/site/learn/guides/webgl-islands.md`
@@ -892,7 +895,7 @@ export interface WebGLBackendDriver extends CRCBackendDriver<WebGLSceneComposer>
 - [ ] **Step 5: Scan current documentation for stale raw/immediate claims**
 
   ```bash
-  rg -n "defineWebGLPrimitive|crcWebGLContext|CRCWebGLContext|component-owned WebGL|draws? during primitive|primitive-at-a-time" README.md AGENTS.md packages/webgl/README.md docs/design docs/site docs/library-status.md
+  rg -n "defineWebGLPrimitive|pibblWebGLContext|PibblWebGLContext|component-owned WebGL|draws? during primitive|primitive-at-a-time" README.md AGENTS.md packages/webgl/README.md docs/design docs/site docs/library-status.md
   ```
 
   Expected: no stale current-contract/public-guide references. Matches in the approved 2026-09-13 spec may name removed APIs as historical decisions; historical 2026-09-09 records are outside this current-doc scan.
@@ -984,7 +987,7 @@ export interface WebGLBackendDriver extends CRCBackendDriver<WebGLSceneComposer>
   ```bash
   git status --short
   git diff --check 3b09bb5..HEAD
-  rg -n "defineWebGLPrimitive|crcWebGLContext|CRCWebGLContext|WebGLResourceGenerationRegistry|ownedResourceGeneration" packages playground tooling README.md AGENTS.md docs/design docs/site docs/library-status.md
+  rg -n "defineWebGLPrimitive|pibblWebGLContext|PibblWebGLContext|WebGLResourceGenerationRegistry|ownedResourceGeneration" packages playground tooling README.md AGENTS.md docs/design docs/site docs/library-status.md
   ```
 
   Expected: only the two known unrelated working-tree items remain unstaged; diff check is clean; current code/docs contain no forbidden API/ownership remnants. The separately committed particle-effects design remains untouched and falls before this implementation diff boundary.

@@ -1,20 +1,20 @@
-/** @jsxImportSource @crc/core */
+/** @jsxImportSource @pibbl/core */
 import {
-  crc,
+  pibbl,
   Group,
   Rectangle,
   Text,
   FocusManagement,
   useSignal,
-  type CRCController,
-} from "@crc/core";
+  type PibblController,
+} from "@pibbl/core";
 import {
   useTexture,
   marble,
   paper,
   cellular,
   type TextureKind,
-} from "@crc/textures";
+} from "@pibbl/core/textures";
 
 const palettes = [
   ["#f2e8d7", "#c4b8a9", "#625e68", "#252c3f"],
@@ -224,7 +224,7 @@ function MaterialLab() {
               fill: "#b8c6c2",
             }}
           >
-            Ordinary CRC text on top.
+            Ordinary Pibbl text on top.
           </Text>
         </Group>
         <Group style={{ translateX: 24, translateY: 510 }}>
@@ -299,6 +299,6 @@ function MaterialLab() {
     </FocusManagement>
   );
 }
-export default function mount(canvas: HTMLCanvasElement): CRCController {
-  return crc(canvas, <MaterialLab />);
+export default function mount(canvas: HTMLCanvasElement): PibblController {
+  return pibbl(canvas, <MaterialLab />);
 }

@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { createElement } from '../element/create-element';
 import { getPrimitiveDefinition } from '../element/metadata';
-import { getCRCInstance } from '../global-state';
+import { getPibblInstance } from '../global-state';
 import { measureElement } from '../layout/measure';
 import { LayoutDiagnostic } from '../style/diagnostics';
 import { componentTest } from '../test-utils/component-test';
@@ -133,7 +133,7 @@ describe('Wedge', () => {
       },
       onClick: vi.fn(),
     }));
-    const bounds = [...getCRCInstance(canvas.element).eventRoot.targets][0]
+    const bounds = [...getPibblInstance(canvas.element).eventRoot.targets][0]
       .keyboardNavigationBounds!;
 
     expect(bounds.x).toBe(100);
@@ -230,7 +230,7 @@ describe('Wedge', () => {
       keyboardNavigationBounds: bounds,
     }));
 
-    expect([...getCRCInstance(canvas.element).eventRoot.targets][0]
+    expect([...getPibblInstance(canvas.element).eventRoot.targets][0]
       .keyboardNavigationBounds).toEqual(bounds);
   });
 

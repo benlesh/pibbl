@@ -5,8 +5,8 @@ import { takeScreenshot } from '../util/test-utils';
 import { Rectangle } from './rect';
 import { createElement } from '../element/create-element';
 import { getPrimitiveDefinition } from '../element/metadata';
-import { getCRCInstance } from '../global-state';
-import { crc } from '../crc';
+import { getPibblInstance } from '../global-state';
+import { pibbl } from '../pibbl';
 import { useSignal } from '../hooks/use-signal';
 import { Group } from './g';
 
@@ -102,7 +102,7 @@ describe('rect', () => {
   it('recovers from an invalid rounded radius with a later valid rectangle', () => {
     const originalRequestAnimationFrame = window.requestAnimationFrame;
     let pending: FrameRequestCallback | undefined;
-    let controller: ReturnType<typeof crc> | undefined;
+    let controller: ReturnType<typeof pibbl> | undefined;
     window.requestAnimationFrame = callback => {
       pending = callback;
       return 1;
@@ -111,7 +111,7 @@ describe('rect', () => {
     document.body.appendChild(canvas);
 
     try {
-      controller = crc(canvas, createElement(Rectangle, {
+      controller = pibbl(canvas, createElement(Rectangle, {
         style: { left: 0, top: 0, width: 20, height: 20, cornerRadius: -1, fill: 'red' },
       }));
       let failure: unknown;
@@ -124,7 +124,7 @@ describe('rect', () => {
         message: expect.stringMatching(/Rectangle: property cornerRadius.*nonnegative/),
       });
 
-      controller = crc(canvas, createElement(Rectangle, {
+      controller = pibbl(canvas, createElement(Rectangle, {
         style: { left: 0, top: 0, width: 20, height: 20, cornerRadius: 4, fill: 'red' },
       }));
       expect(() => pending?.(0)).not.toThrow();
@@ -174,7 +174,7 @@ describe('rect', () => {
       ],
     }));
 
-    expect(Array.from(getCRCInstance(canvas.element).eventRoot.targets)).toEqual(
+    expect(Array.from(getPibblInstance(canvas.element).eventRoot.targets)).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           keyboardNavigationBounds: { x: 0, y: 0, width: 40, height: 50 },

@@ -1,0 +1,17 @@
+---
+title: Marble swatch
+description: A seeded static material with independent raster and display sizes.
+---
+
+The swatch uses `marble({ seed: 42, scale: 6, detail: 0.65 })` at a raster resolution of 128 by 64 cells, displayed in a 600 by 200 rectangle. Its three-color palette runs from pale gray through muted teal to dark teal.
+
+```js
+const fill = useTexture(marble({ seed: 42, scale: 6, detail: 0.65 }), {
+  resolution: { width: 128, height: 64 },
+  palette: ["#f0f4f4", "#779e9c", "#164f55"],
+});
+```
+
+This texture does not animate by itself. Increasing display size does not add detail to its raster. A stable seed makes visual comparisons meaningful.
+
+[Full marble reference](/reference/marble/) · [Texture ownership](/reference/use-texture/) · [Open Material Lab](@PLAYGROUND@#/examples/composition/material-lab)

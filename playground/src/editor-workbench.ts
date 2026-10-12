@@ -1,4 +1,4 @@
-import type { WorkbenchSourceMetadata } from "@crc/scenarios";
+import type { WorkbenchSourceMetadata } from "@pibbl/scenarios";
 import * as monaco from "monaco-editor/editor/editor.api";
 import "monaco-editor/editor/browser/coreCommands";
 import "monaco-editor/editor/contrib/bracketMatching/browser/bracketMatching";
@@ -85,7 +85,8 @@ export interface MountedEditor {
 }
 
 let monacoConfigured = false;
-let crcDeclarationLibraries: EditorDeclarationLibrary[] = [];
+let nextWorkbenchId = 0;
+let pibblDeclarationLibraries: EditorDeclarationLibrary[] = [];
 let threeDeclarationSetup: Promise<void> | undefined;
 
 async function ensureSourceDeclarations(source: string): Promise<void> {
@@ -93,7 +94,7 @@ async function ensureSourceDeclarations(source: string): Promise<void> {
   threeDeclarationSetup ??= import("./three-editor-declaration-libraries").then(
     ({ threeDeclarationLibraries }) => {
       typescriptDefaults.setExtraLibs([
-        ...crcDeclarationLibraries,
+        ...pibblDeclarationLibraries,
         ...threeDeclarationLibraries(),
       ]);
     },
@@ -115,7 +116,7 @@ function configureMonaco(): void {
     module: ModuleKind.ESNext,
     moduleResolution: ModuleResolutionKind.NodeJs,
     jsx: JsxEmit.ReactJSX,
-    jsxImportSource: "@crc/core",
+    jsxImportSource: "@pibbl/core",
     strict: true,
     allowNonTsExtensions: true,
     noEmitOnError: false,
@@ -126,10 +127,10 @@ function configureMonaco(): void {
     noSyntaxValidation: false,
     onlyVisible: false,
   });
-  crcDeclarationLibraries = configureDeclarationLibraries(typescriptDefaults);
+  pibblDeclarationLibraries = configureDeclarationLibraries(typescriptDefaults);
   typescriptDefaults.setEagerModelSync(true);
   setupTypeScript(typescriptDefaults);
-  monaco.editor.defineTheme("crc-studio", {
+  monaco.editor.defineTheme("pibbl-studio", {
     base: "vs-dark",
     inherit: true,
     rules: [
@@ -309,11 +310,13 @@ export async function mountEditorWorkbench(
   const model = monaco.editor.createModel(
     options.initialSource,
     "typescript",
-    monaco.Uri.parse(`file:///lessons/${options.entry.slug}.tsx`),
+    // A route can revisit this lesson before an earlier async mount settles.
+    // Each mount owns its model until its own lifecycle disposes it.
+    monaco.Uri.parse(`file:///lessons/${options.entry.slug}/${++nextWorkbenchId}.tsx`),
   );
   const editor = monaco.editor.create(editorHost, {
     model,
-    theme: "crc-studio",
+    theme: "pibbl-studio",
     automaticLayout: false,
     minimap: { enabled: false },
     fontFamily: '"JetBrains Mono Variable", "JetBrains Mono", monospace',
@@ -341,7 +344,7 @@ export async function mountEditorWorkbench(
   const setDiagnostics = (
     markers: readonly monaco.editor.IMarkerData[],
   ): void => {
-    monaco.editor.setModelMarkers(model, "crc-studio", [...markers]);
+    monaco.editor.setModelMarkers(model, "pibbl-studio", [...markers]);
     diagnostics.replaceChildren();
     if (!markers.length) {
       diagnostics.textContent = "No TypeScript issues.";
@@ -459,7 +462,7 @@ export async function mountEditorWorkbench(
           ),
           text: change.newText,
         }));
-        editor.executeEdits("crc-format", edits);
+        editor.executeEdits("pibbl-format", edits);
         editor.focus();
       })(),
   );
@@ -533,7 +536,7 @@ export function mountReadOnlySource(
   );
   const editor = monaco.editor.create(container, {
     model,
-    theme: "crc-studio",
+    theme: "pibbl-studio",
     readOnly: true,
     domReadOnly: true,
     automaticLayout: true,

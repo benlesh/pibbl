@@ -1,0 +1,124 @@
+[
+  {
+    "id": "filter-blur-shadow",
+    "title": "Blur and cast a shadow",
+    "description": "Compare an original multicolor subject with separate blur and silhouette-shadow treatments.",
+    "source": "blur-shadow.tsx",
+    "environment": "browser",
+    "symbols": [
+      { "name": "blur", "importPath": "@pibbl/core/filters" },
+      { "name": "dropShadow", "importPath": "@pibbl/core/filters" },
+      { "name": "PibblBlurFilterOptions", "importPath": "@pibbl/core/filters" },
+      {
+        "name": "PibblDropShadowFilterOptions",
+        "importPath": "@pibbl/core/filters"
+      },
+      { "name": "PibblFilter", "importPath": "@pibbl/core/filters" }
+    ],
+    "notes": [
+      "Filters change pixels; the rectangle's logical hit geometry stays fixed."
+    ]
+  },
+  {
+    "id": "filter-tone",
+    "title": "Adjust brightness, contrast, and saturation",
+    "description": "Compare brightness, contrast, and saturation independently against the same original subject.",
+    "source": "tone.tsx",
+    "environment": "browser",
+    "symbols": [
+      { "name": "brightness", "importPath": "@pibbl/core/filters" },
+      { "name": "contrast", "importPath": "@pibbl/core/filters" },
+      { "name": "saturate", "importPath": "@pibbl/core/filters" },
+      {
+        "name": "PibblBrightnessFilterOptions",
+        "importPath": "@pibbl/core/filters"
+      },
+      {
+        "name": "PibblContrastFilterOptions",
+        "importPath": "@pibbl/core/filters"
+      },
+      {
+        "name": "PibblSaturateFilterOptions",
+        "importPath": "@pibbl/core/filters"
+      }
+    ],
+    "notes": [
+      "Each treatment changes one variable; the checkerboard remains outside the filtered group."
+    ]
+  },
+  {
+    "id": "filter-color",
+    "title": "Shift a color treatment",
+    "description": "Compare grayscale, hue rotation, and inversion independently against a colorful original.",
+    "source": "color.tsx",
+    "environment": "browser",
+    "symbols": [
+      { "name": "grayscale", "importPath": "@pibbl/core/filters" },
+      { "name": "hueRotate", "importPath": "@pibbl/core/filters" },
+      { "name": "invert", "importPath": "@pibbl/core/filters" },
+      {
+        "name": "PibblGrayscaleFilterOptions",
+        "importPath": "@pibbl/core/filters"
+      },
+      {
+        "name": "PibblHueRotateFilterOptions",
+        "importPath": "@pibbl/core/filters"
+      },
+      {
+        "name": "PibblInvertFilterOptions",
+        "importPath": "@pibbl/core/filters"
+      }
+    ],
+    "notes": [
+      "The option objects are typed before their factories create opaque filters."
+    ]
+  },
+  {
+    "id": "filter-finish",
+    "title": "Warm and fade a shape",
+    "description": "Compare sepia and raster opacity against an original, with a checkerboard revealing transparency.",
+    "source": "finish.tsx",
+    "environment": "browser",
+    "symbols": [
+      { "name": "sepia", "importPath": "@pibbl/core/filters" },
+      { "name": "opacity", "importPath": "@pibbl/core/filters" },
+      {
+        "name": "PibblSepiaFilterOptions",
+        "importPath": "@pibbl/core/filters"
+      },
+      {
+        "name": "PibblOpacityFilterOptions",
+        "importPath": "@pibbl/core/filters"
+      }
+    ],
+    "notes": [
+      "Filter opacity applies to the captured result of the receiving primitive."
+    ]
+  },
+  {
+    "id": "filter-water-light",
+    "title": "Refract and light water",
+    "description": "Compare an original tiled subject, displacement, reflected light, and their combined result.",
+    "source": "water-light.tsx",
+    "environment": "browser",
+    "symbols": [
+      { "name": "displacement", "importPath": "@pibbl/core/filters" },
+      { "name": "reflectedLight", "importPath": "@pibbl/core/filters" },
+      {
+        "name": "PibblDisplacementFilterOptions",
+        "importPath": "@pibbl/core/filters"
+      },
+      {
+        "name": "PibblReflectedLightFilterOptions",
+        "importPath": "@pibbl/core/filters"
+      },
+      {
+        "name": "PibblReflectedLightSource",
+        "importPath": "@pibbl/core/filters"
+      }
+    ],
+    "notes": [
+      "The map is a mount-owned texture; both filters use the same local region. Waves run at speed 3 so motion is clear. This comparison is automatic; [Ripple a wave map](/minimal-examples/textures/texture-water-waves/) demonstrates pointer-driven ripples."
+    ]
+  }
+]

@@ -63,8 +63,8 @@ reviews or implement before plan corrections are recorded.
 
 Primary implementation agent owns core protocol, capture changes and native blur.
 
-- Add inert `@crc/core/filters` entry and declarations/aliases/editor resolution
-  needed for this slice. Keep CRCFilter type from core, change its semantics to
+- Add inert `@pibbl/core/filters` entry and declarations/aliases/editor resolution
+  needed for this slice. Keep PibblFilter type from core, change its semantics to
   opaque values. Reject old descriptors with actionable migration diagnostics.
 - Add private value-owned prepare/executor capabilities; no global installer or
   central operation switch. Keep custom-style interception and pure measurement.
@@ -211,15 +211,15 @@ Independent review completed by `filter_review` in the managed
    surface; maintain separate committed publication pixels until adoption. This
    adds an explicit small-raster copy, measured in full-frame costs. Do not swap a
    frozen context property or change callback signatures. Candidate publication
-   buffers are CRC-owned and never alias retained WASM linear-memory views.
+   buffers are Pibbl-owned and never alias retained WASM linear-memory views.
 4. **P1 writer identity:** Store one stable participant function/token and use that
    exact writer for signal staging and publication registration. `discardWriter`
    must abort its candidate. Test a throw after staging, rejected Commit, disposal
    during notification, and absence of stale retry/continuing work.
-5. **P1 ownership precision:** Native pools remain lazy per CRC instance because
+5. **P1 ownership precision:** Native pools remain lazy per Pibbl instance because
    Layer captures have independent target lifetimes. GPU service is separately
-   owned by the root CRC tree, with cross-Layer occurrence reference counts. Remove
-   concrete imports/fields from mount-crc, global-state, types, backend, and style
+   owned by the root Pibbl tree, with cross-Layer occurrence reference counts. Remove
+   concrete imports/fields from mount-pibbl, global-state, types, backend, and style
    dispatch; only generic optional services are visible to base core. Test one GPU
    context across nested Layers and final-borrower release.
 6. **P1 packaging decision:** Begin with an explicit `src/filters.ts` build entry,

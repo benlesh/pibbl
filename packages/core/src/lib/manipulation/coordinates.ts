@@ -1,5 +1,5 @@
 import { getSurfaceSnapshot } from "../surface/transform.js";
-import type { CRCInstance } from "../types.js";
+import type { PibblInstance } from "../types.js";
 
 /**
  * Captures every input that maps a browser pointer into root-logical space.
@@ -8,7 +8,7 @@ import type { CRCInstance } from "../types.js";
  * before the next root surface commit updates the cached surface snapshot.
  */
 export function currentRootCoordinateMapping(
-  root: CRCInstance,
+  root: PibblInstance,
 ): readonly number[] {
   const surface = getSurfaceSnapshot(root);
   const [contentLeft, contentTop, contentWidth, contentHeight] =
@@ -51,7 +51,7 @@ export function sameRootCoordinateMapping(
 }
 
 function currentCanvasContentBox(
-  canvas: CRCInstance["canvas"],
+  canvas: PibblInstance["canvas"],
   fallbackWidth: number,
   fallbackHeight: number,
 ): readonly [number, number, number, number] {

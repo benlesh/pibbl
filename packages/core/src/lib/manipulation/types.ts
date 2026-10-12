@@ -1,25 +1,68 @@
-export interface CRCManipulationBox {
+import type { PibblManipulationActive, PibblManipulationFrameProps, PibblManipulationGeometry, PibblManipulationOptions, PibblManipulationSnapshot } from './controller-types.js';
+import type { PibblDragHandleProps } from './handles.js';
+/**
+ * Position and dimensions of a manipulation target in logical coordinates.
+ *
+ * @see {@link PibblManipulationOptions}
+ * @see {@link PibblManipulationGeometry}
+ * @see {@link PibblManipulationFrameProps}
+ */
+export interface PibblManipulationBox {
+  /** Left edge coordinate or inset. See {@link PibblManipulationBox}. */
   readonly left: number;
+  /** Top edge value or top envelope guide. See {@link PibblManipulationBox}. */
   readonly top: number;
+  /**
+   * Horizontal extent in the units of the containing geometry or surface. See
+   * {@link PibblManipulationBox}.
+   */
   readonly width: number;
+  /**
+   * Vertical extent in the units of the containing geometry or surface. See
+   * {@link PibblManipulationBox}.
+   */
   readonly height: number;
 }
 
-export interface CRCManipulationPoint {
+/**
+ * A manipulation input point in logical coordinates.
+ *
+ * @see {@link PibblManipulationGeometry}
+ */
+export interface PibblManipulationPoint {
+  /**
+   * Horizontal coordinate or displacement in the containing coordinate system. See
+   * {@link PibblManipulationPoint}.
+   */
   readonly x: number;
+  /**
+   * Vertical coordinate or displacement in the containing coordinate system. See
+   * {@link PibblManipulationPoint}.
+   */
   readonly y: number;
 }
 
-export interface CRCManipulationModifiers {
+export interface PibblManipulationModifiers {
   readonly shift?: boolean;
   readonly alt?: boolean;
   readonly ctrl?: boolean;
   readonly meta?: boolean;
 }
 
-export type CRCManipulationWhen = 'always' | 'shift' | 'alt' | 'ctrl' | 'meta';
+/**
+ * Modifier-key condition used to activate manipulation snapping or affordances.
+ *
+ * @see {@link PibblDragHandleProps}
+ */
+export type PibblManipulationWhen = 'always' | 'shift' | 'alt' | 'ctrl' | 'meta';
 
-export type CRCResizePosition =
+/**
+ * An edge or corner at which a resize handle is placed.
+ *
+ * @see {@link PibblManipulationSnapshot}
+ * @see {@link PibblManipulationActive}
+ */
+export type PibblResizePosition =
   | 'top-left'
   | 'top'
   | 'top-right'
@@ -29,77 +72,112 @@ export type CRCResizePosition =
   | 'bottom-left'
   | 'left';
 
-export interface CRCManipulationMoveSnap {
+export interface PibblManipulationMoveSnap {
   readonly enabled?: boolean;
-  readonly when?: CRCManipulationWhen;
+  readonly when?: PibblManipulationWhen;
   readonly step: number | Readonly<{ x: number; y: number }>;
   readonly origin?: Readonly<{ x?: number; y?: number }>;
 }
 
-export interface CRCManipulationMoveOptions {
+/**
+ * Axis, bounding box, and snapping constraints for translation.
+ *
+ * @see {@link PibblManipulationBox}
+ * @see {@link PibblManipulationMoveSnap}
+ */
+export interface PibblManipulationMoveOptions {
+  /** Selects `"both"`, `"x"`, `"y"` for axis. See {@link PibblManipulationMoveOptions}. */
   readonly axis?: 'both' | 'x' | 'y';
-  readonly bounds?: CRCManipulationBox;
-  readonly snap?: CRCManipulationMoveSnap;
+  /** Logical region constraining the content or query. See {@link PibblManipulationBox}. */
+  readonly bounds?: PibblManipulationBox;
+  /** Snapping configuration for the manipulation operation. See {@link PibblManipulationMoveSnap}. */
+  readonly snap?: PibblManipulationMoveSnap;
 }
 
-export interface CRCManipulationResizeSizeSnap {
+export interface PibblManipulationResizeSizeSnap {
   readonly target?: 'size';
   readonly enabled?: boolean;
-  readonly when?: CRCManipulationWhen;
+  readonly when?: PibblManipulationWhen;
   readonly step: number | Readonly<{ width: number; height: number }>;
 }
 
-export interface CRCManipulationResizeGridSnap {
+export interface PibblManipulationResizeGridSnap {
   readonly target: 'grid';
   readonly enabled?: boolean;
-  readonly when?: CRCManipulationWhen;
+  readonly when?: PibblManipulationWhen;
   readonly step: number | Readonly<{ x: number; y: number }>;
   readonly origin?: Readonly<{ x?: number; y?: number }>;
 }
 
-export interface CRCManipulationAspectRatio {
+export interface PibblManipulationAspectRatio {
   readonly value: 'initial' | number;
-  readonly when?: CRCManipulationWhen;
+  readonly when?: PibblManipulationWhen;
 }
 
-export interface CRCManipulationResizeOptions {
+/**
+ * Size limits, bounds, aspect ratio, and snapping constraints for resizing.
+ *
+ * @see {@link PibblManipulationBox}
+ * @see {@link PibblManipulationResizeSizeSnap}
+ */
+export interface PibblManipulationResizeOptions {
+  /** Minimum permitted width. See {@link PibblManipulationResizeOptions}. */
   readonly minWidth?: number;
+  /** Minimum permitted height. See {@link PibblManipulationResizeOptions}. */
   readonly minHeight?: number;
+  /** Maximum permitted width. See {@link PibblManipulationResizeOptions}. */
   readonly maxWidth?: number;
+  /** Maximum permitted height. See {@link PibblManipulationResizeOptions}. */
   readonly maxHeight?: number;
-  readonly bounds?: CRCManipulationBox;
-  readonly aspectRatio?: CRCManipulationAspectRatio;
-  readonly snap?: CRCManipulationResizeSizeSnap | CRCManipulationResizeGridSnap;
+  /** Logical region constraining the content or query. See {@link PibblManipulationBox}. */
+  readonly bounds?: PibblManipulationBox;
+  /**
+   * Constraint on the manipulated width-to-height ratio. See {@link PibblManipulationAspectRatio}.
+   */
+  readonly aspectRatio?: PibblManipulationAspectRatio;
+  /**
+   * Snapping configuration for the manipulation operation. See
+   * {@link PibblManipulationResizeSizeSnap}, {@link PibblManipulationResizeGridSnap}.
+   */
+  readonly snap?: PibblManipulationResizeSizeSnap | PibblManipulationResizeGridSnap;
 }
 
-export interface CRCManipulationRotateSnap {
+export interface PibblManipulationRotateSnap {
   readonly enabled?: boolean;
-  readonly when?: CRCManipulationWhen;
+  readonly when?: PibblManipulationWhen;
   readonly step: number;
   readonly origin?: number;
 }
 
-export interface CRCManipulationRotateOptions {
-  readonly snap?: CRCManipulationRotateSnap;
+/**
+ * Angular snapping configuration for rotation.
+ *
+ * @see {@link PibblManipulationRotateSnap}
+ */
+export interface PibblManipulationRotateOptions {
+  /**
+   * Snapping configuration for the manipulation operation. See {@link PibblManipulationRotateSnap}.
+   */
+  readonly snap?: PibblManipulationRotateSnap;
 }
 
 export interface ManipulationSolveInput {
   readonly operation: 'move' | 'resize' | 'rotate';
-  readonly handle?: CRCResizePosition;
-  readonly initial: CRCManipulationBox;
+  readonly handle?: PibblResizePosition;
+  readonly initial: PibblManipulationBox;
   readonly initialRotation?: number;
   readonly rotationDelta?: number;
-  readonly initialPoint: CRCManipulationPoint;
-  readonly currentPoint: CRCManipulationPoint;
-  readonly modifiers: CRCManipulationModifiers;
-  readonly move?: CRCManipulationMoveOptions;
-  readonly resize?: CRCManipulationResizeOptions;
-  readonly rotate?: CRCManipulationRotateOptions;
+  readonly initialPoint: PibblManipulationPoint;
+  readonly currentPoint: PibblManipulationPoint;
+  readonly modifiers: PibblManipulationModifiers;
+  readonly move?: PibblManipulationMoveOptions;
+  readonly resize?: PibblManipulationResizeOptions;
+  readonly rotate?: PibblManipulationRotateOptions;
 }
 
 export interface ManipulationSolveResult {
-  readonly proposed: CRCManipulationBox;
-  readonly applied: CRCManipulationBox;
+  readonly proposed: PibblManipulationBox;
+  readonly applied: PibblManipulationBox;
   readonly snapActive: boolean;
   readonly snapSatisfied: boolean;
   readonly proposedRotation: number;

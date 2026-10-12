@@ -1,32 +1,32 @@
+import { signalObserversForTest } from "./support/signal-observer";
 import type {
-  CRCInstance,
-  CRCInteractionRegion,
-  CRCMouseEventListener,
+  PibblInstance,
+  PibblInteractionRegion,
 } from '../src/lib/types';
 import type {
   EventTraceEntry,
   InteractionLabState,
   ScenarioController,
-} from '@crc/scenarios';
+} from '@pibbl/scenarios';
 import {
   interactionLabScenarioEntry,
   loadScenario,
-} from '@crc/scenarios';
+} from '@pibbl/scenarios';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { executeRender } from '../src/lib/execute-render';
 import { GLOBAL_STATE } from '../src/lib/global-state';
-import { removeInteractionRegion } from '../src/lib/interaction-dispatch';
-import { mountCRC } from '../src/lib/mount-crc';
+import { removeInteractionRegion } from '../src/lib/events/dispatch';
+import { mountPibbl } from '../src/lib/mount-pibbl';
 import {
   createTarget,
-  updateLegacyTarget,
+  updateTarget,
 } from '../src/lib/events/registrations';
 import { dispatchToLogicalTarget } from '../src/lib/events/dispatch';
 import { Group, Overlay, Rectangle, signal } from '../src/index';
 import { createElement } from '../src/lib/element/create-element';
 import { getSignalNode } from '../src/lib/signals/graph';
 
-const activeInstances = new Set<CRCInstance>();
+const activeInstances = new Set<PibblInstance>();
 const activeScenarioControllers = new Set<
   ScenarioController<InteractionLabState>
 >();
@@ -34,16 +34,16 @@ const EmptyScene = (_props: {}) => undefined;
 
 function mountDispatchHarness(
   cssSize: readonly [number, number] = [480, 240],
-): { canvas: HTMLCanvasElement; instance: CRCInstance } {
+): { canvas: HTMLCanvasElement; instance: PibblInstance } {
   const canvas = document.createElement('canvas');
   canvas.width = 480;
   canvas.height = 240;
   canvas.style.cssText = `display:block; width:${cssSize[0]}px; height:${cssSize[1]}px`;
   document.body.replaceChildren(canvas);
-  mountCRC(canvas, createElement(EmptyScene, {}));
-  const instance = GLOBAL_STATE.crcInstances.get(canvas);
+  mountPibbl(canvas, createElement(EmptyScene, {}));
+  const instance = GLOBAL_STATE.pibblInstances.get(canvas);
   if (!instance) {
-    throw new Error('Dispatch harness failed to mount a CRC instance.');
+    throw new Error('Dispatch harness failed to mount a Pibbl instance.');
   }
   activeInstances.add(instance);
   executeRender(canvas, 1);
@@ -76,17 +76,22 @@ function rectanglePath(x: number, y: number, width: number, height: number): Pat
 }
 
 function region(
-  owner: CRCInstance,
+  owner: PibblInstance,
   path: Path2D,
   handlers: Partial<Record<
     'click' | 'mousemove' | 'mouseover' | 'mouseout',
-    CRCMouseEventListener
+    (event: import('../src/lib/events/types').PibblLogicalMouseEvent) => void
   >>,
-): CRCInteractionRegion {
+): PibblInteractionRegion {
   const component = Array.from(owner.refs.values())[0];
   if (!component) throw new Error('Dispatch harness root component is missing.');
   const target = createTarget(owner, component, 0);
-  updateLegacyTarget(target, handlers, { path, fill: true });
+  updateTarget(target, {
+    onClick: handlers.click,
+    onMouseMove: handlers.mousemove,
+    onMouseOver: handlers.mouseover,
+    onMouseOut: handlers.mouseout,
+  }, { path, fill: true });
   return target;
 }
 
@@ -206,13 +211,13 @@ describe('interaction dispatcher mutation contract', () => {
     const value = signal(0);
     const observations: number[] = [];
     const phases: string[] = [];
-    getSignalNode(value).observers.add(() => observations.push(value.get()));
+    signalObserversForTest(getSignalNode(value)).add(() => observations.push(value.get()));
     const write = (phase: string, next: number) => () => {
       phases.push(phase);
       value.set(next);
       expect(observations).toEqual([]);
     };
-    mountCRC(canvas, createElement(Group, {
+    mountPibbl(canvas, createElement(Group, {
       onClickCapture: write('capture', 1),
       onClick: write('bubble', 4),
       children: createElement(Rectangle, {
@@ -221,7 +226,7 @@ describe('interaction dispatcher mutation contract', () => {
         onClick: write('target', 3),
       }),
     }));
-    const instance = GLOBAL_STATE.crcInstances.get(canvas)!;
+    const instance = GLOBAL_STATE.pibblInstances.get(canvas)!;
     activeInstances.add(instance);
     executeRender(canvas, 1);
 
@@ -239,7 +244,7 @@ describe('interaction dispatcher mutation contract', () => {
     canvas.height = 60;
     document.body.replaceChildren(canvas);
     const clicks: string[] = [];
-    mountCRC(canvas, createElement(Overlay, {
+    mountPibbl(canvas, createElement(Overlay, {
       style: { width: 100, height: 60 },
       children: [
         createElement(Rectangle, {
@@ -251,7 +256,7 @@ describe('interaction dispatcher mutation contract', () => {
         }),
       ],
     }));
-    const instance = GLOBAL_STATE.crcInstances.get(canvas)!;
+    const instance = GLOBAL_STATE.pibblInstances.get(canvas)!;
     activeInstances.add(instance);
     executeRender(canvas, 1);
 
@@ -269,7 +274,7 @@ describe('interaction dispatcher mutation contract', () => {
     canvas.height = 100;
     document.body.replaceChildren(canvas);
     const clicks: string[] = [];
-    mountCRC(canvas, createElement(Overlay, {
+    mountPibbl(canvas, createElement(Overlay, {
       style: {
         width: 100,
         height: 60,
@@ -288,7 +293,7 @@ describe('interaction dispatcher mutation contract', () => {
         }),
       ],
     }));
-    const instance = GLOBAL_STATE.crcInstances.get(canvas)!;
+    const instance = GLOBAL_STATE.pibblInstances.get(canvas)!;
     activeInstances.add(instance);
     executeRender(canvas, 1);
 
@@ -412,7 +417,7 @@ describe('interaction dispatcher mutation contract', () => {
     dispatchMove(canvas, 300, 90);
     expect(calls).toEqual(['left-out']);
     expect(instance.regions).toEqual(new Set([left]));
-    expect(GLOBAL_STATE.crcInstances.get(canvas)).toBe(instance);
+    expect(GLOBAL_STATE.pibblInstances.get(canvas)).toBe(instance);
   });
 });
 
@@ -570,7 +575,7 @@ describe('shared public user-event laboratory', () => {
 
   it('projects keyboard and composition fields through internal logical transport', async () => {
     const { canvas, controller } = await mountEventFixture('keyboard-fields');
-    const instance = GLOBAL_STATE.crcInstances.get(canvas)!;
+    const instance = GLOBAL_STATE.pibblInstances.get(canvas)!;
     const target = Array.from(instance.eventRoot.targets)[0]!;
 
     dispatchToLogicalTarget('keydown', target, new KeyboardEvent('keydown', {
@@ -624,10 +629,10 @@ describe('shared public user-event laboratory', () => {
 
   it('projects clipboard payload and drag/drop boundary relationships', async () => {
     const { canvas, controller } = await mountEventFixture('clipboard');
-    const instance = GLOBAL_STATE.crcInstances.get(canvas)!;
+    const instance = GLOBAL_STATE.pibblInstances.get(canvas)!;
     const clipboardTarget = Array.from(instance.eventRoot.targets)[0]!;
     const clipboardData = new DataTransfer();
-    clipboardData.setData('text/plain', 'CRC clipboard');
+    clipboardData.setData('text/plain', 'Pibbl clipboard');
 
     dispatchToLogicalTarget('paste', clipboardTarget, new ClipboardEvent('paste', {
       bubbles: true,
@@ -638,13 +643,13 @@ describe('shared public user-event laboratory', () => {
       {
         type: 'paste', target: 'clipboard-target', currentTarget: 'clipboard-target', phase: 2,
         relatedTarget: null, canceled: false,
-        fields: { text: 'CRC clipboard' },
+        fields: { text: 'Pibbl clipboard' },
       },
     ]);
 
     await controller.perform('show-drag-drop');
     const dragData = new DataTransfer();
-    dragData.setData('text/plain', 'CRC drag');
+    dragData.setData('text/plain', 'Pibbl drag');
     dispatchDrag(canvas, 'dragover', 120, 120, dragData);
     dispatchDrag(canvas, 'dragover', 360, 120, dragData);
     dispatchDrag(canvas, 'dragover', 120, 120, dragData);
@@ -652,43 +657,43 @@ describe('shared public user-event laboratory', () => {
     expect(semanticTrace(controller.getState().trace)).toEqual([
       {
         type: 'dragenter', target: 'drag-a', currentTarget: 'drag-a', phase: 2,
-        relatedTarget: null, canceled: false, fields: { text: 'CRC drag' },
+        relatedTarget: null, canceled: false, fields: { text: 'Pibbl drag' },
       },
       {
         type: 'dragover', target: 'drag-a', currentTarget: 'drag-a', phase: 2,
-        relatedTarget: null, canceled: false, fields: { text: 'CRC drag' },
+        relatedTarget: null, canceled: false, fields: { text: 'Pibbl drag' },
       },
       {
         type: 'dragleave', target: 'drag-a', currentTarget: 'drag-a', phase: 2,
         relatedTarget: 'drag-b', canceled: false,
-        fields: { text: 'CRC drag' },
+        fields: { text: 'Pibbl drag' },
       },
       {
         type: 'dragenter', target: 'drag-b', currentTarget: 'drag-b', phase: 2,
         relatedTarget: 'drag-a', canceled: false,
-        fields: { text: 'CRC drag' },
+        fields: { text: 'Pibbl drag' },
       },
       {
         type: 'dragover', target: 'drag-b', currentTarget: 'drag-b', phase: 2,
-        relatedTarget: null, canceled: false, fields: { text: 'CRC drag' },
+        relatedTarget: null, canceled: false, fields: { text: 'Pibbl drag' },
       },
       {
         type: 'dragleave', target: 'drag-b', currentTarget: 'drag-b', phase: 2,
         relatedTarget: 'drag-a', canceled: false,
-        fields: { text: 'CRC drag' },
+        fields: { text: 'Pibbl drag' },
       },
       {
         type: 'dragenter', target: 'drag-a', currentTarget: 'drag-a', phase: 2,
         relatedTarget: 'drag-b', canceled: false,
-        fields: { text: 'CRC drag' },
+        fields: { text: 'Pibbl drag' },
       },
       {
         type: 'dragover', target: 'drag-a', currentTarget: 'drag-a', phase: 2,
-        relatedTarget: null, canceled: false, fields: { text: 'CRC drag' },
+        relatedTarget: null, canceled: false, fields: { text: 'Pibbl drag' },
       },
       {
         type: 'drop', target: 'drag-a', currentTarget: 'drag-a', phase: 2,
-        relatedTarget: null, canceled: false, fields: { text: 'CRC drag' },
+        relatedTarget: null, canceled: false, fields: { text: 'Pibbl drag' },
       },
     ]);
   });
@@ -698,7 +703,7 @@ describe('shared public user-event laboratory', () => {
     const reportError = vi.spyOn(globalThis, 'reportError').mockImplementation(
       () => undefined,
     );
-    const instance = GLOBAL_STATE.crcInstances.get(canvas)!;
+    const instance = GLOBAL_STATE.pibblInstances.get(canvas)!;
     const [targetA] = Array.from(instance.eventRoot.targets);
     if (!targetA) {
       throw new Error('Drag fixture target A is missing.');

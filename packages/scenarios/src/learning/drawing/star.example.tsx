@@ -1,4 +1,4 @@
-import { crc, Rectangle, Star, type CRCController } from "@crc/core";
+import { pibbl, Rectangle, Star, type PibblController } from "@pibbl/core";
 
 function StarStudy() {
   return [
@@ -34,6 +34,6 @@ function StarStudy() {
   ];
 }
 
-export default function mount(canvas: HTMLCanvasElement): CRCController {
-  return crc(canvas, <StarStudy />);
+export default function mount(canvas: HTMLCanvasElement): PibblController {
+  return pibbl(canvas, <StarStudy />);
 }

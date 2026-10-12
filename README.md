@@ -1,21 +1,38 @@
-# CRC — Canvas Rendering Components
+# Pibbl — Canvas Rendering Components
 
-CRC is a small functional component runtime for the HTML Canvas 2D API, with a
-public external-render-layer lifecycle and an optional first-class `@crc/three`
-adapter for ordinary Three.js scenes. `@crc/particles` provides fixed-capacity
-Canvas effects, and the optional `@crc/viz` package provides [composable data
+> **ALPHA — NOT FOR PRODUCTION USE.** Pibbl 0.0.2 is experimental. APIs may change or be removed without notice. Use it only for evaluation and experimentation.
+
+Pibbl is a small functional component runtime for the HTML Canvas 2D API, with a
+public external-render-layer lifecycle and an optional first-class `@pibbl/three`
+adapter for ordinary Three.js scenes. `@pibbl/core/particles` provides fixed-capacity
+Canvas effects, and the `@pibbl/core/viz` subpath provides [composable data
 visualization](docs/site/learn/guides/data-visualization.md).
 JSX is the preferred authoring
-syntax, but CRC has its own renderer, hooks, element brand, and lifecycle: it
-does not depend on React and it does not create DOM nodes.
+syntax, but Pibbl has its own renderer, hooks, element brand, and lifecycle: it
+does not depend on React. Canvas drawing stays on Canvas; opt-in `HtmlBox`
+regions host application-owned DOM content.
+
+## Alpha packages
+
+Version `0.0.2` is an **alpha release, not for production use**, including when
+installed through the `latest` or `next` npm tag.
+
+- `pibbl` mirrors all `@pibbl/core` entry points and shares its runtime instance.
+- `@pibbl/core` contains the Canvas runtime and optional feature subpaths.
+- `@pibbl/three` integrates ordinary Three.js scenes.
+- `@pibbl/text` provides text shaping and outlines.
 
 ## Quick start
 
 Install the runtime:
 
 ```sh
-pnpm add @crc/core
+pnpm add @pibbl/core
 ```
+
+Particles, visualization, textures, and physics are included in this installation
+as optional subpath imports. Unused physics contributes no Rapier code or WASM
+to a production bundle. See the [package migration guide](docs/site/learn/guides/package-migration.md).
 
 Configure TypeScript's automatic JSX runtime:
 
@@ -23,12 +40,12 @@ Configure TypeScript's automatic JSX runtime:
 {
   "compilerOptions": {
     "jsx": "react-jsx",
-    "jsxImportSource": "@crc/core"
+    "jsxImportSource": "@pibbl/core"
   }
 }
 ```
 
-Create a Canvas and a CRC scene:
+Create a Canvas and a Pibbl scene:
 
 ```html
 <canvas id="poster" width="400" height="240"></canvas>
@@ -42,16 +59,16 @@ import {
   Group,
   Rectangle,
   Text,
-  crc,
+  pibbl,
   useSignal,
-  type CRCNode,
-} from "@crc/core";
+  type PibblNode,
+} from "@pibbl/core";
 
 interface PosterProps {
   initialMessage: string;
 }
 
-function Poster({ initialMessage }: PosterProps): CRCNode {
+function Poster({ initialMessage }: PosterProps): PibblNode {
   const message = useSignal(initialMessage);
 
   return (
@@ -63,7 +80,7 @@ function Poster({ initialMessage }: PosterProps): CRCNode {
           fill: "#1f4bd8",
           cursor: "pointer",
         }}
-        onClick={() => message.set("CRC!")}
+        onClick={() => message.set("Pibbl!")}
       />
       <Text
         pointerEvents="none"
@@ -82,7 +99,7 @@ function Poster({ initialMessage }: PosterProps): CRCNode {
 }
 
 const canvas = document.querySelector<HTMLCanvasElement>("#poster")!;
-const controller = crc(canvas, <Poster initialMessage="Hello" />);
+const controller = pibbl(canvas, <Poster initialMessage="Hello" />);
 
 // Release listeners, frames, hooks, layers, and the mount when the page leaves.
 window.addEventListener("pagehide", () => controller.dispose(), { once: true });
@@ -91,20 +108,20 @@ window.addEventListener("pagehide", () => controller.dispose(), { once: true });
 <!-- docs:complete-snippet:end -->
 
 Uppercase imports such as `Rectangle`, `Text`, and `Group` are Canvas
-components, not HTML elements. `crc()` owns at most one live mount per Canvas.
+components, not HTML elements. `pibbl()` owns at most one live mount per Canvas.
 Signal and root updates coalesce onto `requestAnimationFrame`; each frame is a
 full synchronous Canvas traversal. `controller.dispose()` is idempotent.
 
 Prefer ordinary `.tsx` files with the project-wide configuration above. A
-single file can instead begin with `/** @jsxImportSource @crc/core */`. One
-file has one JSX runtime, so mixed React/CRC applications keep their JSX trees
+single file can instead begin with `/** @jsxImportSource @pibbl/core */`. One
+file has one JSX runtime, so mixed React/Pibbl applications keep their JSX trees
 in separate files or use an explicit element constructor for the minority
 tree.
 
 Need to avoid JSX entirely? The complete [`createElement` guide](docs/site/learn/guides/author-without-jsx.md)
 starts from installation and mounting and does not require the JSX guides.
 
-## Learn CRC
+## Learn Pibbl
 
 - [Configure JSX](docs/site/learn/guides/configure-jsx.md)
 - [Author without JSX](docs/site/learn/guides/author-without-jsx.md)
@@ -133,14 +150,17 @@ then run:
 
 ```sh
 corepack pnpm@11.21.0 install --frozen-lockfile
-corepack pnpm@11.21.0 playground
+corepack pnpm@11.21.0 build
+corepack pnpm@11.21.0 website
 ```
 
-Open <http://localhost:5173/#/examples>. The CRC Interactive Examples Studio
-contains 61 focused lessons: 60 use JSX and one demonstrates the complete
-non-JSX API. Every lesson pairs a live Canvas with editable, type-aware source.
-The separate `#/testing` area contains 26 deterministic laboratories used by
-browser verification. Old `#/scenarios` URLs redirect there.
+Open <http://localhost:4321/playground/>. Documentation, API search, examples,
+and the editable live preview share one website. API details incorporate JSDoc
+and link to the exact source snapshot used for the build.
+
+The legacy Studio remains a private development and verification tool:
+`corepack pnpm@11.21.0 studio:dev` serves its test laboratories at
+<http://localhost:5173/#/testing>. It is not needed to run or deploy the website.
 
 To exercise built package output instead of source aliases:
 
@@ -150,8 +170,8 @@ corepack pnpm@11.21.0 playground:built
 
 ## Public surface
 
-- Runtime and authoring: `crc`, `createElement`, `Fragment`, `CRCElement`,
-  `CRCComponent`, `CRCNode`, and `CRCController`
+- Runtime and authoring: `pibbl`, `createElement`, `Fragment`, `PibblElement`,
+  `PibblComponent`, `PibblNode`, and `PibblController`
 - Drawing: `Rectangle`, `Path`, `Line`, `HorizontalLine`, `VerticalLine`,
   `SvgPath`, `Text`, and `Image`
 - Composition and layout: `Group`, `Clip`, `Layer`, `Absolute`, `Overlay`,
@@ -164,29 +184,29 @@ corepack pnpm@11.21.0 playground:built
   `useLayoutBox`
 - Platform extension: `definePrimitive`, `defineRenderLayer`, the render-layer
   lifecycle/interaction types, style resolution, and pure measurement types
-- Optional Three.js composition from `@crc/three`: `defineThreeLayer` and its
+- Optional Three.js composition from `@pibbl/three`: `defineThreeLayer` and its
   lifecycle, renderer, input, picking, and target types; scenes, cameras,
   objects, controls, loaders, materials, lights, shadows, and effects remain
   ordinary imports from `three` and `three/addons/*`
-- Optional particle effects from `@crc/particles`: `Particles2D`,
+- Optional particle effects from `@pibbl/core/particles`: `Particles2D`,
   `useParticleSystem`, immutable 2D definitions, and direct descriptor
   factories
-- Optional CRC-owned 2D physics from `@crc/physics/2d`, with
+- Optional Pibbl-owned 2D physics from `@pibbl/core/physics/2d`, with
   renderer-independent `/2d/geometry` and `/3d/geometry` subpaths; there is no
-  root `@crc/physics` barrel or renderer-coupled 3D runtime
-- Compiler-only entries: `@crc/core/jsx-runtime` and
-  `@crc/core/jsx-dev-runtime`
+  root `@pibbl/core/physics` barrel or renderer-coupled 3D runtime
+- Compiler-only entries: `@pibbl/core/jsx-runtime` and
+  `@pibbl/core/jsx-dev-runtime`
 
-The connected `@crc/core` and `@crc/physics/2d` runtime surfaces share the
-`@crc/core` JSX runtime, element brand, scheduler, and event system.
-`@crc/three` uses the public render-layer lifecycle and peers on the
-application's Three installation. This does not describe `@crc/types` or the
-renderer-independent physics `/geometry` entries. The exported
-`@crc/core/internal` friend seam is reserved for matching official CRC packages
+The connected `@pibbl/core` and `@pibbl/core/physics/2d` runtime surfaces share the
+`@pibbl/core` JSX runtime, element brand, scheduler, and event system.
+`@pibbl/three` uses the public render-layer lifecycle and peers on the
+application's Three installation. Renderer-independent physics `/geometry`
+entries do not initialize the runtime or Rapier. The exported
+`@pibbl/core/internal` friend seam is reserved for matching official Pibbl packages
 and is not an application compatibility promise.
 
 See the [API overview](docs/site/api/index.md) and [grouped type reference](docs/site/api/types/canvas-runtime.md)
-for every value and type export, and [CRC library status](docs/library-status.md)
+for every value and type export, and [Pibbl library status](docs/library-status.md)
 for supported behavior and evidence.
 
 ## Contributing
@@ -205,14 +225,14 @@ safeguards. See the [trust-gate guide](docs/testing/trust-gate.md).
 
 ## Deliberate boundaries
 
-CRC supports explicit Canvas targets and DOM-aligned pointer, mouse, touch,
+Pibbl supports explicit Canvas targets and DOM-aligned pointer, mouse, touch,
 wheel, keyboard/focus, editing/composition, clipboard, and drag/drop event
 facades. Optional focus policies use the Canvas as the one native focus host.
 Canvas drawing primitives and registered render-layer targets participate in
 hit testing by default; `pointerEvents="none"` is the explicit
 decorative/pass-through opt-out, while structural handler props add propagation
 listeners without target geometry.
-CRC does not generate semantic DOM descendants or an accessibility tree;
+Pibbl does not generate semantic DOM descendants or an accessibility tree;
 applications remain responsible for an equivalent accessible DOM experience.
 There is no editable-input adapter, rich text, scrolling, complete CSS engine,
 retained Canvas scene graph, automatic Canvas/Three subprimitive interleaving,
@@ -222,7 +242,7 @@ font, decoded-image, `OffscreenCanvas`, and WebGL behavior remain browser-owned.
 
 Physics adds no manual step API or second clock. Renderer pointer picking and
 authoritative physics queries are distinct; applications explicitly construct
-world-space physics rays when an interaction needs both. CRC physics does not
+world-space physics rays when an interaction needs both. Pibbl physics does not
 include joints, vehicles, character controllers, debug rendering, public
 replay/history, workers, or 2.5D collision.
 

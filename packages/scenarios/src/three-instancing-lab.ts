@@ -1,4 +1,4 @@
-import { crc, type CRCController } from '@crc/core';
+import { pibbl, type PibblController } from '@pibbl/core';
 import {
   createThreeInstancingLabScene,
   THREE_INSTANCING_LAB_SOURCE_ID,
@@ -19,11 +19,22 @@ export type {
 } from './three-instancing-lab.example';
 export { THREE_INSTANCING_LAB_PROBES } from './three-instancing-lab.example';
 
+/**
+ * Stable action identifiers accepted by the three instancing lab scenario.
+ *
+ * @see {@link ThreeInstancingLabAction}
+ */
 export const THREE_INSTANCING_LAB_ACTION_IDS = [
   'cycle-miss-behavior',
   'resize-layer',
 ] as const;
 
+/**
+ * Actions supported by the three instancing lab scenario's public controller.
+ *
+ * @see {@link ThreeInstancingLabState}
+ * @see {@link THREE_INSTANCING_LAB_ACTION_IDS}
+ */
 export type ThreeInstancingLabAction =
   (typeof THREE_INSTANCING_LAB_ACTION_IDS)[number];
 
@@ -64,7 +75,7 @@ async function mountThreeInstancingLab(
 ): Promise<ScenarioController<ThreeInstancingLabState>> {
   const abortController = new AbortController();
   let disposed = false;
-  let runtime: CRCController | undefined;
+  let runtime: PibblController | undefined;
   let state = initialState();
   let compact = false;
   let pending = Promise.resolve();
@@ -80,7 +91,7 @@ async function mountThreeInstancingLab(
   });
   const render = () => {
     assertActive();
-    runtime = crc(
+    runtime = pibbl(
       context.canvas,
       createThreeInstancingLabScene({
         state,
@@ -88,7 +99,7 @@ async function mountThreeInstancingLab(
         onTile: () => {
           state = {
             ...state,
-            lastResolution: 'CRC tile',
+            lastResolution: 'Pibbl tile',
             tileClicks: state.tileClicks + 1,
           };
           publish();
@@ -207,6 +218,12 @@ async function mountThreeInstancingLab(
   };
 }
 
+/**
+ * Runnable three instancing lab scenario with observable state and deterministic actions.
+ *
+ * @see {@link ScenarioDefinition}
+ * @see {@link ThreeInstancingLabState}
+ */
 export const threeInstancingLabScenario: ScenarioDefinition<ThreeInstancingLabState> = {
   id: 'three-instancing',
   sourceId: THREE_INSTANCING_LAB_SOURCE_ID,
@@ -215,7 +232,7 @@ export const threeInstancingLabScenario: ScenarioDefinition<ThreeInstancingLabSt
   formatState: (state) => [
     { label: 'Miss behavior', value: state.missBehavior },
     { label: 'Last resolution', value: state.lastResolution },
-    { label: 'CRC tile clicks', value: String(state.tileClicks) },
+    { label: 'Pibbl tile clicks', value: String(state.tileClicks) },
     { label: 'Three target clicks', value: String(state.threeTargetClicks) },
     { label: 'Blocked Three inputs', value: String(state.blockedThreeInputs) },
     { label: 'Camera changes', value: String(state.cameraChanges) },

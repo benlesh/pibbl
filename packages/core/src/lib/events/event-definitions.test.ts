@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import {
-  CRC_EVENT_TYPES,
-  getCRCEventDefinition,
+  PIBBL_EVENT_TYPES,
+  getPibblEventDefinition,
 } from './event-definitions';
 import type {
-  CRCEventHandlers,
-  CRCEventMap,
-  CRCInputEvent,
-  CRCPointerEvent,
+  PibblEventHandlers,
+  PibblEventMap,
+  PibblInputEvent,
+  PibblPointerEvent,
 } from './types';
 
 const EXPECTED_TYPES = [
@@ -64,13 +64,13 @@ const EXPECTED_TYPES = [
   'drop',
 ] as const;
 
-const handlers: CRCEventHandlers = {
+const handlers: PibblEventHandlers = {
   onPointerDownCapture(event) {
-    const pointer: CRCPointerEvent = event;
+    const pointer: PibblPointerEvent = event;
     void pointer;
   },
   onBeforeInput(event) {
-    const input: CRCInputEvent = event;
+    const input: PibblInputEvent = event;
     void input;
   },
 };
@@ -78,18 +78,18 @@ void handlers;
 
 type Assert<T extends true> = T;
 type KeypressIsNotAnEvent = Assert<
-  'keypress' extends keyof CRCEventMap ? false : true
+  'keypress' extends keyof PibblEventMap ? false : true
 >;
 const keypressIsNotAnEvent: KeypressIsNotAnEvent = true;
 void keypressIsNotAnEvent;
 
-describe('CRC event definitions', () => {
+describe('Pibbl event definitions', () => {
   it('freezes the DOM-aligned event vocabulary', () => {
-    expect(CRC_EVENT_TYPES).toEqual(EXPECTED_TYPES);
-    expect(getCRCEventDefinition('pointerenter')).toMatchObject({
+    expect(PIBBL_EVENT_TYPES).toEqual(EXPECTED_TYPES);
+    expect(getPibblEventDefinition('pointerenter')).toMatchObject({
       bubbles: false,
     });
-    expect(getCRCEventDefinition('focusin')).toMatchObject({ bubbles: true });
-    expect(getCRCEventDefinition('keypress' as never)).toBeUndefined();
+    expect(getPibblEventDefinition('focusin')).toMatchObject({ bubbles: true });
+    expect(getPibblEventDefinition('keypress' as never)).toBeUndefined();
   });
 });

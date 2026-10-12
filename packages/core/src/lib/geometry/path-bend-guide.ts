@@ -183,7 +183,7 @@ export function measureBendGuide(
     }
   }
   return {
-    length, uncertainty, error, field,
+    length, uncertainty, error, field, knots,
     /** Conservative full-field residual, not a sampled flatness heuristic. */
     chordError(low: number, high: number, s0: number, s1: number, d: number, ds: number, dds: number, dy: number, ddy: number, wrap: boolean): number {
       const first = field(s0, wrap), last = field(s1, wrap);

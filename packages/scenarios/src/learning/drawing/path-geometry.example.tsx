@@ -1,8 +1,8 @@
 import {
-  crc, Path, PathGeometry, Circle, Line, Rectangle, Text,
+  pibbl, Path, PathGeometry, Circle, Line, Rectangle, Text,
   flattenPath, flattenPathWang, simplifyPath, simplifyPathRadial, subdividePath, useConst, useSignal, useRef,
-  type CRCController, type CRCNode, type CRCPointerEvent,
-} from '@crc/core';
+  type PibblController, type PibblNode, type PibblPointerEvent,
+} from '@pibbl/core';
 
 function initialPath() {
   const path = new PathGeometry();
@@ -19,8 +19,8 @@ function PathGeometryStudy() {
   const operation = useSignal('Original');
   const message = useSignal('Apply an operation. Each click works on the current path.');
   type Handle = 'anchor' | 'first' | 'second' | 'quadratic';
-  const drag = useRef<{ pointerId: number; target: CRCPointerEvent['currentTarget']; key: string; dx: number; dy: number } | null>(null);
-  const stop = (event: CRCPointerEvent) => {
+  const drag = useRef<{ pointerId: number; target: PibblPointerEvent['currentTarget']; key: string; dx: number; dy: number } | null>(null);
+  const stop = (event: PibblPointerEvent) => {
     if (drag.current?.pointerId !== event.pointerId) return;
     const target = drag.current.target;
     drag.current = null;
@@ -55,7 +55,7 @@ function PathGeometryStudy() {
     />;
   };
   const path = geometry.get();
-  const markers: CRCNode[] = [];
+  const markers: PibblNode[] = [];
   let x = 0, y = 0, anchors = 0, controls = 0, curves = 0, lines = 0;
   const anchor = (index: number, cx: number, cy: number) => {
     anchors++;
@@ -120,6 +120,6 @@ function PathGeometryStudy() {
   </>;
 }
 
-export default function mount(canvas: HTMLCanvasElement): CRCController {
-  return crc(canvas, <PathGeometryStudy />);
+export default function mount(canvas: HTMLCanvasElement): PibblController {
+  return pibbl(canvas, <PathGeometryStudy />);
 }

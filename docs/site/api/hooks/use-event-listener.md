@@ -6,22 +6,22 @@ kind: api
 slug: use-event-listener
 apiCategory: hook
 symbols: [useEventListener]
-relatedTypes: [CRCEventHandlers, CRCNode]
+relatedTypes: [PibblEventHandlers, PibblNode]
 ---
 
 # useEventListener
 
 ```ts
-import { useEventListener, Group, type CRCNode } from "@crc/core";
+import { useEventListener, Group, type PibblNode } from "@pibbl/core";
 ```
 
-`useEventListener(handlers)` accepts [`CRCEventHandlers`](#/api/types/events#crceventhandlers), is render-only, and updates propagation listeners
+`useEventListener(handlers)` accepts [`PibblEventHandlers`](#/api/types/events#pibbleventhandlers), is render-only, and updates propagation listeners
 for the current component identity. It does not define hit geometry; combine it
-with a primitive target or `useEventTarget`. CRC owns the listener registration
+with a primitive target or `useEventTarget`. Pibbl owns the listener registration
 and releases it on replacement or component teardown.
 
 ```tsx
-function Panel({ children }: { children: CRCNode }) {
+function Panel({ children }: { children: PibblNode }) {
   useEventListener({ onClickCapture: (event) => console.log(event.type) });
   return <Group>{children}</Group>;
 }
@@ -29,4 +29,4 @@ function Panel({ children }: { children: CRCNode }) {
 
 See the [Propagation and cancellation live example](#/examples/events-and-interaction/propagation-and-cancellation).
 
-Container children use [`CRCNode`](#/api/types/elements-components#crcnode).
+Container children use [`PibblNode`](#/api/types/elements-components#pibblnode).

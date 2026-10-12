@@ -61,7 +61,7 @@ test("missing glyph substitution is explicit and still returns owned geometry", 
 });
 test("fonts declaring color presentation require explicit monochrome fallback", async () => {
   // This envelope-policy fixture declares a color table; its bytes are not
-  // interpreted as color data because CRC only extracts the existing glyf outlines.
+  // interpreted as color data because Pibbl only extracts the existing glyf outlines.
   const bytes = original.slice();
   bytes.set(new TextEncoder().encode("COLR"), table(bytes, "GPOS"));
   await assert.rejects(loadOutlineFont(bytes), /monochrome/i);

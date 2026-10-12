@@ -1,12 +1,12 @@
-/** @jsxImportSource @crc/core */
-import { Circle, Group, crc, signal, definePrimitive } from "@crc/core";
+/** @jsxImportSource @pibbl/core */
+import { Circle, Group, pibbl, signal, definePrimitive } from "@pibbl/core";
 import {
   PhysicsWorld2D,
   collider2D,
-  crcPhysicsBody2D,
+  pibblPhysicsBody2D,
   dynamicBody2D,
-  type CRCPhysicsBodyHandle2D,
-} from "@crc/physics/2d";
+  type PibblPhysicsBodyHandle2D,
+} from "@pibbl/core/physics/2d";
 import { expect, it } from "vitest";
 import {
   ManualSchedulerDriver,
@@ -22,13 +22,13 @@ it("keeps a local simulation stable while its parent panel moves and scales", ()
   document.body.append(canvas);
   const offset = signal(20),
     scale = signal(1);
-  let body!: CRCPhysicsBodyHandle2D;
+  let body!: PibblPhysicsBodyHandle2D;
   let painted: DOMMatrix | undefined;
   const Paint = definePrimitive((_props, _style, context) => {
     painted = context.getTransform();
   });
   function Ball() {
-    body = crcPhysicsBody2D();
+    body = pibblPhysicsBody2D();
     return (
       <Group
         physics={dynamicBody2D({
@@ -44,7 +44,7 @@ it("keeps a local simulation stable while its parent panel moves and scales", ()
       </Group>
     );
   }
-  const mount = crc(
+  const mount = pibbl(
     canvas,
     <Group style={{ translateX: offset, scaleX: scale, scaleY: scale }}>
       <PhysicsWorld2D

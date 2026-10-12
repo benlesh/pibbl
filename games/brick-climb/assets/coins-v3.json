@@ -1,0 +1,151 @@
+{
+  "frames": {
+    "coin-0": {
+      "frame": {
+        "x": 106,
+        "y": 111,
+        "w": 256,
+        "h": 260
+      },
+      "sourceSize": {
+        "w": 280,
+        "h": 280
+      },
+      "spriteSourceSize": {
+        "x": 12,
+        "y": 10
+      },
+      "duration": 80
+    },
+    "coin-1": {
+      "frame": {
+        "x": 548,
+        "y": 111,
+        "w": 246,
+        "h": 261
+      },
+      "sourceSize": {
+        "w": 280,
+        "h": 280
+      },
+      "spriteSourceSize": {
+        "x": 17,
+        "y": 9
+      },
+      "duration": 80
+    },
+    "coin-2": {
+      "frame": {
+        "x": 1013,
+        "y": 111,
+        "w": 187,
+        "h": 261
+      },
+      "sourceSize": {
+        "w": 280,
+        "h": 280
+      },
+      "spriteSourceSize": {
+        "x": 46,
+        "y": 9
+      },
+      "duration": 80
+    },
+    "coin-3": {
+      "frame": {
+        "x": 1474,
+        "y": 111,
+        "w": 154,
+        "h": 261
+      },
+      "sourceSize": {
+        "w": 280,
+        "h": 280
+      },
+      "spriteSourceSize": {
+        "x": 63,
+        "y": 9
+      },
+      "duration": 80
+    },
+    "coin-4": {
+      "frame": {
+        "x": 188,
+        "y": 517,
+        "w": 93,
+        "h": 257
+      },
+      "sourceSize": {
+        "w": 280,
+        "h": 280
+      },
+      "spriteSourceSize": {
+        "x": 93,
+        "y": 11
+      },
+      "duration": 80
+    },
+    "coin-5": {
+      "frame": {
+        "x": 587,
+        "y": 516,
+        "w": 159,
+        "h": 259
+      },
+      "sourceSize": {
+        "w": 280,
+        "h": 280
+      },
+      "spriteSourceSize": {
+        "x": 60,
+        "y": 10
+      },
+      "duration": 80
+    },
+    "coin-6": {
+      "frame": {
+        "x": 1000,
+        "y": 516,
+        "w": 208,
+        "h": 259
+      },
+      "sourceSize": {
+        "w": 280,
+        "h": 280
+      },
+      "spriteSourceSize": {
+        "x": 36,
+        "y": 10
+      },
+      "duration": 80
+    },
+    "coin-7": {
+      "frame": {
+        "x": 1427,
+        "y": 516,
+        "w": 251,
+        "h": 257
+      },
+      "sourceSize": {
+        "w": 280,
+        "h": 280
+      },
+      "spriteSourceSize": {
+        "x": 14,
+        "y": 11
+      },
+      "duration": 80
+    }
+  },
+  "meta": {
+    "image": "coins-v3.png",
+    "frameTags": [
+      {
+        "name": "spin",
+        "from": 0,
+        "to": 7,
+        "direction": "forward"
+      }
+    ]
+  }
+}

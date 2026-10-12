@@ -6,7 +6,7 @@ Date: 2026-08-11
 
 ## Scenario and risk
 
-The cataloged `runtime-hooks-laboratory` exercises `crc`, `defineComp`, state, memo, ref, synchronous change cleanup, all three public memoized path hooks, falsy children, keyed sibling insertion/reordering/removal, component keys, root identity, and outside-render hook misuse. The gallery and headless suite load the same public-API example, controller, action IDs, catalog metadata, source marker, and source adapter. Existing TFC-04/TFC-05 interaction scenarios and direct lifecycle tests deliberately retain the `useEvent` and `useCursor` behavior matrix instead of duplicating it here.
+The cataloged `runtime-hooks-laboratory` exercises `pibbl`, `defineComp`, state, memo, ref, synchronous change cleanup, all three public memoized path hooks, falsy children, keyed sibling insertion/reordering/removal, component keys, root identity, and outside-render hook misuse. The gallery and headless suite load the same public-API example, controller, action IDs, catalog metadata, source marker, and source adapter. Existing TFC-04/TFC-05 interaction scenarios and direct lifecycle tests deliberately retain the `useEvent` and `useCursor` behavior matrix instead of duplicating it here.
 
 The highest risks were silent identity or hook-slot reuse and updates losing one another before a frame. Before this step, a key replaced component type identity, distinct functions with the same name collided, a state update could cancel and discard a queued root replacement, hook order/count changes could reinterpret another hook's storage, and `useLinePath` did not include `closePath` in its memo dependencies. A thrown render also needed to release partially acquired resources, restore temporary render state and the Canvas context, and permit a valid retry.
 
@@ -39,7 +39,7 @@ The highest risks were silent identity or hook-slot reuse and updates losing one
 | `useEvent`       | Global and path modes share one typed slot and release the previous mode before registering the next. Event ordering/target behavior remains the TFC-04/TFC-05 contract.                       | Direct slot transition plus shared interaction suites                  |
 | `useCursor`      | Default and path modes share one typed slot and release the previous default/region before registering the next.                                                                               | Direct cursor suite, slot transition, and shared interaction suites    |
 
-Every public hook requires an active component render and throws the exact message `CRC hooks can only be called while rendering a component.` otherwise. Each hook class has a distinct slot kind. Rendering more hooks, fewer hooks, or a different kind at an existing index throws a deterministic diagnostic. A shorter render releases omitted suffix resources before the render fails; the failed-render boundary then releases the remaining component tree so a valid retry starts cleanly.
+Every public hook requires an active component render and throws the exact message `Pibbl hooks can only be called while rendering a component.` otherwise. Each hook class has a distinct slot kind. Rendering more hooks, fewer hooks, or a different kind at an existing index throws a deterministic diagnostic. A shorter render releases omitted suffix resources before the render fails; the failed-render boundary then releases the remaining component tree so a valid retry starts cleanly.
 
 ## Manual evidence
 
@@ -72,7 +72,7 @@ Independent verification used Node 24.19.0 and pnpm 11.21.0:
 - the built runtime export-list consumer passed;
 - source and built gallery production builds passed.
 
-The public type fixture covers positive inference and intentional failures for `defineComp`, `crc`, controller/signal types, state/updaters, memo dependencies, refs, synchronous change callbacks, all path hooks, event names/event shape, and cursor options. The package export map now exposes only the root, types, and package metadata; the runtime consumer also proves that `@crc/core/lib/*` internals are rejected rather than resolving declaration-only paths.
+The public type fixture covers positive inference and intentional failures for `defineComp`, `pibbl`, controller/signal types, state/updaters, memo dependencies, refs, synchronous change callbacks, all path hooks, event names/event shape, and cursor options. The package export map now exposes only the root, types, and package metadata; the runtime consumer also proves that `@pibbl/core/lib/*` internals are rejected rather than resolving declaration-only paths.
 
 ## Visual strategy
 
@@ -80,7 +80,7 @@ Runtime identity and hook ownership are primarily semantic contracts, so the dur
 
 ## Legacy test and branch review
 
-The committed `useRef` suite originated on `use-ref-tests`. Its `.only` marker had already been removed and its types cleaned before TFC-08. The three useful behaviors—persistence, mutation without rerender, and multiple refs—were retained. TFC-08 added direct initializer/object-identity/key-remount coverage, public type assertions, and explicit controller ownership so the interaction helper no longer leaves CRC instances mounted between tests.
+The committed `useRef` suite originated on `use-ref-tests`. Its `.only` marker had already been removed and its types cleaned before TFC-08. The three useful behaviors—persistence, mutation without rerender, and multiple refs—were retained. TFC-08 added direct initializer/object-identity/key-remount coverage, public type assertions, and explicit controller ownership so the interaction helper no longer leaves Pibbl instances mounted between tests.
 
 `origin/jess/tests-for-utils` was reviewed selectively rather than merged. It combines old browser-runner imports, CI/config/lockfile changes, unrelated component edits, broad utility tests, and a skipped single-point case. The useful intent was recreated against current contracts: dependency-array equality is covered through `useMemo`, and line construction/`closePath` is covered through the public memoized hook with controlled `Path2D` commands. Stale branch infrastructure and unrelated source changes were rejected.
 

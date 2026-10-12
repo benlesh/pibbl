@@ -6,36 +6,50 @@ import {
   stripLayoutParticipation,
 } from "../style/resolve-built-in.js";
 import type {
-  CRCComponent,
+  PibblComponent,
   PrimitiveCapabilities,
   RenderingContext2D,
 } from "../types.js";
-import { CRC_EVENT_DEFINITIONS } from "../events/event-definitions.js";
+import { PIBBL_EVENT_DEFINITIONS } from "../events/event-definitions.js";
 import { wireStructuralEvents } from "../components/structural-events.js";
 import { RenderLayerController } from "./controller.js";
 import type {
-  CRCRenderLayerDefinition,
-  CRCRenderLayerProps,
-  CRCRenderLayerSize,
-  CRCRenderLayerStyle,
+  PibblRenderLayerDefinition,
+  PibblRenderLayerProps,
+  PibblRenderLayerSize,
+  PibblRenderLayerStyle,
 } from "./types.js";
 
-type ResolvedRenderLayerStyle = CRCRenderLayerStyle & {
+type ResolvedRenderLayerStyle = PibblRenderLayerStyle & {
   readonly width: number;
   readonly height: number;
 };
 
+/**
+ * Defines a Pibbl component backed by a persistent external-renderer surface and resource lifetime.
+ * Pibbl schedules frames and commits the bitmap and interaction snapshot together; the definition
+ * owns application-resource cleanup.
+ *
+ * @param definition - Synchronous resource lifecycle, rendering, and interaction implementation.
+ * See {@link PibblRenderLayerDefinition} .
+ * @returns A Pibbl component that owns one external-renderer boundary per mounted identity. See
+ * {@link PibblComponent} , {@link PibblRenderLayerProps} .
+ *
+ * @see {@link PibblRenderLayerDefinition}
+ * @see {@link PibblComponent}
+ * @see {@link PibblRenderLayerProps}
+ */
 export function defineRenderLayer<
   Props,
   Resources,
   Target extends object = object,
 >(
-  definition: CRCRenderLayerDefinition<Props, Resources, Target>,
-): CRCComponent<CRCRenderLayerProps<Props>> {
+  definition: PibblRenderLayerDefinition<Props, Resources, Target>,
+): PibblComponent<PibblRenderLayerProps<Props>> {
   const immutableDefinition = snapshotDefinition(definition);
   const primitive = (definePrimitive as any)(
     function renderDefinedRenderLayer(
-      props: Readonly<CRCRenderLayerProps<Props>>,
+      props: Readonly<PibblRenderLayerProps<Props>>,
       style: Readonly<ResolvedRenderLayerStyle>,
       ctx: RenderingContext2D,
     ) {
@@ -47,14 +61,14 @@ export function defineRenderLayer<
         controller = new RenderLayerController(immutableDefinition, refs);
         refs.refs[0] = controller;
       }
-      const surface = GLOBAL_STATE.currentCRCInstance!.surface.snapshot!;
+      const surface = GLOBAL_STATE.currentPibblInstance!.surface.snapshot!;
       const layerSurface = createLayerSurface(
         style.width,
         style.height,
         surface.backingPixelsPerLogicalUnitX,
         surface.backingPixelsPerLogicalUnitY,
       );
-      const size: CRCRenderLayerSize = Object.freeze({
+      const size: PibblRenderLayerSize = Object.freeze({
         width: style.width,
         height: style.height,
         backingWidth: layerSurface.backingWidth,
@@ -71,14 +85,14 @@ export function defineRenderLayer<
     },
     { resolveStyle },
   );
-  return primitive as CRCComponent<CRCRenderLayerProps<Props>>;
+  return primitive as PibblComponent<PibblRenderLayerProps<Props>>;
 }
 
 const resolveStyle: NonNullable<
   PrimitiveCapabilities<
-    CRCRenderLayerProps<any>,
-    CRCRenderLayerStyle,
-    CRCRenderLayerStyle,
+    PibblRenderLayerProps<any>,
+    PibblRenderLayerStyle,
+    PibblRenderLayerStyle,
     ResolvedRenderLayerStyle
   >["resolveStyle"]
 > = (style, context) =>
@@ -99,14 +113,14 @@ const resolveStyle: NonNullable<
   }) as ResolvedRenderLayerStyle;
 
 function customProps<Props>(
-  props: Readonly<CRCRenderLayerProps<Props>>,
+  props: Readonly<PibblRenderLayerProps<Props>>,
 ): Props {
   const custom = { ...props } as Record<PropertyKey, unknown>;
   delete custom.missBehavior;
   delete custom.pointerEvents;
   delete custom.keyboardFocusable;
   delete custom.keyboardNavigationBounds;
-  for (const definition of CRC_EVENT_DEFINITIONS) {
+  for (const definition of PIBBL_EVENT_DEFINITIONS) {
     delete custom[definition.prop];
     delete custom[definition.captureProp];
   }
@@ -114,8 +128,8 @@ function customProps<Props>(
 }
 
 function snapshotDefinition<Props, Resources, Target extends object>(
-  definition: CRCRenderLayerDefinition<Props, Resources, Target>,
-): CRCRenderLayerDefinition<Props, Resources, Target> {
+  definition: PibblRenderLayerDefinition<Props, Resources, Target>,
+): PibblRenderLayerDefinition<Props, Resources, Target> {
   return Object.freeze({
     create: definition.create,
     update: definition.update,

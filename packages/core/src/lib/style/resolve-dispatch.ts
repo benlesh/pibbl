@@ -1,3 +1,4 @@
+import { resolveTransitionBinding } from '../transitions/binding.js';
 import { type PreparedQuery } from './responsive.js';
 import { getLayoutBox, getPercentageBasis } from '../layout/context.js';
 import { EMPTY_STYLE } from './empty-style.js';
@@ -7,7 +8,7 @@ import {
   setPrimitiveReceiverToken,
   type PrimitiveDefinition,
 } from '../element/metadata.js';
-import type { CRCElement } from '../element/types.js';
+import type { PibblElement } from '../element/types.js';
 import type {
   ResolvedStyle,
   SpecifiedStyle,
@@ -16,7 +17,7 @@ import type {
 } from '../types.js';
 import { layoutDiagnostic } from './diagnostics.js';
 import { resolveFilterList } from './filter.js';
-import type { CRCFilter } from './filter-types.js';
+import type { PibblFilter } from './filter-types.js';
 import { isPlacementConsumed } from '../element/metadata.js';
 import {
   consumePlacementHandoff,
@@ -30,16 +31,16 @@ import { CANVAS_2D_BACKEND } from '../backend/canvas-2d-backend.js';
 const opaqueStyleProperties = new WeakMap<Function, ReadonlySet<string>>();
 export interface PreparedStyleInput {
   style: Readonly<SystemStyle>;
-  source: CRCElement<any>;
+  source: PibblElement<any>;
   query?: PreparedQuery;
 }
-const preNormalizedStyles = new WeakMap<CRCElement<any>, PreparedStyleInput>();
+const preNormalizedStyles = new WeakMap<PibblElement<any>, PreparedStyleInput>();
 
 /** @internal Carries one normalized style through an internal placement descriptor. */
 export function setPreNormalizedStyle(
-  element: CRCElement<any>,
+  element: PibblElement<any>,
   style: Readonly<SystemStyle>,
-  source: CRCElement<any> = element,
+  source: PibblElement<any> = element,
   receiverToken?: object,
   query?: PreparedQuery,
 ): void {
@@ -49,7 +50,7 @@ export function setPreNormalizedStyle(
 
 /** @internal Consumes an internal normalized-style override exactly once. */
 export function takePreNormalizedStyle(
-  element: CRCElement<any>,
+  element: PibblElement<any>,
 ): PreparedStyleInput | undefined {
   const value = preNormalizedStyles.get(element);
   preNormalizedStyles.delete(element);
@@ -67,7 +68,7 @@ export function registerOpaqueStyleProperties(
 /** @internal Reads the framework-owned filter property from a system style. */
 export function extractSystemFilter(
   style: Readonly<SystemStyle>,
-): CRCFilter | readonly CRCFilter[] | undefined {
+): PibblFilter | readonly PibblFilter[] | undefined {
   return style.filter;
 }
 
@@ -76,10 +77,10 @@ export function withoutSystemFilter(
   style: Readonly<SystemStyle>,
 ): Readonly<SystemStyle> {
   if (!('when' in style)) {
-    const { filter: _filter, ...withoutFilter } = style;
+    const { filter: _filter, transition: _transition, ...withoutFilter } = style;
     return Object.freeze(withoutFilter);
   }
-  const { filter: _filter, when: _when, ...withoutFilter } = style as Readonly<SystemStyle> & { when?: unknown };
+  const { filter: _filter, transition: _transition, when: _when, ...withoutFilter } = style as Readonly<SystemStyle> & { when?: unknown };
   return Object.freeze(withoutFilter);
 }
 
@@ -88,7 +89,7 @@ export function resolveElementStyle<
   N extends SystemStyle,
   R extends SystemStyle,
 >(
-  element: CRCElement<any>,
+  element: PibblElement<any>,
   resolvedSpecifiedStyle?: Readonly<SystemStyle>,
   hasResolvedSpecifiedStyle = false,
   prepared?: PreparedStyleInput,
@@ -100,7 +101,7 @@ export function resolveElementStyle<
     PrimitiveDefinition<any, S, N, R> | undefined;
   if (!definition) {
     throw new Error(
-      `${type.name || 'Anonymous'} does not have CRC primitive metadata`,
+      `${type.name || 'Anonymous'} does not have Pibbl primitive metadata`,
     );
   }
   const component = type.name || 'Anonymous';
@@ -126,8 +127,11 @@ export function resolveElementStyle<
     getSpecifiedStyle(element),
   ) ?? getPlacementSignalHandoff(element);
   const handoffStyle = consumePlacementHandoff(resolvedInput);
+  const ordinaryFilter = extractSystemFilter(handoffStyle);
+  const transitionFilters = handoffStyle.transition === undefined ? undefined : resolveTransitionBinding(handoffStyle.transition);
+  const combined = transitionFilters?.length ? [...(ordinaryFilter === undefined ? [] : Array.isArray(ordinaryFilter) ? ordinaryFilter : [ordinaryFilter]), ...transitionFilters] : ordinaryFilter;
   const systemFilter = resolveFilterList(
-    extractSystemFilter(handoffStyle),
+    combined,
     context,
   );
   const normalized = preNormalized ?

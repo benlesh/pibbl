@@ -1,0 +1,190 @@
+[
+  {
+    "id": "basic",
+    "title": "Drag, resize, and rotate",
+    "description": "Use the convenience component with a writable geometry box.",
+    "source": "basic.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "Manipulable",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PibblManipulableProps",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PibblManipulationBox",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "degrees",
+        "importPath": "@pibbl/core"
+      }
+    ],
+    "notes": [
+      "Angles are radians; degrees() converts author-friendly degrees. The mounted component owns input listeners and gesture cleanup."
+    ]
+  },
+  {
+    "id": "controller",
+    "title": "Own a manipulation controller",
+    "description": "Compose a drag surface and one resize handle, inspect gesture state, and cancel explicitly.",
+    "source": "controller.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "useManipulation",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "ManipulationFrame",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "DragHandle",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "ResizeHandle",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PibblManipulationController",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PibblManipulationOptions",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PibblManipulationFrameProps",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PibblManipulationMoveInput",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PibblManipulationResizeInput",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PibblManipulationRotateInput",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PibblManipulationWhen",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PibblManipulationPoint",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PibblResizePosition",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PibblManipulationGeometry",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PibblManipulationOperation",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PibblManipulationActive",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PibblManipulationSnapshot",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PibblManipulationEvent",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PibblManipulationCommitEvent",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PibblManipulationCancelEvent",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PibblManipulationCancelReason",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PibblDragHandleProps",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PibblResizeHandleProps",
+        "importPath": "@pibbl/core"
+      }
+    ],
+    "notes": [
+      "Hold Shift while moving to snap to the 20-unit grid. Keep handles inside their controller's ManipulationFrame."
+    ]
+  },
+  {
+    "id": "handles",
+    "title": "Style resize and rotation handles",
+    "description": "Add corner handles, a rotation connector, an angle arc, and gesture readouts.",
+    "source": "handles.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "ResizeHandles",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "RotationHandle",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PibblDragHandleStyle",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PibblResizeHandleStyle",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PibblResizeHandlesProps",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PibblRotationHandleProps",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PibblRotationHandleStyle",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PibblManipulationReadoutStyle",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PibblManipulationReadoutStateStyle",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PibblRotationConnectorStyle",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PibblRotationArcStyle",
+        "importPath": "@pibbl/core"
+      }
+    ],
+    "notes": [
+      "Handle hit sizes and readout spacing are CSS pixels; the manipulated box remains in Pibbl logical coordinates."
+    ]
+  }
+]

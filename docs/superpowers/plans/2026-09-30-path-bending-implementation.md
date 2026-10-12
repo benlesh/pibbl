@@ -8,7 +8,7 @@ Both Along Arc and Along Path remain the completion target.
 
 ## Scope and ownership
 
-Implement the approved public functions and types in `@crc/core`, returning
+Implement the approved public functions and types in `@pibbl/core`, returning
 independent line geometry, with explicit source frame, start/center/end alignment,
 source baseline, fitting, offsets, overflow policy, output accuracy, and budgets.
 Preserve source contours and complete closing edges, input revisions, and current
@@ -123,7 +123,7 @@ Keep temporary screenshots/scripts outside the repository.
   preserve that other thread's edits and recheck at the next appropriate gate.
 - Standard Vitest startup encountered unrelated dependency discovery attempting
   to bundle native `fsevents.node`. Focused verification uses
-  `/tmp/crc-path-bending.vitest.config.mts`, importing the normal config with
+  `/tmp/pibbl-path-bending.vitest.config.mts`, importing the normal config with
   **all normal plugins retained**, a separate temporary cache, and test discovery
   restricted to bending tests (plus the public export suite for its check).
   This is focused evidence, not an aggregate trust-gate pass. An earlier red-test
@@ -140,8 +140,8 @@ Keep temporary screenshots/scripts outside the repository.
   restored its exact initial pixels. Desktop viewport: 1440×1100.
   A 390×844 viewport fits the canvas to 360×279; controls are consequently small
   and this learning example is best inspected on desktop.
-- Screenshots are outside the repository at `/tmp/crc-path-bending-before.png`,
-  `/tmp/crc-path-bending-after.png`, and `/tmp/crc-path-bending-mobile.png`.
+- Screenshots are outside the repository at `/tmp/pibbl-path-bending-before.png`,
+  `/tmp/pibbl-path-bending-after.png`, and `/tmp/pibbl-path-bending-mobile.png`.
 - The first-slice URL and inspection instructions were delivered. Experiential
   feedback is pending; do not equate this slice with full feature completion.
 - Final slice rerun: both bending tests passed again. The public export suite
@@ -289,7 +289,7 @@ public compatibility promises.
   preview. The Arc demo test also verifies invalid-offset retention and Reset.
 - Live Chromium verification at the existing Studio URL passed title, nonblank
   page, compilation, console, and guide-drag checks. Images:
-  `/tmp/crc-along-path-before.png` and `/tmp/crc-along-path-after.png`.
+  `/tmp/pibbl-along-path-before.png` and `/tmp/pibbl-along-path-after.png`.
 - The second slice URL was delivered. No changed semantics were requested during
   the feedback opportunity; implementation continues using the approved design.
 - Source focused verification after the internal-cusp fix: 27 tests passed across

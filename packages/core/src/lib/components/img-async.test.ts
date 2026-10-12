@@ -1,8 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { crc } from '../crc';
+import { pibbl } from '../pibbl';
 import {
   clearSharedState,
-  getCRCInstance,
+  getPibblInstance,
   GLOBAL_STATE,
 } from '../global-state';
 import { Image } from './img';
@@ -56,7 +56,7 @@ describe('img async resource ownership', () => {
       instancesObservedDuringRender.push(FakeImage.instances.length);
     };
     const canvas = createCanvas();
-    const controller = crc(canvas, createElement(Group, {
+    const controller = pibbl(canvas, createElement(Group, {
       children: [
         imageElement('committed.png'),
         createElement(Observer, {}),
@@ -77,7 +77,7 @@ describe('img async resource ownership', () => {
       throw new Error('expected image sibling failure');
     };
     const canvas = createCanvas();
-    const controller = crc(canvas, undefined);
+    const controller = pibbl(canvas, undefined);
     await nextFrame();
 
     expect(() => executeRender(
@@ -96,11 +96,11 @@ describe('img async resource ownership', () => {
 
   it('cleans each committed source exactly once across replacement and disposal', async () => {
     const canvas = createCanvas();
-    const controller = crc(canvas, imageElement('first-cleanup.png'));
+    const controller = pibbl(canvas, imageElement('first-cleanup.png'));
     await nextFrame();
     const first = FakeImage.instances[0];
 
-    crc(canvas, imageElement('second-cleanup.png'));
+    pibbl(canvas, imageElement('second-cleanup.png'));
     await nextFrame();
     const second = FakeImage.instances[1];
     expect(first.removedSources).toBe(1);
@@ -124,7 +124,7 @@ describe('img async resource ownership', () => {
       .spyOn(CanvasRenderingContext2D.prototype, 'drawImage')
       .mockImplementation(() => {});
     const canvas = createCanvas();
-    const controller = crc(canvas, createElement(Image, {
+    const controller = pibbl(canvas, createElement(Image, {
       style: {
         src: 'boundary.png',
         left: 10,
@@ -153,7 +153,7 @@ describe('img async resource ownership', () => {
         .spyOn(CanvasRenderingContext2D.prototype, 'drawImage')
         .mockImplementation(() => {});
       const canvas = createCanvas();
-      const controller = crc(canvas, createElement(Image, {
+      const controller = pibbl(canvas, createElement(Image, {
         style: { src: 'independent-natural-size.png', ...dimensions },
       }));
       await nextFrame();
@@ -188,7 +188,7 @@ describe('img async resource ownership', () => {
       .spyOn(CanvasRenderingContext2D.prototype, 'stroke')
       .mockImplementation(() => {});
     const canvas = createCanvas();
-    const controller = crc(canvas, createElement(Image, {
+    const controller = pibbl(canvas, createElement(Image, {
       style: {
         src: 'aligned.png',
         left: 24.2,
@@ -208,7 +208,7 @@ describe('img async resource ownership', () => {
     await nextFrame();
 
     expect(drawImage).toHaveBeenLastCalledWith(image, ...expectedRectangle);
-    const region = Array.from(getCRCInstance(canvas).regions)[0];
+    const region = Array.from(getPibblInstance(canvas).regions)[0];
     expect(stroke).toHaveBeenLastCalledWith(region.paintEntry!.path);
     const context = canvas.getContext('2d')!;
     expect(context.isPointInPath(
@@ -227,7 +227,7 @@ describe('img async resource ownership', () => {
         observedAlpha.push(this.globalAlpha);
       });
     const canvas = createCanvas();
-    const controller = crc(canvas, createElement(Image, {
+    const controller = pibbl(canvas, createElement(Image, {
       style: {
         src: 'transparent.png',
         left: 10,
@@ -252,12 +252,12 @@ describe('img async resource ownership', () => {
       .spyOn(CanvasRenderingContext2D.prototype, 'drawImage')
       .mockImplementation(() => {});
     const canvas = createCanvas();
-    const controller = crc(canvas, imageElement('first.png'));
+    const controller = pibbl(canvas, imageElement('first.png'));
     await nextFrame();
     const first = FakeImage.instances[0];
     const savedFirstLoad = first.onload;
 
-    crc(canvas, imageElement('second.png'));
+    pibbl(canvas, imageElement('second.png'));
     await nextFrame();
     const second = FakeImage.instances[1];
 
@@ -293,19 +293,19 @@ describe('img async resource ownership', () => {
       height: 1,
       onClick,
     } as unknown as Parameters<typeof Image>[0];
-    const controller = crc(canvas, createElement(Image, legacyInput));
+    const controller = pibbl(canvas, createElement(Image, legacyInput));
     await nextFrame();
 
     expect(FakeImage.instances).toHaveLength(1);
     expect(FakeImage.instances[0].src).toBe('styled.png');
-    const region = Array.from(getCRCInstance(canvas).regions)[0];
+    const region = Array.from(getPibblInstance(canvas).regions)[0];
     const context = canvas.getContext('2d')!;
     expect(context.isPointInPath(region.paintEntry!.path, 15, 20)).toBe(true);
     expect(context.isPointInPath(region.paintEntry!.path, 90, 80)).toBe(false);
 
     FakeImage.instances[0].onerror?.();
     await nextFrame();
-    const failedRegion = Array.from(getCRCInstance(canvas).regions)[0];
+    const failedRegion = Array.from(getPibblInstance(canvas).regions)[0];
     expect(context.isPointInPath(failedRegion.paintEntry!.path, 15, 20)).toBe(true);
     controller.dispose();
   });
@@ -314,19 +314,19 @@ describe('img async resource ownership', () => {
     vi.spyOn(CanvasRenderingContext2D.prototype, 'drawImage')
       .mockImplementation(() => {});
     const canvas = createCanvas();
-    const controller = crc(canvas, createElement(Image, {
+    const controller = pibbl(canvas, createElement(Image, {
       style: { src: 'natural.png' },
       onClick: () => undefined,
     }));
     await nextFrame();
 
     const context = canvas.getContext('2d')!;
-    const pendingRegion = Array.from(getCRCInstance(canvas).regions)[0];
+    const pendingRegion = Array.from(getPibblInstance(canvas).regions)[0];
     expect(context.isPointInPath(pendingRegion.paintEntry!.path, 60, 40)).toBe(false);
 
     FakeImage.instances[0].onload?.();
     await nextFrame();
-    const loadedRegion = Array.from(getCRCInstance(canvas).regions)[0];
+    const loadedRegion = Array.from(getPibblInstance(canvas).regions)[0];
     expect(context.isPointInPath(loadedRegion.paintEntry!.path, 60, 40)).toBe(true);
     controller.dispose();
   });
@@ -336,13 +336,13 @@ describe('img async resource ownership', () => {
       .spyOn(CanvasRenderingContext2D.prototype, 'drawImage')
       .mockImplementation(() => {});
     const canvas = createCanvas();
-    const controller = crc(canvas, imageElement('loaded.png'));
+    const controller = pibbl(canvas, imageElement('loaded.png'));
     await nextFrame();
     FakeImage.instances[0].onload?.();
     await nextFrame();
     expect(drawImage).toHaveBeenCalledTimes(1);
 
-    crc(canvas, imageElement('broken.png'));
+    pibbl(canvas, imageElement('broken.png'));
     await nextFrame();
     const broken = FakeImage.instances[1];
     expect(drawImage).toHaveBeenCalledTimes(1);
@@ -357,13 +357,13 @@ describe('img async resource ownership', () => {
 
   it('detaches and invalidates callbacks when the component is removed', async () => {
     const canvas = createCanvas();
-    const controller = crc(canvas, imageElement('pending.png'));
+    const controller = pibbl(canvas, imageElement('pending.png'));
     await nextFrame();
     const pending = FakeImage.instances[0];
     const savedLoad = pending.onload;
     const savedError = pending.onerror;
 
-    crc(canvas, createElement(Empty, {}));
+    pibbl(canvas, createElement(Empty, {}));
     await nextFrame();
 
     expect(pending.onload).toBeNull();
@@ -383,7 +383,7 @@ describe('img async resource ownership', () => {
 
   it('releases a pending image and leaves saved callbacks inert on root disposal', async () => {
     const canvas = createCanvas();
-    const controller = crc(canvas, imageElement('dispose-pending.png'));
+    const controller = pibbl(canvas, imageElement('dispose-pending.png'));
     await nextFrame();
     const pending = FakeImage.instances[0];
     const savedLoad = pending.onload;
@@ -395,12 +395,12 @@ describe('img async resource ownership', () => {
     expect(pending.onload).toBeNull();
     expect(pending.onerror).toBeNull();
     expect(pending.src).toBe('');
-    expect(GLOBAL_STATE.crcInstances.has(canvas)).toBe(false);
+    expect(GLOBAL_STATE.pibblInstances.has(canvas)).toBe(false);
 
     savedLoad?.();
     savedError?.();
     expect(requestFrame).not.toHaveBeenCalled();
-    expect(GLOBAL_STATE.crcInstances.has(canvas)).toBe(false);
+    expect(GLOBAL_STATE.pibblInstances.has(canvas)).toBe(false);
   });
 });
 

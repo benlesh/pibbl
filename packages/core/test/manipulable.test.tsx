@@ -1,9 +1,9 @@
 import { afterEach, expect, it } from "vitest";
 import { commands } from "vitest/browser";
-import * as CRC from "@crc/core";
-import type { CRCController } from "@crc/core";
+import * as Pibbl from "@pibbl/core";
+import type { PibblController } from "@pibbl/core";
 
-let mount: CRCController | undefined;
+let mount: PibblController | undefined;
 const settle = () =>
   new Promise<void>((resolve) =>
     requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
@@ -15,22 +15,22 @@ afterEach(async () => {
   document.body.replaceChildren();
 });
 it("offers the convenience component through the public signal binding without an Absolute host", async () => {
-  const Manipulable = Reflect.get(CRC, "Manipulable");
+  const Manipulable = Reflect.get(Pibbl, "Manipulable");
   expect(Manipulable).toBeTypeOf("function");
-  const box = CRC.signal({ left: 40, top: 50, width: 160, height: 120 });
+  const box = Pibbl.signal({ left: 40, top: 50, width: 160, height: 120 });
   const canvas = document.createElement("canvas");
   canvas.width = 400;
   canvas.height = 300;
   canvas.dataset.manipulationTest = "";
   document.body.append(canvas);
-  mount = CRC.crc(
+  mount = Pibbl.pibbl(
     canvas,
-    CRC.createElement(Manipulable, {
+    Pibbl.createElement(Manipulable, {
       style: box,
       draggable: true,
       resizable: { minWidth: 80, minHeight: 60 },
       children: (
-        <CRC.Rectangle
+        <Pibbl.Rectangle
           style={{ width: "100%", height: "100%", fill: "blue" }}
         />
       ),

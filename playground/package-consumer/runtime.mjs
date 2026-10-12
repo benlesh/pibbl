@@ -1,9 +1,8 @@
-import * as core from "@crc/core";
-import * as internal from "@crc/core/internal";
-import * as particles from "@crc/particles";
-import * as threeAdapter from "@crc/three";
-import * as physics2d from "@crc/physics/2d";
-import * as physics3dGeometry from "@crc/physics/3d/geometry";
+import * as core from "@pibbl/core";
+import * as internal from "@pibbl/core/internal";
+import * as particles from "@pibbl/core/particles";
+import * as threeAdapter from "@pibbl/three";
+import * as physics2d from "@pibbl/core/physics/2d";
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { readFileSync } from "node:fs";
@@ -13,11 +12,11 @@ import {
   Fragment as ProductionFragment,
   jsx,
   jsxs,
-} from "@crc/core/jsx-runtime";
+} from "@pibbl/core/jsx-runtime";
 import {
   Fragment as DevelopmentFragment,
   jsxDEV,
-} from "@crc/core/jsx-dev-runtime";
+} from "@pibbl/core/jsx-dev-runtime";
 
 const expected = [
   "DragHandle", "ResizeHandle", "ResizeHandles", "RotationHandle",
@@ -33,6 +32,7 @@ const expected = [
   "Fragment",
   "Grid",
   "Group",
+  "HtmlBox",
   "HorizontalLine",
   "Image",
   "KeyboardNavigation",
@@ -42,6 +42,15 @@ const expected = [
   "Overlay",
   "Path",
   "PathGeometry",
+  "affineTransform",
+  "arcBendTransform",
+  "composeTransforms",
+  "envelopeTransform",
+  "meshTransform",
+  "pathBendTransform",
+  "quadTransform",
+  "transformPath",
+
   "Polygon",
   "Rectangle",
   "RegularPolygon",
@@ -52,7 +61,7 @@ const expected = [
   "Wedge",
   "batch",
   "computed",
-  "crc",
+  "pibbl",
   "createArcPath",
   "createCirclePath",
   "createElement",
@@ -68,6 +77,19 @@ const expected = [
   "definePrimitive",
   "defineRenderLayer",
   "defineTexture",
+  "defineTransition",
+  "recordFrames",
+  "exportGif",
+  "useVisibilityTransition",
+  "fade",
+  "bifrost",
+  "embers",
+  "hologram",
+  "slide",
+  "zoom",
+  "wipe",
+  "blurReveal",
+  "dissolve",
   "easing",
   "flattenPath",
   "flattenPathWang",
@@ -91,14 +113,13 @@ const expected = [
   "signal",
   "spring",
   "stepper",
-  "track",
+  "drive",
   "tween",
   "untracked",
   "useCanvasContext",
   "useComputed",
   "useConst",
   "useCursor",
-  "useEvent",
   "useEventListener",
   "useEventTarget",
   "useLayoutBox",
@@ -109,77 +130,74 @@ const expected = [
   "useRef",
   "useSignal",
   "useSvgPath",
-  "useTransition",
+  "useAnimatedValue",
   "useTexture",
   "wait",
-  "warpPath",
-  "bendPathAlongArc",
-  "bendPathAlongPath",
+
+
+
 ].sort();
 
 const actual = Object.keys(core).sort();
 if (JSON.stringify(actual) !== JSON.stringify(expected)) {
-  throw new Error(`Unexpected @crc/core exports: ${actual.join(", ")}`);
+  throw new Error(`Unexpected @pibbl/core exports: ${actual.join(", ")}`);
 }
-for (const removedName of ["useState", "useMemo", "useWhenChanged"]) {
+for (const removedName of ["useState", "useMemo", "useWhenChanged", "useSpringValue", "useTweenValue"]) {
   if (removedName in core) {
     throw new Error(
-      `Removed @crc/core export is still present: ${removedName}`,
+      `Removed @pibbl/core export is still present: ${removedName}`,
     );
   }
 }
 
 const expectedInternal = [
-  "CRCInternalManualSchedulerDriver",
+  "PibblInternalManualSchedulerDriver",
   "borrowTextureRaster",
-  "cancelBackendMountFrame",
-  "crcInternalAssertCommandAllowed",
-  "crcInternalCreatePropAttachment",
-  "crcInternalCreateSignalConsumer",
-  "crcInternalCurrentFrame",
-  "crcInternalCurrentRenderOwner",
-  "crcInternalCurrentSimulationOwner",
-  "crcInternalCurrentWorldTransform",
-  "crcInternalInstallTestSchedulerDriver",
-  "crcInternalOnRenderFinish",
-  "crcInternalOnSimulationRenderTransactionFinish",
-  "crcInternalPaintTarget",
-  "crcInternalQueueBegin",
-  "crcInternalQueueComplete",
-  "crcInternalQueueCurrentCommit",
-  "crcInternalQueueCurrentComplete",
-  "crcInternalQueueSimulationBegin",
-  "crcInternalQueueSimulationCommitAcknowledgement",
-  "crcInternalQueueSimulationComplete",
-  "crcInternalRegisterAdvance",
-  "crcInternalRegisterSimulationAdvance",
-  "crcInternalRequestRender",
-  "crcInternalRequestRendererWork",
-  "crcInternalRequestSimulationRender",
-  "crcInternalRunPurePrimitiveResolver",
-  "crcInternalSnapshotRealmScheduler",
+  "pibblInternalAssertCommandAllowed",
+  "pibblInternalCreatePropAttachment",
+  "pibblInternalCreateSignalConsumer",
+  "pibblInternalCurrentFrame",
+  "pibblInternalCurrentRenderOwner",
+  "pibblInternalCurrentSimulationOwner",
+  "pibblInternalCurrentWorldTransform",
+  "pibblInternalInstallTestSchedulerDriver",
+  "pibblInternalOnRenderFinish",
+  "pibblInternalOnSimulationRenderTransactionFinish",
+  "pibblInternalPaintTarget",
+  "pibblInternalQueueBegin",
+  "pibblInternalQueueComplete",
+  "pibblInternalQueueCurrentCommit",
+  "pibblInternalQueueCurrentComplete",
+  "pibblInternalQueueSimulationBegin",
+  "pibblInternalQueueSimulationCommitAcknowledgement",
+  "pibblInternalQueueSimulationComplete",
+  "pibblInternalRegisterAdvance",
+  "pibblInternalRegisterSimulationAdvance",
+  "pibblInternalRequestRender",
+  "pibblInternalRequestRendererWork",
+  "pibblInternalRequestSimulationRender",
+  "pibblInternalRunPurePrimitiveResolver",
+  "pibblInternalSnapshotRealmScheduler",
   "createBackendToken",
   "defineBackendPrimitive",
   "derivePrimitive",
-  "executeBackendCRC",
   "getBackendEnvironment",
   "getCurrentBackendHostCanvas",
   "getCurrentElementSource",
   "getCurrentFrameTimestamp",
   "getCurrentLogicalViewport",
   "getCurrentSurfaceDensity",
-  "hasCRCEventHandler",
+  "hasPibblEventHandler",
   "haveSameLayerNodeTree",
   "isBackendEventTargetLive",
   "materializeRetainedLayerChildren",
-  "mountBackendCRC",
+  "mountBackendPibbl",
   "onCurrentRenderFinish",
   "pushLayoutBox",
   "registerNestedInteractionResolver",
   "releaseBackendEventTarget",
   "requestCurrentInstanceFrame",
   "resolveTexturePaint",
-  "retainBackendMountRoot",
   "setCurrentComponentAfterRender",
   "snapshotLayerNodeTree",
   "useBackendEventTarget",
@@ -189,39 +207,39 @@ const expectedInternal = [
   "withHooksForbidden",
 ];
 const actualInternal = Object.keys(internal).sort();
-if (JSON.stringify(actualInternal) !== JSON.stringify(expectedInternal)) {
+if (JSON.stringify(actualInternal) !== JSON.stringify([...expectedInternal].sort())) {
   throw new Error(
-    `Unexpected @crc/core/internal exports: ${actualInternal.join(", ")}`,
+    `Unexpected @pibbl/core/internal exports: ${actualInternal.join(", ")}`,
   );
 }
 for (const exportName of expectedInternal) {
   if (typeof internal[exportName] !== "function") {
     throw new Error(
-      `Expected @crc/core/internal ${exportName} to be callable.`,
+      `Expected @pibbl/core/internal ${exportName} to be callable.`,
     );
   }
   if (exportName in core) {
     throw new Error(
-      `Internal renderer function leaked from @crc/core: ${exportName}.`,
+      `Internal renderer function leaked from @pibbl/core: ${exportName}.`,
     );
   }
 }
 for (const exportName of expected) {
   if (exportName in internal) {
     throw new Error(
-      `@crc/core/internal re-exported public root value ${exportName}.`,
+      `@pibbl/core/internal re-exported public root value ${exportName}.`,
     );
   }
 }
-if (actual.length !== 101) {
+if (actual.length !== expected.length) {
   throw new Error(
-    `Expected 101 @crc/core runtime exports, received ${actual.length}.`,
+    `Expected ${expected.length} @pibbl/core runtime exports, received ${actual.length}.`,
   );
 }
 
 const requireFromRuntime = createRequire(import.meta.url);
-const coreEntry = requireFromRuntime.resolve("@crc/core");
-const internalEntry = requireFromRuntime.resolve("@crc/core/internal");
+const coreEntry = requireFromRuntime.resolve("@pibbl/core");
+const internalEntry = requireFromRuntime.resolve("@pibbl/core/internal");
 function schedulerModules(entry, visited = new Set()) {
   if (visited.has(entry)) return [];
   visited.add(entry);
@@ -233,7 +251,7 @@ function schedulerModules(entry, visited = new Set()) {
 const coreSchedulers = schedulerModules(coreEntry);
 const internalSchedulers = schedulerModules(internalEntry);
 if (coreSchedulers.length !== 1 || internalSchedulers.length !== 1 || coreSchedulers[0] !== internalSchedulers[0]) {
-  throw new Error("@crc/core/internal did not share the packed core scheduler identity.");
+  throw new Error("@pibbl/core/internal did not share the packed core scheduler identity.");
 }
 
 const runtimeCount = core.signal(2, { debugName: "runtime count" });
@@ -257,7 +275,7 @@ if (runtimeCallback.get()() !== "updated") {
   throw new Error("Function-valued signals were treated as updater callbacks.");
 }
 if (typeof internal.createBackendToken("consumer") !== "object") {
-  throw new Error("@crc/core/internal did not create an opaque backend token.");
+  throw new Error("@pibbl/core/internal did not create an opaque backend token.");
 }
 
 const expectedParticles = [
@@ -276,12 +294,12 @@ const expectedParticles = [
 const actualParticles = Object.keys(particles).sort();
 if (JSON.stringify(actualParticles) !== JSON.stringify(expectedParticles)) {
   throw new Error(
-    `Unexpected @crc/particles exports: ${actualParticles.join(", ")}`,
+    `Unexpected @pibbl/core/particles exports: ${actualParticles.join(", ")}`,
   );
 }
 for (const exportName of expectedParticles) {
   if (typeof particles[exportName] !== "function") {
-    throw new Error(`Expected @crc/particles ${exportName} to be callable.`);
+    throw new Error(`Expected @pibbl/core/particles ${exportName} to be callable.`);
   }
 }
 const expectedThreeAdapter = ["defineThreeLayer"];
@@ -290,55 +308,20 @@ if (
   JSON.stringify(actualThreeAdapter) !== JSON.stringify(expectedThreeAdapter)
 ) {
   throw new Error(
-    `Unexpected @crc/three exports: ${actualThreeAdapter.join(", ")}`,
+    `Unexpected @pibbl/three exports: ${actualThreeAdapter.join(", ")}`,
   );
 }
 if (typeof threeAdapter.defineThreeLayer !== "function") {
-  throw new Error("Expected @crc/three defineThreeLayer to be callable.");
+  throw new Error("Expected @pibbl/three defineThreeLayer to be callable.");
 }
 if (typeof THREE.Scene !== "function" || typeof OrbitControls !== "function") {
   throw new Error(
     "Three.js and its public OrbitControls addon must be available.",
   );
 }
-const expectedPhysics3DGeometry = [
-  "boundsOfShape3D",
-  "boxShape3D",
-  "capsuleShape3D",
-  "coneShape3D",
-  "contactBetweenShapes3D",
-  "containsPoint3D",
-  "convexHullShape3D",
-  "cylinderShape3D",
-  "distanceBetweenShapes3D",
-  "ellipsoidShape3D",
-  "heightfieldShape3D",
-  "massProperties3D",
-  "overlapShapes3D",
-  "raycastShape3D",
-  "shapeCastAgainstShape3D",
-  "sphereShape3D",
-  "transformShape3D",
-  "triangleMeshShape3D",
-].sort();
-if (
-  JSON.stringify(Object.keys(physics3dGeometry).sort()) !==
-  JSON.stringify(expectedPhysics3DGeometry)
-) {
-  throw new Error("Unexpected pure @crc/physics/3d/geometry runtime exports.");
-}
-const packedPhysicsSphere = physics3dGeometry.sphereShape3D({ radius: 1 });
-const packedPhysicsHit = physics3dGeometry.raycastShape3D(
-  packedPhysicsSphere,
-  { position: [0, 0, 0], orientation: [0, 0, 0, 1] },
-  { origin: [-2, 0, 0], direction: [1, 0, 0], maxDistance: 4 },
-);
-if (packedPhysicsHit?.distance !== 1) {
-  throw new Error("Pure 3D geometry returned an unexpected ray hit.");
-}
 for (const threeExport of ["Scene", "Object3D", "WebGLRenderer"]) {
   if (threeExport in threeAdapter) {
-    throw new Error(`@crc/three re-exported Three value ${threeExport}.`);
+    throw new Error(`@pibbl/three re-exported Three value ${threeExport}.`);
   }
 }
 const particleRange = particles.particleRange(1, 2);
@@ -376,7 +359,7 @@ for (const [exportName, value] of Object.entries({
   jsxDEV,
 })) {
   if (typeof value !== "function") {
-    throw new Error(`Expected @crc/core compiler export ${exportName}.`);
+    throw new Error(`Expected @pibbl/core compiler export ${exportName}.`);
   }
 }
 if (
@@ -390,7 +373,7 @@ for (const exportName of expected.filter(
 )) {
   if (typeof core[exportName] !== "function") {
     throw new Error(
-      `Expected @crc/core ${exportName} to be a runtime function.`,
+      `Expected @pibbl/core ${exportName} to be a runtime function.`,
     );
   }
 }
@@ -400,7 +383,7 @@ if (
   typeof core.easing.linear !== "function"
 ) {
   throw new Error(
-    "Expected @crc/core easing to be a frozen function collection.",
+    "Expected @pibbl/core easing to be a frozen function collection.",
   );
 }
 for (const creatorName of [
@@ -416,7 +399,7 @@ for (const creatorName of [
   "createWedgePath",
 ]) {
   if (typeof core[creatorName] !== "function") {
-    throw new Error(`Expected @crc/core ${creatorName} to be callable.`);
+    throw new Error(`Expected @pibbl/core ${creatorName} to be callable.`);
   }
 }
 
@@ -440,13 +423,13 @@ if (
 }
 
 for (const specifier of [
-  "@crc/core/lib/crc",
-  "@crc/core/lib/types",
-  "@crc/core/lib/global-state",
-  "@crc/core/src/index",
-  ["@crc", "webgl"].join("/"),
-  ["@crc", "particles", "webgl"].join("/"),
-  ["@crc", "physics", "3d"].join("/"),
+  "@pibbl/core/lib/pibbl",
+  "@pibbl/core/lib/types",
+  "@pibbl/core/lib/global-state",
+  "@pibbl/core/src/index",
+  ["@pibbl", "webgl"].join("/"),
+  ["@pibbl", "particles", "webgl"].join("/"),
+  ["@pibbl", "physics", "3d"].join("/"),
 ]) {
   try {
     await import(specifier);
@@ -478,11 +461,7 @@ if (core.subdividePath(editableGeometry, { divisions: 2 }).segmentCount !== 3) {
 const warpProbe = new core.PathGeometry();
 warpProbe.moveTo(0, 0); warpProbe.lineTo(1, 1);
 for (const mode of ['bilinear', 'perspective']) {
-  const warped = core.warpPath(warpProbe, {
-    source: { x: 0, y: 0, width: 1, height: 1 },
-    destination: { topLeft: { x: 0, y: 0 }, topRight: { x: 10, y: 0 }, bottomLeft: { x: 0, y: 10 }, bottomRight: { x: 10, y: 5 } },
-    mode, tolerance: 0.01,
-  });
+  const warped = core.transformPath(warpProbe, core.quadTransform({ source: { x: 0, y: 0, width: 1, height: 1 }, destination: { topLeft: { x: 0, y: 0 }, topRight: { x: 10, y: 0 }, bottomLeft: { x: 0, y: 10 }, bottomRight: { x: 10, y: 5 } }, mode }), { tolerance: 0.01 });
   const end = warped.getSegment(warped.segmentCount - 1);
   if (end.type !== 'line' || end.x !== 10 || end.y !== 5 || warpProbe.segmentCount !== 2) {
     throw new Error(`Packed ${mode} warp failed endpoint/ownership evidence.`);
@@ -492,17 +471,21 @@ for (const mode of ['bilinear', 'perspective']) {
 const bendProbe = new core.PathGeometry(); bendProbe.moveTo(25, 7);
 const bendGuide = new core.PathGeometry(); bendGuide.moveTo(30, 40); bendGuide.bezierCurveTo(30, 40, 30, 40, 130, 40);
 const bendOptions = { source: { x: 0, y: 0, width: 100, height: 10 }, baseline: 0, tolerance: 0.01 };
-const bentPoint = core.bendPathAlongPath(bendProbe, bendGuide, bendOptions).getSegment(0);
+const bentPoint = core.transformPath(bendProbe, core.pathBendTransform({ ...bendOptions, guide: bendGuide }), bendOptions).getSegment(0);
 if (bentPoint.type !== 'move' || Math.hypot(bentPoint.x - 55, bentPoint.y - 47) > 0.01) {
   throw new Error('Packed Along Path must use arc length and preserve normal displacement.');
 }
-const arcPoint = core.bendPathAlongArc(bendProbe, {
-  ...bendOptions, arc: { cx: 10, cy: 20, radius: 50, startAngle: 0, sweep: Math.PI },
-}).getSegment(0);
+const arcPoint = core.transformPath(bendProbe, core.arcBendTransform({ ...bendOptions, arc: { cx: 10, cy: 20, radius: 50, startAngle: 0, sweep: Math.PI } }), { ...bendOptions }).getSegment(0);
 if (arcPoint.type !== 'move' || Math.hypot(arcPoint.x - (10 + 43 * Math.cos(0.5)), arcPoint.y - (20 + 43 * Math.sin(0.5))) > 0.01 || core.toSvgPathData(bendProbe) !== 'M 25 7') {
   throw new Error('Packed Along Arc failed analytic geometry or input ownership.');
 }
 
+const htmlDescriptor = core.createElement(core.HtmlBox, {
+  data: { text: 'inert construction' },
+  mount() { throw new Error('HtmlBox construction must not mount DOM'); },
+  style: { width: 100, height: 40 },
+});
+if (htmlDescriptor.type !== core.HtmlBox) throw new Error('HtmlBox descriptor lost its public identity');
 const wangGeometry = core.flattenPathWang(editableGeometry, { tolerance: 0.25 });
 const radialGeometry = core.simplifyPathRadial(wangGeometry, { tolerance: 0.5 });
 if (!(wangGeometry instanceof core.PathGeometry) || !(radialGeometry instanceof core.PathGeometry)) {
@@ -511,4 +494,30 @@ if (!(wangGeometry instanceof core.PathGeometry) || !(radialGeometry instanceof 
 
 if (typeof physics2d.physicsObstacles2D !== "function" || "physicsBoxObstacles2D" in physics2d) {
   throw new Error("Expected the general committed-obstacle API without its superseded box-only name.");
+}
+
+const upper = new core.PathGeometry(); upper.moveTo(0,0); upper.lineTo(10,0);
+const lower = new core.PathGeometry(); lower.moveTo(0,10); lower.lineTo(20,10);
+const envelope = core.envelopeTransform({source:{x:0,y:0,width:1,height:1},top:upper,bottom:lower});
+const composition = core.composeTransforms(envelope,core.affineTransform({a:2,d:2,e:3}));
+const middle = composition.mapPoint({x:0.5,y:0.5});
+if (middle.x !== 18 || middle.y !== 10) throw new Error('Packed envelope composition failed.');
+const affineCopy = core.transformPath(warpProbe,core.affineTransform({e:3}),{tolerance:0.1});
+if (affineCopy.getSegment(0).x !== 3) throw new Error('Packed affine transforms must work without DOMMatrix.');
+const verticalA = new core.PathGeometry(); verticalA.moveTo(0,0); verticalA.lineTo(0,10);
+const verticalB = new core.PathGeometry(); verticalB.moveTo(10,0); verticalB.lineTo(20,10);
+const mesh = core.meshTransform({source:{x:0,y:0,width:1,height:1},columns:[0,1],rows:[0,1],horizontal:[[upper],[lower]],vertical:[[verticalA],[verticalB]]});
+if (Math.abs(mesh.mapPoint({x:0.5,y:0.5}).x-7.5)>0.0001) throw new Error('Packed mesh mapping failed.');
+
+for (const name of [
+  'raycastAny2D', 'raycastClosest2D', 'raycastAll2D',
+  'shapeCastAny2D', 'shapeCastClosest2D', 'shapeCastAll2D',
+  'hasShapeOverlap2D', 'findShapeOverlap2D', 'findAllShapeOverlaps2D',
+  'hasAabbMatch2D', 'findAabbMatch2D', 'findAllAabbMatches2D',
+  'hasPointMatch2D', 'findPointMatch2D', 'findAllPointMatches2D',
+]) {
+  if (typeof physics2d[name] !== 'function') throw new Error(`Missing named query: ${name}`);
+}
+for (const name of ['raycast2D', 'shapeCast2D', 'overlapShape2D', 'queryAabb2D', 'queryPoint2D']) {
+  if (name in physics2d) throw new Error(`Removed selector-driven query remains: ${name}`);
 }

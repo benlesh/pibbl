@@ -1,6 +1,6 @@
-# CRC trust gate
+# Pibbl trust gate
 
-The trust gate is the durable contributor and CI contract for CRC's shipped
+The trust gate is the durable contributor and CI contract for Pibbl's shipped
 public surface. It is broader than a unit-test command: current documentation,
 catalogs, source declarations, compiler entries, packed artifacts, source and
 built Studio modes, browser behavior, deterministic visuals, lifecycle
@@ -17,6 +17,7 @@ Requirements:
 From a fresh checkout:
 
 ```sh
+npm install --global corepack@0.35.0
 corepack pnpm@11.21.0 install --frozen-lockfile --strict-peer-dependencies
 corepack pnpm@11.21.0 exec playwright install chromium
 corepack pnpm@11.21.0 trust
@@ -24,7 +25,35 @@ corepack pnpm@11.21.0 trust
 
 On a fresh Linux CI runner, install Chromium with `--with-deps`. Browser
 launches run serially inside the local aggregate to avoid port/process
-contention observed during earlier upgrade and visual work.
+contention observed during earlier upgrade and visual work. The full Vitest browser
+suite discovers its files with Vitest and partitions them into deterministic
+sequential shards of at most 16 files, each in a fresh Vitest/Chromium process.
+Vitest retains completed frames within a shard; Linux CI reported Chromium
+`ERR_INSUFFICIENT_RESOURCES` even with one worker and 48-file shards. Bounding
+files per browser keeps that limit independent of suite growth. Every discovered
+file remains included. A five-minute per-process watchdog fails a stalled
+browser; it is infrastructure protection, not a performance benchmark. Discovery
+errors, empty inventories, test failures, and crashes all fail the gate without
+retries. CI logs failed browser request URLs and Chromium error codes.
+
+## Preparing the alpha release
+
+Run `corepack pnpm@11.21.0 release 0.0.2` to prepare the four published
+packages: `@pibbl/core`, `@pibbl/three`, `@pibbl/text`, and `pibbl`. This updates
+versions, exact core peer pins, and the mirror's exact core dependency together.
+Preparation does not commit, tag, push, or publish; the private workspace version
+remains unchanged.
+
+Run the complete trust gate against the prepared versions. After reviewing the
+result, run `corepack pnpm@11.21.0 publish:ci`. It packs the explicit release set
+into `dist/npm`, publishes under `next`, then points `latest` at the same versions.
+Both tags identify an **ALPHA release, not for production use**. Every published
+README must retain that warning. To inspect tarballs without publishing, use
+`node tooling/publish-release.mjs --pack-only`.
+
+`pibbl` forwards every core subpath to `@pibbl/core`, preserving one runtime,
+element brand, and scheduler. Published text assets are precompiled; private
+text-testing entry points are excluded from its tarball.
 
 ## Gate contents
 
@@ -51,39 +80,16 @@ contention observed during earlier upgrade and visual work.
 - every explicitly marked complete TypeScript/TSX program extracted directly
   from its guide, plus the marked JavaScript program transformed independently
   by esbuild and the real Babel automatic-runtime plugin;
-- the fixed preservation manifest records every normalized prose paragraph,
-  list obligation, table row, and fenced-code obligation from the normative
-  contract baseline (667 units), with per-file source digests, plus the complete
-  reviewed current form (833 units across 12 baseline-snapshotted contracts)
-  and explicit approved translation, retirement, and addition mappings tied to
-  narrow design unit IDs and excerpts; every translation has exact
-  baseline/current unit IDs, unique rationale,
-  shared clause anchors, and minimum content similarity checked before the
-  digest. Together with 199 mapped units across the post-baseline textures,
-  signal, animation, render-layer/Three, component-manipulation, 2D physics, and text geometry
-  records, this covers 19 current normative contracts. The 56 direct source/test mappings use claims no broader than their
-  cited tests and require the same claim-specific anchors near both markers;
-- the migration guide contains one mechanically checked row for each of the 85
-  field/structural inputs derived from the reviewed baseline style table, and
-  every final replacement must also appear in the normative final-field table;
-- ordinary `docs:check` validates that embedded digest-locked baseline without
-  requiring historical Git objects. When `0040d65` is available it also proves
-  every embedded baseline unit and source digest against Git; static CI fetches
-  full history and requires that provenance mode explicitly;
-- fail-closed export discovery, source-inspected acceptance-matrix evidence,
-  mounted/driven non-JSX behavior, literal `Historical status` banners, and RED
-  mutations proving rejection of heading-only documents, natural negation,
-  arbitrary token insertion, prose moved into headings/code, deletion of every
-  reviewed semantic unit, changed table defaults/hook rows, baseline-digest
-  tampering, same-contract translation swaps and global evidence rotation even
-  after recomputing the candidate manifest digest, field-replacement drift,
-  repeated generic evidence, and missing evidence markers;
+- the migration guide's field replacements agree with the current field table;
+- source-inspected acceptance evidence, executable snippets, historical banners,
+  and negative tests for missing guarantees, invalid links, unsupported exports,
+  and incorrect field replacements;
 - TypeScript, ESLint, Prettier, package output, and source/built Studio builds.
 
 Component manipulation adds focused public browser evidence for signal-owned
 move, resize, rotation, snapping, child-defined drag geometry, readouts,
 pointer capture, cancellation, and teardown. That evidence supplements the
-preservation inventory; it does not weaken baseline or source-inspection rules.
+current documentation checks and source-inspection rules.
 
 `trust:package` builds real tarballs and installs them into strict Bundler and
 NodeNext consumers. It verifies runtime loading, declarations, source maps,
@@ -91,8 +97,8 @@ compiler subpaths, the absence of unpacked source dependencies, and blocked
 private imports.
 
 `trust:browser` runs the complete headless Chromium suite, the deliberate
-visual-regression/recovery safeguard, representative full-page Studio visuals,
-the public Studio documentation/navigation/search acceptance suite, and a
+visual-regression/recovery safeguard, the public Studio
+documentation/navigation/search acceptance suite, and a
 built-package smoke scenario. Semantic state and geometry assertions are the
 first-line oracle; exact pixels are used only where they add information.
 
@@ -144,11 +150,37 @@ are inspected before any baseline decision. This evidence does not claim
 cross-browser/GPU pixel identity, and no uncontrolled wall-clock measurement is
 a default correctness gate.
 
-The unified GitHub Actions workflow runs the same responsibilities as parallel
-static, package, browser, and lifecycle jobs, then exposes one stable aggregate
-result suitable for branch protection. Browser jobs upload named evidence even
-when a behavior check fails. Hosted branch-protection configuration remains a
-repository-administration action outside local source control.
+The GitHub Actions matrix runs the same `trust:static`, `trust:package`,
+`trust:browser`, `trust:lifecycle`, and `trust:native` scripts as local `trust`.
+A regression check rejects a missing or extra CI stage. Each clean runner installs
+Corepack and Chromium. Each stage prepares its own required build output; the
+static stage builds before comparing declarations, and the browser stage builds
+before loading test assets. A startup
+failure remains the primary error even when no screenshot artifacts exist.
+The stable **Trust gate** result requires every matrix stage to succeed.
+
+`trust:native` verifies text geometry, the pinned native toolchain, and two-build
+reproducibility. Wall-clock text benchmarks remain explicit diagnostic commands,
+not correctness gates.
+
+### Historical audits versus merge checks
+
+`audit:docs:preservation` retains the dated migration manifest, paragraph digests,
+reviewed mappings, and their adversarial tests. `audit:agent-verification:claims`
+retains strategy-ledger evidence fingerprints. These audits can report stale
+claims after legitimate changes; they do not establish current runtime defects.
+They are deliberately outside `trust`. Renewing a claim requires review, not an
+automatic digest refresh. `PIBBL_VERIFY_CONTRACT_PROVENANCE=1` requires full Git
+history when running the documentation audit.
+
+The required gate retains current API/documentation parity, valid links and
+snippets, scenario coverage, real packed consumers, browser behavior, visual
+comparisons, resource ownership, and structural performance. These checks compare
+observable behavior or current sources rather than hand-maintained historical
+counts. The scenario index remains a checked generated artifact because readers
+use its routes and API links; regenerate it with `scenarios:write-index` after
+catalog edits. Source API discovery uses the repository's source mappings, so a
+previous local build cannot hide missing declarations in a clean checkout.
 
 ## Documentation evidence semantics
 
@@ -203,6 +235,29 @@ records the verification of the current Learn/API/Examples Studio experience.
 
 ## Visual baseline policy
 
+Full-page Studio snapshots and the tutorial promotional PNG are review aids,
+run explicitly with `corepack pnpm@11.21.0 audit:studio-visual`. They are outside
+the portable merge gate: the same revision matched the teaser exactly on macOS
+but differed by 15,273 pixels on Linux. A zero-tolerance comparison of a shared
+platform-rendered picture cannot distinguish that difference from a product
+regression without reviewing the rendering environment. These snapshots also
+include incidental lesson numbering and displayed source text. Their value is
+in controlled-environment visual review, not certifying cross-platform runtime
+behavior. Keep the reviewed baselines; inspect actual artifacts before updates.
+The teaser audit now saves actual, expected, and comparison metadata on failure.
+
+Required browser verification retains semantic Studio navigation, workbench,
+responsive-layout and teardown acceptance, runtime visual comparisons, and the
+deliberate visual-defect/recovery safeguard. Those checks passed on Linux with
+the full browser suite; no runtime visual tests or safeguards were removed.
+
+The filter laboratory masks only the ten unfiltered system-monospace label
+bounds (10 pixels high). Linux CI differed from macOS by 1,537 label pixels;
+inspection of expected, actual, and diff artifacts confirmed every filtered
+shape matched exactly. Filter tiles, shadows, and intervening gaps remain
+unmasked, with zero pixel tolerance. Each mask records its platform-font reason
+in the comparison report; the committed laboratory baseline is unchanged.
+
 Visual baselines are check-only in normal tests and CI. Never rewrite a
 baseline merely to clear a red check. The safeguard records committed baseline
 bytes, induces the documented smoke mismatch, requires named
@@ -219,6 +274,21 @@ When an intentional product change requires a new baseline:
 
 The Studio baseline update command is
 `corepack pnpm@11.21.0 test:studio-visual:update`; CI never invokes it.
+
+### 2026-10-04 trust repair visual review
+
+The Filters Studio baseline was updated for the already-shipped lesson numbering
+(25 to 26) and the displayed `SvgPath` import added by the positioning migration.
+Expected, actual, and pixel-diff images were inspected, including native-resolution
+editor detail. All 23,256 changed pixels were confined to the ordinal and editor
+source; the Canvas gallery and surrounding layout were unchanged. Only
+`studio-filters.expected.png` was regenerated through the route-specific update.
+
+The examples landing mismatch was different: all 5,612 changed pixels were in
+two Canvas text labels, and a fresh page matched the existing baseline exactly.
+Visual routes now use independent pages to avoid Chromium's navigation-dependent
+Canvas text rasterization. Navigation continuity remains covered by the separate
+Studio acceptance suite; no landing baseline or pixel tolerance was changed.
 
 ## Performance cadence
 
@@ -237,12 +307,12 @@ competing browser workload. Run the focused reference guard three consecutive
 times:
 
 ```sh
-VITE_CRC_PERF_GUARD=1 corepack pnpm@11.21.0 test:performance:reference
-VITE_CRC_PERF_GUARD=1 corepack pnpm@11.21.0 test:performance:reference
-VITE_CRC_PERF_GUARD=1 corepack pnpm@11.21.0 test:performance:reference
+VITE_PIBBL_PERF_GUARD=1 corepack pnpm@11.21.0 test:performance:reference
+VITE_PIBBL_PERF_GUARD=1 corepack pnpm@11.21.0 test:performance:reference
+VITE_PIBBL_PERF_GUARD=1 corepack pnpm@11.21.0 test:performance:reference
 ```
 
-`VITE_CRC_REPORT_PERF=1` records observations without enforcing budgets.
+`VITE_PIBBL_REPORT_PERF=1` records observations without enforcing budgets.
 Investigate only after three controlled breaches, excluding environment or
 constant-factor regressions first. The 10,000-region sparse/miss spatial-index
 trigger remains median above 6 ms or p95 above 12 ms. The last recorded
@@ -251,12 +321,12 @@ run did not justify a spatial index.
 
 ## Supported browser boundary
 
-Chromium is the required browser oracle. CRC's supported pointer, mouse, touch,
+Chromium is the required browser oracle. Pibbl's supported pointer, mouse, touch,
 wheel, keyboard/focus, editing/composition, clipboard, and drag/drop facades
 are exercised there, including focus policies and directional navigation.
 Native executable traces and current UI/Pointer Events informed ordering.
 
-CRC normalizes Canvas-only regions to one topmost logical target,
+Pibbl normalizes Canvas-only regions to one topmost logical target,
 transition-before-move, same-live-target activation, accumulated
 transform/clip/layer geometry, and pathless Canvas observers. Browser-dependent
 context-menu ordering remains native rather than universally normalized.
@@ -264,6 +334,6 @@ context-menu ordering remains native rather than universally normalized.
 The project does not claim cross-browser parity. Adding another required
 browser needs characterization and explicit compatibility decisions rather
 than assuming identical Canvas metrics or input ordering. Keyboard reachability
-also does not imply semantic accessibility: CRC creates no semantic DOM or
+also does not imply semantic accessibility: Pibbl creates no semantic DOM or
 assistive-technology tree, so applications must supply the equivalent
 accessible experience described in the accessibility contract.

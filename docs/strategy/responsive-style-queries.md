@@ -18,7 +18,7 @@ Capability queries and the broader mobile chart redesign remain deferred.
 The CO₂ visualization is usable on desktop but compresses poorly on phones.
 Casual mobile visitors need readable labels, controls that fit, and usable touch
 targets. Recording this gap does not make a mobile redesign part of the current
-visualization work. The broader opportunity is a general CRC styling mechanism
+visualization work. The broader opportunity is a general Pibbl styling mechanism
 for adapting to available space and input capabilities.
 
 ## Direction to investigate

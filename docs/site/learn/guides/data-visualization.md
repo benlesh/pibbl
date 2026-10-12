@@ -1,7 +1,7 @@
 ---
 id: guide-data-visualization
 title: Compose data visualizations
-summary: Build allocated, signal-driven line plots with the official @crc/viz primitives.
+summary: Build allocated, signal-driven line plots with the official @pibbl/core/viz primitives.
 kind: guide
 slug: data-visualization
 order: 67
@@ -11,13 +11,13 @@ exampleSlug: viz-responsive-line
 
 # Compose data visualizations
 
-`@crc/viz` provides scale and drawing primitives. Core owns layout, signals,
+`@pibbl/core/viz` provides scale and drawing primitives. Core owns layout, signals,
 events, clipping, and the JSX runtime. No chart container or second rendering
 loop is required.
 
 ```tsx
-import { Absolute, Group } from "@crc/core";
-import { Axis, LineSeries, Scale } from "@crc/viz";
+import { Absolute, Group } from "@pibbl/core";
+import { Axis, LineSeries, LinearScale } from "@pibbl/core/viz";
 
 const readings = [
   { time: 0, value: 10 },
@@ -29,13 +29,13 @@ const readings = [
 
 <Group style={{ translateX: 48, translateY: 16 }}>
   <Absolute style={{ width: 400, height: 200 }}>
-    <Scale id="x" type="linear" domain={[0, 4]} range="width">
-      <Scale id="y" type="linear" domain={[0, 50]} range="height" reverse>
+    <LinearScale id="x" domain={[0, 4]} range="width">
+      <LinearScale id="y" domain={[0, 50]} range="height" reverse>
         <Axis scale="x" position="bottom" />
         <Axis scale="y" position="left" />
         <LineSeries data={readings} x="time" y="value" xScale="x" yScale="y" />
-      </Scale>
-    </Scale>
+      </LinearScale>
+    </LinearScale>
   </Absolute>
 </Group>;
 ```
@@ -49,9 +49,9 @@ inputs. The receiving component owns those reads. Calling `.get()` yourself
 instead makes the enclosing component the consumer. Scale uses a stable computed
 signal as layout and props change, without render-time writes.
 
-Use `useScale(id).get().map(value)` for custom marks and `invert(pixel)` for
+Use `useLinearScale(id).get().map(value)` for custom marks and `invert(pixel)` for
 inspection. Event coordinates are root-logical; convert them to the plot's local
-space before inversion. `ScaleAdjust` positions ordinary CRC children using that
+space before inversion. `ScaleAdjust` positions ordinary Pibbl children using that
 mapping. Scales neither clip nor invent event targets.
 
 ## Explore an actual record
@@ -65,11 +65,15 @@ included in its editable source.
 
 **Known gap:** the example currently has a desktop-oriented layout. Phone-sized
 presentation and a fully evaluated casual-touch experience remain deferred.
-Core supports responsive style queries on returned CRC elements; conditional
+Core supports responsive style queries on returned Pibbl elements; conditional
 styles for viz-owned marks remain a separate follow-up.
 
-Linear and band scales are available; line curves are linear. Time/UTC,
-additional curves and series, and automatic legends remain future work.
+Linear, UTC, band, log, symlog, and point scales are available. Lines default to
+linear connections; named [curve definitions](#/api/functions/series-curves)
+control step geometry. Local time and automatic legends remain future work.
+[AreaSeries](#/api/components/area-series) fills to an explicit data-space baseline;
+[IntervalBandSeries](#/api/components/interval-band-series) fills matching lower/upper
+observations. Both preserve missing runs and use caller-owned clipping and layout.
 Nearest-data inspection is available through the functions below.
 
 ## Dots and custom marks
@@ -80,7 +84,7 @@ callback returns plain paint/radius values. Circles paint fill then stroke in
 source order, preserving transparent overlap. The series has one union target;
 nearest-data lookup is separate from topmost painted hit testing.
 
-Use `PlotSeries` for ordinary CRC elements at each data coordinate. Its required
+Use `PlotSeries` for ordinary Pibbl elements at each data coordinate. Its required
 `render(datum, index, data)` callback returns nodes; hooks belong in returned
 components. Supply `keyBy` for mutable data to preserve per-row state on reorder.
 Missing coordinates skip rows. A callback that returns null retains its row
@@ -177,12 +181,12 @@ overflowing or filtered child paint, and does not prevent multiple cards from
 colliding with each other. Preferred sides can help separate two readouts.
 
 Viz-owned shared styles support ordinary signals and layout-driven reflow.
-Returned CRC marks support core responsive style queries against their containing
+Returned Pibbl marks support core responsive style queries against their containing
 allocation. Direct conditional-style support for viz-owned styles remains deferred.
 
 For multiple readouts, use [AnchoredLayout](#/api/components/anchored-layout)
 instead of positioning each HoverCard independently. Give it keyed items with
-local anchors and declared outer sizes; its child callback renders ordinary CRC
+local anchors and declared outer sizes; its child callback renders ordinary Pibbl
 content at each placed origin. It arranges the boxes together and keeps them
 clear of every supplied anchor. The Hover comparisons lesson demonstrates this
 with connector lines and a shared column that flips at the plot edge.
@@ -196,15 +200,14 @@ negative bars share a zero baseline. Hover or tap reveals exact counts without
 changing the bar geometry. Missing-value behavior is covered in the tests.
 
 ```tsx
-<Scale
+<BarScale
   id="channels"
-  type="band"
   domain={["Search", "Email"]}
   range="width"
   paddingInner={0.3}
   paddingOuter={0.2}
 >
-  <Scale id="change" type="linear" domain={[-30, 30]} range="height" reverse>
+  <LinearScale id="change" domain={[-30, 30]} range="height" reverse>
     <BarSeries
       data={[
         { channel: "Search", change: 20 },
@@ -215,11 +218,11 @@ changing the bar geometry. Missing-value behavior is covered in the tests.
       categoryScale="channels"
       valueScale="change"
     />
-  </Scale>
-</Scale>
+  </LinearScale>
+</BarScale>
 ```
 
-Import `BarSeries` from `@crc/viz`. `useScale("channels", "band").get()` exposes
+Import `BarSeries` from `@pibbl/core/viz`. `useBarScale("channels").get()` exposes
 band starts and bandwidth for composed labels and inspection. Categories are
 strings or finite numbers; order is explicit, duplicates reject, and unknowns
 map to undefined. Padding and domain can be signals. Value and range bars support both orientations. With `orientation="horizontal"`,
@@ -303,3 +306,115 @@ content remains a later addition. Set `style.innerRadius` for a donut. Inside
 labels must fit entirely in the ring, including exclusion of the hole; auto
 placement moves non-fitting labels outside. The editable example includes a
 donut toggle.
+
+## Calendar time
+
+Use `UTCScale` with numeric epoch milliseconds for real calendar ticks.
+Try [UTC basics](#/examples/composition/viz-utc-basics) for the minimal Scale,
+Axis, useLinearScale, extent and niceUTCDomain APIs, then
+[A rising baseline](#/examples/composition/viz-utc-climate) for 504 real NOAA
+observations, decade zoom, seasonal adjustment and inspection.
+The [UTC domain reference](#/api/functions/utc-domains) lists complete options,
+validation and calendar behavior.
+
+## Explicit segments and stacks
+
+[Threshold-colored CO₂](#/examples/composition/viz-threshold-segments) splits a
+linear path in application code and renders each run with LineSeries. Adjacent
+colors share the same computed crossing vertex. A value exactly at the threshold
+belongs to the upper category; zero-length runs are not measurements. Inspection
+continues to select original NOAA records, never the interpolated crossing.
+This recipe assumes finite ordered observations; split missing runs before
+applying it. It is not a smoothed-curve intersection algorithm.
+
+[Three states, explicit totals](#/examples/composition/viz-population-stack)
+computes BarSeries valueStart/valueEnd before rendering. The authored state order
+is California, Texas, Florida. A second view divides by the sum of those three
+states for each date; it never implies a share of the United States. Counts remain
+available in every readout. Its local transform rejects missing/nonfinite/negative
+counts and represents an all-zero total as zero-width segments with zero shares.
+It does not silently omit a missing state and reweight the rest.
+
+The Census Vintage 2023 source contains April 1, 2020 **estimates base** values and
+July 1, 2022/2023 estimates; those dates are intentionally different. The example
+labels the historical snapshot rather than presenting it as current population.
+The existing [signed cash-flow recipe](#/examples/composition/viz-stacked-bars)
+remains an illustration: it accumulates positive and negative amounts separately.
+No renderer owns aggregation, stacking, normalization, or legend semantics.
+
+## Controlled inspection and domain windows
+
+[Shared inspection](#/examples/composition/viz-linked-inspection) keeps selected
+month timestamps in application-owned signals. Pointer movement is transient;
+a tap or keyboard action commits an observed key. Arrow keys follow authored
+chronological order, Home/End select endpoints, and Escape clears. ReferenceLine
+and ordinary shapes provide crosshair geometry; there is no separate selection
+manager or crosshair container. The Canvas focus outline is visual feedback,
+not an accessibility tree; applications still own semantic alternatives.
+
+[Controlled domain brush](#/examples/composition/viz-domain-exploration) supplies
+an explicit UTC domain to a detail plot and keeps the full domain in an overview.
+Its private gesture draft does not change the committed detail domain until
+pointer-up. Escape, pointer cancellation, native capture loss, resize, or an
+external domain change discards the draft. Handles use a 22px hit radius; nearest
+wins if they overlap, with the start handle winning a tie. Dragging beyond the
+other endpoint clamps rather than exchanging handle roles. Outside taps recenter
+the span, and continuing that drag starts from the recentered position.
+
+The brush clamps gestures to the archive and requires at least 30 UTC days.
+UTC endpoints are rounded to integer milliseconds. Invalid externally controlled
+domains reject rather than rendering a different overview and detail domain.
+Left/Right pans by 30 days; Shift+Left/Right moves the end; Home resets. Touch
+scrolling is disabled only on the owned Canvas and its prior `touch-action` value
+is restored on disposal. Native capture and listeners remain core-owned. There
+are no global selected-chart variables, document listeners, or extra frame loops.
+
+These are editable application recipes, not exported brush/selection APIs. The
+private optional mount configuration exists for the same headless/public-surface
+checks that exercise the default Studio lesson. Ordinary applications compose
+signals, the dedicated scale hooks, and core events directly.
+
+## Linked keys and small multiples
+
+[Linked monthly inspection](#/examples/composition/viz-linked-inspection) keeps
+one NOAA month timestamp as its application-owned key. A pin persists separately
+from transient hover and committed inspection, so both the observed-ppm and
+`ppm − 330` panels draw the same selected record. If replacement data removes a
+key, the lesson clears it and does not revive it when that timestamp returns.
+
+[Quarterly small multiples](#/examples/composition/viz-small-multiples) aligns
+four three-month panels by the explicit ordinal month position (1–3).
+Each panel retains its actual month labels and reports `no observation` when a
+selected position is absent. The shared-domain control makes the comparison
+choice explicit; the independent option uses each panel's own finite values.
+
+## Proportional signed marks and color providers
+
+[State population change](#/examples/composition/viz-size-symbols) maps signed
+Census changes to a symlog y position. Mark area is proportional to absolute
+change: positive values use circles and negative values use equal-area squares.
+The lesson labels this encoding directly and offers a circles-only comparison.
+
+`SequentialColorScale`, `DivergingColorScale`, and `ThresholdColorScale` are
+dedicated ancestor providers. Read each with its matching hook and stable ID.
+Threshold colors use strictly ascending finite boundaries, one `#RRGGBB` color
+per bucket, and map a value equal to a boundary into the following bucket.
+Provider IDs are scoped by the visualization tree; a nested matching provider
+shadows an outer one, while a different color-scale family with the same ID is
+an error.
+
+The detail plot in the domain example uses [`panDomain` and `zoomDomain`](#/api/functions/domain-navigation),
+pure operations on the current resolved continuous mapping. They return a
+bounded domain pair for the application's signal. Wheel units, zoom factors,
+minimum span, reset and gesture cancellation are explicit application policies;
+the helpers own no input listeners or state.
+
+Try [Monthly CO₂ in color](#/examples/composition/viz-color-encodings) to compare
+all three color families. The sequential and diverging providers expose frozen
+`stops`; the threshold provider exposes frozen `bands`. The example builds its
+ramp or bucket key from those exact resolved values and paints cells using the
+same `map`. Widening a domain or changing thresholds therefore updates both marks
+and key. All twelve observed values remain readable on the cells, with a separate
+keyboard/touch inspection target. See the [complete color contract](#/api/components/color-scales)
+for encoded-sRGB interpolation, clamping, explicit center, signal lifetimes and
+validation. No palette is inferred from the data and no generic legend is needed.

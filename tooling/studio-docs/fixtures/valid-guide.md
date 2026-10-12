@@ -11,11 +11,11 @@ keywords:
 
 # First step
 
-[Use crc](#/api/functions/crc) and [visit CRC](https://crc.dev).
+[Use pibbl](#/api/functions/pibbl) and [visit Pibbl](https://pibbl.dev).
 
-| Name | Value  |
-| ---- | ------ |
-| CRC  | Canvas |
+| Name  | Value  |
+| ----- | ------ |
+| Pibbl | Canvas |
 
 # First step
 

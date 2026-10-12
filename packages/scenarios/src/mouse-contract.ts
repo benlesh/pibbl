@@ -1,41 +1,113 @@
 import type { TraceEventType } from './event-trace';
 
+/**
+ * An expected semantic mouse event in a deterministic contract trace.
+ *
+ * @see {@link TraceEventType}
+ * @see {@link formatContractTrace}
+ * @see {@link MouseContractCase}
+ */
 export interface MouseContractTraceEvent {
+  /** Type recorded or configured by this scenario. See {@link TraceEventType}. */
   type: TraceEventType;
+  /** Target recorded or configured by this scenario. See {@link MouseContractTraceEvent}. */
   target: string;
+  /**
+   * Logical related target recorded or configured by this scenario. See
+   * {@link MouseContractTraceEvent}.
+   */
   logicalRelatedTarget: string | null;
 }
 
+/**
+ * The capture, target, and bubble ordering policy expected by a mouse fixture.
+ *
+ * @see {@link formatOrderingPolicy}
+ * @see {@link MouseContractCase}
+ */
 export type MouseContractOrderingPolicy =
-  | { kind: 'fixed' }
   | {
-    kind: 'browser-dependent';
-    referenceEnvironment: string;
-  };
+      /** Kind recorded or configured by this scenario. See {@link MouseContractOrderingPolicy}. */
+      kind: 'fixed';
+    }
+  | {
+      /** Kind recorded or configured by this scenario. See {@link MouseContractOrderingPolicy}. */
+      kind: 'browser-dependent';
+      /**
+       * Reference environment recorded or configured by this scenario. See
+       * {@link MouseContractOrderingPolicy}.
+       */
+      referenceEnvironment: string;
+    };
 
+/**
+ * Expected logical targeting behavior for a mouse-contract fixture.
+ *
+ * @see {@link MouseContractCase}
+ */
 export interface MouseContractTargeting {
-  candidatePolicy: 'any-mouse-handler-or-cursor' | 'canvas-wide-observer';
-  identityPolicy: 'stable-logical-region' | 'not-applicable';
+  /**
+   * Candidate policy recorded or configured by this scenario. See {@link MouseContractTargeting}.
+   */
+  candidatePolicy: 'any-mouse-handler-or-cursor';
+  /**
+   * Identity policy recorded or configured by this scenario. See {@link MouseContractTargeting}.
+   */
+  identityPolicy: 'stable-logical-region';
+  /** Candidates recorded or configured by this scenario. See {@link MouseContractTargeting}. */
   candidates: readonly string[];
 }
 
+/**
+ * A logical probe location used to exercise a mouse-contract fixture.
+ *
+ * @see {@link MouseContractCase}
+ */
 export interface MouseContractVisualProbe {
+  /** X recorded or configured by this scenario. See {@link MouseContractVisualProbe}. */
   x: number;
+  /** Y recorded or configured by this scenario. See {@link MouseContractVisualProbe}. */
   y: number;
+  /**
+   * Expected target recorded or configured by this scenario. See {@link MouseContractVisualProbe}
+   * .
+   */
   expectedTarget: string | null;
 }
 
+/**
+ * A deterministic targeting and event-order fixture with expected trace and visual probes.
+ *
+ * @see {@link MouseContractTraceEvent}
+ * @see {@link MouseContractOrderingPolicy}
+ * @see {@link MouseContractTargeting}
+ * @see {@link MouseContractVisualProbe}
+ * @see {@link getMouseContractCase}
+ * @see {@link MOUSE_CONTRACT_CASES}
+ * @see {@link validateMouseContractCases}
+ */
 export interface MouseContractCase {
+  /** Id recorded or configured by this scenario. See {@link MouseContractCase}. */
   id: string;
+  /** Title recorded or configured by this scenario. See {@link MouseContractCase}. */
   title: string;
+  /** Phase recorded or configured by this scenario. See {@link MouseContractCase}. */
   phase: 'reference-only' | 'tfc-04' | 'tfc-05';
+  /** Gesture recorded or configured by this scenario. See {@link MouseContractCase}. */
   gesture: string;
+  /** Native trace recorded or configured by this scenario. See {@link MouseContractTraceEvent}. */
   nativeTrace: readonly MouseContractTraceEvent[] | null;
-  crcTrace: readonly MouseContractTraceEvent[];
+  /** Pibbl trace recorded or configured by this scenario. See {@link MouseContractTraceEvent}. */
+  pibblTrace: readonly MouseContractTraceEvent[];
+  /** Ordering recorded or configured by this scenario. See {@link MouseContractOrderingPolicy}. */
   ordering: MouseContractOrderingPolicy;
+  /** Targeting recorded or configured by this scenario. See {@link MouseContractTargeting}. */
   targeting: MouseContractTargeting;
+  /** Rule recorded or configured by this scenario. See {@link MouseContractCase}. */
   rule: string;
+  /** Visual target recorded or configured by this scenario. See {@link MouseContractCase}. */
   visualTarget: 'a' | 'b' | 'canvas-root' | 'child' | 'layer' | 'none' | 'top';
+  /** Visual probe recorded or configured by this scenario. See {@link MouseContractVisualProbe}. */
   visualProbe: MouseContractVisualProbe;
 }
 
@@ -51,15 +123,10 @@ function event(
   return { type, target, logicalRelatedTarget };
 }
 
-function targeting(
-  candidates: readonly string[],
-  candidatePolicy: MouseContractTargeting['candidatePolicy'] = 'any-mouse-handler-or-cursor',
-): MouseContractTargeting {
+function targeting(candidates: readonly string[]): MouseContractTargeting {
   return {
-    candidatePolicy,
-    identityPolicy: candidatePolicy === 'canvas-wide-observer' ?
-      'not-applicable' :
-      'stable-logical-region',
+    candidatePolicy: 'any-mouse-handler-or-cursor',
+    identityPolicy: 'stable-logical-region',
     candidates,
   };
 }
@@ -70,7 +137,7 @@ const CONTRACT_CASES = [
     title: 'Enter a region',
     gesture: 'Move from Canvas background into A.',
     nativeTrace: [event('mouseover', 'a', 'canvas-background'), event('mousemove', 'a')],
-    crcTrace: [event('mouseover', 'a', 'canvas-background'), event('mousemove', 'a')],
+    pibblTrace: [event('mouseover', 'a', 'canvas-background'), event('mousemove', 'a')],
     ordering: FIXED_ORDERING,
     targeting: targeting(['a']),
     rule: 'Resolve one logical target; report entry before movement.',
@@ -82,7 +149,7 @@ const CONTRACT_CASES = [
     title: 'Move within a region',
     gesture: 'Move from one point in A to another point in A.',
     nativeTrace: [event('mousemove', 'a')],
-    crcTrace: [event('mousemove', 'a')],
+    pibblTrace: [event('mousemove', 'a')],
     ordering: FIXED_ORDERING,
     targeting: targeting(['a']),
     rule: 'A stable logical target receives movement without another boundary event.',
@@ -98,7 +165,7 @@ const CONTRACT_CASES = [
       event('mouseover', 'b', 'a'),
       event('mousemove', 'b'),
     ],
-    crcTrace: [
+    pibblTrace: [
       event('mouseout', 'a', 'b'),
       event('mouseover', 'b', 'a'),
       event('mousemove', 'b'),
@@ -114,7 +181,7 @@ const CONTRACT_CASES = [
     title: 'Leave a region for Canvas background',
     gesture: 'Move from A to a non-interactive point inside the root Canvas.',
     nativeTrace: [event('mouseout', 'a', 'canvas-background')],
-    crcTrace: [event('mouseout', 'a', 'canvas-background')],
+    pibblTrace: [event('mouseout', 'a', 'canvas-background')],
     ordering: FIXED_ORDERING,
     targeting: targeting(['a']),
     rule: 'Clear the logical region target while the pointer remains inside the Canvas.',
@@ -126,7 +193,7 @@ const CONTRACT_CASES = [
     title: 'Exit the root Canvas',
     gesture: 'Move from A beyond the root Canvas boundary.',
     nativeTrace: [event('mouseout', 'a', 'outside-root')],
-    crcTrace: [event('mouseout', 'a', 'outside-root')],
+    pibblTrace: [event('mouseout', 'a', 'outside-root')],
     ordering: FIXED_ORDERING,
     targeting: targeting(['a']),
     rule: 'Clear the logical target and report one exit when the native pointer leaves the Canvas.',
@@ -138,7 +205,7 @@ const CONTRACT_CASES = [
     title: 'Overlapping siblings',
     gesture: 'Enter a point painted by A and later-painted B.',
     nativeTrace: [event('mouseover', 'top', 'canvas-background'), event('mousemove', 'top')],
-    crcTrace: [event('mouseover', 'top', 'canvas-background'), event('mousemove', 'top')],
+    pibblTrace: [event('mouseover', 'top', 'canvas-background'), event('mousemove', 'top')],
     ordering: FIXED_ORDERING,
     targeting: targeting(['a', 'top']),
     rule: 'Only the topmost interactive hit in reverse paint order is the logical target.',
@@ -150,10 +217,10 @@ const CONTRACT_CASES = [
     title: 'Nested group child',
     gesture: 'Enter an interactive child inside a transformed group.',
     nativeTrace: [event('mouseover', 'child', 'canvas-background'), event('mousemove', 'child')],
-    crcTrace: [event('mouseover', 'child', 'canvas-background'), event('mousemove', 'child')],
+    pibblTrace: [event('mouseover', 'child', 'canvas-background'), event('mousemove', 'child')],
     ordering: FIXED_ORDERING,
     targeting: targeting(['child']),
-    rule: 'Target the deepest painted child only; CRC does not synthesize DOM propagation.',
+    rule: 'Target the deepest painted child only; Pibbl does not synthesize DOM propagation.',
     visualTarget: 'child',
     visualProbe: { x: 184, y: 132, expectedTarget: 'child' },
   },
@@ -162,7 +229,7 @@ const CONTRACT_CASES = [
     title: 'Nested clip miss',
     gesture: 'Move inside the path but outside one active ancestor clip.',
     nativeTrace: null,
-    crcTrace: [],
+    pibblTrace: [],
     ordering: FIXED_ORDERING,
     targeting: targeting(['a']),
     rule: 'All active clips intersect; failing any clip excludes the candidate target.',
@@ -174,7 +241,7 @@ const CONTRACT_CASES = [
     title: 'Transformed geometry hit',
     gesture: 'Enter the visible location of a scaled and translated path.',
     nativeTrace: null,
-    crcTrace: [event('mouseover', 'a', 'canvas-background'), event('mousemove', 'a')],
+    pibblTrace: [event('mouseover', 'a', 'canvas-background'), event('mousemove', 'a')],
     ordering: FIXED_ORDERING,
     targeting: targeting(['a']),
     rule: 'Root coordinates stay in Canvas space while render transforms determine the hit.',
@@ -186,7 +253,7 @@ const CONTRACT_CASES = [
     title: 'Later layer wins',
     gesture: 'Enter overlap between a root region and a later-painted layer region.',
     nativeTrace: null,
-    crcTrace: [event('mouseover', 'layer', 'canvas-background'), event('mousemove', 'layer')],
+    pibblTrace: [event('mouseover', 'layer', 'canvas-background'), event('mousemove', 'layer')],
     ordering: FIXED_ORDERING,
     targeting: targeting(['a', 'layer']),
     rule: 'Layer composition participates in reverse-paint-order target selection.',
@@ -198,7 +265,7 @@ const CONTRACT_CASES = [
     title: 'CSS-scaled Canvas coordinates',
     gesture: 'Interact at the CSS-scaled visual center of A.',
     nativeTrace: null,
-    crcTrace: [event('mousemove', 'a')],
+    pibblTrace: [event('mousemove', 'a')],
     ordering: FIXED_ORDERING,
     targeting: targeting(['a']),
     rule: 'Expose intrinsic Canvas coordinates while CSS scaling only changes client-space placement.',
@@ -210,7 +277,7 @@ const CONTRACT_CASES = [
     title: 'Filled path hit',
     gesture: 'Enter the configured fill area of A.',
     nativeTrace: null,
-    crcTrace: [event('mouseover', 'a', 'canvas-background'), event('mousemove', 'a')],
+    pibblTrace: [event('mouseover', 'a', 'canvas-background'), event('mousemove', 'a')],
     ordering: FIXED_ORDERING,
     targeting: targeting(['a']),
     rule: 'A configured fill uses isPointInPath and emits entry before movement.',
@@ -222,7 +289,7 @@ const CONTRACT_CASES = [
     title: 'Stroked path hit',
     gesture: 'Enter the configured stroke interaction geometry of A.',
     nativeTrace: null,
-    crcTrace: [event('mouseover', 'a', 'canvas-background'), event('mousemove', 'a')],
+    pibblTrace: [event('mouseover', 'a', 'canvas-background'), event('mousemove', 'a')],
     ordering: FIXED_ORDERING,
     targeting: targeting(['a']),
     rule: 'A positive interaction stroke hits without requiring a fill.',
@@ -234,7 +301,7 @@ const CONTRACT_CASES = [
     title: 'Combined fill and stroke hit',
     gesture: 'Enter a path whose configured fill and stroke both contain the point.',
     nativeTrace: null,
-    crcTrace: [event('mouseover', 'a', 'canvas-background'), event('mousemove', 'a')],
+    pibblTrace: [event('mouseover', 'a', 'canvas-background'), event('mousemove', 'a')],
     ordering: FIXED_ORDERING,
     targeting: targeting(['a']),
     rule: 'Combined fill and stroke geometry still emits one entry before one movement.',
@@ -246,7 +313,7 @@ const CONTRACT_CASES = [
     title: 'Transparent configured fill hit',
     gesture: 'Enter a path whose configured fill is visually transparent.',
     nativeTrace: null,
-    crcTrace: [event('mouseover', 'a', 'canvas-background'), event('mousemove', 'a')],
+    pibblTrace: [event('mouseover', 'a', 'canvas-background'), event('mousemove', 'a')],
     ordering: FIXED_ORDERING,
     targeting: targeting(['a']),
     rule: 'Configured fill geometry remains interactive regardless of rendered opacity or alpha.',
@@ -258,7 +325,7 @@ const CONTRACT_CASES = [
     title: 'Expanded line interaction hit',
     gesture: 'Move near a thin painted line but inside its wider interaction stroke.',
     nativeTrace: null,
-    crcTrace: [event('mouseover', 'a', 'canvas-background'), event('mousemove', 'a')],
+    pibblTrace: [event('mouseover', 'a', 'canvas-background'), event('mousemove', 'a')],
     ordering: FIXED_ORDERING,
     targeting: targeting(['a']),
     rule: 'lineInteractionWidth expands hit geometry without changing painted stroke width.',
@@ -270,7 +337,7 @@ const CONTRACT_CASES = [
     title: 'Outside expanded line interaction',
     gesture: 'Move beyond both the painted and interaction strokes.',
     nativeTrace: null,
-    crcTrace: [],
+    pibblTrace: [],
     ordering: FIXED_ORDERING,
     targeting: targeting(['a']),
     rule: 'A candidate whose fill and interaction stroke both miss is pointer-transparent.',
@@ -278,23 +345,11 @@ const CONTRACT_CASES = [
     visualProbe: { x: 240, y: 164, expectedTarget: null },
   },
   {
-    id: 'root-event-no-path',
-    title: 'Canvas-wide observer without a path',
-    gesture: 'Move over Canvas background while a pathless useEvent observer is registered.',
-    nativeTrace: null,
-    crcTrace: [event('mousemove', 'canvas-wide-observer')],
-    ordering: FIXED_ORDERING,
-    targeting: targeting([], 'canvas-wide-observer'),
-    rule: 'Run after target-bound callbacks without participating in logical target or cursor selection.',
-    visualTarget: 'canvas-root',
-    visualProbe: { x: 430, y: 190, expectedTarget: null },
-  },
-  {
     id: 'primary-click-same-target',
     title: 'Primary click on one target',
     gesture: 'Press and release the primary button on A without leaving it.',
     nativeTrace: [event('mousedown', 'a'), event('mouseup', 'a'), event('click', 'a')],
-    crcTrace: [event('mousedown', 'a'), event('mouseup', 'a'), event('click', 'a')],
+    pibblTrace: [event('mousedown', 'a'), event('mouseup', 'a'), event('click', 'a')],
     ordering: FIXED_ORDERING,
     targeting: targeting(['a']),
     rule: 'Activation requires the same still-live logical target for down and up.',
@@ -313,7 +368,7 @@ const CONTRACT_CASES = [
       event('mouseup', 'b'),
       event('click', 'common-ancestor'),
     ],
-    crcTrace: [
+    pibblTrace: [
       event('mousedown', 'a'),
       event('mouseout', 'a', 'b'),
       event('mouseover', 'b', 'a'),
@@ -322,7 +377,7 @@ const CONTRACT_CASES = [
     ],
     ordering: FIXED_ORDERING,
     targeting: targeting(['a', 'b']),
-    rule: 'CRC has no ancestor propagation target, so sibling down/up produces no region click.',
+    rule: 'Pibbl has no ancestor propagation target, so sibling down/up produces no region click.',
     visualTarget: 'b',
     visualProbe: { x: 350, y: 152, expectedTarget: 'b' },
   },
@@ -338,7 +393,7 @@ const CONTRACT_CASES = [
       event('mouseup', 'a'),
       event('click', 'a'),
     ],
-    crcTrace: [
+    pibblTrace: [
       event('mousedown', 'a'),
       event('mouseout', 'a', 'canvas-background'),
       event('mouseover', 'a', 'canvas-background'),
@@ -365,7 +420,7 @@ const CONTRACT_CASES = [
       event('click', 'a'),
       event('dblclick', 'a'),
     ],
-    crcTrace: [
+    pibblTrace: [
       event('mousedown', 'a'),
       event('mouseup', 'a'),
       event('click', 'a'),
@@ -385,7 +440,7 @@ const CONTRACT_CASES = [
     title: 'Context menu',
     gesture: 'Invoke the secondary-button menu on B.',
     nativeTrace: [event('mousedown', 'b'), event('contextmenu', 'b'), event('mouseup', 'b')],
-    crcTrace: [event('mousedown', 'b'), event('contextmenu', 'b'), event('mouseup', 'b')],
+    pibblTrace: [event('mousedown', 'b'), event('contextmenu', 'b'), event('mouseup', 'b')],
     ordering: {
       kind: 'browser-dependent',
       referenceEnvironment: 'Chromium on macOS',
@@ -400,7 +455,7 @@ const CONTRACT_CASES = [
     title: 'Replace a handler during dispatch',
     gesture: 'A handler replaces itself while processing a logical movement event.',
     nativeTrace: null,
-    crcTrace: [event('mousemove', 'a')],
+    pibblTrace: [event('mousemove', 'a')],
     ordering: FIXED_ORDERING,
     targeting: targeting(['a']),
     rule: 'Snapshot listeners per logical event; the replacement becomes eligible on the next logical event.',
@@ -412,7 +467,7 @@ const CONTRACT_CASES = [
     title: 'Remove a handler during dispatch',
     gesture: 'An earlier handler removes a later listener before its turn.',
     nativeTrace: null,
-    crcTrace: [event('mousemove', 'a')],
+    pibblTrace: [event('mousemove', 'a')],
     ordering: FIXED_ORDERING,
     targeting: targeting(['a']),
     rule: 'Listener removal remains effective during a snapshot; skip the removed listener and continue others.',
@@ -424,7 +479,7 @@ const CONTRACT_CASES = [
     title: 'Remove the new target during a move plan',
     gesture: 'While leaving A for B, the mouseout handler removes B.',
     nativeTrace: null,
-    crcTrace: [event('mouseout', 'a', 'b')],
+    pibblTrace: [event('mouseout', 'a', 'b')],
     ordering: FIXED_ORDERING,
     targeting: targeting(['a', 'b']),
     rule: 'Skip planned entry and movement for a target removed before those logical events.',
@@ -436,7 +491,7 @@ const CONTRACT_CASES = [
     title: 'Remove the down target before release',
     gesture: 'Press A, remove its logical region, then release over the former location.',
     nativeTrace: [event('mousedown', 'a')],
-    crcTrace: [event('mousedown', 'a')],
+    pibblTrace: [event('mousedown', 'a')],
     ordering: FIXED_ORDERING,
     targeting: targeting(['a']),
     rule: 'A removed identity receives no later release or activation, and removal clears pending click state.',
@@ -448,7 +503,7 @@ const CONTRACT_CASES = [
     title: 'Thrown handler does not stop dispatch',
     gesture: 'The first handler for A throws while another planned handler remains.',
     nativeTrace: null,
-    crcTrace: [event('mousemove', 'a')],
+    pibblTrace: [event('mousemove', 'a')],
     ordering: FIXED_ORDERING,
     targeting: targeting(['a']),
     rule: 'Report the exception and continue the remaining listeners in the current logical event.',
@@ -469,7 +524,6 @@ const REQUIRED_CASE_IDS = [
   'transparent-fill-hit',
   'line-interaction-width-hit',
   'line-interaction-width-miss',
-  'root-event-no-path',
   'replace-handler-during-dispatch',
   'remove-handler-during-dispatch',
   'remove-target-during-move-plan',
@@ -500,6 +554,14 @@ function assignContractPhases<const Cases extends readonly MouseContractCaseInpu
   }));
 }
 
+/**
+ * Validates deterministic mouse-contract fixtures and returns the typed case collection.
+ *
+ * @param cases - Contract cases whose identifiers and metadata should be validated.
+ * @returns The supplied cases after successful validation.
+ *
+ * @see {@link MouseContractCase}
+ */
 export function validateMouseContractCases<const Cases extends readonly MouseContractCase[]>(
   cases: Cases,
 ): Cases {
@@ -515,20 +577,8 @@ export function validateMouseContractCases<const Cases extends readonly MouseCon
       throw new Error(`Mouse contract case "${contractCase.id}" has an invalid phase.`);
     }
 
-    if (
-      !contractCase.targeting.candidates.length &&
-      contractCase.targeting.candidatePolicy !== 'canvas-wide-observer'
-    ) {
+    if (!contractCase.targeting.candidates.length) {
       throw new Error(`Mouse contract case "${contractCase.id}" needs at least one candidate target.`);
-    }
-    if (
-      contractCase.targeting.candidatePolicy === 'canvas-wide-observer' &&
-      (
-        contractCase.targeting.candidates.length ||
-        contractCase.targeting.identityPolicy !== 'not-applicable'
-      )
-    ) {
-      throw new Error(`Mouse contract case "${contractCase.id}" models an observer as a target.`);
     }
     if (new Set(contractCase.targeting.candidates).size !== contractCase.targeting.candidates.length) {
       throw new Error(`Mouse contract case "${contractCase.id}" has duplicate candidate targets.`);
@@ -546,7 +596,7 @@ export function validateMouseContractCases<const Cases extends readonly MouseCon
       throw new Error(`Mouse contract case "${contractCase.id}" needs a reference environment.`);
     }
 
-    for (const trace of [contractCase.nativeTrace, contractCase.crcTrace]) {
+    for (const trace of [contractCase.nativeTrace, contractCase.pibblTrace]) {
       if (trace === null) {
         continue;
       }
@@ -571,7 +621,7 @@ export function validateMouseContractCases<const Cases extends readonly MouseCon
   }
 
   const reentry = cases.find(contractCase => contractCase.id === 'primary-click-reentry');
-  if (!reentry?.crcTrace.some(traceEvent => traceEvent.type === 'click')) {
+  if (!reentry?.pibblTrace.some(traceEvent => traceEvent.type === 'click')) {
     throw new Error('Mouse contract re-entry must preserve the measured Chromium click reference.');
   }
   const contextMenu = cases.find(contractCase => contractCase.id === 'context-menu');
@@ -582,14 +632,41 @@ export function validateMouseContractCases<const Cases extends readonly MouseCon
   return cases;
 }
 
+/**
+ * Validated deterministic fixtures for mouse targeting and event ordering.
+ *
+ * @see {@link MouseContractCase}
+ */
 export const MOUSE_CONTRACT_CASES = validateMouseContractCases(assignContractPhases(CONTRACT_CASES));
 
+/**
+ * A stable identifier of a deterministic mouse-contract fixture.
+ *
+ * @see {@link MouseContractCase}
+ */
 export type MouseContractCaseId = (typeof MOUSE_CONTRACT_CASES)[number]['id'];
 
+/**
+ * Finds a mouse contract fixture by identifier, or returns undefined.
+ *
+ * @param id - Contract case identifier.
+ * @returns The matching case, or undefined when absent. See {@link MouseContractCase}.
+ *
+ * @see {@link MouseContractCase}
+ */
 export function getMouseContractCase(id: string): MouseContractCase | undefined {
   return MOUSE_CONTRACT_CASES.find(contractCase => contractCase.id === id);
 }
 
+/**
+ * Formats an expected mouse-event trace for inspection, including the absent-trace case.
+ *
+ * @param trace - Recorded events, or null when no trace is available. See
+ * {@link MouseContractTraceEvent} .
+ * @returns Human-readable event trace text.
+ *
+ * @see {@link MouseContractTraceEvent}
+ */
 export function formatContractTrace(trace: readonly MouseContractTraceEvent[] | null): string {
   if (trace === null) {
     return 'Canvas-specific';
@@ -602,6 +679,14 @@ export function formatContractTrace(trace: readonly MouseContractTraceEvent[] | 
   ).join(' → ');
 }
 
+/**
+ * Formats the ordering policy of a mouse-event contract case.
+ *
+ * @param ordering - Expected event ordering policy. See {@link MouseContractOrderingPolicy}.
+ * @returns Human-readable text describing the ordering policy.
+ *
+ * @see {@link MouseContractOrderingPolicy}
+ */
 export function formatOrderingPolicy(ordering: MouseContractOrderingPolicy): string {
   return ordering.kind === 'fixed' ?
     'Fixed contract order' :

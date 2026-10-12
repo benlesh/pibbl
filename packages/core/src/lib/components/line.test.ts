@@ -1,6 +1,6 @@
 import { page } from 'vitest/browser';
 import { describe, expect, it, vi } from 'vitest';
-import { crc } from '../crc';
+import { pibbl } from '../pibbl';
 import { componentTest } from '../test-utils/component-test';
 import { takeScreenshot } from '../util/test-utils';
 import { Group } from './g';
@@ -256,7 +256,7 @@ describe('line', () => {
   it('reports indexed non-finite coordinates as contextual diagnostics and accepts a later valid render', () => {
     const originalRequestAnimationFrame = window.requestAnimationFrame;
     let pending: FrameRequestCallback | undefined;
-    let controller: ReturnType<typeof crc> | undefined;
+    let controller: ReturnType<typeof pibbl> | undefined;
     window.requestAnimationFrame = callback => {
       pending = callback;
       return 1;
@@ -265,7 +265,7 @@ describe('line', () => {
     document.body.appendChild(canvas);
 
     try {
-      controller = crc(canvas, createElement(Line, {
+      controller = pibbl(canvas, createElement(Line, {
         style: { coords: [[0, 0], [Number.NaN, 1]] },
       }));
       let failure: unknown;
@@ -279,7 +279,7 @@ describe('line', () => {
         message: expect.stringMatching(/Line: property coords\[1\]\[0\]/),
       });
 
-      controller = crc(canvas, createElement(Line, {
+      controller = pibbl(canvas, createElement(Line, {
         style: { coords: [[0, 0], [20, 0]], stroke: 'black', strokeWidth: 4 },
       }));
       expect(() => pending?.(0)).not.toThrow();

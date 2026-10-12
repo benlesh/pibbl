@@ -1,6 +1,6 @@
 # Migrating to JSX-era authoring
 
-CRC made an intentionally breaking authoring pivot before release. The old
+Pibbl made an intentionally breaking authoring pivot before release. The old
 factory-first values, wrapper, element aliases, focus enhancer functions, and
 structural props were removed. There are no deprecated compatibility exports
 or runtime aliases: migrate every construction site in one change.
@@ -9,38 +9,38 @@ or runtime aliases: migrate every construction site in one change.
 
 Every old form below has its current replacement on the same row.
 
-| Removed form                                 | Current form                                                                      |
-| -------------------------------------------- | --------------------------------------------------------------------------------- |
-| `defineComp(function Card() {})`             | `function Card() {}`                                                              |
-| `rect({ style })`                            | `<Rectangle style={style} />` or `createElement(Rectangle, { style })`            |
-| `path({ style })`                            | `<Path style={style} />` or `createElement(Path, { style })`                      |
-| `svgPath({ style })`                         | `<SvgPath style={style} />` or `createElement(SvgPath, { style })`                |
-| `line({ style })`                            | `<Line style={style} />` or `createElement(Line, { style })`                      |
-| `horizontalLine({ style })`                  | `<HorizontalLine style={style} />`                                                |
-| `verticalLine({ style })`                    | `<VerticalLine style={style} />`                                                  |
-| `text({ style: { text: value, ...style } })` | `<Text style={style}>{value}</Text>`                                              |
-| `TextStyle.text`                             | `Text` children typed as `CRCTextChild`                                           |
-| `img({ style })`                             | `<Image style={style} />`                                                         |
-| `g({ style, children })`                     | `<Group style={style}>{children}</Group>`                                         |
-| `clip({ style, children })`                  | `<Clip style={style}>{children}</Clip>`                                           |
-| `layer({ style, render })`                   | `<Layer style={style}>{children}</Layer>`                                         |
-| `absolute({ style, children })`              | `<Absolute style={style}>{children}</Absolute>`                                   |
-| `overlay({ style, children })`               | `<Overlay style={style}>{children}</Overlay>`                                     |
-| `flow({ style, children })`                  | `<Flow style={style}>{children}</Flow>`                                           |
-| `flex({ style, children })`                  | `<Flex style={style}>{children}</Flex>`                                           |
-| `grid({ style, children })`                  | `<Grid style={style}>{children}</Grid>`                                           |
-| `withFocusManagement(scene)`                 | `<FocusManagement>{scene}</FocusManagement>`                                      |
-| `withKeyboardNavigation(scene, options)`     | `<KeyboardNavigation {...options}>{scene}</KeyboardNavigation>`                   |
-| `CompEl`                                     | `CRCElement`                                                                      |
-| `CompFn`                                     | `CRCComponent` or `PrimitiveRender`                                               |
-| `ComponentInput`                             | Component props or `PrimitiveInput`                                               |
-| `ComponentCapabilities`                      | `PrimitiveCapabilities`                                                           |
-| `FalsyNodes`                                 | `CRCEmptyNode`                                                                    |
-| `RectProps`                                  | `RectangleProps`                                                                  |
-| `ImgProps`                                   | `ImageProps`                                                                      |
-| `GProps`                                     | `GroupProps`                                                                      |
-| `CompRefs`                                   | No public structural replacement; use `CRCRef` for component-owned mutable values |
-| callable component factory                   | JSX or `createElement(Component, props)`                                          |
+| Removed form                                 | Current form                                                                        |
+| -------------------------------------------- | ----------------------------------------------------------------------------------- |
+| `defineComp(function Card() {})`             | `function Card() {}`                                                                |
+| `rect({ style })`                            | `<Rectangle style={style} />` or `createElement(Rectangle, { style })`              |
+| `path({ style })`                            | `<Path style={style} />` or `createElement(Path, { style })`                        |
+| `svgPath({ style })`                         | `<SvgPath style={style} />` or `createElement(SvgPath, { style })`                  |
+| `line({ style })`                            | `<Line style={style} />` or `createElement(Line, { style })`                        |
+| `horizontalLine({ style })`                  | `<HorizontalLine style={style} />`                                                  |
+| `verticalLine({ style })`                    | `<VerticalLine style={style} />`                                                    |
+| `text({ style: { text: value, ...style } })` | `<Text style={style}>{value}</Text>`                                                |
+| `TextStyle.text`                             | `Text` children typed as `PibblTextChild`                                           |
+| `img({ style })`                             | `<Image style={style} />`                                                           |
+| `g({ style, children })`                     | `<Group style={style}>{children}</Group>`                                           |
+| `clip({ style, children })`                  | `<Clip style={style}>{children}</Clip>`                                             |
+| `layer({ style, render })`                   | `<Layer style={style}>{children}</Layer>`                                           |
+| `absolute({ style, children })`              | `<Absolute style={style}>{children}</Absolute>`                                     |
+| `overlay({ style, children })`               | `<Overlay style={style}>{children}</Overlay>`                                       |
+| `flow({ style, children })`                  | `<Flow style={style}>{children}</Flow>`                                             |
+| `flex({ style, children })`                  | `<Flex style={style}>{children}</Flex>`                                             |
+| `grid({ style, children })`                  | `<Grid style={style}>{children}</Grid>`                                             |
+| `withFocusManagement(scene)`                 | `<FocusManagement>{scene}</FocusManagement>`                                        |
+| `withKeyboardNavigation(scene, options)`     | `<KeyboardNavigation {...options}>{scene}</KeyboardNavigation>`                     |
+| `CompEl`                                     | `PibblElement`                                                                      |
+| `CompFn`                                     | `PibblComponent` or `PrimitiveRender`                                               |
+| `ComponentInput`                             | Component props or `PrimitiveInput`                                                 |
+| `ComponentCapabilities`                      | `PrimitiveCapabilities`                                                             |
+| `FalsyNodes`                                 | `PibblEmptyNode`                                                                    |
+| `RectProps`                                  | `RectangleProps`                                                                    |
+| `ImgProps`                                   | `ImageProps`                                                                        |
+| `GProps`                                     | `GroupProps`                                                                        |
+| `CompRefs`                                   | No public structural replacement; use `PibblRef` for component-owned mutable values |
+| callable component factory                   | JSX or `createElement(Component, props)`                                            |
 
 Imported built-in values are now descriptive and uppercase. A direct call such
 as the removed factory shape is not supported; platform values intentionally
@@ -179,19 +179,19 @@ Set the automatic runtime:
 {
   "compilerOptions": {
     "jsx": "react-jsx",
-    "jsxImportSource": "@crc/core"
+    "jsxImportSource": "@pibbl/core"
   }
 }
 ```
 
-Or place `/** @jsxImportSource @crc/core */` before imports in an individual
-CRC file. CRC publishes `@crc/core/jsx-runtime` and
-`@crc/core/jsx-dev-runtime`; do not import compiler constructors from the root.
+Or place `/** @jsxImportSource @pibbl/core */` before imports in an individual
+Pibbl file. Pibbl publishes `@pibbl/core/jsx-runtime` and
+`@pibbl/core/jsx-dev-runtime`; do not import compiler constructors from the root.
 The package does not depend on React.
 
-One file has one JSX runtime. Split mixed React and CRC JSX into separate files
-or keep the dominant runtime's JSX and construct the minority CRC tree with
-`createElement as createCRCElement`.
+One file has one JSX runtime. Split mixed React and Pibbl JSX into separate files
+or keep the dominant runtime's JSX and construct the minority Pibbl tree with
+`createElement as createPibblElement`.
 
 ## Non-JSX migration
 
@@ -202,7 +202,7 @@ createElement(
   Group,
   null,
   createElement(Rectangle, { style: { width: 200, height: 100 } }),
-  createElement(Text, { style: { x: 20, y: 20 } }, "CRC"),
+  createElement(Text, { style: { x: 20, y: 20 } }, "Pibbl"),
 );
 ```
 

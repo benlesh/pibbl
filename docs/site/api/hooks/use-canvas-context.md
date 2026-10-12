@@ -12,12 +12,12 @@ relatedTypes: [Canvas, RenderingContext2D]
 # useCanvasContext
 
 ```ts
-import { useCanvasContext } from "@crc/core";
+import { useCanvasContext } from "@pibbl/core";
 ```
 
 `useCanvasContext()` returns [`RenderingContext2D`](#/api/types/canvas-runtime#renderingcontext2d) and is render-only: call it synchronously
-from a CRC component while it is rendering, never from pure measurement or an
-event callback. CRC isolates [`Canvas`](#/api/types/canvas-runtime#canvas) state around component traversal; do not
+from a Pibbl component while it is rendering, never from pure measurement or an
+event callback. Pibbl isolates [`Canvas`](#/api/types/canvas-runtime#canvas) state around component traversal; do not
 retain the context for later work.
 
 ```tsx

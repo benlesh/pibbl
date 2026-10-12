@@ -12,7 +12,7 @@ relatedTypes: [PixelGridAlignment, RoundedCornerPathOptions]
 # useRectPath
 
 ```ts
-import { useEvent, useRectPath, Path } from "@crc/core";
+import { useEventTarget, useRectPath, Path } from "@pibbl/core";
 ```
 
 `useRectPath(x, y, width, height, config?)` is render-only. It memoizes a
@@ -25,7 +25,7 @@ Its numeric rounding fields follow [`RoundedCornerPathOptions`](#/api/types/elem
 ```tsx
 function Button() {
   const path = useRectPath(0, 0, 140, 40, { cornerRadius: 8 });
-  useEvent("click", () => undefined, path, true);
+  useEventTarget({ onClick: () => undefined }, { path, fill: true });
   return <Path style={{ d: path, fill: "#2563eb" }} />;
 }
 ```

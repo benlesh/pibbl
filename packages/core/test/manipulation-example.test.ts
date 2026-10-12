@@ -1,8 +1,8 @@
 import { afterEach, expect, it, vi } from "vitest";
 import { commands } from "vitest/browser";
 import mountExample from "../../scenarios/src/learning/user-events/manipulation.example";
-import type { CRCController } from "@crc/core";
-let mounted: CRCController | undefined;
+import type { PibblController } from "@pibbl/core";
+let mounted: PibblController | undefined;
 afterEach(() => {
   mounted?.dispose();
   vi.restoreAllMocks();

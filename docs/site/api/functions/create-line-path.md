@@ -12,7 +12,7 @@ relatedTypes: [LinePathOptions]
 # createLinePath
 
 ```ts
-import { createLinePath, Path } from "@crc/core";
+import { createLinePath, Path } from "@pibbl/core";
 ```
 
 [`LinePathOptions`](#/api/types/elements-components#linepathoptions) is accepted by `createLinePath(options): Path2D`, which creates a fresh path from

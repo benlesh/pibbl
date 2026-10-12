@@ -1,4 +1,4 @@
-import { crc, useSignal, Polygon, Rectangle, type CRCController } from "@crc/core";
+import { pibbl, useSignal, Polygon, Rectangle, type PibblController } from "@pibbl/core";
 
 function PolygonStudy() {
   const active = useSignal(false);
@@ -27,6 +27,6 @@ function PolygonStudy() {
   ];
 }
 
-export default function mount(canvas: HTMLCanvasElement): CRCController {
-  return crc(canvas, <PolygonStudy />);
+export default function mount(canvas: HTMLCanvasElement): PibblController {
+  return pibbl(canvas, <PolygonStudy />);
 }

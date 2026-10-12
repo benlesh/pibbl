@@ -1,3 +1,4 @@
+import type { manipulationLabScenarioEntry } from './catalog.js';
 import {
   DragHandle,
   ManipulationFrame,
@@ -6,37 +7,68 @@ import {
   Text,
   signal,
   useManipulation,
-  type CRCManipulationCancelReason,
-  type CRCManipulationController,
-  type CRCNode,
+  type PibblManipulationCancelReason,
+  type PibblManipulationController,
+  type PibblNode,
   type WritableSignal,
-} from "@crc/core";
+} from "@pibbl/core";
 
 export const MANIPULATION_LAB_SOURCE_ID = "component-manipulation-laboratory-example";
 
+/**
+ * Actions supported by the manipulation lab scenario's public controller.
+ *
+ * @see {@link ManipulationLabState}
+ */
 export type ManipulationLabAction =
   | "toggle-snap"
   | "cancel"
   | "external-write"
   | "reset";
 
+/**
+ * Observable state exposed by the manipulation lab scenario for controls and assertions.
+ *
+ * @see {@link PibblManipulationCancelReason}
+ * @see {@link ManipulationLabAction}
+ * @see {@link manipulationLabScenarioEntry}
+ */
 export interface ManipulationLabState {
-  readonly box: Readonly<{ left: number; top: number; width: number; height: number }>;
+  /** Box recorded or configured by this scenario. See {@link ManipulationLabState}. */
+  readonly box: Readonly<{
+    /** Left recorded or configured by this scenario. See {@link ManipulationLabState}. */
+    left: number;
+    /** Top recorded or configured by this scenario. See {@link ManipulationLabState}. */
+    top: number;
+    /** Width recorded or configured by this scenario. See {@link ManipulationLabState}. */
+    width: number;
+    /** Height recorded or configured by this scenario. See {@link ManipulationLabState}. */
+    height: number;
+  }>;
+  /** Snap enabled recorded or configured by this scenario. See {@link ManipulationLabState}. */
   readonly snapEnabled: boolean;
+  /** Active recorded or configured by this scenario. See {@link ManipulationLabState}. */
   readonly active: "idle" | "move" | "resize" | "rotate";
+  /** Changes recorded or configured by this scenario. See {@link ManipulationLabState}. */
   readonly changes: number;
+  /** Commits recorded or configured by this scenario. See {@link ManipulationLabState}. */
   readonly commits: number;
-  readonly cancellation: CRCManipulationCancelReason | null;
+  /**
+   * Cancellation recorded or configured by this scenario. See {@link PibblManipulationCancelReason}
+   * .
+   */
+  readonly cancellation: PibblManipulationCancelReason | null;
+  /** Last action recorded or configured by this scenario. See {@link ManipulationLabAction}. */
   readonly lastAction: "mount" | ManipulationLabAction;
 }
 
 export interface ManipulationLabModel {
   readonly box: WritableSignal<{ left: number; top: number; width: number; height: number }>;
   readonly snapEnabled: WritableSignal<boolean>;
-  control: CRCManipulationController | undefined;
+  control: PibblManipulationController | undefined;
   changes: number;
   commits: number;
-  cancellation: CRCManipulationCancelReason | null;
+  cancellation: PibblManipulationCancelReason | null;
   publish: (() => void) | undefined;
 }
 
@@ -52,7 +84,7 @@ export function createManipulationLabModel(): ManipulationLabModel {
   };
 }
 
-export function ManipulationLabRoot({ model }: { readonly model: ManipulationLabModel }): CRCNode {
+export function ManipulationLabRoot({ model }: { readonly model: ManipulationLabModel }): PibblNode {
   const control = useManipulation({
     box: model.box,
     move: { snap: { enabled: model.snapEnabled, step: 20 } },

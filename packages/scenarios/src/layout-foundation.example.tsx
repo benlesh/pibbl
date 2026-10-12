@@ -1,6 +1,6 @@
 import {
   Absolute,
-  crc,
+  pibbl,
   useLayoutBox,
   useSignal,
   Flex,
@@ -11,28 +11,58 @@ import {
   Rectangle,
   Text,
   type BoxStyle,
-  type CRCController,
-  type CRCNode,
+  type PibblController,
+  type PibblNode,
   type FlexItemStyle,
   type GridItemStyle,
   type OverlayStyle,
-} from '@crc/core';
+} from '@pibbl/core';
 import type { ScenarioDefinition } from './types';
 export const LAYOUT_FOUNDATION_SOURCE_ID = 'layout-foundation-example';
+/**
+ * Observable state exposed by the layout foundation scenario for controls and assertions.
+ *
+ * @see {@link LayoutFoundationMount}
+ */
 export interface LayoutFoundationState {
+  /** Top clicks recorded or configured by this scenario. See {@link LayoutFoundationState}. */
   topClicks: number;
+  /** Keyed clicks recorded or configured by this scenario. See {@link LayoutFoundationState}. */
   keyedClicks: number;
+  /** Clipped clicks recorded or configured by this scenario. See {@link LayoutFoundationState}. */
   clippedClicks: number;
+  /** Observed box recorded or configured by this scenario. See {@link LayoutFoundationState}. */
   observedBox?: Readonly<{
+    /** X recorded or configured by this scenario. See {@link LayoutFoundationState}. */
     x: number;
+    /** Y recorded or configured by this scenario. See {@link LayoutFoundationState}. */
     y: number;
+    /** Width recorded or configured by this scenario. See {@link LayoutFoundationState}. */
     width: number;
+    /** Height recorded or configured by this scenario. See {@link LayoutFoundationState}. */
     height: number;
   }>;
 }
+/**
+ * Controls and owned cleanup returned by the mounted layout-foundation example.
+ *
+ * @see {@link PibblController}
+ * @see {@link LayoutFoundationState}
+ * @see {@link mountLayoutFoundation}
+ */
 export interface LayoutFoundationMount {
-  readonly controller: CRCController;
+  /** Controller recorded or configured by this scenario. See {@link PibblController}. */
+  readonly controller: PibblController;
+  /**
+   * Reads the current public layout demonstration state. See {@link LayoutFoundationState}.
+   * @returns The example's current semantic state. See {@link LayoutFoundationState}.
+   */
   getState(): Readonly<LayoutFoundationState>;
+  /**
+   * Changes the demonstration's available layout dimensions. See {@link LayoutFoundationMount}.
+   * @param width - New logical canvas width.
+   * @param height - New logical canvas height.
+   */
   resize(width: number, height: number): void;
 }
 interface ProbeProps {
@@ -42,7 +72,7 @@ interface ProbeProps {
 interface ProbeStyle extends BoxStyle {
   fill: string;
 }
-function KeyedProbe({ state, style }: ProbeProps): CRCNode {
+function KeyedProbe({ state, style }: ProbeProps): PibblNode {
   const clicks = useSignal(0);
   const box = useLayoutBox();
   state.keyedClicks = clicks.get();
@@ -62,6 +92,15 @@ function KeyedProbe({ state, style }: ProbeProps): CRCNode {
 }
 const imageSource =
   'data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%2224%22%20height=%2224%22%3E%3Crect%20width=%2224%22%20height=%2224%22%20fill=%22%23f7c948%22/%3E%3C/svg%3E';
+/**
+ * Mounts the layout-foundation demonstration on a caller-owned canvas and returns its controls.
+ *
+ * @param canvas - Canvas on which to mount the layout example.
+ * @returns Controls for inspecting, resizing, and disposing the example. See
+ * {@link LayoutFoundationMount} .
+ *
+ * @see {@link LayoutFoundationMount}
+ */
 export function mountLayoutFoundation(
   canvas: HTMLCanvasElement,
 ): LayoutFoundationMount {
@@ -165,7 +204,7 @@ export function mountLayoutFoundation(
       </Flex>
     </Absolute>
   );
-  const controller = crc(canvas, createScene(), {
+  const controller = pibbl(canvas, createScene(), {
     viewport: 'responsive',
   });
   return {
@@ -176,7 +215,7 @@ export function mountLayoutFoundation(
     resize(width, height) {
       canvas.style.width = `${width}px`;
       canvas.style.height = `${height}px`;
-      crc(canvas, createScene());
+      pibbl(canvas, createScene());
     },
   };
 }

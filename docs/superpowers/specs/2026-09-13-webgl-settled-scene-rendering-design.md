@@ -10,7 +10,7 @@ Date: 2026-09-13
 
 ## Summary
 
-CRC will change `@crc/webgl` from primitive-at-a-time immediate drawing to a
+Pibbl will change `@pibbl/webgl` from primitive-at-a-time immediate drawing to a
 settled-scene renderer. One `WebGLLayer` is one declarative 3D scene. Its child
 components execute once to compose a frame-local description; only after the
 complete child tree succeeds does the WebGL backend settle that description,
@@ -122,7 +122,7 @@ would also make lights unlike other transformed scene objects.
 ### Rejected: retain a cross-frame scene graph
 
 A retained graph could support incremental object-level updates, but it would
-introduce a second identity and lifecycle system beside CRC's component tree.
+introduce a second identity and lifecycle system beside Pibbl's component tree.
 The existing whole-`WebGLLayer` cache already avoids work for clean scenes. A
 frame-local snapshot is enough to choose correct passes when a scene is dirty.
 
@@ -142,7 +142,7 @@ frame-local snapshot is enough to choose correct passes when a scene is dirty.
 ```
 
 Moving either object before or after a future light will not determine whether
-the light affects it. Component position continues to determine CRC identity,
+the light affects it. Component position continues to determine Pibbl identity,
 event ancestry, global focus order, and an exact source index used only where
 the 3D renderer needs a stable tie-breaker.
 
@@ -153,7 +153,7 @@ does not make cameras child nodes or add multiple views.
 
 ## Public surface changes
 
-The public values retained by `@crc/webgl` are:
+The public values retained by `@pibbl/webgl` are:
 
 - `WebGLLayer`;
 - `Group3D`;
@@ -165,11 +165,11 @@ The public values retained by `@crc/webgl` are:
 
 The public types retained are:
 
-- `CRCWebGLVector3`;
-- `CRCWebGLPerspectiveCamera`;
-- `CRCWebGLGeometryInput`;
-- `CRCWebGLGeometry`;
-- `CRCWebGLTransformStyle`;
+- `PibblWebGLVector3`;
+- `PibblWebGLPerspectiveCamera`;
+- `PibblWebGLGeometryInput`;
+- `PibblWebGLGeometry`;
+- `PibblWebGLTransformStyle`;
 - `WebGLLayerProps` and `WebGLLayerStyle`;
 - `Group3DProps` and `Group3DStyle`;
 - `MeshProps` and `MeshStyle`;
@@ -180,17 +180,17 @@ The following immediate-mode values and their dedicated public types are
 removed:
 
 - `defineWebGLPrimitive`;
-- `crcWebGLContext`;
-- `CRCWebGLContext`;
-- `CRCWebGLCameraSnapshot`;
-- `CRCWebGLHitCapability`;
-- `CRCWebGLPrimitiveCapabilities`;
-- `CRCWebGLPrimitiveHitInput`;
-- `CRCWebGLPrimitiveInput`;
-- `CRCWebGLPrimitiveRender`; and
-- `CRCWebGLProgramProps`.
+- `pibblWebGLContext`;
+- `PibblWebGLContext`;
+- `PibblWebGLCameraSnapshot`;
+- `PibblWebGLHitCapability`;
+- `PibblWebGLPrimitiveCapabilities`;
+- `PibblWebGLPrimitiveHitInput`;
+- `PibblWebGLPrimitiveInput`;
+- `PibblWebGLPrimitiveRender`; and
+- `PibblWebGLProgramProps`.
 
-An application-defined shape is an ordinary CRC component that returns
+An application-defined shape is an ordinary Pibbl component that returns
 `<Mesh geometry={geometry} />`. The package does not promise arbitrary shaders,
 GPU resources, decorative raw draws, or custom analytic hits after this change.
 No compatibility alias or legacy immediate mode is added.
@@ -259,7 +259,7 @@ without changing the lifecycle.
 Each mesh submission privately owns or snapshots:
 
 - component diagnostic name and JSX source when available;
-- immutable `CRCWebGLGeometry` identity;
+- immutable `PibblWebGLGeometry` identity;
 - an owned copy of the fully composed model matrix;
 - parsed unlit RGBA color after `style.opacity` multiplication;
 - monotonically increasing scene source index;
@@ -405,7 +405,7 @@ failure, Canvas-composite failure, context loss, component removal, or disposal
 cannot leave a committed picker referring to a different visible generation.
 
 Geometry-backed focus projection uses the settled geometry/model/camera
-snapshot. Global Tab order remains CRC component source order, even though the
+snapshot. Global Tab order remains Pibbl component source order, even though the
 raster renderer groups opaque and transparent queues. Raster sorting never
 reorders component identity, event ancestry, focus order, or pick source
 indices.
@@ -431,7 +431,7 @@ the backend:
 - publishes no completed frame.
 
 A preexisting committed bitmap/pick pair is never overwritten by a partial
-candidate. CRC's broader fail-closed render contract still applies: an error
+candidate. Pibbl's broader fail-closed render contract still applies: an error
 propagating through the root tears down runtime-owned component resources and
 may consequently release that prior committed pair. Pixels already composited
 earlier in the failing Canvas frame are not rolled back.
@@ -487,7 +487,7 @@ Context loss:
 - marks the layer for reconstruction.
 
 Restoration creates a new context-generation renderer/cache on the next
-ordinary scheduled frame. CRC component state and immutable geometry
+ordinary scheduled frame. Pibbl component state and immutable geometry
 descriptors remain the CPU source of truth. Nothing becomes visible or
 interactive until a complete new scene render, bitmap transfer, and parent
 composition commit.
@@ -514,7 +514,7 @@ The existing `render-environment.ts` responsibilities are split accordingly.
 It must no longer combine public GL context, model traversal, pick registration,
 component resource hooks, and frame state in one mutable object.
 
-Core's `CRCBackendDriver` lifecycle does not need a preliminary traversal or a
+Core's `PibblBackendDriver` lifecycle does not need a preliminary traversal or a
 new public API. Any small friend-seam adjustment must remain backend-neutral and
 must not change Canvas 2D behavior.
 
@@ -598,10 +598,10 @@ Deterministic counters and injected failures cover:
 
 The change updates and verifies:
 
-- `@crc/webgl` root runtime exports and declarations;
+- `@pibbl/webgl` root runtime exports and declarations;
 - removal of all raw primitive/context exports;
 - Bundler and NodeNext consumers;
-- packed tarball consumers and one shared `@crc/core` identity;
+- packed tarball consumers and one shared `@pibbl/core` identity;
 - Studio editor declarations and runtime export inventory;
 - source and built Studio modes;
 - Chromium WebGL2 browser scenarios and visual baselines;

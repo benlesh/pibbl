@@ -2,10 +2,10 @@ import { getSignalNode, isSignal } from '../signals/graph.js';
 import type { WritableSignal } from '../signals/types.js';
 import { getDefinitionRecord } from './definition.js';
 import type {
-  CRCAnimationDefinition,
-  CRCAnimationProgram,
-  CRCAnimationRepeatDirection,
-  CRCAnimationRepeatOptions,
+  PibblAnimationDefinition,
+  PibblAnimationProgram,
+  PibblAnimationRepeatDirection,
+  PibblAnimationRepeatOptions,
 } from './types.js';
 
 export type ProgramDuration =
@@ -41,7 +41,7 @@ interface WriterSchedule {
 
 interface BaseProgramRecord {
   readonly kind: 'track' | 'sequence' | 'parallel' | 'wait' | 'marker' | 'repeat';
-  readonly children: readonly CRCAnimationProgram[];
+  readonly children: readonly PibblAnimationProgram[];
   readonly duration: ProgramDuration;
   readonly hasReachableWork: boolean;
   readonly outputs: readonly WritableSignal<unknown>[];
@@ -52,7 +52,7 @@ interface BaseProgramRecord {
 export interface TrackProgramRecord extends BaseProgramRecord {
   readonly kind: 'track';
   readonly output: WritableSignal<unknown>;
-  readonly definition: CRCAnimationDefinition<unknown>;
+  readonly definition: PibblAnimationDefinition<unknown>;
 }
 
 export interface SequenceProgramRecord extends BaseProgramRecord {
@@ -75,7 +75,7 @@ export interface MarkerProgramRecord extends BaseProgramRecord {
 export interface RepeatProgramRecord extends BaseProgramRecord {
   readonly kind: 'repeat';
   readonly iterations: number;
-  readonly direction: CRCAnimationRepeatDirection;
+  readonly direction: PibblAnimationRepeatDirection;
 }
 
 export type ProgramRecord =
@@ -86,10 +86,10 @@ export type ProgramRecord =
   | MarkerProgramRecord
   | RepeatProgramRecord;
 
-const programRecords = new WeakMap<CRCAnimationProgram, ProgramRecord>();
-const exactSeekableDurations = new WeakMap<CRCAnimationProgram, number | undefined>();
+const programRecords = new WeakMap<PibblAnimationProgram, ProgramRecord>();
+const exactSeekableDurations = new WeakMap<PibblAnimationProgram, number | undefined>();
 const activationDependentWriterOutputs = new WeakMap<
-  CRCAnimationProgram,
+  PibblAnimationProgram,
   ReadonlySet<WritableSignal<unknown>>
 >();
 
@@ -135,8 +135,8 @@ function outputsFor(schedules: readonly WriterSchedule[]): readonly WritableSign
   return Object.freeze(outputs);
 }
 
-function createProgram<T extends ProgramRecord>(record: T): CRCAnimationProgram {
-  const program = Object.freeze({}) as CRCAnimationProgram;
+function createProgram<T extends ProgramRecord>(record: T): PibblAnimationProgram {
+  const program = Object.freeze({}) as PibblAnimationProgram;
   programRecords.set(program, Object.freeze(record) as ProgramRecord);
   return program;
 }
@@ -145,7 +145,7 @@ function programLabel(path: readonly number[]): string {
   return `[${path.join(', ')}]`;
 }
 
-function definitionDuration(definition: CRCAnimationDefinition<unknown>): ProgramDuration {
+function definitionDuration(definition: PibblAnimationDefinition<unknown>): ProgramDuration {
   const record = getDefinitionRecord(definition);
   if (record.kind !== 'stepper') return finite(record.duration);
   return record.done === undefined ? infinite : unresolved;
@@ -725,7 +725,10 @@ function validateRepeatSchedules(
     for (const second of schedules) {
       if (first.span.output !== second.span.output) continue;
       const secondRange = scheduleRange(second);
-      if (firstRange.end >= period + secondRange.start) {
+      // Iterations are sequential: touching endpoints have source-order precedence.
+      // Zero-duration repeated writers retain the existing ambiguity guard.
+      if (firstRange.end > period + secondRange.start ||
+        (period === 0 && firstRange.end === period + secondRange.start)) {
         throwWriterConflict(first, second);
       }
     }
@@ -739,7 +742,7 @@ function sequenceDuration(records: readonly ProgramRecord[]): ProgramDuration {
     if (duration.kind === 'finite') {
       milliseconds += duration.milliseconds;
       if (!Number.isFinite(milliseconds)) {
-        throw new RangeError('CRC animation program duration must be finite and representable.');
+        throw new RangeError('Pibbl animation program duration must be finite and representable.');
       }
       continue;
     }
@@ -762,13 +765,24 @@ function parallelDuration(records: readonly ProgramRecord[]): ProgramDuration {
   )));
 }
 
-/** Binds one animation definition to one writable signal. */
-export function track<T>(
+/**
+ * Binds one animation definition to one writable signal.
+ *
+ * @param output - Writable signal that receives sampled values. See {@link WritableSignal}.
+ * @param definition - Animation definition to sample into the signal. See
+ * {@link PibblAnimationDefinition} .
+ * @returns A program that animates the supplied output signal. See {@link PibblAnimationProgram}.
+ *
+ * @see {@link WritableSignal}
+ * @see {@link PibblAnimationDefinition}
+ * @see {@link PibblAnimationProgram}
+ */
+export function drive<T>(
   output: WritableSignal<T>,
-  definition: CRCAnimationDefinition<T>,
-): CRCAnimationProgram {
+  definition: PibblAnimationDefinition<T>,
+): PibblAnimationProgram {
   const writableOutput = assertWritableSignal(output);
-  const normalizedDefinition = definition as CRCAnimationDefinition<unknown>;
+  const normalizedDefinition = definition as PibblAnimationDefinition<unknown>;
   const duration = definitionDuration(normalizedDefinition);
   const end = duration.kind === 'finite' ? duration.milliseconds : Number.POSITIVE_INFINITY;
   const schedule = freezeSchedule(freezeSpan(writableOutput, 0, end, []));
@@ -785,8 +799,16 @@ export function track<T>(
   });
 }
 
-/** Activates children in source order. */
-export function sequence(...children: readonly CRCAnimationProgram[]): CRCAnimationProgram {
+/**
+ * Activates children in source order.
+ *
+ * @param children - Programs in execution order. See {@link PibblAnimationProgram}.
+ * @returns A program that runs each child after its predecessor completes. See
+ * {@link PibblAnimationProgram} .
+ *
+ * @see {@link PibblAnimationProgram}
+ */
+export function sequence(...children: readonly PibblAnimationProgram[]): PibblAnimationProgram {
   const records = children.map(getProgramRecord);
   const duration = sequenceDuration(records);
   let offset = 0;
@@ -808,8 +830,15 @@ export function sequence(...children: readonly CRCAnimationProgram[]): CRCAnimat
   });
 }
 
-/** Activates all children from one shared local origin. */
-export function parallel(...children: readonly CRCAnimationProgram[]): CRCAnimationProgram {
+/**
+ * Activates all children from one shared local origin.
+ *
+ * @param children - Programs to begin together. See {@link PibblAnimationProgram}.
+ * @returns A program whose children run concurrently. See {@link PibblAnimationProgram}.
+ *
+ * @see {@link PibblAnimationProgram}
+ */
+export function parallel(...children: readonly PibblAnimationProgram[]): PibblAnimationProgram {
   const records = children.map(getProgramRecord);
   validateParallelChildren(records);
   const schedules = Object.freeze(records.flatMap((record, index) =>
@@ -826,10 +855,17 @@ export function parallel(...children: readonly CRCAnimationProgram[]): CRCAnimat
   });
 }
 
-/** Adds finite nonnegative local time without writing an output. */
-export function wait(duration: number): CRCAnimationProgram {
+/**
+ * Adds finite nonnegative local time without writing an output.
+ *
+ * @param duration - Delay in milliseconds.
+ * @returns A program that advances time without writing a value. See {@link PibblAnimationProgram}.
+ *
+ * @see {@link PibblAnimationProgram}
+ */
+export function wait(duration: number): PibblAnimationProgram {
   if (!Number.isFinite(duration) || duration < 0) {
-    throw new RangeError('CRC animation wait duration must be finite and nonnegative.');
+    throw new RangeError('Pibbl animation wait duration must be finite and nonnegative.');
   }
   return createProgram({
     kind: 'wait',
@@ -842,10 +878,17 @@ export function wait(duration: number): CRCAnimationProgram {
   });
 }
 
-/** Queues one named playback milestone without invoking user code. */
-export function marker(name: string): CRCAnimationProgram {
+/**
+ * Queues one named playback milestone without invoking user code.
+ *
+ * @param name - Name delivered when playback reaches this milestone.
+ * @returns A zero-duration marker program. See {@link PibblAnimationProgram}.
+ *
+ * @see {@link PibblAnimationProgram}
+ */
+export function marker(name: string): PibblAnimationProgram {
   if (typeof name !== 'string' || name.length === 0) {
-    throw new TypeError('CRC animation marker name must be nonempty.');
+    throw new TypeError('Pibbl animation marker name must be nonempty.');
   }
   return createProgram({
     kind: 'marker',
@@ -859,21 +902,30 @@ export function marker(name: string): CRCAnimationProgram {
   });
 }
 
-/** Repeats one child a total number of iterations. */
+/**
+ * Repeats one child a total number of iterations.
+ *
+ * @param child - Program to repeat. See {@link PibblAnimationProgram}.
+ * @param options - Repeat count and repetition policy. See {@link PibblAnimationRepeatOptions}.
+ * @returns A program representing the requested repetitions. See {@link PibblAnimationProgram}.
+ *
+ * @see {@link PibblAnimationProgram}
+ * @see {@link PibblAnimationRepeatOptions}
+ */
 export function repeat(
-  child: CRCAnimationProgram,
-  options: Readonly<CRCAnimationRepeatOptions>,
-): CRCAnimationProgram {
+  child: PibblAnimationProgram,
+  options: Readonly<PibblAnimationRepeatOptions>,
+): PibblAnimationProgram {
   const childRecord = getProgramRecord(child);
   const iterations = options?.iterations;
   if (iterations !== Number.POSITIVE_INFINITY &&
     (!Number.isInteger(iterations) || (iterations as number) < 1)) {
-    throw new RangeError('CRC animation repeat iterations must be an integer >= 1 or positive infinity.');
+    throw new RangeError('Pibbl animation repeat iterations must be an integer >= 1 or positive infinity.');
   }
   const direction = options?.direction ?? 'normal';
   if (direction !== 'normal' && direction !== 'reverse' &&
     direction !== 'alternate' && direction !== 'alternate-reverse') {
-    throw new TypeError('CRC animation repeat direction must be normal, reverse, alternate, or alternate-reverse.');
+    throw new TypeError('Pibbl animation repeat direction must be normal, reverse, alternate, or alternate-reverse.');
   }
   const duration = iterations === Number.POSITIVE_INFINITY ? infinite :
     childRecord.duration.kind === 'infinite' ? infinite :
@@ -908,15 +960,15 @@ export function repeat(
 function finiteProduct(milliseconds: number, iterations: number): ProgramDuration {
   const result = milliseconds * iterations;
   if (!Number.isFinite(result)) {
-    throw new RangeError('CRC animation program duration must be finite and representable.');
+    throw new RangeError('Pibbl animation program duration must be finite and representable.');
   }
   return finite(result);
 }
 
 /** @internal Returns the private immutable record associated with a program. */
-export function getProgramRecord(program: CRCAnimationProgram): ProgramRecord {
+export function getProgramRecord(program: PibblAnimationProgram): ProgramRecord {
   const record = programRecords.get(program);
-  if (record === undefined) throw new TypeError('Expected a CRC animation program.');
+  if (record === undefined) throw new TypeError('Expected a Pibbl animation program.');
   return record;
 }
 
@@ -926,7 +978,7 @@ export function getProgramRecord(program: CRCAnimationProgram): ProgramRecord {
  * means activation or Task 5 state is required.
  */
 export function getExactSeekableProgramDuration(
-  program: CRCAnimationProgram,
+  program: PibblAnimationProgram,
 ): number | undefined {
   if (exactSeekableDurations.has(program)) return exactSeekableDurations.get(program);
   const record = getProgramRecord(program);
@@ -994,7 +1046,7 @@ export function repeatResolvedWriterSchedules(
 }
 
 function dependentWriterOutputs(
-  program: CRCAnimationProgram,
+  program: PibblAnimationProgram,
 ): ReadonlySet<WritableSignal<unknown>> {
   const cached = activationDependentWriterOutputs.get(program);
   if (cached !== undefined) return cached;
@@ -1030,7 +1082,7 @@ function dependentWriterOutputs(
   return dependent;
 }
 
-function requiresActivationWriterSafetyAt(program: CRCAnimationProgram): boolean {
+function requiresActivationWriterSafetyAt(program: PibblAnimationProgram): boolean {
   const record = getProgramRecord(program);
   if (record.kind === 'parallel') {
     for (let firstIndex = 0; firstIndex < record.children.length; firstIndex++) {
@@ -1063,7 +1115,7 @@ function requiresActivationWriterSafetyAt(program: CRCAnimationProgram): boolean
  * the exact resolved proof against its private activation snapshot.
  */
 export function requiresProgramActivationWriterSafety(
-  program: CRCAnimationProgram,
+  program: PibblAnimationProgram,
 ): boolean {
   return requiresActivationWriterSafetyAt(program);
 }

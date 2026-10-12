@@ -12,7 +12,7 @@ relatedTypes: [HorizontalLineProps, HorizontalLineStyle]
 # HorizontalLine
 
 ```ts
-import { HorizontalLine } from "@crc/core";
+import { HorizontalLine } from "@pibbl/core";
 ```
 
 `HorizontalLine` uses [`HorizontalLineProps`](#/api/types/elements-components#horizontallineprops) and [`HorizontalLineStyle`](#/api/types/styles#horizontallinestyle). It

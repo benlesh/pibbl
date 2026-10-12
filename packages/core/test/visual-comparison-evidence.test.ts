@@ -53,7 +53,7 @@ it.each(['match', 'dimensions', 'masked', 'missing', 'decode'] as const)(
       if (kind === 'match') await comparison;
       else await expect(comparison).rejects.toThrow();
       const report = JSON.parse(await commands.readFile(`${prefix}.diff.png.json`, 'utf8'));
-      expect(report.schema).toBe('crc-visual-comparison/1');
+      expect(report.schema).toBe('pibbl-visual-comparison/1');
       expect(report.coordinateSpace).toBe('image-pixels');
       expect(report.capture.surface).toBe('browser-element-composition');
       expect(report.capture.renderGeneration).toBe('unknown');

@@ -6,12 +6,12 @@ import {
   snapToLattice,
 } from "./snap.js";
 import type {
-  CRCManipulationBox,
-  CRCManipulationMoveSnap,
-  CRCManipulationResizeOptions,
-  CRCManipulationResizeGridSnap,
-  CRCManipulationResizeSizeSnap,
-  CRCResizePosition,
+  PibblManipulationBox,
+  PibblManipulationMoveSnap,
+  PibblManipulationResizeOptions,
+  PibblManipulationResizeGridSnap,
+  PibblManipulationResizeSizeSnap,
+  PibblResizePosition,
   ManipulationSolveInput,
   ManipulationSolveResult,
 } from "./types.js";
@@ -195,7 +195,7 @@ function solveResize(input: ManipulationSolveInput): ManipulationSolveResult {
   let snapSatisfied = true;
   if (snapActive) {
     if (snap!.target === "grid") {
-      const grid = snap as CRCManipulationResizeGridSnap;
+      const grid = snap as PibblManipulationResizeGridSnap;
       const [stepX, stepY] = gridSteps(grid);
       snapSatisfied =
         (!changesWidth ||
@@ -214,7 +214,7 @@ function solveResize(input: ManipulationSolveInput): ManipulationSolveResult {
           ));
     } else {
       const [stepWidth, stepHeight] = sizeSteps(
-        snap as CRCManipulationResizeSizeSnap,
+        snap as PibblManipulationResizeSizeSnap,
       );
       snapSatisfied =
         (!(changesWidth || ratio !== undefined) ||
@@ -252,10 +252,10 @@ function solveRotation(input: ManipulationSolveInput): ManipulationSolveResult {
 }
 
 function resizeFromPoint(
-  initial: CRCManipulationBox,
-  handle: CRCResizePosition,
+  initial: PibblManipulationBox,
+  handle: PibblResizePosition,
   delta: Readonly<{ x: number; y: number }>,
-): CRCManipulationBox {
+): PibblManipulationBox {
   const movesLeft = handle.includes("left");
   const movesRight = handle.includes("right");
   const movesTop = handle.includes("top");
@@ -271,11 +271,11 @@ function resizeFromPoint(
 }
 
 function resizeFromDimensions(
-  initial: CRCManipulationBox,
-  handle: CRCResizePosition,
+  initial: PibblManipulationBox,
+  handle: PibblResizePosition,
   width: number,
   height: number,
-): CRCManipulationBox {
+): PibblManipulationBox {
   return freezeBox({
     left: handle.includes("left")
       ? initial.left + initial.width - width
@@ -289,11 +289,11 @@ function resizeFromDimensions(
 }
 
 function snapResize(
-  initial: CRCManipulationBox,
-  proposed: CRCManipulationBox,
-  handle: CRCResizePosition,
-  snap: CRCManipulationResizeSizeSnap | CRCManipulationResizeGridSnap,
-): CRCManipulationBox {
+  initial: PibblManipulationBox,
+  proposed: PibblManipulationBox,
+  handle: PibblResizePosition,
+  snap: PibblManipulationResizeSizeSnap | PibblManipulationResizeGridSnap,
+): PibblManipulationBox {
   if (snap.target === "grid") {
     const [stepX, stepY] = gridSteps(snap);
     const origin = snap.origin;
@@ -328,14 +328,14 @@ function snapResize(
   );
 }
 
-function moveSteps(snap: CRCManipulationMoveSnap): readonly [number, number] {
+function moveSteps(snap: PibblManipulationMoveSnap): readonly [number, number] {
   return typeof snap.step === "number"
     ? [snap.step, snap.step]
     : [snap.step.x, snap.step.y];
 }
 
 function sizeSteps(
-  snap: CRCManipulationResizeSizeSnap,
+  snap: PibblManipulationResizeSizeSnap,
 ): readonly [number, number] {
   return typeof snap.step === "number"
     ? [snap.step, snap.step]
@@ -343,7 +343,7 @@ function sizeSteps(
 }
 
 function gridSteps(
-  snap: CRCManipulationResizeGridSnap,
+  snap: PibblManipulationResizeGridSnap,
 ): readonly [number, number] {
   return typeof snap.step === "number"
     ? [snap.step, snap.step]
@@ -351,7 +351,7 @@ function gridSteps(
 }
 
 function resolvedResizeConstraints(
-  options: CRCManipulationResizeOptions | undefined,
+  options: PibblManipulationResizeOptions | undefined,
 ): {
   minWidth: number;
   minHeight: number;
@@ -398,10 +398,10 @@ function clamp(value: number, min: number, max: number): number {
 }
 
 function clampMoveToBounds(
-  box: CRCManipulationBox,
-  bounds: CRCManipulationBox | undefined,
+  box: PibblManipulationBox,
+  bounds: PibblManipulationBox | undefined,
   rotation = 0,
-): CRCManipulationBox {
+): PibblManipulationBox {
   if (!bounds) return box;
   assertFiniteBox(bounds, "move.bounds");
   const corners = rotatedCorners(box, rotation);
@@ -422,8 +422,8 @@ function clampMoveToBounds(
 }
 
 function activeRatio(
-  initial: CRCManipulationBox,
-  options: CRCManipulationResizeOptions | undefined,
+  initial: PibblManipulationBox,
+  options: PibblManipulationResizeOptions | undefined,
   modifiers: ManipulationSolveInput["modifiers"],
 ): number | undefined {
   const aspect = options?.aspectRatio;
@@ -450,12 +450,12 @@ function rotateInverse(
 }
 
 function resizeFromDimensionsRotated(
-  initial: CRCManipulationBox,
-  handle: CRCResizePosition,
+  initial: PibblManipulationBox,
+  handle: PibblResizePosition,
   width: number,
   height: number,
   radians: number,
-): CRCManipulationBox {
+): PibblManipulationBox {
   const oldCenter = {
     x: initial.left + initial.width / 2,
     y: initial.top + initial.height / 2,
@@ -503,11 +503,11 @@ function resizeFromDimensionsRotated(
 }
 
 function constrainDimensions(
-  initial: CRCManipulationBox,
-  handle: CRCResizePosition,
+  initial: PibblManipulationBox,
+  handle: PibblResizePosition,
   proposed: SizePoint,
   rotation: number,
-  bounds: CRCManipulationBox | undefined,
+  bounds: PibblManipulationBox | undefined,
   ratio: number | undefined,
   constraints: ReturnType<typeof resolvedResizeConstraints>,
 ): SizePoint {
@@ -561,11 +561,11 @@ type SizePoint = Readonly<{ width: number; height: number }>;
 type HalfPlane = Readonly<{ a: number; b: number; c: number }>;
 
 function projectSizeToBounds(
-  initial: CRCManipulationBox,
-  handle: CRCResizePosition,
+  initial: PibblManipulationBox,
+  handle: PibblResizePosition,
   proposed: SizePoint,
   rotation: number,
-  bounds: CRCManipulationBox,
+  bounds: PibblManipulationBox,
   constraints: ReturnType<typeof resolvedResizeConstraints>,
 ): SizePoint {
   const maximumWidth = Number.isFinite(constraints.maxWidth)
@@ -591,10 +591,10 @@ function projectSizeToBounds(
 }
 
 function boundsPlanes(
-  initial: CRCManipulationBox,
-  handle: CRCResizePosition,
+  initial: PibblManipulationBox,
+  handle: PibblResizePosition,
   rotation: number,
-  bounds: CRCManipulationBox,
+  bounds: PibblManipulationBox,
 ): readonly HalfPlane[] {
   const zero = resizeFromDimensionsRotated(initial, handle, 0, 0, rotation);
   const unitWidth = resizeFromDimensionsRotated(
@@ -712,8 +712,8 @@ function closestPointInPolygon(
 }
 
 function containsRotated(
-  bounds: CRCManipulationBox,
-  box: CRCManipulationBox,
+  bounds: PibblManipulationBox,
+  box: PibblManipulationBox,
   radians: number,
 ): boolean {
   return rotatedCorners(box, radians).every(
@@ -726,7 +726,7 @@ function containsRotated(
 }
 
 function rotatedCorners(
-  box: CRCManipulationBox,
+  box: PibblManipulationBox,
   radians: number,
 ): readonly Readonly<{ x: number; y: number }>[] {
   const center = { x: box.left + box.width / 2, y: box.top + box.height / 2 };
@@ -776,8 +776,8 @@ function validateConfiguredSnaps(input: ManipulationSolveInput): void {
 }
 
 function boxesEqual(
-  left: CRCManipulationBox,
-  right: CRCManipulationBox,
+  left: PibblManipulationBox,
+  right: PibblManipulationBox,
 ): boolean {
   return (
     left.left === right.left &&
@@ -788,8 +788,8 @@ function boxesEqual(
 }
 
 function result(
-  proposed: CRCManipulationBox,
-  applied: CRCManipulationBox,
+  proposed: PibblManipulationBox,
+  applied: PibblManipulationBox,
   snapActive: boolean,
   snapSatisfied: boolean,
   initialRotation = 0,

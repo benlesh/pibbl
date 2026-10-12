@@ -12,7 +12,7 @@ keywords: [signals, props, style, children, inputs, ownership]
 
 # Signal-valued inputs
 
-CRC-provided components accept signals wherever reactive replacement is
+Pibbl-provided components accept signals wherever reactive replacement is
 meaningful: drawing and layout geometry, style fields, text, animation inputs,
 and applicable official render-layer, Three.js, particles, physics, and
 visualization inputs.
@@ -30,7 +30,7 @@ import {
   resolveSignalValue,
   useSignal,
   type SignalValue,
-} from "@crc/core";
+} from "@pibbl/core";
 
 const left = useSignal(10);
 const color = useSignal("red");
@@ -45,13 +45,13 @@ enclosing component the consumer and passes a plain number downstream.
 
 ### Declared, shallow resolution
 
-Resolution follows each component's published input schema. CRC can resolve a
+Resolution follows each component's published input schema. Pibbl can resolve a
 whole-object signal such as `style={styleSignal}` or individual declared fields
 such as `style={{ left: xSignal }}`. Text and structural child grammars resolve
 signals encountered while walking their own declared arrays and finite
 iterables.
 
-CRC never recursively searches arbitrary application data. A signal inside a
+Pibbl never recursively searches arbitrary application data. A signal inside a
 dataset row, event payload, callback closure, custom metadata object, or nested
 descriptor is ordinary application data unless that exact descriptor schema
 explicitly opts into a shallow signal-valued field. A signal returned by
@@ -89,7 +89,7 @@ function Series(props: SeriesProps) {
 
 The helper resolves exactly one plain-or-signal value. It performs no wrapper
 allocation and no deep inspection. Call it while the receiving component is
-evaluating so CRC attributes the dependency to that component.
+evaluating so Pibbl attributes the dependency to that component.
 
 Layout and pure measurement preserve the same ownership rule. Mounted layout
 prepasses transfer declared reads to the eventual receiving child; standalone

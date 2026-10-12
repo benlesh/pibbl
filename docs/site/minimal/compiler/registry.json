@@ -1,0 +1,33 @@
+[
+  {
+    "id": "production",
+    "title": "Automatic JSX runtime",
+    "description": "The production compiler emits jsx and jsxs calls for component values and fragments.",
+    "source": "production.ts",
+    "environment": "browser",
+    "symbols": [
+      { "name": "Fragment", "importPath": "@pibbl/core/jsx-runtime" },
+      { "name": "jsx", "importPath": "@pibbl/core/jsx-runtime" },
+      { "name": "jsxs", "importPath": "@pibbl/core/jsx-runtime" },
+      { "name": "JSX", "importPath": "@pibbl/core/jsx-runtime" }
+    ],
+    "notes": [
+      "Compiler output is shown explicitly for inspection; application code normally uses automatic JSX or createElement."
+    ]
+  },
+  {
+    "id": "development",
+    "title": "Development JSX runtime",
+    "description": "The development compiler emits jsxDEV calls with source-location metadata.",
+    "source": "development.ts",
+    "environment": "browser",
+    "symbols": [
+      { "name": "Fragment", "importPath": "@pibbl/core/jsx-dev-runtime" },
+      { "name": "jsxDEV", "importPath": "@pibbl/core/jsx-dev-runtime" },
+      { "name": "JSX", "importPath": "@pibbl/core/jsx-dev-runtime" }
+    ],
+    "notes": [
+      "Compiler output is shown explicitly for inspection; source metadata is included in development builds."
+    ]
+  }
+]

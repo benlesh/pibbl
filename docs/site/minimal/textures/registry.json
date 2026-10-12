@@ -1,0 +1,159 @@
+[
+  {
+    "id": "texture-procedural-component",
+    "title": "Render a procedural material",
+    "description": "Paint a marble material with a typed palette, resolution, and synchronous renderer.",
+    "source": "procedural-component.tsx",
+    "environment": "browser",
+    "symbols": [
+      { "name": "ProceduralTexture", "importPath": "@pibbl/core/textures" },
+      {
+        "name": "ProceduralTextureProps",
+        "importPath": "@pibbl/core/textures"
+      },
+      { "name": "texturePalettes", "importPath": "@pibbl/core/textures" },
+      { "name": "TextureKind", "importPath": "@pibbl/core/textures" },
+      { "name": "TexturePalette", "importPath": "@pibbl/core/textures" },
+      { "name": "TextureResolution", "importPath": "@pibbl/core/textures" },
+      { "name": "TextureRenderer", "importPath": "@pibbl/core/textures" },
+      { "name": "TextureRenderFrame", "importPath": "@pibbl/core/textures" }
+    ],
+    "notes": [
+      "The borrowed source and mask canvases are used only inside the render callback."
+    ]
+  },
+  {
+    "id": "texture-reaction-component",
+    "title": "Paint reaction diffusion",
+    "description": "Mount an interactive reaction-diffusion layer with a typed brush.",
+    "source": "reaction-component.tsx",
+    "environment": "browser",
+    "symbols": [
+      { "name": "ReactionDiffusion", "importPath": "@pibbl/core/textures" },
+      {
+        "name": "ReactionDiffusionProps",
+        "importPath": "@pibbl/core/textures"
+      },
+      { "name": "TextureBrush", "importPath": "@pibbl/core/textures" }
+    ],
+    "notes": [
+      "The layer owns its simulation until the Pibbl controller is disposed."
+    ]
+  },
+  {
+    "id": "texture-material-recipes",
+    "title": "Compare three material recipes",
+    "description": "Compare labeled marble, paper, and cellular swatches with palettes that reveal their surface detail.",
+    "source": "material-recipes.tsx",
+    "environment": "browser",
+    "symbols": [
+      { "name": "marble", "importPath": "@pibbl/core/textures" },
+      { "name": "paper", "importPath": "@pibbl/core/textures" },
+      { "name": "cellular", "importPath": "@pibbl/core/textures" },
+      { "name": "useTexture", "importPath": "@pibbl/core/textures" },
+      { "name": "MaterialOptions", "importPath": "@pibbl/core/textures" }
+    ],
+    "notes": [
+      "Each hook slot owns one texture resource; the returned handle is directly usable as fill."
+    ]
+  },
+  {
+    "id": "texture-ink-recipe",
+    "title": "Send paint to a living ink texture",
+    "description": "Create a reaction-diffusion recipe and send a typed paint command on click.",
+    "source": "ink-recipe.tsx",
+    "environment": "browser",
+    "symbols": [
+      { "name": "reactionDiffusion", "importPath": "@pibbl/core/textures" },
+      {
+        "name": "ReactionDiffusionOptions",
+        "importPath": "@pibbl/core/textures"
+      },
+      { "name": "InkMessage", "importPath": "@pibbl/core/textures" }
+    ],
+    "notes": [
+      "Messages are sent from the event handler, outside component evaluation."
+    ]
+  },
+  {
+    "id": "texture-water-waves",
+    "title": "Ripple a wave map",
+    "description": "Refract and light a tiled sign through fine, fast-moving waves, with an unfiltered comparison toggle.",
+    "source": "water-waves.tsx",
+    "environment": "browser",
+    "symbols": [
+      { "name": "waterWaves", "importPath": "@pibbl/core/textures" },
+      { "name": "WaterWavesOptions", "importPath": "@pibbl/core/textures" },
+      { "name": "WaterWavesMessage", "importPath": "@pibbl/core/textures" }
+    ],
+    "notes": [
+      "Press anywhere on the image to add a ripple at that position. Turn off Refraction + reflections to see the undistorted source. Scale 10 produces finer periodic waves; speed 2.4 animates them more quickly. Both filters share the same numeric wave map and region."
+    ]
+  },
+  {
+    "id": "texture-water-surface",
+    "title": "Ripple around an obstacle",
+    "description": "Use a bounded water surface with a normalized rectangular obstacle.",
+    "source": "water-surface.tsx",
+    "environment": "browser",
+    "symbols": [
+      { "name": "waterSurface", "importPath": "@pibbl/core/textures" },
+      { "name": "WaterSurfaceObstacle", "importPath": "@pibbl/core/textures" },
+      { "name": "WaterSurfaceOptions", "importPath": "@pibbl/core/textures" },
+      { "name": "WaterSurfaceMessage", "importPath": "@pibbl/core/textures" }
+    ],
+    "notes": [
+      "Press to ripple the tiled image. The outlined island marks the normalized obstacle, which affects the height field rather than Canvas hit testing."
+    ]
+  },
+  {
+    "id": "texture-rain-drops",
+    "title": "Refract through rain glass",
+    "description": "Use a rain map for displacement and localized condensation blur.",
+    "source": "rain-drops.tsx",
+    "environment": "browser",
+    "symbols": [
+      { "name": "rainDrops", "importPath": "@pibbl/core/textures" },
+      { "name": "RainDropsOptions", "importPath": "@pibbl/core/textures" },
+      { "name": "RainDropsMessage", "importPath": "@pibbl/core/textures" }
+    ],
+    "notes": [
+      "Drag across the glass to wipe condensation with typed finger messages. Toggle Fogged glass to compare with the original; Pibbl owns animation and texture cleanup."
+    ]
+  },
+  {
+    "id": "texture-tendrils",
+    "title": "Add a weighted filament source",
+    "description": "Attach electric filaments to typed source sites and add one on click.",
+    "source": "tendrils.tsx",
+    "environment": "browser",
+    "symbols": [
+      { "name": "tendrils", "importPath": "@pibbl/core/textures" },
+      { "name": "TendrilsOptions", "importPath": "@pibbl/core/textures" },
+      { "name": "TendrilsMessage", "importPath": "@pibbl/core/textures" },
+      { "name": "ElectricSource", "importPath": "@pibbl/core/textures" },
+      { "name": "ElectricSourceMessage", "importPath": "@pibbl/core/textures" }
+    ],
+    "notes": [
+      "Source coordinates are normalized to the complete texture, including its padding."
+    ]
+  },
+  {
+    "id": "texture-lightning",
+    "title": "Connect two electric points",
+    "description": "Render a lightning recipe and reset its deterministic seed on click.",
+    "source": "lightning.tsx",
+    "environment": "browser",
+    "symbols": [
+      { "name": "lightning", "importPath": "@pibbl/core/textures" },
+      { "name": "LightningOptions", "importPath": "@pibbl/core/textures" },
+      { "name": "LightningMessage", "importPath": "@pibbl/core/textures" },
+      { "name": "ElectricPoint", "importPath": "@pibbl/core/textures" },
+      { "name": "ElectricOptions", "importPath": "@pibbl/core/textures" },
+      { "name": "ElectricControl", "importPath": "@pibbl/core/textures" }
+    ],
+    "notes": [
+      "The texture owns its animation through Pibbl; no application frame loop is needed."
+    ]
+  }
+]

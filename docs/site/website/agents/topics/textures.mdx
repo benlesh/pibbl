@@ -1,0 +1,50 @@
+---
+title: Agent guide - textures and reaction-diffusion
+description: Own one producer, map coordinates correctly, and adapt live textures without inventing simulation APIs.
+kind: agent-guide
+---
+
+## Reading path and complete recipes
+
+Start with [procedural textures](/guides/procedural-textures/) and [texture resource signatures](/reference/types/texture-resources/). Use the [native-button recipe](/guides/native-button/) for a complete HTML/CSS/JavaScript integration, or [Stirred Ink](/examples/stirred-ink/) for a complete texture/physics composition. Both pages expand the actual source and link to running output. The button requires no image assets; the advanced example also uses procedural content.
+
+`defineTexture` and `useTexture` are core APIs. Optional built-in recipes are imported from `@pibbl/core/textures`. Creating a definition or importing a recipe is inert. A mounted `useTexture` hook owns the live producer. Do not create a new root or simulation for each hover event.
+
+## Ownership, publication, and sharing
+
+A texture handle is stable for its hook slot. It can be shared among consumers in its owning root tree, including nested Layers. Foreign-root or disposed paints reject when rendered. The public API does not expose the producer canvas or a committed raster for arbitrary borrowing.
+
+`send` structured-clones and queues a message for the next eligible frame. It is forbidden during component evaluation, rejects a recipe without a receiver, and is inert after disposal. The queue is bounded at 8192 messages. High-frequency input should send bounded work; do not replay an unbounded history after a hidden tab resumes.
+
+Rasterization publishes pixels and a matching revision transactionally. A failed candidate leaves the last committed publication available; that does not imply rollback of other immediate Canvas paint. A resolution change recreates producer state, clears queued messages, resets timing debt, and releases incompatible publication surfaces. Palette changes recolor without requiring a new field shape.
+
+## Coordinate and parameter rules
+
+| Quantity          | Units and constraint                                                         |
+| ----------------- | ---------------------------------------------------------------------------- |
+| Display rectangle | Logical Canvas units, independent of simulation size                         |
+| Resolution        | Integer width/height 8..1024, total at most 262144 cells; default 256 by 160 |
+| Palette           | 2..16 `#RRGGBB` colors                                                       |
+| Seed              | Unsigned 32-bit integer; default 42                                          |
+| Paint center      | Normalized `u`, `v` in the texture domain                                    |
+| Paint radius      | Texture cells; greater than zero and at most 128; default 6                  |
+| Paint strength    | 0..1; default 0.8                                                            |
+| Stir displacement | Normalized `du`, `dv`, each with absolute value at most 1                    |
+
+The reaction-diffusion presets are `spots` (default) and `stripes`. A palette is presentation, not a different solver. `paint` deposits nuclei; `stir` displaces the existing field. Both may change pixels while reaction advancement is paused. Therefore reduced motion in the button suppresses interaction messages as well as sending pause.
+
+## Adapt the button safely
+
+Native pointer coordinates are CSS coordinates. Normalize against the button's bounding rectangle, then map into texture space. Reset the previous pointer on leave/cancel so re-entry does not drag a line from an old position. A keyboard click has no meaningful pointer coordinates; center its disturbance. Preserve disabled state, document visibility, offscreen pause, observer cleanup, and controller disposal.
+
+The click effect uses radial paint and stir messages. It is an ink disturbance, not a physical water wave. For water or electrical recipes, read their exact [resource reference](/reference/types/texture-resources/) and [electric texture reference](/reference/types/electric-textures/) before choosing a message. Similar visual names do not make their protocols interchangeable.
+
+## Custom producer boundaries
+
+Recipe callbacks are synchronous and cannot call Pibbl hooks. Draw through the supplied context only during its lifecycle. `invalidate()` requests new source pixels; `requestFrame()` asks Pibbl for continued advancement. Stop requesting frames when idle. Do not start a recipe-owned `requestAnimationFrame` loop. Release application allocations in the producer's dispose callback.
+
+## Verification
+
+Hold seed, resolution, clock, and palette constant. Compare pointer movement with an idle run at the same time so natural evolution cannot masquerade as interaction evidence. Assert resize geometry separately from simulation resolution. Verify reduced motion freezes actual pixels even while moving/clicking; verify a normal click still performs its native action.
+
+Test reset, pause, parameter updates, removal/remount, and attempted cross-root sharing. Check one owner is disposed once. For physics-driven stirring, validate coordinate mapping and generation/teleport guards before judging the image. Never call one-way visual coupling bidirectional fluid physics.

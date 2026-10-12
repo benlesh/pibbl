@@ -1,4 +1,4 @@
-import { crc, createElement } from '@crc/core';
+import { pibbl, createElement } from '@pibbl/core';
 import {
   AnimationLabRootA,
   AnimationLabRootB,
@@ -14,6 +14,11 @@ import type {
   ScenarioMountContext,
 } from './types';
 
+/**
+ * Stable action identifiers accepted by the animation lab scenario.
+ *
+ * @see {@link AnimationLabAction}
+ */
 export const ANIMATION_LAB_ACTION_IDS = [
   'play',
   'pause',
@@ -81,8 +86,8 @@ async function mountAnimationLab(
   let disposed = false;
   let model = createAnimationLabModel();
   let lastAction: 'mount' | AnimationLabAction = 'mount';
-  let primaryController: ReturnType<typeof crc> | undefined;
-  let secondaryController: ReturnType<typeof crc> | undefined;
+  let primaryController: ReturnType<typeof pibbl> | undefined;
+  let secondaryController: ReturnType<typeof pibbl> | undefined;
   let secondaryCanvas: HTMLCanvasElement | undefined;
   let actionQueue = Promise.resolve();
 
@@ -93,7 +98,7 @@ async function mountAnimationLab(
     context.onStateChange?.(snapshot(model, secondaryController !== undefined, lastAction));
   };
   const renderPrimary = (): void => {
-    primaryController = crc(
+    primaryController = pibbl(
       context.canvas,
       createElement(AnimationLabRootA, { model }),
       { pixelRatio: 1 },
@@ -182,7 +187,7 @@ async function mountAnimationLab(
           secondaryCanvas.style.cssText = 'display:block;width:480px;height:96px';
           (context.referenceHost ?? context.canvas.parentElement ?? document.body)
             .appendChild(secondaryCanvas);
-          secondaryController = crc(
+          secondaryController = pibbl(
             secondaryCanvas,
             createElement(AnimationLabRootB, { model }),
             { pixelRatio: 1 },

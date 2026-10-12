@@ -1,4 +1,4 @@
-import { crc, useSignal, Rectangle, Text, type CRCController } from "@crc/core";
+import { pibbl, useSignal, Rectangle, Text, type PibblController } from "@pibbl/core";
 
 interface PosterCardProps {
   message: string;
@@ -68,12 +68,12 @@ function Poster() {
     <PosterCard
       message={message.get()}
       onSelect={() =>
-        message.update((value) => (value === "HELLO" ? "CRC!" : "HELLO"))
+        message.update((value) => (value === "HELLO" ? "Pibbl!" : "HELLO"))
       }
     />,
   ];
 }
 
-export default function mount(canvas: HTMLCanvasElement): CRCController {
-  return crc(canvas, <Poster />);
+export default function mount(canvas: HTMLCanvasElement): PibblController {
+  return pibbl(canvas, <Poster />);
 }

@@ -1,4 +1,4 @@
-# CRC responsive high-density Canvas surface design
+# Pibbl responsive high-density Canvas surface design
 
 > **Historical status: IMPLEMENTED DESIGN RECORD.** Original proposal or approval wording below is preserved; current behavior lives in `docs/design/`.
 
@@ -8,7 +8,7 @@ Date: 2026-08-19
 
 ## Summary
 
-CRC will own the relationship between a Canvas scene's logical coordinate
+Pibbl will own the relationship between a Canvas scene's logical coordinate
 space, the element's displayed CSS size, and its physical backing-store
 resolution. A mount will render at the effective device-pixel density by
 default, observe display-size and density changes, and preserve one coherent
@@ -16,14 +16,14 @@ geometry model across paint, layout, clipping, interaction, and offscreen
 layers.
 
 The default is a fixed logical viewport captured from the Canvas element's
-initial `width` and `height` attributes. CRC fits that viewport into the CSS
+initial `width` and `height` attributes. Pibbl fits that viewport into the CSS
 content box with `contain` and renders it at `window.devicePixelRatio`. Callers
 can instead request a responsive viewport whose logical dimensions follow the
 CSS content box exactly. Fixed viewports also support the familiar `cover`,
 `fill`, `none`, and `scale-down` projection modes.
 
 After mount, `canvas.width` and `canvas.height` are physical backing-store
-dimensions owned by CRC. They are no longer the public source of logical scene
+dimensions owned by Pibbl. They are no longer the public source of logical scene
 dimensions. Components obtain logical allocations through normal layout and
 `useLayoutBox()`.
 
@@ -38,7 +38,7 @@ dimensions. Components obtain logical allocations through normal layout and
   CSS pixel and layout reflows as the Canvas display size changes.
 - Keep paint, interaction, clipping, layout placement, and layers aligned under
   every supported fit mode.
-- Coalesce surface changes into CRC's scheduled render lifecycle and release
+- Coalesce surface changes into Pibbl's scheduled render lifecycle and release
   every observer/listener deterministically.
 - Provide a numeric pixel-ratio override for deterministic tests, screenshots,
   and applications that choose a rendering-cost cap.
@@ -63,30 +63,31 @@ dimensions. Components obtain logical allocations through normal layout and
 The public mount configuration becomes a discriminated union:
 
 ```ts
-export type CRCFit = "contain" | "cover" | "fill" | "none" | "scale-down";
+export type PibblFit = "contain" | "cover" | "fill" | "none" | "scale-down";
 
-export type CRCPixelRatio = "device" | number;
+export type PibblPixelRatio = "device" | number;
 
-export interface CRCFixedViewportConfig {
+export interface PibblFixedViewportConfig {
   signal?: AbortSignal;
   viewport?: Readonly<{
     width: number;
     height: number;
   }>;
-  fit?: CRCFit;
-  pixelRatio?: CRCPixelRatio;
+  fit?: PibblFit;
+  pixelRatio?: PibblPixelRatio;
 }
 
-export interface CRCResponsiveViewportConfig {
+export interface PibblResponsiveViewportConfig {
   signal?: AbortSignal;
   viewport: "responsive";
-  pixelRatio?: CRCPixelRatio;
+  pixelRatio?: PibblPixelRatio;
 }
 
-export type CRCConfig = CRCFixedViewportConfig | CRCResponsiveViewportConfig;
+export type PibblConfig =
+  PibblFixedViewportConfig | PibblResponsiveViewportConfig;
 ```
 
-`crc(canvas, root)` is equivalent to capturing this configuration before the
+`pibbl(canvas, root)` is equivalent to capturing this configuration before the
 first backing-store mutation:
 
 ```ts
@@ -104,7 +105,7 @@ The initial Canvas dimensions used for a default fixed viewport must both be
 positive; a zero-valued initial attribute requires an explicit viewport instead.
 An explicitly supplied fixed viewport requires finite positive dimensions. A
 numeric pixel ratio must be finite and greater than zero. Invalid values throw
-actionable mount-time errors before CRC acquires observers or mutates the
+actionable mount-time errors before Pibbl acquires observers or mutates the
 Canvas.
 
 `fit` is absent from the responsive union because it has no coherent effect
@@ -113,21 +114,21 @@ that meaningless combination, and runtime validation rejects it for untyped
 callers.
 
 The surface configuration belongs to the initial mount, like `signal` does
-today. Later `crc(canvas, root, config?)` calls update the root but do not replace
+today. Later `pibbl(canvas, root, config?)` calls update the root but do not replace
 the mounted surface configuration. Changing surface policy requires disposing
 and remounting. This prevents an omitted configuration on an ordinary update
 from resetting the surface accidentally.
 
-The public index exports `CRCConfig`, `CRCFit`, `CRCPixelRatio`,
-`CRCFixedViewportConfig`, and `CRCResponsiveViewportConfig`.
+The public index exports `PibblConfig`, `PibblFit`, `PibblPixelRatio`,
+`PibblFixedViewportConfig`, and `PibblResponsiveViewportConfig`.
 
 ## Surface state
 
-Every root `CRCInstance` owns one surface record. Internal layer instances own
+Every root `PibblInstance` owns one surface record. Internal layer instances own
 derived records without DOM observers.
 
 ```ts
-interface CRCSurface {
+interface PibblSurface {
   mode: "fixed" | "responsive";
   logicalWidth: number;
   logicalHeight: number;
@@ -140,7 +141,7 @@ interface CRCSurface {
   backingPixelsPerCssPixelY: number;
   backingPixelsPerLogicalUnitX: number;
   backingPixelsPerLogicalUnitY: number;
-  fit: CRCFit;
+  fit: PibblFit;
   renderTransform: DOMMatrix;
   inverseRenderTransform: DOMMatrix;
 }
@@ -172,13 +173,13 @@ authoritative. The initial synchronous measurement uses the computed content
 box so the first scheduled render does not wait for an observer delivery.
 Borders and padding are excluded from scene dimensions and pointer conversion.
 
-Changing `canvas.width` or `canvas.height` resets the Canvas 2D context. CRC
+Changing `canvas.width` or `canvas.height` resets the Canvas 2D context. Pibbl
 writes those attributes only when the desired backing dimensions changed and
 then reconstructs the render state for that frame.
 
 An unstyled Canvas derives its CSS intrinsic size from the same backing
 attributes. Blindly increasing those attributes would therefore enlarge the
-element, trigger another resize, and create a feedback loop. CRC handles this
+element, trigger another resize, and create a feedback loop. Pibbl handles this
 case as follows:
 
 1. Measure the content box before changing the backing dimensions.
@@ -187,12 +188,12 @@ case as follows:
 4. If an axis changed as a direct intrinsic-size consequence, set that axis's
    inline CSS size to the pre-mutation display size.
 
-CRC records any inline style it owns. Disposal restores the prior inline value
-only if the application has not replaced CRC's owned value. Stylesheet-driven
+Pibbl records any inline style it owns. Disposal restores the prior inline value
+only if the application has not replaced Pibbl's owned value. Stylesheet-driven
 responsive sizes such as `width: 100%` do not change when backing attributes
-change, so CRC does not freeze them.
+change, so Pibbl does not freeze them.
 
-Device-density mode reads `window.devicePixelRatio`. CRC observes density
+Device-density mode reads `window.devicePixelRatio`. Pibbl observes density
 changes with a resolution media query and a window resize fallback, recreating
 the media query after each change. Numeric pixel-ratio mode installs no density
 observer. All observer/listener resources belong to the root mount and release
@@ -254,13 +255,13 @@ remain mounted across the reflow.
 ## Zero-size behavior
 
 CSS can legitimately collapse or hide a Canvas. A surface with a zero display
-width or height has no invertible projection. CRC records the latest root and
+width or height has no invertible projection. Pibbl records the latest root and
 surface inputs but defers rendering until both axes are positive. Existing
 component state and resources remain mounted; a temporary zero size is not a
 removal or disposal signal. When the surface becomes visible, the latest
 coalesced root renders once against the new allocation.
 
-Mouse events received while either display axis is zero have no CRC region
+Mouse events received while either display axis is zero have no Pibbl region
 target. Canvas-wide native observers still receive their original event through
 the existing observer contract.
 
@@ -294,7 +295,7 @@ recovery contract.
 
 ## Interaction coordinates and transform normalization
 
-Public `CRCMouseEvent.x` and `.y` become logical root coordinates, independent
+Public `PibblMouseEvent.x` and `.y` become logical root coordinates, independent
 of backing-store dimensions.
 
 Mouse-coordinate conversion proceeds through the same surface model as paint:
@@ -311,7 +312,7 @@ therefore have negative or greater-than-viewport logical coordinates and cannot
 hit a viewport-contained region.
 
 Paint-time interaction transforms and clip transforms must not retain the root
-backing transform. Whenever CRC captures `ctx.getTransform()`, it stores:
+backing transform. Whenever Pibbl captures `ctx.getTransform()`, it stores:
 
 ```text
 logicalTransform = inverse(renderTransform) × currentContextTransform
@@ -375,7 +376,7 @@ transform and is deliberately separate from this surface design.
 
 ## Updates, ownership, and errors
 
-- Surface observers and any CRC-owned inline sizing belong to the root mount.
+- Surface observers and any Pibbl-owned inline sizing belong to the root mount.
 - Internal layer surfaces belong to their layer component refs.
 - Repeated observer reports with equal effective inputs do not schedule
   additional work.
@@ -387,7 +388,7 @@ transform and is deliberately separate from this surface design.
 - Unsupported or invalid explicit surface configuration throws before external
   resource acquisition.
 - A missing platform `ResizeObserver` produces a targeted mount error rather
-  than silently promising responsive behavior CRC cannot maintain. Unit tests
+  than silently promising responsive behavior Pibbl cannot maintain. Unit tests
   provide the platform mock; supported browsers provide the native API.
 
 ## Studio and scenario adoption
@@ -480,7 +481,7 @@ Implementation updates these normative contracts alongside code:
 
 The work is complete when:
 
-1. Default CRC mounts render a fixed initial logical viewport into their CSS
+1. Default Pibbl mounts render a fixed initial logical viewport into their CSS
    content box at device density with centered `contain` projection.
 2. Every declared fit mode follows the exact projection table.
 3. Responsive mode uses CSS content-box dimensions as logical root dimensions

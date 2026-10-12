@@ -1,18 +1,18 @@
-# CRC First-Class Style and Layout Implementation Plan
+# Pibbl First-Class Style and Layout Implementation Plan
 
 > **Historical status: IMPLEMENTED PLAN.** Agent instructions and unchecked-looking task syntax below are preserved as dated evidence, not active work.
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Replace CRC's visual props with one explicit typed style language, then deliver dedicated absolute, overlay, flow, CSS-compatible flex, and CSS-compatible grid layout components without introducing a retained display list.
+**Goal:** Replace Pibbl's visual props with one explicit typed style language, then deliver dedicated absolute, overlay, flow, CSS-compatible flex, and CSS-compatible grid layout components without introducing a retained display list.
 
-**Architecture:** Element descriptors store `style` and `key` separately from programmatic props. Layout algorithms inspect direct child descriptors, resolve declared boxes or pure opt-in measurements, and return stable internal placement nodes that compose through CRC's existing transform/clip/interaction seams. Drawing components remain leaves; dedicated layout components establish formatting contexts.
+**Architecture:** Element descriptors store `style` and `key` separately from programmatic props. Layout algorithms inspect direct child descriptors, resolve declared boxes or pure opt-in measurements, and return stable internal placement nodes that compose through Pibbl's existing transform/clip/interaction seams. Drawing components remain leaves; dedicated layout components establish formatting contexts.
 
 **Tech Stack:** TypeScript 7, Canvas 2D, Vitest Browser Mode with Playwright Chromium, esbuild, pnpm 11.21.0.
 
 ## Global Constraints
 
-- CSS property names and accepted CSS values MUST have CSS-compatible behavior for the supported case; divergent CRC algorithms MUST use CRC-specific names.
+- CSS property names and accepted CSS values MUST have CSS-compatible behavior for the supported case; divergent Pibbl algorithms MUST use Pibbl-specific names.
 - Style is the sole visual-property namespace. Final public built-in APIs MUST NOT accept legacy top-level geometry or paint props.
 - No selectors, stylesheets, cascade, specificity, `!important`, or implicit inheritance.
 - Developers compose and reuse styles through ordinary TypeScript values and object spread.
@@ -53,8 +53,8 @@ packages/core/src/lib/layout/
   measure.ts               pure measurement dispatch and services
   place-child.ts           private stable transform/clip placement component
   absolute.ts              absolute containing-box algorithm and component
-  overlay.ts               same-box CRC-native algorithm and component
-  flow.ts                  CRC-native sequential/wrapping algorithm and component
+  overlay.ts               same-box Pibbl-native algorithm and component
+  flow.ts                  Pibbl-native sequential/wrapping algorithm and component
   flex.ts                  supported CSS Flexbox algorithm and component
   grid.ts                  supported CSS Grid algorithm and component
 ```
@@ -110,7 +110,7 @@ it("stores style and key separately and passes style before the Canvas context",
   expect("key" in element.props).toBe(false);
 
   const canvas = document.createElement("canvas");
-  crc(canvas, element);
+  pibbl(canvas, element);
   await nextFrame();
   expect(calls).toEqual([
     { props: { value: 7 }, style: { width: 40 }, canvas },
@@ -166,7 +166,7 @@ export type CompFn<P, S extends SystemStyle = SystemStyle> = (
   props: ProgramProps<P>,
   style: Readonly<S>,
   ctx: RenderingContext2D,
-) => CRCNode[] | CRCNode | void;
+) => PibblNode[] | PibblNode | void;
 
 export interface CompEl<P = any, S extends SystemStyle = SystemStyle> {
   type: CompFn<P, S>;
@@ -412,7 +412,7 @@ text({
 });
 ```
 
-`fit` is CRC-native (`'visible' | 'squish' | 'ellipsis' | 'clip'`) because the complete existing behavior is not CSS `overflow`/`text-overflow`. The pure utility test uses a literal `measureText` table and asserts exact lines and y positions for wrap and ellipsis.
+`fit` is Pibbl-native (`'visible' | 'squish' | 'ellipsis' | 'clip'`) because the complete existing behavior is not CSS `overflow`/`text-overflow`. The pure utility test uses a literal `measureText` table and asserts exact lines and y positions for wrap and ellipsis.
 
 - [ ] **Step 2: Observe focused RED**
 
@@ -550,7 +550,7 @@ corepack pnpm@11.21.0 exec vitest run packages/core/src/lib/components/g.test.ts
 
 - [ ] **Step 3: Implement composition styles and remove legacy visual mixins**
 
-Transform order remains scale, rotation about origin, translate, skew to preserve current behavior. Degree-valued rotation uses CRC-native `rotationDegrees`/`rotationOrigin`, not CSS `rotate`. `children` and layer `render` remain structural props. Layer shallow comparison includes both child props and child style. Export every public component style type from `@crc/core`.
+Transform order remains scale, rotation about origin, translate, skew to preserve current behavior. Degree-valued rotation uses Pibbl-native `rotationDegrees`/`rotationOrigin`, not CSS `rotate`. `children` and layer `render` remain structural props. Layer shallow comparison includes both child props and child style. Export every public component style type from `@pibbl/core`.
 
 - [ ] **Step 4: Run the style-migration milestone**
 
@@ -733,7 +733,7 @@ Atomically introduce distinct `SpecifiedStyle<S>`, `NormalizedStyle<N>`, and com
 
 Add a stack to global temporary render state and restore it across nested/layer renders. Root context is `{ x: 0, y: 0, width: canvas.width, height: canvas.height }`. Before invoking a component, render dispatch calls its `normalizeStyle` and `resolveStyle` capabilities with the immutable specified style and current allocation; the callback receives only its finite component-specific resolved style. Missing capabilities are identity and therefore valid only for styles containing no defaults or allocation-dependent values. An unresolved percentage/`auto` is rejected before the Canvas callback.
 
-`PlacedChild` is one module-level component type, applies `ctx.translate(box.x, box.y)`, pushes a local `{ x: 0, y: 0, width, height }` allocation, applies a CRC-managed rectangular clip in child space when supplied, renders the original child, and restores in `finally`. Its private identity hint is derived from the original child type, canonical key, and same-type occurrence so the wrapper does not alter existing identity rules.
+`PlacedChild` is one module-level component type, applies `ctx.translate(box.x, box.y)`, pushes a local `{ x: 0, y: 0, width, height }` allocation, applies a Pibbl-managed rectangular clip in child space when supplied, renders the original child, and restores in `finally`. Its private identity hint is derived from the original child type, canonical key, and same-type occurrence so the wrapper does not alter existing identity rules.
 
 `useLayoutBox` reads the current local allocation and returns a stable readonly value for unchanged geometry. It does not schedule rendering by itself.
 
@@ -807,7 +807,7 @@ For an oversized centered child, centering remains mathematical and may produce 
 corepack pnpm@11.21.0 exec vitest run packages/core/src/lib/layout/absolute.test.ts packages/core/src/lib/layout/overlay.test.ts packages/core/test/layout-foundation.test.ts --browser.headless --browser.ui=false
 ```
 
-- [ ] **Step 3: Implement both CRC-native algorithms and scenario**
+- [ ] **Step 3: Implement both Pibbl-native algorithms and scenario**
 
 Both algorithms inspect direct child descriptors only, resolve box styles, and return `PlacedChild` elements in source order. `absolute` establishes a containing box; `overlay` allocates from the same content box. `overflow: 'visible' | 'clip'` controls placement clipping and has no scrolling behavior.
 
@@ -827,7 +827,7 @@ git commit -m "feat(layout): add absolute and overlay contexts"
 
 ---
 
-### Task 10: Pure measurement protocol and CRC-native flow
+### Task 10: Pure measurement protocol and Pibbl-native flow
 
 **Files:**
 
@@ -873,7 +873,7 @@ expect(measureElement(Measured({}), constraints, service)).toEqual({
 expect(renders).toBe(0);
 ```
 
-Define CRC-native flow exactly:
+Define Pibbl-native flow exactly:
 
 ```ts
 interface FlowStyle extends BoxStyle {
@@ -1122,7 +1122,7 @@ git commit -m "feat(layout): add CSS-compatible grid"
 - Modify: `packages/scenarios/src/learning-catalog.ts`
 - Modify: `packages/scenarios/src/learning-types.ts`
 - Modify: `packages/scenarios/src/layout-foundation.example.ts`
-- Modify: `playground/src/crc-editor-types.txt`
+- Modify: `playground/src/pibbl-editor-types.txt`
 - Modify: `playground/package-consumer/index.ts`
 - Modify: `docs/scenario-index.md`
 - Test: `packages/core/test/learning-examples.test.ts`
@@ -1136,7 +1136,7 @@ git commit -m "feat(layout): add CSS-compatible grid"
 
 - [ ] **Step 1: Add failing catalog and strict-consumer expectations**
 
-Require exactly one learner route for each layout family grouping, type-clean source imports from `@crc/core`, mount/dispose behavior, and strict public types for styles, percentage lengths, flex/grid configuration, and `useLayoutBox`.
+Require exactly one learner route for each layout family grouping, type-clean source imports from `@pibbl/core`, mount/dispose behavior, and strict public types for styles, percentage lengths, flex/grid configuration, and `useLayoutBox`.
 
 The exhaustive nested scenario must include:
 
@@ -1156,7 +1156,7 @@ corepack pnpm@11.21.0 test:package-consumer
 
 - [ ] **Step 3: Implement examples, catalog entries, declarations, and generated index**
 
-Each learner example uses `export default function mount(canvas): CRCController`, imports only `@crc/core`, exposes exactly two objectives, and uses no test-only diagnostics. Keep the exhaustive scenario in the test catalog. Regenerate `docs/scenario-index.md` with the repository tool.
+Each learner example uses `export default function mount(canvas): PibblController`, imports only `@pibbl/core`, exposes exactly two objectives, and uses no test-only diagnostics. Keep the exhaustive scenario in the test catalog. Regenerate `docs/scenario-index.md` with the repository tool.
 
 - [ ] **Step 4: Run public integration milestone**
 
@@ -1173,7 +1173,7 @@ corepack pnpm@11.21.0 exec vitest run packages/core/test/learning-examples.test.
 
 ```sh
 git add packages playground docs/scenario-index.md
-git commit -m "feat(examples): teach and prove CRC layout"
+git commit -m "feat(examples): teach and prove Pibbl layout"
 ```
 
 ---
@@ -1310,7 +1310,7 @@ corepack pnpm@11.21.0 trust
 Also run the controlled structural/reference command once without turning timing into a default gate:
 
 ```sh
-VITE_CRC_REPORT_PERF=1 corepack pnpm@11.21.0 test:performance:reference
+VITE_PIBBL_REPORT_PERF=1 corepack pnpm@11.21.0 test:performance:reference
 ```
 
 Expected: aggregate trust exits zero; supported behavior has no skips; only the two documented opt-in timing tests remain conditional; performance output is finite and recorded without enforcing environment-sensitive budgets.

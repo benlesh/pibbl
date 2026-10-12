@@ -4,18 +4,18 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Add typed CSS-like `style.filter` effects to every CRC primitive, with combined-subtree silhouettes, ordered lists, inside-out nesting, upright local offscreen rendering, and exact interaction/lifecycle behavior.
+**Goal:** Add typed CSS-like `style.filter` effects to every Pibbl primitive, with combined-subtree silhouettes, ordered lists, inside-out nesting, upright local offscreen rendering, and exact interaction/lifecycle behavior.
 
-**Architecture:** Render dispatch recognizes the framework-owned filter portion of every primitive style and turns a non-empty list into one immediate-mode composition boundary. Each boundary renders once into a pooled upright local `OffscreenCanvas`, applies one native Canvas filter chain into a second pooled surface, then applies the primitive's deferred presentation transform and clip while compositing into its parent; a separate render-target/world-transform model keeps paint and interaction geometry aligned. `Layer` remains the persistent caching boundary, while filter surfaces are transient and owned by one `CRCInstance`.
+**Architecture:** Render dispatch recognizes the framework-owned filter portion of every primitive style and turns a non-empty list into one immediate-mode composition boundary. Each boundary renders once into a pooled upright local `OffscreenCanvas`, applies one native Canvas filter chain into a second pooled surface, then applies the primitive's deferred presentation transform and clip while compositing into its parent; a separate render-target/world-transform model keeps paint and interaction geometry aligned. `Layer` remains the persistent caching boundary, while filter surfaces are transient and owned by one `PibblInstance`.
 
-**Tech Stack:** TypeScript, HTML Canvas 2D and `OffscreenCanvasRenderingContext2D.filter`, DOMMatrix, CRC JSX/createElement runtime, Vitest Browser with Playwright Chromium, pnpm 11.21.0.
+**Tech Stack:** TypeScript, HTML Canvas 2D and `OffscreenCanvasRenderingContext2D.filter`, DOMMatrix, Pibbl JSX/createElement runtime, Vitest Browser with Playwright Chromium, pnpm 11.21.0.
 
 **Spec:** `docs/superpowers/specs/2026-09-08-first-class-filters-design.md`
 
 ## Global Constraints
 
 - Preserve unrelated working-tree changes and untracked files; stage only files named by the active task.
-- Public authors import only from `@crc/core`; no public source or `lib/*` imports.
+- Public authors import only from `@pibbl/core`; no public source or `lib/*` imports.
 - The public property is `style.filter`, not `boxShadow`, `box-shadow`, or a raw CSS string.
 - Support exactly `blur`, `brightness`, `contrast`, `dropShadow`, `grayscale`, `hueRotate`, `invert`, `opacity`, `saturate`, and `sepia`; do not add `url()` or `backdrop-filter`.
 - A filter receives the combined output of the primitive and all descendants it returns.
@@ -32,7 +32,7 @@
 
 ## File and responsibility map
 
-- `packages/core/src/lib/style/filter-types.ts`: public descriptor interfaces and `CRCFilter` union only.
+- `packages/core/src/lib/style/filter-types.ts`: public descriptor interfaces and `PibblFilter` union only.
 - `packages/core/src/lib/style/filter.ts`: immutable normalization, validation, native-string compilation, and resolved-list access.
 - `packages/core/src/lib/render-target.ts`: active local target metadata and conversion from actual paint CTM to root-logical world CTM.
 - `packages/core/src/lib/filter/filter-region.ts`: reverse filter influence, transform inversion, raster density, and backing-window math.
@@ -41,7 +41,7 @@
 - `packages/core/src/lib/filter/render-filter-boundary.ts`: one capture/filter/composite transaction with complete `finally` restoration.
 - `packages/core/src/lib/primitive-presentation.ts`: private Group transform and Clip metadata plus direct/deferred application.
 - `packages/core/src/lib/render.ts`: resolve once and choose the unchanged direct path or filtered boundary around one primitive program.
-- `packages/core/src/lib/{global-state.ts,execute-render.ts,mount-crc.ts,types.ts}`: current target/world state and instance-owned pool lifecycle.
+- `packages/core/src/lib/{global-state.ts,execute-render.ts,mount-pibbl.ts,types.ts}`: current target/world state and instance-owned pool lifecycle.
 - `packages/core/src/lib/{events/registrations.ts,util/push-clipping-path.ts,components/layer.ts}`: consume root-logical world transforms rather than assuming the active paint context is the instance surface.
 - `packages/core/src/lib/components/{g.ts,clip.ts}`: publish private declarative presentation metadata while retaining the direct fast path.
 - `packages/scenarios/src/learning/composition/filters.example.tsx`: approachable ordered-list and combined-silhouette lesson.
@@ -60,7 +60,7 @@ output windows.
 
 - Filter normalization, compilation, and reverse-influence calculation are
   linear in list length: `O(ΣFᵢ)`. Each operation walks a list once; no filter
-  function triggers a component traversal or CRC surface of its own.
+  function triggers a component traversal or Pibbl surface of its own.
 - Pool checkout and return are `O(1)`. The pool uses an active-depth cursor and
   reserves one consecutive source/result pair atomically; it never scans free
   canvases or searches by size.
@@ -69,7 +69,7 @@ output windows.
 - JavaScript work adds `O(B + ΣFᵢ)` around the existing `O(tree)` traversal.
   Matrix inversion, four-corner projection, Canvas-state transfer, and pair
   bookkeeping are constant work per boundary.
-- CRC's boundary overhead is exactly two submitted bitmap draws per boundary:
+- Pibbl's boundary overhead is exactly two submitted bitmap draws per boundary:
   one filtered source-to-result draw and one result-to-parent composite. A
   ten-function list still submits those same two draws, although the browser's
   opaque native filter implementation may do more internal work for that list.
@@ -80,7 +80,7 @@ output windows.
   parent target. The source window is the larger region obtained by walking the
   chain backward. Source and result use separate sizes, preventing blur/shadow
   padding from doubling result memory and raster work.
-- Production JavaScript never visits pixels. The `drawImage` input area CRC
+- Production JavaScript never visits pixels. The `drawImage` input area Pibbl
   submits is `Σ(Aᵢ(source) + Aᵢ(output))`; same-size clear area is tracked
   separately and is at most that sum per frame. No operation uses a pool slot's
   stale or inactive pixels. Actual native raster cost also depends on browser
@@ -93,7 +93,7 @@ output windows.
 - Window areas are conservative axis-aligned bounds, so a large rotation, blur,
   or distant shadow can dominate cost even when actual ink is sparse. Edge,
   dimension, and area arithmetic is preflighted with finite safe-integer checks
-  before allocation. CRC does not tile ordered filters or reduce resolution,
+  before allocation. Pibbl does not tile ordered filters or reduce resolution,
   because either can change kernels or create seams.
 - Canvas dimensions remain a deterministic function of the current snapped
   window, not prior pool use. A slot resizes only when its required snapped
@@ -137,8 +137,8 @@ GPU/browser scheduling is not deterministic.
 
 - Consumes: `LayoutDiagnostic`, `layoutDiagnostic`, `StyleResolutionContext`, and `SystemStyle`.
 - Produces:
-  - the ten `CRC*Filter` descriptor interfaces and `CRCFilter` union from the spec;
-  - `ResolvedFilterList { readonly values: readonly CRCFilter[] }`;
+  - the ten `Pibbl*Filter` descriptor interfaces and `PibblFilter` union from the spec;
+  - `ResolvedFilterList { readonly values: readonly PibblFilter[] }`;
   - `resolveFilterList(value, context): ResolvedFilterList | undefined`;
   - `compileFilterList(value, backingPixelsPerLogicalUnit): string`;
   - `getResolvedFilterList(style): ResolvedFilterList | undefined`.
@@ -205,7 +205,7 @@ a type-only import and add:
 ```ts
 export interface SystemStyle {
   custom?: unknown;
-  filter?: CRCFilter | readonly CRCFilter[];
+  filter?: PibblFilter | readonly PibblFilter[];
 }
 ```
 
@@ -301,7 +301,7 @@ git commit -m "feat(core): define typed filter styles"
 
 - Consumes: Task 1 `resolveFilterList` and existing specified/pre-normalized style paths.
 - Produces:
-  - `extractSystemFilter(style): CRCFilter | readonly CRCFilter[] | undefined`;
+  - `extractSystemFilter(style): PibblFilter | readonly PibblFilter[] | undefined`;
   - `withoutSystemFilter(style): Readonly<SystemStyle>`;
   - resolved primitive styles whose `filter`, when active, is the canonical readonly list from Task 1.
 
@@ -409,7 +409,7 @@ git commit -m "feat(core): own filters in style dispatch"
 
 **Interfaces:**
 
-- Consumes: `CRCSurfaceSnapshot`, active `RenderingContext2D`, and current DOMMatrix transforms.
+- Consumes: `PibblSurfaceSnapshot`, active `RenderingContext2D`, and current DOMMatrix transforms.
 - Produces:
   - `RenderTargetSnapshot { logicalBounds, backingWidth, backingHeight, renderTransform, inverseRenderTransform }`;
   - `rootRenderTarget(surface): RenderTargetSnapshot`;
@@ -462,7 +462,7 @@ as `worldBase.multiply(target.inverseRenderTransform.multiply(ctx.getTransform()
 Replace the three direct assumptions about
 `toLogicalTransform(getSurfaceSnapshot(instance), ctx.getTransform())` with
 `getCurrentWorldTransform()`: target registration, clipping-stack publication,
-and the parent-side `CRCInteractionLayer.transform`. Keep the child Layer root
+and the parent-side `PibblInteractionLayer.transform`. Keep the child Layer root
 world base as identity so its existing bridge composes it into the parent.
 
 - [ ] **Step 5: Run transform, event, Clip, Group, and Layer regressions**
@@ -489,12 +489,12 @@ git commit -m "refactor(core): separate paint and world transforms"
 - Create: `packages/core/src/lib/filter/filter-surface-pool.ts`
 - Create: `packages/core/src/lib/filter/filter-surface-pool.test.ts`
 - Modify: `packages/core/src/lib/types.ts`
-- Modify: `packages/core/src/lib/mount-crc.ts`
+- Modify: `packages/core/src/lib/mount-pibbl.ts`
 - Modify: `packages/core/src/lib/global-state.ts`
 
 **Interfaces:**
 
-- Consumes: Task 1 `ResolvedFilterList`, Task 3 `RenderTargetSnapshot`, `LayoutBox`, and `CRCInstance`.
+- Consumes: Task 1 `ResolvedFilterList`, Task 3 `RenderTargetSnapshot`, `LayoutBox`, and `PibblInstance`.
 - Produces:
   - `BLUR_EXTENT_FACTOR` with the exact spec formula;
   - `PixelBounds { x, y, width, height }` with integer edges;
@@ -620,7 +620,7 @@ claims. The returned source/result object identities and strict depth order
 prove slot `2d`/`2d + 1` reuse; do not add slot-lookup or pixel-area counters to
 production solely for this test.
 
-- [ ] **Step 5: Implement pool leases and CRCInstance ownership**
+- [ ] **Step 5: Implement pool leases and PibblInstance ownership**
 
 Create `OffscreenCanvas` only for slots reached by the active-pair depth cursor.
 For pair index `d`, source always uses slot `2d` and result always uses slot
@@ -659,8 +659,8 @@ skip `clearRect` there and install the same defaults directly. Do not assign an
 unchanged `width` or `height`, because even a redundant assignment resets the
 Canvas backing store.
 
-Initialize one pool in `mountCRC`, add it to `CRCInstance`, and dispose it from
-`cleanupCRCInstance` after component teardowns. Pool creation itself must not
+Initialize one pool in `mountPibbl`, add it to `PibblInstance`, and dispose it from
+`cleanupPibblInstance` after component teardowns. Pool creation itself must not
 construct an OffscreenCanvas.
 
 - [ ] **Step 6: Run region, pool, mount, and lifecycle regressions**
@@ -674,7 +674,7 @@ Expected: all selected suites PASS and unfiltered mounts acquire zero surfaces.
 - [ ] **Step 7: Commit capture geometry and ownership**
 
 ```bash
-git add packages/core/src/lib/filter/filter-region.ts packages/core/src/lib/filter/filter-region.test.ts packages/core/src/lib/filter/filter-surface-pool.ts packages/core/src/lib/filter/filter-surface-pool.test.ts packages/core/src/lib/types.ts packages/core/src/lib/mount-crc.ts packages/core/src/lib/global-state.ts
+git add packages/core/src/lib/filter/filter-region.ts packages/core/src/lib/filter/filter-region.test.ts packages/core/src/lib/filter/filter-surface-pool.ts packages/core/src/lib/filter/filter-surface-pool.test.ts packages/core/src/lib/types.ts packages/core/src/lib/mount-pibbl.ts packages/core/src/lib/global-state.ts
 git commit -m "feat(core): own reusable filter surfaces"
 ```
 
@@ -1103,7 +1103,7 @@ git commit -m "feat(core): compose nested and layered filters"
 
 **Interfaces:**
 
-- Consumes: only public `@crc/core` imports from Tasks 1-7.
+- Consumes: only public `@pibbl/core` imports from Tasks 1-7.
 - Produces:
   - learning route `#/examples/composition/filters`;
   - lab route `#/testing/filters`;
@@ -1114,7 +1114,7 @@ git commit -m "feat(core): compose nested and layered filters"
 - [ ] **Step 1: Add the failing catalog and public-source tests**
 
 Create `filter-lab.test.ts` expecting the two catalog entries, exact routes,
-action IDs, source markers, direct `from '@crc/core'` imports, and no internal
+action IDs, source markers, direct `from '@pibbl/core'` imports, and no internal
 paths. Add the lesson slug to the composition expectations in
 `learning-examples.test.ts`.
 
@@ -1162,7 +1162,7 @@ const CHAINS = [
     },
     { type: "grayscale", amount: 1 },
   ],
-] satisfies readonly (readonly CRCFilter[])[];
+] satisfies readonly (readonly PibblFilter[])[];
 ```
 
 Explain in the metadata that the Group creates one combined silhouette and list
@@ -1328,7 +1328,7 @@ git commit -m "test(core): lock filter ownership and cost"
 
 - Modify: `playground/package-consumer/index.ts`
 - Modify: `playground/package-consumer/jsx.tsx`
-- Modify: `playground/src/crc-editor-types.txt`
+- Modify: `playground/src/pibbl-editor-types.txt`
 - Modify: `tooling/verify-studio-types.mjs`
 - Modify: `docs/design/style-system-contract.md`
 - Modify: `docs/design/drawing-components-contract.md`
@@ -1349,17 +1349,17 @@ git commit -m "test(core): lock filter ownership and cost"
 
 - [ ] **Step 1: Add failing package-consumer type assertions**
 
-Import all eleven new type names from `@crc/core`. Add compile-time examples for
+Import all eleven new type names from `@pibbl/core`. Add compile-time examples for
 single and readonly-list filters on Rectangle, Group, a layout primitive, and a
 custom `definePrimitive`. Include these deliberate failures:
 
 ```ts
-// @ts-expect-error raw CSS strings are not CRC filters
+// @ts-expect-error raw CSS strings are not Pibbl filters
 const raw: SystemStyle = { filter: "blur(4px)" };
-// @ts-expect-error boxShadow is not a CRC system style property
+// @ts-expect-error boxShadow is not a Pibbl system style property
 const box: SystemStyle = { boxShadow: { offsetX: 1 } };
 // @ts-expect-error url filters are excluded
-const url: CRCFilter = { type: "url", value: "#filter" };
+const url: PibblFilter = { type: "url", value: "#filter" };
 ```
 
 - [ ] **Step 2: Run source consumer and Studio checks and confirm stale declarations**
@@ -1376,26 +1376,26 @@ exports; package source compilation may already pass.
 - [ ] **Step 3: Update Studio declarations and exact type manifest**
 
 Regenerate/copy the built declaration content into the three marked modules in
-`playground/src/crc-editor-types.txt` using the repository's existing manual
+`playground/src/pibbl-editor-types.txt` using the repository's existing manual
 bundle format. Add these exact names to `publicTypeExports` in
 `verify-studio-types.mjs`:
 
 ```text
-CRCBlurFilter
-CRCBrightnessFilter
-CRCContrastFilter
-CRCDropShadowFilter
-CRCFilter
-CRCGrayscaleFilter
-CRCHueRotateFilter
-CRCInvertFilter
-CRCOpacityFilter
-CRCSaturateFilter
-CRCSepiaFilter
+PibblBlurFilter
+PibblBrightnessFilter
+PibblContrastFilter
+PibblDropShadowFilter
+PibblFilter
+PibblGrayscaleFilter
+PibblHueRotateFilter
+PibblInvertFilter
+PibblOpacityFilter
+PibblSaturateFilter
+PibblSepiaFilter
 ```
 
 Add a Studio consumer signature asserting
-`SystemStyle['filter']` equals `CRCFilter | readonly CRCFilter[] | undefined`.
+`SystemStyle['filter']` equals `PibblFilter | readonly PibblFilter[] | undefined`.
 
 - [ ] **Step 4: Update current contracts and guides with exact behavior**
 
@@ -1433,7 +1433,7 @@ the feature documents themselves must have no reported drift.
 - [ ] **Step 6: Commit the public surface and contracts**
 
 ```bash
-git add playground/package-consumer/index.ts playground/package-consumer/jsx.tsx playground/src/crc-editor-types.txt tooling/verify-studio-types.mjs docs/design/style-system-contract.md docs/design/drawing-components-contract.md docs/design/canvas-surface-contract.md docs/design/runtime-resource-ownership.md docs/api-reference.md docs/guides/components-props-and-style.md docs/guides/custom-components-and-primitives.md docs/guides/layout-groups-clips-and-layers.md docs/library-status.md AGENTS.md docs/superpowers/specs/2026-09-08-first-class-filters-design.md
+git add playground/package-consumer/index.ts playground/package-consumer/jsx.tsx playground/src/pibbl-editor-types.txt tooling/verify-studio-types.mjs docs/design/style-system-contract.md docs/design/drawing-components-contract.md docs/design/canvas-surface-contract.md docs/design/runtime-resource-ownership.md docs/api-reference.md docs/guides/components-props-and-style.md docs/guides/custom-components-and-primitives.md docs/guides/layout-groups-clips-and-layers.md docs/library-status.md AGENTS.md docs/superpowers/specs/2026-09-08-first-class-filters-design.md
 git commit -m "docs: record first-class filter contracts"
 ```
 

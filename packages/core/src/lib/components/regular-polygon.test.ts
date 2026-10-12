@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { createElement } from '../element/create-element';
 import { jsx } from '../element/jsx-runtime';
 import { getPrimitiveDefinition } from '../element/metadata';
-import { getCRCInstance } from '../global-state';
+import { getPibblInstance } from '../global-state';
 import { useSignal } from '../hooks/use-signal';
 import { measureElement } from '../layout/measure';
 import { LayoutDiagnostic } from '../style/diagnostics';
@@ -209,7 +209,7 @@ describe('RegularPolygon', () => {
         }),
       ],
     }));
-    const targets = Array.from(getCRCInstance(canvas.element).eventRoot.targets);
+    const targets = Array.from(getPibblInstance(canvas.element).eventRoot.targets);
 
     expect(targets[0].keyboardNavigationBounds).toEqual({
       x: 40,
@@ -269,7 +269,7 @@ describe('RegularPolygon', () => {
     advance();
     await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
     expect(pixelAt(canvas.element, 160, 40)).toEqual([0, 0, 0, 0]);
-    expect(getCRCInstance(canvas.element).eventRoot.targets.size).toBe(0);
+    expect(getPibblInstance(canvas.element).eventRoot.targets.size).toBe(0);
   });
 
   it('rejects numeric and rounded style failures with contextual diagnostics', () => {
@@ -299,7 +299,7 @@ describe('RegularPolygon', () => {
       style: Record<string, unknown>,
       context: object,
     ) => object;
-    const render = definition.render as (
+    const render = definition.program as (
       props: object,
       style: object,
       context: CanvasRenderingContext2D,

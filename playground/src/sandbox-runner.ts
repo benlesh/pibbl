@@ -1,7 +1,7 @@
-import runtimeSource from "virtual:crc-runtime-source";
+import runtimeSource from "virtual:pibbl-runtime-source";
 import { toRunnableScript } from "./sandbox-module";
 
-const PROTOCOL = "crc-studio";
+const PROTOCOL = "pibbl-studio";
 const VERSION = 1;
 const PREVIEW_START_TIMEOUT_MS = 10_000;
 
@@ -97,7 +97,7 @@ function createFrameSource(options: {
     try {
       ${runnable}
       const canvas = document.querySelector('canvas');
-      const mountedController = globalThis.__CRC_EXAMPLE_MOUNT__(canvas);
+      const mountedController = globalThis.__PIBBL_EXAMPLE_MOUNT__(canvas);
       if (!mountedController || typeof mountedController.dispose !== 'function') {
         throw new Error('Preview mount must return a controller with dispose().');
       }
@@ -111,7 +111,7 @@ function createFrameSource(options: {
   return `<!doctype html><html><head><meta charset="utf-8"><style>
     *{box-sizing:border-box}html,body{height:100%;margin:0}body{display:grid;place-items:center;background:#fffdf6;overflow:hidden}
     canvas{display:block;width:100%;height:100%;min-width:0;min-height:0;max-height:100%;object-fit:contain;touch-action:none}
-  </style></head><body><canvas width="${options.width}" height="${options.height}" aria-label="Live CRC lesson preview"></canvas>
+  </style></head><body><canvas width="${options.width}" height="${options.height}" aria-label="Live Pibbl lesson preview"></canvas>
   <script type="module">try {
 await (async () => {
 ${escapeScript(runtimeSource)}
@@ -140,7 +140,7 @@ export class SandboxPreview {
     const frame = document.createElement("iframe");
     frame.className = "studio-preview__frame";
     frame.dataset.runId = String(runId);
-    frame.title = "Live CRC lesson preview";
+    frame.title = "Live Pibbl lesson preview";
     frame.sandbox.add("allow-scripts");
     frame.srcdoc = createFrameSource({
       runId,

@@ -22,8 +22,8 @@ process.stdout.write(
 try {
   for (const [name, text, iterations] of [
     ["single glyph", "A", 100],
-    ["short label", "Hello CRC", 100],
-    ["long repeated", "Hello CRC ".repeat(100), 25],
+    ["short label", "Hello Pibbl", 100],
+    ["long repeated", "Hello Pibbl ".repeat(100), 25],
     [
       "long varied",
       "ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz 0123456789 ".repeat(
@@ -31,7 +31,7 @@ try {
       ),
       25,
     ],
-    ["very long", "Hello CRC ".repeat(1000), 8],
+    ["very long", "Hello Pibbl ".repeat(1000), 8],
   ]) {
     const samples = [];
     let segments = 0,

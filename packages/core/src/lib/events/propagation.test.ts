@@ -1,13 +1,13 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import type { CRCComponentRefs, CRCEventRoot, CRCInstance } from '../types';
+import type { PibblComponentRefs, PibblEventRoot, PibblInstance } from '../types';
 import { buildEventPath } from './event-path';
 import { dispatchEventPath } from './propagation';
 import type {
-  CRCEventListenerRegistration,
-  CRCEventTargetRegistration,
-  CRCNormalizedHandlers,
+  PibblEventListenerRegistration,
+  PibblEventTargetRegistration,
+  PibblNormalizedHandlers,
 } from './registrations';
-import type { CRCEvent, CRCEventTarget } from './types';
+import type { PibblEvent, PibblEventTarget } from './types';
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -275,7 +275,7 @@ describe('event propagation', () => {
       screenY: 404,
       shiftKey: true,
     });
-    let seen: CRCEvent | undefined;
+    let seen: PibblEvent | undefined;
     const target = fixture.target({
       click: event => {
         seen = event;
@@ -300,7 +300,7 @@ describe('event propagation', () => {
       target.publicTarget,
     ]);
     expect(Object.isFrozen(path)).toBe(true);
-    expect(() => (path as CRCEventTarget[]).push(related.publicTarget)).toThrow();
+    expect(() => (path as PibblEventTarget[]).push(related.publicTarget)).toThrow();
     expect(event.relatedTarget).toBe(related.publicTarget);
     expect(event.sourceEvent).toBe(sourceEvent);
     expect(event).toMatchObject({
@@ -463,29 +463,29 @@ describe('event propagation', () => {
 });
 
 interface Fixture {
-  readonly root: CRCComponentRefs<unknown>;
-  readonly parent: CRCComponentRefs<unknown>;
-  readonly targetComponent: CRCComponentRefs<unknown>;
+  readonly root: PibblComponentRefs<unknown>;
+  readonly parent: PibblComponentRefs<unknown>;
+  readonly targetComponent: PibblComponentRefs<unknown>;
   listener(
-    component: CRCComponentRefs<unknown>,
+    component: PibblComponentRefs<unknown>,
     handlerMap: HandlerMap,
-  ): CRCEventListenerRegistration;
+  ): PibblEventListenerRegistration;
   target(
     handlerMap: HandlerMap,
-    component?: CRCComponentRefs<unknown>,
-  ): CRCEventTargetRegistration;
+    component?: PibblComponentRefs<unknown>,
+  ): PibblEventTargetRegistration;
 }
 
 type HandlerMap = Record<
   string,
-  ((event: CRCEvent & Record<string, unknown>) => void) | undefined
+  ((event: PibblEvent & Record<string, unknown>) => void) | undefined
 >;
 
 function createFixture(eventRoot = createEventRoot()): Fixture {
   const root = component('root');
   const parent = component('parent', root);
   const targetComponent = component('target', parent);
-  const owner = { eventRoot } as CRCInstance;
+  const owner = { eventRoot } as PibblInstance;
   let slot = 0;
 
   return {
@@ -493,7 +493,7 @@ function createFixture(eventRoot = createEventRoot()): Fixture {
     parent,
     targetComponent,
     listener(componentRef, handlerMap) {
-      const listener: CRCEventListenerRegistration = {
+      const listener: PibblEventListenerRegistration = {
         kind: 'listener',
         owner,
         component: componentRef,
@@ -517,7 +517,7 @@ function createFixture(eventRoot = createEventRoot()): Fixture {
       return listener;
     },
     target(handlerMap, componentRef = targetComponent) {
-      const target: CRCEventTargetRegistration = {
+      const target: PibblEventTargetRegistration = {
         kind: 'target',
         owner,
         component: componentRef,
@@ -543,27 +543,27 @@ function createFixture(eventRoot = createEventRoot()): Fixture {
   };
 }
 
-function createEventRoot(): CRCEventRoot {
+function createEventRoot(): PibblEventRoot {
   return {
     listenersByComponent: new Map(),
     pointerCaptures: new Map(),
     targets: new Set(),
     observers: new Map(),
-  } as unknown as CRCEventRoot;
+  } as unknown as PibblEventRoot;
 }
 
-function handlers(handlerMap: HandlerMap): CRCNormalizedHandlers {
-  return handlerMap as CRCNormalizedHandlers;
+function handlers(handlerMap: HandlerMap): PibblNormalizedHandlers {
+  return handlerMap as PibblNormalizedHandlers;
 }
 
 function component(
   id: string,
-  parent?: CRCComponentRefs<unknown>,
-): CRCComponentRefs<unknown> {
-  return { id, parent } as CRCComponentRefs<unknown>;
+  parent?: PibblComponentRefs<unknown>,
+): PibblComponentRefs<unknown> {
+  return { id, parent } as PibblComponentRefs<unknown>;
 }
 
-function publicTarget(): CRCEventTarget {
+function publicTarget(): PibblEventTarget {
   const captures = new Set<number>();
   return {
     setPointerCapture(pointerId) {

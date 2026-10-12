@@ -1,0 +1,21 @@
+---
+title: useTexture
+description: Own a texture resource in a mounted component.
+kind: reference
+symbols: [useTexture]
+---
+
+Import `useTexture` from `@pibbl/core/textures` alongside a generator. Call it consistently in a synchronous Pibbl component. Pass its returned handle as a primitive's `style.fill` or use its documented paint placement API.
+
+```js
+const ink = useTexture(reactionDiffusion({ seed: 42 }), {
+  resolution: { width: 128, height: 48 },
+  palette: ["#082f35", "#72c6b0"],
+});
+```
+
+This excerpt belongs inside the [complete component and host recipe](/guides/native-button/). The hook owns the resource until its component is removed or the root is disposed. Keep sharing within its owning Pibbl instance and lifetime; do not store a handle for use in unrelated roots. Configuration updates should flow through the mounted hook, rather than recreating the whole root for hover changes.
+
+Resolution defaults to 256 by 160; each dimension must be an integer from 8 to 1024 and the product cannot exceed 262144 cells. A palette has 2 to 16 `#RRGGBB` colors. A display can be larger than the texture without increasing simulation resolution.
+
+Read [marble](/reference/marble/) for a static material and [reactionDiffusion](/reference/reaction-diffusion/) for a message-driven living texture. Resource teardown follows [pibbl](/reference/pibbl/).

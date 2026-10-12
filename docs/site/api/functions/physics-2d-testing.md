@@ -12,29 +12,29 @@ keywords: [physics, testing, deterministic, agentic]
 # 2D physics test harness
 
 ```ts
-import { createPhysicsTestHarness2D } from "@crc/physics/2d/testing";
+import { createPhysicsTestHarness2D } from "@pibbl/core/physics/2d/testing";
 import type {
-  CRCPhysicsTestHarness2D,
-  CRCPhysicsTestHarness2DOptions,
-} from "@crc/physics/2d/testing";
+  PibblPhysicsTestHarness2D,
+  PibblPhysicsTestHarness2DOptions,
+} from "@pibbl/core/physics/2d/testing";
 ```
 
-`createPhysicsTestHarness2D` mounts a public CRC root with a deterministic
+`createPhysicsTestHarness2D` mounts a public Pibbl root with a deterministic
 manual host-frame driver. It lets tests and coding agents observe public handles
 and state without importing private world storage.
 
 ```text
 function createPhysicsTestHarness2D<Observation>(
-  options: CRCPhysicsTestHarness2DOptions<Observation>,
-): CRCPhysicsTestHarness2D<Observation>;
+  options: PibblPhysicsTestHarness2DOptions<Observation>,
+): PibblPhysicsTestHarness2D<Observation>;
 ```
 
-### `CRCPhysicsTestHarness2DOptions`
+### `PibblPhysicsTestHarness2DOptions`
 
 ```text
-interface CRCPhysicsTestHarness2DOptions<Observation> {
+interface PibblPhysicsTestHarness2DOptions<Observation> {
   readonly canvas: HTMLCanvasElement;
-  readonly root: () => CRCNode;
+  readonly root: () => PibblNode;
   readonly observe: () => Observation;
 }
 ```
@@ -43,10 +43,10 @@ The caller owns the canvas; disposal never removes it. `root()` creates the
 initial and reset composition. `observe()` should read public application
 state. External fixtures are not reset automatically.
 
-### `CRCPhysicsTestHarness2D`
+### `PibblPhysicsTestHarness2D`
 
 ```text
-interface CRCPhysicsTestHarness2D<Observation> {
+interface PibblPhysicsTestHarness2D<Observation> {
   readonly pendingFrames: number;
   flush(): boolean;
   advanceFrames(count: number, milliseconds?: number): number;
@@ -64,7 +64,7 @@ may take zero, one, or several ticks per host frame. `act()` runs a state action
 then flushes one frame without moving host time. `reset()` remounts while time
 remains monotonic; `dispose()` is idempotent and restores the previous driver.
 
-The harness requires an isolated CRC realm and rejects creation while another
-CRC root is mounted, because CRC has one realm scheduler. See the
+The harness requires an isolated Pibbl realm and rejects creation while another
+Pibbl root is mounted, because Pibbl has one realm scheduler. See the
 [2D physics guide](#/learn/guides/physics-2d) for the public world and handle
 API under test.

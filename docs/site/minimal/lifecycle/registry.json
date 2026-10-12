@@ -1,0 +1,291 @@
+[
+  {
+    "id": "signals",
+    "title": "Read and update signals",
+    "description": "Use writable, readonly, and computed values with synchronous batching.",
+    "source": "signals.ts",
+    "environment": "browser",
+    "symbols": [
+      { "name": "signal", "importPath": "@pibbl/core" },
+      { "name": "computed", "importPath": "@pibbl/core" },
+      { "name": "batch", "importPath": "@pibbl/core" },
+      { "name": "untracked", "importPath": "@pibbl/core" },
+      { "name": "isSignal", "importPath": "@pibbl/core" },
+      { "name": "resolveSignalValue", "importPath": "@pibbl/core" },
+      { "name": "Signal", "importPath": "@pibbl/core" },
+      { "name": "WritableSignal", "importPath": "@pibbl/core" },
+      { "name": "SignalValue", "importPath": "@pibbl/core" },
+      { "name": "SignalEquals", "importPath": "@pibbl/core" },
+      { "name": "SignalOptions", "importPath": "@pibbl/core" }
+    ],
+    "notes": [
+      "Untracked reads do not attach dependency edges. This example refreshes the DOM explicitly; Pibbl component reads subscribe automatically."
+    ]
+  },
+  {
+    "id": "hooks",
+    "title": "Component-owned state and reactions",
+    "description": "Click to update a signal, derive a value, and publish an imperative effect after commit.",
+    "source": "hooks.tsx",
+    "environment": "browser",
+    "symbols": [
+      { "name": "useSignal", "importPath": "@pibbl/core" },
+      { "name": "useComputed", "importPath": "@pibbl/core" },
+      { "name": "useConst", "importPath": "@pibbl/core" },
+      { "name": "useRef", "importPath": "@pibbl/core" },
+      { "name": "useReaction", "importPath": "@pibbl/core" },
+      { "name": "PibblRef", "importPath": "@pibbl/core" },
+      { "name": "PibblReactionOptions", "importPath": "@pibbl/core" }
+    ],
+    "notes": [
+      "Hooks run inside a mounted synchronous component. A ref mutation does not request rendering. Reaction setup and cleanup must not write signals."
+    ]
+  },
+  {
+    "id": "elements",
+    "title": "Typed components and recursive children",
+    "description": "Build a component with createElement, group its children in a Fragment, and render textual children.",
+    "source": "elements.tsx",
+    "environment": "browser",
+    "symbols": [
+      { "name": "createElement", "importPath": "@pibbl/core" },
+      { "name": "Fragment", "importPath": "@pibbl/core" },
+      { "name": "PibblComponent", "importPath": "@pibbl/core" },
+      { "name": "PibblElement", "importPath": "@pibbl/core" },
+      { "name": "PibblElementType", "importPath": "@pibbl/core" },
+      { "name": "PibblKey", "importPath": "@pibbl/core" },
+      { "name": "PibblNode", "importPath": "@pibbl/core" },
+      { "name": "PibblNodeInput", "importPath": "@pibbl/core" },
+      { "name": "PibblContainerChild", "importPath": "@pibbl/core" },
+      { "name": "PibblEmptyNode", "importPath": "@pibbl/core" },
+      { "name": "PibblTextChild", "importPath": "@pibbl/core" },
+      { "name": "PibblTextInput", "importPath": "@pibbl/core" },
+      { "name": "PibblRenderResult", "importPath": "@pibbl/core" }
+    ],
+    "notes": [
+      "Textual values belong inside Text; arbitrary strings are not general scene nodes. Components are synchronous and createElement is equivalent to automatic JSX."
+    ]
+  },
+  {
+    "id": "mount",
+    "title": "Mount, update, and dispose",
+    "description": "Own one Pibbl root for a canvas and replace its content without creating another controller.",
+    "source": "mount.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "pibbl",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "Canvas",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PibblController",
+        "importPath": "@pibbl/core"
+      }
+    ],
+    "notes": ["One canvas has at most one live mount. dispose() is idempotent."]
+  },
+  {
+    "id": "primitive",
+    "title": "Define a Canvas primitive",
+    "description": "Supply synchronous drawing, style normalization, resolution, and opt-in measurement.",
+    "source": "primitive.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "definePrimitive",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "useCanvasContext",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "SystemStyle",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "RenderingContext2D",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PrimitiveRender",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PrimitiveCapabilities",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PrimitiveInput",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PrimitiveInputOf",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PrimitiveProgramProps",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PibblPrimitiveComponent",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "SpecifiedStyle",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "NormalizedStyle",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "ResolvedStyle",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "StyleResolutionContext",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "MeasureInput",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "MeasureResult",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "CanvasMeasurementService",
+        "importPath": "@pibbl/core"
+      }
+    ],
+    "notes": [
+      "A custom primitive owns its drawing geometry. Use supported hooks for targeting and measurement; never write signals during render. useCanvasContext is for synchronous measurement, not retained context ownership."
+    ]
+  },
+  {
+    "id": "html",
+    "title": "Host a native button in Pibbl",
+    "description": "Mount and update native HTML inside an HtmlBox, preserving native clicks and focus.",
+    "source": "html.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "HtmlBox",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "HtmlBoxProps",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "HtmlBoxStyle",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "HtmlMountCallback",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "HtmlUpdateFunction",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "HtmlBoxFocusState",
+        "importPath": "@pibbl/core"
+      }
+    ],
+    "notes": [
+      "HtmlBox hosts live DOM alongside Canvas; Canvas filters cannot capture it. The abort signal releases listeners on unmount; keep mount callback identity stable."
+    ]
+  },
+  {
+    "id": "texture",
+    "title": "Define and own a texture",
+    "description": "Rasterize a small animated tile and send it a message from native HTML.",
+    "source": "texture.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "defineTexture",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "useTexture",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "TextureDefinition",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "TextureContext",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "TextureFrame",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "TextureRecipe",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "Texture",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "TextureOptions",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "TexturePlacement",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "TexturePaint",
+        "importPath": "@pibbl/core"
+      }
+    ],
+    "notes": [
+      "The texture is owned by useTexture. requestFrame() opts into another shared Pibbl frame; stop calling it to stop animation. Release application-owned resources in definition.dispose if any are allocated."
+    ]
+  },
+  {
+    "id": "surface",
+    "title": "Configure viewport and pixel density",
+    "description": "Compare a fixed logical viewport with one that follows a resizable host.",
+    "source": "surface.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "PibblConfig",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PibblFit",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PibblPixelRatio",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PibblFixedViewportConfig",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PibblResponsiveViewportConfig",
+        "importPath": "@pibbl/core"
+      }
+    ],
+    "notes": [
+      "Surface configuration is captured at mount. Dispose and remount to change it. CSS controls display size; Pibbl manages backing pixels."
+    ]
+  }
+]

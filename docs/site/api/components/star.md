@@ -12,7 +12,7 @@ relatedTypes: [StarProps, StarStyle]
 # Star
 
 ```ts
-import { Star } from "@crc/core";
+import { Star } from "@pibbl/core";
 ```
 
 `Star` uses [`StarProps`](#/api/types/elements-components#starprops) and [`StarStyle`](#/api/types/styles#starstyle). It requires integer `points >= 3`,

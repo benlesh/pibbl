@@ -11,7 +11,7 @@
 
 **Architecture:** Components continue to compose a CPU-only scene before any WebGL work. Meshes, lights, and the background are separate declarations; settlement validates the complete scene, derives normal matrices and world-space light pose, and produces immutable render/pick/focus plans. The renderer then uses closed `unlit` and `lambert` program keys, fixed eight-light uniforms, transactional program/geometry ownership, the existing opaque/transparent queues, and one default-framebuffer pass.
 
-**Tech Stack:** TypeScript, CRC automatic JSX, WebGL2/GLSL ES 3.00, Vitest browser mode with Playwright Chromium, pnpm 11.21.0 on Node 24.15.0, Markdown public documentation, deterministic scenario catalogs, and pixel/structural browser evidence.
+**Tech Stack:** TypeScript, Pibbl automatic JSX, WebGL2/GLSL ES 3.00, Vitest browser mode with Playwright Chromium, pnpm 11.21.0 on Node 24.15.0, Markdown public documentation, deterministic scenario catalogs, and pixel/structural browser evidence.
 
 **Spec:** [`docs/superpowers/specs/2026-09-14-webgl-lighting-materials-and-background-design.md`](../specs/2026-09-14-webgl-lighting-materials-and-background-design.md)
 
@@ -32,7 +32,7 @@
 
 ## Task 1: Add immutable geometry normals and correct built-in normals
 
-**Interfaces produced:** `CRCWebGLGeometryInput.normals`, private owned `Float32Array` normal data, flat Cube normals, radial Sphere normals.
+**Interfaces produced:** `PibblWebGLGeometryInput.normals`, private owned `Float32Array` normal data, flat Cube normals, radial Sphere normals.
 
 **Interfaces consumed later:** settlement normal validation and Lambert normal-buffer uploads.
 
@@ -83,7 +83,7 @@ fnm exec --using=v24.15.0 -- corepack pnpm@11.21.0 exec vitest run \
 - [ ] Extend the public and private geometry shapes exactly as follows and copy normals during descriptor creation.
 
 ```ts
-export interface CRCWebGLGeometryInput {
+export interface PibblWebGLGeometryInput {
   readonly positions: ArrayLike<number>;
   readonly normals?: ArrayLike<number>;
   readonly indices?: ArrayLike<number>;
@@ -116,7 +116,7 @@ git commit -m "feat(webgl): add immutable geometry normals"
 
 ## Task 2: Resolve closed material styles and submit shading intent
 
-**Interfaces produced:** `CRCWebGLLambertMaterial`, `CRCWebGLMaterial`, `MeshStyle.lit`, `MeshStyle.material`, parsed concrete color helper, resolved mesh material submission.
+**Interfaces produced:** `PibblWebGLLambertMaterial`, `PibblWebGLMaterial`, `MeshStyle.lit`, `MeshStyle.material`, parsed concrete color helper, resolved mesh material submission.
 
 **Interfaces consumed later:** settlement selects `unlit`/`lambert`, derives linear base/emissive colors, and requires normals only for lit meshes.
 
@@ -189,24 +189,24 @@ export function parseConcreteColor(
 - [ ] Add and export the public closed material types.
 
 ```ts
-export interface CRCWebGLLambertMaterial {
+export interface PibblWebGLLambertMaterial {
   readonly type: "lambert";
   readonly emissiveColor?: string;
   readonly emissiveIntensity?: number;
 }
 
-export type CRCWebGLMaterial = CRCWebGLLambertMaterial;
+export type PibblWebGLMaterial = PibblWebGLLambertMaterial;
 ```
 
 - [ ] Implement `resolveWebGLMaterial(componentName, value)` with own-key validation for `type`, `emissiveColor`, and `emissiveIntensity`; reject unknown types/fields for untyped callers; default color to black and intensity to one.
 
-- [ ] Add `readonly lit?: boolean` and `readonly material?: CRCWebGLMaterial` to `MeshStyle`, validate `lit` as a runtime boolean, and submit immutable resolved material data without changing target registration or the final alpha calculation.
+- [ ] Add `readonly lit?: boolean` and `readonly material?: PibblWebGLMaterial` to `MeshStyle`, validate `lit` as a runtime boolean, and submit immutable resolved material data without changing target registration or the final alpha calculation.
 
 - [ ] Extend scene submission/draft types to carry `lit` and resolved material data while preserving the mesh-only `sourceIndex` counter and copied model/color ownership.
 
 - [ ] Add retained-WebGLLayer tests proving scalar material fields are snapshotted when the component executes, replacing a nested descriptor invalidates, a fresh equivalent descriptor may conservatively invalidate, and mutating the same descriptor in place is unsupported and may remain cached.
 
-- [ ] Export `CRCWebGLLambertMaterial` and `CRCWebGLMaterial` from `@crc/webgl` without introducing a generic `Material` value.
+- [ ] Export `PibblWebGLLambertMaterial` and `PibblWebGLMaterial` from `@pibbl/webgl` without introducing a generic `Material` value.
 
 - [ ] Run the same focused tests and confirm they pass.
 
@@ -281,12 +281,12 @@ export interface AmbientLightStyle {
   readonly color?: string;
   readonly intensity?: number;
 }
-export interface HemisphereLightStyle extends CRCWebGLTransformStyle {
+export interface HemisphereLightStyle extends PibblWebGLTransformStyle {
   readonly skyColor?: string;
   readonly groundColor?: string;
   readonly intensity?: number;
 }
-export interface DirectionalLightStyle extends CRCWebGLTransformStyle {
+export interface DirectionalLightStyle extends PibblWebGLTransformStyle {
   readonly color?: string;
   readonly intensity?: number;
 }
@@ -308,7 +308,7 @@ export interface WebGLBackgroundStyle {
 
 - [ ] Extend composer draft/close ownership with `lights` and `backgrounds` arrays; retain source data for diagnostics; do not enforce capacity, uniqueness, or transformed-vector validity until settlement.
 
-- [ ] Export all six runtime values and their props/style types from `@crc/webgl`.
+- [ ] Export all six runtime values and their props/style types from `@pibbl/webgl`.
 
 - [ ] Run the same focused tests and confirm they pass.
 
@@ -396,12 +396,12 @@ export type SettledWebGLShading =
   | {
       readonly kind: "unlit";
       readonly displayBaseColor: WebGLRGBA;
-      readonly linearEmissive: CRCWebGLVector3;
+      readonly linearEmissive: PibblWebGLVector3;
     }
   | {
       readonly kind: "lambert";
       readonly linearBaseColor: WebGLRGBA;
-      readonly linearEmissive: CRCWebGLVector3;
+      readonly linearEmissive: PibblWebGLVector3;
       readonly normalMatrix: Readonly<Float32Array>;
     };
 
@@ -771,7 +771,7 @@ git commit -m "test(webgl): add lighting lifecycle laboratory"
 - Modify: `playground/test/routes.test.ts`
 - Modify: `tooling/scenario-catalog.ts`
 
-- [ ] Add a failing contract check that enumerates exactly eleven WebGL lighting lessons, requires direct `@crc/core`/`@crc/webgl` imports and one mount, and compares a normalized literal base block delimited by neutral source comments.
+- [ ] Add a failing contract check that enumerates exactly eleven WebGL lighting lessons, requires direct `@pibbl/core`/`@pibbl/webgl` imports and one mount, and compares a normalized literal base block delimited by neutral source comments.
 
 ```ts
 export const WEBGL_LIGHTING_EXAMPLE_IDS = [
@@ -837,7 +837,7 @@ git commit -m "docs(webgl): add same-scene lighting lessons"
 - Modify: `packages/webgl/README.md`
 - Modify: root `README.md`
 - Modify: root `AGENTS.md`
-- Modify: `playground/src/crc-editor-types.txt`
+- Modify: `playground/src/pibbl-editor-types.txt`
 - Modify: `tooling/verify-studio-types.mjs`
 - Modify: `playground/package-consumer/index.ts`
 - Modify: `playground/package-consumer/jsx.tsx`
@@ -886,8 +886,8 @@ fnm exec --using=v24.15.0 -- node tooling/verify-studio-types.mjs
 fnm exec --using=v24.15.0 -- node tooling/verify-docs.mjs
 fnm exec --using=v24.15.0 -- corepack pnpm@11.21.0 exec tsx \
   tooling/studio-docs/api-exports.check.ts
-fnm exec --using=v24.15.0 -- corepack pnpm@11.21.0 --filter @crc/core build
-fnm exec --using=v24.15.0 -- corepack pnpm@11.21.0 --filter @crc/webgl build
+fnm exec --using=v24.15.0 -- corepack pnpm@11.21.0 --filter @pibbl/core build
+fnm exec --using=v24.15.0 -- corepack pnpm@11.21.0 --filter @pibbl/webgl build
 fnm exec --using=v24.15.0 -- corepack pnpm@11.21.0 exec tsc \
   -p playground/package-consumer/tsconfig.bundler.json
 fnm exec --using=v24.15.0 -- corepack pnpm@11.21.0 exec tsc \
@@ -896,11 +896,11 @@ fnm exec --using=v24.15.0 -- node playground/package-consumer/runtime.mjs
 fnm exec --using=v24.15.0 -- node tooling/verify-packed-consumer.mjs
 ```
 
-- [ ] Synchronize `@crc/webgl` runtime/type exports and Studio declarations. Export exactly these new runtime values: `AmbientLight`, `HemisphereLight`, `DirectionalLight`, `PointLight`, `SpotLight`, `WebGLBackground`.
+- [ ] Synchronize `@pibbl/webgl` runtime/type exports and Studio declarations. Export exactly these new runtime values: `AmbientLight`, `HemisphereLight`, `DirectionalLight`, `PointLight`, `SpotLight`, `WebGLBackground`.
 
-- [ ] Synchronize the 14 new named public types: six props, six styles, `CRCWebGLLambertMaterial`, and `CRCWebGLMaterial`; update fixed inventory counts rather than weakening them.
+- [ ] Synchronize the 14 new named public types: six props, six styles, `PibblWebGLLambertMaterial`, and `PibblWebGLMaterial`; update fixed inventory counts rather than weakening them.
 
-- [ ] Update Bundler, NodeNext, runtime, and packed-tarball consumers to prove root-only imports, automatic JSX, and emitted declarations; do not expose `@crc/core/internal` or `@crc/webgl` source paths.
+- [ ] Update Bundler, NodeNext, runtime, and packed-tarball consumers to prove root-only imports, automatic JSX, and emitted declarations; do not expose `@pibbl/core/internal` or `@pibbl/webgl` source paths.
 
 - [ ] Write one API page per declaration and update Mesh/Cube/Sphere/Group3D/WebGLLayer/geometry/type docs with defaults, exact validation, local `-Z`/`+Y`, group scale semantics, eight-light cap, no-light black, normal requirements, material identity, color alpha, and background click-through.
 

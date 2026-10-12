@@ -1,0 +1,20 @@
+{
+  "name": "@pibbl/website",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "prepare:content": "node --import tsx prepare-content.mjs",
+    "dev": "node --import tsx prepare-content.mjs && astro dev --host localhost",
+    "build": "node --import tsx prepare-content.mjs && pnpm run check:examples && astro build",
+    "check:examples": "node --import tsx --test ../tooling/website-brick-climb.test.mjs ../tooling/minimal-example-registry.test.mjs ../tooling/website-minimal-coverage.test.mjs ../tooling/website-minimal-examples.test.mjs ../tooling/website-text-assets.test.mjs ../tooling/website-text-discovery.test.mjs",
+    "preview": "astro preview --host localhost"
+  },
+  "dependencies": {
+    "@astrojs/markdown-remark": "^7.3.1",
+    "@astrojs/starlight": "^0.42.5",
+    "@pibbl/core": "workspace:*",
+    "@pibbl/text": "workspace:*",
+    "@pibbl/three": "workspace:*",
+    "astro": "^7.3.5"
+  }
+}

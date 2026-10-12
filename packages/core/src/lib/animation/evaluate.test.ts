@@ -1,3 +1,4 @@
+import { signalObserversForTest } from "../../../test/support/signal-observer";
 import repeatMilestones from './repeat-milestones.fixture.json';
 import { describe, expect, it, vi } from 'vitest';
 import {
@@ -10,10 +11,10 @@ import {
   signal,
   spring,
   stepper,
-  track,
+  drive,
   tween,
   wait,
-  type CRCAnimationProgram,
+  type PibblAnimationProgram,
   type WritableSignal,
 } from '../../index';
 import {
@@ -53,7 +54,7 @@ function evaluateAt(
 }
 
 function committedValueAt<T>(
-  program: CRCAnimationProgram,
+  program: PibblAnimationProgram,
   output: WritableSignal<T>,
   time: number,
 ): T {
@@ -66,13 +67,13 @@ describe('seekable animation program evaluation', () => {
   it('captures sequential omitted starts from transaction-local staged values', () => {
     const x = signal(0);
     const program = sequence(
-      track(x, tween({ to: 10, duration: 100 })),
-      track(x, tween({ to: 30, duration: 100 })),
+      drive(x, tween({ to: 10, duration: 100 })),
+      drive(x, tween({ to: 30, duration: 100 })),
     );
     const registration = {};
     const activation = activateProgram(program, registration);
     let invalidations = 0;
-    getSignalNode(x).observers.add(() => invalidations++);
+    signalObserversForTest(getSignalNode(x)).add(() => invalidations++);
     const before = signalGraphSnapshot().signalCommitNotifications;
 
     const result = evaluateAt(activation, 150, 0);
@@ -111,8 +112,8 @@ describe('seekable animation program evaluation', () => {
   it('rebuilds direct seeks from the original run snapshot instead of public mutations', () => {
     const x = signal(0);
     const program = sequence(
-      track(x, tween({ to: 10, duration: 100 })),
-      track(x, tween({ to: 30, duration: 100 })),
+      drive(x, tween({ to: 10, duration: 100 })),
+      drive(x, tween({ to: 30, duration: 100 })),
     );
     const activation = activateProgram(program, {});
     const first = evaluateAt(activation, 150, 0);
@@ -150,9 +151,9 @@ describe('seekable animation program evaluation', () => {
     for (const { time, want } of sequenceCases) {
       const x = signal(-1);
       const program = sequence(
-        track(x, tween({ from: 0, to: 10, duration: 100 })),
+        drive(x, tween({ from: 0, to: 10, duration: 100 })),
         wait(50),
-        track(x, tween({ from: 10, to: 30, duration: 100 })),
+        drive(x, tween({ from: 10, to: 30, duration: 100 })),
       );
       expect(committedValueAt(program, x, time)).toBe(want);
     }
@@ -160,8 +161,8 @@ describe('seekable animation program evaluation', () => {
     const long = signal(0);
     const short = signal(0);
     const parallelProgram = parallel(
-      track(long, tween({ from: 0, to: 10, duration: 100 })),
-      track(short, tween({ from: 0, to: 20, duration: 50 })),
+      drive(long, tween({ from: 0, to: 10, duration: 100 })),
+      drive(short, tween({ from: 0, to: 20, duration: 50 })),
     );
     const parallelResult = evaluateAt(activateProgram(parallelProgram, {}), 75);
     expect(parallelResult.batch.read(long)).toBe(7.5);
@@ -175,7 +176,7 @@ describe('seekable animation program evaluation', () => {
 
     const zero = signal(1);
     const zeroResult = evaluateAt(activateProgram(
-      track(zero, tween({ to: 9, duration: 0 })),
+      drive(zero, tween({ to: 9, duration: 0 })),
       {},
     ), 0);
     expect(zeroResult.batch.read(zero)).toBe(9);
@@ -199,8 +200,8 @@ describe('seekable animation program evaluation', () => {
   it('uses an omitted spring start to resolve following sequence timing', () => {
     const x = signal(10);
     const program = sequence(
-      track(x, spring({ to: 10 })),
-      track(x, tween({ to: 20, duration: 100 })),
+      drive(x, spring({ to: 10 })),
+      drive(x, tween({ to: 20, duration: 100 })),
     );
     const activation = activateProgram(program, {});
     expect(getProgramActivationRecord(activation).trackStarts).toEqual([]);
@@ -216,12 +217,12 @@ describe('seekable animation program evaluation', () => {
     const x = signal(0, { debugName: 'shared output' });
     const program = parallel(
       sequence(
-        track(y, spring({ to: 10 })),
-        track(x, tween({ from: 0, to: 100, duration: 100 })),
+        drive(y, spring({ to: 10 })),
+        drive(x, tween({ from: 0, to: 100, duration: 100 })),
       ),
       sequence(
         wait(50),
-        track(x, tween({ from: 0, to: 200, duration: 100 })),
+        drive(x, tween({ from: 0, to: 200, duration: 100 })),
       ),
     );
 
@@ -236,8 +237,8 @@ describe('seekable animation program evaluation', () => {
     const y = signal(10, { debugName: 'repeat duration source' });
     const x = signal(0, { debugName: 'repeated output' });
     const program = repeat(sequence(
-      track(y, spring({ to: 10 })),
-      track(x, tween({ from: 0, to: 100, duration: 100 })),
+      drive(y, spring({ to: 10 })),
+      drive(x, tween({ from: 0, to: 100, duration: 100 })),
     ), { iterations: 2 });
     const callerWriter = {};
     const callerBatch = createSignalCommitBatch();
@@ -257,10 +258,10 @@ describe('seekable animation program evaluation', () => {
   it('accepts activation-dependent same-output writers that remain provably separated', () => {
     const x = signal(0, { debugName: 'separated output' });
     const program = parallel(
-      track(x, spring({ to: 10 })),
+      drive(x, spring({ to: 10 })),
       sequence(
         wait(10_001),
-        track(x, tween({ from: 10, to: 20, duration: 100 })),
+        drive(x, tween({ from: 10, to: 20, duration: 100 })),
       ),
     );
 
@@ -274,8 +275,8 @@ describe('seekable animation program evaluation', () => {
     const y = signal(10, { debugName: 'large repeat duration source' });
     const x = signal(0, { debugName: 'large repeated output' });
     const program = repeat(sequence(
-      track(y, spring({ to: 10 })),
-      track(x, tween({ from: 0, to: 1, duration: 1 })),
+      drive(y, spring({ to: 10 })),
+      drive(x, tween({ from: 0, to: 1, duration: 1 })),
       wait(100),
     ), { iterations: 600 });
 
@@ -288,7 +289,7 @@ describe('seekable animation program evaluation', () => {
     const output = signal(0);
     let samples = 0;
     const program = repeat(sequence(
-      track(output, tween({
+      drive(output, tween({
         from: 0,
         to: 1,
         duration: 0.5,
@@ -408,7 +409,7 @@ describe('seekable animation program evaluation', () => {
     ] as const) {
       const output = signal(1);
       let samples = 0;
-      const program = repeat(track(output, tween({
+      const program = repeat(drive(output, tween({
         from: 1,
         to: 9,
         duration: 0,
@@ -458,7 +459,7 @@ describe('seekable animation program evaluation', () => {
     for (const { direction, time, want } of cases) {
       const x = signal(-1);
       const child = sequence(
-        track(x, tween({ from: 0, to: 10, duration: 50 })),
+        drive(x, tween({ from: 0, to: 10, duration: 50 })),
         wait(50),
       );
       const program = repeat(child, { iterations: 3, direction });
@@ -508,7 +509,7 @@ describe('seekable animation program evaluation', () => {
       for (let index = 0; index < times.length; index++) {
         const output = signal(-1);
         const child = sequence(
-          track(output, tween({ from: 0, to: 10, duration: 50 })),
+          drive(output, tween({ from: 0, to: 10, duration: 50 })),
           wait(50),
         );
         const program = repeat(child, { iterations: 3, direction });
@@ -524,7 +525,7 @@ describe('seekable animation program evaluation', () => {
       sample: ({ initialValue, progress }) => initialValue + 10 * progress,
     });
     const program = repeat(repeat(sequence(
-      track(output, increment),
+      drive(output, increment),
       wait(1),
     ), { iterations: 2 }), { iterations: 2 });
     const activation = activateProgram(program, {});
@@ -597,11 +598,11 @@ describe('seekable animation program evaluation', () => {
       const sprung = signal(0);
       const repeated = signal(0);
       const program = parallel(
-        sequence(wait(10), track(tweened, tween({ to: 12, duration: 100 }))),
-        track(framed, keyframes({ values: [0, 20, 10], duration: 100 })),
-        track(sprung, spring({ to: 10 })),
+        sequence(wait(10), drive(tweened, tween({ to: 12, duration: 100 }))),
+        drive(framed, keyframes({ values: [0, 20, 10], duration: 100 })),
+        drive(sprung, spring({ to: 10 })),
         repeat(sequence(
-          track(repeated, tween({ from: 0, to: 6, duration: 20 })),
+          drive(repeated, tween({ from: 0, to: 6, duration: 20 })),
           wait(10),
           marker('cycle'),
         ), { iterations: 4, direction: 'alternate' }),
@@ -640,7 +641,7 @@ describe('seekable animation program evaluation', () => {
     let samples = 0;
     const program = sequence(
       marker('begin'),
-      track(output, defineAnimation({
+      drive(output, defineAnimation({
         duration: 100,
         sample: ({ initialValue, progress }) => {
           samples++;
@@ -668,7 +669,7 @@ describe('seekable animation program evaluation', () => {
     function fixture(throwAtTerminal: boolean) {
       const output = signal(0);
       const samples: number[] = [];
-      const program = track(output, defineAnimation({
+      const program = drive(output, defineAnimation({
         duration: 100,
         sample: ({ progress }) => {
           samples.push(progress);
@@ -712,8 +713,8 @@ describe('seekable animation program evaluation', () => {
       const output = signal(0);
       const samples: number[] = [];
       const program = repeat(sequence(
-        track(durationSource, spring({ to: 10 })),
-        track(output, defineAnimation({
+        drive(durationSource, spring({ to: 10 })),
+        drive(output, defineAnimation({
           duration: 100,
           sample: ({ progress }) => {
             samples.push(progress);
@@ -750,9 +751,9 @@ describe('seekable animation program evaluation', () => {
     const first = signal(0);
     const second = signal(0);
     const program = sequence(
-      track(first, spring({ to: 10, damping: 0, maxDuration: 100 })),
+      drive(first, spring({ to: 10, damping: 0, maxDuration: 100 })),
       marker('first'),
-      track(second, spring({ to: 20, damping: 0, maxDuration: 200 })),
+      drive(second, spring({ to: 20, damping: 0, maxDuration: 200 })),
       marker('second'),
     );
     const activation = activateProgram(program, {});
@@ -795,15 +796,15 @@ describe('seekable animation program evaluation', () => {
     const output = signal(0);
     const samples: number[] = [];
     const program = sequence(
-      track(output, defineAnimation({
+      drive(output, defineAnimation({
         duration: 10,
         sample: ({ progress }) => {
           samples.push(progress);
           return progress * 5;
         },
       })),
-      track(output, spring({ from: 0, to: 10, damping: 0, maxDuration: 100 })),
-      track(output, spring({ to: 10 })),
+      drive(output, spring({ from: 0, to: 10, damping: 0, maxDuration: 100 })),
+      drive(output, spring({ to: 10 })),
       marker('done'),
     );
     const activation = activateProgram(program, {});
@@ -856,8 +857,8 @@ describe('seekable animation program evaluation', () => {
           },
         });
         const program = sequence(
-          track(output, first),
-          track(output, spring({ to: 20, damping: 0, maxDuration: 100 })),
+          drive(output, first),
+          drive(output, spring({ to: 20, damping: 0, maxDuration: 100 })),
         );
         return { output, program, calls: () => calls };
       }
@@ -908,10 +909,10 @@ describe('seekable animation program evaluation', () => {
     for (const reverseBranches of [false, true]) {
       for (let index = 0; index < times.length; index++) {
         const output = signal(0);
-        const early = track(output, tween({ from: 0, to: 10, duration: 10 }));
+        const early = drive(output, tween({ from: 0, to: 10, duration: 10 }));
         const late = sequence(
           wait(11),
-          track(output, tween({ from: 10, to: 20, duration: 1 })),
+          drive(output, tween({ from: 10, to: 20, duration: 1 })),
         );
         const branches = reverseBranches ? [late, early] : [early, late];
         const result = evaluateAt(
@@ -922,15 +923,15 @@ describe('seekable animation program evaluation', () => {
       }
 
       const output = signal(0);
-      const early = track(output, tween({ from: 0, to: 10, duration: 10 }));
+      const early = drive(output, tween({ from: 0, to: 10, duration: 10 }));
       const late = sequence(
         wait(11),
-        track(output, tween({ from: 10, to: 20, duration: 1 })),
+        drive(output, tween({ from: 10, to: 20, duration: 1 })),
       );
       const branches = reverseBranches ? [late, early] : [early, late];
       const program = sequence(
         parallel(...branches),
-        track(output, tween({ to: 30, duration: 10 })),
+        drive(output, tween({ to: 30, duration: 10 })),
       );
       const activation = activateProgram(program, {});
       const result = evaluateAt(activation, 17);
@@ -947,8 +948,8 @@ describe('seekable animation program evaluation', () => {
     const first = signal(0);
     const second = signal(0);
     const program = sequence(
-      track(first, tween({ to: 10, duration: 10 })),
-      track(second, defineAnimation({
+      drive(first, tween({ to: 10, duration: 10 })),
+      drive(second, defineAnimation({
         duration: 10,
         sample: () => {
           throw new Error('later sample failed');
@@ -983,7 +984,7 @@ describe('seekable animation program evaluation', () => {
 
   it('evaluates stateful work without changing seekable transaction semantics', () => {
     const output = signal(0);
-    const program = track(output, stepper({
+    const program = drive(output, stepper({
       stepMilliseconds: 10,
       initial: (current: number) => current,
       step: state => state + 1,
@@ -999,7 +1000,7 @@ describe('seekable animation program evaluation', () => {
   it('keeps forked activation starts private until adoption and invalidates consumed forks', () => {
     const output = signal(0);
     const activation = activateProgram(
-      track(output, tween({ to: 10, duration: 10 })),
+      drive(output, tween({ to: 10, duration: 10 })),
       {},
     );
     const discarded = forkProgramActivation(activation);

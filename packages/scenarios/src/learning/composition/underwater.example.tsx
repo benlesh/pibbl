@@ -1,5 +1,5 @@
 import {
-  crc,
+  pibbl,
   defineTexture,
   DragHandle,
   Group,
@@ -10,11 +10,11 @@ import {
   useManipulation,
   useSignal,
   useTexture,
-  type CRCController,
-  type CRCManipulationBox,
-} from "@crc/core";
-import { displacement, reflectedLight } from "@crc/core/filters";
-import { marble, waterSurface } from "@crc/textures";
+  type PibblController,
+  type PibblManipulationBox,
+} from "@pibbl/core";
+import { displacement, reflectedLight } from "@pibbl/core/filters";
+import { marble, waterSurface } from "@pibbl/core/textures";
 
 const skyReflection = defineTexture({
   create: () => ({}),
@@ -47,7 +47,7 @@ function Underwater() {
   });
   const lightOpacity = useSignal(0.15);
   const patternedLight = useSignal(false);
-  const obstacle = useSignal<CRCManipulationBox>({
+  const obstacle = useSignal<PibblManipulationBox>({
     left: 480,
     top: 196,
     width: 96,
@@ -450,6 +450,6 @@ function Underwater() {
   );
 }
 
-export default function mount(canvas: HTMLCanvasElement): CRCController {
-  return crc(canvas, <Underwater />);
+export default function mount(canvas: HTMLCanvasElement): PibblController {
+  return pibbl(canvas, <Underwater />);
 }

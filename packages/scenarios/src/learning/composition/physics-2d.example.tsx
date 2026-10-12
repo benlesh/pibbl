@@ -3,16 +3,16 @@ import {
   Group,
   Rectangle,
   Text,
-  crc,
+  pibbl,
   useRef,
   useSignal,
-  type CRCController,
-  type CRCPointerEvent,
-} from "@crc/core";
+  type PibblController,
+  type PibblPointerEvent,
+} from "@pibbl/core";
 import {
   PhysicsWorld2D,
   collider2D,
-  crcPhysicsBody2D,
+  pibblPhysicsBody2D,
   disableBody2D,
   dynamicBody2D,
   enableBody2D,
@@ -20,7 +20,7 @@ import {
   setLinearVelocity2D,
   staticBody2D,
   teleportBody2D,
-} from "@crc/physics/2d";
+} from "@pibbl/core/physics/2d";
 
 const BALL_RADIUS = 28;
 const MAX_THROW_SPEED = 1000;
@@ -93,12 +93,11 @@ function releaseVelocity(
 }
 
 function DraggableBall() {
-  const body = crcPhysicsBody2D();
+  const body = pibblPhysicsBody2D();
   const dragSession = useRef<BallDragSession | null>(null);
   const dragging = useSignal(false);
-  const requestDragPresentationSignal = useSignal(0);
 
-  const dragTo = (event: CRCPointerEvent): readonly [number, number] | null => {
+  const dragTo = (event: PibblPointerEvent): readonly [number, number] | null => {
     const session = dragSession.current;
     if (session?.pointerId !== event.pointerId) return null;
     const position = clampBallPosition(
@@ -116,11 +115,10 @@ function DraggableBall() {
       y: event.y,
       timeStamp: event.timeStamp,
     });
-    requestDragPresentationSignal.update((revision) => revision + 1);
     return pose;
   };
 
-  const finishDrag = (event: CRCPointerEvent): void => {
+  const finishDrag = (event: PibblPointerEvent): void => {
     const session = dragSession.current;
     if (session?.pointerId !== event.pointerId) return;
     const position = clampBallPosition(
@@ -148,7 +146,7 @@ function DraggableBall() {
     }
   };
 
-  const cancelDrag = (event: CRCPointerEvent): void => {
+  const cancelDrag = (event: PibblPointerEvent): void => {
     const session = dragSession.current;
     if (session?.pointerId !== event.pointerId) return;
     teleportBody2D(body, {
@@ -163,12 +161,6 @@ function DraggableBall() {
     }
   };
 
-  const draggedPosition = dragSession.current?.position;
-  const dragTranslateX =
-    dragging.get() && draggedPosition !== undefined ? draggedPosition[0] - 210 : 0;
-  const dragTranslateY =
-    dragging.get() && draggedPosition !== undefined ? draggedPosition[1] - 110 : 0;
-
   return (
     <Group
       physics={dynamicBody2D({
@@ -180,54 +172,56 @@ function DraggableBall() {
       })}
       style={{ translateX: 210, translateY: 110 }}
     >
-      <Group style={{ translateX: dragTranslateX, translateY: dragTranslateY }}>
-        <Circle
-          physics={collider2D({
-            tag: "ball",
-            restitution: 0.35,
-            friction: 0.65,
-          })}
-          style={{
-            cx: 0,
-            cy: 0,
-            radius: BALL_RADIUS,
-            fill: "#2563eb",
-            stroke: "#17211d",
-            strokeWidth: 5,
-            cursor: dragging.get() ? "grabbing" : "grab",
-          }}
-          onPointerDown={(event) => {
-            if (dragSession.current !== null) return;
-            const displayedBody = inspectPhysics2D(body);
-            const [x, y] =
-              displayedBody?.presentationPose.position ?? body.position.get();
-            const position = [x, y] as const;
-            dragSession.current = {
-              pointerId: event.pointerId,
-              offsetX: x - event.x,
-              offsetY: y - event.y,
-              rotationDegrees:
-                displayedBody?.presentationPose.rotationDegrees ??
-                body.rotationDegrees.get(),
-              position,
-              trail: [],
-            };
-            addTrailSample(dragSession.current.trail, {
-              x: event.x,
-              y: event.y,
-              timeStamp: event.timeStamp,
-            });
-            disableBody2D(body);
-            dragging.set(true);
-            event.currentTarget.setPointerCapture(event.pointerId);
-            event.preventDefault();
-          }}
-          onPointerMove={dragTo}
-          onPointerUp={finishDrag}
-          onPointerCancel={cancelDrag}
-          onLostPointerCapture={cancelDrag}
-        />
-      </Group>
+      <Circle
+        physics={collider2D({
+          tag: "ball",
+          restitution: 0.35,
+          friction: 0.65,
+        })}
+        style={{
+          cx: 0,
+          cy: 0,
+          radius: BALL_RADIUS,
+          fill: "#2563eb",
+          stroke: "#17211d",
+          strokeWidth: 5,
+          cursor: dragging.get() ? "grabbing" : "grab",
+        }}
+        onPointerDown={(event) => {
+          if (dragSession.current !== null) return;
+          const displayedBody = inspectPhysics2D(body);
+          const [x, y] =
+            displayedBody?.presentationPose.position ?? body.position.get();
+          const position = [x, y] as const;
+          dragSession.current = {
+            pointerId: event.pointerId,
+            offsetX: x - event.x,
+            offsetY: y - event.y,
+            rotationDegrees:
+              displayedBody?.presentationPose.rotationDegrees ??
+              body.rotationDegrees.get(),
+            position,
+            trail: [],
+          };
+          addTrailSample(dragSession.current.trail, {
+            x: event.x,
+            y: event.y,
+            timeStamp: event.timeStamp,
+          });
+          disableBody2D(body);
+          teleportBody2D(body, {
+            position,
+            rotationDegrees: dragSession.current.rotationDegrees,
+          });
+          dragging.set(true);
+          event.currentTarget.setPointerCapture(event.pointerId);
+          event.preventDefault();
+        }}
+        onPointerMove={dragTo}
+        onPointerUp={finishDrag}
+        onPointerCancel={cancelDrag}
+        onLostPointerCapture={cancelDrag}
+      />
     </Group>
   );
 }
@@ -372,6 +366,6 @@ function PhysicsLesson() {
   );
 }
 
-export default function mount(canvas: HTMLCanvasElement): CRCController {
-  return crc(canvas, <PhysicsLesson />, { pixelRatio: 1 });
+export default function mount(canvas: HTMLCanvasElement): PibblController {
+  return pibbl(canvas, <PhysicsLesson />, { pixelRatio: 1 });
 }

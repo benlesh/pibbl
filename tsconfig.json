@@ -6,23 +6,39 @@
     "module": "esnext",
     "moduleResolution": "Bundler",
     "paths": {
-      "@crc/core/filters": ["./packages/core/src/filters.ts"],
-      "@crc/core/internal": ["./packages/core/src/internal.ts"],
-      "@crc/core/jsx-dev-runtime": ["./packages/core/src/jsx-dev-runtime.ts"],
-      "@crc/core/jsx-runtime": ["./packages/core/src/jsx-runtime.ts"],
-      "@crc/core/types": ["./packages/core/src/types.ts"],
-      "@crc/core": ["./packages/core/src/index.ts"],
-      "@crc/particles": ["./packages/particles/src/index.ts"],
-      "@crc/three": ["./packages/three/src/index.ts"],
-      "@crc/physics/2d/geometry": ["./packages/physics/src/2d-geometry.ts"],
-      "@crc/physics/2d/testing": ["./packages/physics/src/2d-testing.ts"],
-      "@crc/physics/2d": ["./packages/physics/src/2d.ts"],
-      "@crc/physics/3d/geometry": ["./packages/physics/src/3d-geometry.ts"],
-      "@crc/types": ["./packages/types/src/index.ts"],
-      "virtual:crc-studio-docs": ["./playground/src/studio-docs.d.ts"],
-      "@crc/viz": ["./packages/viz/src/index.ts"],
-      "@crc/textures": ["./packages/textures/src/index.ts"],
-      "@crc/text": ["./packages/text/src/index.ts"]
+      "@pibbl/core/filters": ["./packages/core/src/filters.ts"],
+      "@pibbl/core/internal": ["./packages/core/src/internal.ts"],
+      "@pibbl/core/jsx-dev-runtime": ["./packages/core/src/jsx-dev-runtime.ts"],
+      "@pibbl/core/jsx-runtime": ["./packages/core/src/jsx-runtime.ts"],
+      "@pibbl/core/types": ["./packages/core/src/types.ts"],
+      "@pibbl/core": ["./packages/core/src/index.ts"],
+      "@pibbl/core/particles": [
+        "./packages/core/src/features/particles/index.ts"
+      ],
+      "@pibbl/three": ["./packages/three/src/index.ts"],
+      "@pibbl/core/physics/2d/geometry": [
+        "./packages/core/src/features/physics/2d-geometry.ts"
+      ],
+      "@pibbl/core/physics/2d/testing": [
+        "./packages/core/src/features/physics/2d-testing.ts"
+      ],
+      "@pibbl/core/physics/2d": ["./packages/core/src/features/physics/2d.ts"],
+      "virtual:pibbl-studio-docs": ["./playground/src/studio-docs.d.ts"],
+      "@pibbl/core/viz": ["./packages/core/src/features/viz/index.ts"],
+      "@pibbl/core/textures": [
+        "./packages/core/src/features/textures/index.ts"
+      ],
+      "@pibbl/text": ["./packages/text/src/index.ts"],
+      "@pibbl/core/sprites": ["./packages/core/src/features/sprites/index.ts"],
+      "@pibbl/core/sprites/formats/*": [
+        "./packages/core/src/features/sprites/formats/*.ts"
+      ],
+      "@pibbl/core/machines": [
+        "./packages/core/src/features/machines/index.ts"
+      ],
+      "@pibbl/core/machines/animation": [
+        "./packages/core/src/features/machines/animation.ts"
+      ]
     },
     "resolveJsonModule": true,
     "types": ["vite/client", "node", "vitest/config"],
@@ -30,7 +46,7 @@
     "allowImportingTsExtensions": true,
     "isolatedModules": true,
     "jsx": "react-jsx",
-    "jsxImportSource": "@crc/core",
+    "jsxImportSource": "@pibbl/core",
     "strict": true,
     "strictNullChecks": true,
     "noUnusedLocals": true,
@@ -46,6 +62,6 @@
     "**/node_modules/**",
     "**/dist/**",
     "**/fixtures/**",
-    "packages/physics/**"
+    "packages/core/src/features/physics/**"
   ]
 }

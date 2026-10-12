@@ -1,27 +1,28 @@
+import { signalObserversForTest } from "../../../test/support/signal-observer";
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   computed,
-  crc,
+  pibbl,
   createElement,
   Layer,
   signal,
-} from '@crc/core';
+} from '@pibbl/core';
 import {
-  crcInternalCreateSignalConsumer,
-  crcInternalCurrentFrame,
-  crcInternalCurrentRenderOwner,
-  crcInternalQueueComplete,
-  crcInternalRequestRendererWork,
-  type CRCInternalFrame,
-  type CRCInternalRenderOwner,
-  type CRCInternalSignalConsumer,
-} from '@crc/core/internal';
-import { clearSharedState, getCRCInstance } from '../global-state';
+  pibblInternalCreateSignalConsumer,
+  pibblInternalCurrentFrame,
+  pibblInternalCurrentRenderOwner,
+  pibblInternalQueueComplete,
+  pibblInternalRequestRendererWork,
+  type PibblInternalFrame,
+  type PibblInternalRenderOwner,
+  type PibblInternalSignalConsumer,
+} from '@pibbl/core/internal';
+import { clearSharedState, getPibblInstance } from '../global-state';
 import { getSignalNode, signalGraphSnapshot } from '../signals/graph';
 import {
   registerAdvanceParticipant,
 } from './realm-scheduler';
-import type { CRCAdvanceParticipant } from './types';
+import type { PibblAdvanceParticipant } from './types';
 import {
   installSchedulerDriverForTest,
   ManualSchedulerDriver,
@@ -42,7 +43,7 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-describe('@crc/core/internal renderer participants', () => {
+describe('@pibbl/core/internal renderer participants', () => {
   const failureCases = [
     {
       kind: 'resource',
@@ -74,21 +75,21 @@ describe('@crc/core/internal renderer participants', () => {
         draw: {},
         compose: {},
       };
-      let owner: CRCInternalRenderOwner | undefined;
+      let owner: PibblInternalRenderOwner | undefined;
       let recordRootRender = false;
       let failedOnce = false;
       const canvas = createCanvas();
       const Root = (_props: {}) => {
-        owner ??= crcInternalCurrentRenderOwner();
+        owner ??= pibblInternalCurrentRenderOwner();
         if (recordRootRender) calls.push('root render');
       };
-      const controller = crc(canvas, createElement(Root, {}));
+      const controller = pibbl(canvas, createElement(Root, {}));
       driver.flush(1);
-      const instance = getCRCInstance(canvas);
+      const instance = getPibblInstance(canvas);
       const completedBeforeWork = instance.completedRenderRevision;
 
       for (const kind of ['resource', 'draw', 'compose'] as const) {
-        crcInternalRequestRendererWork(owner!, {
+        pibblInternalRequestRendererWork(owner!, {
           key: keys[kind],
           kind,
           run: () => {
@@ -105,7 +106,7 @@ describe('@crc/core/internal renderer participants', () => {
           },
         });
       }
-      const independent = crc(createCanvas(), createElement(() => {
+      const independent = pibbl(createCanvas(), createElement(() => {
         calls.push('independent root');
       }, {}));
       recordRootRender = true;
@@ -138,23 +139,23 @@ describe('@crc/core/internal renderer participants', () => {
     const calls: string[] = [];
     const firstFailure = new Error('first draw failed');
     const secondFailure = new Error('third draw failed');
-    let owner: CRCInternalRenderOwner | undefined;
+    let owner: PibblInternalRenderOwner | undefined;
     let recordRootRender = false;
     const canvas = createCanvas();
     const Root = (_props: {}) => {
-      owner ??= crcInternalCurrentRenderOwner();
+      owner ??= pibblInternalCurrentRenderOwner();
       if (recordRootRender) calls.push('root render');
     };
-    const controller = crc(canvas, createElement(Root, {}));
+    const controller = pibbl(canvas, createElement(Root, {}));
     driver.flush(1);
-    const completedBeforeWork = getCRCInstance(canvas).completedRenderRevision;
+    const completedBeforeWork = getPibblInstance(canvas).completedRenderRevision;
 
-    crcInternalRequestRendererWork(owner!, {
+    pibblInternalRequestRendererWork(owner!, {
       key: {},
       kind: 'resource',
       run: () => calls.push('resource'),
     });
-    crcInternalRequestRendererWork(owner!, {
+    pibblInternalRequestRendererWork(owner!, {
       key: {},
       kind: 'draw',
       run: () => {
@@ -162,12 +163,12 @@ describe('@crc/core/internal renderer participants', () => {
         throw firstFailure;
       },
     });
-    crcInternalRequestRendererWork(owner!, {
+    pibblInternalRequestRendererWork(owner!, {
       key: {},
       kind: 'draw',
       run: () => calls.push('draw:second'),
     });
-    crcInternalRequestRendererWork(owner!, {
+    pibblInternalRequestRendererWork(owner!, {
       key: {},
       kind: 'draw',
       run: () => {
@@ -175,7 +176,7 @@ describe('@crc/core/internal renderer participants', () => {
         throw secondFailure;
       },
     });
-    crcInternalRequestRendererWork(owner!, {
+    pibblInternalRequestRendererWork(owner!, {
       key: {},
       kind: 'compose',
       run: () => calls.push('compose'),
@@ -200,7 +201,7 @@ describe('@crc/core/internal renderer participants', () => {
       'draw:second',
       'draw:third',
     ]);
-    expect(getCRCInstance(canvas).completedRenderRevision)
+    expect(getPibblInstance(canvas).completedRenderRevision)
       .toBe(completedBeforeWork);
     expect(driver.pendingHostFrames).toBe(1);
     controller.dispose();
@@ -211,17 +212,17 @@ describe('@crc/core/internal renderer participants', () => {
     const failure = new Error('nested renderer failed');
     const parentKey = {};
     const retainedParentKey = {};
-    let parentOwner: CRCInternalRenderOwner | undefined;
-    let childOwner: CRCInternalRenderOwner | undefined;
+    let parentOwner: PibblInternalRenderOwner | undefined;
+    let childOwner: PibblInternalRenderOwner | undefined;
     let failOnce = true;
     let recordRenders = false;
 
     const Child = (_props: {}) => {
-      childOwner ??= crcInternalCurrentRenderOwner();
+      childOwner ??= pibblInternalCurrentRenderOwner();
       if (recordRenders) calls.push('child render');
     };
     const Root = (_props: {}) => {
-      parentOwner ??= crcInternalCurrentRenderOwner();
+      parentOwner ??= pibblInternalCurrentRenderOwner();
       if (recordRenders) calls.push('parent render');
       return createElement(Layer, {
         style: { width: 20, height: 20 },
@@ -229,28 +230,28 @@ describe('@crc/core/internal renderer participants', () => {
       });
     };
 
-    const controller = crc(createCanvas(), createElement(Root, {}));
+    const controller = pibbl(createCanvas(), createElement(Root, {}));
     driver.flush(1);
     recordRenders = true;
 
-    crcInternalRequestRendererWork(parentOwner!, {
+    pibblInternalRequestRendererWork(parentOwner!, {
       key: parentKey,
       kind: 'draw',
       run: () => calls.push('stale parent work'),
     });
-    crcInternalRequestRendererWork(parentOwner!, {
+    pibblInternalRequestRendererWork(parentOwner!, {
       key: retainedParentKey,
       kind: 'draw',
       run: () => calls.push('retained parent work'),
     });
-    crcInternalRequestRendererWork(childOwner!, {
+    pibblInternalRequestRendererWork(childOwner!, {
       key: {},
       kind: 'resource',
       run: () => {
         calls.push('child work');
         if (failOnce) {
           failOnce = false;
-          crcInternalRequestRendererWork(parentOwner!, {
+          pibblInternalRequestRendererWork(parentOwner!, {
             key: parentKey,
             kind: 'draw',
             run: () => calls.push('latest parent work'),
@@ -280,31 +281,31 @@ describe('@crc/core/internal renderer participants', () => {
   it('defers a failed owner completion while successful owners complete exactly once', () => {
     const calls: string[] = [];
     const failure = new Error('renderer failed before completion');
-    let failedOwner: CRCInternalRenderOwner | undefined;
-    let successfulOwner: CRCInternalRenderOwner | undefined;
+    let failedOwner: PibblInternalRenderOwner | undefined;
+    let successfulOwner: PibblInternalRenderOwner | undefined;
     let failOnce = true;
     let recordRenders = false;
 
     const FailingRoot = (_props: {}) => {
-      failedOwner ??= crcInternalCurrentRenderOwner();
+      failedOwner ??= pibblInternalCurrentRenderOwner();
       if (recordRenders) calls.push('failed root render');
     };
     const SuccessfulRoot = (_props: {}) => {
-      successfulOwner ??= crcInternalCurrentRenderOwner();
+      successfulOwner ??= pibblInternalCurrentRenderOwner();
       if (recordRenders) calls.push('successful root render');
     };
-    const failedController = crc(
+    const failedController = pibbl(
       createCanvas(),
       createElement(FailingRoot, {}),
     );
-    const successfulController = crc(
+    const successfulController = pibbl(
       createCanvas(),
       createElement(SuccessfulRoot, {}),
     );
     driver.flush(1);
     recordRenders = true;
 
-    crcInternalRequestRendererWork(failedOwner!, {
+    pibblInternalRequestRendererWork(failedOwner!, {
       key: {},
       kind: 'resource',
       run: () => {
@@ -315,15 +316,15 @@ describe('@crc/core/internal renderer participants', () => {
         }
       },
     });
-    crcInternalQueueComplete(failedOwner!, () => {
+    pibblInternalQueueComplete(failedOwner!, () => {
       calls.push('failed owner complete');
     });
-    crcInternalRequestRendererWork(successfulOwner!, {
+    pibblInternalRequestRendererWork(successfulOwner!, {
       key: {},
       kind: 'draw',
       run: () => calls.push('successful owner work'),
     });
-    crcInternalQueueComplete(successfulOwner!, () => {
+    pibblInternalQueueComplete(successfulOwner!, () => {
       calls.push('successful owner complete');
     });
 
@@ -351,19 +352,19 @@ describe('@crc/core/internal renderer participants', () => {
   it('coalesces several consumer invalidations into one renderer frame', () => {
     const calls: string[] = [];
     const sources = [signal(0), signal(0), signal(0)];
-    const consumers: CRCInternalSignalConsumer[] = [];
+    const consumers: PibblInternalSignalConsumer[] = [];
     const sharedKey = {};
-    let owner: CRCInternalRenderOwner | undefined;
+    let owner: PibblInternalRenderOwner | undefined;
     let recordRootRender = false;
     const Root = (_props: {}) => {
-      owner ??= crcInternalCurrentRenderOwner();
+      owner ??= pibblInternalCurrentRenderOwner();
       if (consumers.length === 0) {
         for (const [index] of sources.entries()) {
-          consumers.push(crcInternalCreateSignalConsumer({
+          consumers.push(pibblInternalCreateSignalConsumer({
             owner,
             invalidate: () => {
               calls.push(`invalidate:${index + 1}`);
-              crcInternalRequestRendererWork(owner!, {
+              pibblInternalRequestRendererWork(owner!, {
                 key: sharedKey,
                 kind: 'draw',
                 run: () => calls.push(`work:${index + 1}`),
@@ -378,7 +379,7 @@ describe('@crc/core/internal renderer participants', () => {
       }
       if (recordRootRender) calls.push('root render');
     };
-    const controller = crc(createCanvas(), createElement(Root, {}));
+    const controller = pibbl(createCanvas(), createElement(Root, {}));
     driver.flush(1);
     const requestsBeforeInvalidation = driver.requestCount;
     recordRootRender = true;
@@ -405,31 +406,31 @@ describe('@crc/core/internal renderer participants', () => {
   it('preserves same-kind registration order when replacing a work key', () => {
     const calls: string[] = [];
     const firstKey = {};
-    let owner: CRCInternalRenderOwner | undefined;
+    let owner: PibblInternalRenderOwner | undefined;
     let recordRootRender = false;
     const Root = (_props: {}) => {
-      owner ??= crcInternalCurrentRenderOwner();
+      owner ??= pibblInternalCurrentRenderOwner();
       if (recordRootRender) calls.push('root render');
     };
-    const controller = crc(createCanvas(), createElement(Root, {}));
+    const controller = pibbl(createCanvas(), createElement(Root, {}));
     driver.flush(1);
 
-    crcInternalRequestRendererWork(owner!, {
+    pibblInternalRequestRendererWork(owner!, {
       key: firstKey,
       kind: 'resource',
       run: () => calls.push('stale first'),
     });
-    crcInternalRequestRendererWork(owner!, {
+    pibblInternalRequestRendererWork(owner!, {
       key: {},
       kind: 'resource',
       run: () => calls.push('second'),
     });
-    crcInternalRequestRendererWork(owner!, {
+    pibblInternalRequestRendererWork(owner!, {
       key: firstKey,
       kind: 'resource',
       run: () => calls.push('latest first'),
     });
-    crcInternalRequestRendererWork(owner!, {
+    pibblInternalRequestRendererWork(owner!, {
       key: {},
       kind: 'resource',
       run: () => calls.push('third'),
@@ -450,7 +451,7 @@ describe('@crc/core/internal renderer participants', () => {
 
   it('orders coalesced renderer work around its Canvas render in one realm frame', () => {
     const calls: string[] = [];
-    const frames: CRCInternalFrame[] = [];
+    const frames: PibblInternalFrame[] = [];
     const rendererValue = signal(0);
     const canvasValue = signal(0);
     const plannedValue = computed(() => {
@@ -461,16 +462,16 @@ describe('@crc/core/internal renderer participants', () => {
     const resourceKey = {};
     const drawKey = {};
     const composeKey = {};
-    let owner: CRCInternalRenderOwner | undefined;
-    let consumer: CRCInternalSignalConsumer | undefined;
+    let owner: PibblInternalRenderOwner | undefined;
+    let consumer: PibblInternalSignalConsumer | undefined;
 
     const scheduleRenderer = () => {
-      crcInternalRequestRendererWork(owner!, {
+      pibblInternalRequestRendererWork(owner!, {
         key: resourceKey,
         kind: 'resource',
         run: () => calls.push('stale resource'),
       });
-      crcInternalRequestRendererWork(owner!, {
+      pibblInternalRequestRendererWork(owner!, {
         key: resourceKey,
         kind: 'resource',
         run: frame => {
@@ -480,7 +481,7 @@ describe('@crc/core/internal renderer participants', () => {
           consumer!.markClean();
         },
       });
-      crcInternalRequestRendererWork(owner!, {
+      pibblInternalRequestRendererWork(owner!, {
         key: drawKey,
         kind: 'draw',
         run: frame => {
@@ -488,7 +489,7 @@ describe('@crc/core/internal renderer participants', () => {
           frames.push(frame);
         },
       });
-      crcInternalRequestRendererWork(owner!, {
+      pibblInternalRequestRendererWork(owner!, {
         key: composeKey,
         kind: 'compose',
         run: frame => {
@@ -496,22 +497,22 @@ describe('@crc/core/internal renderer participants', () => {
           frames.push(frame);
         },
       });
-      crcInternalQueueComplete(owner!, frame => {
+      pibblInternalQueueComplete(owner!, frame => {
         calls.push('complete');
         frames.push(frame);
       });
     };
 
     const Root = (_props: {}) => {
-      owner ??= crcInternalCurrentRenderOwner();
-      consumer ??= crcInternalCreateSignalConsumer({
+      owner ??= pibblInternalCurrentRenderOwner();
+      consumer ??= pibblInternalCreateSignalConsumer({
         owner,
         debugName: 'fake retained renderer resource',
         invalidate: scheduleRenderer,
       });
       if (plannedValue.get() > 0) {
         calls.push('root render');
-        frames.push(crcInternalCurrentFrame());
+        frames.push(pibblInternalCurrentFrame());
       }
       if (rendererValue.get() === 0) {
         consumer.collect(() => rendererValue.get());
@@ -519,17 +520,17 @@ describe('@crc/core/internal renderer participants', () => {
       }
     };
 
-    const controller = crc(createCanvas(), createElement(Root, {}));
-    expect(() => crcInternalCurrentFrame()).toThrow(/current CRC frame/i);
-    expect(() => crcInternalCurrentRenderOwner()).toThrow(/component evaluation/i);
+    const controller = pibbl(createCanvas(), createElement(Root, {}));
+    expect(() => pibblInternalCurrentFrame()).toThrow(/current Pibbl frame/i);
+    expect(() => pibblInternalCurrentRenderOwner()).toThrow(/component evaluation/i);
     driver.flush(5);
     calls.length = 0;
 
-    getSignalNode(rendererValue).observers.add(() => calls.push('commit'));
+    signalObserversForTest(getSignalNode(rendererValue)).add(() => calls.push('commit'));
     let releaseAdvance = () => {};
-    const advance: CRCAdvanceParticipant = (snapshot, batch) => {
+    const advance: PibblAdvanceParticipant = (snapshot, batch) => {
       calls.push('advance');
-      expect(crcInternalCurrentFrame()).toBe(snapshot);
+      expect(pibblInternalCurrentFrame()).toBe(snapshot);
       batch.stage(rendererValue, 1, advance);
       batch.stage(canvasValue, 1, advance);
       releaseAdvance();
@@ -555,17 +556,17 @@ describe('@crc/core/internal renderer participants', () => {
     expect(frames[0].frameId).toBeGreaterThan(0);
     expect(Object.isFrozen(frames[0])).toBe(true);
     expect(driver.pendingHostFrames).toBe(0);
-    expect(() => crcInternalCurrentFrame()).toThrow(/current CRC frame/i);
+    expect(() => pibblInternalCurrentFrame()).toThrow(/current Pibbl frame/i);
     controller.dispose();
   });
 
   it('defers friend work and completion requested during Advance without losing either', () => {
     const calls: string[] = [];
     const workKey = {};
-    let owner: CRCInternalRenderOwner | undefined;
+    let owner: PibblInternalRenderOwner | undefined;
     let recordRootRender = false;
-    const controller = crc(createCanvas(), createElement(() => {
-      owner ??= crcInternalCurrentRenderOwner();
+    const controller = pibbl(createCanvas(), createElement(() => {
+      owner ??= pibblInternalCurrentRenderOwner();
       if (recordRootRender) calls.push('root render');
     }, {}));
     driver.flush(1);
@@ -574,12 +575,12 @@ describe('@crc/core/internal renderer participants', () => {
     let release = () => {};
     release = registerAdvanceParticipant(() => {
       release();
-      crcInternalRequestRendererWork(owner!, {
+      pibblInternalRequestRendererWork(owner!, {
         key: workKey,
         kind: 'draw',
         run: () => calls.push('friend draw'),
       });
-      crcInternalQueueComplete(owner!, () => calls.push('friend complete'));
+      pibblInternalQueueComplete(owner!, () => calls.push('friend complete'));
     });
     driver.flush(2);
 
@@ -596,30 +597,30 @@ describe('@crc/core/internal renderer participants', () => {
     const calls: string[] = [];
     const currentKey = {};
     const deferredKey = {};
-    let owner: CRCInternalRenderOwner | undefined;
+    let owner: PibblInternalRenderOwner | undefined;
     let recordRootRender = false;
-    const controller = crc(createCanvas(), createElement(() => {
-      owner ??= crcInternalCurrentRenderOwner();
+    const controller = pibbl(createCanvas(), createElement(() => {
+      owner ??= pibblInternalCurrentRenderOwner();
       if (recordRootRender) calls.push('root render');
     }, {}));
     driver.flush(1);
     recordRootRender = true;
 
-    crcInternalRequestRendererWork(owner!, {
+    pibblInternalRequestRendererWork(owner!, {
       key: currentKey,
       kind: 'draw',
       run: () => calls.push('current draw'),
     });
-    crcInternalQueueComplete(owner!, () => calls.push('current complete'));
+    pibblInternalQueueComplete(owner!, () => calls.push('current complete'));
     let release = () => {};
     release = registerAdvanceParticipant(() => {
       release();
-      crcInternalRequestRendererWork(owner!, {
+      pibblInternalRequestRendererWork(owner!, {
         key: deferredKey,
         kind: 'draw',
         run: () => calls.push('deferred draw'),
       });
-      crcInternalQueueComplete(owner!, () => calls.push('deferred complete'));
+      pibblInternalQueueComplete(owner!, () => calls.push('deferred complete'));
     });
 
     driver.flush(2);
@@ -644,33 +645,33 @@ describe('@crc/core/internal renderer participants', () => {
   it('keeps same-key pre-Begin work current while Advance coalesces the next frame separately', () => {
     const calls: string[] = [];
     const workKey = {};
-    let owner: CRCInternalRenderOwner | undefined;
+    let owner: PibblInternalRenderOwner | undefined;
     let recordRootRender = false;
     const canvas = createCanvas();
-    const controller = crc(canvas, createElement(() => {
-      owner ??= crcInternalCurrentRenderOwner();
+    const controller = pibbl(canvas, createElement(() => {
+      owner ??= pibblInternalCurrentRenderOwner();
       if (recordRootRender) calls.push('root render');
     }, {}));
     driver.flush(1);
     recordRootRender = true;
-    const instance = getCRCInstance(canvas);
+    const instance = getPibblInstance(canvas);
     const completedBeforeWork = instance.completedRenderRevision;
 
-    crcInternalRequestRendererWork(owner!, {
+    pibblInternalRequestRendererWork(owner!, {
       key: workKey,
       kind: 'draw',
       run: () => calls.push('current draw'),
     });
-    crcInternalQueueComplete(owner!, () => calls.push('current complete'));
+    pibblInternalQueueComplete(owner!, () => calls.push('current complete'));
     let release = () => {};
     release = registerAdvanceParticipant(() => {
       release();
-      crcInternalRequestRendererWork(owner!, {
+      pibblInternalRequestRendererWork(owner!, {
         key: workKey,
         kind: 'draw',
         run: () => calls.push('next draw'),
       });
-      crcInternalQueueComplete(owner!, () => calls.push('next complete'));
+      pibblInternalQueueComplete(owner!, () => calls.push('next complete'));
     });
 
     driver.flush(2);
@@ -707,21 +708,21 @@ describe('@crc/core/internal renderer participants', () => {
       commit: {},
       plan: {},
     };
-    let owner: CRCInternalRenderOwner | undefined;
-    let consumer: CRCInternalSignalConsumer | undefined;
+    let owner: PibblInternalRenderOwner | undefined;
+    let consumer: PibblInternalSignalConsumer | undefined;
     let recordRootRender = false;
     const canvas = createCanvas();
-    const controller = crc(canvas, createElement(() => {
-      owner ??= crcInternalCurrentRenderOwner();
-      consumer ??= crcInternalCreateSignalConsumer({
+    const controller = pibbl(canvas, createElement(() => {
+      owner ??= pibblInternalCurrentRenderOwner();
+      consumer ??= pibblInternalCreateSignalConsumer({
         owner,
         invalidate: () => {
-          crcInternalRequestRendererWork(owner!, {
+          pibblInternalRequestRendererWork(owner!, {
             key: keys.plan,
             kind: 'draw',
             run: () => calls.push('plan draw'),
           });
-          crcInternalQueueComplete(owner!, () => calls.push('plan complete'));
+          pibblInternalQueueComplete(owner!, () => calls.push('plan complete'));
         },
       });
       consumer.collect(() => plannedValue.get());
@@ -730,28 +731,28 @@ describe('@crc/core/internal renderer participants', () => {
     }, {}));
     driver.flush(1);
     recordRootRender = true;
-    const instance = getCRCInstance(canvas);
+    const instance = getPibblInstance(canvas);
     const completedBeforeWork = instance.completedRenderRevision;
     const commitObserver = () => {
-      crcInternalRequestRendererWork(owner!, {
+      pibblInternalRequestRendererWork(owner!, {
         key: keys.commit,
         kind: 'draw',
         run: () => calls.push('commit draw'),
       });
-      crcInternalQueueComplete(owner!, () => calls.push('commit complete'));
+      pibblInternalQueueComplete(owner!, () => calls.push('commit complete'));
     };
-    getSignalNode(commitSource).observers.add(commitObserver);
+    signalObserversForTest(getSignalNode(commitSource)).add(commitObserver);
     expect(driver.pendingHostFrames).toBe(0);
 
     let release = () => {};
-    const participant: CRCAdvanceParticipant = (_snapshot, batch) => {
+    const participant: PibblAdvanceParticipant = (_snapshot, batch) => {
       release();
-      crcInternalRequestRendererWork(owner!, {
+      pibblInternalRequestRendererWork(owner!, {
         key: keys.advance,
         kind: 'draw',
         run: () => calls.push('advance draw'),
       });
-      crcInternalQueueComplete(owner!, () => calls.push('advance complete'));
+      pibblInternalQueueComplete(owner!, () => calls.push('advance complete'));
       batch.stage(commitSource, 1, participant);
       batch.stage(planSource, 1, participant);
     };
@@ -783,7 +784,7 @@ describe('@crc/core/internal renderer participants', () => {
     );
     expect(driver.pendingHostFrames).toBe(0);
 
-    getSignalNode(commitSource).observers.delete(commitObserver);
+    signalObserversForTest(getSignalNode(commitSource)).delete(commitObserver);
     controller.dispose();
   });
 
@@ -791,34 +792,34 @@ describe('@crc/core/internal renderer participants', () => {
     const calls: string[] = [];
     const parentSource = signal(0);
     const drawImage = vi.spyOn(CanvasRenderingContext2D.prototype, 'drawImage');
-    let owner: CRCInternalRenderOwner | undefined;
+    let owner: PibblInternalRenderOwner | undefined;
     let recordChildRender = false;
     const Child = ({ value: _value }: { value: number }) => {
-      owner ??= crcInternalCurrentRenderOwner();
+      owner ??= pibblInternalCurrentRenderOwner();
       if (recordChildRender) calls.push('child render');
     };
     const Root = (_props: {}) => createElement(Layer, {
       style: { width: 20, height: 20 },
       children: createElement(Child, { value: parentSource.get() }),
     });
-    const controller = crc(createCanvas(), createElement(Root, {}));
+    const controller = pibbl(createCanvas(), createElement(Root, {}));
     driver.flush(1);
     const layerCanvas = drawImage.mock.calls
       .map(([source]) => source)
       .find(source => source instanceof OffscreenCanvas) as OffscreenCanvas;
-    const child = getCRCInstance(layerCanvas);
+    const child = getPibblInstance(layerCanvas);
     const completedBeforeWork = child.completedRenderRevision;
     recordChildRender = true;
 
     let release = () => {};
-    const participant: CRCAdvanceParticipant = (_snapshot, batch) => {
+    const participant: PibblAdvanceParticipant = (_snapshot, batch) => {
       release();
-      crcInternalRequestRendererWork(owner!, {
+      pibblInternalRequestRendererWork(owner!, {
         key: {},
         kind: 'draw',
         run: () => calls.push('friend draw'),
       });
-      crcInternalQueueComplete(owner!, () => calls.push('friend complete'));
+      pibblInternalQueueComplete(owner!, () => calls.push('friend complete'));
       batch.stage(parentSource, 1, participant);
     };
     release = registerAdvanceParticipant(participant);
@@ -849,18 +850,18 @@ describe('@crc/core/internal renderer participants', () => {
     const first = signal(0);
     const second = signal(0);
     let invalidations = 0;
-    let consumer: CRCInternalSignalConsumer | undefined;
+    let consumer: PibblInternalSignalConsumer | undefined;
 
     const Root = (_props: {}) => {
-      consumer ??= crcInternalCreateSignalConsumer({
-        owner: crcInternalCurrentRenderOwner(),
+      consumer ??= pibblInternalCreateSignalConsumer({
+        owner: pibblInternalCurrentRenderOwner(),
         invalidate: () => invalidations++,
       });
       consumer.collect(() => first.get());
       consumer.markClean();
     };
 
-    const controller = crc(createCanvas(), createElement(Root, {}));
+    const controller = pibbl(createCanvas(), createElement(Root, {}));
     driver.flush(1);
 
     expect(() => consumer!.collect(() => {
@@ -880,8 +881,8 @@ describe('@crc/core/internal renderer participants', () => {
     const rendererValue = signal(0);
     const resourceKey = {};
     const drawKey = {};
-    let owner: CRCInternalRenderOwner | undefined;
-    let consumer: CRCInternalSignalConsumer | undefined;
+    let owner: PibblInternalRenderOwner | undefined;
+    let consumer: PibblInternalSignalConsumer | undefined;
     const originalDrawImage = CanvasRenderingContext2D.prototype.drawImage;
     vi.spyOn(CanvasRenderingContext2D.prototype, 'drawImage')
       .mockImplementation(function (this: CanvasRenderingContext2D, ...args) {
@@ -892,16 +893,16 @@ describe('@crc/core/internal renderer participants', () => {
       });
 
     const FakeRenderer = (_props: {}) => {
-      owner ??= crcInternalCurrentRenderOwner();
-      consumer ??= crcInternalCreateSignalConsumer({
+      owner ??= pibblInternalCurrentRenderOwner();
+      consumer ??= pibblInternalCreateSignalConsumer({
         owner,
         invalidate: () => {
-          crcInternalRequestRendererWork(owner!, {
+          pibblInternalRequestRendererWork(owner!, {
             key: resourceKey,
             kind: 'resource',
             run: () => calls.push('fake resource'),
           });
-          crcInternalRequestRendererWork(owner!, {
+          pibblInternalRequestRendererWork(owner!, {
             key: drawKey,
             kind: 'draw',
             run: () => calls.push('fake draw'),
@@ -916,7 +917,7 @@ describe('@crc/core/internal renderer participants', () => {
       children: createElement(FakeRenderer, {}),
     });
 
-    const controller = crc(createCanvas(), createElement(Root, {}));
+    const controller = pibbl(createCanvas(), createElement(Root, {}));
     driver.flush(1);
     calls.length = 0;
 
@@ -935,28 +936,28 @@ describe('@crc/core/internal renderer participants', () => {
     const calls: string[] = [];
     const rendererValue = signal(0);
     const workKey = {};
-    let owner: CRCInternalRenderOwner | undefined;
-    let consumer: CRCInternalSignalConsumer | undefined;
+    let owner: PibblInternalRenderOwner | undefined;
+    let consumer: PibblInternalSignalConsumer | undefined;
 
     const Root = (_props: {}) => {
-      owner ??= crcInternalCurrentRenderOwner();
-      consumer ??= crcInternalCreateSignalConsumer({
+      owner ??= pibblInternalCurrentRenderOwner();
+      consumer ??= pibblInternalCreateSignalConsumer({
         owner,
         invalidate: () => {
           calls.push('invalidate');
-          crcInternalRequestRendererWork(owner!, {
+          pibblInternalRequestRendererWork(owner!, {
             key: workKey,
             kind: 'draw',
             run: () => calls.push('draw'),
           });
-          crcInternalQueueComplete(owner!, () => calls.push('complete'));
+          pibblInternalQueueComplete(owner!, () => calls.push('complete'));
         },
       });
       consumer.collect(() => rendererValue.get());
       consumer.markClean();
     };
 
-    const controller = crc(createCanvas(), createElement(Root, {}));
+    const controller = pibbl(createCanvas(), createElement(Root, {}));
     driver.flush(1);
     rendererValue.set(1);
     expect(calls).toEqual(['invalidate']);
@@ -967,7 +968,7 @@ describe('@crc/core/internal renderer participants', () => {
     rendererValue.set(2);
     expect(calls).toEqual(['invalidate']);
 
-    const fallback = crc(createCanvas(), createElement(() => undefined, {}));
+    const fallback = pibbl(createCanvas(), createElement(() => undefined, {}));
     driver.flush(2);
     expect(calls).toEqual(['invalidate']);
     fallback.dispose();
@@ -978,10 +979,10 @@ describe('@crc/core/internal renderer participants', () => {
     const source = signal(1);
     const inner = computed(() => source.get() + 1);
     const outer = computed(() => inner.get() + 1);
-    let consumer: CRCInternalSignalConsumer | undefined;
-    const controller = crc(createCanvas(), createElement(() => {
-      consumer ??= crcInternalCreateSignalConsumer({
-        owner: crcInternalCurrentRenderOwner(),
+    let consumer: PibblInternalSignalConsumer | undefined;
+    const controller = pibbl(createCanvas(), createElement(() => {
+      consumer ??= pibblInternalCreateSignalConsumer({
+        owner: pibblInternalCurrentRenderOwner(),
         invalidate: () => {},
       });
       consumer.collect(() => outer.get());
@@ -992,8 +993,8 @@ describe('@crc/core/internal renderer participants', () => {
     expect(signalGraphSnapshot().computedSourceEdges).toBe(
       baseline.computedSourceEdges + 2,
     );
-    expect(getSignalNode(source).observers.size).toBe(1);
-    expect(getSignalNode(inner).observers.size).toBe(1);
+    expect(getSignalNode(source).observerCount).toBe(1);
+    expect(getSignalNode(inner).observerCount).toBe(1);
 
     controller.dispose();
 
@@ -1002,8 +1003,8 @@ describe('@crc/core/internal renderer participants', () => {
       createdComputedSourceEdges: baseline.createdComputedSourceEdges + 2,
       releasedComputedSourceEdges: baseline.releasedComputedSourceEdges + 2,
     });
-    expect(getSignalNode(source).observers.size).toBe(0);
-    expect(getSignalNode(inner).observers.size).toBe(0);
+    expect(getSignalNode(source).observerCount).toBe(0);
+    expect(getSignalNode(inner).observerCount).toBe(0);
   });
 });
 

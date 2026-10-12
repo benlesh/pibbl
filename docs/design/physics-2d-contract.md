@@ -1,13 +1,13 @@
 # 2D physics contract
 
-CRC owns authoring, identity, scheduling, commands, observation, and cleanup.
+Pibbl owns authoring, identity, scheduling, commands, observation, and cleanup.
 Rapier 2D compat **0.21.0** owns rigid-body integration and solid contact solving.
-There is one supported runtime engine and one CRC realm clock. Pure geometry
+There is one supported runtime engine and one Pibbl realm clock. Pure geometry
 entries do not initialize WebAssembly or require a renderer.
 
 ## Loading, units, and numerical policy
 
-`@crc/physics/2d` is an ES module with top-level await. Its embedded WASM
+`@pibbl/core/physics/2d` is an ES module with top-level await. Its embedded WASM
 initializes before imports resolve; no external WASM fetch or engine animation
 loop is created. Applications use ordinary static imports or await dynamic
 imports. Studio loads its bundled runtime as a module before mounting the scene.
@@ -36,7 +36,7 @@ The old private solver remains a regression/comparison reference; public worlds
 always instantiate Rapier.
 
 Circle, box, capsule, segment and convex polygon leaves use native engine
-colliders. Concave shapes retain CRC's convex decomposition. Ellipses and
+colliders. Concave shapes retain Pibbl's convex decomposition. Ellipses and
 rounded corners use convex polygons with at most 0.01 logical-unit chord error;
 more than 4096 samples is rejected before allocation. Pure geometry queries
 retain the original mathematical shapes, so contact response may differ within
@@ -81,7 +81,7 @@ without moving the authored collision geometry.
 
 Begin accepts commands; Advance computes fixed steps; Commit publishes state;
 Complete delivers callbacks. Callback commands enter a later frame. A failed
-candidate restores both CRC storage and the engine snapshot and publishes no
+candidate restores both Pibbl storage and the engine snapshot and publishes no
 partial simulation state. Other worlds may continue. Explicit disposal frees
 engine resources, signal observers, handles and scheduler registrations.
 
@@ -110,8 +110,8 @@ observation without selecting another body; an unbound or stale handle returns
 without registering pointer targets or mutating physics. Linear interpolation
 can make its authoritative bounds slightly lead the displayed body between ticks.
 
-`@crc/physics/2d/testing` provides an isolated browser harness using the existing
-realm scheduler. It rejects a realm containing a live CRC root. `flush()`
+`@pibbl/core/physics/2d/testing` provides an isolated browser harness using the existing
+realm scheduler. It rejects a realm containing a live Pibbl root. `flush()`
 delivers one pending frame at current time; `advanceFrames(n, ms)` delivers up to
 n pending host frames; `act()` performs an action then flushes once. These are
 host frames, not guaranteed fixed ticks. `observe()` is read-only. `reset()`
@@ -126,8 +126,23 @@ state, geometry, contact lifecycle and cleanup before screenshot comparisons.
 ## Performance evidence
 
 Use `tooling/physics-comparison/benchmark.mjs` for machine-recorded comparisons.
-Distinguish raw engines from the CRC adapter: transactional snapshots, public
+Distinguish raw engines from the Pibbl adapter: transactional snapshots, public
 state publication and Canvas rendering have real costs. Do not turn one machine's
 p95 into a universal CI requirement. Structural tests protect O(1) per-body reads,
 idle scheduling and owned-resource cleanup. Debug snapshots/overlays intentionally
 allocate and are opt-in diagnostics, not per-body rendering dependencies.
+
+## Named query operations
+
+World query functions have fixed return contracts. `raycastAny2D` and
+`shapeCastAny2D` return booleans; their `Closest2D` variants return one hit or
+`null`; their `All2D` variants return frozen hit arrays. `hasShapeOverlap2D`,
+`hasAabbMatch2D`, and `hasPointMatch2D` return booleans. Corresponding `find…`
+functions return one match or `null`, and `findAll…` functions return frozen
+arrays. Query options contain filters only, with no result-mode selector.
+
+Boolean queries stop at the first match. Cast ordering is time of impact,
+distance, then collider index and generation. Overlap, bounds, and point queries
+order by collider index and generation; one-match queries use that deterministic
+order, not a distance metric. These operations preserve committed-world reads,
+filtering, handle identity, stale-handle behavior, and resource ownership.

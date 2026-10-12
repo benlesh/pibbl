@@ -1,13 +1,13 @@
 import {
   createBackendToken,
-  type CRCBackendDriver,
-  type CRCBackendPrimitiveProgram,
+  type PibblBackendDriver,
+  type PibblBackendPrimitiveProgram,
 } from './types.js';
 import {
   getDefinitionPrimitivePresentation,
   type PrimitiveDefinition,
 } from '../element/metadata.js';
-import { GLOBAL_STATE, getCurrentCRCInstance } from '../global-state.js';
+import { GLOBAL_STATE, getCurrentPibblInstance } from '../global-state.js';
 import {
   enterPrimitivePresentation,
 } from '../primitive-presentation.js';
@@ -20,11 +20,11 @@ import { prepareSurface } from '../surface/root-surface.js';
 const CANVAS_2D_TOKEN = createBackendToken('canvas2d');
 
 /** Core's built-in Canvas 2D frame and primitive driver. */
-export const CANVAS_2D_BACKEND: CRCBackendDriver<RenderingContext2D> = {
+export const CANVAS_2D_BACKEND: PibblBackendDriver<RenderingContext2D> = {
   token: CANVAS_2D_TOKEN,
   name: 'canvas2d',
   beginFrame(input) {
-    const surface = prepareSurface(getCurrentCRCInstance());
+    const surface = prepareSurface(getCurrentPibblInstance());
     if (!surface) return undefined;
     const context = get2dContext(input.canvas);
     context.setTransform(1, 0, 0, 1, 0, 0);
@@ -44,7 +44,7 @@ export const CANVAS_2D_BACKEND: CRCBackendDriver<RenderingContext2D> = {
   },
   runPrimitive(_frame, input, runProgram) {
     const definition = input.definition as PrimitiveDefinition;
-    const program = definition.program as CRCBackendPrimitiveProgram<
+    const program = definition.program as PibblBackendPrimitiveProgram<
       Record<PropertyKey, unknown>,
       SystemStyle,
       RenderingContext2D
@@ -72,12 +72,13 @@ export const CANVAS_2D_BACKEND: CRCBackendDriver<RenderingContext2D> = {
     });
     if (filters) {
       const executor = filters.values[0]!.executor;
-      executor.render({
+      GLOBAL_STATE.htmlFilterDepth++;
+      try { executor.render({
         component: input.componentName,
         filters: filters.values,
         presentation,
         renderSubtree: invoke,
-      });
+      }); } finally { GLOBAL_STATE.htmlFilterDepth--; }
       return;
     }
     const releasePresentation = enterPrimitivePresentation(presentation);

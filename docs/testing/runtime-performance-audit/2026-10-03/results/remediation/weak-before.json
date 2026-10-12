@@ -1,9 +1,9 @@
 {
-  "schema": "crc-weak-retention/3",
-  "sourceRoot": "/Users/benlesh/.codex/worktrees/perf-verification/crc",
+  "schema": "pibbl-weak-retention/3",
+  "sourceRoot": "/Users/benlesh/.codex/worktrees/perf-verification/pibbl",
   "sourceCommit": "690bb10a99246b6f5f57df9b0341774209905827",
   "baseUrl": "http://127.0.0.1:5203",
-  "methodology": "Each post-disposal dereference happens after two CDP forced-GC rounds separated by a browser task, before changing the retained handle. This accommodates delayed DOM wrapper cleanup without using a dereference that keeps the target alive between rounds. The probe weakly observes the actual root CRCElement and HTMLCanvasElement; the retain case keeps only the public Texture handle. WeakRef only distinguishes JavaScript reachability; it cannot prove native/GPU reclamation.",
+  "methodology": "Each post-disposal dereference happens after two CDP forced-GC rounds separated by a browser task, before changing the retained handle. This accommodates delayed DOM wrapper cleanup without using a dereference that keeps the target alive between rounds. The probe weakly observes the actual root PibblElement and HTMLCanvasElement; the retain case keeps only the public Texture handle. WeakRef only distinguishes JavaScript reachability; it cannot prove native/GPU reclamation.",
   "cases": [
     {
       "retain": false,

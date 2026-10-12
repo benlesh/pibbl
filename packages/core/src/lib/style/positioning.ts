@@ -3,12 +3,12 @@ import {
   getPlacementSignalHandoffStyle,
   setPlacementSignalHandoff,
 } from '../element/metadata.js';
-import type { CRCElement } from '../element/types.js';
+import type { PibblElement } from '../element/types.js';
 import { isSignal } from '../signals/graph.js';
 import { resolveLocalOffset } from './resolve-built-in.js';
 import type { Length } from './types.js';
 
-const PLACEMENT_HANDOFF = Symbol('crc.placement-handoff');
+const PLACEMENT_HANDOFF = Symbol('pibbl.placement-handoff');
 
 type PropsWithStyle = Record<PropertyKey, unknown> & {
   readonly style?: unknown;
@@ -81,7 +81,7 @@ export function enterPlacementHandoffCapture(
 
 /** @internal Annotates an element created with the active forwarded style signal. */
 export function capturePlacementHandoff(
-  element: CRCElement<any>,
+  element: PibblElement<any>,
   style: unknown,
 ): void {
   if (style && style === activeSignalHandoff?.signal) {
@@ -111,13 +111,21 @@ export function consumePlacementHandoff(
 
 /** @internal Determines whether a primitive consumes one forwarded signal style. */
 export function getPlacementSignalHandoff(
-  element: CRCElement<any>,
+  element: PibblElement<any>,
 ): Readonly<SystemStyle> | undefined {
   return getPlacementSignalHandoffStyle(element);
 }
 
+/**
+ * Offsets in the parent layout coordinate system; percentages resolve against the containing box.
+ *
+ * @see {@link Length}
+ * @see {@link SystemStyle}
+ */
 export interface PositioningStyle extends SystemStyle {
+  /** Left edge coordinate or inset. See {@link Length}. */
   left?: Exclude<Length, 'auto'>;
+  /** Top edge value or top envelope guide. See {@link Length}. */
   top?: Exclude<Length, 'auto'>;
 }
 

@@ -1,6 +1,6 @@
-/** @jsxImportSource @crc/core */
-import { crc, defineTexture, Group, Rectangle, useSignal, useTexture, type WritableSignal, type Texture, type TexturePaint } from '@crc/core';
-import { displacement } from '@crc/core/filters';
+/** @jsxImportSource @pibbl/core */
+import { pibbl, defineTexture, Group, Rectangle, useSignal, useTexture, type WritableSignal, type Texture, type TexturePaint } from '@pibbl/core';
+import { displacement } from '@pibbl/core/filters';
 import { expect, it, vi } from 'vitest';
 import { DisplacementGpu } from '../src/filters/displacement-gpu';
 import { ManualSchedulerDriver, installSchedulerDriverForTest } from '../src/lib/scheduler/testing';
@@ -24,7 +24,7 @@ it('replaces a public map input and detaches its old revision consumer and GPU u
   const canvas = document.createElement('canvas'); canvas.width = canvas.height = 40; document.body.append(canvas);
   const applies = vi.spyOn(DisplacementGpu.prototype, 'apply');
   const deletes = vi.spyOn(WebGL2RenderingContext.prototype, 'deleteTexture');
-  const controller = crc(canvas, <Scene />);
+  const controller = pibbl(canvas, <Scene />);
   try {
     driver.flush(0);
     const pixel = (x: number) => canvas.getContext('2d')!.getImageData(x, 12, 1, 1).data[3];
@@ -50,16 +50,16 @@ it.each([0, 2])('rejects foreign and disposed texture owners even at strength %s
   function Owner() { map = useTexture(recipe({}), { resolution: { width: 8, height: 8 } }); return <Rectangle style={{ width: 8, height: 8, fill: map }} />; }
   const ownerCanvas = document.createElement('canvas'), consumerCanvas = document.createElement('canvas');
   document.body.append(ownerCanvas, consumerCanvas);
-  const owner = crc(ownerCanvas, <Owner />);
+  const owner = pibbl(ownerCanvas, <Owner />);
   const contexts = vi.spyOn(OffscreenCanvas.prototype, 'getContext');
-  let consumer: ReturnType<typeof crc> | undefined;
+  let consumer: ReturnType<typeof pibbl> | undefined;
   try {
     driver.flush(0);
     const scene = () => <Group style={{ filter: displacement({ map, strength, region: { x: 0, y: 0, width: 20, height: 20 } }) }}><Rectangle style={{ width: 10, height: 10 }} /></Group>;
-    consumer = crc(consumerCanvas, scene());
-    expect(() => driver.flush(16)).toThrow(/owning CRC tree/);
+    consumer = pibbl(consumerCanvas, scene());
+    expect(() => driver.flush(16)).toThrow(/owning Pibbl tree/);
     consumer.dispose(); owner.dispose();
-    consumer = crc(consumerCanvas, scene());
+    consumer = pibbl(consumerCanvas, scene());
     expect(() => driver.flush(32)).toThrow(/disposed texture/);
     expect(contexts.mock.calls.filter(([kind]) => kind === 'webgl2')).toHaveLength(0);
   } finally { consumer?.dispose(); owner.dispose(); contexts.mockRestore(); restore(); ownerCanvas.remove(); consumerCanvas.remove(); }

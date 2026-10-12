@@ -5,14 +5,14 @@ import {
   Path,
   Rectangle,
   Text,
-  crc,
+  pibbl,
   useLayoutBox,
   useSignal,
-  type CRCController,
-  type CRCPointerEvent,
+  type PibblController,
+  type PibblPointerEvent,
   type WritableSignal,
-} from "@crc/core";
-import { Axis, BarSeries, Scale, useScale } from "@crc/viz";
+} from "@pibbl/core";
+import { Axis, BarSeries, useBarScale, useLinearScale, BarScale, LinearScale } from "@pibbl/core/viz";
 
 interface Reading {
   category: string;
@@ -100,8 +100,8 @@ function Bars({
   origin: { x: number; y: number };
   orientation: "vertical" | "horizontal";
 }) {
-  const band = useScale("states", "band").get();
-  const values = useScale("change").get();
+  const band = useBarScale("states").get();
+  const values = useLinearScale("change").get();
   const baseline = values.map(0);
   const thresholdY = values.map(300_000);
   const thresholdDots = new Path2D();
@@ -117,7 +117,7 @@ function Bars({
     }
   const active = selected.get();
   const horizontal = orientation === "horizontal";
-  function inspect(event: CRCPointerEvent) {
+  function inspect(event: PibblPointerEvent) {
     const x = event.x - origin.x,
       y = event.y - origin.y;
     const hit = [...rows].reverse().find((row) => {
@@ -356,18 +356,18 @@ function Scene() {
       </Text>
       <Group style={{ translateX: origin.x, translateY: origin.y }}>
         <Absolute style={{ width, height }}>
-          <Scale
+          <BarScale
             id="states"
-            type="band"
+
             domain={order}
             range={mode === "horizontal" ? "height" : "width"}
             style={{ width, height }}
             paddingInner={padding}
             paddingOuter={0.2}
           >
-            <Scale
+            <LinearScale
               id="change"
-              type="linear"
+
               domain={[-200000, 500000]}
               range={mode === "horizontal" ? "width" : "height"}
               reverse={mode === "vertical"}
@@ -378,14 +378,14 @@ function Scene() {
                 origin={origin}
                 orientation={mode}
               />
-            </Scale>
-          </Scale>
+            </LinearScale>
+          </BarScale>
         </Absolute>
       </Group>
     </Group>
   );
 }
 
-export default function mount(canvas: HTMLCanvasElement): CRCController {
-  return crc(canvas, <Scene />, { viewport: "responsive" });
+export default function mount(canvas: HTMLCanvasElement): PibblController {
+  return pibbl(canvas, <Scene />, { viewport: "responsive" });
 }

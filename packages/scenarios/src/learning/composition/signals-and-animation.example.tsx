@@ -1,8 +1,8 @@
 import {
-  crc,
+  pibbl,
   usePlayback,
   useSignal,
-  useTransition,
+  useAnimatedValue,
   FocusManagement,
   Group,
   marker,
@@ -11,10 +11,10 @@ import {
   sequence,
   spring,
   Text,
-  track,
+  drive,
   tween,
-  type CRCController,
-} from "@crc/core";
+  type PibblController,
+} from "@pibbl/core";
 
 function AnimatedCard() {
   const x = useSignal(110, { debugName: "learning animation x" });
@@ -26,17 +26,11 @@ function AnimatedCard() {
   });
   const targetScale = useSignal(1);
   const message = useSignal("CLICK OR PRESS ENTER");
-  const presentedScale = useTransition(targetScale.get(), {
-    type: "spring",
-    stiffness: 240,
-    damping: 22,
-    initial: 1,
-    debugName: "learning target scale",
-  });
+  const presentedScale = useAnimatedValue(targetScale.get(), { animation: spring({ stiffness: 240, damping: 22 }), initial: 1, debugName: "learning target scale" });
 
   const entrance = sequence(
     parallel(
-      track(
+      drive(
         x,
         tween({
           from: 110,
@@ -45,7 +39,7 @@ function AnimatedCard() {
           debugName: "learning entrance x",
         }),
       ),
-      track(
+      drive(
         opacity,
         tween({
           from: 0.2,
@@ -54,7 +48,7 @@ function AnimatedCard() {
           debugName: "learning entrance opacity",
         }),
       ),
-      track(
+      drive(
         pulseScale,
         tween({
           from: 1,
@@ -65,7 +59,7 @@ function AnimatedCard() {
       ),
     ),
     marker("arrived"),
-    track(
+    drive(
       pulseScale,
       spring({
         from: 1,
@@ -174,8 +168,8 @@ function AnimatedCard() {
   ];
 }
 
-export default function mount(canvas: HTMLCanvasElement): CRCController {
-  return crc(
+export default function mount(canvas: HTMLCanvasElement): PibblController {
+  return pibbl(
     canvas,
     <FocusManagement>
       <AnimatedCard />

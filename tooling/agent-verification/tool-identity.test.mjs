@@ -7,7 +7,7 @@ import { replayToolFiles, captureReplayToolIdentity, finalizeReplayToolIdentity 
 
 const repository = resolve(import.meta.dirname, '../..');
 test('tool fingerprint changes when an assertion helper changes without a revision change', async () => {
-  const root = await mkdtemp(join(tmpdir(), 'crc-tool-identity-'));
+  const root = await mkdtemp(join(tmpdir(), 'pibbl-tool-identity-'));
   try {
     for (const path of replayToolFiles('viz')) { await mkdir(dirname(join(root, path)), { recursive: true }); await writeFile(join(root, path), `// ${path}`); }
     const before = await captureReplayToolIdentity(root, 'viz', 'same-revision');
@@ -15,7 +15,7 @@ test('tool fingerprint changes when an assertion helper changes without a revisi
     const after = await captureReplayToolIdentity(root, 'viz', 'same-revision');
     assert.notEqual(before.sha256, after.sha256);
     assert.equal(before.revision, after.revision);
-    assert.equal(before.schema, 'crc-replay-tool-identity/1');
+    assert.equal(before.schema, 'pibbl-replay-tool-identity/1');
     assert.equal(before.files, replayToolFiles('viz').length);
   } finally { await rm(root, { recursive: true, force: true }); }
 });
@@ -36,7 +36,7 @@ test('declared replay fingerprint includes every current static local dependency
 
 
 test('tool changes fail finalization without replacing the original operation failure', async () => {
-  const root = await mkdtemp(join(tmpdir(), 'crc-tool-finalization-'));
+  const root = await mkdtemp(join(tmpdir(), 'pibbl-tool-finalization-'));
   try {
     for (const path of replayToolFiles('viz')) { await mkdir(dirname(join(root, path)), { recursive: true }); await writeFile(join(root, path), `// ${path}`); }
     const initial = await captureReplayToolIdentity(root, 'viz', 'revision');

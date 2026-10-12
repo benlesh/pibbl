@@ -8,14 +8,14 @@ import {
   loadScenario,
   type AnimationLabState,
   type ScenarioController,
-} from '@crc/scenarios';
+} from '@pibbl/scenarios';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
   installSchedulerDriverForTest,
   ManualSchedulerDriver,
 } from '../src/lib/scheduler/testing.js';
 import { writerLeaseSnapshot } from '../src/lib/animation/writer-leases.js';
-import { loadLearningSource } from '../../../playground/src/learning-sources';
+import { loadWorkbenchSource } from '../../../playground/src/learning-sources';
 import { loadScenarioSource } from '../../../playground/src/scenario-sources';
 import {
   mountScenarioSurface,
@@ -107,7 +107,7 @@ describe('first-class animation public scenarios', () => {
       section: 'composition',
       api: [
         'useSignal',
-        'useTransition',
+        'useAnimatedValue',
         'usePlayback',
         'parallel',
         'sequence',
@@ -142,12 +142,12 @@ describe('first-class animation public scenarios', () => {
 
     if (!learning) throw new Error('Missing signals-and-animation learning example.');
     const [learningSource, labSource] = await Promise.all([
-      loadLearningSource(learning),
+      loadWorkbenchSource(learning),
       loadScenarioSource(animationLabScenarioEntry),
     ]);
     for (const source of [learningSource, labSource]) {
-      expect(source).toMatch(/from ['"]@crc\/core['"]/u);
-      expect(source).not.toMatch(/@crc\/core\/(?:internal|lib|src)\b/u);
+      expect(source).toMatch(/from ['"]@pibbl\/core['"]/u);
+      expect(source).not.toMatch(/@pibbl\/core\/(?:internal|lib|src)\b/u);
     }
     expect(learningSource).toContain('.get()');
     expect(labSource).toContain('.get()');

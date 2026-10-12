@@ -1,11 +1,11 @@
 import {
-  crc,
+  pibbl,
   useSignal,
   Image,
   Rectangle,
   Text,
-  type CRCController,
-} from "@crc/core";
+  type PibblController,
+} from "@pibbl/core";
 const postcard = `data:image/svg+xml,${encodeURIComponent(`
   <svg xmlns="http://www.w3.org/2000/svg" width="440" height="240">
     <rect width="440" height="240" fill="#1f4bd8"/>
@@ -63,6 +63,6 @@ function ImageStudy() {
     </Text>,
   ];
 }
-export default function mount(canvas: HTMLCanvasElement): CRCController {
-  return crc(canvas, <ImageStudy />);
+export default function mount(canvas: HTMLCanvasElement): PibblController {
+  return pibbl(canvas, <ImageStudy />);
 }

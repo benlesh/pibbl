@@ -16,12 +16,12 @@ symbols:
   ]
 relatedTypes:
   [
-    CRCParticleRange,
-    CRCParticleIntegerRange,
-    CRCParticleChoice,
-    CRCParticleParameterReference,
-    CRCParticleCurve,
-    CRCParticleGradient,
+    PibblParticleRange,
+    PibblParticleIntegerRange,
+    PibblParticleChoice,
+    PibblParticleParameterReference,
+    PibblParticleCurve,
+    PibblParticleGradient,
   ]
 keywords: [particles, random, curve, gradient, parameter]
 ---
@@ -36,7 +36,7 @@ import {
   particleInteger,
   particleParameter,
   particleRange,
-} from "@crc/particles";
+} from "@pibbl/core/particles";
 ```
 
 These direct, tree-shakable functions create immutable definition descriptors.
@@ -57,9 +57,9 @@ Curves and gradients require strictly increasing keys covering `0` through
 deterministic channel compilation, parameter timing, and GPU lookup-table
 generation; they are not general random-number or interpolation utilities.
 
-Types: [`CRCParticleRange`](#/api/types/particles#crcparticlerange),
-[`CRCParticleIntegerRange`](#/api/types/particles#crcparticleintegerrange),
-[`CRCParticleChoice`](#/api/types/particles#crcparticlechoice),
-[`CRCParticleParameterReference`](#/api/types/particles#crcparticleparameterreference),
-[`CRCParticleCurve`](#/api/types/particles#crcparticlecurve), and
-[`CRCParticleGradient`](#/api/types/particles#crcparticlegradient).
+Types: [`PibblParticleRange`](#/api/types/particles#pibblparticlerange),
+[`PibblParticleIntegerRange`](#/api/types/particles#pibblparticleintegerrange),
+[`PibblParticleChoice`](#/api/types/particles#pibblparticlechoice),
+[`PibblParticleParameterReference`](#/api/types/particles#pibblparticleparameterreference),
+[`PibblParticleCurve`](#/api/types/particles#pibblparticlecurve), and
+[`PibblParticleGradient`](#/api/types/particles#pibblparticlegradient).

@@ -1,11 +1,11 @@
-# CRC focus and keyboard-navigation contract
+# Pibbl focus and keyboard-navigation contract
 
 Status: current implemented contract, updated for registered external
 render-layer targets and Three.js integration on 2026-09-28.
 
-CRC provides optional logical focus and keyboard navigation for explicit event
+Pibbl provides optional logical focus and keyboard navigation for explicit event
 targets. The HTML Canvas remains the only native DOM focus host. While the
-Canvas owns browser focus, CRC may identify one live logical target as focused.
+Canvas owns browser focus, Pibbl may identify one live logical target as focused.
 This facility governs keyboard interaction and rendering state; it does not
 create an accessibility tree or semantic DOM descendants.
 
@@ -21,7 +21,7 @@ Applications opt in with the transparent policy component values
 ```
 
 Each policy removes empty child values and requires exactly one remaining
-branded `CRCElement`. Policy preparation attaches lifecycle metadata to a clone
+branded `PibblElement`. Policy preparation attaches lifecycle metadata to a clone
 of that child before identity resolution. The policy does not paint, lay out,
 own hooks, or change the child's type, key, identity, parentage, measurement,
 paint order, or source order. `KeyboardNavigation` requires an active manager;
@@ -50,20 +50,20 @@ drag-over handlers do not enroll a target by themselves.
 Candidate identity is the mounted component identity plus the explicit target
 hook slot. An ordinary rerender retains it. A keyed child retains it when
 reordered under the same parent. Reparenting, remounting, or changing the key
-creates a new target under the normal CRC identity rules.
+creates a new target under the normal Pibbl identity rules.
 
 Each successful render atomically replaces the candidate index. Source
 traversal is the global Tab order; geometry and numeric positive `tabIndex`
 values never reorder it. A failed render does not commit a partial index. When
-a focused target disappears, CRC clears focus without dispatching events to the
+a focused target disappears, Pibbl clears focus without dispatching events to the
 dead target.
 
 ## Native Canvas host and logical focus events
 
-When the committed index is nonempty, CRC makes the HTML Canvas a native Tab
-stop. While CRC still owns a `tabindex` mutation, it restores the exact prior
-state when that ownership ends. If the application changes `tabindex` while CRC
-is active, CRC relinquishes mutation ownership and preserves the application's
+When the committed index is nonempty, Pibbl makes the HTML Canvas a native Tab
+stop. While Pibbl still owns a `tabindex` mutation, it restores the exact prior
+state when that ownership ends. If the application changes `tabindex` while Pibbl
+is active, Pibbl relinquishes mutation ownership and preserves the application's
 new value. Focus management on a root `OffscreenCanvas` is an error because no
 DOM focus host exists; offscreen layers beneath an HTML Canvas share that
 Canvas's manager.
@@ -140,13 +140,13 @@ Native clicks have no `sourceEvent`.
 
 `<KeyboardNavigation mode="directional">` enrolls eligible
 descendants in one arrow-navigation boundary. A custom target supplies
-`keyboardNavigationBounds` in component-local coordinates. CRC transforms its
+`keyboardNavigationBounds` in component-local coordinates. Pibbl transforms its
 four corners into a root-logical axis-aligned envelope. A focusable target
 without finite bounds remains in Tab order but cannot participate in arrow
 selection.
 
 Registered render-layer targets supply optional finite layer-local
-`keyboardNavigationBounds`. CRC maps them through the same outer Canvas layout,
+`keyboardNavigationBounds`. Pibbl maps them through the same outer Canvas layout,
 transform, and clip projection used by paint and picking. A target without
 bounds remains in Tab order but is excluded from directional selection. The
 Three adapter can project an object's bounds for the application, but Three
@@ -177,7 +177,7 @@ Without a manager both values are false. Pointer focus normally sets only
 not retroactively turn a pointer-established focus into focus-visible focus.
 
 Applications may use `isFocused` for always-visible treatment and
-`isFocusVisible` for modality-sensitive treatment. CRC introduces no focus
+`isFocusVisible` for modality-sensitive treatment. Pibbl introduces no focus
 pseudo-style syntax. Focus visuals are ordinary Canvas drawing and should be
 high contrast and not depend on color alone.
 
@@ -195,7 +195,7 @@ once; an otherwise unchanged cache hit reuses committed focus geometry.
 ## Optionality, lifecycle, and failures
 
 The base renderer and event dispatcher do not import focus implementation
-modules. Without a used `FocusManagement` policy, CRC does not mutate `tabindex`, install
+modules. Without a used `FocusManagement` policy, Pibbl does not mutate `tabindex`, install
 the document Tab listener, maintain an index, or run focus, activation,
 focus-visible, or directional policies. Optimized package-consumer evidence
 proves unused focus implementation is eliminated.
@@ -204,7 +204,7 @@ The focus manager owns its Canvas mutation, document and Canvas listeners,
 committed candidates, directional memberships, current target, and pending
 Space state. Policy removal, render failure, root abort, and `dispose()`
 release those resources. Disposal is idempotent. It restores the prior Canvas
-focusability only while CRC still owns its mutation; an application `tabindex`
+focusability only while Pibbl still owns its mutation; an application `tabindex`
 change is preserved. Application handler errors remain isolated by the shared
 event dispatcher.
 
@@ -216,7 +216,7 @@ The shared `focus-and-keyboard-navigation` scenario demonstrates native DOM
 controls before and after the Canvas, two explicit top targets, twelve keyed
 row-major directional squares, and two explicit bottom targets. Its private
 controls each own their rectangular `useEventTarget` registration and their
-own visual children. They are example composition, not exported CRC widgets.
+own visual children. They are example composition, not exported Pibbl widgets.
 
 The Studio's **Keyboard and focus** section separates that contract into five
 editable lessons: focus enrollment/events/visuals, keyboard delivery and
@@ -241,3 +241,12 @@ the projected focus bounds associated with the visible bitmap/interaction
 generation. Pure geometry queries do not create focus candidates or change
 keyboard order. Disabled or removed objects follow the ordinary committed
 render-layer target and focus-removal rules.
+
+## HtmlBox native focus regions
+
+The canvas-only native host rules above apply to roots without HtmlBox. With an
+active HtmlBox and FocusManagement, registered HTML regions join source order and
+root-owned sentinels coordinate native entry/exit. Descendant native focus owns
+editing and activation; Canvas event targets remain logical and no duplicate
+click is synthesized. The [HtmlBox contract](./html-box-contract.md) defines the
+explicit exception, light-DOM scope, cleanup, and reading-order limits.

@@ -3,7 +3,7 @@ import {
   loadScenario,
   type FocusNavigationState,
   type ScenarioController,
-} from '@crc/scenarios';
+} from '@pibbl/scenarios';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
   clickLogicalPoint,
@@ -63,10 +63,10 @@ async function mountScenario() {
   activeControllers.push(controller);
   await controller.settled();
   const before = document.querySelector<HTMLButtonElement>(
-    '[data-crc-focus-navigation="before"]',
+    '[data-pibbl-focus-navigation="before"]',
   );
   const after = document.querySelector<HTMLButtonElement>(
-    '[data-crc-focus-navigation="after"]',
+    '[data-pibbl-focus-navigation="after"]',
   );
   if (!before || !after) throw new Error('Expected native controls around the Canvas.');
   return { after, before, canvas, controller, definition };

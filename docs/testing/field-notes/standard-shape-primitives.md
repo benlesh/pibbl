@@ -8,7 +8,7 @@ Date: 2026-09-06
 
 Branch: `codex/standard-shape-primitives`
 
-Workspace: `/private/tmp/crc-standard-shapes`
+Workspace: `/private/tmp/pibbl-standard-shapes`
 
 ## Revision and environment
 

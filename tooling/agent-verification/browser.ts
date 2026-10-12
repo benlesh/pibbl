@@ -2,7 +2,7 @@
 export function probeHostPoint(canvas: HTMLCanvasElement, clientX: number, clientY: number) {
   type Status = 'canvas' | 'blocked' | 'empty' | 'out-of-viewport' | 'invalid' | 'unsupported' | 'unavailable';
   const result = (status: Status, targetTag: string | null = null) => Object.freeze({
-    schema: 'crc-browser-point/1', scope: 'owner-document', coordinateSpace: 'client-css',
+    schema: 'pibbl-browser-point/1', scope: 'owner-document', coordinateSpace: 'client-css',
     ancestorFrames: 'unavailable', status, targetTag,
     point: Object.freeze({ x: clientX, y: clientY }),
   });

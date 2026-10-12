@@ -3,7 +3,7 @@ import {
   Circle,
   Clip,
   createElement,
-  crc,
+  pibbl,
   useSignal,
   Ellipse,
   Group,
@@ -24,8 +24,8 @@ import {
   type ArcStyle,
   type CircleProps,
   type CircleStyle,
-  type CRCController,
-  type CRCNode,
+  type PibblController,
+  type PibblNode,
   type EllipseProps,
   type EllipseStyle,
   type PolygonProps,
@@ -37,7 +37,7 @@ import {
   type TextStyle,
   type WedgeProps,
   type WedgeStyle,
-} from '@crc/core';
+} from '@pibbl/core';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 interface CanvasTraceEntry {
@@ -49,7 +49,7 @@ interface CanvasTraceEntry {
   readonly textAlign?: CanvasTextAlign;
 }
 
-const controllers = new Set<CRCController>();
+const controllers = new Set<PibblController>();
 
 beforeEach(() => {
   document.body.innerHTML = '';
@@ -76,17 +76,17 @@ describe('public JSX component authoring', () => {
       synchronousEventTrace: expectedTrace('HELLO'),
       updatedFrameTrace: [
         ...expectedTrace('HELLO'),
-        ...expectedTrace('CRC'),
+        ...expectedTrace('Pibbl'),
       ],
       disposedTrace: [
         ...expectedTrace('HELLO'),
-        ...expectedTrace('CRC'),
+        ...expectedTrace('Pibbl'),
       ],
       pendingFramesAfterDisposal: 0,
     });
   });
 
-  it('rejects a CRC element inside Text at runtime', () => {
+  it('rejects a Pibbl element inside Text at runtime', () => {
     let pendingFrame: FrameRequestCallback | undefined;
     vi.spyOn(window, 'requestAnimationFrame').mockImplementation(callback => {
       pendingFrame = callback;
@@ -99,11 +99,11 @@ describe('public JSX component authoring', () => {
         style: { width: 10, height: 10 },
       }) as never,
     );
-    const controller = crc(createCanvas(), invalid);
+    const controller = pibbl(createCanvas(), invalid);
     controllers.add(controller);
 
     expect(() => pendingFrame?.(0)).toThrowError(
-      'Text received a CRC element inside textual content as a CRC child.',
+      'Text received a Pibbl element inside textual content as a Pibbl child.',
     );
   });
 
@@ -115,7 +115,7 @@ describe('public JSX component authoring', () => {
     const legacyStyle: TextStyle = { text: 'legacy' };
     // @ts-expect-error Rectangle is a leaf and rejects JSX children
     const rectangleWithChild = <Rectangle style={{ width: 10, height: 10 }}>bad</Rectangle>;
-    // @ts-expect-error Text rejects CRC elements as textual children
+    // @ts-expect-error Text rejects Pibbl elements as textual children
     const textWithElement = <Text><Rectangle style={{ width: 10, height: 10 }} /></Text>;
 
     expect(legacyStyle).toEqual({ text: 'legacy' });
@@ -127,7 +127,7 @@ describe('public JSX component authoring', () => {
     value.rect(10, 12, 24, 18);
     const onClick = vi.fn();
     const canvas = createCanvas();
-    controllers.add(crc(canvas, (
+    controllers.add(pibbl(canvas, (
       <Path style={{ d: value, fill: '#7c3aed' }} onClick={onClick} />
     )));
 
@@ -141,7 +141,7 @@ describe('public JSX component authoring', () => {
 
   it('renders SvgPath data and updates its browser-parsed geometry', async () => {
     const canvas = createCanvas();
-    const controller = crc(canvas, (
+    const controller = pibbl(canvas, (
       <SvgPath
         style={{ d: 'M 10 10 H 30 V 30 H 10 Z', fill: '#ef4444' }}
       />
@@ -149,7 +149,7 @@ describe('public JSX component authoring', () => {
     controllers.add(controller);
     await nextFrame();
 
-    crc(canvas, (
+    pibbl(canvas, (
       <SvgPath
         style={{ d: 'M 40 10 H 60 V 30 H 40 Z', fill: '#2563eb' }}
       />
@@ -165,7 +165,7 @@ describe('public JSX component authoring', () => {
     const lineTo = vi.spyOn(Path2D.prototype, 'lineTo');
     const onClick = vi.fn();
     const canvas = createCanvas();
-    controllers.add(crc(canvas, (
+    controllers.add(pibbl(canvas, (
       <Line
         style={{
           coords: [[10, 20], [80, 20]],
@@ -188,7 +188,7 @@ describe('public JSX component authoring', () => {
     const moveTo = vi.spyOn(Path2D.prototype, 'moveTo');
     const lineTo = vi.spyOn(Path2D.prototype, 'lineTo');
     const canvas = createCanvas();
-    controllers.add(crc(canvas, (
+    controllers.add(pibbl(canvas, (
       <HorizontalLine
         style={{ y: 25, x1: 5, stroke: '#dc2626', strokeWidth: 1 }}
       />
@@ -203,7 +203,7 @@ describe('public JSX component authoring', () => {
     const moveTo = vi.spyOn(Path2D.prototype, 'moveTo');
     const lineTo = vi.spyOn(Path2D.prototype, 'lineTo');
     const canvas = createCanvas();
-    controllers.add(crc(canvas, (
+    controllers.add(pibbl(canvas, (
       <VerticalLine
         style={{ x: 35, y1: 7, stroke: '#2563eb', strokeWidth: 1 }}
       />
@@ -244,7 +244,7 @@ describe('public JSX component authoring', () => {
     });
     const frames = useManualAnimationFrames();
     const canvas = createCanvas();
-    const controller = crc(canvas, (
+    const controller = pibbl(canvas, (
       <Image style={{ src: 'first.png', left: 4, top: 6 }} />
     ));
     controllers.add(controller);
@@ -252,7 +252,7 @@ describe('public JSX component authoring', () => {
     const first = FakeBrowserImage.instances[0];
     const savedFirstLoad = first.onload;
 
-    crc(canvas, <Image style={{ src: 'second.png', left: 4, top: 6 }} />);
+    pibbl(canvas, <Image style={{ src: 'second.png', left: 4, top: 6 }} />);
     frames.flushNext();
     const second = FakeBrowserImage.instances[1];
     second.onload?.();
@@ -270,7 +270,7 @@ describe('public JSX component authoring', () => {
     const clippingPath = new Path2D();
     clippingPath.rect(10, 10, 40, 30);
     const canvas = createCanvas();
-    controllers.add(crc(canvas, (
+    controllers.add(pibbl(canvas, (
       <Clip style={{ d: clippingPath, fillRule: 'evenodd' }}>
         <Rectangle style={{ width: 30, height: 50, fill: '#f97316' }} />
         <Rectangle
@@ -289,7 +289,7 @@ describe('public JSX component authoring', () => {
   it('composites Layer children in source order under parent transforms', async () => {
     const onClick = vi.fn();
     const canvas = createCanvas();
-    controllers.add(crc(canvas, (
+    controllers.add(pibbl(canvas, (
       <Group style={{ translateX: 25, translateY: 15 }}>
         <Layer style={{ width: 80, height: 60 }}>
           <Rectangle style={{ width: 60, height: 40, fill: '#2563eb' }} />
@@ -308,8 +308,8 @@ describe('public JSX component authoring', () => {
     expect(onClick).toHaveBeenCalledOnce();
   });
 
-  it('types drawing leaves as childless and Clip and Layer as CRCNode containers', () => {
-    const iterable: Iterable<CRCNode> = [
+  it('types drawing leaves as childless and Clip and Layer as PibblNode containers', () => {
+    const iterable: Iterable<PibblNode> = [
       <Rectangle key="a" style={{ width: 1, height: 1 }} />,
     ];
     const clipContainer = <Clip style={{ d: new Path2D() }}>{iterable}</Clip>;
@@ -524,7 +524,7 @@ function driveInteractiveScene(authoring: AuthoringMode) {
   const frames = useManualAnimationFrames();
   const trace = observeCanvasTrace();
   const canvas = createCanvas();
-  const controller = crc(canvas, interactiveScene(authoring));
+  const controller = pibbl(canvas, interactiveScene(authoring));
   const synchronousMountTrace = trace.slice();
 
   frames.flushNext();
@@ -550,12 +550,12 @@ function driveInteractiveScene(authoring: AuthoringMode) {
   };
 }
 
-function interactiveScene(authoring: AuthoringMode): CRCNode {
-  function Poster(_props: { readonly children?: never }): CRCNode {
+function interactiveScene(authoring: AuthoringMode): PibblNode {
+  function Poster(_props: { readonly children?: never }): PibblNode {
     const message = useSignal('HELLO');
     const rectangleProps = {
       style: { width: 240, height: 120, fill: '#1f4bd8' } as const,
-      onClick: () => message.set('CRC'),
+      onClick: () => message.set('Pibbl'),
     };
     const textStyle = {
       left: 120,

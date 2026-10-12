@@ -1,0 +1,71 @@
+---
+title: Agents & Skills
+description: Find precise, version-aware documentation without running the site.
+---
+
+## Completeness, not just coverage
+
+[Per-API documentation status](/agents/documentation-status/) distinguishes a reference destination from a reviewed minimal example. Do not treat the presence of a symbol in a grouped page as proof that its simplest use case is fully documented. The [visual galleries](/catalogs/) link runnable examples to their APIs, complete source, and full-page experiences.
+
+Start with [llms.txt](/llms.txt), then fetch the relevant page's Markdown link. Every page in this collection has a clean Markdown counterpart generated from the same source, including expanded complete code for recipes. JavaScript is not required to read documentation.
+
+## Reading paths
+
+- For a specific API: look up its exact import in [coverage.json](/agents/coverage.json), follow `minimalPage`, and fetch `minimalExample` for complete plain TS/TSX. The [minimal-example index](/minimal-examples/) groups programs by capability. Read usage notes before copying: some examples require browser APIs, font assets, or optional packages.
+
+- For an existing HTML application: [integration direction](/guides/add-to-your-site/), [button recipe](/guides/native-button/), then [detailed companion](/agents/native-button/).
+- For a Pibbl application: [Start](/start/), [Foundations](/guides/foundations/), then an individual [reference](/reference/).
+- For advanced texture/physics composition: [Stirred Ink](/examples/stirred-ink/) and [its companion](/agents/stirred-ink/).
+
+## Detailed agent topics
+
+These companions are written for implementation, not just API discovery. Each explains ownership, exact boundaries, common failures, and verification; several include complete source expanded from the same examples available in the playground.
+
+| Task                                                | Read this topic                                          |
+| --------------------------------------------------- | -------------------------------------------------------- |
+| Mount Pibbl, choose signals/hooks, preserve identity  | [Authoring and lifecycle](/agents/topics/lifecycle/)     |
+| Draw, allocate space, transform, clip, filter       | [Drawing and layout](/agents/topics/layout/)             |
+| Shape font outlines, edit glyphs, bend text between paths | [Text and typography](/agents/topics/text/) |
+| Handle pointers, focus, forms, or native controls   | [Input and HTML](/agents/topics/input/)                  |
+| Coordinate motion and signal writers                | [Animation](/agents/topics/animation/)                   |
+| Fill with live materials or stir reaction-diffusion | [Textures](/agents/topics/textures/)                     |
+| Simulate bodies or query pure geometry              | [Physics](/agents/topics/physics/)                       |
+| Render bounded bursts, trails, or shared flow       | [Particles](/agents/topics/particles/)                   |
+| Plot data and inspect meaningful marks              | [Visualization](/agents/topics/visualization/)           |
+| Mount an external renderer or ordinary Three scene  | [External renderers](/agents/topics/external-renderers/) |
+
+## Implementation workflow
+
+1. Inspect the consuming application's installed packages, version, renderer, build tool, and lifecycle. This local website documents a checkout, not a verified npm release.
+2. Choose the ownership direction: HTML application embedding Pibbl, or Pibbl application allocating native HTML. State the canvas owner and the action/state owner explicitly.
+3. Fetch one topic's Markdown, then the exact API/type pages named there. The [alphabetical index](/reference/alphabetical/) finds symbols; the coverage JSON identifies their import paths.
+4. Start from a complete public example. Preserve its mount/dispose boundary and coordinate assumptions. Mark a snippet as partial when it omits setup; do not mistake it for a standalone program.
+5. Implement the smallest runnable behavior and verify native state, geometry, and resource ownership before screenshots. Use deterministic clocks/seeds where the claim depends on timing or randomness.
+6. Report the tested package/revision, commands/environment, observed behavior, and remaining gaps. A successful typecheck, a browser run, and an ownership assertion are different evidence.
+
+Do not import private `lib/` or repository scenario helpers into an application. `@pibbl/core/internal` is reserved for matching official integrations. Do not invent a Pibbl API from a design concept, add a second scheduler, claim Canvas filters affect arbitrary HTML, or assume Canvas targets create a semantic accessibility tree.
+
+## Discovery and version policy
+
+[catalog.json](/catalog.json) is a Pibbl-specific inventory with schema version 1, documentation compatibility, stable page IDs, root-relative HTML/Markdown URLs, kinds, documented symbols, import paths, related type names, companion URLs, and authored source provenance. Resolve paths against this site's origin. It is not a universal agent protocol.
+
+[agents/coverage.json](/agents/coverage.json) is generated from TypeScript's semantic export inventory. Each record identifies a symbol, public import path, value/type/compiler kind, documentation destination, and documented/missing status. Multiple exports of one symbol remain separate records. This measures destinations, not prose completeness or fresh execution of every snippet. Grouped type pages may own several related factories; do not assume each symbol has an individual dedicated article.
+
+API references combine authored guidance with signatures, JSDoc, and member details generated from the checkout. Their source links open exact line anchors in a snapshot generated alongside the reference; a GitHub link is included only when that file matches the recorded commit.
+
+Each page identifies the local package version and base revision. Check the consuming project's installed version before adapting code. These pages describe this checkout, including working-tree changes; do not assume a same-numbered published package includes all of them.
+
+The inventory includes authored website/agent topics under `docs/site/website/` and existing public API, guide, and tutorial sources under `docs/site/api/` and `docs/site/learn/`. Planning documents and internal test labs are excluded. The site’s search includes public documentation, generated JSDoc descriptions and member details, and learning-example metadata. Full implementation snapshots are excluded from search. Repository evidence links in migrated documents are supporting material, not runtime dependencies or search content.
+
+## Diagnose before changing architecture
+
+- Blank surface: check browser-only mounting, positive CSS size, compatible runtime, and console errors.
+- Unexpected state reset: check function identity, key, parent scope, and hook order.
+- Stale view: check whether the intended consumer reads a signal; mutable refs do not schedule work.
+- Wrong hit location: distinguish root-logical, local allocation, CSS, backing-pixel, texture, and physics coordinates.
+- Ongoing activity after removal: inspect controller disposal and application listeners, observers, controls, and loaders.
+- Plausible but missing API: inspect the export inventory and exact version; do not substitute a private helper or obsolete package name.
+
+## Skills
+
+No installable Pibbl agent skill is shipped by this milestone. Use the documentation and complete recipes directly. The [downloadable Claude Design kit](/claude-design-kit.tar.gz) is a design/integration handoff, not an installed agent skill. Future skills should retrieve exact references rather than embedding or inventing another API manual.

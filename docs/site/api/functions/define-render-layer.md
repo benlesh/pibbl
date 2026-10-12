@@ -6,20 +6,20 @@ kind: api
 slug: define-render-layer
 apiCategory: function
 symbols: [defineRenderLayer]
-relatedTypes: [CRCRenderLayerDefinition, CRCRenderLayerComponentProps]
+relatedTypes: [PibblRenderLayerDefinition, PibblRenderLayerComponentProps]
 ---
 
 # defineRenderLayer
 
 ```ts
-import { defineRenderLayer } from "@crc/core";
+import { defineRenderLayer } from "@pibbl/core";
 ```
 
-`defineRenderLayer()` creates a CRC component from a
-[`CRCRenderLayerDefinition`](#/api/types/canvas-runtime#crcrenderlayerdefinition)
+`defineRenderLayer()` creates a Pibbl component from a
+[`PibblRenderLayerDefinition`](#/api/types/canvas-runtime#pibblrenderlayerdefinition)
 that owns one external
 `OffscreenCanvas` lifecycle for each mounted component identity. Its callbacks
 create resources, receive updates and size changes, render synchronously, and
 dispose resources on unmount. The returned component accepts
-[`CRCRenderLayerComponentProps`](#/api/types/canvas-runtime#crcrenderlayercomponentprops)
+[`PibblRenderLayerComponentProps`](#/api/types/canvas-runtime#pibblrenderlayercomponentprops)
 alongside its custom props.

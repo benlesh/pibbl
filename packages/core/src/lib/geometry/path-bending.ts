@@ -1,3 +1,4 @@
+import type { ArcBendTransformOptions, BendTransformOptions } from './transform-bend.js';
 import { PathGeometry, type PathSegment } from './path-geometry.js';
 import { TAU } from './path-arc.js';
 import { bendSpanBounds, bendSpanPoint, bendSpans, splitBendSpan, type BendBounds, type BendPoint, type BendSpan } from './path-bend-spans.js';
@@ -6,23 +7,79 @@ import { measureBendGuide, prepareBendGuide } from './path-bend-guide.js';
 export interface PathBendFrame {
   readonly x: number; readonly y: number; readonly width: number; readonly height: number;
 }
+/**
+ * Circular guide geometry used when bending a path along an arc.
+ *
+ * @see {@link ArcBendTransformOptions}
+ */
 export interface PathBendArc {
-  readonly cx: number; readonly cy: number; readonly radius: number;
-  readonly startAngle: number; readonly sweep: number;
+  /** Horizontal coordinate of the center. See {@link PathBendArc}. */
+  readonly cx: number;
+  /** Vertical coordinate of the center. See {@link PathBendArc}. */
+  readonly cy: number;
+  /** Radius in the coordinate system of this geometry or effect. See {@link PathBendArc}. */
+  readonly radius: number;
+  /** Angle at which the arc or slice begins. See {@link PathBendArc}. */
+  readonly startAngle: number;
+  /** Angular extent of the arc. See {@link PathBendArc}. */
+  readonly sweep: number;
 }
+/**
+ * Placement of the source along the beginning, center, or end of a bending guide.
+ *
+ * @see {@link BendTransformOptions}
+ */
 export type PathBendAlign = 'start' | 'center' | 'end';
+/**
+ * The source baseline used for bending: an edge, center, or explicit coordinate.
+ *
+ * @see {@link BendTransformOptions}
+ */
 export type PathBendBaseline = 'center' | 'top' | 'bottom' | number;
+/**
+ * Whether bending preserves source length or stretches it to the guide.
+ *
+ * @see {@link BendTransformOptions}
+ */
 export type PathBendFit = 'none' | 'stretch';
+/**
+ * Policy for source geometry extending beyond a bending guide.
+ *
+ * @see {@link BendTransformOptions}
+ */
 export type PathBendOverflow = 'error' | 'extend' | 'wrap';
+/**
+ * Source bounds, guide alignment, baseline, fitting, overflow, and approximation limits for path bending.
+ *
+ * @see {@link PathBendAlign}
+ * @see {@link PathBendBaseline}
+ * @see {@link PathBendFit}
+ * @see {@link PathBendOverflow}
+ */
 export interface PathBendOptions {
+  /**
+   * Source coordinate frame used to normalize the geometry before bending. See
+   * {@link PathBendFrame}.
+   */
   readonly source: PathBendFrame;
+  /** Placement of the source length along the guide. See {@link PathBendAlign}. */
   readonly align?: PathBendAlign;
+  /** Source baseline mapped onto the guide. See {@link PathBendBaseline}. */
   readonly baseline?: PathBendBaseline;
+  /** Policy for fitting content within its available box. See {@link PathBendFit}. */
   readonly fit?: PathBendFit;
+  /** Offset along the guide. See {@link PathBendOptions}. */
   readonly offset?: number;
+  /** Offset perpendicular to the guide. See {@link PathBendOptions}. */
   readonly normalOffset?: number;
+  /**
+   * Policy for geometry extending beyond the guide's available length. See
+   * {@link PathBendOverflow}.
+   */
   readonly overflow?: PathBendOverflow;
+  /** Positive maximum geometric approximation error. See {@link PathBendOptions}. */
   readonly tolerance: number;
+  /** Upper bound on the number of output path segments. See {@link PathBendOptions}. */
   readonly maxSegments?: number;
 }
 export interface BendPathAlongArcOptions extends PathBendOptions { readonly arc: PathBendArc }

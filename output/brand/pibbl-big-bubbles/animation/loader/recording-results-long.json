@@ -1,0 +1,82 @@
+{
+  "mode": "wasm",
+  "budget": {
+    "frameBytes": 1152000,
+    "expectedFrames": 1326,
+    "frameCapacity": 1525,
+    "pages": 26825,
+    "allocatedBytes": 1758003200,
+    "fps": 120.48192494215621,
+    "headroom": 1.15
+  },
+  "allocationMs": 0.09999990463256836,
+  "width": 640,
+  "height": 450,
+  "frameBytes": 1152000,
+  "requestedMs": 11000,
+  "observedMs": 11001.199999809265,
+  "renderedFrames": 1320,
+  "captureAttempts": 1320,
+  "sentFrames": 1320,
+  "dropped": 0,
+  "storageFull": 0,
+  "intervalMs": {
+    "count": 1319,
+    "mean": 8.332827899924185,
+    "median": 8.300000190734863,
+    "p95": 9,
+    "max": 10.099999904632568
+  },
+  "readbackMs": {
+    "count": 1320,
+    "mean": 0.6244696942242709,
+    "median": 0.5999999046325684,
+    "p95": 0.8000001907348633,
+    "max": 1.1999998092651367
+  },
+  "dispatchMs": {
+    "count": 1320,
+    "mean": 0.027575759454206986,
+    "median": 0,
+    "p95": 0.10000038146972656,
+    "max": 0.20000028610229492
+  },
+  "roundTripMs": {
+    "count": 1320,
+    "mean": 0.5955303011518536,
+    "median": 0.5999999046325684,
+    "p95": 0.8999996185302734,
+    "max": 9.599999904632568
+  },
+  "wasmInputCopyMs": {
+    "count": 1320,
+    "mean": 0.04848485173601093,
+    "median": 0,
+    "p95": 0.10000038146972656,
+    "max": 0.6999998092651367
+  },
+  "wasmStoreMs": {
+    "count": 1320,
+    "mean": 0.1967424309614933,
+    "median": 0.19999980926513672,
+    "p95": 0.39999961853027344,
+    "max": 0.7999997138977051
+  },
+  "wasmAllocationMs": {
+    "count": 1320,
+    "mean": 0.0015151515151515152,
+    "median": 0,
+    "p95": 0,
+    "max": 0.10000038146972656
+  },
+  "type": "finished",
+  "storedFrames": 1320,
+  "storedBytes": 1520640000,
+  "allocatedBytes": 1758003200,
+  "workload": "comparison",
+  "environment": {
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.7922.34 Safari/537.36",
+    "dpr": 1,
+    "visibility": "visible"
+  }
+}

@@ -7,13 +7,13 @@ import {
   physics2DLabScenarioEntry,
   type Physics2DLabState,
   type ScenarioController,
-} from "@crc/scenarios";
+} from "@pibbl/scenarios";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import {
   installSchedulerDriverForTest,
   ManualSchedulerDriver,
 } from "../src/lib/scheduler/testing.js";
-import { loadLearningSource } from "../../../playground/src/learning-sources";
+import { loadWorkbenchSource } from "../../../playground/src/learning-sources";
 import { loadScenarioSource } from "../../../playground/src/scenario-sources";
 
 const EXPECTED_ACTION_IDS = [
@@ -71,7 +71,7 @@ describe("public 2D physics laboratory", () => {
         "dynamicBody2D",
         "staticBody2D",
         "collider2D",
-        "crcPhysicsBody2D",
+        "pibblPhysicsBody2D",
         "useRef",
         "useSignal",
         "setPointerCapture",
@@ -107,14 +107,14 @@ describe("public 2D physics laboratory", () => {
 
     if (!learning) throw new Error("Missing physics-2d learning example.");
     const [learningSource, labSource] = await Promise.all([
-      loadLearningSource(learning),
+      loadWorkbenchSource(learning),
       loadScenarioSource(physics2DLabScenarioEntry),
     ]);
     for (const source of [learningSource, labSource]) {
-      expect(source).toMatch(/from ["']@crc\/core["']/u);
-      expect(source).toMatch(/from ["']@crc\/physics\/2d["']/u);
+      expect(source).toMatch(/from ["']@pibbl\/core["']/u);
+      expect(source).toMatch(/from ["']@pibbl\/core\/physics\/2d["']/u);
       expect(source).not.toMatch(
-        /@crc\/(?:core|physics)\/(?:internal|lib|src)\b/u,
+        /@pibbl\/(?:core|physics)\/(?:internal|lib|src)\b/u,
       );
       expect(source).not.toMatch(
         /ManualSchedulerDriver|installSchedulerDriverForTest|setInterval/u,

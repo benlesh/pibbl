@@ -1,9 +1,9 @@
 import {
-  crc,
+  pibbl,
   Rectangle,
   RegularPolygon,
-  type CRCController,
-} from "@crc/core";
+  type PibblController,
+} from "@pibbl/core";
 
 function RegularPolygonStudy() {
   return [
@@ -48,6 +48,6 @@ function RegularPolygonStudy() {
   ];
 }
 
-export default function mount(canvas: HTMLCanvasElement): CRCController {
-  return crc(canvas, <RegularPolygonStudy />);
+export default function mount(canvas: HTMLCanvasElement): PibblController {
+  return pibbl(canvas, <RegularPolygonStudy />);
 }

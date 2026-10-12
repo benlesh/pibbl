@@ -1,7 +1,7 @@
 ---
 id: api-types-elements-components
 title: Elements and component types
-summary: CRC's branded element protocol, component props, and path-constructor inputs.
+summary: Pibbl's branded element protocol, component props, and path-constructor inputs.
 kind: api
 slug: elements-components
 apiCategory: types
@@ -14,19 +14,6 @@ symbols:
     CirclePathOptions,
     CircleProps,
     ClipProps,
-    CRCComponent,
-    CRCContainerChild,
-    CRCElement,
-    CRCElementType,
-    CRCEmptyNode,
-    CRCKey,
-    CRCNode,
-    CRCNodeInput,
-    CRCPhysics2DPropExtension,
-    CRCPrimitiveComponent,
-    CRCRenderResult,
-    CRCTextChild,
-    CRCTextInput,
     EllipsePathOptions,
     EllipseProps,
     FocusManagementProps,
@@ -39,6 +26,19 @@ symbols:
     LineProps,
     OverlayProps,
     PathProps,
+    PibblComponent,
+    PibblContainerChild,
+    PibblElement,
+    PibblElementType,
+    PibblEmptyNode,
+    PibblKey,
+    PibblNode,
+    PibblNodeInput,
+    PibblPhysics2DPropExtension,
+    PibblPrimitiveComponent,
+    PibblRenderResult,
+    PibblTextChild,
+    PibblTextInput,
     PolygonPathOptions,
     PolygonProps,
     RectanglePathOptions,
@@ -63,13 +63,13 @@ keywords: [JSX, element, component, props, Path2D]
 
 # Elements and component types
 
-CRC components are synchronous functions over a branded recursive element
+Pibbl components are synchronous functions over a branded recursive element
 protocol. Component pages describe each runtime value; this page owns their
 type contracts and the pure `create*Path` option objects.
 
 ## AbsoluteProps
 
-`AbsoluteProps` accepts recursive `CRCNode` children for `Absolute`.
+`AbsoluteProps` accepts recursive `PibblNode` children for `Absolute`.
 
 ## ArcPathOptions
 
@@ -91,79 +91,8 @@ to `createCirclePath`.
 
 ## ClipProps
 
-`ClipProps` supplies a `Path2D`, fill rule, and recursive `CRCNode` children
+`ClipProps` supplies a `Path2D`, fill rule, and recursive `PibblNode` children
 to `Clip`.
-
-## CRCComponent
-
-`CRCComponent<P>` is a synchronous `(props: P) => CRCNode | void` function.
-Components do not return promises and use normal function identity for runtime
-state ownership.
-
-## CRCContainerChild
-
-`CRCContainerChild` aliases the recursive node contract accepted by container
-components such as `Group`, `Layer`, and the layout components.
-
-## CRCElement
-
-`CRCElement<P>` is CRC's immutable branded descriptor with a component `type`,
-readonly `props`, and an optional normalized key. Construct it with JSX or
-`createElement`, not object literals.
-
-## CRCElementType
-
-`CRCElementType<P>` is the supported vocabulary of synchronous CRC component
-types accepted by element construction.
-
-## CRCEmptyNode
-
-`CRCEmptyNode` is `false | true | null | undefined | "" | 0`. These values
-render no CRC output inside a recursive node structure.
-
-## CRCKey
-
-`CRCKey` is `string | number`; element construction normalizes it to a string
-and never delivers it through component props.
-
-## CRCNode
-
-`CRCNode` is one element, an empty node, a recursive readonly array, or a
-finite synchronous iterable. Infinite iterables are unsupported.
-
-## CRCNodeInput
-
-`CRCNodeInput` is the component-owned authoring grammar for structural
-children and component results. It accepts `CRCNode`, direct signals that
-replace one complete resolved node structure, and recursive arrays or finite
-iterables containing those inputs. Signal results are resolved one level only.
-
-## CRCPhysics2DPropExtension
-
-`CRCPhysics2DPropExtension` is the empty declaration-merging base used by the
-optional official 2D physics package to type supported Canvas component props.
-
-## CRCPrimitiveComponent
-
-`CRCPrimitiveComponent` is the capability-bearing component type created by
-`definePrimitive` for platform/component-library authors.
-
-## CRCRenderResult
-
-`CRCRenderResult` is `CRCNode | void`, the output permitted from a synchronous
-CRC component.
-
-## CRCTextChild
-
-`CRCTextChild` is recursive textual content for `Text`: strings, numbers,
-booleans, nullish values, readonly arrays, and finite synchronous iterables.
-
-## CRCTextInput
-
-`CRCTextInput` is the `Text` authoring grammar. It accepts `CRCTextChild`,
-direct signals that replace one complete resolved text structure, and recursive
-arrays or finite iterables containing those inputs. It does not unwrap signals
-inside a structure returned by another signal.
 
 ## EllipsePathOptions
 
@@ -176,12 +105,12 @@ finite radian rotation to `createEllipsePath`.
 
 ## FocusManagementProps
 
-`FocusManagementProps` wraps one recursive `CRCNode` subtree and enables
+`FocusManagementProps` wraps one recursive `PibblNode` subtree and enables
 logical Canvas focus without generating semantic DOM.
 
 ## GroupProps
 
-`GroupProps` accepts recursive `CRCNode` children for transformed composition.
+`GroupProps` accepts recursive `PibblNode` children for transformed composition.
 
 ## HorizontalLineProps
 
@@ -194,13 +123,13 @@ line helper.
 
 ## KeyboardNavigationProps
 
-`KeyboardNavigationProps` wraps recursive `CRCNode` children in a transparent
+`KeyboardNavigationProps` wraps recursive `PibblNode` children in a transparent
 directional-navigation boundary inside focus management.
 
 ## LayerProps
 
-`LayerProps` accepts recursive `CRCNode` children for a persistent offscreen
-CRC instance; browser `OffscreenCanvas` support is required.
+`LayerProps` accepts recursive `PibblNode` children for a persistent offscreen
+Pibbl instance; browser `OffscreenCanvas` support is required.
 
 ## LinePathOptions
 
@@ -213,11 +142,82 @@ to `createLinePath`.
 
 ## OverlayProps
 
-`OverlayProps` accepts recursive `CRCNode` children for shared-box placement.
+`OverlayProps` accepts recursive `PibblNode` children for shared-box placement.
 
 ## PathProps
 
 `PathProps` requires a caller-owned `Path2D` for the `Path` drawing component.
+
+## PibblComponent
+
+`PibblComponent<P>` is a synchronous `(props: P) => PibblNode | void` function.
+Components do not return promises and use normal function identity for runtime
+state ownership.
+
+## PibblContainerChild
+
+`PibblContainerChild` aliases the recursive node contract accepted by container
+components such as `Group`, `Layer`, and the layout components.
+
+## PibblElement
+
+`PibblElement<P>` is Pibbl's immutable branded descriptor with a component `type`,
+readonly `props`, and an optional normalized key. Construct it with JSX or
+`createElement`, not object literals.
+
+## PibblElementType
+
+`PibblElementType<P>` is the supported vocabulary of synchronous Pibbl component
+types accepted by element construction.
+
+## PibblEmptyNode
+
+`PibblEmptyNode` is `false | true | null | undefined | "" | 0`. These values
+render no Pibbl output inside a recursive node structure.
+
+## PibblKey
+
+`PibblKey` is `string | number`; element construction normalizes it to a string
+and never delivers it through component props.
+
+## PibblNode
+
+`PibblNode` is one element, an empty node, a recursive readonly array, or a
+finite synchronous iterable. Infinite iterables are unsupported.
+
+## PibblNodeInput
+
+`PibblNodeInput` is the component-owned authoring grammar for structural
+children and component results. It accepts `PibblNode`, direct signals that
+replace one complete resolved node structure, and recursive arrays or finite
+iterables containing those inputs. Signal results are resolved one level only.
+
+## PibblPhysics2DPropExtension
+
+`PibblPhysics2DPropExtension` is the empty declaration-merging base used by the
+optional official 2D physics module to type supported Canvas component props.
+
+## PibblPrimitiveComponent
+
+`PibblPrimitiveComponent` is the capability-bearing component type created by
+`definePrimitive` for platform/component-library authors.
+
+## PibblRenderResult
+
+`PibblRenderResult` is `PibblNode | void`, the output permitted from a synchronous
+Pibbl component.
+
+## PibblTextChild
+
+`PibblTextChild` is recursive textual content for `Text`: strings, numbers,
+booleans, nullish values, readonly arrays, and finite synchronous iterables.
+
+## PibblTextInput
+
+`PibblTextInput` is the `Text` authoring grammar. It accepts `PibblTextChild`,
+direct signals that replace one complete resolved text structure, and recursive
+arrays or finite iterables containing those inputs. It does not unwrap signals
+inside a structure returned by another signal.
 
 ## PolygonPathOptions
 
@@ -285,7 +285,7 @@ rasterization, and measurement remain browser behavior.
 
 ## TextProps
 
-`TextProps` accepts recursive `CRCTextChild` content and the local text style.
+`TextProps` accepts recursive `PibblTextChild` content and the local text style.
 
 ## VerticalLineProps
 

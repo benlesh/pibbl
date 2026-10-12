@@ -1,3 +1,4 @@
+import { preserveDeclarationJsdoc } from '../../../tooling/preserve-declaration-jsdoc.mjs';
 import {
   mkdir,
   readFile,
@@ -20,7 +21,7 @@ await withDirectoryLock(resolve(cache, "tooling.lock"), async () => {
   const sdk = resolve(cache, `emsdk-${lock.emsdk.version}`);
   const upstream = resolve(cache, `harfbuzz-${lock.harfbuzz.version}`);
   const flags = [
-    `-DCRC_TEXT_PROTOCOL=${lock.protocolVersion}`,
+    `-DPIBBL_TEXT_PROTOCOL=${lock.protocolVersion}`,
     "-O3",
     "-std=c++17",
     "-fexceptions",
@@ -40,7 +41,7 @@ await withDirectoryLock(resolve(cache, "tooling.lock"), async () => {
     .update(await readFile(new URL(import.meta.url)))
     .update(JSON.stringify(lock))
     .update(JSON.stringify(flags))
-    .update(await readFile(resolve(root, "native/crc-text.cpp")))
+    .update(await readFile(resolve(root, "native/pibbl-text.cpp")))
     .digest("hex");
   const native = resolve(cache, "native", digest);
   const files = ["engine.mjs", "engine.wasm", "browser/engine.mjs"];
@@ -64,7 +65,7 @@ await withDirectoryLock(resolve(cache, "tooling.lock"), async () => {
         [
           resolve(sdk, "upstream/emscripten/em++.py"),
           resolve(upstream, "src/harfbuzz.cc"),
-          resolve(root, "native/crc-text.cpp"),
+          resolve(root, "native/pibbl-text.cpp"),
           "-I" + resolve(upstream, "src"),
           ...flags.map((flag) =>
             flag.startsWith("-sENVIRONMENT=")
@@ -123,7 +124,7 @@ await withDirectoryLock(resolve(cache, "tooling.lock"), async () => {
   );
   await copyFile(
     resolve(root, "../../LICENSE.txt"),
-    resolve(output, "CRC-LICENSE.txt"),
+    resolve(output, "Pibbl-LICENSE.txt"),
   );
   const runtimeNotices = [
     [
@@ -174,7 +175,7 @@ await withDirectoryLock(resolve(cache, "tooling.lock"), async () => {
     "--format=esm",
     "--platform=neutral",
     "--target=esnext",
-    "--external:@crc/core",
+    "--external:@pibbl/core",
     "--external:../engine.mjs",
     "--out-extension:.js=.mjs",
     "--chunk-names=chunks/[name]-[hash]",
@@ -195,6 +196,8 @@ await withDirectoryLock(resolve(cache, "tooling.lock"), async () => {
       2,
     ) + "\n",
   );
+  preserveDeclarationJsdoc(resolve(root, "src"), output);
+
   const destination = resolve(root, "dist"),
     previous = resolve(cache, "previous-dist");
   // Keep the previous usable output until all compilers have succeeded.

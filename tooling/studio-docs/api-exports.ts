@@ -1,6 +1,7 @@
+import { readFileSync } from "node:fs";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import {
@@ -13,6 +14,7 @@ import {
 } from "typescript/unstable/sync";
 
 import type { PublicDocFrontmatter } from "./model";
+import { isClassDeclaration, isInterfaceDeclaration, isTypeAliasDeclaration, isPropertyDeclaration, isMethodDeclaration, isGetAccessorDeclaration, isSetAccessorDeclaration, SyntaxKind } from "typescript/unstable/ast";
 
 export interface PublicApiEntryPoint {
   readonly values: readonly string[];
@@ -55,27 +57,58 @@ export interface ApiCoverage {
   readonly duplicateTypes: readonly string[];
 }
 
-export const crcPublicCompilerOptions: CompilerOptions = {
+const repositoryRoot = fileURLToPath(new URL("../../", import.meta.url));
+const sourcePaths: Record<string, string[]> = JSON.parse(
+  readFileSync(resolve(repositoryRoot, "tsconfig.json"), "utf8"),
+).compilerOptions.paths;
+
+export const pibblPublicCompilerOptions: CompilerOptions = {
   target: 99,
+  module: ModuleKind.ESNext,
+  moduleResolution: 100, // Bundler
+  paths: Object.fromEntries(
+    Object.entries(sourcePaths).map(([name, paths]) => [
+      name,
+      paths.map((path) => resolve(repositoryRoot, path)),
+    ]),
+  ),
   jsx: 4, // react-jsx; the native TypeScript API does not export JsxEmit.
-  jsxImportSource: "@crc/core",
+  jsxImportSource: "@pibbl/core",
 };
 
-export const crcPublicEntryPaths = {
-  filters: fileURLToPath(new URL("../../packages/core/src/filters.ts", import.meta.url)),
-  textures: fileURLToPath(new URL("../../packages/textures/src/index.ts", import.meta.url)),
+export const pibblPublicEntryPaths = {
+  machines: fileURLToPath(new URL("../../packages/core/src/features/machines/index.ts", import.meta.url)),
+  machineAnimation: fileURLToPath(new URL("../../packages/core/src/features/machines/animation.ts", import.meta.url)),
+  sprites: fileURLToPath(new URL("../../packages/core/src/features/sprites/index.ts", import.meta.url)),
+  aseprite: fileURLToPath(new URL("../../packages/core/src/features/sprites/formats/aseprite.ts", import.meta.url)),
+  texturePacker: fileURLToPath(new URL("../../packages/core/src/features/sprites/formats/texture-packer.ts", import.meta.url)),
+
+  filters: fileURLToPath(
+    new URL("../../packages/core/src/filters.ts", import.meta.url),
+  ),
+  textures: fileURLToPath(
+    new URL(
+      "../../packages/core/src/features/textures/index.ts",
+      import.meta.url,
+    ),
+  ),
   root: fileURLToPath(
     new URL("../../packages/core/src/index.ts", import.meta.url),
   ),
-  text: fileURLToPath(new URL("../../packages/text/src/index.ts", import.meta.url)),
+  text: fileURLToPath(
+    new URL("../../packages/text/src/index.ts", import.meta.url),
+  ),
   viz: fileURLToPath(
-    new URL("../../packages/viz/src/index.ts", import.meta.url),
+    new URL("../../packages/core/src/features/viz/index.ts", import.meta.url),
   ),
   three: fileURLToPath(
     new URL("../../packages/three/src/index.ts", import.meta.url),
   ),
   particles: fileURLToPath(
-    new URL("../../packages/particles/src/index.ts", import.meta.url),
+    new URL(
+      "../../packages/core/src/features/particles/index.ts",
+      import.meta.url,
+    ),
   ),
   types: fileURLToPath(
     new URL("../../packages/core/src/types.ts", import.meta.url),
@@ -88,26 +121,28 @@ export const crcPublicEntryPaths = {
   ),
 } as const;
 
-export const crcPhysicsEntryPaths = {
+export const pibblPhysicsEntryPaths = {
   root: fileURLToPath(
-    new URL("../../packages/physics/src/2d.ts", import.meta.url),
+    new URL("../../packages/core/src/features/physics/2d.ts", import.meta.url),
   ),
   physics2dGeometry: fileURLToPath(
-    new URL("../../packages/physics/src/2d-geometry.ts", import.meta.url),
-  ),
-  physics3dGeometry: fileURLToPath(
-    new URL("../../packages/physics/src/3d-geometry.ts", import.meta.url),
+    new URL(
+      "../../packages/core/src/features/physics/2d-geometry.ts",
+      import.meta.url,
+    ),
   ),
 } as const;
 
 /** Exact public entries rendered by the Studio API reference. */
-export const crcStudioPublicEntryPaths = {
-  ...crcPublicEntryPaths,
-  physics2d: crcPhysicsEntryPaths.root,
+export const pibblStudioPublicEntryPaths = {
+  ...pibblPublicEntryPaths,
+  physics2d: pibblPhysicsEntryPaths.root,
   physics2dTesting: fileURLToPath(
-    new URL("../../packages/physics/src/2d-testing.ts", import.meta.url),
+    new URL(
+      "../../packages/core/src/features/physics/2d-testing.ts",
+      import.meta.url,
+    ),
   ),
-  physics3dGeometry: crcPhysicsEntryPaths.physics3dGeometry,
 } as const;
 
 const compilerOverviewSymbols = new Set(["jsx", "jsxs", "jsxDEV", "JSX"]);
@@ -149,6 +184,82 @@ export async function collectPublicExports(
   } finally {
     api.close();
     await rm(configuration.directory, { force: true, recursive: true });
+  }
+}
+
+/** Read documentation from resolved public declarations, never from barrel text. */
+export async function collectPublicApiDetails(
+  entryPaths: Readonly<Record<string, string>>,
+  compilerOptions: CompilerOptions,
+  names: readonly string[],
+) {
+  const configuration = await createCompilerConfiguration(entryPaths, compilerOptions);
+  const api = new API({ cwd: process.cwd() });
+  try {
+    const snapshot = api.updateSnapshot({ openProjects: [configuration.path] });
+    try {
+      return Object.entries(entryPaths).flatMap(([entry, path]) => {
+        const project = snapshot.getDefaultProjectForFile(path);
+        if (!project) throw new Error(`Missing documentation project for ${path}`);
+        const { checker, program } = project;
+        const source = program.getSourceFile(path);
+        const module = source && checker.getSymbolAtLocation(source);
+        if (!module) throw new Error(`Missing public entry ${path}`);
+        return checker.getExportsOfModule(module).filter(symbol => names.includes(symbol.name)).map(exported => {
+          const symbol = isAlias(exported) ? checker.getAliasedSymbol(exported) : exported;
+          const declaration = symbol.declarations[0]?.resolve();
+          if (!declaration) throw new Error(`Missing declaration for ${exported.name}`);
+          const location = (node: typeof declaration) => {
+            const file = node.getSourceFile();
+            return { file: file.fileName, line: file.getLineAndCharacterOfPosition(node.getStart()).line + 1, source: file.text };
+          };
+          const isType = (symbol.flags & (SymbolFlags.TypeAlias | SymbolFlags.Interface | SymbolFlags.Class)) !== 0;
+          const type = isType ? checker.getDeclaredTypeOfSymbol(symbol) : checker.getTypeOfSymbolAtLocation(symbol, declaration);
+          let signature = `${exported.name}: ${checker.typeToString(type, declaration, 1)}`;
+          if (isInterfaceDeclaration(declaration) || isClassDeclaration(declaration)) {
+            const parameters = declaration.typeParameters?.map(parameter => parameter.getText()).join(", ");
+            const heritage = declaration.heritageClauses?.map(clause => clause.getText()).join(" ");
+            signature = `${isClassDeclaration(declaration) ? "class" : "interface"} ${exported.name}${parameters ? `<${parameters}>` : ""}${heritage ? ` ${heritage}` : ""}`;
+          } else if (isTypeAliasDeclaration(declaration)) {
+            const parameters = declaration.typeParameters?.map(parameter => parameter.getText()).join(", ");
+            signature = `type ${exported.name}${parameters ? `<${parameters}>` : ""} = ${declaration.type.getText()}`;
+          }
+          const members = isType ? checker.getPropertiesOfType(type).flatMap(member => {
+            // Nominal symbol brands are implementation identity, not authorable options.
+            if (member.name.startsWith("__@")) return [];
+            const node = member.declarations[0]?.resolve();
+            if (!node || node.getSourceFile().fileName.includes("/node_modules/")) return [];
+            if (isPropertyDeclaration(node) || isMethodDeclaration(node) || isGetAccessorDeclaration(node) || isSetAccessorDeclaration(node)) {
+              if (node.name.kind === SyntaxKind.PrivateIdentifier || node.modifiers?.some(modifier => modifier.kind === SyntaxKind.PrivateKeyword || modifier.kind === SyntaxKind.ProtectedKeyword)) return [];
+            }
+            return [{
+              name: member.name,
+              optional: (member.flags & SymbolFlags.Optional) !== 0,
+              readonly: /^(?:(?:public|declare|static|abstract|override)\s+)*readonly\b/.test(node.getText()) || (isGetAccessorDeclaration(node) && !member.declarations.some(handle => { const declaration = handle.resolve(); return declaration && isSetAccessorDeclaration(declaration); })),
+              description: member.getDocumentationComment(checker),
+              tags: member.getJsDocTags(checker),
+              signature: checker.typeToString(checker.getTypeOfSymbolAtLocation(member, node), node, 1),
+              ...location(node),
+            }];
+          }) : [];
+          return {
+            entry,
+            name: exported.name,
+            description: symbol.getDocumentationComment(checker),
+            tags: symbol.getJsDocTags(checker),
+            signature,
+            isType,
+            members,
+            ...location(declaration),
+          };
+        });
+      });
+    } finally {
+      snapshot.dispose();
+    }
+  } finally {
+    api.close();
+    await rm(configuration.directory, { recursive: true, force: true });
   }
 }
 
@@ -337,7 +448,7 @@ async function createCompilerConfiguration(
   entryPaths: Readonly<Record<string, string>>,
   compilerOptions: CompilerOptions,
 ): Promise<{ readonly directory: string; readonly path: string }> {
-  const directory = await mkdtemp(join(tmpdir(), "crc-studio-docs-"));
+  const directory = await mkdtemp(join(tmpdir(), "pibbl-studio-docs-"));
   const path = join(directory, "tsconfig.json");
   await writeFile(
     path,

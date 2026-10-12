@@ -1,3 +1,8 @@
+import {
+  verifyCurveTreeShaking,
+  verifyColorTreeShaking,
+} from "./verify-viz-curve-tree-shaking.mjs";
+import { verifyScaleTreeShaking } from "./verify-viz-scale-tree-shaking.mjs";
 import assert from "node:assert/strict";
 import { parse } from "yaml";
 import { execFileSync } from "node:child_process";
@@ -19,7 +24,7 @@ const store = dirname(
   parse(readFileSync(join(root, "node_modules/.modules.yaml"), "utf8"))
     .storeDir,
 );
-const temp = mkdtempSync(join(tmpdir(), "crc-packed-viz-"));
+const temp = mkdtempSync(join(tmpdir(), "pibbl-packed-viz-"));
 const pnpm = (args, cwd = root) =>
   execFileSync("corepack", ["pnpm@11.21.0", ...args], {
     cwd,
@@ -28,12 +33,12 @@ const pnpm = (args, cwd = root) =>
   });
 try {
   const tarballs = {};
-  for (const name of ["types", "core", "viz"]) {
+  for (const name of ["core"]) {
     pnpm(
       ["pack", "--out", join(temp, `${name}.tgz`)],
       join(root, "packages", name),
     );
-    tarballs[`@crc/${name}`] = `file:${join(temp, `${name}.tgz`)}`;
+    tarballs[`@pibbl/${name}`] = `file:${join(temp, `${name}.tgz`)}`;
   }
   const consumer = join(temp, "consumer");
   mkdirSync(consumer);
@@ -41,10 +46,7 @@ try {
     join(consumer, "package.json"),
     JSON.stringify({ private: true, type: "module", dependencies: tarballs }),
   );
-  writeFileSync(
-    join(consumer, "pnpm-workspace.yaml"),
-    `packages:\n  - .\noverrides:\n  '@crc/types': ${tarballs["@crc/types"]}\n`,
-  );
+  writeFileSync(join(consumer, "pnpm-workspace.yaml"), `packages:\n  - .\n`);
   pnpm(
     [
       "install",
@@ -57,23 +59,60 @@ try {
     consumer,
   );
   const installed = createRequire(join(consumer, "probe.mjs"));
-  const entry = installed.resolve("@crc/viz");
+  const entry = installed.resolve("@pibbl/core/viz");
+  await verifyScaleTreeShaking(entry);
+  await verifyCurveTreeShaking(entry);
+  await verifyColorTreeShaking(entry);
   const fromViz = createRequire(entry);
   assert.equal(
-    realpathSync(fromViz.resolve("@crc/core")),
-    realpathSync(installed.resolve("@crc/core")),
+    realpathSync(fromViz.resolve("@pibbl/core")),
+    realpathSync(installed.resolve("@pibbl/core")),
   );
   const viz = await import(pathToFileURL(entry).href);
   const names = [
+    "extent",
+    "linearTicks",
+    "niceLinearDomain",
+    "formatNumber",
+    "utcTickLabels",
+    "LogScale",
+    "useLogScale",
+    "SymlogScale",
+    "useSymlogScale",
+    "PointScale",
+    "usePointScale",
+    "GridLines",
+    "ReferenceLine",
+    "ReferenceBand",
+    "AxisTitle",
+    "niceUTCDomain",
     "pieSlices",
     "PieLayout",
     "PieSlice",
     "PieLabel",
     "Axis",
     "LineSeries",
-    "Scale",
+    "AreaSeries",
+    "IntervalBandSeries",
+    "stepBefore",
+    "stepAfter",
+    "stepMidpoint",
+    "monotoneX",
+    "panDomain",
+    "zoomDomain",
+    "SequentialColorScale",
+    "useSequentialColorScale",
+    "DivergingColorScale",
+    "useDivergingColorScale",
+    "ThresholdColorScale",
+    "useThresholdColorScale",
+    "LinearScale",
+    "BarScale",
+    "UTCScale",
     "ScaleAdjust",
-    "useScale",
+    "useLinearScale",
+    "useBarScale",
+    "useUTCScale",
     "PointSeries",
     "BarSeries",
     "PlotSeries",
@@ -92,34 +131,20 @@ try {
   if (process.argv.includes("--self-test-missing-export"))
     assert.equal(typeof viz.MissingScale, "function");
   for (const path of [
-    "@crc/viz/internal",
-    "@crc/viz/src/index.ts",
-    "@crc/viz/lib/scale",
+    "@pibbl/core/viz/internal",
+    "@pibbl/core/viz/src/index.ts",
+    "@pibbl/core/viz/lib/scale",
   ])
     assert.throws(() => installed.resolve(path), {
       code: "ERR_PACKAGE_PATH_NOT_EXPORTED",
     });
   const manifest = JSON.parse(
-    readFileSync(installed.resolve("@crc/viz/package.json"), "utf8"),
-  );
-  assert.equal(
-    manifest.peerDependencies["@crc/core"],
-    JSON.parse(
-      readFileSync(installed.resolve("@crc/core/package.json"), "utf8"),
-    ).version,
+    readFileSync(installed.resolve("@pibbl/core/package.json"), "utf8"),
   );
   assert.equal(Object.keys(manifest.dependencies ?? {}).length, 0);
-  const map = JSON.parse(readFileSync(`${entry}.map`, "utf8"));
-  assert.ok(
-    map.sources.every(
-      (source) =>
-        !source.includes("/core/") && !source.includes("node_modules"),
-    ),
-    "viz must externalize core",
-  );
   writeFileSync(
     join(consumer, "public.tsx"),
-    readFileSync(join(root, "packages/viz/type-tests/public.tsx"), "utf8"),
+    readFileSync(join(root, "packages/core/type-tests/viz/public.tsx"), "utf8"),
   );
   const tsc = join(dirname(require.resolve("typescript")), "tsc.js");
   for (const mode of ["Bundler", "NodeNext"]) {
@@ -134,7 +159,7 @@ try {
           skipLibCheck: false,
           types: [],
           jsx: "react-jsx",
-          jsxImportSource: "@crc/core",
+          jsxImportSource: "@pibbl/core",
           module: mode === "Bundler" ? "ESNext" : "NodeNext",
           moduleResolution: mode,
         },

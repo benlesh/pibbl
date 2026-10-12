@@ -36,7 +36,7 @@ const documentation = {
     page("api-overview", "API overview", "api", { apiCategory: "overview" }),
     page("component-text", "Text", "api", { apiCategory: "component" }),
     page("component-absolute", "Absolute", "api", { apiCategory: "component" }),
-    page("function-crc", "crc", "api", { apiCategory: "function" }),
+    page("function-pibbl", "pibbl", "api", { apiCategory: "function" }),
     page("function-create-element", "createElement", "api", { apiCategory: "function" }),
     page("hook-signal", "useSignal", "api", { apiCategory: "hook" }),
     page("hook-computed", "useComputed", "api", { apiCategory: "hook" }),
@@ -123,14 +123,16 @@ describe("Studio navigation", () => {
       "Text",
     ]);
     expect(api.children?.[2]?.children?.map(({ label }) => label)).toEqual([
-      "crc",
       "createElement",
+      "pibbl",
     ]);
     expect(api.children?.[3]?.children?.map(({ label }) => label)).toEqual([
       "useComputed",
       "useSignal",
     ]);
     expect(api.children?.[4]?.children?.map(({ label }) => label)).toEqual([
+      "State machines",
+      "Sprites",
       "Canvas and runtime",
       "Elements and components",
       "Events",
@@ -141,6 +143,8 @@ describe("Studio navigation", () => {
       "Three.js",
     ]);
     expect(api.children?.[4]?.children?.map(({ href }) => href)).toEqual([
+      "#/api/types/machines",
+      "#/api/types/sprites",
       "#/api/types/canvas-runtime",
       "#/api/types/elements-components",
       "#/api/types/events",

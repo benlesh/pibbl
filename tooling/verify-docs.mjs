@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { existsSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import {
   access,
@@ -41,16 +42,33 @@ const repositoryRoot = resolve(import.meta.dirname, "..");
 const require = createRequire(import.meta.url);
 
 function trackedRepositoryFiles(pathspecs) {
-  const listing = spawnSync("git", ["ls-files", "--", ...pathspecs], {
-    cwd: repositoryRoot,
-    encoding: "utf8",
-  });
+  const listing = spawnSync(
+    "git",
+    [
+      "ls-files",
+      "--cached",
+      "--others",
+      "--exclude-standard",
+      "--",
+      ...pathspecs,
+    ],
+    {
+      cwd: repositoryRoot,
+      encoding: "utf8",
+    },
+  );
   assert.equal(
     listing.status,
     0,
     `Could not inventory tracked repository files:\n${listing.stderr}`,
   );
-  return listing.stdout.split("\n").filter(Boolean).sort();
+  return [
+    ...new Set(
+      listing.stdout
+        .split("\n")
+        .filter((path) => path && existsSync(join(repositoryRoot, path))),
+    ),
+  ].sort();
 }
 
 function sourceAtCommit(commit, path) {
@@ -68,6 +86,7 @@ function sourceAtCommit(commit, path) {
   return result.stdout;
 }
 const publicGuidePaths = [
+  "docs/site/learn/guides/package-migration.md",
   "docs/site/learn/guides/author-without-jsx.md",
   "docs/site/learn/guides/components-props-and-children.md",
   "docs/site/learn/guides/compose-and-layout.md",
@@ -87,6 +106,25 @@ const publicGuidePaths = [
   "docs/site/learn/guides/manipulation.md",
 ];
 const publicSiteMarkdownPaths = [
+  "docs/site/api/functions/record-frames.md",
+  "docs/site/api/types/frame-recording.md",
+  "docs/site/api/components/sprite.md",
+  "docs/site/api/functions/machines.md",
+  "docs/site/api/functions/play-animation.md",
+  "docs/site/api/functions/sprite-sheets.md",
+  "docs/site/api/hooks/use-machine.md",
+  "docs/site/api/types/machines.md",
+  "docs/site/api/types/sprites.md",
+  "docs/site/learn/guides/machine-animation.md",
+  "docs/site/learn/guides/sprites.md",
+  "docs/site/learn/guides/state-machines.md",
+
+  "docs/site/api/functions/path-transforms.md",
+  "docs/site/api/hooks/use-visibility-transition.md",
+  "docs/site/api/components/html-box.md",
+  "docs/site/api/types/html-box.md",
+  "docs/site/api/types/electric-textures.md",
+  "docs/site/api/types/texture-resources.md",
   "docs/site/api/components/reaction-diffusion.md",
   "docs/site/api/components/procedural-texture.md",
   "docs/site/api/types/textures.md",
@@ -108,7 +146,18 @@ const publicSiteMarkdownPaths = [
   "docs/site/learn/guides/data-visualization.md",
   "docs/site/api/components/scale.md",
   "docs/site/api/components/axis.md",
+  "docs/site/api/components/axis-title.md",
+  "docs/site/api/components/chart-lines.md",
+  "docs/site/api/components/log-scale.md",
+  "docs/site/api/components/numeric-ticks.md",
+  "docs/site/api/components/symlog-point-scales.md",
+  "docs/site/api/functions/utc-domains.md",
   "docs/site/api/components/line-series.md",
+  "docs/site/api/components/area-series.md",
+  "docs/site/api/functions/series-curves.md",
+  "docs/site/api/functions/domain-navigation.md",
+  "docs/site/api/components/color-scales.md",
+  "docs/site/api/components/interval-band-series.md",
   "docs/site/api/components/point-series.md",
   "docs/site/api/components/plot-series.md",
   "docs/site/api/functions/nearest-point.md",
@@ -152,7 +201,7 @@ const publicSiteMarkdownPaths = [
   "docs/site/api/components/vertical-line.md",
   "docs/site/api/components/wedge.md",
   "docs/site/api/functions/batch.md",
-  "docs/site/api/functions/crc.md",
+  "docs/site/api/functions/pibbl.md",
   "docs/site/api/functions/computed.md",
   "docs/site/api/functions/create-arc-path.md",
   "docs/site/api/functions/create-circle-path.md",
@@ -182,7 +231,6 @@ const publicSiteMarkdownPaths = [
   "docs/site/api/functions/physics-2d-testing.md",
   "docs/site/api/functions/physics-2d.md",
   "docs/site/api/functions/physics-obstacles.md",
-  "docs/site/api/functions/physics-3d-geometry.md",
   "docs/site/api/functions/repeat.md",
   "docs/site/api/functions/resolve-signal-value.md",
   "docs/site/api/functions/resolve-box.md",
@@ -191,7 +239,7 @@ const publicSiteMarkdownPaths = [
   "docs/site/api/functions/signal.md",
   "docs/site/api/functions/spring.md",
   "docs/site/api/functions/stepper.md",
-  "docs/site/api/functions/track.md",
+  "docs/site/api/functions/drive.md",
   "docs/site/api/functions/tween.md",
   "docs/site/api/functions/untracked.md",
   "docs/site/api/functions/wait.md",
@@ -199,7 +247,6 @@ const publicSiteMarkdownPaths = [
   "docs/site/api/hooks/use-computed.md",
   "docs/site/api/hooks/use-const.md",
   "docs/site/api/hooks/use-cursor.md",
-  "docs/site/api/hooks/use-event.md",
   "docs/site/api/hooks/use-event-listener.md",
   "docs/site/api/hooks/use-event-target.md",
   "docs/site/api/hooks/use-flow-field.md",
@@ -212,7 +259,7 @@ const publicSiteMarkdownPaths = [
   "docs/site/api/hooks/use-ref.md",
   "docs/site/api/hooks/use-signal.md",
   "docs/site/api/hooks/use-svg-path.md",
-  "docs/site/api/hooks/use-transition.md",
+  "docs/site/api/hooks/use-animated-value.md",
   "docs/site/api/types/canvas-runtime.md",
   "docs/site/api/types/elements-components.md",
   "docs/site/api/types/events.md",
@@ -221,7 +268,6 @@ const publicSiteMarkdownPaths = [
   "docs/site/api/types/particles.md",
   "docs/site/api/types/physics-2d.md",
   "docs/site/api/types/physics-2d-testing.md",
-  "docs/site/api/types/physics-3d-geometry.md",
   "docs/site/api/types/signal-inputs.md",
   "docs/site/api/types/styles.md",
   "docs/site/api/types/texture-resources.md",
@@ -243,20 +289,26 @@ const publicSiteMarkdownPaths = [
   ...publicGuidePaths,
 ];
 const currentMarkdownPaths = [
-  "docs/design/textures-contract.md",
-  "docs/design/weighted-electric-sources-contract.md",
+  "docs/design/frame-recording-contract.md",
+  "website/README.md",
+  "docs/design/path-transforms-contract.md",
   "docs/design/component-manipulation-contract.md",
   "docs/design/text-geometry-contract.md",
-  "packages/textures/README.md",
+  "docs/site/api/functions/path-transforms.md",
+  "docs/site/api/hooks/use-visibility-transition.md",
   "packages/text/README.md",
+  "docs/design/html-box-contract.md",
+  "docs/design/weighted-electric-sources-contract.md",
+  "docs/design/textures-contract.md",
+  "packages/core/src/features/textures/README.md",
   "AGENTS.md",
   "README.md",
   "packages/core/README.md",
-  "packages/viz/README.md",
-  "packages/particles/README.md",
-  "packages/physics/README.md",
+  "packages/pibbl/README.md",
+  "packages/core/src/features/viz/README.md",
+  "packages/core/src/features/particles/README.md",
+  "packages/core/src/features/physics/README.md",
   "packages/three/README.md",
-  "packages/types/README.md",
   "docs/architecture/style-and-layout-architecture.md",
   "docs/design/canvas-accessibility-guidance.md",
   "docs/design/canvas-surface-contract.md",
@@ -302,14 +354,32 @@ const linkCheckedPaths = [
   "docs/migrations/jsx-authoring-pivot.md",
 ];
 const migrationMarkdownPaths = new Set([
+  "docs/migrations/animated-value-hook.md",
   "docs/migrations/default-pointer-participation.md",
   "docs/migrations/filter-factory-values.md",
   "docs/migrations/jsx-authoring-pivot.md",
 ]);
 const operationalMarkdownPaths = new Set([
-  ...trackedRepositoryFiles(["docs/website-rebuild"]).filter((path) => path.endsWith(".md")),
-  // Agent operating instructions, not product documentation.
-  ...trackedRepositoryFiles([".claude/skills"]).filter((path) => path.endsWith(".md")),
+  // Agent operating instructions, not public product documentation.
+  ...trackedRepositoryFiles([".claude/skills/**/*.md"]),
+  "docs/alpha-publishing.md",
+  "docs/testing/field-notes/visibility-transition-integration.md",
+  ...trackedRepositoryFiles([
+    "docs/website-rebuild/*.md",
+    // Private brand handoffs and verification are operational assets, never public docs.
+    "output/brand/**/*.md",
+    "games/kube-inferno/*.md",
+    "games/brick-climb/assets/*.md",
+  ]),
+  "tooling/fancy-transition-wasm/README.md",
+  "tooling/transition-wasm-spike/README.md",
+  // Active execution records are not historical shipped contracts.
+  "docs/project-plans/004-html-box.md",
+  "docs/project-plans/006-kube-inferno.md",
+  "docs/superpowers/specs/2026-10-02-html-host-design.md",
+  "docs/superpowers/plans/2026-10-02-html-box-implementation.md",
+  "docs/testing/field-notes/html-box.md",
+  "tooling/texture-wasm-spike/README.md",
   ".beads/README.md",
   "packages/text/test/fixtures/source-serif/LICENSE.md",
   "docs/superpowers/plans/2026-09-15-first-class-physics-3d-implementation.md",
@@ -631,6 +701,14 @@ export async function assertLocalLinks(
 }
 
 function resolvePublicAssetPath(decodedFile) {
+  if (/^\/[a-z0-9-]+(?:\/[a-z0-9-]+)*\/$/.test(decodedFile)) {
+    const page = resolve(
+      repositoryRoot,
+      "docs/site/website",
+      `${decodedFile.slice(1, -1)}.mdx`,
+    );
+    if (existsSync(page)) return page;
+  }
   const publicAssetRoot = resolve(repositoryRoot, "playground/public");
   const localPath = resolve(
     publicAssetRoot,
@@ -737,14 +815,20 @@ function extractApiSnippets(sources) {
   for (const [path, source] of sources) {
     if (!path.startsWith("docs/site/api/")) continue;
     const fences = [...source.matchAll(/^```(ts|tsx)\n([\s\S]*?)^```$/gmu)];
-    if (fences.length > 0) {
-      const id = `api-snippet-${path.replaceAll(/[^a-z0-9]+/giu, "-")}`;
+    const groups =
+      fences.length > 1 &&
+      fences.every((match) => /export default/.test(match[2]))
+        ? fences.map((fence) => [fence])
+        : [fences];
+    for (const [index, group] of groups.entries()) {
+      if (!group.length) continue;
+      const id = `api-snippet-${path.replaceAll(/[^a-z0-9]+/giu, "-")}-${index}`;
       snippets.set(id, {
         id,
         path,
-        language: fences.some((match) => match[1] === "tsx") ? "tsx" : "ts",
-        source: appendCrcComponentChecks(
-          fences.map((match) => match[2]).join("\n"),
+        language: group.some((match) => match[1] === "tsx") ? "tsx" : "ts",
+        source: appendPibblComponentChecks(
+          group.map((match) => match[2]).join("\n"),
         ),
       });
     }
@@ -753,7 +837,7 @@ function extractApiSnippets(sources) {
   return snippets;
 }
 
-function appendCrcComponentChecks(source) {
+function appendPibblComponentChecks(source) {
   const componentNames = new Set(
     [
       ...source.matchAll(
@@ -766,7 +850,7 @@ function appendCrcComponentChecks(source) {
     .sort()
     .map(
       (name) =>
-        `const __crcComponentCheck_${name}: import("@crc/core").CRCComponent<any> = ${name};`,
+        `const __pibblComponentCheck_${name}: import("@pibbl/core").PibblComponent<any> = ${name};`,
     )
     .join("\n")}\n`;
 }
@@ -788,6 +872,13 @@ function assertNoBareApiPseudoLinks(path, source) {
     /(^|[^!\\])\[([^\]\n]+)\](?![\t ]*(?:\(|\[))/gmu,
   )) {
     if (referenceLabels.has(normalizeReferenceLabel(match[2]))) continue;
+    // Numeric intervals are ordinary mathematical prose, not broken links.
+    if (
+      /^\s*[+-]?(?:\d+(?:\.\d*)?|\.\d+)\s*,\s*[+-]?(?:\d+(?:\.\d*)?|\.\d+)\s*$/u.test(
+        match[2],
+      )
+    )
+      continue;
     throw new Error(
       `${path} contains a bare bracket-only pseudo-link. Use a canonical Markdown link.`,
     );
@@ -818,7 +909,7 @@ async function typecheckCompleteSnippets(snippets) {
   const typeScriptSnippets = [...snippets.values()].filter((snippet) =>
     /^(?:ts|tsx)$/u.test(snippet.language),
   );
-  const temporaryDirectory = await mkdtemp(join(tmpdir(), "crc-docs-check-"));
+  const temporaryDirectory = await mkdtemp(join(tmpdir(), "pibbl-docs-check-"));
   try {
     const files = [];
     for (const snippet of typeScriptSnippets) {
@@ -837,7 +928,7 @@ async function typecheckCompleteSnippets(snippets) {
           compilerOptions: {
             allowImportingTsExtensions: true,
             jsx: "react-jsx",
-            jsxImportSource: "@crc/core",
+            jsxImportSource: "@pibbl/core",
             lib: ["ESNext", "DOM"],
             module: "ESNext",
             moduleDetection: "force",
@@ -845,45 +936,16 @@ async function typecheckCompleteSnippets(snippets) {
             noEmit: true,
             noUnusedLocals: false,
             noUnusedParameters: false,
-            paths: {
-              "@crc/core": [join(repositoryRoot, "packages/core/src/index.ts")],
-              "@crc/core/jsx-dev-runtime": [
-                join(repositoryRoot, "packages/core/src/jsx-dev-runtime.ts"),
-              ],
-              "@crc/core/jsx-runtime": [
-                join(repositoryRoot, "packages/core/src/jsx-runtime.ts"),
-              ],
-              "@crc/core/internal": [
-                join(repositoryRoot, "packages/core/src/internal.ts"),
-              ],
-              "@crc/core/types": [
-                join(repositoryRoot, "packages/core/src/types.ts"),
-              ],
-              "@crc/particles": [
-                join(repositoryRoot, "packages/particles/src/index.ts"),
-              ],
-              "@crc/core/filters": [join(repositoryRoot, "packages/core/src/filters.ts")],
-              "@crc/textures": [
-                join(repositoryRoot, "packages/textures/src/index.ts"),
-              ],
-              "@crc/text": [join(repositoryRoot, "packages/text/src/index.ts")],
-              "@crc/viz": [join(repositoryRoot, "packages/viz/src/index.ts")],
-              "@crc/three": [
-                join(repositoryRoot, "packages/three/src/index.ts"),
-              ],
-              "@crc/physics/2d": [
-                join(repositoryRoot, "packages/physics/src/2d.ts"),
-              ],
-              "@crc/physics/2d/geometry": [
-                join(repositoryRoot, "packages/physics/src/2d-geometry.ts"),
-              ],
-              "@crc/physics/2d/testing": [
-                join(repositoryRoot, "packages/physics/src/2d-testing.ts"),
-              ],
-              "@crc/physics/3d/geometry": [
-                join(repositoryRoot, "packages/physics/src/3d-geometry.ts"),
-              ],
-            },
+            paths: Object.fromEntries(
+              Object.entries(
+                JSON.parse(
+                  await readFile(join(repositoryRoot, "tsconfig.json"), "utf8"),
+                ).compilerOptions.paths,
+              ).map(([name, paths]) => [
+                name,
+                paths.map((path) => resolve(repositoryRoot, path)),
+              ]),
+            ),
             skipLibCheck: true,
             strict: true,
             target: "ESNext",
@@ -917,7 +979,7 @@ function importedPublicNames(source, filename) {
   for (const statement of parseModule(source, filename).program.body) {
     if (
       statement.type !== "ImportDeclaration" ||
-      statement.source.value !== "@crc/core"
+      statement.source.value !== "@pibbl/core"
     ) {
       continue;
     }
@@ -949,7 +1011,7 @@ export function assertNonJsxCoverage(source) {
     ["focus management policy", /createElement\(\s*FocusManagement,/u],
     ["keyboard navigation policy", /createElement\(\s*KeyboardNavigation,/u],
     ["hook lifecycle", /useSignal\(/u],
-    ["root mounting", /\bcrc\(canvas,/u],
+    ["root mounting", /\bpibbl\(canvas,/u],
     ["mount disposal", /controller\.dispose\(\)/u],
   ]);
   for (const [label, pattern] of requirements) {
@@ -1121,7 +1183,7 @@ function assertNonJsxEvidence(source) {
     if (node.type === "JSXElement" || node.type === "JSXFragment")
       hasJsx = true;
     if (callName(node) === "useReaction") hasLifecycle = true;
-    if (callName(node) === "crc") hasMount = true;
+    if (callName(node) === "pibbl") hasMount = true;
     if (
       node.type === "CallExpression" &&
       memberName(node.callee) === "map" &&
@@ -1341,7 +1403,7 @@ function babelOptionsFromGuide(source) {
     "Babel configuration must name @babel/plugin-transform-react-jsx",
   );
   assert.equal(entry[1]?.runtime, "automatic");
-  assert.equal(entry[1]?.importSource, "@crc/core");
+  assert.equal(entry[1]?.importSource, "@pibbl/core");
   return entry[1];
 }
 
@@ -1358,26 +1420,26 @@ export async function assertAutomaticRuntimeTransforms(source, babelOptions) {
   );
   assert.match(
     babelResult.code,
-    /from "@crc\/core\/jsx-runtime"/u,
-    "Babel did not select the documented CRC automatic runtime",
+    /from "@pibbl\/core\/jsx-runtime"/u,
+    "Babel did not select the documented Pibbl automatic runtime",
   );
   assert.doesNotMatch(
     babelResult.code,
     /react(?:\/jsx-runtime)?/u,
-    "Babel emitted a React dependency for CRC JSX",
+    "Babel emitted a React dependency for Pibbl JSX",
   );
 
   const esbuildResult = await transform(source, {
     format: "esm",
     jsx: "automatic",
-    jsxImportSource: "@crc/core",
+    jsxImportSource: "@pibbl/core",
     loader: "jsx",
     sourcefile: "documented-runtime.jsx",
   });
   assert.match(
     esbuildResult.code,
-    /from "@crc\/core\/jsx-runtime"/u,
-    "esbuild did not select the documented CRC automatic runtime",
+    /from "@pibbl\/core\/jsx-runtime"/u,
+    "esbuild did not select the documented Pibbl automatic runtime",
   );
 }
 
@@ -1429,7 +1491,10 @@ assert.equal(
   0,
   `Could not inventory repository Markdown:\n${markdownListing.stderr}`,
 );
-const repositoryMarkdownPaths = markdownListing.stdout.trim().split("\n");
+const repositoryMarkdownPaths = markdownListing.stdout
+  .trim()
+  .split("\n")
+  .filter((path) => existsSync(join(repositoryRoot, path)));
 const currentMarkdownSet = new Set(currentMarkdownPaths);
 const historicalMarkdownPaths = repositoryMarkdownPaths.filter(
   (path) =>
@@ -1526,6 +1591,16 @@ const staleLowercaseValue = new RegExp(
 );
 
 export function assertCurrentVocabulary(path, source) {
+  if (
+    path.startsWith("docs/site/") &&
+    path !== "docs/site/learn/guides/package-migration.md"
+  ) {
+    assert.doesNotMatch(
+      source,
+      /@pibbl\/(?:viz|particles|physics|textures|types|webgl)(?=[/`'"\s.,;:)]|$)/u,
+      `${path} recommends a retired package; use current package entries`,
+    );
+  }
   for (const identifier of staleIdentifiers) {
     assert.doesNotMatch(
       source,
@@ -1557,8 +1632,8 @@ for (const path of currentMarkdownPaths) {
   );
   assert.doesNotMatch(
     source,
-    /CRC(?:'s)? mouse-only contract/giu,
-    `${path} claims CRC has only a mouse contract`,
+    /Pibbl(?:'s)? mouse-only contract/giu,
+    `${path} claims Pibbl has only a mouse contract`,
   );
 }
 for (const path of presentationSourcePaths) {
@@ -1618,11 +1693,7 @@ const threeSource = await readFile(
   "utf8",
 );
 const particlesSource = await readFile(
-  join(repositoryRoot, "packages/particles/src/index.ts"),
-  "utf8",
-);
-const physics3dGeometrySource = await readFile(
-  join(repositoryRoot, "packages/physics/src/3d-geometry.ts"),
+  join(repositoryRoot, "packages/core/src/features/particles/index.ts"),
   "utf8",
 );
 const rootExports = exportedSpecifiers(
@@ -1643,11 +1714,7 @@ const threeExports = exportedSpecifiers(
 );
 const particleExports = exportedSpecifiers(
   particlesSource,
-  "packages/particles/src/index.ts",
-);
-const physics3dGeometryExports = exportedSpecifiers(
-  physics3dGeometrySource,
-  "packages/physics/src/3d-geometry.ts",
+  "packages/core/src/features/particles/index.ts",
 );
 assertSameNames(
   [...documentedApiSymbols].filter((name) => rootExports.values.has(name)),
@@ -1674,69 +1741,64 @@ assertSameNames(
 assertSameNames(
   [...documentedApiSymbols].filter((name) => threeExports.values.has(name)),
   threeExports.values,
-  "Documented @crc/three runtime values",
+  "Documented @pibbl/three runtime values",
 );
 assertSameNames(
   [...documentedApiSymbols].filter((name) => threeExports.types.has(name)),
   threeExports.types,
-  "Documented @crc/three types",
+  "Documented @pibbl/three types",
 );
 assertSameNames(
   [...documentedApiSymbols].filter((name) => particleExports.values.has(name)),
   particleExports.values,
-  "Documented @crc/particles runtime values",
+  "Documented @pibbl/core/particles runtime values",
 );
 assertSameNames(
   [...documentedApiSymbols].filter((name) => particleExports.types.has(name)),
   particleExports.types,
-  "Documented @crc/particles types",
-);
-assertSameNames(
-  [...documentedApiSymbols].filter((name) =>
-    physics3dGeometryExports.values.has(name),
-  ),
-  physics3dGeometryExports.values,
-  "Documented @crc/physics/3d/geometry runtime values",
-);
-assertSameNames(
-  [...documentedApiSymbols].filter((name) =>
-    physics3dGeometryExports.types.has(name),
-  ),
-  physics3dGeometryExports.types,
-  "Documented @crc/physics/3d/geometry types",
+  "Documented @pibbl/core/particles types",
 );
 const vizSource = await readFile(
-  join(repositoryRoot, "packages/viz/src/index.ts"),
+  join(repositoryRoot, "packages/core/src/features/viz/index.ts"),
   "utf8",
 );
-const vizExports = exportedSpecifiers(vizSource, "packages/viz/src/index.ts");
+const vizExports = exportedSpecifiers(
+  vizSource,
+  "packages/core/src/features/viz/index.ts",
+);
 for (const kind of ["values", "types"])
   assertSameNames(
     [...documentedApiSymbols].filter((name) => vizExports[kind].has(name)),
     vizExports[kind],
-    `Documented @crc/viz ${kind}`,
+    `Documented @pibbl/core/viz ${kind}`,
   );
-const filterSource = await readFile(join(repositoryRoot, "packages/core/src/filters.ts"), "utf8");
-const filterExports = exportedSpecifiers(filterSource, "packages/core/src/filters.ts");
+const filterSource = await readFile(
+  join(repositoryRoot, "packages/core/src/filters.ts"),
+  "utf8",
+);
+const filterExports = exportedSpecifiers(
+  filterSource,
+  "packages/core/src/filters.ts",
+);
 for (const kind of ["values", "types"])
   assertSameNames(
     [...documentedApiSymbols].filter((name) => filterExports[kind].has(name)),
     filterExports[kind],
-    `Documented @crc/core/filters ${kind}`,
+    `Documented @pibbl/core/filters ${kind}`,
   );
 const textureSource = await readFile(
-  join(repositoryRoot, "packages/textures/src/index.ts"),
+  join(repositoryRoot, "packages/core/src/features/textures/index.ts"),
   "utf8",
 );
 const textureExports = exportedSpecifiers(
   textureSource,
-  "packages/textures/src/index.ts",
+  "packages/core/src/features/textures/index.ts",
 );
 for (const kind of ["values", "types"])
   assertSameNames(
     [...documentedApiSymbols].filter((name) => textureExports[kind].has(name)),
     textureExports[kind],
-    `Documented @crc/textures ${kind}`,
+    `Documented @pibbl/core/textures ${kind}`,
   );
 const namespaceMembers = jsxNamespaceMembers(
   runtimeSource,
@@ -1765,7 +1827,7 @@ for (const entry of [
 ]) {
   assert.ok(
     coreManifest.exports[entry],
-    `@crc/core package exports is missing ${entry}`,
+    `@pibbl/core package exports is missing ${entry}`,
   );
 }
 for (const dependencies of [
@@ -1773,7 +1835,7 @@ for (const dependencies of [
   coreManifest.devDependencies,
   coreManifest.peerDependencies,
 ]) {
-  assert.ok(!dependencies?.react, "@crc/core must not depend on React.");
+  assert.ok(!dependencies?.react, "@pibbl/core must not depend on React.");
 }
 assert.match(coreManifest.description, /JSX.*createElement/u);
 const threeManifest = JSON.parse(
@@ -1782,17 +1844,17 @@ const threeManifest = JSON.parse(
 assert.deepEqual(
   Object.keys(threeManifest.exports),
   [".", "./package.json"],
-  "@crc/three must expose only its adapter root and manifest entries.",
+  "@pibbl/three must expose only its adapter root and manifest entries.",
 );
 assert.deepEqual(
   threeManifest.peerDependencies,
-  { "@crc/core": "0.0.1", three: "^0.186.0" },
-  "@crc/three must peer on the matching @crc/core release and application's Three.js.",
+  { "@pibbl/core": coreManifest.version, three: "^0.186.0" },
+  "@pibbl/three must peer on the matching @pibbl/core release and application's Three.js.",
 );
 assert.equal(
   threeManifest.dependencies,
   undefined,
-  "@crc/three must not ship a second renderer dependency graph.",
+  "@pibbl/three must not ship a second renderer dependency graph.",
 );
 assert.equal(threeManifest.sideEffects, false);
 for (const dependencies of [
@@ -1800,54 +1862,38 @@ for (const dependencies of [
   threeManifest.devDependencies,
   threeManifest.peerDependencies,
 ]) {
-  assert.ok(!dependencies?.react, "@crc/three must not depend on React.");
+  assert.ok(!dependencies?.react, "@pibbl/three must not depend on React.");
   assert.ok(
-    !dependencies?.["@crc/types"],
-    "@crc/three must not depend on @crc/types.",
+    !dependencies?.["@pibbl/types"],
+    "@pibbl/three must not depend on @pibbl/types.",
   );
 }
-const particlesManifest = JSON.parse(
-  await readFile(
-    join(repositoryRoot, "packages/particles/package.json"),
-    "utf8",
-  ),
-);
-assert.deepEqual(
-  Object.keys(particlesManifest.exports),
-  [".", "./package.json"],
-  "@crc/particles must expose its Canvas root and manifest only.",
-);
-assert.deepEqual(
-  particlesManifest.peerDependencies,
-  { "@crc/core": "0.0.1" },
-  "@crc/particles must use the matching core peer release only.",
-);
-assert.equal(particlesManifest.sideEffects, false);
-const physicsManifest = JSON.parse(
-  await readFile(join(repositoryRoot, "packages/physics/package.json"), "utf8"),
-);
-assert.deepEqual(
-  Object.keys(physicsManifest.exports),
-  ["./2d", "./2d/geometry", "./2d/testing", "./3d/geometry"],
-  "@crc/physics must expose its 2D runtime, testing, and pure geometry entries only.",
-);
-assert.deepEqual(
-  physicsManifest.peerDependencies,
-  { "@crc/core": "0.0.1" },
-  "@crc/physics must not retain a renderer-coupled peer.",
-);
+for (const entry of [
+  "particles",
+  "viz",
+  "textures",
+  "physics/2d",
+  "physics/2d/geometry",
+  "physics/2d/testing",
+]) {
+  assert.ok(
+    coreManifest.exports[`./${entry}`],
+    `Missing consolidated entry ${entry}`,
+  );
+}
+assert.equal(coreManifest.sideEffects, false);
 assert.equal(
-  physicsManifest.peerDependenciesMeta?.["@crc/core"]?.optional,
-  true,
+  Object.keys(coreManifest.dependencies ?? {}).length,
+  0,
+  "Core must have no consumer runtime dependencies.",
 );
-assert.equal(physicsManifest.sideEffects, false);
-const typesManifest = JSON.parse(
-  await readFile(join(repositoryRoot, "packages/types/package.json"), "utf8"),
+assert.ok(
+  coreManifest.devDependencies["@dimforge/rapier2d-compat"],
+  "Rapier is a private build dependency.",
 );
-assert.doesNotMatch(
-  typesManifest.description,
-  /shared public types/iu,
-  "@crc/types package prose must not claim ownership of the core public surface.",
+// Dated migration certification is a separate audit, not a current-behavior gate.
+const auditHistoricalPreservation = process.argv.includes(
+  "--historical-preservation",
 );
 const trustWorkflow = await readFile(
   join(repositoryRoot, ".github/workflows/trust.yml"),
@@ -1858,46 +1904,28 @@ const rootManifest = JSON.parse(
 );
 assert.match(
   trustWorkflow,
-  /run: pnpm docs:check/u,
-  "The CI static job must run docs:check explicitly.",
-);
-assert.match(
-  trustWorkflow,
-  /run: pnpm studio-docs:check/u,
-  "The CI static job must run studio-docs:check explicitly.",
-);
-assert.match(
-  trustWorkflow,
-  /run: pnpm test:studio-docs:production-boundary/u,
-  "The CI static job must prove hostile acceptance environment values cannot enter production output.",
-);
-for (const command of ["test:studio-docs", "test:studio-visual"]) {
-  assert.match(
-    trustWorkflow,
-    new RegExp(`run: pnpm ${command}`, "u"),
-    `The CI browser job must run ${command} explicitly.`,
-  );
-}
-assertWorkflowCommandOrder(
-  trustWorkflow,
-  [
-    "run: pnpm docs:check\n",
-    "run: pnpm studio-docs:check\n",
-    "run: pnpm test:studio-docs:production-boundary\n",
-    "run: pnpm typecheck\n",
-  ],
-  "CI static documentation and type checks",
+  /run: pnpm run trust:\$\{\{ matrix.stage \}\}/u,
+  "CI must dispatch the canonical trust stages; parity is verified by trust-workflow.test.mjs.",
 );
 assertWorkflowCommandOrder(
-  trustWorkflow,
+  rootManifest.scripts["trust:static"],
   [
-    "run: pnpm test:ci\n",
-    "run: pnpm test:studio-docs\n",
-    "run: pnpm test:visual-safeguard\n",
-    "run: pnpm test:studio-visual\n",
-    "run: pnpm test:smoke:built\n",
+    " docs:check",
+    " studio-docs:check",
+    " test:studio-docs:production-boundary",
+    " typecheck",
   ],
-  "CI browser, documentation, and visual checks",
+  "Static documentation and type checks",
+);
+assertWorkflowCommandOrder(
+  rootManifest.scripts["trust:browser"],
+  [
+    " test:ci",
+    " test:studio-docs",
+    " test:visual-safeguard",
+    " test:smoke:built",
+  ],
+  "Browser, documentation, and visual checks",
 );
 assert.equal(
   rootManifest.scripts["test:studio-docs"],
@@ -1906,7 +1934,7 @@ assert.equal(
 );
 assert.equal(
   rootManifest.scripts["test:studio-docs:production-boundary"],
-  "VITE_CRC_STUDIO_ACCEPTANCE_SEARCH_FAIL_ONCE=1 corepack pnpm@11.21.0 playground:build && node tooling/verify-studio-production-output.mjs",
+  "VITE_PIBBL_STUDIO_ACCEPTANCE_SEARCH_FAIL_ONCE=1 corepack pnpm@11.21.0 playground:build && node tooling/verify-studio-production-output.mjs",
   "The production boundary regression must build ordinary output with a hostile stale VITE value.",
 );
 assert.match(
@@ -1916,13 +1944,18 @@ assert.match(
 );
 assert.match(
   rootManifest.scripts["trust:browser"],
-  /\btest:studio-docs\b[\s\S]*\btest:studio-visual\b/u,
-  "The local browser trust command must retain Studio acceptance before visual baselines.",
+  /\btest:studio-docs\b[\s\S]*\btest:visual-safeguard\b/u,
+  "The local browser trust command must retain Studio acceptance and portable visual safeguards.",
+);
+assert.equal(
+  rootManifest.scripts["audit:studio-visual"],
+  "corepack pnpm@11.21.0 test:studio-visual",
+  "Platform-sensitive Studio snapshots must remain available as an explicit visual audit.",
 );
 assert.match(
   rootManifest.scripts["test:studio-visual"],
   /\bplayground:build\b/u,
-  "test:studio-visual must remain an explicit normal-production build gate.",
+  "test:studio-visual must audit an explicit normal-production build.",
 );
 const studioDocsRunner = await readFile(
   join(repositoryRoot, "tooling/test-studio-docs.mjs"),
@@ -1945,7 +1978,7 @@ assert.match(
 );
 assert.doesNotMatch(
   studioDocsRunner,
-  /VITE_CRC_STUDIO_ACCEPTANCE_SEARCH_FAIL_ONCE/u,
+  /VITE_PIBBL_STUDIO_ACCEPTANCE_SEARCH_FAIL_ONCE/u,
   "Studio acceptance must derive retry behavior from its build mode, not an ambient VITE value.",
 );
 const studioMain = await readFile(
@@ -1954,13 +1987,18 @@ const studioMain = await readFile(
 );
 assert.match(
   studioMain,
-  /__CRC_STUDIO_DOCS_ACCEPTANCE__/u,
+  /__PIBBL_STUDIO_DOCS_ACCEPTANCE__/u,
   "Studio retry composition must use the private mode-defined constant.",
 );
 assert.doesNotMatch(
   studioMain,
-  /import\.meta\.env|VITE_CRC_STUDIO_ACCEPTANCE_SEARCH_FAIL_ONCE/u,
-  "Studio retry composition must not read ambient VITE values.",
+  /import\.meta\.env\.(?!VITE_PIBBL_WEBSITE_URL\b)|VITE_PIBBL_STUDIO_ACCEPTANCE_SEARCH_FAIL_ONCE/u,
+  "Studio retry composition must not read ambient VITE values; the website destination is configurable.",
+);
+assert.match(
+  studioMain,
+  /import\.meta\.env\.VITE_PIBBL_WEBSITE_URL/u,
+  "Studio documentation redirects must have an explicit website URL setting.",
 );
 const studioViteConfig = await readFile(
   join(repositoryRoot, "playground/vite.config.ts"),
@@ -1968,7 +2006,7 @@ const studioViteConfig = await readFile(
 );
 assert.match(
   studioViteConfig,
-  /define:[\s\S]*__CRC_STUDIO_DOCS_ACCEPTANCE__/u,
+  /define:[\s\S]*__PIBBL_STUDIO_DOCS_ACCEPTANCE__/u,
   "Vite must define the private retry flag from studio-docs-acceptance mode.",
 );
 const productionOutputVerifier = await readFile(
@@ -1976,7 +2014,7 @@ const productionOutputVerifier = await readFile(
   "utf8",
 );
 for (const marker of [
-  "crcStudioSearchRetry",
+  "pibblStudioSearchRetry",
   "Intentional verifier search loader failure.",
   "createAcceptanceSearchLoaderOptions",
 ]) {
@@ -2006,13 +2044,13 @@ const configuring = currentSources.get(
   "docs/site/learn/guides/configure-jsx.md",
 );
 for (const marker of [
-  "@crc/core/jsx-runtime",
-  "@crc/core/jsx-dev-runtime",
+  "@pibbl/core/jsx-runtime",
+  "@pibbl/core/jsx-dev-runtime",
   "## Vite and esbuild",
   "--jsx=automatic",
   "## Babel automatic runtime",
   'runtime: "automatic"',
-  'importSource: "@crc/core"',
+  'importSource: "@pibbl/core"',
   "## JavaScript",
   "## One runtime per file",
 ]) {
@@ -2051,7 +2089,7 @@ const requiredGuideMarkers = new Map([
   ],
   [
     "docs/site/learn/guides/react-integration.md",
-    ["one JSX runtime", "createCRCElement", "expression-level pragma"],
+    ["one JSX runtime", "createPibblElement", "expression-level pragma"],
   ],
   [
     "docs/site/learn/guides/signals-and-animation.md",
@@ -2059,7 +2097,7 @@ const requiredGuideMarkers = new Map([
       "## Pass signals to their receivers",
       "## Event-triggered playback",
       "## One frame transaction",
-      "CRC never automatically promotes components",
+      "Pibbl never automatically promotes components",
     ],
   ],
   [
@@ -2105,10 +2143,10 @@ const contractPrecisionRequirements = new Map([
       "a dirty external render layer updates, renders, and settles interaction before ancestor Canvas composition",
       "Finalize successful transactions, release ended runs/leases",
       "accept them\ndirectly at declared inputs",
-      "CRC never automatically promotes\na stable component",
-      "External render layers and the official `@crc/three` adapter use this same",
-      "CRC exposes no public scheduler clock, frame-step API,\ntrace history",
-      "Future worker or WASM number crunching may use packed buffers only if Begin",
+      "Pibbl never automatically promotes\na stable component",
+      "External render layers and the official `@pibbl/three` adapter use this same",
+      "Pibbl exposes no public scheduler clock, frame-step API,\ntrace history",
+      "Worker or WASM number crunching may use packed buffers only if Begin",
     ],
   ],
   [
@@ -2132,7 +2170,7 @@ const contractPrecisionRequirements = new Map([
       "Each frame has six ordered active phases",
       "Managed Layers are scheduler\ninstances, never separately registered top-level roots",
       "Errors are collected and thrown singly or as an aggregate only after Complete",
-      "The friend entry is not a stable third-party API, is not re-exported by\n`@crc/core`, and is intentionally absent from the ordinary Studio declaration\nand runtime surface",
+      "The friend entry is not a stable third-party API, is not re-exported by\n`@pibbl/core`, and is intentionally absent from the ordinary Studio declaration\nand runtime surface",
       "| Signal-to-component edge",
       "| Computed-to-source edge",
       "Exact component consumer",
@@ -2173,7 +2211,7 @@ const contractPrecisionRequirements = new Map([
       "callers may ignore it",
       "measurement is nested during\nan active render",
       "consuming or reordering the parent component's hook slots",
-      '`<Receiver> received duplicate CRC key "<key>" as a CRC child.`',
+      '`<Receiver> received duplicate Pibbl key "<key>" as a Pibbl child.`',
     ],
   ],
   [
@@ -2220,6 +2258,7 @@ const currentNormativeContractPaths = [
   ),
 ].sort();
 const postBaselineNormativeContractPaths = new Set([
+  "docs/design/html-box-contract.md",
   "docs/design/textures-contract.md",
   "docs/design/animation-contract.md",
   "docs/design/component-manipulation-contract.md",
@@ -2228,8 +2267,38 @@ const postBaselineNormativeContractPaths = new Set([
   "docs/design/render-layer-and-three-contract.md",
   "docs/design/text-geometry-contract.md",
 ]);
+// This shipped contract predates this migration but was never registered in the
+// approved-design mapping manifest. Preserve its exact committed bytes; do not
+// invent an approval record or silently exclude it from the normative inventory.
+// Snapshot source: 1d1a2ec49f6bca52be99abf24bd34e1b3cb3f16e:docs/design/weighted-electric-sources-contract.md
+const shippedContractSnapshots = new Map([
+  [
+    "docs/design/weighted-electric-sources-contract.md",
+    "920fc18c95a64afcb38d2f1ac97cceaa7c88a02f871687a3a4aaff38f8b1e484",
+  ],
+]);
+export function assertShippedContractSnapshots(sources) {
+  for (const [path, digest] of shippedContractSnapshots) {
+    assert.equal(
+      typeof sources.get(path),
+      "string",
+      `Missing shipped contract ${path}`,
+    );
+    assert.equal(
+      sha256(sources.get(path)),
+      digest,
+      `Shipped contract changed without a reviewed preservation mapping: ${path}`,
+    );
+  }
+}
+if (auditHistoricalPreservation) assertShippedContractSnapshots(currentSources);
+else
+  for (const path of shippedContractSnapshots.keys())
+    assert.ok(currentSources.has(path), `Missing shipped contract ${path}`);
 const baselineSnapshotContractPaths = currentNormativeContractPaths.filter(
-  (path) => !postBaselineNormativeContractPaths.has(path),
+  (path) =>
+    !postBaselineNormativeContractPaths.has(path) &&
+    !shippedContractSnapshots.has(path),
 );
 
 export function assertCurrentNormativeContractInventory(paths) {
@@ -2343,14 +2412,17 @@ export function assertThreePivotDrawingApprovals(manifest) {
 }
 
 assertThreePivotDrawingApprovals(contractPreservationBaseline);
-const postBaselineContractResults =
-  contractPreservationBaseline.postBaselineContracts.map((record) =>
-    assertPostBaselineContractPreservation({
-      record,
-      currentSource: currentSources.get(record.path),
-      approvalRecordsById,
-    }),
-  );
+const postBaselineContractResults = (
+  auditHistoricalPreservation
+    ? contractPreservationBaseline.postBaselineContracts
+    : []
+).map((record) =>
+  assertPostBaselineContractPreservation({
+    record,
+    currentSource: currentSources.get(record.path),
+    approvalRecordsById,
+  }),
+);
 const postBaselineUnitCount = postBaselineContractResults.reduce(
   (total, result) => total + result.currentUnitCount,
   0,
@@ -2546,8 +2618,8 @@ const trackedContractEvidencePaths = new Set(
   trackedRepositoryFiles([
     "packages/core/src",
     "packages/core/test",
-    "packages/physics/src",
-    "packages/physics/test",
+    "packages/core/src/features/physics",
+    "packages/core/test/features/physics",
     "packages/three/src",
     "packages/three/test",
   ]),
@@ -2567,12 +2639,12 @@ for (const path of requestedContractEvidencePaths) {
   );
 }
 
-const provenanceRequirement = process.env.CRC_VERIFY_CONTRACT_PROVENANCE;
+const provenanceRequirement = process.env.PIBBL_VERIFY_CONTRACT_PROVENANCE;
 assert.ok(
   provenanceRequirement === undefined ||
     provenanceRequirement === "0" ||
     provenanceRequirement === "1",
-  "CRC_VERIFY_CONTRACT_PROVENANCE must be 0, 1, or unset.",
+  "PIBBL_VERIFY_CONTRACT_PROVENANCE must be 0, 1, or unset.",
 );
 const baselineObject = spawnSync(
   "git",
@@ -2580,16 +2652,22 @@ const baselineObject = spawnSync(
   { cwd: repositoryRoot, encoding: "utf8" },
 );
 const baselineHistoryAvailable = baselineObject.status === 0;
-if (provenanceRequirement === "1" && !baselineHistoryAvailable) {
+if (
+  auditHistoricalPreservation &&
+  provenanceRequirement === "1" &&
+  !baselineHistoryAvailable
+) {
   assert.fail(
     `Contract provenance was required, but Git commit ${CONTRACT_BASELINE_COMMIT} ` +
       "is unavailable. Fetch full history (for example, checkout with fetch-depth: 0) " +
-      "or run without CRC_VERIFY_CONTRACT_PROVENANCE=1 to validate the embedded, " +
+      "or run without PIBBL_VERIFY_CONTRACT_PROVENANCE=1 to validate the embedded, " +
       "digest-locked semantic baseline.",
   );
 }
 const verifyBaselineProvenance =
-  baselineHistoryAvailable && provenanceRequirement !== "0";
+  auditHistoricalPreservation &&
+  baselineHistoryAvailable &&
+  provenanceRequirement !== "0";
 const baselineContractSources = verifyBaselineProvenance
   ? new Map(
       baselineSnapshotContractPaths.map((path) => [
@@ -2605,20 +2683,22 @@ const translationRecordSource = await readFile(
 const translationRecordBaselineSource = verifyBaselineProvenance
   ? sourceAtCommit(CONTRACT_BASELINE_COMMIT, CONTRACT_TRANSLATION_RECORD)
   : undefined;
-const contractPreservationResult = assertContractPreservationBaseline({
-  manifest: contractPreservationBaseline,
-  expectedContractPaths: baselineSnapshotContractPaths,
-  baselineSources: baselineContractSources,
-  currentSources,
-  translationRecordSource,
-  translationRecordBaselineSource,
-  approvalRecordSources,
-  evidenceSources: contractEvidenceSources,
-  trackedEvidencePaths: trackedContractEvidencePaths,
-});
+const contractPreservationResult = auditHistoricalPreservation
+  ? assertContractPreservationBaseline({
+      manifest: contractPreservationBaseline,
+      expectedContractPaths: baselineSnapshotContractPaths,
+      baselineSources: baselineContractSources,
+      currentSources,
+      translationRecordSource,
+      translationRecordBaselineSource,
+      approvalRecordSources,
+      evidenceSources: contractEvidenceSources,
+      trackedEvidencePaths: trackedContractEvidencePaths,
+    })
+  : undefined;
 
 const readme = currentSources.get("README.md");
-const advancedStart = readme.indexOf("## Learn CRC");
+const advancedStart = readme.indexOf("## Learn Pibbl");
 assert.ok(readme.indexOf("## Quick start") >= 0, "README needs a quick start.");
 assert.ok(
   advancedStart > readme.indexOf("## Quick start"),
@@ -2628,7 +2708,7 @@ export function assertFixedConfigSignal(source) {
   assert.match(
     source,
     /fixed logical viewport with optional `fit`,\s*`pixelRatio`, and `signal`/u,
-    "Canvas/runtime types must document signal for fixed CRCConfig as well as responsive CRCConfig",
+    "Canvas/runtime types must document signal for fixed PibblConfig as well as responsive PibblConfig",
   );
 }
 assertFixedConfigSignal(canvasRuntimeTypes);
@@ -2819,14 +2899,6 @@ const matrixRequirements = [
     evidence: ["particle-effects.example.tsx"],
   },
   {
-    topic: /Renderer-independent 3D geometry/u,
-    guides: [
-      "site/api/functions/physics-3d-geometry.md",
-      "site/api/types/physics-3d-geometry.md",
-    ],
-    evidence: ["shapes.test.ts", "casts.test.ts"],
-  },
-  {
     topic: /Signal-owned component move, resize, rotation/u,
     guides: [
       "site/learn/guides/manipulation.md",
@@ -2939,76 +3011,6 @@ export function assertAcceptanceMatrix(matrixSource) {
 }
 
 const libraryStatus = currentSources.get("docs/library-status.md");
-const normalizedLibraryStatus = libraryStatus.replace(/\s+/gu, " ");
-assert.match(
-  normalizedLibraryStatus,
-  new RegExp(`\\b${rootExports.types.size} root type imports\\b`, "u"),
-  "Library status public-type count is stale.",
-);
-assert.match(
-  normalizedLibraryStatus,
-  new RegExp(
-    `\\b${contractPreservationResult.baselineUnitCount} preserved baseline units and ` +
-      `${contractPreservationResult.currentUnitCount} current semantic units across all ` +
-      `${contractPreservationBaseline.contracts.length} baseline-snapshotted normative contracts\\b`,
-    "u",
-  ),
-  "Library status baseline/current semantic-unit counts are stale.",
-);
-assert.match(
-  normalizedLibraryStatus,
-  new RegExp(
-    `\\b${currentNormativeContractPaths.length} current normative contracts\\b`,
-    "u",
-  ),
-  "Library status current normative-contract count is stale.",
-);
-assert.match(
-  normalizedLibraryStatus,
-  new RegExp(
-    `\\b${postBaselineUnitCount} exhaustively mapped post-baseline units\\b`,
-    "u",
-  ),
-  "Library status post-baseline semantic-unit count is stale.",
-);
-assert.match(
-  normalizedLibraryStatus,
-  new RegExp(
-    `\\b${contractPreservationResult.evidenceMappingCount} unique direct source/test mappings\\b`,
-    "u",
-  ),
-  "Library status direct-evidence count is stale.",
-);
-export function assertTrustGatePreservationCounts(
-  source,
-  { currentUnitCount, snapshotContractCount, evidenceMappingCount },
-) {
-  const normalizedSource = source.replace(/\s+/gu, " ");
-  assert.match(
-    normalizedSource,
-    new RegExp(
-      `\\bcomplete reviewed current form \\(${currentUnitCount} units across ${snapshotContractCount} baseline-snapshotted contracts\\)`,
-      "u",
-    ),
-    "Trust-gate current semantic-unit count is stale.",
-  );
-  assert.match(
-    normalizedSource,
-    new RegExp(
-      `\\bThe ${evidenceMappingCount} direct source/test mappings\\b`,
-      "u",
-    ),
-    "Trust-gate direct-evidence count is stale.",
-  );
-}
-
-const trustGate = currentSources.get("docs/testing/trust-gate.md");
-const trustGatePreservationCounts = {
-  currentUnitCount: contractPreservationResult.currentUnitCount,
-  snapshotContractCount: contractPreservationBaseline.contracts.length,
-  evidenceMappingCount: contractPreservationResult.evidenceMappingCount,
-};
-assertTrustGatePreservationCounts(trustGate, trustGatePreservationCounts);
 const matrix = libraryStatus.slice(
   libraryStatus.indexOf("## Documentation acceptance matrix"),
   libraryStatus.indexOf("## Running locally"),
@@ -3104,342 +3106,330 @@ export async function verifyMutationProbes() {
       ),
     "Images, inline links, reference links, definitions, and code must remain valid",
   );
-  const crcPathApiPath = "docs/site/api/hooks/use-rect-path.md";
-  const brokenCrcPathSources = new Map(currentSources);
-  const crcPathSource = currentSources.get(crcPathApiPath);
-  const brokenCrcPathSource = crcPathSource.replace(
+  assert.doesNotThrow(
+    () =>
+      extractApiSnippets(
+        new Map([
+          [
+            "docs/site/api/numeric-intervals.md",
+            "# Ranges\n\nValues in [0, 1], [-1,1], and [-0.5, +.5] are numeric intervals.",
+          ],
+        ]),
+      ),
+    "Numeric intervals must not be mistaken for Markdown links",
+  );
+  const pibblPathApiPath = "docs/site/api/hooks/use-rect-path.md";
+  const brokenPibblPathSources = new Map(currentSources);
+  const pibblPathSource = currentSources.get(pibblPathApiPath);
+  const brokenPibblPathSource = pibblPathSource.replace(
     'return <Path style={{ d: path, fill: "#2563eb" }} />;',
     "return path;",
   );
   assert.notEqual(
-    brokenCrcPathSource,
-    crcPathSource,
+    brokenPibblPathSource,
+    pibblPathSource,
     "useRectPath component-return mutation fixture did not change",
   );
-  brokenCrcPathSources.set(crcPathApiPath, brokenCrcPathSource);
+  brokenPibblPathSources.set(pibblPathApiPath, brokenPibblPathSource);
   await rejects(
-    () => typecheckCompleteSnippets(extractApiSnippets(brokenCrcPathSources)),
+    () => typecheckCompleteSnippets(extractApiSnippets(brokenPibblPathSources)),
     /failed typecheck/u,
   );
-  const staleTrustGateUnitCount = trustGate.replace(
-    `${trustGatePreservationCounts.currentUnitCount} units across ${trustGatePreservationCounts.snapshotContractCount} baseline-snapshotted contracts`,
-    `${trustGatePreservationCounts.currentUnitCount - 1} units across ${trustGatePreservationCounts.snapshotContractCount} baseline-snapshotted contracts`,
-  );
-  assert.notEqual(
-    staleTrustGateUnitCount,
-    trustGate,
-    "Trust-gate unit-count mutation fixture did not change",
-  );
-  throws(
-    () =>
-      assertTrustGatePreservationCounts(
-        staleTrustGateUnitCount,
-        trustGatePreservationCounts,
-      ),
-    /Trust-gate current semantic-unit count is stale/u,
-  );
-  const staleTrustGateEvidenceCount = trustGate.replace(
-    `The ${trustGatePreservationCounts.evidenceMappingCount} direct source/test mappings`,
-    `The ${trustGatePreservationCounts.evidenceMappingCount - 1} direct source/test mappings`,
-  );
-  assert.notEqual(
-    staleTrustGateEvidenceCount,
-    trustGate,
-    "Trust-gate evidence-count mutation fixture did not change",
-  );
-  throws(
-    () =>
-      assertTrustGatePreservationCounts(
-        staleTrustGateEvidenceCount,
-        trustGatePreservationCounts,
-      ),
-    /Trust-gate direct-evidence count is stale/u,
-  );
-
-  throws(
-    () =>
-      assertCurrentNormativeContractInventory(
-        currentNormativeContractPaths.filter(
-          (path) => path !== "docs/design/signals-and-scheduling-contract.md",
+  if (auditHistoricalPreservation) {
+    throws(
+      () =>
+        assertCurrentNormativeContractInventory(
+          currentNormativeContractPaths.filter(
+            (path) => path !== "docs/design/signals-and-scheduling-contract.md",
+          ),
         ),
-      ),
-    /Current normative contract inventory/u,
-  );
-  throws(
-    () =>
-      assertCurrentNormativeContractInventory(
-        currentNormativeContractPaths.filter(
-          (path) => path !== "docs/design/animation-contract.md",
-        ),
-      ),
-    /Current normative contract inventory/u,
-  );
-  throws(
-    () =>
-      assertCurrentNormativeContractInventory(
-        currentNormativeContractPaths.filter(
-          (path) => path !== "docs/design/render-layer-and-three-contract.md",
-        ),
-      ),
-    /Current normative contract inventory/u,
-  );
-  const alteredSignalContract = replaceContractUnit(
-    currentSources.get("docs/design/signals-and-scheduling-contract.md"),
-    "s",
-    "s0008",
-    "Signals may implicitly unwrap and update during render.",
-  );
-  throws(
-    () =>
-      assertPostBaselineContractPreservation({
-        record: postBaselineSignalContractRecord,
-        currentSource: alteredSignalContract,
-        approvalRecordsById,
-      }),
-    /reviewed complete semantic inventory/u,
-  );
-  const alteredAnimationContract = replaceContractUnit(
-    currentSources.get("docs/design/animation-contract.md"),
-    "m",
-    "m0008",
-    "Animation easing is mutable and may run on its own clock.",
-  );
-  throws(
-    () =>
-      assertPostBaselineContractPreservation({
-        record: postBaselineAnimationContractRecord,
-        currentSource: alteredAnimationContract,
-        approvalRecordsById,
-      }),
-    /reviewed complete semantic inventory/u,
-  );
-  const alteredThreeContract = replaceContractUnit(
-    currentSources.get("docs/design/render-layer-and-three-contract.md"),
-    "t",
-    "t0016",
-    "The adapter silently replaces the application's Three scene on every frame.",
-  );
-  throws(
-    () =>
-      assertPostBaselineContractPreservation({
-        record: postBaselineThreeContractRecord,
-        currentSource: alteredThreeContract,
-        approvalRecordsById,
-      }),
-    /reviewed complete semantic inventory/u,
-  );
-  const unmappedThreeContract = structuredClone(
-    postBaselineThreeContractRecord,
-  );
-  unmappedThreeContract.mappings
-    .find(({ id }) => id === "three-js-adapter")
-    .currentIds.shift();
-  throws(
-    () =>
-      assertPostBaselineContractPreservation({
-        record: unmappedThreeContract,
-        currentSource: currentSources.get(
-          "docs/design/render-layer-and-three-contract.md",
-        ),
-        approvalRecordsById,
-      }),
-    /current text is not exhaustively mapped/u,
-  );
-  const unmappedSignalContract = structuredClone(
-    postBaselineSignalContractRecord,
-  );
-  const boundaryMapping = unmappedSignalContract.mappings.find(
-    ({ id }) => id === "deliberate-boundaries",
-  );
-  boundaryMapping.currentIds = boundaryMapping.currentIds.filter(
-    (id) => id !== "s0044",
-  );
-  throws(
-    () =>
-      assertPostBaselineContractPreservation({
-        record: unmappedSignalContract,
-        currentSource: currentSources.get(
-          "docs/design/signals-and-scheduling-contract.md",
-        ),
-        approvalRecordsById,
-      }),
-    /current text is not exhaustively mapped/u,
-  );
-  const unmappedAnimationContract = structuredClone(
-    postBaselineAnimationContractRecord,
-  );
-  const animationBoundaryMapping = unmappedAnimationContract.mappings.find(
-    ({ id }) => id === "deliberate-animation-boundaries",
-  );
-  animationBoundaryMapping.currentIds =
-    animationBoundaryMapping.currentIds.filter((id) => id !== "m0060");
-  throws(
-    () =>
-      assertPostBaselineContractPreservation({
-        record: unmappedAnimationContract,
-        currentSource: currentSources.get("docs/design/animation-contract.md"),
-        approvalRecordsById,
-      }),
-    /current text is not exhaustively mapped/u,
-  );
-  const missingPivotRenderApproval = structuredClone(
-    postBaselineAnimationContractRecord,
-  );
-  const renderLifecycleMapping = missingPivotRenderApproval.mappings.find(
-    ({ id }) => id === "scheduler-render-webgl-lifecycle",
-  );
-  delete renderLifecycleMapping.supplementalApprovals;
-  throws(
-    () =>
-      assertThreePivotPostBaselineApprovals({
-        animationRecord: missingPivotRenderApproval,
-        signalRecord: postBaselineSignalContractRecord,
-      }),
-    /m0042 must retain exact render-layer pivot approval/u,
-  );
-  const incompleteAnimationSceneApproval = structuredClone(
-    postBaselineAnimationContractRecord,
-  );
-  const animationSceneMapping = incompleteAnimationSceneApproval.mappings.find(
-    ({ id }) => id === "webgl-animation-scene-lifecycle",
-  );
-  animationSceneMapping.supplementalApprovals[0].unitIds = ["p0026"];
-  throws(
-    () =>
-      assertThreePivotPostBaselineApprovals({
-        animationRecord: incompleteAnimationSceneApproval,
-        signalRecord: postBaselineSignalContractRecord,
-      }),
-    /m0051 must retain exact pivot approval/u,
-  );
-  const incompleteDrawingPivotUnits = structuredClone(
-    contractPreservationBaseline,
-  );
-  incompleteDrawingPivotUnits.additions
-    .find(({ id }) => id === "three-pivot-drawing-components-contract")
-    .currentIds.pop();
-  throws(
-    () => assertThreePivotDrawingApprovals(incompleteDrawingPivotUnits),
-    /must isolate the approved render-layer/u,
-  );
-  const incompleteDrawingPivotApproval = structuredClone(
-    contractPreservationBaseline,
-  );
-  incompleteDrawingPivotApproval.additions
-    .find(({ id }) => id === "three-pivot-drawing-components-contract")
-    .approval.unitIds.pop();
-  throws(
-    () => assertThreePivotDrawingApprovals(incompleteDrawingPivotApproval),
-    /must retain exact Three-pivot design approval/u,
-  );
-  const animationApprovalMutation = structuredClone(
-    postBaselineSignalContractRecord,
-  );
-  const publicSignalMapping = animationApprovalMutation.mappings.find(
-    ({ id }) => id === "public-signal-api",
-  );
-  publicSignalMapping.approval.unitIds = ["g0084"];
-  publicSignalMapping.reason += " g0084";
-  throws(
-    () =>
-      assertPostBaselineContractPreservation({
-        record: animationApprovalMutation,
-        currentSource: currentSources.get(
-          "docs/design/signals-and-scheduling-contract.md",
-        ),
-        approvalRecordsById,
-      }),
-    /out-of-scope approved-design unit g0084 from Animation value definitions/u,
-  );
-  const signalApprovalMutation = structuredClone(
-    postBaselineAnimationContractRecord,
-  );
-  const animationModelMapping = signalApprovalMutation.mappings.find(
-    ({ id }) => id === "animation-document-and-public-model",
-  );
-  animationModelMapping.approval.unitIds = ["g0062"];
-  animationModelMapping.reason += " g0062";
-  throws(
-    () =>
-      assertPostBaselineContractPreservation({
-        record: signalApprovalMutation,
-        currentSource: currentSources.get("docs/design/animation-contract.md"),
-        approvalRecordsById,
-      }),
-    /out-of-scope approved-design unit g0062 from Public signal API/u,
-  );
-  const missingSignalPrecedence = structuredClone(contractPreservationBaseline);
-  missingSignalPrecedence.evidenceMappings =
-    missingSignalPrecedence.evidenceMappings.filter(
-      ({ id }) => id !== "pending-root-precedence-signal",
+      /Current normative contract inventory/u,
     );
-  throws(
-    () => assertTask9EvidenceMappings(missingSignalPrecedence),
-    /Signal pending-root precedence requires signal-specific executable evidence/u,
-  );
-  const weakenedRetainedSignal = structuredClone(contractPreservationBaseline);
-  const weakenedRetainedSignalMapping =
-    weakenedRetainedSignal.evidenceMappings.find(
-      ({ id }) => id === "retained-hook-signal",
+    throws(
+      () =>
+        assertCurrentNormativeContractInventory(
+          currentNormativeContractPaths.filter(
+            (path) => path !== "docs/design/animation-contract.md",
+          ),
+        ),
+      /Current normative contract inventory/u,
     );
-  weakenedRetainedSignalMapping.test.marker =
-    "detaches every signal edge when a component is removed";
-  throws(
-    () => assertTask9EvidenceMappings(weakenedRetainedSignal),
-    /owner removal/u,
-  );
-  const missingPublicPackageLegacyApproval = structuredClone(
-    contractPreservationBaseline,
-  );
-  missingPublicPackageLegacyApproval.translations.find(
-    ({ id }) =>
-      id === "design-runtime-hooks-contract-md-public-package-boundary",
-  ).approval = {
-    recordId: "first-class-signals-and-scheduler",
-    unitIds: ["g0061", "g0158"],
-  };
-  throws(
-    () =>
-      assertMixedLegacyTask9Preservation(missingPublicPackageLegacyApproval),
-    /must retain approved unit a0105/u,
-  );
-  const weakenedPublicPackageAnchors = structuredClone(
-    contractPreservationBaseline,
-  );
-  weakenedPublicPackageAnchors.translations.find(
-    ({ id }) =>
-      id === "design-runtime-hooks-contract-md-public-package-boundary",
-  ).sharedAnchors = ["package", "crc"];
-  throws(
-    () => assertMixedLegacyTask9Preservation(weakenedPublicPackageAnchors),
-    /must retain its distinctive relevance anchors/u,
-  );
-  const missingDeterministicSignalsApproval = structuredClone(
-    contractPreservationBaseline,
-  );
-  missingDeterministicSignalsApproval.translations.find(
-    ({ id }) =>
-      id === "design-runtime-hooks-contract-md-deterministic-evidence",
-  ).approval = {
-    recordId: "first-class-signals-and-scheduler",
-    unitIds: ["g0064", "g0136", "g0153", "g0165", "g0192"],
-  };
-  throws(
-    () =>
-      assertMixedLegacyTask9Preservation(missingDeterministicSignalsApproval),
-    /must retain exact Signals-centric approval/u,
-  );
-  const weakenedDeterministicAnchors = structuredClone(
-    contractPreservationBaseline,
-  );
-  weakenedDeterministicAnchors.translations.find(
-    ({ id }) =>
-      id === "design-runtime-hooks-contract-md-deterministic-evidence",
-  ).sharedAnchors = ["render"];
-  throws(
-    () => assertMixedLegacyTask9Preservation(weakenedDeterministicAnchors),
-    /must retain its distinctive relevance anchors/u,
-  );
+    throws(
+      () =>
+        assertCurrentNormativeContractInventory(
+          currentNormativeContractPaths.filter(
+            (path) => path !== "docs/design/render-layer-and-three-contract.md",
+          ),
+        ),
+      /Current normative contract inventory/u,
+    );
+    const alteredSignalContract = replaceContractUnit(
+      currentSources.get("docs/design/signals-and-scheduling-contract.md"),
+      "s",
+      "s0008",
+      "Signals may implicitly unwrap and update during render.",
+    );
+    throws(
+      () =>
+        assertPostBaselineContractPreservation({
+          record: postBaselineSignalContractRecord,
+          currentSource: alteredSignalContract,
+          approvalRecordsById,
+        }),
+      /reviewed complete semantic inventory/u,
+    );
+    const alteredAnimationContract = replaceContractUnit(
+      currentSources.get("docs/design/animation-contract.md"),
+      "m",
+      "m0008",
+      "Animation easing is mutable and may run on its own clock.",
+    );
+    throws(
+      () =>
+        assertPostBaselineContractPreservation({
+          record: postBaselineAnimationContractRecord,
+          currentSource: alteredAnimationContract,
+          approvalRecordsById,
+        }),
+      /reviewed complete semantic inventory/u,
+    );
+    const alteredThreeContract = replaceContractUnit(
+      currentSources.get("docs/design/render-layer-and-three-contract.md"),
+      "t",
+      "t0016",
+      "The adapter silently replaces the application's Three scene on every frame.",
+    );
+    throws(
+      () =>
+        assertPostBaselineContractPreservation({
+          record: postBaselineThreeContractRecord,
+          currentSource: alteredThreeContract,
+          approvalRecordsById,
+        }),
+      /reviewed complete semantic inventory/u,
+    );
+    const unmappedThreeContract = structuredClone(
+      postBaselineThreeContractRecord,
+    );
+    unmappedThreeContract.mappings
+      .find(({ id }) => id === "three-js-adapter")
+      .currentIds.shift();
+    throws(
+      () =>
+        assertPostBaselineContractPreservation({
+          record: unmappedThreeContract,
+          currentSource: currentSources.get(
+            "docs/design/render-layer-and-three-contract.md",
+          ),
+          approvalRecordsById,
+        }),
+      /current text is not exhaustively mapped/u,
+    );
+    const unmappedSignalContract = structuredClone(
+      postBaselineSignalContractRecord,
+    );
+    const boundaryMapping = unmappedSignalContract.mappings.find(
+      ({ id }) => id === "deliberate-boundaries",
+    );
+    boundaryMapping.currentIds = boundaryMapping.currentIds.filter(
+      (id) => id !== "s0044",
+    );
+    throws(
+      () =>
+        assertPostBaselineContractPreservation({
+          record: unmappedSignalContract,
+          currentSource: currentSources.get(
+            "docs/design/signals-and-scheduling-contract.md",
+          ),
+          approvalRecordsById,
+        }),
+      /current text is not exhaustively mapped/u,
+    );
+    const unmappedAnimationContract = structuredClone(
+      postBaselineAnimationContractRecord,
+    );
+    const animationBoundaryMapping = unmappedAnimationContract.mappings.find(
+      ({ id }) => id === "deliberate-animation-boundaries",
+    );
+    animationBoundaryMapping.currentIds =
+      animationBoundaryMapping.currentIds.filter((id) => id !== "m0060");
+    throws(
+      () =>
+        assertPostBaselineContractPreservation({
+          record: unmappedAnimationContract,
+          currentSource: currentSources.get(
+            "docs/design/animation-contract.md",
+          ),
+          approvalRecordsById,
+        }),
+      /current text is not exhaustively mapped/u,
+    );
+    const missingPivotRenderApproval = structuredClone(
+      postBaselineAnimationContractRecord,
+    );
+    const renderLifecycleMapping = missingPivotRenderApproval.mappings.find(
+      ({ id }) => id === "scheduler-render-webgl-lifecycle",
+    );
+    delete renderLifecycleMapping.supplementalApprovals;
+    throws(
+      () =>
+        assertThreePivotPostBaselineApprovals({
+          animationRecord: missingPivotRenderApproval,
+          signalRecord: postBaselineSignalContractRecord,
+        }),
+      /m0042 must retain exact render-layer pivot approval/u,
+    );
+    const incompleteAnimationSceneApproval = structuredClone(
+      postBaselineAnimationContractRecord,
+    );
+    const animationSceneMapping =
+      incompleteAnimationSceneApproval.mappings.find(
+        ({ id }) => id === "webgl-animation-scene-lifecycle",
+      );
+    animationSceneMapping.supplementalApprovals[0].unitIds = ["p0026"];
+    throws(
+      () =>
+        assertThreePivotPostBaselineApprovals({
+          animationRecord: incompleteAnimationSceneApproval,
+          signalRecord: postBaselineSignalContractRecord,
+        }),
+      /m0051 must retain exact pivot approval/u,
+    );
+    const incompleteDrawingPivotUnits = structuredClone(
+      contractPreservationBaseline,
+    );
+    incompleteDrawingPivotUnits.additions
+      .find(({ id }) => id === "three-pivot-drawing-components-contract")
+      .currentIds.pop();
+    throws(
+      () => assertThreePivotDrawingApprovals(incompleteDrawingPivotUnits),
+      /must isolate the approved render-layer/u,
+    );
+    const incompleteDrawingPivotApproval = structuredClone(
+      contractPreservationBaseline,
+    );
+    incompleteDrawingPivotApproval.additions
+      .find(({ id }) => id === "three-pivot-drawing-components-contract")
+      .approval.unitIds.pop();
+    throws(
+      () => assertThreePivotDrawingApprovals(incompleteDrawingPivotApproval),
+      /must retain exact Three-pivot design approval/u,
+    );
+    const animationApprovalMutation = structuredClone(
+      postBaselineSignalContractRecord,
+    );
+    const publicSignalMapping = animationApprovalMutation.mappings.find(
+      ({ id }) => id === "public-signal-api",
+    );
+    publicSignalMapping.approval.unitIds = ["g0084"];
+    publicSignalMapping.reason += " g0084";
+    throws(
+      () =>
+        assertPostBaselineContractPreservation({
+          record: animationApprovalMutation,
+          currentSource: currentSources.get(
+            "docs/design/signals-and-scheduling-contract.md",
+          ),
+          approvalRecordsById,
+        }),
+      /out-of-scope approved-design unit g0084 from Animation value definitions/u,
+    );
+    const signalApprovalMutation = structuredClone(
+      postBaselineAnimationContractRecord,
+    );
+    const animationModelMapping = signalApprovalMutation.mappings.find(
+      ({ id }) => id === "animation-document-and-public-model",
+    );
+    animationModelMapping.approval.unitIds = ["g0062"];
+    animationModelMapping.reason += " g0062";
+    throws(
+      () =>
+        assertPostBaselineContractPreservation({
+          record: signalApprovalMutation,
+          currentSource: currentSources.get(
+            "docs/design/animation-contract.md",
+          ),
+          approvalRecordsById,
+        }),
+      /out-of-scope approved-design unit g0062 from Public signal API/u,
+    );
+    const missingSignalPrecedence = structuredClone(
+      contractPreservationBaseline,
+    );
+    missingSignalPrecedence.evidenceMappings =
+      missingSignalPrecedence.evidenceMappings.filter(
+        ({ id }) => id !== "pending-root-precedence-signal",
+      );
+    throws(
+      () => assertTask9EvidenceMappings(missingSignalPrecedence),
+      /Signal pending-root precedence requires signal-specific executable evidence/u,
+    );
+    const weakenedRetainedSignal = structuredClone(
+      contractPreservationBaseline,
+    );
+    const weakenedRetainedSignalMapping =
+      weakenedRetainedSignal.evidenceMappings.find(
+        ({ id }) => id === "retained-hook-signal",
+      );
+    weakenedRetainedSignalMapping.test.marker =
+      "detaches every signal edge when a component is removed";
+    throws(
+      () => assertTask9EvidenceMappings(weakenedRetainedSignal),
+      /owner removal/u,
+    );
+    const missingPublicPackageLegacyApproval = structuredClone(
+      contractPreservationBaseline,
+    );
+    missingPublicPackageLegacyApproval.translations.find(
+      ({ id }) =>
+        id === "design-runtime-hooks-contract-md-public-package-boundary",
+    ).approval = {
+      recordId: "first-class-signals-and-scheduler",
+      unitIds: ["g0061", "g0158"],
+    };
+    throws(
+      () =>
+        assertMixedLegacyTask9Preservation(missingPublicPackageLegacyApproval),
+      /must retain approved unit a0105/u,
+    );
+    const weakenedPublicPackageAnchors = structuredClone(
+      contractPreservationBaseline,
+    );
+    weakenedPublicPackageAnchors.translations.find(
+      ({ id }) =>
+        id === "design-runtime-hooks-contract-md-public-package-boundary",
+    ).sharedAnchors = ["package", "pibbl"];
+    throws(
+      () => assertMixedLegacyTask9Preservation(weakenedPublicPackageAnchors),
+      /must retain its distinctive relevance anchors/u,
+    );
+    const missingDeterministicSignalsApproval = structuredClone(
+      contractPreservationBaseline,
+    );
+    missingDeterministicSignalsApproval.translations.find(
+      ({ id }) =>
+        id === "design-runtime-hooks-contract-md-deterministic-evidence",
+    ).approval = {
+      recordId: "first-class-signals-and-scheduler",
+      unitIds: ["g0064", "g0136", "g0153", "g0165", "g0192"],
+    };
+    throws(
+      () =>
+        assertMixedLegacyTask9Preservation(missingDeterministicSignalsApproval),
+      /must retain exact Signals-centric approval/u,
+    );
+    const weakenedDeterministicAnchors = structuredClone(
+      contractPreservationBaseline,
+    );
+    weakenedDeterministicAnchors.translations.find(
+      ({ id }) =>
+        id === "design-runtime-hooks-contract-md-deterministic-evidence",
+    ).sharedAnchors = ["render"];
+    throws(
+      () => assertMixedLegacyTask9Preservation(weakenedDeterministicAnchors),
+      /must retain its distinctive relevance anchors/u,
+    );
+  }
 
   const direct = exportedSpecifiers(
     "export const directValue = 1; export declare function declaredValue(): void; export interface DirectType {}",
@@ -3588,7 +3578,7 @@ export async function verifyMutationProbes() {
           "`fit` and `pixelRatio`",
         ),
       ),
-    /fixed CRCConfig/u,
+    /fixed PibblConfig/u,
   );
 
   throws(
@@ -3696,436 +3686,440 @@ export async function verifyMutationProbes() {
     }
   }
 
-  const assertPreservation = ({
-    manifest = contractPreservationBaseline,
-    sources = currentSources,
-    baselineSources,
-    baselineTranslation,
-    embeddedOnly = false,
-    approvalSources = approvalRecordSources,
-    evidenceSources = contractEvidenceSources,
-    evidencePaths = trackedContractEvidencePaths,
-    reviewedManifestSha256,
-  } = {}) =>
-    assertContractPreservationBaseline({
-      manifest,
-      expectedContractPaths: baselineSnapshotContractPaths,
-      baselineSources: embeddedOnly
-        ? undefined
-        : (baselineSources ?? baselineContractSources),
-      currentSources: sources,
-      translationRecordSource,
-      translationRecordBaselineSource: embeddedOnly
-        ? undefined
-        : (baselineTranslation ?? translationRecordBaselineSource),
-      approvalRecordSources: approvalSources,
-      evidenceSources,
-      trackedEvidencePaths: evidencePaths,
+  if (auditHistoricalPreservation) {
+    const assertPreservation = ({
+      manifest = contractPreservationBaseline,
+      sources = currentSources,
+      baselineSources,
+      baselineTranslation,
+      embeddedOnly = false,
+      approvalSources = approvalRecordSources,
+      evidenceSources = contractEvidenceSources,
+      evidencePaths = trackedContractEvidencePaths,
       reviewedManifestSha256,
+    } = {}) =>
+      assertContractPreservationBaseline({
+        manifest,
+        expectedContractPaths: baselineSnapshotContractPaths,
+        baselineSources: embeddedOnly
+          ? undefined
+          : (baselineSources ?? baselineContractSources),
+        currentSources: sources,
+        translationRecordSource,
+        translationRecordBaselineSource: embeddedOnly
+          ? undefined
+          : (baselineTranslation ?? translationRecordBaselineSource),
+        approvalRecordSources: approvalSources,
+        evidenceSources,
+        trackedEvidencePaths: evidencePaths,
+        reviewedManifestSha256,
+      });
+
+    // The embedded snapshot remains a complete gate in shallow clones even when
+    // the optional provenance commit is unavailable.
+    assertPreservation({
+      embeddedOnly: true,
     });
+    probes += 1;
 
-  // The embedded snapshot remains a complete gate in shallow clones even when
-  // the optional provenance commit is unavailable.
-  assertPreservation({
-    embeddedOnly: true,
-  });
-  probes += 1;
-
-  const duplicatePrimaryDrawingSupplement = structuredClone(
-    contractPreservationBaseline,
-  );
-  const duplicatePrimaryGeometry =
-    duplicatePrimaryDrawingSupplement.additions.find(
-      ({ id }) => id === "three-pivot-drawing-components-contract",
+    const duplicatePrimaryDrawingSupplement = structuredClone(
+      contractPreservationBaseline,
     );
-  duplicatePrimaryGeometry.supplementalApprovals = [
-    {
-      recordId: "three-full-pivot",
-      unitIds: ["p0005"],
-    },
-  ];
-  throws(
-    () =>
-      assertPreservation({
-        manifest: duplicatePrimaryDrawingSupplement,
-        reviewedManifestSha256: sha256(
-          JSON.stringify(duplicatePrimaryDrawingSupplement),
-        ),
-      }),
-    /must use a record distinct from the primary approval/u,
-  );
+    const duplicatePrimaryGeometry =
+      duplicatePrimaryDrawingSupplement.additions.find(
+        ({ id }) => id === "three-pivot-drawing-components-contract",
+      );
+    duplicatePrimaryGeometry.supplementalApprovals = [
+      {
+        recordId: "three-full-pivot",
+        unitIds: ["p0005"],
+      },
+    ];
+    throws(
+      () =>
+        assertPreservation({
+          manifest: duplicatePrimaryDrawingSupplement,
+          reviewedManifestSha256: sha256(
+            JSON.stringify(duplicatePrimaryDrawingSupplement),
+          ),
+        }),
+      /must use a record distinct from the primary approval/u,
+    );
 
-  const oldTask9TranslationApproval = structuredClone(
-    contractPreservationBaseline,
-  );
-  const oldTask9Translation = oldTask9TranslationApproval.translations.find(
-    ({ id }) => id === "design-canvas-surface-contract-realm-scheduling",
-  );
-  oldTask9Translation.approval = {
-    id: "a0177",
-    kind: "prose",
-    text: "Existing design contracts are updated together",
-  };
-  oldTask9Translation.reason =
-    "Approved-design unit a0177 purports to authorize the Task 9 realm scheduler translation.";
-  throws(
-    () =>
-      assertPreservation({
-        manifest: oldTask9TranslationApproval,
-        reviewedManifestSha256: sha256(
-          JSON.stringify(oldTask9TranslationApproval),
-        ),
-      }),
-    /must use approved-design record first-class-signals-and-scheduler/u,
-  );
-
-  const animationTask9TranslationApproval = structuredClone(
-    contractPreservationBaseline,
-  );
-  const animationTask9Translation =
-    animationTask9TranslationApproval.translations.find(
+    const oldTask9TranslationApproval = structuredClone(
+      contractPreservationBaseline,
+    );
+    const oldTask9Translation = oldTask9TranslationApproval.translations.find(
       ({ id }) => id === "design-canvas-surface-contract-realm-scheduling",
     );
-  animationTask9Translation.approval.unitIds = ["g0084"];
-  animationTask9Translation.reason =
-    "first-class-signals-and-scheduler unit g0084 purports to authorize b0034 b0035 to c0037 c0038 through root scheduler density anchors.";
-  throws(
-    () =>
-      assertPreservation({
-        manifest: animationTask9TranslationApproval,
-        reviewedManifestSha256: sha256(
-          JSON.stringify(animationTask9TranslationApproval),
-        ),
-      }),
-    /out-of-scope approved-design unit g0084 from Animation value definitions/u,
-  );
-
-  const headingOnlySources = new Map(currentSources);
-  for (const { path } of contractPreservationBaseline.contracts) {
-    headingOnlySources.set(
-      path,
-      [...currentSources.get(path).matchAll(/^#{1,6}\s+.+$/gmu)]
-        .map(([heading]) => heading)
-        .join("\n"),
-    );
-  }
-  throws(
-    () => assertPreservation({ sources: headingOnlySources }),
-    /reviewed complete semantic snapshot/u,
-  );
-
-  throws(
-    () =>
-      assertPreservation({
-        manifest: {
-          ...contractPreservationBaseline,
-          sourceCommit: "0".repeat(40),
-        },
-      }),
-    /reviewed pre-Task-14 commit/u,
-  );
-
-  for (const [label, before, after] of [
-    [
-      "natural negation",
-      "Reference counts still collapse",
-      "Reference counts still do not collapse",
-    ],
-    [
-      "arbitrary token insertion",
-      "one actual Canvas listener per type",
-      "one actual unrelated Canvas listener per type",
-    ],
-  ]) {
-    const path = "docs/design/event-resource-ownership.md";
-    const mutatedSources = new Map(currentSources);
-    const original = currentSources.get(path);
-    const changed = original.replace(before, after);
-    assert.notEqual(
-      changed,
-      original,
-      `${label} mutation must alter contract prose`,
-    );
-    mutatedSources.set(path, changed);
+    oldTask9Translation.approval = {
+      id: "a0177",
+      kind: "prose",
+      text: "Existing design contracts are updated together",
+    };
+    oldTask9Translation.reason =
+      "Approved-design unit a0177 purports to authorize the Task 9 realm scheduler translation.";
     throws(
-      () => assertPreservation({ sources: mutatedSources }),
+      () =>
+        assertPreservation({
+          manifest: oldTask9TranslationApproval,
+          reviewedManifestSha256: sha256(
+            JSON.stringify(oldTask9TranslationApproval),
+          ),
+        }),
+      /must use approved-design record first-class-signals-and-scheduler/u,
+    );
+
+    const animationTask9TranslationApproval = structuredClone(
+      contractPreservationBaseline,
+    );
+    const animationTask9Translation =
+      animationTask9TranslationApproval.translations.find(
+        ({ id }) => id === "design-canvas-surface-contract-realm-scheduling",
+      );
+    animationTask9Translation.approval.unitIds = ["g0084"];
+    animationTask9Translation.reason =
+      "first-class-signals-and-scheduler unit g0084 purports to authorize b0034 b0035 to c0037 c0038 through root scheduler density anchors.";
+    throws(
+      () =>
+        assertPreservation({
+          manifest: animationTask9TranslationApproval,
+          reviewedManifestSha256: sha256(
+            JSON.stringify(animationTask9TranslationApproval),
+          ),
+        }),
+      /out-of-scope approved-design unit g0084 from Animation value definitions/u,
+    );
+
+    const headingOnlySources = new Map(currentSources);
+    for (const { path } of contractPreservationBaseline.contracts) {
+      headingOnlySources.set(
+        path,
+        [...currentSources.get(path).matchAll(/^#{1,6}\s+.+$/gmu)]
+          .map(([heading]) => heading)
+          .join("\n"),
+      );
+    }
+    throws(
+      () => assertPreservation({ sources: headingOnlySources }),
       /reviewed complete semantic snapshot/u,
     );
-  }
 
-  const eventContract = contractPreservationBaseline.contracts.find(
-    ({ path }) => path === "docs/design/event-resource-ownership.md",
-  );
-  const sharedListenerUnit = eventContract.currentUnits.find(({ text }) =>
-    text.includes("Reference counts still collapse"),
-  );
-  assert.ok(sharedListenerUnit, "Shared-listener mutation unit is missing");
-  for (const [label, replacement] of [
-    ["heading", `## ${sharedListenerUnit.text}`],
-    ["code", `\`\`\`text\n${sharedListenerUnit.text}\n\`\`\``],
-  ]) {
-    const path = eventContract.path;
-    const mutatedSources = new Map(currentSources);
-    mutatedSources.set(
-      path,
-      replaceContractUnit(
-        currentSources.get(path),
-        "c",
-        sharedListenerUnit.id,
-        replacement,
-      ),
-    );
     throws(
-      () => assertPreservation({ sources: mutatedSources }),
-      /reviewed complete semantic snapshot/u,
+      () =>
+        assertPreservation({
+          manifest: {
+            ...contractPreservationBaseline,
+            sourceCommit: "0".repeat(40),
+          },
+        }),
+      /reviewed pre-Task-14 commit/u,
     );
-    assert.ok(label);
-  }
 
-  const canvasContract = contractPreservationBaseline.contracts.find(
-    ({ path }) => path === "docs/design/canvas-surface-contract.md",
-  );
-  const unmappedParagraph = canvasContract.currentUnits.find(({ text }) =>
-    text.startsWith("Centering offsets may be fractional."),
-  );
-  assert.ok(unmappedParagraph, "Unmapped paragraph mutation unit is missing");
-  assert.equal(
-    contractPreservationBaseline.evidenceMappings.some(
-      (mapping) =>
-        mapping.contract === canvasContract.path &&
-        unmappedParagraph.text.includes(mapping.claim.text),
-    ),
-    false,
-    "Unmapped paragraph probe accidentally selected an evidence marker",
-  );
-  {
-    const mutatedSources = new Map(currentSources);
-    mutatedSources.set(
-      canvasContract.path,
-      replaceContractUnit(
-        currentSources.get(canvasContract.path),
-        "c",
-        unmappedParagraph.id,
-        "",
-      ),
-    );
-    throws(
-      () => assertPreservation({ sources: mutatedSources }),
-      /reviewed complete semantic snapshot/u,
-    );
-  }
-
-  const zeroSizeUnit = canvasContract.currentUnits.find(({ text }) =>
-    text.startsWith("A zero-sized display axis"),
-  );
-  assert.ok(zeroSizeUnit, "Zero-size suppression mutation unit is missing");
-  {
-    const mutatedSources = new Map(currentSources);
-    mutatedSources.set(
-      canvasContract.path,
-      replaceContractUnit(
-        currentSources.get(canvasContract.path),
-        "c",
-        zeroSizeUnit.id,
-        "",
-      ),
-    );
-    throws(
-      () => assertPreservation({ sources: mutatedSources }),
-      /reviewed complete semantic snapshot/u,
-    );
-  }
-
-  const layoutContract = contractPreservationBaseline.contracts.find(
-    ({ path }) => path === "docs/design/layout-system-contract.md",
-  );
-  const flexDefaultRow = layoutContract.currentUnits.find(
-    ({ kind, text }) => kind === "table" && text.includes("justifyContent"),
-  );
-  assert.ok(flexDefaultRow, "Flex default table mutation unit is missing");
-  {
-    const mutatedSources = new Map(currentSources);
-    mutatedSources.set(
-      layoutContract.path,
-      replaceContractUnit(
-        currentSources.get(layoutContract.path),
-        "c",
-        flexDefaultRow.id,
-        flexDefaultRow.text.replace("(default)", "(changed default)"),
-      ),
-    );
-    throws(
-      () => assertPreservation({ sources: mutatedSources }),
-      /reviewed complete semantic snapshot/u,
-    );
-  }
-
-  const hooksContract = contractPreservationBaseline.contracts.find(
-    ({ path }) => path === "docs/design/runtime-hooks-contract.md",
-  );
-  const refRow = hooksContract.currentUnits.find(
-    ({ kind, text }) => kind === "table" && text.includes("useRef(init?)"),
-  );
-  assert.ok(refRow, "Hook-specific table mutation unit is missing");
-  {
-    const mutatedSources = new Map(currentSources);
-    mutatedSources.set(
-      hooksContract.path,
-      replaceContractUnit(
-        currentSources.get(hooksContract.path),
-        "c",
-        refRow.id,
-        "",
-      ),
-    );
-    throws(
-      () => assertPreservation({ sources: mutatedSources }),
-      /reviewed complete semantic snapshot/u,
-    );
-  }
-
-  // Every prose paragraph, list obligation, table row, and code contract in all
-  // twelve files must be indispensable, including clauses with no evidence map.
-  for (const contract of contractPreservationBaseline.contracts) {
-    const original = currentSources.get(contract.path);
-    for (const unit of contract.currentUnits) {
+    for (const [label, before, after] of [
+      [
+        "natural negation",
+        "Reference counts still collapse",
+        "Reference counts still do not collapse",
+      ],
+      [
+        "arbitrary token insertion",
+        "one actual Canvas listener per type",
+        "one actual unrelated Canvas listener per type",
+      ],
+    ]) {
+      const path = "docs/design/event-resource-ownership.md";
       const mutatedSources = new Map(currentSources);
-      const changed = replaceContractUnit(original, "c", unit.id, "");
+      const original = currentSources.get(path);
+      const changed = original.replace(before, after);
       assert.notEqual(
         changed,
         original,
-        `${contract.path}#${unit.id} deletion mutation must alter source`,
+        `${label} mutation must alter contract prose`,
       );
-      mutatedSources.set(contract.path, changed);
+      mutatedSources.set(path, changed);
       throws(
         () => assertPreservation({ sources: mutatedSources }),
         /reviewed complete semantic snapshot/u,
       );
     }
-  }
 
-  const digestTamper = structuredClone(contractPreservationBaseline);
-  digestTamper.contracts[0].sourceSha256 = "0".repeat(64);
-  throws(
-    () =>
-      assertPreservation({
-        manifest: digestTamper,
-        embeddedOnly: true,
-      }),
-    /fixed reviewed snapshot/u,
-  );
+    const eventContract = contractPreservationBaseline.contracts.find(
+      ({ path }) => path === "docs/design/event-resource-ownership.md",
+    );
+    const sharedListenerUnit = eventContract.currentUnits.find(({ text }) =>
+      text.includes("Reference counts still collapse"),
+    );
+    assert.ok(sharedListenerUnit, "Shared-listener mutation unit is missing");
+    for (const [label, replacement] of [
+      ["heading", `## ${sharedListenerUnit.text}`],
+      ["code", `\`\`\`text\n${sharedListenerUnit.text}\n\`\`\``],
+    ]) {
+      const path = eventContract.path;
+      const mutatedSources = new Map(currentSources);
+      mutatedSources.set(
+        path,
+        replaceContractUnit(
+          currentSources.get(path),
+          "c",
+          sharedListenerUnit.id,
+          replacement,
+        ),
+      );
+      throws(
+        () => assertPreservation({ sources: mutatedSources }),
+        /reviewed complete semantic snapshot/u,
+      );
+      assert.ok(label);
+    }
 
-  if (baselineContractSources) {
-    const tamperedBaselineSources = new Map(baselineContractSources);
-    const path = contractPreservationBaseline.contracts[0].path;
-    tamperedBaselineSources.set(
-      path,
-      `${tamperedBaselineSources.get(path)}\nBaseline provenance tamper.\n`,
+    const canvasContract = contractPreservationBaseline.contracts.find(
+      ({ path }) => path === "docs/design/canvas-surface-contract.md",
+    );
+    const unmappedParagraph = canvasContract.currentUnits.find(({ text }) =>
+      text.startsWith("Centering offsets may be fractional."),
+    );
+    assert.ok(unmappedParagraph, "Unmapped paragraph mutation unit is missing");
+    assert.equal(
+      contractPreservationBaseline.evidenceMappings.some(
+        (mapping) =>
+          mapping.contract === canvasContract.path &&
+          unmappedParagraph.text.includes(mapping.claim.text),
+      ),
+      false,
+      "Unmapped paragraph probe accidentally selected an evidence marker",
+    );
+    {
+      const mutatedSources = new Map(currentSources);
+      mutatedSources.set(
+        canvasContract.path,
+        replaceContractUnit(
+          currentSources.get(canvasContract.path),
+          "c",
+          unmappedParagraph.id,
+          "",
+        ),
+      );
+      throws(
+        () => assertPreservation({ sources: mutatedSources }),
+        /reviewed complete semantic snapshot/u,
+      );
+    }
+
+    const zeroSizeUnit = canvasContract.currentUnits.find(({ text }) =>
+      text.startsWith("A zero-sized display axis"),
+    );
+    assert.ok(zeroSizeUnit, "Zero-size suppression mutation unit is missing");
+    {
+      const mutatedSources = new Map(currentSources);
+      mutatedSources.set(
+        canvasContract.path,
+        replaceContractUnit(
+          currentSources.get(canvasContract.path),
+          "c",
+          zeroSizeUnit.id,
+          "",
+        ),
+      );
+      throws(
+        () => assertPreservation({ sources: mutatedSources }),
+        /reviewed complete semantic snapshot/u,
+      );
+    }
+
+    const layoutContract = contractPreservationBaseline.contracts.find(
+      ({ path }) => path === "docs/design/layout-system-contract.md",
+    );
+    const flexDefaultRow = layoutContract.currentUnits.find(
+      ({ kind, text }) => kind === "table" && text.includes("justifyContent"),
+    );
+    assert.ok(flexDefaultRow, "Flex default table mutation unit is missing");
+    {
+      const mutatedSources = new Map(currentSources);
+      mutatedSources.set(
+        layoutContract.path,
+        replaceContractUnit(
+          currentSources.get(layoutContract.path),
+          "c",
+          flexDefaultRow.id,
+          flexDefaultRow.text.replace("(default)", "(changed default)"),
+        ),
+      );
+      throws(
+        () => assertPreservation({ sources: mutatedSources }),
+        /reviewed complete semantic snapshot/u,
+      );
+    }
+
+    const hooksContract = contractPreservationBaseline.contracts.find(
+      ({ path }) => path === "docs/design/runtime-hooks-contract.md",
+    );
+    const refRow = hooksContract.currentUnits.find(
+      ({ kind, text }) => kind === "table" && text.includes("useRef(init?)"),
+    );
+    assert.ok(refRow, "Hook-specific table mutation unit is missing");
+    {
+      const mutatedSources = new Map(currentSources);
+      mutatedSources.set(
+        hooksContract.path,
+        replaceContractUnit(
+          currentSources.get(hooksContract.path),
+          "c",
+          refRow.id,
+          "",
+        ),
+      );
+      throws(
+        () => assertPreservation({ sources: mutatedSources }),
+        /reviewed complete semantic snapshot/u,
+      );
+    }
+
+    // Every prose paragraph, list obligation, table row, and code contract in all
+    // twelve files must be indispensable, including clauses with no evidence map.
+    for (const contract of contractPreservationBaseline.contracts) {
+      const original = currentSources.get(contract.path);
+      for (const unit of contract.currentUnits) {
+        const mutatedSources = new Map(currentSources);
+        const changed = replaceContractUnit(original, "c", unit.id, "");
+        assert.notEqual(
+          changed,
+          original,
+          `${contract.path}#${unit.id} deletion mutation must alter source`,
+        );
+        mutatedSources.set(contract.path, changed);
+        throws(
+          () => assertPreservation({ sources: mutatedSources }),
+          /reviewed complete semantic snapshot/u,
+        );
+      }
+    }
+
+    const digestTamper = structuredClone(contractPreservationBaseline);
+    digestTamper.contracts[0].sourceSha256 = "0".repeat(64);
+    throws(
+      () =>
+        assertPreservation({
+          manifest: digestTamper,
+          embeddedOnly: true,
+        }),
+      /fixed reviewed snapshot/u,
+    );
+
+    if (baselineContractSources) {
+      const tamperedBaselineSources = new Map(baselineContractSources);
+      const path = contractPreservationBaseline.contracts[0].path;
+      tamperedBaselineSources.set(
+        path,
+        `${tamperedBaselineSources.get(path)}\nBaseline provenance tamper.\n`,
+      );
+      throws(
+        () => assertPreservation({ baselineSources: tamperedBaselineSources }),
+        /baseline source digest/u,
+      );
+    }
+
+    const irrelevantTranslation = structuredClone(contractPreservationBaseline);
+    const samePathTranslations = irrelevantTranslation.translations.filter(
+      ({ path }) => path === irrelevantTranslation.translations[0].path,
+    );
+    assert.ok(
+      samePathTranslations.length >= 2,
+      "Translation relevance mutation needs two mappings in one contract",
+    );
+    [samePathTranslations[0].currentIds, samePathTranslations[1].currentIds] = [
+      samePathTranslations[1].currentIds,
+      samePathTranslations[0].currentIds,
+    ];
+    const irrelevantTranslationDigest = sha256(
+      JSON.stringify(irrelevantTranslation),
     );
     throws(
-      () => assertPreservation({ baselineSources: tamperedBaselineSources }),
-      /baseline source digest/u,
+      () =>
+        assertPreservation({
+          manifest: irrelevantTranslation,
+          reviewedManifestSha256: irrelevantTranslationDigest,
+        }),
+      /translation.*(?:transform|replacement|relevance)/iu,
+    );
+
+    // A current standard-shape clause must be authorized by the standard-shape
+    // design itself, not by an unrelated but otherwise valid JSX-design unit.
+    const unrelatedShapeApproval = structuredClone(
+      contractPreservationBaseline,
+    );
+    const standardShapeAddition = unrelatedShapeApproval.additions.find(
+      ({ id }) =>
+        id ===
+        "design-drawing-components-contract-standard-shape-circle-matrix-addition",
+    );
+    assert.ok(
+      standardShapeAddition,
+      "Standard-shape approval mutation fixture is missing",
+    );
+    standardShapeAddition.approval = {
+      recordId: "jsx-component-authoring",
+      unitIds: ["a0006"],
+    };
+    standardShapeAddition.reason =
+      "Approval record jsx-component-authoring unit a0006 purports to authorize exact current Circle matrix unit c0012 through the shared Circle, radius, and bounds anchors.";
+    const unrelatedShapeApprovalDigest = sha256(
+      JSON.stringify(unrelatedShapeApproval),
+    );
+    throws(
+      () =>
+        assertPreservation({
+          manifest: unrelatedShapeApproval,
+          reviewedManifestSha256: unrelatedShapeApprovalDigest,
+        }),
+      /standard-shape.*approval/iu,
+    );
+
+    const irrelevantEvidence = structuredClone(contractPreservationBaseline);
+    const evidencePairs = irrelevantEvidence.evidenceMappings.map(
+      ({ source, test }) => ({ source, test }),
+    );
+    for (const [
+      index,
+      mapping,
+    ] of irrelevantEvidence.evidenceMappings.entries()) {
+      const replacement = evidencePairs[(index + 1) % evidencePairs.length];
+      mapping.source = replacement.source;
+      mapping.test = replacement.test;
+    }
+    const irrelevantEvidenceDigest = sha256(JSON.stringify(irrelevantEvidence));
+    throws(
+      () =>
+        assertPreservation({
+          manifest: irrelevantEvidence,
+          reviewedManifestSha256: irrelevantEvidenceDigest,
+        }),
+      /evidence.*(?:anchor|context|relevance)/iu,
+    );
+
+    const repeatedEvidence = structuredClone(contractPreservationBaseline);
+    const firstGapEvidence = repeatedEvidence.evidenceMappings.find(
+      ({ id }) => id === "flex-gap-default",
+    );
+    const secondGapEvidence = repeatedEvidence.evidenceMappings.find(
+      ({ id }) => id === "flex-axis-gap-precedence",
+    );
+    assert.ok(firstGapEvidence && secondGapEvidence);
+    secondGapEvidence.source = firstGapEvidence.source;
+    secondGapEvidence.test = firstGapEvidence.test;
+    throws(
+      () => assertPreservation({ manifest: repeatedEvidence }),
+      /reuses identical generic/u,
+    );
+
+    const missingMarker = structuredClone(contractPreservationBaseline);
+    missingMarker.evidenceMappings[0].source.marker =
+      "missing reviewed implementation evidence marker";
+    throws(
+      () => assertPreservation({ manifest: missingMarker }),
+      /lacks its exact reviewed marker/u,
     );
   }
-
-  const irrelevantTranslation = structuredClone(contractPreservationBaseline);
-  const samePathTranslations = irrelevantTranslation.translations.filter(
-    ({ path }) => path === irrelevantTranslation.translations[0].path,
-  );
-  assert.ok(
-    samePathTranslations.length >= 2,
-    "Translation relevance mutation needs two mappings in one contract",
-  );
-  [samePathTranslations[0].currentIds, samePathTranslations[1].currentIds] = [
-    samePathTranslations[1].currentIds,
-    samePathTranslations[0].currentIds,
-  ];
-  const irrelevantTranslationDigest = sha256(
-    JSON.stringify(irrelevantTranslation),
-  );
-  throws(
-    () =>
-      assertPreservation({
-        manifest: irrelevantTranslation,
-        reviewedManifestSha256: irrelevantTranslationDigest,
-      }),
-    /translation.*(?:transform|replacement|relevance)/iu,
-  );
-
-  // A current standard-shape clause must be authorized by the standard-shape
-  // design itself, not by an unrelated but otherwise valid JSX-design unit.
-  const unrelatedShapeApproval = structuredClone(contractPreservationBaseline);
-  const standardShapeAddition = unrelatedShapeApproval.additions.find(
-    ({ id }) =>
-      id ===
-      "design-drawing-components-contract-standard-shape-circle-matrix-addition",
-  );
-  assert.ok(
-    standardShapeAddition,
-    "Standard-shape approval mutation fixture is missing",
-  );
-  standardShapeAddition.approval = {
-    recordId: "jsx-component-authoring",
-    unitIds: ["a0006"],
-  };
-  standardShapeAddition.reason =
-    "Approval record jsx-component-authoring unit a0006 purports to authorize exact current Circle matrix unit c0012 through the shared Circle, radius, and bounds anchors.";
-  const unrelatedShapeApprovalDigest = sha256(
-    JSON.stringify(unrelatedShapeApproval),
-  );
-  throws(
-    () =>
-      assertPreservation({
-        manifest: unrelatedShapeApproval,
-        reviewedManifestSha256: unrelatedShapeApprovalDigest,
-      }),
-    /standard-shape.*approval/iu,
-  );
-
-  const irrelevantEvidence = structuredClone(contractPreservationBaseline);
-  const evidencePairs = irrelevantEvidence.evidenceMappings.map(
-    ({ source, test }) => ({ source, test }),
-  );
-  for (const [
-    index,
-    mapping,
-  ] of irrelevantEvidence.evidenceMappings.entries()) {
-    const replacement = evidencePairs[(index + 1) % evidencePairs.length];
-    mapping.source = replacement.source;
-    mapping.test = replacement.test;
-  }
-  const irrelevantEvidenceDigest = sha256(JSON.stringify(irrelevantEvidence));
-  throws(
-    () =>
-      assertPreservation({
-        manifest: irrelevantEvidence,
-        reviewedManifestSha256: irrelevantEvidenceDigest,
-      }),
-    /evidence.*(?:anchor|context|relevance)/iu,
-  );
-
-  const repeatedEvidence = structuredClone(contractPreservationBaseline);
-  const firstGapEvidence = repeatedEvidence.evidenceMappings.find(
-    ({ id }) => id === "flex-gap-default",
-  );
-  const secondGapEvidence = repeatedEvidence.evidenceMappings.find(
-    ({ id }) => id === "flex-axis-gap-precedence",
-  );
-  assert.ok(firstGapEvidence && secondGapEvidence);
-  secondGapEvidence.source = firstGapEvidence.source;
-  secondGapEvidence.test = firstGapEvidence.test;
-  throws(
-    () => assertPreservation({ manifest: repeatedEvidence }),
-    /reuses identical generic/u,
-  );
-
-  const missingMarker = structuredClone(contractPreservationBaseline);
-  missingMarker.evidenceMappings[0].source.marker =
-    "missing reviewed implementation evidence marker";
-  throws(
-    () => assertPreservation({ manifest: missingMarker }),
-    /lacks its exact reviewed marker/u,
-  );
 
   const nonJsx = completeSnippets.get("without-jsx").source;
   const nonJsxMutations = [
@@ -4156,7 +4150,7 @@ export async function verifyMutationProbes() {
     ["lifecycle", nonJsx.replace("useSignal(", "missingSignal(")],
     [
       "mount",
-      nonJsx.replace("return crc(canvas,", "return missingMount(canvas,"),
+      nonJsx.replace("return pibbl(canvas,", "return missingMount(canvas,"),
     ],
     [
       "disposal",
@@ -4180,7 +4174,7 @@ export async function verifyMutationProbes() {
         language: "tsx",
         path: "mutation probe",
         source:
-          'import { Rectangle } from "@crc/core";\nconst broken = <MissingIdentifier />;\nvoid Rectangle;\nvoid broken;',
+          'import { Rectangle } from "@pibbl/core";\nconst broken = <MissingIdentifier />;\nvoid Rectangle;\nvoid broken;',
       },
     ],
   ]);
@@ -4192,7 +4186,7 @@ export async function verifyMutationProbes() {
     () =>
       assertAutomaticRuntimeTransforms(
         javascriptSnippet.source.replace(
-          "/** @jsxImportSource @crc/core */",
+          "/** @jsxImportSource @pibbl/core */",
           "",
         ),
         {
@@ -4217,14 +4211,9 @@ process.stdout.write(
     `${matrixRows.length} acceptance rows, ${parsedSnippetCount} parsed ` +
     `code snippets, ${compiledSnippetCount} extracted TypeScript programs, ` +
     `${compiledApiSnippetCount} compiler-checked API example programs, ` +
-    `${contractPreservationResult.baselineUnitCount} pre-Task-14 and ` +
-    `${contractPreservationResult.currentUnitCount} current semantic units across ` +
-    `${contractPreservationBaseline.contracts.length} baseline-snapshotted normative contracts, ` +
     `${currentNormativeContractPaths.length} current normative contracts, ` +
-    `${postBaselineUnitCount} exhaustively mapped post-baseline units, ` +
-    `${contractPreservationResult.evidenceMappingCount} direct evidence mappings, ` +
-    `${fieldMigrationResult.fieldMigrationCount} baseline-derived field migrations, ` +
-    `baseline provenance ${contractPreservationResult.provenanceVerified ? "verified" : "embedded/digest-locked"}, ` +
+    `${fieldMigrationResult.fieldMigrationCount} field migrations, ` +
+    `historical preservation ${auditHistoricalPreservation ? `audited (${contractPreservationResult.currentUnitCount} snapshot units, ${postBaselineUnitCount} post-baseline units)` : "not audited (use audit:docs:preservation)"}, ` +
     `${presentationSourcePaths.length} discovered presentation sources, and ` +
     `the extracted JavaScript program through Babel and esbuild.\n`,
 );

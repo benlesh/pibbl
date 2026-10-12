@@ -164,8 +164,8 @@ describe('signal render consumers', () => {
       disposeSignalRenderConsumer(consumer);
     });
 
-    expect(getSignalNode(retained).observers.size).toBe(0);
-    expect(getSignalNode(abandoned).observers.size).toBe(0);
+    expect(getSignalNode(retained).observerCount).toBe(0);
+    expect(getSignalNode(abandoned).observerCount).toBe(0);
     retained.set(3);
     abandoned.set(4);
 

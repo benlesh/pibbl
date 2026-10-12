@@ -6,17 +6,17 @@
 
 **Goal:** Add rounded `Rectangle` and `Polygon` geometry, new `RegularPolygon` and `Star` drawing leaves, and public pure `Path2D` creators that are shared by components, hooks, clipping, and caller-authored paths.
 
-**Architecture:** Focused modules under `packages/core/src/lib/geometry` own numeric validation, vertex generation, and fresh `Path2D` construction. Components remain immediate-mode leaves: they resolve CRC lengths and diagnostics, call the canonical numeric geometry, compute default keyboard bounds, and delegate paint and interaction to `renderPath`; existing hooks keep their signatures and memoization while delegating allocation to the same creators. Public exports, consumers, Studio declarations, learning examples, one deterministic clipping scenario, contracts, and trust evidence land only after the geometry slices are green.
+**Architecture:** Focused modules under `packages/core/src/lib/geometry` own numeric validation, vertex generation, and fresh `Path2D` construction. Components remain immediate-mode leaves: they resolve Pibbl lengths and diagnostics, call the canonical numeric geometry, compute default keyboard bounds, and delegate paint and interaction to `renderPath`; existing hooks keep their signatures and memoization while delegating allocation to the same creators. Public exports, consumers, Studio declarations, learning examples, one deterministic clipping scenario, contracts, and trust evidence land only after the geometry slices are green.
 
-**Tech Stack:** TypeScript 7, HTML Canvas 2D `Path2D`, CRC JSX/createElement runtime, Vitest Browser with Playwright Chromium, Node 24.15 or newer on Node 24 LTS, pnpm 11.21.0.
+**Tech Stack:** TypeScript 7, HTML Canvas 2D `Path2D`, Pibbl JSX/createElement runtime, Vitest Browser with Playwright Chromium, Node 24.15 or newer on Node 24 LTS, pnpm 11.21.0.
 
 **Spec:** `docs/superpowers/specs/2026-09-08-rounded-shapes-and-path-creators-design.md`
 
 ## Global Constraints
 
 - Preserve unrelated working-tree changes and untracked files; stage only files named by the current task.
-- Public authors import only from `@crc/core`; no public source or `lib/*` imports.
-- Every public creator accepts one readonly numeric options object, allocates a fresh `Path2D`, and has no CRC runtime, rendering, registration, or resource-owning side effects.
+- Public authors import only from `@pibbl/core`; no public source or `lib/*` imports.
+- Every public creator accepts one readonly numeric options object, allocates a fresh `Path2D`, and has no Pibbl runtime, rendering, registration, or resource-owning side effects.
 - Components and existing path hooks delegate to the same canonical creator used by public callers; do not retain duplicate path formulas.
 - Component radius-like styles accept `Exclude<Length, "auto">`; standalone creators accept finite numeric logical Canvas units only.
 - `cornerRadii?.[i] ?? cornerRadius ?? 0` selects each radius; literal zero overrides the default, while holes, `null`, and `undefined` fall back.
@@ -47,7 +47,7 @@
 - Modify: `packages/core/src/lib/components/svg-path.ts`
 - Modify: `packages/core/src/lib/hooks/use-line-path.ts`
 - Modify: `packages/core/src/lib/hooks/use-svg-path.ts`
-- Modify: `packages/core/src/lib/hooks/crc-path-hooks.test.ts`
+- Modify: `packages/core/src/lib/hooks/pibbl-path-hooks.test.ts`
 - Delete: `packages/core/src/lib/util/create-line-path.ts`
 
 **Interfaces:**
@@ -152,7 +152,7 @@ return useMemoSlot(
 Run:
 
 ```bash
-corepack pnpm@11.21.0 exec vitest run packages/core/src/lib/geometry/validation.test.ts packages/core/src/lib/geometry/line.test.ts packages/core/src/lib/geometry/svg-path.test.ts packages/core/src/lib/hooks/crc-path-hooks.test.ts packages/core/src/lib/components/line.test.ts packages/core/src/lib/components/svg-path.test.ts --browser.headless --browser.ui=false
+corepack pnpm@11.21.0 exec vitest run packages/core/src/lib/geometry/validation.test.ts packages/core/src/lib/geometry/line.test.ts packages/core/src/lib/geometry/svg-path.test.ts packages/core/src/lib/hooks/pibbl-path-hooks.test.ts packages/core/src/lib/components/line.test.ts packages/core/src/lib/components/svg-path.test.ts --browser.headless --browser.ui=false
 corepack pnpm@11.21.0 run typecheck
 ```
 
@@ -161,7 +161,7 @@ Expected: all focused suites and typecheck PASS; existing hook memo identity rem
 - [ ] **Step 6: Commit the extraction**
 
 ```bash
-git add packages/core/src/lib/geometry packages/core/src/lib/components/line.ts packages/core/src/lib/components/svg-path.ts packages/core/src/lib/hooks/use-line-path.ts packages/core/src/lib/hooks/use-svg-path.ts packages/core/src/lib/hooks/crc-path-hooks.test.ts packages/core/src/lib/util/create-line-path.ts
+git add packages/core/src/lib/geometry packages/core/src/lib/components/line.ts packages/core/src/lib/components/svg-path.ts packages/core/src/lib/hooks/use-line-path.ts packages/core/src/lib/hooks/use-svg-path.ts packages/core/src/lib/hooks/pibbl-path-hooks.test.ts packages/core/src/lib/util/create-line-path.ts
 git commit -m "feat(core): expose canonical line and SVG geometry"
 ```
 
@@ -496,7 +496,7 @@ git commit -m "feat(core): add rounded polygon geometry"
 - Modify: `packages/core/src/lib/components/rect.test.ts`
 - Modify: `packages/core/src/lib/style/types.ts`
 - Modify: `packages/core/src/lib/hooks/use-rect-path.ts`
-- Modify: `packages/core/src/lib/hooks/crc-path-hooks.test.ts`
+- Modify: `packages/core/src/lib/hooks/pibbl-path-hooks.test.ts`
 
 **Interfaces:**
 
@@ -549,7 +549,7 @@ if (radii.every((radius) => radius === 0)) {
 return path;
 ```
 
-CRC expands fallback values but does not reproduce Canvas signed-dimension remapping or adjacent-radius scaling.
+Pibbl expands fallback values but does not reproduce Canvas signed-dimension remapping or adjacent-radius scaling.
 
 - [ ] **Step 4: Write failing Rectangle component and hook cases**
 
@@ -583,7 +583,7 @@ Resolve the hook's effective four radii before `useMemoSlot`, include all four i
 Run:
 
 ```bash
-corepack pnpm@11.21.0 exec vitest run packages/core/src/lib/geometry/rectangle.test.ts packages/core/src/lib/components/rounded-corner-style.test.ts packages/core/src/lib/components/rect.test.ts packages/core/src/lib/hooks/crc-path-hooks.test.ts packages/core/test/standard-shape-allocation.test.ts --browser.headless --browser.ui=false
+corepack pnpm@11.21.0 exec vitest run packages/core/src/lib/geometry/rectangle.test.ts packages/core/src/lib/components/rounded-corner-style.test.ts packages/core/src/lib/components/rect.test.ts packages/core/src/lib/hooks/pibbl-path-hooks.test.ts packages/core/test/standard-shape-allocation.test.ts --browser.headless --browser.ui=false
 corepack pnpm@11.21.0 run typecheck
 ```
 
@@ -592,7 +592,7 @@ Expected: all suites and typecheck PASS; all existing sharp rectangle assertions
 - [ ] **Step 7: Commit rounded rectangles**
 
 ```bash
-git add packages/core/src/lib/geometry/rectangle.ts packages/core/src/lib/geometry/rectangle.test.ts packages/core/src/lib/components/rect.ts packages/core/src/lib/components/rect.test.ts packages/core/src/lib/style/types.ts packages/core/src/lib/hooks/use-rect-path.ts packages/core/src/lib/hooks/crc-path-hooks.test.ts
+git add packages/core/src/lib/geometry/rectangle.ts packages/core/src/lib/geometry/rectangle.test.ts packages/core/src/lib/components/rect.ts packages/core/src/lib/components/rect.test.ts packages/core/src/lib/style/types.ts packages/core/src/lib/hooks/use-rect-path.ts packages/core/src/lib/hooks/pibbl-path-hooks.test.ts
 git commit -m "feat(core): add rounded rectangle geometry"
 ```
 
@@ -863,18 +863,18 @@ git commit -m "feat(core): add star primitive"
 - Modify: `playground/package-consumer/index.ts`
 - Modify: `playground/package-consumer/jsx.tsx`
 - Modify: `playground/package-consumer/runtime.mjs`
-- Modify: `playground/src/crc-editor-types.txt`
+- Modify: `playground/src/pibbl-editor-types.txt`
 - Modify: `tooling/verify-studio-types.mjs`
 - Modify: `docs/api-reference.md`
 
 **Interfaces:**
 
 - Consumes: all component, creator, options, and style exports from Tasks 1-7.
-- Produces: the supported root `@crc/core` API with 58 runtime values and 140 named type exports; Bundler, NodeNext, packed-package, JSX, and Studio evidence for every new symbol.
+- Produces: the supported root `@pibbl/core` API with 58 runtime values and 140 named type exports; Bundler, NodeNext, packed-package, JSX, and Studio evidence for every new symbol.
 
 - [ ] **Step 1: Add failing root-export and runtime parity assertions**
 
-Extend the exact runtime lists in `public-api.test.ts` and `runtime.mjs` with `RegularPolygon`, `Star`, and all ten creator functions in alphabetical order. Require 58 runtime exports and assert each creator is callable from `@crc/core` rather than a source path.
+Extend the exact runtime lists in `public-api.test.ts` and `runtime.mjs` with `RegularPolygon`, `Star`, and all ten creator functions in alphabetical order. Require 58 runtime exports and assert each creator is callable from `@pibbl/core` rather than a source path.
 
 ```ts
 const addedRuntimeValues = [
@@ -926,7 +926,7 @@ Expected: FAIL on missing root exports and Studio/package declarations.
 
 - [ ] **Step 4: Export the supported surface and update declarations**
 
-Export runtime values and named types explicitly from `packages/core/src/index.ts`; keep `types.ts` consistent with the repository's existing type bridge. Add exact public declarations to `crc-editor-types.txt`, including the discriminated RegularPolygon size union, and update `verify-studio-types.mjs` to expect 140 type exports and 58 runtime values. Update the API-reference marker blocks and count sentence from `46/122` to `58/140`.
+Export runtime values and named types explicitly from `packages/core/src/index.ts`; keep `types.ts` consistent with the repository's existing type bridge. Add exact public declarations to `pibbl-editor-types.txt`, including the discriminated RegularPolygon size union, and update `verify-studio-types.mjs` to expect 140 type exports and 58 runtime values. Update the API-reference marker blocks and count sentence from `46/122` to `58/140`.
 
 Do not add compatibility aliases or deep entry points.
 
@@ -948,7 +948,7 @@ Expected: root/JSX tests, typecheck, Studio check, Bundler and NodeNext consumer
 - [ ] **Step 6: Commit the public surface**
 
 ```bash
-git add packages/core/src/index.ts packages/core/src/types.ts packages/core/src/lib/focus/public-api.test.ts packages/core/test/jsx-authoring.test.tsx playground/package-consumer/index.ts playground/package-consumer/jsx.tsx playground/package-consumer/runtime.mjs playground/src/crc-editor-types.txt tooling/verify-studio-types.mjs docs/api-reference.md
+git add packages/core/src/index.ts packages/core/src/types.ts packages/core/src/lib/focus/public-api.test.ts packages/core/test/jsx-authoring.test.tsx playground/package-consumer/index.ts playground/package-consumer/jsx.tsx playground/package-consumer/runtime.mjs playground/src/pibbl-editor-types.txt tooling/verify-studio-types.mjs docs/api-reference.md
 git commit -m "feat(core): export rounded shapes and path creators"
 ```
 
@@ -972,7 +972,7 @@ git commit -m "feat(core): export rounded shapes and path creators"
 
 **Interfaces:**
 
-- Consumes: Task 8 public `@crc/core` surface only.
+- Consumes: Task 8 public `@pibbl/core` surface only.
 - Produces: focused learning routes for rounded Rectangle, rounded Polygon, RegularPolygon, Star, and creator-based clipping; a deterministic public-API gallery scenario with semantic, interaction, clipping, and reviewed visual evidence.
 
 - [ ] **Step 1: Add failing learning-catalog assertions**
@@ -1036,7 +1036,7 @@ corepack pnpm@11.21.0 exec vitest run packages/core/test/drawing-gallery.test.ts
 
 Expected: FAIL because the new state, shapes, and clipped pixels are absent.
 
-- [ ] **Step 6: Implement the scenario through `@crc/core` and make semantic evidence green**
+- [ ] **Step 6: Implement the scenario through `@pibbl/core` and make semantic evidence green**
 
 Import only supported root values. Construct the hexagon with `createRegularPolygonPath`, pass it to `Clip`, and use the same path or a creator-produced path for explicit targeting only where the scenario needs to prove reuse. Update scenario state and metadata deterministically, then rerun the Step 5 command until PASS.
 

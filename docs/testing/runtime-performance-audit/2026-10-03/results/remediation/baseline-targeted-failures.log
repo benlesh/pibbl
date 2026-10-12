@@ -14,7 +14,7 @@
   - import "./model" without a file extension (tooling/studio-docs/markdown.ts:13:46). Add the file extension
 Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
 
- RUN  v4.1.10 /Users/benlesh/.codex/worktrees/perf-verification/crc
+ RUN  v4.1.10 /Users/benlesh/.codex/worktrees/perf-verification/pibbl
 
 (!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
   - import "./build" without a file extension (tooling/studio-docs/vite-plugin.ts:11:8). Add the file extension
@@ -32,7 +32,7 @@ Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
   - import "./model" without a file extension (tooling/studio-docs/markdown.ts:13:46). Add the file extension
 Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
 4:12:23 PM [vite] (client) warning: 
-/Users/benlesh/.codex/worktrees/perf-verification/crc/tooling/texture-import-inertness.test.mjs
+/Users/benlesh/.codex/worktrees/perf-verification/pibbl/tooling/texture-import-inertness.test.mjs
 8  |  
 9  |  function importBuilt(specifier) {
 10 |  ...unner__"].wrapDynamicImport(() => import(requireBuiltPackage.resolve(specifier)));
@@ -43,13 +43,13 @@ The above dynamic import cannot be analyzed by Vite.
 See https://vite.dev/guide/features#dynamic-import for supported dynamic import formats. If this is intended to be left as-is, you can use the /* @vite-ignore */ comment inside the import() call to suppress this warning.
 
   Plugin: vite:import-analysis
-  File: /Users/benlesh/.codex/worktrees/perf-verification/crc/tooling/texture-import-inertness.test.mjs
+  File: /Users/benlesh/.codex/worktrees/perf-verification/pibbl/tooling/texture-import-inertness.test.mjs
  ❯ |chromium| tooling/texture-import-inertness.test.mjs (0 test)
 
 ⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
 
  FAIL  |chromium| tooling/texture-import-inertness.test.mjs [ tooling/texture-import-inertness.test.mjs ]
-Error: Failed to import test file /Users/benlesh/.codex/worktrees/perf-verification/crc/tooling/texture-import-inertness.test.mjs
+Error: Failed to import test file /Users/benlesh/.codex/worktrees/perf-verification/pibbl/tooling/texture-import-inertness.test.mjs
 Caused by: Error: Module "node:module" has been externalized for browser compatibility. Cannot access "node:module.createRequire" in client code.  See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.
  ❯ tooling/texture-import-inertness.test.mjs:1:39
 

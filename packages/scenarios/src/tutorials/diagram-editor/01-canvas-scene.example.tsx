@@ -1,4 +1,4 @@
-import { crc, Rectangle, Text, type CRCController } from "@crc/core";
+import { pibbl, Rectangle, Text, type PibblController } from "@pibbl/core";
 
 function DiagramEditor() {
   return [
@@ -36,6 +36,6 @@ function DiagramEditor() {
   ];
 }
 
-export default function mount(canvas: HTMLCanvasElement): CRCController {
-  return crc(canvas, <DiagramEditor />);
+export default function mount(canvas: HTMLCanvasElement): PibblController {
+  return pibbl(canvas, <DiagramEditor />);
 }

@@ -1,16 +1,16 @@
 import { isSignal } from '../lib/signals/graph.js';
 import { layoutDiagnostic } from '../lib/style/diagnostics.js';
-import { CRC_FILTER_EXECUTOR, type CRCFilter, type CRCFilterExecutor, type CRCReflectedLightFilterOptions } from '../lib/style/filter-types.js';
+import { PIBBL_FILTER_EXECUTOR, type PibblFilter, type PibblFilterExecutor, type PibblReflectedLightFilterOptions } from '../lib/style/filter-types.js';
 import { borrowTextureRaster, validateTexturePaint } from '../lib/textures/texture-protocol.js';
 import { filterBoundaryExecutor, type CustomPreparedFilter } from './filter-executor.js';
 import { processReflection, isReflectionImage } from './render-reflection-boundary.js';
 import { concreteColor } from './native-color.js';
 
-const definitions = new WeakMap<CRCFilter, Readonly<CRCReflectedLightFilterOptions>>();
-const executor: CRCFilterExecutor = {
+const definitions = new WeakMap<PibblFilter, Readonly<PibblReflectedLightFilterOptions>>();
+const executor: PibblFilterExecutor = {
   prepare(value, property, context) {
     const options=definitions.get(value);
-    if(!options) throw new Error('A reflected-light filter value was created by an incompatible CRC runtime.');
+    if(!options) throw new Error('A reflected-light filter value was created by an incompatible Pibbl runtime.');
     const fail=(key:string,value:unknown,reason:string)=>layoutDiagnostic({component:context.component,property:`${property}.${key}`,value,algorithm:context.algorithm,constraints:context.constraints,reason});
     const numeric=(key:'opacity'|'threshold'|'softness',fallback:number,min:number,max:number)=>{
       const input=options[key]; const value=input===undefined?fallback:isSignal(input)?input.get():input;
@@ -66,8 +66,17 @@ const executor: CRCFilterExecutor = {
   render:filterBoundaryExecutor.render,
 };
 
-/** Adds slope-selective surface light without changing scene alpha or geometry. */
-export function reflectedLight(options: CRCReflectedLightFilterOptions): CRCFilter {
+/**
+ * Adds slope-selective surface light without changing scene alpha or geometry.
+ *
+ * @param options - Lighting texture and reflected-light appearance settings. See
+ * {@link PibblReflectedLightFilterOptions} .
+ * @returns A reflected-light filter descriptor for style.filter. See {@link PibblFilter}.
+ *
+ * @see {@link PibblReflectedLightFilterOptions}
+ * @see {@link PibblFilter}
+ */
+export function reflectedLight(options: PibblReflectedLightFilterOptions): PibblFilter {
   const rawOptions = options as unknown as { readonly region: unknown; readonly direction?: unknown };
   const region = rawOptions.region && typeof rawOptions.region === 'object'
     ? Object.freeze({ ...(rawOptions.region as object) })
@@ -77,8 +86,8 @@ export function reflectedLight(options: CRCReflectedLightFilterOptions): CRCFilt
     : Array.isArray(rawOptions.direction)
       ? Object.freeze([...rawOptions.direction])
       : rawOptions.direction;
-  const definition = Object.freeze({ ...options, region, direction }) as Readonly<CRCReflectedLightFilterOptions>;
-  const value = Object.freeze({ [CRC_FILTER_EXECUTOR]: executor });
+  const definition = Object.freeze({ ...options, region, direction }) as Readonly<PibblReflectedLightFilterOptions>;
+  const value = Object.freeze({ [PIBBL_FILTER_EXECUTOR]: executor });
   definitions.set(value, definition);
   return value;
 }

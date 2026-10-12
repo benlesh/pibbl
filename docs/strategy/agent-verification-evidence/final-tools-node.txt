@@ -1,0 +1,39 @@
+✔ finds a requirement-linked runnable scenario with independent acceptance evidence (2.357792ms)
+✔ distinguishes known unmapped requirements from invalid IDs without inventing coverage (0.832709ms)
+✔ maps analytical correctness to independent arithmetic rather than screenshot similarity (2.807708ms)
+✔ discovers the completed text and signal workflows with usable evidence and rerun recipes (2.549ms)
+✔ finds layout and missingness workflows without inflating their provenance (6.450125ms)
+✔ summary omits bulky observations; explicit action and manifest views retain exact data (16.228792ms)
+✔ checkpoint views cannot promote a completed subset to final success (3.073042ms)
+✔ ambiguous/missing actions and invalid or oversized evidence reject (19.409125ms)
+✔ summary reports omitted actions explicitly and remains compact (3.519667ms)
+✔ summary includes secondary failure categories without conflating them with operation errors (2.015125ms)
+✔ checkpoint summary preserves clock identity and correlation limits (2.353166ms)
+✔ summarizes explicit non-pass check reasons and refuses unknown outcome enums (6.248542ms)
+✔ retrieves one identified assertion failure with its action and operands (4.108292ms)
+✔ exposes declared check expectations separately from completed checks (2.508792ms)
+✔ check expectations alone cannot masquerade as a missing run manifest (1.8135ms)
+✔ pages saved action records with content-bound cursors and explicit checkpoint history (7.27325ms)
+✔ bounds pagination and rejects malformed or mismatched cursors instead of silently restarting (2.842459ms)
+✔ rejects noncanonical encoded cursors rather than accepting whitespace aliases (1.994417ms)
+✔ reads text and signal mutation evidence through the shared summary and identified check views (3.350084ms)
+✔ projects requested fields from oversized action evidence without returning unrelated payloads (4.382333ms)
+✔ projection uses own JSON fields, escapes pointer tokens, distinguishes special numbers and bounds strings (1.7215ms)
+✔ invalid field selectors and unsupported versions have machine-readable errors (2.123375ms)
+✔ CLI projects real retained signal evidence and exposes structured selector failures (225.856625ms)
+✔ projection bounds object-key previews and enforces output bytes even for worst-case escaping (6.186458ms)
+✔ preserves redacted failure reasons and stages without inventing an assertion message (2.051209ms)
+✔ reads layout smoke actions without inventing per-action success or attestation (12.55975ms)
+✔ connects requirement discovery to a fixed native replay, fresh evidence and bounded retrieval (0.731541ms)
+✔ refuses unmapped and unsupported runners and malformed Studio origins (0.548833ms)
+✔ neither child exit nor saved pass overrides timeout, missing evidence or failed browser cleanup (0.1095ms)
+✔ recovers checkpoint evidence after interruption without hiding a corrupt final report (9.743916ms)
+✔ validates next queries against saved data and finds failed actions beyond the summary page (12.700875ms)
+ℹ tests 31
+ℹ suites 0
+ℹ pass 31
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 396.045625

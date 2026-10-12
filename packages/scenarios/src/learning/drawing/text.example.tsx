@@ -1,4 +1,4 @@
-import { crc, useSignal, Rectangle, Text, type CRCController } from "@crc/core";
+import { pibbl, useSignal, Rectangle, Text, type PibblController } from "@pibbl/core";
 function TypeStudy() {
   const accent = useSignal("#1f4bd8");
   return [
@@ -51,7 +51,7 @@ function TypeStudy() {
       }}
     >
       {
-        "CRC keeps drawing text direct: choose a font, alignment, wrapping width, and an overflow strategy."
+        "Pibbl keeps drawing text direct: choose a font, alignment, wrapping width, and an overflow strategy."
       }
     </Text>,
     <Text
@@ -70,6 +70,6 @@ function TypeStudy() {
     </Text>,
   ];
 }
-export default function mount(canvas: HTMLCanvasElement): CRCController {
-  return crc(canvas, <TypeStudy />);
+export default function mount(canvas: HTMLCanvasElement): PibblController {
+  return pibbl(canvas, <TypeStudy />);
 }

@@ -19,12 +19,6 @@ symbols:
     FlattenPathOptions,
     SimplifyPathOptions,
     SubdividePathOptions,
-    warpPath,
-    PathWarpPoint,
-    PathWarpRect,
-    PathWarpCorners,
-    PathWarpMode,
-    WarpPathOptions,
   ]
 ---
 
@@ -34,8 +28,86 @@ symbols:
 It supports the Canvas path-building vocabulary, segment editing, 2D affine
 transforms, and independent native/SVG conversion.
 
+## Operations at a glance
+
+This is the operation map for editable `PathGeometry`. All functions below are
+public exports of `@pibbl/core`; methods belong to a geometry instance.
+
+### Build and edit
+
+| Goal                                | API                                                                  | Result                                                |
+| ----------------------------------- | -------------------------------------------------------------------- | ----------------------------------------------------- |
+| Draw contours                       | `moveTo`, `lineTo`, `quadraticCurveTo`, `bezierCurveTo`, `closePath` | Mutates this geometry; returns void                   |
+| Add curved and rectangular shapes   | `arc`, `arcTo`, `ellipse`, `geometry.rect()`, `roundRect`            | Mutates this geometry; returns void                   |
+| Copy without sharing edits          | `new PathGeometry(source)`, `clone()`                                | Independent `PathGeometry`                            |
+| Append another path                 | `addPath(other, matrix?)`                                            | Mutates this geometry; optionally transforms the copy |
+| Inspect segments                    | `segmentCount`, `getSegment(index)`, iteration                       | Count or independent segment values                   |
+| Replace, insert, or remove segments | `setSegment`, `spliceSegments`                                       | Mutates this geometry                                 |
+| Empty and reuse storage             | `clear()`                                                            | Mutates this geometry                                 |
+| Detect edits                        | `revision`                                                           | Mutation counter, not a reactive signal               |
+
+See [construction and editing](#construction-and-editing) and the
+[editable geometry example](#/examples/drawing/path-geometry).
+
+### Move, bend, and warp
+
+Mapping constructors return a reusable `PathTransform`, not geometry.
+`transformPath(geometry, mapping, { tolerance })` applies one and returns an
+independent `PathGeometry`. `composeTransforms(...)` combines mappings left to
+right before that final approximation. A mapping's `mapPoint(...)` also maps
+individual points, useful for handles and annotations.
+
+| Goal                                                         | API                                    | Working example                                          |
+| ------------------------------------------------------------ | -------------------------------------- | -------------------------------------------------------- |
+| Translate, rotate, scale, skew, or reflect in place          | `geometry.transform(matrix)`           | [Editable geometry](#/examples/drawing/path-geometry)    |
+| Apply an affine mapping without changing the original        | `affineTransform` with `transformPath` | [Transform examples](path-transforms.md)                 |
+| Fit into four corners, using bilinear or perspective mapping | `quadTransform`                        | [Interactive quad warp](#/examples/drawing/path-warp)    |
+| Stretch between two or more guide paths                      | `envelopeTransform`                    | [Multi-guide envelope](#/examples/drawing/text-envelope) |
+| Warp through a grid of curved boundaries                     | `meshTransform`                        | [Mesh reference](path-transforms.md#meshes)              |
+| Bend around a circular arc                                   | `arcBendTransform`                     | [Arc and path bending](#/examples/drawing/path-bending)  |
+| Bend along a smooth guide path                               | `pathBendTransform`                    | [Arc and path bending](#/examples/drawing/path-bending)  |
+| Combine mappings and apply them once                         | `composeTransforms`, `transformPath`   | [Transform examples](path-transforms.md)                 |
+
+See [composable path transforms](path-transforms.md) for source rectangles,
+guide correspondence, mesh boundaries, tolerance, and domain limits. See
+[path bending](path-bending.md) for baseline, alignment, fitting, and overflow.
+Affine mappings preserve curves; nonlinear mappings produce line segments.
+
+### Change detail and export
+
+| Goal                                                    | API                  | Result                                                                     |
+| ------------------------------------------------------- | -------------------- | -------------------------------------------------------------------------- |
+| Adaptively approximate curves with lines                | `flattenPath`        | Independent line-only geometry                                             |
+| Flatten with uniform parameter steps using Wang's bound | `flattenPathWang`    | Independent line-only geometry; predictable segment allocation             |
+| Reduce polyline vertices                                | `simplifyPath`       | Independent simplified geometry; curves must be flattened first            |
+| Simplify with a radial-distance prepass                 | `simplifyPathRadial` | Independent simplified geometry; the two stages share the tolerance budget |
+| Split segments into more editable pieces                | `subdividePath`      | Independent geometry; preserves curves, not equal physical spacing         |
+| Draw with native Canvas APIs                            | `toPath2D`           | Fresh native `Path2D` snapshot                                             |
+| Export SVG path data                                    | `toSvgPathData`      | SVG path-data string                                                       |
+
+See [geometry utilities](#geometry-utilities) and the
+[utility comparison example](#/examples/drawing/path-geometry).
+
+### Boundaries and larger examples
+
+Geometry edits do not schedule rendering: notify a consumed signal after editing.
+Changing `Path` or `Group` presentation transforms does not rewrite the source
+geometry. Pixel filters likewise do not edit its segments.
+
+Native `Path2D` is opaque: Pibbl cannot turn it back into editable geometry. The
+`create*Path` factories return native paths, not `PathGeometry`. Start with the
+builder when later editing or warping is needed. Text outlines from `@pibbl/text`
+can also provide editable geometry; see [text geometry](text-geometry.md).
+Boolean union/intersection/subtraction, equal-distance resampling, and curve
+fitting are not provided by this surface.
+
+Explore the [multi-guide text envelope example](#/examples/drawing/text-envelope)
+for a larger composition using the same mapping APIs.
+
+## Smallest construction example
+
 ```ts
-import { PathGeometry, toPath2D, toSvgPathData, warpPath } from "@crc/core";
+import { PathGeometry, toPath2D, toSvgPathData } from "@pibbl/core";
 
 const geometry = new PathGeometry();
 geometry.moveTo(10, 10);
@@ -100,7 +172,7 @@ export traversal-preserving lines. Turning-point stroke joins can differ from a
 browser's degenerate native ellipse representation.
 
 Path, Clip, explicit event-target and cursor/event-hook inputs accept geometry
-alongside native Path2D. CRC privately caches by identity and saved revision;
+alongside native Path2D. Pibbl privately caches by identity and saved revision;
 paint, clipping and interaction use the same native snapshot. Already-rendered
 hit regions stay unchanged until their consumer renders again. Browser canvas
 methods still require `toPath2D` output. Particle path assets snapshot geometry
@@ -109,7 +181,7 @@ when defining an effect, consistent with immutable effect ownership.
 ## Geometry utilities
 
 ```ts
-import { flattenPath, simplifyPath, subdividePath } from "@crc/core";
+import { flattenPath, simplifyPath, subdividePath } from "@pibbl/core";
 
 const lines = flattenPath(geometry, { tolerance: 0.25 });
 const reduced = simplifyPath(lines, { tolerance: 0.5 });
@@ -137,72 +209,8 @@ including Move/Close). Exceeding it throws without changing the input.
 Equal-distance resampling and curve fitting are separate future operations.
 Try the [editable path example](#/examples/drawing/path-geometry).
 
-## Four-corner warp
+## Spatial transformations
 
-`warpPath(path, { source, destination, tolerance, mode?, maxSegments? })` returns
-independent line geometry mapped from a local source rectangle to four named
-corners. `PathWarpRect` supplies x, y, width, height; `PathWarpCorners` supplies
-topLeft, topRight, bottomLeft, bottomRight as `PathWarpPoint` values.
-`WarpPathOptions` requires positive destination-space tolerance. `PathWarpMode`
-is `'bilinear'` (default) or `'perspective'`. Bilinear stretches between corners;
-perspective projects onto a strictly convex quadrilateral.
-
-```ts
-import { warpPath } from "@crc/core";
-
-const warped = warpPath(geometry, {
-  source: { x: 0, y: 0, width: 200, height: 100 },
-  destination: {
-    topLeft: { x: 20, y: 10 },
-    topRight: { x: 240, y: 30 },
-    bottomLeft: { x: 0, y: 140 },
-    bottomRight: { x: 180, y: 110 },
-  },
-  mode: "perspective",
-  tolerance: 0.25,
-});
-```
-
-Names express source-corner correspondence, even after rotation or reflection.
-The rectangle shares the path's local coordinates; it need not equal the bounds.
-Points outside it extrapolate without clipping or clamping. Bilinear mode permits
-folded/collapsed corners and can bend straight diagonal lines. Perspective keeps
-straight lines straight and requires a strictly convex destination; traced points
-at a projection pole are rejected, even outside the source rectangle.
-
-Output contains only Move, Line, and Close segments. Curves, arcs, and closing
-edges are approximated after warping to meet tolerance in destination units;
-transforming original control points is not equivalent. No stroke-outline or
-topology preservation is promised. Invalid values, invalid perspective
-destinations, overflow, unachievable precision, and exhausted limits throw
-without modifying the input or returning a partial result. Recompute from the
-original geometry while editing. Try the
-[four-corner rocket demo](#/examples/drawing/path-warp).
-
-## Alternate algorithms
-
-Import alternate helpers independently from `@crc/core`. The default helpers do
-not dispatch to them; unused algorithms are removed by compatible production
-bundlers. CRC verifies this for source, built, and packed consumers.
-
-```ts
-import { flattenPathWang, simplifyPathRadial } from "@crc/core";
-
-const uniformLines = flattenPathWang(geometry, { tolerance: 0.25 });
-const reducedDenseLines = simplifyPathRadial(uniformLines, { tolerance: 0.5 });
-```
-
-`flattenPathWang` accepts `FlattenPathOptions` and uses a second-derivative bound
-with uniform parameter steps for Béziers. Transformed arcs use a bound based on
-their maximum affine stretch. It can generate more segments than adaptive
-flattening where curvature varies; predictable counts and less subdivision work
-are its main tradeoffs. It preserves the same input-space distance-tolerance,
-contour, independent-output, and output-limit contracts as `flattenPath`.
-
-`simplifyPathRadial` accepts `SimplifyPathOptions`. It removes nearby samples
-before Douglas–Peucker and splits the tolerance equally between the two passes.
-Its error budget is relative to the original polyline, not just the prefiltered
-points. It is useful for dense input but can retain more points or be slower for
-sparse input. Like `simplifyPath`, it requires line-only geometry and does not
-promise topology preservation. Defaults remain adaptive flattening and ordinary
-Douglas–Peucker. `subdividePath` retains de Casteljau subdivision.
+Use [composable path transforms](path-transforms.md) to apply affine, quad,
+envelope, mesh, and bend mappings through `transformPath`. `PathGeometry.transform`
+remains the low-level in-place affine operation.

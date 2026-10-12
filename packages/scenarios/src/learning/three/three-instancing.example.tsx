@@ -1,5 +1,5 @@
-import { dropShadow } from '@crc/core/filters';
-/** @jsxImportSource @crc/core */
+import { dropShadow } from '@pibbl/core/filters';
+/** @jsxImportSource @pibbl/core */
 // Adapted from Three.js "webgl_instancing_raycast":
 // https://github.com/mrdoob/three.js/blob/dev/examples/webgl_instancing_raycast.html
 // Three.js is MIT licensed: https://github.com/mrdoob/three.js/blob/dev/LICENSE
@@ -9,12 +9,12 @@ import {
   Group,
   Rectangle,
   Text,
-  crc,
+  pibbl,
   useSignal,
-  type CRCController,
-  type CRCNode,
-} from '@crc/core';
-import { defineThreeLayer } from '@crc/three';
+  type PibblController,
+  type PibblNode,
+} from '@pibbl/core';
+import { defineThreeLayer } from '@pibbl/three';
 import {
   Color,
   HemisphereLight,
@@ -232,7 +232,7 @@ const ThreeInstancingLayer = defineThreeLayer<
   },
 });
 
-function tiles(onTile: () => void): CRCNode {
+function tiles(onTile: () => void): PibblNode {
   return Array.from({ length: 45 }, (_, index) => {
     const column = index % 9;
     const row = Math.floor(index / 9);
@@ -276,7 +276,7 @@ function ThreeInstancingExample() {
   const recordTile = () =>
     state.update((current) => ({
       ...current,
-      lastResolution: 'CRC tile',
+      lastResolution: 'Pibbl tile',
       tileClicks: current.tileClicks + 1,
     }));
   const recordBlocked = () =>
@@ -393,13 +393,13 @@ function ThreeInstancingExample() {
             font: '700 11px monospace',
           }}
         >
-          {`CRC ${state.get().tileClicks} · TARGET ${state.get().threeClicks} · BLOCK ${state.get().blockedInputs} · CAMERA ${state.get().cameraChanges}`}
+          {`Pibbl ${state.get().tileClicks} · TARGET ${state.get().threeClicks} · BLOCK ${state.get().blockedInputs} · CAMERA ${state.get().cameraChanges}`}
         </Text>
       </Group>
     </FocusManagement>
   );
 }
 
-export default function mount(canvas: HTMLCanvasElement): CRCController {
-  return crc(canvas, <ThreeInstancingExample />, { pixelRatio: 1 });
+export default function mount(canvas: HTMLCanvasElement): PibblController {
+  return pibbl(canvas, <ThreeInstancingExample />, { pixelRatio: 1 });
 }

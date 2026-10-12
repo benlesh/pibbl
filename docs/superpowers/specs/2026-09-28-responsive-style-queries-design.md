@@ -8,7 +8,7 @@
 
 ## Purpose and recommended slice
 
-Add ordered, typed conditional patches to CRC's local `style` input. One reusable
+Add ordered, typed conditional patches to Pibbl's local `style` input. One reusable
 component must adapt in a wide root, a narrow allocated container inside that
 root, and a phone-sized responsive root. This is general layout and paint
 functionality, with no chart-specific vocabulary.
@@ -65,7 +65,7 @@ not backend-specific drawing vocabularies.
 
 ## Query context and alternatives
 
-**Choose the available containing size at style inspection time.** Units are CRC
+**Choose the available containing size at style inspection time.** Units are Pibbl
 logical units. A layout parent inspects all direct children against its already
 established content dimensions, before placing any of them. A primitive reached
 without parent layout inspection uses the current incoming allocation. Root
@@ -135,7 +135,7 @@ Alternatives considered:
   lookup, lifetime, and measurement propagation. Not needed for this slice.
 
 There is no `context` selector in the first API. Adding a wrapper is an authoring
-choice with existing identity consequences; CRC does not silently insert a new
+choice with existing identity consequences; Pibbl does not silently insert a new
 public component or remount on threshold changes.
 
 ## Exact authoring and public types
@@ -144,7 +144,7 @@ Proposed public contract, shown as declaration shapes (implementation is not
 certified by this specification):
 
 ```ts
-export type CRCSizeQuery = Readonly<
+export type PibblSizeQuery = Readonly<
   {
     minWidth?: number;
     maxWidth?: number;
@@ -158,13 +158,13 @@ export type CRCSizeQuery = Readonly<
   )
 >;
 
-export type CRCStyleRule<S extends SystemStyle> = Readonly<{
-  query: CRCSizeQuery;
+export type PibblStyleRule<S extends SystemStyle> = Readonly<{
+  query: PibblSizeQuery;
   style: Partial<SignalStyle<S>> & { readonly when?: never };
 }>;
 
-export type CRCResponsiveStyle<S extends SystemStyle> = SignalStyle<S> &
-  Readonly<{ when?: readonly CRCStyleRule<S>[] }>;
+export type PibblResponsiveStyle<S extends SystemStyle> = SignalStyle<S> &
+  Readonly<{ when?: readonly PibblStyleRule<S>[] }>;
 ```
 
 The actual primitive input mapping becomes (using existing `StyleField` and
@@ -174,23 +174,23 @@ The actual primitive input mapping becomes (using existing `StyleField` and
 export type PrimitiveInput<
   P,
   S extends SystemStyle = SystemStyle,
-> = SignalProgramProps<P> & StyleField<CRCResponsiveStyle<SpecifiedStyle<S>>>;
+> = SignalProgramProps<P> & StyleField<PibblResponsiveStyle<SpecifiedStyle<S>>>;
 ```
 
 `StyleField` continues deriving required keys from the base style plus the
 optional framework field. Custom primitive definitions reject `when` in any
 specified, normalized, or resolved style declaration. Use a named type guard
 with the diagnostic member
-`"CRC: style.when is framework-owned; remove when from the primitive style type"`
+`"Pibbl: style.when is framework-owned; remove when from the primitive style type"`
 on the definition's render/capabilities parameters, rather than silently
 reducing the whole input to `never`. Check union members as well as simple object
 types. The public authoring alias describes exactly the style accepted by props.
 
 `SignalStyle` above names the existing shallow style mapping, including opaque
-`custom`. Export the new types from `@crc/core`. Keep plain specified style
+`custom`. Export the new types from `@pibbl/core`. Keep plain specified style
 types such as `FlowStyle`, `TextStyle`, and `RectStyle` as the primitive's own
 vocabulary. Extend the style member produced by `PrimitiveInput<P, S>` to accept
-`CRCResponsiveStyle<S>` or a signal of that value; preserve today's rule that
+`PibblResponsiveStyle<S>` or a signal of that value; preserve today's rule that
 styles with required base keys are required. Optional-style primitives also
 continue to accept a whole-style signal resolving to `undefined`.
 
@@ -218,10 +218,10 @@ import {
   signal,
   type BoxStyle,
   type LayoutItemStyle,
-  type CRCResponsiveStyle,
+  type PibblResponsiveStyle,
   type FlowStyle,
   type SignalValue,
-} from "@crc/core";
+} from "@pibbl/core";
 
 const spacing = signal(12);
 const contentStyle = {
@@ -235,11 +235,11 @@ const contentStyle = {
       style: { direction: "horizontal", height: 44 },
     },
   ],
-} satisfies CRCResponsiveStyle<FlowStyle>;
+} satisfies PibblResponsiveStyle<FlowStyle>;
 
 type ActionsProps = {
   style?: SignalValue<
-    CRCResponsiveStyle<BoxStyle & LayoutItemStyle> | undefined
+    PibblResponsiveStyle<BoxStyle & LayoutItemStyle> | undefined
   >;
 };
 
@@ -265,7 +265,7 @@ function ResponsiveActions({ style: placementStyle }: ActionsProps) {
 Equivalent non-JSX component using the same style and signals:
 
 ```ts
-import { createElement, Flow, Rectangle } from "@crc/core";
+import { createElement, Flow, Rectangle } from "@pibbl/core";
 
 function ResponsiveActions({ style: placementStyle }: ActionsProps) {
   // The parent reads placementStyle to allocate this item. Preserve it in props;
@@ -317,7 +317,7 @@ alternative declarations of the same component, not multiple same-name functions
 in a single file. For the phone case mount the same component at the root with
 `{ viewport: 'responsive' }` and a 360 CSS-pixel content box.
 
-Plain component props remain exact author input; CRC does not universally
+Plain component props remain exact author input; Pibbl does not universally
 resolve arbitrary application props. Layout parents may select responsive outer
 style for placement just as they inspect ordinary style today. Passing a style
 to a plain component alone does not apply it to the component's descendants.
@@ -346,14 +346,14 @@ respectively. Reducing width below 600 at height 500 restores gap 16.
 ## Agent-facing authoring and diagnostics
 
 Make the correct pattern discoverable through component `style` autocomplete,
-JSDoc on `when` and `CRCSizeQuery`, and one short public guide linked from both
+JSDoc on `when` and `PibblSizeQuery`, and one short public guide linked from both
 style and layout references. That guide must lead with the two-boundary rule,
 show JSX and createElement versions of the same component, and state the
 measurement restriction next to `auto`. Adjacent to the canonical component
 recipe, state that a plain function receives its original raw `style` prop: the
 layout parent consumes it for placement, and it is neither automatically
 query-resolved for the function nor forwarded to descendants.
-Use `satisfies CRCResponsiveStyle<S>` for
+Use `satisfies PibblResponsiveStyle<S>` for
 shared values; no `any`, casts, or internal imports in supported recipes.
 
 The guide must include this compact decision table so an agent can choose the
@@ -380,7 +380,7 @@ not create a query, and query bounds never become primitive style properties.
 Required public type fixtures include these proposed errors:
 
 ```ts
-const nested: CRCStyleRule<FlowStyle> = {
+const nested: PibblStyleRule<FlowStyle> = {
   query: { minWidth: 600 },
   style: {
     // @ts-expect-error Rules cannot contain another when list.
@@ -394,19 +394,19 @@ interface InvalidStyle extends SystemStyle {
 // @ts-expect-error Remove when: the framework supplies it on primitive inputs.
 const Invalid = definePrimitive<{}, InvalidStyle>(() => null);
 
-const unsupported: CRCResponsiveStyle<FlowStyle> = {
+const unsupported: PibblResponsiveStyle<FlowStyle> = {
   // @ts-expect-error Replace the whole style signal, not the when field.
   when: signal([]),
 };
 
 // Supported: replace a whole style, or use signals in base/patch fields.
-const liveStyle = signal<CRCResponsiveStyle<FlowStyle>>({
+const liveStyle = signal<PibblResponsiveStyle<FlowStyle>>({
   gap: 12,
   when: [{ query: { maxHeight: 400 }, style: { gap: 8 } }],
 });
 ```
 
-These fixtures must import their types/functions from `@crc/core` and be tested
+These fixtures must import their types/functions from `@pibbl/core` and be tested
 in the Studio declarations and packed consumer modes, not merely quoted in docs.
 Also test a missing required Rectangle width, unknown query key, conflicting
 bounds at runtime, and union-style patches that produce an invalid final style.
@@ -417,17 +417,17 @@ Every query diagnostic includes component and JSX source when available, exact
 style path, received value, algorithm (render/layout/measurement), and repair.
 Stable diagnostic codes distinguish malformed input from unsupported measurement:
 
-| Code and example                                                                        | Required repair text                                                                                                    |
-| --------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| `CRC_STYLE_QUERY_BOUND`: `Flow style.when[2].query.maxWidth = -1`                       | Use a finite nonnegative bound.                                                                                         |
-| `CRC_STYLE_QUERY_RANGE`: `minHeight = 500, maxHeight = 400`                             | Set minHeight less than or equal to maxHeight.                                                                          |
-| `CRC_STYLE_QUERY_SIGNAL`: `Flow style.when = Signal`                                    | Put the signal on the whole style or on a base/patch field.                                                             |
-| `CRC_STYLE_QUERY_NESTED`: `Flow style.when[0].style.when`                               | Flatten rules into the receiving style's when list.                                                                     |
-| `CRC_STYLE_QUERY_MEASUREMENT`: `Flow style.when in intrinsic measurement`               | Give this item definite dimensions or a definite allocation, and put responsive styles inside that allocated component. |
-| `CRC_STYLE_QUERY_BASIS`: `Text style.when[0].query.minHeight with maxHeight = Infinity` | Supply a finite maxHeight to standalone measureElement.                                                                 |
+| Code and example                                                                          | Required repair text                                                                                                    |
+| ----------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `PIBBL_STYLE_QUERY_BOUND`: `Flow style.when[2].query.maxWidth = -1`                       | Use a finite nonnegative bound.                                                                                         |
+| `PIBBL_STYLE_QUERY_RANGE`: `minHeight = 500, maxHeight = 400`                             | Set minHeight less than or equal to maxHeight.                                                                          |
+| `PIBBL_STYLE_QUERY_SIGNAL`: `Flow style.when = Signal`                                    | Put the signal on the whole style or on a base/patch field.                                                             |
+| `PIBBL_STYLE_QUERY_NESTED`: `Flow style.when[0].style.when`                               | Flatten rules into the receiving style's when list.                                                                     |
+| `PIBBL_STYLE_QUERY_MEASUREMENT`: `Flow style.when in intrinsic measurement`               | Give this item definite dimensions or a definite allocation, and put responsive styles inside that allocated component. |
+| `PIBBL_STYLE_QUERY_BASIS`: `Text style.when[0].query.minHeight with maxHeight = Infinity` | Supply a finite maxHeight to standalone measureElement.                                                                 |
 
-Add `CRC_STYLE_QUERY_SHAPE` for malformed lists/records and
-`CRC_STYLE_QUERY_KEY` for unknown rule/query keys or an empty defined-bound set.
+Add `PIBBL_STYLE_QUERY_SHAPE` for malformed lists/records and
+`PIBBL_STYLE_QUERY_KEY` for unknown rule/query keys or an empty defined-bound set.
 Their repairs name the expected shape or list the four supported bounds.
 
 Malformed inputs throw before callbacks. Unsupported measurement uses the existing
@@ -550,7 +550,7 @@ extends the existing placement metadata; it is not public API or a new cache:
 
 ```ts
 interface PreparedStyleInput {
-  source: CRCElement<any>;
+  source: PibblElement<any>;
   normalizedStyle: Readonly<SystemStyle>; // query-selected, filter preserved
   receiverToken: object;
   queryBasis?: Readonly<{ width: number; height: number }>;

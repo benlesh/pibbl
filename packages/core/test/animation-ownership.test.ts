@@ -1,16 +1,16 @@
 import {
-  crc,
+  pibbl,
   usePlayback,
   createElement,
   defineAnimation,
   signal,
   stepper,
-  track,
+  drive,
   tween,
-  type CRCController,
-  type CRCNode,
-  type CRCPlayback,
-} from '@crc/core';
+  type PibblController,
+  type PibblNode,
+  type PibblPlayback,
+} from '@pibbl/core';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
   animationPlaybackSnapshot,
@@ -25,7 +25,7 @@ import {
   installSchedulerTraceCollectorForTest,
   ManualSchedulerDriver,
   snapshotRealmScheduler,
-  type CRCSchedulerTraceRecord,
+  type PibblSchedulerTraceRecord,
 } from '../src/lib/scheduler/testing';
 import type { RealmSchedulerSnapshot } from '../src/lib/scheduler/types';
 
@@ -49,7 +49,7 @@ interface ExactSignalGraphOwnershipSnapshot extends ReturnType<
   readonly releasedRendererEdges: number;
 }
 
-const controllers = new Set<CRCController>();
+const controllers = new Set<PibblController>();
 let driver: ManualSchedulerDriver;
 let restoreDriver: () => void;
 
@@ -74,15 +74,15 @@ describe('animation lifecycle ownership', () => {
     const graphBaseline = exactSignalGraphSnapshot();
     const output = signal(0, { debugName: 'owned animation output' });
     const events: string[] = [];
-    const trace: CRCSchedulerTraceRecord[] = [];
+    const trace: PibblSchedulerTraceRecord[] = [];
     const restoreTrace = installSchedulerTraceCollectorForTest(record => {
       trace.push(record);
     });
-    let stepping!: CRCPlayback;
-    let replacement!: CRCPlayback;
+    let stepping!: PibblPlayback;
+    let replacement!: PibblPlayback;
 
-    function Owner(): CRCNode {
-      stepping = usePlayback(track(output, stepper({
+    function Owner(): PibblNode {
+      stepping = usePlayback(drive(output, stepper({
         stepMilliseconds: 10,
         maxElapsedMilliseconds: 40,
         initial: current => current,
@@ -94,7 +94,7 @@ describe('animation lifecycle ownership', () => {
         debugName: 'stepping owner',
         onEvent: event => events.push(`stepping:${event.type}`),
       });
-      replacement = usePlayback(track(output, tween({
+      replacement = usePlayback(drive(output, tween({
         from: 0,
         to: 100,
         duration: 100,
@@ -182,7 +182,7 @@ describe('animation lifecycle ownership', () => {
       'replacement:start',
     ]);
 
-    crc(canvas, undefined);
+    pibbl(canvas, undefined);
     driver.flush(50);
     expect(animationOwnershipSnapshot()).toMatchObject({
       activePlaybacks: baseline.activePlaybacks,
@@ -241,10 +241,10 @@ describe('animation lifecycle ownership', () => {
     const graphBaseline = exactSignalGraphSnapshot();
     const failedOutput = signal(0, { debugName: 'failed output' });
     const errors: unknown[] = [];
-    let failing!: CRCPlayback;
+    let failing!: PibblPlayback;
 
-    function FailingOwner(): CRCNode {
-      failing = usePlayback(track(failedOutput, defineAnimation({
+    function FailingOwner(): PibblNode {
+      failing = usePlayback(drive(failedOutput, defineAnimation({
         duration: 100,
         sample: ({ localTime }) => {
           if (localTime >= 10) throw new Error('owned sampler failed');
@@ -268,9 +268,9 @@ describe('animation lifecycle ownership', () => {
     expectReleasedAnimationState(baseline);
 
     const rootFailureOutput = signal(0);
-    let brokenPlayback!: CRCPlayback;
-    function BrokenOwner(): CRCNode {
-      brokenPlayback = usePlayback(track(rootFailureOutput, tween({
+    let brokenPlayback!: PibblPlayback;
+    function BrokenOwner(): PibblNode {
+      brokenPlayback = usePlayback(drive(rootFailureOutput, tween({
         from: 0,
         to: 10,
         duration: 100,
@@ -291,8 +291,8 @@ describe('animation lifecycle ownership', () => {
 
     const abortController = new AbortController();
     const abortedOutput = signal(0);
-    function AbortedOwner(): CRCNode {
-      usePlayback(track(abortedOutput, tween({
+    function AbortedOwner(): PibblNode {
+      usePlayback(drive(abortedOutput, tween({
         from: 0,
         to: 10,
         duration: 100,
@@ -319,8 +319,8 @@ describe('animation lifecycle ownership', () => {
     const remountCanvas = createCanvas();
     for (let cycle = 0; cycle < 5; cycle += 1) {
       const output = signal(0);
-      function FreshOwner(): CRCNode {
-        usePlayback(track(output, tween({
+      function FreshOwner(): PibblNode {
+        usePlayback(drive(output, tween({
           from: 0,
           to: 1,
           duration: 100,
@@ -439,10 +439,10 @@ function exactSignalGraphSnapshot(): ExactSignalGraphOwnershipSnapshot {
 
 function mount(
   canvas: HTMLCanvasElement,
-  node: CRCNode,
+  node: PibblNode,
   abortSignal?: AbortSignal,
-): CRCController {
-  const controller = crc(canvas, node, abortSignal === undefined ? undefined : {
+): PibblController {
+  const controller = pibbl(canvas, node, abortSignal === undefined ? undefined : {
     signal: abortSignal,
   });
   controllers.add(controller);

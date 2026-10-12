@@ -1,4 +1,4 @@
-import { learningExampleCatalog, getScenarioBySlug, loadScenario, type ScenarioController } from '@crc/scenarios';
+import { learningExampleCatalog, getScenarioBySlug, loadScenario, type ScenarioController } from '@pibbl/scenarios';
 import { afterEach, expect, it } from 'vitest';
 import { tab, pressKey, pointerDownLogicalPoint, pointerMoveLogicalPoint, pointerUpLogicalPoint } from './support/user-input';
 import { clickMouse } from './support/mouse-input';
@@ -25,6 +25,7 @@ it('diagnoses interception and verifies the repair through the same public appli
   // center (144, 112) lies within the action; one click must select item A.
   await controller.perform('inspect');
   const seed = controller.getState();
+  expect(seed.runtimeCompatibility).toMatchObject({ status: 'accepted', reason: null, diagnostic: { relation: 'same-runtime', schedulers: 'shared', versions: 'matching' } });
   const pixel = () => Array.from(canvas.getContext('2d')!.getImageData(144, 112, 1, 1).data);
   expect(pixel()).toEqual([37, 99, 235, 255]);
   expect(seed.signalInspection?.records).toHaveLength(6);
@@ -113,7 +114,7 @@ it('publishes structured, historical evidence and releases the test harness on d
   expect(controller.getState().renderCount).toBeGreaterThan(initialRender);
   await controller.perform('inspect');
   const captured = JSON.parse(evidence!.textContent!);
-  expect(captured.schema).toBe('crc-targeting-fixture/1');
+  expect(captured.schema).toBe('pibbl-targeting-fixture/1');
   expect(captured.state.probe.status).toBe('target');
   expect(captured.state).toEqual(controller.getState());
   const firstSession = captured.state.inspection.generation.session;
@@ -133,7 +134,7 @@ it('keeps the agent fixture out of the public learning catalog', () => {
   expect(learningExampleCatalog.some(entry => entry.slug === 'agent-targeting-verification')).toBe(false);
 });
 
-it('cleans up evidence when the initial CRC mount fails', async () => {
+it('cleans up evidence when the initial Pibbl mount fails', async () => {
   const definition = await loadScenario(getScenarioBySlug('agent-targeting-verification')!);
   const canvas = document.createElement('canvas');
   canvas.width = 0;
@@ -312,4 +313,28 @@ it('exposes opt-in bounded click propagation evidence through the shared scenari
   await clickMouse(canvas, { x: 144, y: 112 }); await controller.settled();
   expect(controller.getState().selections).toBe(2);
   expect(controller.getState().eventTrace).toEqual(stopped);
+});
+
+it('exposes scene pages and cursor expiration through the same manually runnable lab actions', async () => {
+  const canvas = document.createElement('canvas'); canvas.width = 480; canvas.height = 240;
+  canvas.style.cssText = 'width:480px;height:240px'; document.body.append(canvas);
+  const host = document.createElement('div'); document.body.append(host);
+  controller = await (await loadScenario(getScenarioBySlug('agent-targeting-verification')!)).mount({ canvas, referenceHost: host });
+  await controller.perform('pagination-scene'); await controller.perform('scene-page-first');
+  const first = controller.getState();
+  expect(first.scenePage).toMatchObject({ status: 'ready', completeness: 'complete' });
+  expect(first.scenePage.totalRecords).toBeGreaterThan(100);
+  const records = [...first.scenePage.records];
+  while (controller.getState().scenePage.nextCursor) {
+    await controller.perform('scene-page-next'); records.push(...controller.getState().scenePage.records);
+  }
+  expect(records).toHaveLength(first.scenePage.totalRecords);
+  expect(records.map(record => record.order)).toEqual(Array.from({ length: records.length }, (_, i) => i));
+  expect(controller.getState().renderCount).toBe(first.renderCount);
+  expect(controller.getState().dormantMetricEvaluations).toBe(0);
+  await expect(controller.perform('scene-page-next')).rejects.toThrow('No scene continuation');
+  await controller.perform('scene-page-first'); await controller.perform('repair');
+  await controller.perform('scene-page-next');
+  expect(controller.getState().scenePage).toMatchObject({ status: 'cursor-expired', records: [], nextCursor: null });
+  expect(first.scenePage.records).toHaveLength(32);
 });

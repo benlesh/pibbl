@@ -1,5 +1,5 @@
 import { GLOBAL_STATE } from '../global-state.js';
-import type { CRCComponentRefs, CRCInstance, CRCRenderTransaction } from '../types.js';
+import type { PibblComponentRefs, PibblInstance, PibblRenderTransaction } from '../types.js';
 import {
   adoptComputedFormulaCandidate,
   computed,
@@ -16,32 +16,42 @@ import {
   withHooksForbidden,
 } from './hook-slot.js';
 
-interface CRCComputedHookSlot<T> {
+interface PibblComputedHookSlot<T> {
   readonly candidates: WeakMap<
-    CRCRenderTransaction,
+    PibblRenderTransaction,
     ComputedFormulaCandidate<T>
   >;
-  readonly componentRefs: CRCComponentRefs<any>;
-  readonly crcInstance: CRCInstance;
+  readonly componentRefs: PibblComponentRefs<any>;
+  readonly pibblInstance: PibblInstance;
   dependencies: readonly unknown[] | undefined;
   readonly output: Signal<T>;
   readonly signal: Signal<T>;
   renderRevision: number;
 }
 
-/** Creates one component-owned lazy computed signal for a mounted hook slot. */
+/**
+ * Creates one component-owned lazy computed signal for a mounted hook slot.
+ *
+ * @param compute - Synchronous calculation whose signal reads are tracked.
+ * @param dependencies - Values controlling replacement of the captured computation.
+ * @param options - Equality comparison and optional diagnostic name. See {@link SignalOptions}.
+ * @returns A mount-owned readonly computed signal. See {@link Signal}.
+ *
+ * @see {@link SignalOptions}
+ * @see {@link Signal}
+ */
 export function useComputed<T>(
   compute: () => T,
   dependencies?: readonly unknown[],
   options?: SignalOptions<T>,
 ): Signal<T> {
-  const { componentRefs, crcInstance } = requireHookContext();
+  const { componentRefs, pibblInstance } = requireHookContext();
   const formula = guardedFormula(compute);
   const dependencySnapshot = snapshotDependencies(dependencies);
-  const slot = useHookSlot<CRCComputedHookSlot<T>>('computed', () => {
+  const slot = useHookSlot<PibblComputedHookSlot<T>>('computed', () => {
     const output = computed(formula, options);
     const candidates = new WeakMap<
-      CRCRenderTransaction,
+      PibblRenderTransaction,
       ComputedFormulaCandidate<T>
     >();
     const signal = createComputedSignalAlias(output, () => {
@@ -54,7 +64,7 @@ export function useComputed<T>(
     return {
       candidates,
       componentRefs,
-      crcInstance,
+      pibblInstance,
       dependencies: dependencySnapshot,
       output,
       signal,
@@ -64,7 +74,7 @@ export function useComputed<T>(
 
   const transaction = GLOBAL_STATE.renderTransaction;
   if (!transaction) {
-    throw new Error('useComputed requires an active CRC render transaction.');
+    throw new Error('useComputed requires an active Pibbl render transaction.');
   }
   const dependenciesChanged = !dependencySnapshotsEqual(
     slot.dependencies,
@@ -102,7 +112,7 @@ export function useComputed<T>(
 
 function guardedFormula<T>(compute: () => T): () => T {
   return () => withHooksForbidden(
-    'CRC hooks cannot be called inside a useComputed formula.',
+    'Pibbl hooks cannot be called inside a useComputed formula.',
     compute,
   );
 }
@@ -125,9 +135,9 @@ function dependencySnapshotsEqual(
   return true;
 }
 
-function isCurrentSlot(slot: CRCComputedHookSlot<unknown>): boolean {
+function isCurrentSlot(slot: PibblComputedHookSlot<unknown>): boolean {
   return !slot.componentRefs.teardowns.closed &&
-    !slot.crcInstance.mainTeardowns.closed &&
-    GLOBAL_STATE.crcInstances.get(slot.crcInstance.canvas) === slot.crcInstance &&
-    slot.crcInstance.refs.get(slot.componentRefs.id) === slot.componentRefs;
+    !slot.pibblInstance.mainTeardowns.closed &&
+    GLOBAL_STATE.pibblInstances.get(slot.pibblInstance.canvas) === slot.pibblInstance &&
+    slot.pibblInstance.refs.get(slot.componentRefs.id) === slot.componentRefs;
 }

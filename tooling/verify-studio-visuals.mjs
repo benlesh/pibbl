@@ -9,20 +9,14 @@ const update = process.argv.includes("--update");
 const requestedRouteNames = process.argv
   .filter((argument) => argument.startsWith("--route="))
   .map((argument) => argument.slice("--route=".length));
-const previewPort = process.env.CRC_STUDIO_PREVIEW_PORT ?? "4174";
+const previewPort = process.env.PIBBL_STUDIO_PREVIEW_PORT ?? "4174";
 if (!/^[1-9]\d{0,4}$/.test(previewPort) || Number(previewPort) > 65_535) {
   throw new Error(
-    `CRC_STUDIO_PREVIEW_PORT must be an integer from 1 through 65535; received ${JSON.stringify(previewPort)}.`,
+    `PIBBL_STUDIO_PREVIEW_PORT must be an integer from 1 through 65535; received ${JSON.stringify(previewPort)}.`,
   );
 }
 const origin = `http://127.0.0.1:${previewPort}`;
 const allRoutes = [
-  {
-    name: "learn-landing",
-    hash: "#/learn",
-    ready: ".documentation-body a[href='#/learn/tutorials/diagram-editor']",
-  },
-  { name: "api-crc", hash: "#/api/functions/crc", ready: ".documentation-page h1" },
   { name: "examples-landing", hash: "#/examples", ready: ".studio-hero-canvas canvas" },
   {
     name: "filters",
@@ -31,22 +25,11 @@ const allRoutes = [
     waitForWorkbench: true,
   },
   {
-    name: "diagram-editor-landing",
-    hash: "#/learn/tutorials/diagram-editor",
-    ready: "img[src$='/tutorials/diagram-editor/finished-editor.png']",
-  },
-  {
     name: "diagram-editor-finished",
-    hash: "#/learn/tutorials/diagram-editor/finished-editor",
+    hash: "#/workbench/diagram-editor-finished",
     ready: ".studio-preview__frame",
     waitForWorkbench: true,
     captureSelector: ".studio-preview__frame",
-  },
-  {
-    name: "search-open",
-    hash: "#/learn",
-    ready: ".documentation-body a[href='#/learn/tutorials/diagram-editor']",
-    openSearch: true,
   },
   {
     name: "test-lab",
@@ -60,7 +43,7 @@ const unknownRouteNames = requestedRouteNames.filter(
 );
 if (unknownRouteNames.length > 0) {
   throw new Error(
-    `Unknown CRC Studio visual route(s): ${unknownRouteNames.join(", ")}.`,
+    `Unknown Pibbl Studio visual route(s): ${unknownRouteNames.join(", ")}.`,
   );
 }
 const requestedRouteNameSet = new Set(requestedRouteNames);
@@ -161,34 +144,22 @@ let browser;
 try {
   await waitForServer(server);
   browser = await chromium.launch({ headless: true });
-  const mainPage = await browser.newPage({
-    viewport: { width: 1280, height: 900 },
-    colorScheme: "light",
-    reducedMotion: "reduce",
-    locale: "en-US",
-    timezoneId: "UTC",
-    deviceScaleFactor: 1,
-  });
   await mkdir(resolve(workspaceRoot, "test-screenshots/studio"), {
     recursive: true,
   });
 
   for (const route of routes) {
-    // Chromium renders this sandboxed Canvas text differently after earlier
-    // routes in the same page, even after iframe fonts and paint have settled.
-    // Capture it in a fresh page; navigation continuity is covered separately
-    // by the Studio documentation acceptance suite.
-    const isolated = route.name === "filters";
-    const page = isolated
-      ? await browser.newPage({
-          viewport: { width: 1280, height: 900 },
-          colorScheme: "light",
-          reducedMotion: "reduce",
-          locale: "en-US",
-          timezoneId: "UTC",
-          deviceScaleFactor: 1,
-        })
-      : mainPage;
+    // Canvas text rasterization can depend on earlier SPA navigation, even
+    // after fonts and paint settle. Visual cases must have independent browser
+    // state; navigation continuity is tested by Studio documentation acceptance.
+    const page = await browser.newPage({
+      viewport: { width: 1280, height: 900 },
+      colorScheme: "light",
+      reducedMotion: "reduce",
+      locale: "en-US",
+      timezoneId: "UTC",
+      deviceScaleFactor: 1,
+    });
     await page.goto(`${origin}/${route.hash}`);
     await page.locator(route.ready).waitFor({ timeout: 30_000 });
     await page.evaluate(() => window.scrollTo({ top: 0, behavior: "instant" }));
@@ -196,12 +167,6 @@ try {
     await page.evaluate(() => {
       if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
     });
-    if (route.openSearch) {
-      await page.evaluate(() => window.scrollTo({ top: 0, behavior: "instant" }));
-      await page.waitForFunction(() => window.scrollY === 0);
-      await page.getByRole("button", { name: "Search documentation" }).first().click();
-      await page.locator(".studio-search-dialog[open]").waitFor({ timeout: 30_000 });
-    }
     if (route.waitForWorkbench) {
       if (route.captureSelector)
         await page.locator(route.ready).scrollIntoViewIfNeeded();
@@ -272,7 +237,6 @@ try {
           fullPage: true,
           animations: "disabled",
         });
-    if (route.openSearch) await page.keyboard.press("Escape");
     const baselinePath = resolve(
       workspaceRoot,
       `packages/core/test/visual-baselines/studio-${route.name}.expected.png`,
@@ -280,7 +244,7 @@ try {
     await writeFile(actualPath, actual);
     if (update) {
       await writeFile(baselinePath, actual);
-      if (isolated) await page.close();
+      await page.close();
       continue;
     }
     const expected = await readFile(baselinePath).catch(() => undefined);
@@ -294,10 +258,10 @@ try {
         `Studio visual "${route.name}" differs by ${comparison.differentPixels} pixels (${comparison.dimensions}). Inspect ${actualPath}.`,
       );
     }
-    if (isolated) await page.close();
+    await page.close();
   }
   process.stdout.write(
-    `${update ? "Updated and inspected" : "Matched"} ${routes.length} CRC studio visual baselines.\n`,
+    `${update ? "Updated and inspected" : "Matched"} ${routes.length} Pibbl studio visual baselines.\n`,
   );
 } catch (error) {
   if (serverOutput) process.stderr.write(serverOutput);

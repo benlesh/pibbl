@@ -6,7 +6,7 @@
 
 Task 10 is implemented and ready to commit.
 
-- Workspace: `/private/tmp/crc-jsx-component-authoring`
+- Workspace: `/private/tmp/pibbl-jsx-component-authoring`
 - Branch: `codex/jsx-component-authoring`
 - Required start: `8c66e3f2305556550a9ed0d1b46d2747177f1ea9`
 - Runtime: Node `v26.7.0`, pnpm `11.21.0`
@@ -41,11 +41,11 @@ deterministic test-lab scenarios remain a separate, unchanged catalog.
   Focus lessons use `FocusManagement` and `KeyboardNavigation` policy
   components.
 - Drawing styles are explicit `style={{ ... }}` objects. The Flex lesson shows
-  that a child receives its specified `style` while `crcLayoutBox()` exposes the
+  that a child receives its specified `style` while `pibblLayoutBox()` exposes the
   allocation resolved by the parent.
 - Getting Started introduces a stateless plain function before adding state and
   click feedback. Focus prose states that the Canvas is the single native focus
-  host and that CRC does not create semantic DOM or an accessibility tree.
+  host and that Pibbl does not create semantic DOM or an accessibility tree.
 
 All 41 existing canvas metadata values and all existing `related` lists remain
 unchanged. The generated previous/next chain changes only where the required
@@ -252,7 +252,7 @@ visual baseline was rewritten.
   authoring, no lowercase factory calls/imports, no `TextStyle.text`, and no
   `Layer` render prop. False-positive `path.rect(...)` calls in focus geometry
   helpers and lowercase SVG tags inside an image data URI are browser APIs/data,
-  not CRC authoring.
+  not Pibbl authoring.
 - The dedicated non-JSX source contains no JSX element syntax. Every other
   lesson contains uppercase descriptive JSX.
 - Existing canvas metadata and related lists were compared in the catalog diff;
@@ -287,7 +287,7 @@ The validator now:
   namespaced element names;
 - parses legal TypeScript generics, `as` assertions, and comparisons without
   treating angle brackets as JSX;
-- accepts only static `ImportDeclaration` nodes from `@crc/core`, with named
+- accepts only static `ImportDeclaration` nodes from `@pibbl/core`, with named
   specifiers and at least one value import; inline named type specifiers remain
   valid;
 - rejects namespace, default, side-effect, external/helper, dynamic, and
@@ -295,7 +295,7 @@ The validator now:
 - resolves imported and local binding names so aliased legacy factories and
   focus enhancers remain forbidden;
 - follows namespace member syntax before rejecting the namespace import shape,
-  including `CRC.rect`;
+  including `Pibbl.rect`;
 - recognizes `createElement` calls through the resolved core import rather than
   arbitrary text;
 - detects legacy `Text` `style.text` and `Layer` `render` only when the JSX or
@@ -405,7 +405,7 @@ git diff --check: no output
   Legacy decisions use AST node kinds and resolved bindings, not source words.
 - Inline `type` specifiers on an approved named value import remain supported,
   matching all 42 real lessons. Standalone type-only imports are rejected
-  because a lesson must import at least one executable CRC value.
+  because a lesson must import at least one executable Pibbl value.
 - Reserved tags are checked per entry before the global one-authoring-lesson and
   adjacency rule, so an extra JSX tag cannot be hidden by a valid non-JSX entry.
 - No migrated lesson, test-lab source, catalog prose, relationship, canvas size,
@@ -426,7 +426,7 @@ export. This round closes those bypasses in the shared AST validator.
 Learning examples now use a deliberately narrow syntax that a reader and the
 catalog checker can inspect locally:
 
-- `@crc/core` value and type specifiers must retain their exported names. A
+- `@pibbl/core` value and type specifiers must retain their exported names. A
   core value cannot be copied to an alias, reassigned, or shadowed by a local
   declaration or parameter. The validator resolves identifiers from the
   parsed core import map and checks their AST binding and value positions; it
@@ -436,7 +436,7 @@ catalog checker can inspect locally:
   value positions are rejected, which structurally prevents variable,
   destructuring, conditional, and object-held component aliases.
 - JSX spread attributes are rejected. A `style` prop on a directly imported
-  CRC JSX component must be an inline object with static keys and no spreads.
+  Pibbl JSX component must be an inline object with static keys and no spreads.
 - Every direct `createElement` call must provide either `null` or an inline,
   static-key props object. Its `style`, when present, must also be an inline,
   spread-free object. This keeps legacy `Text` content and `Layer` render props
@@ -557,7 +557,7 @@ generated index, runtime package, or visual baseline.
   invocation of any of these imports is rejected in JSX and non-JSX lessons;
   construction must use JSX or `createElement`.
 - Direct calls to non-component public values remain valid. Executable fixtures
-  cover `crc`, `crcState`, `crcMemo`, `resolveLength`, and `measureElement`,
+  cover `pibbl`, `pibblState`, `pibblMemo`, `resolveLength`, and `measureElement`,
   while the catalog continues to exercise direct `createElement` calls in the
   sole non-JSX lesson.
 - Inspectable props and styles now contain only static `ObjectProperty` nodes.
@@ -678,7 +678,7 @@ entry, test-lab fixture, generated index, runtime package, or visual baseline.
 ### Structural enforcement changes
 
 - Authoring modes are now exclusive in both directions. A JSX lesson must
-  contain JSX and no direct call resolving to the imported `@crc/core`
+  contain JSX and no direct call resolving to the imported `@pibbl/core`
   `createElement`; the dedicated non-JSX lesson must contain no JSX and at
   least one such call.
 - The strict no-shadowing scan now uses one function-like binding list for
@@ -784,7 +784,7 @@ server permission; this was an environment restriction, not a product failure.
   contract, and no lesson, catalog, runtime, index, or baseline file changed.
 - The authoring check consumes the resolved core import map rather than source
   spelling. Because accepted learning sources forbid every lexical shadow of a
-  core import, a counted `createElement` call is the imported CRC function.
+  core import, a counted `createElement` call is the imported Pibbl function.
 - Global CommonJS detection is exact-segment and known-root based. It covers
   asserted, computed, nested, and optional chains without treating
   `loader.require` or `loader.module.exports` as CommonJS.
@@ -815,7 +815,7 @@ entry, runtime source, generated index, test-lab fixture, or visual baseline.
 - Direct descriptive components remain invalid across normal, optional,
   constructor, tagged-template, and TypeScript-wrapped call shapes. The tagged
   reference exception is deliberately limited to imported `createElement`;
-  other CRC values remain rejected as tags under the direct-binding policy.
+  other Pibbl values remain rejected as tags under the direct-binding policy.
 - `propertyName` now unwraps transparent expression wrappers and returns the
   cooked value of a no-substitution `TemplateLiteral`, in addition to ordinary
   identifiers and string literals. Computed member resolution separately
@@ -845,7 +845,7 @@ component and unrelated-object cases were already green during RED.
 
 The first GREEN run passed 169 tests. Bounded self-review then found that the
 initial tagged-callee exception was too broad and could admit tagged use of
-another CRC value. An additional regression fixture failed alone while the
+another Pibbl value. An additional regression fixture failed alone while the
 other 169 tests stayed green:
 
 ```text

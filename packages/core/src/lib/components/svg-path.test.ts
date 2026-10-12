@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { crc } from '../crc';
+import { pibbl } from '../pibbl';
 import { componentTest } from '../test-utils/component-test';
 import { SvgPath } from './svg-path';
 import { createElement } from '../element/create-element';
@@ -14,7 +14,7 @@ describe('svgPath', () => {
     }));
     expect(pixel(canvas.element, 20, 20)).toEqual([255, 0, 0, 255]);
 
-    crc(canvas.element, createElement(SvgPath, {
+    pibbl(canvas.element, createElement(SvgPath, {
       style: {
         d: 'M 40 10 H 60 V 30 H 40 Z',
         fill: '#0000ff',

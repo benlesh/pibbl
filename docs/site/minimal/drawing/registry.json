@@ -1,0 +1,273 @@
+[
+  {
+    "id": "round-shapes",
+    "title": "Rounded and circular marks",
+    "description": "Draw a circle, ellipse, rounded rectangle, arc, and wedge with typed props and styles.",
+    "source": "round-shapes.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "Arc",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "ArcProps",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "ArcStyle",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "Circle",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "CircleProps",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "CircleStyle",
+        "importPath": "@pibbl/core"
+      },
+      { "name": "CursorStyle", "importPath": "@pibbl/core" },
+      { "name": "FillStyle", "importPath": "@pibbl/core" },
+      { "name": "PaintStyle", "importPath": "@pibbl/core" },
+      {
+        "name": "Ellipse",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "EllipseProps",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "EllipseStyle",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "Rectangle",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "RectangleProps",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "RectStyle",
+        "importPath": "@pibbl/core"
+      },
+      { "name": "RoundedCornerStyle", "importPath": "@pibbl/core" },
+      { "name": "StrokeStyle", "importPath": "@pibbl/core" },
+      {
+        "name": "Wedge",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "WedgeProps",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "WedgeStyle",
+        "importPath": "@pibbl/core"
+      }
+    ],
+    "notes": [
+      "Creates its own canvas and disposes the Pibbl mount on pagehide."
+    ]
+  },
+  {
+    "id": "polygons",
+    "title": "Polygon marks",
+    "description": "Draw a rounded triangle, regular hexagon, and five-point star.",
+    "source": "polygons.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "Polygon",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PolygonProps",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PolygonStyle",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "RegularPolygon",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "RegularPolygonProps",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "RegularPolygonStyle",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "Star",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "StarProps",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "StarStyle",
+        "importPath": "@pibbl/core"
+      }
+    ],
+    "notes": [
+      "Creates its own canvas and disposes the Pibbl mount on pagehide."
+    ]
+  },
+  {
+    "id": "strokes-paths",
+    "title": "Lines and authored paths",
+    "description": "Combine polyline, axis-aligned strokes, mutable geometry, and SVG path data.",
+    "source": "strokes-paths.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "HorizontalLine",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "HorizontalLineProps",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "HorizontalLineStyle",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "Line",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "LineProps",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "LineStyle",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "Path",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PathProps",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PathStyle",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "SvgPath",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "SvgPathProps",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "SvgPathStyle",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "VerticalLine",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "VerticalLineProps",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "VerticalLineStyle",
+        "importPath": "@pibbl/core"
+      }
+    ],
+    "notes": [
+      "Creates its own canvas and disposes the Pibbl mount on pagehide."
+    ]
+  },
+  {
+    "id": "composition",
+    "title": "Drawing composition",
+    "description": "Group, cache, and clip a drawing, then add text and an embedded thumbnail.",
+    "source": "composition.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "Clip",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "ClipProps",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "ClipStyle",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "Group",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "GroupProps",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "GStyle",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "Image",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "ImageProps",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "ImgStyle",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "Layer",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "LayerProps",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "LayerStyle",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "Text",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "TextProps",
+        "importPath": "@pibbl/core"
+      },
+      { "name": "TextFit", "importPath": "@pibbl/core" },
+      {
+        "name": "TextStyle",
+        "importPath": "@pibbl/core"
+      }
+    ],
+    "notes": [
+      "Creates its own canvas and disposes the Pibbl mount on pagehide.",
+      "The image uses an embedded PNG data URL; no external asset request is needed."
+    ]
+  }
+]

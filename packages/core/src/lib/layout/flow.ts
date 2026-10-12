@@ -1,12 +1,12 @@
 import { preparedStyleValue, preparedStyleQuery, type PreparedQuery } from '../style/responsive.js';
 import { definePrimitive } from '../define-primitive.js';
-import { cloneCRCElement } from '../element/create-element.js';
+import { clonePibblElement } from '../element/create-element.js';
 import { getChildPrimitiveReceiverToken } from '../element/metadata.js';
-import type { CRCElement } from '../element/types.js';
+import type { PibblElement } from '../element/types.js';
 import { GLOBAL_STATE } from '../global-state.js';
 import { layoutDiagnostic } from '../style/diagnostics.js';
 import {
-  type CRCStructuralEventProps,
+  type PibblStructuralEventProps,
   wireStructuralEvents,
 } from '../components/structural-events.js';
 import { normalizeEdges } from '../style/normalize.js';
@@ -14,7 +14,7 @@ import { setPreNormalizedStyle } from '../style/resolve-dispatch.js';
 import type { BoxStyle, LayoutItemStyle, ResolvedBoxStyle } from '../style/types.js';
 import type {
   CanvasMeasurementService,
-  CRCNodeInput,
+  PibblNodeInput,
   MeasureInput,
   MeasureResult,
   RenderingContext2D,
@@ -38,16 +38,35 @@ import type { Constraints, LayoutBox } from './types.js';
 type FlowDirection = 'horizontal' | 'vertical';
 type FlowAlignment = 'start' | 'center' | 'end' | 'stretch';
 
+/**
+ * Supported geometry and presentation properties for Flow.
+ *
+ * @see {@link BoxStyle}
+ * @see {@link LayoutItemStyle}
+ * @see {@link Flow}
+ */
 export interface FlowStyle extends BoxStyle, LayoutItemStyle {
+  /** Direction in which this operation proceeds. See {@link FlowDirection}. */
   direction?: FlowDirection;
+  /** Whether content may wrap into additional lines. See {@link FlowStyle}. */
   wrap?: boolean;
+  /** Spacing between adjacent items. See {@link FlowStyle}. */
   gap?: number;
+  /** Space between wrapped flow lines. See {@link FlowStyle}. */
   lineGap?: number;
+  /** Default alignment of children on the cross or block axis. See {@link FlowAlignment}. */
   alignItems?: FlowAlignment;
 }
 
-export interface FlowProps extends CRCStructuralEventProps {
-  children: CRCNodeInput;
+/**
+ * Authored inputs for Flow, including the declared data and presentation options.
+ *
+ * @see {@link PibblNodeInput}
+ * @see {@link Flow}
+ */
+export interface FlowProps extends PibblStructuralEventProps {
+  /** Descendant content or the callback that supplies it. See {@link PibblNodeInput}. */
+  children: PibblNodeInput;
 }
 
 interface ResolvedFlowStyle extends SystemStyle {
@@ -61,7 +80,7 @@ interface ResolvedFlowStyle extends SystemStyle {
 }
 
 interface FlowItem {
-  child: CRCElement<any>;
+  child: PibblElement<any>;
   normalized: Readonly<SystemStyle>;
   width: number;
   height: number;
@@ -75,14 +94,14 @@ interface FlowItem {
 export interface FlowMeasurementInput {
   service: CanvasMeasurementService;
   measureElement(
-    element: CRCElement<any>,
+    element: PibblElement<any>,
     constraints: Readonly<Constraints>,
   ): MeasureResult;
 }
 
 interface FlowPlacement {
   box: LayoutBox;
-  element: CRCElement<any>;
+  element: PibblElement<any>;
 }
 
 function renderFlow(
@@ -133,7 +152,16 @@ function renderFlow(
   );
 }
 
-/** Describes sequential flow layout for JSX or createElement authoring. */
+/**
+ * Describes sequential flow layout for JSX or createElement authoring.
+ *
+ * @param props - Authored component inputs, supplied through JSX or createElement. See the linked
+ * props and style types.
+ * @throws When called directly; Pibbl mounts this component through JSX or createElement.
+ *
+ * @see {@link FlowProps}
+ * @see {@link FlowStyle}
+ */
 export const Flow = definePrimitive<
   FlowProps,
   FlowStyle,
@@ -151,7 +179,7 @@ export const Flow = definePrimitive<
 
 export function layoutFlow(
   container: Readonly<LayoutBox>,
-  children: CRCNodeInput,
+  children: PibblNodeInput,
   style: Readonly<FlowStyle>,
   measurement: FlowMeasurementInput,
 ): LayoutBox[] {
@@ -162,7 +190,7 @@ export function layoutFlow(
 
 function resolveFlowPlacements(
   container: Readonly<LayoutBox>,
-  children: readonly CRCElement<any>[],
+  children: readonly PibblElement<any>[],
   style: Readonly<FlowStyle>,
   measurement: FlowMeasurementInput,
 ): FlowPlacement[] {
@@ -191,7 +219,7 @@ function resolveFlowPlacements(
         minHeight: 0,
         maxHeight: container.height,
       };
-      const measurementChild = cloneCRCElement(child);
+      const measurementChild = clonePibblElement(child);
       setPreNormalizedStyle(
         measurementChild,
         normalized,
@@ -490,7 +518,7 @@ function nonnegativeOption(
 function resolveItemAlignment(
   value: LayoutItemStyle['alignSelf'],
   fallback: FlowAlignment,
-  child: CRCElement<any>,
+  child: PibblElement<any>,
   container: Readonly<LayoutBox>,
 ): FlowAlignment {
   if (value === undefined || value === 'auto') return fallback;

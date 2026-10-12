@@ -22,7 +22,7 @@ import {
   requiresProgramActivationWriterSafety,
   type ResolvedWriterSchedule,
 } from './program.js';
-import type { CRCAnimationProgram } from './types.js';
+import type { PibblAnimationProgram } from './types.js';
 
 declare const programActivationBrand: unique symbol;
 
@@ -113,7 +113,7 @@ export interface TerminalStepperSnapshot {
 }
 
 export interface ProgramActivationRecord {
-  readonly program: CRCAnimationProgram;
+  readonly program: PibblAnimationProgram;
   readonly registration: object;
   readonly originalValues: ReadonlyMap<WritableSignal<unknown>, unknown>;
   readonly trackStarts: readonly TrackStartSnapshot[];
@@ -130,7 +130,7 @@ interface InternalTrackStart {
 }
 
 interface InternalProgramActivation {
-  readonly program: CRCAnimationProgram;
+  readonly program: PibblAnimationProgram;
   readonly registration: object;
   readonly originalValues: ReadonlyMap<WritableSignal<unknown>, unknown>;
   starts: Map<string, InternalTrackStart>;
@@ -336,9 +336,9 @@ function releaseActivationStepperKeys(activation: ProgramActivation): void {
   releasedStepperStates += tracked.size;
   activationStepperKeys.delete(activation);
 }
-const baselineWriter = Object.freeze({ name: 'CRC animation activation baseline' });
-const directRepeatSelection = new WeakMap<CRCAnimationProgram, boolean>();
-const containsStepperDefinition = new WeakMap<CRCAnimationProgram, boolean>();
+const baselineWriter = Object.freeze({ name: 'Pibbl animation activation baseline' });
+const directRepeatSelection = new WeakMap<PibblAnimationProgram, boolean>();
+const containsStepperDefinition = new WeakMap<PibblAnimationProgram, boolean>();
 // Repeated zero-time work cannot be collapsed without dropping callbacks or
 // milestones. This fixed shared bound keeps one evaluation deterministic while
 // permitting useful finite bursts.
@@ -352,8 +352,8 @@ class StepperCallbackError extends Error {
 }
 
 function stepperLabel(debugName: string | undefined): string {
-  return debugName === undefined ? 'CRC animation stepper' :
-    `CRC animation stepper "${debugName}"`;
+  return debugName === undefined ? 'Pibbl animation stepper' :
+    `Pibbl animation stepper "${debugName}"`;
 }
 
 function reserveZeroDurationOccurrence(
@@ -367,7 +367,7 @@ function reserveZeroDurationOccurrence(
     const repeats = repeatIterations.length === 0 ? '' :
       `, repeat iterations [${repeatIterations.join(', ')}]`;
     throw new RangeError(
-      `CRC animation zero-duration occurrence budget of ` +
+      `Pibbl animation zero-duration occurrence budget of ` +
         `${maximumZeroDurationOccurrencesPerEvaluation} was exhausted before ` +
         `${label} at program path [${path.join(', ')}]${repeats}, ` +
         `frame ${state.frameId}.`,
@@ -425,7 +425,7 @@ function validateStepperOutput(value: unknown, debugName: string | undefined): u
   return value;
 }
 
-function programContainsStepper(program: CRCAnimationProgram): boolean {
+function programContainsStepper(program: PibblAnimationProgram): boolean {
   const cached = containsStepperDefinition.get(program);
   if (cached !== undefined) return cached;
   const record = getProgramRecord(program);
@@ -443,7 +443,7 @@ function knownProgramTerminalDuration(record: InternalProgramActivation): number
 }
 
 function validateActivationWriterSafety(
-  program: CRCAnimationProgram,
+  program: PibblAnimationProgram,
   originalValues: ReadonlyMap<WritableSignal<unknown>, unknown>,
 ): void {
   if (!requiresProgramActivationWriterSafety(program)) return;
@@ -488,7 +488,7 @@ function immutableMap<K, V>(source: ReadonlyMap<K, V>): ReadonlyMap<K, V> {
 
 function activationRecord(activation: ProgramActivation): InternalProgramActivation {
   const record = activationRecords.get(activation);
-  if (record === undefined) throw new TypeError('Expected a CRC animation program activation.');
+  if (record === undefined) throw new TypeError('Expected a Pibbl animation program activation.');
   return record;
 }
 
@@ -505,7 +505,7 @@ function stepperFrameBudgetKey(path: readonly number[]): string {
 
 function assertProgramTime(value: number, label: string): void {
   if (!Number.isFinite(value)) {
-    throw new RangeError(`CRC animation ${label} must be finite.`);
+    throw new RangeError(`Pibbl animation ${label} must be finite.`);
   }
 }
 
@@ -515,13 +515,13 @@ function assertEvaluationInput(input: ProgramEvaluationInput): void {
     assertProgramTime(input.previousTime, 'previous program time');
   }
   if (input.direction !== 'forward' && input.direction !== 'reverse') {
-    throw new TypeError('CRC animation traversal direction must be forward or reverse.');
+    throw new TypeError('Pibbl animation traversal direction must be forward or reverse.');
   }
   if (!Number.isFinite(input.frameId)) {
-    throw new RangeError('CRC animation frame identity must be finite.');
+    throw new RangeError('Pibbl animation frame identity must be finite.');
   }
   if (typeof input.writer !== 'object' || input.writer === null) {
-    throw new TypeError('CRC animation writer token must be an object.');
+    throw new TypeError('Pibbl animation writer token must be an object.');
   }
 }
 
@@ -545,7 +545,7 @@ function setDuration(
 }
 
 function knownDuration(
-  program: CRCAnimationProgram,
+  program: PibblAnimationProgram,
   state: SampleState,
   path: readonly number[],
   repeatIterations: readonly number[],
@@ -563,7 +563,7 @@ function knownDuration(
   return getExactSeekableProgramDuration(program);
 }
 
-function canDirectlySelectRepeat(program: CRCAnimationProgram): boolean {
+function canDirectlySelectRepeat(program: PibblAnimationProgram): boolean {
   const cached = directRepeatSelection.get(program);
   if (cached !== undefined) return cached;
   const record = getProgramRecord(program);
@@ -581,7 +581,7 @@ function canDirectlySelectRepeat(program: CRCAnimationProgram): boolean {
   return direct;
 }
 
-function needsCallbackFreeDurationSeed(program: CRCAnimationProgram): boolean {
+function needsCallbackFreeDurationSeed(program: PibblAnimationProgram): boolean {
   const record = getProgramRecord(program);
   if (record.kind === 'repeat' && record.direction !== 'normal' &&
     getExactSeekableProgramDuration(record.children[0]!) === undefined) {
@@ -652,7 +652,7 @@ function applyDiscoveredWrites(
 }
 
 function unknownRepeatDiscovery(
-  program: CRCAnimationProgram,
+  program: PibblAnimationProgram,
   outputs: readonly WritableSignal<unknown>[],
   state: DiscoveryState,
   path: readonly number[],
@@ -725,7 +725,7 @@ function assertResolvedWritersDisjoint(
       if (resolvedWriterSchedulesOverlap(firstSchedule, secondSchedule)) {
         const name = getSignalNode(firstWriter.output).debugName ?? '<unnamed signal>';
         throw new RangeError(
-          `CRC animation activation-dependent writer schedules at paths ` +
+          `Pibbl animation activation-dependent writer schedules at paths ` +
             `${resolvedWriterLabel(firstWriter)} and ` +
             `${resolvedWriterLabel(secondWriter)} overlap for signal "${name}".`,
         );
@@ -735,7 +735,7 @@ function assertResolvedWritersDisjoint(
 }
 
 function discoverTrack(
-  program: CRCAnimationProgram,
+  program: PibblAnimationProgram,
   state: DiscoveryState,
   path: readonly number[],
   repeatIterations: readonly number[],
@@ -749,7 +749,7 @@ function discoverTrack(
     if (terminal === undefined) {
       if (state.validateWriters) {
         throw new RangeError(
-          `CRC animation activation-dependent writer schedule at path ` +
+          `Pibbl animation activation-dependent writer schedule at path ` +
             `[${path.join(', ')}] contains a stepper whose terminal time is not discovered.`,
         );
       }
@@ -786,8 +786,8 @@ function discoverTrack(
     if (state.validateInputs && needsCapturedInput &&
       initialValue === unknownDiscoveredValue) {
       const label = definitionRecord.debugName === undefined ?
-        'CRC animation definition' :
-        `CRC animation definition "${definitionRecord.debugName}"`;
+        'Pibbl animation definition' :
+        `Pibbl animation definition "${definitionRecord.debugName}"`;
       throw new TypeError(
         `${label} activation input could not be determined callback-free at ` +
           `program path [${path.join(', ')}].`,
@@ -798,8 +798,8 @@ function discoverTrack(
         !definitionRecord.hasFrom && definitionRecord.interpolate === undefined &&
         (typeof initialValue !== 'number' || typeof definitionRecord.to !== 'number')) {
         const label = definitionRecord.debugName === undefined ?
-          'CRC animation definition' :
-          `CRC animation definition "${definitionRecord.debugName}"`;
+          'Pibbl animation definition' :
+          `Pibbl animation definition "${definitionRecord.debugName}"`;
         throw new TypeError(
           `${label} requires an explicit interpolator for nonnumeric values.`,
         );
@@ -904,7 +904,7 @@ function applyIterationEnd(
 }
 
 function discoverNode(
-  program: CRCAnimationProgram,
+  program: PibblAnimationProgram,
   requestedTime: number,
   state: DiscoveryState,
   path: readonly number[],
@@ -1070,7 +1070,7 @@ function discoverNode(
         );
       }
       throw new RangeError(
-        'CRC animation activation-dependent repeat writer period could not be proven finite.',
+        'Pibbl animation activation-dependent repeat writer period could not be proven finite.',
       );
     }
     const firstEndWrites = applyIterationEnd(state, initialValues, first, firstReversed);
@@ -1117,7 +1117,7 @@ function discoverNode(
         );
       }
       throw new RangeError(
-        'CRC animation activation-dependent repeat writer period could not be proven finite.',
+        'Pibbl animation activation-dependent repeat writer period could not be proven finite.',
       );
     }
     const secondEndWrites = applyIterationEnd(
@@ -1231,7 +1231,7 @@ function discoverNode(
           };
         }
         throw new RangeError(
-          'CRC animation activation-dependent alternating repeat writer schedule did not reach a bounded symbolic period.',
+          'Pibbl animation activation-dependent alternating repeat writer schedule did not reach a bounded symbolic period.',
         );
       }
       const pairDuration = first.duration + second.duration;
@@ -1273,7 +1273,7 @@ function discoverNode(
         );
       }
       throw new RangeError(
-        'CRC animation activation-dependent repeat writer schedule did not reach a bounded symbolic period.',
+        'Pibbl animation activation-dependent repeat writer schedule did not reach a bounded symbolic period.',
       );
     }
     assertResolvedWritersDisjoint(
@@ -1421,7 +1421,7 @@ function frozenStepperTrace(
 }
 
 function sampleStepperTrack(
-  program: CRCAnimationProgram,
+  program: PibblAnimationProgram,
   localTime: number,
   state: SampleState,
   path: readonly number[],
@@ -1670,7 +1670,7 @@ function sampleStepperTrack(
 }
 
 function sampleTrack(
-  program: CRCAnimationProgram,
+  program: PibblAnimationProgram,
   localTime: number,
   state: SampleState,
   path: readonly number[],
@@ -1866,14 +1866,14 @@ function clearOccurrenceState(
 }
 
 function programValues(
-  program: CRCAnimationProgram,
+  program: PibblAnimationProgram,
   batch: SignalCommitBatch,
 ): Map<WritableSignal<unknown>, unknown> {
   return new Map(getProgramRecord(program).outputs.map(output => [output, batch.read(output)]));
 }
 
 function stageProgramValues(
-  program: CRCAnimationProgram,
+  program: PibblAnimationProgram,
   values: ReadonlyMap<WritableSignal<unknown>, unknown>,
   state: SampleState,
   offset: number,
@@ -1890,7 +1890,7 @@ function stageProgramValues(
   }
 }
 
-function firstStepperDebugName(program: CRCAnimationProgram): string | undefined {
+function firstStepperDebugName(program: PibblAnimationProgram): string | undefined {
   const record = getProgramRecord(program);
   if (record.kind === 'track') {
     const definition = getDefinitionRecord(record.definition);
@@ -1926,7 +1926,7 @@ function isolatedReplayState(
 }
 
 function mergeReplaySample(
-  program: CRCAnimationProgram,
+  program: PibblAnimationProgram,
   replay: SampleState,
   state: SampleState,
   offset: number,
@@ -1938,7 +1938,7 @@ function mergeReplaySample(
 }
 
 function programValuesEqual(
-  program: CRCAnimationProgram,
+  program: PibblAnimationProgram,
   first: ReadonlyMap<WritableSignal<unknown>, unknown>,
   second: ReadonlyMap<WritableSignal<unknown>, unknown>,
 ): boolean {
@@ -1965,7 +1965,7 @@ function rememberForwardEndpoint(
 }
 
 function requireReverseEndpoint(
-  program: CRCAnimationProgram,
+  program: PibblAnimationProgram,
   state: SampleState,
   endpointPath: readonly number[],
   endpointRepeatIterations: readonly number[],
@@ -1997,7 +1997,7 @@ function requireReverseEndpoint(
 }
 
 function sampleReversedOccurrence(
-  program: CRCAnimationProgram,
+  program: PibblAnimationProgram,
   occurrenceTime: number,
   state: SampleState,
   path: readonly number[],
@@ -2039,7 +2039,7 @@ function reversedRepeatOccurrence(
 }
 
 function sampleStatefulRepeatFrontier(
-  program: CRCAnimationProgram,
+  program: PibblAnimationProgram,
   localTime: number,
   state: SampleState,
   path: readonly number[],
@@ -2165,11 +2165,11 @@ function sampleStatefulRepeatFrontier(
       undefined,
     );
   }
-  throw new Error('CRC animation repeat frontier exceeded its declared iterations.');
+  throw new Error('Pibbl animation repeat frontier exceeded its declared iterations.');
 }
 
 function sampleNode(
-  program: CRCAnimationProgram,
+  program: PibblAnimationProgram,
   requestedTime: number,
   state: SampleState,
   path: readonly number[],
@@ -2424,7 +2424,7 @@ function sampleNode(
 }
 
 function durationForTimeline(
-  program: CRCAnimationProgram,
+  program: PibblAnimationProgram,
   state: SampleState,
   path: readonly number[],
   repeatIterations: readonly number[],
@@ -2438,7 +2438,7 @@ function transformedTime(transform: TimeTransform, localTime: number): number {
 }
 
 function collectTimeline(
-  program: CRCAnimationProgram,
+  program: PibblAnimationProgram,
   requestedTime: number,
   state: SampleState,
   path: readonly number[],
@@ -2644,7 +2644,7 @@ function cloneStepperRecords(
 ): Map<string, InternalStepperRecord> {
   return new Map([...source].map(([key, stepperRecord]) => [key, {
     ...stepperRecord,
-    // A stepper's opaque state belongs to its callbacks. CRC can transact its
+    // A stepper's opaque state belongs to its callbacks. Pibbl can transact its
     // own mutable counters, but cannot clone arbitrary class/closure state
     // without changing user-observable identity or semantics.
     state: stepperRecord.state,
@@ -2782,7 +2782,7 @@ function evaluate(
   if (rebuildStarts && input.direction === 'reverse' && previousTime === undefined &&
     knownProgramTerminalDuration(record) === undefined) {
     throw new TypeError(
-      'CRC animation stateful terminal time is not discovered; reverse-from-idle is unavailable.',
+      'Pibbl animation stateful terminal time is not discovered; reverse-from-idle is unavailable.',
     );
   }
   const normalizedInput = { ...input, time, previousTime };
@@ -2955,11 +2955,11 @@ function evaluate(
 
 /** Captures one program token, its committed outputs, and registration identity. */
 export function activateProgram(
-  program: CRCAnimationProgram,
+  program: PibblAnimationProgram,
   registration: object,
 ): ProgramActivation {
   if (typeof registration !== 'object' || registration === null) {
-    throw new TypeError('CRC animation registration identity must be an object.');
+    throw new TypeError('Pibbl animation registration identity must be an object.');
   }
   const originalValues = captureProgramOriginalValues(program, false);
   const activation = Object.freeze({}) as ProgramActivation;
@@ -2999,7 +2999,7 @@ export function adoptProgramActivationFork(
   const source = activationRecord(fork);
   if (source.program !== target.program || source.registration !== target.registration ||
     source.originalValues !== target.originalValues) {
-      throw new TypeError('CRC animation activation fork does not belong to this activation.');
+      throw new TypeError('Pibbl animation activation fork does not belong to this activation.');
   }
   reconcileActivationStepperKeys(activation);
   reconcileActivationStepperKeys(fork);
@@ -3018,7 +3018,7 @@ export function adoptProgramActivationFork(
 }
 
 function captureProgramOriginalValues(
-  program: CRCAnimationProgram,
+  program: PibblAnimationProgram,
   validateInputs: boolean,
 ): ReadonlyMap<WritableSignal<unknown>, unknown> {
   const programRecord = getProgramRecord(program);
@@ -3036,7 +3036,7 @@ function captureProgramOriginalValues(
 }
 
 function validateCapturedDefinitionInputs(
-  program: CRCAnimationProgram,
+  program: PibblAnimationProgram,
   originalValues: ReadonlyMap<WritableSignal<unknown>, unknown>,
 ): void {
   if (!requiresCapturedDefinitionInput(program)) return;
@@ -3050,7 +3050,7 @@ function validateCapturedDefinitionInputs(
   discoverNode(program, Number.POSITIVE_INFINITY, state, [], []);
 }
 
-function requiresCapturedDefinitionInput(program: CRCAnimationProgram): boolean {
+function requiresCapturedDefinitionInput(program: PibblAnimationProgram): boolean {
   const record = getProgramRecord(program);
   if (record.kind === 'track') {
     const definition = getDefinitionRecord(record.definition);
@@ -3061,7 +3061,7 @@ function requiresCapturedDefinitionInput(program: CRCAnimationProgram): boolean 
 }
 
 /** @internal Validates one current committed activation snapshot without retaining it. */
-export function preflightProgramActivation(program: CRCAnimationProgram): void {
+export function preflightProgramActivation(program: PibblAnimationProgram): void {
   captureProgramOriginalValues(program, true);
 }
 
@@ -3105,7 +3105,7 @@ export function finishProgram(
   const duration = knownProgramTerminalDuration(record);
   if (duration === undefined) {
     throw new TypeError(
-      'CRC animation stateful terminal time is not discovered; finish is unavailable.',
+      'Pibbl animation stateful terminal time is not discovered; finish is unavailable.',
     );
   }
   try {

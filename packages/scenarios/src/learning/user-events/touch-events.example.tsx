@@ -1,12 +1,12 @@
 import {
-  crc,
+  pibbl,
   useSignal,
   Rectangle,
   Text,
-  type CRCController,
-  type CRCTouchEvent,
-} from "@crc/core";
-function touchSummary(event: CRCTouchEvent): string {
+  type PibblController,
+  type PibblTouchEvent,
+} from "@pibbl/core";
+function touchSummary(event: PibblTouchEvent): string {
   const changed = event.changedTouches[0];
   const identifier = changed ? changed.identifier : "–";
   return `${event.type} changed=#${identifier} at ${Math.round(event.x)},${Math.round(event.y)}  all=${event.touches.length} target=${event.targetTouches.length} changed=${event.changedTouches.length}`;
@@ -14,7 +14,7 @@ function touchSummary(event: CRCTouchEvent): string {
 function TouchEventsStudy() {
   const trace = useSignal<readonly string[]>([]);
   const activeContacts = useSignal(0);
-  const record = (event: CRCTouchEvent) => {
+  const record = (event: PibblTouchEvent) => {
     trace.update((current) => [...current.slice(-3), touchSummary(event)]);
     activeContacts.set(event.targetTouches.length);
   };
@@ -142,6 +142,6 @@ function TouchEventsStudy() {
     </Text>,
   ];
 }
-export default function mount(canvas: HTMLCanvasElement): CRCController {
-  return crc(canvas, <TouchEventsStudy />);
+export default function mount(canvas: HTMLCanvasElement): PibblController {
+  return pibbl(canvas, <TouchEventsStudy />);
 }

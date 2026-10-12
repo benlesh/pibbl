@@ -12,7 +12,7 @@ Vendor-color correction rerun: 2026-09-09
 
 A subsequent final re-review found that Chromium accepts the contextual vendor
 colors `-webkit-link` and `-webkit-activelink` in native drop shadows, while the
-CRC lexical set did not classify them as contextual. Direct Chromium
+Pibbl lexical set did not classify them as contextual. Direct Chromium
 `151.0.7922.34` probes retained all of these complete native chains:
 
 ```text
@@ -136,11 +136,11 @@ sentinel unchanged, but the full native filter retained
 `[255, 0, 0, 255]` and its contrast shadow was `[0, 0, 0, 255]`.
 `light-dark(red, blue)` likewise left the fill sentinel unchanged but was
 accepted by the native filter and resolved its light-scheme shadow to
-`[255, 0, 0, 255]`, which is why CRC rejects it lexically as contextual.
+`[255, 0, 0, 255]`, which is why Pibbl rejects it lexically as contextual.
 Concrete `color-mix(in srgb, red, blue)` and `rgb(from red r g b)` were accepted
 by both native accessors and rendered `[128, 0, 128, 255]` and
 `[255, 0, 0, 255]` shadows respectively. `currentColor` was accepted by the
-browser but remains an intentional lexical contextual rejection at the CRC
+browser but remains an intentional lexical contextual rejection at the Pibbl
 boundary.
 
 ### Fresh aggregate evidence

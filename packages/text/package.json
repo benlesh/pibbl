@@ -1,8 +1,8 @@
 {
-  "name": "@crc/text",
-  "version": "0.0.1",
+  "name": "@pibbl/text",
+  "version": "0.0.2",
   "type": "module",
-  "description": "Editable text outlines for CRC, powered by HarfBuzz WASM",
+  "description": "Editable text outlines for Pibbl, powered by HarfBuzz WASM",
   "license": "MIT",
   "sideEffects": false,
   "exports": {
@@ -13,7 +13,8 @@
     "./package.json": "./package.json"
   },
   "files": [
-    "dist"
+    "dist",
+    "!dist/testing.mjs"
   ],
   "scripts": {
     "setup": "node scripts/setup.mjs",
@@ -25,15 +26,24 @@
     "test:browser": "node test/studio.browser.mjs",
     "bench:browser": "node scripts/bench-browser.mjs",
     "verify:reproducible": "node scripts/reproducible.mjs",
-    "reference": "node scripts/reference.mjs"
+    "reference": "node scripts/reference.mjs",
+    "prepublishOnly": "pnpm run build"
   },
   "peerDependencies": {
-    "@crc/core": "0.0.1"
+    "@pibbl/core": "0.0.2"
   },
   "devDependencies": {
-    "@crc/core": "workspace:*"
+    "@pibbl/core": "workspace:*"
   },
   "browser": {
     "./dist/engine.mjs": "./dist/engine-browser.mjs"
-  }
+  },
+  "author": "Ben Lesh <ben@benlesh.com>",
+  "homepage": "https://github.com/benlesh/pibbl",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/benlesh/pibbl.git",
+    "directory": "packages/text"
+  },
+  "bugs": "https://github.com/benlesh/pibbl/issues"
 }

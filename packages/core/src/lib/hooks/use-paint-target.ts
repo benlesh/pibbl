@@ -1,35 +1,35 @@
 import type {
-  CRCEventHandlers,
-  CRCEventTargetOptions,
-  CRCEventTargetSnapshot,
-  CRCPointerEvents,
+  PibblEventHandlers,
+  PibblEventTargetOptions,
+  PibblEventTargetSnapshot,
+  PibblPointerEvents,
 } from '../events/types.js';
 import {
   createTarget,
   releaseTarget,
   updateTarget,
-  type CRCEventTargetRegistration,
+  type PibblEventTargetRegistration,
 } from '../events/registrations.js';
 import { GLOBAL_STATE } from '../global-state.js';
 import { requireHookContext, useHookSlot } from './hook-slot.js';
 
-const UNFOCUSED_SNAPSHOT: CRCEventTargetSnapshot = Object.freeze({
+const UNFOCUSED_SNAPSHOT: PibblEventTargetSnapshot = Object.freeze({
   isFocused: false,
   isFocusVisible: false,
 });
 
 /** @internal Keeps a built-in drawing primitive in paint hit testing by default. */
 export function usePaintTarget(
-  handlers: CRCEventHandlers,
-  options: CRCEventTargetOptions,
-  pointerEvents: CRCPointerEvents = 'auto',
-): CRCEventTargetSnapshot {
-  const { componentRefs, crcInstance } = requireHookContext();
+  handlers: PibblEventHandlers,
+  options: PibblEventTargetOptions,
+  pointerEvents: PibblPointerEvents = 'auto',
+): PibblEventTargetSnapshot {
+  const { componentRefs, pibblInstance } = requireHookContext();
   const hookIndex = GLOBAL_STATE.componentHookIndex;
-  const slot = useHookSlot<CRCEventTargetRegistration>(
+  const slot = useHookSlot<PibblEventTargetRegistration>(
     'paintTarget',
     teardowns => {
-      const target = createTarget(crcInstance, componentRefs, hookIndex);
+      const target = createTarget(pibblInstance, componentRefs, hookIndex);
       teardowns.add(() => releaseTarget(target));
       return target;
     },
@@ -40,6 +40,6 @@ export function usePaintTarget(
   } else {
     updateTarget(target, handlers, options, true);
   }
-  return crcInstance.eventRoot.focusPolicy?.snapshot(target) ??
+  return pibblInstance.eventRoot.focusPolicy?.snapshot(target) ??
     UNFOCUSED_SNAPSHOT;
 }

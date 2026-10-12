@@ -22,31 +22,37 @@ import {
   type ReactiveEdge,
   type SignalDependencyConsumer,
 } from '../signals/edge.js';
-import type { CRCComponentRefs, CRCInstance } from '../types.js';
+import type { PibblComponentRefs, PibblInstance } from '../types.js';
 import {
   requireHookContext,
   useHookSlot,
   withHooksForbidden,
 } from './hook-slot.js';
 
-export interface CRCReactionOptions {
+/**
+ * Options controlling when a signal reaction runs and how it is named for diagnostics.
+ *
+ * @see {@link useReaction}
+ */
+export interface PibblReactionOptions {
+  /** Optional label used in diagnostics. See {@link PibblReactionOptions}. */
   readonly debugName?: string;
 }
 
 interface ReactionConsumerState extends SignalDependencyConsumer {
   readonly kind: 'reaction';
-  readonly ownerComponent: CRCComponentRefs<any>;
+  readonly ownerComponent: PibblComponentRefs<any>;
   collecting: boolean;
   disposed: boolean;
 }
 
-interface CRCReactionHookSlot {
+interface PibblReactionHookSlot {
   active: boolean;
   cancelPending: (() => void) | undefined;
   cleanup: (() => void) | undefined;
-  readonly componentRefs: CRCComponentRefs<any>;
+  readonly componentRefs: PibblComponentRefs<any>;
   consumer: ReactionConsumerState | undefined;
-  readonly crcInstance: CRCInstance;
+  readonly pibblInstance: PibblInstance;
   dependencies: readonly unknown[] | undefined;
   readonly debugName: string | undefined;
   mounted: boolean;
@@ -56,23 +62,31 @@ interface CRCReactionHookSlot {
   setup: () => void | (() => void);
 }
 
-/** Owns one Complete-phase imperative reaction for a mounted hook slot. */
+/**
+ * Owns one Complete-phase imperative reaction for a mounted hook slot.
+ *
+ * @param setup - Setup callback; its optional returned cleanup runs when replaced or disposed.
+ * @param dependencies - Values controlling when setup is repeated.
+ * @param options - Optional diagnostic name for this reaction. See {@link PibblReactionOptions}.
+ *
+ * @see {@link PibblReactionOptions}
+ */
 export function useReaction(
   setup: () => void | (() => void),
   dependencies?: readonly unknown[],
-  options: CRCReactionOptions = {},
+  options: PibblReactionOptions = {},
 ): void {
-  const { componentRefs, crcInstance } = requireHookContext();
+  const { componentRefs, pibblInstance } = requireHookContext();
   const dependencySnapshot = snapshotDependencies(dependencies);
-  const slot = useHookSlot<CRCReactionHookSlot>('reaction', teardowns => {
-    let value!: CRCReactionHookSlot;
+  const slot = useHookSlot<PibblReactionHookSlot>('reaction', teardowns => {
+    let value!: PibblReactionHookSlot;
     value = {
       active: true,
       cancelPending: undefined,
       cleanup: undefined,
       componentRefs,
       consumer: undefined,
-      crcInstance,
+      pibblInstance,
       dependencies: undefined,
       debugName: options.debugName,
       mounted: false,
@@ -87,7 +101,7 @@ export function useReaction(
 
   const transaction = GLOBAL_STATE.renderTransaction;
   if (!transaction) {
-    throw new Error('useReaction requires an active CRC render transaction.');
+    throw new Error('useReaction requires an active Pibbl render transaction.');
   }
   const dependenciesChanged = !slot.mounted || !dependencySnapshotsEqual(
     slot.dependencies,
@@ -113,7 +127,7 @@ export function useReaction(
 
 function createReactionConsumer(
   invalidate: () => void,
-  ownerComponent: CRCComponentRefs<any>,
+  ownerComponent: PibblComponentRefs<any>,
 ): ReactionConsumerState {
   const state: ReactionConsumerState = {
     kind: 'reaction',
@@ -173,7 +187,7 @@ function collectReactionReads<T>(
   return result;
 }
 
-function scheduleReaction(slot: CRCReactionHookSlot): void {
+function scheduleReaction(slot: PibblReactionHookSlot): void {
   if (!slot.active || slot.pending) return;
   slot.pending = true;
   const generation = ++slot.pendingGeneration;
@@ -191,7 +205,7 @@ function scheduleReaction(slot: CRCReactionHookSlot): void {
   });
 }
 
-function runReaction(slot: CRCReactionHookSlot): void {
+function runReaction(slot: PibblReactionHookSlot): void {
   if (!slot.active || slot.consumer === undefined) return;
   const failures: unknown[] = [];
   const cleanup = slot.cleanup;
@@ -212,7 +226,7 @@ function runReaction(slot: CRCReactionHookSlot): void {
       () => withSignalWriteForbidden(
         'Cannot write to a signal during useReaction setup.',
         () => withHooksForbidden(
-          'CRC hooks cannot be called inside useReaction setup.',
+          'Pibbl hooks cannot be called inside useReaction setup.',
           slot.setup,
         ),
       ),
@@ -230,13 +244,13 @@ function runCleanup(cleanup: () => void): void {
   untracked(() => withSignalWriteForbidden(
     'Cannot write to a signal during useReaction cleanup.',
     () => withHooksForbidden(
-      'CRC hooks cannot be called inside useReaction cleanup.',
+      'Pibbl hooks cannot be called inside useReaction cleanup.',
       cleanup,
     ),
   ));
 }
 
-function disposeReaction(slot: CRCReactionHookSlot): void {
+function disposeReaction(slot: PibblReactionHookSlot): void {
   if (!slot.active) return;
   slot.active = false;
   clearPendingReaction(slot);
@@ -258,7 +272,7 @@ function disposeReaction(slot: CRCReactionHookSlot): void {
   }
 }
 
-function clearPendingReaction(slot: CRCReactionHookSlot): void {
+function clearPendingReaction(slot: PibblReactionHookSlot): void {
   slot.pending = false;
   slot.pendingGeneration++;
   const cancel = slot.cancelPending;
@@ -290,12 +304,12 @@ function dependencySnapshotsEqual(
   return true;
 }
 
-function isCurrentSlot(slot: CRCReactionHookSlot): boolean {
+function isCurrentSlot(slot: PibblReactionHookSlot): boolean {
   return slot.active &&
     !slot.componentRefs.teardowns.closed &&
-    !slot.crcInstance.mainTeardowns.closed &&
-    GLOBAL_STATE.crcInstances.get(slot.crcInstance.canvas) === slot.crcInstance &&
-    slot.crcInstance.refs.get(slot.componentRefs.id) === slot.componentRefs;
+    !slot.pibblInstance.mainTeardowns.closed &&
+    GLOBAL_STATE.pibblInstances.get(slot.pibblInstance.canvas) === slot.pibblInstance &&
+    slot.pibblInstance.refs.get(slot.componentRefs.id) === slot.componentRefs;
 }
 
 function throwReactionFailures(
@@ -307,7 +321,7 @@ function throwReactionFailures(
     const label = debugName === undefined ? '' : ` "${debugName}"`;
     throw new AggregateError(
       failures,
-      `CRC reaction${label} setup and cleanup failed.`,
+      `Pibbl reaction${label} setup and cleanup failed.`,
     );
   }
 }

@@ -1,11 +1,11 @@
 import {
-  crc,
+  pibbl,
   useSignal,
   Line,
   Rectangle,
   Text,
-  type CRCController,
-} from "@crc/core";
+  type PibblController,
+} from "@pibbl/core";
 function LineStudy() {
   const tracking = useSignal(false);
   return [
@@ -62,6 +62,6 @@ function LineStudy() {
     </Text>,
   ];
 }
-export default function mount(canvas: HTMLCanvasElement): CRCController {
-  return crc(canvas, <LineStudy />);
+export default function mount(canvas: HTMLCanvasElement): PibblController {
+  return pibbl(canvas, <LineStudy />);
 }

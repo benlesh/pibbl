@@ -1,3 +1,7 @@
+import type { VizFoundationState } from "./viz-foundation-lab.js";
+import type { VizPointsState } from "./viz-points-lab.js";
+import type { VizHoverState } from "./viz-hover-lab.js";
+import type { ThreePickingState } from "./three-picking-lab.example";
 import {
   RESPONSIVE_STYLE_ACTIONS,
   type ResponsiveStylesState,
@@ -129,6 +133,14 @@ function sameValues(
   );
 }
 
+/**
+ * Validates scenario metadata and returns the catalog, throwing for inconsistent entries.
+ *
+ * @param catalog - Catalog whose metadata and identities should be checked.
+ * @returns The supplied catalog after successful validation; invalid metadata throws.
+ *
+ * @see {@link ScenarioCatalogRecord}
+ */
 export function validateScenarioCatalog<
   TCatalog extends readonly ScenarioCatalogRecord[],
 >(catalog: TCatalog): TCatalog {
@@ -237,6 +249,15 @@ function groupCatalog(
     }));
 }
 
+/**
+ * Builds slug and grouping indexes over validated deterministic scenario metadata.
+ *
+ * @param catalog - Scenario metadata and loaders to index. See {@link AnyScenarioCatalogEntry}.
+ * @returns An index of the supplied catalog entries. See {@link ScenarioCatalogIndex}.
+ *
+ * @see {@link AnyScenarioCatalogEntry}
+ * @see {@link ScenarioCatalogIndex}
+ */
 export function createScenarioCatalogIndex(
   catalog: readonly AnyScenarioCatalogEntry[],
 ): ScenarioCatalogIndex {
@@ -259,10 +280,28 @@ export function createScenarioCatalogIndex(
   };
 }
 
+/**
+ * Returns the Studio route for a deterministic scenario catalog record.
+ *
+ * @param entry - Scenario metadata containing its route identity. See
+ * {@link ScenarioCatalogRecord} .
+ * @returns The scenario's application route.
+ *
+ * @see {@link ScenarioCatalogRecord}
+ */
 export function getScenarioRoute(entry: ScenarioCatalogRecord): string {
   return `#/testing/${entry.metadata.slug}`;
 }
 
+/**
+ * Loads a scenario implementation from its catalog entry on demand.
+ *
+ * @param entry - Catalog entry whose lazy loader should run. See {@link ScenarioCatalogEntry}.
+ * @returns A promise for the loaded scenario definition. See {@link ScenarioDefinition}.
+ *
+ * @see {@link ScenarioCatalogEntry}
+ * @see {@link ScenarioDefinition}
+ */
 export async function loadScenario<TState>(
   entry: ScenarioCatalogEntry<TState>,
 ): Promise<ScenarioDefinition<TState>> {
@@ -290,9 +329,9 @@ const smokeMetadata: ScenarioMetadata = {
   id: "baseline-smoke",
   slug: "baseline-smoke",
   title: "Baseline smoke",
-  summary: "Mount, render, update, click, and reset one public-API CRC scene.",
+  summary: "Mount, render, update, click, and reset one public-API Pibbl scene.",
   category: "Getting started",
-  apiTags: ["crc", "Rectangle", "Text"],
+  apiTags: ["pibbl", "Rectangle", "Text"],
   conceptTags: ["mount", "render", "state update", "mouse click"],
   manualSteps: [
     {
@@ -325,6 +364,12 @@ const smokeMetadata: ScenarioMetadata = {
   maturity: "baseline",
 };
 
+/**
+ * Catalog metadata and lazy loader for the smoke scenario.
+ *
+ * @see {@link ScenarioCatalogEntry}
+ * @see {@link SmokeScenarioState}
+ */
 export const smokeScenarioEntry: ScenarioCatalogEntry<SmokeScenarioState> = {
   metadata: smokeMetadata,
   canvas: {
@@ -402,6 +447,12 @@ const drawingShapesMetadata: ScenarioMetadata = {
   maturity: "contract",
 };
 
+/**
+ * Catalog metadata and lazy loader for the drawing shapes scenario.
+ *
+ * @see {@link ScenarioCatalogEntry}
+ * @see {@link DrawingShapesState}
+ */
 export const drawingShapesScenarioEntry: ScenarioCatalogEntry<DrawingShapesState> =
   {
     metadata: drawingShapesMetadata,
@@ -453,6 +504,12 @@ const drawingLinesMetadata: ScenarioMetadata = {
   maturity: "contract",
 };
 
+/**
+ * Catalog metadata and lazy loader for the drawing lines scenario.
+ *
+ * @see {@link ScenarioCatalogEntry}
+ * @see {@link DrawingLinesState}
+ */
 export const drawingLinesScenarioEntry: ScenarioCatalogEntry<DrawingLinesState> =
   {
     metadata: drawingLinesMetadata,
@@ -511,6 +568,12 @@ const drawingTextMetadata: ScenarioMetadata = {
   maturity: "contract",
 };
 
+/**
+ * Catalog metadata and lazy loader for the drawing text scenario.
+ *
+ * @see {@link ScenarioCatalogEntry}
+ * @see {@link DrawingTextState}
+ */
 export const drawingTextScenarioEntry: ScenarioCatalogEntry<DrawingTextState> =
   {
     metadata: drawingTextMetadata,
@@ -569,6 +632,12 @@ const drawingImagesMetadata: ScenarioMetadata = {
   maturity: "contract",
 };
 
+/**
+ * Catalog metadata and lazy loader for the drawing images scenario.
+ *
+ * @see {@link ScenarioCatalogEntry}
+ * @see {@link DrawingImagesState}
+ */
 export const drawingImagesScenarioEntry: ScenarioCatalogEntry<DrawingImagesState> =
   {
     metadata: drawingImagesMetadata,
@@ -634,6 +703,12 @@ const drawingCompositionMetadata: ScenarioMetadata = {
   maturity: "contract",
 };
 
+/**
+ * Catalog metadata and lazy loader for the drawing composition scenario.
+ *
+ * @see {@link ScenarioCatalogEntry}
+ * @see {@link DrawingCompositionState}
+ */
 export const drawingCompositionScenarioEntry: ScenarioCatalogEntry<DrawingCompositionState> =
   {
     metadata: drawingCompositionMetadata,
@@ -702,7 +777,7 @@ const focusNavigationMetadata: ScenarioMetadata = {
     },
   ],
   knownLimitations: [
-    "CRC logical Canvas focus is keyboard interaction, not screen-reader semantics; applications must provide and synchronize an equivalent semantic DOM experience.",
+    "Pibbl logical Canvas focus is keyboard interaction, not screen-reader semantics; applications must provide and synchronize an equivalent semantic DOM experience.",
     "Directional navigation does not wrap or escape from the nearest boundary, and positive numeric tabindex ordering is not supported.",
   ],
   learningOrder: 65,
@@ -712,6 +787,12 @@ const focusNavigationMetadata: ScenarioMetadata = {
   maturity: "contract",
 };
 
+/**
+ * Catalog metadata and lazy loader for the focus navigation scenario.
+ *
+ * @see {@link ScenarioCatalogEntry}
+ * @see {@link FocusNavigationState}
+ */
 export const focusNavigationScenarioEntry: ScenarioCatalogEntry<FocusNavigationState> =
   {
     metadata: focusNavigationMetadata,
@@ -736,11 +817,10 @@ const interactionLabMetadata: ScenarioMetadata = {
   slug: "interaction-trace-lab",
   title: "User-event contract laboratory",
   summary:
-    "Drive propagation, capture, touch retention, cancellation, keyboard, composition, clipboard, drag/drop, and legacy mouse rules through shared public-API fixtures.",
+    "Drive propagation, capture, touch retention, cancellation, keyboard, composition, clipboard, drag/drop, and mouse targeting through shared public-API fixtures.",
   category: "Interaction contracts",
   apiTags: [
-    "crc",
-    "useEvent",
+    "pibbl",
     "useEventListener",
     "useEventTarget",
     "Path",
@@ -783,7 +863,7 @@ const interactionLabMetadata: ScenarioMetadata = {
       action:
         "Inspect the Keyboard fields, Composition, and Clipboard headless contract fixtures; their automated cases use internal headless contract transport.",
       expected:
-        "The internal tests preserve key/code/repeat/composition state, composition data, and clipboard payload without claiming a public adapter or CRC creating hidden editable DOM.",
+        "The internal tests preserve key/code/repeat/composition state, composition data, and clipboard payload without claiming a public adapter or Pibbl creating hidden editable DOM.",
     },
     {
       action:
@@ -817,17 +897,17 @@ const interactionLabMetadata: ScenarioMetadata = {
     },
     {
       action:
-        "Open Observer, Observer replace/remove, and Observer throwing; move twice through each target, then run Remove target after transition from Left to Right and choose Reset.",
+        "Run Remove target after transition from Left to Right and choose Reset.",
       expected:
-        "Canvas observers follow target callbacks; queued replacement/removal appears on the next event; a thrown observer does not stop its safe peer; only Right disappears after the current route; Reset restores Regions.",
+        "Only Right disappears after the current route; Reset restores Regions.",
     },
   ],
   knownLimitations: [
-    "A plain Canvas has no logical keyboard, editing, or clipboard target; no public input adapter exists, and CRC does not create hidden editable DOM.",
+    "A plain Canvas has no logical keyboard, editing, or clipboard target; no public input adapter exists, and Pibbl does not create hidden editable DOM.",
     "This ordering laboratory intentionally uses an untransformed root Canvas; the shared geometry matrix covers CSS scale, transforms, clips, and offscreen layers.",
-    "A CRC rerender requested from a handler settles on the next animation frame; narrow dispatcher tests separately prove synchronous live-registry mutation semantics.",
-    "New logical event facades expose opaque related targets; the retained legacy mouse fixtures still present readable target labels rather than public target identities.",
-    "The Observer throwing fixture deliberately reports one browser error; context-menu ordering follows the active browser instead of being normalized.",
+    "A Pibbl rerender requested from a handler settles on the next animation frame; narrow dispatcher tests separately prove synchronous live-registry mutation semantics.",
+    "New logical event facades expose opaque related targets; the mouse fixtures present readable target labels rather than public target identities.",
+    "Context-menu ordering follows the active browser instead of being normalized.",
   ],
   learningOrder: 80,
   visibility: "test-laboratory",
@@ -836,6 +916,12 @@ const interactionLabMetadata: ScenarioMetadata = {
   maturity: "trusted",
 };
 
+/**
+ * Catalog metadata and lazy loader for the interaction lab scenario.
+ *
+ * @see {@link ScenarioCatalogEntry}
+ * @see {@link InteractionLabState}
+ */
 export const interactionLabScenarioEntry: ScenarioCatalogEntry<InteractionLabState> =
   {
     metadata: interactionLabMetadata,
@@ -861,10 +947,6 @@ export const interactionLabScenarioEntry: ScenarioCatalogEntry<InteractionLabSta
       { id: "show-transparent", label: "Transparent fill" },
       { id: "show-interaction-width", label: "Interaction width" },
       { id: "show-no-hit", label: "No hit geometry" },
-      { id: "show-observer", label: "Canvas observer" },
-      { id: "show-observer-remove", label: "Observer queues removal" },
-      { id: "show-observer-replace", label: "Observer queues replacement" },
-      { id: "show-observer-throwing", label: "Throwing observer" },
       {
         id: "show-remove-target-after-transition",
         label: "Remove target after transition",
@@ -890,9 +972,9 @@ const mouseContractMetadata: ScenarioMetadata = {
   slug: "mouse-interaction-contract",
   title: "Mouse interaction contract",
   summary:
-    "Explore the approved native evidence and the target/order rules implemented by CRC’s dispatcher.",
+    "Explore the approved native evidence and the target/order rules implemented by Pibbl’s dispatcher.",
   category: "Interaction contracts",
-  apiTags: ["crc", "mouse events", "Rectangle", "Layer", "Clip", "Group"],
+  apiTags: ["pibbl", "mouse events", "Rectangle", "Layer", "Clip", "Group"],
   conceptTags: [
     "event order",
     "topmost target",
@@ -903,7 +985,7 @@ const mouseContractMetadata: ScenarioMetadata = {
     {
       action: "Select Enter, Move within, Switch, and Exit cases.",
       expected:
-        "The approved CRC sequence reports boundary transitions before movement.",
+        "The approved Pibbl sequence reports boundary transitions before movement.",
     },
     {
       action: "Select overlap, nested child, clip, transform, and layer cases.",
@@ -933,6 +1015,12 @@ const mouseContractMetadata: ScenarioMetadata = {
   maturity: "contract",
 };
 
+/**
+ * Catalog metadata and lazy loader for the mouse contract scenario.
+ *
+ * @see {@link ScenarioCatalogEntry}
+ * @see {@link MouseContractScenarioState}
+ */
 export const mouseContractScenarioEntry: ScenarioCatalogEntry<MouseContractScenarioState> =
   {
     metadata: mouseContractMetadata,
@@ -951,6 +1039,79 @@ export const mouseContractScenarioEntry: ScenarioCatalogEntry<MouseContractScena
       (await import("./mouse-contract-scenario")).mouseContractScenario,
   };
 
+
+
+const agentLateFontEntry: ScenarioCatalogEntry<import('./agent-late-font').AgentLateFontState> = {
+  metadata: {
+    id: 'agent-late-font', slug: 'agent-late-font', title: 'Late font readiness diagnosis',
+    summary: 'Distinguish loaded fonts from scheduled repaint and responsive text updates.', category: 'Diagnostics',
+    apiTags: ['Text', 'signal', 'useLayoutBox'], conceptTags: ['fonts', 'readiness', 'verification'],
+    manualSteps: [
+      { action: 'Choose Load font.', expected: 'Font readiness and measured width change; existing Canvas pixels wait for repaint.' },
+      { action: 'Choose Repaint.', expected: 'An application signal requests rendering with the ready font.' },
+      { action: 'Choose Narrow canvas.', expected: 'The responsive allocation becomes 200 pixels wide and text size becomes 16px.' },
+    ],
+    knownLimitations: ['No-redraw observations cover two host frames only. Measurements do not prove individual glyph font attribution.', 'Source scheduler inspection only; no served-build attestation.'],
+    learningOrder: 79, visibility: 'test-laboratory', visibilityReason: 'Controlled local font readiness and application repaint evidence.', maturity: 'characterization',
+  },
+  canvas: { width: 400, height: 120 },
+  actions: [{ id: 'load-font', label: 'Load font' }, { id: 'repaint', label: 'Repaint' }, { id: 'narrow', label: 'Narrow canvas' }, { id: 'wide', label: 'Wide canvas' }, { id: 'reset', label: 'Reset' }],
+  source: { id: 'agent-late-font-example', language: 'tsx', marker: "AGENT_LATE_FONT_SOURCE_ID = 'agent-late-font-example'", path: 'packages/scenarios/src/agent-late-font.example.tsx' },
+  load: async () => (await import('./agent-late-font')).agentLateFontScenario,
+};
+
+const agentLayoutPlacementEntry: ScenarioCatalogEntry<import('./agent-layout-placement').AgentLayoutPlacementState> = {
+  metadata: {
+    id: 'agent-layout-placement', slug: 'agent-layout-placement', title: 'Layout placement diagnosis',
+    summary: 'Separate parent placement from local shape offsets and diagnose a clipped shape.', category: 'Diagnostics',
+    apiTags: ['Absolute', 'Group', 'Rectangle', 'useLayoutBox'], conceptTags: ['layout', 'clipping', 'verification'],
+    manualSteps: [
+      { action: 'Inspect the clipped mode.', expected: 'Allocation exists but the local offset puts the shape outside the parent clip.' },
+      { action: 'Choose Allow overflow and click the blue shape.', expected: 'The same offset is visible and targetable under the explicit policy.' },
+      { action: 'Choose Repair local offset and click the blue shape.', expected: 'The shape moves inside the clip; allocation stays unchanged.' },
+    ],
+    knownLimitations: ['Controlled input provenance, not a general style inspector. Source inspection only; no served-build attestation yet.', 'Point probes establish targeting geometry, not painted visibility.'],
+    learningOrder: 78, visibility: 'test-laboratory', visibilityReason: 'Controlled placement failure and repair for agent diagnosis.', maturity: 'characterization',
+  },
+  canvas: { width: 400, height: 240 },
+  actions: [{ id: 'clipped', label: 'Seed clipped offset' }, { id: 'overflow-visible', label: 'Allow overflow' }, { id: 'repaired', label: 'Repair local offset' }, { id: 'overlap-allowed', label: 'Allow overlap' }, { id: 'overlap-prohibited', label: 'Require separation' }],
+  source: { id: 'agent-layout-placement-example', language: 'tsx', marker: "AGENT_LAYOUT_PLACEMENT_SOURCE_ID = 'agent-layout-placement-example'", path: 'packages/scenarios/src/agent-layout-placement.example.tsx' },
+  load: async () => (await import('./agent-layout-placement')).agentLayoutPlacementScenario,
+};
+
+const agentSignalMutationEntry: ScenarioCatalogEntry<import('./agent-signal-mutation').AgentSignalMutationState> = {
+  metadata: {
+    id: 'agent-signal-mutation', slug: 'agent-signal-mutation', title: 'Signal mutation diagnosis',
+    summary: 'Distinguish reference-equal writes from a stale amount after in-place mutation, then repair by replacing the object.', category: 'Diagnostics',
+    apiTags: ['signal', 'Rectangle', 'Text'], conceptTags: ['signals', 'equality', 'mutation', 'verification'],
+    manualSteps: [
+      { action: 'Choose Equal no-op.', expected: 'Amount stays 10; equal reference is intentional and the assertion passes.' },
+      { action: 'Choose Mutate in place.', expected: 'Source amount becomes 42 while the painted bar and label remain at 10; the assertion fails.' },
+      { action: 'Choose Replace object.', expected: 'The bar and label update to 42; signal revision advances and the assertion passes.' },
+    ],
+    knownLimitations: ['This explicit application sequence diagnoses the default Object.is policy; it is not a universal deep-mutation detector.', 'No-redraw evidence is bounded to two observed host frames. Signal revision inspection requires the source runtime.'],
+    learningOrder: 77, visibility: 'test-laboratory', visibilityReason: 'Controlled application equality failure with independent intended value.', maturity: 'contract',
+  },
+  canvas: { width: 480, height: 180 },
+  actions: [{ id: 'equal-noop', label: 'Equal no-op' }, { id: 'in-place', label: 'Mutate in place' }, { id: 'replace', label: 'Replace object' }, { id: 'reset', label: 'Reset' }],
+  source: { id: 'agent-signal-mutation-example', language: 'tsx', marker: "AGENT_SIGNAL_MUTATION_SOURCE_ID = 'agent-signal-mutation-example'", path: 'packages/scenarios/src/agent-signal-mutation.example.tsx' },
+  load: async () => (await import('./agent-signal-mutation')).agentSignalMutationScenario,
+};
+
+const agentTextScenarioEntry: ScenarioCatalogEntry<import('./agent-text-verification').AgentTextState> = {
+  metadata: {
+    id: 'agent-text-verification', slug: 'agent-text-verification', title: 'Agent text verification',
+    summary: 'Verify an exact fixture label while redacting private text from machine evidence.', category: 'Diagnostics',
+    apiTags: ['pibbl', 'Text'], conceptTags: ['text', 'redaction', 'inspection'],
+    manualSteps: [{ action: 'Inspect the seeded label, then choose Repair.', expected: 'The assertion changes from fail to pass; the second string stays redacted in evidence.' }],
+    knownLimitations: ['Source development only; successful calls are not proof of glyph visibility, font selection or clipping.'],
+    learningOrder: 76, visibility: 'test-laboratory', visibilityReason: 'Controlled private and fixture text for agent assertions.', maturity: 'contract',
+  },
+  canvas: { width: 480, height: 160 }, actions: [{ id: 'seed', label: 'Seed wrong label' }, { id: 'repair', label: 'Repair label' }],
+  source: { id: 'agent-text-verification-example', language: 'tsx', marker: "AGENT_TEXT_SOURCE_ID = 'agent-text-verification-example'", path: 'packages/scenarios/src/agent-text-verification.example.tsx' },
+  load: async () => (await import('./agent-text-verification')).agentTextScenario,
+};
+
 const agentTargetingVerificationMetadata: ScenarioMetadata = {
   id: "agent-targeting-verification",
   slug: "agent-targeting-verification",
@@ -958,7 +1119,7 @@ const agentTargetingVerificationMetadata: ScenarioMetadata = {
   summary:
     "Diagnose a decorative Canvas overlay that intercepts an intended item selection, then verify its repair with the same native click.",
   category: "Diagnostics",
-  apiTags: ["crc", "Rectangle", "signal", "pointerEvents"],
+  apiTags: ["pibbl", "Rectangle", "signal", "pointerEvents"],
   conceptTags: ["targeting", "paint order", "native input", "inspection"],
   manualSteps: [
     {
@@ -989,6 +1150,12 @@ const agentTargetingVerificationMetadata: ScenarioMetadata = {
   maturity: "contract",
 };
 
+/**
+ * Catalog metadata and lazy loader for the agent targeting verification scenario.
+ *
+ * @see {@link ScenarioCatalogEntry}
+ * @see {@link AgentTargetingState}
+ */
 export const agentTargetingVerificationScenarioEntry: ScenarioCatalogEntry<AgentTargetingState> = {
   metadata: agentTargetingVerificationMetadata,
   canvas: { width: 480, height: 240 },
@@ -997,6 +1164,9 @@ export const agentTargetingVerificationScenarioEntry: ScenarioCatalogEntry<Agent
     { id: "dom-overlay", label: "Add DOM overlay" },
     { id: "remove-dom-overlay", label: "Remove DOM overlay" },
     { id: "capture-drag", label: "Capture drag" },
+    { id: "pagination-scene", label: "Show 100 extra targets" },
+    { id: "scene-page-first", label: "Start scene query" },
+    { id: "scene-page-next", label: "Next scene page" },
     { id: "inspect", label: "Inspect target" },
     { id: "inspect-outside-layer", label: "Inspect outside Layer" },
     { id: "repair", label: "Repair decoration" },
@@ -1027,7 +1197,7 @@ const lifecycleLabMetadata: ScenarioMetadata = {
   summary:
     "Exercise rerender, handler, subtree, layer, abort, dispose, remount, and stale-cleanup ownership flows.",
   category: "Diagnostics",
-  apiTags: ["crc", "CRCController", "Rectangle", "Layer", "mouse events"],
+  apiTags: ["pibbl", "PibblController", "Rectangle", "Layer", "mouse events"],
   conceptTags: ["event ownership", "teardown", "dispose", "remount"],
   manualSteps: [
     {
@@ -1072,6 +1242,12 @@ const lifecycleLabMetadata: ScenarioMetadata = {
   maturity: "trusted",
 };
 
+/**
+ * Catalog metadata and lazy loader for the lifecycle lab scenario.
+ *
+ * @see {@link ScenarioCatalogEntry}
+ * @see {@link LifecycleLabState}
+ */
 export const lifecycleLabScenarioEntry: ScenarioCatalogEntry<LifecycleLabState> =
   {
     metadata: lifecycleLabMetadata,
@@ -1106,7 +1282,7 @@ const geometryMatrixMetadata: ScenarioMetadata = {
     "Probe intrinsic coordinates, nested transforms and clips, global layer paint order, layer bounds, and stroke interaction geometry.",
   category: "Interaction contracts",
   apiTags: [
-    "crc",
+    "pibbl",
     "Group",
     "Clip",
     "Layer",
@@ -1170,6 +1346,12 @@ const geometryMatrixMetadata: ScenarioMetadata = {
   maturity: "trusted",
 };
 
+/**
+ * Catalog metadata and lazy loader for the geometry matrix scenario.
+ *
+ * @see {@link ScenarioCatalogEntry}
+ * @see {@link GeometryMatrixState}
+ */
 export const geometryMatrixScenarioEntry: ScenarioCatalogEntry<GeometryMatrixState> =
   {
     metadata: geometryMatrixMetadata,
@@ -1199,7 +1381,7 @@ const performanceLabMetadata: ScenarioMetadata = {
   summary:
     "Measure hit-test structure and live dispatch latency across shared zero, sparse, dense, clipped, transformed, layered, cursor, and rerender workloads.",
   category: "Diagnostics",
-  apiTags: ["crc", "Group", "Clip", "Layer", "Rectangle", "mouse events"],
+  apiTags: ["pibbl", "Group", "Clip", "Layer", "Rectangle", "mouse events"],
   conceptTags: [
     "hit-test cost",
     "dispatch latency",
@@ -1243,6 +1425,12 @@ const performanceLabMetadata: ScenarioMetadata = {
   maturity: "trusted",
 };
 
+/**
+ * Catalog metadata and lazy loader for the performance lab scenario.
+ *
+ * @see {@link ScenarioCatalogEntry}
+ * @see {@link PerformanceLabState}
+ */
 export const performanceLabScenarioEntry: ScenarioCatalogEntry<PerformanceLabState> =
   {
     metadata: performanceLabMetadata,
@@ -1271,7 +1459,7 @@ const cleanupStressMetadata: ScenarioMetadata = {
   summary:
     "Exercise pending frames, image races, nested layers, synchronous hook cleanup, component/root identity, runtime disposal, and repeated mount cycles.",
   category: "Diagnostics",
-  apiTags: ["crc", "useReaction", "Image", "Layer", "Rectangle"],
+  apiTags: ["pibbl", "useReaction", "Image", "Layer", "Rectangle"],
   conceptTags: [
     "resource ownership",
     "async cleanup",
@@ -1322,6 +1510,12 @@ const cleanupStressMetadata: ScenarioMetadata = {
   maturity: "trusted",
 };
 
+/**
+ * Catalog metadata and lazy loader for the cleanup stress scenario.
+ *
+ * @see {@link ScenarioCatalogEntry}
+ * @see {@link CleanupStressState}
+ */
 export const cleanupStressScenarioEntry: ScenarioCatalogEntry<CleanupStressState> =
   {
     metadata: cleanupStressMetadata,
@@ -1364,7 +1558,7 @@ const runtimeHooksMetadata: ScenarioMetadata = {
     "Exercise state, memo, ref, synchronous change cleanup, memoized paths, keyed siblings, root identity, falsy children, and public hook misuse.",
   category: "Diagnostics",
   apiTags: [
-    "crc",
+    "pibbl",
     "useSignal",
     "useComputed",
     "useRef",
@@ -1410,7 +1604,7 @@ const runtimeHooksMetadata: ScenarioMetadata = {
     },
   ],
   knownLimitations: [
-    "useEvent is exercised by the ordering and overlap laboratory; this scenario covers useCursor slot identity while the interaction laboratories own its geometry and lifecycle matrix.",
+    "The interaction laboratories cover useEventListener targeting and useCursor geometry while this scenario covers hook slot identity.",
     "A conditional hook-count mismatch is intentionally not exposed as a gallery action because it can corrupt the diagnostic scene; focused runtime tests own that explicit misuse contract.",
     "Displayed identity numbers are deterministic laboratory labels, not public runtime identifiers.",
   ],
@@ -1421,6 +1615,12 @@ const runtimeHooksMetadata: ScenarioMetadata = {
   maturity: "trusted",
 };
 
+/**
+ * Catalog metadata and lazy loader for the runtime hooks scenario.
+ *
+ * @see {@link ScenarioCatalogEntry}
+ * @see {@link RuntimeHooksState}
+ */
 export const runtimeHooksScenarioEntry: ScenarioCatalogEntry<RuntimeHooksState> =
   {
     metadata: runtimeHooksMetadata,
@@ -1493,6 +1693,12 @@ const layoutFoundationMetadata: ScenarioMetadata = {
   maturity: "contract",
 };
 
+/**
+ * Catalog metadata and lazy loader for the layout foundation scenario.
+ *
+ * @see {@link ScenarioCatalogEntry}
+ * @see {@link LayoutFoundationState}
+ */
 export const layoutFoundationScenarioEntry: ScenarioCatalogEntry<LayoutFoundationState> =
   {
     metadata: layoutFoundationMetadata,
@@ -1514,7 +1720,7 @@ const canvasSurfaceMetadata: ScenarioMetadata = {
   summary:
     "Verify fixed fitting, responsive logical reflow, high-density backing stores, and logical mouse coordinates.",
   category: "Rendering",
-  apiTags: ["crc", "useLayoutBox", "Rectangle", "Text", "mouse events"],
+  apiTags: ["pibbl", "useLayoutBox", "Rectangle", "Text", "mouse events"],
   conceptTags: [
     "device pixel ratio",
     "responsive Canvas",
@@ -1556,7 +1762,7 @@ const filterLabMetadata: ScenarioMetadata = {
   summary:
     "Compare every supported filter, order-sensitive chains, nested boundaries, transforms, clips, and cached Layer interaction.",
   category: "Rendering",
-  apiTags: ["Group", "Clip", "Layer", "Image", "CRCFilter"],
+  apiTags: ["Group", "Clip", "Layer", "Image", "PibblFilter"],
   conceptTags: [
     "filter order",
     "combined silhouette",
@@ -1598,6 +1804,12 @@ const filterLabMetadata: ScenarioMetadata = {
   maturity: "trusted",
 };
 
+/**
+ * Catalog metadata and lazy loader for the filter lab scenario.
+ *
+ * @see {@link ScenarioCatalogEntry}
+ * @see {@link FilterLabState}
+ */
 export const filterLabScenarioEntry: ScenarioCatalogEntry<FilterLabState> = {
   metadata: filterLabMetadata,
   canvas: { width: 480, height: 240 },
@@ -1624,7 +1836,7 @@ const threeInstancingLabMetadata: ScenarioMetadata = {
   slug: "three-instancing",
   title: "Three.js instancing integration laboratory",
   summary:
-    "Prove mixed CRC and Three paint order, instanced blocking, registered targets, miss policies, bridged orbit input, focus, clip/filter composition, resize, and cleanup.",
+    "Prove mixed Pibbl and Three paint order, instanced blocking, registered targets, miss policies, bridged orbit input, focus, clip/filter composition, resize, and cleanup.",
   category: "Rendering",
   apiTags: [
     "defineThreeLayer",
@@ -1636,7 +1848,7 @@ const threeInstancingLabMetadata: ScenarioMetadata = {
     "flattened Three layer",
     "interaction arbitration",
     "registered Three target",
-    "CRC scheduling",
+    "Pibbl scheduling",
     "Canvas composition",
   ],
   manualSteps: [
@@ -1650,18 +1862,18 @@ const threeInstancingLabMetadata: ScenarioMetadata = {
       action:
         "Cycle pass-through to block and target-layer, then drag across the empty gap.",
       expected:
-        "Block leaves the lower tile untouched; target-layer routes the empty-space drag to OrbitControls through CRC and reports a camera change.",
+        "Block leaves the lower tile untouched; target-layer routes the empty-space drag to OrbitControls through Pibbl and reports a camera change.",
     },
     {
       action:
         "Tab to the registered target and press Enter or Space, then choose Resize layer.",
       expected:
-        "Keyboard activation follows the same CRC propagation trace and the existing Three resources resize into a newly composed bitmap.",
+        "Keyboard activation follows the same Pibbl propagation trace and the existing Three resources resize into a newly composed bitmap.",
     },
   ],
   knownLimitations: [
     "The proving scene requires WebGL2, OffscreenCanvas, and ImageBitmap transfer in the host browser.",
-    "The instanced mesh intentionally remains one blocking Three object rather than registering every instance as a CRC target.",
+    "The instanced mesh intentionally remains one blocking Three object rather than registering every instance as a Pibbl target.",
   ],
   learningOrder: 177,
   visibility: "test-laboratory",
@@ -1670,6 +1882,12 @@ const threeInstancingLabMetadata: ScenarioMetadata = {
   maturity: "contract",
 };
 
+/**
+ * Catalog metadata and lazy loader for the three instancing lab scenario.
+ *
+ * @see {@link ScenarioCatalogEntry}
+ * @see {@link ThreeInstancingLabState}
+ */
 export const threeInstancingLabScenarioEntry: ScenarioCatalogEntry<ThreeInstancingLabState> =
   {
     metadata: threeInstancingLabMetadata,
@@ -1694,9 +1912,9 @@ const signalsLabMetadata: ScenarioMetadata = {
   slug: "signals",
   title: "First-class signals laboratory",
   summary:
-    "Prove receiver-owned inputs, batching, reactions, computed barriers, shared roots, Layer isolation, and consumer cleanup through public CRC APIs.",
+    "Prove receiver-owned inputs, batching, reactions, computed barriers, shared roots, Layer isolation, and consumer cleanup through public Pibbl APIs.",
   category: "Rendering",
-  apiTags: ["crc", "signal", "computed", "useSignal", "Layer"],
+  apiTags: ["pibbl", "signal", "computed", "useSignal", "Layer"],
   conceptTags: [
     "explicit dependency",
     "equal write",
@@ -1746,6 +1964,12 @@ const signalsLabMetadata: ScenarioMetadata = {
   maturity: "trusted",
 };
 
+/**
+ * Catalog metadata and lazy loader for the signals lab scenario.
+ *
+ * @see {@link ScenarioCatalogEntry}
+ * @see {@link SignalsLabState}
+ */
 export const signalsLabScenarioEntry: ScenarioCatalogEntry<SignalsLabState> = {
   metadata: signalsLabMetadata,
   canvas: { width: 480, height: 240 },
@@ -1775,11 +1999,11 @@ const animationLabMetadata: ScenarioMetadata = {
   slug: "animation",
   title: "First-class animation laboratory",
   summary:
-    "Drive deterministic playback, transitions, composition, simulation, Layer reuse, shared roots, and owner teardown through public CRC APIs.",
+    "Drive deterministic playback, transitions, composition, simulation, Layer reuse, shared roots, and owner teardown through public Pibbl APIs.",
   category: "Rendering",
   apiTags: [
     "usePlayback",
-    "useTransition",
+    "useAnimatedValue",
     "tween",
     "spring",
     "stepper",
@@ -1830,6 +2054,12 @@ const animationLabMetadata: ScenarioMetadata = {
   maturity: "trusted",
 };
 
+/**
+ * Catalog metadata and lazy loader for the animation lab scenario.
+ *
+ * @see {@link ScenarioCatalogEntry}
+ * @see {@link AnimationLabState}
+ */
 export const animationLabScenarioEntry: ScenarioCatalogEntry<AnimationLabState> =
   {
     metadata: animationLabMetadata,
@@ -1866,7 +2096,7 @@ const particleCelebrationLabMetadata: ScenarioMetadata = {
   slug: "particle-celebration",
   title: "Canvas particle celebration laboratory",
   summary:
-    "Place launch points and trigger a colorful Canvas particle celebration through public CRC APIs.",
+    "Place launch points and trigger a colorful Canvas particle celebration through public Pibbl APIs.",
   category: "Rendering",
   apiTags: [
     "defineParticleEffect2D",
@@ -1912,6 +2142,12 @@ const particleCelebrationLabMetadata: ScenarioMetadata = {
   maturity: "contract",
 };
 
+/**
+ * Catalog metadata and lazy loader for the particle celebration lab scenario.
+ *
+ * @see {@link ScenarioCatalogEntry}
+ * @see {@link ParticleCelebrationLabState}
+ */
 export const particleCelebrationLabScenarioEntry: ScenarioCatalogEntry<ParticleCelebrationLabState> =
   {
     metadata: particleCelebrationLabMetadata,
@@ -1941,7 +2177,7 @@ const physics2DLabMetadata: ScenarioMetadata = {
   slug: "physics-2d",
   title: "First-class 2D physics laboratory",
   summary:
-    "Drive rigid bodies, sensors, queries, a kinematic animation target, and explicit animation-to-physics pose ownership through public CRC APIs.",
+    "Drive rigid bodies, sensors, queries, a kinematic animation target, and explicit animation-to-physics pose ownership through public Pibbl APIs.",
   category: "Simulation",
   apiTags: [
     "PhysicsWorld2D",
@@ -1949,12 +2185,12 @@ const physics2DLabMetadata: ScenarioMetadata = {
     "staticBody2D",
     "kinematicBody2D",
     "collider2D",
-    "crcPhysicsBody2D",
-    "crcPhysicsWorld2D",
+    "pibblPhysicsBody2D",
+    "pibblPhysicsWorld2D",
     "applyImpulse2D",
     "disableBody2D",
     "enableBody2D",
-    "queryAabb2D",
+    "findAllAabbMatches2D",
     "tween",
   ],
   conceptTags: [
@@ -1980,7 +2216,7 @@ const physics2DLabMetadata: ScenarioMetadata = {
     {
       action: "Choose Disable handoff, then Transfer animation.",
       expected:
-        "The orange ball keeps its presented pose, moves under a CRC tween while disabled, and returns to physics with zero velocity after completion.",
+        "The orange ball keeps its presented pose, moves under a Pibbl tween while disabled, and returns to physics with zero velocity after completion.",
     },
     {
       action: "Choose Re-enable handoff, Remove owner, or Reset.",
@@ -1999,6 +2235,12 @@ const physics2DLabMetadata: ScenarioMetadata = {
   maturity: "contract",
 };
 
+/**
+ * Catalog metadata and lazy loader for the physics2 d lab scenario.
+ *
+ * @see {@link ScenarioCatalogEntry}
+ * @see {@link Physics2DLabState}
+ */
 export const physics2DLabScenarioEntry: ScenarioCatalogEntry<Physics2DLabState> =
   {
     metadata: physics2DLabMetadata,
@@ -2024,6 +2266,12 @@ export const physics2DLabScenarioEntry: ScenarioCatalogEntry<Physics2DLabState> 
     load: async () => (await import("./physics-2d-lab")).physics2DLabScenario,
   };
 
+/**
+ * Catalog metadata and lazy loader for the canvas surface scenario.
+ *
+ * @see {@link ScenarioCatalogEntry}
+ * @see {@link CanvasSurfaceState}
+ */
 export const canvasSurfaceScenarioEntry: ScenarioCatalogEntry<CanvasSurfaceState> =
   {
     metadata: canvasSurfaceMetadata,
@@ -2042,6 +2290,12 @@ export const canvasSurfaceScenarioEntry: ScenarioCatalogEntry<CanvasSurfaceState
     load: async () => (await import("./canvas-surface")).canvasSurfaceScenario,
   };
 
+/**
+ * Catalog metadata and lazy loader for the viz foundation scenario.
+ *
+ * @see {@link ScenarioCatalogEntry}
+ * @see {@link VizFoundationState}
+ */
 export const vizFoundationScenarioEntry: ScenarioCatalogEntry<
   import("./viz-foundation-lab.js").VizFoundationState
 > = {
@@ -2052,7 +2306,7 @@ export const vizFoundationScenarioEntry: ScenarioCatalogEntry<
     summary:
       "Observe the static NOAA record through linked detail and overview plots.",
     category: "Visualization",
-    apiTags: ["Scale", "LineSeries", "Axis"],
+    apiTags: ["LinearScale", "LineSeries", "Axis"],
     conceptTags: ["local allocation", "signals"],
     manualSteps: [
       {
@@ -2086,6 +2340,12 @@ export const vizFoundationScenarioEntry: ScenarioCatalogEntry<
     (await import("./viz-foundation-lab.js")).vizFoundationScenario,
 };
 
+/**
+ * Catalog metadata and lazy loader for the manipulation lab scenario.
+ *
+ * @see {@link ScenarioCatalogEntry}
+ * @see {@link ManipulationLabState}
+ */
 export const manipulationLabScenarioEntry: ScenarioCatalogEntry<ManipulationLabState> = {
   metadata: {
     id: "component-manipulation",
@@ -2149,6 +2409,12 @@ export const manipulationLabScenarioEntry: ScenarioCatalogEntry<ManipulationLabS
   load: async () => (await import("./manipulation-lab")).manipulationLabScenario,
 };
 
+/**
+ * Catalog metadata and lazy loader for the viz points scenario.
+ *
+ * @see {@link ScenarioCatalogEntry}
+ * @see {@link VizPointsState}
+ */
 export const vizPointsScenarioEntry: ScenarioCatalogEntry<
   import("./viz-points-lab.js").VizPointsState
 > = {
@@ -2191,6 +2457,12 @@ export const vizPointsScenarioEntry: ScenarioCatalogEntry<
   load: async () => (await import("./viz-points-lab.js")).vizPointsScenario,
 };
 
+/**
+ * Catalog metadata and lazy loader for the viz hover scenario.
+ *
+ * @see {@link ScenarioCatalogEntry}
+ * @see {@link VizHoverState}
+ */
 export const vizHoverScenarioEntry: ScenarioCatalogEntry<
   import("./viz-hover-lab.js").VizHoverState
 > = {
@@ -2228,6 +2500,7 @@ export const vizHoverScenarioEntry: ScenarioCatalogEntry<
     { id: "interpolated-x", label: "Interpolate" },
     { id: "update-data", label: "Update first series" },
     { id: "missing-data", label: "Insert missing observation" },
+    { id: "zero-missing-invalid", label: "Zero, missing and invalid values" },
     { id: "duplicate-first", label: "Duplicate x: first row" },
     { id: "duplicate-last", label: "Duplicate x: last row" },
     { id: "duplicate-reordered", label: "Reorder duplicate rows" },
@@ -2235,6 +2508,12 @@ export const vizHoverScenarioEntry: ScenarioCatalogEntry<
     { id: "empty-data", label: "Nearest: empty first series" },
     { id: "weighted-data", label: "Weighted aggregation" },
     { id: "weighted-data-bug", label: "Inject wrong average" },
+    { id: "async-start-old", label: "Start older request" },
+    { id: "async-start-new", label: "Start newer request / retry" },
+    { id: "async-resolve-old", label: "Complete older request" },
+    { id: "async-resolve-new", label: "Complete newer request" },
+    { id: "async-reject-old", label: "Fail older request" },
+    { id: "async-reject-new", label: "Fail newer request" },
     { id: "reset", label: "Reset" },
   ],
   source: {
@@ -2246,6 +2525,12 @@ export const vizHoverScenarioEntry: ScenarioCatalogEntry<
   load: async () => (await import("./viz-hover-lab.js")).vizHoverScenario,
 };
 
+/**
+ * Catalog metadata and lazy loader for the responsive styles scenario.
+ *
+ * @see {@link ScenarioCatalogEntry}
+ * @see {@link ResponsiveStylesState}
+ */
 export const responsiveStylesScenarioEntry: ScenarioCatalogEntry<ResponsiveStylesState> =
   {
     metadata: {
@@ -2287,6 +2572,12 @@ export const responsiveStylesScenarioEntry: ScenarioCatalogEntry<ResponsiveStyle
         .responsiveStylesScenario,
   };
 
+/**
+ * Catalog metadata and lazy loader for the three picking scenario.
+ *
+ * @see {@link ScenarioCatalogEntry}
+ * @see {@link ThreePickingState}
+ */
 export const threePickingScenarioEntry: ScenarioCatalogEntry<import('./three-picking-lab.example').ThreePickingState> = {
   metadata: {
     id: 'three-picking-generation', slug: 'three-picking-generation',
@@ -2307,6 +2598,11 @@ export const threePickingScenarioEntry: ScenarioCatalogEntry<import('./three-pic
   load: async () => (await import('./three-picking-lab.example')).threePickingScenario,
 };
 
+/**
+ * The deterministic test-lab catalog, kept separate from public learning metadata.
+ *
+ * @see {@link AnyScenarioCatalogEntry}
+ */
 export const scenarioCatalog: readonly AnyScenarioCatalogEntry[] =
   validateScenarioCatalog([
     responsiveStylesScenarioEntry,
@@ -2323,6 +2619,10 @@ export const scenarioCatalog: readonly AnyScenarioCatalogEntry[] =
     focusNavigationScenarioEntry,
     mouseContractScenarioEntry,
     agentTargetingVerificationScenarioEntry,
+    agentTextScenarioEntry,
+    agentSignalMutationEntry,
+    agentLayoutPlacementEntry,
+    agentLateFontEntry,
     interactionLabScenarioEntry,
     lifecycleLabScenarioEntry,
     geometryMatrixScenarioEntry,
@@ -2340,8 +2640,22 @@ export const scenarioCatalog: readonly AnyScenarioCatalogEntry[] =
     physics2DLabScenarioEntry,
   ] as const);
 
+/**
+ * Precomputed indexes for deterministic scenario lookup and grouping.
+ *
+ * @see {@link ScenarioCatalogIndex}
+ */
 export const scenarioCatalogIndex = createScenarioCatalogIndex(scenarioCatalog);
 
+/**
+ * Finds a deterministic scenario by its canonical slug, or returns undefined.
+ *
+ * @param slug - Scenario URL slug to look up.
+ * @returns The matching scenario entry, or undefined when absent. See
+ * {@link AnyScenarioCatalogEntry} .
+ *
+ * @see {@link AnyScenarioCatalogEntry}
+ */
 export function getScenarioBySlug(
   slug: string,
 ): AnyScenarioCatalogEntry | undefined {

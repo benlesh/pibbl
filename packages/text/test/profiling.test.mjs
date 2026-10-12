@@ -7,8 +7,8 @@ test("private profiling preserves conversion and releases results after success 
   using font = await loadOutlineFont(
     await readFile(new URL("./fixtures/ABeeZee-Regular.ttf", import.meta.url)),
   );
-  const ordinary = createTextGeometry(font, "Hello CRC", { fontSize: 100 });
-  const { result, timings } = profileTextGeometry(font, "Hello CRC", {
+  const ordinary = createTextGeometry(font, "Hello Pibbl", { fontSize: 100 });
+  const { result, timings } = profileTextGeometry(font, "Hello Pibbl", {
     fontSize: 100,
   });
   assert.deepEqual([...result.geometry], [...ordinary.geometry]);
@@ -27,11 +27,11 @@ test("private profiling preserves conversion and releases results after success 
   assert.ok(timings.totalMs > 0);
   assert.throws(
     () =>
-      profileTextGeometry(font, "Hello CRC", { fontSize: 100, maxSegments: 1 }),
+      profileTextGeometry(font, "Hello Pibbl", { fontSize: 100, maxSegments: 1 }),
     /limit/,
   );
   assert.deepEqual(
-    [...createTextGeometry(font, "Hello CRC", { fontSize: 100 }).geometry],
+    [...createTextGeometry(font, "Hello Pibbl", { fontSize: 100 }).geometry],
     [...ordinary.geometry],
   );
   assert.equal((await nativeResources()).results, 0);

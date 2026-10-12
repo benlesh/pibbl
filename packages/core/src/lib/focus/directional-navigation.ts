@@ -1,7 +1,7 @@
-import type { LayoutBox } from '../layout/types.js';
-import type { CRCFocusCandidate } from './types.js';
+import type { LayoutBox } from "../layout/types.js";
+import type { PibblNavigationCandidate } from "./types.js";
 
-export type CRCDirection = 'left' | 'right' | 'up' | 'down';
+export type PibblDirection = "left" | "right" | "up" | "down";
 
 export type DirectionalScore = readonly [
   beamPenalty: 0 | 1,
@@ -20,15 +20,17 @@ interface NormalizedBounds {
 }
 
 export function findDirectionalCandidate(
-  current: CRCFocusCandidate,
-  candidates: readonly CRCFocusCandidate[],
-  direction: CRCDirection,
-): CRCFocusCandidate | undefined {
-  let winner: CRCFocusCandidate | undefined;
+  current: PibblNavigationCandidate,
+  candidates: readonly PibblNavigationCandidate[],
+  direction: PibblDirection,
+  eligible: (candidate: PibblNavigationCandidate) => boolean = () => true,
+): PibblNavigationCandidate | undefined {
+  let winner: PibblNavigationCandidate | undefined;
   let winningScore: DirectionalScore | undefined;
   for (const candidate of candidates) {
+    if (!eligible(candidate)) continue;
     const score = scoreDirectionalCandidate(current, candidate, direction);
-    if (!score || winningScore && compareScores(score, winningScore) >= 0) {
+    if (!score || (winningScore && compareScores(score, winningScore) >= 0)) {
       continue;
     }
     winner = candidate;
@@ -39,57 +41,65 @@ export function findDirectionalCandidate(
 
 /** Resolves only within the candidate's nearest committed boundary. */
 export function findNearestDirectionalCandidate(
-  current: CRCFocusCandidate,
-  direction: CRCDirection,
-): CRCFocusCandidate | undefined {
+  current: PibblNavigationCandidate,
+  direction: PibblDirection,
+  eligible?: (candidate: PibblNavigationCandidate) => boolean,
+): PibblNavigationCandidate | undefined {
   const boundary = current.directionalBoundary;
-  return boundary ?
-    findDirectionalCandidate(current, boundary.candidates, direction) :
-    undefined;
+  return boundary
+    ? findDirectionalCandidate(
+        current,
+        boundary.candidates,
+        direction,
+        eligible,
+      )
+    : undefined;
 }
 
 export function scoreDirectionalCandidate(
-  current: CRCFocusCandidate,
-  candidate: CRCFocusCandidate,
-  direction: CRCDirection,
+  current: PibblNavigationCandidate,
+  candidate: PibblNavigationCandidate,
+  direction: PibblDirection,
 ): DirectionalScore | undefined {
   const currentBounds = normalizeBounds(current.rootBounds);
   const candidateBounds = normalizeBounds(candidate.rootBounds);
   if (!currentBounds || !candidateBounds) return undefined;
 
-  const horizontal = direction === 'left' || direction === 'right';
-  const forward = direction === 'right' ?
-    candidateBounds.centerX > currentBounds.centerX :
-    direction === 'left' ?
-      candidateBounds.centerX < currentBounds.centerX :
-      direction === 'down' ?
-        candidateBounds.centerY > currentBounds.centerY :
-        candidateBounds.centerY < currentBounds.centerY;
+  const horizontal = direction === "left" || direction === "right";
+  const forward =
+    direction === "right"
+      ? candidateBounds.centerX > currentBounds.centerX
+      : direction === "left"
+        ? candidateBounds.centerX < currentBounds.centerX
+        : direction === "down"
+          ? candidateBounds.centerY > currentBounds.centerY
+          : candidateBounds.centerY < currentBounds.centerY;
   if (!forward) return undefined;
 
-  const beamOverlap = horizontal ?
-    intervalsOverlap(
-      currentBounds.top,
-      currentBounds.bottom,
-      candidateBounds.top,
-      candidateBounds.bottom,
-    ) :
-    intervalsOverlap(
-      currentBounds.left,
-      currentBounds.right,
-      candidateBounds.left,
-      candidateBounds.right,
-    );
-  const forwardEdgeDistance = direction === 'right' ?
-    Math.max(0, candidateBounds.left - currentBounds.right) :
-    direction === 'left' ?
-      Math.max(0, currentBounds.left - candidateBounds.right) :
-      direction === 'down' ?
-        Math.max(0, candidateBounds.top - currentBounds.bottom) :
-        Math.max(0, currentBounds.top - candidateBounds.bottom);
-  const perpendicularDistance = horizontal ?
-    Math.abs(candidateBounds.centerY - currentBounds.centerY) :
-    Math.abs(candidateBounds.centerX - currentBounds.centerX);
+  const beamOverlap = horizontal
+    ? intervalsOverlap(
+        currentBounds.top,
+        currentBounds.bottom,
+        candidateBounds.top,
+        candidateBounds.bottom,
+      )
+    : intervalsOverlap(
+        currentBounds.left,
+        currentBounds.right,
+        candidateBounds.left,
+        candidateBounds.right,
+      );
+  const forwardEdgeDistance =
+    direction === "right"
+      ? Math.max(0, candidateBounds.left - currentBounds.right)
+      : direction === "left"
+        ? Math.max(0, currentBounds.left - candidateBounds.right)
+        : direction === "down"
+          ? Math.max(0, candidateBounds.top - currentBounds.bottom)
+          : Math.max(0, currentBounds.top - candidateBounds.bottom);
+  const perpendicularDistance = horizontal
+    ? Math.abs(candidateBounds.centerY - currentBounds.centerY)
+    : Math.abs(candidateBounds.centerX - currentBounds.centerX);
 
   return [
     beamOverlap ? 0 : 1,

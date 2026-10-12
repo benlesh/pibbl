@@ -5,19 +5,18 @@ import type { Plugin, ViteDevServer } from "vite";
 import {
   buildStudioDocumentation,
   discoverStudioDocumentationSourcePaths,
-  toStudioDocumentationBrowserBuild,
   toStudioDocumentationSearchInput,
   type StudioDocumentationBuild,
 } from "./build";
 import { loadStudioLearningCatalogs } from "./learning-catalog-adapter";
 import { buildSearchBundle, type SerializedSearchBundle } from "./search-index";
 
-const virtualDocumentationId = "virtual:crc-studio-docs";
+const virtualDocumentationId = "virtual:pibbl-studio-docs";
 const resolvedVirtualDocumentationId = `\0${virtualDocumentationId}`;
-const virtualSearchId = "virtual:crc-studio-search";
+const virtualSearchId = "virtual:pibbl-studio-search";
 const resolvedVirtualSearchId = `\0${virtualSearchId}`;
 
-export function crcStudioDocs(options: { repositoryRoot: string }): Plugin {
+export function pibblStudioDocs(options: { repositoryRoot: string }): Plugin {
   let latestBuild: StudioDocumentationBuild | undefined;
   let latestSearchBundle: SerializedSearchBundle | undefined;
 
@@ -44,7 +43,7 @@ export function crcStudioDocs(options: { repositoryRoot: string }): Plugin {
   }
 
   return {
-    name: "crc-studio-docs",
+    name: "pibbl-studio-docs",
     async buildStart() {
       await rebuild(this);
     },
@@ -56,14 +55,14 @@ export function crcStudioDocs(options: { repositoryRoot: string }): Plugin {
     async load(id) {
       if (id === resolvedVirtualDocumentationId) {
         const documentation = latestBuild ?? (await rebuild());
-        const browserDocumentation =
-          toStudioDocumentationBrowserBuild(documentation);
+        const navigation = {
+          pages: documentation.pages.map(({ route, frontmatter }) => ({ route, frontmatter })),
+          legacyRouteToRoute: documentation.legacyRouteToRoute,
+        };
         return [
-          `export const documentation = ${JSON.stringify(browserDocumentation)};`,
+          `export const documentation = ${JSON.stringify(navigation)};`,
           "export const pages = documentation.pages;",
-          "export const pageByRoute = documentation.pageByRoute;",
           "export const legacyRouteToRoute = documentation.legacyRouteToRoute;",
-          "export const apiCoverage = documentation.apiCoverage;",
         ].join("\n");
       }
       if (id === resolvedVirtualSearchId) {

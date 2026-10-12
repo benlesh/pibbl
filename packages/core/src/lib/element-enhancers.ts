@@ -1,70 +1,124 @@
 import { runTeardown } from './teardowns.js';
-import { cloneCRCElement } from './element/create-element.js';
+import { clonePibblElement } from './element/create-element.js';
 import {
   getElementSource,
   registerElementCloneMetadataHandler,
-  type CRCElementSource,
+  type PibblElementSource,
 } from './element/metadata.js';
 import type {
-  CRCComponentRefs,
-  CRCElement,
-  CRCInstance,
+  PibblComponentRefs,
+  PibblElement,
+  PibblInstance,
 } from './types.js';
-import type { CRCPresentationTransformLineage } from './global-state.js';
+import type { PibblPresentationTransformLineage } from './global-state.js';
 
-export interface CRCInternalPrimitiveAttachmentInput {
+/**
+ * Resolved primitive inputs and transform lineage supplied to an official attachment integration.
+ *
+ * @see {@link PibblElementSource}
+ * @see {@link PibblInternalMountedPropAttachment}
+ */
+export interface PibblInternalPrimitiveAttachmentInput {
+  /**
+   * Component function owning the primitive attachment. See
+   * {@link PibblInternalPrimitiveAttachmentInput}.
+   */
   readonly componentType: Function;
+  /** Component name retained for diagnostics. See {@link PibblInternalPrimitiveAttachmentInput}. */
   readonly componentName: string;
+  /**
+   * Component props supplied to evaluation or measurement. See
+   * {@link PibblInternalPrimitiveAttachmentInput}.
+   */
   readonly props: Readonly<Record<PropertyKey, unknown>>;
+  /**
+   * Declared presentation and layout properties. See {@link PibblInternalPrimitiveAttachmentInput}.
+   */
   readonly style: Readonly<Record<PropertyKey, unknown>>;
-  readonly source: CRCElementSource | undefined;
+  /** Authoring source location retained for diagnostics. See {@link PibblElementSource}. */
+  readonly source: PibblElementSource | undefined;
+  /** World transform at the primitive's parent. See {@link PibblInternalPrimitiveAttachmentInput}. */
   readonly parentWorldTransform: DOMMatrix;
-  /** Exact CRC-owned transform lineage at this primitive's parent. */
-  readonly presentationTransformLineage:
-    CRCPresentationTransformLineage | undefined;
-  /** A direct Canvas transform occurred outside the tracked CRC lineage. */
+  /** Exact Pibbl-owned transform lineage at this primitive's parent. */
+  readonly presentationTransformLineage: PibblPresentationTransformLineage | undefined;
+  /** A direct Canvas transform occurred outside the tracked Pibbl lineage. */
   readonly hasUntrackedCanvasTransform: boolean;
 }
 
-export interface CRCInternalMountedPropAttachment {
+/**
+ * Mount-owned primitive attachment with explicit update and teardown semantics.
+ *
+ * @see {@link PibblInternalPrimitiveAttachmentInput}
+ * @see {@link pibblInternalCreatePropAttachment}
+ */
+export interface PibblInternalMountedPropAttachment {
+  /**
+   * Updates the mounted attachment using the latest resolved primitive inputs. See
+   * {@link PibblInternalMountedPropAttachment}.
+   * @param value - Latest attachment descriptor supplied by the component.
+   */
   update(value: unknown): void;
+  /**
+   * Enters the attachment's scope before primitive evaluation. See
+   * {@link PibblInternalMountedPropAttachment}.
+   */
   enter(): void;
-  preparePrimitive(
-    input: CRCInternalPrimitiveAttachmentInput,
-  ): Readonly<{ readonly presentationTransform2D?: DOMMatrix }> | void;
+  /**
+   * Prepares the attachment against the primitive's resolved inputs. See
+   * {@link PibblInternalMountedPropAttachment}.
+   * @param input - Primitive props, style, and geometry for attachment preparation. See
+   * {@link PibblInternalPrimitiveAttachmentInput} .
+   * @returns An optional presentation transform for the primitive.
+   */
+  preparePrimitive(input: PibblInternalPrimitiveAttachmentInput): Readonly<{
+    /**
+     * Transform applied to the primitive's presented Canvas geometry. See
+     * {@link PibblInternalMountedPropAttachment}.
+     */
+    readonly presentationTransform2D?: DOMMatrix;
+  }> | void;
+  /**
+   * Restores the surrounding scope after primitive evaluation. See
+   * {@link PibblInternalMountedPropAttachment}.
+   * @param success - Whether the attached component completed successfully.
+   */
   exit(success: boolean): void;
+  /**
+   * Releases resources owned by this mounted object. See {@link PibblInternalMountedPropAttachment}
+   * .
+   */
   dispose(): void;
 }
 
-export interface CRCElementEnhancerDescriptor {
+export interface PibblElementEnhancerDescriptor {
   readonly key: symbol;
   mount(context: {
-    readonly component: CRCComponentRefs<any>;
-    readonly instance: CRCInstance;
-  }): CRCMountedElementEnhancer;
+    readonly component: PibblComponentRefs<any>;
+    readonly instance: PibblInstance;
+  }): PibblMountedElementEnhancer;
 }
 
-export interface CRCMountedElementEnhancer {
-  update(next: CRCElementEnhancerDescriptor): void;
+export interface PibblMountedElementEnhancer {
+  update(next: PibblElementEnhancerDescriptor): void;
   enter(): void;
   preparePrimitive?(
-    input: CRCInternalPrimitiveAttachmentInput,
+    input: PibblInternalPrimitiveAttachmentInput,
   ): Readonly<{ readonly presentationTransform2D?: DOMMatrix }> | void;
   exit(success: boolean): void;
   dispose(): void;
 }
 
-interface CRCMountedElementEnhancerEntry {
+interface PibblMountedElementEnhancerEntry {
   readonly key: symbol;
-  readonly mounted: CRCMountedElementEnhancer;
+  readonly mounted: PibblMountedElementEnhancer;
 }
 
 interface AttachmentFactoryRecord {
   readonly property: 'physics';
-  readonly mount: () => CRCInternalMountedPropAttachment;
+  readonly mount: () => PibblInternalMountedPropAttachment;
 }
 
-interface CRCPropAttachmentDescriptor extends CRCElementEnhancerDescriptor {
+interface PibblPropAttachmentDescriptor extends PibblElementEnhancerDescriptor {
   readonly key: typeof PHYSICS_PROP_ATTACHMENT_KEY;
   readonly value: object;
 }
@@ -72,12 +126,12 @@ interface CRCPropAttachmentDescriptor extends CRCElementEnhancerDescriptor {
 const PHYSICS_PROP_ATTACHMENT_KEY = Symbol('physics prop attachment');
 
 const elementEnhancers = new WeakMap<
-  CRCElement<any>,
-  readonly CRCElementEnhancerDescriptor[]
+  PibblElement<any>,
+  readonly PibblElementEnhancerDescriptor[]
 >();
 const mountedElementEnhancers = new WeakMap<
-  CRCComponentRefs<any>,
-  CRCMountedElementEnhancerEntry[]
+  PibblComponentRefs<any>,
+  PibblMountedElementEnhancerEntry[]
 >();
 const propAttachments = new WeakMap<object, AttachmentFactoryRecord>();
 
@@ -90,14 +144,14 @@ registerElementCloneMetadataHandler((source, clone) => {
 
 /** @internal Adds private metadata without introducing a component boundary. */
 export function appendElementEnhancer<P>(
-  element: CRCElement<P>,
-  descriptor: CRCElementEnhancerDescriptor,
-): CRCElement<P>;
+  element: PibblElement<P>,
+  descriptor: PibblElementEnhancerDescriptor,
+): PibblElement<P>;
 export function appendElementEnhancer(
-  element: CRCElement<any>,
-  descriptor: CRCElementEnhancerDescriptor,
-): CRCElement<any> {
-  const enhanced = cloneCRCElement(element);
+  element: PibblElement<any>,
+  descriptor: PibblElementEnhancerDescriptor,
+): PibblElement<any> {
+  const enhanced = clonePibblElement(element);
   elementEnhancers.set(enhanced, Object.freeze([
     ...(elementEnhancers.get(element) ?? []),
     descriptor,
@@ -105,11 +159,21 @@ export function appendElementEnhancer(
   return enhanced;
 }
 
-/** Registers one closed official-package attachment without mutating its public value. */
-export function crcInternalCreatePropAttachment<T extends object>(
+/**
+ * Registers one closed official-package attachment without mutating its public value.
+ *
+ * @param property - Reserved prop name receiving the attachment.
+ * @param publicValue - Public descriptor exposed to component authors.
+ * @param mount - Factory creating the mounted attachment lifetime. See
+ * {@link PibblInternalMountedPropAttachment} .
+ * @returns The public descriptor associated with the private mount factory.
+ *
+ * @see {@link PibblInternalMountedPropAttachment}
+ */
+export function pibblInternalCreatePropAttachment<T extends object>(
   property: 'physics',
   publicValue: T,
-  mount: () => CRCInternalMountedPropAttachment,
+  mount: () => PibblInternalMountedPropAttachment,
 ): T {
   propAttachments.set(publicValue, { property, mount });
   return publicValue;
@@ -117,8 +181,8 @@ export function crcInternalCreatePropAttachment<T extends object>(
 
 /** @internal Layer cache key for otherwise field-identical enhanced elements. */
 export function haveSameElementEnhancers(
-  left: CRCElement<any>,
-  right: CRCElement<any>,
+  left: PibblElement<any>,
+  right: PibblElement<any>,
 ): boolean {
   const leftDescriptors = elementEnhancers.get(left) ?? [];
   const rightDescriptors = elementEnhancers.get(right) ?? [];
@@ -130,14 +194,14 @@ export function haveSameElementEnhancers(
 
 /** @internal Reads identity-transparent policy descriptors for snapshots. */
 export function getElementEnhancerDescriptors(
-  element: CRCElement<any>,
-): readonly CRCElementEnhancerDescriptor[] {
+  element: PibblElement<any>,
+): readonly PibblElementEnhancerDescriptor[] {
   return elementEnhancers.get(element) ?? [];
 }
 
 /** @internal */
 export function hasElementEnhancer(
-  element: CRCElement<any>,
+  element: PibblElement<any>,
   key: symbol,
 ): boolean {
   return elementEnhancers.get(element)?.some(descriptor =>
@@ -147,8 +211,8 @@ export function hasElementEnhancer(
 
 /** @internal */
 export function reconcileElementEnhancers(
-  component: CRCComponentRefs<any>,
-  instance: CRCInstance,
+  component: PibblComponentRefs<any>,
+  instance: PibblInstance,
   reconcilePrimitiveAttachments = false,
 ): void {
   const privateDescriptors = elementEnhancers.get(component.element) ?? [];
@@ -163,8 +227,8 @@ export function reconcileElementEnhancers(
   const hasOwnership = mountedElementEnhancers.has(component);
   const previous = mountedElementEnhancers.get(component) ?? [];
   const previousByKey = new Map(previous.map(entry => [entry.key, entry]));
-  const next: CRCMountedElementEnhancerEntry[] = [];
-  const acquired: CRCMountedElementEnhancerEntry[] = [];
+  const next: PibblMountedElementEnhancerEntry[] = [];
+  const acquired: PibblMountedElementEnhancerEntry[] = [];
 
   try {
     for (const descriptor of descriptors) {
@@ -196,7 +260,7 @@ export function reconcileElementEnhancers(
 }
 
 /** @internal Reports whether a primitive has mounted official attachments. */
-export function hasElementEnhancers(component: CRCComponentRefs<any>): boolean {
+export function hasElementEnhancers(component: PibblComponentRefs<any>): boolean {
   return (mountedElementEnhancers.get(component) ?? []).some(
     entry => entry.mounted.preparePrimitive !== undefined,
   );
@@ -204,8 +268,8 @@ export function hasElementEnhancers(component: CRCComponentRefs<any>): boolean {
 
 /** @internal Prepares mounted official attachments against resolved geometry. */
 export function prepareElementEnhancers(
-  component: CRCComponentRefs<any>,
-  input: CRCInternalPrimitiveAttachmentInput,
+  component: PibblComponentRefs<any>,
+  input: PibblInternalPrimitiveAttachmentInput,
 ): Readonly<{ readonly presentationTransform2D?: DOMMatrix }> | void {
   let presentationTransform2D: DOMMatrix | undefined;
   for (const entry of mountedElementEnhancers.get(component) ?? []) {
@@ -218,9 +282,9 @@ export function prepareElementEnhancers(
 
 /** @internal */
 export function enterElementEnhancers(
-  component: CRCComponentRefs<any>,
-): readonly CRCMountedElementEnhancerEntry[] {
-  const entered: CRCMountedElementEnhancerEntry[] = [];
+  component: PibblComponentRefs<any>,
+): readonly PibblMountedElementEnhancerEntry[] {
+  const entered: PibblMountedElementEnhancerEntry[] = [];
   try {
     for (const entry of mountedElementEnhancers.get(component) ?? []) {
       entry.mounted.enter();
@@ -239,7 +303,7 @@ export function enterElementEnhancers(
 
 /** @internal */
 export function exitElementEnhancers(
-  entered: readonly CRCMountedElementEnhancerEntry[],
+  entered: readonly PibblMountedElementEnhancerEntry[],
   success: boolean,
 ): void {
   let firstError: unknown;
@@ -255,20 +319,20 @@ export function exitElementEnhancers(
 }
 
 /** @internal */
-export function disposeElementEnhancers(component: CRCComponentRefs<any>): void {
+export function disposeElementEnhancers(component: PibblComponentRefs<any>): void {
   const entries = mountedElementEnhancers.get(component) ?? [];
   mountedElementEnhancers.delete(component);
   disposeEntries(entries);
 }
 
 function assertUniqueDescriptorKeys(
-  descriptors: readonly CRCElementEnhancerDescriptor[],
+  descriptors: readonly PibblElementEnhancerDescriptor[],
 ): void {
   const keys = new Set<symbol>();
   for (const descriptor of descriptors) {
     if (keys.has(descriptor.key)) {
       throw new Error(
-        `Duplicate CRC element enhancer "${descriptor.key.description ?? 'anonymous'}".`,
+        `Duplicate Pibbl element enhancer "${descriptor.key.description ?? 'anonymous'}".`,
       );
     }
     keys.add(descriptor.key);
@@ -276,8 +340,8 @@ function assertUniqueDescriptorKeys(
 }
 
 function getPrimitivePropAttachment(
-  element: CRCElement<any>,
-): CRCPropAttachmentDescriptor | undefined {
+  element: PibblElement<any>,
+): PibblPropAttachmentDescriptor | undefined {
   const value = (element.props as Readonly<Record<PropertyKey, unknown>>).physics;
   if (value === undefined || value === null) return undefined;
   const record = isObject(value) ? propAttachments.get(value) : undefined;
@@ -291,7 +355,7 @@ function getPrimitivePropAttachment(
       const mounted = record.mount();
       return {
         update(next) {
-          mounted.update((next as CRCPropAttachmentDescriptor).value);
+          mounted.update((next as PibblPropAttachmentDescriptor).value);
         },
         enter: () => mounted.enter(),
         preparePrimitive: input => mounted.preparePrimitive(input),
@@ -303,14 +367,14 @@ function getPrimitivePropAttachment(
 }
 
 function invalidPropAttachmentError(
-  element: CRCElement<any>,
+  element: PibblElement<any>,
   property: 'physics',
 ): Error {
   const componentName = element.type.name || 'Anonymous';
   const source = getElementSource(element);
   return new Error(
     `${componentName} received an unregistered ${property} prop attachment.` +
-      ' Use the matching official CRC package factory.' +
+      ' Use the matching official Pibbl package factory.' +
       (source ?
         ` JSX source: ${source.fileName}:${source.lineNumber}:${source.columnNumber}.` :
         ''),
@@ -322,7 +386,7 @@ function isObject(value: unknown): value is object {
     typeof value === 'function';
 }
 
-function disposeEntries(entries: readonly CRCMountedElementEnhancerEntry[]): void {
+function disposeEntries(entries: readonly PibblMountedElementEnhancerEntry[]): void {
   for (let index = entries.length - 1; index >= 0; index--) {
     runTeardown(() => entries[index].mounted.dispose());
   }

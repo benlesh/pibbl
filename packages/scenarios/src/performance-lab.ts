@@ -9,7 +9,7 @@ import type {
   ScenarioDefinition,
   ScenarioMountContext,
 } from './types';
-import { crc, type CRCLogicalMouseEvent } from '@crc/core';
+import { pibbl, type PibblLogicalMouseEvent } from '@pibbl/core';
 import {
   createPerformanceScene,
   getPerformanceWorkload,
@@ -228,7 +228,7 @@ async function mountPerformanceLab(
       target: null,
     });
   };
-  const recordHit = (target: string, event: CRCLogicalMouseEvent) => {
+  const recordHit = (target: string, event: PibblLogicalMouseEvent) => {
     const pendingDispatch = pendingDispatches.get(event.originalEvent);
     if (pendingDispatch) {
       pendingDispatch.target = target;
@@ -269,7 +269,7 @@ async function mountPerformanceLab(
   const render = async () => {
     assertActive();
     const started = performance.now();
-    crc(context.canvas, createPerformanceScene({
+    pibbl(context.canvas, createPerformanceScene({
       workloadId: state.workloadId,
       revision: state.revision,
       recordHit,

@@ -1,17 +1,17 @@
 {
-  "name": "@crc/core",
+  "name": "@pibbl/core",
   "type": "module",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Canvas 2D component runtime with JSX and createElement authoring",
   "author": "Ben Lesh <ben@benlesh.com>",
   "license": "MIT",
-  "homepage": "https://github.com/benlesh/crc",
+  "homepage": "https://github.com/benlesh/pibbl",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/benlesh/crc.git",
+    "url": "git+https://github.com/benlesh/pibbl.git",
     "directory": "packages/core"
   },
-  "bugs": "https://github.com/benlesh/crc/issues",
+  "bugs": "https://github.com/benlesh/pibbl/issues",
   "keywords": [
     "canvas",
     "jsx",
@@ -42,7 +42,51 @@
     "./types": {
       "types": "./dist/types.d.ts"
     },
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./particles": {
+      "types": "./dist/features/particles/index.d.ts",
+      "default": "./dist/features/particles/index.mjs"
+    },
+    "./viz": {
+      "types": "./dist/features/viz/index.d.ts",
+      "default": "./dist/features/viz/index.mjs"
+    },
+    "./textures": {
+      "types": "./dist/features/textures/index.d.ts",
+      "default": "./dist/features/textures/index.mjs"
+    },
+    "./physics/2d": {
+      "types": "./dist/features/physics/2d.d.ts",
+      "default": "./dist/features/physics/2d.mjs"
+    },
+    "./physics/2d/geometry": {
+      "types": "./dist/features/physics/2d-geometry.d.ts",
+      "default": "./dist/features/physics/2d-geometry.mjs"
+    },
+    "./physics/2d/testing": {
+      "types": "./dist/features/physics/2d-testing.d.ts",
+      "default": "./dist/features/physics/2d-testing.mjs"
+    },
+    "./sprites": {
+      "types": "./dist/features/sprites/index.d.ts",
+      "default": "./dist/features/sprites/index.mjs"
+    },
+    "./sprites/formats/aseprite": {
+      "types": "./dist/features/sprites/formats/aseprite.d.ts",
+      "default": "./dist/features/sprites/formats/aseprite.mjs"
+    },
+    "./sprites/formats/texture-packer": {
+      "types": "./dist/features/sprites/formats/texture-packer.d.ts",
+      "default": "./dist/features/sprites/formats/texture-packer.mjs"
+    },
+    "./machines": {
+      "types": "./dist/features/machines/index.d.ts",
+      "default": "./dist/features/machines/index.mjs"
+    },
+    "./machines/animation": {
+      "types": "./dist/features/machines/animation.d.ts",
+      "default": "./dist/features/machines/animation.mjs"
+    }
   },
   "main": "./dist/index.mjs",
   "module": "./dist/index.mjs",
@@ -61,19 +105,60 @@
       "*": [
         "./dist/*",
         "./*"
+      ],
+      "jsx-runtime": [
+        "./dist/jsx-runtime.d.ts"
+      ],
+      "jsx-dev-runtime": [
+        "./dist/jsx-dev-runtime.d.ts"
+      ],
+      "particles": [
+        "./dist/features/particles/index.d.ts"
+      ],
+      "viz": [
+        "./dist/features/viz/index.d.ts"
+      ],
+      "textures": [
+        "./dist/features/textures/index.d.ts"
+      ],
+      "physics/2d": [
+        "./dist/features/physics/2d.d.ts"
+      ],
+      "physics/2d/geometry": [
+        "./dist/features/physics/2d-geometry.d.ts"
+      ],
+      "physics/2d/testing": [
+        "./dist/features/physics/2d-testing.d.ts"
+      ],
+      "sprites": [
+        "./dist/features/sprites/index.d.ts"
+      ],
+      "sprites/formats/aseprite": [
+        "./dist/features/sprites/formats/aseprite.d.ts"
+      ],
+      "sprites/formats/texture-packer": [
+        "./dist/features/sprites/formats/texture-packer.d.ts"
+      ],
+      "machines": [
+        "./dist/features/machines/index.d.ts"
+      ],
+      "machines/animation": [
+        "./dist/features/machines/animation.d.ts"
       ]
     }
   },
   "files": [
-    "dist"
+    "dist",
+    "THIRD_PARTY_NOTICES.txt"
   ],
   "scripts": {
-    "build": "rimraf dist && tsc -p tsconfig.build.json && node ../../tooling/build-core.mjs",
+    "build": "node ../../tooling/build-transition-wasm.mjs --check && node ../../tooling/build-recording-wasm.mjs --check && node ../../tooling/build-recording-worker.mjs --check && rimraf dist && tsc -p tsconfig.build.json && node ../../tooling/build-core.mjs",
     "dev": "pnpm run build",
     "prepublishOnly": "pnpm run build",
     "test": "vitest"
   },
-  "dependencies": {
-    "@crc/types": "workspace:*"
+  "devDependencies": {
+    "@dimforge/rapier2d-compat": "0.21.0",
+    "assemblyscript": "0.28.20"
   }
 }

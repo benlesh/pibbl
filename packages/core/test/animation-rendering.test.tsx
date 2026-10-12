@@ -2,23 +2,23 @@ import {
   Absolute,
   Group,
   Rectangle,
-  crc,
+  pibbl,
   usePlayback,
-  useTransition,
+  useAnimatedValue,
   parallel,
   signal,
-  track,
+  drive,
   tween,
-  type CRCController,
-  type CRCNode,
-  type CRCPlayback,
+  type PibblController,
+  type PibblNode,
+  type PibblPlayback,
   type Signal,
-} from '@crc/core';
+} from '@pibbl/core';
 import {
-  crcInternalCurrentRenderOwner,
-  crcInternalRequestRendererWork,
-  type CRCInternalRenderOwner,
-} from '@crc/core/internal';
+  pibblInternalCurrentRenderOwner,
+  pibblInternalRequestRendererWork,
+  type PibblInternalRenderOwner,
+} from '@pibbl/core/internal';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
   installSchedulerDriverForTest,
@@ -27,7 +27,7 @@ import {
 
 let driver: ManualSchedulerDriver;
 let restoreDriver: () => void;
-const controllers = new Set<CRCController>();
+const controllers = new Set<PibblController>();
 
 beforeEach(() => {
   document.body.replaceChildren();
@@ -53,13 +53,13 @@ describe('animation rendering integration', () => {
       y: number;
       opacity?: number;
     }> = [];
-    let firstPlayback!: CRCPlayback;
-    let secondPlayback!: CRCPlayback;
+    let firstPlayback!: PibblPlayback;
+    let secondPlayback!: PibblPlayback;
 
-    function FirstRoot(): CRCNode {
+    function FirstRoot(): PibblNode {
       firstPlayback = usePlayback(parallel(
-        track(x, tween({ from: 0, to: 20, duration: 100 })),
-        track(opacity, tween({ from: 1, to: 0, duration: 100 })),
+        drive(x, tween({ from: 0, to: 20, duration: 100 })),
+        drive(opacity, tween({ from: 1, to: 0, duration: 100 })),
       ));
       const currentX = x.get();
       const currentY = y.get();
@@ -86,9 +86,9 @@ describe('animation rendering integration', () => {
       );
     }
 
-    function SecondRoot(): CRCNode {
+    function SecondRoot(): PibblNode {
       secondPlayback = usePlayback(
-        track(y, tween({ from: 0, to: 10, duration: 100 })),
+        drive(y, tween({ from: 0, to: 10, duration: 100 })),
       );
       const currentX = x.get();
       const currentY = y.get();
@@ -106,8 +106,8 @@ describe('animation rendering integration', () => {
       );
     }
 
-    controllers.add(crc(createCanvas(), <FirstRoot />, { pixelRatio: 1 }));
-    controllers.add(crc(createCanvas(), <SecondRoot />, { pixelRatio: 1 }));
+    controllers.add(pibbl(createCanvas(), <FirstRoot />, { pixelRatio: 1 }));
+    controllers.add(pibbl(createCanvas(), <SecondRoot />, { pixelRatio: 1 }));
     expect(driver.pendingHostFrames).toBe(1);
     driver.flush(-1);
     renders.length = 0;
@@ -131,18 +131,14 @@ describe('animation rendering integration', () => {
   });
 
   it('repaints another root after a failed transition preview rolls back', () => {
-    let producerOwner!: CRCInternalRenderOwner;
+    let producerOwner!: PibblInternalRenderOwner;
     let failComposition = false;
     let output!: Signal<number>;
     const observed: number[] = [];
     const workKey = {};
 
     function TransitionChild({ initial, target }: { initial: number; target: number }) {
-      output = useTransition(target, {
-        type: 'tween',
-        duration: 100,
-        initial,
-      });
+      output = useAnimatedValue(target, { animation: tween({ duration: 100 }), initial });
       output.get();
     }
 
@@ -151,7 +147,7 @@ describe('animation rendering integration', () => {
       initial,
       target,
     }: { include: boolean; initial: number; target: number }) {
-      producerOwner ??= crcInternalCurrentRenderOwner();
+      producerOwner ??= pibblInternalCurrentRenderOwner();
       return include ? <TransitionChild initial={initial} target={target} /> : undefined;
     }
 
@@ -166,13 +162,13 @@ describe('animation rendering integration', () => {
     }
 
     const producerCanvas = createCanvas(60, 10);
-    controllers.add(crc(
+    controllers.add(pibbl(
       producerCanvas,
       <Producer include={false} initial={0} target={0} />,
       { pixelRatio: 1 },
     ));
     driver.flush(0);
-    crcInternalRequestRendererWork(producerOwner, {
+    pibblInternalRequestRendererWork(producerOwner, {
       key: workKey,
       kind: 'compose',
       run: () => {
@@ -181,13 +177,13 @@ describe('animation rendering integration', () => {
     });
 
     failComposition = true;
-    crc(producerCanvas, <Producer include initial={1} target={10} />);
+    pibbl(producerCanvas, <Producer include initial={1} target={10} />);
     expect(() => driver.flush(10)).toThrow(/transition composition failed/iu);
     expect(output.get()).toBe(1);
 
     const observerCanvas = createCanvas(60, 10);
-    controllers.add(crc(observerCanvas, <Observer />, { pixelRatio: 1 }));
-    crc(producerCanvas, <Producer include initial={3} target={20} />);
+    controllers.add(pibbl(observerCanvas, <Observer />, { pixelRatio: 1 }));
+    pibbl(producerCanvas, <Producer include initial={3} target={20} />);
     expect(() => driver.flush(20)).toThrow(/transition composition failed/iu);
 
     expect(observed).toEqual([3]);
@@ -195,7 +191,7 @@ describe('animation rendering integration', () => {
     expect(pixel(observerCanvas, 31, 1)).toEqual([0, 0, 255, 255]);
 
     failComposition = false;
-    crc(producerCanvas, <Producer include={false} initial={0} target={0} />);
+    pibbl(producerCanvas, <Producer include={false} initial={0} target={0} />);
     driver.flush(30);
     for (const logicalTime of [40, 50, 60]) {
       if (driver.pendingHostFrames === 0) break;
@@ -217,13 +213,13 @@ describe('animation rendering integration', () => {
       rectangleX: number;
       layoutLeft: number;
     }> = [];
-    let playback!: CRCPlayback;
+    let playback!: PibblPlayback;
 
-    function Scene(): CRCNode {
+    function Scene(): PibblNode {
       playback = usePlayback(parallel(
-        track(translateX, tween({ from: 0, to: 10, duration: 100 })),
-        track(rectangleX, tween({ from: 0, to: 10, duration: 100 })),
-        track(layoutLeft, tween({ from: 40, to: 60, duration: 100 })),
+        drive(translateX, tween({ from: 0, to: 10, duration: 100 })),
+        drive(rectangleX, tween({ from: 0, to: 10, duration: 100 })),
+        drive(layoutLeft, tween({ from: 40, to: 60, duration: 100 })),
       ));
       const currentTranslateX = translateX.get();
       const currentRectangleX = rectangleX.get();
@@ -279,7 +275,7 @@ describe('animation rendering integration', () => {
     }
 
     const canvas = createCanvas(120, 40);
-    controllers.add(crc(canvas, <Scene />, { pixelRatio: 1 }));
+    controllers.add(pibbl(canvas, <Scene />, { pixelRatio: 1 }));
     expect(driver.pendingHostFrames).toBe(1);
     driver.flush(-1);
     renderedValues.length = 0;

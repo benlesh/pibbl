@@ -1,4 +1,4 @@
-import { crc, useSignal, Ellipse, Rectangle, type CRCController } from "@crc/core";
+import { pibbl, useSignal, Ellipse, Rectangle, type PibblController } from "@pibbl/core";
 
 function EllipseStudy() {
   const active = useSignal(false);
@@ -24,6 +24,6 @@ function EllipseStudy() {
   ];
 }
 
-export default function mount(canvas: HTMLCanvasElement): CRCController {
-  return crc(canvas, <EllipseStudy />);
+export default function mount(canvas: HTMLCanvasElement): PibblController {
+  return pibbl(canvas, <EllipseStudy />);
 }

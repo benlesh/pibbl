@@ -1,14 +1,14 @@
 import {
   Clip,
-  crc,
+  pibbl,
   useSignal,
   Group,
   Layer,
   Path,
   Rectangle,
   Text,
-  type CRCController,
-} from "@crc/core";
+  type PibblController,
+} from "@pibbl/core";
 interface MoonProps {
   active: boolean;
   onSelect: () => void;
@@ -96,6 +96,6 @@ function ComposedTargetStudy() {
     </Text>,
   ];
 }
-export default function mount(canvas: HTMLCanvasElement): CRCController {
-  return crc(canvas, <ComposedTargetStudy />);
+export default function mount(canvas: HTMLCanvasElement): PibblController {
+  return pibbl(canvas, <ComposedTargetStudy />);
 }

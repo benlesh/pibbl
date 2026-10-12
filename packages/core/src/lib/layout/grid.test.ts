@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { Rectangle } from '../components/rect';
 import { componentTest } from '../test-utils/component-test';
-import type { CRCElement } from '../types';
+import type { PibblElement } from '../types';
 import { Grid, layoutGrid, resolveGridTracks } from './grid';
 import { measureElement } from './measure';
 import { createElement } from '../element/create-element';
@@ -12,7 +12,7 @@ const service = {
 const measurement = {
   service,
   measureElement: (
-    element: CRCElement<any>,
+    element: PibblElement<any>,
     constraints: {
       minWidth: number;
       maxWidth: number;

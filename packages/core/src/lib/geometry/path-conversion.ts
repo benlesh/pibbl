@@ -1,7 +1,14 @@
 import { arcPoint, ellipseParameters, singularArcPoints, type ArcSegment } from './path-arc.js';
 import { PathGeometry, visitPathGeometry } from './path-geometry.js';
 
-/** Creates a fresh caller-owned native snapshot; never returns a shared cache. */
+/**
+ * Creates a fresh caller-owned native snapshot; never returns a shared cache.
+ *
+ * @param geometry - Pibbl geometry to convert. See {@link PathGeometry}.
+ * @returns A native Canvas path representing the geometry.
+ *
+ * @see {@link PathGeometry}
+ */
 export function toPath2D(geometry: PathGeometry): Path2D {
   const path = new Path2D();
   visitPathGeometry(geometry, (type, data, i) => {
@@ -29,7 +36,14 @@ export function toPath2D(geometry: PathGeometry): Path2D {
   return path;
 }
 
-/** Serializes independent absolute SVG path data without implicit rounding. */
+/**
+ * Serializes independent absolute SVG path data without implicit rounding.
+ *
+ * @param geometry - Pibbl geometry to serialize. See {@link PathGeometry}.
+ * @returns SVG path data representing the geometry.
+ *
+ * @see {@link PathGeometry}
+ */
 export function toSvgPathData(geometry: PathGeometry): string {
   const parts: string[] = [];
   const commands = ['M', 'L', 'Q', 'C', 'Z'];

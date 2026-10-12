@@ -9,6 +9,9 @@ export const identityMarker = 'const fixtureIdentity = null;';
 const fixedFiles = [fixturePath,
   'packages/scenarios/src/agent-targeting-verification.example.tsx',
   'tooling/agent-verification/targeting.ts',
+  'tooling/agent-verification/runtime-identity.ts',
+  'tooling/agent-verification/runtime-inspection.ts',
+  'packages/core/package.json',
   'tooling/agent-verification/signals.ts',
   'tooling/agent-verification/component-diff.ts',
   'tooling/agent-verification/scheduler.ts',
@@ -26,7 +29,7 @@ export async function fingerprint(root, files, revision) {
     const content = await readFile(resolve(root, file));
     hash.update(JSON.stringify([file, content.length])).update('\n').update(content);
   }
-  return Object.freeze({ schema: 'crc-targeting-identity/1', revision,
+  return Object.freeze({ schema: 'pibbl-targeting-identity/1', revision,
     sha256: hash.digest('hex'), files: sorted.length });
 }
 
@@ -44,16 +47,15 @@ export async function sourceIdentity(root, scope = 'targeting') {
     }
   }
   await walk('packages/core/src');
-  if (scope === 'viz') await walk('packages/viz/src');
   const revision = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' }).trim();
   return fingerprint(root, files, revision);
 }
 
 export function assertIdentity(expected, served) {
-  if (!served || served.schema !== 'crc-targeting-identity/1') {
-    throw Object.assign(new Error('Served fixture identity unavailable; use the source development Studio with provenance enabled.'), { code: 'CRC_FIXTURE_IDENTITY_UNAVAILABLE' });
+  if (!served || served.schema !== 'pibbl-targeting-identity/1') {
+    throw Object.assign(new Error('Served fixture identity unavailable; use the source development Studio with provenance enabled.'), { code: 'PIBBL_FIXTURE_IDENTITY_UNAVAILABLE' });
   }
   if (served.revision !== expected.revision || served.sha256 !== expected.sha256 || served.files !== expected.files) {
-    throw Object.assign(new Error('Served fixture identity mismatch; reload the intended checkout before verifying.'), { code: 'CRC_FIXTURE_IDENTITY_MISMATCH' });
+    throw Object.assign(new Error('Served fixture identity mismatch; reload the intended checkout before verifying.'), { code: 'PIBBL_FIXTURE_IDENTITY_MISMATCH' });
   }
 }

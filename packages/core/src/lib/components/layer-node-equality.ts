@@ -1,16 +1,16 @@
 import {
   getElementEnhancerDescriptors,
-  type CRCElementEnhancerDescriptor,
+  type PibblElementEnhancerDescriptor,
 } from '../element-enhancers.js';
 import { materializeContainerChildren } from '../element/children.js';
-import { isCRCElement } from '../element/create-element.js';
-import type { CRCElement, CRCNodeInput } from '../element/types.js';
+import { isPibblElement } from '../element/create-element.js';
+import type { PibblElement, PibblNodeInput } from '../element/types.js';
 
 interface LayerElementSnapshot {
   readonly kind: 'element';
-  readonly type: CRCElement<any>['type'];
+  readonly type: PibblElement<any>['type'];
   readonly key: string | undefined;
-  readonly enhancers: readonly CRCElementEnhancerDescriptor[];
+  readonly enhancers: readonly PibblElementEnhancerDescriptor[];
   readonly nonChildProps: readonly LayerPropertySnapshot[];
   readonly style: readonly LayerPropertySnapshot[];
   readonly children: LayerNodeSnapshot;
@@ -31,16 +31,31 @@ interface LayerPropertySnapshot {
   readonly value: unknown;
 }
 
+/**
+ * Captured element structure used to compare managed-layer inputs.
+ *
+ * @see {@link haveSameLayerNodeTree}
+ * @see {@link snapshotLayerNodeTree}
+ */
 export type LayerNodeSnapshot =
   | LayerElementSnapshot
   | LayerArraySnapshot
   | LayerOpaqueSnapshot;
 
-/** Materializes retained Layer children once before a private renderer owns them. */
+/**
+ * Materializes retained Layer children once before a private renderer owns them.
+ *
+ * @param node - Recursive child structure to materialize. See {@link PibblNodeInput}.
+ * @param receiver - Receiver name used in invalid-child diagnostics.
+ * @returns The ordered element descriptors retained by the layer. See {@link PibblElement}.
+ *
+ * @see {@link PibblNodeInput}
+ * @see {@link PibblElement}
+ */
 export function materializeRetainedLayerChildren(
-  node: CRCNodeInput,
+  node: PibblNodeInput,
   receiver: string,
-): readonly CRCElement<any>[] {
+): readonly PibblElement<any>[] {
   return materializeContainerChildren(node, receiver);
 }
 
@@ -48,9 +63,15 @@ export function materializeRetainedLayerChildren(
  * Captures Layer's successfully rendered tree without retaining mutable
  * author-owned containers. Direct Layer children are already materialized;
  * nested opaque iterables remain identity values and are never evaluated.
+ *
+ * @param node - Node tree to record.
+ * @returns A snapshot used for subsequent structural equality checks. See
+ * {@link LayerNodeSnapshot} .
+ *
+ * @see {@link LayerNodeSnapshot}
  */
 export function snapshotLayerNodeTree(node: unknown): LayerNodeSnapshot {
-  if (isCRCElement(node)) {
+  if (isPibblElement(node)) {
     const props = splitProps(node.props);
     return Object.freeze({
       kind: 'element',
@@ -76,6 +97,12 @@ export function snapshotLayerNodeTree(node: unknown): LayerNodeSnapshot {
 /**
  * Compares an immutable successful-render snapshot with an already-materialized
  * candidate tree. Opaque nested iterables compare only by identity.
+ *
+ * @param snapshot - Previously recorded node-tree snapshot, if any. See {@link LayerNodeSnapshot}.
+ * @param node - Current node tree to compare.
+ * @returns Whether the current tree matches the retained snapshot.
+ *
+ * @see {@link LayerNodeSnapshot}
  */
 export function haveSameLayerNodeTree(
   snapshot: LayerNodeSnapshot | undefined,
@@ -85,7 +112,7 @@ export function haveSameLayerNodeTree(
 
   switch (snapshot.kind) {
     case 'element':
-      return isCRCElement(node) && haveSameLayerElement(snapshot, node);
+      return isPibblElement(node) && haveSameLayerElement(snapshot, node);
     case 'array':
       return Array.isArray(node) &&
         snapshot.children.length === node.length &&
@@ -99,7 +126,7 @@ export function haveSameLayerNodeTree(
 
 function haveSameLayerElement(
   snapshot: LayerElementSnapshot,
-  element: CRCElement<any>,
+  element: PibblElement<any>,
 ): boolean {
   if (snapshot.type !== element.type || snapshot.key !== element.key) {
     return false;

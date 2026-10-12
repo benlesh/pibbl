@@ -183,7 +183,7 @@ export async function expectVisualMatch(
     error?: string;
   } = {
     comparisonId, reportPath: `${artifactDirectory}/report.json`,
-    schema: 'crc-visual-comparison/1', status: 'unavailable', stage: 'capture',
+    schema: 'pibbl-visual-comparison/1', status: 'unavailable', stage: 'capture',
     coordinateSpace: 'image-pixels',
     capture: { surface: 'browser-element-composition', renderGeneration: 'unknown', assetReadiness: 'unknown', atomicFrameObservation: false, before: null, after: null },
     artifacts: { expected: null, actual: null, diff: null },

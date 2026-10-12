@@ -2,17 +2,17 @@ import {
   DragHandle,
   ManipulationFrame,
   Rectangle,
-  crc,
+  pibbl,
   signal,
   useEventListener,
   useManipulation,
-  type CRCController,
-  type CRCNode,
-} from '@crc/core';
+  type PibblController,
+  type PibblNode,
+} from '@pibbl/core';
 import { afterEach, expect, it } from 'vitest';
 import { commands } from 'vitest/browser';
 
-let controller: CRCController | undefined;
+let controller: PibblController | undefined;
 
 afterEach(async () => {
   controller?.dispose();
@@ -29,7 +29,7 @@ function Scene({
   readonly clicks: number[];
   readonly doubleClicks: number[];
   readonly ordinaryClicks: number[];
-}): CRCNode {
+}): PibblNode {
   useEventListener({
     onClick() { clicks.push(1); },
     onDblClick() { doubleClicks.push(1); },
@@ -75,7 +75,7 @@ it('suppresses only the activated drag click through native lost capture and res
   canvas.addEventListener('click', () => { nativeClicks++; });
   canvas.addEventListener('mousedown', () => { nativeMouseDowns++; });
   canvas.addEventListener('mouseup', () => { nativeMouseUps++; });
-  controller = crc(
+  controller = pibbl(
     canvas,
     <Scene
       clicks={clicks}

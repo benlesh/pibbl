@@ -96,7 +96,7 @@ await withDirectoryLock(resolve(cache, "tooling.lock"), async () => {
       {
         harfbuzz: lock.harfbuzz,
         method:
-          "native/reference.cpp; direct native HarfBuzz without CRC wrapper",
+          "native/reference.cpp; direct native HarfBuzz without Pibbl wrapper",
         glyphColumns: [
           "id",
           "utf16Cluster",

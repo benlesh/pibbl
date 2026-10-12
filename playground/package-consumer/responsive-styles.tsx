@@ -1,32 +1,32 @@
 import {
   createElement, definePrimitive, Flow, Rectangle, signal,
-  type CRCResponsiveStyle, type CRCSizeQuery, type CRCStyleRule,
+  type PibblResponsiveStyle, type PibblSizeQuery, type PibblStyleRule,
   type FlowStyle, type SystemStyle, type BoxStyle, type LayoutItemStyle, type SignalValue,
-} from '@crc/core';
+} from '@pibbl/core';
 
 const content = {
   width: '100%', height: 112, direction: 'vertical',
   when: [{ query: { minWidth: 600, maxHeight: 900 }, style: { direction: 'horizontal', gap: signal(12) } }],
-} satisfies CRCResponsiveStyle<FlowStyle>;
+} satisfies PibblResponsiveStyle<FlowStyle>;
 <Flow children={null} style={content} />;
 createElement(Flow, { style: content, children: null });
-function Actions(_props: { style?: SignalValue<CRCResponsiveStyle<BoxStyle & LayoutItemStyle> | undefined> }) {
+function Actions(_props: { style?: SignalValue<PibblResponsiveStyle<BoxStyle & LayoutItemStyle> | undefined> }) {
   return <Flow children={null} style={content} />;
 }
-const outer = signal<CRCResponsiveStyle<BoxStyle & LayoutItemStyle>>({ width: 320, height: 160 });
+const outer = signal<PibblResponsiveStyle<BoxStyle & LayoutItemStyle>>({ width: 320, height: 160 });
 <Actions style={outer} />;
 createElement(Actions, { style: outer });
-<Flow children={null} style={signal<CRCResponsiveStyle<FlowStyle> | undefined>(undefined)} />;
+<Flow children={null} style={signal<PibblResponsiveStyle<FlowStyle> | undefined>(undefined)} />;
 <Rectangle style={{ width: 100, height: 40, when: [{ query: { minHeight: 0 }, style: { fill: signal('red') } }] }} />;
 // @ts-expect-error Required base width/height cannot be supplied only by a rule.
 <Rectangle style={{ when: [{ query: { minWidth: 0 }, style: { width: 100, height: 40 } }] }} />;
 // @ts-expect-error Conditions require at least one bound.
-const empty: CRCSizeQuery = {};
+const empty: PibblSizeQuery = {};
 void empty;
 // @ts-expect-error Foreign conditions are outside the closed vocabulary.
-const pointer: CRCSizeQuery = { pointer: 'coarse' };
+const pointer: PibblSizeQuery = { pointer: 'coarse' };
 void pointer;
-const nested: CRCStyleRule<FlowStyle> = { query: { minHeight: 0 }, style: {
+const nested: PibblStyleRule<FlowStyle> = { query: { minHeight: 0 }, style: {
   // @ts-expect-error Nested conditions are forbidden.
   when: [],
 } };
@@ -41,7 +41,7 @@ void nested;
 <Flow children={null} style={{ when: [{ query: { maxWidth: 300 }, style: { fill: 'red' } }] }} />;
 
 interface InvalidSpecified extends SystemStyle { when?: string }
-// @ts-expect-error CRC: style.when is framework-owned.
+// @ts-expect-error Pibbl: style.when is framework-owned.
 definePrimitive<{}, InvalidSpecified>(() => undefined);
 interface InvalidNormalized extends SystemStyle { when?: number }
 // @ts-expect-error Normalized styles cannot claim framework-owned input names.

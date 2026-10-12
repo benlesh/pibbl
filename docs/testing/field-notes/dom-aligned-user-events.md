@@ -56,9 +56,9 @@ fully released snapshots.
 The first RED runs failed because the observer did not expose those structural
 fields. The performance RED also exposed a private laboratory ordering defect:
 after lazy native listener installation replaced the eager listener model, the
-Canvas completion observer could run before CRC. Moving only that private
+Canvas completion observer could run before Pibbl. Moving only that private
 completion observer to the bubbling `window` boundary restores measurement
-ordering without changing `@crc/core` runtime behavior.
+ordering without changing `@pibbl/core` runtime behavior.
 
 Initial Task 10 GREEN results represented by commit `3d38c70`:
 
@@ -71,8 +71,8 @@ Initial Task 10 GREEN results represented by commit `3d38c70`:
 
 The strict consumer now exercises `useEventTarget`, `useEventListener`, and
 pointer, mouse, touch, wheel, keyboard, focus, input/editing, composition,
-clipboard, and drag declarations from both `@crc/core` and
-`@crc/core/types`. The same source is compiled under Bundler and NodeNext
+clipboard, and drag declarations from both `@pibbl/core` and
+`@pibbl/core/types`. The same source is compiled under Bundler and NodeNext
 resolution against the packed tarball. Runtime verification loads the exact
 root export set and checks every value is function-valued, including both event
 hooks and the `LayoutDiagnostic` class constructor; unsupported `lib/` and
@@ -100,7 +100,7 @@ Initial Task 10 focused gates represented by commit `3d38c70` passed:
   duration 9.64 seconds.
 - `corepack pnpm@11.21.0 test:performance`: 1 file; 7 tests passed and 2
   opt-in timing tests skipped out of 9; duration 1.32 seconds.
-- `CRC_STUDIO_PREVIEW_PORT=4274 corepack pnpm@11.21.0 test:studio-visual`:
+- `PIBBL_STUDIO_PREVIEW_PORT=4274 corepack pnpm@11.21.0 test:studio-visual`:
   exit 0 after a 0.86-second Studio build; all 5 full-page baselines matched;
   measured command duration 3.71 seconds.
 
@@ -109,13 +109,13 @@ static, package, 601-test browser, and visual-safeguard phases had passed, then
 stopped after about 60.0 seconds because unrelated user process `44491`, rooted
 at `/Users/benlesh/GitHub/yeah/apps/web`, already owned the verifier's fixed
 loopback port 4174. That process was not disturbed. The evidence harness now
-accepts a validated `CRC_STUDIO_PREVIEW_PORT` integer from 1 through 65535 and
+accepts a validated `PIBBL_STUDIO_PREVIEW_PORT` integer from 1 through 65535 and
 retains 4174 as its default.
 
 The one post-fix aggregate run for the initial Task 10 delivery was:
 
 ```text
-CRC_STUDIO_PREVIEW_PORT=4274 corepack pnpm@11.21.0 trust
+PIBBL_STUDIO_PREVIEW_PORT=4274 corepack pnpm@11.21.0 trust
 ```
 
 It exited 0 in a measured 46.8 seconds on the tree committed as `3d38c70`,

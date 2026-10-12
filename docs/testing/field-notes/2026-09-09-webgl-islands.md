@@ -15,7 +15,7 @@ Verified implementation revision: `66addd0367c554bacf59d76c6b637cd3f5a8c3ee`
 
 The later evidence-note commit changes only this Markdown record.
 
-Workspace: `/private/tmp/crc-webgl-islands`
+Workspace: `/private/tmp/pibbl-webgl-islands`
 
 ## Environment
 
@@ -30,8 +30,8 @@ is fresh local evidence but does not replace a Node 24 CI result.
 
 ## Verified scope
 
-The integrated branch includes the `@crc/webgl` package, the matching-version
-`@crc/core/internal` friend seam, fixed global Canvas/WebGL hit resolution,
+The integrated branch includes the `@pibbl/webgl` package, the matching-version
+`@pibbl/core/internal` friend seam, fixed global Canvas/WebGL hit resolution,
 JSX and `createElement` authoring, default and explicit cameras, Cube, Sphere,
 Mesh, Group3D, geometry and primitive extension APIs, animation/context hooks,
 context-loss recovery, package consumers, Studio examples, documentation, and

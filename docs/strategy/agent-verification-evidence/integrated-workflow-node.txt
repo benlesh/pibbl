@@ -1,0 +1,11 @@
+✔ connects requirement discovery to a fixed native replay, fresh evidence and bounded retrieval (0.404709ms)
+✔ refuses unmapped and unsupported runners and malformed Studio origins (0.286875ms)
+✔ neither child exit nor saved pass overrides timeout, missing evidence or failed browser cleanup (0.059ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 36.777542

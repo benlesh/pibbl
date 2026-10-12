@@ -1,8 +1,8 @@
 import { definePrimitive } from '../define-primitive.js';
 import type {
-  CRCEventFocusOptions,
-  CRCEventHandlers,
-  CRCEventParticipationOptions,
+  PibblEventFocusOptions,
+  PibblEventHandlers,
+  PibblEventParticipationOptions,
 } from '../events/types.js';
 import {
   resolveStarGeometry,
@@ -26,7 +26,7 @@ import type {
   RoundedCornerStyle,
 } from '../style/types.js';
 import type { RenderingContext2D, SystemStyle } from '../types.js';
-import type { CRCPhysics2DPropExtension } from '../types.js';
+import type { PibblPhysics2DPropExtension } from '../types.js';
 import { renderPath } from './path.js';
 import { resolveRoundedCornerStyle } from './rounded-corner-style.js';
 import {
@@ -36,8 +36,28 @@ import {
   shapeGeometryErrorFactory,
 } from './shape-style.js';
 
-export interface StarProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions, CRCPhysics2DPropExtension {}
+/**
+ * Authored inputs for Star, including the declared data and presentation options.
+ *
+ * @see {@link PibblEventHandlers}
+ * @see {@link PibblEventParticipationOptions}
+ * @see {@link PibblPhysics2DPropExtension}
+ * @see {@link Star}
+ */
+export interface StarProps extends PibblEventHandlers, PibblEventFocusOptions, PibblEventParticipationOptions, PibblPhysics2DPropExtension {}
 
+/**
+ * Supported geometry and presentation properties for Star.
+ *
+ * @see {@link RoundedCornerStyle}
+ * @see {@link SystemStyle}
+ * @see {@link PaintStyle}
+ * @see {@link CursorStyle}
+ * @see {@link BoxStyle}
+ * @see {@link LayoutItemStyle}
+ * @see {@link Length}
+ * @see {@link Star}
+ */
 export interface StarStyle
   extends
     RoundedCornerStyle,
@@ -46,12 +66,22 @@ export interface StarStyle
     CursorStyle,
     BoxStyle,
     LayoutItemStyle {
+  /** Points defining the geometry or reported by the contact query. See {@link StarStyle}. */
   points: number;
+  /** Horizontal coordinate of the center. See {@link Length}. */
   cx?: Exclude<Length, 'auto'>;
+  /** Vertical coordinate of the center. See {@link Length}. */
   cy?: Exclude<Length, 'auto'>;
+  /** Radius of the outer boundary. See {@link Length}. */
   outerRadius: Exclude<Length, 'auto'>;
+  /** Radius of the inner boundary. See {@link Length}. */
   innerRadius: Exclude<Length, 'auto'>;
+  /** Rotation applied to the containing geometry. See {@link StarStyle}. */
   rotation?: number;
+  /**
+   * Width used for line hit testing independently of the visible stroke width. See
+   * {@link StarStyle}.
+   */
   lineInteractionWidth?: number;
 }
 
@@ -105,7 +135,16 @@ function renderStar(
   }, ctx);
 }
 
-/** Describes a star primitive for JSX or createElement authoring. */
+/**
+ * Describes a star primitive for JSX or createElement authoring.
+ *
+ * @param props - Authored component inputs, supplied through JSX or createElement. See the linked
+ * props and style types.
+ * @throws When called directly; Pibbl mounts this component through JSX or createElement.
+ *
+ * @see {@link StarProps}
+ * @see {@link StarStyle}
+ */
 export const Star = definePrimitive<
   StarProps,
   StarStyle,

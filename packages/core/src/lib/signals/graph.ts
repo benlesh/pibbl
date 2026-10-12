@@ -4,15 +4,13 @@ import type {
   SignalOptions,
   WritableSignal,
 } from './types.js';
-import type { CRCRenderTransaction } from '../types.js';
+import type { PibblRenderTransaction } from '../types.js';
 import {
   beginReactiveCollection,
   collectReactiveDependency,
-  createDetachedReactiveEdge,
   finishReactiveCollection,
   linkReactiveEdgeToSource,
   notifyReactiveEdges,
-  unlinkReactiveEdgeFromConsumer,
   unlinkReactiveEdgeFromSource,
   type ReactiveEdge,
   type ReactiveNotificationCursor,
@@ -64,28 +62,14 @@ export interface SignalNode<T> {
   observerTail: ReactiveEdge | undefined;
   observerCount: number;
   activeObserverCursor: ReactiveNotificationCursor | undefined;
-  /** @internal Legacy test-only observer access. */
-  readonly observers: SignalObserverCollection;
   observe?(): () => void;
   validate?(): void;
-}
-
-export interface SignalObserver {
-  (node: SignalNode<unknown>): void;
-  propagateInvalidation?: boolean;
-  renderInvalidation?: boolean;
-}
-
-export interface SignalObserverCollection {
-  readonly size: number;
-  add(observer: SignalObserver): this;
-  delete(observer: SignalObserver): boolean;
 }
 
 type SignalRenderProvisionStatus = 'pending' | 'success' | 'failure';
 
 interface SignalRenderProvisionEntry {
-  readonly transaction: CRCRenderTransaction;
+  readonly transaction: PibblRenderTransaction;
   value: unknown;
   status: SignalRenderProvisionStatus;
 }
@@ -94,7 +78,7 @@ interface SignalRenderProvisionState {
   baseValue: unknown;
   readonly entries: SignalRenderProvisionEntry[];
   readonly entriesByTransaction: Map<
-    CRCRenderTransaction,
+    PibblRenderTransaction,
     SignalRenderProvisionEntry
   >;
 }
@@ -127,26 +111,12 @@ export interface SignalWriterLeasePolicy {
 let activeSignalDependencyCollector: SignalDependencyCollector | undefined;
 const writePolicyStack: SignalWritePolicy[] = [];
 const computedStack: ComputedSignalNode<unknown>[] = [];
-const legacyObserverCollections = new WeakMap<
-  SignalNode<unknown>,
-  SignalObserverCollection
->();
-const legacyObserverConsumers = new WeakMap<
-  SignalObserver,
-  SignalDependencyConsumer
->();
-const signalNodePrototype = {
-  get observers(): SignalObserverCollection {
-    return getLegacyObserverCollection(this as SignalNode<unknown>);
-  },
-};
-
 function createSignalNodeState<T>(
   value: T,
   equals: SignalEquals<T>,
   debugName: string | undefined,
 ): SignalNode<T> {
-  return Object.assign(Object.create(signalNodePrototype), {
+  return {
     value,
     equals,
     debugName,
@@ -155,76 +125,7 @@ function createSignalNodeState<T>(
     observerTail: undefined,
     observerCount: 0,
     activeObserverCursor: undefined,
-  }) as SignalNode<T>;
-}
-
-function getLegacyObserverCollection(
-  node: SignalNode<unknown>,
-): SignalObserverCollection {
-  let collection = legacyObserverCollections.get(node);
-  if (collection !== undefined) return collection;
-  collection = {
-    get size(): number {
-      return node.observerCount;
-    },
-    add(observer: SignalObserver): SignalObserverCollection {
-      const consumer = getLegacyObserverConsumer(observer);
-      for (
-        let edge = consumer.dependencyHead;
-        edge !== undefined;
-        edge = edge.consumerNext
-      ) {
-        if (edge.source === node) return collection!;
-      }
-      const edge = createDetachedReactiveEdge(consumer, node);
-      linkReactiveEdgeToSource(edge);
-      return collection!;
-    },
-    delete(observer: SignalObserver): boolean {
-      const consumer = legacyObserverConsumers.get(observer);
-      if (consumer === undefined) return false;
-      for (
-        let edge = consumer.dependencyHead;
-        edge !== undefined;
-        edge = edge.consumerNext
-      ) {
-        if (edge.source !== node) continue;
-        unlinkReactiveEdgeFromSource(edge);
-        unlinkReactiveEdgeFromConsumer(edge);
-        return true;
-      }
-      return false;
-    },
   };
-  legacyObserverCollections.set(node, collection);
-  return collection;
-}
-
-function getLegacyObserverConsumer(
-  observer: SignalObserver,
-): SignalDependencyConsumer {
-  let consumer = legacyObserverConsumers.get(observer);
-  if (consumer !== undefined) return consumer;
-  consumer = {
-    dependencyHead: undefined,
-    dependencyTail: undefined,
-    dependencyFreeHead: undefined,
-    dependencyFreeCount: 0,
-    dependencyCount: 0,
-    dependencyHighWater: 0,
-    collectionCursor: undefined,
-    collectionGeneration: 0,
-    addDependency: () => {},
-    notify: node => observer(node),
-    get propagateInvalidation(): boolean {
-      return observer.propagateInvalidation === true;
-    },
-    get renderInvalidation(): boolean {
-      return observer.renderInvalidation === true;
-    },
-  };
-  legacyObserverConsumers.set(observer, consumer);
-  return consumer;
 }
 
 const commandAssertionNode = createSignalNodeState<unknown>(
@@ -452,6 +353,17 @@ export function recordRendererEdgeReleased(): void {
   releasedRendererEdges++;
 }
 
+/**
+ * Runs a synchronous callback while coalescing signal notifications until the outer batch
+ * completes.
+ *
+ * @param callback - Synchronous work whose signal notifications are grouped.
+ * @returns The callback's return value.
+ *
+ * @see {@link signal}
+ * @see {@link computed}
+ * @see {@link WritableSignal}
+ */
 export function batch<T>(callback: () => T): T {
   if (activePublicSignalBatch !== undefined) return callback();
 
@@ -475,7 +387,7 @@ export function batch<T>(callback: () => T): T {
     if (notificationFailures.length === 0) throw callbackFailure;
     throw new AggregateError(
       [callbackFailure, ...notificationFailures],
-      'CRC signal batch callback and observer notifications failed.',
+      'Pibbl signal batch callback and observer notifications failed.',
     );
   }
   throwSignalObserverFailures(notificationFailures);
@@ -499,7 +411,7 @@ function flushPublicSignalBatch(state: PublicSignalBatchState): unknown[] {
   } catch (error) {
     if (
       error instanceof AggregateError &&
-      error.message === 'CRC signal observer notifications failed.'
+      error.message === 'Pibbl signal observer notifications failed.'
     ) {
       state.failures.push(...error.errors);
     } else {
@@ -591,10 +503,21 @@ function notifyRendererInvalidationObservers(node: SignalNode<unknown>): unknown
 
 function throwSignalObserverFailures(failures: readonly unknown[]): void {
   if (failures.length > 0) {
-    throw new AggregateError(failures, 'CRC signal observer notifications failed.');
+    throw new AggregateError(failures, 'Pibbl signal observer notifications failed.');
   }
 }
 
+/**
+ * Creates a synchronous writable signal with configurable equality and an optional diagnostic
+ * name.
+ *
+ * @param initialValue - Value stored before the first write.
+ * @param options - Equality comparison and optional diagnostic name. See {@link SignalOptions}.
+ * @returns A writable signal holding the initial value. See {@link WritableSignal}.
+ *
+ * @see {@link SignalOptions}
+ * @see {@link WritableSignal}
+ */
 export function signal<T>(
   initialValue: T,
   options: SignalOptions<T> = {},
@@ -659,7 +582,7 @@ export function signal<T>(
 export function provisionSignalValueForRender<T>(
   value: WritableSignal<T>,
   nextValue: T,
-  transaction: CRCRenderTransaction,
+  transaction: PibblRenderTransaction,
 ): void {
   const node = getSignalNode(value) as SignalNode<unknown>;
   const publishComputedVersion = (next: unknown): void => {
@@ -736,6 +659,17 @@ export function provisionSignalValueForRender<T>(
   publishEffectiveValue(entry);
 }
 
+/**
+ * Creates a lazy, cached readonly signal whose dependencies are tracked during evaluation.
+ *
+ * @param compute - Synchronous calculation whose signal reads become dependencies.
+ * @param options - Equality comparison and optional diagnostic name. See {@link SignalOptions}.
+ * @returns A readonly, lazy, cached signal that recomputes when its dependencies change. See
+ * {@link Signal} .
+ *
+ * @see {@link SignalOptions}
+ * @see {@link Signal}
+ */
 export function computed<T>(
   compute: () => T,
   options: SignalOptions<T> = {},
@@ -866,7 +800,7 @@ export function computed<T>(
     const cycle = [...computedStack.slice(start), node as ComputedSignalNode<unknown>]
       .map(computedNode => computedNode.debugName ?? '<computed>')
       .join(' -> ');
-    return new Error(`CRC computed cycle: ${cycle}`);
+    return new Error(`Pibbl computed cycle: ${cycle}`);
   };
 
   const evaluate = (): void => {
@@ -1156,7 +1090,7 @@ export function flushPendingComputedValidations(): void {
         } catch (error) {
           if (
             error instanceof AggregateError &&
-            error.message === 'CRC signal observer notifications failed.'
+            error.message === 'Pibbl signal observer notifications failed.'
           ) {
             failures.push(...error.errors);
           } else {
@@ -1183,6 +1117,15 @@ export function setSignalGraphPlanWorkNotifier(notifier: () => void): void {
   if (pendingComputedValidations.size > 0) notifier();
 }
 
+/**
+ * Runs a callback without recording its signal reads as dependencies of the current consumer.
+ *
+ * @param callback - Synchronous work whose reads should not register dependencies.
+ * @returns The callback's return value.
+ *
+ * @see {@link Signal}
+ * @see {@link computed}
+ */
 export function untracked<T>(callback: () => T): T {
   const previous = activeSignalDependencyCollector;
   activeSignalDependencyCollector = undefined;
@@ -1193,6 +1136,15 @@ export function untracked<T>(callback: () => T): T {
   }
 }
 
+/**
+ * Checks the nominal Pibbl signal identity rather than accepting objects that merely have a get
+ * method.
+ *
+ * @param value - Value to check for Pibbl's nominal signal brand.
+ * @returns True if the value is a Pibbl signal, narrowing its type accordingly. See {@link Signal}.
+ *
+ * @see {@link Signal}
+ */
 export function isSignal(value: unknown): value is Signal<unknown> {
   return typeof value === 'object' && value !== null && signalValues.has(value);
 }
@@ -1428,7 +1380,7 @@ function requireSignalCommitBatchState(
   batch: SignalCommitBatch,
 ): SignalCommitBatchState {
   const state = signalCommitBatchStates.get(batch);
-  if (!state) throw new TypeError('Expected a CRC signal Commit batch.');
+  if (!state) throw new TypeError('Expected a Pibbl signal Commit batch.');
   return state;
 }
 
@@ -1524,7 +1476,7 @@ export function installSignalWriterLeasePolicy(
   policy: SignalWriterLeasePolicy,
 ): void {
   if (signalWriterLeasePolicy !== undefined && signalWriterLeasePolicy !== policy) {
-    throw new Error('CRC signal writer-lease policy is already installed.');
+    throw new Error('Pibbl signal writer-lease policy is already installed.');
   }
   signalWriterLeasePolicy = policy;
 }

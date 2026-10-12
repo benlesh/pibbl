@@ -1,7 +1,7 @@
 import { afterEach, expect, it, vi } from "vitest";
 import { commands } from "vitest/browser";
 import {
-  crc,
+  pibbl,
   signal,
   useManipulation,
   ManipulationFrame,
@@ -10,15 +10,15 @@ import {
   Flex,
   Absolute,
   Rectangle,
-  type CRCController,
-} from "@crc/core";
+  type PibblController,
+} from "@pibbl/core";
 import {
   installSchedulerDriverForTest,
   ManualSchedulerDriver,
 } from "../src/lib/scheduler/testing";
 import { getSignalNode } from "../src/lib/signals/graph";
 
-let mounted: CRCController | undefined;
+let mounted: PibblController | undefined;
 let restore: (() => void) | undefined;
 afterEach(() => {
   mounted?.dispose();
@@ -70,7 +70,7 @@ it("coalesces pointer samples into one normal content traversal and releases ges
   canvas.dataset.manipulationTest = "";
   document.body.append(canvas);
   const readback = vi.spyOn(canvas.getContext("2d")!, "getImageData");
-  mounted = crc(canvas, <Scene />);
+  mounted = pibbl(canvas, <Scene />);
   driver.flush(0);
   expect(contentVisits).toBe(1);
   expect(itemVisits).toBe(3);
@@ -103,7 +103,7 @@ it("coalesces pointer samples into one normal content traversal and releases ges
   expect(driver.pendingHostFrames).toBe(0);
   const visitsBeforeManual = contentVisits;
   const itemsBeforeManual = itemVisits;
-  mounted = crc(
+  mounted = pibbl(
     canvas,
     <Absolute style={box}>
       <Content style={{ width: 160, height: 120 }} />

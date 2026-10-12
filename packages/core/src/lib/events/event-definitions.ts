@@ -1,14 +1,14 @@
 import type {
-  CRCEventCapturePropName,
-  CRCEventHandlers,
-  CRCEventPropName,
-  CRCEventType,
+  PibblEventCapturePropName,
+  PibblEventHandlers,
+  PibblEventPropName,
+  PibblEventType,
 } from './types.js';
 
-export interface CRCEventDefinition {
-  readonly type: CRCEventType;
-  readonly prop: CRCEventPropName;
-  readonly captureProp: CRCEventCapturePropName;
+export interface PibblEventDefinition {
+  readonly type: PibblEventType;
+  readonly prop: PibblEventPropName;
+  readonly captureProp: PibblEventCapturePropName;
   readonly family:
     | 'pointer'
     | 'mouse'
@@ -25,7 +25,7 @@ export interface CRCEventDefinition {
   readonly coordinate: boolean;
 }
 
-export const CRC_EVENT_DEFINITIONS = Object.freeze([
+export const PIBBL_EVENT_DEFINITIONS = Object.freeze([
   { type: 'pointerover', prop: 'onPointerOver', captureProp: 'onPointerOverCapture', family: 'pointer', bubbles: true, cancelable: true, coordinate: true },
   { type: 'pointerenter', prop: 'onPointerEnter', captureProp: 'onPointerEnterCapture', family: 'pointer', bubbles: false, cancelable: false, coordinate: true },
   { type: 'pointerdown', prop: 'onPointerDown', captureProp: 'onPointerDownCapture', family: 'pointer', bubbles: true, cancelable: true, coordinate: true },
@@ -77,29 +77,37 @@ export const CRC_EVENT_DEFINITIONS = Object.freeze([
   { type: 'dragleave', prop: 'onDragLeave', captureProp: 'onDragLeaveCapture', family: 'drag', bubbles: true, cancelable: false, coordinate: true },
   { type: 'dragover', prop: 'onDragOver', captureProp: 'onDragOverCapture', family: 'drag', bubbles: true, cancelable: true, coordinate: true },
   { type: 'drop', prop: 'onDrop', captureProp: 'onDropCapture', family: 'drag', bubbles: true, cancelable: true, coordinate: true },
-]) as readonly CRCEventDefinition[];
+]) as readonly PibblEventDefinition[];
 
-export const CRC_EVENT_TYPES = Object.freeze(
-  CRC_EVENT_DEFINITIONS.map(definition => definition.type),
+export const PIBBL_EVENT_TYPES = Object.freeze(
+  PIBBL_EVENT_DEFINITIONS.map(definition => definition.type),
 );
 
-/** Returns whether an object supplies any supported CRC event callback. */
-export function hasCRCEventHandler(
-  handlers: Readonly<Record<PropertyKey, unknown>> | CRCEventHandlers,
+/**
+ * Returns whether an object supplies any supported Pibbl event callback.
+ *
+ * @param handlers - Object that may contain Pibbl event handler properties. See
+ * {@link PibblEventHandlers} .
+ * @returns Whether at least one Pibbl event handler is present.
+ *
+ * @see {@link PibblEventHandlers}
+ */
+export function hasPibblEventHandler(
+  handlers: Readonly<Record<PropertyKey, unknown>> | PibblEventHandlers,
 ): boolean {
-  return CRC_EVENT_DEFINITIONS.some(
+  return PIBBL_EVENT_DEFINITIONS.some(
     definition =>
       typeof handlers[definition.prop] === 'function' ||
       typeof handlers[definition.captureProp] === 'function',
   );
 }
 
-const definitionsByType = new Map<CRCEventType, CRCEventDefinition>(
-  CRC_EVENT_DEFINITIONS.map(definition => [definition.type, definition]),
+const definitionsByType = new Map<PibblEventType, PibblEventDefinition>(
+  PIBBL_EVENT_DEFINITIONS.map(definition => [definition.type, definition]),
 );
 
-export function getCRCEventDefinition(
-  type: CRCEventType,
-): CRCEventDefinition | undefined {
+export function getPibblEventDefinition(
+  type: PibblEventType,
+): PibblEventDefinition | undefined {
   return definitionsByType.get(type);
 }

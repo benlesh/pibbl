@@ -1,11 +1,11 @@
 import { compileNativeFilters, type NativePreparedFilter } from '../../filters/native-operations';
-import { invert, blur } from '@crc/core/filters';
+import { invert, blur } from '@pibbl/core/filters';
 import { describe, expect, it, vi } from 'vitest';
 import { definePrimitive } from '../define-primitive';
 import { createElement } from '../element/create-element';
 import { executeRender } from '../execute-render';
-import { mountCRC } from '../mount-crc';
-import type { CRCController, CRCNode, SystemStyle } from '../types';
+import { mountPibbl } from '../mount-pibbl';
+import type { PibblController, PibblNode, SystemStyle } from '../types';
 import { setPreNormalizedStyle, takePreNormalizedStyle } from './resolve-dispatch';
 import { normalizeDirectChildStyle } from '../layout/absolute';
 
@@ -213,22 +213,22 @@ describe('render style dispatch', () => {
   });
 });
 
-function mountAndRender(root: CRCNode): {
+function mountAndRender(root: PibblNode): {
   canvas: HTMLCanvasElement;
-  controller: CRCController;
+  controller: PibblController;
 } {
   const mounted = mount(root);
   executeRender(mounted.canvas, 1);
   return mounted;
 }
 
-function mount(root: CRCNode): {
+function mount(root: PibblNode): {
   canvas: HTMLCanvasElement;
-  controller: CRCController;
+  controller: PibblController;
 } {
   const canvas = document.createElement('canvas');
   canvas.width = 200;
   canvas.height = 100;
   document.body.appendChild(canvas);
-  return { canvas, controller: mountCRC(canvas, root) };
+  return { canvas, controller: mountPibbl(canvas, root) };
 }

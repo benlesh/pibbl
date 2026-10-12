@@ -45,7 +45,7 @@ Five reviewed native-Canvas baselines replace one composite gallery screenshot. 
 
 System-font glyph rectangles are tightly masked because glyph rasterization varies by platform; exact controlled Canvas calls, text interaction, and card pixels cover their semantics. Two decoded/scaled SVG image boxes receive tight edge masks; stable interior colors, blending, sources, dimensions, and failure/removal pixels remain exact.
 
-A deliberate `VITE_CRC_DRAWING_VISUAL_DRILL=1` run changed the three top-row shapes and failed on 20,694 pixels with maximum channel delta 234. The expected, actual, and diff images were inspected and showed only the intended changed shapes. A normal rerun returned all six drawing-gallery tests to green. Baselines were never updated by CI or by the drill.
+A deliberate `VITE_PIBBL_DRAWING_VISUAL_DRILL=1` run changed the three top-row shapes and failed on 20,694 pixels with maximum channel delta 234. The expected, actual, and diff images were inspected and showed only the intended changed shapes. A normal rerun returned all six drawing-gallery tests to green. Baselines were never updated by CI or by the drill.
 
 ## Proven fixes and decisions
 
@@ -57,7 +57,7 @@ A deliberate `VITE_CRC_DRAWING_VISUAL_DRILL=1` run changed the three top-row sha
 - Horizontal and vertical helper defaults are symmetric.
 - The unused `GProps.clipFillRule` declaration was removed; clipping belongs to `clip`.
 - Layer prop and dimension changes are tested on one persistent mounted Canvas.
-- Empty paths/lines paint nothing. Negative geometry and malformed SVG strings follow the browser Canvas/`Path2D` implementation rather than a CRC validation layer.
+- Empty paths/lines paint nothing. Negative geometry and malformed SVG strings follow the browser Canvas/`Path2D` implementation rather than a Pibbl validation layer.
 
 These decisions are summarized in the [drawing-component contract](../../design/drawing-components-contract.md).
 

@@ -20,14 +20,14 @@ Give the selected card one coherent typed drop shadow while keeping every card�
 
 Put the filter value on the card’s outer `Group`, not on its individual rectangles or labels. A nonempty filter captures that Group and all of its recursive output as one combined silhouette, so the body, text, and ports share one shadow. Nested filter boundaries resolve inside out; an ordered filter list runs forward in the order you declare it.
 
-An empty `[]` means the unselected card remains on CRC’s direct path. It needs no filter capability. A nonempty list needs browser `OffscreenCanvas` and native Canvas `filter` support. Filter output changes pixels only: it does not enlarge layout, measurement, cursor, hit testing, focus bounds, or navigation geometry.
+An empty `[]` means the unselected card remains on Pibbl’s direct path. It needs no filter capability. A nonempty list needs browser `OffscreenCanvas` and native Canvas `filter` support. Filter output changes pixels only: it does not enlarge layout, measurement, cursor, hit testing, focus bounds, or navigation geometry.
 
 ## Build the change
 
 Use one typed filter value at the card boundary and keep the direct path explicit for every other card.
 
 ```tsx
-import { dropShadow } from "@crc/core/filters";
+import { dropShadow } from "@pibbl/core/filters";
 
 <Group
   style={{
@@ -51,8 +51,8 @@ The [filter type reference](#/api/types/filters) lists every supported typed fil
 
 ## Predict and try
 
-Import `brightness` and `dropShadow` from `@crc/core/filters`, and `type CRCFilter`
-from `@crc/core`. Use these filter values for the selected branch:
+Import `brightness` and `dropShadow` from `@pibbl/core/filters`, and `type PibblFilter`
+from `@pibbl/core`. Use these filter values for the selected branch:
 
 ```tsx
 const bright = brightness({ amount: 1.08 });
@@ -62,7 +62,7 @@ const shadow = dropShadow({
   blurRadius: 10,
   color: "rgb(23 33 29 / 35%)",
 });
-const selectedFilters: readonly CRCFilter[] = [bright, shadow];
+const selectedFilters: readonly PibblFilter[] = [bright, shadow];
 
 <Group
   style={{

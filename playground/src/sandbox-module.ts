@@ -1,24 +1,29 @@
 import { parse } from "@babel/parser";
 
 const SUPPORTED_MODULES = new Set([
-  "@crc/core",
-  "@crc/core/filters",
-  "@crc/text",
-  "@crc/viz",
-  "@crc/textures",
-  "@crc/core/jsx-runtime",
-  "@crc/core/jsx-dev-runtime",
-  "@crc/particles",
-  "@crc/three",
-  "@crc/physics/2d",
-  "@crc/physics/2d/geometry",
-  "@crc/physics/3d/geometry",
+  "@pibbl/core/machines",
+  "@pibbl/core/machines/animation",
+  "@pibbl/core/sprites",
+  "@pibbl/core/sprites/formats/aseprite",
+  "@pibbl/core/sprites/formats/texture-packer",
+
+  "@pibbl/text",
+  "@pibbl/core",
+  "@pibbl/core/filters",
+  "@pibbl/core/viz",
+  "@pibbl/core/textures",
+  "@pibbl/core/jsx-runtime",
+  "@pibbl/core/jsx-dev-runtime",
+  "@pibbl/core/particles",
+  "@pibbl/three",
+  "@pibbl/core/physics/2d",
+  "@pibbl/core/physics/2d/geometry",
   "three",
   "three/addons/controls/OrbitControls.js",
 ]);
 
 const RESTRICTED_MODULE_EXPORTS = new Map<string, ReadonlySet<string>>([
-  ["@crc/three", new Set(["defineThreeLayer"])],
+  ["@pibbl/three", new Set(["defineThreeLayer"])],
   [
     "three",
     new Set([
@@ -49,10 +54,9 @@ interface SourceEdit {
 
 function invalidModuleShape(): Error {
   return new Error(
-    "Lessons may contain named imports only from @crc/core, @crc/viz, @crc/textures, " +
-      "@crc/core/jsx-runtime, @crc/core/jsx-dev-runtime, @crc/particles, " +
-      "@crc/physics/2d, @crc/physics/2d/geometry, " +
-      "@crc/physics/3d/geometry, @crc/three, three, and " +
+    "Lessons may contain named imports only from @pibbl/core/machines, @pibbl/core/machines/animation, @pibbl/core/sprites and its format adapters, @pibbl/core, @pibbl/core/filters, @pibbl/core/viz, @pibbl/core/textures, " +
+      "@pibbl/core/jsx-runtime, @pibbl/core/jsx-dev-runtime, @pibbl/core/particles, " +
+      "@pibbl/core/physics/2d, @pibbl/core/physics/2d/geometry, @pibbl/three, three, and " +
       "three/addons/controls/OrbitControls.js, plus exactly " +
       "one default mount(canvas) export.",
   );
@@ -99,7 +103,7 @@ function applyEdits(source: string, edits: readonly SourceEdit[]): string {
 }
 
 function uniqueRuntimeBinding(identifiers: ReadonlySet<string>): string {
-  let binding = "__crcStudioRuntime";
+  let binding = "__pibblStudioRuntime";
   while (identifiers.has(binding)) binding += "_";
   return binding;
 }
@@ -250,17 +254,17 @@ export function toRunnableScript(emittedCode: string): string {
   const runtimeBindings = [...bindings]
     .map(([moduleName, moduleBindings]) => {
       const runtimeSource = RESTRICTED_MODULE_EXPORTS.has(moduleName)
-        ? `${runtimeBinding}.__crcStudioModules[${JSON.stringify(moduleName)}]`
+        ? `${runtimeBinding}.__pibblStudioModules[${JSON.stringify(moduleName)}]`
         : runtimeBinding;
       return `const { ${moduleBindings.join(", ")} } = ${runtimeSource};`;
     })
     .join("\n");
-  const wrapped = `globalThis.__CRC_EXAMPLE_MOUNT__ = (function (${runtimeBinding}) {
+  const wrapped = `globalThis.__PIBBL_EXAMPLE_MOUNT__ = (function (${runtimeBinding}) {
 "use strict";
 ${runtimeBindings}
 ${runnable}
 return mount;
-})(globalThis["CRC_CORE"]);`;
+})(globalThis["PIBBL_CORE"]);`;
 
   try {
     parse(wrapped, { createImportExpressions: true, sourceType: "script" });

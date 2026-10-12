@@ -12,13 +12,13 @@ keywords: [particles, flow, smoke, buoyancy]
 # useFlowField2D and useFlowSource2D
 
 ```ts
-import { useFlowField2D, useFlowSource2D } from "@crc/particles";
+import { useFlowField2D, useFlowSource2D } from "@pibbl/core/particles";
 ```
 
 `useFlowField2D({ bounds, resolution, obstacles?, buoyancy? })` owns one
 staggered velocity grid. Bounds contain logical `width` and `height`;
 resolution is `[columns, rows]`. Dimensions are mount-only. The field uses the
-CRC scheduler, fixed 60 Hz steps, and at most four catch-up steps per frame.
+Pibbl scheduler, fixed 60 Hz steps, and at most four catch-up steps per frame.
 Negative buoyancy accelerates hot flow upward in Canvas coordinates.
 
 `useFlowSource2D(field, { position, radius, acceleration?, heat?, enabled? })`

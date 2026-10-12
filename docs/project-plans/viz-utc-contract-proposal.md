@@ -1,9 +1,33 @@
 # UTC scale contract (approved)
 
+> **Historical status: Design proposal retained as work evidence; current code and public contracts define shipped behavior.**
+
+> API correction approved 2026-10-05: **every scale family has a dedicated
+> provider and hook**, with a fixed return type and no family-selector argument.
+> Current families: `LinearScale` / `useLinearScale`, `BarScale` / `useBarScale`,
+> `UTCScale` / `useUTCScale`. UTC nicening is `niceUTCDomain(domain, { count? })`.
+> Generic `Scale`, `ScaleProps`, and `useScale` are removed, without aliases.
+> Future log, symlog, power, square-root, point, ordinal, local-time, sequential,
+> diverging, quantile, quantize, and threshold variations must follow this rule;
+> listing them here does not claim implementation. Family modules must tree shake
+> independently. This decision supersedes selector-based API examples below.
+
 > **Historical status: Approved proposal record; it does not define current shipped behavior.**
 
 Status: approved by the user on 2026-09-30. Implementation is authorized;
 this contract is not yet shipped behavior.
+
+## Current priority and presentation requirement — 2026-10-05
+
+The [current visualization priorities](viz-charting-priorities.md) select this
+as the first charting slice. Preserve the approved numeric/calendar contract
+below. Its full-ISO default formatter is deterministic, but does not by itself
+meet the new visual-quality bar: the first example needs compact calendar labels,
+clear UTC context, units, deliberate gutters, and readable narrow layouts.
+A reusable contextual formatter and label-density/collision policy are follow-up
+presentation work, not silently approved changes to tick generation or
+`formatTick`. Explicitly resolve endpoint crowding before claiming axis quality
+is complete. No implementation or visual acceptance is claimed by this note.
 
 ## Approval summary
 
@@ -153,7 +177,7 @@ These are the only implicit domain-padding rules.
 Both helpers are pure snapshots: they resolve no `SignalValue`, create no
 subscription themselves, copy no rows, and retain no cache. A caller may invoke
 `extent` during a tracked component evaluation; signal reads in its accessor are
-therefore owned by that caller context and participate in normal CRC dependency
+therefore owned by that caller context and participate in normal Pibbl dependency
 tracking. Calling either helper outside evaluation has no hidden reactivity.
 Replacing data/domain/range/reverse or any resolved UTC cadence input invalidates
 ordinary mapping consumers; no automatic domain extension, mutation observation,

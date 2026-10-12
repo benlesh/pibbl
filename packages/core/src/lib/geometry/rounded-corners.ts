@@ -1,3 +1,7 @@
+import type { PolygonPathOptions } from './polygon.js';
+import type { RectanglePathOptions } from './rectangle.js';
+import type { StarPathOptions } from './star.js';
+import type { RegularPolygonPathOptions } from './regular-polygon.js';
 import { createLinePath } from './line.js';
 import {
   nonnegativeNumber,
@@ -5,8 +9,24 @@ import {
   type GeometryErrorFactory,
 } from './validation.js';
 
+/**
+ * Uniform or per-corner radii for rounding supported path vertices.
+ *
+ * @see {@link PolygonPathOptions}
+ * @see {@link RectanglePathOptions}
+ * @see {@link StarPathOptions}
+ * @see {@link RegularPolygonPathOptions}
+ */
 export interface RoundedCornerPathOptions {
+  /**
+   * Uniform corner radius used where no per-corner override is supplied. See
+   * {@link RoundedCornerPathOptions}.
+   */
   cornerRadius?: number;
+  /**
+   * Per-corner radii; nullish entries use the uniform corner radius. See
+   * {@link RoundedCornerPathOptions}.
+   */
   cornerRadii?: readonly (number | null | undefined)[];
 }
 

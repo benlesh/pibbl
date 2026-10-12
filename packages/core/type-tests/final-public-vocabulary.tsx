@@ -1,15 +1,14 @@
-import {
+import { tween, spring,
   Absolute,
   batch,
   Clip,
   computed,
   createElement,
-  crc,
+  pibbl,
   useCanvasContext,
   useComputed,
   useConst,
   useCursor,
-  useEvent,
   useEventListener,
   useEventTarget,
   useLayoutBox,
@@ -20,7 +19,7 @@ import {
   useRef,
   useSignal,
   useSvgPath,
-  useTransition,
+  useAnimatedValue,
   definePrimitive,
   defineAnimation,
   easing,
@@ -46,60 +45,58 @@ import {
   repeat,
   sequence,
   signal,
-  spring,
   stepper,
   SvgPath,
   Star,
   Text,
-  track,
-  tween,
+  drive,
   untracked,
   VerticalLine,
   wait,
   marker,
-  type CRCAnimationDefinition,
-  type CRCAnimationOptions,
-  type CRCAnimationProgram,
-  type CRCAnimationRepeatDirection,
-  type CRCAnimationRepeatOptions,
-  type CRCAnimationSampleInput,
-  type CRCComponent,
-  type CRCController,
-  type CRCEventHandler,
-  type CRCElement,
-  type CRCEasing,
-  type CRCInterpolator,
-  type CRCKeyframesOptions,
-  type CRCNode,
-  type CRCNodeInput,
-  type CRCPlayback,
-  type CRCPlaybackEvent,
-  type CRCPlaybackOptions,
-  type CRCPlaybackStatus,
-  type CRCReactionOptions,
+  type PibblAnimationDefinition,
+  type PibblAnimationOptions,
+  type PibblAnimationProgram,
+  type PibblAnimationRepeatDirection,
+  type PibblAnimationRepeatOptions,
+  type PibblAnimationSampleInput,
+  type PibblComponent,
+  type PibblController,
+  type PibblEventHandler,
+  type PibblElement,
+  type PibblEasing,
+  type PibblInterpolator,
+  type PibblKeyframesOptions,
+  type PibblNode,
+  type PibblNodeInput,
+  type PibblPlayback,
+  type PibblPlaybackEvent,
+  type PibblPlaybackOptions,
+  type PibblPlaybackStatus,
+  type PibblReactionOptions,
   type RectStyle,
-  type CRCSpringOptions,
-  type CRCSpringTransitionOptions,
-  type CRCStepperOptions,
-  type CRCTweenOptions,
-  type CRCTweenTransitionOptions,
+  type PibblSpringOptions,
+  type PibblAnimatedValueOptions,
+  type PibblStepperOptions,
+  type PibblTweenOptions,
+
   type Signal,
   type SignalEquals,
   type SignalOptions,
   type SignalValue,
-  type CRCTextInput,
+  type PibblTextInput,
   type WritableSignal,
-} from '@crc/core';
+} from '@pibbl/core';
 
 // Removed hooks have no compatibility export from the package root.
 // @ts-expect-error useState was replaced by useSignal
-import { useState as removedUseState } from '@crc/core';
+import { useState as removedUseState } from '@pibbl/core';
 // @ts-expect-error StateUpdater was removed with useState
-import type { StateUpdater as RemovedStateUpdater } from '@crc/core';
+import type { StateUpdater as RemovedStateUpdater } from '@pibbl/core';
 // @ts-expect-error useMemo was replaced by useConst and useComputed
-import { useMemo as removedUseMemo } from '@crc/core';
+import { useMemo as removedUseMemo } from '@pibbl/core';
 // @ts-expect-error useWhenChanged was replaced by useReaction
-import { useWhenChanged as removedUseWhenChanged } from '@crc/core';
+import { useWhenChanged as removedUseWhenChanged } from '@pibbl/core';
 
 const importedFinalVocabulary = {
   Absolute,
@@ -107,12 +104,11 @@ const importedFinalVocabulary = {
   Clip,
   computed,
   createElement,
-  crc,
+  pibbl,
   useCanvasContext,
   useComputed,
   useConst,
   useCursor,
-  useEvent,
   useEventListener,
   useEventTarget,
   useLayoutBox,
@@ -123,7 +119,7 @@ const importedFinalVocabulary = {
   useRef,
   useSignal,
   useSvgPath,
-  useTransition,
+  useAnimatedValue,
   definePrimitive,
   defineAnimation,
   easing,
@@ -153,7 +149,7 @@ const importedFinalVocabulary = {
   SvgPath,
   Star,
   Text,
-  track,
+  drive,
   tween,
   untracked,
   VerticalLine,
@@ -168,7 +164,7 @@ type RemovedHookVocabulary = [
   typeof removedUseWhenChanged,
 ];
 
-function FinalVocabularyScene(): CRCNode {
+function FinalVocabularyScene(): PibblNode {
   return (
     <FocusManagement>
       <KeyboardNavigation mode="directional">
@@ -204,8 +200,8 @@ function FinalVocabularyScene(): CRCNode {
   );
 }
 
-const component: CRCComponent<Record<string, never>> = FinalVocabularyScene;
-const element: CRCElement<any> = createElement(Rectangle, {
+const component: PibblComponent<Record<string, never>> = FinalVocabularyScene;
+const element: PibblElement<any> = createElement(Rectangle, {
   style: { width: 1, height: 1 },
 });
 const pointerEventsVocabulary = (
@@ -224,7 +220,7 @@ const pointerEventsVocabulary = (
     <Rectangle pointerEvents={1} style={{ width: 1, height: 1 }} />
   </>
 );
-const controller = null as CRCController | null;
+const controller = null as PibblController | null;
 const signalEquals: SignalEquals<number> = (previous, next) => previous === next;
 const signalOptions: SignalOptions<number> = {
   debugName: 'final vocabulary count',
@@ -241,7 +237,7 @@ callbackSignal.set(() => 'updated');
 
 const reactiveX = signal(10);
 const reactiveFill = signal('red');
-const reactiveHandler = signal<CRCEventHandler<'click'>>(() => {});
+const reactiveHandler = signal<PibblEventHandler<'click'>>(() => {});
 const reactiveStyle = signal<RectStyle>({
   left: 10,
   fill: 'red',
@@ -320,11 +316,11 @@ const nestedPaddingSignal = (
   />
 );
 const reactiveLabel = signal('Current');
-const reactiveNode = signal<CRCNode>(
+const reactiveNode = signal<PibblNode>(
   <Rectangle style={{ width: 10, height: 10 }} />,
 );
-const publicNodeInput: CRCNodeInput = reactiveNode;
-const publicTextInput: CRCTextInput = ['Value: ', reactiveLabel];
+const publicNodeInput: PibblNodeInput = reactiveNode;
+const publicTextInput: PibblTextInput = ['Value: ', reactiveLabel];
 const signalValuedChildren = (
   <Group>
     {reactiveNode}
@@ -338,8 +334,8 @@ const invalidNestedTextSignal = (
     {nestedTextSignal}
   </Text>
 );
-// @ts-expect-error a bare signal has no receiving component at the CRC root
-crc(document.createElement('canvas'), reactiveNode);
+// @ts-expect-error a bare signal has no receiving component at the Pibbl root
+pibbl(document.createElement('canvas'), reactiveNode);
 void signalValuedPrimitiveInputs;
 void gauge;
 void exactSignal;
@@ -353,17 +349,17 @@ void invalidNestedTextSignal;
 
 const numericOutput = signal(0);
 const objectOutput = signal({ x: 0 });
-const objectInterpolator: CRCInterpolator<{ x: number }> = (
+const objectInterpolator: PibblInterpolator<{ x: number }> = (
   from,
   to,
   progress,
 ) => ({ x: from.x + (to.x - from.x) * progress });
-const tweenDefinition: CRCAnimationDefinition<number> = tween({
+const tweenDefinition: PibblAnimationDefinition<number> = tween({
   to: 10,
   duration: 100,
   easing: easing.easeOut,
 });
-const springDefinition: CRCAnimationDefinition<number> = spring({ to: 20 });
+const springDefinition: PibblAnimationDefinition<number> = spring({ to: 20 });
 const objectDefinition = tween({
   to: { x: 10 },
   duration: 100,
@@ -380,68 +376,64 @@ const stepperDefinition = stepper<{ value: number }, number>({
   step: state => ({ value: state.value + 1 }),
   read: state => state.value,
 });
-const animationProgram: CRCAnimationProgram = sequence(
+const animationProgram: PibblAnimationProgram = sequence(
   parallel(
-    track(numericOutput, tweenDefinition),
-    track(objectOutput, objectDefinition),
+    drive(numericOutput, tweenDefinition),
+    drive(objectOutput, objectDefinition),
   ),
   marker('halfway'),
-  track(numericOutput, keyframeDefinition),
+  drive(numericOutput, keyframeDefinition),
   wait(10),
-  repeat(track(numericOutput, springDefinition), {
+  repeat(drive(numericOutput, springDefinition), {
     iterations: 2,
     direction: 'alternate',
   }),
-  track(numericOutput, customDefinition),
-  track(numericOutput, stepperDefinition),
+  drive(numericOutput, customDefinition),
+  drive(numericOutput, stepperDefinition),
 );
-const easingValue: CRCEasing = easing.linear;
-const repeatDirection: CRCAnimationRepeatDirection = 'alternate-reverse';
-const repeatOptions: CRCAnimationRepeatOptions = {
+const easingValue: PibblEasing = easing.linear;
+const repeatDirection: PibblAnimationRepeatDirection = 'alternate-reverse';
+const repeatOptions: PibblAnimationRepeatOptions = {
   iterations: 2,
   direction: repeatDirection,
 };
-const tweenOptions: CRCTweenOptions<number> = { to: 1, duration: 10 };
-const keyframesOptions: CRCKeyframesOptions<number> = {
+const tweenOptions: PibblTweenOptions<number> = { to: 1, duration: 10 };
+const keyframesOptions: PibblKeyframesOptions<number> = {
   values: [0, 1],
   duration: 10,
 };
-const oneValueKeyframesOptions: CRCKeyframesOptions<number> = {
+const oneValueKeyframesOptions: PibblKeyframesOptions<number> = {
   // @ts-expect-error public keyframes require at least two values
   values: [0],
   duration: 10,
 };
 void oneValueKeyframesOptions;
-const springOptions: CRCSpringOptions = { to: 1 };
-const sampleInput: CRCAnimationSampleInput<number> = {
+const springOptions: PibblSpringOptions = { to: 1 };
+const sampleInput: PibblAnimationSampleInput<number> = {
   initialValue: 0,
   localTime: 5,
   progress: 0.5,
 };
-const animationOptions: CRCAnimationOptions<number> = {
+const animationOptions: PibblAnimationOptions<number> = {
   duration: 10,
   sample: input => input.progress,
 };
-const stepperOptions: CRCStepperOptions<{ value: number }, number> = {
+const stepperOptions: PibblStepperOptions<{ value: number }, number> = {
   stepMilliseconds: 10,
   initial: value => ({ value }),
   step: state => state,
   read: state => state.value,
 };
-const playbackOptions: CRCPlaybackOptions = { autoplay: false };
-const playbackStatus: CRCPlaybackStatus = 'idle';
-const playbackEvent = null as CRCPlaybackEvent | null;
-const tweenTransitionOptions: CRCTweenTransitionOptions<{ x: number }> = {
-  type: 'tween',
-  duration: 100,
-  interpolate: objectInterpolator,
-};
-const springTransitionOptions: CRCSpringTransitionOptions = { type: 'spring' };
+const playbackOptions: PibblPlaybackOptions = { autoplay: false };
+const playbackStatus: PibblPlaybackStatus = 'idle';
+const playbackEvent = null as PibblPlaybackEvent | null;
+const tweenTransitionOptions: PibblAnimatedValueOptions<{ x: number }> = { animation: tween({ duration: 100, interpolate: objectInterpolator }) };
+const springTransitionOptions: PibblAnimatedValueOptions<number> = { animation: spring({  }) };
 
-function AnimationHookScene(): CRCNode {
-  const player: CRCPlayback = usePlayback(animationProgram, playbackOptions);
-  const tweened = useTransition({ x: 10 }, tweenTransitionOptions);
-  const sprung = useTransition(10, springTransitionOptions);
+function AnimationHookScene(): PibblNode {
+  const player: PibblPlayback = usePlayback(animationProgram, playbackOptions);
+  const tweened = useAnimatedValue({ x: 10 }, tweenTransitionOptions);
+  const sprung = useAnimatedValue(10, springTransitionOptions);
   return <Text>{`${player.status.get()}:${tweened.get().x}:${sprung.get()}`}</Text>;
 }
 
@@ -449,14 +441,14 @@ function AnimationHookScene(): CRCNode {
 spring({ to: 'done' });
 const numberDefinition = tween({ to: 10, duration: 100 });
 // @ts-expect-error a numeric definition cannot write an object signal
-track(objectOutput, numberDefinition);
-type CoreExports = typeof import('@crc/core');
+drive(objectOutput, numberDefinition);
+type CoreExports = typeof import('@pibbl/core');
 // @ts-expect-error no free playback function is exported
 type FreePlay = CoreExports['play'];
 
 // @ts-expect-error readonly signals do not expose writes
 readonlyCount.set(2);
-// @ts-expect-error CRC style accepts resolved numbers, not signal containers
+// @ts-expect-error Pibbl style accepts resolved numbers, not signal containers
 const badStyle: RectStyle = { left: writableCount, width: 10, height: 10 };
 // @ts-expect-error computed values are readonly
 computed(() => writableCount.get() * 2).update(value => value + 1);
@@ -467,13 +459,13 @@ if (isSignal(maybeSignal)) {
   void narrowedSignal.get();
 }
 
-function SignalHookScene(): CRCNode {
+function SignalHookScene(): PibblNode {
   const label = useSignal('hook value');
   return <Text>{label.get()}</Text>;
 }
-const signalHookComponent: CRCComponent<Record<string, never>> = SignalHookScene;
+const signalHookComponent: PibblComponent<Record<string, never>> = SignalHookScene;
 
-function ComputedHookScene({ scale }: { scale: number }): CRCNode {
+function ComputedHookScene({ scale }: { scale: number }): PibblNode {
   const origin = useConst(() => 10);
   const source = useSignal(2);
   const value: Signal<number> = useComputed(
@@ -483,19 +475,19 @@ function ComputedHookScene({ scale }: { scale: number }): CRCNode {
   );
   return <Text>{value}</Text>;
 }
-const computedHookComponent: CRCComponent<{ scale: number }> =
+const computedHookComponent: PibblComponent<{ scale: number }> =
   ComputedHookScene;
 
-function ReactionHookScene({ label }: { label: string }): CRCNode {
+function ReactionHookScene({ label }: { label: string }): PibblNode {
   const source = useSignal(1);
-  const options: CRCReactionOptions = { debugName: label };
+  const options: PibblReactionOptions = { debugName: label };
   useReaction(() => {
     source.get();
     return () => undefined;
   }, [label], options);
   return <Text>{source}</Text>;
 }
-const reactionHookComponent: CRCComponent<{ label: string }> =
+const reactionHookComponent: PibblComponent<{ label: string }> =
   ReactionHookScene;
 
 void importedFinalVocabulary;

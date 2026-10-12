@@ -23,7 +23,7 @@ const store = dirname(
   parse(readFileSync(join(root, "node_modules/.modules.yaml"), "utf8"))
     .storeDir,
 );
-const temp = mkdtempSync(join(tmpdir(), "crc-packed-text-"));
+const temp = mkdtempSync(join(tmpdir(), "pibbl-packed-text-"));
 const pnpm = (args, cwd = root) =>
   execFileSync("corepack", ["pnpm@11.21.0", ...args], {
     cwd,
@@ -33,12 +33,12 @@ const pnpm = (args, cwd = root) =>
 let server, browser;
 try {
   const dependencies = {};
-  for (const name of ["types", "core", "text"]) {
+  for (const name of ["core", "text"]) {
     pnpm(
       ["pack", "--out", join(temp, `${name}.tgz`)],
       join(root, "packages", name),
     );
-    dependencies[`@crc/${name}`] = `file:${join(temp, `${name}.tgz`)}`;
+    dependencies[`@pibbl/${name}`] = `file:${join(temp, `${name}.tgz`)}`;
   }
   const consumer = join(temp, "consumer");
   mkdirSync(consumer);
@@ -48,7 +48,7 @@ try {
   );
   writeFileSync(
     join(consumer, "pnpm-workspace.yaml"),
-    `packages:\n  - .\noverrides:\n  '@crc/types': ${dependencies["@crc/types"]}\n`,
+    `packages:\n  - .\n`,
   );
   pnpm(
     [
@@ -61,17 +61,18 @@ try {
     consumer,
   );
   const installed = createRequire(join(consumer, "probe.mjs"));
-  const entry = installed.resolve("@crc/text");
+  const entry = installed.resolve("@pibbl/text");
+  assert.ok(!readdirSync(dirname(entry)).includes("testing.mjs"), "Private text testing entry must not ship");
   const manifest = JSON.parse(
-    readFileSync(installed.resolve("@crc/text/package.json"), "utf8"),
+    readFileSync(installed.resolve("@pibbl/text/package.json"), "utf8"),
   );
   assert.equal(manifest.scripts.install, undefined);
   assert.equal(manifest.scripts.postinstall, undefined);
   assert.equal(
-    realpathSync(createRequire(entry).resolve("@crc/core")),
-    realpathSync(installed.resolve("@crc/core")),
+    realpathSync(createRequire(entry).resolve("@pibbl/core")),
+    realpathSync(installed.resolve("@pibbl/core")),
   );
-  for (const path of ["@crc/text/testing", "@crc/text/src/index.ts"])
+  for (const path of ["@pibbl/text/testing", "@pibbl/text/src/index.ts"])
     assert.throws(() => installed.resolve(path), {
       code: "ERR_PACKAGE_PATH_NOT_EXPORTED",
     });
@@ -85,7 +86,7 @@ try {
   );
   const result = text.createTextGeometry(font, "Hello", { fontSize: 100 });
   const { PathGeometry } = await import(
-    pathToFileURL(installed.resolve("@crc/core"))
+    pathToFileURL(installed.resolve("@pibbl/core"))
   );
   assert.ok(result.geometry instanceof PathGeometry);
   font.dispose();
@@ -107,7 +108,7 @@ try {
   ])
     assert.ok(runtimeNotices.includes(attribution), attribution);
 
-  const publicSource = `import {loadOutlineFont,createTextGeometry,type OutlineFont,type InkBounds} from '@crc/text';\nexport async function convert(bytes:Uint8Array) {using font:OutlineFont=await loadOutlineFont(bytes); const result=createTextGeometry(font,'Hello',{fontSize:100}); const bounds:InkBounds|null=result.inkBounds; return {result,bounds};}\n`;
+  const publicSource = `import {loadOutlineFont,createTextGeometry,type OutlineFont,type InkBounds} from '@pibbl/text';\nexport async function convert(bytes:Uint8Array) {using font:OutlineFont=await loadOutlineFont(bytes); const result=createTextGeometry(font,'Hello',{fontSize:100}); const bounds:InkBounds|null=result.inkBounds; return {result,bounds};}\n`;
   writeFileSync(join(consumer, "public.ts"), publicSource);
   const tsc = join(dirname(require.resolve("typescript")), "tsc.js");
   for (const mode of ["Bundler", "NodeNext"]) {

@@ -1,0 +1,59 @@
+---
+import { galleryExamples } from '../../gallery.mjs';
+const { slug } = Astro.props;
+const example = galleryExamples.find(example => example.slug === slug)!;
+const { width, height } = example.canvas;
+---
+<section data-effect-demo={slug} data-source={example.source.path} aria-label="Interactive effect">
+  <div class="effect-actions">
+    <button type="button" data-start>Run example</button>
+    <button type="button" data-stop disabled>Stop</button>
+    <span role="status" data-status>Stopped</span>
+  </div>
+  <canvas width={width} height={height} aria-label={`${slug} interactive Canvas example`} style={`aspect-ratio:${width}/${height}`}>
+    The complete example source and integration notes are available below.
+  </canvas>
+</section>
+<style>
+  canvas { display: block; width: 100%; height: auto; background: #12171b; touch-action: none; }
+  .effect-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem; }
+  button { padding: 0.4rem 0.8rem; cursor: pointer; }
+</style>
+<script>
+  const loaders = import.meta.glob<{ default: (canvas: HTMLCanvasElement) => { dispose(): void } }>('../../../packages/scenarios/src/learning/**/*.example.tsx');
+  for (const host of document.querySelectorAll<HTMLElement>('[data-effect-demo]')) {
+    const canvas = host.querySelector('canvas')!;
+    const start = host.querySelector<HTMLButtonElement>('[data-start]')!;
+    const stop = host.querySelector<HTMLButtonElement>('[data-stop]')!;
+    const status = host.querySelector<HTMLElement>('[data-status]')!;
+    let controller: { dispose(): void } | undefined;
+    let generation = 0;
+    function dispose() {
+      generation++;
+      controller?.dispose();
+      controller = undefined;
+      start.disabled = false;
+      stop.disabled = true;
+      status.textContent = 'Stopped';
+    }
+    start.addEventListener('click', async () => {
+      const current = ++generation;
+      start.disabled = true;
+      stop.disabled = false;
+      status.textContent = 'Loading';
+      try {
+        const example = await loaders[`../../../${host.dataset.source}`]();
+        if (current !== generation) return;
+        controller = example.default(canvas);
+        status.textContent = 'Running';
+      } catch (error) {
+        if (current !== generation) return;
+        dispose();
+        status.textContent = `Unable to run: ${error instanceof Error ? error.message : String(error)}`;
+      }
+    });
+    stop.addEventListener('click', dispose);
+    window.addEventListener('pagehide', dispose);
+    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) start.click();
+  }
+</script>

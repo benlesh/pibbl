@@ -1,20 +1,20 @@
 import { afterEach, expect, it, vi } from "vitest";
 import {
-  crc,
+  pibbl,
   defineTexture,
   useTexture,
   Rectangle,
   Text,
   Layer,
   signal,
-} from "@crc/core";
+} from "@pibbl/core";
 import {
   ManualSchedulerDriver,
   installSchedulerDriverForTest,
 } from "../src/lib/scheduler/testing.js";
 import { clearSharedState } from "../src/lib/global-state.js";
 import { getSignalNode } from "../src/lib/signals/graph.js";
-import { borrowTextureRaster } from "@crc/core/internal";
+import { borrowTextureRaster } from "@pibbl/core/internal";
 
 afterEach(() => {
   clearSharedState();
@@ -59,7 +59,7 @@ it("shares a mount-owned texture across shape and text, updates cached consumers
   canvas.width = 100;
   canvas.height = 80;
   document.body.append(canvas);
-  const controller = crc(canvas, <Scene />);
+  const controller = pibbl(canvas, <Scene />);
   try {
     driver.flush(0);
     expect(create).toHaveBeenCalledTimes(1);
@@ -115,7 +115,7 @@ it("publishes one committed raster revision to every paint consumer", () => {
   canvas.width = 48;
   canvas.height = 24;
   document.body.append(canvas);
-  const controller = crc(canvas, <Scene />);
+  const controller = pibbl(canvas, <Scene />);
   try {
     driver.flush(0);
     expect(rasterize).toHaveBeenCalledTimes(1);
@@ -152,7 +152,7 @@ it("releases an initial provisional texture raster when its render transaction f
   const canvas = document.createElement("canvas");
   canvas.width = canvas.height = 16;
   document.body.append(canvas);
-  const controller = crc(canvas, <Broken />);
+  const controller = pibbl(canvas, <Broken />);
   try {
     expect(() => driver.flush(0)).toThrow("texture mount failed");
     expect(source!.width).toBe(0);
@@ -184,7 +184,7 @@ it("cleans a failed initial texture publication without masking its error", () =
   const canvas = document.createElement("canvas");
   canvas.width = canvas.height = 16;
   document.body.append(canvas);
-  const controller = crc(canvas, <Broken />);
+  const controller = pibbl(canvas, <Broken />);
   try {
     expect(() => driver.flush(0)).toThrow("initial publication failed");
     expect(dispose).toHaveBeenCalledTimes(1);
@@ -223,7 +223,7 @@ it("keeps an Advance-committed texture raster when the later render fails", () =
   const canvas = document.createElement("canvas");
   canvas.width = canvas.height = 16;
   document.body.append(canvas);
-  const controller = crc(canvas, <Scene />);
+  const controller = pibbl(canvas, <Scene />);
   try {
     driver.flush(0);
     texture!.send({ color: "#00ff00" });
@@ -247,7 +247,7 @@ it("retries one failed publication copy without replacing committed pixels", () 
   const nativeDrawImage = OffscreenCanvasRenderingContext2D.prototype.drawImage;
   function Scene() { texture = useTexture(recipe({}), { resolution: { width: 8, height: 8 } }); return <Rectangle style={{ width: 8, height: 8, fill: texture }} />; }
   const canvas = document.createElement("canvas"); canvas.width = canvas.height = 16; document.body.append(canvas);
-  const controller = crc(canvas, <Scene />);
+  const controller = pibbl(canvas, <Scene />);
   try {
     driver.flush(0);
     texture.send("#00ff00");
@@ -280,7 +280,7 @@ it("cleans the incompatible spare before replacement allocation fails", () => {
   const NativeCanvas = OffscreenCanvas;
   function Scene() { texture = useTexture(recipe({}), { resolution: { width: size.get(), height: size.get() } }); borrowTextureRaster(texture, raster => { first ??= raster.source; }); return <Rectangle style={{ width: 8, height: 8, fill: texture }} />; }
   const canvas = document.createElement("canvas"); canvas.width = canvas.height = 16; document.body.append(canvas);
-  const controller = crc(canvas, <Scene />);
+  const controller = pibbl(canvas, <Scene />);
   try {
     driver.flush(0); texture.send("update"); driver.flush(16);
     let allocations = 0;
@@ -297,7 +297,7 @@ it("stops after one automatic retry for a persistent publication copy failure", 
   let texture!: ReturnType<typeof useTexture<string>>;
   function Scene() { texture = useTexture(recipe({}), { resolution: { width: 8, height: 8 } }); return <Rectangle style={{ width: 8, height: 8, fill: texture }} />; }
   const canvas = document.createElement("canvas"); canvas.width = canvas.height = 16; document.body.append(canvas);
-  const controller = crc(canvas, <Scene />); const nativeDrawImage = OffscreenCanvasRenderingContext2D.prototype.drawImage;
+  const controller = pibbl(canvas, <Scene />); const nativeDrawImage = OffscreenCanvasRenderingContext2D.prototype.drawImage;
   try {
     driver.flush(0); texture.send("retry");
     OffscreenCanvasRenderingContext2D.prototype.drawImage = () => { throw new Error("persistent copy failure"); };
@@ -315,7 +315,7 @@ it("does not dispose an already released state again when recreation fails", () 
   });
   function Scene() { const texture = useTexture(recipe({}), { resolution: { width: size.get(), height: size.get() } }); return <Rectangle style={{ width: 8, height: 8, fill: texture }} />; }
   const canvas = document.createElement("canvas"); canvas.width = canvas.height = 16; document.body.append(canvas);
-  const controller = crc(canvas, <Scene />);
+  const controller = pibbl(canvas, <Scene />);
   try {
     driver.flush(0); size.set(16);
     expect(() => driver.flush(16)).toThrow("recreation failed");
@@ -333,7 +333,7 @@ it("cleans a texture when its resized state disposer throws", () => {
   });
   function Scene() { const texture = useTexture(recipe({}), { resolution: { width: size.get(), height: size.get() } }); return <Rectangle style={{ width: 8, height: 8, fill: texture }} />; }
   const canvas = document.createElement("canvas"); canvas.width = canvas.height = 16; document.body.append(canvas);
-  const controller = crc(canvas, <Scene />);
+  const controller = pibbl(canvas, <Scene />);
   try {
     driver.flush(0); size.set(16);
     expect(() => driver.flush(16)).toThrow("resize disposal failed");
@@ -367,7 +367,7 @@ it("reuses its bounded publication pair across 100 committed updates", () => {
   const canvas = document.createElement("canvas");
   canvas.width = canvas.height = 16;
   document.body.append(canvas);
-  const controller = crc(canvas, <Scene />);
+  const controller = pibbl(canvas, <Scene />);
   try {
     driver.flush(0);
     for (let value = 1; value <= 100; value++) {
@@ -407,7 +407,7 @@ it("retains committed pixels when Commit rejects a texture revision and retries"
   const canvas = document.createElement("canvas");
   canvas.width = canvas.height = 16;
   document.body.append(canvas);
-  const controller = crc(canvas, <Scene />);
+  const controller = pibbl(canvas, <Scene />);
   try {
     driver.flush(0);
     const node = getSignalNode(resource.revision) as any;
@@ -445,7 +445,7 @@ it("resets texture state on resolution changes while preserving the producer can
     return <Rectangle style={{ width: displayWidth, height: 16, fill: texture }} />;
   }
   const canvas = document.createElement('canvas'); canvas.width = 40; canvas.height = 20; document.body.append(canvas);
-  const controller = crc(canvas, <Scene />);
+  const controller = pibbl(canvas, <Scene />);
   try {
     driver.flush(0);
     texture.send('blue'); driver.flush(16);

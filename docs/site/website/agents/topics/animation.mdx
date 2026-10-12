@@ -1,0 +1,68 @@
+---
+title: Agent guide - animation and scheduling
+description: Bind animations to signals, choose one writer, and control playback through Pibbl's scheduler.
+kind: agent-guide
+sources:
+  - packages/scenarios/src/learning/composition/signals-and-animation.example.tsx
+---
+
+## Select the right tool
+
+Read [signals and animation](/guides/signals-and-animation/), then the exact reference for [useAnimatedValue](/reference/hooks/use-animated-value/) or [usePlayback](/reference/hooks/use-playback/). Use `useAnimatedValue` with an animation definition or pure factory for target-driven movement; use programs and playback for coordinated sequences, timelines, and explicit controls. Do not invent a standalone `play(program)` function or use the removed `useTransition` name.
+
+Pibbl animation has three layers: definitions describe values, programs bind definitions to writable signals, and a mounted playback hook owns the run. Definitions/programs are immutable and do not start work merely by being created. Keep continuing work on Pibbl's scheduler.
+
+## Watch this example
+
+**Click the blue card in the preview above.** Run mounts the example; the card click starts the animation. With reduced motion enabled, first choose Run to opt into the preview. [Open full page](/experience/signals-and-animation/) for more room, or [open the playground](@PLAYGROUND@#/examples/composition/signals-and-animation) to edit the source.
+
+The card begins at X = 110 with its blue rectangle at 20% opacity. Clicking moves it right to X = 178 and fades that rectangle to full opacity over 360 milliseconds, simultaneously. Then the `arrived` marker changes the message and a spring grows the card's scale multiplier from 1 to 1.08. A separate target-driven spring toggles between 1 and 0.96 on each click; the two scale values are multiplied when drawing. The label text is not part of the rectangle's opacity animation.
+
+## Where entrance is used
+
+`entrance` is the program description, not a running animation. Its direct consumer is **`usePlayback(entrance, ...)`** in `AnimatedCard`. The returned `playback` owns the mounted run. The blue rectangle's `onClick` handler calls **`playback.play({ conflict: "replace" })`** to start it.
+
+This excerpt isolates the connections in the complete source below; it is not a second standalone example:
+
+```tsx
+const entrance = sequence(/* tracks and marker shown in the complete source */);
+const playback = usePlayback(entrance, {/* marker callback */});
+
+// Reading the outputs makes this component update as playback publishes values.
+const currentX = x.get();
+const currentOpacity = opacity.get();
+
+// Inside the returned scene:
+<Group style={{ translateX: currentX }}>
+  <Rectangle
+    style={{ width: 364, height: 172, opacity: currentOpacity }}
+    onClick={() => playback.play({ conflict: "replace" })}
+  />
+</Group>;
+```
+
+Follow the chain: playback of `drive(x, tween(...))` writes `x`; `x.get()` reads it; `Group.style.translateX` moves the card. The program driving opacity similarly reaches `Rectangle.style.opacity`. `pulseScale` and `presentedScale` feed the group's `scaleX` and `scaleY`. None of these programs draws anything by itself.
+
+## Values, time, and ownership
+
+Durations are milliseconds and must be finite and nonnegative. Numeric interpolation is built in; colors, points, and objects require an explicit interpolator. An omitted tween `from` captures the output when that occurrence activates. Springs are analytic seekable numeric definitions; stateful steppers use fixed steps and have different seeking constraints. Choose the documented model rather than integrating velocity in a render function.
+
+`drive` binds a definition to an output. `sequence`, `parallel`, `wait`, `marker`, and `repeat` compose timing. A whole run reserves its writers. Two ambiguous writers are rejected unless explicit replacement is selected. Give each visual property a clear owner; a drag handler and playback must not accidentally compete for the same signal.
+
+Commands enter Begin, sampling occurs in Advance, writes publish atomically in Commit, and rendering follows planning. Milestones and errors deliver in Complete. Calls made in an event are scheduled commands, not permission to inspect uncommitted future pixels immediately.
+
+For `useAnimatedValue`, an unspecified initial value presents the target immediately. An explicit different initial value is painted first and starts motion only after successful mounting. Tween retargeting starts a new duration from the committed value; spring retargeting carries committed velocity. Passing a signal directly to a declared input avoids subscribing the whole enclosing component unnecessarily.
+
+## Complete example and adaptation
+
+The source below is exactly the Signals and Animation lesson running above. It demonstrates stable playback controls, explicitly read signal values, and coordinated motion. Use a 720 by 420 logical canvas and Pibbl's JSX import source. No external assets are required. [Example documentation](/examples/signals-and-animation/) also links its complete source and full-page view.
+
+When adapting, list every output signal and its owner before adding tracks. Preserve the hook lifetime through rerenders. Change one definition or timing parameter at a time. The host must apply a reduced-motion policy appropriate to the product; an example with animation does not automatically establish that policy for your application.
+
+## Verification
+
+Assert starting values, an intermediate sample, completion, pause/resume, restart, and retargeting. Use a controlled browser clock rather than wall-clock sleeps for timing claims. Confirm callbacks happen once at their documented point and that unmount stops the run. Test zero duration and repeated commands if your interaction permits them.
+
+Test reduced motion with a useful static destination, not an unreadable half-finished frame. Verify that interactions remain native where HTML owns them. Do not infer performance from a moving screenshot: ordinary Canvas roots repaint immediately; explicit Layers and external render layers are the retained bitmap boundaries.
+
+For a “jumps on every render” bug, inspect identity, signal recreation, and program bindings first. For competing-writer failures, identify the second owner and explicitly stop or replace it. For stutter after backgrounding, use Pibbl's time policy instead of layering another host frame loop on top.

@@ -1,24 +1,25 @@
+import { signalObserversForTest } from "../../../test/support/signal-observer";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   usePlayback,
   defineAnimation,
   marker,
   sequence,
-  track,
-  type CRCPlayback,
+  drive,
+  type PibblPlayback,
 } from "../../index";
-import { crc } from "../crc";
+import { pibbl } from "../pibbl";
 import { Layer } from "../components/layer";
 import { Rectangle } from "../components/rect";
-import { createElement, isCRCElement } from "../element/create-element";
+import { createElement, isPibblElement } from "../element/create-element";
 import { executeRender } from "../execute-render";
 import {
   clearSharedState,
-  getCRCInstance,
-  getCurrentCRCInstance,
+  getPibblInstance,
+  getCurrentPibblInstance,
   GLOBAL_STATE,
 } from "../global-state";
-import { mountCRC } from "../mount-crc";
+import { mountPibbl } from "../mount-pibbl";
 import { useRef } from "../hooks/use-ref";
 import { useSignal } from "../hooks/use-signal";
 import type { WritableSignal } from "../signals/types";
@@ -41,7 +42,7 @@ import {
   queueReactionCompletion,
   registerAdvanceParticipant,
 } from "./realm-scheduler";
-import type { CRCAdvanceParticipant } from "./types";
+import type { PibblAdvanceParticipant } from "./types";
 import {
   installSchedulerDriverForTest,
   ManualSchedulerDriver,
@@ -78,13 +79,13 @@ describe("realm scheduler", () => {
     const firstCanvas = createCanvas();
     const secondCanvas = createCanvas();
 
-    const first = crc(firstCanvas, createElement(Root, { label: "first:1" }));
-    const second = crc(
+    const first = pibbl(firstCanvas, createElement(Root, { label: "first:1" }));
+    const second = pibbl(
       secondCanvas,
       createElement(Root, { label: "second:1" }),
     );
-    crc(secondCanvas, createElement(Root, { label: "second:2" }));
-    crc(firstCanvas, createElement(Root, { label: "first:2" }));
+    pibbl(secondCanvas, createElement(Root, { label: "second:2" }));
+    pibbl(firstCanvas, createElement(Root, { label: "first:2" }));
 
     expect(driver.requestCount).toBe(1);
     expect(driver.pendingHostFrames).toBe(1);
@@ -112,8 +113,8 @@ describe("realm scheduler", () => {
     const Root = ({ label }: { label: string }) => {
       renders.push(label);
     };
-    const first = crc(createCanvas(), createElement(Root, { label: "first" }));
-    const second = crc(
+    const first = pibbl(createCanvas(), createElement(Root, { label: "first" }));
+    const second = pibbl(
       createCanvas(),
       createElement(Root, { label: "second" }),
     );
@@ -142,15 +143,15 @@ describe("realm scheduler", () => {
       renders.push("second");
     };
     const firstCanvas = createCanvas();
-    const first = crc(firstCanvas, createElement(Failing, {}));
-    const second = crc(createCanvas(), createElement(Healthy, {}));
+    const first = pibbl(firstCanvas, createElement(Failing, {}));
+    const second = pibbl(createCanvas(), createElement(Healthy, {}));
 
     expect(() => driver.flush(10)).toThrow(boom);
 
     expect(renders).toEqual(["first", "second"]);
     expect(driver.pendingHostFrames).toBe(0);
 
-    crc(firstCanvas, createElement(Healthy, {}));
+    pibbl(firstCanvas, createElement(Healthy, {}));
     driver.flush(20);
     expect(renders).toEqual(["first", "second", "second"]);
     first.dispose();
@@ -187,14 +188,14 @@ describe("realm scheduler", () => {
         style: { width: 20, height: 20, fill: "green" },
       });
     };
-    const controller = crc(canvas, createElement(Initial, {}));
+    const controller = pibbl(canvas, createElement(Initial, {}));
     driver.flush(10);
     const layerCanvas = drawImage.mock.calls
       .map(([source]) => source)
       .find((source) => source instanceof OffscreenCanvas) as OffscreenCanvas;
 
     update(layerCanvas, createElement(FailingChild, {}));
-    crc(canvas, createElement(Replacement, {}));
+    pibbl(canvas, createElement(Replacement, {}));
     expect(() => driver.flush(20)).toThrow(nestedFailure);
 
     expect(calls).toEqual(["parent:initial", "child:failing"]);
@@ -203,13 +204,13 @@ describe("realm scheduler", () => {
       dirtyRoots: 1,
       pendingHostFrames: 1,
     });
-    const failedChild = getCRCInstance(layerCanvas);
-    const deferredParent = getCRCInstance(canvas);
+    const failedChild = getPibblInstance(layerCanvas);
+    const deferredParent = getPibblInstance(canvas);
     expect(
-      isCRCElement(failedChild.pendingRoot) && failedChild.pendingRoot.type,
+      isPibblElement(failedChild.pendingRoot) && failedChild.pendingRoot.type,
     ).toBe(FailingChild);
     expect(
-      isCRCElement(deferredParent.pendingRoot) &&
+      isPibblElement(deferredParent.pendingRoot) &&
         deferredParent.pendingRoot.type,
     ).toBe(Replacement);
     expect(failedChild.requestedRenderRevision).toBeGreaterThan(
@@ -257,20 +258,20 @@ describe("realm scheduler", () => {
     };
     const FailingChild = (_props: {}) => {
       calls.push("child:failing");
-      crc(canvas, createElement(NewerReplacement, {}));
+      pibbl(canvas, createElement(NewerReplacement, {}));
       throw nestedFailure;
     };
     const HealthyChild = (_props: {}) => {
       calls.push("child:healthy");
     };
-    const controller = crc(canvas, createElement(Initial, {}));
+    const controller = pibbl(canvas, createElement(Initial, {}));
     driver.flush(10);
     const layerCanvas = drawImage.mock.calls
       .map(([source]) => source)
       .find((source) => source instanceof OffscreenCanvas) as OffscreenCanvas;
 
     update(layerCanvas, createElement(FailingChild, {}));
-    crc(canvas, createElement(OlderReplacement, {}));
+    pibbl(canvas, createElement(OlderReplacement, {}));
     expect(() => driver.flush(20)).toThrow(nestedFailure);
 
     expect(snapshotRealmScheduler()).toMatchObject({
@@ -278,8 +279,8 @@ describe("realm scheduler", () => {
       dirtyRoots: 1,
       pendingHostFrames: 1,
     });
-    const pendingParent = getCRCInstance(canvas).pendingRoot;
-    expect(isCRCElement(pendingParent) && pendingParent.type).toBe(
+    const pendingParent = getPibblInstance(canvas).pendingRoot;
+    expect(isPibblElement(pendingParent) && pendingParent.type).toBe(
       NewerReplacement,
     );
 
@@ -303,23 +304,23 @@ describe("realm scheduler", () => {
     };
     const Initial = (_props: {}) => {
       renders.push("initial");
-      crc(canvas, createElement(Replacement, {}));
+      pibbl(canvas, createElement(Replacement, {}));
     };
-    const controller = crc(canvas, createElement(Initial, {}));
+    const controller = pibbl(canvas, createElement(Initial, {}));
 
     driver.flush(10);
     expect(renders).toEqual(["initial"]);
     expect(driver.pendingHostFrames).toBe(1);
     expect(snapshotRealmScheduler().dirtyRoots).toBe(1);
-    expect(getCRCInstance(canvas).requestedRenderRevision).toBeGreaterThan(
-      getCRCInstance(canvas).completedRenderRevision,
+    expect(getPibblInstance(canvas).requestedRenderRevision).toBeGreaterThan(
+      getPibblInstance(canvas).completedRenderRevision,
     );
 
     driver.flush(20);
     expect(renders).toEqual(["initial", "replacement"]);
     expect(driver.pendingHostFrames).toBe(0);
-    expect(getCRCInstance(canvas).completedRenderRevision).toBe(
-      getCRCInstance(canvas).requestedRenderRevision,
+    expect(getPibblInstance(canvas).completedRenderRevision).toBe(
+      getPibblInstance(canvas).requestedRenderRevision,
     );
     controller.dispose();
   });
@@ -329,7 +330,7 @@ describe("realm scheduler", () => {
     const Child = (_props: {}) => {
       observedRootCounts.push(snapshotRealmScheduler().registeredRoots);
     };
-    const controller = crc(
+    const controller = pibbl(
       createCanvas(),
       createElement(Layer, {
         style: { width: 20, height: 20 },
@@ -360,7 +361,7 @@ describe("realm scheduler", () => {
         }),
       });
     };
-    const controller = crc(canvas, createElement(Root, {}));
+    const controller = pibbl(canvas, createElement(Root, {}));
     driver.flush(10);
     const layerCanvas = drawImage.mock.calls
       .map(([source]) => source)
@@ -386,11 +387,11 @@ describe("realm scheduler", () => {
       dirtyRoots: 1,
       pendingHostFrames: 1,
     });
-    expect(getCRCInstance(layerCanvas).requestedRenderRevision).toBeGreaterThan(
-      getCRCInstance(layerCanvas).completedRenderRevision,
+    expect(getPibblInstance(layerCanvas).requestedRenderRevision).toBeGreaterThan(
+      getPibblInstance(layerCanvas).completedRenderRevision,
     );
-    expect(getCRCInstance(canvas).requestedRenderRevision).toBeGreaterThan(
-      getCRCInstance(canvas).completedRenderRevision,
+    expect(getPibblInstance(canvas).requestedRenderRevision).toBeGreaterThan(
+      getPibblInstance(canvas).completedRenderRevision,
     );
 
     driver.flush(30);
@@ -423,7 +424,7 @@ describe("realm scheduler", () => {
         children: createElement(Child, { color }),
       });
     };
-    const controller = crc(canvas, createElement(Parent, { color: "red" }));
+    const controller = pibbl(canvas, createElement(Parent, { color: "red" }));
     driver.flush(10);
     const layerCanvas = drawImage.mock.calls
       .map(([source]) => source)
@@ -431,11 +432,11 @@ describe("realm scheduler", () => {
     calls.length = 0;
 
     const commitLatestParent = () => {
-      crc(canvas, createElement(Parent, { color: "green" }));
+      pibbl(canvas, createElement(Parent, { color: "green" }));
     };
-    getSignalNode(commitTrigger).observers.add(commitLatestParent);
+    signalObserversForTest(getSignalNode(commitTrigger)).add(commitLatestParent);
     let releaseAdvance = () => {};
-    const participant: CRCAdvanceParticipant = (_snapshot, batch) => {
+    const participant: PibblAdvanceParticipant = (_snapshot, batch) => {
       releaseAdvance();
       update(layerCanvas, createElement(Child, { color: "blue" }));
       batch.stage(commitTrigger, 1, participant);
@@ -447,8 +448,8 @@ describe("realm scheduler", () => {
     expect(calls).toEqual(["parent:green", "child:green"]);
     expect(pixel(layerCanvas, 5, 5)).toEqual([0, 128, 0, 255]);
     expect(pixel(canvas, 5, 5)).toEqual([0, 128, 0, 255]);
-    const childInstance = getCRCInstance(layerCanvas);
-    const parentInstance = getCRCInstance(canvas);
+    const childInstance = getPibblInstance(layerCanvas);
+    const parentInstance = getPibblInstance(canvas);
     expect(childInstance.requestedRenderRevision).toBeGreaterThan(
       childInstance.completedRenderRevision,
     );
@@ -478,7 +479,7 @@ describe("realm scheduler", () => {
       dirtyRoots: 0,
       pendingHostFrames: 0,
     });
-    getSignalNode(commitTrigger).observers.delete(commitLatestParent);
+    signalObserversForTest(getSignalNode(commitTrigger)).delete(commitLatestParent);
     controller.dispose();
   });
 
@@ -506,7 +507,7 @@ describe("realm scheduler", () => {
         style: { width: 20, height: 20, fill: "red" },
       });
     };
-    const controller = crc(
+    const controller = pibbl(
       canvas,
       createElement(Layer, {
         style: { width: 20, height: 20 },
@@ -524,7 +525,7 @@ describe("realm scheduler", () => {
     childPulse.set(1);
     driver.flush(20);
 
-    const child = getCRCInstance(layerCanvas);
+    const child = getPibblInstance(layerCanvas);
     expect(calls).toEqual(["child"]);
     expect(child.requestedRenderRevision).toBeGreaterThan(
       child.completedRenderRevision,
@@ -556,14 +557,14 @@ describe("realm scheduler", () => {
         style: { width: 20, height: 20, fill: shared.get() },
       });
     };
-    const first = crc(
+    const first = pibbl(
       createCanvas(),
       createElement(Layer, {
         style: { width: 20, height: 20 },
         children: createElement(LayerChild, {}),
       }),
     );
-    const second = crc(createCanvas(), createElement(OtherRoot, {}));
+    const second = pibbl(createCanvas(), createElement(OtherRoot, {}));
 
     driver.flush(10);
     reads.length = 0;
@@ -594,7 +595,7 @@ describe("realm scheduler", () => {
       createElement(Rectangle, {
         style: { width: 20, height: 20, fill: "blue" },
       });
-    const first = crc(
+    const first = pibbl(
       firstCanvas,
       createElement(Layer, {
         style: { width: 20, height: 20 },
@@ -605,7 +606,7 @@ describe("realm scheduler", () => {
       }),
     );
     const secondCanvas = createCanvas();
-    const second = crc(
+    const second = pibbl(
       secondCanvas,
       createElement(() => {
         independentRenders++;
@@ -615,13 +616,13 @@ describe("realm scheduler", () => {
     const layerCanvas = drawImage.mock.calls
       .map(([source]) => source)
       .find((source) => source instanceof OffscreenCanvas) as OffscreenCanvas;
-    const nested = Array.from(GLOBAL_STATE.crcInstances.values()).find(
+    const nested = Array.from(GLOBAL_STATE.pibblInstances.values()).find(
       (instance) => instance.parent === layerCanvas,
     )!;
     expect(nested.refs.size).toBeGreaterThan(0);
 
     shouldFail.set(true);
-    crc(
+    pibbl(
       secondCanvas,
       createElement(() => {
         independentRenders++;
@@ -630,24 +631,24 @@ describe("realm scheduler", () => {
     expect(() => driver.flush(20)).toThrow(failure);
 
     expect(nested.refs.size).toBe(0);
-    expect(getSignalNode(shouldFail).observers.size).toBe(0);
+    expect(getSignalNode(shouldFail).observerCount).toBe(0);
     expect(independentRenders).toBe(2);
-    expect(GLOBAL_STATE.crcInstances.has(layerCanvas)).toBe(true);
+    expect(GLOBAL_STATE.pibblInstances.has(layerCanvas)).toBe(true);
 
     update(nested.canvas, createElement(Recovered, {}));
     driver.flush(30);
 
     expect(pixel(firstCanvas, 5, 5)).toEqual([0, 0, 255, 255]);
     first.dispose();
-    expect(GLOBAL_STATE.crcInstances.has(layerCanvas)).toBe(false);
-    expect(GLOBAL_STATE.crcInstances.has(nested.canvas)).toBe(false);
+    expect(GLOBAL_STATE.pibblInstances.has(layerCanvas)).toBe(false);
+    expect(GLOBAL_STATE.pibblInstances.has(nested.canvas)).toBe(false);
     second.dispose();
   });
 
   it("cancels pending nested Layer work and releases nested ownership on disposal", () => {
     const canvas = createCanvas();
     const drawImage = vi.spyOn(CanvasRenderingContext2D.prototype, "drawImage");
-    const controller = crc(
+    const controller = pibbl(
       canvas,
       createElement(Layer, {
         style: { width: 20, height: 20 },
@@ -663,7 +664,7 @@ describe("realm scheduler", () => {
     const outer = drawImage.mock.calls
       .map(([source]) => source)
       .find((source) => source instanceof OffscreenCanvas) as OffscreenCanvas;
-    const nested = Array.from(GLOBAL_STATE.crcInstances.values()).find(
+    const nested = Array.from(GLOBAL_STATE.pibblInstances.values()).find(
       (instance) => instance.parent === outer,
     )!;
 
@@ -678,12 +679,12 @@ describe("realm scheduler", () => {
 
     expect(driver.cancelCount).toBe(1);
     expect(driver.pendingHostFrames).toBe(0);
-    expect(GLOBAL_STATE.crcInstances.has(outer)).toBe(false);
-    expect(GLOBAL_STATE.crcInstances.has(nested.canvas)).toBe(false);
+    expect(GLOBAL_STATE.pibblInstances.has(outer)).toBe(false);
+    expect(GLOBAL_STATE.pibblInstances.has(nested.canvas)).toBe(false);
   });
 
   it("cancels exactly one pending host callback when the final dirty root is removed", () => {
-    const controller = crc(
+    const controller = pibbl(
       createCanvas(),
       createElement(() => undefined, {}),
     );
@@ -707,7 +708,7 @@ describe("realm scheduler", () => {
     const abortController = new AbortController();
     abortController.abort();
 
-    const controller = crc(
+    const controller = pibbl(
       canvas,
       createElement(() => undefined, {}),
       { signal: abortController.signal },
@@ -732,7 +733,7 @@ describe("realm scheduler", () => {
     });
 
     expect(() =>
-      crc(
+      pibbl(
         canvas,
         createElement(() => undefined, {}),
       ),
@@ -755,7 +756,7 @@ describe("realm scheduler", () => {
       return value * 2;
     });
     const canvas = createCanvas();
-    const controller = mountCRC(
+    const controller = mountPibbl(
       canvas,
       createElement(() => {
         phases.push(snapshotRealmScheduler().phase);
@@ -767,11 +768,11 @@ describe("realm scheduler", () => {
     });
     collectSignalReads(consumer, () => selected.get());
     consumer.markClean();
-    getSignalNode(source).observers.add(() => {
+    signalObserversForTest(getSignalNode(source)).add(() => {
       phases.push(snapshotRealmScheduler().phase);
     });
     let releaseAdvance = () => {};
-    const advance: CRCAdvanceParticipant = (_snapshot, batch) => {
+    const advance: PibblAdvanceParticipant = (_snapshot, batch) => {
       phases.push(snapshotRealmScheduler().phase);
       batch.stage(source, 1, advance);
       releaseAdvance();
@@ -801,12 +802,12 @@ describe("realm scheduler", () => {
     const observer = () => {
       if (output.get() > 0) phases.push(snapshotRealmScheduler().phase);
     };
-    getSignalNode(output).observers.add(observer);
-    let playback!: CRCPlayback;
+    signalObserversForTest(getSignalNode(output)).add(observer);
+    let playback!: PibblPlayback;
     const Root = (_props: {}) => {
       playback = usePlayback(
         sequence(
-          track(
+          drive(
             output,
             defineAnimation({
               duration: 50,
@@ -830,7 +831,7 @@ describe("realm scheduler", () => {
       const value = derived.get();
       if (value > 0) phases.push(snapshotRealmScheduler().phase);
     };
-    const controller = crc(createCanvas(), createElement(Root, {}));
+    const controller = pibbl(createCanvas(), createElement(Root, {}));
     expect(driver.pendingHostFrames).toBe(1);
     driver.flush(-1);
     playback.play();
@@ -855,7 +856,7 @@ describe("realm scheduler", () => {
       queuedFrameCompletions: 0,
       queuedBeginCommands: 0,
     });
-    getSignalNode(output).observers.delete(observer);
+    signalObserversForTest(getSignalNode(output)).delete(observer);
     controller.dispose();
   });
 
@@ -870,7 +871,7 @@ describe("realm scheduler", () => {
     const setFailure = captureFailure(() => driver.flush(60));
     expect(setFailure).toMatchObject({
       message:
-        "Cannot write to a signal directly during CRC scheduler Advance; stage it through the provided batch.",
+        "Cannot write to a signal directly during Pibbl scheduler Advance; stage it through the provided batch.",
     });
     expect(value.get()).toBe(0);
 
@@ -887,7 +888,7 @@ describe("realm scheduler", () => {
     const updateFailure = captureFailure(() => driver.flush(70));
     expect(updateFailure).toMatchObject({
       message:
-        "Cannot write to a signal directly during CRC scheduler Advance; stage it through the provided batch.",
+        "Cannot write to a signal directly during Pibbl scheduler Advance; stage it through the provided batch.",
     });
     expect(updateCalls).toBe(0);
     expect(value.get()).toBe(0);
@@ -898,7 +899,7 @@ describe("realm scheduler", () => {
     const staged = signal(0);
     const direct = signal(0);
     let release = () => {};
-    const participant: CRCAdvanceParticipant = (_snapshot, batch) => {
+    const participant: PibblAdvanceParticipant = (_snapshot, batch) => {
       release();
       batch.stage(staged, 1, participant);
       direct.set(1);
@@ -906,7 +907,7 @@ describe("realm scheduler", () => {
     release = registerAdvanceParticipant(participant);
 
     expect(() => driver.flush(80)).toThrow(
-      "Cannot write to a signal directly during CRC scheduler Advance; stage it through the provided batch.",
+      "Cannot write to a signal directly during Pibbl scheduler Advance; stage it through the provided batch.",
     );
     expect(staged.get()).toBe(0);
     expect(direct.get()).toBe(0);
@@ -919,7 +920,7 @@ describe("realm scheduler", () => {
       replacementRenders.push("replacement");
     };
     const replacementCanvas = createCanvas();
-    const replacementController = crc(
+    const replacementController = pibbl(
       replacementCanvas,
       createElement(() => undefined, {}),
     );
@@ -927,7 +928,7 @@ describe("realm scheduler", () => {
     let release = () => {};
     release = registerAdvanceParticipant(() => {
       release();
-      crc(replacementCanvas, createElement(Replacement, {}));
+      pibbl(replacementCanvas, createElement(Replacement, {}));
     });
     driver.flush(20);
 
@@ -950,20 +951,20 @@ describe("realm scheduler", () => {
     const Latest = (_props: {}) => {
       renders.push("latest");
     };
-    const controller = crc(
+    const controller = pibbl(
       canvas,
       createElement(() => undefined, {}),
     );
     driver.flush(10);
     const commitLatestRoot = () => {
-      crc(canvas, createElement(Latest, {}));
+      pibbl(canvas, createElement(Latest, {}));
     };
-    getSignalNode(source).observers.add(commitLatestRoot);
+    signalObserversForTest(getSignalNode(source)).add(commitLatestRoot);
 
     let release = () => {};
-    const participant: CRCAdvanceParticipant = (_snapshot, batch) => {
+    const participant: PibblAdvanceParticipant = (_snapshot, batch) => {
       release();
-      crc(canvas, createElement(Deferred, {}));
+      pibbl(canvas, createElement(Deferred, {}));
       batch.stage(source, 1, participant);
     };
     release = registerAdvanceParticipant(participant);
@@ -975,7 +976,7 @@ describe("realm scheduler", () => {
     driver.flush(30);
     expect(renders).toEqual(["latest", "latest"]);
     expect(driver.pendingHostFrames).toBe(0);
-    getSignalNode(source).observers.delete(commitLatestRoot);
+    signalObserversForTest(getSignalNode(source)).delete(commitLatestRoot);
     controller.dispose();
   });
 
@@ -996,14 +997,14 @@ describe("realm scheduler", () => {
     const healthy = computed(() => healthySource.get() + 1);
     let failingRenderAttempts = 0;
     const healthyValues: number[] = [];
-    const first = crc(
+    const first = pibbl(
       createCanvas(),
       createElement(() => {
         failingRenderAttempts++;
         outer.get();
       }, {}),
     );
-    const second = crc(
+    const second = pibbl(
       createCanvas(),
       createElement(() => {
         healthyValues.push(healthy.get());
@@ -1012,7 +1013,7 @@ describe("realm scheduler", () => {
     driver.flush(10);
 
     let release = () => {};
-    const participant: CRCAdvanceParticipant = (_snapshot, batch) => {
+    const participant: PibblAdvanceParticipant = (_snapshot, batch) => {
       release();
       batch.stage(failingSource, 1, participant);
       batch.stage(healthySource, 1, participant);
@@ -1035,7 +1036,7 @@ describe("realm scheduler", () => {
     const computedSource = signal(0);
     const derived = computed(() => computedSource.get() * 2);
     const calls: string[] = [];
-    const directController = crc(
+    const directController = pibbl(
       createCanvas(),
       createElement(() => {
         calls.push(
@@ -1043,7 +1044,7 @@ describe("realm scheduler", () => {
         );
       }, {}),
     );
-    const computedController = crc(
+    const computedController = pibbl(
       createCanvas(),
       createElement(() => {
         calls.push(
@@ -1055,7 +1056,7 @@ describe("realm scheduler", () => {
     calls.length = 0;
 
     let release = () => {};
-    const participant: CRCAdvanceParticipant = (_snapshot, batch) => {
+    const participant: PibblAdvanceParticipant = (_snapshot, batch) => {
       release();
       batch.stage(directSource, 1, participant);
       batch.stage(computedSource, 1, participant);
@@ -1072,7 +1073,7 @@ describe("realm scheduler", () => {
   it("defers a state request made during Complete until the next Begin", () => {
     const values: number[] = [];
     let state!: WritableSignal<number>;
-    const controller = crc(
+    const controller = pibbl(
       createCanvas(),
       createElement(() => {
         const value = useSignal(0);
@@ -1098,7 +1099,7 @@ describe("realm scheduler", () => {
     const calls: string[] = [];
     let releaseFirst = () => {};
     let releaseSecond = () => {};
-    const second: CRCAdvanceParticipant = () => {
+    const second: PibblAdvanceParticipant = () => {
       calls.push(`second:${snapshotRealmScheduler().currentFrame?.hostTime}`);
       releaseSecond();
     };
@@ -1155,7 +1156,7 @@ describe("realm scheduler", () => {
     let releaseGate = () => {};
     let releaseOriginal = () => {};
     let releaseReplacement = () => {};
-    const shared: CRCAdvanceParticipant = (snapshot) => {
+    const shared: PibblAdvanceParticipant = (snapshot) => {
       calls.push(`shared:${snapshot.hostTime}`);
       releaseReplacement();
     };
@@ -1178,7 +1179,7 @@ describe("realm scheduler", () => {
 
   it("owns concurrent registrations of one Advance callback independently", () => {
     const calls: number[] = [];
-    const shared: CRCAdvanceParticipant = (snapshot) => {
+    const shared: PibblAdvanceParticipant = (snapshot) => {
       calls.push(snapshot.hostTime);
     };
     const releaseFirst = registerAdvanceParticipant(shared);
@@ -1208,7 +1209,7 @@ describe("realm scheduler", () => {
       releaseFirst();
       throw producerFailure;
     });
-    const secondProducer: CRCAdvanceParticipant = (_snapshot, batch) => {
+    const secondProducer: PibblAdvanceParticipant = (_snapshot, batch) => {
       calls.push("second-producer");
       batch.stage(value, 1, secondProducer);
       releaseSecond();
@@ -1246,14 +1247,14 @@ describe("realm scheduler", () => {
     const failure = new Error("transaction callback failed");
     const calls: string[] = [];
     const Root = (_props: {}) => {
-      const transaction = getCurrentCRCInstance().eventRoot.renderTransaction!;
+      const transaction = getCurrentPibblInstance().eventRoot.renderTransaction!;
       transaction.onFinish(() => {
         calls.push("first");
         throw failure;
       });
       transaction.onFinish(() => calls.push("second"));
     };
-    const controller = crc(createCanvas(), createElement(Root, {}));
+    const controller = pibbl(createCanvas(), createElement(Root, {}));
 
     expect(() => driver.flush(40)).toThrow(failure);
 
@@ -1266,7 +1267,7 @@ describe("realm scheduler", () => {
     const snapshots: Array<ReturnType<typeof getCurrentFrameSnapshot>> = [];
     let advances = 0;
     const canvas = createCanvas();
-    const controller = mountCRC(
+    const controller = mountPibbl(
       canvas,
       createElement(() => {
         snapshots.push(getCurrentFrameSnapshot());
@@ -1290,12 +1291,12 @@ describe("realm scheduler", () => {
     const parentRoot = createElement(() => {
       calls.push("parent");
     }, {});
-    const parent = mountCRC(parentCanvas, parentRoot);
+    const parent = mountPibbl(parentCanvas, parentRoot);
     const childCanvas = new OffscreenCanvas(20, 20);
     const childRoot = createElement(() => {
       calls.push("child");
     }, {});
-    const child = mountCRC(childCanvas, childRoot, { parent: parentCanvas });
+    const child = mountPibbl(childCanvas, childRoot, { parent: parentCanvas });
 
     executeRender(childCanvas, 90, childRoot, true);
 
@@ -1310,7 +1311,7 @@ describe("realm scheduler", () => {
     const root = createElement(() => {
       renders++;
     }, {});
-    const controller = crc(canvas, root);
+    const controller = pibbl(canvas, root);
 
     executeRender(canvas, 5, root);
     expect(renders).toBe(1);

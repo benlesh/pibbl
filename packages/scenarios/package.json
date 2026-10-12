@@ -1,5 +1,5 @@
 {
-  "name": "@crc/scenarios",
+  "name": "@pibbl/scenarios",
   "type": "module",
   "version": "0.0.0",
   "private": true,
@@ -13,22 +13,15 @@
     "./mouse-contract": "./src/mouse-contract.ts",
     "./mouse-contract-scenario": "./src/mouse-contract-scenario.ts",
     "./physics-2d-lab": "./src/physics-2d-lab.ts",
-    "./physics-3d": "./src/physics-3d.ts",
     "./smoke": "./src/smoke.ts",
     "./surface": "./src/surface.ts",
-    "./three-instancing-lab": "./src/three-instancing-lab.ts",
-    "./webgl-lab": "./src/webgl-lab.ts",
-    "./webgl-lighting-lab": "./src/webgl-lighting-lab.ts"
+    "./three-instancing-lab": "./src/three-instancing-lab.ts"
   },
   "dependencies": {
-    "@crc/core": "workspace:*",
-    "@crc/particles": "workspace:*",
-    "@crc/physics": "workspace:*",
-    "@crc/three": "workspace:*",
+    "@pibbl/core": "workspace:*",
+    "@pibbl/three": "workspace:*",
     "three": "catalog:",
-    "@crc/viz": "workspace:*",
-    "@crc/textures": "workspace:*",
-    "@crc/text": "workspace:*"
+    "@pibbl/text": "workspace:*"
   },
   "devDependencies": {
     "@types/three": "catalog:"

@@ -1,18 +1,20 @@
-import * as CRC_CORE_ROOT from '@crc/core';
-import * as CRC_JSX_DEV_RUNTIME from '@crc/core/jsx-dev-runtime';
-import * as CRC_JSX_RUNTIME from '@crc/core/jsx-runtime';
+import * as PIBBL_CORE_ROOT from '@pibbl/core';
+import * as PIBBL_JSX_DEV_RUNTIME from '@pibbl/core/jsx-dev-runtime';
+import * as PIBBL_JSX_RUNTIME from '@pibbl/core/jsx-runtime';
+// @ts-expect-error the singular legacy event hook is not public
+import { useEvent as RemovedEventHook } from '@pibbl/core';
 // @ts-expect-error the definition wrapper is not part of the final type surface
-import type { defineC\u006fmp as RemovedDefinitionWrapper } from '@crc/core';
+import type { defineC\u006fmp as RemovedDefinitionWrapper } from '@pibbl/core';
 // @ts-expect-error the old element type is not part of the final type surface
-import type { Comp\u0045l as RemovedElementType } from '@crc/core';
+import type { Comp\u0045l as RemovedElementType } from '@pibbl/core';
 // @ts-expect-error the old render-function type is not part of the final type surface
-import type { Comp\u0046n as RemovedRenderType } from '@crc/core';
+import type { Comp\u0046n as RemovedRenderType } from '@pibbl/core';
 // @ts-expect-error the old component input type is not part of the final type surface
-import type { Component\u0049nput as RemovedInputType } from '@crc/core';
+import type { Component\u0049nput as RemovedInputType } from '@pibbl/core';
 // @ts-expect-error the old capability type is not part of the final type surface
-import type { Component\u0043apabilities as RemovedCapabilityType } from '@crc/core';
+import type { Component\u0043apabilities as RemovedCapabilityType } from '@pibbl/core';
 // @ts-expect-error the old empty-node alias is not part of the final type surface
-import type { Falsy\u004eodes as RemovedEmptyNodeType } from '@crc/core';
+import type { Falsy\u004eodes as RemovedEmptyNodeType } from '@pibbl/core';
 import {
   Arc,
   Circle,
@@ -42,20 +44,20 @@ import {
   type CircleProps,
   type CircleStyle,
   type EllipsePathOptions,
-  type CRCComponent,
-  type CRCConfig,
-  type CRCContainerChild,
-  type CRCController,
-  type CRCElement,
-  type CRCElementType,
-  type CRCEvent,
-  type CRCEventHandlers,
-  type CRCKeyboardNavigationOptions,
-  type CRCKey,
-  type CRCNode,
-  type CRCPrimitiveComponent,
-  type CRCRenderResult,
-  type CRCTextChild,
+  type PibblComponent,
+  type PibblConfig,
+  type PibblContainerChild,
+  type PibblController,
+  type PibblElement,
+  type PibblElementType,
+  type PibblEvent,
+  type PibblEventHandlers,
+  type PibblKeyboardNavigationOptions,
+  type PibblKey,
+  type PibblNode,
+  type PibblPrimitiveComponent,
+  type PibblRenderResult,
+  type PibblTextChild,
   type Constraints,
   type EllipseProps,
   type EllipseStyle,
@@ -91,7 +93,7 @@ import {
   type WedgePathOptions,
   type WedgeProps,
   type WedgeStyle,
-} from '@crc/core';
+} from '@pibbl/core';
 import { describe, expect, expectTypeOf, it } from 'vitest';
 import { materializeContainerChildren } from '../element/children';
 
@@ -105,15 +107,15 @@ type RemovedPublicTypes = [
 ];
 
 type ApprovedPublicTypes = {
-  readonly element: CRCElement;
-  readonly component: CRCComponent;
-  readonly elementType: CRCElementType;
-  readonly primitive: CRCPrimitiveComponent;
-  readonly node: CRCNode;
-  readonly containerChild: CRCContainerChild;
-  readonly textChild: CRCTextChild;
-  readonly renderResult: CRCRenderResult;
-  readonly key: CRCKey;
+  readonly element: PibblElement;
+  readonly component: PibblComponent;
+  readonly elementType: PibblElementType;
+  readonly primitive: PibblPrimitiveComponent;
+  readonly node: PibblNode;
+  readonly containerChild: PibblContainerChild;
+  readonly textChild: PibblTextChild;
+  readonly renderResult: PibblRenderResult;
+  readonly key: PibblKey;
   readonly programProps: PrimitiveProgramProps<{ label: string }>;
   readonly primitiveInput: PrimitiveInput<{ label: string }, SystemStyle>;
   readonly primitiveRender: PrimitiveRender<{ label: string }>;
@@ -126,10 +128,10 @@ type ApprovedPublicTypes = {
   readonly measureInput: MeasureInput<{ label: string }>;
   readonly measureResult: MeasureResult;
   readonly renderingContext: RenderingContext2D;
-  readonly controller: CRCController;
-  readonly config: CRCConfig;
-  readonly event: CRCEvent;
-  readonly eventHandlers: CRCEventHandlers;
+  readonly controller: PibblController;
+  readonly config: PibblConfig;
+  readonly event: PibblEvent;
+  readonly eventHandlers: PibblEventHandlers;
   readonly focusProps: FocusManagementProps;
   readonly keyboardProps: KeyboardNavigationProps;
   readonly circleProps: CircleProps;
@@ -184,9 +186,14 @@ const obsoleteRuntimeExportParts = [
   ['with', 'Keyboard', 'Navigation'],
 ] as const;
 
-describe('public CRC API', () => {
+describe('public Pibbl API', () => {
+  it('exports drive without the removed track alias', () => {
+    expect(PIBBL_CORE_ROOT).toHaveProperty('drive');
+    expect(PIBBL_CORE_ROOT).not.toHaveProperty('track');
+  });
+
   it('exports exactly the final runtime authoring surface', () => {
-    expect(Object.keys(CRC_CORE_ROOT).sort()).toEqual([
+    expect(Object.keys(PIBBL_CORE_ROOT).sort()).toEqual([
       'Absolute',
       'Arc',
       'Circle',
@@ -200,6 +207,7 @@ describe('public CRC API', () => {
       'Grid',
       'Group',
       'HorizontalLine',
+      'HtmlBox',
       'Image',
       'KeyboardNavigation',
       'Layer',
@@ -221,11 +229,13 @@ describe('public CRC API', () => {
       'Text',
       'VerticalLine',
       'Wedge',
+      'affineTransform',
+      'arcBendTransform',
       'batch',
-      'bendPathAlongArc',
-      'bendPathAlongPath',
+      'bifrost',
+      'blurReveal',
+      'composeTransforms',
       'computed',
-      'crc',
       'createArcPath',
       'createCirclePath',
       'createElement',
@@ -241,17 +251,30 @@ describe('public CRC API', () => {
       'definePrimitive',
       'defineRenderLayer',
       'defineTexture',
+      'defineTransition',
       'degrees',
+      'dissolve',
+      'drive',
       'easing',
+      'embers',
+      'envelopeTransform',
+      'exportGif',
+      'fade',
       'flattenPath',
       'flattenPathWang',
+      'hologram',
       'isSignal',
       'keyframes',
       'layoutDiagnostic',
       'marker',
       'measureElement',
+      'meshTransform',
       'normalizeEdges',
       'parallel',
+      'pathBendTransform',
+      'pibbl',
+      'quadTransform',
+      'recordFrames',
       'repeat',
       'resolveBox',
       'resolveLength',
@@ -260,19 +283,20 @@ describe('public CRC API', () => {
       'signal',
       'simplifyPath',
       'simplifyPathRadial',
+      'slide',
       'spring',
       'stepper',
       'subdividePath',
       'toPath2D',
       'toSvgPathData',
-      'track',
+      'transformPath',
       'tween',
       'untracked',
+      'useAnimatedValue',
       'useCanvasContext',
       'useComputed',
       'useConst',
       'useCursor',
-      'useEvent',
       'useEventListener',
       'useEventTarget',
       'useLayoutBox',
@@ -285,10 +309,15 @@ describe('public CRC API', () => {
       'useSignal',
       'useSvgPath',
       'useTexture',
-      'useTransition',
+      'useVisibilityTransition',
       'wait',
-      'warpPath',
+      'wipe',
+      'zoom',
     ]);
+
+    expect('useEvent' in PIBBL_CORE_ROOT).toBe(false);
+    expect(PIBBL_CORE_ROOT.useEventListener).toBeTypeOf('function');
+    expect(PIBBL_CORE_ROOT.useEventTarget).toBeTypeOf('function');
 
     for (const creator of [
       createArcPath,
@@ -306,25 +335,25 @@ describe('public CRC API', () => {
     for (const parts of obsoleteRuntimeExportParts) {
       const name = parts.join('');
       expect(
-        (CRC_CORE_ROOT as Record<string, unknown>)[name],
+        (PIBBL_CORE_ROOT as Record<string, unknown>)[name],
         `${name} must not be exported`,
       ).toBeUndefined();
     }
   });
 
   it('keeps compiler functions on their compiler subpaths only', () => {
-    expect(Object.keys(CRC_JSX_RUNTIME).sort()).toEqual([
+    expect(Object.keys(PIBBL_JSX_RUNTIME).sort()).toEqual([
       'Fragment',
       'jsx',
       'jsxs',
     ]);
-    expect(Object.keys(CRC_JSX_DEV_RUNTIME).sort()).toEqual([
+    expect(Object.keys(PIBBL_JSX_DEV_RUNTIME).sort()).toEqual([
       'Fragment',
       'jsxDEV',
     ]);
-    expect((CRC_CORE_ROOT as Record<string, unknown>).jsx).toBeUndefined();
-    expect((CRC_CORE_ROOT as Record<string, unknown>).jsxs).toBeUndefined();
-    expect((CRC_CORE_ROOT as Record<string, unknown>).jsxDEV).toBeUndefined();
+    expect((PIBBL_CORE_ROOT as Record<string, unknown>).jsx).toBeUndefined();
+    expect((PIBBL_CORE_ROOT as Record<string, unknown>).jsxs).toBeUndefined();
+    expect((PIBBL_CORE_ROOT as Record<string, unknown>).jsxDEV).toBeUndefined();
   });
 
   it('exports the approved public type families', () => {
@@ -340,7 +369,7 @@ describe('public CRC API', () => {
     const Probe = (_props: {} & { style: Readonly<ProbeStyle> }) => undefined;
     const style = { width: 24 };
     const element = createElement(Probe, { key: 'stable', style });
-    const options: CRCKeyboardNavigationOptions = { mode: 'directional' };
+    const options: PibblKeyboardNavigationOptions = { mode: 'directional' };
 
     const policyTree = createElement(FocusManagement, {
       children: createElement(KeyboardNavigation, {

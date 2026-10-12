@@ -1,13 +1,27 @@
-import { Image, Rectangle } from '@crc/core';
+import { Image, Rectangle } from '@pibbl/core';
 export const DRAWING_IMAGES_SOURCE_ID = 'drawing-images-example';
+/**
+ * Named image assets used by the drawing-images scenario.
+ *
+ * @see {@link DrawingImageMode}
+ */
 export const DRAWING_IMAGE_SOURCES = {
+  /**
+   * Intentionally invalid image source for failure and cleanup checks. See
+   * {@link DRAWING_IMAGE_SOURCES}.
+   */
   broken: 'data:image/png;base64,not-a-valid-image',
+  /**
+   * Primary image asset for deterministic drawing and ownership checks. See
+   * {@link DRAWING_IMAGE_SOURCES}.
+   */
   primary: `data:image/svg+xml,${encodeURIComponent(`
     <svg xmlns="http://www.w3.org/2000/svg" width="90" height="60">
       <rect width="90" height="60" fill="#0ea5e9"/>
       <circle cx="45" cy="30" r="17" fill="#e0f2fe"/>
     </svg>
   `)}`,
+  /** Alternate image asset for source replacement checks. See {@link DRAWING_IMAGE_SOURCES}. */
   secondary: `data:image/svg+xml,${encodeURIComponent(`
     <svg xmlns="http://www.w3.org/2000/svg" width="90" height="60">
       <rect width="90" height="60" fill="#ec4899"/>
@@ -15,8 +29,24 @@ export const DRAWING_IMAGE_SOURCES = {
     </svg>
   `)}`,
 } as const;
+/**
+ * Supported drawing image mode values: `"broken"`, `"hidden"`, `"primary"`, `"secondary"`.
+ *
+ * @see {@link DRAWING_IMAGE_SOURCES}
+ * @see {@link DrawingImagesState}
+ */
 export type DrawingImageMode = 'broken' | 'hidden' | 'primary' | 'secondary';
+/**
+ * Supported drawing image sizing values: `"explicit"`, `"natural"`.
+ *
+ * @see {@link DrawingImagesState}
+ */
 export type DrawingImageSizing = 'explicit' | 'natural';
+/**
+ * Actions supported by the drawing images scenario's public controller.
+ *
+ * @see {@link DrawingImagesState}
+ */
 export type DrawingImagesAction =
   | 'change-image'
   | 'mount'
@@ -26,10 +56,21 @@ export type DrawingImagesAction =
   | 'show-image'
   | 'use-explicit-size'
   | 'use-natural-size';
+/**
+ * Observable state exposed by the drawing images scenario for controls and assertions.
+ *
+ * @see {@link DrawingImagesAction}
+ * @see {@link DrawingImageMode}
+ * @see {@link DrawingImageSizing}
+ */
 export interface DrawingImagesState {
+  /** Last action recorded or configured by this scenario. See {@link DrawingImagesAction}. */
   lastAction: DrawingImagesAction;
+  /** Mode recorded or configured by this scenario. See {@link DrawingImageMode}. */
   mode: DrawingImageMode;
+  /** Revision recorded or configured by this scenario. See {@link DrawingImagesState}. */
   revision: number;
+  /** Sizing recorded or configured by this scenario. See {@link DrawingImageSizing}. */
   sizing: DrawingImageSizing;
 }
 interface DrawingImagesSceneProps {

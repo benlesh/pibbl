@@ -1,36 +1,22 @@
 ---
 id: api-types-physics-2d-testing
 title: 2D physics test harness types
-summary: Options and deterministic frame-control interface for @crc/physics/2d/testing.
+summary: Options and deterministic frame-control interface for @pibbl/core/physics/2d/testing.
 kind: api
 slug: physics-2d-testing
 apiCategory: types
-symbols: [CRCPhysicsTestHarness2D, CRCPhysicsTestHarness2DOptions]
+symbols: [PibblPhysicsTestHarness2D, PibblPhysicsTestHarness2DOptions]
 keywords: [physics, testing, deterministic, agentic]
 ---
 
 # 2D physics test harness types
 
-Import these contracts with `type` from `@crc/physics/2d/testing`.
+Import these contracts with `type` from `@pibbl/core/physics/2d/testing`.
 
-## `CRCPhysicsTestHarness2DOptions`
-
-```text
-interface CRCPhysicsTestHarness2DOptions<Observation> {
-  readonly canvas: HTMLCanvasElement;
-  readonly root: () => CRCNode;
-  readonly observe: () => Observation;
-}
-```
-
-The caller owns `canvas`; harness disposal never removes it. `root()` creates
-the initial and reset composition. `observe()` reads public application state.
-External fixtures stay under the test's ownership and are not reset.
-
-## `CRCPhysicsTestHarness2D`
+## `PibblPhysicsTestHarness2D`
 
 ```text
-interface CRCPhysicsTestHarness2D<Observation> {
+interface PibblPhysicsTestHarness2D<Observation> {
   readonly pendingFrames: number;
   flush(): boolean;
   advanceFrames(count: number, milliseconds?: number): number;
@@ -50,3 +36,17 @@ Use `createPhysicsTestHarness2D` from the
 [test-harness function page](#/api/functions/physics-2d-testing) and consult
 the [2D physics guide](#/learn/guides/physics-2d) for public world and handle
 composition.
+
+## `PibblPhysicsTestHarness2DOptions`
+
+```text
+interface PibblPhysicsTestHarness2DOptions<Observation> {
+  readonly canvas: HTMLCanvasElement;
+  readonly root: () => PibblNode;
+  readonly observe: () => Observation;
+}
+```
+
+The caller owns `canvas`; harness disposal never removes it. `root()` creates
+the initial and reset composition. `observe()` reads public application state.
+External fixtures stay under the test's ownership and are not reset.

@@ -9,8 +9,8 @@ they were not separately reviewed by the user.
 
 ## Package boundary
 
-Ship optional `@crc/textures` through public `defineRenderLayer`, with
-`ReactionDiffusion`, `ProceduralTexture`, and `texturePalettes`. Keep CRC's single
+Ship optional `@pibbl/textures` through public `defineRenderLayer`, with
+`ReactionDiffusion`, `ProceduralTexture`, and `texturePalettes`. Keep Pibbl's single
 scheduler, mounted identity, routed input, composition, and exact resource ownership.
 The package owns generation, simulation, palettes, low-resolution rasterization,
 and presentation. Do not require core changes, internal imports, workers, or GPU.
@@ -26,7 +26,7 @@ Start with a JavaScript Gray–Scott implementation using double-buffered float
 fields, periodic boundaries, and seeded patches. The implemented nine-point
 stencil uses center −1, cardinal 0.2, diagonal 0.05, diffusion 1/0.5, timestep 1,
 and spots feed/kill 0.0367/0.0649 or stripes 0.029/0.057. Advance fixed steps from
-CRC frames at 480 steps/second, clamp elapsed time to 50 ms and 24 steps, retain
+Pibbl frames at 480 steps/second, clamp elapsed time to 50 ms and 24 steps, retain
 fractional time, and discard excess host time. Initial/reset/resume frames start a
 fresh time baseline. Pause keeps painting and recoloring available without a loop.
 
@@ -37,7 +37,7 @@ seek API. Checkpoints, chemical rollback, WASM, workers, and GPU are deferred.
 
 ## Input and updates
 
-CRC supplies one topmost pointer target and local coordinates. Scale the default
+Pibbl supplies one topmost pointer target and local coordinates. Scale the default
 rectangular display into simulation coordinates. Capture one primary pointer,
 interpolate brush stamps, and end on release/cancel. Ignore outside samples rather
 than clamping them onto an edge. Snapshot brush settings per stamp and apply painting
@@ -67,7 +67,7 @@ Separate generation from presentation internally. Expose a synchronous
 lazy alpha mask for the duration of that callback. Default output stretches to the
 allocation; custom presentation can repeat a Canvas pattern, draw a background,
 or apply `destination-in` to artwork in logical display coordinates. Restore
-Canvas state on failure and preserve CRC's outer composition.
+Canvas state on failure and preserve Pibbl's outer composition.
 
 Borrowed sources must not be retained, mutated, transferred, or disposed. Callers
 can copy a still to their own canvas, or draw the same source multiple times in one
@@ -78,8 +78,8 @@ lists. Custom presentation geometry does not automatically remap painting.
 ## Ownership and evidence
 
 Release package arrays, pointer capture, queues, raster and mask backing stores
-exactly once. CRC owns presentation surfaces, bitmaps, event registrations, and
-scheduler work. Render failures use CRC's last committed generation and completion
+exactly once. Pibbl owns presentation surfaces, bitmaps, event registrations, and
+scheduler work. Render failures use Pibbl's last committed generation and completion
 error delivery; private fields are not transactional checkpoints. Invalid inputs
 throw actionable errors. Removal and repeated disposal must leave no work alive.
 
@@ -88,6 +88,6 @@ runnable Studio lesson. Extend with Material Lab and Growing Reveal. Then verify
 fixed-step timing, reset/recolor/resize, routed painting, seeded reproducibility,
 seamless repeat, alpha masks, overlap, teardown, packed consumers, and Studio
 source/built/editor parity. Measure solver, raster/upload, and complete synchronous
-CRC frame costs separately; machine-specific timings are evidence, not guarantees.
+Pibbl frame costs separately; machine-specific timings are evidence, not guarantees.
 A future batched WASM solver must preserve the public API and be assessed including
 memory copies, pixel upload, presentation, and composition, not solver speed alone.

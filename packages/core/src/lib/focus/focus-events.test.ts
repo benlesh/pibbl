@@ -1,20 +1,20 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { CRCEventTargetRegistration } from '../events/registrations';
-import type { CRCEvent, CRCEventHandlers, CRCEventTarget } from '../events/types';
+import type { PibblEventTargetRegistration } from '../events/registrations';
+import type { PibblEvent, PibblEventHandlers, PibblEventTarget } from '../events/types';
 import { executeRender } from '../execute-render';
-import { clearSharedState, getCRCInstance } from '../global-state';
+import { clearSharedState, getPibblInstance } from '../global-state';
 import { useEventListener } from '../hooks/use-event-listener';
 import { useEventTarget } from '../hooks/use-event-target';
 import { useSignal } from '../hooks/use-signal';
 import type { WritableSignal } from '../signals/types';
-import { mountCRC } from '../mount-crc';
-import type { CRCElement, CRCController } from '../types';
-import type { CRCFocusManager } from './focus-manager';
+import { mountPibbl } from '../mount-pibbl';
+import type { PibblElement, PibblController } from '../types';
+import type { PibblFocusManager } from './focus-manager';
 import { transitionLogicalFocus } from './focus-events';
 import { focusManaged } from './policy-test-support';
 import { createElement } from '../element/create-element';
 
-const activeControllers = new Set<CRCController>();
+const activeControllers = new Set<PibblController>();
 beforeEach(() => {
   document.body.replaceChildren();
 });
@@ -30,8 +30,8 @@ afterEach(() => {
 describe('logical focus transitions', () => {
   it('canonicalizes real Canvas entry and exit without routing companion native focus events twice', () => {
     const trace: string[] = [];
-    let manager!: CRCFocusManager;
-    const record = (scope: string, event: CRCEvent) => {
+    let manager!: PibblFocusManager;
+    const record = (scope: string, event: PibblEvent) => {
       const target = manager.candidates[0].target;
       trace.push(
         `${scope}:${event.type}:` +
@@ -88,9 +88,9 @@ describe('logical focus transitions', () => {
 
   it('dispatches A -> B in canonical order with logical related targets and state boundaries', async () => {
     const trace: string[] = [];
-    let manager!: CRCFocusManager;
-    let targets!: readonly [CRCEventTargetRegistration, CRCEventTargetRegistration];
-    const record = (event: CRCEvent) => {
+    let manager!: PibblFocusManager;
+    let targets!: readonly [PibblEventTargetRegistration, PibblEventTargetRegistration];
+    const record = (event: PibblEvent) => {
       const [a, b] = targets;
       const target = event.target === a.publicTarget ? 'A' : 'B';
       const related = event.relatedTarget === a.publicTarget ? 'A' :
@@ -116,7 +116,7 @@ describe('logical focus transitions', () => {
     const mounted = mountAndRender(focusManaged(Root));
     manager = mounted.manager;
     targets = manager.candidates.map(candidate => candidate.target) as unknown as
-      readonly [CRCEventTargetRegistration, CRCEventTargetRegistration];
+      readonly [PibblEventTargetRegistration, PibblEventTargetRegistration];
 
     transitionLogicalFocus(manager, targets[0], 'keyboard');
     await nextFrame();
@@ -139,14 +139,14 @@ describe('logical focus transitions', () => {
 
   it('queues a nested request from an outgoing handler after the current transition completes', async () => {
     const trace: string[] = [];
-    let manager!: CRCFocusManager;
-    let targets!: readonly CRCEventTargetRegistration[];
+    let manager!: PibblFocusManager;
+    let targets!: readonly PibblEventTargetRegistration[];
     let requested = false;
-    const label = (target: CRCEventTarget | null) => {
+    const label = (target: PibblEventTarget | null) => {
       const index = targets.findIndex(candidate => candidate.publicTarget === target);
       return index < 0 ? 'none' : ['A', 'B', 'C'][index];
     };
-    const record = (event: CRCEvent) => {
+    const record = (event: PibblEvent) => {
       trace.push(`${event.type}:${label(event.target)}->${label(event.relatedTarget)}`);
     };
     const Root = (_props: {}) => [
@@ -200,15 +200,15 @@ describe('logical focus transitions', () => {
 
   it('queues the latest nested request from incoming handlers without interrupting their transition', async () => {
     const trace: string[] = [];
-    let manager!: CRCFocusManager;
-    let targets!: readonly CRCEventTargetRegistration[];
+    let manager!: PibblFocusManager;
+    let targets!: readonly PibblEventTargetRegistration[];
     let requestedFromFocusIn = false;
     let requestedFromFocus = false;
-    const label = (target: CRCEventTarget | null) => {
+    const label = (target: PibblEventTarget | null) => {
       const index = targets.findIndex(candidate => candidate.publicTarget === target);
       return index < 0 ? 'none' : ['A', 'B', 'C'][index];
     };
-    const record = (event: CRCEvent) => {
+    const record = (event: PibblEvent) => {
       trace.push(`${event.type}:${label(event.target)}->${label(event.relatedTarget)}`);
     };
     const Root = (_props: {}) => [
@@ -275,7 +275,7 @@ describe('logical focus transitions', () => {
 
   it('honors synchronous Canvas refocus requested from the canonical blur handler', () => {
     const trace: string[] = [];
-    let manager!: CRCFocusManager;
+    let manager!: PibblFocusManager;
     let canvas!: HTMLCanvasElement;
     const Root = (_props: {}) => createElement(Target, {
       label: 'only',
@@ -358,11 +358,11 @@ describe('logical focus transitions', () => {
   });
 
   it('skips an already-dead previous target and exposes null as the incoming related target', async () => {
-    const trace: Array<CRCEventTarget | null> = [];
+    const trace: Array<PibblEventTarget | null> = [];
     const Root = focusScene({
       targetHandlers: {
-        onFocusOut: () => trace.push({} as CRCEventTarget),
-        onBlur: () => trace.push({} as CRCEventTarget),
+        onFocusOut: () => trace.push({} as PibblEventTarget),
+        onBlur: () => trace.push({} as PibblEventTarget),
         onFocusIn: event => trace.push(event.relatedTarget),
         onFocus: event => trace.push(event.relatedTarget),
       },
@@ -409,7 +409,7 @@ describe('logical focus transitions', () => {
 interface TargetProps {
   readonly label: string;
   readonly x: number;
-  readonly handlers: CRCEventHandlers;
+  readonly handlers: PibblEventHandlers;
 }
 
 const Target = ({ handlers, x }: TargetProps) => {
@@ -423,9 +423,9 @@ function focusScene({
   listenerHandlers = {},
   targetHandlers = {},
 }: {
-  readonly listenerHandlers?: CRCEventHandlers;
-  readonly targetHandlers?: CRCEventHandlers;
-}): CRCElement<any> {
+  readonly listenerHandlers?: PibblEventHandlers;
+  readonly targetHandlers?: PibblEventHandlers;
+}): PibblElement<any> {
   const Root = (_props: {}) => {
     useEventListener(listenerHandlers);
     return [
@@ -437,13 +437,13 @@ function focusScene({
 }
 
 function mountAndRender(
-  element: CRCElement<any>,
+  element: PibblElement<any>,
   canvas = createCanvas(),
 ) {
-  const controller = mountCRC(canvas, element);
+  const controller = mountPibbl(canvas, element);
   activeControllers.add(controller);
   executeRender(canvas, 1);
-  const manager = getCRCInstance(canvas).eventRoot.focusPolicy as CRCFocusManager | undefined;
+  const manager = getPibblInstance(canvas).eventRoot.focusPolicy as PibblFocusManager | undefined;
   if (!manager) throw new Error('Expected a focus manager.');
   return { canvas, controller, manager };
 }

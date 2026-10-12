@@ -6,7 +6,7 @@ Date: 2026-08-11
 
 ## Scenario and risk
 
-The cataloged Ordering and overlap laboratory drives CRC's existing eight mouse events through sibling routes, overlap, component ancestry, fill/stroke/combined geometry, transparent and non-hittable shapes, expanded interaction width, Canvas observers, handler replacement/removal, target removal, error isolation, activation, and cursor fallbacks. The primary risks were movement arriving before entry, every overlapping region firing, event and cursor selection disagreeing, handler changes losing stable identity, and pathless observers/default cursors accidentally becoming geometric targets.
+The cataloged Ordering and overlap laboratory drives Pibbl's existing eight mouse events through sibling routes, overlap, component ancestry, fill/stroke/combined geometry, transparent and non-hittable shapes, expanded interaction width, Canvas observers, handler replacement/removal, target removal, error isolation, activation, and cursor fallbacks. The primary risks were movement arriving before entry, every overlapping region firing, event and cursor selection disagreeing, handler changes losing stable identity, and pathless observers/default cursors accidentally becoming geometric targets.
 
 The TFC-04 boundary is an untransformed root Canvas. CSS scaling, transforms, nested clips, and globally ordered offscreen layers remain explicit TFC-05 cases rather than implied coverage.
 
@@ -38,15 +38,15 @@ The only browser error observed manually was the scenario's deliberate `Delibera
 
 ## Platform evidence and decisions
 
-Current Pointer Events, UI Events, CSSOM View, and DOM listener rules were cross-checked against Chrome for Testing 151.0.7922.34. Reference traces support one topmost target, exit before entry, transitions before movement, removal-aware listener snapshots, and exception isolation. Chromium also confirmed that leaving and re-entering A before release can still click A when down, up, and the generated click all resolve to the same live target. Reference macOS context order was secondary down → context menu → up, but CRC deliberately preserves the browser's native order instead of promising that sequence cross-platform.
+Current Pointer Events, UI Events, CSSOM View, and DOM listener rules were cross-checked against Chrome for Testing 151.0.7922.34. Reference traces support one topmost target, exit before entry, transitions before movement, removal-aware listener snapshots, and exception isolation. Chromium also confirmed that leaving and re-entering A before release can still click A when down, up, and the generated click all resolve to the same live target. Reference macOS context order was secondary down → context menu → up, but Pibbl deliberately preserves the browser's native order instead of promising that sequence cross-platform.
 
 The four historical failures were four geometry variants of the same move-before-entry defect, not four independent semantic disputes. The implemented fill, stroke, and expanded-width cases all require `mouseover → mousemove`.
 
-CRC-specific decisions are:
+Pibbl-specific decisions are:
 
 - one event-type-independent logical region wins in reverse paint order;
 - one component/path slot keeps identity across handler replacement;
-- CRC does not imitate DOM propagation by firing every geometric hit;
+- Pibbl does not imitate DOM propagation by firing every geometric hit;
 - a no-path `useEvent` is a post-target Canvas observer and a no-path `useCursor` is a fallback, never a target;
 - public rerenders requested during handlers settle on the next frame, while direct synchronous registry mutations obey the live-snapshot contract;
 - global paint order and coordinate conversion across layers remain TFC-05 work.
@@ -58,7 +58,7 @@ CRC-specific decisions are:
 - Removing a hovered cursorless target can still require fallback reconciliation; region removal and default replacement need the same ownership-aware path.
 - Public rerender is animation-frame queued. Tests that described it as same-dispatch mutation were corrected; a narrow internal test proves the synchronous Set/region boundary without inventing a production API.
 - A combined fill/stroke probe initially landed in fill-only space. It moved to a point covered by both the fill and the configured six-pixel stroke.
-- Rejected all-hit dispatch because it conflicts with topmost user expectations and CRC has no event-path API.
+- Rejected all-hit dispatch because it conflicts with topmost user expectations and Pibbl has no event-path API.
 - Rejected treating cursor-only/default hooks as independent targets; cursor and events must share one selected region, with Canvas defaults outside hit testing.
 - Rejected weakening transition ordering or adding retries; the platform trace and 20-run gate were stable.
 
@@ -69,7 +69,7 @@ The raw browser input helper must preserve press and release as distinct CDP eve
 Candidate tools:
 
 1. a reusable raw-CDP mouse gesture driver with explicit button/click-count and root-Canvas coordinates;
-2. a contract-route projector that compares native, approved CRC, and observed traces without circular table assertions;
+2. a contract-route projector that compares native, approved Pibbl, and observed traces without circular table assertions;
 3. a standard scenario pixel/target probe for positive, boundary, and negative geometry cells;
 4. a cursor-state probe that distinguishes pointer presence, logical target, fallback winner, and exact CSS ownership.
 

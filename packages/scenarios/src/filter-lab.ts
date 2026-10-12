@@ -1,4 +1,4 @@
-import { crc } from '@crc/core';
+import { pibbl } from '@pibbl/core';
 import type {
   FilterLabMode,
   FilterLabOrder,
@@ -22,6 +22,11 @@ export type {
   FilterLabTarget,
 } from './filter-lab.example';
 
+/**
+ * Stable action identifiers accepted by the filter lab scenario.
+ *
+ * @see {@link FilterLabState}
+ */
 export const FILTER_LAB_ACTION_IDS = [
   'show-all',
   'show-ordered',
@@ -78,7 +83,7 @@ async function mountFilterLab(
   const publish = () => context.onStateChange?.({ ...state });
   const render = () => {
     assertActive();
-    crc(context.canvas, createFilterLabScene({
+    pibbl(context.canvas, createFilterLabScene({
       state,
       recordTarget: (target: FilterLabTarget) => {
         state = { ...state, lastTarget: target };

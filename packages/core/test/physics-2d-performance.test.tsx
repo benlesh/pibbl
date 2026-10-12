@@ -1,15 +1,15 @@
-/** @jsxImportSource @crc/core */
-import { Circle, Group, crc, signal } from "@crc/core";
+/** @jsxImportSource @pibbl/core */
+import { Circle, Group, pibbl, signal } from "@pibbl/core";
 import {
   PhysicsWorld2D,
   collider2D,
-  crcPhysicsBody2D,
+  pibblPhysicsBody2D,
   dynamicBody2D,
   kinematicBody2D,
-  type CRCPhysicsBodyHandle2D,
-} from "@crc/physics/2d";
+  type PibblPhysicsBodyHandle2D,
+} from "@pibbl/core/physics/2d";
 import { expect, it, vi } from "vitest";
-import { PhysicsWorld2DKernel } from "../../physics/src/lib/2d/world/world.js";
+import { PhysicsWorld2DKernel } from "../src/features/physics/lib/2d/world/world.js";
 import { getSignalNode } from "../src/lib/signals/graph.js";
 import {
   ManualSchedulerDriver,
@@ -23,9 +23,9 @@ it("does not copy the entire world for each body presentation", () => {
   canvas.width = 480;
   canvas.height = 240;
   document.body.append(canvas);
-  const bodies: CRCPhysicsBodyHandle2D[] = [];
+  const bodies: PibblPhysicsBodyHandle2D[] = [];
   function Ball({ index }: { index: number }) {
-    const body = crcPhysicsBody2D();
+    const body = pibblPhysicsBody2D();
     bodies[index] = body;
     return (
       <Circle
@@ -34,7 +34,7 @@ it("does not copy the entire world for each body presentation", () => {
       />
     );
   }
-  const mount = crc(
+  const mount = pibbl(
     canvas,
     <PhysicsWorld2D>
       {Array.from({ length: 32 }, (_, i) => (
@@ -69,9 +69,9 @@ it("rolls back direct body signal staging when Commit rejects a physics candidat
   canvas.width = 100;
   canvas.height = 100;
   document.body.append(canvas);
-  let body!: CRCPhysicsBodyHandle2D;
+  let body!: PibblPhysicsBodyHandle2D;
   function Ball() {
-    body = crcPhysicsBody2D();
+    body = pibblPhysicsBody2D();
     return (
       <Circle
         physics={dynamicBody2D({ handle: body, linearVelocity: [1, 0] })}
@@ -79,7 +79,7 @@ it("rolls back direct body signal staging when Commit rejects a physics candidat
       />
     );
   }
-  const mount = crc(
+  const mount = pibbl(
     canvas,
     <PhysicsWorld2D>
       <Ball />
@@ -130,9 +130,9 @@ it("idles a stationary kinematic world and wakes when its target changes", () =>
   canvas.height = 240;
   document.body.append(canvas);
   const target = signal<readonly [number, number]>([20, 20]);
-  let body!: CRCPhysicsBodyHandle2D;
+  let body!: PibblPhysicsBodyHandle2D;
   function Platform() {
-    body = crcPhysicsBody2D();
+    body = pibblPhysicsBody2D();
     return (
       <Group
         physics={kinematicBody2D({
@@ -146,7 +146,7 @@ it("idles a stationary kinematic world and wakes when its target changes", () =>
       </Group>
     );
   }
-  const mount = crc(
+  const mount = pibbl(
     canvas,
     <PhysicsWorld2D>
       <Platform />

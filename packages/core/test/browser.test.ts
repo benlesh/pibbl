@@ -1,17 +1,17 @@
-import * as CRC_ROOT from '@crc/core';
-import { crc, Rectangle } from '@crc/core';
-import { jsx, jsxs } from '@crc/core/jsx-runtime';
-import { jsxDEV } from '@crc/core/jsx-dev-runtime';
+import * as PIBBL_ROOT from '@pibbl/core';
+import { pibbl, Rectangle } from '@pibbl/core';
+import { jsx, jsxs } from '@pibbl/core/jsx-runtime';
+import { jsxDEV } from '@pibbl/core/jsx-dev-runtime';
 import { page } from 'vitest/browser';
 import { describe, expect, it } from 'vitest';
 import { takeScreenshot } from '../src/lib/util/test-utils';
-import { createElement } from '@crc/core';
+import { createElement } from '@pibbl/core';
 
-describe('crc browser tests', () => {
+describe('pibbl browser tests', () => {
   it('keeps compiler constructors on their runtime entry points', () => {
-    expect(CRC_ROOT).not.toHaveProperty('jsx');
-    expect(CRC_ROOT).not.toHaveProperty('jsxs');
-    expect(CRC_ROOT).not.toHaveProperty('jsxDEV');
+    expect(PIBBL_ROOT).not.toHaveProperty('jsx');
+    expect(PIBBL_ROOT).not.toHaveProperty('jsxs');
+    expect(PIBBL_ROOT).not.toHaveProperty('jsxDEV');
 
     expect(jsx(Rectangle, { style: { width: 2, height: 2 } }).type)
       .toBe(Rectangle);
@@ -51,7 +51,7 @@ describe('crc browser tests', () => {
       });
     };
 
-    crc(canvas, createElement(SimpleRect, {}));
+    pibbl(canvas, createElement(SimpleRect, {}));
 
     // Method 1: Auto-generated name based on test name + timestamp
     await takeScreenshot(page);

@@ -15,8 +15,8 @@ Verified implementation revision before this evidence-only note: `ee4fe30`
 ## Delivered scope
 
 The completed work adds first-class deterministic 3D physics to
-`@crc/physics/3d` and pure geometry to `@crc/physics/3d/geometry`. It preserves
-CRC's component-owned lifecycle and realm scheduler: mounted worlds contribute
+`@pibbl/physics/3d` and pure geometry to `@pibbl/physics/3d/geometry`. It preserves
+Pibbl's component-owned lifecycle and realm scheduler: mounted worlds contribute
 one simulation participant, fixed ticks run in the scheduler's simulation
 lane, and successful commits publish one coherent pose/revision generation for
 WebGL render, pick, and focus settlement.
@@ -26,8 +26,8 @@ cone, convex-hull, triangle-mesh, heightfield, and transformed shape records;
 deterministic contact, ray, shape-cast, overlap, mass-property,
 rigid-body, collider, material, filter, event, query, command, and handle APIs;
 declarative `PhysicsWorld3D`; `dynamicBody3D`, `staticBody3D`, `kinematicBody3D`,
-and `collider3D` descriptors; shape components; and the `crcPhysicsWorld3D` and
-`crcPhysicsBody3D` hooks.
+and `collider3D` descriptors; shape components; and the `pibblPhysicsWorld3D` and
+`pibblPhysicsBody3D` hooks.
 
 Multiple `collider3D` descriptors can compose one body's compound mass and
 collision behavior; there is no separate public compound-shape factory.
@@ -84,7 +84,7 @@ only fixtures that intentionally exercise unlit geometry.
 
 Three existing Studio shell baselines changed because the new 3D physics guide
 and API material expand navigation/search content: `studio-learn-landing`,
-`studio-api-crc`, and `studio-search-open`. Expected, actual, and diff images
+`studio-api-pibbl`, and `studio-search-open`. Expected, actual, and diff images
 were inspected before those expected images were updated. The final visual
 safeguard rejected its deliberate mutation and recovered green; the diagram
 editor teaser had zero differing pixels; all nine Studio visual baselines
@@ -108,7 +108,7 @@ Fresh Node.js `v24.15.0` evidence included:
 
 Repository scans found no external engine, WASM, Worker, timer, or independent
 animation-frame loop in 3D production source; no public manual world step; and
-no production import through an `@crc/physics` root barrel. The package exposes
+no production import through an `@pibbl/physics` root barrel. The package exposes
 only `./2d`, `./2d/geometry`, `./3d`, and `./3d/geometry`, with optional peer
 relationships to matching Core and WebGL packages.
 

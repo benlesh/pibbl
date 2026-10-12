@@ -40,7 +40,7 @@ request, service, analytics call, or crawler participates in the search flow.
 The public shell and route outcomes were reviewed at the standard desktop
 profile and narrow mobile profile:
 
-- Desktop: `#/learn`, `#/api/functions/crc`, `#/examples`,
+- Desktop: `#/learn`, `#/api/functions/pibbl`, `#/examples`,
   `#/examples/drawing/filters`, search opened from `#/learn`, and
   `#/testing/baseline-smoke`.
 - Narrow: `#/learn`, `#/api`, `#/examples`, the filters example, and the
@@ -75,7 +75,7 @@ No baseline was updated merely to clear a failing comparison.
 | Baseline                               | Reason for intentional change                                                                                              |
 | -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
 | `studio-learn-landing.expected.png`    | Replaces the old landing composition with the Learn landing and persistent three-area navigation.                          |
-| `studio-api-crc.expected.png`          | Adds the focused API-reference page to visual coverage.                                                                    |
+| `studio-api-pibbl.expected.png`        | Adds the focused API-reference page to visual coverage.                                                                    |
 | `studio-examples-landing.expected.png` | Adds the public grouped Examples landing to visual coverage.                                                               |
 | `studio-filters.expected.png`          | Replaces the generic primitive/mouse coverage with the canonical Drawing/Filters public example.                           |
 | `studio-search-open.expected.png`      | Adds the open, accessible local-search dialog and result-shell state.                                                      |

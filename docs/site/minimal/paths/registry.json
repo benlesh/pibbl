@@ -1,0 +1,344 @@
+[
+  {
+    "id": "geometry",
+    "title": "Editable path geometry",
+    "description": "Build a cubic path, convert it, and compare flattening and simplification utilities.",
+    "source": "geometry.ts",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "PathGeometry",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PathSegment",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "flattenPath",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "flattenPathWang",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "simplifyPath",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "simplifyPathRadial",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "subdividePath",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "toPath2D",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "toSvgPathData",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "FlattenPathOptions",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "SimplifyPathOptions",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "SubdividePathOptions",
+        "importPath": "@pibbl/core"
+      }
+    ],
+    "notes": [
+      "Strokes the authored curve and four derived paths on a local Canvas."
+    ]
+  },
+  {
+    "id": "circular-factories",
+    "title": "Circular path factories",
+    "description": "Create circle, ellipse, arc, and wedge Path2D shapes.",
+    "source": "circular-factories.ts",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "createArcPath",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "createCirclePath",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "createEllipsePath",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "createWedgePath",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "ArcPathOptions",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "CirclePathOptions",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "EllipsePathOptions",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "WedgePathOptions",
+        "importPath": "@pibbl/core"
+      }
+    ],
+    "notes": ["Strokes every constructed Path2D on a local Canvas."]
+  },
+  {
+    "id": "polygon-factories",
+    "title": "Polygon path factories",
+    "description": "Create rounded rectangles and polygons alongside regular and star shapes.",
+    "source": "polygon-factories.ts",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "createPolygonPath",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "createRectanglePath",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "createRegularPolygonPath",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "createStarPath",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PolygonPathOptions",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "RectanglePathOptions",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "RegularPolygonNumericSize",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "RegularPolygonPathOptions",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "RegularPolygonPathPosition",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "RoundedCornerPathOptions",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "StarPathOptions",
+        "importPath": "@pibbl/core"
+      }
+    ],
+    "notes": ["Strokes every constructed Path2D on a local Canvas."]
+  },
+  {
+    "id": "line-svg-factories",
+    "title": "Line and SVG paths",
+    "description": "Construct a polyline and an SVG path from authored coordinates.",
+    "source": "line-svg-factories.ts",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "createLinePath",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "createSvgPath",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "LinePathOptions",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "SvgPathOptions",
+        "importPath": "@pibbl/core"
+      }
+    ],
+    "notes": ["Strokes both paths on a local Canvas."]
+  },
+  {
+    "id": "affine",
+    "title": "Affine transforms",
+    "description": "Compose translation and scaling, then transform geometry and a sample point.",
+    "source": "affine.ts",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "affineTransform",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "composeTransforms",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "transformPath",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PathPoint",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PathRect",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PathTransform",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "TransformPathOptions",
+        "importPath": "@pibbl/core"
+      }
+    ],
+    "notes": [
+      "Gray is the source; teal is the transformed path; orange marks the mapped center."
+    ]
+  },
+  {
+    "id": "quad-envelope",
+    "title": "Quad and envelope warps",
+    "description": "Warp a tile through a quadrilateral and between measured guide paths.",
+    "source": "quad-envelope.ts",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "envelopeTransform",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "quadTransform",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "EnvelopeGuide",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "EnvelopeTransformOptions",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PathGuide",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PathGuideOptions",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PathGuideStation",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PathQuadCorners",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PathQuadMode",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "QuadTransformOptions",
+        "importPath": "@pibbl/core"
+      }
+    ],
+    "notes": ["Gray is the source; teal and orange show the two warps."]
+  },
+  {
+    "id": "bends",
+    "title": "Arc and path bending",
+    "description": "Bend geometry around an arc and along a guide with explicit placement options.",
+    "source": "bends.ts",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "arcBendTransform",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "pathBendTransform",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "ArcBendTransformOptions",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "BendTransformOptions",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PathBendAlign",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PathBendArc",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PathBendBaseline",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PathBendFit",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PathBendOverflow",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PathBendTransformOptions",
+        "importPath": "@pibbl/core"
+      }
+    ],
+    "notes": [
+      "Gray is the source; teal and orange show the arc and guide bends."
+    ]
+  },
+  {
+    "id": "mesh",
+    "title": "Mesh warp",
+    "description": "Define a one-cell guide mesh and warp a circle through it.",
+    "source": "mesh.ts",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "meshTransform",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "MeshTransformOptions",
+        "importPath": "@pibbl/core"
+      }
+    ],
+    "notes": ["Gray is the source; teal is the mesh-warped result."]
+  }
+]

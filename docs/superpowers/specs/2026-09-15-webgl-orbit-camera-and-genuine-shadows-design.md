@@ -10,13 +10,13 @@ Status: design and written specification approved on 2026-09-15.
 
 ## Summary
 
-CRC will add an explicit `useOrbitCamera()` hook and genuine geometry-based
-shadow maps to `@crc/webgl`.
+Pibbl will add an explicit `useOrbitCamera()` hook and genuine geometry-based
+shadow maps to `@pibbl/webgl`.
 
 `useOrbitCamera()` does not create a camera object or change the
 `WebGLLayer.camera` contract. The hook owns spherical interaction state and
 returns current `position` and `lookAt` values plus a stable bundle of ordinary
-CRC event handlers. Authors attach those handlers to whichever CRC event
+Pibbl event handlers. Authors attach those handlers to whichever Pibbl event
 participant should control the view. `WebGLLayer` continues to receive one
 plain perspective-camera descriptor and remains unaware of controls.
 
@@ -44,10 +44,10 @@ PBR, custom shaders, or a retained application scene graph.
 
 - Let users rotate around a chosen world-space point and zoom without teaching
   `WebGLLayer` about control schemes.
-- Keep the existing plain `CRCWebGLPerspectiveCamera` descriptor as the only
+- Keep the existing plain `PibblWebGLPerspectiveCamera` descriptor as the only
   camera input to `WebGLLayer`.
-- Make orbit interaction use the same public CRC event handlers, propagation,
-  pointer capture, scheduling, hook identity, and teardown model as other CRC
+- Make orbit interaction use the same public Pibbl event handlers, propagation,
+  pointer capture, scheduling, hook identity, and teardown model as other Pibbl
   interaction.
 - Make cast shadows work by default in an ordinary lit scene.
 - Offer familiar `low`, `medium`, and `high` quality choices instead of
@@ -135,14 +135,14 @@ hook state is sufficient.
 
 ### Rejected: hook returns only opaque callbacks or a `bind()` function
 
-A named `handlers` object visibly follows CRC's existing event vocabulary,
+A named `handlers` object visibly follows Pibbl's existing event vocabulary,
 supports normal JSX spreading, and can be composed with application handlers.
 A binding function would add an abstraction and allocate or cache property
 objects without providing a needed capability.
 
 ### Selected: conventional shadow maps
 
-Depth shadow maps are the established fit for CRC's raster renderer. They
+Depth shadow maps are the established fit for Pibbl's raster renderer. They
 support directional, spot, and omnidirectional point lights, hard or filtered
 edges, renderer-owned caching, and simple quality scaling.
 
@@ -161,7 +161,7 @@ default correctness promise.
 ### Rejected: dual-paraboloid point shadows
 
 Two paraboloid views reduce point-light rendering passes but introduce seam
-and projection distortion. CRC chooses the conventional six-direction result
+and projection distortion. Pibbl chooses the conventional six-direction result
 for predictable quality. Caching addresses static-scene cost; the quality tier
 does not substitute an approximate projection.
 
@@ -169,21 +169,21 @@ does not substitute an approximate projection.
 
 ### Orbit camera hook
 
-`@crc/webgl` exports:
+`@pibbl/webgl` exports:
 
 ```ts
-export interface CRCOrbitCameraOptions {
-  readonly orbitPoint: CRCWebGLVector3;
-  readonly initialPosition: CRCWebGLVector3;
+export interface PibblOrbitCameraOptions {
+  readonly orbitPoint: PibblWebGLVector3;
+  readonly initialPosition: PibblWebGLVector3;
   readonly minDistance?: number;
   readonly maxDistance?: number;
   readonly rotateSpeed?: number;
   readonly zoomSpeed?: number;
 }
 
-export type CRCOrbitCameraHandlers = Required<
+export type PibblOrbitCameraHandlers = Required<
   Pick<
-    CRCEventHandlers,
+    PibblEventHandlers,
     | "onPointerDown"
     | "onPointerMove"
     | "onPointerUp"
@@ -193,15 +193,15 @@ export type CRCOrbitCameraHandlers = Required<
   >
 >;
 
-export interface CRCOrbitCameraResult {
-  readonly position: CRCWebGLVector3;
-  readonly lookAt: CRCWebGLVector3;
-  readonly handlers: CRCOrbitCameraHandlers;
+export interface PibblOrbitCameraResult {
+  readonly position: PibblWebGLVector3;
+  readonly lookAt: PibblWebGLVector3;
+  readonly handlers: PibblOrbitCameraHandlers;
 }
 
 export function useOrbitCamera(
-  options: CRCOrbitCameraOptions,
-): CRCOrbitCameraResult;
+  options: PibblOrbitCameraOptions,
+): PibblOrbitCameraResult;
 ```
 
 `orbitPoint` and `initialPosition` are required to avoid a hidden initial
@@ -227,14 +227,14 @@ their values change. The `handlers` object and its function identities remain
 stable for the hook-slot lifetime and read the latest successfully adopted
 options.
 
-The hook follows normal CRC hook ordering and ownership. Calling it during
+The hook follows normal Pibbl hook ordering and ownership. Calling it during
 every component render retrieves the same component-owned slot; it does not
 create another camera or event subscription. Removal, remount, render failure,
 and root disposal use ordinary hook teardown semantics.
 
 ### Orbit input semantics
 
-The handler bundle uses only ordinary public CRC events:
+The handler bundle uses only ordinary public Pibbl events:
 
 - A primary `pointerdown` begins one orbit gesture and captures that pointer on
   `event.currentTarget`.
@@ -252,10 +252,10 @@ The handler bundle uses only ordinary public CRC events:
   current bounds, and the handler prevents the corresponding page-scroll
   default when it changes the camera.
 - Pointer and wheel changes publish ordinary hook-owned reactive state and ask
-  CRC for a scheduled render. The hook owns no independent animation loop and
+  Pibbl for a scheduled render. The hook owns no independent animation loop and
   requests no idle frames.
 
-The handler bundle may be spread onto any CRC component that accepts event
+The handler bundle may be spread onto any Pibbl component that accepts event
 handlers:
 
 ```tsx
@@ -293,10 +293,10 @@ not merge callbacks automatically.
 `WebGLLayerStyle` gains:
 
 ```ts
-export type CRCWebGLShadowQuality = false | "low" | "medium" | "high";
+export type PibblWebGLShadowQuality = false | "low" | "medium" | "high";
 
 export interface WebGLLayerStyle {
-  readonly shadows?: CRCWebGLShadowQuality;
+  readonly shadows?: PibblWebGLShadowQuality;
 }
 ```
 
@@ -314,11 +314,11 @@ The tiers define intent and minimum algorithm shape:
 
 The renderer clamps the requested resolution to the WebGL2 context's supported
 maximum. A device clamp does not change the selected comparison count. The
-tier applies uniformly to every shadow-casting light in one `WebGLLayer`; CRC
+tier applies uniformly to every shadow-casting light in one `WebGLLayer`; Pibbl
 does not silently select only some eligible lights.
 
 Map layout, texture arrays or atlases, depth format, sampling pattern, and bias
-remain private implementation details. CRC selects deterministic internal near
+remain private implementation details. Pibbl selects deterministic internal near
 planes and depth bias from the resolved light projection and settled scene
 bounds. This release exposes no per-light quality or tuning escape hatch.
 
@@ -334,7 +334,7 @@ Omission means `true`. Ambient and hemisphere light styles do not expose the
 field because those lights have no singular direction or position from which
 to form a direct-light shadow projection.
 
-Every eligible direct light casts when the layer quality is not `false`; CRC
+Every eligible direct light casts when the layer quality is not `false`; Pibbl
 does not choose a primary light or silently truncate shadow participation. The
 existing eight-total-light scene limit remains unchanged. Authors control a
 dynamic scene's cost by choosing the layer quality or explicitly setting
@@ -462,7 +462,7 @@ distances, speeds, or boolean participation fields fail the candidate render
 with the component and field named in the diagnostic.
 
 Renderer capability or allocation failures use the current `WebGLLayer`
-failure and rollback boundary. CRC does not silently disable all shadows or
+failure and rollback boundary. Pibbl does not silently disable all shadows or
 substitute screen-space/fake shadows when genuine depth resources cannot be
 created. Device resolution clamping is the one documented capability
 adaptation because it preserves the selected algorithm.
@@ -533,13 +533,13 @@ verification budget.
 - `WebGLLayer` receives no controls property.
 - The perspective camera remains a plain data descriptor.
 - `useOrbitCamera()` returns `{ position, lookAt, handlers }`.
-- Orbit handlers are ordinary, stable CRC event handlers attachable wherever
+- Orbit handlers are ordinary, stable Pibbl event handlers attachable wherever
   the author chooses.
 - Shadows use `false | "low" | "medium" | "high"`; omission is `"medium"`.
 - Shadows are conventional geometry-based depth maps, never fake blobs or
   screen-space substitutes.
 - Directional and spot shadows use one view; point shadows use six directions.
-- Every eligible direct light casts by default; CRC does not silently choose a
+- Every eligible direct light casts by default; Pibbl does not silently choose a
   primary shadow light.
 - Opaque meshes cast and receive by default; transparent defaults follow the
   final-alpha table.

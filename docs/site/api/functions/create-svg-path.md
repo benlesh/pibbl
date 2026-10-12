@@ -12,7 +12,7 @@ relatedTypes: [SvgPathOptions]
 # createSvgPath
 
 ```ts
-import { createSvgPath, Path } from "@crc/core";
+import { createSvgPath, Path } from "@pibbl/core";
 ```
 
 [`SvgPathOptions`](#/api/types/elements-components#svgpathoptions) is accepted by `createSvgPath(options): Path2D`, which returns a fresh `Path2D` from

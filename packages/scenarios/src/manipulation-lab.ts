@@ -1,4 +1,4 @@
-import { crc, createElement } from "@crc/core";
+import { pibbl, createElement } from "@pibbl/core";
 import {
   createManipulationLabModel,
   ManipulationLabRoot,
@@ -9,6 +9,11 @@ import {
 } from "./manipulation-lab.example";
 import type { ScenarioDefinition, ScenarioMountContext } from "./types";
 
+/**
+ * Stable action identifiers accepted by the manipulation lab scenario.
+ *
+ * @see {@link ManipulationLabAction}
+ */
 export const MANIPULATION_LAB_ACTION_IDS = [
   "toggle-snap",
   "cancel",
@@ -46,7 +51,7 @@ export const manipulationLabScenario: ScenarioDefinition<ManipulationLabState> =
     const model = createManipulationLabModel();
     const publish = () => context.onStateChange?.(snapshot(model, lastAction));
     model.publish = publish;
-    const controller = crc(context.canvas, createElement(ManipulationLabRoot, { model }), { pixelRatio: 1 });
+    const controller = pibbl(context.canvas, createElement(ManipulationLabRoot, { model }), { pixelRatio: 1 });
     await nextPaint();
     publish();
     const assertActive = () => {

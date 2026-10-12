@@ -1,0 +1,54 @@
+---
+title: Agent guide - authoring, signals, and lifecycle
+description: Build a valid Pibbl tree, preserve identity, synchronize host state, and dispose exactly once.
+kind: agent-guide
+sources:
+  - packages/scenarios/src/learning/start/signals.example.tsx
+---
+
+## Task and reading order
+
+Use this topic when mounting Pibbl, integrating a host framework, debugging state resets, or managing imperative resources. First read [installation and authoring](/start/), [state and lifecycle](/guides/state-and-lifecycle/), and the exact [pibbl contract](/reference/functions/pibbl/). For an HTML-owned application, also read the [native-button integration](/guides/native-button/).
+
+Do not infer compatibility from syntax resembling React. Pibbl components are synchronous functions returning Pibbl nodes. Pibbl and React have different elements, hooks, and JSX runtimes. Use one JSX runtime per file or explicit `createElement` at a mixed-runtime boundary. The [React host guide](/guides/react-integration/) shows the lifecycle split.
+
+## Ownership and identity
+
+The host owns the canvas DOM node, CSS, and the returned controller. Pibbl owns the live mount and its component/hook resources. Retain the controller and dispose it before the host is removed. Repeated `pibbl` calls on the same live canvas replace the root on the scheduler and return the same controller; they do not replace mount-time viewport, fit, density, or AbortSignal configuration.
+
+Component identity depends on parent scope, function identity, key, and same-type occurrence. Define stable component functions outside the rendering function that uses them. Keys preserve same-parent reorder; they cannot preserve a component across reparenting. A changed function or key is a lifetime change, not a styling update. Call hooks in the same order and count every successful render.
+
+## Choose the state primitive
+
+| Requirement                    | Use                         | Avoid                                                |
+| ------------------------------ | --------------------------- | ---------------------------------------------------- |
+| Host-owned writable state      | `signal`                    | Recreating it on every host update                   |
+| Component-owned writable state | `useSignal`                 | Writing while rendering                              |
+| Derived state                  | `computed` or `useComputed` | A reaction that writes another signal                |
+| Imperative synchronization     | `useReaction` with cleanup  | Treating it as a React effect that may write signals |
+| Mount-lifetime construction    | `useConst`                  | Assuming it owns cleanup or tracks reads             |
+| Mutable session bookkeeping    | `useRef`                    | Expecting mutation to schedule rendering             |
+
+Reads are explicit. Passing a signal to a declared reactive input makes the receiver its consumer. Calling `.get()` in your component makes that component the consumer. There is no recursive unwrapping of arbitrary application objects. `set` treats a function as data; use `update` for functional updates. `batch` groups synchronous notification waves.
+
+## Scheduling and failure
+
+The shared scheduler runs Begin, Advance, Commit, Plan, Render, and Complete. Reactions run in Complete after successful rendering. Signal reads in a reaction belong to it; its cleanup runs before replacement or release. Setup and cleanup cannot write signals. Component, primitive, and computed evaluation also forbid writes, including equality no-ops. `untracked` does not bypass these guards.
+
+Failed evaluation preserves the previous successful dependency generation and releases provisional resources. This does not promise pixel rollback: immediate Canvas operations already performed may remain visible. Do not use a thrown render as an application transaction.
+
+## Complete example and adaptation
+
+The source below is the existing Signals lesson. Compile it with `jsx: "react-jsx"` and `jsxImportSource: "@pibbl/core"`, attach a canvas with width 720 and height 420, then call its default `mount(canvas)`. Keep its returned controller. The lesson's module-level signals deliberately outlive one mount; move state into `useSignal` when each instance should start independently.
+
+[Open the Signals lesson](@PLAYGROUND@#/workbench/signals) in the playground. For the underlying API, use [signal](/reference/functions/signal/), [useSignal](/reference/hooks/use-signal/), [computed](/reference/functions/computed/), and [useReaction](/reference/hooks/use-reaction/).
+
+## Verification
+
+1. Mount once, activate the example, and assert its displayed state changes after a scheduled frame.
+2. Rerender with the same function/key and confirm state is retained. Change the key and confirm a new lifetime.
+3. Reorder keyed siblings within the same parent and confirm state follows keys. Treat reparenting as a remount.
+4. Mount, remove, and remount repeatedly. Check owned listeners/observers are released and the old controller cannot affect the replacement.
+5. Test a failed setup or render and confirm external resources are released. Inspect semantic state before pixels.
+
+When reporting results, distinguish a code typecheck from a browser run, and include package version, source revision, action, and observed state. Do not claim teardown from a screenshot or from heap timing alone.

@@ -1,0 +1,238 @@
+[
+  {
+    "id": "fade",
+    "title": "fade enter and exit",
+    "description": "Show and hide a captured Pibbl subtree with the fade transition.",
+    "source": "fade.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "fade",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "useVisibilityTransition",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PibblTransitionEffect",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PibblVisibilityTransition",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PibblVisibilityTransitionOptions",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PibblVisibilityTransitionResult",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PibblVisibilityTransitionStatus",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PibblTransitionBinding",
+        "importPath": "@pibbl/core"
+      }
+    ],
+    "notes": [
+      "Transitions affect pixels, not hit testing or native HTML. Keep the subject mounted until hide() resolves with status finished before removing it.",
+      "Mount-time transition options are stable. The Pibbl mount owns playback and effect cleanup."
+    ]
+  },
+  {
+    "id": "slide",
+    "title": "slide enter and exit",
+    "description": "Show and hide a captured Pibbl subtree with the slide transition.",
+    "source": "slide.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "slide",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PibblSlideOptions",
+        "importPath": "@pibbl/core"
+      }
+    ],
+    "notes": [
+      "Transitions affect pixels, not hit testing or native HTML. Keep the subject mounted until hide() resolves with status finished before removing it.",
+      "Mount-time transition options are stable. The Pibbl mount owns playback and effect cleanup."
+    ]
+  },
+  {
+    "id": "zoom",
+    "title": "zoom enter and exit",
+    "description": "Show and hide a captured Pibbl subtree with the zoom transition.",
+    "source": "zoom.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "zoom",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PibblZoomOptions",
+        "importPath": "@pibbl/core"
+      }
+    ],
+    "notes": [
+      "Transitions affect pixels, not hit testing or native HTML. Keep the subject mounted until hide() resolves with status finished before removing it.",
+      "Mount-time transition options are stable. The Pibbl mount owns playback and effect cleanup."
+    ]
+  },
+  {
+    "id": "wipe",
+    "title": "wipe enter and exit",
+    "description": "Show and hide a captured Pibbl subtree with the wipe transition.",
+    "source": "wipe.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "wipe",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PibblWipeOptions",
+        "importPath": "@pibbl/core"
+      }
+    ],
+    "notes": [
+      "Transitions affect pixels, not hit testing or native HTML. Keep the subject mounted until hide() resolves with status finished before removing it.",
+      "Mount-time transition options are stable. The Pibbl mount owns playback and effect cleanup."
+    ]
+  },
+  {
+    "id": "blur-reveal",
+    "title": "blurReveal enter and exit",
+    "description": "Show and hide a captured Pibbl subtree with the blurReveal transition.",
+    "source": "blur-reveal.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "blurReveal",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PibblBlurRevealOptions",
+        "importPath": "@pibbl/core"
+      }
+    ],
+    "notes": [
+      "Transitions affect pixels, not hit testing or native HTML. Keep the subject mounted until hide() resolves with status finished before removing it.",
+      "Mount-time transition options are stable. The Pibbl mount owns playback and effect cleanup."
+    ]
+  },
+  {
+    "id": "dissolve",
+    "title": "dissolve enter and exit",
+    "description": "Show and hide a captured Pibbl subtree with the dissolve transition.",
+    "source": "dissolve.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "dissolve",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PibblDissolveOptions",
+        "importPath": "@pibbl/core"
+      }
+    ],
+    "notes": [
+      "Transitions affect pixels, not hit testing or native HTML. Keep the subject mounted until hide() resolves with status finished before removing it.",
+      "Mount-time transition options are stable. The Pibbl mount owns playback and effect cleanup."
+    ]
+  },
+  {
+    "id": "bifrost",
+    "title": "bifrost enter and exit",
+    "description": "Beam a transparent logo in and out with Bifrost, using a dark stage and space for its luminous trails. The first entrance runs automatically.",
+    "source": "bifrost.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "bifrost",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PibblBifrostOptions",
+        "importPath": "@pibbl/core"
+      }
+    ],
+    "notes": [
+      "Transitions affect pixels, not hit testing or native HTML. Keep the subject mounted until hide() resolves with status finished before removing it.",
+      "Mount-time transition options are stable. The Pibbl mount owns playback and effect cleanup."
+    ]
+  },
+  {
+    "id": "hologram",
+    "title": "hologram enter and exit",
+    "description": "Project a spacecraft with swept wings, a transparent window, and detached exhaust shapes. Hologram follows the painted silhouette, not a filled rectangle. The first entrance runs automatically; Show and Hide replay either direction.",
+    "source": "hologram.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "hologram",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PibblHologramOptions",
+        "importPath": "@pibbl/core"
+      }
+    ],
+    "notes": [
+      "Transitions affect pixels, not hit testing or native HTML. Keep the subject mounted until hide() resolves with status finished before removing it.",
+      "Mount-time transition options are stable. The Pibbl mount owns playback and effect cleanup."
+    ]
+  },
+  {
+    "id": "embers",
+    "title": "embers enter and exit",
+    "description": "Break a transparent logo into glowing Embers, with a dark stage and space for falling particles. The first entrance runs automatically.",
+    "source": "embers.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "embers",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PibblEmbersOptions",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PibblEmbersPhysicsOptions",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PibblEmberCollision",
+        "importPath": "@pibbl/core"
+      }
+    ],
+    "notes": [
+      "Transitions affect pixels, not hit testing or native HTML. Keep the subject mounted until hide() resolves with status finished before removing it.",
+      "Mount-time transition options are stable. The Pibbl mount owns playback and effect cleanup."
+    ]
+  },
+  {
+    "id": "custom",
+    "title": "Define a custom transition",
+    "description": "Render a captured subtree with a custom synchronous alpha curve.",
+    "source": "custom.tsx",
+    "environment": "browser",
+    "symbols": [
+      { "name": "defineTransition", "importPath": "@pibbl/core" },
+      { "name": "PibblTransitionDefinition", "importPath": "@pibbl/core" },
+      { "name": "PibblTransitionRenderFrame", "importPath": "@pibbl/core" }
+    ],
+    "notes": [
+      "The context and source are borrowed only for the synchronous render callback. Do not retain them or mutate signals while rendering."
+    ]
+  }
+]

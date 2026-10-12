@@ -1,15 +1,15 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { CRCEventHandlers } from '../events/types';
+import type { PibblEventHandlers } from '../events/types';
 import { executeRender } from '../execute-render';
-import { clearSharedState, getCRCInstance } from '../global-state';
+import { clearSharedState, getPibblInstance } from '../global-state';
 import { useEventTarget } from '../hooks/use-event-target';
-import { mountCRC } from '../mount-crc';
-import type { CRCController } from '../types';
-import type { CRCFocusManager } from './focus-manager';
+import { mountPibbl } from '../mount-pibbl';
+import type { PibblController } from '../types';
+import type { PibblFocusManager } from './focus-manager';
 import { focusManaged } from './policy-test-support';
 import { createElement } from '../element/create-element';
 
-const activeControllers = new Set<CRCController>();
+const activeControllers = new Set<PibblController>();
 
 beforeEach(() => {
   document.body.replaceChildren();
@@ -313,14 +313,14 @@ describe('press-to-focus defaults', () => {
     dispatchMouse(mounted.canvas, 10, 1);
     expect(document.activeElement).not.toBe(mounted.canvas);
 
-    getCRCInstance(mounted.canvas).eventRoot.pointerCaptures.set(52, captured);
+    getPibblInstance(mounted.canvas).eventRoot.pointerCaptures.set(52, captured);
     dispatchPointer(mounted.canvas, 52, 10, 'mouse');
     expect(mounted.manager.resolveKeyboardTarget()).toBe(focusable);
   });
 
   it('clears logical state only after the native Canvas blur reaches its target', () => {
     const snapshots: boolean[] = [];
-    let manager!: CRCFocusManager;
+    let manager!: PibblFocusManager;
     const Root = (_props: {}) => createElement(Target, {
       label: 'focusable', x: 0, keyboardFocusable: true,
       handlers: {
@@ -342,7 +342,7 @@ interface TargetProps {
   readonly label: string;
   readonly x: number;
   readonly keyboardFocusable: boolean;
-  readonly handlers: CRCEventHandlers;
+  readonly handlers: PibblEventHandlers;
 }
 
 const Target = ({
@@ -369,25 +369,25 @@ function mountScene() {
 }
 
 function mountAndRender(element: ReturnType<typeof focusManaged>, canvas = createCanvas()) {
-  const controller = mountCRC(canvas, element);
+  const controller = mountPibbl(canvas, element);
   activeControllers.add(controller);
   executeRender(canvas, 1);
-  const manager = getCRCInstance(canvas).eventRoot.focusPolicy as CRCFocusManager | undefined;
+  const manager = getPibblInstance(canvas).eventRoot.focusPolicy as PibblFocusManager | undefined;
   if (!manager) throw new Error('Expected a focus manager.');
   return { canvas, controller, manager };
 }
 
-function focusedLabel(manager: CRCFocusManager): string | undefined {
+function focusedLabel(manager: PibblFocusManager): string | undefined {
   const target = manager.resolveKeyboardTarget();
   return target ? (target.component.element.props as { label: string }).label : undefined;
 }
 
 function targetsByLabel(
-  manager: CRCFocusManager,
+  manager: PibblFocusManager,
   first: string,
   second: string,
 ) {
-  const all = Array.from(getCRCInstance(manager.candidates[0].target.owner.canvas).eventRoot.targets);
+  const all = Array.from(getPibblInstance(manager.candidates[0].target.owner.canvas).eventRoot.targets);
   const find = (label: string) => all.find(target =>
     (target.component.element.props as { label: string }).label === label
   )!;

@@ -1,12 +1,12 @@
-import { jsxDEV } from '@crc/core/jsx-dev-runtime';
-import { createElement, definePrimitive, measureElement, signal, Text, type CRCResponsiveStyle, type TextStyle, type SystemStyle } from '@crc/core';
+import { jsxDEV } from '@pibbl/core/jsx-dev-runtime';
+import { createElement, definePrimitive, measureElement, signal, Text, type PibblResponsiveStyle, type TextStyle, type SystemStyle } from '@pibbl/core';
 import { describe, expect, it, vi } from 'vitest';
 const constraints = { minWidth: 0, maxWidth: 700, minHeight: 0, maxHeight: 100 };
 const service = { measureText: () => ({ width: 20, actualBoundingBoxLeft: 0, actualBoundingBoxRight: 20, actualBoundingBoxAscent: 9, actualBoundingBoxDescent: 3 }) as TextMetrics };
 function measured(when: unknown, maxHeight = 100) {
   return measureElement(createElement(Text, { children: 'label', style: {
     when,
-  } as CRCResponsiveStyle<TextStyle> }), { ...constraints, maxHeight }, service);
+  } as PibblResponsiveStyle<TextStyle> }), { ...constraints, maxHeight }, service);
 }
 describe('responsive query validation', () => {
   it('preserves zero and fractional inclusive bounds on both axes', () => {
@@ -40,21 +40,21 @@ describe('responsive query validation', () => {
   });
 
   it.each([
-    [null, 'CRC_STYLE_QUERY_SHAPE'],
-    [{}, 'CRC_STYLE_QUERY_SHAPE'],
-    [signal([]), 'CRC_STYLE_QUERY_SIGNAL'],
-    [[signal({})], 'CRC_STYLE_QUERY_SIGNAL'],
-    [[{ query: signal({ minWidth: 0 }), style: {} }], 'CRC_STYLE_QUERY_SIGNAL'],
-    [[{ query: { minWidth: 0 }, style: signal({}) }], 'CRC_STYLE_QUERY_SIGNAL'],
-    [[{ query: {}, style: {} }], 'CRC_STYLE_QUERY_KEY'],
-    [[{ query: { pointer: 'coarse' }, style: {} }], 'CRC_STYLE_QUERY_KEY'],
-    [[{ query: { minWidth: -1 }, style: {} }], 'CRC_STYLE_QUERY_BOUND'],
-    [[{ query: { minWidth: Infinity }, style: {} }], 'CRC_STYLE_QUERY_BOUND'],
-    [[{ query: { minHeight: NaN }, style: {} }], 'CRC_STYLE_QUERY_BOUND'],
-    [[{ query: { minWidth: 10, maxWidth: 9 }, style: {} }], 'CRC_STYLE_QUERY_RANGE'],
-    [[{ query: { minHeight: 10, maxHeight: 9 }, style: {} }], 'CRC_STYLE_QUERY_RANGE'],
-    [[{ query: { minWidth: 800 }, style: { when: [] } }], 'CRC_STYLE_QUERY_NESTED'],
-    [[{ query: { minWidth: 0 }, style: new Date() }], 'CRC_STYLE_QUERY_SHAPE'],
+    [null, 'PIBBL_STYLE_QUERY_SHAPE'],
+    [{}, 'PIBBL_STYLE_QUERY_SHAPE'],
+    [signal([]), 'PIBBL_STYLE_QUERY_SIGNAL'],
+    [[signal({})], 'PIBBL_STYLE_QUERY_SIGNAL'],
+    [[{ query: signal({ minWidth: 0 }), style: {} }], 'PIBBL_STYLE_QUERY_SIGNAL'],
+    [[{ query: { minWidth: 0 }, style: signal({}) }], 'PIBBL_STYLE_QUERY_SIGNAL'],
+    [[{ query: {}, style: {} }], 'PIBBL_STYLE_QUERY_KEY'],
+    [[{ query: { pointer: 'coarse' }, style: {} }], 'PIBBL_STYLE_QUERY_KEY'],
+    [[{ query: { minWidth: -1 }, style: {} }], 'PIBBL_STYLE_QUERY_BOUND'],
+    [[{ query: { minWidth: Infinity }, style: {} }], 'PIBBL_STYLE_QUERY_BOUND'],
+    [[{ query: { minHeight: NaN }, style: {} }], 'PIBBL_STYLE_QUERY_BOUND'],
+    [[{ query: { minWidth: 10, maxWidth: 9 }, style: {} }], 'PIBBL_STYLE_QUERY_RANGE'],
+    [[{ query: { minHeight: 10, maxHeight: 9 }, style: {} }], 'PIBBL_STYLE_QUERY_RANGE'],
+    [[{ query: { minWidth: 800 }, style: { when: [] } }], 'PIBBL_STYLE_QUERY_NESTED'],
+    [[{ query: { minWidth: 0 }, style: new Date() }], 'PIBBL_STYLE_QUERY_SHAPE'],
   ])('rejects malformed query input with a repairable diagnostic: %j', (when, code) => {
     expect(() => measured(when)).toThrow(code as string);
   });
@@ -62,7 +62,7 @@ describe('responsive query validation', () => {
     expect(() => measured([
       { query: { minHeight: 10 }, style: {} },
       { query: { minWidth: -1 }, style: {} },
-    ], Infinity)).toThrow('CRC_STYLE_QUERY_BOUND');
+    ], Infinity)).toThrow('PIBBL_STYLE_QUERY_BOUND');
   });
   it('does not read base or patch signals when the standalone basis is unavailable', () => {
     const value = signal(20);

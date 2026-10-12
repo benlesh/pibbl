@@ -1,11 +1,69 @@
 import { arcPoint, arcSweep, TAU, type ArcSegment } from './path-arc.js';
-/** A canonical, independently editable path segment. */
+/**
+ * A canonical, independently editable path segment.
+ *
+ * @see {@link PathGeometry}
+ */
 export type PathSegment =
-  | { type: 'move' | 'line'; x: number; y: number }
-  | { type: 'quadratic'; cpx: number; cpy: number; x: number; y: number }
-  | { type: 'cubic'; cp1x: number; cp1y: number; cp2x: number; cp2y: number; x: number; y: number }
+  | {
+      /** Selects `"move"`, `"line"` for type. See {@link PathSegment}. */
+      type: 'move' | 'line';
+      /**
+       * Horizontal coordinate or displacement in the containing coordinate system. See
+       * {@link PathSegment}.
+       */
+      x: number;
+      /**
+       * Vertical coordinate or displacement in the containing coordinate system. See
+       * {@link PathSegment}.
+       */
+      y: number;
+    }
+  | {
+      /** The literal "quadratic" identifying this variant. See {@link PathSegment}. */
+      type: 'quadratic';
+      /** Horizontal coordinate of the quadratic control point. See {@link PathSegment}. */
+      cpx: number;
+      /** Vertical coordinate of the quadratic control point. See {@link PathSegment}. */
+      cpy: number;
+      /**
+       * Horizontal coordinate or displacement in the containing coordinate system. See
+       * {@link PathSegment}.
+       */
+      x: number;
+      /**
+       * Vertical coordinate or displacement in the containing coordinate system. See
+       * {@link PathSegment}.
+       */
+      y: number;
+    }
+  | {
+      /** The literal "cubic" identifying this variant. See {@link PathSegment}. */
+      type: 'cubic';
+      /** Horizontal coordinate of the first cubic control point. See {@link PathSegment}. */
+      cp1x: number;
+      /** Vertical coordinate of the first cubic control point. See {@link PathSegment}. */
+      cp1y: number;
+      /** Horizontal coordinate of the second cubic control point. See {@link PathSegment}. */
+      cp2x: number;
+      /** Vertical coordinate of the second cubic control point. See {@link PathSegment}. */
+      cp2y: number;
+      /**
+       * Horizontal coordinate or displacement in the containing coordinate system. See
+       * {@link PathSegment}.
+       */
+      x: number;
+      /**
+       * Vertical coordinate or displacement in the containing coordinate system. See
+       * {@link PathSegment}.
+       */
+      y: number;
+    }
   | ArcSegment
-  | { type: 'close' };
+  | {
+      /** The literal "close" identifying this variant. See {@link PathSegment}. */
+      type: 'close';
+    };
 
 const names = ['move', 'line', 'quadratic', 'cubic', 'close', 'arc'] as const;
 const widths = [2, 2, 4, 6, 0, 8] as const;
@@ -77,8 +135,17 @@ function operands(segment: PathSegment): number[] {
   }
 }
 
-/** Mutable packed geometry. Mutations do not schedule CRC rendering. */
+/**
+ * Mutable packed geometry. Mutations do not schedule Pibbl rendering.
+ *
+ * @see {@link PathSegment}
+ */
 export class PathGeometry implements Iterable<PathSegment> {
+  /**
+   * Creates empty geometry or an independent copy of the supplied path. See {@link PathGeometry}.
+   * @param source - Optional geometry whose segments are copied; omission creates an empty path.
+   * See {@link PathGeometry} .
+   */
   constructor(source?: PathGeometry) {
     const original = source === undefined ? undefined : state(source);
     storage.set(this, {
@@ -92,11 +159,25 @@ export class PathGeometry implements Iterable<PathSegment> {
     });
   }
 
+  /**
+   * Monotonic mutation revision; changing geometry does not itself request a Pibbl frame. See
+   * {@link PathGeometry}.
+   * @returns The mutation revision used to invalidate cached representations.
+   */
   get revision(): number { return state(this).revision; }
+  /**
+   * Number of stored path segments, including move and close commands. See {@link PathGeometry}.
+   * @returns The number of stored path segments.
+   */
   get segmentCount(): number { return state(this).count; }
 
+  /**
+   * Returns an independent copy with its own mutation revision. See {@link PathGeometry}.
+   * @returns An independent copy of this path's segments. See {@link PathGeometry}.
+   */
   clone(): PathGeometry { return new PathGeometry(this); }
 
+  /** Removes all segments and resets the current point. See {@link PathGeometry}. */
   clear(): void {
     const value = state(this);
     if (!value.count) return;
@@ -106,24 +187,74 @@ export class PathGeometry implements Iterable<PathSegment> {
     value.revision++;
   }
 
+  /**
+   * Begins a subpath at the supplied coordinates. See {@link PathGeometry}.
+   * @param x - Horizontal coordinate of the new subpath's starting point.
+   * @param y - Vertical coordinate of the new subpath's starting point.
+   */
   moveTo(x: number, y: number): void { this.#build(0, [x, y]); }
+  /**
+   * Appends a straight segment to the supplied coordinates. See {@link PathGeometry}.
+   * @param x - Horizontal coordinate of the line endpoint.
+   * @param y - Vertical coordinate of the line endpoint.
+   */
   lineTo(x: number, y: number): void { this.#build(1, [x, y]); }
+  /**
+   * Appends a quadratic curve using one control point and an endpoint. See {@link PathGeometry}.
+   * @param cpx - Horizontal coordinate of the quadratic control point.
+   * @param cpy - Vertical coordinate of the quadratic control point.
+   * @param x - Horizontal coordinate of the curve endpoint.
+   * @param y - Vertical coordinate of the curve endpoint.
+   */
   quadraticCurveTo(cpx: number, cpy: number, x: number, y: number): void {
     this.#build(2, [cpx, cpy, x, y]);
   }
+  /**
+   * Appends a cubic curve using two control points and an endpoint. See {@link PathGeometry}.
+   * @param cp1x - Horizontal coordinate of the first control point.
+   * @param cp1y - Vertical coordinate of the first control point.
+   * @param cp2x - Horizontal coordinate of the second control point.
+   * @param cp2y - Vertical coordinate of the second control point.
+   * @param x - Horizontal coordinate of the curve endpoint.
+   * @param y - Vertical coordinate of the curve endpoint.
+   */
   bezierCurveTo(cp1x: number, cp1y: number, cp2x: number, cp2y: number, x: number, y: number): void {
     this.#build(3, [cp1x, cp1y, cp2x, cp2y, x, y]);
   }
+  /**
+   * Closes the current subpath; an already closed or empty path is unchanged. See
+   * {@link PathGeometry}.
+   */
   closePath(): void {
     const value = state(this);
     if (!value.count || value.types[value.count - 1] === 4) return;
     this.#build(4, []);
   }
 
+  /**
+   * Appends a circular arc using Canvas-compatible angles in radians. See {@link PathGeometry}.
+   * @param x - Horizontal coordinate of the circle center.
+   * @param y - Vertical coordinate of the circle center.
+   * @param radius - Circle radius in path units.
+   * @param startAngle - Starting angle in radians.
+   * @param endAngle - Ending angle in radians.
+   * @param counterclockwise - Whether the arc runs counterclockwise; defaults to false.
+   */
   arc(x: number, y: number, radius: number, startAngle: number, endAngle: number, counterclockwise = false): void {
     this.ellipse(x, y, radius, radius, 0, startAngle, endAngle, counterclockwise);
   }
 
+  /**
+   * Appends an elliptical arc; rotation and arc angles are in radians. See {@link PathGeometry}.
+   * @param x - Horizontal coordinate of the ellipse center.
+   * @param y - Vertical coordinate of the ellipse center.
+   * @param radiusX - Horizontal radius in path units.
+   * @param radiusY - Vertical radius in path units.
+   * @param rotation - Ellipse rotation in radians.
+   * @param startAngle - Starting angle in radians.
+   * @param endAngle - Ending angle in radians.
+   * @param counterclockwise - Whether the arc runs counterclockwise; defaults to false.
+   */
   ellipse(x: number, y: number, radiusX: number, radiusY: number, rotation: number, startAngle: number, endAngle: number, counterclockwise = false): void {
     if (![x, y, radiusX, radiusY, rotation, startAngle, endAngle].every(Number.isFinite)) return;
     if (radiusX < 0 || radiusY < 0) throw new DOMException('Arc radii must not be negative.', 'IndexSizeError');
@@ -148,6 +279,15 @@ export class PathGeometry implements Iterable<PathSegment> {
     value.revision++;
   }
 
+  /**
+   * Appends a circular arc tangent to two lines using Canvas-compatible geometry. See
+   * {@link PathGeometry}.
+   * @param x1 - Horizontal coordinate of the first tangent intersection.
+   * @param y1 - Vertical coordinate of the first tangent intersection.
+   * @param x2 - Horizontal coordinate of the second tangent endpoint.
+   * @param y2 - Vertical coordinate of the second tangent endpoint.
+   * @param radius - Arc radius in path units.
+   */
   arcTo(x1: number, y1: number, x2: number, y2: number, radius: number): void {
     if (![x1, y1, x2, y2, radius].every(Number.isFinite)) return;
     if (radius < 0) throw new DOMException('Arc radius must not be negative.', 'IndexSizeError');
@@ -172,6 +312,13 @@ export class PathGeometry implements Iterable<PathSegment> {
       startAngle: start, sweep: arcSweep(start, end, cross > 0) });
   }
 
+  /**
+   * Appends a closed rectangle subpath. See {@link PathGeometry}.
+   * @param x - Horizontal coordinate of the rectangle origin.
+   * @param y - Vertical coordinate of the rectangle origin.
+   * @param width - Signed horizontal extent in path units.
+   * @param height - Signed vertical extent in path units.
+   */
   rect(x: number, y: number, width: number, height: number): void {
     if (![x, y, width, height].every(Number.isFinite)) return;
     if (![x + width, y + height].every(Number.isFinite)) throw new RangeError('Rectangle coordinates overflowed.');
@@ -186,6 +333,15 @@ export class PathGeometry implements Iterable<PathSegment> {
     value.revision++;
   }
 
+  /**
+   * Appends a closed rectangle with Canvas-compatible corner radii. See {@link PathGeometry}.
+   * @param x - Horizontal coordinate of the rectangle origin.
+   * @param y - Vertical coordinate of the rectangle origin.
+   * @param width - Signed horizontal extent in path units.
+   * @param height - Signed vertical extent in path units.
+   * @param radii - Circular or elliptical corner radii, using Canvas roundRect ordering; defaults
+   * to zero.
+   */
   roundRect(x: number, y: number, width: number, height: number,
     radii: number | DOMPointInit | (number | DOMPointInit)[] = 0): void {
     if (![x, y, width, height].every(Number.isFinite)) return;
@@ -222,6 +378,13 @@ export class PathGeometry implements Iterable<PathSegment> {
     this.#copyPath(path);
   }
 
+  /**
+   * Appends a copy of another path, optionally transformed by a 2D matrix. See
+   * {@link PathGeometry}.
+   * @param other - Geometry whose segments are appended. See {@link PathGeometry}.
+   * @param matrix - Optional affine transform applied to the appended segments; defaults to
+   * identity.
+   */
   addPath(other: PathGeometry, matrix: DOMMatrix2DInit = {}): void {
     if (!state(other).count) return;
     const normalized = DOMMatrix.fromMatrix(matrix);
@@ -246,6 +409,13 @@ export class PathGeometry implements Iterable<PathSegment> {
     value.revision++;
   }
 
+  /**
+   * Replaces a segment range with validated independent segment values. See {@link PathGeometry}.
+   * @param start - Index at which to begin replacing segments.
+   * @param deleteCount - Number of segments to remove.
+   * @param segments - Replacement segments; defaults to no inserted segments. See
+   * {@link PathSegment} .
+   */
   spliceSegments(start: number, deleteCount: number, segments: readonly PathSegment[] = []): void {
     const value = state(this);
     if (!Number.isInteger(start) || start < 0 || start > value.count ||
@@ -302,10 +472,20 @@ export class PathGeometry implements Iterable<PathSegment> {
     return offset;
   }
 
+  /**
+   * Returns an independent segment value at the specified index. See {@link PathSegment}.
+   * @param index - Zero-based segment index.
+   * @returns The segment at the requested index. See {@link PathSegment}.
+   */
   getSegment(index: number): PathSegment {
     return readSegment(state(this), index, this.#offset(index));
   }
 
+  /**
+   * Replaces one stored segment with a validated independent value. See {@link PathGeometry}.
+   * @param index - Zero-based index of the segment to replace.
+   * @param segment - Replacement segment data. See {@link PathSegment}.
+   */
   setSegment(index: number, segment: PathSegment): void {
     const offset = this.#offset(index);
     const type = names.indexOf(segment.type);
@@ -325,7 +505,10 @@ export class PathGeometry implements Iterable<PathSegment> {
     value.revision++;
   }
 
-  /** Applies a finite 2D affine matrix. Old native conversions remain unchanged. */
+  /**
+   * Applies a finite 2D affine matrix. Old native conversions remain unchanged.
+   * @param matrix - Affine matrix applied to all segments in this path.
+   */
   transform(matrix: DOMMatrix2DInit): void {
     const input = matrix as DOMMatrixInit;
     const normalized = DOMMatrix.fromMatrix(input);
@@ -357,6 +540,10 @@ export class PathGeometry implements Iterable<PathSegment> {
     value.revision++;
   }
 
+  /**
+   * Iterates over independent segment values in source order. See {@link PathSegment}.
+   * @returns An iterator over the path's segments in drawing order. See {@link PathSegment}.
+   */
   *[Symbol.iterator](): IterableIterator<PathSegment> {
     const value = state(this);
     const revision = value.revision;

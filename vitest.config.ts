@@ -1,10 +1,11 @@
+import PibblActionsReporter from "./tooling/vitest-actions-reporter.mjs";
 import { writeFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { defineBrowserCommand, playwright } from "@vitest/browser-playwright";
 import { configDefaults, defineConfig } from "vitest/config";
 import { assertBuiltCore } from "./tooling/assert-built-core.ts";
-import { crcRuntimeSource } from "./tooling/crc-runtime-source.ts";
-import { crcStudioDocs } from "./tooling/studio-docs/vite-plugin.ts";
+import { pibblRuntimeSource } from "./tooling/pibbl-runtime-source.ts";
+import { pibblStudioDocs } from "./tooling/studio-docs/vite-plugin.ts";
 import { manipulationPointer } from "./tooling/manipulation-browser-command.ts";
 
 interface DevToolsSession {
@@ -78,12 +79,12 @@ export default defineConfig(({ mode }) => ({
   oxc: {
     jsx: {
       runtime: "automatic",
-      importSource: "@crc/core",
+      importSource: "@pibbl/core",
     },
   },
   plugins: [
-    crcRuntimeSource(mode),
-    crcStudioDocs({
+    pibblRuntimeSource(mode),
+    pibblStudioDocs({
       repositoryRoot: fileURLToPath(new URL(".", import.meta.url)),
     }),
     ...(mode === "built" ? [assertBuiltCore()] : []),
@@ -93,22 +94,25 @@ export default defineConfig(({ mode }) => ({
       mode === "built"
         ? []
         : [
-            { find: /^@crc\/core\/filters$/, replacement: fileURLToPath(new URL("./packages/core/src/filters.ts", import.meta.url)) },
-            { find: /^@crc\/textures$/, replacement: fileURLToPath(new URL("./packages/textures/src/index.ts", import.meta.url)) },
+            { find: /^@pibbl\/core\/filters$/, replacement: fileURLToPath(new URL("./packages/core/src/filters.ts", import.meta.url)) },
+            { find: /^@pibbl\/core\/machines\/animation$/, replacement: fileURLToPath(new URL("./packages/core/src/features/machines/animation.ts", import.meta.url)) },
+            { find: /^@pibbl\/core\/machines$/, replacement: fileURLToPath(new URL("./packages/core/src/features/machines/index.ts", import.meta.url)) },
+            { find: /^@pibbl\/core\/sprites$/, replacement: fileURLToPath(new URL("./packages/core/src/features/sprites/index.ts", import.meta.url)) },
+            { find: /^@pibbl\/core\/textures$/, replacement: fileURLToPath(new URL("./packages/core/src/features/textures/index.ts", import.meta.url)) },
             {
-              find: /^@crc\/viz$/,
+              find: /^@pibbl\/core\/viz$/,
               replacement: fileURLToPath(
-                new URL("./packages/viz/src/index.ts", import.meta.url),
+                new URL("./packages/core/src/features/viz/index.ts", import.meta.url),
               ),
             },
             {
-              find: /^@crc\/core\/internal$/,
+              find: /^@pibbl\/core\/internal$/,
               replacement: fileURLToPath(
                 new URL("./packages/core/src/internal.ts", import.meta.url),
               ),
             },
             {
-              find: /^@crc\/core\/jsx-dev-runtime$/,
+              find: /^@pibbl\/core\/jsx-dev-runtime$/,
               replacement: fileURLToPath(
                 new URL(
                   "./packages/core/src/jsx-dev-runtime.ts",
@@ -117,71 +121,59 @@ export default defineConfig(({ mode }) => ({
               ),
             },
             {
-              find: /^@crc\/core\/jsx-runtime$/,
+              find: /^@pibbl\/core\/jsx-runtime$/,
               replacement: fileURLToPath(
                 new URL("./packages/core/src/jsx-runtime.ts", import.meta.url),
               ),
             },
             {
-              find: "@crc/core/types",
+              find: "@pibbl/core/types",
               replacement: fileURLToPath(
                 new URL("./packages/core/src/types.ts", import.meta.url),
               ),
             },
             {
-              find: /^@crc\/core$/,
+              find: /^@pibbl\/core$/,
               replacement: fileURLToPath(
                 new URL("./packages/core/src/index.ts", import.meta.url),
               ),
             },
             {
-              find: /^@crc\/three$/,
+              find: /^@pibbl\/three$/,
               replacement: fileURLToPath(
                 new URL("./packages/three/src/index.ts", import.meta.url),
               ),
             },
             {
-              find: /^@crc\/physics\/2d\/geometry$/,
+              find: /^@pibbl\/core\/physics\/2d\/geometry$/,
               replacement: fileURLToPath(
                 new URL(
-                  "./packages/physics/src/2d-geometry.ts",
+                  "./packages/core/src/features/physics/2d-geometry.ts",
                   import.meta.url,
                 ),
               ),
             },
             {
-              find: /^@crc\/physics\/2d\/testing$/,
+              find: /^@pibbl\/core\/physics\/2d\/testing$/,
               replacement: fileURLToPath(
                 new URL(
-                  "./packages/physics/src/2d-testing.ts",
+                  "./packages/core/src/features/physics/2d-testing.ts",
                   import.meta.url,
                 ),
               ),
             },
             {
-              find: /^@crc\/physics\/2d$/,
+              find: /^@pibbl\/core\/physics\/2d$/,
               replacement: fileURLToPath(
-                new URL("./packages/physics/src/2d.ts", import.meta.url),
-              ),
-            },
-            {
-              find: /^@crc\/physics\/3d\/geometry$/,
-              replacement: fileURLToPath(
-                new URL(
-                  "./packages/physics/src/3d-geometry.ts",
-                  import.meta.url,
-                ),
-              ),
-            },
-            {
-              find: "@crc/types",
-              replacement: fileURLToPath(
-                new URL("./packages/types/src/index.ts", import.meta.url),
+                new URL("./packages/core/src/features/physics/2d.ts", import.meta.url),
               ),
             },
           ],
   },
   test: {
+    ...(process.env.GITHUB_ACTIONS === "true"
+      ? { reporters: ["default", new PibblActionsReporter()] }
+      : {}),
     exclude: [
       ...configDefaults.exclude,
       "packages/text/.cache/**",
@@ -190,16 +182,11 @@ export default defineConfig(({ mode }) => ({
       ".superpowers/**",
       ".worktrees/**",
       "tooling/surviving-package-entries.test.ts",
-      // Node-runner suites own browser processes; they cannot run inside Chromium.
-      // Kept in test:agent-verification:{requirements,identity,watchdog}.
-      "tooling/agent-verification/**/*.test.mjs",
-      // Node-only checks run in trust:static and trust:package.
-      "tooling/filter-authoring.test.mjs",
-      "tooling/filter-validation.test.mjs",
-      "tooling/optional-import-inertness.test.mjs",
-      "tooling/texture-import-inertness.test.mjs",
-      "packages/physics/src/lib/2d/public-types.test.ts",
-      "packages/physics/src/lib/3d/public-types.test.ts",
+      // Tooling .mjs suites use node:test and run in their owning trust stages.
+      "tooling/**/*.test.mjs",
+      // Private brand assets have their own Node-runner verification.
+      "output/brand/**",
+      "packages/core/src/features/physics/lib/2d/public-types.test.ts",
     ],
     browser: {
       commands: {

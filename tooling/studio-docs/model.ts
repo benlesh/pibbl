@@ -2,6 +2,8 @@ export type PublicDocKind = "landing" | "tutorial" | "guide" | "api";
 export type ApiCategory =
   "overview" | "component" | "function" | "hook" | "types";
 export type TypeDomain =
+  | "machines"
+  | "sprites"
   | "canvas-runtime"
   | "elements-components"
   | "events"
@@ -83,6 +85,8 @@ const apiCategories = new Set<ApiCategory>([
   "types",
 ]);
 const typeDomains = new Set<TypeDomain>([
+  "machines",
+  "sprites",
   "canvas-runtime",
   "elements-components",
   "events",

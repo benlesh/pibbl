@@ -1,4 +1,4 @@
-import type { ScenarioController, SignalsLabState } from '@crc/scenarios';
+import type { ScenarioController, SignalsLabState } from '@pibbl/scenarios';
 import {
   getLearningExampleBySlug,
   getLearningExampleRoute,
@@ -6,7 +6,7 @@ import {
   loadLearningExample,
   loadScenario,
   signalsLabScenarioEntry,
-} from '@crc/scenarios';
+} from '@pibbl/scenarios';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import signalsLabSource from '../../scenarios/src/signals-lab.example.tsx?raw';
 import signalsLearningSource from '../../scenarios/src/learning/start/signals.example.tsx?raw';
@@ -130,8 +130,8 @@ describe('first-class signal public scenarios', () => {
     expect(getScenarioRoute(signalsLabScenarioEntry)).toBe('#/testing/signals');
 
     for (const source of [signalsLearningSource, signalInputsLearningSource, signalsLabSource]) {
-      expect(source).toMatch(/from ['"]@crc\/core['"]/u);
-      expect(source).not.toMatch(/@crc\/core\/(?:internal|lib|src)\b/u);
+      expect(source).toMatch(/from ['"]@pibbl\/core['"]/u);
+      expect(source).not.toMatch(/@pibbl\/core\/(?:internal|lib|src)\b/u);
       expect(source).not.toMatch(/(?:ManualFrames|flushPending|requestAnimationFrame)/u);
     }
     expect(signalsLearningSource).toContain('fill: color');

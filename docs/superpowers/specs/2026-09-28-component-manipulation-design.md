@@ -15,7 +15,7 @@ Implementation plan:
 
 ## Intent
 
-Make moving, resizing, and rotating CRC components easy to author and verify.
+Make moving, resizing, and rotating Pibbl components easy to author and verify.
 Provide standard handles and a composable controller without a retained scene
 graph, inferred descendant bounds, or imperative mutation of component nodes.
 Application signals remain the geometry source of truth. Resize changes an
@@ -40,7 +40,7 @@ allocation; scaling artwork is a distinct operation outside the first slice.
 - Application-controlled proposals are a possible later binding mode. The first
   slice binds writable signals, avoiding two competing state ownership models.
 
-The implementation plan fixes the initial names/types and exports from @crc/core.
+The implementation plan fixes the initial names/types and exports from @pibbl/core.
 No additional package or public solver entry is needed for the first delivery.
 
 ## Authoring sketch
@@ -112,7 +112,7 @@ The exact suppression of browser click activation after a completed drag needs
 an explicit extension to the existing activation contract. It must suppress
 only that gesture's activation, not unrelated pointers or ordinary clicks.
 
-Escape cancellation is available through CRC's existing logical focus path when
+Escape cancellation is available through Pibbl's existing logical focus path when
 FocusManagement is installed and the handle is focused. A controller also
 exposes `cancel()` for application keyboard/toolbars. No hidden document-wide
 keyboard listener or implicit focus policy is introduced.
@@ -166,7 +166,7 @@ still receives the frame's finite local allocation.
 - The first slice supports free placement. Flex/Grid reordering and editing
   layout constraints are separate operations, not side effects of dragging.
 
-CRC parents inspect direct-child style before evaluating a custom component.
+Pibbl parents inspect direct-child style before evaluating a custom component.
 The frame therefore exposes geometry through the existing style channel. The
 runtime distinguishes parent-resolved placement from standalone placement,
 without rendering a child to discover its box or applying offsets twice.
@@ -225,7 +225,7 @@ placement identity, and scheduler paths. Do not pre-render content, scan it for
 bounds, read pixels, or schedule feedback frames to copy measured geometry into
 signals. Gesture calculations and the fixed number of handles add bounded work;
 ordinary content layout/render costs still apply. Do not promise that movement
-skips descendant layout in CRC's full-traversal renderer. Verify proportional
+skips descendant layout in Pibbl's full-traversal renderer. Verify proportional
 layout/visit counts against an equivalent manually positioned scene and verify
 that multiple pointer updates coalesce onto the existing scheduled frame.
 
@@ -276,7 +276,7 @@ authored-field provenance when necessary. Validate actual normalized direct
 children under existing fragment/array rules; a layout nested deeper inside
 a child does not change that child's parent placement policy.
 
-The diagnostic has a stable code (`CRC_LAYOUT_IGNORED_POSITION`), parent layout,
+The diagnostic has a stable code (`PIBBL_LAYOUT_IGNORED_POSITION`), parent layout,
 child component, offending fields and values, and available JSX source metadata.
 Include a stable child key when available; do not invent unavailable source
 locations. Explain that the parent owns positioning and suggest its alignment,
@@ -284,7 +284,7 @@ gap, or explicit placement options, or an Absolute region for freely positioned
 content. For example:
 
 ```text
-CRC_LAYOUT_IGNORED_POSITION: Rectangle inside Flex declares left: 10, top: 440.
+PIBBL_LAYOUT_IGNORED_POSITION: Rectangle inside Flex declares left: 10, top: 440.
 Flex controls this child's position; these fields have no effect.
 Use Flex alignment/gap or an Absolute region for positioned content.
 Source: Editor.tsx:42 (when available)
@@ -423,7 +423,7 @@ handoff decision.
   branches cannot recursively contain state branches. Active means the
   threshold-activated manipulation, not CSS pointer-down `:active`.
 - This is a typed local readout-slot convention, not a new global CSS selector
-  or pseudo-class system. Current CRC focus visuals are ordinary drawing from
+  or pseudo-class system. Current Pibbl focus visuals are ordinary drawing from
   events/signals, and responsive style conditions describe allocation queries,
   not pointer/focus state. Use the existing `font` vocabulary (for example
   `12px sans-serif`); `fontSize` would be a separate style-language addition.
@@ -449,7 +449,7 @@ handoff decision.
   rotation in radians; size inputs include width/height in logical units.
   The built-in display-unit option affects only default formatting. Do not
   feed rounded/formatted strings back into manipulation geometry.
-- Print formatters supply their own document unit conversion. CRC must not
+- Print formatters supply their own document unit conversion. Pibbl must not
   silently assume that a logical pixel is a physical printer pixel or that a
   document uses a particular DPI.
 

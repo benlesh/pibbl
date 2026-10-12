@@ -11,7 +11,7 @@ symbols: [useSvgPath]
 # useSvgPath
 
 ```ts
-import { useSvgPath, Path } from "@crc/core";
+import { useSvgPath, Path } from "@pibbl/core";
 ```
 
 `useSvgPath(svgPathData)` is render-only and memoizes a browser-parsed `Path2D`

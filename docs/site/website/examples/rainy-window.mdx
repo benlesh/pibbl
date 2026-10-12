@@ -1,0 +1,31 @@
+---
+title: Rainy Window
+description: Interactive rain, mist, refraction, and finger trails on glass.
+sources:
+  - packages/scenarios/src/learning/composition/rainy-window.example.tsx
+---
+
+Rain beads, merges, and runs down fogged glass over a drawn city. Drag across the pane to wipe the mist and gather droplets; release to leave the collected water on the glass. The original controls adjust the rain and mist and toggle the effect.
+
+[Open in the editor](@PLAYGROUND@#/examples/composition/rainy-window) · [Effects gallery](/catalogs/)
+
+## How it works
+
+`useTexture(rainDrops(...))` owns a live droplet resource. Its output supplies a `displacement` map for a cached city `Layer`. A captured pointer drag sends commands to the resource. The droplet field and the mist are related but distinct: wiping changes the film as well as moving water, while moving drops leave trails.
+
+## Integration boundaries
+
+This is a Pibbl-centered Canvas scene, not a filter over live HTML. To distort a photograph, draw a loaded image inside the Pibbl composition; Canvas cannot capture an arbitrary DOM subtree. The included city is drawn in code, so this example requires no image assets.
+
+The host uses an 880 by 700 logical canvas. CSS can scale its presentation; keep its aspect ratio so the scene and its controls remain aligned. Pibbl owns scheduling and pointer capture. Dispose the mount before replacing its canvas. The example starts automatically and provides Stop. With reduced motion enabled, Run example starts it explicitly.
+
+## APIs and agent guidance
+
+- [Rain and other texture generators](/reference/types/textures/)
+- [Texture resource types](/reference/types/texture-resources/)
+- [Detailed texture integration guidance](/agents/topics/textures/)
+- [Canvas and HTML integration boundaries](/guides/add-to-your-site/)
+
+## Verification
+
+Run the scene, drag through the mist, release, and observe the cleared trail and gathered droplet. Toggle the effect to compare the underlying city. Stop and restart to verify a new mount without a second animation loop.

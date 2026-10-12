@@ -1,0 +1,33 @@
+{
+  "date": "2026-10-04T17:02:33.094Z",
+  "browser": "151.0.7922.34",
+  "node": "v26.9.0",
+  "platform": "darwin",
+  "arch": "arm64",
+  "startupMs": 2,
+  "wasmBytes": 4696,
+  "maxDescriptorError": 8.877165669218812e-9,
+  "pixelMaxError": 0,
+  "pixelChanged": 0,
+  "checksum": 134545903.22426096,
+  "kernelMs": {
+    "original": 0.008010000002384186,
+    "cached": 0.005839999997615814,
+    "wasm": 0.0010850000023841858
+  },
+  "submissionMedianMs": {
+    "original": 9.799999952316284,
+    "cached": 9.700000047683716,
+    "wasm": 9.799999952316284
+  },
+  "synchronizedMedianMs": {
+    "original": 10.200000047683716,
+    "cached": 10.200000047683716,
+    "wasm": 10.200000047683716
+  },
+  "synchronizedP95Ms": {
+    "original": 11.799999952316284,
+    "cached": 11.799999952316284,
+    "wasm": 11.600000143051147
+  }
+}

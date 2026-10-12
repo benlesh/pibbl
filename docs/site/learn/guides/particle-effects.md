@@ -10,9 +10,9 @@ keywords: [particles, canvas, confetti, sparks, trails]
 
 # Create particle effects
 
-`@crc/particles` provides deterministic 2D effects for UI-scale sparks,
+`@pibbl/core/particles` provides deterministic 2D effects for UI-scale sparks,
 confetti, click feedback, trails, and other Canvas composition. An immutable
-effect describes a population; `Particles2D` binds it into ordinary CRC
+effect describes a population; `Particles2D` binds it into ordinary Pibbl
 layout, events, filters, lifecycle, and scheduling.
 
 ## Define, then mount
@@ -25,7 +25,7 @@ import {
   particleChoice,
   particleCurve,
   particleRange,
-} from "@crc/particles";
+} from "@pibbl/core/particles";
 
 const celebration = defineParticleEffect2D({
   emitters: [
@@ -81,7 +81,7 @@ parameter registers, and curve or gradient tables.
 ## Motion, capacity, and bounds
 
 `acceleration`, `gravity`, `drag`, and the other motion modules calculate
-particle motion analytically at its logical age. They do not replace CRC animation: continue to drive
+particle motion analytically at its logical age. They do not replace Pibbl animation: continue to drive
 component transforms and ordinary application values with signals plus
 `tween`, `keyframes`, `spring`, `defineAnimation`, or `stepper`.
 
@@ -97,13 +97,13 @@ Start with [Particle effects](#/examples/composition/particle-effects).
 A convincing flame needs coherent internal detail as well as moving particles.
 The [Fire and Flow example](#/examples/composition/fire-and-flow) combines a small
 animated procedural flame texture, sparse embers, and soft smoke sprites. Its
-artwork is generated locally. Shape selection and manipulation use ordinary CRC
+artwork is generated locally. Shape selection and manipulation use ordinary Pibbl
 controls; decorative effects opt out of pointer targeting.
 
 For interacting smoke, create one field with `useFlowField2D`, add force/heat
 sources with `useFlowSource2D`, and pass it to `useParticleSystem(effect, { flow })`.
 Many particles can sample that shared field without owning rigid bodies. With
-optional `@crc/physics/2d`, `physicsObstacles2D(crcPhysicsWorld2D())` provides
+optional `@pibbl/core/physics/2d`, `physicsObstacles2D(pibblPhysicsWorld2D())` provides
 committed box, ellipse, and polygon geometry and motion. Both systems must use
 the same coordinates. The adapter copies numerical data and does not depend on
 shared WASM memory or apply smoke forces back to the physics world.
@@ -116,7 +116,7 @@ stateful transport with [explicit timing and replay limits](#/api/hooks/use-flow
 
 Effect recipes belong to the application. A helper such as `useFireAndSmoke`
 can compose these hooks and return the systems and controls its scene needs;
-CRC does not export a growing catalog of named fire/smoke presets. Canvas paint
+Pibbl does not export a growing catalog of named fire/smoke presets. Canvas paint
 order determines which whole elements appear in front. Soft particle pixels can
 cross an obstacle boundary even when their centers cannot; this is not volumetric
 lighting or depth-aware sprite clipping.

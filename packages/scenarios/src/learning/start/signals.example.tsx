@@ -1,12 +1,12 @@
 import {
   computed,
-  crc,
+  pibbl,
   useSignal,
   Rectangle,
   Text,
   signal,
-  type CRCController,
-} from "@crc/core";
+  type PibblController,
+} from "@pibbl/core";
 
 const x = signal(144, { debugName: "learning x" });
 const doubledX = computed(() => x.get() * 2, { debugName: "learning doubled x" });
@@ -74,6 +74,6 @@ function SignalCard() {
   ];
 }
 
-export default function mount(canvas: HTMLCanvasElement): CRCController {
-  return crc(canvas, <SignalCard />);
+export default function mount(canvas: HTMLCanvasElement): PibblController {
+  return pibbl(canvas, <SignalCard />);
 }

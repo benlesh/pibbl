@@ -7,7 +7,7 @@ import type {
   DrawingTextState,
   ScenarioController,
   ScenarioDefinition,
-} from '@crc/scenarios';
+} from '@pibbl/scenarios';
 import {
   drawingCompositionScenarioEntry,
   drawingImagesScenarioEntry,
@@ -17,7 +17,7 @@ import {
   loadScenario,
   scenarioCatalog,
   validateScenarioCatalog,
-} from '@crc/scenarios';
+} from '@pibbl/scenarios';
 import { page, userEvent } from 'vitest/browser';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import drawingCompositionSource from '../../scenarios/src/drawing-composition.example.tsx?raw';
@@ -302,7 +302,7 @@ describe('complete public drawing gallery', () => {
         const point = context.getTransform().transformPoint({ x, y });
         draws.push({ text, x: point.x, y: point.y, alpha: context.globalAlpha, font: context.font, maxWidth });
         // Mutation probe: command intent still exists, but no glyph reaches the bitmap.
-        if (import.meta.env.VITE_CRC_DRAWING_VISUAL_DRILL !== 'omit-text-ink') fillText(text, x, y, maxWidth);
+        if (import.meta.env.VITE_PIBBL_DRAWING_VISUAL_DRILL !== 'omit-text-ink') fillText(text, x, y, maxWidth);
       });
     });
     function verify(updated: boolean) {
@@ -468,14 +468,14 @@ describe('complete public drawing gallery', () => {
         expect(translucentCenter[3]).toBe(255);
       }
       if (
-        import.meta.env.VITE_CRC_DRAWING_VISUAL_DRILL === '1' &&
+        import.meta.env.VITE_PIBBL_DRAWING_VISUAL_DRILL === '1' &&
         visual.entry === drawingShapesScenarioEntry
       ) {
         await controller.perform('update-shapes');
       }
       if (
-        (import.meta.env.VITE_CRC_DRAWING_VISUAL_DRILL === 'text-mask-gap' && visual.entry === drawingTextScenarioEntry) ||
-        (import.meta.env.VITE_CRC_DRAWING_VISUAL_DRILL === 'image-mask-background' && visual.entry === drawingImagesScenarioEntry)
+        (import.meta.env.VITE_PIBBL_DRAWING_VISUAL_DRILL === 'text-mask-gap' && visual.entry === drawingTextScenarioEntry) ||
+        (import.meta.env.VITE_PIBBL_DRAWING_VISUAL_DRILL === 'image-mask-background' && visual.entry === drawingImagesScenarioEntry)
       ) {
         const context = canvas.getContext('2d')!;
         context.fillStyle = '#ff0000';

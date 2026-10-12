@@ -10,17 +10,17 @@ Date: 2026-09-17
 
 ## Summary
 
-CRC will make professional 3D asset rendering useful before attempting to
+Pibbl will make professional 3D asset rendering useful before attempting to
 become a modeling system. The first feature is one complete public path from a
-static binary glTF (`.glb`) asset to a correctly shaded CRC WebGL island:
+static binary glTF (`.glb`) asset to a correctly shaded Pibbl WebGL island:
 
 ```text
 Blender or another content tool
   -> self-contained static GLB
   -> useGLTF()
-  -> immutable CRCWebGLAsset
+  -> immutable PibblWebGLAsset
   -> Model
-  -> settled CRC scene
+  -> settled Pibbl scene
   -> linear rendering, PBR, shadows, environment light, and final output
 ```
 
@@ -32,7 +32,7 @@ focus geometry, and exact ownership rules. Asset loading is asynchronous, but
 component evaluation and scene composition remain synchronous.
 
 Printable-model interoperability follows through separate format adapters.
-3MF is CRC's preferred modern additive-manufacturing format; STL is a
+3MF is Pibbl's preferred modern additive-manufacturing format; STL is a
 compatibility format. They compile into the same immutable render-asset seam,
 but manufacturing units, parts, and metadata remain distinct from visual PBR
 materials. 3MF and STL are explicitly not part of the first implementation
@@ -53,7 +53,7 @@ processing.
 The first outcome is therefore experiential rather than checklist-based:
 
 > A developer can export a representative static model from Blender as one
-> GLB, load it through public CRC APIs, orbit it, light it from an HDR
+> GLB, load it through public Pibbl APIs, orbit it, light it from an HDR
 > environment, receive shadows, and get a result recognizably close to the
 > authoring tool without writing shaders.
 
@@ -75,7 +75,7 @@ compatibility, but only describes triangle surfaces and normals; it has no
 standard units, material system, texture model, hierarchy, or manufacturing
 metadata.
 
-## Relationship to current CRC WebGL contracts
+## Relationship to current Pibbl WebGL contracts
 
 The current renderer already supplies the essential control points:
 
@@ -112,7 +112,7 @@ the public API and renders its default scene with:
 - positions, normals, UV set zero, tangents when supplied, and indices;
 - base-color factors and embedded PNG/JPEG base-color textures;
 - metallic and roughness factors;
-- one analytic CRC light;
+- one analytic Pibbl light;
 - the existing perspective and orbit-camera path;
 - whole-model picking and focus bounds; and
 - deterministic load, error, replacement, removal, and disposal behavior.
@@ -153,7 +153,7 @@ The following require their own design approval and implementation plan:
 
 ## Goals
 
-- Deliver one end-to-end static Blender-to-CRC workflow through public APIs.
+- Deliver one end-to-end static Blender-to-Pibbl workflow through public APIs.
 - Add an immutable asset representation reusable by later GLB, 3MF, and STL
   adapters without exposing a mutable retained scene graph.
 - Preserve glTF node hierarchy, transforms, primitive/material assignment,
@@ -171,11 +171,11 @@ The following require their own design approval and implementation plan:
 - Separate visible environment background from environment illumination.
 - Render lighting into a linear intermediate target and perform final exposure,
   tone mapping, and display encoding once per island.
-- Preserve ordinary CRC scheduling, transforms, picking, focus, events,
+- Preserve ordinary Pibbl scheduling, transforms, picking, focus, events,
   shadows, Canvas ordering, and transactional bitmap commits.
 - Give unsupported files, required extensions, capabilities, and malformed
   resources actionable deterministic diagnostics.
-- Keep format adapters optional so a basic `@crc/webgl` consumer does not
+- Keep format adapters optional so a basic `@pibbl/webgl` consumer does not
   acquire every parser.
 
 ## Non-goals
@@ -212,26 +212,26 @@ import {
   Model,
   WebGLBackground,
   WebGLLayer,
-} from "@crc/webgl";
-import { useGLTF } from "@crc/webgl/gltf";
-import { useHDREnvironment } from "@crc/webgl/hdr";
+} from "@pibbl/webgl";
+import { useGLTF } from "@pibbl/webgl/gltf";
+import { useHDREnvironment } from "@pibbl/webgl/hdr";
 ```
 
-Later adapters may use `@crc/webgl/3mf` and `@crc/webgl/stl`. The HDR decoder
-similarly stays in `@crc/webgl/hdr`. These are public application subpaths,
-unlike the version-coupled `@crc/webgl/internal` friend surface. Each model
+Later adapters may use `@pibbl/webgl/3mf` and `@pibbl/webgl/stl`. The HDR decoder
+similarly stays in `@pibbl/webgl/hdr`. These are public application subpaths,
+unlike the version-coupled `@pibbl/webgl/internal` friend surface. Each model
 adapter compiles its input into the same opaque root asset type.
 
 ### Asset loading hook
 
-`@crc/webgl/gltf` exports a component-owned hook:
+`@pibbl/webgl/gltf` exports a component-owned hook:
 
 ```ts
-export type CRCWebGLAssetLoadResult =
+export type PibblWebGLAssetLoadResult =
   | { readonly status: "loading" }
   | {
       readonly status: "ready";
-      readonly asset: CRCWebGLAsset;
+      readonly asset: PibblWebGLAsset;
     }
   | {
       readonly status: "error";
@@ -240,7 +240,7 @@ export type CRCWebGLAssetLoadResult =
 
 export function useGLTF(
   source: string | URL | ArrayBuffer,
-): CRCWebGLAssetLoadResult;
+): PibblWebGLAssetLoadResult;
 ```
 
 The initial call returns `loading` and starts one component-owned source
@@ -270,17 +270,17 @@ the asset is published.
 
 ### Asset value
 
-`CRCWebGLAsset` is an opaque immutable descriptor. Its public inspection
+`PibblWebGLAsset` is an opaque immutable descriptor. Its public inspection
 surface in this release is intentionally small:
 
 ```ts
-declare const crcWebGLAssetBrand: unique symbol;
+declare const pibblWebGLAssetBrand: unique symbol;
 
-export interface CRCWebGLAsset {
-  readonly [crcWebGLAssetBrand]: true;
+export interface PibblWebGLAsset {
+  readonly [pibblWebGLAssetBrand]: true;
   readonly bounds: Readonly<{
-    readonly min: CRCWebGLVector3;
-    readonly max: CRCWebGLVector3;
+    readonly min: PibblWebGLVector3;
+    readonly max: PibblWebGLVector3;
   }>;
 }
 ```
@@ -295,11 +295,11 @@ but the first release does not freeze an authoring graph around glTF's schema.
 The root package exports one general asset instance:
 
 ```ts
-export interface ModelProps extends CRCWebGLTargetProps {
-  readonly asset: CRCWebGLAsset;
+export interface ModelProps extends PibblWebGLTargetProps {
+  readonly asset: PibblWebGLAsset;
 }
 
-export interface ModelStyle extends CRCWebGLTransformStyle {
+export interface ModelStyle extends PibblWebGLTransformStyle {
   readonly opacity?: number;
   readonly color?: string;
   readonly castShadow?: boolean;
@@ -316,7 +316,7 @@ instance opacity. `style.opacity` multiplies every imported primitive's final
 alpha. Shadow flags provide instance-wide overrides while omission preserves
 material/primitive defaults.
 
-One `Model` is one logical CRC event/focus target backed by the union of all
+One `Model` is one logical Pibbl event/focus target backed by the union of all
 participating imported mesh geometry. Nearest-triangle picking still chooses
 the visible depth hit, but dispatch targets the `Model` component rather than
 inventing application components for file nodes. `pointerEvents="none"` opts
@@ -328,7 +328,7 @@ into ordinary mesh submissions in stable node-preorder and primitive order.
 Each submission snapshots the composed model transform and resolved material.
 The asset is not one flattened draw call: opaque, cutout, and blended
 primitives still enter the appropriate global settled queues and interact
-correctly with external CRC meshes.
+correctly with external Pibbl meshes.
 
 Rendering the same asset twice creates two component instances with independent
 world transforms, target identity, focus geometry, and shadow invalidation,
@@ -336,10 +336,10 @@ while sharing immutable CPU data and context-local GPU resources.
 
 ## Geometry contract
 
-`CRCWebGLGeometryInput` gains optional, separately validated vertex streams:
+`PibblWebGLGeometryInput` gains optional, separately validated vertex streams:
 
 ```ts
-export interface CRCWebGLGeometryInput {
+export interface PibblWebGLGeometryInput {
   readonly positions: ArrayLike<number>;
   readonly normals?: ArrayLike<number>;
   readonly tangents?: ArrayLike<number>;
@@ -376,7 +376,7 @@ the geometric-normal result for normal mapping rather than producing
 non-finite tangent values. The first feedback slice may require supplied
 tangents for normal-map use; feature completion may not.
 
-Imported glTF triangle primitives preserve their numeric coordinates. CRC does
+Imported glTF triangle primitives preserve their numeric coordinates. Pibbl does
 not auto-center, normalize, scale, or rotate them. glTF's coordinate and unit
 conventions remain asset metadata; camera framing is an application decision.
 
@@ -417,17 +417,17 @@ The existing Lambert descriptor remains supported. A new closed material is
 added:
 
 ```ts
-export interface CRCWebGLPBRMetallicRoughnessMaterial {
+export interface PibblWebGLPBRMetallicRoughnessMaterial {
   readonly type: "pbr-metallic-roughness";
   readonly baseColorFactor?: readonly [number, number, number, number];
-  readonly baseColorTexture?: CRCWebGLTextureBinding;
+  readonly baseColorTexture?: PibblWebGLTextureBinding;
   readonly metallicFactor?: number;
   readonly roughnessFactor?: number;
-  readonly metallicRoughnessTexture?: CRCWebGLTextureBinding;
-  readonly normalTexture?: CRCWebGLNormalTextureBinding;
-  readonly occlusionTexture?: CRCWebGLOcclusionTextureBinding;
+  readonly metallicRoughnessTexture?: PibblWebGLTextureBinding;
+  readonly normalTexture?: PibblWebGLNormalTextureBinding;
+  readonly occlusionTexture?: PibblWebGLOcclusionTextureBinding;
   readonly emissiveFactor?: readonly [number, number, number];
-  readonly emissiveTexture?: CRCWebGLTextureBinding;
+  readonly emissiveTexture?: PibblWebGLTextureBinding;
   readonly alphaMode?: "opaque" | "mask" | "blend";
   readonly alphaCutoff?: number;
   readonly doubleSided?: boolean;
@@ -454,7 +454,7 @@ tangent basis. Occlusion affects indirect/environment contribution, not direct
 punctual lights. Emission remains self-illumination and does not light adjacent
 geometry or imply bloom.
 
-CRC ambient and hemisphere lights contribute artist-oriented diffuse fill to
+Pibbl ambient and hemisphere lights contribute artist-oriented diffuse fill to
 PBR nonmetals; they do not synthesize physically based reflections and do not
 make metals visible. Directional, point, and spot lights use the PBR direct
 BRDF and retain their existing attenuation, cone, and shadow contracts.
@@ -494,7 +494,7 @@ eight 2D shadow samplers and eight cube shadow samplers. WebGL2 guarantees only
 sixteen fragment texture units, so that layout cannot coexist with material and
 environment textures.
 
-Before PBR texture rendering, CRC will migrate direct-light depth storage to
+Before PBR texture rendering, Pibbl will migrate direct-light depth storage to
 one renderer-owned 2D depth-texture array. Directional and spot lights consume
 one layer; point lights consume six face layers. The whole `WebGLLayer` already
 uses one shadow quality/resolution, so all layers have compatible dimensions.
@@ -517,7 +517,7 @@ One PBR draw then fits inside the WebGL2 minimum budget:
 - one BRDF lookup sampler; and
 - remaining units reserved for renderer implementation needs.
 
-CRC validates actual fragment and combined texture-unit limits once per context
+Pibbl validates actual fragment and combined texture-unit limits once per context
 generation and reports an actionable capability error before partial drawing.
 
 ## Environment lighting and reflections
@@ -526,20 +526,20 @@ The HDR subpath adds a component-owned environment hook, while the root package
 adds the environment asset type and scene declarations:
 
 ```ts
-export type CRCWebGLEnvironmentLoadResult =
+export type PibblWebGLEnvironmentLoadResult =
   | { readonly status: "loading" }
   | {
       readonly status: "ready";
-      readonly environment: CRCWebGLEnvironment;
+      readonly environment: PibblWebGLEnvironment;
     }
   | { readonly status: "error"; readonly error: Error };
 
 export function useHDREnvironment(
   source: string | URL | ArrayBuffer,
-): CRCWebGLEnvironmentLoadResult;
+): PibblWebGLEnvironmentLoadResult;
 
 export interface EnvironmentLightProps {
-  readonly environment: CRCWebGLEnvironment;
+  readonly environment: PibblWebGLEnvironment;
 }
 
 export interface EnvironmentLightStyle {
@@ -595,7 +595,7 @@ explicit compatibility/debug choice for exposure, clamp, and display encoding
 without highlight compression.
 
 The renderer shades and blends the color scene into a linear intermediate
-target. When `EXT_color_buffer_float` is available, CRC uses an RGBA16F target.
+target. When `EXT_color_buffer_float` is available, Pibbl uses an RGBA16F target.
 HDR environments require that capability and fail with a clear layer
 diagnostic when it is unavailable. A non-HDR scene may use a portable RGBA8
 linear fallback, accepting per-pass clamping while retaining the selected final
@@ -613,7 +613,7 @@ recreated transactionally on size, capability, or context-generation changes.
 It participates in the same candidate bitmap transaction; failure never
 commits a partially tone-mapped frame.
 
-CRC requests a device-clamped multisample intermediate where the chosen color
+Pibbl requests a device-clamped multisample intermediate where the chosen color
 format supports it, resolves before the final output pass, and records the
 resolved sample count in structural evidence. This design does not add a
 public sample-count control or promise identical edge pixels across devices.
@@ -694,9 +694,9 @@ Feature completion supports one self-contained glTF 2.0 binary container with:
 - opaque, mask, and blend alpha modes plus double-sided materials; and
 - unknown optional extension data ignored without changing the core fallback.
 
-`KHR_materials_unlit` is included because it maps directly onto CRC's existing
+`KHR_materials_unlit` is included because it maps directly onto Pibbl's existing
 unlit path and is a ratified, common semantic. Other extensions are deferred.
-Any name in `extensionsRequired` that CRC does not support rejects the asset
+Any name in `extensionsRequired` that Pibbl does not support rejects the asset
 before publication and lists the unsupported names. Unknown `extensionsUsed`
 entries are tolerated only when the core fallback remains valid.
 
@@ -764,7 +764,7 @@ viewer.
 
 Advanced 3MF extensions are independently gated. In particular, the 3MF
 Boolean Operations extension is a serialized manufacturing operation model;
-supporting it does not automatically define CRC's interactive CSG API or
+supporting it does not automatically define Pibbl's interactive CSG API or
 editable topology representation.
 
 STEP remains outside the mesh-adapter roadmap. Faithful STEP support requires
@@ -789,12 +789,12 @@ The separation is intentional:
 ```text
 editable authoring topology or manufacturing document
   -> evaluate / triangulate / compile
-  -> immutable CRCWebGLAsset
+  -> immutable PibblWebGLAsset
   -> Model declarations
   -> settled renderer scene
 ```
 
-This leaves CRC capable of hosting a future modeling application without
+This leaves Pibbl capable of hosting a future modeling application without
 forcing today's renderer to retain or mutate application geometry.
 
 ## Failure behavior
@@ -838,7 +838,7 @@ forcing today's renderer to retain or mutate application geometry.
 - alpha-tested color and shadow silhouettes;
 - analytic-light, environment diffuse, and environment specular response;
 - exposure, no-tone-map, PBR Neutral, final encoding, and alpha behavior;
-- mixed imported and manually authored CRC meshes in global depth order; and
+- mixed imported and manually authored Pibbl meshes in global depth order; and
 - unchanged pointer coordinates, nearest-depth picking, focus bounds, event
   propagation, and Canvas/WebGL composition.
 
@@ -859,7 +859,7 @@ and final root disposal. Garbage collection is never the oracle.
   example and visual evidence;
 - a public example showing loading, error, orbit, environment light, matching
   background, and shadows;
-- Bundler and NodeNext imports for the root and `@crc/webgl/gltf` subpath;
+- Bundler and NodeNext imports for the root and `@pibbl/webgl/gltf` subpath;
 - packed consumer execution with no private imports;
 - source and built browser modes;
 - Studio declarations, API reference, search, and navigation; and
@@ -874,7 +874,7 @@ in documentation are not evidence.
 
 Feature completion updates:
 
-- the `@crc/webgl` README and public API inventory;
+- the `@pibbl/webgl` README and public API inventory;
 - the WebGL island and lighting guides;
 - a new guide for loading and presenting 3D assets;
 - material, texture, environment, asset, model, and hook API references;
@@ -894,11 +894,11 @@ It does not present a successful preview as evidence that a mesh is printable.
 Primitives are useful and should follow, but they do not unlock authored asset
 ecosystems or force the renderer foundations needed for professional output.
 
-### Parse GLB directly into public CRC elements
+### Parse GLB directly into public Pibbl elements
 
 Returning a large public element tree would tie parsed assets to one mounted
 component identity, duplicate CPU data for repeated instances, make decoded
-resource ownership unclear, and expose glTF's schema as CRC's retained scene
+resource ownership unclear, and expose glTF's schema as Pibbl's retained scene
 API. The opaque asset plus `Model` boundary keeps data reusable and rendering
 declarative.
 
@@ -909,7 +909,7 @@ format-specific options ambiguous, prevents clean optional bundles, and becomes
 especially misleading for manufacturing formats. Explicit format hooks plus a
 common `Model asset=` value keep concerns visible.
 
-### Put glTF parsing in the `@crc/webgl` root bundle
+### Put glTF parsing in the `@pibbl/webgl` root bundle
 
 Applications using only procedural meshes should not acquire format parsing and
 image-decoding code. Public adapter subpaths provide an intentional capability
@@ -930,14 +930,14 @@ valuable compatibility adapter after the common asset seam exists.
 ### Make the imported asset publicly mutable
 
 Mutation would introduce adoption, aliasing, dirty tracking, teardown,
-cross-context synchronization, undo, and stable topology identity before CRC
+cross-context synchronization, undo, and stable topology identity before Pibbl
 has an editing use case. Immutable assets fit the current scheduler and
 transactional renderer.
 
 ### Expose raw shaders for professional materials
 
 Raw shaders shift portability, color, light, shadow, texture-unit, context-loss,
-and ownership obligations to applications. CRC instead grows a closed portable
+and ownership obligations to applications. Pibbl instead grows a closed portable
 material vocabulary and may later add a separately designed contained extension
 point if real use cases require it.
 
@@ -954,7 +954,7 @@ values without changing this WebGL2 contract.
 - External `.gltf` resource graphs and credential/base-URL control.
 - Per-node inspection, visibility, targeting, material replacement, and stable
   path semantics.
-- Imported animation ownership and its integration with CRC animation.
+- Imported animation ownership and its integration with Pibbl animation.
 - Texture compression and mesh decompression dependencies.
 - Advanced PBR extensions and environment formats beyond Radiance HDR.
 - Print-analysis tolerances, unit policies, and diagnostic vocabulary.

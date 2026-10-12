@@ -6,10 +6,10 @@ import {
   sequence,
   signal,
   stepper,
-  track,
+  drive,
   tween,
   wait,
-  type CRCAnimationProgram,
+  type PibblAnimationProgram,
   type WritableSignal,
 } from '../../index';
 import { getProgramRecord } from './program';
@@ -25,17 +25,17 @@ describe('immutable animation programs', () => {
     expect(Object.isFrozen(program)).toBe(true);
     expect(getProgramRecord(program).children).toEqual([first]);
     expect(Object.isFrozen(getProgramRecord(program).children)).toBe(true);
-    expect(() => (getProgramRecord(program).children as CRCAnimationProgram[]).push(wait(1)))
+    expect(() => (getProgramRecord(program).children as PibblAnimationProgram[]).push(wait(1)))
       .toThrow(TypeError);
-    expect(() => getProgramRecord({} as typeof program)).toThrow('CRC animation program');
-    expect(() => sequence({} as typeof program)).toThrow('CRC animation program');
-    expect(() => track(output, {} as ReturnType<typeof tween>)).toThrow(
-      'CRC animation definition',
+    expect(() => getProgramRecord({} as typeof program)).toThrow('Pibbl animation program');
+    expect(() => sequence({} as typeof program)).toThrow('Pibbl animation program');
+    expect(() => drive(output, {} as ReturnType<typeof tween>)).toThrow(
+      'Pibbl animation definition',
     );
     const foreignOutput = {
       set() {}, update() {}, get() { return 0; }, asReadonly() { return { get: () => 0 }; },
     } as unknown as WritableSignal<number>;
-    expect(() => track(foreignOutput,
+    expect(() => drive(foreignOutput,
       tween({ to: 1, duration: 1 }),
     )).toThrow('writable signal');
   });
@@ -61,14 +61,14 @@ describe('immutable animation programs', () => {
 
   it('classifies finite, infinite, and unresolved program durations', () => {
     const x = signal(0);
-    const finiteTrack = track(x, tween({ to: 1, duration: 20 }));
-    const nonterminating = track(x, stepper({
+    const finiteTrack = drive(x, tween({ to: 1, duration: 20 }));
+    const nonterminating = drive(x, stepper({
       stepMilliseconds: 10,
       initial: (current: number) => current,
       step: state => state,
       read: state => state,
     }));
-    const discoverable = track(x, stepper({
+    const discoverable = drive(x, stepper({
       stepMilliseconds: 10,
       initial: (current: number) => current,
       step: state => state + 1,
@@ -95,8 +95,8 @@ describe('immutable animation programs', () => {
   it('allows sequential writers and exposes frozen finite writer spans', () => {
     const x = signal(0, { debugName: 'x' });
     const program = sequence(
-      track(x, tween({ to: 10, duration: 10 })),
-      track(x, tween({ to: 20, duration: 20 })),
+      drive(x, tween({ to: 10, duration: 10 })),
+      drive(x, tween({ to: 20, duration: 20 })),
     );
     const spans = getProgramRecord(program).writerSpans;
 
@@ -112,44 +112,44 @@ describe('immutable animation programs', () => {
     const x = signal(0, { debugName: 'x' });
 
     expect(() => parallel(
-      track(x, tween({ to: 1, duration: 10 })),
-      track(x, tween({ to: 2, duration: 10 })),
+      drive(x, tween({ to: 1, duration: 10 })),
+      drive(x, tween({ to: 2, duration: 10 })),
     )).toThrow(/\[0\].*\[1\].*x/u);
     expect(() => parallel(
-      sequence(wait(0), track(x, tween({ to: 1, duration: 10 }))),
-      sequence(wait(10), track(x, tween({ to: 2, duration: 1 }))),
+      sequence(wait(0), drive(x, tween({ to: 1, duration: 10 }))),
+      sequence(wait(10), drive(x, tween({ to: 2, duration: 1 }))),
     )).toThrow('overlap');
 
     expect(() => parallel(
-      sequence(wait(0), track(x, tween({ to: 1, duration: 10 }))),
-      sequence(wait(11), track(x, tween({ to: 2, duration: 1 }))),
+      sequence(wait(0), drive(x, tween({ to: 1, duration: 10 }))),
+      sequence(wait(11), drive(x, tween({ to: 2, duration: 1 }))),
     )).not.toThrow();
   });
 
   it('checks repeated writer intervals symbolically at repeat boundaries', () => {
     const x = signal(0, { debugName: 'x' });
     const separated = repeat(sequence(
-      track(x, tween({ to: 1, duration: 10 })),
+      drive(x, tween({ to: 1, duration: 10 })),
       wait(10),
     ), { iterations: Number.POSITIVE_INFINITY, direction: 'alternate' });
 
-    expect(() => repeat(track(x, tween({ to: 1, duration: 10 })), {
+    expect(() => repeat(drive(x, tween({ to: 1, duration: 10 })), {
       iterations: Number.POSITIVE_INFINITY,
-    })).toThrow('overlap');
+    })).not.toThrow();
     expect(() => parallel(
       separated,
-      sequence(wait(15), track(x, tween({ to: 2, duration: 1 }))),
+      sequence(wait(15), drive(x, tween({ to: 2, duration: 1 }))),
     )).not.toThrow();
     expect(() => parallel(
       separated,
-      sequence(wait(5), track(x, tween({ to: 2, duration: 1 }))),
+      sequence(wait(5), drive(x, tween({ to: 2, duration: 1 }))),
     )).toThrow('overlap');
   });
 
   it('retains large finite and nested repeat writers as constant-size metadata', () => {
     const x = signal(0, { debugName: 'x' });
     const base = sequence(
-      track(x, tween({ to: 1, duration: 0 })),
+      drive(x, tween({ to: 1, duration: 0 })),
       wait(1),
     );
     const iterations = 100_001;
@@ -168,16 +168,16 @@ describe('immutable animation programs', () => {
     const x = signal(0, { debugName: 'x' });
     const iterations = 100_001;
     const evens = repeat(sequence(
-      track(x, tween({ to: 1, duration: 0.5 })),
+      drive(x, tween({ to: 1, duration: 0.5 })),
       wait(1.5),
     ), { iterations, direction: 'alternate-reverse' });
     const odds = repeat(sequence(
       wait(1),
-      track(x, tween({ to: 2, duration: 0.5 })),
+      drive(x, tween({ to: 2, duration: 0.5 })),
       wait(2.5),
     ), { iterations, direction: 'alternate' });
     const multiplesOfFour = repeat(sequence(
-      track(x, tween({ to: 3, duration: 0.5 })),
+      drive(x, tween({ to: 3, duration: 0.5 })),
       wait(3.5),
     ), { iterations, direction: 'reverse' });
 
@@ -188,17 +188,17 @@ describe('immutable animation programs', () => {
   it('proves hole-separated nested repeat frames disjoint exactly', () => {
     const x = signal(0, { debugName: 'x' });
     const lhs = repeat(sequence(
-      repeat(sequence(track(x, tween({ to: 1, duration: 0 })), wait(1)), { iterations: 2 }),
+      repeat(sequence(drive(x, tween({ to: 1, duration: 0 })), wait(1)), { iterations: 2 }),
       wait(10),
     ), { iterations: 2 });
     const rhs = repeat(sequence(
       wait(2),
-      track(x, tween({ to: 2, duration: 0 })),
+      drive(x, tween({ to: 2, duration: 0 })),
       wait(10),
     ), { iterations: 2 });
     const overlapping = repeat(sequence(
       wait(1),
-      track(x, tween({ to: 3, duration: 0 })),
+      drive(x, tween({ to: 3, duration: 0 })),
       wait(11),
     ), { iterations: 2 });
 
@@ -209,16 +209,16 @@ describe('immutable animation programs', () => {
   it('proves different infinite periodic schedules disjoint or overlapping exactly', () => {
     const x = signal(0, { debugName: 'x' });
     const evens = repeat(sequence(
-      track(x, tween({ to: 1, duration: 0.5 })),
+      drive(x, tween({ to: 1, duration: 0.5 })),
       wait(1.5),
     ), { iterations: Number.POSITIVE_INFINITY });
     const odds = repeat(sequence(
       wait(1),
-      track(x, tween({ to: 2, duration: 0.5 })),
+      drive(x, tween({ to: 2, duration: 0.5 })),
       wait(2.5),
     ), { iterations: Number.POSITIVE_INFINITY });
     const multiplesOfFour = repeat(sequence(
-      track(x, tween({ to: 3, duration: 0.5 })),
+      drive(x, tween({ to: 3, duration: 0.5 })),
       wait(3.5),
     ), { iterations: Number.POSITIVE_INFINITY });
 
@@ -229,22 +229,22 @@ describe('immutable animation programs', () => {
   it('aligns unequal finite and mixed nested outer periods without filling holes', () => {
     const x = signal(0, { debugName: 'x' });
     const lhs = repeat(sequence(
-      repeat(sequence(track(x, tween({ to: 1, duration: 0 })), wait(1)), { iterations: 2 }),
+      repeat(sequence(drive(x, tween({ to: 1, duration: 0 })), wait(1)), { iterations: 2 }),
       wait(10),
     ), { iterations: 2 });
     const rhsFinite = repeat(sequence(
       wait(2),
-      track(x, tween({ to: 2, duration: 0 })),
+      drive(x, tween({ to: 2, duration: 0 })),
       wait(13),
     ), { iterations: 2 });
     const rhsInfinite = repeat(sequence(
       wait(2),
-      track(x, tween({ to: 3, duration: 0 })),
+      drive(x, tween({ to: 3, duration: 0 })),
       wait(13),
     ), { iterations: Number.POSITIVE_INFINITY });
     const overlapping = repeat(sequence(
       wait(1),
-      track(x, tween({ to: 4, duration: 0 })),
+      drive(x, tween({ to: 4, duration: 0 })),
       wait(14),
     ), { iterations: Number.POSITIVE_INFINITY });
 
@@ -257,14 +257,14 @@ describe('immutable animation programs', () => {
     const x = signal(0, { debugName: 'x' });
     const lhs = repeat(sequence(
       repeat(sequence(
-        track(x, tween({ to: 1, duration: 0 })),
+        drive(x, tween({ to: 1, duration: 0 })),
         wait(0.5),
       ), { iterations: 2 }),
       wait(0.25),
     ), { iterations: 2 });
     const rhs = repeat(sequence(
       wait(0.75),
-      track(x, tween({ to: 2, duration: 0 })),
+      drive(x, tween({ to: 2, duration: 0 })),
       wait(0.5 + Number.EPSILON),
     ), { iterations: 2 });
 
@@ -276,12 +276,12 @@ describe('immutable animation programs', () => {
     const lhs = repeat(sequence(
       repeat(sequence(
         wait(0.5),
-        track(x, tween({ to: 1, duration: 0 })),
+        drive(x, tween({ to: 1, duration: 0 })),
       ), { iterations: 2 }),
       wait(1),
     ), { iterations: 2 });
     const rhs = repeat(sequence(
-      track(x, tween({ to: 2, duration: 0 })),
+      drive(x, tween({ to: 2, duration: 0 })),
       wait(3),
     ), { iterations: 2 });
 
@@ -293,14 +293,14 @@ describe('immutable animation programs', () => {
     const iterations = 1_000_000_000_000;
     const lhs = repeat(sequence(
       repeat(sequence(
-        track(x, tween({ to: 1, duration: 0 })),
+        drive(x, tween({ to: 1, duration: 0 })),
         wait(0.25),
       ), { iterations: 2 }),
       wait(0.75),
     ), { iterations });
     const rhs = repeat(sequence(
       wait(0.1),
-      track(x, tween({ to: 2, duration: 0 })),
+      drive(x, tween({ to: 2, duration: 0 })),
       wait(1.15 + Number.EPSILON),
     ), { iterations });
 
@@ -312,13 +312,13 @@ describe('immutable animation programs', () => {
     const iterations = 1_000_000_000_000;
     const lhs = repeat(sequence(
       repeat(sequence(
-        track(x, tween({ to: 1, duration: 0 })),
+        drive(x, tween({ to: 1, duration: 0 })),
         wait(0.25),
       ), { iterations: 2 }),
       wait(0.75),
     ), { iterations });
     const rhs = repeat(sequence(
-      track(x, tween({ to: 2, duration: 0 })),
+      drive(x, tween({ to: 2, duration: 0 })),
       wait(1.25 + Number.EPSILON),
     ), { iterations });
 

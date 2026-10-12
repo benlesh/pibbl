@@ -1,41 +1,41 @@
-# CRC canvas surface contract
+# Pibbl canvas surface contract
 
 Status: current implemented contract, updated for first-class signals, the realm
 scheduler, and external render-layer surfaces on 2026-09-28.
 
-This document defines how a root CRC mount maps logical drawing units to the
+This document defines how a root Pibbl mount maps logical drawing units to the
 Canvas CSS content box and physical backing store. The mapping is owned by the
 runtime so drawing, layout, interaction, clipping, Canvas layers, filters, and
 external render layers use one coordinate model.
 
 ## Public configuration
 
-`crc(canvas, root, config?)` accepts one branded recursive `CRCNode` root and
+`pibbl(canvas, root, config?)` accepts one branded recursive `PibblNode` root and
 one mount-time surface configuration:
 
 ```ts
-type CRCFit = "contain" | "cover" | "fill" | "none" | "scale-down";
-type CRCPixelRatio = "device" | number;
+type PibblFit = "contain" | "cover" | "fill" | "none" | "scale-down";
+type PibblPixelRatio = "device" | number;
 
-type CRCConfig =
+type PibblConfig =
   | {
       signal?: AbortSignal;
       viewport?: Readonly<{ width: number; height: number }>;
-      fit?: CRCFit;
-      pixelRatio?: CRCPixelRatio;
+      fit?: PibblFit;
+      pixelRatio?: PibblPixelRatio;
     }
   | {
       signal?: AbortSignal;
       viewport: "responsive";
-      pixelRatio?: CRCPixelRatio;
+      pixelRatio?: PibblPixelRatio;
     };
 ```
 
 JSX and `createElement` create the same opaque branded elements; fragments,
 arrays, finite synchronous iterables, and empty nodes are also valid roots.
-The surface configuration belongs to the first live mount. Later `crc()` calls
+The surface configuration belongs to the first live mount. Later `pibbl()` calls
 update the root node but do not replace it. `config.signal` likewise belongs to
-the first live mount and is not replaced by later `crc()` calls. Dispose and
+the first live mount and is not replaced by later `pibbl()` calls. Dispose and
 remount to select a different surface mode or signal.
 
 The defaults are:
@@ -59,10 +59,10 @@ A root mount also requires `ResizeObserver`.
 
 ## Three coordinate spaces
 
-CRC distinguishes:
+Pibbl distinguishes:
 
 1. **logical space**, used by components, styles, layout boxes, paths, and
-   `CRCMouseEvent.x/y`;
+   `PibblLogicalMouseEvent.x/y`;
 2. **display space**, measured from the Canvas CSS content box in CSS pixels;
 3. **backing space**, stored by `canvas.width` and `canvas.height` in physical
    pixels.
@@ -74,14 +74,14 @@ backingWidth  = max(1, round(displayWidth  * pixelRatio))
 backingHeight = max(1, round(displayHeight * pixelRatio))
 ```
 
-CRC derives the effective backing density from those rounded dimensions and
+Pibbl derives the effective backing density from those rounded dimensions and
 installs one root transform before rendering. Component-local transforms then
 compose after that root transform. The bitmap is cleared in backing space
 before the root transform is installed.
 
 CSS borders and padding are excluded when measuring display space. If changing
 backing attributes would otherwise feed intrinsic Canvas dimensions back into
-CSS sizing, CRC temporarily owns an equivalent inline CSS width and/or height
+CSS sizing, Pibbl temporarily owns an equivalent inline CSS width and/or height
 to stabilize the original content box. Disposal restores only inline values
 still owned by that mount and never overwrites a later external change.
 
@@ -97,7 +97,7 @@ Fixed fitting is centered on both axes:
 | `none`       | Preserve one logical unit per CSS pixel and center the viewport without scaling.               |
 | `scale-down` | Use `none` when the viewport fits; otherwise use `contain`.                                    |
 
-Centering offsets may be fractional. CRC does not currently expose alignment
+Centering offsets may be fractional. Pibbl does not currently expose alignment
 or background/letterbox paint options. Content outside the Canvas bitmap is
 naturally clipped by the platform.
 
@@ -140,7 +140,7 @@ candidate into one persistent `OffscreenCanvas`, and parent Canvas composition
 draws that complete physical source into one logical destination before bitmap
 and interaction metadata commit as one matching generation.
 
-Runtime-created Layer and filter surfaces are upright local targets. CRC keeps
+Runtime-created Layer and filter surfaces are upright local targets. Pibbl keeps
 the current paint transform, which maps local drawing into the active target,
 separate from the world transform used by event paths, focus bounds, clipping
 entries, and Layer bridges. Inside a filtered boundary,
@@ -171,7 +171,7 @@ A nonempty native-filter segment requires browser `OffscreenCanvas`, a 2D
 context, and native Canvas `filter` support on that context. A displacement
 segment requires `OffscreenCanvas` WebGL2 and the processor's texture-size
 limit. Unsupported chains, invalid dimensions, allocation, context-acquisition,
-shader, upload, or context-loss failure are actionable render errors. CRC does
+shader, upload, or context-loss failure are actionable render errors. Pibbl does
 not fall back to a DOM canvas, CPU processing, or silently reduced resolution.
 An empty list is a direct-path no-op. A zero-strength displacement validates its
 map but has no capture or WebGL requirement.
@@ -198,7 +198,7 @@ phase admission and root/Layer revision rules.
 Each external render layer owns its surface, committed bitmap, interaction
 generation, and lifecycle callbacks. Renderer-specific context loss and
 restoration remain application/adapter concerns; any replacement requests an
-ordinary coalesced CRC frame. Publication waits for one complete render,
+ordinary coalesced Pibbl frame. Publication waits for one complete render,
 interaction settlement, transfer, parent composite, and transaction commit.
 Layer removal or root disposal makes stale invalidation callbacks inert.
 
@@ -229,3 +229,10 @@ headless Chromium. It proves fixed 2x backing, fixed CSS resize without logical
 reflow, responsive logical reflow without remount, and logical mouse
 coordinates. Full-page Studio baselines provide the corresponding sharpness
 and composition evidence.
+
+## Native HTML boxes
+
+`HtmlBox` explicitly mounts native content above Canvas paint through the
+mount-only `htmlOverlay` configuration. It shares root projection and world
+geometry, while application-owned wrapper CSS aligns the two surfaces. See the
+[HtmlBox contract](./html-box-contract.md) for clipping and composition limits.

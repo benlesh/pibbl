@@ -1,7 +1,7 @@
-import { crc, Path, Circle, Text, Rectangle, signal, type CRCController, type PathGeometry, type PathSegment, type CRCPointerEvent } from '@crc/core';
-import { loadOutlineFont, createTextGeometry, type OutlineFont } from '@crc/text';
+import { pibbl, Path, Circle, Text, Rectangle, signal, type PibblController, type PathGeometry, type PathSegment, type PibblPointerEvent } from '@pibbl/core';
+import { loadOutlineFont, createTextGeometry, type OutlineFont } from '@pibbl/text';
 
-export default function mount(canvas: HTMLCanvasElement): CRCController {
+export default function mount(canvas: HTMLCanvasElement): PibblController {
   const abort = new AbortController();
   const form = document.createElement('form');
   const input = document.createElement('input');
@@ -10,7 +10,7 @@ export default function mount(canvas: HTMLCanvasElement): CRCController {
   const status = document.createElement('span');
   form.style.cssText = 'display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:14px;background:#16232d;color:#dbe7ea;font:14px sans-serif';
   input.setAttribute('aria-label', 'Text to turn into an outline');
-  input.value = 'Hello CRC'; input.maxLength = 36;
+  input.value = 'Hello Pibbl'; input.maxLength = 36;
   input.style.cssText = 'font:inherit;padding:10px;border:1px solid #8da1aa;border-radius:6px;min-width:220px';
   button.type = 'button'; button.textContent = 'Generate outline'; button.disabled = true;
   reset.textContent = 'Reset points'; reset.type = 'button'; reset.disabled = true;
@@ -22,7 +22,7 @@ export default function mount(canvas: HTMLCanvasElement): CRCController {
   let geometry: PathGeometry | undefined, original: PathGeometry | undefined;
   let font: OutlineFont | undefined, disposed = false;
   let drag: { pointer: number; segment: number; xKey: string; yKey: string } | undefined;
-  const stop = (event: CRCPointerEvent) => {
+  const stop = (event: PibblPointerEvent) => {
     if (drag?.pointer !== event.pointerId) return;
     drag = undefined;
     if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
@@ -81,15 +81,15 @@ export default function mount(canvas: HTMLCanvasElement): CRCController {
   input.onkeydown = event => { if (event.key === "Enter") { event.preventDefault(); generate(); } };
   form.onsubmit = event => { event.preventDefault(); };
   reset.onclick = () => { if (original) { geometry = original.clone(); drag = undefined; generation.update(value => value + 1); } };
-  let controller: CRCController;
+  let controller: PibblController;
   const dispose = () => {
     if (disposed) return; disposed = true; abort.abort(); font?.dispose(); font = undefined;
     controller?.dispose(); form.remove(); canvas.style.touchAction = previousTouch;
     geometry = original = undefined; form.onsubmit = null; reset.onclick = null; button.onclick = null; input.onkeydown = null;
   };
-  try { controller = crc(canvas, <Scene />); }
+  try { controller = pibbl(canvas, <Scene />); }
   catch (error) { dispose(); throw error; }
-  void loadOutlineFont(new URL('/crc-text/ABeeZee-Regular.ttf', document.baseURI), { signal: abort.signal }).then(value => {
+  void loadOutlineFont(new URL('/pibbl-text/ABeeZee-Regular.ttf', document.baseURI), { signal: abort.signal }).then(value => {
     if (disposed) { value.dispose(); return; }
     font = value; button.disabled = false; generate();
   }).catch(error => { if (!disposed) status.textContent = `Font loading failed: ${String(error)}`; });

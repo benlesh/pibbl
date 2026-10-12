@@ -6,16 +6,16 @@ import {
   tutorialSnapshotCatalog,
   validateTutorialSnapshotCatalog,
   type TutorialSnapshotCatalogEntry,
-} from "@crc/scenarios";
+} from "@pibbl/scenarios";
 import {
-  crc,
+  pibbl,
   useEventTarget,
   useRectPath,
   useRef,
   useSignal,
   createElement,
   Rectangle,
-} from "@crc/core";
+} from "@pibbl/core";
 import { afterEach, expect, it } from "vitest";
 import {
   learningSourcePaths,
@@ -749,7 +749,7 @@ it("removes an active target-local drag before pointer-up without a ghost loss o
     return visible.get() ? createElement(RemovableTarget, {}) : null;
   }
 
-  const controller = crc(canvas, createElement(RemovalHarness, {}));
+  const controller = pibbl(canvas, createElement(RemovalHarness, {}));
   mountedControllers.push(controller);
   await nextPaint();
   await pointerMoveLogicalPoint(canvas, { x: 80, y: 80 });

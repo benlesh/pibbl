@@ -1,11 +1,11 @@
 import {
-  crc,
+  pibbl,
   useSignal,
   Grid,
   Rectangle,
   Text,
-  type CRCController,
-} from "@crc/core";
+  type PibblController,
+} from "@pibbl/core";
 function GridStudy() {
   const active = useSignal(false);
   return [
@@ -84,6 +84,6 @@ function GridStudy() {
     </Text>,
   ];
 }
-export default function mount(canvas: HTMLCanvasElement): CRCController {
-  return crc(canvas, <GridStudy />);
+export default function mount(canvas: HTMLCanvasElement): PibblController {
+  return pibbl(canvas, <GridStudy />);
 }

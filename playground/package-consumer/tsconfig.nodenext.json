@@ -4,7 +4,7 @@
     "moduleResolution": "NodeNext",
     "noEmit": true,
     "jsx": "react-jsx",
-    "jsxImportSource": "@crc/core",
+    "jsxImportSource": "@pibbl/core",
     "paths": {},
     "skipLibCheck": false,
     "strict": true,
@@ -15,7 +15,7 @@
     "index.ts",
     "jsx.tsx",
     "wrong-runtime.ts",
-    "mixed-runtime/crc-scene.crc.tsx",
+    "mixed-runtime/pibbl-scene.pibbl.tsx",
     "mixed-runtime/react-host.tsx",
     "mixed-runtime/react-stub/jsx-runtime.d.ts",
     "responsive-styles.tsx"

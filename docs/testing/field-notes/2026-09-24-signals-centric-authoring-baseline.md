@@ -24,7 +24,7 @@ run.
 ## Command
 
 ```sh
-fnm exec --using=24.15.0 env VITE_CRC_REPORT_PERF=1 \
+fnm exec --using=24.15.0 env VITE_PIBBL_REPORT_PERF=1 \
   corepack pnpm@11.21.0 exec vitest run \
   packages/core/test/signal-scheduler-performance.test.ts \
   packages/core/test/performance-characterization.test.ts \

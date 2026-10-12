@@ -1,34 +1,34 @@
 import type {
-  CRCKey,
-  CRCNode,
-  CRCPrimitiveComponent,
-  CRCTextChild,
-} from '@crc/core';
+  PibblKey,
+  PibblNode,
+  PibblPrimitiveComponent,
+  PibblTextChild,
+} from '@pibbl/core';
 import {
   FocusManagement,
   KeyboardNavigation,
   Rectangle,
-} from '@crc/core';
+} from '@pibbl/core';
 
-function Label(props: { value: string; children?: CRCTextChild }): CRCNode {
+function Label(props: { value: string; children?: PibblTextChild }): PibblNode {
   void props;
   return undefined;
 }
 
 function NoReturn(_props: { enabled?: boolean }): void {}
 
-async function AsyncScene(): Promise<CRCNode> {
+async function AsyncScene(): Promise<PibblNode> {
   return undefined;
 }
 
-function ReservedKey(_props: { key?: CRCKey }): void {}
+function ReservedKey(_props: { key?: PibblKey }): void {}
 
 type PrimitiveInput = {
   value: string;
   style?: { x?: number };
 };
 
-declare const Primitive: CRCPrimitiveComponent<
+declare const Primitive: PibblPrimitiveComponent<
   Record<string, never>,
   PrimitiveInput
 >;
@@ -36,7 +36,7 @@ declare const Primitive: CRCPrimitiveComponent<
 export const valid = (
   <>
     <Label key={1} value="ready">
-      CRC
+      Pibbl
     </Label>
     <NoReturn enabled />
     <Primitive value="ready" style={{ x: 1 }} />
@@ -50,12 +50,12 @@ export const valid = (
 
 // @ts-expect-error required value is missing
 export const missing = <Label />;
-// @ts-expect-error CRC defines no lowercase intrinsic tags
+// @ts-expect-error Pibbl defines no lowercase intrinsic tags
 export const intrinsic = <rect />;
-// @ts-expect-error async components are not CRC element types
+// @ts-expect-error async components are not Pibbl element types
 export const asyncValue = <AsyncScene />;
-// @ts-expect-error Promise values are not CRC text children
-export const promiseChild = <Label value="loading">{Promise.resolve('CRC')}</Label>;
+// @ts-expect-error Promise values are not Pibbl text children
+export const promiseChild = <Label value="loading">{Promise.resolve('Pibbl')}</Label>;
 // @ts-expect-error component props may not reserve the compiler-owned key field
 export const reservedKey = <ReservedKey />;
 // @ts-expect-error primitive managed input still requires value
@@ -70,5 +70,5 @@ export const missingKeyboardMode = <KeyboardNavigation>
 export const invalidKeyboardMode = <KeyboardNavigation mode="linear">
     <Rectangle style={{ width: 1, height: 1 }} />
 </KeyboardNavigation>;
-// @ts-expect-error policy text must be wrapped in Text and is not a CRC node
+// @ts-expect-error policy text must be wrapped in Text and is not a Pibbl node
 export const invalidPolicyText = <FocusManagement>raw text</FocusManagement>;

@@ -1,0 +1,27 @@
+{
+  "schema": "pibbl-replay-watchdog/1",
+  "status": "exited",
+  "timestamp": "2026-10-02T03:57:00.615Z",
+  "deadlineMs": 60000,
+  "graceMs": 1000,
+  "elapsedMs": 3792,
+  "pid": 28468,
+  "exitCode": 0,
+  "exitSignal": null,
+  "childExited": true,
+  "cleanupScope": "Replay child and parent-owned Playwright browser process group; arbitrary escaped descendants are outside scope.",
+  "browserCleanup": {
+    "status": "terminated",
+    "pid": 28460,
+    "processExited": true
+  },
+  "stdout": {
+    "text": "pass: /Users/benlesh/GitHub/crc/packages/core/test/out/agent-workflow/final-signals/replay/report.json\n",
+    "truncated": false
+  },
+  "stderr": {
+    "text": "",
+    "truncated": false
+  },
+  "failure": null
+}

@@ -1,15 +1,15 @@
 import {
-  crc,
+  pibbl,
   useEventTarget,
   useSignal,
   FocusManagement,
   Rectangle,
   Text,
-  type CRCController,
-  type CRCEventTargetSnapshot,
-  type CRCKeyboardEvent,
-  type CRCLogicalMouseEvent,
-} from "@crc/core";
+  type PibblController,
+  type PibblEventTargetSnapshot,
+  type PibblKeyboardEvent,
+  type PibblLogicalMouseEvent,
+} from "@pibbl/core";
 function boxPath(x: number, y: number, width: number, height: number): Path2D {
   const path = new Path2D();
   path.rect(x, y, width, height);
@@ -20,16 +20,16 @@ function KeyboardActivationLesson() {
   const activation = useSignal("No activation yet");
   const record = (message: string) =>
     events.update((current) => [...current.slice(-5), message]);
-  const snapshot: CRCEventTargetSnapshot = useEventTarget(
+  const snapshot: PibblEventTargetSnapshot = useEventTarget(
     {
-      onClick: (event: CRCLogicalMouseEvent) => {
+      onClick: (event: PibblLogicalMouseEvent) => {
         const source = event.sourceEvent
           ? `keyboard (${event.sourceEvent.type})`
           : "native pointer click";
         activation.set(`click from ${source}; detail ${event.detail}`);
         record(`click → ${source}`);
       },
-      onKeyDown: (event: CRCKeyboardEvent) => {
+      onKeyDown: (event: PibblKeyboardEvent) => {
         record(
           `keydown key=${event.key} code=${event.code} repeat=${event.repeat} shift=${event.shiftKey}`,
         );
@@ -38,7 +38,7 @@ function KeyboardActivationLesson() {
           record("Escape default prevented by the target");
         }
       },
-      onKeyUp: (event: CRCKeyboardEvent) => {
+      onKeyUp: (event: PibblKeyboardEvent) => {
         record(
           `keyup key=${event.key} ctrl=${event.ctrlKey} alt=${event.altKey} meta=${event.metaKey}`,
         );
@@ -174,8 +174,8 @@ function KeyboardActivationLesson() {
     </Text>,
   ];
 }
-export default function mount(canvas: HTMLCanvasElement): CRCController {
-  return crc(
+export default function mount(canvas: HTMLCanvasElement): PibblController {
+  return pibbl(
     canvas,
     <FocusManagement>
       <KeyboardActivationLesson />

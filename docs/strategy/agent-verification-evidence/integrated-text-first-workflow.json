@@ -1,0 +1,163 @@
+{
+  "schema": "pibbl-agent-workflow-run/1",
+  "status": "incomplete",
+  "requirementId": "TXT-08",
+  "requirementCompletion": "not-established",
+  "scope": "Controlled reference workflow only; not arbitrary application or full requirement verification.",
+  "scenario": "agent-text-verification",
+  "url": "http://127.0.0.1:5199/#/testing/agent-text-verification",
+  "watchdog": {
+    "status": "exited",
+    "exitCode": 0,
+    "browserCleanup": {
+      "status": "terminated",
+      "pid": 19139,
+      "processExited": true
+    }
+  },
+  "evidence": {
+    "schema": "pibbl-replay-evidence-view/1",
+    "sourceSchema": "pibbl-text-replay/1",
+    "source": "/Users/benlesh/GitHub/crc/packages/core/test/out/agent-workflow/text-first/replay/report.json",
+    "verification": "saved-evidence-only",
+    "kind": "final-report",
+    "claimedStatus": "pass",
+    "runId": "fb5e414a-d519-4d41-b225-1e42ce4fbd1e",
+    "view": "summary",
+    "actionCount": 3,
+    "firstFailedCheck": null,
+    "requiredCheckCount": 12,
+    "checkCount": 12,
+    "checks": [
+      {
+        "checkId": "initial.ready-revision",
+        "actionId": "initial",
+        "status": "pass",
+        "required": true,
+        "reason": null
+      },
+      {
+        "checkId": "initial.exact-fixture-label",
+        "actionId": "initial",
+        "status": "pass",
+        "required": true,
+        "reason": null
+      },
+      {
+        "checkId": "initial.private-text-redacted",
+        "actionId": "initial",
+        "status": "pass",
+        "required": true,
+        "reason": null
+      },
+      {
+        "checkId": "initial.bounded-call-evidence",
+        "actionId": "initial",
+        "status": "pass",
+        "required": true,
+        "reason": null
+      },
+      {
+        "checkId": "repair.ready-revision",
+        "actionId": "repair",
+        "status": "pass",
+        "required": true,
+        "reason": null
+      },
+      {
+        "checkId": "repair.exact-fixture-label",
+        "actionId": "repair",
+        "status": "pass",
+        "required": true,
+        "reason": null
+      },
+      {
+        "checkId": "repair.private-text-redacted",
+        "actionId": "repair",
+        "status": "pass",
+        "required": true,
+        "reason": null
+      },
+      {
+        "checkId": "repair.bounded-call-evidence",
+        "actionId": "repair",
+        "status": "pass",
+        "required": true,
+        "reason": null
+      },
+      {
+        "checkId": "seed.ready-revision",
+        "actionId": "seed",
+        "status": "pass",
+        "required": true,
+        "reason": null
+      },
+      {
+        "checkId": "seed.exact-fixture-label",
+        "actionId": "seed",
+        "status": "pass",
+        "required": true,
+        "reason": null
+      },
+      {
+        "checkId": "seed.private-text-redacted",
+        "actionId": "seed",
+        "status": "pass",
+        "required": true,
+        "reason": null
+      },
+      {
+        "checkId": "seed.bounded-call-evidence",
+        "actionId": "seed",
+        "status": "pass",
+        "required": true,
+        "reason": null
+      }
+    ],
+    "omittedChecks": 0,
+    "actions": [
+      {
+        "actionId": "initial",
+        "status": "pass"
+      },
+      {
+        "actionId": "repair",
+        "status": "pass"
+      },
+      {
+        "actionId": "seed",
+        "status": "pass"
+      }
+    ],
+    "omittedActions": 0,
+    "failure": null,
+    "otherFailures": {
+      "observation": null,
+      "check": null,
+      "checkCompletion": null,
+      "completion": null,
+      "checkpoint": null,
+      "cleanup": null,
+      "verifier": null
+    },
+    "recordedPageErrors": 0,
+    "droppedPageErrors": 0,
+    "manifestAvailable": true,
+    "checkpoint": null,
+    "truncatedFields": []
+  },
+  "readFailure": null,
+  "artifacts": {
+    "report": "/Users/benlesh/GitHub/crc/packages/core/test/out/agent-workflow/text-first/replay/report.json",
+    "watchdog": "/Users/benlesh/GitHub/crc/packages/core/test/out/agent-workflow/text-first/watchdog.json"
+  },
+  "next": {
+    "executable": "/Users/benlesh/.local/share/fnm/node-versions/v24.15.0/installation/bin/node",
+    "arguments": [
+      "/Users/benlesh/GitHub/crc/tooling/agent-verification/evidence-reader.mjs",
+      "/Users/benlesh/GitHub/crc/packages/core/test/out/agent-workflow/text-first/replay/report.json",
+      "--page",
+      "actions"
+    ]
+  }
+}

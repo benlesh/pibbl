@@ -1,12 +1,12 @@
 import { preparedStyleValue, preparedStyleQuery, type PreparedQuery } from '../style/responsive.js';
 import { definePrimitive } from '../define-primitive.js';
-import { cloneCRCElement } from '../element/create-element.js';
+import { clonePibblElement } from '../element/create-element.js';
 import { getChildPrimitiveReceiverToken } from '../element/metadata.js';
-import type { CRCElement } from '../element/types.js';
+import type { PibblElement } from '../element/types.js';
 import { GLOBAL_STATE } from '../global-state.js';
 import { layoutDiagnostic } from '../style/diagnostics.js';
 import {
-  type CRCStructuralEventProps,
+  type PibblStructuralEventProps,
   wireStructuralEvents,
 } from '../components/structural-events.js';
 import { normalizeEdges } from '../style/normalize.js';
@@ -20,7 +20,7 @@ import type {
 } from '../style/types.js';
 import type {
   CanvasMeasurementService,
-  CRCNodeInput,
+  PibblNodeInput,
   MeasureInput,
   MeasureResult,
   RenderingContext2D,
@@ -51,25 +51,50 @@ type MainAlignment =
   | 'space-evenly';
 type CrossAlignment = 'stretch' | 'flex-start' | 'flex-end' | 'center';
 
+/**
+ * Supported geometry and presentation properties for Flex.
+ *
+ * @see {@link BoxStyle}
+ * @see {@link LayoutItemStyle}
+ * @see {@link Flex}
+ */
 export interface FlexStyle extends BoxStyle, LayoutItemStyle {
+  /** The main axis along which flex children are placed. See {@link FlexDirection}. */
   flexDirection?: FlexDirection;
+  /** Whether children may wrap onto additional flex lines. See {@link FlexWrap}. */
   flexWrap?: FlexWrap;
+  /** Distribution of children along the main axis. See {@link MainAlignment}. */
   justifyContent?: MainAlignment;
+  /** Default alignment of children on the cross or block axis. See {@link CrossAlignment}. */
   alignItems?: CrossAlignment;
+  /**
+   * Distribution of wrapped flex lines within the available cross-axis space. See
+   * {@link CrossAlignment}, {@link MainAlignment}.
+   */
   alignContent?: CrossAlignment | MainAlignment;
+  /** Spacing between adjacent items. See {@link FlexStyle}. */
   gap?: number;
+  /** Space between adjacent rows or items on the row axis. See {@link FlexStyle}. */
   rowGap?: number;
+  /** Space between adjacent columns or items on the column axis. See {@link FlexStyle}. */
   columnGap?: number;
 }
 
-export interface FlexProps extends CRCStructuralEventProps {
-  children: CRCNodeInput;
+/**
+ * Authored inputs for Flex, including the declared data and presentation options.
+ *
+ * @see {@link PibblNodeInput}
+ * @see {@link Flex}
+ */
+export interface FlexProps extends PibblStructuralEventProps {
+  /** Descendant content or the callback that supplies it. See {@link PibblNodeInput}. */
+  children: PibblNodeInput;
 }
 
 export interface FlexMeasurementInput {
   service: CanvasMeasurementService;
   measureElement(
-    element: CRCElement<any>,
+    element: PibblElement<any>,
     constraints: Readonly<Constraints>,
   ): MeasureResult;
 }
@@ -87,7 +112,7 @@ interface ResolvedFlexStyle extends SystemStyle {
 }
 
 interface FlexItem {
-  child: CRCElement<any>;
+  child: PibblElement<any>;
   normalized: Readonly<BoxStyle & FlexItemStyle & LayoutItemStyle>;
   baseMain: number;
   targetMain: number;
@@ -114,7 +139,7 @@ interface FlexLine {
 
 interface FlexPlacement {
   box: LayoutBox;
-  element: CRCElement<any>;
+  element: PibblElement<any>;
 }
 
 function renderFlex(
@@ -165,7 +190,16 @@ function renderFlex(
   );
 }
 
-/** Describes the supported Flexbox subset for JSX or createElement authoring. */
+/**
+ * Describes the supported Flexbox subset for JSX or createElement authoring.
+ *
+ * @param props - Authored component inputs, supplied through JSX or createElement. See the linked
+ * props and style types.
+ * @throws When called directly; Pibbl mounts this component through JSX or createElement.
+ *
+ * @see {@link FlexProps}
+ * @see {@link FlexStyle}
+ */
 export const Flex = definePrimitive<
   FlexProps,
   FlexStyle,
@@ -393,7 +427,7 @@ function unsupportedIntrinsic(reason: string): MeasureResult {
 
 export function layoutFlex(
   container: Readonly<LayoutBox>,
-  children: CRCNodeInput,
+  children: PibblNodeInput,
   style: Readonly<FlexStyle>,
   measurement: FlexMeasurementInput,
 ): LayoutBox[] {
@@ -404,7 +438,7 @@ export function layoutFlex(
 
 function resolveFlexPlacements(
   container: Readonly<LayoutBox>,
-  children: readonly CRCElement<any>[],
+  children: readonly PibblElement<any>[],
   style: Readonly<FlexStyle>,
   measurement: FlexMeasurementInput,
 ): FlexPlacement[] {
@@ -468,7 +502,7 @@ function resolveFlexPlacements(
         minHeight: 0,
         maxHeight: container.height,
       };
-      const measurementChild = cloneCRCElement(child);
+      const measurementChild = clonePibblElement(child);
       setPreNormalizedStyle(
         measurementChild,
         normalized,
@@ -898,7 +932,7 @@ function nonnegativeGap(
 function nonnegativeFactor(
   value: number,
   property: string,
-  child: CRCElement<any>,
+  child: PibblElement<any>,
   container: Readonly<LayoutBox>,
 ): number {
   if (!Number.isFinite(value) || value < 0) {
@@ -919,7 +953,7 @@ function resolveBasis(
   measuredMain: number | undefined,
   reference: number,
   property: 'width' | 'height',
-  child: CRCElement<any>,
+  child: PibblElement<any>,
   container: Readonly<LayoutBox>,
 ): number {
   const value = basis === 'auto' || basis === undefined ? specifiedMain : basis;
@@ -942,7 +976,7 @@ function resolveItemLength(
   value: Exclude<BoxStyle['width'], undefined>,
   reference: number,
   property: string,
-  child: CRCElement<any>,
+  child: PibblElement<any>,
   container: Readonly<LayoutBox>,
 ): number {
   const resolved = resolveLength(value, reference, property, childContext(child, container));
@@ -963,7 +997,7 @@ function resolveOptionalBound(
   reference: number,
   property: string,
   fallback: number,
-  child: CRCElement<any>,
+  child: PibblElement<any>,
   container: Readonly<LayoutBox>,
 ): number {
   if (value === undefined) return fallback;
@@ -972,7 +1006,7 @@ function resolveOptionalBound(
 
 function normalizeItemAlignment(
   value: LayoutItemStyle['alignSelf'],
-  child: CRCElement<any>,
+  child: PibblElement<any>,
   container: Readonly<LayoutBox>,
 ): CrossAlignment | 'auto' {
   if (value === undefined || value === 'auto') return 'auto';
@@ -1005,7 +1039,7 @@ function alignmentOffset(
 }
 
 function rejectUnsupportedItemFields(
-  child: CRCElement<any>,
+  child: PibblElement<any>,
   style: Readonly<Record<string, unknown>>,
   container: Readonly<LayoutBox>,
 ): void {
@@ -1051,7 +1085,7 @@ function optionDiagnostic(
 }
 
 function childDiagnostic(
-  child: CRCElement<any>,
+  child: PibblElement<any>,
   property: string,
   value: unknown,
   container: Readonly<LayoutBox>,
@@ -1068,7 +1102,7 @@ function childDiagnostic(
 }
 
 function childContext(
-  child: CRCElement<any>,
+  child: PibblElement<any>,
   container: Readonly<LayoutBox>,
 ) {
   return {

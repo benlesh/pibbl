@@ -1,4 +1,4 @@
-import crcDeclarationBundle from "./crc-editor-types.txt?raw";
+import pibblDeclarationBundle from "./pibbl-editor-types.txt?raw";
 
 export interface EditorDeclarationLibrary {
   readonly content: string;
@@ -10,42 +10,43 @@ interface DeclarationLibraryDefaults {
 }
 
 const declarationModulePaths = new Map([
-  ["@crc/core/filters", "file:///node_modules/@crc/core/filters.d.ts"],
-  ["@crc/textures", "file:///node_modules/@crc/textures/index.d.ts"],
-  ["@crc/text", "file:///node_modules/@crc/text/index.d.ts"],
-  ["@crc/viz", "file:///node_modules/@crc/viz/index.d.ts"],
-  ["@crc/core", "file:///node_modules/@crc/core/index.d.ts"],
-  ["@crc/core/jsx-runtime", "file:///node_modules/@crc/core/jsx-runtime.d.ts"],
+  ["@pibbl/text", "file:///node_modules/@pibbl/text/index.d.ts"],
+  ["@pibbl/core/filters", "file:///node_modules/@pibbl/core/filters.d.ts"],
+  ["@pibbl/core/textures", "file:///node_modules/@pibbl/core/textures/index.d.ts"],
+  ["@pibbl/core/viz", "file:///node_modules/@pibbl/core/viz/index.d.ts"],
+  ["@pibbl/core", "file:///node_modules/@pibbl/core/index.d.ts"],
+  ["@pibbl/core/jsx-runtime", "file:///node_modules/@pibbl/core/jsx-runtime.d.ts"],
   [
-    "@crc/core/jsx-dev-runtime",
-    "file:///node_modules/@crc/core/jsx-dev-runtime.d.ts",
+    "@pibbl/core/jsx-dev-runtime",
+    "file:///node_modules/@pibbl/core/jsx-dev-runtime.d.ts",
   ],
-  ["@crc/particles", "file:///node_modules/@crc/particles/index.d.ts"],
-  ["@crc/physics/2d", "file:///node_modules/@crc/physics/2d.d.ts"],
+  ["@pibbl/core/particles", "file:///node_modules/@pibbl/core/particles/index.d.ts"],
+  ["@pibbl/core/machines", "file:///node_modules/@pibbl/core/machines/index.d.ts"],
+  ["@pibbl/core/machines/animation", "file:///node_modules/@pibbl/core/machines/animation.d.ts"],
+  ["@pibbl/core/sprites", "file:///node_modules/@pibbl/core/sprites/index.d.ts"],
+  ["@pibbl/core/sprites/formats/aseprite", "file:///node_modules/@pibbl/core/sprites/formats/aseprite.d.ts"],
+  ["@pibbl/core/sprites/formats/texture-packer", "file:///node_modules/@pibbl/core/sprites/formats/texture-packer.d.ts"],
+  ["@pibbl/core/physics/2d", "file:///node_modules/@pibbl/core/physics/2d.d.ts"],
   [
-    "@crc/physics/2d/geometry",
-    "file:///node_modules/@crc/physics/2d/geometry.d.ts",
+    "@pibbl/core/physics/2d/geometry",
+    "file:///node_modules/@pibbl/core/physics/2d/geometry.d.ts",
   ],
-  [
-    "@crc/physics/3d/geometry",
-    "file:///node_modules/@crc/physics/3d/geometry.d.ts",
-  ],
-  ["@crc/three", "file:///node_modules/@crc/three/index.d.ts"],
+  ["@pibbl/three", "file:///node_modules/@pibbl/three/index.d.ts"],
 ]);
 
-function crcDeclarationLibraries(): EditorDeclarationLibrary[] {
+function pibblDeclarationLibraries(): EditorDeclarationLibrary[] {
   const markers = [
-    ...crcDeclarationBundle.matchAll(/^\/\* @crc-studio-module (.+) \*\/$/gmu),
+    ...pibblDeclarationBundle.matchAll(/^\/\* @pibbl-studio-module (.+) \*\/$/gmu),
   ];
   const libraries = markers.map((marker, index) => {
     const moduleName = marker[1];
     const filePath = moduleName && declarationModulePaths.get(moduleName);
-    if (!filePath) throw new Error("Unknown CRC Studio declaration module.");
+    if (!filePath) throw new Error("Unknown Pibbl Studio declaration module.");
     return {
-      content: crcDeclarationBundle
+      content: pibblDeclarationBundle
         .slice(
           marker.index + marker[0].length,
-          markers[index + 1]?.index ?? crcDeclarationBundle.length,
+          markers[index + 1]?.index ?? pibblDeclarationBundle.length,
         )
         .trimStart(),
       filePath,
@@ -57,14 +58,14 @@ function crcDeclarationLibraries(): EditorDeclarationLibrary[] {
       declarationModulePaths.size
   ) {
     throw new Error(
-      `CRC Studio declarations must define all ${declarationModulePaths.size} package entry points.`,
+      `Pibbl Studio declarations must define all ${declarationModulePaths.size} package entry points.`,
     );
   }
   return libraries;
 }
 
 export function declarationLibraries(): EditorDeclarationLibrary[] {
-  return crcDeclarationLibraries();
+  return pibblDeclarationLibraries();
 }
 
 export function configureDeclarationLibraries(

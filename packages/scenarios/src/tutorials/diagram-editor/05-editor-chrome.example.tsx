@@ -1,6 +1,6 @@
 import {
   Absolute,
-  crc,
+  pibbl,
   useLayoutBox,
   Fragment,
   Group,
@@ -8,10 +8,10 @@ import {
   Rectangle,
   Text,
   type BoxStyle,
-  type CRCController,
-  type CRCNode,
+  type PibblController,
+  type PibblNode,
   type LayoutItemStyle,
-} from "@crc/core";
+} from "@pibbl/core";
 
 type NodeId = "idea" | "sketch" | "build" | "ship";
 
@@ -108,7 +108,7 @@ function arrowheadPath(point: Readonly<{ x: number; y: number }>): Path2D {
   return path;
 }
 
-function NodeCard({ node }: Readonly<{ node: DiagramNode }>): CRCNode {
+function NodeCard({ node }: Readonly<{ node: DiagramNode }>): PibblNode {
   return (
     <Group style={{ translateX: node.x, translateY: node.y }}>
       <Rectangle
@@ -171,7 +171,7 @@ function NodeCard({ node }: Readonly<{ node: DiagramNode }>): CRCNode {
   );
 }
 
-function Connection({ edge }: Readonly<{ edge: DiagramEdge }>): CRCNode {
+function Connection({ edge }: Readonly<{ edge: DiagramEdge }>): PibblNode {
   const from = INITIAL_NODES.find((node) => node.id === edge.from);
   const to = INITIAL_NODES.find((node) => node.id === edge.to);
   if (!from || !to) throw new Error(`Unknown node in edge "${edge.id}".`);
@@ -195,7 +195,7 @@ function Connection({ edge }: Readonly<{ edge: DiagramEdge }>): CRCNode {
   );
 }
 
-function Toolbar({ style: _specifiedStyle }: RegionProps): CRCNode {
+function Toolbar({ style: _specifiedStyle }: RegionProps): PibblNode {
   const box = useLayoutBox();
   return [
     <Rectangle
@@ -242,7 +242,7 @@ function Toolbar({ style: _specifiedStyle }: RegionProps): CRCNode {
   ];
 }
 
-function Workspace({ style: _specifiedStyle }: RegionProps): CRCNode {
+function Workspace({ style: _specifiedStyle }: RegionProps): PibblNode {
   const box = useLayoutBox();
   return [
     <Rectangle
@@ -259,7 +259,7 @@ function Workspace({ style: _specifiedStyle }: RegionProps): CRCNode {
   ];
 }
 
-function StatusBar({ style: _specifiedStyle }: RegionProps): CRCNode {
+function StatusBar({ style: _specifiedStyle }: RegionProps): PibblNode {
   const box = useLayoutBox();
   return [
     <Rectangle
@@ -274,7 +274,7 @@ function StatusBar({ style: _specifiedStyle }: RegionProps): CRCNode {
   ];
 }
 
-function DiagramEditor(): CRCNode {
+function DiagramEditor(): PibblNode {
   return (
     <Absolute style={{ width: 960, height: 600 }}>
       <Toolbar style={{ left: 0, top: 0, width: "100%", height: 56 }} />
@@ -291,6 +291,6 @@ function DiagramEditor(): CRCNode {
   );
 }
 
-export default function mount(canvas: HTMLCanvasElement): CRCController {
-  return crc(canvas, <DiagramEditor />);
+export default function mount(canvas: HTMLCanvasElement): PibblController {
+  return pibbl(canvas, <DiagramEditor />);
 }

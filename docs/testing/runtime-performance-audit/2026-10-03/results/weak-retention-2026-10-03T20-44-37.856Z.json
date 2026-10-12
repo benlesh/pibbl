@@ -1,7 +1,7 @@
 {
-  "schema": "crc-weak-retention/2",
+  "schema": "pibbl-weak-retention/2",
   "baseUrl": "http://127.0.0.1:5205",
-  "methodology": "Each dereference happens in a new browser evaluation after CDP forced GC. The probe weakly observes the actual root CRCElement and HTMLCanvasElement; the retain case keeps only the public Texture handle. WeakRef only distinguishes JavaScript reachability; it cannot prove native/GPU reclamation.",
+  "methodology": "Each dereference happens in a new browser evaluation after CDP forced GC. The probe weakly observes the actual root PibblElement and HTMLCanvasElement; the retain case keeps only the public Texture handle. WeakRef only distinguishes JavaScript reachability; it cannot prove native/GPU reclamation.",
   "cases": [
     {
       "retain": false,

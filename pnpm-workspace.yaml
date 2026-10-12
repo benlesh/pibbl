@@ -4,11 +4,10 @@ packages:
   - playground
   - examples/*
   - docs
+  - website
 allowBuilds:
   esbuild: true
   msw: false
-overrides:
-  defu: ^6.1.7
 catalog:
   "@fontsource-variable/jetbrains-mono": ^5.3.0
   "@fontsource-variable/space-grotesk": ^5.3.0
@@ -20,7 +19,6 @@ catalog:
   "@types/node": ^26.2.0
   "@types/three": ^0.186.0
   "@vitest/browser-playwright": ^4.1.10
-  bumpp: ^12.2.0
   eslint: ^10.8.1
   esbuild: ^0.28.2
   globals: ^17.9.0

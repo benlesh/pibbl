@@ -2,11 +2,11 @@ import {
   Group,
   Rectangle,
   Text,
-  crc,
+  pibbl,
   useSignal,
-  type CRCController,
-  type CRCNode,
-} from "@crc/core";
+  type PibblController,
+  type PibblNode,
+} from "@pibbl/core";
 import {
   PieLayout,
   PieSlice,
@@ -14,7 +14,7 @@ import {
   HoverCard,
   type PieSliceGeometry,
   type PieLabelPlacement,
-} from "@crc/viz";
+} from "@pibbl/core/viz";
 // Illustrative survey data, not real-world statistics. Both samples total 100.
 const balanced = [
   { id: "walk", label: "Walk", value: 35, color: "#2878b5" },
@@ -48,7 +48,7 @@ function Button({
   text: string;
   action: () => void;
   active?: boolean;
-}): CRCNode {
+}): PibblNode {
   return (
     <Group>
       <Rectangle
@@ -103,7 +103,7 @@ function Scene() {
       </Text>
       <Text style={{ left: 28, top: 67, font: "14px sans-serif", fill: "#62758b" }}>
         100 fictional responses · Labels share one layout; slices keep ordinary
-        CRC events.
+        Pibbl events.
       </Text>
       <Rectangle
         pointerEvents="none"
@@ -335,6 +335,6 @@ function Scene() {
     </Group>
   );
 }
-export default function mount(canvas: HTMLCanvasElement): CRCController {
-  return crc(canvas, <Scene />);
+export default function mount(canvas: HTMLCanvasElement): PibblController {
+  return pibbl(canvas, <Scene />);
 }

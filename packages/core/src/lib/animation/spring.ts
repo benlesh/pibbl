@@ -1,4 +1,4 @@
-import type { CRCSpringOptions } from './types.js';
+import type { PibblSpringOptions } from './types.js';
 
 const DEFAULT_MASS = 1;
 const DEFAULT_STIFFNESS = 170;
@@ -53,8 +53,8 @@ interface SpringFrequencies {
 }
 
 function definitionLabel(debugName: string | undefined): string {
-  return debugName === undefined ? 'CRC spring definition' :
-    `CRC spring definition "${debugName}"`;
+  return debugName === undefined ? 'Pibbl spring definition' :
+    `Pibbl spring definition "${debugName}"`;
 }
 
 function finite(value: number, property: string, debugName: string | undefined): number {
@@ -88,7 +88,7 @@ function defaulted(value: number | undefined, fallback: number): number {
   return value === undefined ? fallback : value;
 }
 
-function normalizedSpring(options: Readonly<CRCSpringOptions>): SpringWithoutDuration {
+function normalizedSpring(options: Readonly<PibblSpringOptions & { readonly to: number }>): SpringWithoutDuration {
   const debugName = options.debugName;
   const hasFrom = options.from !== undefined;
   return {
@@ -381,7 +381,7 @@ export function resolveSpringDuration(record: SpringWithoutDuration): number {
 
 /** @internal Creates the fully normalized immutable spring definition record. */
 export function createSpringRecord(
-  options: Readonly<CRCSpringOptions>,
+  options: Readonly<PibblSpringOptions & { readonly to: number }>,
 ): SpringDefinitionRecord {
   const normalized = normalizedSpring(options);
   return Object.freeze({

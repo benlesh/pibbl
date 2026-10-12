@@ -1,25 +1,64 @@
+import type { flattenPathWang } from './path-wang.js';
+import type { simplifyPathRadial } from './path-radial.js';
 import { arcPoint, TAU, type ArcSegment } from './path-arc.js';
 import { PathGeometry, type PathSegment } from './path-geometry.js';
 
 const DEFAULT_MAX_SEGMENTS = 1_000_000;
 
+/**
+ * Positive approximation tolerance and output-segment budget for curve flattening.
+ *
+ * @see {@link flattenPath}
+ * @see {@link flattenPathWang}
+ */
 export interface FlattenPathOptions {
+  /** Positive maximum geometric approximation error. See {@link FlattenPathOptions}. */
   readonly tolerance: number;
+  /** Upper bound on the number of output path segments. See {@link FlattenPathOptions}. */
   readonly maxSegments?: number;
 }
 
+/**
+ * Positive tolerance and output-segment budget for polyline simplification.
+ *
+ * @see {@link simplifyPath}
+ * @see {@link simplifyPathRadial}
+ */
 export interface SimplifyPathOptions {
+  /** Positive maximum geometric approximation error. See {@link SimplifyPathOptions}. */
   readonly tolerance: number;
+  /** Upper bound on the number of output path segments. See {@link SimplifyPathOptions}. */
   readonly maxSegments?: number;
 }
 
+/**
+ * Subdivision count and output-segment budget for splitting path segments.
+ *
+ * @see {@link subdividePath}
+ */
 export interface SubdividePathOptions {
+  /**
+   * Number of pieces produced from each drawable path segment. See {@link SubdividePathOptions}.
+   */
   readonly divisions: number;
+  /** Upper bound on the number of output path segments. See {@link SubdividePathOptions}. */
   readonly maxSegments?: number;
 }
 
 type Point = readonly [number, number];
 
+/**
+ * Returns independent geometry with curves approximated by line segments within the requested
+ * tolerance.
+ *
+ * @param path - Source geometry; it is not modified. See {@link PathGeometry}.
+ * @param options - Maximum approximation error and flattening work limits. See
+ * {@link FlattenPathOptions} .
+ * @returns Independent geometry with curves replaced by line segments. See {@link PathGeometry}.
+ *
+ * @see {@link PathGeometry}
+ * @see {@link FlattenPathOptions}
+ */
 export function flattenPath(path: PathGeometry, options: Readonly<FlattenPathOptions>): PathGeometry {
   const tolerance = requiredPositive(options.tolerance, 'tolerance');
   const output = collector(options.maxSegments);
@@ -54,6 +93,18 @@ export function flattenPath(path: PathGeometry, options: Readonly<FlattenPathOpt
   return output.finish();
 }
 
+/**
+ * Returns independent geometry with each drawable segment split into the requested number of
+ * pieces.
+ *
+ * @param path - Source geometry; it is not modified. See {@link PathGeometry}.
+ * @param options - Subdivision length and work limits. See {@link SubdividePathOptions}.
+ * @returns Independent geometry with segments split according to the requested limits. See
+ * {@link PathGeometry} .
+ *
+ * @see {@link PathGeometry}
+ * @see {@link SubdividePathOptions}
+ */
 export function subdividePath(path: PathGeometry, options: Readonly<SubdividePathOptions>): PathGeometry {
   const divisions = requiredInteger(options.divisions, 'divisions');
   const output = collector(options.maxSegments);
@@ -99,6 +150,17 @@ export function subdividePath(path: PathGeometry, options: Readonly<SubdividePat
   return output.finish();
 }
 
+/**
+ * Returns independent polyline geometry with redundant points removed within the requested
+ * tolerance.
+ *
+ * @param path - Source geometry; it is not modified. See {@link PathGeometry}.
+ * @param options - Simplification tolerance and work limits. See {@link SimplifyPathOptions}.
+ * @returns Independent geometry with redundant line vertices removed. See {@link PathGeometry}.
+ *
+ * @see {@link PathGeometry}
+ * @see {@link SimplifyPathOptions}
+ */
 export function simplifyPath(path: PathGeometry, options: Readonly<SimplifyPathOptions>): PathGeometry {
   const tolerance = requiredPositive(options.tolerance, 'tolerance');
   const output = collector(options.maxSegments);

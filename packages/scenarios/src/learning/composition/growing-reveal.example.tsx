@@ -1,15 +1,15 @@
-/** @jsxImportSource @crc/core */
+/** @jsxImportSource @pibbl/core */
 import {
-  crc,
+  pibbl,
   Group,
   Rectangle,
   Text,
   FocusManagement,
   useSignal,
   useReaction,
-  type CRCController,
-} from "@crc/core";
-import { ReactionDiffusion, type TextureRenderer } from "@crc/textures";
+  type PibblController,
+} from "@pibbl/core";
+import { ReactionDiffusion, type TextureRenderer } from "@pibbl/core/textures";
 
 // The artwork and raster alpha mask are composed locally. No new core mask API.
 const landscape: TextureRenderer = (ctx, texture) => {
@@ -223,6 +223,6 @@ function GrowingReveal({ canvas }: { canvas: HTMLCanvasElement }) {
     </FocusManagement>
   );
 }
-export default function mount(canvas: HTMLCanvasElement): CRCController {
-  return crc(canvas, <GrowingReveal canvas={canvas} />);
+export default function mount(canvas: HTMLCanvasElement): PibblController {
+  return pibbl(canvas, <GrowingReveal canvas={canvas} />);
 }

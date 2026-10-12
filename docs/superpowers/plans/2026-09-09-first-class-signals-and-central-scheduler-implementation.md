@@ -13,11 +13,11 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Ship CRC's general-purpose signal graph, explicit component signal reads, renderer-consumer invalidation, and one realm-wide six-phase frame scheduler while preserving the current immediate-mode Canvas 2D, Layer, lifecycle, and event contracts.
+**Goal:** Ship Pibbl's general-purpose signal graph, explicit component signal reads, renderer-consumer invalidation, and one realm-wide six-phase frame scheduler while preserving the current immediate-mode Canvas 2D, Layer, lifecycle, and event contracts.
 
-**Architecture:** Mount-independent writable and computed signals own a synchronous dependency graph. A component-scoped renderer consumer records successful `.get()` reads and translates relevant changes into work for the exact CRC instance that read them. A realm scheduler replaces per-instance animation-frame ownership, snapshots all top-level root work once, validates observed computed values, and renders affected roots in stable mount order. Ordinary Canvas 2D remains full-root immediate mode; explicit Layer instances remain the retained boundary and use revisioned dirty propagation so a signal read inside a Layer repaints that surface before ancestor composition.
+**Architecture:** Mount-independent writable and computed signals own a synchronous dependency graph. A component-scoped renderer consumer records successful `.get()` reads and translates relevant changes into work for the exact Pibbl instance that read them. A realm scheduler replaces per-instance animation-frame ownership, snapshots all top-level root work once, validates observed computed values, and renders affected roots in stable mount order. Ordinary Canvas 2D remains full-root immediate mode; explicit Layer instances remain the retained boundary and use revisioned dirty propagation so a signal read inside a Layer repaints that surface before ancestor composition.
 
-**Tech Stack:** TypeScript, HTML Canvas 2D, `OffscreenCanvas`, `requestAnimationFrame`, CRC's synchronous JSX/createElement runtime and hook slots, Vitest Browser with Playwright Chromium, pnpm 11.21.0.
+**Tech Stack:** TypeScript, HTML Canvas 2D, `OffscreenCanvas`, `requestAnimationFrame`, Pibbl's synchronous JSX/createElement runtime and hook slots, Vitest Browser with Playwright Chromium, pnpm 11.21.0.
 
 **Spec:** `docs/superpowers/specs/2026-09-09-first-class-signals-and-animation-design.md`
 
@@ -29,33 +29,33 @@
 
 - Preserve unrelated working-tree changes and untracked files; stage only files named by the active task.
 - Add a failing test before each production behavior change.
-- Keep `signal`, `computed`, and `untracked` usable without mounting CRC.
+- Keep `signal`, `computed`, and `untracked` usable without mounting Pibbl.
 - Keep signal reads explicit as `value.get()`. Do not make signals callable and do not interpret signal objects placed directly in `style`.
 - Keep signals mount-independent. A disposed consumer detaches its graph edges; disposal does not destroy a signal retained by application code.
 - Export no public `subscribe`, `effect`, watcher, resource, store/proxy, or `batch` API.
-- Reject signal writes while evaluating a computed callback or rendering a CRC component/primitive. Do not change the separate `useState` setter contract.
+- Reject signal writes while evaluating a computed callback or rendering a Pibbl component/primitive. Do not change the separate `useState` setter contract.
 - Preserve lazy, memoized computed evaluation, dynamic dependencies, cached errors, and `Object.is` equality by default.
-- One JavaScript realm owns at most one pending CRC host animation frame. Top-level roots are render participants; Layer child instances never own a host frame.
+- One JavaScript realm owns at most one pending Pibbl host animation frame. Top-level roots are render participants; Layer child instances never own a host frame.
 - Preserve latest-root coalescing, state scheduling, resize/density/image/focus/event requests, source paint order, root-logical events, identity, hook order, fail-closed render teardown, and current Canvas pixel behavior.
 - An ordinary Canvas 2D signal invalidation clears and traverses the affected top-level root. Do not add automatic subtree caching, a retained display list, or hidden offscreen surfaces.
 - A Layer-internal signal read dirties that Layer and every retained ancestor needed to reach it. A parent-only Layer presentation read must continue to reuse the child bitmap.
 - Keep every scheduler collection and ownership release explicit. Correctness must not depend on `WeakRef`, finalizers, or garbage-collection timing.
 - The internal manual driver and trace are test/diagnostic seams, not a public clock API.
-- The WebGL implementation may extend `@crc/core/internal`, but it must preserve the one scheduler singleton and the scheduler/consumer capabilities established here.
+- The WebGL implementation may extend `@pibbl/core/internal`, but it must preserve the one scheduler singleton and the scheduler/consumer capabilities established here.
 - Use Node 24.15 or newer, pnpm 11.21.0, and Playwright Chromium for final evidence.
 
 ## File and responsibility map
 
 - `packages/core/src/lib/signals/types.ts`: public nominal `Signal`, `WritableSignal`, equality, and options types.
 - `packages/core/src/lib/signals/graph.ts`: writable/computed nodes, synchronous tracking stack, dynamic graph edges, equality, error caching, internal renderer consumers, and commit batches.
-- `packages/core/src/lib/signals/graph.test.ts`: pure graph behavior with no CRC mount.
+- `packages/core/src/lib/signals/graph.test.ts`: pure graph behavior with no Pibbl mount.
 - `packages/core/src/lib/scheduler/types.ts`: private frame phases, snapshots, root jobs, advance registrations, completion work, traces, and driver types.
 - `packages/core/src/lib/scheduler/realm-scheduler.ts`: one realm registry, one host-frame owner, stable work ordering, six phases, staged signal commit, error isolation, and exact cancellation.
 - `packages/core/src/lib/scheduler/testing.ts`: source-only controlled driver, trace snapshots, and structural counters.
 - `packages/core/src/lib/scheduler/realm-scheduler.test.ts`: controlled multi-root and phase-order contract.
 - `packages/core/src/lib/signals/render-consumer.ts`: component/resource consumer ownership and revisioned invalidation adapters.
 - `packages/core/src/lib/hooks/use-signal.ts`: one stable writable signal per mounted hook slot.
-- `packages/core/src/lib/{mount-crc.ts,update.ts,execute-render.ts,render.ts,global-state.ts,types.ts}`: scheduler registration, render jobs, dependency collection, write guard, and teardown.
+- `packages/core/src/lib/{mount-pibbl.ts,update.ts,execute-render.ts,render.ts,global-state.ts,types.ts}`: scheduler registration, render jobs, dependency collection, write guard, and teardown.
 - `packages/core/src/lib/components/layer.ts`: retained-child dirty-revision checks before cache reuse.
 - `packages/core/src/internal.ts`: version-coupled official-package friend entry for the scheduler/consumer slice only.
 - `packages/scenarios/src/signals-lab.example.tsx` and `packages/scenarios/src/signals-lab.ts`: deterministic public signal laboratory.
@@ -69,7 +69,7 @@ The implementation must retain these distinctions:
 | Concern                       | Owner                                         | Observable consequence                                                 |
 | ----------------------------- | --------------------------------------------- | ---------------------------------------------------------------------- |
 | Signal value and source edges | Signal graph node                             | Survives mount disposal when application code retains it               |
-| Component read edges          | Exact `CRCComponentRefs` consumer             | Replaced after its next successful evaluation and detached on teardown |
+| Component read edges          | Exact `PibblComponentRefs` consumer           | Replaced after its next successful evaluation and detached on teardown |
 | Pending host callback         | Realm scheduler                               | One callback regardless of root count                                  |
 | Root replacement              | Exact mounted instance                        | Latest value captured for the next Begin snapshot                      |
 | Layer dirty work              | Nested Layer instance plus retained ancestors | Child surface updates before parent composite                          |
@@ -164,7 +164,7 @@ Keep the nominal key declaration private to the type module. Use a private
 `WeakSet<object>` or equivalent unforgeable registry for `isSignal`; do not add
 an enumerable public brand property.
 
-- [ ] **Step 4: Implement writable nodes without CRC coupling**
+- [ ] **Step 4: Implement writable nodes without Pibbl coupling**
 
 Normalize `equals` and `debugName` once at construction. `get()` calls the
 innermost synchronous dependency collector when one exists. `set()` evaluates
@@ -265,7 +265,7 @@ Detect `evaluating` re-entry and throw a deterministic error containing the
 available debug-name path, for example:
 
 ```text
-CRC computed cycle: viewport scale -> fitted width -> viewport scale
+Pibbl computed cycle: viewport scale -> fitted width -> viewport scale
 ```
 
 - [ ] **Step 4: Add observed-computed validation without public subscription**
@@ -399,7 +399,7 @@ removes all of its current-frame candidates before commit.
 - [ ] **Step 6: Centralize write guards**
 
 Computed evaluation calls
-`withSignalWriteForbidden(computedWriteErrorLabel(node), evaluate)`; CRC render
+`withSignalWriteForbidden(computedWriteErrorLabel(node), evaluate)`; Pibbl render
 uses the same primitive in Task 5. Public `set` and `update`, internal staged
 writes, and later animation control paths consult the shared stack and report
 contextual deterministic errors.
@@ -422,7 +422,7 @@ git commit -m "feat(core): add signal consumers and commit batches"
 - Create: `packages/core/src/lib/scheduler/testing.ts`
 - Create: `packages/core/src/lib/scheduler/realm-scheduler.test.ts`
 - Modify: `packages/core/src/lib/update.ts`
-- Modify: `packages/core/src/lib/mount-crc.ts`
+- Modify: `packages/core/src/lib/mount-pibbl.ts`
 - Modify: `packages/core/src/lib/execute-render.ts`
 - Modify: `packages/core/src/lib/global-state.ts`
 - Modify: `packages/core/src/lib/types.ts`
@@ -436,7 +436,7 @@ git commit -m "feat(core): add signal consumers and commit batches"
 - Consumes: Task 3 `SignalCommitBatch` and `flushPendingComputedValidations`.
 - Produces private `registerRootInstance`, `unregisterRootInstance`, `requestInstanceRender`, `registerAdvanceParticipant`, `queueFrameCompletion`, and `getCurrentFrameSnapshot`.
 - Produces source-only `ManualSchedulerDriver`, `installSchedulerDriverForTest`, and scheduler ownership snapshots.
-- Removes `CRCInstance.animationFrameId` and per-instance cancellation.
+- Removes `PibblInstance.animationFrameId` and per-instance cancellation.
 
 - [ ] **Step 1: Characterize current root scheduling before refactoring**
 
@@ -470,10 +470,10 @@ Add cases for:
 Use these phases and immutable snapshot:
 
 ```ts
-export type CRCFramePhase =
+export type PibblFramePhase =
   "idle" | "begin" | "advance" | "commit" | "plan" | "render" | "complete";
 
-export interface CRCFrameSnapshot {
+export interface PibblFrameSnapshot {
   readonly frameId: number;
   readonly hostTime: number;
   readonly logicalTime: number;
@@ -491,7 +491,7 @@ test interception.
 
 Keep `update(canvas, root?, updateParents?)` as the current private call site,
 but make it validate the mount, merge the latest pending root, and delegate to
-`requestInstanceRender`. Top-level `mountCRC` registers once in mount order;
+`requestInstanceRender`. Top-level `mountPibbl` registers once in mount order;
 cleanup unregisters once. A child instance follows its parent canvas until the
 top-level root and never enters the root registry.
 
@@ -555,7 +555,7 @@ Expected: one-frame structural tests and all existing selected contracts PASS.
 - [ ] **Step 9: Commit centralized scheduling**
 
 ```bash
-git add packages/core/src/lib/scheduler packages/core/src/lib/update.ts packages/core/src/lib/mount-crc.ts packages/core/src/lib/execute-render.ts packages/core/src/lib/global-state.ts packages/core/src/lib/types.ts packages/core/src/lib/hooks/use-state.test.ts packages/core/src/lib/components/img-async.test.ts packages/core/test/event-performance.test.ts
+git add packages/core/src/lib/scheduler packages/core/src/lib/update.ts packages/core/src/lib/mount-pibbl.ts packages/core/src/lib/execute-render.ts packages/core/src/lib/global-state.ts packages/core/src/lib/types.ts packages/core/src/lib/hooks/use-state.test.ts packages/core/src/lib/components/img-async.test.ts packages/core/test/event-performance.test.ts
 git commit -m "refactor(core): centralize frame scheduling"
 ```
 
@@ -575,14 +575,14 @@ git commit -m "refactor(core): centralize frame scheduling"
 
 - Consumes: Task 3 renderer consumers and Task 4 `requestInstanceRender`.
 - Produces public `useSignal(initialValue, options): WritableSignal<T>`.
-- Gives every non-fragment `CRCComponentRefs` one exact signal consumer.
+- Gives every non-fragment `PibblComponentRefs` one exact signal consumer.
 
 - [ ] **Step 1: Write failing public render-invalidation tests**
 
 Mount a component that reads `x.get()` into Rectangle style, then write `x`
 outside render. Assert no synchronous render, one scheduled frame, and one
 full-root traversal with the new value. Write the same value and assert no
-frame. Read a signal before constructing `crc(canvas, root)` and prove it is a
+frame. Read a signal before constructing `pibbl(canvas, root)` and prove it is a
 snapshot with no reactive dependency.
 
 Add a component with an equality-suppressing computed:
@@ -628,7 +628,7 @@ missing.
 
 Create the consumer when `prepareComponentScope` mounts and follow
 `componentRefs.teardowns`. Its invalidation callback verifies exact component
-and instance identity, then calls `requestInstanceRender(crcInstance)`.
+and instance identity, then calls `requestInstanceRender(pibblInstance)`.
 
 Collect reads across the component function or, for primitives, style
 resolution plus primitive callback. Commit the dependency set after that
@@ -640,7 +640,7 @@ consumers.
 - [ ] **Step 6: Guard the complete root render against signal writes**
 
 Invoke the existing root traversal as
-`withSignalWriteForbidden("CRC render", renderRoot)`. Keep `useState` behavior
+`withSignalWriteForbidden("Pibbl render", renderRoot)`. Keep `useState` behavior
 unchanged. Ensure cleanup, error recovery, nested Layer rendering, and
 render-transaction `finally` paths restore the guard stack.
 
@@ -715,7 +715,7 @@ root registry.
 In `renderLayer`, extend `shouldRender` with:
 
 ```ts
-hasPendingInstanceRender(layerCRC);
+hasPendingInstanceRender(layerPibbl);
 ```
 
 Capture the child's requested revision before invoking `executeRender`. Mark
@@ -773,7 +773,7 @@ git commit -m "feat(core): invalidate signal-driven layers"
 **Interfaces:**
 
 - Consumes: centralized frame snapshots, renderer consumers, exact teardowns, and revisioned work.
-- Produces the version-coupled `@crc/core/internal` scheduler/consumer capabilities needed by official sibling renderers.
+- Produces the version-coupled `@pibbl/core/internal` scheduler/consumer capabilities needed by official sibling renderers.
 - Does not promise a stable third-party plugin API or expose mutable `GLOBAL_STATE`.
 
 - [ ] **Step 1: Write failing fake-renderer phase tests**
@@ -797,60 +797,60 @@ next snapshot.
 corepack pnpm@11.21.0 exec vitest run packages/core/src/lib/scheduler/renderer-participant.test.ts --browser.headless --browser.ui=false
 ```
 
-Expected: FAIL because renderer participants and `@crc/core/internal` do not
+Expected: FAIL because renderer participants and `@pibbl/core/internal` do not
 exist.
 
 - [ ] **Step 3: Add focused internal capabilities**
 
 Expose operations through `src/internal.ts` with names prefixed
-`crcInternal*`, including:
+`pibblInternal*`, including:
 
 ```ts
 declare const internalRenderOwnerBrand: unique symbol;
 
-export interface CRCInternalRenderOwner {
+export interface PibblInternalRenderOwner {
   readonly [internalRenderOwnerBrand]: true;
 }
 
-export interface CRCInternalFrame {
+export interface PibblInternalFrame {
   readonly frameId: number;
   readonly logicalTime: number;
 }
 
-export type CRCInternalRendererWorkKind = "resource" | "draw" | "compose";
+export type PibblInternalRendererWorkKind = "resource" | "draw" | "compose";
 
-export interface CRCInternalSignalConsumer {
+export interface PibblInternalSignalConsumer {
   collect<T>(read: () => T): T;
   markClean(): void;
   dispose(): void;
 }
 
-export function crcInternalCurrentRenderOwner(): CRCInternalRenderOwner;
+export function pibblInternalCurrentRenderOwner(): PibblInternalRenderOwner;
 
-export function crcInternalCreateSignalConsumer(options: {
-  owner: CRCInternalRenderOwner;
+export function pibblInternalCreateSignalConsumer(options: {
+  owner: PibblInternalRenderOwner;
   debugName?: string;
   invalidate(): void;
-}): CRCInternalSignalConsumer;
+}): PibblInternalSignalConsumer;
 
-export function crcInternalRequestRendererWork(
-  owner: CRCInternalRenderOwner,
+export function pibblInternalRequestRendererWork(
+  owner: PibblInternalRenderOwner,
   request: {
     key: object;
-    kind: CRCInternalRendererWorkKind;
-    run(frame: CRCInternalFrame): void;
+    kind: PibblInternalRendererWorkKind;
+    run(frame: PibblInternalFrame): void;
   },
 ): void;
 
-export function crcInternalCurrentFrame(): CRCInternalFrame;
+export function pibblInternalCurrentFrame(): PibblInternalFrame;
 
-export function crcInternalQueueComplete(
-  owner: CRCInternalRenderOwner,
-  callback: (frame: CRCInternalFrame) => void,
+export function pibblInternalQueueComplete(
+  owner: PibblInternalRenderOwner,
+  callback: (frame: PibblInternalFrame) => void,
 ): void;
 ```
 
-`crcInternalCurrentRenderOwner` is valid only while evaluating a component and
+`pibblInternalCurrentRenderOwner` is valid only while evaluating a component and
 returns an opaque owner tied to its component teardown. Consumer collection
 replaces dependencies only on success. Renderer work coalesces by `key` within
 one owner/frame and runs in kind order while retaining stable registration order
@@ -861,7 +861,7 @@ during Plan/Render.
 Update the WebGL execution plan's friend-entry task from creating an independent
 entry to extending this entry with its backend traversal APIs. Specify that its
 `requestCurrentInstanceFrame(true)` adapter delegates to
-`crcInternalRequestRendererWork`, and replace the Task 11 phrase “existing
+`pibblInternalRequestRendererWork`, and replace the Task 11 phrase “existing
 instance rAF coalescing” with “realm scheduler coalescing.” Preserve the WebGL
 plan's backend, traversal, interaction, and resource contracts.
 
@@ -878,7 +878,7 @@ Import the internal types/functions in `playground/package-consumer/index.ts`,
 dynamically inspect their runtime presence from `runtime.mjs`, require
 `dist/internal.{d.ts,mjs,mjs.map}` in packed verification, and copy the updated
 consumer fixtures into the packed test. Assert source, built, and packed modes
-resolve `@crc/core/internal` while `@crc/core/lib/*` and `@crc/core/src/*`
+resolve `@pibbl/core/internal` while `@pibbl/core/lib/*` and `@pibbl/core/src/*`
 remain blocked. Verify the internal module contains no root public re-export and
 document in its declaration comments that it is reserved for official
 version-coupled packages.
@@ -919,7 +919,7 @@ git commit -m "feat(core): expose renderer scheduling internals"
 
 **Interfaces:**
 
-- Consumes: only public `@crc/core` signal and rendering APIs.
+- Consumes: only public `@pibbl/core` signal and rendering APIs.
 - Produces learning route `#/examples/start/signals` and lab route `#/testing/signals`.
 - Produces deterministic actions for direct write, equal write, computed-equal write, dependency switch, shared roots, Layer-local write, remove consumer, and reset.
 
@@ -948,7 +948,7 @@ implicit style binding.
 Metadata must explain:
 
 - `.get()` is the dependency declaration;
-- writing schedules one future CRC frame;
+- writing schedules one future Pibbl frame;
 - the style object contains ordinary resolved values;
 - a signal can be shared independently of a mount.
 
@@ -995,8 +995,8 @@ git commit -m "test(core): prove signals through public scenarios"
 - Modify: `playground/package-consumer/index.ts`
 - Modify: `playground/package-consumer/jsx.tsx`
 - Modify: `playground/package-consumer/runtime.mjs`
-- Modify: `playground/src/crc-editor-types.txt`
-- Modify: `tooling/crc-studio-runtime-entry.ts`
+- Modify: `playground/src/pibbl-editor-types.txt`
+- Modify: `tooling/pibbl-studio-runtime-entry.ts`
 - Modify: `tooling/verify-studio-types.mjs`
 - Create: `docs/design/signals-and-scheduling-contract.md`
 - Modify: `docs/design/runtime-hooks-contract.md`
@@ -1014,7 +1014,7 @@ git commit -m "test(core): prove signals through public scenarios"
 
 - [ ] **Step 1: Add failing type and runtime consumer assertions**
 
-Import all signal types and runtime values from `@crc/core`. Prove generic
+Import all signal types and runtime values from `@pibbl/core`. Prove generic
 inference, readonly narrowing, function-valued signals, computed values, and
 hook use. Include deliberate failures:
 
@@ -1024,14 +1024,14 @@ const readonlyX: Signal<number> = x.asReadonly();
 
 // @ts-expect-error readonly signals do not expose writes
 readonlyX.set(2);
-// @ts-expect-error CRC style accepts resolved numbers, not signal containers
+// @ts-expect-error Pibbl style accepts resolved numbers, not signal containers
 const badStyle: RectStyle = { x, width: 10, height: 10 };
 // @ts-expect-error computed values are readonly
 computed(() => x.get() * 2).update((value) => value + 1);
 ```
 
 Update the runtime export inventory for `signal`, `computed`, `untracked`,
-`isSignal`, and `useSignal`; verify `@crc/core/internal` independently rather
+`isSignal`, and `useSignal`; verify `@pibbl/core/internal` independently rather
 than adding its values to the root inventory.
 
 - [ ] **Step 2: Run package and Studio checks and confirm stale surfaces**
@@ -1048,9 +1048,9 @@ the missing signal names or internal entry.
 - [ ] **Step 3: Update declarations and Studio runtime entries**
 
 Regenerate/copy built declarations into the existing marked modules in
-`playground/src/crc-editor-types.txt`, add the five runtime values and four
+`playground/src/pibbl-editor-types.txt`, add the five runtime values and four
 public types to the exact Studio manifests, and re-export the runtime values
-from `tooling/crc-studio-runtime-entry.ts`. Keep `@crc/core/internal` unavailable
+from `tooling/pibbl-studio-runtime-entry.ts`. Keep `@pibbl/core/internal` unavailable
 to ordinary Studio examples.
 
 - [ ] **Step 4: Write the normative implemented contracts**
@@ -1082,7 +1082,7 @@ Expected: all seven checks PASS.
 - [ ] **Step 6: Commit the public surface and current contracts**
 
 ```bash
-git add packages/core/type-tests/final-public-vocabulary.tsx playground/package-consumer/index.ts playground/package-consumer/jsx.tsx playground/package-consumer/runtime.mjs playground/src/crc-editor-types.txt tooling/crc-studio-runtime-entry.ts tooling/verify-studio-types.mjs docs/design/signals-and-scheduling-contract.md docs/design/runtime-hooks-contract.md docs/design/canvas-surface-contract.md docs/design/runtime-resource-ownership.md docs/api-reference.md docs/guides/state-lifecycle-and-react-differences.md docs/library-status.md AGENTS.md
+git add packages/core/type-tests/final-public-vocabulary.tsx playground/package-consumer/index.ts playground/package-consumer/jsx.tsx playground/package-consumer/runtime.mjs playground/src/pibbl-editor-types.txt tooling/pibbl-studio-runtime-entry.ts tooling/verify-studio-types.mjs docs/design/signals-and-scheduling-contract.md docs/design/runtime-hooks-contract.md docs/design/canvas-surface-contract.md docs/design/runtime-resource-ownership.md docs/api-reference.md docs/guides/state-lifecycle-and-react-differences.md docs/library-status.md AGENTS.md
 git commit -m "docs: publish signals and scheduler contracts"
 ```
 

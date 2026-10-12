@@ -2,8 +2,8 @@
 
 Status: implemented, 2026-10-01.
 
-CRC texture production is authored through `defineTexture()` and mounted through
-`useTexture()` from `@crc/core`. `@crc/textures` is an optional package of
+Pibbl texture production is authored through `defineTexture()` and mounted through
+`useTexture()` from `@pibbl/core`. `@pibbl/core/textures` is an optional package of
 recipes and existing texture components; it has no scheduler of its own and
 does not import the core friend entry. Creating a recipe or importing either
 package is inert. A mounted `useTexture` hook owns the live resource.
@@ -20,7 +20,7 @@ const texture = useTexture(recipe(options));
 
 `TextureContext.canvas` is the stable producer canvas. Recipe callbacks may use
 it synchronously during `create`, `update`, `receive`, `advance`, `rasterize`,
-and `dispose`. They cannot call CRC hooks. `invalidate()` marks source pixels
+and `dispose`. They cannot call Pibbl hooks. `invalidate()` marks source pixels
 dirty and `requestFrame()` asks the realm scheduler for another frame; stopping
 is the recipe's choice not to request another frame. Recipe factories clone
 their configuration and allocate no canvas or scheduler participant.
@@ -35,9 +35,9 @@ The public surface never exposes the producer canvas or a committed source
 raster.
 
 `send(message)` queues a structured-cloned message for the next eligible frame.
-It is forbidden during CRC evaluation, rejects a recipe without `receive`, and
+It is forbidden during Pibbl evaluation, rejects a recipe without `receive`, and
 is inert after disposal. Messages are bounded at 8192. A texture may be shared
-between consumers in its owning CRC root tree, including nested Layers; a
+between consumers in its owning Pibbl root tree, including nested Layers; a
 foreign-root or disposed value rejects when rendered. A texture resource has
 one producer regardless of how many paints or filters consume it.
 
@@ -64,7 +64,7 @@ failure does not promise rollback of already committed texture pixels.
 
 Recipe `advance` receives logical frame time and a nonnegative delta. Recipes
 that pause or otherwise change timing policy establish their own fresh baseline
-through their state; CRC does not preserve a generic simulation rollback or
+through their state; Pibbl does not preserve a generic simulation rollback or
 checkpoint. The scheduler, rather than a recipe-owned `requestAnimationFrame`,
 owns all continuing work.
 
@@ -77,7 +77,7 @@ dimensions, revision, resource identity, and placement. Consumers must not
 retain, transfer, mutate, or expose that source; a GPU consumer may retain only
 its own derived upload keyed to the resource/revision.
 
-`displacement()` from `@crc/core/filters` accepts a texture `map`, a finite
+`displacement()` from `@pibbl/core/filters` accepts a texture `map`, a finite
 nonnegative logical `strength`, and a finite positive logical `region`. Red and
 green encode signed horizontal and vertical offsets, alpha weights the offset,
 and blue is ignored unless optional `blurRadius` is positive. Blue times alpha then scales a local mip-filtered 5×5 binomial blur support radius; it is not Gaussian sigma. Map placement is evaluated in the documented logical
@@ -92,7 +92,7 @@ release invalid GPU handles on context loss, and invalidate consumers on restore
 Cross-context sharing and a generic public texture consumer protocol remain outside
 the public contract.
 
-`waterWaves()` in `@crc/textures` is an optional numeric RG displacement-map
+`waterWaves()` in `@pibbl/core/textures` is an optional numeric RG displacement-map
 recipe. It produces periodic integer-wave fields, accepts finite nonnegative
 speed and integer scale 1 through 32, rejects palettes, and supports `pause`
 and `reset` messages, plus normalized `ripple` impulses. `rippleStrength` changes
@@ -109,28 +109,28 @@ slower propagation with increased damping; it is an artistic control rather than
 physical density or a mass-conserving fluid model. Changes preserve the existing
 field and paused state. The dedicated WASM memory is fixed in size for that grid.
 
-`reflectedLight()` accepts a color, decoded caller-owned image, or CRC texture
+`reflectedLight()` accepts a color, decoded caller-owned image, or Pibbl texture
 paint. It blends light selectively from the displacement-map slope, preserves
 scene alpha, and never closes a caller-owned image. Its opacity is independent of
 wave strength. An immediately preceding `displacement()` fuses into one GPU pass
-and bitmap transfer. Solid color or texture surface overlays use ordinary CRC
+and bitmap transfer. Solid color or texture surface overlays use ordinary Pibbl
 paint and opacity inside the filtered composition, with `pointerEvents="none"`.
 
 ## Existing texture components
 
 `ReactionDiffusion`, `ProceduralTexture`, `TextureRenderer`, and
-`texturePalettes` remain public `@crc/textures` exports. Each mounted legacy
+`texturePalettes` remain public `@pibbl/core/textures` exports. Each mounted legacy
 component owns an independent render-layer resource and source raster; it does
 not become a shared live `Texture` resource. Importing it is inert, and its
 render-layer lifecycle continues to own creation, resize, rendering, and
 disposal. `ReactionDiffusion` keeps its documented double-buffered periodic
 Gray--Scott field, bounded fixed-step timing, fresh-baseline pause/reset
-behavior, and CRC-routed primary-pointer brush queue. It advances only through
+behavior, and Pibbl-routed primary-pointer brush queue. It advances only through
 the supplied frame invalidator, never by a second scheduler loop.
 
-CRC resolves one topmost target and supplies layer-local pointer coordinates.
+Pibbl resolves one topmost target and supplies layer-local pointer coordinates.
 The default brush mapping scales the displayed rectangle into the simulation.
-A single primary pointer is captured through CRC; release/cancel ends the stroke.
+A single primary pointer is captured through Pibbl; release/cancel ends the stroke.
 Stamps interpolate movement and clip to the field, without clamping out-of-bounds
 points to its edge. Brush settings are snapshotted into each queued stamp. Work is
 bounded to 4096 stamps per event and 8192 queued stamps; pathological overload can
@@ -153,7 +153,7 @@ Canvas state is restored on failure; they may draw it repeatedly but must not
 mutate, transfer, retain, or dispose it. Legacy display remapping does not
 remap brush interaction. Component disposal releases fields, rasters, queues,
 captures, and callbacks exactly once; duplicate disposal is inert. Legacy
-render failures preserve CRC's last committed render-layer generation and do
+render failures preserve Pibbl's last committed render-layer generation and do
 not promise simulation-state rollback. Invalid legacy inputs remain actionable
 errors.
 
@@ -166,7 +166,7 @@ owned canvases, and invokes recipe disposal once. A filter borrower never owns
 or disposes the texture resource. Filter removal releases its GPU borrow but
 does not dispose an independently mounted texture.
 
-Validation and raster errors are actionable render errors. CRC preserves the
+Validation and raster errors are actionable render errors. Pibbl preserves the
 last successful texture publication where one exists, but it does not provide
 transactional rollback for arbitrary producer state or an all-Canvas-frame
 atomicity guarantee.
@@ -190,7 +190,7 @@ constitute a guarantee of physical fluid accuracy or two-way scene physics.
 
 The marble, paper, cellular, reaction-diffusion, tendrils, lightning, waterWaves,
 and waterSurface kernels execute in WASM.
-Configuration, lifecycle callbacks, and scheduling remain ordinary CRC code.
+Configuration, lifecycle callbacks, and scheduling remain ordinary Pibbl code.
 There is no runtime backend selector or JavaScript fallback for these kernels.
 Water solver stepping, wave generation, obstacle masks and wakes, and RGBA
 rasterization all execute in WASM. Canvas presentation and filter GPU passes

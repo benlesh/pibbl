@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { tutorialSnapshotCatalog } from "@crc/scenarios";
+import { tutorialSnapshotCatalog } from "@pibbl/scenarios";
 import {
   encodeCodeRoute,
   MAX_SHARED_URL_LENGTH,
@@ -81,9 +81,9 @@ describe("learning example sandbox modules", () => {
     runtime: Readonly<Record<string, unknown>>,
     canvasElement: unknown,
   ): unknown {
-    const sandboxGlobal = { CRC_CORE: runtime } as {
-      CRC_CORE: Readonly<Record<string, unknown>>;
-      __CRC_EXAMPLE_MOUNT__?: (canvas: unknown) => unknown;
+    const sandboxGlobal = { PIBBL_CORE: runtime } as {
+      PIBBL_CORE: Readonly<Record<string, unknown>>;
+      __PIBBL_EXAMPLE_MOUNT__?: (canvas: unknown) => unknown;
     };
     const execute = new Function(
       "globalThis",
@@ -92,7 +92,7 @@ describe("learning example sandbox modules", () => {
        try {
          ${toRunnableScript(emittedCode)}
          const canvas = canvasElement;
-         controller = globalThis.__CRC_EXAMPLE_MOUNT__(canvas);
+         controller = globalThis.__PIBBL_EXAMPLE_MOUNT__(canvas);
        } finally {}
        return controller;`,
     ) as (globalValue: typeof sandboxGlobal, canvas: unknown) => unknown;
@@ -102,24 +102,24 @@ describe("learning example sandbox modules", () => {
   it("executes multiline root and runtime imports with aliases and comments", () => {
     const canvasElement = { id: "preview" };
     const runtime = {
-      crc: (canvas: unknown, node: unknown) => ({ canvas, node }),
+      pibbl: (canvas: unknown, node: unknown) => ({ canvas, node }),
       jsx: (type: unknown, props: unknown) => ({ type, props }),
       Text: "text-component",
     };
 
     const emittedCode = `
 import {
-  crc /* root alias */ as CRC_CORE,
+  pibbl /* root alias */ as PIBBL_CORE,
   Text as controller,
-} from "@crc/core";
+} from "@pibbl/core";
 import {
-  jsx as /* compiler alias */ __crcStudioRuntime,
-} from "@crc/core/jsx-runtime";
-import { Fragment as canvas } from "@crc/core/jsx-dev-runtime";
+  jsx as /* compiler alias */ __pibblStudioRuntime,
+} from "@pibbl/core/jsx-runtime";
+import { Fragment as canvas } from "@pibbl/core/jsx-dev-runtime";
 const literal = "import this and preserve export {}";
 const template = \`export \${"import"} text\`;
 export default function mount(/* before */ canvas /* after */) {
-  return CRC_CORE(canvas, __crcStudioRuntime(controller, { children: [literal, template] }));
+  return PIBBL_CORE(canvas, __pibblStudioRuntime(controller, { children: [literal, template] }));
 }
 export /* empty module sentinel */ {};
 `;
@@ -147,19 +147,19 @@ export /* empty module sentinel */ {};
   it("executes combined automatic and development runtime aliases", () => {
     const result = executeSandbox(
       `
-import { jsx as _jsx, jsxs as _jsxs } from "@crc/core/jsx-runtime";
-import { jsxDEV as _jsxDEV } from "@crc/core/jsx-dev-runtime";
-import { crc, Rectangle, Text } from "@crc/core";
+import { jsx as _jsx, jsxs as _jsxs } from "@pibbl/core/jsx-runtime";
+import { jsxDEV as _jsxDEV } from "@pibbl/core/jsx-dev-runtime";
+import { pibbl, Rectangle, Text } from "@pibbl/core";
 export default function mount(canvas) {
-  return crc(canvas, [
+  return pibbl(canvas, [
     _jsx(Rectangle, { style: { width: 2, height: 2 } }),
-    _jsxs(Text, { children: ["CRC ", 1] }),
+    _jsxs(Text, { children: ["Pibbl ", 1] }),
     _jsxDEV(Rectangle, { style: { width: 4, height: 4 } }, undefined, false, undefined, undefined),
   ]);
 }
 `,
       {
-        crc: (_canvas: unknown, node: unknown) => node,
+        pibbl: (_canvas: unknown, node: unknown) => node,
         jsx: (type: unknown, props: unknown) => ({ kind: "jsx", type, props }),
         jsxs: (type: unknown, props: unknown) => ({
           kind: "jsxs",
@@ -187,17 +187,17 @@ export default function mount(canvas) {
   it("executes core and Three-adapter imports through one Studio runtime", () => {
     const result = executeSandbox(
       `
-import { crc } from "@crc/core";
-import { defineThreeLayer } from "@crc/three";
+import { pibbl } from "@pibbl/core";
+import { defineThreeLayer } from "@pibbl/three";
 const ProductScene = defineThreeLayer({ create() {} });
 export default function mount(canvas) {
-  return crc(canvas, ProductScene);
+  return pibbl(canvas, ProductScene);
 }
 `,
       {
-        crc: (_canvas: unknown, node: unknown) => node,
-        __crcStudioModules: {
-          "@crc/three": {
+        pibbl: (_canvas: unknown, node: unknown) => node,
+        __pibblStudioModules: {
+          "@pibbl/three": {
             defineThreeLayer: (definition: unknown) => ({
               kind: "three-layer",
               definition,
@@ -216,9 +216,9 @@ export default function mount(canvas) {
   it("executes core and particle imports through one Studio runtime", () => {
     const result = executeSandbox(
       `
-import { crc } from "@crc/core";
-import { jsx as _jsx } from "@crc/core/jsx-runtime";
-import { Particles2D, defineParticleEffect2D, particleRange } from "@crc/particles";
+import { pibbl } from "@pibbl/core";
+import { jsx as _jsx } from "@pibbl/core/jsx-runtime";
+import { Particles2D, defineParticleEffect2D, particleRange } from "@pibbl/core/particles";
 const effect = defineParticleEffect2D({
   emitters: [{
     name: "spark",
@@ -230,11 +230,11 @@ const effect = defineParticleEffect2D({
   }],
 });
 export default function mount(canvas) {
-  return crc(canvas, _jsx(Particles2D, { effect, style: { width: 320, height: 180 } }));
+  return pibbl(canvas, _jsx(Particles2D, { effect, style: { width: 320, height: 180 } }));
 }
 `,
       {
-        crc: (_canvas: unknown, node: unknown) => node,
+        pibbl: (_canvas: unknown, node: unknown) => node,
         jsx: (type: unknown, props: unknown) => ({ type, props }),
         Particles2D: "particles-component",
         defineParticleEffect2D: (effect: unknown) => effect,
@@ -263,8 +263,8 @@ export default function mount(canvas) {
 
     const result = executeSandbox(
       `
-import { crc } from "@crc/core";
-import { defineThreeLayer } from "@crc/three";
+import { pibbl } from "@pibbl/core";
+import { defineThreeLayer } from "@pibbl/three";
 import {
   Color,
   HemisphereLight,
@@ -288,13 +288,13 @@ const Layer = defineThreeLayer({
   },
 });
 export default function mount(canvas) {
-  return crc(canvas, Layer);
+  return pibbl(canvas, Layer);
 }
 `,
       {
-        crc: (_canvas: unknown, node: unknown) => node,
-        __crcStudioModules: {
-          "@crc/three": { defineThreeLayer },
+        pibbl: (_canvas: unknown, node: unknown) => node,
+        __pibblStudioModules: {
+          "@pibbl/three": { defineThreeLayer },
           three: {
             Color: ThreeValue,
             HemisphereLight: ThreeValue,
@@ -320,8 +320,8 @@ export default function mount(canvas) {
   });
 
   it.each([
-    'import { Scene } from "@crc/three";',
-    'import { Scene } from "@crc/three/internal";',
+    'import { Scene } from "@pibbl/three";',
+    'import { Scene } from "@pibbl/three/internal";',
     'import { WebGPURenderer } from "three";',
     'import { Scene } from "three/src/scenes/Scene.js";',
     'import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";',
@@ -337,19 +337,19 @@ export default function mount(canvas) {
   it("executes the exact public physics entries through one Studio runtime", () => {
     const result = executeSandbox(
       `
-import { crc } from "@crc/core";
-import { jsx as _jsx } from "@crc/core/jsx-runtime";
-import { PhysicsWorld2D, dynamicBody2D } from "@crc/physics/2d";
-import { circleShape2D } from "@crc/physics/2d/geometry";
+import { pibbl } from "@pibbl/core";
+import { jsx as _jsx } from "@pibbl/core/jsx-runtime";
+import { PhysicsWorld2D, dynamicBody2D } from "@pibbl/core/physics/2d";
+import { circleShape2D } from "@pibbl/core/physics/2d/geometry";
 export default function mount(canvas) {
-  return crc(canvas, _jsx(PhysicsWorld2D, {
+  return pibbl(canvas, _jsx(PhysicsWorld2D, {
     gravity: [0, 600],
     children: dynamicBody2D({ collider: circleShape2D({ radius: 12 }) }),
   }));
 }
 `,
       {
-        crc: (_canvas: unknown, node: unknown) => node,
+        pibbl: (_canvas: unknown, node: unknown) => node,
         jsx: (type: unknown, props: unknown) => ({ type, props }),
         PhysicsWorld2D: "physics-world-component",
         dynamicBody2D: (options: unknown) => ({ kind: "dynamic", options }),
@@ -375,12 +375,12 @@ export default function mount(canvas) {
 
   it.each([
     'import external from "external";',
-    'import * as CRC from "@crc/core";',
-    'import CRC from "@crc/core";',
-    'import { jsx } from "@crc/core/private-runtime";',
-    'import { jsx } from "@crc/three/jsx-runtime";',
-    'import "@crc/core";',
-    'import type { CRCNode } from "@crc/core";',
+    'import * as Pibbl from "@pibbl/core";',
+    'import Pibbl from "@pibbl/core";',
+    'import { jsx } from "@pibbl/core/private-runtime";',
+    'import { jsx } from "@pibbl/three/jsx-runtime";',
+    'import "@pibbl/core";',
+    'import type { PibblNode } from "@pibbl/core";',
   ])("rejects unsupported emitted module syntax: %s", (statement) => {
     expect(() =>
       toRunnableScript(
@@ -390,31 +390,31 @@ export default function mount(canvas) {
   });
 
   it.each([
-    'const runtime = import("@crc/core/jsx-runtime");',
-    'async function load() { return import("@crc/core"); }',
+    'const runtime = import("@pibbl/core/jsx-runtime");',
+    'async function load() { return import("@pibbl/core"); }',
   ])("rejects dynamic imports in any lexical context: %s", (statement) => {
     expect(() =>
       toRunnableScript(
-        `import { crc } from "@crc/core";\n${statement}\nexport default function mount(canvas) { return canvas; }`,
+        `import { pibbl } from "@pibbl/core";\n${statement}\nexport default function mount(canvas) { return canvas; }`,
       ),
     ).toThrow();
   });
 
   it.each([
-    "export { crc };",
-    'export * from "@crc/core";',
+    "export { pibbl };",
+    'export * from "@pibbl/core";',
     "export const extra = 1;",
     "export default canvas => canvas;",
     "export default function mount(canvas) { return canvas; }\nexport {};\nexport {};",
   ])("rejects malformed or extra exports: %s", (exportSource) => {
     expect(() =>
-      toRunnableScript(`import { crc } from "@crc/core";\n${exportSource}`),
+      toRunnableScript(`import { pibbl } from "@pibbl/core";\n${exportSource}`),
     ).toThrow(/default mount\(canvas\)/u);
   });
 
   it.each([
-    'import { crc } from "@crc/core";\nimport { jsx as crc } from "@crc/core/jsx-runtime";',
-    'import { crc, crc } from "@crc/core";',
+    'import { pibbl } from "@pibbl/core";\nimport { jsx as pibbl } from "@pibbl/core/jsx-runtime";',
+    'import { pibbl, pibbl } from "@pibbl/core";',
   ])("rejects duplicate local import bindings: %s", (imports) => {
     expect(() =>
       toRunnableScript(
@@ -432,18 +432,18 @@ export default function mount(canvas) {
     "export default function mount(canvas) { return canvas; }\nexport default function mount(canvas) { return canvas; }",
   ])("requires exactly one default mount(canvas) export", (mountSource) => {
     expect(() =>
-      toRunnableScript(`import { crc } from "@crc/core";\n${mountSource}`),
+      toRunnableScript(`import { pibbl } from "@pibbl/core";\n${mountSource}`),
     ).toThrow(/default mount\(canvas\)/u);
   });
 
   it("does not reinterpret module-looking text in strings, templates, or comments", () => {
     const emittedCode = `
-import { crc } from "@crc/core";
+import { pibbl } from "@pibbl/core";
 // import external from "external"; export const nope = true;
 const stringValue = "import this; export {};";
 const templateValue = \`dynamic import("external") and export default\`;
 export default function mount(canvas /* retained comment */) {
-  return crc(canvas, { stringValue, templateValue });
+  return pibbl(canvas, { stringValue, templateValue });
 }
 `;
     const runnable = toRunnableScript(emittedCode);

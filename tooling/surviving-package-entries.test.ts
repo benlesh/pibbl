@@ -3,37 +3,31 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
 const repositoryRoot = fileURLToPath(new URL("../", import.meta.url));
+const manifest = (name: string) => JSON.parse(readFileSync(`${repositoryRoot}/packages/${name}/package.json`, "utf8"));
 
-function manifest(relativePath: string): {
-  exports: Record<string, unknown>;
-  peerDependencies?: Record<string, string>;
-} {
-  return JSON.parse(
-    readFileSync(new URL(relativePath, import.meta.url), "utf8"),
-  );
-}
-
-describe("surviving optional package entries", () => {
-  it("publishes Canvas particles without a WebGL peer or entry", () => {
-    const particles = manifest("../packages/particles/package.json");
-    expect(Object.keys(particles.exports)).toEqual([".", "./package.json"]);
-    expect(particles.peerDependencies).toEqual({ "@crc/core": "0.0.1" });
+describe("consolidated package entries", () => {
+  it("publishes optional features as core subpaths without runtime dependencies", () => {
+    const core = manifest("core");
+    for (const entry of ["particles", "viz", "textures", "physics/2d", "physics/2d/geometry", "physics/2d/testing"])
+      expect(core.exports[`./${entry}`]).toBeDefined();
+    expect(core.exports["./physics"]).toBeUndefined();
+    expect(core.exports["./physics/3d"]).toBeUndefined();
+    expect(core.exports["./physics/3d/geometry"]).toBeUndefined();
+    expect(core.dependencies ?? {}).toEqual({});
+    expect(core.devDependencies["@dimforge/rapier2d-compat"]).toBe("0.21.0");
+    expect(core.sideEffects).toBe(false);
   });
-
-  it("publishes 2D physics and pure 3D geometry without a renderer peer", () => {
-    const physics = manifest("../packages/physics/package.json");
-    expect(Object.keys(physics.exports)).toEqual([
-      "./2d",
-      "./2d/geometry",
-      "./2d/testing",
-      "./3d/geometry",
-    ]);
-    expect(physics.peerDependencies).toEqual({ "@crc/core": "0.0.1" });
+  it("keeps Three as an adapter with the application's renderer peer", () => {
+    expect(manifest("three").peerDependencies).toEqual({ "@pibbl/core": manifest("core").version, three: "^0.186.0" });
   });
-
-  it("does not include the retired renderer package", () => {
-    expect(existsSync(`${repositoryRoot}/packages/webgl/package.json`)).toBe(
-      false,
-    );
+  it("keeps text and Three versions and exact core peers in lockstep", () => {
+    for (const name of ["three", "text"]) {
+      expect(manifest(name).version).toBe(manifest("core").version);
+      expect(manifest(name).peerDependencies["@pibbl/core"]).toBe(manifest("core").version);
+    }
+  });
+  it("does not publish retired feature, types, or renderer packages", () => {
+    for (const name of ["particles", "physics", "viz", "textures", "types", "webgl"])
+      expect(existsSync(`${repositoryRoot}/packages/${name}/package.json`)).toBe(false);
   });
 });

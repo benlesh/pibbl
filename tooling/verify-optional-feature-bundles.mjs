@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { gzipSync } from "node:zlib";
 import { execFileSync } from "node:child_process";
 import {
+  existsSync,
   mkdtempSync,
   mkdirSync,
   readFileSync,
@@ -15,7 +16,17 @@ import { build as esbuild, version as esbuildVersion } from "esbuild";
 import { build as vite } from "vite";
 
 const root = resolve(import.meta.dirname, "..");
-const temp = mkdtempSync(join(tmpdir(), "crc-optional-bundles-"));
+// A selected WASM recipe must not retain another recipe's embedded kernel.
+const wasmKernels = Object.fromEntries(
+  ["marble", "paper", "cellular", "ink"].flatMap((name) => {
+    const path = join(root, `packages/core/src/features/textures/lib/wasm/${name}-bytes.ts`);
+    if (!existsSync(path)) return [];
+    const match = readFileSync(path, "utf8").match(/bytes = "([^"]+)"/);
+    assert.ok(match, `Cannot inspect ${name} WASM kernel`);
+    return [[name, match[1]]];
+  }),
+);
+const temp = mkdtempSync(join(tmpdir(), "pibbl-optional-bundles-"));
 const store = dirname(
   parse(readFileSync(join(root, "node_modules/.modules.yaml"), "utf8"))
     .storeDir,
@@ -29,44 +40,46 @@ const pnpm = (args, cwd = root) =>
 
 // Observable public mounts keep the entire selected feature path live.
 const fixtures = {
-  plain: `import { crc, createElement, Group, Rectangle, Text } from '@crc/core'; export function mount(canvas) { return crc(canvas, createElement(Group, { children: [createElement(Rectangle, { style: { width: 40, height: 40, fill: 'red' } }), createElement(Text, { children: 'Plain' })] })); }`,
-  layer: `import { crc, createElement, Layer, Rectangle } from '@crc/core'; export function mount(canvas) { return crc(canvas, createElement(Layer, { children: createElement(Rectangle, { style: { width: 40, height: 40, fill: 'red' } }) })); }`,
-  blur: `import { crc, createElement, Rectangle } from '@crc/core'; import { blur } from '@crc/core/filters'; export function mount(canvas) { return crc(canvas, createElement(Rectangle, { style: { width: 40, height: 40, fill: 'red', filter: blur({ radius: 2 }) } })); }`,
-  marble: `import { crc, createElement, Rectangle, useTexture } from '@crc/core'; import { marble } from '@crc/textures'; function Scene() { const map = useTexture(marble({ seed: 1 })); return createElement(Rectangle, { style: { width: 40, height: 40, fill: map } }); } export function mount(canvas) { return crc(canvas, createElement(Scene, {})); }`,
-  water: `import { crc, createElement, Rectangle, useTexture } from '@crc/core'; import { waterWaves } from '@crc/textures'; function Scene() { const map = useTexture(waterWaves({ seed: 1 })); return createElement(Rectangle, { style: { width: 40, height: 40, fill: map } }); } export function mount(canvas) { return crc(canvas, createElement(Scene, {})); }`,
-  displacement: `import { crc, createElement, Rectangle, defineTexture, useTexture } from '@crc/core'; import { displacement } from '@crc/core/filters'; const recipe=defineTexture({create(){return {}},rasterize(_, { canvas }){const c=canvas.getContext('2d'); c.fillStyle='rgb(128 128 128)'; c.fillRect(0,0,canvas.width,canvas.height);}}); function Scene() { const map=useTexture(recipe({})); return createElement(Rectangle, { style: { width: 40, height: 40, fill: 'red', filter: displacement({ map, strength: 2, region: { x: 0, y: 0, width: 40, height: 40 } }) } }); } export function mount(canvas) { return crc(canvas, createElement(Scene, {})); }`,
-  waterSurface: `import { crc, createElement, Rectangle, useTexture } from '@crc/core'; import { waterSurface } from '@crc/textures'; function Scene() { const map = useTexture(waterSurface({ seed: 1 })); return createElement(Rectangle, { style: { width: 40, height: 40, fill: map } }); } export function mount(canvas) { return crc(canvas, createElement(Scene, {})); }`,
-  reflection: `import { crc, createElement, Rectangle, defineTexture, useTexture } from '@crc/core'; import { reflectedLight } from '@crc/core/filters'; const recipe=defineTexture({create(){return {}},rasterize(_, { canvas }){const c=canvas.getContext('2d'); c.fillStyle='rgb(255 128 128)'; c.fillRect(0,0,canvas.width,canvas.height);}}); function Scene() { const map=useTexture(recipe({})); return createElement(Rectangle, { style: { width: 40, height: 40, fill: 'red', filter: reflectedLight({ map, region: { x: 0, y: 0, width: 40, height: 40 } }) } }); } export function mount(canvas) { return crc(canvas, createElement(Scene, {})); }`,
-  animation: `import { usePlayback } from '@crc/core'; globalThis.keep=usePlayback;`,
-  coreImportOnly: `import '@crc/core';`,
-  filtersImportOnly: `import '@crc/core/filters';`,
-  texturesImportOnly: `import '@crc/textures';`,
+  plain: `import { pibbl, createElement, Group, Rectangle, Text } from '@pibbl/core'; export function mount(canvas) { return pibbl(canvas, createElement(Group, { children: [createElement(Rectangle, { style: { width: 40, height: 40, fill: 'red' } }), createElement(Text, { children: 'Plain' })] })); }`,
+  layer: `import { pibbl, createElement, Layer, Rectangle } from '@pibbl/core'; export function mount(canvas) { return pibbl(canvas, createElement(Layer, { children: createElement(Rectangle, { style: { width: 40, height: 40, fill: 'red' } }) })); }`,
+  blur: `import { pibbl, createElement, Rectangle } from '@pibbl/core'; import { blur } from '@pibbl/core/filters'; export function mount(canvas) { return pibbl(canvas, createElement(Rectangle, { style: { width: 40, height: 40, fill: 'red', filter: blur({ radius: 2 }) } })); }`,
+  marble: `import { pibbl, createElement, Rectangle, useTexture } from '@pibbl/core'; import { marble } from '@pibbl/core/textures'; function Scene() { const map = useTexture(marble({ seed: 1 })); return createElement(Rectangle, { style: { width: 40, height: 40, fill: map } }); } export function mount(canvas) { return pibbl(canvas, createElement(Scene, {})); }`,
+  water: `import { pibbl, createElement, Rectangle, useTexture } from '@pibbl/core'; import { waterWaves } from '@pibbl/core/textures'; function Scene() { const map = useTexture(waterWaves({ seed: 1 })); return createElement(Rectangle, { style: { width: 40, height: 40, fill: map } }); } export function mount(canvas) { return pibbl(canvas, createElement(Scene, {})); }`,
+  displacement: `import { pibbl, createElement, Rectangle, defineTexture, useTexture } from '@pibbl/core'; import { displacement } from '@pibbl/core/filters'; const recipe=defineTexture({create(){return {}},rasterize(_, { canvas }){const c=canvas.getContext('2d'); c.fillStyle='rgb(128 128 128)'; c.fillRect(0,0,canvas.width,canvas.height);}}); function Scene() { const map=useTexture(recipe({})); return createElement(Rectangle, { style: { width: 40, height: 40, fill: 'red', filter: displacement({ map, strength: 2, region: { x: 0, y: 0, width: 40, height: 40 } }) } }); } export function mount(canvas) { return pibbl(canvas, createElement(Scene, {})); }`,
+  animation: `import { usePlayback } from '@pibbl/core'; globalThis.keep=usePlayback;`,
+  coreImportOnly: `import '@pibbl/core';`,
+  filtersImportOnly: `import '@pibbl/core/filters';`,
+  texturesImportOnly: `import '@pibbl/core/textures';`,
+
+  waterSurface: `import { pibbl, createElement, Rectangle, useTexture } from '@pibbl/core'; import { waterSurface } from '@pibbl/core/textures'; function Scene() { const map = useTexture(waterSurface({ seed: 1 })); return createElement(Rectangle, { style: { width: 40, height: 40, fill: map } }); } export function mount(canvas) { return pibbl(canvas, createElement(Scene, {})); }`,
+  reflection: `import { pibbl, createElement, Rectangle, defineTexture, useTexture } from '@pibbl/core'; import { reflectedLight } from '@pibbl/core/filters'; const recipe=defineTexture({create(){return {}},rasterize(_, { canvas }){const c=canvas.getContext('2d'); c.fillStyle='rgb(255 128 128)'; c.fillRect(0,0,canvas.width,canvas.height);}}); function Scene() { const map=useTexture(recipe({})); return createElement(Rectangle, { style: { width: 40, height: 40, fill: 'red', filter: reflectedLight({ map, region: { x: 0, y: 0, width: 40, height: 40 } }) } }); } export function mount(canvas) { return pibbl(canvas, createElement(Scene, {})); }`,
 };
+
+for (const [name, factory] of [["paper", "paper"], ["cellular", "cellular"], ["ink", "reactionDiffusion"]]) {
+  fixtures[name] = fixtures.marble.replaceAll("marble", factory);
+}
 
 const normalized = (path) => path.replaceAll("\\", "/");
 const sourceAliases = [
   {
-    find: "@crc/core/filters",
+    find: "@pibbl/core/filters",
     replacement: join(root, "packages/core/src/filters.ts"),
   },
-  { find: "@crc/core", replacement: join(root, "packages/core/src/index.ts") },
+  { find: "@pibbl/core", replacement: join(root, "packages/core/src/index.ts") },
   {
-    find: "@crc/textures",
-    replacement: join(root, "packages/textures/src/index.ts"),
-  },
-  {
-    find: "@crc/types",
-    replacement: join(root, "packages/types/src/index.ts"),
+    find: "@pibbl/core/textures",
+    replacement: join(root, "packages/core/src/features/textures/index.ts"),
   },
 ];
+sourceAliases.sort((a, b) => b.find.length - a.find.length);
 const sourceAliasByName = Object.fromEntries(
   sourceAliases.map(({ find, replacement }) => [find, replacement]),
 );
 const sourceResolver = {
-  name: "crc-source",
+  name: "pibbl-source",
   setup(build) {
     build.onResolve(
-      { filter: /^@crc\/(?:core|textures|types)(?:\/filters)?$/ },
+      { filter: /^@pibbl\/core(?:\/(?:filters|textures))?$/ },
       ({ path }) => ({ path: sourceAliasByName[path] }),
     );
   },
@@ -82,8 +95,8 @@ const isDisplacement = (path) =>
   path.includes("filters/render-displacement");
 const isTexture = (path) =>
   path.includes("packages/core/src/lib/textures/texture.ts") ||
-  path.includes("packages/textures/src/") ||
-  path.includes("/textures/dist/");
+  path.includes("packages/core/src/features/textures/") ||
+  path.includes("/core/dist/features/textures/");
 const isAnimation = (path) => path.includes("packages/core/src/lib/animation/");
 const attributedInputs = (metafile) =>
   Object.entries(metafile.outputs)
@@ -178,7 +191,7 @@ function assertExcluded(label, evidence, detector, name) {
 
 function summary(es, vi) {
   const markers = {
-    animation: "CRC animation playback run is already ending",
+    animation: "Pibbl animation playback run is already ending",
     displacement: "displacement filter value",
     nativeDropShadow: "drop-shadow(",
     textureProducer: "Texture message queue is full",
@@ -216,10 +229,10 @@ function summary(es, vi) {
 
 try {
   const tarballs = {};
-  for (const name of ["types", "core", "textures"]) {
+  for (const name of ["core"]) {
     const file = join(temp, `${name}.tgz`);
     pnpm(["pack", "--out", file], join(root, "packages", name));
-    tarballs[`@crc/${name}`] = `file:${file}`;
+    tarballs[`@pibbl/${name}`] = `file:${file}`;
   }
   const consumer = join(temp, "consumer");
   mkdirSync(consumer);
@@ -229,7 +242,7 @@ try {
   );
   writeFileSync(
     join(consumer, "pnpm-workspace.yaml"),
-    `packages:\n  - .\noverrides:\n  '@crc/types': ${tarballs["@crc/types"]}\n`,
+    `packages:\n  - .\n`,
   );
   pnpm(
     [
@@ -244,7 +257,7 @@ try {
   );
   writeFileSync(
     join(consumer, "import-only-inert.mjs"),
-    `globalThis.OffscreenCanvas = class { constructor() { throw new Error("import allocated a canvas"); } };\nglobalThis.requestAnimationFrame = () => { throw new Error("import scheduled a frame"); };\nawait import("@crc/core");\nawait import("@crc/core/filters");\nawait import("@crc/textures");\n`,
+    `globalThis.OffscreenCanvas = class { constructor() { throw new Error("import allocated a canvas"); } };\nglobalThis.requestAnimationFrame = () => { throw new Error("import scheduled a frame"); };\nawait import("@pibbl/core");\nawait import("@pibbl/core/filters");\nawait import("@pibbl/core/textures");\n`,
   );
   execFileSync(process.execPath, ["import-only-inert.mjs"], {
     cwd: consumer,
@@ -270,6 +283,14 @@ try {
         );
         evidence[name] ??= {};
         evidence[name][key] = summary(es, vi);
+        if (["plain", "layer", "blur", "marble", "paper", "cellular", "ink", "water", "displacement"].includes(name)) {
+          for (const [bundler, code] of [["esbuild", es.code], ["Vite", vi.code]]) {
+            for (const [kernel, bytes] of Object.entries(wasmKernels)) {
+              assert.equal(code.includes(bytes), name === kernel,
+                `${name} ${key} ${bundler} has incorrect ${kernel} WASM retention`);
+            }
+          }
+        }
         if (name === "plain" || name === "layer") {
           for (const [bundler, code] of [["esbuild", es.code], ["Vite", vi.code]]) {
             assert.equal(code.includes("unresolved-stepper"), false, `${name} ${key} ${bundler} retained animation evaluation state`);
@@ -288,7 +309,7 @@ try {
             `${name} ${key} Vite retained filter machinery`,
           );
           for (const [feature, marker] of Object.entries({
-            animation: "CRC animation playback run is already ending",
+            animation: "Pibbl animation playback run is already ending",
             displacement: "displacement filter value",
             textureProducer: "Texture message queue is full",
             water: "waterWaves is a numeric displacement map",

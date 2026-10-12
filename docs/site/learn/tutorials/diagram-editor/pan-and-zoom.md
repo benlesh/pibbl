@@ -55,7 +55,7 @@ const zoomAroundPoint = (
 </Group>;
 ```
 
-CRC applies the Group scale before its translation, so the source divides the stored root-pixel pan by zoom. The anchor calculation prevents the content beneath the pointer from drifting; clamping prevents an unbounded or inverted view, and `preventDefault()` prevents the owned wheel gesture from scrolling the page.
+Pibbl applies the Group scale before its translation, so the source divides the stored root-pixel pan by zoom. The anchor calculation prevents the content beneath the pointer from drifting; clamping prevents an unbounded or inverted view, and `preventDefault()` prevents the owned wheel gesture from scrolling the page.
 
 ## Predict and try
 

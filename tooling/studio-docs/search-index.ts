@@ -72,7 +72,7 @@ const fieldBoosts = {
 
 const exactApiSymbolBoost = 1_000_000;
 const publicSearchUrl =
-  /^#\/(?:learn(?:\/(?:guides|tutorials)(?:\/[a-z0-9]+(?:-[a-z0-9]+)*)*)?|api(?:\/(?:components|functions|hooks|types)(?:\/[a-z0-9]+(?:-[a-z0-9]+)*)*)?|examples\/(?:drawing|composition|layout|three|events-and-interaction|focus-and-keyboard)\/[a-z0-9]+(?:-[a-z0-9]+)*)(?:#[a-z0-9]+(?:-[a-z0-9]+)*)?$/u;
+  /^#\/(?:learn(?:\/(?:guides|tutorials)(?:\/[a-z0-9]+(?:-[a-z0-9]+)*)*)?|api(?:\/(?:components|functions|hooks|types)(?:\/[a-z0-9]+(?:-[a-z0-9]+)*)*)?|examples\/(?:drawing|composition|layout|three|events-and-interaction|focus-and-keyboard)\/[a-z0-9]+(?:-[a-z0-9]+)*)(?:#[A-Za-z0-9_-]+)?$/u;
 
 /**
  * The matching configuration must remain identical when the browser restores
@@ -120,7 +120,7 @@ export function buildSearchBundle(
 }
 
 /**
- * Queries one already-restored MiniSearch instance using CRC's public ranking
+ * Queries one already-restored MiniSearch instance using Pibbl's public ranking
  * contract. This is browser-safe: all source imports other than MiniSearch are
  * type-only, so the lazy browser search can use it without build-time tooling.
  */

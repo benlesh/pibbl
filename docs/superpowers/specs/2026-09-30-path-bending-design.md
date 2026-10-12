@@ -10,7 +10,7 @@ Implementation plan: [Path bending implementation](../plans/2026-09-30-path-bend
 
 ## Recommendation
 
-Add two standalone public utilities to `@crc/core`:
+Add two standalone public utilities to `@pibbl/core`:
 
 - `bendPathAlongArc(source, options)` bends geometry around a circular guide.
 - `bendPathAlongPath(source, guide, options)` bends geometry along a supplied
@@ -173,7 +173,7 @@ F(x,y) = B(s) + d * N(s)
 
 Offsets are applied after fitting. Stretch consumes the full guide, so all
 three longitudinal alignments coincide in that mode. Source X always follows
-guide traversal. Reversing the guide reverses the tangent and normal; CRC never
+guide traversal. Reversing the guide reverses the tangent and normal; Pibbl never
 auto-flips geometry to keep text upright. Reverse arc traversal by changing its
 start and sweep; arbitrary guides follow their authored segment order.
 
@@ -377,8 +377,8 @@ Microsoft's documented analogue is
 which provides bilinear/perspective rectangle warping. That documentation does
 not establish a built-in Along Arc or Along Path operation. The closer conceptual
 reference is [Inkscape Bend Path](https://wiki.inkscape.org/wiki/Bend_Path), which
-describes an arc-length guide with normal displacement. CRC's API, validation,
-alignment, and accuracy policies above are proposed CRC decisions.
+describes an arc-length guide with normal displacement. Pibbl's API, validation,
+alignment, and accuracy policies above are proposed Pibbl decisions.
 
 Related repository context:
 

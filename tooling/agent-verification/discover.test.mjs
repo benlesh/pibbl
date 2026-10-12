@@ -27,8 +27,8 @@ test('distinguishes known unmapped requirements from invalid IDs without inventi
   assert.equal(result.status, 'unmapped');
   assert.deepEqual(result.workflows, []);
   assert.ok(result.remaining);
-  assert.throws(() => discoverRequirement('HIT-999', ledger), { code: 'CRC_UNKNOWN_REQUIREMENT' });
-  assert.throws(() => discoverRequirement('HIT-12; echo unsafe', ledger), { code: 'CRC_UNKNOWN_REQUIREMENT' });
+  assert.throws(() => discoverRequirement('HIT-999', ledger), { code: 'PIBBL_UNKNOWN_REQUIREMENT' });
+  assert.throws(() => discoverRequirement('HIT-12; echo unsafe', ledger), { code: 'PIBBL_UNKNOWN_REQUIREMENT' });
 });
 
 test('maps analytical correctness to independent arithmetic rather than screenshot similarity', async () => {
@@ -38,4 +38,36 @@ test('maps analytical correctness to independent arithmetic rather than screensh
   for (const path of result.workflows[0].sources) await access(resolve(root, path));
   const ids = new Set(ledger.requirements.map(row => row.id));
   for (const id of result.workflows[0].requirements) assert.ok(ids.has(id));
+});
+
+test('discovers the completed text and signal workflows with usable evidence and rerun recipes', async () => {
+  for (const [id, scenario, replay] of [['TXT-08', 'agent-text-verification', 'text-replay.mjs'], ['SIG-14', 'agent-signal-mutation', 'signal-mutation-replay.mjs']]) {
+    const result = discoverRequirement(id, ledger);
+    assert.equal(result.status, 'mapped');
+    const workflow = result.workflows.find(item => item.scenario === scenario);
+    assert.ok(workflow);
+    assert.ok(workflow.replay.arguments[0].endsWith(replay));
+    assert.ok(workflow.queries.some(query => query.includes('--fields')));
+    for (const path of workflow.sources) await access(resolve(root, path));
+  }
+});
+
+test('finds layout and missingness workflows without inflating their provenance', async () => {
+  for (const [id, scenario] of [['LAY-02', 'agent-layout-placement'], ['LAY-06', 'agent-layout-placement'], ['DAT-07', 'viz-hover-lab']]) {
+    const result = discoverRequirement(id, ledger);
+    assert.equal(result.status, 'mapped');
+    assert.equal(result.verification, 'discovery-only');
+    const workflow = result.workflows.find(item => item.scenario === scenario);
+    assert.ok(workflow);
+    for (const path of workflow.sources) await access(resolve(root, path));
+    if (id.startsWith('LAY')) {
+      assert.ok(workflow.limits.some(value => value.includes('no served-build attestation')));
+      assert.ok(workflow.queries.some(value => value.includes('pibbl-layout-studio-smoke/1')));
+      assert.ok(workflow.acceptance.some(value => value.includes('(300,90)')));
+      assert.ok(workflow.acceptance.some(value => value.includes('(120,90)')));
+    } else {
+      assert.ok(workflow.acceptance.some(value => value.includes('zero')));
+      assert.ok(workflow.acceptance.some(value => value.includes('25')));
+    }
+  }
 });

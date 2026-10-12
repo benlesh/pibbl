@@ -8,7 +8,7 @@ realized, but shipped public code and executable tests remain authoritative.
 
 ## Summary
 
-CRC will keep its existing framework-free TypeScript application and Vite build.
+Pibbl will keep its existing framework-free TypeScript application and Vite build.
 The Interactive Examples Studio will become a unified documentation experience
 with three primary public areas: Learn, API, and Examples. A build-time content
 pipeline will render public Markdown, validate navigation and API coverage, and
@@ -68,7 +68,7 @@ The first implementation does not:
 - author the complete diagram-editor tutorial;
 - produce a large new collection of guides, tips, or recipes;
 - merge public learning content with test-only scenario metadata;
-- change CRC runtime behavior or public APIs.
+- change Pibbl runtime behavior or public APIs.
 
 ## Chosen architecture
 
@@ -159,7 +159,7 @@ display titles and is not stored as another hand-maintained sequence.
 
 ## Information architecture
 
-The persistent sidebar begins with CRC identity and the global search control,
+The persistent sidebar begins with Pibbl identity and the global search control,
 then presents three primary public areas in this order: Learn, API, Examples.
 
 ### Learn
@@ -319,7 +319,7 @@ chapters.
 
 The approved chapter sequence is:
 
-1. **Create the Canvas scene** — mount CRC, draw the workspace, understand the
+1. **Create the Canvas scene** — mount Pibbl, draw the workspace, understand the
    controller, scheduled rendering, and disposal.
 2. **Draw the first node** — combine Rectangle and Text and introduce local
    style and coordinate geometry.
@@ -327,7 +327,7 @@ The approved chapter sequence is:
    build a recognizable diagram.
 4. **Extract a reusable node component** — introduce props, children, lists,
    fragments, and stable keys.
-5. **Build the editor chrome** — add toolbar and status regions with CRC layout
+5. **Build the editor chrome** — add toolbar and status regions with Pibbl layout
    components and distinguish allocation from drawing geometry.
 6. **Select nodes with state** — use `useState`, click targets, visible
    selection, and frame-coalesced updates.
@@ -340,7 +340,7 @@ The approved chapter sequence is:
 10. **Polish selection with filters** — add typed shadows or glow, explain
     filter boundaries and nesting, and handle browser capability requirements.
 11. **Add keyboard interaction** — introduce focus management, directional
-    navigation, activation, and CRC's accessibility boundary.
+    navigation, activation, and Pibbl's accessibility boundary.
 12. **Finish and harden the editor** — cover relevant memoization, refs and
     change effects, cleanup ownership, component identity, failure behavior,
     and practical production patterns.
@@ -395,7 +395,7 @@ example. Each record carries:
 - selected public identifiers used by an example.
 
 Full example source is not indexed indiscriminately. Generated code search data
-is restricted to public CRC identifiers or intentionally curated terms so common
+is restricted to public Pibbl identifiers or intentionally curated terms so common
 syntax, string literals, and implementation noise do not dominate prose and API
 matches.
 
@@ -464,7 +464,7 @@ The content pipeline fails the relevant check or build for:
 - nondeterministic generated search data.
 
 Public export coverage is derived through the TypeScript compiler from the
-supported `@crc/core` entry points, not by a fragile regular expression.
+supported `@pibbl/core` entry points, not by a fragile regular expression.
 Compiler-only JSX runtime entries and type-only compatibility entries are
 documented on the API overview or mapped to their canonical public declaration
 destinations.

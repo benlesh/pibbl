@@ -1,0 +1,787 @@
+{
+  "schema": "pibbl-signal-mutation-replay/1",
+  "status": "pass",
+  "url": "http://127.0.0.1:5199/#/testing/agent-signal-mutation",
+  "requiredChecks": [
+    {
+      "actionId": "initial",
+      "checkId": "initial.application-intent"
+    },
+    {
+      "actionId": "initial",
+      "checkId": "initial.equality-diagnosis"
+    },
+    {
+      "actionId": "initial",
+      "checkId": "initial.publication-evaluation"
+    },
+    {
+      "actionId": "initial",
+      "checkId": "initial.bounded-window"
+    },
+    {
+      "actionId": "initial",
+      "checkId": "initial.bar-pixels"
+    },
+    {
+      "actionId": "intentional-noop",
+      "checkId": "intentional-noop.application-intent"
+    },
+    {
+      "actionId": "intentional-noop",
+      "checkId": "intentional-noop.equality-diagnosis"
+    },
+    {
+      "actionId": "intentional-noop",
+      "checkId": "intentional-noop.publication-evaluation"
+    },
+    {
+      "actionId": "intentional-noop",
+      "checkId": "intentional-noop.bounded-window"
+    },
+    {
+      "actionId": "intentional-noop",
+      "checkId": "intentional-noop.bar-pixels"
+    },
+    {
+      "actionId": "mutation",
+      "checkId": "mutation.application-intent"
+    },
+    {
+      "actionId": "mutation",
+      "checkId": "mutation.equality-diagnosis"
+    },
+    {
+      "actionId": "mutation",
+      "checkId": "mutation.publication-evaluation"
+    },
+    {
+      "actionId": "mutation",
+      "checkId": "mutation.bounded-window"
+    },
+    {
+      "actionId": "mutation",
+      "checkId": "mutation.bar-pixels"
+    },
+    {
+      "actionId": "repeat-mutation",
+      "checkId": "repeat-mutation.application-intent"
+    },
+    {
+      "actionId": "repeat-mutation",
+      "checkId": "repeat-mutation.equality-diagnosis"
+    },
+    {
+      "actionId": "repeat-mutation",
+      "checkId": "repeat-mutation.publication-evaluation"
+    },
+    {
+      "actionId": "repeat-mutation",
+      "checkId": "repeat-mutation.bounded-window"
+    },
+    {
+      "actionId": "repeat-mutation",
+      "checkId": "repeat-mutation.bar-pixels"
+    },
+    {
+      "actionId": "replacement",
+      "checkId": "replacement.application-intent"
+    },
+    {
+      "actionId": "replacement",
+      "checkId": "replacement.equality-diagnosis"
+    },
+    {
+      "actionId": "replacement",
+      "checkId": "replacement.publication-evaluation"
+    },
+    {
+      "actionId": "replacement",
+      "checkId": "replacement.bounded-window"
+    },
+    {
+      "actionId": "replacement",
+      "checkId": "replacement.bar-pixels"
+    },
+    {
+      "actionId": "reset",
+      "checkId": "reset.application-intent"
+    },
+    {
+      "actionId": "reset",
+      "checkId": "reset.equality-diagnosis"
+    },
+    {
+      "actionId": "reset",
+      "checkId": "reset.publication-evaluation"
+    },
+    {
+      "actionId": "reset",
+      "checkId": "reset.bounded-window"
+    },
+    {
+      "actionId": "reset",
+      "checkId": "reset.bar-pixels"
+    }
+  ],
+  "scope": "Explicit default Object.is fixture; bounded two-frame observation, not a universal deep mutation detector.",
+  "steps": [
+    {
+      "actionId": "initial",
+      "action": "mount",
+      "status": "pass",
+      "transport": "page-navigation",
+      "state": {
+        "status": "ready",
+        "revision": 1,
+        "action": "reset",
+        "expectedAmount": 10,
+        "sourceAmount": 10,
+        "evaluatedAmount": 10,
+        "componentEvaluations": 1,
+        "signalVersion": 1,
+        "equality": {
+          "policy": "Object.is-default",
+          "sameReference": false,
+          "amountBefore": 10,
+          "amountAfter": 10
+        },
+        "assertion": "pass",
+        "diagnosis": "application-observation",
+        "observationWindow": {
+          "kind": "two-host-animation-frames",
+          "completedFrames": 2,
+          "scope": "finite-observation-not-future-guarantee"
+        }
+      },
+      "pixel": {
+        "logicalPoint": {
+          "x": 200,
+          "y": 80
+        },
+        "rgba": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "backingPoint": {
+          "x": 200,
+          "y": 110
+        },
+        "backingSize": {
+          "width": 480,
+          "height": 240
+        },
+        "displaySize": {
+          "width": 480,
+          "height": 240
+        },
+        "viewport": {
+          "width": 480,
+          "height": 180,
+          "fit": "contain"
+        },
+        "capture": "active-single-pixel-readback"
+      }
+    },
+    {
+      "actionId": "intentional-noop",
+      "action": "equal-noop",
+      "status": "pass",
+      "transport": "native-playwright-pointer",
+      "state": {
+        "status": "ready",
+        "revision": 2,
+        "action": "equal-noop",
+        "expectedAmount": 10,
+        "sourceAmount": 10,
+        "evaluatedAmount": 10,
+        "componentEvaluations": 1,
+        "signalVersion": 1,
+        "equality": {
+          "policy": "Object.is-default",
+          "sameReference": true,
+          "amountBefore": 10,
+          "amountAfter": 10
+        },
+        "assertion": "pass",
+        "diagnosis": "intentional-equal-write",
+        "observationWindow": {
+          "kind": "two-host-animation-frames",
+          "completedFrames": 2,
+          "scope": "finite-observation-not-future-guarantee"
+        }
+      },
+      "pixel": {
+        "logicalPoint": {
+          "x": 200,
+          "y": 80
+        },
+        "rgba": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "backingPoint": {
+          "x": 200,
+          "y": 110
+        },
+        "backingSize": {
+          "width": 480,
+          "height": 240
+        },
+        "displaySize": {
+          "width": 480,
+          "height": 240
+        },
+        "viewport": {
+          "width": 480,
+          "height": 180,
+          "fit": "contain"
+        },
+        "capture": "active-single-pixel-readback"
+      }
+    },
+    {
+      "actionId": "mutation",
+      "action": "in-place",
+      "status": "pass",
+      "transport": "native-playwright-pointer",
+      "state": {
+        "status": "ready",
+        "revision": 3,
+        "action": "in-place",
+        "expectedAmount": 42,
+        "sourceAmount": 42,
+        "evaluatedAmount": 10,
+        "componentEvaluations": 1,
+        "signalVersion": 1,
+        "equality": {
+          "policy": "Object.is-default",
+          "sameReference": true,
+          "amountBefore": 10,
+          "amountAfter": 42
+        },
+        "assertion": "fail",
+        "diagnosis": "same-reference-mutation-suppressed",
+        "observationWindow": {
+          "kind": "two-host-animation-frames",
+          "completedFrames": 2,
+          "scope": "finite-observation-not-future-guarantee"
+        }
+      },
+      "pixel": {
+        "logicalPoint": {
+          "x": 200,
+          "y": 80
+        },
+        "rgba": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "backingPoint": {
+          "x": 200,
+          "y": 110
+        },
+        "backingSize": {
+          "width": 480,
+          "height": 240
+        },
+        "displaySize": {
+          "width": 480,
+          "height": 240
+        },
+        "viewport": {
+          "width": 480,
+          "height": 180,
+          "fit": "contain"
+        },
+        "capture": "active-single-pixel-readback"
+      }
+    },
+    {
+      "actionId": "repeat-mutation",
+      "action": "in-place",
+      "status": "pass",
+      "transport": "native-playwright-pointer",
+      "state": {
+        "status": "ready",
+        "revision": 4,
+        "action": "in-place",
+        "expectedAmount": 42,
+        "sourceAmount": 42,
+        "evaluatedAmount": 10,
+        "componentEvaluations": 1,
+        "signalVersion": 1,
+        "equality": {
+          "policy": "Object.is-default",
+          "sameReference": true,
+          "amountBefore": 42,
+          "amountAfter": 42
+        },
+        "assertion": "fail",
+        "diagnosis": "equal-write-keeps-stale-display",
+        "observationWindow": {
+          "kind": "two-host-animation-frames",
+          "completedFrames": 2,
+          "scope": "finite-observation-not-future-guarantee"
+        }
+      },
+      "pixel": {
+        "logicalPoint": {
+          "x": 200,
+          "y": 80
+        },
+        "rgba": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "backingPoint": {
+          "x": 200,
+          "y": 110
+        },
+        "backingSize": {
+          "width": 480,
+          "height": 240
+        },
+        "displaySize": {
+          "width": 480,
+          "height": 240
+        },
+        "viewport": {
+          "width": 480,
+          "height": 180,
+          "fit": "contain"
+        },
+        "capture": "active-single-pixel-readback"
+      }
+    },
+    {
+      "actionId": "replacement",
+      "action": "replace",
+      "status": "pass",
+      "transport": "native-playwright-pointer",
+      "state": {
+        "status": "ready",
+        "revision": 5,
+        "action": "replace",
+        "expectedAmount": 42,
+        "sourceAmount": 42,
+        "evaluatedAmount": 42,
+        "componentEvaluations": 2,
+        "signalVersion": 2,
+        "equality": {
+          "policy": "Object.is-default",
+          "sameReference": false,
+          "amountBefore": 42,
+          "amountAfter": 42
+        },
+        "assertion": "pass",
+        "diagnosis": "replacement-published",
+        "observationWindow": {
+          "kind": "two-host-animation-frames",
+          "completedFrames": 2,
+          "scope": "finite-observation-not-future-guarantee"
+        }
+      },
+      "pixel": {
+        "logicalPoint": {
+          "x": 200,
+          "y": 80
+        },
+        "rgba": [
+          37,
+          99,
+          235,
+          255
+        ],
+        "backingPoint": {
+          "x": 200,
+          "y": 110
+        },
+        "backingSize": {
+          "width": 480,
+          "height": 240
+        },
+        "displaySize": {
+          "width": 480,
+          "height": 240
+        },
+        "viewport": {
+          "width": 480,
+          "height": 180,
+          "fit": "contain"
+        },
+        "capture": "active-single-pixel-readback"
+      }
+    },
+    {
+      "actionId": "reset",
+      "action": "reset",
+      "status": "pass",
+      "transport": "native-playwright-pointer",
+      "state": {
+        "status": "ready",
+        "revision": 6,
+        "action": "reset",
+        "expectedAmount": 10,
+        "sourceAmount": 10,
+        "evaluatedAmount": 10,
+        "componentEvaluations": 3,
+        "signalVersion": 3,
+        "equality": {
+          "policy": "Object.is-default",
+          "sameReference": false,
+          "amountBefore": 42,
+          "amountAfter": 10
+        },
+        "assertion": "pass",
+        "diagnosis": "application-observation",
+        "observationWindow": {
+          "kind": "two-host-animation-frames",
+          "completedFrames": 2,
+          "scope": "finite-observation-not-future-guarantee"
+        }
+      },
+      "pixel": {
+        "logicalPoint": {
+          "x": 200,
+          "y": 80
+        },
+        "rgba": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "backingPoint": {
+          "x": 200,
+          "y": 110
+        },
+        "backingSize": {
+          "width": 480,
+          "height": 240
+        },
+        "displaySize": {
+          "width": 480,
+          "height": 240
+        },
+        "viewport": {
+          "width": 480,
+          "height": 180,
+          "fit": "contain"
+        },
+        "capture": "active-single-pixel-readback"
+      }
+    }
+  ],
+  "errors": [],
+  "droppedErrors": 0,
+  "run": {
+    "schema": "pibbl-replay-run/1",
+    "runId": "5e5ec72d-b707-4f20-b164-2f59ef237a31",
+    "kind": "signal-mutation",
+    "startedAt": "2026-10-02T03:13:03.394Z",
+    "clock": "UTC-wall-clock",
+    "environment": {
+      "node": "v24.15.0",
+      "platform": "darwin",
+      "architecture": "arm64",
+      "browserContext": {
+        "viewport": {
+          "width": 1280,
+          "height": 1000
+        },
+        "deviceScaleFactor": 1,
+        "locale": "en-US",
+        "timezoneId": "UTC",
+        "reducedMotion": "reduce",
+        "colorScheme": "light"
+      },
+      "observedPage": {
+        "status": "observed",
+        "scope": "page-reported-at-capture",
+        "viewportCss": {
+          "width": 1280,
+          "height": 1000
+        },
+        "devicePixelRatio": 1,
+        "visualViewportScale": 1,
+        "browserZoom": "unavailable",
+        "language": "en-US",
+        "timezone": "UTC",
+        "preferences": {
+          "dark": false,
+          "reducedMotion": true
+        }
+      }
+    },
+    "rerun": {
+      "executable": "/Users/benlesh/.local/share/fnm/node-versions/v24.15.0/installation/bin/node",
+      "arguments": [
+        "/Users/benlesh/GitHub/crc/tooling/agent-verification/signal-mutation-replay.mjs",
+        "http://127.0.0.1:5199/#/testing/agent-signal-mutation"
+      ],
+      "cwd": "/Users/benlesh/GitHub/crc",
+      "environment": {},
+      "unsetEnvironment": [
+        "PIBBL_VERIFY_BROWSER_ENDPOINT"
+      ],
+      "outputPolicy": "fresh-default-directory",
+      "preconditions": [
+        "Provision the recorded checkout dependencies and Playwright Chromium.",
+        "Serve the source Studio from the intended checkout at the recorded URL; served/local identity checks must pass."
+      ]
+    },
+    "toolIdentity": {
+      "schema": "pibbl-replay-tool-identity/1",
+      "revision": "c838c434159efe602583f1cc2bf5383b57c15db5",
+      "sha256": "c821eb58e561c0c0c40fa521d14cc8715ef31e0dc89e3ad7ab6d732e90bad64b",
+      "files": 11,
+      "scope": "Replay and declared local dependencies on disk; not loaded-module or installed-dependency attestation."
+    },
+    "toolIdentityAfter": {
+      "schema": "pibbl-replay-tool-identity/1",
+      "revision": "c838c434159efe602583f1cc2bf5383b57c15db5",
+      "sha256": "c821eb58e561c0c0c40fa521d14cc8715ef31e0dc89e3ad7ab6d732e90bad64b",
+      "files": 11,
+      "scope": "Replay and declared local dependencies on disk; not loaded-module or installed-dependency attestation."
+    }
+  },
+  "expectedIdentity": {
+    "schema": "pibbl-targeting-identity/1",
+    "revision": "c838c434159efe602583f1cc2bf5383b57c15db5",
+    "sha256": "9ae3c5a1d401b9924f8706f13045ad7eb6bee56c7a81b98c511f0b35f77472b1",
+    "files": 199
+  },
+  "browser": "151.0.7922.34",
+  "checks": [
+    {
+      "checkId": "initial.application-intent",
+      "actionId": "initial",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "initial.equality-diagnosis",
+      "actionId": "initial",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "initial.publication-evaluation",
+      "actionId": "initial",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "initial.bounded-window",
+      "actionId": "initial",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "initial.bar-pixels",
+      "actionId": "initial",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "intentional-noop.application-intent",
+      "actionId": "intentional-noop",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "intentional-noop.equality-diagnosis",
+      "actionId": "intentional-noop",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "intentional-noop.publication-evaluation",
+      "actionId": "intentional-noop",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "intentional-noop.bounded-window",
+      "actionId": "intentional-noop",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "intentional-noop.bar-pixels",
+      "actionId": "intentional-noop",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "mutation.application-intent",
+      "actionId": "mutation",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "mutation.equality-diagnosis",
+      "actionId": "mutation",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "mutation.publication-evaluation",
+      "actionId": "mutation",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "mutation.bounded-window",
+      "actionId": "mutation",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "mutation.bar-pixels",
+      "actionId": "mutation",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "repeat-mutation.application-intent",
+      "actionId": "repeat-mutation",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "repeat-mutation.equality-diagnosis",
+      "actionId": "repeat-mutation",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "repeat-mutation.publication-evaluation",
+      "actionId": "repeat-mutation",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "repeat-mutation.bounded-window",
+      "actionId": "repeat-mutation",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "repeat-mutation.bar-pixels",
+      "actionId": "repeat-mutation",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "replacement.application-intent",
+      "actionId": "replacement",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "replacement.equality-diagnosis",
+      "actionId": "replacement",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "replacement.publication-evaluation",
+      "actionId": "replacement",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "replacement.bounded-window",
+      "actionId": "replacement",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "replacement.bar-pixels",
+      "actionId": "replacement",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "reset.application-intent",
+      "actionId": "reset",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "reset.equality-diagnosis",
+      "actionId": "reset",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "reset.publication-evaluation",
+      "actionId": "reset",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "reset.bounded-window",
+      "actionId": "reset",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "checkId": "reset.bar-pixels",
+      "actionId": "reset",
+      "required": true,
+      "status": "pass",
+      "reason": null
+    }
+  ],
+  "toolVerification": {
+    "status": "matching-on-disk"
+  },
+  "requiredActions": [
+    "initial",
+    "intentional-noop",
+    "mutation",
+    "repeat-mutation",
+    "replacement",
+    "reset"
+  ]
+}

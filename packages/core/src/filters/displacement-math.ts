@@ -1,6 +1,6 @@
 import type { PixelBounds } from '../lib/filter/filter-region.js';
 
-/** Decodes CRC's exact signed eight-bit displacement encoding. */
+/** Decodes Pibbl's exact signed eight-bit displacement encoding. */
 export function decodeDisplacementChannel(value: number): number {
   if (!Number.isFinite(value)) throw new RangeError('Displacement channel must be finite.');
   const channel = Math.min(255, Math.max(0, value));

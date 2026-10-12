@@ -4,8 +4,8 @@ import {
   loadScenario,
   scenarioCatalog,
   smokeScenarioEntry,
-} from "@crc/scenarios";
-import { mountScenarioSurface } from "@crc/scenarios/surface";
+} from "@pibbl/scenarios";
+import { mountScenarioSurface } from "@pibbl/scenarios/surface";
 
 import type { PageLifecycle, Disposable } from "../app/page-lifecycle";
 import { loadScenarioSource } from "../scenario-sources";

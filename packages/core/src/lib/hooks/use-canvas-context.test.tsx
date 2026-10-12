@@ -1,8 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { crc } from '../crc.js';
+import { pibbl } from '../pibbl.js';
 import { definePrimitive } from '../define-primitive.js';
-import { createCRCElement } from '../element/create-element.js';
-import { clearSharedState, getCRCInstance } from '../global-state.js';
+import { createPibblElement } from '../element/create-element.js';
+import { clearSharedState, getPibblInstance } from '../global-state.js';
 import { measureElement } from '../layout/measure.js';
 import type { CanvasMeasurementService } from '../types.js';
 import { useCanvasContext } from './use-canvas-context.js';
@@ -11,7 +11,7 @@ import { useSignal } from './use-signal.js';
 import type { WritableSignal } from '../signals/types.js';
 
 const CONTEXT_ERROR =
-  'useCanvasContext() is available only during CRC rendering and cannot be ' +
+  'useCanvasContext() is available only during Pibbl rendering and cannot be ' +
   'used during pure measurement.';
 
 const constraints = {
@@ -64,7 +64,7 @@ describe('useCanvasContext', () => {
     }
 
     const canvas = createCanvas();
-    const controller = crc(canvas, [<Painter />, <Observer />]);
+    const controller = pibbl(canvas, [<Painter />, <Observer />]);
     await nextFrame();
 
     expect(snapshots).toHaveLength(2);
@@ -92,12 +92,12 @@ describe('useCanvasContext', () => {
     }
 
     const canvas = createCanvas();
-    const controller = crc(canvas, <Probe />);
+    const controller = pibbl(canvas, <Probe />);
     await nextFrame();
     updateState?.set(1);
     await nextFrame();
 
-    const probeRefs = Array.from(getCRCInstance(canvas).refs.values())
+    const probeRefs = Array.from(getPibblInstance(canvas).refs.values())
       .find(ref => ref.element.type === Probe)!;
     expect(states).toEqual([0, 1]);
     expect(refs[1]).toBe(refs[0]);
@@ -119,7 +119,7 @@ describe('useCanvasContext', () => {
         };
       },
     });
-    const element = createCRCElement(Measuring, {}, undefined, undefined);
+    const element = createPibblElement(Measuring, {}, undefined, undefined);
 
     expect(() => measureElement(element, constraints, service))
       .toThrowError(CONTEXT_ERROR);

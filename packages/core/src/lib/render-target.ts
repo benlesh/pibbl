@@ -1,6 +1,6 @@
 import { GLOBAL_STATE } from './global-state.js';
 import type { LayoutBox } from './layout/types.js';
-import type { CRCSurfaceSnapshot } from './surface/types.js';
+import type { PibblSurfaceSnapshot } from './surface/types.js';
 import type { RenderingContext2D } from './types.js';
 
 export interface RenderTargetSnapshot {
@@ -12,7 +12,7 @@ export interface RenderTargetSnapshot {
 }
 
 export function rootRenderTarget(
-  surface: CRCSurfaceSnapshot,
+  surface: PibblSurfaceSnapshot,
 ): RenderTargetSnapshot {
   return {
     logicalBounds: bitmapVisibleLogicalBounds(surface),
@@ -24,7 +24,7 @@ export function rootRenderTarget(
 }
 
 function bitmapVisibleLogicalBounds(
-  surface: CRCSurfaceSnapshot,
+  surface: PibblSurfaceSnapshot,
 ): Readonly<LayoutBox> {
   const points = [
     surface.inverseRenderTransform.transformPoint(new DOMPoint(0, 0)),
@@ -40,7 +40,7 @@ function bitmapVisibleLogicalBounds(
   ];
   if (points.some(point => !Number.isFinite(point.x) || !Number.isFinite(point.y))) {
     throw new Error(
-      'CRC root surface inverse projection produced non-finite logical bounds.',
+      'Pibbl root surface inverse projection produced non-finite logical bounds.',
     );
   }
   const xs = points.map(point => point.x);
@@ -64,6 +64,15 @@ export function getCurrentPaintTransform(): DOMMatrix {
     target.inverseRenderTransform.multiply(canvasTransform);
 }
 
+/**
+ * Returns the current logical world transform, optionally incorporating a supplied paint
+ * transform.
+ *
+ * @param paintTransform - Optional paint transform to include in the world transform.
+ * @returns The transform mapping local geometry into world coordinates.
+ *
+ * @see {@link LayoutBox}
+ */
 export function getCurrentWorldTransform(paintTransform?: DOMMatrix): DOMMatrix {
   const exactWorld = GLOBAL_STATE.worldExactTransform;
   const paintAnchor = GLOBAL_STATE.worldPaintAnchorTransform;
@@ -79,7 +88,7 @@ export function getCurrentWorldTransform(paintTransform?: DOMMatrix): DOMMatrix 
   return worldBase.multiply(paintTransform ?? getCurrentPaintTransform());
 }
 
-/** Whether direct Canvas calls changed paint since the last CRC-owned anchor. */
+/** Whether direct Canvas calls changed paint since the last Pibbl-owned anchor. */
 export function hasCurrentWorldTransformCanvasDelta(paintTransform?: DOMMatrix): boolean {
   const paintAnchor = GLOBAL_STATE.worldPaintAnchorTransform;
   return paintAnchor !== undefined &&

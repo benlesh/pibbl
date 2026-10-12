@@ -1,7 +1,8 @@
+import type { responsiveStylesScenarioEntry } from './catalog.js';
 import {
-  crc, Flow, Grid, Group, Rectangle, Text, signal, useCanvasContext, useConst, useLayoutBox,
-  type BoxStyle, type CRCResponsiveStyle, type FlowStyle, type LayoutItemStyle,
-} from '@crc/core';
+  pibbl, Flow, Grid, Group, Rectangle, Text, signal, useCanvasContext, useConst, useLayoutBox,
+  type BoxStyle, type PibblResponsiveStyle, type FlowStyle, type LayoutItemStyle,
+} from '@pibbl/core';
 import type { ScenarioDefinition } from './types';
 
 export const RESPONSIVE_STYLES_SOURCE_ID = 'responsive-styles-lab-example';
@@ -12,8 +13,15 @@ export interface ResponsiveRegionState {
   y: number;
   identity: number;
 }
+/**
+ * Observable state exposed by the responsive styles scenario for controls and assertions.
+ *
+ * @see {@link responsiveStylesScenarioEntry}
+ */
 export interface ResponsiveStylesState {
+  /** Root recorded or configured by this scenario. See {@link ResponsiveRegionState}. */
   root: ResponsiveRegionState | null;
+  /** Cell recorded or configured by this scenario. See {@link ResponsiveRegionState}. */
   cell: ResponsiveRegionState | null;
 }
 export const RESPONSIVE_STYLE_ACTIONS = [
@@ -40,7 +48,7 @@ export const responsiveStylesScenario: ScenarioDefinition<ResponsiveStylesState>
         { query: { minWidth: 600 }, style: { direction: 'horizontal', height: 44 } },
         { query: { maxHeight: 120 }, style: { gap: 8 } },
       ],
-    } satisfies CRCResponsiveStyle<FlowStyle>;
+    } satisfies PibblResponsiveStyle<FlowStyle>;
     function Second({ region, identity, available }: {
       style: BoxStyle;
       region: 'root' | 'cell'; identity: number;
@@ -85,7 +93,7 @@ export const responsiveStylesScenario: ScenarioDefinition<ResponsiveStylesState>
     };
     canvas.style.width = '1000px';
     canvas.style.height = '600px';
-    const controller = crc(canvas, <Scene />, { viewport: 'responsive', pixelRatio: 1 });
+    const controller = pibbl(canvas, <Scene />, { viewport: 'responsive', pixelRatio: 1 });
     await settle();
     return {
       getState: () => structuredClone(state),

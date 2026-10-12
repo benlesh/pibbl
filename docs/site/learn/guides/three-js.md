@@ -1,7 +1,7 @@
 ---
 id: guide-three-js
-title: Use Three.js inside CRC
-summary: Mount an ordinary Three.js scene in Canvas paint order while CRC owns scheduling, composition, events, focus, and cleanup.
+title: Use Three.js inside Pibbl
+summary: Mount an ordinary Three.js scene in Canvas paint order while Pibbl owns scheduling, composition, events, focus, and cleanup.
 kind: guide
 slug: three-js
 order: 65
@@ -9,32 +9,32 @@ keywords: [three.js, 3d, render layer, raycasting, focus, events]
 exampleSlug: three-layer
 ---
 
-# Use Three.js inside CRC
+# Use Three.js inside Pibbl
 
-`@crc/three` is a thin integration, not a second 3D API. Your application
+`@pibbl/three` is a thin integration, not a second 3D API. Your application
 creates ordinary Three scenes, cameras, objects, materials, loaders, controls,
-mixers, and composers. CRC contributes the boundary around them: Canvas paint
+mixers, and composers. Pibbl contributes the boundary around them: Canvas paint
 order, layout, clips, outer filters, one shared scheduler, event arbitration,
 focus, component ownership, and teardown.
 
-Install CRC, the adapter, and Three:
+Install Pibbl, the adapter, and Three:
 
 ```sh
-pnpm add @crc/core @crc/three three
+pnpm add @pibbl/core @pibbl/three three
 ```
 
-Keep `@crc/core` as the JSX runtime. Three objects are created with the normal
-Three API; CRC JSX only mounts the completed render layer.
+Keep `@pibbl/core` as the JSX runtime. Three objects are created with the normal
+Three API; Pibbl JSX only mounts the completed render layer.
 
 ## Define the layer once
 
 Call [`defineThreeLayer`](#/api/functions/define-three-layer) at module scope.
-It returns a reusable CRC component. One mounted component identity creates one
+It returns a reusable Pibbl component. One mounted component identity creates one
 Three renderer and one application resource value.
 
 ```tsx
-import { Rectangle, crc } from "@crc/core";
-import { defineThreeLayer } from "@crc/three";
+import { Rectangle, pibbl } from "@pibbl/core";
+import { defineThreeLayer } from "@pibbl/three";
 import {
   BoxGeometry,
   Mesh,
@@ -88,10 +88,10 @@ function App() {
   );
 }
 
-crc(document.querySelector("canvas")!, <App />);
+pibbl(document.querySelector("canvas")!, <App />);
 ```
 
-`create()` runs once for a mounted identity. CRC component updates call
+`create()` runs once for a mounted identity. Pibbl component updates call
 `update()` with current props instead of rebuilding the scene. `resize()` sees
 logical and backing dimensions. Without a custom `render()`, the adapter calls
 `renderer.render(resources.scene, resources.camera)`. `dispose()` releases the
@@ -100,11 +100,11 @@ renderer.
 
 ## Share events without wrapping the scene graph
 
-Visible Three geometry participates in CRC hit arbitration even when it has no
-CRC handler. That is what prevents a covered Canvas rectangle from receiving a
+Visible Three geometry participates in Pibbl hit arbitration even when it has no
+Pibbl handler. That is what prevents a covered Canvas rectangle from receiving a
 click through a sphere or cube.
 
-Return selected objects from `targets()` when they should become logical CRC
+Return selected objects from `targets()` when they should become logical Pibbl
 targets:
 
 ```text
@@ -119,20 +119,20 @@ targets(resources, props) {
 ```
 
 The default picker raycasts the Three scene. A hit on a registered object—or a
-descendant of one—becomes that CRC target. A hit on other visible geometry
+descendant of one—becomes that Pibbl target. A hit on other visible geometry
 blocks lower Canvas paint. A raycast miss follows the component's
 `missBehavior`:
 
-- `"pass-through"` lets CRC test paint behind the layer;
+- `"pass-through"` lets Pibbl test paint behind the layer;
 - `"block"` consumes the coordinate without a target;
 - `"target-layer"` targets the layer itself and can feed bridged controls.
 
-CRC remains responsible for capture, target, and bubble propagation, pointer
+Pibbl remains responsible for capture, target, and bubble propagation, pointer
 capture, cursor selection, logical focus, keyboard activation, and source paint
 order. Three's `EventDispatcher` is still useful for Three object lifecycles,
 but it does not replace browser input arbitration.
 
-## Use controls and animation on CRC's clock
+## Use controls and animation on Pibbl's clock
 
 Controls that expect a DOM element connect through `context.input`:
 
@@ -153,12 +153,12 @@ when another frame is needed. Do not start a separate `requestAnimationFrame()`
 loop or call `renderer.setAnimationLoop()` for a composited layer. Immersive XR
 and AR presentation are outside this integration.
 
-## Compose it like any other CRC paint entry
+## Compose it like any other Pibbl paint entry
 
-The complete Three frame is one transparent Canvas paint entry. CRC content can
+The complete Three frame is one transparent Canvas paint entry. Pibbl content can
 paint before or after it. `Group`, `Clip`, layout components, and `style.filter`
 apply outside the flattened bitmap. Individual Three objects cannot interleave
-with individual CRC primitives; use multiple layers when separate Canvas paint
+with individual Pibbl primitives; use multiple layers when separate Canvas paint
 positions are required.
 
 The [Three.js instancing example](#/examples/three/three-instancing)

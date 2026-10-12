@@ -1,6 +1,6 @@
 # Signals-centric hooks migration
 
-CRC now has one reactive authoring model. `useSignal`, `useComputed`,
+Pibbl now has one reactive authoring model. `useSignal`, `useComputed`,
 `useConst`, and `useReaction` replace the former overlapping hook vocabulary.
 This is a source migration: the removed exports have no compatibility aliases.
 
@@ -78,13 +78,13 @@ useReaction(() => {
 
 The lifecycle changes deliberately. `useReaction` setup runs in Complete after
 a successful render, and signal reads inside setup drive later reaction runs
-without making the component a render consumer. CRC runs the exact previous
+without making the component a render consumer. Pibbl runs the exact previous
 cleanup before replacement and once on final release. Signal writes are not
 allowed during setup or cleanup.
 
 ## Direct signal inputs
 
-Prefer passing signals to declared CRC inputs when the receiver should own the
+Prefer passing signals to declared Pibbl inputs when the receiver should own the
 dependency:
 
 ```tsx
@@ -100,5 +100,5 @@ const scene = (
 Use `value.get()` when the enclosing component intentionally needs the snapshot
 for branching, arithmetic, aggregation, or another value that it constructs.
 Custom component APIs can accept `SignalValue<T>` and call
-`resolveSignalValue()` at the receiving boundary. CRC does not deep-unwrap
+`resolveSignalValue()` at the receiving boundary. Pibbl does not deep-unwrap
 signals hidden inside arbitrary objects or datasets.

@@ -1,4 +1,4 @@
-# CRC event resource ownership
+# Pibbl event resource ownership
 
 Status: current implemented contract, updated for event-registration masks on
 2026-09-23.
@@ -11,11 +11,11 @@ failure isolation, while those documents govern dispatch and geometry.
 
 ## Public lifetime
 
-`crc(canvas, scene, config)` accepts a branded recursive `CRCNode` and returns a
-stable `CRCController` for the active mount:
+`pibbl(canvas, scene, config)` accepts a branded recursive `PibblNode` and returns a
+stable `PibblController` for the active mount:
 
 ```ts
-interface CRCController {
+interface PibblController {
   dispose(): void;
 }
 ```
@@ -37,7 +37,7 @@ after the first cleanup request.
 
 | Resource                         | Sole owner                                                          | Acquisition                                                    | Release trigger                                                                        | Required postcondition                                                                                                |
 | -------------------------------- | ------------------------------------------------------------------- | -------------------------------------------------------------- | -------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| Root instance-map entry          | Mount/controller identity                                           | First `crc()` for a Canvas                                     | Matching signal/controller disposal                                                    | The entry is absent; a newer identity is untouched.                                                                   |
+| Root instance-map entry          | Mount/controller identity                                           | First `pibbl()` for a Canvas                                   | Matching signal/controller disposal                                                    | The entry is absent; a newer identity is untouched.                                                                   |
 | Abort subscription               | Root instance main teardown                                         | Mount with a signal                                            | Any disposal path                                                                      | The abort listener is detached and later abort is harmless.                                                           |
 | Per-type native Canvas listener  | Root event hub                                                      | First live requester for that type                             | Last requester release or root disposal                                                | At most one native listener exists for the type; removal uses the matching capture option.                            |
 | Grouped event target             | Built-in paint-target slot or `useEventTarget` hook                 | Default-participating drawing, or explicit target registration | `pointerEvents="none"`, last explicit property removed, component removal, or disposal | Target, paint entry, native requests, captures, contacts, drag hover, focus, and cursor references are absent.        |
@@ -45,7 +45,7 @@ after the first cleanup request.
 | Logical pointer capture          | Capturing live event node and root capture state                    | Successful native `setPointerCapture` request                  | Transfer, release, cancel, native loss, node removal, or disposal                      | Per-pointer active/provisional/pending-transfer/pending-loss records and prerequisite native requests settle to zero. |
 | Retained touch contact           | Root dispatcher, keyed by identifier                                | Hit-resolved `touchstart`                                      | `touchend`, `touchcancel`, target removal, or disposal                                 | No identifier refers to a dead logical target.                                                                        |
 | Drag hover target                | Root dispatcher                                                     | Drag boundary reconciliation                                   | Root leave, drop, drag end, target removal, or disposal                                | No drag boundary state refers to a dead logical target.                                                               |
-| Pending animation frame          | CRC instance                                                        | Each update                                                    | Replacement, callback completion, or disposal                                          | The exact frame identity is canceled/completed; a stale callback is a no-op.                                          |
+| Pending animation frame          | Pibbl instance                                                      | Each update                                                    | Replacement, callback completion, or disposal                                          | The exact frame identity is canceled/completed; a stale callback is a no-op.                                          |
 | Component/main follower          | Mounted component                                                   | First component render                                         | Component removal or instance disposal                                                 | Component teardown closes once and detaches from its parent.                                                          |
 | Interaction region               | One persistent component path slot                                  | Render with a handler or cursor                                | Last interactive prop removed, component removal, or disposal                          | The owner-local region and paint entry are absent; root state no longer references it.                                |
 | Hover/activation state           | Root interaction dispatcher                                         | Native pointer/activation input                                | Target removal, completed activation, root exit, or disposal                           | Every referenced leaf region remains live, or the state is cleared synchronously.                                     |
@@ -57,7 +57,7 @@ after the first cleanup request.
 | Render-layer nested resolver     | Owning `defineRenderLayer` component                                | Successful Canvas composite and generation commit              | Opt-out, generation replacement, layer removal, failure, or root disposal              | The global paint ledger cannot invoke a stale picker or mismatched focus generation.                                  |
 | Render-layer event-parent bridge | Owning external-renderer mount                                      | Layer mount                                                    | Layer removal, failure, or root disposal                                               | Temporary paths cannot retain the removed external target or its Canvas parent.                                       |
 | Three input bridge               | Owning `defineThreeLayer` adapter                                   | Layer creation                                                 | Layer removal, failure, or root disposal                                               | Control listeners and capture state detach; retained input callbacks cannot dispatch or schedule work.                |
-| Component refs                   | CRC instance                                                        | Render                                                         | Component removal or instance disposal                                                 | Removed refs run teardown and become unreachable.                                                                     |
+| Component refs                   | Pibbl instance                                                      | Render                                                         | Component removal or instance disposal                                                 | Removed refs run teardown and become unreachable.                                                                     |
 
 ## Central disposal sequence
 
@@ -96,7 +96,7 @@ it.
 ### Registration signatures and native ownership
 
 Handler normalization and native-listener ownership use private two-word
-bitmask signatures over the closed `CRC_EVENT_DEFINITIONS` vocabulary. Bits
+bitmask signatures over the closed `PIBBL_EVENT_DEFINITIONS` vocabulary. Bits
 0-31 occupy the low word and bits 32-63 occupy the high word; module loading
 fails rather than aliasing definitions if the vocabulary exceeds 64 entries.
 The signed numeric representation of bit 31 is immaterial because words are
@@ -132,7 +132,7 @@ cross-version bit-position contract. The complete rationale and maintenance
 rules live in the [event-registration hot-path design](../superpowers/specs/2026-09-23-event-registration-hot-path-design.md).
 
 The Three input bridge owns no logical target or focus candidate merely by
-connecting a control. Registered Three targets acquire ordinary CRC event/focus
+connecting a control. Registered Three targets acquire ordinary Pibbl event/focus
 resources only through the committed layer interaction snapshot. During a
 gesture, capture remains owned by the receiving live event node and root
 dispatcher; adapter teardown clears bridge-local state and makes retained

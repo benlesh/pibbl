@@ -24,8 +24,8 @@ Specification: [allocation-relative responsive styles](../specs/2026-09-28-respo
 - Initial public browser test failed at wide-toolbar geometry: expected `(124, 0)`,
   received `(0, 56)`. Existing performance suite passed 14 tests.
 - Captured three untouched-runtime Node 24.15.0 performance runs under
-  `/private/tmp/crc-responsive-baseline24-{1,2,3}.log`; archived original core source
-  at `/private/tmp/crc-responsive-core-before.tgz`. Initial exploratory run used
+  `/private/tmp/pibbl-responsive-baseline24-{1,2,3}.log`; archived original core source
+  at `/private/tmp/pibbl-responsive-core-before.tgz`. Initial exploratory run used
   Node 26; final comparisons must use Node 24.15.0 and pnpm 11.21.0.
 - Browser tests require sandbox escalation to bind localhost; initial sandbox run
   executed no tests. Successful failing-test evidence came from Chromium outside
@@ -92,7 +92,7 @@ Specification: [allocation-relative responsive styles](../specs/2026-09-28-respo
 The independent reviewer found a canonical authoring mismatch: a plain component's
 outer style prop excluded whole-style signals. The package fixture reproduced
 TS2559 for JSX and createElement, then passed after using
-`SignalValue<CRCResponsiveStyle<BoxStyle & LayoutItemStyle> | undefined>`.
+`SignalValue<PibblResponsiveStyle<BoxStyle & LayoutItemStyle> | undefined>`.
 The guide, specification, and learning example now use that type. Studio's
 source/built declarations passed again with 329-type coverage.
 
@@ -115,7 +115,7 @@ Bundler, NodeNext, runtime exports, declarations, and package isolation.
 
 Runnable harness: `tooling/benchmark-responsive-preparation.mjs`. Baseline sources
 were archived before implementation, without a worktree, at
-`/private/tmp/crc-responsive-core-before.tgz` (SHA-256
+`/private/tmp/pibbl-responsive-core-before.tgz` (SHA-256
 `cab31508006e2f947400a74db43b273526e8f2d29eaed332e98c0c75bce32eec`).
 The checkout HEAD was `4717dc9862ffd57634c26cdd707ed677bd3da6f4`;
 the archive and bundle hashes, rather than that commit alone, pin the artifacts.
@@ -357,7 +357,7 @@ The aggregate gate remains unverified/failed for these recorded reasons:
   still failed two physics assertions. Load sensitivity is suspected, not proven
   against the baseline; these are not reported as passing.
 - Studio visual verification finds the already documented 110-pixel WebGL
-  lighting tag mismatch (`crcOrbitCamera` versus `useOrbitCamera`). Expected and
+  lighting tag mismatch (`pibblOrbitCamera` versus `useOrbitCamera`). Expected and
   actual images were inspected; the unrelated baseline was not rewritten.
 
 The implementation is available for hands-on feedback, but feature-complete and
@@ -376,7 +376,7 @@ with an illustrative store revenue card: three metrics, a sales trend, and
 working 7/30-day selection. Dashboard, Sidebar, and Phone retain the same card
 instance while local width rules change metric direction and chart placement.
 The example configures ordinary host scrolling for short Studio previews and
-restores its host/canvas styles on disposal; it adds no CRC scrolling API.
+restores its host/canvas styles on disposal; it adds no Pibbl scrolling API.
 Updated the learning catalog and generated scenario index. No runtime changes.
 
 A focused browser test failed before the replacement and now passes, checking
@@ -394,7 +394,7 @@ The user accepted the revenue-card example ("much better") and requested that
 work continue. A narrowed independent review found the refreshed example had
 lost whole-style signal support in its copied component prop type, and its
 interaction test could find stale text from earlier renders. Restored the public
-`SignalValue<CRCResponsiveStyle<BoxStyle & LayoutItemStyle> | undefined>` form.
+`SignalValue<PibblResponsiveStyle<BoxStyle & LayoutItemStyle> | undefined>` form.
 Every interaction/resize assertion now uses a fresh paint epoch and checks that
 the unselected period's amount is absent. A failing synchronous surface-measurement
 fixture demonstrated that host CSS was left modified after mount failure; the

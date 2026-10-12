@@ -1,0 +1,548 @@
+[
+  {
+    "id": "geometry-shapes",
+    "title": "Shape measurements",
+    "description": "Compare bounds, area, and mass for four common 2D shapes.",
+    "source": "geometry-shapes.ts",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "circleShape2D",
+        "importPath": "@pibbl/core/physics/2d/geometry"
+      },
+      {
+        "name": "ellipseShape2D",
+        "importPath": "@pibbl/core/physics/2d/geometry"
+      },
+      {
+        "name": "boxShape2D",
+        "importPath": "@pibbl/core/physics/2d/geometry"
+      },
+      {
+        "name": "roundedBoxShape2D",
+        "importPath": "@pibbl/core/physics/2d/geometry"
+      },
+      {
+        "name": "boundsOfShape2D",
+        "importPath": "@pibbl/core/physics/2d/geometry"
+      },
+      {
+        "name": "massProperties2D",
+        "importPath": "@pibbl/core/physics/2d/geometry"
+      },
+      {
+        "name": "PibblPhysicsVector2",
+        "importPath": "@pibbl/core/physics/2d/geometry"
+      },
+      {
+        "name": "PibblPhysicsPose2D",
+        "importPath": "@pibbl/core/physics/2d/geometry"
+      },
+      {
+        "name": "PibblPhysicsShape2D",
+        "importPath": "@pibbl/core/physics/2d/geometry"
+      },
+      {
+        "name": "PibblPhysicsAabb2D",
+        "importPath": "@pibbl/core/physics/2d/geometry"
+      },
+      {
+        "name": "PibblPhysicsMassProperties2D",
+        "importPath": "@pibbl/core/physics/2d/geometry"
+      }
+    ],
+    "notes": ["Mass uses density 2; the shapes remain immutable and reusable."]
+  },
+  {
+    "id": "geometry-paths",
+    "title": "Path-like shapes",
+    "description": "Create curved, stroked, and polygonal shapes and transform them.",
+    "source": "geometry-paths.ts",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "capsuleShape2D",
+        "importPath": "@pibbl/core/physics/2d/geometry"
+      },
+      {
+        "name": "segmentShape2D",
+        "importPath": "@pibbl/core/physics/2d/geometry"
+      },
+      {
+        "name": "chainShape2D",
+        "importPath": "@pibbl/core/physics/2d/geometry"
+      },
+      {
+        "name": "polygonShape2D",
+        "importPath": "@pibbl/core/physics/2d/geometry"
+      },
+      {
+        "name": "arcShape2D",
+        "importPath": "@pibbl/core/physics/2d/geometry"
+      },
+      {
+        "name": "wedgeShape2D",
+        "importPath": "@pibbl/core/physics/2d/geometry"
+      },
+      {
+        "name": "transformShape2D",
+        "importPath": "@pibbl/core/physics/2d/geometry"
+      },
+      {
+        "name": "PibblPhysicsTransform2D",
+        "importPath": "@pibbl/core/physics/2d/geometry"
+      }
+    ],
+    "notes": ["Each row reports the world bounds after one shared transform."]
+  },
+  {
+    "id": "geometry-queries",
+    "title": "Geometry queries",
+    "description": "Check point containment, separation, overlap, contact, and casts.",
+    "source": "geometry-queries.ts",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "containsPoint2D",
+        "importPath": "@pibbl/core/physics/2d/geometry"
+      },
+      {
+        "name": "distanceBetweenShapes2D",
+        "importPath": "@pibbl/core/physics/2d/geometry"
+      },
+      {
+        "name": "overlapShapes2D",
+        "importPath": "@pibbl/core/physics/2d/geometry"
+      },
+      {
+        "name": "contactBetweenShapes2D",
+        "importPath": "@pibbl/core/physics/2d/geometry"
+      },
+      {
+        "name": "raycastShape2D",
+        "importPath": "@pibbl/core/physics/2d/geometry"
+      },
+      {
+        "name": "shapeCastAgainstShape2D",
+        "importPath": "@pibbl/core/physics/2d/geometry"
+      },
+      {
+        "name": "PibblPhysicsDistance2D",
+        "importPath": "@pibbl/core/physics/2d/geometry"
+      },
+      {
+        "name": "PibblPhysicsContactPoint2D",
+        "importPath": "@pibbl/core/physics/2d/geometry"
+      },
+      {
+        "name": "PibblPhysicsShapeContact2D",
+        "importPath": "@pibbl/core/physics/2d/geometry"
+      },
+      {
+        "name": "PibblPhysicsRay2D",
+        "importPath": "@pibbl/core/physics/2d/geometry"
+      },
+      {
+        "name": "PibblPhysicsShapeHit2D",
+        "importPath": "@pibbl/core/physics/2d/geometry"
+      }
+    ],
+    "notes": ["The pure geometry entry works without mounting a physics world."]
+  },
+  {
+    "id": "runtime-world",
+    "title": "Live physics world",
+    "description": "Mount a falling ball, inspect it, and control its body with buttons.",
+    "source": "runtime-world.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "PhysicsWorld2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "PhysicsDebug2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "pibblPhysicsWorld2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "pibblPhysicsBody2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "dynamicBody2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "staticBody2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "collider2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "inspectPhysics2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "applyForce2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "applyImpulse2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "applyTorque2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "setLinearVelocity2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "setAngularVelocity2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "teleportBody2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "sleepBody2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "wakeBody2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "disableBody2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "enableBody2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "PibblPhysicsBodyHandle2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "PibblPhysicsWorldHandle2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "PibblPhysicsBodyInspection2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "PibblPhysicsDebug2DProps",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "PibblPhysicsInspection2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "PibblPhysicsSolverOptions",
+        "importPath": "@pibbl/core/physics/2d"
+      }
+    ],
+    "notes": [
+      "Body commands queue for Pibbl's physics scheduler; inspection reads the committed state."
+    ]
+  },
+  {
+    "id": "runtime-queries",
+    "title": "World queries",
+    "description": "Query a static collider by ray, moving shape, overlap, point, and bounds.",
+    "source": "runtime-queries.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "raycastAny2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "raycastClosest2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "raycastAll2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "shapeCastAny2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "shapeCastClosest2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "shapeCastAll2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "hasShapeOverlap2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "findShapeOverlap2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "findAllShapeOverlaps2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "hasAabbMatch2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "findAabbMatch2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "findAllAabbMatches2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "hasPointMatch2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "findPointMatch2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "findAllPointMatches2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "toPhysicsPoint2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "fromPhysicsPoint2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "physicsObstacles2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "PibblPhysicsColliderHandle2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "PibblPhysicsQueryOptions2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "PibblPhysicsQueryHit2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "PibblPhysicsQueryMatch2D",
+        "importPath": "@pibbl/core/physics/2d"
+      }
+    ],
+    "notes": [
+      "Queries read committed world state and do not advance the simulation."
+    ]
+  },
+  {
+    "id": "runtime-components",
+    "title": "Physics drawing components",
+    "description": "Draw four physics shapes and move a custom kinematic collider.",
+    "source": "runtime-components.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "PhysicsShape2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "Capsule2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "Segment2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "Chain2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "kinematicBody2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "withPhysicsShape2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "PibblPhysicsKinematicBody2DOptions",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "PibblPhysicsKinematicTarget2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "PibblPhysicsAttachment2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "PibblPhysicsBodyAttachment2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "PibblPhysicsColliderAttachment2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "PibblPhysicsPrimitiveProps2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "PibblPhysics2DPropExtension",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PhysicsShape2DProps",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "PhysicsShape2DStyle",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "Capsule2DProps",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "Capsule2DStyle",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "Segment2DProps",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "Segment2DStyle",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "Chain2DProps",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "Chain2DStyle",
+        "importPath": "@pibbl/core/physics/2d"
+      }
+    ],
+    "notes": [
+      "The derived primitive supplies collider geometry through a pure shape resolver."
+    ]
+  },
+  {
+    "id": "runtime-events",
+    "title": "Physics events",
+    "description": "Record collisions, sensor overlap, body sleep, and contact inspection.",
+    "source": "runtime-events.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "PibblPhysicsCollisionFilter",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "PibblPhysicsCollisionHandler2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "PibblPhysicsHitHandler2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "PibblPhysicsOverlapHandler2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "PibblPhysicsBodyStateHandler2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "PibblPhysicsColliderConfiguration2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "PibblPhysicsDynamicBody2DOptions",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "PibblPhysicsStaticBody2DOptions",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "PibblPhysicsWorld2DProps",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "PibblPhysicsCollisionEvent2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "PibblPhysicsOverlapEvent2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "PibblPhysicsBodyStateEvent2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "PibblPhysicsColliderInspection2D",
+        "importPath": "@pibbl/core/physics/2d"
+      },
+      {
+        "name": "PibblPhysicsContactInspection2D",
+        "importPath": "@pibbl/core/physics/2d"
+      }
+    ],
+    "notes": [
+      "Event callbacks report committed physics ticks; a sensor reports overlap without a solid response."
+    ]
+  },
+  {
+    "id": "testing-harness",
+    "title": "Deterministic physics test",
+    "description": "Advance a public physics scene through controlled host frames.",
+    "source": "testing-harness.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "createPhysicsTestHarness2D",
+        "importPath": "@pibbl/core/physics/2d/testing"
+      },
+      {
+        "name": "PibblPhysicsTestHarness2D",
+        "importPath": "@pibbl/core/physics/2d/testing"
+      },
+      {
+        "name": "PibblPhysicsTestHarness2DOptions",
+        "importPath": "@pibbl/core/physics/2d/testing"
+      }
+    ],
+    "notes": [
+      "Create this harness in an isolated Pibbl realm with no other mounted roots."
+    ]
+  }
+]

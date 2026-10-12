@@ -4,15 +4,15 @@
 
 Date: 2026-08-11
 
-This report freezes what CRC does before the interaction contract and ownership fixes. A recorded result is not automatically a supported behavior. TFC-02 decides semantics; TFC-03, TFC-04, and TFC-07 resolve the ownership, ordering, and cleanup findings.
+This report freezes what Pibbl does before the interaction contract and ownership fixes. A recorded result is not automatically a supported behavior. TFC-02 decides semantics; TFC-03, TFC-04, and TFC-07 resolve the ownership, ordering, and cleanup findings.
 
 ## Trace method
 
-The shared `interaction-trace-lab` scenario renders equal-sized left/right CRC regions and native DOM reference regions. Real Chromium input records monotonic order, source, event type, logical region, Canvas/reference-local coordinates, button state, transition kind, and symbolic related target. The headless fixture and manual gallery mount the same scenario definition.
+The shared `interaction-trace-lab` scenario renders equal-sized left/right Pibbl regions and native DOM reference regions. Real Chromium input records monotonic order, source, event type, logical region, Canvas/reference-local coordinates, button state, transition kind, and symbolic related target. The headless fixture and manual gallery mount the same scenario definition.
 
 Observed projections for one explicit movement per waypoint:
 
-| Gesture                               | Current CRC projection                                   | Native Chromium projection                                                            |
+| Gesture                               | Current Pibbl projection                                 | Native Chromium projection                                                            |
 | ------------------------------------- | -------------------------------------------------------- | ------------------------------------------------------------------------------------- |
 | Outside to left `(60, 90)`            | `mousemove(left)`, `mouseover(left)`                     | `mouseover(left, related=outside)`, `mousemove(left)`                                 |
 | Within left `(80, 100)`               | `mousemove(left)`                                        | `mousemove(left)`                                                                     |
@@ -20,7 +20,7 @@ Observed projections for one explicit movement per waypoint:
 | Right to outside `(460, 200)`         | `mouseout(right)`                                        | `mouseout(right, related=outside)`                                                    |
 | Primary activation at left `(60, 90)` | `mousedown(left)`, `mouseup(left)`, `click(left)`        | `mousedown(left)`, `mouseup(left)`, `click(left)`                                     |
 
-The four historical WIP ordering expectations are consistent with the native trace: transitions precede the associated `mousemove`. TFC-01 does not change CRC to match them.
+The four historical WIP ordering expectations are consistent with the native trace: transitions precede the associated `mousemove`. TFC-01 does not change Pibbl to match them.
 
 ## Deterministic resource counts
 
@@ -77,7 +77,7 @@ Timing is informational, not a CI speed budget. The deterministic assertions are
 
 ## Artifact boundary
 
-The diagnostic observer is outside every package build entry and package file list. After a clean build, `RuntimeDiagnostics`, `runtime-diagnostics`, `packages/core/test`, and `test/support` are absent from `packages/core/dist` and its source maps. Importing `@crc/core/test/support/runtime-diagnostics` fails as expected.
+The diagnostic observer is outside every package build entry and package file list. After a clean build, `RuntimeDiagnostics`, `runtime-diagnostics`, `packages/core/test`, and `test/support` are absent from `packages/core/dist` and its source maps. Importing `@pibbl/core/test/support/runtime-diagnostics` fails as expected.
 
 ## Frozen findings routed forward
 

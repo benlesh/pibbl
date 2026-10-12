@@ -27,7 +27,7 @@ Record root-logical pointer and workspace node origins. Each move uses an immuta
 ```tsx
 const dragSession = useRef<NodeDragSession | null>(null);
 
-const onPointerDown = (node: DiagramNode, event: CRCPointerEvent) => {
+const onPointerDown = (node: DiagramNode, event: PibblPointerEvent) => {
   const pointerStart = rootToWorkspace(event);
   event.currentTarget.setPointerCapture(event.pointerId);
   dragSession.current = {
@@ -39,7 +39,7 @@ const onPointerDown = (node: DiagramNode, event: CRCPointerEvent) => {
   };
 };
 
-const onPointerMove = (event: CRCPointerEvent) => {
+const onPointerMove = (event: PibblPointerEvent) => {
   const session = dragSession.current;
   if (!session || session.pointerId !== event.pointerId) return;
   const point = rootToWorkspace(event);

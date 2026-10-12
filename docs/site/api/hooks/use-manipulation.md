@@ -6,13 +6,13 @@ kind: api
 slug: use-manipulation
 apiCategory: hook
 symbols: [useManipulation]
-relatedTypes: [CRCManipulationController, CRCManipulationOptions]
+relatedTypes: [PibblManipulationController, PibblManipulationOptions]
 ---
 
 # useManipulation
 
 ```ts
-import { useManipulation, useSignal } from "@crc/core";
+import { useManipulation, useSignal } from "@pibbl/core";
 ```
 
 `useManipulation(options)` creates one controller for the mounted component.
@@ -26,4 +26,4 @@ const box = useSignal({ left: 40, top: 32, width: 180, height: 100 });
 const manipulation = useManipulation({ box, move: {}, resize: {} });
 ```
 
-Related types: [CRCManipulationController](#/api/types/events#crcmanipulationcontroller), [CRCManipulationOptions](#/api/types/events#crcmanipulationoptions).
+Related types: [PibblManipulationController](#/api/types/events#pibblmanipulationcontroller), [PibblManipulationOptions](#/api/types/events#pibblmanipulationoptions).

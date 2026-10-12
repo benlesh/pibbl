@@ -1,0 +1,16 @@
+{
+  "provenance": "Result returned by the independent review agent after running original-probes/pibbl-handle-retention-probe.mjs.txt; original stdout was not separately archived.",
+  "before": {
+    "bodies": 0,
+    "colliders": 0
+  },
+  "afterCycles": {
+    "bodies": 100,
+    "colliders": 100
+  },
+  "afterDispose": {
+    "bodies": 100,
+    "colliders": 100
+  },
+  "pendingFrames": 0
+}

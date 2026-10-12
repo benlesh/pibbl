@@ -8,10 +8,10 @@ apiCategory: hook
 symbols: [useParticleSystem]
 relatedTypes:
   [
-    CRCParticleSystem,
-    CRCParticleSystemOptions,
-    CRCParticleSystemStatus,
-    CRCParticleExecution,
+    PibblParticleSystem,
+    PibblParticleSystemOptions,
+    PibblParticleSystemStatus,
+    PibblParticleExecution,
   ]
 keywords: [particles, hook, pause, restart, emit, drain]
 ---
@@ -19,12 +19,12 @@ keywords: [particles, hook, pause, restart, emit, drain]
 # useParticleSystem
 
 ```ts
-import { useParticleSystem } from "@crc/particles";
+import { useParticleSystem } from "@pibbl/core/particles";
 ```
 
 Creates a stable component-owned system for an immutable 2D definition.
 Its controls are `play`, `pause`, `resume`, `restart`, `emit`, and `stop`.
-`status` and `execution` are readonly CRC signals.
+`status` and `execution` are readonly Pibbl signals.
 
 Commands enter the shared scheduler's Begin phase. Population advances in
 Advance, metadata publishes in Commit, renderer work plans and paints, and
@@ -35,7 +35,7 @@ and makes retained controls inert.
 Use explicit system mode when event handlers need manual bursts or lifecycle
 controls. Canvas supports both automatic emission and manual births.
 
-Types: [`CRCParticleSystem`](#/api/types/particles#crcparticlesystem),
-[`CRCParticleSystemOptions`](#/api/types/particles#crcparticlesystemoptions),
-[`CRCParticleSystemStatus`](#/api/types/particles#crcparticlesystemstatus), and
-[`CRCParticleExecution`](#/api/types/particles#crcparticleexecution).
+Types: [`PibblParticleSystem`](#/api/types/particles#pibblparticlesystem),
+[`PibblParticleSystemOptions`](#/api/types/particles#pibblparticlesystemoptions),
+[`PibblParticleSystemStatus`](#/api/types/particles#pibblparticlesystemstatus), and
+[`PibblParticleExecution`](#/api/types/particles#pibblparticleexecution).

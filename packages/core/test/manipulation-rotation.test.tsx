@@ -1,13 +1,13 @@
 import { afterEach, expect, it } from "vitest";
 import { commands } from "vitest/browser";
-import * as CRC from "@crc/core";
+import * as Pibbl from "@pibbl/core";
 import type {
-  CRCController,
-  CRCNode,
-  CRCManipulationCommitEvent,
-} from "@crc/core";
+  PibblController,
+  PibblNode,
+  PibblManipulationCommitEvent,
+} from "@pibbl/core";
 
-let mount: CRCController | undefined;
+let mount: PibblController | undefined;
 const settle = () =>
   new Promise<void>((resolve) =>
     requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
@@ -20,35 +20,35 @@ afterEach(async () => {
 });
 
 async function scene(snap = false) {
-  const RotationHandle = Reflect.get(CRC, "RotationHandle");
+  const RotationHandle = Reflect.get(Pibbl, "RotationHandle");
   expect(RotationHandle).toBeTypeOf("function");
-  const box = CRC.signal({ left: 100, top: 100, width: 120, height: 80 });
-  const rotation = CRC.signal(0);
-  const commits: CRCManipulationCommitEvent[] = [];
+  const box = Pibbl.signal({ left: 100, top: 100, width: 120, height: 80 });
+  const rotation = Pibbl.signal(0);
+  const commits: PibblManipulationCommitEvent[] = [];
   const canvas = document.createElement("canvas");
   canvas.width = 400;
   canvas.height = 300;
   canvas.dataset.manipulationTest = "";
   canvas.style.touchAction = "none";
   document.body.append(canvas);
-  function Scene(): CRCNode {
-    const control = CRC.useManipulation({
+  function Scene(): PibblNode {
+    const control = Pibbl.useManipulation({
       box,
       rotation,
-      rotate: snap ? { snap: { step: CRC.degrees(15) } } : {},
+      rotate: snap ? { snap: { step: Pibbl.degrees(15) } } : {},
       onCommit: (event) => commits.push(event),
     });
     return (
-      <CRC.ManipulationFrame {...control.frameProps}>
-        <CRC.Rectangle
+      <Pibbl.ManipulationFrame {...control.frameProps}>
+        <Pibbl.Rectangle
           pointerEvents="none"
           style={{ width: 120, height: 80, fill: "blue" }}
         />
-        {CRC.createElement(RotationHandle, { controller: control })}
-      </CRC.ManipulationFrame>
+        {Pibbl.createElement(RotationHandle, { controller: control })}
+      </Pibbl.ManipulationFrame>
     );
   }
-  mount = CRC.crc(canvas, <Scene />, { pixelRatio: 1 });
+  mount = Pibbl.pibbl(canvas, <Scene />, { pixelRatio: 1 });
   await settle();
   return { box, rotation, commits };
 }
@@ -92,18 +92,18 @@ it("keeps rotation continuous through a full turn and commits the terminal sampl
 });
 
 it("resizes a quarter-turned frame while preserving the opposite painted corner", async () => {
-  const box = CRC.signal({ left: 100, top: 100, width: 120, height: 80 });
-  const rotation = CRC.signal(Math.PI / 2);
+  const box = Pibbl.signal({ left: 100, top: 100, width: 120, height: 80 });
+  const rotation = Pibbl.signal(Math.PI / 2);
   const canvas = document.createElement("canvas");
   canvas.width = 400;
   canvas.height = 300;
   canvas.dataset.manipulationTest = "";
   document.body.append(canvas);
-  mount = CRC.crc(
+  mount = Pibbl.pibbl(
     canvas,
-    <CRC.Manipulable style={box} rotation={rotation} resizable>
-      <CRC.Rectangle style={{ width: "100%", height: "100%", fill: "blue" }} />
-    </CRC.Manipulable>,
+    <Pibbl.Manipulable style={box} rotation={rotation} resizable>
+      <Pibbl.Rectangle style={{ width: "100%", height: "100%", fill: "blue" }} />
+    </Pibbl.Manipulable>,
     { pixelRatio: 1 },
   );
   await settle();
@@ -130,15 +130,15 @@ it("resizes a quarter-turned frame while preserving the opposite painted corner"
 });
 
 it("converts native movement through a rotated and nonuniformly scaled Group", async () => {
-  const box = CRC.signal({ left: 40, top: 50, width: 120, height: 80 });
+  const box = Pibbl.signal({ left: 40, top: 50, width: 120, height: 80 });
   const canvas = document.createElement("canvas");
   canvas.width = 500;
   canvas.height = 400;
   canvas.dataset.manipulationTest = "";
   document.body.append(canvas);
-  mount = CRC.crc(
+  mount = Pibbl.pibbl(
     canvas,
-    <CRC.Group
+    <Pibbl.Group
       style={{
         translateX: 100,
         translateY: 40,
@@ -147,12 +147,12 @@ it("converts native movement through a rotated and nonuniformly scaled Group", a
         scaleY: 0.75,
       }}
     >
-      <CRC.Manipulable style={box} draggable>
-        <CRC.Rectangle
+      <Pibbl.Manipulable style={box} draggable>
+        <Pibbl.Rectangle
           style={{ width: "100%", height: "100%", fill: "blue" }}
         />
-      </CRC.Manipulable>
-    </CRC.Group>,
+      </Pibbl.Manipulable>
+    </Pibbl.Group>,
     { pixelRatio: 1 },
   );
   await settle();
@@ -174,10 +174,10 @@ it("converts native movement through a rotated and nonuniformly scaled Group", a
 });
 
 it("converts every finite degree magnitude without intermediate overflow", () => {
-  expect(CRC.degrees(180)).toBe(Math.PI);
-  expect(CRC.degrees(-90)).toBe(-Math.PI / 2);
-  expect(Number.isFinite(CRC.degrees(Number.MAX_VALUE))).toBe(true);
-  expect(CRC.degrees(Number.MAX_VALUE)).toBeCloseTo(Number.MAX_VALUE / 180 * Math.PI, -290);
-  expect(() => CRC.degrees(Infinity)).toThrow(/finite/);
-  expect(() => CRC.degrees(NaN)).toThrow(/finite/);
+  expect(Pibbl.degrees(180)).toBe(Math.PI);
+  expect(Pibbl.degrees(-90)).toBe(-Math.PI / 2);
+  expect(Number.isFinite(Pibbl.degrees(Number.MAX_VALUE))).toBe(true);
+  expect(Pibbl.degrees(Number.MAX_VALUE)).toBeCloseTo(Number.MAX_VALUE / 180 * Math.PI, -290);
+  expect(() => Pibbl.degrees(Infinity)).toThrow(/finite/);
+  expect(() => Pibbl.degrees(NaN)).toThrow(/finite/);
 });

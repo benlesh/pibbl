@@ -86,7 +86,7 @@ export function describeReplayError(error) {
 export function recordReplayFailure(report, error, stage) {
   const evidence = describeReplayError(error);
   const transport = report.browserFailure?.category;
-  const identityFailure = evidence.code === 'CRC_FIXTURE_IDENTITY_UNAVAILABLE' || evidence.code === 'CRC_FIXTURE_IDENTITY_MISMATCH';
+  const identityFailure = evidence.code === 'PIBBL_FIXTURE_IDENTITY_UNAVAILABLE' || evidence.code === 'PIBBL_FIXTURE_IDENTITY_MISMATCH';
   report.status = transport ? 'fail' :
     stage === 'setup' || stage === 'navigation' || identityFailure ? 'blocked' : 'fail';
   const last = report.steps?.at(-1);

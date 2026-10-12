@@ -1,8 +1,5 @@
-import {
-  bendPathAlongArc, bendPathAlongPath, crc, Circle, Group, Line, Path, PathGeometry, Rectangle, Text,
-  useConst, useRef, useSignal,
-  type CRCController, type CRCPointerEvent, type PathBendAlign, type PathBendBaseline, type PathBendFit,
-} from '@crc/core';
+import { pibbl, Circle, Group, Line, Path, PathGeometry, Rectangle, Text, useConst, useRef, useSignal, type PibblController, type PibblPointerEvent, type PathBendAlign, type PathBendBaseline, type PathBendFit, transformPath, arcBendTransform, pathBendTransform } from '@pibbl/core';
+
 
 interface Controls {
   baseline: PathBendBaseline; align: PathBendAlign; fit: PathBendFit;
@@ -32,8 +29,8 @@ function originalOutline() {
 
 function bend(source: ReturnType<typeof originalOutline>, controls: Controls) {
   return controls.mode === 'arc'
-    ? bendPathAlongArc(source, { source: frame, arc: guideArc(controls), ...controls, overflow: 'extend', tolerance: 0.15 })
-    : bendPathAlongPath(source, guideGeometry(controls), { source: frame, ...controls, overflow: 'extend', tolerance: 0.15 });
+    ? transformPath(source, arcBendTransform({ source: frame, arc: guideArc(controls), ...controls, overflow: 'extend' }), { ...controls, tolerance: 0.15 })
+    : transformPath(source, pathBendTransform({ ...{ source: frame, ...controls, overflow: 'extend' }, guide: guideGeometry(controls) }), { ...controls, tolerance: 0.15 });
 }
 
 function guideGeometry(controls: Controls) {
@@ -78,7 +75,7 @@ function PathBendingStudy() {
   const tangentLength = Math.hypot(620 - controls.c2x, 310 - controls.c2y);
   const tx = controls.mode === 'arc' ? -Math.sin(endAngle) : (620 - controls.c2x) / tangentLength;
   const ty = controls.mode === 'arc' ? Math.cos(endAngle) : (310 - controls.c2y) / tangentLength;
-  const stop = (event: CRCPointerEvent) => {
+  const stop = (event: PibblPointerEvent) => {
     if (drag.current?.pointerId !== event.pointerId) return;
     drag.current = null;
     if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
@@ -154,6 +151,6 @@ function PathBendingStudy() {
   </>;
 }
 
-export default function mount(canvas: HTMLCanvasElement): CRCController {
-  return crc(canvas, <PathBendingStudy />);
+export default function mount(canvas: HTMLCanvasElement): PibblController {
+  return pibbl(canvas, <PathBendingStudy />);
 }

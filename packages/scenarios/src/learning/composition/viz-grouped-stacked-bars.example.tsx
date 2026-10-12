@@ -4,14 +4,14 @@ import {
   Line,
   Rectangle,
   Text,
-  crc,
+  pibbl,
   useLayoutBox,
   useSignal,
-  type CRCController,
-  type CRCPointerEvent,
+  type PibblController,
+  type PibblPointerEvent,
   type WritableSignal,
-} from "@crc/core";
-import { Axis, BarSeries, Scale, useScale } from "@crc/viz";
+} from "@pibbl/core";
+import { Axis, BarSeries, useBarScale, useLinearScale, BarScale, LinearScale } from "@pibbl/core/viz";
 
 const periods = ["Q1", "Q2", "Q3", "Q4"];
 const regions = ["North", "South"];
@@ -129,11 +129,11 @@ function Plot({
   origin: { x: number; y: number };
   selected: WritableSignal<Segment | null>;
 }) {
-  const category = useScale("periods", "band").get();
-  const group = useScale("regions", "band").get();
-  const value = useScale("cash").get();
+  const category = useBarScale("periods").get();
+  const group = useBarScale("regions").get();
+  const value = useLinearScale("cash").get();
   const hit = selected.get();
-  function inspect(event: CRCPointerEvent) {
+  function inspect(event: PibblPointerEvent) {
     const x = event.x - origin.x;
     const y = event.y - origin.y;
     selected.set(
@@ -317,26 +317,26 @@ function Scene() {
       ))}
       <Group style={{ translateX: origin.x, translateY: origin.y }}>
         <Absolute style={{ width, height }}>
-          <Scale
+          <BarScale
             id="periods"
-            type="band"
+
             domain={periods}
             range={horizontal.get() ? "height" : "width"}
             paddingInner={0.3}
             paddingOuter={0.18}
             style={{ width, height }}
           >
-            <Scale
+            <BarScale
               id="regions"
-              type="band"
+
               domain={regions}
               range={{ bandwidthOf: "periods" }}
               paddingInner={0.12}
               paddingOuter={0.04}
             >
-              <Scale
+              <LinearScale
                 id="cash"
-                type="linear"
+
                 domain={[-240, 420]}
                 range={horizontal.get() ? "width" : "height"}
                 reverse={!horizontal.get()}
@@ -346,15 +346,15 @@ function Scene() {
                   origin={origin}
                   selected={selected}
                 />
-              </Scale>
-            </Scale>
-          </Scale>
+              </LinearScale>
+            </BarScale>
+          </BarScale>
         </Absolute>
       </Group>
     </Group>
   );
 }
 
-export default function mount(canvas: HTMLCanvasElement): CRCController {
-  return crc(canvas, <Scene />, { viewport: "responsive" });
+export default function mount(canvas: HTMLCanvasElement): PibblController {
+  return pibbl(canvas, <Scene />, { viewport: "responsive" });
 }

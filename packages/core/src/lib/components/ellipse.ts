@@ -1,11 +1,11 @@
 import { definePrimitive } from '../define-primitive.js';
 import type {
-  CRCEventFocusOptions,
-  CRCEventHandlers,
-  CRCEventParticipationOptions,
+  PibblEventFocusOptions,
+  PibblEventHandlers,
+  PibblEventParticipationOptions,
 } from '../events/types.js';
 import type { RenderingContext2D, SystemStyle } from '../types.js';
-import type { CRCPhysics2DPropExtension } from '../types.js';
+import type { PibblPhysics2DPropExtension } from '../types.js';
 import {
   resolveLocalOffset,
   stripLayoutParticipation,
@@ -26,15 +26,43 @@ import {
 import { renderPath } from './path.js';
 import { createEllipsePath } from '../geometry/ellipse.js';
 
-export interface EllipseProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions, CRCPhysics2DPropExtension {}
+/**
+ * Authored inputs for Ellipse, including the declared data and presentation options.
+ *
+ * @see {@link PibblEventHandlers}
+ * @see {@link PibblEventParticipationOptions}
+ * @see {@link PibblPhysics2DPropExtension}
+ * @see {@link Ellipse}
+ */
+export interface EllipseProps extends PibblEventHandlers, PibblEventFocusOptions, PibblEventParticipationOptions, PibblPhysics2DPropExtension {}
 
+/**
+ * Supported geometry and presentation properties for Ellipse.
+ *
+ * @see {@link SystemStyle}
+ * @see {@link PaintStyle}
+ * @see {@link CursorStyle}
+ * @see {@link BoxStyle}
+ * @see {@link LayoutItemStyle}
+ * @see {@link Length}
+ * @see {@link Ellipse}
+ */
 export interface EllipseStyle
   extends SystemStyle, PaintStyle, CursorStyle, BoxStyle, LayoutItemStyle {
+  /** Horizontal ellipse radius. See {@link Length}. */
   radiusX: Exclude<Length, 'auto'>;
+  /** Vertical ellipse radius. See {@link Length}. */
   radiusY: Exclude<Length, 'auto'>;
+  /** Horizontal coordinate of the center. See {@link Length}. */
   cx?: Exclude<Length, 'auto'>;
+  /** Vertical coordinate of the center. See {@link Length}. */
   cy?: Exclude<Length, 'auto'>;
+  /** Rotation applied to the containing geometry. See {@link EllipseStyle}. */
   rotation?: number;
+  /**
+   * Width used for line hit testing independently of the visible stroke width. See
+   * {@link EllipseStyle}.
+   */
   lineInteractionWidth?: number;
 }
 
@@ -76,7 +104,16 @@ function renderEllipse(
   }, ctx);
 }
 
-/** Describes an ellipse primitive for JSX or createElement authoring. */
+/**
+ * Describes an ellipse primitive for JSX or createElement authoring.
+ *
+ * @param props - Authored component inputs, supplied through JSX or createElement. See the linked
+ * props and style types.
+ * @throws When called directly; Pibbl mounts this component through JSX or createElement.
+ *
+ * @see {@link EllipseProps}
+ * @see {@link EllipseStyle}
+ */
 export const Ellipse = definePrimitive<
   EllipseProps,
   EllipseStyle,

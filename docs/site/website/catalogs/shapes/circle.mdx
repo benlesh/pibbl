@@ -1,0 +1,16 @@
+---
+title: Circle preview
+description: A single teal circle at a known size.
+---
+
+The preview draws a teal circle centered at `(150, 100)`, with radius 60, on a 600 by 200 logical surface. Its diameter is 120 logical pixels. The rest of the surface is transparent.
+
+```js
+createElement(Circle, {
+  style: { cx: 150, cy: 100, radius: 60, fill: "#267d7c" },
+});
+```
+
+Increase `radius` to change the geometry; changing only `fill` changes paint. The responsive display scales this fixed logical surface, so display pixels may differ from logical units.
+
+[Full Circle reference](/reference/circle/) · [Open editable Circle](@PLAYGROUND@#/examples/drawing/circle) · [Sizing foundations](/guides/foundations/)

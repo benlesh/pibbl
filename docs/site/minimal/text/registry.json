@@ -1,0 +1,22 @@
+[
+  {
+    "id": "outline",
+    "title": "Text outline",
+    "description": "Load an outline font, shape a text run, and paint its editable path with glyph metrics.",
+    "source": "outline.tsx",
+    "environment": "browser",
+    "symbols": [
+      { "name": "loadOutlineFont", "importPath": "@pibbl/text" },
+      { "name": "createTextGeometry", "importPath": "@pibbl/text" },
+      { "name": "InkBounds", "importPath": "@pibbl/text" },
+      { "name": "OutlineFont", "importPath": "@pibbl/text" },
+      { "name": "OutlineFontOptions", "importPath": "@pibbl/text" },
+      { "name": "TextGeometryOptions", "importPath": "@pibbl/text" },
+      { "name": "TextGeometryResult", "importPath": "@pibbl/text" },
+      { "name": "TextGlyph", "importPath": "@pibbl/text" }
+    ],
+    "notes": [
+      "The browser example requires the existing Studio /pibbl-text/ABeeZee-Regular.ttf asset and the @pibbl/text WASM loader asset; retain and dispose the font explicitly."
+    ]
+  }
+]

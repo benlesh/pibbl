@@ -1,6 +1,6 @@
-import { dropShadow } from '@crc/core/filters';
+import { dropShadow } from '@pibbl/core/filters';
 import { describe, expect, it, vi } from 'vitest';
-import { crc } from '../crc';
+import { pibbl } from '../pibbl';
 import { Image } from '../components/img';
 import { Text } from '../components/text';
 import { resolveTextLayout } from '../components/text-layout';
@@ -9,7 +9,7 @@ import { useRef } from '../hooks/use-ref';
 import { useSignal } from '../hooks/use-signal';
 import { LayoutDiagnostic } from '../style/diagnostics';
 import { componentTest } from '../test-utils/component-test';
-import type { CRCElement, MeasureResult, SystemStyle } from '../types';
+import type { PibblElement, MeasureResult, SystemStyle } from '../types';
 import {
   measureElement,
   type CanvasMeasurementService,
@@ -224,21 +224,21 @@ describe('pure element measurement', () => {
     expect(errors[1]).toMatch(/hooks?.*component|component.*hooks?/i);
     expect(errors[2]).toMatch(/layout context/i);
 
-    crc(canvas.element, createElement(Host, { revision: 2 }));
+    pibbl(canvas.element, createElement(Host, { revision: 2 }));
     await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
     expect(errors).toHaveLength(6);
   });
 
   it('rejects direct and indirect cyclic measurement and cleans up afterward', () => {
-    let directElement: CRCElement<any>;
+    let directElement: PibblElement<any>;
     const Direct = definePrimitive<{}>(() => undefined, {
       measure: (input): MeasureResult =>
         input.measureElement(directElement, constraints),
     });
     directElement = createElement(Direct, {});
 
-    let aElement: CRCElement<any>;
-    let bElement: CRCElement<any>;
+    let aElement: PibblElement<any>;
+    let bElement: PibblElement<any>;
     const A = definePrimitive<{}>(() => undefined, {
       measure: (input): MeasureResult =>
         input.measureElement(bElement, constraints),

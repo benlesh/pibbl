@@ -1,6 +1,6 @@
 # Examples and gallery directives
 
-An example earns its place by teaching something recognizable and showing a result someone wants to make. The gallery should offer both approachable lessons and ambitious proof of CRC's range, with an obvious way to move from either into the playground.
+An example earns its place by teaching something recognizable and showing a result someone wants to make. The gallery should offer both approachable lessons and ambitious proof of Pibbl's range, with an obvious way to move from either into the playground.
 
 ## Three distinct content forms
 
@@ -20,7 +20,7 @@ Give the scene a coherent miniature art direction: a limited palette, deliberate
 
 Use public package entries, ordinary application code, explicit cleanup, and predictable initial state. Keep assets local or clearly declared and licensed. Use native HTML for text editing and complex forms when that better serves the experience. Treat that HTML as part of the example, not hidden site scaffolding.
 
-Every example should state what CRC contributes and what comes from application logic, HTML, Three.js, or another declared dependency. A game is not evidence that CRC provides a game engine. A shader is not automatically a CRC feature.
+Every example should state what Pibbl contributes and what comes from application logic, HTML, Three.js, or another declared dependency. A game is not evidence that Pibbl provides a game engine. A shader is not automatically a Pibbl feature.
 
 ## Splitting a large example
 
@@ -59,3 +59,7 @@ Audit current examples as keep, simplify, split, remake, or keep only in the tes
 ## Acceptance questions
 
 Can someone explain the point after one interaction? Is the relevant code easy to find? Is the edit prompt achievable without understanding unrelated machinery? Does the screenshot match the live result? Does Open in playground preserve the complete experience? Can users pause motion, operate relevant controls with a keyboard, and understand fallback states?
+
+## Catalogs and agent companions
+
+In addition to the complete-example gallery, provide distinct catalogs for shapes, filters, textures, and reaction-diffusion as defined in the [updated architecture](12-documentation-architecture.md). Each entry pairs comparable visual output with a short source excerpt, reference links, and playground access. Every advanced example also has a public, explicitly linked Markdown companion explaining architecture, safe adaptations, limitations, and validation; keep that depth out of the default human page layout.

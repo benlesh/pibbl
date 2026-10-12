@@ -6,21 +6,22 @@ kind: api
 slug: use-event-target
 apiCategory: hook
 symbols: [useEventTarget]
-relatedTypes: [CRCEventHandlers, CRCEventTargetOptions, CRCEventTargetSnapshot]
+relatedTypes:
+  [PibblEventHandlers, PibblEventTargetOptions, PibblEventTargetSnapshot]
 ---
 
 # useEventTarget
 
 ```ts
-import { useEventTarget } from "@crc/core";
+import { useEventTarget } from "@pibbl/core";
 ```
 
-`useEventTarget(handlers, options)` accepts [`CRCEventHandlers`](#/api/types/events#crceventhandlers) and [`CRCEventTargetOptions`](#/api/types/events#crceventtargetoptions), is render-only, and returns the current
+`useEventTarget(handlers, options)` accepts [`PibblEventHandlers`](#/api/types/events#pibbleventhandlers) and [`PibblEventTargetOptions`](#/api/types/events#pibbleventtargetoptions), is render-only, and returns the current
 focus snapshot while registering/updating a geometric target, its event
-handlers, and focus options. CRC owns the registration and releases it when the
+handlers, and focus options. Pibbl owns the registration and releases it when the
 hook slot is replaced or the component unmounts.
 
-The returned focus state is a [`CRCEventTargetSnapshot`](#/api/types/events#crceventtargetsnapshot).
+The returned focus state is a [`PibblEventTargetSnapshot`](#/api/types/events#pibbleventtargetsnapshot).
 
 ```tsx
 function Target() {

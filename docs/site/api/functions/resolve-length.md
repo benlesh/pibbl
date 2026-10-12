@@ -12,7 +12,7 @@ relatedTypes: [Length]
 # resolveLength
 
 ```ts
-import { resolveLength } from "@crc/core";
+import { resolveLength } from "@pibbl/core";
 ```
 
 `resolveLength(value, reference, property, context?)` resolves a public [`Length`](#/api/types/layout#length) and returns a finite logical

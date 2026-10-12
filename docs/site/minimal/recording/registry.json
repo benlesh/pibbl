@@ -1,0 +1,47 @@
+[
+  {
+    "id": "record-frames",
+    "title": "Record committed frames and export a GIF",
+    "description": "Capture a live Canvas color change, read frame metadata and pixels, export a GIF and release owned resources.",
+    "source": "record-frames.ts",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "recordFrames",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "exportGif",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PibblFrameRecordingOptions",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PibblFrameRecordingSession",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PibblFrameRecording",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PibblRecordedFrameInfo",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PibblRecordedFrame",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PibblGifExportOptions",
+        "importPath": "@pibbl/core"
+      }
+    ],
+    "notes": [
+      "Recording observes committed renders without scheduling application animation.",
+      "The application owns and revokes its GIF Blob URL."
+    ]
+  }
+]

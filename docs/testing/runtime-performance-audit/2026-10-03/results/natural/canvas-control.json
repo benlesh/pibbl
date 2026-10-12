@@ -1,7 +1,7 @@
 {
   "node": "v24.15.0",
   "browser": "151.0.7922.34",
-  "meaning": "Platform-only control, no CRC/WASM. Alternating512x512 publication surfaces updated from ImageData, CanvasPattern fill versus drawImage. Natural GC during60s each. Allocation/rendering hypotheses only.",
+  "meaning": "Platform-only control, no Pibbl/WASM. Alternating512x512 publication surfaces updated from ImageData, CanvasPattern fill versus drawImage. Natural GC during60s each. Allocation/rendering hypotheses only.",
   "samples": [
     {
       "method": "pattern",

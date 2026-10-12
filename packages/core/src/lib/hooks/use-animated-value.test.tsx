@@ -1,0 +1,532 @@
+import { signalObserversForTest } from "../../../test/support/signal-observer";
+import { afterEach, beforeEach, describe, expect, expectTypeOf, it } from 'vitest';
+import {
+  pibblInternalCurrentRenderOwner,
+  pibblInternalRequestRendererWork,
+  type PibblInternalRenderOwner,
+} from '@pibbl/core/internal';
+import {
+  tween, spring, pibbl,
+  computed,
+  useConst,
+  useAnimatedValue,
+  signal,
+  type Signal,
+} from '../../index.js';
+import { animationPlaybackSnapshot } from '../animation/playback.js';
+import { createSpringRecord, sampleSpring } from '../animation/spring.js';
+import { executeRender } from '../execute-render.js';
+import { clearSharedState, getPibblInstance } from '../global-state.js';
+import { getSignalNode, signalGraphSnapshot } from '../signals/graph.js';
+import { writerLeaseSnapshot } from '../animation/writer-leases.js';
+import {
+  installSchedulerDriverForTest,
+  installSchedulerTraceCollectorForTest,
+  ManualSchedulerDriver,
+  snapshotRealmScheduler,
+} from '../scheduler/testing.js';
+
+let driver: ManualSchedulerDriver;
+let restoreDriver: () => void;
+const roots = new Set<ReturnType<typeof pibbl>>();
+
+beforeEach(() => {
+  document.body.replaceChildren();
+  driver = new ManualSchedulerDriver();
+  restoreDriver = installSchedulerDriverForTest(driver);
+});
+
+afterEach(() => {
+  for (const root of roots) root.dispose();
+  roots.clear();
+  clearSharedState();
+  restoreDriver();
+  document.body.replaceChildren();
+});
+
+function mount(node: Parameters<typeof pibbl>[1]): {
+  readonly canvas: HTMLCanvasElement;
+  readonly controller: ReturnType<typeof pibbl>;
+} {
+  const canvas = document.createElement('canvas');
+  document.body.appendChild(canvas);
+  const controller = pibbl(canvas, node);
+  roots.add(controller);
+  return { canvas, controller };
+}
+
+describe('animated value hooks mount behavior', () => {
+  it('resolves signal-valued targets, option objects, and direct option fields', () => {
+    const target = signal(10);
+    const duration = signal(100);
+    const initial = signal(0);
+    const options = signal({ animation: computed(() => tween({ duration: duration.get() })), initial });
+    let output!: Signal<number>;
+    function Probe() {
+      output = useAnimatedValue(target, options);
+      output.get();
+    }
+
+    mount(<Probe />);
+    driver.flush(0);
+    driver.flush(10);
+    driver.flush(60);
+    expect(output.get()).toBe(5);
+
+    duration.set(200);
+    target.set(20);
+    driver.flush(70);
+    driver.flush(80);
+    driver.flush(180);
+    expect(output.get()).toBe(13);
+
+  });
+
+  it('presents an omitted initial target with stable readonly identity and no entrance work', () => {
+    const values: number[] = [];
+    const outputs: Signal<number>[] = [];
+    function Probe({ target }: { target: number }) {
+      const output = useAnimatedValue(target, { animation: tween({ duration: 100 }) });
+      outputs.push(output);
+      values.push(output.get());
+    }
+
+    const beforePlaybacks = animationPlaybackSnapshot();
+    const beforeLeases = writerLeaseSnapshot();
+    const { canvas } = mount(<Probe target={10} />);
+    driver.flush(0);
+
+    expect(values).toEqual([10]);
+    expect('set' in outputs[0]).toBe(false);
+    expect(driver.pendingHostFrames).toBe(0);
+    expect(animationPlaybackSnapshot()).toEqual(beforePlaybacks);
+    expect(writerLeaseSnapshot()).toEqual(beforeLeases);
+
+    pibbl(canvas, <Probe target={10} />);
+    driver.flush(1);
+    expect(outputs[1]).toBe(outputs[0]);
+    expect(values).toEqual([10, 10]);
+    expect(driver.pendingHostFrames).toBe(0);
+  });
+
+  it('presents an explicit initial value and queues entrance only after mount succeeds', () => {
+    const values: number[] = [];
+    let output!: Signal<number>;
+    function Probe() {
+      output = useAnimatedValue(10, { animation: tween({ duration: 100 }), initial: 0 });
+      values.push(output.get());
+    }
+
+    mount(<Probe />);
+    expect(driver.pendingHostFrames).toBe(1);
+    driver.flush(0);
+
+    expect(values).toEqual([0]);
+    expect(output.get()).toBe(0);
+    expect(driver.pendingHostFrames).toBe(1);
+    expect(animationPlaybackSnapshot().activePlaybacks).toBe(0);
+    expect(writerLeaseSnapshot().active).toBe(0);
+
+    driver.flush(10);
+    expect(animationPlaybackSnapshot().activePlaybacks).toBe(1);
+    expect(writerLeaseSnapshot().active).toBe(1);
+    expect(output.get()).toBe(0);
+  });
+
+  it('uses configured equality for the initial and later target comparisons', () => {
+    const beforePlaybacks = animationPlaybackSnapshot();
+    let output!: Signal<number>;
+    function Probe({ target }: { target: number }) {
+      output = useAnimatedValue(target, { animation: tween({ duration: 100 }), initial: 1.2, equals: (previous, next) => Math.floor(previous) === Math.floor(next) });
+      output.get();
+    }
+
+    const { canvas } = mount(<Probe target={1.8} />);
+    driver.flush(0);
+    expect(output.get()).toBe(1.2);
+    expect(driver.pendingHostFrames).toBe(0);
+
+    pibbl(canvas, <Probe target={1.9} />);
+    driver.flush(10);
+    expect(output.get()).toBe(1.2);
+    expect(driver.pendingHostFrames).toBe(0);
+    expect(animationPlaybackSnapshot().createdPlaybacks)
+      .toBe(beforePlaybacks.createdPlaybacks);
+  });
+});
+
+describe('animated value hooks retargeting', () => {
+  it('restarts a tween at full duration from the last committed presented value', () => {
+    let output!: Signal<number>;
+    function Probe({ target }: { target: number }) {
+      output = useAnimatedValue(target, { animation: tween({ duration: 100 }), initial: 0 });
+      output.get();
+    }
+
+    const { canvas } = mount(<Probe target={10} />);
+    driver.flush(0);
+    driver.flush(10);
+    driver.flush(60);
+    expect(output.get()).toBe(5);
+
+    pibbl(canvas, <Probe target={20} />);
+    driver.flush(70);
+    expect(output.get()).toBe(6);
+    driver.flush(80);
+    expect(output.get()).toBe(6);
+    driver.flush(130);
+
+    expect(output.get()).toBe(13);
+  });
+
+  it('coalesces successful target changes before Begin to one latest retarget', () => {
+    let output!: Signal<number>;
+    function Probe({ target }: { target: number }) {
+      output = useAnimatedValue(target, { animation: tween({ duration: 100 }) });
+      output.get();
+    }
+
+    const { canvas } = mount(<Probe target={0} />);
+    driver.flush(0);
+    executeRender(canvas, 1, <Probe target={10} />);
+    executeRender(canvas, 2, <Probe target={20} />);
+    executeRender(canvas, 3, <Probe target={30} />);
+
+    expect(snapshotRealmScheduler().queuedBeginCommands).toBe(1);
+    expect(animationPlaybackSnapshot().queuedCommands).toBe(1);
+    driver.flush(10);
+    expect(output.get()).toBe(0);
+    driver.flush(60);
+    expect(output.get()).toBe(15);
+  });
+
+  it('validates changed options during render even when the target is equal', () => {
+    function Probe({ duration }: { duration: number }) {
+      useAnimatedValue(10, { animation: tween({ duration }) }).get();
+    }
+
+    const { canvas } = mount(<Probe duration={100} />);
+    driver.flush(0);
+    pibbl(canvas, <Probe duration={Number.NaN} />);
+
+    expect(() => driver.flush(10)).toThrow(/duration must be finite/iu);
+    expect(driver.pendingHostFrames).toBe(1);
+    driver.flush(11);
+    expect(snapshotRealmScheduler().queuedBeginCommands).toBe(0);
+    expect(animationPlaybackSnapshot().activePlaybacks).toBe(0);
+    expect(writerLeaseSnapshot().active).toBe(0);
+  });
+
+  it('carries the last committed analytic spring velocity into a retarget', () => {
+    const springOptions = { animation: spring({ stiffness: 100, damping: 1, restSpeed: 0.001, restDelta: 0.001, maxDuration: 2_000 }), initial: 0 };
+    let output!: Signal<number>;
+    function Probe({ target }: { target: number }) {
+      output = useAnimatedValue(target, springOptions);
+      output.get();
+    }
+
+    const { canvas } = mount(<Probe target={100} />);
+    driver.flush(0);
+    driver.flush(10);
+    driver.flush(110);
+    pibbl(canvas, <Probe target={0} />);
+    driver.flush(120);
+    const committed = output.get();
+    driver.flush(130);
+    driver.flush(140);
+
+    const zeroVelocity = sampleSpring(createSpringRecord({
+      from: committed,
+      to: 0,
+      stiffness: 100,
+      damping: 1,
+      restSpeed: 0.001,
+      restDelta: 0.001,
+      maxDuration: 2_000,
+      initialVelocity: 0,
+    }), 0.01).position;
+    expect(zeroVelocity).toBeLessThan(committed);
+    expect(output.get()).toBeGreaterThan(committed);
+    expect(output.get()).toBeGreaterThan(zeroVelocity);
+  });
+
+  it('uses successful option-only changes for the next target without restarting early', () => {
+    let output!: Signal<number>;
+    function Probe({ duration, target }: { duration: number; target: number }) {
+      output = useAnimatedValue(target, { animation: tween({ duration }) });
+      output.get();
+    }
+
+    const { canvas } = mount(<Probe duration={100} target={0} />);
+    driver.flush(0);
+    executeRender(canvas, 1, <Probe duration={200} target={0} />);
+    expect(driver.pendingHostFrames).toBe(0);
+    executeRender(canvas, 2, <Probe duration={200} target={20} />);
+    expect(snapshotRealmScheduler().queuedBeginCommands).toBe(1);
+
+    driver.flush(10);
+    driver.flush(110);
+    expect(output.get()).toBe(10);
+  });
+
+  it('adopts an option-only debug name for active-run diagnostics without restarting', () => {
+    const sampleNames: Array<string | undefined> = [];
+    const restoreTrace = installSchedulerTraceCollectorForTest(record => {
+      if (record.kind === 'animation-sample') sampleNames.push(record.debugName);
+    });
+    function Probe({ debugName }: { debugName: string }) {
+      useAnimatedValue(10, { animation: tween({ duration: 100 }), initial: 0, debugName }).get();
+    }
+
+    try {
+      const { canvas } = mount(<Probe debugName="first" />);
+      driver.flush(0);
+      driver.flush(10);
+      sampleNames.length = 0;
+      pibbl(canvas, <Probe debugName="latest" />);
+      driver.flush(20);
+      sampleNames.length = 0;
+      driver.flush(30);
+
+      expect(sampleNames).toEqual(['latest']);
+      expect(animationPlaybackSnapshot().createdPlaybacks).toBeGreaterThan(0);
+    } finally {
+      restoreTrace();
+    }
+  });
+
+  it('does not adopt a target when its animation factory fails', () => {
+    let output!: Signal<number>;
+    function Probe({ target, fail = false }: { target: number; fail?: boolean }) {
+      output = useAnimatedValue(target, {
+        animation: () => {
+          if (fail) throw new Error('expected factory failure');
+          return tween({ duration: 100 });
+        },
+      });
+    }
+    const { canvas } = mount(<Probe target={0} />);
+    driver.flush(0);
+    pibbl(canvas, <Probe target={10} fail />);
+    expect(() => driver.flush(10)).toThrow('expected factory failure');
+    expect(output.get()).toBe(0);
+    expect(animationPlaybackSnapshot().queuedCommands).toBe(0);
+    expect(animationPlaybackSnapshot().activePlaybacks).toBe(0);
+  });
+
+  it('adopts no target from a failed shared root transaction', () => {
+    let output!: Signal<number>;
+    let owner!: PibblInternalRenderOwner;
+    let failComposition = false;
+    const workKey = {};
+    function Probe({ target }: { target: number }) {
+      output = useAnimatedValue(target, { animation: tween({ duration: 100 }) });
+      output.get();
+      owner ??= pibblInternalCurrentRenderOwner();
+    }
+
+    const { canvas } = mount(<Probe target={0} />);
+    driver.flush(0);
+    pibblInternalRequestRendererWork(owner, {
+      key: workKey,
+      kind: 'compose',
+      run: () => {
+        if (failComposition) throw new Error('expected composition failure');
+      },
+    });
+
+    failComposition = true;
+    pibbl(canvas, <Probe target={10} />);
+    expect(() => driver.flush(10)).toThrow(/expected composition failure/iu);
+    expect(output.get()).toBe(0);
+    expect(animationPlaybackSnapshot().queuedCommands).toBe(0);
+
+    failComposition = false;
+    pibbl(canvas, <Probe target={0} />);
+    driver.flush(20);
+    expect(output.get()).toBe(0);
+    expect(driver.pendingHostFrames).toBe(0);
+    expect(animationPlaybackSnapshot().activePlaybacks).toBe(0);
+  });
+
+  it('evaluates throwing target equality during Render and fails closed once', () => {
+    const failure = new Error('transition equality failed');
+    let equalityCalls = 0;
+    let output!: Signal<number>;
+    function Probe({ fail, target }: { fail: boolean; target: number }) {
+      output = useAnimatedValue(target, { animation: tween({ duration: 100 }), equals: fail ? () => {
+          equalityCalls++;
+          throw failure;
+        } : Object.is });
+      output.get();
+    }
+
+    const { canvas } = mount(<Probe fail={false} target={0} />);
+    driver.flush(0);
+    const staleOutput = output;
+    pibbl(canvas, <Probe fail target={10} />);
+
+    expect(() => driver.flush(10)).toThrow(failure);
+    expect(equalityCalls).toBe(1);
+    expect(getPibblInstance(canvas).refs.size).toBe(0);
+    expect(animationPlaybackSnapshot().activePlaybacks).toBe(0);
+    expect(animationPlaybackSnapshot().queuedCommands).toBe(0);
+    expect(writerLeaseSnapshot().active).toBe(0);
+    driver.flush(11);
+    expect(staleOutput.get()).toBe(0);
+    expect(equalityCalls).toBe(1);
+    expect(driver.pendingHostFrames).toBe(0);
+  });
+
+  it('runs target equality under the Render signal-write guard', () => {
+    const external = signal(0);
+    function Probe({ target, write }: { target: number; write: boolean }) {
+      useAnimatedValue(target, { animation: tween({ duration: 100 }), equals: write ? () => {
+          external.set(1);
+          return false;
+        } : Object.is }).get();
+    }
+
+    const { canvas } = mount(<Probe target={0} write={false} />);
+    driver.flush(0);
+    pibbl(canvas, <Probe target={10} write />);
+
+    expect(() => driver.flush(10)).toThrow('Pibbl render');
+    expect(external.get()).toBe(0);
+    expect(getPibblInstance(canvas).refs.size).toBe(0);
+    driver.flush(11);
+  });
+
+  it('keeps one signal identity across failed omitted and explicit initial mount retries', () => {
+    const beforeGraph = signalGraphSnapshot();
+    let owner!: PibblInternalRenderOwner;
+    let failComposition = false;
+    const values: Array<readonly [direct: number, derived: number]> = [];
+    const versions: number[] = [];
+    const outputs: Signal<number>[] = [];
+    let outputNotifications = 0;
+    let observedOutput: Signal<number> | undefined;
+    const outputObserver = () => outputNotifications++;
+    const workKey = {};
+    function Child({ initial, target }: { initial?: number; target: number }) {
+      const output = initial === undefined ?
+        useAnimatedValue(target, { animation: tween({ duration: 100 }) }) :
+        useAnimatedValue(target, { animation: tween({ duration: 100 }), initial });
+      const doubled = useConst(() => computed(() => output.get() * 2));
+      if (observedOutput === undefined) {
+        observedOutput = output;
+        signalObserversForTest(getSignalNode(output)).add(outputObserver);
+      }
+      outputs.push(output);
+      values.push([output.get(), doubled.get()]);
+      versions.push(getSignalNode(output).version);
+    }
+    function Root({
+      include,
+      initial,
+      target,
+    }: { include: boolean; initial?: number; target: number }) {
+      owner ??= pibblInternalCurrentRenderOwner();
+      return include ? <Child initial={initial} target={target} /> : undefined;
+    }
+
+    const { canvas } = mount(<Root include={false} target={0} />);
+    driver.flush(0);
+    pibblInternalRequestRendererWork(owner, {
+      key: workKey,
+      kind: 'compose',
+      run: () => {
+        if (failComposition) throw new Error('mount transaction failed');
+      },
+    });
+
+    failComposition = true;
+    pibbl(canvas, <Root include target={10} />);
+    expect(() => driver.flush(10)).toThrow(/mount transaction failed/iu);
+    pibbl(canvas, <Root include initial={3} target={20} />);
+    expect(() => driver.flush(20)).toThrow(/mount transaction failed/iu);
+    failComposition = false;
+    pibbl(canvas, <Root include target={30} />);
+    driver.flush(30);
+
+    expect(values).toEqual([[10, 20], [3, 6], [30, 60]]);
+    expect(versions[1]).toBeGreaterThan(versions[0]);
+    expect(versions[2]).toBeGreaterThan(versions[1]);
+    expect(outputs[1]).toBe(outputs[0]);
+    expect(outputs[2]).toBe(outputs[0]);
+    expect(outputNotifications).toBe(0);
+    expect(animationPlaybackSnapshot().activePlaybacks).toBe(0);
+    expect(animationPlaybackSnapshot().queuedCommands).toBe(0);
+    expect(writerLeaseSnapshot().active).toBe(0);
+    expect(driver.pendingHostFrames).toBe(0);
+    expect(signalGraphSnapshot().computedSourceEdges)
+      .toBe(beforeGraph.computedSourceEdges + 1);
+
+    signalObserversForTest(getSignalNode(observedOutput!)).delete(outputObserver);
+    executeRender(canvas, 31, undefined);
+    expect(signalGraphSnapshot().computedSourceEdges)
+      .toBe(beforeGraph.computedSourceEdges);
+  });
+});
+
+describe('animated value hooks public types and lifecycle', () => {
+  it('returns readonly signals, keeps spring numeric, and supports generic tween interpolation', () => {
+    const tweenTransition = () => useAnimatedValue(
+      { x: 10 },
+      { animation: tween({ duration: 100, interpolate: (from, to, progress) => ({
+          x: from.x + (to.x - from.x) * progress,
+        }) }), initial: { x: 0 } },
+    );
+    const springTransition = () => useAnimatedValue(10, { animation: spring({  }) });
+
+    expectTypeOf(tweenTransition).returns.toEqualTypeOf<Signal<{ x: number }>>();
+    expectTypeOf(springTransition).returns.toEqualTypeOf<Signal<number>>();
+    const invalidTypeExamples = () => {
+      // @ts-expect-error spring transitions accept only numeric targets
+      useAnimatedValue('ten', { animation: spring({  }) });
+      const readonly = useAnimatedValue(1, { animation: spring({  }) });
+      // @ts-expect-error transition outputs deliberately expose no write method
+      readonly.set(2);
+    };
+    expectTypeOf(invalidTypeExamples).toBeFunction();
+  });
+
+  for (const state of ['queued', 'running'] as const) {
+    it(`releases ${state} transition work and leaves a saved signal inert`, () => {
+      const beforePlayback = animationPlaybackSnapshot();
+      const beforeLeases = writerLeaseSnapshot();
+      const beforeGraph = signalGraphSnapshot();
+      let output!: Signal<number>;
+      function Probe() {
+        output = useAnimatedValue(10, { animation: tween({ duration: 100 }), initial: 0 });
+        output.get();
+      }
+
+      const { canvas } = mount(<Probe />);
+      driver.flush(0);
+      if (state === 'queued') {
+        executeRender(canvas, 1, undefined);
+      } else {
+        driver.flush(10);
+        pibbl(canvas, undefined);
+        driver.flush(20);
+      }
+      if (driver.pendingHostFrames > 0) driver.flush(21);
+      const retained = output.get();
+
+      expect(animationPlaybackSnapshot()).toMatchObject({
+        activePlaybacks: beforePlayback.activePlaybacks,
+        queuedCommands: 0,
+        queuedMilestones: 0,
+      });
+      expect(writerLeaseSnapshot().active).toBe(beforeLeases.active);
+      expect(snapshotRealmScheduler().registeredAdvanceParticipants).toBe(0);
+      expect(signalGraphSnapshot()).toMatchObject({
+        rendererConsumers: beforeGraph.rendererConsumers,
+        rendererEdges: beforeGraph.rendererEdges,
+      });
+      expect(output.get()).toBe(retained);
+      expect(driver.pendingHostFrames).toBe(0);
+    });
+  }
+});

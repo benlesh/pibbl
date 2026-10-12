@@ -1,5 +1,6 @@
+import type { useInternalHookSlot } from './hook-slot.js';
 import { GLOBAL_STATE } from '../global-state.js';
-import type { CRCRenderTransaction } from '../types.js';
+import type { PibblRenderTransaction } from '../types.js';
 import { useHookSlot } from './hook-slot.js';
 
 interface ValueMemoCandidate<T> {
@@ -8,13 +9,22 @@ interface ValueMemoCandidate<T> {
 }
 
 interface ValueMemoSlot<T> {
-  readonly candidates: WeakMap<CRCRenderTransaction, ValueMemoCandidate<T>>;
+  readonly candidates: WeakMap<PibblRenderTransaction, ValueMemoCandidate<T>>;
   dependencies: readonly unknown[];
   renderRevision: number;
   value: T;
 }
 
-/** Private direct-value cache for specialized hooks and renderer internals. */
+/**
+ * Private direct-value cache for specialized hooks and renderer internals.
+ *
+ * @param kind - Hook kind used to validate stable hook ordering.
+ * @param create - Factory called when the slot is created or dependencies change.
+ * @param dependencies - Values compared to decide whether to recreate the memoized value.
+ * @returns The value retained for the current dependencies.
+ *
+ * @see {@link useInternalHookSlot}
+ */
 export function useValueMemoSlot<T>(
   kind: string,
   create: () => T,
@@ -32,7 +42,7 @@ export function useValueMemoSlot<T>(
 
   const transaction = GLOBAL_STATE.renderTransaction;
   if (!transaction) {
-    throw new Error('CRC value memoization requires an active render transaction.');
+    throw new Error('Pibbl value memoization requires an active render transaction.');
   }
   let candidate = slot.candidates.get(transaction);
   if (!candidate || !sameDependencies(candidate.dependencies, snapshot)) {

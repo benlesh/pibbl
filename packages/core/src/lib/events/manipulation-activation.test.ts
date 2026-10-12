@@ -1,7 +1,7 @@
 import { afterEach, expect, it, vi } from 'vitest';
-import { crc } from '../crc';
+import { pibbl } from '../pibbl';
 import { createElement } from '../element/create-element';
-import { clearSharedState, getCRCInstance } from '../global-state';
+import { clearSharedState, getPibblInstance } from '../global-state';
 import { useEventTarget } from '../hooks/use-event-target';
 import { suppressManipulationActivation } from './dispatch';
 
@@ -21,9 +21,9 @@ it('uses a native click pointer ID before considering another pending manipulati
     }, { path: rectanglePath(), fill: true });
   };
   const canvas = createCanvas();
-  crc(canvas, createElement(Target, {}));
+  pibbl(canvas, createElement(Target, {}));
   await nextFrame();
-  const root = getCRCInstance(canvas);
+  const root = getPibblInstance(canvas);
 
   dispatchPointer(canvas, 'pointerdown', 1);
   suppressManipulationActivation(root, 1);
@@ -50,9 +50,9 @@ it.each(['pointerup', 'pointercancel'] as const)(
       }, { path: rectanglePath(), fill: true });
     };
     const canvas = createCanvas();
-    crc(canvas, createElement(Target, {}));
+    pibbl(canvas, createElement(Target, {}));
     await nextFrame();
-    const root = getCRCInstance(canvas);
+    const root = getPibblInstance(canvas);
 
     dispatchPointer(canvas, 'pointerdown', 7);
     dispatchPointer(canvas, type, 7);

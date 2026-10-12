@@ -1,29 +1,26 @@
-import type { CRCClippingStackEntry, CRCEventRoot, CRCInstance } from '../types.js';
+import type { PibblClippingStackEntry, PibblEventRoot, PibblInstance } from '../types.js';
 import { isHit } from '../util/is-hit.js';
 import {
-  CRCHitDisposition,
-  CRCPaintEntryKind,
+  PibblHitDisposition,
+  PibblPaintEntryKind,
   hitTestScratchFactory,
-  type CRCHitTestInput,
-  type CRCHitTestOutput,
-  type CRCPathPaintEntry,
+  type PibblHitTestInput,
+  type PibblHitTestOutput,
+  type PibblPathPaintEntry,
 } from './paint-entry.js';
-import {
-  getLegacyHitGeometry,
-  type CRCEventTargetRegistration,
-} from './registrations.js';
+import type { PibblEventTargetRegistration } from './registrations.js';
 
-export interface CRCCoordinatePoint {
+export interface PibblCoordinatePoint {
   readonly x: number;
   readonly y: number;
 }
 
 /** Resolves one paint entry in reverse global paint order without allocating. */
 export function resolveCoordinateHit(
-  eventRoot: CRCEventRoot,
-  input: CRCHitTestInput,
-  output: CRCHitTestOutput,
-): CRCHitTestOutput {
+  eventRoot: PibblEventRoot,
+  input: PibblHitTestInput,
+  output: PibblHitTestOutput,
+): PibblHitTestOutput {
   const instance = eventRoot.rootInstance;
   const canvas = eventRoot.canvas;
   reset(output);
@@ -41,20 +38,20 @@ export function resolveCoordinateHit(
 
 /** Compatibility wrapper for coordinate event dispatch. */
 export function resolveCoordinateTarget(
-  eventRoot: CRCEventRoot,
-  point: CRCCoordinatePoint,
-): CRCEventTargetRegistration | undefined {
+  eventRoot: PibblEventRoot,
+  point: PibblCoordinatePoint,
+): PibblEventTargetRegistration | undefined {
   const output = resolveCoordinateOutput(eventRoot, point);
-  return output.disposition === CRCHitDisposition.Target ?
+  return output.disposition === PibblHitDisposition.Target ?
     output.target ?? undefined :
     undefined;
 }
 
 /** Borrows the root scratch result for immediate coordinate dispatch. */
 export function resolveCoordinateOutput(
-  eventRoot: CRCEventRoot,
-  point: CRCCoordinatePoint,
-): CRCHitTestOutput {
+  eventRoot: PibblEventRoot,
+  point: PibblCoordinatePoint,
+): PibblHitTestOutput {
   let input = eventRoot.coordinateHitInput;
   let output = eventRoot.coordinateHitOutput;
   if (!input || !output) {
@@ -69,24 +66,24 @@ export function resolveCoordinateOutput(
 }
 
 function resolveInstanceHit(
-  eventRoot: CRCEventRoot,
-  instance: CRCInstance,
+  eventRoot: PibblEventRoot,
+  instance: PibblInstance,
   canvas: HTMLCanvasElement,
   rootX: number,
   rootY: number,
   transform: DOMMatrix,
-  output: CRCHitTestOutput,
-): CRCHitTestOutput {
+  output: PibblHitTestOutput,
+): PibblHitTestOutput {
   const entries = Array.from(instance.paintEntries);
   for (let index = entries.length - 1; index >= 0; index--) {
     const entry = entries[index]!;
     reset(output);
     switch (entry.paintKind) {
-      case CRCPaintEntryKind.Path:
+      case PibblPaintEntryKind.Path:
         resolvePathHit(eventRoot, canvas, entry, rootX, rootY, transform, output);
         break;
-      case CRCPaintEntryKind.NestedInstance:
-      case CRCPaintEntryKind.Resolver: {
+      case PibblPaintEntryKind.NestedInstance:
+      case PibblPaintEntryKind.Resolver: {
         if (entry.instance.mainTeardowns.closed) continue;
         const childTransform = multiplyTransforms(transform, entry.transform);
         const boundaryClippingStack = composeClippingStack(
@@ -104,7 +101,7 @@ function resolveInstanceHit(
           currentClippingStack: boundaryClippingStack,
         })) break;
         try {
-          if (entry.paintKind === CRCPaintEntryKind.NestedInstance) {
+          if (entry.paintKind === PibblPaintEntryKind.NestedInstance) {
             resolveInstanceHit(
               eventRoot,
               entry.instance,
@@ -126,31 +123,25 @@ function resolveInstanceHit(
         break;
       }
     }
-    if (output.disposition !== CRCHitDisposition.Miss) return output;
+    if (output.disposition !== PibblHitDisposition.Miss) return output;
   }
   return output;
 }
 
 function resolvePathHit(
-  eventRoot: CRCEventRoot,
+  eventRoot: PibblEventRoot,
   canvas: HTMLCanvasElement,
-  entry: CRCPathPaintEntry,
+  entry: PibblPathPaintEntry,
   rootX: number,
   rootY: number,
   transform: DOMMatrix,
-  output: CRCHitTestOutput,
+  output: PibblHitTestOutput,
 ): void {
   const target = entry.target;
   if (!isLiveTarget(eventRoot, target)) return;
-  const legacyGeometry = getLegacyHitGeometry(target);
-  if (legacyGeometry && !legacyGeometry.path) {
-    output.disposition = CRCHitDisposition.Target;
-    output.target = target;
-    return;
-  }
   if (isHit({
     canvas,
-    path: legacyGeometry?.path ?? entry.path,
+    path: entry.path,
     transform: multiplyTransforms(transform, entry.transform),
     x: rootX,
     y: rootY,
@@ -158,21 +149,21 @@ function resolvePathHit(
     lineInteractionWidth: entry.lineInteractionWidth,
     currentClippingStack: composeClippingStack(entry.clippingStack, transform),
   })) {
-    output.disposition = CRCHitDisposition.Target;
+    output.disposition = PibblHitDisposition.Target;
     output.target = target;
   }
 }
 
-function reset(output: CRCHitTestOutput): void {
-  output.disposition = CRCHitDisposition.Miss;
+function reset(output: PibblHitTestOutput): void {
+  output.disposition = PibblHitDisposition.Miss;
   output.target = null;
   delete output.winner;
   delete output.winnerState;
 }
 
 function isLiveTarget(
-  eventRoot: CRCEventRoot,
-  target: CRCEventTargetRegistration,
+  eventRoot: PibblEventRoot,
+  target: PibblEventTargetRegistration,
 ): boolean {
   return target.live &&
     !target.owner.mainTeardowns.closed &&
@@ -181,9 +172,9 @@ function isLiveTarget(
 }
 
 function composeClippingStack(
-  clippingStack: readonly CRCClippingStackEntry[],
+  clippingStack: readonly PibblClippingStackEntry[],
   transform: DOMMatrix,
-): readonly CRCClippingStackEntry[] {
+): readonly PibblClippingStackEntry[] {
   if (clippingStack.length === 0 || transform.isIdentity) return clippingStack;
   return clippingStack.map(entry => ({
     ...entry,

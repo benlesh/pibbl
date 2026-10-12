@@ -4,7 +4,7 @@ import {
   recordCanvasParticleLedgerCreated,
   recordCanvasParticleRasterEntryCreated,
   recordParticleSchedulerRegistration,
-} from "../../particles/src/lib/system/ownership.js";
+} from "../src/features/particles/lib/system/ownership.js";
 
 describe("particle resource ownership", () => {
   it("accounts for every renderer resource with idempotent release", () => {

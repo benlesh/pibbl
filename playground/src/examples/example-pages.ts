@@ -1,18 +1,18 @@
 import {
-  crc,
+  pibbl,
   createElement,
   Group,
   Rectangle,
   Text,
-  type CRCController,
-} from "@crc/core";
+  type PibblController,
+} from "@pibbl/core";
 import {
   getLearningExampleBySlug,
   getLearningExampleRoute,
   learningExampleCatalog,
   learningSections,
   type LearningExampleCatalogEntry,
-} from "@crc/scenarios";
+} from "@pibbl/scenarios";
 
 import type { PageLifecycle } from "../app/page-lifecycle";
 import { loadWorkbenchSource } from "../learning-sources";
@@ -44,7 +44,7 @@ export function createExamplePages(options: ExamplePagesOptions): ExamplePages {
       const title = routeHeading("Make shapes. Teach the mouse.");
       const summary = document.createElement("p");
       summary.textContent =
-        "Learn CRC one clear idea at a time. Every lesson pairs a live Canvas with editable, type-aware TypeScript.";
+        "Learn Pibbl one clear idea at a time. Every lesson pairs a live Canvas with editable, type-aware TypeScript.";
       const start = document.createElement("a");
       start.className = "studio-primary-action";
       start.href = getLearningExampleRoute(learningExampleCatalog[0]);
@@ -53,7 +53,7 @@ export function createExamplePages(options: ExamplePagesOptions): ExamplePages {
 
       const hero = document.createElement("section");
       hero.className = "studio-hero-canvas";
-      hero.ariaLabel = "Interactive CRC composition";
+      hero.ariaLabel = "Interactive Pibbl composition";
       const canvas = document.createElement("canvas");
       canvas.width = 720;
       canvas.height = 420;
@@ -61,10 +61,10 @@ export function createExamplePages(options: ExamplePagesOptions): ExamplePages {
       heroButton.type = "button";
       heroButton.textContent = "Shuffle the composition";
       let phase = 0;
-      let controller: CRCController | undefined;
+      let controller: PibblController | undefined;
       const renderHero = () => {
         controller?.dispose();
-        controller = crc(
+        controller = pibbl(
           canvas,
           createElement(HeroScene, {
             phase,
@@ -182,7 +182,7 @@ export function createExamplePages(options: ExamplePagesOptions): ExamplePages {
 
       const limitation = document.createElement("p");
       limitation.className = "lesson-limitation";
-      limitation.innerHTML = "<strong>Canvas accessibility note:</strong> CRC supports DOM-aligned user events and optional logical focus and keyboard navigation. Painted targets still do not create DOM semantics or an accessibility tree; applications must provide an equivalent semantic experience.";
+      limitation.innerHTML = "<strong>Canvas accessibility note:</strong> Pibbl supports DOM-aligned user events and optional logical focus and keyboard navigation. Painted targets still do not create DOM semantics or an accessibility tree; applications must provide an equivalent semantic experience.";
 
       const pagination = document.createElement("nav");
       pagination.className = "lesson-pagination";

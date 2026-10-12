@@ -2,11 +2,13 @@
 
 Give each surface a clear job. Learn teaches concepts and workflows; API answers precise questions; Examples shows working results; Playground is the place to edit and run code. The homepage connects them through a clear product story.
 
+The [October 4 architecture](12-documentation-architecture.md) refines the groups below into Start, Reference, Visual Catalogs, Guides, Examples, and Agents & Skills, with Home and Playground as separate destinations. It also makes static paths the recommended canonical documentation URLs, with old hash routes retained for compatibility.
+
 ## Primary navigation
 
 | Surface    | User question                                 | Primary action                        |
 | ---------- | --------------------------------------------- | ------------------------------------- |
-| Home       | What can I make, and why CRC?                 | Explore examples                      |
+| Home       | What can I make, and why Pibbl?               | Explore examples                      |
 | Learn      | How do I get started or understand a concept? | Follow a short guide                  |
 | API        | What does this symbol accept and do?          | Read a contract and try a snippet     |
 | Examples   | What does this look like in practice?         | Open a demo or its playground project |
@@ -20,12 +22,12 @@ Use capability groups as the main navigation. Within a group, put components, ho
 
 | Group                   | Scope and representative entries                                   |
 | ----------------------- | ------------------------------------------------------------------ |
-| Setup and authoring     | `crc`, JSX setup, `createElement`, elements, controller disposal   |
+| Setup and authoring     | `pibbl`, JSX setup, `createElement`, elements, controller disposal |
 | Drawing and text        | Shapes, paths, images, `Text`, paint and geometry helpers          |
 | Composition and effects | `Group`, `Clip`, `Layer`, transforms, filters                      |
 | Layout and measurement  | Absolute, Overlay, Flow, Flex, Grid, measurement and allocation    |
 | State and signals       | Hooks, `signal`, `computed`, explicit reads, reactions             |
-| Animation               | Definitions, tracks, programs, `usePlayback`, `useTransition`      |
+| Animation               | Definitions, tracks, programs, `usePlayback`, `useAnimatedValue`   |
 | Input and focus         | Pointer/keyboard events, event types, focus policies, targeting    |
 | HTML integration        | `HtmlBox`, mount/update lifetime, overlay setup, native input      |
 | Particles               | Canvas emitters, descriptors, systems, lifecycle                   |
@@ -37,7 +39,7 @@ Use capability groups as the main navigation. Within a group, put components, ho
 
 Compiler exports and specialized testing helpers belong in a clearly labeled advanced reference section, still searchable. Pure 3D geometry needs an explicit label so readers do not infer a 3D physics runtime. Exact group membership should come from an export inventory before migration; this table is a proposed browsing model, not a complete symbol list.
 
-Keep import paths visible on every API page. Capability groups must not invent packages: particles, textures, physics, and visualization are current `@crc/core` subpaths; `@crc/three` is an adapter package.
+Keep import paths visible on every API page. Capability groups must not invent packages: particles, textures, physics, and visualization are current `@pibbl/core` subpaths; `@pibbl/three` is an adapter package.
 
 ## Learn structure
 
@@ -48,7 +50,7 @@ Do not make a beginner read the complete scheduler contract before animating a c
 ## Connected journeys
 
 - Visitor: homepage ink interaction → focused ink example → playground → edit a parameter → share the result.
-- API reader: `useTransition` reference → exact runnable snippet → playground with relevant lines selected → return to the same reference page.
+- API reader: `useAnimatedValue` reference → exact runnable snippet → playground with relevant lines selected → return to the same reference page.
 - Application developer: gallery HTML filter control → live example → inspect source → download a complete runnable project.
 - Returning user: direct playground URL → inspect shared source → Run → edit → copy a new snapshot link.
 
@@ -62,6 +64,6 @@ The gallery has its own small set of combinable filters: topic, focused example/
 
 ## Routes and migration
 
-Logical destinations are Home, Learn, API, Examples, Example detail, and Playground. Clean paths versus current hash routes remain a deployment decision. The current site uses hash routes, including `#/examples/{group}/{slug}` and API routes split by components/functions/hooks/types.
+Logical destinations are Home, Learn, API, Examples, Example detail, and Playground. Use ordinary static paths as canonical documentation URLs under the October 4 direction; exact base-path and redirect configuration remain deployment decisions. The current site uses hash routes, including `#/examples/{group}/{slug}` and API routes split by components/functions/hooks/types.
 
 Avoid changing URLs merely to match a new sidebar. Preserve existing links and anchors through aliases or redirects, including existing shared-code payloads. Maintain stable content IDs separately from display labels and navigation groups. Decide how old runtime versions and example revisions are handled before describing old links as durable.

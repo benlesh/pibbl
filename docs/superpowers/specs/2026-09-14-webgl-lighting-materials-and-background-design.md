@@ -10,11 +10,11 @@ Date: 2026-09-14
 
 ## Summary
 
-CRC will add first-class analytic lighting to the settled `@crc/webgl` scene.
+Pibbl will add first-class analytic lighting to the settled `@pibbl/webgl` scene.
 `AmbientLight`, `HemisphereLight`, `DirectionalLight`, `PointLight`, and
 `SpotLight` are ordinary `WebGLLayer` children. They compose CPU-only scene
 declarations during the existing single child traversal; only after the entire
-scene succeeds does CRC settle mesh and light records, plan the frame, issue
+scene succeeds does Pibbl settle mesh and light records, plan the frame, issue
 WebGL commands, and transactionally commit the resulting bitmap, pick ledger,
 and focus metadata.
 
@@ -81,11 +81,11 @@ optional range, and inner/outer spot half-angles. Ambient and hemisphere lights
 are widely used artist-friendly fill lights, including separate
 [`AmbientLight`](https://threejs.org/docs/pages/AmbientLight.html) and
 [`HemisphereLight`](https://threejs.org/docs/pages/HemisphereLight.html) values
-in Three.js. CRC exposes both because their authoring intent is meaningfully
+in Three.js. Pibbl exposes both because their authoring intent is meaningfully
 different even though equal hemisphere colors can reproduce flat ambient fill.
 
 Physically named candela and lux values require a world-scale contract plus
-exposure and tone mapping. CRC currently promises neither, so this release
+exposure and tone mapping. Pibbl currently promises neither, so this release
 defines `intensity` as a nonnegative dimensionless linear multiplier. It adopts
 the stable shape of inverse-square falloff and smooth range cutoff without
 claiming photometric units.
@@ -94,7 +94,7 @@ Visible background and image-based environment lighting are independent scene
 inputs. Three.js exposes them separately as `Scene.background` and
 `Scene.environment`; neither is required for ordinary analytic lights.
 [`Scene`](https://threejs.org/docs/pages/Scene.html) documents that separation.
-CRC follows it: a color background may be visible without illuminating
+Pibbl follows it: a color background may be visible without illuminating
 geometry, and a future environment light may illuminate geometry without being
 visible.
 
@@ -192,7 +192,7 @@ backgrounds, environments, shadow passes, or post effects.
 ### Rejected: scoped `<Lighting>` wrappers
 
 Tree-scoped illumination would make wrapper insertion and reparenting change
-visual meaning and identity. CRC styles are local and closed rather than
+visual meaning and identity. Pibbl styles are local and closed rather than
 inherited. In this release every settled light affects every settled mesh whose
 local `style.lit` is true.
 
@@ -222,7 +222,7 @@ meaningless combinations.
 ### Rejected: material outside `style`
 
 Materials determine appearance and rendering behavior. A separate component
-prop would conflict with CRC's existing rule that geometry, paint, transform,
+prop would conflict with Pibbl's existing rule that geometry, paint, transform,
 cursor, and local render behavior belong to the closed `style` vocabulary.
 
 ### Selected: transform-driven light pose
@@ -235,7 +235,7 @@ system.
 
 ### Rejected: target objects or competing direction vectors
 
-Retained target objects conflict with CRC's component and frame-local scene
+Retained target objects conflict with Pibbl's component and frame-local scene
 model. Supporting both transform orientation and an explicit `direction`
 vector would require precedence and composition rules without adding a
 necessary capability.
@@ -323,7 +323,7 @@ meshes in the same layer.
 
 ## Public surface
 
-`@crc/webgl` adds these public runtime values:
+`@pibbl/webgl` adds these public runtime values:
 
 - `AmbientLight`;
 - `HemisphereLight`;
@@ -335,20 +335,20 @@ meshes in the same layer.
 It adds the matching component prop/style types plus:
 
 ```ts
-export interface CRCWebGLLambertMaterial {
+export interface PibblWebGLLambertMaterial {
   readonly type: "lambert";
   readonly emissiveColor?: string;
   readonly emissiveIntensity?: number;
 }
 
-export type CRCWebGLMaterial = CRCWebGLLambertMaterial;
+export type PibblWebGLMaterial = PibblWebGLLambertMaterial;
 ```
 
 `MeshStyle` adds:
 
 ```ts
 readonly lit?: boolean;
-readonly material?: CRCWebGLMaterial;
+readonly material?: PibblWebGLMaterial;
 ```
 
 `CubeStyle` and `SphereStyle` inherit those fields. `style.lit` defaults to
@@ -359,7 +359,7 @@ remains the final mesh alpha multiplier. There is no public `UnlitMaterial` or
 
 This delivery exports no generic `Material`, `Background`, or `Environment`
 name. The explicit `WebGLBackground` name avoids collisions in the Studio's
-combined `@crc/core`/`@crc/webgl` module and leaves room for independently named
+combined `@pibbl/core`/`@pibbl/webgl` module and leaves room for independently named
 future environment lighting.
 
 ## Closed light styles and defaults
@@ -413,10 +413,10 @@ therefore rejects even when every author input was finite.
 
 ## Geometry normals
 
-`CRCWebGLGeometryInput` adds one optional array:
+`PibblWebGLGeometryInput` adds one optional array:
 
 ```ts
-export interface CRCWebGLGeometryInput {
+export interface PibblWebGLGeometryInput {
   readonly positions: ArrayLike<number>;
   readonly normals?: ArrayLike<number>;
   readonly indices?: ArrayLike<number>;
@@ -488,7 +488,7 @@ finite and nonnegative. Supplying intensity without a color is allowed and has
 no visible effect, which supports ordinary signal-driven property changes
 without changing descriptor shape.
 
-`style.material` is an immutable-by-contract nested style value. CRC snapshots
+`style.material` is an immutable-by-contract nested style value. Pibbl snapshots
 and validates its scalar fields whenever the mesh component executes. Retained
 Layer/WebGLLayer equality continues to compare that top-level nested value by
 identity: replacing a descriptor is the supported way to change it, and a
@@ -520,7 +520,7 @@ linearSurface = linearBaseColor + linearEmissiveColor * emissiveIntensity
 The unlit path preserves the current concrete CSS color output and alpha
 behavior. When emission is omitted, black, or has zero effective intensity, the
 unlit program passes the parsed sRGB base color through exactly as the existing
-shader does. When unlit emission contributes, CRC decodes both base and
+shader does. When unlit emission contributes, Pibbl decodes both base and
 emissive RGB with the standard sRGB transfer function, adds them in linear
 space, clamps to `[0, 1]`, and re-encodes with the inverse standard sRGB
 transfer. The lit path likewise decodes base, light, sky, ground, and emissive
@@ -536,7 +536,7 @@ specifies. Alpha zero retains pick and focus participation while omitting raster
 work.
 
 V1 retains the default framebuffer and existing source-alpha transparency
-path. Lighting math is linear, but CRC does not promise physically linear
+path. Lighting math is linear, but Pibbl does not promise physically linear
 multi-object transparent blending until a later explicit offscreen output
 pipeline exists.
 
@@ -582,7 +582,7 @@ distanceAttenuation = 1 / safeDistanceSquared
 The `0.0001` squared-distance floor corresponds to a minimum effective distance
 of `0.01` world units and avoids an infinite value at the light origin.
 
-When range is present, CRC multiplies by the glTF-style smooth cutoff:
+When range is present, Pibbl multiplies by the glTF-style smooth cutoff:
 
 ```text
 ratio = distance / range
@@ -613,11 +613,11 @@ They must be finite and satisfy
 `0 <= innerConeAngleDegrees <= outerConeAngleDegrees <= 90`. When inner is
 strictly less than outer, the outer boundary is zero contribution, the inner
 boundary and interior are full contribution, and the interval between them
-falls smoothly. When inner equals outer, CRC does not call GLSL `smoothstep`
+falls smoothly. When inner equals outer, Pibbl does not call GLSL `smoothstep`
 with equal edges; it evaluates an explicit hard cone whose boundary and
 interior are full contribution and whose exterior is zero.
 
-At the exact point/spot origin, CRC uses a stable zero diffuse contribution
+At the exact point/spot origin, Pibbl uses a stable zero diffuse contribution
 rather than allowing a NaN direction to enter the shader.
 
 ## Background semantics
@@ -638,7 +638,7 @@ is structurally allowed as an ordinary descendant declaration but ignores the
 composed transform; public guidance places it directly under `WebGLLayer`.
 
 Image backgrounds are deferred. Their later `source` will be an immutable
-CRC-owned descriptor rather than a raw `WebGLTexture` or mutable unowned
+Pibbl-owned descriptor rather than a raw `WebGLTexture` or mutable unowned
 `TexImageSource`.
 
 ## Scene composition and settlement
@@ -680,7 +680,7 @@ floating-point addition order. It never scopes which mesh receives a light.
 The limit is eight declared lights total across ambient, hemisphere,
 directional, point, and spot. Zero-intensity declarations count. The ninth
 declaration rejects during settlement with its component/source context and the
-documented limit. CRC does not inspect device-specific larger capacity and
+documented limit. Pibbl does not inspect device-specific larger capacity and
 silently vary public behavior.
 
 Background uniqueness, light count, transformed directions, lit normal
@@ -699,7 +699,7 @@ shader recompilation when a scene changes among zero through eight lights.
 
 Opaque meshes retain ascending mesh source order. Transparent meshes retain the
 implemented bounds-center back-to-front order with ascending mesh source index
-as the exact equal-depth tie-breaker. CRC does not batch or reorder either queue
+as the exact equal-depth tie-breaker. Pibbl does not batch or reorder either queue
 by program or material. The renderer switches programs inside those queues when
 needed.
 
@@ -826,7 +826,7 @@ The nested material descriptor intentionally reserves a clean future shape:
 />
 ```
 
-Texture values will be immutable CPU-side CRC descriptors, not raw context
+Texture values will be immutable CPU-side Pibbl descriptors, not raw context
 handles. A separate texture design must define URL/source input, decoding,
 CORS, cancellation, color-space roles, UVs/tangents, sampler state, per-context
 uploads, sharing, stale completion, disposal, and restoration.
@@ -998,7 +998,7 @@ Tests and browser scenarios must prove:
 
 The implementation updates and verifies:
 
-- `@crc/webgl` runtime exports and declarations;
+- `@pibbl/webgl` runtime exports and declarations;
 - Bundler, NodeNext, and packed-tarball consumers;
 - the Studio editor declaration snapshot and runtime inventory;
 - source and built Studio modes;

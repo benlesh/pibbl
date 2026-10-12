@@ -58,7 +58,7 @@ an acceptable substitute.
 
 Reinspect these exports and run their focused executable tests before any viz
 production work. Do not implement these hooks, input resolution, a graph, or a
-transaction mechanism in `@crc/viz`. Do not edit the other thread's work. If
+transaction mechanism in `@pibbl/viz`. Do not edit the other thread's work. If
 those capabilities remain absent or differ materially from the approved
 contract, stop at the named dependency and report it. The complete hooks
 migration and its aggregate gate are not prerequisites merely by association.
@@ -67,7 +67,7 @@ migration and its aggregate gate are not prerequisites merely by association.
 
 At `24c57d7`, public `SignalValue`, `resolveSignalValue`, and transactional
 `useComputed` are available. The focused core hook/input suites passed (20 tests).
-`SignalStyle<S>` is the shared official-package type from `@crc/core/internal`,
+`SignalStyle<S>` is the shared official-package type from `@pibbl/core/internal`,
 not a root export; whole signal-valued styles use `SignalValue<SignalStyle<S>>`.
 The shared resolver unwraps one level. Viz validates its declared resolved
 values rather than introducing recursive resolution or a second signal graph.
@@ -76,20 +76,20 @@ This supersedes the historical blocked status above.
 ### Delivery boundary
 
 The slice exports `Scale`, `useScale`, `ScaleAdjust`, `Axis`, `LineSeries`, and
-the types below from `@crc/viz`. It implements **linear scales only**, including
+the types below from `@pibbl/viz`. It implements **linear scales only**, including
 numeric elapsed-time x coordinates. Actual calendar time/UTC scales and domain
 helpers are deferred. This avoids choosing calendar tick/format semantics to
 prove an allocation and signal architecture.
 
 One responsive learning example and its separate deterministic lab prove two
 independently allocated plot panels, nested x/y scales, gaps, source updates,
-ordinary CRC pointer interaction, and custom composition. Both use supported
+ordinary Pibbl pointer interaction, and custom composition. Both use supported
 package imports. There is no chart container, per-datum component tree,
 visualization runtime dependency, implicit clipping, or new event API.
 
 ### Initial scale types
 
-All imported types in the declarations below come from `@crc/core`. These are
+All imported types in the declarations below come from `@pibbl/core`. These are
 public contract sketches; implementation declarations must preserve the same
 constraints and inference.
 
@@ -107,7 +107,7 @@ export interface LinearScaleProps {
   readonly range: SignalValue<ScaleRange>;
   readonly reverse?: SignalValue<boolean>;
   readonly style?: SignalValue<SignalStyle<ScaleLayoutStyle>>;
-  readonly children?: CRCNode;
+  readonly children?: PibblNode;
 }
 export type ScaleProps = LinearScaleProps;
 
@@ -151,7 +151,7 @@ interpolation methods/options are exposed prematurely.
 
 ### Allocation and signal derivation
 
-`Scale` receives the finite local allocation supplied by CRC. It creates no
+`Scale` receives the finite local allocation supplied by Pibbl. It creates no
 box, translation, padding, clip, paint, or hit target. Its optional layout style
 only supplies direct-child placement/sizing information to a layout parent.
 It has no intrinsic measurement. When used directly under a layout that needs
@@ -185,7 +185,7 @@ consumers outside that transaction.
 ### Scope, ownership, and failure
 
 Use a private linked provider stack and the existing after-descendants restore
-hook from `@crc/core/internal`, with immediate restoration if installing cleanup
+hook from `@pibbl/core/internal`, with immediate restoration if installing cleanup
 fails. Provider lookup uses strict string/symbol identity and nearest-ancestor
 shadowing. No root-wide ID registry or descendant domain registration exists.
 `useScale` uses an owned hook slot to enforce ordinary hook order and render-only
@@ -193,7 +193,7 @@ use. It resolves scope each evaluation rather than capturing the first provider
 forever. Restore scope after success and throw; independent roots and siblings
 must not leak providers into each other.
 
-For this slice a provider and consumer must belong to the **same CRC rendering
+For this slice a provider and consumer must belong to the **same Pibbl rendering
 instance**. Capture the instance's owning Canvas identity with the existing
 friend getter, and reject lookup across a managed Layer boundary even on its
 first traversal. Put the complete Scale subtree inside the Layer instead.
@@ -272,7 +272,7 @@ export interface LineSeriesStyle {
   readonly lineInteractionWidth?: number;
 }
 export interface LineSeriesProps<D>
-  extends CRCEventHandlers, CRCEventParticipationOptions {
+  extends PibblEventHandlers, PibblEventParticipationOptions {
   readonly data: SignalValue<readonly D[]>;
   readonly x: LineAccessor<D>;
   readonly y: LineAccessor<D>;
@@ -315,7 +315,7 @@ resolved paint to core primitives. Apply the same rule to Axis. Do not scan
 nested paint objects or invent a generic deep resolver. No style callback or
 `segmentStyle` is implemented yet.
 Filter/style expansion is deferred; authors may wrap a series in a core Group
-with a filter. Ordinary CRC handlers and pointerEvents forward to the single
+with a filter. Ordinary Pibbl handlers and pointerEvents forward to the single
 Path target. There is no event enrichment or nearest-datum helper in this slice.
 Core transforms, explicit clips, target order, and teardown remain authoritative.
 
@@ -330,7 +330,7 @@ type ScaleAdjustY =
   | { readonly y?: never; readonly yScale?: never };
 export type ScaleAdjustProps = ScaleAdjustX &
   ScaleAdjustY & {
-    readonly children?: CRCNode;
+    readonly children?: PibblNode;
   };
 ```
 
@@ -355,7 +355,7 @@ Grid with two unequal fractional columns. Each panel declares its Grid placement
 and contains an allocated plot with left/bottom gutters. Each plot nests x and y
 Scale providers using width/height; y uses reverse. Use small deterministic
 numeric elapsed-time data, one missing point, explicit domains, and straight
-segments. An ordinary CRC control updates the data and domain signals. An
+segments. An ordinary Pibbl control updates the data and domain signals. An
 explicit plot background receives pointer events; line handlers demonstrate
 normal bubbling. Axis decorations cannot steal input. Include a ScaleAdjust
 mark and a custom useScale readout without per-datum components.
@@ -420,16 +420,16 @@ may use capabilities deferred from this slice.
 
 ## Summary
 
-CRC will eventually provide one official `@crc/viz` package for fast,
+Pibbl will eventually provide one official `@pibbl/viz` package for fast,
 interactive Canvas data visualization without a D3 or other visualization
-runtime dependency. The package will be CRC-native: ordinary synchronous
-components, the shared JSX runtime, local allocation and layout, normal CRC
+runtime dependency. The package will be Pibbl-native: ordinary synchronous
+components, the shared JSX runtime, local allocation and layout, normal Pibbl
 events, and the realm signal graph remain the authoring and execution model.
 
 The design is intentionally component-compositional rather than centered on a
 monolithic `Chart` component or a high-level declarative chart grammar. Nested
 `Scale` components establish named coordinate mappings. Axes, series, ordinary
-CRC primitives, and user components consume those mappings explicitly. This
+Pibbl primitives, and user components consume those mappings explicitly. This
 allows an author to compose an unusual visualization without escaping the
 library while still making familiar charts short recipes.
 
@@ -461,7 +461,7 @@ future design.
 | --------------------------- | ----------------------------------------------------------------------------- |
 | `Scale`                     | Foundation approved; exact prop unions and resolved-scale methods incomplete  |
 | `useScale`                  | Approved as a readonly signal lookup by scale ID                              |
-| `ScaleAdjust`               | Approved for translating arbitrary CRC subtrees through named scales          |
+| `ScaleAdjust`               | Approved for translating arbitrary Pibbl subtrees through named scales        |
 | `Axis`                      | Direction approved; complete public API deferred                              |
 | `LineSeries`                | Initial geometry, gaps, curve vocabulary, and segment styling approved        |
 | `PointSeries`               | Name and shared series/style conventions approved; exact geometry deferred    |
@@ -487,11 +487,11 @@ The package is for authors who need both ends of the visualization spectrum:
 - a dashboard should support several independently responsive charts without
   global coordination machinery;
 - financial and statistical marks should compose with ordinary lines, points,
-  bars, axes, labels, and arbitrary CRC drawing components;
+  bars, axes, labels, and arbitrary Pibbl drawing components;
 - custom visualizations should be able to consume the same scales, events,
   styles, signals, layout allocation, and renderer rather than dropping into a
   separate framework; and
-- high-frequency data and pointer updates should preserve CRC's explicit,
+- high-frequency data and pointer updates should preserve Pibbl's explicit,
   scheduled, allocation-conscious runtime model.
 
 Human readability and agent readability are both design requirements. Common
@@ -500,21 +500,21 @@ and opaque configuration languages or hidden inference should be avoided.
 
 ## Design principles
 
-### CRC-native rather than a wrapped D3
+### Pibbl-native rather than a wrapped D3
 
-`@crc/viz` ships the algorithms it exposes. It does not require D3 for scales,
+`@pibbl/viz` ships the algorithms it exposes. It does not require D3 for scales,
 ticks, shapes, interpolation, spatial lookup, layouts, or interaction. D3 is a
 capability reference and a source of ecosystem lessons, not a runtime layer or
-an API that CRC must clone.
+an API that Pibbl must clone.
 
 The package uses the same branded element protocol and automatic JSX runtime as
-`@crc/core`. It does not publish another element constructor, Fragment, hook
+`@pibbl/core`. It does not publish another element constructor, Fragment, hook
 runtime, event system, renderer loop, or retained scene graph.
 
 ### Fine-grained components first
 
 The primary vocabulary is scales, axes, series, transforms, geometry helpers,
-and ordinary CRC primitives. A chart is the tree an author composes. This keeps
+and ordinary Pibbl primitives. A chart is the tree an author composes. This keeps
 unusual overlays, mixed mark types, annotations, custom labels, and application
 controls from fighting a chart-level abstraction.
 
@@ -548,7 +548,7 @@ but the static-style path remains cheap.
 
 ## Package boundary
 
-The initial surface is one `@crc/viz` package. Maintaining several packages for
+The initial surface is one `@pibbl/viz` package. Maintaining several packages for
 scales, shapes, layouts, and interaction would create avoidable release and
 authoring complexity before their boundaries have been proven.
 
@@ -557,8 +557,8 @@ meaningful loading or platform boundary. Force simulation and geospatial data
 are possible candidates. They are not separate packages by default, and no
 subpath is approved by this record.
 
-`@crc/viz` depends on the public and official-package seams of `@crc/core`. It
-must not reach through `@crc/core/lib/*` or source paths. It imports the shared
+`@pibbl/viz` depends on the public and official-package seams of `@pibbl/core`. It
+must not reach through `@pibbl/core/lib/*` or source paths. It imports the shared
 `SignalValue` vocabulary rather than defining `MaybeSignal` or a package-local
 reactive convention.
 
@@ -587,7 +587,7 @@ an array or a signal-valued array, so an unrequested thunk is invalid. This
 avoids making every function-valued prop ambiguous between lazy data, an
 accessor, an event handler, and an ordinary function value.
 
-CRC-owned schemas resolve signals only at declared positions. A series may
+Pibbl-owned schemas resolve signals only at declared positions. A series may
 accept `SignalValue<readonly Datum[]>`, but it does not search dataset rows for
 signals. A scale may accept a signal-valued complete domain, range, or approved
 option, but it does not recursively unwrap arbitrary application objects.
@@ -635,7 +635,7 @@ mapping and makes its resolved value available to descendants.
 The approved identity and scope rules are:
 
 - `id` is required and accepts a `string` or `symbol`;
-- CRC does not export `createScaleId`; ordinary string and symbol construction
+- Pibbl does not export `createScaleId`; ordinary string and symbol construction
   is sufficient;
 - scale lookup is lexical through the visualization component tree;
 - a nearer scale may shadow an outer scale with the same ID;
@@ -670,7 +670,7 @@ const x = xScale.get().map(datum.timestamp);
 
 Conceptually, `Scale` derives a resolved scale from its domain, range, options,
 and local allocation. Changes propagate through the existing synchronous signal
-graph and schedule ordinary CRC work. A scale is not merely recomputed as an
+graph and schedule ordinary Pibbl work. A scale is not merely recomputed as an
 incidental render-local object, and it does not emit custom resize or change
 events.
 
@@ -693,7 +693,7 @@ allocation. Approved conveniences include:
 
 `range="width"` and `range="height"` bind to the receiving scale's local
 layout box rather than the root Canvas. Percentage endpoints resolve against
-the selected local extent. Numeric endpoints are logical CRC pixels. `reverse`
+the selected local extent. Numeric endpoints are logical Pibbl pixels. `reverse`
 changes range direction without forcing authors to reconstruct an equivalent
 tuple.
 
@@ -757,7 +757,7 @@ spans several domain coordinates or needs scale-family-specific capabilities.
 ### `ScaleAdjust`
 
 `ScaleAdjust` maps one or both domain coordinates through named scales and
-translates an arbitrary CRC subtree:
+translates an arbitrary Pibbl subtree:
 
 ```tsx
 <ScaleAdjust x={datum.time} xScale="x" y={datum.value} yScale="y">
@@ -768,7 +768,7 @@ translates an arbitrary CRC subtree:
 It is structural rather than a drawing primitive:
 
 - it adds no hit geometry of its own;
-- descendants keep their ordinary CRC paint and event behavior;
+- descendants keep their ordinary Pibbl paint and event behavior;
 - it does not claim or alter layout allocation;
 - it composes with `Group`, `Clip`, filters, Layers, and ordinary primitives;
   and
@@ -788,7 +788,7 @@ Datum selection accepts either a property key or a function:
 ```
 
 A property key is normalized once into an internal accessor. A function is
-called directly. CRC does not introduce accessor-builder objects for ordinary
+called directly. Pibbl does not introduce accessor-builder objects for ordinary
 cases.
 
 Domain helpers are pure functions, not hooks and not inline component-like
@@ -805,7 +805,7 @@ Reactive domains use ordinary computed signals:
 const yDomain = useComputed(() => valueDomain(data.get(), "value"));
 ```
 
-Names beginning with `use` are reserved for actual CRC hooks. A helper must not
+Names beginning with `use` are reserved for actual Pibbl hooks. A helper must not
 be named `useTimeDomain` or `useValueDomain` merely because it is useful inside
 a component.
 
@@ -819,7 +819,7 @@ behavior, and date/numeric validation remain to be designed.
 Responsive behavior follows core rather than introducing one observer per
 chart or scale:
 
-- the CRC root owns the native Canvas surface observation already required by
+- the Pibbl root owns the native Canvas surface observation already required by
   responsive root mode;
 - layout gives each subtree a local allocation;
 - `range="width"`, `range="height"`, and percentages resolve against that local
@@ -830,7 +830,7 @@ chart or scale:
   bespoke resize events.
 
 Four charts in a Grid, Flex, Flow, or other allocated layout each derive ranges
-from their own box. A chart in normal document flow is responsive when its CRC
+from their own box. A chart in normal document flow is responsive when its Pibbl
 root and layout allocation are responsive. A plain `Group` transforms drawing
 coordinates but does not itself invent a layout box; allocation-relative scales
 must ultimately be placed under a component that provides an allocation.
@@ -855,7 +855,7 @@ The design does not yet lock the complete `Axis` API. Future work must specify:
 - styling of the baseline, ticks, labels, grid, and title; and
 - behavior under transformed `Group` trees without a new allocation.
 
-`Canvas` is not the only possible owner; any appropriate allocated CRC subtree
+`Canvas` is not the only possible owner; any appropriate allocated Pibbl subtree
 may establish the local frame. A transform-only `Group` is not automatically an
 independent responsive frame.
 
@@ -1048,7 +1048,7 @@ curve={{ type: "basis", mode: "open" }}
 curve={{ type: "cardinal", mode: "closed", tension: 0.2 }}
 ```
 
-CRC implements the approved algorithms directly. Imported D3-style curve
+Pibbl implements the approved algorithms directly. Imported D3-style curve
 factory functions were rejected for ordinary use because strings and typed
 descriptors are easier to read, serialize, validate, and distinguish from data
 accessors.
@@ -1184,7 +1184,7 @@ The approved initial financial/statistical direction is:
 - `boxPlotSummary` as the pure raw-sample-to-summary helper.
 
 OHLC is accepted as the normal industry term. These components compose with
-ordinary axes, points, lines, bars, annotations, and CRC primitives. They are
+ordinary axes, points, lines, bars, annotations, and Pibbl primitives. They are
 not chart containers and do not own scales.
 
 Exact geometry props, orientation variants, bandwidth inference, statistics,
@@ -1193,10 +1193,10 @@ surface is implementation-ready.
 
 ## Interaction
 
-Visualization components use ordinary CRC event props and the existing event
+Visualization components use ordinary Pibbl event props and the existing event
 propagation, pointer capture, focus, cursor, and coordinate model. The design
 rejects a visualization-specific `InteractionArea` component as redundant with
-events on normal components and explicit CRC geometry. It also rejects a
+events on normal components and explicit Pibbl geometry. It also rejects a
 `useVizTarget` hook because it hides ordinary event participation behind a
 second target model.
 
@@ -1308,7 +1308,7 @@ produce a truthful-looking but incorrect visualization.
 ## Capability landscape for future design
 
 D3 and the broader visualization ecosystem establish a large capability
-landscape. This list is a research and design checklist, not an approved CRC API
+landscape. This list is a research and design checklist, not an approved Pibbl API
 or a promise of one-for-one parity.
 
 ### Data and statistics

@@ -1,0 +1,64 @@
+---
+title: Start
+description: Install Pibbl and render a complete first scene.
+---
+
+Choose [Build with Pibbl](#build-with-pibbl) for a Canvas-centered application or [Add Pibbl to your site](/guides/add-to-your-site/) for a bounded effect in an HTML application.
+
+## Build with Pibbl
+
+In a browser application with a module bundler, install the runtime:
+
+```sh
+npm install @pibbl/core
+```
+
+Match the installed package to the documentation version at the bottom of this page. This local preview documents the checkout, not a verified published release. For an exact local package, run `corepack pnpm@11.21.0 --filter @pibbl/core build` and `corepack pnpm@11.21.0 --filter @pibbl/core pack --pack-destination /tmp/pibbl-pack`, then install the resulting tarball in your application.
+
+Add a host canvas and load your application module through your bundler:
+
+```html
+<canvas id="scene" width="320" height="200" aria-label="A teal circle"></canvas>
+<script type="module" src="/src/main.js"></script>
+```
+
+```js
+import { pibbl, createElement, Circle } from "@pibbl/core";
+
+const canvas = document.querySelector("#scene");
+const controller = pibbl(
+  canvas,
+  createElement(Circle, {
+    style: { cx: 160, cy: 100, radius: 60, fill: "#267d7c" },
+  }),
+);
+
+// Call when the owning route or component is removed:
+// controller.dispose();
+```
+
+The result is a teal circle centered in a 320 by 200 logical surface. [Inspect Circle](/reference/circle/) or [edit the working circle example](@PLAYGROUND@#/examples/drawing/circle).
+
+## Prefer JSX?
+
+Configure your compiler with `jsx: "react-jsx"` and `jsxImportSource: "@pibbl/core"`. A `.tsx` file may then pass `<Circle style={{ cx: 160, cy: 100, radius: 60, fill: '#267d7c' }} />` to `pibbl`. React is not required. Keep Pibbl JSX compilation separate from your host framework's JSX; plain `createElement` is useful at that boundary.
+
+## Add Pibbl to your site
+
+HTML can continue to own navigation, text, forms, and accessibility. Place a decorative canvas behind one control and pass native state to Pibbl. Begin with the [complete native-button recipe](/guides/native-button/).
+
+## Browser and ownership basics
+
+Mount only in a browser after the canvas exists. One live mount owns each canvas; keep the returned controller and dispose it before removing its host. Pibbl schedules updates. Do not add another animation loop for these examples.
+
+The first scene uses Canvas 2D. The texture recipe also requires the browser capabilities used by Pibbl's texture renderer, including WebAssembly and offscreen surfaces. Native HTML must remain usable if the enhancement cannot start. [Foundations](/guides/foundations/) explains sizing, signals, and composition boundaries.
+
+## Continue learning
+
+1. [Configure JSX](/guides/configure-jsx/) or [author without JSX](/guides/author-without-jsx/).
+2. [Write components, props, and children](/guides/components-props-and-children/).
+3. [Manage state and lifecycle](/guides/state-and-lifecycle/).
+4. [Draw and style](/guides/style-and-draw/), then [compose and lay out scenes](/guides/compose-and-layout/).
+5. [Animate signals](/guides/signals-and-animation/) or [integrate with React](/guides/react-integration/) when your application needs that boundary.
+
+For agent-led implementation, use the [agent reading workflow](/agents/) and choose one detailed topic before editing. Exact prop/type contracts are in the [reference](/reference/); complete compositions are in [Examples](/examples/).

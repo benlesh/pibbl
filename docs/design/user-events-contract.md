@@ -1,4 +1,4 @@
-# CRC user-event contract
+# Pibbl user-event contract
 
 Status: current implemented contract, updated for external render-layer and
 Three.js interaction on 2026-09-28.
@@ -6,15 +6,14 @@ Focus integration is governed by the implemented
 [focus and keyboard-navigation contract](./focus-and-keyboard-navigation-contract.md).
 
 This document defines the public event behavior shared by built-in drawing
-components, `useEventTarget`, `useEventListener`, and the legacy `useEvent`
-hook. The executable public integration oracle is the
+components, `useEventTarget`, and `useEventListener`. The executable public integration oracle is the
 `interaction-trace-lab` scenario; focused event suites retain exhaustive
 family, geometry, mutation, and ownership matrices.
 
-This contract supersedes the old mouse-only statements that CRC had no event
+This contract supersedes the old mouse-only statements that Pibbl had no event
 path, propagation control, logical related targets, cancellation, pointer
 capture, or common-ancestor activation. The target geometry, root-logical
-coordinate, cursor, layer paint-order, and pathless-observer rules retained in
+coordinate, cursor, and layer paint-order rules retained in
 the [mouse interaction contract](./mouse-interaction-contract.md) still apply.
 
 ## Public registration model
@@ -31,12 +30,12 @@ resolution while leaving paint unchanged.
 An external render layer publishes one committed nested resolver.
 `pointerEvents="none"` disables that complete resolver. Its interaction
 snapshot distinguishes a registered logical target, a blocking visual hit, and
-a miss; a renderer-specific object becomes a CRC target only when the snapshot
+a miss; a renderer-specific object becomes a Pibbl target only when the snapshot
 registers it.
 
 `useEventTarget(handlers, options)` creates one grouped custom target. Its
 required `Path2D`, fill/stroke hit options, captured render transform, clips,
-and paint-ledger position are explicit; CRC never infers a custom component's
+and paint-ledger position are explicit; Pibbl never infers a custom component's
 geometry from its returned descendants. Rerender replaces handlers and
 geometry in the same hook slot without replacing target identity.
 
@@ -48,8 +47,8 @@ its role on a derived event path.
 
 Authors construct these descriptive component values with JSX or
 `createElement`; platform values are not callable factories. All three event
-surfaces use public exports from `@crc/core`. Internal source or
-`@crc/core/lib/*` imports are unsupported. CRC does not inspect arbitrary
+surfaces use public exports from `@pibbl/core`. Internal source or
+`@pibbl/core/lib/*` imports are unsupported. Pibbl does not inspect arbitrary
 custom-component props, hoist descendant handlers, create a widget
 abstraction, or retain drawing commands.
 
@@ -62,7 +61,7 @@ handlers with `missBehavior="target-layer"`.
 
 ## Event vocabulary
 
-CRC supports the following ordered families:
+Pibbl supports the following ordered families:
 
 - pointer: `pointerover`, `pointerenter`, `pointerdown`, `pointermove`,
   `pointerrawupdate`, `pointerup`, `pointercancel`, `pointerout`,
@@ -80,7 +79,7 @@ CRC supports the following ordered families:
   `dragover`, `drop`.
 
 `keypress`, semantic-control events, and non-input lifecycle/media/network
-events are not part of this dispatcher. CRC forwards native pointer and mouse
+events are not part of this dispatcher. Pibbl forwards native pointer and mouse
 compatibility sequences independently; it neither synthesizes a duplicate
 mouse sequence nor suppresses one supplied by the browser.
 
@@ -111,7 +110,7 @@ target, and `miss` follows the layer's `pass-through`, `block`, or
 `target-layer` miss policy. The Three adapter's default picker uses ordinary
 Three raycasting and performs no pixel readback or hidden GPU ID pass.
 
-For one logical dispatch, CRC walks the target's mounted-component ancestry,
+For one logical dispatch, Pibbl walks the target's mounted-component ancestry,
 including explicit Canvas and render-layer parent bridges, and snapshots the
 live listener nodes already present on that route. A registered external target
 therefore propagates through the render layer into Canvas ancestors. Listener
@@ -131,7 +130,7 @@ Target capture runs before target non-capture and both report phase `2`.
 and `selectionchange` do not bubble. They may still run capture and target
 phases. All other declared events bubble according to the definition table.
 
-`composedPath()` is an immutable snapshot of opaque logical CRC targets from
+`composedPath()` is an immutable snapshot of opaque logical Pibbl targets from
 root to target. These values are not DOM nodes or component refs. They expose
 only pointer-capture operations; there is no imperative `focus()` method.
 
@@ -163,7 +162,7 @@ and retains native browser order and hysteresis.
 ## Pointer capture, touch, wheel, and drag ownership
 
 Any live target or propagation-listener `currentTarget` may call
-`setPointerCapture(pointerId)`. CRC asks the root HTML Canvas for native
+`setPointerCapture(pointerId)`. Pibbl asks the root HTML Canvas for native
 capture and records the logical owner only if native capture succeeds.
 Capture is per pointer ID. Subsequent coordinate pointer events route to that
 owner until explicit release, `pointercancel`, native loss, target removal, or
@@ -192,9 +191,9 @@ modifier/mouse fields. Calling logical `preventDefault()` makes the native
 cancelable wheel event default-prevented. Wheel and cancellable touch native
 listeners are installed with non-passive options.
 
-The `@crc/three` input bridge uses these same rules. Controls receive routed
+The `@pibbl/three` input bridge uses these same rules. Controls receive routed
 pointer, wheel, context-menu, and click input only after the committed layer
-resolver participates, and their pointer-capture requests map back to CRC. An
+resolver participates, and their pointer-capture requests map back to Pibbl. An
 input change schedules another frame only when the application or control calls
 the layer's invalidation capability; the bridge starts no independent loop.
 
@@ -207,7 +206,7 @@ drag-source target.
 ## Non-coordinate transport
 
 Keyboard, logical focus, editing, composition, and clipboard facades preserve
-their family fields. CRC's internal dispatcher transports them to a known
+their family fields. Pibbl's internal dispatcher transports them to a known
 target. A plain Canvas supplies no logical descendant for native
 non-coordinate input by itself. When an application installs
 `FocusManagement`, the optional focus policy chooses the current explicit
@@ -215,7 +214,7 @@ target and supplies the implemented keyboard, focus, activation, and navigation
 behavior defined by the
 [focus and keyboard-navigation contract](./focus-and-keyboard-navigation-contract.md).
 Without that policy, native Canvas events in these families remain targetless
-and target handlers do not run. CRC exposes no separate public event-injection
+and target handlers do not run. Pibbl exposes no separate public event-injection
 adapter or hidden editable DOM.
 
 Registering handlers alone does not install `tabindex`, focus policy, or
@@ -243,7 +242,7 @@ that same conjunction; calling it on synthesized `pointerenter`/`pointerleave`,
 movement source. `stopPropagation()` completes the remaining handlers on
 the current node, suppresses later nodes/phases, and forwards to the native
 event. `stopImmediatePropagation()` also suppresses the remaining handler on
-the current target/phase and forwards natively. A native listener outside CRC
+the current target/phase and forwards natively. A native listener outside Pibbl
 that already ran is not undone.
 
 ## Mutation, errors, and scheduling
@@ -259,7 +258,7 @@ read immediately before invocation:
 - one thrown application handler is reported through `reportError` and does
   not suppress unrelated handlers or corrupt cleanup.
 
-Handlers may schedule normal CRC updates. Public `crc()` and state updates
+Handlers may schedule normal Pibbl updates. Public `pibbl()` and state updates
 remain animation-frame coalesced, so a requested rerender normally becomes
 visible after the current native dispatch. Direct synchronous removal through
 runtime teardown takes effect immediately.
@@ -276,20 +275,11 @@ idempotent.
 
 Offscreen Canvas layers and external render layers share their root HTML Canvas
 event root, global paint order, paths, captures, contacts, drag hover,
-listeners, and observers. A CRC mount
+listeners, and observers. A Pibbl mount
 whose root is itself an `OffscreenCanvas` has no DOM native-event source and
-therefore no native-listener hub. CRC does not pretend that such a root can
+therefore no native-listener hub. Pibbl does not pretend that such a root can
 receive browser UI input and exposes no public event-injection API in this
 delivery.
-
-The singular path-bound `useEvent` remains a stable legacy geometric target.
-A pathless `useEvent` remains a narrow mouse-only Canvas observer with the
-shipped `{ x, y, originalEvent }` payload. Observers run after logical target
-propagation, once per matching native event, in registration order. Removal is
-effective before a pending observer turn, additions wait until the next native
-event, and thrown observers are reported without suppressing safe peers.
-Pathless observers do not affect target selection, propagation, cursor, or
-activation.
 
 Root disposal synchronously clears native listeners, logical registrations,
 pointer captures and pending loss, pointer hover, touch contacts, drag hover,
@@ -324,21 +314,11 @@ depth-aware default raycasting, structural propagation, pointer capture, cursor,
 focus bounds, controls input, cache replay, and bitmap/interaction generation
 evidence through public package imports.
 
-CRC still does not provide semantic controls, DOM accessibility, a retained
+Pibbl still does not provide semantic controls, DOM accessibility, a retained
 scene graph, hidden editable DOM, pointer/touch gesture recognition, or
 cross-browser normalization beyond the stated logical contracts. Optional
 logical focus does not create screen-reader semantics or generated DOM
 descendants.
-
-## External 3D geometry boundary
-
-Three coordinate events target the nearest committed visible object through the
-adapter's camera-aware raycasting, or through an application-supplied picker.
-Pure operations from `@crc/physics/3d/geometry` do not create event targets or
-retain an authoritative world. Applications that combine those operations with
-a Three scene explicitly derive their world-space query input and register the
-corresponding Three object as a CRC target; normal event propagation and pointer
-capture remain unchanged.
 
 ## Component manipulation events
 

@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { PathGeometry } from "@crc/core";
+import { PathGeometry } from "@pibbl/core";
 import { inkBounds } from "../dist/testing.mjs";
 const near = (actual, expected, tolerance = 1e-10) =>
   assert.ok(

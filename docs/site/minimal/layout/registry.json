@@ -1,0 +1,246 @@
+[
+  {
+    "id": "absolute-overlay",
+    "title": "Absolute and overlay layout",
+    "description": "Position a block absolutely and center content within an overlay.",
+    "source": "absolute-overlay.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "Absolute",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "AbsoluteProps",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "AbsoluteStyle",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "Overlay",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "OverlayProps",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "OverlayStyle",
+        "importPath": "@pibbl/core"
+      }
+    ],
+    "notes": [
+      "Creates its own canvas and disposes the Pibbl mount on pagehide."
+    ]
+  },
+  {
+    "id": "flow-flex",
+    "title": "Flow and flex layout",
+    "description": "Stack a banner with a flexible row of marks.",
+    "source": "flow-flex.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "Flow",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "FlowProps",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "FlowStyle",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "Flex",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "FlexProps",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "FlexStyle",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "FlexItemStyle",
+        "importPath": "@pibbl/core"
+      }
+    ],
+    "notes": [
+      "Creates its own canvas and disposes the Pibbl mount on pagehide."
+    ]
+  },
+  {
+    "id": "grid-responsive",
+    "title": "Grid and responsive style",
+    "description": "Place marks on explicit grid tracks and apply a local width rule.",
+    "source": "grid-responsive.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "Grid",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "GridProps",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "GridStyle",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "GridTrack",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "GridItemStyle",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PibblResponsiveStyle",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PibblSizeQuery",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PibblStyleRule",
+        "importPath": "@pibbl/core"
+      }
+    ],
+    "notes": [
+      "Use Narrow/Wide to cross the local width query and change the top mark's color."
+    ]
+  },
+  {
+    "id": "box-helpers",
+    "title": "Box resolution",
+    "description": "Resolve padding, percentages, and a constrained box with typed diagnostics.",
+    "source": "box-helpers.ts",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "LayoutDiagnostic",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "layoutDiagnostic",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "normalizeEdges",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "resolveBox",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "resolveLength",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "BoxStyle",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "Constraints",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "EdgeValues",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "Edges",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "LayoutBox",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "LayoutDiagnosticContext",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "LayoutDiagnosticInput",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "Length",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "Percentage",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "ResolvedBoxStyle",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "Size",
+        "importPath": "@pibbl/core"
+      }
+    ],
+    "notes": ["Displays resolved edges and box geometry in the document."]
+  },
+  {
+    "id": "measure",
+    "title": "Intrinsic measurement",
+    "description": "Measure a Text element with a Canvas service and display its computed dimensions.",
+    "source": "measure.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "measureElement",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "CanvasMeasurementService",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "Constraints",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "MeasureInput",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "MeasureResult",
+        "importPath": "@pibbl/core"
+      }
+    ],
+    "notes": ["Displays the measured Text dimensions in the document."]
+  },
+  {
+    "id": "layout-box",
+    "title": "Allocated layout box",
+    "description": "Read the current canvas allocation and draw an inset panel.",
+    "source": "layout-box.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "useLayoutBox",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "LayoutItemStyle",
+        "importPath": "@pibbl/core"
+      }
+    ],
+    "notes": [
+      "Creates its own canvas and disposes the Pibbl mount on pagehide."
+    ]
+  }
+]

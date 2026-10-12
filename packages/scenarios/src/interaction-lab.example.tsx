@@ -1,21 +1,21 @@
+import type { INTERACTION_LAB_ACTION_IDS } from './interaction-lab.js';
+import type { interactionLabScenarioEntry } from './catalog.js';
 import type {
-  CRCClipboardEvent,
-  CRCCompositionEvent,
-  CRCDragEvent,
-  CRCEvent,
-  CRCKeyboardEvent,
-  CRCLogicalMouseEvent,
-  CRCMouseEvent,
-  CRCPointerEvent,
-  CRCTouchEvent,
-} from '@crc/core';
+  PibblClipboardEvent,
+  PibblCompositionEvent,
+  PibblDragEvent,
+  PibblEvent,
+  PibblKeyboardEvent,
+  PibblLogicalMouseEvent,
+  PibblPointerEvent,
+  PibblTouchEvent,
+} from '@pibbl/core';
 import type {
   EventTraceEntry,
   EventTraceInput,
   TraceEventType,
 } from './event-trace';
 import {
-  useEvent,
   useEventListener,
   useEventTarget,
   Group,
@@ -23,8 +23,17 @@ import {
   Path,
   Rectangle,
   Text,
-} from '@crc/core';
+} from '@pibbl/core';
 export const INTERACTION_LAB_SOURCE_ID = 'interaction-trace-lab-example';
+/**
+ * Supported interaction lab fixture values: `"clipboard"`, `"composition"`, `"drag-drop"`,
+ * `"fill"`, `"fill-stroke"`, `"interaction-width"`, `"keyboard-fields"`, `"nested"`, `"no-hit"`,
+ * `"overlap"`, `"pointer-capture"`, `"propagation"`, `"remove-target-after-transition"`,
+ * `"regions"`, `"stroke"`, `"touch-retention"`, `"transparent"`, `"wheel-cancellation"`.
+ *
+ * @see {@link InteractionLabAction}
+ * @see {@link InteractionLabState}
+ */
 export type InteractionLabFixture =
   | 'clipboard'
   | 'composition'
@@ -35,10 +44,6 @@ export type InteractionLabFixture =
   | 'keyboard-fields'
   | 'nested'
   | 'no-hit'
-  | 'observer'
-  | 'observer-remove'
-  | 'observer-replace'
-  | 'observer-throwing'
   | 'overlap'
   | 'pointer-capture'
   | 'propagation'
@@ -48,6 +53,13 @@ export type InteractionLabFixture =
   | 'touch-retention'
   | 'transparent'
   | 'wheel-cancellation';
+/**
+ * Actions supported by the interaction lab scenario's public controller.
+ *
+ * @see {@link InteractionLabFixture}
+ * @see {@link InteractionLabState}
+ * @see {@link INTERACTION_LAB_ACTION_IDS}
+ */
 export type InteractionLabAction =
   | 'clear-trace'
   | 'mount'
@@ -57,17 +69,40 @@ export type InteractionLabAction =
   | 'replace-handler'
   | 'reset'
   | `show-${InteractionLabFixture}`;
+/**
+ * Observable state exposed by the interaction lab scenario for controls and assertions.
+ *
+ * @see {@link InteractionLabFixture}
+ * @see {@link InteractionLabAction}
+ * @see {@link EventTraceEntry}
+ * @see {@link interactionLabScenarioEntry}
+ */
 export interface InteractionLabState {
+  /** Fixture recorded or configured by this scenario. See {@link InteractionLabFixture}. */
   fixture: InteractionLabFixture;
+  /**
+   * Handler generation recorded or configured by this scenario. See {@link InteractionLabState}.
+   */
   handlerGeneration: number;
+  /** Last action recorded or configured by this scenario. See {@link InteractionLabAction}. */
   lastAction: InteractionLabAction;
+  /**
+   * Last handler generation recorded or configured by this scenario. See
+   * {@link InteractionLabState}.
+   */
   lastHandlerGeneration: number | null;
+  /**
+   * Left handler enabled recorded or configured by this scenario. See {@link InteractionLabState}
+   * .
+   */
   leftHandlerEnabled: boolean;
-  observerGeneration: number;
-  observerMutationComplete: boolean;
+  /** Right visible recorded or configured by this scenario. See {@link InteractionLabState}. */
   rightVisible: boolean;
+  /** Top painted last recorded or configured by this scenario. See {@link InteractionLabState}. */
   topPaintedLast: boolean;
+  /** Top visible recorded or configured by this scenario. See {@link InteractionLabState}. */
   topVisible: boolean;
+  /** Trace recorded or configured by this scenario. See {@link EventTraceEntry}. */
   trace: readonly EventTraceEntry[];
 }
 export interface InteractionLabRecord {
@@ -77,16 +112,16 @@ interface InteractionLabSceneProps {
   state: Readonly<InteractionLabState>;
   record: InteractionLabRecord;
 }
-type TraceMouseCoordinates = Pick<CRCMouseEvent, 'x' | 'y' | 'originalEvent'>;
+type TraceMouseCoordinates = Pick<PibblLogicalMouseEvent, 'x' | 'y' | 'originalEvent'>;
 type TraceHandlers = {
-  onClick: (event: CRCLogicalMouseEvent) => void;
-  onContextMenu: (event: CRCLogicalMouseEvent) => void;
-  onDblClick: (event: CRCLogicalMouseEvent) => void;
-  onMouseDown: (event: CRCLogicalMouseEvent) => void;
-  onMouseMove: (event: CRCLogicalMouseEvent) => void;
-  onMouseOut: (event: CRCLogicalMouseEvent) => void;
-  onMouseOver: (event: CRCLogicalMouseEvent) => void;
-  onMouseUp: (event: CRCLogicalMouseEvent) => void;
+  onClick: (event: PibblLogicalMouseEvent) => void;
+  onContextMenu: (event: PibblLogicalMouseEvent) => void;
+  onDblClick: (event: PibblLogicalMouseEvent) => void;
+  onMouseDown: (event: PibblLogicalMouseEvent) => void;
+  onMouseMove: (event: PibblLogicalMouseEvent) => void;
+  onMouseOut: (event: PibblLogicalMouseEvent) => void;
+  onMouseOver: (event: PibblLogicalMouseEvent) => void;
+  onMouseUp: (event: PibblLogicalMouseEvent) => void;
 };
 function recordEvent(
   record: InteractionLabRecord,
@@ -97,7 +132,7 @@ function recordEvent(
 ): void {
   record(
     {
-      source: 'crc',
+      source: 'pibbl',
       type,
       target,
       x: Math.round(event.x),
@@ -109,7 +144,7 @@ function recordEvent(
   );
 }
 type TraceLogicalEvent = Pick<
-  CRCEvent,
+  PibblEvent,
   | 'currentTarget'
   | 'defaultPrevented'
   | 'eventPhase'
@@ -117,15 +152,15 @@ type TraceLogicalEvent = Pick<
   | 'relatedTarget'
   | 'target'
 > &
-  Partial<Pick<CRCLogicalMouseEvent, 'x' | 'y'>>;
+  Partial<Pick<PibblLogicalMouseEvent, 'x' | 'y'>>;
 interface TraceTargetLabels {
   currentTarget: string;
   relatedTarget: string | null;
   target: string;
 }
-const logicalTargetLabels = new WeakMap<CRCEvent['target'], string>();
+const logicalTargetLabels = new WeakMap<PibblEvent['target'], string>();
 function stableTargetLabel(
-  target: CRCEvent['target'] | null,
+  target: PibblEvent['target'] | null,
   label: string | null,
 ): string | null {
   if (!target) {
@@ -163,7 +198,7 @@ function recordLogicalEvent(
   fields: EventTraceInput['fields'],
 ): void {
   record({
-    source: 'crc',
+    source: 'pibbl',
     type,
     target: stableTargetLabel(event.target, labels.target)!,
     currentTarget: stableTargetLabel(
@@ -182,13 +217,13 @@ function recordLogicalEvent(
     fields,
   });
 }
-function pointerFields(event: CRCPointerEvent) {
+function pointerFields(event: PibblPointerEvent) {
   return {
     pointerId: event.pointerId,
     pointerType: event.pointerType,
   } as const;
 }
-function captureFields(event: CRCPointerEvent) {
+function captureFields(event: PibblPointerEvent) {
   return {
     captured: event.currentTarget.hasPointerCapture(event.pointerId),
     pointerId: event.pointerId,
@@ -196,7 +231,7 @@ function captureFields(event: CRCPointerEvent) {
     y: Math.round(event.y),
   } as const;
 }
-function touchFields(event: CRCTouchEvent) {
+function touchFields(event: PibblTouchEvent) {
   const identifiers = (touches: TouchList) =>
     Array.from(touches, (touch) => touch.identifier).join(',');
   return {
@@ -211,7 +246,7 @@ function traceHandlers(
   record: InteractionLabRecord,
   handlerGeneration?: number,
 ): TraceHandlers {
-  const handler = (type: TraceEventType) => (event: CRCLogicalMouseEvent) => {
+  const handler = (type: TraceEventType) => (event: PibblLogicalMouseEvent) => {
     recordEvent(record, type, target, event, handlerGeneration);
   };
   return {
@@ -364,11 +399,9 @@ const NestedChild = ({ record }: NestedAncestorProps) =>
   );
 const NestedInteractiveAncestor = ({ record }: NestedAncestorProps) => {
   const parentPath = rectanglePath(70, 52, 300, 148);
-  useEvent(
-    'mousemove',
-    (event) => recordEvent(record, 'mousemove', 'ancestor', event),
-    parentPath,
-    true,
+  useEventTarget(
+    { onMouseMove: event => recordEvent(record, 'mousemove', 'ancestor', event) },
+    { path: parentPath, fill: true },
   );
   return [
     <Rectangle
@@ -472,7 +505,7 @@ const CustomPointerCapture = ({ record }: NestedAncestorProps) => {
         | 'pointermove'
         | 'pointerup',
     ) =>
-    (event: CRCPointerEvent) => {
+    (event: PibblPointerEvent) => {
       if (type === 'pointerdown') {
         event.currentTarget.setPointerCapture(event.pointerId);
       } else if (type === 'pointerup') {
@@ -515,7 +548,7 @@ const CustomPointerCapture = ({ record }: NestedAncestorProps) => {
 };
 function touchRetention(record: InteractionLabRecord) {
   const trace =
-    (type: 'touchend' | 'touchmove' | 'touchstart') => (event: CRCTouchEvent) =>
+    (type: 'touchend' | 'touchmove' | 'touchstart') => (event: PibblTouchEvent) =>
       recordLogicalEvent(
         record,
         type,
@@ -584,7 +617,7 @@ function keyboardFields(record: InteractionLabRecord) {
         stroke: '#0c4a6e',
         strokeWidth: 2,
       }}
-      onKeyDown={(event: CRCKeyboardEvent) =>
+      onKeyDown={(event: PibblKeyboardEvent) =>
         recordLogicalEvent(
           record,
           'keydown',
@@ -605,7 +638,7 @@ function keyboardFields(record: InteractionLabRecord) {
 function composition(record: InteractionLabRecord) {
   const trace =
     (type: 'compositionend' | 'compositionstart' | 'compositionupdate') =>
-    (event: CRCCompositionEvent) =>
+    (event: PibblCompositionEvent) =>
       recordLogicalEvent(
         record,
         type,
@@ -646,7 +679,7 @@ function clipboard(record: InteractionLabRecord) {
         stroke: '#312e81',
         strokeWidth: 2,
       }}
-      onPaste={(event: CRCClipboardEvent) =>
+      onPaste={(event: PibblClipboardEvent) =>
         recordLogicalEvent(
           record,
           'paste',
@@ -663,10 +696,10 @@ function clipboard(record: InteractionLabRecord) {
 function dragDrop(record: InteractionLabRecord) {
   type DragTargetLabel = 'drag-a' | 'drag-b';
   const labels: readonly DragTargetLabel[] = ['drag-a', 'drag-b'];
-  const labelsByTarget = new WeakMap<CRCEvent['target'], DragTargetLabel>();
-  const targetsByLabel = new Map<DragTargetLabel, CRCEvent['target']>();
+  const labelsByTarget = new WeakMap<PibblEvent['target'], DragTargetLabel>();
+  const targetsByLabel = new Map<DragTargetLabel, PibblEvent['target']>();
   const bindTarget = (
-    eventTarget: CRCEvent['target'],
+    eventTarget: PibblEvent['target'],
     label: DragTargetLabel,
   ): DragTargetLabel => {
     const existingLabel = labelsByTarget.get(eventTarget);
@@ -686,7 +719,7 @@ function dragDrop(record: InteractionLabRecord) {
     return label;
   };
   const resolveRelatedTarget = (
-    eventTarget: CRCEvent['target'],
+    eventTarget: PibblEvent['target'],
   ): DragTargetLabel => {
     const existingLabel = labelsByTarget.get(eventTarget);
     if (existingLabel) {
@@ -705,7 +738,7 @@ function dragDrop(record: InteractionLabRecord) {
   const region = (target: DragTargetLabel, x: number, fill: string) => {
     const trace =
       (type: 'dragenter' | 'dragleave' | 'dragover' | 'drop') =>
-      (event: CRCDragEvent) => {
+      (event: PibblDragEvent) => {
         bindTarget(event.target, target);
         bindTarget(event.currentTarget, target);
         recordLogicalEvent(
@@ -912,69 +945,9 @@ function caseVisual(
           {...traceHandlers('a', record)}
         />,
       ];
-    case 'observer':
-    case 'observer-remove':
-    case 'observer-replace':
-    case 'observer-throwing':
-      return [
-        region(
-          'a',
-          record,
-          {
-            x: 90,
-            y: 66,
-            width: 220,
-            height: 124,
-          },
-          {
-            cursor: 'pointer',
-            fillStyle: '#2563eb',
-          },
-        ),
-      ];
   }
 }
 const InteractionLabScene = ({ state, record }: InteractionLabSceneProps) => {
-  useEvent(
-    'mousemove',
-    state.fixture === 'observer'
-      ? (event) => {
-          recordEvent(record, 'mousemove', 'canvas-observer', event);
-        }
-      : state.fixture === 'observer-remove' ||
-          state.fixture === 'observer-replace'
-        ? (event) => {
-            recordEvent(record, 'mousemove', 'observer-mutator', event);
-          }
-        : state.fixture === 'observer-throwing'
-          ? (event) => {
-              recordEvent(record, 'mousemove', 'observer-throws', event);
-              throw new Error('Deliberate ordering-lab observer failure');
-            }
-          : undefined,
-  );
-  useEvent(
-    'mousemove',
-    state.fixture === 'observer-replace'
-      ? (event) => {
-          recordEvent(
-            record,
-            'mousemove',
-            `observer-generation-${state.observerGeneration}`,
-            event,
-            state.observerGeneration,
-          );
-        }
-      : state.fixture === 'observer-remove' && !state.observerMutationComplete
-        ? (event) => {
-            recordEvent(record, 'mousemove', 'observer-removable', event);
-          }
-        : state.fixture === 'observer-throwing'
-          ? (event) => {
-              recordEvent(record, 'mousemove', 'observer-safe', event);
-            }
-          : undefined,
-  );
   return [
     <Rectangle
       key="background"

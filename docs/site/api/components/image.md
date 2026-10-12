@@ -12,12 +12,12 @@ relatedTypes: [ImageProps, ImgStyle]
 # Image
 
 ```ts
-import { Image } from "@crc/core";
+import { Image } from "@pibbl/core";
 ```
 
 `Image` uses [`ImageProps`](#/api/types/elements-components#imageprops) and [`ImgStyle`](#/api/types/styles#imgstyle) to paint a browser image source with
 local geometry, border, and interaction. It rejects children. Browser decoded-
-image behavior and CORS policy remain authoritative; CRC does not define an
+image behavior and CORS policy remain authoritative; Pibbl does not define an
 image CORS policy.
 
 ```tsx

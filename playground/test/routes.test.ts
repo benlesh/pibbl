@@ -6,6 +6,7 @@ import {
   resolveLearningExampleRoute,
   routeHref,
 } from "../src/app/routes";
+import { websiteUrlForStudioDocument } from "../../tooling/studio-docs/website-routes";
 
 describe("Studio routes", () => {
   it("parses every canonical public route family", () => {
@@ -33,18 +34,18 @@ describe("Studio routes", () => {
       kind: "document",
       route: "#/api/components/rectangle",
     });
-    expect(parseStudioRoute("#/api/functions/crc")).toEqual({
+    expect(parseStudioRoute("#/api/functions/pibbl")).toEqual({
       kind: "document",
-      route: "#/api/functions/crc",
+      route: "#/api/functions/pibbl",
     });
     expect(parseStudioRoute("#/api/hooks/use-state")).toEqual({
       kind: "document",
       route: "#/api/hooks/use-state",
     });
-    expect(parseStudioRoute("#/api/types/events#crcpointerevent")).toEqual({
+    expect(parseStudioRoute("#/api/types/events#pibblpointerevent")).toEqual({
       kind: "document",
       route: "#/api/types/events",
-      anchor: "crcpointerevent",
+      anchor: "pibblpointerevent",
     });
     expect(parseStudioRoute("#/examples/drawing/rectangle")).toEqual({
       kind: "example",
@@ -55,6 +56,11 @@ describe("Studio routes", () => {
       kind: "example",
       group: "three",
       slug: "three-layer",
+    });
+    expect(parseStudioRoute("#/workbench/diagram-editor-first-node?code=v1.abc")).toEqual({
+      kind: "workbench",
+      slug: "diagram-editor-first-node",
+      query: "?code=v1.abc",
     });
     expect(parseStudioRoute("#/testing")).toEqual({ kind: "testing" });
     expect(parseStudioRoute("#/testing/baseline-smoke")).toEqual({
@@ -77,18 +83,26 @@ describe("Studio routes", () => {
 
   it("round-trips document anchors together with their query text", () => {
     const route = parseStudioRoute(
-      "#/api/types/events#crcpointerevent?mode=detail",
+      "#/api/types/events#pibblpointerevent?mode=detail",
     );
 
     expect(route).toEqual({
       kind: "document",
       route: "#/api/types/events",
-      anchor: "crcpointerevent",
+      anchor: "pibblpointerevent",
       query: "?mode=detail",
     });
     expect(routeHref(route)).toBe(
-      "#/api/types/events#crcpointerevent?mode=detail",
+      "#/api/types/events#pibblpointerevent?mode=detail",
     );
+  });
+
+  it("maps legacy documentation routes to their canonical website pages", () => {
+    const base = "http://localhost:4321/";
+    expect(websiteUrlForStudioDocument("#/learn", base)).toBe("http://localhost:4321/guides/learning-path/");
+    expect(websiteUrlForStudioDocument("#/learn/tutorials/diagram-editor/first-node#example?mode=detail", base)).toBe("http://localhost:4321/guides/tutorials/diagram-editor/first-node/?mode=detail#example");
+    expect(websiteUrlForStudioDocument("#/api/types/events#pibblpointerevent", base)).toBe("http://localhost:4321/reference/types/events/#pibblpointerevent");
+    expect(websiteUrlForStudioDocument("#/api/functions/pibbl", base)).toBe("http://localhost:4321/reference/functions/pibbl/");
   });
 
   it("reports paths outside public route families as unknown", () => {

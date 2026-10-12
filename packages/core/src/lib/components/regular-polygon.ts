@@ -1,8 +1,8 @@
 import { definePrimitive } from '../define-primitive.js';
 import type {
-  CRCEventFocusOptions,
-  CRCEventHandlers,
-  CRCEventParticipationOptions,
+  PibblEventFocusOptions,
+  PibblEventHandlers,
+  PibblEventParticipationOptions,
 } from '../events/types.js';
 import {
   resolveRegularPolygonGeometry,
@@ -26,7 +26,7 @@ import type {
   RoundedCornerStyle,
 } from '../style/types.js';
 import type { RenderingContext2D, SystemStyle } from '../types.js';
-import type { CRCPhysics2DPropExtension } from '../types.js';
+import type { PibblPhysics2DPropExtension } from '../types.js';
 import { renderPath } from './path.js';
 import { resolveRoundedCornerStyle } from './rounded-corner-style.js';
 import {
@@ -36,34 +36,97 @@ import {
   shapeGeometryErrorFactory,
 } from './shape-style.js';
 
+/**
+ * Authored inputs for RegularPolygon, including the declared data and presentation options.
+ *
+ * @see {@link PibblEventHandlers}
+ * @see {@link PibblEventParticipationOptions}
+ * @see {@link PibblPhysics2DPropExtension}
+ * @see {@link RegularPolygon}
+ */
 export interface RegularPolygonProps
-  extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions, CRCPhysics2DPropExtension {}
+  extends PibblEventHandlers, PibblEventFocusOptions, PibblEventParticipationOptions, PibblPhysics2DPropExtension {}
 
+/**
+ * Center, side count, rotation, and paint shared by regular-polygon size variants.
+ *
+ * @see {@link RegularPolygonStyle}
+ */
 interface RegularPolygonCommonStyle extends RoundedCornerStyle {
+  /** Number of sides of the regular polygon. See {@link RegularPolygonCommonStyle}. */
   sides: number;
+  /** Horizontal coordinate of the center. See {@link Length}. */
   cx?: Exclude<Length, 'auto'>;
+  /** Vertical coordinate of the center. See {@link Length}. */
   cy?: Exclude<Length, 'auto'>;
+  /** Rotation applied to the containing geometry. See {@link RegularPolygonCommonStyle}. */
   rotation?: number;
+  /**
+   * Width used for line hit testing independently of the visible stroke width. See
+   * {@link RegularPolygonCommonStyle}.
+   */
   lineInteractionWidth?: number;
 }
 
+/**
+ * Exactly one declared size measure for a regular polygon.
+ *
+ * @see {@link RegularPolygonStyle}
+ */
 type RegularPolygonSizeStyle =
   | {
+      /** Distance from the polygon center to a vertex. See {@link Length}. */
       circumradius: Exclude<Length, 'auto'>;
+      /**
+       * Not accepted in this variant; use the alternative fields instead. See
+       * {@link RegularPolygonSizeStyle}.
+       */
       inradius?: never;
+      /**
+       * Not accepted in this variant; use the alternative fields instead. See
+       * {@link RegularPolygonSizeStyle}.
+       */
       sideLength?: never;
     }
   | {
+      /**
+       * Not accepted in this variant; use the alternative fields instead. See
+       * {@link RegularPolygonSizeStyle}.
+       */
       circumradius?: never;
+      /** Distance from the polygon center to an edge. See {@link Length}. */
       inradius: Exclude<Length, 'auto'>;
+      /**
+       * Not accepted in this variant; use the alternative fields instead. See
+       * {@link RegularPolygonSizeStyle}.
+       */
       sideLength?: never;
     }
   | {
+      /**
+       * Not accepted in this variant; use the alternative fields instead. See
+       * {@link RegularPolygonSizeStyle}.
+       */
       circumradius?: never;
+      /**
+       * Not accepted in this variant; use the alternative fields instead. See
+       * {@link RegularPolygonSizeStyle}.
+       */
       inradius?: never;
+      /** Length of one polygon edge. See {@link Length}. */
       sideLength: Exclude<Length, 'auto'>;
     };
 
+/**
+ * Supported geometry and presentation properties for RegularPolygon.
+ *
+ * @see {@link SystemStyle}
+ * @see {@link PaintStyle}
+ * @see {@link CursorStyle}
+ * @see {@link BoxStyle}
+ * @see {@link LayoutItemStyle}
+ * @see {@link RegularPolygon}
+ */
 export type RegularPolygonStyle = RegularPolygonCommonStyle &
   RegularPolygonSizeStyle &
   SystemStyle &
@@ -126,7 +189,16 @@ function renderRegularPolygon(
   }, ctx);
 }
 
-/** Describes a regular-polygon primitive for JSX or createElement authoring. */
+/**
+ * Describes a regular-polygon primitive for JSX or createElement authoring.
+ *
+ * @param props - Authored component inputs, supplied through JSX or createElement. See the linked
+ * props and style types.
+ * @throws When called directly; Pibbl mounts this component through JSX or createElement.
+ *
+ * @see {@link RegularPolygonProps}
+ * @see {@link RegularPolygonStyle}
+ */
 export const RegularPolygon = definePrimitive<
   RegularPolygonProps,
   RegularPolygonStyle,

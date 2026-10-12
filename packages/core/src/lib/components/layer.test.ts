@@ -1,24 +1,23 @@
 import { peekNativeFilterPool } from '../filter/render-filter-boundary';
-import { opacity, blur } from '@crc/core/filters';
+import { opacity, blur } from '@pibbl/core/filters';
 import type { RectangleProps } from './rect';
 import type { RectStyle } from '../style/types';
 import type { SystemStyle } from '../types';
 import {
   usePlayback,
   parallel,
-  track,
+  drive,
   tween,
-  type CRCPlayback,
-} from '@crc/core';
+  type PibblPlayback,
+} from '@pibbl/core';
 import { page } from 'vitest/browser';
 import { describe, expect, it, vi } from 'vitest';
-import { crc } from '../crc';
+import { pibbl } from '../pibbl';
 import { createElement } from '../element/create-element';
 import { Fragment } from '../element/fragment';
 import { executeRender } from '../execute-render';
-import { getCRCInstance, GLOBAL_STATE } from '../global-state';
+import { getPibblInstance, GLOBAL_STATE } from '../global-state';
 import { useCursor } from '../hooks/use-cursor';
-import { useEvent } from '../hooks/use-event';
 import { useEventTarget } from '../hooks/use-event-target';
 import { useRef } from '../hooks/use-ref';
 import { useSignal } from '../hooks/use-signal';
@@ -30,7 +29,7 @@ import {
 } from '../scheduler/testing';
 import { focusManaged } from '../focus/policy-test-support';
 import { componentTest } from '../test-utils/component-test';
-import type { CRCController, CRCNode } from '../types';
+import type { PibblController, PibblNode } from '../types';
 import { takeScreenshot } from '../util/test-utils';
 import { Clip } from './clip';
 import { Group } from './g';
@@ -46,7 +45,7 @@ describe('Layer children and retained subtree contract', () => {
     const source = signal(0);
     const color = computed(() => source.get() % 2 === 0 ? 'red' : 'blue');
     let childRenders = 0;
-    const Child = (_props: {}): CRCNode => {
+    const Child = (_props: {}): PibblNode => {
       childRenders++;
       return createElement(Rectangle, {
         style: { width: 20, height: 20, fill: color.get() },
@@ -56,7 +55,7 @@ describe('Layer children and retained subtree contract', () => {
     canvas.width = 20;
     canvas.height = 20;
     document.body.appendChild(canvas);
-    const controller = crc(canvas, createElement(Layer, {
+    const controller = pibbl(canvas, createElement(Layer, {
       style: { width: 20, height: 20 },
       children: createElement(Child, {}),
     }), { pixelRatio: 1 });
@@ -89,7 +88,7 @@ describe('Layer children and retained subtree contract', () => {
     const restoreDriver = installSchedulerDriverForTest(driver);
     const color = signal('red');
     let childRenders = 0;
-    const Child = (_props: {}): CRCNode => {
+    const Child = (_props: {}): PibblNode => {
       childRenders++;
       return createElement(Rectangle, {
         style: { width: 20, height: 20, fill: color.get() },
@@ -103,7 +102,7 @@ describe('Layer children and retained subtree contract', () => {
     canvas.width = 20;
     canvas.height = 20;
     document.body.appendChild(canvas);
-    const controller = crc(canvas, scene, { pixelRatio: 1 });
+    const controller = pibbl(canvas, scene, { pixelRatio: 1 });
     const drawImage = vi.spyOn(CanvasRenderingContext2D.prototype, 'drawImage');
 
     try {
@@ -117,7 +116,7 @@ describe('Layer children and retained subtree contract', () => {
       expect(childRenders).toBe(2);
       expect(pixel(canvas, 5, 5)).toEqual([0, 0, 255, 255]);
       expect(drawImage).toHaveBeenCalledTimes(1);
-      const child = getCRCInstance(layerCanvas);
+      const child = getPibblInstance(layerCanvas);
       expect(child.completedRenderRevision).toBe(child.requestedRenderRevision);
     } finally {
       drawImage.mockRestore();
@@ -131,7 +130,7 @@ describe('Layer children and retained subtree contract', () => {
     const restoreDriver = installSchedulerDriverForTest(driver);
     const color = signal('red');
     let nestedRenders = 0;
-    const NestedChild = (_props: {}): CRCNode => {
+    const NestedChild = (_props: {}): PibblNode => {
       nestedRenders++;
       return createElement(Rectangle, {
         style: { width: 20, height: 20, fill: color.get() },
@@ -148,7 +147,7 @@ describe('Layer children and retained subtree contract', () => {
     canvas.width = 20;
     canvas.height = 20;
     document.body.appendChild(canvas);
-    const controller = crc(canvas, scene, { pixelRatio: 1 });
+    const controller = pibbl(canvas, scene, { pixelRatio: 1 });
     const drawImage = vi.spyOn(CanvasRenderingContext2D.prototype, 'drawImage');
     const offscreenDrawImage = vi.spyOn(
       OffscreenCanvasRenderingContext2D.prototype,
@@ -157,9 +156,9 @@ describe('Layer children and retained subtree contract', () => {
 
     try {
       driver.flush(10);
-      const outer = Array.from(GLOBAL_STATE.crcInstances.values())
+      const outer = Array.from(GLOBAL_STATE.pibblInstances.values())
         .find(instance => instance.parent === canvas)!;
-      const nested = Array.from(GLOBAL_STATE.crcInstances.values())
+      const nested = Array.from(GLOBAL_STATE.pibblInstances.values())
         .find(instance => instance.parent === outer.canvas)!;
       drawImage.mockClear();
       offscreenDrawImage.mockClear();
@@ -188,13 +187,13 @@ describe('Layer children and retained subtree contract', () => {
     const restoreDriver = installSchedulerDriverForTest(driver);
     const offset = signal(0);
     let childRenders = 0;
-    const Child = (_props: {}): CRCNode => {
+    const Child = (_props: {}): PibblNode => {
       childRenders++;
       return createElement(Rectangle, {
         style: { width: 20, height: 20, fill: 'red' },
       });
     };
-    const Root = (_props: {}): CRCNode => createElement(Group, {
+    const Root = (_props: {}): PibblNode => createElement(Group, {
       style: { translateX: offset.get() },
       children: createElement(Layer, {
         style: { width: 20, height: 20 },
@@ -206,7 +205,7 @@ describe('Layer children and retained subtree contract', () => {
     canvas.width = 40;
     canvas.height = 20;
     document.body.appendChild(canvas);
-    const controller = crc(canvas, root, { pixelRatio: 1 });
+    const controller = pibbl(canvas, root, { pixelRatio: 1 });
 
     try {
       driver.flush(10);
@@ -228,27 +227,27 @@ describe('Layer children and retained subtree contract', () => {
     const aSignal = signal(0);
     const nestedSignal = signal(0);
     const renders = { root: 0, a: 0, b: 0, nested: 0 };
-    const AChild = (_props: {}): CRCNode => {
+    const AChild = (_props: {}): PibblNode => {
       renders.a++;
       aSignal.get();
       return createElement(Rectangle, {
         style: { width: 20, height: 20, fill: 'red' },
       });
     };
-    const NestedChild = (_props: {}): CRCNode => {
+    const NestedChild = (_props: {}): PibblNode => {
       renders.nested++;
       nestedSignal.get();
       return createElement(Rectangle, {
         style: { left: 20, width: 20, height: 20, fill: 'blue' },
       });
     };
-    const BChild = (_props: {}): CRCNode => {
+    const BChild = (_props: {}): PibblNode => {
       renders.b++;
       return createElement(Rectangle, {
         style: { width: 20, height: 20, fill: 'green' },
       });
     };
-    const Root = (_props: {}): CRCNode => {
+    const Root = (_props: {}): PibblNode => {
       renders.root++;
       return createElement(Fragment, {
         children: [
@@ -273,7 +272,7 @@ describe('Layer children and retained subtree contract', () => {
     canvas.width = 40;
     canvas.height = 20;
     document.body.appendChild(canvas);
-    const controller = crc(canvas, createElement(Root, {}), { pixelRatio: 1 });
+    const controller = pibbl(canvas, createElement(Root, {}), { pixelRatio: 1 });
     const drawImage = vi.spyOn(CanvasRenderingContext2D.prototype, 'drawImage');
     const offscreenDrawImage = vi.spyOn(
       OffscreenCanvasRenderingContext2D.prototype,
@@ -282,9 +281,9 @@ describe('Layer children and retained subtree contract', () => {
 
     try {
       driver.flush(10);
-      const [aLayer, bLayer] = Array.from(GLOBAL_STATE.crcInstances.values())
+      const [aLayer, bLayer] = Array.from(GLOBAL_STATE.pibblInstances.values())
         .filter(instance => instance.parent === canvas);
-      const nestedLayer = Array.from(GLOBAL_STATE.crcInstances.values())
+      const nestedLayer = Array.from(GLOBAL_STATE.pibblInstances.values())
         .find(instance => instance.parent === aLayer!.canvas)!;
       drawImage.mockClear();
       offscreenDrawImage.mockClear();
@@ -331,10 +330,10 @@ describe('Layer children and retained subtree contract', () => {
     const childX = signal(0);
     const parentOffset = signal(0);
     const parentOpacity = signal(1);
-    let childPlayback!: CRCPlayback;
-    let presentationPlayback!: CRCPlayback;
+    let childPlayback!: PibblPlayback;
+    let presentationPlayback!: PibblPlayback;
     const renders = { root: 0, a: 0, b: 0 };
-    const AChild = vi.fn((_props: {}): CRCNode => {
+    const AChild = vi.fn((_props: {}): PibblNode => {
       renders.a++;
       return createElement(Rectangle, {
         style: {
@@ -345,20 +344,20 @@ describe('Layer children and retained subtree contract', () => {
         },
       });
     });
-    const BChild = (_props: {}): CRCNode => {
+    const BChild = (_props: {}): PibblNode => {
       renders.b++;
       return createElement(Rectangle, {
         style: { width: 10, height: 10, fill: 'blue' },
       });
     };
-    const Root = (_props: {}): CRCNode => {
+    const Root = (_props: {}): PibblNode => {
       renders.root++;
       childPlayback = usePlayback(
-        track(childX, tween({ from: 0, to: 20, duration: 100 })),
+        drive(childX, tween({ from: 0, to: 20, duration: 100 })),
       );
       presentationPlayback = usePlayback(parallel(
-        track(parentOffset, tween({ from: 0, to: 10, duration: 100 })),
-        track(parentOpacity, tween({ from: 1, to: 0.5, duration: 100 })),
+        drive(parentOffset, tween({ from: 0, to: 10, duration: 100 })),
+        drive(parentOpacity, tween({ from: 1, to: 0.5, duration: 100 })),
       ));
       const offset = parentOffset.get();
       const opacityAmount = parentOpacity.get();
@@ -386,7 +385,7 @@ describe('Layer children and retained subtree contract', () => {
     canvas.width = 40;
     canvas.height = 10;
     document.body.appendChild(canvas);
-    const controller = crc(canvas, createElement(Root, {}), { pixelRatio: 1 });
+    const controller = pibbl(canvas, createElement(Root, {}), { pixelRatio: 1 });
     const drawImage = vi.spyOn(CanvasRenderingContext2D.prototype, 'drawImage');
     const offscreenDrawImage = vi.spyOn(
       OffscreenCanvasRenderingContext2D.prototype,
@@ -396,7 +395,7 @@ describe('Layer children and retained subtree contract', () => {
     try {
       expect(driver.pendingHostFrames).toBe(1);
       driver.flush(-1);
-      const [aLayer, bLayer] = Array.from(GLOBAL_STATE.crcInstances.values())
+      const [aLayer, bLayer] = Array.from(GLOBAL_STATE.pibblInstances.values())
         .filter(instance => instance.parent === canvas);
       expect(aLayer).toBeDefined();
       expect(bLayer).toBeDefined();
@@ -492,8 +491,8 @@ describe('Layer children and retained subtree contract', () => {
 
     renderNow(mounted.canvas, scene(0.25));
 
-    const parent = getCRCInstance(mounted.canvas);
-    const child = Array.from(GLOBAL_STATE.crcInstances.values())
+    const parent = getPibblInstance(mounted.canvas);
+    const child = Array.from(GLOBAL_STATE.pibblInstances.values())
       .find(instance => instance.parent === mounted.canvas)!;
     expect(childRenders).toBe(1);
     expect(firstAlpha).toBeGreaterThan(180);
@@ -530,10 +529,10 @@ describe('Layer children and retained subtree contract', () => {
       }) : undefined,
     });
     const mounted = mountNow(scene(true));
-    const parent = getCRCInstance(mounted.canvas);
-    const child = Array.from(GLOBAL_STATE.crcInstances.values())
+    const parent = getPibblInstance(mounted.canvas);
+    const child = Array.from(GLOBAL_STATE.pibblInstances.values())
       .find(instance => instance.parent === mounted.canvas)!;
-    const grandchild = Array.from(GLOBAL_STATE.crcInstances.values())
+    const grandchild = Array.from(GLOBAL_STATE.pibblInstances.values())
       .find(instance => instance.parent === child.canvas)!;
     const childCanvas = child.canvas;
     const grandchildCanvas = grandchild.canvas;
@@ -553,8 +552,8 @@ describe('Layer children and retained subtree contract', () => {
 
     renderNow(mounted.canvas, scene(false));
 
-    expect(GLOBAL_STATE.crcInstances.has(childCanvas)).toBe(false);
-    expect(GLOBAL_STATE.crcInstances.has(grandchildCanvas)).toBe(false);
+    expect(GLOBAL_STATE.pibblInstances.has(childCanvas)).toBe(false);
+    expect(GLOBAL_STATE.pibblInstances.has(grandchildCanvas)).toBe(false);
     expect(parent.paintEntries.size).toBe(0);
     expect(peekNativeFilterPool(child)).toBeUndefined();
     expect(grandchildPool.snapshot()).toMatchObject({
@@ -568,13 +567,13 @@ describe('Layer children and retained subtree contract', () => {
   it('materializes arrays and iterables once per Layer traversal and paints every child in source order', () => {
     let iterations = 0;
     let childRenders = 0;
-    function CountedChild(): CRCNode {
+    function CountedChild(): PibblNode {
       childRenders++;
       return createElement(Rectangle, {
         style: { left: 20, top: 10, width: 40, height: 30, fill: '#ef4444' },
       });
     }
-    const iterable: Iterable<CRCNode> = {
+    const iterable: Iterable<PibblNode> = {
       *[Symbol.iterator]() {
         iterations++;
         yield createElement(CountedChild, {});
@@ -612,7 +611,7 @@ describe('Layer children and retained subtree contract', () => {
       children: [],
     }));
     const offscreen = layerCanvasFrom(drawImage);
-    const child = getCRCInstance(offscreen);
+    const child = getPibblInstance(offscreen);
 
     expect(pixel(mounted.canvas, 10, 10)).toEqual([0, 0, 0, 0]);
     expect(child.paintEntries.size).toBe(0);
@@ -623,7 +622,7 @@ describe('Layer children and retained subtree contract', () => {
   it('preserves keyed child state while invalidating the cache for child reorder', () => {
     let mounts = 0;
     const trace: string[] = [];
-    function Stateful({ label }: { label: string }): CRCNode {
+    function Stateful({ label }: { label: string }): PibblNode {
       const identity = useRef<number>();
       identity.current ??= ++mounts;
       trace.push(`${label}:${identity.current}`);
@@ -653,7 +652,7 @@ describe('Layer children and retained subtree contract', () => {
     function Counted(props: {
       version: number;
       style: { tone: string };
-    }): CRCNode {
+    }): PibblNode {
       renders++;
       return createElement(Rectangle, {
         style: {
@@ -715,7 +714,7 @@ describe('Layer children and retained subtree contract', () => {
   });
 
   it('invalidates when a reused descendant element mutable child array changes', () => {
-    const children: CRCNode[] = [
+    const children: PibblNode[] = [
       createElement(Rectangle, {
         style: { width: 20, height: 20, fill: '#ef4444' },
       }),
@@ -783,7 +782,7 @@ describe('Layer children and retained subtree contract', () => {
       renders++;
       return createElement(Rectangle, { style: { width: 20, height: 20, fill: '#ef4444' } });
     };
-    const nestedIterable: Iterable<CRCNode> = {
+    const nestedIterable: Iterable<PibblNode> = {
       *[Symbol.iterator]() {
         iterations++;
         yield createElement(Counted, {});
@@ -858,7 +857,7 @@ describe('Layer children and retained subtree contract', () => {
       children: createElement(Counted, {}),
     }));
     expect(renders).toBe(2);
-    expect(getCRCInstance(mounted.canvas).eventRoot.focusPolicy).toBeUndefined();
+    expect(getPibblInstance(mounted.canvas).eventRoot.focusPolicy).toBeUndefined();
     mounted.controller.dispose();
   });
 
@@ -879,14 +878,14 @@ describe('Layer children and retained subtree contract', () => {
       })),
     });
     const mounted = mountNow(scene());
-    const policy = getCRCInstance(mounted.canvas).eventRoot.focusPolicy as unknown as
+    const policy = getPibblInstance(mounted.canvas).eventRoot.focusPolicy as unknown as
       { readonly candidates: readonly { readonly target: unknown }[] };
     const target = policy.candidates[0].target;
     expect(renders).toBe(1);
 
     renderNow(mounted.canvas, scene());
 
-    const replayedPolicy = getCRCInstance(mounted.canvas).eventRoot.focusPolicy as unknown as
+    const replayedPolicy = getPibblInstance(mounted.canvas).eventRoot.focusPolicy as unknown as
       { readonly candidates: readonly { readonly target: unknown }[] };
     expect(renders).toBe(1);
     expect(replayedPolicy).toBe(policy);
@@ -925,7 +924,7 @@ describe('Layer children and retained subtree contract', () => {
 
   it('resizes the retained offscreen surface and rerenders its children', () => {
     let renders = 0;
-    function Counted(): CRCNode {
+    function Counted(): PibblNode {
       renders++;
       return createElement(Rectangle, {
         style: { width: 20, height: 20, fill: '#2563eb' },
@@ -954,7 +953,7 @@ describe('Layer children and retained subtree contract', () => {
 
   it('fails closed and releases the child controller when a Layer child throws', () => {
     let cleanups = 0;
-    function Child({ fail }: { fail: boolean }): CRCNode {
+    function Child({ fail }: { fail: boolean }): PibblNode {
       useReaction(() => () => cleanups++, []);
       if (fail) throw new Error('layer child failed');
       return createElement(Rectangle, {
@@ -974,15 +973,15 @@ describe('Layer children and retained subtree contract', () => {
     expect(() => renderNow(mounted.canvas, scene(true)))
       .toThrowError('layer child failed');
     expect(cleanups).toBe(1);
-    expect(GLOBAL_STATE.crcInstances.has(offscreen)).toBe(false);
-    expect(getCRCInstance(mounted.canvas).refs.size).toBe(0);
-    expect(getCRCInstance(mounted.canvas).paintEntries.size).toBe(0);
+    expect(GLOBAL_STATE.pibblInstances.has(offscreen)).toBe(false);
+    expect(getPibblInstance(mounted.canvas).refs.size).toBe(0);
+    expect(getPibblInstance(mounted.canvas).paintEntries.size).toBe(0);
     mounted.controller.dispose();
   });
 
   it('disposes one child controller and its resources exactly once', () => {
     let cleanups = 0;
-    function Child(): CRCNode {
+    function Child(): PibblNode {
       useReaction(() => () => cleanups++, []);
       return createElement(Rectangle, {
         style: { width: 20, height: 20 },
@@ -996,7 +995,7 @@ describe('Layer children and retained subtree contract', () => {
     const mounted = mountNow(createElement(Layer, {
       children: createElement(Child, {}),
     }));
-    const parent = getCRCInstance(mounted.canvas);
+    const parent = getPibblInstance(mounted.canvas);
     const offscreen = layerCanvasFrom(drawImage);
 
     mounted.controller.dispose();
@@ -1004,8 +1003,8 @@ describe('Layer children and retained subtree contract', () => {
 
     expect(cleanups).toBe(1);
     expect(parent.paintEntries.size).toBe(0);
-    expect(GLOBAL_STATE.crcInstances.has(mounted.canvas)).toBe(false);
-    expect(GLOBAL_STATE.crcInstances.has(offscreen)).toBe(false);
+    expect(GLOBAL_STATE.pibblInstances.has(mounted.canvas)).toBe(false);
+    expect(GLOBAL_STATE.pibblInstances.has(offscreen)).toBe(false);
   });
 });
 
@@ -1065,7 +1064,7 @@ describe('layer', () => {
     canvas.style.cssText = 'display:block; width:300px; height:300px';
     document.body.appendChild(canvas);
     const drawImage = vi.spyOn(CanvasRenderingContext2D.prototype, 'drawImage');
-    const controller = crc(canvas, createElement(Layer, {
+    const controller = pibbl(canvas, createElement(Layer, {
       style: { width: 200, height: 100 },
       children: createElement(Rectangle, {
         style: { width: 200, height: 100, fill: '#2563eb' },
@@ -1094,7 +1093,7 @@ describe('layer', () => {
       return createElement(Rectangle, { style: { width: 200, height: 100, fill: '#2563eb' } });
     };
     const drawImage = vi.spyOn(CanvasRenderingContext2D.prototype, 'drawImage');
-    const controller = crc(canvas, createElement(Layer, {
+    const controller = pibbl(canvas, createElement(Layer, {
       style: { width: 200, height: 100 },
       children: createElement(Counted, {}),
     }), { pixelRatio: 2 });
@@ -1703,10 +1702,9 @@ describe('layer', () => {
       expect(onClick).toHaveBeenCalledOnce();
     });
 
-    it('shares transitions, cursor targeting, and observer order with the root', async () => {
+    it('shares transitions and cursor targeting with the root', async () => {
       const calls: string[] = [];
       const LayerTarget = (_props: {}) => {
-        useEvent('mousemove', () => calls.push('observer'));
         return createElement(Rectangle, {
           style: {
             left: 50,
@@ -1740,18 +1738,16 @@ describe('layer', () => {
       }));
 
       await canvas.mouseMove({ position: { x: 100, y: 100 } });
-      expect(calls).toEqual(['layer-over', 'layer-move', 'observer']);
+      expect(calls).toEqual(['layer-over', 'layer-move']);
       expect(canvas.element.style.cursor).toBe('pointer');
 
       await canvas.mouseMove({ position: { x: 20, y: 20 } });
       expect(calls).toEqual([
         'layer-over',
         'layer-move',
-        'observer',
         'layer-out',
         'root-over',
         'root-move',
-        'observer',
       ]);
       expect(canvas.element.style.cursor).toBe('crosshair');
     });
@@ -1779,21 +1775,21 @@ describe('layer', () => {
   });
 });
 
-function mountNow(root: CRCNode): {
+function mountNow(root: PibblNode): {
   canvas: HTMLCanvasElement;
-  controller: CRCController;
+  controller: PibblController;
 } {
   const canvas = document.createElement('canvas');
   canvas.width = 200;
   canvas.height = 100;
   canvas.style.cssText = 'display:block;width:200px;height:100px';
   document.body.appendChild(canvas);
-  const controller = crc(canvas, root, { pixelRatio: 1 });
+  const controller = pibbl(canvas, root, { pixelRatio: 1 });
   executeRender(canvas, performance.now(), root, false);
   return { canvas, controller };
 }
 
-function renderNow(canvas: HTMLCanvasElement, root: CRCNode): void {
+function renderNow(canvas: HTMLCanvasElement, root: PibblNode): void {
   executeRender(canvas, performance.now(), root, false);
 }
 

@@ -1,17 +1,17 @@
 import {
   PhysicsWorld2D,
-  crcPhysicsWorld2D,
+  pibblPhysicsWorld2D,
   physicsObstacles2D,
   kinematicBody2D,
   collider2D,
-} from "@crc/physics/2d";
+} from "@pibbl/core/physics/2d";
 import {
   Group,
   Rectangle,
   Ellipse,
   Polygon,
   Text,
-  crc,
+  pibbl,
   definePrimitive,
   useConst,
   useComputed,
@@ -23,13 +23,13 @@ import {
   ResizeHandles,
   RotationHandle,
   type WritableSignal,
-  type CRCManipulationBox,
+  type PibblManipulationBox,
   repeat,
   sequence,
   wait,
   marker,
-  type CRCController,
-} from "@crc/core";
+  type PibblController,
+} from "@pibbl/core";
 import {
   Particles2D,
   defineParticleEffect2D,
@@ -38,8 +38,8 @@ import {
   useParticleSystem,
   useFlowField2D,
   useFlowSource2D,
-  type CRCParticleEmitter2D,
-} from "@crc/particles";
+  type PibblParticleEmitter2D,
+} from "@pibbl/core/particles";
 
 // Original procedural artwork; buffers live with this mounted example.
 function smokeSprite(variant: number): OffscreenCanvas {
@@ -133,7 +133,7 @@ function createFlameSurface() {
   };
 }
 
-// A small effect primitive, composed in normal CRC paint order. The shared CRC
+// A small effect primitive, composed in normal Pibbl paint order. The shared Pibbl
 // clock changes time; rendering reuses one raster, with no separate frame loop.
 const Flame = definePrimitive<{
   surface: ReturnType<typeof createFlameSurface>;
@@ -166,7 +166,7 @@ function Obstacle({
 }: {
   id: string;
   kind: "rectangle" | "ellipse" | "triangle";
-  initial: CRCManipulationBox;
+  initial: PibblManipulationBox;
   selected: WritableSignal<string | null>;
 }) {
   const box = useSignal(initial);
@@ -281,7 +281,7 @@ function FireAndFlow() {
   const drag = useSignal<number | null>(null);
   const fuelGesture = useConst(() => ({ x: 0, y: 0, moved: false }));
   const selected = useSignal<string | null>(null);
-  const obstacles = physicsObstacles2D(crcPhysicsWorld2D());
+  const obstacles = physicsObstacles2D(pibblPhysicsWorld2D());
   const flow = useFlowField2D({
     bounds: { width: 720, height: 480 },
     resolution: [96, 64],
@@ -299,7 +299,7 @@ function FireAndFlow() {
     enabled: burning,
   });
   const effects = useConst(() => {
-    const smokeEmitter = (variant: number): CRCParticleEmitter2D => ({
+    const smokeEmitter = (variant: number): PibblParticleEmitter2D => ({
       bounds: { min: [-720, -480], max: [720, 480] },
       name: `smoke${variant}`,
       capacity: 360,
@@ -551,8 +551,8 @@ function FireAndFlow() {
     </Group>
   );
 }
-export default function mount(canvas: HTMLCanvasElement): CRCController {
-  return crc(
+export default function mount(canvas: HTMLCanvasElement): PibblController {
+  return pibbl(
     canvas,
     <PhysicsWorld2D space="local" gravity={[0, 0]}>
       <FireAndFlow />

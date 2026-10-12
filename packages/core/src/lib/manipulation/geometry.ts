@@ -1,6 +1,6 @@
-import type { CRCManipulationBox, CRCManipulationPoint } from './types.js';
+import type { PibblManipulationBox, PibblManipulationPoint } from './types.js';
 
-export function assertFiniteBox(box: CRCManipulationBox, label = 'box'): void {
+export function assertFiniteBox(box: PibblManipulationBox, label = 'box'): void {
   for (const [property, value] of Object.entries(box)) {
     if (!Number.isFinite(value)) {
       throw new Error(`${label}.${property} must be finite, received ${value}`);
@@ -11,7 +11,7 @@ export function assertFiniteBox(box: CRCManipulationBox, label = 'box'): void {
   }
 }
 
-export function assertFinitePoint(point: CRCManipulationPoint, label: string): void {
+export function assertFinitePoint(point: PibblManipulationPoint, label: string): void {
   for (const [property, value] of Object.entries(point)) {
     if (!Number.isFinite(value)) {
       throw new Error(`${label}.${property} must be finite, received ${value}`);
@@ -19,6 +19,6 @@ export function assertFinitePoint(point: CRCManipulationPoint, label: string): v
   }
 }
 
-export function freezeBox(box: CRCManipulationBox): CRCManipulationBox {
+export function freezeBox(box: PibblManipulationBox): PibblManipulationBox {
   return Object.freeze({ ...box });
 }

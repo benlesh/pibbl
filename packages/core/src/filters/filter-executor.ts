@@ -4,13 +4,13 @@ import { getOptionalService } from '../lib/optional-services.js';
 import { enterPrimitivePresentation } from '../lib/primitive-presentation.js';
 import { renderFilterBoundary } from '../lib/filter/render-filter-boundary.js';
 import type { FilterWindows, PixelBounds } from '../lib/filter/filter-region.js';
-import type { CRCFilterBoundaryExecutor, PreparedCRCFilter } from '../lib/style/filter-types.js';
-import type { CRCInstance } from '../lib/types.js';
+import type { PibblFilterBoundaryExecutor, PreparedPibblFilter } from '../lib/style/filter-types.js';
+import type { PibblInstance } from '../lib/types.js';
 import { compileNativeFilters, type NativePreparedFilter } from './native-operations.js';
 import { assertNativeCanvasFilter } from './native-canvas-filter.js';
 
 /** An operation-owned pass. The shared executor knows nothing about its inputs. */
-export interface CustomPreparedFilter extends PreparedCRCFilter {
+export interface CustomPreparedFilter extends PreparedPibblFilter {
   readonly reverseInfluence: (output: Readonly<PixelBounds>, density: number) => PixelBounds;
   /** Private fusion capability; no concrete GPU implementation enters this module. */
   readonly textureWarp?: Readonly<{ map: TexturePaint; strength: number; region: Readonly<{x:number;y:number;width:number;height:number}> }>;
@@ -18,12 +18,12 @@ export interface CustomPreparedFilter extends PreparedCRCFilter {
   readonly process?: (source: OffscreenCanvas, windows: FilterWindows) => ImageBitmap;
 }
 type Operation = NativePreparedFilter | CustomPreparedFilter;
-const SCRATCH = Symbol('crc.filter-pass-scratch');
+const SCRATCH = Symbol('pibbl.filter-pass-scratch');
 class PassScratch {
   private readonly surfaces: OffscreenCanvas[] = [];
   used = false;
   private committed = false;
-  constructor(private readonly instance: CRCInstance) {}
+  constructor(private readonly instance: PibblInstance) {}
   beginRender(): void { this.used = false; }
   endRender(success: boolean): void {
     if (success && this.used) { this.committed = true; return; }
@@ -45,7 +45,7 @@ class PassScratch {
   }
 }
 
-export const filterBoundaryExecutor: CRCFilterBoundaryExecutor = {
+export const filterBoundaryExecutor: PibblFilterBoundaryExecutor = {
   render(input) {
     const operations: Operation[] = [];
     for (const operation of input.filters as readonly Operation[]) {
@@ -71,8 +71,8 @@ export const filterBoundaryExecutor: CRCFilterBoundaryExecutor = {
     renderFilterBoundary({
       component: input.component, filters: bounds, presentation: input.presentation,
       process(source, result, windows) {
-        const instance = GLOBAL_STATE.currentCRCInstance;
-        if (!instance) throw new Error('Filter processing requires an active CRC instance.');
+        const instance = GLOBAL_STATE.currentPibblInstance;
+        if (!instance) throw new Error('Filter processing requires an active Pibbl instance.');
         const scratch = getOptionalService(instance, SCRATCH, () => new PassScratch(instance));
         scratch.used = true;
         let current = source, pass = 0;

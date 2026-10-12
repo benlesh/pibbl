@@ -9,44 +9,44 @@ typeDomain: canvas-runtime
 symbols:
   [
     Canvas,
-    CRCAnimationDefinition,
-    CRCAnimationOptions,
-    CRCAnimationProgram,
-    CRCAnimationRepeatDirection,
-    CRCAnimationRepeatOptions,
-    CRCAnimationSampleInput,
-    CRCConfig,
-    CRCController,
-    CRCEasing,
-    CRCFit,
-    CRCFixedViewportConfig,
-    CRCInterpolator,
-    CRCKeyframesOptions,
-    CRCPixelRatio,
-    CRCPlayback,
-    CRCPlaybackEvent,
-    CRCPlaybackOptions,
-    CRCPlaybackStatus,
-    CRCReactionOptions,
-    CRCRef,
-    CRCRenderLayerComponentProps,
-    CRCRenderLayerContext,
-    CRCRenderLayerDefinition,
-    CRCRenderLayerFrame,
-    CRCRenderLayerHit,
-    CRCRenderLayerInput,
-    CRCRenderLayerInteraction,
-    CRCRenderLayerInteractionSnapshot,
-    CRCRenderLayerProps,
-    CRCRenderLayerSize,
-    CRCRenderLayerStyle,
-    CRCRenderLayerTarget,
-    CRCResponsiveViewportConfig,
-    CRCSpringOptions,
-    CRCSpringTransitionOptions,
-    CRCStepperOptions,
-    CRCTweenOptions,
-    CRCTweenTransitionOptions,
+    PibblAnimatedValueOptions,
+    PibblAnimationDefinition,
+    PibblAnimationOptions,
+    PibblAnimationProgram,
+    PibblAnimationRepeatDirection,
+    PibblAnimationRepeatOptions,
+    PibblAnimationSampleInput,
+    PibblAnimationTarget,
+    PibblConfig,
+    PibblController,
+    PibblEasing,
+    PibblFit,
+    PibblFixedViewportConfig,
+    PibblInterpolator,
+    PibblKeyframesOptions,
+    PibblPixelRatio,
+    PibblPlayback,
+    PibblPlaybackEvent,
+    PibblPlaybackOptions,
+    PibblPlaybackStatus,
+    PibblReactionOptions,
+    PibblRef,
+    PibblRenderLayerComponentProps,
+    PibblRenderLayerContext,
+    PibblRenderLayerDefinition,
+    PibblRenderLayerFrame,
+    PibblRenderLayerHit,
+    PibblRenderLayerInput,
+    PibblRenderLayerInteraction,
+    PibblRenderLayerInteractionSnapshot,
+    PibblRenderLayerProps,
+    PibblRenderLayerSize,
+    PibblRenderLayerStyle,
+    PibblRenderLayerTarget,
+    PibblResponsiveViewportConfig,
+    PibblSpringOptions,
+    PibblStepperOptions,
+    PibblTweenOptions,
     RenderingContext2D,
     Signal,
     SignalEquals,
@@ -58,211 +58,211 @@ keywords: [canvas, viewport, controller, signals, animation, playback, runtime]
 
 # Canvas and runtime types
 
-These contracts describe CRC's Canvas host, root-surface configuration, and
+These contracts describe Pibbl's Canvas host, root-surface configuration, and
 the stable values returned by its runtime and state APIs. Import them with
-`type` from `@crc/core`.
+`type` from `@pibbl/core`.
 
 ## Canvas
 
 `Canvas` is the supported host union: `HTMLCanvasElement | OffscreenCanvas`.
-CRC owns at most one live mount for a host Canvas.
+Pibbl owns at most one live mount for a host Canvas.
 
-## CRCAnimationDefinition
+## PibblAnimatedValueOptions
 
-`CRCAnimationDefinition<T>` is an opaque immutable value description without a
+`PibblAnimatedValueOptions<T>` supplies an animation definition or pure factory,
+optional initial value, equality comparison, and diagnostic label.
+
+## PibblAnimationDefinition
+
+`PibblAnimationDefinition<T>` is an opaque immutable value description without a
 clock or output binding.
 
-## CRCAnimationOptions
+## PibblAnimationOptions
 
-`CRCAnimationOptions<T>` configures `defineAnimation` with a finite duration,
+`PibblAnimationOptions<T>` configures `defineAnimation` with a finite duration,
 synchronous sampler, and optional debug name.
 
-## CRCAnimationProgram
+## PibblAnimationProgram
 
-`CRCAnimationProgram` is an opaque immutable composition of tracks, sequences,
+`PibblAnimationProgram` is an opaque immutable composition of tracks, sequences,
 parallel work, waits, markers, and repeats.
 
-## CRCAnimationRepeatDirection
+## PibblAnimationRepeatDirection
 
-`CRCAnimationRepeatDirection` is `normal`, `reverse`, `alternate`, or
+`PibblAnimationRepeatDirection` is `normal`, `reverse`, `alternate`, or
 `alternate-reverse`.
 
-## CRCAnimationRepeatOptions
+## PibblAnimationRepeatOptions
 
-`CRCAnimationRepeatOptions` supplies a positive iteration count or infinity and
+`PibblAnimationRepeatOptions` supplies a positive iteration count or infinity and
 an optional repeat direction.
 
-## CRCAnimationSampleInput
+## PibblAnimationSampleInput
 
-`CRCAnimationSampleInput<T>` gives a custom sampler its activation value, local
+`PibblAnimationSampleInput<T>` gives a custom sampler its activation value, local
 time, and normalized progress.
 
-## CRCConfig
+## PibblAnimationTarget
 
-`CRCConfig` selects either the fixed logical viewport configuration or the
-responsive viewport configuration. The first `crc()` mount owns this choice.
+`PibblAnimationTarget<T>` provides `from`, `to`, and optional committed spring
+`velocity` to a custom animation factory.
 
-## CRCController
+## PibblConfig
 
-`CRCController` is the stable controller returned by `crc()`. Its `dispose()`
+`PibblConfig` selects either the fixed logical viewport configuration or the
+responsive viewport configuration. The first `pibbl()` mount owns this choice.
+
+## PibblController
+
+`PibblController` is the stable controller returned by `pibbl()`. Its `dispose()`
 method is idempotent and releases runtime-owned resources for that mount.
 
-## CRCEasing
+## PibblEasing
 
-`CRCEasing` maps normalized progress to interpolation progress.
+`PibblEasing` maps normalized progress to interpolation progress.
 
-## CRCFit
+## PibblFit
 
-`CRCFit` is the fixed-surface fitting mode. Fixed roots use centered `contain`
+`PibblFit` is the fixed-surface fitting mode. Fixed roots use centered `contain`
 by default; the logical viewport remains distinct from CSS and backing pixels.
 
-## CRCFixedViewportConfig
+## PibblFixedViewportConfig
 
-`CRCFixedViewportConfig` configures a fixed logical viewport with optional `fit`, `pixelRatio`, and `signal`. Omitting it captures the Canvas's initial logical
+`PibblFixedViewportConfig` configures a fixed logical viewport with optional `fit`, `pixelRatio`, and `signal`. Omitting it captures the Canvas's initial logical
 dimensions; the signal can abort runtime ownership.
 
-## CRCInterpolator
+## PibblInterpolator
 
-`CRCInterpolator<T>` produces a typed value between `from` and `to` for a
+`PibblInterpolator<T>` produces a typed value between `from` and `to` for a
 normalized progress value.
 
-## CRCKeyframesOptions
+## PibblKeyframesOptions
 
-`CRCKeyframesOptions<T>` supplies at least two values, duration, optional
+`PibblKeyframesOptions<T>` supplies at least two values, duration, optional
 offsets/easing/interpolator, and a debug name.
 
-## CRCPixelRatio
+## PibblPixelRatio
 
-`CRCPixelRatio` describes the backing-pixel density policy. It keeps logical
+`PibblPixelRatio` describes the backing-pixel density policy. It keeps logical
 geometry independent from the Canvas backing-store density.
 
-## CRCPlayback
+## PibblPlayback
 
-`CRCPlayback` exposes readonly `status` and `currentTime` signals plus stable
+`PibblPlayback` exposes readonly `status` and `currentTime` signals plus stable
 play, pause, resume, cancel, finish, seek, reverse, and playback-rate controls.
 
-## CRCPlaybackEvent
+## PibblPlaybackEvent
 
-`CRCPlaybackEvent` describes start, iteration, marker, finish, and cancel
+`PibblPlaybackEvent` describes start, iteration, marker, finish, and cancel
 milestones delivered after rendering during Complete.
 
-## CRCPlaybackOptions
+## PibblPlaybackOptions
 
-`CRCPlaybackOptions` configures autoplay, conflict policy, debug name,
+`PibblPlaybackOptions` configures autoplay, conflict policy, debug name,
 milestone delivery, and isolated error handling.
 
-## CRCPlaybackStatus
+## PibblPlaybackStatus
 
-`CRCPlaybackStatus` is `idle`, `scheduled`, `running`, `paused`, `finished`,
+`PibblPlaybackStatus` is `idle`, `scheduled`, `running`, `paused`, `finished`,
 `cancelled`, or `disposed`.
 
-## CRCReactionOptions
+## PibblReactionOptions
 
-`CRCReactionOptions` accepts an optional debug name for a component-owned
+`PibblReactionOptions` accepts an optional debug name for a component-owned
 `useReaction` lifecycle.
 
-## CRCRef
+## PibblRef
 
-`CRCRef<T>` is the stable mutable `{ current }` object returned by `useRef`.
+`PibblRef<T>` is the stable mutable `{ current }` object returned by `useRef`.
 Writing `current` does not schedule rendering and its lifetime is one component
 identity.
 
-## CRCRenderLayerComponentProps
+## PibblRenderLayerComponentProps
 
-`CRCRenderLayerComponentProps` supplies the style and normal CRC event, focus,
+`PibblRenderLayerComponentProps` supplies the style and normal Pibbl event, focus,
 and participation fields reserved by a render layer.
 
-## CRCRenderLayerContext
+## PibblRenderLayerContext
 
-`CRCRenderLayerContext` exposes the layer's owned `OffscreenCanvas`, current
+`PibblRenderLayerContext` exposes the layer's owned `OffscreenCanvas`, current
 resolved size, and a coalesced invalidation callback.
 
-## CRCRenderLayerDefinition
+## PibblRenderLayerDefinition
 
-`CRCRenderLayerDefinition` describes synchronous create, update, resize,
+`PibblRenderLayerDefinition` describes synchronous create, update, resize,
 render, and optional disposal callbacks for an external raster layer.
 
-## CRCRenderLayerFrame
+## PibblRenderLayerFrame
 
-`CRCRenderLayerFrame` provides CRC logical frame time, delta, and next-frame
+`PibblRenderLayerFrame` provides Pibbl logical frame time, delta, and next-frame
 invalidation to one render callback.
 
-## CRCRenderLayerHit
+## PibblRenderLayerHit
 
-`CRCRenderLayerHit<Target>` reports a layer-local miss, an occluding block, or
+`PibblRenderLayerHit<Target>` reports a layer-local miss, an occluding block, or
 a registered application target identity.
 
-## CRCRenderLayerInput
+## PibblRenderLayerInput
 
-`CRCRenderLayerInput<Target>` delivers coordinate input only after the layer
+`PibblRenderLayerInput<Target>` delivers coordinate input only after the layer
 wins global reverse-paint arbitration, with layer-local coordinates and
 winner-owned pointer capture controls.
 
-## CRCRenderLayerInteraction
+## PibblRenderLayerInteraction
 
-`CRCRenderLayerInteraction<Props, Resources, Target>` settles the interaction
+`PibblRenderLayerInteraction<Props, Resources, Target>` settles the interaction
 snapshot that commits transactionally with a candidate bitmap.
 
-## CRCRenderLayerInteractionSnapshot
+## PibblRenderLayerInteractionSnapshot
 
-`CRCRenderLayerInteractionSnapshot<Target>` contains one generation's target
+`PibblRenderLayerInteractionSnapshot<Target>` contains one generation's target
 declarations, hit test, and optional winner input handler.
 
-## CRCRenderLayerProps
+## PibblRenderLayerProps
 
-`CRCRenderLayerProps<Props>` combines custom layer props with the reserved CRC
+`PibblRenderLayerProps<Props>` combines custom layer props with the reserved Pibbl
 component fields and rejects reserved custom names.
 
-## CRCRenderLayerSize
+## PibblRenderLayerSize
 
-`CRCRenderLayerSize` records logical and backing dimensions plus effective
+`PibblRenderLayerSize` records logical and backing dimensions plus effective
 pixel ratios for one layer frame.
 
-## CRCRenderLayerStyle
+## PibblRenderLayerStyle
 
-`CRCRenderLayerStyle` is the local box, layout, and filter style accepted by a
+`PibblRenderLayerStyle` is the local box, layout, and filter style accepted by a
 render layer.
 
-## CRCRenderLayerTarget
+## PibblRenderLayerTarget
 
-`CRCRenderLayerTarget<Target>` associates a stable application identity with
-CRC handlers, cursor participation, and optional focus geometry.
+`PibblRenderLayerTarget<Target>` associates a stable application identity with
+Pibbl handlers, cursor participation, and optional focus geometry.
 
-## CRCResponsiveViewportConfig
+## PibblResponsiveViewportConfig
 
-`CRCResponsiveViewportConfig` is `{ viewport: "responsive", pixelRatio?,
+`PibblResponsiveViewportConfig` is `{ viewport: "responsive", pixelRatio?,
 signal? }`. Its logical root follows CSS content-box pixels instead of a fixed
 captured viewport.
 
-## CRCSpringOptions
+## PibblSpringOptions
 
-`CRCSpringOptions` configures a number-only analytic spring and its rest bounds.
+`PibblSpringOptions` configures a number-only analytic spring and its rest bounds.
 
-## CRCSpringTransitionOptions
+## PibblStepperOptions
 
-`CRCSpringTransitionOptions` configures a number transition with `type:
-"spring"`, equality, optional initial value, and spring parameters.
-
-## CRCStepperOptions
-
-`CRCStepperOptions<State, T>` supplies the fixed step, state initialization,
+`PibblStepperOptions<State, T>` supplies the fixed step, state initialization,
 step/read callbacks, optional completion predicate, elapsed clamp, and debug
 name.
 
-## CRCTweenOptions
+## PibblTweenOptions
 
-`CRCTweenOptions<T>` supplies `to`, optional `from`, duration, easing,
+`PibblTweenOptions<T>` supplies `to`, optional `from`, duration, easing,
 interpolator, and debug name.
-
-## CRCTweenTransitionOptions
-
-`CRCTweenTransitionOptions<T>` configures a transition with `type: "tween"`,
-duration, equality, optional initial value, easing, and interpolation.
 
 ## RenderingContext2D
 
 `RenderingContext2D` is the 2D-context union for the supported Canvas hosts.
-`useCanvasContext()` exposes it only while a CRC component is rendering.
+`useCanvasContext()` exposes it only while a Pibbl component is rendering.
 
 ## Signal
 
@@ -270,7 +270,7 @@ duration, equality, optional initial value, easing, and interpolation.
 
 ## SignalEquals
 
-`SignalEquals<T>` compares the previous and candidate values. CRC uses
+`SignalEquals<T>` compares the previous and candidate values. Pibbl uses
 `Object.is` when no custom equality function is supplied.
 
 ## SignalOptions

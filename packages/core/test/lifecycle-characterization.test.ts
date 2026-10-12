@@ -1,21 +1,21 @@
-import type { CRCEventHandlers } from '../src/lib/events/types';
-import type { CRCController } from '../src/lib/types';
-import { crc, useCursor, useEvent, Layer, Rectangle } from '@crc/core';
+import type { PibblEventHandlers } from '../src/lib/events/types';
+import type { PibblController } from '../src/lib/types';
+import { pibbl, useCursor, Layer, Rectangle } from '@pibbl/core';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   clearSharedState,
-  getCRCInstance,
+  getPibblInstance,
   GLOBAL_STATE,
 } from '../src/lib/global-state';
-import { CRC_EVENT_TYPES } from '../src/lib/events/event-definitions';
+import { PIBBL_EVENT_TYPES } from '../src/lib/events/event-definitions';
 import { RuntimeDiagnostics } from './support/runtime-diagnostics';
-import { createElement } from '@crc/core';
+import { createElement } from '@pibbl/core';
 
 const activeDiagnostics = new Set<RuntimeDiagnostics>();
-const activeControllers = new Set<CRCController>();
+const activeControllers = new Set<PibblController>();
 
 const EMPTY_HANDLERS = Object.fromEntries(
-  CRC_EVENT_TYPES.map(type => [type, 0]),
+  PIBBL_EVENT_TYPES.map(type => [type, 0]),
 );
 
 const EMPTY_FOCUS_DIAGNOSTICS = {
@@ -54,7 +54,7 @@ interface ProbeSceneProps {
 }
 
 type ShippedMouseHandlers = Required<Pick<
-  CRCEventHandlers,
+  PibblEventHandlers,
   | 'onClick'
   | 'onContextMenu'
   | 'onDblClick'
@@ -179,25 +179,7 @@ const CursorOwnershipScene = (_props: {}) => [
   }),
 ];
 
-const ObserverScene = ({ calls }: { calls: string[] }) => {
-  useEvent('click', () => {
-    calls.push('throws');
-    throw new Error('expected lifecycle handler error');
-  });
-  useEvent('click', () => calls.push('safe'));
-  return createElement(Rectangle, {
-    style: {
-      left: 0,
-      top: 0,
-      width: 160,
-      height: 120,
-      fill: '#f8fafc',
-    },
-  });
-};
-
 const LayerGlobalResources = ({ calls }: { calls: string[] }) => {
-  useEvent('mousemove', () => calls.push('observer'));
   useCursor({ style: 'wait' });
   return createElement(Rectangle, {
     style: {
@@ -239,7 +221,7 @@ function createHarness() {
   return { canvas, diagnostics };
 }
 
-function track(controller: CRCController): CRCController {
+function drive(controller: PibblController): PibblController {
   activeControllers.add(controller);
   return controller;
 }
@@ -292,7 +274,7 @@ describe('event lifecycle ownership', () => {
     const { canvas, diagnostics } = createHarness();
     const calls: number[] = [];
     const abortController = new AbortController();
-    track(crc(canvas, createElement(ProbeScene, { calls, enabled: true, generation: 0, show: true }), {
+    drive(pibbl(canvas, createElement(ProbeScene, { calls, enabled: true, generation: 0, show: true }), {
       signal: abortController.signal,
     }));
     await nextFrame();
@@ -306,7 +288,7 @@ describe('event lifecycle ownership', () => {
     });
 
     for (let generation = 1; generation <= 1_000; generation++) {
-      crc(canvas, createElement(ProbeScene, { calls, enabled: true, generation, show: true }));
+      pibbl(canvas, createElement(ProbeScene, { calls, enabled: true, generation, show: true }));
       await nextFrame();
     }
     expect(diagnostics.snapshot()).toEqual(baseline);
@@ -323,28 +305,28 @@ describe('event lifecycle ownership', () => {
   it('replaces, removes, and unmounts handlers without ghost calls', async () => {
     const { canvas, diagnostics } = createHarness();
     const calls: number[] = [];
-    const controller = track(crc(
+    const controller = drive(pibbl(
       canvas,
       createElement(ProbeScene, { calls, enabled: true, generation: 1, show: true }),
     ));
     await nextFrame();
     const baseline = diagnostics.snapshot();
 
-    crc(canvas, createElement(ProbeScene, { calls, enabled: true, generation: 2, show: true }));
+    pibbl(canvas, createElement(ProbeScene, { calls, enabled: true, generation: 2, show: true }));
     await nextFrame();
     expect(diagnostics.snapshot()).toEqual(baseline);
     clickCanvas(canvas, 40, 40);
     expect(calls).toEqual([2]);
 
-    crc(canvas, createElement(ProbeScene, { calls, enabled: false, generation: 2, show: true }));
+    pibbl(canvas, createElement(ProbeScene, { calls, enabled: false, generation: 2, show: true }));
     await nextFrame();
     expect(diagnostics.snapshot().handlers).toEqual(EMPTY_HANDLERS);
     clickCanvas(canvas, 40, 40);
     expect(calls).toEqual([2]);
 
-    crc(canvas, createElement(ProbeScene, { calls, enabled: true, generation: 3, show: true }));
+    pibbl(canvas, createElement(ProbeScene, { calls, enabled: true, generation: 3, show: true }));
     await nextFrame();
-    crc(canvas, createElement(ProbeScene, { calls, enabled: true, generation: 3, show: false }));
+    pibbl(canvas, createElement(ProbeScene, { calls, enabled: true, generation: 3, show: false }));
     await nextFrame();
     expect(diagnostics.snapshot().handlers).toEqual(EMPTY_HANDLERS);
     clickCanvas(canvas, 40, 40);
@@ -356,7 +338,7 @@ describe('event lifecycle ownership', () => {
 
   it('cancels immediate work and disposes a no-signal mount idempotently', () => {
     const { canvas, diagnostics } = createHarness();
-    const controller = track(crc(
+    const controller = drive(pibbl(
       canvas,
       createElement(ProbeScene, { calls: [], enabled: true, generation: 1, show: true }),
     ));
@@ -386,7 +368,7 @@ describe('event lifecycle ownership', () => {
 
     try {
       const canvas = document.createElement('canvas');
-      const controller = track(crc(
+      const controller = drive(pibbl(
         canvas,
         createElement(ProbeScene, { calls: [], enabled: true, generation: 1, show: true }),
       ));
@@ -404,7 +386,7 @@ describe('event lifecycle ownership', () => {
     const { canvas, diagnostics } = createHarness();
     const calls: number[] = [];
     const staleAbort = new AbortController();
-    const staleController = track(crc(
+    const staleController = drive(pibbl(
       canvas,
       createElement(ProbeScene, { calls, enabled: true, generation: 1, show: true }),
       { signal: staleAbort.signal },
@@ -412,7 +394,7 @@ describe('event lifecycle ownership', () => {
     await nextFrame();
     staleController.dispose();
 
-    const liveController = track(crc(
+    const liveController = drive(pibbl(
       canvas,
       createElement(ProbeScene, { calls, enabled: true, generation: 2, show: true }),
     ));
@@ -434,14 +416,14 @@ describe('event lifecycle ownership', () => {
     const calls: number[] = [];
     const mountAbort = new AbortController();
     const updateAbort = new AbortController();
-    const controller = track(crc(
+    const controller = drive(pibbl(
       canvas,
       createElement(ProbeScene, { calls, enabled: true, generation: 1, show: true }),
       { signal: mountAbort.signal },
     ));
     await nextFrame();
 
-    const updatedController = crc(
+    const updatedController = pibbl(
       canvas,
       createElement(ProbeScene, { calls, enabled: true, generation: 2, show: true }),
       { signal: updateAbort.signal },
@@ -461,14 +443,14 @@ describe('event lifecycle ownership', () => {
   it('releases nested layer instances when their subtree disappears', async () => {
     const { canvas, diagnostics } = createHarness();
     const calls: number[] = [];
-    const controller = track(crc(
+    const controller = drive(pibbl(
       canvas,
       createElement(ToggleNestedLayerScene, { calls, enabled: true, generation: 1, show: true }),
     ));
     await nextFrame();
     expect(diagnostics.snapshot().instances).toBe(3);
 
-    crc(canvas, createElement(ToggleNestedLayerScene, { calls, enabled: true, generation: 1, show: false }));
+    pibbl(canvas, createElement(ToggleNestedLayerScene, { calls, enabled: true, generation: 1, show: false }));
     await nextFrame();
     expect(diagnostics.snapshot()).toMatchObject({
       instances: 1,
@@ -483,33 +465,31 @@ describe('event lifecycle ownership', () => {
     expectFullyReleased(diagnostics);
   });
 
-  it('releases layered paint entries, root observers, and root cursor defaults', async () => {
+  it('releases layered paint entries and root cursor defaults', async () => {
     const { canvas, diagnostics } = createHarness();
     const calls: string[] = [];
-    const controller = track(crc(canvas, createElement(LayerGlobalResourcesScene, { calls, show: true })));
+    const controller = drive(pibbl(canvas, createElement(LayerGlobalResourcesScene, { calls, show: true })));
     await nextFrame();
-    const root = getCRCInstance(canvas);
+    const root = getPibblInstance(canvas);
 
     expect(diagnostics.snapshot()).toMatchObject({ instances: 2, nativeListeners: 2 });
     expect(root.paintEntries.size).toBe(1);
-    expect(root.eventRoot.observers.get('mousemove')?.size).toBe(1);
     expect(root.cursorDefaults.size).toBe(1);
 
     canvas.dispatchEvent(new MouseEvent('mousemove', { clientX: 40, clientY: 40 }));
-    expect(calls).toEqual(['target', 'observer']);
+    expect(calls).toEqual(['target']);
     expect(canvas.style.cursor).toBe('wait');
 
-    crc(canvas, createElement(LayerGlobalResourcesScene, { calls, show: false }));
+    pibbl(canvas, createElement(LayerGlobalResourcesScene, { calls, show: false }));
     await nextFrame();
-    expect(GLOBAL_STATE.crcInstances.size).toBe(1);
+    expect(GLOBAL_STATE.pibblInstances.size).toBe(1);
     expect(root.paintEntries.size).toBe(0);
-    expect(root.eventRoot.observers.get('mousemove')?.size).toBe(0);
     expect(root.cursorDefaults.size).toBe(0);
     expect(root.interaction.hoveredRegion).toBeUndefined();
     expect(canvas.style.cursor).toBe('');
 
     canvas.dispatchEvent(new MouseEvent('mousemove', { clientX: 40, clientY: 40 }));
-    expect(calls).toEqual(['target', 'observer']);
+    expect(calls).toEqual(['target']);
 
     controller.dispose();
     expectFullyReleased(diagnostics);
@@ -518,7 +498,7 @@ describe('event lifecycle ownership', () => {
   it('updates handlers inside a persistent layer and removes them without ghosts', async () => {
     const { canvas, diagnostics } = createHarness();
     const calls: number[] = [];
-    const controller = track(crc(
+    const controller = drive(pibbl(
       canvas,
       createElement(PersistentLayerScene, { calls, enabled: true, generation: 1, show: true }),
     ));
@@ -527,12 +507,12 @@ describe('event lifecycle ownership', () => {
     clickCanvas(canvas, 40, 40);
     expect(calls).toEqual([1]);
 
-    crc(canvas, createElement(PersistentLayerScene, { calls, enabled: true, generation: 2, show: true }));
+    pibbl(canvas, createElement(PersistentLayerScene, { calls, enabled: true, generation: 2, show: true }));
     await nextFrame();
     clickCanvas(canvas, 40, 40);
     expect(calls).toEqual([1, 2]);
 
-    crc(canvas, createElement(PersistentLayerScene, { calls, enabled: false, generation: 2, show: true }));
+    pibbl(canvas, createElement(PersistentLayerScene, { calls, enabled: false, generation: 2, show: true }));
     await nextFrame();
     clickCanvas(canvas, 40, 40);
     expect(calls).toEqual([1, 2]);
@@ -544,11 +524,11 @@ describe('event lifecycle ownership', () => {
   it('replaces a persistent layer root when its component type changes', async () => {
     const { canvas, diagnostics } = createHarness();
     const calls: string[] = [];
-    const controller = track(crc(canvas, createElement(SwitchingLayerScene, { calls, second: false })));
+    const controller = drive(pibbl(canvas, createElement(SwitchingLayerScene, { calls, second: false })));
     await nextFrame();
     clickCanvas(canvas, 40, 40);
 
-    crc(canvas, createElement(SwitchingLayerScene, { calls, second: true }));
+    pibbl(canvas, createElement(SwitchingLayerScene, { calls, second: true }));
     await nextFrame();
     clickCanvas(canvas, 40, 40);
     expect(calls).toEqual(['first', 'second']);
@@ -559,7 +539,7 @@ describe('event lifecycle ownership', () => {
 
   it('does not clear a cursor value replaced by another owner', async () => {
     const { canvas, diagnostics } = createHarness();
-    const controller = track(crc(canvas, createElement(CursorOwnershipScene, {})));
+    const controller = drive(pibbl(canvas, createElement(CursorOwnershipScene, {})));
     await nextFrame();
 
     canvas.dispatchEvent(new MouseEvent('mousemove', { clientX: 40, clientY: 40 }));
@@ -575,19 +555,4 @@ describe('event lifecycle ownership', () => {
     expectFullyReleased(diagnostics);
   });
 
-  it('reports a thrown observer and continues the same native dispatch and cleanup', async () => {
-    const { canvas, diagnostics } = createHarness();
-    const calls: string[] = [];
-    const expectedError = vi.spyOn(globalThis, 'reportError').mockImplementation(() => {});
-    const controller = track(crc(canvas, createElement(ObserverScene, { calls })));
-    await nextFrame();
-    diagnostics.snapshot();
-
-    canvas.dispatchEvent(new MouseEvent('click', { clientX: 40, clientY: 40 }));
-    expect(calls).toEqual(['throws', 'safe']);
-    expect(expectedError).toHaveBeenCalledOnce();
-
-    controller.dispose();
-    expectFullyReleased(diagnostics);
-  });
 });

@@ -56,19 +56,21 @@ interface SourceInspection {
   readonly packageImportModules: readonly string[];
 }
 
-const VIZ_MODULE = "@crc/viz";
-const CORE_MODULE = "@crc/core";
-const PARTICLES_MODULE = "@crc/particles";
-const PARTICLES_WEBGL_MODULE = ["@crc/particles", "webgl"].join("/");
-const THREE_ADAPTER_MODULE = "@crc/three";
+const VIZ_MODULE = "@pibbl/core/viz";
+const CORE_MODULE = "@pibbl/core";
+const PARTICLES_MODULE = "@pibbl/core/particles";
+const PARTICLES_WEBGL_MODULE = ["@pibbl/core/particles", "webgl"].join("/");
+const THREE_ADAPTER_MODULE = "@pibbl/three";
 const THREE_MODULE = "three";
 const THREE_ORBIT_CONTROLS_MODULE = "three/addons/controls/OrbitControls.js";
-const WEBGL_MODULE = ["@crc", "webgl"].join("/");
+const WEBGL_MODULE = ["@pibbl", "webgl"].join("/");
 const LEARNING_VALUE_MODULES = new Set([
-  "@crc/text",
-  "@crc/core/filters",
+  "@pibbl/text",
+  "@pibbl/core/machines",
+  "@pibbl/core/sprites",
+  "@pibbl/core/filters",
   VIZ_MODULE,
-  "@crc/textures",
+  "@pibbl/core/textures",
   CORE_MODULE,
   PARTICLES_MODULE,
   THREE_ADAPTER_MODULE,
@@ -77,7 +79,7 @@ const LEARNING_VALUE_MODULES = new Set([
 ]);
 const PARTICLES_LEARNING_SOURCE_PATH =
   "packages/scenarios/src/learning/composition/particle-effects.example.tsx";
-const PHYSICS_2D_MODULE = "@crc/physics/2d";
+const PHYSICS_2D_MODULE = "@pibbl/core/physics/2d";
 const PHYSICS_MODULES = new Set([PHYSICS_2D_MODULE]);
 for (const physicsModule of PHYSICS_MODULES) {
   LEARNING_VALUE_MODULES.add(physicsModule);
@@ -361,7 +363,7 @@ function isCanonicalMount(programBody: readonly SyntaxNode[]): boolean {
     canvas?.type === "Identifier" &&
     canvas.name === "canvas" &&
     typeReferenceName(canvas.typeAnnotation) === "HTMLCanvasElement" &&
-    typeReferenceName(declaration.returnType) === "CRCController"
+    typeReferenceName(declaration.returnType) === "PibblController"
   );
 }
 
@@ -1462,7 +1464,7 @@ export function validateScenarioSourceText(
   if (inspection.hasScenarioReExport) {
     throw invalid(
       label,
-      "must not re-export local, external, or public CRC package modules.",
+      "must not re-export local, external, or public Pibbl package modules.",
     );
   }
   if (
@@ -1473,7 +1475,7 @@ export function validateScenarioSourceText(
   ) {
     throw invalid(
       label,
-      "must use supported static imports from @crc/core, @crc/text, @crc/viz, @crc/particles, @crc/physics/2d, @crc/three, three, and supported Three addons; relative imports must be type-only; and at least one public @crc/core value is required.",
+      "must use supported static imports from @pibbl/core, @pibbl/text, @pibbl/core/viz, @pibbl/core/particles, @pibbl/core/physics/2d, @pibbl/three, three, and supported Three addons; relative imports must be type-only; and at least one public @pibbl/core value is required.",
     );
   }
   if (inspection.hasLegacyTypes) {
@@ -1485,7 +1487,7 @@ export function validateScenarioSourceText(
   if (inspection.hasDirectComponentCall) {
     throw invalid(
       label,
-      "must construct descriptive CRC components with JSX or createElement, not direct calls.",
+      "must construct descriptive Pibbl components with JSX or createElement, not direct calls.",
     );
   }
   if (inspection.hasLegacyTextStyle) {
@@ -1536,6 +1538,8 @@ export function validateLearningSourceText(
       (label === "fire-and-flow" ||
         label === 'Learning example "fire-and-flow"'));
   const isPhysicsLesson =
+    sourcePath === "packages/scenarios/src/learning/composition/embers-physics.example.tsx" ||
+    (sourcePath === undefined && (label === "embers-physics" || label === 'Learning example "embers-physics"')) ||
     sourcePath === PHYSICS_LEARNING_SOURCE_PATH ||
     sourcePath ===
       "packages/scenarios/src/learning/composition/physics-panels.example.tsx" ||
@@ -1545,11 +1549,11 @@ export function validateLearningSourceText(
         label === "physics-2d" ||
         label === 'Learning example "physics-2d"'));
   const isVizLesson = inspection.packageImportModules.includes(VIZ_MODULE);
-  const isTextLesson = inspection.packageImportModules.includes("@crc/text");
+  const isTextLesson = inspection.packageImportModules.includes("@pibbl/text");
   // Filter factories compose with every supported example package set.
   // The approved-module and named-import checks below still apply to them.
   const basePackageCount = inspection.packageImportModules.filter(
-    (module) => module !== "@crc/core/filters",
+    (module) => module !== "@pibbl/core/filters",
   ).length;
   const isStirredInkLesson =
     sourcePath ===
@@ -1559,7 +1563,7 @@ export function validateLearningSourceText(
   const hasExactPackageImports = isStirredInkLesson
     ? inspection.hasNamedValueCoreImport &&
       inspection.hasPhysics2DValueImport &&
-      inspection.packageImportModules.includes("@crc/textures") &&
+      inspection.packageImportModules.includes("@pibbl/core/textures") &&
       basePackageCount === 3
     : isFlowLesson
       ? inspection.hasNamedValueCoreImport &&
@@ -1568,9 +1572,11 @@ export function validateLearningSourceText(
         !inspection.hasPhysics3DValueImport &&
         !inspection.hasNamedValueWebGLImport &&
         basePackageCount === 3
-      : isVizLesson ||
+      : inspection.packageImportModules.includes("@pibbl/core/machines") ||
+          inspection.packageImportModules.includes("@pibbl/core/sprites") ||
+          isVizLesson ||
           isTextLesson ||
-          inspection.packageImportModules.includes("@crc/textures")
+          inspection.packageImportModules.includes("@pibbl/core/textures")
         ? inspection.hasNamedValueCoreImport && basePackageCount === 2
         : isThreeLesson
           ? inspection.hasNamedValueCoreImport &&
@@ -1604,13 +1610,13 @@ export function validateLearningSourceText(
       label,
       isThreeLesson
         ? isThreeControlsLesson
-          ? "must use direct, unaliased static named value imports from @crc/core, @crc/three, three, and three/addons/controls/OrbitControls.js."
-          : "must use direct, unaliased static named value imports from @crc/core, @crc/three, and three."
+          ? "must use direct, unaliased static named value imports from @pibbl/core, @pibbl/three, three, and three/addons/controls/OrbitControls.js."
+          : "must use direct, unaliased static named value imports from @pibbl/core, @pibbl/three, and three."
         : isParticlesLesson
-          ? "must use direct, unaliased static named value imports from both @crc/core and @crc/particles."
+          ? "must use direct, unaliased static named value imports from both @pibbl/core and @pibbl/core/particles."
           : isPhysicsLesson
-            ? "must use direct, unaliased static named value imports from both @crc/core and @crc/physics/2d."
-            : "must use direct, unaliased static named imports only from @crc/core, including at least one value import.",
+            ? "must use direct, unaliased static named value imports from both @pibbl/core and @pibbl/core/physics/2d."
+            : "must use direct, unaliased static named imports only from @pibbl/core, including at least one value import.",
     );
   }
   if (
@@ -1635,10 +1641,10 @@ export function validateLearningSourceText(
       isThreeLesson
         ? "must use direct Three lesson bindings without aliases, reassignment, or shadowing."
         : isParticlesLesson
-          ? "must use direct @crc/core and @crc/particles bindings without aliases, reassignment, or shadowing."
+          ? "must use direct @pibbl/core and @pibbl/core/particles bindings without aliases, reassignment, or shadowing."
           : isPhysicsLesson
-            ? "must use direct @crc/core and @crc/physics/2d bindings without aliases, reassignment, or shadowing."
-            : "must use direct @crc/core bindings without aliases, reassignment, or shadowing.",
+            ? "must use direct @pibbl/core and @pibbl/core/physics/2d bindings without aliases, reassignment, or shadowing."
+            : "must use direct @pibbl/core bindings without aliases, reassignment, or shadowing.",
     );
   }
   if (inspection.hasTestScaffolding) {
@@ -1650,7 +1656,7 @@ export function validateLearningSourceText(
   if (inspection.hasDirectComponentCall) {
     throw invalid(
       label,
-      "must construct descriptive CRC components with JSX or createElement, not direct calls.",
+      "must construct descriptive Pibbl components with JSX or createElement, not direct calls.",
     );
   }
   if (inspection.hasLegacyTextStyle) {

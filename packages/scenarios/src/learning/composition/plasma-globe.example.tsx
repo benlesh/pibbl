@@ -1,6 +1,6 @@
-/** @jsxImportSource @crc/core */
+/** @jsxImportSource @pibbl/core */
 import {
-  crc,
+  pibbl,
   Circle,
   Path,
   PathGeometry,
@@ -13,16 +13,16 @@ import {
   useSignal,
   useConst,
   useReaction,
-  type CRCPointerEvent,
-  type CRCController,
-} from "@crc/core";
+  type PibblPointerEvent,
+  type PibblController,
+} from "@pibbl/core";
 import {
   useTexture,
   tendrils,
   lightning,
   type ElectricPoint,
   type ElectricSource,
-} from "@crc/textures";
+} from "@pibbl/core/textures";
 
 function Label({
   x,
@@ -258,7 +258,7 @@ function PlasmaGlobe({ canvas }: { canvas: HTMLCanvasElement }) {
     contacts.delete(id);
     threads.send({ type: "remove-source", id: `contact:${id}` });
   };
-  const move = (e: CRCPointerEvent) => {
+  const move = (e: PibblPointerEvent) => {
     if (e.pointerType === "touch" && !pointers.has(e.pointerId)) return;
     // Root-logical coordinates -> this fill's complete texture coordinates.
     const x = (e.x - 34) / 480,
@@ -270,7 +270,7 @@ function PlasmaGlobe({ canvas }: { canvas: HTMLCanvasElement }) {
     // Identical source message for pointer input and application-controlled sites.
     attract(e.pointerId, { x, y });
   };
-  const end = (e: CRCPointerEvent) => {
+  const end = (e: PibblPointerEvent) => {
     pointers.delete(e.pointerId);
     release(e.pointerId);
     if (e.currentTarget.hasPointerCapture(e.pointerId))
@@ -641,6 +641,6 @@ function PlasmaGlobe({ canvas }: { canvas: HTMLCanvasElement }) {
     </FocusManagement>
   );
 }
-export default function mount(canvas: HTMLCanvasElement): CRCController {
-  return crc(canvas, <PlasmaGlobe canvas={canvas} />);
+export default function mount(canvas: HTMLCanvasElement): PibblController {
+  return pibbl(canvas, <PlasmaGlobe canvas={canvas} />);
 }

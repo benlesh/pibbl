@@ -10,7 +10,7 @@ Design: [Text conversion to PathGeometry](../specs/2026-09-30-text-path-geometry
 
 ## Outcome and delivery order
 
-Deliver `@crc/text`, an optional workspace package with a CRC-owned HarfBuzz
+Deliver `@pibbl/text`, an optional workspace package with a Pibbl-owned HarfBuzz
 WASM wrapper. Load fonts asynchronously, generate editable PathGeometry
 synchronously, and release font handles through either dispose or Symbol.dispose.
 All setup, build, test, and benchmark operations have pnpm entry points.
@@ -54,7 +54,7 @@ Do not spend this stage benchmarking alternative engines or building a font corp
 Create:
 
 - `packages/text/package.json`, `tsconfig.build.json`, `src/index.ts`.
-- `packages/text/native/crc-text.cpp` and the native lock manifest.
+- `packages/text/native/pibbl-text.cpp` and the native lock manifest.
 - `packages/text/scripts/{setup,doctor,build,clean}.mjs` plus shared tooling helpers.
 - A local ignored cache for SDK/source downloads and native intermediates.
 
@@ -141,7 +141,7 @@ Check: focused `pnpm text:test`, package typecheck, and changed-file lint.
 
 Create `packages/scenarios/src/learning/drawing/text-geometry.example.tsx` and
 add its learning/catalog registration. Update the Studio runtime import mapping,
-source/built aliases, and `playground/src/crc-editor-types.txt` sufficiently for
+source/built aliases, and `playground/src/pibbl-editor-types.txt` sufficiently for
 this example to execute and typecheck through public imports.
 
 - [x] Load the font outside synchronous component evaluation and show loading
@@ -224,7 +224,7 @@ is requested; creating this plan performs none of those actions.
 
 ## 8. Optional later build-time generation
 
-After runtime behavior is accepted, implement `@crc/text/build` and
+After runtime behavior is accepted, implement `@pibbl/text/build` and
 `pnpm text:generate -- <configuration>` using the same Node-capable engine.
 
 - [ ] Test a fixed string's generated factory against runtime geometry/metadata.
@@ -240,7 +240,7 @@ infrastructure before an observed need.
 
 ## Execution evidence 2026-09-30
 
-Implementation checkout: `/Users/benlesh/.codex/worktrees/text-geometry/crc`,
+Implementation checkout: `/Users/benlesh/.codex/worktrees/text-geometry/pibbl`,
 branch `codex/text-geometry`, based on origin/main d9c28931. The original
 checkout contains unrelated active changes and is untouched by implementation.
 
@@ -249,7 +249,7 @@ checkout contains unrelated active changes and is untouched by implementation.
 - Added a revision-pinned ABeeZee fixture with OFL license and provenance.
 - First public conversion test failed for missing dist/index.mjs before runtime
   implementation. It subsequently passed under Node 24.15.0: 1 test, 1 passed.
-- `pnpm --filter '@crc/core...' build` built core with its types dependency;
+- `pnpm --filter '@pibbl/core...' build` built core with its types dependency;
   `pnpm text:build` compiled the custom native wrapper and TS facade; a second
   build reused the native output.
 - Implemented initial bulk outline transport, baseline scaling, UTF-16 clusters,
@@ -277,7 +277,7 @@ is claimed from the single passing contract test.
 - Node 24.15.0: `pnpm text:test` passed (1 focused contract);
   `pnpm text:test:browser` passed input/generate/drag/reset in Chromium, with
   no page errors. Reset restored the exact pre-drag canvas screenshot.
-  The browser command currently expects a running Studio at CRC_TEXT_STUDIO_URL
+  The browser command currently expects a running Studio at PIBBL_TEXT_STUDIO_URL
   (default port 5190); automate server ownership for final CI integration.
 - `pnpm exec tsc --noEmit` passed. Studio reports no TypeScript issues for the
   example. Browser plugin was unavailable, so repository Playwright was used.
@@ -337,7 +337,7 @@ is implemented. Toolchain/setup scripts still require the hardening listed above
 - Empty text exposed a negative-zero advance. All zero metrics now normalize
   consistently. Focused text:test passes 13 tests on Node 24.15.0.
 - Added text:bench:browser with an owned temporary HTTP server and Chromium.
-  It serves built artifacts, verifies importing @crc/text does not request
+  It serves built artifacts, verifies importing @pibbl/text does not request
   engine assets, then measures cold load and five text scenarios. Short cases
   use batches of 20 to reduce browser timer quantization; there are no timing
   assertions. Server and browser teardown run in finally.
@@ -379,8 +379,8 @@ is implemented. Toolchain/setup scripts still require the hardening listed above
 ### Native failure-path and algorithm review
 
 - Inspected pinned HarfBuzz hb_ot_draw_glyph_or_fail and glyf get_path ownership.
-  Found that throwing std::bad_alloc from a CRC draw callback could bypass
-  HarfBuzz's explicit release_scratch call. CRC callbacks now catch allocation
+  Found that throwing std::bad_alloc from a Pibbl draw callback could bypass
+  HarfBuzz's explicit release_scratch call. Pibbl callbacks now catch allocation
   failures locally, stop emitting, exhaust the live draw budget, and return
   normally. The wrapper reports failure only after HarfBuzz returns.
 - Added a private deterministic fault hook (absent from package exports), with
@@ -454,9 +454,9 @@ is implemented. Toolchain/setup scripts still require the hardening listed above
   probes after dated records received the required in-progress status banner.
   Repository typechecking and focused code lint also pass.
 - Browser test now owns and closes an ephemeral development or preview server
-  unless CRC_TEXT_STUDIO_URL is supplied. Both source-production and built-package
+  unless PIBBL_TEXT_STUDIO_URL is supplied. Both source-production and built-package
   production Studio builds passed typing/generation/drag/reset with no page errors.
-  Built Studio build log: /tmp/crc-text-built-studio.log (local transient evidence).
+  Built Studio build log: /tmp/pibbl-text-built-studio.log (local transient evidence).
 - Demo status now shows advance and ink dimensions. Public docs explain immutable
   conversion metadata, UTF-16 clusters, format/paragraph boundaries, native limits,
   lazy initialization, and browser asset placement.
@@ -471,7 +471,7 @@ is implemented. Toolchain/setup scripts still require the hardening listed above
 ### Independent shaping and ownership evidence
 
 - Added native/reference.cpp, a direct native HarfBuzz harness independent of
-  CRC's WASM wrapper/geometry implementation, and pnpm text:reference to build
+  Pibbl's WASM wrapper/geometry implementation, and pnpm text:reference to build
   it with a host C++17 compiler and generate checked-in expectations.
 - Nine font-hash-pinned cases now check exact glyph IDs, UTF-16 clusters,
   advances, and offsets: kerning and ligature switches, Arabic marks/RTL, CFF
@@ -514,7 +514,7 @@ files so canceled jobs cannot restore an abandoned tooling lock.
   language remain usable across font lifetimes.
 - The aggregate gate exposed stale catalog/editor expectations and Chromium
   discovery of the downloaded SDK and separately owned Node tests. Updated the
-  catalog to include the text lesson/API, editor inventory to include @crc/text,
+  catalog to include the text lesson/API, editor inventory to include @pibbl/text,
   and excluded those non-Chromium inputs. The aggregate run failed and is not
   final verification; focused integration re-verification is in progress.
 - Remaining work includes phase-level performance reporting, final aggregate
@@ -554,7 +554,7 @@ files so canceled jobs cannot restore an abandoned tooling lock.
   Further configurations remain accepted; the public font identity is stable.
   Shaping failure invalidates that internal cache for the next attempt.
 - The current demo was loaded and visually inspected at the recorded port 5190:
-  editable Hello CRC outlines, white endpoints, gold controls, input/generate/
+  editable Hello Pibbl outlines, white endpoints, gold controls, input/generate/
   reset controls, metrics, and segment count are present. The server was verified
   live; it was not restarted based on old notes.
 

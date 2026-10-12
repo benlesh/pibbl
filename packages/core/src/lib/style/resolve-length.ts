@@ -6,6 +6,19 @@ import type { Length } from './types.js';
 
 const DECIMAL_PERCENTAGE = /^[+-]?(?:\d+(?:\.\d+)?|\.\d+)%$/;
 
+/**
+ * Resolves a numeric or percentage length; automatic sizing returns undefined.
+ *
+ * @param value - Logical length or percentage to resolve. See {@link Length}.
+ * @param reference - Reference length for percentages, or undefined if unavailable.
+ * @param property - Property name used in diagnostics.
+ * @param context - Component and property context for diagnostic messages. See
+ * {@link LayoutDiagnosticContext} .
+ * @returns The resolved logical length, or undefined for an unresolved automatic length.
+ *
+ * @see {@link Length}
+ * @see {@link LayoutDiagnosticContext}
+ */
 export function resolveLength(
   value: Length,
   reference: number | undefined,

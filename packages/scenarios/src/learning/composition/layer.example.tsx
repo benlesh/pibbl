@@ -1,12 +1,12 @@
 import {
-  crc,
+  pibbl,
   useSignal,
   Group,
   Layer,
   Rectangle,
   Text,
-  type CRCController,
-} from "@crc/core";
+  type PibblController,
+} from "@pibbl/core";
 function LayerStudy() {
   const active = useSignal(false);
   return [
@@ -90,6 +90,6 @@ function LayerStudy() {
     </Group>,
   ];
 }
-export default function mount(canvas: HTMLCanvasElement): CRCController {
-  return crc(canvas, <LayerStudy />);
+export default function mount(canvas: HTMLCanvasElement): PibblController {
+  return pibbl(canvas, <LayerStudy />);
 }

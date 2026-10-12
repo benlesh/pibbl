@@ -1,0 +1,186 @@
+[
+  {
+    "id": "tween",
+    "title": "Tween playback controls",
+    "description": "Animate a signal and control the mounted playback with native buttons.",
+    "source": "tween.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "tween",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "drive",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "easing",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "usePlayback",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PibblEasing",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PibblInterpolator",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PibblTweenOptions",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PibblAnimationDefinition",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PibblPlayback",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PibblPlaybackOptions",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PibblPlaybackEvent",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PibblPlaybackStatus",
+        "importPath": "@pibbl/core"
+      }
+    ],
+    "notes": [
+      "Playback owns the animation; disposing the Pibbl mount releases it. Commands are applied by Pibbl's shared scheduler."
+    ]
+  },
+  {
+    "id": "composition",
+    "title": "Compose keyframes and springs",
+    "description": "Run two independent tracks together, then mark, wait, and repeat.",
+    "source": "composition.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "keyframes",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "spring",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "sequence",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "parallel",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "wait",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "marker",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "repeat",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PibblAnimationProgram",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PibblAnimationRepeatDirection",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PibblAnimationRepeatOptions",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PibblKeyframesOptions",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PibblSpringOptions",
+        "importPath": "@pibbl/core"
+      }
+    ],
+    "notes": [
+      "Parallel tracks must not ambiguously write the same signal. Definitions and programs are immutable."
+    ]
+  },
+  {
+    "id": "custom",
+    "title": "Custom sampling and fixed steps",
+    "description": "Combine a time-sampled sine wave with a fixed-step state machine.",
+    "source": "custom.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "defineAnimation",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "stepper",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PibblAnimationOptions",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PibblAnimationSampleInput",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PibblStepperOptions",
+        "importPath": "@pibbl/core"
+      }
+    ],
+    "notes": [
+      "Custom samples are seekable; stateful steppers integrate clamped elapsed time and are not generally seekable."
+    ]
+  },
+  {
+    "id": "targets",
+    "title": "Animate changing targets",
+    "description": "Compare a tween and spring as the same target changes.",
+    "source": "targets.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "useAnimatedValue",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "spring",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "tween",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PibblAnimatedValueOptions",
+        "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PibblAnimationTarget",
+        "importPath": "@pibbl/core"
+      }
+    ],
+    "notes": [
+      "Read the target during component evaluation. The mounted hook owns the animated value and cleanup."
+    ]
+  }
+]

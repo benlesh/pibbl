@@ -1,14 +1,14 @@
-/** @jsxImportSource @crc/core */
-import { Circle, Group, crc, signal } from "@crc/core";
+/** @jsxImportSource @pibbl/core */
+import { Circle, Group, pibbl, signal } from "@pibbl/core";
 import {
   PhysicsWorld2D,
   collider2D,
-  crcPhysicsBody2D,
+  pibblPhysicsBody2D,
   dynamicBody2D,
   kinematicBody2D,
-  type CRCPhysicsBodyHandle2D,
-} from "@crc/physics/2d";
-import { createPhysicsTestHarness2D } from "@crc/physics/2d/testing";
+  type PibblPhysicsBodyHandle2D,
+} from "@pibbl/core/physics/2d";
+import { createPhysicsTestHarness2D } from "@pibbl/core/physics/2d/testing";
 import { describe, expect, it } from "vitest";
 
 describe("public physics 2D test harness", () => {
@@ -17,7 +17,7 @@ describe("public physics 2D test harness", () => {
     canvas.width = 200;
     canvas.height = 100;
     document.body.append(canvas);
-    let body!: CRCPhysicsBodyHandle2D;
+    let body!: PibblPhysicsBodyHandle2D;
     const harness = createPhysicsTestHarness2D({
       canvas,
       root: () => <Ball />,
@@ -28,7 +28,7 @@ describe("public physics 2D test harness", () => {
     });
 
     function Ball() {
-      body = crcPhysicsBody2D();
+      body = pibblPhysicsBody2D();
       return (
         <PhysicsWorld2D gravity={[0, 600]}>
           <Group
@@ -59,7 +59,7 @@ describe("public physics 2D test harness", () => {
     const canvas = document.createElement("canvas");
     document.body.append(canvas);
     const target = signal<readonly [number, number]>([10, 10]);
-    let body!: CRCPhysicsBodyHandle2D;
+    let body!: PibblPhysicsBodyHandle2D;
     let renders = 0;
     const harness = createPhysicsTestHarness2D({
       canvas,
@@ -69,7 +69,7 @@ describe("public physics 2D test harness", () => {
 
     function Platform() {
       renders++;
-      body = crcPhysicsBody2D();
+      body = pibblPhysicsBody2D();
       return (
         <PhysicsWorld2D gravity={[0, 0]}>
           <Group
@@ -105,11 +105,11 @@ describe("public physics 2D test harness", () => {
     }
   });
 
-  it("refuses to take over a realm that already has a CRC root", () => {
+  it("refuses to take over a realm that already has a Pibbl root", () => {
     const canvas = document.createElement("canvas");
     const occupied = document.createElement("canvas");
     document.body.append(canvas, occupied);
-    const mount = crc(occupied, <Circle style={{ cx: 4, cy: 4, radius: 2 }} />);
+    const mount = pibbl(occupied, <Circle style={{ cx: 4, cy: 4, radius: 2 }} />);
     try {
       expect(() =>
         createPhysicsTestHarness2D({
@@ -117,7 +117,7 @@ describe("public physics 2D test harness", () => {
           root: () => <PhysicsWorld2D />,
           observe: () => null,
         }),
-      ).toThrow("isolated CRC realm");
+      ).toThrow("isolated Pibbl realm");
     } finally {
       mount.dispose();
       canvas.remove();

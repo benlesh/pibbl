@@ -1,4 +1,4 @@
-# CRC first-class style and layout design
+# Pibbl first-class style and layout design
 
 > **Historical status: IMPLEMENTED DESIGN RECORD.** Original proposal or approval wording below is preserved; current behavior lives in `docs/design/`.
 
@@ -8,16 +8,16 @@ Date: 2026-08-17
 
 ## Summary
 
-CRC will replace drawing geometry scattered across component props with one
+Pibbl will replace drawing geometry scattered across component props with one
 first-class, typed `style` dictionary. Style describes every value that directly
 affects visual output or spatial behavior, including primitive geometry such as
 a rectangle's width and a path's data. Programmatic inputs and event handlers
 remain component props.
 
 Layout will be explicit in the component tree. Dedicated layout components own
-layout algorithms; drawing components only paint. CRC will use CSS property
+layout algorithms; drawing components only paint. Pibbl will use CSS property
 names and keywords only where the supported behavior is compatible with CSS.
-When CRC deliberately provides a different algorithm, it will use CRC-specific
+When Pibbl deliberately provides a different algorithm, it will use Pibbl-specific
 nomenclature rather than a misleading CSS name.
 
 This design does not adopt the CSS cascade or inheritance. Every element's style
@@ -26,7 +26,7 @@ objects, functions, and object spread.
 
 ## Goals
 
-- Make CRC approachable to web developers through familiar, predictable style
+- Make Pibbl approachable to web developers through familiar, predictable style
   and layout terminology.
 - Make one property the authoritative source for one visual concept. For
   example, `style.width` is the only width of a rectangle.
@@ -34,7 +34,7 @@ objects, functions, and object spread.
   layout does not require recording Canvas drawing commands.
 - Support absolute positioning, sequential flow, flex, grid, overlays,
   percentages, constraints, and reusable layout-aware components incrementally.
-- Preserve CRC's parent-first rendering, source paint order, interaction
+- Preserve Pibbl's parent-first rendering, source paint order, interaction
   geometry, scheduled updates, identity rules, and deterministic cleanup.
 - Keep formatting contexts visible through named layout components rather than
   hidden `display` behavior on arbitrary drawing components.
@@ -102,7 +102,7 @@ so layout can inspect style without invoking the component.
 - No selector or global rule can change an element.
 - Component defaults, variants, and caller overrides are combined explicitly.
 - Ordinary object-spread order is the precedence model.
-- CRC may expose specified and resolved styles for diagnostics, but it does not
+- Pibbl may expose specified and resolved styles for diagnostics, but it does not
   introduce hidden style origins.
 
 ```ts
@@ -124,11 +124,11 @@ text({
 
 ### Names are behavioral contracts
 
-CRC uses a CSS name only when accepted values have CSS-compatible semantics.
+Pibbl uses a CSS name only when accepted values have CSS-compatible semantics.
 Unsupported properties and values are rejected or documented as unsupported;
 they are not accepted with approximate behavior.
 
-CRC-native algorithms use distinct names. For example, a deliberately simpler
+Pibbl-native algorithms use distinct names. For example, a deliberately simpler
 one-axis wrapping algorithm may be named `flow`, but it must not masquerade as
 CSS block/inline formatting. A same-box composition algorithm may be named
 `overlay` rather than claiming CSS positioned-layout equivalence.
@@ -169,10 +169,10 @@ formatting context through `style.display`.
 
 ## Style vocabulary
 
-CRC owns the system style namespace. Unknown system keys are type errors and,
+Pibbl owns the system style namespace. Unknown system keys are type errors and,
 where runtime validation is possible, actionable diagnostics. Custom component
 style data lives under a typed `custom` member so application keys cannot collide
-with future CRC properties.
+with future Pibbl properties.
 
 Style types are composed from focused capabilities rather than one permissive
 dictionary:
@@ -218,16 +218,16 @@ custom unit parsing are deferred until separately designed.
 The intended family is:
 
 - `absolute`: an explicit containing box for Canvas/SVG-like positioned children;
-  outside a layout component, CRC's existing root positioning remains absolute.
+  outside a layout component, Pibbl's existing root positioning remains absolute.
 - `flex`: a CSS-compatible subset of Flexbox. Accepted properties and values
   follow CSS behavior; unsupported intrinsic or edge cases are rejected.
 - `grid`: a CSS-compatible subset of Grid for explicit tracks and explicit item
   placements, expanded incrementally without claiming unsupported auto-placement
   behavior.
-- `flow`: a CRC-native sequential and optional wrapping algorithm. It uses its
-  own documented behavior unless CRC later implements faithful CSS block/inline
+- `flow`: a Pibbl-native sequential and optional wrapping algorithm. It uses its
+  own documented behavior unless Pibbl later implements faithful CSS block/inline
   formatting under CSS terminology.
-- `overlay`: a CRC-native same-box composition algorithm with explicit alignment
+- `overlay`: a Pibbl-native same-box composition algorithm with explicit alignment
   and source-order painting.
 
 `row` and `column` are not separate core semantics. Applications may define thin
@@ -239,14 +239,14 @@ Layout operates on declared and resolved boxes, not inferred paint bounds.
 Components may paint outside an allocated box according to the applicable
 overflow policy; overflow does not silently resize the layout box.
 
-CRC resolves size in this order:
+Pibbl resolves size in this order:
 
 1. Definite style sizes and parent constraints.
 2. Algorithm-owned flexible or track allocation.
 3. Supported intrinsic measurement for built-ins and opt-in custom components.
 4. An actionable error when a required size remains unknowable.
 
-An opt-in measurement capability is pure with respect to CRC rendering: it may
+An opt-in measurement capability is pure with respect to Pibbl rendering: it may
 read props, specified style, constraints, and Canvas measurement services, but it
 may not paint, use render hooks, register interaction, or own resources.
 
@@ -254,7 +254,7 @@ Text can measure using the same typography/wrapping utility used to paint. In
 the first release, an image participating in layout requires explicit dimensions;
 natural image sizing is deferred because loading currently starts during render
 and pure measurement may not own that resource. Arbitrary custom components must
-declare a size or provide their own measurement capability; CRC does not invoke
+declare a size or provide their own measurement capability; Pibbl does not invoke
 them speculatively to discover what they draw.
 
 ## Rendering and interaction semantics
@@ -268,10 +268,10 @@ them speculatively to discover what they draw.
 - Source child order remains paint order unless a later CSS-compatible feature
   explicitly specifies otherwise and updates interaction semantics with it.
 - Reverse paint order remains the one-topmost-target rule.
-- Placement uses the same Canvas transform and CRC clipping seams already used
+- Placement uses the same Canvas transform and Pibbl clipping seams already used
   by drawing and interaction, keeping pixels, hit testing, and cursors aligned.
 - Stable reflow does not remount keyed children. Moving a child between layout
-  parents remains reparenting and may remount under CRC's existing identity rule.
+  parents remains reparenting and may remount under Pibbl's existing identity rule.
 - A layout failure follows the existing fail-closed render and teardown model.
 
 ## CSS compatibility policy
@@ -290,7 +290,7 @@ For Flexbox, the initial supported subset centers on row/column directions,
 definite sizes and bases, measured `auto`, grow/shrink allocation, wrapping,
 numeric gaps, and start/end/center/stretch alignment. Reverse directions,
 `wrap-reverse`, reordering, baseline alignment, automatic margins, percentage
-gaps, and implicit automatic minimum sizes are deferred until CRC can preserve
+gaps, and implicit automatic minimum sizes are deferred until Pibbl can preserve
 their CSS sizing, paint-order, and interaction semantics together. The supported
 wrapping subset includes CSS `align-content`; shrink/auto-basis cases require an
 explicit zero-or-greater main-axis minimum instead of guessing the deferred
@@ -326,8 +326,8 @@ and style.
 - Diagnostics identify the component, property, supplied value, containing
   layout algorithm, and relevant constraint.
 - Unsupported CSS values say that the value is unsupported rather than silently
-  substituting a nearby CRC behavior.
-- `custom` style data is ignored by CRC and interpreted only by its owning custom
+  substituting a nearby Pibbl behavior.
+- `custom` style data is ignored by Pibbl and interpreted only by its owning custom
   component.
 
 ## Performance policy
@@ -394,6 +394,6 @@ change is recorded.
   roles explicit but adds ceremony without enough value when layout component
   names already expose the formatting context.
 - **Adopt CSS cascade and inheritance.** Their behavioral indirection conflicts
-  with CRC's local, componentized, debuggable model.
-- **Use CSS names for approximate CRC algorithms.** Familiar spelling without
+  with Pibbl's local, componentized, debuggable model.
+- **Use CSS names for approximate Pibbl algorithms.** Familiar spelling without
   compatible behavior creates false expectations and migration hazards.

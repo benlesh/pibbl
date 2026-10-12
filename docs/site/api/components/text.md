@@ -6,16 +6,16 @@ kind: api
 slug: text
 apiCategory: component
 symbols: [Text]
-relatedTypes: [CRCTextChild, TextProps, TextStyle]
+relatedTypes: [PibblTextChild, TextProps, TextStyle]
 ---
 
 # Text
 
 ```ts
-import { Text } from "@crc/core";
+import { Text } from "@pibbl/core";
 ```
 
-`Text` uses [`TextProps`](#/api/types/elements-components#textprops) and [`TextStyle`](#/api/types/styles#textstyle), and accepts recursive [`CRCTextChild`](#/api/types/elements-components#crctextchild)
+`Text` uses [`TextProps`](#/api/types/elements-components#textprops) and [`TextStyle`](#/api/types/styles#textstyle), and accepts recursive [`PibblTextChild`](#/api/types/elements-components#pibbltextchild)
 content rather than visual child elements. It supports paint, wrapping, fitting,
 and measurement under its local style. Font rasterization and measurement are
 browser behavior. Ellipsis fitting preserves complete grapheme clusters, including

@@ -1,0 +1,304 @@
+[
+  {
+    "id": "descriptors",
+    "title": "Particle descriptors",
+    "description": "Define randomized spawn values and lifespan curves.",
+    "source": "descriptors.ts",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "particleChoice",
+        "importPath": "@pibbl/core/particles"
+      },
+      {
+        "name": "particleCurve",
+        "importPath": "@pibbl/core/particles"
+      },
+      {
+        "name": "particleGradient",
+        "importPath": "@pibbl/core/particles"
+      },
+      {
+        "name": "particleInteger",
+        "importPath": "@pibbl/core/particles"
+      },
+      {
+        "name": "particleParameter",
+        "importPath": "@pibbl/core/particles"
+      },
+      {
+        "name": "particleRange",
+        "importPath": "@pibbl/core/particles"
+      },
+      {
+        "name": "PibblParticleChoice",
+        "importPath": "@pibbl/core/particles"
+      },
+      {
+        "name": "PibblParticleCurve",
+        "importPath": "@pibbl/core/particles"
+      },
+      {
+        "name": "PibblParticleCurveOptions",
+        "importPath": "@pibbl/core/particles"
+      },
+      {
+        "name": "PibblParticleCurveValue",
+        "importPath": "@pibbl/core/particles"
+      },
+      {
+        "name": "PibblParticleGradient",
+        "importPath": "@pibbl/core/particles"
+      },
+      {
+        "name": "PibblParticleIntegerRange",
+        "importPath": "@pibbl/core/particles"
+      },
+      {
+        "name": "PibblParticleParameterReference",
+        "importPath": "@pibbl/core/particles"
+      },
+      {
+        "name": "PibblParticleRange",
+        "importPath": "@pibbl/core/particles"
+      },
+      {
+        "name": "PibblParticleScalar",
+        "importPath": "@pibbl/core/particles"
+      },
+      {
+        "name": "PibblParticleVector2",
+        "importPath": "@pibbl/core/particles"
+      }
+    ],
+    "notes": ["Displays the resulting descriptor values in the document."]
+  },
+  {
+    "id": "effect",
+    "title": "Particle effect configuration",
+    "description": "Compose a typed ember emitter from emission, motion, appearance, and bounds.",
+    "source": "effect.ts",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "defineParticleEffect2D",
+        "importPath": "@pibbl/core/particles"
+      },
+      {
+        "name": "PibblParticleAppearance",
+        "importPath": "@pibbl/core/particles"
+      },
+      {
+        "name": "PibblParticleBounds2D",
+        "importPath": "@pibbl/core/particles"
+      },
+      {
+        "name": "PibblParticleEffect2D",
+        "importPath": "@pibbl/core/particles"
+      },
+      {
+        "name": "PibblParticleEffect2DInput",
+        "importPath": "@pibbl/core/particles"
+      },
+      {
+        "name": "PibblParticleEmission",
+        "importPath": "@pibbl/core/particles"
+      },
+      {
+        "name": "PibblParticleEmitter2D",
+        "importPath": "@pibbl/core/particles"
+      },
+      {
+        "name": "PibblParticleInitial2D",
+        "importPath": "@pibbl/core/particles"
+      },
+      {
+        "name": "PibblParticleMotion2D",
+        "importPath": "@pibbl/core/particles"
+      },
+      {
+        "name": "PibblParticleOverflow",
+        "importPath": "@pibbl/core/particles"
+      },
+      {
+        "name": "PibblParticleRenderer2D",
+        "importPath": "@pibbl/core/particles"
+      },
+      {
+        "name": "PibblParticleShape2D",
+        "importPath": "@pibbl/core/particles"
+      }
+    ],
+    "notes": [
+      "Displays the effect dimension and emitter count in the document."
+    ]
+  },
+  {
+    "id": "parameters",
+    "title": "Effect parameters",
+    "description": "Define typed spawn and render parameters and use them in an effect.",
+    "source": "parameters.ts",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "PibblParticleParameterDefinition",
+        "importPath": "@pibbl/core/particles"
+      },
+      {
+        "name": "PibblParticleParameterDefinitions",
+        "importPath": "@pibbl/core/particles"
+      },
+      {
+        "name": "PibblParticleParameterTiming",
+        "importPath": "@pibbl/core/particles"
+      },
+      {
+        "name": "PibblParticleParameterValue",
+        "importPath": "@pibbl/core/particles"
+      },
+      {
+        "name": "PibblParticleParameterValues",
+        "importPath": "@pibbl/core/particles"
+      },
+      {
+        "name": "PibblParticleValueFor",
+        "importPath": "@pibbl/core/particles"
+      },
+      {
+        "name": "PibblParticleValuesOf",
+        "importPath": "@pibbl/core/particles"
+      }
+    ],
+    "notes": ["Displays the typed parameter values in the document."]
+  },
+  {
+    "id": "system",
+    "title": "Mounted particle system",
+    "description": "Mount a manual burst effect and trigger it with pointer input.",
+    "source": "system.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "Particles2D",
+        "importPath": "@pibbl/core/particles"
+      },
+      {
+        "name": "useParticleSystem",
+        "importPath": "@pibbl/core/particles"
+      },
+      {
+        "name": "PibblParticleBurstOverrides",
+        "importPath": "@pibbl/core/particles"
+      },
+      {
+        "name": "PibblParticleCommonProps",
+        "importPath": "@pibbl/core/particles"
+      },
+      {
+        "name": "PibblParticleExecution",
+        "importPath": "@pibbl/core/particles"
+      },
+      {
+        "name": "PibblParticleSystem",
+        "importPath": "@pibbl/core/particles"
+      },
+      {
+        "name": "PibblParticleSystemOptions",
+        "importPath": "@pibbl/core/particles"
+      },
+      {
+        "name": "PibblParticleSystemStatus",
+        "importPath": "@pibbl/core/particles"
+      },
+      {
+        "name": "Particles2DProps",
+        "importPath": "@pibbl/core/particles"
+      },
+      {
+        "name": "Particles2DStyle",
+        "importPath": "@pibbl/core/particles"
+      }
+    ],
+    "notes": [
+      "Press Burst or click the canvas to emit another spread of particles."
+    ]
+  },
+  {
+    "id": "flow",
+    "title": "Flow-driven particles",
+    "description": "Advect mist through a mount-owned flow field and source.",
+    "source": "flow.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "useFlowField2D",
+        "importPath": "@pibbl/core/particles"
+      },
+      {
+        "name": "useFlowSource2D",
+        "importPath": "@pibbl/core/particles"
+      },
+      {
+        "name": "PibblFlowField2D",
+        "importPath": "@pibbl/core/particles"
+      },
+      {
+        "name": "PibblFlowFieldOptions2D",
+        "importPath": "@pibbl/core/particles"
+      },
+      {
+        "name": "PibblFlowObstacleBatch2D",
+        "importPath": "@pibbl/core/particles"
+      },
+      {
+        "name": "PibblFlowObstacleSource2D",
+        "importPath": "@pibbl/core/particles"
+      },
+      {
+        "name": "PibblFlowSourceOptions2D",
+        "importPath": "@pibbl/core/particles"
+      }
+    ],
+    "notes": [
+      "Flow-bound particles take their velocity from the field; set acceleration on useFlowSource2D, not initial.velocity."
+    ]
+  },
+  {
+    "id": "events",
+    "title": "Particle lifecycle events",
+    "description": "Handle the discriminated event and diagnostic records.",
+    "source": "events.ts",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "PibblParticleBurstAcceptedEvent",
+        "importPath": "@pibbl/core/particles"
+      },
+      {
+        "name": "PibblParticleBurstRejectedEvent",
+        "importPath": "@pibbl/core/particles"
+      },
+      {
+        "name": "PibblParticleDiagnostic",
+        "importPath": "@pibbl/core/particles"
+      },
+      {
+        "name": "PibblParticleDrainStartEvent",
+        "importPath": "@pibbl/core/particles"
+      },
+      {
+        "name": "PibblParticleFinishEvent",
+        "importPath": "@pibbl/core/particles"
+      },
+      {
+        "name": "PibblParticleStartEvent",
+        "importPath": "@pibbl/core/particles"
+      },
+      {
+        "name": "PibblParticleSystemEvent",
+        "importPath": "@pibbl/core/particles"
+      }
+    ],
+    "notes": ["Displays the event sequence and diagnostic in the document."]
+  }
+]

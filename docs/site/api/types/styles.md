@@ -11,9 +11,6 @@ symbols:
     ArcStyle,
     CircleStyle,
     ClipStyle,
-    CRCResponsiveStyle,
-    CRCSizeQuery,
-    CRCStyleRule,
     CursorStyle,
     EllipseStyle,
     FillStyle,
@@ -25,6 +22,9 @@ symbols:
     NormalizedStyle,
     PaintStyle,
     PathStyle,
+    PibblResponsiveStyle,
+    PibblSizeQuery,
+    PibblStyleRule,
     PixelGridAlignment,
     PolygonStyle,
     PrimitiveCapabilities,
@@ -53,7 +53,7 @@ keywords: [style, paint, primitive, stroke, fill]
 
 Styles are local, closed contracts: there is no inheritance or cascade. Author
 input is specified, then normalized, then resolved against a finite allocation.
-`definePrimitive` exposes the extension seam without turning CRC into a retained
+`definePrimitive` exposes the extension seam without turning Pibbl into a retained
 scene graph.
 
 ## ArcStyle
@@ -70,32 +70,6 @@ events, focus geometry, and applicable declared-box fields.
 
 `ClipStyle` supplies a clipping `Path2D`, fill rule, local composition fields,
 and applicable filter behavior for `Clip`.
-
-## CRCResponsiveStyle
-
-`CRCResponsiveStyle<S>` is the primitive's ordinary signal-capable style plus an
-optional readonly `when` list. Required base fields stay required. Whole-style
-signals and signals in base or patch fields are supported; conditions and lists
-are plain values. Use `satisfies CRCResponsiveStyle<FlowStyle>` for reusable
-styles. Unmatched patch signals are not read. No styles cascade or inherit.
-
-The [responsive local styles guide](#/learn/guides/responsive-styles) explains
-outer placement versus inner content. Custom primitives must leave `when` out
-of their specified, normalized, and resolved styles: CRC supplies that field on
-inputs and removes it before callbacks.
-
-## CRCSizeQuery
-
-`CRCSizeQuery` requires at least one inclusive, finite nonnegative bound:
-`minWidth`, `maxWidth`, `minHeight`, or `maxHeight`. All bounds must match the
-available containing size in logical units. A direct Grid item's rules see the
-Grid content box; rules inside the placed component see its assigned cell.
-
-## CRCStyleRule
-
-`CRCStyleRule<S>` pairs a `query` with a partial local `style` patch. Matching
-patches apply in list order, with the last assignment winning. Patches cannot
-contain another `when`; objects and arrays replace rather than deep-merge.
 
 ## CursorStyle
 
@@ -137,7 +111,7 @@ polyline `Line`.
 
 ## NormalizedStyle
 
-`NormalizedStyle` is CRC's immutable parsed style stage: shorthands and
+`NormalizedStyle` is Pibbl's immutable parsed style stage: shorthands and
 component defaults are resolved, but no parent-derived geometry is retained.
 
 ## PaintStyle
@@ -148,6 +122,32 @@ applicable Canvas painting settings.
 ## PathStyle
 
 `PathStyle` is the local paint and interaction style for a caller-owned `Path2D`.
+
+## PibblResponsiveStyle
+
+`PibblResponsiveStyle<S>` is the primitive's ordinary signal-capable style plus an
+optional readonly `when` list. Required base fields stay required. Whole-style
+signals and signals in base or patch fields are supported; conditions and lists
+are plain values. Use `satisfies PibblResponsiveStyle<FlowStyle>` for reusable
+styles. Unmatched patch signals are not read. No styles cascade or inherit.
+
+The [responsive local styles guide](#/learn/guides/responsive-styles) explains
+outer placement versus inner content. Custom primitives must leave `when` out
+of their specified, normalized, and resolved styles: Pibbl supplies that field on
+inputs and removes it before callbacks.
+
+## PibblSizeQuery
+
+`PibblSizeQuery` requires at least one inclusive, finite nonnegative bound:
+`minWidth`, `maxWidth`, `minHeight`, or `maxHeight`. All bounds must match the
+available containing size in logical units. A direct Grid item's rules see the
+Grid content box; rules inside the placed component see its assigned cell.
+
+## PibblStyleRule
+
+`PibblStyleRule<S>` pairs a `query` with a partial local `style` patch. Matching
+patches apply in list order, with the last assignment winning. Patches cannot
+contain another `when`; objects and arrays replace rather than deep-merge.
 
 ## PixelGridAlignment
 
@@ -176,13 +176,13 @@ local style.
 
 ## PrimitiveProgramProps
 
-`PrimitiveProgramProps` is the props portion of a primitive input after CRC's
+`PrimitiveProgramProps` is the props portion of a primitive input after Pibbl's
 reserved `key` and `style` metadata are separated.
 
 ## PrimitiveRender
 
 `PrimitiveRender` is the render callback contract supplied to `definePrimitive`.
-It executes in CRC's isolated render traversal, not as a standalone function.
+It executes in Pibbl's isolated render traversal, not as a standalone function.
 
 ## RectStyle
 
@@ -196,7 +196,7 @@ inradius, or side length, with local paint and rounded-corner fields.
 
 ## ResolvedStyle
 
-`ResolvedStyle` is CRC's immutable finite style stage for the current containing
+`ResolvedStyle` is Pibbl's immutable finite style stage for the current containing
 box and allocation; it is passed to primitive rendering.
 
 ## RoundedCornerStyle

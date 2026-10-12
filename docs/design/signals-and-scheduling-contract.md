@@ -1,9 +1,9 @@
-# CRC signals and scheduling contract
+# Pibbl signals and scheduling contract
 
 Status: current implemented contract, updated for Signals-centric authoring on
 2026-09-24.
 
-This document defines CRC's first-class synchronous signals and the one
+This document defines Pibbl's first-class synchronous signals and the one
 realm-wide frame scheduler shared by every mounted root and managed `Layer` in
 that loaded runtime. The [animation contract](./animation-contract.md) defines
 the definitions, programs, playback, transitions, and staged animation work
@@ -53,7 +53,7 @@ declare function useSignal<T>(
 ```
 
 Signals are containers. Application code reads them explicitly, while
-CRC-provided components resolve them at declared reactive input positions:
+Pibbl-provided components resolve them at declared reactive input positions:
 
 ```tsx
 const count = signal(0);
@@ -86,7 +86,7 @@ the updater or equality function throws, the previous value remains current.
 nested batches share the outer batch, and each affected observer is notified at
 most once when the outer callback exits. If the callback throws, completed
 writes remain committed, notification flushes, and the original error is
-rethrown. CRC event dispatch creates the same outer batch automatically.
+rethrown. Pibbl event dispatch creates the same outer batch automatically.
 
 ## Computed signals and untracked reads
 
@@ -119,7 +119,7 @@ immediately.
 
 ## Component consumers, signal inputs, and `useSignal`
 
-During component evaluation, CRC collects that component's explicit reads and
+During component evaluation, Pibbl collects that component's explicit reads and
 declared input resolutions. Primitive prop/style resolution and render
 callbacks belong to the primitive consumer that performs those reads; a
 child's reads do not become parent dependencies. A successful evaluation
@@ -156,7 +156,7 @@ normally.
 
 ## One realm scheduler
 
-One scheduler singleton belongs to one loaded `@crc/core` runtime in one
+One scheduler singleton belongs to one loaded `@pibbl/core` runtime in one
 JavaScript realm. All roots, managed Layers, signal consumers, and official
 friend renderers using that runtime share at most one pending
 `requestAnimationFrame`. Work requested while a frame is running is retained
@@ -198,7 +198,7 @@ cannot be erased by another kind of request.
 Errors are isolated to the narrowest scheduled participant or render
 transaction. One failed Advance participant does not block other participants.
 One failed root does not block later roots or captured ordinary completions;
-ordinary CRC failure remains fail-closed and requires later explicit work.
+ordinary Pibbl failure remains fail-closed and requires later explicit work.
 Errors are collected and thrown singly or as an aggregate only after Complete.
 
 Plan validates every eligible observed computed in stable dependency order even
@@ -216,18 +216,18 @@ completion is deferred. Cleanup and scheduler state restoration occur in
 
 ## Version-coupled friend entry
 
-`@crc/core/internal` is an explicit package entry only for official lockstep
-renderer packages built against the exact same CRC version. It exports
-`crcInternalCreateSignalConsumer`, `crcInternalCurrentFrame`,
-`crcInternalCurrentRenderOwner`, `crcInternalQueueComplete`,
-`crcInternalRequestRendererWork`, and the `CRCInternalFrame`,
-`CRCInternalRendererWorkKind`, `CRCInternalRenderOwner`, and
-`CRCInternalSignalConsumer` types. The current render owner is available only
-while CRC is evaluating that exact component.
+`@pibbl/core/internal` is an explicit package entry only for official lockstep
+renderer packages built against the exact same Pibbl version. It exports
+`pibblInternalCreateSignalConsumer`, `pibblInternalCurrentFrame`,
+`pibblInternalCurrentRenderOwner`, `pibblInternalQueueComplete`,
+`pibblInternalRequestRendererWork`, and the `PibblInternalFrame`,
+`PibblInternalRendererWorkKind`, `PibblInternalRenderOwner`, and
+`PibblInternalSignalConsumer` types. The current render owner is available only
+while Pibbl is evaluating that exact component.
 
 The friend entry is not a stable third-party API, is not re-exported by
-`@crc/core`, and is intentionally absent from the ordinary Studio declaration
-and runtime surface. Consumers must never import `@crc/core/lib/*` or source
+`@pibbl/core`, and is intentionally absent from the ordinary Studio declaration
+and runtime surface. Consumers must never import `@pibbl/core/lib/*` or source
 paths as a substitute.
 
 ## Ownership summary
@@ -251,7 +251,7 @@ package-consumer, and Studio declaration suites are the executable evidence.
 
 ## Deliberate boundaries
 
-- CRC resolves signals only at declared component-input positions; arbitrary
+- Pibbl resolves signals only at declared component-input positions; arbitrary
   application data is never deep-unwrapped.
 - Signals are synchronous; async resources and Promise-aware dependency
   tracking are not provided.
@@ -262,3 +262,13 @@ package-consumer, and Studio declaration suites are the executable evidence.
 - Animation values and hooks use these same reads and declared inputs, staging, frame
   phases, consumer boundaries, and ownership rules. Their specialized behavior
   lives in the [animation contract](./animation-contract.md).
+
+## Native HTML publication
+
+HtmlBox uses the root render transaction's optional publication stage before
+finish callbacks and focus metadata adoption. Scheduled roots publish at the start
+of Complete; direct private renders finish synchronously. Publication failure
+notifies finish callbacks of failure and releases affected HTML while unrelated
+roots complete. This adds no scheduler or animation loop. HtmlBox data remains
+opaque; lifecycle setup/update/abort cleanup forbid signal writes. See the
+[HtmlBox contract](./html-box-contract.md).

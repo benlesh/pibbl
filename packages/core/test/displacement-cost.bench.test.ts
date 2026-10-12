@@ -5,8 +5,8 @@ const timing = vi.hoisted(() => ({
   waterRaster: [] as number[],
 }));
 
-vi.mock("@crc/core", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@crc/core")>();
+vi.mock("@pibbl/core", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@pibbl/core")>();
   return {
     ...actual,
     defineTexture(definition: Parameters<typeof actual.defineTexture>[0]) {
@@ -29,22 +29,22 @@ vi.mock("@crc/core", async (importOriginal) => {
 
 import {
   createElement,
-  crc,
+  pibbl,
   Group,
   Rectangle,
   signal,
   useTexture,
-} from "@crc/core";
-import { displacement } from "@crc/core/filters";
+} from "@pibbl/core";
+import { displacement } from "@pibbl/core/filters";
 import { filterBoundaryExecutor } from "../src/filters/filter-executor.js";
-import { waterWaves } from "@crc/textures";
+import { waterWaves } from "@pibbl/core/textures";
 import {
   ManualSchedulerDriver,
   installSchedulerDriverForTest,
 } from "../src/lib/scheduler/testing.js";
 import { describe, expect, it } from "vitest";
 
-const enabled = import.meta.env.VITE_CRC_DISPLACEMENT_BENCH === "1";
+const enabled = import.meta.env.VITE_PIBBL_DISPLACEMENT_BENCH === "1";
 const now = () => performance.now();
 const percentile = (samples: number[], value: number) =>
   samples[Math.min(samples.length - 1, Math.floor(samples.length * value))] ??
@@ -172,7 +172,7 @@ describe.skipIf(!enabled)("animated displacement cost probe", () => {
           ),
         });
       }
-      const controller = crc(canvas, createElement(Scene, {}), {
+      const controller = pibbl(canvas, createElement(Scene, {}), {
         pixelRatio: density,
       });
       const rootContext = canvas.getContext("2d")!;
@@ -226,7 +226,7 @@ describe.skipIf(!enabled)("animated displacement cost probe", () => {
     }
     console.error(
       JSON.stringify({
-        probe: "crc-water-displacement-cpu-submission",
+        probe: "pibbl-water-displacement-cpu-submission",
         node:
           typeof process === "undefined" ? "browser-runner" : process.version,
         userAgent: navigator.userAgent,

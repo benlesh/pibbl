@@ -7,11 +7,11 @@ import {
   CANVAS_2D_BACKEND,
 } from './backend/canvas-2d-backend.js';
 import type {
-  CRCBackendPrimitiveProgram,
-  CRCBackendToken,
+  PibblBackendPrimitiveProgram,
+  PibblBackendToken,
 } from './backend/types.js';
 import type {
-  CRCPrimitiveComponent,
+  PibblPrimitiveComponent,
   PreservedSignalPropKey,
   PrimitiveCapabilities,
   PrimitiveInput,
@@ -25,7 +25,7 @@ import { withSignalWriteForbidden } from './signals/graph.js';
 
 type DeclaresWhen<S> = S extends unknown ? 'when' extends keyof S ? true : false : never;
 type PrimitiveStyleGuard<S, N, R> = true extends DeclaresWhen<S> | DeclaresWhen<N> | DeclaresWhen<R> ? {
-  readonly 'CRC: style.when is framework-owned; remove when from the primitive style type': never;
+  readonly 'Pibbl: style.when is framework-owned; remove when from the primitive style type': never;
 } : unknown;
 
 type AllocationValue = `${number}%` | 'auto';
@@ -64,7 +64,22 @@ type CapabilityArguments<
     capabilities?: PrimitiveCapabilitiesInput<P, S, N, R>,
   ] : [capabilities: PrimitiveCapabilitiesInput<P, S, N, R>];
 
-/** Defines a platform component with private style and measurement behavior. */
+/**
+ * Defines a platform component with private style and measurement behavior.
+ *
+ * @param render - Synchronous primitive renderer receiving props, resolved style, and Canvas
+ * context. See {@link PrimitiveRender} , {@link PrimitiveStyleGuard} , {@link PrimitiveInput} .
+ * @param capabilityArguments - Style normalization, resolution, and measurement capabilities
+ * required by the primitive. See {@link CapabilityArguments} .
+ * @returns A primitive component usable with JSX or createElement. See
+ * {@link PibblPrimitiveComponent} , {@link PrimitiveProgramProps} , {@link PrimitiveInput} .
+ *
+ * @see {@link PrimitiveRender}
+ * @see {@link PrimitiveInput}
+ * @see {@link PibblPrimitiveComponent}
+ * @see {@link PrimitiveProgramProps}
+ * @see {@link SystemStyle}
+ */
 export function definePrimitive<
   P = Record<string, never>,
   S extends SystemStyle = SystemStyle,
@@ -75,7 +90,7 @@ export function definePrimitive<
     PrimitiveInput<P, S> extends never ? never : unknown
   ),
   ...capabilityArguments: CapabilityArguments<P, S, N, R>
-): CRCPrimitiveComponent<PrimitiveProgramProps<P>, PrimitiveInput<P, S>> {
+): PibblPrimitiveComponent<PrimitiveProgramProps<P>, PrimitiveInput<P, S>> {
   return defineBackendPrimitive<P, S, N, R, RenderingContext2D>(
     CANVAS_2D_BACKEND.token,
     render,
@@ -83,7 +98,25 @@ export function definePrimitive<
   );
 }
 
-/** Defines a primitive owned by one official CRC rendering backend. */
+/**
+ * Defines a primitive owned by one official Pibbl rendering backend.
+ *
+ * @param backend - Identity of the backend that can execute this primitive. See
+ * {@link PibblBackendToken} .
+ * @param program - Synchronous program using the active backend environment. See
+ * {@link PibblBackendPrimitiveProgram} , {@link PrimitiveStyleGuard} , {@link PrimitiveInput} .
+ * @param capabilityArguments - Style and measurement capabilities for the primitive. See
+ * {@link CapabilityArguments} .
+ * @returns A primitive component bound to the specified backend. See {@link PibblPrimitiveComponent}
+ * , {@link PrimitiveProgramProps} , {@link PrimitiveInput} .
+ *
+ * @see {@link PibblBackendToken}
+ * @see {@link PibblBackendPrimitiveProgram}
+ * @see {@link PrimitiveInput}
+ * @see {@link PibblPrimitiveComponent}
+ * @see {@link PrimitiveProgramProps}
+ * @see {@link SystemStyle}
+ */
 export function defineBackendPrimitive<
   P = Record<string, never>,
   S extends SystemStyle = SystemStyle,
@@ -91,21 +124,21 @@ export function defineBackendPrimitive<
   R extends SystemStyle = N,
   E = unknown,
 >(
-  backend: CRCBackendToken,
-  program: CRCBackendPrimitiveProgram<P, R, E> & PrimitiveStyleGuard<S, N, R> & (
+  backend: PibblBackendToken,
+  program: PibblBackendPrimitiveProgram<P, R, E> & PrimitiveStyleGuard<S, N, R> & (
     PrimitiveInput<P, S> extends never ? never : unknown
   ),
   ...capabilityArguments: CapabilityArguments<P, S, N, R>
-): CRCPrimitiveComponent<PrimitiveProgramProps<P>, PrimitiveInput<P, S>> {
+): PibblPrimitiveComponent<PrimitiveProgramProps<P>, PrimitiveInput<P, S>> {
   const componentName = primitiveComponentName(program.name);
-  const component = function CRCPrimitiveComponent(): never {
+  const component = function PibblPrimitiveComponent(): never {
     throw new Error(
-      `${componentName} is a CRC component and was invoked outside the CRC ` +
+      `${componentName} is a Pibbl component and was invoked outside the Pibbl ` +
       'renderer.\n' +
-      `Use <${componentName} ... /> in a CRC JSX file or ` +
+      `Use <${componentName} ... /> in a Pibbl JSX file or ` +
       `createElement(${componentName}, props).`,
     );
-  } as unknown as CRCPrimitiveComponent<
+  } as unknown as PibblPrimitiveComponent<
     PrimitiveProgramProps<P>,
     PrimitiveInput<P, S>
   >;
@@ -120,7 +153,6 @@ export function defineBackendPrimitive<
   setPrimitiveDefinition(component, {
     backend,
     program,
-    render: program,
     preserveSignalProps: capabilities.preserveSignalProps,
     childInput: capabilities.childInput,
     normalizeStyle: capabilities.normalizeStyle,
@@ -130,19 +162,26 @@ export function defineBackendPrimitive<
   return component;
 }
 
-/** Derives a new official-package primitive identity with the source behavior. */
-export function derivePrimitive<T extends CRCPrimitiveComponent<any, any>>(
+/**
+ * Derives a new official-package primitive identity with the source behavior.
+ *
+ * @param source - Primitive whose rendering and capabilities are reused.
+ * @returns A derived primitive with its own component identity.
+ *
+ * @see {@link PibblPrimitiveComponent}
+ */
+export function derivePrimitive<T extends PibblPrimitiveComponent<any, any>>(
   source: T,
 ): T {
   if (!getPrimitiveDefinition(source)) {
-    throw new TypeError('Can only derive a CRC primitive component.');
+    throw new TypeError('Can only derive a Pibbl primitive component.');
   }
   const componentName = source.name || 'Anonymous';
-  const derived = function CRCPrimitiveComponent(): never {
+  const derived = function PibblPrimitiveComponent(): never {
     throw new Error(
-      `${componentName} is a CRC component and was invoked outside the CRC ` +
+      `${componentName} is a Pibbl component and was invoked outside the Pibbl ` +
       'renderer.\n' +
-      `Use <${componentName} ... /> in a CRC JSX file or ` +
+      `Use <${componentName} ... /> in a Pibbl JSX file or ` +
       `createElement(${componentName}, props).`,
     );
   } as unknown as T;
@@ -154,8 +193,15 @@ export function derivePrimitive<T extends CRCPrimitiveComponent<any, any>>(
   return derived;
 }
 
-/** Runs one official-package primitive resolver without render side-effect authority. */
-export function crcInternalRunPurePrimitiveResolver<T>(callback: () => T): T {
+/**
+ * Runs one official-package primitive resolver without render side-effect authority.
+ *
+ * @param callback - Synchronous resolver to evaluate with hooks and signal writes forbidden.
+ * @returns The resolver's return value.
+ *
+ * @see {@link PrimitiveCapabilities}
+ */
+export function pibblInternalRunPurePrimitiveResolver<T>(callback: () => T): T {
   const previousComponentRefs = GLOBAL_STATE.componentRefs;
   const previousComponentHookIndex = GLOBAL_STATE.componentHookIndex;
   const previousComponentIsMounting = GLOBAL_STATE.componentIsMounting;
@@ -163,7 +209,7 @@ export function crcInternalRunPurePrimitiveResolver<T>(callback: () => T): T {
   GLOBAL_STATE.componentHookIndex = 0;
   GLOBAL_STATE.componentIsMounting = false;
   try {
-    return withSignalWriteForbidden('CRC pure primitive resolver', callback);
+    return withSignalWriteForbidden('Pibbl pure primitive resolver', callback);
   } finally {
     GLOBAL_STATE.componentRefs = previousComponentRefs;
     GLOBAL_STATE.componentHookIndex = previousComponentHookIndex;

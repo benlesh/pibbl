@@ -1,0 +1,29 @@
+[
+  {
+    "workflow": "final-targeting",
+    "status": "pass",
+    "queryStatus": "pass",
+    "view": "page",
+    "runId": "6ca5ecbc-0aef-430b-b1ff-2c5063a91c6e",
+    "checks": 23,
+    "actions": 8
+  },
+  {
+    "workflow": "final-viz",
+    "status": "pass",
+    "queryStatus": "pass",
+    "view": "page",
+    "runId": "496a81fc-1cec-4436-9144-8c55689d7baa",
+    "checks": 127,
+    "actions": 22
+  },
+  {
+    "workflow": "final-signals",
+    "status": "pass",
+    "queryStatus": "pass",
+    "view": "page",
+    "runId": "869d11b3-8c73-47a3-80e6-57f5d9ef9e6b",
+    "checks": 30,
+    "actions": 6
+  }
+]

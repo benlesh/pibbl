@@ -6,7 +6,8 @@ kind: api
 slug: keyframes
 apiCategory: function
 symbols: [keyframes]
-relatedTypes: [CRCAnimationDefinition, CRCKeyframesOptions, CRCInterpolator]
+relatedTypes:
+  [PibblAnimationDefinition, PibblKeyframesOptions, PibblInterpolator]
 ---
 
 # keyframes
@@ -14,7 +15,7 @@ relatedTypes: [CRCAnimationDefinition, CRCKeyframesOptions, CRCInterpolator]
 `keyframes(options)` creates an immutable seekable definition from at least two
 values. Optional offsets must be nondecreasing and cover the values; easing may
 be one function or one per segment. Numbers interpolate by default, while other
-types require a [`CRCInterpolator`](#/api/types/canvas-runtime#crcinterpolator).
+types require a [`PibblInterpolator`](#/api/types/canvas-runtime#pibblinterpolator).
 
-Related types: [`CRCAnimationDefinition`](#/api/types/canvas-runtime#crcanimationdefinition)
-and [`CRCKeyframesOptions`](#/api/types/canvas-runtime#crckeyframesoptions).
+Related types: [`PibblAnimationDefinition`](#/api/types/canvas-runtime#pibblanimationdefinition)
+and [`PibblKeyframesOptions`](#/api/types/canvas-runtime#pibblkeyframesoptions).

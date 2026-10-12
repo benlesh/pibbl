@@ -1,7 +1,7 @@
 import {
-  Absolute, Flow, Layer, Rectangle, Text, crc, definePrimitive, signal, type CRCController, type SystemStyle,
-  type CRCResponsiveStyle, type RectStyle,
-} from '@crc/core';
+  Absolute, Flow, Layer, Rectangle, Text, pibbl, definePrimitive, signal, type PibblController, type SystemStyle,
+  type PibblResponsiveStyle, type RectStyle,
+} from '@pibbl/core';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { signalGraphSnapshot } from '../src/lib/signals/graph';
 import { responsiveStyleSnapshot } from '../src/lib/style/responsive';
@@ -9,7 +9,7 @@ import { installSchedulerDriverForTest, ManualSchedulerDriver } from '../src/lib
 
 let driver: ManualSchedulerDriver;
 let restore: () => void;
-const controllers: CRCController[] = [];
+const controllers: PibblController[] = [];
 beforeEach(() => {
   driver = new ManualSchedulerDriver();
   restore = installSchedulerDriverForTest(driver);
@@ -20,12 +20,12 @@ afterEach(() => {
   vi.restoreAllMocks();
   document.body.replaceChildren();
 });
-function mount(tree: Parameters<typeof crc>[1]) {
+function mount(tree: Parameters<typeof pibbl>[1]) {
   const canvas = document.createElement('canvas');
   canvas.width = 700;
   canvas.height = 160;
   document.body.append(canvas);
-  const controller = crc(canvas, tree, { pixelRatio: 1 });
+  const controller = pibbl(canvas, tree, { pixelRatio: 1 });
   controllers.push(controller);
   driver.flush(1);
   return controller;
@@ -100,7 +100,7 @@ describe('responsive style work and ownership', () => {
     expect(() => mount(<Flow>
       <Rectangle style={{ width: 10, height: 10, when: [{ query: { minWidth: 0 }, style: { fill } }] }} />
       <Text style={{ when: [{ query: { minWidth: 0 }, style: { lineHeight: 20 } }] }}>unsupported</Text>
-    </Flow>)).toThrow('CRC_STYLE_QUERY_MEASUREMENT');
+    </Flow>)).toThrow('PIBBL_STYLE_QUERY_MEASUREMENT');
     const after = signalGraphSnapshot();
     expect(after.rendererEdges).toBe(before.rendererEdges);
     expect(after.rendererConsumers).toBe(before.rendererConsumers);
@@ -112,7 +112,7 @@ describe('responsive style work and ownership', () => {
   it('cleans up a failed query root while an independent root completes its update', () => {
     const baseline = signalGraphSnapshot();
     const badFill = signal('red');
-    const badStyle = signal<CRCResponsiveStyle<RectStyle>>({ width: 10, height: 10, when: [
+    const badStyle = signal<PibblResponsiveStyle<RectStyle>>({ width: 10, height: 10, when: [
       { query: { minWidth: 0 }, style: { fill: badFill } },
     ] });
     const failing = mount(<Rectangle style={badStyle} />);
@@ -128,7 +128,7 @@ describe('responsive style work and ownership', () => {
       { query: { minWidth: -1 }, style: { fill: badFill } },
     ] });
     goodFill.set('green');
-    expect(() => driver.flush(2)).toThrow('CRC_STYLE_QUERY_BOUND');
+    expect(() => driver.flush(2)).toThrow('PIBBL_STYLE_QUERY_BOUND');
     expect(seen).toEqual(['black', 'green']);
     expect(signalGraphSnapshot().receiverInputProvisions).toBe(baseline.receiverInputProvisions);
     expect(signalGraphSnapshot().rendererEdges).toBe(baseline.rendererEdges + 1);
@@ -206,7 +206,7 @@ describe('responsive style work and ownership', () => {
     const overridden = signal('orange');
     const inactive = signal('blue');
     const reads = [base, active, overridden, inactive].map(value => vi.spyOn(value, 'get'));
-    const style = signal<CRCResponsiveStyle<RectStyle>>({ width: 10, height: 10, fill: base, when: [
+    const style = signal<PibblResponsiveStyle<RectStyle>>({ width: 10, height: 10, fill: base, when: [
       { query: { minWidth: 600 }, style: { fill: overridden } },
       { query: { minHeight: 100 }, style: { fill: active } },
       { query: { maxWidth: 599 }, style: { fill: inactive } },

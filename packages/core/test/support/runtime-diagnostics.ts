@@ -1,16 +1,16 @@
 import type {
   Canvas,
-  CRCInstance,
+  PibblInstance,
 } from '../../src/lib/types';
 import type {
-  CRCEventListenerRegistration,
-  CRCEventTargetRegistration,
+  PibblEventListenerRegistration,
+  PibblEventTargetRegistration,
 } from '../../src/lib/events/registrations';
 import { GLOBAL_STATE } from '../../src/lib/global-state';
-import { CRC_EVENT_TYPES } from '../../src/lib/events/event-definitions';
-import type { CRCEventType } from '../../src/lib/events/types';
+import { PIBBL_EVENT_TYPES } from '../../src/lib/events/event-definitions';
+import type { PibblEventType } from '../../src/lib/events/types';
 
-type EventType = CRCEventType;
+type EventType = PibblEventType;
 type EventHandler = (event: Event) => void;
 
 export interface ResourceLedgerSnapshot {
@@ -85,8 +85,8 @@ interface RegistryRecord {
 }
 
 type DiagnosticRegistration =
-  | CRCEventTargetRegistration
-  | CRCEventListenerRegistration;
+  | PibblEventTargetRegistration
+  | PibblEventListenerRegistration;
 
 interface RegionRegistryRecord {
   regions: Set<DiagnosticRegistration>;
@@ -97,7 +97,7 @@ interface RegionRegistryRecord {
   duplicateReleases: Record<EventType, number>;
 }
 
-const EVENT_TYPES: readonly EventType[] = CRC_EVENT_TYPES;
+const EVENT_TYPES: readonly EventType[] = PIBBL_EVENT_TYPES;
 
 function captureFrom(options?: boolean | AddEventListenerOptions): boolean {
   return typeof options === 'boolean' ? options : options?.capture ?? false;
@@ -423,7 +423,7 @@ export class RuntimeDiagnostics {
     window.cancelAnimationFrame = this.originalCancelAnimationFrame;
   }
 
-  private observeRegistries(instances: readonly CRCInstance[]): void {
+  private observeRegistries(instances: readonly PibblInstance[]): void {
     const eventRoots = new Set(instances.map(instance => instance.eventRoot));
     for (const eventRoot of eventRoots) {
       for (const type of EVENT_TYPES) {
@@ -516,12 +516,12 @@ export class RuntimeDiagnostics {
     }
   }
 
-  private getOwnedInstances(): CRCInstance[] {
+  private getOwnedInstances(): PibblInstance[] {
     const ownedCanvases = new Set<Canvas>([this.canvas]);
     let foundNewCanvas = true;
     while (foundNewCanvas) {
       foundNewCanvas = false;
-      for (const [canvas, instance] of GLOBAL_STATE.crcInstances) {
+      for (const [canvas, instance] of GLOBAL_STATE.pibblInstances) {
         if (instance.parent && ownedCanvases.has(instance.parent) && !ownedCanvases.has(canvas)) {
           ownedCanvases.add(canvas);
           foundNewCanvas = true;
@@ -529,8 +529,8 @@ export class RuntimeDiagnostics {
       }
     }
     return Array.from(ownedCanvases)
-      .map(canvas => GLOBAL_STATE.crcInstances.get(canvas))
-      .filter((instance): instance is CRCInstance => Boolean(instance));
+      .map(canvas => GLOBAL_STATE.pibblInstances.get(canvas))
+      .filter((instance): instance is PibblInstance => Boolean(instance));
   }
 }
 
@@ -584,8 +584,8 @@ function focusDiagnosticState(policy: unknown): {
     candidates?: readonly { directionalBoundary?: unknown }[];
     committedBoundaries?: ReadonlySet<unknown>;
     coordinator?: { managers?: ReadonlySet<unknown> };
-    logicalFocusTarget?: CRCEventTargetRegistration;
-    pendingSpaceTarget?: CRCEventTargetRegistration;
+    logicalFocusTarget?: PibblEventTargetRegistration;
+    pendingSpaceTarget?: PibblEventTargetRegistration;
   };
   const candidateBoundaries = new Set(
     manager.candidates

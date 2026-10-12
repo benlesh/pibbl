@@ -85,7 +85,7 @@ routing change. Search-open, Test Lab, and every unrelated baseline remained
 byte-identical.
 
 The Studio visual run reported: `Matched diagram-editor teaser at 960×600 with
-zero differing pixels.` and `Matched 8 CRC studio visual baselines.` No other
+zero differing pixels.` and `Matched 8 Pibbl studio visual baselines.` No other
 existing visual baseline was updated.
 
 ## Aggregate trust evidence

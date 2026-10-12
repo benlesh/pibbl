@@ -9,7 +9,7 @@ import type {
   ScenarioDefinition,
   ScenarioMountContext,
 } from './types';
-import { crc } from '@crc/core';
+import { pibbl } from '@pibbl/core';
 import { EventTraceRecorder } from './event-trace';
 import type { EventTraceInput, TraceEventType } from './event-trace';
 import {
@@ -41,13 +41,14 @@ const FIXTURES: readonly InteractionLabFixture[] = [
   'transparent',
   'interaction-width',
   'no-hit',
-  'observer',
-  'observer-remove',
-  'observer-replace',
-  'observer-throwing',
   'remove-target-after-transition',
 ];
 
+/**
+ * Stable action identifiers accepted by the interaction lab scenario.
+ *
+ * @see {@link InteractionLabAction}
+ */
 export const INTERACTION_LAB_ACTION_IDS: readonly Exclude<
   InteractionLabAction,
   'mount' | 'reset'
@@ -67,8 +68,6 @@ function initialState(lastAction: InteractionLabAction = 'mount'): InteractionLa
     lastAction,
     lastHandlerGeneration: null,
     leftHandlerEnabled: true,
-    observerGeneration: 1,
-    observerMutationComplete: false,
     rightVisible: true,
     topPaintedLast: true,
     topVisible: true,
@@ -187,7 +186,7 @@ async function mountInteractionLab(
 
   const render = () => {
     assertActive();
-    crc(context.canvas, createInteractionLabScene({ state, record }), {
+    pibbl(context.canvas, createInteractionLabScene({ state, record }), {
       signal: abortController.signal,
     });
     context.onStateChange?.({ ...state });
@@ -205,20 +204,6 @@ async function mountInteractionLab(
       state = { ...state, rightVisible: false };
       void render();
       return;
-    }
-
-    if (
-      (state.fixture === 'observer-remove' || state.fixture === 'observer-replace') &&
-      !state.observerMutationComplete &&
-      input.type === 'mousemove' &&
-      input.target === 'observer-mutator'
-    ) {
-      state = {
-        ...state,
-        observerGeneration: state.fixture === 'observer-replace' ? 2 : state.observerGeneration,
-        observerMutationComplete: true,
-      };
-      void render();
     }
   };
 
@@ -251,8 +236,6 @@ async function mountInteractionLab(
         await transition(actionId as InteractionLabAction, {
           fixture,
           leftHandlerEnabled: true,
-          observerGeneration: 1,
-          observerMutationComplete: false,
           rightVisible: true,
           topPaintedLast: true,
           topVisible: true,
@@ -332,6 +315,12 @@ function formatTrace(state: Readonly<InteractionLabState>): string {
   }).join(' → ');
 }
 
+/**
+ * Runnable interaction lab scenario with observable state and deterministic actions.
+ *
+ * @see {@link ScenarioDefinition}
+ * @see {@link InteractionLabState}
+ */
 export const interactionLabScenario: ScenarioDefinition<InteractionLabState> = {
   id: 'interaction-trace-lab',
   sourceId: INTERACTION_LAB_SOURCE_ID,

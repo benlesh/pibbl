@@ -1,12 +1,12 @@
 import type {
-  CRCConfig,
-  CRCFit,
-  CRCSurfaceSnapshot,
+  PibblConfig,
+  PibblFit,
+  PibblSurfaceSnapshot,
   ResolvedSurfaceConfig,
   SurfaceDisplaySize,
 } from './types.js';
 
-const FITS = new Set<CRCFit>([
+const FITS = new Set<PibblFit>([
   'contain',
   'cover',
   'fill',
@@ -16,14 +16,14 @@ const FITS = new Set<CRCFit>([
 
 export function validateSurfaceConfig(
   canvas: HTMLCanvasElement,
-  config?: CRCConfig,
+  config?: PibblConfig,
 ): ResolvedSurfaceConfig {
   const pixelRatio = config?.pixelRatio ?? 'device';
   validatePixelRatio(pixelRatio);
 
   if (config?.viewport === 'responsive') {
     if ('fit' in config) {
-      throw new Error('CRC responsive viewport does not support fit.');
+      throw new Error('Pibbl responsive viewport does not support fit.');
     }
     return { mode: 'responsive', pixelRatio };
   }
@@ -34,7 +34,7 @@ export function validateSurfaceConfig(
   validatePositiveFinite(height, 'viewport height');
   const fit = config?.fit ?? 'contain';
   if (!FITS.has(fit)) {
-    throw new Error(`Invalid CRC fit: ${String(fit)}.`);
+    throw new Error(`Invalid Pibbl fit: ${String(fit)}.`);
   }
   return { mode: 'fixed', width, height, fit, pixelRatio };
 }
@@ -43,7 +43,7 @@ export function resolveSurface(
   config: ResolvedSurfaceConfig,
   display: SurfaceDisplaySize,
   pixelRatio: number,
-): CRCSurfaceSnapshot | undefined {
+): PibblSurfaceSnapshot | undefined {
   validatePositiveFinite(pixelRatio, 'pixelRatio');
   if (!(display.width > 0) || !(display.height > 0)) {
     return undefined;
@@ -98,7 +98,7 @@ export function createLayerSurface(
   height: number,
   densityX: number,
   densityY: number,
-): CRCSurfaceSnapshot {
+): PibblSurfaceSnapshot {
   validatePositiveFinite(width, 'layer width');
   validatePositiveFinite(height, 'layer height');
   validatePositiveFinite(densityX, 'layer densityX');
@@ -125,7 +125,7 @@ export function createLayerSurface(
 }
 
 function resolveProjection(
-  fit: CRCFit,
+  fit: PibblFit,
   logicalWidth: number,
   logicalHeight: number,
   displayWidth: number,
@@ -176,8 +176,8 @@ function createSnapshot({
   offsetX,
   offsetY,
 }: {
-  mode: CRCSurfaceSnapshot['mode'];
-  fit: CRCFit;
+  mode: PibblSurfaceSnapshot['mode'];
+  fit: PibblFit;
   logicalWidth: number;
   logicalHeight: number;
   display: SurfaceDisplaySize;
@@ -189,7 +189,7 @@ function createSnapshot({
   scaleY: number;
   offsetX: number;
   offsetY: number;
-}): CRCSurfaceSnapshot {
+}): PibblSurfaceSnapshot {
   const renderTransform = new DOMMatrix()
     .scale(backingPixelsPerCssPixelX, backingPixelsPerCssPixelY)
     .translate(offsetX, offsetY)
@@ -228,6 +228,6 @@ function validatePixelRatio(pixelRatio: 'device' | number): void {
 
 function validatePositiveFinite(value: number, name: string): void {
   if (!Number.isFinite(value) || value <= 0) {
-    throw new Error(`CRC ${name} must be a finite number greater than zero.`);
+    throw new Error(`Pibbl ${name} must be a finite number greater than zero.`);
   }
 }

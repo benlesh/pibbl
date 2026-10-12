@@ -1,4 +1,4 @@
-import { Circle, crc, useSignal, Rectangle, type CRCController } from "@crc/core";
+import { Circle, pibbl, useSignal, Rectangle, type PibblController } from "@pibbl/core";
 
 function CircleStudy() {
   const active = useSignal(false);
@@ -22,6 +22,6 @@ function CircleStudy() {
   ];
 }
 
-export default function mount(canvas: HTMLCanvasElement): CRCController {
-  return crc(canvas, <CircleStudy />);
+export default function mount(canvas: HTMLCanvasElement): PibblController {
+  return pibbl(canvas, <CircleStudy />);
 }

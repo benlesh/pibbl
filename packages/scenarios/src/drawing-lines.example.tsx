@@ -1,9 +1,24 @@
-import { HorizontalLine, Line, Rectangle, VerticalLine } from '@crc/core';
+import type { drawingLinesScenarioEntry } from './catalog.js';
+import { HorizontalLine, Line, Rectangle, VerticalLine } from '@pibbl/core';
 export const DRAWING_LINES_SOURCE_ID = 'drawing-lines-example';
+/**
+ * Actions supported by the drawing lines scenario's public controller.
+ *
+ * @see {@link DrawingLinesState}
+ */
 export type DrawingLinesAction = 'mount' | 'reset' | 'update-lines';
+/**
+ * Observable state exposed by the drawing lines scenario for controls and assertions.
+ *
+ * @see {@link DrawingLinesAction}
+ * @see {@link drawingLinesScenarioEntry}
+ */
 export interface DrawingLinesState {
+  /** Last action recorded or configured by this scenario. See {@link DrawingLinesAction}. */
   lastAction: DrawingLinesAction;
+  /** Revision recorded or configured by this scenario. See {@link DrawingLinesState}. */
   revision: number;
+  /** Updated recorded or configured by this scenario. See {@link DrawingLinesState}. */
   updated: boolean;
 }
 interface DrawingLinesSceneProps {

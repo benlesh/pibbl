@@ -1,9 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { crc } from '../crc.js';
+import { pibbl } from '../pibbl.js';
 import { executeRender } from '../execute-render.js';
-import { clearSharedState, getCRCInstance } from '../global-state.js';
-import { mountCRC } from '../mount-crc.js';
-import type { CRCComponent, CRCNode } from '../types.js';
+import { clearSharedState, getPibblInstance } from '../global-state.js';
+import { mountPibbl } from '../mount-pibbl.js';
+import type { PibblComponent, PibblNode } from '../types.js';
 import {
   materializeContainerChildren,
   materializeTextChildren,
@@ -34,7 +34,7 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-describe('recursive CRC container children', () => {
+describe('recursive Pibbl container children', () => {
   it('constructs the shared traversal probe as a plain function element', () => {
     const rendered: string[] = [];
     const element = probe({ value: 'not-rendered', rendered });
@@ -46,7 +46,7 @@ describe('recursive CRC container children', () => {
   it('returns one frozen direct-element sequence from recursive container input', () => {
     const rendered: string[] = [];
     let executions = 0;
-    function* children(): Iterable<CRCNode> {
+    function* children(): Iterable<PibblNode> {
       executions++;
       yield probe({ key: 'a', value: 'A', rendered });
       yield [null, probe({ key: 'b', value: 'B', rendered })];
@@ -72,7 +72,7 @@ describe('recursive CRC container children', () => {
     expect(() => materializeTextChildren(
       probe({ value: 'invalid', rendered: [] }) as never,
       'Text',
-    )).toThrowError(/Text.*CRC element/i);
+    )).toThrowError(/Text.*Pibbl element/i);
   });
 
   it('resolves signals at declared text grammar positions', () => {
@@ -100,7 +100,7 @@ describe('recursive CRC container children', () => {
 
     const rendered: string[] = [];
     const nestedNode = signal([
-      signal<CRCNode>(probe({ value: 'nested', rendered })),
+      signal<PibblNode>(probe({ value: 'nested', rendered })),
     ] as const);
     expect(() => materializeContainerChildren(nestedNode as never, 'Group'))
       .toThrowError(/Group.*signal.*resolved/iu);
@@ -113,13 +113,13 @@ describe('recursive CRC container children', () => {
     let generatorExecutions = 0;
     let recursiveIterableExecutions = 0;
 
-    function* rows(): Iterable<CRCNode> {
+    function* rows(): Iterable<PibblNode> {
       generatorExecutions++;
       yield probe({ key: 'a', value: 'A', rendered });
       yield [false, probe({ key: 'b', value: 'B', rendered })];
     }
 
-    const recursiveIterable: Iterable<CRCNode> = {
+    const recursiveIterable: Iterable<PibblNode> = {
       *[Symbol.iterator]() {
         recursiveIterableExecutions++;
         yield [
@@ -133,7 +133,7 @@ describe('recursive CRC container children', () => {
       },
     };
 
-    const controller = crc(canvas, jsx(Fragment, {
+    const controller = pibbl(canvas, jsx(Fragment, {
       children: [
         rows(),
         jsx(Fragment, { children: recursiveIterable }),
@@ -151,32 +151,32 @@ describe('recursive CRC container children', () => {
   it('accepts an initially empty root and commits an explicit undefined root update', async () => {
     const canvas = createCanvas();
     const rendered: string[] = [];
-    const controller = crc(canvas, undefined);
+    const controller = pibbl(canvas, undefined);
     await nextFrame();
 
-    expect(getCRCInstance(canvas).root).toBeUndefined();
+    expect(getPibblInstance(canvas).root).toBeUndefined();
 
-    crc(canvas, probe({ value: 'mounted', rendered }));
+    pibbl(canvas, probe({ value: 'mounted', rendered }));
     await nextFrame();
     expect(rendered).toEqual(['mounted']);
 
-    crc(canvas, undefined);
+    pibbl(canvas, undefined);
     await nextFrame();
-    expect(getCRCInstance(canvas).root).toBeUndefined();
-    expect(getCRCInstance(canvas).refs.size).toBe(0);
+    expect(getPibblInstance(canvas).root).toBeUndefined();
+    expect(getPibblInstance(canvas).refs.size).toBe(0);
     controller.dispose();
   });
 
   it('owns component-result signals at the receiving component', async () => {
     const canvas = createCanvas();
     const rendered: string[] = [];
-    const selected = signal<CRCNode>(probe({ value: 'A', rendered }));
-    const Receiver = (() => selected) as unknown as CRCComponent<{}>;
-    const controller = crc(canvas, jsx(Receiver, {}));
+    const selected = signal<PibblNode>(probe({ value: 'A', rendered }));
+    const Receiver = (() => selected) as unknown as PibblComponent<{}>;
+    const controller = pibbl(canvas, jsx(Receiver, {}));
     await nextFrame();
 
     expect(rendered).toEqual(['A']);
-    expect(Array.from(getCRCInstance(canvas).refs.values())
+    expect(Array.from(getPibblInstance(canvas).refs.values())
       .find(ref => ref.element.type === Receiver)?.signalConsumer)
       .toBeDefined();
 
@@ -188,12 +188,12 @@ describe('recursive CRC container children', () => {
 
   it('makes keyed Fragments own child signals and leaves unkeyed ones transparent', async () => {
     const rendered: string[] = [];
-    const selected = signal<CRCNode>(probe({ value: 'keyed', rendered }));
+    const selected = signal<PibblNode>(probe({ value: 'keyed', rendered }));
     const keyedCanvas = createCanvas();
     const keyed = jsx(Fragment, { children: selected as never }, 'owner');
-    const keyedController = crc(keyedCanvas, keyed);
+    const keyedController = pibbl(keyedCanvas, keyed);
     await nextFrame();
-    const keyedRefs = Array.from(getCRCInstance(keyedCanvas).refs.values());
+    const keyedRefs = Array.from(getPibblInstance(keyedCanvas).refs.values());
 
     expect(rendered).toEqual(['keyed']);
     expect(keyedRefs.find(ref => ref.element.type === Fragment)?.signalConsumer)
@@ -204,10 +204,10 @@ describe('recursive CRC container children', () => {
     const unkeyedCanvas = createCanvas();
     const Receiver = (() => jsx(Fragment, {
       children: selected as never,
-    })) as CRCComponent<{}>;
-    const unkeyedController = crc(unkeyedCanvas, jsx(Receiver, {}));
+    })) as PibblComponent<{}>;
+    const unkeyedController = pibbl(unkeyedCanvas, jsx(Receiver, {}));
     await nextFrame();
-    const unkeyedRefs = Array.from(getCRCInstance(unkeyedCanvas).refs.values());
+    const unkeyedRefs = Array.from(getPibblInstance(unkeyedCanvas).refs.values());
 
     expect(rendered).toEqual(['keyed']);
     expect(unkeyedRefs.find(ref => ref.element.type === Receiver)?.signalConsumer)
@@ -216,9 +216,9 @@ describe('recursive CRC container children', () => {
     unkeyedController.dispose();
   });
 
-  it('rejects a bare signal at the CRC root', () => {
-    expect(() => renderNow(signal<CRCNode>(undefined) as never))
-      .toThrowError(/CRC root.*signal.*component/iu);
+  it('rejects a bare signal at the Pibbl root', () => {
+    expect(() => renderNow(signal<PibblNode>(undefined) as never))
+      .toThrowError(/Pibbl root.*signal.*component/iu);
   });
 
   it('rejects duplicate keys in one sibling scope after transparent flattening', () => {
@@ -249,14 +249,14 @@ describe('recursive CRC container children', () => {
     ['a symbol', Symbol('child'), /Receiver.*symbol/i],
     ['a plain object', { child: true }, /Receiver.*object/i],
   ])('rejects %s with receiver and jsxDEV source context', (_label, child, message) => {
-    const Receiver = (() => child) as CRCComponent<any>;
+    const Receiver = (() => child) as PibblComponent<any>;
     const receiver = jsxDEV(
       Receiver as any,
       { style: {} },
       undefined,
       false,
       {
-        fileName: 'scene.crc.tsx',
+        fileName: 'scene.pibbl.tsx',
         lineNumber: 17,
         columnNumber: 9,
       },
@@ -264,7 +264,7 @@ describe('recursive CRC container children', () => {
     );
 
     expect(() => renderNow(receiver)).toThrowError(message);
-    expect(() => renderNow(receiver)).toThrowError(/scene\.crc\.tsx:17:9/);
+    expect(() => renderNow(receiver)).toThrowError(/scene\.pibbl\.tsx:17:9/);
   });
 
   it.each([
@@ -275,14 +275,14 @@ describe('recursive CRC container children', () => {
       $$typeof: reactBrand,
       type: 'div',
       props: {},
-    })) as unknown as CRCComponent<any>;
+    })) as unknown as PibblComponent<any>;
     const receiver = jsxDEV(
       Receiver as any,
       { style: {} },
       undefined,
       false,
       {
-        fileName: 'react-scene.crc.tsx',
+        fileName: 'react-scene.pibbl.tsx',
         lineNumber: 4,
         columnNumber: 3,
       },
@@ -290,16 +290,16 @@ describe('recursive CRC container children', () => {
     );
 
     expect(() => renderNow(receiver)).toThrowError(
-      'CRC received a React element. This file is using the React JSX runtime.\n' +
-      'Set jsxImportSource to "@crc/core" or add ' +
-      '/** @jsxImportSource @crc/core */.',
+      'Pibbl received a React element. This file is using the React JSX runtime.\n' +
+      'Set jsxImportSource to "@pibbl/core" or add ' +
+      '/** @jsxImportSource @pibbl/core */.',
     );
   });
 });
 
 function renderNow(root: unknown): void {
   const canvas = createCanvas();
-  mountCRC(canvas, root as never);
+  mountPibbl(canvas, root as never);
   executeRender(canvas, 0);
 }
 

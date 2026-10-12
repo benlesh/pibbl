@@ -1,4 +1,5 @@
-import { dropShadow } from '@crc/core/filters';
+import type { particleCelebrationLabScenarioEntry } from './catalog.js';
+import { dropShadow } from '@pibbl/core/filters';
 import {
   Circle,
   Clip,
@@ -7,7 +8,7 @@ import {
   Rectangle,
   Text,
   type WritableSignal,
-} from '@crc/core';
+} from '@pibbl/core';
 import {
   Particles2D,
   useParticleSystem,
@@ -15,30 +16,54 @@ import {
   particleChoice,
   particleCurve,
   particleRange,
-  type CRCParticleSystem,
-  type CRCParticleSystemEvent,
-} from '@crc/particles';
+  type PibblParticleSystem,
+  type PibblParticleSystemEvent,
+} from '@pibbl/core/particles';
 
 // prettier-ignore
 export const PARTICLE_CELEBRATION_LAB_SOURCE_ID = 'first-class-particle-celebration-laboratory-example';
 
+/**
+ * Actions supported by the particle celebration lab scenario's public controller.
+ *
+ * @see {@link ParticleCelebrationLabState}
+ */
 export type ParticleCelebrationLabAction =
   'launch' | 'pause' | 'resume' | 'replay' | 'clear' | 'toggle-glow';
 
 export type CelebrationPoint = readonly [x: number, y: number];
 
+/**
+ * Observable state exposed by the particle celebration lab scenario for controls and assertions.
+ *
+ * @see {@link ParticleCelebrationLabAction}
+ * @see {@link particleCelebrationLabScenarioEntry}
+ */
 export interface ParticleCelebrationLabState {
+  /** Animation recorded or configured by this scenario. See {@link ParticleCelebrationLabState}. */
   readonly animation: 'ready' | 'playing' | 'paused';
+  /**
+   * Selected points recorded or configured by this scenario. See
+   * {@link ParticleCelebrationLabState}.
+   */
   readonly selectedPoints: number;
+  /**
+   * Celebrations recorded or configured by this scenario. See {@link ParticleCelebrationLabState}
+   * .
+   */
   readonly celebrations: number;
+  /**
+   * Last action recorded or configured by this scenario. See {@link ParticleCelebrationLabState}.
+   */
   readonly lastAction: string;
+  /** Glow recorded or configured by this scenario. See {@link ParticleCelebrationLabState}. */
   readonly glow: boolean;
 }
 
 export interface ParticleCelebrationLabModel {
   readonly glowEnabled: WritableSignal<boolean>;
   readonly selectedPoints: WritableSignal<readonly CelebrationPoint[]>;
-  system: CRCParticleSystem | undefined;
+  system: PibblParticleSystem | undefined;
   celebrations: number;
   lastAction: string;
   lastLaunchPoints: readonly CelebrationPoint[];
@@ -125,7 +150,7 @@ export const particleCelebrationEffect = defineParticleEffect2D({
 });
 
 export function emitCelebrationBurst(
-  system: CRCParticleSystem,
+  system: PibblParticleSystem,
   x: number,
   y: number,
 ): void {
@@ -141,7 +166,7 @@ export function emitCelebrationBurst(
 
 function recordEvent(
   model: ParticleCelebrationLabModel,
-  event: CRCParticleSystemEvent,
+  event: PibblParticleSystemEvent,
 ): void {
   if (
     event.type === 'burst-accepted' &&
@@ -200,7 +225,7 @@ function ParticleCelebrationOwner({
         height: 360,
         filter: glowEnabled
           ? dropShadow({
-              
+
               offsetX: 0,
               offsetY: 5,
               blurRadius: 5,

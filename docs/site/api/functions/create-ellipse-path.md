@@ -12,7 +12,7 @@ relatedTypes: [EllipsePathOptions]
 # createEllipsePath
 
 ```ts
-import { createEllipsePath, Path } from "@crc/core";
+import { createEllipsePath, Path } from "@pibbl/core";
 ```
 
 [`EllipsePathOptions`](#/api/types/elements-components#ellipsepathoptions) is accepted by `createEllipsePath(options): Path2D`, which creates a fresh path

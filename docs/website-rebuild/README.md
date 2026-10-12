@@ -1,17 +1,25 @@
-# CRC website rebuild planning pack
+# Pibbl website rebuild planning pack
 
-Draft for Ben Lesh and Jessica Sachs · October 2, 2026
+Draft for Ben Lesh and Jessica Sachs · Updated October 4, 2026
 
-This pack separates the website rebuild into content strategy, product behavior, and visual design. It is meant to be read in the repository or shared as one folder. It proposes a clearer website and much stronger demonstrations of CRC, without starting implementation or choosing the site's visual identity.
+This pack separates the website rebuild into content strategy, product behavior, and visual design. It is meant to be read in the repository or shared as one folder. It proposes a clearer website and much stronger demonstrations of Pibbl, without starting implementation or choosing the site's visual identity.
 
 The starting problem is Ben's assessment: the current website feels disorganized, many examples are uninteresting, and some compelling examples bury their point in too much code. The response should improve what the site says and teaches before deciding how it looks.
+
+## October 4 direction
+
+Prioritize comprehensive agent guidance alongside concise human pages. Add separate shapes, filters, textures, and reaction-diffusion catalogs; advanced composition guides; directly retrievable Markdown companions; a versioned public content catalog; and discoverable installable skills. Start with the [updated documentation architecture](12-documentation-architecture.md), [agent documentation and skills plan](13-agent-documentation-and-skills.md), and [platform recommendation](14-documentation-platform-options.md). These refine the earlier navigation proposals. Platform selection and implementation remain pending.
+
+## Ordinary HTML integration
+
+The [Add Pibbl to your site section](15-add-pibbl-to-your-site.md) distinguishes Pibbl-centered applications from existing HTML apps enhanced with Pibbl. It defines native-control integration patterns, 40 recipe ideas, and an initial collection of buttons, forms, image reveals, and hero transitions.
 
 ## Start here
 
 | Document                                                                 | What it helps decide                                                      |
 | ------------------------------------------------------------------------ | ------------------------------------------------------------------------- |
 | [Brief and decisions](01-brief-and-decisions.md)                         | Requirements, recommendations, open questions, and scope                  |
-| [Positioning and homepage](02-positioning-and-homepage.md)               | CRC's pitch, proof, and an ambitious interactive homepage concept         |
+| [Positioning and homepage](02-positioning-and-homepage.md)               | Pibbl's pitch, proof, and an ambitious interactive homepage concept       |
 | [Site organization](03-site-organization.md)                             | Navigation, API taxonomy, search, and user journeys                       |
 | [API documentation directives](04-api-documentation-directives.md)       | Repeatable instructions for clear, accurate reference pages               |
 | [Examples and gallery directives](05-examples-and-gallery-directives.md) | Concise teaching examples, richer showcases, and screenshot-led discovery |

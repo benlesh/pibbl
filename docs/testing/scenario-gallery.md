@@ -1,11 +1,11 @@
 # Interactive studio and automated test labs
 
-CRC has two deliberately different catalogs. The public Studio presents focused,
+Pibbl has two deliberately different catalogs. The public Studio presents focused,
 interactive learning examples alongside Learn and API documentation; the
 automated-test catalog preserves exhaustive deterministic scenarios used by
 browser verification. The Studio presents 61 focused lessons and 26 test labs.
 Both catalogs use supported public APIs. The Three.js lessons mount through the
-official `@crc/three` adapter and otherwise use the same `@crc/core` runtime as
+official `@pibbl/three` adapter and otherwise use the same `@pibbl/core` runtime as
 the Canvas examples.
 
 ## Architecture
@@ -17,10 +17,10 @@ test catalog ─────── scenario controller ────────�
 ```
 
 - `packages/scenarios/src/learning-catalog.ts` contains the public lesson order, section, API tags, two objectives, prompts, relationships, Canvas dimensions, canonical source path, validation, and lazy loaders.
-- Every `packages/scenarios/src/learning/**/*.example.tsx` file is a concise lesson with one contract: `export default function mount(canvas: HTMLCanvasElement): CRCController`.
+- Every `packages/scenarios/src/learning/**/*.example.tsx` file is a concise lesson with one contract: `export default function mount(canvas: HTMLCanvasElement): PibblController`.
 - `packages/scenarios/src/catalog.ts` retains the test-only scenario metadata, actions, source identity, visibility, maturity, validation, and lazy loaders.
 - Every non-learning `packages/scenarios/src/**/*.example.tsx` file remains an exhaustive scenario controller with state, actions, render settlement, reset, and disposal.
-- `packages/scenarios/src/surface.ts` is an optional gallery surface adapter available only through the explicit `@crc/scenarios/surface` subpath. It is not exported from the package root or imported by the catalog.
+- `packages/scenarios/src/surface.ts` is an optional gallery surface adapter available only through the explicit `@pibbl/scenarios/surface` subpath. It is not exported from the package root or imported by the catalog.
 - `playground/src/learning-sources.ts` and `playground/src/scenario-sources.ts` are the Vite-specific raw-source adapters. Learning source is route-lazy; test source becomes a collapsed read-only editor only when opened.
 - `tooling/scenario-catalog.ts` independently discovers both sets from disk, validates their source contracts, loads every definition, and checks the generated [example catalog index](../scenario-index.md).
 - Browser tests mount every lesson and every test scenario from those same modules.
@@ -49,10 +49,10 @@ Its build-generated MiniSearch data is loaded on demand in the browser, makes
 no remote request, and excludes scenario IDs, test metadata, and every
 automated test-lab route.
 
-Each lesson loads Monaco and the TypeScript worker on demand. CRC declarations provide semantic errors, completion items, and hover types. Valid edits are emitted by the worker and run in a replaceable opaque iframe with `sandbox="allow-scripts"`; invalid edits leave the last successful preview in place. Share links use a versioned compressed hash payload and fall back safely when malformed or oversized.
+Each lesson loads Monaco and the TypeScript worker on demand. Pibbl declarations provide semantic errors, completion items, and hover types. Valid edits are emitted by the worker and run in a replaceable opaque iframe with `sandbox="allow-scripts"`; invalid edits leave the last successful preview in place. Share links use a versioned compressed hash payload and fall back safely when malformed or oversized.
 
 The Canvas lessons demonstrate the shipped JSX, drawing, layout, DOM-aligned
-user-event, focus, and directional-keyboard contracts. CRC focus lessons use
+user-event, focus, and directional-keyboard contracts. Pibbl focus lessons use
 the Canvas as the one native focus host and explicit logical targets; they do
 not imply generated semantic DOM descendants or an accessibility tree. The
 surrounding Studio navigation and controls remain ordinary accessible DOM.
@@ -97,7 +97,7 @@ The approved baseline is `packages/core/test/visual-baselines/dep-01-smoke.expec
 To prove the failure path without editing source or baselines:
 
 ```sh
-VITE_CRC_VISUAL_DRILL=1 pnpm test:smoke
+VITE_PIBBL_VISUAL_DRILL=1 pnpm test:smoke
 ```
 
 This intentionally compares the legitimate purple update state against the approved blue reset baseline. The command must fail and produce `smoke.expected.png`, `smoke.actual.png`, and `smoke.diff.png`. Run the normal command afterward and require green. Baselines are adopted only after inspecting all images; CI never updates them.

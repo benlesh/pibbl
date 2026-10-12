@@ -7,7 +7,11 @@ slug: repeat
 apiCategory: function
 symbols: [repeat]
 relatedTypes:
-  [CRCAnimationProgram, CRCAnimationRepeatOptions, CRCAnimationRepeatDirection]
+  [
+    PibblAnimationProgram,
+    PibblAnimationRepeatOptions,
+    PibblAnimationRepeatDirection,
+  ]
 ---
 
 # repeat
@@ -17,6 +21,6 @@ infinity. Direction is `normal`, `reverse`, `alternate`, or
 `alternate-reverse`. Infinite repeats are valid only where the surrounding
 composition can schedule them unambiguously.
 
-Related types: [`CRCAnimationProgram`](#/api/types/canvas-runtime#crcanimationprogram),
-[`CRCAnimationRepeatOptions`](#/api/types/canvas-runtime#crcanimationrepeatoptions),
-and [`CRCAnimationRepeatDirection`](#/api/types/canvas-runtime#crcanimationrepeatdirection).
+Related types: [`PibblAnimationProgram`](#/api/types/canvas-runtime#pibblanimationprogram),
+[`PibblAnimationRepeatOptions`](#/api/types/canvas-runtime#pibblanimationrepeatoptions),
+and [`PibblAnimationRepeatDirection`](#/api/types/canvas-runtime#pibblanimationrepeatdirection).

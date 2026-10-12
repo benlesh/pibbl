@@ -1,7 +1,7 @@
 import { InkSimulation } from './reference-simulation.ts';
 import { TextureRaster } from './reference-presentation.ts';
-import { paletteLut, texturePalettes } from '../../packages/textures/src/lib/palette.ts';
-import { crc, createElement, defineRenderLayer } from '../../packages/core/src/index.ts';
+import { paletteLut, texturePalettes } from '../../packages/core/src/features/textures/lib/palette.ts';
+import { pibbl, createElement, defineRenderLayer } from '../../packages/core/src/index.ts';
 import { ManualSchedulerDriver, installSchedulerDriverForTest } from '../../packages/core/src/lib/scheduler/testing.ts';
 import { WasmSimulation } from './runtime.mjs';
 import { OptimizedSimulation } from './optimized.mjs';
@@ -83,7 +83,7 @@ window.runBenchmark = async ({rounds = 3, samples = 80, warmup = 30} = {}) => {
         let controller;
         try {
           const start = performance.now();
-          controller = crc(canvas, createElement(Layer, {style:{width:832,height:400}}), {pixelRatio:1});
+          controller = pibbl(canvas, createElement(Layer, {style:{width:832,height:400}}), {pixelRatio:1});
           driver.flush(0);
           const setupMs = performance.now()-start;
           let tick = 0;
@@ -115,7 +115,7 @@ window.startPreview = () => {
     heading.textContent=mode; canvas.width=512; canvas.height=320;
     section.append(heading,canvas); document.querySelector('#previews').append(section);
     const Layer=layer(mode,256,160,8,{});
-    liveControllers.push(crc(canvas,createElement(Layer,{style:{width:512,height:320}}),{pixelRatio:1}));
+    liveControllers.push(pibbl(canvas,createElement(Layer,{style:{width:512,height:320}}),{pixelRatio:1}));
   }
   document.querySelector('#status').textContent='Live comparison: identical seed, palette and eight steps per scheduled frame.';
 };

@@ -1,8 +1,8 @@
 import { definePrimitive } from "../define-primitive.js";
 import type {
-  CRCEventFocusOptions,
-  CRCEventHandlers,
-  CRCEventParticipationOptions,
+  PibblEventFocusOptions,
+  PibblEventHandlers,
+  PibblEventParticipationOptions,
 } from "../events/types.js";
 import {
   resolveLocalOffset,
@@ -18,7 +18,7 @@ import type {
   ResolvedDrawingStyle,
 } from "../style/types.js";
 import type { RenderingContext2D, SystemStyle } from "../types.js";
-import type { CRCPhysics2DPropExtension } from "../types.js";
+import type { PibblPhysics2DPropExtension } from "../types.js";
 import { wedgeBounds } from "./arc-geometry.js";
 import {
   createWedgePath,
@@ -31,16 +31,45 @@ import {
   resolveNonnegativeShapeLength,
 } from "./shape-style.js";
 
-export interface WedgeProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions, CRCPhysics2DPropExtension {}
+/**
+ * Authored inputs for Wedge, including the declared data and presentation options.
+ *
+ * @see {@link PibblEventHandlers}
+ * @see {@link PibblEventParticipationOptions}
+ * @see {@link PibblPhysics2DPropExtension}
+ * @see {@link Wedge}
+ */
+export interface WedgeProps extends PibblEventHandlers, PibblEventFocusOptions, PibblEventParticipationOptions, PibblPhysics2DPropExtension {}
 
+/**
+ * Supported geometry and presentation properties for Wedge.
+ *
+ * @see {@link SystemStyle}
+ * @see {@link PaintStyle}
+ * @see {@link CursorStyle}
+ * @see {@link BoxStyle}
+ * @see {@link LayoutItemStyle}
+ * @see {@link Length}
+ * @see {@link Wedge}
+ */
 export interface WedgeStyle
   extends SystemStyle, PaintStyle, CursorStyle, BoxStyle, LayoutItemStyle {
+  /** Radius in the coordinate system of this geometry or effect. See {@link Length}. */
   radius: Exclude<Length, "auto">;
+  /** Angle at which the arc or slice begins. See {@link WedgeStyle}. */
   startAngle: number;
+  /** Angle at which the arc or slice ends. See {@link WedgeStyle}. */
   endAngle: number;
+  /** Horizontal coordinate of the center. See {@link Length}. */
   cx?: Exclude<Length, "auto">;
+  /** Vertical coordinate of the center. See {@link Length}. */
   cy?: Exclude<Length, "auto">;
+  /** Whether the arc follows the counterclockwise direction. See {@link WedgeStyle}. */
   counterclockwise?: boolean;
+  /**
+   * Width used for line hit testing independently of the visible stroke width. See
+   * {@link WedgeStyle}.
+   */
   lineInteractionWidth?: number;
 }
 
@@ -101,7 +130,16 @@ function renderWedge(
   );
 }
 
-/** Describes a center-closed circular wedge primitive for JSX or createElement authoring. */
+/**
+ * Describes a center-closed circular wedge primitive for JSX or createElement authoring.
+ *
+ * @param props - Authored component inputs, supplied through JSX or createElement. See the linked
+ * props and style types.
+ * @throws When called directly; Pibbl mounts this component through JSX or createElement.
+ *
+ * @see {@link WedgeProps}
+ * @see {@link WedgeStyle}
+ */
 export const Wedge = definePrimitive<
   WedgeProps,
   WedgeStyle,

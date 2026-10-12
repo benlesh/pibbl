@@ -1,8 +1,10 @@
-import type { Teardowns } from '../teardowns.js';
-import type { CRCEventRoot } from '../types.js';
-import type { CRCEventType } from '../events/types.js';
-import type { CRCFocusManager } from './focus-manager.js';
-import { moveTab } from './keyboard-defaults.js';
+import type { Teardowns } from "../teardowns.js";
+import type { PibblEventRoot } from "../types.js";
+import type { PibblEventType } from "../events/types.js";
+import type { PibblFocusManager } from "./focus-manager.js";
+import { moveTab } from "./keyboard-defaults.js";
+import type { HtmlFocusRegion } from "./html-focus-region.js";
+import { getManagedTabStops } from "./dom-tab-stops.js";
 
 interface TabIndexSnapshot {
   readonly existed: boolean;
@@ -21,44 +23,55 @@ interface PendingTabEntry {
   readonly origin: Element | null;
 }
 
-export interface CRCMountedDOMFocusHost {
-  beforeNativeDispatch(type: CRCEventType, event: Event): boolean;
+export interface PibblMountedDOMFocusHost {
+  beforeNativeDispatch(type: PibblEventType, event: Event): boolean;
   focusFromPress(): void;
-  setManager(manager: CRCFocusManager | undefined): void;
+  setManager(manager: PibblFocusManager | undefined): void;
   syncCandidateAvailability(hasCandidates: boolean): void;
+  syncHtmlRegions(regions: readonly HtmlFocusRegion[]): void;
 }
 
 export function mountDOMFocusHost(
   canvas: HTMLCanvasElement,
-  eventRoot: CRCEventRoot,
+  eventRoot: PibblEventRoot,
   teardowns: Teardowns,
-): CRCMountedDOMFocusHost {
+): PibblMountedDOMFocusHost {
   let tabIndexOwnership: TabIndexOwnership | undefined;
   let candidateReason = false;
   let pressReason = false;
   let pendingTabEntry: PendingTabEntry | undefined;
   let pendingTabExpiry: ReturnType<typeof setTimeout> | undefined;
-  let manager: CRCFocusManager | undefined;
+  let manager: PibblFocusManager | undefined;
   let disposed = false;
   let domFocusActive = canvas.ownerDocument.activeElement === canvas;
+  let htmlRegions: readonly HtmlFocusRegion[] = Object.freeze([]);
+  let managedHtmlReason = false;
+  let leadingSentinel: HTMLSpanElement | undefined;
+  let trailingSentinel: HTMLSpanElement | undefined;
+  let exitingSentinel: HTMLSpanElement | undefined;
+  let pendingPointerRegion: HtmlFocusRegion | undefined;
+  let pendingKeyboardFocus = false;
+  // htmlOverlay is mount configuration: it cannot appear after this focus host
+  // is constructed. Keep the ordinary Canvas-only listener footprint intact.
+  const supportsHtmlRegions = Boolean(eventRoot.htmlOverlay);
   const keydownsWithTarget = new WeakSet<KeyboardEvent>();
 
   const restoreSnapshot = (ownership: TabIndexOwnership) => {
     if (ownership.snapshot.existed) {
-      canvas.setAttribute('tabindex', ownership.snapshot.value ?? '');
+      canvas.setAttribute("tabindex", ownership.snapshot.value ?? "");
     } else {
-      canvas.removeAttribute('tabindex');
+      canvas.removeAttribute("tabindex");
     }
   };
 
   const snapshotTabIndex = (): TabIndexSnapshot => ({
-    existed: canvas.hasAttribute('tabindex'),
-    value: canvas.getAttribute('tabindex'),
+    existed: canvas.hasAttribute("tabindex"),
+    value: canvas.getAttribute("tabindex"),
   });
 
   const matchesSnapshot = (snapshot: TabIndexSnapshot): boolean =>
-    canvas.hasAttribute('tabindex') === snapshot.existed &&
-    canvas.getAttribute('tabindex') === snapshot.value;
+    canvas.hasAttribute("tabindex") === snapshot.existed &&
+    canvas.getAttribute("tabindex") === snapshot.value;
 
   const syncTabIndex = () => {
     const hasReason = candidateReason || pressReason;
@@ -76,8 +89,8 @@ export function mountDOMFocusHost(
     if (
       !ownership.lost &&
       ownership.ownedValue !== undefined &&
-      (!canvas.hasAttribute('tabindex') ||
-        canvas.getAttribute('tabindex') !== ownership.ownedValue)
+      (!canvas.hasAttribute("tabindex") ||
+        canvas.getAttribute("tabindex") !== ownership.ownedValue)
     ) {
       ownership.lost = true;
       ownership.ownedValue = undefined;
@@ -101,10 +114,15 @@ export function mountDOMFocusHost(
     }
     if (ownership.lost) return;
 
-    const desired = candidateReason ?
-      ownership.snapshot.existed && ownership.baseTabIndex >= 0 ?
-        undefined : '0' :
-      ownership.snapshot.existed ? undefined : '-1';
+    const desired = candidateReason
+      ? managedHtmlReason
+        ? "-1"
+        : ownership.snapshot.existed && ownership.baseTabIndex >= 0
+          ? undefined
+          : "0"
+      : ownership.snapshot.existed
+        ? undefined
+        : "-1";
     if (desired === ownership.ownedValue) return;
     if (desired === undefined) {
       if (ownership.ownedValue !== undefined) {
@@ -113,7 +131,7 @@ export function mountDOMFocusHost(
       }
       return;
     }
-    canvas.setAttribute('tabindex', desired);
+    canvas.setAttribute("tabindex", desired);
     ownership.ownedValue = desired;
   };
 
@@ -135,10 +153,82 @@ export function mountDOMFocusHost(
     syncTabIndex();
   };
 
-  const setManager = (nextManager: CRCFocusManager | undefined) => {
+  const setManager = (nextManager: PibblFocusManager | undefined) => {
     if (disposed) return;
     manager = nextManager;
     syncCandidateAvailability(Boolean(nextManager?.hasFocusCandidates));
+    syncHtmlRegions(nextManager?.htmlFocusRegions ?? []);
+  };
+
+  const isManagedRegion = (
+    target: EventTarget | null,
+  ): HtmlFocusRegion | undefined =>
+    target instanceof Node
+      ? htmlRegions.find(
+          (region) => region.active && region.content?.contains(target),
+        )
+      : undefined;
+
+  const removeSentinels = () => {
+    leadingSentinel?.remove();
+    trailingSentinel?.remove();
+    leadingSentinel = undefined;
+    trailingSentinel = undefined;
+    exitingSentinel = undefined;
+  };
+
+  const makeSentinel = () => {
+    const sentinel = canvas.ownerDocument.createElement("span");
+    sentinel.tabIndex = 0;
+    sentinel.setAttribute("aria-hidden", "true");
+    sentinel.style.cssText =
+      "position:fixed;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none;";
+    return sentinel;
+  };
+
+  const enterFromSentinel = (backwards: boolean, sentinel: HTMLSpanElement) => {
+    if (exitingSentinel === sentinel) {
+      exitingSentinel = undefined;
+      return;
+    }
+    const activeManager = manager;
+    if (!activeManager) return;
+    activeManager.enterDOMFocus(backwards);
+  };
+
+  const syncHtmlRegions = (regions: readonly HtmlFocusRegion[]) => {
+    htmlRegions = regions.filter((region) => region.active && region.content);
+    managedHtmlReason = htmlRegions.length > 0;
+    syncTabIndex();
+    removeSentinels();
+    const activeRegion = isManagedRegion(canvas.ownerDocument.activeElement);
+    manager?.reconcileNativeHtmlFocus(activeRegion);
+    if (!manager || htmlRegions.length === 0) return;
+    const parent = canvas.parentElement;
+    if (!parent) return;
+    leadingSentinel = makeSentinel();
+    trailingSentinel = makeSentinel();
+    parent.insertBefore(leadingSentinel, canvas);
+    // The configured overlay is the canvas's adjacent sibling. Keeping the
+    // trailing sentinel after it makes native entry/exit cover both surfaces.
+    const overlay = canvas.nextElementSibling;
+    parent.insertBefore(
+      trailingSentinel,
+      overlay ? overlay.nextSibling : canvas.nextSibling,
+    );
+    leadingSentinel.addEventListener("focus", () =>
+      enterFromSentinel(true, leadingSentinel!),
+    );
+    trailingSentinel.addEventListener("focus", () =>
+      enterFromSentinel(false, trailingSentinel!),
+    );
+  };
+
+  const exitSurface = (backwards: boolean) => {
+    const sentinel = backwards ? leadingSentinel : trailingSentinel;
+    if (!sentinel) return;
+    exitingSentinel = sentinel;
+    sentinel.focus({ preventScroll: true });
   };
 
   const clearPendingTabEntry = () => {
@@ -148,7 +238,11 @@ export function mountDOMFocusHost(
   };
 
   const onDocumentKeyDown = (event: KeyboardEvent) => {
-    if (event.key !== 'Tab') return;
+    // A click on an already focused control has no focusin to consume this
+    // marker. Keyboard navigation must establish a fresh keyboard modality.
+    pendingPointerRegion = undefined;
+    pendingKeyboardFocus = event.key === "Tab";
+    if (event.key !== "Tab") return;
     clearPendingTabEntry();
     const entry: PendingTabEntry = {
       event,
@@ -162,27 +256,29 @@ export function mountDOMFocusHost(
     pendingTabExpiry = expiry;
   };
 
-  const beforeNativeDispatch = (type: CRCEventType, event: Event) => {
+  const beforeNativeDispatch = (type: PibblEventType, event: Event) => {
     const activeManager = manager;
     if (!activeManager) return true;
-    if (type === 'focus' || type === 'focusin') {
+    if (type === "focus" || type === "focusin") {
       if (canvas.ownerDocument.activeElement !== canvas) return false;
       if (domFocusActive) return false;
       domFocusActive = true;
       const entry = pendingTabEntry;
       clearPendingTabEntry();
-      activeManager.enterDOMFocus(Boolean(
-        entry &&
-        entry.event.eventPhase === Event.NONE &&
-        !entry.event.defaultPrevented &&
-        entry.origin?.ownerDocument === canvas.ownerDocument &&
-        isFocusEventForCanvas(event, canvas) &&
-        event.relatedTarget === entry.origin &&
-        entry.event.shiftKey
-      ));
+      activeManager.enterDOMFocus(
+        Boolean(
+          entry &&
+          entry.event.eventPhase === Event.NONE &&
+          !entry.event.defaultPrevented &&
+          entry.origin?.ownerDocument === canvas.ownerDocument &&
+          isFocusEventForCanvas(event, canvas) &&
+          event.relatedTarget === entry.origin &&
+          entry.event.shiftKey,
+        ),
+      );
       return false;
     }
-    if (type === 'blur' || type === 'focusout') {
+    if (type === "blur" || type === "focusout") {
       if (canvas.ownerDocument.activeElement === canvas) return false;
       if (domFocusActive) {
         domFocusActive = false;
@@ -192,7 +288,7 @@ export function mountDOMFocusHost(
       return false;
     }
     if (
-      type === 'keydown' &&
+      type === "keydown" &&
       event instanceof KeyboardEvent &&
       activeManager.resolveKeyboardTarget()
     ) {
@@ -209,7 +305,7 @@ export function mountDOMFocusHost(
     syncTabIndex();
   };
   const onNativeKeyDown = (event: Event) => {
-    if (!(event instanceof KeyboardEvent) || event.key !== 'Tab') return;
+    if (!(event instanceof KeyboardEvent) || event.key !== "Tab") return;
     if (keydownsWithTarget.delete(event)) return;
     const activeManager = manager;
     if (
@@ -219,22 +315,70 @@ export function mountDOMFocusHost(
     ) {
       return;
     }
-    if (moveTab(activeManager, event.shiftKey) === 'moved') {
+    if (moveTab(activeManager, event.shiftKey) === "moved") {
       event.preventDefault();
     }
   };
 
-  const focusObservers = requireObservers(eventRoot, 'focus');
-  const focusinObservers = requireObservers(eventRoot, 'focusin');
-  const blurObservers = requireObservers(eventRoot, 'blur');
-  const focusoutObservers = requireObservers(eventRoot, 'focusout');
-  const keydownObservers = requireObservers(eventRoot, 'keydown');
-  const keyupObservers = requireObservers(eventRoot, 'keyup');
-  const pointerdownObservers = requireObservers(eventRoot, 'pointerdown');
-  const mousedownObservers = requireObservers(eventRoot, 'mousedown');
-  const touchstartObservers = requireObservers(eventRoot, 'touchstart');
-  const touchendObservers = requireObservers(eventRoot, 'touchend');
-  const touchcancelObservers = requireObservers(eventRoot, 'touchcancel');
+  const onHtmlFocusIn = (event: FocusEvent) => {
+    const region = isManagedRegion(event.target);
+    if (!region || !manager) return;
+    const pointerOrigin = pendingPointerRegion === region;
+    const keyboardOrigin = pendingKeyboardFocus;
+    pendingPointerRegion = undefined;
+    pendingKeyboardFocus = false;
+    manager.adoptNativeHtmlFocus(
+      region,
+      pointerOrigin ? "pointer" : keyboardOrigin ? "keyboard" : undefined,
+    );
+  };
+
+  const onHtmlPointerDown = (event: PointerEvent) => {
+    // A pointer interaction supersedes a Tab origin even when it occurs
+    // outside this root; no later programmatic focus may inherit that Tab.
+    pendingKeyboardFocus = false;
+    pendingPointerRegion = isManagedRegion(event.target);
+  };
+
+  const onHtmlFocusOut = (event: FocusEvent) => {
+    const region = isManagedRegion(event.target);
+    if (!region || !manager) return;
+    queueMicrotask(() => {
+      if (!region.content?.contains(canvas.ownerDocument.activeElement)) {
+        manager?.clearNativeHtmlFocus(region);
+      }
+    });
+  };
+
+  const onHtmlKeyDown = (event: KeyboardEvent) => {
+    if (event.key !== "Tab" || event.defaultPrevented || !manager) return;
+    const region = isManagedRegion(event.target);
+    if (!region?.content) return;
+    const stops = getManagedTabStops(region.content);
+    const index = stops.indexOf(
+      canvas.ownerDocument.activeElement as HTMLElement,
+    );
+    if (index < 0) return;
+    const next = index + (event.shiftKey ? -1 : 1);
+    if (next >= 0 && next < stops.length) return;
+    if (moveTab(manager, event.shiftKey) === "moved") {
+      event.preventDefault();
+    } else {
+      exitSurface(event.shiftKey);
+    }
+  };
+
+  const focusObservers = requireObservers(eventRoot, "focus");
+  const focusinObservers = requireObservers(eventRoot, "focusin");
+  const blurObservers = requireObservers(eventRoot, "blur");
+  const focusoutObservers = requireObservers(eventRoot, "focusout");
+  const keydownObservers = requireObservers(eventRoot, "keydown");
+  const keyupObservers = requireObservers(eventRoot, "keyup");
+  const pointerdownObservers = requireObservers(eventRoot, "pointerdown");
+  const mousedownObservers = requireObservers(eventRoot, "mousedown");
+  const touchstartObservers = requireObservers(eventRoot, "touchstart");
+  const touchendObservers = requireObservers(eventRoot, "touchend");
+  const touchcancelObservers = requireObservers(eventRoot, "touchcancel");
   focusObservers.add(onNativeFocus);
   focusinObservers.add(onNativeFocus);
   blurObservers.add(onNativeExit);
@@ -246,7 +390,13 @@ export function mountDOMFocusHost(
   touchstartObservers.add(onNativePress);
   touchendObservers.add(onNativePress);
   touchcancelObservers.add(onNativePress);
-  canvas.ownerDocument.addEventListener('keydown', onDocumentKeyDown, true);
+  canvas.ownerDocument.addEventListener("keydown", onDocumentKeyDown, true);
+  if (supportsHtmlRegions) {
+    canvas.ownerDocument.addEventListener("focusin", onHtmlFocusIn, true);
+    canvas.ownerDocument.addEventListener("focusout", onHtmlFocusOut, true);
+    canvas.ownerDocument.addEventListener("pointerdown", onHtmlPointerDown, true);
+    canvas.ownerDocument.addEventListener("keydown", onHtmlKeyDown);
+  }
 
   teardowns.add(() => {
     if (disposed) return;
@@ -267,7 +417,22 @@ export function mountDOMFocusHost(
     touchstartObservers.delete(onNativePress);
     touchendObservers.delete(onNativePress);
     touchcancelObservers.delete(onNativePress);
-    canvas.ownerDocument.removeEventListener('keydown', onDocumentKeyDown, true);
+    canvas.ownerDocument.removeEventListener(
+      "keydown",
+      onDocumentKeyDown,
+      true,
+    );
+    if (supportsHtmlRegions) {
+      canvas.ownerDocument.removeEventListener("focusin", onHtmlFocusIn, true);
+      canvas.ownerDocument.removeEventListener("focusout", onHtmlFocusOut, true);
+      canvas.ownerDocument.removeEventListener(
+        "pointerdown",
+        onHtmlPointerDown,
+        true,
+      );
+      canvas.ownerDocument.removeEventListener("keydown", onHtmlKeyDown);
+    }
+    removeSentinels();
   });
 
   return {
@@ -275,6 +440,7 @@ export function mountDOMFocusHost(
     focusFromPress,
     setManager,
     syncCandidateAvailability,
+    syncHtmlRegions,
   };
 }
 
@@ -287,14 +453,23 @@ function isFocusEventForCanvas(
 }
 
 function requireObservers(
-  eventRoot: CRCEventRoot,
-  type: 'blur' | 'focus' | 'focusin' | 'focusout' | 'keydown' |
-    'keyup' | 'mousedown' | 'pointerdown' | 'touchcancel' | 'touchend' |
-    'touchstart',
+  eventRoot: PibblEventRoot,
+  type:
+    | "blur"
+    | "focus"
+    | "focusin"
+    | "focusout"
+    | "keydown"
+    | "keyup"
+    | "mousedown"
+    | "pointerdown"
+    | "touchcancel"
+    | "touchend"
+    | "touchstart",
 ): Set<(event: Event) => void> {
   const observers = eventRoot.observers.get(type);
   if (!observers) {
-    throw new Error(`CRC ${type} observer registry is unavailable.`);
+    throw new Error(`Pibbl ${type} observer registry is unavailable.`);
   }
   return observers;
 }

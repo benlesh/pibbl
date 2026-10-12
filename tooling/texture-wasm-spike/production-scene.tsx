@@ -1,6 +1,6 @@
-/** @jsxImportSource @crc/core */
+/** @jsxImportSource @pibbl/core */
 import {
-  crc,
+  pibbl,
   Group,
   Rectangle,
   Circle,
@@ -9,27 +9,27 @@ import {
   useRef,
   useTexture,
   usePlayback,
-  track,
+  drive,
   tween,
   repeat,
   sequence,
   wait,
   type Texture,
-} from "@crc/core";
+} from "@pibbl/core";
 import {
   marble,
   paper,
   cellular,
   reactionDiffusion,
   type InkMessage,
-} from "@crc/textures";
+} from "@pibbl/core/textures";
 import {
   PhysicsWorld2D,
-  crcPhysicsBody2D,
+  pibblPhysicsBody2D,
   collider2D,
   dynamicBody2D,
   staticBody2D,
-} from "@crc/physics/2d";
+} from "@pibbl/core/physics/2d";
 export function mountProductionScene(canvas: HTMLCanvasElement) {
   const observations = {
     disturbances: 0,
@@ -41,7 +41,7 @@ export function mountProductionScene(canvas: HTMLCanvasElement) {
     usePlayback(
       repeat(
         sequence(
-          track(detail, tween({ from: 0.2, to: 0.9, duration: 3000 })),
+          drive(detail, tween({ from: 0.2, to: 0.9, duration: 3000 })),
           wait(16),
         ),
         { iterations: Infinity, direction: "alternate" },
@@ -71,7 +71,7 @@ export function mountProductionScene(canvas: HTMLCanvasElement) {
     );
   }
   function Ink() {
-    const body = crcPhysicsBody2D();
+    const body = pibblPhysicsBody2D();
     ink = useTexture(reactionDiffusion({ seed: 42, preset: "stripes" }), {
       resolution: { width: 256, height: 128 },
       palette: ["#101f2b", "#265869", "#77b8ac", "#f3d69d"],
@@ -140,7 +140,7 @@ export function mountProductionScene(canvas: HTMLCanvasElement) {
       </PhysicsWorld2D>
     );
   }
-  const controller = crc(
+  const controller = pibbl(
     canvas,
     <>
       <Materials />

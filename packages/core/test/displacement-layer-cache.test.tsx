@@ -1,7 +1,7 @@
-/** @jsxImportSource @crc/core */
-import { crc, definePrimitive, Group, Layer, Rectangle, useTexture } from '@crc/core';
-import { displacement } from '@crc/core/filters';
-import { waterWaves } from '@crc/textures';
+/** @jsxImportSource @pibbl/core */
+import { pibbl, definePrimitive, Group, Layer, Rectangle, useTexture } from '@pibbl/core';
+import { displacement } from '@pibbl/core/filters';
+import { waterWaves } from '@pibbl/core/textures';
 import { expect, it, vi } from 'vitest';
 import { DisplacementGpu } from '../src/filters/displacement-gpu';
 import { ManualSchedulerDriver, installSchedulerDriverForTest } from '../src/lib/scheduler/testing';
@@ -26,7 +26,7 @@ it('reprocesses live water without repainting its clean child Layer', () => {
     </Group>;
   }
   const canvas = document.createElement('canvas'); canvas.width = 48; canvas.height = 40; document.body.append(canvas);
-  const controller = crc(canvas, <Scene />);
+  const controller = pibbl(canvas, <Scene />);
   try {
     driver.flush(0);
     expect(paints).toBe(1);
@@ -49,7 +49,7 @@ it('does not acquire a GPU or subscribe to live map pixels at zero strength', ()
     return <Group style={{ filter: displacement({ map, strength: 0, region: { x: 0, y: 0, width: 40, height: 40 } }) }}><Content /></Group>;
   }
   const canvas = document.createElement('canvas'); canvas.width = canvas.height = 40; document.body.append(canvas);
-  const controller = crc(canvas, <Scene />);
+  const controller = pibbl(canvas, <Scene />);
   try {
     driver.flush(0);
     for (let index = 1; index <= 20; index++) driver.flush(index * 16);

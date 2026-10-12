@@ -4,18 +4,18 @@ import { createElement } from '../element/create-element.js';
 import { Fragment, type FragmentProps } from '../element/fragment.js';
 import { executeRender } from '../execute-render.js';
 import {
-  getCRCInstance,
-  getCurrentCRCInstance,
+  getPibblInstance,
+  getCurrentPibblInstance,
   GLOBAL_STATE,
 } from '../global-state.js';
-import { mountCRC } from '../mount-crc.js';
+import { mountPibbl } from '../mount-pibbl.js';
 import {
-  CRCNodeInput,
-  CRCInteractionLayer,
+  PibblNodeInput,
+  PibblInteractionLayer,
   RenderingContext2D,
   SystemStyle,
 } from '../types.js';
-import { CRCPaintEntryKind } from '../events/paint-entry.js';
+import { PibblPaintEntryKind } from '../events/paint-entry.js';
 import {
   resolveRequiredLength,
   stripLayoutParticipation,
@@ -34,21 +34,36 @@ import {
   completeInstanceRenderRevision,
   hasPendingInstanceRender,
 } from '../scheduler/realm-scheduler.js';
-import type { CRCElement } from '../element/types.js';
+import type { PibblElement } from '../element/types.js';
 import {
   haveSameLayerNodeTree,
   snapshotLayerNodeTree,
   type LayerNodeSnapshot,
 } from './layer-node-equality.js';
 import {
-  type CRCStructuralEventProps,
+  type PibblStructuralEventProps,
   wireStructuralEvents,
 } from './structural-events.js';
 
-export interface LayerProps extends CRCStructuralEventProps {
-  children: CRCNodeInput;
+/**
+ * Authored inputs for Layer, including the declared data and presentation options.
+ *
+ * @see {@link PibblNodeInput}
+ * @see {@link Layer}
+ */
+export interface LayerProps extends PibblStructuralEventProps {
+  /** Descendant content or the callback that supplies it. See {@link PibblNodeInput}. */
+  children: PibblNodeInput;
 }
 
+/**
+ * Supported geometry and presentation properties for Layer.
+ *
+ * @see {@link SystemStyle}
+ * @see {@link BoxStyle}
+ * @see {@link LayoutItemStyle}
+ * @see {@link Layer}
+ */
 export interface LayerStyle extends SystemStyle, BoxStyle, LayoutItemStyle {}
 
 type ResolvedLayerStyle = ResolvedDrawingStyle<LayerStyle> & {
@@ -58,7 +73,7 @@ type ResolvedLayerStyle = ResolvedDrawingStyle<LayerStyle> & {
 
 interface LayerSlot {
   canvas: OffscreenCanvas;
-  interactionLayer: CRCInteractionLayer;
+  interactionLayer: PibblInteractionLayer;
   logicalWidth: number;
   logicalHeight: number;
   focusRenderRevision: number | undefined;
@@ -79,7 +94,7 @@ function renderLayer(
   const canvas = GLOBAL_STATE.canvas!;
   const { width = canvas.width, height = canvas.height } = style;
   const componentRefs = GLOBAL_STATE.componentRefs!;
-  const parentInstance = getCurrentCRCInstance();
+  const parentInstance = getCurrentPibblInstance();
   const parentSurface = getSurfaceSnapshot(parentInstance);
   const layerSurface = createLayerSurface(
     width,
@@ -92,14 +107,14 @@ function renderLayer(
       layerSurface.backingWidth,
       layerSurface.backingHeight,
     );
-    const controller = mountCRC(offscreenCanvas, nextRoot, {
+    const controller = mountPibbl(offscreenCanvas, nextRoot, {
       parent: canvas,
       surface: layerSurface,
     });
-    const childInstance = getCRCInstance(offscreenCanvas);
+    const childInstance = getPibblInstance(offscreenCanvas);
     childInstance.eventParent = componentRefs;
-    const interactionLayer: CRCInteractionLayer = {
-      paintKind: CRCPaintEntryKind.NestedInstance,
+    const interactionLayer: PibblInteractionLayer = {
+      paintKind: PibblPaintEntryKind.NestedInstance,
       instance: childInstance,
       transform: new DOMMatrix(),
       clippingStack: [],
@@ -123,7 +138,7 @@ function renderLayer(
 
   const slot = componentRefs.refs[0] as LayerSlot;
   const offscreenCanvas = slot.canvas;
-  const layerCRC = getCRCInstance(offscreenCanvas);
+  const layerPibbl = getPibblInstance(offscreenCanvas);
   const dimensionsChanged = slot.logicalWidth !== width ||
     slot.logicalHeight !== height;
   const surfaceChanged =
@@ -142,7 +157,7 @@ function renderLayer(
   parentInstance.paintEntries.add(interactionLayer);
 
   const focusPolicy = parentInstance.eventRoot.focusPolicy;
-  const focusRenderRevision = focusPolicy?.layerFocusRenderRevision?.(layerCRC);
+  const focusRenderRevision = focusPolicy?.layerFocusRenderRevision?.(layerPibbl);
 
   const shouldRender =
     GLOBAL_STATE.componentIsMounting ||
@@ -150,33 +165,35 @@ function renderLayer(
     surfaceChanged ||
     !haveSameLayerNodeTree(slot.retainedTree, nextRoot) ||
     slot.focusRenderRevision !== focusRenderRevision ||
-    hasPendingInstanceRender(layerCRC);
+    hasPendingInstanceRender(layerPibbl);
   if (shouldRender) {
-    if (layerCRC.surface.kind !== 'layer') {
-      throw new Error('CRC layer mounted without a derived surface.');
+    if (layerPibbl.surface.kind !== 'layer') {
+      throw new Error('Pibbl layer mounted without a derived surface.');
     }
-    layerCRC.surface.snapshot = layerSurface;
-    layerCRC.surface.managed = true;
+    layerPibbl.surface.snapshot = layerSurface;
+    layerPibbl.surface.managed = true;
     offscreenCanvas.width = layerSurface.backingWidth;
     offscreenCanvas.height = layerSurface.backingHeight;
     slot.logicalWidth = width;
     slot.logicalHeight = height;
 
-    const renderedRevision = layerCRC.requestedRenderRevision;
+    const renderedRevision = layerPibbl.requestedRenderRevision;
     executeRender(
       offscreenCanvas,
-      getCurrentCRCInstance().renderTimestamp,
+      getCurrentPibblInstance().renderTimestamp,
       nextRoot,
       false,
     );
-    completeInstanceRenderRevision(layerCRC, renderedRevision);
+    completeInstanceRenderRevision(layerPibbl, renderedRevision);
     slot.retainedTree = snapshotLayerNodeTree(nextRoot);
   } else {
-    parentInstance.eventRoot.focusPolicy?.replayRetainedSubtree(layerCRC);
+    parentInstance.eventRoot.focusPolicy?.replayRetainedSubtree(layerPibbl);
   }
   const renderedFocusPolicy = parentInstance.eventRoot.focusPolicy;
   slot.focusRenderRevision =
-    renderedFocusPolicy?.layerFocusRenderRevision?.(layerCRC);
+    renderedFocusPolicy?.layerFocusRenderRevision?.(layerPibbl);
+
+  parentInstance.eventRoot.html?.recordLayer(parentInstance, layerPibbl, interactionLayer, ctx.globalAlpha, ctx.globalCompositeOperation);
 
   ctx.drawImage(
     offscreenCanvas,
@@ -192,7 +209,16 @@ function renderLayer(
 
 }
 
-/** Describes a retained offscreen composition layer. */
+/**
+ * Describes a retained offscreen composition layer.
+ *
+ * @param props - Authored component inputs, supplied through JSX or createElement. See the linked
+ * props and style types.
+ * @throws When called directly; Pibbl mounts this component through JSX or createElement.
+ *
+ * @see {@link LayerProps}
+ * @see {@link LayerStyle}
+ */
 export const Layer = definePrimitive<
   LayerProps,
   LayerStyle,
@@ -232,10 +258,10 @@ function resolveLayerStyle(
 }
 
 function createPrivateLayerRoot(
-  children: readonly CRCElement<any>[],
-): CRCElement<FragmentProps> {
+  children: readonly PibblElement<any>[],
+): PibblElement<FragmentProps> {
   return createElement(Fragment, {
-    key: 'crc-layer-root',
+    key: 'pibbl-layer-root',
     children,
   });
 }

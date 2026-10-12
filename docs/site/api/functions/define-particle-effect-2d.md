@@ -7,14 +7,14 @@ slug: define-particle-effect-2d
 apiCategory: function
 symbols: [defineParticleEffect2D]
 relatedTypes:
-  [CRCParticleEffect2D, CRCParticleEffect2DInput, CRCParticleEmitter2D]
+  [PibblParticleEffect2D, PibblParticleEffect2DInput, PibblParticleEmitter2D]
 keywords: [particles, definition, canvas, emitter]
 ---
 
 # defineParticleEffect2D
 
 ```ts
-import { defineParticleEffect2D } from "@crc/particles";
+import { defineParticleEffect2D } from "@pibbl/core/particles";
 ```
 
 Creates an immutable validated effect from one or more named emitters. The
@@ -26,6 +26,6 @@ over-life appearance, renderer, and optional bounds are compiled once. Invalid
 or unsupported combinations fail at definition time with the effect, emitter,
 and property in the diagnostic.
 
-Types: [`CRCParticleEffect2D`](#/api/types/particles#crcparticleeffect2d),
-[`CRCParticleEffect2DInput`](#/api/types/particles#crcparticleeffect2dinput),
-and [`CRCParticleEmitter2D`](#/api/types/particles#crcparticleemitter2d).
+Types: [`PibblParticleEffect2D`](#/api/types/particles#pibblparticleeffect2d),
+[`PibblParticleEffect2DInput`](#/api/types/particles#pibblparticleeffect2dinput),
+and [`PibblParticleEmitter2D`](#/api/types/particles#pibblparticleemitter2d).

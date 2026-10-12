@@ -1,12 +1,12 @@
 import { preparedStyleValue, preparedStyleQuery } from '../style/responsive.js';
 import { definePrimitive } from '../define-primitive.js';
-import { cloneCRCElement } from '../element/create-element.js';
+import { clonePibblElement } from '../element/create-element.js';
 import { getChildPrimitiveReceiverToken } from '../element/metadata.js';
-import type { CRCElement } from '../element/types.js';
+import type { PibblElement } from '../element/types.js';
 import { GLOBAL_STATE } from '../global-state.js';
 import { layoutDiagnostic } from '../style/diagnostics.js';
 import {
-  type CRCStructuralEventProps,
+  type PibblStructuralEventProps,
   wireStructuralEvents,
 } from '../components/structural-events.js';
 import { normalizeEdges } from '../style/normalize.js';
@@ -20,7 +20,7 @@ import type {
 } from '../style/types.js';
 import type {
   CanvasMeasurementService,
-  CRCNodeInput,
+  PibblNodeInput,
   MeasureInput,
   MeasureResult,
   RenderingContext2D,
@@ -41,6 +41,11 @@ import { assertSupportedChildPosition } from './positioning-diagnostics.js';
 import { measureElement } from './measure.js';
 import type { Constraints, LayoutBox } from './types.js';
 
+/**
+ * A fixed logical size, percentage of available space, or fractional share of remaining grid space.
+ *
+ * @see {@link GridStyle}
+ */
 export type GridTrack = number | `${number}%` | `${number}fr`;
 type GridAlignment = 'stretch' | 'start' | 'center' | 'end';
 type ParsedGridTrack =
@@ -48,24 +53,46 @@ type ParsedGridTrack =
   | Readonly<{ kind: 'percentage'; factor: number }>
   | Readonly<{ kind: 'fraction'; factor: number }>;
 
+/**
+ * Supported geometry and presentation properties for Grid.
+ *
+ * @see {@link BoxStyle}
+ * @see {@link LayoutItemStyle}
+ * @see {@link GridTrack}
+ * @see {@link Grid}
+ */
 export interface GridStyle extends BoxStyle, LayoutItemStyle {
+  /** Explicit grid column track definitions. See {@link GridTrack}. */
   gridTemplateColumns: readonly GridTrack[];
+  /** Explicit grid row track definitions. See {@link GridTrack}. */
   gridTemplateRows: readonly GridTrack[];
+  /** Default inline-axis alignment of grid or overlay children. See {@link GridAlignment}. */
   justifyItems?: GridAlignment;
+  /** Default alignment of children on the cross or block axis. See {@link GridAlignment}. */
   alignItems?: GridAlignment;
+  /** Spacing between adjacent items. See {@link GridStyle}. */
   gap?: number;
+  /** Space between adjacent rows or items on the row axis. See {@link GridStyle}. */
   rowGap?: number;
+  /** Space between adjacent columns or items on the column axis. See {@link GridStyle}. */
   columnGap?: number;
 }
 
-export interface GridProps extends CRCStructuralEventProps {
-  children: CRCNodeInput;
+/**
+ * Authored inputs for Grid, including the declared data and presentation options.
+ *
+ * @see {@link PibblNodeInput}
+ * @see {@link Grid}
+ */
+export interface GridProps extends PibblStructuralEventProps {
+  /** Descendant content or the callback that supplies it. See {@link PibblNodeInput}. */
+  children: PibblNodeInput;
 }
 
 export interface GridMeasurementInput {
   service: CanvasMeasurementService;
   measureElement(
-    element: CRCElement<any>,
+    element: PibblElement<any>,
     constraints: Readonly<Constraints>,
   ): MeasureResult;
 }
@@ -83,7 +110,7 @@ interface ResolvedGridStyle extends SystemStyle {
 
 interface GridPlacement {
   box: LayoutBox;
-  element: CRCElement<any>;
+  element: PibblElement<any>;
 }
 
 function renderGrid(
@@ -134,7 +161,16 @@ function renderGrid(
   );
 }
 
-/** Describes explicit Grid layout for JSX or createElement authoring. */
+/**
+ * Describes explicit Grid layout for JSX or createElement authoring.
+ *
+ * @param props - Authored component inputs, supplied through JSX or createElement. See the linked
+ * props and style types.
+ * @throws When called directly; Pibbl mounts this component through JSX or createElement.
+ *
+ * @see {@link GridProps}
+ * @see {@link GridStyle}
+ */
 export const Grid = definePrimitive<
   GridProps,
   GridStyle,
@@ -152,7 +188,7 @@ export const Grid = definePrimitive<
 
 export function layoutGrid(
   container: Readonly<LayoutBox>,
-  children: CRCNodeInput,
+  children: PibblNodeInput,
   style: Readonly<GridStyle>,
   measurement: GridMeasurementInput,
 ): LayoutBox[] {
@@ -164,7 +200,7 @@ export function layoutGrid(
 
 function resolveGridPlacements(
   container: Readonly<LayoutBox>,
-  children: readonly CRCElement<any>[],
+  children: readonly PibblElement<any>[],
   options: Readonly<ReturnType<typeof normalizeGridOptions>>,
   measurement: GridMeasurementInput,
 ): GridPlacement[] {
@@ -284,7 +320,7 @@ function resolveGridPlacements(
       (widthAuto && justify !== 'stretch') ||
       (heightAuto && align !== 'stretch')
     ) {
-      const measurementChild = cloneCRCElement(child);
+      const measurementChild = clonePibblElement(child);
       setPreNormalizedStyle(
         measurementChild,
         normalized,
@@ -629,7 +665,7 @@ function itemAlignment(
   value: unknown,
   fallback: GridAlignment,
   property: string,
-  child: CRCElement<any>,
+  child: PibblElement<any>,
   container: Readonly<LayoutBox>,
 ): GridAlignment {
   if (value === undefined || value === 'auto') return fallback;
@@ -652,7 +688,7 @@ function itemAlignment(
 function placementInteger(
   value: unknown,
   property: string,
-  child: CRCElement<any>,
+  child: PibblElement<any>,
   container: Readonly<LayoutBox>,
   required: boolean,
 ): number {
@@ -682,7 +718,7 @@ function validateSpan(
   span: number,
   trackCount: number,
   property: string,
-  child: CRCElement<any>,
+  child: PibblElement<any>,
   container: Readonly<LayoutBox>,
 ): void {
   if (start - 1 + span > trackCount) {
@@ -700,7 +736,7 @@ function validateStart(
   start: number,
   trackCount: number,
   property: string,
-  child: CRCElement<any>,
+  child: PibblElement<any>,
   container: Readonly<LayoutBox>,
 ): void {
   if (start > trackCount) {
@@ -780,7 +816,7 @@ function assertFiniteContainer(container: Readonly<LayoutBox>): void {
 }
 
 function rejectUnsupportedItemFields(
-  child: CRCElement<any>,
+  child: PibblElement<any>,
   style: Readonly<Record<string, unknown>>,
   container: Readonly<LayoutBox>,
 ): void {
@@ -827,7 +863,7 @@ function optionDiagnostic(
 }
 
 function childDiagnostic(
-  child: CRCElement<any>,
+  child: PibblElement<any>,
   property: string,
   value: unknown,
   container: Readonly<LayoutBox>,
@@ -843,7 +879,7 @@ function childDiagnostic(
   });
 }
 
-function childContext(child: CRCElement<any>, container: Readonly<LayoutBox>) {
+function childContext(child: PibblElement<any>, container: Readonly<LayoutBox>) {
   return {
     component: child.type.name || 'Anonymous',
     algorithm: 'grid',

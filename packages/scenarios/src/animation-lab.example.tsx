@@ -1,6 +1,7 @@
+import type { animationLabScenarioEntry } from './catalog.js';
 import {
   usePlayback,
-  useTransition,
+  useAnimatedValue,
   Group,
   Layer,
   marker,
@@ -10,19 +11,24 @@ import {
   sequence,
   signal,
   stepper,
-  track,
+  drive,
   tween,
   wait,
-  type CRCAnimationProgram,
-  type CRCPlayback,
-  type CRCPlaybackEvent,
-  type CRCPlaybackStatus,
+  type PibblAnimationProgram,
+  type PibblPlayback,
+  type PibblPlaybackEvent,
+  type PibblPlaybackStatus,
   type Signal,
   type WritableSignal,
-} from '@crc/core';
+} from '@pibbl/core';
 
 export const ANIMATION_LAB_SOURCE_ID = 'first-class-animation-laboratory-example';
 
+/**
+ * Actions supported by the animation lab scenario's public controller.
+ *
+ * @see {@link AnimationLabState}
+ */
 export type AnimationLabAction =
   | 'play'
   | 'pause'
@@ -40,32 +46,73 @@ export type AnimationLabAction =
   | 'remove-owner'
   | 'reset';
 
+/**
+ * Observable state exposed by the animation lab scenario for controls and assertions.
+ *
+ * @see {@link PibblPlaybackStatus}
+ * @see {@link AnimationLabAction}
+ * @see {@link animationLabScenarioEntry}
+ */
 export interface AnimationLabState {
-  readonly status: CRCPlaybackStatus;
+  /** Status recorded or configured by this scenario. See {@link PibblPlaybackStatus}. */
+  readonly status: PibblPlaybackStatus;
+  /** Current time recorded or configured by this scenario. See {@link AnimationLabState}. */
   readonly currentTime: number;
+  /** X recorded or configured by this scenario. See {@link AnimationLabState}. */
   readonly x: number;
+  /** Opacity recorded or configured by this scenario. See {@link AnimationLabState}. */
   readonly opacity: number;
+  /** Target scale recorded or configured by this scenario. See {@link AnimationLabState}. */
   readonly targetScale: number;
+  /** Presented scale recorded or configured by this scenario. See {@link AnimationLabState}. */
   readonly presentedScale: number;
+  /** Pulse scale recorded or configured by this scenario. See {@link AnimationLabState}. */
   readonly pulseScale: number;
+  /** Iteration recorded or configured by this scenario. See {@link AnimationLabState}. */
   readonly iteration: number;
+  /** Milestones recorded or configured by this scenario. See {@link AnimationLabState}. */
   readonly milestones: readonly string[];
-  readonly stepper: Readonly<{ value: number; steps: number }>;
-  readonly rootRenders: Readonly<{ primary: number; secondary: number }>;
+  /** Stepper recorded or configured by this scenario. See {@link AnimationLabState}. */
+  readonly stepper: Readonly<{
+    /** Value recorded or configured by this scenario. See {@link AnimationLabState}. */
+    value: number;
+    /** Steps recorded or configured by this scenario. See {@link AnimationLabState}. */
+    steps: number;
+  }>;
+  /** Root renders recorded or configured by this scenario. See {@link AnimationLabState}. */
+  readonly rootRenders: Readonly<{
+    /** Primary recorded or configured by this scenario. See {@link AnimationLabState}. */
+    primary: number;
+    /** Secondary recorded or configured by this scenario. See {@link AnimationLabState}. */
+    secondary: number;
+  }>;
+  /** Layer recorded or configured by this scenario. See {@link AnimationLabState}. */
   readonly layer: Readonly<{
+    /** Visible recorded or configured by this scenario. See {@link AnimationLabState}. */
     visible: boolean;
+    /** Child renders recorded or configured by this scenario. See {@link AnimationLabState}. */
     childRenders: number;
+    /** Presentations recorded or configured by this scenario. See {@link AnimationLabState}. */
     presentations: number;
   }>;
+  /** Shared roots recorded or configured by this scenario. See {@link AnimationLabState}. */
   readonly sharedRoots: Readonly<{
+    /** Visible recorded or configured by this scenario. See {@link AnimationLabState}. */
     visible: boolean;
+    /** Value recorded or configured by this scenario. See {@link AnimationLabState}. */
     value: number;
+    /** Primary renders recorded or configured by this scenario. See {@link AnimationLabState}. */
     primaryRenders: number;
+    /** Secondary renders recorded or configured by this scenario. See {@link AnimationLabState}. */
     secondaryRenders: number;
   }>;
+  /** Owner recorded or configured by this scenario. See {@link AnimationLabState}. */
   readonly owner: 'mounted' | 'removed';
-  readonly staleStatus: CRCPlaybackStatus | 'none';
+  /** Stale status recorded or configured by this scenario. See {@link PibblPlaybackStatus}. */
+  readonly staleStatus: PibblPlaybackStatus | 'none';
+  /** Stale action inert recorded or configured by this scenario. See {@link AnimationLabState}. */
   readonly staleActionInert: boolean;
+  /** Last action recorded or configured by this scenario. See {@link AnimationLabAction}. */
   readonly lastAction: 'mount' | AnimationLabAction;
 }
 
@@ -98,9 +145,9 @@ export interface AnimationLabModel {
   readonly metrics: AnimationLabMetrics;
   ownerVisible: boolean;
   programMode: AnimationLabProgramMode;
-  playback: CRCPlayback | undefined;
+  playback: PibblPlayback | undefined;
   presentedScale: Signal<number> | undefined;
-  stalePlayback: CRCPlayback | undefined;
+  stalePlayback: PibblPlayback | undefined;
   staleActionInert: boolean;
   publish: (() => void) | undefined;
 }
@@ -136,21 +183,21 @@ export function createAnimationLabModel(): AnimationLabModel {
   };
 }
 
-function entranceProgram(model: AnimationLabModel): CRCAnimationProgram {
+function entranceProgram(model: AnimationLabModel): PibblAnimationProgram {
   return sequence(
     parallel(
-      track(model.x, tween({ from: 0, to: 180, duration: 200 })),
-      track(model.opacity, tween({ from: 1, to: 0.4, duration: 200 })),
+      drive(model.x, tween({ from: 0, to: 180, duration: 200 })),
+      drive(model.opacity, tween({ from: 1, to: 0.4, duration: 200 })),
     ),
     marker('arrived'),
-    track(model.pulseScale, tween({ from: 1, to: 1.25, duration: 100 })),
+    drive(model.pulseScale, tween({ from: 1, to: 1.25, duration: 100 })),
   );
 }
 
-function repeatProgram(model: AnimationLabModel): CRCAnimationProgram {
+function repeatProgram(model: AnimationLabModel): PibblAnimationProgram {
   return repeat(
     sequence(
-      track(model.x, tween({ from: 0, to: 120, duration: 90 })),
+      drive(model.x, tween({ from: 0, to: 120, duration: 90 })),
       marker('turn'),
       wait(10),
     ),
@@ -158,8 +205,8 @@ function repeatProgram(model: AnimationLabModel): CRCAnimationProgram {
   );
 }
 
-function simulationProgram(model: AnimationLabModel): CRCAnimationProgram {
-  return track(model.stepper, stepper({
+function simulationProgram(model: AnimationLabModel): PibblAnimationProgram {
+  return drive(model.stepper, stepper({
     stepMilliseconds: 10,
     maxElapsedMilliseconds: 30,
     initial: (): AnimationLabStepperProjection => Object.freeze({
@@ -176,7 +223,7 @@ function simulationProgram(model: AnimationLabModel): CRCAnimationProgram {
   }));
 }
 
-function programFor(model: AnimationLabModel): CRCAnimationProgram {
+function programFor(model: AnimationLabModel): PibblAnimationProgram {
   switch (model.programMode) {
     case 'entrance':
       return entranceProgram(model);
@@ -187,7 +234,7 @@ function programFor(model: AnimationLabModel): CRCAnimationProgram {
   }
 }
 
-function normalizedEvent(model: AnimationLabModel, event: CRCPlaybackEvent): string {
+function normalizedEvent(model: AnimationLabModel, event: PibblPlaybackEvent): string {
   if (event.type === 'start') model.metrics.eventOrigin = event.logicalTime;
   const origin = model.metrics.eventOrigin ?? event.logicalTime;
   const relativeTime = Number((event.logicalTime - origin).toFixed(10));
@@ -207,12 +254,7 @@ function AnimationOwner({ model }: { readonly model: AnimationLabModel }) {
       model.publish?.();
     },
   });
-  const presentedScale = useTransition(model.transitionTarget.get(), {
-    type: 'tween',
-    duration: 120,
-    initial: 1,
-    debugName: 'animation laboratory transition',
-  });
+  const presentedScale = useAnimatedValue(model.transitionTarget.get(), { animation: tween({ duration: 120 }), initial: 1, debugName: 'animation laboratory transition' });
   model.playback = playback;
   model.presentedScale = presentedScale;
 

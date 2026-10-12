@@ -1,4 +1,4 @@
-# CRC style, layout, and element architecture
+# Pibbl style, layout, and element architecture
 
 Status: current architecture. Project Plan 003 established style/layout on
 2026-08-18; the JSX authoring pivot updated the element boundary on 2026-09-03.
@@ -6,14 +6,14 @@ Status: current architecture. Project Plan 003 established style/layout on
 ## Purpose
 
 This document describes how branded elements, local style, pure measurement,
-and declared-box layout preserve CRC's scheduled immediate-mode Canvas model.
+and declared-box layout preserve Pibbl's scheduled immediate-mode Canvas model.
 The completed Plan 003 design and implementation documents remain dated
 historical evidence for the original style/layout delivery; this document is
 the current authoring and runtime architecture.
 
 ## Existing constraints
 
-CRC preserves:
+Pibbl preserves:
 
 - one live mount per Canvas and identity-guarded, idempotent disposal;
 - animation-frame update coalescing and one full synchronous traversal;
@@ -35,17 +35,17 @@ JSX and `createElement(type, props, ...children)` create the same lightweight
 descriptor:
 
 ```ts
-interface CRCElement<P = unknown> {
-  readonly type: CRCElementType<P>;
+interface PibblElement<P = unknown> {
+  readonly type: PibblElementType<P>;
   readonly props: Readonly<P>;
   readonly key?: string;
 }
 
-type CRCComponent<P> = (props: P) => CRCNode | void;
+type PibblComponent<P> = (props: P) => PibblNode | void;
 ```
 
 The public interface is nominally branded; the runtime uses the non-enumerable
-stable global symbol `Symbol.for("@crc/core.element")`. Author props are copied,
+stable global symbol `Symbol.for("@pibbl/core.element")`. Author props are copied,
 `key` is removed and normalized from string/number to string, and compiler or
 variadic children are installed in props. Development construction
 shallow-freezes the synthetic props and descriptor and `jsxDEV` stores source
@@ -58,16 +58,16 @@ report a targeted error when invoked outside the renderer.
 ### Recursive nodes and preparation
 
 ```ts
-type CRCNode =
-  | CRCElement<any>
+type PibblNode =
+  | PibblElement<any>
   | false
   | true
   | null
   | undefined
   | ""
   | 0
-  | readonly CRCNode[]
-  | Iterable<CRCNode>;
+  | readonly PibblNode[]
+  | Iterable<PibblNode>;
 ```
 
 Arrays and finite synchronous iterables flatten recursively. Empty values do
@@ -218,7 +218,7 @@ interface LayoutResult {
 }
 
 interface ChildPlacement {
-  element: CRCElement;
+  element: PibblElement;
   box: LayoutBox;
   clipInChildSpace?: LayoutBox;
   identityHint: InternalIdentityHint;
@@ -227,13 +227,13 @@ interface ChildPlacement {
 
 - `Absolute`: independent offsets within a containing box;
 - `Overlay`: one shared allocation plus alignment;
-- `Flow`: CRC-native sequential placement and optional wrapping;
+- `Flow`: Pibbl-native sequential placement and optional wrapping;
 - `Flex`: the documented CSS-compatible subset; and
 - `Grid`: explicit fixed/percentage/fractional tracks and explicit placement.
 
 Algorithms do not depend on global render state, DOM nodes, user events, or
-Canvas drawing calls. CSS-named values are accepted only where CRC implements
-their documented behavior; divergent algorithms retain CRC-specific names.
+Canvas drawing calls. CSS-named values are accepted only where Pibbl implements
+their documented behavior; divergent algorithms retain Pibbl-specific names.
 
 ## Render pipeline
 
@@ -266,7 +266,7 @@ For a dedicated layout element the runtime:
 6. traverses stable private placement descriptors in paint order.
 
 A placement descriptor saves Canvas/runtime layout state, translates to the
-child allocation, applies CRC-owned overflow clipping, publishes a child-local
+child allocation, applies Pibbl-owned overflow clipping, publishes a child-local
 `LayoutBox`, traverses the author element, and restores state. This remains one
 normal render traversal, never a speculative paint pass.
 
@@ -296,7 +296,7 @@ algorithm work. It normalizes direct child style without invoking child
 functions. Flow/Flex/Grid call pure measurement only when a used size is not
 definite.
 
-For each result, CRC creates a branded private placement clone that preserves
+For each result, Pibbl creates a branded private placement clone that preserves
 the author descriptor and records per-occurrence used style/identity metadata
 in weak storage. Placement then:
 
@@ -384,7 +384,7 @@ runs in the component's local paint space after resolved dimensions are known.
 
 ### Clipping and overflow
 
-Visible overflow creates no layout clip. Clipped overflow adds a CRC-managed
+Visible overflow creates no layout clip. Clipped overflow adds a Pibbl-managed
 content-box clip whose intersection is shared by paint and hit testing; it does
 not imply scrolling.
 
@@ -407,7 +407,7 @@ const card = (
 );
 ```
 
-CRC never merges parent style into a child. A component forwards or derives
+Pibbl never merges parent style into a child. A component forwards or derives
 the style fields it intentionally owns. System normalization ignores
 application-owned `custom` data.
 

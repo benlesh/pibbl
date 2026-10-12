@@ -12,7 +12,7 @@ relatedTypes: [PolygonPathOptions]
 # createPolygonPath
 
 ```ts
-import { createPolygonPath, Path } from "@crc/core";
+import { createPolygonPath, Path } from "@pibbl/core";
 ```
 
 [`PolygonPathOptions`](#/api/types/elements-components#polygonpathoptions) is accepted by `createPolygonPath(options): Path2D`, which creates a fresh

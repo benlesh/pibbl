@@ -5,18 +5,18 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const root = resolve(process.env.CRC_AUDIT_ROOT ?? fileURLToPath(new URL('../..', import.meta.url)));
+const root = resolve(process.env.PIBBL_AUDIT_ROOT ?? fileURLToPath(new URL('../..', import.meta.url)));
 const baseUrl = process.argv[2] ?? 'http://127.0.0.1:5204';
-const outputDirectory = resolve(process.env.CRC_AUDIT_OUTPUT ?? resolve(root, 'docs/testing/runtime-performance-audit/2026-10-03/results'));
+const outputDirectory = resolve(process.env.PIBBL_AUDIT_OUTPUT ?? resolve(root, 'docs/testing/runtime-performance-audit/2026-10-03/results'));
 await mkdir(outputDirectory, { recursive: true });
 const output = resolve(outputDirectory, `weak-retention-${new Date().toISOString().replaceAll(':', '-')}.json`);
 const browser = await chromium.launch({ headless: true });
-const report = { schema: 'crc-weak-retention/3', sourceRoot: root, sourceCommit: execFileSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' }).trim(), baseUrl, methodology: 'Each post-disposal dereference happens after two CDP forced-GC rounds separated by a browser task, before changing the retained handle. This accommodates delayed DOM wrapper cleanup without using a dereference that keeps the target alive between rounds. The probe weakly observes the actual root CRCElement and HTMLCanvasElement; the retain case keeps only the public Texture handle. WeakRef only distinguishes JavaScript reachability; it cannot prove native/GPU reclamation.', cases: [], errors: [] };
+const report = { schema: 'pibbl-weak-retention/3', sourceRoot: root, sourceCommit: execFileSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' }).trim(), baseUrl, methodology: 'Each post-disposal dereference happens after two CDP forced-GC rounds separated by a browser task, before changing the retained handle. This accommodates delayed DOM wrapper cleanup without using a dereference that keeps the target alive between rounds. The probe weakly observes the actual root PibblElement and HTMLCanvasElement; the retain case keeps only the public Texture handle. WeakRef only distinguishes JavaScript reachability; it cannot prove native/GPU reclamation.', cases: [], errors: [] };
 try {
   for (const retain of [false, true]) {
     const page = await browser.newPage();
-    await page.route('**/crc-weak-audit.html', route => route.fulfill({ contentType: 'text/html', body: '<!doctype html><title>CRC WeakRef audit</title>' }));
-    await page.goto(`${baseUrl}/crc-weak-audit.html`);
+    await page.route('**/pibbl-weak-audit.html', route => route.fulfill({ contentType: 'text/html', body: '<!doctype html><title>Pibbl WeakRef audit</title>' }));
+    await page.goto(`${baseUrl}/pibbl-weak-audit.html`);
     await page.evaluate(async ({ workspace, retain }) => {
       const base = `/@fs${workspace}/`;
       const [core, textures, scheduler] = await Promise.all([import(`${base}packages/core/src/index.ts`), import(`${base}packages/textures/src/index.ts`), import(`${base}packages/core/src/lib/scheduler/testing.ts`)]);
@@ -28,11 +28,11 @@ try {
       document.body.append(canvas);
       rootElement = core.createElement(Scene, { retainHandle: retain });
       const weakRoot = new WeakRef(rootElement), weakCanvas = new WeakRef(canvas);
-      const controller = core.crc(canvas, rootElement);
+      const controller = core.pibbl(canvas, rootElement);
       const pendingBeforeInitialFlush = driver.pendingHostFrames;
       driver.flush(0);
       const hasConfiguredStaleHandle = retain ? stale !== undefined : stale === undefined;
-      window.__crcWeakAudit = { weakRoot, weakCanvas, stale, hasConfiguredStaleHandle, renders, pendingBeforeInitialFlush, controller, scheduler, restore };
+      window.__pibblWeakAudit = { weakRoot, weakCanvas, stale, hasConfiguredStaleHandle, renders, pendingBeforeInitialFlush, controller, scheduler, restore };
       // Explicitly sever local references before later forced-GC evaluations.
       // eslint-disable-next-line no-useless-assignment
       rootElement = undefined;
@@ -41,15 +41,15 @@ try {
     }, { workspace: root, retain });
     const positiveControl = await page.evaluate(({ retain }) => ({
       retain,
-      hasConfiguredStaleHandle: window.__crcWeakAudit.hasConfiguredStaleHandle,
-      renders: window.__crcWeakAudit.renders,
-      pendingBeforeInitialFlush: window.__crcWeakAudit.pendingBeforeInitialFlush,
-      rootReachableBeforeDispose: window.__crcWeakAudit.weakRoot.deref() !== undefined,
-      canvasReachableBeforeDispose: window.__crcWeakAudit.weakCanvas.deref() !== undefined,
+      hasConfiguredStaleHandle: window.__pibblWeakAudit.hasConfiguredStaleHandle,
+      renders: window.__pibblWeakAudit.renders,
+      pendingBeforeInitialFlush: window.__pibblWeakAudit.pendingBeforeInitialFlush,
+      rootReachableBeforeDispose: window.__pibblWeakAudit.weakRoot.deref() !== undefined,
+      canvasReachableBeforeDispose: window.__pibblWeakAudit.weakCanvas.deref() !== undefined,
     }), { retain });
     if (!positiveControl.hasConfiguredStaleHandle || positiveControl.renders < 1 || !positiveControl.rootReachableBeforeDispose || !positiveControl.canvasReachableBeforeDispose) throw new Error(`WeakRef pre-disposal positive control failed: ${JSON.stringify(positiveControl)}`);
     const disposeState = await page.evaluate(() => {
-      const state = window.__crcWeakAudit;
+      const state = window.__pibblWeakAudit;
       state.controller.dispose();
       state.controller = undefined;
       document.querySelector('canvas')?.remove();
@@ -69,15 +69,15 @@ try {
     const beforeDrop = await page.evaluate(({ retain, positiveControl }) => ({
       ...positiveControl,
       retain,
-      rootReachableWithConfiguredHandleState: window.__crcWeakAudit.weakRoot.deref() !== undefined,
-      canvasReachableWithConfiguredHandleState: window.__crcWeakAudit.weakCanvas.deref() !== undefined,
-      scheduler: window.__crcWeakAudit.scheduler,
+      rootReachableWithConfiguredHandleState: window.__pibblWeakAudit.weakRoot.deref() !== undefined,
+      canvasReachableWithConfiguredHandleState: window.__pibblWeakAudit.weakCanvas.deref() !== undefined,
+      scheduler: window.__pibblWeakAudit.scheduler,
     }), { retain, positiveControl });
-    await page.evaluate(() => { window.__crcWeakAudit.stale = undefined; });
+    await page.evaluate(() => { window.__pibblWeakAudit.stale = undefined; });
     await collect();
     report.cases.push({ ...beforeDrop, ...await page.evaluate(() => ({
-      rootReachableAfterDroppingStaleAndRepeatedGC: window.__crcWeakAudit.weakRoot.deref() !== undefined,
-      canvasReachableAfterDroppingStaleAndRepeatedGC: window.__crcWeakAudit.weakCanvas.deref() !== undefined,
+      rootReachableAfterDroppingStaleAndRepeatedGC: window.__pibblWeakAudit.weakRoot.deref() !== undefined,
+      canvasReachableAfterDroppingStaleAndRepeatedGC: window.__pibblWeakAudit.weakCanvas.deref() !== undefined,
     })) });
     await page.close();
   }

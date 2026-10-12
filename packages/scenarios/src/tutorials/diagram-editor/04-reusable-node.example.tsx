@@ -1,12 +1,12 @@
 import {
-  crc,
+  pibbl,
   Fragment,
   Group,
   Path,
   Rectangle,
   Text,
-  type CRCController,
-} from "@crc/core";
+  type PibblController,
+} from "@pibbl/core";
 
 type NodeId = "idea" | "sketch" | "build" | "ship";
 
@@ -236,6 +236,6 @@ function DiagramEditor() {
   ];
 }
 
-export default function mount(canvas: HTMLCanvasElement): CRCController {
-  return crc(canvas, <DiagramEditor />);
+export default function mount(canvas: HTMLCanvasElement): PibblController {
+  return pibbl(canvas, <DiagramEditor />);
 }

@@ -1,6 +1,6 @@
 import {
   batch,
-  crc,
+  pibbl,
   resolveSignalValue,
   useComputed,
   useConst,
@@ -9,10 +9,10 @@ import {
   Line,
   Rectangle,
   Text,
-  type CRCController,
-  type CRCNode,
+  type PibblController,
+  type PibblNode,
   type SignalValue,
-} from "@crc/core";
+} from "@pibbl/core";
 
 const signalInputsExternalResource = {
   cleanupRuns: 0,
@@ -25,7 +25,7 @@ interface LineSeriesProps {
   readonly domain: SignalValue<readonly [number, number]>;
 }
 
-function LineSeries(props: LineSeriesProps): CRCNode {
+function LineSeries(props: LineSeriesProps): PibblNode {
   const data = resolveSignalValue(props.data);
   const [minimum, maximum] = resolveSignalValue(props.domain);
   const range = Math.max(1, maximum - minimum);
@@ -50,7 +50,7 @@ function LineSeries(props: LineSeriesProps): CRCNode {
   ];
 }
 
-function SignalInputsStudy(): CRCNode {
+function SignalInputsStudy(): PibblNode {
   const x = useSignal(72);
   const color = useSignal("#2563eb");
   const label = useSignal("Current");
@@ -129,6 +129,6 @@ function SignalInputsStudy(): CRCNode {
   ];
 }
 
-export default function mount(canvas: HTMLCanvasElement): CRCController {
-  return crc(canvas, <SignalInputsStudy />);
+export default function mount(canvas: HTMLCanvasElement): PibblController {
+  return pibbl(canvas, <SignalInputsStudy />);
 }

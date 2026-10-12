@@ -1,0 +1,41 @@
+✔ compares recorded actions while ignoring independent run IDs (0.884ms)
+✔ refuses missing or differing provenance rather than silently comparing unlike runs (0.725083ms)
+✔ compares recorded failure changes and refuses a pass with unfinished actions (0.12ms)
+✔ refuses equally unavailable or malformed observed environments (0.250167ms)
+✔ labels declared-only comparisons and compares observed facts when available (0.104083ms)
+✔ compares explicit check evidence and refuses contradictory required-check passes (0.127209ms)
+✔ refuses missing required-check evidence and differing declared check manifests (0.157291ms)
+✔ finds a requirement-linked runnable scenario with independent acceptance evidence (1.88225ms)
+✔ distinguishes known unmapped requirements from invalid IDs without inventing coverage (0.42625ms)
+✔ maps analytical correctness to independent arithmetic rather than screenshot similarity (0.476ms)
+✔ discovers the completed text and signal workflows with usable evidence and rerun recipes (0.405208ms)
+✔ finds layout and missingness workflows without inflating their provenance (0.443ms)
+✔ summary omits bulky observations; explicit action and manifest views retain exact data (5.072667ms)
+✔ checkpoint views cannot promote a completed subset to final success (0.899917ms)
+✔ ambiguous/missing actions and invalid or oversized evidence reject (6.137333ms)
+✔ summary reports omitted actions explicitly and remains compact (1.569708ms)
+✔ summary includes secondary failure categories without conflating them with operation errors (0.741167ms)
+✔ checkpoint summary preserves clock identity and correlation limits (0.544042ms)
+✔ summarizes explicit non-pass check reasons and refuses unknown outcome enums (2.938917ms)
+✔ retrieves one identified assertion failure with its action and operands (1.449916ms)
+✔ exposes declared check expectations separately from completed checks (0.914958ms)
+✔ check expectations alone cannot masquerade as a missing run manifest (0.6745ms)
+✔ pages saved action records with content-bound cursors and explicit checkpoint history (3.254958ms)
+✔ bounds pagination and rejects malformed or mismatched cursors instead of silently restarting (1.138375ms)
+✔ rejects noncanonical encoded cursors rather than accepting whitespace aliases (1.019208ms)
+✔ reads text and signal mutation evidence through the shared summary and identified check views (1.444125ms)
+✔ projects requested fields from oversized action evidence without returning unrelated payloads (2.00725ms)
+✔ projection uses own JSON fields, escapes pointer tokens, distinguishes special numbers and bounds strings (0.82375ms)
+✔ invalid field selectors and unsupported versions have machine-readable errors (1.534875ms)
+✔ CLI projects real retained signal evidence and exposes structured selector failures (131.49625ms)
+✔ projection bounds object-key previews and enforces output bytes even for worst-case escaping (3.84025ms)
+✔ preserves redacted failure reasons and stages without inventing an assertion message (1.266834ms)
+✔ reads layout smoke actions without inventing per-action success or attestation (5.393458ms)
+ℹ tests 33
+ℹ suites 0
+ℹ pass 33
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 212.814833

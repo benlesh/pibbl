@@ -7,7 +7,7 @@ Date: 2026-09-09
 
 Branch: `codex/rounded-shapes`
 
-Workspace: `/private/tmp/crc-rounded-shapes`
+Workspace: `/private/tmp/pibbl-rounded-shapes`
 
 ## Environment
 

@@ -1,11 +1,14 @@
+import type { agentTargetingVerificationScenarioEntry } from './catalog.js';
+import type { createRuntimeCheckedInspector } from '../../../tooling/agent-verification/runtime-inspection.js';
 import type { createEventTrace } from '../../../tooling/agent-verification/events.js';
 import type { createSchedulerHistory } from '../../../tooling/agent-verification/scheduler.js';
 import type { probeHostPoint } from '../../../tooling/agent-verification/browser.js';
 import type { createSignalInspector } from '../../../tooling/agent-verification/signals.js';
-import { crc, createElement, computed, signal, type CRCLogicalMouseEvent, type CRCPointerEvent } from '@crc/core';
+import { pibbl, createElement, computed, signal, type PibblLogicalMouseEvent, type PibblPointerEvent } from '@pibbl/core';
 import type {
   createTargetingInspector,
   TargetingProbe,
+  TargetingPage,
   InteractionPointSearch,
   CoordinateConversion,
   TargetingSnapshot,
@@ -22,6 +25,11 @@ import type {
   ScenarioMountContext,
 } from './types.js';
 
+/**
+ * Actions supported by the agent targeting scenario's public controller.
+ *
+ * @see {@link AGENT_TARGETING_ACTION_IDS}
+ */
 export type AgentTargetingAction =
   | 'capture-sources'
   | 'trace-start'
@@ -30,6 +38,9 @@ export type AgentTargetingAction =
   | 'dom-overlay'
   | 'remove-dom-overlay'
   | 'capture-drag'
+  | 'pagination-scene'
+  | 'scene-page-first'
+  | 'scene-page-next'
   | 'inspect'
   | 'inspect-outside-layer'
   | 'inspection-off'
@@ -52,37 +63,142 @@ export interface AgentTargetingDeliveryRecord {
   } | null;
 }
 
+/**
+ * Observable state exposed by the agent targeting scenario for controls and assertions.
+ *
+ * @see {@link AgentTargetingMode}
+ * @see {@link AgentTargetingDelivery}
+ * @see {@link agentTargetingVerificationScenarioEntry}
+ */
 export interface AgentTargetingState {
-  readonly componentChanges: ReturnType<ReturnType<typeof createSignalInspector>['compareComponents']> | null;
+  /**
+   * Runtime compatibility recorded or configured by this scenario. See {@link AgentTargetingState}
+   * .
+   */
+  readonly runtimeCompatibility: Omit<
+    ReturnType<typeof createRuntimeCheckedInspector>,
+    'inspector'
+  > | null;
+  /** Scene page recorded or configured by this scenario. See {@link TargetingPage}. */
+  readonly scenePage: TargetingPage | null;
+  /** Component changes recorded or configured by this scenario. See {@link AgentTargetingState}. */
+  readonly componentChanges: ReturnType<
+    ReturnType<typeof createSignalInspector>['compareComponents']
+  > | null;
+  /** Event trace recorded or configured by this scenario. See {@link AgentTargetingState}. */
   readonly eventTrace: ReturnType<ReturnType<typeof createEventTrace>['snapshot']> | null;
-  readonly schedulerHistory: ReturnType<ReturnType<typeof createSchedulerHistory>['snapshot']> | null;
-  readonly coordinateMappings: { readonly backing: CoordinateConversion; readonly cssContent: CoordinateConversion } | null;
-  readonly signalInspection: ReturnType<ReturnType<typeof createSignalInspector>['snapshot']> | null;
+  /** Scheduler history recorded or configured by this scenario. See {@link AgentTargetingState}. */
+  readonly schedulerHistory: ReturnType<
+    ReturnType<typeof createSchedulerHistory>['snapshot']
+  > | null;
+  /**
+   * Coordinate mappings recorded or configured by this scenario. See {@link CoordinateConversion}
+   * .
+   */
+  readonly coordinateMappings: {
+    /** Backing recorded or configured by this scenario. See {@link CoordinateConversion}. */
+    readonly backing: CoordinateConversion;
+    /** Css content recorded or configured by this scenario. See {@link CoordinateConversion}. */
+    readonly cssContent: CoordinateConversion;
+  } | null;
+  /** Signal inspection recorded or configured by this scenario. See {@link AgentTargetingState}. */
+  readonly signalInspection: ReturnType<
+    ReturnType<typeof createSignalInspector>['snapshot']
+  > | null;
+  /**
+   * Focus observation error recorded or configured by this scenario. See
+   * {@link AgentTargetingState}.
+   */
   readonly focusObservationError: string | null;
+  /** Browser probe recorded or configured by this scenario. See {@link AgentTargetingState}. */
   readonly browserProbe: ReturnType<typeof probeHostPoint> | null;
+  /**
+   * Dom overlay clicks recorded or configured by this scenario. See {@link AgentTargetingState}.
+   */
   readonly domOverlayClicks: number;
-  readonly capturedDelivery: { readonly pointerId: number; readonly targetId: number | null; readonly x: number; readonly y: number } | null;
+  /** Captured delivery recorded or configured by this scenario. See {@link AgentTargetingState}. */
+  readonly capturedDelivery: {
+    /** Pointer id recorded or configured by this scenario. See {@link AgentTargetingState}. */
+    readonly pointerId: number;
+    /** Target id recorded or configured by this scenario. See {@link AgentTargetingState}. */
+    readonly targetId: number | null;
+    /** X recorded or configured by this scenario. See {@link AgentTargetingState}. */
+    readonly x: number;
+    /** Y recorded or configured by this scenario. See {@link AgentTargetingState}. */
+    readonly y: number;
+  } | null;
+  /** Point search recorded or configured by this scenario. See {@link InteractionPointSearch}. */
   readonly pointSearch: InteractionPointSearch | null;
-  readonly probePoint: { readonly x: number; readonly y: number } | null;
+  /** Probe point recorded or configured by this scenario. See {@link AgentTargetingState}. */
+  readonly probePoint: {
+    /** X recorded or configured by this scenario. See {@link AgentTargetingState}. */
+    readonly x: number;
+    /** Y recorded or configured by this scenario. See {@link AgentTargetingState}. */
+    readonly y: number;
+  } | null;
+  /** Mode recorded or configured by this scenario. See {@link AgentTargetingMode}. */
   readonly mode: AgentTargetingMode;
+  /**
+   * Expected selection recorded or configured by this scenario. See {@link AgentTargetingState}.
+   */
   readonly expectedSelection: boolean;
+  /** Selected item recorded or configured by this scenario. See {@link AgentTargetingState}. */
   readonly selectedItem: 'item-a' | null;
+  /** Selections recorded or configured by this scenario. See {@link AgentTargetingState}. */
   readonly selections: number;
+  /** Delivered to recorded or configured by this scenario. See {@link AgentTargetingDelivery}. */
   readonly deliveredTo: AgentTargetingDelivery;
+  /** Delivery recorded or configured by this scenario. See {@link AgentTargetingDeliveryRecord}. */
   readonly delivery: AgentTargetingDeliveryRecord;
-  readonly inspection: TargetingSnapshot | { readonly status: 'unavailable'; readonly generation: null };
-  readonly probe: TargetingProbe | { readonly status: 'unavailable'; readonly targetId: null; readonly candidates: readonly [] };
+  /** Inspection recorded or configured by this scenario. See {@link TargetingSnapshot}. */
+  readonly inspection:
+    | TargetingSnapshot
+    | {
+        /** Status recorded or configured by this scenario. See {@link AgentTargetingState}. */
+        readonly status: 'unavailable';
+        /** Generation recorded or configured by this scenario. See {@link AgentTargetingState}. */
+        readonly generation: null;
+      };
+  /** Probe recorded or configured by this scenario. See {@link TargetingProbe}. */
+  readonly probe:
+    | TargetingProbe
+    | {
+        /** Status recorded or configured by this scenario. See {@link AgentTargetingState}. */
+        readonly status: 'unavailable';
+        /** Target id recorded or configured by this scenario. See {@link AgentTargetingState}. */
+        readonly targetId: null;
+        /** Candidates recorded or configured by this scenario. See {@link AgentTargetingState}. */
+        readonly candidates: readonly [];
+      };
+  /**
+   * Inspection enabled recorded or configured by this scenario. See {@link AgentTargetingState}.
+   */
   readonly inspectionEnabled: boolean;
+  /**
+   * Inspection availability recorded or configured by this scenario. See
+   * {@link AgentTargetingState}.
+   */
   readonly inspectionAvailability: 'source-runtime' | 'unsupported-build';
+  /** Render count recorded or configured by this scenario. See {@link AgentTargetingState}. */
   readonly renderCount: number;
+  /**
+   * Dormant metric evaluations recorded or configured by this scenario. See
+   * {@link AgentTargetingState}.
+   */
   readonly dormantMetricEvaluations: number;
 }
 
+/**
+ * Stable action identifiers accepted by the agent targeting scenario.
+ *
+ * @see {@link AgentTargetingAction}
+ */
 export const AGENT_TARGETING_ACTION_IDS: readonly AgentTargetingAction[] = [
   'keyboard-focus',
   'dom-overlay',
   'remove-dom-overlay',
   'capture-drag',
+  'pagination-scene', 'scene-page-first', 'scene-page-next',
   'inspect',
   'inspect-outside-layer',
   'repair',
@@ -98,6 +214,7 @@ const TARGET_POINT = { x: 144, y: 112 } as const;
 
 function unavailableState() {
   return {
+    scenePage: null,
     componentChanges: null,
     schedulerHistory: null,
     eventTrace: null,
@@ -120,8 +237,18 @@ export const agentTargetingVerificationScenario: ScenarioDefinition<AgentTargeti
   sourceId: AGENT_TARGETING_VERIFICATION_SOURCE_ID,
   actionIds: AGENT_TARGETING_ACTION_IDS,
   async mount(context: ScenarioMountContext<AgentTargetingState>) {
-    const inspectorFactory = import.meta.env.DEV && import.meta.env.MODE !== 'built' ?
-      (await import('../../../tooling/agent-verification/targeting.js')).createTargetingInspector : undefined;
+    const runtimeTools = import.meta.env.DEV && import.meta.env.MODE !== 'built' ?
+      await import('../../../tooling/agent-verification/runtime-inspection.js') : undefined;
+    const applicationIdentity = runtimeTools ? await import('../../../tooling/agent-verification/runtime-identity.js') : undefined;
+    let runtimeCompatibility: AgentTargetingState['runtimeCompatibility'] = null;
+    const inspectorFactory = runtimeTools && applicationIdentity ? (canvas: HTMLCanvasElement) => {
+      // Bind to the pibbl function actually used below, so differing resolution
+      // cannot silently compare the inspector's identity only with itself.
+      const binding = { ...applicationIdentity.captureRuntimeBinding(), runtime: pibbl };
+      const checked = runtimeTools.createRuntimeCheckedInspector(canvas, binding);
+      runtimeCompatibility = { status: checked.status, diagnostic: checked.diagnostic, reason: checked.reason };
+      return checked.inspector ?? undefined;
+    } : undefined;
     const signalInspectorFactory = import.meta.env.DEV && import.meta.env.MODE !== 'built' ?
       (await import('../../../tooling/agent-verification/signals.js')).createSignalInspector : undefined;
     const historyFactory = import.meta.env.DEV && import.meta.env.MODE !== 'built' ?
@@ -137,6 +264,7 @@ export const agentTargetingVerificationScenario: ScenarioDefinition<AgentTargeti
     let removeOverlay = () => {};
     let disposed = false;
     let inspector: ReturnType<typeof createTargetingInspector> | undefined;
+    let sceneCursor: string | null = null;
     const mapCoordinates = (inspection: TargetingSnapshot, point: { readonly x: number; readonly y: number }) => inspection.generation && inspector ? {
       backing: inspector.convert(inspection.generation, 'root-logical', 'backing', point),
       cssContent: inspector.convert(inspection.generation, 'root-logical', 'css-content', point),
@@ -165,12 +293,13 @@ export const agentTargetingVerificationScenario: ScenarioDefinition<AgentTargeti
       if (root) signalInspector.labelComponent({ session: snapshot.session, componentId: root.componentId, renderGeneration: root.renderGeneration }, 'targeting-scene');
     };
     const enableSignalInspection = () => {
-      if (!signalInspectorFactory || signalInspector) return;
+      if (!signalInspectorFactory || signalInspector || !inspector) return;
       previousSignalSnapshot = undefined;
       signalInspector = signalInspectorFactory(context.canvas);
       for (const value of [mode, selectedItem, selections, deliveredTo, dormantMetric, selectionLabel]) signalInspector.register(value);
     };
     let latest: AgentTargetingState = {
+      runtimeCompatibility: null,
       mode: 'seed',
       domOverlayClicks: 0,
       expectedSelection: true,
@@ -187,7 +316,7 @@ export const agentTargetingVerificationScenario: ScenarioDefinition<AgentTargeti
 
     const copyState = (): AgentTargetingState => structuredClone(latest);
     const publish = () => {
-      if (evidence) evidence.textContent = JSON.stringify({ schema: 'crc-targeting-fixture/1', identity: fixtureIdentity, state: latest });
+      if (evidence) evidence.textContent = JSON.stringify({ schema: 'pibbl-targeting-fixture/1', identity: fixtureIdentity, state: latest });
       context.onStateChange?.(copyState());
     };
     const pendingWaits = new Set<() => void>();
@@ -214,7 +343,7 @@ export const agentTargetingVerificationScenario: ScenarioDefinition<AgentTargeti
       frame = requestAnimationFrame(poll);
     });
     const updateLatest = (update: Partial<AgentTargetingState>) => {
-      latest = { ...latest, ...update, renderCount, dormantMetricEvaluations, schedulerHistory: history?.snapshot() ?? null, eventTrace: eventTrace?.snapshot() ?? null };
+      latest = { ...latest, ...update, runtimeCompatibility, renderCount, dormantMetricEvaluations, schedulerHistory: history?.snapshot() ?? null, eventTrace: eventTrace?.snapshot() ?? null };
       publish();
     };
     const setMode = (nextMode: AgentTargetingMode) => {
@@ -235,7 +364,7 @@ export const agentTargetingVerificationScenario: ScenarioDefinition<AgentTargeti
     };
     const onDelivery = (
       target: Exclude<AgentTargetingDelivery, null>,
-      event: CRCLogicalMouseEvent,
+      event: PibblLogicalMouseEvent,
     ) => {
       // Capture synchronously. Window activation can come from earlier input and
       // does not certify this event's trust or grant a particular permission.
@@ -276,7 +405,7 @@ export const agentTargetingVerificationScenario: ScenarioDefinition<AgentTargeti
         if (!disposed) updateLatest({ focusObservationError: String(error).slice(0, 500) });
       }).finally(() => { focusObservationPending = false; });
     };
-    let crcController: ReturnType<typeof crc> | undefined;
+    let pibblController: ReturnType<typeof pibbl> | undefined;
     const dispose = () => {
       if (disposed) return;
       disposed = true;
@@ -288,10 +417,10 @@ export const agentTargetingVerificationScenario: ScenarioDefinition<AgentTargeti
       signalInspector?.dispose(); signalInspector = undefined; previousSignalSnapshot = undefined;
       for (const cancel of pendingWaits) cancel();
       evidence?.remove();
-      crcController?.dispose();
+      pibblController?.dispose();
     };
     try {
-      crcController = crc(
+      pibblController = pibbl(
       context.canvas,
       createElement(AgentTargetingVerificationScene, {
         mode,
@@ -306,7 +435,7 @@ export const agentTargetingVerificationScenario: ScenarioDefinition<AgentTargeti
           finally { if (!disposed) updateLatest({}); }
         },
         onFocusEvidence,
-        onCapturedMove: (event: CRCPointerEvent) => {
+        onCapturedMove: (event: PibblPointerEvent) => {
           if (!inspector) return;
           const inspection = inspector.snapshot();
           const probe = inspection.generation ? inspector.probe(inspection.generation, event.x, event.y) : unavailableState().probe;
@@ -321,13 +450,13 @@ export const agentTargetingVerificationScenario: ScenarioDefinition<AgentTargeti
       }),
       { pixelRatio: 1 },
     );
-    // Bind after CRC has installed this exact mount. The prototype owns no hooks
+    // Bind after Pibbl has installed this exact mount. The prototype owns no hooks
     // into rendering, signals, scheduling, or native event delivery.
     inspector = inspectorFactory?.(context.canvas);
     enableSignalInspection();
     await settled();
     labelScene();
-    updateLatest({});
+    updateLatest({ inspectionEnabled: !!inspector });
     } catch (error) {
       dispose();
       throw error;
@@ -404,13 +533,23 @@ export const agentTargetingVerificationScenario: ScenarioDefinition<AgentTargeti
           }
           case 'remove-dom-overlay': removeOverlay(); break;
           case 'capture-drag': setMode('capture-drag'); await settled(); break;
+          case 'pagination-scene': setMode('pagination'); await settled(); break;
+          case 'scene-page-first':
+          case 'scene-page-next': {
+            if (!inspector) throw new Error('Scene pages require enabled source-runtime inspection.');
+            if (actionId === 'scene-page-next' && !sceneCursor) throw new Error('No scene continuation; start a new scene query.');
+            const scenePage = inspector.page(actionId === 'scene-page-next' ? sceneCursor! : undefined);
+            sceneCursor = scenePage.nextCursor;
+            updateLatest({ scenePage });
+            break;
+          }
           case 'inspect': inspect(); break;
           case 'inspect-outside-layer': inspect({ x: 300, y: 112 }); break;
           case 'repair': setMode('repair'); await settled(); break;
           case 'seed': setMode('seed'); await settled(); break;
           case 'intentional-block': setMode('intentional-block'); await settled(); break;
           case 'inspection-off': signalInspector?.dispose(); signalInspector = undefined; previousSignalSnapshot = undefined; inspector?.dispose(); inspector = undefined; updateLatest({ inspectionEnabled: false, ...unavailableState() }); break;
-          case 'inspection-on': enableSignalInspection(); labelScene(); inspector ??= inspectorFactory?.(context.canvas); updateLatest({ inspectionEnabled: !!inspector }); break;
+          case 'inspection-on': inspector ??= inspectorFactory?.(context.canvas); enableSignalInspection(); labelScene(); updateLatest({ inspectionEnabled: !!inspector }); break;
           case 'reset': setMode('seed'); await settled(); break;
           default: throw new Error(`Unknown targeting verification action "${actionId}".`);
         }
@@ -449,11 +588,13 @@ export const agentTargetingVerificationScenario: ScenarioDefinition<AgentTargeti
       { label: 'Mode', value: state.mode },
       { label: 'Browser point', value: state.browserProbe ? JSON.stringify(state.browserProbe) : 'not captured' },
       { label: 'DOM overlay clicks', value: String(state.domOverlayClicks) },
+      { label: 'Scene page', value: JSON.stringify(state.scenePage) },
       { label: 'Focus observation', value: snapshotAvailable ? JSON.stringify(state.inspection.focus) : 'unavailable' },
       { label: 'Captured move', value: state.capturedDelivery ? JSON.stringify(state.capturedDelivery) : 'not captured' },
       { label: 'Logical capture owners', value: snapshotAvailable ? JSON.stringify(state.inspection.pointerCapture) : 'unavailable' },
       { label: 'Signal observation', value: state.signalInspection ? state.signalInspection.records.map(record => record.status === 'available' ? `${record.id}: ${record.kind} ${record.cache}/${record.validation} ${JSON.stringify(record.preview)} deps:${record.dependencies.edges.map(edge => edge.sourceId ?? '?').join(',') || 'none'} (${record.dependencies.completeness})` : `${record.id}: released`).join(' · ') : 'not captured' },
       { label: 'Probe point', value: state.probePoint ? `${state.probePoint.x}, ${state.probePoint.y} (root logical)` : 'not captured' },
+      { label: 'Runtime compatibility', value: JSON.stringify(state.runtimeCompatibility) },
       { label: 'Inspection capability', value: state.inspectionAvailability },
       { label: 'Independent requirement', value: requirement },
       { label: 'Delivered to', value: `${state.deliveredTo ?? 'none'} · target ${state.delivery.targetId ?? 'unavailable'}` },

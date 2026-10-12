@@ -3,7 +3,7 @@
 Benchmark tooling and frozen JavaScript controls are kept outside package exports.
 The original spike records below describe the stages preceding the production WASM
 conversion; current built-in texture generators now use WASM exclusively. The comparison page
-mounts both implementations through public `crc`, `createElement`, and
+mounts both implementations through public `pibbl`, `createElement`, and
 `defineRenderLayer`. A private manual scheduler driver is used only to measure
 repeatable complete frames headlessly.
 
@@ -29,22 +29,22 @@ component's elapsed-time admission.
 In another terminal:
 
 ```sh
-node tooling/texture-wasm-spike/measure.mjs /tmp/crc-texture-wasm-results.json
+node tooling/texture-wasm-spike/measure.mjs /tmp/pibbl-texture-wasm-results.json
 # Fast browser check without repeating the benchmark:
 node tooling/texture-wasm-spike/measure.mjs --verify-only
 ```
 
 The runner checks exact nonempty live Canvas pixel equality, captures a preview
-in `/private/tmp/crc-texture-wasm-preview.png`, and rejects page errors.
+in `/private/tmp/pibbl-texture-wasm-preview.png`, and rejects page errors.
 
 The 1,743-byte WASM module can be rebuilt with AssemblyScript 0.28.20:
 
 ```sh
-npm install --prefix /private/tmp/crc-texture-wasm-compiler --no-audit --no-fund --ignore-scripts --save-exact assemblyscript@0.28.20
+npm install --prefix /private/tmp/pibbl-texture-wasm-compiler --no-audit --no-fund --ignore-scripts --save-exact assemblyscript@0.28.20
 node tooling/texture-wasm-spike/build.mjs
 ```
 
-Set `CRC_ASC` to the compiler's `bin/asc.js` on other installations. Compiler
+Set `PIBBL_ASC` to the compiler's `bin/asc.js` on other installations. Compiler
 packages stay outside workspace dependencies. `kernel.asc` is AssemblyScript;
 the build temporarily supplies the `.ts` extension required by its compiler.
 
@@ -57,7 +57,7 @@ frame makes one solver call for the whole step batch and one colorization call.
 Field buffers swap by offsets; pixel storage never moves or grows. `ImageData`
 borrows the pixel view, with a runtime assertion that its buffer is identical.
 There is no per-frame field serialization or WASM-to-JavaScript pixel copy.
-Canvas upload and CRC bitmap composition still have their normal costs.
+Canvas upload and Pibbl bitmap composition still have their normal costs.
 
 Painting writes four f64 values directly into WASM memory per interpolated stamp,
 then one `paintBatch` call applies every queued stamp before advancing the solver.
@@ -78,7 +78,7 @@ Seven workloads from 32×32/one step through 512×512/24 steps; fixed 832×400
 presentation at density 1; three rounds; 30 warmup frames and 80 measured frames
 per case per round. Mode order rotates each round. All modes use the same
 render-layer wrapper and display composition. Timings separate solver,
-raster/upload, and total synchronous CRC frame work. They exclude asynchronous
+raster/upload, and total synchronous Pibbl frame work. They exclude asynchronous
 GPU completion, display scanout, and scheduling delay.
 
 Four modes distinguish the causes of any gain:
@@ -99,7 +99,7 @@ copy-path difference as proof of a transport speedup.
 
 2026-10-02 UTC: Apple M5 Max, macOS arm64, Chromium 151.0.7922.34,
 Node 26.9.0 (not the repository's documented Node 24 LTS environment).
-Pooled synchronous CRC frame median/p95, milliseconds, 240 samples per cell:
+Pooled synchronous Pibbl frame median/p95, milliseconds, 240 samples per cell:
 
 | Workload          |  Current JS | Optimized JS | WASM direct |
 | ----------------- | ----------: | -----------: | ----------: |
@@ -125,15 +125,15 @@ browsers/devices remain outside this spike.
 
 ```sh
 node tooling/texture-wasm-spike/measure-interaction.mjs --verify-only
-node tooling/texture-wasm-spike/measure-interaction.mjs /tmp/crc-texture-interaction-results.json
+node tooling/texture-wasm-spike/measure-interaction.mjs /tmp/pibbl-texture-interaction-results.json
 ```
 
 The browser runner first proves identical painted fields and pixels with the
 solver paused, including capture outside the surface and release. It also checks
 engine/workload/brush/pause controls, desktop and mobile layout, and console health.
-Screenshots are saved under `/private/tmp/crc-texture-interaction-*.png`.
+Screenshots are saved under `/private/tmp/pibbl-texture-interaction-*.png`.
 
-Timing uses the real CRC browser scheduler, with a diagnostic trace collector
+Timing uses the real Pibbl browser scheduler, with a diagnostic trace collector
 observing completion after the Complete phase. Node injects 120 mouse moves at
 60 Hz through Chromium's input protocol per case, plus a press/release. Dispatches
 are not awaited serially, so blocked page work does not artificially slow the
@@ -142,16 +142,16 @@ case. Only one backend runs and live metric DOM updates are disabled during timi
 The brush radius is 6 simulation cells, strength 0.8. Both backends use the same
 seed and pointer path; different frame rates produce different simulation ages.
 
-The measured endpoint is synchronous CRC frame completion, **not physical screen
+The measured endpoint is synchronous Pibbl frame completion, **not physical screen
 presentation**. Event-to-frame uses the browser input timestamp. Separate metrics
 record event age at brush-handler entry, brush-handler-to-frame, queue writes,
-brush application, and CRC frame durations. The approximately 0.1 ms browser clock
+brush application, and Pibbl frame durations. The approximately 0.1 ms browser clock
 cannot resolve nanosecond-scale bridge overhead. A sample rounding to zero does
 not imply free work. The headless browser's unblocked frame interval was about
 8.4 ms; the 60 Hz input cadence is not a forced 60 Hz display refresh rate.
 
 Same M5 Max / Chromium 151 / Node 26.9.0 environment as above, 2026-10-02 UTC.
-Pooled input-to-CRC-frame median/p95 in milliseconds:
+Pooled input-to-Pibbl-frame median/p95 in milliseconds:
 
 | Workload          |  JavaScript |        WASM | Routed samples JS / WASM |
 | ----------------- | ----------: | ----------: | -----------------------: |
@@ -185,7 +185,7 @@ visual proposals, not approved replacements for the shipped recipes.
 node tooling/texture-wasm-spike/build.mjs
 node --import tsx --test tooling/texture-wasm-spike/materials.check.mjs
 node tooling/texture-wasm-spike/measure-materials.mjs --verify-only
-node tooling/texture-wasm-spike/measure-materials.mjs /tmp/crc-materials-results.json
+node tooling/texture-wasm-spike/measure-materials.mjs /tmp/pibbl-materials-results.json
 ```
 
 `materials.asc` contains f64 calculations with f32 output. The material runtime
@@ -221,7 +221,7 @@ The full benchmark uses three rotated-order rounds, 12 measured regenerations an
 four warmups per case at 64, 256, and 512 square; 1024-square stress cases use six
 measurements and two warmups. It changes seed and detail each generation, keeping
 resolution and scale fixed. Results separate generation, coloring/upload, and
-complete synchronous CRC regeneration/presentation at 832×400. Fresh-instance
+complete synchronous Pibbl regeneration/presentation at 832×400. Fresh-instance
 first-generation timing is also recorded after module compilation; it is not a
 fresh-browser cold-start measurement. Module compilation is reported separately.
 The unchanged-props check confirms no additional generation or continuing frame.
@@ -242,7 +242,7 @@ per fresh page, three rounds, eight warmups, and 12 measurements per case:
 node tooling/texture-wasm-spike/measure-materials.mjs --isolate
 ```
 
-Fresh-page baseline at 512×512, pooled median/p95 regeneration plus CRC
+Fresh-page baseline at 512×512, pooled median/p95 regeneration plus Pibbl
 presentation in milliseconds (36 samples per cell):
 
 | Recipe   |  Shipped JS |  Matched JS |        WASM |
@@ -286,18 +286,18 @@ candidates remains a user judgment.
 
 ## Production migration slice
 
-`/crc` now runs the public recipe APIs with WASM marble, paper, cellular, and ink,
+`/pibbl` now runs the public recipe APIs with WASM marble, paper, cellular, and ink,
 including animated material parameters and Rapier collision messages that paint
 ink. The comparison pages retain the pre-migration JS implementations in
 `reference-*.ts`; they must not silently benchmark WASM against itself.
 
-The production kernels are generated from `packages/textures/assembly/` by
+The production kernels are generated from `packages/core/assembly/textures/` by
 `node tooling/build-texture-wasm.mjs`. Static parameter updates reuse memory;
 resolution or generator changes replace it. Full-field and RGBA transport does
 not cross through copies in JavaScript; Canvas upload remains browser work.
 
 Focused parity: `node --import tsx --test tooling/texture-wasm-spike/production.check.mjs`.
-Public browser contracts: `packages/textures/test/wasm-runtime.test.tsx` and
+Public browser contracts: `packages/core/test/features/textures/wasm-runtime.test.tsx` and
 `wasm-integration.test.tsx`. The latter pauses ink evolution and verifies that
 physics collision messages alter its pixels, while animated materials keep
 three stable pixel buffers across 360 scheduled frames.
@@ -309,7 +309,7 @@ Fresh slice verification (2026-10-01 local, Node 26.9.0, pnpm 11.21.0,
 Playwright Chromium 151 on macOS arm64; not the repository's Node 24 LTS baseline):
 
 ```sh
-corepack pnpm@11.21.0 exec vitest run packages/textures/test/wasm-runtime.test.tsx packages/textures/test/wasm-integration.test.tsx packages/textures/test/material.test.tsx packages/textures/test/simulation.test.ts packages/textures/test/reaction-diffusion.test.tsx packages/textures/test/lifecycle.test.tsx packages/textures/test/presentation.test.tsx --browser.headless --browser.ui=false
+corepack pnpm@11.21.0 exec vitest run packages/core/test/features/textures/wasm-runtime.test.tsx packages/core/test/features/textures/wasm-integration.test.tsx packages/core/test/features/textures/material.test.tsx packages/core/test/features/textures/simulation.test.ts packages/core/test/features/textures/reaction-diffusion.test.tsx packages/core/test/features/textures/lifecycle.test.tsx packages/core/test/features/textures/presentation.test.tsx --browser.headless --browser.ui=false
 ```
 
 Result: 7 files, 36 tests passed. `corepack pnpm@11.21.0 exec tsc --noEmit
@@ -322,14 +322,14 @@ this slice.
 
 ### Living-ink feedback revision
 
-The `/crc` preview now uses the branching preset and continuous physics-driven
+The `/pibbl` preview now uses the branching preset and continuous physics-driven
 `stir` messages instead of collision paint stamps. A mount-owned `useReaction`
 reads the body's committed position; initial placement/teleports are excluded.
 “Pause reaction” stops Gray–Scott stepping while leaving displacement active.
 
 Fresh focused check: `corepack pnpm@11.21.0 exec vitest run
-packages/textures/test/simulation.test.ts packages/textures/test/wasm-integration.test.tsx
-packages/textures/test/wasm-runtime.test.tsx --browser.headless --browser.ui=false`
+packages/core/test/features/textures/simulation.test.ts packages/core/test/features/textures/wasm-integration.test.tsx
+packages/core/test/features/textures/wasm-runtime.test.tsx --browser.headless --browser.ui=false`
 passed 13 tests in Chromium on Node 26.9.0. Package build, focused ESLint, and
 kernel reproducibility check passed. Browser QA observed 298 movement messages
 in five seconds with no page errors; desktop/mobile and reset/pause checked.
@@ -341,14 +341,14 @@ in `packages/scenarios/src/learning/composition/underwater.example.tsx:29`.
 The accepted scope is marble, paper, cellular, reaction-diffusion, and the
 physics-driven stirring example. Water, tendrils, and lightning are separate
 work; this record does not claim those generators use WASM. Richer material
-candidates remain in the comparison spike. CRC's existing animation scheduler
+candidates remain in the comparison spike. Pibbl's existing animation scheduler
 and Rapier integration are unchanged, and texture and physics memories remain
 separate.
 
 The public Studio example is `#/examples/composition/stirred-ink`. Its pause,
 stir, and reset controls demonstrate that reaction evolution and displacement
 are independent. Run `node tooling/texture-wasm-spike/check-studio.mjs` against
-Studio on port 4382, or set `CRC_STUDIO_ORIGIN`. The check exercises the editable
+Studio on port 4382, or set `PIBBL_STUDIO_ORIGIN`. The check exercises the editable
 public source and asserts runtime behavior, including zero ink uploads with both
 controls paused, one upload on reset, and continued stirring with the reaction
 paused. No TypeScript or browser runtime errors were observed; the Canvas output
@@ -365,14 +365,14 @@ arm64:
 - `trust:package`: packed package boundaries, Bundler/NodeNext consumers, import
   inertness (including forbidden WASM allocation), package entries, and source/
   packed esbuild/Vite tree-shaking checks passed. Each selected texture retains
-  only its own kernel, and plain CRC retains none.
+  only its own kernel, and plain Pibbl retains none.
 - `learning-examples.test.ts`: all 221 tests passed with the added Studio route.
 - `test:smoke:built`: both built browser smoke tests passed.
 - `scenarios:check`, `studio-docs:check`, `playground:build`, `lint:code`, package
   builds, and `git diff --check` passed.
-- `VITE_CRC_REPORT_PERF=1` with `performance.test.tsx`: 256×144 reaction-diffusion,
+- `VITE_PIBBL_REPORT_PERF=1` with `performance.test.tsx`: 256×144 reaction-diffusion,
   displayed at 832×400, 60 measured frames after warmup: solver mean 0.995 ms,
-  raster/upload mean 0.032 ms, full CRC frame median 1.8 ms, p95 1.9 ms. This is a
+  raster/upload mean 0.032 ms, full Pibbl frame median 1.8 ms, p95 1.9 ms. This is a
   machine-specific descriptive sample, not a timing guard or display latency.
 
 The mixed checkout is **not aggregate-trust green**. `trust` stopped at the

@@ -1,5 +1,5 @@
 {
-  "schema": "crc-three-picking-cost/1",
+  "schema": "pibbl-three-picking-cost/1",
   "timestamp": "2026-10-03T19:30:13.406Z",
   "environment": {
     "node": "v24.15.0",

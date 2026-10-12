@@ -1,14 +1,14 @@
-import { crc, createElement } from "@crc/core";
+import { pibbl, createElement } from "@pibbl/core";
 import {
   applyImpulse2D,
   disableBody2D,
   enableBody2D,
-  queryAabb2D,
+  findAllAabbMatches2D,
   setLinearVelocity2D,
   teleportBody2D,
-  type CRCPhysicsBodyHandle2D,
-  type CRCPhysicsVector2,
-} from "@crc/physics/2d";
+  type PibblPhysicsBodyHandle2D,
+  type PibblPhysicsVector2,
+} from "@pibbl/core/physics/2d";
 import {
   PHYSICS_2D_LAB_BODY_IDS,
   PHYSICS_2D_LAB_SOURCE_ID,
@@ -26,6 +26,11 @@ import type {
   ScenarioMountContext,
 } from "./types";
 
+/**
+ * Stable action identifiers accepted by the physics 2 d lab scenario.
+ *
+ * @see {@link Physics2DLabAction}
+ */
 export const PHYSICS_2D_LAB_ACTION_IDS = [
   "settle",
   "impulse",
@@ -39,7 +44,7 @@ export const PHYSICS_2D_LAB_ACTION_IDS = [
 ] as const satisfies readonly Physics2DLabAction[];
 
 const INITIAL_POSITIONS: Readonly<
-  Record<Physics2DLabBodyId, CRCPhysicsVector2>
+  Record<Physics2DLabBodyId, PibblPhysicsVector2>
 > = {
   circle: [64, 202],
   box: [120, 202],
@@ -61,14 +66,14 @@ function clean(value: number): number {
   return Object.is(rounded, -0) ? 0 : rounded;
 }
 
-function vector(value: CRCPhysicsVector2): CRCPhysicsVector2 {
+function vector(value: PibblPhysicsVector2): PibblPhysicsVector2 {
   return Object.freeze([clean(value[0]), clean(value[1])] as const);
 }
 
 function requireBody(
   model: Physics2DLabModel,
   id: Physics2DLabBodyId,
-): CRCPhysicsBodyHandle2D {
+): PibblPhysicsBodyHandle2D {
   const body = model.handles[id];
   if (!body) {
     throw new Error(`Physics laboratory body "${id}" has not rendered yet.`);
@@ -149,7 +154,7 @@ async function mountPhysics2DLab(
   let disposed = false;
   let model = createPhysics2DLabModel();
   let lastAction: Physics2DLabState["lastAction"] = "mount";
-  let mount = crc(context.canvas, createElement(Physics2DLabRoot, { model }), {
+  let mount = pibbl(context.canvas, createElement(Physics2DLabRoot, { model }), {
     pixelRatio: 1,
   });
   let actionQueue = Promise.resolve();
@@ -165,7 +170,7 @@ async function mountPhysics2DLab(
     mount.dispose();
     model = createPhysics2DLabModel();
     model.publish = publish;
-    mount = crc(context.canvas, createElement(Physics2DLabRoot, { model }), {
+    mount = pibbl(context.canvas, createElement(Physics2DLabRoot, { model }), {
       pixelRatio: 1,
     });
   };
@@ -194,10 +199,10 @@ async function mountPhysics2DLab(
         const world = model.world;
         if (!world)
           throw new Error("Physics laboratory world has not rendered yet.");
-        const matches = queryAabb2D(
+        const matches = findAllAabbMatches2D(
           world,
           { min: [0, 70], max: [480, 240] },
-          { mode: "all", sensors: "include" },
+          {  sensors: "include" },
         );
         model.queryTags.splice(
           0,
@@ -302,6 +307,12 @@ async function mountPhysics2DLab(
   };
 }
 
+/**
+ * Runnable physics2 d lab scenario with observable state and deterministic actions.
+ *
+ * @see {@link ScenarioDefinition}
+ * @see {@link Physics2DLabState}
+ */
 export const physics2DLabScenario: ScenarioDefinition<Physics2DLabState> = {
   id: "first-class-physics-2d",
   sourceId: PHYSICS_2D_LAB_SOURCE_ID,

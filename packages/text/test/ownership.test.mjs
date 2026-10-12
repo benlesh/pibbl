@@ -11,7 +11,7 @@ test("repeated success, limit errors, and missing glyphs return native owners to
   async function cycle() {
     const font = await loadOutlineFont(bytes);
     try {
-      createTextGeometry(font, "Hello CRC ".repeat(100), { fontSize: 100 });
+      createTextGeometry(font, "Hello Pibbl ".repeat(100), { fontSize: 100 });
       assert.throws(
         () =>
           createTextGeometry(font, "Hello", { fontSize: 100, maxSegments: 2 }),
@@ -82,16 +82,16 @@ test("overflowing whitespace metrics fail without leaking a native result", asyn
 test("draw allocation failures release scratch leases and preserve font usability", async () => {
   const { failNextDrawAfter } = await import("../dist/testing.mjs");
   using font = await loadOutlineFont(bytes);
-  createTextGeometry(font, "Hello CRC", { fontSize: 100 });
+  createTextGeometry(font, "Hello Pibbl", { fontSize: 100 });
   const before = await nativeResources();
   for (let i = 0; i < 100; i++) {
     await failNextDrawAfter(4);
     assert.throws(
-      () => createTextGeometry(font, "Hello CRC", { fontSize: 100 }),
+      () => createTextGeometry(font, "Hello Pibbl", { fontSize: 100 }),
       /allocation/i,
     );
     assert.ok(
-      createTextGeometry(font, "Hello CRC", { fontSize: 100 }).geometry
+      createTextGeometry(font, "Hello Pibbl", { fontSize: 100 }).geometry
         .segmentCount > 0,
     );
   }

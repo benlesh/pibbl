@@ -4,7 +4,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Turn the existing CRC Vite Studio into one searchable Learn, API, and Examples documentation experience while preserving live examples, test labs, and legacy links.
+**Goal:** Turn the existing Pibbl Vite Studio into one searchable Learn, API, and Examples documentation experience while preserving live examples, test labs, and legacy links.
 
 **Architecture:** A Vite plugin reads validated Markdown under `docs/site`, combines it with the typed example catalog, and exposes a virtual documentation manifest plus a serialized MiniSearch index. The framework-free browser app gains focused router, navigation, Markdown, and search modules while retaining its existing Canvas workbench and testing adapters.
 
@@ -33,12 +33,12 @@
 
 - `tooling/studio-docs/model.ts` — public frontmatter, normalized page, heading, route, and manifest types plus validation.
 - `tooling/studio-docs/markdown.ts` — frontmatter parsing, safe Markdown rendering, stable heading anchors, plain-text/section extraction, and internal-link collection.
-- `tooling/studio-docs/api-exports.ts` — TypeScript-compiler inventory of supported `@crc/core` entry-point exports and exact API coverage validation.
+- `tooling/studio-docs/api-exports.ts` — TypeScript-compiler inventory of supported `@pibbl/core` entry-point exports and exact API coverage validation.
 - `tooling/studio-docs/search-index.ts` — search-record construction, camel-case tokenization, MiniSearch configuration, deterministic serialization, and testable query helper.
 - `tooling/studio-docs/build.ts` — discover `docs/site`, combine pages/examples, validate cross-links/routes/order, and return one `StudioDocumentationBuild`.
 - `tooling/studio-docs/vite-plugin.ts` — Vite virtual-module adapter and development invalidation.
 - `tooling/studio-docs/studio-docs.check.ts` — Node-side fixture and real-repository checks for the complete build-time subsystem.
-- `playground/src/studio-docs.d.ts` — browser-facing declaration for `virtual:crc-studio-docs`.
+- `playground/src/studio-docs.d.ts` — browser-facing declaration for `virtual:pibbl-studio-docs`.
 
 ### Browser application
 
@@ -139,7 +139,7 @@ assert.deepEqual(
 assert.match(loaded.html, /<table>/u);
 assert.doesNotMatch(loaded.html, /<script/u);
 assert.deepEqual(loaded.internalLinks, [
-  { href: "#/api/functions/crc", sourceHeading: "first-step" },
+  { href: "#/api/functions/pibbl", sourceHeading: "first-step" },
 ]);
 assert.throws(
   () => parsePublicMarkdown("invalid.md", invalidScript),
@@ -236,15 +236,15 @@ git commit -m "feat(docs): add public Markdown content model"
 Use fixture exports that cover direct values, direct types, aliased re-exports, `export type *`, and the compiler JSX namespace. Assert separate sorted value/type lists and exact failures:
 
 ```ts
-assert.deepEqual(inventory.root.values, ["Circle", "crc"]);
-assert.deepEqual(inventory.root.types, ["CRCConfig", "CircleProps"]);
+assert.deepEqual(inventory.root.values, ["Circle", "pibbl"]);
+assert.deepEqual(inventory.root.types, ["PibblConfig", "CircleProps"]);
 assert.throws(
   () => validateApiCoverage(inventory, duplicatePages),
   /Circle is assigned to both api-circle and api-shapes/u,
 );
 assert.throws(
   () => validateApiCoverage(inventory, missingPages),
-  /Undocumented public exports: CRCConfig/u,
+  /Undocumented public exports: PibblConfig/u,
 );
 assert.throws(
   () => validateApiCoverage(inventory, stalePages),
@@ -302,7 +302,7 @@ git commit -m "test(docs): validate public API reference coverage"
 
 - Consumes: `parsePublicMarkdown`, example catalog records, and API inventory.
 - Produces: `buildStudioDocumentation(options): Promise<StudioDocumentationBuild>`.
-- Produces virtual module `virtual:crc-studio-docs` exporting `pages`, `pageByRoute`, and `apiCoverage`.
+- Produces virtual module `virtual:pibbl-studio-docs` exporting `pages`, `pageByRoute`, and `apiCoverage`.
 
 - [ ] **Step 1: Write the failing aggregate-build check**
 
@@ -314,7 +314,7 @@ const second = await buildStudioDocumentation(fixtureOptions);
 assert.equal(JSON.stringify(first), JSON.stringify(second));
 assert.deepEqual(
   first.pages.map(({ route }) => route),
-  ["#/api/functions/crc", "#/learn/guides/first-scene"],
+  ["#/api/functions/pibbl", "#/learn/guides/first-scene"],
 );
 assert.ok(
   first.pages.every(({ sourcePath }) => sourcePath.startsWith("docs/site/")),
@@ -341,23 +341,23 @@ heading anchors, internal links, tutorial order, example references, and API
 symbol duplication. The Vite plugin must:
 
 ```ts
-export function crcStudioDocs(options: { repositoryRoot: string }): Plugin {
+export function pibblStudioDocs(options: { repositoryRoot: string }): Plugin {
   return {
-    name: "crc-studio-docs",
+    name: "pibbl-studio-docs",
     async resolveId(id) {
-      return id === "virtual:crc-studio-docs"
-        ? "\0virtual:crc-studio-docs"
+      return id === "virtual:pibbl-studio-docs"
+        ? "\0virtual:pibbl-studio-docs"
         : undefined;
     },
     async load(id) {
-      if (id !== "\0virtual:crc-studio-docs") return undefined;
+      if (id !== "\0virtual:pibbl-studio-docs") return undefined;
       return `export const documentation = ${JSON.stringify(await buildStudioDocumentation(options))};`;
     },
   };
 }
 ```
 
-Register the plugin after `crcRuntimeSource(mode)` and watch every discovered Markdown path plus the relevant catalog modules.
+Register the plugin after `pibblRuntimeSource(mode)` and watch every discovered Markdown path plus the relevant catalog modules.
 
 - [ ] **Step 4: Run the build fixture and an empty public-tree Vite build**
 
@@ -480,10 +480,10 @@ Cover every canonical family, type anchors, unknown routes, query preservation,
 old example sections, and old scenario routes:
 
 ```ts
-expect(parseStudioRoute("#/api/types/events#crcpointerevent")).toEqual({
+expect(parseStudioRoute("#/api/types/events#pibblpointerevent")).toEqual({
   kind: "document",
   route: "#/api/types/events",
-  anchor: "crcpointerevent",
+  anchor: "pibblpointerevent",
 });
 expect(canonicalizeHash("#/examples/composition/filters").canonical).toBe(
   "#/examples/drawing/filters",
@@ -701,7 +701,7 @@ Use explicit frontmatter such as:
 ---
 id: guide-state-lifecycle
 title: Manage state and lifecycle
-summary: Understand scheduled rendering, hook slots, identity, cleanup, and CRC's differences from React.
+summary: Understand scheduled rendering, hook slots, identity, cleanup, and Pibbl's differences from React.
 kind: guide
 slug: state-and-lifecycle
 order: 60
@@ -770,7 +770,7 @@ git commit -m "docs: publish Learn guides and diagram tutorial outline"
 - Create: `docs/site/api/components/text.md`
 - Create: `docs/site/api/components/vertical-line.md`
 - Create: `docs/site/api/components/wedge.md`
-- Create: `docs/site/api/functions/crc.md`
+- Create: `docs/site/api/functions/pibbl.md`
 - Create: `docs/site/api/functions/create-arc-path.md`
 - Create: `docs/site/api/functions/create-circle-path.md`
 - Create: `docs/site/api/functions/create-element.md`
@@ -854,10 +854,10 @@ type-only inputs remain owned by Task 9.
 
 - [ ] **Step 5: Create one page per hook**
 
-Create pages for every `crc*` hook discovered from the public entry point. Each
+Create pages for every `pibbl*` hook discovered from the public entry point. Each
 page states render-only constraints, signature, ownership/cleanup behavior,
 dependency behavior where applicable, and related examples/contracts. Avoid
-React terminology where CRC behavior differs.
+React terminology where Pibbl behavior differs.
 
 - [ ] **Step 6: Run runtime API coverage and link validation**
 
@@ -918,7 +918,7 @@ Expected: FAIL with a sorted list of types not already paired with value pages.
 - [ ] **Step 2: Create six domain pages with exact alphabetical anchors**
 
 Assign every remaining type by meaning, not filename. Use headings of the form
-`## CRCController` so the generated anchor is stable and search can index it.
+`## PibblController` so the generated anchor is stable and search can index it.
 Within each file, compare the heading list to `Intl.Collator("en")` output.
 Preserve all behavior from the old API reference, including filter descriptor
 fields, event facade relationships, layout/style distinctions, Canvas unions,
@@ -964,7 +964,7 @@ git commit -m "docs: publish complete grouped type reference"
 - Consumes: normalized heading-sized docs and public example metadata.
 - Produces: `buildSearchBundle(input): SerializedSearchBundle`.
 - Produces: `tokenizeSearchText(value): readonly string[]` shared by indexing and browser query.
-- Produces a separate lazy virtual module `virtual:crc-studio-search` exporting `serializedSearchIndex` and `searchRecords` metadata.
+- Produces a separate lazy virtual module `virtual:pibbl-studio-search` exporting `serializedSearchIndex` and `searchRecords` metadata.
 
 - [ ] **Step 1: Write failing record, exclusion, determinism, and ranking checks**
 
@@ -980,8 +980,8 @@ assert.equal(
   false,
 );
 assert.deepEqual(tokenizeSearchText("useWhenChanged"), [
-  "crcwhenchanged",
-  "crc",
+  "pibblwhenchanged",
+  "pibbl",
   "when",
   "changed",
 ]);
@@ -1039,7 +1039,7 @@ as an excerpt source.
 Sort input records by ID before `addAll`, serialize with `toJSON`, and serialize
 record metadata in the same order. Never include source timestamps or absolute
 paths. Add the serialized bundle to the separate
-`virtual:crc-studio-search` module so Task 11 can load it without pulling the
+`virtual:pibbl-studio-search` module so Task 11 can load it without pulling the
 index into the statically imported documentation manifest.
 
 - [ ] **Step 5: Run search and full content checks**
@@ -1073,7 +1073,7 @@ git commit -m "feat(docs): generate static full-text search index"
 
 **Interfaces:**
 
-- Consumes: Task 10 serialized index via dynamic `import("virtual:crc-studio-search")`.
+- Consumes: Task 10 serialized index via dynamic `import("virtual:pibbl-studio-search")`.
 - Produces: `createSearchEngine(loadBundle): SearchEngine` with `preload`, `search`, and `retry`.
 - Produces: `mountSearchDialog(options): SearchDialogController` with `open`, `close`, and `dispose`.
 
@@ -1170,7 +1170,7 @@ new model, but the active route always expands its area and ancestors:
 
 ```ts
 storage.setItem(
-  "crc-studio-navigation",
+  "pibbl-studio-navigation",
   JSON.stringify({ api: false, "api-types": false }),
 );
 const state = createNavigationState({
@@ -1214,7 +1214,7 @@ Expected: FAIL on incomplete navigation persistence, route integration, or accep
 - [ ] **Step 4: Complete desktop/mobile navigation and canonical route dispatch**
 
 Persist only expansion booleans under versioned key
-`crc-studio-navigation:v1`. Treat malformed storage as empty preferences.
+`pibbl-studio-navigation:v1`. Treat malformed storage as empty preferences.
 Render semantic buttons for groups and anchors for destinations. Route dispatch
 must replace legacy hashes with canonical hashes before page rendering and
 preserve existing share query strings.
@@ -1240,7 +1240,7 @@ await import("./api-exports.check");
 await import("./build.check");
 await import("./search-index.check");
 process.stdout.write(
-  "Validated CRC Studio documentation content, API coverage, routes, links, and search.\n",
+  "Validated Pibbl Studio documentation content, API coverage, routes, links, and search.\n",
 );
 ```
 

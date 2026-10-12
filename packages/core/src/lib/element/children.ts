@@ -1,4 +1,4 @@
-import { isCRCElement } from './create-element.js';
+import { isPibblElement } from './create-element.js';
 import { isFragmentElement } from './fragment.js';
 import {
   getElementPolicyDefinition,
@@ -7,29 +7,29 @@ import {
   setPolicyPreparationSource,
 } from './metadata.js';
 import type {
-  CRCElement,
-  CRCNodeInput,
-  CRCTextInput,
+  PibblElement,
+  PibblNodeInput,
+  PibblTextInput,
 } from './types.js';
 import { isSignal } from '../signals/graph.js';
 
-type ChildReceiver = string | CRCElement<any>;
+type ChildReceiver = string | PibblElement<any>;
 
 const REACT_ELEMENT_TYPE = Symbol.for('react.element');
 const REACT_TRANSITIONAL_ELEMENT_TYPE = Symbol.for(
   'react.transitional.element',
 );
 
-/** Rejects a directly supplied foreign JSX root before CRC acquires resources. */
+/** Rejects a directly supplied foreign JSX root before Pibbl acquires resources. */
 export function assertCompatibleRootNode(node: unknown): void {
   if (isSignal(node)) {
     throw new Error(
-      'CRC root received a signal without a component receiver. ' +
+      'Pibbl root received a signal without a component receiver. ' +
       'Place the signal under a component or read it explicitly.',
     );
   }
-  if (!node || typeof node !== 'object' || isCRCElement(node)) return;
-  if (isReactElement(node)) throw reactElementError('CRC root');
+  if (!node || typeof node !== 'object' || isPibblElement(node)) return;
+  if (isReactElement(node)) throw reactElementError('Pibbl root');
   if (
     !isPromiseLike(node) &&
     !isAsyncIterable(node) &&
@@ -37,7 +37,7 @@ export function assertCompatibleRootNode(node: unknown): void {
     !isIterable(node) &&
     isForeignElementLike(node)
   ) {
-    throw foreignElementError('CRC root');
+    throw foreignElementError('Pibbl root');
   }
 }
 
@@ -46,11 +46,11 @@ export function assertCompatibleRootNode(node: unknown): void {
  * Arrays and unkeyed Fragments are transparent; keyed Fragments remain entries.
  */
 export function materializeContainerChildren(
-  node: CRCNodeInput,
+  node: PibblNodeInput,
   receiver: ChildReceiver,
   options: Readonly<{ validateKeys?: boolean }> = {},
-): readonly CRCElement<any>[] {
-  const elements: CRCElement<any>[] = [];
+): readonly PibblElement<any>[] {
+  const elements: PibblElement<any>[] = [];
   visitContainerNode(node, receiver, elements, [], false, true, new Set());
   if (options.validateKeys !== false) assertUniqueKeys(elements, receiver);
   return Object.freeze(elements);
@@ -58,9 +58,9 @@ export function materializeContainerChildren(
 
 /** Prepares a policy descriptor for APIs that receive one element directly. */
 export function prepareElementPolicies(
-  element: CRCElement<any>,
+  element: PibblElement<any>,
   receiver: string,
-): CRCElement<any> {
+): PibblElement<any> {
   if (!getElementPolicyDefinition(element.type)) return element;
   const [prepared] = materializeContainerChildren(element, receiver);
   return prepared;
@@ -68,7 +68,7 @@ export function prepareElementPolicies(
 
 /** Materializes Text's recursive scalar content into one reusable string. */
 export function materializeTextChildren(
-  node: CRCTextInput,
+  node: PibblTextInput,
   receiver: ChildReceiver,
 ): string {
   const parts: string[] = [];
@@ -79,8 +79,8 @@ export function materializeTextChildren(
 function visitContainerNode(
   node: unknown,
   receiver: ChildReceiver,
-  elements: CRCElement<any>[],
-  pendingPolicies: readonly CRCElement<any>[] = [],
+  elements: PibblElement<any>[],
+  pendingPolicies: readonly PibblElement<any>[] = [],
   preservePolicies = false,
   allowSignals = true,
   ancestors: Set<object>,
@@ -98,9 +98,9 @@ function visitContainerNode(
   }
 
   if (isSignal(node)) {
-    if (receiver === 'CRC root') {
+    if (receiver === 'Pibbl root') {
       throw new Error(
-        'CRC root received a signal without a component receiver. ' +
+        'Pibbl root received a signal without a component receiver. ' +
         'Place the signal under a component or read it explicitly.',
       );
     }
@@ -117,7 +117,7 @@ function visitContainerNode(
     return;
   }
 
-  if (isCRCElement(node)) {
+  if (isPibblElement(node)) {
     const policy = getElementPolicyDefinition(node.type);
     if (policy) {
       if (preservePolicies) {
@@ -125,14 +125,14 @@ function visitContainerNode(
         return;
       }
       const policyChildren = materializeUnpreparedPolicyChildren(
-        (node.props as { readonly children?: CRCNodeInput }).children,
+        (node.props as { readonly children?: PibblNodeInput }).children,
         node,
         allowSignals,
         ancestors,
       );
       if (policyChildren.length !== 1) {
         throw new Error(
-          `${describeReceiver(node)} requires exactly one CRC element child ` +
+          `${describeReceiver(node)} requires exactly one Pibbl element child ` +
           `after empty values are removed; received ${policyChildren.length}.`,
         );
       }
@@ -164,7 +164,7 @@ function visitContainerNode(
     for (const pendingPolicy of pendingPolicies) {
       const definition = getElementPolicyDefinition(pendingPolicy.type);
       if (!definition) {
-        throw new Error('CRC policy preparation metadata was lost.');
+        throw new Error('Pibbl policy preparation metadata was lost.');
       }
       prepared = definition.prepare(pendingPolicy, prepared);
     }
@@ -240,12 +240,12 @@ function visitContainerNode(
 }
 
 function materializeUnpreparedPolicyChildren(
-  node: CRCNodeInput,
-  receiver: CRCElement<any>,
+  node: PibblNodeInput,
+  receiver: PibblElement<any>,
   allowSignals: boolean,
   ancestors: Set<object>,
-): readonly CRCElement<any>[] {
-  const elements: CRCElement<any>[] = [];
+): readonly PibblElement<any>[] {
+  const elements: PibblElement<any>[] = [];
   visitContainerNode(
     node,
     receiver,
@@ -283,8 +283,8 @@ function visitTextNode(
     parts.push(String(node));
     return;
   }
-  if (isCRCElement(node)) {
-    throw invalidChild(receiver, 'a CRC element inside textual content');
+  if (isPibblElement(node)) {
+    throw invalidChild(receiver, 'a Pibbl element inside textual content');
   }
   if (typeof node === 'function') {
     throw invalidChild(receiver, 'a function');
@@ -327,7 +327,7 @@ function visitTextNode(
 }
 
 function assertUniqueKeys(
-  elements: readonly CRCElement<any>[],
+  elements: readonly PibblElement<any>[],
   receiver: ChildReceiver,
 ): void {
   const keys = new Set<string>();
@@ -335,7 +335,7 @@ function assertUniqueKeys(
     const key = element.key;
     if (key === undefined) continue;
     if (keys.has(key)) {
-      throw invalidChild(receiver, `duplicate CRC key "${key}"`);
+      throw invalidChild(receiver, `duplicate Pibbl key "${key}"`);
     }
     keys.add(key);
   }
@@ -343,7 +343,7 @@ function assertUniqueKeys(
 
 function invalidChild(receiver: ChildReceiver, description: string): Error {
   return new Error(
-    `${describeReceiver(receiver)} received ${description} as a CRC child.`,
+    `${describeReceiver(receiver)} received ${description} as a Pibbl child.`,
   );
 }
 
@@ -373,9 +373,9 @@ function withAcyclicContainer<T extends object>(
 
 function reactElementError(receiver: ChildReceiver): Error {
   return new Error(
-    'CRC received a React element. This file is using the React JSX runtime.\n' +
-    'Set jsxImportSource to "@crc/core" or add ' +
-    '/** @jsxImportSource @crc/core */.\n' +
+    'Pibbl received a React element. This file is using the React JSX runtime.\n' +
+    'Set jsxImportSource to "@pibbl/core" or add ' +
+    '/** @jsxImportSource @pibbl/core */.\n' +
     `Received by ${describeReceiver(receiver)}.`,
   );
 }
@@ -383,8 +383,8 @@ function reactElementError(receiver: ChildReceiver): Error {
 function foreignElementError(receiver: ChildReceiver): Error {
   return new Error(
     `${describeReceiver(receiver)} received an element-like object that was ` +
-    'not created by @crc/core as a CRC child.\n' +
-    'Check this file\'s JSX runtime and set jsxImportSource to "@crc/core".',
+    'not created by @pibbl/core as a Pibbl child.\n' +
+    'Check this file\'s JSX runtime and set jsxImportSource to "@pibbl/core".',
   );
 }
 
