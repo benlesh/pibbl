@@ -24,6 +24,16 @@ export { AreaSeries } from "./lib/area-series.js";
 export type { AreaSeriesProps, AreaSeriesStyle } from "./lib/area-series.js";
 export { IntervalBandSeries } from "./lib/interval-band-series.js";
 export type { IntervalBandSeriesProps } from "./lib/interval-band-series.js";
+export {
+  HorizontalIntervalSeries,
+  VerticalIntervalSeries,
+} from "./lib/interval-series.js";
+export type {
+  IntervalSeriesStyle,
+  IntervalSeriesProps,
+  HorizontalIntervalSeriesProps,
+  VerticalIntervalSeriesProps,
+} from "./lib/interval-series.js";
 export type { SeriesCurve } from "./lib/curve-definition.js";
 export { stepBefore, stepAfter, stepMidpoint } from "./lib/step-curves.js";
 export { monotoneX } from "./lib/monotone-curve.js";
@@ -164,8 +174,23 @@ export type {
   SessionVwapOptions,
   SessionVwapPoint,
 } from "./lib/financial-aggregation.js";
-export { RangeNavigator, EditableReferenceLine, EditableReferenceBand, EditableTrendLine } from "./lib/editable-chart-elements.js";
-export type { ChartAnchor, RangeNavigatorProps, RangeNavigatorStyle, EditableReferenceLineProps, EditableReferenceLineStyle, EditableReferenceBandProps, EditableReferenceBandStyle, EditableTrendLineProps, EditableTrendLineStyle } from "./lib/editable-chart-elements.js";
+export {
+  RangeNavigator,
+  EditableReferenceLine,
+  EditableReferenceBand,
+  EditableTrendLine,
+} from "./lib/editable-chart-elements.js";
+export type {
+  ChartAnchor,
+  RangeNavigatorProps,
+  RangeNavigatorStyle,
+  EditableReferenceLineProps,
+  EditableReferenceLineStyle,
+  EditableReferenceBandProps,
+  EditableReferenceBandStyle,
+  EditableTrendLineProps,
+  EditableTrendLineStyle,
+} from "./lib/editable-chart-elements.js";
 export {
   simpleMovingAverage,
   exponentialMovingAverage,
@@ -283,3 +308,21 @@ export type {
   BaselineSeriesStyle,
   BaselineSideStyle,
 } from "./lib/baseline-series.js";
+export { IntervalDiamondSeries } from "./lib/interval-diamond-series.js";
+export type {
+  IntervalDiamondSeriesProps,
+  IntervalDiamondSeriesStyle,
+} from "./lib/interval-diamond-series.js";
+export { CensoredPointSeries } from "./lib/censored-point-series.js";
+export type {
+  CensoringStatus,
+  CensoringAccessor,
+  CensoredPointSeriesProps,
+  CensoredPointSeriesStyle,
+} from "./lib/censored-point-series.js";
+export { WeightedPointSeries } from "./lib/weighted-point-series.js";
+export type {
+  WeightedPointSeriesProps,
+  WeightedPointSeriesStyle,
+  WeightAccessor,
+} from "./lib/weighted-point-series.js";

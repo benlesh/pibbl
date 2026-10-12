@@ -113,6 +113,11 @@ try {
     "LineSeries",
     "AreaSeries",
     "IntervalBandSeries",
+    "HorizontalIntervalSeries",
+    "IntervalDiamondSeries",
+    "WeightedPointSeries",
+    "CensoredPointSeries",
+    "VerticalIntervalSeries",
     "stepBefore",
     "stepAfter",
     "stepMidpoint",
@@ -304,6 +309,10 @@ try {
   );
   const financialFiles = [
     "chart-editing.tsx",
+    "interval-series.tsx",
+    "interval-diamond-series.tsx",
+    "weighted-point-series.tsx",
+    "censored-point-series.tsx",
     "financial-candles.tsx",
     "financial-candle-inspection.tsx",
     "financial-ohlc-bars.tsx",

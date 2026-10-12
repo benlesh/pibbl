@@ -53,8 +53,20 @@ Import from `@pibbl/core/viz/inspection`. Rendering-only applications can omit
 this entry. Pass an optional inspection ref to one mounted series:
 
 ```tsx
-import { PointSeries, defineSeries } from "@pibbl/core/viz";
-import { usePointInspection } from "@pibbl/core/viz/inspection";
+import { signal, type PibblLogicalMouseEvent } from "@pibbl/core";
+import {
+  PointSeries,
+  defineSeries,
+  linearInterpolation,
+} from "@pibbl/core/viz";
+import {
+  anchorInsideClips,
+  lastSourceObservation,
+  nearestRecordedX,
+  sampleRecordedX,
+  usePointInspection,
+  withInspection,
+} from "@pibbl/core/viz/inspection";
 
 function InspectedPoints() {
   const series = defineSeries({
@@ -86,10 +98,19 @@ its original string or number.
 ## Standalone queries
 
 ```ts
-const rendered = inspection.rendered();
-if (rendered) {
-  const hit = nearestRecordedX(rendered, { domainX: 8 });
-  console.log(hit?.datum, hit?.sourceIndex, hit?.domainY);
+function QueryNearest() {
+  const series = defineSeries({
+    data: [{ time: 0, price: 10 }],
+    x: "time",
+    y: "price",
+  });
+  const inspection = usePointInspection(series);
+  const rendered = inspection.rendered();
+  if (rendered) {
+    const hit = nearestRecordedX(rendered, { domainX: 8 });
+    console.log(hit?.datum, hit?.sourceIndex, hit?.domainY);
+  }
+  return <PointSeries {...series} xScale="time" yScale="price" inspection={inspection} />;
 }
 ```
 
@@ -113,10 +134,21 @@ predicate participate, including offscreen anchors. An optional pure
 `filter(candidate)` additionally restricts that request:
 
 ```ts
-nearestRecordedX(rendered, {
-  domainX: 8,
-  filter: anchorInsideClips,
-});
+function QueryVisibleNearest() {
+  const series = defineSeries({
+    data: [{ time: 0, price: 10 }],
+    x: "time",
+    y: "price",
+  });
+  const inspection = usePointInspection(series);
+  const rendered = inspection.rendered();
+  if (rendered)
+    nearestRecordedX(rendered, {
+      domainX: 8,
+      filter: anchorInsideClips,
+    });
+  return <PointSeries {...series} xScale="time" yScale="price" inspection={inspection} />;
+}
 ```
 
 `anchorInsideClips` tests the observation anchor against every committed clip and
@@ -128,11 +160,22 @@ and do not change what is rendered.
 ## Explicit interpolation
 
 ```ts
-sampleRecordedX(rendered, {
-  domainX: 8,
-  interpolation: linearInterpolation(), // from @pibbl/core/viz
-  resolveDuplicate: lastSourceObservation,
-});
+function QueryInterpolatedSample() {
+  const series = defineSeries({
+    data: [{ time: 0, price: 10 }],
+    x: "time",
+    y: "price",
+  });
+  const inspection = usePointInspection(series);
+  const rendered = inspection.rendered();
+  if (rendered)
+    sampleRecordedX(rendered, {
+      domainX: 8,
+      interpolation: linearInterpolation(),
+      resolveDuplicate: lastSourceObservation,
+    });
+  return <PointSeries {...series} xScale="time" yScale="price" inspection={inspection} />;
+}
 ```
 
 `sampleRecordedX` returns `kind: "exact"` with an original record, or
@@ -149,15 +192,33 @@ synchronous and return valid values.
 ## Lazy ordinary handlers
 
 ```tsx
-const onClick = withInspection((event, context) => {
-  const rendered = context.rendered(inspection);
-  if (!rendered) return;
-  const rootPoint = { x: event.x, y: event.y };
-  const hit = context.request(nearestRecordedX, rendered, {
-    domainX: rendered.domainXAtRoot(rootPoint),
+function ClickSelection() {
+  const series = defineSeries({
+    data: [{ time: 0, price: 10 }],
+    x: "time",
+    y: "price",
   });
-  selection.set(hit?.datum ?? null);
-});
+  const inspection = usePointInspection(series);
+  const selection = signal<{ time: number; price: number } | null>(null);
+  const onClick = withInspection<PibblLogicalMouseEvent>((event, context) => {
+    const rendered = context.rendered(inspection);
+    if (!rendered) return;
+    const rootPoint = { x: event.x, y: event.y };
+    const hit = context.request(nearestRecordedX, rendered, {
+      domainX: rendered.domainXAtRoot(rootPoint),
+    });
+    selection.set(hit?.datum ?? null);
+  });
+  return (
+    <PointSeries
+      {...series}
+      xScale="time"
+      yScale="price"
+      inspection={inspection}
+      onClick={onClick}
+    />
+  );
+}
 ```
 
 The event is unchanged. The second argument expires when the synchronous handler

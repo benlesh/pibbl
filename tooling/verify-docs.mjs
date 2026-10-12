@@ -159,6 +159,10 @@ const publicSiteMarkdownPaths = [
   "docs/site/api/functions/domain-navigation.md",
   "docs/site/api/components/color-scales.md",
   "docs/site/api/components/interval-band-series.md",
+  "docs/site/api/components/interval-series.md",
+  "docs/site/api/components/censored-point-series.md",
+  "docs/site/api/components/weighted-point-series.md",
+  "docs/site/api/components/interval-diamond-series.md",
   "docs/site/api/components/chart-editing.md",
   "docs/site/api/components/point-series.md",
   "docs/site/api/components/plot-series.md",
@@ -325,6 +329,7 @@ const currentMarkdownPaths = [
   "docs/design/runtime-hooks-contract.md",
   "docs/design/render-layer-and-three-contract.md",
   "docs/design/runtime-resource-ownership.md",
+  "docs/design/api-design-guidance.md",
   "docs/design/signals-and-scheduling-contract.md",
   "docs/design/style-system-contract.md",
   "docs/design/user-events-contract.md",
@@ -410,6 +415,7 @@ for (const representative of [
   );
 }
 const historicalMarkdownPatterns = [
+  /^docs\/strategy\/agent-verification-evidence\//u,
   /^docs\/testing\/runtime-performance-audit\//u,
   /^\.superpowers\/sdd\//u,
   /^docs\/design\/tfc-01-characterization-baseline\.md$/u,
