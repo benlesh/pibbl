@@ -47,3 +47,10 @@ export default function mount(canvas: HTMLCanvasElement) {
     </LinearScale>,
   );
 }
+
+const canvas = document.createElement("canvas");
+canvas.width = 320;
+canvas.height = 220;
+document.body.append(canvas);
+const app = mount(canvas);
+window.addEventListener("pagehide", () => app.dispose(), { once: true });
