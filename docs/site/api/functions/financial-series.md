@@ -7,6 +7,16 @@ slug: financial-series
 apiCategory: function
 symbols:
   [
+    OhlcvBucket,
+    OhlcvSource,
+    AggregateOhlcvOptions,
+    AggregatedOhlcvPoint,
+    SessionAccessor,
+    SessionIdentifier,
+    SessionVwapOptions,
+    SessionVwapPoint,
+    aggregateOhlcv,
+    sessionVwap,
     ComparisonBaseOptions,
     PercentageReturnPoint,
     IndexedValuePoint,
@@ -397,3 +407,38 @@ keyed glyphs, labels and focusable hit regions. The application owns fill
 selection, coincident-event ordering and clipping policy. Execution Journal
 shows this composition with simulated buy/sell fills and a selectable entry
 baseline; it does not add a public marker component.
+
+## OHLCV aggregation and session VWAP
+
+`aggregateOhlcv(data, options)` preserves chronological source order and combines
+complete records within explicit half-open `{ start, end }` buckets. Accessors
+supply `time`, `open`, `high`, `low`, `close`, and `volume`; `bucket(time)` supplies
+bounds or `null` to exclude a timestamp. `defined` excludes before accessors run.
+First open, maximum high, minimum low, last close and summed volume form each
+frozen `AggregatedOhlcvPoint`. Frozen `sources` retain original datum/index pairs.
+It creates no empty buckets and does not determine whether a bucket is final.
+Missing inputs skip; descending finite times, inconsistent/overlapping bounds,
+malformed finite OHLC, negative volume and volume overflow reject. Source records
+remain caller-owned and are not frozen or mutated.
+
+`sessionVwap(data, { price, volume, session, defined? })` returns one frozen point
+per original record. Session IDs are strings or finite numbers supplied by a
+property or callback. Every session change resets accumulation, including an
+excluded first observation. Session resolves before `defined`; excluded rows skip
+price and volume accessors, report their session and produce null VWAP. Missing
+price/volume also produces null while preserving that session's prior state.
+Zero volume preserves prior VWAP, or null before the first positive volume.
+Negative volume and cumulative volume overflow reject. Weighted price arithmetic
+avoids intermediate price-times-volume overflow. Results include original datum,
+sourceIndex, session, cumulativeVolume and vwap. The function does not infer a
+calendar, reorder data or deduplicate observations.
+
+Trade price and quantity produce trade-based VWAP. Typical bar price
+`(high + low + close) / 3` and bar volume produce an approximation; the caller must
+label that choice. Derive VWAP from the full source session before slicing the
+view or aggregating the display timeframe to preserve a consistent study.
+
+Live updates use ordinary signals: replace the current immutable record or append
+a new record and publish the new array. The application owns feed lifetime,
+retention, follow-latest policy and historical inspection. Existing chart and
+animation APIs continue to own rendering and navigation.

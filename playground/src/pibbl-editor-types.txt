@@ -1273,6 +1273,133 @@ export interface MeshTransformOptions {
   export function defineThreeLayer<Props, Resources extends PibblThreeLayerResources>(definition: PibblThreeLayerDefinition<Props, Resources>): PibblComponent<PibblRenderLayerProps<Props>>;
 
 /* @pibbl-studio-module @pibbl/core/viz */
+/** One half-open time interval used to group complete OHLCV records. See {@link AggregateOhlcvOptions}. */
+export interface OhlcvBucket {
+    /** Inclusive finite start coordinate. */
+    readonly start: number;
+    /** Exclusive finite end coordinate after the start. */
+    readonly end: number;
+}
+/** Original source record that contributed to an aggregated OHLCV bar. See {@link AggregatedOhlcvPoint}. */
+export interface OhlcvSource<D> {
+    /** Caller-owned complete contributing record. */
+    readonly datum: D;
+    /** Original source index. */
+    readonly sourceIndex: number;
+}
+/** One frozen OHLCV bar aggregated without sorting caller-owned records. See {@link aggregateOhlcv}. */
+export interface AggregatedOhlcvPoint<D> extends OhlcvBucket {
+    /** Open from the first contributing record. */
+    readonly open: number;
+    /** Maximum high from contributing records. */
+    readonly high: number;
+    /** Minimum low from contributing records. */
+    readonly low: number;
+    /** Close from the last contributing record. */
+    readonly close: number;
+    /** Finite sum of non-negative contributing volumes. */
+    readonly volume: number;
+    /** Frozen references to contributing caller-owned records. */
+    readonly sources: readonly OhlcvSource<D>[];
+}
+/** Inputs for chronological OHLCV aggregation. See {@link aggregateOhlcv}. */
+export interface AggregateOhlcvOptions<D> {
+    /** Numeric property or callback that supplies each record's time coordinate. */
+    readonly time: LineAccessor<D>;
+    /** Numeric property or callback that supplies open. */
+    readonly open: LineAccessor<D>;
+    /** Numeric property or callback that supplies high. */
+    readonly high: LineAccessor<D>;
+    /** Numeric property or callback that supplies low. */
+    readonly low: LineAccessor<D>;
+    /** Numeric property or callback that supplies close. */
+    readonly close: LineAccessor<D>;
+    /** Numeric property or callback that supplies non-negative volume. */
+    readonly volume: LineAccessor<D>;
+    /**
+     * Returns the half-open aggregate bucket for one eligible finite timestamp, or null to skip it.
+     * @param time - Eligible finite source timestamp.
+     * @returns A containing half-open bucket, or null when the record is not aggregated.
+     * @see {@link OhlcvBucket}
+     */
+    readonly bucket: (time: number) => OhlcvBucket | null;
+    /**
+     * Excludes a record before its OHLCV and bucket accessors run.
+     * @param datum - Original source observation.
+     * @param index - Zero-based source index.
+     * @param data - Complete caller-supplied source array.
+     * @returns Whether this observation may contribute.
+     */
+    readonly defined?: (datum: D, index: number, data: readonly D[]) => boolean;
+}
+/** A valid session identifier supplied to {@link sessionVwap}. */
+export type SessionIdentifier = string | number;
+/**
+ * A property or callback that supplies the session containing a source record.
+ * @param datum - Source observation under consideration.
+ * @param index - Zero-based source index.
+ * @param data - Complete caller-supplied source array.
+ * @returns The record's string or finite numeric session identifier.
+ * @see {@link SessionVwapOptions}
+ */
+export type SessionAccessor<D> = {
+    [K in keyof D]-?: D[K] extends SessionIdentifier ? K : never;
+}[keyof D] | ((datum: D, index: number, data: readonly D[]) => SessionIdentifier);
+/** Inputs for source-aligned session VWAP. See {@link sessionVwap}. */
+export interface SessionVwapOptions<D> {
+    /** Numeric property or callback that supplies each record's price. */
+    readonly price: LineAccessor<D>;
+    /** Numeric property or callback that supplies non-negative volume. */
+    readonly volume: LineAccessor<D>;
+    /** Property or callback that supplies the current string or finite numeric session identifier. */
+    readonly session: SessionAccessor<D>;
+    /**
+     * Excludes a row before price and volume accessors run; its session still resets state.
+     * @param datum - Original source observation.
+     * @param index - Zero-based source index.
+     * @param data - Complete caller-supplied source array.
+     * @returns Whether this observation participates in VWAP calculation.
+     */
+    readonly defined?: (datum: D, index: number, data: readonly D[]) => boolean;
+}
+/** One frozen source-aligned session VWAP point. See {@link sessionVwap}. */
+export interface SessionVwapPoint<D> {
+    /** Caller-owned original record. */
+    readonly datum: D;
+    /** Original source index, including excluded and incomplete records. */
+    readonly sourceIndex: number;
+    /** Evaluated session, including for an excluded source record. */
+    readonly session: SessionIdentifier;
+    /** Finite volume accumulated for this session before or including this record. */
+    readonly cumulativeVolume: number;
+    /** Session VWAP after this valid record, null for incomplete or excluded records. */
+    readonly vwap: number | null;
+}
+/**
+ * Aggregates source-ordered complete OHLCV records into caller-defined chronological buckets.
+ *
+ * It never sorts or mutates source records. Missing, excluded, and null-bucket records are skipped;
+ * finite malformed candles, negative volume, noncontiguous bucket bounds, and time disorder reject.
+ * @param data - Caller-owned source observations in chronological order.
+ * @param options - OHLCV accessors, bucket definition, and optional participation callback.
+ * @returns Frozen anchored aggregate bars with frozen original source references.
+ * @see {@link AggregateOhlcvOptions}
+ * @see {@link AggregatedOhlcvPoint}
+ */
+export declare function aggregateOhlcv<D>(data: readonly D[], options: AggregateOhlcvOptions<D>): readonly AggregatedOhlcvPoint<D>[];
+/**
+ * Derives source-aligned volume-weighted prices that reset whenever the session identifier changes.
+ *
+ * Missing prices or volumes and excluded rows produce null without changing the current accumulated
+ * state. Zero-volume complete records preserve the preceding VWAP; negative volumes reject.
+ * @param data - Caller-owned source observations in presentation order.
+ * @param options - Price, volume, session accessors, and optional participation callback.
+ * @returns Frozen source-aligned points with current cumulative volume and VWAP or null.
+ * @see {@link SessionVwapOptions}
+ * @see {@link SessionVwapPoint}
+ */
+export declare function sessionVwap<D>(data: readonly D[], options: SessionVwapOptions<D>): readonly SessionVwapPoint<D>[];
+
 import type { BoxStyle, PibblNode, LayoutItemStyle, LayoutBox, SignalValue } from '@pibbl/core';
 type SignalStyle<S> = Readonly<{ [K in keyof S]: K extends "custom" ? S[K] : SignalValue<S[K]> }>;
 export interface BaselineSideStyle { readonly fill?: import('@pibbl/core').FillStyle; readonly stroke?: import('@pibbl/core').StrokeStyle; }
