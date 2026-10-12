@@ -1,0 +1,67 @@
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - import "../../vitest.config" without a file extension (tooling/line-attribution/vitest.config.ts:2:18). Add the file extension
+  - import "./build" without a file extension (tooling/studio-docs/vite-plugin.ts:10:8). Add the file extension
+  - import "./learning-catalog-adapter" without a file extension (tooling/studio-docs/vite-plugin.ts:11:44). Add the file extension
+  - import "./search-index" without a file extension (tooling/studio-docs/vite-plugin.ts:12:64). Add the file extension
+  - import "./build" without a file extension (tooling/studio-docs/search-index.ts:6:8). Add the file extension
+  - import "./build" without a file extension (tooling/studio-docs/learning-catalog-adapter.ts:8:8). Add the file extension
+  - import "./api-exports" without a file extension (tooling/studio-docs/build.ts:12:8). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/search-index.ts:7:39). Add the file extension
+  - import "./markdown" without a file extension (tooling/studio-docs/build.ts:13:37). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/build.ts:14:64). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/markdown.ts:10:8). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/api-exports.ts:16:43). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/markdown.ts:11:46). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/markdown.ts:13:46). Add the file extension
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+
+ RUN  v4.1.10 /Users/benlesh/GitHub/crc
+
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - import "../../vitest.config" without a file extension (tooling/line-attribution/vitest.config.ts:2:18). Add the file extension
+  - import "./build" without a file extension (tooling/studio-docs/vite-plugin.ts:10:8). Add the file extension
+  - import "./learning-catalog-adapter" without a file extension (tooling/studio-docs/vite-plugin.ts:11:44). Add the file extension
+  - import "./search-index" without a file extension (tooling/studio-docs/vite-plugin.ts:12:64). Add the file extension
+  - import "./build" without a file extension (tooling/studio-docs/search-index.ts:6:8). Add the file extension
+  - import "./build" without a file extension (tooling/studio-docs/learning-catalog-adapter.ts:8:8). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/search-index.ts:7:39). Add the file extension
+  - import "./api-exports" without a file extension (tooling/studio-docs/build.ts:12:8). Add the file extension
+  - import "./markdown" without a file extension (tooling/studio-docs/build.ts:13:37). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/build.ts:14:64). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/markdown.ts:10:8). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/api-exports.ts:16:43). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/markdown.ts:11:46). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/markdown.ts:13:46). Add the file extension
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+3:04:29 PM [vite] Internal server error: Failed to resolve import "./capture" from "tooling/line-attribution/line-attribution.check.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /Users/benlesh/GitHub/crc/tooling/line-attribution/line-attribution.check.tsx:4:47
+  2  |  import { LinearScale, LineSeries } from "@pibbl/core/viz";
+  3  |  import { afterEach, expect, it, vi } from "vitest";
+  4  |  import { createLineAttributionInspector } from "./capture";
+     |                                                  ^
+  5  |  import { testRuntime } from "../../packages/core/test/features/viz/support/runtime";
+  6  |  var _jsxFileName = "/Users/benlesh/GitHub/crc/tooling/line-attribution/line-attribution.check.tsx";
+      at TransformPluginContext._formatLog (file:///Users/benlesh/GitHub/crc/node_modules/.pnpm/vite@8.2.1_@types+node@26.2.0_esbuild@0.28.2_jiti@2.7.0_terser@5.36.0_tsx@4.23.12_yaml@2.9.0/node_modules/vite/dist/node/chunks/node.js:31066:39)
+      at TransformPluginContext.error (file:///Users/benlesh/GitHub/crc/node_modules/.pnpm/vite@8.2.1_@types+node@26.2.0_esbuild@0.28.2_jiti@2.7.0_terser@5.36.0_tsx@4.23.12_yaml@2.9.0/node_modules/vite/dist/node/chunks/node.js:31063:14)
+      at normalizeUrl (file:///Users/benlesh/GitHub/crc/node_modules/.pnpm/vite@8.2.1_@types+node@26.2.0_esbuild@0.28.2_jiti@2.7.0_terser@5.36.0_tsx@4.23.12_yaml@2.9.0/node_modules/vite/dist/node/chunks/node.js:28008:18)
+      at file:///Users/benlesh/GitHub/crc/node_modules/.pnpm/vite@8.2.1_@types+node@26.2.0_esbuild@0.28.2_jiti@2.7.0_terser@5.36.0_tsx@4.23.12_yaml@2.9.0/node_modules/vite/dist/node/chunks/node.js:28076:30
+      at async Promise.all (index 3)
+      at TransformPluginContext.transform (file:///Users/benlesh/GitHub/crc/node_modules/.pnpm/vite@8.2.1_@types+node@26.2.0_esbuild@0.28.2_jiti@2.7.0_terser@5.36.0_tsx@4.23.12_yaml@2.9.0/node_modules/vite/dist/node/chunks/node.js:28044:4)
+      at EnvironmentPluginContainer.transform (file:///Users/benlesh/GitHub/crc/node_modules/.pnpm/vite@8.2.1_@types+node@26.2.0_esbuild@0.28.2_jiti@2.7.0_terser@5.36.0_tsx@4.23.12_yaml@2.9.0/node_modules/vite/dist/node/chunks/node.js:30851:14)
+      at loadAndTransform (file:///Users/benlesh/GitHub/crc/node_modules/.pnpm/vite@8.2.1_@types+node@26.2.0_esbuild@0.28.2_jiti@2.7.0_terser@5.36.0_tsx@4.23.12_yaml@2.9.0/node_modules/vite/dist/node/chunks/node.js:20619:26)
+ ❯ |chromium| tooling/line-attribution/line-attribution.check.tsx (0 test)
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |chromium| tooling/line-attribution/line-attribution.check.tsx [ tooling/line-attribution/line-attribution.check.tsx ]
+Error: Failed to import test file /Users/benlesh/GitHub/crc/tooling/line-attribution/line-attribution.check.tsx
+Caused by: TypeError: Failed to fetch dynamically imported module: http://localhost:63315/Users/benlesh/GitHub/crc/tooling/line-attribution/line-attribution.check.tsx?import&browserv=1791486269341
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  15:04:27
+   Duration  1.51s (transform 0ms, setup 0ms, import 0ms, tests 0ms, environment 0ms)
+

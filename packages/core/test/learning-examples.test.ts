@@ -1214,11 +1214,11 @@ describe("learning example catalog", () => {
     );
   });
 
-  it("contains 108 unique, ordered, source-backed routes including rainy window, optional filters, and underwater", async () => {
+  it("contains 128 unique, ordered, source-backed routes including rainy window, optional filters, and underwater", async () => {
     expect(validateLearningExampleCatalog(learningExampleCatalog)).toBe(
       learningExampleCatalog,
     );
-    expect(learningExampleCatalog).toHaveLength(108);
+    expect(learningExampleCatalog).toHaveLength(128);
     expect(
       learningExampleCatalog
         .filter(
@@ -1310,6 +1310,27 @@ describe("learning example catalog", () => {
         "wedge",
       ],
       composition: [
+        "financial-calendar-ranges",
+        "financial-candles",
+        "financial-crosshair",
+        "financial-execution-journal",
+        "financial-linked-panes",
+        "financial-live-monitor",
+        "financial-market-session",
+        "financial-momentum-desk",
+        "financial-normalized-returns",
+        "financial-price-guides",
+        "financial-relative-performance",
+        "financial-research-workspace",
+        "financial-trading-time",
+        "financial-trend-volatility",
+        "financial-visible-autoscale",
+        "financial-volume",
+        "viz-inspection-workbench",
+        "viz-lazy-inspection",
+        "viz-painted-inspection",
+        "viz-recorded-inspection",
+
         "state-machines",
         "sprites",
         "viz-utc-basics",
@@ -1489,6 +1510,26 @@ describe("learning example catalog", () => {
       "viz-small-multiples",
       "viz-size-symbols",
       "viz-color-encodings",
+      "viz-recorded-inspection",
+      "viz-lazy-inspection",
+      "viz-painted-inspection",
+      "viz-inspection-workbench",
+      "financial-volume",
+      "financial-market-session",
+      "financial-trading-time",
+      "financial-candles",
+      "financial-crosshair",
+      "financial-price-guides",
+      "financial-visible-autoscale",
+      "financial-linked-panes",
+      "financial-calendar-ranges",
+      "financial-normalized-returns",
+      "financial-relative-performance",
+      "financial-trend-volatility",
+      "financial-momentum-desk",
+      "financial-execution-journal",
+      "financial-live-monitor",
+      "financial-research-workspace",
     ]);
 
     const startExamples = learningExampleCatalog.filter(
@@ -1845,6 +1886,36 @@ describe("learning example catalog", () => {
       .flatMap((entry) => entry.api);
     expect(new Set(drawingAndComposition)).toEqual(
       new Set([
+        "BaselineSeries",
+        "CandlestickSeries",
+        "EditableReferenceBand",
+        "EditableReferenceLine",
+        "EditableTrendLine",
+        "OhlcBarSeries",
+        "RangeNavigator",
+        "TradingTimeScale",
+        "VolumeSeries",
+        "aggregateOhlcv",
+        "bollingerBands",
+        "exponentialMovingAverage",
+        "indexTo100",
+        "movingAverageConvergenceDivergence",
+        "nearestRecordedCandleX",
+        "nearestRecordedX",
+        "padLinearDomain",
+        "paintedCandleAt",
+        "paintedPointAt",
+        "percentageReturns",
+        "relativeStrengthIndex",
+        "sessionVwap",
+        "simpleMovingAverage",
+        "stochasticOscillator",
+        "useCandleInspection",
+        "useOhlcBarInspection",
+        "usePointInspection",
+        "useTradingTimeScale",
+        "visibleOhlcPriceExtent",
+        "withInspection",
         "LogScale",
         "PointScale",
         "Sprite",

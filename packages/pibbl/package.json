@@ -81,6 +81,10 @@
     "./machines/animation": {
       "types": "./dist/machines/animation.d.ts",
       "default": "./dist/machines/animation.mjs"
+    },
+    "./viz/inspection": {
+      "types": "./dist/viz/inspection.d.ts",
+      "default": "./dist/viz/inspection.mjs"
     }
   },
   "main": "./dist/index.mjs",
@@ -135,6 +139,9 @@
       ],
       "machines/animation": [
         "./dist/machines/animation.d.ts"
+      ],
+      "viz/inspection": [
+        "./dist/viz/inspection.d.ts"
       ]
     }
   },

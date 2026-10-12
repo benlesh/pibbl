@@ -153,6 +153,8 @@ for (const removedName of ["useState", "useMemo", "useWhenChanged", "useSpringVa
 const expectedInternal = [
   "PibblInternalManualSchedulerDriver",
   "borrowTextureRaster",
+  "borrowDispatchResource",
+  "captureSeriesInspectionFrame",
   "pibblInternalAssertCommandAllowed",
   "pibblInternalCreatePropAttachment",
   "pibblInternalCreateSignalConsumer",

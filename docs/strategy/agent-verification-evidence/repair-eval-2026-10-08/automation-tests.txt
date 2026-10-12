@@ -1,0 +1,15 @@
+✔ automates two repair/review turns and persists weighted scores (97.29775ms)
+✔ failed agent turns stay blocked and never invoke review (6.918209ms)
+✔ both arms require independent painted-result evidence without a defect hint (4.696166ms)
+✔ 80 deterministic points and 20 judged points (0.464125ms)
+✔ blocked or missing checks do not become passing scores (0.118542ms)
+✔ reject invalid judge values and unsupported blank reasons (0.068ms)
+✔ reviewer explicitly permits reading its evidence (0.067625ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 259.326375

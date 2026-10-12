@@ -83,6 +83,7 @@ const entryImports = {
   textures: "@pibbl/core/textures",
   text: "@pibbl/text",
   viz: "@pibbl/core/viz",
+  inspection: "@pibbl/core/viz/inspection",
   three: "@pibbl/three",
   particles: "@pibbl/core/particles",
   types: "@pibbl/core/types",

@@ -1,5 +1,129 @@
 [
   {
+    "id": "financial-percentage-returns",
+    "title": "Common-base percentage returns",
+    "description": "Derive cumulative simple returns with explicit null gaps from one exact base.",
+    "source": "financial-percentage-returns.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "percentageReturns",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "ComparisonBaseOptions",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "PercentageReturnPoint",
+        "importPath": "@pibbl/core/viz"
+      }
+    ]
+  },
+  {
+    "id": "financial-index-to-100",
+    "title": "Common-base indexed values",
+    "description": "Index supplied prices to 100 at one exact common base.",
+    "source": "financial-index-to-100.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "indexTo100",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "IndexedValuePoint",
+        "importPath": "@pibbl/core/viz"
+      }
+    ]
+  },
+  {
+    "id": "financial-indicators",
+    "title": "Consecutive financial indicators",
+    "description": "Derive aligned SMA, EMA, and population-standard-deviation bands with explicit gap resets.",
+    "source": "financial-indicators.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "simpleMovingAverage",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "exponentialMovingAverage",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "bollingerBands",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "MovingAveragePoint",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "BollingerBandPoint",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "MovingAverageOptions",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "BollingerBandsOptions",
+        "importPath": "@pibbl/core/viz"
+      }
+    ]
+  },
+  {
+    "id": "financial-oscillators",
+    "title": "Financial oscillators",
+    "description": "Derive source-aligned RSI, MACD, and stochastic values with explicit gap resets.",
+    "source": "financial-oscillators.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "relativeStrengthIndex",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "movingAverageConvergenceDivergence",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "stochasticOscillator",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "RelativeStrengthIndexPoint",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "MovingAverageConvergenceDivergencePoint",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "StochasticOscillatorPoint",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "OscillatorOptions",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "RelativeStrengthIndexOptions",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "MovingAverageConvergenceDivergenceOptions",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "StochasticOscillatorOptions",
+        "importPath": "@pibbl/core/viz"
+      }
+    ]
+  },
+  {
     "id": "scales",
     "title": "Scales and axes",
     "description": "Create band and linear scales with a typed axis and inspect resolved mappings.",
@@ -837,6 +961,23 @@
     ]
   },
   {
+    "id": "numeric-range-interpolation",
+    "title": "Animated numeric ranges",
+    "description": "Compose endpoint interpolation with the existing target-driven animation hook.",
+    "source": "numeric-range-interpolation.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "interpolateNumericRange",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "NumericDomain",
+        "importPath": "@pibbl/core/viz"
+      }
+    ]
+  },
+  {
     "id": "colors",
     "title": "Explicit color scales",
     "description": "Map real observations with dedicated providers and authored palettes.",
@@ -897,6 +1038,717 @@
       },
       {
         "name": "ThresholdColorBand",
+        "importPath": "@pibbl/core/viz"
+      }
+    ]
+  },
+  {
+    "id": "inspection-recorded",
+    "title": "Recorded numeric inspection",
+    "description": "Query the committed observations from numeric and point series with explicit units and interpolation.",
+    "source": "inspection-recorded.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "anchorInsideClips",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "firstSourceObservation",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "lastSourceObservation",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "nearestRecordedPoint",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "nearestRecordedX",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "sampleRecordedX",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "useNumericInspection",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "usePointInspection",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "InspectionCandidate",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "NearestRecordedPointHit",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "NearestRecordedPointOptions",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "NearestRecordedXHit",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "NearestRecordedXOptions",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "NumericDomainInterpolation",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "NumericDuplicateResolver",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "NumericInspectionRef",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "NumericRenderedAnchors",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "NumericRenderedFilter",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "NumericRenderedObservation",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "NumericRenderedSeries",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "PointInspectionRef",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "PointRenderedSeries",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "RecordedNumericHit",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "RecordedXSample",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "RenderedSeries",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "RenderedSeriesPoint",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "SampleRecordedXOptions",
+        "importPath": "@pibbl/core/viz/inspection"
+      }
+    ]
+  },
+  {
+    "id": "inspection-lazy",
+    "title": "Lazy event inspection",
+    "description": "Request a typed query only inside an ordinary event handler and reuse an equal request within its dispatch.",
+    "source": "inspection-lazy.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "withInspection",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "InspectionContext",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "InspectionRef",
+        "importPath": "@pibbl/core/viz/inspection"
+      }
+    ]
+  },
+  {
+    "id": "inspection-painted",
+    "title": "Painted mark lookup",
+    "description": "Keep painted point and bar hit testing separate from nearest recorded-data selection.",
+    "source": "inspection-painted.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "paintedBarAt",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "paintedPointAt",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "useBarInspection",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "BarInspectionRef",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "BarRenderedSeries",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "PaintedBarHit",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "PaintedPointHit",
+        "importPath": "@pibbl/core/viz/inspection"
+      }
+    ]
+  },
+  {
+    "id": "financial-crosshair",
+    "title": "Snapped OHLCV inspection",
+    "description": "Compose a recorded-time crosshair that keyboard navigation can retain.",
+    "source": "financial-crosshair.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "ReferenceLine",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "nearestRecordedCandleX",
+        "importPath": "@pibbl/core/viz/inspection"
+      }
+    ]
+  },
+  {
+    "id": "financial-price-guides",
+    "title": "Price guides and formatting",
+    "description": "Format and label supplied price references with composition primitives.",
+    "source": "financial-price-guides.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "ReferenceLine",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "ScaleAdjust",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "formatNumber",
+        "importPath": "@pibbl/core/viz"
+      }
+    ]
+  },
+  {
+    "id": "financial-visible-autoscale",
+    "title": "Visible OHLC autoscaling",
+    "description": "Derive a padded linear domain from complete candles in one visible window.",
+    "source": "financial-visible-autoscale.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "visibleOhlcPriceExtent",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "padLinearDomain",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "PadLinearDomainOptions",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "VisibleOhlcPriceExtentOptions",
+        "importPath": "@pibbl/core/viz"
+      }
+    ]
+  },
+  {
+    "id": "financial-volume",
+    "title": "Financial volume columns",
+    "description": "Paint time-aligned nonnegative volume columns with a numeric baseline.",
+    "source": "financial-volume.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "VolumeSeries",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "VolumeSeriesProps",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "VolumeSeriesStyle",
+        "importPath": "@pibbl/core/viz"
+      }
+    ]
+  },
+  {
+    "id": "financial-volume-inspection",
+    "title": "Volume inspection",
+    "description": "Read committed volume observations with typed nearest-time and painted-column queries.",
+    "source": "financial-volume-inspection.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "useVolumeInspection",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "nearestRecordedVolumeX",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "paintedVolumeAt",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "VolumeObservation",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "VolumeInspectionCandidate",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "NearestVolumeHit",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "PaintedVolumeHit",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "VolumeInspectionRef",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "VolumeRenderedSeries",
+        "importPath": "@pibbl/core/viz/inspection"
+      }
+    ]
+  },
+  {
+    "id": "financial-trading-time",
+    "title": "Trading-time observation slots",
+    "description": "Place supplied UTC observations in consecutive logical slots without modeling an exchange calendar.",
+    "source": "financial-trading-time.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "TradingTimeScale",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "useTradingTimeScale",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "TradingTimeScaleProps",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "ResolvedTradingTimeScale",
+        "importPath": "@pibbl/core/viz"
+      }
+    ]
+  },
+  {
+    "id": "financial-candles",
+    "title": "Candlestick OHLC marks",
+    "description": "Render named open, high, low, and close values with independently styled bodies and wicks.",
+    "source": "financial-candles.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "CandlestickSeries",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "CandlestickSeriesProps",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "CandlestickSeriesStyle",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "CandleBodyStyle",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "CandleWickStyle",
+        "importPath": "@pibbl/core/viz"
+      }
+    ]
+  },
+  {
+    "id": "financial-candle-inspection",
+    "title": "Candle inspection",
+    "description": "Read committed OHLC records and distinguish body coverage from wick coverage.",
+    "source": "financial-candle-inspection.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "useCandleInspection",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "nearestRecordedCandleX",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "paintedCandleAt",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "CandleObservation",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "CandleInspectionCandidate",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "NearestCandleHit",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "PaintedCandleHit",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "CandleInspectionRef",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "CandleRenderedSeries",
+        "importPath": "@pibbl/core/viz/inspection"
+      }
+    ]
+  },
+  {
+    "id": "financial-ohlc-bars",
+    "title": "OHLC bar inspection",
+    "description": "Render OHLC stems and ticks, then query committed nearest and painted bars.",
+    "source": "financial-ohlc-bars.tsx",
+    "environment": "typecheck",
+    "symbols": [
+      {
+        "name": "OhlcBarSeries",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "OhlcBarSeriesProps",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "OhlcBarSeriesStyle",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "useOhlcBarInspection",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "nearestRecordedOhlcBarX",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "paintedOhlcBarAt",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "OhlcBarObservation",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "OhlcBarInspectionCandidate",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "NearestOhlcBarHit",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "PaintedOhlcBarHit",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "OhlcBarInspectionRef",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "OhlcBarRenderedSeries",
+        "importPath": "@pibbl/core/viz/inspection"
+      }
+    ]
+  },
+  {
+    "id": "financial-baseline",
+    "title": "Entry-price baseline",
+    "description": "Paint linear price changes above and below an explicit entry reference.",
+    "source": "financial-baseline.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "BaselineSeries",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "BaselineSeriesProps",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "BaselineSeriesStyle",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "BaselineSideStyle",
+        "importPath": "@pibbl/core/viz"
+      }
+    ]
+  },
+  {
+    "id": "financial-aggregation",
+    "title": "OHLCV buckets and session VWAP",
+    "description": "Aggregate source bars and compute session-reset volume-weighted pricing.",
+    "source": "financial-aggregation.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "OhlcvBucket",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "OhlcvSource",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "AggregateOhlcvOptions",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "AggregatedOhlcvPoint",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "SessionAccessor",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "SessionIdentifier",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "SessionVwapOptions",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "SessionVwapPoint",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "aggregateOhlcv",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "sessionVwap",
+        "importPath": "@pibbl/core/viz"
+      }
+    ]
+  },
+  {
+    "id": "estimate-intervals",
+    "title": "Supplied estimates and intervals",
+    "description": "Map asymmetric supplied bounds and estimates in both orientations.",
+    "source": "interval-series.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "HorizontalIntervalSeries",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "VerticalIntervalSeries",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "HorizontalIntervalSeriesProps",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "VerticalIntervalSeriesProps",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "IntervalSeriesProps",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "IntervalSeriesStyle",
+        "importPath": "@pibbl/core/viz"
+      }
+    ],
+    "notes": [
+      "Synthetic supplied values; no statistical calculation.",
+      "Creates its own canvas and disposes on pagehide."
+    ]
+  },
+  {
+    "id": "chart-editing",
+    "title": "Controlled chart editing",
+    "description": "Edit a range window, reference line, reference band, and trading-time trend anchors through controlled callbacks.",
+    "source": "chart-editing.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "RangeNavigator",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "RangeNavigatorProps",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "RangeNavigatorStyle",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "EditableReferenceLine",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "EditableReferenceLineProps",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "EditableReferenceLineStyle",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "EditableReferenceBand",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "EditableReferenceBandProps",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "EditableReferenceBandStyle",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "EditableTrendLine",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "EditableTrendLineProps",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "EditableTrendLineStyle",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "ChartAnchor",
+        "importPath": "@pibbl/core/viz"
+      }
+    ],
+    "notes": [
+      "All interaction state is application-owned and fed back through controlled props.",
+      "Trading-time anchors snap to the supplied observations."
+    ]
+  },
+  {
+    "id": "interval-diamond-series",
+    "title": "Supplied summary diamonds",
+    "description": "Supplied summary diamonds.",
+    "source": "interval-diamond-series.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "IntervalDiamondSeries",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "IntervalDiamondSeriesProps",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "IntervalDiamondSeriesStyle",
+        "importPath": "@pibbl/core/viz"
+      }
+    ]
+  },
+  {
+    "id": "censored-point-series",
+    "title": "Supplied assay reporting limits",
+    "description": "Supplied assay reporting limits.",
+    "source": "censored-point-series.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "CensoredPointSeries",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "CensoredPointSeriesProps",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "CensoredPointSeriesStyle",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "CensoringAccessor",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "CensoringStatus",
+        "importPath": "@pibbl/core/viz"
+      }
+    ]
+  },
+  {
+    "id": "weighted-point-series",
+    "title": "Supplied weights mapped to marker area",
+    "description": "Supplied weights mapped to marker area.",
+    "source": "weighted-point-series.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "WeightedPointSeries",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "WeightedPointSeriesProps",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "WeightedPointSeriesStyle",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "WeightAccessor",
         "importPath": "@pibbl/core/viz"
       }
     ]

@@ -28,6 +28,8 @@ export interface CreatePibblEventInput<K extends PibblEventType> {
 }
 
 interface PibblEventFacadeState {
+  dispatchFinished?: boolean;
+  resources?: Map<object, { value: unknown; dispose: () => void }>;
   currentTarget: PibblEventTarget;
   eventPhase: PibblEventPhase;
   defaultPrevented: boolean;
@@ -36,6 +38,34 @@ interface PibblEventFacadeState {
 }
 
 const states = new WeakMap<object, PibblEventFacadeState>();
+
+/** Private opt-in dispatch ownership; ordinary events allocate no resource map.
+ * @param event - The currently dispatched logical event.
+ * @param key - Identity of this optional integration resource.
+ * @param create - Lazy initializer with an exact dispatch-end disposer.
+ * @returns Shared resource for this logical dispatch.
+ * @see {@link PibblEvent}
+ */
+export function borrowDispatchResource<T>(event: PibblEvent, key: object, create: () => {value:T;dispose:()=>void}): T {
+  const state = requiredState(event);
+  if (state.dispatchFinished) throw new Error('Inspection dispatch has expired.');
+  const resources = state.resources ??= new Map();
+  let resource = resources.get(key);
+  if (!resource) { resource = create(); resources.set(key,resource); }
+  return resource.value as T;
+}
+
+/** Releases optional synchronous resources even when a handler fails. */
+export function finishEventDispatch(event: PibblEvent): void {
+  const state = requiredState(event);
+  state.dispatchFinished = true;
+  const resources = state.resources;
+  if (resources) {
+    for (const resource of resources.values()) resource.dispose();
+    resources.clear();
+    state.resources = undefined;
+  }
+}
 
 export function createPibblEvent<K extends PibblEventType>(
   input: CreatePibblEventInput<K>,

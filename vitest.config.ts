@@ -94,6 +94,7 @@ export default defineConfig(({ mode }) => ({
       mode === "built"
         ? []
         : [
+            { find: /^@pibbl\/core\/viz\/inspection$/, replacement: fileURLToPath(new URL("./packages/core/src/features/viz/inspection.ts", import.meta.url)) },
             { find: /^@pibbl\/core\/filters$/, replacement: fileURLToPath(new URL("./packages/core/src/filters.ts", import.meta.url)) },
             { find: /^@pibbl\/core\/machines\/animation$/, replacement: fileURLToPath(new URL("./packages/core/src/features/machines/animation.ts", import.meta.url)) },
             { find: /^@pibbl\/core\/machines$/, replacement: fileURLToPath(new URL("./packages/core/src/features/machines/index.ts", import.meta.url)) },

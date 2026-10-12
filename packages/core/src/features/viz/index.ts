@@ -24,6 +24,16 @@ export { AreaSeries } from "./lib/area-series.js";
 export type { AreaSeriesProps, AreaSeriesStyle } from "./lib/area-series.js";
 export { IntervalBandSeries } from "./lib/interval-band-series.js";
 export type { IntervalBandSeriesProps } from "./lib/interval-band-series.js";
+export {
+  HorizontalIntervalSeries,
+  VerticalIntervalSeries,
+} from "./lib/interval-series.js";
+export type {
+  IntervalSeriesStyle,
+  IntervalSeriesProps,
+  HorizontalIntervalSeriesProps,
+  VerticalIntervalSeriesProps,
+} from "./lib/interval-series.js";
 export type { SeriesCurve } from "./lib/curve-definition.js";
 export { stepBefore, stepAfter, stepMidpoint } from "./lib/step-curves.js";
 export { monotoneX } from "./lib/monotone-curve.js";
@@ -138,6 +148,74 @@ export type {
   LinearTickOptions,
   NumberFormatOptions,
 } from "./lib/numeric-ticks.js";
+export { interpolateNumericRange } from "./lib/numeric-range-interpolation.js";
+export {
+  visibleOhlcPriceExtent,
+  padLinearDomain,
+} from "./lib/financial-autoscale.js";
+export type {
+  VisibleOhlcPriceExtentOptions,
+  PadLinearDomainOptions,
+} from "./lib/financial-autoscale.js";
+export { percentageReturns, indexTo100 } from "./lib/financial-comparison.js";
+export type {
+  ComparisonBaseOptions,
+  PercentageReturnPoint,
+  IndexedValuePoint,
+} from "./lib/financial-comparison.js";
+export { aggregateOhlcv, sessionVwap } from "./lib/financial-aggregation.js";
+export type {
+  OhlcvBucket,
+  OhlcvSource,
+  AggregatedOhlcvPoint,
+  AggregateOhlcvOptions,
+  SessionIdentifier,
+  SessionAccessor,
+  SessionVwapOptions,
+  SessionVwapPoint,
+} from "./lib/financial-aggregation.js";
+export {
+  RangeNavigator,
+  EditableReferenceLine,
+  EditableReferenceBand,
+  EditableTrendLine,
+} from "./lib/editable-chart-elements.js";
+export type {
+  ChartAnchor,
+  RangeNavigatorProps,
+  RangeNavigatorStyle,
+  EditableReferenceLineProps,
+  EditableReferenceLineStyle,
+  EditableReferenceBandProps,
+  EditableReferenceBandStyle,
+  EditableTrendLineProps,
+  EditableTrendLineStyle,
+} from "./lib/editable-chart-elements.js";
+export {
+  simpleMovingAverage,
+  exponentialMovingAverage,
+  bollingerBands,
+} from "./lib/financial-indicators.js";
+export type {
+  MovingAverageOptions,
+  BollingerBandsOptions,
+  MovingAveragePoint,
+  BollingerBandPoint,
+} from "./lib/financial-indicators.js";
+export {
+  relativeStrengthIndex,
+  movingAverageConvergenceDivergence,
+  stochasticOscillator,
+} from "./lib/financial-oscillators.js";
+export type {
+  OscillatorOptions,
+  RelativeStrengthIndexOptions,
+  MovingAverageConvergenceDivergenceOptions,
+  StochasticOscillatorOptions,
+  RelativeStrengthIndexPoint,
+  MovingAverageConvergenceDivergencePoint,
+  StochasticOscillatorPoint,
+} from "./lib/financial-oscillators.js";
 
 export { utcTickLabels } from "./lib/utc-labels.js";
 export type { UTCTickLabelOptions } from "./lib/utc-labels.js";
@@ -165,7 +243,11 @@ export { AxisTitle } from "./lib/axis-title.js";
 export type { AxisTitleProps } from "./lib/axis-title.js";
 
 export { panDomain, zoomDomain } from "./lib/domain-navigation.js";
-export type { DomainNavigationConstraints, PanDomainOptions, ZoomDomainOptions } from "./lib/domain-navigation.js";
+export type {
+  DomainNavigationConstraints,
+  PanDomainOptions,
+  ZoomDomainOptions,
+} from "./lib/domain-navigation.js";
 
 export {
   SequentialColorScale,
@@ -192,3 +274,55 @@ export type {
   ThresholdColorScaleProps,
   ResolvedThresholdColorScale,
 } from "./lib/threshold-color-scale.js";
+
+export { VolumeSeries } from "./lib/volume-series.js";
+export type {
+  VolumeSeriesProps,
+  VolumeSeriesStyle,
+} from "./lib/volume-series.js";
+
+export {
+  TradingTimeScale,
+  useTradingTimeScale,
+} from "./lib/trading-time-scale.js";
+export type {
+  TradingTimeScaleProps,
+  ResolvedTradingTimeScale,
+} from "./lib/trading-time-scale.js";
+export { CandlestickSeries } from "./lib/candlestick-series.js";
+export type {
+  CandlestickSeriesProps,
+  CandlestickSeriesStyle,
+  CandleBodyStyle,
+  CandleWickStyle,
+} from "./lib/candlestick-series.js";
+export { OhlcBarSeries } from "./lib/ohlc-bar-series.js";
+export type {
+  OhlcBarSeriesProps,
+  OhlcBarSeriesStyle,
+} from "./lib/ohlc-bar-series.js";
+
+export { BaselineSeries } from "./lib/baseline-series.js";
+export type {
+  BaselineSeriesProps,
+  BaselineSeriesStyle,
+  BaselineSideStyle,
+} from "./lib/baseline-series.js";
+export { IntervalDiamondSeries } from "./lib/interval-diamond-series.js";
+export type {
+  IntervalDiamondSeriesProps,
+  IntervalDiamondSeriesStyle,
+} from "./lib/interval-diamond-series.js";
+export { CensoredPointSeries } from "./lib/censored-point-series.js";
+export type {
+  CensoringStatus,
+  CensoringAccessor,
+  CensoredPointSeriesProps,
+  CensoredPointSeriesStyle,
+} from "./lib/censored-point-series.js";
+export { WeightedPointSeries } from "./lib/weighted-point-series.js";
+export type {
+  WeightedPointSeriesProps,
+  WeightedPointSeriesStyle,
+  WeightAccessor,
+} from "./lib/weighted-point-series.js";

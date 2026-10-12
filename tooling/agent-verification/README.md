@@ -1813,3 +1813,605 @@ visualization replay. Its saved report supports the shared evidence reader's
 `/observations/0/state/missingness/counts/zero`, `/missing` and `/invalid` under
 that same `counts` parent. Discovery reports ledger status; finding a recipe
 never certifies that it ran or that a requirement is complete.
+
+## Bounded application diagnosis and repair — 2026-10-08
+
+The October 1 delivery remains historical. Its inventory stop rule still applies.
+This exercise reuses the current `viz-hover-comparison` learning example, with a
+small cooperating application in `chart-application.ts`. It adds no catalog lab,
+public runtime API, inspector, schema family, or requirement closure.
+
+From the repository root, use Node 24.15.0 and pnpm 11.21.0:
+
+```sh
+corepack pnpm@11.21.0 studio:dev --host 127.0.0.1 --port 5199
+```
+
+The original interactive example is at
+<http://127.0.0.1:5199/#/examples/composition/viz-hover-comparison>.
+In a second terminal, run the controlled application against that source Studio:
+
+```sh
+node tooling/agent-verification/chart-application-replay.mjs http://127.0.0.1:5199 /tmp/pibbl-chart-new
+node tooling/agent-verification/chart-application-replay.mjs http://127.0.0.1:5199 /tmp/pibbl-chart-manual-new --headed
+```
+
+Use a fresh directory for every run. The headed command runs the assertions, then
+keeps the browser open with the reused chart, application controls, and a state
+panel. Keep the pointer in the plot; press **s** to seed, **r** to repair, **z** to
+zoom, **p** to pan, and **h** to reset. Inspect the middle record's source value,
+retained hover value, and line segment. Mouse clicks on the controls also work,
+but leaving the plot can cause a repaint that masks the stale-publication bug.
+The controls are temporary page content installed by this exercise, not a saved
+Studio route. Reload restores the ordinary example. No learning-example or
+runtime code is changed. Closing the browser ends the headed command.
+
+The fixed dataset contains `(start,0,10)`, `(middle,5,20)`, `(end,10,30)` with
+stable IDs. Its update intent is `middle.y = 30`. These expected values and the
+independent arithmetic below are declared in the replay, not obtained from the
+chart's mapping or query implementation:
+
+- At 1000×620 CSS pixels and density 1, the plot is `(55,175,917,375)`.
+  Initial x=5 maps to root x=513.5, y=20 to root y=362.5.
+- Zoom halves `[0,10]` around its center to `[2.5,7.5]`; pan adds one to each
+  endpoint, producing `[3.5,8.5]`. These are application domain controls using
+  public signals, not a test of `zoomDomain`/`panDomain` algorithms.
+- After pan, a native pointer at root x=514.5 maps to `6 + 5/917`.
+  The nearest record remains `middle`; its local anchor is `917×1.5/5 = 275.1`.
+- Initial and repaired line segments at data x=2.5 have y=15 and y=20.
+  Two independent 7×7 pixel regions around `(284.25,409.375)` and
+  `(284.25,362.5)` distinguish them. Blue-channel thresholds allow antialiasing;
+  screenshots are not the oracle.
+
+The focused test was run failing before the repair. The original application
+update mutated `rows[1].y` and called `data.set(rows)`. The repair maps to a fresh
+array and replaces only the record with ID `middle`, using the public signal API.
+The explicit seed command retains the buggy operation for reversible reproduction.
+
+```sh
+corepack pnpm@11.21.0 exec vitest run packages/core/test/agent-chart-application.test.ts packages/core/test/agent-viz-verification.test.ts --browser.headless --browser.ui=false
+node --test tooling/agent-verification/workflow.test.mjs tooling/agent-verification/evidence-reader.test.mjs tooling/agent-verification/discover.test.mjs
+```
+
+Diagnosis separates three kinds of evidence. Application-owned copied rows show
+30 after seed. Registered signal inspection shows no version advance, and the
+committed targeting generation remains unchanged after a bounded observation of
+at least three host frames with a five-second deadline. The retained chart
+snapshot still says 20, and pixels remain on the old segment. After immutable
+replacement, signal version and completed generation advance, hover reports 30
+with the same record ID, and the new segment paints. The chart snapshot callback
+runs during evaluation; it is not itself a commit receipt. Settled generation
+and independent pixels corroborate it. The source inspector is repository-local
+prototype tooling; the application imports only supported public APIs.
+
+Native pointer movement verifies actual hover responses. Target probes are
+geometry predictions, not delivered event traces. Outside the plot, both the
+probe and actual pointer-leave result indicate no plot inspection. This chart
+has no `Clip`; the replay explicitly checks that fact. Its out-of-domain line
+paint is not claimed to be clipped. Actual clipping is covered separately by
+the existing layout smoke; it does not establish chart-specific clipping.
+
+Saved evidence is under
+`docs/strategy/agent-verification-evidence/application-2026-10-08/`:
+
+- `chart-verified/failure.json`: expected application failure, including a
+  failing source-versus-hover contract.
+- `chart-verified/report.json`: repaired application, navigation, identity,
+  pixels, outside targeting, and reset checks; 26 checks pass.
+- `test-first-failure.txt` and `chart-application-before.txt`: failing test and
+  the application source before repair. `focused-browser-final.txt`: 11 pass.
+- `targeting-current`, `viz-current`, `signals-current`, `layout-current.json`:
+  fresh existing paths pass (8/23, 22/127, 6/30 actions/checks, and five layout
+  modes). Those initial runs used Node 26.9.0; the delivered chart and focused
+  browser checks use the documented Node 24.15.0. Chromium is 151.0.7922.34,
+  pnpm is 11.21.0. The source Studio server runs under Node 26.9.0.
+- `tools-node.txt`: 31 workflow/reader/discovery tests pass; `typecheck.txt`:
+  pass. Focused lint passes. Initial sandbox launch and connection failures,
+  the mouse-leave masking mistake (`chart-before-repair`), the failing repair
+  contract (`chart-failing-contract`), and premature post-pan input
+  (`chart-repaired`) remain visible rather than being rewritten as successes.
+
+These next queries have been executed successfully against the retained files:
+
+```sh
+node tooling/agent-verification/evidence-reader.mjs docs/strategy/agent-verification-evidence/application-2026-10-08/chart-verified/failure.json --check application.reading-agreement
+node tooling/agent-verification/evidence-reader.mjs docs/strategy/agent-verification-evidence/application-2026-10-08/chart-verified/report.json --action immutable-repair --fields '["/state/application/source/1/y","/state/application/rendered/results/0/y","/state/signals/records/0/version","/state/committed/generation/completed","/state/pixels/repairedSegment"]'
+```
+
+The existing entry point helps discover and run known reference workflows; the
+reader can navigate this saved application evidence using the existing viz report
+schema. It neither attaches to arbitrary applications nor determines root cause.
+The diagnosis here required explicit application state, source inspection, and
+independent probes. Object previews are opaque; target IDs are session-local;
+hover identity is a record ID, not a delivered target ID. A finite unchanged
+render observation cannot prove that no later input will repaint the root.
+A failed post-pan query alone could mean an old committed scale, wrong pointer
+coordinates, or stale derived state. Waiting for committed rendering narrowed
+that ambiguity here. The report records source hashes but has no fixed-replay
+watchdog manifest, dependency/build attestation, or generalized replay guarantee.
+
+The most valuable missing capability is generation-linked paint attribution:
+which application series/record and scale produced the visible segment, including
+its clip chain. That would reduce the need for application snapshots and bespoke
+pixel regions without conflating declared data, committed geometry, and pixels.
+No such inspector is built in this exercise.
+
+One aggregate trust attempt outside the sandbox stops at documentation
+classification for unrelated brand-output README files (see
+`trust-delivered.txt`). The earlier sandbox attempt stopped at a local IPC
+permission error (`trust-attempt.txt`). An attributable documentation anchor error in `trust-final.txt` was repaired;
+the next aggregate attempt reaches the unrelated classification failure.
+No aggregate-green or release-ready claim
+is made; unrelated brand/project-plan changes were preserved. This bounded
+exercise is complete to the stated scope. Stop here; do not resume the inventory.
+
+## Development-build line attribution — 2026-10-08
+
+The follow-on attribution slice lives entirely in `tooling/line-attribution/`.
+Ordinary core and visualization source have no imports of this tooling. The
+explicit development compiler plugin adds capture calls to three source modules;
+it rejects missing or duplicate source anchors when those modules change.
+Published package builds and ordinary Studio builds do not activate the plugin.
+
+Start the dedicated development fixture with Node 24.15.0 and pnpm 11.21.0:
+
+```sh
+corepack pnpm@11.21.0 exec vite --config tooling/line-attribution/studio.config.ts --mode inspection --host 127.0.0.1 --port 5201 --strictPort
+```
+
+Open <http://127.0.0.1:5201/__pibbl/line-attribution>. Move over the blue line;
+use **clip** to reveal its right half, **update** to replace the middle reading,
+**zoom** to change the scale, and **fail** followed by **retry**. The fixture uses
+public `LineSeries`, `LinearScale`, `Clip`, `Group`, `Overlay`, and signal APIs.
+The inspector itself is source-development tooling, with no package export or
+application compatibility promise. The dedicated page skips unrelated Studio
+catalog/documentation generation and is served only by the explicit development
+plugin; it is not an ordinary production Studio route or editor-runtime feature.
+
+The current slice captures direct root Canvas strokes from straight lines with
+linear scales, including decorative `pointerEvents="none"` content. It records
+mapped points already evaluated by `LineSeries`; inspection never invokes data
+accessors again. Captured domain coordinates, source indices, scale domains and
+ranges, world transforms, cloned clip paths and fill rules, and stroke settings
+belong to the successfully completed root render transaction. Replacement drops
+the preceding payload. Failure keeps the previous successful generation as
+historical evidence, reports `render-failed`, and refuses geometry queries until
+an explicit successful retry. Root disposal clears captured lines, native query
+context, pending publication and scale identity references.
+
+`segmentAt(rootPoint)` queries geometric coverage within the captured root
+surface, line stroke and clip intersection, using a separate native query
+context. The query does not read pixels or change the application's context.
+It reports `segment`, `ambiguous`, `clip-excluded`, `surface-excluded`, `miss`, or
+`unavailable`. Multiple contributing segments at a shared vertex or stroke
+overlap are explicit candidates; no arbitrary record is selected. Among captured
+lines, reverse paint order wins. Later non-line paint, alpha, compositing,
+filters and external renderer content are not final-pixel occlusion evidence.
+
+A unique segment exposes copied `from`/`to` coordinates and source indices.
+`fromSourceReference` and `toSourceReference` are original application objects,
+explicitly labeled `live-application-references-not-captured-values`. Mutation
+can change those live objects while captured coordinates stay fixed. Snapshots
+omit the original objects; the cooperating fixture intentionally serializes its
+known records. There is no automatic property walk or stable application-key
+extraction. The retained reference count is bounded, but referenced application
+object graphs are not copied or size-bounded.
+
+Capture is bounded to 32 lines, 16 clips per line, 1024 combined run-point/segment
+slots per line, 64 symbol-scale identities, and eight distinct refusal reasons.
+Symbol scale IDs receive session-local serializable identities. Curved lines,
+nonlinear scales, offscreen/filter surfaces and encountered managed Layers report
+unsupported capture. Cached offscreen content is outside the root-line scope.
+Dashed segment and unmatched join coverage report unavailable attribution.
+This does not supply general scene discovery, a retained renderer, or automatic
+attachment to a separately bundled Studio editor runtime.
+
+Reproduce proportional checks with fresh native output paths:
+
+```sh
+corepack pnpm@11.21.0 exec vitest run --config tooling/line-attribution/vitest.config.ts --mode inspection --browser.headless --browser.ui=false
+node tooling/line-attribution/replay.mjs http://127.0.0.1:5201/__pibbl/line-attribution /tmp/pibbl-line-new
+node tooling/line-attribution/verify-isolation.mjs
+corepack pnpm@11.21.0 exec eslint tooling/line-attribution
+```
+
+Independent native expectations use the 710×420 root, plot origin `(55,90)`,
+600×240 plot, x domain `[0,10]`, y domain `[0,40]`, and the fixed records
+`(a,0,10)`, `(b,5,20)`, `(c,10,30)`. Data x=2.5 initially maps to root
+`(205,240)`; replacing b.y with 30 moves that segment to `(205,210)`.
+Data x=7.5 maps to `(505,180)` and is initially excluded by a 300-unit-wide clip.
+Native pixel regions independently confirm initial, replaced and revealed paint;
+geometry queries and source numbers supply separate assertions. A failed render
+may already have changed immediate-mode Canvas pixels, so the previous attribution
+is deliberately unusable as current paint evidence.
+
+The focused browser suite passes three tests: transactional capture/clipping and
+repair, vertex ambiguity, and root-surface exclusion. The initial focused contract
+and the surface exclusion regression were retained failing before implementation.
+The native replay passes 24 checks; review found no remaining material issues in
+this scope. Tests also distinguish immutable numeric evidence from mutable source
+references and verify release on root disposal. Node 24.15.0, pnpm 11.21.0 and
+Playwright Chromium 151.0.7922.34 were used.
+
+The isolation command compares byte-identical ordinary consumer output with the
+plugin absent and disabled, under esbuild and Vite, from both current source and
+an actual core package tarball. All four comparisons have **zero byte delta**;
+esbuild reports zero retained attribution inputs. The packed test uses current
+`dist`, records its tarball hash, and does not claim a fresh complete package
+build. A positive instrumented build retains the capture helper, demonstrating
+that the detector is effective. Enabled instrumentation adds code, allocations
+and capture work; the zero-cost claim applies to ordinary uninstrumented builds.
+Because attribution changes no shipped renderer source, ordinary consumers run
+identical compiled code for this feature. No timing benchmark is substituted for
+that structural proof.
+
+Evidence lives under
+`docs/strategy/agent-verification-evidence/line-attribution-2026-10-08/`.
+`native/report.json` retains all observations; `bundle-isolation.json` records
+hashes, sizes and exclusion results; `browser-tests.txt` records focused checks;
+`test-first-failure.txt`, `instrumentation-missing-failure.txt`, and
+`surface-failure.txt` retain failed attempts. `lint.txt` records focused lint.
+`typecheck.txt` records unrelated concurrent inspection-workbench Axis typing
+errors; that other work was preserved and is not approved by this slice.
+Concurrent core inspection changes are excluded from the attribution-only bundle
+delta claim. No aggregate-green or whole-working-tree performance claim is made.
+
+The saved failure query is executable and has been verified:
+
+```sh
+node tooling/agent-verification/evidence-reader.mjs docs/strategy/agent-verification-evidence/line-attribution-2026-10-08/native/report.json --action failed-render --fields '["/state/attribution/status","/state/attribution/generation","/state/query/status"]'
+```
+
+The focused attribution slice is complete to this scope. The inventory remains
+deferred; wider renderer and curve coverage require a separate requested slice.
+
+## Blind repair API research eval — 2026-10-08
+
+This opt-in experiment compares ordinary public API/source/browser evidence with
+that same evidence plus the development-only line-attribution prototype. It is
+an API improvement exercise, not a release gate. Nothing is added to `trust`,
+package scripts, or the inventory. Preserve the delivery cutoff above.
+
+There are three seeded application mistakes and one correct control. The
+coordinator-only `tooling/repair-eval/private-cases.mjs` contains their identities
+and reference repairs. Do not give it, the judge, this runbook, repository
+history, or this conversation to the agents. Reference repairs calibrate the
+experiment; they are not evidence of model usefulness.
+
+### Prepare and run one matched comparison
+
+Use Node 24.15+ on Node 24 and the checkout's installed dependencies/Playwright
+Chromium. From the repository root:
+
+```sh
+node tooling/repair-eval/prepare-pair.mjs case-01 /tmp/pibbl-repair-pair-01
+```
+
+Repeat with `case-02`, `case-03`, and `case-04`, using fresh parent directories.
+Each pair has identical initial application source and matching hashes of the
+actual core source bytes consumed while bundling. Preparation fails if source
+changes between arms; discard that pair and prepare again. Runtime bundles are
+frozen so later repository edits do not change a trial. `pair.json`,
+`initial-app.tsx`, and each child's `trial.json` retain provenance and a source
+review baseline. Keep the parent private.
+
+Give a fresh agent **only one child capsule** (`ordinary` or `attribution`) as
+its workspace and its `TASK.md` as the request. Start from a new context, not a
+fork of this conversation. The capsule uses supported public application APIs;
+the assisted harness adds the experimental inspection helper. No installation
+is needed. For manual inspection inside either child:
+
+```sh
+node serve.mjs 5210
+```
+
+Open **http://127.0.0.1:5210/**. Update, Zoom, and Reset controls also accept U,
+Z, and R. Reload after editing `app.tsx`. The agent task includes intended
+geometry and interactions but no defect diagnosis or hidden scoring locations.
+It asks the agent to leave a correct application unchanged and record evidence,
+API confusion, missing capabilities, and uncertainties in `observations.json`.
+
+After the agent finishes, from the repository root:
+
+```sh
+node tooling/repair-eval/judge.mjs /tmp/pibbl-repair-pair-01/ordinary /tmp/pibbl-repair-pair-01/ordinary-score.json
+node tooling/repair-eval/judge.mjs /tmp/pibbl-repair-pair-01/attribution /tmp/pibbl-repair-pair-01/attribution-score.json
+```
+
+These are usable next-query commands: each score preserves individual failed
+checks, application/evaluated state, actual pixel observations, interaction
+identity, browser errors, and runtime integrity. Judge outputs stay outside
+agent capsules. Its CLI prints the result without making a failing repair a
+CI exit gate. A `blocked` result needs coordinator review (including application
+compile errors); it must not be silently counted as a successful repair.
+
+### Blindness and interpretation
+
+This is procedural blinding, not a filesystem security boundary. For a real
+comparison, provide isolated workspaces with no access to the repository,
+parent directory, opposite arm, answer key, or prior trial context. A discovered
+leak invalidates the trial. Capsule servers resolve the provisioned checkout's
+esbuild installation; that dependency path is not an isolation mechanism.
+
+Use the same model, settings, tool access, time allowance, and instructions in
+both arms, apart from inspection availability. Balance arm order across cases;
+randomize assignment and retain the assignment before running. Never let one
+agent solve the same case twice. The first pilot is eight fresh agent runs
+(four cases × two arms). Replicate before estimating an effect; this small,
+synthetic pilot cannot establish general model improvement. Where practical,
+have a reviewer assess diagnoses with arm labels removed.
+
+Review both the source diff against the private initial source and the agent
+trace. Passing geometry alone does not establish a sound general repair:
+reject hardcoded probe answers, modified harnesses, unrelated changes, and
+unsupported causal claims. Runtime integrity is checked automatically; other
+harness integrity and contract quality require review. The correct control
+measures unnecessary edits and invented diagnoses.
+
+The fifteen hidden checks use declared values and independently calculated
+linear geometry, exact small pixel regions, native hover input, update without
+intervening pointer input, zoom, and reset. They never use attribution output
+as the correctness oracle. Application source and evaluated state are
+cooperative evidence, not proof of committed pixels; the pixel observations
+and actual native interaction checks corroborate them. Screenshots are not the
+sole oracle. These probes cover this chart, not arbitrary charts or all clips.
+
+Compare repair correctness, time to first supported hypothesis, time to repair,
+edit iterations, unsupported conclusions, unnecessary changes, and evidence
+quality. Record timing/tool counts from coordinator logs or transcripts; keep
+agent-reported measurements labeled as self-reported and leave unavailable
+values missing. Count all browser queries and attribution queries separately.
+Prioritize repeated API friction: facts agents could not obtain, confusing
+coordinate units or generations, stale versus live data, ambiguous identity,
+and the boilerplate needed to connect paint to its source. Preserve concrete
+queries and the agent's interpretation alongside proposed API improvements.
+A higher pass rate alone does not explain which API helped.
+
+### Calibration and saved evidence
+
+```sh
+node tooling/repair-eval/smoke.mjs
+corepack pnpm@11.21.0 exec eslint tooling/repair-eval
+```
+
+Smoke prepares both arms, observes seeded failures, applies private reference
+repairs, and checks them again; it also verifies the clean control passes
+unchanged. It removes temporary capsules. On October 8, 2026, all three seeded
+cases failed before repair and passed all fifteen checks after repair in both
+arms; the control passed before and after. Saved output is in
+`docs/strategy/agent-verification-evidence/repair-eval-2026-10-08/`.
+No blind agent comparison has been performed yet. This result establishes
+fixture/oracle plumbing, not attribution's benefit to agents.
+
+### Automated 80/20 scoring
+
+The opt-in runner now prepares all four matched pairs, alternates arm order,
+launches eight fresh ephemeral Codex repair turns, runs the deterministic
+oracle, launches a separate structured reviewer for each valid trial, and saves
+`results.json` plus per-trial source, traces, observations, reviews and reasons.
+It requires the authenticated `codex` CLI and provisioned Chromium:
+
+```sh
+node tooling/repair-eval/run.mjs /tmp/pibbl-repair-automated-01
+# Optional explicit models: NEW_DIRECTORY REPAIR_MODEL JUDGE_MODEL
+node --test tooling/repair-eval/scoring.test.mjs tooling/repair-eval/run.test.mjs
+```
+
+The deterministic score is `80 × passing checks / 15`. Agent review supplies
+four integer scores from zero to five: supported diagnosis, sound minimal
+repair, evidence quality, and honest uncertainty/actionable API friction.
+Each criterion requires a written evidence-based reason. Total score is their
+sum, rounded to two decimals. `deterministicPassed` remains separate: a high
+weighted score must not conceal a functional failure. No release threshold is
+introduced.
+
+Repair turns use automatic approval review within the workspace-write sandbox;
+review turns use the read-only sandbox. Each turn has a ten-minute bound and
+process-group cleanup. Auth, network, approval denial, timeout, invalid judge
+JSON, changed harness files, or blocked browser verification produce a blocked,
+unscored trial. Partial reports are persisted as work completes. Restart with
+a fresh output directory; automatic retries/resumption are deliberately absent
+so they cannot silently grant one arm extra attempts.
+
+The reviewer sees initial/final application source, the intended contract,
+deterministic observations and the repair trace, not the answer key. Explicit
+arm/case labels are omitted from its evidence packet, but tools/paths in a trace
+can reveal the arm; this is a separate-context review, not perfect reviewer
+blinding. Source and trace content are marked untrusted in the review prompt.
+The same model may review by default; pass a distinct judge model when desired.
+Agentic scores remain subjective and can vary. Compare criterion reasons as
+well as totals, and replicate batches before claiming an uplift.
+
+The runner uses an injectable adapter for orchestration tests. Those tests
+validate weighting, review dispatch, saved outputs and blocked handling; they
+are not model repair trials. A full eight-trial batch spends authenticated model
+usage and may take up to sixteen ten-minute turns. No scheduler or recurring
+job is installed; this automation runs once per command.
+
+### Feedback-driven follow-up runs — October 8, 2026
+
+Fresh trials exposed an ambiguous reviewer instruction that forbade tools while
+asking the reviewer to read evidence files. Its original low scores are invalid
+review observations, not repair failures. The corrected prompt explicitly
+permits reading the three supplied files and forbids executing application code,
+editing, or reading other files. Review packets now include the agent's API
+notes, marked self-reported, and explicitly separate coordinator checks from
+verification the repair agent actually performed. The 80/20 weights, fifteen
+checks, and four review criteria remain unchanged.
+
+Re-review a completed batch without retrying any repair or overwriting its
+original evidence:
+
+```sh
+node tooling/repair-eval/rejudge.mjs /tmp/pibbl-repair-batch-20261008-01 /tmp/pibbl-repair-batch-20261008-01-reviewed
+```
+
+The prototype's snapshot now labels root query coordinates, line-local captured
+positions, local-to-root transforms, live source references, opaque clip paths,
+and geometry's distinction from pixels and routed targets. It explicitly labels
+the last successful render as potentially lagging application state. These are
+query-time development-tooling labels; no published runtime source is changed.
+Opaque paths still do not supply serialized clip bounds.
+
+Later fresh trials found browser-import friction and inadequate independent
+pixel evidence despite functional repairs. The runner now supplies the correct
+CommonJS Playwright import shape. Both arms receive the same general evidence
+requirement: derive expected geometry independently, corroborate painted-result
+claims with Canvas pixels, use native pointer input for interaction identity,
+and state missing evidence. This guidance contains no defect diagnosis, hidden
+probe locations, or scoring answers. Capsules are explicitly described as
+non-Git workspaces so a failed Git sanity command cannot be mistaken for repair
+verification.
+
+Results and original/revised review evidence are saved under
+`docs/strategy/agent-verification-evidence/repair-eval-2026-10-08/automated/`.
+The baseline and subsequent rounds are distinct experimental conditions, not
+independent repetitions of one unchanged experiment. Focused later rounds are
+not comparable as whole-suite means. Runtime source receipts and arm order are
+retained. Wall-clock durations are observed repair-turn durations; concurrent
+runs and tool retries make them unsuitable for controlled performance claims.
+Self-reported elapsed time and query counts are not substituted for coordinator
+measurements. Default CLI model identities/settings were not pinned explicitly,
+so these results must not be presented as a reproducible model-version benchmark.
+
+### Final results after stronger interaction verification
+
+The source-diff audit found an unnecessary edit in the second batch's assisted
+clean control. Its agent removed the root-to-plot offset and added reset
+batching; its original reviewer praised both. Independent native probes showed
+that removing the offset regressed hover. Public pointer x/y are root-logical,
+while this chart's scale range is `[0,600]`; subtracting the plot's root origin
+was correct. The reset-batching explanation did not establish a preexisting
+contract failure. This was an agent/reviewer false positive, not a defective
+clean-control fixture.
+
+The first oracle sampled only representative center hover positions. The
+strengthened oracle samples both sides of independently calculated nearest-ID
+midpoints: root x=204/206 around 205 and x=504/506 around 505. It also samples
+zoomed interior x=60/205/355/650, all of which must choose b. These probes live
+inside the existing `hover.identity` and `zoom.hover` checks: fifteen equally
+weighted deterministic checks and the 80/20 split remain unchanged. Original
+center-only results are retained but superseded by rescoring every saved repair.
+No repair got another attempt during rescoring. Valid reviews of unchanged
+passing outcomes are retained; the newly exposed regression received a fresh
+review using the counterevidence.
+
+| Condition                                             | Fresh trials | Ordinary mean | Attribution mean |
+| ----------------------------------------------------- | -----------: | ------------: | ---------------: |
+| Baseline, corrected reviews                           |            8 |         99.50 |            99.00 |
+| Evidence labels and corrected review                  |            8 |         98.75 |            94.08 |
+| Focused clipping/control, browser-import guidance     |            4 |        100.00 |            99.00 |
+| Final signal pair, temporal labels and pixel guidance |            2 |        100.00 |           100.00 |
+
+Of 22 fresh repairs, 21 pass the strengthened oracle; 328 of 330 checks pass.
+Five of six clean controls remain unchanged. The assisted false repair fails
+both interaction checks and scores 69.33 deterministic + 11 review = 80.33,
+with `deterministicPassed: false`. An 80-point total therefore must never be
+interpreted as a functional pass. The old review had scored that trial 99.
+
+This small experiment provides no evidence of a repair-success uplift from
+attribution. Both arms solved the three seeded problems; assisted agents used
+captured scales, clips and generations, but sometimes substituted them for
+pixel evidence or misinterpreted event coordinates. Explicit evidence labels
+and pixel guidance improved the final pair's verification, without establishing
+a causal or statistical improvement. All ordinary runtime bundles and actual
+core source receipts were identical across rounds. No production performance
+or bundle-size claim is inferred from trial duration; the separate disabled
+bundle-isolation checks show zero byte delta for the tooling changes.
+
+The most useful missing inspection capability is a reliable join between an
+actual routed pointer event, its root-to-scale coordinate conversion, and the
+committed series generation. Opaque clip geometry also still requires manual
+source inspection plus inside/outside probes. The most valuable eval improvement
+was independent boundary evidence that can contradict a plausible diagnosis.
+No new inspector or public runtime API was built for this follow-up.
+
+Saved `automated/results.json` includes per-trial failed checks, review reasons,
+and self-reported API notes. Compressed archives preserve original capsules,
+traces, reviews, corrected reviews and rescored evidence; `archives.sha256`
+provides checksums. Calibration distinguishes all three seeded faults from the
+clean control and rejects the false hover repair:
+
+```sh
+node tooling/repair-eval/oracle.check.mjs
+node tooling/repair-eval/smoke.mjs
+node tooling/repair-eval/rescore.mjs /tmp/pibbl-repair-batch-20261008-02 /tmp/pibbl-repair-new-rescore
+node -e 'const r=require("./docs/strategy/agent-verification-evidence/repair-eval-2026-10-08/automated/results.json"); console.log(r.rounds.flatMap(x=>x.trials.filter(t=>!t.deterministicPassed).map(t=>({round:x.id,...t}))))'
+```
+
+The last command is the next query for the exposed regression and its reviewer
+feedback. The earlier totals of 330/330 and “all six controls unchanged” were
+provisional and are explicitly superseded by the source audit and stronger
+oracle. The inventory stop rule and non-gating status remain unchanged.
+
+## Public inspection benefit pilot
+
+This follow-up evaluates the current `@pibbl/core/viz/inspection` entry, rather
+than the source-instrumented attribution prototype. It prepares identical
+application source and byte-identical frozen runtime bundles in both conditions.
+The inspection condition enables the public `useNumericInspection` hook through
+an immutable application bridge and exposes synchronous public committed-record
+queries through `window.inspectPlot({x,y})`. The ordinary condition leaves capture
+disabled and forbids importing/enabling inspection. Both conditions allow normal
+source/browser/pixel evidence and public application repairs. Installed runtime
+exports are identical; the capability restriction is procedural and must be
+checked against source/trace evidence.
+
+The October 9 pilot ran two fault cases and one case believed to be a clean
+control. Independent replay found that the third case had a real zoom-plus-focus
+clipping defect. The immutable run and its corrected interpretation are saved
+under `docs/strategy/agent-verification-evidence/public-inspection-pilot-2026-10-09/`.
+The corrected runner protocol below separates that latent defect from a true
+clean control. F narrows the plot clip to 299 local units, G restores it, and R
+resets the chart. The independent oracle covers update painting, nearest-ID
+boundaries, zoomed mapping, focused clip pixels and selection, zoom-plus-focus,
+unfocus, reset, native input and errors. The prototype's original cases and
+delivery cutoff remain historical; this is not an inventory expansion or a
+release gate.
+
+```sh
+node tooling/repair-eval/decision-check.mjs
+node tooling/repair-eval/run-decision.mjs /tmp/pibbl-public-inspection-new
+```
+
+The first command calibrates all three defect cases, their reference repairs, the
+genuinely clean control, and inspection availability in both arms. The second
+launches sixteen fresh repair turns and separate reviews: four matched cases,
+two repetitions. Case and arm order reverse for the second repetition. It
+preserves the 80/20 score and records measured repair trace tokens and command
+counts, not inferred agent timing or query estimates.
+
+`tooling/repair-eval/decision-protocol.json` is corrected schema `/2`; it records
+the model, effort, cases, true control, ordering, hypotheses and threshold for a
+future run. The saved October 9 pilot retains its original `/1` protocol and raw
+`not-cleared` status. Its owner decision is to ship the opt-in API; see the report
+above for the control correction and token accounting. The pilot pins
+`gpt-5.6-sol` with low reasoning for repairs and reviews. The authenticated CLI
+rejected the desktop's `gpt-6.1-sol` name; the working CLI startup header resolved
+`gpt-5.6-sol`, and an explicit structured preflight succeeded. CLI version is
+0.147.0. This does not measure the desktop's configured model.
+
+The registered effort proxy is uncached input tokens plus output tokens, including
+reasoning already counted within output. It is not currency and does not apply
+API price weights. The effort comparison uses the median inspection/ordinary
+ratio for matched successful repairs. The threshold requires at least six
+eight matched correct pairs, no lower repair success, no increase in unexpected
+clean-control edits, no lower average review score, and at least 20% lower median
+paired effort. Missing/blocked measurements make clearance inconclusive. A
+weighted score does not override `deterministicPassed`.
+
+These are four synthetic cases, with a pre-integrated capture bridge, no
+integration-cost measurement, no rich application documentation environment,
+and one model family serving both roles. Cached-token accounting and tool
+choice can affect the effort proxy. Passing the pilot threshold would justify
+further investigation, not prove broad value. The pilot is informative evidence,
+not a release gate. Repetitions use frozen fixtures and prompts; do not tune
+them between runs to obtain a win.
+
+The live first-pair public API application was served at
+<http://127.0.0.1:5212/>. It is separate from the repair agent's browser session.
+Its source can change as that agent repairs its capsule; reload to inspect the
+finished app. For a later saved trial, run `node serve.mjs 5212` inside its
+inspection capsule and call `inspectPlot({x:205,y:210})` in the browser console.
+Captured observations/queries remain geometric evidence, not pixel or routed
+interaction proof.

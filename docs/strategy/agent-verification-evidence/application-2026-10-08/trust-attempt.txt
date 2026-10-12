@@ -1,0 +1,93 @@
+$ corepack pnpm@11.21.0 trust:static && corepack pnpm@11.21.0 trust:package && corepack pnpm@11.21.0 trust:browser && corepack pnpm@11.21.0 trust:lifecycle && corepack pnpm@11.21.0 trust:native
+$ node --test tooling/trust-workflow.test.mjs tooling/run-browser-contracts.test.mjs tooling/vitest-actions-reporter.test.mjs && corepack pnpm@11.21.0 test:texture-kernels && corepack pnpm@11.21.0 test:filter-authoring && corepack pnpm@11.21.0 test:agent-verification:requirements && corepack pnpm@11.21.0 scenarios:check && corepack pnpm@11.21.0 docs:check && corepack pnpm@11.21.0 studio-docs:check && corepack pnpm@11.21.0 build && node --import tsx --test tooling/website-documentation.test.mjs tooling/website-effects.test.mjs tooling/website-slice.test.mjs tooling/website-unified.test.mjs && corepack pnpm@11.21.0 test:studio-docs:production-boundary && corepack pnpm@11.21.0 typecheck && corepack pnpm@11.21.0 lint && corepack pnpm@11.21.0 playground:build && corepack pnpm@11.21.0 playground:build:built
+✔ discovers all tests and bounds each fresh-browser shard as the suite grows (11.159417ms)
+✔ discovery failure, empty discovery, or malformed discovery cannot pass (0.173625ms)
+✔ a failed or crashed shard fails without retrying or running later shards (0.123125ms)
+✔ browser discovery includes runtime tests and excludes Node-runner tooling (1648.949667ms)
+✔ CI runs every canonical local trust stage without a second check list (0.663542ms)
+✔ browser trust includes the unified website against a fresh build (0.051208ms)
+✔ package trust builds generated exports before checking release forwarding (0.057792ms)
+✔ Actions summaries identify the command and shard, list results, and retain failure annotations (307.953833ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 8
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1698.647958
+$ node tooling/build-texture-wasm.mjs --check && node tooling/build-water-surface-wasm.mjs --check && node --import tsx --test tooling/texture-wasm-spike/production.check.mjs
+marble: 10126 bytes
+paper: 7711 bytes
+cellular: 7517 bytes
+ink: 8953 bytes
+tendrils: 15923 bytes
+lightning: 6519 bytes
+water-waves: 6935 bytes
+water-surface: 13261 bytes
+✔ production kernels preserve the original seeded fields, brush effects, and fixed steps (33.121375ms)
+✔ static WASM fields preserve edge and numeric behavior at boundary dimensions and parameters (531.868333ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 655.258125
+$ node --import tsx --test tooling/filter-authoring.test.mjs tooling/filter-validation.test.mjs
+✔ Studio executes an explicitly imported filter factory through a public lesson (4.206625ms)
+✔ Studio still rejects internal filter implementation imports (0.299541ms)
+✔ factories preserve contextual and balanced color token validation (0.785083ms)
+✔ explicit null radius is invalid and nonfinite values have finite diagnostics (0.120833ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 122.618541
+$ node --test tooling/agent-verification/requirements.test.mjs tooling/agent-verification/discover.test.mjs
+✔ finds a requirement-linked runnable scenario with independent acceptance evidence (1.58875ms)
+✔ distinguishes known unmapped requirements from invalid IDs without inventing coverage (0.491125ms)
+✔ maps analytical correctness to independent arithmetic rather than screenshot similarity (0.507042ms)
+✔ discovers the completed text and signal workflows with usable evidence and rerun recipes (0.653167ms)
+✔ finds layout and missingness workflows without inflating their provenance (1.017958ms)
+✔ requires every inventory ID exactly once (1.385458ms)
+✔ rejects unsupported completion claims and missing remaining work (0.302042ms)
+✔ distinguishes an audited gap from an unassessed requirement (0.100125ms)
+✔ accepts a fully specified reviewed closure but rejects incomplete claims (1.143125ms)
+✔ closure evidence expires after changes or deletion and cannot escape through symlinks (5.237125ms)
+ℹ tests 10
+ℹ suites 0
+ℹ pass 10
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 43.173
+$ tsx tooling/scenario-source-discovery.check.ts && tsx tooling/scenario-catalog.ts
+node:net:1986
+      const error = new UVExceptionWithHostPort(rval, 'listen', address, port);
+                    ^
+
+Error: listen EPERM: operation not permitted /var/folders/17/qj7dhqf957gcflr60tv32l5c0000gn/T/tsx-501/98471.pipe
+    at Server.setupListenHandle [as _listen2] (node:net:1986:21)
+    at listenInCluster (node:net:2065:12)
+    at Server.listen (node:net:2187:5)
+    at file:///Users/benlesh/GitHub/crc/node_modules/.pnpm/tsx@4.23.12/node_modules/tsx/dist/cli.mjs:53:31472
+    at new Promise (<anonymous>)
+    at createIpcServer (file:///Users/benlesh/GitHub/crc/node_modules/.pnpm/tsx@4.23.12/node_modules/tsx/dist/cli.mjs:53:31450)
+    at async file:///Users/benlesh/GitHub/crc/node_modules/.pnpm/tsx@4.23.12/node_modules/tsx/dist/cli.mjs:55:542 {
+  code: 'EPERM',
+  errno: -1,
+  syscall: 'listen',
+  address: '/var/folders/17/qj7dhqf957gcflr60tv32l5c0000gn/T/tsx-501/98471.pipe',
+  port: -1
+}
+
+Node.js v24.15.0
+[ELIFECYCLE] Command failed with exit code 1.
+[ELIFECYCLE] Command failed with exit code 1.
+[ELIFECYCLE] Command failed with exit code 1.

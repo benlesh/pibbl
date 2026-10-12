@@ -2,10 +2,17 @@
 
 ## Active plan
 
+[008 — Financial charting](./008-financial-charting.md) is active. Batches 1 and 2
+are accepted; the user authorized a local commit and continuation on 2026-10-09.
+The next checkpoint is Batch 3 authoring review: linked panes, range controls and
+normalized returns. Platform Intl number formatting is reused. Final focused
+Batch 2 runtime, desktop/touch Studio, editor, catalog, documentation and TypeScript
+checks pass; no aggregate trust pass is claimed. Unrelated changes remain separate.
+
 [007 — Visualization charting](./007-visualization-charting.md) completed its approved
 scope on 2026-10-06. The [closeout walkthrough](../testing/field-notes/2026-10-06-chart-api-walkthrough.md)
 records an unrelated documentation/formatting blocker in the repository-wide gate;
-all unaffected verification passed. No next plan is selected.
+all unaffected verification passed.
 
 [004 — HtmlBox](./004-html-box.md) retains unfinished work and its existing
 evidence; this queue switch does not mark it complete.

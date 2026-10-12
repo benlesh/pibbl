@@ -77,6 +77,7 @@ export const pibblPublicCompilerOptions: CompilerOptions = {
 };
 
 export const pibblPublicEntryPaths = {
+  inspection: fileURLToPath(new URL("../../packages/core/src/features/viz/inspection.ts", import.meta.url)),
   machines: fileURLToPath(new URL("../../packages/core/src/features/machines/index.ts", import.meta.url)),
   machineAnimation: fileURLToPath(new URL("../../packages/core/src/features/machines/animation.ts", import.meta.url)),
   sprites: fileURLToPath(new URL("../../packages/core/src/features/sprites/index.ts", import.meta.url)),

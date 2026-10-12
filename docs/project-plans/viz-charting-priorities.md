@@ -62,6 +62,329 @@ screen-reader semantics.
 
 ## Priority order
 
+### Pharmaceutical and scientific research additions (2026-10-12)
+
+User-directed priority: deliver the full scientific/medical visualization suite
+eventually, with pharmaceutical research determining the order of additions.
+General statistics and clinical studies are the initial anchors. This section
+supersedes the undifferentiated P1 ordering below for these additions. Bring
+forward only the foundation work needed by each research slice; unrelated
+foundation polish is not a prerequisite for starting these slices. It does not
+change shipped contracts or authorize unspecified public API signatures.
+
+The order is a product recommendation, not a regulatory checklist. It balances
+reuse, pharmaceutical research value, and the shortest path to a working public
+example. Clinical and laboratory/assay workflows both remain in scope.
+
+| Order | Capability and pharmaceutical use                                                                                                                                            | First observable slice                                                                                                                                                                                                                                                                                                               |
+| ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1     | **Estimates and uncertainty:** horizontal/vertical point-and-interval marks, asymmetric error bars, weighted symbols, summary diamonds, forest/subgroup and estimation plots | A forest plot of externally supplied treatment effects and intervals, with explicit effect measure, null value, analysis population, study/subgroup labels, and aligned numerical results. Distinguish subgroup estimates from evidence of interaction.                                                                              |
+| 2     | **Dose/exposure-response and pharmacokinetics:** assay concentration-response, efficacy/toxicity by dose or exposure, concentration-time plots                               | Observations plus an externally fitted curve and labelled interval band; preserve dose versus exposure units, distinguish observations from predictions, and explicitly handle zero/control doses and below-quantification records on logarithmic axes. Reuse existing points, lines, log scales, and bands.                         |
+| 3     | **Paired and longitudinal outcomes:** before/after values, participant trajectories, change from baseline, visit-level summaries                                             | Participant-linked observations and an externally supplied group summary. Keep subject identity, actual time versus scheduled visit, baseline definition, and missing visits explicit; no automatic imputation.                                                                                                                      |
+| 4     | **Safety and tolerability:** adverse-event incidence comparisons, laboratory/vital-sign distributions, baseline-to-follow-up shift matrices, event timelines                 | Adverse-event comparison with visible n/N, analysis population, observation window, and supplied effect intervals. Distinguish participants with an event from event counts; exposure-adjusted rates require explicit denominators and units. Heatmap and interval-lane foundations move forward when their safety slice needs them. |
+| 5     | **Time-to-event:** survival curves, censoring marks, interval bands, risk tables; later cumulative-incidence views                                                           | Externally supplied survival steps and censoring records with an aligned number-at-risk table and explicit time units. Define table timing conventions. Do not treat competing events as ordinary censoring by default. Move this family directly after order 1 for oncology or another program centered on time-to-event endpoints. |
+| 6     | **General distributions:** strip plots, histograms, ECDFs, box plots, then density/violin/beeswarm and composed raincloud views                                              | Raw assay or biomarker observations with a box summary and sample counts, then explicit histogram binning and ECDFs. Specify quantiles, whiskers, kernel/bandwidth, normalization, and deterministic displacement as applicable; distinguish biological from technical replicates.                                                   |
+| 7     | **Model and measurement diagnostics:** residual, Q-Q, observed-versus-predicted, Bland-Altman, funnel and influence plots, simulation-based predictive checks                | Observed-versus-predicted and residual views from supplied analysis outputs. Follow with agreement plots whose supplied limits and assumptions are labelled. Render predictive checks from supplied simulation summaries before considering simulation or estimation helpers.                                                        |
+| 8     | **Diagnostic and biomarker performance:** ROC, precision-recall, calibration, threshold tradeoffs                                                                            | Externally supplied curves with threshold inspection and visible cohort/context. Keep positive-class definition, prevalence context, validation split, and supplied uncertainty explicit.                                                                                                                                            |
+| 9     | **Matrices and broader life sciences:** general heatmaps, correlation/missingness/expression matrices, volcano plots, other multivariate and spatial scientific views        | Heatmap with an explicit color domain, units, missing-cell treatment, and stable row/column ordering; then a volcano example with supplied effect sizes and adjusted significance values. Distinguish transformed data from raw data and do not silently cluster or adjust p-values.                                                 |
+
+All families from the initial discussion remain included: individual observations,
+distributions, uncertainty, treatment effects, longitudinal outcomes,
+time-to-event outcomes, diagnostic performance, measurement agreement, matrices,
+and model diagnostics. Earlier delivery of a shared mark does not establish that
+every dependent research composition is complete.
+
+#### API and delivery boundaries
+
+- Keep drawing components, pure data/layout helpers, and research compositions
+  distinct. Names in the discussion are proposals, not committed exports.
+- Accept analysis outputs from R, Python, SAS, and other systems without requiring
+  Pibbl-owned estimation. Rendering must not select an inferential method, fit a
+  model, pool studies, choose a confidence method, or perform significance tests.
+- Add small deterministic transforms alongside the slice that needs them.
+  Statistical estimators need separately specified assumptions, method-specific
+  fixed return contracts, trusted reference fixtures, and public evidence.
+- Label units, observational units, sample sizes/denominators, interval meaning,
+  population, and relevant analysis provenance. Distinguish SD, SE, confidence,
+  credible, and prediction intervals even when their drawing geometry is shared.
+- Use explicit operations and typed definitions under the repository's public API
+  rules; no generic chart/statistics selector with changing return contracts.
+- Every slice needs a supported public API example, one focused failing contract
+  test before production changes, semantic geometry evidence, and an exact Studio
+  URL for hands-on feedback. Harden after feedback rather than building all
+  statistical infrastructure first.
+- Carry keyboard/tap inspection, host-owned HTML summaries/tables, non-color
+  encodings, and responsive composition into each applicable example. Canvas
+  drawing does not establish semantic DOM accessibility.
+- Plan reproducible publication output, dimensions, fonts, panel labels, captions,
+  and provenance alongside the first slice. Vector export requires a separate
+  renderer/export contract and is not an implied current capability.
+
+#### Research grounding
+
+These sources inform the emphasis; they do not prescribe this API or priority order:
+
+- [ICH E9 and E9(R1), EMA](https://www.ema.europa.eu/en/scientific-guidelines/ich-e9-statistical-principles-clinical-trials): statistical principles, estimands, and sensitivity analysis in clinical trials.
+- [FDA exposure-response guidance](https://www.fda.gov/regulatory-information/search-fda-guidance-documents/exposure-response-relationships-study-design-data-analysis-and-regulatory-applications): dose/concentration-response information in drug development and dose selection.
+- [Cochrane Handbook, Chapter 10](https://www.cochrane.org/authors/handbooks-and-manuals/handbook/current/chapter-10): effect measures, meta-analysis assumptions, heterogeneity, and prediction intervals.
+- [Nature Progress Brain Health statistical guidelines](https://www.nature.com/natprogbrainhealth/submission-guidelines/statistical-guidelines): labelled variability, sample counts, and visibility of distributions and individual observations.
+
+### Proposed scientific public APIs (2026-10-12)
+
+Saved at the user's request before implementing the first estimate-and-interval
+slice. This is an API proposal, not a declaration that every API is shipped.
+Exact signatures are resolved in the slice that introduces them. Existing
+`PointSeries`, `LineSeries`, `IntervalBandSeries`, scales, axes, reference lines,
+and inspection remain the foundation. Research compositions initially live in
+editable examples rather than a generic chart factory.
+
+| Priority | Family                               | Proposed public additions                                                                                                                                                                   | Research compositions                                                                     |
+| -------- | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| 1        | Estimates and uncertainty            | `HorizontalIntervalSeries`, `VerticalIntervalSeries`, `WeightedPointSeries`, `IntervalDiamondSeries`                                                                                        | Forest/subgroup plots, estimation plots, asymmetric error bars                            |
+| 2        | Dose/exposure-response and PK/PD     | `CensoredPointSeries`; reuse existing points, lines, and bands                                                                                                                              | Concentration-time, dose-response, exposure-response, assay curves                        |
+| 3        | Paired and longitudinal outcomes     | `PairedSeries`, `TrajectorySeries`, `changeFromBaseline`                                                                                                                                    | Before/after comparisons, participant trajectories, baseline-adjusted outcomes            |
+| 4        | Safety and tolerability              | `IntervalLaneSeries`, `HeatmapSeries`, `ColorLegend`                                                                                                                                        | Adverse-event comparisons, laboratory shift matrices, event timelines                     |
+| 5        | Time-to-event                        | `SurvivalSeries`, `CensorSeries`, `RiskTable`                                                                                                                                               | Survival curves, censoring, uncertainty bands, numbers at risk                            |
+| 6        | Distributions                        | `StripSeries`, `BeeswarmSeries`, `HistogramSeries`, `BoxPlotSeries`, `DensitySeries`, `ViolinSeries`, `ECDFSeries`; `binValues`, `summarizeBoxPlot`, `estimateKernelDensity`, `computeECDF` | Assay/biomarker distributions and raincloud compositions                                  |
+| 7        | Model and measurement diagnostics    | `QQSeries`; `computeMeanDifferencePairs`, `computeResiduals`, `computeQQPoints`                                                                                                             | Bland-Altman, residual, Q-Q, observed-versus-predicted, funnel and predictive-check views |
+| 8        | Diagnostic and biomarker performance | No specialized new marks initially; reuse existing lines, points, bands, and references                                                                                                     | ROC, precision-recall, calibration, threshold tradeoffs                                   |
+| 9        | Matrices and broader life sciences   | Reuse `HeatmapSeries`/`ColorLegend`; later `ContourSeries`, `HexbinSeries`, `hexbinPoints`                                                                                                  | Correlation/expression/missingness matrices, volcano plots, spatial density               |
+
+#### Concise authoring sketches
+
+All snippets assume the referenced scale providers are declared around them.
+New API shapes below are proposals; existing APIs retain their current required
+props. Intervals and fitted/model results are externally supplied.
+
+Treatment effects and asymmetric uncertainty:
+
+```tsx
+<HorizontalIntervalSeries
+  data={effects}
+  category="study" estimate="effect" lower="ciLower" upper="ciUpper"
+  categoryScale="studies" valueScale="effect"
+/>
+<ReferenceLine scale="effect" value={1} direction="vertical" span={[0, 300]} />
+```
+
+Dose/exposure-response uses existing marks:
+
+```tsx
+<PointSeries data={observations} x="dose" y="response" xScale="dose" yScale="response" />
+<LineSeries data={predictions} x="dose" y="estimate" xScale="dose" yScale="response" />
+<IntervalBandSeries data={predictions} x="dose" lower="lower" upper="upper"
+  xScale="dose" yScale="response" />
+```
+
+Paired and longitudinal observations:
+
+```tsx
+<PairedSeries data={participants} before="baseline" after="followUp"
+  category="treatment" categoryScale="treatments" valueScale="outcome" />
+<TrajectorySeries data={visits} groupBy="participantId" x="day" y="outcome"
+  xScale="day" yScale="outcome" />
+```
+
+Safety timelines and shift matrices:
+
+```tsx
+<IntervalLaneSeries data={events} lane="participantId" start="startDay" end="endDay"
+  laneScale="participants" timeScale="day" />
+<HeatmapSeries data={shifts} column="baselineGrade" row="followUpGrade" value="count"
+  columnScale="baseline" rowScale="followUp" colorScale="count" />
+```
+
+Externally calculated survival results:
+
+```tsx
+<SurvivalSeries data={survival} time="time" survival="estimate"
+  timeScale="time" probabilityScale="survival" />
+<CensorSeries data={censors} time="time" survival="estimate"
+  timeScale="time" probabilityScale="survival" />
+<RiskTable data={riskCounts} group="arm" time="time" count="atRisk"
+  timeScale="time" groupScale="arms" />
+```
+
+Explicit distribution transforms:
+
+```tsx
+const bins = binValues(samples, {
+  value: "concentration", boundaries: [0, 5, 10, 20, 40],
+});
+const ecdf = computeECDF(samples, { value: "concentration" });
+
+<HistogramSeries data={bins} lower="lower" upper="upper" value="count"
+  xScale="concentration" yScale="count" />
+<ECDFSeries data={ecdf} value="value" probability="probability"
+  xScale="concentration" yScale="probability" />
+```
+
+Measurement agreement coordinates, without estimating agreement limits:
+
+```tsx
+const differences = computeMeanDifferencePairs(measurements, {
+  first: "reference",
+  second: "candidate",
+});
+<PointSeries
+  data={differences}
+  x="mean"
+  y="difference"
+  xScale="mean"
+  yScale="difference"
+/>;
+```
+
+Diagnostic performance from supplied curve points:
+
+```tsx
+<LineSeries
+  data={roc}
+  x="falsePositiveRate"
+  y="truePositiveRate"
+  xScale="falsePositiveRate"
+  yScale="truePositiveRate"
+/>
+```
+
+Volcano composition from supplied effect sizes and adjusted significance:
+
+```tsx
+<PointSeries
+  data={genes}
+  x="log2FoldChange"
+  y="negativeLog10AdjustedP"
+  xScale="effect"
+  yScale="significance"
+/>
+```
+
+#### Public API summary
+
+Drawing components render observations, summaries, intervals, trajectories,
+matrices, and fields. Pure helpers perform explicitly named transformations
+with fixed return contracts. Research examples compose these APIs into complete
+figures. Do not initially add `ForestPlot`, `VolcanoPlot`, or `ResearchChart`:
+actual repeated compositions will establish whether a reusable component is
+needed. Statistical fitting, hypothesis testing, meta-analysis, and clinical
+estimators are separate design work.
+
+Box summaries must specify quantile/whisker definitions; density calculation
+must specify kernel/bandwidth. Weighted symbols encode weight by area, not by
+radius. Censored measurement marks show supplied bounds rather than invented
+exact values. Paired/trajectory marks preserve participant identity and missing
+observations. No helper silently imputes, clusters, normalizes, adjusts p-values,
+or changes the supplied analysis population.
+
+#### First slice implementation (2026-10-12)
+
+The estimate-and-interval slice adds `HorizontalIntervalSeries` and
+`VerticalIntervalSeries` to `@pibbl/core/viz`, with shared `IntervalSeriesStyle`
+and props types. The public clinical forest example uses supplied synthetic
+risk ratios/95% intervals, a logarithmic axis, null value 1, row inspection,
+effect ordering, and an application-owned HTML results table. Phone presentation
+stacks row labels and values and uses ordinary host scrolling.
+
+The focused public browser test was added first and failed on the absent export
+before production implementation. It establishes independent asymmetric-bound
+mapping in both orientations, missing-row omission, and scheduled geometry
+replacement. A separate headless example test drives ordering and table-based
+inspection through the same supported example mount.
+
+`WeightedPointSeries` and `IntervalDiamondSeries` remain proposed follow-ups;
+this slice uses equal-size estimate circles and supplies no pooled result.
+Status is **slice ready for feedback**, not feature complete; broader edge-case
+hardening and aggregate verification follow experiential feedback.
+
+Studio route: `#/examples/composition/viz-clinical-forest`.
+
+Fresh verification used Node 24.15.0, pnpm 11.21.0, and Playwright Chromium:
+the two focused Vitest browser tests passed in source and built modes;
+`tsc --noEmit`, the core build, packed viz verification (Bundler/NodeNext and
+runtime exports), Studio declaration parity, scenario catalog validation,
+targeted ESLint, and public JSDoc checks passed. Desktop (1440 x 1000) and phone
+(390 x 844) Studio checks exercised sorting, row selection, and the HTML table;
+desktop also exercised Enter activation. No relevant browser console/runtime
+errors were observed. The aggregate trust gate was not run at this feedback
+milestone. The broader `docs:check` remains blocked by an unrelated existing
+unclassified evidence README under
+`docs/strategy/agent-verification-evidence/public-inspection-pilot-2026-10-09/`.
+
+#### Accepted forest slice: hardening (2026-10-12)
+
+Following hands-on acceptance, the interval API and forest example now have 25
+focused public browser checks (22 interval checks and 3 example checks). Tests
+cover missing/nonfinite coordinates, unknown categories, numeric category IDs,
+asymmetric/equal bounds, estimates outside bounds, reversed domains/ranges,
+logarithmic values, malformed data/styles, categorical scale requirements,
+callback inputs and exclusion, reactive geometry/style removal, widened target
+strokes, transforms, clipping, decorative participation, forbidden hooks/writes,
+and signal teardown. Type evidence includes JSX/createElement, signals,
+callbacks, mandatory bounds, numeric field keys, and closed styles.
+
+Regression tests failed before fixes for unknown-category omission and example
+ownership. Unknown categories now omit the row before bounds validation. The
+forest mount disposes its previous application-owned lifetime before remounting;
+repeated disposal cannot restore stale host styles or dispose a replacement.
+Accessor hook diagnostics identify the prohibited operation.
+
+Fresh verification on Node 24.15.0 / pnpm 11.21.0 / Playwright Chromium:
+
+- The isolated source visualization suite passed 496 tests, with 2 skipped,
+  excluding the concurrently developed financial workspace and editable-chart
+  tests. A temporary configuration removed only Studio documentation generation.
+- All 26 focused checks (including the new dose-response check below) passed
+  against built public packages, with the built-resolution assertion enabled.
+- Independent packed interval consumers passed Bundler and NodeNext, runtime
+  exports, JSX/createElement, signals, and negative type cases. The standard
+  packed-viz gate is blocked by unrelated editable-chart export-list drift.
+- The core build and repository typecheck passed before later unrelated texture
+  changes. The final runtime bundle rebuild passed. Targeted ESLint passed.
+- Catalog generation passed: 134 lessons, 12 tutorial snapshots, 33 labs.
+- Desktop (960 x 900) and phone (390 x 844) render/interaction checks passed in
+  an isolated preview using the same public example mounts. Forest checks include
+  keyboard sorting, touch, table inspection, live desktop/phone resizing, and
+  teardown. Both figures were visually inspected; no page errors were observed.
+  Regular Playwright was used because the Browser plugin is not available.
+
+`corepack pnpm@11.21.0 trust` was attempted and stopped during browser discovery
+because unrelated editable-chart exports lack API documentation. Standard Studio
+verification also encountered unrelated `geometric-patterns.ts` type errors.
+The full visualization run identified failures in the concurrently developed
+financial workspace (duplicate keys) and editable-chart test (`settled()` is not
+part of the controller contract). These changes were preserved. Status:
+**accepted behavior hardened and independently verified; aggregate feature
+completion remains pending the shared-checkout blockers**.
+
+#### Next slice: dose-response composition (2026-10-12)
+
+The next pharmaceutical priority has a runnable `viz-dose-response` learning
+example. It composes existing `PointSeries`, `LineSeries`, `IntervalBandSeries`,
+`LogScale`, and `LinearScale`: observations use outlined circles, supplied model
+predictions use a line, and supplied 95% confidence bounds for mean response use
+a separately toggleable band. All values are invented teaching data. There is
+no curve fitting, interval calculation, or clinical inference.
+
+The zero-dose control is displayed separately and included in the HTML data
+table; only positive doses enter the log scale. Dose units and response units
+remain visible, and observations and supplied predictions are exposed below
+Canvas. The focused test was added first and failed on the absent example. It
+then passed with semantic labels, band paint/removal, native control behavior,
+complete observed data, and subscription/HTML teardown. Desktop and phone
+render/interaction checks also passed.
+
+Studio route: `#/examples/composition/viz-dose-response`. While unrelated Studio
+compilation is blocked, the isolated built-package previews are available at
+`http://127.0.0.1:5186/research-qa?dose` and
+`http://127.0.0.1:5186/research-qa?forest`.
+
+Status: **slice ready for feedback in the isolated preview; Studio readiness
+pending unrelated compilation errors**. `CensoredPointSeries` and explicit
+below-quantification handling remain the next API work in this family. This
+example does not claim that those APIs or a complete PK/PD suite have shipped.
+
+### Earlier general visualization tiers
+
 Order within each tier follows dependencies and concrete example needs. Deliver
 one runnable vertical slice at a time; do not build every foundation before
 showing a chart. P0 is the first product milestone. Do not displace unfinished
@@ -294,3 +617,29 @@ API audit correction: removed LegendItem as redundant core shape/text compositio
 ChartText remains withdrawn. Retained only added scale/data/numeric/calendar or
 axis-geometry behavior. Hardening now includes localized negative-zero formatting
 and complete source/built visualization contract runs; see Plan 007 for evidence.
+
+### Research mark delivery update (2026-10-12)
+
+The estimate-and-interval slice now includes `CensoredPointSeries`,
+`WeightedPointSeries`, and `IntervalDiamondSeries`, exported from
+`@pibbl/core/viz` with their props/style/accessor types. Censor markers preserve
+supplied reporting limits and domain direction. Weighted circles use an explicit
+zero-based weight domain and area proportional to supplied weights. Summary
+diamonds require the estimate to lie inside supplied bounds. These marks perform
+no inference or pooling.
+
+Public examples: `viz-censored-assay`, `viz-weighted-evidence`, and
+`viz-evidence-synthesis`. The evidence synthesis uses the published metadat BCG
+teaching dataset, supplied REML output, and a separate prediction-interval toggle.
+API pages and complete minimal programs accompany every new export.
+
+Fresh verification: Node 24.15.0 / pnpm 11.21.0; 41 focused source tests passed;
+the complete built visualization suite passed 525 tests with two skipped.
+Packed Bundler/NodeNext consumers, runtime identity/private boundaries, Studio
+source/built/editor export parity, and repository TypeScript checks passed.
+Integration verification and the commit are recorded at delivery.
+
+Next pharmaceutical slice: repeated-measure and longitudinal series, with explicit
+participant grouping and missing-visit gaps; then safety/event views and
+time-to-event outcomes. Audit existing line and point composition before adding
+public APIs.

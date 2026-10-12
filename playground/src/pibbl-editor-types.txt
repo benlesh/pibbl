@@ -1273,8 +1273,139 @@ export interface MeshTransformOptions {
   export function defineThreeLayer<Props, Resources extends PibblThreeLayerResources>(definition: PibblThreeLayerDefinition<Props, Resources>): PibblComponent<PibblRenderLayerProps<Props>>;
 
 /* @pibbl-studio-module @pibbl/core/viz */
+/** One half-open time interval used to group complete OHLCV records. See {@link AggregateOhlcvOptions}. */
+export interface OhlcvBucket {
+    /** Inclusive finite start coordinate. */
+    readonly start: number;
+    /** Exclusive finite end coordinate after the start. */
+    readonly end: number;
+}
+/** Original source record that contributed to an aggregated OHLCV bar. See {@link AggregatedOhlcvPoint}. */
+export interface OhlcvSource<D> {
+    /** Caller-owned complete contributing record. */
+    readonly datum: D;
+    /** Original source index. */
+    readonly sourceIndex: number;
+}
+/** One frozen OHLCV bar aggregated without sorting caller-owned records. See {@link aggregateOhlcv}. */
+export interface AggregatedOhlcvPoint<D> extends OhlcvBucket {
+    /** Open from the first contributing record. */
+    readonly open: number;
+    /** Maximum high from contributing records. */
+    readonly high: number;
+    /** Minimum low from contributing records. */
+    readonly low: number;
+    /** Close from the last contributing record. */
+    readonly close: number;
+    /** Finite sum of non-negative contributing volumes. */
+    readonly volume: number;
+    /** Frozen references to contributing caller-owned records. */
+    readonly sources: readonly OhlcvSource<D>[];
+}
+/** Inputs for chronological OHLCV aggregation. See {@link aggregateOhlcv}. */
+export interface AggregateOhlcvOptions<D> {
+    /** Numeric property or callback that supplies each record's time coordinate. */
+    readonly time: LineAccessor<D>;
+    /** Numeric property or callback that supplies open. */
+    readonly open: LineAccessor<D>;
+    /** Numeric property or callback that supplies high. */
+    readonly high: LineAccessor<D>;
+    /** Numeric property or callback that supplies low. */
+    readonly low: LineAccessor<D>;
+    /** Numeric property or callback that supplies close. */
+    readonly close: LineAccessor<D>;
+    /** Numeric property or callback that supplies non-negative volume. */
+    readonly volume: LineAccessor<D>;
+    /**
+     * Returns the half-open aggregate bucket for one eligible finite timestamp, or null to skip it.
+     * @param time - Eligible finite source timestamp.
+     * @returns A containing half-open bucket, or null when the record is not aggregated.
+     * @see {@link OhlcvBucket}
+     */
+    readonly bucket: (time: number) => OhlcvBucket | null;
+    /**
+     * Excludes a record before its OHLCV and bucket accessors run.
+     * @param datum - Original source observation.
+     * @param index - Zero-based source index.
+     * @param data - Complete caller-supplied source array.
+     * @returns Whether this observation may contribute.
+     */
+    readonly defined?: (datum: D, index: number, data: readonly D[]) => boolean;
+}
+/** A valid session identifier supplied to {@link sessionVwap}. */
+export type SessionIdentifier = string | number;
+/**
+ * A property or callback that supplies the session containing a source record.
+ * @param datum - Source observation under consideration.
+ * @param index - Zero-based source index.
+ * @param data - Complete caller-supplied source array.
+ * @returns The record's string or finite numeric session identifier.
+ * @see {@link SessionVwapOptions}
+ */
+export type SessionAccessor<D> = {
+    [K in keyof D]-?: D[K] extends SessionIdentifier ? K : never;
+}[keyof D] | ((datum: D, index: number, data: readonly D[]) => SessionIdentifier);
+/** Inputs for source-aligned session VWAP. See {@link sessionVwap}. */
+export interface SessionVwapOptions<D> {
+    /** Numeric property or callback that supplies each record's price. */
+    readonly price: LineAccessor<D>;
+    /** Numeric property or callback that supplies non-negative volume. */
+    readonly volume: LineAccessor<D>;
+    /** Property or callback that supplies the current string or finite numeric session identifier. */
+    readonly session: SessionAccessor<D>;
+    /**
+     * Excludes a row before price and volume accessors run; its session still resets state.
+     * @param datum - Original source observation.
+     * @param index - Zero-based source index.
+     * @param data - Complete caller-supplied source array.
+     * @returns Whether this observation participates in VWAP calculation.
+     */
+    readonly defined?: (datum: D, index: number, data: readonly D[]) => boolean;
+}
+/** One frozen source-aligned session VWAP point. See {@link sessionVwap}. */
+export interface SessionVwapPoint<D> {
+    /** Caller-owned original record. */
+    readonly datum: D;
+    /** Original source index, including excluded and incomplete records. */
+    readonly sourceIndex: number;
+    /** Evaluated session, including for an excluded source record. */
+    readonly session: SessionIdentifier;
+    /** Finite volume accumulated for this session before or including this record. */
+    readonly cumulativeVolume: number;
+    /** Session VWAP after this valid record, null for incomplete or excluded records. */
+    readonly vwap: number | null;
+}
+/**
+ * Aggregates source-ordered complete OHLCV records into caller-defined chronological buckets.
+ *
+ * It never sorts or mutates source records. Missing, excluded, and null-bucket records are skipped;
+ * finite malformed candles, negative volume, noncontiguous bucket bounds, and time disorder reject.
+ * @param data - Caller-owned source observations in chronological order.
+ * @param options - OHLCV accessors, bucket definition, and optional participation callback.
+ * @returns Frozen anchored aggregate bars with frozen original source references.
+ * @see {@link AggregateOhlcvOptions}
+ * @see {@link AggregatedOhlcvPoint}
+ */
+export declare function aggregateOhlcv<D>(data: readonly D[], options: AggregateOhlcvOptions<D>): readonly AggregatedOhlcvPoint<D>[];
+/**
+ * Derives source-aligned volume-weighted prices that reset whenever the session identifier changes.
+ *
+ * Missing prices or volumes and excluded rows produce null without changing the current accumulated
+ * state. Zero-volume complete records preserve the preceding VWAP; negative volumes reject.
+ * @param data - Caller-owned source observations in presentation order.
+ * @param options - Price, volume, session accessors, and optional participation callback.
+ * @returns Frozen source-aligned points with current cumulative volume and VWAP or null.
+ * @see {@link SessionVwapOptions}
+ * @see {@link SessionVwapPoint}
+ */
+export declare function sessionVwap<D>(data: readonly D[], options: SessionVwapOptions<D>): readonly SessionVwapPoint<D>[];
+
 import type { BoxStyle, PibblNode, LayoutItemStyle, LayoutBox, SignalValue } from '@pibbl/core';
 type SignalStyle<S> = Readonly<{ [K in keyof S]: K extends "custom" ? S[K] : SignalValue<S[K]> }>;
+export interface BaselineSideStyle { readonly fill?: import('@pibbl/core').FillStyle; readonly stroke?: import('@pibbl/core').StrokeStyle; }
+export interface BaselineSeriesStyle { readonly above?: BaselineSideStyle; readonly below?: BaselineSideStyle; readonly fillOpacity?: number; readonly strokeWidth?: number; readonly cursor?: string; }
+export interface BaselineSeriesProps<D> extends PibblEventHandlers, PibblEventParticipationOptions { readonly data: import('@pibbl/core').SignalValue<readonly D[]>; readonly x: LineAccessor<D>; readonly y: LineAccessor<D>; readonly xScale: ScaleId; readonly yScale: ScaleId; readonly baseline: import('@pibbl/core').SignalValue<number>; readonly defined?: (datum: D, index: number, data: readonly D[]) => boolean; readonly inspection?: import('@pibbl/core/viz/inspection').NumericInspectionRef<D>; readonly style?: SignalValue<SignalStyle<BaselineSeriesStyle>>; }
+export declare function BaselineSeries<D>(props: BaselineSeriesProps<D>): import('@pibbl/core').PibblNode;
 export interface AreaSeriesStyle { readonly fill?: FillStyle; readonly opacity?: number; readonly cursor?: string; }
 export interface AreaSeriesProps<D> extends PibblEventHandlers, PibblEventParticipationOptions {
   readonly data: LineSeriesProps<D>["data"];
@@ -1404,6 +1535,46 @@ export interface ReferenceLineProps extends ChartLineProps { readonly value: Sig
 export declare function GridLines(props: GridLinesProps): PibblNode;
 export declare function ReferenceLine(props: ReferenceLineProps): PibblNode;
 
+export interface ChartAnchor { readonly x: number; readonly y: number; }
+export interface RangeNavigatorStyle { readonly fill?: SignalValue<string>; readonly stroke?: SignalValue<string>; readonly strokeWidth?: SignalValue<number>; readonly opacity?: SignalValue<number>; readonly handleFill?: SignalValue<string>; readonly handleStroke?: SignalValue<string>; readonly handleSize?: SignalValue<number>; readonly hitSize?: SignalValue<number>; }
+export interface EditableReferenceLineStyle extends RangeNavigatorStyle {}
+export interface EditableReferenceBandStyle extends RangeNavigatorStyle {}
+export interface EditableTrendLineStyle extends RangeNavigatorStyle {}
+export interface RangeNavigatorProps {
+  readonly scale: ScaleId;
+  readonly values: SignalValue<readonly [number, number]>;
+  readonly span: SignalValue<readonly [number, number]>;
+  readonly minimumSpan?: number;
+  readonly onChange: (value: readonly [number, number]) => void;
+  readonly onCommit?: (value: readonly [number, number]) => void;
+  readonly onCancel?: () => void;
+  readonly style?: SignalValue<RangeNavigatorStyle>;
+}
+export interface EditableReferenceLineProps {
+  readonly scale: ScaleId; readonly direction: "horizontal" | "vertical";
+  readonly value: SignalValue<number>; readonly span: SignalValue<readonly [number, number]>;
+  readonly selected?: SignalValue<boolean>; readonly keyboardStep: number; readonly onSelect?: () => void;
+  readonly onChange: (value: number) => void; readonly onCommit?: (value: number) => void; readonly onCancel?: () => void;
+  readonly style?: SignalValue<EditableReferenceLineStyle>;
+}
+export interface EditableReferenceBandProps {
+  readonly scale: ScaleId; readonly direction: "horizontal" | "vertical";
+  readonly values: SignalValue<readonly [number, number]>; readonly span: SignalValue<readonly [number, number]>;
+  readonly selected?: SignalValue<boolean>; readonly keyboardStep: number; readonly minimumSpan?: number; readonly onSelect?: () => void;
+  readonly onChange: (value: readonly [number, number]) => void; readonly onCommit?: (value: readonly [number, number]) => void; readonly onCancel?: () => void;
+  readonly style?: SignalValue<EditableReferenceBandStyle>;
+}
+export interface EditableTrendLineProps {
+  readonly xScale: ScaleId; readonly yScale: ScaleId; readonly anchors: SignalValue<readonly [ChartAnchor, ChartAnchor]>;
+  readonly selected?: SignalValue<boolean>; readonly keyboardStep: { readonly x: number; readonly y: number }; readonly onSelect?: () => void;
+  readonly onChange: (value: readonly [ChartAnchor, ChartAnchor]) => void; readonly onCommit?: (value: readonly [ChartAnchor, ChartAnchor]) => void; readonly onCancel?: () => void;
+  readonly style?: SignalValue<EditableTrendLineStyle>;
+}
+export declare function RangeNavigator(props: RangeNavigatorProps): PibblNode;
+export declare function EditableReferenceLine(props: EditableReferenceLineProps): PibblNode;
+export declare function EditableReferenceBand(props: EditableReferenceBandProps): PibblNode;
+export declare function EditableTrendLine(props: EditableTrendLineProps): PibblNode;
+
 export type ScaleId = string | symbol;
 export type LinearDomain = readonly [number, number];
 export type ScaleRange = 'width' | 'height' | readonly [number, number];
@@ -1452,7 +1623,7 @@ export interface ResolvedUtcScale extends Omit<ResolvedLinearScale, "type"> {
   formatTick(value: number): string;
 }
 export type ResolvedContinuousScale = ResolvedLinearScale | ResolvedUtcScale | ResolvedLogScale | ResolvedSymlogScale;
-export type ResolvedScale = ResolvedContinuousScale | ResolvedBandScale | ResolvedPointScale;
+export type ResolvedScale = ResolvedContinuousScale | ResolvedBandScale | ResolvedPointScale | ResolvedTradingTimeScale;
 export declare function extent<D>(data: readonly D[], value: (datum: D, index: number, data: readonly D[]) => number | null | undefined): NumericDomain | undefined;
 export interface SymlogScaleProps extends LinearScaleProps { readonly constant?: SignalValue<number>; }
 export interface ResolvedSymlogScale extends Omit<ResolvedLinearScale, "type"> { readonly type: "symlog"; readonly constant: number; }
@@ -1473,9 +1644,57 @@ export interface NumberFormatOptions extends Intl.NumberFormatOptions { readonly
 export declare function linearTicks(domain: NumericDomain, options?: LinearTickOptions): readonly number[];
 export declare function niceLinearDomain(domain: NumericDomain, options?: LinearTickOptions): NumericDomain;
 export declare function formatNumber(value: number, options?: NumberFormatOptions): string;
+export declare function interpolateNumericRange(from: NumericDomain, to: NumericDomain, progress: number): NumericDomain;
 export declare function niceUTCDomain(domain: NumericDomain, options?: { readonly count?: number }): NumericDomain;
+export interface ComparisonBaseOptions<D> {
+ readonly time: LineAccessor<D>;
+ readonly value: LineAccessor<D>;
+ readonly baseTime: number;
+ readonly defined?: (datum: D, index: number, data: readonly D[]) => boolean;
+}
+export interface PercentageReturnPoint<D> {
+ readonly datum: D; readonly sourceIndex: number; readonly time: number | null; readonly returnPercent: number | null;
+}
+export interface IndexedValuePoint<D> {
+ readonly datum: D; readonly sourceIndex: number; readonly time: number | null; readonly indexValue: number | null;
+}
+/** Cumulative simple return in percentage points from the exact positive base; undefined means unavailable base. */
+export declare function percentageReturns<D>(data: readonly D[], options: ComparisonBaseOptions<D>): readonly PercentageReturnPoint<D>[] | undefined;
+/** Values indexed to 100 at the exact positive base; undefined means unavailable base. */
+export declare function indexTo100<D>(data: readonly D[], options: ComparisonBaseOptions<D>): readonly IndexedValuePoint<D>[] | undefined;
+export interface MovingAverageOptions<D> { readonly value: LineAccessor<D>; readonly period: number; readonly defined?: (datum: D, index: number, data: readonly D[]) => boolean; }
+export interface BollingerBandsOptions<D> extends MovingAverageOptions<D> { readonly multiplier?: number; }
+export interface MovingAveragePoint<D> { readonly datum: D; readonly sourceIndex: number; readonly average: number | null; }
+export interface BollingerBandPoint<D> { readonly datum: D; readonly sourceIndex: number; readonly mean: number | null; readonly lower: number | null; readonly upper: number | null; }
+export declare function simpleMovingAverage<D>(data: readonly D[], options: MovingAverageOptions<D>): readonly MovingAveragePoint<D>[];
+export declare function exponentialMovingAverage<D>(data: readonly D[], options: MovingAverageOptions<D>): readonly MovingAveragePoint<D>[];
+export declare function bollingerBands<D>(data: readonly D[], options: BollingerBandsOptions<D>): readonly BollingerBandPoint<D>[];
+export interface OscillatorOptions<D> { readonly value: LineAccessor<D>; readonly defined?: (datum: D, index: number, data: readonly D[]) => boolean; }
+export interface RelativeStrengthIndexOptions<D> extends OscillatorOptions<D> { readonly period: number; }
+export interface MovingAverageConvergenceDivergenceOptions<D> extends OscillatorOptions<D> { readonly fastPeriod: number; readonly slowPeriod: number; readonly signalPeriod: number; }
+export interface StochasticOscillatorOptions<D> { readonly high: LineAccessor<D>; readonly low: LineAccessor<D>; readonly close: LineAccessor<D>; readonly lookbackPeriod: number; readonly kPeriod: number; readonly dPeriod: number; readonly defined?: (datum: D, index: number, data: readonly D[]) => boolean; }
+export interface RelativeStrengthIndexPoint<D> { readonly datum: D; readonly sourceIndex: number; readonly rsi: number | null; }
+export interface MovingAverageConvergenceDivergencePoint<D> { readonly datum: D; readonly sourceIndex: number; readonly macd: number | null; readonly signal: number | null; readonly histogram: number | null; }
+export interface StochasticOscillatorPoint<D> { readonly datum: D; readonly sourceIndex: number; readonly rawK: number | null; readonly k: number | null; readonly d: number | null; }
+export declare function relativeStrengthIndex<D>(data: readonly D[], options: RelativeStrengthIndexOptions<D>): readonly RelativeStrengthIndexPoint<D>[];
+export declare function movingAverageConvergenceDivergence<D>(data: readonly D[], options: MovingAverageConvergenceDivergenceOptions<D>): readonly MovingAverageConvergenceDivergencePoint<D>[];
+export declare function stochasticOscillator<D>(data: readonly D[], options: StochasticOscillatorOptions<D>): readonly StochasticOscillatorPoint<D>[];
+export interface VisibleOhlcPriceExtentOptions<D> {
+  readonly time: LineAccessor<D>;
+  readonly open: LineAccessor<D>;
+  readonly high: LineAccessor<D>;
+  readonly low: LineAccessor<D>;
+  readonly close: LineAccessor<D>;
+  readonly positionAtTime: (time: number) => number | undefined;
+  readonly visibleRange: LinearDomain;
+  readonly defined?: (datum: D, index: number, data: readonly D[]) => boolean;
+}
+export interface PadLinearDomainOptions { readonly padding?: number; readonly minimumSpan?: number; }
+export declare function visibleOhlcPriceExtent<D>(data: readonly D[], options: VisibleOhlcPriceExtentOptions<D>): LinearDomain | undefined;
+export declare function padLinearDomain(domain: LinearDomain, options?: PadLinearDomainOptions): LinearDomain;
 
 import type { PibblEventHandlers, PibblEventParticipationOptions, FillStyle, StrokeStyle } from '@pibbl/core';
+import type { BarInspectionRef, NumericInspectionRef, VolumeInspectionRef, CandleInspectionRef, OhlcBarInspectionRef } from '@pibbl/core/viz/inspection';
 export interface AxisStyle { readonly stroke?: StrokeStyle; readonly strokeWidth?: number; readonly fill?: FillStyle; readonly font?: string; readonly opacity?: number }
 interface AxisBaseProps {
   readonly scale: ScaleId;
@@ -1507,6 +1726,7 @@ export interface LineSeriesProps<D> extends PibblEventHandlers, PibblEventPartic
   readonly defined?: (datum: D, index: number, data: readonly D[]) => boolean;
   readonly curve?: LineCurve;
   readonly style?: SignalValue<SignalStyle<LineSeriesStyle>>;
+  readonly inspection?: NumericInspectionRef<D>;
 }
 type ScaleAdjustX = { readonly x: SignalValue<BandCategory>; readonly xScale: ScaleId } | { readonly x?: never; readonly xScale?: never };
 type ScaleAdjustY = { readonly y: SignalValue<BandCategory>; readonly yScale: ScaleId } | { readonly y?: never; readonly yScale?: never };
@@ -1541,6 +1761,7 @@ export interface PointSeriesProps<D> extends PibblEventHandlers, PibblEventParti
   readonly yScale: ScaleId;
   readonly defined?: (datum: D, index: number, data: readonly D[]) => boolean;
   readonly style?: SignalValue<SignalStyle<PointSeriesStyle> | PointStyleResolver<D>>;
+  readonly inspection?: NumericInspectionRef<D>;
 }
 
 export type PlotKeyAccessor<D> =
@@ -1721,6 +1942,7 @@ interface BarSeriesBaseProps<D> extends PibblEventHandlers, PibblEventParticipat
   readonly valueScale: ScaleId;
   readonly defined?: (datum: D, index: number, data: readonly D[]) => boolean;
   readonly style?: SignalValue<SignalStyle<BarSeriesStyle> | BarStyleResolver<D>>;
+  readonly inspection?: BarInspectionRef<D>;
 }
 export type BarSeriesProps<D> = BarSeriesBaseProps<D> & (
     | { readonly value: LineAccessor<D>; readonly baseline?: SignalValue<number>; readonly valueStart?: never; readonly valueEnd?: never }
@@ -1801,6 +2023,715 @@ export interface PieLabelProps<D> extends PibblEventHandlers, PibblEventParticip
 export declare function PieLayout<D>(props: PieLayoutProps<D>): PibblNode;
 export declare function PieSlice<D>(props: PieSliceProps<D>): PibblNode;
 export declare function PieLabel<D>(props: PieLabelProps<D>): PibblNode;
+
+/** Local column presentation; color meaning is supplied by the application.
+ * @see {@link VolumeSeries}
+ */
+export interface VolumeSeriesStyle {
+    /** Positive column width in local logical units; default 70% spacing capped at 12. */
+    readonly width?: number;
+    /** Interior paint; defaults to teal. */
+    readonly fill?: FillStyle;
+    /** Optional column outline paint. */
+    readonly stroke?: StrokeStyle;
+    /** Nonnegative outline width in local units; default 1. */
+    readonly strokeWidth?: number;
+    /** Paint opacity from zero through one; default 1. */
+    readonly opacity?: number;
+    /** Cursor when the series owns coordinate targeting. */
+    readonly cursor?: string;
+}
+/** Time-aligned volume columns with an independent numeric y-scale.
+ * @see {@link VolumeSeries}
+ */
+export interface VolumeSeriesProps<D> extends PibblEventHandlers, PibblEventParticipationOptions {
+    /** Original records or a signal of records; never sorted or mutated. */
+    readonly data: SignalValue<readonly D[]>;
+    /** UTC-millisecond property or callback; missing/nonfinite values skip the row. */
+    readonly time: LineAccessor<D>;
+    /** Nonnegative volume property or callback; missing/nonfinite values skip the row. */
+    readonly volume: LineAccessor<D>;
+    /** Selects source records before evaluating accessors.
+     * @param datum - Original record.
+     * @param index - Original source index.
+     * @param data - Complete source array.
+     * @returns Whether the row participates.
+     */
+    readonly defined?: (datum: D, index: number, data: readonly D[]) => boolean;
+    /** Numeric time scale identity. */
+    readonly xScale: ScaleId;
+    /** Independent numeric volume scale identity; the baseline is zero. */
+    readonly yScale: ScaleId;
+    /** Constant presentation or a hook-free per-record resolver.
+     * @param datum - Original record.
+     * @param index - Original source index.
+     * @param data - Complete source array.
+     * @returns Column presentation.
+     */
+    readonly style?: SignalValue<VolumeSeriesStyle> | ((datum: D, index: number, data: readonly D[]) => VolumeSeriesStyle);
+    /** Optional committed capture; importing the renderer does not import inspection queries. */
+    readonly inspection?: VolumeInspectionRef<D>;
+}
+/**
+ * Paints source-ordered time-aligned volume columns, batching adjacent equal styles.
+ * Zero volume is recorded but has no painted coverage. Finite negative volume rejects.
+ * @param props - Original records, numeric scales, accessors and optional capture.
+ * @returns Ordinary Pibbl paint/event composition.
+ * @see {@link VolumeSeriesProps}
+ */
+export declare function VolumeSeries<D>({ data: input, time: timeInput, volume: volumeInput, xScale, yScale, defined, style: styleInput, inspection, pointerEvents, ...events }: VolumeSeriesProps<D>): PibblNode;
+
+/** Controlled gapless observation slots; UTCScale retains elapsed-time semantics.
+ * @see {@link TradingTimeScale}
+ */
+export interface TradingTimeScaleProps {
+    /** Ancestor scale identity. */ readonly id: ScaleId;
+    /** Strictly increasing, unique UTC-millisecond observations; copied by the mapping. */ readonly timestamps: SignalValue<readonly number[]>;
+    /** Visible logical slot endpoints, possibly fractional/reversed; default covers supplied slots. */ readonly logicalRange?: SignalValue<readonly [number, number]>;
+    /** Output in local logical units or the receiving allocation's width/height. */ readonly range: SignalValue<ScaleRange>;
+    /** Reverses physical output without reordering supplied observations. */ readonly reverse?: SignalValue<boolean>;
+    /** Receiving scale frame allocation and layout participation. */ readonly style?: SignalValue<SignalStyle<ScaleLayoutStyle>>;
+    /** Descendant visualization composition. */ readonly children?: PibblNode;
+}
+/** Dedicated exact-time/slot mapping; no interpolated UTC timestamps are fabricated.
+ * @see {@link TradingTimeScale}
+ */
+export interface ResolvedTradingTimeScale {
+    /** Describes this resolved mapping. */ readonly type: "trading-time";
+    /** Owned supplied timestamps in ascending order, also used as the data domain. */ readonly timestamps: readonly number[];
+    /** Owned supplied timestamp domain, not logical slot endpoints. */ readonly domain: readonly number[];
+    /** Controlled viewport endpoints in logical slot units. */ readonly logicalRange: readonly [number, number];
+    /** Output local-logical endpoints. */ readonly range: readonly [number, number];
+    /** Receiving allocation in local logical units. */ readonly frame: Readonly<{
+        x: number; /** Local allocation y. */
+        y: number; /** Local width. */
+        width: number; /** Local height. */
+        height: number;
+    }>;
+    /** Maps an exact supplied UTC timestamp; unknown timestamps throw.
+     * @param time - Supplied UTC milliseconds.
+     * @returns Series-local coordinate.
+     */ map(time: number): number;
+    /** Maps a possibly fractional logical slot, including viewport whitespace.
+     * @param slot - Logical observation slot.
+     * @returns Series-local coordinate.
+     */ mapSlot(slot: number): number;
+    /** Exact timestamp lookup.
+     * @param time - UTC milliseconds.
+     * @returns Supplied slot index, or undefined.
+     */ slotAtTime(time: number): number | undefined;
+    /** Exact integer slot lookup.
+     * @param slot - Integer logical observation slot.
+     * @returns Supplied timestamp, or undefined.
+     */ timeAtSlot(slot: number): number | undefined;
+    /** Inverts local geometry to fractional slots.
+     * @param position - Series-local logical coordinate.
+     * @returns Fractional logical slot.
+     */ slotAtPosition(position: number): number;
+    /** Selects a supplied timestamp; ties choose earlier, outside positions clamp.
+     * @param position - Series-local logical coordinate.
+     * @returns Supplied UTC milliseconds, or undefined for empty input.
+     */ nearestTimeAtPosition(position: number): number | undefined;
+    /** Chooses at most count visible supplied observations as date ticks.
+     * @param count - Integer maximum from zero through 100, default five.
+     * @returns Original UTC timestamps in physical axis order.
+     */ ticks(count?: number): readonly number[];
+    /** Formats supplied or finite valid UTC timestamps without inferring sessions.
+     * @param time - UTC milliseconds in Date range.
+     * @returns ISO UTC timestamp.
+     */ formatTick(time: number): string;
+}
+/**
+ * Reads a stable dedicated ancestor trading-time signal.
+ * @param id - Ancestor TradingTimeScale identity.
+ * @returns Readonly mapping with explicit timestamp and logical-slot operations.
+ * @see {@link TradingTimeScale}
+ */
+export declare function useTradingTimeScale(id: ScaleId): Signal<ResolvedTradingTimeScale>;
+/**
+ * Provides gapless positions for ordered supplied observations, leaving application-owned viewport control explicit.
+ * @param props - Timestamps, optional logical viewport, output range and children.
+ * @returns Descendant composition in the named mapping scope.
+ * @see {@link TradingTimeScaleProps}
+ */
+export declare function TradingTimeScale(props: TradingTimeScaleProps): PibblNode;
+
+/** Open/close body paint, independent from wick paint.
+ * @see {@link CandlestickSeries}
+ */
+export interface CandleBodyStyle {
+    /** Interior; default teal for close >= open, coral otherwise. Empty string disables fill. */ readonly fill?: FillStyle;
+    /** Optional body outline. */ readonly stroke?: StrokeStyle;
+    /** Nonnegative local outline width; default 1. */ readonly strokeWidth?: number;
+}
+/** High/low wick paint.
+ * @see {@link CandlestickSeries}
+ */
+export interface CandleWickStyle {
+    /** Wick paint; default dark teal. Empty string disables wick paint. */ readonly stroke?: StrokeStyle;
+    /** Nonnegative local width; default 1. */ readonly strokeWidth?: number;
+}
+/** Accepted named body/wick presentation for OHLC marks.
+ * @see {@link CandlestickSeries}
+ */
+export interface CandlestickSeriesStyle {
+    /** Positive local body width, or automatic 70% spacing capped at 12; singleton fallback 8. */ readonly bandwidth?: number | "auto";
+    /** Independent open/close body appearance. */ readonly body?: CandleBodyStyle;
+    /** Independent high/low wick appearance. */ readonly wick?: CandleWickStyle;
+    /** Opacity zero through one; default 1. */ readonly opacity?: number;
+    /** Cursor while the series owns targeting. */ readonly cursor?: string;
+}
+/** Source-ordered OHLC records with named accessors and optional shared inspection.
+ * @see {@link CandlestickSeries}
+ */
+export interface CandlestickSeriesProps<D> extends PibblEventHandlers, PibblEventParticipationOptions {
+    /** Original records/signal; never sorted or mutated. */ readonly data: SignalValue<readonly D[]>;
+    /** UTC-millisecond property or callback. */ readonly time: LineAccessor<D>;
+    /** Open price property or callback. */ readonly open: LineAccessor<D>;
+    /** High price property or callback. */ readonly high: LineAccessor<D>;
+    /** Low price property or callback. */ readonly low: LineAccessor<D>;
+    /** Close price property or callback. */ readonly close: LineAccessor<D>;
+    /** Numeric/UTC/trading horizontal mapping identity. */ readonly xScale: ScaleId;
+    /** Independent numeric price mapping identity. */ readonly yScale: ScaleId;
+    /** Tests original rows before accessor evaluation.
+     * @param datum - Original row.
+     * @param index - Source index including skipped rows.
+     * @param data - Original complete array.
+     * @returns Whether the candle participates.
+     */ readonly defined?: (datum: D, index: number, data: readonly D[]) => boolean;
+    /** Named body/wick appearance or a hook-free datum resolver.
+     * @param datum - Original row.
+     * @param index - Original source index.
+     * @param data - Complete source array.
+     * @returns Plain named candle styles.
+     */ readonly style?: SignalValue<CandlestickSeriesStyle> | ((datum: D, index: number, data: readonly D[]) => CandlestickSeriesStyle);
+    /** Optional capture on the ordinary inspection foundation; no queries while painting. */ readonly inspection?: CandleInspectionRef<D>;
+}
+/**
+ * Paints OHLC bodies and wicks, preserving source order and skipping complete missing candles.
+ * Finite malformed OHLC rejects; equal open/close paints a one-local-unit doji.
+ * @param props - Named OHLC accessors, scales, styles and optional inspection.
+ * @returns Ordinary Pibbl composition; disjoint equal styles share paint paths.
+ * @see {@link CandlestickSeriesProps}
+ */
+export declare function CandlestickSeries<D>({ data: input, time: timeInput, open: openInput, high: highInput, low: lowInput, close: closeInput, xScale, yScale, defined, style: styleInput, inspection, pointerEvents, ...events }: CandlestickSeriesProps<D>): PibblNode;
+
+export interface OhlcBarSeriesStyle { readonly bandwidth?: number | "auto"; readonly stroke?: StrokeStyle; readonly strokeWidth?: number; readonly opacity?: number; readonly cursor?: string; }
+export interface OhlcBarSeriesProps<D> extends PibblEventHandlers, PibblEventParticipationOptions {
+  readonly data: SignalValue<readonly D[]>; readonly time: LineAccessor<D>; readonly open: LineAccessor<D>; readonly high: LineAccessor<D>; readonly low: LineAccessor<D>; readonly close: LineAccessor<D>; readonly xScale: ScaleId; readonly yScale: ScaleId;
+  readonly defined?: (datum: D, index: number, data: readonly D[]) => boolean;
+  readonly style?: SignalValue<OhlcBarSeriesStyle> | ((datum: D, index: number, data: readonly D[]) => OhlcBarSeriesStyle);
+  readonly inspection?: OhlcBarInspectionRef<D>;
+}
+export declare function OhlcBarSeries<D>(props: OhlcBarSeriesProps<D>): PibblNode;
+
+/** Local-pixel geometry and paint for estimate-and-interval marks. */
+export interface IntervalSeriesStyle {
+  readonly radius?: number;
+  readonly capSize?: number;
+  readonly fill?: FillStyle;
+  readonly stroke?: StrokeStyle;
+  readonly strokeWidth?: number;
+  readonly lineInteractionWidth?: number;
+  readonly opacity?: number;
+  readonly cursor?: string;
+}
+export interface IntervalSeriesProps<D> extends PibblEventHandlers, PibblEventParticipationOptions {
+  readonly data: SignalValue<readonly D[]>;
+  readonly category: BarCategoryAccessor<D>;
+  readonly estimate: LineAccessor<D>;
+  readonly lower: LineAccessor<D>;
+  readonly upper: LineAccessor<D>;
+  readonly categoryScale: ScaleId;
+  readonly valueScale: ScaleId;
+  readonly defined?: (datum: D, index: number, data: readonly D[]) => boolean;
+  readonly style?: SignalValue<SignalStyle<IntervalSeriesStyle>>;
+}
+export type HorizontalIntervalSeriesProps<D> = IntervalSeriesProps<D>;
+export type VerticalIntervalSeriesProps<D> = IntervalSeriesProps<D>;
+export declare function HorizontalIntervalSeries<D>(props: HorizontalIntervalSeriesProps<D>): PibblNode;
+export declare function VerticalIntervalSeries<D>(props: VerticalIntervalSeriesProps<D>): PibblNode;
+
+export type CensoringStatus = "observed" | "below" | "above";
+export type CensoringAccessor<D> =
+  | {
+      [K in keyof D]-?: D[K] extends CensoringStatus | null | undefined
+        ? K
+        : never;
+    }[keyof D]
+  | ((
+      datum: D,
+      index: number,
+      data: readonly D[],
+    ) => CensoringStatus | null | undefined);
+export interface CensoredPointSeriesStyle {
+  /** Circle and open censor marker radius in local pixels; defaults to 4. */
+  readonly radius?: number;
+  /** Fill for observed circles; defaults to #087f8c. Censor markers remain open. */
+  readonly fill?: FillStyle;
+  /** Outline for circles and open directional censor markers; defaults to #087f8c. */
+  readonly stroke?: StrokeStyle;
+  /** Outline width in local pixels; defaults to 1.5. */
+  readonly strokeWidth?: number;
+  /** Shared paint opacity from zero to one; defaults to 1. */
+  readonly opacity?: number;
+  /** Cursor for painted mark targets. */
+  readonly cursor?: string;
+}
+export interface CensoredPointSeriesProps<D>
+  extends PibblEventHandlers, PibblEventParticipationOptions {
+  /** Original records, or a signal of records. The series performs no imputation or inference. */
+  readonly data: SignalValue<readonly D[]>;
+  /** Property or callback supplying the numeric horizontal coordinate. */
+  readonly x: LineAccessor<D>;
+  /** Property or callback supplying the numeric vertical value or reporting limit. */
+  readonly y: LineAccessor<D>;
+  /** Property or callback yielding `observed`, `below`, or `above`. */
+  readonly censoring: CensoringAccessor<D>;
+  /** Ancestor continuous numeric scale mapping x. */
+  readonly xScale: ScaleId;
+  /** Ancestor continuous numeric scale mapping y and its reporting limit. */
+  readonly yScale: ScaleId;
+  /** Optional synchronous predicate; excluded rows contribute no mark.
+   * @param datum - Original record being tested.
+   * @param index - Zero-based source index.
+   * @param data - Complete supplied record array.
+   * @returns Whether this record contributes a mark.
+   */
+  readonly defined?: (datum: D, index: number, data: readonly D[]) => boolean;
+  /** Shared style; whole-object and shallow field signals are observed by the series. */
+  readonly style?: SignalValue<SignalStyle<CensoredPointSeriesStyle>>;
+}
+export type WeightAccessor<D> = LineAccessor<D>;
+export interface WeightedPointSeriesStyle {
+  /** Paint used for point interiors. Defaults to `#087f8c`. */
+  readonly fill?: FillStyle;
+  /** Paint used for point outlines. Defaults to no outline. */
+  readonly stroke?: StrokeStyle;
+  /** Outline width in local coordinate units. Defaults to 1. */
+  readonly strokeWidth?: number;
+  /** Opacity in the inclusive range [0, 1]. Defaults to 1. */
+  readonly opacity?: number;
+  /** Pointer cursor while the series owns a target. */
+  readonly cursor?: string;
+}
+export interface WeightedPointSeriesProps<D>
+  extends PibblEventHandlers, PibblEventParticipationOptions {
+  /** Readonly data or a signal containing it. */
+  readonly data: SignalValue<readonly D[]>;
+  /** Horizontal coordinate property or synchronous accessor. */
+  readonly x: SeriesAccessor<D>;
+  /** Vertical coordinate property or synchronous accessor. */
+  readonly y: SeriesAccessor<D>;
+  /** Nonnegative supplied weight property or synchronous accessor. */
+  readonly weight: WeightAccessor<D>;
+  /** Scale used to map x coordinates. */
+  readonly xScale: ScaleId;
+  /** Scale used to map y coordinates. */
+  readonly yScale: ScaleId;
+  /** Supplied inclusive weight extent. The lower bound must be zero. */
+  readonly weightDomain: readonly [0, number];
+  /** Radius extent `[0, maximumRadius]`; defaults to `[0, 6]`. */
+  readonly radiusRange?: readonly [0, number];
+  /**
+   * Excludes a datum before coordinate and weight accessors run.
+   * @param datum - Candidate source datum.
+   * @param index - Zero-based source index.
+   * @param data - Complete source data array.
+   * @returns Whether this datum contributes a mark.
+   */
+  readonly defined?: (datum: D, index: number, data: readonly D[]) => boolean;
+  /** Shared presentation. Whole-object and shallow field signals are supported. */
+  readonly style?: SignalValue<SignalStyle<WeightedPointSeriesStyle>>;
+}
+export interface IntervalDiamondSeriesStyle {
+  /** Full perpendicular height in local pixels; defaults to 12. Zero hides marks. */
+  readonly height?: number;
+  /** Diamond interior paint; defaults to #087f8c. */
+  readonly fill?: FillStyle;
+  /** Diamond outline paint; defaults to #087f8c. */
+  readonly stroke?: StrokeStyle;
+  /** Visible outline width in local pixels; defaults to 1.5. */
+  readonly strokeWidth?: number;
+  /** Outline targeting width in local pixels; defaults to strokeWidth. */
+  readonly lineInteractionWidth?: number;
+  /** Shared opacity from zero to one; defaults to 1. */
+  readonly opacity?: number;
+  /** Cursor shown over painted diamonds. */
+  readonly cursor?: string;
+}
+export interface IntervalDiamondSeriesProps<D> extends Omit<
+  IntervalSeriesProps<D>,
+  "style"
+> {
+  /** Whole-object and shallow field signals are observed; per-datum styling is not supported. */
+  readonly style?: SignalValue<SignalStyle<IntervalDiamondSeriesStyle>>;
+}
+export declare function CensoredPointSeries<D>(props: CensoredPointSeriesProps<D>): PibblNode;
+export declare function WeightedPointSeries<D>(props: WeightedPointSeriesProps<D>): PibblNode;
+export declare function IntervalDiamondSeries<D>(props: IntervalDiamondSeriesProps<D>): PibblNode;
+
+/* @pibbl-studio-module @pibbl/core/viz/inspection */
+import type { LayoutBox, PibblEvent } from '@pibbl/core';
+import type { BarSeriesProps, BandCategory, HoverSeries, ResolvedContinuousScale, ResolvedTradingTimeScale, VolumeSeriesProps, CandlestickSeriesProps, OhlcBarSeriesProps } from '@pibbl/core/viz';
+
+export interface RenderedSeriesPoint { readonly x: number; readonly y: number; }
+export interface NumericRenderedObservation<D> {
+  readonly datum: D;
+  readonly sourceIndex: number;
+  readonly domainX: number;
+  readonly domainY: number;
+  readonly anchorLocal: Readonly<RenderedSeriesPoint>;
+  readonly anchorRoot: Readonly<RenderedSeriesPoint>;
+  readonly run: number;
+}
+export interface NumericRenderedAnchors {
+  readonly anchorLocal: Readonly<RenderedSeriesPoint>;
+  readonly anchorRoot: Readonly<RenderedSeriesPoint>;
+}
+export interface NumericRenderedSeries<D> {
+  readonly observations: readonly NumericRenderedObservation<D>[];
+  assertLive(): void;
+  domainXAtRoot(point: Readonly<RenderedSeriesPoint>): number | undefined;
+  anchorAtDomain(point: Readonly<{ domainX: number; domainY: number }>): NumericRenderedAnchors;
+  anchorInsideClips(pointLocal: Readonly<RenderedSeriesPoint>): boolean;
+}
+export type RenderedSeries<D> = NumericRenderedSeries<D>;
+export interface InspectionCandidate<D> extends NumericRenderedObservation<D> { anchorInsideClips(): boolean; }
+export type NumericRenderedFilter<D> = (observation: InspectionCandidate<D>) => boolean;
+export interface RecordedNumericHit<D> extends NumericRenderedObservation<D> {}
+export interface NearestRecordedXHit<D> extends RecordedNumericHit<D> { readonly domainDelta: number; }
+export interface NearestRecordedPointHit<D> extends RecordedNumericHit<D> { readonly rootDistance: number; }
+export type NumericDuplicateResolver<D> = (first: NumericRenderedObservation<D>, next: NumericRenderedObservation<D>) => NumericRenderedObservation<D>;
+export type NumericDomainInterpolation = (beforeDomainY: number, afterDomainY: number, fraction: number) => number;
+export type RecordedXSample<D> =
+  | (RecordedNumericHit<D> & { readonly kind: 'exact' })
+  | Readonly<{ kind: 'interpolated'; domainX: number; domainY: number; anchorLocal: Readonly<RenderedSeriesPoint>; anchorRoot: Readonly<RenderedSeriesPoint>; before: NumericRenderedObservation<D>; after: NumericRenderedObservation<D>; fraction: number }>;
+export interface NearestRecordedXOptions<D> { readonly domainX: number | undefined; readonly maxDomainDelta?: number; readonly filter?: NumericRenderedFilter<D>; }
+export interface NearestRecordedPointOptions<D> { readonly rootPoint: Readonly<RenderedSeriesPoint> | undefined; readonly maxRootDistance?: number; readonly filter?: NumericRenderedFilter<D>; }
+export interface SampleRecordedXOptions<D> { readonly domainX: number | undefined; readonly interpolation: NumericDomainInterpolation; readonly resolveDuplicate?: NumericDuplicateResolver<D>; readonly maxDomainGap?: number; readonly filter?: NumericRenderedFilter<D>; }
+export interface InspectionRef<S> { rendered(): S | undefined; }
+export interface InspectionContext {
+  rendered<S>(ref: InspectionRef<S>): S | undefined;
+  request<S, A, R>(query: (rendered: S, options: A) => R, rendered: S, options: A): R;
+}
+interface CapturedNumericObservation<D> {
+  readonly datum: D;
+  readonly sourceIndex: number;
+  readonly domainX: number;
+  readonly domainY: number;
+  readonly anchorLocal: Readonly<RenderedSeriesPoint>;
+  readonly run: number;
+  readonly radiusLocal?: number;
+  readonly fill?: boolean;
+  readonly strokeWidthLocal?: number;
+}
+interface NumericSeriesCapture<D> {
+  readonly observations: readonly CapturedNumericObservation<D>[];
+  readonly xScale: ResolvedContinuousScale | ResolvedTradingTimeScale;
+  readonly yScale: ResolvedContinuousScale | ResolvedTradingTimeScale;
+}
+export interface NumericInspectionRef<D> {
+  rendered(): NumericRenderedSeries<D> | undefined;
+  capture(input: NumericSeriesCapture<D>): void;
+}
+export interface PointRenderedSeries<D> extends NumericRenderedSeries<D> {
+  readonly marks: readonly CapturedNumericObservation<D>[];
+  localAtRoot(point: Readonly<RenderedSeriesPoint>): Readonly<RenderedSeriesPoint> | undefined;
+}
+export interface PointInspectionRef<D> extends NumericInspectionRef<D> { rendered(): PointRenderedSeries<D> | undefined; }
+export interface PaintedPointHit<D> extends RecordedNumericHit<D> { readonly radiusLocal: number; readonly strokeWidthLocal: number; }
+export interface PaintedBarHit<D> {
+  readonly datum: D;
+  readonly sourceIndex: number;
+  readonly category: BandCategory;
+  readonly group: BandCategory | undefined;
+  readonly valueStart: number;
+  readonly valueEnd: number;
+  readonly boundsLocal: Readonly<LayoutBox>;
+}
+interface CapturedBarMark<D> extends PaintedBarHit<D> { readonly fill: boolean; readonly strokeWidthLocal: number; }
+export interface BarRenderedSeries<D> {
+  readonly marks: readonly CapturedBarMark<D>[];
+  assertLive(): void;
+  localAtRoot(point: Readonly<RenderedSeriesPoint>): Readonly<RenderedSeriesPoint> | undefined;
+  anchorInsideClips(point: Readonly<RenderedSeriesPoint>): boolean;
+}
+export interface BarInspectionRef<D> { rendered(): BarRenderedSeries<D> | undefined; capture(input: readonly CapturedBarMark<D>[]): void; }
+export declare function useNumericInspection<D>(series: HoverSeries<D>): NumericInspectionRef<D>;
+export declare function usePointInspection<D>(series: HoverSeries<D>): PointInspectionRef<D>;
+export declare function useBarInspection<D>(inputs: Pick<BarSeriesProps<D>, 'data' | 'category'>): BarInspectionRef<D>;
+export declare function withInspection<E extends PibblEvent>(handler: (event: E, context: InspectionContext) => void): (event: E) => void;
+export declare function paintedPointAt<D>(rendered: PointRenderedSeries<D>, options: { rootPoint: Readonly<RenderedSeriesPoint> }): PaintedPointHit<D> | undefined;
+export declare function paintedBarAt<D>(rendered: BarRenderedSeries<D>, options: { rootPoint: Readonly<RenderedSeriesPoint> }): PaintedBarHit<D> | undefined;
+export declare function firstSourceObservation<D>(first: NumericRenderedObservation<D>, next: NumericRenderedObservation<D>): NumericRenderedObservation<D>;
+export declare function lastSourceObservation<D>(first: NumericRenderedObservation<D>, next: NumericRenderedObservation<D>): NumericRenderedObservation<D>;
+export declare function anchorInsideClips<D>(candidate: InspectionCandidate<D>): boolean;
+export declare function nearestRecordedX<D>(rendered: NumericRenderedSeries<D>, options: NearestRecordedXOptions<D>): NearestRecordedXHit<D> | undefined;
+export declare function nearestRecordedPoint<D>(rendered: NumericRenderedSeries<D>, options: NearestRecordedPointOptions<D>): NearestRecordedPointHit<D> | undefined;
+export declare function sampleRecordedX<D>(rendered: NumericRenderedSeries<D>, options: SampleRecordedXOptions<D>): RecordedXSample<D> | undefined;
+
+/** One original volume record and the values/geometry evaluated during paint.
+ * @see {@link useVolumeInspection}
+ */
+export interface VolumeObservation<D> {
+    /** Caller-owned original record. */ readonly datum: D;
+    /** Original index including skipped rows. */ readonly sourceIndex: number;
+    /** Evaluated UTC milliseconds. */ readonly time: number;
+    /** Evaluated nonnegative volume. */ readonly volume: number;
+    /** Zero-volume baseline. */ readonly baseline: 0;
+    /** Volume endpoint in series-local logical coordinates. */ readonly anchorLocal: Readonly<RenderedSeriesPoint>;
+    /** Volume endpoint in root-logical coordinates. */ readonly anchorRoot: Readonly<RenderedSeriesPoint>;
+    /** Column bounds in series-local logical coordinates. */ readonly boundsLocal: Readonly<LayoutBox>;
+}
+/** A nearest-time candidate with an explicit optional clip predicate.
+ * @see {@link useVolumeInspection}
+ */
+export interface VolumeInspectionCandidate<D> extends VolumeObservation<D> {
+    /** @returns Whether the endpoint lies inside every committed clip. */ anchorInsideClips(): boolean;
+}
+/** A recorded volume selected by timestamp proximity.
+ * @see {@link useVolumeInspection}
+ */
+export interface NearestVolumeHit<D> extends VolumeObservation<D> {
+    /** Absolute UTC-millisecond distance from the requested time. */ readonly timeDelta: number;
+}
+/** A recorded volume whose painted column covers the query point.
+ * @see {@link useVolumeInspection}
+ */
+export interface PaintedVolumeHit<D> extends VolumeObservation<D> {
+}
+/** @internal Immutable local renderer capture, without queries or transformed allocation.
+ * @see {@link useVolumeInspection}
+ */
+interface CapturedVolumeMark<D> extends Omit<VolumeObservation<D>, "anchorRoot"> {
+    /** Whether the rectangle paints its interior. */ readonly fill: boolean;
+    /** Outline width when painted, zero otherwise. */ readonly strokeWidthLocal: number;
+}
+/** Borrowed committed volume values; expires after a new root generation or disposal.
+ * @see {@link useVolumeInspection}
+ */
+export interface VolumeRenderedSeries<D> {
+    /** Original observations and evaluated values in source order. */ readonly observations: readonly VolumeObservation<D>[];
+    /** Throws when borrowed values are stale or disposed. */ assertLive(): void;
+    /** Inverts a root-logical point to UTC milliseconds.
+     * @param pointRoot - Root-logical Canvas position.
+     * @returns Timestamp or undefined for unavailable inversion.
+     */ timeAtRoot(pointRoot: Readonly<RenderedSeriesPoint>): number | undefined;
+    /** Tests a local point against the committed clip stack.
+     * @param pointLocal - Series-local position.
+     * @returns Whether every clip includes it.
+     */ anchorInsideClips(pointLocal: Readonly<RenderedSeriesPoint>): boolean;
+    /** @internal Committed paint flags. */ readonly marks: readonly CapturedVolumeMark<D>[];
+    /** @internal Shared numeric query view. */ readonly numeric: NumericRenderedSeries<D>;
+    /** @internal Converts root coordinates to local coordinates.
+     * @param point - Root-logical position.
+     * @returns Local position or undefined for a singular transform.
+     */ localAtRoot(point: Readonly<RenderedSeriesPoint>): Readonly<RenderedSeriesPoint> | undefined;
+}
+/** Mount-owned optional volume capture.
+ * @see {@link useVolumeInspection}
+ */
+export interface VolumeInspectionRef<D> {
+    /** @returns Borrowed committed values, or undefined before paint/after disposal. */ rendered(): VolumeRenderedSeries<D> | undefined;
+    /** @internal Records local values without executing a query.
+     * @param input - Immutable local marks and committed time mapping.
+     */ capture(input: {
+        marks: readonly CapturedVolumeMark<D>[]; /** Committed horizontal mapping. */
+        xScale: ResolvedContinuousScale | ResolvedTradingTimeScale; /** Committed volume mapping. */
+        yScale: ResolvedContinuousScale;
+    }): void;
+}
+/**
+ * Creates a stable optional volume receiver without reading data or subscribing.
+ * @param _inputs - Data/accessors used only for original datum inference.
+ * @returns Ref to pass to exactly one VolumeSeries inspection prop.
+ * @see {@link VolumeInspectionRef}
+ */
+export declare function useVolumeInspection<D>(_inputs: Pick<VolumeSeriesProps<D>, "data" | "time" | "volume">): VolumeInspectionRef<D>;
+/**
+ * Selects a recorded volume by timestamp; equal distances choose first source index.
+ * @param rendered - Borrowed committed volume values.
+ * @param options - UTC-millisecond request and optional pure candidate filter.
+ * @returns Captured original volume and time delta, or undefined when no candidate survives.
+ * @see {@link NearestVolumeHit}
+ */
+export declare function nearestRecordedVolumeX<D>(rendered: VolumeRenderedSeries<D>, options: {
+    time: number;
+    filter?: (observation: VolumeInspectionCandidate<D>) => boolean;
+}): NearestVolumeHit<D> | undefined;
+/**
+ * Finds the last-painted volume column covering a root-logical point.
+ * @param rendered - Borrowed committed volume values and paint geometry.
+ * @param options - Root-logical point; respects clips, zero height and source paint order.
+ * @returns Captured original volume, or undefined for gaps/singular transforms.
+ * @see {@link PaintedVolumeHit}
+ */
+export declare function paintedVolumeAt<D>(rendered: VolumeRenderedSeries<D>, options: {
+    rootPoint: Readonly<RenderedSeriesPoint>;
+}): PaintedVolumeHit<D> | undefined;
+
+/** One original candle with its evaluated OHLC values and committed local geometry.
+ * @see {@link CandleRenderedSeries}
+ */
+export interface CandleObservation<D> {
+    /** Caller-owned original record. */
+    readonly datum: D;
+    /** Original source index, including skipped records. */
+    readonly sourceIndex: number;
+    /** Evaluated UTC-millisecond timestamp. */
+    readonly time: number;
+    /** Evaluated opening value. */
+    readonly open: number;
+    /** Evaluated high value. */
+    readonly high: number;
+    /** Evaluated low value. */
+    readonly low: number;
+    /** Evaluated closing value. */
+    readonly close: number;
+    /** Closing endpoint in series-local logical units. */
+    readonly anchorLocal: Readonly<RenderedSeriesPoint>;
+    /** Closing endpoint in root-logical units. */
+    readonly anchorRoot: Readonly<RenderedSeriesPoint>;
+    /** Body rectangle before world transforms. */
+    readonly bodyBoundsLocal: Readonly<LayoutBox>;
+    /** Wick center and endpoints before world transforms. */
+    readonly wickLocal: Readonly<{
+        /** Horizontal wick center in series-local logical units. */
+        x: number;
+        /** Mapped low endpoint in series-local logical units. */
+        lowY: number;
+        /** Mapped high endpoint in series-local logical units. */
+        highY: number;
+    }>;
+}
+/** A candle candidate whose closing endpoint can be tested against committed clips.
+ * @see {@link CandleObservation}
+ */
+export interface CandleInspectionCandidate<D> extends CandleObservation<D> {
+    /**
+     * @returns Whether the close anchor lies inside every committed clip.
+     */
+    anchorInsideClips(): boolean;
+}
+/** Candle selected by nearest timestamp.
+ * @see {@link nearestRecordedCandleX}
+ */
+export interface NearestCandleHit<D> extends CandleObservation<D> {
+    /** Absolute UTC-millisecond distance from the requested timestamp. */
+    readonly timeDelta: number;
+}
+/** Candle part whose actual painted geometry covers a root-logical query point.
+ * @see {@link paintedCandleAt}
+ */
+export interface PaintedCandleHit<D> extends CandleObservation<D> {
+    /** Part selected in source paint order: body paints after wick. */
+    readonly part: "body" | "wick";
+}
+/** @internal Local candle geometry and paint flags committed by CandlestickSeries. */
+interface CapturedCandleMark<D> extends Omit<CandleObservation<D>, "anchorRoot"> {
+    /** Whether the body paints an interior. */
+    readonly bodyFill: boolean;
+    /** Local body outline width, zero when its outline is not painted. */
+    readonly bodyStrokeWidthLocal: number;
+    /** Local wick stroke width, zero when its wick is not painted. */
+    readonly wickStrokeWidthLocal: number;
+}
+/** Borrowed committed candle generation.
+ * @see {@link CandleInspectionRef}
+ */
+export interface CandleRenderedSeries<D> {
+    /** Captured original records, values, and geometry in source order. */
+    readonly observations: readonly CandleObservation<D>[];
+    /** Throws after replacement or disposal. */
+    assertLive(): void;
+    /**
+     * Selects the supplied/nearest timestamp at a root-logical coordinate.
+     * @param pointRoot - Root-logical point to invert through the committed transform.
+     * @returns UTC milliseconds, or undefined for singular transforms or empty mappings.
+     */
+    timeAtRoot(pointRoot: Readonly<RenderedSeriesPoint>): number | undefined;
+    /**
+     * Tests local geometry against each committed clip.
+     * @param pointLocal - Series-local logical point.
+     * @returns Whether every committed clip contains the point.
+     */
+    anchorInsideClips(pointLocal: Readonly<RenderedSeriesPoint>): boolean;
+    /** @internal Captured paint flags in source paint order. */
+    readonly marks: readonly CapturedCandleMark<D>[];
+    /** @internal Numeric-query view based on close endpoints. */
+    readonly numeric: NumericRenderedSeries<D>;
+    /**
+     * @internal Converts root-logical points to local geometry.
+     * @param point - Root-logical point to convert.
+     * @returns Series-local point, or undefined when the transform is singular.
+     */
+    localAtRoot(point: Readonly<RenderedSeriesPoint>): Readonly<RenderedSeriesPoint> | undefined;
+}
+/** Mount-owned optional candle capture.
+ * @see {@link useCandleInspection}
+ */
+export interface CandleInspectionRef<D> {
+    /**
+     * @returns The current borrowed generation, or undefined before paint and after disposal.
+     */
+    rendered(): CandleRenderedSeries<D> | undefined;
+    /**
+     * @internal Records a completed CandlestickSeries paint without executing queries.
+     * @param input - Source-ordered marks and the committed numeric mappings.
+     */
+    capture(input: {
+        /** Source-ordered local marks and paint flags. */
+        marks: readonly CapturedCandleMark<D>[];
+        /** Committed numeric or trading-time horizontal mapping. */
+        xScale: ResolvedContinuousScale | ResolvedTradingTimeScale;
+        /** Committed continuous vertical mapping. */
+        yScale: ResolvedContinuousScale;
+    }): void;
+}
+/**
+ * Creates a stable optional candle receiver without reading data or subscribing.
+ *
+ * @param _inputs - Inputs retained only to infer the original datum type.
+ * @returns A ref for exactly one CandlestickSeries inspection prop.
+ * @see {@link CandleInspectionRef}
+ */
+export declare function useCandleInspection<D>(_inputs: Pick<CandlestickSeriesProps<D>, "data" | "time" | "open" | "high" | "low" | "close">): CandleInspectionRef<D>;
+/**
+ * Selects a captured candle nearest to a requested UTC timestamp.
+ *
+ * @param rendered - Borrowed committed candle generation.
+ * @param options - Timestamp and optional pure candidate filter.
+ * @returns The first source-order candle on a tie, or undefined when none qualifies.
+ * @see {@link NearestCandleHit}
+ */
+export declare function nearestRecordedCandleX<D>(rendered: CandleRenderedSeries<D>, options: {
+    time: number;
+    filter?: (observation: CandleInspectionCandidate<D>) => boolean;
+}): NearestCandleHit<D> | undefined;
+/**
+ * Finds the last-painted candle body or wick covering a root-logical point.
+ *
+ * Body coverage is tested before wick coverage because a candle paints its body after its wick.
+ *
+ * @param rendered - Borrowed committed candle generation.
+ * @param options - Root-logical point; clips and singular transforms produce no result.
+ * @returns Captured candle and painted part, or undefined for gaps and unpainted geometry.
+ * @see {@link PaintedCandleHit}
+ */
+export declare function paintedCandleAt<D>(rendered: CandleRenderedSeries<D>, options: {
+    rootPoint: Readonly<RenderedSeriesPoint>;
+}): PaintedCandleHit<D> | undefined;
+
+export interface OhlcBarObservation<D> { readonly datum: D; readonly sourceIndex: number; readonly time: number; readonly open: number; readonly high: number; readonly low: number; readonly close: number; readonly anchorLocal: Readonly<RenderedSeriesPoint>; readonly anchorRoot: Readonly<RenderedSeriesPoint>; readonly stemLocal: Readonly<{ x: number; highY: number; lowY: number }>; readonly openTickLocal: Readonly<{ x1: number; x2: number; y: number }>; readonly closeTickLocal: Readonly<{ x1: number; x2: number; y: number }>; }
+export interface OhlcBarInspectionCandidate<D> extends OhlcBarObservation<D> { anchorInsideClips(): boolean; }
+export interface NearestOhlcBarHit<D> extends OhlcBarObservation<D> { readonly timeDelta: number; }
+export interface PaintedOhlcBarHit<D> extends OhlcBarObservation<D> { readonly part: "stem" | "openTick" | "closeTick"; }
+export interface OhlcBarRenderedSeries<D> { readonly observations: readonly OhlcBarObservation<D>[]; assertLive(): void; timeAtRoot(pointRoot: Readonly<RenderedSeriesPoint>): number | undefined; anchorInsideClips(pointLocal: Readonly<RenderedSeriesPoint>): boolean; }
+export interface OhlcBarInspectionRef<D> { rendered(): OhlcBarRenderedSeries<D> | undefined; }
+export declare function useOhlcBarInspection<D>(inputs: Pick<OhlcBarSeriesProps<D>, "data" | "time" | "open" | "high" | "low" | "close">): OhlcBarInspectionRef<D>;
+export declare function nearestRecordedOhlcBarX<D>(rendered: OhlcBarRenderedSeries<D>, options: { time: number; filter?: (observation: OhlcBarInspectionCandidate<D>) => boolean }): NearestOhlcBarHit<D> | undefined;
+export declare function paintedOhlcBarAt<D>(rendered: OhlcBarRenderedSeries<D>, options: { rootPoint: Readonly<RenderedSeriesPoint> }): PaintedOhlcBarHit<D> | undefined;
 
 /* @pibbl-studio-module @pibbl/text */
 import { PathGeometry } from '@pibbl/core';

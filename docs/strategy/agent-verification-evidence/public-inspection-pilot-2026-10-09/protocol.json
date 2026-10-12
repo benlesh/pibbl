@@ -1,0 +1,41 @@
+{
+  "schema": "pibbl-public-inspection-pilot/1",
+  "registeredBeforeRepairTrials": true,
+  "surface": "@pibbl/core/viz/inspection",
+  "conditions": [
+    "ordinary",
+    "inspection"
+  ],
+  "model": "gpt-5.6-sol",
+  "reasoningEffort": "low",
+  "judgeModel": "gpt-5.6-sol",
+  "repetitions": 2,
+  "cases": [
+    "decision-01",
+    "decision-02",
+    "decision-03"
+  ],
+  "weights": {
+    "deterministic": 80,
+    "agentic": 20
+  },
+  "primaryEffort": "repair trace uncached input tokens + output tokens; proxy, not currency",
+  "threshold": {
+    "inspectionMustNotReduceFullRepairSuccess": true,
+    "inspectionMustNotIncreaseCleanControlRegressions": true,
+    "inspectionReviewMeanMustNotDecrease": true,
+    "minimumMatchedCorrectPairsForEffortComparison": 6,
+    "minimumMedianPairedEffortReduction": 0.2
+  },
+  "ordering": "alternate arms across cases; reverse case and arm order for repetition two",
+  "noAdaptiveFixtureOrPromptChangesBetweenRepetitions": true,
+  "blockedTrials": "reported, never silently retried; missing measurements make threshold inconclusive",
+  "interpretation": "Exploratory pilot. Threshold clearance is evidence for further investment, not sufficient proof for shipping a broad API. Failure provides no affirmative shipping justification from this pilot.",
+  "limitations": [
+    "three synthetic application cases",
+    "procedural blinding",
+    "same model family repairs and reviews",
+    "runtime includes identical exports in both arms; use of inspection forbidden in ordinary condition",
+    "two repetitions are not a statistical power claim"
+  ]
+}

@@ -1,0 +1,1311 @@
+{
+  "schema": "pibbl-repair-feedback-rounds/1",
+  "date": "2026-10-08",
+  "weights": {
+    "deterministic": 80,
+    "agentic": 20
+  },
+  "oracleRevision": "native-nearest-ID-boundaries-v2",
+  "scope": "Exploratory synthetic trials; no statistically supported attribution uplift.",
+  "rounds": [
+    {
+      "id": "01",
+      "label": "Baseline, corrected re-review",
+      "trials": [
+        {
+          "caseId": "case-01",
+          "arm": "ordinary",
+          "elapsedSeconds": 121.547,
+          "sourceChanged": true,
+          "status": "scored",
+          "deterministic": 80,
+          "agentic": 20,
+          "total": 100,
+          "deterministicPassed": true,
+          "reviewFresh": false,
+          "checksPassed": 15,
+          "checksTotal": 15,
+          "failedChecks": [],
+          "browser": "151.0.7922.34",
+          "review": {
+            "diagnosis": 5,
+            "repairQuality": 5,
+            "evidenceQuality": 5,
+            "uncertainty": 5,
+            "reasons": {
+              "diagnosis": "Trace item_8 directly isolates the defect: after U, source b.y is 30 while evaluated b.y remains 20 until Z causes reevaluation; item_9 correctly attributes this to mutating and republishing the same array reference. The initial/final source comparison corroborates that causal explanation.",
+              "repairQuality": "The only source change replaces in-place mutation with an immutable map that creates a new array and only a new b record. This is a minimal general repair preserving IDs and all other behavior; trace items item_12 and item_13 confirm immediate update and retained zoom/reset/hover behavior.",
+              "evidenceQuality": "Strong layered verification is recorded: item_8 captures the failing baseline; item_12 separates synchronous source/evaluated state from rendered pixels; item_13 exercises native keyboard, pointer, and button interactions and records state, pixel colors, clipping boundaries, canvas dimensions, hover through decorative paint, reset, and console/page errors. Item_13 also corrects the transient stale-build result seen in item_11.",
+              "uncertainty": "The final response precisely limits validation to provisioned Chromium, a 900x600 viewport with a 710x420 canvas, and pixelRatio 1, explicitly identifying other engines and device-pixel ratios as unmeasured. The trace records the unavailable Browser plugin and the Playwright fallback, while the available evidence was sufficient for the contract."
+            }
+          },
+          "agentNotesSelfReported": {
+            "elapsedMinutes": 9,
+            "browserQueries": 4,
+            "editIterations": 1,
+            "evidenceUsed": [
+              "Playwright applicationState() snapshots before and after update, zoom, and reset",
+              "Pointer movement at three plot x positions, outside the plot, and directly over the rendered line",
+              "Canvas pixel samples at the updated line location, prior line location, and immediately inside/outside all relevant clip boundaries",
+              "Rendered screenshot at a 900x600 browser viewport",
+              "Browser console and page-error capture"
+            ],
+            "confusingAPIs": [
+              "Pibbl signal publication depends on reference identity; mutating the existing array and setting that same reference did not schedule reevaluation.",
+              "Pibbl pointer event coordinates are canvas-logical coordinates even when the handler is on a translated plot rectangle, so the plot origin must be subtracted before scale inversion."
+            ],
+            "missingCapabilities": [
+              "Browser plugin was not available; the provisioned Playwright dependency was used instead."
+            ],
+            "unsupportedConclusions": [
+              "Behavior in browser engines other than provisioned Chromium was not measured.",
+              "Rendering at device pixel ratios other than the configured pixelRatio 1 was not measured."
+            ],
+            "model/settings": "Codex GPT-5 family per system context; exact model identifier and inference settings were not available."
+          }
+        },
+        {
+          "caseId": "case-01",
+          "arm": "attribution",
+          "elapsedSeconds": 102.875,
+          "sourceChanged": true,
+          "status": "scored",
+          "deterministic": 80,
+          "agentic": 20,
+          "total": 100,
+          "deterministicPassed": true,
+          "reviewFresh": false,
+          "checksPassed": 15,
+          "checksTotal": 15,
+          "failedChecks": [],
+          "browser": "151.0.7922.34",
+          "review": {
+            "diagnosis": 5,
+            "repairQuality": 5,
+            "evidenceQuality": 5,
+            "uncertainty": 5,
+            "reasons": {
+              "diagnosis": "The diagnosis precisely identifies the causal identity/invalidation defect: initial-app.tsx mutates rows[1] and republishes the same array, while the trace reports that the immutable repair makes update alone advance render generation 1→2 with evaluated geometry at b.y=30. This is corroborated by update.evaluated and update.segment.",
+              "repairQuality": "The only functional change is update() publishing a new array and a new b record; it preserves IDs, unrelated records, and every other contract behavior. The complete check set passes, including update.*, zoom.*, reset.*, hover.identity, clipping/geometry, runtime integrity, and page.errors.",
+              "evidenceQuality": "The trace contains direct Chromium observations across distinct layers: application source/evaluated state, inspectPlot generations/scales/transforms/clips/segments, native keyboard and pointer interaction, and canvas pixel reads. In particular, item_12 records the new vertex as blue [37,99,235,255] and the old location as white, while the staged observations and checks corroborate immediate update, zoom, reset, and hover behavior.",
+              "uncertainty": "The report scopes certainty to the stated contract ('none observed within the stated contract'), records the important API friction about same-identity signal publication and live source references, and distinguishes captured segment values as stable evidence. It also transparently records the failed initial Playwright import and subsequent successful verification; no additional capability was needed for the contract."
+            }
+          },
+          "agentNotesSelfReported": {
+            "elapsedMinutes": 7,
+            "browserQueries": 17,
+            "editIterations": 1,
+            "evidenceUsed": [
+              "applicationState before and after U, Z, and R",
+              "inspectPlot captured scales, transforms, clips, segments, and generations",
+              "inspectPlot edge hits at x=55 and x=655 plus clip-excluded results at x=54 and x=656",
+              "pointer movement over the plot at left, center-on-line, and right positions",
+              "canvas pixel samples at the updated and former b vertex positions"
+            ],
+            "confusingAPIs": [
+              "signal.set with the same mutated array identity did not invalidate rendering",
+              "inspectPlot source references are live while captured segment values are the generation-stable geometric evidence"
+            ],
+            "missingCapabilities": [],
+            "unsupportedConclusions": [],
+            "model/settings": "GPT-5 Codex; exact model variant and reasoning setting were not exposed"
+          }
+        },
+        {
+          "caseId": "case-02",
+          "arm": "attribution",
+          "elapsedSeconds": 107.056,
+          "sourceChanged": true,
+          "status": "scored",
+          "deterministic": 80,
+          "agentic": 19,
+          "total": 99,
+          "deterministicPassed": true,
+          "reviewFresh": false,
+          "checksPassed": 15,
+          "checksTotal": 15,
+          "failedChecks": [],
+          "browser": "151.0.7922.34",
+          "review": {
+            "diagnosis": 5,
+            "repairQuality": 5,
+            "evidenceQuality": 4,
+            "uncertainty": 5,
+            "reasons": {
+              "diagnosis": "Precise and corroborated: the trace identifies the initial source y-domain as `[0,80]`, while the contract requires `[0,40]`; the initial `inspectPlot` output independently reports `yScale.domain: [0,80]` and range `[240,0]`.",
+              "repairQuality": "The final file changes only the erroneous y-domain from `[0,80]` to `[0,40]`, preserving data updates, zoom/reset, clipping, hover identity, and non-intercepting line input. The resulting behavior is consistent with checks `initial.segment`, `update.segment`, `zoom.segment`, `hover.identity`, and `reset.geometry`.",
+              "evidenceQuality": "Strong but not complete: the trace records source and evaluated state, attribution generations and segments, transformed scales, clip inside/outside probes, and native Playwright keyboard/pointer interactions. Checks including `update.evaluated`, `zoom.hover`, and `page.errors` corroborate the evaluated result. However, the agent explicitly states that attribution evidence does not establish pixel-level raster color/antialiasing, and its trace does not show an independent rendered-pixel or screenshot measurement, so full source/evaluated/pixels/native-interaction separation is not demonstrated by agent-observed evidence.",
+              "uncertainty": "The limits are explicit and actionable: `unsupportedConclusions` says no pixel-level antialiasing or exact-raster-color claim is made, while `confusingAPIs` explains that clip geometry is reported only as `captured-path` and documents the one-pixel inside/outside workaround for boundary semantics. No additional missing capability was needed for the identified one-line defect."
+            }
+          },
+          "agentNotesSelfReported": {
+            "elapsedMinutes": 8,
+            "browserQueries": {
+              "browserSessions": 4,
+              "inspectPlotCalls": 22,
+              "interactionChecks": [
+                "hover at a, b, and c x positions plus pointer leave",
+                "U update",
+                "Z zoom",
+                "R reset",
+                "zoomed line immediately inside and outside both horizontal clip edges"
+              ]
+            },
+            "editIterations": 1,
+            "evidenceUsed": [
+              "app.tsx source inspection",
+              "window.applicationState() source/evaluated/domain/hover values",
+              "window.inspectPlot({x,y}) captured scales, transform, clip, segments, source references, generation, and query status",
+              "Playwright pointer and keyboard input"
+            ],
+            "confusingAPIs": [
+              "inspectPlot reports the captured clip as captured-path rather than serializing its rectangle dimensions; dimensions were established from the live app.tsx Path2D rect and verified with inside/outside geometric queries",
+              "queries exactly on the right or left clip boundary can miss because path-fill boundary semantics are not an inclusive-edge contract, so clipping was tested one logical pixel inside and outside"
+            ],
+            "missingCapabilities": [],
+            "unsupportedConclusions": [
+              "No claim is made about pixel-level antialiasing or exact raster color from attribution evidence"
+            ],
+            "model/settings": {
+              "model": "GPT-5-based Codex",
+              "settings": "not otherwise exposed"
+            }
+          }
+        },
+        {
+          "caseId": "case-02",
+          "arm": "ordinary",
+          "elapsedSeconds": 79.493,
+          "sourceChanged": true,
+          "status": "scored",
+          "deterministic": 80,
+          "agentic": 20,
+          "total": 100,
+          "deterministicPassed": true,
+          "reviewFresh": false,
+          "checksPassed": 15,
+          "checksTotal": 15,
+          "failedChecks": [],
+          "browser": "151.0.7922.34",
+          "review": {
+            "diagnosis": 5,
+            "repairQuality": 5,
+            "evidenceQuality": 5,
+            "uncertainty": 5,
+            "reasons": {
+              "diagnosis": "The trace precisely identifies the causal mismatch in item_1/item_3: the source configured the y-scale domain as `[0,80]` while the contract requires `[0,40]`. The final source contains `[0,40]`, and item_8 corroborates the resulting expected canvas y geometry.",
+              "repairQuality": "The initial and final files differ only in the y-domain value, changing `[0,80]` to `[0,40]`. This is a minimal, general contract repair that preserves update, zoom, reset, clipping, and interaction behavior; all listed coordinator checks pass.",
+              "evidenceQuality": "The trace separates source inspection (item_1), application state across U/Z/R (item_4), native pointer interaction and stable IDs/leave behavior (item_5), and rendered pixel bounds plus immediate repaint across initial/update/zoom/reset (item_8). These observations corroborate evaluated state, pixels, clipping, and input behavior rather than relying only on claims.",
+              "uncertainty": "The report explicitly records that elapsed time was not instrumented and behavior outside the public contract was not assessed. It also identifies concrete API friction—canvas-local pointer coordinates require subtracting the 55px plot translation—and documents the missing built-in browser capability and the Playwright workaround. The claim of no remaining contract uncertainty is well supported by the traced checks."
+            }
+          },
+          "agentNotesSelfReported": {
+            "elapsedMinutes": null,
+            "browserQueries": 3,
+            "editIterations": 1,
+            "evidenceUsed": [
+              "Inspected app.tsx source",
+              "Loaded the application in Chromium and queried window.applicationState() before and after U, Z, and R",
+              "Moved the pointer at canvas-relative positions across the plot and observed stable hover IDs a, b, and c plus null after leave",
+              "Read canvas pixels after initial render, U, Z, and R to verify line geometry, clipping bounds, and immediate repaint"
+            ],
+            "confusingAPIs": [
+              "Pointer event x is canvas-local while the plot scale is group-local, so the plot's 55px translation must be removed before scale inversion"
+            ],
+            "missingCapabilities": [
+              "No built-in browser tool was exposed; validation used the provisioned Playwright dependency"
+            ],
+            "unsupportedConclusions": [
+              "Elapsed wall-clock minutes were not instrumented, so elapsedMinutes is null",
+              "Behavior outside the specified public contract was not assessed"
+            ],
+            "model/settings": null
+          }
+        },
+        {
+          "caseId": "case-03",
+          "arm": "ordinary",
+          "elapsedSeconds": 104.448,
+          "sourceChanged": true,
+          "status": "scored",
+          "deterministic": 80,
+          "agentic": 20,
+          "total": 100,
+          "deterministicPassed": true,
+          "reviewFresh": false,
+          "checksPassed": 15,
+          "checksTotal": 15,
+          "failedChecks": [],
+          "browser": "151.0.7922.34",
+          "review": {
+            "diagnosis": 5,
+            "repairQuality": 5,
+            "evidenceQuality": 5,
+            "uncertainty": 5,
+            "reasons": {
+              "diagnosis": "Precise and corroborated: the final response identifies canvas-global clip coordinates inside the translated Group as causing a second translation. This matches the source change from path.rect(55,90,600,240) to path.rect(0,0,600,240), while the trace reports pre-repair blue bounds x=110..510/y=180..260 and post-repair bounds x=55..654/y=149..270.",
+              "repairQuality": "Sound minimal repair: only the Clip Path2D origin changes to local coordinates; plot placement, scales, data updates, hover logic, and pointer-events behavior remain intact. The trace's item_13 confirms the focused final source, and the post-repair browser output corroborates the preserved contract.",
+              "evidenceQuality": "Strong trace-backed verification separates source/evaluated state, rendered pixels, and native pointer interaction. The post-repair browser output records source and evaluated values across update/zoom/reset, pixel bounds and outside=0, hover results a/b/c including b-on-painted-line, and pointer-leave null. It also explicitly verifies update repaint without further input; the deterministic checks independently agree but were not used as extra credit.",
+              "uncertainty": "The agent reports concrete limits rather than unsupported certainty: elapsedMinutes was left null because it was not instrumented, and behavior beyond the required pixelRatio:1 was not claimed. It also documents actionable API friction involving local Clip coordinates and the CommonJS Playwright entry, with no missing capability needed for the contracted configuration."
+            }
+          },
+          "agentNotesSelfReported": {
+            "elapsedMinutes": null,
+            "browserQueries": 2,
+            "editIterations": 1,
+            "evidenceUsed": [
+              "Inspected app.tsx and the public boot/runtime integration without reading evaluator files, repository history, or other trials.",
+              "Pre-repair Chromium run: applicationState showed correct initial data/domain and correct update, zoom, reset, and hover behavior; rendered blue bounds were x=110..510 and y=180..260, exposing the displaced clip.",
+              "Post-repair Chromium run: initial rendered blue bounds were x=55..654 and y=149..270 with zero blue pixels outside the logical plot rectangle.",
+              "Post-repair U changed both source and evaluated b.y to 30 and changed rendered pixels without another interaction.",
+              "Post-repair Z set the domain to [2.5,7.5]; R restored initial data, evaluated data, domain, and null hover.",
+              "Post-repair pointer moves at left, center directly on the painted line, and right reported stable IDs a, b, and c; leaving the plot cleared hover."
+            ],
+            "confusingAPIs": [
+              "Clip Path2D coordinates are local to the already-translated Group, so using canvas-global plot coordinates translates the clip twice.",
+              "The provisioned Playwright entry is CommonJS and required a default import before destructuring chromium."
+            ],
+            "missingCapabilities": [],
+            "unsupportedConclusions": [
+              "Elapsed wall-clock minutes were not instrumented at task start, so elapsedMinutes is null rather than inferred.",
+              "No claim is made about device pixel ratios other than the required pixelRatio:1 configuration exercised by the app."
+            ],
+            "model/settings": {
+              "model": "GPT-5",
+              "reasoningEffort": null
+            }
+          }
+        },
+        {
+          "caseId": "case-03",
+          "arm": "attribution",
+          "elapsedSeconds": 80.476,
+          "sourceChanged": true,
+          "status": "scored",
+          "deterministic": 80,
+          "agentic": 18,
+          "total": 98,
+          "deterministicPassed": true,
+          "reviewFresh": false,
+          "checksPassed": 15,
+          "checksTotal": 15,
+          "failedChecks": [],
+          "browser": "151.0.7922.34",
+          "review": {
+            "diagnosis": 5,
+            "repairQuality": 5,
+            "evidenceQuality": 4,
+            "uncertainty": 4,
+            "reasons": {
+              "diagnosis": "Precise and corroborated: finalResponse identifies that `Path2D.rect(55,90,600,240)` used root coordinates despite inheriting the Group translation `(55,90)`. The initial/final source diff changes only this rectangle to `(0,0,600,240)`, and trace item_8 reports root transform `[1,0,0,1,55,90]` with corrected inside/outside clip probes.",
+              "repairQuality": "The one-line coordinate correction is minimal, general, and preserves data, scales, updates, hover, and `pointerEvents=\"none\"`. The full contract is corroborated by `initial.left-visible`, `update.segment`, `zoom.segment`, `zoom.hover`, and `reset.geometry`, all passing.",
+              "evidenceQuality": "Strong but not complete: trace item_8 separately records source and evaluated state, attribution generations 1–3, segment/source-index queries, clip-excluded probes, and native Playwright pointer moves yielding stable IDs; updated state was checked before further input. However, the trace contains no direct screenshot or canvas-pixel sampling, so rendered pixels were inferred through attribution rather than independently verified.",
+              "uncertainty": "The notes honestly state that application state was not pixel evidence, that clip geometry was opaque, and that claims were limited to the specified contract and attribution coverage. They also document the local/root-coordinate API friction and the inside/outside workaround. A remaining gap is that `missingCapabilities` is empty and the final response says uncertainty is only outside the inspected contract despite lacking independent rendered-pixel inspection."
+            }
+          },
+          "agentNotesSelfReported": {
+            "elapsedMinutes": 6,
+            "browserQueries": 15,
+            "editIterations": 1,
+            "evidenceUsed": [
+              "window.applicationState() before and after update, zoom, and reset",
+              "window.inspectPlot({x,y}) snapshots and segment queries at expected vertices, plot edges, and one logical unit outside each horizontal edge",
+              "attribution generations 1, 2, and 3 for initial, updated, and zoomed renders",
+              "Playwright pointer moves using canvas bounding-box-relative logical coordinates"
+            ],
+            "confusingAPIs": [
+              "Clip Path2D coordinates are local to the translated group even though inspectPlot reports the clip transform in root coordinates",
+              "inspectPlot reports captured clip geometry opaquely, so exact bounds were checked with inside/outside geometric probes"
+            ],
+            "missingCapabilities": [],
+            "unsupportedConclusions": [
+              "window.applicationState() was not treated as pixel evidence",
+              "No claim is made about visual output outside the tested contract and attribution coverage"
+            ],
+            "model/settings": "Codex based on GPT-5; detailed model variant and reasoning settings were not exposed"
+          }
+        },
+        {
+          "caseId": "case-04",
+          "arm": "attribution",
+          "elapsedSeconds": 113.523,
+          "sourceChanged": false,
+          "status": "scored",
+          "deterministic": 80,
+          "agentic": 19,
+          "total": 99,
+          "deterministicPassed": true,
+          "reviewFresh": false,
+          "checksPassed": 15,
+          "checksTotal": 15,
+          "failedChecks": [],
+          "browser": "151.0.7922.34",
+          "review": {
+            "diagnosis": 5,
+            "repairQuality": 5,
+            "evidenceQuality": 4,
+            "uncertainty": 5,
+            "reasons": {
+              "diagnosis": "The no-defect conclusion is precisely supported: initial-app.tsx and final-app.tsx are identical, while trace items item_7, item_8, and item_10 corroborate immediate update/repaint, zoom, clipping, reset, and nearest-ID hover behavior. The agent also investigated the suspicious offset and correctly resolved it using observed boundary transitions at root x=205/505.",
+              "repairQuality": "Leaving the application unchanged was the minimal contract-preserving result. The identical initial/final files contain the required reactive update, scale domains, exact clip, stable-ID hover, and pointerEvents=\"none\"; the trace’s focused clean run (item_10) supports the decision not to introduce a repair.",
+              "evidenceQuality": "Strong trace-backed verification separates source and evaluated state, attribution generation/geometry, clip queries, and native Playwright keyboard/pointer interaction (especially item_10). However, the agent explicitly states that it did not inspect exact rasterized pixel colors or antialiasing, so rendered-pixel verification is incomplete; coordinator pixel checks cannot be credited as agent observation.",
+              "uncertainty": "The agent precisely limits its conclusion: agentNotesSelfReported.unsupportedConclusions and the final response disclaim raster-level color/antialiasing claims, while item_6 transparently records the failed Playwright import and the corrected run follows. It also reports no missing capability needed for the geometric and interaction contract."
+            }
+          },
+          "agentNotesSelfReported": {
+            "elapsedMinutes": null,
+            "browserQueries": {
+              "successfulSessions": 3,
+              "queries": [
+                "initial applicationState and attribution snapshot",
+                "U update state, generation, old coordinate, and new coordinate",
+                "Z zoom state, scale domains, plot-edge hits, and one-pixel-outside clip exclusions",
+                "R reset state",
+                "hover identity at endpoints and nearest-by-x midpoint boundaries",
+                "pointer leave clearing hover"
+              ]
+            },
+            "editIterations": 0,
+            "evidenceUsed": [
+              "window.applicationState() for source data, evaluated data, domain, and hover",
+              "window.inspectPlot({x,y}) snapshots for logical surface size, transforms, scale domains/ranges, segments, clip participation, and repaint generation",
+              "window.inspectPlot({x,y}) geometric queries at line coordinates and immediately outside plot boundaries",
+              "Playwright keyboard and pointer input on a clean reload"
+            ],
+            "confusingAPIs": [
+              "The provisioned Playwright entry is CommonJS and required a default import rather than the initially attempted named ESM import.",
+              "Pibbl pointer event x is expressed in root logical coordinates for this handler, making the explicit 55-unit plot offset subtraction necessary."
+            ],
+            "missingCapabilities": [],
+            "unsupportedConclusions": [
+              "elapsedMinutes was not instrumented at task start and is therefore not inferred",
+              "No claim is made about exact rasterized pixel colors or antialiasing; attribution was used only as geometric evidence"
+            ],
+            "model/settings": {
+              "model": "GPT-5",
+              "settings": null
+            }
+          }
+        },
+        {
+          "caseId": "case-04",
+          "arm": "ordinary",
+          "elapsedSeconds": 69.992,
+          "sourceChanged": false,
+          "status": "scored",
+          "deterministic": 80,
+          "agentic": 18,
+          "total": 98,
+          "deterministicPassed": true,
+          "reviewFresh": false,
+          "checksPassed": 15,
+          "checksTotal": 15,
+          "failedChecks": [],
+          "browser": "151.0.7922.34",
+          "review": {
+            "diagnosis": 5,
+            "repairQuality": 5,
+            "evidenceQuality": 4,
+            "uncertainty": 4,
+            "reasons": {
+              "diagnosis": "The no-defect conclusion is precise and supported: initial-app.tsx and final-app.tsx are identical, while trace item_6 directly observed correct initial/source/evaluated state, immediate update, zoom, reset, and hover IDs a/b/c. The coordinator checks independently corroborate the conclusion, including update.evaluated, update.segment, zoom.segment, hover.identity, and reset.geometry.",
+              "repairQuality": "Leaving the application unchanged was the minimal contract-preserving action. The identical initial and final files avoid unnecessary modifications, and trace item_6 supports that existing update, zoom, reset, and pointer behavior already worked; all listed coordinator checks pass without harness changes.",
+              "evidenceQuality": "Trace item_6 provides strong browser evidence for source state, evaluated state, and native keyboard/pointer interaction, including stable hover identities and immediate post-update evaluation. Screenshots were captured, but the trace contains no image-inspection step or pixel sampling, so the self-reported claim that they were visually inspected and confirmed clipping/geometry is not fully supported by the agent trace. Coordinator pixel checks corroborate correctness but are not credited as agent observation.",
+              "uncertainty": "The response appropriately limits claims about subpixel rasterization and antialiasing and identifies the empirically resolved canvas-coordinate API issue. However, it calls screenshots visual evidence despite the trace showing capture but no actual inspection, and it does not explicitly acknowledge that resulting evidentiary gap."
+            }
+          },
+          "agentNotesSelfReported": {
+            "elapsedMinutes": 5,
+            "browserQueries": 6,
+            "editIterations": 0,
+            "evidenceUsed": [
+              "Inspected app.tsx declarations for the 710x420 canvas scene, plot translation and dimensions, scales, line data, clip path, and pointerEvents configuration.",
+              "Loaded the application in headless Chromium through the provisioned Playwright dependency.",
+              "Captured and visually inspected initial, post-update, post-zoom, and post-reset screenshots.",
+              "Queried window.applicationState() initially and after U, Z, and R to confirm source data, evaluated render data, domain, and reset behavior.",
+              "Moved the pointer at plot x positions near 0, 5, and 10 while directly over the initial painted line; hover reported stable IDs a, b, and c respectively."
+            ],
+            "confusingAPIs": [
+              "Pibbl pointer coordinates are exposed in canvas coordinates even when the handler is attached to a node inside a translated Group; the existing subtraction of the plot's x offset was validated empirically."
+            ],
+            "missingCapabilities": [
+              "No integrated browser tool was exposed, so validation used the explicitly provisioned Playwright dependency."
+            ],
+            "unsupportedConclusions": [
+              "No claim is made about subpixel rasterization or exact antialiasing; screenshots were used as normal visual evidence, not as a pixel oracle."
+            ],
+            "model/settings": "GPT-5 Codex; additional runtime model settings unknown"
+          }
+        }
+      ],
+      "means": {
+        "ordinary": {
+          "deterministic": 80,
+          "agentic": 19.5,
+          "total": 99.5,
+          "fullyPassing": 4,
+          "trials": 4
+        },
+        "attribution": {
+          "deterministic": 80,
+          "agentic": 19,
+          "total": 99,
+          "fullyPassing": 4,
+          "trials": 4
+        }
+      }
+    },
+    {
+      "id": "02",
+      "label": "Evidence labels and corrected review",
+      "trials": [
+        {
+          "caseId": "case-01",
+          "arm": "ordinary",
+          "elapsedSeconds": 71.786,
+          "sourceChanged": true,
+          "status": "scored",
+          "deterministic": 80,
+          "agentic": 20,
+          "total": 100,
+          "deterministicPassed": true,
+          "reviewFresh": false,
+          "checksPassed": 15,
+          "checksTotal": 15,
+          "failedChecks": [],
+          "browser": "151.0.7922.34",
+          "review": {
+            "diagnosis": 5,
+            "repairQuality": 5,
+            "evidenceQuality": 5,
+            "uncertainty": 5,
+            "reasons": {
+              "diagnosis": "Trace item_5 directly corroborates the causal diagnosis: after U, source b.y became 30 while evaluated b.y stayed 20 and the old line pixel at (355,210) remained painted. The initial code republishes the same mutated array, matching the stated signal-equality cause.",
+              "repairQuality": "The only source change replaces the in-place mutation with a new array and a new b record, preserving IDs, exports, actions, and all other behavior. The complete coordinator check set passes, including update.evaluated, update.segment, hover.identity, zoom.*, reset.*, harness.runtime-unchanged, and page.errors.",
+              "evidenceQuality": "Trace items_5 and _8 provide actual Chromium measurements separating source state, evaluated state, canvas pixels, and native keyboard/pointer/button interaction before and after repair. Item_8 verifies immediate repaint at (355,150), removal at (355,210), hover a/b/c plus leave, zoom domain, reset, and sampled pixels outside all four clip edges; these are corroborated by the recorded observations and named checks.",
+              "uncertainty": "The response accurately limits the clipping claim to sampled edge pixels rather than exhaustive per-pixel proof and says behavior outside the stated contract was not evaluated. It also identifies the actionable API friction—undocumented signal equality behavior—and explains that browser observation was used to resolve it; no additional capability was shown to be necessary."
+            }
+          },
+          "agentNotesSelfReported": {
+            "elapsedMinutes": 4,
+            "browserQueries": 2,
+            "editIterations": 1,
+            "evidenceUsed": [
+              "Read app.tsx, boot.mjs, and index.html without consulting evaluator files or repository history",
+              "Before repair: keyboard U changed source b.y to 30, but evaluated b.y remained 20 and the line remained at canvas point (355,210)",
+              "After repair: initial, U/update, Z/zoom, and R/reset state transitions were exercised in Chromium",
+              "After repair: canvas pixels showed the line move from (355,210) to (355,150) immediately after U, with no second interaction",
+              "Pointer moves at left, middle, and right plot positions reported stable IDs a, b, and c; leaving the plot cleared hover",
+              "Pixels immediately outside all four plot edges retained the scene background during initial, update, zoom, and reset checks"
+            ],
+            "confusingAPIs": [
+              "Pibbl signal equality behavior is not documented in the fixture; browser behavior established that republishing the same mutated array does not invalidate this render"
+            ],
+            "missingCapabilities": [],
+            "unsupportedConclusions": [
+              "No exhaustive per-pixel proof of clipping was attempted",
+              "No behavior outside the stated contract was evaluated"
+            ],
+            "model/settings": "Codex based on GPT-5; exact model identifier and reasoning settings not exposed"
+          }
+        },
+        {
+          "caseId": "case-01",
+          "arm": "attribution",
+          "elapsedSeconds": 94.597,
+          "sourceChanged": true,
+          "status": "scored",
+          "deterministic": 80,
+          "agentic": 19,
+          "total": 99,
+          "deterministicPassed": true,
+          "reviewFresh": false,
+          "checksPassed": 15,
+          "checksTotal": 15,
+          "failedChecks": [],
+          "browser": "151.0.7922.34",
+          "review": {
+            "diagnosis": 5,
+            "repairQuality": 5,
+            "evidenceQuality": 4,
+            "uncertainty": 5,
+            "reasons": {
+              "diagnosis": "Precise and corroborated: initial-app.tsx mutates rows[1] and calls data.set(rows) with the same array reference. Trace item_7 shows the resulting causal split after U: source b.y=30 while evaluated/captured segments remain b.y=20 and render generation remains 1. Trace item_8 explicitly identifies this mismatch.",
+              "repairQuality": "The only behavioral change in final-app.tsx is an immutable update that publishes a new array and a new b record. It preserves IDs and all unrelated behavior. Trace item_10 then shows generation advancing to 2 immediately after update, with source, evaluated state, and captured segments all containing b.y=30; subsequent zoom, hover, clipping, and reset checks remain consistent.",
+              "evidenceQuality": "Strong but not fully pixel-level. Trace items item_5, item_7, and item_10 separate application source/evaluated state from captured render geometry and generations, and exercise native keyboard and pointer paths. Item_10 also checks clip boundaries, hover IDs, zoom, and reset. However, the inspector expressly reports coverage as geometry-not-pixels-or-event-target, and the final response concedes that no pixel-level claims were made, so actual rendered pixels were not independently verified by the agent.",
+              "uncertainty": "The limitations are unusually precise and actionable: the trace identifies inspector source references as live rather than snapshots, distinguishes them using captured segments, generation, and evaluated state, and states that inspector coverage excludes pixels and event targets. The final response appropriately limits its conclusion to application state and geometric attribution rather than claiming pixel verification."
+            }
+          },
+          "agentNotesSelfReported": {
+            "elapsedMinutes": 6,
+            "browserQueries": 3,
+            "editIterations": 1,
+            "evidenceUsed": [
+              "window.applicationState() before and after update, zoom, reset, and pointer movement",
+              "window.inspectPlot({x,y}) captured scale domains/ranges, transform, records, generation, and clip probes",
+              "Playwright keyboard events for U/Z/R and pointer movement at plot x positions"
+            ],
+            "confusingAPIs": [
+              "inspectPlot source references are live while captured segment values are snapshots; generation and evaluated state were needed to distinguish mutation from repaint"
+            ],
+            "missingCapabilities": [],
+            "unsupportedConclusions": [
+              "No pixel-level conclusions were inferred from applicationState or inspectPlot",
+              "No measurements beyond the reported browser and inspector values were inferred"
+            ],
+            "model/settings": "Codex based on GPT-5; exact model variant and reasoning settings not exposed"
+          }
+        },
+        {
+          "caseId": "case-02",
+          "arm": "attribution",
+          "elapsedSeconds": 76.311,
+          "sourceChanged": true,
+          "status": "scored",
+          "deterministic": 80,
+          "agentic": 19,
+          "total": 99,
+          "deterministicPassed": true,
+          "reviewFresh": false,
+          "checksPassed": 15,
+          "checksTotal": 15,
+          "failedChecks": [],
+          "browser": "151.0.7922.34",
+          "review": {
+            "diagnosis": 5,
+            "repairQuality": 5,
+            "evidenceQuality": 4,
+            "uncertainty": 5,
+            "reasons": {
+              "diagnosis": "The diagnosis precisely identifies the causal mismatch: initial-app.tsx declares the y-domain as `[0,80]` while the contract requires `[0,40]`. The trace explicitly flags this before editing, and subsequent geometric inspection reports the repaired `[0,40]` domain and expected coordinates.",
+              "repairQuality": "The final source changes only the y-domain from `[0,80]` to `[0,40]`, preserving update, zoom, reset, clipping, and interaction behavior. The complete coordinator check set passes, including `update.segment`, `zoom.segment`, `hover.identity`, `reset.geometry`, and `harness.runtime-unchanged`.",
+              "evidenceQuality": "The trace provides strong browser-based corroboration: Playwright keyboard and pointer input, separate source/evaluated state inspection, paint-generation checks, scale/transform/segment attribution, and clip boundary probes. The `updated-before-more-input` observation also separates updated source/evaluated state from changed rendered-region counts. One point is withheld because the agent explicitly did not inspect actual pixel color or antialiasing; its rendering evidence was chiefly geometric attribution rather than direct pixel inspection.",
+              "uncertainty": "The agent clearly records actionable limits: attribution covers geometry rather than pixels or event targets, event behavior was exercised separately, snapshots may briefly expose a prior generation, shared vertices can be ambiguous, and elapsed time could not be measured without a start timestamp. These limitations are consistent with the trace and do not overstate certainty."
+            }
+          },
+          "agentNotesSelfReported": {
+            "elapsedMinutes": null,
+            "browserQueries": 26,
+            "editIterations": 1,
+            "evidenceUsed": [
+              "window.applicationState() for source/evaluated data, domain, hover, and reset state",
+              "window.inspectPlot({x,y}) snapshots for logical surface size, scales, transform, captured records, clips, and paint generations",
+              "window.inspectPlot({x,y}) boundary probes for segment inclusion at x=55 and x=655 and clip exclusion at x=54 and x=656",
+              "Playwright keyboard input for U, Z, and R and pointer movement at left, middle, and right plot positions"
+            ],
+            "confusingAPIs": [
+              "inspectPlot snapshots can briefly report the prior generation if queried immediately after a signal change; waiting through animation frames exposed the completed repaint",
+              "A query exactly at a shared line vertex reports ambiguous because both adjacent segments are valid"
+            ],
+            "missingCapabilities": [
+              "No trial start timestamp was supplied, so elapsedMinutes was not measured"
+            ],
+            "unsupportedConclusions": [
+              "No pixel-level antialiasing or color conclusion; attribution reports geometry, not pixels",
+              "No event-target conclusion from attribution alone; pointer behavior was exercised separately"
+            ],
+            "model/settings": {
+              "model": "Codex based on GPT-5",
+              "settings": "not known"
+            }
+          }
+        },
+        {
+          "caseId": "case-02",
+          "arm": "ordinary",
+          "elapsedSeconds": 98.04,
+          "sourceChanged": true,
+          "status": "scored",
+          "deterministic": 80,
+          "agentic": 17,
+          "total": 97,
+          "deterministicPassed": true,
+          "reviewFresh": false,
+          "checksPassed": 15,
+          "checksTotal": 15,
+          "failedChecks": [],
+          "browser": "151.0.7922.34",
+          "review": {
+            "diagnosis": 5,
+            "repairQuality": 5,
+            "evidenceQuality": 3,
+            "uncertainty": 4,
+            "reasons": {
+              "diagnosis": "Precise causal diagnosis: initial-app.tsx configures the value scale as domain [0,80] while the contract requires [0,40], which necessarily compresses the plotted y geometry. Trace item_5 explicitly identifies this mismatch before editing, and final-app.tsx corroborates the corrected domain.",
+              "repairQuality": "The repair changes only the y-scale domain from [0,80] to [0,40], preserving data, clipping, reactivity, hover identity, hit-testing, and public exports. Trace item_10 records the single app edit and item_16 confirms the repaired scale declaration.",
+              "evidenceQuality": "Trace items item_9 and item_13 provide before/after Chromium state evidence for source and evaluated data, update, zoom, reset, hover positions, on-line pointer interaction, canvas bounds, and empty error arrays. However, the trace does not expose pixel measurements or screenshot inspection results, so the claimed rendered-pixel and clipping verification is not independently trace-supported; coordinator checks such as update.segment and zoom.segment are not credited as agent observation.",
+              "uncertainty": "The evidence honestly limits conclusions to configured pixelRatio 1 and records elapsed time as unknown/null rather than estimating it. No additional API capability appears necessary for the requested interaction checks, but the final statement of no remaining uncertainty is slightly stronger than the trace supports because its claimed screenshot/pixel verification is not shown."
+            }
+          },
+          "agentNotesSelfReported": {
+            "elapsedMinutes": null,
+            "browserQueries": 17,
+            "editIterations": 1,
+            "evidenceUsed": [
+              "Read app.tsx and the public boot wiring without consulting evaluator files or repository history",
+              "Two fresh Chromium runs against the rebuilt application: one before repair and one after repair",
+              "window.applicationState() snapshots for initial, hover, update, zoom, and reset behavior",
+              "Canvas screenshots before repair and after repair in initial, updated, and zoomed states",
+              "Pointer movement at left, middle-left, middle-right, and right plot x positions, plus directly on the rendered line",
+              "No browser console or page errors in either run"
+            ],
+            "confusingAPIs": [],
+            "missingCapabilities": [
+              "No exact task-start timer was captured, so elapsedMinutes is null rather than estimated"
+            ],
+            "unsupportedConclusions": [
+              "No claim is made about rendering under device pixel ratios other than the configured pixelRatio 1",
+              "No elapsed duration is inferred"
+            ],
+            "model/settings": {
+              "model": "GPT-5 Codex",
+              "reasoningEffort": "unknown"
+            }
+          }
+        },
+        {
+          "caseId": "case-03",
+          "arm": "ordinary",
+          "elapsedSeconds": 101.314,
+          "sourceChanged": true,
+          "status": "scored",
+          "deterministic": 80,
+          "agentic": 20,
+          "total": 100,
+          "deterministicPassed": true,
+          "reviewFresh": false,
+          "checksPassed": 15,
+          "checksTotal": 15,
+          "failedChecks": [],
+          "browser": "151.0.7922.34",
+          "review": {
+            "diagnosis": 5,
+            "repairQuality": 5,
+            "evidenceQuality": 5,
+            "uncertainty": 5,
+            "reasons": {
+              "diagnosis": "Precise causal diagnosis: the initial source defines the clip as `path.rect(55, 90, 600, 240)` inside a Group already translated by `(55,90)`, while the final response explains that this reapplied the offset in local coordinates. Trace item_8 corroborates the corrected geometry with a rendered blue-pixel bbox of `[55,149,654,270]` and `outside:0`.",
+              "repairQuality": "The final source makes exactly one contract-directed change, replacing the clip rectangle with `(0,0,600,240)` while preserving data, scales, updates, input handling, and layout. The complete coordinator check set passes, including `initial.left-visible`, `update.segment`, `zoom.segment`, `hover.identity`, and `harness.runtime-unchanged`.",
+              "evidenceQuality": "Trace item_8 records actual Chromium verification across distinct layers: `applicationState()` for source/evaluated/domain state, canvas pixel scans for rendered geometry and clipping, button clicks for update/zoom/reset, pointer movement at a/b/c for native interaction, and captured console/page errors. It specifically shows immediate updated source/evaluated values, changed paint geometry, zoomed geometry, restored reset geometry, hover IDs a/b/c, and zero out-of-plot pixels; coordinator observations and checks corroborate these results.",
+              "uncertainty": "The response explicitly limits its conclusion to Chromium and the required `pixelRatio:1`, declining claims about other browsers or device-pixel ratios. The notes also identify the concrete API friction—Clip Path2D coordinates are local to the translated Group—and report no missing capability needed for the scoped contract."
+            }
+          },
+          "agentNotesSelfReported": {
+            "elapsedMinutes": 5,
+            "browserQueries": 21,
+            "editIterations": 1,
+            "evidenceUsed": [
+              "Two fresh Chromium page loads of the locally served application",
+              "applicationState() before and after update, zoom, and reset",
+              "Pointer movement at the plotted a, b, and c locations and outside the plot",
+              "Canvas pixel scans for the blue line bounding box and blue pixels outside the plot",
+              "Before/after screenshots and captured browser console/page errors"
+            ],
+            "confusingAPIs": [
+              "Clip Path2D coordinates are local to the already-translated Group; using plot-root coordinates applied the plot offset twice"
+            ],
+            "missingCapabilities": [],
+            "unsupportedConclusions": [
+              "No claim is made about untested browsers or device pixel ratios other than the required pixelRatio 1"
+            ],
+            "model/settings": {
+              "model": "Codex based on GPT-5",
+              "reasoningEffort": "unknown"
+            }
+          }
+        },
+        {
+          "caseId": "case-03",
+          "arm": "attribution",
+          "elapsedSeconds": 112.668,
+          "sourceChanged": true,
+          "status": "scored",
+          "deterministic": 80,
+          "agentic": 18,
+          "total": 98,
+          "deterministicPassed": true,
+          "reviewFresh": false,
+          "checksPassed": 15,
+          "checksTotal": 15,
+          "failedChecks": [],
+          "browser": "151.0.7922.34",
+          "review": {
+            "diagnosis": 5,
+            "repairQuality": 5,
+            "evidenceQuality": 4,
+            "uncertainty": 4,
+            "reasons": {
+              "diagnosis": "Precise and corroborated: the final response identifies the clip rectangle as using root-like `(55,90)` coordinates beneath an existing `(55,90)` transform. Trace item_7 records the initial left-edge probe as `miss` while showing the line and clip transform at `(55,90)`, supporting the coordinate-space diagnosis.",
+              "repairQuality": "The sole application change is `Path2D.rect(55,90,600,240)` to `rect(0,0,600,240)`, a minimal general correction preserving all other behavior. Trace item_15 reports inside-boundary segments and adjacent `clip-excluded` probes, and coordinator checks including `initial.left-visible`, `zoom.segment`, and `reset.geometry` pass.",
+              "evidenceQuality": "Strong trace-backed verification covers source and evaluated state, attribution generations/segments, scale ranges and transforms, boundary clipping, and native Playwright pointer interaction (trace items_7 and item_15). It does not include agent-observed raster-pixel verification; the notes explicitly say `inspectPlot does not provide pixel-raster or event-target evidence`, so coordinator pixel checks cannot be credited as observations by the agent.",
+              "uncertainty": "The agent explicitly distinguishes geometric attribution from raster evidence, states that exact antialiasing/color was not established, documents opaque clip geometry and the need for inside/outside probes, and declines to infer uninstrumented elapsed time. The score is reduced because the final claim that remaining uncertainty is limited to pixel antialiasing/color omits the separately acknowledged lack of event-target evidence."
+            }
+          },
+          "agentNotesSelfReported": {
+            "elapsedMinutes": null,
+            "browserQueries": {
+              "successfulBrowserSessions": 3,
+              "pageEvaluations": 43
+            },
+            "editIterations": 1,
+            "evidenceUsed": [
+              "applicationState initial, update, zoom, hover, leave, and reset states",
+              "inspectPlot captured canvas dimensions, scale domains and ranges, transforms, source segments, clip probes, and generations",
+              "Playwright pointer movement using measured canvas page bounds"
+            ],
+            "confusingAPIs": [
+              "Path2D clip geometry is local to the transformed Clip node even though inspectPlot queries use root logical coordinates",
+              "inspectPlot reports captured clip geometry as opaque, requiring inside/outside probes"
+            ],
+            "missingCapabilities": [
+              "inspectPlot does not provide pixel-raster or event-target evidence"
+            ],
+            "unsupportedConclusions": [
+              "No pixel-level anti-aliasing or exact raster-color conclusion was made",
+              "Elapsed minutes were not instrumented and therefore were not inferred"
+            ],
+            "model/settings": {
+              "model": "GPT-5",
+              "reasoningEffort": null
+            }
+          }
+        },
+        {
+          "caseId": "case-04",
+          "arm": "attribution",
+          "elapsedSeconds": 101.021,
+          "sourceChanged": true,
+          "status": "scored",
+          "deterministic": 69.33,
+          "agentic": 11,
+          "total": 80.33,
+          "deterministicPassed": false,
+          "reviewFresh": true,
+          "checksPassed": 13,
+          "checksTotal": 15,
+          "failedChecks": [
+            {
+              "id": "hover.identity",
+              "status": "fail",
+              "reason": "[{\"x\":70,\"expected\":\"a\",\"actual\":\"a\"},{\"x\":204,\"expected\":\"a\",\"actual\":\"b\"},{\"x\":206,\"expected\":\"b\",\"actual\":\"b\"},{\"x\":355,\"expected\":\"b\",\"actual\":\"b\"},{\"x\":504,\"expected\":\"b\",\"actual\":\"c\"},{\"x\":506,\"expected\":\"c\",\"actual\":\"c\"},{\"x\":640,\"expected\":\"c\",\"actual\":\"c\"}]\n+ actual - expected\n\n  [\n    'a',\n-   'a',\n    'b',\n    'b',\n    'b',\n    'c',\n    'c',\n+   'c'\n  ]\n"
+            },
+            {
+              "id": "zoom.hover",
+              "status": "fail",
+              "reason": "Expected values to be strictly deep-equal:\n+ actual - expected\n\n  [\n    'b',\n    'b',\n    'b',\n+   'c'\n-   'b'\n  ]\n"
+            }
+          ],
+          "browser": "151.0.7922.34",
+          "review": {
+            "diagnosis": 2,
+            "repairQuality": 2,
+            "evidenceQuality": 4,
+            "uncertainty": 3,
+            "reasons": {
+              "diagnosis": "The claimed “double-applied 55px offset” is not established by the cited representative probes and is contradicted by `hover.identity` and `zoom.hover`: after removing the offset, x=204 selects `b` instead of `a`, x=504 selects `c` instead of `b`, and zoomed x=650 selects `c` instead of `b`. The reset batching rationale is plausible, but the supplied trace does not clearly show a pre-repair observable reset failure.",
+              "repairQuality": "The repair is small and preserves most behavior; batching reset is a reasonable general change, and update, zoom, reset geometry, and error checks pass. However, changing `x.invert(event.x-55)` to `x.invert(event.x)` regresses the nearest-record contract, as demonstrated by deterministic checks `hover.identity` and `zoom.hover`, so the repair is not functionally complete.",
+              "evidenceQuality": "The trace contains real Chromium interaction and separately inspects application source/evaluated state, scale/domain geometry, attribution generations, clipping probes, keyboard actions, pointer moves, pointer leave, and browser errors. Examples include generation 1→2 after update, `clip-excluded` edge probes after zoom, and generation 4 after reset. Verification is weakened because hover was tested only at easy representative positions (70, 355, 640), not decision boundaries or a zoomed edge, and the agent explicitly notes attribution does not verify raster pixels or event-target identity.",
+              "uncertainty": "The response honestly states that attribution cannot establish pixel-perfect raster appearance or event-target identity and identifies the latter as inferred from `pointerEvents=\"none\"` plus successful hover. However, it expresses unsupported confidence that hover was fixed and fails to flag the unresolved coordinate-space ambiguity that boundary probes would have exposed; `hover.identity` and `zoom.hover` show that limitation was material."
+            }
+          },
+          "agentNotesSelfReported": {
+            "elapsedMinutes": 7,
+            "browserQueries": 19,
+            "editIterations": 1,
+            "evidenceUsed": [
+              "window.applicationState() for source, evaluated data, domain, and hover",
+              "window.inspectPlot({x,y}) snapshots for logical surface size, transforms, scale domains/ranges, clips, source segments, and render generation",
+              "inside/outside geometric probes at both plot edges after zoom",
+              "Playwright keyboard and pointer interactions in a freshly loaded page",
+              "browser console and page-error capture"
+            ],
+            "confusingAPIs": [
+              "Pibbl pointer event coordinates on a translated Rectangle are plot-local, not root-logical",
+              "Multiple synchronous signal writes require batch() to produce one immediate coherent render"
+            ],
+            "missingCapabilities": [],
+            "unsupportedConclusions": [
+              "Pixel-perfect raster appearance was not inferred from applicationState or attribution geometry",
+              "Event target identity is not exposed by the line attribution inspector; non-interception was established from pointerEvents=none plus successful plot hover behavior"
+            ],
+            "model/settings": {
+              "model": "GPT-5-based Codex (exact model identifier not exposed)",
+              "reasoningEffort": "not exposed"
+            }
+          }
+        },
+        {
+          "caseId": "case-04",
+          "arm": "ordinary",
+          "elapsedSeconds": 79.383,
+          "sourceChanged": false,
+          "status": "scored",
+          "deterministic": 80,
+          "agentic": 18,
+          "total": 98,
+          "deterministicPassed": true,
+          "reviewFresh": false,
+          "checksPassed": 15,
+          "checksTotal": 15,
+          "failedChecks": [],
+          "browser": "151.0.7922.34",
+          "review": {
+            "diagnosis": 5,
+            "repairQuality": 5,
+            "evidenceQuality": 4,
+            "uncertainty": 4,
+            "reasons": {
+              "diagnosis": "The no-defect diagnosis is precise and supported by source inspection plus runtime probes: trace item_6 observed correct initial, update, zoom, and reset state, while item_7 localized the a/b hover transition to canvas x=205–206; item_8 correctly related that boundary to the 55px plot translation. The identical initial-app.tsx and final-app.tsx corroborate the control conclusion.",
+              "repairQuality": "Leaving the application unchanged was the minimal contract-preserving action. Initial and final files are identical, and the agent explicitly justified no repair after focused interaction checks (trace items 6–8). The coordinator checks, including update.segment, zoom.segment, hover.identity, and reset.geometry, corroborate that unchanged behavior satisfies the contract, though those checks are not themselves credited as agent reasoning.",
+              "evidenceQuality": "Trace item_6 records native keyboard and pointer interaction and separately reports source, evaluated state, domain, and hover across initial/U/Z/R stages; item_7 adds a focused hover-boundary probe. However, rendered-pixel verification is incomplete in the agent trace: screenshots were captured, but there is no traced screenshot-view or pixel-analysis result supporting the claimed visual inspection, clipping, placement, or repaint. Thus verification is strong but not fully corroborated across all required layers.",
+              "uncertainty": "The final response appropriately limits the clipping conclusion, stating it was not validated with a pixel oracle, and the notes honestly decline to infer unmeasured elapsed time. It also identifies actionable API friction concerning scene-coordinate pointer x and validates it with trace item_7. The score is reduced because missingCapabilities is empty and the response still claims screenshots confirmed several visual properties without traced inspection evidence."
+            }
+          },
+          "agentNotesSelfReported": {
+            "elapsedMinutes": null,
+            "browserQueries": 2,
+            "editIterations": 0,
+            "evidenceUsed": [
+              "Inspected app.tsx and the public boot wiring without reading evaluator or trial-answer material",
+              "Loaded the application in provisioned Playwright at the dynamically assigned local port",
+              "Queried window.applicationState() initially and after U, Z, and R",
+              "Moved the pointer across the plot, including directly over the painted line and around the a/b nearest-x boundary",
+              "Captured and visually inspected screenshots immediately after update and zoom"
+            ],
+            "confusingAPIs": [
+              "Pointer event x is expressed in canvas scene coordinates here, so subtracting the plot's 55px scene translation is necessary before scale inversion"
+            ],
+            "missingCapabilities": [],
+            "unsupportedConclusions": [
+              "Elapsed minutes were not instrumented from the beginning, so no duration was inferred"
+            ],
+            "model/settings": "GPT-5 Codex; exact deployment model identifier and inference settings were not exposed"
+          }
+        }
+      ],
+      "means": {
+        "ordinary": {
+          "deterministic": 80,
+          "agentic": 18.75,
+          "total": 98.75,
+          "fullyPassing": 4,
+          "trials": 4
+        },
+        "attribution": {
+          "deterministic": 77.3325,
+          "agentic": 16.75,
+          "total": 94.0825,
+          "fullyPassing": 3,
+          "trials": 4
+        }
+      }
+    },
+    {
+      "id": "03",
+      "label": "Focused clipping/control with browser-import guidance",
+      "trials": [
+        {
+          "caseId": "case-03",
+          "arm": "ordinary",
+          "elapsedSeconds": 127.07,
+          "sourceChanged": true,
+          "status": "scored",
+          "deterministic": 80,
+          "agentic": 20,
+          "total": 100,
+          "deterministicPassed": true,
+          "reviewFresh": false,
+          "checksPassed": 15,
+          "checksTotal": 15,
+          "failedChecks": [],
+          "browser": "151.0.7922.34",
+          "review": {
+            "diagnosis": 5,
+            "repairQuality": 5,
+            "evidenceQuality": 5,
+            "uncertainty": 5,
+            "reasons": {
+              "diagnosis": "Trace item_8 directly shows the pre-repair displacement (blue bounds x=110…510, y=180…260), and item_10 correctly attributes it to translated frame coordinates being applied again to scale output and clipping. The initial/final source change corroborates that causal explanation.",
+              "repairQuality": "The repair changes only the two scale ranges from layout shortcuts to plot-local numeric ranges and the clip rectangle from (55,90) to (0,0), preserving data, actions, hover logic, public exports, and non-intercepting line behavior. Trace item_12 and the supplied observations show the intended geometry and state transitions afterward.",
+              "evidenceQuality": "Trace items item_8 and item_12 separate application source/evaluated state from canvas pixels and use native Playwright mouse and keyboard input. Item_12 records initial, immediate update, zoom, reset, pixel bounds/samples, and hover IDs; supplied observations independently organize the same source/evaluated/domain/hover and pixel-stage evidence. Pointer-leave proof is less direct, but the overall verification is strongly corroborated.",
+              "uncertainty": "The evidence explicitly reports elapsed time as unknown rather than inferred, identifies the relevant API friction about frame-relative range shortcuts and canvas-relative pointer coordinates, and explains the zoom-edge b/c tie observed in item_12. The final antialiasing caveat is appropriately narrow, with no material unresolved contract issue indicated."
+            }
+          },
+          "agentNotesSelfReported": {
+            "elapsedMinutes": null,
+            "browserQueries": 3,
+            "editIterations": 1,
+            "evidenceUsed": [
+              "Read app.tsx and the local boot/server entry points",
+              "Inspected the bundled Pibbl runtime exports and scale implementation context",
+              "Loaded the application in headless Chromium before and after the edit",
+              "Exercised U/update, Z/zoom, R/reset, pointer move, and pointer leave through normal browser input",
+              "Compared applicationState() source, evaluated, domain, and hover values",
+              "Inspected browser screenshots and canvas-rendered geometry at contract coordinates"
+            ],
+            "confusingAPIs": [
+              "LinearScale range shortcuts use the enclosing layout frame coordinates, while explicit numeric ranges remain plot-local",
+              "Pointer event coordinates are canvas coordinates even when the input primitive is inside a translated Group"
+            ],
+            "missingCapabilities": [],
+            "unsupportedConclusions": [
+              "Elapsed time was not instrumented from the beginning, so elapsedMinutes is reported as null rather than inferred",
+              "No evaluator files, trial metadata, repository history, or prior fixture conversations were inspected"
+            ],
+            "model/settings": {
+              "model": "GPT-5-based Codex",
+              "settings": "not known"
+            }
+          }
+        },
+        {
+          "caseId": "case-03",
+          "arm": "attribution",
+          "elapsedSeconds": 124.848,
+          "sourceChanged": true,
+          "status": "scored",
+          "deterministic": 80,
+          "agentic": 18,
+          "total": 98,
+          "deterministicPassed": true,
+          "reviewFresh": false,
+          "checksPassed": 15,
+          "checksTotal": 15,
+          "failedChecks": [],
+          "browser": "151.0.7922.34",
+          "review": {
+            "diagnosis": 5,
+            "repairQuality": 5,
+            "evidenceQuality": 4,
+            "uncertainty": 4,
+            "reasons": {
+              "diagnosis": "Precise and corroborated: trace item_10 identifies the clip path as local `(55,90)` plus the Group transform `(55,90)`, causing double translation; initial-app.tsx and trace item_5 support this coordinate-space mismatch.",
+              "repairQuality": "Minimal general repair: final-app.tsx changes only `path.rect(55, 90, 600, 240)` to local `path.rect(0, 0, 600, 240)`, preserving all other behavior. The complete coordinator check set passes, including initial.left-visible, update.segment, zoom.segment, zoom.hover, reset.geometry, and harness.runtime-unchanged.",
+              "evidenceQuality": "Strong but not pixel-complete. Trace items item_12 and item_13 verify source/evaluated state, scale domains, render generations, clip inclusion/exclusion, keyboard actions, and real pointer hover—including over the line. However, the final response explicitly says `no pixel-level conclusions were made`; coordinator pixel observations cannot prove the agent observed rendered pixels.",
+              "uncertainty": "The agent honestly distinguishes geometric attribution from pixels and event-target identity in `unsupportedConclusions`, records the stale-generation timing race, and uses an actionable generation/domain wait in item_13. It falls short of fully specifying what additional pixel inspection would be needed to close the acknowledged rendering-evidence gap."
+            }
+          },
+          "agentNotesSelfReported": {
+            "elapsedMinutes": 8,
+            "browserQueries": 6,
+            "editIterations": 1,
+            "evidenceUsed": [
+              "window.applicationState() for source, evaluated data, domain, and hover",
+              "window.inspectPlot({x,y}) for captured transforms, linear scale domains/ranges, segments, clip inclusion/exclusion, and render generations",
+              "Playwright keyboard input for U/update, Z/zoom, and R/reset",
+              "Playwright pointer movement at root-logical plot positions, including directly over the painted line",
+              "Canvas DOM bounds only to translate root-logical coordinates into browser page coordinates"
+            ],
+            "confusingAPIs": [
+              "Pointer event x is root-logical even when the Rectangle target is inside a translated Group, so the existing subtraction of the plot's root x offset is required.",
+              "applicationState can update before inspectPlot advances to the next paint generation; attribution checks must wait for the captured scale or generation."
+            ],
+            "missingCapabilities": [],
+            "unsupportedConclusions": [
+              "No pixel-level conclusions were drawn from applicationState or inspectPlot.",
+              "inspectPlot documents geometric coverage rather than event-target identity; non-interception was verified by successful hover while the pointer was directly over the line."
+            ],
+            "model/settings": "Codex based on GPT-5; exact model identifier and reasoning settings not exposed"
+          }
+        },
+        {
+          "caseId": "case-04",
+          "arm": "attribution",
+          "elapsedSeconds": 79.307,
+          "sourceChanged": false,
+          "status": "scored",
+          "deterministic": 80,
+          "agentic": 20,
+          "total": 100,
+          "deterministicPassed": true,
+          "reviewFresh": false,
+          "checksPassed": 15,
+          "checksTotal": 15,
+          "failedChecks": [],
+          "browser": "151.0.7922.34",
+          "review": {
+            "diagnosis": 5,
+            "repairQuality": 5,
+            "evidenceQuality": 5,
+            "uncertainty": 5,
+            "reasons": {
+              "diagnosis": "The supported no-defect conclusion is precise and corroborated. Trace item_8 records initial generation 1, update generation 2 with b changing from y=20 to y=30, zoom generation 3 with domain [2.5,7.5], and reset generation 4 restoring data/domain. Trace item_9 explicitly connects those observations to the decision that no app.tsx repair was warranted.",
+              "repairQuality": "initial-app.tsx and final-app.tsx are identical, so the contract-preserving control made no unnecessary source change. The unchanged decision is justified by trace item_9 and independently aligns with the full observed state/render sequence; no hardcoded probe or harness manipulation appears in either supplied app source.",
+              "evidenceQuality": "The trace separates source/evaluated state, attribution, rendered pixels, and native interaction. Trace item_8 records application state, attribution generations/scales/transforms/segments, and RGBA samples showing the old update pixel cleared and the new one painted after frame waits. The recorded hover stage reports stable ID \"b\", while agentNotesSelfReported identifies real pointer movement; observations cover initial, updated-before-more-input, zoomed, and reset states.",
+              "uncertainty": "Limits are stated specifically and usefully: agentNotesSelfReported says decoded clip bounds and event-target identity are unavailable, explains scheduled-frame behavior and half-open clipping, and declines inference about unmeasured DPR or non-Chromium behavior. The missing inspector capabilities were addressed within scope using boundary pixel probes and real pointer movement, so no additional capability was needed for the supported conclusion."
+            }
+          },
+          "agentNotesSelfReported": {
+            "elapsedMinutes": 7,
+            "browserQueries": 21,
+            "editIterations": 0,
+            "evidenceUsed": [
+              "window.applicationState() before and after update, zoom, reset, and pointer movement",
+              "window.inspectPlot({x,y}) attribution snapshots and segment queries in root logical coordinates",
+              "captured linear scale domains/ranges, local-to-root transform, clip presence, segment source indices, and generations",
+              "canvas pixel samples at expected old/new line positions and immediately inside/outside plot boundaries",
+              "real pointer movement across nearest-record x thresholds",
+              "two requestAnimationFrame waits after each keyboard action, with no additional interaction"
+            ],
+            "confusingAPIs": [
+              "Signal writes update source state synchronously, while evaluated/rendered state and attribution generation update on a scheduled frame.",
+              "Clip geometry is intentionally opaque in attribution; exact clipping must be checked with inside/outside probes.",
+              "Canvas rasterization excludes the right/bottom boundary pixel under the half-open clip, although attribution describes the plot-edge geometry."
+            ],
+            "missingCapabilities": [
+              "The attribution inspector does not expose decoded clip bounds or event-target identity."
+            ],
+            "unsupportedConclusions": [
+              "No conclusions were drawn from applicationState() about pixels.",
+              "No unmeasured device-pixel-ratio or non-Chromium behavior was inferred."
+            ],
+            "model/settings": {
+              "model": "GPT-5 Codex",
+              "reasoningEffort": "not exposed",
+              "browser": "Playwright Chromium 1.62.1, headless",
+              "viewport": "900x700",
+              "applicationPixelRatio": 1
+            }
+          }
+        },
+        {
+          "caseId": "case-04",
+          "arm": "ordinary",
+          "elapsedSeconds": 86.115,
+          "sourceChanged": false,
+          "status": "scored",
+          "deterministic": 80,
+          "agentic": 20,
+          "total": 100,
+          "deterministicPassed": true,
+          "reviewFresh": false,
+          "checksPassed": 15,
+          "checksTotal": 15,
+          "failedChecks": [],
+          "browser": "151.0.7922.34",
+          "review": {
+            "diagnosis": 5,
+            "repairQuality": 5,
+            "evidenceQuality": 5,
+            "uncertainty": 5,
+            "reasons": {
+              "diagnosis": "The supported conclusion was that no defect existed: initial-app.tsx and final-app.tsx are unchanged, while trace item_1 identifies the two genuine API-sensitive questions (pointer-coordinate frame and reactive repaint), and trace items_6 and item_9 corroborate correct canvas dimensions, state transitions, hover identity, repaint, zoom, and reset behavior.",
+              "repairQuality": "Leaving the application unchanged was the minimal contract-preserving response. The supplied initial and final sources are identical, editIterations is 0, and trace item_9 demonstrates the existing implementation already satisfies update, zoom, reset, and hover behavior without a repair or harness manipulation.",
+              "evidenceQuality": "The trace separates source inspection (item_1), evaluated application state (items_6 and item_9), rendered output via canvas dimensions and distinct/restored pixel hashes (item_9), and native pointer interaction at left/middle/right plus leave (item_9). It also checks immediate update state and paint, zoom state, and reset equivalence; deterministic check IDs such as update.evaluated, update.segment, zoom.hover, and reset.geometry independently agree but are not the basis of the score.",
+              "uncertainty": "The report states concrete limits: elapsed time was not instrumented, rendering environments beyond the exercised Chromium runtime were not generalized, and subpixel/antialiasing properties were not inferred. It also usefully records the two API ambiguities that required probing—event-coordinate space and signal repaint timing—and ties both to observed browser behavior."
+            }
+          },
+          "agentNotesSelfReported": {
+            "elapsedMinutes": null,
+            "browserQueries": 18,
+            "editIterations": 0,
+            "evidenceUsed": [
+              "Inspected app.tsx without reading evaluator files, repository history, or other trials",
+              "Loaded the rebuilt application in headless Chromium at the provided local server",
+              "Confirmed the canvas backing dimensions are 710 by 420",
+              "Visually inspected initial and zoomed screenshots",
+              "Queried window.applicationState() initially and after hover, U, Z, and R interactions",
+              "Compared full-canvas pixel hashes before and after U and after R",
+              "Moved the pointer over the painted line at left, middle, and right plot x positions and observed stable IDs a, b, and c",
+              "Observed pointer leave clear hover",
+              "Observed the zoomed stroke terminate at the plot boundaries"
+            ],
+            "confusingAPIs": [
+              "The pointer event x coordinate frame is not self-evident from app.tsx; browser probing showed event.x is canvas-relative here, so subtracting the plot's x translation is correct.",
+              "Signal repaint timing is not explicit from the call sites; live interaction showed data/domain changes re-evaluate and repaint without a second interaction."
+            ],
+            "missingCapabilities": [
+              "Elapsed wall-clock duration was not instrumented at trial start, so elapsedMinutes is null rather than inferred."
+            ],
+            "unsupportedConclusions": [
+              "No claim is made about rendering implementations or environments other than the supplied runtime exercised in Chromium.",
+              "No unmeasured subpixel or antialiasing properties are inferred from screenshots."
+            ],
+            "model/settings": {
+              "model": "GPT-5 Codex",
+              "reasoningEffort": "unknown"
+            }
+          }
+        }
+      ],
+      "means": {
+        "ordinary": {
+          "deterministic": 80,
+          "agentic": 20,
+          "total": 100,
+          "fullyPassing": 2,
+          "trials": 2
+        },
+        "attribution": {
+          "deterministic": 80,
+          "agentic": 19,
+          "total": 99,
+          "fullyPassing": 2,
+          "trials": 2
+        }
+      }
+    },
+    {
+      "id": "04",
+      "label": "Final signal pair with temporal labels and independent pixel guidance",
+      "trials": [
+        {
+          "caseId": "case-01",
+          "arm": "ordinary",
+          "elapsedSeconds": 85.837,
+          "sourceChanged": true,
+          "status": "scored",
+          "deterministic": 80,
+          "agentic": 20,
+          "total": 100,
+          "deterministicPassed": true,
+          "reviewFresh": false,
+          "checksPassed": 15,
+          "checksTotal": 15,
+          "failedChecks": [],
+          "browser": "151.0.7922.34",
+          "review": {
+            "diagnosis": 5,
+            "repairQuality": 5,
+            "evidenceQuality": 5,
+            "uncertainty": 5,
+            "reasons": {
+              "diagnosis": "Precise and corroborated: trace item_5 shows that after U, source b.y became 30 while evaluated b.y remained 20 and pixels remained at oldB/quarterOld; this directly supports the diagnosis that mutating and republishing the same array reference failed to trigger reevaluation/repaint.",
+              "repairQuality": "The only source change replaces in-place mutation with data.set(data.get().map(...)), creating a new array and only a new b record. This is a minimal general repair that preserves IDs, actions, scales, clipping, hover, and the public API; trace items 7 and 9 verify update, zoom, reset, clipping, and pointer behavior.",
+              "evidenceQuality": "Strong layered verification is present: trace item_5 separates baseline source state, evaluated state, raster samples, and native keyboard/pointer behavior; item_7 repeats those checks after repair and confirms immediate repaint before further input; item_9 adds full-canvas blue bounds and reset hover IDs. The evidence observations also distinguish application, pixels, and canvas state by stage.",
+              "uncertainty": "Limits are explicit and appropriately scoped: the final response states that no retained render-geometry inspector was available and substitutes independently observed evaluated values and pixels; it also says cross-browser antialiasing was not tested. agentNotesSelfReported.unsupportedConclusions further limits claims across browsers, pixel ratios, and graphics backends, while missingCapabilities reports no additional capability required."
+            }
+          },
+          "agentNotesSelfReported": {
+            "elapsedMinutes": 6,
+            "browserQueries": [
+              "initial, post-update, post-zoom, and post-reset applicationState() snapshots",
+              "native keyboard input for U, Z, and R",
+              "native pointer movement over left, middle, right, and outside plot positions",
+              "CanvasRenderingContext2D getImageData samples at expected old and new line positions",
+              "full-canvas blue-pixel bounding-box scan after update plus zoom"
+            ],
+            "editIterations": 1,
+            "evidenceUsed": [
+              "app.tsx source inspection",
+              "published source values from applicationState().source",
+              "evaluated component values from applicationState().evaluated",
+              "domain and hover values from applicationState()",
+              "independent canvas pixel RGBA samples",
+              "native Playwright keyboard and pointer input",
+              "blue raster bounds of x=55..654 and y=148..211 after update plus zoom"
+            ],
+            "confusingAPIs": [
+              "signal.set accepts the same mutated array reference without causing the dependent component to re-evaluate",
+              "pixels exactly on a clipped stroke endpoint can be background because the stroke is clipped at the plot boundary"
+            ],
+            "missingCapabilities": [],
+            "unsupportedConclusions": [
+              "No claim is made about antialiasing or pixel colors on other browsers, device pixel ratios, or graphics backends",
+              "No separate retained render-geometry inspector was available; evaluated values and actual canvas pixels were observed independently"
+            ],
+            "model/settings": "Codex on GPT-5; exact reasoning setting not exposed"
+          }
+        },
+        {
+          "caseId": "case-01",
+          "arm": "attribution",
+          "elapsedSeconds": 53.991,
+          "sourceChanged": true,
+          "status": "scored",
+          "deterministic": 80,
+          "agentic": 20,
+          "total": 100,
+          "deterministicPassed": true,
+          "reviewFresh": false,
+          "checksPassed": 15,
+          "checksTotal": 15,
+          "failedChecks": [],
+          "browser": "151.0.7922.34",
+          "review": {
+            "diagnosis": 5,
+            "repairQuality": 5,
+            "evidenceQuality": 5,
+            "uncertainty": 5,
+            "reasons": {
+              "diagnosis": "Precise and corroborated: initial-app.tsx mutates `rows[1]` and republishes the identical array reference; trace item_6 reports that after U the source showed `b.y=30` while evaluated data stayed at 20, render generation stayed at 1, and pixel (355,150) remained white until Z forced rendering.",
+              "repairQuality": "final-app.tsx makes the minimal general repair by publishing a new array and a new object only for stable ID `b`; all other behavior and public APIs remain unchanged. Trace item_8 confirms immediate rerendering, and the supplied contract checks all pass, including update, zoom, hover, reset, clipping, and unchanged runtime.",
+              "evidenceQuality": "Trace item_8 independently verifies source and evaluated state, attribution snapshots/render generations, actual Canvas RGBA pixels, and native Playwright keyboard/pointer interaction. It observes generation 1→2 on U, updated and former-line pixels swapping blue/white, hover IDs a/b/c, zoom generation/domain, and reset generation/state; these are also summarized by the staged observations and corresponding check IDs such as update.evaluated, update.segment, zoom.segment, zoom.hover, and reset.geometry.",
+              "uncertainty": "The evidence states precise limits: agentNotesSelfReported and trace items 9/11 acknowledge that finite pixel probes cannot establish every pixel on the complete clip boundary, while inspector geometry is not treated as pixel or routed-event proof and live source references are distinguished from captured render values. The missing built-in browser capability is actionable and was successfully addressed with the provisioned Playwright entry."
+            }
+          },
+          "agentNotesSelfReported": {
+            "elapsedMinutes": 6,
+            "browserQueries": {
+              "inspectPlotCalls": 10,
+              "nativePointerPositions": 6,
+              "canvasPixelSamples": 38,
+              "pageLoads": 2
+            },
+            "editIterations": 1,
+            "evidenceUsed": [
+              "applicationState source, evaluated, domain, and hover values",
+              "inspectPlot captured scales, transforms, segments, clips, and render generation",
+              "CanvasRenderingContext2D getImageData pixel samples at expected stroke and clip-boundary locations",
+              "Playwright native keyboard and mouse input"
+            ],
+            "confusingAPIs": [
+              "inspectPlot source references are live while captured positions and scale values belong to a render generation",
+              "inspectPlot segment coverage is explicitly geometric and does not establish pixels or routed event targets",
+              "signal set with the same mutated array reference did not invalidate rendering"
+            ],
+            "missingCapabilities": [
+              "No built-in browser tool was available; the provisioned Playwright entry was used"
+            ],
+            "unsupportedConclusions": [
+              "Finite pixel probes do not exhaustively prove every pixel along the full clip boundary",
+              "Geometric segment coverage was not treated as pixel evidence or event-target evidence"
+            ],
+            "model/settings": {
+              "model": "GPT-5-based Codex",
+              "reasoningSetting": "unknown",
+              "browser": "Playwright Chromium headless",
+              "deviceScaleFactor": 1
+            }
+          }
+        }
+      ],
+      "means": {
+        "ordinary": {
+          "deterministic": 80,
+          "agentic": 20,
+          "total": 100,
+          "fullyPassing": 1,
+          "trials": 1
+        },
+        "attribution": {
+          "deterministic": 80,
+          "agentic": 20,
+          "total": 100,
+          "fullyPassing": 1,
+          "trials": 1
+        }
+      }
+    }
+  ],
+  "limitations": [
+    "Procedural agent blinding; reviewer traces can disclose arm",
+    "Default CLI models/settings not pinned explicitly",
+    "Timing and agent-reported query counts are not controlled performance measurements",
+    "Focused rounds have different case mixes; do not compare their means to whole-suite means",
+    "Original baseline reviewer instructions were contradictory; corrected re-reviews supersede original scores",
+    "Earlier center-only interaction checks missed a clean-control regression; all saved repairs have been rescored",
+    "Passing outcomes retain valid prior reviews; the regression received a fresh review with counterevidence",
+    "Prototype geometry is not a pixel/event oracle; clip paths remain opaque"
+  ],
+  "totals": {
+    "repairTrials": 22,
+    "fullyPassingRepairs": 21,
+    "deterministicChecksPassed": 328,
+    "deterministicChecksTotal": 330,
+    "cleanControlsUnchanged": 5,
+    "cleanControlRegressions": 1,
+    "ordinaryRuntimeIdenticalAcrossRounds": true,
+    "coreSourceReceiptsIdenticalAcrossRounds": true
+  }
+}
