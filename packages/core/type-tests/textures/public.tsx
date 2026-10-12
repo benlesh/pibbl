@@ -210,3 +210,27 @@ export function ChemicalConsumer() {
 
   return <Group><Rectangle style={{width:64,height:64,fill:first}} /><Rectangle style={{width:64,height:64,fill:second}} /><Rectangle style={{width:64,height:64,fill:third}} /></Group>;
 }
+
+import { polkaDots, halftone, truchet, plaid, plaidPresets, type PlaidOptions } from '@pibbl/core/textures';
+const namedPlaid: TextureRecipe = plaid({
+  colors: { paper: '#ffffff', ink: '#000000' },
+  horizontal: [{width:3,color:'paper'},{width:1,color:'ink'}],
+  vertical: [{width:1,color:'paper'}],
+});
+plaid({colors:{paper:'#ffffff'},horizontal:[{width:1,
+ // @ts-expect-error A band must reference a key in colors.
+ color:'missing'}],vertical:[{width:1,color:'paper'}]});
+const typedBands: PlaidOptions<{paper:string;ink:string}> = {
+ colors:{paper:'#ffffff',ink:'#000000'}, horizontal:[{width:1,color:'paper'}],vertical:[{width:1,color:'ink'}],
+};
+plaid(typedBands);
+plaid(plaidPresets.tartan);
+// @ts-expect-error Numeric palette indices are not color references.
+plaid({colors:{paper:'#ffffff'},horizontal:[{width:1,color:0}],vertical:[{width:1,color:'paper'}]});
+export function GeometricConsumer(){
+ const dots=useTexture(polkaDots({jitter:.2,seed:42}));
+ const tone=useTexture(halftone({cyclesX:2,speed:.1}));
+ const curves=useTexture(truchet({orientationBias:.4}));
+ const cloth=useTexture(namedPlaid);
+ return <Group>{[dots,tone,curves,cloth].map((fill,i)=><Rectangle key={i} style={{width:128,height:128,fill}}/>)}</Group>;
+}

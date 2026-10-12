@@ -482,6 +482,16 @@ const drafts = [
     load: () => import("./learning/composition/fabric-explorer.example"),
   },
   {
+    slug: "geometric-explorer", title: "Geometric Texture Explorer", shortTitle: "Geometric Patterns", section: "composition", order: 257,
+    summary: "Customize seamless dots, halftone, named-color plaids, and connecting Truchet curves.",
+    api: ["polkaDots", "halftone", "plaid", "truchet", "plaidPresets", "useTexture", "HtmlBox"],
+    objectives: ["Explore every geometry, color, and motion option with native editing controls.", "Build ordered plaid bands referencing named colors and inspect tile repetition."],
+    prompts: {gesture: "Choose a texture and preset; scroll the settings to edit colors, bands, motion, and placement.", code: "Use a named colors dictionary for plaid and ordered palette ramps for the other patterns."},
+    apiNotes: ["Plaid color references are checked against the colors dictionary by TypeScript and at runtime.", "All recipes repeat during motion and stop requesting frames at zero speed."],
+    canvas: {width:980,height:940}, related: ["texture-explorer","fabric-explorer","chemical-explorer"],
+    load: () => import("./learning/composition/geometric-explorer.example"),
+  },
+  {
     slug: "chemical-explorer", title: "Reaction–Diffusion Explorer", shortTitle: "Chemical Patterns", section: "composition", order: 256,
     summary: "Grow Schnakenberg spots, Barkley spirals, and Brusselator patterns with presets and live chemistry controls.",
     api: ["schnakenberg", "barkley", "brusselator", "schnakenbergPresets", "barkleyPresets", "brusselatorPresets", "useTexture", "InkMessage"],

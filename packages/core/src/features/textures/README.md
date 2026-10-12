@@ -177,3 +177,23 @@ pause/reset, painting and stirring. Chemistry changes initialize a new field;
 colors, placement, speed and pause preserve it. Some valid settings converge to
 uniform fields. Numerical stepping currently uses a private CPU implementation;
 no application animation loop or new public solver selector is introduced.
+
+## Geometric patterns and named color references
+
+`polkaDots`, `halftone`, and `truchet` use the existing ordered palette ramp.
+Dots expose radius, lattice size, stagger, jitter, and seed. Halftone varies dot
+sizes with a periodic tonal field. Truchet uses seeded quarter-circle tiles whose
+edge midpoints connect for either orientation. Phase and speed animate each
+pattern without losing periodic borders.
+
+`plaid` takes a `colors` dictionary and ordered `horizontal`/`vertical` band
+arrays. Each band's `color` is a TypeScript-checked dictionary key, with runtime
+validation for dynamic data. Relative band widths are normalized per axis;
+`crossing` sets the horizontal color contribution. Use `plaidPresets.gingham`,
+`.tartan`, or `.windowpane` as editable configurations. Omit the `useTexture`
+palette for plaid; its named colors supply the raster directly.
+
+Geometric Texture Explorer exposes every recipe option, color ramps, named plaid
+colors, editable band sequences, motion, resolution, rotation, and separate tile
+width/height. These recipes have no message commands. The existing ordered ramps
+remain arrays; no shipped texture API selected named colors by numeric index.

@@ -2595,6 +2595,16 @@ export declare function loadOutlineFont(source: string | URL | ArrayBuffer | Uin
 export declare function createTextGeometry(font: OutlineFont, text: string, options: TextGeometryOptions): TextGeometryResult;
 
 /* @pibbl-studio-module @pibbl/core/textures */
+export interface PolkaDotsOptions extends PatternMotionOptions { readonly columns?:number; readonly rows?:number; readonly radius?:number; readonly stagger?:number; readonly jitter?:number; readonly seed?:number; }
+export interface HalftoneOptions extends PatternMotionOptions { readonly columns?:number; readonly rows?:number; readonly minRadius?:number; readonly maxRadius?:number; readonly cyclesX?:number; readonly cyclesY?:number; readonly contrast?:number; readonly stagger?:number; }
+export interface TruchetOptions extends PatternMotionOptions { readonly columns?:number; readonly rows?:number; readonly lineWidth?:number; readonly orientationBias?:number; readonly seed?:number; }
+export interface PlaidBand<Key extends string = string> {readonly width:number;readonly color:Key;}
+export interface PlaidOptions<Colors extends Readonly<Record<string,string>> = Readonly<Record<string,string>>> extends PatternMotionOptions {readonly colors:Colors;readonly horizontal:readonly PlaidBand<NoInfer<Extract<keyof Colors,string>>>[];readonly vertical:readonly PlaidBand<NoInfer<Extract<keyof Colors,string>>>[];readonly crossing?:number;}
+export function polkaDots(options?:PolkaDotsOptions):import('@pibbl/core').TextureRecipe;
+export function halftone(options?:HalftoneOptions):import('@pibbl/core').TextureRecipe;
+export function truchet(options?:TruchetOptions):import('@pibbl/core').TextureRecipe;
+export function plaid<const Colors extends Readonly<Record<string,string>>>(options:PlaidOptions<Colors>):import('@pibbl/core').TextureRecipe;
+export const plaidPresets:Readonly<Record<'gingham'|'tartan'|'windowpane',Readonly<PlaidOptions<Readonly<{background:string;primary:string;accent:string}>>>>>;
 interface ChemicalOptions { readonly seed?:number; readonly diffusionU?:number; readonly diffusionV?:number; readonly initialNoise?:number; readonly warmupSteps?:number; readonly speed?:number; readonly paused?:boolean; }
 export interface SchnakenbergOptions extends ChemicalOptions { readonly a?:number; readonly b?:number; }
 export interface BarkleyOptions extends ChemicalOptions { readonly a?:number; readonly b?:number; readonly epsilon?:number; }
