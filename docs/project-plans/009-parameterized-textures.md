@@ -1,5 +1,7 @@
 # 009 — Parameterized texture library
 
+> **Historical status: Planning and implementation work record; current code and public contracts define shipped behavior.**
+
 Date: 2026-10-09. Status: first collection and fabric slice accepted on 2026-10-12; noise/composition and emboss slice accepted.
 Authorization: the user approved documenting the complete texture direction and
 starting stripes, checkers, hair, and expanded Gray–Scott. “Strips” is interpreted
