@@ -153,6 +153,17 @@ export type {
   PercentageReturnPoint,
   IndexedValuePoint,
 } from "./lib/financial-comparison.js";
+export { aggregateOhlcv, sessionVwap } from "./lib/financial-aggregation.js";
+export type {
+  OhlcvBucket,
+  OhlcvSource,
+  AggregatedOhlcvPoint,
+  AggregateOhlcvOptions,
+  SessionIdentifier,
+  SessionAccessor,
+  SessionVwapOptions,
+  SessionVwapPoint,
+} from "./lib/financial-aggregation.js";
 export {
   simpleMovingAverage,
   exponentialMovingAverage,

@@ -495,7 +495,9 @@
         "importPath": "@pibbl/core/viz"
       }
     ],
-    "notes": ["Displays three query results in the document."]
+    "notes": [
+      "Displays three query results in the document."
+    ]
   },
   {
     "id": "hover-card",
@@ -1442,6 +1444,55 @@
       },
       {
         "name": "BaselineSideStyle",
+        "importPath": "@pibbl/core/viz"
+      }
+    ]
+  },
+  {
+    "id": "financial-aggregation",
+    "title": "OHLCV buckets and session VWAP",
+    "description": "Aggregate source bars and compute session-reset volume-weighted pricing.",
+    "source": "financial-aggregation.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "OhlcvBucket",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "OhlcvSource",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "AggregateOhlcvOptions",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "AggregatedOhlcvPoint",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "SessionAccessor",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "SessionIdentifier",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "SessionVwapOptions",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "SessionVwapPoint",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "aggregateOhlcv",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "sessionVwap",
         "importPath": "@pibbl/core/viz"
       }
     ]

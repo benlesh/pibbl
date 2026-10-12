@@ -228,6 +228,13 @@ const drafts = [
     apiNotes:["Seeded simulated USD prices and fills, not a market feed. Per-share mark difference excludes fees and is not portfolio P&L."],canvas:{width:960,height:620},related:["financial-momentum-desk","financial-trend-volatility","financial-candles"],load:()=>import("./learning/composition/financial-execution-journal.example"),
   },
 
+  {slug:"financial-live-monitor",title:"Live Market Monitor",shortTitle:"Live Market Monitor",section:"composition",order:924,
+    summary:"Replay simulated intraday candles and volume with timeframe aggregation, session VWAP and explicit follow-latest navigation.",api:["aggregateOhlcv","sessionVwap","CandlestickSeries","VolumeSeries","useAnimatedValue"],
+    objectives:["Aggregate OHLCV without losing source extrema or volume.","Inspect an evolving partial bar while preserving zoom and historical browsing."],
+    prompts:{gesture:"Play the replay, switch 1m/5m/15m bars, pan into history, then Follow latest. Step through the selloff and recovery.",code:"Change replay cadence, simulated volume, session buckets or the VWAP price accessor."},
+    apiNotes:["Deterministic invented USD prices and shares, not a market feed. VWAP uses one-minute typical-price bars and is an approximation."],canvas:{width:960,height:640},related:["financial-execution-journal","financial-linked-panes","financial-trend-volatility"],load:()=>import("./learning/composition/financial-live-monitor.example"),
+  },
+
   {slug: "viz-recorded-inspection", title: "Recorded observations", shortTitle: "Recorded observations", section: "composition", order: 901,
     summary: "Find the recorded quote nearest an order time, and see why it was selected.", api: ["PointSeries", "usePointInspection", "nearestRecordedX"],
     objectives: ["Inspect the last successful paint through a public query.", "Keep query results tied to original typed observations."],

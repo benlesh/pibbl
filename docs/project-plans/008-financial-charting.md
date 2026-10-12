@@ -149,7 +149,7 @@ value or turn simulated events into reported market facts.
 | 4     | SMA, EMA, Bollinger Bands                                           | Accepted; focused verification passed |
 | 5     | RSI, MACD, stochastic oscillator                                    | Accepted; focused verification passed |
 | 6     | OHLC bars, baseline series, event markers                           | Accepted; focused verification passed |
-| 7     | Live updates, OHLCV aggregation, session VWAP                       | Queued                                |
+| 7     | Live updates, OHLCV aggregation, session VWAP                       | Accepted; focused verification passed |
 | 8     | Overview navigator, levels/zones, trend-line editing                | Queued                                |
 | 9     | Channel tools, Fibonacci tools, drawing persistence                 | Queued                                |
 | 10    | Exchange sessions, history loading, Heikin-Ashi                     | Later design                          |
@@ -1127,3 +1127,113 @@ trust, push or publication is claimed. Batch 7 API design remains pending review
 
 Final acceptance rerun on Node 24.15.0 / pnpm 11.21.0: the combined OHLC,
 baseline and Execution Journal Chromium suite passed 3 files / 9 tests.
+
+## Batch 7 runnable slice — 2026-10-12
+
+The user approved `aggregateOhlcv` and `sessionVwap`, with existing signals owning
+live feed updates. Pure helpers are implemented through the supported viz entry.
+Aggregation preserves OHLC extrema, volume and original contributing records;
+VWAP is source aligned and resets on session changes, including excluded boundary
+records. Caller-defined half-open buckets, price and session accessors make the
+financial assumptions explicit. Session properties are also accepted alongside
+callbacks, with one fixed return contract.
+
+Live Market Monitor replays two deterministic simulated UTC intraday sessions,
+including an opening volume burst, a selloff and recovery. Four partial updates
+per minute reveal the current bar without future extrema; the last replay update
+completes the final record. The application owns one cleanup-managed interval,
+play/pause/step/reset and bounded two-session retention. It adds no animation loop.
+One minute-based trading viewport persists across 1m/5m/15m aggregation. Direct
+wheel/drag/pinch suspends follow; Follow animates back at the current span. VWAP
+uses the full minute source before display aggregation, with its approximation
+labeled. Price and volume share navigation; original aggregate sources remain
+inspectable. Replay starts paused for intentional inspection.
+
+Milestone: **slice ready for feedback**, pending hands-on acceptance and broader
+hardening. Node 24.15.0 / pnpm 11.21.0 Chromium tests passed 2 files / 6 tests.
+Typecheck, focused ESLint, public JSDoc, core build and packed-viz verification
+passed. Packed evidence covers Bundler/NodeNext consumers, runtime exports,
+shared identity and private boundaries. Public source validation passed.
+Browser plugin was unavailable; native Playwright Chromium checked dark/light,
+desktop 1018×658 and phone 360×300, timeframe/window preservation, native wheel,
+drag and touch pinch, replay while browsing, animated Follow at the same span,
+and no page errors. Screenshots were inspected. Public Studio declarations and
+minimal examples include both APIs. No aggregate trust, commit, push or publication
+is claimed.
+
+Studio: `http://127.0.0.1:5196/#/examples/composition/financial-live-monitor`.
+
+### Batch 7 replay visibility correction — 2026-10-12
+
+User feedback found Play and Step visually imperceptible. Native inspection proved
+the feed was advancing, but five-minute candles took fourteen seconds to append.
+Play now advances thirty simulated seconds every 150ms (200× replay); Step pauses
+and advances to the next displayed-candle boundary. A seconds-resolution replay
+clock, explicit speed/Step labels, expanded VWAP explanation and latest-price
+horizontal guide make progress visible. Viewport span, animated following and
+native mouse/touch navigation remain unchanged.
+
+The focused public regression failed before the correction and passes afterward;
+the monitor file now has 3 passing tests. Native Chromium checks confirm wheel,
+drag, pinch, replay while browsing, animated Follow at the same span, and both
+palettes/phone layout. Focused lint passes. Fresh aggregate typecheck is temporarily
+blocked by concurrent interval-series tests referring to unfinished public exports;
+this work's timer-mock typing was corrected independently. No aggregate trust or
+commit is claimed.
+
+### Batch 7 animated replay and stable ticks — 2026-10-12
+
+User feedback requested animated playing data and X-axis ticks that move with the
+axis. The presented replay tick now uses existing numeric useAnimatedValue/tween
+(linear, 150ms), and snapshot derives partial candle, volume, VWAP and price-guide
+values from that interpolated position. Feed targets remain discrete; no new
+public API or animation loop was added. Reset adopts the initial feed directly,
+and reduced-motion preferences disable data tweening alongside navigation.
+Clock-aligned ticks select a fixed interval from the visible span/label budget;
+the same time stays attached to the same data coordinate as navigation scrolls.
+The policy only changes granularity when span changes, not at each moving endpoint.
+
+A stable-tick regression failed before implementation. Four focused Chromium
+monitor tests pass, including fixed-time tick displacement and intermediate replay
+samples with reduced motion disabled. Typecheck and focused lint pass. Native
+Chromium navigation checks still pass for mouse/wheel/pinch, replay while browsing,
+animated following, desktop/phone and both themes. Native intermediate-frame
+checks verify the same clock tick travels with the axis and feed values animate.
+No aggregate trust, commit or acceptance is claimed.
+
+### Batch 7 tick flicker and direct volume — 2026-10-12
+
+Native feedback identified flicker at tick-spacing boundaries. A focused mobile
+30-minute-follow regression reproduced alternation between ten- and fifteen-minute
+ticks from floating-point span subtraction. Interval selection now rounds tiny
+spacing noise; explicit sparse clock ticks render without the Axis endpoint-priority
+label suppression pass. Tick identities persist during translation; zoom can still
+change granularity. No generic Axis behavior or public API changed.
+
+The user also requested that volume bars stop animating from zero. Volume now
+aggregates received feed snapshots directly, uses a matching direct extent/readout,
+and shares only horizontal navigation with the price chart. Candles/VWAP/price
+presentation continue to interpolate. A failing volume regression now passes,
+checking received volume stays constant through intermediate price frames.
+Five focused monitor tests, fresh typecheck and focused lint pass. Native mobile
+replay sampling checks tick continuity without page errors. No commit or aggregate
+trust is claimed.
+
+The user requested a slightly slower simulation after these corrections. Replay
+now advances thirty simulated seconds every 250ms (120×), with a matching 250ms
+price tween. Volume remains direct and horizontal navigation retains its existing
+180ms duration.
+
+### Batch 7 acceptance — 2026-10-12
+
+The user approved Live Market Monitor after replay cadence, animation, stable tick
+and direct-volume refinements and requested a commit. The accepted replay cadence
+is 250ms / thirty simulated seconds (120×), with 250ms price interpolation and
+direct volume updates. Previous typecheck and packed/browser evidence remains
+current; focused acceptance tests cover both data helpers and all monitor fixes.
+Batch 8 is proposed next; its public editing/navigation APIs require user review.
+No aggregate trust, push or publication is claimed.
+
+Final acceptance rerun: Node 24.15.0 / pnpm 11.21.0 focused Chromium suite
+passed 2 files / 9 tests. Read-only final review found no material contract,
+lifecycle or numeric blocker.
