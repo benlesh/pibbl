@@ -646,7 +646,9 @@ function isApprovedCoreReference(
     (parent.type === "MemberExpression" ||
       parent.type === "OptionalMemberExpression") &&
     parent.object === node &&
-    valueImports.get(identifierName(node) ?? "") === "particle" &&
+    ["particle", "easing"].includes(
+      valueImports.get(identifierName(node) ?? "") ?? "",
+    ) &&
     staticMemberName(parent) !== undefined
   ) {
     return true;
@@ -1539,8 +1541,11 @@ export function validateLearningSourceText(
       (label === "fire-and-flow" ||
         label === 'Learning example "fire-and-flow"'));
   const isPhysicsLesson =
-    sourcePath === "packages/scenarios/src/learning/composition/embers-physics.example.tsx" ||
-    (sourcePath === undefined && (label === "embers-physics" || label === 'Learning example "embers-physics"')) ||
+    sourcePath ===
+      "packages/scenarios/src/learning/composition/embers-physics.example.tsx" ||
+    (sourcePath === undefined &&
+      (label === "embers-physics" ||
+        label === 'Learning example "embers-physics"')) ||
     sourcePath === PHYSICS_LEARNING_SOURCE_PATH ||
     sourcePath ===
       "packages/scenarios/src/learning/composition/physics-panels.example.tsx" ||
@@ -1554,7 +1559,9 @@ export function validateLearningSourceText(
   // Filter factories compose with every supported example package set.
   // The approved-module and named-import checks below still apply to them.
   const basePackageCount = inspection.packageImportModules.filter(
-    (module) => module !== "@pibbl/core/filters" && module !== "@pibbl/core/viz/inspection",
+    (module) =>
+      module !== "@pibbl/core/filters" &&
+      module !== "@pibbl/core/viz/inspection",
   ).length;
   const isStirredInkLesson =
     sourcePath ===

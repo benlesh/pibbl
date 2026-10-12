@@ -153,6 +153,17 @@ export type {
   PercentageReturnPoint,
   IndexedValuePoint,
 } from "./lib/financial-comparison.js";
+export {
+  simpleMovingAverage,
+  exponentialMovingAverage,
+  bollingerBands,
+} from "./lib/financial-indicators.js";
+export type {
+  MovingAverageOptions,
+  BollingerBandsOptions,
+  MovingAveragePoint,
+  BollingerBandPoint,
+} from "./lib/financial-indicators.js";
 
 export { utcTickLabels } from "./lib/utc-labels.js";
 export type { UTCTickLabelOptions } from "./lib/utc-labels.js";

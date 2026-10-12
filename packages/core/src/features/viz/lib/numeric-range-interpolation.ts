@@ -39,6 +39,7 @@ function interpolateEndpoint(from: number, to: number, progress: number): number
  * @param to - Ending finite endpoint pair.
  * @param progress - Finite interpolation progress supplied by an animation definition.
  * @returns A frozen finite endpoint pair.
+ * @see {@link NumericDomain}
  */
 export function interpolateNumericRange(
   from: NumericDomain,

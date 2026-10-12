@@ -23,6 +23,20 @@
     ]
   },
   {
+    "id": "financial-indicators",
+    "title": "Consecutive financial indicators",
+    "description": "Derive aligned SMA, EMA, and population-standard-deviation bands with explicit gap resets.",
+    "source": "financial-indicators.tsx",
+    "environment": "browser",
+    "symbols": [
+      { "name": "simpleMovingAverage", "importPath": "@pibbl/core/viz" },
+      { "name": "exponentialMovingAverage", "importPath": "@pibbl/core/viz" },
+      { "name": "bollingerBands", "importPath": "@pibbl/core/viz" },
+      { "name": "MovingAveragePoint", "importPath": "@pibbl/core/viz" },
+      { "name": "BollingerBandPoint", "importPath": "@pibbl/core/viz" }
+    ]
+  },
+  {
     "id": "scales",
     "title": "Scales and axes",
     "description": "Create band and linear scales with a typed axis and inspect resolved mappings.",
