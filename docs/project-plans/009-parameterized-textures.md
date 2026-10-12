@@ -1,6 +1,6 @@
 # 009 — Parameterized texture library
 
-Date: 2026-10-09. Status: first collection and fabric slice accepted on 2026-10-12; noise/composition next.
+Date: 2026-10-09. Status: first collection and fabric slice accepted on 2026-10-12; noise/composition and emboss slice accepted.
 Authorization: the user approved documenting the complete texture direction and
 starting stripes, checkers, hair, and expanded Gray–Scott. “Strips” is interpreted
 as stripes from the preceding proposal. Later families are a recorded backlog,
@@ -242,4 +242,30 @@ image overlays are a future composition use case, not a new filter commitment.
 
 2026-10-12: the user accepted the reference-checked fabric revision and authorized
 a local commit. The next recorded candidate is noise/composition, followed by
-additional reaction-diffusion models. No next implementation has been started.
+additional reaction-diffusion models. The noise/composition slice below has now started.
+
+## Noise and composition feedback slice
+
+2026-10-12: `softNoise` and `ridgedNoise` expose seeded seamless fields with
+frequency, octaves, persistence, contrast, phase, and speed. The Painted Canvas
+example at `#/examples/composition/material-overlay` applies grayscale canvas or
+paper texture and independent pigment variation to an image through an app-owned
+multiply scope. Controls cover strength (including exact restoration at zero),
+tile size, surface, seed, pigment, and motion. Twelve focused browser tests and
+packed consumers pass; desktop/mobile Studio controls were checked. Await
+experiential feedback before broader hardening or the next reaction-diffusion
+family. See the dated noise/composition field note for limitations.
+
+2026-10-12 follow-up: surface brightness alone did not satisfy the requested
+embossed canvas appearance. The demo now uses `emboss(map, options)` on the image:
+grayscale height gradients produce normals and directional highlights/shadows.
+Relief and light-direction controls make this observable. The previous screen
+highlight layer is replaced. This is a public filter feedback slice awaiting
+visual acceptance, not the full filter hardening milestone.
+
+## Noise, composition, and emboss acceptance
+
+2026-10-12: the user accepted the height-lit canvas appearance and public emboss
+API, and authorized a local commit. The next texture family is additional
+reaction-diffusion models: start with Schnakenberg for spots/labyrinths, followed
+by Barkley for moving excitable fronts and Brusselator for oscillatory patterns.

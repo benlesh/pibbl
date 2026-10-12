@@ -28,3 +28,6 @@ export type {
 
 export { reflectedLight } from './filters/reflected-light.js';
 export type { PibblReflectedLightFilterOptions, PibblReflectedLightSource } from './lib/style/filter-types.js';
+
+export { emboss } from './filters/emboss.js';
+export type { PibblEmbossFilterOptions } from './filters/emboss.js';

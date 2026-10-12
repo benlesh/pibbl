@@ -352,6 +352,16 @@ const drafts = [
     load: () => import("./learning/composition/fabric-explorer.example"),
   },
   {
+    slug: "material-overlay", title: "Painted Canvas", shortTitle: "Painted Canvas", section: "composition", order: 255,
+    summary: "Combine seamless noise and a woven or paper surface to give an image material depth.",
+    api: ["softNoise", "ridgedNoise", "plainWeave", "paper", "useTexture", "Image", "definePrimitive", "emboss"],
+    objectives: ["Compare a clean image with texture-modulated pixels.", "Adjust surface strength, size, seeds, pigment variation, and periodic noise motion."],
+    prompts: { gesture: "Switch Canvas weave to Paper grain, compare Strength zero, and toggle Pigment.", code: "Change NoiseOptions or the grayscale surface palette to adjust the material response." },
+    apiNotes: ["The emboss filter lights grayscale surface heights; the pigment multiply scope uses definePrimitive.", "Strength zero reproduces the original image; decorative overlays opt out of pointer targeting."],
+    canvas: { width: 880, height: 790 }, related: ["fabric-explorer", "texture-explorer", "material-lab"],
+    load: () => import("./learning/composition/material-overlay.example"),
+  },
+  {
     slug: "material-lab",
     title: "Material Lab",
     shortTitle: "Material Lab",
