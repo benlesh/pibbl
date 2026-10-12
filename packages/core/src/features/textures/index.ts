@@ -69,3 +69,6 @@ export type {
 } from "./lib/patterns.js";
 export { grayScottPresets } from "./lib/gray-scott.js";
 export type { ReactionDiffusionPreset } from "./lib/gray-scott.js";
+
+export { softNoise, ridgedNoise } from "./lib/patterns.js";
+export type { NoiseOptions } from "./lib/patterns.js";

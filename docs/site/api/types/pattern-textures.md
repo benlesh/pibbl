@@ -11,6 +11,9 @@ symbols:
     twill,
     herringbone,
     FabricOptions,
+    softNoise,
+    ridgedNoise,
+    NoiseOptions,
     stripes,
     checkers,
     woodGrain,
@@ -133,3 +136,25 @@ pixels use the dark end. This is a stylized fabric surface, without physical clo
 simulation or individually simulated fibers. Rotate the complete repeat lattice
 through paint placement. Use enough raster resolution for the chosen thread count;
 small raster or display sizes can alias fine fibers.
+
+## softNoise
+
+`softNoise(options)` sums periodic smooth value-noise layers. Each successive
+layer doubles the integer lattice frequency. Layer amplitudes are normalized.
+
+## ridgedNoise
+
+`ridgedNoise(options)` folds each layer with `1 - abs(noise)` before summing it,
+producing connected bright crests and softer valleys. Both are material fields,
+without a terrain or physical cloud simulation contract.
+
+## NoiseOptions
+
+Seed is unsigned 32-bit (default 42). Frequency is integer 1–16 (default 4);
+octaves is integer 1–6 (default 4); persistence is 0–1 (default 0.5). Contrast is
+0–4 (default 1), centered around 0.5 with final color values clamped to the ramp.
+Zero contrast is a uniform midpoint field. Phase/speed follow PatternMotionOptions.
+Motion scrolls the field periodically, preserving its seams; zero speed idles.
+Mount with useTexture for colors and resolution. Use enough resolution for the
+highest selected frequency to avoid aliasing. Layer composition belongs to the
+application; these factories add no new blending or filter API.

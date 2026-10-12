@@ -152,3 +152,15 @@ Material Lab, Stirred Ink, and Growing Reveal examples.
 seeded fine fibers, phase, and speed. Mount with `useTexture` to choose colors and
 resolution; paint placement controls display size and rotation. Zero speed idles.
 Try the public Fabric Explorer at `#/examples/composition/fabric-explorer`.
+
+### Noise and image composition (feedback slice)
+
+`softNoise` layers periodic value noise; `ridgedNoise` folds each layer into
+ridges. `NoiseOptions` controls seed, frequency, octaves, persistence, contrast,
+phase, and speed. Mount with `useTexture` for palette and resolution controls.
+Try `#/examples/composition/material-overlay` to compare an image with canvas or
+paper texture and independent pigment variation. The `emboss` filter derives
+surface normals from a grayscale weave or paper height map, then lights the image
+with matching highlights and shadows. Relief and light-direction controls expose
+the effect. The example still owns its pigment multiply scope through
+`definePrimitive`.

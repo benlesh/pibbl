@@ -327,3 +327,33 @@ it("fuzzy yarn has gradual edge coverage instead of an abrupt pixel step", () =>
     h.dispose();
   }
 });
+
+it("soft and ridged noise expose seeded multiscale fields that repeat during motion", () => {
+  const outputs: Uint8ClampedArray[] = [];
+  for (const factory of [textures.softNoise, textures.ridgedNoise]) {
+    expect(typeof factory).toBe("function");
+    const h = harness(
+      factory({ seed: 42, frequency: 4, octaves: 3, speed: 0.2 }),
+    );
+    try {
+      h.driver.flush(0);
+      const first = h.pixels();
+      outputs.push(first);
+      h.driver.flush(16);
+      h.driver.flush(500);
+      const moving = h.pixels();
+      expect(moving).not.toEqual(first);
+      expect(moving.slice(0, 65 * 4)).toEqual(moving.slice(64 * 65 * 4));
+      for (let y = 0; y < 65; y++)
+        expect(moving.slice(y * 65 * 4, y * 65 * 4 + 4)).toEqual(
+          moving.slice((y * 65 + 64) * 4, (y * 65 + 65) * 4),
+        );
+      h.update(factory({ seed: 91, frequency: 4, octaves: 3 }));
+      expect(h.pixels()).not.toEqual(first);
+      expect(h.driver.pendingHostFrames).toBe(0);
+    } finally {
+      h.dispose();
+    }
+  }
+  expect(outputs[0]).not.toEqual(outputs[1]);
+});

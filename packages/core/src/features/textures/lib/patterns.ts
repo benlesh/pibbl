@@ -465,3 +465,77 @@ export function twill(options: FabricOptions = {}): TextureRecipe {
 export function herringbone(options: FabricOptions = {}): TextureRecipe {
   return herringboneRecipe(options);
 }
+
+/** Seeded seamless noise layers and their tonal response. @see {@link softNoise} */
+export interface NoiseOptions extends PatternMotionOptions {
+  /** Unsigned 32-bit noise seed; default 42. See {@link NoiseOptions}. */
+  readonly seed?: number;
+  /** Integer base lattice periods per axis, 1–16; default 4. See {@link NoiseOptions}. */
+  readonly frequency?: number;
+  /** Number of doubled-frequency layers, integer 1–6; default 4. See {@link NoiseOptions}. */
+  readonly octaves?: number;
+  /** Relative amplitude of each successive layer, 0–1; default 0.5. See {@link NoiseOptions}. */
+  readonly persistence?: number;
+  /** Tonal contrast about the midpoint, 0–4; default 1. See {@link NoiseOptions}. */
+  readonly contrast?: number;
+}
+function noiseConfig(options: NoiseOptions) {
+  return {
+    ...motion(options),
+    seed: validateSeed(options.seed),
+    frequency: bounded("Noise frequency", options.frequency ?? 4, 1, 16, true),
+    octaves: bounded("Noise octaves", options.octaves ?? 4, 1, 6, true),
+    persistence: bounded("Noise persistence", options.persistence ?? 0.5, 0, 1),
+    contrast: bounded("Noise contrast", options.contrast ?? 1, 0, 4),
+  };
+}
+function layeredNoise(
+  c: ReturnType<typeof noiseConfig>,
+  u: number,
+  v: number,
+  ridge: boolean,
+) {
+  let sum = 0,
+    weight = 0,
+    amplitude = 1,
+    frequency = c.frequency;
+  for (let i = 0; i < c.octaves; i++) {
+    const sample = noise(
+      u,
+      v,
+      frequency,
+      frequency,
+      c.seed ^ Math.imul(i, 0x517cc1b7),
+    );
+    sum += (ridge ? 1 - Math.abs(sample) : 0.5 + sample * 0.5) * amplitude;
+    weight += amplitude;
+    amplitude *= c.persistence;
+    frequency *= 2;
+  }
+  return 0.5 + (sum / weight - 0.5) * c.contrast;
+}
+const softNoiseRecipe = /* @__PURE__ */ pattern(noiseConfig, (c, u, v, phase) =>
+  layeredNoise(c, u, wrap(v + phase), false),
+);
+const ridgedNoiseRecipe = /* @__PURE__ */ pattern(
+  noiseConfig,
+  (c, u, v, phase) => layeredNoise(c, u, wrap(v + phase), true),
+);
+/**
+ * Creates smooth seamless multiscale lattice noise for clouds, pigment, and material variation.
+ * @param options - Seed, lattice frequencies, amplitudes, contrast, and motion. See {@link NoiseOptions}.
+ * @returns A mountable recipe with no message commands. See {@link TextureRecipe}.
+ * @see {@link NoiseOptions}
+ */
+export function softNoise(options: NoiseOptions = {}): TextureRecipe {
+  return softNoiseRecipe(options);
+}
+/**
+ * Creates seamless multiscale ridges by folding each noise layer around its midpoint.
+ * @param options - Seed, lattice frequencies, amplitudes, contrast, and motion. See {@link NoiseOptions}.
+ * @returns A mountable recipe with no message commands. See {@link TextureRecipe}.
+ * @see {@link NoiseOptions}
+ */
+export function ridgedNoise(options: NoiseOptions = {}): TextureRecipe {
+  return ridgedNoiseRecipe(options);
+}

@@ -180,3 +180,20 @@ export function FabricConsumer() {
   const chevrons: Texture<never> = useTexture(herringbone(options));
   return <Group><Rectangle style={{ width: 100, height: 100, fill: weave }} /><Rectangle style={{ width: 100, height: 100, fill: diagonal }} /><Rectangle style={{ width: 100, height: 100, fill: chevrons }} /></Group>;
 }
+
+
+import { softNoise, ridgedNoise, type NoiseOptions } from "@pibbl/core/textures";
+export function NoiseConsumer() {
+  const options: NoiseOptions = { seed: 42, frequency: 4, octaves: 3, persistence: 0.5, contrast: 1.2, speed: 0.1 };
+  const soft: Texture<never> = useTexture(softNoise(options));
+  const ridge: Texture<never> = useTexture(ridgedNoise(options));
+  return <Group><Rectangle style={{ width: 100, height: 100, fill: soft }} /><Rectangle style={{ width: 100, height: 100, fill: ridge }} /></Group>;
+}
+
+
+import { emboss, type PibblEmbossFilterOptions } from "@pibbl/core/filters";
+export function EmbossConsumer() {
+  const height = useTexture(plainWeave(), { palette: ["#000000", "#ffffff"] });
+  const options: PibblEmbossFilterOptions = { region: {x:0,y:0,width:100,height:100}, depth:3, strength:0.5, direction:[-1,-1] };
+  return <Rectangle style={{ width:100, height:100, fill:"#708090", filter:emboss(height.paint({mode:"repeat",tileWidth:64,tileHeight:64}), options) }} />;
+}
