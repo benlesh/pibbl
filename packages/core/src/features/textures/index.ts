@@ -72,3 +72,6 @@ export type { ReactionDiffusionPreset } from "./lib/gray-scott.js";
 
 export { softNoise, ridgedNoise } from "./lib/patterns.js";
 export type { NoiseOptions } from "./lib/patterns.js";
+
+export { schnakenberg, barkley, brusselator, schnakenbergPresets, barkleyPresets, brusselatorPresets } from './lib/chemical-recipes.js';
+export type { SchnakenbergOptions, BarkleyOptions, BrusselatorOptions } from './lib/chemical-recipes.js';

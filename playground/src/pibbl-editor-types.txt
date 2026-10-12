@@ -1850,6 +1850,17 @@ export declare function loadOutlineFont(source: string | URL | ArrayBuffer | Uin
 export declare function createTextGeometry(font: OutlineFont, text: string, options: TextGeometryOptions): TextGeometryResult;
 
 /* @pibbl-studio-module @pibbl/core/textures */
+interface ChemicalOptions { readonly seed?:number; readonly diffusionU?:number; readonly diffusionV?:number; readonly initialNoise?:number; readonly warmupSteps?:number; readonly speed?:number; readonly paused?:boolean; }
+export interface SchnakenbergOptions extends ChemicalOptions { readonly a?:number; readonly b?:number; }
+export interface BarkleyOptions extends ChemicalOptions { readonly a?:number; readonly b?:number; readonly epsilon?:number; }
+export interface BrusselatorOptions extends ChemicalOptions { readonly a?:number; readonly b?:number; }
+export function schnakenberg(options?:SchnakenbergOptions):import('@pibbl/core').TextureRecipe<InkMessage>;
+export function barkley(options?:BarkleyOptions):import('@pibbl/core').TextureRecipe<InkMessage>;
+export function brusselator(options?:BrusselatorOptions):import('@pibbl/core').TextureRecipe<InkMessage>;
+export const schnakenbergPresets:Readonly<{spots:Readonly<SchnakenbergOptions>;labyrinths:Readonly<SchnakenbergOptions>}>;
+export const barkleyPresets:Readonly<{spirals:Readonly<BarkleyOptions>;waves:Readonly<BarkleyOptions>}>;
+export const brusselatorPresets:Readonly<{spots:Readonly<BrusselatorOptions>;oscillations:Readonly<BrusselatorOptions>}>;
+
 export interface NoiseOptions extends PatternMotionOptions { readonly seed?: number; readonly frequency?: number; readonly octaves?: number; readonly persistence?: number; readonly contrast?: number; }
 export function softNoise(options?: NoiseOptions): import('@pibbl/core').TextureRecipe;
 export function ridgedNoise(options?: NoiseOptions): import('@pibbl/core').TextureRecipe;

@@ -14,6 +14,15 @@ symbols:
     softNoise,
     ridgedNoise,
     NoiseOptions,
+    schnakenberg,
+    barkley,
+    brusselator,
+    schnakenbergPresets,
+    barkleyPresets,
+    brusselatorPresets,
+    SchnakenbergOptions,
+    BarkleyOptions,
+    BrusselatorOptions,
     stripes,
     checkers,
     woodGrain,
@@ -158,3 +167,55 @@ Motion scrolls the field periodically, preserving its seams; zero speed idles.
 Mount with useTexture for colors and resolution. Use enough resolution for the
 highest selected frequency to avoid aliasing. Layer composition belongs to the
 application; these factories add no new blending or filter API.
+
+## schnakenberg
+
+`schnakenberg(options?)` creates a periodic activator/inhibitor simulation recipe
+accepting `InkMessage` paint, stir, pause and reset. Mount with `useTexture` for
+palette and resolution, and use paint placement for tile size.
+
+## barkley
+
+`barkley(options?)` creates an excitable two-field simulation initialized with a
+broken excitation front. Paint excites activator; stir advects both fields.
+
+## brusselator
+
+`brusselator(options?)` creates a periodic two-field feed/conversion simulation.
+Color represents activator relative to twice its equilibrium concentration.
+
+## SchnakenbergOptions
+
+`a` and `b` are 0.01–2 (defaults 0.1, 0.9); diffusion defaults to 1, 20.
+
+## BarkleyOptions
+
+`a` is 0.3–1.2 (default 0.75), `b` is 0–0.2 (default 0.02), and `epsilon` is
+0.005–0.1 (default 0.02). Diffusion defaults to 1, 0. Color represents excitation.
+
+## BrusselatorOptions
+
+`a` is 0.1–3 (default 1), `b` is 0.1–5 (default 1.8). Diffusion defaults to 0.2, 2.
+
+All three types accept `seed` (uint32, default 42), `diffusionU`/`diffusionV`
+(0–32), `initialNoise` (0–1, default 0.1), `warmupSteps` (integer 0–12000,
+default 4096), `speed` (0–4, default 1) and `paused` (default false).
+Speed multiplies 480 numerical steps per second; an internal stability-limited
+step size depends on chemistry and diffusion. Zero speed or pause idles.
+Chemistry, seed, noise and warmup changes reset the field; speed and pause changes
+preserve it. Reset reproduces initialization and preserves pause state. Palette
+changes preserve the field. Resolution changes initialize a new field.
+Minimum resolution is 3×3. Raster borders duplicate periodic samples. All stepping,
+brushes and stirring wrap. Brush radius is in simulation cells.
+
+## schnakenbergPresets
+
+Immutable `spots` and `labyrinths` option objects, spread into `schnakenberg`.
+
+## barkleyPresets
+
+Immutable `spirals` and `waves` option objects, spread into `barkley`.
+
+## brusselatorPresets
+
+Immutable `spots` and `oscillations` option objects, spread into `brusselator`.
