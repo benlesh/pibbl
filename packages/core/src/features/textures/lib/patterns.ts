@@ -314,10 +314,7 @@ const woodRecipe = /* @__PURE__ */ pattern(
       if (radius >= 1) continue;
       const edge = Math.min(1, Math.max(0, (radius - 0.85) / 0.15));
       const blend = 1 - edge * edge * (3 - 2 * edge);
-      const ring = Math.pow(
-        0.5 + 0.5 * Math.cos(tau * radius * 3),
-        5,
-      );
+      const ring = Math.pow(0.5 + 0.5 * Math.cos(tau * radius * 3), 5);
       const knotValue =
         0.55 - 0.23 * ring - 0.28 * Math.pow(Math.max(0, 1 - radius * 3), 2);
       value += (knotValue - value) * blend;
@@ -333,4 +330,138 @@ const woodRecipe = /* @__PURE__ */ pattern(
  */
 export function woodGrain(options: WoodGrainOptions = {}): TextureRecipe {
   return woodRecipe(options);
+}
+
+/** Shared thread geometry and shading for seamless woven fabrics. @see {@link plainWeave} */
+export interface FabricOptions extends PatternMotionOptions {
+  /** Unsigned 32-bit fiber variation seed; default 42. See {@link FabricOptions}. */
+  readonly seed?: number;
+  /** Thread count on each axis, a multiple of 8 in 8–128; default 16. See {@link FabricOptions}. */
+  readonly threads?: number;
+  /** Thread width as a fraction of cell spacing, 0.2–1; default 0.8. See {@link FabricOptions}. */
+  readonly threadWidth?: number;
+  /** Rounded thread lighting strength, 0–1; default 0.65. See {@link FabricOptions}. */
+  readonly relief?: number;
+  /** Seeded directional fibers and soft, uneven yarn edges, 0–1; default 0.2. See {@link FabricOptions}. */
+  readonly fuzz?: number;
+}
+function fabricConfig(options: FabricOptions) {
+  const threads = bounded(
+    "Fabric threads",
+    options.threads ?? 16,
+    8,
+    128,
+    true,
+  );
+  if (threads % 8 !== 0)
+    throw new RangeError("Fabric threads must be a multiple of 8.");
+  return {
+    ...motion(options),
+    seed: validateSeed(options.seed),
+    threads,
+    threadWidth: bounded(
+      "Fabric threadWidth",
+      options.threadWidth ?? 0.8,
+      0.2,
+      1,
+    ),
+    relief: bounded("Fabric relief", options.relief ?? 0.65, 0, 1),
+    fuzz: bounded("Fabric fuzz", options.fuzz ?? 0.2, 0, 1),
+  };
+}
+type FabricConfig = ReturnType<typeof fabricConfig>;
+function fabricSample(
+  c: FabricConfig,
+  u: number,
+  v: number,
+  warpOnTop: boolean,
+) {
+  const x = u * c.threads,
+    y = v * c.threads;
+  const warpFiber = noise(u, v, c.threads * 8, 16, c.seed);
+  const weftFiber = noise(u, v, 16, c.threads * 8, c.seed ^ 0x68bc21eb);
+  // Spun yarn has uneven edges and a soft fiber envelope. Coverage, rather
+  // than a binary inside/outside test, keeps enlarged yarn from looking cut out.
+  const warpRadius = c.threadWidth * (1 + c.fuzz * 0.14 * warpFiber);
+  const weftRadius = c.threadWidth * (1 + c.fuzz * 0.14 * weftFiber);
+  const acrossWarp = (Math.abs((x % 1) - 0.5) * 2) / warpRadius;
+  const acrossWeft = (Math.abs((y % 1) - 0.5) * 2) / weftRadius;
+  const softness = 0.1 + c.fuzz * 0.45;
+  const coverage = (across: number) => {
+    const t = Math.max(
+      0,
+      Math.min(1, (across - (1 - softness)) / (2 * softness)),
+    );
+    return 1 - t * t * (3 - 2 * t);
+  };
+  const warp = coverage(acrossWarp),
+    weft = coverage(acrossWeft);
+  const warpCrown = Math.sqrt(Math.max(0, 1 - acrossWarp * acrossWarp));
+  const weftCrown = Math.sqrt(Math.max(0, 1 - acrossWeft * acrossWeft));
+  const warpValue =
+    0.62 + c.relief * (0.14 * warpCrown - 0.07) + c.fuzz * 0.15 * warpFiber;
+  const weftValue =
+    0.43 + c.relief * (0.14 * weftCrown - 0.07) + c.fuzz * 0.15 * weftFiber;
+  const gap = 0.18;
+  // The drawdown determines occlusion at crossings. A yarn stays continuous
+  // along a float; no per-cell bevel or repeated shadow chops it into blocks.
+  return warpOnTop
+    ? warpValue * warp + (weftValue * weft + gap * (1 - weft)) * (1 - warp)
+    : weftValue * weft + (warpValue * warp + gap * (1 - warp)) * (1 - weft);
+}
+const plainWeaveRecipe = /* @__PURE__ */ pattern(
+  fabricConfig,
+  (c, u, v, phase) => {
+    v = wrap(v + phase);
+    const x = Math.floor(u * c.threads),
+      y = Math.floor(v * c.threads);
+    return fabricSample(c, u, v, (x + y) % 2 === 0);
+  },
+);
+const twillRecipe = /* @__PURE__ */ pattern(fabricConfig, (c, u, v, phase) => {
+  v = wrap(v + phase);
+  const x = Math.floor(u * c.threads),
+    y = Math.floor(v * c.threads);
+  return fabricSample(c, u, v, (((x - y) % 4) + 4) % 4 < 2);
+});
+const herringboneHarnesses = [0, 1, 2, 3, 1, 0, 3, 2] as const;
+const herringboneRecipe = /* @__PURE__ */ pattern(
+  fabricConfig,
+  (c, u, v, phase) => {
+    v = wrap(v + phase);
+    const x = Math.floor(u * c.threads) % 8,
+      y = Math.floor(v * c.threads);
+    // CottonWorks Weaving 101, p. 23: harness sequence 1,2,3,4,2,1,4,3.
+    // The offset at each reversal breaks the diagonal instead of duplicating
+    // the turning end, which would produce a pointed/chevron-like twill.
+    const harness = herringboneHarnesses[x];
+    return fabricSample(c, u, v, (harness + y) % 4 >= 2);
+  },
+);
+/**
+ * Creates an alternating over-under plain weave with rounded threads and seeded fibers.
+ * @param options - Thread geometry, shading, seed, and motion. See {@link FabricOptions}.
+ * @returns A mountable recipe with no message commands. See {@link TextureRecipe}.
+ * @see {@link FabricOptions}
+ */
+export function plainWeave(options: FabricOptions = {}): TextureRecipe {
+  return plainWeaveRecipe(options);
+}
+/**
+ * Creates a two-over, two-under diagonal twill fabric.
+ * @param options - Thread geometry, shading, seed, and motion. See {@link FabricOptions}.
+ * @returns A mountable recipe with no message commands. See {@link TextureRecipe}.
+ * @see {@link FabricOptions}
+ */
+export function twill(options: FabricOptions = {}): TextureRecipe {
+  return twillRecipe(options);
+}
+/**
+ * Creates a reversing twill fabric with repeating herringbone chevrons.
+ * @param options - Thread geometry, shading, seed, and motion. See {@link FabricOptions}.
+ * @returns A mountable recipe with no message commands. See {@link TextureRecipe}.
+ * @see {@link FabricOptions}
+ */
+export function herringbone(options: FabricOptions = {}): TextureRecipe {
+  return herringboneRecipe(options);
 }

@@ -2427,6 +2427,10 @@ export declare function loadOutlineFont(source: string | URL | ArrayBuffer | Uin
 export declare function createTextGeometry(font: OutlineFont, text: string, options: TextGeometryOptions): TextGeometryResult;
 
 /* @pibbl-studio-module @pibbl/core/textures */
+export interface FabricOptions extends PatternMotionOptions { readonly seed?: number; readonly threads?: number; readonly threadWidth?: number; readonly relief?: number; readonly fuzz?: number; }
+export function plainWeave(options?: FabricOptions): import('@pibbl/core').TextureRecipe;
+export function twill(options?: FabricOptions): import('@pibbl/core').TextureRecipe;
+export function herringbone(options?: FabricOptions): import('@pibbl/core').TextureRecipe;
 export interface PatternMotionOptions { readonly phase?: number; readonly speed?: number; }
 export interface StripesOptions extends PatternMotionOptions { readonly bands?: number; readonly dutyCycle?: number; readonly wave?: number; readonly waveCycles?: number; }
 export interface CheckersOptions extends PatternMotionOptions { readonly columns?: number; readonly rows?: number; }

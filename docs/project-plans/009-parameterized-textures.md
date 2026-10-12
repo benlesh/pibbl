@@ -1,6 +1,6 @@
 # 009 — Parameterized texture library
 
-Date: 2026-10-09. Status: first collection accepted on 2026-10-12; fabric slice next.
+Date: 2026-10-09. Status: first collection and fabric slice accepted on 2026-10-12; noise/composition next.
 Authorization: the user approved documenting the complete texture direction and
 starting stripes, checkers, hair, and expanded Gray–Scott. “Strips” is interpreted
 as stripes from the preceding proposal. Later families are a recorded backlog,
@@ -222,3 +222,24 @@ authorized committing them, and requested the next texture set. Begin the fabric
 family with plain weave, twill, and herringbone: shared recoloring, thread size,
 fiber variation, and periodic motion. Deliver a public Studio slice before broad
 hardening. Acceptance does not imply a completed aggregate trust run.
+
+### Fabric slice ready for feedback
+
+2026-10-12: `plainWeave`, `twill`, and `herringbone` are available with thread count,
+thread width, relief, seeded fiber variation, palette, tile size, and motion.
+The Fabric Explorer is manually and headlessly driven through public APIs at
+`#/examples/composition/fabric-explorer`. Nine source tests and one built example
+check pass; packed texture consumers pass. Broad hardening follows evaluation.
+
+2026-10-12 fabric feedback: verify against actual weaving references. Plain weave
+and 2/2 twill checked; herringbone corrected to CottonWorks' offset broken twill
+rather than a duplicated-end reversal. Crossing-level public tests added. Yarn
+edges now use soft coverage and seeded fiber irregularity; Explorer detail uses
+512² textures. Eleven source tests and one built-example test pass. Painted-canvas
+image overlays are a future composition use case, not a new filter commitment.
+
+## Fabric acceptance
+
+2026-10-12: the user accepted the reference-checked fabric revision and authorized
+a local commit. The next recorded candidate is noise/composition, followed by
+additional reaction-diffusion models. No next implementation has been started.

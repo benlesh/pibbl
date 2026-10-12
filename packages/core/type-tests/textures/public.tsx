@@ -170,3 +170,13 @@ export function PatternConsumer() {
   stripeTexture.send({ type: "pause", paused: true });
   return <Group><Rectangle style={{ width: 80, height: 80, fill: stripeTexture }} /><Rectangle style={{ width: 80, height: 80, fill: checks }} /><Rectangle style={{ width: 80, height: 80, fill: wood }} /><Rectangle style={{ width: 80, height: 80, fill: chemistry }} /></Group>;
 }
+
+
+import { plainWeave, twill, herringbone, type FabricOptions } from "@pibbl/core/textures";
+export function FabricConsumer() {
+  const options: FabricOptions = { threads: 16, threadWidth: 0.8, relief: 0.65, fuzz: 0.2, seed: 42, speed: 0.1 };
+  const weave: Texture<never> = useTexture(plainWeave(options));
+  const diagonal: Texture<never> = useTexture(twill(options));
+  const chevrons: Texture<never> = useTexture(herringbone(options));
+  return <Group><Rectangle style={{ width: 100, height: 100, fill: weave }} /><Rectangle style={{ width: 100, height: 100, fill: diagonal }} /><Rectangle style={{ width: 100, height: 100, fill: chevrons }} /></Group>;
+}

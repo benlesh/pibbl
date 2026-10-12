@@ -444,6 +444,16 @@ const drafts = [
     load: () => import("./learning/composition/texture-explorer.example"),
   },
   {
+    slug: "fabric-explorer", title: "Fabric Explorer", shortTitle: "Fabrics", section: "composition", order: 254,
+    summary: "Weave seamless plain fabric, diagonal twill, and herringbone with adjustable threads and fibers.",
+    api: ["plainWeave", "twill", "herringbone", "useTexture", "useSignal"],
+    objectives: ["Compare plain weave, 2/2 twill, and offset broken herringbone.", "Change thread density, width, relief, fibers, palette, and periodic motion."],
+    prompts: { gesture: "Change Threads, Width, Relief, and Fuzz; try palettes and motion.", code: "Adjust FabricOptions or rotate the repeating paint for a different fabric direction." },
+    apiNotes: ["Threads must be a multiple of eight so every weave repeats seamlessly.", "Texture resolution and painted tile size independently control detail and scale."],
+    canvas: { width: 880, height: 620 }, related: ["texture-explorer", "material-lab"],
+    load: () => import("./learning/composition/fabric-explorer.example"),
+  },
+  {
     slug: "material-lab",
     title: "Material Lab",
     shortTitle: "Material Lab",

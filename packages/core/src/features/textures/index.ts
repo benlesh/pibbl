@@ -52,8 +52,16 @@ export type {
 export { rainDrops } from "./lib/rain-drops.js";
 export type { RainDropsOptions, RainDropsMessage } from "./lib/rain-drops.js";
 
-export { stripes, checkers, woodGrain } from "./lib/patterns.js";
+export {
+  stripes,
+  checkers,
+  woodGrain,
+  plainWeave,
+  twill,
+  herringbone,
+} from "./lib/patterns.js";
 export type {
+  FabricOptions,
   PatternMotionOptions,
   StripesOptions,
   CheckersOptions,
