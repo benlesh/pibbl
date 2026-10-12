@@ -75,3 +75,6 @@ export type { NoiseOptions } from "./lib/patterns.js";
 
 export { schnakenberg, barkley, brusselator, schnakenbergPresets, barkleyPresets, brusselatorPresets } from './lib/chemical-recipes.js';
 export type { SchnakenbergOptions, BarkleyOptions, BrusselatorOptions } from './lib/chemical-recipes.js';
+
+export { polkaDots, halftone, plaid, truchet, plaidPresets } from './lib/geometric-patterns.js';
+export type { PolkaDotsOptions, HalftoneOptions, PlaidBand, PlaidOptions, TruchetOptions } from './lib/geometric-patterns.js';

@@ -287,3 +287,16 @@ broader numerical, scheduling, resource and performance hardening.
 authorized a local commit. The next recommended collection is geometric/decorative
 textures: polka dots and halftone, plaids, and seeded Truchet curves, with seamless
 placement, palette, density, line-weight and motion controls.
+
+## 2026-10-12: geometric texture feedback slice
+
+Approved: `polkaDots`, `halftone`, `plaid`, and `truchet`, with all settings exposed
+in a playground. Ordered ramps and band sequences remain arrays. References to
+specific plaid colors use inferred, type-checked dictionary keys; dynamic inputs
+are also validated at runtime. The audit found no shipped numeric texture color
+selector requiring migration.
+
+The runnable slice is `/examples/composition/geometric-explorer`: twelve presets,
+live native range/number/color controls, editable named colors and band sequences,
+phase/speed, independent tile dimensions, rotation, and raster resolution. Source
+and built public API checks pass; experiential feedback precedes broader hardening.

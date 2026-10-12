@@ -7,6 +7,16 @@ slug: pattern-textures
 apiCategory: types
 symbols:
   [
+    polkaDots,
+    halftone,
+    plaid,
+    truchet,
+    plaidPresets,
+    PolkaDotsOptions,
+    HalftoneOptions,
+    PlaidBand,
+    PlaidOptions,
+    TruchetOptions,
     plainWeave,
     twill,
     herringbone,
@@ -219,3 +229,97 @@ Immutable `spirals` and `waves` option objects, spread into `barkley`.
 ## brusselatorPresets
 
 Immutable `spots` and `oscillations` option objects, spread into `brusselator`.
+
+## polkaDots
+
+Creates seamless circular dots from `PolkaDotsOptions`, using the palette endpoints.
+
+## PolkaDotsOptions
+
+`columns` is an integer 1–64 (default 12). `rows` is an even integer 2–64 (default 12) so stagger wraps. `radius` is 0–0.5 of a cell (default 0.3), `stagger` is 0–1
+(default 0), and `jitter` is 0–0.5 of a cell (default 0). `seed` is an unsigned
+32-bit integer (default 42). With unequal cell sizes, dots become elliptical.
+
+## halftone
+
+Creates seamless variable-size dots driven by a periodic tonal field.
+
+## HalftoneOptions
+
+`columns` is an integer 1–64 (default 24), and `rows` is an even integer 2–64
+(default 24). `minRadius` and `maxRadius` are cell fractions 0–0.5 (defaults 0.05
+and 0.45); minimum must not exceed maximum. `cyclesX` and `cyclesY` are integers
+0–16 (default 1); zero removes that axis's variation. `contrast` is 0–1
+(default 0.7), and `stagger` is 0–1 (default 0.5). Motion advances the tonal field.
+
+## truchet
+
+Creates seeded quarter-circle tiles connecting at every edge midpoint.
+
+## TruchetOptions
+
+Rows and columns are integers 1–64 (default 8). `lineWidth` is 0–0.5 of a cell
+(default 0.12); zero draws only background. `orientationBias` is 0–1 (default
+0.5); endpoints choose one orientation everywhere. `seed` is an unsigned 32-bit
+integer (default 42). Unequal cell sizes produce elliptical arcs. Motion scrolls
+the connected pattern along both axes.
+
+## plaid
+
+Creates a named-color plaid. The dictionary supplies colors directly; omit the
+`useTexture` palette for this recipe. Palette arrays remain ordered ramps for
+other textures.
+
+```tsx
+const recipe = plaid({
+  colors: { paper: "#f5e9d3", ink: "#304c48", accent: "#c56948" },
+  horizontal: [
+    { width: 8, color: "paper" },
+    { width: 1, color: "accent" },
+  ],
+  vertical: [
+    { width: 3, color: "paper" },
+    { width: 1, color: "ink" },
+  ],
+  crossing: 0.5,
+});
+const texture = useTexture(recipe, { resolution: { width: 256, height: 256 } });
+```
+
+TypeScript checks band color names against the inferred dictionary keys. Runtime
+validation also rejects missing keys. Color changes update the mounted recipe.
+
+## PlaidOptions
+
+`colors` contains 1–16 named opaque `#RRGGBB` entries. `horizontal` and `vertical`
+each contain 1–32 ordered bands. `crossing` is the horizontal color contribution
+0–1 (default 0.5); the vertical contribution is its complement. Crossings use
+linear interpolation in sRGB. Dictionary order has no visual effect.
+
+## PlaidBand
+
+`width` is finite and positive, up to 1,000,000; widths on each axis are normalized
+together into one repeat. `color` is a checked dictionary key. Band order determines
+placement; band arrays are deliberately ordered.
+
+## plaidPresets
+
+Immutable `gingham`, `tartan`, and `windowpane` configurations use `background`,
+`primary`, and `accent` keys. Spread a preset and replace its colors or bands:
+
+```ts
+plaid({
+  ...plaidPresets.tartan,
+  colors: {
+    background: "#f5e9d3",
+    primary: "#304c48",
+    accent: "#c56948",
+  },
+});
+```
+
+All four geometric recipes accept `phase` (finite cycles, wrapping) and `speed`
+(0–20 cycles/sec, default 0). Dot motion scrolls horizontally; plaid and Truchet
+scroll along both axes. Smooth edge coverage is computed at the selected raster
+resolution. Increasing resolution improves detail independently of painted tile
+size. Every recipe preserves periodic borders during animation.
