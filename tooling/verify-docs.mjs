@@ -360,6 +360,8 @@ const migrationMarkdownPaths = new Set([
   "docs/migrations/jsx-authoring-pivot.md",
 ]);
 const operationalMarkdownPaths = new Set([
+  // Agent operating instructions, not public product documentation.
+  ...trackedRepositoryFiles([".claude/skills/**/*.md"]),
   "docs/alpha-publishing.md",
   "docs/testing/field-notes/visibility-transition-integration.md",
   ...trackedRepositoryFiles([

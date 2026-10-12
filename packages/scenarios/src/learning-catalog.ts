@@ -240,6 +240,33 @@ const drafts = [
     load: () => import("./learning/composition/rainy-window.example"),
   },
   {
+    slug: "pipeline-health",
+    title: "Pipeline Health",
+    shortTitle: "Pipeline Health",
+    section: "composition",
+    order: 216,
+    summary:
+      "Read six inference stages against their own budgets on one shared clock.",
+    api: ["LinearScale", "Axis", "LineSeries", "Layer"],
+    objectives: [
+      "Compose a shared-axis trellis so onset order is readable across stages.",
+      "Represent an unmeasured stage as a gap and a lower bound rather than a number.",
+    ],
+    prompts: {
+      gesture:
+        "Hover to scrub all stages together. Tab to a row; use Left/Right, Home/End, and Escape to inspect time, and Enter to select it.",
+      code: "Swap the seeded series for your own samples and keep each row's budget rule.",
+    },
+    apiNotes: [
+      "Allocation-relative LinearScale frames share one time domain across every row.",
+      "A stage that stops reporting breaks its line and withholds the claims that depend on it.",
+    ],
+    canvas: { width: 880, height: 620 },
+    related: ["rainy-window", "filters"],
+    load: () => import("./learning/composition/pipeline-health.example"),
+  },
+
+  {
     slug: "html-box",
     title: "HTML Box",
     shortTitle: "HTML Box",
@@ -716,7 +743,14 @@ const drafts = [
     order: 248,
     summary:
       "Compare continuous and discrete color encodings with exact observed values and scale-derived keys.",
-    api: ["SequentialColorScale", "DivergingColorScale", "ThresholdColorScale", "useSequentialColorScale", "useDivergingColorScale", "useThresholdColorScale"],
+    api: [
+      "SequentialColorScale",
+      "DivergingColorScale",
+      "ThresholdColorScale",
+      "useSequentialColorScale",
+      "useDivergingColorScale",
+      "useThresholdColorScale",
+    ],
     objectives: [
       "Author meaningful numeric color domains and palettes.",
       "Derive readable keys from the same resolved mapping as marks.",
@@ -814,7 +848,14 @@ const drafts = [
     order: 245,
     summary:
       "Draft and commit a bounded UTC window through native pointer capture and keyboard controls.",
-    api: ["UTCScale", "LinearScale", "LineSeries", "useUTCScale", "panDomain", "zoomDomain"],
+    api: [
+      "UTCScale",
+      "LinearScale",
+      "LineSeries",
+      "useUTCScale",
+      "panDomain",
+      "zoomDomain",
+    ],
     objectives: [
       "Separate drag drafts from committed domains.",
       "Cancel gestures without leaking capture or changing the committed view.",
