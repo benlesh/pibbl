@@ -63,6 +63,14 @@
       {
         "name": "BollingerBandPoint",
         "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "MovingAverageOptions",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "BollingerBandsOptions",
+        "importPath": "@pibbl/core/viz"
       }
     ]
   },
@@ -95,6 +103,22 @@
       },
       {
         "name": "StochasticOscillatorPoint",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "OscillatorOptions",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "RelativeStrengthIndexOptions",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "MovingAverageConvergenceDivergenceOptions",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "StochasticOscillatorOptions",
         "importPath": "@pibbl/core/viz"
       }
     ]
@@ -1419,6 +1443,63 @@
       },
       {
         "name": "CandleRenderedSeries",
+        "importPath": "@pibbl/core/viz/inspection"
+      }
+    ]
+  },
+  {
+    "id": "financial-ohlc-bars",
+    "title": "OHLC bar inspection",
+    "description": "Render OHLC stems and ticks, then query committed nearest and painted bars.",
+    "source": "financial-ohlc-bars.tsx",
+    "environment": "typecheck",
+    "symbols": [
+      {
+        "name": "OhlcBarSeries",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "OhlcBarSeriesProps",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "OhlcBarSeriesStyle",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "useOhlcBarInspection",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "nearestRecordedOhlcBarX",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "paintedOhlcBarAt",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "OhlcBarObservation",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "OhlcBarInspectionCandidate",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "NearestOhlcBarHit",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "PaintedOhlcBarHit",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "OhlcBarInspectionRef",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "OhlcBarRenderedSeries",
         "importPath": "@pibbl/core/viz/inspection"
       }
     ]
