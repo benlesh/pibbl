@@ -1498,6 +1498,16 @@ export interface BollingerBandPoint<D> { readonly datum: D; readonly sourceIndex
 export declare function simpleMovingAverage<D>(data: readonly D[], options: MovingAverageOptions<D>): readonly MovingAveragePoint<D>[];
 export declare function exponentialMovingAverage<D>(data: readonly D[], options: MovingAverageOptions<D>): readonly MovingAveragePoint<D>[];
 export declare function bollingerBands<D>(data: readonly D[], options: BollingerBandsOptions<D>): readonly BollingerBandPoint<D>[];
+export interface OscillatorOptions<D> { readonly value: LineAccessor<D>; readonly defined?: (datum: D, index: number, data: readonly D[]) => boolean; }
+export interface RelativeStrengthIndexOptions<D> extends OscillatorOptions<D> { readonly period: number; }
+export interface MovingAverageConvergenceDivergenceOptions<D> extends OscillatorOptions<D> { readonly fastPeriod: number; readonly slowPeriod: number; readonly signalPeriod: number; }
+export interface StochasticOscillatorOptions<D> { readonly high: LineAccessor<D>; readonly low: LineAccessor<D>; readonly close: LineAccessor<D>; readonly lookbackPeriod: number; readonly kPeriod: number; readonly dPeriod: number; readonly defined?: (datum: D, index: number, data: readonly D[]) => boolean; }
+export interface RelativeStrengthIndexPoint<D> { readonly datum: D; readonly sourceIndex: number; readonly rsi: number | null; }
+export interface MovingAverageConvergenceDivergencePoint<D> { readonly datum: D; readonly sourceIndex: number; readonly macd: number | null; readonly signal: number | null; readonly histogram: number | null; }
+export interface StochasticOscillatorPoint<D> { readonly datum: D; readonly sourceIndex: number; readonly rawK: number | null; readonly k: number | null; readonly d: number | null; }
+export declare function relativeStrengthIndex<D>(data: readonly D[], options: RelativeStrengthIndexOptions<D>): readonly RelativeStrengthIndexPoint<D>[];
+export declare function movingAverageConvergenceDivergence<D>(data: readonly D[], options: MovingAverageConvergenceDivergenceOptions<D>): readonly MovingAverageConvergenceDivergencePoint<D>[];
+export declare function stochasticOscillator<D>(data: readonly D[], options: StochasticOscillatorOptions<D>): readonly StochasticOscillatorPoint<D>[];
 export interface VisibleOhlcPriceExtentOptions<D> {
   readonly time: LineAccessor<D>;
   readonly open: LineAccessor<D>;

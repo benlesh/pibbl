@@ -84,6 +84,9 @@ try {
     "simpleMovingAverage",
     "exponentialMovingAverage",
     "bollingerBands",
+    "relativeStrengthIndex",
+    "movingAverageConvergenceDivergence",
+    "stochasticOscillator",
     "utcTickLabels",
     "LogScale",
     "useLogScale",
@@ -297,6 +300,7 @@ try {
     "financial-percentage-returns.tsx",
     "financial-index-to-100.tsx",
     "financial-indicators.tsx",
+    "financial-oscillators.tsx",
     "numeric-range-interpolation.tsx",
   ];
   for (const file of financialFiles)

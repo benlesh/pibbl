@@ -10,6 +10,8 @@ restored mouse/trackpad/touch interaction were accepted on 2026-10-12. Focused
 verification is recorded below; no aggregate verification, push or publication is
 claimed for these additions. Batch 4 SMA, EMA and Bollinger Bands were approved
 on 2026-10-12, implemented and accepted after the band-fill contrast revision.
+Batch 5 oscillator APIs were subsequently approved and are implemented as a
+Momentum Desk slice accepted by the user on 2026-10-12.
 
 ## Goal and baseline
 
@@ -144,7 +146,7 @@ value or turn simulated events into reported market facts.
 | 2     | Inspection, price labels/formatting, price autoscaling              | Accepted; local commit authorized     |
 | 3     | Linked panes, range controls, comparison returns                    | Accepted; committed as `cf420e8c`     |
 | 4     | SMA, EMA, Bollinger Bands                                           | Accepted; focused verification passed |
-| 5     | RSI, MACD, stochastic oscillator                                    | Queued                                |
+| 5     | RSI, MACD, stochastic oscillator                                    | Accepted; focused verification passed |
 | 6     | OHLC bars, baseline series, event markers                           | Queued                                |
 | 7     | Live updates, OHLCV aggregation, session VWAP                       | Queued                                |
 | 8     | Overview navigator, levels/zones, trend-line editing                | Queued                                |
@@ -987,3 +989,62 @@ remains unclaimed because of the previously recorded unrelated shared-tree
 blockers. The next proposed batch is RSI, MACD and stochastic oscillator; review
 initialization, warmup, flat/zero-range conventions and linked-pane authoring with
 the user before implementation.
+
+
+## Batch 5 runnable slice — 2026-10-12
+
+The user approved the exact named calculation contracts and authorized execution.
+Public `@pibbl/core/viz` exports now include `relativeStrengthIndex`,
+`movingAverageConvergenceDivergence` and `stochasticOscillator`, plus separate
+options and source-aligned point types. All three preserve original source order,
+datum ownership and indices, freeze outputs, and expose nullable numeric fields
+through warmup and gaps. RSI uses Wilder smoothing after `period` price changes;
+MACD uses SMA-seeded price and signal EMAs; stochastic uses rolling high/low and
+SMA smoothing. Flat RSI is 50; a zero stochastic range resets smoothing but keeps
+its complete OHLC row in the rolling range. Invalid finite high/low/close rejects.
+
+Momentum Desk uses 180 seeded synthetic weekday OHLC observations, with visible
+simulation labeling, selloff/recovery regimes and a missing close. Price candles
+and one selected oscillator share the same supplied trading-time mapping,
+inspection timestamp and animated calendar viewport. RSI has 30/70 guides;
+stochastic has 20/80 guides and color-matched %K/%D labels; MACD shows two labeled
+lines and a signed histogram in USD. Both panes support inspection and native
+mouse/wheel/touch navigation, with a compact phone layout. Calculations occur
+before windowing, preserving history during navigation. No rendering component,
+public hook or scheduler was added.
+
+Focused public tests were added before helper and showcase implementation.
+Node 24.15.0 / pnpm 11.21.0 focused Chromium tests cover hand-checkable seeds and
+values, gap rewarm, `defined` ordering, frozen alignment, malformed finite rows,
+non-array inputs and extreme finite stochastic ranges. Showcase tests cover study
+selection, phone bounds, palettes and equal recorded-time inspection from either
+pane. Native source Studio checks cover all studies at desktop 1018×721 and phone
+360×260 allocations, gap readouts, declarations, theme rendering, mouse wheel/drag,
+oscillator-pane selection and touch pinch. Screenshots were inspected.
+
+Milestone: **slice ready for feedback**; Batch 5 user acceptance and aggregate
+trust are not claimed. Full catalog validation remains blocked by concurrent
+`material-overlay` inline-props/style-spread changes; the new source validates
+independently and the index was regenerated without claiming global validation.
+The previously recorded unrelated document classification blocker remains.
+Studio URL: `http://127.0.0.1:5196/#/examples/composition/financial-momentum-desk`.
+No commit, push or publication is claimed for Batch 5.
+
+
+Fresh Batch 5 results: focused Vitest Chromium run passed 2 files / 8 tests;
+`pnpm typecheck`, focused ESLint, public JSDoc verification, core build and packed
+viz verification passed. Packed consumers cover Bundler, NodeNext, runtime exports,
+shared core identity and private boundaries. Native source Studio checks passed
+for all three studies and both themes, with desktop wheel/drag and phone pinch.
+Read-only review confirmed units/shared viewport/inspection; an unexposed inherited
+YTD match was removed so preset status only reports selectable calendar controls.
+
+
+### Batch 5 acceptance — 2026-10-12
+
+The user approved Momentum Desk and requested a commit after hands-on review.
+The previously recorded 8 focused tests, typecheck, lint, JSDoc, core build,
+packed consumer and native Studio checks remain the acceptance evidence.
+Batch 6 is the next proposed work: OHLC bars, a two-color baseline series, and
+financial event/trade markers in Execution Journal. Public APIs require authoring
+review before implementation. No aggregate trust, push or publication is claimed.

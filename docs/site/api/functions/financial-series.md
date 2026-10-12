@@ -19,6 +19,16 @@ symbols:
     simpleMovingAverage,
     exponentialMovingAverage,
     bollingerBands,
+    OscillatorOptions,
+    RelativeStrengthIndexOptions,
+    MovingAverageConvergenceDivergenceOptions,
+    StochasticOscillatorOptions,
+    RelativeStrengthIndexPoint,
+    MovingAverageConvergenceDivergencePoint,
+    StochasticOscillatorPoint,
+    relativeStrengthIndex,
+    movingAverageConvergenceDivergence,
+    stochasticOscillator,
     CandlestickSeries,
     CandlestickSeriesProps,
     CandlestickSeriesStyle,
@@ -256,6 +266,45 @@ const bands = bollingerBands(prices, {
   multiplier: 2,
 });
 // LineSeries: y="mean", y="lower", or y="upper".
+```
+
+## Oscillators
+
+`relativeStrengthIndex(data, { value, period, defined? })` returns frozen,
+source-aligned `RelativeStrengthIndexPoint` rows. Wilder smoothing seeds after
+`period` consecutive price changes, so the first value needs `period + 1`
+consecutive prices. Flat gains and losses yield `50`; gain-only and loss-only
+windows yield `100` and `0`. Gaps reset the seed.
+
+`movingAverageConvergenceDivergence(data, { value, fastPeriod, slowPeriod,
+signalPeriod, defined? })` returns aligned `macd`, `signal`, and `histogram`
+fields. The fast period must be smaller than the slow period. Both price EMAs
+use SMA seeds; MACD appears once both are available, while the signal and
+histogram wait for `signalPeriod` MACD values.
+
+`stochasticOscillator(data, { high, low, close, lookbackPeriod, kPeriod,
+dPeriod, defined? })` returns `rawK`, smoothed `k`, and `d` fields. All periods
+are positive safe integers. Every finite candle must satisfy `low <= close <= high`.
+A zero trailing range returns null and resets only %K/%D smoothing, preserving
+the complete OHLC row in the rolling range. Missing, nonfinite, and excluded
+records reset warmup in every oscillator; accessors run only after `defined`.
+
+```ts
+const rsi = relativeStrengthIndex(prices, { value: "close", period: 14 });
+const macd = movingAverageConvergenceDivergence(prices, {
+  value: "close",
+  fastPeriod: 12,
+  slowPeriod: 26,
+  signalPeriod: 9,
+});
+const stochastic = stochasticOscillator(candles, {
+  high: "high",
+  low: "low",
+  close: "close",
+  lookbackPeriod: 14,
+  kPeriod: 3,
+  dPeriod: 3,
+});
 ```
 
 ## Candle painting
