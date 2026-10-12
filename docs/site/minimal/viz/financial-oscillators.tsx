@@ -54,9 +54,18 @@ export default function mount(canvas: HTMLCanvasElement) {
   return pibbl(
     canvas,
     <FocusManagement>
-      <Text style={{ left: 16, top: 18, font: "12px sans-serif" }}>
+      <Text
+        style={{ left: 16, top: 18, font: "12px sans-serif", fill: "#18283d" }}
+      >
         {`RSI ${rsi[last]!.rsi} · MACD ${macd[last]!.macd} · %K ${stochastic[last]!.k}`}
       </Text>
     </FocusManagement>,
   );
 }
+
+const canvas = document.createElement("canvas");
+canvas.width = 320;
+canvas.height = 220;
+document.body.append(canvas);
+const app = mount(canvas);
+window.addEventListener("pagehide", () => app.dispose(), { once: true });
