@@ -258,3 +258,15 @@ export type {
   CandleBodyStyle,
   CandleWickStyle,
 } from "./lib/candlestick-series.js";
+export { OhlcBarSeries } from "./lib/ohlc-bar-series.js";
+export type {
+  OhlcBarSeriesProps,
+  OhlcBarSeriesStyle,
+} from "./lib/ohlc-bar-series.js";
+
+export { BaselineSeries } from "./lib/baseline-series.js";
+export type {
+  BaselineSeriesProps,
+  BaselineSeriesStyle,
+  BaselineSideStyle,
+} from "./lib/baseline-series.js";

@@ -29,6 +29,10 @@ symbols:
     relativeStrengthIndex,
     movingAverageConvergenceDivergence,
     stochasticOscillator,
+    BaselineSeries,
+    BaselineSeriesProps,
+    BaselineSeriesStyle,
+    BaselineSideStyle,
     CandlestickSeries,
     CandlestickSeriesProps,
     CandlestickSeriesStyle,
@@ -43,6 +47,18 @@ symbols:
     PaintedCandleHit,
     CandleInspectionRef,
     CandleRenderedSeries,
+    OhlcBarSeries,
+    OhlcBarSeriesProps,
+    OhlcBarSeriesStyle,
+    useOhlcBarInspection,
+    nearestRecordedOhlcBarX,
+    paintedOhlcBarAt,
+    OhlcBarObservation,
+    OhlcBarInspectionCandidate,
+    NearestOhlcBarHit,
+    PaintedOhlcBarHit,
+    OhlcBarInspectionRef,
+    OhlcBarRenderedSeries,
     TradingTimeScale,
     useTradingTimeScale,
     TradingTimeScaleProps,
@@ -329,3 +345,55 @@ its underlying wick. Results preserve captured time/open/high/low/close, origina
 datum/sourceIndex, close endpoint anchors and body/wick local geometry. Empty
 queries return undefined; stale generations throw. The optional typed filter
 exposes `anchorInsideClips()` for explicit close-endpoint eligibility.
+
+## OHLC bars
+
+`OhlcBarSeries` accepts the same original `data`, `time/open/high/low/close`,
+scales, `defined`, event, pointer, and inspection inputs as `CandlestickSeries`.
+It paints a high/low stem, a left-facing open tick, and a right-facing close tick.
+Its shared style accepts `bandwidth`, `stroke`, `strokeWidth`, `opacity`, and
+`cursor`; a callback receives the original datum, source index, and complete data.
+Missing/nonfinite values skip the complete bar and finite malformed OHLC rejects.
+
+`useOhlcBarInspection(inputs)` captures original data and evaluated OHLC values.
+`nearestRecordedOhlcBarX(rendered, { time, filter? })` returns the nearest original
+bar with `timeDelta`. `paintedOhlcBarAt(rendered, { rootPoint })` respects committed
+transforms and clips and returns `part: "stem" | "openTick" | "closeTick"` for the
+last painted matching segment. Results retain original datum/sourceIndex, close
+anchors, and frozen local stem/open/close tick geometry; stale generations throw.
+
+## Entry-price baseline series
+
+`BaselineSeries` draws linear connections with independently colored lines and
+filled regions above and below an explicit finite data-space `baseline`. It uses
+`data`, `x`, `y`, `xScale`, `yScale`, `defined`, and optional numeric `inspection`.
+`baseline` and data can be signals. Missing/nonfinite observations split runs;
+synthetic crossing geometry never becomes an inspection observation.
+
+`style.above` and `style.below` accept `fill` and `stroke` paints.
+`fillOpacity` defaults to `0.2` and affects only fills; `strokeWidth` defaults to
+`2`. Equal values use the above stroke and have no area. Linear interpolation is
+explicit; there is no curve-selection option in this initial component.
+
+```tsx
+<BaselineSeries
+  data={prices}
+  x="time"
+  y="close"
+  xScale="time"
+  yScale="price"
+  baseline={entryPrice}
+  style={{
+    above: { fill: "#29c7ab", stroke: "#00876e" },
+    below: { fill: "#ed6975", stroke: "#cb4057" },
+    fillOpacity: 0.22,
+    strokeWidth: 1.5,
+  }}
+/>
+```
+
+Financial event markers compose existing `PlotSeries` with application-owned
+keyed glyphs, labels and focusable hit regions. The application owns fill
+selection, coincident-event ordering and clipping policy. Execution Journal
+shows this composition with simulated buy/sell fills and a selectable entry
+baseline; it does not add a public marker component.

@@ -1275,6 +1275,10 @@ export interface MeshTransformOptions {
 /* @pibbl-studio-module @pibbl/core/viz */
 import type { BoxStyle, PibblNode, LayoutItemStyle, LayoutBox, SignalValue } from '@pibbl/core';
 type SignalStyle<S> = Readonly<{ [K in keyof S]: K extends "custom" ? S[K] : SignalValue<S[K]> }>;
+export interface BaselineSideStyle { readonly fill?: import('@pibbl/core').FillStyle; readonly stroke?: import('@pibbl/core').StrokeStyle; }
+export interface BaselineSeriesStyle { readonly above?: BaselineSideStyle; readonly below?: BaselineSideStyle; readonly fillOpacity?: number; readonly strokeWidth?: number; readonly cursor?: string; }
+export interface BaselineSeriesProps<D> extends PibblEventHandlers, PibblEventParticipationOptions { readonly data: import('@pibbl/core').SignalValue<readonly D[]>; readonly x: LineAccessor<D>; readonly y: LineAccessor<D>; readonly xScale: ScaleId; readonly yScale: ScaleId; readonly baseline: import('@pibbl/core').SignalValue<number>; readonly defined?: (datum: D, index: number, data: readonly D[]) => boolean; readonly inspection?: import('@pibbl/core/viz/inspection').NumericInspectionRef<D>; readonly style?: SignalValue<SignalStyle<BaselineSeriesStyle>>; }
+export declare function BaselineSeries<D>(props: BaselineSeriesProps<D>): import('@pibbl/core').PibblNode;
 export interface AreaSeriesStyle { readonly fill?: FillStyle; readonly opacity?: number; readonly cursor?: string; }
 export interface AreaSeriesProps<D> extends PibblEventHandlers, PibblEventParticipationOptions {
   readonly data: LineSeriesProps<D>["data"];
@@ -1523,7 +1527,7 @@ export declare function visibleOhlcPriceExtent<D>(data: readonly D[], options: V
 export declare function padLinearDomain(domain: LinearDomain, options?: PadLinearDomainOptions): LinearDomain;
 
 import type { PibblEventHandlers, PibblEventParticipationOptions, FillStyle, StrokeStyle } from '@pibbl/core';
-import type { BarInspectionRef, NumericInspectionRef, VolumeInspectionRef, CandleInspectionRef } from '@pibbl/core/viz/inspection';
+import type { BarInspectionRef, NumericInspectionRef, VolumeInspectionRef, CandleInspectionRef, OhlcBarInspectionRef } from '@pibbl/core/viz/inspection';
 export interface AxisStyle { readonly stroke?: StrokeStyle; readonly strokeWidth?: number; readonly fill?: FillStyle; readonly font?: string; readonly opacity?: number }
 interface AxisBaseProps {
   readonly scale: ScaleId;
@@ -2045,9 +2049,18 @@ export interface CandlestickSeriesProps<D> extends PibblEventHandlers, PibblEven
  */
 export declare function CandlestickSeries<D>({ data: input, time: timeInput, open: openInput, high: highInput, low: lowInput, close: closeInput, xScale, yScale, defined, style: styleInput, inspection, pointerEvents, ...events }: CandlestickSeriesProps<D>): PibblNode;
 
+export interface OhlcBarSeriesStyle { readonly bandwidth?: number | "auto"; readonly stroke?: StrokeStyle; readonly strokeWidth?: number; readonly opacity?: number; readonly cursor?: string; }
+export interface OhlcBarSeriesProps<D> extends PibblEventHandlers, PibblEventParticipationOptions {
+  readonly data: SignalValue<readonly D[]>; readonly time: LineAccessor<D>; readonly open: LineAccessor<D>; readonly high: LineAccessor<D>; readonly low: LineAccessor<D>; readonly close: LineAccessor<D>; readonly xScale: ScaleId; readonly yScale: ScaleId;
+  readonly defined?: (datum: D, index: number, data: readonly D[]) => boolean;
+  readonly style?: SignalValue<OhlcBarSeriesStyle> | ((datum: D, index: number, data: readonly D[]) => OhlcBarSeriesStyle);
+  readonly inspection?: OhlcBarInspectionRef<D>;
+}
+export declare function OhlcBarSeries<D>(props: OhlcBarSeriesProps<D>): PibblNode;
+
 /* @pibbl-studio-module @pibbl/core/viz/inspection */
 import type { LayoutBox, PibblEvent } from '@pibbl/core';
-import type { BarSeriesProps, BandCategory, HoverSeries, ResolvedContinuousScale, ResolvedTradingTimeScale, VolumeSeriesProps, CandlestickSeriesProps } from '@pibbl/core/viz';
+import type { BarSeriesProps, BandCategory, HoverSeries, ResolvedContinuousScale, ResolvedTradingTimeScale, VolumeSeriesProps, CandlestickSeriesProps, OhlcBarSeriesProps } from '@pibbl/core/viz';
 
 export interface RenderedSeriesPoint { readonly x: number; readonly y: number; }
 export interface NumericRenderedObservation<D> {
@@ -2396,6 +2409,16 @@ export declare function nearestRecordedCandleX<D>(rendered: CandleRenderedSeries
 export declare function paintedCandleAt<D>(rendered: CandleRenderedSeries<D>, options: {
     rootPoint: Readonly<RenderedSeriesPoint>;
 }): PaintedCandleHit<D> | undefined;
+
+export interface OhlcBarObservation<D> { readonly datum: D; readonly sourceIndex: number; readonly time: number; readonly open: number; readonly high: number; readonly low: number; readonly close: number; readonly anchorLocal: Readonly<RenderedSeriesPoint>; readonly anchorRoot: Readonly<RenderedSeriesPoint>; readonly stemLocal: Readonly<{ x: number; highY: number; lowY: number }>; readonly openTickLocal: Readonly<{ x1: number; x2: number; y: number }>; readonly closeTickLocal: Readonly<{ x1: number; x2: number; y: number }>; }
+export interface OhlcBarInspectionCandidate<D> extends OhlcBarObservation<D> { anchorInsideClips(): boolean; }
+export interface NearestOhlcBarHit<D> extends OhlcBarObservation<D> { readonly timeDelta: number; }
+export interface PaintedOhlcBarHit<D> extends OhlcBarObservation<D> { readonly part: "stem" | "openTick" | "closeTick"; }
+export interface OhlcBarRenderedSeries<D> { readonly observations: readonly OhlcBarObservation<D>[]; assertLive(): void; timeAtRoot(pointRoot: Readonly<RenderedSeriesPoint>): number | undefined; anchorInsideClips(pointLocal: Readonly<RenderedSeriesPoint>): boolean; }
+export interface OhlcBarInspectionRef<D> { rendered(): OhlcBarRenderedSeries<D> | undefined; }
+export declare function useOhlcBarInspection<D>(inputs: Pick<OhlcBarSeriesProps<D>, "data" | "time" | "open" | "high" | "low" | "close">): OhlcBarInspectionRef<D>;
+export declare function nearestRecordedOhlcBarX<D>(rendered: OhlcBarRenderedSeries<D>, options: { time: number; filter?: (observation: OhlcBarInspectionCandidate<D>) => boolean }): NearestOhlcBarHit<D> | undefined;
+export declare function paintedOhlcBarAt<D>(rendered: OhlcBarRenderedSeries<D>, options: { rootPoint: Readonly<RenderedSeriesPoint> }): PaintedOhlcBarHit<D> | undefined;
 
 /* @pibbl-studio-module @pibbl/text */
 import { PathGeometry } from '@pibbl/core';

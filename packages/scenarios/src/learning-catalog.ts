@@ -221,6 +221,13 @@ const drafts = [
     apiNotes:["Seeded synthetic USD OHLC, not a market feed. RSI uses Wilder smoothing; MACD uses SMA-seeded EMAs; stochastic uses SMA smoothing."],canvas:{width:960,height:680},related:["financial-trend-volatility","financial-linked-panes"],load:()=>import("./learning/composition/financial-momentum-desk.example"),
   },
 
+  {slug:"financial-execution-journal",title:"Execution Journal",shortTitle:"Execution Journal",section:"composition",order:923,
+    summary:"Inspect simulated fills against OHLC bars and a selectable entry-price baseline.",api:["OhlcBarSeries","BaselineSeries","PlotSeries","useOhlcBarInspection"],
+    objectives:["Distinguish OHLC ticks and exact baseline crossings.","Compose keyed trade markers and keep fill selection explicit."],
+    prompts:{gesture:"Compare Bars, Baseline and Both; select B1/B2/B3 entries or trade markers. Pan/zoom and inspect prices.",code:"Change simulated fill quantities, timestamps, selected entry or baseline paints."},
+    apiNotes:["Seeded simulated USD prices and fills, not a market feed. Per-share mark difference excludes fees and is not portfolio P&L."],canvas:{width:960,height:620},related:["financial-momentum-desk","financial-trend-volatility","financial-candles"],load:()=>import("./learning/composition/financial-execution-journal.example"),
+  },
+
   {slug: "viz-recorded-inspection", title: "Recorded observations", shortTitle: "Recorded observations", section: "composition", order: 901,
     summary: "Find the recorded quote nearest an order time, and see why it was selected.", api: ["PointSeries", "usePointInspection", "nearestRecordedX"],
     objectives: ["Inspect the last successful paint through a public query.", "Keep query results tied to original typed observations."],

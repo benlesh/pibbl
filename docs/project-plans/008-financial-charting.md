@@ -9,7 +9,10 @@ verification is recorded below; no aggregate verification, push or publication i
 claimed for these additions. Batch 4 SMA, EMA and Bollinger Bands were approved
 on 2026-10-12, implemented and accepted after the band-fill contrast revision.
 Batch 5 oscillator APIs were subsequently approved and are implemented as a
-Momentum Desk slice accepted by the user on 2026-10-12.
+Momentum Desk slice accepted by the user on 2026-10-12. Batch 6 APIs were
+approved and Execution Journal was accepted on 2026-10-12 after the entry
+navigation correction. Focused verification passed; aggregate validation remains
+blocked by the unrelated changes recorded below.
 
 ## Goal and baseline
 
@@ -145,7 +148,7 @@ value or turn simulated events into reported market facts.
 | 3     | Linked panes, range controls, comparison returns                    | Accepted; committed as `cf420e8c`     |
 | 4     | SMA, EMA, Bollinger Bands                                           | Accepted; focused verification passed |
 | 5     | RSI, MACD, stochastic oscillator                                    | Accepted; focused verification passed |
-| 6     | OHLC bars, baseline series, event markers                           | Queued                                |
+| 6     | OHLC bars, baseline series, event markers                           | Accepted; focused verification passed |
 | 7     | Live updates, OHLCV aggregation, session VWAP                       | Queued                                |
 | 8     | Overview navigator, levels/zones, trend-line editing                | Queued                                |
 | 9     | Channel tools, Fibonacci tools, drawing persistence                 | Queued                                |
@@ -1046,3 +1049,81 @@ packed consumer and native Studio checks remain the acceptance evidence.
 Batch 6 is the next proposed work: OHLC bars, a two-color baseline series, and
 financial event/trade markers in Execution Journal. Public APIs require authoring
 review before implementation. No aggregate trust, push or publication is claimed.
+
+
+## Batch 6 runnable slice — 2026-10-12
+
+The user approved OHLC bars, a linear two-color baseline series and event/trade
+markers composed through existing PlotSeries, then authorized implementation.
+Public exports now include `OhlcBarSeries`, its style/props types, and independent
+`useOhlcBarInspection`, `nearestRecordedOhlcBarX`, `paintedOhlcBarAt` contracts.
+Bars paint high/low stems, open ticks left and close ticks right. Missing inputs
+skip; malformed finite OHLC rejects. Committed queries preserve original records,
+source indices and OHLC geometry; painted results distinguish stem/openTick/closeTick.
+
+`BaselineSeries` uses an explicit finite data-space baseline, above/below line and
+fill paints, separate fillOpacity and strokeWidth, linear y mapping and numeric
+continuous x mappings including trading time. Linear segment crossings split
+exactly, gaps remain gaps, equal values belong to the above stroke, and synthetic
+crossings never become inspection observations. Sequential pieces preserve paint
+order for overlapping or unsorted observations. A stable distance ratio handles
+extreme finite crossings without overflowing the interpolation denominator.
+
+Execution Journal composes 180 seeded simulated weekday OHLC records with two
+closed simulated trade lots and one open lot. B1/B2/B3 select entry-price references;
+per-share mark differences exclude fees and are not portfolio returns. Bars,
+Baseline and Both views share inspection and existing animated navigation.
+Keyed PlotSeries buy/sell arrows and a simulated earnings diamond show exact
+recorded anchors; a coincident buy/earnings pair remains separately selectable
+above/below the shared price. The application owns glyphs, focusable hit regions,
+selection, source order and clipping. No public marker component was added.
+
+Milestone: **slice ready for feedback**, not Batch 6 acceptance or aggregate trust.
+Node 24.15.0 / pnpm 11.21.0 focused Chromium run passed 3 files / 8 tests:
+OHLC geometry/inspection (3), baseline crossings/inspection (3), and responsive
+Execution Journal behavior (2). Coverage includes missing/malformed data,
+transforms, clip exclusion, overlap/doji precedence, opacity-zero nearest capture,
+stale/disposed generations, finite extreme crossings and trading-time mapping.
+Typecheck, focused ESLint, public JSDoc, core build and packed-viz verification
+passed. Packed checks cover Bundler/NodeNext, runtime exports/shared core identity
+and private boundaries. Native source Studio checks passed desktop 1018×658 and
+phone 360×260 rendering, both themes, mouse/wheel/pinch navigation, entry changes,
+independent coincident marker selection, all three views and editor declarations.
+Screenshots were inspected. Read-only review found no blocking units, clip,
+selection or source-paint drift.
+
+Full catalog validation remains blocked by concurrent `material-overlay`
+inline-props/style-spread changes. Execution Journal source validates independently;
+the index was regenerated without claiming global validation. The previously
+recorded unrelated document classification blocker remains. No commit, push or
+publication is claimed for Batch 6.
+Studio URL: `http://127.0.0.1:5196/#/examples/composition/financial-execution-journal`.
+
+### Batch 6 entry navigation correction — 2026-10-12
+
+User feedback found that selecting an offscreen B fill changed the price range
+without revealing the fill. Selection now shifts the currently displayed time
+window to center an offscreen fill, preserving its logical span and using the
+existing animated navigation helper. Visible fills leave the window unchanged;
+centering clamps at supplied-data boundaries. The y domain is derived only from
+visible OHLC, so an offscreen baseline no longer forces unrelated price-range
+expansion. Its reference line renders only when it falls inside that domain.
+The desktop window readout includes the session width.
+
+A public regression failed before the correction and now passes. The focused
+Execution Journal Chromium file passes 3 tests, including B1/B2 centering,
+unchanged session width and repeat selection. Native Studio verification checks
+an intermediate animation frame and final centered B1 geometry at the same
+24-session width, with no page errors. Typecheck and focused lint pass. No public
+API or scheduler change was needed; Batch 6 remains awaiting acceptance.
+
+### Batch 6 acceptance — 2026-10-12
+
+The user approved the entry navigation correction and authorized committing
+Batch 6. Acceptance includes the public OHLC and baseline APIs, Execution
+Journal, and animated offscreen-fill centering at the existing zoom span.
+The focused package and browser evidence above remains current. No aggregate
+trust, push or publication is claimed. Batch 7 API design remains pending review.
+
+Final acceptance rerun on Node 24.15.0 / pnpm 11.21.0: the combined OHLC,
+baseline and Execution Journal Chromium suite passed 3 files / 9 tests.
