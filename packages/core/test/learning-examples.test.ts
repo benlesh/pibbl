@@ -1214,11 +1214,11 @@ describe("learning example catalog", () => {
     );
   });
 
-  it("contains 128 unique, ordered, source-backed routes including rainy window, optional filters, and underwater", async () => {
+  it("contains 133 unique, ordered, source-backed routes including rainy window, optional filters, and underwater", async () => {
     expect(validateLearningExampleCatalog(learningExampleCatalog)).toBe(
       learningExampleCatalog,
     );
-    expect(learningExampleCatalog).toHaveLength(128);
+    expect(learningExampleCatalog).toHaveLength(133);
     expect(
       learningExampleCatalog
         .filter(
@@ -1345,6 +1345,11 @@ describe("learning example catalog", () => {
         "viz-policy-steps",
         "viz-monotone-climate",
         "viz-category-series",
+        "viz-clinical-forest",
+        "viz-dose-response",
+        "viz-censored-assay",
+        "viz-weighted-evidence",
+        "viz-evidence-synthesis",
         "viz-threshold-segments",
         "viz-population-stack",
         "viz-linked-inspection",
@@ -1529,7 +1534,12 @@ describe("learning example catalog", () => {
       "financial-momentum-desk",
       "financial-execution-journal",
       "financial-live-monitor",
+      "viz-clinical-forest",
       "financial-research-workspace",
+      "viz-dose-response",
+      "viz-censored-assay",
+      "viz-weighted-evidence",
+      "viz-evidence-synthesis",
     ]);
 
     const startExamples = learningExampleCatalog.filter(
@@ -1886,6 +1896,11 @@ describe("learning example catalog", () => {
       .flatMap((entry) => entry.api);
     expect(new Set(drawingAndComposition)).toEqual(
       new Set([
+        "CensoredPointSeries",
+        "HorizontalIntervalSeries",
+        "VerticalIntervalSeries",
+        "IntervalDiamondSeries",
+        "WeightedPointSeries",
         "BaselineSeries",
         "CandlestickSeries",
         "EditableReferenceBand",
