@@ -11,6 +11,7 @@ import {
   type PibblRecordedFrameInfo,
   type PibblRecordedFrame,
   type PibblGifExportOptions,
+  type PibblRenderCompletion,
 } from "@pibbl/core";
 
 const canvas = document.createElement("canvas");
@@ -27,7 +28,17 @@ const root = pibbl(
   createElement(Rectangle, { style: { width: 240, height: 160, fill } }),
   { viewport: { width: 240, height: 160 }, pixelRatio: 1 },
 );
-const options: PibblFrameRecordingOptions = { duration: 1000, frameRate: 30 };
+let latestCompletion: PibblRenderCompletion | undefined;
+const options: PibblFrameRecordingOptions = {
+  duration: 1000,
+  frameRate: 30,
+  onRenderComplete: (completion) => {
+    latestCompletion = completion;
+  },
+  onFrameCaptured: (frame) => {
+    status.textContent = `Copied render ${frame.renderGeneration}`;
+  },
+};
 const gifOptions: PibblGifExportOptions = {
   width: 240,
   frameRate: 25,
@@ -55,7 +66,7 @@ button.onclick = async () => {
     if (disposed) return;
     url = URL.createObjectURL(gif);
     preview.src = url;
-    status.textContent = `${metadata.length} captured frames; ${first.width}×${first.height}; ${retained.duration} ms`;
+    status.textContent = `${metadata.length} captured frames; ${first.width}×${first.height}; ${retained.duration} ms; render ${latestCompletion?.generation}`;
   } catch (error) {
     if (!disposed) status.textContent = String(error);
   } finally {

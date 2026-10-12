@@ -157,10 +157,15 @@ export function executeRender(
     if (!pibblInstance.parent) {
       renderTransaction.onFinish((success) => {
         if (success) pibblInstance.committedRenderGeneration = renderGeneration;
-        if (pibblInstance.rootFrameObservers) {
-          for (const observer of pibblInstance.rootFrameObservers) observer(success);
-        }
       });
+      if (pibblInstance.rootFrameObservers?.size) {
+        renderTransaction.onAfterFinish?.((success) => {
+          const observers = pibblInstance.rootFrameObservers;
+          if (!observers) return;
+          for (const observer of observers)
+            observer(success, renderGeneration);
+        });
+      }
     }
     renderSeenIds = pibblInstance.renderSeenIds;
     renderSeenKeys = pibblInstance.renderSeenKeys;

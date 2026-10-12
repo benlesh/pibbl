@@ -84,6 +84,57 @@ async function retained(canvas: HTMLCanvasElement, duration = 100) {
   recordings.push(recording);
   return recording;
 }
+it.each(["cancel", "abort", "dispose"] as const)(
+  "releases initial capture when its frame callback requests %s",
+  async (action) => {
+    const { canvas, root } = await mount();
+    const abort = new AbortController();
+    const session = recordFrames(canvas, {
+      duration: 1000,
+      signal: abort.signal,
+      onFrameCaptured() {
+        if (action === "cancel") session.cancel();
+        else if (action === "abort") abort.abort();
+        else root.dispose();
+      },
+    });
+    await expect(session.ready).rejects.toMatchObject({ name: "AbortError" });
+    await expect(session.finished).rejects.toMatchObject({
+      name: "AbortError",
+    });
+    if (diagnosticsEnabled) expect(recordingResources.timers).toBe(0);
+  },
+);
+it("retains the first frame when its capture callback stops initialization", async () => {
+  const { canvas } = await mount();
+  const session = recordFrames(canvas, {
+    duration: 1000,
+    onFrameCaptured: () => session.stop(),
+  });
+  await session.ready;
+  const recording = await session.finished;
+  recordings.push(recording);
+  expect(recording.frames).toHaveLength(1);
+  expect(Array.from((await recording.readFrame(0)).data.slice(0, 4))).toEqual([
+    255, 0, 0, 255,
+  ]);
+});
+it.each(["onRenderComplete", "onFrameCaptured"] as const)(
+  "rejects and releases capture when %s throws",
+  async (callback) => {
+    const { canvas } = await mount();
+    const session = recordFrames(canvas, {
+      duration: 1000,
+      [callback]: () => {
+        throw new Error("completion callback failed");
+      },
+    });
+    await expect(session.ready).rejects.toThrow("completion callback failed");
+    await expect(session.finished).rejects.toThrow(
+      "completion callback failed",
+    );
+  },
+);
 it("stops early, keeps the elapsed still hold, and encodes a independently decodable GIF", async () => {
   const { canvas, fill } = await mount();
   const session = recordFrames(canvas, { duration: 1000 });
@@ -465,6 +516,183 @@ it("retains one bitmap across a long static span and keeps its whole GIF delay",
 });
 
 import { Layer } from "@pibbl/core";
+import { LinearScale, LineSeries, defineSeries } from "@pibbl/core/viz";
+import {
+  nearestRecordedX,
+  useNumericInspection,
+  type NumericInspectionRef,
+} from "@pibbl/core/viz/inspection";
+it("joins public inspection state and raw pixels by committed render generation", async () => {
+  type Row = { id: string; x: number; y: number };
+  const rows = signal<Row[]>([
+    { id: "start", x: 0, y: 10 },
+    { id: "middle", x: 5, y: 20 },
+    { id: "end", x: 10, y: 30 },
+  ]);
+  const series = defineSeries({ data: rows, x: "x", y: "y" });
+  const canvas = document.createElement("canvas");
+  canvas.style.cssText = "width:32px;height:24px";
+  document.body.append(canvas);
+  let inspection!: NumericInspectionRef<Row>;
+  function Chart() {
+    inspection = useNumericInspection(series);
+    return createElement(LinearScale, {
+      id: "x",
+      domain: [0, 10] as const,
+      range: [0, 32] as const,
+      children: createElement(LinearScale, {
+        id: "y",
+        domain: [0, 40] as const,
+        range: [24, 0] as const,
+        children: createElement(LineSeries, {
+          ...series,
+          xScale: "x",
+          yScale: "y",
+          inspection,
+          style: { stroke: "blue", strokeWidth: 2 },
+        }),
+      }),
+    });
+  }
+  const root = pibbl(canvas, createElement(Chart, {}), {
+    viewport: { width: 32, height: 24 },
+    pixelRatio: 1,
+  });
+  roots.push(root);
+  await wait(35);
+
+  const observed = new Map<number, { domainY: number; id: string }>();
+  const completionEvents: Array<{ status: string; generation: number }> = [];
+  const capturedFrames: number[] = [];
+  const options = {
+    duration: 1000,
+    frameRate: 60,
+    onRenderComplete(completion: { status: string; generation: number }) {
+      completionEvents.push(completion);
+      if (completion.status !== "committed") return;
+      const rendered = inspection!.rendered();
+      const hit = rendered && nearestRecordedX(rendered, { domainX: 5 });
+      if (hit)
+        observed.set(completion.generation, {
+          domainY: hit.domainY,
+          id: hit.datum.id,
+        });
+    },
+    onFrameCaptured(frame: { renderGeneration: number }) {
+      capturedFrames.push(frame.renderGeneration);
+    },
+  };
+  const session = recordFrames(canvas, options);
+  await session.ready;
+  rows.set([
+    { id: "start", x: 0, y: 10 },
+    { id: "middle", x: 5, y: 30 },
+    { id: "end", x: 10, y: 30 },
+  ]);
+  await wait(40);
+  session.stop();
+  const recording = await session.finished;
+  recordings.push(recording);
+
+  expect(completionEvents.some((event) => event.status === "committed")).toBe(
+    true,
+  );
+  expect(completionEvents.some((event) => event.status === "failed")).toBe(
+    false,
+  );
+  expect(recording.frames.length).toBeGreaterThanOrEqual(2);
+  expect(capturedFrames).toEqual(
+    recording.frames.map((frame) => frame.renderGeneration),
+  );
+  for (const frame of recording.frames) {
+    expect(frame.renderGeneration).toBeGreaterThan(0);
+    expect(observed.has(frame.renderGeneration)).toBe(true);
+  }
+  const readFrames = await Promise.all(
+    recording.frames.map((_, index) => recording.readFrame(index)),
+  );
+  const repaired = readFrames.find(
+    (frame) => observed.get(frame.renderGeneration)?.domainY === 30,
+  );
+  expect(repaired).toBeDefined();
+  expect(observed.get(repaired!.renderGeneration)).toEqual({
+    domainY: 30,
+    id: "middle",
+  });
+  const bluePixelsNear = (frame: Uint8ClampedArray, x: number, y: number) => {
+    let count = 0;
+    for (let py = y - 2; py <= y + 2; py++) {
+      for (let px = x - 2; px <= x + 2; px++) {
+        const offset = (py * 32 + px) * 4;
+        if (frame[offset + 2] > frame[offset] + 40) count++;
+      }
+    }
+    return count;
+  };
+  expect(bluePixelsNear(repaired!.data, 16, 6)).toBeGreaterThan(0);
+  expect(bluePixelsNear(repaired!.data, 16, 12)).toBe(0);
+});
+it("reports failed attempts separately and rejects without retaining partial paint", async () => {
+  const failed = signal(false);
+  function ControlledFailure() {
+    if (failed.get()) throw new Error("controlled render failure after paint");
+    return null;
+  }
+  function App() {
+    return [
+      createElement(Rectangle, {
+        style: { width: 32, height: 24, fill: "blue" },
+      }),
+      createElement(ControlledFailure, {}),
+    ];
+  }
+  const canvas = document.createElement("canvas");
+  canvas.style.cssText = "width:32px;height:24px";
+  document.body.append(canvas);
+  const root = pibbl(canvas, createElement(App, {}), {
+    viewport: { width: 32, height: 24 },
+    pixelRatio: 1,
+  });
+  roots.push(root);
+  await wait(35);
+  const completions: Array<{ status: string; generation: number }> = [];
+  const session = recordFrames(canvas, {
+    duration: 1000,
+    onRenderComplete: (completion: { status: string; generation: number }) =>
+      completions.push(completion),
+  });
+  await session.ready;
+  const lastCommitted = completions.findLast(
+    (completion) => completion.status === "committed",
+  );
+  expect(lastCommitted).toBeDefined();
+  const handleRenderError = (event: ErrorEvent) => {
+    if (event.message.includes("controlled render failure after paint")) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+    }
+  };
+  window.addEventListener("error", handleRenderError);
+  failed.set(true);
+  try {
+    await expect(session.finished).rejects.toThrow(/render failed/);
+  } finally {
+    window.removeEventListener("error", handleRenderError);
+  }
+  const failure = completions.findLast(
+    (completion) => completion.status === "failed",
+  );
+  expect(failure).toBeDefined();
+  expect(failure!.generation).toBeGreaterThan(lastCommitted!.generation);
+  expect(
+    completions.some(
+      (completion) =>
+        completion.status === "committed" &&
+        completion.generation === failure!.generation,
+    ),
+  ).toBe(false);
+});
+
 it("records the fully composed root including a cached nested Layer", async () => {
   const canvas = document.createElement("canvas");
   canvas.style.cssText = "width:32px;height:24px";
