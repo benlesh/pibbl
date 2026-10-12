@@ -1,5 +1,7 @@
 # Plan 008 — Animated chart navigation proposal
 
+> **Historical status: Accepted financial visualization proposal subsequently implemented in Plan 008; current public APIs and executable tests define shipped behavior.**
+
 Date: 2026-10-12. Status: helper approach accepted by the user; runnable slice implemented.
 Approved coordinated financial work is committed as `cf420e8c`.
 

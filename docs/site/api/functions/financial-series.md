@@ -100,7 +100,46 @@ on a time scale with an independent numeric volume scale. It does not sort,
 aggregate, mutate records, infer sessions, or execute queries during rendering.
 
 ```tsx
-import { LinearScale, UTCScale, VolumeSeries } from "@pibbl/core/viz";
+import {
+  BaselineSeries,
+  LinearScale,
+  UTCScale,
+  VolumeSeries,
+  bollingerBands,
+  movingAverageConvergenceDivergence,
+  padLinearDomain,
+  percentageReturns,
+  relativeStrengthIndex,
+  stochasticOscillator,
+  visibleOhlcPriceExtent,
+} from "@pibbl/core/viz";
+
+const baseTime = Date.UTC(2026, 0, 2, 16);
+const prices = [
+  { time: baseTime, close: 100 },
+  { time: baseTime + 86_400_000, close: 104 },
+  { time: baseTime + 2 * 86_400_000, close: 102 },
+] as const;
+const bars = [
+  { time: baseTime, open: 99, high: 103, low: 98, close: 100 },
+  { time: baseTime + 86_400_000, open: 100, high: 106, low: 99, close: 104 },
+  {
+    time: baseTime + 2 * 86_400_000,
+    open: 104,
+    high: 105,
+    low: 101,
+    close: 102,
+  },
+] as const;
+const candles = bars;
+const trading = {
+  logicalRange: [0, 2] as const,
+  slotAtTime(time: number): number | undefined {
+    const slot = bars.findIndex((bar) => bar.time === time);
+    return slot < 0 ? undefined : slot;
+  },
+};
+const entryPrice = 101;
 
 function Volumes() {
   return (

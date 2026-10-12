@@ -1,5 +1,7 @@
 # Financial Batch 1 — runnable slices, 2026-10-08
 
+> **Historical status: Dated financial visualization verification record; later approvals and current executable tests define the shipped state.**
+
 Milestone: **slice ready for feedback**, not feature complete. Approved designs:
 TradingTimeScale, named candle body/wick authoring, time-aligned VolumeSeries and
 optional typed candle/volume capture on the existing inspection foundation.

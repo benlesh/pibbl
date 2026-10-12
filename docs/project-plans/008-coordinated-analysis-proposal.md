@@ -1,5 +1,7 @@
 # Plan 008 — Batch 3 coordinated analysis proposal
 
+> **Historical status: Accepted financial visualization proposal subsequently implemented in Plan 008; current public APIs and executable tests define shipped behavior.**
+
 Date: 2026-10-09. Authoring accepted and independently audited on 2026-10-12;
 Batch 3 runnable slices are in implementation. Public signatures remain as proposed.
 Previous accepted slices are committed locally as `be31890a`.

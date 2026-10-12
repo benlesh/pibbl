@@ -1,5 +1,7 @@
 # Financial presentation feedback — 2026-10-08
 
+> **Historical status: Dated financial visualization verification record; later approvals and current executable tests define the shipped state.**
+
 User feedback: the first financial examples looked unprofessional/childish.
 Requested contemporary-library reference research, revisions and visible results.
 This pass changes only the four existing Batch 1 learning examples and focused
