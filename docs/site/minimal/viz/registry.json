@@ -6,9 +6,18 @@
     "source": "financial-percentage-returns.tsx",
     "environment": "browser",
     "symbols": [
-      { "name": "percentageReturns", "importPath": "@pibbl/core/viz" },
-      { "name": "ComparisonBaseOptions", "importPath": "@pibbl/core/viz" },
-      { "name": "PercentageReturnPoint", "importPath": "@pibbl/core/viz" }
+      {
+        "name": "percentageReturns",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "ComparisonBaseOptions",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "PercentageReturnPoint",
+        "importPath": "@pibbl/core/viz"
+      }
     ]
   },
   {
@@ -18,8 +27,14 @@
     "source": "financial-index-to-100.tsx",
     "environment": "browser",
     "symbols": [
-      { "name": "indexTo100", "importPath": "@pibbl/core/viz" },
-      { "name": "IndexedValuePoint", "importPath": "@pibbl/core/viz" }
+      {
+        "name": "indexTo100",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "IndexedValuePoint",
+        "importPath": "@pibbl/core/viz"
+      }
     ]
   },
   {
@@ -29,11 +44,26 @@
     "source": "financial-indicators.tsx",
     "environment": "browser",
     "symbols": [
-      { "name": "simpleMovingAverage", "importPath": "@pibbl/core/viz" },
-      { "name": "exponentialMovingAverage", "importPath": "@pibbl/core/viz" },
-      { "name": "bollingerBands", "importPath": "@pibbl/core/viz" },
-      { "name": "MovingAveragePoint", "importPath": "@pibbl/core/viz" },
-      { "name": "BollingerBandPoint", "importPath": "@pibbl/core/viz" }
+      {
+        "name": "simpleMovingAverage",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "exponentialMovingAverage",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "bollingerBands",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "MovingAveragePoint",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "BollingerBandPoint",
+        "importPath": "@pibbl/core/viz"
+      }
     ]
   },
   {
@@ -43,18 +73,30 @@
     "source": "financial-oscillators.tsx",
     "environment": "browser",
     "symbols": [
-      { "name": "relativeStrengthIndex", "importPath": "@pibbl/core/viz" },
+      {
+        "name": "relativeStrengthIndex",
+        "importPath": "@pibbl/core/viz"
+      },
       {
         "name": "movingAverageConvergenceDivergence",
         "importPath": "@pibbl/core/viz"
       },
-      { "name": "stochasticOscillator", "importPath": "@pibbl/core/viz" },
-      { "name": "RelativeStrengthIndexPoint", "importPath": "@pibbl/core/viz" },
+      {
+        "name": "stochasticOscillator",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "RelativeStrengthIndexPoint",
+        "importPath": "@pibbl/core/viz"
+      },
       {
         "name": "MovingAverageConvergenceDivergencePoint",
         "importPath": "@pibbl/core/viz"
       },
-      { "name": "StochasticOscillatorPoint", "importPath": "@pibbl/core/viz" }
+      {
+        "name": "StochasticOscillatorPoint",
+        "importPath": "@pibbl/core/viz"
+      }
     ]
   },
   {
@@ -1003,7 +1045,10 @@
         "name": "nearestRecordedX",
         "importPath": "@pibbl/core/viz/inspection"
       },
-      { "name": "sampleRecordedX", "importPath": "@pibbl/core/viz/inspection" },
+      {
+        "name": "sampleRecordedX",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
       {
         "name": "useNumericInspection",
         "importPath": "@pibbl/core/viz/inspection"
@@ -1072,8 +1117,14 @@
         "name": "RecordedNumericHit",
         "importPath": "@pibbl/core/viz/inspection"
       },
-      { "name": "RecordedXSample", "importPath": "@pibbl/core/viz/inspection" },
-      { "name": "RenderedSeries", "importPath": "@pibbl/core/viz/inspection" },
+      {
+        "name": "RecordedXSample",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "RenderedSeries",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
       {
         "name": "RenderedSeriesPoint",
         "importPath": "@pibbl/core/viz/inspection"
@@ -1091,12 +1142,18 @@
     "source": "inspection-lazy.tsx",
     "environment": "browser",
     "symbols": [
-      { "name": "withInspection", "importPath": "@pibbl/core/viz/inspection" },
+      {
+        "name": "withInspection",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
       {
         "name": "InspectionContext",
         "importPath": "@pibbl/core/viz/inspection"
       },
-      { "name": "InspectionRef", "importPath": "@pibbl/core/viz/inspection" }
+      {
+        "name": "InspectionRef",
+        "importPath": "@pibbl/core/viz/inspection"
+      }
     ]
   },
   {
@@ -1106,8 +1163,14 @@
     "source": "inspection-painted.tsx",
     "environment": "browser",
     "symbols": [
-      { "name": "paintedBarAt", "importPath": "@pibbl/core/viz/inspection" },
-      { "name": "paintedPointAt", "importPath": "@pibbl/core/viz/inspection" },
+      {
+        "name": "paintedBarAt",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "paintedPointAt",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
       {
         "name": "useBarInspection",
         "importPath": "@pibbl/core/viz/inspection"
@@ -1120,8 +1183,14 @@
         "name": "BarRenderedSeries",
         "importPath": "@pibbl/core/viz/inspection"
       },
-      { "name": "PaintedBarHit", "importPath": "@pibbl/core/viz/inspection" },
-      { "name": "PaintedPointHit", "importPath": "@pibbl/core/viz/inspection" }
+      {
+        "name": "PaintedBarHit",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
+      {
+        "name": "PaintedPointHit",
+        "importPath": "@pibbl/core/viz/inspection"
+      }
     ]
   },
   {
@@ -1131,7 +1200,10 @@
     "source": "financial-crosshair.tsx",
     "environment": "browser",
     "symbols": [
-      { "name": "ReferenceLine", "importPath": "@pibbl/core/viz" },
+      {
+        "name": "ReferenceLine",
+        "importPath": "@pibbl/core/viz"
+      },
       {
         "name": "nearestRecordedCandleX",
         "importPath": "@pibbl/core/viz/inspection"
@@ -1145,9 +1217,18 @@
     "source": "financial-price-guides.tsx",
     "environment": "browser",
     "symbols": [
-      { "name": "ReferenceLine", "importPath": "@pibbl/core/viz" },
-      { "name": "ScaleAdjust", "importPath": "@pibbl/core/viz" },
-      { "name": "formatNumber", "importPath": "@pibbl/core/viz" }
+      {
+        "name": "ReferenceLine",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "ScaleAdjust",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "formatNumber",
+        "importPath": "@pibbl/core/viz"
+      }
     ]
   },
   {
@@ -1157,9 +1238,18 @@
     "source": "financial-visible-autoscale.tsx",
     "environment": "browser",
     "symbols": [
-      { "name": "visibleOhlcPriceExtent", "importPath": "@pibbl/core/viz" },
-      { "name": "padLinearDomain", "importPath": "@pibbl/core/viz" },
-      { "name": "PadLinearDomainOptions", "importPath": "@pibbl/core/viz" },
+      {
+        "name": "visibleOhlcPriceExtent",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "padLinearDomain",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "PadLinearDomainOptions",
+        "importPath": "@pibbl/core/viz"
+      },
       {
         "name": "VisibleOhlcPriceExtentOptions",
         "importPath": "@pibbl/core/viz"
@@ -1173,9 +1263,18 @@
     "source": "financial-volume.tsx",
     "environment": "browser",
     "symbols": [
-      { "name": "VolumeSeries", "importPath": "@pibbl/core/viz" },
-      { "name": "VolumeSeriesProps", "importPath": "@pibbl/core/viz" },
-      { "name": "VolumeSeriesStyle", "importPath": "@pibbl/core/viz" }
+      {
+        "name": "VolumeSeries",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "VolumeSeriesProps",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "VolumeSeriesStyle",
+        "importPath": "@pibbl/core/viz"
+      }
     ]
   },
   {
@@ -1193,7 +1292,10 @@
         "name": "nearestRecordedVolumeX",
         "importPath": "@pibbl/core/viz/inspection"
       },
-      { "name": "paintedVolumeAt", "importPath": "@pibbl/core/viz/inspection" },
+      {
+        "name": "paintedVolumeAt",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
       {
         "name": "VolumeObservation",
         "importPath": "@pibbl/core/viz/inspection"
@@ -1227,10 +1329,22 @@
     "source": "financial-trading-time.tsx",
     "environment": "browser",
     "symbols": [
-      { "name": "TradingTimeScale", "importPath": "@pibbl/core/viz" },
-      { "name": "useTradingTimeScale", "importPath": "@pibbl/core/viz" },
-      { "name": "TradingTimeScaleProps", "importPath": "@pibbl/core/viz" },
-      { "name": "ResolvedTradingTimeScale", "importPath": "@pibbl/core/viz" }
+      {
+        "name": "TradingTimeScale",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "useTradingTimeScale",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "TradingTimeScaleProps",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "ResolvedTradingTimeScale",
+        "importPath": "@pibbl/core/viz"
+      }
     ]
   },
   {
@@ -1240,11 +1354,26 @@
     "source": "financial-candles.tsx",
     "environment": "browser",
     "symbols": [
-      { "name": "CandlestickSeries", "importPath": "@pibbl/core/viz" },
-      { "name": "CandlestickSeriesProps", "importPath": "@pibbl/core/viz" },
-      { "name": "CandlestickSeriesStyle", "importPath": "@pibbl/core/viz" },
-      { "name": "CandleBodyStyle", "importPath": "@pibbl/core/viz" },
-      { "name": "CandleWickStyle", "importPath": "@pibbl/core/viz" }
+      {
+        "name": "CandlestickSeries",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "CandlestickSeriesProps",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "CandlestickSeriesStyle",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "CandleBodyStyle",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "CandleWickStyle",
+        "importPath": "@pibbl/core/viz"
+      }
     ]
   },
   {
@@ -1262,7 +1391,10 @@
         "name": "nearestRecordedCandleX",
         "importPath": "@pibbl/core/viz/inspection"
       },
-      { "name": "paintedCandleAt", "importPath": "@pibbl/core/viz/inspection" },
+      {
+        "name": "paintedCandleAt",
+        "importPath": "@pibbl/core/viz/inspection"
+      },
       {
         "name": "CandleObservation",
         "importPath": "@pibbl/core/viz/inspection"
@@ -1286,6 +1418,31 @@
       {
         "name": "CandleRenderedSeries",
         "importPath": "@pibbl/core/viz/inspection"
+      }
+    ]
+  },
+  {
+    "id": "financial-baseline",
+    "title": "Entry-price baseline",
+    "description": "Paint linear price changes above and below an explicit entry reference.",
+    "source": "financial-baseline.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "BaselineSeries",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "BaselineSeriesProps",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "BaselineSeriesStyle",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "BaselineSideStyle",
+        "importPath": "@pibbl/core/viz"
       }
     ]
   }

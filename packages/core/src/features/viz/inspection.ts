@@ -75,3 +75,16 @@ export type {
   CandleInspectionRef,
   CandleRenderedSeries,
 } from "./inspection/candle.js";
+export {
+  useOhlcBarInspection,
+  nearestRecordedOhlcBarX,
+  paintedOhlcBarAt,
+} from "./inspection/ohlc-bar.js";
+export type {
+  OhlcBarObservation,
+  OhlcBarInspectionCandidate,
+  NearestOhlcBarHit,
+  PaintedOhlcBarHit,
+  OhlcBarInspectionRef,
+  OhlcBarRenderedSeries,
+} from "./inspection/ohlc-bar.js";
