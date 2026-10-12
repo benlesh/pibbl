@@ -1330,11 +1330,6 @@ describe("learning example catalog", () => {
         "wedge",
       ],
       composition: [
-        "viz-clinical-forest",
-        "viz-dose-response",
-        "viz-censored-assay",
-        "viz-weighted-evidence",
-        "viz-evidence-synthesis",
 
         "financial-calendar-ranges",
         "financial-candles",
@@ -1546,6 +1541,11 @@ describe("learning example catalog", () => {
       "viz-small-multiples",
       "viz-size-symbols",
       "viz-color-encodings",
+      "texture-explorer",
+      "fabric-explorer",
+      "material-overlay",
+      "chemical-explorer",
+      "geometric-explorer",
       "viz-recorded-inspection",
       "viz-lazy-inspection",
       "viz-painted-inspection",
@@ -1565,12 +1565,13 @@ describe("learning example catalog", () => {
       "financial-momentum-desk",
       "financial-execution-journal",
       "financial-live-monitor",
+      "viz-clinical-forest",
       "financial-research-workspace",
-      "texture-explorer",
-      "fabric-explorer",
-      "material-overlay",
-      "chemical-explorer",
-      "geometric-explorer",
+      "viz-dose-response",
+      "viz-censored-assay",
+      "viz-weighted-evidence",
+      "viz-evidence-synthesis",
+
     ]);
 
     const startExamples = learningExampleCatalog.filter(
