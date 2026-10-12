@@ -2,6 +2,12 @@
 
 ## Active plan
 
+[009 — Parameterized textures](./009-parameterized-textures.md) is the active
+user-directed texture library work. Its catalog and implementation slices are
+recorded there.
+
+## Completed plans
+
 [007 — Visualization charting](./007-visualization-charting.md) completed its approved
 scope on 2026-10-06. The [closeout walkthrough](../testing/field-notes/2026-10-06-chart-api-walkthrough.md)
 records an unrelated documentation/formatting blocker in the repository-wide gate;

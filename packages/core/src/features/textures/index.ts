@@ -39,8 +39,25 @@ export { tendrils } from "./lib/tendrils.js";
 export type { TendrilsOptions, TendrilsMessage } from "./lib/tendrils.js";
 export { lightning } from "./lib/lightning.js";
 export type { LightningOptions, LightningMessage } from "./lib/lightning.js";
-export type { ElectricPoint, ElectricOptions, ElectricControl } from "./lib/electric-shared.js";
-export type { ElectricSource, ElectricSourceMessage } from "./lib/electric-sources.js";
+export type {
+  ElectricPoint,
+  ElectricOptions,
+  ElectricControl,
+} from "./lib/electric-shared.js";
+export type {
+  ElectricSource,
+  ElectricSourceMessage,
+} from "./lib/electric-sources.js";
 
 export { rainDrops } from "./lib/rain-drops.js";
 export type { RainDropsOptions, RainDropsMessage } from "./lib/rain-drops.js";
+
+export { stripes, checkers, woodGrain } from "./lib/patterns.js";
+export type {
+  PatternMotionOptions,
+  StripesOptions,
+  CheckersOptions,
+  WoodGrainOptions,
+} from "./lib/patterns.js";
+export { grayScottPresets } from "./lib/gray-scott.js";
+export type { ReactionDiffusionPreset } from "./lib/gray-scott.js";

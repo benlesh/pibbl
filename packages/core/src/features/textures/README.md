@@ -40,9 +40,28 @@ Palettes contain 2–16 opaque `#RRGGBB` colors, interpolated evenly in sRGB.
 `texturePalettes` provides lagoon, porcelain, and ember. Display dimensions are
 independent of texture resolution.
 
+## Parameterized patterns
+
+`stripes`, `checkers`, and `woodGrain` mount through the same shared `useTexture`
+resource. Colors come from its palette; repeat tile dimensions and rotation come
+from `texture.paint`. Stripes/checkers use palette endpoints; wood uses the tonal
+ramp. All are periodic on both axes, including during motion, and default to zero
+speed so unchanged materials idle. Their reusable Canvas raster buffers add no
+backend selector and do not change existing WASM kernels.
+
+Stripes expose bands, duty cycle, wave amplitude, and wave frequency. Checkers use
+even row/column counts. Wood exposes seeded grain, irregular distortion, roughness, optional knot count,
+and knot size. Zero knots produces clear wood. Motion uses finite phase in cycles and speed 0–20 cycles/second.
+See [the pattern API](../../../../../docs/site/api/types/pattern-textures.md) for
+ranges and Texture Explorer for a tile/repeat comparison.
+
 ## Living ink and movement
 
-`reactionDiffusion({ seed, preset })` accepts `spots` or `stripes` (default spots).
+`reactionDiffusion({ seed, preset, feed, kill, warmupSteps })` accepts `spots`,
+`stripes`, `coral`, `worms`, `labyrinths`, or `mitosis` (default spots). Optional
+feed/kill overrides are finite 0–0.1; warmup is integer 0–4096 and runs once at
+initialization. Chemistry and warmup changes reset the field. Existing spots and
+stripes coefficients are unchanged.
 Use `useTexture` to mount it, then send typed `InkMessage` commands:
 
 - `paint`: normalized `u`/`v`, optional radius in cells (default 6, greater than

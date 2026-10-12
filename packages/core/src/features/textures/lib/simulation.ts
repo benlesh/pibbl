@@ -1,3 +1,7 @@
+import {
+  grayScottConfig,
+  type ReactionDiffusionOptions,
+} from "./gray-scott.js";
 import { FieldMemory, lazyKernel } from "./wasm/memory.js";
 import { bytes } from "./wasm/ink-bytes.js";
 const module = /* @__PURE__ */ lazyKernel(bytes);
@@ -8,12 +12,21 @@ export class InkSimulation {
   private owner?: FieldMemory;
   private parity = 0;
   steps = 0;
+  readonly width: number;
+  readonly height: number;
+  readonly preset: ReturnType<typeof grayScottConfig>["preset"];
+  private readonly feed: number;
+  private readonly kill: number;
   constructor(
-    readonly width: number,
-    readonly height: number,
-    seed: number,
-    readonly preset: "spots" | "stripes",
+    options: ReactionDiffusionOptions & { width: number; height: number },
   ) {
+    const { width, height } = options;
+    const config = grayScottConfig(options);
+    this.width = width;
+    this.height = height;
+    this.preset = config.preset;
+    this.feed = config.feed;
+    this.kill = config.kill;
     const owner = (this.owner = new FieldMemory(module(), width, height, 4));
     [this.a, this.b] = owner.fields;
     owner.kernel.initialize(
@@ -21,8 +34,9 @@ export class InkSimulation {
       this.b.byteOffset,
       width,
       height,
-      seed,
+      config.seed,
     );
+    if (config.warmupSteps) this.advance(config.warmupSteps);
   }
   paint(x: number, y: number, radius: number, strength: number) {
     const owner = this.owner!;
@@ -67,8 +81,8 @@ export class InkSimulation {
       this.width,
       this.height,
       count,
-      this.preset === "spots" ? 0.0367 : 0.029,
-      this.preset === "spots" ? 0.0649 : 0.057,
+      this.feed,
+      this.kill,
     );
     if (count % 2) this.parity = next;
     this.a = owner.fields[this.parity];
