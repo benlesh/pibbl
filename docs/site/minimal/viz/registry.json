@@ -1496,5 +1496,70 @@
         "importPath": "@pibbl/core/viz"
       }
     ]
+  },
+  {
+    "id": "chart-editing",
+    "title": "Controlled chart editing",
+    "description": "Edit a range window, reference line, reference band, and trading-time trend anchors through controlled callbacks.",
+    "source": "chart-editing.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "RangeNavigator",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "RangeNavigatorProps",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "RangeNavigatorStyle",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "EditableReferenceLine",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "EditableReferenceLineProps",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "EditableReferenceLineStyle",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "EditableReferenceBand",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "EditableReferenceBandProps",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "EditableReferenceBandStyle",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "EditableTrendLine",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "EditableTrendLineProps",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "EditableTrendLineStyle",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "ChartAnchor",
+        "importPath": "@pibbl/core/viz"
+      }
+    ],
+    "notes": [
+      "All interaction state is application-owned and fed back through controlled props.",
+      "Trading-time anchors snap to the supplied observations."
+    ]
   }
 ]

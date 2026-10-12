@@ -1535,6 +1535,46 @@ export interface ReferenceLineProps extends ChartLineProps { readonly value: Sig
 export declare function GridLines(props: GridLinesProps): PibblNode;
 export declare function ReferenceLine(props: ReferenceLineProps): PibblNode;
 
+export interface ChartAnchor { readonly x: number; readonly y: number; }
+export interface RangeNavigatorStyle { readonly fill?: SignalValue<string>; readonly stroke?: SignalValue<string>; readonly strokeWidth?: SignalValue<number>; readonly opacity?: SignalValue<number>; readonly handleFill?: SignalValue<string>; readonly handleStroke?: SignalValue<string>; readonly handleSize?: SignalValue<number>; readonly hitSize?: SignalValue<number>; }
+export interface EditableReferenceLineStyle extends RangeNavigatorStyle {}
+export interface EditableReferenceBandStyle extends RangeNavigatorStyle {}
+export interface EditableTrendLineStyle extends RangeNavigatorStyle {}
+export interface RangeNavigatorProps {
+  readonly scale: ScaleId;
+  readonly values: SignalValue<readonly [number, number]>;
+  readonly span: SignalValue<readonly [number, number]>;
+  readonly minimumSpan?: number;
+  readonly onChange: (value: readonly [number, number]) => void;
+  readonly onCommit?: (value: readonly [number, number]) => void;
+  readonly onCancel?: () => void;
+  readonly style?: SignalValue<RangeNavigatorStyle>;
+}
+export interface EditableReferenceLineProps {
+  readonly scale: ScaleId; readonly direction: "horizontal" | "vertical";
+  readonly value: SignalValue<number>; readonly span: SignalValue<readonly [number, number]>;
+  readonly selected?: SignalValue<boolean>; readonly keyboardStep: number; readonly onSelect?: () => void;
+  readonly onChange: (value: number) => void; readonly onCommit?: (value: number) => void; readonly onCancel?: () => void;
+  readonly style?: SignalValue<EditableReferenceLineStyle>;
+}
+export interface EditableReferenceBandProps {
+  readonly scale: ScaleId; readonly direction: "horizontal" | "vertical";
+  readonly values: SignalValue<readonly [number, number]>; readonly span: SignalValue<readonly [number, number]>;
+  readonly selected?: SignalValue<boolean>; readonly keyboardStep: number; readonly minimumSpan?: number; readonly onSelect?: () => void;
+  readonly onChange: (value: readonly [number, number]) => void; readonly onCommit?: (value: readonly [number, number]) => void; readonly onCancel?: () => void;
+  readonly style?: SignalValue<EditableReferenceBandStyle>;
+}
+export interface EditableTrendLineProps {
+  readonly xScale: ScaleId; readonly yScale: ScaleId; readonly anchors: SignalValue<readonly [ChartAnchor, ChartAnchor]>;
+  readonly selected?: SignalValue<boolean>; readonly keyboardStep: { readonly x: number; readonly y: number }; readonly onSelect?: () => void;
+  readonly onChange: (value: readonly [ChartAnchor, ChartAnchor]) => void; readonly onCommit?: (value: readonly [ChartAnchor, ChartAnchor]) => void; readonly onCancel?: () => void;
+  readonly style?: SignalValue<EditableTrendLineStyle>;
+}
+export declare function RangeNavigator(props: RangeNavigatorProps): PibblNode;
+export declare function EditableReferenceLine(props: EditableReferenceLineProps): PibblNode;
+export declare function EditableReferenceBand(props: EditableReferenceBandProps): PibblNode;
+export declare function EditableTrendLine(props: EditableTrendLineProps): PibblNode;
+
 export type ScaleId = string | symbol;
 export type LinearDomain = readonly [number, number];
 export type ScaleRange = 'width' | 'height' | readonly [number, number];

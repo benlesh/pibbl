@@ -235,6 +235,13 @@ const drafts = [
     apiNotes:["Deterministic invented USD prices and shares, not a market feed. VWAP uses one-minute typical-price bars and is an approximation."],canvas:{width:960,height:640},related:["financial-execution-journal","financial-linked-panes","financial-trend-volatility"],load:()=>import("./learning/composition/financial-live-monitor.example"),
   },
 
+  {slug:"financial-research-workspace",title:"Research Workspace",shortTitle:"Research Workspace",section:"composition",order:926,
+    summary:"Research simulated price regimes with a full-history navigator, editable levels and zones, and persistent trend anchors.",api:["RangeNavigator","EditableReferenceLine","EditableReferenceBand","EditableTrendLine","TradingTimeScale"],
+    objectives:["Keep editable annotations in domain coordinates through navigation.","Move and resize a full-history viewing window; cancel, undo or delete drawing edits."],
+    prompts:{gesture:"Select a drawing and drag its handles; add a Level, Zone or Trend, then Undo. Move or resize the overview window; zoom and pan the main chart.",code:"Change simulated support/resistance prices, trend anchors, handle styles or application-owned undo state."},
+    apiNotes:["Deterministic invented USD observations, not a market feed. Drawings are application-owned research annotations.","Direct gestures update immediately; range buttons use existing animated navigation."],canvas:{width:960,height:680},related:["financial-live-monitor","financial-execution-journal","financial-trend-volatility"],load:()=>import("./learning/composition/financial-research-workspace.example"),
+  },
+
   {slug: "viz-recorded-inspection", title: "Recorded observations", shortTitle: "Recorded observations", section: "composition", order: 901,
     summary: "Find the recorded quote nearest an order time, and see why it was selected.", api: ["PointSeries", "usePointInspection", "nearestRecordedX"],
     objectives: ["Inspect the last successful paint through a public query.", "Keep query results tied to original typed observations."],
