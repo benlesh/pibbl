@@ -2,12 +2,11 @@
 
 ## Active plan
 
-[008 — Financial charting](./008-financial-charting.md) is active. Batches 1 and 2
-are accepted; the user authorized a local commit and continuation on 2026-10-09.
-The next checkpoint is Batch 3 authoring review: linked panes, range controls and
-normalized returns. Platform Intl number formatting is reused. Final focused
-Batch 2 runtime, desktop/touch Studio, editor, catalog, documentation and TypeScript
-checks pass; no aggregate trust pass is claimed. Unrelated changes remain separate.
+[008 — Financial charting](./008-financial-charting.md) records the approved financial delivery.
+[009 — Parameterized textures](./009-parameterized-textures.md) records the user-directed texture library work.
+[Scientific visualization priorities](./viz-charting-priorities.md) records the research marks and next proposed slices.
+
+## Completed plans
 
 [007 — Visualization charting](./007-visualization-charting.md) completed its approved
 scope on 2026-10-06. The [closeout walkthrough](../testing/field-notes/2026-10-06-chart-api-walkthrough.md)

@@ -2781,6 +2781,44 @@ export declare function loadOutlineFont(source: string | URL | ArrayBuffer | Uin
 export declare function createTextGeometry(font: OutlineFont, text: string, options: TextGeometryOptions): TextGeometryResult;
 
 /* @pibbl-studio-module @pibbl/core/textures */
+export interface PolkaDotsOptions extends PatternMotionOptions { readonly columns?:number; readonly rows?:number; readonly radius?:number; readonly stagger?:number; readonly jitter?:number; readonly seed?:number; }
+export interface HalftoneOptions extends PatternMotionOptions { readonly columns?:number; readonly rows?:number; readonly minRadius?:number; readonly maxRadius?:number; readonly cyclesX?:number; readonly cyclesY?:number; readonly contrast?:number; readonly stagger?:number; }
+export interface TruchetOptions extends PatternMotionOptions { readonly columns?:number; readonly rows?:number; readonly lineWidth?:number; readonly orientationBias?:number; readonly seed?:number; }
+export interface PlaidBand<Key extends string = string> {readonly width:number;readonly color:Key;}
+export interface PlaidOptions<Colors extends Readonly<Record<string,string>> = Readonly<Record<string,string>>> extends PatternMotionOptions {readonly colors:Colors;readonly horizontal:readonly PlaidBand<NoInfer<Extract<keyof Colors,string>>>[];readonly vertical:readonly PlaidBand<NoInfer<Extract<keyof Colors,string>>>[];readonly crossing?:number;}
+export function polkaDots(options?:PolkaDotsOptions):import('@pibbl/core').TextureRecipe;
+export function halftone(options?:HalftoneOptions):import('@pibbl/core').TextureRecipe;
+export function truchet(options?:TruchetOptions):import('@pibbl/core').TextureRecipe;
+export function plaid<const Colors extends Readonly<Record<string,string>>>(options:PlaidOptions<Colors>):import('@pibbl/core').TextureRecipe;
+export const plaidPresets:Readonly<Record<'gingham'|'tartan'|'windowpane',Readonly<PlaidOptions<Readonly<{background:string;primary:string;accent:string}>>>>>;
+interface ChemicalOptions { readonly seed?:number; readonly diffusionU?:number; readonly diffusionV?:number; readonly initialNoise?:number; readonly warmupSteps?:number; readonly speed?:number; readonly paused?:boolean; }
+export interface SchnakenbergOptions extends ChemicalOptions { readonly a?:number; readonly b?:number; }
+export interface BarkleyOptions extends ChemicalOptions { readonly a?:number; readonly b?:number; readonly epsilon?:number; }
+export interface BrusselatorOptions extends ChemicalOptions { readonly a?:number; readonly b?:number; }
+export function schnakenberg(options?:SchnakenbergOptions):import('@pibbl/core').TextureRecipe<InkMessage>;
+export function barkley(options?:BarkleyOptions):import('@pibbl/core').TextureRecipe<InkMessage>;
+export function brusselator(options?:BrusselatorOptions):import('@pibbl/core').TextureRecipe<InkMessage>;
+export const schnakenbergPresets:Readonly<{spots:Readonly<SchnakenbergOptions>;labyrinths:Readonly<SchnakenbergOptions>}>;
+export const barkleyPresets:Readonly<{spirals:Readonly<BarkleyOptions>;waves:Readonly<BarkleyOptions>}>;
+export const brusselatorPresets:Readonly<{spots:Readonly<BrusselatorOptions>;oscillations:Readonly<BrusselatorOptions>}>;
+
+export interface NoiseOptions extends PatternMotionOptions { readonly seed?: number; readonly frequency?: number; readonly octaves?: number; readonly persistence?: number; readonly contrast?: number; }
+export function softNoise(options?: NoiseOptions): import('@pibbl/core').TextureRecipe;
+export function ridgedNoise(options?: NoiseOptions): import('@pibbl/core').TextureRecipe;
+export interface FabricOptions extends PatternMotionOptions { readonly seed?: number; readonly threads?: number; readonly threadWidth?: number; readonly relief?: number; readonly fuzz?: number; }
+export function plainWeave(options?: FabricOptions): import('@pibbl/core').TextureRecipe;
+export function twill(options?: FabricOptions): import('@pibbl/core').TextureRecipe;
+export function herringbone(options?: FabricOptions): import('@pibbl/core').TextureRecipe;
+export interface PatternMotionOptions { readonly phase?: number; readonly speed?: number; }
+export interface StripesOptions extends PatternMotionOptions { readonly bands?: number; readonly dutyCycle?: number; readonly wave?: number; readonly waveCycles?: number; }
+export interface CheckersOptions extends PatternMotionOptions { readonly columns?: number; readonly rows?: number; }
+export interface WoodGrainOptions extends PatternMotionOptions { readonly seed?: number; readonly grain?: number; readonly distortion?: number; readonly roughness?: number; readonly knots?: number; readonly knotSize?: number; }
+export function stripes(options?: StripesOptions): import('@pibbl/core').TextureRecipe;
+export function checkers(options?: CheckersOptions): import('@pibbl/core').TextureRecipe;
+export function woodGrain(options?: WoodGrainOptions): import('@pibbl/core').TextureRecipe;
+export type ReactionDiffusionPreset = 'spots' | 'stripes' | 'coral' | 'worms' | 'labyrinths' | 'mitosis';
+export const grayScottPresets: Readonly<Record<ReactionDiffusionPreset, Readonly<{ feed: number; kill: number }>>>;
+
   export interface ElectricPoint { readonly x: number; readonly y: number; }
   export interface ElectricOptions { readonly seed?: number; readonly branching?: number; readonly glow?: number; }
   export type ElectricControl = { readonly type: 'pause'; readonly paused: boolean } | { readonly type: 'reset'; readonly seed?: number };
@@ -2794,7 +2832,7 @@ export declare function createTextGeometry(font: OutlineFont, text: string, opti
   export function lightning(options?: LightningOptions): import('@pibbl/core').TextureRecipe<LightningMessage>;
   export {useTexture} from '@pibbl/core';
   export interface MaterialOptions {readonly seed?: number; readonly scale?: number; readonly detail?: number;}
-  export interface ReactionDiffusionOptions {readonly seed?: number; readonly preset?: 'spots' | 'stripes';}
+  export interface ReactionDiffusionOptions {readonly seed?: number; readonly preset?: ReactionDiffusionPreset; readonly feed?: number; readonly kill?: number; readonly warmupSteps?: number;}
   export type InkMessage = {readonly type: 'stir'; readonly u: number; readonly v: number; readonly du: number; readonly dv: number; readonly radius?: number} | {readonly type: 'paint'; readonly u: number; readonly v: number; readonly radius?: number; readonly strength?: number} | {readonly type: 'pause'; readonly paused: boolean} | {readonly type: 'reset'};
   export function marble(options?: MaterialOptions): import('@pibbl/core').TextureRecipe;
   export function paper(options?: MaterialOptions): import('@pibbl/core').TextureRecipe;
@@ -2804,11 +2842,11 @@ import type { PibblComponent, PibblRenderLayerComponentProps } from '@pibbl/core
 export type TexturePalette = readonly string[];
 export interface TextureResolution { readonly width: number; readonly height: number; }
 export interface TextureBrush { readonly radius: number; readonly strength: number; }
-export interface ReactionDiffusionProps {
+export interface ReactionDiffusionProps extends ReactionDiffusionOptions {
   readonly render?: TextureRenderer;
   readonly resolution?: TextureResolution;
   readonly seed?: number;
-  readonly preset?: 'spots' | 'stripes';
+  readonly preset?: ReactionDiffusionPreset;
   readonly palette?: TexturePalette;
   readonly paused?: boolean;
   readonly resetRevision?: number;
@@ -2876,6 +2914,9 @@ export function displacement(options: Readonly<PibblDisplacementFilterOptions>):
 export type PibblReflectedLightSource = string | import('@pibbl/core').TexturePaint | HTMLImageElement | ImageBitmap;
 export interface PibblReflectedLightFilterOptions { readonly map: SignalValue<import('@pibbl/core').TexturePaint>; readonly region: Readonly<{x:number;y:number;width:number;height:number}>; readonly source?: SignalValue<PibblReflectedLightSource>; readonly opacity?: SignalValue<number>; readonly threshold?: SignalValue<number>; readonly softness?: SignalValue<number>; readonly direction?: readonly [number,number]; }
 export function reflectedLight(options: PibblReflectedLightFilterOptions): PibblFilter;
+export interface PibblEmbossFilterOptions { readonly region: Readonly<{x:number;y:number;width:number;height:number}>; readonly depth?: SignalValue<number>; readonly strength?: SignalValue<number>; readonly direction?: readonly [number,number]; }
+export function emboss(map: SignalValue<import('@pibbl/core').TexturePaint>, options: PibblEmbossFilterOptions): PibblFilter;
+
 
 /* @pibbl-studio-module @pibbl/core/machines */
   import type { Signal } from '@pibbl/core';

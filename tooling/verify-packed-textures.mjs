@@ -41,10 +41,7 @@ try {
     join(consumer, "package.json"),
     JSON.stringify({ private: true, type: "module", dependencies: tarballs }),
   );
-  writeFileSync(
-    join(consumer, "pnpm-workspace.yaml"),
-    `packages:\n  - .\n`,
-  );
+  writeFileSync(join(consumer, "pnpm-workspace.yaml"), `packages:\n  - .\n`);
   pnpm(
     [
       "install",
@@ -64,10 +61,34 @@ try {
     realpathSync(installed.resolve("@pibbl/core")),
   );
   const textures = await import(pathToFileURL(entry).href);
+  const filters = await import(
+    pathToFileURL(installed.resolve("@pibbl/core/filters")).href
+  );
+  assert.equal(typeof filters.emboss, "function");
   const names = [
     "ProceduralTexture",
     "ReactionDiffusion",
     "cellular",
+    "polkaDots",
+    "halftone",
+    "plaid",
+    "truchet",
+    "plaidPresets",
+    "stripes",
+    "checkers",
+    "woodGrain",
+    "schnakenberg",
+    "barkley",
+    "brusselator",
+    "schnakenbergPresets",
+    "barkleyPresets",
+    "brusselatorPresets",
+    "softNoise",
+    "ridgedNoise",
+    "plainWeave",
+    "twill",
+    "herringbone",
+    "grayScottPresets",
     "marble",
     "paper",
     "reactionDiffusion",
@@ -90,11 +111,16 @@ try {
     assert.throws(() => installed.resolve(path), {
       code: "ERR_PACKAGE_PATH_NOT_EXPORTED",
     });
-  const manifest = JSON.parse(readFileSync(installed.resolve("@pibbl/core/package.json"), "utf8"));
+  const manifest = JSON.parse(
+    readFileSync(installed.resolve("@pibbl/core/package.json"), "utf8"),
+  );
   assert.equal(Object.keys(manifest.dependencies ?? {}).length, 0);
   writeFileSync(
     join(consumer, "public.tsx"),
-    readFileSync(join(root, "packages/core/type-tests/textures/public.tsx"), "utf8"),
+    readFileSync(
+      join(root, "packages/core/type-tests/textures/public.tsx"),
+      "utf8",
+    ),
   );
   const tsc = join(dirname(require.resolve("typescript")), "tsc.js");
   for (const mode of ["Bundler", "NodeNext"]) {

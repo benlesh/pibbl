@@ -1,3 +1,8 @@
+import {
+  grayScottConfig,
+  type ReactionDiffusionOptions,
+  type ReactionDiffusionPreset,
+} from "./gray-scott.js";
 import { defineRenderLayer, type PibblRenderLayerInput } from "@pibbl/core";
 import { TextureRaster, type TextureRenderer } from "./presentation.js";
 import { InkSimulation } from "./simulation.js";
@@ -5,7 +10,6 @@ import {
   paletteLut,
   texturePalettes,
   validateResolution,
-  validateSeed,
   type TexturePalette,
   type TextureResolution,
 } from "./palette.js";
@@ -30,7 +34,7 @@ export interface TextureBrush {
  * @see {@link TextureBrush}
  * @see {@link ReactionDiffusion}
  */
-export interface ReactionDiffusionProps {
+export interface ReactionDiffusionProps extends ReactionDiffusionOptions {
   /**
    * Renders the current data or resources using the supplied context. See {@link TextureRenderer}
    * .
@@ -47,7 +51,7 @@ export interface ReactionDiffusionProps {
    * Named pattern configuration used to initialize the simulation. See
    * {@link ReactionDiffusionProps}.
    */
-  readonly preset?: "spots" | "stripes";
+  readonly preset?: ReactionDiffusionPreset;
   /** Ordered colors used to present texture intensity. See {@link TexturePalette}. */
   readonly palette?: TexturePalette;
   /**
@@ -68,16 +72,17 @@ export interface ReactionDiffusionProps {
 interface Options {
   resolution: TextureResolution;
   seed: number;
-  preset: "spots" | "stripes";
+  preset: ReactionDiffusionPreset;
+  feed: number;
+  kill: number;
+  warmupSteps: number;
   palette: TexturePalette;
   paused: boolean;
   resetRevision: number;
   brush: TextureBrush | false;
 }
 function options(props: ReactionDiffusionProps): Options {
-  const preset = props.preset ?? "spots";
-  if (preset !== "spots" && preset !== "stripes")
-    throw new TypeError("Unknown reaction-diffusion preset.");
+  const chemistry = grayScottConfig(props);
   const brush = props.brush ?? { radius: 6, strength: 0.8 };
   if (
     brush &&
@@ -95,8 +100,7 @@ function options(props: ReactionDiffusionProps): Options {
     throw new RangeError("resetRevision must be a safe integer.");
   return {
     resolution: validateResolution(props.resolution),
-    seed: validateSeed(props.seed),
-    preset,
+    ...chemistry,
     palette: [...(props.palette ?? texturePalettes.lagoon)],
     paused: props.paused ?? false,
     resetRevision: props.resetRevision ?? 0,
@@ -127,12 +131,7 @@ interface Resources {
 }
 function reset(r: Resources, config: Options) {
   const { width, height } = config.resolution;
-  const simulation = new InkSimulation(
-    width,
-    height,
-    config.seed,
-    config.preset,
-  );
+  const simulation = new InkSimulation({ width, height, ...config });
   let raster: TextureRaster;
   try {
     raster = new TextureRaster(width, height);
@@ -236,12 +235,7 @@ export const ReactionDiffusion = /* @__PURE__ */ defineRenderLayer<
         raster,
         output,
         render: props.render,
-        simulation: new InkSimulation(
-          width,
-          height,
-          config.seed,
-          config.preset,
-        ),
+        simulation: new InkSimulation({ width, height, ...config }),
         elapsed: 0,
         fresh: true,
         dirty: true,
@@ -265,6 +259,9 @@ export const ReactionDiffusion = /* @__PURE__ */ defineRenderLayer<
     if (
       next.seed !== old.seed ||
       next.preset !== old.preset ||
+      next.feed !== old.feed ||
+      next.kill !== old.kill ||
+      next.warmupSteps !== old.warmupSteps ||
       next.resetRevision !== old.resetRevision ||
       next.resolution.width !== old.resolution.width ||
       next.resolution.height !== old.resolution.height
