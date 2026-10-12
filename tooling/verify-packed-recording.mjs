@@ -37,14 +37,18 @@ try {
   assert.equal(typeof runtime.recordFrames, "function");
   assert.equal(typeof runtime.exportGif, "function");
   const consumer = `import {recordFrames,exportGif,type PibblFrameRecordingOptions,type PibblFrameRecordingSession,type PibblFrameRecording,type PibblRecordedFrameInfo,type PibblRecordedFrame,type PibblGifExportOptions} from '@pibbl/core';
- const options:PibblFrameRecordingOptions={duration:1000,frameRate:60};
+ const options:PibblFrameRecordingOptions={duration:1000,frameRate:60,
+   onRenderComplete(completion) { const generation:number=completion.generation; const status:'committed'|'failed'=completion.status; void [generation,status]; },
+   onFrameCaptured(frame) { const generation:number=frame.renderGeneration; void generation; }
+ };
  const session:PibblFrameRecordingSession=recordFrames(document.createElement('canvas'),options);
  const recording:PibblFrameRecording=await session.finished;
  const metadata:readonly PibblRecordedFrameInfo[]=recording.frames;
  const frame:PibblRecordedFrame=await recording.readFrame(0);
+ const generation:number=frame.renderGeneration;
  const gifOptions:PibblGifExportOptions={frameRate:25,width:320,height:225,maxColors:64,palette:["red","blue"],dithering:true,quantizationSampleFactor:1,paletteSampleCount:8192,signal:new AbortController().signal};
  const blob:Blob=await exportGif(recording,gifOptions);
- session.stop();session.cancel();recording.dispose();void [metadata,frame,blob];
+ session.stop();session.cancel();recording.dispose();void [metadata,frame,blob,generation];
  // @ts-expect-error There is no selector-driven export operation.
  exportGif(recording,{format:'zip'});
  `;

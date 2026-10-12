@@ -1,0 +1,62 @@
+{
+  "status": "pass",
+  "scope": "Eval plumbing and independent oracles only; no agent usefulness comparison performed.",
+  "results": [
+    {
+      "arm": "ordinary",
+      "caseId": "case-01",
+      "before": "fail",
+      "after": "pass",
+      "checks": 15
+    },
+    {
+      "arm": "attribution",
+      "caseId": "case-01",
+      "before": "fail",
+      "after": "pass",
+      "checks": 15
+    },
+    {
+      "arm": "ordinary",
+      "caseId": "case-02",
+      "before": "fail",
+      "after": "pass",
+      "checks": 15
+    },
+    {
+      "arm": "attribution",
+      "caseId": "case-02",
+      "before": "fail",
+      "after": "pass",
+      "checks": 15
+    },
+    {
+      "arm": "ordinary",
+      "caseId": "case-03",
+      "before": "fail",
+      "after": "pass",
+      "checks": 15
+    },
+    {
+      "arm": "attribution",
+      "caseId": "case-03",
+      "before": "fail",
+      "after": "pass",
+      "checks": 15
+    },
+    {
+      "arm": "ordinary",
+      "caseId": "case-04",
+      "before": "pass",
+      "after": "pass",
+      "checks": 15
+    },
+    {
+      "arm": "attribution",
+      "caseId": "case-04",
+      "before": "pass",
+      "after": "pass",
+      "checks": 15
+    }
+  ]
+}

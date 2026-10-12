@@ -77,6 +77,8 @@ import {
 import { PibblPaintEntryKind } from "./lib/events/paint-entry.js";
 import type { PibblEventHandlers, PibblPointerEvents } from "./lib/events/types.js";
 import { getCurrentPibblInstance, GLOBAL_STATE } from "./lib/global-state.js";
+export { captureSeriesInspectionFrame } from "./lib/series-inspection-frame.js";
+export { borrowDispatchResource } from "./lib/events/event-facade.js";
 import {
   requireHookContext,
   useInternalHookSlot,

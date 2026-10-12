@@ -50,6 +50,7 @@ describe("Studio editor declaration libraries", () => {
       "file:///node_modules/@pibbl/core/physics/2d/geometry.d.ts",
       "file:///node_modules/@pibbl/core/textures/index.d.ts",
       "file:///node_modules/@pibbl/core/viz/index.d.ts",
+      "file:///node_modules/@pibbl/core/viz/inspection/index.d.ts",
       "file:///node_modules/@pibbl/text/index.d.ts",
       "file:///node_modules/@pibbl/three/index.d.ts",
     ].sort());

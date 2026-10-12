@@ -1,0 +1,7 @@
+{
+  "check": "native-pointer-inspection-zoom-plus-focus",
+  "method": "Replay the saved ordinary clean-control app and the inspection-assisted saved repair independently in headless Chromium. Apply zoom, focus, then native pointer input at root x=340,y=210.",
+  "ordinaryOriginal": {"domain":[2.5,7.5],"focused":true,"hover":"a"},
+  "inspectionRepaired": {"domain":[2.5,7.5],"focused":true,"hover":null,"inspection":{"domainX":4.875,"visible":null,"observations":[{"id":"a","anchorLocal":{"x":-300,"y":180},"insideClips":false},{"id":"b","anchorLocal":{"x":300,"y":120},"insideClips":false},{"id":"c","anchorLocal":{"x":900,"y":60},"insideClips":false}]}},
+  "conclusion": "The supposed clean control violates its declared nearest-visible-anchor contract. Inspection found and repaired the genuine zoom-plus-focus interaction bug in repetition two. This is an out-of-oracle repair success, not a false positive clean-control edit."
+}

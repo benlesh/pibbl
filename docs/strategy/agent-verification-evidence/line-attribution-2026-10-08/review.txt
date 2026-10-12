@@ -1,0 +1,7 @@
+Independent scoped review, 2026-10-08.
+Initial findings: shared-vertex/overlapping-stroke ambiguity, and original datum references mistaken for immutable paint evidence.
+Resolution: ambiguous results with candidate source index pairs; explicit live-reference names/semantics alongside copied immutable numeric evidence. Both have focused regressions.
+Additional root surface exclusion test failed before implementation, then passed.
+Re-review: no unresolved material issue for direct root, straight, linear, geometric attribution. Three focused browser tests pass.
+Retained limits: original reference graphs are not size-bounded; curves, nonlinear scales, offscreen surfaces, dash attribution, final-pixel occlusion, and separately bundled editor runtimes are outside this slice.
+Bundle proof applies only to development attribution tooling, not concurrent optional core inspection implementation.

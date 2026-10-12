@@ -10,6 +10,7 @@ interface DeclarationLibraryDefaults {
 }
 
 const declarationModulePaths = new Map([
+  ["@pibbl/core/viz/inspection", "file:///node_modules/@pibbl/core/viz/inspection/index.d.ts"],
   ["@pibbl/text", "file:///node_modules/@pibbl/text/index.d.ts"],
   ["@pibbl/core/filters", "file:///node_modules/@pibbl/core/filters.d.ts"],
   ["@pibbl/core/textures", "file:///node_modules/@pibbl/core/textures/index.d.ts"],

@@ -6,7 +6,13 @@ Implemented public surface: `recordFrames(canvas, options)` and
 Recording is opt-in and works on any live Pibbl root Canvas 2D bitmap. It observes
 successful root render transactions after nested layers and external bitmaps
 compose. Failure rejects the session. Ordinary renders acquire no observer and
-perform no recording readback. The API does not record DOM overlays or CSS
+perform no recording readback. Optional `onRenderComplete` reports committed or
+failed root attempts after all committed-state finish callbacks publish. Its
+monotonic `generation` joins semantic application inspection to pixels. Optional
+`onFrameCaptured` reports the exact committed generation after RGBA copying;
+recorded frame metadata carries the same `renderGeneration`. Timestamps remain
+wall-clock capture times, not generation IDs, and sampling can coalesce renders.
+Failed attempts never produce committed pixel frames. The API does not record DOM overlays or CSS
 backgrounds, and it never requests an animation frame or advances application
 playback. A first pending mount render supplies backing dimensions before worker
 allocation; a suspended zero-display surface rejects initialization.

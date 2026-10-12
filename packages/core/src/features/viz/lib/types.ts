@@ -254,7 +254,10 @@ export interface ResolvedLogScale extends Omit<ResolvedLinearScale, "type"> {
 }
 /** A numeric or categorical mapping snapshot. See {@link ResolvedContinuousScale}. */
 export type ResolvedScale =
-  ResolvedContinuousScale | ResolvedBandScale | ResolvedPointScale;
+  | ResolvedContinuousScale
+  | ResolvedBandScale
+  | ResolvedPointScale
+  | import("./trading-time-scale.js").ResolvedTradingTimeScale;
 /** Signed logarithmic scale inputs. See {@link LinearScaleProps}. */
 export interface SymlogScaleProps extends LinearScaleProps {
   /** Positive linear-to-log transition constant in domain units, default 1. */
@@ -459,6 +462,8 @@ export interface LineSeriesProps<D>
    * Application data supplied to the component or reported by the event. See {@link SignalValue}.
    */
   readonly data: SignalValue<readonly D[]>;
+  /** Optional committed numeric observation capture; no query execution during paint. */
+  readonly inspection?: import("../inspection/capture-types.js").NumericInspectionRef<D>;
   /** Property key or callback extracting the horizontal domain coordinate. See {@link LineAccessor}. */
   readonly x: SeriesAccessor<D>;
   /** Property key or callback extracting the vertical domain coordinate. See {@link LineAccessor}. */

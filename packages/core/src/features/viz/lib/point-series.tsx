@@ -78,6 +78,7 @@ export function PointSeries<D>({
   xScale: xId,
   yScale: yId,
   defined,
+  inspection,
   style: styleInput,
   ...events
 }: PointSeriesProps<D>) {
@@ -93,14 +94,17 @@ export function PointSeries<D>({
       : normalized(styleObject(specified ?? {}, false));
   const ctx = useCanvasContext();
   const target = new Path2D();
+  const captured: import("../inspection/capture-types.js").CapturedNumericObservation<D>[] | undefined = inspection ? [] : undefined;
+  let run = 0;
+  if (inspection && (xs.type === "point" || ys.type === "point")) throw new TypeError("Numeric point inspection requires numeric continuous scales.");
   for (let i = 0; i < data.length; i++) {
     const datum = data[i];
-    if (defined && !defined(datum, i, data)) continue;
+    if (defined && !defined(datum, i, data)) { run++; continue; }
     const xv = x(datum, i, data),
       yv = y(datum, i, data);
     const mappedX = mapSeriesPosition(xs, xv),
       mappedY = mapSeriesPosition(ys, yv);
-    if (mappedX === undefined || mappedY === undefined) continue;
+    if (mappedX === undefined || mappedY === undefined) { run++; continue; }
     const px = mappedX,
       py = mappedY;
     const style =
@@ -115,6 +119,7 @@ export function PointSeries<D>({
           true,
         ),
       );
+    captured?.push(Object.freeze({datum,sourceIndex:i,domainX:xv as number,domainY:yv as number,anchorLocal:Object.freeze({x:px,y:py}),run,radiusLocal:style.radius,fill:!!style.fill,strokeWidthLocal:style.stroke ? style.strokeWidth : 0}));
     if (style.radius === 0) continue;
     appendPointTarget(
       target,
@@ -151,6 +156,7 @@ export function PointSeries<D>({
       ctx.restore();
     }
   }
+  if (inspection && xs.type !== "point" && ys.type !== "point") inspection.capture({observations:captured!,xScale:xs,yScale:ys});
   return (
     <Path
       {...events}

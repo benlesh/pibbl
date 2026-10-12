@@ -40,9 +40,28 @@ Palettes contain 2–16 opaque `#RRGGBB` colors, interpolated evenly in sRGB.
 `texturePalettes` provides lagoon, porcelain, and ember. Display dimensions are
 independent of texture resolution.
 
+## Parameterized patterns
+
+`stripes`, `checkers`, and `woodGrain` mount through the same shared `useTexture`
+resource. Colors come from its palette; repeat tile dimensions and rotation come
+from `texture.paint`. Stripes/checkers use palette endpoints; wood uses the tonal
+ramp. All are periodic on both axes, including during motion, and default to zero
+speed so unchanged materials idle. Their reusable Canvas raster buffers add no
+backend selector and do not change existing WASM kernels.
+
+Stripes expose bands, duty cycle, wave amplitude, and wave frequency. Checkers use
+even row/column counts. Wood exposes seeded grain, irregular distortion, roughness, optional knot count,
+and knot size. Zero knots produces clear wood. Motion uses finite phase in cycles and speed 0–20 cycles/second.
+See [the pattern API](../../../../../docs/site/api/types/pattern-textures.md) for
+ranges and Texture Explorer for a tile/repeat comparison.
+
 ## Living ink and movement
 
-`reactionDiffusion({ seed, preset })` accepts `spots` or `stripes` (default spots).
+`reactionDiffusion({ seed, preset, feed, kill, warmupSteps })` accepts `spots`,
+`stripes`, `coral`, `worms`, `labyrinths`, or `mitosis` (default spots). Optional
+feed/kill overrides are finite 0–0.1; warmup is integer 0–4096 and runs once at
+initialization. Chemistry and warmup changes reset the field. Existing spots and
+stripes coefficients are unchanged.
 Use `useTexture` to mount it, then send typed `InkMessage` commands:
 
 - `paint`: normalized `u`/`v`, optional radius in cells (default 6, greater than
@@ -125,3 +144,56 @@ candidates remain experiments rather than changes to shipped material defaults.
 See [the public guide](../../../../../docs/site/learn/guides/procedural-textures.md),
 [the contract](../../../../../docs/design/textures-contract.md), and Studio's Living Ink,
 Material Lab, Stirred Ink, and Growing Reveal examples.
+
+### Woven fabrics (feedback slice)
+
+`plainWeave`, `twill`, and `herringbone` create seamless woven surfaces with
+`FabricOptions`: thread count (multiple of 8), thread width, rounded relief,
+seeded fine fibers, phase, and speed. Mount with `useTexture` to choose colors and
+resolution; paint placement controls display size and rotation. Zero speed idles.
+Try the public Fabric Explorer at `#/examples/composition/fabric-explorer`.
+
+### Noise and image composition (feedback slice)
+
+`softNoise` layers periodic value noise; `ridgedNoise` folds each layer into
+ridges. `NoiseOptions` controls seed, frequency, octaves, persistence, contrast,
+phase, and speed. Mount with `useTexture` for palette and resolution controls.
+Try `#/examples/composition/material-overlay` to compare an image with canvas or
+paper texture and independent pigment variation. The `emboss` filter derives
+surface normals from a grayscale weave or paper height map, then lights the image
+with matching highlights and shadows. Relief and light-direction controls expose
+the effect. The example still owns its pigment multiply scope through
+`definePrimitive`.
+
+### Additional reaction–diffusion models (feedback slice)
+
+`schnakenberg`, `barkley`, and `brusselator` are distinct public recipe factories
+with typed options and immutable named preset collections. Mount with `useTexture`
+for palette/resolution and send existing `InkMessage` paint, stir, pause and reset
+commands. Their stepping and brushes wrap; presentation duplicates seam samples.
+The public explorer at `#/examples/composition/chemical-explorer` includes all six
+presets, chemistry/diffusion/noise/warmup/speed controls, colors, tile size, seed,
+pause/reset, painting and stirring. Chemistry changes initialize a new field;
+colors, placement, speed and pause preserve it. Some valid settings converge to
+uniform fields. Numerical stepping currently uses a private CPU implementation;
+no application animation loop or new public solver selector is introduced.
+
+## Geometric patterns and named color references
+
+`polkaDots`, `halftone`, and `truchet` use the existing ordered palette ramp.
+Dots expose radius, lattice size, stagger, jitter, and seed. Halftone varies dot
+sizes with a periodic tonal field. Truchet uses seeded quarter-circle tiles whose
+edge midpoints connect for either orientation. Phase and speed animate each
+pattern without losing periodic borders.
+
+`plaid` takes a `colors` dictionary and ordered `horizontal`/`vertical` band
+arrays. Each band's `color` is a TypeScript-checked dictionary key, with runtime
+validation for dynamic data. Relative band widths are normalized per axis;
+`crossing` sets the horizontal color contribution. Use `plaidPresets.gingham`,
+`.tartan`, or `.windowpane` as editable configurations. Omit the `useTexture`
+palette for plaid; its named colors supply the raster directly.
+
+Geometric Texture Explorer exposes every recipe option, color ramps, named plaid
+colors, editable band sequences, motion, resolution, rotation, and separate tile
+width/height. These recipes have no message commands. The existing ordered ramps
+remain arrays; no shipped texture API selected named colors by numeric index.

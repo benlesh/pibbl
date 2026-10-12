@@ -13,6 +13,7 @@ symbols:
     contrast,
     displacement,
     dropShadow,
+    emboss,
     grayscale,
     hueRotate,
     invert,
@@ -22,6 +23,7 @@ symbols:
     PibblContrastFilterOptions,
     PibblDisplacementFilterOptions,
     PibblDropShadowFilterOptions,
+    PibblEmbossFilterOptions,
     PibblFilter,
     PibblGrayscaleFilterOptions,
     PibblHueRotateFilterOptions,
@@ -114,6 +116,16 @@ It changes pixels only; the receiving primitive retains its original hit geometr
 
 `dropShadow(options)` creates an opaque filter for a shadow of the combined silhouette.
 
+## emboss
+
+`emboss(map, options)` lights a receiving primitive and its descendants using a
+mounted grayscale height texture. Luminance times alpha supplies height; white
+is high. Neighboring height samples one logical pixel apart give the surface
+slopes. A directional diffuse light brightens facing slopes and darkens opposing
+slopes; flat heights preserve the original color. Alpha and logical geometry are
+preserved. Repeat, offset, rotation, and tile scale follow the map's paint placement.
+Processing uses the optional WebGL2 filter surface without scene pixel readback.
+
 ## grayscale
 
 `grayscale(options)` creates an opaque filter for grayscale conversion.
@@ -160,6 +172,15 @@ map without acquiring GPU processing or subscribing to map pixel revisions.
 
 `PibblDropShadowFilterOptions` describes the validated inputs to `dropShadow`, shown in the
 field table above. Numeric fields support signals owned by the receiving primitive.
+
+## PibblEmbossFilterOptions
+
+`region` supplies finite local x/y coordinates and positive width/height.
+`depth` is the height range in logical pixels (0–32, default 3); `strength` is
+0–1 (default 1). Both accept signals. Zero depth or strength bypasses processing.
+`direction` is a finite nonzero pair pointing toward the light (default
+`[-0.6, -0.8]`); it is normalized. The filter uses a fixed light elevation.
+A flat surface remains neutral instead of receiving a uniform brightness change.
 
 ## PibblFilter
 

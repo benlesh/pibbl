@@ -1,0 +1,1 @@
+Inspection tree-shaking: rendering excludes inspection modules; nearest-x bundle 832 bytes excludes optional capabilities.

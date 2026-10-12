@@ -1,0 +1,43 @@
+{
+  "node": "v24.15.0",
+  "scope": "Attribution-only delta against the same current source/packed snapshot. Does not approve concurrent core inspection changes.",
+  "results": [
+    {
+      "flavor": "source",
+      "bundler": "esbuild",
+      "bytes": 132815,
+      "sha256": "61cb14c1fb0bc8069a971df1d18066db588b92b4d08b2aa696dcb07baa1c9ee2",
+      "inactiveByteDelta": 0,
+      "retainedAttributionInputs": 0
+    },
+    {
+      "flavor": "source",
+      "bundler": "vite",
+      "bytes": 172626,
+      "sha256": "7e28719ab1682cd7adb3471fc9d4d4b8e5a63195f5eafc4f1927702c7ef619f0",
+      "inactiveByteDelta": 0
+    },
+    {
+      "flavor": "packed",
+      "bundler": "esbuild",
+      "bytes": 133097,
+      "sha256": "774a43e59a4432c0d1307c94836c6cb31584a26c1051c012a1087a24bab6a4d3",
+      "inactiveByteDelta": 0,
+      "retainedAttributionInputs": 0
+    },
+    {
+      "flavor": "packed",
+      "bundler": "vite",
+      "bytes": 181451,
+      "sha256": "2c01b6d45164431b4a4d608301462d1da397074e0ddb400d006a8d7a14143ccc",
+      "inactiveByteDelta": 0
+    }
+  ],
+  "tarballSha256": "09cb60b433ca300fbc7d5863b4fb4835cd026d5ba7163c1aee23bf8c72476656",
+  "packedProvenance": "Actual tarball of the current dist; this check does not rebuild or approve concurrent package changes.",
+  "instrumentedSource": {
+    "bytes": 135894,
+    "addedBytes": 3079
+  },
+  "status": "pass"
+}

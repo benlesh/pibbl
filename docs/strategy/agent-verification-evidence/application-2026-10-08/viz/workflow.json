@@ -1,0 +1,45 @@
+{
+  "schema": "pibbl-agent-workflow-run/1",
+  "status": "incomplete",
+  "requirementId": "DAT-07",
+  "requirementCompletion": "not-established",
+  "scope": "Controlled reference workflow only; not arbitrary application or full requirement verification.",
+  "scenario": "viz-hover-lab",
+  "url": "http://127.0.0.1:5199/#/testing/viz-hover-lab",
+  "sources": [
+    "packages/scenarios/src/viz-hover-lab.ts",
+    "packages/core/test/agent-viz-missingness.test.ts",
+    "tooling/agent-verification/viz-replay.mjs"
+  ],
+  "remaining": "",
+  "acceptance": [
+    "Valid zero produces an exact y=0 query, recorded tooltip label and a connected line segment.",
+    "Null, undefined, NaN and both infinities break interpolation and line segments rather than being coerced to zero.",
+    "At x=9 interpolation is 25 with an estimated tooltip label.",
+    "Serialized categories and counts refer to the same generation as the chart."
+  ],
+  "watchdog": {
+    "status": "launch-error",
+    "exitCode": null,
+    "browserCleanup": {
+      "status": "launch-failed",
+      "pid": null,
+      "processExited": false
+    }
+  },
+  "evidence": null,
+  "readFailure": {
+    "code": "ENOENT",
+    "message": "ENOENT: no such file or directory, open '/Users/benlesh/GitHub/crc/docs/strategy/agent-verification-evidence/application-2026-10-08/viz/replay/report.json'"
+  },
+  "checkpointFailure": {
+    "code": "ENOENT",
+    "message": "ENOENT: no such file or directory, open '/Users/benlesh/GitHub/crc/docs/strategy/agent-verification-evidence/application-2026-10-08/viz/replay/checkpoint.json'"
+  },
+  "evidencePath": null,
+  "artifacts": {
+    "report": "/Users/benlesh/GitHub/crc/docs/strategy/agent-verification-evidence/application-2026-10-08/viz/replay/report.json",
+    "watchdog": "/Users/benlesh/GitHub/crc/docs/strategy/agent-verification-evidence/application-2026-10-08/viz/watchdog.json"
+  },
+  "next": null
+}

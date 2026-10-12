@@ -9,6 +9,7 @@ symbols:
   [
     panDomain,
     zoomDomain,
+    interpolateNumericRange,
     DomainNavigationConstraints,
     PanDomainOptions,
     ZoomDomainOptions,
@@ -35,6 +36,11 @@ declare function zoomDomain(
   scale: ResolvedContinuousScale,
   options: ZoomDomainOptions,
 ): LinearDomain;
+declare function interpolateNumericRange(
+  from: LinearDomain,
+  to: LinearDomain,
+  progress: number,
+): LinearDomain;
 ```
 
 `PanDomainOptions` extends `DomainNavigationConstraints` with required
@@ -50,6 +56,16 @@ call the operation in an event handler, and write the pair to an application-own
 domain signal. The algorithms work through map/invert for linear, UTC, log, and
 symlog scales, including reversed ranges and descending domains. Categorical
 scales are not continuous mappings and are not accepted.
+
+`interpolateNumericRange(from, to, progress)` is a pure
+[`PibblInterpolator`](#/api/types/canvas-runtime#pibblinterpolator) for a
+two-endpoint numeric range. It linearly interpolates both finite endpoints and
+returns a frozen pair. It supports ascending, descending, and flat pairs.
+Progress outside zero through one extrapolates rather than clamps, matching
+numeric tween behavior; use a non-overshooting easing when a normalized viewport
+must remain within its endpoint bounds. It owns no constraints, signals, or
+animation clock, so compose it with `tween`, `keyframes`, and
+`useAnimatedValue`.
 
 `options.bounds` is a required finite two-endpoint hard domain extent, in
 either order. Values must be valid for the chosen scale (positive for log, safe integer

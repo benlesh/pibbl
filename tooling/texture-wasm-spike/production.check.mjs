@@ -7,7 +7,7 @@ import { materialField as reference } from "./reference-material-field.ts";
 test("production kernels preserve the original seeded fields, brush effects, and fixed steps", () => {
   for (const seed of [0, 42, 4294967295]) {
     for (const preset of ["spots", "stripes"]) {
-      const actual = new InkSimulation(64, 40, seed, preset),
+      const actual = new InkSimulation({ width: 64, height: 40, seed, preset }),
         expected = new Reference(64, 40, seed, preset);
       assert.deepEqual(actual.a, expected.a);
       assert.deepEqual(actual.b, expected.b);

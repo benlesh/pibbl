@@ -1,0 +1,282 @@
+{
+  "schema": "pibbl-agent-workflow-run/1",
+  "status": "pass",
+  "requirementId": "DAT-07",
+  "requirementCompletion": "not-established",
+  "scope": "Controlled reference workflow only; not arbitrary application or full requirement verification.",
+  "scenario": "viz-hover-lab",
+  "url": "http://127.0.0.1:5199/#/testing/viz-hover-lab",
+  "sources": [
+    "packages/scenarios/src/viz-hover-lab.ts",
+    "packages/core/test/agent-viz-missingness.test.ts",
+    "tooling/agent-verification/viz-replay.mjs"
+  ],
+  "remaining": "",
+  "acceptance": [
+    "Valid zero produces an exact y=0 query, recorded tooltip label and a connected line segment.",
+    "Null, undefined, NaN and both infinities break interpolation and line segments rather than being coerced to zero.",
+    "At x=9 interpolation is 25 with an estimated tooltip label.",
+    "Serialized categories and counts refer to the same generation as the chart."
+  ],
+  "watchdog": {
+    "status": "exited",
+    "exitCode": 0,
+    "browserCleanup": {
+      "status": "terminated",
+      "pid": 90127,
+      "processExited": true
+    }
+  },
+  "evidence": {
+    "schema": "pibbl-replay-evidence-view/1",
+    "sourceSchema": "pibbl-viz-replay/1",
+    "source": "/Users/benlesh/GitHub/crc/docs/strategy/agent-verification-evidence/application-2026-10-08/viz-current/replay/report.json",
+    "verification": "saved-evidence-only",
+    "kind": "final-report",
+    "claimedStatus": "pass",
+    "runId": "a9cecad4-618d-45f4-9df9-ecdcc97389b8",
+    "view": "summary",
+    "actionCount": 22,
+    "firstFailedCheck": null,
+    "requiredCheckCount": 127,
+    "checkCount": 127,
+    "checks": [
+      {
+        "checkId": "interpolation-initial.monthly.interpolated-x",
+        "actionId": "interpolation-initial",
+        "status": "pass",
+        "required": true,
+        "reason": null
+      },
+      {
+        "checkId": "interpolation-initial.monthly.interpolated-y",
+        "actionId": "interpolation-initial",
+        "status": "pass",
+        "required": true,
+        "reason": null
+      },
+      {
+        "checkId": "interpolation-initial.monthly.interpolated-anchor-x",
+        "actionId": "interpolation-initial",
+        "status": "pass",
+        "required": true,
+        "reason": null
+      },
+      {
+        "checkId": "interpolation-initial.monthly.interpolated-anchor-y",
+        "actionId": "interpolation-initial",
+        "status": "pass",
+        "required": true,
+        "reason": null
+      },
+      {
+        "checkId": "interpolation-initial.adjusted.interpolated-x",
+        "actionId": "interpolation-initial",
+        "status": "pass",
+        "required": true,
+        "reason": null
+      },
+      {
+        "checkId": "interpolation-initial.adjusted.interpolated-y",
+        "actionId": "interpolation-initial",
+        "status": "pass",
+        "required": true,
+        "reason": null
+      },
+      {
+        "checkId": "interpolation-initial.adjusted.interpolated-anchor-x",
+        "actionId": "interpolation-initial",
+        "status": "pass",
+        "required": true,
+        "reason": null
+      },
+      {
+        "checkId": "interpolation-initial.adjusted.interpolated-anchor-y",
+        "actionId": "interpolation-initial",
+        "status": "pass",
+        "required": true,
+        "reason": null
+      },
+      {
+        "checkId": "interpolation-updated.monthly.interpolated-x",
+        "actionId": "interpolation-updated",
+        "status": "pass",
+        "required": true,
+        "reason": null
+      },
+      {
+        "checkId": "interpolation-updated.monthly.interpolated-y",
+        "actionId": "interpolation-updated",
+        "status": "pass",
+        "required": true,
+        "reason": null
+      },
+      {
+        "checkId": "interpolation-updated.monthly.interpolated-anchor-x",
+        "actionId": "interpolation-updated",
+        "status": "pass",
+        "required": true,
+        "reason": null
+      },
+      {
+        "checkId": "interpolation-updated.monthly.interpolated-anchor-y",
+        "actionId": "interpolation-updated",
+        "status": "pass",
+        "required": true,
+        "reason": null
+      },
+      {
+        "checkId": "interpolation-updated.adjusted.interpolated-x",
+        "actionId": "interpolation-updated",
+        "status": "pass",
+        "required": true,
+        "reason": null
+      },
+      {
+        "checkId": "interpolation-updated.adjusted.interpolated-y",
+        "actionId": "interpolation-updated",
+        "status": "pass",
+        "required": true,
+        "reason": null
+      },
+      {
+        "checkId": "interpolation-updated.adjusted.interpolated-anchor-x",
+        "actionId": "interpolation-updated",
+        "status": "pass",
+        "required": true,
+        "reason": null
+      },
+      {
+        "checkId": "interpolation-updated.adjusted.interpolated-anchor-y",
+        "actionId": "interpolation-updated",
+        "status": "pass",
+        "required": true,
+        "reason": null
+      }
+    ],
+    "omittedChecks": 111,
+    "actions": [
+      {
+        "actionId": "interpolation-initial",
+        "status": "pass"
+      },
+      {
+        "actionId": "interpolation-updated",
+        "status": "pass"
+      },
+      {
+        "actionId": "interpolation-missing",
+        "status": "pass"
+      },
+      {
+        "actionId": "duplicate-first",
+        "status": "pass"
+      },
+      {
+        "actionId": "duplicate-last",
+        "status": "pass"
+      },
+      {
+        "actionId": "duplicate-reordered",
+        "status": "pass"
+      },
+      {
+        "actionId": "nearest-unsorted",
+        "status": "pass"
+      },
+      {
+        "actionId": "empty-data",
+        "status": "pass"
+      },
+      {
+        "actionId": "closest-point-native",
+        "status": "pass"
+      },
+      {
+        "actionId": "weighted-data-bug",
+        "status": "pass"
+      },
+      {
+        "actionId": "weighted-data",
+        "status": "pass"
+      },
+      {
+        "actionId": "async-loading-old",
+        "status": "pass"
+      },
+      {
+        "actionId": "async-loading-new",
+        "status": "pass"
+      },
+      {
+        "actionId": "async-current-success",
+        "status": "pass"
+      },
+      {
+        "actionId": "async-stale-success",
+        "status": "pass"
+      },
+      {
+        "actionId": "async-second-old",
+        "status": "pass"
+      },
+      {
+        "actionId": "async-second-new",
+        "status": "pass"
+      },
+      {
+        "actionId": "async-stale-error",
+        "status": "pass"
+      },
+      {
+        "actionId": "async-current-error",
+        "status": "pass"
+      },
+      {
+        "actionId": "async-retry-loading",
+        "status": "pass"
+      },
+      {
+        "actionId": "async-retry-success",
+        "status": "pass"
+      },
+      {
+        "actionId": "zero-missing-invalid",
+        "status": "pass"
+      }
+    ],
+    "omittedActions": 0,
+    "failure": null,
+    "otherFailures": {
+      "observation": null,
+      "check": null,
+      "checkCompletion": null,
+      "completion": null,
+      "checkpoint": null,
+      "cleanup": null,
+      "verifier": null
+    },
+    "recordedPageErrors": 0,
+    "droppedPageErrors": 0,
+    "manifestAvailable": true,
+    "checkpoint": null,
+    "truncatedFields": []
+  },
+  "readFailure": null,
+  "checkpointFailure": null,
+  "evidencePath": "/Users/benlesh/GitHub/crc/docs/strategy/agent-verification-evidence/application-2026-10-08/viz-current/replay/report.json",
+  "artifacts": {
+    "report": "/Users/benlesh/GitHub/crc/docs/strategy/agent-verification-evidence/application-2026-10-08/viz-current/replay/report.json",
+    "watchdog": "/Users/benlesh/GitHub/crc/docs/strategy/agent-verification-evidence/application-2026-10-08/viz-current/watchdog.json"
+  },
+  "next": {
+    "executable": "/Users/benlesh/.local/share/fnm/node-versions/v26.9.0/installation/bin/node",
+    "arguments": [
+      "/Users/benlesh/GitHub/crc/tooling/agent-verification/evidence-reader.mjs",
+      "/Users/benlesh/GitHub/crc/docs/strategy/agent-verification-evidence/application-2026-10-08/viz-current/replay/report.json",
+      "--page",
+      "actions"
+    ],
+    "unavailableSelections": []
+  }
+}

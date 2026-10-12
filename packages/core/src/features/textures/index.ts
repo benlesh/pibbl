@@ -39,8 +39,42 @@ export { tendrils } from "./lib/tendrils.js";
 export type { TendrilsOptions, TendrilsMessage } from "./lib/tendrils.js";
 export { lightning } from "./lib/lightning.js";
 export type { LightningOptions, LightningMessage } from "./lib/lightning.js";
-export type { ElectricPoint, ElectricOptions, ElectricControl } from "./lib/electric-shared.js";
-export type { ElectricSource, ElectricSourceMessage } from "./lib/electric-sources.js";
+export type {
+  ElectricPoint,
+  ElectricOptions,
+  ElectricControl,
+} from "./lib/electric-shared.js";
+export type {
+  ElectricSource,
+  ElectricSourceMessage,
+} from "./lib/electric-sources.js";
 
 export { rainDrops } from "./lib/rain-drops.js";
 export type { RainDropsOptions, RainDropsMessage } from "./lib/rain-drops.js";
+
+export {
+  stripes,
+  checkers,
+  woodGrain,
+  plainWeave,
+  twill,
+  herringbone,
+} from "./lib/patterns.js";
+export type {
+  FabricOptions,
+  PatternMotionOptions,
+  StripesOptions,
+  CheckersOptions,
+  WoodGrainOptions,
+} from "./lib/patterns.js";
+export { grayScottPresets } from "./lib/gray-scott.js";
+export type { ReactionDiffusionPreset } from "./lib/gray-scott.js";
+
+export { softNoise, ridgedNoise } from "./lib/patterns.js";
+export type { NoiseOptions } from "./lib/patterns.js";
+
+export { schnakenberg, barkley, brusselator, schnakenbergPresets, barkleyPresets, brusselatorPresets } from './lib/chemical-recipes.js';
+export type { SchnakenbergOptions, BarkleyOptions, BrusselatorOptions } from './lib/chemical-recipes.js';
+
+export { polkaDots, halftone, plaid, truchet, plaidPresets } from './lib/geometric-patterns.js';
+export type { PolkaDotsOptions, HalftoneOptions, PlaidBand, PlaidOptions, TruchetOptions } from './lib/geometric-patterns.js';

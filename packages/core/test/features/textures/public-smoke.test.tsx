@@ -1,6 +1,9 @@
 import { afterEach, expect, it } from "vitest";
-import { pibbl, Group, Text } from "@pibbl/core";
+import { pibbl, Group, Text, Rectangle, useTexture } from "@pibbl/core";
 import {
+  stripes,
+  checkers,
+  woodGrain,
   ReactionDiffusion,
   ProceduralTexture,
   type TextureRenderer,
@@ -63,4 +66,60 @@ it("composes and recolors textures through the public package entry in source an
   controller.dispose();
   await frame();
   expect(paints).toBe(2);
+});
+
+it("publishes new pattern fills and expanded Gray–Scott through source and built package entries", async () => {
+  const canvas = document.createElement("canvas");
+  canvas.width = 240;
+  canvas.height = 120;
+  document.body.append(canvas);
+  function Scene({ palette }: { palette: readonly string[] }) {
+    const bands = useTexture(stripes({ bands: 4, wave: 0.05 }), {
+      resolution: { width: 64, height: 64 },
+      palette,
+    });
+    const checks = useTexture(checkers({ columns: 4, rows: 4 }), {
+      resolution: { width: 64, height: 64 },
+      palette,
+    });
+    const fibers = useTexture(woodGrain({ seed: 42, grain: 12, distortion: 0.5 }), {
+      resolution: { width: 64, height: 64 },
+      palette,
+    });
+    return (
+      <Group>
+        <Rectangle style={{ width: 60, height: 120, fill: bands }} />
+        <Rectangle style={{ left: 60, width: 60, height: 120, fill: checks }} />
+        <Rectangle
+          style={{ left: 120, width: 60, height: 120, fill: fibers }}
+        />
+        <Group style={{ translateX: 180 }}>
+          <ReactionDiffusion
+            preset="mitosis"
+            warmupSteps={1200}
+            paused
+            brush={false}
+            palette={palette}
+            resolution={{ width: 64, height: 64 }}
+            style={{ width: 60, height: 120 }}
+          />
+        </Group>
+      </Group>
+    );
+  }
+  const controller = pibbl(canvas, <Scene palette={["#000000", "#ffffff"]} />);
+  disposals.push(() => controller.dispose());
+  await frame();
+  const context = canvas.getContext("2d")!;
+  const before = Array.from(context.getImageData(0, 0, 240, 120).data);
+  for (const x of [0, 60, 120, 180]) {
+    const values = context.getImageData(x, 0, 60, 120).data;
+    expect(values.some((value, i) => i % 4 !== 3 && value > 0)).toBe(true);
+    expect(values.every((value, i) => i % 4 !== 3 || value === 255)).toBe(true);
+  }
+  pibbl(canvas, <Scene palette={["#112233", "#eeccaa"]} />);
+  await frame();
+  expect(Array.from(context.getImageData(0, 0, 240, 120).data)).not.toEqual(
+    before,
+  );
 });

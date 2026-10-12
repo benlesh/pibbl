@@ -154,3 +154,83 @@ export function RainGlassConsumer() {
   const finger: RainDropsMessage = { type: "finger", x: 0.5, y: 0.5, radius: 0.05 };
   return <Group children={null} style={{ filter: displacement({ map: rain.paint({ mode: "stretch" }), strength: 18, blurRadius: 16, region: { x: 0, y: 0, width: 200, height: 100 } }) }} onPointerDown={() => rain.send(finger)} onPointerUp={() => rain.send({ type: "release" })} />;
 }
+
+import { stripes, checkers, woodGrain, grayScottPresets, type StripesOptions, type CheckersOptions, type WoodGrainOptions, type ReactionDiffusionPreset, type PatternMotionOptions } from "@pibbl/core/textures";
+const patternMotion: PatternMotionOptions = { speed: 0.1, phase: 0.25 };
+const stripeOptions: StripesOptions = { ...patternMotion, bands: 4, dutyCycle: 0.3, wave: 0.1 };
+const checkerOptions: CheckersOptions = { columns: 4, rows: 8 };
+const woodOptions: WoodGrainOptions = { seed: 42, distortion: 0.8, knots: 2, knotSize: 0.12 };
+const chemicalPreset: ReactionDiffusionPreset = "coral";
+export function PatternConsumer() {
+  const stripeTexture: Texture<never> = useTexture(stripes(stripeOptions));
+  const checks: Texture<never> = useTexture(checkers(checkerOptions));
+  const wood: Texture<never> = useTexture(woodGrain(woodOptions));
+  const chemistry: Texture<InkMessage> = useTexture(reactionDiffusion({ preset: chemicalPreset, ...grayScottPresets.mitosis, warmupSteps: 1200 }));
+  // @ts-expect-error Geometric textures do not accept chemical messages.
+  stripeTexture.send({ type: "pause", paused: true });
+  return <Group><Rectangle style={{ width: 80, height: 80, fill: stripeTexture }} /><Rectangle style={{ width: 80, height: 80, fill: checks }} /><Rectangle style={{ width: 80, height: 80, fill: wood }} /><Rectangle style={{ width: 80, height: 80, fill: chemistry }} /></Group>;
+}
+
+
+import { plainWeave, twill, herringbone, type FabricOptions } from "@pibbl/core/textures";
+export function FabricConsumer() {
+  const options: FabricOptions = { threads: 16, threadWidth: 0.8, relief: 0.65, fuzz: 0.2, seed: 42, speed: 0.1 };
+  const weave: Texture<never> = useTexture(plainWeave(options));
+  const diagonal: Texture<never> = useTexture(twill(options));
+  const chevrons: Texture<never> = useTexture(herringbone(options));
+  return <Group><Rectangle style={{ width: 100, height: 100, fill: weave }} /><Rectangle style={{ width: 100, height: 100, fill: diagonal }} /><Rectangle style={{ width: 100, height: 100, fill: chevrons }} /></Group>;
+}
+
+
+import { softNoise, ridgedNoise, type NoiseOptions } from "@pibbl/core/textures";
+export function NoiseConsumer() {
+  const options: NoiseOptions = { seed: 42, frequency: 4, octaves: 3, persistence: 0.5, contrast: 1.2, speed: 0.1 };
+  const soft: Texture<never> = useTexture(softNoise(options));
+  const ridge: Texture<never> = useTexture(ridgedNoise(options));
+  return <Group><Rectangle style={{ width: 100, height: 100, fill: soft }} /><Rectangle style={{ width: 100, height: 100, fill: ridge }} /></Group>;
+}
+
+
+import { emboss, type PibblEmbossFilterOptions } from "@pibbl/core/filters";
+export function EmbossConsumer() {
+  const height = useTexture(plainWeave(), { palette: ["#000000", "#ffffff"] });
+  const options: PibblEmbossFilterOptions = { region: {x:0,y:0,width:100,height:100}, depth:3, strength:0.5, direction:[-1,-1] };
+  return <Rectangle style={{ width:100, height:100, fill:"#708090", filter:emboss(height.paint({mode:"repeat",tileWidth:64,tileHeight:64}), options) }} />;
+}
+
+
+import { schnakenberg, barkley, brusselator, schnakenbergPresets, barkleyPresets, brusselatorPresets, type SchnakenbergOptions, type BarkleyOptions, type BrusselatorOptions } from "@pibbl/core/textures";
+export function ChemicalConsumer() {
+  const s: SchnakenbergOptions = {...schnakenbergPresets.labyrinths, seed:42, paused:true};
+  const b: BarkleyOptions = {...barkleyPresets.spirals, epsilon:0.02, speed:1};
+  const r: BrusselatorOptions = {...brusselatorPresets.oscillations, initialNoise:0.1};
+  const first:Texture<InkMessage> = useTexture(schnakenberg(s));
+  const second:Texture<InkMessage> = useTexture(barkley(b));
+  const third:Texture<InkMessage> = useTexture(brusselator(r));
+
+  return <Group><Rectangle style={{width:64,height:64,fill:first}} /><Rectangle style={{width:64,height:64,fill:second}} /><Rectangle style={{width:64,height:64,fill:third}} /></Group>;
+}
+
+import { polkaDots, halftone, truchet, plaid, plaidPresets, type PlaidOptions } from '@pibbl/core/textures';
+const namedPlaid: TextureRecipe = plaid({
+  colors: { paper: '#ffffff', ink: '#000000' },
+  horizontal: [{width:3,color:'paper'},{width:1,color:'ink'}],
+  vertical: [{width:1,color:'paper'}],
+});
+plaid({colors:{paper:'#ffffff'},horizontal:[{width:1,
+ // @ts-expect-error A band must reference a key in colors.
+ color:'missing'}],vertical:[{width:1,color:'paper'}]});
+const typedBands: PlaidOptions<{paper:string;ink:string}> = {
+ colors:{paper:'#ffffff',ink:'#000000'}, horizontal:[{width:1,color:'paper'}],vertical:[{width:1,color:'ink'}],
+};
+plaid(typedBands);
+plaid(plaidPresets.tartan);
+// @ts-expect-error Numeric palette indices are not color references.
+plaid({colors:{paper:'#ffffff'},horizontal:[{width:1,color:0}],vertical:[{width:1,color:'paper'}]});
+export function GeometricConsumer(){
+ const dots=useTexture(polkaDots({jitter:.2,seed:42}));
+ const tone=useTexture(halftone({cyclesX:2,speed:.1}));
+ const curves=useTexture(truchet({orientationBias:.4}));
+ const cloth=useTexture(namedPlaid);
+ return <Group>{[dots,tone,curves,cloth].map((fill,i)=><Rectangle key={i} style={{width:128,height:128,fill}}/>)}</Group>;
+}

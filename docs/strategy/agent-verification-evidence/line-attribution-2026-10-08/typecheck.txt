@@ -1,0 +1,6 @@
+$ tsc --noEmit
+packages/scenarios/src/learning/composition/viz-inspection-workbench.example.tsx(78,59): error TS2322: Type '{ scale: string; side: string; }' is not assignable to type 'IntrinsicAttributes & AxisProps'.
+  Property 'side' does not exist on type 'IntrinsicAttributes & AxisProps'.
+packages/scenarios/src/learning/composition/viz-inspection-workbench.example.tsx(103,55): error TS2322: Type '{ scale: string; side: string; }' is not assignable to type 'IntrinsicAttributes & AxisProps'.
+  Property 'side' does not exist on type 'IntrinsicAttributes & AxisProps'.
+[ELIFECYCLE] Command failed with exit code 1.

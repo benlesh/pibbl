@@ -1,0 +1,76 @@
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - import "../../vitest.config" without a file extension (tooling/line-attribution/vitest.config.ts:4:18). Add the file extension
+  - import "./build" without a file extension (tooling/studio-docs/vite-plugin.ts:10:8). Add the file extension
+  - import "./learning-catalog-adapter" without a file extension (tooling/studio-docs/vite-plugin.ts:11:44). Add the file extension
+  - import "./search-index" without a file extension (tooling/studio-docs/vite-plugin.ts:12:64). Add the file extension
+  - import "./build" without a file extension (tooling/studio-docs/search-index.ts:6:8). Add the file extension
+  - import "./build" without a file extension (tooling/studio-docs/learning-catalog-adapter.ts:8:8). Add the file extension
+  - import "./api-exports" without a file extension (tooling/studio-docs/build.ts:12:8). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/search-index.ts:7:39). Add the file extension
+  - import "./markdown" without a file extension (tooling/studio-docs/build.ts:13:37). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/build.ts:14:64). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/markdown.ts:10:8). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/api-exports.ts:16:43). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/markdown.ts:11:46). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/markdown.ts:13:46). Add the file extension
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+
+ RUN  v4.1.10 /Users/benlesh/GitHub/crc
+
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - import "../../vitest.config" without a file extension (tooling/line-attribution/vitest.config.ts:4:18). Add the file extension
+  - import "./build" without a file extension (tooling/studio-docs/vite-plugin.ts:10:8). Add the file extension
+  - import "./learning-catalog-adapter" without a file extension (tooling/studio-docs/vite-plugin.ts:11:44). Add the file extension
+  - import "./search-index" without a file extension (tooling/studio-docs/vite-plugin.ts:12:64). Add the file extension
+  - import "./build" without a file extension (tooling/studio-docs/search-index.ts:6:8). Add the file extension
+  - import "./build" without a file extension (tooling/studio-docs/learning-catalog-adapter.ts:8:8). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/search-index.ts:7:39). Add the file extension
+  - import "./api-exports" without a file extension (tooling/studio-docs/build.ts:12:8). Add the file extension
+  - import "./markdown" without a file extension (tooling/studio-docs/build.ts:13:37). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/build.ts:14:64). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/markdown.ts:10:8). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/api-exports.ts:16:43). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/markdown.ts:11:46). Add the file extension
+  - import "./model" without a file extension (tooling/studio-docs/markdown.ts:13:46). Add the file extension
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+8:58:37 PM [vite] (client) Re-optimizing dependencies because vite config has changed
+ ❯ |chromium| tooling/line-attribution/line-attribution.check.tsx (3 tests | 1 failed) 72ms
+   × connects a decorative segment to captured data, scales, transform and clip after successful rendering only 70ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |chromium| tooling/line-attribution/line-attribution.check.tsx > connects a decorative segment to captured data, scales, transform and clip after successful rendering only
+AssertionError: expected undefined to match object { …(6) }
+
+Failure screenshot:
+  - tooling/line-attribution/__screenshots__/line-attribution.check.tsx/connects-a-decorative-segment-to-captured-data--scales--transform-and-clip-after-successful-rendering-only-1.png
+
+[32m- Expected:[39m
+{
+  "capturedPositions": "line-local",
+  "clipGeometry": "opaque-path-use-inside-outside-probes",
+  "coverage": "geometry-not-pixels-or-event-target",
+  "queryCoordinates": "root-logical",
+  "sourceReferences": "live-not-snapshot",
+  "transforms": "local-to-root-logical",
+}
+
+[31m+ Received:[39m
+undefined
+
+ ❯ tooling/line-attribution/line-attribution.check.tsx:64:27
+     62|     const first = inspector.snapshot();
+     63|     expect(first.status).toBe("ready");
+     64|     expect(first.evidence).toMatchObject({
+       |                           ^
+     65|       queryCoordinates: "root-logical",
+     66|       capturedPositions: "line-local",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 2 passed (3)
+   Start at  20:58:37
+   Duration  794ms (transform 0ms, setup 0ms, import 197ms, tests 72ms, environment 0ms)
+

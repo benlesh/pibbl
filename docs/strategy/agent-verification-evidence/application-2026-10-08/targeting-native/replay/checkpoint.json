@@ -1,0 +1,241 @@
+{
+  "schema": "pibbl-replay-checkpoint/1",
+  "runId": "ac5120e2-3b67-4f27-85a2-e5101edd5358",
+  "sequence": 3,
+  "status": "partial",
+  "stage": "before-cleanup",
+  "timestamp": "2026-10-08T18:19:17.110Z",
+  "timing": {
+    "clock": "node-monotonic",
+    "clockId": "ac5120e2-3b67-4f27-85a2-e5101edd5358",
+    "elapsedMs": 111.703833,
+    "anchor": {
+      "monotonicMs": 132.313292,
+      "wallTimestamp": "2026-10-08T18:19:16.998Z",
+      "correlation": "paired-observations-not-synchronized"
+    }
+  },
+  "report": {
+    "requiredChecks": [
+      {
+        "checkId": "seed.pixels",
+        "actionId": "seed"
+      },
+      {
+        "checkId": "seed.input-provenance",
+        "actionId": "seed"
+      },
+      {
+        "checkId": "seed.selected-entity",
+        "actionId": "seed"
+      },
+      {
+        "checkId": "seed.selection-count",
+        "actionId": "seed"
+      },
+      {
+        "checkId": "seed.delivery-generation",
+        "actionId": "seed"
+      },
+      {
+        "checkId": "seed.delivery-target",
+        "actionId": "seed"
+      },
+      {
+        "checkId": "seed.selection-intent",
+        "actionId": "seed"
+      },
+      {
+        "checkId": "repair.pixels",
+        "actionId": "repair"
+      },
+      {
+        "checkId": "repair.input-provenance",
+        "actionId": "repair"
+      },
+      {
+        "checkId": "repair.selected-entity",
+        "actionId": "repair"
+      },
+      {
+        "checkId": "repair.selection-count",
+        "actionId": "repair"
+      },
+      {
+        "checkId": "repair.delivery-generation",
+        "actionId": "repair"
+      },
+      {
+        "checkId": "repair.delivery-target",
+        "actionId": "repair"
+      },
+      {
+        "checkId": "repair.selection-intent",
+        "actionId": "repair"
+      },
+      {
+        "checkId": "intentional-block.pixels",
+        "actionId": "intentional-block"
+      },
+      {
+        "checkId": "intentional-block.input-provenance",
+        "actionId": "intentional-block"
+      },
+      {
+        "checkId": "intentional-block.selected-entity",
+        "actionId": "intentional-block"
+      },
+      {
+        "checkId": "intentional-block.selection-count",
+        "actionId": "intentional-block"
+      },
+      {
+        "checkId": "intentional-block.delivery-generation",
+        "actionId": "intentional-block"
+      },
+      {
+        "checkId": "intentional-block.delivery-target",
+        "actionId": "intentional-block"
+      },
+      {
+        "checkId": "intentional-block.selection-intent",
+        "actionId": "intentional-block"
+      }
+    ],
+    "schema": "pibbl-targeting-replay/1",
+    "status": "incomplete",
+    "url": "http://127.0.0.1:5199/#/testing/agent-targeting-verification",
+    "node": "v26.9.0",
+    "browser": "151.0.7922.34",
+    "timestamp": "2026-10-08T18:19:16.998Z",
+    "environment": {
+      "viewport": {
+        "width": 1280,
+        "height": 1000
+      },
+      "density": 1,
+      "locale": "en-US",
+      "timezone": "UTC"
+    },
+    "provenanceScope": "Loaded fixture marker compared with local core source, fixture, inspector, development configuration and lockfile; not full dependency or asset attestation.",
+    "oracle": {
+      "point": {
+        "x": 144,
+        "y": 112
+      },
+      "expectedColor": [
+        37,
+        99,
+        235,
+        255
+      ],
+      "requiredSelection": "item-a"
+    },
+    "steps": [],
+    "errors": [],
+    "droppedErrors": 0,
+    "checks": [
+      {
+        "checkId": "protected-action-permissions",
+        "status": "not-applicable",
+        "required": false,
+        "reason": "This controlled fixture invokes no clipboard, fullscreen or other permission-gated action."
+      },
+      {
+        "checkId": "real-hardware-input",
+        "status": "skipped",
+        "required": false,
+        "reason": "This run uses Playwright Chromium automation; physical touch/pen hardware is not exercised."
+      }
+    ],
+    "checkpointRunId": "ac5120e2-3b67-4f27-85a2-e5101edd5358",
+    "run": {
+      "schema": "pibbl-replay-run/1",
+      "runId": "ac5120e2-3b67-4f27-85a2-e5101edd5358",
+      "kind": "targeting",
+      "startedAt": "2026-10-08T18:19:16.998Z",
+      "clock": "UTC-wall-clock",
+      "environment": {
+        "node": "v26.9.0",
+        "platform": "darwin",
+        "architecture": "arm64",
+        "browserContext": {
+          "viewport": {
+            "width": 1280,
+            "height": 1000
+          },
+          "deviceScaleFactor": 1,
+          "locale": "en-US",
+          "timezoneId": "UTC",
+          "reducedMotion": "reduce",
+          "colorScheme": "light"
+        }
+      },
+      "rerun": {
+        "executable": "/Users/benlesh/.local/share/fnm/node-versions/v26.9.0/installation/bin/node",
+        "arguments": [
+          "/Users/benlesh/GitHub/crc/tooling/agent-verification/replay.mjs",
+          "http://127.0.0.1:5199/#/testing/agent-targeting-verification"
+        ],
+        "cwd": "/Users/benlesh/GitHub/crc",
+        "environment": {},
+        "unsetEnvironment": [
+          "PIBBL_VERIFY_BROWSER_ENDPOINT"
+        ],
+        "outputPolicy": "fresh-default-directory",
+        "preconditions": [
+          "Provision the recorded checkout dependencies and Playwright Chromium.",
+          "Serve the source Studio from the intended checkout at the recorded URL; served/local identity checks must pass."
+        ]
+      },
+      "toolIdentity": {
+        "schema": "pibbl-replay-tool-identity/1",
+        "revision": "66e6ab05ac859db0f65e2dd7558110e1b6ff5013",
+        "sha256": "5240ea07c437816ece6562d3bdabf3e5316ba603a985a1f7dfbb32495ecad16e",
+        "files": 11,
+        "scope": "Replay and declared local dependencies on disk; not loaded-module or installed-dependency attestation."
+      }
+    },
+    "localSource": {
+      "revision": "66e6ab05ac859db0f65e2dd7558110e1b6ff5013",
+      "sourceFiles": [
+        "tooling/agent-verification/targeting.ts",
+        "tooling/agent-verification/replay.mjs",
+        "packages/scenarios/src/agent-targeting-verification.example.tsx",
+        "packages/scenarios/src/agent-targeting-verification.ts"
+      ],
+      "sha256": "06887e8d4b06683b70c4de2599714b08946e3764f5601fb2bcbc32c5c5537010"
+    },
+    "expectedIdentity": {
+      "schema": "pibbl-targeting-identity/1",
+      "revision": "66e6ab05ac859db0f65e2dd7558110e1b6ff5013",
+      "sha256": "a3d6e60ee9e93c5b6086b527b514c553be9318c3d68354afb2237db7d22840a6",
+      "files": 431
+    },
+    "browserFailure": {
+      "pageCrashed": false,
+      "unexpectedDisconnect": false,
+      "category": null
+    },
+    "failure": {
+      "category": "operation-error",
+      "stage": "navigation",
+      "actionId": null,
+      "lastActionId": null,
+      "message": "page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:5199/#/testing/agent-targeting-verification\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:5199/#/testing/agent-targeting-verification\", waiting until \"load\"\u001b[22m\n",
+      "code": null,
+      "assertion": null,
+      "layoutDiagnostic": null,
+      "detail": {
+        "limits": {
+          "nodes": 64,
+          "depth": 4,
+          "entries": 16,
+          "string": 1024,
+          "totalString": 8192
+        },
+        "omissions": []
+      }
+    }
+  }
+}

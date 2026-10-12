@@ -37,6 +37,10 @@
       {
         "name": "PibblGifExportOptions",
         "importPath": "@pibbl/core"
+      },
+      {
+        "name": "PibblRenderCompletion",
+        "importPath": "@pibbl/core"
       }
     ],
     "notes": [

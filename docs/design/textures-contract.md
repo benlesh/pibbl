@@ -265,3 +265,40 @@ advance with gravity or participate in ordinary free-bead merging. Release
 returns the bead to the free simulation at rest; reset discards the contact.
 The bound is 256 free beads plus one transient held bead; a full-capacity release
 coalesces the closest free pair by volume before returning the held bead.
+
+## Parameterized patterns and expanded Gray–Scott
+
+First feedback slice, 2026-10-09: `stripes`, `checkers`, and `woodGrain` are descriptive
+recipe factories with the fixed `TextureRecipe<never>` contract. They reuse the
+existing texture resource, palette, publication, and repeat-placement lifecycle.
+Their Canvas raster buffers are bounded by the selected resolution; imports and
+recipe construction allocate no surface or scheduler participant. Unchanged
+zero-speed patterns idle. Periodic motion runs only through Pibbl's shared frame.
+
+Stripes and checkers use palette endpoints. Wood uses the palette ramp for seeded
+growth lines warped by periodic multiscale noise, optional round-to-elliptical knots
+with their long axis along the grain and outward-flowing surrounding growth lines,
+and fine fiber variation. Zero knots produces clear grain. The unreleased hair
+study was replaced by wood grain after user feedback; actual hair remains deferred. Field samples repeat
+on both axes throughout motion; palette-only updates recolor the existing field.
+Tile size and paint rotation are presentation controls, independent of resolution.
+See [the API options](../site/api/types/pattern-textures.md) for validated ranges.
+
+The same WASM Gray–Scott solver adds coral, worms, labyrinths, and mitosis presets
+alongside unchanged spots/stripes coefficients. Preset names describe typical
+regimes, not guaranteed morphology for every seed or resolution. Recipe and
+component accept bounded feed/kill overrides and initial warmup steps. Chemistry
+and warmup changes reset seeded initialization; palette changes preserve it.
+Warmup runs synchronously once at initialization and can delay a large-grid mount.
+Periodic solver neighbors do not change existing clipped painting or clamped
+stirring. Exact looping and arbitrary-time seeking remain outside this contract.
+
+## Fabric feedback slice (2026-10-12)
+
+`plainWeave`, `twill`, and `herringbone` are separate factories with the same
+`TextureRecipe<never>` return contract. `FabricOptions` controls seeded thread
+geometry, tonal relief, fine fiber variation, and periodic phase/motion. Threads
+must be a multiple of eight to preserve each over-under structure across repeats.
+They reuse the pattern lifecycle and owned raster buffers; zero speed idles.
+Resolution, recoloring, repeat placement, and teardown use the existing texture
+contract. These are stylized material fields rather than cloth simulation.
