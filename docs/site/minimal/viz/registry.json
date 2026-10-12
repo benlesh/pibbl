@@ -1577,6 +1577,43 @@
     ]
   },
   {
+    "id": "estimate-intervals",
+    "title": "Supplied estimates and intervals",
+    "description": "Map asymmetric supplied bounds and estimates in both orientations.",
+    "source": "interval-series.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "HorizontalIntervalSeries",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "VerticalIntervalSeries",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "HorizontalIntervalSeriesProps",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "VerticalIntervalSeriesProps",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "IntervalSeriesProps",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "IntervalSeriesStyle",
+        "importPath": "@pibbl/core/viz"
+      }
+    ],
+    "notes": [
+      "Synthetic supplied values; no statistical calculation.",
+      "Creates its own canvas and disposes on pagehide."
+    ]
+  },
+  {
     "id": "chart-editing",
     "title": "Controlled chart editing",
     "description": "Edit a range window, reference line, reference band, and trading-time trend anchors through controlled callbacks.",
@@ -1639,6 +1676,81 @@
     "notes": [
       "All interaction state is application-owned and fed back through controlled props.",
       "Trading-time anchors snap to the supplied observations."
+    ]
+  },
+  {
+    "id": "interval-diamond-series",
+    "title": "Supplied summary diamonds",
+    "description": "Supplied summary diamonds.",
+    "source": "interval-diamond-series.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "IntervalDiamondSeries",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "IntervalDiamondSeriesProps",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "IntervalDiamondSeriesStyle",
+        "importPath": "@pibbl/core/viz"
+      }
+    ]
+  },
+  {
+    "id": "censored-point-series",
+    "title": "Supplied assay reporting limits",
+    "description": "Supplied assay reporting limits.",
+    "source": "censored-point-series.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "CensoredPointSeries",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "CensoredPointSeriesProps",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "CensoredPointSeriesStyle",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "CensoringAccessor",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "CensoringStatus",
+        "importPath": "@pibbl/core/viz"
+      }
+    ]
+  },
+  {
+    "id": "weighted-point-series",
+    "title": "Supplied weights mapped to marker area",
+    "description": "Supplied weights mapped to marker area.",
+    "source": "weighted-point-series.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "WeightedPointSeries",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "WeightedPointSeriesProps",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "WeightedPointSeriesStyle",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "WeightAccessor",
+        "importPath": "@pibbl/core/viz"
+      }
     ]
   }
 ]

@@ -2225,6 +2225,152 @@ export interface OhlcBarSeriesProps<D> extends PibblEventHandlers, PibblEventPar
 }
 export declare function OhlcBarSeries<D>(props: OhlcBarSeriesProps<D>): PibblNode;
 
+/** Local-pixel geometry and paint for estimate-and-interval marks. */
+export interface IntervalSeriesStyle {
+  readonly radius?: number;
+  readonly capSize?: number;
+  readonly fill?: FillStyle;
+  readonly stroke?: StrokeStyle;
+  readonly strokeWidth?: number;
+  readonly lineInteractionWidth?: number;
+  readonly opacity?: number;
+  readonly cursor?: string;
+}
+export interface IntervalSeriesProps<D> extends PibblEventHandlers, PibblEventParticipationOptions {
+  readonly data: SignalValue<readonly D[]>;
+  readonly category: BarCategoryAccessor<D>;
+  readonly estimate: LineAccessor<D>;
+  readonly lower: LineAccessor<D>;
+  readonly upper: LineAccessor<D>;
+  readonly categoryScale: ScaleId;
+  readonly valueScale: ScaleId;
+  readonly defined?: (datum: D, index: number, data: readonly D[]) => boolean;
+  readonly style?: SignalValue<SignalStyle<IntervalSeriesStyle>>;
+}
+export type HorizontalIntervalSeriesProps<D> = IntervalSeriesProps<D>;
+export type VerticalIntervalSeriesProps<D> = IntervalSeriesProps<D>;
+export declare function HorizontalIntervalSeries<D>(props: HorizontalIntervalSeriesProps<D>): PibblNode;
+export declare function VerticalIntervalSeries<D>(props: VerticalIntervalSeriesProps<D>): PibblNode;
+
+export type CensoringStatus = "observed" | "below" | "above";
+export type CensoringAccessor<D> =
+  | {
+      [K in keyof D]-?: D[K] extends CensoringStatus | null | undefined
+        ? K
+        : never;
+    }[keyof D]
+  | ((
+      datum: D,
+      index: number,
+      data: readonly D[],
+    ) => CensoringStatus | null | undefined);
+export interface CensoredPointSeriesStyle {
+  /** Circle and open censor marker radius in local pixels; defaults to 4. */
+  readonly radius?: number;
+  /** Fill for observed circles; defaults to #087f8c. Censor markers remain open. */
+  readonly fill?: FillStyle;
+  /** Outline for circles and open directional censor markers; defaults to #087f8c. */
+  readonly stroke?: StrokeStyle;
+  /** Outline width in local pixels; defaults to 1.5. */
+  readonly strokeWidth?: number;
+  /** Shared paint opacity from zero to one; defaults to 1. */
+  readonly opacity?: number;
+  /** Cursor for painted mark targets. */
+  readonly cursor?: string;
+}
+export interface CensoredPointSeriesProps<D>
+  extends PibblEventHandlers, PibblEventParticipationOptions {
+  /** Original records, or a signal of records. The series performs no imputation or inference. */
+  readonly data: SignalValue<readonly D[]>;
+  /** Property or callback supplying the numeric horizontal coordinate. */
+  readonly x: LineAccessor<D>;
+  /** Property or callback supplying the numeric vertical value or reporting limit. */
+  readonly y: LineAccessor<D>;
+  /** Property or callback yielding `observed`, `below`, or `above`. */
+  readonly censoring: CensoringAccessor<D>;
+  /** Ancestor continuous numeric scale mapping x. */
+  readonly xScale: ScaleId;
+  /** Ancestor continuous numeric scale mapping y and its reporting limit. */
+  readonly yScale: ScaleId;
+  /** Optional synchronous predicate; excluded rows contribute no mark.
+   * @param datum - Original record being tested.
+   * @param index - Zero-based source index.
+   * @param data - Complete supplied record array.
+   * @returns Whether this record contributes a mark.
+   */
+  readonly defined?: (datum: D, index: number, data: readonly D[]) => boolean;
+  /** Shared style; whole-object and shallow field signals are observed by the series. */
+  readonly style?: SignalValue<SignalStyle<CensoredPointSeriesStyle>>;
+}
+export type WeightAccessor<D> = LineAccessor<D>;
+export interface WeightedPointSeriesStyle {
+  /** Paint used for point interiors. Defaults to `#087f8c`. */
+  readonly fill?: FillStyle;
+  /** Paint used for point outlines. Defaults to no outline. */
+  readonly stroke?: StrokeStyle;
+  /** Outline width in local coordinate units. Defaults to 1. */
+  readonly strokeWidth?: number;
+  /** Opacity in the inclusive range [0, 1]. Defaults to 1. */
+  readonly opacity?: number;
+  /** Pointer cursor while the series owns a target. */
+  readonly cursor?: string;
+}
+export interface WeightedPointSeriesProps<D>
+  extends PibblEventHandlers, PibblEventParticipationOptions {
+  /** Readonly data or a signal containing it. */
+  readonly data: SignalValue<readonly D[]>;
+  /** Horizontal coordinate property or synchronous accessor. */
+  readonly x: SeriesAccessor<D>;
+  /** Vertical coordinate property or synchronous accessor. */
+  readonly y: SeriesAccessor<D>;
+  /** Nonnegative supplied weight property or synchronous accessor. */
+  readonly weight: WeightAccessor<D>;
+  /** Scale used to map x coordinates. */
+  readonly xScale: ScaleId;
+  /** Scale used to map y coordinates. */
+  readonly yScale: ScaleId;
+  /** Supplied inclusive weight extent. The lower bound must be zero. */
+  readonly weightDomain: readonly [0, number];
+  /** Radius extent `[0, maximumRadius]`; defaults to `[0, 6]`. */
+  readonly radiusRange?: readonly [0, number];
+  /**
+   * Excludes a datum before coordinate and weight accessors run.
+   * @param datum - Candidate source datum.
+   * @param index - Zero-based source index.
+   * @param data - Complete source data array.
+   * @returns Whether this datum contributes a mark.
+   */
+  readonly defined?: (datum: D, index: number, data: readonly D[]) => boolean;
+  /** Shared presentation. Whole-object and shallow field signals are supported. */
+  readonly style?: SignalValue<SignalStyle<WeightedPointSeriesStyle>>;
+}
+export interface IntervalDiamondSeriesStyle {
+  /** Full perpendicular height in local pixels; defaults to 12. Zero hides marks. */
+  readonly height?: number;
+  /** Diamond interior paint; defaults to #087f8c. */
+  readonly fill?: FillStyle;
+  /** Diamond outline paint; defaults to #087f8c. */
+  readonly stroke?: StrokeStyle;
+  /** Visible outline width in local pixels; defaults to 1.5. */
+  readonly strokeWidth?: number;
+  /** Outline targeting width in local pixels; defaults to strokeWidth. */
+  readonly lineInteractionWidth?: number;
+  /** Shared opacity from zero to one; defaults to 1. */
+  readonly opacity?: number;
+  /** Cursor shown over painted diamonds. */
+  readonly cursor?: string;
+}
+export interface IntervalDiamondSeriesProps<D> extends Omit<
+  IntervalSeriesProps<D>,
+  "style"
+> {
+  /** Whole-object and shallow field signals are observed; per-datum styling is not supported. */
+  readonly style?: SignalValue<SignalStyle<IntervalDiamondSeriesStyle>>;
+}
+export declare function CensoredPointSeries<D>(props: CensoredPointSeriesProps<D>): PibblNode;
+export declare function WeightedPointSeries<D>(props: WeightedPointSeriesProps<D>): PibblNode;
+export declare function IntervalDiamondSeries<D>(props: IntervalDiamondSeriesProps<D>): PibblNode;
+
 /* @pibbl-studio-module @pibbl/core/viz/inspection */
 import type { LayoutBox, PibblEvent } from '@pibbl/core';
 import type { BarSeriesProps, BandCategory, HoverSeries, ResolvedContinuousScale, ResolvedTradingTimeScale, VolumeSeriesProps, CandlestickSeriesProps, OhlcBarSeriesProps } from '@pibbl/core/viz';
