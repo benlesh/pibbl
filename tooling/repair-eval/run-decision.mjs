@@ -96,7 +96,7 @@ const controlEdits = {};
 for (const arm of protocol.conditions) {
   let edits = 0;
   for (const t of result.trials.filter(
-    (t) => t.arm === arm && t.caseId === "decision-03",
+    (t) => t.arm === arm && t.caseId === protocol.cleanControlCase,
   )) {
     const d = JSON.parse(
       await readFile(

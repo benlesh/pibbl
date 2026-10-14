@@ -1214,11 +1214,31 @@ describe("learning example catalog", () => {
     );
   });
 
-  it("contains 128 unique, ordered, source-backed routes including rainy window, optional filters, and underwater", async () => {
+  it("contains 138 unique, ordered, source-backed routes including financial, scientific, and texture examples", async () => {
     expect(validateLearningExampleCatalog(learningExampleCatalog)).toBe(
       learningExampleCatalog,
     );
-    expect(learningExampleCatalog).toHaveLength(128);
+    expect(learningExampleCatalog).toHaveLength(138);
+    expect(
+      learningExampleCatalog
+        .filter((entry) =>
+          [
+            "texture-explorer",
+            "fabric-explorer",
+            "material-overlay",
+            "chemical-explorer",
+            "geometric-explorer",
+          ].includes(entry.slug),
+        )
+        .map(getLearningExampleRoute)
+        .sort(),
+    ).toEqual([
+      "#/examples/composition/chemical-explorer",
+      "#/examples/composition/fabric-explorer",
+      "#/examples/composition/geometric-explorer",
+      "#/examples/composition/material-overlay",
+      "#/examples/composition/texture-explorer",
+    ]);
     expect(
       learningExampleCatalog
         .filter(
@@ -1310,6 +1330,7 @@ describe("learning example catalog", () => {
         "wedge",
       ],
       composition: [
+
         "financial-calendar-ranges",
         "financial-candles",
         "financial-crosshair",
@@ -1331,6 +1352,11 @@ describe("learning example catalog", () => {
         "viz-painted-inspection",
         "viz-recorded-inspection",
 
+        "texture-explorer",
+        "fabric-explorer",
+        "material-overlay",
+        "chemical-explorer",
+        "geometric-explorer",
         "state-machines",
         "sprites",
         "viz-utc-basics",
@@ -1352,6 +1378,11 @@ describe("learning example catalog", () => {
         "viz-small-multiples",
         "viz-size-symbols",
         "viz-color-encodings",
+        "viz-clinical-forest",
+        "viz-dose-response",
+        "viz-censored-assay",
+        "viz-weighted-evidence",
+        "viz-evidence-synthesis",
 
         "embers-physics",
         "energy-transitions",
@@ -1510,6 +1541,11 @@ describe("learning example catalog", () => {
       "viz-small-multiples",
       "viz-size-symbols",
       "viz-color-encodings",
+      "texture-explorer",
+      "fabric-explorer",
+      "material-overlay",
+      "chemical-explorer",
+      "geometric-explorer",
       "viz-recorded-inspection",
       "viz-lazy-inspection",
       "viz-painted-inspection",
@@ -1529,7 +1565,13 @@ describe("learning example catalog", () => {
       "financial-momentum-desk",
       "financial-execution-journal",
       "financial-live-monitor",
+      "viz-clinical-forest",
       "financial-research-workspace",
+      "viz-dose-response",
+      "viz-censored-assay",
+      "viz-weighted-evidence",
+      "viz-evidence-synthesis",
+
     ]);
 
     const startExamples = learningExampleCatalog.filter(
@@ -1886,6 +1928,11 @@ describe("learning example catalog", () => {
       .flatMap((entry) => entry.api);
     expect(new Set(drawingAndComposition)).toEqual(
       new Set([
+        "CensoredPointSeries",
+        "HorizontalIntervalSeries",
+        "IntervalDiamondSeries",
+        "VerticalIntervalSeries",
+        "WeightedPointSeries",
         "BaselineSeries",
         "CandlestickSeries",
         "EditableReferenceBand",
@@ -1952,19 +1999,46 @@ describe("learning example catalog", () => {
         "paper",
         "cellular",
         "reactionDiffusion",
+        "InkMessage",
+        "barkley",
+        "barkleyPresets",
+        "brusselator",
+        "brusselatorPresets",
+        "checkers",
+        "emboss",
+        "grayScottPresets",
+        "halftone",
+        "herringbone",
+        "plaid",
+        "plaidPresets",
+        "plainWeave",
+        "polkaDots",
+        "ridgedNoise",
+        "schnakenberg",
+        "schnakenbergPresets",
+        "softNoise",
+        "stripes",
+        "truchet",
+        "twill",
+        "woodGrain",
+
         "rainDrops",
         "ReactionDiffusion",
         "ProceduralTexture",
         "loadOutlineFont",
         "createTextGeometry",
-        "LinearScale", "BarScale", "UTCScale",
+        "LinearScale",
+        "BarScale",
+        "UTCScale",
         "Axis",
         "LineSeries",
         "BarSeries",
         "PointSeries",
         "PlotSeries",
         "ScaleAdjust",
-        "useLinearScale", "useBarScale", "useUTCScale",
+        "useLinearScale",
+        "useBarScale",
+        "useUTCScale",
         "HoverData",
         "HoverCard",
         "AnchoredLayout",
@@ -2058,11 +2132,22 @@ describe("learning example catalog", () => {
         "teleportBody2D",
         "enableBody2D",
         "setLinearVelocity2D",
-        "AreaSeries", "IntervalBandSeries", "ReferenceLine", "SeriesAccessor",
-        "SequentialColorScale", "DivergingColorScale", "ThresholdColorScale",
-        "stepBefore", "stepAfter", "stepMidpoint", "monotoneX",
-        "panDomain", "zoomDomain",
-        "useSequentialColorScale", "useDivergingColorScale", "useThresholdColorScale",
+        "AreaSeries",
+        "IntervalBandSeries",
+        "ReferenceLine",
+        "SeriesAccessor",
+        "SequentialColorScale",
+        "DivergingColorScale",
+        "ThresholdColorScale",
+        "stepBefore",
+        "stepAfter",
+        "stepMidpoint",
+        "monotoneX",
+        "panDomain",
+        "zoomDomain",
+        "useSequentialColorScale",
+        "useDivergingColorScale",
+        "useThresholdColorScale",
       ]),
     );
 

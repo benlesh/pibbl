@@ -7,4 +7,4 @@ for(let n=0;n<=100;n++){
  assert.ok(Math.abs(v.y+bounds(2,v.rotation).bottom-FLOOR)<1e-8);
  assert.ok(Math.abs(g.rotation-v.rotation)<1e-8);
 }
-console.log('PASS: no floor penetration, grounded curved support throughout ride');
+console.warn('PASS: no floor penetration, grounded curved support throughout ride');

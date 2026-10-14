@@ -4,11 +4,22 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { applicationSource } from "./private-cases.mjs";
 import { prepareTrial } from "./prepare.mjs";
-export const decisionCases = ["decision-01", "decision-02", "decision-03"];
-export const decisionContract = `Additional behavior: F/focus narrows the line clip to 299 plot-local units wide, leaving only record a's anchor visible. Hover while focused must choose the nearest visible record anchor, so a remains selected even at root x=340. G/unfocus restores the full plot clip. R restores data, domain, full clip and hover. Zoom must use the current domain for hover, not a mount-time mapping. Pointer x/y are root-logical; scale ranges here are plot-local. Inspection selection is not a routed event target. The application source may contain zero or one fault; leave correct behavior unchanged.`;
+export const decisionCases = [
+  "decision-01",
+  "decision-02",
+  "decision-03",
+  "decision-04",
+];
+export const decisionContract = `Additional behavior: F/focus narrows the line clip to 299 plot-local units wide, leaving only record a's anchor visible. Hover while focused must choose the nearest visible record anchor, so a remains selected even at root x=340. G/unfocus restores the full plot clip. R restores data, domain, full clip and hover. After Z/zoom followed by F/focus, no record anchor is inside the clip and hover must be null. Zoom must use the current domain for hover, not a mount-time mapping. Pointer x/y are root-logical; scale ranges here are plot-local. Inspection selection is not a routed event target. The application source may contain zero or one fault; leave correct behavior unchanged.`;
 export function decisionSource(caseId) {
   if (!decisionCases.includes(caseId)) throw new Error("Unknown decision case");
   let s = applicationSource("case-04");
+  const candidateExpression =
+    caseId === "decision-02"
+      ? "rows"
+      : caseId === "decision-03"
+        ? "rows.filter(row => currentScale.map(row.x) < 299)"
+        : "rows.filter(row => { const x = currentScale.map(row.x); return x >= 0 && x < 299; })";
   s = s
     .replace("pibbl, signal", "pibbl, signal, useRef")
     .replace(
@@ -32,8 +43,8 @@ export function decisionSource(caseId) {
     "path.rect(0, 0, focused.get() ? 299 : 600, 240);",
   );
   s = s.replace(
-    "let nearest=rows[0]; for(const row of rows)",
-    `const candidates=${caseId === "decision-02" ? "rows" : "focused.get() ? rows.filter(row => currentScale.map(row.x) < 299) : rows"}; let nearest=candidates[0]; for(const row of candidates)`,
+    "let nearest=rows[0]; for(const row of rows) if(Math.abs(row.x-time)<Math.abs(nearest.x-time)) nearest=row; hover.set(nearest.id);",
+    `const candidates=focused.get() ? ${candidateExpression} : rows; let nearest=candidates[0]; for(const row of candidates) if(!nearest || Math.abs(row.x-time)<Math.abs(nearest.x-time)) nearest=row; hover.set(nearest?.id ?? null);`,
   );
   s = s.replace(
     "<LineSeries data={rows}",
@@ -99,8 +110,13 @@ export async function repairDecisionReference(directory, caseId) {
     s = s.replace("const x = mountScale.current;", "const x = currentScale;");
   if (caseId === "decision-02")
     s = s.replace(
-      "const candidates=rows;",
+      "const candidates=focused.get() ? rows : rows;",
+      "const candidates=focused.get() ? rows.filter(row => { const x = currentScale.map(row.x); return x >= 0 && x < 299; }) : rows;",
+    );
+  if (caseId === "decision-03")
+    s = s.replace(
       "const candidates=focused.get() ? rows.filter(row => currentScale.map(row.x) < 299) : rows;",
+      "const candidates=focused.get() ? rows.filter(row => { const x = currentScale.map(row.x); return x >= 0 && x < 299; }) : rows;",
     );
   await writeFile(path, s);
 }

@@ -79,7 +79,7 @@ export async function prepareTrial({
   contract,
 }) {
   if (!["ordinary", "attribution", "inspection"].includes(arm))
-    throw new Error("Arm must be ordinary or attribution");
+    throw new Error("Arm must be ordinary, attribution, or inspection");
   const app = application ?? applicationSource(caseId);
   directory = resolve(directory);
   await mkdir(directory, { recursive: false });

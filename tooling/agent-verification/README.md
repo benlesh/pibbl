@@ -2296,12 +2296,12 @@ No repair got another attempt during rescoring. Valid reviews of unchanged
 passing outcomes are retained; the newly exposed regression received a fresh
 review using the counterevidence.
 
-| Condition | Fresh trials | Ordinary mean | Attribution mean |
-| --- | ---: | ---: | ---: |
-| Baseline, corrected reviews | 8 | 99.50 | 99.00 |
-| Evidence labels and corrected review | 8 | 98.75 | 94.08 |
-| Focused clipping/control, browser-import guidance | 4 | 100.00 | 99.00 |
-| Final signal pair, temporal labels and pixel guidance | 2 | 100.00 | 100.00 |
+| Condition                                             | Fresh trials | Ordinary mean | Attribution mean |
+| ----------------------------------------------------- | -----------: | ------------: | ---------------: |
+| Baseline, corrected reviews                           |            8 |         99.50 |            99.00 |
+| Evidence labels and corrected review                  |            8 |         98.75 |            94.08 |
+| Focused clipping/control, browser-import guidance     |            4 |        100.00 |            99.00 |
+| Final signal pair, temporal labels and pixel guidance |            2 |        100.00 |           100.00 |
 
 Of 22 fresh repairs, 21 pass the strengthened oracle; 328 of 330 checks pass.
 Five of six clean controls remain unchanged. The assisted false repair fails
@@ -2357,28 +2357,35 @@ source/browser/pixel evidence and public application repairs. Installed runtime
 exports are identical; the capability restriction is procedural and must be
 checked against source/trace evidence.
 
-The three private cases cover stale mount-time hover mapping after zoom,
-selection that ignores clipped-out record anchors, and a correct control. F
-narrows the plot clip to 299 local units, G restores it, and R resets the chart.
-The independent oracle covers update painting, nearest-ID boundaries, zoomed
-mapping, focused clip pixels and selection, unfocus, reset, native input and
-errors. The prototype's original cases and delivery cutoff remain historical;
-this is not an inventory expansion or a release gate.
+The October 9 pilot ran two fault cases and one case believed to be a clean
+control. Independent replay found that the third case had a real zoom-plus-focus
+clipping defect. The immutable run and its corrected interpretation are saved
+under `docs/strategy/agent-verification-evidence/public-inspection-pilot-2026-10-09/`.
+The corrected runner protocol below separates that latent defect from a true
+clean control. F narrows the plot clip to 299 local units, G restores it, and R
+resets the chart. The independent oracle covers update painting, nearest-ID
+boundaries, zoomed mapping, focused clip pixels and selection, zoom-plus-focus,
+unfocus, reset, native input and errors. The prototype's original cases and
+delivery cutoff remain historical; this is not an inventory expansion or a
+release gate.
 
 ```sh
 node tooling/repair-eval/decision-check.mjs
 node tooling/repair-eval/run-decision.mjs /tmp/pibbl-public-inspection-new
 ```
 
-The first command calibrates both faults, both reference repairs, the correct
-control, and inspection availability in both arms. The second launches twelve
-fresh repair turns and separate reviews: three matched cases, two repetitions.
-Case and arm order reverse for the second repetition. It preserves the 80/20
-score and records measured repair trace tokens and command counts, not inferred
-agent timing or query estimates.
+The first command calibrates all three defect cases, their reference repairs, the
+genuinely clean control, and inspection availability in both arms. The second
+launches sixteen fresh repair turns and separate reviews: four matched cases,
+two repetitions. Case and arm order reverse for the second repetition. It
+preserves the 80/20 score and records measured repair trace tokens and command
+counts, not inferred agent timing or query estimates.
 
-`tooling/repair-eval/decision-protocol.json` records the model, effort, cases,
-ordering, hypotheses and threshold before repair turns. The pilot pins
+`tooling/repair-eval/decision-protocol.json` is corrected schema `/2`; it records
+the model, effort, cases, true control, ordering, hypotheses and threshold for a
+future run. The saved October 9 pilot retains its original `/1` protocol and raw
+`not-cleared` status. Its owner decision is to ship the opt-in API; see the report
+above for the control correction and token accounting. The pilot pins
 `gpt-5.6-sol` with low reasoning for repairs and reviews. The authenticated CLI
 rejected the desktop's `gpt-6.1-sol` name; the working CLI startup header resolved
 `gpt-5.6-sol`, and an explicit structured preflight succeeded. CLI version is
@@ -2388,18 +2395,18 @@ The registered effort proxy is uncached input tokens plus output tokens, includi
 reasoning already counted within output. It is not currency and does not apply
 API price weights. The effort comparison uses the median inspection/ordinary
 ratio for matched successful repairs. The threshold requires at least six
-matched correct pairs, no lower repair success, no increase in unexpected
+eight matched correct pairs, no lower repair success, no increase in unexpected
 clean-control edits, no lower average review score, and at least 20% lower median
 paired effort. Missing/blocked measurements make clearance inconclusive. A
 weighted score does not override `deterministicPassed`.
 
-These are three synthetic cases, with a pre-integrated capture bridge, no
+These are four synthetic cases, with a pre-integrated capture bridge, no
 integration-cost measurement, no rich application documentation environment,
 and one model family serving both roles. Cached-token accounting and tool
 choice can affect the effort proxy. Passing the pilot threshold would justify
-further investigation, not prove broad value or approve shipping. Failing it
-provides no affirmative shipping justification from this pilot. Repetitions
-use frozen fixtures and prompts; do not tune them between runs to obtain a win.
+further investigation, not prove broad value. The pilot is informative evidence,
+not a release gate. Repetitions use frozen fixtures and prompts; do not tune
+them between runs to obtain a win.
 
 The live first-pair public API application was served at
 <http://127.0.0.1:5212/>. It is separate from the repair agent's browser session.
@@ -2408,3 +2415,30 @@ finished app. For a later saved trial, run `node serve.mjs 5212` inside its
 inspection capsule and call `inspectPlot({x:205,y:210})` in the browser console.
 Captured observations/queries remain geometric evidence, not pixel or routed
 interaction proof.
+
+## Render completion and committed pixel evidence
+
+`render-completion-demo.tsx` is a small public-API exercise joining an
+application update to `recordFrames()` completion notifications, committed
+numeric inspection, and the corresponding copied RGBA frame. Completion
+callbacks run after the root's ordinary finish callbacks, so committed
+inspection can be read there. A frame's `renderGeneration` is the join key;
+its timestamp is wall-clock time, and capture can coalesce renders. A failed
+attempt reports `status: "failed"` and never yields a committed frame.
+
+Run the source Studio and replay from the repository root:
+
+```sh
+corepack pnpm@11.21.0 exec vite --config tooling/agent-verification/render-completion.studio.config.ts --mode inspection --host 127.0.0.1 --port 5202 --strictPort
+node tooling/agent-verification/render-completion-replay.mjs http://127.0.0.1:5202 /tmp/pibbl-render-completion-run
+node tooling/agent-verification/evidence-reader.mjs /tmp/pibbl-render-completion-run/report.json --check generation-join
+```
+
+Manual Studio URL: <http://127.0.0.1:5202/__pibbl/render-completion>. Start
+recording, then try update, zoom, pan, clipping, and the controlled failure / repair
+buttons. The replay checks source and semantic state, independently calculated
+coordinates and raw pixels. It does not use screenshot similarity as its oracle.
+The test and demo verify failed renders are kept distinct from successful
+commits. Normal unrecorded roots still avoid pixel readback and recorder worker
+creation; cancellation, disposal, independent roots, and repeat-run behavior
+remain covered by the recording lifecycle tests.

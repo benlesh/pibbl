@@ -233,6 +233,21 @@ export async function scoreTrial(directory) {
         unfocused.application.focused === false &&
         unfocused.application.hover === "b" &&
         unfocused.pixels.outsideFocus > 0;
+      await page.keyboard.press("r");
+      await page.keyboard.press("z");
+      await settle();
+      await page.keyboard.press("f");
+      await settle();
+      await page.mouse.move(box.x + 340, box.y + 210);
+      const zoomFocused = await capture("zoom-focused-no-visible-anchor");
+      check("zoom.focus.selection", () =>
+        assert.equal(
+          zoomFocused.application.hover,
+          null,
+          "No record anchor is visible after zoom then focus",
+        ),
+      );
+      focusCorrect = focusCorrect && zoomFocused.application.hover === null;
     }
     check("reset.geometry", () =>
       assert.ok(

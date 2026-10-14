@@ -19,9 +19,15 @@ try {
       const before = await scoreTrial(dir);
       assert.equal(
         before.status,
-        caseId === "decision-03" ? "pass" : "fail",
+        caseId === "decision-04" ? "pass" : "fail",
         `${caseId}/${arm} must distinguish faults`,
       );
+      if (caseId === "decision-04")
+        assert.equal(
+          before.sourceChanged,
+          false,
+          "Clean control starts unchanged",
+        );
       assert.equal(
         before.observations[0].state.inspectionAvailable,
         arm === "inspection",
@@ -29,6 +35,12 @@ try {
       await repairDecisionReference(dir, caseId);
       const after = await scoreTrial(dir);
       assert.equal(after.status, "pass", `${caseId}/${arm} reference repair`);
+      if (caseId === "decision-04")
+        assert.equal(
+          after.sourceChanged,
+          false,
+          "Clean control remains unchanged",
+        );
       results.push({
         caseId,
         arm,

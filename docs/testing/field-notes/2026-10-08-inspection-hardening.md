@@ -1,3 +1,5 @@
+> **Historical status: Field evidence from the October 8, 2026 inspection API hardening pass.**
+
 # Inspection foundation — accepted batch hardening, 2026-10-08
 
 The user accepted Batch 0's three runnable capabilities and authorized hardening.

@@ -1,3 +1,5 @@
+> **Historical status: This October 8, 2026 volume-series proposal was separate from the inspection shipping decision. The user later approved its financial implementation, recorded in Plan 008.**
+
 # Plan 008 — remaining Batch 1 design checkpoint
 
 Status: accepted by the user on 2026-10-08; implementation in progress.

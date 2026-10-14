@@ -426,6 +426,7 @@ const historicalMarkdownPatterns = [
   /^docs\/testing\/dep-\d+-upgrade-notes\.md$/u,
   /^docs\/testing\/field-notes\//u,
   /^docs\/testing\/pre-upgrade-baseline\.md$/u,
+  /^docs\/strategy\/agent-verification-evidence\/public-inspection-pilot-\d{4}-\d{2}-\d{2}\/README\.md$/u,
 ];
 
 function parseModule(source, filename) {

@@ -9,4 +9,4 @@ for(let n=1;n<100;n++){
  if(acceleration===undefined)acceleration=ddy;
  assert.ok(ddy>0&&Math.abs(ddy-acceleration)<1e-7,'constant downward acceleration');
 }
-console.log('PASS: ballistic center of mass, constant sideways velocity, constant gravity despite rotation and stretch');
+console.warn('PASS: ballistic center of mass, constant sideways velocity, constant gravity despite rotation and stretch');

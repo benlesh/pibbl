@@ -11,7 +11,7 @@ assert.ok(choreography(.57)[2].sy<1);
 assert.ok(choreography(.60)[1].sy<1);
 assert.ok(choreography(.635)[0].sy<1);
 for(const t of [.911,.92,.93,.945]){const [c,g,v]=choreography(t);const foot=projection(0,c,[0,1])[1];assert.ok(Math.abs(foot-projection(1,g,[0,1])[0])<1e-7);assert.ok(Math.abs(foot-projection(2,v,[0,1])[0])<1e-7);}
-console.log('PASS: anticipation, lift-off stretch, attached hoist, shared laughter, supported pyramid catch');
+console.warn('PASS: anticipation, lift-off stretch, attached hoist, shared laughter, supported pyramid catch');
 
 assert.ok(choreography(.388)[1].sy<1,'green pushes off with its own compression');
 assert.ok(choreography(.402)[1].sy>1,'green extends during its push-off');
@@ -23,4 +23,4 @@ const cuts=[0,.2142,.5414,1];
 for(let hop=0;hop<3;hop++){let height=0;for(let n=0;n<=100;n++){const p=.72+.08*(cuts[hop]+(cuts[hop+1]-cuts[hop])*n/100);const c=choreography(p)[0];height=Math.max(height,390-projection(0,c,[0,1])[1]);}lifts.push(height);}
 assert.ok(lifts[0]<lifts[1]&&lifts[1]<lifts[2],'each preparation hop must get higher');
 assert.deepEqual(choreography(.69),choreography(.71),'hold a beat after laughter');
-console.log('PASS: forward hoist, green push-off, clockwise back-first slide, pause, escalating hops');
+console.warn('PASS: forward hoist, green push-off, clockwise back-first slide, pause, escalating hops');

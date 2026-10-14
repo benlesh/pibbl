@@ -36,7 +36,7 @@ make its implementation tree-shakeable if pibbl statically imports that service.
 Therefore mount-time registration uses an explicit opt-in factory:
 
 ```tsx
-import { pibbl, auxiliaryOutputs } from '@pibbl/core';
+import { pibbl, auxiliaryOutputs } from "@pibbl/core";
 
 pibbl(primaryCanvas, <App />, {
   auxOutputs: auxiliaryOutputs([
@@ -45,7 +45,7 @@ pibbl(primaryCanvas, <App />, {
       canvas: detailCanvas,
       width: 200,
       height: 200,
-      pixelRatio: 'device',
+      pixelRatio: "device",
       zoom: 4,
       sourceX: 100,
       sourceY: 80,
@@ -61,9 +61,7 @@ no imports of the auxiliary renderer. No global registration side effects.
 
 ```ts
 type PibblAuxOutput =
-  | HTMLCanvasElement
-  | OffscreenCanvas
-  | PibblAuxOutputOptions;
+  HTMLCanvasElement | OffscreenCanvas | PibblAuxOutputOptions;
 
 interface PibblAuxOutputOptions {
   readonly canvas: HTMLCanvasElement | OffscreenCanvas;
@@ -76,7 +74,9 @@ interface PibblAuxOutputOptions {
 }
 
 // Opaque immutable definition, with no public lifecycle methods.
-interface PibblAuxOutputsDefinition { /* private brand */ }
+interface PibblAuxOutputsDefinition {
+  /* private brand */
+}
 
 function auxiliaryOutputs(
   outputs: readonly PibblAuxOutput[],
@@ -150,7 +150,10 @@ output removal. Removed destinations receive no paint in subsequent frames.
   style={{
     src: externalCanvas,
     sourceRect: { x: 100, y: 80, width: 200, height: 150 },
-    x: 20, y: 20, width: 400, height: 300,
+    x: 20,
+    y: 20,
+    width: 400,
+    height: 300,
   }}
 />
 ```
@@ -189,40 +192,59 @@ cross-mount render propagation or cycle resolution is promised.
 
 ```tsx
 import {
-  pibbl, signal, useAuxOutput, useComputed,
+  pibbl,
+  signal,
+  useAuxOutput,
+  useComputed,
   type Signal,
-} from '@pibbl/core';
+} from "@pibbl/core";
 
 const center = signal({ x: 300, y: 200 });
 const zoom = signal(4);
 
-function LensOutput({ canvas, center, zoom }: {
+function LensOutput({
+  canvas,
+  center,
+  zoom,
+}: {
   canvas: HTMLCanvasElement;
   center: Signal<{ x: number; y: number }>;
   zoom: Signal<number>;
 }) {
   const sourceX = useComputed(
-    () => center.get().x - 100 / zoom.get(), [center, zoom],
+    () => center.get().x - 100 / zoom.get(),
+    [center, zoom],
   );
   const sourceY = useComputed(
-    () => center.get().y - 100 / zoom.get(), [center, zoom],
+    () => center.get().y - 100 / zoom.get(),
+    [center, zoom],
   );
   useAuxOutput({
-    canvas, width: 200, height: 200, pixelRatio: 'device',
-    zoom, sourceX, sourceY,
+    canvas,
+    width: 200,
+    height: 200,
+    pixelRatio: "device",
+    zoom,
+    sourceX,
+    sourceY,
   });
   return null;
 }
 
 // Both elements are application-owned, in a positioned HTML wrapper.
-pibbl(primaryCanvas, <>
-  <Scene />
-  <LensOutput canvas={lensCanvas} center={center} zoom={zoom} />
-</>);
+pibbl(
+  primaryCanvas,
+  <>
+    <Scene />
+    <LensOutput canvas={lensCanvas} center={center} zoom={zoom} />
+  </>,
+);
 ```
 
 ```css
-.canvas-wrapper { position: relative; }
+.canvas-wrapper {
+  position: relative;
+}
 .lens {
   position: absolute;
   width: 200px;

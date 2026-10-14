@@ -15,3 +15,6 @@ packages/text/test/fixtures/
 
 # Immutable, SHA-256-addressed performance audit captures
 docs/testing/runtime-performance-audit/*/results/
+
+# Logo export metadata and retained recording reports are byte-fingerprinted assets.
+output/brand/**/*.json

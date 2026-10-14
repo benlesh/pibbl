@@ -1,9 +1,11 @@
+> **Historical status: The inspection proposal was implemented on October 8, 2026; its shipping decision was updated after the October 9 public-API pilot.**
+
 # Plan 008 inspection checkpoint — proposal, 2026-10-08
 
-Status: design accepted 2026-10-08 with the revisions below; Batch 0 slices
-accepted and hardened, with unrelated aggregate blockers recorded in the
-[dated evidence](../testing/field-notes/2026-10-08-inspection-hardening.md).
-Historical proposal examples remain below for context.
+Status: The revised inspection design shipped in the optional visualization
+inspection entry. The owner approved shipping after the public-API pilot on
+October 9; raw pilot results and limitations remain in the dated evidence. The
+proposal examples below are historical context.
 
 Accepted revisions: `RenderedSeries` and `rendered()` replace snapshot names.
 An optional pure `filter` callback replaces candidate string policies; no filter

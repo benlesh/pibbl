@@ -30,9 +30,18 @@ export default function mount(canvas: HTMLCanvasElement) {
   return pibbl(
     canvas,
     <FocusManagement>
-      <Text style={{ left: 16, top: 18, font: "12px sans-serif" }}>
+      <Text
+        style={{ left: 16, top: 18, font: "12px sans-serif", fill: "#18283d" }}
+      >
         {`SMA ${sma[last]!.average} · EMA ${ema[last]!.average} · band mean ${bands[last]!.mean}`}
       </Text>
     </FocusManagement>,
   );
 }
+
+const canvas = document.createElement("canvas");
+canvas.width = 320;
+canvas.height = 220;
+document.body.append(canvas);
+const app = mount(canvas);
+window.addEventListener("pagehide", () => app.dispose(), { once: true });

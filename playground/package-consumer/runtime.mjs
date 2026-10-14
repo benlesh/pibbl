@@ -78,6 +78,8 @@ const expected = [
   "defineRenderLayer",
   "defineTexture",
   "defineTransition",
+  "recordFrames",
+  "exportGif",
   "useVisibilityTransition",
   "fade",
   "bifrost",
@@ -151,6 +153,8 @@ for (const removedName of ["useState", "useMemo", "useWhenChanged", "useSpringVa
 const expectedInternal = [
   "PibblInternalManualSchedulerDriver",
   "borrowTextureRaster",
+  "borrowDispatchResource",
+  "captureSeriesInspectionFrame",
   "pibblInternalAssertCommandAllowed",
   "pibblInternalCreatePropAttachment",
   "pibblInternalCreateSignalConsumer",
