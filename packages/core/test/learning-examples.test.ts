@@ -1214,11 +1214,11 @@ describe("learning example catalog", () => {
     );
   });
 
-  it("contains 138 unique, ordered, source-backed routes including financial, scientific, and texture examples", async () => {
+  it("contains 139 unique, ordered, source-backed routes including financial, scientific, and texture examples", async () => {
     expect(validateLearningExampleCatalog(learningExampleCatalog)).toBe(
       learningExampleCatalog,
     );
-    expect(learningExampleCatalog).toHaveLength(138);
+    expect(learningExampleCatalog).toHaveLength(139);
     expect(
       learningExampleCatalog
         .filter((entry) =>
@@ -1383,6 +1383,7 @@ describe("learning example catalog", () => {
         "viz-censored-assay",
         "viz-weighted-evidence",
         "viz-evidence-synthesis",
+        "viz-phase-ii-trajectories",
 
         "embers-physics",
         "energy-transitions",
@@ -1571,6 +1572,7 @@ describe("learning example catalog", () => {
       "viz-censored-assay",
       "viz-weighted-evidence",
       "viz-evidence-synthesis",
+        "viz-phase-ii-trajectories",
 
     ]);
 
@@ -1933,6 +1935,8 @@ describe("learning example catalog", () => {
         "IntervalDiamondSeries",
         "VerticalIntervalSeries",
         "WeightedPointSeries",
+        "TrajectorySeries",
+        "PairedSeries",
         "BaselineSeries",
         "CandlestickSeries",
         "EditableReferenceBand",

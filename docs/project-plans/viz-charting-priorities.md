@@ -643,3 +643,39 @@ Next pharmaceutical slice: repeated-measure and longitudinal series, with explic
 participant grouping and missing-visit gaps; then safety/event views and
 time-to-event outcomes. Audit existing line and point composition before adding
 public APIs.
+
+### Paired and longitudinal slice proposal (2026-10-12)
+
+Previous research marks landed in main through PR 15 (`da947d78`). The next
+slice adds `TrajectorySeries` (grouped long-form participant paths) and
+`PairedSeries` (complete wide-record endpoint connectors) to `@pibbl/core/viz`.
+Both use existing scales, shared signal styles and ordinary series events; no
+core runtime change is required. Source order remains explicit, and supplied
+missing visit rows break individual trajectories. The example will show a
+clearly labelled synthetic Phase II repeated-measures study with accessible
+controls, units, denominators and missingness.
+
+`changeFromBaseline` remains deferred until baseline selection, duplicate
+baselines and missing-baseline policies have a separate concrete contract.
+Applications supply changes in this slice; summary lines and uncertainty remain
+existing `LineSeries`/`IntervalBandSeries` composition with supplied data.
+
+Paired/longitudinal slice implementation: `TrajectorySeries`, `PairedSeries`,
+their props/style types and `TrajectoryGroupAccessor` are implemented. Public
+source tests failed first on absent exports before the production implementation.
+The synthetic `viz-phase-ii-trajectories` example supplies 16 participants and
+scheduled visit rows, preserves missed assessments and discontinuation, and
+provides paired endpoints, native controls and an accessible table. Numeric
+outcomes, identities, source ordering, gap boundaries, accessor guards and
+reactive paint have focused public evidence. API pages, complete minimal
+programs, packed consumers and Studio editor declarations accompany the slice.
+
+Fresh verification (Node 24.15.0 / pnpm 11.21.0): the built visualization suite
+passed 533 tests with two existing skips before the final additional omission
+and mobile-label checks. The final focused mark suite passed eight tests and the clinical example passed
+two tests; the learning catalog passed 288 tests. Repository typecheck, docs/JSDoc checks,
+packed Bundler/NodeNext and runtime boundary checks, production Studio and
+website builds passed. Desktop/phone browser QA exercised native controls and
+explicit missingness. This slice has not run the full aggregate `trust` gate;
+previous merged work passed it in PR 15. Studio feedback remains the next
+milestone before landing this new branch.

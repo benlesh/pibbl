@@ -326,3 +326,14 @@ export type {
   WeightedPointSeriesStyle,
   WeightAccessor,
 } from "./lib/weighted-point-series.js";
+export { TrajectorySeries } from "./lib/trajectory-series.js";
+export type {
+  TrajectorySeriesProps,
+  TrajectorySeriesStyle,
+  TrajectoryGroupAccessor,
+} from "./lib/trajectory-series.js";
+export { PairedSeries } from "./lib/paired-series.js";
+export type {
+  PairedSeriesProps,
+  PairedSeriesStyle,
+} from "./lib/paired-series.js";

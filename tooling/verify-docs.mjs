@@ -163,6 +163,8 @@ const publicSiteMarkdownPaths = [
   "docs/site/api/components/censored-point-series.md",
   "docs/site/api/components/weighted-point-series.md",
   "docs/site/api/components/interval-diamond-series.md",
+  "docs/site/api/components/trajectory-series.md",
+  "docs/site/api/components/paired-series.md",
   "docs/site/api/components/chart-editing.md",
   "docs/site/api/components/point-series.md",
   "docs/site/api/components/plot-series.md",
