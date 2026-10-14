@@ -15,6 +15,7 @@ const protectedFiles = [
   "index.html",
   "TASK.md",
   "trial.json",
+  "inspection-bridge.mjs",
 ];
 const digest = (bytes) => createHash("sha256").update(bytes).digest("hex");
 const hashes = async (dir) =>
@@ -34,6 +35,7 @@ export async function codexTurn({
   trace,
   timeoutMs,
   model,
+  reasoningEffort,
   command = "codex",
 }) {
   const args = [
@@ -50,6 +52,11 @@ export async function codexTurn({
   ];
   if (schema) args.push("--output-schema", schema);
   if (model) args.push("--model", model);
+  if (reasoningEffort)
+    args.push(
+      "-c",
+      `model_reasoning_effort=${JSON.stringify(reasoningEffort)}`,
+    );
   args.push("-");
   const child = spawn(command, args, {
     stdio: ["pipe", "pipe", "pipe"],
@@ -90,10 +97,14 @@ export async function runExperiment({
   directory,
   model,
   judgeModel,
+  reasoningEffort,
   timeoutMs = 600000,
   turn = codexTurn,
   score = scoreTrial,
   cases = caseIds,
+  prepare = preparePair,
+  arms = ["ordinary", "attribution"],
+  protocol,
 }) {
   directory = resolve(directory);
   await mkdir(directory, { recursive: false });
@@ -102,8 +113,10 @@ export async function runExperiment({
     started: new Date().toISOString(),
     model: model ?? "CLI default",
     judgeModel: judgeModel ?? model ?? "CLI default",
+    reasoningEffort,
     timeoutMs,
     weights: { deterministic: 80, agentic: 20 },
+    protocol,
     blinding: "Procedural; workspace-write is not read isolation",
     trials: [],
   };
@@ -115,10 +128,8 @@ export async function runExperiment({
   await save();
   for (const [i, caseId] of cases.entries()) {
     const pair = resolve(directory, caseId);
-    await preparePair({ caseId, directory: pair });
-    for (const arm of i % 2
-      ? ["attribution", "ordinary"]
-      : ["ordinary", "attribution"]) {
+    await prepare({ caseId, directory: pair });
+    for (const arm of i % 2 ? [...arms].reverse() : arms) {
       const capsule = resolve(pair, arm),
         privateDir = resolve(pair, arm + "-private");
       await mkdir(privateDir);
@@ -137,6 +148,7 @@ export async function runExperiment({
           trace: resolve(privateDir, "repair-events.jsonl"),
           timeoutMs,
           model,
+          reasoningEffort,
         });
         result.elapsedSeconds = (Date.now() - started) / 1000;
         const final = await hashes(capsule);
@@ -163,6 +175,7 @@ export async function runExperiment({
             turn,
             model: judgeModel ?? model,
             timeoutMs,
+            reasoningEffort,
           }),
         );
       } catch (e) {
@@ -176,7 +189,7 @@ export async function runExperiment({
   }
   manifest.completed = new Date().toISOString();
   manifest.summary = Object.fromEntries(
-    ["ordinary", "attribution"].map((arm) => {
+    arms.map((arm) => {
       const trials = manifest.trials.filter((t) => t.arm === arm),
         scored = trials.filter((t) => t.status === "scored");
       return [

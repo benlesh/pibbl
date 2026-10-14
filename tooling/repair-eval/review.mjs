@@ -10,6 +10,7 @@ export async function reviewTrial({
   turn,
   model,
   timeoutMs,
+  reasoningEffort,
 }) {
   const reviewDir = resolve(outputDirectory, "review");
   await mkdir(reviewDir);
@@ -19,8 +20,8 @@ export async function reviewTrial({
   );
   await copyFile(initialSource, resolve(reviewDir, "initial-app.tsx"));
   const contract = (await readFile(resolve(capsule, "TASK.md"), "utf8")).split(
-    "\n\n",
-  )[1];
+    "\n\nRun:",
+  )[0];
   const packet = {
     contract,
     checks: deterministic.checks,
@@ -57,6 +58,7 @@ export async function reviewTrial({
     trace: resolve(outputDirectory, "review-events.jsonl"),
     timeoutMs,
     model,
+    reasoningEffort,
   });
   const review = JSON.parse(
     await readFile(resolve(outputDirectory, "review.json"), "utf8"),

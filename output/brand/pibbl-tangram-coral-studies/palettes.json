@@ -1,0 +1,38 @@
+[
+  {
+    "name": "Current warm coral",
+    "triangle": "#FF896B",
+    "rectangle": "#159447",
+    "bowl": "#8B5CCB"
+  },
+  {
+    "name": "Peach coral",
+    "triangle": "#F6A080",
+    "rectangle": "#159447",
+    "bowl": "#8B5CCB"
+  },
+  {
+    "name": "Apricot coral",
+    "triangle": "#FA9562",
+    "rectangle": "#159447",
+    "bowl": "#8B5CCB"
+  },
+  {
+    "name": "Pink coral",
+    "triangle": "#F78391",
+    "rectangle": "#159447",
+    "bowl": "#8B5CCB"
+  },
+  {
+    "name": "Vivid coral",
+    "triangle": "#FF735E",
+    "rectangle": "#159447",
+    "bowl": "#8B5CCB"
+  },
+  {
+    "name": "Muted coral",
+    "triangle": "#DD8B7A",
+    "rectangle": "#159447",
+    "bowl": "#8B5CCB"
+  }
+]

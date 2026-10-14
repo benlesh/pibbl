@@ -2343,3 +2343,68 @@ The last command is the next query for the exposed regression and its reviewer
 feedback. The earlier totals of 330/330 and “all six controls unchanged” were
 provisional and are explicitly superseded by the source audit and stronger
 oracle. The inventory stop rule and non-gating status remain unchanged.
+
+## Public inspection benefit pilot
+
+This follow-up evaluates the current `@pibbl/core/viz/inspection` entry, rather
+than the source-instrumented attribution prototype. It prepares identical
+application source and byte-identical frozen runtime bundles in both conditions.
+The inspection condition enables the public `useNumericInspection` hook through
+an immutable application bridge and exposes synchronous public committed-record
+queries through `window.inspectPlot({x,y})`. The ordinary condition leaves capture
+disabled and forbids importing/enabling inspection. Both conditions allow normal
+source/browser/pixel evidence and public application repairs. Installed runtime
+exports are identical; the capability restriction is procedural and must be
+checked against source/trace evidence.
+
+The three private cases cover stale mount-time hover mapping after zoom,
+selection that ignores clipped-out record anchors, and a correct control. F
+narrows the plot clip to 299 local units, G restores it, and R resets the chart.
+The independent oracle covers update painting, nearest-ID boundaries, zoomed
+mapping, focused clip pixels and selection, unfocus, reset, native input and
+errors. The prototype's original cases and delivery cutoff remain historical;
+this is not an inventory expansion or a release gate.
+
+```sh
+node tooling/repair-eval/decision-check.mjs
+node tooling/repair-eval/run-decision.mjs /tmp/pibbl-public-inspection-new
+```
+
+The first command calibrates both faults, both reference repairs, the correct
+control, and inspection availability in both arms. The second launches twelve
+fresh repair turns and separate reviews: three matched cases, two repetitions.
+Case and arm order reverse for the second repetition. It preserves the 80/20
+score and records measured repair trace tokens and command counts, not inferred
+agent timing or query estimates.
+
+`tooling/repair-eval/decision-protocol.json` records the model, effort, cases,
+ordering, hypotheses and threshold before repair turns. The pilot pins
+`gpt-5.6-sol` with low reasoning for repairs and reviews. The authenticated CLI
+rejected the desktop's `gpt-6.1-sol` name; the working CLI startup header resolved
+`gpt-5.6-sol`, and an explicit structured preflight succeeded. CLI version is
+0.147.0. This does not measure the desktop's configured model.
+
+The registered effort proxy is uncached input tokens plus output tokens, including
+reasoning already counted within output. It is not currency and does not apply
+API price weights. The effort comparison uses the median inspection/ordinary
+ratio for matched successful repairs. The threshold requires at least six
+matched correct pairs, no lower repair success, no increase in unexpected
+clean-control edits, no lower average review score, and at least 20% lower median
+paired effort. Missing/blocked measurements make clearance inconclusive. A
+weighted score does not override `deterministicPassed`.
+
+These are three synthetic cases, with a pre-integrated capture bridge, no
+integration-cost measurement, no rich application documentation environment,
+and one model family serving both roles. Cached-token accounting and tool
+choice can affect the effort proxy. Passing the pilot threshold would justify
+further investigation, not prove broad value or approve shipping. Failing it
+provides no affirmative shipping justification from this pilot. Repetitions
+use frozen fixtures and prompts; do not tune them between runs to obtain a win.
+
+The live first-pair public API application was served at
+<http://127.0.0.1:5212/>. It is separate from the repair agent's browser session.
+Its source can change as that agent repairs its capsule; reload to inspect the
+finished app. For a later saved trial, run `node serve.mjs 5212` inside its
+inspection capsule and call `inspectPlot({x:205,y:210})` in the browser console.
+Captured observations/queries remain geometric evidence, not pixel or routed
+interaction proof.

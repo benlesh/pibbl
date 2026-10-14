@@ -63,6 +63,7 @@ it("connects a decorative segment to captured data, scales, transform and clip a
     expect(first.status).toBe("ready");
     expect(first.evidence).toMatchObject({
       queryCoordinates: "root-logical",
+      eventCoordinates: "root-logical",
       renderTiming: "last-successful-render-may-lag-application",
       capturedPositions: "line-local",
       transforms: "local-to-root-logical",

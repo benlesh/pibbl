@@ -1,0 +1,38 @@
+[
+  {
+    "name": "Original Kelly & coral",
+    "triangle": "#FF785E",
+    "rectangle": "#159447",
+    "bowl": "#3748AE"
+  },
+  {
+    "name": "Warmer coral",
+    "triangle": "#FF896B",
+    "rectangle": "#159447",
+    "bowl": "#3748AE"
+  },
+  {
+    "name": "Deeper green",
+    "triangle": "#FF785E",
+    "rectangle": "#0B813E",
+    "bowl": "#3748AE"
+  },
+  {
+    "name": "Brighter green",
+    "triangle": "#FF785E",
+    "rectangle": "#16A34A",
+    "bowl": "#3748AE"
+  },
+  {
+    "name": "Softer indigo",
+    "triangle": "#FF785E",
+    "rectangle": "#159447",
+    "bowl": "#5964B7"
+  },
+  {
+    "name": "Cooler blue",
+    "triangle": "#FF785E",
+    "rectangle": "#159447",
+    "bowl": "#2860B8"
+  }
+]

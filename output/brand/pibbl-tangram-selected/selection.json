@@ -1,0 +1,13 @@
+{
+  "name": "Pibbl Big Bubbles",
+  "selectedOn": "2026-10-08",
+  "palette": {
+    "coral": "#FF735E",
+    "green": "#159447",
+    "violet": "#8B5CCB",
+    "ink": "#111211"
+  },
+  "treatment": "Big Bubbles with two deeper interior cutouts and an organic cloud of violet, coral, and green dots.",
+  "source": "../pibbl-tangram-big-bubbles",
+  "animationParts": "../pibbl-tangram-big-bubbles/animation-parts.json"
+}

@@ -24,7 +24,7 @@ try {
   await writeFile(resolve(dir, "app.tsx"), code);
   const good = await scoreTrial(dir);
   assert.equal(good.status, "pass");
-  console.log(
+  process.stdout.write(
     JSON.stringify({
       status: "pass",
       regression: bad.checks.filter((c) => c.status === "fail"),

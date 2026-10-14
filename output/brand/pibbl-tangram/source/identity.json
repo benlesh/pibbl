@@ -1,0 +1,35 @@
+{
+  "name": "Pibbl Original Tangram",
+  "version": "1.1",
+  "date": "2026-10-06",
+  "palette": {
+    "blue": "#006CFE",
+    "yellow": "#FEC104",
+    "coral": "#FD4534",
+    "ink": "#111211",
+    "white": "#FFFFFF",
+    "dark": "#141820",
+    "paper": "#F5F5F0"
+  },
+  "sourceConcept": "reference/original-tangram-concept.png",
+  "reconstruction": "Deterministic vector reconstruction of the selected raster concept. Flat colors sampled from the concept; raster shading removed. Lowercase wordmark rebuilt as geometric paths, preserving its character and approximate proportions. This is not a pixel-identical trace or a font-derived wordmark.",
+  "clearSpace": 35,
+  "geometryNote": "The blue bowl's bottom and the coral rectangle's top align exactly at y=140. This approved correction supersedes the bowl height in the raster concept.",
+  "minimumSizes": {
+    "icon": "24 px high recommended; 16 px favicon supplied for browser chrome",
+    "horizontal": "160 px wide recommended",
+    "stacked": "120 px wide recommended",
+    "wordmark": "100 px wide recommended"
+  },
+  "icon": [
+    {"id": "triangle", "color": "yellow", "d": "M0 0H128L0 140Z"},
+    {"id": "square", "color": "coral", "d": "M0 140H124V280H0Z"},
+    {"id": "bowl", "color": "blue", "d": "M128 0H148C192 0 228 31 228 70C228 109 192 140 148 140H128Z"}
+  ],
+  "forms": {
+    "horizontal": {"width": 890, "height": 364, "icon": [35, 35, 1], "wordmark": [303, 73, 1]},
+    "icon": {"width": 298, "height": 350, "icon": [35, 35, 1]},
+    "stacked": {"width": 650, "height": 630, "icon": [211, 35, 1], "wordmark": [50, 340, 1]},
+    "wordmark": {"width": 621, "height": 325, "wordmark": [35, 35, 1]}
+  }
+}

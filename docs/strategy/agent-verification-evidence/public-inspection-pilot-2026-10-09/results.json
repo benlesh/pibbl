@@ -1,0 +1,288 @@
+{
+  "schema": "pibbl-public-inspection-pilot-result/1",
+  "protocol": {
+    "schema": "pibbl-public-inspection-pilot/1",
+    "registeredBeforeRepairTrials": true,
+    "surface": "@pibbl/core/viz/inspection",
+    "conditions": [
+      "ordinary",
+      "inspection"
+    ],
+    "model": "gpt-5.6-sol",
+    "reasoningEffort": "low",
+    "judgeModel": "gpt-5.6-sol",
+    "repetitions": 2,
+    "cases": [
+      "decision-01",
+      "decision-02",
+      "decision-03"
+    ],
+    "weights": {
+      "deterministic": 80,
+      "agentic": 20
+    },
+    "primaryEffort": "repair trace uncached input tokens + output tokens; proxy, not currency",
+    "threshold": {
+      "inspectionMustNotReduceFullRepairSuccess": true,
+      "inspectionMustNotIncreaseCleanControlRegressions": true,
+      "inspectionReviewMeanMustNotDecrease": true,
+      "minimumMatchedCorrectPairsForEffortComparison": 6,
+      "minimumMedianPairedEffortReduction": 0.2
+    },
+    "ordering": "alternate arms across cases; reverse case and arm order for repetition two",
+    "noAdaptiveFixtureOrPromptChangesBetweenRepetitions": true,
+    "blockedTrials": "reported, never silently retried; missing measurements make threshold inconclusive",
+    "interpretation": "Exploratory pilot. Threshold clearance is evidence for further investment, not sufficient proof for shipping a broad API. Failure provides no affirmative shipping justification from this pilot.",
+    "limitations": [
+      "three synthetic application cases",
+      "procedural blinding",
+      "same model family repairs and reviews",
+      "runtime includes identical exports in both arms; use of inspection forbidden in ordinary condition",
+      "two repetitions are not a statistical power claim"
+    ]
+  },
+  "trials": [
+    {
+      "caseId": "decision-01",
+      "arm": "ordinary",
+      "status": "scored",
+      "elapsedSeconds": 85.384,
+      "deterministic": 80,
+      "agentic": 20,
+      "total": 100,
+      "deterministicPassed": true,
+      "repeat": 1,
+      "effort": {
+        "inputTokens": 587233,
+        "cachedInputTokens": 545664,
+        "outputTokens": 4493,
+        "uncachedTokenProxy": 46062,
+        "commandExecutions": 8
+      }
+    },
+    {
+      "caseId": "decision-01",
+      "arm": "inspection",
+      "status": "scored",
+      "elapsedSeconds": 81.073,
+      "deterministic": 80,
+      "agentic": 20,
+      "total": 100,
+      "deterministicPassed": true,
+      "repeat": 1,
+      "effort": {
+        "inputTokens": 358660,
+        "cachedInputTokens": 316672,
+        "outputTokens": 4396,
+        "uncachedTokenProxy": 46384,
+        "commandExecutions": 7
+      }
+    },
+    {
+      "caseId": "decision-02",
+      "arm": "inspection",
+      "status": "scored",
+      "elapsedSeconds": 89.726,
+      "deterministic": 80,
+      "agentic": 20,
+      "total": 100,
+      "deterministicPassed": true,
+      "repeat": 1,
+      "effort": {
+        "inputTokens": 275377,
+        "cachedInputTokens": 254080,
+        "outputTokens": 4704,
+        "uncachedTokenProxy": 26001,
+        "commandExecutions": 6
+      }
+    },
+    {
+      "caseId": "decision-02",
+      "arm": "ordinary",
+      "status": "scored",
+      "elapsedSeconds": 74.583,
+      "deterministic": 80,
+      "agentic": 20,
+      "total": 100,
+      "deterministicPassed": true,
+      "repeat": 1,
+      "effort": {
+        "inputTokens": 387769,
+        "cachedInputTokens": 353664,
+        "outputTokens": 4403,
+        "uncachedTokenProxy": 38508,
+        "commandExecutions": 7
+      }
+    },
+    {
+      "caseId": "decision-03",
+      "arm": "ordinary",
+      "status": "scored",
+      "elapsedSeconds": 95.765,
+      "deterministic": 80,
+      "agentic": 20,
+      "total": 100,
+      "deterministicPassed": true,
+      "repeat": 1,
+      "effort": {
+        "inputTokens": 403631,
+        "cachedInputTokens": 362752,
+        "outputTokens": 4288,
+        "uncachedTokenProxy": 45167,
+        "commandExecutions": 7
+      }
+    },
+    {
+      "caseId": "decision-03",
+      "arm": "inspection",
+      "status": "scored",
+      "elapsedSeconds": 84.677,
+      "deterministic": 80,
+      "agentic": 20,
+      "total": 100,
+      "deterministicPassed": true,
+      "repeat": 1,
+      "effort": {
+        "inputTokens": 373797,
+        "cachedInputTokens": 339584,
+        "outputTokens": 4318,
+        "uncachedTokenProxy": 38531,
+        "commandExecutions": 7
+      }
+    },
+    {
+      "caseId": "decision-03",
+      "arm": "inspection",
+      "status": "scored",
+      "elapsedSeconds": 81.101,
+      "deterministic": 80,
+      "agentic": 20,
+      "total": 100,
+      "deterministicPassed": true,
+      "repeat": 2,
+      "effort": {
+        "inputTokens": 380424,
+        "cachedInputTokens": 336128,
+        "outputTokens": 4691,
+        "uncachedTokenProxy": 48987,
+        "commandExecutions": 6
+      }
+    },
+    {
+      "caseId": "decision-03",
+      "arm": "ordinary",
+      "status": "scored",
+      "elapsedSeconds": 69.78,
+      "deterministic": 80,
+      "agentic": 20,
+      "total": 100,
+      "deterministicPassed": true,
+      "repeat": 2,
+      "effort": {
+        "inputTokens": 261289,
+        "cachedInputTokens": 234496,
+        "outputTokens": 3705,
+        "uncachedTokenProxy": 30498,
+        "commandExecutions": 5
+      }
+    },
+    {
+      "caseId": "decision-02",
+      "arm": "ordinary",
+      "status": "scored",
+      "elapsedSeconds": 101.142,
+      "deterministic": 80,
+      "agentic": 20,
+      "total": 100,
+      "deterministicPassed": true,
+      "repeat": 2,
+      "effort": {
+        "inputTokens": 337001,
+        "cachedInputTokens": 297856,
+        "outputTokens": 5526,
+        "uncachedTokenProxy": 44671,
+        "commandExecutions": 10
+      }
+    },
+    {
+      "caseId": "decision-02",
+      "arm": "inspection",
+      "status": "scored",
+      "elapsedSeconds": 110.102,
+      "deterministic": 80,
+      "agentic": 20,
+      "total": 100,
+      "deterministicPassed": true,
+      "repeat": 2,
+      "effort": {
+        "inputTokens": 330734,
+        "cachedInputTokens": 302720,
+        "outputTokens": 5604,
+        "uncachedTokenProxy": 33618,
+        "commandExecutions": 8
+      }
+    },
+    {
+      "caseId": "decision-01",
+      "arm": "inspection",
+      "status": "scored",
+      "elapsedSeconds": 63.873,
+      "deterministic": 80,
+      "agentic": 20,
+      "total": 100,
+      "deterministicPassed": true,
+      "repeat": 2,
+      "effort": {
+        "inputTokens": 306613,
+        "cachedInputTokens": 278400,
+        "outputTokens": 3343,
+        "uncachedTokenProxy": 31556,
+        "commandExecutions": 7
+      }
+    },
+    {
+      "caseId": "decision-01",
+      "arm": "ordinary",
+      "status": "scored",
+      "elapsedSeconds": 76.495,
+      "deterministic": 80,
+      "agentic": 20,
+      "total": 100,
+      "deterministicPassed": true,
+      "repeat": 2,
+      "effort": {
+        "inputTokens": 305677,
+        "cachedInputTokens": 243456,
+        "outputTokens": 4487,
+        "uncachedTokenProxy": 66708,
+        "commandExecutions": 6
+      }
+    }
+  ],
+  "status": "complete",
+  "summary": {
+    "ordinary": {
+      "trials": 6,
+      "fullyPassing": 6,
+      "blocked": 0,
+      "meanReview": 20,
+      "meanScore": 100
+    },
+    "inspection": {
+      "trials": 6,
+      "fullyPassing": 6,
+      "blocked": 0,
+      "meanReview": 20,
+      "meanScore": 100
+    }
+  },
+  "comparison": {
+    "matchedCorrectPairs": 6,
+    "medianPairedEffortReduction": 0.19717632214672465,
+    "cleanControlEdits": {
+      "ordinary": 0,
+      "inspection": 1
+    }
+  },
+  "thresholdStatus": "not-cleared"
+}

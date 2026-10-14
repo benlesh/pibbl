@@ -14,11 +14,18 @@ export default defineConfig({
   integrations: [
     starlight({
       title: "Pibbl",
+      logo: {
+        light: "./src/assets/pibbl-logo-light.svg",
+        dark: "./src/assets/pibbl-logo-dark.svg",
+        alt: "",
+        replacesTitle: true,
+      },
       description:
         "Build Canvas applications or add Pibbl effects to your HTML site.",
       pagefind: false,
       customCss: ["./src/style.css"],
       components: {
+        PageTitle: "./src/components/PageTitle.astro",
         MarkdownContent: "./src/components/ContentPanel.astro",
         Search: "./src/components/Search.astro",
       },

@@ -1,0 +1,38 @@
+[
+  {
+    "name": "Warmer coral · reference",
+    "triangle": "#FF896B",
+    "rectangle": "#159447",
+    "bowl": "#3748AE"
+  },
+  {
+    "name": "Purple indigo",
+    "triangle": "#FF896B",
+    "rectangle": "#159447",
+    "bowl": "#5141B5"
+  },
+  {
+    "name": "Royal purple",
+    "triangle": "#FF896B",
+    "rectangle": "#159447",
+    "bowl": "#6538B5"
+  },
+  {
+    "name": "Electric violet",
+    "triangle": "#FF896B",
+    "rectangle": "#159447",
+    "bowl": "#7C3AED"
+  },
+  {
+    "name": "Soft violet",
+    "triangle": "#FF896B",
+    "rectangle": "#159447",
+    "bowl": "#8B5CCB"
+  },
+  {
+    "name": "Orchid purple",
+    "triangle": "#FF896B",
+    "rectangle": "#159447",
+    "bowl": "#A33CBD"
+  }
+]

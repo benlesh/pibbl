@@ -114,6 +114,7 @@ export async function scoreTrial(directory) {
             initial: blue(205, 240),
             updated: blue(205, 210),
             zoomed: blue(205, 180),
+            outsideFocus: blue(505, 180),
           },
           canvas: { width: canvas.width, height: canvas.height },
           inspectionAvailable: typeof window.inspectPlot === "function",
@@ -214,8 +215,30 @@ export async function scoreTrial(directory) {
     check("reset.values", () =>
       assert.deepEqual(reset.application.source, initial.application.source),
     );
+    let focusCorrect = true;
+    if (trial.caseId.startsWith("decision-")) {
+      await page.keyboard.press("f");
+      await settle();
+      await page.mouse.move(box.x + 340, box.y + 210);
+      const focused = await capture("focused-visible-selection");
+      await page.keyboard.press("g");
+      await settle();
+      await page.mouse.move(box.x + 340, box.y + 210);
+      const unfocused = await capture("unfocused-selection");
+      focusCorrect =
+        focused.application.focused === true &&
+        focused.application.hover === "a" &&
+        focused.pixels.initial > 0 &&
+        focused.pixels.outsideFocus === 0 &&
+        unfocused.application.focused === false &&
+        unfocused.application.hover === "b" &&
+        unfocused.pixels.outsideFocus > 0;
+    }
     check("reset.geometry", () =>
-      assert.ok(reset.pixels.initial > 0 && reset.pixels.updated === 0),
+      assert.ok(
+        reset.pixels.initial > 0 && reset.pixels.updated === 0 && focusCorrect,
+        "Reset and focused clip/selection contract",
+      ),
     );
     check("page.errors", () => assert.deepEqual(report.errors, []));
     report.status = report.checks.every((c) => c.status === "pass")
