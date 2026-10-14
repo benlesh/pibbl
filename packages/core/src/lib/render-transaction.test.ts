@@ -18,3 +18,25 @@ it('does not publish on render failure and finishes once', () => {
   transaction.onFinish(success => calls.push(success));
   transaction.finish(false);transaction.finish(true);expect(calls).toEqual([false]);
 });
+it('delivers completion observers after all committed state callbacks', () => {
+  const calls: string[] = [];
+  const transaction = new RootRenderTransaction();
+  transaction.onAfterFinish((success) => calls.push(`observer:${success}`));
+  transaction.onFinish((success) => calls.push(`inspection:${success}`));
+  transaction.onFinish((success) => calls.push(`policy:${success}`));
+  transaction.finish(true);
+  expect(calls).toEqual([
+    'inspection:true',
+    'policy:true',
+    'observer:true',
+  ]);
+});
+it('delivers failed completion after failure cleanup without publishing', () => {
+  const calls: string[] = [];
+  const transaction = new RootRenderTransaction();
+  transaction.onPublish(() => calls.push('must-not-publish'));
+  transaction.onFinish((success) => calls.push(`cleanup:${success}`));
+  transaction.onAfterFinish((success) => calls.push(`observer:${success}`));
+  transaction.finish(false);
+  expect(calls).toEqual(['cleanup:false', 'observer:false']);
+});

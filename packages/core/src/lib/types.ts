@@ -568,6 +568,8 @@ export interface PibblEventRoot {
 export interface PibblRenderTransaction {
   onPublish?(callback: () => void): void;
   onFinish(callback: (success: boolean) => void): void;
+  /** Run after all finish callbacks have published their committed state. */
+  onAfterFinish?(callback: (success: boolean) => void): void;
 }
 
 export interface PibblFocusPolicyBridge {
@@ -649,7 +651,7 @@ export interface PibblInstance {
   /** Last root traversal published successfully; failed render attempts do not advance it. */
   committedRenderGeneration?: number;
   /** Opt-in root bitmap observers; absent unless a recording is attached. */
-  rootFrameObservers?: Set<(success: boolean) => void>;
+  rootFrameObservers?: Set<(success: boolean, generation: number) => void>;
   canvas: Canvas;
   controller: PibblController;
   root: PibblNode;

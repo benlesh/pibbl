@@ -432,4 +432,5 @@ export type {
   PibblRecordedFrame,
   PibblFrameRecording,
   PibblGifExportOptions,
+  PibblRenderCompletion,
 } from './lib/recording/types.js';

@@ -10,7 +10,19 @@ export interface PibblFrameRecordingOptions {
   memoryHeadroom?: number;
   /** Aborting discards the recording, including during initialization. */
   signal?: AbortSignal;
+  /**
+   * Observe each root render after its committed application state is published.
+   * Failed attempts are reported separately and never produce recorded frames.
+   */
+  onRenderComplete?: (completion: PibblRenderCompletion) => void;
+  /** Observe the exact committed generation after its RGBA pixels were copied. */
+  onFrameCaptured?: (frame: PibblRecordedFrameInfo) => void;
 }
+
+/** A completed root-render attempt. Failed generations were attempted, not committed. */
+export type PibblRenderCompletion =
+  | { readonly status: "committed"; readonly generation: number }
+  | { readonly status: "failed"; readonly generation: number };
 
 /** An active capture; stop keeps frames and cancel discards them.
  * @see {@link PibblFrameRecording}
@@ -30,6 +42,8 @@ export interface PibblFrameRecordingSession {
  * @see {@link PibblRecordedFrame}
  */
 export interface PibblRecordedFrameInfo {
+  /** Root render generation whose committed bitmap was copied. */
+  readonly renderGeneration: number;
   /** Milliseconds since capture began; the initial frame is timestamp zero. */
   readonly timestamp: number;
   /** Bitmap width in physical backing pixels. */

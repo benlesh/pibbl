@@ -9,6 +9,7 @@ import type {
   PibblFrameRecordingSession,
   PibblRecordedFrameInfo,
   PibblGifExportOptions,
+  PibblRenderCompletion,
 } from "./types.js";
 
 /** Private deterministic ownership evidence; not a public diagnostics API. */
@@ -280,6 +281,8 @@ export function recordFrames(
     pendingFrames = 0;
   let width = 0,
     height = 0;
+  let pendingRenderGeneration = 0;
+  let lastNotifiedGeneration = 0;
   let timer: ReturnType<typeof setTimeout> | undefined;
   let sampleTimer: ReturnType<typeof setTimeout> | undefined;
   let removeAbort = () => {};
@@ -349,8 +352,10 @@ export function recordFrames(
       fail(error);
     }
   }
-  function capture(): void {
+  function capture(renderGeneration: number): void {
     if (!target) return;
+    if (!Number.isSafeInteger(renderGeneration) || renderGeneration <= 0)
+      throw new Error("Recording requires a committed render generation.");
     if (target.width !== width || target.height !== height)
       throw new Error("Canvas backing size changed during recording.");
     const now = performance.now();
@@ -370,7 +375,7 @@ export function recordFrames(
             recordingResources.timers--;
             if (phase !== "capturing") return;
             try {
-              capture();
+            capture(pendingRenderGeneration);
             } catch (error) {
               fail(error);
             }
@@ -395,7 +400,9 @@ export function recordFrames(
       pixels.data.buffer,
     ]);
     pendingFrames++;
-    metadata.push(Object.freeze({ timestamp, width, height }));
+    const info = Object.freeze({ timestamp, width, height, renderGeneration });
+    metadata.push(info);
+    options.onFrameCaptured?.(info);
     last = timestamp;
     if (initial) {
       started = now;
@@ -406,18 +413,32 @@ export function recordFrames(
       if (stopRequested) stop();
     }
   }
-  function observe(success: boolean): void {
+  function observe(success: boolean, renderGeneration: number): void {
+    if (phase === "finished" || phase === "cancelled") return;
+    if (renderGeneration > lastNotifiedGeneration) {
+      lastNotifiedGeneration = renderGeneration;
+      const completion: PibblRenderCompletion = success
+        ? { status: "committed", generation: renderGeneration }
+        : { status: "failed", generation: renderGeneration };
+      try {
+        options.onRenderComplete?.(Object.freeze(completion));
+      } catch (error) {
+        fail(error);
+        return;
+      }
+    }
     if (!success) {
       fail(new Error("Pibbl render failed during recording."));
       return;
     }
     if (phase !== "starting" && phase !== "capturing") return;
+    pendingRenderGeneration = renderGeneration;
     if (!workerReady) {
       initialize();
       return;
     }
     try {
-      capture();
+      capture(renderGeneration);
     } catch (error) {
       fail(error);
     }
@@ -434,7 +455,7 @@ export function recordFrames(
         instance.committedRenderGeneration &&
         instance.committedRenderGeneration === instance.renderGeneration
       )
-        observe(true);
+        observe(true, instance.committedRenderGeneration);
       else update(instance.canvas);
     } else if (data.type === "ack") pendingFrames--;
     else if (data.type === "finished" && phase === "finishing") {
