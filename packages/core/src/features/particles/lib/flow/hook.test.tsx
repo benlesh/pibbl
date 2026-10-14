@@ -5,11 +5,11 @@ import {
   useFlowSource2D,
   type CRCFlowField2D,
 } from "../../index.js";
-import { clearSharedState } from "../../../../core/src/lib/global-state.js";
+import { clearSharedState } from "../../../../lib/global-state.js";
 import {
   installSchedulerDriverForTest,
   ManualSchedulerDriver,
-} from "../../../../core/src/lib/scheduler/testing.js";
+} from "../../../../lib/scheduler/testing.js";
 let driver: ManualSchedulerDriver;
 let restore: () => void;
 let root: ReturnType<typeof crc> | undefined;
@@ -241,7 +241,7 @@ it("publishes obstacle-source replacement even when no simulation time passes", 
 it("releases source clocks when disabled and transfers a source without leaving a stale registration", async () => {
   const { signal } = await import("@crc/core");
   const { snapshotRealmScheduler } =
-    await import("../../../../core/src/lib/scheduler/testing.js");
+    await import("../../../../lib/scheduler/testing.js");
   const enabled = signal(true),
     useSecond = signal(false);
   let first!: CRCFlowField2D, second!: CRCFlowField2D;
@@ -366,7 +366,7 @@ it("reads the same committed physics motion regardless of sibling registration o
 
 it("does not retain a source clock or usable field after its initial render fails", async () => {
   const { snapshotRealmScheduler } =
-    await import("../../../../core/src/lib/scheduler/testing.js");
+    await import("../../../../lib/scheduler/testing.js");
   const baseline = snapshotRealmScheduler().advanceParticipants;
   let flow!: CRCFlowField2D;
   function Root() {

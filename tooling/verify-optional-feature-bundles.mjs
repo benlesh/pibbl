@@ -49,14 +49,13 @@ const sourceAliases = [
     find: "@crc/core/filters",
     replacement: join(root, "packages/core/src/filters.ts"),
   },
-  { find: "@crc/core", replacement: join(root, "packages/core/src/index.ts") },
   {
     find: "@crc/core/textures",
     replacement: join(root, "packages/core/src/features/textures/index.ts"),
   },
   {
-    find: "@crc/types",
-    replacement: join(root, "packages/types/src/index.ts"),
+    find: "@crc/core",
+    replacement: join(root, "packages/core/src/index.ts"),
   },
 ];
 const sourceAliasByName = Object.fromEntries(
@@ -66,7 +65,7 @@ const sourceResolver = {
   name: "crc-source",
   setup(build) {
     build.onResolve(
-      { filter: /^@crc\/(?:core|textures|types)(?:\/filters)?$/ },
+      { filter: /^@crc\/core(?:\/(?:filters|textures))?$/ },
       ({ path }) => ({ path: sourceAliasByName[path] }),
     );
   },
@@ -83,7 +82,7 @@ const isDisplacement = (path) =>
 const isTexture = (path) =>
   path.includes("packages/core/src/lib/textures/texture.ts") ||
   path.includes("packages/core/src/features/textures/") ||
-  path.includes("/textures/dist/");
+  path.includes("/core/dist/features/textures/");
 const isAnimation = (path) => path.includes("packages/core/src/lib/animation/");
 const attributedInputs = (metafile) =>
   Object.entries(metafile.outputs)
@@ -216,7 +215,7 @@ function summary(es, vi) {
 
 try {
   const tarballs = {};
-  for (const name of ["types", "core", "textures"]) {
+  for (const name of ["core"]) {
     const file = join(temp, `${name}.tgz`);
     pnpm(["pack", "--out", file], join(root, "packages", name));
     tarballs[`@crc/${name}`] = `file:${file}`;
@@ -229,7 +228,7 @@ try {
   );
   writeFileSync(
     join(consumer, "pnpm-workspace.yaml"),
-    `packages:\n  - .\noverrides:\n  '@crc/types': ${tarballs["@crc/types"]}\n`,
+    `packages:\n  - .\n`,
   );
   pnpm(
     [

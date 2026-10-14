@@ -1,6 +1,7 @@
 import { resolveSignalValue, useComputed, useLayoutBox } from "@crc/core";
 import type { ScaleProps, ScaleRange } from "./types.js";
 import { equalScale, resolveLinearScale } from "./linear-scale.js";
+import { resolveUtcScale } from "./utc-scale.js";
 import { resolveBandScale } from "./band-scale.js";
 import { captureScaleLookup, provideScale } from "./scale-context.js";
 export function Scale(props: ScaleProps) {
@@ -9,8 +10,10 @@ export function Scale(props: ScaleProps) {
     typeof props.id !== "symbol"
   )
     throw new TypeError("Scale id requires a nonempty string or symbol.");
-  if (props.type !== "linear" && props.type !== "band")
-    throw new TypeError(`Scale supports type="linear" or type="band".`);
+  if (props.type !== "linear" && props.type !== "utc" && props.type !== "band")
+    throw new TypeError(
+      `Scale supports type="linear", type="utc", or type="band".`,
+    );
   const { width, height } = useLayoutBox();
   const lookup = captureScaleLookup("Scale bandwidthOf");
   function resolveParent() {
@@ -63,13 +66,21 @@ export function Scale(props: ScaleProps) {
             resolveSignalValue(props.paddingInner ?? 0),
             resolveSignalValue(props.paddingOuter ?? 0),
           )
-        : resolveLinearScale(
-            resolveSignalValue(props.domain),
-            resolvedRange(),
-            resolveSignalValue(props.reverse ?? false),
-            width,
-            height,
-          ),
+        : props.type === "utc"
+          ? resolveUtcScale(
+              resolveSignalValue(props.domain),
+              resolvedRange(),
+              resolveSignalValue(props.reverse ?? false),
+              width,
+              height,
+            )
+          : resolveLinearScale(
+              resolveSignalValue(props.domain),
+              resolvedRange(),
+              resolveSignalValue(props.reverse ?? false),
+              width,
+              height,
+            ),
     dependencies,
     { equals: equalScale },
   );
@@ -87,6 +98,18 @@ export function Scale(props: ScaleProps) {
       throw new TypeError("useScale requires type=band.");
     return resolved;
   }, dependencies);
-  provideScale(props.id, value, linear, band);
+  const utc = useComputed(() => {
+    const resolved = value.get();
+    if (resolved.type !== "utc")
+      throw new TypeError("useScale requires type=utc.");
+    return resolved;
+  }, dependencies);
+  const continuous = useComputed(() => {
+    const resolved = value.get();
+    if (resolved.type === "band")
+      throw new TypeError("useScale requires a continuous scale.");
+    return resolved;
+  }, dependencies);
+  provideScale(props.id, value, linear, band, utc, continuous);
   return props.children;
 }

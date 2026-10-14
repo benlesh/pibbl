@@ -5,13 +5,13 @@ import {
   waterSurface,
   type WaterWavesMessage,
 } from "@crc/core/textures";
-import { waterWaves as referenceWaves } from "../../../tooling/texture-wasm-spike/reference-water/water-waves.js";
-import { waterSurface as referenceSurface } from "../../../tooling/texture-wasm-spike/reference-water/water-surface.js";
+import { waterWaves as referenceWaves } from "../../../../../tooling/texture-wasm-spike/reference-water/water-waves.js";
+import { waterSurface as referenceSurface } from "../../../../../tooling/texture-wasm-spike/reference-water/water-surface.js";
 import {
   ManualSchedulerDriver,
   installSchedulerDriverForTest,
-} from "../../core/src/lib/scheduler/testing.js";
-import { clearSharedState } from "../../core/src/lib/global-state.js";
+} from "../../../src/lib/scheduler/testing.js";
+import { clearSharedState } from "../../../src/lib/global-state.js";
 afterEach(() => {
   clearSharedState();
   vi.restoreAllMocks();

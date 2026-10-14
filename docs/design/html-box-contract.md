@@ -107,3 +107,62 @@ the accessibility tree. Authors must disable or hide ineligible controls.
 - Existing focus, signal/scheduler, Layer, layout, package and Studio checks remain
   required regressions. See [field notes](../testing/field-notes/html-box.md) for
   fresh execution evidence rather than inferring success from this contract.
+
+## Native component event handlers
+
+HtmlBox accepts the existing CRC event names and capture variants through
+`HtmlBoxEventHandlers`. It reuses the CRC payload types; coordinate-bearing
+mouse, pointer, wheel, touch and drag events additionally expose readonly
+`localX`/`localY`. Their origin is the untransformed border-box top-left before
+padding. A point ten units inside content with left padding six reports localX
+sixteen. Nested native targets never change this origin. `x`/`y` remain root
+Canvas-logical coordinates. Native keyboard activation uses the browser's
+reported coordinate values; captured pointer positions are not clamped.
+
+Projection inverts the overlay SVG screen matrix, the committed root CSS
+projection, and the committed host world matrix. The zero-sized SVG has no
+viewBox and is explicitly positioned at the overlay origin. Shared CSS affine
+ancestor transforms and page scrolling are included by the screen matrix.
+HtmlOverlay-configured roots measure their pre-transform CSS content dimensions,
+so fitting/backing density do not double-apply CSS transforms. Nested Layers,
+rotation, scale/reflection and padding use the existing committed CRC geometry.
+No native offsetX/offsetY or bounding-rectangle subtraction defines local values.
+Inactive, suspended and singular hosts suppress component dispatch. CSS 3D
+perspective is outside this affine contract.
+
+A dedicated virtual event node gives HtmlBox a stable CRC target and its ordinary
+CRC listener ancestors without Canvas hit geometry or Canvas-native subscriptions.
+Native capture runs CRC ancestor capture then HtmlBox capture. Native descendant
+handlers run next. If native bubbling reaches the host, HtmlBox's ordinary handler
+then CRC ancestor bubble handlers run on the same facade. Descendant propagation
+cancellation suppresses that bubble phase. Nonbubbling focus/blur and host boundary
+enter/leave deliver ancestor capture and host handlers during native capture, with
+no ancestor bubble. Enter/leave ignore descendant-to-descendant transitions;
+over/out retain native descendant transitions.
+
+Each CRC capture or bubble phase batches synchronous signal writes. The capture
+batch flushes before native descendants run; the bubble phase has its own batch.
+This differs from Canvas dispatch, which can batch its entire logical path, and
+avoids keeping a transaction open across native propagation that may be stopped.
+Native bubbling flags and live defaultPrevented are retained. Cancellation methods
+affect the original event; observing alone never cancels input, selection, scrolling,
+IME or activation. Pointer and compatibility mouse streams remain independent.
+Input/textarea selectionchange can be observed when element-targeted; document-only
+selectionchange is not assigned to an HtmlBox. No native event is redispatched,
+no Canvas hit test/default action runs, and no duplicate activation is synthesized.
+
+The facade target/currentTarget/composedPath follow CRC conventions; the actual
+native leaf is originalEvent.target. HtmlBox target pointer-capture methods delegate
+to its supplied native DIV. Native descendants retain their own capture. Canvas
+ancestor currentTarget keeps its existing logical target semantics: use event.target
+or the original native target to request HTML capture. Related targets snapshot a
+live HtmlBox in the same root or null outside those hosts. Handler maps and inverse
+geometry update at host publication without remounting; clean Layers retain their
+committed inner handlers while replaying current placement. Host listeners reconcile
+native types from the current path and are removed on removal, failure and disposal.
+
+Evidence: `html-box-events.test.tsx` covers direct mouse/pointer coordinates,
+ancestor propagation, native controls/capture, changing handlers and cleanup;
+`html-box-smoke.test.ts` drives the pointer-dependent Canvas effect through the
+public lesson in source and built modes. Independent review and exact fresh checks
+are recorded in the implementation field note.

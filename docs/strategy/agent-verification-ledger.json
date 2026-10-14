@@ -251,7 +251,7 @@
       "verificationRun": "environment-identity-closure-2026-10-01",
       "closure": {
         "schema": "crc-requirement-closure/1",
-        "inventorySha256": "d81589bd06da940fa68c83621f3f2d4645a4ff0bc6c6f9b8797df69e903ad878",
+        "inventorySha256": "33b0fdc7de7be32e0ddee472bffbfcdb5c2791c527f11a15af88e91e02f111d9",
         "requirementText": "- **ENV-03:** Detect incompatible package versions or duplicate core runtimes; distinguish separate JavaScript realms and their independent schedulers.",
         "reviewedAt": "2026-10-02",
         "review": "Reviewed every clause of ENV-03 against explicit live binding comparison, checked targeting workflow, repository declarations and actual resolved consumer peer audit. Tests evaluate separately bundled real CRC graphs in one realm and different realms; browser tests use an actual iframe and public Canvas mount. Duplicate same-realm runtimes are refused, separate realms are identified as independent schedulers, and mismatched/unknown bindings never become empty-scene success. Standard semver checks diagnose installed incompatible peers, missing required peers and broken optional peers without executing packages. Physical duplicate installs are reported separately from live runtime duplication. The shared native lab retains a matching application/inspector handshake before actions. Installed resolution is explicitly Node require/default; live runtime evidence covers cooperating source browser participants. No global discovery, arbitrary-object attestation, or inference about unobserved custom-loader/worker graphs is claimed. A stale port-5196 fingerprint was correctly blocked, retained separately, and replaced by a passing run on a fresh verified port-5199 server. Package consolidation review (2026-10-02): moved feature paths and core/Three peer topology were revalidated with the current source browser checks, Node verification tests where applicable, and native scenario replay. Prior artifacts retain their original dated scope. Existing stale layout-test and signal-graph fingerprints were also revalidated against their relevant current behavior suites; no runtime semantics were changed to reconcile these records.",
@@ -488,11 +488,11 @@
           },
           {
             "path": "package.json",
-            "sha256": "2ad1ff8838d23ff85f24c8c84765a95762b95e646120124896da5608fa1558a4"
+            "sha256": "1edb2deb7e31330b4c90d5a5deb5ffe674f93c87d4ae671fc9e8ab23e6fa83af"
           },
           {
             "path": "pnpm-lock.yaml",
-            "sha256": "f19c5e2c6da5548fc0190031a3994e92ca32aa044efd03b26371fcbb3609d5f8"
+            "sha256": "d621d868e11005e73dba6ec638125f7a6e05b030736b82ba765af65ce6aff124"
           },
           {
             "path": "tooling/agent-verification/identity.mjs",
@@ -939,7 +939,7 @@
       "verificationRun": "runtime-handshake-lab-2026-10-01",
       "closure": {
         "schema": "crc-requirement-closure/1",
-        "inventorySha256": "d81589bd06da940fa68c83621f3f2d4645a4ff0bc6c6f9b8797df69e903ad878",
+        "inventorySha256": "33b0fdc7de7be32e0ddee472bffbfcdb5c2791c527f11a15af88e91e02f111d9",
         "requirementText": "- **QRY-04:** Make pagination snapshot-consistent; cursors must not silently mix changing scene generations. Report cursor expiration and incomplete history.",
         "reviewedAt": "2026-10-02",
         "review": "Reviewed full QRY-04 wording against both supported pagination surfaces. Scene pages are copied immutable records from one bounded committed generation, with one retained expansion and explicit expiration on pending/render changes, query replacement, disposal or mount replacement; nested Layer changes are tested. Saved pages bind complete evidence content hash and collection/page size; changed bytes expire continuation. Final truncated scene pages preserve unknown total and a reason; saved checkpoints report prefix history, and final reports do not imply complete application history. Malformed, foreign, aliased and out-of-range scene cursors do not substitute fresh data. Native public-API scenario and replay verify the same manual actions. Bounded truncation is part of this contract; this closure does not promise unbounded traversal, nested payload pagination or a historical scene store. Re-reviewed after migrating the shared lab to runtime-checked inspection: 36 browser tests and the eight-action native replay passed; the preserved pagination contract is unchanged. Updated source and artifact fingerprints only after that verification. Saved reader schema/projection additions were re-reviewed on 2026-10-01. All existing snapshot-bound paging/expiry tests still pass within twenty reader tests; scene pagination code and its retained native/browser evidence are unchanged. New sourceSchema is additive and projection snapshots bind to exact saved bytes. Layout smoke schema support re-reviewed against all twenty-one reader tests and twelve comparator/discovery regressions. Existing pagination/expiry behavior remains passing; only reader and reader-test fingerprints refreshed. Live scene pagination did not change. Package consolidation review (2026-10-02): moved feature paths and core/Three peer topology were revalidated with the current source browser checks, Node verification tests where applicable, and native scenario replay. Prior artifacts retain their original dated scope. Existing stale layout-test and signal-graph fingerprints were also revalidated against their relevant current behavior suites; no runtime semantics were changed to reconcile these records.",
@@ -1080,7 +1080,7 @@
           },
           {
             "path": "packages/core/test/agent-targeting-pagination.test.tsx",
-            "sha256": "a0effe895b004cfe53bf6c830ae45df81d85cbe01812f32ad560d70d164e7898"
+            "sha256": "2d5fefb99d2c10f3d80140161f8ebe4a138618bba9e4b3ffe4c7fb70f1201742"
           },
           {
             "path": "packages/scenarios/src/agent-targeting-verification.ts",
@@ -1108,7 +1108,7 @@
           },
           {
             "path": "packages/scenarios/src/agent-targeting-verification.example.tsx",
-            "sha256": "3ec96ed0dfb186464f1e74502533d47829aa6b58b307569226e7f6d6bec7fb95"
+            "sha256": "77a7d94f85ba988d166dcf2a3a36121fc4182cd7d75899f2c2a9361031675a23"
           },
           {
             "path": "tooling/agent-verification/runtime-inspection.ts",
@@ -1692,7 +1692,7 @@
       "verificationRun": "lay-02-reviewed-2026-10-01",
       "closure": {
         "schema": "crc-requirement-closure/1",
-        "inventorySha256": "d81589bd06da940fa68c83621f3f2d4645a4ff0bc6c6f9b8797df69e903ad878",
+        "inventorySha256": "33b0fdc7de7be32e0ddee472bffbfcdb5c2791c527f11a15af88e91e02f111d9",
         "requirementText": "- **LAY-02:** Explain parent placement versus primitive-local drawing coordinates, including the difference between layout `left`/`top` and shape `x`/`y`.",
         "reviewedAt": "2026-10-02",
         "review": "Reviewed the entire LAY-02 wording. The public application declares parent left/top separately from Rectangle x/y; useLayoutBox reports a local allocation, not a root position or paint bound. Machine evidence includes the committed transform and converted shape center, while the explanation names the nested translation and scale. Independent browser assertions establish root centers, matrix, clip exclusion and actual pixels; native clicks prove the original offset can be intentionally allowed or repaired while allocation stays unchanged. Cancellation, publication failure and disposal withdraw current evidence and preserve historical snapshots. This closes the placement-explanation capability for the supported reference workflow, not general style-resolution tracing, all layout algorithm explanations, broad overlap diagnosis or served-build attestation. The native smoke explicitly lacks build attestation; the authoritative source browser tests provide direct current-code evidence. The unrelated material-lab catalog validation failure prevents an aggregate trust claim, not this placement result. Overlap-mode extension re-reviewed against twenty focused browser tests and fresh native regression. Existing placement/text/signal contracts remain unchanged; only affected fingerprints refreshed. Package consolidation review (2026-10-02): moved feature paths and core/Three peer topology were revalidated with the current source browser checks, Node verification tests where applicable, and native scenario replay. Prior artifacts retain their original dated scope. Existing stale layout-test and signal-graph fingerprints were also revalidated against their relevant current behavior suites; no runtime semantics were changed to reconcile these records.",
@@ -1786,19 +1786,19 @@
         "files": [
           {
             "path": "packages/core/src/lib/layout/absolute.test.ts",
-            "sha256": "48a0a5366868ce7fecbcbc5837bd23531e08f8dceb402853d7c3ba368adf8247"
+            "sha256": "56948731bb812d7ff4635585c2b2505da25499f7908c58ffdb60f3213d738d9c"
           },
           {
             "path": "packages/core/src/lib/layout/place-child.test.ts",
-            "sha256": "0b7ada6fecad817c532ead1099bf6c629f6426ddffd983abcd45c58a3b1a4731"
+            "sha256": "d2b73c95ce797782cad1660d6107ef9ce912c958364cb8bf8c6496ef3d98e8ea"
           },
           {
             "path": "packages/scenarios/src/agent-layout-placement.example.tsx",
-            "sha256": "8d4e82e590db86df012450ed799260f812a8d2262913d74395e739e0dcb09eee"
+            "sha256": "eb615bdf5879c7a2b3ee1ff65ac41d5984af1224f2a24e53276e03de99cc5596"
           },
           {
             "path": "packages/core/test/agent-layout-placement.test.tsx",
-            "sha256": "c5148eff53960746871de11ea68168061ca7a4e835959fe283857400590a3591"
+            "sha256": "3a7ff43f95034054b3e3f07b19fcfef2992a1180ca3a999bf7af7c984176a558"
           },
           {
             "path": "docs/strategy/agent-verification-evidence/layout-placement-slice-browser.json",
@@ -1806,7 +1806,7 @@
           },
           {
             "path": "packages/scenarios/src/agent-layout-placement.ts",
-            "sha256": "b689bc281e605967863a8d4dc01ab48099fde929a118294e14b2ece207902f33"
+            "sha256": "43537b36c1ff49bfaf2ca0ae57d440c0932990ab625df3c79c52e7afb9439f4d"
           },
           {
             "path": "packages/core/test/agent-layout-workflow.test.ts",
@@ -2020,7 +2020,7 @@
       "verificationRun": "lay-06-reviewed-2026-10-01",
       "closure": {
         "schema": "crc-requirement-closure/1",
-        "inventorySha256": "d81589bd06da940fa68c83621f3f2d4645a4ff0bc6c6f9b8797df69e903ad878",
+        "inventorySha256": "33b0fdc7de7be32e0ddee472bffbfcdb5c2791c527f11a15af88e91e02f111d9",
         "requirementText": "- **LAY-06:** Identify overflow, overlap and out-of-allocation drawing as facts; diagnose them as errors only when an application expectation makes them errors.",
         "reviewedAt": "2026-10-01",
         "review": "Reviewed the complete LAY-06 wording against the explicit declared-box relation capability and public layout reference workflow. Per-edge overflow quantifies drawing outside a local allocation; actual pixels and target probes distinguish clipped from allowed visible drawing. The overlapping blue/orange rectangles have independently checked pixels and native topmost delivery under identical geometry. The app may allow overlap without a separation judgment or explicitly prohibit it and receive a failed assertion. Pure tests separate positive overlap, boundary touching, disjoint and degenerate geometry, reject invalid/unrepresentable arithmetic and preserve immutable results. Live tests withdraw relations on pending/error/disposal and isolate historical snapshots. Completion covers caller-declared axis-aligned boxes in a common coordinate space with independent rendering/interaction evidence; it does not promise general path bounds, arbitrary transform normalization, visibility/occlusion inference or automatic application intent. Native smoke lacks served-build attestation, stated explicitly; source browser tests anchor the implemented behavior. No unrelated layout requirement or aggregate trust pass is implied.",
@@ -2079,7 +2079,7 @@
         "files": [
           {
             "path": "packages/core/src/lib/layout/overlay.test.ts",
-            "sha256": "340825e1b94948dc10c0f93b72ae6d68a13a74685eb630c80919184597ac8a52"
+            "sha256": "2f9daddaf64789ff5152e6f6a7f13a90c5866384854b4b04bd49909d4240fb7d"
           },
           {
             "path": "packages/core/src/lib/layout/flex.test.ts",
@@ -2087,11 +2087,11 @@
           },
           {
             "path": "packages/scenarios/src/agent-layout-placement.example.tsx",
-            "sha256": "8d4e82e590db86df012450ed799260f812a8d2262913d74395e739e0dcb09eee"
+            "sha256": "eb615bdf5879c7a2b3ee1ff65ac41d5984af1224f2a24e53276e03de99cc5596"
           },
           {
             "path": "packages/core/test/agent-layout-placement.test.tsx",
-            "sha256": "c5148eff53960746871de11ea68168061ca7a4e835959fe283857400590a3591"
+            "sha256": "3a7ff43f95034054b3e3f07b19fcfef2992a1180ca3a999bf7af7c984176a558"
           },
           {
             "path": "docs/strategy/agent-verification-evidence/layout-placement-slice-browser.json",
@@ -2099,7 +2099,7 @@
           },
           {
             "path": "packages/scenarios/src/agent-layout-placement.ts",
-            "sha256": "b689bc281e605967863a8d4dc01ab48099fde929a118294e14b2ece207902f33"
+            "sha256": "43537b36c1ff49bfaf2ca0ae57d440c0932990ab625df3c79c52e7afb9439f4d"
           },
           {
             "path": "packages/core/test/agent-layout-workflow.test.ts",
@@ -2736,7 +2736,7 @@
       "verificationRun": "redacted-text-closure-2026-10-01",
       "closure": {
         "schema": "crc-requirement-closure/1",
-        "inventorySha256": "d81589bd06da940fa68c83621f3f2d4645a4ff0bc6c6f9b8797df69e903ad878",
+        "inventorySha256": "33b0fdc7de7be32e0ddee472bffbfcdb5c2791c527f11a15af88e91e02f111d9",
         "requirementText": "- **TXT-08:** Preserve text redaction and payload limits while allowing explicit fixture text to serve as an assertion or locator.",
         "reviewedAt": "2026-10-02",
         "review": "Reviewed the full TXT-08 requirement: default private text stays redacted, bounded exact fixture strings support independent assertions, and payload/history limits persist through saved native evidence. Requirement allows assertions or locators; the delivered assertion path satisfies that alternative without claiming a general locator API. One explicitly instrumented native context is the supported acquisition surface. Layout, font resolution, visibility and other-context coverage are separate open requirements, not silently inferred. Lifecycle and hostile report payload regressions are included; built runtime inspection is explicitly unavailable. This closure does not claim a full trust pass. Shared catalog registration of the signal mutation lab was re-reviewed on 2026-10-01: all nine text browser regressions and twelve native text checks still pass, with fresh retained artifacts. Signal-mutation identity/replay support was added without changing text acquisition or assertions. Re-reviewed shared plugin/manifest changes with sixteen Node regressions, nine text browser regressions and twelve native text checks; fresh artifacts preserve the closure. Mixed-validity visualization mode was added on 2026-10-01. Re-reviewed the affected shared lab/catalog against twenty-six focused browser tests and a fresh native replay of this completed workflow; only the reviewed shared-file fingerprints were refreshed. Layout lab catalog addition re-reviewed against sixteen focused browser tests and a fresh native replay of this workflow; only the shared catalog fingerprint was refreshed. Overlap-mode extension re-reviewed against twenty focused browser tests and fresh native regression. Existing placement/text/signal contracts remain unchanged; only affected fingerprints refreshed. Late-font catalog addition reviewed against focused browser regressions and fresh native text/signal replays; existing entries unchanged. Refreshed only the catalog fingerprint. Package consolidation review (2026-10-02): moved feature paths and core/Three peer topology were revalidated with the current source browser checks, Node verification tests where applicable, and native scenario replay. Prior artifacts retain their original dated scope. Existing stale layout-test and signal-graph fingerprints were also revalidated against their relevant current behavior suites; no runtime semantics were changed to reconcile these records.",
@@ -2922,11 +2922,11 @@
           },
           {
             "path": "packages/core/test/agent-text-observation.test.ts",
-            "sha256": "c7774f76b0816e4d4e0c33ff95353bfef4bf66f95194655646546d098a1096a3"
+            "sha256": "59d987d48f15fffd6115caf569e9917ff7c0de175d67138c26d727691e248c55"
           },
           {
             "path": "packages/scenarios/src/agent-text-verification.example.tsx",
-            "sha256": "84a4a747d82dabfd3b42ba8dcc2635ce7204dc9bd23382b2795849b1051fc91f"
+            "sha256": "dfdf40384541924d32c148da8086d6fbd49df1b4e5fc0ebf388d395d0f709f11"
           },
           {
             "path": "packages/scenarios/src/agent-text-verification.ts",
@@ -2958,7 +2958,7 @@
           },
           {
             "path": "packages/scenarios/src/catalog.ts",
-            "sha256": "84d64d0698f4a4312b3e5707da7f51a82ec215649beaae5e7b30dbb677ca7dd8"
+            "sha256": "a6f043ee6b2884cc90bec6d47fa9ddc0c2832180f43dac07e453efb7a3f8031c"
           },
           {
             "path": "tooling/agent-verification/text-identity.mjs",
@@ -3994,7 +3994,7 @@
       "verificationRun": "signal-mutation-closure-2026-10-01",
       "closure": {
         "schema": "crc-requirement-closure/1",
-        "inventorySha256": "d81589bd06da940fa68c83621f3f2d4645a4ff0bc6c6f9b8797df69e903ad878",
+        "inventorySha256": "33b0fdc7de7be32e0ddee472bffbfcdb5c2791c527f11a15af88e91e02f111d9",
         "requirementText": "- **SIG-14:** Diagnose likely in-place-mutation mistakes through documented equality semantics and explicit app assertions; no universal deep mutation detector is assumed.",
         "reviewedAt": "2026-10-02",
         "review": "Reviewed the complete SIG-14 wording against the documented and actual default Object.is policy, explicit application-owned reference/value facts, independently fixed intended values and independent pixel checks. The application distinguishes a benign equal no-op, the known in-place change leaving evaluation/pixels stale, another equal write retaining that stale display, and immutable replacement repair. Diagnosis is scoped to that declared application sequence and recorded source revision; it does not recursively inspect objects, infer arbitrary custom equality, guarantee that another action cannot repaint, or claim a universal deep mutation detector. Finite two-frame evidence, setup/cancel/reset/remount cases and native Studio evidence are retained. The first native pixel test sampled without the contain offset; its failed report is retained, geometry was independently derived from the explicit viewport and an extra aspect-ratio regression was added before success. No aggregate trust pass is claimed. Mixed-validity visualization mode was added on 2026-10-01. Re-reviewed the affected shared lab/catalog against twenty-six focused browser tests and a fresh native replay of this completed workflow; only the reviewed shared-file fingerprints were refreshed. Layout lab catalog addition re-reviewed against sixteen focused browser tests and a fresh native replay of this workflow; only the shared catalog fingerprint was refreshed. Overlap-mode extension re-reviewed against twenty focused browser tests and fresh native regression. Existing placement/text/signal contracts remain unchanged; only affected fingerprints refreshed. Late-font catalog addition reviewed against focused browser regressions and fresh native text/signal replays; existing entries unchanged. Refreshed only the catalog fingerprint. Package consolidation review (2026-10-02): moved feature paths and core/Three peer topology were revalidated with the current source browser checks, Node verification tests where applicable, and native scenario replay. Prior artifacts retain their original dated scope. Existing stale layout-test and signal-graph fingerprints were also revalidated against their relevant current behavior suites; no runtime semantics were changed to reconcile these records.",
@@ -4142,11 +4142,11 @@
           },
           {
             "path": "packages/core/src/lib/signals/graph.ts",
-            "sha256": "1579da74710597f3983cfbc5002d7baac53c85b749b5ed1bbf0a2e4149e7f3ee"
+            "sha256": "915ddedafc3c1fc78b16cce85b00e8f7715fe6899cb6af6eedef727932b413ed"
           },
           {
             "path": "packages/scenarios/src/agent-signal-mutation.example.tsx",
-            "sha256": "8b0cc0f3a36090d7298f6f186d3d90d0229b036f310b49dbd2ece23a6ee99120"
+            "sha256": "3a2f6ba9a2aad6b7b269de57eb4fe4a262afbc9f5dbc64f5244a1e37ed3d40c9"
           },
           {
             "path": "packages/scenarios/src/agent-signal-mutation.ts",
@@ -4178,7 +4178,7 @@
           },
           {
             "path": "packages/scenarios/src/catalog.ts",
-            "sha256": "84d64d0698f4a4312b3e5707da7f51a82ec215649beaae5e7b30dbb677ca7dd8"
+            "sha256": "a6f043ee6b2884cc90bec6d47fa9ddc0c2832180f43dac07e453efb7a3f8031c"
           },
           {
             "path": "tooling/agent-verification/signal-mutation-identity.mjs",
@@ -4985,7 +4985,7 @@
       "verificationRun": "dat-07-native-review-2026-10-01",
       "closure": {
         "schema": "crc-requirement-closure/1",
-        "inventorySha256": "d81589bd06da940fa68c83621f3f2d4645a4ff0bc6c6f9b8797df69e903ad878",
+        "inventorySha256": "33b0fdc7de7be32e0ddee472bffbfcdb5c2791c527f11a15af88e91e02f111d9",
         "requirementText": "- **DAT-07:** Verify missing, zero and invalid values retain distinct semantics; do not treat missing data as zero unless the application explicitly requires it.",
         "reviewedAt": "2026-10-02",
         "review": "Reviewed complete DAT-07 wording against the supported public visualization workflow. Input tags preserve finite zero, null, undefined, NaN and both infinities; independent expected counts/category order guard JSON conflation. Exact zero query and actual emitted tooltip text, a painted segment through zero, absent queries across all missing/invalid positions, absent bridging pixels, and valid post-gap interpolation establish distinct semantics. Generation-bound replacement removes old metadata. Native Studio replay exercises the same application via pointer input; measured float32 transport precision is explicit and cannot be mistaken for missing-as-zero. This establishes the declared application policy, not automatic inference of arbitrary business coercion or unobscured glyph visibility. No production API or broader data/visualization requirement is certified by this closure. Package consolidation review (2026-10-02): moved feature paths and core/Three peer topology were revalidated with the current source browser checks, Node verification tests where applicable, and native scenario replay. Prior artifacts retain their original dated scope. Existing stale layout-test and signal-graph fingerprints were also revalidated against their relevant current behavior suites; no runtime semantics were changed to reconcile these records.",
@@ -5097,7 +5097,7 @@
           },
           {
             "path": "packages/core/test/features/viz/plot-series.test.tsx",
-            "sha256": "4462c7ca5f4bcc4a8528c652e88d2e06d60a88f83a2c236362ba0b75a334b940"
+            "sha256": "cb3534ed2422bad2b0832174b13c7a8a75edc94870f74145bbb42d42a17fdf0e"
           },
           {
             "path": "packages/scenarios/src/viz-hover-lab.ts",
@@ -5141,7 +5141,7 @@
           },
           {
             "path": "packages/scenarios/src/learning/composition/viz-hover-comparison.example.tsx",
-            "sha256": "bad7a5a7d920f6b7b3da191318bdcfa86ff860d04e29dd007c8001d5d57d05e8"
+            "sha256": "6b81bd6e67a18c20816da0bc07d53a1e6806a54089499c205e6ea39e3f859b46"
           },
           {
             "path": "tooling/agent-verification/text.ts",
@@ -6344,7 +6344,7 @@
       "verificationRun": "async-data-closure-2026-10-01",
       "closure": {
         "schema": "crc-requirement-closure/1",
-        "inventorySha256": "d81589bd06da940fa68c83621f3f2d4645a4ff0bc6c6f9b8797df69e903ad878",
+        "inventorySha256": "33b0fdc7de7be32e0ddee472bffbfcdb5c2791c527f11a15af88e91e02f111d9",
         "requirementText": "- **APP-11:** Record loading/error/retry and asynchronous response ordering for application data; stale responses must follow the application's declared policy.",
         "reviewedAt": "2026-10-01",
         "review": "Reviewed the complete APP-11 wording against the application-owned hover fixture and retained execution. Loading, error, retry, response ordering and declared stale-response policy are observable and independently asserted. Current failure retains chart data; retry clears error and commits a new generation; stale success/error cannot overwrite current data or request status. Queued responses are revoked on reset/disposal and cannot affect remounts. This closes APP-11 for the supported reference application workflow, not generic network interception, all possible application policies, or unrelated application requirements. The normal browser configuration passed; the separate material-lab catalog validation failure is not evidence about this workflow. Mixed-validity visualization mode was added on 2026-10-01. Re-reviewed the affected shared lab/catalog against twenty-six focused browser tests and a fresh native replay of this completed workflow; only the reviewed shared-file fingerprints were refreshed. Extended native replay reviewed after appending mixed-validity checks: existing async actions and expectations are unchanged and all pass. Only replay/required-check declaration fingerprints refreshed using the retained 127-check run.",
@@ -8680,7 +8680,7 @@
       "remaining": "Document human acceptance points for product intent, visual quality and assistive use without allowing approval to replace machine-verifiable contracts."
     }
   ],
-  "inventorySha256": "d81589bd06da940fa68c83621f3f2d4645a4ff0bc6c6f9b8797df69e903ad878",
+  "inventorySha256": "33b0fdc7de7be32e0ddee472bffbfcdb5c2791c527f11a15af88e91e02f111d9",
   "verificationRuns": {
     "layout-audit-2026-09-30": {
       "date": "2026-09-30",
@@ -9388,6 +9388,13 @@
       "command": "Combined runtime/identity/peer Node suites; browser runtime identity suite; declared and installed peer CLIs; native targeting watchdog; pnpm typecheck",
       "result": "16 Node tests, 2 browser tests, both peer audits and typecheck passed. Port-5196 replay correctly blocked stale source identity before actions. Fresh owned source server on 5199 passed all eight actions with matching identities. Durable passed and blocked evidence retained.",
       "scope": "ENV-03 full wording reviewed for explicit supported verification surfaces; no global discovery or custom-loader/worker attestation. Existing listener was not restarted because ownership could not be confirmed. No aggregate trust claim."
+    },
+    "package-relocation-recertification-2026-10-02": {
+      "date": "2026-10-02",
+      "environment": "Node 24.15.0 / pnpm 11.21.0 / Playwright Chromium",
+      "command": "Focused source-browser agent closure suite plus Node identity, evidence-reader, layout-relation, replay-identity and required-check suites; peer compatibility and installed-peer audits.",
+      "result": "16 focused browser files / 87 assertions and 78 focused Node tests passed. Fresh receipts are retained under docs/testing/integration-evidence/. The layout fixture was updated for the shipped left/top transform contract: the inspector now converts the primitive-local center while the declared parent-local offset remains the independent allocation relation. Text observation likewise records native fillText coordinates as primitive-local after left/top becomes a transform.",
+      "scope": "Recertifies the affected completed-closure source assertions after package relocation and the positioning-contract migration. Historical native replay receipts retain their original dated scope; this run does not claim a new native replay or aggregate trust pass."
     }
   }
 }

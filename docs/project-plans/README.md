@@ -2,7 +2,7 @@
 
 ## Active plan
 
-[004 — HtmlBox](./004-html-box.md) is active.
+[004 — HtmlBox](./004-html-box.md) is implemented and ready for local review.
 
 ## Strategy input
 

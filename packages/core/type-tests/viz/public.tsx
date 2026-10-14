@@ -460,3 +460,13 @@ void (<BarSeries data={[{ category: "A", value: 2 }]} x="category" y="value" xSc
 void (<PieLayout data={pieData} value="amount" revision={signal(0)} style={{ radius: 100, innerRadius: signal(55) }}>{slice => { const hole: number = slice.innerRadius; void hole; return <PieSlice slice={slice} />; }}</PieLayout>);
 // @ts-expect-error cache revisions are numeric
 void (<PieLayout data={pieData} value="amount" revision="stale">{() => null}</PieLayout>);
+
+// Integrated UTC and custom-label APIs must work in packed Bundler and NodeNext consumers.
+import { extent, niceDomain, type NumericDomain, type UtcScaleProps } from "@crc/core/viz";
+const observedDomain: NumericDomain | undefined = extent([{ time: 0 }, { time: 86_400_000 }], row => row.time);
+const utcProps: UtcScaleProps = { id: "time", type: "utc", domain: niceDomain(observedDomain!, { type: "utc", count: 4 }), range: "width" };
+void (<Scale {...utcProps}><Axis scale="time" position="bottom" /></Scale>);
+const labelBox = { width: 40, height: 20 };
+void (<PieLayout data={pieData} value="amount" labelBox={() => labelBox}>{slice => <PieLabel slice={slice}><Scale id="label" type="linear" domain={[0, 1]} range="width" /></PieLabel>}</PieLayout>);
+// @ts-expect-error text labels and custom label boxes are mutually exclusive
+void (<PieLayout data={pieData} value="amount" label={pieLabel} labelBox={() => labelBox}>{() => null}</PieLayout>);

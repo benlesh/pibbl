@@ -12,16 +12,17 @@ keywords: [packages, migration, installation, physics, bundles]
 
 Install `@crc/core` for drawing, particles, visualization, textures, and physics.
 Keep `@crc/three` and `three` when using the Three adapter.
+The native font-outline integration remains available separately as `@crc/text`.
 
 | Previous import            | Current import                  |
 | -------------------------- | ------------------------------- |
-| `@crc/core/particles`           | `@crc/core/particles`           |
-| `@crc/core/viz`                 | `@crc/core/viz`                 |
-| `@crc/core/textures`            | `@crc/core/textures`            |
-| `@crc/core/physics/2d`          | `@crc/core/physics/2d`          |
-| `@crc/core/physics/2d/geometry` | `@crc/core/physics/2d/geometry` |
-| `@crc/core/physics/3d/geometry` | `@crc/core/physics/3d/geometry` |
-| `@crc/core/physics/2d/testing`  | `@crc/core/physics/2d/testing`  |
+| `@crc/particles`           | `@crc/core/particles`           |
+| `@crc/viz`                 | `@crc/core/viz`                 |
+| `@crc/textures`            | `@crc/core/textures`            |
+| `@crc/physics/2d`          | `@crc/core/physics/2d`          |
+| `@crc/physics/2d/geometry` | `@crc/core/physics/2d/geometry` |
+| `@crc/physics/3d/geometry` | `@crc/core/physics/3d/geometry` |
+| `@crc/physics/2d/testing`  | `@crc/core/physics/2d/testing`  |
 
 Remove the previous feature packages and `@crc/types` from your dependencies.
 The empty types compatibility package has been removed; import core types from

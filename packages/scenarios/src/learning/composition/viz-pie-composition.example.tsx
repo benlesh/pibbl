@@ -13,6 +13,8 @@ import {
   PieLabel,
   HoverCard,
   type PieSliceGeometry,
+  type PieLayoutSlice,
+  type PieLayoutProps,
   type PieLabelPlacement,
 } from "@crc/core/viz";
 // Illustrative survey data, not real-world statistics. Both samples total 100.
@@ -31,9 +33,49 @@ const tiny = [
   { id: "accessible", label: "Accessible transit", value: 1, color: "#986448" },
 ];
 type Datum = (typeof balanced)[number];
-// Stable callback identity lets label placement reuse its computed result.
 const label = (slice: PieSliceGeometry<Datum>) =>
   `${slice.datum.label} · ${Math.round(slice.fraction * 100)}%`;
+function LabelledPie({
+  cards,
+  data,
+  placement,
+  bounds,
+  style,
+  children,
+}: {
+  cards: boolean;
+  data: PieLayoutProps<Datum>["data"];
+  placement: PieLayoutProps<Datum>["placement"];
+  bounds: PieLayoutProps<Datum>["bounds"];
+  style: PieLayoutProps<Datum>["style"];
+  children: (slice: PieLayoutSlice<Datum>) => CRCNode;
+}) {
+  return cards ? (
+    <PieLayout
+      data={data}
+      value="value"
+      keyBy="id"
+      labelBox={() => ({ width: 120, height: 38 })}
+      placement={placement}
+      bounds={bounds}
+      style={style}
+    >
+      {children}
+    </PieLayout>
+  ) : (
+    <PieLayout
+      data={data}
+      value="value"
+      keyBy="id"
+      label={label}
+      placement={placement}
+      bounds={bounds}
+      style={style}
+    >
+      {children}
+    </PieLayout>
+  );
+}
 function Button({
   x,
   y,
@@ -85,6 +127,7 @@ function Scene() {
   const placement = useSignal<PieLabelPlacement>("auto");
   const narrow = useSignal(false);
   const donut = useSignal(false);
+  const cards = useSignal(false);
   const hovered = useSignal<string | null>(null);
   const pinned = useSignal<string | null>(null);
   const active = pinned.get() ?? hovered.get();
@@ -93,15 +136,30 @@ function Scene() {
   const box = narrow.get()
     ? { x: 170, y: 115, width: 320, height: 310 }
     : { x: 20, y: 115, width: 620, height: 310 };
+  const pieStyle = {
+    cx: 330,
+    cy: 270,
+    radius: 112,
+    innerRadius: donut.get() ? 58 : 0,
+    labelFont: "13px sans-serif",
+    labelGap: 10,
+  };
   return (
     <Group>
       <Rectangle style={{ width: 1000, height: 570, fill: "#fcfbf8" }} />
       <Text
-        style={{ left: 28, top: 38, font: "bold 26px sans-serif", fill: "#182c42" }}
+        style={{
+          left: 28,
+          top: 38,
+          font: "bold 26px sans-serif",
+          fill: "#182c42",
+        }}
       >
         How we get around
       </Text>
-      <Text style={{ left: 28, top: 67, font: "14px sans-serif", fill: "#62758b" }}>
+      <Text
+        style={{ left: 28, top: 67, font: "14px sans-serif", fill: "#62758b" }}
+      >
         100 fictional responses · Labels share one layout; slices keep ordinary
         CRC events.
       </Text>
@@ -116,21 +174,12 @@ function Scene() {
           cornerRadius: 6,
         }}
       />
-      <PieLayout
+      <LabelledPie
+        cards={cards.get()}
         data={data}
-        value="value"
-        keyBy="id"
-        label={label}
         placement={placement}
         bounds={box}
-        style={{
-          cx: 330,
-          cy: 270,
-          radius: 112,
-          innerRadius: donut.get() ? 58 : 0,
-          labelFont: "13px sans-serif",
-          labelGap: 10,
-        }}
+        style={pieStyle}
       >
         {(slice) => (
           <PieSlice
@@ -159,10 +208,46 @@ function Scene() {
               onPointerEnter={() => hovered.set(slice.key)}
               onPointerLeave={() => hovered.set(null)}
               onClick={() => toggle(slice.key)}
-            />
+            >
+              {cards.get() && (
+                <Group>
+                  <Rectangle
+                    pointerEvents="none"
+                    style={{
+                      width: 120,
+                      height: 38,
+                      cornerRadius: 5,
+                      fill: "#fffdf8",
+                      stroke: slice.datum.color,
+                      strokeWidth: 1,
+                    }}
+                  />
+                  <Text
+                    pointerEvents="none"
+                    style={{
+                      left: 8,
+                      top: 15,
+                      font: "bold 12px sans-serif",
+                      fill: "#182c42",
+                    }}
+                  >
+                    {slice.datum.label}
+                  </Text>
+                  <Text
+                    pointerEvents="none"
+                    style={{
+                      left: 8,
+                      top: 30,
+                      font: "11px sans-serif",
+                      fill: "#62758b",
+                    }}
+                  >{`${slice.datum.value} of 100 responses`}</Text>
+                </Group>
+              )}
+            </PieLabel>
           </PieSlice>
         )}
-      </PieLayout>
+      </LabelledPie>
       <Text
         pointerEvents="none"
         style={{
@@ -193,7 +278,13 @@ function Scene() {
           />
           <Rectangle
             pointerEvents="none"
-            style={{ left: 10, top: 12, width: 12, height: 12, fill: datum.color }}
+            style={{
+              left: 10,
+              top: 12,
+              width: 12,
+              height: 12,
+              fill: datum.color,
+            }}
           />
           <Text
             pointerEvents="none"
@@ -302,6 +393,14 @@ function Scene() {
         width={138}
         text={narrow.get() ? "Restore label space" : "Limit label space"}
         action={() => narrow.set(!narrow.get())}
+      />
+      <Button
+        x={502}
+        y={438}
+        width={138}
+        text={cards.get() ? "Show text labels" : "Show label cards"}
+        active={cards.get()}
+        action={() => cards.set(!cards.get())}
       />
       <Button
         x={690}

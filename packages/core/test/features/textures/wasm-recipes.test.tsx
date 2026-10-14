@@ -10,8 +10,8 @@ import {
 import {
   ManualSchedulerDriver,
   installSchedulerDriverForTest,
-} from "../../core/src/lib/scheduler/testing.js";
-import { clearSharedState } from "../../core/src/lib/global-state.js";
+} from "../../../src/lib/scheduler/testing.js";
+import { clearSharedState } from "../../../src/lib/global-state.js";
 
 afterEach(() => {
   clearSharedState();

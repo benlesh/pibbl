@@ -1834,3 +1834,29 @@ function PackedFlowScene() {
   return createElement(Particles2D, { system, pointerEvents: 'none' as const, style: { width: 240, height: 160 } });
 }
 createElement(PhysicsWorld2D, {}, createElement(PackedFlowScene, {}));
+
+
+// HtmlBox preserves the application's generic payload across mount and update.
+const htmlMount: import('@crc/core').HtmlMountCallback<{ label: string }> = (element, initial, abort) => {
+  element.textContent = initial.label;
+  element.addEventListener('click', () => undefined, { signal: abort });
+  return next => { element.textContent = next.label; };
+};
+createElement(HtmlBox, { data: { label: 'native' }, mount: htmlMount, style: { width: 120, height: 40, rotationDegrees: 5 } });
+// @ts-expect-error payload and mount callback types must agree
+createElement(HtmlBox<{ label: string }>, { data: { label: 42 }, mount: htmlMount });
+const htmlConfig: CRCConfig = { viewport: 'responsive', htmlOverlay: undefined };
+void htmlConfig;
+
+const htmlEvents = createElement(HtmlBox<{ caption: string }>, {
+  data: { caption: 'native events' },
+  mount: (_element: HTMLDivElement, _props: { caption: string }, _signal: AbortSignal) => (_next: { caption: string }) => undefined,
+  onPointerMove(event) {
+    const rootX: number = event.x;
+    const hostX: number = event.localX;
+    const native: PointerEvent = event.originalEvent;
+    void [rootX, hostX, native];
+  },
+  onMouseMove(event) { const local: number = event.localY; void local; },
+});
+void htmlEvents;

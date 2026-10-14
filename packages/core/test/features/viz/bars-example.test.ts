@@ -1,5 +1,5 @@
 import { afterEach, expect, it, vi } from "vitest";
-import mount from "../../scenarios/src/learning/composition/viz-band-bars.example.js";
+import mount from "../../../../scenarios/src/learning/composition/viz-band-bars.example.js";
 import { testRuntime } from "./support/runtime.js";
 let runtime: ReturnType<typeof testRuntime>;
 afterEach(() => runtime?.dispose());

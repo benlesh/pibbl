@@ -573,7 +573,9 @@
   export type HtmlUpdateFunction<Props> = (props: Props) => void;
   export type HtmlMountCallback<Props> = (element: HTMLDivElement, initialProps: Props, signal: AbortSignal) => HtmlUpdateFunction<Props>;
   export interface HtmlBoxFocusState { readonly isFocusWithin: boolean; readonly isFocusVisible: boolean }
-  export interface HtmlBoxProps<Props> { data: Props; mount: HtmlMountCallback<Props>; pointerEvents?: 'auto' | 'none'; onFocusChange?: (state: Readonly<HtmlBoxFocusState>) => void }
+  type HtmlBoxEvent<Event> = Event extends { readonly x: number; readonly y: number } ? Event & { readonly localX: number; readonly localY: number } : Event;
+  export type HtmlBoxEventHandlers = { [Key in keyof CRCEventHandlers]: (event: HtmlBoxEvent<Parameters<NonNullable<CRCEventHandlers[Key]>>[0]>) => void };
+  export interface HtmlBoxProps<Props> extends HtmlBoxEventHandlers { data: Props; mount: HtmlMountCallback<Props>; pointerEvents?: 'auto' | 'none'; onFocusChange?: (state: Readonly<HtmlBoxFocusState>) => void }
   export interface HtmlBoxStyle extends GStyle { opacity?: number }
   export function HtmlBox<Props>(props: Omit<PrimitiveInput<HtmlBoxProps<Props>, HtmlBoxStyle>, 'data' | 'mount'> & Pick<HtmlBoxProps<Props>, 'data' | 'mount'>): CRCRenderResult;
   export const Group: CRCPrimitiveComponent<GroupProps, PrimitiveInput<GroupProps, GStyle>>;
@@ -1146,6 +1148,8 @@ import type { BoxStyle, CRCNode, LayoutItemStyle, LayoutBox, SignalValue } from 
 type SignalStyle<S> = Readonly<{ [K in keyof S]: K extends "custom" ? S[K] : SignalValue<S[K]> }>;
 export type ScaleId = string | symbol;
 export type LinearDomain = readonly [number, number];
+export type NumericDomain = LinearDomain;
+export type UtcDomain = NumericDomain;
 export type ScaleRange = 'width' | 'height' | readonly [number, number];
 export type BandScaleRange = ScaleRange | { readonly bandwidthOf: ScaleId };
 export type ScaleLayoutStyle = Pick<BoxStyle, 'width' | 'height'> & LayoutItemStyle;
@@ -1158,6 +1162,10 @@ export interface LinearScaleProps {
   readonly style?: SignalValue<SignalStyle<ScaleLayoutStyle>>;
   readonly children?: CRCNode;
 }
+export interface UtcScaleProps extends Omit<LinearScaleProps, "type" | "domain"> {
+  readonly type: "utc";
+  readonly domain: SignalValue<UtcDomain>;
+}
 export type BandCategory = string | number;
 export type BandDomain = readonly BandCategory[];
 export interface BandScaleProps extends Omit<LinearScaleProps, "type" | "domain" | "range"> {
@@ -1167,7 +1175,7 @@ export interface BandScaleProps extends Omit<LinearScaleProps, "type" | "domain"
   readonly paddingInner?: SignalValue<number>;
   readonly paddingOuter?: SignalValue<number>;
 }
-export type ScaleProps = LinearScaleProps | BandScaleProps;
+export type ScaleProps = LinearScaleProps | UtcScaleProps | BandScaleProps;
 export interface ResolvedBandScale {
   readonly type: "band";
   readonly domain: BandDomain;
@@ -1187,7 +1195,12 @@ export interface ResolvedLinearScale {
   invert(pixel: number): number;
   ticks(count?: number): readonly number[];
 }
-export type ResolvedScale = ResolvedLinearScale | ResolvedBandScale;
+export interface ResolvedUtcScale extends Omit<ResolvedLinearScale, "type"> {
+  readonly type: "utc";
+  formatTick(value: number): string;
+}
+export type ResolvedContinuousScale = ResolvedLinearScale | ResolvedUtcScale;
+export type ResolvedScale = ResolvedContinuousScale | ResolvedBandScale;
 
 import type { CRCEventHandlers, CRCEventParticipationOptions, FillStyle, StrokeStyle } from '@crc/core';
 export interface AxisStyle { readonly stroke?: StrokeStyle; readonly strokeWidth?: number; readonly fill?: FillStyle; readonly font?: string; readonly opacity?: number }
@@ -1222,6 +1235,10 @@ import type { Signal } from "@crc/core";
 export declare function Scale(props: ScaleProps): CRCNode;
 export declare function useScale(id: ScaleId, type?: "linear"): Signal<ResolvedLinearScale>;
 export declare function useScale(id: ScaleId, type: "band"): Signal<ResolvedBandScale>;
+export declare function useScale(id: ScaleId, type: "utc"): Signal<ResolvedUtcScale>;
+export declare function useScale(id: ScaleId, type: "continuous"): Signal<ResolvedContinuousScale>;
+export declare function extent<D>(data: readonly D[], value: (datum: D, index: number, data: readonly D[]) => number | null | undefined): NumericDomain | undefined;
+export declare function niceDomain(domainInput: NumericDomain, options: { readonly type: "utc"; readonly count?: number }): NumericDomain;
 export declare function Axis(props: AxisProps): CRCNode;
 export declare function LineSeries<D>(props: LineSeriesProps<D>): CRCNode;
 export declare function ScaleAdjust(props: ScaleAdjustProps): CRCNode;
@@ -1448,19 +1465,46 @@ export declare function pieSlices<D>(data: readonly D[], options: PieOptions<D>)
 
 import type { WedgeProps, WedgeStyle } from "@crc/core";
 export type PieLabelPlacement = "inside" | "outside" | "auto";
-export type PieLabelLayout = Readonly<{
-  status: "hidden";
-  reason: "empty" | "inside-fit" | "space";
-  text: string;
-}> | Readonly<{
-  status: "placed";
-  placement: "inside" | "outside";
-  text: string;
-  font: string;
-  x: number; y: number; width: number; height: number;
-  textX: number; textY: number;
-  leader?: readonly (readonly [number, number])[];
-}>;
+interface PieLabelBox {
+  readonly width: number;
+  readonly height: number;
+}
+export type PieLabelLayout =
+  | Readonly<{
+      kind: "text";
+      status: "hidden";
+      reason: "empty" | "inside-fit" | "space";
+      text: string;
+    }>
+  | Readonly<{
+      kind: "text";
+      status: "placed";
+      placement: "inside" | "outside";
+      text: string;
+      font: string;
+      x: number;
+      y: number;
+      width: number;
+      height: number;
+      textX: number;
+      textY: number;
+      leader?: readonly (readonly [number, number])[];
+    }>
+  | Readonly<{
+      kind: "content";
+      status: "hidden";
+      reason: "inside-fit" | "space";
+    }>
+  | Readonly<{
+      kind: "content";
+      status: "placed";
+      placement: "inside" | "outside";
+      x: number;
+      y: number;
+      width: number;
+      height: number;
+      leader?: readonly (readonly [number, number])[];
+    }>;
 export interface PieLayoutSlice<D> extends PieSliceGeometry<D> {
   readonly cx: number;
   readonly cy: number;
@@ -1469,23 +1513,38 @@ export interface PieLayoutSlice<D> extends PieSliceGeometry<D> {
   readonly label?: PieLabelLayout;
 }
 export interface PieLayoutStyle {
-  readonly innerRadius?: number;
   readonly cx?: number;
   readonly cy?: number;
   readonly radius?: number;
+  readonly innerRadius?: number;
   readonly labelFont?: string;
   readonly labelGap?: number;
 }
-export interface PieLayoutProps<D> extends PieOptions<D> {
-  readonly revision?: SignalValue<number>;
+interface PieLayoutBaseProps<D> extends PieOptions<D> {
   readonly data: SignalValue<readonly D[]>;
-  readonly label?: (slice: PieSliceGeometry<D>) => string;
+  /** Opts into cached geometry for mutable inputs; advance after nonreactive changes. */
+  readonly revision?: SignalValue<number>;
   readonly placement?: SignalValue<PieLabelPlacement>;
   readonly bounds?: SignalValue<HoverBounds>;
   readonly style?: SignalValue<SignalStyle<PieLayoutStyle>>;
   readonly children: (slice: PieLayoutSlice<D>) => CRCNode;
 }
-export type PieSliceStyle = Omit<WedgeStyle, "cx" | "cy" | "radius" | "startAngle" | "endAngle" | "counterclockwise">;
+type PieTextLabelSource<D> = Readonly<{
+  readonly label?: ((slice: PieSliceGeometry<D>) => string) | undefined;
+  readonly labelBox?: undefined;
+}>;
+type PieContentLabelSource<D> = Readonly<{
+  readonly label?: undefined;
+  readonly labelBox?:
+    | ((slice: PieSliceGeometry<D>) => PieLabelBox | null | undefined)
+    | undefined;
+}>;
+export type PieLayoutProps<D> = PieLayoutBaseProps<D> &
+  (PieTextLabelSource<D> | PieContentLabelSource<D>);
+export type PieSliceStyle = Omit<
+  WedgeStyle,
+  "cx" | "cy" | "radius" | "startAngle" | "endAngle" | "counterclockwise"
+>;
 export interface PieSliceProps<D> extends WedgeProps {
   readonly slice: PieLayoutSlice<D>;
   readonly style?: SignalValue<SignalStyle<PieSliceStyle>>;
@@ -1496,9 +1555,11 @@ export interface PieLabelStyle {
   readonly leaderStroke?: StrokeStyle;
   readonly leaderWidth?: number;
 }
-export interface PieLabelProps<D> extends CRCEventHandlers, CRCEventParticipationOptions {
+export interface PieLabelProps<D>
+  extends CRCEventHandlers, CRCEventParticipationOptions {
   readonly slice: PieLayoutSlice<D>;
   readonly style?: SignalValue<SignalStyle<PieLabelStyle>>;
+  readonly children?: CRCNode;
 }
 
 export declare function PieLayout<D>(props: PieLayoutProps<D>): CRCNode;

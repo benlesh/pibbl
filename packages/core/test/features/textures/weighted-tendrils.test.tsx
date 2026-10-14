@@ -4,7 +4,7 @@ import { tendrils, useTexture, type TendrilsMessage } from "@crc/core/textures";
 import {
   ManualSchedulerDriver,
   installSchedulerDriverForTest,
-} from "../../core/src/lib/scheduler/testing.js";
+} from "../../../src/lib/scheduler/testing.js";
 let cleanup = () => {};
 afterEach(() => {
   cleanup();

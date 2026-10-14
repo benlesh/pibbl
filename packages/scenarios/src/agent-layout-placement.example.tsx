@@ -14,8 +14,8 @@ function PlacedItem({ localX, overlap, onAllocation, onActivate }: ItemProps) {
   // Public allocation is local to the placed child; it is not a paint bound.
   onAllocation(useLayoutBox());
   return <Group>
-    <Rectangle style={{ x: localX, y: 0, width: 20, height: 20, fill: '#2563eb' }} onClick={() => onActivate?.('primary')} />
-    {overlap ? <Rectangle style={{ x: 10, y: 0, width: 20, height: 20, fill: '#f97316' }} onClick={() => onActivate?.('peer')} /> : null}
+    <Rectangle style={{ left: localX, top: 0, width: 20, height: 20, fill: '#2563eb' }} onClick={() => onActivate?.('primary')} />
+    {overlap ? <Rectangle style={{ left: 10, top: 0, width: 20, height: 20, fill: '#f97316' }} onClick={() => onActivate?.('peer')} /> : null}
   </Group>;
 }
 

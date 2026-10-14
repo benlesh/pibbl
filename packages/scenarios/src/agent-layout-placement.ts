@@ -56,7 +56,10 @@ export const agentLayoutPlacementScenario: ScenarioDefinition<AgentLayoutPlaceme
         const snapshot = inspector?.snapshot();
         const overlapMode = action === 'overlap-allowed' || action === 'overlap-prohibited';
         const entry = snapshot?.records.length === (overlapMode ? 2 : 1) ? snapshot.records[0] : null;
-        const localCenter = { x: state.declared.shapeLocal.x + 10, y: 10 };
+        // `left`/`top` are resolved into the receiving primitive's transform.
+        // Entry-local coordinates therefore begin at the Rectangle's own origin;
+        // the declared offset remains parent-local evidence for box relations.
+        const localCenter = { x: 10, y: 10 };
         const converted = snapshot?.status === 'ready' && snapshot.generation && entry ? inspector!.convert(snapshot.generation, 'entry-local', 'root-logical', localCenter, 'point', entry.order) : null;
         const observed = snapshot?.generation && entry && converted?.status === 'mapped' && converted.value ? { generation: snapshot.generation, transform: entry.transform, center: converted.value, probe: inspector!.probe(snapshot.generation, converted.value.x, converted.value.y) } : null;
         const candidate = observed?.probe.candidates[0];
@@ -66,7 +69,7 @@ export const agentLayoutPlacementScenario: ScenarioDefinition<AgentLayoutPlaceme
         const relationFailure = relations?.status === 'available' && (relations.assertions.containment === 'fail' || relations.assertions.separation === 'fail');
         const diagnosis = !observed ? 'inspection-unavailable' : overlapMode && relations?.status === 'available' && relations.overlap?.relation === 'overlap' ? action === 'overlap-prohibited' ? 'overlap-violates-separation' : 'overlap-explicitly-allowed' : clipped ? 'local-offset-outside-parent-clip' : target && action === 'overflow-visible' ? 'overflow-explicitly-allowed' : target && action === 'repaired' ? 'local-offset-repaired' : 'unexpected-geometry';
         state = { ...state, status: 'ready', allocation, observed, relations, assertion: !observed || !relations || relations.status !== 'available' ? 'unavailable' : target && !relationFailure ? 'pass' : 'fail', diagnosis,
-          explanation: 'The app expects the shape center to be targetable. Parent left=30/top=20 places a local 20x20 allocation; Rectangle x is an additional local drawing offset. Translation (40,30) and scale 2 map these coordinates into root space. Allocation is not a paint bound. Declared overflow controls clipping; geometry probes do not prove pixel visibility. Box relations describe declared rectangles in one common local space. Overlap becomes an error only when separation is explicitly required.' };
+          explanation: 'The app expects the shape center to be targetable. Parent left=30/top=20 places a local 20x20 allocation; Rectangle left is an additional parent-local drawing offset and is resolved into its primitive transform. Translation (40,30) and scale 2 map the primitive-local center into root space. Allocation is not a paint bound. Declared overflow controls clipping; geometry probes do not prove pixel visibility. Box relations describe declared rectangles in one common local space. Overlap becomes an error only when separation is explicitly required.' };
         publish();
       }).catch(error => { if (!disposed) { state = { ...state, status: 'error', assertion: 'unavailable', observed: null, allocation: null, relations: null, diagnosis: 'observation-failed' }; evidence.textContent = JSON.stringify({ schema: 'crc-layout-placement-fixture/1', state }); } throw error; }).finally(() => { inFlight = null; });
       inFlight = operation; return operation;

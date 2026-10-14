@@ -1,9 +1,9 @@
 import { expect, it, vi } from "vitest";
-import { mountProductionScene } from "../../../tooling/texture-wasm-spike/production-scene.js";
+import { mountProductionScene } from "../../../../../tooling/texture-wasm-spike/production-scene.js";
 import {
   ManualSchedulerDriver,
   installSchedulerDriverForTest,
-} from "../../core/src/lib/scheduler/testing.js";
+} from "../../../src/lib/scheduler/testing.js";
 it("drives WASM texture parameters with animation and displaces ink continuously from Rapier movement", () => {
   const driver = new ManualSchedulerDriver(),
     restore = installSchedulerDriverForTest(driver);

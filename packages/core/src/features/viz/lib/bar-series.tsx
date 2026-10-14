@@ -96,7 +96,7 @@ export function BarSeries<D>({
   ...events
 }: BarSeriesProps<D>) {
   const categories = useScale(categoryScale, "band").get();
-  const values = useScale(valueScale).get();
+  const values = useScale(valueScale, "continuous").get();
   const groups = lookupScale(groupScale, "BarSeries groupScale", "band")?.get();
   if ((group === undefined) !== (groupScale === undefined))
     throw new TypeError("BarSeries requires group and groupScale together.");
@@ -112,13 +112,14 @@ export function BarSeries<D>({
   const slotWidth =
     groups?.type === "band" ? groups.bandwidth : categories.bandwidth;
   if (orientation !== "vertical" && orientation !== "horizontal")
-    throw new TypeError("BarSeries orientation must be vertical or horizontal.");
+    throw new TypeError(
+      "BarSeries orientation must be vertical or horizontal.",
+    );
   const data = pointData(resolveSignalValue(input), "BarSeries");
   const category =
     typeof categoryInput === "function"
       ? categoryInput
-      : (datum: D) =>
-          datum[categoryInput] as BandCategory | null | undefined;
+      : (datum: D) => datum[categoryInput] as BandCategory | null | undefined;
   const ranged = valueStart !== undefined || valueEnd !== undefined;
   if (
     ranged
@@ -176,8 +177,10 @@ export function BarSeries<D>({
         resolved.bandwidth === undefined || resolved.bandwidth === "auto"
           ? slotWidth
           : width(resolved.bandwidth, "BarSeries bandwidth"),
-      fill: barFill(ctx, resolved.fill ?? "#2563eb", (value) =>
-        values.map(value),
+      fill: barFill(
+        ctx,
+        resolved.fill ?? "#2563eb",
+        (value) => values.map(value),
         orientation,
       ),
       stroke: resolved.stroke,
@@ -225,8 +228,12 @@ export function BarSeries<D>({
         key={i}
         pointerEvents={pointerEvents}
         style={{
-          left: vertical ? start + (slotWidth - bandwidth) / 2 : Math.min(base, end),
-          top: vertical ? Math.min(base, end) : start + (slotWidth - bandwidth) / 2,
+          left: vertical
+            ? start + (slotWidth - bandwidth) / 2
+            : Math.min(base, end),
+          top: vertical
+            ? Math.min(base, end)
+            : start + (slotWidth - bandwidth) / 2,
           width: vertical ? bandwidth : extent,
           height: vertical ? extent : bandwidth,
           fill: fill(from, v),

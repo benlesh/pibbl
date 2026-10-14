@@ -33,7 +33,7 @@ const pnpm = (args, cwd = root) =>
 let server, browser;
 try {
   const dependencies = {};
-  for (const name of ["types", "core", "text"]) {
+  for (const name of ["core", "text"]) {
     pnpm(
       ["pack", "--out", join(temp, `${name}.tgz`)],
       join(root, "packages", name),
@@ -48,7 +48,7 @@ try {
   );
   writeFileSync(
     join(consumer, "pnpm-workspace.yaml"),
-    `packages:\n  - .\noverrides:\n  '@crc/types': ${dependencies["@crc/types"]}\n`,
+    `packages:\n  - .\n`,
   );
   pnpm(
     [

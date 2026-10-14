@@ -179,6 +179,24 @@ afterEach(() => {
 });
 
 describe("learning example catalog", () => {
+  it("accepts Manipulable's signal-owned box without allowing arbitrary style expressions", () => {
+    for (const authoring of ["jsx", "createElement"] as const) {
+      const scene = authoring === "jsx"
+        ? "<Manipulable style={box} />"
+        : "createElement(Manipulable, { style: box })";
+      const root = authoring === "jsx" ? "<Scene />" : "createElement(Scene, {})";
+      const source = `import { crc, Manipulable, useSignal, createElement, type CRCController } from '@crc/core';
+        function Scene() {
+          const box = useSignal({ left: 0, top: 0, width: 100, height: 80 });
+          return ${scene};
+        }
+        export default function mount(canvas: HTMLCanvasElement): CRCController {
+          return crc(canvas, ${root});
+        }`;
+      expectValidLearningSource(source, authoring);
+      expectInvalidLearningSource(source.replace(authoring === "jsx" ? "style={box}" : "style: box", authoring === "jsx" ? "style={unknownBox}" : "style: unknownBox"), authoring);
+    }
+  });
   const threeLayerSourcePath =
     "packages/scenarios/src/learning/three/three-layer.example.tsx";
   const threeInstancingSourcePath =
@@ -1214,11 +1232,11 @@ describe("learning example catalog", () => {
     );
   });
 
-  it("contains 81 unique, ordered, source-backed routes including optional filters and underwater", async () => {
+  it("contains 83 unique, ordered, source-backed routes including optional filters and underwater", async () => {
     expect(validateLearningExampleCatalog(learningExampleCatalog)).toBe(
       learningExampleCatalog,
     );
-    expect(learningExampleCatalog).toHaveLength(81);
+    expect(learningExampleCatalog).toHaveLength(83);
     expect(
       learningExampleCatalog
         .filter(
@@ -1292,7 +1310,6 @@ describe("learning example catalog", () => {
         "image",
         "line",
         "path",
-        "along-path",
         "path-bending",
         "path-geometry",
         "path-warp",
@@ -1329,6 +1346,7 @@ describe("learning example catalog", () => {
         "viz-band-bars",
         "viz-grouped-bars",
         "viz-hover-comparison",
+        "viz-utc-line",
         "viz-pie-composition",
         "viz-points-and-inspection",
         "viz-responsive-line",
@@ -1433,6 +1451,8 @@ describe("learning example catalog", () => {
       "plasma-globe",
       "underwater",
       "stirred-ink",
+      "html-box",
+      "viz-utc-line",
       "optional-filters",
     ]);
 
@@ -1808,6 +1828,7 @@ describe("learning example catalog", () => {
         "PlotSeries",
         "ScaleAdjust",
         "useScale",
+        "niceDomain",
         "HoverData",
         "HoverCard",
         "AnchoredLayout",

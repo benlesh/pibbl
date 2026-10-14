@@ -66,6 +66,8 @@ try {
   const viz = await import(pathToFileURL(entry).href);
   const names = [
     "pieSlices",
+    "extent",
+    "niceDomain",
     "PieLayout",
     "PieSlice",
     "PieLabel",

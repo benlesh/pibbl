@@ -8,6 +8,8 @@ import type {
 import type { SignalStyle } from "@crc/core/internal";
 export type ScaleId = string | symbol;
 export type LinearDomain = readonly [number, number];
+export type NumericDomain = LinearDomain;
+export type UtcDomain = NumericDomain;
 export type ScaleRange = "width" | "height" | readonly [number, number];
 export type BandScaleRange = ScaleRange | { readonly bandwidthOf: ScaleId };
 export type ScaleLayoutStyle = Pick<BoxStyle, "width" | "height"> &
@@ -21,6 +23,13 @@ export interface LinearScaleProps {
   readonly style?: SignalValue<SignalStyle<ScaleLayoutStyle>>;
   readonly children?: CRCNode;
 }
+export interface UtcScaleProps extends Omit<
+  LinearScaleProps,
+  "type" | "domain"
+> {
+  readonly type: "utc";
+  readonly domain: SignalValue<UtcDomain>;
+}
 export type BandCategory = string | number;
 export type BandDomain = readonly BandCategory[];
 export interface BandScaleProps extends Omit<
@@ -33,7 +42,7 @@ export interface BandScaleProps extends Omit<
   readonly paddingInner?: SignalValue<number>;
   readonly paddingOuter?: SignalValue<number>;
 }
-export type ScaleProps = LinearScaleProps | BandScaleProps;
+export type ScaleProps = LinearScaleProps | UtcScaleProps | BandScaleProps;
 export interface ResolvedBandScale {
   readonly type: "band";
   readonly domain: BandDomain;
@@ -52,7 +61,12 @@ export interface ResolvedLinearScale {
   invert(pixel: number): number;
   ticks(count?: number): readonly number[];
 }
-export type ResolvedScale = ResolvedLinearScale | ResolvedBandScale;
+export interface ResolvedUtcScale extends Omit<ResolvedLinearScale, "type"> {
+  readonly type: "utc";
+  formatTick(value: number): string;
+}
+export type ResolvedContinuousScale = ResolvedLinearScale | ResolvedUtcScale;
+export type ResolvedScale = ResolvedContinuousScale | ResolvedBandScale;
 
 import type {
   CRCEventHandlers,
@@ -73,10 +87,14 @@ interface AxisBaseProps {
   readonly tickFormat?: (value: number | string, index: number) => string;
   readonly style?: SignalValue<SignalStyle<AxisStyle>>;
 }
-export type AxisProps = AxisBaseProps & (
-  | { readonly tickValues: SignalValue<readonly (number | string)[]>; readonly tickCount?: never }
-  | { readonly tickValues?: never; readonly tickCount?: SignalValue<number> }
-);
+export type AxisProps = AxisBaseProps &
+  (
+    | {
+        readonly tickValues: SignalValue<readonly (number | string)[]>;
+        readonly tickCount?: never;
+      }
+    | { readonly tickValues?: never; readonly tickCount?: SignalValue<number> }
+  );
 
 export type LineCoordinate = number | null | undefined;
 export type LineAccessor<D> =

@@ -7,7 +7,7 @@ export function AgentSignalMutationScene({ amount, onRender }: {
   const value = amount.get().amount;
   onRender(value);
   return <Group>
-    <Text style={{ x: 24, y: 24, font: '20px sans-serif', fill: '#111827' }}>Amount: {value}</Text>
-    <Rectangle style={{ x: 24, y: 64, width: value * 8, height: 40, fill: '#2563eb' }} />
+    <Text style={{ left: 24, top: 24, font: '20px sans-serif', fill: '#111827' }}>Amount: {value}</Text>
+    <Rectangle style={{ left: 24, top: 64, width: value * 8, height: 40, fill: '#2563eb' }} />
   </Group>;
 }

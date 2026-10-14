@@ -91,7 +91,7 @@ it("loads the complete function-query comparison as canonical editable source", 
   ).not.toThrow();
 });
 
-import groupedLesson from "../../scenarios/src/learning/composition/viz-grouped-bars.example.tsx?raw";
+import groupedLesson from "../../../../scenarios/src/learning/composition/viz-grouped-bars.example.tsx?raw";
 it("loads grouped bars as the canonical editable public lesson", async () => {
   expect(() =>
     validateLearningSourceText(groupedLesson, {
@@ -106,7 +106,7 @@ it("loads grouped bars as the canonical editable public lesson", async () => {
   ).resolves.toBe(groupedLesson);
 });
 
-import stackedLesson from "../../scenarios/src/learning/composition/viz-stacked-bars.example.tsx?raw";
+import stackedLesson from "../../../../scenarios/src/learning/composition/viz-stacked-bars.example.tsx?raw";
 it("loads stacked bars as the canonical editable public lesson", async () => {
   expect(() =>
     validateLearningSourceText(stackedLesson, {

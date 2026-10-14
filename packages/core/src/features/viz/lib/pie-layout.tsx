@@ -1,5 +1,6 @@
 import {
   Group,
+  Absolute,
   Path,
   Wedge,
   definePrimitive,
@@ -76,8 +77,14 @@ export function PieLayout<D>(props: PieLayoutProps<D>) {
     throw new TypeError(
       "PieLayout: children must be a function returning CRC elements.",
     );
+  if (props.label !== undefined && props.labelBox !== undefined)
+    throw new TypeError(
+      "PieLayout: label and labelBox are mutually exclusive.",
+    );
   const revision =
-    props.revision === undefined ? undefined : resolveSignalValue(props.revision);
+    props.revision === undefined
+      ? undefined
+      : resolveSignalValue(props.revision);
   if (
     revision !== undefined &&
     (!Number.isSafeInteger(revision) || revision < 0)
@@ -107,7 +114,9 @@ export function PieLayout<D>(props: PieLayoutProps<D>) {
       context.font = "11px monospace";
       context.font = font;
       if (context.font !== normalized)
-        throw new TypeError("PieLayout: labelFont must be a valid Canvas font.");
+        throw new TypeError(
+          "PieLayout: labelFont must be a valid Canvas font.",
+        );
       context.textAlign = "left";
       context.textBaseline = "alphabetic";
       return layoutPie(
@@ -121,6 +130,7 @@ export function PieLayout<D>(props: PieLayoutProps<D>) {
         gap,
         placement,
         props.label,
+        props.labelBox,
         (text) => {
           const m = context.measureText(text);
           const width = Math.max(
@@ -154,6 +164,7 @@ export function PieLayout<D>(props: PieLayoutProps<D>) {
     gap,
     placement,
     props.label,
+    props.labelBox,
     context,
   ]);
   return layout
@@ -194,13 +205,7 @@ export function PieSlice<D>({
   }
   const sweep = resolveClockwiseSweep(slice.startAngle, slice.endAngle);
   const path = new Path2D();
-  path.arc(
-    slice.cx,
-    slice.cy,
-    slice.radius,
-    sweep.startAngle,
-    sweep.endAngle,
-  );
+  path.arc(slice.cx, slice.cy, slice.radius, sweep.startAngle, sweep.endAngle);
   if (slice.innerRadius > 0)
     path.arc(
       slice.cx,
@@ -217,8 +222,7 @@ export function PieSlice<D>({
       <Path
         {...events}
         keyboardNavigationBounds={
-          events.keyboardNavigationBounds ??
-          annularSliceBounds(slice, sweep)
+          events.keyboardNavigationBounds ?? annularSliceBounds(slice, sweep)
         }
         style={{
           ...style,
@@ -312,13 +316,18 @@ function positiveModulo(value: number, divisor: number) {
 }
 
 const LabelText = definePrimitive<
-  { label: Extract<PieLabelLayout, { status: "placed" }> },
+  { label: Extract<PieLabelLayout, { kind: "text"; status: "placed" }> },
   { readonly custom?: never; fill: import("@crc/core").FillStyle }
 >(({ label }, style, context) => {
   context.font = label.font;
   context.textAlign = "left";
   context.textBaseline = "alphabetic";
-  context.fillStyle = resolveTexturePaint(style.fill, context, { x: label.x, y: label.y, width: label.width, height: label.height });
+  context.fillStyle = resolveTexturePaint(style.fill, context, {
+    x: label.x,
+    y: label.y,
+    width: label.width,
+    height: label.height,
+  });
   context.fillText(label.text, label.textX, label.textY);
 });
 
@@ -326,10 +335,15 @@ export function PieLabel<D>({
   slice,
   style: input,
   pointerEvents = "none",
+  children,
   ...events
 }: PieLabelProps<D>) {
   const style = resolveSignalValue(input) ?? {};
   const label = slice.label;
+  if (label?.kind === "text" && children != null && children !== false)
+    throw new TypeError(
+      "PieLabel: children require PieLayout labelBox; string label layouts cannot size custom content.",
+    );
   if (!label || label.status !== "placed") return null;
   return (
     <Group {...events}>
@@ -353,10 +367,20 @@ export function PieLabel<D>({
           fill: "transparent",
         }}
       />
-      <LabelText
-        label={label}
-        style={{ fill: resolveSignalValue(style.fill) ?? "#182c42" }}
-      />
+      {label.kind === "text" ? (
+        <LabelText
+          label={label}
+          style={{ fill: resolveSignalValue(style.fill) ?? "#182c42" }}
+        />
+      ) : (
+        <Group style={{ translateX: label.x, translateY: label.y }}>
+          <Absolute style={{ width: label.width, height: label.height }}>
+            <Group style={{ width: label.width, height: label.height }}>
+              {children}
+            </Group>
+          </Absolute>
+        </Group>
+      )}
     </Group>
   );
 }

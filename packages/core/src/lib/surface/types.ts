@@ -65,6 +65,8 @@ export interface CRCSurfaceSnapshot {
 }
 
 export interface RootSurfaceState {
+  /** Configured native overlays use the pre-transform CSS layout dimensions. */
+  readonly untransformedDisplay?: boolean;
   kind: 'root';
   config: ResolvedSurfaceConfig;
   display: SurfaceDisplaySize;

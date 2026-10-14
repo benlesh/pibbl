@@ -10,7 +10,7 @@ import {
 import {
   ManualSchedulerDriver,
   installSchedulerDriverForTest,
-} from "../../core/src/lib/scheduler/testing.js";
+} from "../../../src/lib/scheduler/testing.js";
 
 let cleanup = () => {};
 afterEach(() => {

@@ -96,7 +96,6 @@ const publicSiteMarkdownPaths = [
   "docs/site/api/components/reaction-diffusion.md",
   "docs/site/api/components/procedural-texture.md",
   "docs/site/api/types/textures.md",
-  "docs/site/api/types/electric-textures.md",
   "docs/site/api/functions/path-bending.md",
   "docs/site/api/functions/path-geometry.md",
   "docs/site/api/functions/text-geometry.md",
@@ -252,10 +251,9 @@ const currentMarkdownPaths = [
   "docs/design/html-box-contract.md",
   "docs/design/weighted-electric-sources-contract.md",
   "docs/design/textures-contract.md",
-  "docs/design/weighted-electric-sources-contract.md",
   "docs/design/component-manipulation-contract.md",
   "docs/design/text-geometry-contract.md",
-  "packages/textures/README.md",
+  "packages/core/src/features/textures/README.md",
   "packages/text/README.md",
   "AGENTS.md",
   "README.md",
@@ -1724,14 +1722,6 @@ for (const kind of ["values", "types"])
     [...documentedApiSymbols].filter((name) => vizExports[kind].has(name)),
     vizExports[kind],
     `Documented @crc/core/viz ${kind}`,
-  );
-const filterSource = await readFile(join(repositoryRoot, "packages/core/src/filters.ts"), "utf8");
-const filterExports = exportedSpecifiers(filterSource, "packages/core/src/filters.ts");
-for (const kind of ["values", "types"])
-  assertSameNames(
-    [...documentedApiSymbols].filter((name) => filterExports[kind].has(name)),
-    filterExports[kind],
-    `Documented @crc/core/filters ${kind}`,
   );
 const filterSource = await readFile(join(repositoryRoot, "packages/core/src/filters.ts"), "utf8");
 const filterExports = exportedSpecifiers(filterSource, "packages/core/src/filters.ts");

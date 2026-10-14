@@ -9,7 +9,7 @@ export const CONTRACT_TRANSLATION_RECORD =
 // Updated only after the complete baseline, translation allowlist, additions,
 // and evidence map receive review together.
 const REVIEWED_MANIFEST_SHA256 =
-  "c2dda3cc3d979dcfdd8d485de811ce34c12c3a80d1f6f422dc3f32bd29aeb663";
+  "c965f1a7eb0d7fe8499d068bba8a9f17a878ddea2e7e9f66aa2f29bc27f93992";
 
 const SIGNALS_SCHEDULER_APPROVAL_RECORD = "first-class-signals-and-scheduler";
 const THREE_PIVOT_APPROVAL_RECORD = "three-full-pivot";
@@ -123,6 +123,7 @@ const MIXED_SIGNAL_ANIMATION_APPROVED_SECTIONS = new Set([
 const HTML_BOX_APPROVAL_RECORD = "html-box";
 const HTML_BOX_APPROVED_SECTIONS = new Set([
   "HtmlBox design",
+  "Native component event extension — 2026-10-02",
   "Purpose",
   "Public authoring surface",
   "Root DOM arrangement and ownership",

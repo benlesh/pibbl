@@ -1,3 +1,4 @@
+import { HtmlNativeEvents } from './html-events.js';
 import { GLOBAL_STATE } from '../global-state.js';
 import { withSignalWriteForbidden } from '../signals/graph.js';
 import type { CRCClippingStackEntry, CRCEventRoot, CRCInstance, CRCInteractionLayer, CRCRenderTransaction } from '../types.js';
@@ -55,7 +56,7 @@ export class HtmlService implements HtmlBridge {
     this.root.renderTransaction!.onPublish!(() => {
       this.root.focusPolicy?.suspendHtmlRegions?.();
       if (this.viewport) this.viewport.hidden = true;
-      for (const slot of this.live) { slot.region.active = false; if (slot.shell) slot.shell.inert = true; }
+      for (const slot of this.live) { slot.region.active = false; slot.events?.suspend(); if (slot.shell) slot.shell.inert = true; }
     });
   }
 
@@ -98,6 +99,7 @@ export class HtmlService implements HtmlBridge {
   private retire(slot: HtmlBoxSlot): void {
     if (slot.disposed) return;
     slot.disposed = true;
+    slot.events?.dispose();
     slot.region.active = false;
     this.root.focusPolicy?.removeHtmlFocusRegion?.(slot.region);
     try { withSignalWriteForbidden('HtmlBox abort cleanup', () => slot.abort?.abort()); }
@@ -120,7 +122,7 @@ export class HtmlService implements HtmlBridge {
     if (rootInstance.surface.kind === 'root' && (!rootInstance.surface.display.width || !rootInstance.surface.display.height)) {
       this.root.focusPolicy?.suspendHtmlRegions?.();
       if (this.viewport) this.viewport.hidden = true;
-      for (const slot of this.live) { slot.region.active = false; if (slot.shell) slot.shell.inert = true; }
+      for (const slot of this.live) { slot.region.active = false; slot.events?.suspend(); if (slot.shell) slot.shell.inert = true; }
       return;
     }
     const surface = rootInstance.surface.snapshot!;
@@ -162,7 +164,7 @@ export class HtmlService implements HtmlBridge {
     this.svg = doc.createElementNS(SVG, 'svg');
     this.svg.setAttribute('width', '0'); this.svg.setAttribute('height', '0');
     this.svg.setAttribute('aria-hidden', 'true');
-    this.svg.style.cssText = 'position:absolute;pointer-events:none';
+    this.svg.style.cssText = 'position:absolute;left:0;top:0;pointer-events:none';
     this.root.htmlOverlay!.append(this.svg, this.viewport);
   }
 
@@ -198,6 +200,14 @@ export class HtmlService implements HtmlBridge {
     slot.region.rootBounds = { x: Math.min(...xs), y: Math.min(...ys), width: Math.max(...xs)-Math.min(...xs), height: Math.max(...ys)-Math.min(...ys) };
     slot.callback = r.onFocusChange;
     if (visible) this.applyClips(slot, clips, world.inverse());
+    slot.events ??= new HtmlNativeEvents(slot, this.svg!, target => {
+      if (!(target instanceof doc.defaultView!.Node)) return null;
+      for (const candidate of this.live) {
+        if (candidate.events?.node.live && candidate.shell?.contains(target)) return candidate.events.node;
+      }
+      return null;
+    });
+    slot.events.publish(r.handlers, world, rootMatrix);
     try {
       if (first) {
         const update = withSignalWriteForbidden('HtmlBox mount', () => slot.mount(slot.content!, r.data, slot.abort!.signal));

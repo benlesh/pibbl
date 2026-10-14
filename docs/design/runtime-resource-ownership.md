@@ -213,6 +213,7 @@ a signal write guard prevents immediate restoration, CRC queues one
 generation-checked Begin cleanup record; a newer external write or later owner
 generation invalidates it. See the
 [component-manipulation contract](./component-manipulation-contract.md).
+
 ## HtmlBox ownership
 
 A configured root exclusively reserves its application-owned overlay. Component

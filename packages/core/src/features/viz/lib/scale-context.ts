@@ -9,6 +9,8 @@ interface Scope {
   id: ScaleId;
   value: Signal<ResolvedScale>;
   linear: Signal<ResolvedScale>;
+  utc: Signal<ResolvedScale>;
+  continuous: Signal<ResolvedScale>;
   band: Signal<ResolvedScale>;
   canvas: Canvas;
   parent: Scope | undefined;
@@ -19,6 +21,8 @@ export function provideScale(
   value: Signal<ResolvedScale>,
   linear: Signal<ResolvedScale>,
   band: Signal<ResolvedScale>,
+  utc: Signal<ResolvedScale>,
+  continuous: Signal<ResolvedScale>,
 ): void {
   const parent = current;
   const scope: Scope = {
@@ -26,6 +30,8 @@ export function provideScale(
     value,
     linear,
     band,
+    utc,
+    continuous,
     canvas: getCurrentBackendHostCanvas(),
     parent,
   };
@@ -43,7 +49,7 @@ export function provideScale(
 export function lookupScale(
   id: ScaleId | undefined,
   receiver: string,
-  type?: "linear" | "band",
+  type?: "linear" | "band" | "utc" | "continuous",
 ): Signal<ResolvedScale> | undefined {
   useInternalHookSlot("vizScaleLookup", () => undefined);
   return readScale(id, receiver, type);
@@ -52,7 +58,7 @@ export function lookupScale(
 export function readScale(
   id: ScaleId | undefined,
   receiver: string,
-  type?: "linear" | "band",
+  type?: "linear" | "band" | "utc" | "continuous",
 ): Signal<ResolvedScale> | undefined {
   return findScale(current, getCurrentBackendHostCanvas(), id, receiver, type);
 }
@@ -61,15 +67,17 @@ export function captureScaleLookup(receiver: string) {
   useInternalHookSlot("vizScaleLookup", () => undefined);
   const parent = current;
   const canvas = getCurrentBackendHostCanvas();
-  return (id: ScaleId | undefined, type?: "linear" | "band") =>
-    findScale(parent, canvas, id, receiver, type);
+  return (
+    id: ScaleId | undefined,
+    type?: "linear" | "band" | "utc" | "continuous",
+  ) => findScale(parent, canvas, id, receiver, type);
 }
 function findScale(
   parent: Scope | undefined,
   canvas: Canvas,
   id: ScaleId | undefined,
   receiver: string,
-  type?: "linear" | "band",
+  type?: "linear" | "band" | "utc" | "continuous",
 ): Signal<ResolvedScale> | undefined {
   if (id === undefined) return undefined;
   for (let scope = parent; scope; scope = scope.parent) {

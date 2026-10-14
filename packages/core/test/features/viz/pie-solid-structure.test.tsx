@@ -2,7 +2,7 @@ import { createElement, signal, type CRCNode } from "@crc/core";
 import { PieLayout, PieLabel, PieSlice, type PieLayoutSlice } from "@crc/core/viz";
 import { expect, it, vi } from "vitest";
 import { commands } from "vitest/browser";
-import { getCRCInstance } from "../../core/src/lib/global-state.js";
+import { getCRCInstance } from "../../../src/lib/global-state.js";
 import { testRuntime } from "./support/runtime.js";
 
 const enabled = import.meta.env.VITE_CRC_VIZ_STRUCTURE === "1";

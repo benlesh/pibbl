@@ -1,9 +1,10 @@
 # HtmlBox design
 
-Status: finalized design, 2026-10-02. The user accepted the component name
-`HtmlBox` and requested finalization followed by implementation design. This is
-the implementation target, not shipped behavior. See the
-[implementation design](../plans/2026-10-02-html-box-implementation.md).
+> **Historical status: Implemented HtmlBox record; current behavior is defined by runtime contracts.**
+> Status: finalized design, 2026-10-02. The user accepted the component name
+> `HtmlBox` and requested finalization followed by implementation design. This is
+> the implementation target, not shipped behavior. See the
+> [implementation design](../plans/2026-10-02-html-box-implementation.md).
 
 The public name is `HtmlBox`; “HTML host” describes its architectural role and
 “overlay” describes its DOM placement. Neither `Html`, `HtmlHost`, nor
@@ -511,3 +512,83 @@ verified. Neither milestone is achieved by this design document alone.
 These platform capabilities support the designed architecture. Exact browser
 behavior at focus and clipping boundaries still requires the executable evidence
 listed above; no implementation or compatibility result is claimed here.
+
+## Native component event extension — 2026-10-02
+
+The user extends the approved scope to direct HtmlBox event props, including
+`onMouseMove` and `onPointerMove`, to drive Canvas effects beneath native HTML.
+HtmlBox accepts the existing `CRCEventHandlers` names and capture variants through
+`HtmlBoxEventHandlers`, a type mapping over the existing event vocabulary. Payloads
+reuse the existing CRC event types. Coordinate-bearing events additionally expose
+readonly `localX` and `localY`; no alternate event names or native redispatch API
+is introduced.
+
+`x`/`y` retain root Canvas-logical meaning. `localX`/`localY` use the HtmlBox border
+box's untransformed top-left as (0, 0), before padding. The content DIV begins at
+its resolved padding offset, so a point ten units into content with left padding
+six has localX sixteen. The original DOM target's geometry, scroll offset and
+native offsetX/offsetY never define this origin. Values are not clamped; native
+pointer capture may report points outside the box. Native keyboard-generated
+activation uses the browser's reported coordinates rather than inventing a center.
+
+Conversion uses the browser's SVG screen matrix for the root overlay origin,
+the committed root CSS projection, and the committed host world matrix. Invert
+these affine mappings to obtain root and host coordinates, respectively. This
+reuses CRC's geometry across nested Layers, viewport fits, backing density,
+rotation, reflection, nonuniform scale and translation. A shared transformed CSS
+ancestor and page scrolling are included by the browser screen matrix. No
+bounding-rectangle subtraction or offsetX/offsetY approximation is used. 3D CSS
+perspective remains outside the affine host contract. Invalid/singular projection
+or inactive/suspended hosts do not dispatch component events.
+
+Each native event is observed once at the host boundary. The CRC logical target
+is the stable HtmlBox event target; `originalEvent.target` remains the actual
+native descendant. The CRC path includes the ordinary listener ancestors across
+Groups/layout/Layers. `onXCapture` runs root-to-host during native capture; native
+descendant handlers then run; `onX` runs host-to-root when native bubbling reaches
+the host. Descendant stopPropagation therefore suppresses CRC bubbling, while
+capture observers have already run. Nonbubbling focus/blur are observed in capture
+and deliver their host handler there after ancestor capture; they do not bubble to CRC ancestors.
+Native mouseenter/leave and pointerenter/leave are observed only for the host
+boundary, not repeated for transitions among its descendants. Native over/out
+retain native descendant transitions. Document-only events (such as document
+selectionchange) are not converted into HtmlBox events; element-targeted events
+in the existing vocabulary are observed normally.
+
+The normal CRC facade exposes target/currentTarget/composedPath and eventPhase,
+with HtmlBox as the logical target even though the DOM leaf may be nested.
+Handlers share one facade per native event and retain native bubbling flags,
+including bubbling input/textarea selectionchange. Native defaultPrevented stays live
+between capture and bubble. preventDefault and propagation methods affect that
+same native event; no default is canceled automatically. Pointer/mouse native
+compatibility sequences remain independent. No Canvas hit testing, Canvas
+activation synthesis, focus default action or duplicate native dispatch runs for
+HTML events. Existing native editing, selection, scrolling, IME and control
+activation remain browser-owned. Native handlers may intentionally cancel them.
+
+HtmlBox's public event target capture methods delegate to its native host DIV.
+Native descendants can continue using their own DOM pointer capture unchanged.
+CRC ancestor currentTarget remains that ancestor's existing logical target;
+request native capture through the HtmlBox event.target or original native target,
+not a Canvas ancestor. Related targets resolve to a mounted HtmlBox in the same
+root, or null when outside those hosts. Observing events does not manufacture
+Canvas hover or focus candidates for the HTML.
+
+Each CRC capture or bubble phase batches synchronous signal writes. The capture
+batch flushes before native descendants run; the bubble phase has its own batch.
+This differs from Canvas dispatch, which can batch its entire logical path, and
+avoids keeping a transaction open across native propagation that may be stopped.
+Handler maps and inverse projections publish with the host's committed geometry.
+Renders update callback closures without replacing the DOM or its event target.
+Clean Layer replay reprojects using current outer placement while retaining its
+last committed inner handlers. Host-owned listeners reconcile required native
+types from its current CRC path, including ancestors, and are removed on abort,
+removal, failure and root disposal. Event callbacks may write signals under the
+same rules as other native event handlers.
+
+The extension requires focused public browser evidence for transformed root/local
+coordinates over nested DOM targets, padding, nested cached Layers, viewport fit,
+density, updated handler identity, capture/bubble/cancellation order, native
+controls and capture, and listener cleanup. The public HtmlBox lesson demonstrates
+a pointer-driven Canvas effect behind a transformed host and the equivalent
+mouse-move handler usage. The reviewer examines both this contract and the change.

@@ -91,7 +91,12 @@ selection changes to reuse geometry and measurements.
 
 ```tsx
 import { signal } from "@crc/core";
-import { PieLayout, PieSlice, PieLabel, type PieSliceGeometry } from "@crc/core/viz";
+import {
+  PieLayout,
+  PieSlice,
+  PieLabel,
+  type PieSliceGeometry,
+} from "@crc/core/viz";
 
 const rows = [
   { amount: 2, name: "North" },

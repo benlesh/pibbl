@@ -488,6 +488,7 @@ hit geometry can start a move. `ResizeHandle`, `ResizeHandles`, and
 content. Resize and rotation controls keep CSS-pixel visual and hit geometry
 while their centers follow the frame. See the
 [component-manipulation contract](./component-manipulation-contract.md).
+
 ## HtmlBox
 
 HtmlBox is a native HTML boundary with a logical box and no Canvas paint. It

@@ -29,15 +29,12 @@ const kernels = Object.fromEntries(
 try {
   let checks = 0;
   for (const mode of ["source", "built"]) {
-    const alias = Object.fromEntries(
-      ["core", "textures"].map((name) => [
-        `@crc/${name}`,
-        join(
-          root,
-          `packages/${name}/${mode === "source" ? "src/index.ts" : "dist/index.mjs"}`,
-        ),
-      ]),
-    );
+    const directory = mode === "source" ? "src" : "dist";
+    const extension = mode === "source" ? "ts" : "mjs";
+    const alias = {
+      "@crc/core/textures": join(root, `packages/core/${directory}/features/textures/index.${extension}`),
+      "@crc/core": join(root, `packages/core/${directory}/index.${extension}`),
+    };
     for (const name of ["plain", ...Object.keys(kernels)]) {
       const factory =
         name === "ink"

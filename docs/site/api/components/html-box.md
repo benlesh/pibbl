@@ -13,6 +13,7 @@ relatedTypes:
     HtmlMountCallback,
     HtmlUpdateFunction,
     HtmlBoxFocusState,
+    HtmlBoxEventHandlers,
   ]
 ---
 
@@ -23,19 +24,23 @@ affine transforms, inherited `PathGeometry` clips, and mounted identity. The
 browser owns its content, editing, semantics, and native events.
 
 ```tsx
-import { HtmlBox } from "@crc/core";
+import { HtmlBox, signal } from "@crc/core";
 
-<HtmlBox
-  data="Name"
-  style={{ width: 240, height: 80 }}
-  mount={(element, label, signal) => {
-    const input = document.createElement("input");
-    input.setAttribute("aria-label", label);
-    element.append(input);
-    input.addEventListener("input", () => console.log(input.value), { signal });
-    return (nextLabel) => input.setAttribute("aria-label", nextLabel);
-  }}
-/>;
+const nameField = (
+  <HtmlBox
+    data="Name"
+    style={{ width: 240, height: 80 }}
+    mount={(element, label, signal) => {
+      const input = document.createElement("input");
+      input.setAttribute("aria-label", label);
+      element.append(input);
+      input.addEventListener("input", () => console.log(input.value), {
+        signal,
+      });
+      return (nextLabel) => input.setAttribute("aria-label", nextLabel);
+    }}
+  />
+);
 ```
 
 Mount runs once after attaching the DIV. The returned function receives subsequent
@@ -76,4 +81,57 @@ Type reference: [HtmlBoxProps](#/api/types/html-box#htmlboxprops),
 [HtmlBoxStyle](#/api/types/html-box#htmlboxstyle),
 [HtmlMountCallback](#/api/types/html-box#htmlmountcallback),
 [HtmlUpdateFunction](#/api/types/html-box#htmlupdatefunction), and
-[HtmlBoxFocusState](#/api/types/html-box#htmlboxfocusstate).
+[HtmlBoxFocusState](#/api/types/html-box#htmlboxfocusstate), and
+[HtmlBoxEventHandlers](#/api/types/html-box#htmlboxeventhandlers).
+
+## Native component events
+
+Use the same event names as Canvas components:
+
+```tsx
+const effectPosition = signal({ x: 0, y: 0 });
+const localPosition = signal({ x: 0, y: 0 });
+const pointerField = (
+  <HtmlBox
+    mount={(element, title: string) => {
+      element.textContent = title;
+      return (next) => {
+        element.textContent = next;
+      };
+    }}
+    data="Move here"
+    style={{ width: 340, height: 190, padding: 12, rotationDegrees: 15 }}
+    onPointerMove={(event) => {
+      effectPosition.set({ x: event.x, y: event.y });
+      localPosition.set({ x: event.localX, y: event.localY });
+    }}
+  />
+);
+```
+
+`onMouseMove` provides the same coordinate fields for the native mouse sequence.
+Choose the pointer or mouse callback for your effect; installing both observes
+both native streams. See [HtmlBoxEventHandlers](#/api/types/html-box).
+
+The local origin is the untransformed border-box top-left, before padding. A point
+10 units inside content with 12 units of left padding reports `localX = 22`.
+`x/y` are root Canvas-logical, so a Canvas effect drawn at that position follows the
+native pointer through rotation, scaling, Layers and viewport fitting. Browser
+`offsetX/offsetY` remain native-target-relative and should not be used for this.
+
+CRC ancestor capture handlers run before native descendants; host and ancestor
+bubble handlers run after descendants. Native stopPropagation can prevent that
+bubble phase. `preventDefault()` cancels the actual native event only when you
+request it. HtmlBox does not synthesize Canvas clicks, suppress native selection,
+or run Canvas keyboard activation for native controls. Nonbubbling events keep
+ancestor capture and host handlers, with no ancestor bubble. Native event flags
+are retained, including bubbling input/textarea selectionchange; document-only
+selectionchange is not assigned to a host. Enter/leave observe the host boundary;
+over/out still reflect native descendant transitions.
+
+`event.target` identifies the HtmlBox in CRC's event path; the original native
+leaf is `event.originalEvent.target`. Use `event.target.setPointerCapture(id)`
+for the host's native capture, or capture directly on your own native control.
+An ancestor `currentTarget` still represents the Canvas ancestor, so it cannot
+request native host capture. Handlers refresh without remounting the HTML, and
+listeners are removed with the host lifecycle.

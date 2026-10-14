@@ -17,3 +17,15 @@ it('preserves generic props across JSX and createElement authoring', () => {
   const badPlain = createElement(HtmlBox, { data: { label: 123 }, mount });
   void bad; void badPlain;
 });
+
+// The existing event vocabulary retains native types and adds local coordinates
+// only for the coordinate-bearing families.
+const htmlEventAuthoring = <HtmlBox data={1} mount={() => () => undefined}
+  onMouseMove={event => { const position: number = event.localX + event.localY + event.x + event.y; void position; const native: MouseEvent = event.originalEvent; void native; }}
+  onPointerMove={event => { const pointer: number = event.pointerId; const local: number = event.localX; void pointer; void local; }}
+  onKeyDown={event => { const key: string = event.key; void key;
+    // @ts-expect-error keyboard events do not invent pointer coordinates
+    void event.localX;
+  }}
+/>;
+void htmlEventAuthoring;

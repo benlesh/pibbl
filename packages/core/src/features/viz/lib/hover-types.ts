@@ -1,8 +1,8 @@
 import type { CRCNode, SignalValue } from "@crc/core";
 import type { PointAccessor } from "./point-types.js";
-import type { ResolvedLinearScale, ScaleId } from "./types.js";
+import type { ResolvedContinuousScale, ScaleId } from "./types.js";
 export interface HoverQueryContext {
-  scale(id: ScaleId): ResolvedLinearScale;
+  scale(id: ScaleId): ResolvedContinuousScale;
 }
 export type HoverQuery<T> = (context: HoverQueryContext) => T | undefined;
 export interface HoverDataProps<T> {

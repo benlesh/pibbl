@@ -22,7 +22,7 @@ function renderHtmlBox(props: HtmlBoxProps<unknown>, style: Readonly<Resolved>, 
   let slot = refs.refs[0] as HtmlBoxSlot | undefined;
   if (!slot || slot.disposed) {
     if (typeof props.mount !== 'function') throw new TypeError('HtmlBox mount must be a function.');
-    slot = { owner, mount: props.mount, disposed: false, region: { identity: {}, owner, content: undefined, rootBounds: undefined, active: true } };
+    slot = { owner, component: refs, mount: props.mount, disposed: false, region: { identity: {}, owner, content: undefined, rootBounds: undefined, active: true } };
     const stable = slot;
     stable.region = { ...stable.region, onFocusSnapshot(snapshot) {
       queueMicrotask(() => { if (!stable.disposed) stable.callback?.(snapshot); });
@@ -32,7 +32,7 @@ function renderHtmlBox(props: HtmlBoxProps<unknown>, style: Readonly<Resolved>, 
   }
   const opacity = style.opacity ?? 1;
   if (!Number.isFinite(opacity) || opacity < 0 || opacity > 1) throw new RangeError('HtmlBox opacity must be between 0 and 1.');
-  service.register({ slot, data: props.data, matrix: getCurrentWorldTransform(),
+  service.register({ slot, handlers: props, data: props.data, matrix: getCurrentWorldTransform(),
     clips: snapshotClips(GLOBAL_STATE.clippingStack), border: style.borderBox, content: style.contentBox,
     opacity: ctx.globalAlpha * opacity, interactive: props.pointerEvents !== 'none', overflow: style.overflow ?? 'clip', onFocusChange: props.onFocusChange });
 }

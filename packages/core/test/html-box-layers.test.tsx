@@ -1,7 +1,7 @@
+import { blur } from '@crc/core/filters';
 import { userEvent } from 'vitest/browser';
 import { afterEach, describe, expect, it } from 'vitest';
 import { crc, HtmlBox, Group, Clip, Layer, Absolute, PathGeometry, signal, createElement, definePrimitive } from '@crc/core';
-import { blur } from '@crc/core/filters';
 import { clearSharedState } from '../src/lib/global-state.js';
 import { ManualSchedulerDriver, installSchedulerDriverForTest } from '../src/lib/scheduler/testing.js';
 import mountLesson from '../../scenarios/src/learning/composition/html-box.example.js';
@@ -65,7 +65,7 @@ describe('HtmlBox geometry, composition and ownership', () => {
     try{
       const missing=surface();const c1=crc(missing.canvas,<HtmlBox mount={emptyMount} data={0}/>);expect(()=>driver.flush(1)).toThrow('htmlOverlay');c1.dispose();
       const native=surface();const clip=new Path2D();clip.rect(0,0,30,30);const c2=crc(native.canvas,<Clip style={{d:clip}}><HtmlBox mount={emptyMount} data={0}/></Clip>,{htmlOverlay:native.overlay});expect(()=>driver.flush(2)).toThrow('PathGeometry');expect(native.overlay.childNodes.length).toBe(0);c2.dispose();
-      const filtered=surface();const c3=crc(filtered.canvas,<Group style={{filter:blur({radius:2})}}><HtmlBox mount={emptyMount} data={0}/></Group>,{htmlOverlay:filtered.overlay});expect(()=>driver.flush(3)).toThrow('filters');c3.dispose();
+      const filtered=surface();const c3=crc(filtered.canvas,<Group style={{filter:blur({ radius: 2 })}}><HtmlBox mount={emptyMount} data={0}/></Group>,{htmlOverlay:filtered.overlay});expect(()=>driver.flush(3)).toThrow('filters');c3.dispose();
       const composite=surface();const Composite=definePrimitive<{children:ReturnType<typeof createElement>}>((props,_style,ctx)=>{ctx.globalCompositeOperation='multiply';return props.children;});const c4=crc(composite.canvas,<Composite><HtmlBox mount={emptyMount} data={0}/></Composite>,{htmlOverlay:composite.overlay});expect(()=>driver.flush(4)).toThrow('compositing');c4.dispose();
     }finally{restore();}
   });
@@ -93,7 +93,13 @@ describe('HtmlBox geometry, composition and ownership', () => {
     const driver=new ManualSchedulerDriver();const restore=installSchedulerDriverForTest(driver);const {canvas,wrapper,overlay}=surface();overlay.remove();const original=canvas.getAttribute('style');
     const controller=mountLesson(canvas);
     try{driver.flush(1);const input=wrapper.querySelector('input')!;input.value='lesson survives';const button=wrapper.querySelector('button')!;button.click();expect(button.textContent).toBe('Native clicks: 1');
-      const rect=canvas.getBoundingClientRect();await userEvent.click(canvas,{position:{x:92/720*rect.width,y:(rect.height-480*rect.width/720)/2+116/720*rect.width}});driver.flush(2);expect(input.value).toBe('lesson survives');
+      const shell=wrapper.querySelector<HTMLElement>('[data-crc-html-box]')!;
+      const bounds=shell.getBoundingClientRect();
+      await userEvent.dragAndDrop(shell,shell,{
+        sourcePosition:{x:bounds.width / 2,y:bounds.height * 170 / 190},
+        targetPosition:{x:bounds.width * 190 / 340,y:bounds.height * 180 / 190},
+      });
+      driver.flush(2);expect(input.value).toBe('lesson survives');
       controller.dispose();expect(canvas.parentElement).toBe(wrapper);expect(canvas.getAttribute('style')).toBe(original);expect(wrapper.querySelector('[data-crc-html-box]')).toBeNull();
     }finally{controller.dispose();restore();}
   });
@@ -120,7 +126,7 @@ describe('HtmlBox geometry, composition and ownership', () => {
   it('keeps an enclosing filter unsupported even when its Layer content is cached', () => {
     const driver=new ManualSchedulerDriver();const restore=installSchedulerDriverForTest(driver);const {canvas,overlay}=surface();let mounts=0,updates=0,aborts=0;
     const child=<Layer style={{width:100,height:100}}><HtmlBox data={0} mount={(_e,_p,s)=>{mounts++;s.addEventListener('abort',()=>aborts++);return ()=>updates++;}}/></Layer>;
-    const scene=(enabled:boolean)=><Group style={{filter:enabled?blur({radius:2}):[]}}>{child}</Group>;
+    const scene=(enabled:boolean)=><Group style={{filter:enabled ? blur({ radius: 2 }) : []}}>{child}</Group>;
     const controller=crc(canvas,scene(false),{htmlOverlay:overlay});
     try{driver.flush(1);crc(canvas,scene(true));expect(()=>driver.flush(2)).toThrow('filters');expect(mounts).toBe(1);expect(updates).toBe(0);expect(aborts).toBe(1);expect(overlay.childNodes.length).toBe(0);}
     finally{controller.dispose();restore();}

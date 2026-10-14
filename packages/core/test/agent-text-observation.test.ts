@@ -28,7 +28,7 @@ it("redacts private resolved text while permitting exact fixture labels without 
     canvas,
     createElement(Text, {
       children,
-      style: { fill: "black", font: "16px sans-serif", x: 10, y: 20 },
+      style: { fill: "black", font: "16px sans-serif", left: 10, top: 20 },
     }),
   );
   try {
@@ -38,8 +38,11 @@ it("redacts private resolved text while permitting exact fixture labels without 
     expect(hidden.records[0]).toMatchObject({
       operation: "fillText",
       content: { status: "redacted" },
-      x: 10,
-      y: 20,
+      // Positioned Text resolves left/top into the Canvas transform. The
+      // recorder intentionally reports native fillText arguments, which remain
+      // primitive-local rather than root-logical coordinates.
+      x: 0,
+      y: 0,
     });
     expect(JSON.stringify(hidden)).not.toContain("PRIVATE_ACCOUNT_493");
     context.fillText("Public fixture", 3, 4);

@@ -1,11 +1,11 @@
 import { afterEach, expect, it } from "vitest";
 import { crc, Rectangle } from "@crc/core";
 import { ReactionDiffusion, type TextureRenderer } from "@crc/core/textures";
-import { clearSharedState } from "../../core/src/lib/global-state.js";
+import { clearSharedState } from "../../../src/lib/global-state.js";
 import {
   ManualSchedulerDriver,
   installSchedulerDriverForTest,
-} from "../../core/src/lib/scheduler/testing.js";
+} from "../../../src/lib/scheduler/testing.js";
 
 afterEach(() => {
   clearSharedState();

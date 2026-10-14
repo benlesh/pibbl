@@ -4,7 +4,7 @@ import { tendrils, lightning } from "@crc/core/textures";
 import {
   ManualSchedulerDriver,
   installSchedulerDriverForTest,
-} from "../../core/src/lib/scheduler/testing.js";
+} from "../../../src/lib/scheduler/testing.js";
 it("allocates fixed WASM memory for both electric generators and reuses it through animation", () => {
   const native = WebAssembly.Memory;
   const memory = vi
@@ -52,8 +52,8 @@ it("allocates fixed WASM memory for both electric generators and reuses it throu
 });
 
 import { type Texture, type TextureRecipe } from "@crc/core";
-import { tendrils as jsTendrils } from "../../../tooling/texture-wasm-spike/reference-electric/tendrils.js";
-import { lightning as jsLightning } from "../../../tooling/texture-wasm-spike/reference-electric/lightning.js";
+import { tendrils as jsTendrils } from "../../../../../tooling/texture-wasm-spike/reference-electric/tendrils.js";
+import { lightning as jsLightning } from "../../../../../tooling/texture-wasm-spike/reference-electric/lightning.js";
 function replay(
   recipe: TextureRecipe<any>,
   commands: (frame: number, texture: Texture<any>) => void,

@@ -16,7 +16,7 @@
     "test": "corepack pnpm@11.21.0 test:ui",
     "test:ci": "vitest run --browser.headless --maxWorkers=4",
     "test:smoke": "vitest run packages/core/test/smoke-scenario.test.ts --browser.headless --browser.ui=false",
-    "test:smoke:built": "corepack pnpm@11.21.0 build && vitest run packages/core/test/smoke-scenario.test.ts packages/core/test/features/textures/public-smoke.test.tsx packages/core/test/features/particles/public-flow-smoke.test.tsx --mode built --browser.headless --browser.ui=false",
+    "test:smoke:built": "corepack pnpm@11.21.0 build && vitest run packages/core/test/smoke-scenario.test.ts packages/core/test/html-box-smoke.test.ts packages/core/test/features/textures/public-smoke.test.tsx packages/core/test/features/particles/public-flow-smoke.test.tsx --mode built --browser.headless --browser.ui=false",
     "test:package-consumer": "corepack pnpm@11.21.0 build && tsc -p playground/package-consumer/tsconfig.bundler.json && tsc -p playground/package-consumer/tsconfig.nodenext.json && node playground/package-consumer/runtime.mjs",
     "test:package-consumer:packed": "corepack pnpm@11.21.0 build && node tooling/verify-bundle-sizes.mjs && node tooling/verify-packed-pivot.mjs && node tooling/verify-packed-viz.mjs && node tooling/verify-packed-textures.mjs && node tooling/verify-optional-feature-bundles.mjs && node --test tooling/optional-import-inertness.test.mjs",
     "test:package-entries": "vitest run --config tooling/package-entries.vitest.config.ts",

@@ -1,4 +1,4 @@
-import { resolveTexturePaint } from '@crc/core/internal';
+import { resolveTexturePaint } from "@crc/core/internal";
 import {
   Path,
   isSignal,
@@ -69,8 +69,8 @@ export function PointSeries<D>({
   style: styleInput,
   ...events
 }: PointSeriesProps<D>) {
-  const xs = useScale(xId).get(),
-    ys = useScale(yId).get();
+  const xs = useScale(xId, "continuous").get(),
+    ys = useScale(yId, "continuous").get();
   const data = pointData(resolveSignalValue(input), "PointSeries");
   const x = pointAccessor(xInput),
     y = pointAccessor(yInput);
@@ -115,11 +115,21 @@ export function PointSeries<D>({
     try {
       ctx.globalAlpha *= style.opacity;
       if (style.fill) {
-        ctx.fillStyle = resolveTexturePaint(style.fill, ctx, { x: px - style.radius, y: py - style.radius, width: style.radius * 2, height: style.radius * 2 });
+        ctx.fillStyle = resolveTexturePaint(style.fill, ctx, {
+          x: px - style.radius,
+          y: py - style.radius,
+          width: style.radius * 2,
+          height: style.radius * 2,
+        });
         ctx.fill(path);
       }
       if (style.stroke && style.strokeWidth > 0) {
-        ctx.strokeStyle = resolveTexturePaint(style.stroke, ctx, { x: px - style.radius, y: py - style.radius, width: style.radius * 2, height: style.radius * 2 });
+        ctx.strokeStyle = resolveTexturePaint(style.stroke, ctx, {
+          x: px - style.radius,
+          y: py - style.radius,
+          width: style.radius * 2,
+          height: style.radius * 2,
+        });
         ctx.lineWidth = style.strokeWidth;
         ctx.stroke(path);
       }

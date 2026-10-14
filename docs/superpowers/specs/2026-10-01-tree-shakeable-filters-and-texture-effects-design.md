@@ -685,3 +685,53 @@ need implementation evidence rather than further speculative API design:
 If evidence contradicts a proposed backend choice, revise this draft and explain
 the change. Do not weaken the appearance-only or optional-dependency guarantees to
 make an implementation pass.
+
+## Concurrent texture and WASM integration clarification
+
+The ongoing plasma/lightning work and production WASM migration share the existing
+`defineTexture` / `useTexture` resource lifecycle with this design. A texture
+produces pixels; a filter consumes the committed texture publication to change
+presentation. Generator implementation is private: JavaScript Canvas drawing and
+WASM-backed rasterization must have identical ownership, invalidation, scheduling,
+and consumer semantics. Neither the filter nor its consumer may borrow a raw WASM
+memory view or depend on a particular generator's state layout.
+
+Transparent frames replace the previous publication, including alpha. A reused
+candidate surface must be cleared before copying the producer surface. Publishing
+with source-over alone would accumulate stale plasma arcs and corrupt displacement
+maps with transparent regions. Candidate preparation remains isolated from the
+committed surface until the existing transaction adopts it.
+
+WASM modules must remain independently removable per recipe. Importing marble
+must not retain paper, cellular, ink, electric effects, or water. Importing water
+must not acquire unrelated WASM kernels. Inert recipe construction may carry a
+purity annotation after confirming that it allocates no host resource and performs
+no external registration. Compilation and memory allocation belong to resource
+creation, not module import. The source and packed esbuild/Vite bundle matrix must
+check embedded kernel retention as well as ordinary JavaScript modules.
+
+Animation and physics may provide parameters and typed messages through the
+existing CRC phases. Sharing conceptual data does not imply sharing WebAssembly
+memory: cross-module physics/texture integration uses explicit small value batches
+and retains each resource's ownership. No second clock or framebuffer readback is
+introduced. Water's current generator remains JavaScript; moving it to WASM is a
+separate backend change that must preserve its observable output and timing.
+
+## Integrated water and production-WASM amendment (2026-10-02)
+
+This integration amendment records the shipped behavior merged from
+`origin/main` (including water-heightfield work) and the package-consolidation
+snapshot. It supersedes the preceding branch-qualified statement that water's
+current generator remains JavaScript. `waterSurface()` is a bounded WASM height
+field with reflective edges and normalized rectangular obstacles; `reflectedLight()`
+is an optional appearance-only surface effect that can follow displacement. Both
+retain the texture publication, scheduler, ownership, and no-readback boundaries
+above.
+
+Production marble, paper, cellular, reaction-diffusion, electric, wave, and water
+generators use independently removable embedded WASM modules. Each resource owns
+its bounded memory and compiles lazily at creation. Animation or physics exchanges
+only validated value messages with those resources; raw memory, a second clock,
+and cross-resource framebuffer readback remain outside the contract. The trust
+gate preserves source/packed retention, reproducibility, and public lifecycle
+evidence for these integrated implementations.

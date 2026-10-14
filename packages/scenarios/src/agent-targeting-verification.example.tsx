@@ -75,7 +75,7 @@ export function AgentTargetingVerificationScene({
       />
       {rendered.mode === 'pagination' ? Array.from({ length: 100 }, (_, index) => <Rectangle
         key={index}
-        style={{ x: 300 + (index % 10) * 6, y: 174 + Math.floor(index / 10) * 6, width: 4, height: 4, fill: '#0f766e' }}
+        style={{ left: 300 + (index % 10) * 6, top: 174 + Math.floor(index / 10) * 6, width: 4, height: 4, fill: '#0f766e' }}
         onClick={() => undefined}
       />) : null}
       <Group style={{ translateX: 40, translateY: 32 }}>

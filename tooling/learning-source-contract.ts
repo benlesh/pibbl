@@ -1116,10 +1116,16 @@ function inspectSource(source: string, label: string): SourceInspection {
     );
 
   const manipulationBindings = new Set<string>();
+  const manipulationBoxBindings = new Set<string>();
   walk(file, (node) => {
     if (node.type !== "VariableDeclarator") return;
     const name = identifierName(node.id);
     const initializer = unwrapTransparentExpression(node.init);
+    if (name && initializer?.type === "CallExpression" &&
+        resolveCoreValue(initializer.callee) === "useSignal" &&
+        isInspectableObject(nodes(initializer.arguments)[0])) {
+      manipulationBoxBindings.add(name);
+    }
     if (
       name &&
       initializer?.type === "CallExpression" &&
@@ -1151,7 +1157,8 @@ function inspectSource(source: string, label: string): SourceInspection {
     }
     if (isInspectableObject(props)) {
       const style = objectPropertyValue(props, "style");
-      if (style !== undefined && !isInspectableObject(style)) {
+      if (style !== undefined && !isInspectableObject(style) &&
+          !(componentName === "Manipulable" && manipulationBoxBindings.has(identifierName(style) ?? ""))) {
         hasUninspectableProps = true;
       }
     }
@@ -1297,7 +1304,8 @@ function inspectSource(source: string, label: string): SourceInspection {
       if (
         componentName !== undefined &&
         styleAttribute !== undefined &&
-        !isInspectableObject(style)
+        !isInspectableObject(style) &&
+        !(componentName === "Manipulable" && manipulationBoxBindings.has(identifierName(style) ?? ""))
       ) {
         hasUninspectableProps = true;
       }

@@ -1,11 +1,12 @@
 # HtmlBox implementation design
 
-Status: approved for complete implementation, 2026-10-02. Plan review by the
-`review` subagent is complete; dispositions are below. The user explicitly
-requested continuous overnight implementation, implementation review, fixes, and
-a commit. Deliver the first runnable slice promptly, then continue hardening
-without waiting for experiential feedback. Preserve unrelated working-tree work.
-Active execution: [Plan 004](../../project-plans/004-html-box.md).
+> **Historical status: Implemented HtmlBox record; current behavior is defined by runtime contracts.**
+> Status: approved for complete implementation, 2026-10-02. Plan review by the
+> `review` subagent is complete; dispositions are below. The user explicitly
+> requested continuous overnight implementation, implementation review, fixes, and
+> a commit. Deliver the first runnable slice promptly, then continue hardening
+> without waiting for experiential feedback. Preserve unrelated working-tree work.
+> Active execution: [Plan 004](../../project-plans/004-html-box.md).
 
 **Target:** [Finalized HtmlBox design](../specs/2026-10-02-html-host-design.md).
 
@@ -477,3 +478,24 @@ implementation:
     only one focus manager per root. Preserve that rule; do not implement the
     draft’s hypothetical multiple-manager support. Nested directional policies
     remain supported.
+
+## Event extension implementation slice
+
+The user extended the goal before the final commit. Follow the added native event
+contract in the design. Add a focused failing public test first, then a dedicated
+host-owned native bridge with a stable virtual event node, current callback map
+and committed inverse matrices. Reuse the existing facade and node-invocation
+machinery but split native capture and native bubble around descendant DOM work.
+Do not enter Canvas hit testing or its synthetic activation/default-action path.
+Use the overlay SVG screen matrix with explicit zero-origin positioning; its
+zero-sized viewport without viewBox was characterized in Chromium under shared
+ancestor rotation and scale. Extend the same public lesson with the Canvas effect
+and preserve built-mode smoke coverage. Review the implementation, update approved
+contract-unit mappings, and include all work in the final local commit.
+
+Review clarifications: nonbubbling focus/blur preserve existing CRC ancestor
+capture semantics and omit ancestor bubble. Element-targeted selectionchange is
+observable; document-only selectionchange is not relayed into an arbitrary host.
+Native enter/leave listeners are direct host-boundary observations and do not use
+Canvas's over/move event dependency expansion. A dedicated virtual node never
+acquires Canvas native subscriptions or logical Canvas pointer capture.

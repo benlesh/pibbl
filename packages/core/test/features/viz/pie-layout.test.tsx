@@ -1,8 +1,8 @@
-import { Rectangle, signal, useSignal } from "@crc/core";
+import { Rectangle, signal, useLayoutBox, useSignal } from "@crc/core";
 import * as viz from "@crc/core/viz";
 import { afterEach, expect, it, vi } from "vitest";
-import { boxOutsideInnerCircle } from "../src/lib/layout-pie.js";
-import { getCRCInstance } from "../../core/src/lib/global-state.js";
+import { boxOutsideInnerCircle } from "../../../src/features/viz/lib/layout-pie.js";
+import { getCRCInstance } from "../../../src/lib/global-state.js";
 import { testRuntime } from "./support/runtime.js";
 let runtime: ReturnType<typeof testRuntime>;
 afterEach(() => runtime?.dispose());
@@ -146,17 +146,25 @@ it("hides a non-fitting donut label inside and moves it outside in auto mode", (
     </viz.PieLayout>,
   );
   runtime.flush();
-  expect(result?.label).toMatchObject({ status: "hidden", reason: "inside-fit" });
+  expect(result?.label).toMatchObject({
+    status: "hidden",
+    reason: "inside-fit",
+  });
   placement.set("auto");
   runtime.flush();
-  expect(result?.label).toMatchObject({ status: "placed", placement: "outside" });
+  expect(result?.label).toMatchObject({
+    status: "placed",
+    placement: "outside",
+  });
 });
 it("re-evaluates pie accessors and labels by default on each consuming render", () => {
   runtime = testRuntime();
   const placement = signal<viz.PieLabelPlacement>("outside");
   const data = [1];
   const value = vi.fn((n: number) => n);
-  const label = vi.fn((slice: viz.PieSliceGeometry<number>) => `${slice.value}`);
+  const label = vi.fn(
+    (slice: viz.PieSliceGeometry<number>) => `${slice.value}`,
+  );
   function Scene() {
     return (
       <viz.PieLayout
@@ -293,8 +301,9 @@ it("bounds a large finite structural annular sweep as one full clockwise turn", 
     />,
   );
   expect(() => runtime.flush()).not.toThrow();
-  expect([...getCRCInstance(canvas).eventRoot.targets][0]
-    ?.keyboardNavigationBounds).toEqual({ x: 20, y: 20, width: 160, height: 160 });
+  expect(
+    [...getCRCInstance(canvas).eventRoot.targets][0]?.keyboardNavigationBounds,
+  ).toEqual({ x: 20, y: 20, width: 160, height: 160 });
 });
 it("bounds an extreme finite structural annular sweep", () => {
   runtime = testRuntime();
@@ -318,8 +327,9 @@ it("bounds an extreme finite structural annular sweep", () => {
     />,
   );
   expect(() => runtime.flush()).not.toThrow();
-  expect([...getCRCInstance(canvas).eventRoot.targets][0]
-    ?.keyboardNavigationBounds).toEqual({ x: 20, y: 20, width: 160, height: 160 });
+  expect(
+    [...getCRCInstance(canvas).eventRoot.targets][0]?.keyboardNavigationBounds,
+  ).toEqual({ x: 20, y: 20, width: 160, height: 160 });
 });
 it.each([
   { radius: 0, innerRadius: 1 },
@@ -330,11 +340,7 @@ it.each([
 ])("rejects invalid inner radius allocation %j", (style) => {
   runtime = testRuntime();
   runtime.mount(
-    <viz.PieLayout
-      data={[1]}
-      value={(value: number) => value}
-      style={style}
-    >
+    <viz.PieLayout data={[1]} value={(value: number) => value} style={style}>
       {(slice) => <viz.PieSlice slice={slice} />}
     </viz.PieLayout>,
   );
@@ -351,7 +357,13 @@ it("keeps keyed donut state on reorder and releases removed interaction targets"
   function Mark({ slice }: { slice: viz.PieLayoutSlice<Row> }) {
     const state = useSignal({});
     states.set(slice.key, state);
-    return <viz.PieSlice slice={slice} style={{ fill: "red" }} onPointerDown={() => undefined} />;
+    return (
+      <viz.PieSlice
+        slice={slice}
+        style={{ fill: "red" }}
+        onPointerDown={() => undefined}
+      />
+    );
   }
   function Scene() {
     return (
@@ -514,4 +526,159 @@ it("fans tiny-slice leaders apart immediately without crossing the pie", () => {
       (a[0] - 300) * (b[0] - a[0]) + (a[1] - 200) * (b[1] - a[1]),
     ).toBeGreaterThanOrEqual(-1e-8);
   }
+});
+it("places explicit custom label boxes, tracks their signals, and unmounts hidden content", () => {
+  runtime = testRuntime();
+  const width = signal(200);
+  const states: object[] = [];
+  const allocations: { width: number; height: number }[] = [];
+  let result: viz.PieLayoutSlice<{ id: string; value: number }>[] = [];
+  function Card() {
+    const state = useSignal({});
+    const box = useLayoutBox();
+    states.push(state);
+    allocations.push({ width: box.width, height: box.height });
+    return <Rectangle style={{ width: 20, height: 16, fill: "blue" }} />;
+  }
+  function Scene() {
+    result = [];
+    return (
+      <viz.PieLayout
+        data={[{ id: "a", value: 1 }]}
+        value="value"
+        keyBy="id"
+        revision={0}
+        placement="inside"
+        labelBox={() => ({ width: width.get(), height: 20 })}
+        style={{ cx: 100, cy: 100, radius: 60, innerRadius: 20 }}
+      >
+        {(slice) => {
+          result.push(slice);
+          return (
+            <viz.PieSlice slice={slice} style={{ fill: "red" }}>
+              <viz.PieLabel slice={slice}>
+                <Card />
+              </viz.PieLabel>
+            </viz.PieSlice>
+          );
+        }}
+      </viz.PieLayout>
+    );
+  }
+  runtime.mount(<Scene />);
+  runtime.flush();
+  expect(result[0]?.label).toMatchObject({
+    kind: "content",
+    status: "hidden",
+    reason: "inside-fit",
+  });
+  expect(states).toEqual([]);
+  width.set(20);
+  runtime.flush();
+  expect(result[0]?.label).toMatchObject({
+    kind: "content",
+    status: "placed",
+    placement: "inside",
+    width: 20,
+    height: 20,
+  });
+  expect(states).toHaveLength(1);
+  expect(allocations.at(-1)).toEqual({ width: 20, height: 20 });
+  const visible = states[0];
+  width.set(200);
+  runtime.flush();
+  expect(result[0]?.label).toMatchObject({ kind: "content", status: "hidden" });
+  width.set(20);
+  runtime.flush();
+  expect(states).toHaveLength(2);
+  expect(states[1]).not.toBe(visible);
+});
+it("falls back to an outside custom label box and rejects ambiguous label sources", () => {
+  runtime = testRuntime();
+  let result: viz.PieLayoutSlice<number>[] = [];
+  runtime.mount(
+    <viz.PieLayout
+      data={[1]}
+      value={(value: number) => value}
+      labelBox={() => ({ width: 100, height: 30 })}
+      placement="auto"
+      bounds={{ x: 0, y: 0, width: 320, height: 260 }}
+      style={{ cx: 150, cy: 130, radius: 60, innerRadius: 20 }}
+    >
+      {(slice) => {
+        result.push(slice);
+        return (
+          <viz.PieLabel slice={slice}>
+            <Rectangle style={{ width: 100, height: 30 }} />
+          </viz.PieLabel>
+        );
+      }}
+    </viz.PieLayout>,
+  );
+  runtime.flush();
+  expect(result[0]?.label).toMatchObject({
+    kind: "content",
+    status: "placed",
+    placement: "outside",
+  });
+
+  runtime.dispose();
+  runtime = testRuntime();
+  const invalidLabels = {
+    data: [1],
+    value: (value: number) => value,
+    label: () => "one",
+    labelBox: () => ({ width: 20, height: 20 }),
+  } as unknown as viz.PieLayoutProps<number>;
+  runtime.mount(
+    <viz.PieLayout {...invalidLabels}>
+      {(slice) => <viz.PieLabel slice={slice} />}
+    </viz.PieLayout>,
+  );
+  expect(() => runtime.flush()).toThrow(/mutually exclusive/);
+});
+it("preserves visible custom label child state by slice key on reorder", () => {
+  runtime = testRuntime();
+  type Row = { id: string; value: number };
+  const rows = signal<Row[]>([
+    { id: "a", value: 1 },
+    { id: "b", value: 1 },
+  ]);
+  const states = new Map<string, object>();
+  function Card({ slice }: { slice: viz.PieLayoutSlice<Row> }) {
+    const state = useSignal({});
+    states.set(slice.key, state);
+    return <Rectangle style={{ width: 20, height: 20, fill: "blue" }} />;
+  }
+  function Scene() {
+    return (
+      <viz.PieLayout
+        data={rows}
+        value="value"
+        keyBy="id"
+        revision={0}
+        labelBox={() => ({ width: 20, height: 20 })}
+        placement="inside"
+        style={{ cx: 100, cy: 100, radius: 70 }}
+      >
+        {(slice) => (
+          <viz.PieSlice slice={slice} style={{ fill: "red" }}>
+            <viz.PieLabel slice={slice}>
+              <Card slice={slice} />
+            </viz.PieLabel>
+          </viz.PieSlice>
+        )}
+      </viz.PieLayout>
+    );
+  }
+  runtime.mount(<Scene />);
+  runtime.flush();
+  const firstA = states.get("a");
+  const firstB = states.get("b");
+  expect(firstA).toBeDefined();
+  expect(firstB).toBeDefined();
+  rows.set([...rows.get()].reverse());
+  runtime.flush();
+  expect(states.get("a")).toBe(firstA);
+  expect(states.get("b")).toBe(firstB);
 });

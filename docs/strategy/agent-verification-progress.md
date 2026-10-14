@@ -1,5 +1,32 @@
 # Agent verification continuation audit
 
+## Package-relocation recertification, 2026-10-02
+
+The package consolidation changed only the inventory's package names and source
+locations: visualization now lives at `@crc/core/viz`, physics testing at
+`@crc/core/physics/2d/testing`, and the source map points to the consolidated
+core feature directories. All 373 requirement IDs and their wording are
+unchanged. The ledger's inventory binding and every complete-closure file hash
+were reconciled against those deliberate moves.
+
+The relocation also changed the observable transform representation for the
+layout fixture. `left` and `top` are now part of the receiving primitive's
+transform, so its native entry-local center is `(10, 10)` while the declared
+parent-local drawing offset remains `(90, 0)`. The fixture and its independent
+geometry oracle retain the same root centers, clipping, pixels, and pointer
+outcomes. Text recording similarly reports native `fillText(0, 0)` arguments
+after positioned Text is transformed; it does not silently reinterpret those
+arguments as root coordinates.
+
+Fresh source-browser verification passed 16 focused files / 87 assertions, including runtime
+identity, targeting pagination/observation, layout placement/workflow/relations,
+text, signal mutation, and visualization checks. The focused Node verification
+suite passed 78 tests, and both current peer audits also passed. Receipts are retained in
+`docs/testing/integration-evidence/agent-closure-browser.json`,
+`agent-closure-node.txt`, `declared-peers.json`, and `installed-peers.json`.
+Historical native replay receipts remain dated evidence; this recertification
+does not claim a new native replay or aggregate trust pass.
+
 > **Delivery stopped at the user-requested cutoff (2026-10-01).** The four
 > priority reference workflows and saved-evidence queries passed. Aggregate trust
 > is not green: existing package-manifest changes invalidate ENV-03 closure

@@ -3,6 +3,8 @@ export { useScale } from "./lib/use-scale.js";
 export type {
   ScaleId,
   LinearDomain,
+  NumericDomain,
+  UtcDomain,
   BandCategory,
   BandDomain,
   BandScaleProps,
@@ -11,10 +13,14 @@ export type {
   ScaleRange,
   ScaleLayoutStyle,
   LinearScaleProps,
+  UtcScaleProps,
   ScaleProps,
   ResolvedLinearScale,
+  ResolvedUtcScale,
+  ResolvedContinuousScale,
   ResolvedScale,
 } from "./lib/types.js";
+export { extent, niceDomain } from "./lib/utc-scale.js";
 export { Axis } from "./lib/axis.js";
 export { LineSeries } from "./lib/line-series.js";
 export { ScaleAdjust } from "./lib/scale-adjust.js";
@@ -96,4 +102,14 @@ export { pieSlices } from "./lib/pie-slices.js";
 export type { PieOptions, PieSliceGeometry } from "./lib/pie-slices.js";
 
 export { PieLayout, PieSlice, PieLabel } from "./lib/pie-layout.js";
-export type { PieLayoutProps, PieLayoutStyle, PieLayoutSlice, PieLabelPlacement, PieLabelLayout, PieSliceProps, PieSliceStyle, PieLabelProps, PieLabelStyle } from "./lib/pie-types.js";
+export type {
+  PieLayoutProps,
+  PieLayoutStyle,
+  PieLayoutSlice,
+  PieLabelPlacement,
+  PieLabelLayout,
+  PieSliceProps,
+  PieSliceStyle,
+  PieLabelProps,
+  PieLabelStyle,
+} from "./lib/pie-types.js";

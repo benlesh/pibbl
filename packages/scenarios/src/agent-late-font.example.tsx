@@ -10,5 +10,5 @@ export function AgentLateFontScene({ revision, family, onEvaluation }: {
  const { width } = useLayoutBox();
  const fontSize = width < 300 ? 16 : 24;
  onEvaluation({ width, fontSize });
- return <Text style={{x:10,y:10,font:`${fontSize}px "${family}", monospace`,fill:'#2563eb'}}>MMMM</Text>;
+ return <Text style={{left:10,top:10,font:`${fontSize}px "${family}", monospace`,fill:'#2563eb'}}>MMMM</Text>;
 }

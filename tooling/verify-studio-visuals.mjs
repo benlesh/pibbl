@@ -178,7 +178,8 @@ try {
     // routes in the same page, even after iframe fonts and paint have settled.
     // Capture it in a fresh page; navigation continuity is covered separately
     // by the Studio documentation acceptance suite.
-    const isolated = route.name === "filters";
+    const isolated =
+      route.name === "filters" || route.name === "diagram-editor-finished";
     const page = isolated
       ? await browser.newPage({
           viewport: { width: 1280, height: 900 },

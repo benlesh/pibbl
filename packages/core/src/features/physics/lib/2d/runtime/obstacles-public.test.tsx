@@ -22,8 +22,8 @@ import {
 import {
   installSchedulerDriverForTest,
   ManualSchedulerDriver,
-} from "../../../../../core/src/lib/scheduler/testing.js";
-import { clearSharedState } from "../../../../../core/src/lib/global-state.js";
+} from "../../../../../lib/scheduler/testing.js";
+import { clearSharedState } from "../../../../../lib/global-state.js";
 
 let dispose = () => {};
 afterEach(() => {

@@ -54,14 +54,14 @@ contention observed during earlier upgrade and visual work.
 - the fixed preservation manifest records every normalized prose paragraph,
   list obligation, table row, and fenced-code obligation from the normative
   contract baseline (667 units), with per-file source digests, plus the complete
-  reviewed current form (833 units across 12 baseline-snapshotted contracts)
+  reviewed current form (837 units across 12 baseline-snapshotted contracts)
   and explicit approved translation, retirement, and addition mappings tied to
   narrow design unit IDs and excerpts; every translation has exact
   baseline/current unit IDs, unique rationale,
   shared clause anchors, and minimum content similarity checked before the
-  digest. Together with 199 mapped units across the post-baseline textures,
+  digest. Together with 225 mapped units across the post-baseline textures,
   signal, animation, render-layer/Three, component-manipulation, 2D physics, and text geometry
-  records, this covers 19 current normative contracts. The 56 direct source/test mappings use claims no broader than their
+  records, this covers 20 current normative contracts. The 56 direct source/test mappings use claims no broader than their
   cited tests and require the same claim-specific anchors near both markers;
 - the migration guide contains one mechanically checked row for each of the 85
   field/structural inputs derived from the reviewed baseline style table, and

@@ -92,18 +92,6 @@
       "unitPrefix": "p"
     },
     {
-      "id": "component-manipulation",
-      "path": "docs/superpowers/specs/2026-09-28-component-manipulation-design.md",
-      "sourceSha256": "56c97b229f807ef529f152bf9858bd48f26ecca7f340441645d2162492e6a80a",
-      "unitPrefix": "n"
-    },
-    {
-      "id": "child-defined-drag-handles",
-      "path": "docs/superpowers/specs/2026-09-29-child-defined-drag-handles.md",
-      "sourceSha256": "089b9bbb68b2694321e646ca2d2c2edc482e6beb35befe66027d97da80575f95",
-      "unitPrefix": "h"
-    },
-    {
       "id": "physics-2d-quality",
       "path": "docs/superpowers/specs/2026-09-29-physics-2d-quality-design.md",
       "sourceSha256": "c77f63950ecf004946146ce1238d14de25be03b639fc53616a9791e103d033fe",
@@ -116,12 +104,6 @@
       "unitPrefix": "q"
     },
     {
-      "id": "text-path-geometry",
-      "path": "docs/superpowers/specs/2026-09-30-text-path-geometry-design.md",
-      "sourceSha256": "137d802bc97c193b2d669a904c0ce04628847c5120e6d6ba00e39923afac44f4",
-      "unitPrefix": "y"
-    },
-    {
       "id": "four-corner-path-warp",
       "path": "docs/superpowers/specs/2026-09-30-path-warp-design.md",
       "sourceSha256": "00c1e512db47743561fe0c9d2e4d4e1af69f9d0ed50f6163c2cf75dafbc8885a",
@@ -130,13 +112,13 @@
     {
       "id": "procedural-textures",
       "path": "docs/superpowers/specs/2026-09-30-procedural-textures-design.md",
-      "sourceSha256": "a3037df203612535df390350599377dcfb8953ef2ceff1c7c14fd9b07954e848",
+      "sourceSha256": "5c848b2978d3b8887bfa4851092fefc6f93591e4e167c2da5321704d33a8e075",
       "unitPrefix": "d"
     },
     {
       "id": "tree-shakeable-filters-and-texture-effects",
       "path": "docs/superpowers/specs/2026-10-01-tree-shakeable-filters-and-texture-effects-design.md",
-      "sourceSha256": "f2599fd238c4cb212ccf6e4ceae8a0cb606746c17173fa81f40d12219bf3b3b9",
+      "sourceSha256": "c5b0327683729f037fe836117643e872e712e4be9ea0b5b5e2ec0b627c90b258",
       "unitPrefix": "n"
     },
     {
@@ -148,8 +130,26 @@
     {
       "id": "html-box",
       "path": "docs/superpowers/specs/2026-10-02-html-host-design.md",
-      "sourceSha256": "12848b886cb664de24e90403082f52c205aaf9e9e47a7c8beadf71e3563f609b",
+      "sourceSha256": "973caf1a19fa80ae0886edad2796deefb798d0d08be88d5443e1de8693506988",
       "unitPrefix": "u"
+    },
+    {
+      "id": "component-manipulation",
+      "path": "docs/superpowers/specs/2026-09-28-component-manipulation-design.md",
+      "sourceSha256": "56c97b229f807ef529f152bf9858bd48f26ecca7f340441645d2162492e6a80a",
+      "unitPrefix": "n"
+    },
+    {
+      "id": "child-defined-drag-handles",
+      "path": "docs/superpowers/specs/2026-09-29-child-defined-drag-handles.md",
+      "sourceSha256": "089b9bbb68b2694321e646ca2d2c2edc482e6beb35befe66027d97da80575f95",
+      "unitPrefix": "h"
+    },
+    {
+      "id": "text-path-geometry",
+      "path": "docs/superpowers/specs/2026-09-30-text-path-geometry-design.md",
+      "sourceSha256": "137d802bc97c193b2d669a904c0ce04628847c5120e6d6ba00e39923afac44f4",
+      "unitPrefix": "y"
     }
   ],
   "contracts": [
@@ -3386,6 +3386,12 @@
           "kind": "prose",
           "section": "Component manipulation",
           "text": "`ManipulationFrame` binds one writable finite box signal to a positioned local allocation. `DragHandle` is a structural listener: only participating descendant hit geometry can start a move. `ResizeHandle`, `ResizeHandles`, and `RotationHandle` retain explicit control geometry. No frame infers bounds from content. Resize and rotation controls keep CSS-pixel visual and hit geometry while their centers follow the frame. See the [component-manipulation contract](./component-manipulation-contract.md)."
+        },
+        {
+          "id": "c0088",
+          "kind": "prose",
+          "section": "HtmlBox",
+          "text": "HtmlBox is a native HTML boundary with a logical box and no Canvas paint. It uses existing Group transforms and box allocation, portable PathGeometry clips, and the shared scheduler. It always appears above the canvas. See the [HtmlBox contract](./html-box-contract.md) for authoring and native focus."
         }
       ]
     },
@@ -7934,6 +7940,12 @@
           "kind": "prose",
           "section": "Component manipulation ownership",
           "text": "A manipulation controller owns native pointer capture, bounded source observations, and its temporary session until a terminal event, frame removal, component teardown, or root disposal. Release is idempotent. Teardown restores only a preview still owned by that session and invokes no disposed callback. If a signal write guard prevents immediate restoration, CRC queues one generation-checked Begin cleanup record; a newer external write or later owner generation invalidates it. See the [component-manipulation contract](./component-manipulation-contract.md)."
+        },
+        {
+          "id": "c0066",
+          "kind": "prose",
+          "section": "HtmlBox ownership",
+          "text": "A configured root exclusively reserves its application-owned overlay. Component identities own persistent DIVs and AbortControllers; the root owns SVG clipping definitions and publication snapshots. Abort fires once before removing connected content, including partial setup/update failure. Root disposal removes owned nodes and listeners and releases the lease. See the [HtmlBox contract](./html-box-contract.md)."
         }
       ]
     },
@@ -12088,6 +12100,53 @@
       "sharedAnchors": ["PathGeometry"]
     },
     {
+      "id": "four-corner-path-warp-drawing-components",
+      "path": "docs/design/drawing-components-contract.md",
+      "currentIds": ["c0080", "c0081", "c0082"],
+      "reason": "four-corner-path-warp units z0003 z0005 z0007 z0012 z0012 z0012 z0018 z0027 z0027 z0027 z0027 z0027 z0027 z0032 z0032 z0032 z0032 z0034 z0050 z0050 z0050 z0050 z0050 z0077 z0077 z0077 z0077 z0077 z0077 z0077 z0077 z0077 z0077 z0077 z0077 authorize drawing contract units c0080 c0081 c0082 for the source/destination mapping, destination-space tolerance, PathGeometry ownership, and evidence. Approved design units: z0003, z0005, z0007, z0010, z0011, z0012, z0018, z0022, z0023, z0024, z0025, z0026, z0027, z0029, z0030, z0031, z0032, z0034, z0046, z0047, z0048, z0049, z0050, z0066, z0067, z0068, z0069, z0070, z0071, z0072, z0073, z0074, z0075, z0076, z0077.",
+      "approval": {
+        "recordId": "four-corner-path-warp",
+        "unitIds": [
+          "z0003",
+          "z0005",
+          "z0007",
+          "z0010",
+          "z0011",
+          "z0012",
+          "z0018",
+          "z0022",
+          "z0023",
+          "z0024",
+          "z0025",
+          "z0026",
+          "z0027",
+          "z0029",
+          "z0030",
+          "z0031",
+          "z0032",
+          "z0034",
+          "z0046",
+          "z0047",
+          "z0048",
+          "z0049",
+          "z0050",
+          "z0066",
+          "z0067",
+          "z0068",
+          "z0069",
+          "z0070",
+          "z0071",
+          "z0072",
+          "z0073",
+          "z0074",
+          "z0075",
+          "z0076",
+          "z0077"
+        ]
+      },
+      "sharedAnchors": ["source", "tolerance", "geometry"]
+    },
+    {
       "id": "mutable-path-geometry-runtime-hooks",
       "path": "docs/design/runtime-hooks-contract.md",
       "currentIds": ["c0071"],
@@ -12108,6 +12167,109 @@
         "unitIds": ["q0005", "q0006", "q0008", "q0047", "q0048", "q0049"]
       },
       "sharedAnchors": ["PathGeometry", "snapshot"]
+    },
+    {
+      "id": "path-bending-drawing-components",
+      "path": "docs/design/drawing-components-contract.md",
+      "currentIds": ["c0083", "c0084", "c0085", "c0086"],
+      "reason": "path-bending units j0007 j0007 j0007 j0012 j0012 j0012 j0022 j0022 j0022 j0022 j0025 j0034 j0034 j0034 j0034 j0043 j0043 j0043 j0043 j0043 j0043 j0043 j0043 j0050 j0050 j0050 j0050 j0050 j0050 j0053 j0053 j0055 j0060 j0060 j0060 j0060 j0069 authorize c0083 c0084 c0085 c0086 for guide geometry, alignment, tolerance, validation, ownership, and public evidence. Approved design units: j0005, j0006, j0007, j0010, j0011, j0012, j0019, j0020, j0021, j0022, j0025, j0031, j0032, j0033, j0034, j0036, j0037, j0038, j0039, j0040, j0041, j0042, j0043, j0045, j0046, j0047, j0048, j0049, j0050, j0052, j0053, j0055, j0057, j0058, j0059, j0060, j0069.",
+      "approval": {
+        "recordId": "path-bending",
+        "unitIds": [
+          "j0005",
+          "j0006",
+          "j0007",
+          "j0010",
+          "j0011",
+          "j0012",
+          "j0019",
+          "j0020",
+          "j0021",
+          "j0022",
+          "j0025",
+          "j0031",
+          "j0032",
+          "j0033",
+          "j0034",
+          "j0036",
+          "j0037",
+          "j0038",
+          "j0039",
+          "j0040",
+          "j0041",
+          "j0042",
+          "j0043",
+          "j0045",
+          "j0046",
+          "j0047",
+          "j0048",
+          "j0049",
+          "j0050",
+          "j0052",
+          "j0053",
+          "j0055",
+          "j0057",
+          "j0058",
+          "j0059",
+          "j0060",
+          "j0069"
+        ]
+      },
+      "sharedAnchors": ["guide", "geometry", "tolerance"]
+    },
+    {
+      "id": "html-box-canvas-surface",
+      "path": "docs/design/canvas-surface-contract.md",
+      "currentIds": ["c0046"],
+      "reason": "html-box approved design u0019 u0031 u0032 authorizes current contract c0046 for the documented overlay root behavior.",
+      "approval": {
+        "recordId": "html-box",
+        "unitIds": ["u0019", "u0031", "u0032"]
+      },
+      "sharedAnchors": ["overlay", "root"]
+    },
+    {
+      "id": "html-box-drawing-boundary",
+      "path": "docs/design/drawing-components-contract.md",
+      "currentIds": ["c0088"],
+      "reason": "html-box approved design u0003 u0004 u0034 u0042 u0057 authorizes current contract c0088 for the documented Canvas PathGeometry behavior.",
+      "approval": {
+        "recordId": "html-box",
+        "unitIds": ["u0003", "u0004", "u0034", "u0042", "u0057"]
+      },
+      "sharedAnchors": ["Canvas", "PathGeometry"]
+    },
+    {
+      "id": "html-box-native-focus-regions",
+      "path": "docs/design/focus-and-keyboard-navigation-contract.md",
+      "currentIds": ["c0051"],
+      "reason": "html-box approved design u0054 u0057 u0070 u0071 u0072 u0073 u0075 u0076 u0077 authorizes current contract c0051 for the documented FocusManagement native sentinels behavior.",
+      "approval": {
+        "recordId": "html-box",
+        "unitIds": [
+          "u0054",
+          "u0057",
+          "u0070",
+          "u0071",
+          "u0072",
+          "u0073",
+          "u0075",
+          "u0076",
+          "u0077"
+        ]
+      },
+      "sharedAnchors": ["FocusManagement", "native", "sentinels"]
+    },
+    {
+      "id": "html-box-resource-ownership",
+      "path": "docs/design/runtime-resource-ownership.md",
+      "currentIds": ["c0066"],
+      "reason": "html-box approved design u0031 u0033 u0045 u0052 u0053 authorizes current contract c0066 for the documented overlay Abort root behavior.",
+      "approval": {
+        "recordId": "html-box",
+        "unitIds": ["u0031", "u0033", "u0045", "u0052", "u0053"]
+      },
+      "sharedAnchors": ["overlay", "Abort", "root"]
     },
     {
       "id": "component-manipulation-drawing-contract",
@@ -12175,102 +12337,6 @@
         "unitIds": ["n0029", "n0030", "n0031", "n0041", "n0045"]
       },
       "sharedAnchors": ["left", "style"]
-    },
-    {
-      "id": "four-corner-path-warp-drawing-components",
-      "path": "docs/design/drawing-components-contract.md",
-      "currentIds": ["c0080", "c0081", "c0082"],
-      "reason": "four-corner-path-warp units z0003 z0005 z0007 z0012 z0012 z0012 z0018 z0027 z0027 z0027 z0027 z0027 z0027 z0032 z0032 z0032 z0032 z0034 z0050 z0050 z0050 z0050 z0050 z0077 z0077 z0077 z0077 z0077 z0077 z0077 z0077 z0077 z0077 z0077 z0077 authorize drawing contract units c0080 c0081 c0082 for the source/destination mapping, destination-space tolerance, PathGeometry ownership, and evidence. Approved design units: z0003, z0005, z0007, z0010, z0011, z0012, z0018, z0022, z0023, z0024, z0025, z0026, z0027, z0029, z0030, z0031, z0032, z0034, z0046, z0047, z0048, z0049, z0050, z0066, z0067, z0068, z0069, z0070, z0071, z0072, z0073, z0074, z0075, z0076, z0077.",
-      "approval": {
-        "recordId": "four-corner-path-warp",
-        "unitIds": [
-          "z0003",
-          "z0005",
-          "z0007",
-          "z0010",
-          "z0011",
-          "z0012",
-          "z0018",
-          "z0022",
-          "z0023",
-          "z0024",
-          "z0025",
-          "z0026",
-          "z0027",
-          "z0029",
-          "z0030",
-          "z0031",
-          "z0032",
-          "z0034",
-          "z0046",
-          "z0047",
-          "z0048",
-          "z0049",
-          "z0050",
-          "z0066",
-          "z0067",
-          "z0068",
-          "z0069",
-          "z0070",
-          "z0071",
-          "z0072",
-          "z0073",
-          "z0074",
-          "z0075",
-          "z0076",
-          "z0077"
-        ]
-      },
-      "sharedAnchors": ["source", "tolerance", "geometry"]
-    },
-    {
-      "id": "path-bending-drawing-components",
-      "path": "docs/design/drawing-components-contract.md",
-      "currentIds": ["c0083", "c0084", "c0085", "c0086"],
-      "reason": "path-bending units j0007 j0007 j0007 j0012 j0012 j0012 j0022 j0022 j0022 j0022 j0025 j0034 j0034 j0034 j0034 j0043 j0043 j0043 j0043 j0043 j0043 j0043 j0043 j0050 j0050 j0050 j0050 j0050 j0050 j0053 j0053 j0055 j0060 j0060 j0060 j0060 j0069 authorize c0083 c0084 c0085 c0086 for guide geometry, alignment, tolerance, validation, ownership, and public evidence. Approved design units: j0005, j0006, j0007, j0010, j0011, j0012, j0019, j0020, j0021, j0022, j0025, j0031, j0032, j0033, j0034, j0036, j0037, j0038, j0039, j0040, j0041, j0042, j0043, j0045, j0046, j0047, j0048, j0049, j0050, j0052, j0053, j0055, j0057, j0058, j0059, j0060, j0069.",
-      "approval": {
-        "recordId": "path-bending",
-        "unitIds": [
-          "j0005",
-          "j0006",
-          "j0007",
-          "j0010",
-          "j0011",
-          "j0012",
-          "j0019",
-          "j0020",
-          "j0021",
-          "j0022",
-          "j0025",
-          "j0031",
-          "j0032",
-          "j0033",
-          "j0034",
-          "j0036",
-          "j0037",
-          "j0038",
-          "j0039",
-          "j0040",
-          "j0041",
-          "j0042",
-          "j0043",
-          "j0045",
-          "j0046",
-          "j0047",
-          "j0048",
-          "j0049",
-          "j0050",
-          "j0052",
-          "j0053",
-          "j0055",
-          "j0057",
-          "j0058",
-          "j0059",
-          "j0060",
-          "j0069"
-        ]
-      },
-      "sharedAnchors": ["guide", "geometry", "tolerance"]
     }
   ],
   "evidenceMappings": [
@@ -13343,8 +13409,8 @@
     {
       "path": "docs/design/html-box-contract.md",
       "unitPrefix": "y",
-      "currentUnitCount": 19,
-      "currentUnitsSha256": "d177580277dcbe1e8c55042f47d28c27bca164d9453253ab16b66a22bd5e00ca",
+      "currentUnitCount": 25,
+      "currentUnitsSha256": "89223b296083c0cf5d8d5505cfcdd8c01ccf87cca6f027d99fefb484907c4d2a",
       "approvalRecordId": "html-box",
       "mappings": [
         {
@@ -13520,125 +13586,244 @@
             "unitIds": ["u0083", "u0087", "u0089", "u0090", "u0092", "u0093"]
           },
           "sharedAnchors": ["focus", "Layer", "test"]
+        },
+        {
+          "id": "html-box-events-vocabulary",
+          "currentIds": ["y0020"],
+          "reason": "html-box approved event extension u0098 u0099 authorizes the documented native event vocabulary contract. Current unit y0020.",
+          "approval": {
+            "recordId": "html-box",
+            "unitIds": ["u0098", "u0099"]
+          },
+          "sharedAnchors": ["coordinates"]
+        },
+        {
+          "id": "html-box-events-geometry",
+          "currentIds": ["y0021"],
+          "reason": "html-box approved event extension u0100 authorizes the documented native event geometry contract. Current unit y0021.",
+          "approval": {
+            "recordId": "html-box",
+            "unitIds": ["u0100"]
+          },
+          "sharedAnchors": ["matrix"]
+        },
+        {
+          "id": "html-box-events-propagation",
+          "currentIds": ["y0022"],
+          "reason": "html-box approved event extension u0101 authorizes the documented native event propagation contract. Current unit y0022.",
+          "approval": {
+            "recordId": "html-box",
+            "unitIds": ["u0101"]
+          },
+          "sharedAnchors": ["capture"]
+        },
+        {
+          "id": "html-box-events-native",
+          "currentIds": ["y0023"],
+          "reason": "html-box approved event extension u0101 u0102 authorizes the documented native event native contract. Current unit y0023.",
+          "approval": {
+            "recordId": "html-box",
+            "unitIds": ["u0101", "u0102"]
+          },
+          "sharedAnchors": ["native"]
+        },
+        {
+          "id": "html-box-events-lifecycle",
+          "currentIds": ["y0024"],
+          "reason": "html-box approved event extension u0103 u0104 authorizes the documented native event lifecycle contract. Current unit y0024.",
+          "approval": {
+            "recordId": "html-box",
+            "unitIds": ["u0103", "u0104"]
+          },
+          "sharedAnchors": ["target"]
+        },
+        {
+          "id": "html-box-events-event-evidence",
+          "currentIds": ["y0025"],
+          "reason": "html-box approved event extension u0105 authorizes the documented native event event-evidence contract. Current unit y0025.",
+          "approval": {
+            "recordId": "html-box",
+            "unitIds": ["u0105"]
+          },
+          "sharedAnchors": ["public"]
         }
       ]
     },
     {
       "path": "docs/design/textures-contract.md",
-      "unitPrefix": "u",
-      "currentUnitCount": 12,
-      "currentUnitsSha256": "a0abec83e03ee1e41dcebb05d7d3cb1d784ec234eb29cbe5ce7de8d384a727c4",
-      "approvalRecordId": "procedural-textures",
+      "unitPrefix": "x",
+      "currentUnitCount": 31,
+      "currentUnitsSha256": "e9f71938a0f3c5f14ebf7db6906fde1ef528de42988cb5ed77001039cdf06062",
+      "approvalRecordId": "tree-shakeable-filters-and-texture-effects",
       "mappings": [
         {
           "id": "textures-2",
-          "currentIds": ["u0001", "u0002"],
-          "reason": "u0001 and u0002 records the implemented procedural textures contract behavior authorized by d0013 and d0013; numerical limits are implementation choices within the approved package scope. See procedural-textures. Approved design units: d0002, d0003.",
+          "currentIds": ["x0001"],
+          "reason": "x0001 records the implemented status authorized by tree-shakeable-filters-and-texture-effects n0002 for this approved texture-effects contract.",
           "approval": {
-            "recordId": "procedural-textures",
-            "unitIds": ["d0002", "d0003"]
+            "recordId": "tree-shakeable-filters-and-texture-effects",
+            "unitIds": ["n0002"]
           },
-          "sharedAnchors": ["textures", "defineRenderLayer"]
+          "sharedAnchors": ["Status", "2026-10-01"]
         },
         {
           "id": "textures-3",
-          "currentIds": ["u0003"],
-          "reason": "u0003 records the implemented persistence and timing behavior authorized by d0013; numerical limits are implementation choices within the approved package scope. See procedural-textures. Approved design units: d0004.",
+          "currentIds": ["x0002", "x0003", "x0004"],
+          "reason": "x0002 x0003 and x0004 record the public texture authoring and producer callback surface authorized by tree-shakeable-filters-and-texture-effects n0006 n0050 and n0054.",
           "approval": {
-            "recordId": "procedural-textures",
-            "unitIds": ["d0004"]
+            "recordId": "tree-shakeable-filters-and-texture-effects",
+            "unitIds": ["n0006", "n0050", "n0054"]
           },
-          "sharedAnchors": ["simulation", "raster"]
+          "sharedAnchors": ["texture", "useTexture"]
         },
         {
           "id": "textures-4",
-          "currentIds": ["u0004"],
-          "reason": "u0004 records the implemented persistence and timing behavior authorized by d0013; numerical limits are implementation choices within the approved package scope. See procedural-textures. Approved design units: d0005.",
+          "currentIds": ["x0005", "x0006", "x0007"],
+          "reason": "x0005 x0006 and x0007 record handles, paint placement, ownership, and private consumption authorized by tree-shakeable-filters-and-texture-effects n0050 n0051 n0053 and n0054.",
           "approval": {
-            "recordId": "procedural-textures",
-            "unitIds": ["d0005"]
+            "recordId": "tree-shakeable-filters-and-texture-effects",
+            "unitIds": ["n0050", "n0051", "n0053", "n0054"]
           },
-          "sharedAnchors": ["steps", "periodic"]
+          "sharedAnchors": ["texture", "placement", "owner"]
         },
         {
           "id": "textures-5",
-          "currentIds": ["u0005"],
-          "reason": "u0005 records the implemented persistence and timing behavior authorized by d0013; numerical limits are implementation choices within the approved package scope. See procedural-textures. Approved design units: d0006.",
+          "currentIds": ["x0008", "x0009", "x0010"],
+          "reason": "x0008 x0009 and x0010 record committed publication, retry, and logical scheduling authorized by tree-shakeable-filters-and-texture-effects n0077 n0078 and n0080.",
           "approval": {
-            "recordId": "procedural-textures",
-            "unitIds": ["d0006"]
+            "recordId": "tree-shakeable-filters-and-texture-effects",
+            "unitIds": ["n0077", "n0078", "n0080"]
           },
-          "sharedAnchors": ["signals", "callback"]
+          "sharedAnchors": ["Commit", "candidate", "frame"]
         },
         {
           "id": "textures-6",
-          "currentIds": ["u0006"],
-          "reason": "u0006 records the implemented input and update semantics behavior authorized by d0013; numerical limits are implementation choices within the approved package scope. See procedural-textures. Approved design units: d0007.",
+          "currentIds": ["x0011"],
+          "reason": "x0011 records synchronous raster borrowing and consumer ownership authorized by tree-shakeable-filters-and-texture-effects n0051 n0052 and n0053.",
           "approval": {
-            "recordId": "procedural-textures",
-            "unitIds": ["d0007"]
+            "recordId": "tree-shakeable-filters-and-texture-effects",
+            "unitIds": ["n0051", "n0052", "n0053"]
           },
-          "sharedAnchors": ["pointer", "stamps"]
+          "sharedAnchors": ["borrow", "raster", "texture"]
         },
         {
           "id": "textures-7",
-          "currentIds": ["u0007"],
-          "reason": "u0007 records the implemented input and update semantics behavior authorized by d0013; numerical limits are implementation choices within the approved package scope. See procedural-textures. Approved design units: d0008.",
+          "currentIds": ["x0012", "x0013", "x0016"],
+          "reason": "x0012 and x0013 record displacement semantics and the optional GPU capability boundary authorized by tree-shakeable-filters-and-texture-effects n0057 n0058 n0059 n0063 n0064 and n0066.",
           "approval": {
-            "recordId": "procedural-textures",
-            "unitIds": ["d0008"]
+            "recordId": "tree-shakeable-filters-and-texture-effects",
+            "unitIds": ["n0057", "n0058", "n0059", "n0063", "n0064", "n0066"]
           },
-          "sharedAnchors": ["palette", "capture"]
+          "sharedAnchors": ["displacement", "WebGL2", "texture"]
         },
         {
           "id": "textures-8",
-          "currentIds": ["u0008"],
-          "reason": "u0008 records the implemented input and update semantics behavior authorized by d0013; numerical limits are implementation choices within the approved package scope. See procedural-textures. Approved design units: d0009.",
+          "currentIds": ["x0014", "x0015"],
+          "reason": "x0014 records periodic water-wave generation, messages, timing, and independent packaging authorized by tree-shakeable-filters-and-texture-effects n0008 n0070 n0071 n0072 n0073 and n0076.",
           "approval": {
-            "recordId": "procedural-textures",
-            "unitIds": ["d0009"]
+            "recordId": "tree-shakeable-filters-and-texture-effects",
+            "unitIds": ["n0008", "n0070", "n0071", "n0072", "n0073", "n0076"]
           },
-          "sharedAnchors": ["periodic", "grain"]
+          "sharedAnchors": ["water", "speed", "texture"]
         },
         {
           "id": "textures-9",
-          "currentIds": ["u0009"],
-          "reason": "u0009 records the implemented composition and borrowing behavior authorized by d0013; numerical limits are implementation choices within the approved package scope. See procedural-textures. Approved design units: d0010.",
+          "currentIds": ["x0017"],
+          "reason": "x0020 preserves the existing component ownership behavior required by tree-shakeable-filters-and-texture-effects n0007 and n0022, with procedural-textures d0002 d0003 d0004 d0005 and d0006 retaining its concrete legacy guarantees.",
           "approval": {
-            "recordId": "procedural-textures",
-            "unitIds": ["d0010"]
+            "recordId": "tree-shakeable-filters-and-texture-effects",
+            "unitIds": ["n0007", "n0022"]
           },
-          "sharedAnchors": ["mask", "synchronous"]
+          "sharedAnchors": ["component", "texture", "render"],
+          "supplementalApprovals": [
+            {
+              "recordId": "procedural-textures",
+              "unitIds": ["d0002", "d0003", "d0004", "d0005", "d0006"]
+            }
+          ]
         },
         {
           "id": "textures-10",
-          "currentIds": ["u0010"],
-          "reason": "u0010 records the implemented composition and borrowing behavior authorized by d0013; numerical limits are implementation choices within the approved package scope. See procedural-textures. Approved design units: d0011.",
+          "currentIds": ["x0018", "x0019"],
+          "reason": "x0021 preserves existing component update and timing behavior required by tree-shakeable-filters-and-texture-effects n0007 and n0022, with procedural-textures d0007 d0008 and d0009 retaining the legacy field guarantees.",
           "approval": {
-            "recordId": "procedural-textures",
-            "unitIds": ["d0011"]
+            "recordId": "tree-shakeable-filters-and-texture-effects",
+            "unitIds": ["n0007", "n0022"]
           },
-          "sharedAnchors": ["sources", "painting"]
+          "sharedAnchors": ["field", "texture", "palette"],
+          "supplementalApprovals": [
+            {
+              "recordId": "procedural-textures",
+              "unitIds": ["d0007", "d0008", "d0009"]
+            }
+          ]
         },
         {
           "id": "textures-11",
-          "currentIds": ["u0011"],
-          "reason": "u0011 records the implemented resource release and errors behavior authorized by d0013; numerical limits are implementation choices within the approved package scope. See procedural-textures. Approved design units: d0012.",
+          "currentIds": ["x0020"],
+          "reason": "x0022 preserves existing component presentation, borrowing, release, and error behavior required by tree-shakeable-filters-and-texture-effects n0007 and n0022, with procedural-textures d0010 d0011 and d0012 retaining the concrete legacy guarantees.",
           "approval": {
-            "recordId": "procedural-textures",
-            "unitIds": ["d0012"]
+            "recordId": "tree-shakeable-filters-and-texture-effects",
+            "unitIds": ["n0007", "n0022"]
           },
-          "sharedAnchors": ["disposal", "errors"]
+          "sharedAnchors": ["component", "texture", "raster"],
+          "supplementalApprovals": [
+            {
+              "recordId": "procedural-textures",
+              "unitIds": ["d0010", "d0011", "d0012"]
+            }
+          ]
         },
         {
           "id": "textures-12",
-          "currentIds": ["u0012"],
-          "reason": "u0012 records the implemented evidence behavior authorized by d0013; numerical limits are implementation choices within the approved package scope. See procedural-textures.",
+          "currentIds": ["x0021", "x0022"],
+          "reason": "x0023 and x0024 record release, disposal, and non-rollback failures authorized by tree-shakeable-filters-and-texture-effects n0084 n0089 n0090 n0093 and n0094.",
           "approval": {
-            "recordId": "procedural-textures",
-            "unitIds": ["d0013"]
+            "recordId": "tree-shakeable-filters-and-texture-effects",
+            "unitIds": ["n0084", "n0089", "n0090", "n0093", "n0094"]
           },
-          "sharedAnchors": ["Studio", "evidence"]
+          "sharedAnchors": ["hook", "texture", "dispose"]
+        },
+        {
+          "id": "textures-13",
+          "currentIds": ["x0023", "x0024"],
+          "reason": "x0025 and x0026 record appearance-only boundaries and focused behavior and packed-consumer evidence authorized by tree-shakeable-filters-and-texture-effects n0009 n0026 n0082 n0083 n0095 n0113 n0114 n0115 n0117 n0121 n0122 and n0123.",
+          "approval": {
+            "recordId": "tree-shakeable-filters-and-texture-effects",
+            "unitIds": [
+              "n0009",
+              "n0026",
+              "n0082",
+              "n0083",
+              "n0095",
+              "n0113",
+              "n0114",
+              "n0115",
+              "n0117",
+              "n0121",
+              "n0122",
+              "n0123"
+            ]
+          },
+          "sharedAnchors": ["texture", "filter", "displacement"]
+        },
+        {
+          "id": "textures-wasm-integration",
+          "currentIds": [
+            "x0025",
+            "x0026",
+            "x0027",
+            "x0028",
+            "x0029",
+            "x0030",
+            "x0031"
+          ],
+          "reason": "x0025 through x0031 record the recovered concurrent texture/WASM clarification and the labeled 2026-10-02 integrated water amendment: private per-recipe WASM, bounded resource memory, value-message integration, electric and water ownership, and retention verification.",
+          "approval": {
+            "recordId": "tree-shakeable-filters-and-texture-effects",
+            "unitIds": ["n0153", "n0155", "n0156", "n0157", "n0158"]
+          },
+          "sharedAnchors": ["WASM", "resource", "memory"]
         }
       ]
     },

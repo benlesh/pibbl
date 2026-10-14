@@ -1,6 +1,6 @@
 import { expect, it } from "vitest";
-import { InkSimulation } from "../src/lib/simulation.js";
-import { materialField } from "../src/lib/material-field.js";
+import { InkSimulation } from "../../../src/features/textures/lib/simulation.js";
+import { materialField } from "../../../src/features/textures/lib/material-field.js";
 
 it("replays fixed step counts independently of batch boundaries and remains finite", () => {
   const a = new InkSimulation(64, 40, 42, "stripes"),

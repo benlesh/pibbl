@@ -1,16 +1,16 @@
 import { afterEach, expect, it } from "vitest";
 import { crc, Group } from "@crc/core";
 import { ReactionDiffusion } from "@crc/core/textures";
-import { clearSharedState } from "../../core/src/lib/global-state.js";
+import { clearSharedState } from "../../../src/lib/global-state.js";
 import {
   ManualSchedulerDriver,
   installSchedulerDriverForTest,
-} from "../../core/src/lib/scheduler/testing.js";
+} from "../../../src/lib/scheduler/testing.js";
 import {
   pointerDownLogicalPoint,
   pointerMoveLogicalPoint,
   pointerUpLogicalPoint,
-} from "../../core/test/support/user-input.js";
+} from "../../support/user-input.js";
 
 afterEach(() => {
   clearSharedState();

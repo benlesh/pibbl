@@ -28,8 +28,8 @@ export function PlotSeries<D>({
   render,
   ...events
 }: PlotSeriesProps<D>): CRCNode {
-  const xs = useScale(xId).get(),
-    ys = useScale(yId).get();
+  const xs = useScale(xId, "continuous").get(),
+    ys = useScale(yId, "continuous").get();
   const data = pointData(resolveSignalValue(input), "PlotSeries");
   if (typeof render !== "function")
     throw new TypeError("PlotSeries: render must be a synchronous function.");

@@ -1,9 +1,9 @@
 import { afterEach, beforeEach, expect, it } from "vitest";
-import { site, sources, type SourceSite } from "../src/lib/electric-sources.js";
+import { site, sources, type SourceSite } from "../../../src/features/textures/lib/electric-sources.js";
 
-import { ElectricMemory } from "../src/lib/wasm/electric.js";
-import { lazyKernel } from "../src/lib/wasm/memory.js";
-import { bytes } from "../src/lib/wasm/tendrils-bytes.js";
+import { ElectricMemory } from "../../../src/features/textures/lib/wasm/electric.js";
+import { lazyKernel } from "../../../src/features/textures/lib/wasm/memory.js";
+import { bytes } from "../../../src/features/textures/lib/wasm/tendrils-bytes.js";
 const module = lazyKernel(bytes);
 let memory: ElectricMemory;
 beforeEach(() => {

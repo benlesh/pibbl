@@ -38,27 +38,27 @@ export function dispatchEventPath<K extends CRCEventType>(
 
   for (let index = 0; index < targetIndex; index++) {
     if (isCRCPropagationStopped(event)) break;
-    invoke(path[index], input.type, true, 1, event);
+    invokeCRCEventHandler(path[index], input.type, true, 1, event);
   }
 
   if (!isCRCPropagationStopped(event) && input.target.live) {
-    invoke(input.target, input.type, true, 2, event);
+    invokeCRCEventHandler(input.target, input.type, true, 2, event);
     if (!isCRCImmediatePropagationStopped(event)) {
-      invoke(input.target, input.type, false, 2, event);
+      invokeCRCEventHandler(input.target, input.type, false, 2, event);
     }
   }
 
   if (definition.bubbles && !isCRCPropagationStopped(event)) {
     for (let index = targetIndex - 1; index >= 0; index--) {
       if (isCRCPropagationStopped(event)) break;
-      invoke(path[index], input.type, false, 3, event);
+      invokeCRCEventHandler(path[index], input.type, false, 3, event);
     }
   }
 
   return event;
 }
 
-function invoke(
+export function invokeCRCEventHandler(
   node: CRCEventNode,
   type: CRCEventType,
   capture: boolean,

@@ -94,7 +94,7 @@ export default defineConfig(({ mode }) => ({
         ? []
         : [
             { find: /^@crc\/core\/filters$/, replacement: fileURLToPath(new URL("./packages/core/src/filters.ts", import.meta.url)) },
-            { find: /^@crc\/textures$/, replacement: fileURLToPath(new URL("./packages/core/src/features/textures/index.ts", import.meta.url)) },
+            { find: /^@crc\/core\/textures$/, replacement: fileURLToPath(new URL("./packages/core/src/features/textures/index.ts", import.meta.url)) },
             {
               find: /^@crc\/core\/viz$/,
               replacement: fileURLToPath(
@@ -191,6 +191,7 @@ export default defineConfig(({ mode }) => ({
       "tooling/filter-authoring.test.mjs",
       "tooling/filter-validation.test.mjs",
       "tooling/optional-import-inertness.test.mjs",
+      "tooling/texture-import-inertness.test.mjs",
       "packages/core/src/features/physics/lib/2d/public-types.test.ts",
       "packages/core/src/features/physics/lib/3d/public-types.test.ts",
     ],

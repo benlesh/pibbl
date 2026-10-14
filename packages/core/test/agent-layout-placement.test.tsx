@@ -11,8 +11,8 @@ it('separates parent placement, shape-local offsets and intentional clipping thr
   canvas.width = 400; canvas.height = 240;
   canvas.style.cssText = 'width:400px;height:240px'; document.body.append(canvas);
   try {
-    for (const [mode, localX, rootX, expected] of [
-      ['clipped', 90, 300, 'miss'], ['overflow-visible', 90, 300, 'target'], ['repaired', 0, 120, 'target'],
+    for (const [mode, rootX, expected] of [
+      ['clipped', 300, 'miss'], ['overflow-visible', 300, 'target'], ['repaired', 120, 'target'],
     ] as const) {
       let allocation: unknown;
       const mount = crc(canvas, <AgentLayoutPlacementScene mode={mode} onAllocation={box => { allocation = box; }} />, { pixelRatio: 1 });
@@ -25,10 +25,10 @@ it('separates parent placement, shape-local offsets and intentional clipping thr
         expect(allocation).toEqual({ x: 0, y: 0, width: 20, height: 20 });
         expect(snapshot.records).toHaveLength(1);
         const entry = snapshot.records[0];
-        // Group translation (40,30), scale 2, then parent placement (30,20).
-        // The shape's x remains a separate coordinate in this placed space.
-        expect(entry.transform).toEqual([2, 0, 0, 2, 100, 70]);
-        expect(inspector.convert(snapshot.generation!, 'entry-local', 'root-logical', { x: localX + 10, y: 10 }, 'point', entry.order)).toMatchObject({ status: 'mapped', value: { x: rootX, y: 90 } });
+        // Group translation (40,30), scale 2, parent placement (30,20), then
+        // Rectangle placement (left=90). The receiving entry is primitive-local.
+        expect(entry.transform).toEqual([2, 0, 0, 2, mode === 'repaired' ? 100 : 280, 70]);
+        expect(inspector.convert(snapshot.generation!, 'entry-local', 'root-logical', { x: 10, y: 10 }, 'point', entry.order)).toMatchObject({ status: 'mapped', value: { x: rootX, y: 90 } });
         const probe = inspector.probe(snapshot.generation!, rootX, 90);
         expect(probe.status).toBe(expected);
         expect(probe.candidates[0]).toMatchObject({ geometry: 'hit', outcome: mode === 'clipped' ? 'clip-excluded' : 'hit' });
