@@ -1,0 +1,294 @@
+{
+  "requiredChecks": [
+    {
+      "checkId": "seed.pixels",
+      "actionId": "seed"
+    },
+    {
+      "checkId": "seed.input-provenance",
+      "actionId": "seed"
+    },
+    {
+      "checkId": "seed.selected-entity",
+      "actionId": "seed"
+    },
+    {
+      "checkId": "seed.selection-count",
+      "actionId": "seed"
+    },
+    {
+      "checkId": "seed.delivery-generation",
+      "actionId": "seed"
+    },
+    {
+      "checkId": "seed.delivery-target",
+      "actionId": "seed"
+    },
+    {
+      "checkId": "seed.selection-intent",
+      "actionId": "seed"
+    },
+    {
+      "checkId": "repair.pixels",
+      "actionId": "repair"
+    },
+    {
+      "checkId": "repair.input-provenance",
+      "actionId": "repair"
+    },
+    {
+      "checkId": "repair.selected-entity",
+      "actionId": "repair"
+    },
+    {
+      "checkId": "repair.selection-count",
+      "actionId": "repair"
+    },
+    {
+      "checkId": "repair.delivery-generation",
+      "actionId": "repair"
+    },
+    {
+      "checkId": "repair.delivery-target",
+      "actionId": "repair"
+    },
+    {
+      "checkId": "repair.selection-intent",
+      "actionId": "repair"
+    },
+    {
+      "checkId": "intentional-block.pixels",
+      "actionId": "intentional-block"
+    },
+    {
+      "checkId": "intentional-block.input-provenance",
+      "actionId": "intentional-block"
+    },
+    {
+      "checkId": "intentional-block.selected-entity",
+      "actionId": "intentional-block"
+    },
+    {
+      "checkId": "intentional-block.selection-count",
+      "actionId": "intentional-block"
+    },
+    {
+      "checkId": "intentional-block.delivery-generation",
+      "actionId": "intentional-block"
+    },
+    {
+      "checkId": "intentional-block.delivery-target",
+      "actionId": "intentional-block"
+    },
+    {
+      "checkId": "intentional-block.selection-intent",
+      "actionId": "intentional-block"
+    }
+  ],
+  "schema": "crc-targeting-replay/1",
+  "status": "blocked",
+  "url": "http://127.0.0.1:5196/#/testing/agent-targeting-verification",
+  "node": "v24.15.0",
+  "browser": "151.0.7922.34",
+  "timestamp": "2026-10-02T01:40:41.753Z",
+  "environment": {
+    "viewport": {
+      "width": 1280,
+      "height": 1000
+    },
+    "density": 1,
+    "locale": "en-US",
+    "timezone": "UTC"
+  },
+  "provenanceScope": "Loaded fixture marker compared with local core source, fixture, inspector, development configuration and lockfile; not full dependency or asset attestation.",
+  "oracle": {
+    "point": {
+      "x": 144,
+      "y": 112
+    },
+    "expectedColor": [
+      37,
+      99,
+      235,
+      255
+    ],
+    "requiredSelection": "item-a"
+  },
+  "steps": [],
+  "errors": [],
+  "droppedErrors": 0,
+  "checks": [
+    {
+      "checkId": "protected-action-permissions",
+      "status": "not-applicable",
+      "required": false,
+      "reason": "This controlled fixture invokes no clipboard, fullscreen or other permission-gated action."
+    },
+    {
+      "checkId": "real-hardware-input",
+      "status": "skipped",
+      "required": false,
+      "reason": "This run uses Playwright Chromium automation; physical touch/pen hardware is not exercised."
+    }
+  ],
+  "checkpointRunId": "4a85ecf9-93fc-4f4c-bca0-832740a493d5",
+  "run": {
+    "schema": "crc-replay-run/1",
+    "runId": "4a85ecf9-93fc-4f4c-bca0-832740a493d5",
+    "kind": "targeting",
+    "startedAt": "2026-10-02T01:40:41.753Z",
+    "clock": "UTC-wall-clock",
+    "environment": {
+      "node": "v24.15.0",
+      "platform": "darwin",
+      "architecture": "arm64",
+      "browserContext": {
+        "viewport": {
+          "width": 1280,
+          "height": 1000
+        },
+        "deviceScaleFactor": 1,
+        "locale": "en-US",
+        "timezoneId": "UTC",
+        "reducedMotion": "reduce",
+        "colorScheme": "light"
+      },
+      "observedPage": {
+        "status": "observed",
+        "scope": "page-reported-at-capture",
+        "viewportCss": {
+          "width": 1280,
+          "height": 1000
+        },
+        "devicePixelRatio": 1,
+        "visualViewportScale": 1,
+        "browserZoom": "unavailable",
+        "language": "en-US",
+        "timezone": "UTC",
+        "preferences": {
+          "dark": false,
+          "reducedMotion": true
+        }
+      }
+    },
+    "rerun": {
+      "executable": "/Users/benlesh/.local/share/fnm/node-versions/v24.15.0/installation/bin/node",
+      "arguments": [
+        "/Users/benlesh/GitHub/crc/tooling/agent-verification/replay.mjs",
+        "http://127.0.0.1:5196/#/testing/agent-targeting-verification"
+      ],
+      "cwd": "/Users/benlesh/GitHub/crc",
+      "environment": {},
+      "unsetEnvironment": [
+        "CRC_VERIFY_BROWSER_ENDPOINT"
+      ],
+      "outputPolicy": "fresh-default-directory",
+      "preconditions": [
+        "Provision the recorded checkout dependencies and Playwright Chromium.",
+        "Serve the source Studio from the intended checkout at the recorded URL; served/local identity checks must pass."
+      ]
+    },
+    "toolIdentity": {
+      "schema": "crc-replay-tool-identity/1",
+      "revision": "c838c434159efe602583f1cc2bf5383b57c15db5",
+      "sha256": "ad03427a9d4dd0e1ef982abe56696956a0902763ff046daacb5215d611d3a089",
+      "files": 11,
+      "scope": "Replay and declared local dependencies on disk; not loaded-module or installed-dependency attestation."
+    },
+    "toolIdentityAfter": {
+      "schema": "crc-replay-tool-identity/1",
+      "revision": "c838c434159efe602583f1cc2bf5383b57c15db5",
+      "sha256": "ad03427a9d4dd0e1ef982abe56696956a0902763ff046daacb5215d611d3a089",
+      "files": 11,
+      "scope": "Replay and declared local dependencies on disk; not loaded-module or installed-dependency attestation."
+    }
+  },
+  "localSource": {
+    "revision": "c838c434159efe602583f1cc2bf5383b57c15db5",
+    "sourceFiles": [
+      "tooling/agent-verification/targeting.ts",
+      "tooling/agent-verification/replay.mjs",
+      "packages/scenarios/src/agent-targeting-verification.example.tsx",
+      "packages/scenarios/src/agent-targeting-verification.ts"
+    ],
+    "sha256": "0234e7816a15a7c66b8f49346f4d75f6a69a6567afa275135f3fc44e95c07e91"
+  },
+  "expectedIdentity": {
+    "schema": "crc-targeting-identity/1",
+    "revision": "c838c434159efe602583f1cc2bf5383b57c15db5",
+    "sha256": "3823e756260301a351feb4cdc46a05db58eabb732f5185f2b50b0172920e59fa",
+    "files": 203
+  },
+  "servedIdentity": {
+    "schema": "crc-targeting-identity/1",
+    "revision": "c838c434159efe602583f1cc2bf5383b57c15db5",
+    "sha256": "9915eebd214a0919b3807125b581d5339e86ba0b6717b74766a7441c1e217224",
+    "files": 203
+  },
+  "browserFailure": {
+    "pageCrashed": false,
+    "unexpectedDisconnect": false,
+    "category": null
+  },
+  "failure": {
+    "category": "operation-error",
+    "stage": "navigation",
+    "actionId": null,
+    "lastActionId": null,
+    "message": "Served fixture identity mismatch; reload the intended checkout before verifying.",
+    "code": "CRC_FIXTURE_IDENTITY_MISMATCH",
+    "assertion": null,
+    "layoutDiagnostic": null,
+    "detail": {
+      "limits": {
+        "nodes": 64,
+        "depth": 4,
+        "entries": 16,
+        "string": 1024,
+        "totalString": 8192
+      },
+      "omissions": []
+    }
+  },
+  "toolVerification": {
+    "status": "matching-on-disk"
+  },
+  "requiredActions": [
+    "seed",
+    "repair",
+    "intentional-block",
+    "outside-layer",
+    "capture-drag",
+    "dom-overlay",
+    "keyboard-focus",
+    "scene-pagination"
+  ],
+  "checkCompletionFailure": {
+    "category": "incomplete-required-checks",
+    "missing": [
+      "seed.pixels",
+      "seed.input-provenance",
+      "seed.selected-entity",
+      "seed.selection-count",
+      "seed.delivery-generation",
+      "seed.delivery-target",
+      "seed.selection-intent",
+      "repair.pixels",
+      "repair.input-provenance",
+      "repair.selected-entity",
+      "repair.selection-count",
+      "repair.delivery-generation",
+      "repair.delivery-target",
+      "repair.selection-intent",
+      "intentional-block.pixels",
+      "intentional-block.input-provenance",
+      "intentional-block.selected-entity",
+      "intentional-block.selection-count",
+      "intentional-block.delivery-generation",
+      "intentional-block.delivery-target",
+      "intentional-block.selection-intent"
+    ],
+    "mismatched": [],
+    "unexpected": []
+  }
+}

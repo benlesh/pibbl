@@ -1,0 +1,24 @@
+✔ served identity rejects different fixture bytes even with the same revision (4.30475ms)
+✔ identity is embedded in the loaded fixture only for source development (107.502042ms)
+✔ native replay blocks a mismatched served fixture before exercising actions (350.459084ms)
+✔ visualization replay blocks a mismatched served fixture before exercising actions (333.854834ms)
+✔ native replay retains structured assertion evidence from a controlled fixture (313.64375ms)
+✔ records an executable rerun recipe without reusing evidence or copying ambient secrets (1.500333ms)
+✔ targeting recipe keeps its fixed density and rejects invalid configurations (0.197292ms)
+✔ records observed page environment separately from requested options (242.494042ms)
+✔ signal mutation fixture embeds its actual source identity and has a native replay recipe (72.033875ms)
+✔ text fixture embeds its source identity and refuses unavailable or changed evidence (71.426375ms)
+✔ text replay has its own executable recipe and fingerprints its checks and tooling (0.584667ms)
+✔ text replay refuses unexpected private payload without retaining content (359.379458ms)
+✔ text replay refuses stale identity without retaining content (334.536ms)
+✔ tool fingerprint changes when an assertion helper changes without a revision change (10.52175ms)
+✔ declared replay fingerprint includes every current static local dependency (3.888209ms)
+✔ tool changes fail finalization without replacing the original operation failure (10.844709ms)
+ℹ tests 16
+ℹ suites 0
+ℹ pass 16
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1152.672417

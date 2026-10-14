@@ -51,9 +51,9 @@
     "trust:lifecycle": "corepack pnpm@11.21.0 test:lifecycle && corepack pnpm@11.21.0 test:performance",
     "trust": "corepack pnpm@11.21.0 trust:static && corepack pnpm@11.21.0 trust:package && corepack pnpm@11.21.0 trust:browser && corepack pnpm@11.21.0 trust:lifecycle",
     "test:viz-package": "node tooling/verify-packed-viz.mjs",
-    "test:agent-verification:identity": "node --test tooling/agent-verification/identity.test.mjs",
-    "test:agent-verification:watchdog": "node --test tooling/agent-verification/input-provenance.test.mjs tooling/agent-verification/evidence-directory.test.mjs tooling/agent-verification/watchdog.test.mjs tooling/agent-verification/watchdog-browser.test.mjs tooling/agent-verification/browser-failure.test.mjs tooling/agent-verification/checkpoint.test.mjs tooling/agent-verification/replay-outcome.test.mjs tooling/agent-verification/run-manifest.test.mjs tooling/agent-verification/tool-identity.test.mjs tooling/agent-verification/failure-evidence.test.mjs tooling/agent-verification/numeric-assertion.test.mjs tooling/agent-verification/evidence-reader.test.mjs tooling/agent-verification/compare-evidence.test.mjs",
-    "test:agent-verification": "corepack pnpm@11.21.0 test:agent-verification:requirements && corepack pnpm@11.21.0 test:agent-verification:identity && corepack pnpm@11.21.0 test:agent-verification:watchdog && vitest run packages/core/test/agent-event-trace.test.tsx packages/core/test/agent-interaction-point.test.tsx packages/core/test/agent-targeting-observation.test.tsx packages/core/test/agent-targeting-verification.test.ts packages/core/test/agent-signal-observation.test.tsx packages/core/test/agent-browser-observation.test.ts packages/core/test/agent-viz-verification.test.ts packages/core/test/three-picking-verification.test.ts packages/viz/test/hover-lab.test.ts --browser.headless --browser.ui=false",
+    "test:agent-verification:identity": "node --test tooling/agent-verification/identity.test.mjs tooling/agent-verification/core-peer-compatibility.test.mjs tooling/agent-verification/installed-peers.test.mjs && node tooling/agent-verification/core-peer-compatibility.mjs && node tooling/agent-verification/installed-peers.mjs",
+    "test:agent-verification:watchdog": "node --test tooling/agent-verification/runtime-identity.test.mjs tooling/agent-verification/required-checks.test.mjs tooling/agent-verification/recorded-check.test.mjs tooling/agent-verification/input-provenance.test.mjs tooling/agent-verification/evidence-directory.test.mjs tooling/agent-verification/watchdog.test.mjs tooling/agent-verification/watchdog-browser.test.mjs tooling/agent-verification/browser-failure.test.mjs tooling/agent-verification/checkpoint.test.mjs tooling/agent-verification/replay-outcome.test.mjs tooling/agent-verification/run-manifest.test.mjs tooling/agent-verification/tool-identity.test.mjs tooling/agent-verification/failure-evidence.test.mjs tooling/agent-verification/numeric-assertion.test.mjs tooling/agent-verification/evidence-reader.test.mjs tooling/agent-verification/compare-evidence.test.mjs",
+    "test:agent-verification": "corepack pnpm@11.21.0 test:agent-verification:requirements && corepack pnpm@11.21.0 test:agent-verification:identity && corepack pnpm@11.21.0 test:agent-verification:watchdog && vitest run packages/core/test/agent-runtime-identity.test.ts packages/core/test/agent-event-trace.test.tsx packages/core/test/agent-targeting-pagination.test.tsx packages/core/test/agent-interaction-point.test.tsx packages/core/test/agent-targeting-observation.test.tsx packages/core/test/agent-targeting-verification.test.ts packages/core/test/agent-signal-observation.test.tsx packages/core/test/agent-browser-observation.test.ts packages/core/test/agent-viz-verification.test.ts packages/core/test/three-picking-verification.test.ts packages/viz/test/hover-lab.test.ts --browser.headless --browser.ui=false",
     "test:agent-verification:requirements": "node --test tooling/agent-verification/requirements.test.mjs tooling/agent-verification/discover.test.mjs && node tooling/agent-verification/requirements.mjs",
     "test:textures": "vitest run packages/textures/test --browser.headless --browser.ui=false",
     "test:filter-authoring": "node --import tsx --test tooling/filter-authoring.test.mjs tooling/filter-validation.test.mjs"
@@ -66,7 +66,9 @@
     "@crc/particles": "workspace:*",
     "@crc/physics": "workspace:*",
     "@crc/scenarios": "workspace:*",
+    "@crc/textures": "workspace:*",
     "@crc/three": "workspace:*",
+    "@crc/viz": "workspace:*",
     "@eslint/js": "catalog:",
     "@gltf-transform/core": "4.5.0",
     "@gltf-transform/extensions": "4.5.0",
@@ -82,13 +84,12 @@
     "playwright": "catalog:",
     "prettier": "catalog:",
     "rimraf": "catalog:",
+    "semver": "7.8.5",
     "sharp": "0.35.4",
     "tsx": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",
     "vitest": "catalog:",
-    "yaml": "catalog:",
-    "@crc/viz": "workspace:*",
-    "@crc/textures": "workspace:*"
+    "yaml": "catalog:"
   }
 }

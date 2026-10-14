@@ -58,3 +58,69 @@ const bad = <ProceduralTexture kind="unknown" />;
 import { InkSimulation } from "@crc/textures";
 void bad;
 void InkSimulation;
+
+import { Rectangle, type Texture, type TextureRecipe } from "@crc/core";
+import {
+  tendrils,
+  lightning,
+  useTexture,
+  type ElectricSource,
+  type ElectricSourceMessage,
+  type TendrilsMessage,
+  type TendrilsOptions,
+  type LightningMessage,
+} from "@crc/textures";
+const sites: readonly ElectricSource[] = [
+  { id: "node-a", point: { x: 0.2, y: 0.3 }, weight: 1 },
+  { id: "node-b", point: { x: 0.8, y: 0.7 }, weight: 4 },
+];
+const weighted: TendrilsOptions = {
+  sources: sites,
+  rise: 0.5,
+  count: 12,
+  crackle: 0.6,
+};
+const recipe: TextureRecipe<TendrilsMessage> = tendrils(weighted);
+const message: ElectricSourceMessage = {
+  type: "upsert-source",
+  source: { id: "pointer:1", point: { x: 0.4, y: 0.6 }, weight: 20 },
+};
+export function WeightedFill() {
+  const texture: Texture<TendrilsMessage> = useTexture(recipe, {
+    resolution: { width: 256, height: 256 },
+  });
+  const arc: Texture<LightningMessage> = useTexture(
+    lightning({ positive: sites[0].point, negative: sites[1].point }),
+  );
+  return (
+    <Group>
+      <Rectangle
+        style={{ width: 256, height: 256, fill: texture }}
+        onClick={() => texture.send(message)}
+      />
+      <Rectangle
+        style={{
+          width: 128,
+          height: 128,
+          fill: texture.paint({
+            mode: "repeat",
+            tileWidth: 128,
+            tileHeight: 128,
+          }),
+        }}
+      />
+      <Rectangle style={{ width: 256, height: 128, fill: arc }} />
+    </Group>
+  );
+}
+const obsoleteCommand = {
+  type: "attract",
+  id: 1,
+  point: { x: 0.5, y: 0.5 },
+} as const;
+// @ts-expect-error Pointer input is ordinary source data, not an attraction command.
+const oldCommand: TendrilsMessage = obsoleteCommand;
+// @ts-expect-error Boundary and interior locations are source data, not modes.
+const oldOptions: TendrilsOptions = { termination: "perimeter" };
+void oldCommand;
+void oldOptions;
