@@ -1,0 +1,392 @@
+{
+  "schema": "crc-current-performance-audit/1",
+  "baseline": "82ff443a7a30e28bb2a9f4a6e534a0514b3f75e5",
+  "reactionDiffusionSha256": "697319e7b125d053c1a6d2047671027e91f4e183a125054e77ad4b02d154e6c3",
+  "timestamp": "2026-10-03T20:30:52.810Z",
+  "environment": {
+    "node": "v24.15.0",
+    "platform": "darwin",
+    "architecture": "arm64",
+    "baseUrl": "http://127.0.0.1:5204",
+    "cycles": 1,
+    "frames": 1,
+    "browser": "151.0.7922.34"
+  },
+  "meaning": "Source-mode, local descriptive measurements. Explicit resource release and weak reachability are separate observations; neither demonstrates native or GPU reclamation.",
+  "cases": [
+    {
+      "name": "reaction-diffusion legacy steady",
+      "frameCount": 1,
+      "warmupFrames": 1,
+      "idleFrames": 0,
+      "before": {
+        "canvasAllocations": 0,
+        "wasmMemoryAllocations": 0,
+        "wasmBytes": 0,
+        "rasterDisposals": 0,
+        "simulationDisposals": 0,
+        "uploads": 0,
+        "zeroDimensionCanvases": 0,
+        "observedNonReleasedCanvasDimensions": [],
+        "observerRetainsCanvases": true,
+        "signalGraph": {
+          "rendererConsumers": 0,
+          "rendererEdges": 0,
+          "computedSourceEdges": 0,
+          "pendingComputedValidations": 0,
+          "createdRendererConsumers": 0,
+          "releasedRendererConsumers": 0,
+          "createdRendererEdges": 0,
+          "releasedRendererEdges": 0,
+          "signalCommitNotifications": 0,
+          "planComputedValidations": 0,
+          "createdComputedSourceEdges": 0,
+          "releasedComputedSourceEdges": 0,
+          "lazyRendererConsumers": 0,
+          "reusedRendererEdges": 0,
+          "plainInputResolutions": 0,
+          "signalInputResolutions": 0,
+          "shallowInputCopies": 0,
+          "receiverInputProvisions": 0,
+          "adoptedReceiverInputProvisions": 0,
+          "rolledBackReceiverInputProvisions": 0,
+          "batchedObserverInvalidations": 0,
+          "reactionConsumers": 0,
+          "reactionEdges": 0,
+          "reactionRuns": 0,
+          "reactionCleanups": 0,
+          "reactionFailures": 0
+        }
+      },
+      "after": {
+        "canvasAllocations": 2,
+        "wasmMemoryAllocations": 1,
+        "wasmBytes": 327680,
+        "rasterDisposals": 1,
+        "simulationDisposals": 1,
+        "uploads": 1,
+        "zeroDimensionCanvases": 1,
+        "observedNonReleasedCanvasDimensions": [
+          [
+            256,
+            160
+          ]
+        ],
+        "observerRetainsCanvases": true,
+        "signalGraph": {
+          "rendererConsumers": 0,
+          "rendererEdges": 0,
+          "computedSourceEdges": 0,
+          "pendingComputedValidations": 0,
+          "createdRendererConsumers": 0,
+          "releasedRendererConsumers": 0,
+          "createdRendererEdges": 0,
+          "releasedRendererEdges": 0,
+          "signalCommitNotifications": 0,
+          "planComputedValidations": 0,
+          "createdComputedSourceEdges": 0,
+          "releasedComputedSourceEdges": 0,
+          "lazyRendererConsumers": 0,
+          "reusedRendererEdges": 0,
+          "plainInputResolutions": 4,
+          "signalInputResolutions": 0,
+          "shallowInputCopies": 0,
+          "receiverInputProvisions": 0,
+          "adoptedReceiverInputProvisions": 0,
+          "rolledBackReceiverInputProvisions": 0,
+          "batchedObserverInvalidations": 0,
+          "reactionConsumers": 0,
+          "reactionEdges": 0,
+          "reactionRuns": 0,
+          "reactionCleanups": 0,
+          "reactionFailures": 0
+        }
+      },
+      "scheduler": {
+        "phase": "idle",
+        "pendingHostFrames": 0,
+        "registeredRoots": 0,
+        "advanceParticipants": 0,
+        "completionCallbacks": 0,
+        "createdRootRegistrations": 1,
+        "releasedRootRegistrations": 1,
+        "createdBeginCommands": 0,
+        "releasedBeginCommands": 0,
+        "createdCompletionCallbacks": 0,
+        "releasedCompletionCallbacks": 0,
+        "dirtyInstances": 0,
+        "dirtyRoots": 0,
+        "registeredAdvanceParticipants": 0,
+        "queuedFrameCompletions": 0,
+        "queuedReactionCompletions": 0,
+        "queuedBeginCommands": 0
+      },
+      "errors": [],
+      "flushDurationMs": {
+        "samples": 0,
+        "median": 0,
+        "p95": 0,
+        "max": 0
+      }
+    },
+    {
+      "name": "reaction-diffusion legacy paused",
+      "frameCount": 1,
+      "warmupFrames": 1,
+      "idleFrames": 0,
+      "before": {
+        "canvasAllocations": 2,
+        "wasmMemoryAllocations": 1,
+        "wasmBytes": 327680,
+        "rasterDisposals": 1,
+        "simulationDisposals": 1,
+        "uploads": 1,
+        "zeroDimensionCanvases": 1,
+        "observedNonReleasedCanvasDimensions": [
+          [
+            256,
+            160
+          ]
+        ],
+        "observerRetainsCanvases": true,
+        "signalGraph": {
+          "rendererConsumers": 0,
+          "rendererEdges": 0,
+          "computedSourceEdges": 0,
+          "pendingComputedValidations": 0,
+          "createdRendererConsumers": 0,
+          "releasedRendererConsumers": 0,
+          "createdRendererEdges": 0,
+          "releasedRendererEdges": 0,
+          "signalCommitNotifications": 0,
+          "planComputedValidations": 0,
+          "createdComputedSourceEdges": 0,
+          "releasedComputedSourceEdges": 0,
+          "lazyRendererConsumers": 0,
+          "reusedRendererEdges": 0,
+          "plainInputResolutions": 4,
+          "signalInputResolutions": 0,
+          "shallowInputCopies": 0,
+          "receiverInputProvisions": 0,
+          "adoptedReceiverInputProvisions": 0,
+          "rolledBackReceiverInputProvisions": 0,
+          "batchedObserverInvalidations": 0,
+          "reactionConsumers": 0,
+          "reactionEdges": 0,
+          "reactionRuns": 0,
+          "reactionCleanups": 0,
+          "reactionFailures": 0
+        }
+      },
+      "after": {
+        "canvasAllocations": 4,
+        "wasmMemoryAllocations": 2,
+        "wasmBytes": 655360,
+        "rasterDisposals": 2,
+        "simulationDisposals": 2,
+        "uploads": 2,
+        "zeroDimensionCanvases": 2,
+        "observedNonReleasedCanvasDimensions": [
+          [
+            256,
+            160
+          ],
+          [
+            256,
+            160
+          ]
+        ],
+        "observerRetainsCanvases": true,
+        "signalGraph": {
+          "rendererConsumers": 0,
+          "rendererEdges": 0,
+          "computedSourceEdges": 0,
+          "pendingComputedValidations": 0,
+          "createdRendererConsumers": 0,
+          "releasedRendererConsumers": 0,
+          "createdRendererEdges": 0,
+          "releasedRendererEdges": 0,
+          "signalCommitNotifications": 0,
+          "planComputedValidations": 0,
+          "createdComputedSourceEdges": 0,
+          "releasedComputedSourceEdges": 0,
+          "lazyRendererConsumers": 0,
+          "reusedRendererEdges": 0,
+          "plainInputResolutions": 9,
+          "signalInputResolutions": 0,
+          "shallowInputCopies": 0,
+          "receiverInputProvisions": 0,
+          "adoptedReceiverInputProvisions": 0,
+          "rolledBackReceiverInputProvisions": 0,
+          "batchedObserverInvalidations": 0,
+          "reactionConsumers": 0,
+          "reactionEdges": 0,
+          "reactionRuns": 0,
+          "reactionCleanups": 0,
+          "reactionFailures": 0
+        }
+      },
+      "scheduler": {
+        "phase": "idle",
+        "pendingHostFrames": 0,
+        "registeredRoots": 0,
+        "advanceParticipants": 0,
+        "completionCallbacks": 0,
+        "createdRootRegistrations": 2,
+        "releasedRootRegistrations": 2,
+        "createdBeginCommands": 0,
+        "releasedBeginCommands": 0,
+        "createdCompletionCallbacks": 0,
+        "releasedCompletionCallbacks": 0,
+        "dirtyInstances": 0,
+        "dirtyRoots": 0,
+        "registeredAdvanceParticipants": 0,
+        "queuedFrameCompletions": 0,
+        "queuedReactionCompletions": 0,
+        "queuedBeginCommands": 0
+      },
+      "errors": [],
+      "flushDurationMs": {
+        "samples": 0,
+        "median": 0,
+        "p95": 0,
+        "max": 0
+      }
+    },
+    {
+      "name": "reaction-diffusion legacy resize-reset",
+      "frameCount": 1,
+      "warmupFrames": 1,
+      "idleFrames": 0,
+      "before": {
+        "canvasAllocations": 4,
+        "wasmMemoryAllocations": 2,
+        "wasmBytes": 655360,
+        "rasterDisposals": 2,
+        "simulationDisposals": 2,
+        "uploads": 2,
+        "zeroDimensionCanvases": 2,
+        "observedNonReleasedCanvasDimensions": [
+          [
+            256,
+            160
+          ],
+          [
+            256,
+            160
+          ]
+        ],
+        "observerRetainsCanvases": true,
+        "signalGraph": {
+          "rendererConsumers": 0,
+          "rendererEdges": 0,
+          "computedSourceEdges": 0,
+          "pendingComputedValidations": 0,
+          "createdRendererConsumers": 0,
+          "releasedRendererConsumers": 0,
+          "createdRendererEdges": 0,
+          "releasedRendererEdges": 0,
+          "signalCommitNotifications": 0,
+          "planComputedValidations": 0,
+          "createdComputedSourceEdges": 0,
+          "releasedComputedSourceEdges": 0,
+          "lazyRendererConsumers": 0,
+          "reusedRendererEdges": 0,
+          "plainInputResolutions": 9,
+          "signalInputResolutions": 0,
+          "shallowInputCopies": 0,
+          "receiverInputProvisions": 0,
+          "adoptedReceiverInputProvisions": 0,
+          "rolledBackReceiverInputProvisions": 0,
+          "batchedObserverInvalidations": 0,
+          "reactionConsumers": 0,
+          "reactionEdges": 0,
+          "reactionRuns": 0,
+          "reactionCleanups": 0,
+          "reactionFailures": 0
+        }
+      },
+      "after": {
+        "canvasAllocations": 6,
+        "wasmMemoryAllocations": 3,
+        "wasmBytes": 983040,
+        "rasterDisposals": 3,
+        "simulationDisposals": 3,
+        "uploads": 3,
+        "zeroDimensionCanvases": 3,
+        "observedNonReleasedCanvasDimensions": [
+          [
+            256,
+            160
+          ],
+          [
+            256,
+            160
+          ],
+          [
+            256,
+            160
+          ]
+        ],
+        "observerRetainsCanvases": true,
+        "signalGraph": {
+          "rendererConsumers": 0,
+          "rendererEdges": 0,
+          "computedSourceEdges": 0,
+          "pendingComputedValidations": 0,
+          "createdRendererConsumers": 1,
+          "releasedRendererConsumers": 1,
+          "createdRendererEdges": 2,
+          "releasedRendererEdges": 2,
+          "signalCommitNotifications": 0,
+          "planComputedValidations": 0,
+          "createdComputedSourceEdges": 0,
+          "releasedComputedSourceEdges": 0,
+          "lazyRendererConsumers": 1,
+          "reusedRendererEdges": 0,
+          "plainInputResolutions": 14,
+          "signalInputResolutions": 0,
+          "shallowInputCopies": 0,
+          "receiverInputProvisions": 0,
+          "adoptedReceiverInputProvisions": 0,
+          "rolledBackReceiverInputProvisions": 0,
+          "batchedObserverInvalidations": 0,
+          "reactionConsumers": 0,
+          "reactionEdges": 0,
+          "reactionRuns": 0,
+          "reactionCleanups": 0,
+          "reactionFailures": 0
+        }
+      },
+      "scheduler": {
+        "phase": "idle",
+        "pendingHostFrames": 0,
+        "registeredRoots": 0,
+        "advanceParticipants": 0,
+        "completionCallbacks": 0,
+        "createdRootRegistrations": 3,
+        "releasedRootRegistrations": 3,
+        "createdBeginCommands": 0,
+        "releasedBeginCommands": 0,
+        "createdCompletionCallbacks": 0,
+        "releasedCompletionCallbacks": 0,
+        "dirtyInstances": 0,
+        "dirtyRoots": 0,
+        "registeredAdvanceParticipants": 0,
+        "queuedFrameCompletions": 0,
+        "queuedReactionCompletions": 0,
+        "queuedBeginCommands": 0
+      },
+      "errors": [],
+      "flushDurationMs": {
+        "samples": 0,
+        "median": 0,
+        "p95": 0,
+        "max": 0
+      }
+    }
+  ],
+  "errors": [
+    "page.evaluate: TypeError: Cannot read properties of undefined (reading 'simulationDisposals')\n    at eval (eval at evaluate (:311:30), <anonymous>:68:73)\n    at async <anonymous>:337:30\n    at /Users/benlesh/.codex/worktrees/perf-implementation/crc/tooling/performance-audit/run-browser.mjs:58:32"
+  ]
+}
