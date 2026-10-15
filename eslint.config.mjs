@@ -50,6 +50,10 @@ const typescriptRules = {
 export default defineConfig([
   globalIgnores([
     '**/node_modules/**',
+    // Preserved design experiments are archival deliverables, not runtime/tooling source.
+    'output/brand/pibbl-distinctiveness-studies/**',
+    'output/brand/pibbl-loading-study/**',
+    'output/brand/pibbl-tangram*/**',
     'packages/text/.cache/**',
     '**/dist/**',
     // Website build copies compiled Pibbl and upstream WASM loaders here.
