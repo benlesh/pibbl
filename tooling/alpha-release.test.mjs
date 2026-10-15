@@ -28,7 +28,8 @@ test('alpha publishing rejects stable versions and never promotes latest', () =>
     mkdirSync(join(root, 'bin'));
     copyFileSync('tooling/publish-release.mjs', join(root, 'tooling/publish-release.mjs'));
     for (const command of ['npm', 'corepack']) {
-      writeFileSync(join(root, 'bin', command), `#!${process.execPath}\nrequire('node:fs').appendFileSync(process.env.CALL_LOG, JSON.stringify(process.argv.slice(2)) + '\\n');\n`, { mode: 0o755 });
+      writeFileSync(join(root, 'bin', command), `#!${process.execPath}\nif(process.argv[2]==='--version'){process.stdout.write(process.env.TEST_NPM_VERSION || '11.19.1');process.exit(0);}
+require('node:fs').appendFileSync(process.env.CALL_LOG, JSON.stringify(process.argv.slice(2)) + '\\n');\n`, { mode: 0o755 });
     }
     const manifests = version => {
       for (const name of ['core', 'three', 'text', 'pibbl']) {
@@ -48,7 +49,22 @@ test('alpha publishing rejects stable versions and never promotes latest', () =>
     for (const name of ['core', 'three', 'text', 'pibbl']) assert.equal(JSON.parse(readFileSync(join(root, 'packages', name, 'package.json'))).pibblAlphaInputHash, 'a'.repeat(64));
     for (const args of publishes) assert.equal(args.at(-1), 'alpha');
     assert.ok(calls.every(args => args[0] !== 'dist-tag'));
+    writeFileSync(log, '');
+    const previous = process.env.TEST_NPM_VERSION;
+    process.env.TEST_NPM_VERSION = '10.9.9';
+    try { assert.throws(run, /npm 11.5.1 or newer/); }
+    finally { if (previous === undefined) delete process.env.TEST_NPM_VERSION; else process.env.TEST_NPM_VERSION = previous; }
+    assert.equal(readFileSync(log, 'utf8'), '', 'old npm must fail before packing or publication');
     manifests('0.0.3');
     assert.throws(run);
   } finally { rmSync(root, { recursive: true, force: true }); }
+});
+
+ test('publishing installs npm into a PATH-preferred isolated prefix', () => {
+  const workflow = parse(readFileSync('.github/workflows/trust.yml', 'utf8'));
+  for (const id of ['publish-alpha', 'npm-auth-check']) {
+    const install = workflow.jobs[id].steps.find(step => step.run?.includes('npm install --global'));
+    assert.ok(install.run.includes('--prefix "$RUNNER_TEMP/pibbl-publishing-tools"'));
+    assert.ok(install.run.includes('"$RUNNER_TEMP/pibbl-publishing-tools/bin" >> "$GITHUB_PATH"'));
+  }
 });

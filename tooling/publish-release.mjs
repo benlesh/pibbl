@@ -3,8 +3,17 @@ import { execFileSync } from 'node:child_process';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
+function requirePublishingNpm() {
+  const version = execFileSync('npm', ['--version'], { encoding: 'utf8' }).trim();
+  const [major, minor, patch] = version.split('.').map(Number);
+  assert.ok(major > 11 || (major === 11 && (minor > 5 || (minor === 5 && patch >= 1))), `Trusted publishing requires npm 11.5.1 or newer; resolved npm ${version}`);
+  process.stdout.write(`Publishing npm: ${version}\n`);
+}
+if (process.argv.includes('--check-npm')) { requirePublishingNpm(); process.exit(0); }
+
 // Publish only the explicit release set. Keep the reviewed tarballs for retries.
 const alpha = process.argv.includes('--alpha');
+if (alpha && !process.argv.includes('--pack-only')) requirePublishingNpm();
 const root = resolve(import.meta.dirname, '..');
 const output = resolve(root, 'dist/npm');
 const packages = ['core', 'three', 'text', 'pibbl'].map(directory => {

@@ -105,7 +105,11 @@ jobs:
           runtime: node@24.19.0
           install: false
       - name: Install Corepack and OIDC-capable npm
-        run: npm install --global corepack@0.35.0 npm@11
+        run: |
+          npm install --global --prefix "$RUNNER_TEMP/pibbl-publishing-tools" corepack@0.35.0 npm@11
+          echo "$RUNNER_TEMP/pibbl-publishing-tools/bin" >> "$GITHUB_PATH"
+      - name: Verify publishing npm version
+        run: node tooling/publish-release.mjs --check-npm
       - name: Install dependencies
         run: pnpm install --frozen-lockfile --strict-peer-dependencies
       - name: Check published alpha inputs
@@ -154,7 +158,11 @@ jobs:
           runtime: node@24.19.0
           install: false
       - name: Install publishing npm
-        run: npm install --global corepack@0.35.0 npm@11
+        run: |
+          npm install --global --prefix "$RUNNER_TEMP/pibbl-publishing-tools" corepack@0.35.0 npm@11
+          echo "$RUNNER_TEMP/pibbl-publishing-tools/bin" >> "$GITHUB_PATH"
+      - name: Verify publishing npm version
+        run: node tooling/publish-release.mjs --check-npm
       - name: Check publisher token exchange without publishing
         run: node tooling/npm-publishing-auth.mjs
       - name: Diagnose npm CLI without publishing
