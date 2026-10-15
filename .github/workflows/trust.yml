@@ -5,12 +5,18 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      check_npm_auth:
+        description: Check npm trusted publishing without building or publishing packages
+        type: boolean
+        default: false
 
 permissions:
   contents: read
 
 jobs:
   contracts:
+    if: github.event_name != 'workflow_dispatch' || inputs.check_npm_auth != true
     name: Trust / ${{ matrix.stage }}
     runs-on: ubuntu-latest
     timeout-minutes: 45
@@ -68,7 +74,7 @@ jobs:
 
   trust-gate:
     name: Trust gate
-    if: always()
+    if: always() && (github.event_name != 'workflow_dispatch' || inputs.check_npm_auth != true)
     needs: [contracts]
     runs-on: ubuntu-latest
     steps:
@@ -129,3 +135,18 @@ jobs:
             exit 0
           fi
           pnpm publish:ci --alpha
+
+  npm-auth-check:
+    name: Check npm trusted publishing
+    if: github.event_name == 'workflow_dispatch' && inputs.check_npm_auth == true
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    environment: npm-alpha
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Check publisher token exchange without publishing
+        run: node tooling/npm-publishing-auth.mjs
