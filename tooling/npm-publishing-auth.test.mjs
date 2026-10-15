@@ -40,7 +40,8 @@ test('manual auth diagnosis cannot publish or replace the normal trust gate', ()
   assert.equal(job.environment, 'npm-alpha');
   assert.equal(job.permissions['id-token'], 'write');
   assert.ok(job.steps.some(step => step.run === 'node tooling/npm-publishing-auth.mjs'));
-  assert.ok(!job.steps.some(step => /npm publish/.test(step.run ?? '')));
+  for (const step of job.steps.filter(step => /npm publish/.test(step.run ?? ''))) assert.ok(step.run.includes('--dry-run'));
+  assert.ok(job.steps.some(step => step.run?.includes('pnpm exec npm publish') && step.run.includes('--loglevel=verbose')));
   assert.equal(workflow.jobs.contracts.if, "github.event_name != 'workflow_dispatch' || inputs.check_npm_auth != true");
   assert.equal(workflow.jobs['trust-gate'].if, "always() && (github.event_name != 'workflow_dispatch' || inputs.check_npm_auth != true)");
   assert.deepEqual(workflow.jobs['publish-alpha'].needs, ['trust-gate']);

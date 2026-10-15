@@ -148,5 +148,19 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+      - name: Setup publishing runtime
+        uses: pnpm/setup@v2
+        with:
+          runtime: node@24.19.0
+          install: false
+      - name: Install publishing npm
+        run: npm install --global corepack@0.35.0 npm@11
       - name: Check publisher token exchange without publishing
         run: node tooling/npm-publishing-auth.mjs
+      - name: Diagnose npm CLI without publishing
+        continue-on-error: true
+        run: |
+          command -v npm
+          npm --version
+          pnpm exec npm --version
+          pnpm exec npm publish ./packages/core --dry-run --ignore-scripts --tag auth-check --loglevel=verbose
