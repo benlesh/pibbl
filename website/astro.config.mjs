@@ -31,6 +31,7 @@ export default defineConfig({
       },
       sidebar: [
         { label: "Start", link: "/start/" },
+        { label: "Data Visualization", link: "/visualization/" },
         { label: "Reference", link: "/reference/" },
         { label: "Visual Catalogs", link: "/catalogs/" },
         { label: "Guides", link: "/guides/" },

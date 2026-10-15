@@ -16,7 +16,7 @@ The complete Band Bars source below uses public imports and embeds its data. [Op
 
 Give the plot a finite local allocation with layout, and reserve gutters for axes. Width/height scale ranges use that allocation, not a global chart rectangle. A surrounding Group can supply placement. Scale does not automatically clip or create an input target.
 
-Linear and band scales are supported. Do not invent time/UTC scales, nonlinear curves, or automatic legends. Signals can flow into declared data/domain/range/reverse inputs. The receiver owns those reads; `.get()` in an enclosing component moves that dependency to the enclosing component.
+Linear, band, UTC, trading-time, log, symlog, and point scales are supported. Use the documented scale and series contracts for each chart; do not assume arbitrary curve interpolation or automatic legends. Signals can flow into declared data/domain/range/reverse inputs. The receiver owns those reads; `.get()` in an enclosing component moves that dependency to the enclosing component.
 
 Use `useLinearScale(id).get().map(value)` for custom marks and `invert(pixel)` for inspection where supported. Pointer coordinates arrive in root-logical space; convert to the plot's local coordinates before inversion. Do not invert CSS pixels directly when the Canvas uses a fixed viewport or transform.
 

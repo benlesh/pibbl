@@ -47,7 +47,7 @@ export const topics = {
   visualization: {
     title: "Data visualization",
     match:
-      /visualization|scale|axis|series|domain|nearest|interpolat|pie-|hover-card/,
+      /visualization|scale|axis|series|domain|nearest|interpolat|pie-|hover-|chart-|financial-|ohlcv|session-vwap/,
   },
   "external-renderers": {
     title: "External renderers and Three.js",

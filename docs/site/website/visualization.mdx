@@ -1,0 +1,40 @@
+---
+title: Charts and data visualization
+description: Build interactive charts, financial workspaces, and scientific figures with composable Canvas APIs.
+---
+
+Build charts with `@pibbl/core/viz`: scales, axes, data marks, inspection, and navigation that compose with Pibbl layout, signals, animation, and events. Start with a complete example, change its data in the playground, then follow the API links for precise behavior. No required chart container or separate animation loop.
+
+## Start with a chart
+
+- [Read the data visualization guide](/guides/data-visualization/) for allocation, scales, axes, and series.
+- [Edit a complete bar chart](/playground/#/examples/composition/viz-band-bars) with embedded data.
+- [Browse every visualization API](/reference/capabilities/visualization/) or [complete minimal programs](/minimal-examples/#viz) with live previews.
+
+## Choose your chart
+
+| Use case                               | Public APIs and runnable examples                                                                                                                                                                                                                                                                                                  |
+| -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Trends and comparisons                 | [LineSeries](/reference/components/line-series/), [PointSeries](/reference/components/point-series/), [BarSeries](/reference/components/bar-series/), and [custom marks with PlotSeries](/reference/components/plot-series/)                                                                                                       |
+| Grouped and stacked comparisons        | [Grouped bars](/playground/#/examples/composition/viz-grouped-bars), [stacked bars](/playground/#/examples/composition/viz-stacked-bars), and [grouped stacks](/playground/#/examples/composition/viz-grouped-stacked-bars)                                                                                                        |
+| Parts of a whole                       | [Pie layout](/reference/components/pie-layout/) and [editable pie examples](/playground/#/examples/composition/viz-pie-composition)                                                                                                                                                                                                |
+| Time and nonlinear data                | [UTC scales](/reference/components/scale/), [log scales](/reference/components/log-scale/), and [symlog and point scales](/reference/components/symlog-point-scales/)                                                                                                                                                              |
+| Financial analysis                     | [Candles, OHLC bars, volume, and inspection](/reference/functions/financial-series/), [indicators](/reference/functions/financial-series/), and [oscillators](/reference/functions/financial-series/)                                                                                                                              |
+| Uncertainty and scientific evidence    | [Intervals](/reference/components/interval-series/), [interval bands](/reference/components/interval-band-series/), [censored observations](/reference/components/censored-point-series/), [weighted points](/reference/components/weighted-point-series/), and [summary diamonds](/reference/components/interval-diamond-series/) |
+| Before/after and repeated observations | [PairedSeries](/reference/components/paired-series/) and [TrajectorySeries](/reference/components/trajectory-series/)                                                                                                                                                                                                              |
+| Color encodings                        | [Sequential, diverging, and threshold color scales](/reference/components/color-scales/)                                                                                                                                                                                                                                           |
+
+## Explore complete workspaces
+
+- [Financial research workspace](/playground/#/examples/composition/financial-research-workspace): coordinated financial charts and controlled editing.
+- [Live market monitor](/playground/#/examples/composition/financial-live-monitor): streaming financial data and aggregation.
+- [Clinical forest plot](/playground/#/examples/composition/viz-clinical-forest): interval estimates and research evidence.
+- [Phase II participant trajectories](/playground/#/examples/composition/viz-phase-ii-trajectories): paired outcomes, individual courses, and missing observations.
+
+These examples demonstrate the public rendering and interaction APIs. Statistical methods, data interpretation, and application data remain application-owned.
+
+## Interaction, inspection, and navigation
+
+Use [HoverData](/reference/components/hover-data/) for explicit data queries and [rendered-series inspection](/reference/functions/rendered-series-inspection/) to query captured geometry through the optional `@pibbl/core/viz/inspection` entry. Read [ScaleAdjust](/reference/components/scale-adjust/) for domain navigation, [chart guides](/reference/components/chart-lines/) for references, and [chart editing](/reference/components/chart-editing/) for controlled edits.
+
+Keep labels, units, missing observations, and baselines meaningful. Provide an application-owned HTML summary or table for important Canvas information. The [agent visualization guide](/agents/topics/visualization/) covers coordinate conversion, ownership, and verification.
