@@ -1214,11 +1214,11 @@ describe("learning example catalog", () => {
     );
   });
 
-  it("contains 139 unique, ordered, source-backed routes including financial, scientific, and texture examples", async () => {
+  it("contains 153 unique, ordered, source-backed routes including financial, scientific, texture, and graph examples", async () => {
     expect(validateLearningExampleCatalog(learningExampleCatalog)).toBe(
       learningExampleCatalog,
     );
-    expect(learningExampleCatalog).toHaveLength(139);
+    expect(learningExampleCatalog).toHaveLength(153);
     expect(
       learningExampleCatalog
         .filter((entry) =>
@@ -1330,6 +1330,20 @@ describe("learning example catalog", () => {
         "wedge",
       ],
       composition: [
+        "viz-graph-dependency",
+        "viz-graph-force",
+        "viz-graph-tree",
+        "viz-graph-tree-reconstruction",
+        "viz-graph-matrix",
+        "viz-graph-sankey",
+        "viz-graph-bipartite",
+        "viz-graph-treemap",
+        "viz-graph-treemap-reconstruction",
+        "viz-graph-neighborhood",
+        "viz-graph-neighborhood-reconstruction",
+        "viz-graph-icicle",
+        "viz-graph-icicle-reconstruction",
+        "viz-graph-chord",
 
         "financial-calendar-ranges",
         "financial-candles",
@@ -1930,6 +1944,36 @@ describe("learning example catalog", () => {
       .flatMap((entry) => entry.api);
     expect(new Set(drawingAndComposition)).toEqual(
       new Set([
+        "AdjacencyMatrix",
+        "BipartiteGraph",
+        "ChordDiagram",
+        "ChordRibbon",
+        "DependencyGraph",
+        "ForceNetwork",
+        "GraphLabel",
+        "GraphNode",
+        "GraphView",
+        "Icicle",
+        "IcicleCell",
+        "MatrixCell",
+        "RadialNeighborhood",
+        "Sankey",
+        "SankeyFlow",
+        "TidyTree",
+        "Treemap",
+        "TreemapCell",
+        "backdropContrast",
+        "createForceSimulation",
+        "layoutBipartite",
+        "layoutChords",
+        "layoutDependencies",
+        "layoutIcicle",
+        "layoutMatrix",
+        "layoutNeighborhood",
+        "layoutSankey",
+        "layoutTree",
+        "layoutTreemap",
+        "useForceNetwork",
         "CensoredPointSeries",
         "HorizontalIntervalSeries",
         "IntervalDiamondSeries",
