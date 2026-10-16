@@ -29,3 +29,11 @@ export default function mount(canvas: HTMLCanvasElement) {
     </Group>,
   );
 }
+
+// Minimal-runtime pages execute their module directly.
+const canvas = document.createElement("canvas");
+canvas.width = 640;
+canvas.height = 300;
+document.body.append(canvas);
+const controller = mount(canvas);
+window.addEventListener("pagehide", () => controller.dispose(), { once: true });

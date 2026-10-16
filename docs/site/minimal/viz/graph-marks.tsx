@@ -192,3 +192,11 @@ function Scene() {
 export default function mount(canvas: HTMLCanvasElement) {
   return pibbl(canvas, <Scene />);
 }
+
+// Minimal-runtime pages execute their module directly.
+const canvas = document.createElement("canvas");
+canvas.width = 560;
+canvas.height = 640;
+document.body.append(canvas);
+const controller = mount(canvas);
+window.addEventListener("pagehide", () => controller.dispose(), { once: true });
