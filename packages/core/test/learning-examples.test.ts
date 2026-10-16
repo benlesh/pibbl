@@ -1586,8 +1586,21 @@ describe("learning example catalog", () => {
       "viz-censored-assay",
       "viz-weighted-evidence",
       "viz-evidence-synthesis",
-        "viz-phase-ii-trajectories",
-
+      "viz-phase-ii-trajectories",
+      "viz-graph-dependency",
+      "viz-graph-force",
+      "viz-graph-tree",
+      "viz-graph-tree-reconstruction",
+      "viz-graph-matrix",
+      "viz-graph-sankey",
+      "viz-graph-bipartite",
+      "viz-graph-treemap",
+      "viz-graph-treemap-reconstruction",
+      "viz-graph-neighborhood",
+      "viz-graph-neighborhood-reconstruction",
+      "viz-graph-icicle",
+      "viz-graph-icicle-reconstruction",
+      "viz-graph-chord",
     ]);
 
     const startExamples = learningExampleCatalog.filter(
