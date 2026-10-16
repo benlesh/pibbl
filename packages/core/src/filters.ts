@@ -9,8 +9,8 @@ export {
   opacity,
   saturate,
   sepia,
-} from './filters/native.js';
-export { displacement } from './filters/displacement.js';
+} from "./filters/native.js";
+export { displacement } from "./filters/displacement.js";
 export type {
   PibblFilter,
   PibblBlurFilterOptions,
@@ -24,10 +24,16 @@ export type {
   PibblSaturateFilterOptions,
   PibblSepiaFilterOptions,
   PibblDisplacementFilterOptions,
-} from './lib/style/filter-types.js';
+} from "./lib/style/filter-types.js";
 
-export { reflectedLight } from './filters/reflected-light.js';
-export type { PibblReflectedLightFilterOptions, PibblReflectedLightSource } from './lib/style/filter-types.js';
+export { reflectedLight } from "./filters/reflected-light.js";
+export type {
+  PibblReflectedLightFilterOptions,
+  PibblReflectedLightSource,
+} from "./lib/style/filter-types.js";
 
-export { emboss } from './filters/emboss.js';
-export type { PibblEmbossFilterOptions } from './filters/emboss.js';
+export { emboss } from "./filters/emboss.js";
+export type { PibblEmbossFilterOptions } from "./filters/emboss.js";
+
+export { backdropContrast } from "./filters/backdrop-contrast.js";
+export type { PibblBackdropContrastFilterOptions } from "./filters/backdrop-contrast.js";

@@ -65,6 +65,7 @@ try {
     pathToFileURL(installed.resolve("@pibbl/core/filters")).href
   );
   assert.equal(typeof filters.emboss, "function");
+  assert.equal(typeof filters.backdropContrast, "function");
   const names = [
     "ProceduralTexture",
     "ReactionDiffusion",

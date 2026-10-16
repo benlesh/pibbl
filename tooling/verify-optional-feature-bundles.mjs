@@ -46,6 +46,7 @@ const fixtures = {
   marble: `import { pibbl, createElement, Rectangle, useTexture } from '@pibbl/core'; import { marble } from '@pibbl/core/textures'; function Scene() { const map = useTexture(marble({ seed: 1 })); return createElement(Rectangle, { style: { width: 40, height: 40, fill: map } }); } export function mount(canvas) { return pibbl(canvas, createElement(Scene, {})); }`,
   water: `import { pibbl, createElement, Rectangle, useTexture } from '@pibbl/core'; import { waterWaves } from '@pibbl/core/textures'; function Scene() { const map = useTexture(waterWaves({ seed: 1 })); return createElement(Rectangle, { style: { width: 40, height: 40, fill: map } }); } export function mount(canvas) { return pibbl(canvas, createElement(Scene, {})); }`,
   displacement: `import { pibbl, createElement, Rectangle, defineTexture, useTexture } from '@pibbl/core'; import { displacement } from '@pibbl/core/filters'; const recipe=defineTexture({create(){return {}},rasterize(_, { canvas }){const c=canvas.getContext('2d'); c.fillStyle='rgb(128 128 128)'; c.fillRect(0,0,canvas.width,canvas.height);}}); function Scene() { const map=useTexture(recipe({})); return createElement(Rectangle, { style: { width: 40, height: 40, fill: 'red', filter: displacement({ map, strength: 2, region: { x: 0, y: 0, width: 40, height: 40 } }) } }); } export function mount(canvas) { return pibbl(canvas, createElement(Scene, {})); }`,
+  backdrop: `import { pibbl, createElement, Rectangle } from '@pibbl/core'; import { backdropContrast } from '@pibbl/core/filters'; export function mount(canvas) { return pibbl(canvas, createElement(Rectangle, { style: { width: 40, height: 40, fill: 'red', filter: backdropContrast() } })); }`,
   animation: `import { usePlayback } from '@pibbl/core'; globalThis.keep=usePlayback;`,
   coreImportOnly: `import '@pibbl/core';`,
   filtersImportOnly: `import '@pibbl/core/filters';`,
@@ -333,6 +334,7 @@ try {
         }
         for (const [bundler, code] of [["esbuild", es.code], ["Vite", vi.code]]) {
           assert.equal(code.includes("Water surface WASM aborted."), name === "waterSurface", `${name} ${key} ${bundler} water simulation tree shaking`);
+          assert.equal(code.includes("backdropContrast filter was created"), name === "backdrop", `${name} ${key} ${bundler} backdrop tree shaking`);
           assert.equal(code.includes("reflected-light filter value"), name === "reflection", `${name} ${key} ${bundler} reflection tree shaking`);
         }
         if (name === "animation") {

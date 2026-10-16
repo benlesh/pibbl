@@ -2499,6 +2499,1438 @@ interface ResolvedPairedStyle {
 export declare function TrajectorySeries<D>(props: TrajectorySeriesProps<D>): PibblNode;
 export declare function PairedSeries<D>(props: PairedSeriesProps<D>): PibblNode;
 
+
+
+
+// Graph visualization: shipped public types and fixed return contracts.
+import type * as GraphCore from "@pibbl/core";
+type ClickEvent = Parameters<NonNullable<GraphCore.PibblEventHandlers["onClick"]>>[0];
+/** A stable application identifier used to join graph records and geometry. {@link GraphLayout} */
+export type VizKey = string | number;
+/** A property key or pure reader for one typed source record. {@link GraphLayout}
+ * @param datum - Source record.
+ * @returns Accessed value. */
+export type Accessor<D, V> = {
+    [P in keyof D]-?: D[P] extends V ? P : never;
+}[keyof D] /** A caller-provided pure callback. {@link GraphLayout}
+* @param datum - The source record or geometry supplied by Pibbl.
+* @returns The value produced by this callback. */ | ((datum: D) => V);
+/** An immutable finite rectangle in graph-local logical pixels. {@link GraphLayout} */
+export type Bounds = Readonly<{
+    /** Horizontal coordinate in local logical pixels. {@link GraphLayout} */
+    x: number;
+    /** Vertical coordinate in local logical pixels. {@link GraphLayout} */
+    y: number;
+    /** Finite width in local logical pixels. {@link GraphLayout} */
+    width: number;
+    /** Finite height in local logical pixels. {@link GraphLayout} */
+    height: number;
+}>;
+export type Size = GraphCore.Size;
+
+/** An immutable coordinate in graph-local logical pixels. {@link GraphLayout} */
+export type Point = Readonly<{
+    /** Horizontal coordinate in local logical pixels. {@link GraphLayout} */
+    x: number;
+    /** Vertical coordinate in local logical pixels. {@link GraphLayout} */
+    y: number;
+}>;
+/** A responsive style value or signal accepted by a Pibbl mark. {@link GraphLayout} */
+export type Style<S extends GraphCore.SystemStyle> = GraphCore.SignalValue<GraphCore.PibblResponsiveStyle<S>>;
+/** A static or geometry-aware mark style with no retained state. {@link GraphLayout}
+ * @param geometry - Mark geometry.
+ * @returns Mark style. */
+export type MarkStyle<G, S extends GraphCore.SystemStyle> = Style<S> /** A caller-provided pure callback. {@link GraphLayout}
+ * @param geometry - The source record or geometry supplied by Pibbl.
+ * @returns The value produced by this callback. */ | ((geometry: G) => Style<S>);
+/** Paint properties for a node box; geometry remains layout-owned. {@link GraphLayout} */
+export type NodeStyle = Omit<GraphCore.RectStyle, "left" | "top" | "width" | "height">;
+/** Paint properties for an edge path; its route remains geometry-owned. {@link GraphLayout} */
+export type EdgeStyle = Omit<GraphCore.SvgPathStyle, "d" | "left" | "top">;
+/** Paint properties for text; label placement remains geometry-owned. {@link GraphLayout} */
+export type LabelStyle = Omit<GraphCore.TextStyle, "left" | "top" | "width" | "height">;
+/** Layout and paint properties for a graph component frame. {@link GraphLayout} */
+export type FrameStyle = GraphCore.GStyle;
+/** A decorative text string with immutable placement. {@link GraphLayout} */
+export interface LabelGeometry {
+    /** Text displayed by the label. {@link GraphLayout} */
+    readonly text: string;
+    /** Finite local logical bounds for this geometry. {@link GraphLayout} */
+    readonly bounds: Bounds;
+    /** Clockwise label rotation in degrees. {@link GraphLayout} */
+    readonly rotationDegrees: number;
+}
+/** Application-owned node and edge records in stable source order. {@link GraphLayout} */
+export interface GraphData<N, E> {
+    /** Source nodes in application order. {@link GraphLayout} */
+    readonly nodes: readonly N[];
+    /** Source edges in application order. {@link GraphLayout} */
+    readonly edges: readonly E[];
+}
+/** Typed readers that identify graph records and optional text. {@link GraphLayout} */
+export interface GraphAccessors<N, E> {
+    /** Reads each node’s stable key. {@link GraphLayout} */
+    readonly nodeKey: Accessor<N, VizKey>;
+    /** Reads each edge’s stable key. {@link GraphLayout} */
+    readonly edgeKey: Accessor<E, VizKey>;
+    /** Reads an edge source key. {@link GraphLayout} */
+    readonly source: Accessor<E, VizKey>;
+    /** Reads an edge target key. {@link GraphLayout} */
+    readonly target: Accessor<E, VizKey>;
+    /** Optional reader for a node’s primary text. {@link LabelGeometry} */
+    readonly label?: Accessor<N, string>;
+    /** Optional reader for a node’s secondary text. {@link LabelGeometry} */
+    readonly detail?: Accessor<N, string>;
+}
+/** Immutable node geometry paired with its original record. {@link GraphLayout} */
+export interface GraphNodeGeometry<N> {
+    /** Stable application-provided key. {@link GraphLayout} */
+    readonly key: VizKey;
+    /** Original application record. {@link GraphLayout} */
+    readonly datum: N;
+    /** Finite local logical bounds for this geometry. {@link GraphLayout} */
+    readonly bounds: Bounds;
+    /** Decorative label geometry. {@link GraphLayout} */
+    readonly label: LabelGeometry;
+    /** Optional secondary label geometry. {@link GraphLayout} */
+    readonly detail: LabelGeometry | null;
+}
+/** Structured anchors and path segments for an edge route. {@link GraphLayout} */
+export interface GraphRoute {
+    /** Attachment point on the source mark. {@link GraphLayout} */
+    readonly sourceAnchor: Point;
+    /** Attachment point on the target mark. {@link GraphLayout} */
+    readonly targetAnchor: Point;
+    /** Path segments from source to target. {@link GraphLayout} */
+    readonly segments: readonly Readonly<GraphCore.PathSegment>[];
+    /** Optional path segments for an edge arrowhead. {@link GraphLayout} */
+    readonly arrowSegments: readonly Readonly<GraphCore.PathSegment>[] | null;
+}
+/** Immutable edge geometry paired with its original record. {@link GraphLayout} */
+export interface GraphEdgeGeometry<E> {
+    /** Stable application-provided key. {@link GraphLayout} */
+    readonly key: VizKey;
+    /** Original application record. {@link GraphLayout} */
+    readonly datum: E;
+    /** Stable key of the edge source node. {@link GraphLayout} */
+    readonly sourceKey: VizKey;
+    /** Stable key of the edge target node. {@link GraphLayout} */
+    readonly targetKey: VizKey;
+    /** Structured route used to produce the serialized path. {@link GraphLayout} */
+    readonly route: GraphRoute;
+    /** SVG path serialization of the route. {@link GraphLayout} */
+    readonly path: string;
+    /** Optional SVG path for the route arrow. {@link GraphLayout} */
+    readonly arrowPath: string | null;
+}
+/** A pure immutable snapshot that can be painted with graph marks. {@link GraphLayout} */
+export interface GraphLayout<N, E> {
+    /** Finite local logical bounds for this geometry. {@link GraphLayout} */
+    readonly bounds: Bounds;
+    /** Source nodes in application order. {@link GraphLayout} */
+    readonly nodes: readonly GraphNodeGeometry<N>[];
+    /** Source edges in application order. {@link GraphLayout} */
+    readonly edges: readonly GraphEdgeGeometry<E>[];
+}
+/** Optional default-mark overrides and click handlers shared by graph components. {@link GraphLayout} */
+export interface GraphPresentation<N, E, NG extends GraphNodeGeometry<N> = GraphNodeGeometry<N>> {
+    /** Style or geometry-aware style for node marks. {@link GraphLayout} */
+    readonly nodeStyle?: MarkStyle<NG, NodeStyle>;
+    /** Style or geometry-aware style for edge marks. {@link GraphLayout} */
+    readonly edgeStyle?: MarkStyle<GraphEdgeGeometry<E>, EdgeStyle>;
+    /** Style for decorative labels. {@link GraphLayout} */
+    readonly labelStyle?: MarkStyle<NG, LabelStyle>;
+    /** Replaces the default node mark with this composition. {@link GraphLayout}
+     * @param node - The source record or geometry supplied by Pibbl.
+     * @returns The value produced by this callback. */
+    readonly renderNode?: (node: NG) => GraphCore.PibblNode;
+    /** Replaces the default edge mark with this composition. {@link GraphLayout}
+     * @param edge - The source record or geometry supplied by Pibbl.
+     * @returns The value produced by this callback. */
+    readonly renderEdge?: (edge: GraphEdgeGeometry<E>) => GraphCore.PibblNode;
+    /** Receives clicks on a node mark. {@link GraphLayout}
+     * @param node - The source record or geometry supplied by Pibbl.
+     * @param event - The source record or geometry supplied by Pibbl. */
+    readonly onNodeClick?: (node: NG, event: ClickEvent) => void;
+    /** Receives clicks on an edge mark. {@link GraphLayout}
+     * @param edge - The source record or geometry supplied by Pibbl.
+     * @param event - The source record or geometry supplied by Pibbl. */
+    readonly onEdgeClick?: (edge: GraphEdgeGeometry<E>, event: ClickEvent) => void;
+}
+/** Ordinary Pibbl event and focus participation accepted by graph marks. {@link GraphLayout} */
+export interface MarkInteraction extends GraphCore.PibblEventHandlers, GraphCore.PibblEventParticipationOptions {
+    /** Whether the mark enters logical keyboard focus. {@link GraphLayout} */
+    readonly keyboardFocusable?: boolean;
+    /** Logical bounds used for keyboard navigation. {@link GraphLayout} */
+    readonly keyboardNavigationBounds?: Bounds;
+}
+/** Geometry, paint, content, and ordinary events for GraphNode. {@link GraphLayout} */
+export interface GraphNodeProps<N> extends MarkInteraction {
+    /** Immutable node geometry and original datum. {@link GraphLayout} */
+    readonly node: GraphNodeGeometry<N>;
+    /** Frame style and responsive size allocation. {@link GraphLayout} */
+    readonly style?: Style<NodeStyle>;
+    /** Optional content painted with this mark. {@link GraphLayout} */
+    readonly children?: GraphCore.PibblNode;
+}
+/** Geometry, paint, and ordinary events for GraphEdge. {@link GraphLayout} */
+export interface GraphEdgeProps<E> extends MarkInteraction {
+    /** Immutable edge geometry and original datum. {@link GraphLayout} */
+    readonly edge: GraphEdgeGeometry<E>;
+    /** Frame style and responsive size allocation. {@link GraphLayout} */
+    readonly style?: Style<EdgeStyle>;
+}
+/** Geometry and paint for a decorative GraphLabel. {@link GraphLayout} */
+export interface GraphLabelProps {
+    /** Decorative label geometry. {@link GraphLayout} */
+    readonly label: LabelGeometry;
+    /** Frame style and responsive size allocation. {@link GraphLayout} */
+    readonly style?: Style<LabelStyle>;
+}
+/** A layout snapshot plus mark overrides, without running an algorithm. {@link GraphLayout} */
+export interface GraphViewProps<N, E> extends GraphPresentation<N, E> {
+    /** Immutable layout snapshot for ordinary mark composition. {@link GraphLayout} */
+    readonly layout: GraphCore.SignalValue<GraphLayout<N, E>>;
+    /** Frame style and responsive size allocation. {@link GraphLayout} */
+    readonly style?: Style<FrameStyle>;
+}
+/** Frame options for rank-based dependency diagrams. {@link GraphLayout} */
+export interface DependencyStyle extends GraphCore.GStyle {
+    /** Distance between ranks in local logical pixels. {@link GraphLayout} */
+    readonly rankGap?: number;
+    /** Minimum gap between node marks in local logical pixels. {@link GraphLayout} */
+    readonly nodeGap?: number;
+}
+/** Pure layout inputs for a directed dependency graph. {@link GraphLayout} */
+export interface DependencyOptions<N, E> extends GraphAccessors<N, E> {
+    /** Finite local logical bounds for this geometry. {@link GraphLayout} */
+    readonly bounds: Bounds;
+    /** Node size in local logical pixels; defaults to 160 by 56. {@link GraphLayout}
+     * @param node - Source record to measure.
+     * @returns Finite local logical size. */
+    readonly nodeSize?: Size /** A caller-provided pure callback. {@link GraphLayout}
+     * @param node - The source record or geometry supplied by Pibbl.
+     * @returns The value produced by this callback. */ | ((node: N) => Size);
+    /** Distance between ranks in local logical pixels. {@link GraphLayout} */
+    readonly rankGap?: number;
+    /** Minimum gap between node marks in local logical pixels. {@link GraphLayout} */
+    readonly nodeGap?: number;
+}
+/** Reactive dependency data and default mark presentation. {@link GraphLayout} */
+export interface DependencyGraphProps<N, E> extends GraphAccessors<N, E>, GraphPresentation<N, E> {
+    /** Graph records; publish a new snapshot to update. {@link GraphLayout} */
+    readonly graph: GraphCore.SignalValue<GraphData<N, E>>;
+    /** Node size in local logical pixels; defaults to 160 by 56. {@link GraphLayout}
+     * @param node - Source record to measure.
+     * @returns Finite local logical size. */
+    readonly nodeSize?: Size /** A caller-provided pure callback. {@link GraphLayout}
+     * @param node - The source record or geometry supplied by Pibbl.
+     * @returns The value produced by this callback. */ | ((node: N) => Size);
+    /** Frame style and responsive size allocation. {@link GraphLayout} */
+    readonly style?: Style<DependencyStyle>;
+}
+/** Bounded deterministic numeric settings for force solving. {@link GraphLayout} */
+export interface ForceSettings {
+    /** Deterministic seed for solver initialization. {@link GraphLayout} */
+    readonly seed?: number;
+    /** Preferred link distance in local logical pixels. {@link GraphLayout} */
+    readonly linkDistance?: number;
+    /** Minimum gap between node marks in local logical pixels. {@link GraphLayout} */
+    readonly nodeGap?: number;
+    /** Maximum solver iterations before exhaustion. {@link GraphLayout} */
+    readonly maxIterations?: number;
+}
+/** Pure force-layout inputs, accessors, bounds, and solver settings. {@link GraphLayout} */
+export interface ForceOptions<N, E> extends GraphAccessors<N, E> {
+    /** Finite local logical bounds for this geometry. {@link GraphLayout} */
+    readonly bounds: Bounds;
+    /** Node size in local logical pixels; defaults to 160 by 56. {@link GraphLayout}
+     * @param node - Source record to measure.
+     * @returns Finite local logical size. */
+    readonly nodeSize?: Size /** A caller-provided pure callback. {@link GraphLayout}
+     * @param node - The source record or geometry supplied by Pibbl.
+     * @returns The value produced by this callback. */ | ((node: N) => Size);
+    /** Optional deterministic solver settings. {@link GraphLayout} */
+    readonly simulation?: ForceSettings;
+    /** Whether direction affects the algorithm. {@link GraphLayout} */
+    readonly directed?: boolean;
+}
+/** A force-solver snapshot with bounded progress state. {@link GraphLayout} */
+export interface ForceLayout<N, E> extends GraphLayout<N, E> {
+    /** Iterations completed by the solver. {@link GraphLayout} */
+    readonly iterations: number;
+    /** Whether the solver reached its stopping condition. {@link GraphLayout} */
+    readonly settled: boolean;
+}
+/** Hook-owned live solver state and commands; released on unmount. {@link GraphLayout} */
+export interface ForceNetworkController<N, E> {
+    /** Immutable layout snapshot for ordinary mark composition. {@link GraphLayout} */
+    readonly layout: GraphCore.Signal<ForceLayout<N, E>>;
+    /** Current solver lifecycle status. {@link GraphLayout} */
+    readonly status: GraphCore.Signal<"running" | "paused" | "settled" | "exhausted" | "failed">;
+    /** Most recent solver failure, or null. {@link GraphLayout} */
+    readonly error: GraphCore.Signal<Error | null>;
+    /** Queues a pause at the next scheduler boundary. {@link GraphLayout} */
+    pause(): void;
+    /** Queues solver advancement at the next scheduler boundary. {@link GraphLayout} */
+    resume(): void;
+    /** Restarts the current solver without discarding node positions. {@link GraphLayout} */
+    restart(): void;
+    /** Restores seeded positions and clears pins. {@link GraphLayout} */
+    reset(): void;
+    /** Pins one node at a finite local position. {@link GraphLayout}
+     * @param key - The source record or geometry supplied by Pibbl.
+     * @param position - The source record or geometry supplied by Pibbl. */
+    pin(key: VizKey, position: Point): void;
+    /** Releases a previously pinned node. {@link GraphLayout}
+     * @param key - The source record or geometry supplied by Pibbl. */
+    release(key: VizKey): void;
+}
+/** Frame style for a live force network. {@link GraphLayout} */
+export type ForceStyle = GraphCore.GStyle;
+/** Reactive force-network data, solver settings, and presentation. {@link GraphLayout} */
+export interface ForceNetworkProps<N, E> extends GraphAccessors<N, E>, GraphPresentation<N, E> {
+    /** Optional compatible numeric solver factory. {@link GraphLayout} */
+    readonly createSimulation?: ForceSimulationFactory<N, E>;
+    /** Graph records; publish a new snapshot to update. {@link GraphLayout} */
+    readonly graph: GraphCore.SignalValue<GraphData<N, E>>;
+    /** Node size in local logical pixels; defaults to 160 by 56. {@link GraphLayout}
+     * @param node - Source record to measure.
+     * @returns Finite local logical size. */
+    readonly nodeSize?: Size /** A caller-provided pure callback. {@link GraphLayout}
+     * @param node - The source record or geometry supplied by Pibbl.
+     * @returns The value produced by this callback. */ | ((node: N) => Size);
+    /** Optional deterministic solver settings. {@link GraphLayout} */
+    readonly simulation?: ForceSettings;
+    /** Whether direction affects the algorithm. {@link GraphLayout} */
+    readonly directed?: boolean;
+    /** GraphCore.Signal controlling whether simulation advances. {@link GraphLayout} */
+    readonly paused?: GraphCore.SignalValue<boolean>;
+    /** Frame style and responsive size allocation. {@link GraphLayout} */
+    readonly style?: Style<ForceStyle>;
+}
+/** Configuration for a hook-owned force solver session. {@link GraphLayout} */
+export interface ForceHookOptions<N, E> extends ForceOptions<N, E> {
+    /** Initial paused state for a new controller. {@link GraphLayout} */
+    readonly initialPaused?: boolean;
+    /** Optional compatible numeric solver factory. {@link GraphLayout} */
+    readonly createSimulation?: ForceSimulationFactory<N, E>;
+}
+/** Typed readers for one rooted hierarchy with stable child order. {@link GraphLayout} */
+export interface HierarchyAccessors<D> {
+    /** Reads each hierarchy record’s stable key. {@link GraphLayout} */
+    readonly keyBy: Accessor<D, VizKey>;
+    /** Reads ordered child records; null and undefined mean no children. {@link GraphLayout} */
+    readonly childrenBy: Accessor<D, readonly D[] | null | undefined>;
+    /** Optional reader for a node’s primary text. {@link LabelGeometry} */
+    readonly label?: Accessor<D, string>;
+    /** Whether this item hides its descendants. {@link GraphLayout}
+     * @param node - The source record or geometry supplied by Pibbl.
+     * @returns The value produced by this callback. */
+    readonly collapsed?: (node: D) => boolean;
+}
+/** The original parent and child records represented by a tree edge. {@link GraphLayout} */
+export interface TreeEdge<D> {
+    /** Original parent record. {@link GraphLayout} */
+    readonly parent: D;
+    /** Original child record. {@link GraphLayout} */
+    readonly child: D;
+}
+/** Tree node geometry with ancestry and collapsed-child information. {@link GraphLayout} */
+export interface TreeNodeGeometry<D> extends GraphNodeGeometry<D> {
+    /** Zero-based hierarchy depth. {@link GraphLayout} */
+    readonly depth: number;
+    /** Parent key, or null for a top-level item. {@link GraphLayout} */
+    readonly parentKey: VizKey | null;
+    /** Number of children omitted by collapse. {@link GraphLayout} */
+    readonly hiddenChildren: number;
+}
+/** Immutable tidy-tree node and edge geometry. {@link GraphLayout} */
+export interface TreeLayout<D> extends GraphLayout<D, TreeEdge<D>> {
+    /** Source nodes in application order. {@link GraphLayout} */
+    readonly nodes: readonly TreeNodeGeometry<D>[];
+}
+/** Frame options controlling tree level and sibling spacing. {@link GraphLayout} */
+export interface TreeStyle extends GraphCore.GStyle {
+    /** Gap between hierarchy levels in local logical pixels. {@link GraphLayout} */
+    readonly levelGap?: number;
+    /** Gap between sibling subtrees in local logical pixels. {@link GraphLayout} */
+    readonly siblingGap?: number;
+}
+/** Pure tidy-tree inputs including bounds and optional dimensions. {@link GraphLayout} */
+export interface TreeOptions<D> extends HierarchyAccessors<D> {
+    /** Finite local logical bounds for this geometry. {@link GraphLayout} */
+    readonly bounds: Bounds;
+    /** Optional reader for a node’s secondary text. {@link LabelGeometry} */
+    readonly detail?: Accessor<D, string>;
+    /** Node size in local logical pixels; defaults to 160 by 56. {@link GraphLayout}
+     * @param node - Source record to measure.
+     * @returns Finite local logical size. */
+    readonly nodeSize?: Size /** A caller-provided pure callback. {@link GraphLayout}
+     * @param node - The source record or geometry supplied by Pibbl.
+     * @returns The value produced by this callback. */ | ((node: D) => Size);
+    /** Gap between hierarchy levels in local logical pixels. {@link GraphLayout} */
+    readonly levelGap?: number;
+    /** Gap between sibling subtrees in local logical pixels. {@link GraphLayout} */
+    readonly siblingGap?: number;
+}
+/** Reactive hierarchy data and presentation for TidyTree. {@link GraphLayout} */
+export interface TidyTreeProps<D> extends HierarchyAccessors<D>, GraphPresentation<D, TreeEdge<D>, TreeNodeGeometry<D>> {
+    /** Hierarchy root; publish a new root to update. {@link GraphLayout} */
+    readonly root: GraphCore.SignalValue<D>;
+    /** Optional reader for a node’s secondary text. {@link LabelGeometry} */
+    readonly detail?: Accessor<D, string>;
+    /** Node size in local logical pixels; defaults to 160 by 56. {@link GraphLayout}
+     * @param node - Source record to measure.
+     * @returns Finite local logical size. */
+    readonly nodeSize?: Size /** A caller-provided pure callback. {@link GraphLayout}
+     * @param node - The source record or geometry supplied by Pibbl.
+     * @returns The value produced by this callback. */ | ((node: D) => Size);
+    /** Replaces the default node mark with this composition. {@link GraphLayout}
+     * @param node - The source record or geometry supplied by Pibbl.
+     * @returns The value produced by this callback. */
+    readonly renderNode?: (node: TreeNodeGeometry<D>) => GraphCore.PibblNode;
+    /** Receives clicks on a node mark. {@link GraphLayout}
+     * @param node - The source record or geometry supplied by Pibbl.
+     * @param event - The source record or geometry supplied by Pibbl. */
+    readonly onNodeClick?: (node: TreeNodeGeometry<D>, event: ClickEvent) => void;
+    /** Frame style and responsive size allocation. {@link GraphLayout} */
+    readonly style?: Style<TreeStyle>;
+}
+/** Ordered row, column, and relation records for an adjacency matrix. {@link GraphLayout} */
+export interface MatrixData<R, C, E> {
+    /** Ordered source row records. {@link GraphLayout} */
+    readonly rows: readonly R[];
+    /** Ordered source column records. {@link GraphLayout} */
+    readonly columns: readonly C[];
+    /** Source relation records. {@link GraphLayout} */
+    readonly relations: readonly E[];
+}
+/** Typed matrix keys, quantity reader, labels, and display unit. {@link GraphLayout} */
+export interface MatrixAccessors<R, C, E> {
+    /** Stable row key. {@link GraphLayout} */
+    readonly rowKey: Accessor<R, VizKey>;
+    /** Stable column key. {@link GraphLayout} */
+    readonly columnKey: Accessor<C, VizKey>;
+    /** Reads an edge source key. {@link GraphLayout} */
+    readonly source: Accessor<E, VizKey>;
+    /** Reads an edge target key. {@link GraphLayout} */
+    readonly target: Accessor<E, VizKey>;
+    /** Reads the finite quantitative value. {@link GraphLayout} */
+    readonly value: Accessor<E, number>;
+    /** Reads a row label. {@link GraphLayout} */
+    readonly rowLabel?: Accessor<R, string>;
+    /** Reads a column label. {@link GraphLayout} */
+    readonly columnLabel?: Accessor<C, string>;
+    /** Display unit for quantitative values. {@link GraphLayout} */
+    readonly unit: string;
+    /** Formats a quantitative value for display. {@link GraphLayout}
+     * @param value - The source record or geometry supplied by Pibbl.
+     * @returns The value produced by this callback. */
+    readonly formatValue?: (value: number) => string;
+}
+/** Immutable aggregate geometry for one ordered row/column pair. {@link GraphLayout} */
+export interface MatrixCellGeometry<R, C, E> {
+    /** Original row record. {@link GraphLayout} */
+    readonly row: R;
+    /** Original column record. {@link GraphLayout} */
+    readonly column: C;
+    /** Stable row key. {@link GraphLayout} */
+    readonly rowKey: VizKey;
+    /** Stable column key. {@link GraphLayout} */
+    readonly columnKey: VizKey;
+    /** Original records represented by this aggregate. {@link GraphLayout} */
+    readonly records: readonly E[];
+    /** Reads the finite quantitative value. {@link GraphLayout} */
+    readonly value: number | null;
+    /** Finite local logical bounds for this geometry. {@link GraphLayout} */
+    readonly bounds: Bounds;
+    /** Decorative label geometry. {@link GraphLayout} */
+    readonly label: LabelGeometry | null;
+}
+/** Immutable matrix cells and decorative axis labels. {@link GraphLayout} */
+export interface MatrixLayout<R, C, E> {
+    /** Finite local logical bounds for this geometry. {@link GraphLayout} */
+    readonly bounds: Bounds;
+    /** Display unit for quantitative values. {@link GraphLayout} */
+    readonly unit: string;
+    /** Immutable cells in source-stable layout order. {@link GraphLayout} */
+    readonly cells: readonly MatrixCellGeometry<R, C, E>[];
+    /** Decorative labels for matrix rows. {@link GraphLayout} */
+    readonly rowLabels: readonly LabelGeometry[];
+    /** Decorative labels for matrix columns. {@link GraphLayout} */
+    readonly columnLabels: readonly LabelGeometry[];
+}
+/** Frame options for matrix gaps and label reservations. {@link GraphLayout} */
+export interface MatrixStyle extends GraphCore.GStyle {
+    /** Gap between cells in local logical pixels. {@link GraphLayout} */
+    readonly cellGap?: number;
+    /** Reserved width for matrix row labels in local logical pixels. {@link GraphLayout} */
+    readonly rowLabelWidth?: number;
+    /** Reserved height for matrix column labels in local logical pixels. {@link GraphLayout} */
+    readonly columnLabelHeight?: number;
+}
+/** Pure adjacency-matrix inputs and finite output bounds. {@link GraphLayout} */
+export interface MatrixOptions<R, C, E> extends MatrixAccessors<R, C, E> {
+    /** Finite local logical bounds for this geometry. {@link GraphLayout} */
+    readonly bounds: Bounds;
+    /** Gap between cells in local logical pixels. {@link GraphLayout} */
+    readonly cellGap?: number;
+    /** Reserved width for matrix row labels in local logical pixels. {@link GraphLayout} */
+    readonly rowLabelWidth?: number;
+    /** Reserved height for matrix column labels in local logical pixels. {@link GraphLayout} */
+    readonly columnLabelHeight?: number;
+}
+/** Reactive matrix data and cell presentation. {@link GraphLayout} */
+export interface AdjacencyMatrixProps<R, C, E> extends MatrixAccessors<R, C, E> {
+    /** Input records; publish a new snapshot to update. {@link GraphLayout} */
+    readonly data: GraphCore.SignalValue<MatrixData<R, C, E>>;
+    /** Frame style and responsive size allocation. {@link GraphLayout} */
+    readonly style?: Style<MatrixStyle>;
+    /** Style or geometry-aware style for cell marks. {@link GraphLayout} */
+    readonly cellStyle?: MarkStyle<MatrixCellGeometry<R, C, E>, NodeStyle>;
+    /** Style for decorative labels. {@link GraphLayout} */
+    readonly labelStyle?: Style<LabelStyle>;
+    /** Replaces the default cell mark with this composition. {@link GraphLayout}
+     * @param cell - The source record or geometry supplied by Pibbl.
+     * @returns The value produced by this callback. */
+    readonly renderCell?: (cell: MatrixCellGeometry<R, C, E>) => GraphCore.PibblNode;
+    /** Receives clicks on a cell mark. {@link GraphLayout}
+     * @param cell - The source record or geometry supplied by Pibbl.
+     * @param event - The source record or geometry supplied by Pibbl. */
+    readonly onCellClick?: (cell: MatrixCellGeometry<R, C, E>, event: ClickEvent) => void;
+}
+/** Geometry, paint, events, and content for one matrix cell. {@link GraphLayout} */
+export interface MatrixCellProps<R, C, E> extends MarkInteraction {
+    /** Immutable cell geometry and its original records. {@link GraphLayout} */
+    readonly cell: MatrixCellGeometry<R, C, E>;
+    /** Frame style and responsive size allocation. {@link GraphLayout} */
+    readonly style?: Style<NodeStyle>;
+    /** Optional content painted with this mark. {@link GraphLayout} */
+    readonly children?: GraphCore.PibblNode;
+}
+/** Node geometry annotated with incoming, outgoing, and net quantities. {@link GraphLayout} */
+export interface SankeyNodeGeometry<N> extends GraphNodeGeometry<N> {
+    /** Total value arriving at this node. {@link GraphLayout} */
+    readonly incomingValue: number;
+    /** Total value leaving this node. {@link GraphLayout} */
+    readonly outgoingValue: number;
+    /** Outgoing value minus incoming value. {@link GraphLayout} */
+    readonly netValue: number;
+}
+/** Flow geometry annotated with its source quantity and pixel thickness. {@link GraphLayout} */
+export interface SankeyFlowGeometry<E> extends GraphEdgeGeometry<E> {
+    /** Reads the finite quantitative value. {@link GraphLayout} */
+    readonly value: number;
+    /** Display unit for quantitative values. {@link GraphLayout} */
+    readonly unit: string;
+    /** Source-side flow attachment span. {@link GraphLayout} */
+    readonly sourceSpan: Readonly<{
+        /** Upper endpoint of the attachment span. {@link GraphLayout} */
+        top: Point;
+        /** Lower endpoint of the attachment span. {@link GraphLayout} */
+        bottom: Point;
+    }>;
+    /** Target-side flow attachment span. {@link GraphLayout} */
+    readonly targetSpan: Readonly<{
+        /** Upper endpoint of the attachment span. {@link GraphLayout} */
+        top: Point;
+        /** Lower endpoint of the attachment span. {@link GraphLayout} */
+        bottom: Point;
+    }>;
+    /** Flow width in local logical pixels. {@link GraphLayout} */
+    readonly thickness: number;
+}
+/** Immutable Sankey nodes and flows with their display unit. {@link GraphLayout} */
+export interface SankeyLayout<N, E> {
+    /** Finite local logical bounds for this geometry. {@link GraphLayout} */
+    readonly bounds: Bounds;
+    /** Display unit for quantitative values. {@link GraphLayout} */
+    readonly unit: string;
+    /** Source nodes in application order. {@link GraphLayout} */
+    readonly nodes: readonly SankeyNodeGeometry<N>[];
+    /** Immutable Sankey flow geometry. {@link GraphLayout} */
+    readonly flows: readonly SankeyFlowGeometry<E>[];
+}
+/** Typed Sankey keys, flow quantity reader, and display unit. {@link GraphLayout} */
+export interface SankeyAccessors<N, E> extends GraphAccessors<N, E> {
+    /** Reads the finite quantitative value. {@link GraphLayout} */
+    readonly value: Accessor<E, number>;
+    /** Display unit for quantitative values. {@link GraphLayout} */
+    readonly unit: string;
+    /** Formats a quantitative value for display. {@link GraphLayout}
+     * @param value - The source record or geometry supplied by Pibbl.
+     * @returns The value produced by this callback. */
+    readonly formatValue?: (value: number) => string;
+}
+/** Frame options for Sankey node width and separation. {@link GraphLayout} */
+export interface SankeyStyle extends GraphCore.GStyle {
+    /** Width of Sankey nodes in local logical pixels. {@link GraphLayout} */
+    readonly nodeWidth?: number;
+    /** Minimum gap between node marks in local logical pixels. {@link GraphLayout} */
+    readonly nodeGap?: number;
+}
+/** Pure Sankey inputs and finite output bounds. {@link GraphLayout} */
+export interface SankeyOptions<N, E> extends SankeyAccessors<N, E> {
+    /** Finite local logical bounds for this geometry. {@link GraphLayout} */
+    readonly bounds: Bounds;
+    /** Width of Sankey nodes in local logical pixels. {@link GraphLayout} */
+    readonly nodeWidth?: number;
+    /** Minimum gap between node marks in local logical pixels. {@link GraphLayout} */
+    readonly nodeGap?: number;
+}
+/** Reactive Sankey data and default flow/node presentation. {@link GraphLayout} */
+export interface SankeyProps<N, E> extends SankeyAccessors<N, E> {
+    /** Graph records; publish a new snapshot to update. {@link GraphLayout} */
+    readonly graph: GraphCore.SignalValue<GraphData<N, E>>;
+    /** Frame style and responsive size allocation. {@link GraphLayout} */
+    readonly style?: Style<SankeyStyle>;
+    /** Style or geometry-aware style for node marks. {@link GraphLayout} */
+    readonly nodeStyle?: MarkStyle<SankeyNodeGeometry<N>, NodeStyle>;
+    /** Style or geometry-aware style for flow marks. {@link GraphLayout} */
+    readonly flowStyle?: MarkStyle<SankeyFlowGeometry<E>, EdgeStyle>;
+    /** Style for decorative labels. {@link GraphLayout} */
+    readonly labelStyle?: Style<LabelStyle>;
+    /** Replaces the default node mark with this composition. {@link GraphLayout}
+     * @param node - The source record or geometry supplied by Pibbl.
+     * @returns The value produced by this callback. */
+    readonly renderNode?: (node: SankeyNodeGeometry<N>) => GraphCore.PibblNode;
+    /** Replaces the default flow mark with this composition. {@link GraphLayout}
+     * @param flow - The source record or geometry supplied by Pibbl.
+     * @returns The value produced by this callback. */
+    readonly renderFlow?: (flow: SankeyFlowGeometry<E>) => GraphCore.PibblNode;
+    /** Receives clicks on a node mark. {@link GraphLayout}
+     * @param node - The source record or geometry supplied by Pibbl.
+     * @param event - The source record or geometry supplied by Pibbl. */
+    readonly onNodeClick?: (node: SankeyNodeGeometry<N>, event: ClickEvent) => void;
+    /** Receives clicks on a flow mark. {@link GraphLayout}
+     * @param flow - The source record or geometry supplied by Pibbl.
+     * @param event - The source record or geometry supplied by Pibbl. */
+    readonly onFlowClick?: (flow: SankeyFlowGeometry<E>, event: ClickEvent) => void;
+}
+/** Ordered left, right, and edge records for a two-sided graph. {@link GraphLayout} */
+export interface BipartiteData<L, R, E> {
+    /** Left-side endpoint geometry. {@link GraphLayout} */
+    readonly left: readonly L[];
+    /** Right-side endpoint geometry. {@link GraphLayout} */
+    readonly right: readonly R[];
+    /** Source edges in application order. {@link GraphLayout} */
+    readonly edges: readonly E[];
+}
+/** Typed keys and optional labels for both graph sides. {@link GraphLayout} */
+export interface BipartiteAccessors<L, R, E> {
+    /** Reads each left-side record’s stable key. {@link GraphLayout} */
+    readonly leftKey: Accessor<L, VizKey>;
+    /** Reads each right-side record’s stable key. {@link GraphLayout} */
+    readonly rightKey: Accessor<R, VizKey>;
+    /** Reads each edge’s stable key. {@link GraphLayout} */
+    readonly edgeKey: Accessor<E, VizKey>;
+    /** Reads an edge source key. {@link GraphLayout} */
+    readonly source: Accessor<E, VizKey>;
+    /** Reads an edge target key. {@link GraphLayout} */
+    readonly target: Accessor<E, VizKey>;
+    /** Optional reader for a left-side label. {@link GraphLayout} */
+    readonly leftLabel?: Accessor<L, string>;
+    /** Optional reader for a right-side label. {@link GraphLayout} */
+    readonly rightLabel?: Accessor<R, string>;
+}
+/** Edge geometry retaining side-qualified endpoints. {@link GraphLayout} */
+export interface BipartiteEdgeGeometry<L, R, E> extends GraphEdgeGeometry<E> {
+    /** Left-side endpoint geometry. {@link GraphLayout} */
+    readonly left: GraphNodeGeometry<L>;
+    /** Right-side endpoint geometry. {@link GraphLayout} */
+    readonly right: GraphNodeGeometry<R>;
+}
+/** Immutable left nodes, right nodes, and their connecting edges. {@link GraphLayout} */
+export interface BipartiteLayout<L, R, E> {
+    /** Finite local logical bounds for this geometry. {@link GraphLayout} */
+    readonly bounds: Bounds;
+    /** Left-side endpoint geometry. {@link GraphLayout} */
+    readonly left: readonly GraphNodeGeometry<L>[];
+    /** Right-side endpoint geometry. {@link GraphLayout} */
+    readonly right: readonly GraphNodeGeometry<R>[];
+    /** Source edges in application order. {@link GraphLayout} */
+    readonly edges: readonly BipartiteEdgeGeometry<L, R, E>[];
+}
+/** Frame options for two-sided graph columns and node spacing. {@link GraphLayout} */
+export interface BipartiteStyle extends GraphCore.GStyle {
+    /** Distance between bipartite columns in local logical pixels. {@link GraphLayout} */
+    readonly columnGap?: number;
+    /** Minimum gap between node marks in local logical pixels. {@link GraphLayout} */
+    readonly nodeGap?: number;
+}
+/** Pure bipartite inputs, side dimensions, and finite bounds. {@link GraphLayout} */
+export interface BipartiteOptions<L, R, E> extends BipartiteAccessors<L, R, E> {
+    /** Finite local logical bounds for this geometry. {@link GraphLayout} */
+    readonly bounds: Bounds;
+    /** Optional left-node size reader in local logical pixels. {@link GraphLayout}
+     * @param datum - Left-side source record to measure.
+     * @returns Finite local logical size. */
+    readonly leftSize?: Size /** A caller-provided pure callback. {@link GraphLayout}
+     * @param datum - The source record or geometry supplied by Pibbl.
+     * @returns The value produced by this callback. */ | ((datum: L) => Size);
+    /** Optional right-node size reader in local logical pixels. {@link GraphLayout}
+     * @param datum - Right-side source record to measure.
+     * @returns Finite local logical size. */
+    readonly rightSize?: Size /** A caller-provided pure callback. {@link GraphLayout}
+     * @param datum - The source record or geometry supplied by Pibbl.
+     * @returns The value produced by this callback. */ | ((datum: R) => Size);
+    /** Distance between bipartite columns in local logical pixels. {@link GraphLayout} */
+    readonly columnGap?: number;
+    /** Minimum gap between node marks in local logical pixels. {@link GraphLayout} */
+    readonly nodeGap?: number;
+}
+/** Reactive bipartite data and side-specific mark presentation. {@link GraphLayout} */
+export interface BipartiteGraphProps<L, R, E> extends BipartiteAccessors<L, R, E> {
+    /** Graph records; publish a new snapshot to update. {@link GraphLayout} */
+    readonly graph: GraphCore.SignalValue<BipartiteData<L, R, E>>;
+    /** Optional left-node size reader in local logical pixels. {@link GraphLayout}
+     * @param datum - Left-side source record to measure.
+     * @returns Finite local logical size. */
+    readonly leftSize?: Size /** A caller-provided pure callback. {@link GraphLayout}
+     * @param datum - The source record or geometry supplied by Pibbl.
+     * @returns The value produced by this callback. */ | ((datum: L) => Size);
+    /** Optional right-node size reader in local logical pixels. {@link GraphLayout}
+     * @param datum - Right-side source record to measure.
+     * @returns Finite local logical size. */
+    readonly rightSize?: Size /** A caller-provided pure callback. {@link GraphLayout}
+     * @param datum - The source record or geometry supplied by Pibbl.
+     * @returns The value produced by this callback. */ | ((datum: R) => Size);
+    /** Frame style and responsive size allocation. {@link GraphLayout} */
+    readonly style?: Style<BipartiteStyle>;
+    /** Style or geometry-aware style for left nodes. {@link GraphLayout} */
+    readonly leftNodeStyle?: MarkStyle<GraphNodeGeometry<L>, NodeStyle>;
+    /** Style or geometry-aware style for right nodes. {@link GraphLayout} */
+    readonly rightNodeStyle?: MarkStyle<GraphNodeGeometry<R>, NodeStyle>;
+    /** Style or geometry-aware style for edge marks. {@link GraphLayout} */
+    readonly edgeStyle?: MarkStyle<BipartiteEdgeGeometry<L, R, E>, EdgeStyle>;
+    /** Style for decorative labels. {@link GraphLayout} */
+    readonly labelStyle?: Style<LabelStyle>;
+    /** Replaces a default left-node mark. {@link GraphLayout}
+     * @param node - The source record or geometry supplied by Pibbl.
+     * @returns The value produced by this callback. */
+    readonly renderLeftNode?: (node: GraphNodeGeometry<L>) => GraphCore.PibblNode;
+    /** Replaces a default right-node mark. {@link GraphLayout}
+     * @param node - The source record or geometry supplied by Pibbl.
+     * @returns The value produced by this callback. */
+    readonly renderRightNode?: (node: GraphNodeGeometry<R>) => GraphCore.PibblNode;
+    /** Replaces the default edge mark with this composition. {@link GraphLayout}
+     * @param edge - The source record or geometry supplied by Pibbl.
+     * @returns The value produced by this callback. */
+    readonly renderEdge?: (edge: BipartiteEdgeGeometry<L, R, E>) => GraphCore.PibblNode;
+    /** Receives clicks on left-side nodes. {@link GraphLayout}
+     * @param node - The source record or geometry supplied by Pibbl.
+     * @param event - The source record or geometry supplied by Pibbl. */
+    readonly onLeftNodeClick?: (node: GraphNodeGeometry<L>, event: ClickEvent) => void;
+    /** Receives clicks on right-side nodes. {@link GraphLayout}
+     * @param node - The source record or geometry supplied by Pibbl.
+     * @param event - The source record or geometry supplied by Pibbl. */
+    readonly onRightNodeClick?: (node: GraphNodeGeometry<R>, event: ClickEvent) => void;
+    /** Receives clicks on an edge mark. {@link GraphLayout}
+     * @param edge - The source record or geometry supplied by Pibbl.
+     * @param event - The source record or geometry supplied by Pibbl. */
+    readonly onEdgeClick?: (edge: BipartiteEdgeGeometry<L, R, E>, event: ClickEvent) => void;
+}
+/** Hierarchy readers plus a leaf quantity, unit, and optional formatter. {@link GraphLayout} */
+export interface PartitionAccessors<D> extends HierarchyAccessors<D> {
+    /** Reads the finite quantitative value. {@link GraphLayout} */
+    readonly value: Accessor<D, number>;
+    /** Display unit for quantitative values. {@link GraphLayout} */
+    readonly unit: string;
+    /** Formats a quantitative value for display. {@link GraphLayout}
+     * @param value - The source record or geometry supplied by Pibbl.
+     * @returns The value produced by this callback. */
+    readonly formatValue?: (value: number) => string;
+}
+/** Immutable hierarchy-cell geometry with aggregate quantity metadata. {@link GraphLayout} */
+export interface PartitionCellGeometry<D> {
+    /** Stable application-provided key. {@link GraphLayout} */
+    readonly key: VizKey;
+    /** Original application record. {@link GraphLayout} */
+    readonly datum: D;
+    /** Parent key, or null for a top-level item. {@link GraphLayout} */
+    readonly parentKey: VizKey | null;
+    /** Zero-based hierarchy depth. {@link GraphLayout} */
+    readonly depth: number;
+    /** Reads the finite quantitative value. {@link GraphLayout} */
+    readonly value: number;
+    /** Share of the root total from zero through one. {@link GraphLayout} */
+    readonly fraction: number;
+    /** Whether the original record has no children. {@link GraphLayout} */
+    readonly isLeaf: boolean;
+    /** Whether this item hides its descendants. {@link GraphLayout} */
+    readonly collapsed: boolean;
+    /** Finite local logical bounds for this geometry. {@link GraphLayout} */
+    readonly bounds: Bounds;
+    /** Decorative label geometry. {@link GraphLayout} */
+    readonly label: LabelGeometry | null;
+}
+/** Immutable hierarchy partition cells and root total. {@link GraphLayout} */
+export interface PartitionLayout<D> {
+    /** Finite local logical bounds for this geometry. {@link GraphLayout} */
+    readonly bounds: Bounds;
+    /** Stable key of the hierarchy root. {@link GraphLayout} */
+    readonly rootKey: VizKey;
+    /** Sum of all source leaf values. {@link GraphLayout} */
+    readonly total: number;
+    /** Display unit for quantitative values. {@link GraphLayout} */
+    readonly unit: string;
+    /** Immutable cells in source-stable layout order. {@link GraphLayout} */
+    readonly cells: readonly PartitionCellGeometry<D>[];
+}
+/** Default partition-cell paint, rendering, and click behavior. {@link GraphLayout} */
+export interface PartitionPresentation<D> {
+    /** Style or geometry-aware style for cell marks. {@link GraphLayout} */
+    readonly cellStyle?: MarkStyle<PartitionCellGeometry<D>, NodeStyle>;
+    /** Style for decorative labels. {@link GraphLayout} */
+    readonly labelStyle?: Style<LabelStyle>;
+    /** Replaces the default cell mark with this composition. {@link GraphLayout}
+     * @param cell - The source record or geometry supplied by Pibbl.
+     * @returns The value produced by this callback. */
+    readonly renderCell?: (cell: PartitionCellGeometry<D>) => GraphCore.PibblNode;
+    /** Receives clicks on a cell mark. {@link GraphLayout}
+     * @param cell - The source record or geometry supplied by Pibbl.
+     * @param event - The source record or geometry supplied by Pibbl. */
+    readonly onCellClick?: (cell: PartitionCellGeometry<D>, event: ClickEvent) => void;
+}
+/** Frame options for squarified-cell gaps, padding, and headers. {@link GraphLayout} */
+export interface TreemapStyle extends GraphCore.GStyle {
+    /** Gap between cells in local logical pixels. {@link GraphLayout} */
+    readonly cellGap?: number;
+    /** Inset inside each parent cell in local logical pixels. {@link GraphLayout} */
+    readonly padding?: number;
+    /** Reserved parent-header height in local logical pixels. {@link GraphLayout} */
+    readonly headerHeight?: number;
+}
+/** Pure treemap inputs and finite output bounds. {@link GraphLayout} */
+export interface TreemapOptions<D> extends PartitionAccessors<D> {
+    /** Finite local logical bounds for this geometry. {@link GraphLayout} */
+    readonly bounds: Bounds;
+    /** Gap between cells in local logical pixels. {@link GraphLayout} */
+    readonly cellGap?: number;
+    /** Inset inside each parent cell in local logical pixels. {@link GraphLayout} */
+    readonly padding?: number;
+    /** Reserved parent-header height in local logical pixels. {@link GraphLayout} */
+    readonly headerHeight?: number;
+}
+/** Reactive hierarchy input and presentation for Treemap. {@link GraphLayout} */
+export interface TreemapProps<D> extends PartitionAccessors<D>, PartitionPresentation<D> {
+    /** Hierarchy root; publish a new root to update. {@link GraphLayout} */
+    readonly root: GraphCore.SignalValue<D>;
+    /** Frame style and responsive size allocation. {@link GraphLayout} */
+    readonly style?: Style<TreemapStyle>;
+}
+/** Geometry, paint, events, and content for one partition cell. {@link GraphLayout} */
+export interface PartitionCellProps<D> extends MarkInteraction {
+    /** Immutable cell geometry and its original records. {@link GraphLayout} */
+    readonly cell: PartitionCellGeometry<D>;
+    /** Frame style and responsive size allocation. {@link GraphLayout} */
+    readonly style?: Style<NodeStyle>;
+    /** Optional content painted with this mark. {@link GraphLayout} */
+    readonly children?: GraphCore.PibblNode;
+}
+/** Frame options for radial hop-ring and node spacing. {@link GraphLayout} */
+export interface NeighborhoodStyle extends GraphCore.GStyle {
+    /** Radial distance between hop rings in local logical pixels. {@link GraphLayout} */
+    readonly ringGap?: number;
+    /** Minimum gap between node marks in local logical pixels. {@link GraphLayout} */
+    readonly nodeGap?: number;
+}
+/** Pure neighborhood inputs centered on one application key. {@link GraphLayout} */
+export interface NeighborhoodOptions<N, E> extends GraphAccessors<N, E> {
+    /** Finite local logical bounds for this geometry. {@link GraphLayout} */
+    readonly bounds: Bounds;
+    /** Key placed at the center of the neighborhood. {@link GraphLayout} */
+    readonly centerKey: VizKey;
+    /** Maximum graph distance from the center; defaults to two. {@link GraphLayout} */
+    readonly hops?: number;
+    /** Edges followed while collecting the neighborhood. {@link GraphLayout} */
+    readonly direction?: "outbound" | "inbound" | "either";
+    /** Node size in local logical pixels; defaults to 160 by 56. {@link GraphLayout}
+     * @param node - Source record to measure.
+     * @returns Finite local logical size. */
+    readonly nodeSize?: Size /** A caller-provided pure callback. {@link GraphLayout}
+     * @param node - The source record or geometry supplied by Pibbl.
+     * @returns The value produced by this callback. */ | ((node: N) => Size);
+    /** Radial distance between hop rings in local logical pixels. {@link GraphLayout} */
+    readonly ringGap?: number;
+    /** Minimum gap between node marks in local logical pixels. {@link GraphLayout} */
+    readonly nodeGap?: number;
+}
+/** Node geometry annotated with its graph distance from center. {@link GraphLayout} */
+export interface NeighborhoodNodeGeometry<N> extends GraphNodeGeometry<N> {
+    /** Zero-based graph distance from the center. {@link GraphLayout} */
+    readonly hop: number;
+}
+/** Immutable reachable nodes, retained edges, and omitted keys. {@link GraphLayout} */
+export interface NeighborhoodLayout<N, E> extends GraphLayout<N, E> {
+    /** Key placed at the center of the neighborhood. {@link GraphLayout} */
+    readonly centerKey: VizKey;
+    /** Source nodes in application order. {@link GraphLayout} */
+    readonly nodes: readonly NeighborhoodNodeGeometry<N>[];
+    /** Known node keys outside the requested hop range. {@link GraphLayout} */
+    readonly omittedKeys: readonly VizKey[];
+}
+/** Reactive graph input and presentation for radial neighborhoods. {@link GraphLayout} */
+export interface RadialNeighborhoodProps<N, E> extends GraphAccessors<N, E>, GraphPresentation<N, E, NeighborhoodNodeGeometry<N>> {
+    /** Graph records; publish a new snapshot to update. {@link GraphLayout} */
+    readonly graph: GraphCore.SignalValue<GraphData<N, E>>;
+    /** Key placed at the center of the neighborhood. {@link GraphLayout} */
+    readonly centerKey: GraphCore.SignalValue<VizKey>;
+    /** Maximum graph distance from the center; defaults to two. {@link GraphLayout} */
+    readonly hops?: GraphCore.SignalValue<number>;
+    /** Edges followed while collecting the neighborhood. {@link GraphLayout} */
+    readonly direction?: "outbound" | "inbound" | "either";
+    /** Node size in local logical pixels; defaults to 160 by 56. {@link GraphLayout}
+     * @param node - Source record to measure.
+     * @returns Finite local logical size. */
+    readonly nodeSize?: Size /** A caller-provided pure callback. {@link GraphLayout}
+     * @param node - The source record or geometry supplied by Pibbl.
+     * @returns The value produced by this callback. */ | ((node: N) => Size);
+    /** Replaces the default node mark with this composition. {@link GraphLayout}
+     * @param node - The source record or geometry supplied by Pibbl.
+     * @returns The value produced by this callback. */
+    readonly renderNode?: (node: NeighborhoodNodeGeometry<N>) => GraphCore.PibblNode;
+    /** Receives clicks on a node mark. {@link GraphLayout}
+     * @param node - The source record or geometry supplied by Pibbl.
+     * @param event - The source record or geometry supplied by Pibbl. */
+    readonly onNodeClick?: (node: NeighborhoodNodeGeometry<N>, event: ClickEvent) => void;
+    /** Frame style and responsive size allocation. {@link GraphLayout} */
+    readonly style?: Style<NeighborhoodStyle>;
+}
+/** Frame options for icicle cell and level spacing. {@link GraphLayout} */
+export interface IcicleStyle extends GraphCore.GStyle {
+    /** Gap between cells in local logical pixels. {@link GraphLayout} */
+    readonly cellGap?: number;
+    /** Gap between hierarchy levels in local logical pixels. {@link GraphLayout} */
+    readonly levelGap?: number;
+}
+/** Pure icicle inputs and finite output bounds. {@link GraphLayout} */
+export interface IcicleOptions<D> extends PartitionAccessors<D> {
+    /** Finite local logical bounds for this geometry. {@link GraphLayout} */
+    readonly bounds: Bounds;
+    /** Gap between cells in local logical pixels. {@link GraphLayout} */
+    readonly cellGap?: number;
+    /** Gap between hierarchy levels in local logical pixels. {@link GraphLayout} */
+    readonly levelGap?: number;
+}
+/** Reactive hierarchy input and presentation for Icicle. {@link GraphLayout} */
+export interface IcicleProps<D> extends PartitionAccessors<D>, PartitionPresentation<D> {
+    /** Hierarchy root; publish a new root to update. {@link GraphLayout} */
+    readonly root: GraphCore.SignalValue<D>;
+    /** Frame style and responsive size allocation. {@link GraphLayout} */
+    readonly style?: Style<IcicleStyle>;
+}
+/** Ordered categories and directed transfer records for a chord diagram. {@link GraphLayout} */
+export interface ChordData<C, T> {
+    /** Ordered category records. {@link GraphLayout} */
+    readonly categories: readonly C[];
+    /** Source transfer records. {@link GraphLayout} */
+    readonly transfers: readonly T[];
+}
+/** Typed category and transfer readers with quantity display settings. {@link GraphLayout} */
+export interface ChordAccessors<C, T> {
+    /** Reads each category key. {@link GraphLayout} */
+    readonly categoryKey: Accessor<C, VizKey>;
+    /** Optional reader for a node’s primary text. {@link LabelGeometry} */
+    readonly label?: Accessor<C, string>;
+    /** Reads an edge source key. {@link GraphLayout} */
+    readonly source: Accessor<T, VizKey>;
+    /** Reads an edge target key. {@link GraphLayout} */
+    readonly target: Accessor<T, VizKey>;
+    /** Reads the finite quantitative value. {@link GraphLayout} */
+    readonly value: Accessor<T, number>;
+    /** Display unit for quantitative values. {@link GraphLayout} */
+    readonly unit: string;
+    /** Formats a quantitative value for display. {@link GraphLayout}
+     * @param value - The source record or geometry supplied by Pibbl.
+     * @returns The value produced by this callback. */
+    readonly formatValue?: (value: number) => string;
+}
+/** A clockwise angular span in graph-local polar geometry. {@link GraphLayout} */
+export interface ChordArc {
+    /** Center point in local logical pixels. {@link GraphLayout} */
+    readonly center: Point;
+    /** Radius in local logical pixels. {@link GraphLayout} */
+    readonly radius: number;
+    /** Clockwise start angle from twelve o’clock. {@link GraphLayout} */
+    readonly startAngleDegrees: number;
+    /** Clockwise end angle from twelve o’clock. {@link GraphLayout} */
+    readonly endAngleDegrees: number;
+}
+/** Immutable outer category band geometry and aggregate quantities. {@link GraphLayout} */
+export interface ChordBandGeometry<C> {
+    /** Stable application-provided key. {@link GraphLayout} */
+    readonly key: VizKey;
+    /** Original application record. {@link GraphLayout} */
+    readonly datum: C;
+    /** Total value arriving at this node. {@link GraphLayout} */
+    readonly incomingValue: number;
+    /** Total value leaving this node. {@link GraphLayout} */
+    readonly outgoingValue: number;
+    /** Angular span for the visible category band. {@link GraphLayout} */
+    readonly arc: ChordArc;
+    /** Inner ribbon radius in local logical pixels. {@link GraphLayout} */
+    readonly innerRadius: number;
+    /** Path segments from source to target. {@link GraphLayout} */
+    readonly segments: readonly Readonly<GraphCore.PathSegment>[];
+    /** SVG path serialization of the route. {@link GraphLayout} */
+    readonly path: string;
+    /** Decorative label geometry. {@link GraphLayout} */
+    readonly label: LabelGeometry;
+}
+/** Immutable grouped transfer-ribbon geometry and source records. {@link GraphLayout} */
+export interface ChordRibbonGeometry<T> {
+    /** Stable application-provided key. {@link GraphLayout} */
+    readonly key: string;
+    /** Stable key of the edge source node. {@link GraphLayout} */
+    readonly sourceKey: VizKey;
+    /** Stable key of the edge target node. {@link GraphLayout} */
+    readonly targetKey: VizKey;
+    /** Original records represented by this aggregate. {@link GraphLayout} */
+    readonly records: readonly T[];
+    /** Reads the finite quantitative value. {@link GraphLayout} */
+    readonly value: number;
+    /** Angular span allocated to the source side. {@link GraphLayout} */
+    readonly sourceArc: ChordArc;
+    /** Angular span allocated to the target side. {@link GraphLayout} */
+    readonly targetArc: ChordArc;
+    /** Path segments from source to target. {@link GraphLayout} */
+    readonly segments: readonly Readonly<GraphCore.PathSegment>[];
+    /** SVG path serialization of the route. {@link GraphLayout} */
+    readonly path: string;
+}
+/** Immutable category bands and grouped transfer ribbons. {@link GraphLayout} */
+export interface ChordLayout<C, T> {
+    /** Finite local logical bounds for this geometry. {@link GraphLayout} */
+    readonly bounds: Bounds;
+    /** Display unit for quantitative values. {@link GraphLayout} */
+    readonly unit: string;
+    /** Sum of all source leaf values. {@link GraphLayout} */
+    readonly total: number;
+    /** Immutable category-band geometry. {@link GraphLayout} */
+    readonly bands: readonly ChordBandGeometry<C>[];
+    /** Immutable grouped transfer-ribbon geometry. {@link GraphLayout} */
+    readonly ribbons: readonly ChordRibbonGeometry<T>[];
+}
+/** Frame options for chord band width and angular spacing. {@link GraphLayout} */
+export interface ChordStyle extends GraphCore.GStyle {
+    /** Chord-band thickness in local logical pixels. {@link GraphLayout} */
+    readonly bandWidth?: number;
+    /** Angular gap between chord categories in degrees. {@link GraphLayout} */
+    readonly padAngle?: number;
+    /** Clockwise chord rotation from twelve o’clock in degrees. {@link GraphLayout} */
+    readonly startAngle?: number;
+}
+/** Pure chord inputs and finite output bounds. {@link GraphLayout} */
+export interface ChordOptions<C, T> extends ChordAccessors<C, T> {
+    /** Finite local logical bounds for this geometry. {@link GraphLayout} */
+    readonly bounds: Bounds;
+    /** Chord-band thickness in local logical pixels. {@link GraphLayout} */
+    readonly bandWidth?: number;
+    /** Angular gap between chord categories in degrees. {@link GraphLayout} */
+    readonly padAngle?: number;
+    /** Clockwise chord rotation from twelve o’clock in degrees. {@link GraphLayout} */
+    readonly startAngle?: number;
+}
+/** Reactive chord data and default band/ribbon presentation. {@link GraphLayout} */
+export interface ChordDiagramProps<C, T> extends ChordAccessors<C, T> {
+    /** Input records; publish a new snapshot to update. {@link GraphLayout} */
+    readonly data: GraphCore.SignalValue<ChordData<C, T>>;
+    /** Frame style and responsive size allocation. {@link GraphLayout} */
+    readonly style?: Style<ChordStyle>;
+    /** Style for category bands. {@link GraphLayout} */
+    readonly bandStyle?: MarkStyle<ChordBandGeometry<C>, EdgeStyle>;
+    /** Style for transfer ribbons. {@link GraphLayout} */
+    readonly ribbonStyle?: MarkStyle<ChordRibbonGeometry<T>, EdgeStyle>;
+    /** Style for decorative labels. {@link GraphLayout} */
+    readonly labelStyle?: Style<LabelStyle>;
+    /** Replaces the default category-band mark with this composition. {@link GraphLayout}
+     * @param band - The source record or geometry supplied by Pibbl.
+     * @returns The value produced by this callback. */
+    readonly renderBand?: (band: ChordBandGeometry<C>) => GraphCore.PibblNode;
+    /** Replaces the default ribbon mark with this composition. {@link GraphLayout}
+     * @param ribbon - The source record or geometry supplied by Pibbl.
+     * @returns The value produced by this callback. */
+    readonly renderRibbon?: (ribbon: ChordRibbonGeometry<T>) => GraphCore.PibblNode;
+    /** Receives clicks on a band mark. {@link GraphLayout}
+     * @param band - The source record or geometry supplied by Pibbl.
+     * @param event - The source record or geometry supplied by Pibbl. */
+    readonly onBandClick?: (band: ChordBandGeometry<C>, event: ClickEvent) => void;
+    /** Receives clicks on a ribbon mark. {@link GraphLayout}
+     * @param ribbon - The source record or geometry supplied by Pibbl.
+     * @param event - The source record or geometry supplied by Pibbl. */
+    readonly onRibbonClick?: (ribbon: ChordRibbonGeometry<T>, event: ClickEvent) => void;
+}
+/** A manual deterministic solver with no scheduler or resource ownership. {@link GraphLayout} */
+export interface ForceSimulation<N, E> {
+    /** Reads the current immutable solver snapshot. {@link GraphLayout}
+     * @returns The value produced by this callback. */
+    read(): ForceLayout<N, E>;
+    /** Advances at most the requested solver iterations. {@link GraphLayout}
+     * @param options - The source record or geometry supplied by Pibbl.
+     * @returns The value produced by this callback. */
+    step(options: Readonly<{
+        /** Iterations completed by the solver. {@link GraphLayout} */
+        iterations: number;
+    }>): ForceLayout<N, E>;
+    /** Reconfigures this manual solver with a new graph snapshot. {@link GraphLayout}
+     * @param graph - The source record or geometry supplied by Pibbl.
+     * @param options - The source record or geometry supplied by Pibbl. */
+    update(graph: GraphData<N, E>, options: ForceOptions<N, E>): void;
+    /** Restarts the current solver without discarding node positions. {@link GraphLayout} */
+    restart(): void;
+    /** Restores seeded positions and clears pins. {@link GraphLayout} */
+    reset(): void;
+    /** Pins one node at a finite local position. {@link GraphLayout}
+     * @param key - The source record or geometry supplied by Pibbl.
+     * @param position - The source record or geometry supplied by Pibbl. */
+    pin(key: VizKey, position: Point): void;
+    /** Releases a previously pinned node. {@link GraphLayout}
+     * @param key - The source record or geometry supplied by Pibbl. */
+    release(key: VizKey): void;
+}
+/** Creates a compatible manual force solver for supplied graph inputs. {@link GraphLayout}
+ * @param graph - Source graph.
+ * @param options - Solver options.
+ * @returns Simulation. */
+export type ForceSimulationFactory<N, E> =
+/** A caller-provided pure callback. {@link GraphLayout}
+ * @param graph - The source record or geometry supplied by Pibbl.
+ * @param options - The source record or geometry supplied by Pibbl.
+ * @returns The value produced by this callback. */
+(graph: GraphData<N, E>, options: ForceOptions<N, E>) => ForceSimulation<N, E>;
+
+/**
+ * Return the built-in node paint as an ordinary reusable style.
+ * @param _node - The node being painted. See {@link GraphNodeGeometry}.
+ * @returns Default fill, stroke and corner radius. See {@link NodeStyle}.
+ */
+export declare function defaultGraphNodeStyle<N>(_node: GraphNodeGeometry<N>): NodeStyle;
+
+/**
+ * Return the built-in edge paint as an ordinary reusable style.
+ * @param _edge - The edge being painted. See {@link GraphEdgeGeometry}.
+ * @returns Default stroke and logical stroke width. See {@link EdgeStyle}.
+ */
+export declare function defaultGraphEdgeStyle<E>(_edge: GraphEdgeGeometry<E>): EdgeStyle;
+
+/**
+ * Return the built-in label paint as an ordinary reusable style.
+ * @param _label - The label being painted. See {@link LabelGeometry}.
+ * @returns Default Canvas font, fill and middle baseline. See {@link LabelStyle}.
+ */
+export declare function defaultGraphLabelStyle(_label: LabelGeometry): LabelStyle;
+
+/**
+ * Draw a node box; children use node-local coordinates and ordinary Pibbl events.
+ * @param props - Box geometry, paint and event handlers. See {@link GraphNodeProps}.
+ * @returns A group containing the box and authored children. See {@link GraphNodeProps}.
+ */
+export declare function GraphNode<N>({ node, style, children, ...events }: GraphNodeProps<N>): GraphCore.PibblNode;
+
+/**
+ * Draw an edge path and optional arrow with ordinary path targeting.
+ * @param props - Edge geometry, paint and event handlers. See {@link GraphEdgeProps}.
+ * @returns Path content in diagram-local coordinates. See {@link GraphEdgeProps}.
+ */
+export declare function GraphEdge<E>({ edge, style, ...events }: GraphEdgeProps<E>): GraphCore.PibblNode;
+
+/**
+ * Draw decorative label text at its supplied box and rotation.
+ * @param props - Text geometry and optional text paint. See {@link GraphLabelProps}.
+ * @returns A transformed decorative Text component. See {@link GraphLabelProps}.
+ */
+export declare function GraphLabel({ label, style }: GraphLabelProps): GraphCore.PibblNode;
+
+/**
+ * Render supplied graph geometry without layout, fitting, or simulation.
+ * @param props - A snapshot or signal, item overrides and events. See {@link GraphViewProps}.
+ * @returns An ordinary Pibbl composition preserving source paint order. See {@link GraphViewProps}.
+ */
+export declare function GraphView<N, E>(props: GraphViewProps<N, E>): GraphCore.PibblNode;
+
+type Endpoints = Readonly<{
+    sourceAnchor: Point;
+    targetAnchor: Point;
+}>;
+
+/**
+ * Build an independent straight graph route in local logical units.
+ * @param endpoints - Finite named source and target anchor points. See {@link GraphRoute}.
+ * @param options - Optional nonnegative arrowLength (default zero).
+ * @returns Named anchors and independently editable core path segments. See {@link GraphRoute}.
+ */
+export declare function straightGraphRoute(endpoints: Endpoints, options?: Readonly<{
+    arrowLength?: number;
+}>): GraphRoute;
+
+/**
+ * Build an independent horizontal orthogonal graph route in local logical units.
+ * @param endpoints - Finite named source and target anchor points. See {@link GraphRoute}.
+ * @param options - Optional nonnegative arrowLength (default zero).
+ * @returns Named anchors and independently editable core path segments. See {@link GraphRoute}.
+ */
+export declare function orthogonalGraphRoute(endpoints: Endpoints, options?: Readonly<{
+    arrowLength?: number;
+}>): GraphRoute;
+
+/**
+ * Build an independent horizontal cubic graph route in local logical units.
+ * @param endpoints - Finite named source and target anchor points. See {@link GraphRoute}.
+ * @param options - Optional nonnegative arrowLength (default zero); curvature defaults to 0.5 and must be in [0, 1].
+ * @returns Named anchors and independently editable core path segments. See {@link GraphRoute}.
+ */
+export declare function curvedGraphRoute(endpoints: Endpoints, options?: Readonly<{
+    curvature?: number;
+    arrowLength?: number;
+}>): GraphRoute;
+
+/**
+ * Place a DAG in longest-path ranks with editable orthogonal routes. Cycles and insufficient bounds throw.
+ * @param graph - Original node and edge records. See {@link GraphData}.
+ * @param options - Typed accessors, finite bounds, node sizes and nonnegative gaps. See {@link DependencyOptions}.
+ * @returns Original-record node geometry and routes in local logical units. See {@link GraphLayout}.
+ */
+export declare function layoutDependencies<N, E>(graph: GraphData<N, E>, options: DependencyOptions<N, E>): GraphLayout<N, E>;
+
+/**
+ * Compose the public dependency layout helper and graph marks with useful defaults.
+ * @param props - Graph input, accessors, presentation and definite allocation. See {@link DependencyGraphProps}.
+ * @returns The same graph composition available through layoutDependencies and GraphView. See {@link GraphView}.
+ */
+export declare function DependencyGraph<N, E>(props: DependencyGraphProps<N, E>): GraphCore.PibblNode;
+
+/** Computes ordered cells for an explicit row/column relation matrix.
+ * @param data - Explicit rows, columns, and ordered relations. See {@link MatrixData}.
+ * @param options - Typed accessors, dimensions, labels, and unit. See {@link MatrixOptions}.
+ * @returns Immutable cell and label geometry. See {@link MatrixLayout}.
+ */
+export declare function layoutMatrix<R, C, E>(data: MatrixData<R, C, E>, options: MatrixOptions<R, C, E>): MatrixLayout<R, C, E>;
+
+/** Default cell paint for custom matrix compositions.
+ * @param cell - Cell geometry.
+ * @param range - Observed numeric extent.
+ * @returns Resolved cell paint.
+ * @see {@link MatrixCell}
+ */
+export declare function defaultMatrixCellStyle<R, C, E>(cell: MatrixCellGeometry<R, C, E>, range: Readonly<{
+    minimum: number;
+    maximum: number;
+}>): NodeStyle;
+
+/** Draw one supplied matrix cell geometry.
+ * @param argument - Cell props.
+ * @returns Canvas node.
+ * @see {@link MatrixCellProps}
+ */
+export declare function MatrixCell<R, C, E>({ cell, style: input, children, ...events }: MatrixCellProps<R, C, E>): GraphCore.PibblNode;
+
+/** Render an ordered relation matrix with default marks and labels.
+ * @param props - Matrix data and presentation.
+ * @returns Canvas node.
+ * @see {@link layoutMatrix}
+ */
+export declare function AdjacencyMatrix<R, C, E>(props: AdjacencyMatrixProps<R, C, E>): GraphCore.PibblNode;
+
+/** Places an acyclic weighted flow graph in deterministic left-to-right ranks.
+ * @param graph - Nodes and acyclic weighted edges. See {@link GraphData}.
+ * @param options - Accessors, bounds, and display unit. See {@link SankeyOptions}.
+ * @returns Immutable nodes and proportional flow geometry. See {@link SankeyLayout}.
+ */
+export declare function layoutSankey<N, E>(graph: GraphData<N, E>, options: SankeyOptions<N, E>): SankeyLayout<N, E>;
+
+/** Default node paint for custom Sankey compositions.
+ * @param _node - Node geometry.
+ * @returns Resolved node paint.
+ * @see {@link SankeyNode}
+ */
+export declare function defaultSankeyNodeStyle<N>(_node: SankeyNodeGeometry<N>): NodeStyle;
+
+/** Default flow paint for custom Sankey compositions.
+ * @param _flow - Flow geometry.
+ * @returns Resolved flow paint.
+ * @see {@link SankeyFlow}
+ */
+export declare function defaultSankeyFlowStyle<E>(_flow: SankeyFlowGeometry<E>): EdgeStyle;
+
+/** Draw one supplied Sankey node.
+ * @param argument - Node props.
+ * @returns Canvas node.
+ * @see {@link SankeyNodeGeometry}
+ */
+export declare function SankeyNode<N>({ node, style: input, children, ...events }: GraphNodeProps<N> & {
+    readonly node: SankeyNodeGeometry<N>;
+}): GraphCore.PibblNode;
+
+/** Draw one supplied Sankey flow.
+ * @param argument - Flow props.
+ * @returns Canvas node.
+ * @see {@link SankeyFlowGeometry}
+ */
+export declare function SankeyFlow<E>({ flow, style: input, ...events }: MarkInteraction & {
+    readonly flow: SankeyFlowGeometry<E>;
+    readonly style?: Style<EdgeStyle>;
+}): GraphCore.PibblNode;
+
+/** Render a weighted acyclic flow graph.
+ * @param props - Graph data and presentation.
+ * @returns Canvas node.
+ * @see {@link layoutSankey}
+ */
+export declare function Sankey<N, E>(props: SankeyProps<N, E>): GraphCore.PibblNode;
+
+/** Arranges two explicit entity sets in columns, retaining side-qualified identity.
+ * @param graph - Explicit left and right entities with cross-set edges. See {@link BipartiteData}.
+ * @param options - Accessors, dimensions, and column spacing. See {@link BipartiteOptions}.
+ * @returns Immutable side-aware nodes and routed edges. See {@link BipartiteLayout}.
+ */
+export declare function layoutBipartite<L, R, E>(graph: BipartiteData<L, R, E>, options: BipartiteOptions<L, R, E>): BipartiteLayout<L, R, E>;
+
+/** Render left/right entity sets and their cross-set relationships.
+ * @param props - Entity data and presentation.
+ * @returns Canvas node.
+ * @see {@link layoutBipartite}
+ */
+export declare function BipartiteGraph<L, R, E>(props: BipartiteGraphProps<L, R, E>): GraphCore.PibblNode;
+
+/** Computes a directed chord layout, aggregating repeated ordered transfer pairs.
+ * @param data - Ordered category transfers. See {@link ChordData}.
+ * @param options - Accessors, bounds, angular spacing, and unit. See {@link ChordOptions}.
+ * @returns Immutable bands and directed ribbon geometry. See {@link ChordLayout}.
+ */
+export declare function layoutChords<C, T>(data: ChordData<C, T>, options: ChordOptions<C, T>): ChordLayout<C, T>;
+
+/** Default outer-band paint for custom chord compositions.
+ * @param _band - Band geometry.
+ * @returns Resolved band paint.
+ * @see {@link ChordBand}
+ */
+export declare function defaultChordBandStyle<C>(_band: ChordBandGeometry<C>): EdgeStyle;
+
+/** Default directed-ribbon paint for custom chord compositions.
+ * @param _ribbon - Ribbon geometry.
+ * @returns Resolved ribbon paint.
+ * @see {@link ChordRibbon}
+ */
+export declare function defaultChordRibbonStyle<T>(_ribbon: ChordRibbonGeometry<T>): EdgeStyle;
+
+/** Draw one supplied category band.
+ * @param argument - Band props.
+ * @returns Canvas node.
+ * @see {@link ChordBandGeometry}
+ */
+export declare function ChordBand<C>({ band, style: input, ...events }: MarkInteraction & {
+    readonly band: ChordBandGeometry<C>;
+    readonly style?: Style<EdgeStyle>;
+}): GraphCore.PibblNode;
+
+/** Draw one supplied directed ribbon.
+ * @param argument - Ribbon props.
+ * @returns Canvas node.
+ * @see {@link ChordRibbonGeometry}
+ */
+export declare function ChordRibbon<T>({ ribbon, style: input, ...events }: MarkInteraction & {
+    readonly ribbon: ChordRibbonGeometry<T>;
+    readonly style?: Style<EdgeStyle>;
+}): GraphCore.PibblNode;
+
+/** Render a directed transfer chord diagram.
+ * @param props - Transfer data and presentation.
+ * @returns Canvas node.
+ * @see {@link layoutChords}
+ */
+export declare function ChordDiagram<C, T>(props: ChordDiagramProps<C, T>): GraphCore.PibblNode;
+
+/** Lay out a validated hierarchy with stable child order and variable node dimensions.
+ * @param root - Hierarchy root.
+ * @param options - Named hierarchy accessors and finite bounds.
+ * @returns Immutable node and edge geometry. @see {@link TreeLayout} */
+export declare function layoutTree<D>(root: D, options: TreeOptions<D>): TreeLayout<D>;
+
+/** Render a tidy hierarchy from ordinary data using default marks or caller compositions.
+ * @param props - Reactive hierarchy data, presentation, and frame style.
+ * @returns Canvas composition. @see {@link layoutTree} */
+export declare function TidyTree<D>(props: TidyTreeProps<D>): GraphCore.PibblNode;
+
+/** Return the built-in depth-aware partition paint.
+ * @param cell - Partition cell geometry.
+ * @returns Ordinary rectangle style. @see {@link PartitionCellGeometry} */
+export declare function defaultPartitionCellStyle<D>(cell: PartitionCellGeometry<D>): NodeStyle;
+
+/** Squarify weighted hierarchy leaves into stable, compact rectangles.
+ * @param root - Hierarchy root.
+ * @param options - Accessors, units, and finite bounds.
+ * @returns Immutable partition geometry. @see {@link PartitionLayout} */
+export declare function layoutTreemap<D>(root: D, options: TreemapOptions<D>): PartitionLayout<D>;
+
+/** Paint one partition cell at its immutable geometry.
+ * @param props - Cell geometry, paint, events, and optional global-coordinate children.
+ * @returns Canvas composition. @see {@link PartitionCellGeometry} */
+export declare function TreemapCell<D>(props: PartitionCellProps<D>): GraphCore.PibblNode;
+
+/** Render a squarified hierarchy with visible quantitative labels.
+ * @param props - Reactive hierarchy data and presentation.
+ * @returns Canvas composition. @see {@link layoutTreemap} */
+export declare function Treemap<D>(props: TreemapProps<D>): GraphCore.PibblNode;
+
+/** Lay out hierarchy values in depth rows.
+ * @param root - Hierarchy root.
+ * @param options - Accessors, units, and finite bounds.
+ * @returns Immutable partition geometry. @see {@link PartitionLayout} */
+export declare function layoutIcicle<D>(root: D, options: IcicleOptions<D>): PartitionLayout<D>;
+
+/** Paint one icicle partition cell.
+ * @param props - Cell geometry, paint, events, and optional children.
+ * @returns Canvas composition. @see {@link PartitionCellGeometry} */
+export declare function IcicleCell<D>(props: PartitionCellProps<D>): GraphCore.PibblNode;
+
+/** Render hierarchy values as depth-aligned bands.
+ * @param props - Reactive hierarchy data and presentation.
+ * @returns Canvas composition. @see {@link layoutIcicle} */
+export declare function Icicle<D>(props: IcicleProps<D>): GraphCore.PibblNode;
+
+/** Lay out the reachable neighborhood around one stable key in concentric rings.
+ * @param graph - Nodes and edges in source order.
+ * @param options - Accessors, center, hops, and finite bounds.
+ * @returns Immutable neighborhood geometry. @see {@link NeighborhoodLayout} */
+export declare function layoutNeighborhood<N, E>(graph: GraphData<N, E>, options: NeighborhoodOptions<N, E>): NeighborhoodLayout<N, E>;
+
+/** Render an interactive radial neighborhood from ordinary graph records.
+ * @param props - Reactive graph, center, presentation, and frame style.
+ * @returns Canvas composition. @see {@link layoutNeighborhood} */
+export declare function RadialNeighborhood<N, E>(props: RadialNeighborhoodProps<N, E>): GraphCore.PibblNode;
+
+/** Create a deterministic, manually stepped numeric solver without resources or scheduling.
+ * Uses inverse-square repulsion, Hooke link relaxation, damping, box collisions and bounded iterations.
+ * @param graph - Original records. See {@link GraphData}.
+ * @param options - Accessors, bounds and seed. See {@link ForceOptions}.
+ * @returns Numeric session whose snapshots can be rendered or advanced by any public driver. See {@link ForceSimulation}.
+ */
+export declare function createForceSimulation<N, E>(graph: GraphData<N, E>, options: ForceOptions<N, E>): ForceSimulation<N, E>;
+
+/**
+ * Solve a seeded force layout synchronously, bounded by maxIterations. No timers or resources are allocated.
+ * @param graph - Original node and edge records. See {@link GraphData}.
+ * @param options - Accessors, finite bounds and numeric settings. See {@link ForceOptions}.
+ * @returns A bounded result which may remain unsettled on exhaustion. See {@link ForceLayout}.
+ */
+export declare function layoutForceNetwork<N, E>(graph: GraphData<N, E>, options: ForceOptions<N, E>): ForceLayout<N, E>;
+
+/** Own a force session through public stepper, drive, usePlayback and signals.
+ * @param graph - Graph input or signal; accessors are snapshotted during component evaluation. See {@link GraphData}.
+ * @param options - Geometry and optional resource-free numeric solver factory. See {@link ForceHookOptions}.
+ * @returns Readonly snapshots and commands; playback is released on unmount. See {@link ForceNetworkController}.
+ */
+export declare function useForceNetwork<N, E>(graph: GraphCore.SignalValue<GraphData<N, E>>, options: ForceHookOptions<N, E>): ForceNetworkController<N, E>;
+
+/**
+ * Own and render a live force network through the public hook and GraphView; unmount releases playback.
+ * @param props - Graph, definite frame, optional solver factory, controlled pause and presentation. See {@link ForceNetworkProps}.
+ * @returns A public-hook and public-marks composition. See {@link useForceNetwork}.
+ */
+export declare function ForceNetwork<N, E>(props: ForceNetworkProps<N, E>): GraphCore.PibblNode;
+
 /* @pibbl-studio-module @pibbl/core/viz/inspection */
 import type { LayoutBox, PibblEvent } from '@pibbl/core';
 import type { BarSeriesProps, BandCategory, HoverSeries, ResolvedContinuousScale, ResolvedTradingTimeScale, VolumeSeriesProps, CandlestickSeriesProps, OhlcBarSeriesProps } from '@pibbl/core/viz';
@@ -3043,6 +4475,8 @@ export type PibblReflectedLightSource = string | import('@pibbl/core').TexturePa
 export interface PibblReflectedLightFilterOptions { readonly map: SignalValue<import('@pibbl/core').TexturePaint>; readonly region: Readonly<{x:number;y:number;width:number;height:number}>; readonly source?: SignalValue<PibblReflectedLightSource>; readonly opacity?: SignalValue<number>; readonly threshold?: SignalValue<number>; readonly softness?: SignalValue<number>; readonly direction?: readonly [number,number]; }
 export function reflectedLight(options: PibblReflectedLightFilterOptions): PibblFilter;
 export interface PibblEmbossFilterOptions { readonly region: Readonly<{x:number;y:number;width:number;height:number}>; readonly depth?: SignalValue<number>; readonly strength?: SignalValue<number>; readonly direction?: readonly [number,number]; }
+export interface PibblBackdropContrastFilterOptions { readonly light?: SignalValue<string>; readonly dark?: SignalValue<string>; }
+export function backdropContrast(options?: PibblBackdropContrastFilterOptions): PibblFilter;
 export function emboss(map: SignalValue<import('@pibbl/core').TexturePaint>, options: PibblEmbossFilterOptions): PibblFilter;
 
 

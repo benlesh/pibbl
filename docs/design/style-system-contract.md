@@ -313,3 +313,24 @@ where their individual contracts define them. A freely positioned
 `ManipulationFrame` publishes its writable finite box through this same local
 style channel. Direct `Flex`, `Flow`, and `Grid` placement remains parent-owned.
 See the [component-manipulation contract](./component-manipulation-contract.md).
+
+## Backdrop contrast
+
+The optional `backdropContrast({ light?, dark? })` factory from
+`@pibbl/core/filters` defaults to white and black. Unlike source-only native
+filters, it samples prior paint in the current Canvas render target and uses the
+receiving subtree's combined alpha as its mask. It selects `light` below linear
+sRGB relative luminance 0.179128785, `dark` otherwise. Color inputs accept signals
+and concrete supported CSS colors; custom colors retain that luminance mapping.
+Their alpha multiplies the mask. Layout, hit geometry, and source traversal do not
+change. Transparent backdrop is evaluated over white; DOM backgrounds are outside
+the contract. Isolated filters and cached Layers expose only local prior paint.
+Outer paint changes do not invalidate cached Layer pixels.
+
+It uses the existing optional filter executor, surface pool, and GPU resource
+implementation, requires OffscreenCanvas/WebGL2, and does not read scene pixels
+back to JavaScript. Captures use the active target's finite viewport and transforms.
+Resources are created lazily, reused across passes, restored through scheduled
+invalidation after context loss, and released on removal or mount disposal.
+Ordered filter lists remain ordered; every backdrop pass reads the same prior
+parent paint, while intervening operations change the source mask/result normally.

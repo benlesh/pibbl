@@ -8,6 +8,7 @@ apiCategory: types
 typeDomain: filters
 symbols:
   [
+    backdropContrast,
     blur,
     brightness,
     contrast,
@@ -18,6 +19,7 @@ symbols:
     hueRotate,
     invert,
     opacity,
+    PibblBackdropContrastFilterOptions,
     PibblBlurFilterOptions,
     PibblBrightnessFilterOptions,
     PibblContrastFilterOptions,
@@ -95,6 +97,43 @@ Invalid input is diagnosed during receiving-primitive preparation, before its
 render callback. Custom style normalization cannot remove or reinterpret filters.
 Pure measurement ignores their appearance and acquires no raster resources.
 
+## backdropContrast
+
+`backdropContrast({ light?, dark? } = {})` colors each pixel of the receiving
+primitive and its descendants according to the already-painted backdrop. `light`
+defaults to white and `dark` to black; both accept color signals. The original RGB
+is replaced and its alpha mask is preserved, including glyph antialiasing. A color's
+own alpha additionally scales coverage. Geometry, events, and layout are unchanged.
+
+```tsx
+import { Text } from "@pibbl/core";
+import { backdropContrast } from "@pibbl/core/filters";
+
+<Text style={{ left: 24, top: 40, fill: "black", filter: backdropContrast() }}>
+  Natural gas · 400 MWh
+</Text>;
+```
+
+The two-color mapping uses linear sRGB relative luminance: `light` below
+0.179128785, `dark` at or above it. This is the equal-contrast boundary for black
+and white. Custom colors retain the same mapping; their contrast is the caller's
+responsibility. Inputs must be concrete supported CSS colors, without contextual
+references such as `currentColor` or `var()`.
+
+The backdrop is content already painted in the **current Canvas render target**.
+Transparent backdrop pixels are evaluated over white. DOM/CSS backgrounds are not
+sampled. Inside an isolated filter or Layer, only that target's local prior paint
+is visible. A cached Layer does not recolor when an outer background changes;
+place backdrop-sensitive content outside that isolation when it must react to outer
+paint. Later paint can cover the result normally.
+
+This optional effect requires OffscreenCanvas and WebGL2. It shares the existing
+GPU filter resource implementation and performs no scene pixel readback. Surface
+captures are bounded by the active target viewport. GPU/scratch resources are reused
+and released when the effect is removed or the mount is disposed. Filter arrays
+remain ordered: earlier effects change the source mask; later effects process the
+recolored result. Each backdropContrast pass samples the same prior target paint.
+
 ## blur
 
 `blur(options)` creates an opaque filter for Gaussian blur with a logical radius.
@@ -141,6 +180,13 @@ Processing uses the optional WebGL2 filter surface without scene pixel readback.
 ## opacity
 
 `opacity(options)` creates an opaque filter for combined-raster opacity.
+
+## PibblBackdropContrastFilterOptions
+
+| Property | Type                                            | Default   | Meaning                                |
+| -------- | ----------------------------------------------- | --------- | -------------------------------------- |
+| `light`  | [`SignalValue<string>`](signals.md#signalvalue) | `"white"` | Foreground over dark backdrop pixels.  |
+| `dark`   | [`SignalValue<string>`](signals.md#signalvalue) | `"black"` | Foreground over light backdrop pixels. |
 
 ## PibblBlurFilterOptions
 

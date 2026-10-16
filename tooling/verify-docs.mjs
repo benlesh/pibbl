@@ -141,6 +141,7 @@ const publicSiteMarkdownPaths = [
   "docs/site/api/components/manipulable.md",
   "docs/site/api/components/manipulation-frame.md",
   "docs/site/api/components/pie-layout.md",
+  "docs/site/api/components/graph-visualization.md",
   "docs/site/api/components/resize-handle.md",
   "docs/site/api/components/resize-handles.md",
   "docs/site/api/components/rotation-handle.md",

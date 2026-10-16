@@ -1,3 +1,4 @@
+import { verifyGraphTreeShaking } from "./verify-viz-graph-tree-shaking.mjs";
 import {
   verifyCurveTreeShaking,
   verifyColorTreeShaking,
@@ -60,6 +61,7 @@ try {
   );
   const installed = createRequire(join(consumer, "probe.mjs"));
   const entry = installed.resolve("@pibbl/core/viz");
+  await verifyGraphTreeShaking(entry);
   await verifyScaleTreeShaking(entry);
   await verifyCurveTreeShaking(entry);
   await verifyColorTreeShaking(entry);
@@ -72,6 +74,52 @@ try {
   const inspectionEntry = installed.resolve("@pibbl/core/viz/inspection");
   const inspection = await import(pathToFileURL(inspectionEntry).href);
   const names = [
+    "GraphNode",
+    "GraphEdge",
+    "GraphLabel",
+    "GraphView",
+    "defaultGraphNodeStyle",
+    "defaultGraphEdgeStyle",
+    "defaultGraphLabelStyle",
+    "straightGraphRoute",
+    "orthogonalGraphRoute",
+    "curvedGraphRoute",
+    "layoutDependencies",
+    "DependencyGraph",
+    "layoutMatrix",
+    "AdjacencyMatrix",
+    "MatrixCell",
+    "defaultMatrixCellStyle",
+    "layoutSankey",
+    "Sankey",
+    "SankeyNode",
+    "SankeyFlow",
+    "defaultSankeyNodeStyle",
+    "defaultSankeyFlowStyle",
+    "layoutBipartite",
+    "BipartiteGraph",
+    "layoutChords",
+    "ChordDiagram",
+    "ChordBand",
+    "ChordRibbon",
+    "defaultChordBandStyle",
+    "defaultChordRibbonStyle",
+    "layoutTree",
+    "TidyTree",
+    "layoutTreemap",
+    "Treemap",
+    "TreemapCell",
+    "defaultPartitionCellStyle",
+    "layoutIcicle",
+    "Icicle",
+    "IcicleCell",
+    "layoutNeighborhood",
+    "RadialNeighborhood",
+    "createForceSimulation",
+    "layoutForceNetwork",
+    "useForceNetwork",
+    "ForceNetwork",
+
     "extent",
     "linearTicks",
     "niceLinearDomain",
@@ -184,6 +232,10 @@ try {
     "withInspection",
   ])
     assert.equal(typeof inspection[name], "function", `${name} must be public`);
+  const graph = { nodes: [{ id: "a" }, { id: "b" }], edges: [{ id: "edge", from: "a", to: "b" }] };
+  const dependency = viz.layoutDependencies(graph, { nodeKey: "id", edgeKey: "id", source: "from", target: "to", bounds: { x: 0, y: 0, width: 640, height: 320 } });
+  assert.equal(dependency.nodes[0].datum, graph.nodes[0]);
+  assert.ok(dependency.edges[0].route.segments.length > 1);
   const observation = Object.freeze({
     datum: Object.freeze({ time: 1, value: 4 }),
     sourceIndex: 0,
@@ -328,6 +380,7 @@ try {
     "financial-indicators.tsx",
     "financial-oscillators.tsx",
     "numeric-range-interpolation.tsx",
+    "graph-visualizations.tsx",
   ];
   for (const file of financialFiles)
     writeFileSync(

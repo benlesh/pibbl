@@ -234,3 +234,20 @@ export function GeometricConsumer(){
  const cloth=useTexture(namedPlaid);
  return <Group>{[dots,tone,curves,cloth].map((fill,i)=><Rectangle key={i} style={{width:128,height:128,fill}}/>)}</Group>;
 }
+
+
+// Optional backdrop filter stays available through the published filter entry.
+import {
+  backdropContrast,
+  type PibblBackdropContrastFilterOptions,
+} from "@pibbl/core/filters";
+const backdropColors: PibblBackdropContrastFilterOptions = {
+  light: "#fff",
+  dark: "#172b25",
+};
+backdropContrast();
+backdropContrast(backdropColors);
+// @ts-expect-error Color inputs are CSS strings, not numeric channel tuples.
+backdropContrast({ light: [1, 1, 1] });
+// @ts-expect-error The foreground color roles are light/dark.
+backdropContrast({ onLight: "black" });
