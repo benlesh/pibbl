@@ -182,5 +182,22 @@
     "notes": [
       "The grayscale height map supplies relief; directional lighting preserves paint color and alpha."
     ]
+  },
+  {
+    "id": "backdrop-contrast",
+    "title": "Text that adapts to its backdrop",
+    "description": "Recolor each glyph pixel across light and dark painted regions using two foreground colors.",
+    "source": "backdrop-contrast.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "backdropContrast",
+        "importPath": "@pibbl/core/filters"
+      },
+      {
+        "name": "PibblBackdropContrastFilterOptions",
+        "importPath": "@pibbl/core/filters"
+      }
+    ]
   }
 ]

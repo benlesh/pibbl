@@ -185,8 +185,8 @@ Processing uses the optional WebGL2 filter surface without scene pixel readback.
 
 | Property | Type                                            | Default   | Meaning                                |
 | -------- | ----------------------------------------------- | --------- | -------------------------------------- |
-| `light`  | [`SignalValue<string>`](signals.md#signalvalue) | `"white"` | Foreground over dark backdrop pixels.  |
-| `dark`   | [`SignalValue<string>`](signals.md#signalvalue) | `"black"` | Foreground over light backdrop pixels. |
+| `light`  | [`SignalValue<string>`](signal-inputs.md#signalvalue) | `"white"` | Foreground over dark backdrop pixels.  |
+| `dark`   | [`SignalValue<string>`](signal-inputs.md#signalvalue) | `"black"` | Foreground over light backdrop pixels. |
 
 ## PibblBlurFilterOptions
 

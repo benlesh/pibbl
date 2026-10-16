@@ -1798,5 +1798,596 @@
         "importPath": "@pibbl/core/viz"
       }
     ]
+  },
+  {
+    "id": "graph-visualizations",
+    "title": "Graph components and pure layouts",
+    "description": "Author the ten graph families with shared record accessors, or rebuild a view from immutable geometry.",
+    "source": "graph-visualizations.tsx",
+    "environment": "typecheck",
+    "symbols": [
+      {
+        "name": "DependencyGraph",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "ForceNetwork",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "TidyTree",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "AdjacencyMatrix",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "Sankey",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "BipartiteGraph",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "Treemap",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "RadialNeighborhood",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "Icicle",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "ChordDiagram",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "GraphView",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "layoutDependencies",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "layoutForceNetwork",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "layoutTree",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "layoutMatrix",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "layoutSankey",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "layoutBipartite",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "layoutTreemap",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "layoutNeighborhood",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "layoutIcicle",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "layoutChords",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "createForceSimulation",
+        "importPath": "@pibbl/core/viz"
+      }
+    ]
+  },
+  {
+    "id": "graph-contracts",
+    "title": "Typed graph customization contracts",
+    "description": "Bind graph input, options, output geometry, component props, styles, and simulation ownership to application records.",
+    "source": "graph-contracts.ts",
+    "environment": "typecheck",
+    "symbols": [
+      {
+        "name": "VizKey",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "Accessor",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "Bounds",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "Point",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "Style",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "MarkStyle",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "NodeStyle",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "EdgeStyle",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "LabelStyle",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "FrameStyle",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "LabelGeometry",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "GraphData",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "GraphAccessors",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "GraphNodeGeometry",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "GraphRoute",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "GraphEdgeGeometry",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "GraphLayout",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "GraphPresentation",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "MarkInteraction",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "GraphNodeProps",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "GraphEdgeProps",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "GraphLabelProps",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "GraphViewProps",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "DependencyStyle",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "DependencyOptions",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "DependencyGraphProps",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "ForceSettings",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "ForceOptions",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "ForceLayout",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "ForceNetworkController",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "ForceStyle",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "ForceNetworkProps",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "ForceHookOptions",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "HierarchyAccessors",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "TreeEdge",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "TreeNodeGeometry",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "TreeLayout",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "TreeStyle",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "TreeOptions",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "TidyTreeProps",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "MatrixData",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "MatrixAccessors",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "MatrixCellGeometry",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "MatrixLayout",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "MatrixStyle",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "MatrixOptions",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "AdjacencyMatrixProps",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "MatrixCellProps",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "SankeyNodeGeometry",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "SankeyFlowGeometry",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "SankeyLayout",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "SankeyAccessors",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "SankeyStyle",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "SankeyOptions",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "SankeyProps",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "BipartiteData",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "BipartiteAccessors",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "BipartiteEdgeGeometry",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "BipartiteLayout",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "BipartiteStyle",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "BipartiteOptions",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "BipartiteGraphProps",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "PartitionAccessors",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "PartitionCellGeometry",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "PartitionLayout",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "PartitionPresentation",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "TreemapStyle",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "TreemapOptions",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "TreemapProps",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "PartitionCellProps",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "NeighborhoodStyle",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "NeighborhoodOptions",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "NeighborhoodNodeGeometry",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "NeighborhoodLayout",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "RadialNeighborhoodProps",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "IcicleStyle",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "IcicleOptions",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "IcicleProps",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "ChordData",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "ChordAccessors",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "ChordArc",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "ChordBandGeometry",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "ChordRibbonGeometry",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "ChordLayout",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "ChordStyle",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "ChordOptions",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "ChordDiagramProps",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "ForceSimulation",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "ForceSimulationFactory",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "Size",
+        "importPath": "@pibbl/core/viz"
+      }
+    ]
+  },
+  {
+    "id": "graph-marks",
+    "title": "Rebuild graph views with public marks",
+    "description": "Compose live force geometry, standalone routes, matrix cells, Sankey flows, partition cells, and chord ribbons through public marks.",
+    "source": "graph-marks.tsx",
+    "environment": "browser",
+    "symbols": [
+      {
+        "name": "GraphView",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "GraphNode",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "GraphEdge",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "GraphLabel",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "defaultGraphNodeStyle",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "defaultGraphEdgeStyle",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "defaultGraphLabelStyle",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "useForceNetwork",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "straightGraphRoute",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "orthogonalGraphRoute",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "curvedGraphRoute",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "layoutMatrix",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "MatrixCell",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "defaultMatrixCellStyle",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "layoutSankey",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "SankeyNode",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "SankeyFlow",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "defaultSankeyNodeStyle",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "defaultSankeyFlowStyle",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "layoutTreemap",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "TreemapCell",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "defaultPartitionCellStyle",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "layoutIcicle",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "IcicleCell",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "layoutChords",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "ChordBand",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "ChordRibbon",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "defaultChordBandStyle",
+        "importPath": "@pibbl/core/viz"
+      },
+      {
+        "name": "defaultChordRibbonStyle",
+        "importPath": "@pibbl/core/viz"
+      }
+    ]
   }
 ]
