@@ -1,4 +1,5 @@
-import { pibbl } from "@pibbl/core";
+import { } from "@pibbl/core";
+import { pibblSync } from '@pibbl/core/sync';
 import {
   LinearScale,
   VolumeSeries,
@@ -73,7 +74,7 @@ const canvas = document.createElement("canvas");
 canvas.width = 320;
 canvas.height = 180;
 document.body.append(canvas, button, result);
-const controller = pibbl(
+const controller = pibblSync(
   canvas,
   <LinearScale id="time" domain={[0, 2]} range={[30, 290]}>
     <LinearScale id="volume" domain={[0, 30]} range={[145, 20]} reverse>

@@ -31,7 +31,7 @@ first frame.
 
 The snapshot exports the named `DiagramEditor` component. Studio supplies the
 Canvas and calls `pibbl(canvas, <DiagramEditor />)` for it. In your own application,
-make that call directly. [`pibbl`](#/api/functions/pibbl) returns one
+make that call directly. [`pibbl`](#/api/functions/pibbl) asynchronously returns one
 stable controller for that Canvas, which is the object that owns the mounted
 scene and later disposes it. The toolbar and workspace are plain
 [`Rectangle`](#/api/components/rectangle) primitives; their labels are

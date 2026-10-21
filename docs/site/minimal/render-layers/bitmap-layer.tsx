@@ -1,5 +1,5 @@
 import {
-  pibbl,
+
   defineRenderLayer,
   type PibblRenderLayerComponentProps,
   type PibblRenderLayerContext,
@@ -14,6 +14,7 @@ import {
   type PibblRenderLayerStyle,
   type PibblRenderLayerTarget,
 } from "@pibbl/core";
+import { pibblSync } from '@pibbl/core/sync';
 
 interface DotProps {
   readonly x: number;
@@ -123,5 +124,5 @@ const props: PibblRenderLayerProps<DotProps> = {
   x: 160,
   y: 100,
 };
-const controller = pibbl(canvas, <DotLayer {...props} />);
+const controller = pibblSync(canvas, <DotLayer {...props} />);
 window.addEventListener("pagehide", () => controller.dispose(), { once: true });

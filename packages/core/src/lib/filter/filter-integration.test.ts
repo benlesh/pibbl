@@ -2,24 +2,8 @@ import { resolveFilterList } from '../style/filter';
 import type { NativePreparedFilter } from '../../filters/native-operations';
 import { peekNativeFilterPool } from './render-filter-boundary';
 import { blur, dropShadow, grayscale, opacity } from '@pibbl/core/filters';
-import {
-  Absolute,
-  Group,
-  Rectangle,
-  pibbl,
-  usePlayback,
-  createElement,
-  definePrimitive,
-  signal,
-  drive,
-  tween,
-  type PibblController,
-  type PibblNode,
-  type PibblPlayback,
-  type RectStyle,
-  type RenderingContext2D,
-  type SystemStyle,
-} from '@pibbl/core';
+import { Absolute, Group, Rectangle, usePlayback, createElement, definePrimitive, signal, drive, tween, type PibblController, type PibblNode, type PibblPlayback, type RectStyle, type RenderingContext2D, type SystemStyle } from "@pibbl/core";
+import { pibblSync as pibbl } from "../../sync.js";
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   clearSharedState,

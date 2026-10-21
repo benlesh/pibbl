@@ -438,7 +438,9 @@ Do not add a JavaScript production solver as an implicit loading fallback.
 - `PibblConfig.signal` cancels that caller's pending mount. A pre-aborted or
   subsequently aborted pending call rejects with `AbortError`, releases its abort
   listener/reservation, and never mounts later. It does not cancel other waiters
-  or the shared compilation. `prepareLayoutEngine()` has no cancellation argument:
+  or the shared compilation. `pibblSync()` throws `AbortError` for a pre-aborted
+  request and never creates a pending loading operation.
+  `prepareLayoutEngine()` has no cancellation argument:
   it warms a shared resource with no caller-owned mutable state. Abort after
   mounting retains the existing mount lifetime/disposal semantics. Completion
   removes temporary loading listeners; normal mount ownership takes over.

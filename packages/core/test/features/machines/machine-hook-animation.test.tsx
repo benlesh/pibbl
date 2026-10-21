@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { drive, pibbl, signal, tween } from '@pibbl/core';
+import { drive, signal, tween } from "@pibbl/core";
+import { pibblSync as pibbl } from "@pibbl/core/sync";
 import {
   defineMachine,
   fromCallback,

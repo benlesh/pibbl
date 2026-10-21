@@ -1,4 +1,5 @@
-import { pibbl, createElement, Text } from "@pibbl/core";
+import { createElement, Text } from "@pibbl/core";
+import { pibblSync as pibbl } from "@pibbl/core/sync";
 import { expect, it } from "vitest";
 import { createTextRecorder } from "../../../tooling/agent-verification/text";
 import {

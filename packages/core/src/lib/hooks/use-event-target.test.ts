@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
 import { Rectangle } from '../components/rect';
-import { pibbl } from '../pibbl';
+import { pibblSync as pibbl } from "../../sync.js";
 import type { PibblEventTargetRegistration } from '../events/registrations';
 import type {
   PibblEventHandlers,

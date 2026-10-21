@@ -3,12 +3,12 @@ import {
   Group,
   Rectangle,
   batch,
-  pibbl,
   recordFrames,
   signal,
   type PibblFrameRecording,
   type PibblFrameRecordingSession,
 } from "@pibbl/core";
+import { pibblSync } from "@pibbl/core/sync";
 import { LinearScale, LineSeries, defineSeries } from "@pibbl/core/viz";
 import {
   nearestRecordedX,
@@ -114,7 +114,7 @@ function ControlledFailure() {
   return null;
 }
 
-const root = pibbl(canvas, <Chart />, {
+const root = pibblSync(canvas, <Chart />, {
   viewport: { width, height },
   pixelRatio: 1,
 });

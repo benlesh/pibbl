@@ -1,5 +1,5 @@
 import {
-  pibbl,
+
   Group,
   Rectangle,
   Circle,
@@ -14,6 +14,7 @@ import {
   type PibblVisibilityTransitionStatus,
   type PibblTransitionBinding,
 } from "@pibbl/core";
+import { pibblSync } from '@pibbl/core/sync';
 
 const options: PibblBifrostOptions = {
   region: { x: 100, y: 100, width: 280, height: 100 },
@@ -94,7 +95,7 @@ function Scene() {
     </>
   );
 }
-const controller = pibbl(canvas, <Scene />);
+const controller = pibblSync(canvas, <Scene />);
 // Wait for the scheduled first mount before starting its entrance.
 void ready.then((transition) => transition.show());
 for (const action of ["show", "hide"] as const) {

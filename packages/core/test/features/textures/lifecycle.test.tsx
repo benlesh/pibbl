@@ -1,5 +1,6 @@
 import { afterEach, expect, it, vi } from "vitest";
-import { pibbl, Rectangle } from "@pibbl/core";
+import { Rectangle } from "@pibbl/core";
+import { pibblSync as pibbl } from "@pibbl/core/sync";
 import {
   ReactionDiffusion,
   ProceduralTexture,

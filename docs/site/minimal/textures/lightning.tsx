@@ -1,5 +1,6 @@
 /** @jsxImportSource @pibbl/core */
-import { pibbl, Rectangle } from "@pibbl/core";
+import { Rectangle } from "@pibbl/core";
+import { pibblSync } from '@pibbl/core/sync';
 import {
   lightning,
   useTexture,
@@ -40,5 +41,5 @@ function Arc() {
   );
 }
 
-const controller = pibbl(canvas, <Arc />);
+const controller = pibblSync(canvas, <Arc />);
 window.addEventListener("pagehide", () => controller.dispose(), { once: true });

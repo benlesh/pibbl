@@ -5,7 +5,8 @@
  * host frames; a physics world may run zero, one, or several fixed ticks in a
  * host frame according to its public fixed-step configuration.
  */
-import { pibbl, type PibblController, type PibblNode } from "@pibbl/core";
+import type { PibblController, PibblNode } from "@pibbl/core";
+import { pibblSync } from "../../lib/pibbl-sync.js";
 import {
   PibblInternalManualSchedulerDriver,
   pibblInternalInstallTestSchedulerDriver,
@@ -214,7 +215,7 @@ export function createPhysicsTestHarness2D<Observation>(
 function mountRoot<Observation>(
   options: PibblPhysicsTestHarness2DOptions<Observation>,
 ): PibblController {
-  return pibbl(options.canvas, options.root());
+  return pibblSync(options.canvas, options.root());
 }
 
 function requireFrameCount(count: number): void {

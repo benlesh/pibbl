@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Signal } from '../signals/types.js';
 import { Text } from '../components/text.js';
-import { pibbl } from '../pibbl.js';
+import { pibblSync as pibbl } from "../../sync.js";
 import { clearSharedState } from '../global-state.js';
 import {
   getSignalNode,

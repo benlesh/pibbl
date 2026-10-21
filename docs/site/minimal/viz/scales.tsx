@@ -1,4 +1,5 @@
-import { pibbl, Overlay } from "@pibbl/core";
+import {  Overlay } from "@pibbl/core";
+import { pibblSync } from '@pibbl/core/sync';
 import {
   Axis,
   type AxisProps,
@@ -67,7 +68,7 @@ const canvas = document.createElement("canvas");
 canvas.width = 320;
 canvas.height = 220;
 document.body.append(canvas);
-const app = pibbl(
+const app = pibblSync(
   canvas,
   <Overlay style={{ left: 70, top: 15, width: 230, height: 170 }}>
     <BarScale {...x}>

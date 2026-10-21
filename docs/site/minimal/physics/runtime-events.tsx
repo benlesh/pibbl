@@ -1,4 +1,5 @@
-import { Circle, Group, Rectangle, pibbl } from "@pibbl/core";
+import { Circle, Group, Rectangle, } from "@pibbl/core";
+import { pibblSync } from '@pibbl/core/sync';
 import {
   PhysicsWorld2D,
   collider2D,
@@ -111,7 +112,7 @@ function Scene() {
   );
 }
 
-const controller = pibbl(
+const controller = pibblSync(
   canvas,
   <PhysicsWorld2D {...worldProps}>
     <Scene />

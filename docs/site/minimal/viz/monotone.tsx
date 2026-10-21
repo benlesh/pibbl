@@ -1,4 +1,5 @@
-import { Group, Text, pibbl } from "@pibbl/core";
+import { Group, Text, } from "@pibbl/core";
+import { pibblSync } from '@pibbl/core/sync';
 import { LineSeries, LinearScale, monotoneX } from "@pibbl/core/viz";
 // NOAA / Scripps Mauna Loa monthly CO2, ppm, Jan–Jun 1980.
 // https://gml.noaa.gov/webdata/ccgg/trends/co2/co2_mm_mlo.csv
@@ -10,7 +11,7 @@ const canvas = document.createElement("canvas");
 canvas.width = 360;
 canvas.height = 240;
 document.body.append(canvas);
-const app = pibbl(
+const app = pibblSync(
   canvas,
   <Group style={{ translateX: 20, translateY: 20 }}>
     <LinearScale id="x" domain={[0, 5]} range={[0, 320]}>

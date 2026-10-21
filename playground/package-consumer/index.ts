@@ -212,7 +212,7 @@ import {
   type PibblInternalSimulationOwner,
 } from '@pibbl/core/internal';
 import { tween, spring,
-  pibbl,
+
   useComputed,
   useConst,
   useCursor,
@@ -293,6 +293,7 @@ import { tween, spring,
   untracked,
   wait,
 } from '@pibbl/core';
+import { pibblSync } from '@pibbl/core/sync';
 
 // Removed hooks intentionally have no built-package compatibility exports.
 // @ts-expect-error useState was replaced by useSignal
@@ -655,7 +656,7 @@ export const scene = createElement(FocusManagement, {
     }),
   }),
 });
-export const mount = pibbl;
+export const mount = pibblSync;
 
 const pathStyle = {
   d: new Path2D(),
@@ -1159,7 +1160,7 @@ createElement(Clip, { style: {} }, []);
 createElement(Layer, { width: 100, height: 100 },
   createElement(Rectangle, { style: rectangleStyle }));
 
-export function disposeMount(controller: ReturnType<typeof pibbl>): void {
+export function disposeMount(controller: ReturnType<typeof pibblSync>): void {
   const publicController: PibblController = controller;
   publicController.dispose();
 }
@@ -1190,7 +1191,7 @@ const unsupportedEnhancerElement: PibblElement = {
 };
 void publicElementHasEnhancers;
 void unsupportedEnhancerElement;
-const runtimeController: PibblController = pibbl(canvas, runtimeElement, {
+const runtimeController: PibblController = pibblSync(canvas, runtimeElement, {
   signal: new AbortController().signal,
 });
 runtimeController.dispose();
@@ -1207,8 +1208,8 @@ const responsiveSurfaceConfig: PibblResponsiveViewportConfig = {
   pixelRatio: 'device',
 };
 const publicSurfaceConfig: PibblConfig = fixedSurfaceConfig;
-pibbl(canvas, runtimeElement, publicSurfaceConfig);
-pibbl(canvas, runtimeElement, responsiveSurfaceConfig);
+pibblSync(canvas, runtimeElement, publicSurfaceConfig);
+pibblSync(canvas, runtimeElement, responsiveSurfaceConfig);
 
 interface RuntimeProbeStyle extends SystemStyle {
   width: number;
@@ -1395,17 +1396,17 @@ createElement(RuntimeProbe, {});
 // @ts-expect-error excess component props are rejected
 createElement(RuntimeProbe, { count: 1, unknown: true });
 // @ts-expect-error pibbl requires an HTML Canvas
-pibbl(document.createElement('div'), runtimeElement);
+pibblSync(document.createElement('div'), runtimeElement);
 // @ts-expect-error pibbl requires a component element, not a component factory
-pibbl(canvas, RuntimeProbe);
+pibblSync(canvas, RuntimeProbe);
 // @ts-expect-error pibbl signal must be an AbortSignal
-pibbl(canvas, runtimeElement, { signal: 'abort' });
+pibblSync(canvas, runtimeElement, { signal: 'abort' });
 // @ts-expect-error responsive viewports do not accept a fit
-pibbl(canvas, runtimeElement, { viewport: 'responsive', fit: 'contain' });
+pibblSync(canvas, runtimeElement, { viewport: 'responsive', fit: 'contain' });
 // @ts-expect-error fixed viewport dimensions must be numeric
-pibbl(canvas, runtimeElement, { viewport: { width: '720', height: 420 } });
+pibblSync(canvas, runtimeElement, { viewport: { width: '720', height: 420 } });
 // @ts-expect-error pixelRatio accepts only device or a number
-pibbl(canvas, runtimeElement, { pixelRatio: 'retina' });
+pibblSync(canvas, runtimeElement, { pixelRatio: 'retina' });
 
 const state = useSignal({ count: 0 });
 const stateCount: number = state.get().count;

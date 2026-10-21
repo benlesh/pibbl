@@ -1,4 +1,5 @@
-import { pibbl, Group, Rectangle, Text } from "@pibbl/core";
+import {  Group, Rectangle, Text } from "@pibbl/core";
+import { pibblSync } from '@pibbl/core/sync';
 import {
   backdropContrast,
   type PibblBackdropContrastFilterOptions,
@@ -34,5 +35,5 @@ const canvas = document.createElement("canvas");
 canvas.width = 640;
 canvas.height = 300;
 document.body.append(canvas);
-const controller = pibbl(canvas, <BackdropContrastExample />);
+const controller = pibblSync(canvas, <BackdropContrastExample />);
 window.addEventListener("pagehide", () => controller.dispose(), { once: true });

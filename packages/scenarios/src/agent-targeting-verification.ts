@@ -4,7 +4,8 @@ import type { createEventTrace } from '../../../tooling/agent-verification/event
 import type { createSchedulerHistory } from '../../../tooling/agent-verification/scheduler.js';
 import type { probeHostPoint } from '../../../tooling/agent-verification/browser.js';
 import type { createSignalInspector } from '../../../tooling/agent-verification/signals.js';
-import { pibbl, createElement, computed, signal, type PibblLogicalMouseEvent, type PibblPointerEvent } from '@pibbl/core';
+import { createElement, computed, signal, type PibblLogicalMouseEvent, type PibblPointerEvent } from '@pibbl/core';
+import { pibblSync } from '@pibbl/core/sync';
 import type {
   createTargetingInspector,
   TargetingProbe,
@@ -244,7 +245,7 @@ export const agentTargetingVerificationScenario: ScenarioDefinition<AgentTargeti
     const inspectorFactory = runtimeTools && applicationIdentity ? (canvas: HTMLCanvasElement) => {
       // Bind to the pibbl function actually used below, so differing resolution
       // cannot silently compare the inspector's identity only with itself.
-      const binding = { ...applicationIdentity.captureRuntimeBinding(), runtime: pibbl };
+      const binding = { ...applicationIdentity.captureRuntimeBinding(), runtime: pibblSync };
       const checked = runtimeTools.createRuntimeCheckedInspector(canvas, binding);
       runtimeCompatibility = { status: checked.status, diagnostic: checked.diagnostic, reason: checked.reason };
       return checked.inspector ?? undefined;
@@ -410,7 +411,7 @@ export const agentTargetingVerificationScenario: ScenarioDefinition<AgentTargeti
         if (!disposed) updateLatest({ focusObservationError: String(error).slice(0, 500) });
       }).finally(() => { focusObservationPending = false; });
     };
-    let pibblController: ReturnType<typeof pibbl> | undefined;
+    let pibblController: ReturnType<typeof pibblSync> | undefined;
     const dispose = () => {
       if (disposed) return;
       disposed = true;
@@ -425,7 +426,7 @@ export const agentTargetingVerificationScenario: ScenarioDefinition<AgentTargeti
       pibblController?.dispose();
     };
     try {
-      pibblController = pibbl(
+      pibblController = pibblSync(
       context.canvas,
       createElement(AgentTargetingVerificationScene, {
         mode,

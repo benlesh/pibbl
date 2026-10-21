@@ -13,7 +13,8 @@ import {
 import { commands } from 'vitest/browser';
 import { afterEach, describe, expect, it } from 'vitest';
 import performanceLabSource from '../../scenarios/src/performance-lab.example.tsx?raw';
-import { Absolute, pibbl, useEventListener, Flow, Rectangle, Text, type PibblController } from '../src/index';
+import { Absolute, useEventListener, Flow, Rectangle, Text, type PibblController } from "../src/index";
+import { pibblSync as pibbl } from "@pibbl/core/sync";
 import { GLOBAL_STATE } from '../src/lib/global-state';
 import { snapshotRealmScheduler } from '../src/lib/scheduler/testing';
 import {

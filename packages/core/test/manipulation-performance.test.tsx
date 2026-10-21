@@ -1,17 +1,7 @@
 import { afterEach, expect, it, vi } from "vitest";
 import { commands } from "vitest/browser";
-import {
-  pibbl,
-  signal,
-  useManipulation,
-  ManipulationFrame,
-  DragHandle,
-  ResizeHandles,
-  Flex,
-  Absolute,
-  Rectangle,
-  type PibblController,
-} from "@pibbl/core";
+import { signal, useManipulation, ManipulationFrame, DragHandle, ResizeHandles, Flex, Absolute, Rectangle, type PibblController } from "@pibbl/core";
+import { pibblSync as pibbl } from "@pibbl/core/sync";
 import {
   installSchedulerDriverForTest,
   ManualSchedulerDriver,

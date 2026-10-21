@@ -1,14 +1,6 @@
 import { opacity } from '@pibbl/core/filters';
-import {
-  Group,
-  Rectangle,
-  pibbl,
-  definePrimitive,
-  type PibblController,
-  type PibblElementType,
-  type PrimitiveInputOf,
-  type SystemStyle,
-} from '@pibbl/core';
+import { Group, Rectangle, definePrimitive, type PibblController, type PibblElementType, type PrimitiveInputOf, type SystemStyle } from "@pibbl/core";
+import { pibblSync as pibbl } from "../../sync.js";
 import {
   pibblInternalCreatePropAttachment,
   type PibblInternalMountedPropAttachment,

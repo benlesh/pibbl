@@ -1,11 +1,12 @@
 import {
-  pibbl,
+
   Rectangle,
   Text,
   Group,
   useTexture,
   type TextureRecipe,
 } from "@pibbl/core";
+import { pibblSync } from '@pibbl/core/sync';
 import {
   polkaDots,
   halftone,
@@ -100,5 +101,5 @@ canvas.width = 976;
 canvas.height = 288;
 canvas.style.cssText = "display:block;max-width:100%;height:auto";
 document.body.append(canvas);
-const controller = pibbl(canvas, <Scene />);
+const controller = pibblSync(canvas, <Scene />);
 window.addEventListener("pagehide", () => controller.dispose(), { once: true });

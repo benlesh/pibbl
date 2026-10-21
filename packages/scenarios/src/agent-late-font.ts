@@ -1,4 +1,5 @@
-import { pibbl, createElement, signal } from '@pibbl/core';
+import { createElement, signal } from '@pibbl/core';
+import { pibblSync } from '@pibbl/core/sync';
 import { AgentLateFontScene } from './agent-late-font.example';
 const fontUrl = new URL('./assets/agent-space-grotesk.woff2', import.meta.url).href;
 import type { ScenarioDefinition } from './types';
@@ -23,7 +24,7 @@ export const agentLateFontScenario: ScenarioDefinition<AgentLateFontState> = {
   let face=new FontFace(family,`url("${fontUrl}")`);
   let disposed=false,inFlight:Promise<void>|null=null,cancelWait:(()=>void)|null=null;
   let evaluations=0, evaluated:{width:number;fontSize:number}|null=null,fontLoadedAtEvaluation:boolean|null=null;
-  let controller:ReturnType<typeof pibbl>|undefined,inspector:ReturnType<NonNullable<typeof source>['createTargetingInspector']>|undefined;
+  let controller:ReturnType<typeof pibblSync>|undefined,inspector:ReturnType<NonNullable<typeof source>['createTargetingInspector']>|undefined;
   const originalWidth=canvas.style.width;
   const measureContext=document.createElement('canvas').getContext('2d')!;
   const evidence=document.createElement('pre');evidence.dataset.testid='agent-late-font-evidence';evidence.style.cssText='max-width:100%;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere';referenceHost?.append(evidence);
@@ -71,7 +72,7 @@ export const agentLateFontScenario: ScenarioDefinition<AgentLateFontState> = {
    inFlight=operation;return operation;
   }
   async function dispose(){if(disposed)return;disposed=true;cancelWait?.();controller?.dispose();inspector?.dispose();document.fonts.delete(face);canvas.style.width=originalWidth;evidence.remove();state={...state,status:'disposed',sample:null,diagnosis:'disposed'};}
-  try{controller=pibbl(canvas,createElement(AgentLateFontScene,{revision,family,onEvaluation(value:{width:number;fontSize:number}){evaluated=value;evaluations++;fontLoadedAtEvaluation=document.fonts.has(face)&&face.status==='loaded';}}),{viewport:'responsive',pixelRatio:1});inspector=source?.createTargetingInspector(canvas);await perform('reset');}
+  try{controller=pibblSync(canvas,createElement(AgentLateFontScene,{revision,family,onEvaluation(value:{width:number;fontSize:number}){evaluated=value;evaluations++;fontLoadedAtEvaluation=document.fonts.has(face)&&face.status==='loaded';}}),{viewport:'responsive',pixelRatio:1});inspector=source?.createTargetingInspector(canvas);await perform('reset');}
   catch(error){await dispose();throw error;}
   return {getState:()=>structuredClone(state),perform,reset:()=>perform('reset'),settled:async()=>{if(disposed)throw new Error('Font fixture disposed.');await inFlight;},dispose};
  },

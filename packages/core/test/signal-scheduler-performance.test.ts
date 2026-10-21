@@ -1,20 +1,5 @@
-import {
-  Absolute,
-  Layer,
-  Rectangle,
-  Text,
-  batch,
-  computed,
-  pibbl,
-  createElement,
-  resolveSignalValue,
-  signal,
-  useReaction,
-  useSignal,
-  type PibblController,
-  type PibblNode,
-  type SignalValue,
-} from '@pibbl/core';
+import { Absolute, Layer, Rectangle, Text, batch, computed, createElement, resolveSignalValue, signal, useReaction, useSignal, type PibblController, type PibblNode, type SignalValue } from "@pibbl/core";
+import { pibblSync as pibbl } from "@pibbl/core/sync";
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { clearSharedState } from '../src/lib/global-state';
 import {

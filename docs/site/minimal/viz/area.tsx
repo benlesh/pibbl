@@ -1,4 +1,5 @@
-import { Group, Text, pibbl } from "@pibbl/core";
+import { Group, Text, } from "@pibbl/core";
+import { pibblSync } from '@pibbl/core/sync';
 import {
   AreaSeries,
   LinearScale,
@@ -25,7 +26,7 @@ const canvas = document.createElement("canvas");
 canvas.width = 360;
 canvas.height = 240;
 document.body.append(canvas);
-const app = pibbl(
+const app = pibblSync(
   canvas,
   <>
     <Text style={{ left: 12, top: 12, font: "13px sans-serif" }}>

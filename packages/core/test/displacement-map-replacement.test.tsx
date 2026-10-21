@@ -1,5 +1,6 @@
 /** @jsxImportSource @pibbl/core */
-import { pibbl, defineTexture, Group, Rectangle, useSignal, useTexture, type WritableSignal, type Texture, type TexturePaint } from '@pibbl/core';
+import { defineTexture, Group, Rectangle, useSignal, useTexture, type WritableSignal, type Texture, type TexturePaint } from "@pibbl/core";
+import { pibblSync as pibbl } from "@pibbl/core/sync";
 import { displacement } from '@pibbl/core/filters';
 import { expect, it, vi } from 'vitest';
 import { DisplacementGpu } from '../src/filters/displacement-gpu';

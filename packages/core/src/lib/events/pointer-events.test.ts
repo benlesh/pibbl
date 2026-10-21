@@ -1,6 +1,6 @@
 import { userEvent } from 'vitest/browser';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { pibbl } from '../pibbl';
+import { pibblSync as pibbl } from "../../sync.js";
 import { Layer } from '../components/layer';
 import { Rectangle } from '../components/rect';
 import type { PibblFocusManager } from '../focus/focus-manager';

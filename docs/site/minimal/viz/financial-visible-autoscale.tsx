@@ -8,7 +8,8 @@ import {
   type PadLinearDomainOptions,
   type VisibleOhlcPriceExtentOptions,
 } from "@pibbl/core/viz";
-import { Rectangle, Text, pibbl } from "@pibbl/core";
+import { Rectangle, Text } from "@pibbl/core";
+import { pibblSync } from '@pibbl/core/sync';
 const bars = [
   { time: Date.UTC(2026, 9, 5), open: 100, high: 103, low: 99, close: 102 },
   { time: Date.UTC(2026, 9, 6), open: 102, high: 150, low: 50, close: 103 },
@@ -65,7 +66,7 @@ const canvas = document.createElement("canvas");
 canvas.width = 320;
 canvas.height = 190;
 document.body.append(canvas);
-const controller = pibbl(
+const controller = pibblSync(
   canvas,
   <TradingTimeScale
     id="time"

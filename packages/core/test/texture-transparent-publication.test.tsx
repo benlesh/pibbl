@@ -1,11 +1,6 @@
 import { expect, it } from "vitest";
-import {
-  pibbl,
-  defineTexture,
-  Rectangle,
-  useTexture,
-  type Texture,
-} from "@pibbl/core";
+import { defineTexture, Rectangle, useTexture, type Texture } from "@pibbl/core";
+import { pibblSync as pibbl } from "@pibbl/core/sync";
 import {
   ManualSchedulerDriver,
   installSchedulerDriverForTest,

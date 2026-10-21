@@ -1,12 +1,6 @@
 import { afterEach, expect, it, vi } from "vitest";
-import {
-  Group,
-  Rectangle,
-  pibbl,
-  defineTexture,
-  signal,
-  useTexture,
-} from "@pibbl/core";
+import { Group, Rectangle, defineTexture, signal, useTexture } from "@pibbl/core";
+import { pibblSync as pibbl } from "@pibbl/core/sync";
 import { borrowTextureRaster } from "@pibbl/core/internal";
 import { clearSharedState } from "../src/lib/global-state.js";
 import {

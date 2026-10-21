@@ -7,7 +7,7 @@ symbols: [Circle]
 
 ```js
 import { pibbl, createElement, Circle } from "@pibbl/core";
-const controller = pibbl(
+const controller = await pibbl(
   document.querySelector("canvas"),
   createElement(Circle, {
     style: { cx: 150, cy: 100, radius: 60, fill: "#267d7c" },

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { pibbl } from '../pibbl';
+import { pibblSync as pibbl } from "../../sync.js";
 import { clearSharedState, getPibblInstance } from '../global-state';
 import { useEventListener } from '../hooks/use-event-listener';
 import { useEventTarget } from '../hooks/use-event-target';

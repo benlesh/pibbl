@@ -1,5 +1,5 @@
 import {
-  pibbl,
+
   Rectangle,
   useSignal,
   useManipulation,
@@ -26,6 +26,7 @@ import {
   type PibblDragHandleProps,
   type PibblResizeHandleProps,
 } from "@pibbl/core";
+import { pibblSync } from '@pibbl/core/sync';
 
 const canvas = document.createElement("canvas");
 canvas.width = 420;
@@ -87,7 +88,7 @@ function Scene() {
     </ManipulationFrame>
   );
 }
-const controller = pibbl(canvas, <Scene />);
+const controller = pibblSync(canvas, <Scene />);
 const cancel = document.createElement("button");
 cancel.textContent = "Cancel gesture";
 cancel.onclick = () => controls?.cancel();

@@ -1,4 +1,5 @@
-import { pibbl, Group, Rectangle, Text, useTexture } from "@pibbl/core";
+import {  Group, Rectangle, Text, useTexture } from "@pibbl/core";
+import { pibblSync } from '@pibbl/core/sync';
 import { emboss, type PibblEmbossFilterOptions } from "@pibbl/core/filters";
 import { plainWeave } from "@pibbl/core/textures";
 function Scene() {
@@ -62,5 +63,5 @@ canvas.width = 496;
 canvas.height = 288;
 canvas.style.cssText = "display:block;max-width:100%;height:auto";
 document.body.append(canvas);
-const controller = pibbl(canvas, <Scene />);
+const controller = pibblSync(canvas, <Scene />);
 window.addEventListener("pagehide", () => controller.dispose(), { once: true });

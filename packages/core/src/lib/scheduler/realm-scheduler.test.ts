@@ -8,7 +8,7 @@ import {
   drive,
   type PibblPlayback,
 } from "../../index";
-import { pibbl } from "../pibbl";
+import { pibblSync as pibbl } from "../../sync.js";
 import { Layer } from "../components/layer";
 import { Rectangle } from "../components/rect";
 import { createElement, isPibblElement } from "../element/create-element";

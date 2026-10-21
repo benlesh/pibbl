@@ -1,19 +1,5 @@
-import {
-  Absolute,
-  Group,
-  Rectangle,
-  pibbl,
-  usePlayback,
-  useAnimatedValue,
-  parallel,
-  signal,
-  drive,
-  tween,
-  type PibblController,
-  type PibblNode,
-  type PibblPlayback,
-  type Signal,
-} from '@pibbl/core';
+import { Absolute, Group, Rectangle, usePlayback, useAnimatedValue, parallel, signal, drive, tween, type PibblController, type PibblNode, type PibblPlayback, type Signal } from "@pibbl/core";
+import { pibblSync as pibbl } from "@pibbl/core/sync";
 import {
   pibblInternalCurrentRenderOwner,
   pibblInternalRequestRendererWork,

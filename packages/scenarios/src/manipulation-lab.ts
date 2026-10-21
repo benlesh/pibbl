@@ -1,4 +1,5 @@
-import { pibbl, createElement } from "@pibbl/core";
+import { createElement } from "@pibbl/core";
+import { pibblSync } from '@pibbl/core/sync';
 import {
   createManipulationLabModel,
   ManipulationLabRoot,
@@ -51,7 +52,7 @@ export const manipulationLabScenario: ScenarioDefinition<ManipulationLabState> =
     const model = createManipulationLabModel();
     const publish = () => context.onStateChange?.(snapshot(model, lastAction));
     model.publish = publish;
-    const controller = pibbl(context.canvas, createElement(ManipulationLabRoot, { model }), { pixelRatio: 1 });
+    const controller = pibblSync(context.canvas, createElement(ManipulationLabRoot, { model }), { pixelRatio: 1 });
     await nextPaint();
     publish();
     const assertActive = () => {

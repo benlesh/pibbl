@@ -1,5 +1,6 @@
 import { afterEach, expect, it } from "vitest";
-import { pibbl, Rectangle, useTexture } from "@pibbl/core";
+import { Rectangle, useTexture } from "@pibbl/core";
+import { pibblSync as pibbl } from "@pibbl/core/sync";
 import { borrowTextureRaster } from "@pibbl/core/internal";
 import { waterSurface } from "@pibbl/core/textures";
 import { clearSharedState } from "../../../src/lib/global-state.js";

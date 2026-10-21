@@ -12,7 +12,7 @@ export function isSandboxAsset(url: URL, origin: string): boolean {
     url.origin === origin &&
     !url.search &&
     !url.hash &&
-    textAssets.has(url.pathname)
+    (textAssets.has(url.pathname) || url.pathname.endsWith("/pibbl-layout/layout.wasm"))
   );
 }
 
@@ -37,7 +37,8 @@ export function installSandboxAssetFetch(options: {
       url.origin !== origin ||
       url.search ||
       url.hash ||
-      !options.paths.includes(url.pathname)
+      (!options.paths.includes(url.pathname) &&
+        !url.pathname.endsWith("/pibbl-layout/layout.wasm"))
     ) {
       return nativeFetch(input, init);
     }

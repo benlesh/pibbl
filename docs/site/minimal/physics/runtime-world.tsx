@@ -1,4 +1,5 @@
-import { Circle, Group, Rectangle, pibbl, useReaction } from "@pibbl/core";
+import { Circle, Group, Rectangle,  useReaction } from "@pibbl/core";
+import { pibblSync } from '@pibbl/core/sync';
 import {
   PhysicsDebug2D,
   PhysicsWorld2D,
@@ -61,7 +62,7 @@ const solver: PibblPhysicsSolverOptions = {
   velocityIterations: 4,
   positionIterations: 2,
 };
-const controller = pibbl(
+const controller = pibblSync(
   canvas,
   <PhysicsWorld2D gravity={[0, 420]} solver={solver}>
     <Rectangle

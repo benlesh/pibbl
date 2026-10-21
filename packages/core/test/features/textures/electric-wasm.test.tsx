@@ -1,5 +1,6 @@
 import { expect, it, vi } from "vitest";
-import { pibbl, Rectangle, useTexture } from "@pibbl/core";
+import { Rectangle, useTexture } from "@pibbl/core";
+import { pibblSync as pibbl } from "@pibbl/core/sync";
 import { tendrils, lightning } from "@pibbl/core/textures";
 import {
   ManualSchedulerDriver,

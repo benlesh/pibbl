@@ -1,4 +1,5 @@
-import { Absolute, pibbl, signal } from "@pibbl/core";
+import { Absolute, signal } from "@pibbl/core";
+import { pibblSync as pibbl } from "@pibbl/core/sync";
 import { BarSeries, type ResolvedBandScale, useBarScale, BarScale, LinearScale, useLinearScale } from "@pibbl/core/viz";
 import { afterEach, expect, it } from "vitest";
 import { testRuntime } from "./support/runtime.js";

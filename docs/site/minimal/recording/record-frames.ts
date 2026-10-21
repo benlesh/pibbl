@@ -1,6 +1,6 @@
 import {
   createElement,
-  pibbl,
+
   Rectangle,
   signal,
   recordFrames,
@@ -13,6 +13,7 @@ import {
   type PibblGifExportOptions,
   type PibblRenderCompletion,
 } from "@pibbl/core";
+import { pibblSync } from '@pibbl/core/sync';
 
 const canvas = document.createElement("canvas");
 canvas.style.cssText = "width:240px;height:160px";
@@ -23,7 +24,7 @@ const preview = document.createElement("img");
 preview.alt = "GIF of the captured color change";
 document.body.append(canvas, button, status, preview);
 const fill = signal("#159447");
-const root = pibbl(
+const root = pibblSync(
   canvas,
   createElement(Rectangle, { style: { width: 240, height: 160, fill } }),
   { viewport: { width: 240, height: 160 }, pixelRatio: 1 },

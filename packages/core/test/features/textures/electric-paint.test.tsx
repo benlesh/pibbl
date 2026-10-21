@@ -1,5 +1,6 @@
 import { afterEach, expect, it } from "vitest";
-import { pibbl, Rectangle, type Texture } from "@pibbl/core";
+import { Rectangle, type Texture } from "@pibbl/core";
+import { pibblSync as pibbl } from "@pibbl/core/sync";
 import {
   tendrils,
   lightning,

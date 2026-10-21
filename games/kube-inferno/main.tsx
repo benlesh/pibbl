@@ -291,7 +291,7 @@ function App() {
   );
 }
 const canvas = $<HTMLCanvasElement>("canvas");
-const controller = pibbl(canvas, <App />, {
+const controller = await pibbl(canvas, <App />, {
   viewport: { width: 1200, height: 720 },
   fit: "contain",
 });

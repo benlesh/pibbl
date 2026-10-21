@@ -1,3 +1,4 @@
+import { pibblSync as __pibblSyncTest } from "@pibbl/core/sync";
 import { afterEach, expect, it } from "vitest";
 import { commands } from "vitest/browser";
 import * as Pibbl from "@pibbl/core";
@@ -48,7 +49,7 @@ async function scene(snap = false) {
       </Pibbl.ManipulationFrame>
     );
   }
-  mount = Pibbl.pibbl(canvas, <Scene />, { pixelRatio: 1 });
+  mount = __pibblSyncTest(canvas, <Scene />, { pixelRatio: 1 });
   await settle();
   return { box, rotation, commits };
 }
@@ -99,7 +100,7 @@ it("resizes a quarter-turned frame while preserving the opposite painted corner"
   canvas.height = 300;
   canvas.dataset.manipulationTest = "";
   document.body.append(canvas);
-  mount = Pibbl.pibbl(
+  mount = __pibblSyncTest(
     canvas,
     <Pibbl.Manipulable style={box} rotation={rotation} resizable>
       <Pibbl.Rectangle style={{ width: "100%", height: "100%", fill: "blue" }} />
@@ -136,7 +137,7 @@ it("converts native movement through a rotated and nonuniformly scaled Group", a
   canvas.height = 400;
   canvas.dataset.manipulationTest = "";
   document.body.append(canvas);
-  mount = Pibbl.pibbl(
+  mount = __pibblSyncTest(
     canvas,
     <Pibbl.Group
       style={{

@@ -1,7 +1,6 @@
 import { userEvent } from "vitest/browser";
 import { afterEach, describe, expect, it } from "vitest";
 import {
-  pibbl,
   HtmlBox,
   Group,
   Clip,
@@ -12,6 +11,7 @@ import {
   createElement,
   definePrimitive,
 } from "@pibbl/core";
+import { pibblSync as pibbl } from "@pibbl/core/sync";
 import { blur } from "@pibbl/core/filters";
 import { clearSharedState } from "../src/lib/global-state.js";
 import {

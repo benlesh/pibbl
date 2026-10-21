@@ -666,7 +666,8 @@ export interface MeshTransformOptions {
   type PibblRenderLayerReservedProp = 'key' | 'style' | 'missBehavior' | keyof PibblEventHandlers | keyof PibblEventFocusOptions | keyof PibblEventParticipationOptions;
   export type PibblRenderLayerProps<Props> = Extract<keyof Props, PibblRenderLayerReservedProp> extends never ? Props & PibblRenderLayerComponentProps : never;
 
-  export function pibbl(canvas: HTMLCanvasElement, element: PibblNode, config?: PibblConfig): PibblController;
+  export function pibbl(canvas: HTMLCanvasElement, element: PibblNode, config?: PibblConfig): Promise<PibblController>;
+  export function prepareLayoutEngine(): Promise<void>;
   export function signal<T>(initialValue: T, options?: SignalOptions<T>): WritableSignal<T>;
   export function computed<T>(compute: () => T, options?: SignalOptions<T>): Signal<T>;
   export function batch<T>(callback: () => T): T;
@@ -4626,3 +4627,7 @@ export function emboss(map: SignalValue<import('@pibbl/core').TexturePaint>, opt
   import type { SpriteSheetFormat } from '@pibbl/core/sprites';
   /** Creates a tree-shakable adapter for TexturePacker JSON exports. */
   export function texturePacker(): SpriteSheetFormat;
+
+/* @pibbl-studio-module @pibbl/core/sync */
+import type { PibblNode, PibblConfig, PibblController } from "@pibbl/core";
+export function pibblSync(canvas: HTMLCanvasElement, element: PibblNode, config?: PibblConfig): PibblController;

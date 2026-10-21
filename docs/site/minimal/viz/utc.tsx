@@ -1,4 +1,5 @@
-import { Overlay, Group, Text, pibbl, useLayoutBox } from "@pibbl/core";
+import { Overlay, Group, Text,  useLayoutBox } from "@pibbl/core";
+import { pibblSync } from '@pibbl/core/sync';
 import {
   Axis,
   LineSeries,
@@ -128,5 +129,5 @@ function Scene() {
 const canvas = document.createElement("canvas");
 canvas.style.cssText = "width:100%;height:360px";
 document.body.append(canvas);
-const app = pibbl(canvas, <Scene />, { viewport: "responsive" });
+const app = pibblSync(canvas, <Scene />, { viewport: "responsive" });
 window.addEventListener("pagehide", () => app.dispose(), { once: true });

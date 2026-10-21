@@ -1,11 +1,5 @@
-import {
-  pibbl,
-  signal,
-  tween,
-  useAnimatedValue,
-  type PibblController,
-  type Signal,
-} from "@pibbl/core";
+import { signal, tween, useAnimatedValue, type PibblController, type Signal } from "@pibbl/core";
+import { pibblSync as pibbl } from "@pibbl/core/sync";
 import {
   interpolateNumericRange,
   type NumericDomain,

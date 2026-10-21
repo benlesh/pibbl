@@ -1,6 +1,6 @@
 import { page } from 'vitest/browser';
 import { describe, expect, it, vi } from 'vitest';
-import { pibbl } from '../pibbl.js';
+import { pibblSync as pibbl } from "../../sync.js";
 import { createElement } from '../element/create-element.js';
 import { Flow } from '../layout/flow.js';
 import { measureElement } from '../layout/measure.js';

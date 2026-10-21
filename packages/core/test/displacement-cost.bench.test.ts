@@ -27,14 +27,8 @@ vi.mock("@pibbl/core", async (importOriginal) => {
   };
 });
 
-import {
-  createElement,
-  pibbl,
-  Group,
-  Rectangle,
-  signal,
-  useTexture,
-} from "@pibbl/core";
+import { createElement, Group, Rectangle, signal, useTexture } from "@pibbl/core";
+import { pibblSync as pibbl } from "@pibbl/core/sync";
 import { displacement } from "@pibbl/core/filters";
 import { filterBoundaryExecutor } from "../src/filters/filter-executor.js";
 import { waterWaves } from "@pibbl/core/textures";

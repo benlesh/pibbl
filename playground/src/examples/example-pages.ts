@@ -65,24 +65,24 @@ export function createExamplePages(options: ExamplePagesOptions): ExamplePages {
       heroButton.textContent = "Shuffle the composition";
       let phase = 0;
       let controller: PibblController | undefined;
-      const renderHero = () => {
+      const renderHero = async () => {
         controller?.dispose();
-        controller = pibbl(
+        controller = await pibbl(
           canvas,
           createElement(HeroScene, {
             phase,
             onActivate: () => {
               phase++;
-              renderHero();
+              void renderHero();
             },
           }),
         );
       };
       heroButton.addEventListener("click", () => {
         phase++;
-        renderHero();
+        void renderHero();
       });
-      renderHero();
+      void renderHero();
       hero.append(canvas, heroButton);
       intro.append(copy, hero);
 

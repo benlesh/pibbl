@@ -1,3 +1,4 @@
+import { pibblSync as __pibblSyncTest } from "@pibbl/core/sync";
 import { afterEach, expect, it, vi } from "vitest";
 import { commands } from "vitest/browser";
 import * as Pibbl from "@pibbl/core";
@@ -18,7 +19,7 @@ it("paints an active rotation readout in the visible CSS canvas rectangle", asyn
       <Pibbl.RotationHandle controller={control} formatReadout={() => "turn"} style={{ readout: true }} />
     </Pibbl.ManipulationFrame>;
   }
-  mount = Pibbl.pibbl(canvas, <Pibbl.FocusManagement><Scene /></Pibbl.FocusManagement>, { pixelRatio: 1 });
+  mount = __pibblSyncTest(canvas, <Pibbl.FocusManagement><Scene /></Pibbl.FocusManagement>, { pixelRatio: 1 });
   await settle();
   const draw = vi.spyOn(canvas.getContext("2d")!, "fillText");
   await commands.manipulationPointer([{ type: "move", x: 120, y: 26 }, { type: "down" }, { type: "move", x: 175, y: 70 }]);
@@ -43,7 +44,7 @@ it("paints one active combined resize readout for a handle collection", async ()
       <Pibbl.ResizeHandles controller={control} formatReadout={() => "size"} style={{ readout: true }} />
     </Pibbl.ManipulationFrame>;
   }
-  mount = Pibbl.pibbl(canvas, <Pibbl.FocusManagement><Scene /></Pibbl.FocusManagement>, { pixelRatio: 1 });
+  mount = __pibblSyncTest(canvas, <Pibbl.FocusManagement><Scene /></Pibbl.FocusManagement>, { pixelRatio: 1 });
   await settle();
   const draw = vi.spyOn(canvas.getContext("2d")!, "fillText");
   await commands.manipulationPointer([{ type: "move", x: 200, y: 150 }, { type: "down" }, { type: "move", x: 220, y: 170 }]);
@@ -71,7 +72,7 @@ it("keeps wide strokes and italic glyph bounds inside the canvas inset", async (
     const control = Pibbl.useManipulation({ box: Pibbl.useSignal({left: 120, top: 0, width: 30, height: 30}), resize: {} });
     return <Pibbl.ManipulationFrame {...control.frameProps}><Pibbl.ResizeHandle controller={control} position="top-right" formatReadout={() => "ffff"} style={{readout:{visible:true,font:"italic 28px serif",stroke:"red",strokeWidth:20}}}/></Pibbl.ManipulationFrame>;
   }
-  mount = Pibbl.pibbl(canvas, <Scene />, {pixelRatio:1});
+  mount = __pibblSyncTest(canvas, <Scene />, {pixelRatio:1});
   await settle();
   expect(painted.length).toBeGreaterThan(0);
   for (const [left, top, right, bottom] of painted) {
@@ -97,7 +98,7 @@ it.each([[0, 5], [Math.PI / 4, 5], [Math.PI * 0.8, 5], [Math.PI / 4, 16]])("plac
     const control = Pibbl.useManipulation({box: Pibbl.useSignal({left:300,top:240,width:160,height:100}), rotation:Pibbl.useSignal(rotation), resize:{}});
     return <Pibbl.ManipulationFrame {...control.frameProps}><Pibbl.ResizeHandle controller={control} position="bottom-right" formatReadout={() => "size"} style={{readout:{visible:true,gap}}}/></Pibbl.ManipulationFrame>;
   }
-  mount = Pibbl.pibbl(canvas, <Scene />, {pixelRatio:1}); await settle();
+  mount = __pibblSyncTest(canvas, <Scene />, {pixelRatio:1}); await settle();
   expect(bounds).toHaveLength(1);
   const [left,top,right,bottom] = bounds[0];
   const c = Math.cos(rotation), s = Math.sin(rotation);

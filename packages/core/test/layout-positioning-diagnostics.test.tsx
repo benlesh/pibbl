@@ -1,4 +1,5 @@
-import { Flex, Flow, Grid, Rectangle, pibbl, signal, type PibblNode, type PibblController } from '@pibbl/core';
+import { Flex, Flow, Grid, Rectangle, signal, type PibblNode, type PibblController } from "@pibbl/core";
+import { pibblSync as pibbl } from "@pibbl/core/sync";
 import { afterEach, describe, expect, it } from 'vitest';
 import { installSchedulerDriverForTest, ManualSchedulerDriver } from '../src/lib/scheduler/testing';
 

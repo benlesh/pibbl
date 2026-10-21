@@ -1,6 +1,6 @@
 import { page } from 'vitest/browser';
 import { describe, expect, it, vi } from 'vitest';
-import { pibbl } from '../pibbl';
+import { pibblSync as pibbl } from "../../sync.js";
 import { componentTest } from '../test-utils/component-test';
 import { takeScreenshot } from '../util/test-utils';
 import { Group } from './g';

@@ -1,15 +1,7 @@
 import { peekNativeFilterPool } from '../src/lib/filter/render-filter-boundary';
 import { grayscale, blur, opacity } from '@pibbl/core/filters';
-import {
-  Group,
-  Rectangle,
-  pibbl,
-  createElement,
-  definePrimitive,
-  type PibblController,
-  type PibblNode,
-  type SystemStyle,
-} from "@pibbl/core";
+import { Group, Rectangle, createElement, definePrimitive, type PibblController, type PibblNode, type SystemStyle } from "@pibbl/core";
+import { pibblSync as pibbl } from "@pibbl/core/sync";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { clearSharedState, getPibblInstance } from "../src/lib/global-state";
 import { FilterSurfacePool } from "../src/lib/filter/filter-surface-pool";

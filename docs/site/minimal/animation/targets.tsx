@@ -1,13 +1,14 @@
 import {
   tween,
   spring,
-  pibbl,
+
   Circle,
   signal,
   useAnimatedValue,
   type PibblAnimationTarget,
   type PibblAnimatedValueOptions,
 } from "@pibbl/core";
+import { pibblSync } from '@pibbl/core/sync';
 
 const target = signal(50);
 const button = document.createElement("button");
@@ -34,5 +35,5 @@ function Scene() {
     </>
   );
 }
-const controller = pibbl(canvas, <Scene />);
+const controller = pibblSync(canvas, <Scene />);
 window.addEventListener("pagehide", () => controller.dispose(), { once: true });

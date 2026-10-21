@@ -1,5 +1,6 @@
 import { expect, it, vi } from "vitest";
-import { Group, Rectangle, Text, Clip, signal, pibbl } from "@pibbl/core";
+import { Group, Rectangle, Text, Clip, signal } from "@pibbl/core";
+import { pibblSync as pibbl } from "@pibbl/core/sync";
 import { backdropContrast, opacity } from "@pibbl/core/filters";
 import { testRuntime } from "./features/viz/support/runtime.js";
 

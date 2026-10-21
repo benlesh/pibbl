@@ -1,4 +1,5 @@
-import { pibbl, Text } from "@pibbl/core";
+import {  Text } from "@pibbl/core";
+import { pibblSync } from '@pibbl/core/sync';
 import {
   assign,
   createMachine,
@@ -109,7 +110,7 @@ const canvas = document.createElement("canvas");
 canvas.width = 420;
 canvas.height = 90;
 document.body.append(canvas);
-const app = pibbl(canvas, <Scene />);
+const app = pibblSync(canvas, <Scene />);
 const button = document.createElement("button");
 button.textContent = "Start task";
 document.body.append(button);

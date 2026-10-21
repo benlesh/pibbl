@@ -26,7 +26,7 @@ Add a host canvas and load your application module through your bundler:
 import { pibbl, createElement, Circle } from "@pibbl/core";
 
 const canvas = document.querySelector("#scene");
-const controller = pibbl(
+const controller = await pibbl(
   canvas,
   createElement(Circle, {
     style: { cx: 160, cy: 100, radius: 60, fill: "#267d7c" },

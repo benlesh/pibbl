@@ -24,7 +24,7 @@ relatedTypes:
 import { recordFrames, exportGif } from "@pibbl/core";
 
 const canvas = document.querySelector<HTMLCanvasElement>("canvas")!;
-// This canvas must already have a live pibbl() mount.
+// This canvas must already have a live await pibbl() mount.
 const capture = recordFrames(canvas, { duration: 5000, frameRate: 60 });
 await capture.ready;
 // capture.stop() finishes early and keeps frames.

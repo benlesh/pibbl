@@ -1,4 +1,5 @@
-import { pibbl, Group, Text } from "@pibbl/core";
+import {  Group, Text } from "@pibbl/core";
+import { pibblSync } from '@pibbl/core/sync';
 import {
   GraphView,
   GraphNode,
@@ -198,5 +199,5 @@ const canvas = document.createElement("canvas");
 canvas.width = 560;
 canvas.height = 640;
 document.body.append(canvas);
-const controller = pibbl(canvas, <GraphMarksExample />);
+const controller = pibblSync(canvas, <GraphMarksExample />);
 window.addEventListener("pagehide", () => controller.dispose(), { once: true });

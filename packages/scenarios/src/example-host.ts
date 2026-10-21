@@ -1,9 +1,9 @@
 import {
-  pibbl,
   createElement,
   type PibblComponent,
   type PibblConfig,
 } from "@pibbl/core";
+import { pibblSync } from "@pibbl/core/sync";
 
 const exampleMounts = new WeakMap<HTMLCanvasElement, { dispose(): void }>();
 
@@ -63,7 +63,7 @@ export function mountExampleComponent<Props extends object>(
       options.Component as PibblComponent<object>,
       options.props ?? null,
     );
-    const controller = pibbl(canvas, node, host.config);
+    const controller = pibblSync(canvas, node, host.config);
     let disposed = false;
     const mounted = {
       dispose() {

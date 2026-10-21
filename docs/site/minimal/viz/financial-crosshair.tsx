@@ -3,10 +3,11 @@ import {
   Group,
   Rectangle,
   Text,
-  pibbl,
+
   useSignal,
   type PibblLogicalMouseEvent,
 } from "@pibbl/core";
+import { pibblSync } from '@pibbl/core/sync';
 import {
   CandlestickSeries,
   LinearScale,
@@ -161,7 +162,7 @@ const canvas = document.createElement("canvas");
 canvas.width = 320;
 canvas.height = 190;
 document.body.append(canvas);
-const controller = pibbl(
+const controller = pibblSync(
   canvas,
   <FocusManagement>
     <Chart />

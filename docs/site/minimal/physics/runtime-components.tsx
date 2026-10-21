@@ -1,11 +1,12 @@
 import {
   Group,
-  pibbl,
+
   definePrimitive,
   signal,
   type PibblPhysics2DPropExtension,
   type SystemStyle,
 } from "@pibbl/core";
+import { pibblSync } from '@pibbl/core/sync';
 import {
   Capsule2D,
   Chain2D,
@@ -114,7 +115,7 @@ function MovingDiamond() {
   );
 }
 
-const controller = pibbl(
+const controller = pibblSync(
   canvas,
   <PhysicsWorld2D gravity={[0, 0]}>
     <Capsule2D {...capsuleProps} style={capsuleStyle} />

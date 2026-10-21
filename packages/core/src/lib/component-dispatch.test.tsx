@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Fragment } from '../index.js';
-import { pibbl } from './pibbl.js';
+import { pibblSync as pibbl } from "../sync.js";
 import { definePrimitive } from './define-primitive.js';
 import { materializeContainerChildren } from './element/children.js';
 import { executeRender } from './execute-render.js';

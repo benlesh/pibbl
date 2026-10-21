@@ -5,8 +5,14 @@ import {
 } from '../src/lib/layout/flex';
 import { measureElement } from '../src/lib/layout/measure';
 import type { PibblElement } from '../src/lib/types';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { createElement } from '../src/lib/element/create-element';
+import { prepareLayoutEngineSync } from '../src/lib/layout/wasm/embedded';
+import { experimentalLayout } from '../src/lib/layout/wasm/region';
+
+beforeAll(() => {
+  if (experimentalLayout) prepareLayoutEngineSync();
+});
 
 const service = {
   measureText: (value: string) => ({ width: value.length * 10 } as TextMetrics),

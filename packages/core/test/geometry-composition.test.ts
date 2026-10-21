@@ -13,7 +13,8 @@ import {
 import { page } from 'vitest/browser';
 import { afterEach, describe, expect, it } from 'vitest';
 import geometryMatrixSource from '../../scenarios/src/geometry-matrix.example.tsx?raw';
-import { Absolute, Clip, pibbl, Group, Layer, Rectangle, type PibblController } from '../src/index';
+import { Absolute, Clip, Group, Layer, Rectangle, type PibblController } from "../src/index";
+import { pibblSync as pibbl } from "@pibbl/core/sync";
 import {
   clickMouse,
   backingPointForLogical,

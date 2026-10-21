@@ -16,9 +16,9 @@ import {
   Rectangle,
   RegularPolygon,
   Star,
-  pibbl,
   createElement,
 } from "@pibbl/core";
+import { pibblSync as pibbl } from "@pibbl/core/sync";
 import filterLabSource from "../../scenarios/src/filter-lab.example.tsx?raw";
 import learningFilterSource from "../../scenarios/src/learning/composition/filters.example.tsx?raw";
 import { clickMouse, cssPointForIntrinsic } from "./support/mouse-input";

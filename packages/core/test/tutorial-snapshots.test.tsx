@@ -8,7 +8,6 @@ import {
   type TutorialSnapshotCatalogEntry,
 } from "@pibbl/scenarios";
 import {
-  pibbl,
   useEventTarget,
   useRectPath,
   useRef,
@@ -16,6 +15,7 @@ import {
   createElement,
   Rectangle,
 } from "@pibbl/core";
+import { pibblSync as pibbl } from "@pibbl/core/sync";
 import { afterEach, expect, it } from "vitest";
 import {
   learningSourcePaths,

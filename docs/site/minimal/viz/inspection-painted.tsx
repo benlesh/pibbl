@@ -2,10 +2,11 @@ import {
   Group,
   Rectangle,
   Text,
-  pibbl,
+
   useSignal,
   type PibblLogicalMouseEvent,
 } from "@pibbl/core";
+import { pibblSync } from '@pibbl/core/sync';
 import {
   BarScale,
   BarSeries,
@@ -93,7 +94,7 @@ const canvas = document.createElement("canvas");
 canvas.width = 320;
 canvas.height = 230;
 document.body.append(canvas);
-const controller = pibbl(
+const controller = pibblSync(
   canvas,
   <LinearScale id="x" domain={[0, 10]} range={[30, 280]}>
     <LinearScale id="y" domain={[0, 10]} range={[150, 20]}>

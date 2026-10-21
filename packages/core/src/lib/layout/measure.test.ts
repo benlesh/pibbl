@@ -1,6 +1,6 @@
 import { dropShadow } from '@pibbl/core/filters';
 import { describe, expect, it, vi } from 'vitest';
-import { pibbl } from '../pibbl';
+import { pibblSync as pibbl } from "../../sync.js";
 import { Image } from '../components/img';
 import { Text } from '../components/text';
 import { resolveTextLayout } from '../components/text-layout';

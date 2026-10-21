@@ -1,5 +1,5 @@
 import {
-  pibbl,
+
   Circle,
   Text,
   useSignal,
@@ -16,6 +16,7 @@ import {
   type PibblPlaybackEvent,
   type PibblPlaybackStatus,
 } from "@pibbl/core";
+import { pibblSync } from '@pibbl/core/sync';
 
 const canvas = document.createElement("canvas");
 canvas.width = 420;
@@ -57,7 +58,7 @@ function Scene() {
     </>
   );
 }
-const controller = pibbl(canvas, <Scene />);
+const controller = pibblSync(canvas, <Scene />);
 const commands: [string, () => void][] = [
   ["Replay", () => controls?.play()],
   ["Pause", () => controls?.pause()],

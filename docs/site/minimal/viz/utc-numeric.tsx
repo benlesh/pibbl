@@ -1,4 +1,5 @@
-import { pibbl, Overlay, Text } from "@pibbl/core";
+import {  Overlay, Text } from "@pibbl/core";
+import { pibblSync } from '@pibbl/core/sync';
 import {
   utcTickLabels,
   type UTCTickLabelOptions,
@@ -31,7 +32,7 @@ const canvas = document.createElement("canvas");
 canvas.width = 640;
 canvas.height = 140;
 document.body.append(canvas);
-const app = pibbl(
+const app = pibblSync(
   canvas,
   <Overlay style={{ left: 35, top: 15, width: 570, height: 70 }}>
     <UTCScale

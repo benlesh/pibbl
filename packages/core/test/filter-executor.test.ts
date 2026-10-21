@@ -1,4 +1,5 @@
-import { pibbl, createElement, defineTexture, Rectangle, useTexture } from '@pibbl/core';
+import { createElement, defineTexture, Rectangle, useTexture } from "@pibbl/core";
+import { pibblSync as pibbl } from "@pibbl/core/sync";
 import { blur, displacement } from '@pibbl/core/filters';
 import { expect, it, vi } from 'vitest';
 import { DisplacementGpu } from '../src/filters/displacement-gpu';

@@ -1,19 +1,5 @@
-import {
-  Clip,
-  DragHandle,
-  Group,
-  Layer,
-  Manipulable,
-  ManipulationFrame,
-  Rectangle,
-  ResizeHandle,
-  RotationHandle,
-  pibbl,
-  signal,
-  useManipulation,
-  type PibblController,
-  type PibblNode,
-} from '@pibbl/core';
+import { Clip, DragHandle, Group, Layer, Manipulable, ManipulationFrame, Rectangle, ResizeHandle, RotationHandle, signal, useManipulation, type PibblController, type PibblNode } from "@pibbl/core";
+import { pibblSync as pibbl } from "@pibbl/core/sync";
 import { blur } from '@pibbl/core/filters';
 import { afterEach, expect, it } from 'vitest';
 import { commands } from 'vitest/browser';

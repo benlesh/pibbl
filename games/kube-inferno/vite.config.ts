@@ -33,5 +33,5 @@ export default defineConfig({
     strictPort: true,
     fs: { allow: [resolve(import.meta.dirname, "../..")] },
   },
-  build: { outDir: "dist", emptyOutDir: true },
+  build: { target: "esnext", outDir: "dist", emptyOutDir: true },
 });

@@ -1,11 +1,6 @@
 import { expect, it, vi } from "vitest";
-import {
-  pibbl,
-  Rectangle,
-  embers,
-  useVisibilityTransition,
-  type PibblVisibilityTransition,
-} from "@pibbl/core";
+import { Rectangle, embers, useVisibilityTransition, type PibblVisibilityTransition } from "@pibbl/core";
+import { pibblSync as pibbl } from "@pibbl/core/sync";
 import {
   installSchedulerDriverForTest,
   ManualSchedulerDriver,

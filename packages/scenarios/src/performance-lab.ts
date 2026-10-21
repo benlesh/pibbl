@@ -9,7 +9,8 @@ import type {
   ScenarioDefinition,
   ScenarioMountContext,
 } from './types';
-import { pibbl, type PibblLogicalMouseEvent } from '@pibbl/core';
+import { type PibblLogicalMouseEvent } from '@pibbl/core';
+import { pibblSync } from '@pibbl/core/sync';
 import {
   createPerformanceScene,
   getPerformanceWorkload,
@@ -269,7 +270,7 @@ async function mountPerformanceLab(
   const render = async () => {
     assertActive();
     const started = performance.now();
-    pibbl(context.canvas, createPerformanceScene({
+    pibblSync(context.canvas, createPerformanceScene({
       workloadId: state.workloadId,
       revision: state.revision,
       recordHit,

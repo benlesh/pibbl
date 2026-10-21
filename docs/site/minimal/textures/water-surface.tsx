@@ -1,4 +1,5 @@
-import { pibbl, Group, Rectangle, Circle, Text, signal } from "@pibbl/core";
+import {  Group, Rectangle, Circle, Text, signal } from "@pibbl/core";
+import { pibblSync } from '@pibbl/core/sync';
 import { displacement } from "@pibbl/core/filters";
 import {
   waterSurface,
@@ -116,5 +117,5 @@ function Basin() {
     </>
   );
 }
-const controller = pibbl(canvas, <Basin />);
+const controller = pibblSync(canvas, <Basin />);
 window.addEventListener("pagehide", () => controller.dispose(), { once: true });

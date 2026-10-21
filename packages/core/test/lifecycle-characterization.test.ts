@@ -1,6 +1,7 @@
 import type { PibblEventHandlers } from '../src/lib/events/types';
 import type { PibblController } from '../src/lib/types';
-import { pibbl, useCursor, Layer, Rectangle } from '@pibbl/core';
+import { useCursor, Layer, Rectangle } from "@pibbl/core";
+import { pibblSync as pibbl } from "@pibbl/core/sync";
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   clearSharedState,

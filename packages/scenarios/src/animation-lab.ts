@@ -1,4 +1,5 @@
-import { pibbl, createElement } from '@pibbl/core';
+import { createElement } from '@pibbl/core';
+import { pibblSync } from '@pibbl/core/sync';
 import {
   AnimationLabRootA,
   AnimationLabRootB,
@@ -86,8 +87,8 @@ async function mountAnimationLab(
   let disposed = false;
   let model = createAnimationLabModel();
   let lastAction: 'mount' | AnimationLabAction = 'mount';
-  let primaryController: ReturnType<typeof pibbl> | undefined;
-  let secondaryController: ReturnType<typeof pibbl> | undefined;
+  let primaryController: ReturnType<typeof pibblSync> | undefined;
+  let secondaryController: ReturnType<typeof pibblSync> | undefined;
   let secondaryCanvas: HTMLCanvasElement | undefined;
   let actionQueue = Promise.resolve();
 
@@ -98,7 +99,7 @@ async function mountAnimationLab(
     context.onStateChange?.(snapshot(model, secondaryController !== undefined, lastAction));
   };
   const renderPrimary = (): void => {
-    primaryController = pibbl(
+    primaryController = pibblSync(
       context.canvas,
       createElement(AnimationLabRootA, { model }),
       { pixelRatio: 1 },
@@ -187,7 +188,7 @@ async function mountAnimationLab(
           secondaryCanvas.style.cssText = 'display:block;width:480px;height:96px';
           (context.referenceHost ?? context.canvas.parentElement ?? document.body)
             .appendChild(secondaryCanvas);
-          secondaryController = pibbl(
+          secondaryController = pibblSync(
             secondaryCanvas,
             createElement(AnimationLabRootB, { model }),
             { pixelRatio: 1 },

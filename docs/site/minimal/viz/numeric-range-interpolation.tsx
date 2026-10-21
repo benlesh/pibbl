@@ -2,11 +2,12 @@ import {
   FocusManagement,
   Text,
   easing,
-  pibbl,
+
   signal,
   tween,
   useAnimatedValue,
 } from "@pibbl/core";
+import { pibblSync } from '@pibbl/core/sync';
 import { interpolateNumericRange, type NumericDomain } from "@pibbl/core/viz";
 
 const intent = signal<NumericDomain>([18, 42]);
@@ -43,5 +44,5 @@ const canvas = document.createElement("canvas");
 canvas.width = 320;
 canvas.height = 220;
 document.body.append(canvas);
-const app = pibbl(canvas, <NumericRangeInterpolationExample />);
+const app = pibblSync(canvas, <NumericRangeInterpolationExample />);
 window.addEventListener("pagehide", () => app.dispose(), { once: true });

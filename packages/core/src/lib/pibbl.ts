@@ -1,39 +1,38 @@
-import { GLOBAL_STATE } from './global-state.js';
-import { mountPibbl } from './mount-pibbl.js';
-import { assertCompatibleRootNode } from './element/children.js';
-import { PibblController, type PibblNode } from './types.js';
-import { update } from './update.js';
-import type { PibblConfig } from './surface/types.js';
+import { prepareLayoutEngine } from "./layout/wasm/loader.js";
+import { reserveMountRequest } from "./mount-requests.js";
+import {
+  mountPreparedRoot,
+  validateMountArguments,
+} from "./mount-prepared-root.js";
+import type { PibblController, PibblNode } from "./types.js";
+import type { PibblConfig } from "./surface/types.js";
 
 /**
- * Mounts or updates a canvas render component on a given HTMLCanvasElement.
- * The first mount captures the surface configuration; later calls update only
- * the root element until that controller is disposed.
- * @param canvas The canvas to render on
- * @param element The Pibbl element to render
- * @param config The mount lifetime, logical viewport, fit, and pixel density. See
- * {@link PibblConfig} .
- * @returns The stable {@link PibblController} for this canvas; dispose it to release the mount.
- *
- * @see {@link PibblNode}
- * @see {@link PibblConfig}
+ * Prepares the external layout engine, then mounts or updates a canvas.
+ * No component, event owner or frame is admitted before preparation succeeds.
+ * The first mount captures surface configuration; later calls update its root.
+ * @param canvas - The canvas to render on. See {@link PibblConfig}.
+ * @param element - The branded root tree. See {@link PibblNode}.
+ * @param config - Surface options and the caller's pending-load cancellation signal.
+ * The original mounted signal continues to govern the mount lifetime. See {@link PibblConfig}.
+ * @returns A Promise for the stable {@link PibblController}; call dispose to release it.
+ * @throws Rejects on loading or mount failure, or with AbortError when cancelled or superseded.
+ * @see {@link prepareLayoutEngine}
  * @see {@link PibblController}
  */
-export function pibbl(
+export async function pibbl(
   canvas: HTMLCanvasElement,
   element: PibblNode,
   config?: PibblConfig,
-): PibblController {
-  assertCompatibleRootNode(element);
-  const mountedInstance = GLOBAL_STATE.pibblInstances.get(canvas);
-  if (mountedInstance) {
-    update(canvas, element);
-    return mountedInstance.controller;
+): Promise<PibblController> {
+  validateMountArguments(canvas, element, config);
+  const request = reserveMountRequest(canvas, config?.signal);
+  try {
+    request.assertCurrent();
+    await request.waitUntilReady(prepareLayoutEngine());
+    request.assertCurrent();
+    return mountPreparedRoot(canvas, element, config);
+  } finally {
+    request.finish();
   }
-
-  const controller = mountPibbl(canvas, element, config);
-  if (GLOBAL_STATE.pibblInstances.has(canvas)) {
-    update(canvas, element);
-  }
-  return controller;
 }

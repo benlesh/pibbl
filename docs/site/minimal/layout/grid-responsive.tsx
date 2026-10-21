@@ -1,7 +1,7 @@
 import {
   Grid,
   Rectangle,
-  pibbl,
+
   signal,
   type PibblResponsiveStyle,
   type PibblSizeQuery,
@@ -12,6 +12,7 @@ import {
   type GridTrack,
   type RectStyle,
 } from "@pibbl/core";
+import { pibblSync } from '@pibbl/core/sync';
 
 const columns: readonly GridTrack[] = ["1fr", "2fr"];
 const row: GridItemStyle = {
@@ -76,7 +77,7 @@ button.addEventListener("click", () => {
   gridWidth.set(narrow ? 260 : 320);
   button.textContent = narrow ? "Wide" : "Narrow";
 });
-const app = pibbl(
+const app = pibblSync(
   canvas,
   <Grid {...gridProps} style={{ ...gridStyle, width: gridWidth }} />,
 );

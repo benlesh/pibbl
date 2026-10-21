@@ -1,4 +1,5 @@
-import { Rectangle, Text, pibbl } from '@pibbl/core';
+import { Rectangle, Text, } from '@pibbl/core';
+import { pibblSync } from '@pibbl/core/sync';
 import { Fragment, jsxDEV, type JSX } from '@pibbl/core/jsx-dev-runtime';
 
 const canvas = document.createElement('canvas');
@@ -32,5 +33,5 @@ const root = jsxDEV(
   source,
   undefined,
 );
-const controller = pibbl(canvas, root);
+const controller = pibblSync(canvas, root);
 window.addEventListener('pagehide', () => controller.dispose(), { once: true });

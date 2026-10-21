@@ -19,7 +19,8 @@ import {
   type Object3D,
 } from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
-import { FocusManagement, Rectangle, pibbl } from "@pibbl/core";
+import { FocusManagement, Rectangle } from "@pibbl/core";
+import { pibblSync as pibbl } from "@pibbl/core/sync";
 import {
   clearSharedState,
   getPibblInstance,

@@ -1,5 +1,6 @@
 /** @jsxImportSource @pibbl/core */
-import { pibbl, Rectangle } from "@pibbl/core";
+import { Rectangle } from "@pibbl/core";
+import { pibblSync } from '@pibbl/core/sync';
 import {
   tendrils,
   useTexture,
@@ -44,5 +45,5 @@ function Filaments() {
   );
 }
 
-const controller = pibbl(canvas, <Filaments />);
+const controller = pibblSync(canvas, <Filaments />);
 window.addEventListener("pagehide", () => controller.dispose(), { once: true });

@@ -1,4 +1,5 @@
-import { pibbl, Circle } from "@pibbl/core";
+import {  Circle } from "@pibbl/core";
+import { pibblSync } from '@pibbl/core/sync';
 import {
   PlotSeries,
   PointSeries,
@@ -48,7 +49,7 @@ const canvas = document.createElement("canvas");
 canvas.width = 320;
 canvas.height = 220;
 document.body.append(canvas);
-const app = pibbl(
+const app = pibblSync(
   canvas,
   <LinearScale
     id="x"

@@ -1,7 +1,7 @@
 import {
   Rectangle,
   Text,
-  pibbl,
+
   useCursor,
   useEventListener,
   useEventTarget,
@@ -31,6 +31,7 @@ import {
   type PibblWheelEvent,
   type PixelGridAlignment,
 } from "@pibbl/core";
+import { pibblSync } from '@pibbl/core/sync';
 
 const canvas = document.createElement("canvas");
 canvas.width = 320;
@@ -131,5 +132,5 @@ function Scene() {
   return <Target />;
 }
 
-const controller = pibbl(canvas, <Scene />);
+const controller = pibblSync(canvas, <Scene />);
 window.addEventListener("pagehide", () => controller.dispose(), { once: true });

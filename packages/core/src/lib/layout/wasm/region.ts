@@ -1,5 +1,5 @@
 /// <reference types="vite/client" />
-import { bytes } from './bytes.js';
+import { getPreparedLayoutModule } from './module-cache.js';
 import { GLOBAL_STATE } from '../../global-state.js';
 import { signalGraphSnapshot } from '../../signals/graph.js';
 import type { PibblComponentRefs } from '../../types.js';
@@ -42,10 +42,8 @@ interface Kernel {
   place_main(main: number, gap: number, alignment: number): number;
   dispose(): void;
 }
-let module: WebAssembly.Module | undefined;
 function instantiate(): Kernel {
-  module ??= new WebAssembly.Module(Uint8Array.from(atob(bytes), c => c.charCodeAt(0)));
-  return new WebAssembly.Instance(module).exports as unknown as Kernel;
+  return new WebAssembly.Instance(getPreparedLayoutModule()).exports as unknown as Kernel;
 }
 export interface NumericFlexItem {
   baseMain: number; minMain: number; maxMain: number; paddingMain: number;

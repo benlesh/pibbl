@@ -1,4 +1,5 @@
-import { pibbl, Rectangle, signal } from '@pibbl/core';
+import { Rectangle, signal } from "@pibbl/core";
+import { pibblSync as pibbl } from "@pibbl/core/sync";
 import { afterEach, describe, expect, it } from 'vitest';
 import { clearSharedState, getPibblInstance } from '../src/lib/global-state';
 import { signalGraphSnapshot } from '../src/lib/signals/graph';

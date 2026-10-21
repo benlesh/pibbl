@@ -1,4 +1,5 @@
-import { pibbl, Circle, signal, drive, tween } from "@pibbl/core";
+import {  Circle, signal, drive, tween } from "@pibbl/core";
+import { pibblSync } from '@pibbl/core/sync';
 import { defineMachine, useMachine } from "@pibbl/core/machines";
 import {
   playAnimation,
@@ -28,5 +29,5 @@ const canvas = document.createElement("canvas");
 canvas.width = 320;
 canvas.height = 90;
 document.body.append(canvas);
-const app = pibbl(canvas, <Scene />);
+const app = pibblSync(canvas, <Scene />);
 window.addEventListener("pagehide", () => app.dispose(), { once: true });

@@ -1,5 +1,6 @@
 import { afterEach, expect, it, vi } from 'vitest';
-import { pibbl, signal } from '@pibbl/core';
+import { signal } from '@pibbl/core';
+import { pibblSync as pibbl } from '@pibbl/core/sync';
 import { createMachine } from '@pibbl/core/machines';
 import { setLinearVelocity2D } from '@pibbl/core/physics/2d';
 import { defineSpriteAnimation, loadSpriteSheet, type SpriteSheet } from '@pibbl/core/sprites';

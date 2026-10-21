@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Fragment } from '../../index.js';
-import { pibbl } from '../pibbl.js';
+import { pibblSync as pibbl } from "../../sync.js";
 import { clearSharedState, getPibblInstance } from '../global-state.js';
 import { useRef } from '../hooks/use-ref.js';
 import { createElement } from './create-element';

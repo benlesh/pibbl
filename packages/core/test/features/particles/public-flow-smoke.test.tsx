@@ -1,5 +1,6 @@
 import { afterEach, expect, it } from "vitest";
-import { pibbl, Rectangle, signal } from "@pibbl/core";
+import { Rectangle, signal } from "@pibbl/core";
+import { pibblSync as pibbl } from "@pibbl/core/sync";
 import {
   PhysicsWorld2D,
   pibblPhysicsWorld2D,

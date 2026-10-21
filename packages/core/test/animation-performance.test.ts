@@ -1,24 +1,8 @@
 import {
   animationPlaybackSnapshot,
 } from '../src/lib/animation/playback';
-import {
-  Group,
-  Layer,
-  Rectangle,
-  pibbl,
-  usePlayback,
-  createElement,
-  keyframes,
-  sequence,
-  signal,
-  spring,
-  stepper,
-  drive,
-  tween,
-  type PibblController,
-  type PibblNode,
-  type PibblPlayback,
-} from '@pibbl/core';
+import { Group, Layer, Rectangle, usePlayback, createElement, keyframes, sequence, signal, spring, stepper, drive, tween, type PibblController, type PibblNode, type PibblPlayback } from "@pibbl/core";
+import { pibblSync as pibbl } from "@pibbl/core/sync";
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import * as animationDefinition from '../src/lib/animation/definition';
 import { writerLeaseSnapshot } from '../src/lib/animation/writer-leases';

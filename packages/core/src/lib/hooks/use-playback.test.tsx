@@ -5,23 +5,8 @@ import {
   pibblInternalRequestRendererWork,
   type PibblInternalRenderOwner,
 } from '@pibbl/core/internal';
-import {
-  pibbl,
-  usePlayback,
-  defineAnimation,
-  marker,
-  parallel,
-  repeat,
-  sequence,
-  signal,
-  drive,
-  tween,
-  wait,
-  type PibblAnimationProgram,
-  type PibblPlayback,
-  type PibblPlaybackEvent,
-  type PibblPlaybackOptions,
-} from '../../index.js';
+import { usePlayback, defineAnimation, marker, parallel, repeat, sequence, signal, drive, tween, wait, type PibblAnimationProgram, type PibblPlayback, type PibblPlaybackEvent, type PibblPlaybackOptions } from "../../index.js";
+import { pibblSync as pibbl } from "../../sync.js";
 import { clearSharedState, getPibblInstance } from '../global-state.js';
 import { animationPlaybackSnapshot } from '../animation/playback.js';
 import { writerLeaseSnapshot } from '../animation/writer-leases.js';

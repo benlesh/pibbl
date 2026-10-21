@@ -1,15 +1,6 @@
 /** @jsxImportSource @pibbl/core */
-import {
-  pibbl,
-  Rectangle,
-  Ellipse,
-  Polygon,
-  Group,
-  signal,
-  useComputed,
-  useManipulation,
-  ManipulationFrame,
-} from "@pibbl/core";
+import { Rectangle, Ellipse, Polygon, Group, signal, useComputed, useManipulation, ManipulationFrame } from "@pibbl/core";
+import { pibblSync as pibbl } from "../../../../../sync.js";
 import { afterEach, expect, it } from "vitest";
 import {
   PhysicsWorld2D,

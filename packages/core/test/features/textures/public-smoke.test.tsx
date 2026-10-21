@@ -1,5 +1,6 @@
 import { afterEach, expect, it } from "vitest";
-import { pibbl, Group, Text, Rectangle, useTexture } from "@pibbl/core";
+import { Group, Text, Rectangle, useTexture } from "@pibbl/core";
+import { pibblSync as pibbl } from "@pibbl/core/sync";
 import {
   stripes,
   checkers,

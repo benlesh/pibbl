@@ -73,7 +73,9 @@ either as the current result unless a fresh run reproduces it.
 ## Current runtime model
 
 - `pibbl(canvas, root, config?)` owns at most one live mount per Canvas and
-  returns a stable controller with idempotent `dispose()`.
+  returns a Promise for a stable controller with idempotent `dispose()`.
+  `prepareLayoutEngine()` prewarms the shared external WASM module; the separate
+  `@pibbl/core/sync` entry provides `pibblSync()` for synchronous embedded startup.
 - One realm scheduler coalesces roots, managed Layers, animation, 2D physics,
   and external render layers into Begin, Advance, Commit, Plan, Render, and
   Complete phases.

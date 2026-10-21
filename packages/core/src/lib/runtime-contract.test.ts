@@ -17,7 +17,7 @@ import {
   tween,
   type PibblPlayback,
 } from '../index';
-import { pibbl } from './pibbl';
+import { pibblSync as pibbl } from "../sync.js";
 import { definePrimitive } from './define-primitive';
 import { createElement, isPibblElement } from './element/create-element';
 import { clearSharedState, getPibblInstance } from './global-state';

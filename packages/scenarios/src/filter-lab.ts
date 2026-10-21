@@ -1,4 +1,5 @@
-import { pibbl } from '@pibbl/core';
+import {  } from '@pibbl/core';
+import { pibblSync } from '@pibbl/core/sync';
 import type {
   FilterLabMode,
   FilterLabOrder,
@@ -83,7 +84,7 @@ async function mountFilterLab(
   const publish = () => context.onStateChange?.({ ...state });
   const render = () => {
     assertActive();
-    pibbl(context.canvas, createFilterLabScene({
+    pibblSync(context.canvas, createFilterLabScene({
       state,
       recordTarget: (target: FilterLabTarget) => {
         state = { ...state, lastTarget: target };

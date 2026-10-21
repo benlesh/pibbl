@@ -8,7 +8,8 @@ import {
 } from '@pibbl/scenarios';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import lifecycleLabSource from '../../scenarios/src/lifecycle-lab.example.tsx?raw';
-import { Absolute, pibbl, useEventTarget, Layer, Rectangle, type PibblElement, type PibblController } from '../src/index';
+import { Absolute, useEventTarget, Layer, Rectangle, type PibblElement, type PibblController } from "../src/index";
+import { pibblSync as pibbl } from "@pibbl/core/sync";
 import {
   directionalPolicy,
   focusManaged,

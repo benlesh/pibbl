@@ -1,4 +1,5 @@
-import { pibbl } from "@pibbl/core";
+import { } from "@pibbl/core";
+import { pibblSync } from '@pibbl/core/sync';
 import {
   Axis,
   LineSeries,
@@ -41,7 +42,7 @@ const canvas = document.createElement("canvas");
 canvas.width = 320;
 canvas.height = 220;
 document.body.append(canvas);
-const app = pibbl(
+const app = pibblSync(
   canvas,
   <LinearScale
     id="day"

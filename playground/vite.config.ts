@@ -1,6 +1,7 @@
 
 import { targetingIdentityPlugin } from '../tooling/agent-verification/identity-plugin.mjs';
 import { textAssets } from "../tooling/text-assets.ts";
+import { layoutAssets } from "../tooling/layout-assets.ts";
 import { defineConfig } from "vite";
 import { resolve } from "node:path";
 import { assertBuiltCore } from "../tooling/assert-built-core.ts";
@@ -28,6 +29,7 @@ export default defineConfig(({ mode }) => {
     ["@pibbl/core/textures", "../packages/core/src/features/textures/index.ts"],
     ["@pibbl/core/viz", "../packages/core/src/features/viz/index.ts"],
     ["@pibbl/core/internal", "../packages/core/src/internal.ts"],
+    ["@pibbl/core/sync", "../packages/core/src/sync.ts"],
     ["@pibbl/core/jsx-dev-runtime", "../packages/core/src/jsx-dev-runtime.ts"],
     ["@pibbl/core/jsx-runtime", "../packages/core/src/jsx-runtime.ts"],
     ["@pibbl/core", "../packages/core/src/index.ts"],
@@ -43,6 +45,7 @@ export default defineConfig(({ mode }) => {
     plugins: [
       targetingIdentityPlugin(resolve(import.meta.dirname, "..")),
       textAssets(),
+      layoutAssets(),
       ...(mode === "built" ? [assertBuiltCore()] : []),
       pibblRuntimeSource(mode),
       pibblStudioDocs({ repositoryRoot: resolve(import.meta.dirname, "..") }),

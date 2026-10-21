@@ -1,5 +1,6 @@
 import { afterEach, expect, it } from "vitest";
-import { defineTexture, pibbl, Rectangle, useTexture } from "@pibbl/core";
+import { defineTexture, Rectangle, useTexture } from "@pibbl/core";
+import { pibblSync as pibbl } from "@pibbl/core/sync";
 import * as filters from "@pibbl/core/filters";
 import {
   ManualSchedulerDriver,

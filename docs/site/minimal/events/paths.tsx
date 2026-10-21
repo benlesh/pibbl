@@ -1,12 +1,13 @@
 import {
   Path,
-  pibbl,
+
   useEventTarget,
   useLinePath,
   useRectPath,
   useSvgPath,
   type PixelGridAlignment,
 } from "@pibbl/core";
+import { pibblSync } from '@pibbl/core/sync';
 
 const canvas = document.createElement("canvas");
 canvas.width = 340;
@@ -63,5 +64,5 @@ function Paths() {
   );
 }
 
-const controller = pibbl(canvas, <Paths />);
+const controller = pibblSync(canvas, <Paths />);
 window.addEventListener("pagehide", () => controller.dispose(), { once: true });

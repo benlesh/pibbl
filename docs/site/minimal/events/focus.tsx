@@ -4,13 +4,14 @@ import {
   KeyboardNavigation,
   Rectangle,
   Text,
-  pibbl,
+
   useEventTarget,
   useRectPath,
   type PibblKeyboardNavigationOptions,
   type FocusManagementProps,
   type KeyboardNavigationProps,
 } from "@pibbl/core";
+import { pibblSync } from '@pibbl/core/sync';
 
 const canvas = document.createElement("canvas");
 canvas.width = 320;
@@ -77,5 +78,5 @@ const focus: FocusManagementProps = {
     </Group>
   ),
 };
-const controller = pibbl(canvas, <FocusManagement {...focus} />);
+const controller = pibblSync(canvas, <FocusManagement {...focus} />);
 window.addEventListener("pagehide", () => controller.dispose(), { once: true });

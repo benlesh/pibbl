@@ -1,6 +1,6 @@
 import {
   Absolute,
-  pibbl,
+
   useLayoutBox,
   useSignal,
   Flex,
@@ -17,6 +17,7 @@ import {
   type GridItemStyle,
   type OverlayStyle,
 } from '@pibbl/core';
+import { pibblSync } from '@pibbl/core/sync';
 import type { ScenarioDefinition } from './types';
 export const LAYOUT_FOUNDATION_SOURCE_ID = 'layout-foundation-example';
 /**
@@ -204,7 +205,7 @@ export function mountLayoutFoundation(
       </Flex>
     </Absolute>
   );
-  const controller = pibbl(canvas, createScene(), {
+  const controller = pibblSync(canvas, createScene(), {
     viewport: 'responsive',
   });
   return {
@@ -215,7 +216,7 @@ export function mountLayoutFoundation(
     resize(width, height) {
       canvas.style.width = `${width}px`;
       canvas.style.height = `${height}px`;
-      pibbl(canvas, createScene());
+      pibblSync(canvas, createScene());
     },
   };
 }

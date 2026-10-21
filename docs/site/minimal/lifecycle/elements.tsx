@@ -1,6 +1,5 @@
 /** @jsxImportSource @pibbl/core */
 import {
-  pibbl,
   createElement,
   Fragment,
   Text,
@@ -16,6 +15,7 @@ import {
   type PibblTextInput,
   type PibblRenderResult,
 } from "@pibbl/core";
+import { pibblSync } from '@pibbl/core/sync';
 
 const canvas = document.createElement("canvas");
 canvas.width = 320;
@@ -44,5 +44,5 @@ const empty: PibblEmptyNode = null;
 const nodes: PibblNode = [element, empty];
 const input: PibblNodeInput = nodes;
 const children: PibblContainerChild = input;
-const controller = pibbl(canvas, <Fragment>{children}</Fragment>);
+const controller = pibblSync(canvas, <Fragment>{children}</Fragment>);
 window.addEventListener("pagehide", () => controller.dispose(), { once: true });

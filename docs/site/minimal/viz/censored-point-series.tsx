@@ -1,4 +1,5 @@
-import { createElement, pibbl } from "@pibbl/core";
+import { createElement, } from "@pibbl/core";
+import { pibblSync } from '@pibbl/core/sync';
 import {
   CensoredPointSeries,
   LinearScale,
@@ -44,5 +45,5 @@ const canvas = document.createElement("canvas");
 canvas.width = 360;
 canvas.height = 220;
 document.body.append(canvas);
-const app = pibbl(canvas, minimalCensoredPointSeries);
+const app = pibblSync(canvas, minimalCensoredPointSeries);
 window.addEventListener("pagehide", () => app.dispose(), { once: true });

@@ -1,5 +1,6 @@
 /** @jsxImportSource @pibbl/core */
-import { pibbl, Group, Text, type PibblController } from "@pibbl/core";
+import { Group, Text, type PibblController } from "@pibbl/core";
+import { pibblSync as pibbl } from "@pibbl/core/sync";
 import {
   ReactionDiffusion,
   ProceduralTexture,

@@ -1,4 +1,5 @@
-import { FocusManagement, Text, pibbl } from "@pibbl/core";
+import { FocusManagement, Text, } from "@pibbl/core";
+import { pibblSync } from '@pibbl/core/sync';
 import {
   LineSeries,
   LinearScale,
@@ -60,5 +61,5 @@ const canvas = document.createElement("canvas");
 canvas.width = 320;
 canvas.height = 220;
 document.body.append(canvas);
-const app = pibbl(canvas, <FinancialIndexTo100Example />);
+const app = pibblSync(canvas, <FinancialIndexTo100Example />);
 window.addEventListener("pagehide", () => app.dispose(), { once: true });

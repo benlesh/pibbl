@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { Rectangle } from '../components/rect';
-import { pibbl } from '../pibbl';
+import { pibblSync as pibbl } from "../../sync.js";
 import { useLayoutBox } from '../hooks/use-layout-box';
 import { componentTest } from '../test-utils/component-test';
 import type { SystemStyle } from '../types';

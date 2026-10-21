@@ -5,7 +5,7 @@ import {
   Layer,
   Rectangle,
   Text,
-  pibbl,
+
   createCirclePath,
   type ClipProps,
   type ClipStyle,
@@ -19,6 +19,7 @@ import {
   type TextFit,
   type TextStyle,
 } from "@pibbl/core";
+import { pibblSync } from '@pibbl/core/sync';
 
 const groupStyle: GStyle = { translateX: 24, translateY: 24 };
 const clipStyle: ClipStyle = {
@@ -71,7 +72,7 @@ const canvas = document.createElement("canvas");
 canvas.width = 320;
 canvas.height = 220;
 document.body.append(canvas);
-const app = pibbl(
+const app = pibblSync(
   canvas,
   <>
     <Group {...groupProps} style={groupStyle} />

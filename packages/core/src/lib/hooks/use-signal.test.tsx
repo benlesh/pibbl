@@ -1,14 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import {
-  computed,
-  pibbl,
-  useSignal,
-  definePrimitive,
-  Rectangle,
-  signal,
-  type SignalOptions,
-  type WritableSignal,
-} from '../../index.js';
+import { computed, useSignal, definePrimitive, Rectangle, signal, type SignalOptions, type WritableSignal } from "../../index.js";
+import { pibblSync as pibbl } from "../../sync.js";
 import { clearSharedState } from '../global-state.js';
 import { useRef } from './use-ref.js';
 import type { SystemStyle } from '../types.js';

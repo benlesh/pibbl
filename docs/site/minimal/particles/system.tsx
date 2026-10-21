@@ -1,4 +1,5 @@
-import { pibbl } from "@pibbl/core";
+import { } from "@pibbl/core";
+import { pibblSync } from '@pibbl/core/sync';
 import {
   defineParticleEffect2D,
   particleRange,
@@ -75,5 +76,5 @@ function App() {
   );
 }
 
-const app = pibbl(canvas, <App />);
+const app = pibblSync(canvas, <App />);
 window.addEventListener("pagehide", () => app.dispose(), { once: true });

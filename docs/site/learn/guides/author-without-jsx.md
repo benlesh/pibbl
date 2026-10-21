@@ -95,12 +95,12 @@ function Poster({ initialMessage }: PosterProps): PibblNode {
   );
 }
 
-export function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(canvas, createElement(Poster, { initialMessage: "None" }));
+export async function mount(canvas: HTMLCanvasElement): Promise<PibblController> {
+  return await pibbl(canvas, createElement(Poster, { initialMessage: "None" }));
 }
 
-export function attach(canvas: HTMLCanvasElement): () => void {
-  const controller = mount(canvas);
+export async function attach(canvas: HTMLCanvasElement): Promise<() => void> {
+  const controller = await mount(canvas);
   return () => controller.dispose();
 }
 ```

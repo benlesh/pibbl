@@ -10,7 +10,7 @@ import type {
   MeasureResult,
   SystemStyle,
 } from './types.js';
-import { pibbl } from './pibbl.js';
+import { pibblSync as pibbl } from '../sync.js';
 import {
   pibblInternalRunPurePrimitiveResolver,
   definePrimitive,

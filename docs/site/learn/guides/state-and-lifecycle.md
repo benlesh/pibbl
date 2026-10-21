@@ -18,8 +18,9 @@ immediate Canvas runtime rather than a React renderer.
 ## The render cycle
 
 `pibbl(canvas, root, config?)` creates at most one live mount for a Canvas and
-returns a stable controller. A later `pibbl()` call on that Canvas queues a root
-replacement and returns the same controller. All roots and managed Layers in
+returns a Promise for its stable controller after external layout preparation.
+A later awaited `pibbl()` call on that Canvas queues a root replacement and
+resolves to the same controller. All roots and managed Layers in
 one loaded runtime share one realm scheduler and at most one pending animation
 frame. Signal, root, resize, density, animation, and Layer requests coalesce.
 

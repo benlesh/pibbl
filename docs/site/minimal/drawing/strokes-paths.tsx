@@ -5,7 +5,7 @@ import {
   PathGeometry,
   SvgPath,
   VerticalLine,
-  pibbl,
+
   type HorizontalLineProps,
   type HorizontalLineStyle,
   type LineProps,
@@ -17,6 +17,7 @@ import {
   type VerticalLineProps,
   type VerticalLineStyle,
 } from "@pibbl/core";
+import { pibblSync } from '@pibbl/core/sync';
 
 const lineProps: LineProps = { pointerEvents: "auto" };
 const lineStyle: LineStyle = {
@@ -62,7 +63,7 @@ const canvas = document.createElement("canvas");
 canvas.width = 320;
 canvas.height = 220;
 document.body.append(canvas);
-const app = pibbl(
+const app = pibblSync(
   canvas,
   <>
     <Line {...lineProps} style={lineStyle} />

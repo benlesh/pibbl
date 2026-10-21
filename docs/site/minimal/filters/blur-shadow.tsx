@@ -1,4 +1,5 @@
-import { pibbl, Group, Circle, Rectangle, Text } from "@pibbl/core";
+import {  Group, Circle, Rectangle, Text } from "@pibbl/core";
+import { pibblSync } from '@pibbl/core/sync';
 import {
   blur,
   dropShadow,
@@ -60,7 +61,7 @@ const controllers = comparisons.map(([label, filter]) => {
   canvas.height = 156;
   figure.append(caption, canvas);
   grid.append(figure);
-  return pibbl(
+  return pibblSync(
     canvas,
     <>
       <Rectangle style={{ width: 224, height: 156, fill: "#f1f4f5" }} />

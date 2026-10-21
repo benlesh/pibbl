@@ -1,4 +1,5 @@
-import { Circle, Group, Overlay, Text, pibbl } from "@pibbl/core";
+import { Circle, Group, Overlay, Text, } from "@pibbl/core";
+import { pibblSync } from '@pibbl/core/sync';
 import {
   Axis,
   PointScale,
@@ -40,7 +41,7 @@ canvas.width = 560;
 canvas.height = 210;
 canvas.style.cssText = "max-width:100%;height:auto";
 document.body.append(canvas);
-const app = pibbl(
+const app = pibblSync(
   canvas,
   <>
     <Text

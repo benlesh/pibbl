@@ -1,4 +1,5 @@
-import { pibbl } from "@pibbl/core";
+import { } from "@pibbl/core";
+import { pibblSync } from '@pibbl/core/sync';
 import {
   defineParticleEffect2D,
   Particles2D,
@@ -58,5 +59,5 @@ function App() {
   return <Particles2D system={mist} style={{ width: 320, height: 220 }} />;
 }
 
-const app = pibbl(canvas, <App />);
+const app = pibblSync(canvas, <App />);
 window.addEventListener("pagehide", () => app.dispose(), { once: true });

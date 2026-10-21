@@ -24,7 +24,7 @@ import {
 // Daily observed TMIN/TMAX in °C, not uncertainty. DOI: 10.7289/V5D21VHZ.
 // Retrieved 2026-10-06; metric API values retained with no unit conversion.
 // https://www.ncei.noaa.gov/access/services/data/v1?dataset=daily-summaries&stations=USW00094728&startDate=2020-01-01&endDate=2020-01-12&format=json&includeAttributes=true&units=metric
-// All TMIN/TMAX attributes are ",,W": no measurement/quality flags; WBAN source.
+// All TMIN/TMAX attributes are ",W": no measurement/quality flags; WBAN source.
 // NOAA/NCEI federal environmental data are public domain in the US; credit NOAA.
 // Omit Jan 6 is an explicit demonstration filter, not a missing source record.
 const data = [

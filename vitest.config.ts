@@ -5,6 +5,7 @@ import { defineBrowserCommand, playwright } from "@vitest/browser-playwright";
 import { configDefaults, defineConfig } from "vitest/config";
 import { assertBuiltCore } from "./tooling/assert-built-core.ts";
 import { pibblRuntimeSource } from "./tooling/pibbl-runtime-source.ts";
+import { layoutAssets } from "./tooling/layout-assets.ts";
 import { pibblStudioDocs } from "./tooling/studio-docs/vite-plugin.ts";
 import { manipulationPointer } from "./tooling/manipulation-browser-command.ts";
 
@@ -83,6 +84,7 @@ export default defineConfig(({ mode }) => ({
     },
   },
   plugins: [
+    layoutAssets(),
     pibblRuntimeSource(mode),
     pibblStudioDocs({
       repositoryRoot: fileURLToPath(new URL(".", import.meta.url)),
@@ -110,6 +112,12 @@ export default defineConfig(({ mode }) => ({
               find: /^@pibbl\/core\/internal$/,
               replacement: fileURLToPath(
                 new URL("./packages/core/src/internal.ts", import.meta.url),
+              ),
+            },
+            {
+              find: /^@pibbl\/core\/sync$/,
+              replacement: fileURLToPath(
+                new URL("./packages/core/src/sync.ts", import.meta.url),
               ),
             },
             {

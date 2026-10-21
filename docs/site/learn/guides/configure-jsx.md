@@ -120,7 +120,7 @@ function Scene() {
   );
 }
 
-const controller = pibbl(document.querySelector("canvas"), <Scene />);
+const controller = await pibbl(document.querySelector("canvas"), <Scene />);
 window.addEventListener("pagehide", () => controller.dispose(), { once: true });
 ```
 
@@ -174,7 +174,7 @@ export function Poster({ initialMessage }: PosterProps): PibblNode {
 
 ```tsx docs:complete-snippet=jsx-quick-start
 const canvas = document.querySelector("canvas")!;
-const controller = pibbl(canvas, <Poster initialMessage="Hello" />);
+const controller = await pibbl(canvas, <Poster initialMessage="Hello" />);
 controller.dispose();
 controller.dispose(); // Idempotent.
 ```

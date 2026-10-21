@@ -1,8 +1,5 @@
-import {
-  pibbl,
-  createElement,
-  Rectangle,
-} from '@pibbl/core';
+import { createElement, Rectangle } from "@pibbl/core";
+import { pibblSync as pibbl } from "@pibbl/core/sync";
 import { describe, expect, it, vi } from 'vitest';
 
 describe('public pointer events', () => {

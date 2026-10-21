@@ -1,4 +1,5 @@
-import { pibbl } from "@pibbl/core";
+import { } from "@pibbl/core";
+import { pibblSync } from '@pibbl/core/sync';
 import {
   LinearScale,
   WeightedPointSeries,
@@ -33,7 +34,7 @@ const canvas = document.createElement("canvas");
 canvas.width = 400;
 canvas.height = 300;
 document.body.append(canvas);
-const app = pibbl(
+const app = pibblSync(
   canvas,
   <LinearScale id="concentration" domain={[0, 4]} range={[40, 360]}>
     <LinearScale id="inhibition" domain={[0, 100]} range={[260, 30]}>

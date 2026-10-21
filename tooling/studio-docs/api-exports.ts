@@ -96,6 +96,9 @@ export const pibblPublicEntryPaths = {
   root: fileURLToPath(
     new URL("../../packages/core/src/index.ts", import.meta.url),
   ),
+  sync: fileURLToPath(
+    new URL("../../packages/core/src/sync.ts", import.meta.url),
+  ),
   text: fileURLToPath(
     new URL("../../packages/text/src/index.ts", import.meta.url),
   ),

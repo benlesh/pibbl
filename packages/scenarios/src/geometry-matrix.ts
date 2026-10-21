@@ -9,7 +9,8 @@ import type {
   ScenarioDefinition,
   ScenarioMountContext,
 } from './types';
-import { pibbl } from '@pibbl/core';
+import {  } from '@pibbl/core';
+import { pibblSync } from '@pibbl/core/sync';
 import { EventTraceRecorder } from './event-trace';
 import {
   createGeometryMatrixScene,
@@ -85,7 +86,7 @@ async function mountGeometryMatrix(
     const matrixCase = getMatrixCase(state.caseId);
     context.canvas.style.width = `${matrixCase.cssSize.width}px`;
     context.canvas.style.height = `${matrixCase.cssSize.height}px`;
-    pibbl(context.canvas, createGeometryMatrixScene({ caseId: state.caseId, record }), {
+    pibblSync(context.canvas, createGeometryMatrixScene({ caseId: state.caseId, record }), {
       signal: abortController.signal,
     });
     publish();

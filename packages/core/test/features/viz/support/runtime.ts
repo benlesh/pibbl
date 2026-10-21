@@ -1,4 +1,5 @@
-import { pibbl, type PibblNode, type PibblController } from "@pibbl/core";
+import { type PibblNode, type PibblController } from "@pibbl/core";
+import { pibblSync as pibbl } from "@pibbl/core/sync";
 import { vi } from "vitest";
 
 export function testRuntime() {

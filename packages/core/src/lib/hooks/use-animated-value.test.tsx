@@ -5,14 +5,8 @@ import {
   pibblInternalRequestRendererWork,
   type PibblInternalRenderOwner,
 } from '@pibbl/core/internal';
-import {
-  tween, spring, pibbl,
-  computed,
-  useConst,
-  useAnimatedValue,
-  signal,
-  type Signal,
-} from '../../index.js';
+import { tween, spring, computed, useConst, useAnimatedValue, signal, type Signal } from "../../index.js";
+import { pibblSync as pibbl } from "../../sync.js";
 import { animationPlaybackSnapshot } from '../animation/playback.js';
 import { createSpringRecord, sampleSpring } from '../animation/spring.js';
 import { executeRender } from '../execute-render.js';

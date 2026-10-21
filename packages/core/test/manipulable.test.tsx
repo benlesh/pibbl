@@ -1,3 +1,4 @@
+import { pibblSync as __pibblSyncTest } from "@pibbl/core/sync";
 import { afterEach, expect, it } from "vitest";
 import { commands } from "vitest/browser";
 import * as Pibbl from "@pibbl/core";
@@ -23,7 +24,7 @@ it("offers the convenience component through the public signal binding without a
   canvas.height = 300;
   canvas.dataset.manipulationTest = "";
   document.body.append(canvas);
-  mount = Pibbl.pibbl(
+  mount = __pibblSyncTest(
     canvas,
     Pibbl.createElement(Manipulable, {
       style: box,

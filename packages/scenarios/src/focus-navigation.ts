@@ -1,4 +1,5 @@
-import { pibbl, type PibblController, type PibblLogicalMouseEvent } from '@pibbl/core';
+import { type PibblController, type PibblLogicalMouseEvent } from '@pibbl/core';
+import { pibblSync } from '@pibbl/core/sync';
 import {
   createFocusNavigationScene,
   FOCUS_NAVIGATION_SOURCE_ID,
@@ -67,7 +68,7 @@ async function mountFocusNavigationScenario(
   };
   const render = () => {
     assertActive();
-    runtime = pibbl(context.canvas, createFocusNavigationScene({
+    runtime = pibblSync(context.canvas, createFocusNavigationScene({
       squareLabels,
       state,
       onActivation: (target, event) => {

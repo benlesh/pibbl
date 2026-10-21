@@ -1,11 +1,5 @@
-import {
-  createElement,
-  pibbl,
-  defineRenderLayer,
-  defineTexture,
-  Group,
-  useTexture,
-} from "@pibbl/core";
+import { createElement, defineRenderLayer, defineTexture, Group, useTexture } from "@pibbl/core";
+import { pibblSync as pibbl } from "@pibbl/core/sync";
 import { displacement } from "@pibbl/core/filters";
 import { describe, expect, it } from "vitest";
 import { clickMouse } from "./support/mouse-input";

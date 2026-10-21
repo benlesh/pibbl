@@ -1,4 +1,5 @@
-import { pibbl, signal } from "@pibbl/core";
+import {  signal } from "@pibbl/core";
+import { pibblSync } from '@pibbl/core/sync';
 import {
   IntervalDiamondSeries,
   LinearScale,
@@ -24,7 +25,7 @@ const canvas = document.createElement("canvas");
 canvas.width = 360;
 canvas.height = 120;
 document.body.append(canvas);
-const app = pibbl(
+const app = pibblSync(
   canvas,
   <PointScale id="analyses" domain={["Summary"]} range={[60, 60]}>
     <LinearScale id="effect" domain={[0, 1.5]} range={[20, 340]}>

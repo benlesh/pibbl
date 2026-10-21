@@ -1,12 +1,7 @@
 import { signalObserversForTest } from "../../../test/support/signal-observer";
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import {
-  computed,
-  pibbl,
-  createElement,
-  Layer,
-  signal,
-} from '@pibbl/core';
+import { computed, createElement, Layer, signal } from "@pibbl/core";
+import { pibblSync as pibbl } from "../../sync.js";
 import {
   pibblInternalCreateSignalConsumer,
   pibblInternalCurrentFrame,

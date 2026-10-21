@@ -6,6 +6,9 @@
     "module": "esnext",
     "moduleResolution": "Bundler",
     "paths": {
+      "@pibbl/core/sync": ["./packages/core/src/sync.ts"],
+      "@pibbl/scenarios": ["./packages/scenarios/src/index.ts"],
+      "@pibbl/scenarios/*": ["./packages/scenarios/src/*"],
       "@pibbl/core/filters": ["./packages/core/src/filters.ts"],
       "@pibbl/core/internal": ["./packages/core/src/internal.ts"],
       "@pibbl/core/jsx-dev-runtime": ["./packages/core/src/jsx-dev-runtime.ts"],

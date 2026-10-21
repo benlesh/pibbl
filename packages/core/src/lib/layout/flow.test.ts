@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { Rectangle } from '../components/rect';
 import { Text } from '../components/text';
-import { pibbl } from '../pibbl';
+import { pibblSync as pibbl } from "../../sync.js";
 import { useSignal } from '../hooks/use-signal';
 import { useLayoutBox } from '../hooks/use-layout-box';
 import type { Length } from '../style/types';

@@ -1,5 +1,5 @@
 import {
-  pibbl,
+
   Rectangle,
   useSignal,
   useManipulation,
@@ -17,6 +17,7 @@ import {
   type PibblRotationConnectorStyle,
   type PibblRotationArcStyle,
 } from "@pibbl/core";
+import { pibblSync } from '@pibbl/core/sync';
 
 const focused: PibblManipulationReadoutStateStyle = {
   fill: "#b83970",
@@ -68,5 +69,5 @@ const canvas = document.createElement("canvas");
 canvas.width = 420;
 canvas.height = 300;
 document.body.append(canvas);
-const controller = pibbl(canvas, <Scene />);
+const controller = pibblSync(canvas, <Scene />);
 window.addEventListener("pagehide", () => controller.dispose(), { once: true });

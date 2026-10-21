@@ -1,4 +1,5 @@
-import { pibbl } from "@pibbl/core";
+import { } from "@pibbl/core";
+import { pibblSync } from '@pibbl/core/sync';
 import {
   LinearScale,
   PairedSeries,
@@ -25,7 +26,7 @@ const canvas = document.createElement("canvas");
 canvas.width = 400;
 canvas.height = 300;
 document.body.append(canvas);
-const app = pibbl(
+const app = pibblSync(
   canvas,
   <LinearScale id="visit" domain={[0, 12]} range={[40, 360]}>
     <LinearScale id="outcome" domain={[0, 100]} range={[260, 30]}>

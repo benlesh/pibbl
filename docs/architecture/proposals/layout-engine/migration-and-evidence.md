@@ -343,8 +343,10 @@ Pibbl with caches enabled unless that is a separately labeled diagnostic lane.
   targeted reactive/text/Grid integration workloads. Report any tradeoff openly.
 - Working initial budget for controlled desktop runs: investigate >10% regression
   in p95 total update latency, >10% memory regression for equal capabilities, or
-  > 5 ms synchronous cold initialization. These are investigation thresholds, not
-  > universal guarantees; calibrate and preregister final budgets after baseline data.
+  more than 5 ms synchronous cold initialization through `pibblSync`. Record async
+  fetch/compile latency and warm prepared-mount cost separately. These are
+  investigation thresholds, not universal guarantees; calibrate and preregister
+  final budgets after baseline data.
 - Size: record compressed and uncompressed JS/WASM bytes for drawing-only, Flex,
   and Grid consumers. Set the final budget from the first artifact and target-device
   startup measurement. Do not invent a byte target without an implementation.

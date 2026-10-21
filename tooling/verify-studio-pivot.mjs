@@ -16,6 +16,7 @@ const repositoryRoot = resolve(import.meta.dirname, "..");
 const require = createRequire(import.meta.url);
 const tsc = join(dirname(require.resolve("typescript")), "tsc.js");
 const expectedModules = new Map([
+  ["@pibbl/core/sync", "node_modules/@pibbl/core/sync.d.ts"],
   ["@pibbl/core/filters", "node_modules/@pibbl/core/filters.d.ts"],
   ["@pibbl/core/textures", "node_modules/@pibbl/core/textures/index.d.ts"],
   ["@pibbl/core", "node_modules/@pibbl/core/index.d.ts"],
@@ -64,6 +65,7 @@ assert.deepEqual(
   [...expectedModules.keys()].sort(),
 );
 const sourceEntries = {
+  sync: join(repositoryRoot, "packages/core/src/sync.ts"),
   filters: join(repositoryRoot, "packages/core/src/filters.ts"),
   textures: join(
     repositoryRoot,
@@ -121,6 +123,7 @@ const builtInventory = await collectPublicExports(
   pibblPublicCompilerOptions,
 );
 const inventoryKey = new Map([
+  ["@pibbl/core/sync", "sync"],
   ["@pibbl/core/filters", "filters"],
   ["@pibbl/core/textures", "textures"],
   ["@pibbl/core", "root"],

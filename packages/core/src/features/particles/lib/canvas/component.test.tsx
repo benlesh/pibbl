@@ -1,18 +1,7 @@
 import { blur } from '@pibbl/core/filters';
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import {
-  Absolute,
-  Clip,
-  Flow,
-  Fragment,
-  Group,
-  Layer,
-  Rectangle,
-  pibbl,
-  definePrimitive,
-  signal,
-  type PibblNode,
-} from "@pibbl/core";
+import { Absolute, Clip, Flow, Fragment, Group, Layer, Rectangle, definePrimitive, signal, type PibblNode } from "@pibbl/core";
+import { pibblSync as pibbl } from "../../../../sync.js";
 import {
   clearSharedState,
   getPibblInstance,

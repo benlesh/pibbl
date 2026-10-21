@@ -1,4 +1,5 @@
-import { FocusManagement, Group, pibbl, signal } from "@pibbl/core";
+import { FocusManagement, Group, signal } from "@pibbl/core";
+import { pibblSync as pibbl } from "@pibbl/core/sync";
 import {
   EditableReferenceBand,
   EditableReferenceLine,

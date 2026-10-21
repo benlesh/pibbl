@@ -1,4 +1,5 @@
-import { Path, pibbl, type PibblController } from "@pibbl/core";
+import { Path,  type PibblController } from "@pibbl/core";
+import { pibblSync } from '@pibbl/core/sync';
 import {
   createTextGeometry,
   loadOutlineFont,
@@ -57,7 +58,7 @@ void loadOutlineFont(
     const firstGlyph: TextGlyph | undefined = result.glyphs[0];
     const ink: Readonly<InkBounds> | null = result.inkBounds;
     result.geometry.transform({ a: 1, d: 1, e: 24, f: 145 });
-    controller = pibbl(
+    controller = pibblSync(
       canvas,
       <Path style={{ d: result.geometry, fill: "#0f766e" }} />,
     );

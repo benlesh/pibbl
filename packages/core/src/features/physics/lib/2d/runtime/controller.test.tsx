@@ -1,18 +1,7 @@
 import { opacity } from "@pibbl/core/filters";
 /** @jsxImportSource @pibbl/core */
-import {
-  Circle,
-  Fragment,
-  Group,
-  pibbl,
-  usePlayback,
-  signal,
-  drive,
-  tween,
-  type PibblController,
-  type PibblPlayback,
-  type WritableSignal,
-} from "@pibbl/core";
+import { Circle, Fragment, Group, usePlayback, signal, drive, tween, type PibblController, type PibblPlayback, type WritableSignal } from "@pibbl/core";
+import { pibblSync as pibbl } from "../../../../../sync.js";
 import {
   pibblInternalCurrentSimulationOwner,
   pibblInternalRegisterSimulationAdvance,

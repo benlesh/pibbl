@@ -1,7 +1,5 @@
-import {
-  Absolute, Flow, Layer, Rectangle, Text, pibbl, definePrimitive, signal, type PibblController, type SystemStyle,
-  type PibblResponsiveStyle, type RectStyle,
-} from '@pibbl/core';
+import { Absolute, Flow, Layer, Rectangle, Text, definePrimitive, signal, type PibblController, type SystemStyle, type PibblResponsiveStyle, type RectStyle } from "@pibbl/core";
+import { pibblSync as pibbl } from "@pibbl/core/sync";
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { signalGraphSnapshot } from '../src/lib/signals/graph';
 import { responsiveStyleSnapshot } from '../src/lib/style/responsive';

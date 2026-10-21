@@ -1,4 +1,5 @@
-import { pibbl, Group, Rectangle, Circle, Text, signal } from "@pibbl/core";
+import {  Group, Rectangle, Circle, Text, signal } from "@pibbl/core";
+import { pibblSync } from '@pibbl/core/sync';
 import { displacement, reflectedLight } from "@pibbl/core/filters";
 import {
   waterWaves,
@@ -104,5 +105,5 @@ function Waves() {
     </>
   );
 }
-const controller = pibbl(canvas, <Waves />);
+const controller = pibblSync(canvas, <Waves />);
 window.addEventListener("pagehide", () => controller.dispose(), { once: true });

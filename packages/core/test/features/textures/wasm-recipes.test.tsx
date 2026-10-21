@@ -1,5 +1,6 @@
 import { afterEach, expect, it, vi } from "vitest";
-import { pibbl, Rectangle, useTexture, type Texture } from "@pibbl/core";
+import { Rectangle, useTexture, type Texture } from "@pibbl/core";
+import { pibblSync as pibbl } from "@pibbl/core/sync";
 import {
   marble,
   paper,

@@ -23,6 +23,10 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.mjs"
     },
+    "./sync": {
+      "types": "./dist/sync.d.ts",
+      "default": "./dist/sync.mjs"
+    },
     "./internal": {
       "types": "./dist/internal.d.ts",
       "default": "./dist/internal.mjs"
@@ -105,6 +109,9 @@
       ],
       "internal": [
         "./dist/internal.d.ts"
+      ],
+      "sync": [
+        "./dist/sync.d.ts"
       ],
       "*": [
         "./dist/*",

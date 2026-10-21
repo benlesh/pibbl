@@ -1,12 +1,6 @@
 import { afterEach, expect, it } from "vitest";
-import {
-  createElement,
-  pibbl,
-  Rectangle,
-  recordFrames,
-  signal,
-  type PibblController,
-} from "@pibbl/core";
+import { createElement, Rectangle, recordFrames, signal, type PibblController } from "@pibbl/core";
+import { pibblSync as pibbl } from "@pibbl/core/sync";
 const roots: PibblController[] = [];
 afterEach(() => {
   roots.splice(0).forEach((root) => root.dispose());

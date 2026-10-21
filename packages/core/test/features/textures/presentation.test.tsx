@@ -1,5 +1,6 @@
 import { afterEach, expect, it } from "vitest";
-import { pibbl, Rectangle } from "@pibbl/core";
+import { Rectangle } from "@pibbl/core";
+import { pibblSync as pibbl } from "@pibbl/core/sync";
 import { ReactionDiffusion, type TextureRenderer } from "@pibbl/core/textures";
 import { clearSharedState } from "../../../src/lib/global-state.js";
 import {

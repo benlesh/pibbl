@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 import { Rectangle } from '../components/rect';
 import type { Length } from '../style/types';
 import type { PibblElement, SystemStyle } from '../types';
@@ -6,6 +6,12 @@ import { Flex, layoutFlex } from './flex';
 import { measureElement, type CanvasMeasurementService } from './measure';
 import { createElement } from '../element/create-element';
 import { definePrimitive } from '../define-primitive';
+import { prepareLayoutEngineSync } from './wasm/embedded';
+import { experimentalLayout } from './wasm/region';
+
+beforeAll(() => {
+  if (experimentalLayout) prepareLayoutEngineSync();
+});
 
 const service: CanvasMeasurementService = {
   measureText: value => ({ width: value.length * 10 } as TextMetrics),

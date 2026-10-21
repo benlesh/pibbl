@@ -1,4 +1,5 @@
-import { pibbl, createElement, signal } from '@pibbl/core';
+import { createElement, signal } from '@pibbl/core';
+import { pibblSync } from '@pibbl/core/sync';
 import {
   CELEBRATION_SEED,
   PARTICLE_CELEBRATION_LAB_SOURCE_ID,
@@ -76,7 +77,7 @@ async function mountParticleCelebrationLab(
 ): Promise<ScenarioController<ParticleCelebrationLabState>> {
   let disposed = false;
   let model = createModel();
-  let root: ReturnType<typeof pibbl> | undefined;
+  let root: ReturnType<typeof pibblSync> | undefined;
   let actionQueue = Promise.resolve();
 
   const assertActive = (): void => {
@@ -89,7 +90,7 @@ async function mountParticleCelebrationLab(
   const publish = (): void => context.onStateChange?.(snapshot(model));
   const render = (): void => {
     assertActive();
-    root = pibbl(
+    root = pibblSync(
       context.canvas,
       createElement(ParticleCelebrationLabRoot, { model }),
       { pixelRatio: 1 },

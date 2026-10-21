@@ -101,8 +101,12 @@ function createFrameSource(options: {
     }
     const prepareHost = ${prepareExampleHost.toString()};
     let controller;
+    let disposed = false;
+    const lifetime = new AbortController();
     let host;
     const dispose = () => {
+      disposed = true;
+      lifetime.abort();
       try { controller?.dispose(); }
       finally { controller = undefined; host?.dispose(); host = undefined; }
     };
@@ -118,11 +122,12 @@ function createFrameSource(options: {
       ${runnable}
       const canvas = document.querySelector('canvas');
       host = prepareHost(canvas, ${JSON.stringify({ config: options.config, htmlOverlay: options.htmlOverlay })});
-      const mountedController = globalThis.__PIBBL_EXAMPLE_MOUNT__(canvas, host.config);
+      const mountedController = await globalThis.__PIBBL_EXAMPLE_MOUNT__(canvas, { ...host.config, signal: lifetime.signal });
       if (!mountedController || typeof mountedController.dispose !== 'function') {
         throw new Error('Preview mount must return a controller with dispose().');
       }
-      controller = mountedController;
+      if (disposed) mountedController.dispose();
+      else controller = mountedController;
       send({ kind: 'mounted' });
     } catch (error) {
       dispose();

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { pibbl } from '../pibbl';
+import { pibblSync as pibbl } from "../../sync.js";
 import { componentTest } from '../test-utils/component-test';
 import { SvgPath } from './svg-path';
 import { createElement } from '../element/create-element';

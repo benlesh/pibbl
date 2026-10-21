@@ -1,4 +1,5 @@
-import { pibbl, type PibblController, type LayoutBox } from '@pibbl/core';
+import { type PibblController, type LayoutBox } from '@pibbl/core';
+import { pibblSync } from '@pibbl/core/sync';
 import {
   CANVAS_SURFACE_SOURCE_ID,
   createCanvasSurfaceScene,
@@ -68,7 +69,7 @@ async function mountCanvasSurface(
     mountAbort?.abort();
     mountAbort = new AbortController();
     state = { ...state, mode };
-    runtime = pibbl(
+    runtime = pibblSync(
       context.canvas,
       createCanvasSurfaceScene({
         mode,

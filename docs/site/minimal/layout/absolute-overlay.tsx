@@ -3,12 +3,13 @@ import {
   Overlay,
   Rectangle,
   Text,
-  pibbl,
+
   type AbsoluteProps,
   type AbsoluteStyle,
   type OverlayProps,
   type OverlayStyle,
 } from "@pibbl/core";
+import { pibblSync } from '@pibbl/core/sync';
 
 const absoluteStyle: AbsoluteStyle = { width: 320, height: 220 };
 const overlayStyle: OverlayStyle = {
@@ -50,7 +51,7 @@ const canvas = document.createElement("canvas");
 canvas.width = 320;
 canvas.height = 220;
 document.body.append(canvas);
-const app = pibbl(
+const app = pibblSync(
   canvas,
   <Absolute {...absoluteProps} style={absoluteStyle} />,
 );

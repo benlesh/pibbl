@@ -1,4 +1,5 @@
-import { pibbl, createElement, Rectangle } from '@pibbl/core';
+import { createElement, Rectangle } from "@pibbl/core";
+import { pibblSync as pibbl } from "@pibbl/core/sync";
 import { createRuntimeCheckedInspector } from '../../../tooling/agent-verification/runtime-inspection';
 import { ManualSchedulerDriver, installSchedulerDriverForTest } from '../src/lib/scheduler/testing';
 import { expect, it } from 'vitest';

@@ -1198,6 +1198,40 @@ a general graph. No new public API or speculative ordinary-component execution.
 This is selected for design/implementation next, followed by group9 consolidation;
 it does not itself close root-wide zero-visit or full preparation milestones.
 
+Slice 26 delivery (2026-10-21): completed the in-progress private role foundation
+before any loading migration. Existing receiver edges carry staged masks; successful
+collection replaces them, rollback preserves committed masks, provisions adopt
+combined roles, and batched changes retain all roles with one renderer invalidation.
+Declared style inputs and Text content are classified; unknown inputs retain the
+conservative redraw path. Removed an unused pending-role accumulator: actual
+role-directed work admission remains later work. No second graph or scheduler.
+
+Fresh focused verification on Node26.9.0/pnpm11.21.0/Playwright Chromium:
+108 tests pass across layout-WASM, input provisions, signal graph and renderer
+consumer suites. Source and built nested public checks prove width/layout,
+Text/measurement and fill/paint roles plus geometry/hits, bounded measurement reuse,
+detached-source inactivity and exact cleanup. Built receipt has460private dist
+inputs; isolated tarball has217installed dist inputs, strict Bundler/NodeNext,
+actual WASM and import inactivity. The browser check now asserts role diagnostics
+in all three consumer lanes; these are receiver notifications, not counts of
+layout-node visits or a performance claim. Unchanged56793-byte artifact.
+
+Focused review found no material issue. Targeted lint, doc formatting and diff
+checks pass. Root typecheck passed initially, then a final run failed during
+concurrent example-authoring changes (missing default exports in energy-transitions,
+chemical-explorer, fabric-explorer and other learning consumers, plus cascading
+inference errors). Preserve that work; no final root typecheck or aggregate trust
+claim. This does not establish the new loading API, full incremental layout,
+Node24verification or feature completion.
+
+Slice ready for feedback: source
+http://127.0.0.1:5187/#/examples/layout/wasm-flex-nested-intrinsic and built
+http://127.0.0.1:5188/#/examples/layout/wasm-flex-nested-intrinsic. Inspect Paint only,
+Change Text and Toggle width: role counters distinguish inputs while existing
+geometry/input/cleanup behavior remains. Built server restarted from playground
+(session72528) after an initial wrong-directory launch timed out; final check passes.
+Loading is the queued focused migration below; no loading production code started.
+
 ## Queued loading migration after slice 26
 
 Accepted design amendment, 2026-10-21. Continue slice 26 (receiver input roles)
@@ -1263,3 +1297,57 @@ These are future acceptance requirements, not fresh test results. Existing slice
 25 source/built/packed evidence validates its synchronous experimental package
 only. Preserve field notes and completed implementation records without rewriting
 those results as evidence for the accepted loading API.
+
+## Slice 27 ready for feedback: external loading and explicit sync mounting
+
+Delivered 2026-10-21 in the isolated `codex/layout-loading-slice` checkout. The
+accepted loading signatures above are implemented. Root mounting awaits a shared,
+fingerprint-verified external binary; `prepareLayoutEngine` warms that code;
+`@pibbl/core/sync` mounts synchronously from the matching embedded binary. Layout
+and frame execution remain synchronous after preparation. This slice does not
+replace the normal JavaScript solver with the experimental WASM solver.
+
+A focused public test failed before production edits: `pibbl()` returned a
+controller instead of the required Promise. The completed public suite covers
+failed loading and retry before mount admission, shared preparation, caller abort,
+same-canvas supersession including a sync winner, live-mount updates, original
+lifetime/config preservation, disposal preventing resurrection, Flex/Text geometry,
+input and teardown. Loader tests additionally cover fingerprint rejection, stale
+completion and fresh import inertness with counters installed before import.
+
+All affected synchronous test/lab hosts use the explicit sync entry. Application
+hosts, public mounting guides, React cleanup, Studio preview startup/cancellation,
+package exports, declarations and editor inventory use their respective fixed
+contracts. The concurrent named-component migration was captured as prerequisite
+commit `d4ef5325`; its diagnostic lifetime corrections are separate commit
+`5855d4a8`. Neither is folded into the loading commit.
+
+Fresh evidence on macOS, Node 26.9.0, pnpm 11.21.0 installed dependencies and
+Playwright Chromium (2026-10-21):
+
+- Public `layout-loading.test.tsx`: 8 passed in source `layout-wasm`, normal built,
+  and private `layout-wasm-built` modes.
+- Focused normal browser lane: 69 passed; focused WASM lane: 90 passed across
+  layout slices, direct Flex/CSS compatibility, signal inputs and loader tests.
+- `node tooling/build-layout-wasm.mjs --check`: 56,793-byte binary, matching source
+  fingerprint and generated forms.
+- Core declaration/build scripts and isolated packed loading consumer passed:
+  offline tarball installation, strict Bundler/NodeNext types, real external fetch,
+  synchronous zero-fetch mount and async-only embedded-payload exclusion.
+- `node --import tsx tooling/verify-studio-pivot.mjs`: source/built/editor exact
+  export parity and runtime/Three addons passed. Public JSDoc audit and Studio
+  docs metadata/routes/links/search checks passed. Changed-code lint passed.
+- Direct repository TypeScript check has no loading migration errors; it still
+  reports three missing Astro/Starlight modules in this unprovisioned isolated
+  website checkout. `pnpm` commands reject cross-checkout dependency symlinks, so
+  focused verification invoked installed tool entry points directly. No Node 24
+  aggregate trust result is claimed.
+
+Hands-on source: `http://127.0.0.1:5192/#/examples/layout/wasm-flex-text`.
+Private built: `http://127.0.0.1:5193/#/examples/layout/wasm-flex-text`.
+Scroll the live Canvas into view, toggle width, change text and click paragraphs.
+Both previews rendered the experimental diagnostics after async startup. Browser
+checks caught and corrected the missing sync editor module and built-loader URL
+rewrite. The broader default-solver migration, paint-only Flex allocation reuse,
+release hardening and aggregate trust gate remain subsequent work; this is a slice
+ready for feedback, not completion of the full layout-engine rework.

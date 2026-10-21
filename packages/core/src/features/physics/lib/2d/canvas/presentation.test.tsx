@@ -1,5 +1,6 @@
 import { displacement, opacity } from "@pibbl/core/filters";
-import { Circle, Group, Rectangle, pibbl, defineTexture, signal, useTexture, type PibblController } from "@pibbl/core";
+import { Circle, Group, Rectangle, defineTexture, signal, useTexture, type PibblController } from "@pibbl/core";
+import { pibblSync as pibbl } from "../../../../../sync.js";
 /** @jsxImportSource @pibbl/core */
 import {
   PhysicsWorld2D,

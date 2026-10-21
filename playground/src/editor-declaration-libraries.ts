@@ -16,6 +16,7 @@ const declarationModulePaths = new Map([
   ["@pibbl/core/textures", "file:///node_modules/@pibbl/core/textures/index.d.ts"],
   ["@pibbl/core/viz", "file:///node_modules/@pibbl/core/viz/index.d.ts"],
   ["@pibbl/core", "file:///node_modules/@pibbl/core/index.d.ts"],
+  ["@pibbl/core/sync", "file:///node_modules/@pibbl/core/sync.d.ts"],
   ["@pibbl/core/jsx-runtime", "file:///node_modules/@pibbl/core/jsx-runtime.d.ts"],
   [
     "@pibbl/core/jsx-dev-runtime",

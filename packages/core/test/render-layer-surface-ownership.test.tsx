@@ -1,5 +1,6 @@
 import { afterEach, expect, it, vi } from "vitest";
-import { pibbl, defineRenderLayer } from "@pibbl/core";
+import { defineRenderLayer } from "@pibbl/core";
+import { pibblSync as pibbl } from "@pibbl/core/sync";
 import { clearSharedState } from "../src/lib/global-state.js";
 import { installSchedulerDriverForTest, ManualSchedulerDriver, snapshotRealmScheduler } from "../src/lib/scheduler/testing.js";
 

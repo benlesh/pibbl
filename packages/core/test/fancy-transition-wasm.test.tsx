@@ -1,5 +1,6 @@
 import { afterEach, expect, it, vi } from 'vitest';
-import { pibbl, Rectangle, embers, hologram, useVisibilityTransition, type PibblVisibilityTransition } from '@pibbl/core';
+import { Rectangle, embers, hologram, useVisibilityTransition, type PibblVisibilityTransition } from "@pibbl/core";
+import { pibblSync as pibbl } from "@pibbl/core/sync";
 import { installSchedulerDriverForTest, ManualSchedulerDriver } from '../src/lib/scheduler/testing';
 const roots: ReturnType<typeof pibbl>[] = [];
 afterEach(() => { roots.splice(0).forEach(root => root.dispose()); document.body.replaceChildren(); });

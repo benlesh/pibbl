@@ -1,6 +1,8 @@
 import yogaReference from '../../../tooling/layout-yoga-rehearsal/reference.json';
-import { afterEach, describe, expect, it, vi } from 'vitest';
-import { createElement, Flex, Text, Rectangle, measureElement, pibbl, useLayoutBox, Layer, signal, computed, type PibblNode } from '@pibbl/core';
+import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
+import { createElement, Flex, Text, Rectangle, measureElement, useLayoutBox, Layer, signal, computed, type PibblNode } from '@pibbl/core';
+import { pibblSync as pibbl } from '@pibbl/core/sync';
+import { prepareLayoutEngineSync } from '../src/lib/layout/wasm/embedded';
 import { WasmFlexTextExample as mountWasmFlexTextComponent } from "../../scenarios/src/learning/layout/wasm-flex-text.example";
 import { snapshotWasmLayoutDiagnostics, experimentalLayout } from '../src/lib/layout/wasm/region';
 import { layoutFlex } from '../src/lib/layout/flex';
@@ -11,6 +13,10 @@ const mountWasmFlexText = createExampleMount(mountWasmFlexTextComponent);
 
 const service = { measureText: (value: string) => ({ width: value.length * 10 } as TextMetrics) };
 const measurement = { service, measureElement: (element: Parameters<typeof measureElement>[0], constraints: Parameters<typeof measureElement>[1]) => measureElement(element, constraints, service) };
+
+beforeAll(() => {
+  if (experimentalLayout) prepareLayoutEngineSync();
+});
 
 describe('Flex/Text replacement contract', () => {
   it('remeasures wrapped height at the final shrunken width', () => {
@@ -94,7 +100,8 @@ it.runIf(experimentalLayout)('renews output views after WASM growth and never ac
 });
 
 it.runIf(experimentalLayout)('releases numeric records when a mounted Flex becomes empty', async () => {
-  const { pibbl, signal } = await import('@pibbl/core');
+  const { signal } = await import('@pibbl/core');
+  const { pibblSync: pibbl } = await import('@pibbl/core/sync');
   const { Flex } = await import('@pibbl/core');
   const show = signal(true);
   const canvas = document.createElement('canvas'); canvas.width = 200; canvas.height = 100;
@@ -110,7 +117,8 @@ it.runIf(experimentalLayout)('releases numeric records when a mounted Flex becom
 });
 
 it.runIf(experimentalLayout)('retains reactive Text measurements on paint-only updates', async () => {
-  const { pibbl, Flex, signal } = await import('@pibbl/core');
+  const { Flex, signal } = await import('@pibbl/core');
+  const { pibblSync: pibbl } = await import('@pibbl/core/sync');
   const text = signal('Signal-owned text wraps at its final allocated width.');
   const ink = signal('#19375b');
   const canvas = document.createElement('canvas'); canvas.width = 300; canvas.height = 200;
@@ -133,7 +141,8 @@ it.runIf(experimentalLayout)('retains reactive Text measurements on paint-only u
 });
 
 it.runIf(experimentalLayout)('classifies declared Flex/Text inputs before coalescing their redraw', async () => {
-  const { pibbl, Flex, signal } = await import('@pibbl/core');
+  const { Flex, signal } = await import('@pibbl/core');
+  const { pibblSync: pibbl } = await import('@pibbl/core/sync');
   const width = signal(300);
   const text = signal('Signal-owned text wraps at its final allocated width.');
   const ink = signal('#19375b');

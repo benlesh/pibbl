@@ -140,7 +140,7 @@ function Poster() {
   );
 }
 
-pibbl(document.querySelector("canvas")!, <Poster />);
+await pibbl(document.querySelector("canvas")!, <Poster />);
 ```
 
 Start with the [Getting started guide](#/learn/guides/configure-jsx). Add an

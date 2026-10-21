@@ -1,4 +1,5 @@
-import { KeyboardNavigation, FocusManagement, Clip, Group, Layer, Line, Rectangle, computed, pibbl, defineRenderLayer, signal, type PibblController, type PibblNode } from '@pibbl/core';
+import { KeyboardNavigation, FocusManagement, Clip, Group, Layer, Line, Rectangle, computed, defineRenderLayer, signal, type PibblController, type PibblNode } from "@pibbl/core";
+import { pibblSync as pibbl } from "@pibbl/core/sync";
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { createTargetingInspector } from '../../../tooling/agent-verification/targeting';
 import { signalGraphSnapshot } from '../src/lib/signals/graph';

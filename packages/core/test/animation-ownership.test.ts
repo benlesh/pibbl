@@ -1,16 +1,5 @@
-import {
-  pibbl,
-  usePlayback,
-  createElement,
-  defineAnimation,
-  signal,
-  stepper,
-  drive,
-  tween,
-  type PibblController,
-  type PibblNode,
-  type PibblPlayback,
-} from '@pibbl/core';
+import { usePlayback, createElement, defineAnimation, signal, stepper, drive, tween, type PibblController, type PibblNode, type PibblPlayback } from "@pibbl/core";
+import { pibblSync as pibbl } from "@pibbl/core/sync";
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
   animationPlaybackSnapshot,

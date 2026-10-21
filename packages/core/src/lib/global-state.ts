@@ -1,3 +1,4 @@
+import { invalidatePendingMount } from './mount-requests.js';
 import type { LayoutContext } from './layout/types.js';
 import type { PibblNode } from './element/types.js';
 import type { RenderTargetSnapshot } from './render-target.js';
@@ -153,6 +154,7 @@ export function cleanupPibblInstance(pibblInstance: PibblInstance): void {
   }
 
   if (!pibblInstance.parent) {
+    invalidatePendingMount(canvas);
     unregisterRootInstance(pibblInstance);
   }
 

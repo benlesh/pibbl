@@ -1,4 +1,5 @@
-import { pibbl } from "@pibbl/core";
+import { } from "@pibbl/core";
+import { pibblSync } from '@pibbl/core/sync';
 import {
   BaselineSeries,
   LinearScale,
@@ -51,5 +52,5 @@ const canvas = document.createElement("canvas");
 canvas.width = 320;
 canvas.height = 220;
 document.body.append(canvas);
-const app = pibbl(canvas, <FinancialBaselineExample />);
+const app = pibblSync(canvas, <FinancialBaselineExample />);
 window.addEventListener("pagehide", () => app.dispose(), { once: true });
