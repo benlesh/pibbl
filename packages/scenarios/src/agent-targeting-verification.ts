@@ -296,7 +296,12 @@ export const agentTargetingVerificationScenario: ScenarioDefinition<AgentTargeti
       if (!signalInspectorFactory || signalInspector || !inspector) return;
       previousSignalSnapshot = undefined;
       signalInspector = signalInspectorFactory(context.canvas);
-      for (const value of [mode, selectedItem, selections, deliveredTo, dormantMetric, selectionLabel]) signalInspector.register(value);
+      signalInspector.register(mode);
+      signalInspector.register(selectedItem);
+      signalInspector.register(selections);
+      signalInspector.register(deliveredTo);
+      signalInspector.register(dormantMetric);
+      signalInspector.register(selectionLabel);
     };
     let latest: AgentTargetingState = {
       runtimeCompatibility: null,

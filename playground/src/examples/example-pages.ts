@@ -157,13 +157,8 @@ export function createExamplePages(options: ExamplePagesOptions): ExamplePages {
       tryIt.className = "lesson-callout lesson-callout--try";
       tryIt.innerHTML = '<p class="studio-eyebrow">Try it</p><h2>Touch the scene, then the code.</h2>';
       const prompts = document.createElement("ol");
-      for (const [label, value] of [["Gesture", entry.prompts.gesture], ["Code change", entry.prompts.code]] as const) {
-        const item = document.createElement("li");
-        const strong = document.createElement("strong");
-        strong.textContent = label;
-        item.append(strong, document.createTextNode(value));
-        prompts.appendChild(item);
-      }
+      appendPrompt(prompts, "Gesture", entry.prompts.gesture);
+      appendPrompt(prompts, "Code change", entry.prompts.code);
       tryIt.appendChild(prompts);
       const notes = document.createElement("section");
       notes.className = "lesson-callout lesson-callout--notes";
@@ -262,4 +257,16 @@ function categoryLink(entry: LearningExampleCatalogEntry | undefined, label: str
   strong.textContent = entry?.title ?? "Interactive examples";
   link.append(small, strong);
   return link;
+}
+
+function appendPrompt(
+  prompts: HTMLElement,
+  label: string,
+  value: string,
+): void {
+  const item = document.createElement("li");
+  const strong = document.createElement("strong");
+  strong.textContent = label;
+  item.append(strong, document.createTextNode(value));
+  prompts.appendChild(item);
 }

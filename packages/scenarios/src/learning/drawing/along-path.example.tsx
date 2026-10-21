@@ -20,7 +20,7 @@ function originalOutline() {
   p.lineTo(16, 0);
   p.closePath();
   // Opposite-winding cutouts make the thickness and local rotation visible.
-  for (const x of [55, 105, 155, 205]) {
+  for (let x = 55; x <= 205; x += 50) {
     p.moveTo(x - 8, -15); p.lineTo(x - 8, 15);
     p.lineTo(x + 8, 15); p.lineTo(x + 8, -15); p.closePath();
   }

@@ -209,6 +209,25 @@ operation selector.
   evidence for each resulting contract. Existing violations are migration
   work, not precedent for new APIs.
 
+## Hot-path allocation discipline
+
+Pibbl runtime code is close to the metal. Keep hot paths explicit and avoid
+allocations that exist only to make a few operations look uniform.
+
+- For a small fixed set of known values, use direct calls or boolean checks.
+  Do not create an array, object, Set, or iterator pipeline just to validate,
+  visit, or dispatch those values. This includes temporary-array `for...of`,
+  `.forEach()`, `.every()`, and `.some()` patterns.
+- Use numeric loops for fixed corner, axis, sign, or pass traversal. Keep genuine
+  reusable lookup tables outside per-frame and per-item execution.
+- Do not hide the same allocations behind rest parameters, per-call closures,
+  generic iteration helpers, or reflection over a known fixed shape.
+- Preserve snapshots when mutation or reentrancy requires them, and preserve
+  meaningful data tables and test matrices. Apply this rule based on ownership
+  and execution frequency, not a blanket ban on collections.
+- Prefer the clearest allocation-free code. A few repeated direct calls are
+  better than abstraction whose only benefit is avoiding that repetition.
+
 ## Change and evidence rules
 
 - Preserve unrelated working-tree changes and untracked files.

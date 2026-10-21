@@ -684,7 +684,12 @@ function cssBasis(state: ManipulationState): {
 } {
   const css = frameToCss(state);
   const inverse = new DOMMatrix([css.a, css.b, css.c, css.d, 0, 0]).inverse();
-  if (![inverse.a, inverse.b, inverse.c, inverse.d].every(Number.isFinite))
+  if (!(
+    Number.isFinite(inverse.a) &&
+    Number.isFinite(inverse.b) &&
+    Number.isFinite(inverse.c) &&
+    Number.isFinite(inverse.d)
+  ))
     throw new Error(
       "Manipulation handle cannot use a singular presentation transform.",
     );
@@ -701,14 +706,11 @@ function cssHandlePath(
   const half = size / 2;
   const cos = Math.cos(angle),
     sin = Math.sin(angle);
-  for (const [i, point] of [
-    [-half, -half],
-    [half, -half],
-    [half, half],
-    [-half, half],
-  ].entries()) {
-    const sx = point[0] * cos - point[1] * sin,
-      sy = point[0] * sin + point[1] * cos;
+  for (let i = 0; i < 4; i++) {
+    const cornerX = i === 0 || i === 3 ? -half : half;
+    const cornerY = i < 2 ? -half : half;
+    const sx = cornerX * cos - cornerY * sin,
+      sy = cornerX * sin + cornerY * cos;
     const local = inverse.transformPoint(new DOMPoint(sx, sy));
     if (i === 0) path.moveTo(x + local.x, y + local.y);
     else path.lineTo(x + local.x, y + local.y);
@@ -815,45 +817,47 @@ function validateReadoutStyle(
   value: false | true | PibblManipulationReadoutStyle | undefined,
 ): void {
   if (!value || value === true) return;
-  for (const style of [value, value.inactive, value.focused, value.active]) {
-    if (!style) continue;
-    if (
+  validateReadoutStateStyle(value);
+  validateReadoutStateStyle(value.inactive);
+  validateReadoutStateStyle(value.focused);
+  validateReadoutStateStyle(value.active);
+}
+function validateReadoutStateStyle(style: PibblManipulationReadoutStateStyle | undefined): void {
+  if (!style) return;
+  if (
       style.gap !== undefined &&
       (!Number.isFinite(style.gap) || style.gap < 0)
     )
       throw new Error(
         "Manipulation readout gap must be finite non-negative CSS pixels.",
       );
-    if (
+  if (
       style.strokeWidth !== undefined &&
       (!Number.isFinite(style.strokeWidth) || style.strokeWidth < 0)
     )
       throw new Error(
         "Manipulation readout strokeWidth must be finite and non-negative.",
       );
-    if (
+  if (
       style.opacity !== undefined &&
       (!Number.isFinite(style.opacity) || style.opacity < 0)
     )
       throw new Error(
         "Manipulation readout opacity must be finite and non-negative.",
       );
-  }
+}
+function validateGuideDimension(value: number | undefined, property: string): void {
+  if (value !== undefined && (!Number.isFinite(value) || value < 0))
+    throw new Error(`Manipulation guide ${property} must be finite and non-negative.`);
 }
 function validateRotationStyle(style: PibblRotationHandleStyle): void {
   const connector =
     style.connector && style.connector !== true ? style.connector : undefined;
   const arc = style.arc && style.arc !== true ? style.arc : undefined;
-  for (const value of [connector?.strokeWidth, arc?.strokeWidth])
-    if (value !== undefined && (!Number.isFinite(value) || value < 0))
-      throw new Error(
-        "Manipulation guide strokeWidth must be finite and non-negative.",
-      );
-  for (const value of [connector?.opacity, arc?.opacity])
-    if (value !== undefined && (!Number.isFinite(value) || value < 0))
-      throw new Error(
-        "Manipulation guide opacity must be finite and non-negative.",
-      );
+  validateGuideDimension(connector?.strokeWidth, "strokeWidth");
+  validateGuideDimension(arc?.strokeWidth, "strokeWidth");
+  validateGuideDimension(connector?.opacity, "opacity");
+  validateGuideDimension(arc?.opacity, "opacity");
   if (
     arc?.sweep !== undefined &&
     (!Number.isFinite(arc.sweep) || arc.sweep <= 0 || arc.sweep > Math.PI * 2)

@@ -13,7 +13,10 @@ export interface SpriteGrid { /** Positive cell width in pixels. */ readonly fra
  * @param options - Grid dimensions or an explicit metadata format adapter.
  * @returns A decoded sprite sheet with explicit disposal ownership.
  */
-export async function loadSpriteSheet(url: string, options: { readonly grid: SpriteGrid } | { readonly format: SpriteSheetFormat }): Promise<SpriteSheet> {
+export async function loadSpriteSheet(
+  url: string,
+  options: { readonly grid: SpriteGrid } | { readonly format: SpriteSheetFormat },
+): Promise<SpriteSheet> {
   const owner = { disposed: false };
   const images: HTMLImageElement[] = [];
   const dispose = () => { if (owner.disposed) return; owner.disposed = true; for (const image of images) image.removeAttribute('src'); };
@@ -25,8 +28,21 @@ export async function loadSpriteSheet(url: string, options: { readonly grid: Spr
     let clips: Readonly<Record<string, readonly { frame: string; duration: number }[]>> = {};
     if ('grid' in options) {
       const { frameWidth: w, frameHeight: h, margin = 0, spacing = 0 } = options.grid;
-      if (![w, h, margin, spacing].every(Number.isInteger) || w <= 0 || h <= 0 || margin < 0 || spacing < 0) throw new RangeError('Invalid sprite grid dimensions.');
-      const image = await load(url); const frames: SpriteFrameData[] = [];
+      if (
+        !(
+          Number.isInteger(w) &&
+          Number.isInteger(h) &&
+          Number.isInteger(margin) &&
+          Number.isInteger(spacing)
+        ) ||
+        w <= 0 ||
+        h <= 0 ||
+        margin < 0 ||
+        spacing < 0
+      )
+        throw new RangeError('Invalid sprite grid dimensions.');
+      const image = await load(url);
+      const frames: SpriteFrameData[] = [];
       for (let y = margin; y + h <= image.naturalHeight - margin; y += h + spacing)
         for (let x = margin; x + w <= image.naturalWidth - margin; x += w + spacing)
           frames.push({ name: String(frames.length), rect: { x, y, width: w, height: h } });
@@ -41,12 +57,41 @@ export async function loadSpriteSheet(url: string, options: { readonly grid: Spr
     const frames: Record<string, SpriteFrame> = Object.create(null);
     for (const spec of specs) {
       const image = images[spec.page ?? 0], r = spec.rect;
-      if (!image || ![r.x, r.y, r.width, r.height].every(Number.isFinite) || r.x < 0 || r.y < 0 || r.width <= 0 || r.height <= 0 || r.x + r.width > image.naturalWidth || r.y + r.height > image.naturalHeight) throw new RangeError(`Invalid sprite rectangle: ${spec.name}`);
+      if (
+        !image ||
+        !(
+          Number.isFinite(r.x) &&
+          Number.isFinite(r.y) &&
+          Number.isFinite(r.width) &&
+          Number.isFinite(r.height)
+        ) ||
+        r.x < 0 ||
+        r.y < 0 ||
+        r.width <= 0 ||
+        r.height <= 0 ||
+        r.x + r.width > image.naturalWidth ||
+        r.y + r.height > image.naturalHeight
+      )
+        throw new RangeError(`Invalid sprite rectangle: ${spec.name}`);
       if (frames[spec.name]) throw new Error(`Duplicate sprite frame: ${spec.name}`);
       const width = spec.sourceSize?.width ?? (spec.rotated ? r.height : r.width);
       const height = spec.sourceSize?.height ?? (spec.rotated ? r.width : r.height);
       const trim = { x: spec.trim?.x ?? 0, y: spec.trim?.y ?? 0 };
-      if (![width, height, trim.x, trim.y].every(Number.isFinite) || width <= 0 || height <= 0 || trim.x < 0 || trim.y < 0 || trim.x + (spec.rotated ? r.height : r.width) > width || trim.y + (spec.rotated ? r.width : r.height) > height) throw new RangeError(`Invalid sprite logical bounds: ${spec.name}`);
+      if (
+        !(
+          Number.isFinite(width) &&
+          Number.isFinite(height) &&
+          Number.isFinite(trim.x) &&
+          Number.isFinite(trim.y)
+        ) ||
+        width <= 0 ||
+        height <= 0 ||
+        trim.x < 0 ||
+        trim.y < 0 ||
+        trim.x + (spec.rotated ? r.height : r.width) > width ||
+        trim.y + (spec.rotated ? r.width : r.height) > height
+      )
+        throw new RangeError(`Invalid sprite logical bounds: ${spec.name}`);
       frames[spec.name] = makeFrame({ ...spec, rect: Object.freeze({ ...r }), sourceSize: Object.freeze({ width, height }), trim: Object.freeze(trim), image, owner });
     }
     const animations: Record<string, PibblAnimationDefinition<SpriteFrame>> = Object.create(null);

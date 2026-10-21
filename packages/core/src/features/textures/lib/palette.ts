@@ -69,8 +69,13 @@ export function validateResolution(
   value: TextureResolution = { width: 256, height: 160 },
 ): TextureResolution {
   if (
-    ![value.width, value.height].every(
-      (n) => Number.isInteger(n) && n >= 8 && n <= 1024,
+    !(
+      Number.isInteger(value.width) &&
+      value.width >= 8 &&
+      value.width <= 1024 &&
+      Number.isInteger(value.height) &&
+      value.height >= 8 &&
+      value.height <= 1024
     ) ||
     value.width * value.height > 262144
   ) {

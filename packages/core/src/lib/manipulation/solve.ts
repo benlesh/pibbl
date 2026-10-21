@@ -15,6 +15,12 @@ import type {
   ManipulationSolveInput,
   ManipulationSolveResult,
 } from "./types.js";
+const sizeConstraintNames = [
+    "minWidth",
+    "minHeight",
+    "maxWidth",
+    "maxHeight",
+  ] as const;
 
 export function solveManipulation(
   input: ManipulationSolveInput,
@@ -358,12 +364,8 @@ function resolvedResizeConstraints(
   maxWidth: number;
   maxHeight: number;
 } {
-  for (const name of [
-    "minWidth",
-    "minHeight",
-    "maxWidth",
-    "maxHeight",
-  ] as const) {
+  for (let nameIndex = 0; nameIndex < sizeConstraintNames.length; nameIndex++) {
+    const name = sizeConstraintNames[nameIndex];
     const value = options?.[name];
     if (value !== undefined && (!Number.isFinite(value) || value <= 0))
       throw new Error(`${name} must be positive and finite.`);
@@ -616,10 +618,10 @@ function boundsPlanes(
   const widthCorners = rotatedCorners(unitWidth, rotation);
   const heightCorners = rotatedCorners(unitHeight, rotation);
   for (let index = 0; index < 4; index++) {
-    for (const [coordinate, lower, upper] of [
-      ["x", bounds.left, bounds.left + bounds.width],
-      ["y", bounds.top, bounds.top + bounds.height],
-    ] as const) {
+    for (let axis = 0; axis < 2; axis++) {
+      const coordinate = axis === 0 ? "x" : "y";
+      const lower = axis === 0 ? bounds.left : bounds.top;
+      const upper = lower + (axis === 0 ? bounds.width : bounds.height);
       const constant = zeroCorners[index][coordinate];
       const a = widthCorners[index][coordinate] - constant;
       const b = heightCorners[index][coordinate] - constant;

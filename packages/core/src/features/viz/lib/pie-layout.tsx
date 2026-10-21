@@ -260,7 +260,8 @@ function annularSliceBounds(
       height: slice.radius * 2,
     };
   const angles = [sweep.startAngle, sweep.endAngle];
-  for (const cardinal of [0, Math.PI / 2, Math.PI, Math.PI * 1.5]) {
+  for (let cardinalIndex = 0; cardinalIndex < 4; cardinalIndex++) {
+    const cardinal = cardinalIndex * (Math.PI / 2);
     const angle = cardinal < sweep.startAngle ? cardinal + fullTurn : cardinal;
     if (angle <= sweep.endAngle) angles.push(angle);
   }

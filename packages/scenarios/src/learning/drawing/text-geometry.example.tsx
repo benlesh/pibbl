@@ -14,7 +14,8 @@ export default function mount(canvas: HTMLCanvasElement): PibblController {
   input.style.cssText = 'font:inherit;padding:10px;border:1px solid #8da1aa;border-radius:6px;min-width:220px';
   button.type = 'button'; button.textContent = 'Generate outline'; button.disabled = true;
   reset.textContent = 'Reset points'; reset.type = 'button'; reset.disabled = true;
-  for (const el of [button, reset]) el.style.cssText = 'font:inherit;padding:10px;border-radius:6px;cursor:pointer';
+  button.style.cssText = 'font:inherit;padding:10px;border-radius:6px;cursor:pointer';
+  reset.style.cssText = button.style.cssText;
   status.setAttribute('role', 'status'); status.textContent = 'Loading font…';
   form.append(input, button, reset, status); canvas.before(form);
   const previousTouch = canvas.style.touchAction; canvas.style.touchAction = 'none';

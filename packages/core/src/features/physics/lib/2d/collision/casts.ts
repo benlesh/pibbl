@@ -343,7 +343,7 @@ function raycastCapsule(
   const acrossDirection = directionX * sideNormalX + directionY * sideNormalY;
   const distances: number[] = [];
   if (Math.abs(acrossDirection) > GEOMETRY_EPSILON) {
-    for (const side of [-1, 1] as const) {
+    for (let side = -1; side <= 1; side += 2) {
       const distance = (side * leaf.radius - acrossOrigin) / acrossDirection;
       const along = alongOrigin + distance * alongDirection;
       if (
@@ -356,7 +356,9 @@ function raycastCapsule(
       }
     }
   }
-  for (const [centerX, centerY] of [[startX, startY], [endX, endY]] as const) {
+  for (let endpoint = 0; endpoint < 2; endpoint++) {
+    const centerX = endpoint === 0 ? startX : endX;
+    const centerY = endpoint === 0 ? startY : endY;
     const distance = rayCircleDistance(
       originX,
       originY,

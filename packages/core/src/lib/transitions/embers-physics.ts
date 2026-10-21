@@ -152,16 +152,11 @@ export function emberSimulation(
             throw new RangeError(
               "Invalid ember obstacle batch or capacity exceeded (8192 numbers).",
             );
-          for (const packed of [boxes, ellipses, polygons])
-            for (const value of packed)
-              if (!Number.isFinite(value))
-                throw new RangeError("Ember obstacles must be finite.");
-          for (const packed of [boxes, ellipses])
-            for (let i = 0; i < packed.length; i += 10)
-              if (packed[i + 2]! <= 0 || packed[i + 3]! <= 0)
-                throw new RangeError(
-                  "Ember obstacle extents must be positive.",
-                );
+          validateFiniteObstacles(boxes);
+          validateFiniteObstacles(ellipses);
+          validateFiniteObstacles(polygons);
+          validateObstacleExtents(boxes);
+          validateObstacleExtents(ellipses);
           for (let at = 0; at < polygons.length;) {
             const count = polygons[at]!;
             if (
@@ -251,4 +246,18 @@ export function emberSimulation(
       }
     },
   };
+}
+
+function validateFiniteObstacles(packed: ArrayLike<number>): void {
+  for (let i = 0; i < packed.length; i++)
+    if (!Number.isFinite(packed[i]))
+      throw new RangeError("Ember obstacles must be finite.");
+}
+
+function validateObstacleExtents(packed: ArrayLike<number>): void {
+  for (let i = 0; i < packed.length; i += 10)
+              if (packed[i + 2]! <= 0 || packed[i + 3]! <= 0)
+                throw new RangeError(
+                  "Ember obstacle extents must be positive.",
+                );
 }

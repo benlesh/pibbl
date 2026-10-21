@@ -28,9 +28,11 @@ function monthAt(ordinal: number): number {
 const fixedSteps = [1, 2, 5, 10, 20, 50, 100, 200, 500,
   ...[1, 2, 5, 10, 15, 30].map(n => n * 1000),
   ...[1, 2, 5, 10, 15, 30].map(n => n * 60_000),
-  ...[1, 2, 3, 6, 12].map(n => n * 3_600_000), DAY, 2 * DAY];
+  ...[1, 2, 3, 6, 12].map(n => n * 3_600_000), DAY, 2 * DAY, 7 * DAY];
+const monthSteps = [1, 2, 3, 6,
+    ...Array.from({ length: 7 }, (_, exponent) => [1, 2, 5].map(n => 12 * n * 10 ** exponent)).flat()];
 function selectCadence(lo: number, hi: number, count: number): Cadence {
-  for (const step of [...fixedSteps, 7 * DAY]) {
+  for (const step of fixedSteps) {
     const offset = step === 7 * DAY ? -3 * DAY : 0;
     const first = Math.floor((lo - offset) / step) + 1;
     const last = Math.ceil((hi - offset) / step) - 1;
@@ -43,9 +45,7 @@ function selectCadence(lo: number, hi: number, count: number): Cadence {
   const highMonth = stop.getUTCFullYear() * 12 + stop.getUTCMonth();
   const highBoundary = stop.getUTCDate() === 1 && stop.getUTCHours() === 0 &&
     stop.getUTCMinutes() === 0 && stop.getUTCSeconds() === 0 && stop.getUTCMilliseconds() === 0;
-  const steps = [1, 2, 3, 6,
-    ...Array.from({ length: 7 }, (_, exponent) => [1, 2, 5].map(n => 12 * n * 10 ** exponent)).flat()];
-  for (const step of steps) {
+  for (const step of monthSteps) {
     const first = Math.floor(lowMonth / step) + 1;
     const last = Math.floor(highMonth / step) - (highBoundary && highMonth % step === 0 ? 1 : 0);
     if (Math.max(0, last - first + 1) <= count - 2)

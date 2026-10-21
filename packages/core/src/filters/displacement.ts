@@ -28,7 +28,16 @@ const displacementExecutor: PibblFilterExecutor = {
     }
     const identity = strengthValue === 0 && blurRadius === 0;
     const { x, y, width, height } = options.region;
-    if (![x, y, width, height].every(Number.isFinite) || width <= 0 || height <= 0) {
+    if (
+      !(
+        Number.isFinite(x) &&
+        Number.isFinite(y) &&
+        Number.isFinite(width) &&
+        Number.isFinite(height)
+      ) ||
+      width <= 0 ||
+      height <= 0
+    ) {
       throw diagnostic(`${property}.region`, options.region, 'must have finite coordinates and positive finite dimensions', context);
     }
     const map = isSignal(options.map) ? options.map.get() : options.map;

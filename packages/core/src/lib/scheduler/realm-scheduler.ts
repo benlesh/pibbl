@@ -405,17 +405,8 @@ export function removeRendererParticipantOwner(
 ): void {
   currentRendererWorkByOwner.delete(owner);
   nextRendererWorkByOwner.delete(owner);
-  for (const completions of [
-    currentRendererParticipantCompletions,
-    nextRendererParticipantCompletions,
-  ]) {
-    for (let index = completions.length - 1; index >= 0; index--) {
-      if (completions[index].owner === owner) {
-        completions.splice(index, 1);
-        releasedCompletionCallbacks++;
-      }
-    }
-  }
+  removeParticipantCompletions(currentRendererParticipantCompletions, owner);
+  removeParticipantCompletions(nextRendererParticipantCompletions, owner);
   cancelIdleHostFrame();
 }
 
@@ -982,24 +973,14 @@ function instanceDepth(instance: PibblInstance): number {
 }
 
 function removeRootWork(root: PibblInstance): void {
-  for (const workByInstance of [currentInstanceWork, nextInstanceWork]) {
-    for (const instance of workByInstance.keys()) {
-      if (findRoot(instance) === root) {
-        workByInstance.delete(instance);
-        synchronizeInstancePendingState(instance);
-      }
-    }
-  }
+  removeRootWorkFrom(currentInstanceWork, root);
+  removeRootWorkFrom(nextInstanceWork, root);
 }
 
 function countDirtyRoots(): number {
   const roots = new Set<PibblInstance>();
-  for (const workByInstance of [currentInstanceWork, nextInstanceWork]) {
-    for (const instance of workByInstance.keys()) {
-      const root = findRoot(instance);
-      if (root && registeredRoots.has(root)) roots.add(root);
-    }
-  }
+  collectDirtyRoots(currentInstanceWork, roots);
+  collectDirtyRoots(nextInstanceWork, roots);
   return roots.size;
 }
 
@@ -1283,5 +1264,39 @@ function throwCollectedErrors(errors: unknown[]): void {
   if (errors.length === 1) throw errors[0];
   if (errors.length > 1) {
     throw new AggregateError(errors, "Multiple Pibbl frame operations failed.");
+  }
+}
+
+function removeParticipantCompletions(
+  completions: RendererParticipantCompletion[],
+  owner: RendererParticipantOwner,
+): void {
+  for (let index = completions.length - 1; index >= 0; index--) {
+    if (completions[index].owner === owner) {
+      completions.splice(index, 1);
+      releasedCompletionCallbacks++;
+    }
+  }
+}
+
+function removeRootWorkFrom(
+  workByInstance: Map<PibblInstance, PendingInstanceWork>,
+  root: PibblInstance,
+): void {
+  for (const instance of workByInstance.keys()) {
+    if (findRoot(instance) === root) {
+      workByInstance.delete(instance);
+      synchronizeInstancePendingState(instance);
+    }
+  }
+}
+
+function collectDirtyRoots(
+  workByInstance: Map<PibblInstance, PendingInstanceWork>,
+  roots: Set<PibblInstance>,
+): void {
+  for (const instance of workByInstance.keys()) {
+    const root = findRoot(instance);
+    if (root && registeredRoots.has(root)) roots.add(root);
   }
 }

@@ -208,9 +208,15 @@ const Card = definePrimitive<
       const strokeWidth = style.strokeWidth ?? 1,
         cornerRadius = style.cornerRadius ?? 7,
         opacity = style.opacity ?? 1;
-      for (const value of [strokeWidth, cornerRadius, opacity])
-        if (!Number.isFinite(value) || value < 0)
-          throw new RangeError(
+      if (
+        !Number.isFinite(strokeWidth) ||
+        strokeWidth < 0 ||
+        !Number.isFinite(cornerRadius) ||
+        cornerRadius < 0 ||
+        !Number.isFinite(opacity) ||
+        opacity < 0
+      )
+        throw new RangeError(
             "HoverCard paint dimensions must be finite and nonnegative.",
           );
       if (opacity > 1)

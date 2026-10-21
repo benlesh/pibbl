@@ -286,7 +286,14 @@ export class PhysicsWorld2DController {
       this.space === "local" ? rootTransform : new DOMMatrix();
     const { a, b, c, d, e, f } = simulationToRoot;
     if (
-      ![a, b, c, d, e, f].every(Number.isFinite) ||
+      !(
+        Number.isFinite(a) &&
+        Number.isFinite(b) &&
+        Number.isFinite(c) &&
+        Number.isFinite(d) &&
+        Number.isFinite(e) &&
+        Number.isFinite(f)
+      ) ||
       Math.abs(a * d - b * c) < 1e-10
     )
       throw new Error(

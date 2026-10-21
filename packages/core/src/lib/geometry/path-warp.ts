@@ -61,7 +61,11 @@ function perspective(corners: readonly WarpPoint[]): (span: WarpSpan) => WarpSpa
   }
   const g = (dx3 * dy2 - dx2 * dy3) / determinant;
   const h = (dx1 * dy3 - dx3 * dy1) / determinant;
-  if ([1 + g, 1 + h, 1 + g + h].some(w => w <= 64 * Number.EPSILON * (1 + Math.abs(g) + Math.abs(h)))) {
+  if (
+    1 + g <= 64 * Number.EPSILON * (1 + Math.abs(g) + Math.abs(h)) ||
+    1 + h <= 64 * Number.EPSILON * (1 + Math.abs(g) + Math.abs(h)) ||
+    1 + g + h <= 64 * Number.EPSILON * (1 + Math.abs(g) + Math.abs(h))
+  ) {
     throw new RangeError('Perspective mapping cannot certify a finite source rectangle.');
   }
   const xx = b[0] - a[0] + g * b[0], xy = c[0] - a[0] + h * c[0];

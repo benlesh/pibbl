@@ -1,3 +1,5 @@
+const unsupportedProperties = ['order', 'margin', 'marginLeft', 'marginRight', 'marginTop', 'marginBottom'] as const;
+
 import { preparedStyleValue, preparedStyleQuery, type PreparedQuery } from '../style/responsive.js';
 import { definePrimitive } from '../define-primitive.js';
 import { clonePibblElement } from '../element/create-element.js';
@@ -410,12 +412,8 @@ function isPercentage(value: unknown): boolean {
 }
 
 function hasPercentageBounds(style: Readonly<BoxStyle>): boolean {
-  return [
-    style.minWidth,
-    style.maxWidth,
-    style.minHeight,
-    style.maxHeight,
-  ].some(isPercentage);
+  return isPercentage(style.minWidth) || isPercentage(style.maxWidth) ||
+    isPercentage(style.minHeight) || isPercentage(style.maxHeight);
 }
 
 function unsupportedIntrinsic(reason: string): MeasureResult {
@@ -1043,7 +1041,8 @@ function rejectUnsupportedItemFields(
   style: Readonly<Record<string, unknown>>,
   container: Readonly<LayoutBox>,
 ): void {
-  for (const property of ['order', 'margin', 'marginLeft', 'marginRight', 'marginTop', 'marginBottom']) {
+  for (let propertyIndex = 0; propertyIndex < unsupportedProperties.length; propertyIndex++) {
+    const property = unsupportedProperties[propertyIndex];
     if (style[property] !== undefined) {
       throw childDiagnostic(
         child,

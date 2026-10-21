@@ -29,7 +29,16 @@ const executor: PibblFilterExecutor = {
       throw fail('region', candidateRegion, 'must have finite coordinates and positive dimensions');
     }
     const { x, y, width, height } = candidateRegion as { x?: unknown; y?: unknown; width?: unknown; height?: unknown };
-    if (![x, y, width, height].every(value => typeof value === 'number' && Number.isFinite(value))) {
+    if (!(
+      typeof x === 'number' &&
+      Number.isFinite(x) &&
+      typeof y === 'number' &&
+      Number.isFinite(y) &&
+      typeof width === 'number' &&
+      Number.isFinite(width) &&
+      typeof height === 'number' &&
+      Number.isFinite(height)
+    )) {
       throw fail('region', candidateRegion, 'must have finite coordinates and positive dimensions');
     }
     const numericRegion = { x: x as number, y: y as number, width: width as number, height: height as number };

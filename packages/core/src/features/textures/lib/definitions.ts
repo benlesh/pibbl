@@ -250,8 +250,12 @@ const inkRecipe = /* @__PURE__ */ defineTexture<
     else if (message.type === "stir") {
       const radius = message.radius ?? 16;
       if (
-        ![message.u, message.v, message.du, message.dv, radius].every(
-          Number.isFinite,
+        !(
+          Number.isFinite(message.u) &&
+          Number.isFinite(message.v) &&
+          Number.isFinite(message.du) &&
+          Number.isFinite(message.dv) &&
+          Number.isFinite(radius)
         ) ||
         radius <= 0 ||
         radius > 128 ||
@@ -273,7 +277,12 @@ const inkRecipe = /* @__PURE__ */ defineTexture<
       const radius = message.radius ?? 6,
         strength = message.strength ?? 0.8;
       if (
-        ![message.u, message.v, radius, strength].every(Number.isFinite) ||
+        !(
+          Number.isFinite(message.u) &&
+          Number.isFinite(message.v) &&
+          Number.isFinite(radius) &&
+          Number.isFinite(strength)
+        ) ||
         radius <= 0 ||
         radius > 128 ||
         strength < 0 ||

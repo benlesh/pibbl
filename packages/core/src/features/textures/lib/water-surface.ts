@@ -422,8 +422,11 @@ function options(input: WaterSurfaceOptions): Config {
   const obstacles = Object.freeze(
     (input.obstacles ?? []).map((obstacle) => {
       if (
-        ![obstacle.x, obstacle.y, obstacle.width, obstacle.height].every(
-          Number.isFinite,
+        !(
+          Number.isFinite(obstacle.x) &&
+          Number.isFinite(obstacle.y) &&
+          Number.isFinite(obstacle.width) &&
+          Number.isFinite(obstacle.height)
         ) ||
         obstacle.x < 0 ||
         obstacle.y < 0 ||

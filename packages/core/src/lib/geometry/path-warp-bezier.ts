@@ -1,3 +1,5 @@
+
+const homogeneousCoordinateKeys = ['x', 'y', 'w'] as const;
 /** @internal Homogeneous Bernstein curves, degree at most six after warping. */
 export interface WarpSpan { x: number[]; y: number[]; w: number[] }
 export type WarpPoint = readonly [number, number];
@@ -80,9 +82,19 @@ export interface WarpWork {
 function frame(work: WarpWork, index: number): WarpSpan {
   return work.pool[index] ?? (work.pool[index] = { x: [], y: [], w: [] });
 }
-export function emitSpan(span: WarpSpan, tolerance: number, work: WarpWork, emit: (x: number, y: number) => void): void {
+export function emitSpan(
+  span: WarpSpan,
+  tolerance: number,
+  work: WarpWork,
+  emit: (x: number, y: number) => void,
+): void {
   const first = frame(work, 0);
-  for (const key of ['x', 'y', 'w'] as const) {
+  for (
+    let keyIndex = 0;
+    keyIndex < homogeneousCoordinateKeys.length;
+    keyIndex++
+  ) {
+    const key = homogeneousCoordinateKeys[keyIndex];
     first[key].length = span[key].length;
     for (let i = 0; i < span[key].length; i++) {
       const value = span[key][i];

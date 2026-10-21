@@ -26,13 +26,21 @@ export function validateHtmlOverlay(canvas: HTMLCanvasElement, overlay: HTMLElem
   if (!canvas.isConnected || !overlay.isConnected || canvas.parentElement !== overlay.parentElement || canvas.nextElementSibling !== overlay) {
     throw new Error('HtmlBox overlay and canvas must remain connected adjacent siblings.');
   }
-  for (const element of [canvas, overlay]) {
-    const style = view.getComputedStyle(element);
-    if (style.transform !== 'none' || ['paddingLeft','paddingRight','paddingTop','paddingBottom','borderLeftWidth','borderRightWidth','borderTopWidth','borderBottomWidth'].some(key => parseFloat(style[key as keyof CSSStyleDeclaration] as string) !== 0)) {
-      throw new Error('HtmlBox canvas and overlay must have no independent CSS transform, padding, or border. Style their common wrapper instead.');
-    }
-  }
+  validateOverlayElement(view.getComputedStyle(canvas));
+  validateOverlayElement(view.getComputedStyle(overlay));
   if (Math.abs(canvas.clientWidth - overlay.clientWidth) > 1 || Math.abs(canvas.clientHeight - overlay.clientHeight) > 1 || canvas.offsetLeft !== overlay.offsetLeft || canvas.offsetTop !== overlay.offsetTop) {
     throw new Error('HtmlBox overlay must share the canvas content rectangle.');
   }
+}
+
+function validateOverlayElement(style: CSSStyleDeclaration): void {
+  if (
+    style.transform !== 'none' ||
+    parseFloat(style.paddingLeft) !== 0 || parseFloat(style.paddingRight) !== 0 ||
+    parseFloat(style.paddingTop) !== 0 || parseFloat(style.paddingBottom) !== 0 ||
+    parseFloat(style.borderLeftWidth) !== 0 || parseFloat(style.borderRightWidth) !== 0 ||
+    parseFloat(style.borderTopWidth) !== 0 || parseFloat(style.borderBottomWidth) !== 0
+  ) {
+      throw new Error('HtmlBox canvas and overlay must have no independent CSS transform, padding, or border. Style their common wrapper instead.');
+    }
 }

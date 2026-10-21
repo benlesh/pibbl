@@ -300,7 +300,13 @@ const recipe = defineTexture<RainDropsOptions, State, RainDropsMessage>({
       const x = bounded(message.x, "nudge x", 1), y = bounded(message.y, "nudge y", 1);
       const radius = bounded(message.radius ?? 0.12, "nudge radius", 2);
       if (radius === 0) throw new RangeError("Rain nudge radius must be positive.");
-      for (const delta of [message.dx, message.dy]) if (!Number.isFinite(delta) || Math.abs(delta) > 1) throw new RangeError("Rain nudge movement must be finite and within [-1, 1].");
+      if (
+        !Number.isFinite(message.dx) ||
+        Math.abs(message.dx) > 1 ||
+        !Number.isFinite(message.dy) ||
+        Math.abs(message.dy) > 1
+      )
+        throw new RangeError("Rain nudge movement must be finite and within [-1, 1].");
       if (message.dx === 0 && message.dy === 0) return;
       const side = Math.min(context.canvas.width, context.canvas.height);
       const width = context.canvas.width / side, height = context.canvas.height / side;

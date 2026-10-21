@@ -20,7 +20,8 @@ export function arcBounds(
   }
 
   const angles = [sweep.startAngle, sweep.endAngle];
-  for (const cardinal of [0, Math.PI / 2, Math.PI, Math.PI * 1.5]) {
+  for (let cardinalIndex = 0; cardinalIndex < 4; cardinalIndex++) {
+    const cardinal = cardinalIndex * (Math.PI / 2);
     if (containsAngle(sweep, cardinal)) angles.push(cardinal);
   }
   const xs = angles.map((angle) => cx + radius * Math.cos(angle));

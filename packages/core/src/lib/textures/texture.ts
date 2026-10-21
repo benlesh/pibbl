@@ -13,6 +13,13 @@ import {
   type TexturePaint,
   type TexturePlacement,
 } from "./texture-protocol.js";
+const placementKeys = [
+    "tileWidth",
+    "tileHeight",
+    "offsetX",
+    "offsetY",
+    "rotation",
+  ] as const;
 
 export type { TexturePaint, TexturePlacement } from "./texture-protocol.js";
 
@@ -196,13 +203,8 @@ function placement(value: TexturePlacement = {}): Readonly<TexturePlacement> {
     value.mode !== "stretch"
   )
     throw new TypeError("Unknown texture placement mode.");
-  for (const key of [
-    "tileWidth",
-    "tileHeight",
-    "offsetX",
-    "offsetY",
-    "rotation",
-  ] as const) {
+  for (let keyIndex = 0; keyIndex < placementKeys.length; keyIndex++) {
+    const key = placementKeys[keyIndex];
     const n = value[key];
     if (
       n !== undefined &&
@@ -217,7 +219,14 @@ function dimensions(options: TextureOptions): [number, number] {
   const width = options.resolution?.width ?? 256,
     height = options.resolution?.height ?? 160;
   if (
-    ![width, height].every((n) => Number.isInteger(n) && n >= 8 && n <= 1024) ||
+    !(
+      Number.isInteger(width) &&
+      width >= 8 &&
+      width <= 1024 &&
+      Number.isInteger(height) &&
+      height >= 8 &&
+      height <= 1024
+    ) ||
     width * height > 262144
   )
     throw new RangeError(

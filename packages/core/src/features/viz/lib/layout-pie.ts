@@ -97,28 +97,21 @@ export function layoutPie<D>(
         : innerRadius + (radius - innerRadius) * 0.65;
     const x = cx + Math.cos(mid) * labelRadius - m.width / 2;
     const y = cy + Math.sin(mid) * labelRadius - m.height / 2;
-    const corners = [
-      [x, y],
-      [x + m.width, y],
-      [x, y + m.height],
-      [x + m.width, y + m.height],
-    ];
     // A disk intersected with the midpoint half-plane is convex. Restrict wide
     // sectors to it so corner containment also proves containment of the box.
-    const fits =
-      inBounds(x, y, m.width, m.height) &&
-      corners.every(([px, py]) => {
-        const dx = px - cx,
+    let fits = inBounds(x, y, m.width, m.height);
+    for (let corner = 0; corner < 4 && fits; corner++) {
+      const px = x + (corner % 2 === 0 ? 0 : m.width);
+      const py = y + (corner < 2 ? 0 : m.height);
+      const dx = px - cx,
           dy = py - cy;
-        const relative =
+      const relative =
           ((Math.atan2(dy, dx) - mid + Math.PI * 3) % (Math.PI * 2)) - Math.PI;
-        return (
-          Math.hypot(dx, dy) <= radius &&
+      fits = Math.hypot(dx, dy) <= radius &&
           Math.abs(relative) <=
-            Math.min(Math.PI / 2, (slice.endAngle - slice.startAngle) / 2)
-        );
-      }) &&
-      boxOutsideInnerCircle(x, y, m.width, m.height, cx, cy, innerRadius);
+            Math.min(Math.PI / 2, (slice.endAngle - slice.startAngle) / 2);
+    }
+    fits = fits && boxOutsideInnerCircle(x, y, m.width, m.height, cx, cy, innerRadius);
     if (placement !== "outside" && fits) {
       labels[index] = placed(text, m, x, y, "inside");
       return;
@@ -168,10 +161,8 @@ export function layoutPie<D>(
     const upper = accepted.filter((row) => row.anchor[1] < cy).reverse();
     const lower = accepted.filter((row) => row.anchor[1] >= cy);
     const visible = new Set<(typeof accepted)[number]>();
-    for (const [rows, sign] of [
-      [upper, -1],
-      [lower, 1],
-    ] as const) {
+    for (let sign = -1; sign <= 1; sign += 2) {
+      const rows = sign < 0 ? upper : lower;
       let cursor = cy + (sign * gap) / 2;
       for (const row of rows) {
         const dx = row.anchor[0] - cx;

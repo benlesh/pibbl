@@ -293,8 +293,9 @@ function Scene({ input }: { input: SignalValue<readonly Datum[]> }) {
   useReaction(() => {
     const current = resolveSignalValue(input);
     const currentKeys = new Set(current.map((row) => row.time));
-    for (const key of [committed.get(), hovered.get(), pinned.get()])
-      if (key !== null && !currentKeys.has(key)) retired.add(key);
+    retireMissingKey(committed.get(), currentKeys, retired);
+    retireMissingKey(hovered.get(), currentKeys, retired);
+    retireMissingKey(pinned.get(), currentKeys, retired);
   }, [input]);
   const byKey = new Map(records.map((row) => [row.time, row]));
   const valid = (value: number | null) => {
@@ -518,4 +519,12 @@ export default function mount(
     </FocusManagement>,
     { viewport: "responsive" },
   );
+}
+
+function retireMissingKey(
+  key: number | null,
+  currentKeys: Set<number>,
+  retired: Set<number>,
+): void {
+  if (key !== null && !currentKeys.has(key)) retired.add(key);
 }
