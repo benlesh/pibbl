@@ -146,7 +146,8 @@ function measureElementInternal(
   }
 }
 
-function withIsolatedRenderState<T>(work: () => T): T {
+/** @internal Shared pure measurement preparation; never lends a mounted render context. */
+export function withIsolatedRenderState<T>(work: () => T): T {
   const snapshot = {
     currentPibblInstance: GLOBAL_STATE.currentPibblInstance,
     componentRefs: GLOBAL_STATE.componentRefs,

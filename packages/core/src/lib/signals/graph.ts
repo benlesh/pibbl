@@ -83,8 +83,19 @@ interface SignalRenderProvisionState {
   >;
 }
 
+/** @internal The declared effect of one receiver-owned signal input. */
+export type SignalDependencyRole =
+  | 'structure'
+  | 'layout'
+  | 'measurement'
+  | 'paint'
+  | 'transform'
+  | 'interaction'
+  | 'unknown';
+export type SignalDependencyRoleInput = SignalDependencyRole | number;
+
 export interface SignalDependencyCollector {
-  addDependency(node: SignalNode<unknown>): void;
+  addDependency(node: SignalNode<unknown>, role?: SignalDependencyRoleInput): void;
 }
 
 export type SignalWriteOperation = 'direct' | 'staged';
@@ -109,6 +120,7 @@ export interface SignalWriterLeasePolicy {
 }
 
 let activeSignalDependencyCollector: SignalDependencyCollector | undefined;
+let activeSignalDependencyRole: SignalDependencyRole | undefined;
 const writePolicyStack: SignalWritePolicy[] = [];
 const computedStack: ComputedSignalNode<unknown>[] = [];
 function createSignalNodeState<T>(
@@ -159,6 +171,13 @@ let receiverInputProvisions = 0;
 let adoptedReceiverInputProvisions = 0;
 let rolledBackReceiverInputProvisions = 0;
 let batchedObserverInvalidations = 0;
+let structureInputInvalidations = 0;
+let layoutInputInvalidations = 0;
+let measurementInputInvalidations = 0;
+let paintInputInvalidations = 0;
+let transformInputInvalidations = 0;
+let interactionInputInvalidations = 0;
+let unknownInputInvalidations = 0;
 let reactionConsumers = 0;
 let reactionEdges = 0;
 let reactionRuns = 0;
@@ -202,6 +221,13 @@ export interface SignalGraphSnapshot {
   readonly adoptedReceiverInputProvisions: number;
   readonly rolledBackReceiverInputProvisions: number;
   readonly batchedObserverInvalidations: number;
+  readonly structureInputInvalidations: number;
+  readonly layoutInputInvalidations: number;
+  readonly measurementInputInvalidations: number;
+  readonly paintInputInvalidations: number;
+  readonly transformInputInvalidations: number;
+  readonly interactionInputInvalidations: number;
+  readonly unknownInputInvalidations: number;
   readonly reactionConsumers: number;
   readonly reactionEdges: number;
   readonly reactionRuns: number;
@@ -233,12 +259,30 @@ export function signalGraphSnapshot(): SignalGraphSnapshot {
     adoptedReceiverInputProvisions,
     rolledBackReceiverInputProvisions,
     batchedObserverInvalidations,
+    structureInputInvalidations,
+    layoutInputInvalidations,
+    measurementInputInvalidations,
+    paintInputInvalidations,
+    transformInputInvalidations,
+    interactionInputInvalidations,
+    unknownInputInvalidations,
     reactionConsumers,
     reactionEdges,
     reactionRuns,
     reactionCleanups,
     reactionFailures,
   });
+}
+
+/** @internal Records roles carried by a receiver edge when its source changes. */
+export function recordSignalInputInvalidation(roles: number): void {
+  if (roles & 1) structureInputInvalidations++;
+  if (roles & 2) layoutInputInvalidations++;
+  if (roles & 4) measurementInputInvalidations++;
+  if (roles & 8) paintInputInvalidations++;
+  if (roles & 16) transformInputInvalidations++;
+  if (roles & 32) interactionInputInvalidations++;
+  if (roles & 64) unknownInputInvalidations++;
 }
 
 /** @internal Records one component consumer materialized by its first read. */
@@ -285,8 +329,28 @@ export function recordReceiverInputProvisionRolledBack(): void {
 }
 
 /** @internal Adds one already-read source to the active dependency collector. */
-export function trackSignalDependency(node: SignalNode<unknown>): void {
-  activeSignalDependencyCollector?.addDependency(node);
+export function trackSignalDependency(
+  node: SignalNode<unknown>,
+  role?: SignalDependencyRoleInput,
+): void {
+  activeSignalDependencyCollector?.addDependency(
+    node,
+    role ?? activeSignalDependencyRole,
+  );
+}
+
+/** @internal Tags reads while a declared receiver input is resolved. */
+export function withSignalDependencyRole<T>(
+  role: SignalDependencyRole,
+  callback: () => T,
+): T {
+  const previous = activeSignalDependencyRole;
+  activeSignalDependencyRole = role;
+  try {
+    return callback();
+  } finally {
+    activeSignalDependencyRole = previous;
+  }
 }
 
 /** @internal Records one observer invalidation deduplicated by a public batch. */
@@ -419,11 +483,11 @@ function flushPublicSignalBatch(state: PublicSignalBatchState): unknown[] {
     }
   }
 
-  const seen = new Set<SignalDependencyConsumer>();
-  const consumers: Array<{
+  const consumers = new Map<SignalDependencyConsumer, {
     readonly consumer: SignalDependencyConsumer;
     readonly source: SignalNode<unknown>;
-  }> = [];
+    roles: number;
+  }>();
   for (const [source, entry] of state.entries) {
     let unchanged = false;
     try {
@@ -440,19 +504,20 @@ function flushPublicSignalBatch(state: PublicSignalBatchState): unknown[] {
     ) {
       const consumer = edge.consumer;
       if (consumer.propagateInvalidation === true) continue;
-      if (seen.has(consumer)) {
+      const existing = consumers.get(consumer);
+      if (existing !== undefined) {
+        existing.roles |= edge.dependencyRoles;
         recordBatchedObserverInvalidation();
         continue;
       }
-      seen.add(consumer);
-      consumers.push({ consumer, source });
+      consumers.set(consumer, { consumer, source, roles: edge.dependencyRoles });
     }
   }
 
   activePublicSignalBatch = undefined;
-  for (const { consumer, source } of consumers) {
+  for (const { consumer, source, roles } of consumers.values()) {
     try {
-      consumer.notify(source);
+      consumer.notify(source, roles);
     } catch (error) {
       state.failures.push(error);
     }
@@ -528,7 +593,10 @@ export function signal<T>(
 
   let readonlySignal: Signal<T> | undefined;
   const read = (): T => {
-    activeSignalDependencyCollector?.addDependency(node as SignalNode<unknown>);
+    activeSignalDependencyCollector?.addDependency(
+      node as SignalNode<unknown>,
+      activeSignalDependencyRole,
+    );
     return node.value;
   };
   const assertWriteAllowed = (): void => {
@@ -964,6 +1032,7 @@ export function computed<T>(
     get(): T {
       activeSignalDependencyCollector?.addDependency(
         node as SignalNode<unknown>,
+        activeSignalDependencyRole,
       );
       validate();
       removePendingValidation();
@@ -1016,7 +1085,7 @@ export function readComputedFormulaCandidate<T>(
 ): T {
   const node = requireComputedSignalNode(target);
   const reader = activeSignalDependencyCollector;
-  reader?.addDependency(node as SignalNode<unknown>);
+  reader?.addDependency(node as SignalNode<unknown>, activeSignalDependencyRole);
   if (reader !== undefined) candidate.readers.add(reader);
   if (!candidate.evaluated) {
     const value = untracked(() => candidate.signal.get());

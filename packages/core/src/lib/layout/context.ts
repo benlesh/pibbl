@@ -1,6 +1,11 @@
 import { GLOBAL_STATE } from '../global-state.js';
 import type { LayoutBox } from './types.js';
 
+/** @internal A pushed allocation remains active through ordinary components. */
+export function hasParentLayoutAllocation(): boolean {
+  return (GLOBAL_STATE.layoutStack?.length ?? 0) > 1;
+}
+
 export function getLayoutBox(): Readonly<LayoutBox> {
   const context = GLOBAL_STATE.layoutStack?.at(-1);
   if (!context) {

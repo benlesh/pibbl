@@ -6,6 +6,7 @@ export interface LearningSourceContract {
   readonly authoring: LearningSourceAuthoring;
   readonly label: string;
   readonly sourcePath?: string;
+  readonly exportName?: string;
 }
 
 interface SyntaxNode {
@@ -48,7 +49,7 @@ interface SourceInspection {
   readonly hasOnlyScenarioImports: boolean;
   readonly hasOrbitHandlersSpread: boolean;
   readonly hasScenarioReExport: boolean;
-  readonly hasCanonicalMount: boolean;
+  readonly hasExampleEntry: boolean;
   readonly hasTestScaffolding: boolean;
   readonly hasUninspectableProps: boolean;
   readonly hasUninspectableLegacySensitiveProps: boolean;
@@ -339,7 +340,14 @@ function typeReferenceName(annotation: unknown): string | undefined {
   return identifierName(typeAnnotation.typeName);
 }
 
-function isCanonicalMount(programBody: readonly SyntaxNode[]): boolean {
+function hasExampleEntry(programBody: readonly SyntaxNode[], exportName?: string): boolean {
+  if (exportName) return programBody.some(statement => {
+    const declaration = statement.declaration;
+    return statement.type === "ExportNamedDeclaration" &&
+      isNode(declaration) && declaration.type === "FunctionDeclaration" &&
+      identifierName(declaration.id) === exportName &&
+      declaration.async !== true && declaration.generator !== true;
+  });
   const defaults = programBody.filter(
     (statement) => statement.type === "ExportDefaultDeclaration",
   );
@@ -348,15 +356,16 @@ function isCanonicalMount(programBody: readonly SyntaxNode[]): boolean {
   if (
     !isNode(declaration) ||
     declaration.type !== "FunctionDeclaration" ||
-    identifierName(declaration.id) !== "mount" ||
     declaration.async === true ||
     declaration.generator === true
   ) {
     return false;
   }
   const parameters = nodes(declaration.params);
+  const name = identifierName(declaration.id);
   const canvas = parameters[0];
   return (
+    name === "mount" &&
     parameters.length >= 1 &&
     parameters
       .slice(1)
@@ -905,7 +914,7 @@ function resolvedCoreNamespaceTypeName(
     : undefined;
 }
 
-function inspectSource(source: string, label: string): SourceInspection {
+function inspectSource(source: string, label: string, exportName?: string): SourceInspection {
   const file = parseSource(source, label);
   const program = isNode(file.program) ? file.program : undefined;
   const programBody = nodes(program?.body);
@@ -938,7 +947,11 @@ function inspectSource(source: string, label: string): SourceInspection {
   for (const statement of programBody) {
     if (statement.type !== "ImportDeclaration") {
       if (
-        statement.type === "ExportNamedDeclaration" ||
+        (statement.type === "ExportNamedDeclaration" && !(
+          exportName && isNode(statement.declaration) &&
+          statement.declaration.type === "FunctionDeclaration" &&
+          statement.declaration.async !== true && statement.declaration.generator !== true
+        )) ||
         statement.type === "ExportAllDeclaration" ||
         statement.type === "TSExportAssignment" ||
         statement.type === "TSNamespaceExportDeclaration" ||
@@ -1377,7 +1390,7 @@ function inspectSource(source: string, label: string): SourceInspection {
 
   return {
     hasBindingViolation,
-    hasCanonicalMount: isCanonicalMount(programBody),
+    hasExampleEntry: hasExampleEntry(programBody, exportName),
     hasCommonJsSyntax,
     hasCoreValueImport,
     hasOrbitControlsValueImport,
@@ -1514,8 +1527,8 @@ export function validateLearningSourceText(
   source: string,
   contract: LearningSourceContract,
 ): void {
-  const { authoring, label, sourcePath } = contract;
-  const inspection = inspectSource(source, label);
+  const { authoring, label, sourcePath, exportName } = contract;
+  const inspection = inspectSource(source, label, exportName);
   const isParticlesLesson =
     sourcePath === PARTICLES_LEARNING_SOURCE_PATH ||
     (sourcePath === undefined &&
@@ -1640,8 +1653,10 @@ export function validateLearningSourceText(
   if (inspection.hasCommonJsSyntax) {
     throw invalid(label, "must not use CommonJS module loading or exports.");
   }
-  if (!inspection.hasCanonicalMount) {
-    throw invalid(label, "must export the canonical mount(canvas) contract.");
+  if (!inspection.hasExampleEntry) {
+    throw invalid(label, exportName
+      ? `must export the catalog-selected component "${exportName}".`
+      : "must export the legacy mount(canvas) contract, or select a named component in the catalog.");
   }
   if (inspection.hasBindingViolation) {
     throw invalid(

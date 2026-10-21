@@ -1,3 +1,5 @@
+import { experimentalLayout } from '../layout/wasm/region.js';
+import { hasParentLayoutAllocation } from '../layout/context.js';
 import { definePrimitive } from '../define-primitive.js';
 import { materializeContainerChildren } from '../element/children.js';
 import { createElement } from '../element/create-element.js';
@@ -33,6 +35,7 @@ import { createLayerSurface } from '../surface/resolve-surface.js';
 import {
   completeInstanceRenderRevision,
   hasPendingInstanceRender,
+  setInstanceAllocationParent,
 } from '../scheduler/realm-scheduler.js';
 import type { PibblElement } from '../element/types.js';
 import {
@@ -130,6 +133,7 @@ function renderLayer(
       retainedTree: undefined,
     } satisfies LayerSlot;
     componentRefs.teardowns.add(() => {
+      setInstanceAllocationParent(childInstance);
       childInstance.eventParent = undefined;
       parentInstance.paintEntries.delete(interactionLayer);
       controller.dispose();
@@ -139,6 +143,7 @@ function renderLayer(
   const slot = componentRefs.refs[0] as LayerSlot;
   const offscreenCanvas = slot.canvas;
   const layerPibbl = getPibblInstance(offscreenCanvas);
+  if (experimentalLayout) setInstanceAllocationParent(layerPibbl, hasParentLayoutAllocation() ? parentInstance : undefined);
   const dimensionsChanged = slot.logicalWidth !== width ||
     slot.logicalHeight !== height;
   const surfaceChanged =

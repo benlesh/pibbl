@@ -1,4 +1,4 @@
-import { pibbl, useSignal, Rectangle, Text, type PibblController } from "@pibbl/core";
+import { useSignal, Rectangle, Text } from "@pibbl/core";
 
 interface PosterCardProps {
   message: string;
@@ -43,7 +43,7 @@ function PosterCard({ message, onSelect }: PosterCardProps) {
   ];
 }
 
-function Poster() {
+export function Poster() {
   const message = useSignal("HELLO");
 
   return [
@@ -72,8 +72,4 @@ function Poster() {
       }
     />,
   ];
-}
-
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(canvas, <Poster />);
 }

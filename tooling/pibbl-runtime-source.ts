@@ -25,8 +25,8 @@ const threeEntryPoints = new Map([
 ]);
 
 function pibblEntryPoints(mode: string): ReadonlyMap<string, string> {
-  const directory = mode === "built" ? "dist" : "src";
-  const extension = mode === "built" ? "mjs" : "ts";
+  const directory = mode === "layout-wasm-built" ? ".layout-wasm-package/dist" : mode === "built" ? "dist" : "src";
+  const extension = mode === "built" || mode === "layout-wasm-built" ? "mjs" : "ts";
   return new Map([
     ["@pibbl/core/viz/inspection", resolve(import.meta.dirname, `../packages/core/${directory}/features/viz/inspection.${extension}`)],
     ["@pibbl/core/machines", resolve(import.meta.dirname, `../packages/core/${directory}/features/machines/index.${extension}`)],
@@ -35,7 +35,7 @@ function pibblEntryPoints(mode: string): ReadonlyMap<string, string> {
     ["@pibbl/core/sprites/formats/aseprite", resolve(import.meta.dirname, `../packages/core/${directory}/features/sprites/formats/aseprite.${extension}`)],
     ["@pibbl/core/sprites/formats/texture-packer", resolve(import.meta.dirname, `../packages/core/${directory}/features/sprites/formats/texture-packer.${extension}`)],
 
-    ["@pibbl/text", resolve(import.meta.dirname, `../packages/text/${directory}/index.${extension}`)],
+    ["@pibbl/text", resolve(import.meta.dirname, `../packages/text/${mode === "layout-wasm-built" ? "dist" : directory}/index.${extension}`)],
     ["@pibbl/core/filters", resolve(import.meta.dirname, `../packages/core/${directory}/filters.${extension}`)],
     ["@pibbl/core/textures", resolve(import.meta.dirname, `../packages/core/${directory}/features/textures/index.${extension}`)],
     [
@@ -84,7 +84,7 @@ function pibblEntryPoints(mode: string): ReadonlyMap<string, string> {
       "@pibbl/three",
       resolve(
         import.meta.dirname,
-        `../packages/three/${directory}/index.${extension}`,
+        `../packages/three/${mode === "layout-wasm-built" ? "dist" : directory}/index.${extension}`,
       ),
     ],
     [
@@ -116,7 +116,7 @@ function assertSingleRuntimeMode(
     const packageRoot = resolve(repositoryRoot, `packages/${packageName}`);
     const expectedRoot = resolve(
       packageRoot,
-      mode === "built" ? "dist" : "src",
+      mode === "layout-wasm-built" ? (packageName === "core" ? ".layout-wasm-package/dist" : "dist") : mode === "built" ? "dist" : "src",
     );
     const packageNodeModules = resolve(packageRoot, "node_modules");
     const packageInputs = inputs.filter(
@@ -166,7 +166,7 @@ export function pibblRuntimeSource(mode: string) {
           loader: "ts",
         },
         bundle: true,
-        define: { "import.meta.env.DEV": production ? "false" : "true" },
+        define: { "import.meta.env.DEV": production ? "false" : "true", "import.meta.env": JSON.stringify({ MODE: mode, DEV: !production }) },
         format: "esm",
         metafile: true,
         platform: "browser",
@@ -174,11 +174,27 @@ export function pibblRuntimeSource(mode: string) {
           {
             name: "pibbl-studio-runtime-entries",
             setup(build) {
-              build.onResolve({ filter: /engine\.mjs$/ }, args => {
-                if (!args.importer.includes('/packages/text/')) return undefined;
-                return { path: 'text-engine-loader', namespace: 'pibbl-text' };
+              build.onResolve({ filter: /engine\.mjs$/ }, (args) => {
+                if (!args.importer.includes("/packages/text/"))
+                  return undefined;
+                return { path: "text-engine-loader", namespace: "pibbl-text" };
               });
-              build.onLoad({ filter: /.*/, namespace: 'pibbl-text' }, () => ({ contents: 'export default async function () { const url = new URL("/pibbl-text/engine.mjs", document.baseURI).href; const module = await import(url); return module.default(); }', loader: 'js' }));
+              build.onLoad({ filter: /.*/, namespace: "pibbl-text" }, () => ({
+                contents: `export default async function () {
+  const loaderUrl = new URL("/pibbl-text/engine.mjs", document.baseURI);
+  const wasmUrl = new URL("/pibbl-text/engine.wasm", document.baseURI);
+  const [loader, wasm] = await Promise.all([fetch(loaderUrl), fetch(wasmUrl)]);
+  if (!loader.ok || !wasm.ok) throw new Error("Text engine download failed.");
+  const source = await loader.text();
+  const wasmBinary = await wasm.arrayBuffer();
+  const moduleUrl = URL.createObjectURL(new Blob([source], { type: "text/javascript" }));
+  try {
+    const module = await import(moduleUrl);
+    return await module.default({ wasmBinary, locateFile: () => wasmUrl.href });
+  } finally { URL.revokeObjectURL(moduleUrl); }
+}`,
+                loader: "js",
+              }));
               build.onResolve({ filter: PIBBL_ENTRY_POINT }, (args) => {
                 const path = entryPoints.get(args.path);
                 if (!path) return undefined;
@@ -199,7 +215,13 @@ export function pibblRuntimeSource(mode: string) {
       const output = result.outputFiles[0]?.text;
       if (!output)
         throw new Error("Pibbl runtime bundling produced no browser output.");
-      return `export default ${JSON.stringify(output)};`;
+      const provenance = mode === "layout-wasm-built"
+        ? `globalThis.__PIBBL_BUILT_LAYOUT_PROOF__ = ${JSON.stringify({
+            mode,
+            coreInputs: Object.keys(result.metafile.inputs).filter(path => path.includes("packages/core/")),
+          })};\n`
+        : "";
+      return `export default ${JSON.stringify(provenance + output)};`;
     },
   };
 }

@@ -11,6 +11,7 @@ import {
   recordPlainInputResolution,
   recordShallowInputCopy,
   recordSignalInputResolution,
+  withSignalDependencyRole,
 } from '../signals/graph.js';
 
 export interface ResolvedPrimitiveInputs {
@@ -102,10 +103,23 @@ export function resolvePrimitiveStyleInput(
         resolved = { ...source };
         recordShallowInputCopy();
       }
-      resolved[key] = value.get();
+      resolved[key] = withSignalDependencyRole(
+        styleInputRole(key),
+        () => value.get(),
+      );
     } else {
       recordPlainInputResolution();
     }
   }
   return resolved ?? source;
+}
+
+function styleInputRole(
+  key: string,
+): 'layout' | 'measurement' | 'paint' | 'interaction' | 'transform' | 'unknown' {
+  if (key === 'fill' || key === 'stroke' || key === 'opacity' || key === 'filter') return 'paint';
+  if (key === 'cursor' || key === 'pointerEvents') return 'interaction';
+  if (key === 'font' || key === 'lineHeight' || key === 'wrap' || key === 'fit') return 'measurement';
+  if (key === 'width' || key === 'height' || key === 'minWidth' || key === 'minHeight' || key === 'maxWidth' || key === 'maxHeight' || key === 'left' || key === 'top' || key === 'flexBasis' || key === 'flexGrow' || key === 'flexShrink' || key === 'flexDirection' || key === 'flexWrap' || key === 'justifyContent' || key === 'alignItems' || key === 'alignSelf' || key === 'alignContent' || key === 'gap' || key === 'rowGap' || key === 'columnGap' || key === 'padding') return 'layout';
+  return 'unknown';
 }

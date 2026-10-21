@@ -58,8 +58,8 @@ function invalidModuleShape(): Error {
     "Lessons may contain named imports only from @pibbl/core/machines, @pibbl/core/machines/animation, @pibbl/core/sprites and its format adapters, @pibbl/core, @pibbl/core/filters, @pibbl/core/viz, @pibbl/core/textures, " +
       "@pibbl/core/jsx-runtime, @pibbl/core/jsx-dev-runtime, @pibbl/core/particles, " +
       "@pibbl/core/physics/2d, @pibbl/core/physics/2d/geometry, @pibbl/three, three, and " +
-      "three/addons/controls/OrbitControls.js, plus exactly " +
-      "one default mount(canvas) export.",
+      "three/addons/controls/OrbitControls.js, with a catalog-selected named component export " +
+      "or one legacy default mount(canvas) export.",
   );
 }
 
@@ -109,7 +109,10 @@ function uniqueRuntimeBinding(identifiers: ReadonlySet<string>): string {
   return binding;
 }
 
-export function toRunnableScript(emittedCode: string): string {
+export function toRunnableScript(
+  emittedCode: string,
+  options: { exportName?: string } = {},
+): string {
   let file;
   try {
     file = parse(emittedCode, {
@@ -129,6 +132,7 @@ export function toRunnableScript(emittedCode: string): string {
   const edits: SourceEdit[] = [];
   let mountExports = 0;
   let emptyExports = 0;
+  let componentName: string | undefined;
 
   for (const statement of file.program.body) {
     if (statement.type === "ImportDeclaration") {
@@ -183,14 +187,47 @@ export function toRunnableScript(emittedCode: string): string {
       continue;
     }
 
+    if (statement.type === "ExportNamedDeclaration" && statement.declaration) {
+      const declaration = statement.declaration;
+      if (
+        !options.exportName ||
+        statement.source ||
+        declaration.type !== "FunctionDeclaration" ||
+        !declaration.id ||
+        declaration.async ||
+        declaration.generator
+      ) {
+        throw invalidModuleShape();
+      }
+      if (declaration.id.name === options.exportName) {
+        componentName = declaration.id.name;
+      }
+      const exportToken = file.tokens?.find(
+        token => token.start === statement.start && token.type.label === "export",
+      );
+      if (!exportToken) throw invalidModuleShape();
+      edits.push({
+        start: requiredOffset(exportToken.start),
+        end: requiredOffset(exportToken.end),
+        replacement: "",
+      });
+      continue;
+    }
+
     if (statement.type === "ExportDefaultDeclaration") {
       const declaration = statement.declaration;
       if (
+        options.exportName ||
         ++mountExports !== 1 ||
         declaration.type !== "FunctionDeclaration" ||
         declaration.async ||
         declaration.generator ||
-        declaration.id?.name !== "mount" ||
+        !declaration.id
+      ) {
+        throw invalidModuleShape();
+      }
+      if (
+        declaration.id.name !== "mount" ||
         declaration.params.length < 1 ||
         declaration.params.slice(1).some(parameter => parameter.type !== "AssignmentPattern") ||
         declaration.params[0]?.type !== "Identifier" ||
@@ -246,7 +283,10 @@ export function toRunnableScript(emittedCode: string): string {
     }
   }
 
-  if (bindings.size === 0 || mountExports !== 1) {
+  if (options.exportName && !componentName) {
+    throw new Error(`Preview component export "${options.exportName}" was not found. Keep the catalog-selected export when editing the lesson.`);
+  }
+  if (bindings.size === 0 || (!componentName && mountExports !== 1)) {
     throw invalidModuleShape();
   }
 
@@ -264,7 +304,9 @@ export function toRunnableScript(emittedCode: string): string {
 "use strict";
 ${runtimeBindings}
 ${runnable}
-return mount;
+return ${componentName
+    ? `(canvas) => ${runtimeBinding}.pibbl(canvas, ${runtimeBinding}.createElement(${componentName}, null))`
+    : "mount"};
 })(globalThis["PIBBL_CORE"]);`;
 
   try {

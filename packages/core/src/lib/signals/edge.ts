@@ -1,4 +1,18 @@
-import type { SignalNode } from './graph.js';
+import type { SignalDependencyRole, SignalDependencyRoleInput, SignalNode } from './graph.js';
+
+const dependencyRoleMasks: Record<SignalDependencyRole, number> = {
+  structure: 1,
+  layout: 2,
+  measurement: 4,
+  paint: 8,
+  transform: 16,
+  interaction: 32,
+  unknown: 64,
+};
+
+export function signalDependencyRoleMask(role: SignalDependencyRoleInput | undefined): number {
+  return typeof role === 'number' ? role : dependencyRoleMasks[role ?? 'unknown'];
+}
 
 export interface ReactiveEdge {
   source: SignalNode<unknown> | undefined;
@@ -14,6 +28,8 @@ export interface ReactiveEdge {
   sourceLinked: boolean;
   collectionKind: 'new' | 'reused' | undefined;
   releaseObservation: (() => void) | undefined;
+  dependencyRoles: number;
+  collectedDependencyRoles: number;
 }
 
 export interface ReactiveNotificationCursor {
@@ -30,8 +46,8 @@ export interface SignalDependencyConsumer {
   dependencyHighWater: number;
   collectionCursor: ReactiveEdge | undefined;
   collectionGeneration: number;
-  addDependency(node: SignalNode<unknown>): void;
-  notify(node: SignalNode<unknown>): void;
+  addDependency(node: SignalNode<unknown>, role?: SignalDependencyRoleInput): void;
+  notify(node: SignalNode<unknown>, dependencyRoles?: number): void;
   propagateInvalidation?: boolean;
   renderInvalidation?: boolean;
 }
@@ -47,8 +63,10 @@ export function beginReactiveCollection(
 export function collectReactiveDependency(
   consumer: SignalDependencyConsumer,
   source: SignalNode<unknown>,
+  role?: SignalDependencyRoleInput,
 ): ReactiveEdge {
   const generation = consumer.collectionGeneration;
+  const roleMask = signalDependencyRoleMask(role);
   let edge = consumer.collectionCursor;
   if (
     edge?.source === source &&
@@ -56,6 +74,7 @@ export function collectReactiveDependency(
   ) {
     edge.collectionGeneration = generation;
     edge.collectionKind = 'reused';
+    edge.collectedDependencyRoles = roleMask;
     consumer.collectionCursor = edge.consumerNext;
     return edge;
   }
@@ -65,7 +84,10 @@ export function collectReactiveDependency(
     if (edge.collectionGeneration !== generation) {
       edge.collectionGeneration = generation;
       edge.collectionKind = 'reused';
+      edge.collectedDependencyRoles = roleMask;
       consumer.collectionCursor = edge.consumerNext;
+    } else {
+      edge.collectedDependencyRoles |= roleMask;
     }
     return edge;
   }
@@ -74,6 +96,7 @@ export function collectReactiveDependency(
   edge.source = source;
   edge.collectionGeneration = generation;
   edge.collectionKind = edge.everPublished ? 'reused' : 'new';
+  edge.collectedDependencyRoles = roleMask;
   edge.observedVersion = source.version;
   linkReactiveEdgeToConsumer(edge);
   consumer.collectionCursor = edge.consumerNext;
@@ -89,6 +112,7 @@ export function finishReactiveCollection(
   while (edge !== undefined) {
     const next = edge.consumerNext;
     if (edge.collectionGeneration === consumer.collectionGeneration) {
+      edge.dependencyRoles = edge.collectedDependencyRoles;
       publish(edge);
     } else {
       release(edge);
@@ -228,7 +252,7 @@ export function notifyReactiveEdges(
       if (!edge.sourceLinked || edge.source !== source) continue;
       if (!accepts(edge.consumer)) continue;
       try {
-        edge.consumer.notify(source);
+        edge.consumer.notify(source, edge.dependencyRoles);
       } catch (error) {
         failures.push(error);
       }
@@ -268,6 +292,8 @@ function createReactiveEdge(
     sourceLinked: false,
     collectionKind: undefined,
     releaseObservation: undefined,
+    dependencyRoles: signalDependencyRoleMask(undefined),
+    collectedDependencyRoles: 0,
   };
 }
 

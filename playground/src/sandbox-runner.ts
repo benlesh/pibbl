@@ -1,3 +1,4 @@
+import { respondWithSandboxAsset, sandboxAssetSource } from "./sandbox-assets";
 import runtimeSource from "virtual:pibbl-runtime-source";
 import { toRunnableScript } from "./sandbox-module";
 
@@ -8,6 +9,13 @@ const PREVIEW_START_TIMEOUT_MS = 10_000;
 type LogLevel = "log" | "info" | "warn" | "error";
 
 type FrameMessage =
+  | {
+      protocol: typeof PROTOCOL;
+      version: typeof VERSION;
+      runId: number;
+      kind: "asset";
+      url: string;
+    }
   | {
       protocol: typeof PROTOCOL;
       version: typeof VERSION;
@@ -38,6 +46,7 @@ export interface PreviewEvent {
 
 interface RunOptions {
   code: string;
+  exportName?: string;
   width: number;
   height: number;
   onEvent: (event: PreviewEvent) => void;
@@ -61,10 +70,11 @@ function escapeScript(source: string): string {
 function createFrameSource(options: {
   runId: number;
   code: string;
+  exportName?: string;
   width: number;
   height: number;
 }): string {
-  const runnable = toRunnableScript(options.code);
+  const runnable = toRunnableScript(options.code, { exportName: options.exportName });
   const boot = `
     const protocol = '${PROTOCOL}';
     const version = ${VERSION};
@@ -113,6 +123,7 @@ function createFrameSource(options: {
     canvas{display:block;width:100%;height:100%;min-width:0;min-height:0;max-height:100%;object-fit:contain;touch-action:none}
   </style></head><body><canvas width="${options.width}" height="${options.height}" aria-label="Live Pibbl lesson preview"></canvas>
   <script type="module">try {
+${escapeScript(sandboxAssetSource({ protocol: PROTOCOL, version: VERSION, runId: options.runId }))}
 await (async () => {
 ${escapeScript(runtimeSource)}
 })();
@@ -125,6 +136,7 @@ export class SandboxPreview {
   #frame: HTMLIFrameElement | undefined;
   #startTimeout: number | undefined;
   #runId = 0;
+  #assetLifetime: AbortController | undefined;
   #onEvent: ((event: PreviewEvent) => void) | undefined;
 
   constructor(host: HTMLElement) {
@@ -134,6 +146,8 @@ export class SandboxPreview {
 
   run(options: RunOptions): void {
     const runId = ++this.#runId;
+    this.#assetLifetime?.abort();
+    this.#assetLifetime = new AbortController();
     this.#onEvent = options.onEvent;
     this.#clearStartTimeout();
     this.#disposeFrame(this.#frame);
@@ -145,6 +159,7 @@ export class SandboxPreview {
     frame.srcdoc = createFrameSource({
       runId,
       code: options.code,
+      exportName: options.exportName,
       width: options.width,
       height: options.height,
     });
@@ -152,6 +167,7 @@ export class SandboxPreview {
     this.#host.appendChild(frame);
     this.#startTimeout = window.setTimeout(() => {
       if (this.#frame !== frame || this.#runId !== runId) return;
+      this.#assetLifetime?.abort();
       this.#frame = undefined;
       this.#disposeFrame(frame);
       this.#onEvent?.({
@@ -163,6 +179,7 @@ export class SandboxPreview {
   }
 
   dispose(): void {
+    this.#assetLifetime?.abort();
     this.#clearStartTimeout();
     this.#disposeFrame(this.#frame);
     this.#frame = undefined;
@@ -194,6 +211,17 @@ export class SandboxPreview {
       message.runId !== Number(sourceFrame.dataset.runId)
     )
       return;
+    if (message.kind === "asset") {
+      const port = event.ports[0];
+      if (port && typeof message.url === "string" && this.#assetLifetime) {
+        void respondWithSandboxAsset(
+          message.url,
+          port,
+          this.#assetLifetime.signal,
+        );
+      }
+      return;
+    }
     if (message.kind === "mounted") {
       if (message.runId !== this.#runId) return;
       this.#clearStartTimeout();

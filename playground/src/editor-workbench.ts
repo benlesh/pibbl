@@ -398,6 +398,7 @@ export async function mountEditorWorkbench(
     try {
       preview.run({
         code: javascript,
+        exportName: options.entry.source.exportName,
         width: options.entry.canvas.width,
         height: options.entry.canvas.height,
         onEvent: (event) => {

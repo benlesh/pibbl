@@ -4,8 +4,10 @@ import {
   recordRendererEdgeCreated,
   recordRendererEdgeReleased,
   recordRendererEdgeReused,
+  recordSignalInputInvalidation,
   recordLazyRendererConsumerCreated,
   type SignalDependencyCollector,
+  type SignalDependencyRoleInput,
   type SignalNode,
   withSignalTracking,
 } from './graph.js';
@@ -45,6 +47,7 @@ interface ConsumerState extends SignalDependencyConsumer {
   dirty: boolean;
   disposed: boolean;
   releaseCount: number;
+  pendingInvalidationRoles: number;
 }
 
 const consumerStates = new WeakMap<SignalRenderConsumer, ConsumerState>();
@@ -70,23 +73,17 @@ export function createSignalRenderConsumer(
     dirty: true,
     disposed: false,
     releaseCount: 0,
+    pendingInvalidationRoles: 0,
     renderInvalidation: true,
-    addDependency(node): void {
+    addDependency(node, role?: SignalDependencyRoleInput): void {
       if (!state.collecting) return;
-      const cursor = state.collectionCursor;
-      if (
-        cursor?.source === node &&
-        cursor.collectionGeneration !== state.collectionGeneration
-      ) {
-        cursor.collectionGeneration = state.collectionGeneration;
-        cursor.collectionKind = 'reused';
-        state.collectionCursor = cursor.consumerNext;
-        return;
-      }
-      collectReactiveDependency(state, node);
+      collectReactiveDependency(state, node, role);
     },
-    notify(): void {
-      if (state.disposed || state.dirty) return;
+    notify(_node, dependencyRoles = 64): void {
+      if (state.disposed) return;
+      state.pendingInvalidationRoles |= dependencyRoles;
+      recordSignalInputInvalidation(dependencyRoles);
+      if (state.dirty) return;
       state.dirty = true;
       options.invalidate();
     },
@@ -98,7 +95,10 @@ export function createSignalRenderConsumer(
       return state.releaseCount;
     },
     markClean(): void {
-      if (!state.disposed) state.dirty = false;
+      if (!state.disposed) {
+        state.dirty = false;
+        state.pendingInvalidationRoles = 0;
+      }
     },
   };
 
@@ -155,7 +155,7 @@ export function collectComponentSignalReads<T>(
   let collector: SignalDependencyCollector;
   if (state === undefined) {
     collector = {
-      addDependency(node: SignalNode<unknown>): void {
+    addDependency(node: SignalNode<unknown>, role?: SignalDependencyRoleInput): void {
         if (committed) return;
         if (state === undefined) {
           const options = createOptions();
@@ -166,7 +166,7 @@ export function collectComponentSignalReads<T>(
           recordLazyRendererConsumerCreated();
           beginConsumerCollection(state);
         }
-        state.addDependency(node);
+        state.addDependency(node, role);
       },
     };
   } else {
@@ -238,6 +238,7 @@ function commitCollectedDependencies(state: ConsumerState): void {
     onlyEdge.sourceLinked &&
     onlyEdge.collectionKind === 'reused'
   ) {
+    onlyEdge.dependencyRoles = onlyEdge.collectedDependencyRoles;
     recordRendererEdgeReused();
     onlyEdge.observedVersion = onlyEdge.source!.version;
     onlyEdge.collectionKind = undefined;

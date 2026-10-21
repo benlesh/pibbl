@@ -1865,6 +1865,7 @@ describe("learning example catalog", () => {
           authoring: entry.authoring,
           label: entry.slug,
           sourcePath: entry.source.path,
+          exportName: entry.source.exportName,
         }),
       ).not.toThrow();
     }
@@ -2489,6 +2490,7 @@ describe("learning example catalog", () => {
           authoring: entry.authoring,
           label: entry.slug,
           sourcePath: entry.source.path,
+          exportName: entry.source.exportName,
         }),
       ).not.toThrow();
 

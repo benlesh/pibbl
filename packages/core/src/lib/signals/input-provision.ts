@@ -9,11 +9,13 @@ import {
   untracked,
   withSignalTracking,
   type SignalDependencyCollector,
+  type SignalDependencyRoleInput,
   type SignalNode,
 } from './graph.js';
+import { signalDependencyRoleMask } from './edge.js';
 
 interface ReceiverInputProvision {
-  readonly nodes: SignalNode<unknown>[];
+  readonly nodes: Array<{ node: SignalNode<unknown>; roles: number }>;
   settled: boolean;
 }
 
@@ -32,11 +34,13 @@ export function withReceiverInputProvision<T>(
 
   let provision: ReceiverInputProvision | undefined;
   const collector: SignalDependencyCollector = {
-    addDependency(node): void {
+    addDependency(node, role: SignalDependencyRoleInput = 'unknown'): void {
       if (provision === undefined) {
         provision = createProvision(transaction, receiver);
       }
-      if (!provision.nodes.includes(node)) provision.nodes.push(node);
+      const existing = provision.nodes.find(entry => entry.node === node);
+      if (existing === undefined) provision.nodes.push({ node, roles: signalDependencyRoleMask(role) });
+      else existing.roles |= signalDependencyRoleMask(role);
     },
   };
   return withSignalTracking(collector, callback);
@@ -53,7 +57,7 @@ export function adoptReceiverInputProvision(
 
   provision.settled = true;
   receivers!.delete(receiver);
-  for (const node of provision.nodes) trackSignalDependency(node);
+  for (const { node, roles } of provision.nodes) trackSignalDependency(node, roles);
   provision.nodes.length = 0;
   recordReceiverInputProvisionAdopted();
 }

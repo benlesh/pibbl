@@ -38,6 +38,8 @@ export default defineConfig(({ mode }) => {
     replacement: resolve(import.meta.dirname, path),
   }));
   return {
+    // Source and private-built lanes run concurrently; their optimizer graphs differ.
+    cacheDir: mode === "layout-wasm-built" ? "node_modules/.vite-layout-wasm-built" : undefined,
     plugins: [
       targetingIdentityPlugin(resolve(import.meta.dirname, "..")),
       textAssets(),
@@ -46,8 +48,8 @@ export default defineConfig(({ mode }) => {
       pibblStudioDocs({ repositoryRoot: resolve(import.meta.dirname, "..") }),
     ],
     resolve: {
-      alias: mode === "built" ? [] : sourceAliases,
-      tsconfigPaths: mode !== "built",
+      alias: mode === "built" || mode === "layout-wasm-built" ? [] : sourceAliases,
+      tsconfigPaths: mode !== "built" && mode !== "layout-wasm-built",
     },
     define: {
       __PIBBL_STUDIO_DOCS_ACCEPTANCE__: JSON.stringify(isStudioDocsAcceptance),

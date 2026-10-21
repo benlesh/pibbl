@@ -2,6 +2,7 @@ import {
   pibbl,
   useSignal,
   Rectangle,
+  Group,
   Text,
   type PibblController,
   type PibblDragEvent,
@@ -10,13 +11,14 @@ function dragLine(type: string, event: PibblDragEvent): string {
   const payload = event.dataTransfer?.getData("text/plain") || "empty";
   return `${type}  @ ${Math.round(event.x)},${Math.round(event.y)}  data=${payload}`;
 }
-function DragAndDropStudy() {
+function DragAndDropStudy({ canvas }: { canvas: HTMLCanvasElement }) {
   const trace = useSignal<readonly string[]>([]);
   const dropped = useSignal("nothing dropped");
   const record = (type: string, event: PibblDragEvent) => {
     trace.update((current) => [...current.slice(-4), dragLine(type, event)]);
   };
-  return [
+  return <Group onDragStart={(event) => event.preventDefault()}>{[
+    // Only the cargo handler permits a native drag to start.
     <Rectangle
       style={{
         left: 0,
@@ -27,6 +29,7 @@ function DragAndDropStudy() {
       }}
     />,
     <Text
+      pointerEvents="none"
       style={{
         left: 360,
         top: 46,
@@ -49,16 +52,44 @@ function DragAndDropStudy() {
         cursor: "grab",
       }}
       onDragStart={(event) => {
+        event.stopPropagation();
         event.dataTransfer?.setData("text/plain", "pibbl-cargo");
+        // Native dragging snapshots the DOM canvas unless given a cargo-only image.
+        const image = document.createElement("canvas");
+        image.width = 226;
+        image.height = 176;
+        const scaleX = canvas.width / 720,
+          scaleY = canvas.height / 420;
+        image
+          .getContext("2d")!
+          .drawImage(
+            canvas,
+            74 * scaleX,
+            104 * scaleY,
+            226 * scaleX,
+            176 * scaleY,
+            0,
+            0,
+            226,
+            176,
+          );
+        event.dataTransfer?.setDragImage(
+          image,
+          event.x - 74,
+          event.y - 104,
+        );
         record("dragstart", event);
       }}
       onDrag={(event) => record("drag", event)}
       onDragEnd={(event) => record("dragend", event)}
     />,
     <Text
+      pointerEvents="none"
       style={{
         left: 187,
         top: 174,
+        width: 190,
+        wrap: true,
         lineHeight: 28,
         fill: "#fffdf6",
         font: "900 22px sans-serif",
@@ -88,12 +119,14 @@ function DragAndDropStudy() {
         record("dragover / prevented", event);
       }}
       onDrop={(event) => {
+        event.preventDefault();
         const payload = event.dataTransfer?.getData("text/plain") || "empty";
         dropped.set(`dropped: ${payload} @ ${Math.round(event.x)},${Math.round(event.y)}`);
         record("drop", event);
       }}
     />,
     <Text
+      pointerEvents="none"
       style={{
         left: 533,
         top: 164,
@@ -105,6 +138,7 @@ function DragAndDropStudy() {
       {dropped.get() === "nothing dropped" ? "DROP ZONE" : "DELIVERED"}
     </Text>,
     <Text
+      pointerEvents="none"
       style={{
         left: 533,
         top: 204,
@@ -117,6 +151,7 @@ function DragAndDropStudy() {
       {dropped.get()}
     </Text>,
     <Text
+      pointerEvents="none"
       style={{
         left: 360,
         top: 314,
@@ -134,6 +169,7 @@ function DragAndDropStudy() {
         : "Drag the blue cargo into the drop zone."}
     </Text>,
     <Text
+      pointerEvents="none"
       style={{
         left: 360,
         top: 398,
@@ -146,14 +182,14 @@ function DragAndDropStudy() {
         "dragover calls preventDefault(), which permits drop. Coordinates are root-logical; dataTransfer is native."
       }
     </Text>,
-  ];
+  ]}</Group>;
 }
 export default function mount(canvas: HTMLCanvasElement): PibblController {
   const previousDraggable = canvas.draggable;
   canvas.draggable = true;
   let disposed = false;
   try {
-    const controller = pibbl(canvas, <DragAndDropStudy />);
+    const controller = pibbl(canvas, <DragAndDropStudy canvas={canvas} />);
     return {
       dispose() {
         if (disposed) return;

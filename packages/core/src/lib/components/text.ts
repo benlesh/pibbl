@@ -26,6 +26,8 @@ import { wireCommonEvents } from '../util/wire-common-events.js';
 import { pushClippingPath } from '../util/push-clipping-path.js';
 import { resolveTextClipBounds, resolveTextLayout } from './text-layout.js';
 import { withReceiverInputProvision } from '../signals/input-provision.js';
+import { withSignalDependencyRole, withSignalWriteForbidden } from '../signals/graph.js';
+import { withHooksForbidden } from '../hooks/hook-slot.js';
 
 /**
  * Authored inputs for Text, including the declared data and presentation options.
@@ -234,9 +236,21 @@ function measureTextStyle(
   };
 }
 
-function materializeTextContent(props: Readonly<TextProps>): string {
+/** @internal Prepare measured Text through its existing transaction/receiver ownership. */
+export function prepareLayoutTextContent(
+  props: Readonly<TextProps>, options: { receiverToken?: object },
+): string {
+  return withSignalWriteForbidden('Signal writes are forbidden during Pibbl measurement', () =>
+    withHooksForbidden('Pibbl hooks cannot be called while preparing measured Text content.', () =>
+      materializeTextContent(props, options.receiverToken),
+    ),
+  );
+}
+
+function materializeTextContent(
+  props: Readonly<TextProps>, receiver = GLOBAL_STATE.primitiveReceiverToken,
+): string {
   const transaction = GLOBAL_STATE.renderTransaction;
-  const receiver = GLOBAL_STATE.primitiveReceiverToken;
   if (!transaction || !receiver) {
     return materializeTextChildren(props.children, 'Text');
   }
@@ -251,7 +265,10 @@ function materializeTextContent(props: Readonly<TextProps>): string {
   const materialized = withReceiverInputProvision(
     transaction,
     receiver,
-    () => materializeTextChildren(props.children, 'Text'),
+    () => withSignalDependencyRole(
+      'measurement',
+      () => materializeTextChildren(props.children, 'Text'),
+    ),
   );
   receivers.set(receiver, materialized);
   return materialized;

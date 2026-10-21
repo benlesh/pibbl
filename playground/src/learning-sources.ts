@@ -1,4 +1,5 @@
 import type { WorkbenchSourceMetadata } from "@pibbl/scenarios";
+import { parse } from "@babel/parser";
 
 const learningModules = import.meta.glob(
   "../../packages/scenarios/src/learning/**/*.example.tsx",
@@ -45,11 +46,18 @@ export async function loadWorkbenchSource(
       `No workbench source adapter matches "${entry.source.path}".`,
     );
   const source = await load();
-  if (
-    !/^export default function mount\(\s*canvas:\s*HTMLCanvasElement(?:,\s*\w+:\s*\w+\s*=\s*\{\})?,?\s*\):\s*PibblController/mu.test(source)
-  ) {
+  const exportName = entry.source.exportName;
+  const hasEntry = exportName
+    ? parse(source, { sourceType: "module", plugins: ["typescript", "jsx"] }).program.body.some(statement =>
+      statement.type === "ExportNamedDeclaration" &&
+      statement.declaration?.type === "FunctionDeclaration" &&
+      statement.declaration.id?.name === exportName &&
+      !statement.declaration.async && !statement.declaration.generator,
+    )
+    : /^export default function mount\(\s*canvas:\s*HTMLCanvasElement(?:,\s*\w+:\s*\w+\s*=\s*\{\})?,?\s*\):\s*PibblController/mu.test(source);
+  if (!hasEntry) {
     throw new Error(
-      `Workbench source "${entry.source.path}" does not expose the canonical mount contract.`,
+      `Workbench source "${entry.source.path}" must export ${exportName ? `the named component "${exportName}"` : "a legacy mount function"}.`,
     );
   }
   return source;

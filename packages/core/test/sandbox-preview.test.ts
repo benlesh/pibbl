@@ -28,24 +28,28 @@ export default function mount(canvas) {
 `;
 
 const disposableLesson = `
-import { pibbl } from "@pibbl/core";
-export default function mount(canvas) {
-  return {
-    dispose() {
+import { useReaction } from "@pibbl/core";
+export function NamedLesson() {
+  useReaction(() => {
+    console.log("component-ready");
+    return () => {
       parent.postMessage({ kind: "controller-disposed" }, "*");
-    },
-  };
+    };
+  }, []);
+  return null;
 }
 `;
 
 function runPreview(
   preview: SandboxPreview,
   code: string,
+  exportName?: string,
 ): Promise<readonly PreviewEvent[]> {
   return new Promise((resolve) => {
     const events: PreviewEvent[] = [];
     preview.run({
       code,
+      exportName,
       width: 320,
       height: 180,
       onEvent(event) {
@@ -111,7 +115,7 @@ describe("Studio sandbox preview", () => {
     }
   });
 
-  it("disposes a valid controller when the preview is disposed", async () => {
+  it("mounts an exported component and releases its hooks when the preview is disposed", async () => {
     const host = document.createElement("div");
     document.body.appendChild(host);
     const preview = new SandboxPreview(host);
@@ -132,9 +136,11 @@ describe("Studio sandbox preview", () => {
     });
 
     try {
-      await expect(runPreview(preview, disposableLesson)).resolves.toEqual([
-        { kind: "mounted" },
-      ]);
+      const events = await runPreview(preview, disposableLesson, "NamedLesson");
+      expect(events[0]).toEqual({ kind: "mounted" });
+      await expect.poll(() => events.some(event =>
+        event.kind === "log" && event.message?.includes("component-ready"),
+      )).toBe(true);
       frameWindow = host.querySelector("iframe")?.contentWindow ?? null;
       preview.dispose();
       await expect(disposed).resolves.toBeUndefined();

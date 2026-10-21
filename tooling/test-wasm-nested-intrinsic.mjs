@@ -1,0 +1,84 @@
+import { strict as assert } from 'node:assert';
+import { chromium } from 'playwright';
+const base = process.argv.slice(2).find(argument => !argument.startsWith('--')) ?? 'http://127.0.0.1:5188';
+const sourceLane = process.argv.includes('--source');
+const packedLane = process.argv.includes('--packed');
+const browser = await chromium.launch({ headless: true });
+try {
+  const page = await browser.newPage({ viewport: { width: 1440, height: 1100 } });
+  const errors = [];
+  page.on('pageerror', error => errors.push(error.message));
+  page.on('console', message => { if (message.type() === 'error') errors.push(message.text()); });
+  await page.goto(`${base}/#/examples/layout/wasm-flex-nested-intrinsic`);
+  const frame = page.frameLocator('iframe[srcdoc]'); await frame.locator('pre').waitFor({ timeout: 10000 });
+  const state = async () => JSON.parse(await frame.locator('pre').innerText());
+  const click = async (x, y) => {
+    const bounds = await frame.locator('canvas').boundingBox();
+    const scale = Math.min(bounds.width / 760, bounds.height / 460);
+    await frame.locator('canvas').click({ position: { x: (bounds.width - 760 * scale) / 2 + x * scale, y: (bounds.height - 460 * scale) / 2 + y * scale } });
+    await page.waitForTimeout(180); return state();
+  };
+  await page.waitForTimeout(180);
+  const initial = await state(); assert.equal(initial.footerBox.y, initial.cardBottom+12);
+  const narrow = await click(60,110);
+  assert.ok(narrow.footerBox.y > initial.footerBox.y); assert.equal(narrow.footerBox.y, narrow.cardBottom+12);
+  assert.equal(narrow.layout.nodeCreates, initial.layout.nodeCreates);
+  assert.equal(narrow.layout.layoutInputInvalidations, initial.layout.layoutInputInvalidations+1);
+  assert.equal(narrow.layout.paintInputInvalidations, initial.layout.paintInputInvalidations);
+  assert.equal(narrow.layout.measurementInputInvalidations, initial.layout.measurementInputInvalidations);
+  assert.equal(narrow.probeRenders, initial.probeRenders+1, 'Measurement must not invoke the opaque probe');
+  assert.equal((await click(40,initial.footerBox.y+12)).footerHits, 0);
+  assert.equal((await click(40,narrow.footerBox.y+12)).footerHits, 1);
+  if (process.env.PIBBL_LAYOUT_SCREENSHOT) await frame.locator('canvas').screenshot({ path: process.env.PIBBL_LAYOUT_SCREENSHOT });
+  const short = await click(236,110);
+  assert.ok(short.footerBox.y < narrow.footerBox.y); assert.equal(short.footerBox.y, short.cardBottom+12);
+  assert.ok(short.layout.measurementInputInvalidations > narrow.layout.measurementInputInvalidations);
+  const painted = await click(432,110);
+  assert.ok(painted.layout.paintInputInvalidations > short.layout.paintInputInvalidations);
+  assert.equal(painted.layout.layoutInputInvalidations, short.layout.layoutInputInvalidations);
+  assert.equal(painted.layout.measurementInputInvalidations, short.layout.measurementInputInvalidations);
+  assert.equal(painted.layout.unknownInputInvalidations, short.layout.unknownInputInvalidations);
+  assert.equal(painted.layout.solves, short.layout.solves);
+  assert.equal(painted.layout.measuredLeaves, short.layout.measuredLeaves, 'Nested aggregate paint reuse');
+  const reversed = await click(40,426);
+  assert.equal(reversed.layout.nodeCreates, painted.layout.nodeCreates);
+  assert.deepEqual(reversed.keys, ['note','main']);
+  assert.ok(reversed.layout.measuredLeaves > painted.layout.measuredLeaves);
+  const removed = await click(240,426);
+  assert.ok(removed.footerBox.y < reversed.footerBox.y);
+  assert.equal(removed.layout.activeNodes, reversed.layout.activeNodes-1);
+  const detached = await click(240,110);
+  assert.equal(detached.layout.measuredLeaves, removed.layout.measuredLeaves);
+  assert.equal(detached.probeRenders, removed.probeRenders);
+  assert.equal((await click(40,reversed.footerBox.y+30)).footerHits, 1);
+  assert.equal((await click(40,removed.footerBox.y+12)).footerHits, 2);
+  const restored = await click(240,426);
+  assert.equal(restored.layout.nodeCreates, painted.layout.nodeCreates+1);
+  assert.ok(restored.footerBox.y > removed.footerBox.y);
+  assert.equal(restored.footerBox.y, restored.cardBottom+12);
+  assert.equal(restored.footerBox.y, narrow.footerBox.y);
+  assert.ok(restored.layout.cachedMeasurements <= 2*restored.layout.activeNodes);
+  const repainted = await click(432,110);
+  assert.equal(repainted.layout.measuredLeaves, restored.layout.measuredLeaves);
+  const sandbox = page.frames().find(item => item.url() === 'about:srcdoc');
+  const proof = await sandbox.evaluate(() => globalThis.__PIBBL_BUILT_LAYOUT_PROOF__);
+  if (!sourceLane) {
+    assert.equal(proof?.mode, packedLane ? 'layout-wasm-packed' : 'layout-wasm-built');
+    assert.ok(proof.coreInputs.length > 0 && proof.coreInputs.every(path => path.includes(packedLane ? '/node_modules/@pibbl/core/dist/' : 'packages/core/.layout-wasm-package/dist/')));
+    if (packedLane) {
+      const receipt = await sandbox.evaluate(() => ({...globalThis.__PIBBL_PACKED_PROOF__, request: undefined}));
+      assert.equal(receipt.importInert, true);
+      assert.ok(receipt.modules > 0 && receipt.instances > 0, 'Installed package must execute embedded WASM');
+      assert.match(proof.sha256, /^[a-f0-9]{64}$/);
+    }
+  }
+  const disposed = await sandbox.evaluate(() => {
+    dispatchEvent(new PageTransitionEvent('pagehide'));
+    return globalThis.__PIBBL_LAYOUT_DIAGNOSTICS__();
+  });
+  assert.deepEqual([disposed.activeNodes, disposed.activeArenas, disposed.cachedMeasurements], [0,0,0]);
+  await page.waitForTimeout(180);
+  assert.deepEqual(await sandbox.evaluate(() => globalThis.__PIBBL_LAYOUT_DIAGNOSTICS__()), disposed);
+  assert.deepEqual(errors, []);
+  console.warn(`${sourceLane ? 'Source' : 'Built'} nested intrinsic: footer ${initial.footerBox.y}→${narrow.footerBox.y}→${short.footerBox.y}, probe normal-only, moved targets, keyed remove/restore, detached source inert, bounded paint reuse, receiver roles, zero disposal ownership; ${proof?.coreInputs.length ?? 'source'} inputs`);
+} finally { await browser.close(); }

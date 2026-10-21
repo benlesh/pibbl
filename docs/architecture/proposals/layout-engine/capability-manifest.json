@@ -1,0 +1,727 @@
+{
+  "schemaVersion": 1,
+  "status": "proposed",
+  "asOf": "2026-10-21",
+  "purpose": "First-release capability denominator and evidence ledger. This file does not define a public API, enable the experimental engine, or claim Yoga parity.",
+  "baseline": {
+    "oracle": "Yoga",
+    "version": "3.2.1",
+    "commit": "042f5013152eb81c1552dec945b88f7b95ca350f",
+    "configuration": {
+      "useWebDefaults": false,
+      "pointScaleFactor": 0,
+      "errata": "none",
+      "direction": "LTR"
+    },
+    "rule": "Released Yoga 3.2.1 is the parity oracle. Development Yoga is observational only and cannot replace this baseline."
+  },
+  "evidenceRules": {
+    "parity": "Requires a pinned Yoga fixture, a public Pibbl fixture, semantic geometry evidence, negative evidence, interaction evidence where applicable, and classified divergences.",
+    "preserve": "Requires current public-contract regression evidence and release notes for a material divergence from Yoga.",
+    "beyond": "Requires a Pibbl contract and public evidence; Yoga is not an oracle for the capability.",
+    "experimental": "Does not count as released parity or a production migration promise."
+  },
+  "observationRule": "A `current` value without `evidenceRefs` is a source observation, not a test-pass claim. `evidenceRefs` identify focused executable evidence or the contract that records the current public surface.",
+  "sourceReferences": [
+    "docs/architecture/proposals/layout-engine/migration-and-evidence.md",
+    "docs/architecture/proposals/layout-engine/design.md",
+    "docs/architecture/proposals/layout-engine/reactivity.md",
+    "docs/project-plans/layout-engine-rework-proposal.md",
+    "docs/project-plans/010-layout-engine-rework.md",
+    "docs/design/layout-system-contract.md"
+  ],
+  "currentYogaEvidence": {
+    "fixture": "tooling/layout-yoga-rehearsal/reference.json",
+    "cases": [
+      {
+        "id": "grow",
+        "covers": ["flex.grow-shrink-basis", "flex.numeric-gap"]
+      },
+      {
+        "id": "cap",
+        "covers": ["flex.grow-shrink-basis", "flex.min-max"]
+      },
+      {
+        "id": "shrink",
+        "covers": ["flex.grow-shrink-basis", "flex.min-max"]
+      }
+    ],
+    "limit": "These three exact numeric row cases are the only current pinned Yoga geometry evidence."
+  },
+  "gateGroups": [
+    {
+      "id": "flex-core",
+      "releaseGate": true,
+      "dependsOn": []
+    },
+    {
+      "id": "box-and-direction",
+      "releaseGate": true,
+      "dependsOn": ["flex-core"]
+    },
+    {
+      "id": "measurement-and-intrinsic",
+      "releaseGate": true,
+      "dependsOn": ["flex-core"]
+    },
+    {
+      "id": "placement-and-participation",
+      "releaseGate": true,
+      "dependsOn": ["box-and-direction", "measurement-and-intrinsic"]
+    },
+    {
+      "id": "reactivity-and-publication",
+      "releaseGate": true,
+      "dependsOn": ["measurement-and-intrinsic"]
+    },
+    {
+      "id": "migration-and-conformance",
+      "releaseGate": true,
+      "dependsOn": [
+        "flex-core",
+        "box-and-direction",
+        "measurement-and-intrinsic",
+        "placement-and-participation",
+        "reactivity-and-publication"
+      ]
+    },
+    {
+      "id": "grid-beyond-yoga",
+      "releaseGate": true,
+      "dependsOn": ["measurement-and-intrinsic", "reactivity-and-publication"]
+    }
+  ],
+  "capabilities": [
+    {
+      "id": "flex.row-column-nowrap-wrap",
+      "target": "preserve",
+      "group": "flex-core",
+      "current": "public subset; experimental WASM covers finite row and column wrapping",
+      "status": "experimental",
+      "evidenceRefs": [
+        "docs/design/layout-system-contract.md#flex",
+        "packages/core/test/layout-wasm-slice.test.tsx"
+      ],
+      "evidence": {
+        "positive": ["public Flex/Text scenarios"],
+        "negative": ["intrinsic wrapped containers rejected"],
+        "interaction": ["wrapped target geometry"],
+        "yogaCases": [],
+        "missing": ["nested percentages", "release-pinned Yoga cases"]
+      }
+    },
+    {
+      "id": "flex.reverse-and-wrap-reverse",
+      "target": "parity",
+      "group": "flex-core",
+      "current": "rejected",
+      "status": "missing",
+      "evidence": {
+        "positive": [],
+        "negative": ["current rejection"],
+        "interaction": [],
+        "yogaCases": [],
+        "missing": [
+          "row/column reverse",
+          "wrap-reverse",
+          "RTL composition",
+          "source paint-order proof"
+        ]
+      }
+    },
+    {
+      "id": "flex.grow-shrink-basis",
+      "target": "parity",
+      "group": "flex-core",
+      "current": "bounded subset with explicit main minimums",
+      "status": "experimental",
+      "evidenceRefs": [
+        "packages/core/test/layout-wasm-slice.test.tsx",
+        "tooling/layout-yoga-rehearsal/reference.json"
+      ],
+      "evidence": {
+        "positive": ["grow", "cap", "shrink"],
+        "negative": ["nonfinite intermediate allocation rejection"],
+        "interaction": ["signal resize"],
+        "yogaCases": ["grow", "cap", "shrink"],
+        "missing": [
+          "fractional-factor differential coverage",
+          "zero-basis differential coverage",
+          "pinned Yoga differential coverage for huge finite factors",
+          "release freeze corpus"
+        ]
+      }
+    },
+    {
+      "id": "flex.main-cross-distribution",
+      "target": "parity",
+      "group": "flex-core",
+      "current": "accepted subset",
+      "status": "partial",
+      "evidenceRefs": [
+        "packages/core/src/lib/layout/flex.test.ts",
+        "packages/core/test/layout-wasm-slice.test.tsx"
+      ],
+      "evidence": {
+        "positive": [
+          "main/cross placement scenarios",
+          "negative-free-space fallback subset"
+        ],
+        "negative": [],
+        "interaction": ["placement target movement"],
+        "yogaCases": [],
+        "missing": [
+          "start/end semantics",
+          "pinned Yoga matrix for negative free space",
+          "one-item lines",
+          "auto cross sizes"
+        ]
+      }
+    },
+    {
+      "id": "flex.min-max",
+      "target": "parity",
+      "group": "flex-core",
+      "current": "numeric and some percentage bounds",
+      "status": "partial",
+      "evidenceRefs": [
+        "packages/core/src/lib/layout/flex.test.ts",
+        "tooling/layout-yoga-rehearsal/reference.json"
+      ],
+      "evidence": {
+        "positive": ["cap", "shrink"],
+        "negative": ["opposing limits rejection"],
+        "interaction": [],
+        "yogaCases": ["cap", "shrink"],
+        "missing": ["full percentage rules", "definite/indefinite owner matrix"]
+      }
+    },
+    {
+      "id": "flex.automatic-minimum",
+      "target": "parity",
+      "group": "flex-core",
+      "current": "explicit main-axis minimum required in common shrink/auto cases",
+      "status": "missing",
+      "unresolvedPolicy": "Choose native content-based automatic-minimum and overflow behavior, then define any Yoga conversion difference.",
+      "evidence": {
+        "positive": [],
+        "negative": ["current explicit-minimum diagnostic"],
+        "interaction": [],
+        "yogaCases": [],
+        "missing": ["unbreakable text", "images", "aspect ratio", "overflow"]
+      }
+    },
+    {
+      "id": "flex.nested-intrinsic-containers",
+      "target": "parity",
+      "group": "measurement-and-intrinsic",
+      "current": "known built-in nowrap column/direct Text subset only",
+      "status": "experimental",
+      "evidenceRefs": [
+        "packages/core/test/layout-wasm-slice.test.tsx",
+        "tooling/test-wasm-nested-intrinsic.mjs"
+      ],
+      "evidence": {
+        "positive": ["nested intrinsic Card scenario"],
+        "negative": [
+          "opaque components and wrapped intrinsic containers unsupported"
+        ],
+        "interaction": ["text width, keyed restore, moved footer target"],
+        "yogaCases": [],
+        "missing": [
+          "prepared Flex/Grid/Flow tree",
+          "nested wrapping",
+          "constraint feedback"
+        ]
+      }
+    },
+    {
+      "id": "flex.margin",
+      "target": "parity",
+      "group": "box-and-direction",
+      "current": "absent",
+      "status": "missing",
+      "unresolvedPolicy": "Implementation direction is authorized; public margin field names and logical-edge precedence need exact signatures.",
+      "evidence": {
+        "positive": [],
+        "negative": [],
+        "interaction": [],
+        "yogaCases": [],
+        "missing": [
+          "physical numeric/percentage margins",
+          "negative margins",
+          "limits",
+          "wrap line breaks"
+        ]
+      }
+    },
+    {
+      "id": "flex.auto-margin",
+      "target": "parity",
+      "group": "box-and-direction",
+      "current": "absent",
+      "status": "missing",
+      "unresolvedPolicy": "Auto-margin precedence against alignment and distribution needs a contract.",
+      "evidence": {
+        "positive": [],
+        "negative": [],
+        "interaction": [],
+        "yogaCases": [],
+        "missing": ["main/cross absorption", "min/max", "RTL/reverse"]
+      }
+    },
+    {
+      "id": "flex.numeric-gap",
+      "target": "preserve",
+      "group": "flex-core",
+      "current": "finite numeric gap, rowGap, columnGap",
+      "status": "partial",
+      "evidenceRefs": [
+        "packages/core/src/lib/layout/flex.test.ts",
+        "packages/core/test/layout-wasm-slice.test.tsx",
+        "tooling/layout-yoga-rehearsal/reference.json"
+      ],
+      "evidence": {
+        "positive": ["grow", "cap", "shrink"],
+        "negative": ["negative/nonfinite validation"],
+        "interaction": ["wrapped layouts"],
+        "yogaCases": ["grow", "cap", "shrink"],
+        "missing": ["release wrap edge-count cases"]
+      }
+    },
+    {
+      "id": "flex.percentage-gap",
+      "target": "parity",
+      "group": "box-and-direction",
+      "current": "rejected",
+      "status": "missing",
+      "unresolvedPolicy": "Indefinite intrinsic-cycle resolution must be specified before implementation.",
+      "evidence": {
+        "positive": [],
+        "negative": ["current rejection"],
+        "interaction": [],
+        "yogaCases": [],
+        "missing": ["definite parent", "indefinite parent", "nested Flex/Grid"]
+      }
+    },
+    {
+      "id": "box.padding-and-layout-border",
+      "target": "parity",
+      "group": "box-and-direction",
+      "current": "numeric padding; painted stroke is separate",
+      "status": "partial",
+      "unresolvedPolicy": "Implementation direction is authorized; exact layout-border fields and percentage/logical padding signatures remain unresolved.",
+      "evidenceRefs": [
+        "docs/design/layout-system-contract.md#flex",
+        "docs/architecture/proposals/layout-engine/design.md#boxes-and-units"
+      ],
+      "evidence": {
+        "positive": ["numeric padding"],
+        "negative": ["paint stroke is not a layout border"],
+        "interaction": [],
+        "yogaCases": [],
+        "missing": [
+          "percentage padding",
+          "logical padding",
+          "layout border",
+          "content measurement"
+        ]
+      }
+    },
+    {
+      "id": "box.box-sizing",
+      "target": "parity",
+      "group": "box-and-direction",
+      "current": "content-box only",
+      "status": "missing",
+      "unresolvedPolicy": "Implementation direction is authorized; the public box-sizing signature and default/migration policy need exact definitions.",
+      "evidence": {
+        "positive": [],
+        "negative": [],
+        "interaction": [],
+        "yogaCases": [],
+        "missing": [
+          "content-box",
+          "border-box",
+          "basis/limits/aspect interaction"
+        ]
+      }
+    },
+    {
+      "id": "box.aspect-ratio",
+      "target": "parity",
+      "group": "box-and-direction",
+      "current": "absent",
+      "status": "missing",
+      "unresolvedPolicy": "Aspect-ratio value form and precedence with definite axes/bounds need a contract.",
+      "evidence": {
+        "positive": [],
+        "negative": [],
+        "interaction": [],
+        "yogaCases": [],
+        "missing": ["one/two definite axes", "min/max", "images"]
+      }
+    },
+    {
+      "id": "direction.rtl-and-logical-edges",
+      "target": "parity",
+      "group": "box-and-direction",
+      "current": "absent",
+      "status": "missing",
+      "unresolvedPolicy": "Implementation direction is authorized; direction signature and logical-versus-physical precedence need exact definitions.",
+      "evidence": {
+        "positive": [],
+        "negative": [],
+        "interaction": [],
+        "yogaCases": [],
+        "missing": [
+          "horizontal RTL",
+          "edge precedence",
+          "reverse",
+          "percentages"
+        ]
+      }
+    },
+    {
+      "id": "flex.baselines",
+      "target": "parity",
+      "group": "measurement-and-intrinsic",
+      "current": "absent",
+      "status": "missing",
+      "unresolvedPolicy": "Implementation direction is authorized; baseline-provider and missing-baseline fallback contracts need exact definitions.",
+      "evidence": {
+        "positive": [],
+        "negative": [],
+        "interaction": [],
+        "yogaCases": [],
+        "missing": [
+          "mixed fonts",
+          "multiline Text",
+          "nested containers",
+          "first/last baseline"
+        ]
+      }
+    },
+    {
+      "id": "position.relative-static-absolute",
+      "target": "parity",
+      "group": "placement-and-participation",
+      "current": "local offsets plus dedicated Absolute",
+      "status": "missing",
+      "unresolvedPolicy": "Implementation direction is authorized; position values, all-inset semantics, and compatibility lowering for Absolute need exact definitions.",
+      "evidence": {
+        "positive": ["current Absolute"],
+        "negative": [],
+        "interaction": [],
+        "yogaCases": [],
+        "missing": ["padding/border", "opposite insets", "nested static nodes"]
+      }
+    },
+    {
+      "id": "position.containing-block",
+      "target": "parity",
+      "group": "placement-and-participation",
+      "current": "no Yoga-style override",
+      "status": "missing",
+      "unresolvedPolicy": "Implementation direction is authorized; containing-block semantics for transformed and boxless ancestors need exact definitions.",
+      "evidence": {
+        "positive": [],
+        "negative": [],
+        "interaction": [],
+        "yogaCases": [],
+        "missing": [
+          "transformed ancestor",
+          "boxless ancestor",
+          "absolute descendants"
+        ]
+      }
+    },
+    {
+      "id": "participation.hidden-and-contents",
+      "target": "parity",
+      "group": "placement-and-participation",
+      "current": "absent",
+      "status": "missing",
+      "unresolvedPolicy": "Hidden resource retention and contents event/identity behavior need a contract.",
+      "evidence": {
+        "positive": [],
+        "negative": [],
+        "interaction": [],
+        "yogaCases": [],
+        "missing": ["identity", "events", "clips", "visibility changes"]
+      }
+    },
+    {
+      "id": "overflow-sizing",
+      "target": "preserve",
+      "group": "measurement-and-intrinsic",
+      "current": "visible/clip",
+      "status": "partial",
+      "unresolvedPolicy": "Yoga scroll-sizing translation requires a migration policy; this does not add scrolling interaction.",
+      "evidence": {
+        "positive": ["visible/clip"],
+        "negative": [],
+        "interaction": [],
+        "yogaCases": [],
+        "missing": ["intrinsic size", "automatic minimum interaction"]
+      }
+    },
+    {
+      "id": "measurement.custom-leaf",
+      "target": "parity",
+      "group": "measurement-and-intrinsic",
+      "current": "pure leaf measurement exists",
+      "status": "partial",
+      "unresolvedPolicy": "Implementation direction is authorized; baseline and optional intrinsic-query extensions still need exact contracts.",
+      "evidenceRefs": [
+        "packages/core/src/lib/layout/layout-jsx.test.tsx",
+        "packages/core/src/lib/define-primitive.test.tsx"
+      ],
+      "evidence": {
+        "positive": ["measure callbacks"],
+        "negative": ["opaque component measurement unsupported"],
+        "interaction": [],
+        "yogaCases": [],
+        "missing": [
+          "exact/at-most/unbounded",
+          "invalidation",
+          "baselines",
+          "callback count and exceptions"
+        ]
+      }
+    },
+    {
+      "id": "reactivity.incremental-layout",
+      "target": "beyond",
+      "group": "reactivity-and-publication",
+      "current": "receiver ownership and bounded caches in demonstrated cases",
+      "status": "experimental",
+      "evidenceRefs": [
+        "packages/core/test/layout-wasm-slice.test.tsx",
+        "tooling/test-wasm-nested-intrinsic.mjs"
+      ],
+      "evidence": {
+        "positive": ["paint-only cache reuse", "keyed removal/disposal"],
+        "negative": [],
+        "interaction": ["signal updates"],
+        "yogaCases": [],
+        "missing": [
+          "role-aware graph",
+          "minimal visit proof",
+          "root-wide arena"
+        ]
+      }
+    },
+    {
+      "id": "geometry.transactional-publication",
+      "target": "preserve",
+      "group": "reactivity-and-publication",
+      "current": "existing transaction is not general geometry rollback",
+      "status": "missing",
+      "evidence": {
+        "positive": [],
+        "negative": [],
+        "interaction": [],
+        "yogaCases": [],
+        "missing": [
+          "staged geometry",
+          "hit/focus/HTML adoption",
+          "failure preflight",
+          "independent-root isolation"
+        ]
+      }
+    },
+    {
+      "id": "rounding-and-point-scale",
+      "target": "parity",
+      "group": "migration-and-conformance",
+      "current": "logical coordinates differ; current Yoga cases use point scale 0",
+      "status": "missing",
+      "unresolvedPolicy": "Select and document snapping policy while preserving unrounded geometry evidence.",
+      "evidenceRefs": [
+        "tooling/layout-yoga-rehearsal/reference.json",
+        "tooling/layout-yoga-rehearsal/README.md"
+      ],
+      "evidence": {
+        "positive": ["unrounded three-case receipt"],
+        "negative": [],
+        "interaction": [],
+        "yogaCases": ["grow", "cap", "shrink"],
+        "missing": [
+          "DPR",
+          "negative/fractional/large positions",
+          "nested edges"
+        ]
+      }
+    },
+    {
+      "id": "integration.source-order-canvas",
+      "target": "preserve",
+      "group": "reactivity-and-publication",
+      "current": "present",
+      "status": "partial",
+      "evidenceRefs": [
+        "docs/design/layout-system-contract.md",
+        "tooling/test-wasm-nested-intrinsic.mjs"
+      ],
+      "evidence": {
+        "positive": ["source-order hit handling"],
+        "negative": [],
+        "interaction": ["moved targets"],
+        "yogaCases": [],
+        "missing": ["reverse/RTL proof", "Group/Layer/filter preservation"]
+      }
+    },
+    {
+      "id": "integration.signal-aware-caching",
+      "target": "beyond",
+      "group": "reactivity-and-publication",
+      "current": "existing foundations and bounded experimental caches",
+      "status": "experimental",
+      "evidenceRefs": ["packages/core/test/layout-wasm-slice.test.tsx"],
+      "evidence": {
+        "positive": ["measurement cache", "receiver cleanup"],
+        "negative": [],
+        "interaction": ["paint-only update"],
+        "yogaCases": [],
+        "missing": ["full efficiency scenarios", "cache-on/off equivalence"]
+      }
+    },
+    {
+      "id": "integration.deterministic-cleanup",
+      "target": "preserve",
+      "group": "reactivity-and-publication",
+      "current": "explicit resource ownership",
+      "status": "partial",
+      "evidenceRefs": [
+        "packages/core/test/layout-wasm-slice.test.tsx",
+        "tooling/test-wasm-wrapped-collections.mjs",
+        "tooling/test-wasm-nested-intrinsic.mjs"
+      ],
+      "evidence": {
+        "positive": ["zero layout arenas/nodes after disposal"],
+        "negative": [],
+        "interaction": ["remove/restore/dispose"],
+        "yogaCases": [],
+        "missing": ["full failure/cancellation stress"]
+      }
+    },
+    {
+      "id": "grid.explicit-placement",
+      "target": "beyond",
+      "group": "grid-beyond-yoga",
+      "current": "subset",
+      "status": "partial",
+      "evidence": {
+        "positive": ["existing Grid"],
+        "negative": [],
+        "interaction": [],
+        "yogaCases": [],
+        "missing": ["spans", "intrinsic/fr/minmax tracks", "percentages"]
+      }
+    },
+    {
+      "id": "grid.implicit-tracks-and-auto-placement",
+      "target": "beyond",
+      "group": "grid-beyond-yoga",
+      "current": "absent",
+      "status": "missing",
+      "evidence": {
+        "positive": [],
+        "negative": [],
+        "interaction": [],
+        "yogaCases": [],
+        "missing": [
+          "dense/sparse",
+          "auto-fill/fit",
+          "overflow",
+          "mixed explicit items"
+        ]
+      }
+    },
+    {
+      "id": "intrinsic-size-vocabulary",
+      "target": "beyond",
+      "group": "grid-beyond-yoga",
+      "current": "restricted auto",
+      "status": "missing",
+      "unresolvedPolicy": "Legal length vocabulary by property must be specified before API work.",
+      "evidence": {
+        "positive": [],
+        "negative": [],
+        "interaction": [],
+        "yogaCases": [],
+        "missing": [
+          "min-content",
+          "max-content",
+          "stretch",
+          "fit-content under indefinite constraints"
+        ]
+      }
+    },
+    {
+      "id": "migration.owned-tree-snapshots",
+      "target": "beyond",
+      "group": "migration-and-conformance",
+      "current": "no public equivalent",
+      "status": "missing",
+      "unresolvedPolicy": "Implementation direction is authorized; standalone tree ownership, mutation, calculate/snapshot, and dispose contracts need exact definitions.",
+      "evidence": {
+        "positive": [],
+        "negative": [],
+        "interaction": [],
+        "yogaCases": [],
+        "missing": [
+          "standalone host migration",
+          "Pibbl screen migration",
+          "no Canvas runtime import"
+        ]
+      }
+    },
+    {
+      "id": "migration.versioned-yoga-conversion",
+      "target": "parity",
+      "group": "migration-and-conformance",
+      "current": "three-case rehearsal only",
+      "status": "experimental",
+      "unresolvedPolicy": "Implementation direction is authorized; conversion/analyzer return contracts and supported compatibility policy remain to be specified.",
+      "evidenceRefs": [
+        "tooling/layout-yoga-rehearsal/reference.cpp",
+        "tooling/layout-yoga-rehearsal/reference.json",
+        "packages/core/test/layout-wasm-slice.test.tsx"
+      ],
+      "evidence": {
+        "positive": ["three-case Yoga 3.2.1 rehearsal"],
+        "negative": ["no profile or public selector"],
+        "interaction": ["migration example resize"],
+        "yogaCases": ["grow", "cap", "shrink"],
+        "missing": [
+          "style/tree analysis",
+          "classified divergence manifest",
+          "real migration application"
+        ]
+      }
+    },
+    {
+      "id": "excluded.full-css-vertical-writing-subgrid",
+      "target": "excluded",
+      "group": "migration-and-conformance",
+      "current": "not supported",
+      "status": "excluded",
+      "evidence": {
+        "positive": ["published exclusion"],
+        "negative": ["no silent fallback"],
+        "interaction": [],
+        "yogaCases": [],
+        "missing": []
+      }
+    }
+  ],
+  "explicitExclusions": [
+    "Full CSS formatting and parsing",
+    "Vertical writing modes",
+    "Subgrid and masonry",
+    "A drop-in Yoga Node compatibility API",
+    "Automatic accessibility, rich text editing, or scrolling widgets"
+  ]
+}

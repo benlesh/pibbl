@@ -165,6 +165,84 @@ cases with allocation-independent tracks/items; wrap, percentage-dependent,
 growth-dependent, and otherwise ambiguous cases report unsupported measurement
 instead of approximating.
 
+Wrapped Text whose row main-axis size changes is remeasured at its final content
+width before its automatic cross-axis height is placed. In a nowrap column,
+Text used as an automatic main-axis basis is measured at its final constrained
+cross-axis width before that basis and following-sibling positions are resolved. Large finite grow/shrink
+factors are normalized before distribution; nonfinite intermediate allocations
+fail instead of publishing invalid geometry.
+
+An explicitly experimental `layout-wasm` Studio/test build, and the unpublished
+`layout-wasm-built` local Studio lane, use the same public
+Flex surface with a private f64 WASM allocator and main/cross-axis placement.
+It supports nowrap rows/columns, finite row wrap, and finite column wrap with
+declared height/flexBasis and width; wrapped line formation,
+per-line allocation and line/item offsets run in WASM. Direct Text in rows is remeasured
+at its final per-line content width before line cross sizes settle. Main-axis
+minimums remain explicit. Wrapped columns reject automatic measured main bases and automatic cross widths
+before measurement; intrinsic wrapped containers remain unsupported;
+normal builds retain the existing solver. This is not a released replacement,
+Yoga parity, or a standalone layout API. See [Plan 010](../project-plans/010-layout-engine-rework.md)
+for limitations and evidence. The lineFormations inspector is a cumulative private
+solve counter, not a complete work or performance metric. The private built artifact preserves ordinary public
+entry names and declarations; normal `dist` remains separate. Public consumer
+evidence covers Bundler/NodeNext types, inert unused imports, finite Text/Layer
+geometry and exact repeated teardown. This is a local symlink consumer, not a
+production loading/distribution policy or packed-consumer release gate.
+
+Within that experimental lane, numeric item identity follows component type and
+key (or unkeyed occurrence); actual removal ends that identity. Generic-font Text
+measurement caches retain at most two recent content/style/constraint entries per
+item, including on signal-valued content. Measurement cache hits retain the exact
+Text receiver's input provision. Keyed reorder reuses surviving records; removal
+releases the record, its measurement cache, and normal mounted input ownership.
+The wrapped collection scenario exercises data-order changes across row and column
+lines in both source and unpublished built lanes: surviving mounted stamps/numeric
+records persist, restored keys start new lifetimes, targets follow placement, and
+disposal returns owned nodes/arenas/measurement entries to baseline. Data reorder
+changes source paint order; it does not add CSS order, reversed axes or RTL.
+The experimental lane also measures Text leaves and nested known built-in nowrap
+columns in an auto-height built-in nowrap column whose width is declared or
+stretched from a definite parent column allocation. Each nested column receives
+its settled content width before dependent height measurement; parent measurement
+adds its padding once. Recursion uses the shared cycle-detecting measurement
+context, without speculative ordinary component execution or a fixed-point loop. Padding and width bounds settle before intrinsic height measurement.
+A standalone maximum-width constraint alone does not become a definite width. Text width is definite or stretches, children
+have explicit main minimums and no intrinsic growth, and percentage child sizes
+remain unsupported. Final constrained container width settles before dependent
+Text height in either parent axis. Arbitrary components remain opaque; this is not
+a general prepared-component protocol. Direct-Text intrinsic snapshots reuse the region-owned two-entry measurement cache
+for explicitly generic fonts. Keys include resolved content, metric styles,
+structure/order and constraints; each hit still prepares the current receiver
+inputs. Snapshot traversal shares isolated measurement state and forbids signal
+writes. Removal/disposal release entries. Unsupported shapes, responsive intrinsic
+queries and custom font families remain conservative; font-loading/revision
+invalidation is not implemented. Known nested nowrap column snapshots also reuse this bounded cache at settled
+widths, including opaque children with declared finite sizes. Snapshot traversal
+resolves current nested receiver inputs on every hit; changing active signal
+dependencies replaces subscriptions normally. Arbitrary opaque measurement and
+custom fonts remain conservative. Keyed nested membership/order changes refresh
+aggregate snapshots; removed receivers detach, surviving numeric nodes persist and
+restored keys begin fresh lifetimes. Retained cache keys contain scalar values,
+not descriptor references or subscriptions.
+The legacy measuredLeaves inspector counts host measurement entries, including
+these aggregate requests; it is not a complete count of Canvas text metric calls.
+
+Managed Canvas Layers under an active allocation in the experimental lane defer
+eligible pending Canvas raster work until the parent has settled allocation. This
+includes Layers returned by ordinary reusable components, which remain opaque to
+intrinsic measurement and execute only in normal traversal. The public
+Layer example verifies one final-size raster, cleared former pixels, moved hit
+geometry and clean sibling bitmap reuse. Renderer-participant work and deferred
+root payloads retain existing scheduling; they do not inherit this guarantee.
+Public `defineRenderLayer` runs its lifecycle inline, so it follows the managed
+Canvas Layer allocation handoff. The experimental renderer-in-Layer example checks
+final resize/render widths, committed edge targets and persistent resource lifetime.
+This does not integrate the separate friend-only renderer-work queue.
+
+These are scoped experimental receipts, not a root prepared-tree, custom-font
+revision, or Layer allocation-ordering contract.
+
 ## Grid
 
 `Grid` implements explicit tracks and explicit placement only. Both

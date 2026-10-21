@@ -154,6 +154,18 @@ let schedulerTraceExclusive = false;
 
 setSignalGraphPlanWorkNotifier(syncSignalGraphPlanWork);
 
+// Experimental managed Canvas Layers may depend on a parent layout allocation.
+// Weak ownership follows the existing Layer lifetime, not a second scheduler.
+const allocationParents = new WeakMap<PibblInstance, PibblInstance>();
+let allocationParentCount = 0;
+const noAllocationDeferred = new Set<PibblInstance>();
+export function setInstanceAllocationParent(instance: PibblInstance, parent?: PibblInstance): void {
+  if (parent) {
+    if (!allocationParents.has(instance)) allocationParentCount++;
+    allocationParents.set(instance, parent);
+  } else if (allocationParents.delete(instance)) allocationParentCount--;
+}
+
 export function registerRootInstance(instance: PibblInstance): void {
   if (!instance.parent && !registeredRoots.has(instance)) {
     registeredRoots.add(instance);
@@ -638,10 +650,11 @@ function runFrame(hostTime: number): void {
     rootJob.root.eventRoot.renderTransaction = transaction;
     let failedInstance: PibblInstance | undefined;
     let rendererFailed = false;
+    const allocationDeferred = captureAllocationDeferredJobs(rootJob, rendererWork);
     try {
       for (let jobIndex = 0; jobIndex < rootJob.instances.length; jobIndex++) {
         const job = rootJob.instances[jobIndex];
-        if (job.instance.mainTeardowns.closed) continue;
+        if (job.instance.mainTeardowns.closed || allocationDeferred.has(job.instance)) continue;
         const participantWork = rendererWork.get(job.instance);
         const resourceFailures = runRendererParticipantStage(
           participantWork,
@@ -824,6 +837,26 @@ function createFrameCompletionCancellation(
       return;
     }
   };
+}
+
+function captureAllocationDeferredJobs(
+  rootJob: RootRenderJob,
+  rendererWork: Map<PibblInstance, RendererParticipantWorkRegistration[]>,
+): Set<PibblInstance> {
+  if (allocationParentCount === 0) return noAllocationDeferred;
+  const deferred = new Set<PibblInstance>();
+  for (const job of rootJob.instances) {
+    const parent = allocationParents.get(job.instance);
+    if (!parent || !rootJob.instances.some(candidate => candidate.instance === parent)) continue;
+    const branch = rootJob.instances.filter(candidate => isInstanceWithin(candidate.instance, job.instance));
+    // Parent traversal already rasterizes pending Canvas children inline after
+    // settling allocation. Renderer work and root payload admission keep their
+    // established ordering until integrated explicitly with that handoff.
+    if (branch.some(candidate => rendererWork.get(candidate.instance)?.length ||
+      candidate.pendingRoot !== NO_PENDING_ROOT || nextInstanceWork.has(candidate.instance))) continue;
+    for (const candidate of branch) deferred.add(candidate.instance);
+  }
+  return deferred;
 }
 
 function captureRootJobs(): RootRenderJob[] {

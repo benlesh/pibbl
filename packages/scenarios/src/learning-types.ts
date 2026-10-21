@@ -105,6 +105,8 @@ export interface WorkbenchSourceMetadata {
   source: {
     /** Path recorded or configured by this scenario. See {@link WorkbenchSourceMetadata}. */
     path: string;
+    /** Named component selected by Studio; omitted for legacy mounts. See {@link WorkbenchSourceMetadata}. */
+    exportName?: string;
   };
 }
 
