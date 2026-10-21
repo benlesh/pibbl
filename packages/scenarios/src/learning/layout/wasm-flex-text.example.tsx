@@ -4,6 +4,7 @@ import {
   Text,
   useConst,
   useReaction,
+  untracked,
   useCanvasContext,
   signal,
   computed,
@@ -261,7 +262,7 @@ export function WasmFlexTextExample() {
             .join(" · ")}\n${readInputs()}`
         : "Normal JS build. Start Studio with --mode layout-wasm to inspect the WASM experiment.";
     };
-    refresh();
+    untracked(refresh);
     const timer = window.setInterval(refresh, 200);
     return () => {
       window.clearInterval(timer);
