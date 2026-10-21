@@ -1,12 +1,4 @@
-import {
-  Group,
-  Rectangle,
-  Text,
-  pibbl,
-  useSignal,
-  type PibblController,
-  type PibblNode,
-} from "@pibbl/core";
+import { Group, Rectangle, Text, useSignal, type PibblNode } from "@pibbl/core";
 import {
   PieLayout,
   PieSlice,
@@ -79,7 +71,7 @@ function Button({
     </Group>
   );
 }
-function Scene() {
+export function Scene() {
   const data = useSignal(balanced);
   const small = useSignal(false);
   const placement = useSignal<PieLabelPlacement>("auto");
@@ -97,11 +89,18 @@ function Scene() {
     <Group>
       <Rectangle style={{ width: 1000, height: 570, fill: "#fcfbf8" }} />
       <Text
-        style={{ left: 28, top: 38, font: "bold 26px sans-serif", fill: "#182c42" }}
+        style={{
+          left: 28,
+          top: 38,
+          font: "bold 26px sans-serif",
+          fill: "#182c42",
+        }}
       >
         How we get around
       </Text>
-      <Text style={{ left: 28, top: 67, font: "14px sans-serif", fill: "#62758b" }}>
+      <Text
+        style={{ left: 28, top: 67, font: "14px sans-serif", fill: "#62758b" }}
+      >
         100 fictional responses · Labels share one layout; slices keep ordinary
         Pibbl events.
       </Text>
@@ -193,7 +192,13 @@ function Scene() {
           />
           <Rectangle
             pointerEvents="none"
-            style={{ left: 10, top: 12, width: 12, height: 12, fill: datum.color }}
+            style={{
+              left: 10,
+              top: 12,
+              width: 12,
+              height: 12,
+              fill: datum.color,
+            }}
           />
           <Text
             pointerEvents="none"
@@ -334,7 +339,4 @@ function Scene() {
       </Text>
     </Group>
   );
-}
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(canvas, <Scene />);
 }

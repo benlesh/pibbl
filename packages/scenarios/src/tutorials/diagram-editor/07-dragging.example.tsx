@@ -1,16 +1,14 @@
 import {
   Absolute,
-  pibbl,
-  useLayoutBox,
-  useRef,
-  useSignal,
   Fragment,
   Group,
   Path,
   Rectangle,
   Text,
+  useLayoutBox,
+  useRef,
+  useSignal,
   type BoxStyle,
-  type PibblController,
   type PibblNode,
   type PibblPointerEvent,
   type LayoutItemStyle,
@@ -150,7 +148,11 @@ function arrowheadPath(point: Readonly<{ x: number; y: number }>): Path2D {
   return path;
 }
 
-function NodeCard({ node, selected, pointerHandlers }: NodeCardProps): PibblNode {
+function NodeCard({
+  node,
+  selected,
+  pointerHandlers,
+}: NodeCardProps): PibblNode {
   return (
     <Group style={{ translateX: node.x, translateY: node.y }}>
       <Rectangle
@@ -254,13 +256,23 @@ function Toolbar({ style: _specifiedStyle }: RegionProps): PibblNode {
     />,
     <Text
       pointerEvents="none"
-      style={{ left: 24, top: 34, fill: "#17211d", font: "900 22px sans-serif" }}
+      style={{
+        left: 24,
+        top: 34,
+        fill: "#17211d",
+        font: "900 22px sans-serif",
+      }}
     >
       WORKFLOW MAP
     </Text>,
     <Text
       pointerEvents="none"
-      style={{ left: 250, top: 32, fill: "#667066", font: "600 13px sans-serif" }}
+      style={{
+        left: 250,
+        top: 32,
+        fill: "#667066",
+        font: "600 13px sans-serif",
+      }}
     >
       Drag a card to rearrange it
     </Text>,
@@ -325,7 +337,8 @@ function Workspace({
 function StatusBar({
   style: _specifiedStyle,
   selectedNode,
-}: RegionProps & Readonly<{ selectedNode: DiagramNode | undefined }>): PibblNode {
+}: RegionProps &
+  Readonly<{ selectedNode: DiagramNode | undefined }>): PibblNode {
   const box = useLayoutBox();
   const status = selectedNode
     ? `SELECTED · ${selectedNode.title}`
@@ -355,7 +368,7 @@ function StatusBar({
   ];
 }
 
-function DiagramEditor(): PibblNode {
+export function DiagramEditor(): PibblNode {
   const nodes = useSignal<readonly DiagramNode[]>(INITIAL_NODES);
   const selectedNodeId = useSignal<NodeId | null>("sketch");
   const dragSession = useRef<NodeDragSession | null>(null);
@@ -389,7 +402,8 @@ function DiagramEditor(): PibblNode {
                 y: session.nodeStart.y + point.y - session.pointerStart.y,
               }
             : candidate,
-        ));
+        ),
+      );
     },
     onPointerUp(event) {
       if (dragSession.current?.pointerId !== event.pointerId) return;
@@ -400,7 +414,9 @@ function DiagramEditor(): PibblNode {
     onPointerCancel: clearSession,
     onLostPointerCapture: clearSession,
   };
-  const selectedNode = nodes.get().find((node) => node.id === selectedNodeId.get());
+  const selectedNode = nodes
+    .get()
+    .find((node) => node.id === selectedNodeId.get());
   return (
     <Absolute style={{ width: 960, height: 600 }}>
       <Toolbar style={{ left: 0, top: 0, width: "100%", height: 56 }} />
@@ -422,8 +438,4 @@ function DiagramEditor(): PibblNode {
       />
     </Absolute>
   );
-}
-
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(canvas, <DiagramEditor />);
 }

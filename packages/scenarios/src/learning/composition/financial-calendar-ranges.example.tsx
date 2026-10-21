@@ -3,7 +3,6 @@ import {
   Group,
   Rectangle,
   Text,
-  pibbl,
   useLayoutBox,
   useAnimatedValue,
   tween,
@@ -11,7 +10,6 @@ import {
   useRef,
   useReaction,
   useSignal,
-  type PibblController,
 } from "@pibbl/core";
 import {
   Axis,
@@ -440,12 +438,10 @@ function Lesson() {
     </>
   );
 }
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(
-    canvas,
+export function FinancialCalendarRangesExample() {
+  return (
     <FocusManagement>
       <Lesson />
-    </FocusManagement>,
-    { viewport: "responsive" },
+    </FocusManagement>
   );
 }

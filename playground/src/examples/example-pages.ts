@@ -26,7 +26,10 @@ export interface ExamplePagesOptions {
 
 export interface ExamplePages {
   renderLanding(version: number): Promise<void>;
-  renderDetail(entry: LearningExampleCatalogEntry, version: number): Promise<void>;
+  renderDetail(
+    entry: LearningExampleCatalogEntry,
+    version: number,
+  ): Promise<void>;
 }
 
 /** Hosts the live teaching examples without giving page routing ownership to them. */
@@ -90,22 +93,27 @@ export function createExamplePages(options: ExamplePagesOptions): ExamplePages {
         categoryCard({
           eyebrow: "11 focused primitives",
           title: "Draw & compose",
-          description: "Rects, paths, lines, type, images, transforms, clips, and layers.",
+          description:
+            "Rects, paths, lines, type, images, transforms, clips, and layers.",
           href: getLearningExampleRoute(getLearningExampleBySlug("rectangle")!),
           className: "is-drawing",
         }),
         categoryCard({
           eyebrow: "8 mouse events",
           title: "Make it react",
-          description: "See every supported event produce immediate, visible feedback.",
+          description:
+            "See every supported event produce immediate, visible feedback.",
           href: getLearningExampleRoute(getLearningExampleBySlug("click")!),
           className: "is-mouse",
         }),
         categoryCard({
           eyebrow: "4 deeper studies",
           title: "Master targeting",
-          description: "Trace sequences, widen hit areas, and reason about composed paint order.",
-          href: getLearningExampleRoute(getLearningExampleBySlug("event-sequences")!),
+          description:
+            "Trace sequences, widen hit areas, and reason about composed paint order.",
+          href: getLearningExampleRoute(
+            getLearningExampleBySlug("event-sequences")!,
+          ),
           className: "is-advanced",
         }),
       );
@@ -114,11 +122,14 @@ export function createExamplePages(options: ExamplePagesOptions): ExamplePages {
       await options.lifecycle.setDisposable(version, {
         dispose: () => controller?.dispose(),
       });
-      if (options.lifecycle.isCurrent(version)) options.finishRoute("Interactive examples");
+      if (options.lifecycle.isCurrent(version))
+        options.finishRoute("Interactive examples");
     },
 
     async renderDetail(entry, version): Promise<void> {
-      const section = learningSections.find((value) => value.id === entry.section);
+      const section = learningSections.find(
+        (value) => value.id === entry.section,
+      );
       const article = document.createElement("article");
       article.className = "lesson-page";
       const header = document.createElement("header");
@@ -149,31 +160,33 @@ export function createExamplePages(options: ExamplePagesOptions): ExamplePages {
 
       const workbenchHost = document.createElement("div");
       workbenchHost.className = "lesson-workbench-loading";
-      workbenchHost.innerHTML = '<p role="status">Loading the TypeScript workbench…</p>';
+      workbenchHost.innerHTML =
+        '<p role="status">Loading the TypeScript workbench…</p>';
 
       const teaching = document.createElement("div");
       teaching.className = "lesson-teaching-grid";
       const tryIt = document.createElement("section");
       tryIt.className = "lesson-callout lesson-callout--try";
-      tryIt.innerHTML = '<p class="studio-eyebrow">Try it</p><h2>Touch the scene, then the code.</h2>';
+      tryIt.innerHTML =
+        '<p class="studio-eyebrow">Try it</p><h2>Touch the scene, then the code.</h2>';
       const prompts = document.createElement("ol");
-      for (const [label, value] of [["Gesture", entry.prompts.gesture], ["Code change", entry.prompts.code]] as const) {
-        const item = document.createElement("li");
-        const strong = document.createElement("strong");
-        strong.textContent = label;
-        item.append(strong, document.createTextNode(value));
-        prompts.appendChild(item);
-      }
+      appendPrompt(prompts, "Gesture", entry.prompts.gesture);
+      appendPrompt(prompts, "Code change", entry.prompts.code);
       tryIt.appendChild(prompts);
       const notes = document.createElement("section");
       notes.className = "lesson-callout lesson-callout--notes";
-      notes.innerHTML = '<p class="studio-eyebrow">API notes</p><h2>Keep in mind</h2>';
+      notes.innerHTML =
+        '<p class="studio-eyebrow">API notes</p><h2>Keep in mind</h2>';
       const notesList = document.createElement("ul");
       for (const note of entry.apiNotes) {
         const item = document.createElement("li");
         const parts = note.split("`");
         for (let index = 0; index < parts.length; index++) {
-          item.append(index % 2 ? codePill(parts[index]) : document.createTextNode(parts[index]));
+          item.append(
+            index % 2
+              ? codePill(parts[index])
+              : document.createTextNode(parts[index]),
+          );
         }
         notesList.appendChild(item);
       }
@@ -182,18 +195,30 @@ export function createExamplePages(options: ExamplePagesOptions): ExamplePages {
 
       const limitation = document.createElement("p");
       limitation.className = "lesson-limitation";
-      limitation.innerHTML = "<strong>Canvas accessibility note:</strong> Pibbl supports DOM-aligned user events and optional logical focus and keyboard navigation. Painted targets still do not create DOM semantics or an accessibility tree; applications must provide an equivalent semantic experience.";
+      limitation.innerHTML =
+        "<strong>Canvas accessibility note:</strong> Pibbl supports DOM-aligned user events and optional logical focus and keyboard navigation. Painted targets still do not create DOM semantics or an accessibility tree; applications must provide an equivalent semantic experience.";
 
       const pagination = document.createElement("nav");
       pagination.className = "lesson-pagination";
       pagination.ariaLabel = "Previous and next lessons";
-      const previous = entry.relationships.previous ? getLearningExampleBySlug(entry.relationships.previous) : undefined;
-      const next = entry.relationships.next ? getLearningExampleBySlug(entry.relationships.next) : undefined;
+      const previous = entry.relationships.previous
+        ? getLearningExampleBySlug(entry.relationships.previous)
+        : undefined;
+      const next = entry.relationships.next
+        ? getLearningExampleBySlug(entry.relationships.next)
+        : undefined;
       pagination.append(
         categoryLink(previous, previous ? "← Previous" : "← Studio home"),
         categoryLink(next, next ? "Next →" : "Studio home →"),
       );
-      article.append(header, objectives, workbenchHost, teaching, limitation, pagination);
+      article.append(
+        header,
+        objectives,
+        workbenchHost,
+        teaching,
+        limitation,
+        pagination,
+      );
       options.container.replaceChildren(article);
       options.finishRoute(entry.title);
 
@@ -220,19 +245,103 @@ export function createExamplePages(options: ExamplePagesOptions): ExamplePages {
 function HeroScene(props: { phase: number; onActivate: () => void }) {
   const angle = props.phase % 2 ? 11 : -7;
   return [
-    createElement(Rectangle, { style: { left: 0, top: 0, width: 720, height: 420, fill: "#f7c948" } }),
-    createElement(Rectangle, { style: { left: 38, top: 38, width: 644, height: 344, fill: "#fffdf6", stroke: "#17211d", strokeWidth: 6 } }),
-    createElement(Group, { style: { translateX: 76, translateY: 60, rotationDegrees: angle, rotationOrigin: [284, 150] }, children: [
-      createElement(Rectangle, { style: { left: 46, top: 22, width: 222, height: 252, fill: "#1f4bd8", cursor: "pointer" }, onClick: props.onActivate }),
-      createElement(Rectangle, { style: { left: 238, top: 84, width: 252, height: 152, fill: props.phase % 2 ? "#74d3ae" : "#ff6b57", stroke: "#17211d", strokeWidth: 6, cursor: "pointer" }, onClick: props.onActivate }),
-      createElement(Rectangle, { style: { left: 456, top: 18, width: 92, height: 92, fill: "#f7c948", stroke: "#17211d", strokeWidth: 5, cursor: "pointer" }, onClick: props.onActivate }),
-    ] }),
-    createElement(Text, { style: { left: 358, top: 150, fill: "#17211d", font: "900 54px sans-serif", textAlign: "center" } }, "DRAW."),
-    createElement(Text, { style: { left: 358, top: 222, fill: "#17211d", font: "900 42px sans-serif", textAlign: "center" } }, "MOVE. LEARN."),
+    createElement(Rectangle, {
+      style: { left: 0, top: 0, width: 720, height: 420, fill: "#f7c948" },
+    }),
+    createElement(Rectangle, {
+      style: {
+        left: 38,
+        top: 38,
+        width: 644,
+        height: 344,
+        fill: "#fffdf6",
+        stroke: "#17211d",
+        strokeWidth: 6,
+      },
+    }),
+    createElement(Group, {
+      style: {
+        translateX: 76,
+        translateY: 60,
+        rotationDegrees: angle,
+        rotationOrigin: [284, 150],
+      },
+      children: [
+        createElement(Rectangle, {
+          style: {
+            left: 46,
+            top: 22,
+            width: 222,
+            height: 252,
+            fill: "#1f4bd8",
+            cursor: "pointer",
+          },
+          onClick: props.onActivate,
+        }),
+        createElement(Rectangle, {
+          style: {
+            left: 238,
+            top: 84,
+            width: 252,
+            height: 152,
+            fill: props.phase % 2 ? "#74d3ae" : "#ff6b57",
+            stroke: "#17211d",
+            strokeWidth: 6,
+            cursor: "pointer",
+          },
+          onClick: props.onActivate,
+        }),
+        createElement(Rectangle, {
+          style: {
+            left: 456,
+            top: 18,
+            width: 92,
+            height: 92,
+            fill: "#f7c948",
+            stroke: "#17211d",
+            strokeWidth: 5,
+            cursor: "pointer",
+          },
+          onClick: props.onActivate,
+        }),
+      ],
+    }),
+    createElement(
+      Text,
+      {
+        style: {
+          left: 358,
+          top: 150,
+          fill: "#17211d",
+          font: "900 54px sans-serif",
+          textAlign: "center",
+        },
+      },
+      "DRAW.",
+    ),
+    createElement(
+      Text,
+      {
+        style: {
+          left: 358,
+          top: 222,
+          fill: "#17211d",
+          font: "900 42px sans-serif",
+          textAlign: "center",
+        },
+      },
+      "MOVE. LEARN.",
+    ),
   ];
 }
 
-function categoryCard(options: { eyebrow: string; title: string; description: string; href: string; className: string }): HTMLAnchorElement {
+function categoryCard(options: {
+  eyebrow: string;
+  title: string;
+  description: string;
+  href: string;
+  className: string;
+}): HTMLAnchorElement {
   const card = document.createElement("a");
   card.href = options.href;
   card.className = `studio-category-card ${options.className}`;
@@ -253,7 +362,10 @@ function codePill(value: string): HTMLElement {
   return code;
 }
 
-function categoryLink(entry: LearningExampleCatalogEntry | undefined, label: string): HTMLAnchorElement {
+function categoryLink(
+  entry: LearningExampleCatalogEntry | undefined,
+  label: string,
+): HTMLAnchorElement {
   const link = document.createElement("a");
   link.href = entry ? getLearningExampleRoute(entry) : "#/examples";
   const small = document.createElement("small");
@@ -262,4 +374,16 @@ function categoryLink(entry: LearningExampleCatalogEntry | undefined, label: str
   strong.textContent = entry?.title ?? "Interactive examples";
   link.append(small, strong);
   return link;
+}
+
+function appendPrompt(
+  prompts: HTMLElement,
+  label: string,
+  value: string,
+): void {
+  const item = document.createElement("li");
+  const strong = document.createElement("strong");
+  strong.textContent = label;
+  item.append(strong, document.createTextNode(value));
+  prompts.appendChild(item);
 }

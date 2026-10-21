@@ -8,21 +8,21 @@ const rectangleLesson = `
 import { pibbl, Rectangle } from "@pibbl/core";
 import { jsx as _jsx } from "@pibbl/core/jsx-runtime";
 window.requestAnimationFrame = () => 0;
-export default function mount(canvas) {
-  return pibbl(canvas, _jsx(Rectangle, { style: { width: 1, height: 1 } }));
+export function Lesson() {
+  return _jsx(Rectangle, { style: { width: 1, height: 1 } });
 }
 `;
 
 const invalidControllerLesson = `
 import { pibbl } from "@pibbl/core";
-export default function mount(canvas) {
-  return {};
+export function DifferentLesson() {
+  return null;
 }
 `;
 
 const throwingLesson = `
 import { pibbl } from "@pibbl/core";
-export default function mount(canvas) {
+export function Lesson() {
   throw new Error("mount failed");
 }
 `;
@@ -43,7 +43,7 @@ export function NamedLesson() {
 function runPreview(
   preview: SandboxPreview,
   code: string,
-  exportName?: string,
+  exportName = "Lesson",
 ): Promise<readonly PreviewEvent[]> {
   return new Promise((resolve) => {
     const events: PreviewEvent[] = [];
@@ -80,35 +80,40 @@ describe("Studio sandbox preview", () => {
     }
   }, 12_000);
 
-  it("rejects an invalid controller without first reporting mounted", async () => {
+  it("rejects a missing catalog-selected component before reporting mounted", () => {
     const host = document.createElement("div");
-    document.body.appendChild(host);
     const preview = new SandboxPreview(host);
-
+    const events: PreviewEvent[] = [];
     try {
-      await expect(
-        runPreview(preview, invalidControllerLesson),
-      ).resolves.toEqual([
-        {
-          kind: "error",
-          message: "Preview mount must return a controller with dispose().",
-        },
-      ]);
+      expect(() =>
+        preview.run({
+          code: invalidControllerLesson,
+          exportName: "Lesson",
+          width: 320,
+          height: 180,
+          onEvent: (event) => events.push(event),
+        }),
+      ).toThrow(/Lesson.*not found/);
+      expect(events).toEqual([]);
     } finally {
       preview.dispose();
-      host.remove();
     }
   });
 
-  it("reports a synchronous mount failure without first reporting mounted", async () => {
+  it("reports a scheduled component failure", async () => {
     const host = document.createElement("div");
-    document.body.appendChild(host);
+    document.body.append(host);
     const preview = new SandboxPreview(host);
-
     try {
-      await expect(runPreview(preview, throwingLesson)).resolves.toEqual([
-        { kind: "error", message: "mount failed" },
-      ]);
+      const events = await runPreview(preview, throwingLesson);
+      await expect
+        .poll(() =>
+          events.some(
+            (event) =>
+              event.kind === "error" && event.message?.includes("mount failed"),
+          ),
+        )
+        .toBe(true);
     } finally {
       preview.dispose();
       host.remove();
@@ -138,9 +143,15 @@ describe("Studio sandbox preview", () => {
     try {
       const events = await runPreview(preview, disposableLesson, "NamedLesson");
       expect(events[0]).toEqual({ kind: "mounted" });
-      await expect.poll(() => events.some(event =>
-        event.kind === "log" && event.message?.includes("component-ready"),
-      )).toBe(true);
+      await expect
+        .poll(() =>
+          events.some(
+            (event) =>
+              event.kind === "log" &&
+              event.message?.includes("component-ready"),
+          ),
+        )
+        .toBe(true);
       frameWindow = host.querySelector("iframe")?.contentWindow ?? null;
       preview.dispose();
       await expect(disposed).resolves.toBeUndefined();
@@ -159,12 +170,13 @@ it("keeps a responsive canvas inside its preview after both dimensions shrink", 
   const sizes: string[] = [];
   try {
     preview.run({
+      exportName: "Scene",
+      config: { viewport: "responsive" },
       width: 1100,
       height: 680,
       code: `
       import { pibbl, createElement, useLayoutBox } from "@pibbl/core";
-      function Scene() { const box = useLayoutBox(); console.log(box.width + "x" + box.height); }
-      export default function mount(canvas) { return pibbl(canvas, createElement(Scene, {}), { viewport: "responsive" }); }
+      export function Scene() { const box = useLayoutBox(); console.log(box.width + "x" + box.height); return null; }
     `,
       onEvent(event) {
         if (event.kind === "log") sizes.push(event.message!);

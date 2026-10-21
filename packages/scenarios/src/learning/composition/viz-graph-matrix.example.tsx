@@ -1,13 +1,11 @@
+import { AdjacencyMatrix, GraphLabel, MatrixCell } from "@pibbl/core/viz";
 import {
   FocusManagement,
   Group,
   Rectangle,
   Text,
-  pibbl,
   useSignal,
-  type PibblController,
 } from "@pibbl/core";
-import { AdjacencyMatrix, GraphLabel, MatrixCell } from "@pibbl/core/viz";
 
 const teams = [
   "Research",
@@ -203,11 +201,10 @@ function Scene() {
   );
 }
 
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(
-    canvas,
+export function VizGraphMatrixExample() {
+  return (
     <FocusManagement>
       <Scene />
-    </FocusManagement>,
+    </FocusManagement>
   );
 }

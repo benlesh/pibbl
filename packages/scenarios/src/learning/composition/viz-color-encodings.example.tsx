@@ -2,10 +2,8 @@ import {
   FocusManagement,
   Rectangle,
   Text,
-  pibbl,
   useLayoutBox,
   useSignal,
-  type PibblController,
   type PibblPointerEvent,
 } from "@pibbl/core";
 import {
@@ -246,8 +244,19 @@ function SequentialView(props: GridProps) {
   const scale = useSequentialColorScale("color").get();
   return (
     <>
-      <Grid width={props.width} height={props.height} selected={props.selected} select={props.select} map={scale.map} />
-      <Ramp width={props.width} height={props.height} map={scale.map} stops={scale.stops} />
+      <Grid
+        width={props.width}
+        height={props.height}
+        selected={props.selected}
+        select={props.select}
+        map={scale.map}
+      />
+      <Ramp
+        width={props.width}
+        height={props.height}
+        map={scale.map}
+        stops={scale.stops}
+      />
       <Label
         x={14}
         y={props.height - 28}
@@ -260,8 +269,19 @@ function DivergingView(props: GridProps) {
   const scale = useDivergingColorScale("color").get();
   return (
     <>
-      <Grid width={props.width} height={props.height} selected={props.selected} select={props.select} map={scale.map} />
-      <Ramp width={props.width} height={props.height} map={scale.map} stops={scale.stops} />
+      <Grid
+        width={props.width}
+        height={props.height}
+        selected={props.selected}
+        select={props.select}
+        map={scale.map}
+      />
+      <Ramp
+        width={props.width}
+        height={props.height}
+        map={scale.map}
+        stops={scale.stops}
+      />
       <Label
         x={14}
         y={props.height - 28}
@@ -275,7 +295,13 @@ function ThresholdView(props: GridProps) {
     w = (props.width - 28) / scale.bands.length;
   return (
     <>
-      <Grid width={props.width} height={props.height} selected={props.selected} select={props.select} map={scale.map} />
+      <Grid
+        width={props.width}
+        height={props.height}
+        selected={props.selected}
+        select={props.select}
+        map={scale.map}
+      />
       {scale.bands.map((band, index) => (
         <>
           <Rectangle
@@ -400,7 +426,12 @@ function Scene() {
           domain={wide.get() ? [330, 345] : [336, 342]}
           colors={sequential}
         >
-          <SequentialView width={props.width} height={props.height} selected={props.selected} select={props.select} />
+          <SequentialView
+            width={props.width}
+            height={props.height}
+            selected={props.selected}
+            select={props.select}
+          />
         </SequentialColorScale>
       ) : family.get() === 1 ? (
         <DivergingColorScale
@@ -408,7 +439,12 @@ function Scene() {
           domain={wide.get() ? [330, 340, 345] : [336, 340, 342]}
           colors={diverging}
         >
-          <DivergingView width={props.width} height={props.height} selected={props.selected} select={props.select} />
+          <DivergingView
+            width={props.width}
+            height={props.height}
+            selected={props.selected}
+            select={props.select}
+          />
         </DivergingColorScale>
       ) : (
         <ThresholdColorScale
@@ -416,7 +452,12 @@ function Scene() {
           thresholds={wide.get() ? [337, 341] : [338, 340]}
           colors={threshold}
         >
-          <ThresholdView width={props.width} height={props.height} selected={props.selected} select={props.select} />
+          <ThresholdView
+            width={props.width}
+            height={props.height}
+            selected={props.selected}
+            select={props.select}
+          />
         </ThresholdColorScale>
       )}
       <Label
@@ -428,12 +469,10 @@ function Scene() {
     </>
   );
 }
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(
-    canvas,
+export function VizColorEncodingsExample() {
+  return (
     <FocusManagement>
       <Scene />
-    </FocusManagement>,
-    { viewport: "responsive" },
+    </FocusManagement>
   );
 }

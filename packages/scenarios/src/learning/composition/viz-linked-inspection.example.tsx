@@ -5,13 +5,11 @@ import {
   Overlay,
   Rectangle,
   Text,
-  pibbl,
   resolveSignalValue,
   useConst,
   useLayoutBox,
   useReaction,
   useSignal,
-  type PibblController,
   type PibblPointerEvent,
   type SignalValue,
 } from "@pibbl/core";
@@ -293,8 +291,9 @@ function Scene({ input }: { input: SignalValue<readonly Datum[]> }) {
   useReaction(() => {
     const current = resolveSignalValue(input);
     const currentKeys = new Set(current.map((row) => row.time));
-    for (const key of [committed.get(), hovered.get(), pinned.get()])
-      if (key !== null && !currentKeys.has(key)) retired.add(key);
+    retireMissingKey(committed.get(), currentKeys, retired);
+    retireMissingKey(hovered.get(), currentKeys, retired);
+    retireMissingKey(pinned.get(), currentKeys, retired);
   }, [input]);
   const byKey = new Map(records.map((row) => [row.time, row]));
   const valid = (value: number | null) => {
@@ -507,15 +506,18 @@ function Scene({ input }: { input: SignalValue<readonly Datum[]> }) {
     </>
   );
 }
-export default function mount(
-  canvas: HTMLCanvasElement,
-  config: Config = {},
-): PibblController {
-  return pibbl(
-    canvas,
+export function VizLinkedInspectionExample(config: Config = {}) {
+  return (
     <FocusManagement>
       <Scene input={config.data ?? defaultData} />
-    </FocusManagement>,
-    { viewport: "responsive" },
+    </FocusManagement>
   );
+}
+
+function retireMissingKey(
+  key: number | null,
+  currentKeys: Set<number>,
+  retired: Set<number>,
+): void {
+  if (key !== null && !currentKeys.has(key)) retired.add(key);
 }

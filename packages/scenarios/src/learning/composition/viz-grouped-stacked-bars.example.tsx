@@ -4,14 +4,19 @@ import {
   Line,
   Rectangle,
   Text,
-  pibbl,
   useLayoutBox,
   useSignal,
-  type PibblController,
   type PibblPointerEvent,
   type WritableSignal,
 } from "@pibbl/core";
-import { Axis, BarSeries, useBarScale, useLinearScale, BarScale, LinearScale } from "@pibbl/core/viz";
+import {
+  Axis,
+  BarSeries,
+  BarScale,
+  LinearScale,
+  useBarScale,
+  useLinearScale,
+} from "@pibbl/core/viz";
 
 const periods = ["Q1", "Q2", "Q3", "Q4"];
 const regions = ["North", "South"];
@@ -250,7 +255,7 @@ function Plot({
   );
 }
 
-function Scene() {
+export function Scene() {
   const box = useLayoutBox();
   const horizontal = useSignal(false);
   const selected = useSignal<Segment | null>(null);
@@ -353,8 +358,4 @@ function Scene() {
       </Group>
     </Group>
   );
-}
-
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(canvas, <Scene />, { viewport: "responsive" });
 }

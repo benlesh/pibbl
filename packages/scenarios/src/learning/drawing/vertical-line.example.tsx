@@ -1,12 +1,5 @@
-import {
-  pibbl,
-  useSignal,
-  Rectangle,
-  Text,
-  VerticalLine,
-  type PibblController,
-} from "@pibbl/core";
-function VerticalStudy() {
+import { Rectangle, Text, VerticalLine, useSignal } from "@pibbl/core";
+export function VerticalStudy() {
   const stripe = useSignal(0);
   const colors = ["#1f4bd8", "#ff6b57", "#f7c948", "#74d3ae"];
   return [
@@ -47,7 +40,4 @@ function VerticalStudy() {
       {stripe.get() ? `STRIPE ${stripe.get()}` : "VERTICAL FIELD"}
     </Text>,
   ];
-}
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(canvas, <VerticalStudy />);
 }

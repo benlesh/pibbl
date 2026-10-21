@@ -1,15 +1,13 @@
-import { dropShadow } from '@pibbl/core/filters';
+import { dropShadow } from "@pibbl/core/filters";
 /** @jsxImportSource @pibbl/core */
 import {
   FocusManagement,
   Group,
   Rectangle,
   Text,
-  pibbl,
   useSignal,
-  type PibblController,
-} from '@pibbl/core';
-import { defineThreeLayer } from '@pibbl/three';
+} from "@pibbl/core";
+import { defineThreeLayer } from "@pibbl/three";
 import {
   Color,
   HemisphereLight,
@@ -18,7 +16,7 @@ import {
   MeshPhongMaterial,
   PerspectiveCamera,
   Scene,
-} from 'three';
+} from "three";
 
 interface ThreeLayerProps {
   readonly turn: number;
@@ -39,11 +37,11 @@ const ThreeScene = defineThreeLayer<ThreeLayerProps, ThreeLayerResources>({
     const camera = new PerspectiveCamera(45, 2, 0.1, 100);
     camera.position.set(0, 0, 7);
 
-    scene.add(new HemisphereLight('#dbeafe', '#172554', 2.8));
+    scene.add(new HemisphereLight("#dbeafe", "#172554", 2.8));
 
     const blocker = new Mesh(
       new IcosahedronGeometry(1.05, 1),
-      new MeshPhongMaterial({ color: new Color('#38bdf8'), shininess: 72 }),
+      new MeshPhongMaterial({ color: new Color("#38bdf8"), shininess: 72 }),
     );
     blocker.position.x = -1.6;
     scene.add(blocker);
@@ -51,8 +49,8 @@ const ThreeScene = defineThreeLayer<ThreeLayerProps, ThreeLayerResources>({
     const target = new Mesh(
       new IcosahedronGeometry(1.05, 1),
       new MeshPhongMaterial({
-        color: new Color('#fbbf24'),
-        emissive: new Color('#5b2500'),
+        color: new Color("#fbbf24"),
+        emissive: new Color("#5b2500"),
         shininess: 96,
       }),
     );
@@ -74,7 +72,7 @@ const ThreeScene = defineThreeLayer<ThreeLayerProps, ThreeLayerResources>({
       {
         object: resources.target,
         handlers: { onClick: props.onTarget },
-        cursor: 'pointer',
+        cursor: "pointer",
         keyboardFocusable: true,
       },
     ];
@@ -87,7 +85,7 @@ const ThreeScene = defineThreeLayer<ThreeLayerProps, ThreeLayerResources>({
   },
 });
 
-function ThreeLayerLesson() {
+export function ThreeLayerLesson() {
   const state = useSignal({ backgroundClicks: 0, targetClicks: 0 });
   const current = state.get();
   const activateTarget = () =>
@@ -100,18 +98,18 @@ function ThreeLayerLesson() {
     <FocusManagement>
       <Group>
         <Rectangle
-        style={{
-          width: 720,
-          height: 420,
-          fill: '#0f2742',
-          cursor: 'pointer',
-        }}
-        onClick={() =>
-          state.update((value) => ({
-            ...value,
-            backgroundClicks: value.backgroundClicks + 1,
-          }))
-        }
+          style={{
+            width: 720,
+            height: 420,
+            fill: "#0f2742",
+            cursor: "pointer",
+          }}
+          onClick={() =>
+            state.update((value) => ({
+              ...value,
+              backgroundClicks: value.backgroundClicks + 1,
+            }))
+          }
         />
         <Group style={{ translateX: 70, translateY: 82 }}>
           <ThreeScene
@@ -123,39 +121,40 @@ function ThreeLayerLesson() {
               height: 260,
               filter: [
                 dropShadow({
-                  
                   offsetX: 0,
                   offsetY: 10,
                   blurRadius: 18,
-                  color: '#0009',
+                  color: "#0009",
                 }),
               ],
             }}
           />
         </Group>
         <Text
-        pointerEvents="none"
-        style={{ left: 28, top: 36, fill: '#f8fafc', font: '700 22px Arial' }}
+          pointerEvents="none"
+          style={{ left: 28, top: 36, fill: "#f8fafc", font: "700 22px Arial" }}
         >
           Three.js inside Pibbl
         </Text>
         <Text
-        pointerEvents="none"
-        style={{ left: 28, top: 62, fill: '#bfdbfe', font: '14px Arial' }}
+          pointerEvents="none"
+          style={{ left: 28, top: 62, fill: "#bfdbfe", font: "14px Arial" }}
         >
-          Blue blocks the Canvas · gold is a Pibbl target · empty pixels pass through
+          Blue blocks the Canvas · gold is a Pibbl target · empty pixels pass
+          through
         </Text>
         <Text
-        pointerEvents="none"
-        style={{ left: 28, top: 392, fill: '#f8fafc', font: '600 14px Arial' }}
+          pointerEvents="none"
+          style={{
+            left: 28,
+            top: 392,
+            fill: "#f8fafc",
+            font: "600 14px Arial",
+          }}
         >
           {`Canvas ${current.backgroundClicks} · Three target ${current.targetClicks}`}
         </Text>
       </Group>
     </FocusManagement>
   );
-}
-
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(canvas, <ThreeLayerLesson />);
 }

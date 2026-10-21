@@ -1,5 +1,16 @@
 import { pibbl, Circle, Rectangle, Text } from "@pibbl/core";
-import { closestPoint, defineSeries, HoverCard, HoverData, type HoverBounds, type HoverCardProps, type HoverCardStyle, type HoverDataProps, type HoverPlacement, LinearScale } from "@pibbl/core/viz";
+import {
+  closestPoint,
+  defineSeries,
+  HoverCard,
+  HoverData,
+  type HoverBounds,
+  type HoverCardProps,
+  type HoverCardStyle,
+  type HoverDataProps,
+  type HoverPlacement,
+  LinearScale,
+} from "@pibbl/core/viz";
 
 const data = [{ x: 2, y: 3, label: "Peak" }];
 const query = closestPoint({
@@ -63,7 +74,7 @@ const app = pibbl(
       range="width"
       style={{ width: 320, height: 220 }}
     >
-      <LinearScale id="y"  domain={[0, 6]} range="height" reverse>
+      <LinearScale id="y" domain={[0, 6]} range="height" reverse>
         <HoverData {...hover} />
       </LinearScale>
     </LinearScale>

@@ -1,8 +1,13 @@
 import { signal, type PibblController } from "@pibbl/core";
-import mount from "../../../../scenarios/src/learning/composition/viz-clinical-forest.example";
+import { VizClinicalForestExample as mountComponent } from "../../../../scenarios/src/learning/composition/viz-clinical-forest.example";
 import { afterEach, expect, it, vi } from "vitest";
 import { userEvent } from "vitest/browser";
 import { testRuntime } from "./support/runtime.js";
+import { createExampleMount } from "../../../../scenarios/src/example-host";
+
+const mount = createExampleMount(mountComponent, {
+  config: { viewport: "responsive" },
+});
 
 let runtime: ReturnType<typeof testRuntime>;
 let controller: PibblController | undefined;

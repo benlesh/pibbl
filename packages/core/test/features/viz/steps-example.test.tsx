@@ -1,8 +1,14 @@
 import { userEvent } from "vitest/browser";
 import { expect, it, vi } from "vitest";
-import mount from "../../../../scenarios/src/learning/composition/viz-policy-steps.example.js";
+import { VizPolicyStepsExample as mountComponent } from "../../../../scenarios/src/learning/composition/viz-policy-steps.example.js";
 import { testRuntime } from "./support/runtime.js";
 import { tab } from "../../support/user-input.js";
+import { createExampleMount } from "../../../../scenarios/src/example-host";
+
+const mount = createExampleMount(mountComponent, {
+  config: { viewport: "responsive" },
+});
+
 it.each([
   [1000, 640],
   [560, 300],

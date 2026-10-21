@@ -65,7 +65,8 @@ function Scene() {
   const manipulation = useManipulation(options);
   controls = manipulation;
   const active: PibblManipulationActive | null = manipulation.active.get();
-  const snapshot: PibblManipulationSnapshot | null = manipulation.snapshot.get();
+  const snapshot: PibblManipulationSnapshot | null =
+    manipulation.snapshot.get();
   const frame: PibblManipulationFrameProps = manipulation.frameProps;
   const drag: PibblDragHandleProps = { controller: manipulation };
   const position: PibblResizePosition = "bottom-right";

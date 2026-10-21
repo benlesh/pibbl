@@ -1,6 +1,14 @@
-import calendarMount from "../../../../scenarios/src/learning/composition/financial-calendar-ranges.example.js";
-import linkedMount from "../../../../scenarios/src/learning/composition/financial-linked-panes.example.js";
+import { FinancialCalendarRangesExample as calendarMountComponent } from "../../../../scenarios/src/learning/composition/financial-calendar-ranges.example.js";
+import { FinancialLinkedPanesExample as linkedMountComponent } from "../../../../scenarios/src/learning/composition/financial-linked-panes.example.js";
 import { afterEach, expect, it, vi } from "vitest";
+import { createExampleMount } from "../../../../scenarios/src/example-host";
+
+const calendarMount = createExampleMount(calendarMountComponent, {
+  config: { viewport: "responsive" },
+});
+const linkedMount = createExampleMount(linkedMountComponent, {
+  config: { viewport: "responsive" },
+});
 
 const frames = new Map<number, FrameRequestCallback>();
 let id = 0;
@@ -113,7 +121,9 @@ it("derives matching presets and calendar tick granularity from the current wind
 
 it("animates calendar navigation through an intermediate custom range and retargets cleanly", () => {
   const preference = Object.assign(new EventTarget(), { matches: false });
-  vi.spyOn(window, "matchMedia").mockReturnValue(preference as unknown as MediaQueryList);
+  vi.spyOn(window, "matchMedia").mockReturnValue(
+    preference as unknown as MediaQueryList,
+  );
   const view = mount(calendarMount);
   try {
     view.click(27, 65, false);

@@ -1,21 +1,23 @@
 import {
-  Absolute,
-  Group,
-  Rectangle,
-  Text,
-  pibbl,
-  signal,
-  useLayoutBox,
-  type PibblController,
-  type WritableSignal,
-} from "@pibbl/core";
-import {
   Axis,
   GridLines,
   LinearScale,
   LineSeries,
   WeightedPointSeries,
 } from "@pibbl/core/viz";
+import {
+  useConst,
+  Absolute,
+  Group,
+  Rectangle,
+  Text,
+  useCanvasContext,
+  useReaction,
+  type PibblNode,
+  signal,
+  useLayoutBox,
+  type WritableSignal,
+} from "@pibbl/core";
 
 interface EvidencePoint {
   readonly dose: number;
@@ -278,10 +280,8 @@ function Scene({ selected }: { selected: WritableSignal<string | null> }) {
   );
 }
 
-const mounts = new WeakMap<HTMLCanvasElement, PibblController>();
-
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  mounts.get(canvas)?.dispose();
+function createVizWeightedEvidenceExampleContent(canvas: HTMLCanvasElement) {
+  let node: PibblNode;
   const selected = signal<string | null>(null);
   const oldHeight = canvas.style.height;
   const host = canvas.parentElement;
@@ -337,26 +337,31 @@ export default function mount(canvas: HTMLCanvasElement): PibblController {
   canvas.insertAdjacentElement("afterend", details);
   let disposed = false;
   try {
-    const controller = pibbl(canvas, <Scene selected={selected} />, {
-      pixelRatio: 1,
-    });
+    node = <Scene selected={selected} />;
     const wrapped = {
       dispose() {
         if (disposed) return;
         disposed = true;
-        controller.dispose();
+
         details.remove();
         canvas.style.height = oldHeight;
         if (host) host.style.overflow = oldOverflow ?? "";
-        mounts.delete(canvas);
       },
     };
-    mounts.set(canvas, wrapped);
-    return wrapped;
+    return { node, ...wrapped };
   } catch (error) {
     details.remove();
     canvas.style.height = oldHeight;
     if (host) host.style.overflow = oldOverflow ?? "";
     throw error;
   }
+}
+
+export function VizWeightedEvidenceExample() {
+  const canvas = useCanvasContext().canvas as HTMLCanvasElement;
+  const resource = useConst(() =>
+    createVizWeightedEvidenceExampleContent(canvas),
+  );
+  useReaction(() => resource.dispose, []);
+  return resource.node;
 }

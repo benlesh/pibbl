@@ -5,12 +5,11 @@ import {
   Overlay,
   Rectangle,
   Text,
-  pibbl,
+  useCanvasContext,
   useLayoutBox,
   useSignal,
   useReaction,
   untracked,
-  type PibblController,
   type PibblPointerEvent,
   type PibblEventTarget,
   type WritableSignal,
@@ -526,27 +525,18 @@ function Scene({ options }: { options: Options }) {
     </>
   );
 }
-export default function mount(
-  canvas: HTMLCanvasElement,
-  options: Options = {},
-): PibblController {
-  const touchAction = canvas.style.touchAction;
-  canvas.style.touchAction = "none";
-  const app = pibbl(
-    canvas,
+export function VizDomainExplorationExample(options: Options = {}) {
+  const canvas = useCanvasContext().canvas as HTMLCanvasElement;
+  useReaction(() => {
+    const previous = canvas.style.touchAction;
+    canvas.style.touchAction = "none";
+    return () => {
+      canvas.style.touchAction = previous;
+    };
+  }, [canvas]);
+  return (
     <FocusManagement>
       <Scene options={options} />
-    </FocusManagement>,
-    { viewport: "responsive" },
+    </FocusManagement>
   );
-  let disposed = false;
-  return {
-    ...app,
-    dispose() {
-      if (disposed) return;
-      disposed = true;
-      app.dispose();
-      canvas.style.touchAction = touchAction;
-    },
-  };
 }

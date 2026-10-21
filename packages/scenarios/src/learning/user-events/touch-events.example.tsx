@@ -1,17 +1,10 @@
-import {
-  pibbl,
-  useSignal,
-  Rectangle,
-  Text,
-  type PibblController,
-  type PibblTouchEvent,
-} from "@pibbl/core";
+import { Rectangle, Text, useSignal, type PibblTouchEvent } from "@pibbl/core";
 function touchSummary(event: PibblTouchEvent): string {
   const changed = event.changedTouches[0];
   const identifier = changed ? changed.identifier : "–";
   return `${event.type} changed=#${identifier} at ${Math.round(event.x)},${Math.round(event.y)}  all=${event.touches.length} target=${event.targetTouches.length} changed=${event.changedTouches.length}`;
 }
-function TouchEventsStudy() {
+export function TouchEventsStudy() {
   const trace = useSignal<readonly string[]>([]);
   const activeContacts = useSignal(0);
   const record = (event: PibblTouchEvent) => {
@@ -141,7 +134,4 @@ function TouchEventsStudy() {
         : "Use a touch-capable device; touchcancel is registered for interrupted contacts."}
     </Text>,
   ];
-}
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(canvas, <TouchEventsStudy />);
 }

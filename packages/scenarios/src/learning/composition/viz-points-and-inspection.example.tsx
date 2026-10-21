@@ -5,16 +5,25 @@ import {
   Line,
   Rectangle,
   Text,
+  useCanvasContext,
+  useReaction,
   batch,
-  pibbl,
   useLayoutBox,
   useSignal,
-  type PibblController,
   type BoxStyle,
   type LayoutItemStyle,
   type WritableSignal,
 } from "@pibbl/core";
-import { Axis, HoverData, HoverCard, PointSeries, PlotSeries, nearestPoint, useLinearScale, LinearScale } from "@pibbl/core/viz";
+import {
+  Axis,
+  HoverData,
+  HoverCard,
+  PointSeries,
+  PlotSeries,
+  LinearScale,
+  nearestPoint,
+  useLinearScale,
+} from "@pibbl/core/viz";
 
 type Row = {
   id: string;
@@ -660,7 +669,9 @@ function Panel({
           strokeWidth: 1,
         }}
       />
-      <Text style={{ left: 20, top: 18, fill: ink, font: "bold 16px sans-serif" }}>
+      <Text
+        style={{ left: 20, top: 18, fill: ink, font: "bold 16px sans-serif" }}
+      >
         {index === 0 ? "01   Batched dots" : "02   Your own elements"}
       </Text>
       <Text style={{ left: 20, top: 42, fill: muted, font: "11px sans-serif" }}>
@@ -764,7 +775,9 @@ function Scene({ fixture }: { fixture: Fixture }) {
         pointerEvents="none"
         style={{ width: box.width, height: box.height, fill: "#f4f7fb" }}
       />
-      <Text style={{ left: 24, top: 20, font: "bold 25px sans-serif", fill: ink }}>
+      <Text
+        style={{ left: 24, top: 20, font: "bold 25px sans-serif", fill: ink }}
+      >
         Palmer penguins
       </Text>
       <Text style={{ left: 24, top: 52, font: "11px sans-serif", fill: muted }}>
@@ -829,7 +842,9 @@ function Scene({ fixture }: { fixture: Fixture }) {
           })
         }
       />
-      <Text style={{ left: 24, top: top - 30, font: "12px monospace", fill: ink }}>
+      <Text
+        style={{ left: 24, top: top - 30, font: "12px monospace", fill: ink }}
+      >
         {current
           ? box.width < 600
             ? `${current.label} · ${current.x} mm · ${current.y} g`
@@ -879,35 +894,21 @@ function Scene({ fixture }: { fixture: Fixture }) {
   );
 }
 // VIZ_POINTS_SOURCE_ID = 'viz-points-example'
-export default function mount(
-  canvas: HTMLCanvasElement,
-  fixture: Fixture = {},
-): PibblController {
-  const previousMinHeight = canvas.style.minHeight;
-  const previousTouchAction = canvas.style.touchAction;
-  canvas.style.minHeight = "720px";
-  canvas.style.touchAction = "pan-y";
-  // The Studio iframe is shorter than stacked plots on a phone. Scroll its
-  // existing document; this is host presentation, not Canvas scrolling.
-  const host = canvas.parentElement;
-  const previousOverflow = host?.style.overflow;
-  if (host) host.style.overflow = "auto";
-  try {
-    const controller = pibbl(canvas, <Scene fixture={fixture} />, {
-      viewport: "responsive",
-    });
-    return {
-      dispose() {
-        controller.dispose();
-        canvas.style.minHeight = previousMinHeight;
-        canvas.style.touchAction = previousTouchAction;
-        if (host) host.style.overflow = previousOverflow ?? "";
-      },
+export function VizPointsAndInspectionExample(fixture: Fixture = {}) {
+  const canvas = useCanvasContext().canvas as HTMLCanvasElement;
+  useReaction(() => {
+    const minHeight = canvas.style.minHeight;
+    const touchAction = canvas.style.touchAction;
+    const host = canvas.parentElement;
+    const overflow = host?.style.overflow;
+    canvas.style.minHeight = "720px";
+    canvas.style.touchAction = "pan-y";
+    if (host) host.style.overflow = "auto";
+    return () => {
+      canvas.style.minHeight = minHeight;
+      canvas.style.touchAction = touchAction;
+      if (host) host.style.overflow = overflow ?? "";
     };
-  } catch (error) {
-    canvas.style.minHeight = previousMinHeight;
-    canvas.style.touchAction = previousTouchAction;
-    if (host) host.style.overflow = previousOverflow ?? "";
-    throw error;
-  }
+  }, [canvas]);
+  return <Scene fixture={fixture} />;
 }

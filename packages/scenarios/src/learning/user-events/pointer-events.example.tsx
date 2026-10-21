@@ -1,15 +1,13 @@
 import {
-  pibbl,
-  useSignal,
   Rectangle,
   Text,
-  type PibblController,
+  useSignal,
   type PibblPointerEvent,
 } from "@pibbl/core";
 function pointerSummary(event: PibblPointerEvent): string {
   return `${event.type} #${event.pointerId} ${event.pointerType} ${Math.round(event.x)},${Math.round(event.y)} p=${event.pressure.toFixed(2)} ${event.width}×${event.height} tilt=${event.tiltX}/${event.tiltY} twist=${event.twist} b=${event.button}/${event.buttons} ${event.isPrimary ? "primary" : "secondary"}`;
 }
-function PointerEventsStudy() {
+export function PointerEventsStudy() {
   const trace = useSignal<readonly string[]>([]);
   const inside = useSignal(false);
   const record = (event: PibblPointerEvent) => {
@@ -130,7 +128,4 @@ function PointerEventsStudy() {
         : "Trace waits for a pointer. The latest pointer fields appear here."}
     </Text>,
   ];
-}
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(canvas, <PointerEventsStudy />);
 }

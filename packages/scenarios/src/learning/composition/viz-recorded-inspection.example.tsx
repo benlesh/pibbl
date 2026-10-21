@@ -3,9 +3,7 @@ import {
   FocusManagement,
   Rectangle,
   Text,
-  pibbl,
   useSignal,
-  type PibblController,
 } from "@pibbl/core";
 import { LinearScale, PointSeries, defineSeries } from "@pibbl/core/viz";
 import {
@@ -202,15 +200,14 @@ function RecordedInspection() {
 }
 
 /** Mount the standalone recorded-query lesson; dispose the returned controller on removal. */
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(
-    canvas,
+export function VizRecordedInspectionExample() {
+  return (
     <FocusManagement>
       <LinearScale id="time" domain={[0, 10]} range={[40, 300]}>
         <LinearScale id="price" domain={[98, 108]} range={[145, 55]}>
           <RecordedInspection />
         </LinearScale>
       </LinearScale>
-    </FocusManagement>,
+    </FocusManagement>
   );
 }

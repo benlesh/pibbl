@@ -1,15 +1,25 @@
-import type { PibblComponent } from "@pibbl/core";
+import type { PibblComponent, PibblConfig } from "@pibbl/core";
 import type { LearningExampleModule } from "./learning-types";
 
-/** Adapts component lessons to the catalog's executable test-host interface. */
+/** Selects a named component for the catalog's executable host interface. */
 export async function loadComponentExample(
-  pending: Promise<PibblComponent<object>>,
+  pending: Promise<unknown>,
+  options: { exportName: string; config?: PibblConfig; htmlOverlay?: boolean },
 ): Promise<LearningExampleModule> {
-  const [Component, { pibbl, createElement }] = await Promise.all([
+  const [module, { mountExampleComponent }] = await Promise.all([
     pending,
-    import("@pibbl/core"),
+    import("./example-host"),
   ]);
+  const Component = (module as Record<string, unknown>)[options.exportName];
+  if (typeof Component !== "function")
+    throw new Error(
+      `Example component export "${options.exportName}" was not found.`,
+    );
   return {
-    default: (canvas) => pibbl(canvas, createElement(Component, null)),
+    mount: (canvas) =>
+      mountExampleComponent(canvas, {
+        Component: Component as PibblComponent<object>,
+        ...options,
+      }),
   };
 }

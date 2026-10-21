@@ -1,12 +1,10 @@
 /** @jsxImportSource @pibbl/core */
 import {
-  pibbl,
   Group,
   Rectangle,
   Text,
   FocusManagement,
   useSignal,
-  type PibblController,
 } from "@pibbl/core";
 import {
   useTexture,
@@ -66,7 +64,13 @@ function MaterialSwatches({
       />
       <Rectangle
         pointerEvents="none"
-        style={{ left: 560, top: 222, width: 252, height: 126, fill: "#14232cbb" }}
+        style={{
+          left: 560,
+          top: 222,
+          width: 252,
+          height: 126,
+          fill: "#14232cbb",
+        }}
       />
       <Rectangle
         pointerEvents="none"
@@ -136,7 +140,7 @@ function Button({
     </Group>
   );
 }
-function MaterialLab() {
+export function MaterialLab() {
   const state = useSignal({
     kind: "marble" as TextureKind,
     seed: 24,
@@ -189,7 +193,14 @@ function MaterialLab() {
           A little geology. A little paper. A reproducible accident.
         </Text>
         <Group style={{ translateX: 24, translateY: 118 }}>
-          <MaterialSwatches key={s.kind} kind={s.kind} seed={s.seed} scale={s.scale} detail={s.detail} palette={s.palette} />
+          <MaterialSwatches
+            key={s.kind}
+            kind={s.kind}
+            seed={s.seed}
+            scale={s.scale}
+            detail={s.detail}
+            palette={s.palette}
+          />
           <Text
             pointerEvents="none"
             style={{
@@ -298,7 +309,4 @@ function MaterialLab() {
       </Group>
     </FocusManagement>
   );
-}
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(canvas, <MaterialLab />);
 }

@@ -1,9 +1,12 @@
 import { expect, it } from "vitest";
-import mount from "../../scenarios/src/learning/composition/physics-2d.example.js";
+import { PhysicsLesson as mountComponent } from "../../scenarios/src/learning/composition/physics-2d.example.js";
 import {
   ManualSchedulerDriver,
   installSchedulerDriverForTest,
 } from "../src/lib/scheduler/testing.js";
+import { createExampleMount } from "../../scenarios/src/example-host";
+
+const mount = createExampleMount(mountComponent, { config: { pixelRatio: 1 } });
 
 // Drive the actual public lesson. Its painted blue silhouette is the observable
 // drag position; no test-only body or alternate interaction implementation.

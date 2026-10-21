@@ -50,5 +50,8 @@ const canvas = document.createElement("canvas");
 canvas.width = 320;
 canvas.height = 220;
 document.body.append(canvas);
-const app = pibbl(canvas, <Absolute {...absoluteProps} style={absoluteStyle} />);
+const app = pibbl(
+  canvas,
+  <Absolute {...absoluteProps} style={absoluteStyle} />,
+);
 window.addEventListener("pagehide", () => app.dispose(), { once: true });

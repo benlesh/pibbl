@@ -340,14 +340,26 @@ function typeReferenceName(annotation: unknown): string | undefined {
   return identifierName(typeAnnotation.typeName);
 }
 
-function hasExampleEntry(programBody: readonly SyntaxNode[], exportName?: string): boolean {
-  if (exportName) return programBody.some(statement => {
-    const declaration = statement.declaration;
-    return statement.type === "ExportNamedDeclaration" &&
-      isNode(declaration) && declaration.type === "FunctionDeclaration" &&
-      identifierName(declaration.id) === exportName &&
-      declaration.async !== true && declaration.generator !== true;
-  });
+function hasExampleEntry(
+  programBody: readonly SyntaxNode[],
+  exportName?: string,
+): boolean {
+  if (exportName)
+    return programBody.some((statement) => {
+      const declaration = statement.declaration;
+      return (
+        statement.type === "ExportNamedDeclaration" &&
+        isNode(declaration) &&
+        declaration.type === "FunctionDeclaration" &&
+        identifierName(declaration.id) === exportName &&
+        nodes(declaration.params).length <= 1 &&
+        nodes(declaration.params).every(
+          (parameter) => parameter.type === "AssignmentPattern",
+        ) &&
+        declaration.async !== true &&
+        declaration.generator !== true
+      );
+    });
   const defaults = programBody.filter(
     (statement) => statement.type === "ExportDefaultDeclaration",
   );
@@ -914,7 +926,11 @@ function resolvedCoreNamespaceTypeName(
     : undefined;
 }
 
-function inspectSource(source: string, label: string, exportName?: string): SourceInspection {
+function inspectSource(
+  source: string,
+  label: string,
+  exportName?: string,
+): SourceInspection {
   const file = parseSource(source, label);
   const program = isNode(file.program) ? file.program : undefined;
   const programBody = nodes(program?.body);
@@ -947,11 +963,14 @@ function inspectSource(source: string, label: string, exportName?: string): Sour
   for (const statement of programBody) {
     if (statement.type !== "ImportDeclaration") {
       if (
-        (statement.type === "ExportNamedDeclaration" && !(
-          exportName && isNode(statement.declaration) &&
-          statement.declaration.type === "FunctionDeclaration" &&
-          statement.declaration.async !== true && statement.declaration.generator !== true
-        )) ||
+        (statement.type === "ExportNamedDeclaration" &&
+          !(
+            exportName &&
+            isNode(statement.declaration) &&
+            statement.declaration.type === "FunctionDeclaration" &&
+            statement.declaration.async !== true &&
+            statement.declaration.generator !== true
+          )) ||
         statement.type === "ExportAllDeclaration" ||
         statement.type === "TSExportAssignment" ||
         statement.type === "TSNamespaceExportDeclaration" ||
@@ -1654,9 +1673,12 @@ export function validateLearningSourceText(
     throw invalid(label, "must not use CommonJS module loading or exports.");
   }
   if (!inspection.hasExampleEntry) {
-    throw invalid(label, exportName
-      ? `must export the catalog-selected component "${exportName}".`
-      : "must export the legacy mount(canvas) contract, or select a named component in the catalog.");
+    throw invalid(
+      label,
+      exportName
+        ? `must export the catalog-selected component "${exportName}".`
+        : "must export the legacy mount(canvas) contract, or select a named component in the catalog.",
+    );
   }
   if (inspection.hasBindingViolation) {
     throw invalid(
@@ -1736,7 +1758,8 @@ const DIAGRAM_EDITOR_BASE_DECLARATIONS = [
 function topLevelDeclarationNames(sourceFile: SyntaxNode): Set<string> {
   const program = isNode(sourceFile.program) ? sourceFile.program : undefined;
   const names = new Set<string>();
-  for (const statement of nodes(program?.body)) {
+  for (const entry of nodes(program?.body)) {
+    const statement = declarationValue(entry);
     if (
       statement.type === "FunctionDeclaration" ||
       statement.type === "TSInterfaceDeclaration" ||
@@ -1760,11 +1783,13 @@ function topLevelFunction(
   name: string,
 ): SyntaxNode | undefined {
   const program = isNode(sourceFile.program) ? sourceFile.program : undefined;
-  return nodes(program?.body).find(
-    (statement) =>
-      statement.type === "FunctionDeclaration" &&
-      identifierName(statement.id) === name,
-  );
+  return nodes(program?.body)
+    .map(declarationValue)
+    .find(
+      (statement) =>
+        statement.type === "FunctionDeclaration" &&
+        identifierName(statement.id) === name,
+    );
 }
 
 function callsIdentifier(node: SyntaxNode | undefined, name: string): boolean {

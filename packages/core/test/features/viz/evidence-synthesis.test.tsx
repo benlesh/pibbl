@@ -1,7 +1,13 @@
 import { type PibblController } from "@pibbl/core";
-import mount from "../../../../scenarios/src/learning/composition/viz-evidence-synthesis.example";
+import { VizEvidenceSynthesisExample as mountComponent } from "../../../../scenarios/src/learning/composition/viz-evidence-synthesis.example";
 import { afterEach, expect, it, vi } from "vitest";
 import { testRuntime } from "./support/runtime.js";
+import { createExampleMount } from "../../../../scenarios/src/example-host";
+
+const mount = createExampleMount(mountComponent, {
+  config: { viewport: "responsive" },
+});
+
 let runtime: ReturnType<typeof testRuntime>,
   controller: PibblController | undefined;
 afterEach(() => {

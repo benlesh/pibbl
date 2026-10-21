@@ -1,5 +1,5 @@
-import { pibbl, useSignal, Rectangle, Text, type PibblController } from "@pibbl/core";
-function PaintOrderStudy() {
+import { Rectangle, Text, useSignal } from "@pibbl/core";
+export function PaintOrderStudy() {
   const winner = useSignal("none");
   return [
     <Rectangle
@@ -70,7 +70,4 @@ function PaintOrderStudy() {
         : `TARGET / ${winner.get().toUpperCase()}`}
     </Text>,
   ];
-}
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(canvas, <PaintOrderStudy />);
 }

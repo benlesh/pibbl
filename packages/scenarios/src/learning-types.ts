@@ -1,7 +1,15 @@
-import type { getLearningExampleBySlug, getLearningExamplesByBrowseGroup, getLearningExamplesBySection, learningSections } from './learning-catalog.js';
-import type { loadTutorialSnapshot } from './tutorial-catalog.js';
-import type { TutorialSnapshotCatalogEntry, TutorialSnapshotMetadata } from './tutorial-types.js';
-import type { PibblController } from "@pibbl/core";
+import type {
+  getLearningExampleBySlug,
+  getLearningExamplesByBrowseGroup,
+  getLearningExamplesBySection,
+  learningSections,
+} from "./learning-catalog.js";
+import type { loadTutorialSnapshot } from "./tutorial-catalog.js";
+import type {
+  TutorialSnapshotCatalogEntry,
+  TutorialSnapshotMetadata,
+} from "./tutorial-types.js";
+import type { PibblController, PibblConfig } from "@pibbl/core";
 
 /**
  * A stable identifier for a public learning-example section.
@@ -105,8 +113,12 @@ export interface WorkbenchSourceMetadata {
   source: {
     /** Path recorded or configured by this scenario. See {@link WorkbenchSourceMetadata}. */
     path: string;
-    /** Named component selected by Studio; omitted for legacy mounts. See {@link WorkbenchSourceMetadata}. */
-    exportName?: string;
+    /** Named component selected by Studio. See {@link WorkbenchSourceMetadata}. */
+    exportName: string;
+    /** Host-owned surface settings. See {@link PibblConfig}. */
+    config?: PibblConfig;
+    /** Creates an opt-in HTML overlay host. See {@link WorkbenchSourceMetadata}. */
+    htmlOverlay?: boolean;
   };
 }
 
@@ -172,8 +184,8 @@ export type LearningMount = (canvas: HTMLCanvasElement) => PibblController;
  * @see {@link TutorialSnapshotCatalogEntry}
  */
 export interface LearningExampleModule {
-  /** Default recorded or configured by this scenario. See {@link LearningMount}. */
-  default: LearningMount;
+  /** Host operation for the catalog-selected component. See {@link LearningMount}. */
+  mount: LearningMount;
 }
 
 /**

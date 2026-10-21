@@ -312,7 +312,9 @@ export async function mountEditorWorkbench(
     "typescript",
     // A route can revisit this lesson before an earlier async mount settles.
     // Each mount owns its model until its own lifecycle disposes it.
-    monaco.Uri.parse(`file:///lessons/${options.entry.slug}/${++nextWorkbenchId}.tsx`),
+    monaco.Uri.parse(
+      `file:///lessons/${options.entry.slug}/${++nextWorkbenchId}.tsx`,
+    ),
   );
   const editor = monaco.editor.create(editorHost, {
     model,
@@ -399,6 +401,8 @@ export async function mountEditorWorkbench(
       preview.run({
         code: javascript,
         exportName: options.entry.source.exportName,
+        config: options.entry.source.config,
+        htmlOverlay: options.entry.source.htmlOverlay,
         width: options.entry.canvas.width,
         height: options.entry.canvas.height,
         onEvent: (event) => {

@@ -1,5 +1,17 @@
 import { pibbl, Circle } from "@pibbl/core";
-import { PlotSeries, PointSeries, ScaleAdjust, type PlotKeyAccessor, type PlotSeriesProps, type PointAccessor, type PointMarkStyle, type PointSeriesProps, type PointSeriesStyle, type PointStyleResolver, LinearScale } from "@pibbl/core/viz";
+import {
+  PlotSeries,
+  PointSeries,
+  ScaleAdjust,
+  type PlotKeyAccessor,
+  type PlotSeriesProps,
+  type PointAccessor,
+  type PointMarkStyle,
+  type PointSeriesProps,
+  type PointSeriesStyle,
+  type PointStyleResolver,
+  LinearScale,
+} from "@pibbl/core/viz";
 
 type Datum = { id: string; x: number; y: number; important: boolean };
 const data: readonly Datum[] = [
@@ -45,7 +57,7 @@ const app = pibbl(
     range="width"
     style={{ width: 320, height: 220 }}
   >
-    <LinearScale id="y"  domain={[0, 4]} range="height" reverse>
+    <LinearScale id="y" domain={[0, 4]} range="height" reverse>
       <PointSeries {...points} />
       <PlotSeries {...plot} />
     </LinearScale>

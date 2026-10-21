@@ -1,23 +1,25 @@
 import {
-  Absolute,
-  Circle,
-  Group,
-  Line,
-  Rectangle,
-  Text,
-  pibbl,
-  signal,
-  useLayoutBox,
-  type PibblController,
-  type WritableSignal,
-} from "@pibbl/core";
-import {
   Axis,
   CensoredPointSeries,
   GridLines,
   LinearScale,
   LogScale,
 } from "@pibbl/core/viz";
+import {
+  useConst,
+  Absolute,
+  Circle,
+  Group,
+  Line,
+  Rectangle,
+  Text,
+  useCanvasContext,
+  useReaction,
+  type PibblNode,
+  signal,
+  useLayoutBox,
+  type WritableSignal,
+} from "@pibbl/core";
 
 type Result = {
   hour: number;
@@ -261,10 +263,11 @@ function Scene({ selected: supplied }: Fixture) {
   );
 }
 
-export default function mount(
+function createVizCensoredAssayExampleContent(
   canvas: HTMLCanvasElement,
   fixture: Fixture = {},
-): PibblController {
+) {
+  let node: PibblNode;
   const selected = fixture.selected ?? signal<string | null>(null);
   const details = document.createElement("details");
   details.style.cssText =
@@ -307,20 +310,30 @@ export default function mount(
   details.append(summary, table);
   canvas.after(details);
   try {
-    const controller = pibbl(canvas, <Scene selected={selected} />, {
-      viewport: "responsive",
-    });
+    node = <Scene selected={selected} />;
     let disposed = false;
     return {
-      dispose() {
-        if (disposed) return;
-        disposed = true;
-        controller.dispose();
-        details.remove();
+      node,
+      ...{
+        dispose() {
+          if (disposed) return;
+          disposed = true;
+
+          details.remove();
+        },
       },
     };
   } catch (error) {
     details.remove();
     throw error;
   }
+}
+
+export function VizCensoredAssayExample(fixture: Fixture = {}) {
+  const canvas = useCanvasContext().canvas as HTMLCanvasElement;
+  const resource = useConst(() =>
+    createVizCensoredAssayExampleContent(canvas, fixture),
+  );
+  useReaction(() => resource.dispose, []);
+  return resource.node;
 }

@@ -1,11 +1,16 @@
-import { pibbl, Group, Rectangle, Text, type PibblController } from "@pibbl/core";
+import { Group, Rectangle, Text } from "@pibbl/core";
 
-function DiagramEditor() {
+export function DiagramEditor() {
   return [
     <Rectangle style={{ width: 960, height: 56, fill: "#fffdf6" }} />,
     <Text
       pointerEvents="none"
-      style={{ left: 24, top: 34, fill: "#17211d", font: "900 22px sans-serif" }}
+      style={{
+        left: 24,
+        top: 34,
+        fill: "#17211d",
+        font: "900 22px sans-serif",
+      }}
     >
       WORKFLOW MAP
     </Text>,
@@ -79,13 +84,14 @@ function DiagramEditor() {
     />,
     <Text
       pointerEvents="none"
-      style={{ left: 20, top: 589, fill: "#fffdf6", font: "700 12px monospace" }}
+      style={{
+        left: 20,
+        top: 589,
+        fill: "#fffdf6",
+        font: "700 12px monospace",
+      }}
     >
       READY · 100%
     </Text>,
   ];
-}
-
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(canvas, <DiagramEditor />);
 }

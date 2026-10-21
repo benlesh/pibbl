@@ -114,7 +114,7 @@ async function renderLearningExample(slug: string): Promise<{
   };
 
   const module = await loadLearningExample(entry);
-  const controller = module.default(canvas);
+  const controller = module.mount(canvas);
   mountedControllers.push(controller);
   await new Promise<void>((resolve) =>
     requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
@@ -1204,7 +1204,10 @@ describe("learning example catalog", () => {
     const invalidCatalog = [
       {
         ...first,
-        source: { path: first.source.path.replace(/\.tsx$/u, ".ts") },
+        source: {
+          exportName: "Fixture",
+          path: first.source.path.replace(/\.tsx$/u, ".ts"),
+        },
       },
       ...rest,
     ];
@@ -1612,6 +1615,7 @@ describe("learning example catalog", () => {
     expect(signals).toMatchObject({
       api: ["signal", "computed", "useSignal"],
       source: {
+        exportName: "Fixture",
         path: "packages/scenarios/src/learning/start/signals.example.tsx",
       },
     });
@@ -1708,10 +1712,12 @@ describe("learning example catalog", () => {
       validateLearningSourceText(source, {
         authoring: "createElement",
         label: nonJsx!.slug,
+        exportName: nonJsx!.source.exportName,
       }),
     ).not.toThrow();
     expect(source).toContain("createElement(");
-    expect(source).toMatch(/pibbl\(\s*canvas,\s*createElement\(/u);
+    expect(source).toContain(`export function ${nonJsx!.source.exportName}(`);
+    expect(source).not.toContain("export default");
   });
 
   it("mounts and drives fragments, keyed dynamic children, text zero, focus policies, and lifecycle without JSX", async () => {

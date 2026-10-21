@@ -1,4 +1,4 @@
-import { useSignal, Rectangle, Text } from "@pibbl/core";
+import { Rectangle, Text, useSignal } from "@pibbl/core";
 export function ClickStudy() {
   const picks = useSignal(0);
   const sleeve = (x: number, color: string, value: number) => (

@@ -107,9 +107,8 @@ also demonstrates both families and categorical custom-mark placement:
 ```tsx
 import { Circle, Group, pibbl } from "@pibbl/core";
 import { Axis, PointScale, SymlogScale, ScaleAdjust } from "@pibbl/core/viz";
-export default function mount(canvas: HTMLCanvasElement) {
-  return pibbl(
-    canvas,
+export function SymlogPointScalesExample() {
+  return (
     <Group style={{ translateX: 60, translateY: 30 }}>
       <PointScale id="state" domain={["A", "B", "C"]} range={[0, 120]}>
         <SymlogScale
@@ -125,7 +124,7 @@ export default function mount(canvas: HTMLCanvasElement) {
           </ScaleAdjust>
         </SymlogScale>
       </PointScale>
-    </Group>,
+    </Group>
   );
 }
 ```

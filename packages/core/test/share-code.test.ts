@@ -7,7 +7,11 @@ import {
   replaceCodeRoute,
 } from "../../../playground/src/share-code";
 import { loadWorkbenchSource } from "../../../playground/src/learning-sources";
-import { toRunnableScript } from "../../../playground/src/sandbox-module";
+import { toRunnableScript as compileRunnableScript } from "../../../playground/src/sandbox-module";
+
+function toRunnableScript(code: string) {
+  return compileRunnableScript(code, { exportName: "Lesson" });
+}
 
 const route = "#/examples/drawing/rectangle";
 const canonical = "export default function mount() {}\n";
@@ -81,7 +85,12 @@ describe("learning example sandbox modules", () => {
     runtime: Readonly<Record<string, unknown>>,
     canvasElement: unknown,
   ): unknown {
-    const sandboxGlobal = { PIBBL_CORE: runtime } as {
+    const sandboxGlobal = {
+      PIBBL_CORE: {
+        ...runtime,
+        createElement: (Component: () => unknown) => Component(),
+      },
+    } as {
       PIBBL_CORE: Readonly<Record<string, unknown>>;
       __PIBBL_EXAMPLE_MOUNT__?: (canvas: unknown) => unknown;
     };
@@ -118,8 +127,8 @@ import {
 import { Fragment as canvas } from "@pibbl/core/jsx-dev-runtime";
 const literal = "import this and preserve export {}";
 const template = \`export \${"import"} text\`;
-export default function mount(/* before */ canvas /* after */) {
-  return PIBBL_CORE(canvas, __pibblStudioRuntime(controller, { children: [literal, template] }));
+export function Lesson(/* before */ /* after */) {
+  return ( __pibblStudioRuntime(controller, { children: [literal, template] }));
 }
 export /* empty module sentinel */ {};
 `;
@@ -150,8 +159,8 @@ export /* empty module sentinel */ {};
 import { jsx as _jsx, jsxs as _jsxs } from "@pibbl/core/jsx-runtime";
 import { jsxDEV as _jsxDEV } from "@pibbl/core/jsx-dev-runtime";
 import { pibbl, Rectangle, Text } from "@pibbl/core";
-export default function mount(canvas) {
-  return pibbl(canvas, [
+export function Lesson() {
+  return ( [
     _jsx(Rectangle, { style: { width: 2, height: 2 } }),
     _jsxs(Text, { children: ["Pibbl ", 1] }),
     _jsxDEV(Rectangle, { style: { width: 4, height: 4 } }, undefined, false, undefined, undefined),
@@ -190,8 +199,8 @@ export default function mount(canvas) {
 import { pibbl } from "@pibbl/core";
 import { defineThreeLayer } from "@pibbl/three";
 const ProductScene = defineThreeLayer({ create() {} });
-export default function mount(canvas) {
-  return pibbl(canvas, ProductScene);
+export function Lesson() {
+  return ( ProductScene);
 }
 `,
       {
@@ -229,8 +238,8 @@ const effect = defineParticleEffect2D({
     renderer: { type: "circle" },
   }],
 });
-export default function mount(canvas) {
-  return pibbl(canvas, _jsx(Particles2D, { effect, style: { width: 320, height: 180 } }));
+export function Lesson() {
+  return ( _jsx(Particles2D, { effect, style: { width: 320, height: 180 } }));
 }
 `,
       {
@@ -287,8 +296,8 @@ const Layer = defineThreeLayer({
     return { scene, camera, controls };
   },
 });
-export default function mount(canvas) {
-  return pibbl(canvas, Layer);
+export function Lesson() {
+  return ( Layer);
 }
 `,
       {
@@ -329,9 +338,9 @@ export default function mount(canvas) {
   ])("rejects unsupported Three legacy or deep paths: %s", (statement) => {
     expect(() =>
       toRunnableScript(
-        `${statement}\nexport default function mount(canvas) { return canvas; }`,
+        `${statement}\nexport function Lesson() { return canvas; }`,
       ),
-    ).toThrow(/default mount\(canvas\)/u);
+    ).toThrow(/component/u);
   });
 
   it("executes the exact public physics entries through one Studio runtime", () => {
@@ -341,8 +350,8 @@ import { pibbl } from "@pibbl/core";
 import { jsx as _jsx } from "@pibbl/core/jsx-runtime";
 import { PhysicsWorld2D, dynamicBody2D } from "@pibbl/core/physics/2d";
 import { circleShape2D } from "@pibbl/core/physics/2d/geometry";
-export default function mount(canvas) {
-  return pibbl(canvas, _jsx(PhysicsWorld2D, {
+export function Lesson() {
+  return ( _jsx(PhysicsWorld2D, {
     gravity: [0, 600],
     children: dynamicBody2D({ collider: circleShape2D({ radius: 12 }) }),
   }));
@@ -384,7 +393,7 @@ export default function mount(canvas) {
   ])("rejects unsupported emitted module syntax: %s", (statement) => {
     expect(() =>
       toRunnableScript(
-        `${statement}\nexport default function mount(canvas) { return canvas; }`,
+        `${statement}\nexport function Lesson() { return canvas; }`,
       ),
     ).toThrow();
   });
@@ -395,7 +404,7 @@ export default function mount(canvas) {
   ])("rejects dynamic imports in any lexical context: %s", (statement) => {
     expect(() =>
       toRunnableScript(
-        `import { pibbl } from "@pibbl/core";\n${statement}\nexport default function mount(canvas) { return canvas; }`,
+        `import { pibbl } from "@pibbl/core";\n${statement}\nexport function Lesson() { return canvas; }`,
       ),
     ).toThrow();
   });
@@ -405,11 +414,11 @@ export default function mount(canvas) {
     'export * from "@pibbl/core";',
     "export const extra = 1;",
     "export default canvas => canvas;",
-    "export default function mount(canvas) { return canvas; }\nexport {};\nexport {};",
+    "export function Lesson() { return canvas; }\nexport {};\nexport {};",
   ])("rejects malformed or extra exports: %s", (exportSource) => {
     expect(() =>
       toRunnableScript(`import { pibbl } from "@pibbl/core";\n${exportSource}`),
-    ).toThrow(/default mount\(canvas\)/u);
+    ).toThrow(/component/u);
   });
 
   it.each([
@@ -418,7 +427,7 @@ export default function mount(canvas) {
   ])("rejects duplicate local import bindings: %s", (imports) => {
     expect(() =>
       toRunnableScript(
-        `${imports}\nexport default function mount(canvas) { return canvas; }`,
+        `${imports}\nexport function Lesson() { return canvas; }`,
       ),
     ).toThrow();
   });
@@ -429,11 +438,11 @@ export default function mount(canvas) {
     "export default function other(canvas) { return canvas; }",
     "export default async function mount(canvas) { return canvas; }",
     "export default function* mount(canvas) { yield canvas; }",
-    "export default function mount(canvas) { return canvas; }\nexport default function mount(canvas) { return canvas; }",
+    "export function Lesson() { return canvas; }\nexport function Lesson() { return canvas; }",
   ])("requires exactly one default mount(canvas) export", (mountSource) => {
     expect(() =>
       toRunnableScript(`import { pibbl } from "@pibbl/core";\n${mountSource}`),
-    ).toThrow(/default mount\(canvas\)/u);
+    ).toThrow(/component/u);
   });
 
   it("does not reinterpret module-looking text in strings, templates, or comments", () => {
@@ -442,8 +451,8 @@ import { pibbl } from "@pibbl/core";
 // import external from "external"; export const nope = true;
 const stringValue = "import this; export {};";
 const templateValue = \`dynamic import("external") and export default\`;
-export default function mount(canvas /* retained comment */) {
-  return pibbl(canvas, { stringValue, templateValue });
+export function Lesson(/* retained comment */) {
+  return ( { stringValue, templateValue });
 }
 `;
     const runnable = toRunnableScript(emittedCode);
@@ -455,6 +464,6 @@ export default function mount(canvas /* retained comment */) {
     expect(runnable).toContain(
       '`dynamic import("external") and export default`',
     );
-    expect(runnable).toContain("canvas /* retained comment */");
+    expect(runnable).toContain("/* retained comment */");
   });
 });

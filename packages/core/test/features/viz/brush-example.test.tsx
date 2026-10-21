@@ -1,6 +1,6 @@
 import { signal } from "@pibbl/core";
 import { expect, it, vi } from "vitest";
-import mount from "../../../../scenarios/src/learning/composition/viz-domain-exploration.example.js";
+import { VizDomainExplorationExample as mountComponent } from "../../../../scenarios/src/learning/composition/viz-domain-exploration.example.js";
 import { testRuntime } from "./support/runtime.js";
 import {
   wheelLogicalPoint,
@@ -11,6 +11,12 @@ import {
   touchStartLogicalPoint,
 } from "../../support/user-input.js";
 import { cdp, userEvent } from "vitest/browser";
+import { createExampleMount } from "../../../../scenarios/src/example-host";
+
+const mount = createExampleMount(mountComponent, {
+  config: { viewport: "responsive" },
+});
+
 it("keeps a native captured brush draft separate until commit and cancels with Escape", async () => {
   const runtime = testRuntime(),
     canvas = document.createElement("canvas");

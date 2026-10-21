@@ -1,12 +1,6 @@
-import {
-  Group,
-  Rectangle,
-  Text,
-  pibbl,
-  useSignal,
-  type PibblController,
-} from "@pibbl/core";
 import { GraphLabel, Treemap } from "@pibbl/core/viz";
+import { Group, Rectangle, Text, useSignal } from "@pibbl/core";
+
 type Item = {
   id: string;
   name: string;
@@ -71,7 +65,7 @@ const details: Record<string, string> = {
   audio: "Audio · 4.6 GB",
   thumbnails: "Thumbnails · 1.2 GB",
 };
-function Scene() {
+export function Scene() {
   const selected = useSignal<string | number | null>(null);
   return (
     <Group>
@@ -182,7 +176,4 @@ function Scene() {
       />
     </Group>
   );
-}
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(canvas, <Scene />);
 }

@@ -1,13 +1,5 @@
-import {
-  pibbl,
-  useSignal,
-  Group,
-  Rectangle,
-  SvgPath,
-  Text,
-  type PibblController,
-} from "@pibbl/core";
-function SvgPathStudy() {
+import { Group, Rectangle, SvgPath, Text, useSignal } from "@pibbl/core";
+export function SvgPathStudy() {
   const active = useSignal(false);
   return [
     <Rectangle
@@ -61,7 +53,4 @@ function SvgPathStudy() {
       {active.get() ? "SVG PATH / ACTIVE" : "SVG PATH / CLICK"}
     </Text>,
   ];
-}
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(canvas, <SvgPathStudy />);
 }

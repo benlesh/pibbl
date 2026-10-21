@@ -1,11 +1,6 @@
-import {
-  pibbl,
-  Rectangle,
-  RegularPolygon,
-  type PibblController,
-} from "@pibbl/core";
+import { Rectangle, RegularPolygon } from "@pibbl/core";
 
-function RegularPolygonStudy() {
+export function RegularPolygonStudy() {
   return [
     <Rectangle
       style={{ left: 0, top: 0, width: 720, height: 420, fill: "#f7f0df" }}
@@ -46,8 +41,4 @@ function RegularPolygonStudy() {
       }}
     />,
   ];
-}
-
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(canvas, <RegularPolygonStudy />);
 }

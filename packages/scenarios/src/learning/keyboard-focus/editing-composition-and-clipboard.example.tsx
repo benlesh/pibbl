@@ -1,13 +1,12 @@
 import {
-  pibbl,
-  useEventTarget,
-  useSignal,
+  useCanvasContext,
   FocusManagement,
   Rectangle,
   Text,
+  useEventTarget,
+  useSignal,
   type PibblClipboardEvent,
   type PibblCompositionEvent,
-  type PibblController,
   type PibblInputEvent,
 } from "@pibbl/core";
 function boxPath(x: number, y: number, width: number, height: number): Path2D {
@@ -244,11 +243,11 @@ function EditingCompositionClipboardLesson({
     </Text>,
   ];
 }
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(
-    canvas,
+export function EditingCompositionAndClipboardExample() {
+  const canvas = useCanvasContext().canvas as HTMLCanvasElement;
+  return (
     <FocusManagement>
       <EditingCompositionClipboardLesson canvas={canvas} />
-    </FocusManagement>,
+    </FocusManagement>
   );
 }

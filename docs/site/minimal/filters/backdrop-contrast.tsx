@@ -7,9 +7,8 @@ const colors: PibblBackdropContrastFilterOptions = {
   light: "white",
   dark: "black",
 };
-export default function mount(canvas: HTMLCanvasElement) {
-  return pibbl(
-    canvas,
+export function BackdropContrastExample() {
+  return (
     <Group>
       <Rectangle style={{ width: 640, height: 300, fill: "#f8f6f0" }} />
       <Rectangle
@@ -26,7 +25,7 @@ export default function mount(canvas: HTMLCanvasElement) {
       >
         Light meets dark
       </Text>
-    </Group>,
+    </Group>
   );
 }
 
@@ -35,5 +34,5 @@ const canvas = document.createElement("canvas");
 canvas.width = 640;
 canvas.height = 300;
 document.body.append(canvas);
-const controller = mount(canvas);
+const controller = pibbl(canvas, <BackdropContrastExample />);
 window.addEventListener("pagehide", () => controller.dispose(), { once: true });

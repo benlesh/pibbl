@@ -1,14 +1,12 @@
+import { Sankey, SankeyFlow, SankeyNode } from "@pibbl/core/viz";
 import {
   FocusManagement,
   Group,
   Rectangle,
   Text,
-  pibbl,
   useSignal,
-  type PibblController,
 } from "@pibbl/core";
 import { backdropContrast } from "@pibbl/core/filters";
-import { Sankey, SankeyFlow, SankeyNode } from "@pibbl/core/viz";
 
 const nodes = [
   {
@@ -317,11 +315,10 @@ function Scene() {
   );
 }
 
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(
-    canvas,
+export function VizGraphSankeyExample() {
+  return (
     <FocusManagement>
       <Scene />
-    </FocusManagement>,
+    </FocusManagement>
   );
 }

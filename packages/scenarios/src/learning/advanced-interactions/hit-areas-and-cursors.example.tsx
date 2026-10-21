@@ -1,12 +1,5 @@
-import {
-  pibbl,
-  useSignal,
-  Line,
-  Rectangle,
-  Text,
-  type PibblController,
-} from "@pibbl/core";
-function HitAreaStudy() {
+import { Line, Rectangle, Text, useSignal } from "@pibbl/core";
+export function HitAreaStudy() {
   const hits = useSignal(0);
   const route: [number, number][] = [
     [80, 290],
@@ -63,7 +56,4 @@ function HitAreaStudy() {
       }}
     >{`CLICKS NEAR THE LINE / ${hits.get()}`}</Text>,
   ];
-}
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(canvas, <HitAreaStudy />);
 }

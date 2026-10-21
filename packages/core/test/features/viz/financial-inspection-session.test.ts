@@ -1,5 +1,10 @@
-import mount from "../../../../scenarios/src/learning/composition/financial-market-session.example.js";
+import { FinancialMarketSessionExample as mountComponent } from "../../../../scenarios/src/learning/composition/financial-market-session.example.js";
 import { afterEach, expect, it, vi } from "vitest";
+import { createExampleMount } from "../../../../scenarios/src/example-host";
+
+const mount = createExampleMount(mountComponent, {
+  config: { viewport: "responsive" },
+});
 
 const cleanups: (() => void)[] = [];
 afterEach(() => {
@@ -113,12 +118,12 @@ it("changes the visible domain independently of selection and freezes a manual d
 it("adds calendar and bounded navigation while preserving the pinned timestamp", () => {
   const s = scene();
   s.flush();
-  const x = 16 + 6.5 / 56 * (760 - 94);
+  const x = 16 + (6.5 / 56) * (760 - 94);
   s.click(x, 170);
   const labels = s.click(30, 120);
   expect(labels).toContain("1M");
   expect(labels).toContain("13 Jan 2026");
-  expect(labels.some(text => text.includes("outside window"))).toBe(true);
+  expect(labels.some((text) => text.includes("outside window"))).toBe(true);
   expect(s.click(300, 120)).toContain("13 Jan 2026");
 });
 

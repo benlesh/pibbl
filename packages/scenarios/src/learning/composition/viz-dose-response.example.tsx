@@ -1,18 +1,4 @@
 import {
-  Absolute,
-  Circle,
-  Group,
-  Line,
-  Rectangle,
-  Text,
-  pibbl,
-  signal,
-  useLayoutBox,
-  useSignal,
-  type PibblController,
-  type WritableSignal,
-} from "@pibbl/core";
-import {
   Axis,
   GridLines,
   IntervalBandSeries,
@@ -21,6 +7,22 @@ import {
   LogScale,
   PointSeries,
 } from "@pibbl/core/viz";
+import {
+  useConst,
+  Absolute,
+  Circle,
+  Group,
+  Line,
+  Rectangle,
+  Text,
+  useCanvasContext,
+  useReaction,
+  type PibblNode,
+  signal,
+  useLayoutBox,
+  useSignal,
+  type WritableSignal,
+} from "@pibbl/core";
 
 // Invented teaching data. Observations and predictions are supplied separately;
 // Pibbl performs no fitting, interval calculation, or clinical inference.
@@ -238,10 +240,11 @@ function Scene({ showBand }: { showBand?: WritableSignal<boolean> }) {
     </Group>
   );
 }
-export default function mount(
+function createVizDoseResponseExampleContent(
   canvas: HTMLCanvasElement,
   fixture: DoseResponseFixture = {},
-): PibblController {
+) {
+  let node: PibblNode;
   const showBand = fixture.showBand ?? signal(true);
   const controls = document.createElement("div");
   controls.style.cssText =
@@ -294,17 +297,18 @@ export default function mount(
   details.append(summary, table, supplied);
   canvas.after(controls, details);
   try {
-    const controller = pibbl(canvas, <Scene showBand={showBand} />, {
-      viewport: "responsive",
-    });
+    node = <Scene showBand={showBand} />;
     let disposed = false;
     return {
-      dispose() {
-        if (disposed) return;
-        disposed = true;
-        controller.dispose();
-        controls.remove();
-        details.remove();
+      node,
+      ...{
+        dispose() {
+          if (disposed) return;
+          disposed = true;
+
+          controls.remove();
+          details.remove();
+        },
       },
     };
   } catch (error) {
@@ -312,4 +316,13 @@ export default function mount(
     details.remove();
     throw error;
   }
+}
+
+export function VizDoseResponseExample(fixture: DoseResponseFixture = {}) {
+  const canvas = useCanvasContext().canvas as HTMLCanvasElement;
+  const resource = useConst(() =>
+    createVizDoseResponseExampleContent(canvas, fixture),
+  );
+  useReaction(() => resource.dispose, []);
+  return resource.node;
 }

@@ -1,6 +1,11 @@
 import { batch, signal } from "@pibbl/core";
-import mount from "./learning/composition/viz-points-and-inspection.example.js";
+import { VizPointsAndInspectionExample as mountComponent } from "./learning/composition/viz-points-and-inspection.example.js";
 import type { ScenarioDefinition } from "./types.js";
+import { createExampleMount } from "./example-host";
+
+const mount = createExampleMount(mountComponent, { config: {
+      viewport: "responsive" } });
+
 export interface VizPointsState {
   panels: readonly {
     width: number;

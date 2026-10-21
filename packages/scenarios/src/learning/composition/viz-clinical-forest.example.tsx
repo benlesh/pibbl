@@ -1,16 +1,17 @@
 import {
+  useConst,
   Absolute,
   FocusManagement,
   Group,
   Line,
   Rectangle,
   Text,
-  pibbl,
+  useCanvasContext,
+  type PibblNode,
   signal,
   useLayoutBox,
   useReaction,
   useSignal,
-  type PibblController,
   type WritableSignal,
 } from "@pibbl/core";
 import {
@@ -531,13 +532,11 @@ function Scene({
   );
 }
 
-const mounts = new WeakMap<HTMLCanvasElement, PibblController>();
-
-export default function mount(
+function createVizClinicalForestExampleContent(
   canvas: HTMLCanvasElement,
   fixture: Fixture = {},
-): PibblController {
-  mounts.get(canvas)?.dispose();
+) {
+  let node: PibblNode;
   const selected = fixture.selected ?? signal<string | null>(null);
   const oldHeight = canvas.style.height;
   const oldMinHeight = canvas.style.minHeight,
@@ -626,27 +625,30 @@ export default function mount(
   details.append(summary, table);
   canvas.after(details);
   try {
-    const controller = pibbl(
-      canvas,
-      <Scene fixture={{ ...fixture, selected }} canvas={canvas} />,
-      { viewport: "responsive" },
-    );
+    node = <Scene fixture={{ ...fixture, selected }} canvas={canvas} />;
     let disposed = false;
-    const owned: PibblController = {
+    const owned = {
       dispose() {
         if (disposed) return;
         disposed = true;
-        mounts.delete(canvas);
-        controller.dispose();
+
         details.remove();
         restore();
       },
     };
-    mounts.set(canvas, owned);
-    return owned;
+    return { node, ...owned };
   } catch (error) {
     details.remove();
     restore();
     throw error;
   }
+}
+
+export function VizClinicalForestExample(fixture: Fixture = {}) {
+  const canvas = useCanvasContext().canvas as HTMLCanvasElement;
+  const resource = useConst(() =>
+    createVizClinicalForestExampleContent(canvas, fixture),
+  );
+  useReaction(() => resource.dispose, []);
+  return resource.node;
 }

@@ -3,10 +3,8 @@ import {
   Group,
   Rectangle,
   Text,
-  pibbl,
   useLayoutBox,
   useSignal,
-  type PibblController,
   type PibblLogicalMouseEvent,
 } from "@pibbl/core";
 import {
@@ -348,12 +346,10 @@ function Lesson() {
     </>
   );
 }
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(
-    canvas,
+export function FinancialLinkedPanesExample() {
+  return (
     <FocusManagement>
       <Lesson />
-    </FocusManagement>,
-    { viewport: "responsive" },
+    </FocusManagement>
   );
 }

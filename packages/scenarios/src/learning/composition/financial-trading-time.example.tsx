@@ -4,11 +4,9 @@ import {
   FocusManagement,
   Rectangle,
   Text,
-  pibbl,
   useLayoutBox,
   useRectPath,
   useSignal,
-  type PibblController,
   type PibblLogicalMouseEvent,
   type PibblNode,
 } from "@pibbl/core";
@@ -369,12 +367,10 @@ function Chart() {
   );
 }
 /** Mount a responsive trading-time lesson with application-owned viewport and lazy mouse inspection. */
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(
-    canvas,
+export function FinancialTradingTimeExample() {
+  return (
     <FocusManagement>
       <Chart />
-    </FocusManagement>,
-    { viewport: "responsive" },
+    </FocusManagement>
   );
 }

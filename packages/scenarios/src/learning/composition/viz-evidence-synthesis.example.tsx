@@ -1,17 +1,4 @@
 import {
-  Absolute,
-  Group,
-  Line,
-  Rectangle,
-  Text,
-  pibbl,
-  signal,
-  useLayoutBox,
-  useReaction,
-  type PibblController,
-  type WritableSignal,
-} from "@pibbl/core";
-import {
   Axis,
   GridLines,
   HorizontalIntervalSeries,
@@ -22,6 +9,20 @@ import {
   ReferenceLine,
   WeightedPointSeries,
 } from "@pibbl/core/viz";
+import {
+  useConst,
+  Absolute,
+  Group,
+  Line,
+  Rectangle,
+  Text,
+  useCanvasContext,
+  type PibblNode,
+  signal,
+  useLayoutBox,
+  useReaction,
+  type WritableSignal,
+} from "@pibbl/core";
 
 // Source: metadat dat.bcg (13 studies), retrieved 2026-10-12:
 // https://wviechtb.github.io/metadat/reference/dat.bcg.html
@@ -440,12 +441,11 @@ function Scene({
     </Group>
   );
 }
-const mounts = new WeakMap<HTMLCanvasElement, PibblController>();
-export default function mount(
+function createVizEvidenceSynthesisExampleContent(
   canvas: HTMLCanvasElement,
   fixture: Fixture = {},
-): PibblController {
-  mounts.get(canvas)?.dispose();
+) {
+  let node: PibblNode;
   const showPrediction = fixture.showPrediction ?? signal(false);
   const oldHeight = canvas.style.height,
     oldMin = canvas.style.minHeight,
@@ -534,32 +534,32 @@ export default function mount(
     }
   }
   try {
-    const controller = pibbl(
-      canvas,
-      <Scene canvas={canvas} showPrediction={showPrediction} />,
-      { viewport: "responsive" },
-    );
+    node = <Scene canvas={canvas} showPrediction={showPrediction} />;
     let disposed = false;
     const owned = {
       dispose() {
         if (disposed) return;
         disposed = true;
-        mounts.delete(canvas);
-        try {
-          controller.dispose();
-        } finally {
-          controls.remove();
-          details.remove();
-          restore();
-        }
+
+        controls.remove();
+        details.remove();
+        restore();
       },
     };
-    mounts.set(canvas, owned);
-    return owned;
+    return { node, ...owned };
   } catch (error) {
     controls.remove();
     details.remove();
     restore();
     throw error;
   }
+}
+
+export function VizEvidenceSynthesisExample(fixture: Fixture = {}) {
+  const canvas = useCanvasContext().canvas as HTMLCanvasElement;
+  const resource = useConst(() =>
+    createVizEvidenceSynthesisExampleContent(canvas, fixture),
+  );
+  useReaction(() => resource.dispose, []);
+  return resource.node;
 }

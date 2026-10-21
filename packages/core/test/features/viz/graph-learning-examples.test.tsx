@@ -1,10 +1,16 @@
 import { page } from "vitest/browser";
 import { afterEach, expect, it, vi } from "vitest";
 import { testRuntime } from "./support/runtime.js";
-import matrixMount from "../../../../scenarios/src/learning/composition/viz-graph-matrix.example.tsx";
-import sankeyMount from "../../../../scenarios/src/learning/composition/viz-graph-sankey.example.tsx";
-import bipartiteMount from "../../../../scenarios/src/learning/composition/viz-graph-bipartite.example.tsx";
-import chordMount from "../../../../scenarios/src/learning/composition/viz-graph-chord.example.tsx";
+import { VizGraphMatrixExample as matrixMountComponent } from "../../../../scenarios/src/learning/composition/viz-graph-matrix.example.tsx";
+import { VizGraphSankeyExample as sankeyMountComponent } from "../../../../scenarios/src/learning/composition/viz-graph-sankey.example.tsx";
+import { VizGraphBipartiteExample as bipartiteMountComponent } from "../../../../scenarios/src/learning/composition/viz-graph-bipartite.example.tsx";
+import { VizGraphChordExample as chordMountComponent } from "../../../../scenarios/src/learning/composition/viz-graph-chord.example.tsx";
+import { createExampleMount } from "../../../../scenarios/src/example-host";
+
+const matrixMount = createExampleMount(matrixMountComponent);
+const sankeyMount = createExampleMount(sankeyMountComponent);
+const bipartiteMount = createExampleMount(bipartiteMountComponent);
+const chordMount = createExampleMount(chordMountComponent);
 
 const offscreenDraw = OffscreenCanvasRenderingContext2D.prototype.fillText;
 

@@ -1,3 +1,4 @@
+import type { PibblConfig } from "@pibbl/core";
 import { loadComponentExample } from "./component-example";
 import type {
   LearningExampleCatalogEntry,
@@ -88,7 +89,9 @@ interface LearningDraft extends Omit<
   "authoring" | "relationships" | "source"
 > {
   authoring?: "jsx" | "createElement";
-  exportName?: string;
+  exportName: string;
+  config?: PibblConfig;
+  htmlOverlay?: boolean;
   related?: readonly string[];
   load: () => Promise<unknown>;
 }
@@ -125,154 +128,992 @@ function browseGroupFor(
 }
 
 const drafts = [
-{"slug": "viz-graph-dependency", "title": "Release dependencies", "shortTitle": "Release dependencies", "section": "composition", "order": 12000, "summary": "Trace an illustrative commerce release from signed commit to global rollout.", "api": ["DependencyGraph", "layoutDependencies", "GraphView"], "objectives": ["Read the relationships, quantities, and units shown in this example.", "Customize the layout, marks, labels, and interaction through public APIs."], "prompts": {"gesture": "Select a release stage to inspect its prerequisites and downstream stages.", "code": "Change the records or replace the geometry calculation and paint."}, "apiNotes": ["Checked-in illustrative data, not live measurements. See the canvas caption for units and interpretation.", "Geometry helpers are independent of rendering; built-in marks use ordinary Pibbl events."], "canvas": {"width": 1100, "height": 620}, "related": ["viz-graph-force"], load: () => import("./learning/composition/viz-graph-dependency.example")},
-{"slug": "viz-graph-force", "title": "Team collaboration", "shortTitle": "Team collaboration", "section": "composition", "order": 12001, "summary": "Explore delivery dependencies between twelve illustrative product teams.", "api": ["ForceNetwork", "createForceSimulation", "useForceNetwork", "GraphView"], "objectives": ["Read the relationships, quantities, and units shown in this example.", "Customize the layout, marks, labels, and interaction through public APIs."], "prompts": {"gesture": "Drag a team to pin it. Select a team to highlight its links; use Release pins to let the layout move them again.", "code": "Change the records or replace the geometry calculation and paint."}, "apiNotes": ["Checked-in illustrative data, not live measurements. See the canvas caption for units and interpretation.", "Geometry helpers are independent of rendering; built-in marks use ordinary Pibbl events."], "canvas": {"width": 1100, "height": 620}, "related": ["viz-graph-dependency"], load: () => import("./learning/composition/viz-graph-force.example")},
-{"slug": "viz-graph-tree", "title": "Organization structure", "shortTitle": "Organization structure", "section": "composition", "order": 12002, "summary": "Explore an illustrative organization through a collapsible tidy tree.", "api": ["TidyTree", "layoutTree", "GraphNode", "GraphLabel"], "objectives": ["Read the relationships, quantities, and units shown in this example.", "Customize the layout, marks, labels, and interaction through public APIs."], "prompts": {"gesture": "Select a manager to collapse or expand their reports.", "code": "Change the records or replace the geometry calculation and paint."}, "apiNotes": ["Checked-in illustrative data, not live measurements. See the canvas caption for units and interpretation.", "Geometry helpers are independent of rendering; built-in marks use ordinary Pibbl events."], "canvas": {"width": 1000, "height": 570}, "related": ["viz-graph-dependency"], load: () => import("./learning/composition/viz-graph-tree.example")},
-{"slug": "viz-graph-tree-reconstruction", "title": "Organization structure · public reconstruction", "shortTitle": "Organization structure · public reconstruction", "section": "composition", "order": 12003, "summary": "Explore an illustrative organization through a collapsible tidy tree. Rebuild through supported public marks and geometry.", "api": ["TidyTree", "layoutTree", "GraphNode", "GraphLabel"], "objectives": ["Read relationships and quantities from realistic illustrative data.", "Customize geometry, marks, labels and interaction through public APIs."], "prompts": {"gesture": "Inspect the visualization, then edit the public geometry and drawing code below.", "code": "Change the records or replace the geometry calculation and paint."}, "apiNotes": ["Checked-in illustrative data, not live measurements. See the canvas caption for units and interpretation.", "Geometry helpers are independent of rendering; built-in marks use ordinary Pibbl events."], "canvas": {"width": 1000, "height": 570}, "related": ["viz-graph-dependency"], load: () => import("./learning/composition/viz-graph-tree-reconstruction.example")},
-{"slug": "viz-graph-matrix", "title": "Team handoffs", "shortTitle": "Team handoffs", "section": "composition", "order": 12004, "summary": "Compare directed handoffs between teams with values and missingness.", "api": ["AdjacencyMatrix", "layoutMatrix", "MatrixCell"], "objectives": ["Read the relationships, quantities, and units shown in this example.", "Customize the layout, marks, labels, and interaction through public APIs."], "prompts": {"gesture": "Select a matrix cell to inspect requests from the row team to the column team.", "code": "Change the records or replace the geometry calculation and paint."}, "apiNotes": ["Checked-in illustrative data, not live measurements. See the canvas caption for units and interpretation.", "Geometry helpers are independent of rendering; built-in marks use ordinary Pibbl events."], "canvas": {"width": 900, "height": 580}, "related": ["viz-graph-dependency"], load: () => import("./learning/composition/viz-graph-matrix.example")},
-{"slug": "viz-graph-sankey", "title": "Regional energy budget", "shortTitle": "Regional energy budget", "section": "composition", "order": 12005, "summary": "Follow 1,000 MWh through electricity, district heat, end uses, and conversion losses.", "api": ["Sankey", "layoutSankey", "SankeyFlow", "backdropContrast"], "objectives": ["Read the relationships, quantities, and units shown in this example.", "Customize the layout, marks, labels, and interaction through public APIs."], "prompts": {"gesture": "Select an energy ribbon to inspect its route and MWh, and watch labels adapt to the highlighted background.", "code": "Customize the light and dark colors in backdropContrast, or edit the energy records."}, "apiNotes": ["Checked-in illustrative data, not live measurements. See the canvas caption for units and interpretation.", "Geometry helpers are independent of rendering; built-in marks use ordinary Pibbl events."], "canvas": {"width": 900, "height": 580}, "related": ["viz-graph-dependency"], load: () => import("./learning/composition/viz-graph-sankey.example")},
-{"slug": "viz-graph-bipartite", "title": "Research participation", "shortTitle": "Research participation", "section": "composition", "order": 12006, "summary": "Connect research participants to the studies in which they participate.", "api": ["BipartiteGraph", "layoutBipartite", "GraphNode"], "objectives": ["Read the relationships, quantities, and units shown in this example.", "Customize the layout, marks, labels, and interaction through public APIs."], "prompts": {"gesture": "Select an organization or study to highlight its research partnerships.", "code": "Change the records or replace the geometry calculation and paint."}, "apiNotes": ["Checked-in illustrative data, not live measurements. See the canvas caption for units and interpretation.", "Geometry helpers are independent of rendering; built-in marks use ordinary Pibbl events."], "canvas": {"width": 900, "height": 580}, "related": ["viz-graph-dependency"], load: () => import("./learning/composition/viz-graph-bipartite.example")},
-{"slug": "viz-graph-treemap", "title": "Storage allocation", "shortTitle": "Storage allocation", "section": "composition", "order": 12007, "summary": "Explore hierarchical storage allocation with explicit units.", "api": ["Treemap", "layoutTreemap", "TreemapCell"], "objectives": ["Read the relationships, quantities, and units shown in this example.", "Customize the layout, marks, labels, and interaction through public APIs."], "prompts": {"gesture": "Select a storage tile to inspect its name and size in gigabytes.", "code": "Change the records or replace the geometry calculation and paint."}, "apiNotes": ["Checked-in illustrative data, not live measurements. See the canvas caption for units and interpretation.", "Geometry helpers are independent of rendering; built-in marks use ordinary Pibbl events."], "canvas": {"width": 1000, "height": 570}, "related": ["viz-graph-dependency"], load: () => import("./learning/composition/viz-graph-treemap.example")},
-{"slug": "viz-graph-treemap-reconstruction", "title": "Storage allocation · public reconstruction", "shortTitle": "Storage allocation · public reconstruction", "section": "composition", "order": 12008, "summary": "Explore hierarchical storage allocation with explicit units. Rebuild through supported public marks and geometry.", "api": ["Treemap", "layoutTreemap", "TreemapCell"], "objectives": ["Read relationships and quantities from realistic illustrative data.", "Customize geometry, marks, labels and interaction through public APIs."], "prompts": {"gesture": "Inspect the visualization, then edit the public geometry and drawing code below.", "code": "Change the records or replace the geometry calculation and paint."}, "apiNotes": ["Checked-in illustrative data, not live measurements. See the canvas caption for units and interpretation.", "Geometry helpers are independent of rendering; built-in marks use ordinary Pibbl events."], "canvas": {"width": 1000, "height": 570}, "related": ["viz-graph-dependency"], load: () => import("./learning/composition/viz-graph-treemap-reconstruction.example")},
-{"slug": "viz-graph-neighborhood", "title": "Incident neighborhood", "shortTitle": "Incident neighborhood", "section": "composition", "order": 12009, "summary": "Recenter a local service dependency neighborhood to inspect impact.", "api": ["RadialNeighborhood", "layoutNeighborhood", "GraphView"], "objectives": ["Read the relationships, quantities, and units shown in this example.", "Customize the layout, marks, labels, and interaction through public APIs."], "prompts": {"gesture": "Select a service to inspect it, then use Recenter selected to investigate its dependencies.", "code": "Change the records or replace the geometry calculation and paint."}, "apiNotes": ["Checked-in illustrative data, not live measurements. See the canvas caption for units and interpretation.", "Geometry helpers are independent of rendering; built-in marks use ordinary Pibbl events."], "canvas": {"width": 1000, "height": 570}, "related": ["viz-graph-dependency"], load: () => import("./learning/composition/viz-graph-neighborhood.example")},
-{"slug": "viz-graph-neighborhood-reconstruction", "title": "Incident neighborhood · public reconstruction", "shortTitle": "Incident neighborhood · public reconstruction", "section": "composition", "order": 12010, "summary": "Recenter a local service dependency neighborhood to inspect impact. Rebuild through supported public marks and geometry.", "api": ["RadialNeighborhood", "layoutNeighborhood", "GraphView"], "objectives": ["Read relationships and quantities from realistic illustrative data.", "Customize geometry, marks, labels and interaction through public APIs."], "prompts": {"gesture": "Inspect the visualization, then edit the public geometry and drawing code below.", "code": "Change the records or replace the geometry calculation and paint."}, "apiNotes": ["Checked-in illustrative data, not live measurements. See the canvas caption for units and interpretation.", "Geometry helpers are independent of rendering; built-in marks use ordinary Pibbl events."], "canvas": {"width": 1000, "height": 570}, "related": ["viz-graph-dependency"], load: () => import("./learning/composition/viz-graph-neighborhood-reconstruction.example")},
-{"slug": "viz-graph-icicle", "title": "Storage by ancestry", "shortTitle": "Storage by ancestry", "section": "composition", "order": 12011, "summary": "Inspect hierarchical storage in gigabytes with visible proportional partitions.", "api": ["Icicle", "layoutIcicle", "IcicleCell"], "objectives": ["Read the relationships, quantities, and units shown in this example.", "Customize the layout, marks, labels, and interaction through public APIs."], "prompts": {"gesture": "Select a band to inspect its full name and size, including bands too small for labels.", "code": "Change the records or replace the geometry calculation and paint."}, "apiNotes": ["Checked-in illustrative data, not live measurements. See the canvas caption for units and interpretation.", "Geometry helpers are independent of rendering; built-in marks use ordinary Pibbl events."], "canvas": {"width": 1000, "height": 570}, "related": ["viz-graph-dependency"], load: () => import("./learning/composition/viz-graph-icicle.example")},
-{"slug": "viz-graph-icicle-reconstruction", "title": "Storage by ancestry · public reconstruction", "shortTitle": "Storage by ancestry · public reconstruction", "section": "composition", "order": 12012, "summary": "Inspect hierarchical storage in gigabytes with visible proportional partitions. Rebuild through supported public marks and geometry.", "api": ["Icicle", "layoutIcicle", "IcicleCell"], "objectives": ["Read relationships and quantities from realistic illustrative data.", "Customize geometry, marks, labels and interaction through public APIs."], "prompts": {"gesture": "Inspect the visualization, then edit the public geometry and drawing code below.", "code": "Change the records or replace the geometry calculation and paint."}, "apiNotes": ["Checked-in illustrative data, not live measurements. See the canvas caption for units and interpretation.", "Geometry helpers are independent of rendering; built-in marks use ordinary Pibbl events."], "canvas": {"width": 1000, "height": 570}, "related": ["viz-graph-dependency"], load: () => import("./learning/composition/viz-graph-icicle-reconstruction.example")},
-{"slug": "viz-graph-chord", "title": "District trips", "shortTitle": "District trips", "section": "composition", "order": 12013, "summary": "Compare directed illustrative travel flows between districts.", "api": ["ChordDiagram", "layoutChords", "ChordRibbon"], "objectives": ["Read the relationships, quantities, and units shown in this example.", "Customize the layout, marks, labels, and interaction through public APIs."], "prompts": {"gesture": "Select a travel ribbon to compare its directed route and reverse flow.", "code": "Change the records or replace the geometry calculation and paint."}, "apiNotes": ["Checked-in illustrative data, not live measurements. See the canvas caption for units and interpretation.", "Geometry helpers are independent of rendering; built-in marks use ordinary Pibbl events."], "canvas": {"width": 900, "height": 580}, "related": ["viz-graph-dependency"], load: () => import("./learning/composition/viz-graph-chord.example")},
-  {slug:"viz-painted-inspection",title:"Painted marks versus nearest data",shortTitle:"Painted marks versus nearest data",section:"composition",order:903,
-    summary:"Click two overlapping orders to compare the nearest center with the top painted mark.",api:["PointSeries","paintedPointAt","withInspection"],
-    objectives:["Distinguish recorded data from geometric paint selection.","Inspect typed original records without enriching ordinary events."],
-    prompts:{gesture:"Click, tap or focus the plot and use the keyboard.",code:"Change simulated records or point paint order."},
-    apiNotes:["Clearly labeled deterministic simulation; no external market feed."],canvas:{width:360,height:280},
-    related:["viz-recorded-inspection","viz-lazy-inspection"],load:()=>import("./learning/composition/viz-painted-inspection.example"),
+  {
+    slug: "viz-graph-dependency",
+    title: "Release dependencies",
+    shortTitle: "Release dependencies",
+    section: "composition",
+    order: 12000,
+    summary:
+      "Trace an illustrative commerce release from signed commit to global rollout.",
+    api: ["DependencyGraph", "layoutDependencies", "GraphView"],
+    objectives: [
+      "Read the relationships, quantities, and units shown in this example.",
+      "Customize the layout, marks, labels, and interaction through public APIs.",
+    ],
+    prompts: {
+      gesture:
+        "Select a release stage to inspect its prerequisites and downstream stages.",
+      code: "Change the records or replace the geometry calculation and paint.",
+    },
+    apiNotes: [
+      "Checked-in illustrative data, not live measurements. See the canvas caption for units and interpretation.",
+      "Geometry helpers are independent of rendering; built-in marks use ordinary Pibbl events.",
+    ],
+    canvas: { width: 1100, height: 620 },
+    related: ["viz-graph-force"],
+    exportName: "VizGraphDependencyExample",
+    load: () => import("./learning/composition/viz-graph-dependency.example"),
+  },
+  {
+    slug: "viz-graph-force",
+    title: "Team collaboration",
+    shortTitle: "Team collaboration",
+    section: "composition",
+    order: 12001,
+    summary:
+      "Explore delivery dependencies between twelve illustrative product teams.",
+    api: [
+      "ForceNetwork",
+      "createForceSimulation",
+      "useForceNetwork",
+      "GraphView",
+    ],
+    objectives: [
+      "Read the relationships, quantities, and units shown in this example.",
+      "Customize the layout, marks, labels, and interaction through public APIs.",
+    ],
+    prompts: {
+      gesture:
+        "Drag a team to pin it. Select a team to highlight its links; use Release pins to let the layout move them again.",
+      code: "Change the records or replace the geometry calculation and paint.",
+    },
+    apiNotes: [
+      "Checked-in illustrative data, not live measurements. See the canvas caption for units and interpretation.",
+      "Geometry helpers are independent of rendering; built-in marks use ordinary Pibbl events.",
+    ],
+    canvas: { width: 1100, height: 620 },
+    related: ["viz-graph-dependency"],
+    exportName: "VizGraphForceExample",
+    load: () => import("./learning/composition/viz-graph-force.example"),
+  },
+  {
+    slug: "viz-graph-tree",
+    title: "Organization structure",
+    shortTitle: "Organization structure",
+    section: "composition",
+    order: 12002,
+    summary:
+      "Explore an illustrative organization through a collapsible tidy tree.",
+    api: ["TidyTree", "layoutTree", "GraphNode", "GraphLabel"],
+    objectives: [
+      "Read the relationships, quantities, and units shown in this example.",
+      "Customize the layout, marks, labels, and interaction through public APIs.",
+    ],
+    prompts: {
+      gesture: "Select a manager to collapse or expand their reports.",
+      code: "Change the records or replace the geometry calculation and paint.",
+    },
+    apiNotes: [
+      "Checked-in illustrative data, not live measurements. See the canvas caption for units and interpretation.",
+      "Geometry helpers are independent of rendering; built-in marks use ordinary Pibbl events.",
+    ],
+    canvas: { width: 1000, height: 570 },
+    related: ["viz-graph-dependency"],
+    exportName: "VizGraphTreeExample",
+    load: () => import("./learning/composition/viz-graph-tree.example"),
+  },
+  {
+    slug: "viz-graph-tree-reconstruction",
+    title: "Organization structure · public reconstruction",
+    shortTitle: "Organization structure · public reconstruction",
+    section: "composition",
+    order: 12003,
+    summary:
+      "Explore an illustrative organization through a collapsible tidy tree. Rebuild through supported public marks and geometry.",
+    api: ["TidyTree", "layoutTree", "GraphNode", "GraphLabel"],
+    objectives: [
+      "Read relationships and quantities from realistic illustrative data.",
+      "Customize geometry, marks, labels and interaction through public APIs.",
+    ],
+    prompts: {
+      gesture:
+        "Inspect the visualization, then edit the public geometry and drawing code below.",
+      code: "Change the records or replace the geometry calculation and paint.",
+    },
+    apiNotes: [
+      "Checked-in illustrative data, not live measurements. See the canvas caption for units and interpretation.",
+      "Geometry helpers are independent of rendering; built-in marks use ordinary Pibbl events.",
+    ],
+    canvas: { width: 1000, height: 570 },
+    related: ["viz-graph-dependency"],
+    exportName: "VizGraphTreeReconstructionExample",
+    load: () =>
+      import("./learning/composition/viz-graph-tree-reconstruction.example"),
+  },
+  {
+    slug: "viz-graph-matrix",
+    title: "Team handoffs",
+    shortTitle: "Team handoffs",
+    section: "composition",
+    order: 12004,
+    summary:
+      "Compare directed handoffs between teams with values and missingness.",
+    api: ["AdjacencyMatrix", "layoutMatrix", "MatrixCell"],
+    objectives: [
+      "Read the relationships, quantities, and units shown in this example.",
+      "Customize the layout, marks, labels, and interaction through public APIs.",
+    ],
+    prompts: {
+      gesture:
+        "Select a matrix cell to inspect requests from the row team to the column team.",
+      code: "Change the records or replace the geometry calculation and paint.",
+    },
+    apiNotes: [
+      "Checked-in illustrative data, not live measurements. See the canvas caption for units and interpretation.",
+      "Geometry helpers are independent of rendering; built-in marks use ordinary Pibbl events.",
+    ],
+    canvas: { width: 900, height: 580 },
+    related: ["viz-graph-dependency"],
+    exportName: "VizGraphMatrixExample",
+    load: () => import("./learning/composition/viz-graph-matrix.example"),
+  },
+  {
+    slug: "viz-graph-sankey",
+    title: "Regional energy budget",
+    shortTitle: "Regional energy budget",
+    section: "composition",
+    order: 12005,
+    summary:
+      "Follow 1,000 MWh through electricity, district heat, end uses, and conversion losses.",
+    api: ["Sankey", "layoutSankey", "SankeyFlow", "backdropContrast"],
+    objectives: [
+      "Read the relationships, quantities, and units shown in this example.",
+      "Customize the layout, marks, labels, and interaction through public APIs.",
+    ],
+    prompts: {
+      gesture:
+        "Select an energy ribbon to inspect its route and MWh, and watch labels adapt to the highlighted background.",
+      code: "Customize the light and dark colors in backdropContrast, or edit the energy records.",
+    },
+    apiNotes: [
+      "Checked-in illustrative data, not live measurements. See the canvas caption for units and interpretation.",
+      "Geometry helpers are independent of rendering; built-in marks use ordinary Pibbl events.",
+    ],
+    canvas: { width: 900, height: 580 },
+    related: ["viz-graph-dependency"],
+    exportName: "VizGraphSankeyExample",
+    load: () => import("./learning/composition/viz-graph-sankey.example"),
+  },
+  {
+    slug: "viz-graph-bipartite",
+    title: "Research participation",
+    shortTitle: "Research participation",
+    section: "composition",
+    order: 12006,
+    summary:
+      "Connect research participants to the studies in which they participate.",
+    api: ["BipartiteGraph", "layoutBipartite", "GraphNode"],
+    objectives: [
+      "Read the relationships, quantities, and units shown in this example.",
+      "Customize the layout, marks, labels, and interaction through public APIs.",
+    ],
+    prompts: {
+      gesture:
+        "Select an organization or study to highlight its research partnerships.",
+      code: "Change the records or replace the geometry calculation and paint.",
+    },
+    apiNotes: [
+      "Checked-in illustrative data, not live measurements. See the canvas caption for units and interpretation.",
+      "Geometry helpers are independent of rendering; built-in marks use ordinary Pibbl events.",
+    ],
+    canvas: { width: 900, height: 580 },
+    related: ["viz-graph-dependency"],
+    exportName: "VizGraphBipartiteExample",
+    load: () => import("./learning/composition/viz-graph-bipartite.example"),
+  },
+  {
+    slug: "viz-graph-treemap",
+    title: "Storage allocation",
+    shortTitle: "Storage allocation",
+    section: "composition",
+    order: 12007,
+    summary: "Explore hierarchical storage allocation with explicit units.",
+    api: ["Treemap", "layoutTreemap", "TreemapCell"],
+    objectives: [
+      "Read the relationships, quantities, and units shown in this example.",
+      "Customize the layout, marks, labels, and interaction through public APIs.",
+    ],
+    prompts: {
+      gesture:
+        "Select a storage tile to inspect its name and size in gigabytes.",
+      code: "Change the records or replace the geometry calculation and paint.",
+    },
+    apiNotes: [
+      "Checked-in illustrative data, not live measurements. See the canvas caption for units and interpretation.",
+      "Geometry helpers are independent of rendering; built-in marks use ordinary Pibbl events.",
+    ],
+    canvas: { width: 1000, height: 570 },
+    related: ["viz-graph-dependency"],
+    exportName: "Scene",
+    load: () => import("./learning/composition/viz-graph-treemap.example"),
+  },
+  {
+    slug: "viz-graph-treemap-reconstruction",
+    title: "Storage allocation · public reconstruction",
+    shortTitle: "Storage allocation · public reconstruction",
+    section: "composition",
+    order: 12008,
+    summary:
+      "Explore hierarchical storage allocation with explicit units. Rebuild through supported public marks and geometry.",
+    api: ["Treemap", "layoutTreemap", "TreemapCell"],
+    objectives: [
+      "Read relationships and quantities from realistic illustrative data.",
+      "Customize geometry, marks, labels and interaction through public APIs.",
+    ],
+    prompts: {
+      gesture:
+        "Inspect the visualization, then edit the public geometry and drawing code below.",
+      code: "Change the records or replace the geometry calculation and paint.",
+    },
+    apiNotes: [
+      "Checked-in illustrative data, not live measurements. See the canvas caption for units and interpretation.",
+      "Geometry helpers are independent of rendering; built-in marks use ordinary Pibbl events.",
+    ],
+    canvas: { width: 1000, height: 570 },
+    related: ["viz-graph-dependency"],
+    exportName: "VizGraphTreemapReconstructionExample",
+    load: () =>
+      import("./learning/composition/viz-graph-treemap-reconstruction.example"),
+  },
+  {
+    slug: "viz-graph-neighborhood",
+    title: "Incident neighborhood",
+    shortTitle: "Incident neighborhood",
+    section: "composition",
+    order: 12009,
+    summary:
+      "Recenter a local service dependency neighborhood to inspect impact.",
+    api: ["RadialNeighborhood", "layoutNeighborhood", "GraphView"],
+    objectives: [
+      "Read the relationships, quantities, and units shown in this example.",
+      "Customize the layout, marks, labels, and interaction through public APIs.",
+    ],
+    prompts: {
+      gesture:
+        "Select a service to inspect it, then use Recenter selected to investigate its dependencies.",
+      code: "Change the records or replace the geometry calculation and paint.",
+    },
+    apiNotes: [
+      "Checked-in illustrative data, not live measurements. See the canvas caption for units and interpretation.",
+      "Geometry helpers are independent of rendering; built-in marks use ordinary Pibbl events.",
+    ],
+    canvas: { width: 1000, height: 570 },
+    related: ["viz-graph-dependency"],
+    exportName: "VizGraphNeighborhoodExample",
+    load: () => import("./learning/composition/viz-graph-neighborhood.example"),
+  },
+  {
+    slug: "viz-graph-neighborhood-reconstruction",
+    title: "Incident neighborhood · public reconstruction",
+    shortTitle: "Incident neighborhood · public reconstruction",
+    section: "composition",
+    order: 12010,
+    summary:
+      "Recenter a local service dependency neighborhood to inspect impact. Rebuild through supported public marks and geometry.",
+    api: ["RadialNeighborhood", "layoutNeighborhood", "GraphView"],
+    objectives: [
+      "Read relationships and quantities from realistic illustrative data.",
+      "Customize geometry, marks, labels and interaction through public APIs.",
+    ],
+    prompts: {
+      gesture:
+        "Inspect the visualization, then edit the public geometry and drawing code below.",
+      code: "Change the records or replace the geometry calculation and paint.",
+    },
+    apiNotes: [
+      "Checked-in illustrative data, not live measurements. See the canvas caption for units and interpretation.",
+      "Geometry helpers are independent of rendering; built-in marks use ordinary Pibbl events.",
+    ],
+    canvas: { width: 1000, height: 570 },
+    related: ["viz-graph-dependency"],
+    exportName: "VizGraphNeighborhoodReconstructionExample",
+    load: () =>
+      import("./learning/composition/viz-graph-neighborhood-reconstruction.example"),
+  },
+  {
+    slug: "viz-graph-icicle",
+    title: "Storage by ancestry",
+    shortTitle: "Storage by ancestry",
+    section: "composition",
+    order: 12011,
+    summary:
+      "Inspect hierarchical storage in gigabytes with visible proportional partitions.",
+    api: ["Icicle", "layoutIcicle", "IcicleCell"],
+    objectives: [
+      "Read the relationships, quantities, and units shown in this example.",
+      "Customize the layout, marks, labels, and interaction through public APIs.",
+    ],
+    prompts: {
+      gesture:
+        "Select a band to inspect its full name and size, including bands too small for labels.",
+      code: "Change the records or replace the geometry calculation and paint.",
+    },
+    apiNotes: [
+      "Checked-in illustrative data, not live measurements. See the canvas caption for units and interpretation.",
+      "Geometry helpers are independent of rendering; built-in marks use ordinary Pibbl events.",
+    ],
+    canvas: { width: 1000, height: 570 },
+    related: ["viz-graph-dependency"],
+    exportName: "Scene",
+    load: () => import("./learning/composition/viz-graph-icicle.example"),
+  },
+  {
+    slug: "viz-graph-icicle-reconstruction",
+    title: "Storage by ancestry · public reconstruction",
+    shortTitle: "Storage by ancestry · public reconstruction",
+    section: "composition",
+    order: 12012,
+    summary:
+      "Inspect hierarchical storage in gigabytes with visible proportional partitions. Rebuild through supported public marks and geometry.",
+    api: ["Icicle", "layoutIcicle", "IcicleCell"],
+    objectives: [
+      "Read relationships and quantities from realistic illustrative data.",
+      "Customize geometry, marks, labels and interaction through public APIs.",
+    ],
+    prompts: {
+      gesture:
+        "Inspect the visualization, then edit the public geometry and drawing code below.",
+      code: "Change the records or replace the geometry calculation and paint.",
+    },
+    apiNotes: [
+      "Checked-in illustrative data, not live measurements. See the canvas caption for units and interpretation.",
+      "Geometry helpers are independent of rendering; built-in marks use ordinary Pibbl events.",
+    ],
+    canvas: { width: 1000, height: 570 },
+    related: ["viz-graph-dependency"],
+    exportName: "VizGraphIcicleReconstructionExample",
+    load: () =>
+      import("./learning/composition/viz-graph-icicle-reconstruction.example"),
+  },
+  {
+    slug: "viz-graph-chord",
+    title: "District trips",
+    shortTitle: "District trips",
+    section: "composition",
+    order: 12013,
+    summary: "Compare directed illustrative travel flows between districts.",
+    api: ["ChordDiagram", "layoutChords", "ChordRibbon"],
+    objectives: [
+      "Read the relationships, quantities, and units shown in this example.",
+      "Customize the layout, marks, labels, and interaction through public APIs.",
+    ],
+    prompts: {
+      gesture:
+        "Select a travel ribbon to compare its directed route and reverse flow.",
+      code: "Change the records or replace the geometry calculation and paint.",
+    },
+    apiNotes: [
+      "Checked-in illustrative data, not live measurements. See the canvas caption for units and interpretation.",
+      "Geometry helpers are independent of rendering; built-in marks use ordinary Pibbl events.",
+    ],
+    canvas: { width: 900, height: 580 },
+    related: ["viz-graph-dependency"],
+    exportName: "VizGraphChordExample",
+    load: () => import("./learning/composition/viz-graph-chord.example"),
+  },
+  {
+    slug: "viz-painted-inspection",
+    title: "Painted marks versus nearest data",
+    shortTitle: "Painted marks versus nearest data",
+    section: "composition",
+    order: 903,
+    summary:
+      "Click two overlapping orders to compare the nearest center with the top painted mark.",
+    api: ["PointSeries", "paintedPointAt", "withInspection"],
+    objectives: [
+      "Distinguish recorded data from geometric paint selection.",
+      "Inspect typed original records without enriching ordinary events.",
+    ],
+    prompts: {
+      gesture: "Click, tap or focus the plot and use the keyboard.",
+      code: "Change simulated records or point paint order.",
+    },
+    apiNotes: [
+      "Clearly labeled deterministic simulation; no external market feed.",
+    ],
+    canvas: { width: 360, height: 280 },
+    related: ["viz-recorded-inspection", "viz-lazy-inspection"],
+    exportName: "VizPaintedInspectionExample",
+    load: () => import("./learning/composition/viz-painted-inspection.example"),
   },
 
-  {slug:"viz-inspection-workbench",title:"Inspection Workbench",shortTitle:"Inspection Workbench",section:"composition",order:904,
-    summary:"Compare recorded prices, explicit estimates, executions and categorical risk ranges.",api:["PointSeries","paintedPointAt","withInspection"],
-    objectives:["Distinguish recorded data from geometric paint selection.","Inspect typed original records without enriching ordinary events."],
-    prompts:{gesture:"Click, tap or focus the plot and use the keyboard.",code:"Change simulated records or point paint order."},
-    apiNotes:["Clearly labeled deterministic simulation; no external market feed."],canvas:{width:1000,height:640},
-    related:["viz-recorded-inspection","viz-lazy-inspection"],load:()=>import("./learning/composition/viz-inspection-workbench.example"),
+  {
+    slug: "viz-inspection-workbench",
+    title: "Inspection Workbench",
+    shortTitle: "Inspection Workbench",
+    section: "composition",
+    order: 904,
+    summary:
+      "Compare recorded prices, explicit estimates, executions and categorical risk ranges.",
+    api: ["PointSeries", "paintedPointAt", "withInspection"],
+    objectives: [
+      "Distinguish recorded data from geometric paint selection.",
+      "Inspect typed original records without enriching ordinary events.",
+    ],
+    prompts: {
+      gesture: "Click, tap or focus the plot and use the keyboard.",
+      code: "Change simulated records or point paint order.",
+    },
+    apiNotes: [
+      "Clearly labeled deterministic simulation; no external market feed.",
+    ],
+    canvas: { width: 1000, height: 640 },
+    related: ["viz-recorded-inspection", "viz-lazy-inspection"],
+    exportName: "VizInspectionWorkbenchExample",
+    config: { pixelRatio: 1 },
+    load: () =>
+      import("./learning/composition/viz-inspection-workbench.example"),
   },
 
-  {slug:"financial-candles",title:"Candlestick observations",shortTitle:"Candles",section:"composition",order:913,
-    summary:"Read open/close bodies, high/low wicks and dojis while inspecting the original OHLC record.",api:["CandlestickSeries","useCandleInspection","paintedCandleAt"],
-    objectives:["Use named body and wick styling with ordinary OHLC records.","Distinguish painted parts without interpolating financial data."],
-    prompts:{gesture:"Move to read OHLC; tap a body or wick; use arrow keys to step.",code:"Change an OHLC record or named body/wick style."},
-    apiNotes:["Deterministic OHLC simulation, including equal-open/close candles."],canvas:{width:760,height:440},related:["financial-market-session","financial-volume"],load:()=>import("./learning/composition/financial-candles.example"),
+  {
+    slug: "financial-candles",
+    title: "Candlestick observations",
+    shortTitle: "Candles",
+    section: "composition",
+    order: 913,
+    summary:
+      "Read open/close bodies, high/low wicks and dojis while inspecting the original OHLC record.",
+    api: ["CandlestickSeries", "useCandleInspection", "paintedCandleAt"],
+    objectives: [
+      "Use named body and wick styling with ordinary OHLC records.",
+      "Distinguish painted parts without interpolating financial data.",
+    ],
+    prompts: {
+      gesture: "Move to read OHLC; tap a body or wick; use arrow keys to step.",
+      code: "Change an OHLC record or named body/wick style.",
+    },
+    apiNotes: [
+      "Deterministic OHLC simulation, including equal-open/close candles.",
+    ],
+    canvas: { width: 760, height: 440 },
+    related: ["financial-market-session", "financial-volume"],
+    exportName: "FinancialCandlesExample",
+    config: { viewport: "responsive" },
+    load: () => import("./learning/composition/financial-candles.example"),
   },
-  {slug:"financial-trading-time",title:"Trading-time observations",shortTitle:"Trading time",section:"composition",order:912,
-    summary:"Give Friday, Monday and Tuesday equal observation spacing, then pan by fractional slots.",api:["TradingTimeScale","useTradingTimeScale","LineSeries","PlotSeries"],
-    objectives:["Distinguish UTC timestamps from consecutive logical slots.","Share one mapping across lines and custom marks."],
-    prompts:{gesture:"Move to inspect quotes; pan with the control or arrow keys.",code:"Change supplied timestamps or the visible logical range."},
-    apiNotes:["Simulation; compresses supplied observations without inferring exchange calendars."],canvas:{width:760,height:300},related:["financial-market-session","financial-volume"],load:()=>import("./learning/composition/financial-trading-time.example"),
+  {
+    slug: "financial-trading-time",
+    title: "Trading-time observations",
+    shortTitle: "Trading time",
+    section: "composition",
+    order: 912,
+    summary:
+      "Give Friday, Monday and Tuesday equal observation spacing, then pan by fractional slots.",
+    api: [
+      "TradingTimeScale",
+      "useTradingTimeScale",
+      "LineSeries",
+      "PlotSeries",
+    ],
+    objectives: [
+      "Distinguish UTC timestamps from consecutive logical slots.",
+      "Share one mapping across lines and custom marks.",
+    ],
+    prompts: {
+      gesture: "Move to inspect quotes; pan with the control or arrow keys.",
+      code: "Change supplied timestamps or the visible logical range.",
+    },
+    apiNotes: [
+      "Simulation; compresses supplied observations without inferring exchange calendars.",
+    ],
+    canvas: { width: 760, height: 300 },
+    related: ["financial-market-session", "financial-volume"],
+    exportName: "FinancialTradingTimeExample",
+    config: { viewport: "responsive" },
+    load: () => import("./learning/composition/financial-trading-time.example"),
   },
-  {slug:"financial-volume",title:"Time-aligned volume",shortTitle:"Volume",section:"composition",order:910,
-    summary:"Place recorded daily volume on a time scale with an independent zero-based value axis.",api:["VolumeSeries","UTCScale","LinearScale"],
-    objectives:["Align original numeric timestamps without categorical bands.","Keep volume on its own y-scale."],
-    prompts:{gesture:"Move or tap to read recorded shares; use arrow keys to step.",code:"Change volume values or column width."},
-    apiNotes:["Deterministic simulated daily volumes in shares."],canvas:{width:760,height:440},related:["financial-market-session"],load:()=>import("./learning/composition/financial-volume.example"),
+  {
+    slug: "financial-volume",
+    title: "Time-aligned volume",
+    shortTitle: "Volume",
+    section: "composition",
+    order: 910,
+    summary:
+      "Place recorded daily volume on a time scale with an independent zero-based value axis.",
+    api: ["VolumeSeries", "UTCScale", "LinearScale"],
+    objectives: [
+      "Align original numeric timestamps without categorical bands.",
+      "Keep volume on its own y-scale.",
+    ],
+    prompts: {
+      gesture: "Move or tap to read recorded shares; use arrow keys to step.",
+      code: "Change volume values or column width.",
+    },
+    apiNotes: ["Deterministic simulated daily volumes in shares."],
+    canvas: { width: 760, height: 440 },
+    related: ["financial-market-session"],
+    exportName: "FinancialVolumeExample",
+    config: { viewport: "responsive" },
+    load: () => import("./learning/composition/financial-volume.example"),
   },
-  {slug:"financial-market-session",title:"Market Session",shortTitle:"Market Session",section:"composition",order:911,
-    summary:"Inspect original simulated OHLCV records while comparing price and time-aligned participation.",api:["TradingTimeScale","ReferenceLine","visibleOhlcPriceExtent","padLinearDomain"],
-    objectives:["Compose independent price and volume scales.","Inspect typed original records on demand."],
-    prompts:{gesture:"Move over either pane; click/tap to pin, use arrows to step, and switch visible windows.",code:"Change simulated OHLCV records and color policy."},
-    apiNotes:["Deterministic OHLCV regimes; shared trading-time mapping and optional typed inspection."],canvas:{width:760,height:460},related:["financial-volume","viz-inspection-workbench"],load:()=>import("./learning/composition/financial-market-session.example"),
+  {
+    slug: "financial-market-session",
+    title: "Market Session",
+    shortTitle: "Market Session",
+    section: "composition",
+    order: 911,
+    summary:
+      "Inspect original simulated OHLCV records while comparing price and time-aligned participation.",
+    api: [
+      "TradingTimeScale",
+      "ReferenceLine",
+      "visibleOhlcPriceExtent",
+      "padLinearDomain",
+    ],
+    objectives: [
+      "Compose independent price and volume scales.",
+      "Inspect typed original records on demand.",
+    ],
+    prompts: {
+      gesture:
+        "Move over either pane; click/tap to pin, use arrows to step, and switch visible windows.",
+      code: "Change simulated OHLCV records and color policy.",
+    },
+    apiNotes: [
+      "Deterministic OHLCV regimes; shared trading-time mapping and optional typed inspection.",
+    ],
+    canvas: { width: 760, height: 460 },
+    related: ["financial-volume", "viz-inspection-workbench"],
+    exportName: "FinancialMarketSessionExample",
+    config: { viewport: "responsive" },
+    load: () =>
+      import("./learning/composition/financial-market-session.example"),
   },
-  {slug:"financial-crosshair",title:"Snapped OHLCV inspection",shortTitle:"OHLCV crosshair",section:"composition",order:914,
-    summary:"Snap one recorded timestamp across price and volume, then pin it for touch and keyboard reading.",api:["ReferenceLine","nearestRecordedCandleX","TradingTimeScale"],
-    objectives:["Keep a selected timestamp rather than a borrowed inspection hit.","Make pointer, tap and keyboard selection agree on recorded OHLCV."],
-    prompts:{gesture:"Move to preview; click/tap to pin; use arrows and Escape.",code:"Change the three supplied OHLCV records."},
-    apiNotes:["Deterministic three-record simulation; values are never interpolated."],canvas:{width:760,height:360},related:["financial-market-session","financial-candles"],load:()=>import("./learning/composition/financial-crosshair.example"),
+  {
+    slug: "financial-crosshair",
+    title: "Snapped OHLCV inspection",
+    shortTitle: "OHLCV crosshair",
+    section: "composition",
+    order: 914,
+    summary:
+      "Snap one recorded timestamp across price and volume, then pin it for touch and keyboard reading.",
+    api: ["ReferenceLine", "nearestRecordedCandleX", "TradingTimeScale"],
+    objectives: [
+      "Keep a selected timestamp rather than a borrowed inspection hit.",
+      "Make pointer, tap and keyboard selection agree on recorded OHLCV.",
+    ],
+    prompts: {
+      gesture: "Move to preview; click/tap to pin; use arrows and Escape.",
+      code: "Change the three supplied OHLCV records.",
+    },
+    apiNotes: [
+      "Deterministic three-record simulation; values are never interpolated.",
+    ],
+    canvas: { width: 760, height: 360 },
+    related: ["financial-market-session", "financial-candles"],
+    exportName: "FinancialCrosshairExample",
+    config: { viewport: "responsive" },
+    load: () => import("./learning/composition/financial-crosshair.example"),
   },
-  {slug:"financial-price-guides",title:"Price guides and formatting",shortTitle:"Price guides",section:"composition",order:915,
-    summary:"Label latest and previous supplied prices with data-anchored guides and Intl formatting.",api:["ReferenceLine","ScaleAdjust","formatNumber"],
-    objectives:["Keep presentation rounding separate from data values.","Compose axis tags from existing primitives."],
-    prompts:{gesture:"Read the supplied last and previous-close labels.",code:"Change currency, precision or supplied records."},
-    apiNotes:["Deterministic simulated USD prices and shares."],canvas:{width:760,height:330},related:["financial-market-session","financial-crosshair"],load:()=>import("./learning/composition/financial-price-guides.example"),
+  {
+    slug: "financial-price-guides",
+    title: "Price guides and formatting",
+    shortTitle: "Price guides",
+    section: "composition",
+    order: 915,
+    summary:
+      "Label latest and previous supplied prices with data-anchored guides and Intl formatting.",
+    api: ["ReferenceLine", "ScaleAdjust", "formatNumber"],
+    objectives: [
+      "Keep presentation rounding separate from data values.",
+      "Compose axis tags from existing primitives.",
+    ],
+    prompts: {
+      gesture: "Read the supplied last and previous-close labels.",
+      code: "Change currency, precision or supplied records.",
+    },
+    apiNotes: ["Deterministic simulated USD prices and shares."],
+    canvas: { width: 760, height: 330 },
+    related: ["financial-market-session", "financial-crosshair"],
+    exportName: "Lesson",
+    config: { viewport: "responsive" },
+    load: () => import("./learning/composition/financial-price-guides.example"),
   },
-  {slug:"financial-visible-autoscale",title:"Visible-window autoscaling",shortTitle:"Visible autoscale",section:"composition",order:916,
-    summary:"Compute an OHLC price domain from the current window so an off-window extreme does not flatten the view.",api:["visibleOhlcPriceExtent","padLinearDomain","TradingTimeScale"],
-    objectives:["Use high and low instead of close-only extent.","Keep automatic domain selection caller controlled."],
-    prompts:{gesture:"Click or use arrows to switch the window.",code:"Change the extreme candle or visible range."},
-    apiNotes:["Deterministic records include a deliberately extreme middle wick."],canvas:{width:760,height:330},related:["financial-market-session","financial-price-guides"],load:()=>import("./learning/composition/financial-visible-autoscale.example"),
+  {
+    slug: "financial-visible-autoscale",
+    title: "Visible-window autoscaling",
+    shortTitle: "Visible autoscale",
+    section: "composition",
+    order: 916,
+    summary:
+      "Compute an OHLC price domain from the current window so an off-window extreme does not flatten the view.",
+    api: ["visibleOhlcPriceExtent", "padLinearDomain", "TradingTimeScale"],
+    objectives: [
+      "Use high and low instead of close-only extent.",
+      "Keep automatic domain selection caller controlled.",
+    ],
+    prompts: {
+      gesture: "Click or use arrows to switch the window.",
+      code: "Change the extreme candle or visible range.",
+    },
+    apiNotes: [
+      "Deterministic records include a deliberately extreme middle wick.",
+    ],
+    canvas: { width: 760, height: 330 },
+    related: ["financial-market-session", "financial-price-guides"],
+    exportName: "FinancialVisibleAutoscaleExample",
+    config: { viewport: "responsive" },
+    load: () =>
+      import("./learning/composition/financial-visible-autoscale.example"),
   },
 
-  {slug:"financial-linked-panes",title:"Linked price and volume panes",shortTitle:"Linked panes",section:"composition",order:917,
-    summary:"Share one supplied timestamp across independently scaled price and volume panes.",api:["TradingTimeScale","ReferenceLine","useSignal"],
-    objectives:["Align sibling plots with one x mapping.","Keep recorded selection separate from viewport state."],
-    prompts:{gesture:"Move or tap either pane; use arrows to step through recorded times.",code:"Change the shared observation calendar or independent y domains."},
-    apiNotes:["Deterministic simulated observations; no pane container or hidden selection store."],canvas:{width:760,height:360},related:["financial-market-session","financial-calendar-ranges"],load:()=>import("./learning/composition/financial-linked-panes.example"),
+  {
+    slug: "financial-linked-panes",
+    title: "Linked price and volume panes",
+    shortTitle: "Linked panes",
+    section: "composition",
+    order: 917,
+    summary:
+      "Share one supplied timestamp across independently scaled price and volume panes.",
+    api: ["TradingTimeScale", "ReferenceLine", "useSignal"],
+    objectives: [
+      "Align sibling plots with one x mapping.",
+      "Keep recorded selection separate from viewport state.",
+    ],
+    prompts: {
+      gesture:
+        "Move or tap either pane; use arrows to step through recorded times.",
+      code: "Change the shared observation calendar or independent y domains.",
+    },
+    apiNotes: [
+      "Deterministic simulated observations; no pane container or hidden selection store.",
+    ],
+    canvas: { width: 760, height: 360 },
+    related: ["financial-market-session", "financial-calendar-ranges"],
+    exportName: "FinancialLinkedPanesExample",
+    config: { viewport: "responsive" },
+    load: () => import("./learning/composition/financial-linked-panes.example"),
   },
-  {slug:"financial-calendar-ranges",title:"Calendar ranges over trading slots",shortTitle:"Calendar ranges",section:"composition",order:918,
-    summary:"Resolve UTC calendar membership before compressing supplied observations into trading slots.",api:["TradingTimeScale","useSignal"],
-    objectives:["Clamp month subtraction at month end.","Navigate within supplied observations without inventing exchange sessions."],
-    prompts:{gesture:"Activate range buttons with click, tap, Enter or Space.",code:"Change supplied timestamps or the explicit as-of date."},
-    apiNotes:["UTC application-local calendar arithmetic; presets do not rebase comparisons."],canvas:{width:760,height:330},related:["financial-linked-panes","financial-relative-performance"],load:()=>import("./learning/composition/financial-calendar-ranges.example"),
+  {
+    slug: "financial-calendar-ranges",
+    title: "Calendar ranges over trading slots",
+    shortTitle: "Calendar ranges",
+    section: "composition",
+    order: 918,
+    summary:
+      "Resolve UTC calendar membership before compressing supplied observations into trading slots.",
+    api: ["TradingTimeScale", "useSignal"],
+    objectives: [
+      "Clamp month subtraction at month end.",
+      "Navigate within supplied observations without inventing exchange sessions.",
+    ],
+    prompts: {
+      gesture: "Activate range buttons with click, tap, Enter or Space.",
+      code: "Change supplied timestamps or the explicit as-of date.",
+    },
+    apiNotes: [
+      "UTC application-local calendar arithmetic; presets do not rebase comparisons.",
+    ],
+    canvas: { width: 760, height: 330 },
+    related: ["financial-linked-panes", "financial-relative-performance"],
+    exportName: "FinancialCalendarRangesExample",
+    config: { viewport: "responsive" },
+    load: () =>
+      import("./learning/composition/financial-calendar-ranges.example"),
   },
-  {slug:"financial-normalized-returns",title:"Compare from one common base",shortTitle:"Normalized returns",section:"composition",order:919,
-    summary:"Compare cumulative returns and base-100 values without silently choosing different base dates.",api:["percentageReturns","indexTo100","LineSeries"],
-    objectives:["Name return units explicitly.","Preserve missing observations and show an unavailable exact base."],
-    prompts:{gesture:"Read the two supplied series and their fixed common base.",code:"Change a price, a missing observation or the common base timestamp."},
-    apiNotes:["Deterministic daily USD close simulations with market shocks and explicit missing observations; price returns exclude dividends."],canvas:{width:760,height:360},related:["financial-relative-performance","financial-calendar-ranges"],load:()=>import("./learning/composition/financial-normalized-returns.example"),
+  {
+    slug: "financial-normalized-returns",
+    title: "Compare from one common base",
+    shortTitle: "Normalized returns",
+    section: "composition",
+    order: 919,
+    summary:
+      "Compare cumulative returns and base-100 values without silently choosing different base dates.",
+    api: ["percentageReturns", "indexTo100", "LineSeries"],
+    objectives: [
+      "Name return units explicitly.",
+      "Preserve missing observations and show an unavailable exact base.",
+    ],
+    prompts: {
+      gesture: "Read the two supplied series and their fixed common base.",
+      code: "Change a price, a missing observation or the common base timestamp.",
+    },
+    apiNotes: [
+      "Deterministic daily USD close simulations with market shocks and explicit missing observations; price returns exclude dividends.",
+    ],
+    canvas: { width: 760, height: 360 },
+    related: ["financial-relative-performance", "financial-calendar-ranges"],
+    exportName: "FinancialNormalizedReturnsExample",
+    config: { viewport: "responsive" },
+    load: () =>
+      import("./learning/composition/financial-normalized-returns.example"),
   },
-  {slug:"financial-relative-performance",title:"Relative Performance Desk",shortTitle:"Performance Desk",section:"composition",order:920,
-    summary:"Compare three simulated instruments from one visible common base with bounded calendar navigation and shared inspection.",api:["percentageReturns","TradingTimeScale","LineSeries","nearestRecordedX"],
-    objectives:["Keep comparison base independent of the viewport.","Show missing observations and unavailable assets honestly."],
-    prompts:{gesture:"Select 1M, 3M or YTD; pan, zoom and return to Latest. Click/tap to pin; arrows to step.",code:"Change deterministic price regimes, common base or the explicit gap."},
-    apiNotes:["USD simulation, not a market feed. Returns are cumulative from 02 Jan 2026."],canvas:{width:760,height:500},related:["financial-normalized-returns","financial-calendar-ranges","financial-linked-panes"],load:()=>import("./learning/composition/financial-relative-performance.example"),
+  {
+    slug: "financial-relative-performance",
+    title: "Relative Performance Desk",
+    shortTitle: "Performance Desk",
+    section: "composition",
+    order: 920,
+    summary:
+      "Compare three simulated instruments from one visible common base with bounded calendar navigation and shared inspection.",
+    api: [
+      "percentageReturns",
+      "TradingTimeScale",
+      "LineSeries",
+      "nearestRecordedX",
+    ],
+    objectives: [
+      "Keep comparison base independent of the viewport.",
+      "Show missing observations and unavailable assets honestly.",
+    ],
+    prompts: {
+      gesture:
+        "Select 1M, 3M or YTD; pan, zoom and return to Latest. Click/tap to pin; arrows to step.",
+      code: "Change deterministic price regimes, common base or the explicit gap.",
+    },
+    apiNotes: [
+      "USD simulation, not a market feed. Returns are cumulative from 02 Jan 2026.",
+    ],
+    canvas: { width: 760, height: 500 },
+    related: [
+      "financial-normalized-returns",
+      "financial-calendar-ranges",
+      "financial-linked-panes",
+    ],
+    exportName: "FinancialRelativePerformanceExample",
+    config: { viewport: "responsive" },
+    load: () =>
+      import("./learning/composition/financial-relative-performance.example"),
   },
 
-  {slug:"financial-trend-volatility",title:"Trend and Volatility",shortTitle:"Trend and Volatility",section:"composition",order:921,
-    summary:"Inspect simulated OHLC price action with adjustable SMA, EMA and population-standard-deviation Bollinger Bands.",api:["simpleMovingAverage","exponentialMovingAverage","bollingerBands","CandlestickSeries","IntervalBandSeries"],
-    objectives:["Calculate before windowing to preserve indicator history.","Compare trend lag, changing volatility and explicit gap warmup."],
-    prompts:{gesture:"Compare SMA and EMA; change P or σ. Visit Shock and Gap, drag/pinch/wheel to navigate, click to pin.",code:"Change seeded market regimes, indicator periods or the missing close."},
-    apiNotes:["Seeded synthetic USD OHLC, not a market feed. Bands use population standard deviation, not a confidence interval."],canvas:{width:960,height:620},related:["financial-relative-performance","financial-candles"],load:()=>import("./learning/composition/financial-trend-volatility.example"),
+  {
+    slug: "financial-trend-volatility",
+    title: "Trend and Volatility",
+    shortTitle: "Trend and Volatility",
+    section: "composition",
+    order: 921,
+    summary:
+      "Inspect simulated OHLC price action with adjustable SMA, EMA and population-standard-deviation Bollinger Bands.",
+    api: [
+      "simpleMovingAverage",
+      "exponentialMovingAverage",
+      "bollingerBands",
+      "CandlestickSeries",
+      "IntervalBandSeries",
+    ],
+    objectives: [
+      "Calculate before windowing to preserve indicator history.",
+      "Compare trend lag, changing volatility and explicit gap warmup.",
+    ],
+    prompts: {
+      gesture:
+        "Compare SMA and EMA; change P or σ. Visit Shock and Gap, drag/pinch/wheel to navigate, click to pin.",
+      code: "Change seeded market regimes, indicator periods or the missing close.",
+    },
+    apiNotes: [
+      "Seeded synthetic USD OHLC, not a market feed. Bands use population standard deviation, not a confidence interval.",
+    ],
+    canvas: { width: 960, height: 620 },
+    related: ["financial-relative-performance", "financial-candles"],
+    exportName: "FinancialTrendVolatilityExample",
+    config: { viewport: "responsive" },
+    load: () =>
+      import("./learning/composition/financial-trend-volatility.example"),
   },
 
-  {slug:"financial-momentum-desk",title:"Momentum Desk",shortTitle:"Momentum Desk",section:"composition",order:922,
-    summary:"Link simulated OHLC price action with RSI, MACD and stochastic oscillator analysis.",api:["relativeStrengthIndex","movingAverageConvergenceDivergence","stochasticOscillator","TradingTimeScale","CandlestickSeries"],
-    objectives:["Inspect price and momentum at one recorded time.","Compare oscillator conventions and explicit warmup after gaps."],
-    prompts:{gesture:"Choose RSI, MACD or Stoch. Visit Shock and Gap, drag/pinch/wheel to navigate, click either pane to pin.",code:"Change periods, seeded market regimes or the missing close."},
-    apiNotes:["Seeded synthetic USD OHLC, not a market feed. RSI uses Wilder smoothing; MACD uses SMA-seeded EMAs; stochastic uses SMA smoothing."],canvas:{width:960,height:680},related:["financial-trend-volatility","financial-linked-panes"],load:()=>import("./learning/composition/financial-momentum-desk.example"),
+  {
+    slug: "financial-momentum-desk",
+    title: "Momentum Desk",
+    shortTitle: "Momentum Desk",
+    section: "composition",
+    order: 922,
+    summary:
+      "Link simulated OHLC price action with RSI, MACD and stochastic oscillator analysis.",
+    api: [
+      "relativeStrengthIndex",
+      "movingAverageConvergenceDivergence",
+      "stochasticOscillator",
+      "TradingTimeScale",
+      "CandlestickSeries",
+    ],
+    objectives: [
+      "Inspect price and momentum at one recorded time.",
+      "Compare oscillator conventions and explicit warmup after gaps.",
+    ],
+    prompts: {
+      gesture:
+        "Choose RSI, MACD or Stoch. Visit Shock and Gap, drag/pinch/wheel to navigate, click either pane to pin.",
+      code: "Change periods, seeded market regimes or the missing close.",
+    },
+    apiNotes: [
+      "Seeded synthetic USD OHLC, not a market feed. RSI uses Wilder smoothing; MACD uses SMA-seeded EMAs; stochastic uses SMA smoothing.",
+    ],
+    canvas: { width: 960, height: 680 },
+    related: ["financial-trend-volatility", "financial-linked-panes"],
+    exportName: "FinancialMomentumDeskExample",
+    config: { viewport: "responsive" },
+    load: () =>
+      import("./learning/composition/financial-momentum-desk.example"),
   },
 
-  {slug:"financial-execution-journal",title:"Execution Journal",shortTitle:"Execution Journal",section:"composition",order:923,
-    summary:"Inspect simulated fills against OHLC bars and a selectable entry-price baseline.",api:["OhlcBarSeries","BaselineSeries","PlotSeries","useOhlcBarInspection"],
-    objectives:["Distinguish OHLC ticks and exact baseline crossings.","Compose keyed trade markers and keep fill selection explicit."],
-    prompts:{gesture:"Compare Bars, Baseline and Both; select B1/B2/B3 entries or trade markers. Pan/zoom and inspect prices.",code:"Change simulated fill quantities, timestamps, selected entry or baseline paints."},
-    apiNotes:["Seeded simulated USD prices and fills, not a market feed. Per-share mark difference excludes fees and is not portfolio P&L."],canvas:{width:960,height:620},related:["financial-momentum-desk","financial-trend-volatility","financial-candles"],load:()=>import("./learning/composition/financial-execution-journal.example"),
+  {
+    slug: "financial-execution-journal",
+    title: "Execution Journal",
+    shortTitle: "Execution Journal",
+    section: "composition",
+    order: 923,
+    summary:
+      "Inspect simulated fills against OHLC bars and a selectable entry-price baseline.",
+    api: [
+      "OhlcBarSeries",
+      "BaselineSeries",
+      "PlotSeries",
+      "useOhlcBarInspection",
+    ],
+    objectives: [
+      "Distinguish OHLC ticks and exact baseline crossings.",
+      "Compose keyed trade markers and keep fill selection explicit.",
+    ],
+    prompts: {
+      gesture:
+        "Compare Bars, Baseline and Both; select B1/B2/B3 entries or trade markers. Pan/zoom and inspect prices.",
+      code: "Change simulated fill quantities, timestamps, selected entry or baseline paints.",
+    },
+    apiNotes: [
+      "Seeded simulated USD prices and fills, not a market feed. Per-share mark difference excludes fees and is not portfolio P&L.",
+    ],
+    canvas: { width: 960, height: 620 },
+    related: [
+      "financial-momentum-desk",
+      "financial-trend-volatility",
+      "financial-candles",
+    ],
+    exportName: "FinancialExecutionJournalExample",
+    config: { viewport: "responsive" },
+    load: () =>
+      import("./learning/composition/financial-execution-journal.example"),
   },
 
-  {slug:"financial-live-monitor",title:"Live Market Monitor",shortTitle:"Live Market Monitor",section:"composition",order:924,
-    summary:"Replay simulated intraday candles and volume with timeframe aggregation, session VWAP and explicit follow-latest navigation.",api:["aggregateOhlcv","sessionVwap","CandlestickSeries","VolumeSeries","useAnimatedValue"],
-    objectives:["Aggregate OHLCV without losing source extrema or volume.","Inspect an evolving partial bar while preserving zoom and historical browsing."],
-    prompts:{gesture:"Play the replay, switch 1m/5m/15m bars, pan into history, then Follow latest. Step through the selloff and recovery.",code:"Change replay cadence, simulated volume, session buckets or the VWAP price accessor."},
-    apiNotes:["Deterministic invented USD prices and shares, not a market feed. VWAP uses one-minute typical-price bars and is an approximation."],canvas:{width:960,height:640},related:["financial-execution-journal","financial-linked-panes","financial-trend-volatility"],load:()=>import("./learning/composition/financial-live-monitor.example"),
+  {
+    slug: "financial-live-monitor",
+    title: "Live Market Monitor",
+    shortTitle: "Live Market Monitor",
+    section: "composition",
+    order: 924,
+    summary:
+      "Replay simulated intraday candles and volume with timeframe aggregation, session VWAP and explicit follow-latest navigation.",
+    api: [
+      "aggregateOhlcv",
+      "sessionVwap",
+      "CandlestickSeries",
+      "VolumeSeries",
+      "useAnimatedValue",
+    ],
+    objectives: [
+      "Aggregate OHLCV without losing source extrema or volume.",
+      "Inspect an evolving partial bar while preserving zoom and historical browsing.",
+    ],
+    prompts: {
+      gesture:
+        "Play the replay, switch 1m/5m/15m bars, pan into history, then Follow latest. Step through the selloff and recovery.",
+      code: "Change replay cadence, simulated volume, session buckets or the VWAP price accessor.",
+    },
+    apiNotes: [
+      "Deterministic invented USD prices and shares, not a market feed. VWAP uses one-minute typical-price bars and is an approximation.",
+    ],
+    canvas: { width: 960, height: 640 },
+    related: [
+      "financial-execution-journal",
+      "financial-linked-panes",
+      "financial-trend-volatility",
+    ],
+    exportName: "FinancialLiveMonitorExample",
+    config: { viewport: "responsive" },
+    load: () => import("./learning/composition/financial-live-monitor.example"),
   },
 
-  {slug:"financial-research-workspace",title:"Research Workspace",shortTitle:"Research Workspace",section:"composition",order:926,
-    summary:"Research simulated price regimes with a full-history navigator, editable levels and zones, and persistent trend anchors.",api:["RangeNavigator","EditableReferenceLine","EditableReferenceBand","EditableTrendLine","TradingTimeScale"],
-    objectives:["Keep editable annotations in domain coordinates through navigation.","Move and resize a full-history viewing window; cancel, undo or delete drawing edits."],
-    prompts:{gesture:"Select a drawing and drag its handles; add a Level, Zone or Trend, then Undo. Move or resize the overview window; zoom and pan the main chart.",code:"Change simulated support/resistance prices, trend anchors, handle styles or application-owned undo state."},
-    apiNotes:["Deterministic invented USD observations, not a market feed. Drawings are application-owned research annotations.","Direct gestures update immediately; range buttons use existing animated navigation."],canvas:{width:960,height:680},related:["financial-live-monitor","financial-execution-journal","financial-trend-volatility"],load:()=>import("./learning/composition/financial-research-workspace.example"),
+  {
+    slug: "financial-research-workspace",
+    title: "Research Workspace",
+    shortTitle: "Research Workspace",
+    section: "composition",
+    order: 926,
+    summary:
+      "Research simulated price regimes with a full-history navigator, editable levels and zones, and persistent trend anchors.",
+    api: [
+      "RangeNavigator",
+      "EditableReferenceLine",
+      "EditableReferenceBand",
+      "EditableTrendLine",
+      "TradingTimeScale",
+    ],
+    objectives: [
+      "Keep editable annotations in domain coordinates through navigation.",
+      "Move and resize a full-history viewing window; cancel, undo or delete drawing edits.",
+    ],
+    prompts: {
+      gesture:
+        "Select a drawing and drag its handles; add a Level, Zone or Trend, then Undo. Move or resize the overview window; zoom and pan the main chart.",
+      code: "Change simulated support/resistance prices, trend anchors, handle styles or application-owned undo state.",
+    },
+    apiNotes: [
+      "Deterministic invented USD observations, not a market feed. Drawings are application-owned research annotations.",
+      "Direct gestures update immediately; range buttons use existing animated navigation.",
+    ],
+    canvas: { width: 960, height: 680 },
+    related: [
+      "financial-live-monitor",
+      "financial-execution-journal",
+      "financial-trend-volatility",
+    ],
+    exportName: "FinancialResearchWorkspaceExample",
+    config: { viewport: "responsive" },
+    load: () =>
+      import("./learning/composition/financial-research-workspace.example"),
   },
 
-  {slug: "viz-recorded-inspection", title: "Recorded observations", shortTitle: "Recorded observations", section: "composition", order: 901,
-    summary: "Find the recorded quote nearest an order time, and see why it was selected.", api: ["PointSeries", "usePointInspection", "nearestRecordedX"],
-    objectives: ["Inspect the last successful paint through a public query.", "Keep query results tied to original typed observations."],
-    prompts: {gesture: "Choose an order time; focus a button and use Enter or arrow keys.", code: "Change the quote times and requested order times."},
-    apiNotes: ["Labeled deterministic quotes; original records are selected without interpolation."],
-    canvas: {width: 340, height: 280}, related: ["viz-points-and-inspection"],
-    load: () => import("./learning/composition/viz-recorded-inspection.example"),
+  {
+    slug: "viz-recorded-inspection",
+    title: "Recorded observations",
+    shortTitle: "Recorded observations",
+    section: "composition",
+    order: 901,
+    summary:
+      "Find the recorded quote nearest an order time, and see why it was selected.",
+    api: ["PointSeries", "usePointInspection", "nearestRecordedX"],
+    objectives: [
+      "Inspect the last successful paint through a public query.",
+      "Keep query results tied to original typed observations.",
+    ],
+    prompts: {
+      gesture:
+        "Choose an order time; focus a button and use Enter or arrow keys.",
+      code: "Change the quote times and requested order times.",
+    },
+    apiNotes: [
+      "Labeled deterministic quotes; original records are selected without interpolation.",
+    ],
+    canvas: { width: 340, height: 280 },
+    related: ["viz-points-and-inspection"],
+
+    exportName: "VizRecordedInspectionExample",
+    load: () =>
+      import("./learning/composition/viz-recorded-inspection.example"),
   },
 
-  {slug: "viz-lazy-inspection", title: "Lazy event inspection", shortTitle: "Lazy event inspection", section: "composition", order: 902,
-    summary: "Select a simulated order and see two identical inspection requests execute once.", api: ["PointSeries", "usePointInspection", "nearestRecordedX"],
-    objectives: ["Inspect the last successful paint through a public query.", "Keep query results tied to original typed observations."],
-    prompts: {gesture: "Click or tap the plot; focus it and press Enter.", code: "Change the order data or remove the repeated request."},
+  {
+    slug: "viz-lazy-inspection",
+    title: "Lazy event inspection",
+    shortTitle: "Lazy event inspection",
+    section: "composition",
+    order: 902,
+    summary:
+      "Select a simulated order and see two identical inspection requests execute once.",
+    api: ["PointSeries", "usePointInspection", "nearestRecordedX"],
+    objectives: [
+      "Inspect the last successful paint through a public query.",
+      "Keep query results tied to original typed observations.",
+    ],
+    prompts: {
+      gesture: "Click or tap the plot; focus it and press Enter.",
+      code: "Change the order data or remove the repeated request.",
+    },
     apiNotes: ["Tiny deterministic observations; values are illustrative."],
-    canvas: {width: 340, height: 280}, related: ["viz-points-and-inspection"],
+    canvas: { width: 340, height: 280 },
+    related: ["viz-points-and-inspection"],
+
+    exportName: "VizLazyInspectionExample",
     load: () => import("./learning/composition/viz-lazy-inspection.example"),
   },
 
@@ -305,6 +1146,8 @@ const drafts = [
     ],
     canvas: { width: 800, height: 600 },
     related: ["visibility-transitions", "physics-panels"],
+
+    exportName: "Demo",
     load: () => import("./learning/composition/embers-physics.example"),
   },
   {
@@ -338,6 +1181,8 @@ const drafts = [
     ],
     canvas: { width: 800, height: 560 },
     related: ["energy-transitions", "signals-and-animation"],
+
+    exportName: "Demo",
     load: () => import("./learning/composition/visibility-transitions.example"),
   },
   {
@@ -364,6 +1209,8 @@ const drafts = [
     ],
     canvas: { width: 960, height: 790 },
     related: ["signals-and-animation", "particle-effects"],
+
+    exportName: "EnergyTransitionsExample",
     load: () => import("./learning/composition/energy-transitions.example"),
   },
   {
@@ -390,6 +1237,8 @@ const drafts = [
     ],
     canvas: { width: 880, height: 700 },
     related: ["underwater", "living-ink"],
+
+    exportName: "RainyWindow",
     load: () => import("./learning/composition/rainy-window.example"),
   },
   {
@@ -416,6 +1265,10 @@ const drafts = [
     ],
     canvas: { width: 720, height: 480 },
     related: ["group", "clip"],
+
+    exportName: "HtmlBoxExample",
+    config: { viewport: { width: 720, height: 480 } },
+    htmlOverlay: true,
     load: () => import("./learning/composition/html-box.example"),
   },
   {
@@ -442,6 +1295,8 @@ const drafts = [
     ],
     canvas: { width: 880, height: 720 },
     related: ["living-ink", "material-lab"],
+
+    exportName: "PlasmaGlobeExample",
     load: () => import("./learning/composition/plasma-globe.example"),
   },
   {
@@ -477,6 +1332,8 @@ const drafts = [
     ],
     canvas: { width: 600, height: 580 },
     related: ["living-ink", "material-lab", "physics-panels"],
+
+    exportName: "StirredInkExample",
     load: () => import("./learning/composition/stirred-ink.example"),
   },
   {
@@ -485,53 +1342,176 @@ const drafts = [
     shortTitle: "Textures",
     section: "composition",
     order: 253,
-    summary: "Customize seamless stripes, checkers, and wood grain, then compare six living Gray–Scott patterns.",
-    api: ["stripes", "checkers", "woodGrain", "reactionDiffusion", "grayScottPresets", "useTexture", "useSignal"],
-    objectives: ["Share one texture between a tile and repeated fills.", "Change colors, geometry, scheduled motion, and warm-started Gray–Scott presets."],
-    prompts: { gesture: "Change the palette and tile size, enable motion, and try each ink preset.", code: "Adjust dutyCycle, wood grain, distortion, knots, or Gray–Scott feed/kill rates." },
-    apiNotes: ["Geometric recipes idle at zero speed; Pibbl owns every continuing frame.", "The ink preview starts at 1,800 numerical steps and retains its field when recolored."],
+    summary:
+      "Customize seamless stripes, checkers, and wood grain, then compare six living Gray–Scott patterns.",
+    api: [
+      "stripes",
+      "checkers",
+      "woodGrain",
+      "reactionDiffusion",
+      "grayScottPresets",
+      "useTexture",
+      "useSignal",
+    ],
+    objectives: [
+      "Share one texture between a tile and repeated fills.",
+      "Change colors, geometry, scheduled motion, and warm-started Gray–Scott presets.",
+    ],
+    prompts: {
+      gesture:
+        "Change the palette and tile size, enable motion, and try each ink preset.",
+      code: "Adjust dutyCycle, wood grain, distortion, knots, or Gray–Scott feed/kill rates.",
+    },
+    apiNotes: [
+      "Geometric recipes idle at zero speed; Pibbl owns every continuing frame.",
+      "The ink preview starts at 1,800 numerical steps and retains its field when recolored.",
+    ],
     canvas: { width: 880, height: 820 },
     related: ["material-lab", "living-ink", "stirred-ink"],
+
+    exportName: "TextureExplorer",
     load: () => import("./learning/composition/texture-explorer.example"),
   },
   {
-    slug: "fabric-explorer", title: "Fabric Explorer", shortTitle: "Fabrics", section: "composition", order: 254,
-    summary: "Weave seamless plain fabric, diagonal twill, and herringbone with adjustable threads and fibers.",
+    slug: "fabric-explorer",
+    title: "Fabric Explorer",
+    shortTitle: "Fabrics",
+    section: "composition",
+    order: 254,
+    summary:
+      "Weave seamless plain fabric, diagonal twill, and herringbone with adjustable threads and fibers.",
     api: ["plainWeave", "twill", "herringbone", "useTexture", "useSignal"],
-    objectives: ["Compare plain weave, 2/2 twill, and offset broken herringbone.", "Change thread density, width, relief, fibers, palette, and periodic motion."],
-    prompts: { gesture: "Change Threads, Width, Relief, and Fuzz; try palettes and motion.", code: "Adjust FabricOptions or rotate the repeating paint for a different fabric direction." },
-    apiNotes: ["Threads must be a multiple of eight so every weave repeats seamlessly.", "Texture resolution and painted tile size independently control detail and scale."],
-    canvas: { width: 880, height: 620 }, related: ["texture-explorer", "material-lab"],
+    objectives: [
+      "Compare plain weave, 2/2 twill, and offset broken herringbone.",
+      "Change thread density, width, relief, fibers, palette, and periodic motion.",
+    ],
+    prompts: {
+      gesture:
+        "Change Threads, Width, Relief, and Fuzz; try palettes and motion.",
+      code: "Adjust FabricOptions or rotate the repeating paint for a different fabric direction.",
+    },
+    apiNotes: [
+      "Threads must be a multiple of eight so every weave repeats seamlessly.",
+      "Texture resolution and painted tile size independently control detail and scale.",
+    ],
+    canvas: { width: 880, height: 620 },
+    related: ["texture-explorer", "material-lab"],
+
+    exportName: "FabricExplorer",
     load: () => import("./learning/composition/fabric-explorer.example"),
   },
   {
-    slug: "geometric-explorer", title: "Geometric Texture Explorer", shortTitle: "Geometric Patterns", section: "composition", order: 257,
-    summary: "Customize seamless dots, halftone, named-color plaids, and connecting Truchet curves.",
-    api: ["polkaDots", "halftone", "plaid", "truchet", "plaidPresets", "useTexture", "HtmlBox"],
-    objectives: ["Explore every geometry, color, and motion option with native editing controls.", "Build ordered plaid bands referencing named colors and inspect tile repetition."],
-    prompts: {gesture: "Choose a texture and preset; scroll the settings to edit colors, bands, motion, and placement.", code: "Use a named colors dictionary for plaid and ordered palette ramps for the other patterns."},
-    apiNotes: ["Plaid color references are checked against the colors dictionary by TypeScript and at runtime.", "All recipes repeat during motion and stop requesting frames at zero speed."],
-    canvas: {width:980,height:940}, related: ["texture-explorer","fabric-explorer","chemical-explorer"],
+    slug: "geometric-explorer",
+    title: "Geometric Texture Explorer",
+    shortTitle: "Geometric Patterns",
+    section: "composition",
+    order: 257,
+    summary:
+      "Customize seamless dots, halftone, named-color plaids, and connecting Truchet curves.",
+    api: [
+      "polkaDots",
+      "halftone",
+      "plaid",
+      "truchet",
+      "plaidPresets",
+      "useTexture",
+      "HtmlBox",
+    ],
+    objectives: [
+      "Explore every geometry, color, and motion option with native editing controls.",
+      "Build ordered plaid bands referencing named colors and inspect tile repetition.",
+    ],
+    prompts: {
+      gesture:
+        "Choose a texture and preset; scroll the settings to edit colors, bands, motion, and placement.",
+      code: "Use a named colors dictionary for plaid and ordered palette ramps for the other patterns.",
+    },
+    apiNotes: [
+      "Plaid color references are checked against the colors dictionary by TypeScript and at runtime.",
+      "All recipes repeat during motion and stop requesting frames at zero speed.",
+    ],
+    canvas: { width: 980, height: 940 },
+    related: ["texture-explorer", "fabric-explorer", "chemical-explorer"],
+
+    exportName: "GeometricExplorerExample",
+    config: {
+      viewport: { width: 980, height: 940 },
+    },
+    htmlOverlay: true,
     load: () => import("./learning/composition/geometric-explorer.example"),
   },
   {
-    slug: "chemical-explorer", title: "Reaction–Diffusion Explorer", shortTitle: "Chemical Patterns", section: "composition", order: 256,
-    summary: "Grow Schnakenberg spots, Barkley spirals, and Brusselator patterns with presets and live chemistry controls.",
-    api: ["schnakenberg", "barkley", "brusselator", "schnakenbergPresets", "barkleyPresets", "brusselatorPresets", "useTexture", "InkMessage"],
-    objectives: ["Explore three distinct periodic reaction–diffusion models.", "Tune chemistry, diffusion, noise, warmup and speed; paint and stir across wrapped boundaries."],
-    prompts: {gesture: "Switch models and presets, pause to paint, and compare the repeated field.", code: "Spread a preset into its named factory and customize the palette or resolution."},
-    apiNotes: ["Changing chemistry resets the simulation; colors, tile size, speed and pause preserve it.", "Solver time steps are stability-limited; arbitrary parameters may settle into uniform fields."],
-    canvas: {width:880,height:910}, related: ["texture-explorer","material-overlay","living-ink"],
+    slug: "chemical-explorer",
+    title: "Reaction–Diffusion Explorer",
+    shortTitle: "Chemical Patterns",
+    section: "composition",
+    order: 256,
+    summary:
+      "Grow Schnakenberg spots, Barkley spirals, and Brusselator patterns with presets and live chemistry controls.",
+    api: [
+      "schnakenberg",
+      "barkley",
+      "brusselator",
+      "schnakenbergPresets",
+      "barkleyPresets",
+      "brusselatorPresets",
+      "useTexture",
+      "InkMessage",
+    ],
+    objectives: [
+      "Explore three distinct periodic reaction–diffusion models.",
+      "Tune chemistry, diffusion, noise, warmup and speed; paint and stir across wrapped boundaries.",
+    ],
+    prompts: {
+      gesture:
+        "Switch models and presets, pause to paint, and compare the repeated field.",
+      code: "Spread a preset into its named factory and customize the palette or resolution.",
+    },
+    apiNotes: [
+      "Changing chemistry resets the simulation; colors, tile size, speed and pause preserve it.",
+      "Solver time steps are stability-limited; arbitrary parameters may settle into uniform fields.",
+    ],
+    canvas: { width: 880, height: 910 },
+    related: ["texture-explorer", "material-overlay", "living-ink"],
+
+    exportName: "Explorer",
     load: () => import("./learning/composition/chemical-explorer.example"),
   },
   {
-    slug: "material-overlay", title: "Painted Canvas", shortTitle: "Painted Canvas", section: "composition", order: 255,
-    summary: "Combine seamless noise and a woven or paper surface to give an image material depth.",
-    api: ["softNoise", "ridgedNoise", "plainWeave", "paper", "useTexture", "Image", "definePrimitive", "emboss"],
-    objectives: ["Compare a clean image with texture-modulated pixels.", "Adjust surface strength, size, seeds, pigment variation, and periodic noise motion."],
-    prompts: { gesture: "Switch Canvas weave to Paper grain, compare Strength zero, and toggle Pigment.", code: "Change NoiseOptions or the grayscale surface palette to adjust the material response." },
-    apiNotes: ["The emboss filter lights grayscale surface heights; the pigment multiply scope uses definePrimitive.", "Strength zero reproduces the original image; decorative overlays opt out of pointer targeting."],
-    canvas: { width: 880, height: 790 }, related: ["fabric-explorer", "texture-explorer", "material-lab"],
+    slug: "material-overlay",
+    title: "Painted Canvas",
+    shortTitle: "Painted Canvas",
+    section: "composition",
+    order: 255,
+    summary:
+      "Combine seamless noise and a woven or paper surface to give an image material depth.",
+    api: [
+      "softNoise",
+      "ridgedNoise",
+      "plainWeave",
+      "paper",
+      "useTexture",
+      "Image",
+      "definePrimitive",
+      "emboss",
+    ],
+    objectives: [
+      "Compare a clean image with texture-modulated pixels.",
+      "Adjust surface strength, size, seeds, pigment variation, and periodic noise motion.",
+    ],
+    prompts: {
+      gesture:
+        "Switch Canvas weave to Paper grain, compare Strength zero, and toggle Pigment.",
+      code: "Change NoiseOptions or the grayscale surface palette to adjust the material response.",
+    },
+    apiNotes: [
+      "The emboss filter lights grayscale surface heights; the pigment multiply scope uses definePrimitive.",
+      "Strength zero reproduces the original image; decorative overlays opt out of pointer targeting.",
+    ],
+    canvas: { width: 880, height: 790 },
+    related: ["fabric-explorer", "texture-explorer", "material-lab"],
+
+    exportName: "MaterialOverlay",
     load: () => import("./learning/composition/material-overlay.example"),
   },
   {
@@ -557,6 +1537,8 @@ const drafts = [
     ],
     canvas: { width: 880, height: 630 },
     related: ["living-ink"],
+
+    exportName: "MaterialLab",
     load: () => import("./learning/composition/material-lab.example"),
   },
   {
@@ -583,6 +1565,8 @@ const drafts = [
     ],
     canvas: { width: 880, height: 630 },
     related: ["living-ink"],
+
+    exportName: "GrowingRevealExample",
     load: () => import("./learning/composition/growing-reveal.example"),
   },
 
@@ -609,6 +1593,8 @@ const drafts = [
     ],
     canvas: { width: 880, height: 630 },
     related: ["layer", "three-layer"],
+
+    exportName: "LivingInkExample",
     load: () => import("./learning/composition/living-ink.example"),
   },
   {
@@ -634,6 +1620,8 @@ const drafts = [
     ],
     canvas: { width: 720, height: 420 },
     related: ["signals", "getting-started"],
+
+    exportName: "LoadingCard",
     load: () => import("./learning/composition/state-machines.example"),
   },
   {
@@ -660,6 +1648,8 @@ const drafts = [
     ],
     canvas: { width: 720, height: 420 },
     related: ["signals-and-animation", "state-machines"],
+
+    exportName: "Example",
     load: () => import("./learning/composition/sprites.example"),
   },
   {
@@ -685,8 +1675,9 @@ const drafts = [
     ],
     canvas: { width: 720, height: 420 },
     related: ["rectangle", "text", "click"],
+
     exportName: "Poster",
-    load: () => loadComponentExample(import("./learning/start/getting-started.example").then(module => module.Poster)),
+    load: () => import("./learning/start/getting-started.example"),
   },
   {
     slug: "viz-band-bars",
@@ -719,6 +1710,9 @@ const drafts = [
     ],
     canvas: { width: 940, height: 660 },
     related: ["viz-responsive-line", "viz-points-and-inspection"],
+
+    exportName: "Scene",
+    config: { viewport: "responsive" },
     load: () => import("./learning/composition/viz-band-bars.example"),
   },
   {
@@ -752,6 +1746,9 @@ const drafts = [
     ],
     canvas: { width: 940, height: 660 },
     related: ["viz-stacked-bars", "viz-grouped-bars", "viz-band-bars"],
+
+    exportName: "Scene",
+    config: { viewport: "responsive" },
     load: () =>
       import("./learning/composition/viz-grouped-stacked-bars.example"),
   },
@@ -785,6 +1782,9 @@ const drafts = [
     ],
     canvas: { width: 940, height: 720 },
     related: ["viz-grouped-bars", "viz-band-bars"],
+
+    exportName: "Scene",
+    config: { viewport: "responsive" },
     load: () => import("./learning/composition/viz-stacked-bars.example"),
   },
   {
@@ -818,6 +1818,9 @@ const drafts = [
     ],
     canvas: { width: 940, height: 660 },
     related: ["viz-band-bars", "viz-responsive-line"],
+
+    exportName: "Scene",
+    config: { viewport: "responsive" },
     load: () => import("./learning/composition/viz-grouped-bars.example"),
   },
   {
@@ -844,6 +1847,8 @@ const drafts = [
     ],
     canvas: { width: 1000, height: 570 },
     related: ["viz-points-and-inspection", "signals"],
+
+    exportName: "Scene",
     load: () => import("./learning/composition/viz-pie-composition.example"),
   },
   {
@@ -852,58 +1857,176 @@ const drafts = [
     shortTitle: "Dose–response",
     section: "composition",
     order: 927,
-    summary: "Separate synthetic observations, supplied predictions, and confidence bands on a logarithmic dose axis.",
-    api: ["PointSeries", "LineSeries", "IntervalBandSeries", "LogScale", "LinearScale"],
-    objectives: ["Compose observations and externally calculated predictions.", "Show zero-dose controls separately from logarithmic coordinates."],
-    prompts: { gesture: "Toggle the confidence band below the figure and open the data table.", code: "Replace the synthetic observations and predictions with supplied research results." },
-    apiNotes: ["Invented teaching data; no fitting or clinical inference.", "The band represents supplied uncertainty in mean response, not individual prediction intervals.", "The zero-dose control stays outside the logarithmic plot."],
+    summary:
+      "Separate synthetic observations, supplied predictions, and confidence bands on a logarithmic dose axis.",
+    api: [
+      "PointSeries",
+      "LineSeries",
+      "IntervalBandSeries",
+      "LogScale",
+      "LinearScale",
+    ],
+    objectives: [
+      "Compose observations and externally calculated predictions.",
+      "Show zero-dose controls separately from logarithmic coordinates.",
+    ],
+    prompts: {
+      gesture:
+        "Toggle the confidence band below the figure and open the data table.",
+      code: "Replace the synthetic observations and predictions with supplied research results.",
+    },
+    apiNotes: [
+      "Invented teaching data; no fitting or clinical inference.",
+      "The band represents supplied uncertainty in mean response, not individual prediction intervals.",
+      "The zero-dose control stays outside the logarithmic plot.",
+    ],
     canvas: { width: 960, height: 640 },
-    related: ["viz-clinical-forest", "viz-interval-temperature", "viz-log-basics"],
+    related: [
+      "viz-clinical-forest",
+      "viz-interval-temperature",
+      "viz-log-basics",
+    ],
+
+    exportName: "VizDoseResponseExample",
+    config: {
+      viewport: "responsive",
+    },
     load: () => import("./learning/composition/viz-dose-response.example"),
   },
   {
-    slug: "viz-censored-assay", title: "Pharmacokinetic assay reporting limits", shortTitle: "Pharmacokinetic assay reporting limits", section: "composition", order: 928,
-    summary: "Read synthetic pharmacokinetic observations and explicit assay reporting limits without imputation.",
+    slug: "viz-censored-assay",
+    title: "Pharmacokinetic assay reporting limits",
+    shortTitle: "Pharmacokinetic assay reporting limits",
+    section: "composition",
+    order: 928,
+    summary:
+      "Read synthetic pharmacokinetic observations and explicit assay reporting limits without imputation.",
     api: ["CensoredPointSeries", "LinearScale", "LogScale"],
-    objectives: ["Render supplied research results through a reusable public series.", "Keep units, uncertainty, reporting limits, and source values explicit."],
-    prompts: { gesture: "Use the controls and inspect the data table below the figure.", code: "Replace the supplied teaching records with validated research results." },
-    apiNotes: ["Clearly labelled synthetic research example; no real medicine or trial.", "Rendering performs no statistical inference, pooling, or imputation.", "An application-owned HTML table exposes essential values."],
+    objectives: [
+      "Render supplied research results through a reusable public series.",
+      "Keep units, uncertainty, reporting limits, and source values explicit.",
+    ],
+    prompts: {
+      gesture: "Use the controls and inspect the data table below the figure.",
+      code: "Replace the supplied teaching records with validated research results.",
+    },
+    apiNotes: [
+      "Clearly labelled synthetic research example; no real medicine or trial.",
+      "Rendering performs no statistical inference, pooling, or imputation.",
+      "An application-owned HTML table exposes essential values.",
+    ],
     canvas: { width: 960, height: 680 },
     related: ["viz-clinical-forest", "viz-dose-response"],
+
+    exportName: "VizCensoredAssayExample",
+    config: {
+      viewport: "responsive",
+    },
     load: () => import("./learning/composition/viz-censored-assay.example"),
   },
   {
-    slug: "viz-weighted-evidence", title: "Precision-weighted assay response", shortTitle: "Weighted assay response", section: "composition", order: 929,
-    summary: "Compare supplied assay observations while marker area shows supplied precision weights.",
+    slug: "viz-weighted-evidence",
+    title: "Precision-weighted assay response",
+    shortTitle: "Weighted assay response",
+    section: "composition",
+    order: 929,
+    summary:
+      "Compare supplied assay observations while marker area shows supplied precision weights.",
     api: ["WeightedPointSeries", "LinearScale", "LineSeries"],
-    objectives: ["Render supplied research results through a reusable public series.", "Keep units, uncertainty, reporting limits, and source values explicit."],
-    prompts: { gesture: "Use the controls and inspect the data table below the figure.", code: "Replace the supplied teaching records with validated research results." },
-    apiNotes: ["Clearly labelled synthetic research example; no real medicine or trial.", "Rendering performs no statistical inference, pooling, or imputation.", "An application-owned HTML table exposes essential values."],
+    objectives: [
+      "Render supplied research results through a reusable public series.",
+      "Keep units, uncertainty, reporting limits, and source values explicit.",
+    ],
+    prompts: {
+      gesture: "Use the controls and inspect the data table below the figure.",
+      code: "Replace the supplied teaching records with validated research results.",
+    },
+    apiNotes: [
+      "Clearly labelled synthetic research example; no real medicine or trial.",
+      "Rendering performs no statistical inference, pooling, or imputation.",
+      "An application-owned HTML table exposes essential values.",
+    ],
     canvas: { width: 960, height: 680 },
     related: ["viz-clinical-forest", "viz-dose-response"],
+
+    exportName: "VizWeightedEvidenceExample",
+    config: {
+      pixelRatio: 1,
+    },
     load: () => import("./learning/composition/viz-weighted-evidence.example"),
   },
   {
-    slug: "viz-evidence-synthesis", title: "BCG evidence synthesis with supplied summary", shortTitle: "Evidence synthesis", section: "composition", order: 930,
-    summary: "Explore 13 published BCG studies with weighted study marks, supplied summary diamonds, and distinct confidence and prediction intervals.",
-    api: ["WeightedPointSeries", "IntervalDiamondSeries", "HorizontalIntervalSeries", "LogScale"],
-    objectives: ["Compose externally calculated study results and a supplied meta-analysis summary.", "Distinguish supplied confidence bounds from prediction intervals and make provenance inspectable."],
-    prompts: { gesture: "Toggle the supplied prediction interval and open the source/results table.", code: "Replace the precomputed results with supplied analysis outputs; keep calculation outside the renderer." },
-    apiNotes: ["Published metadat dat.bcg teaching dataset: 13 studies from 1948–1980.", "Study log-Wald intervals and REML weights prepared offline; summary copied from published output.", "Historical teaching analysis with heterogeneous studies; no current treatment recommendation."],
+    slug: "viz-evidence-synthesis",
+    title: "BCG evidence synthesis with supplied summary",
+    shortTitle: "Evidence synthesis",
+    section: "composition",
+    order: 930,
+    summary:
+      "Explore 13 published BCG studies with weighted study marks, supplied summary diamonds, and distinct confidence and prediction intervals.",
+    api: [
+      "WeightedPointSeries",
+      "IntervalDiamondSeries",
+      "HorizontalIntervalSeries",
+      "LogScale",
+    ],
+    objectives: [
+      "Compose externally calculated study results and a supplied meta-analysis summary.",
+      "Distinguish supplied confidence bounds from prediction intervals and make provenance inspectable.",
+    ],
+    prompts: {
+      gesture:
+        "Toggle the supplied prediction interval and open the source/results table.",
+      code: "Replace the precomputed results with supplied analysis outputs; keep calculation outside the renderer.",
+    },
+    apiNotes: [
+      "Published metadat dat.bcg teaching dataset: 13 studies from 1948–1980.",
+      "Study log-Wald intervals and REML weights prepared offline; summary copied from published output.",
+      "Historical teaching analysis with heterogeneous studies; no current treatment recommendation.",
+    ],
     canvas: { width: 1080, height: 830 },
-    related: ["viz-weighted-evidence", "viz-clinical-forest", "viz-censored-assay"],
+    related: [
+      "viz-weighted-evidence",
+      "viz-clinical-forest",
+      "viz-censored-assay",
+    ],
+
+    exportName: "VizEvidenceSynthesisExample",
+    config: { viewport: "responsive" },
     load: () => import("./learning/composition/viz-evidence-synthesis.example"),
   },
   {
-    slug: "viz-phase-ii-trajectories", title: "Phase II participant trajectories", shortTitle: "Participant trajectories", section: "composition", order: 931,
-    summary: "Compare scheduled participant change trajectories with paired baseline and week-12 scores while retaining missing visits.",
-    api: ["TrajectorySeries", "PairedSeries", "PointSeries", "LineSeries", "LinearScale"],
-    objectives: ["Compose grouped participant paths from explicit repeated-measures records.", "Keep paired endpoints and unobserved visits distinct from inferred values."],
-    prompts: { gesture: "Choose a participant and toggle individual trajectories.", code: "Change supplied synthetic scores, visits, or missingness." },
-    apiNotes: ["Invented teaching records only; no clinical inference, treatment claim, baseline derivation, or imputation."],
+    slug: "viz-phase-ii-trajectories",
+    title: "Phase II participant trajectories",
+    shortTitle: "Participant trajectories",
+    section: "composition",
+    order: 931,
+    summary:
+      "Compare scheduled participant change trajectories with paired baseline and week-12 scores while retaining missing visits.",
+    api: [
+      "TrajectorySeries",
+      "PairedSeries",
+      "PointSeries",
+      "LineSeries",
+      "LinearScale",
+    ],
+    objectives: [
+      "Compose grouped participant paths from explicit repeated-measures records.",
+      "Keep paired endpoints and unobserved visits distinct from inferred values.",
+    ],
+    prompts: {
+      gesture: "Choose a participant and toggle individual trajectories.",
+      code: "Change supplied synthetic scores, visits, or missingness.",
+    },
+    apiNotes: [
+      "Invented teaching records only; no clinical inference, treatment claim, baseline derivation, or imputation.",
+    ],
     canvas: { width: 1040, height: 720 },
     related: ["viz-clinical-forest", "viz-dose-response", "viz-censored-assay"],
-    load: () => import("./learning/composition/viz-phase-ii-trajectories.example"),
+
+    exportName: "VizPhaseIiTrajectoriesExample",
+    config: { viewport: "responsive" },
+    load: () =>
+      import("./learning/composition/viz-phase-ii-trajectories.example"),
   },
   {
     slug: "viz-clinical-forest",
@@ -911,16 +2034,34 @@ const drafts = [
     shortTitle: "Clinical forest plot",
     section: "composition",
     order: 925,
-    summary: "Compare synthetic clinical risk ratios with asymmetric intervals, a logarithmic axis, and an accessible results table.",
-    api: ["HorizontalIntervalSeries", "VerticalIntervalSeries", "BarScale", "LogScale", "ReferenceLine"],
-    objectives: ["Render externally supplied estimates and confidence bounds.", "Keep units, interval meaning, analysis population, and null value visible."],
+    summary:
+      "Compare synthetic clinical risk ratios with asymmetric intervals, a logarithmic axis, and an accessible results table.",
+    api: [
+      "HorizontalIntervalSeries",
+      "VerticalIntervalSeries",
+      "BarScale",
+      "LogScale",
+      "ReferenceLine",
+    ],
+    objectives: [
+      "Render externally supplied estimates and confidence bounds.",
+      "Keep units, interval meaning, analysis population, and null value visible.",
+    ],
     prompts: {
-      gesture: "Sort by effect, then click, tap, or focus a trial row to inspect it.",
+      gesture:
+        "Sort by effect, then click, tap, or focus a trial row to inspect it.",
       code: "Replace the invented trials with your externally calculated results.",
     },
-    apiNotes: ["Deterministic synthetic teaching data; no real trial or medicine.", "Equal-size estimate circles; no weighting, pooling, or statistical inference.", "Below the canvas, an application-owned HTML table exposes every value."],
+    apiNotes: [
+      "Deterministic synthetic teaching data; no real trial or medicine.",
+      "Equal-size estimate circles; no weighting, pooling, or statistical inference.",
+      "Below the canvas, an application-owned HTML table exposes every value.",
+    ],
     canvas: { width: 960, height: 680 },
     related: ["viz-points-and-inspection", "viz-interval-temperature"],
+
+    exportName: "VizClinicalForestExample",
+    config: { viewport: "responsive" },
     load: () => import("./learning/composition/viz-clinical-forest.example"),
   },
   {
@@ -954,6 +2095,11 @@ const drafts = [
     ],
     canvas: { width: 1000, height: 620 },
     related: ["viz-points-and-inspection", "viz-responsive-line"],
+
+    exportName: "VizHoverComparisonExample",
+    config: {
+      viewport: "responsive",
+    },
     load: () => import("./learning/composition/viz-hover-comparison.example"),
   },
   {
@@ -991,6 +2137,11 @@ const drafts = [
     ],
     canvas: { width: 1100, height: 680 },
     related: ["viz-responsive-line", "signals"],
+
+    exportName: "VizPointsAndInspectionExample",
+    config: {
+      viewport: "responsive",
+    },
     load: () =>
       import("./learning/composition/viz-points-and-inspection.example"),
   },
@@ -1002,7 +2153,14 @@ const drafts = [
     order: 248,
     summary:
       "Compare continuous and discrete color encodings with exact observed values and scale-derived keys.",
-    api: ["SequentialColorScale", "DivergingColorScale", "ThresholdColorScale", "useSequentialColorScale", "useDivergingColorScale", "useThresholdColorScale"],
+    api: [
+      "SequentialColorScale",
+      "DivergingColorScale",
+      "ThresholdColorScale",
+      "useSequentialColorScale",
+      "useDivergingColorScale",
+      "useThresholdColorScale",
+    ],
     objectives: [
       "Author meaningful numeric color domains and palettes.",
       "Derive readable keys from the same resolved mapping as marks.",
@@ -1017,6 +2175,9 @@ const drafts = [
     ],
     canvas: { width: 1000, height: 640 },
     related: ["viz-size-symbols", "viz-threshold-segments"],
+
+    exportName: "VizColorEncodingsExample",
+    config: { viewport: "responsive" },
     load: () => import("./learning/composition/viz-color-encodings.example"),
   },
   {
@@ -1041,6 +2202,9 @@ const drafts = [
     ],
     canvas: { width: 1000, height: 640 },
     related: ["viz-color-encodings", "viz-population-stack"],
+
+    exportName: "VizSizeSymbolsExample",
+    config: { viewport: "responsive" },
     load: () => import("./learning/composition/viz-size-symbols.example"),
   },
   {
@@ -1066,6 +2230,9 @@ const drafts = [
     ],
     canvas: { width: 1000, height: 640 },
     related: ["viz-linked-inspection", "viz-domain-exploration"],
+
+    exportName: "VizSmallMultiplesExample",
+    config: { viewport: "responsive" },
     load: () => import("./learning/composition/viz-small-multiples.example"),
   },
   {
@@ -1090,6 +2257,9 @@ const drafts = [
     ],
     canvas: { width: 1000, height: 640 },
     related: ["viz-hover-comparison", "viz-domain-exploration"],
+
+    exportName: "VizLinkedInspectionExample",
+    config: { viewport: "responsive" },
     load: () => import("./learning/composition/viz-linked-inspection.example"),
   },
   {
@@ -1100,7 +2270,14 @@ const drafts = [
     order: 245,
     summary:
       "Draft and commit a bounded UTC window through native pointer capture and keyboard controls.",
-    api: ["UTCScale", "LinearScale", "LineSeries", "useUTCScale", "panDomain", "zoomDomain"],
+    api: [
+      "UTCScale",
+      "LinearScale",
+      "LineSeries",
+      "useUTCScale",
+      "panDomain",
+      "zoomDomain",
+    ],
     objectives: [
       "Separate drag drafts from committed domains.",
       "Cancel gestures without leaking capture or changing the committed view.",
@@ -1115,6 +2292,9 @@ const drafts = [
     ],
     canvas: { width: 1000, height: 640 },
     related: ["viz-linked-inspection", "viz-responsive-line"],
+
+    exportName: "VizDomainExplorationExample",
+    config: { viewport: "responsive" },
     load: () => import("./learning/composition/viz-domain-exploration.example"),
   },
   {
@@ -1140,6 +2320,9 @@ const drafts = [
     ],
     canvas: { width: 1000, height: 640 },
     related: ["viz-population-stack", "viz-area-basics"],
+
+    exportName: "VizThresholdSegmentsExample",
+    config: { viewport: "responsive" },
     load: () => import("./learning/composition/viz-threshold-segments.example"),
   },
   {
@@ -1164,6 +2347,9 @@ const drafts = [
     ],
     canvas: { width: 1000, height: 640 },
     related: ["viz-stacked-bars", "viz-grouped-bars"],
+
+    exportName: "VizPopulationStackExample",
+    config: { viewport: "responsive" },
     load: () => import("./learning/composition/viz-population-stack.example"),
   },
   {
@@ -1194,6 +2380,9 @@ const drafts = [
     ],
     canvas: { width: 1000, height: 640 },
     related: ["viz-long-labels", "viz-monotone-climate"],
+
+    exportName: "VizCategorySeriesExample",
+    config: { viewport: "responsive" },
     load: () => import("./learning/composition/viz-category-series.example"),
   },
   {
@@ -1219,6 +2408,9 @@ const drafts = [
     ],
     canvas: { width: 1000, height: 640 },
     related: ["viz-policy-steps", "viz-area-basics"],
+
+    exportName: "VizMonotoneClimateExample",
+    config: { viewport: "responsive" },
     load: () => import("./learning/composition/viz-monotone-climate.example"),
   },
   {
@@ -1249,6 +2441,9 @@ const drafts = [
     ],
     canvas: { width: 1000, height: 640 },
     related: ["viz-interval-temperature", "viz-area-basics"],
+
+    exportName: "VizPolicyStepsExample",
+    config: { viewport: "responsive" },
     load: () => import("./learning/composition/viz-policy-steps.example"),
   },
   {
@@ -1274,6 +2469,9 @@ const drafts = [
     ],
     canvas: { width: 1000, height: 640 },
     related: ["viz-area-basics", "viz-utc-climate"],
+
+    exportName: "VizIntervalTemperatureExample",
+    config: { viewport: "responsive" },
     load: () =>
       import("./learning/composition/viz-interval-temperature.example"),
   },
@@ -1306,6 +2504,9 @@ const drafts = [
     ],
     canvas: { width: 1000, height: 640 },
     related: ["viz-utc-climate", "viz-numeric-axis"],
+
+    exportName: "VizAreaBasicsExample",
+    config: { viewport: "responsive" },
     load: () => import("./learning/composition/viz-area-basics.example"),
   },
   {
@@ -1337,6 +2538,9 @@ const drafts = [
     ],
     canvas: { width: 1000, height: 640 },
     related: ["viz-log-masses", "viz-band-bars"],
+
+    exportName: "VizSignedPopulationExample",
+    config: { viewport: "responsive" },
     load: () => import("./learning/composition/viz-signed-population.example"),
   },
   {
@@ -1359,6 +2563,9 @@ const drafts = [
     apiNotes: ["Zero and negative log coordinates reject explicitly."],
     canvas: { width: 620, height: 280 },
     related: ["viz-log-masses"],
+
+    exportName: "Scene",
+    config: { viewport: "responsive" },
     load: () => import("./learning/composition/viz-log-basics.example"),
   },
   {
@@ -1383,6 +2590,9 @@ const drafts = [
     ],
     canvas: { width: 1000, height: 660 },
     related: ["viz-log-basics", "viz-numeric-axis"],
+
+    exportName: "VizLogMassesExample",
+    config: { viewport: "responsive" },
     load: () => import("./learning/composition/viz-log-masses.example"),
   },
   {
@@ -1407,6 +2617,9 @@ const drafts = [
     ],
     canvas: { width: 900, height: 640 },
     related: ["viz-numeric-axis", "viz-utc-basics"],
+
+    exportName: "VizLongLabelsExample",
+    config: { viewport: "responsive" },
     load: () => import("./learning/composition/viz-long-labels.example"),
   },
   {
@@ -1437,6 +2650,9 @@ const drafts = [
     ],
     canvas: { width: 620, height: 360 },
     related: ["viz-utc-climate"],
+
+    exportName: "Scene",
+    config: { viewport: "responsive" },
     load: () => import("./learning/composition/viz-numeric-axis.example"),
   },
   {
@@ -1469,6 +2685,9 @@ const drafts = [
     ],
     canvas: { width: 620, height: 360 },
     related: ["viz-utc-climate"],
+
+    exportName: "Scene",
+    config: { viewport: "responsive" },
     load: () => import("./learning/composition/viz-utc-basics.example"),
   },
   {
@@ -1502,6 +2721,9 @@ const drafts = [
     ],
     canvas: { width: 1100, height: 680 },
     related: ["viz-utc-basics", "viz-responsive-line"],
+
+    exportName: "VizUtcClimateExample",
+    config: { viewport: "responsive" },
     load: () => import("./learning/composition/viz-utc-climate.example"),
   },
   {
@@ -1535,6 +2757,9 @@ const drafts = [
     ],
     canvas: { width: 1100, height: 680 },
     related: ["grid", "signals"],
+
+    exportName: "VizResponsiveLineExample",
+    config: { viewport: "responsive" },
     load: () => import("./learning/composition/viz-responsive-line.example"),
   },
   {
@@ -1573,6 +2798,8 @@ const drafts = [
     ],
     canvas: { width: 720, height: 420 },
     related: ["getting-started", "group", "text"],
+
+    exportName: "CreateElementAuthoringExample",
     load: () => import("./learning/start/create-element-authoring.example"),
   },
   {
@@ -1606,6 +2833,8 @@ const drafts = [
     ],
     canvas: { width: 800, height: 560 },
     related: ["signals", "flex"],
+
+    exportName: "ManipulationExample",
     load: () => import("./learning/user-events/manipulation.example"),
   },
   {
@@ -1632,6 +2861,8 @@ const drafts = [
     ],
     canvas: { width: 720, height: 420 },
     related: ["getting-started", "layer", "create-element-authoring"],
+
+    exportName: "SignalCard",
     load: () => import("./learning/start/signals.example"),
   },
   {
@@ -1658,8 +2889,9 @@ const drafts = [
     ],
     canvas: { width: 720, height: 420 },
     related: ["path", "click", "overlap-and-paint-order"],
+
     exportName: "RectangleStudy",
-    load: () => loadComponentExample(import("./learning/drawing/rectangle.example").then(module => module.RectangleStudy)),
+    load: () => import("./learning/drawing/rectangle.example"),
   },
   {
     slug: "circle",
@@ -1683,6 +2915,8 @@ const drafts = [
     ],
     canvas: { width: 720, height: 420 },
     related: ["ellipse", "wedge", "click"],
+
+    exportName: "CircleStudy",
     load: () => import("./learning/drawing/circle.example"),
   },
   {
@@ -1708,6 +2942,8 @@ const drafts = [
     ],
     canvas: { width: 720, height: 420 },
     related: ["circle", "arc", "click"],
+
+    exportName: "EllipseStudy",
     load: () => import("./learning/drawing/ellipse.example"),
   },
   {
@@ -1733,6 +2969,8 @@ const drafts = [
     ],
     canvas: { width: 720, height: 420 },
     related: ["ellipse", "wedge", "line"],
+
+    exportName: "ArcStudy",
     load: () => import("./learning/drawing/arc.example"),
   },
   {
@@ -1758,6 +2996,8 @@ const drafts = [
     ],
     canvas: { width: 720, height: 420 },
     related: ["arc", "circle", "click"],
+
+    exportName: "WedgeStudy",
     load: () => import("./learning/drawing/wedge.example"),
   },
   {
@@ -1784,6 +3024,8 @@ const drafts = [
     ],
     canvas: { width: 720, height: 420 },
     related: ["line", "path", "click"],
+
+    exportName: "PolygonStudy",
     load: () => import("./learning/drawing/polygon.example"),
   },
   {
@@ -1810,6 +3052,8 @@ const drafts = [
     ],
     canvas: { width: 720, height: 420 },
     related: ["polygon", "star", "clip"],
+
+    exportName: "RegularPolygonStudy",
     load: () => import("./learning/drawing/regular-polygon.example"),
   },
   {
@@ -1836,6 +3080,8 @@ const drafts = [
     ],
     canvas: { width: 720, height: 420 },
     related: ["regular-polygon", "polygon", "path"],
+
+    exportName: "StarStudy",
     load: () => import("./learning/drawing/star.example"),
   },
   {
@@ -1861,6 +3107,8 @@ const drafts = [
     ],
     canvas: { width: 720, height: 420 },
     related: ["svg-path", "hit-areas-and-cursors"],
+
+    exportName: "PathStudy",
     load: () => import("./learning/drawing/path.example"),
   },
   {
@@ -1887,6 +3135,8 @@ const drafts = [
     ],
     canvas: { width: 900, height: 480 },
     related: ["path-geometry", "text"],
+
+    exportName: "TextGeometryExample",
     load: () => import("./learning/drawing/text-geometry.example"),
   },
   {
@@ -1921,6 +3171,8 @@ const drafts = [
     ],
     canvas: { width: 760, height: 520 },
     related: ["path", "svg-path"],
+
+    exportName: "PathGeometryStudy",
     load: () => import("./learning/drawing/path-geometry.example"),
   },
   {
@@ -1958,6 +3210,10 @@ const drafts = [
     ],
     canvas: { width: 960, height: 700 },
     related: ["path-warp", "path-geometry", "along-path"],
+
+    exportName: "TextEnvelopeExample",
+    config: { viewport: { width: 960, height: 700 } },
+    htmlOverlay: true,
     load: () => import("./learning/drawing/text-envelope.example"),
   },
   {
@@ -1984,6 +3240,8 @@ const drafts = [
     ],
     canvas: { width: 900, height: 580 },
     related: ["path-geometry", "path"],
+
+    exportName: "WarpStudy",
     load: () => import("./learning/drawing/path-warp.example"),
   },
   {
@@ -2010,6 +3268,8 @@ const drafts = [
     ],
     canvas: { width: 800, height: 620 },
     related: ["along-path", "path-geometry", "path"],
+
+    exportName: "PathBendingStudy",
     load: () => import("./learning/drawing/path-bending.example"),
   },
   {
@@ -2036,6 +3296,8 @@ const drafts = [
     ],
     canvas: { width: 800, height: 620 },
     related: ["path-bending", "path-geometry", "path"],
+
+    exportName: "PathBendingStudy",
     load: () => import("./learning/drawing/along-path.example"),
   },
   {
@@ -2060,6 +3322,8 @@ const drafts = [
     ],
     canvas: { width: 720, height: 420 },
     related: ["path", "group"],
+
+    exportName: "SvgPathStudy",
     load: () => import("./learning/drawing/svg-path.example"),
   },
   {
@@ -2085,6 +3349,8 @@ const drafts = [
     ],
     canvas: { width: 720, height: 420 },
     related: ["horizontal-line", "vertical-line", "hit-areas-and-cursors"],
+
+    exportName: "LineStudy",
     load: () => import("./learning/drawing/line.example"),
   },
   {
@@ -2110,6 +3376,8 @@ const drafts = [
     ],
     canvas: { width: 720, height: 420 },
     related: ["line", "vertical-line"],
+
+    exportName: "HorizontalStudy",
     load: () => import("./learning/drawing/horizontal-line.example"),
   },
   {
@@ -2134,6 +3402,8 @@ const drafts = [
     ],
     canvas: { width: 720, height: 420 },
     related: ["line", "horizontal-line"],
+
+    exportName: "VerticalStudy",
     load: () => import("./learning/drawing/vertical-line.example"),
   },
   {
@@ -2159,6 +3429,8 @@ const drafts = [
     ],
     canvas: { width: 720, height: 420 },
     related: ["getting-started", "image"],
+
+    exportName: "TypeStudy",
     load: () => import("./learning/drawing/text.example"),
   },
   {
@@ -2184,6 +3456,8 @@ const drafts = [
     ],
     canvas: { width: 720, height: 420 },
     related: ["text", "layer"],
+
+    exportName: "ImageStudy",
     load: () => import("./learning/drawing/image.example"),
   },
   {
@@ -2208,6 +3482,8 @@ const drafts = [
     ],
     canvas: { width: 720, height: 420 },
     related: ["svg-path", "clip", "transformed-clipped-layered-targets"],
+
+    exportName: "GroupStudy",
     load: () => import("./learning/composition/group.example"),
   },
   {
@@ -2235,6 +3511,8 @@ const drafts = [
     ],
     canvas: { width: 720, height: 420 },
     related: ["group", "layer", "transformed-clipped-layered-targets"],
+
+    exportName: "ClipStudy",
     load: () => import("./learning/composition/clip.example"),
   },
   {
@@ -2262,6 +3540,8 @@ const drafts = [
     ],
     canvas: { width: 800, height: 540 },
     related: ["optional-filters", "filters", "layer"],
+
+    exportName: "Underwater",
     load: () => import("./learning/composition/underwater.example"),
   },
   {
@@ -2288,6 +3568,8 @@ const drafts = [
     ],
     canvas: { width: 720, height: 420 },
     related: ["filters", "group", "layer"],
+
+    exportName: "OptionalFilters",
     load: () => import("./learning/composition/optional-filters.example"),
   },
   {
@@ -2313,6 +3595,8 @@ const drafts = [
     ],
     canvas: { width: 960, height: 660 },
     related: ["group", "layer", "transformed-clipped-layered-targets"],
+
+    exportName: "FiltersExample",
     load: () => import("./learning/composition/filters.example"),
   },
   {
@@ -2341,6 +3625,9 @@ const drafts = [
     ],
     canvas: { width: 720, height: 420 },
     related: ["group", "clip", "filters"],
+
+    exportName: "ThreeInstancingExample",
+    config: { pixelRatio: 1 },
     load: () => import("./learning/three/three-instancing.example"),
   },
   {
@@ -2368,6 +3655,8 @@ const drafts = [
     ],
     canvas: { width: 720, height: 420 },
     related: ["three-instancing", "layer", "overlap-and-paint-order"],
+
+    exportName: "ThreeLayerLesson",
     load: () => import("./learning/three/three-layer.example"),
   },
   {
@@ -2401,6 +3690,8 @@ const drafts = [
     ],
     canvas: { width: 720, height: 420 },
     related: ["signals", "signals-and-animation", "rectangle", "text"],
+
+    exportName: "SignalInputsStudy",
     load: () => import("./learning/composition/signal-inputs.example"),
   },
   {
@@ -2436,6 +3727,8 @@ const drafts = [
     ],
     canvas: { width: 720, height: 420 },
     related: ["signals", "group", "layer"],
+
+    exportName: "SignalsAndAnimationExample",
     load: () => import("./learning/composition/signals-and-animation.example"),
   },
   {
@@ -2467,6 +3760,9 @@ const drafts = [
     ],
     canvas: { width: 720, height: 480 },
     related: ["particle-effects", "physics-2d"],
+
+    exportName: "FireAndFlowExample",
+    config: { pixelRatio: 1 },
     load: () => import("./learning/composition/fire-and-flow.example"),
   },
   {
@@ -2508,6 +3804,9 @@ const drafts = [
     ],
     canvas: { width: 720, height: 420 },
     related: ["signals-and-animation", "layer", "pointer-events"],
+
+    exportName: "ParticleEffectsStudy",
+    config: { pixelRatio: 1 },
     load: () => import("./learning/composition/particle-effects.example"),
   },
   {
@@ -2543,6 +3842,8 @@ const drafts = [
     ],
     canvas: { width: 720, height: 420 },
     related: ["physics-2d", "group"],
+
+    exportName: "PhysicsPanels",
     load: () => import("./learning/composition/physics-panels.example"),
   },
   {
@@ -2583,6 +3884,9 @@ const drafts = [
     ],
     canvas: { width: 720, height: 420 },
     related: ["signals-and-animation", "group", "circle"],
+
+    exportName: "PhysicsLesson",
+    config: { pixelRatio: 1 },
     load: () => import("./learning/composition/physics-2d.example"),
   },
   {
@@ -2608,6 +3912,8 @@ const drafts = [
     ],
     canvas: { width: 720, height: 420 },
     related: ["group", "clip", "overlap-and-paint-order"],
+
+    exportName: "LayerStudy",
     load: () => import("./learning/composition/layer.example"),
   },
   {
@@ -2633,6 +3939,8 @@ const drafts = [
     ],
     canvas: { width: 720, height: 420 },
     related: ["flow", "flex", "grid"],
+
+    exportName: "AbsoluteOverlayStudy",
     load: () => import("./learning/layout/absolute-and-overlay.example"),
   },
   {
@@ -2658,6 +3966,8 @@ const drafts = [
     ],
     canvas: { width: 720, height: 420 },
     related: ["absolute-and-overlay", "flex", "grid"],
+
+    exportName: "FlowStudy",
     load: () => import("./learning/layout/flow.example"),
   },
   {
@@ -2684,6 +3994,9 @@ const drafts = [
     ],
     canvas: { width: 1000, height: 800 },
     related: ["flow", "grid"],
+
+    exportName: "ResponsiveStylesExample",
+    config: { viewport: "responsive" },
     load: () => import("./learning/layout/responsive-styles.example"),
   },
   {
@@ -2709,6 +4022,8 @@ const drafts = [
     ],
     canvas: { width: 720, height: 420 },
     related: ["flow", "grid", "absolute-and-overlay"],
+
+    exportName: "FlexStudy",
     load: () => import("./learning/layout/flex.example"),
   },
   {
@@ -2717,13 +4032,26 @@ const drafts = [
     shortTitle: "WASM Flex/Text",
     section: "layout",
     order: 131,
-    summary: "Experimental build: signal-controlled width and final-width text measurement using a private WASM allocator.",
+    summary:
+      "Experimental build: signal-controlled width and final-width text measurement using a private WASM allocator.",
     api: ["Flex", "Text", "signal", "computed"],
-    objectives: ["Use ordinary Flex and Text authoring in the experimental build.", "Compare reactive updates, keyed reorder/removal and ownership in the diagnostic panel."],
-    prompts: { gesture: "Toggle width or Change text; reverse keys, remove B, update it while absent, then restore. Click a paragraph to inspect its key.", code: "Adjust the paragraph, flex basis or gap; run Studio with --mode layout-wasm." },
-    apiNotes: ["Experimental, nowrap only. Not Yoga parity or a released replacement engine.", "Explicit minimums and definite nested container sizes remain required. No performance claim."],
+    objectives: [
+      "Use ordinary Flex and Text authoring in the experimental build.",
+      "Compare reactive updates, keyed reorder/removal and ownership in the diagnostic panel.",
+    ],
+    prompts: {
+      gesture:
+        "Toggle width or Change text; reverse keys, remove B, update it while absent, then restore. Click a paragraph to inspect its key.",
+      code: "Adjust the paragraph, flex basis or gap; run Studio with --mode layout-wasm.",
+    },
+    apiNotes: [
+      "Experimental, nowrap only. Not Yoga parity or a released replacement engine.",
+      "Explicit minimums and definite nested container sizes remain required. No performance claim.",
+    ],
     canvas: { width: 760, height: 460 },
     related: ["wasm-flex-column-text", "flex", "responsive-styles"],
+
+    exportName: "WasmFlexTextExample",
     load: () => import("./learning/layout/wasm-flex-text.example"),
   },
   {
@@ -2732,13 +4060,26 @@ const drafts = [
     shortTitle: "WASM column Text",
     section: "layout",
     order: 132,
-    summary: "A signal-controlled width cap determines column Text height before the following sibling is placed.",
+    summary:
+      "A signal-controlled width cap determines column Text height before the following sibling is placed.",
     api: ["Flex", "Text", "signal", "useLayoutBox"],
-    objectives: ["Measure automatic column height at the final constrained Text width.", "Keep following-sibling paint and hit geometry aligned in the same frame."],
-    prompts: { gesture: "Switch row/column, Toggle width cap, Cycle alignment or Distribute, then click the green sibling at its new position. Paint only should reuse allocation, measurements and both placements.", code: "Change maxWidth, font, lineHeight or gap. Compare with the row/keyed experiment." },
-    apiNotes: ["Experimental nowrap column sizing; explicit minimums and a definite container remain required.", "Custom-font revisions, wrapped Flex lines and general prepared intrinsic containers remain deferred."],
+    objectives: [
+      "Measure automatic column height at the final constrained Text width.",
+      "Keep following-sibling paint and hit geometry aligned in the same frame.",
+    ],
+    prompts: {
+      gesture:
+        "Switch row/column, Toggle width cap, Cycle alignment or Distribute, then click the green sibling at its new position. Paint only should reuse allocation, measurements and both placements.",
+      code: "Change maxWidth, font, lineHeight or gap. Compare with the row/keyed experiment.",
+    },
+    apiNotes: [
+      "Experimental nowrap column sizing; explicit minimums and a definite container remain required.",
+      "Custom-font revisions, wrapped Flex lines and general prepared intrinsic containers remain deferred.",
+    ],
     canvas: { width: 760, height: 460 },
     related: ["wasm-flex-text", "flex"],
+
+    exportName: "WasmFlexColumnTextExample",
     load: () => import("./learning/layout/wasm-flex-column-text.example"),
   },
   {
@@ -2747,13 +4088,26 @@ const drafts = [
     shortTitle: "WASM constraints",
     section: "layout",
     order: 133,
-    summary: "Signal-controlled growth and maximum width redistribute space while panel text and input geometry follow.",
+    summary:
+      "Signal-controlled growth and maximum width redistribute space while panel text and input geometry follow.",
     api: ["Flex", "Text", "signal", "useLayoutBox"],
-    objectives: ["Freeze a growing item at its maximum and redistribute remaining space.", "Observe stable ownership and paint-only layout reuse through the inspector."],
-    prompts: { gesture: "Toggle A cap, change A growth, then remove the cap. Toggle shortfall and A floor to redistribute shrink. Click near the moving boundary; try Paint only.", code: "Change flexBasis, maxWidth, growth or gap using ordinary public style fields." },
-    apiNotes: ["Experimental nowrap finite row; no Yoga parity or performance claim.", "Panel geometry uses public useLayoutBox; applications import only @pibbl/core."],
+    objectives: [
+      "Freeze a growing item at its maximum and redistribute remaining space.",
+      "Observe stable ownership and paint-only layout reuse through the inspector.",
+    ],
+    prompts: {
+      gesture:
+        "Toggle A cap, change A growth, then remove the cap. Toggle shortfall and A floor to redistribute shrink. Click near the moving boundary; try Paint only.",
+      code: "Change flexBasis, maxWidth, growth or gap using ordinary public style fields.",
+    },
+    apiNotes: [
+      "Experimental nowrap finite row; no Yoga parity or performance claim.",
+      "Panel geometry uses public useLayoutBox; applications import only @pibbl/core.",
+    ],
     canvas: { width: 760, height: 460 },
     related: ["wasm-flex-text", "wasm-flex-column-text", "flex"],
+
+    exportName: "WasmFlexConstraintsExample",
     load: () => import("./learning/layout/wasm-flex-constraints.example"),
   },
   {
@@ -2762,13 +4116,26 @@ const drafts = [
     shortTitle: "WASM intrinsic Text",
     section: "layout",
     order: 134,
-    summary: "A built-in column derives its automatic height from wrapped Text at a definite width before placing its sibling.",
+    summary:
+      "A built-in column derives its automatic height from wrapped Text at a definite width before placing its sibling.",
     api: ["Flex", "Text", "signal", "useLayoutBox"],
-    objectives: ["Size an intrinsic built-in column around a measured Text leaf.", "Keep dependent sibling paint and input geometry synchronized after width and text changes."],
-    prompts: { gesture: "Toggle width, Change text or Cycle font, then click the green sibling at its new position. Generic-font Paint only reuses measurement and numeric work; the custom-family step stays uncached.", code: "Only the outer Flex declares width. The inner column stretches and derives height from Text. Keep explicit minimums; ordinary components remain opaque." },
-    apiNotes: ["Experimental finite nowrap column and direct Text only; width may be declared or stretched from a definite parent. No general prepared-component API.", "Direct Text snapshots reuse bounded measurements for explicit generic fonts. Custom-family loading/revisions, Layer dependencies and percentage feedback remain separate work."],
+    objectives: [
+      "Size an intrinsic built-in column around a measured Text leaf.",
+      "Keep dependent sibling paint and input geometry synchronized after width and text changes.",
+    ],
+    prompts: {
+      gesture:
+        "Toggle width, Change text or Cycle font, then click the green sibling at its new position. Generic-font Paint only reuses measurement and numeric work; the custom-family step stays uncached.",
+      code: "Only the outer Flex declares width. The inner column stretches and derives height from Text. Keep explicit minimums; ordinary components remain opaque.",
+    },
+    apiNotes: [
+      "Experimental finite nowrap column and direct Text only; width may be declared or stretched from a definite parent. No general prepared-component API.",
+      "Direct Text snapshots reuse bounded measurements for explicit generic fonts. Custom-family loading/revisions, Layer dependencies and percentage feedback remain separate work.",
+    ],
     canvas: { width: 760, height: 460 },
     related: ["wasm-flex-column-text", "wasm-flex-constraints", "flex"],
+
+    exportName: "WasmFlexIntrinsicTextExample",
     load: () => import("./learning/layout/wasm-flex-intrinsic-text.example"),
   },
   {
@@ -2777,13 +4144,26 @@ const drafts = [
     shortTitle: "WASM Layer sizing",
     section: "layout",
     order: 135,
-    summary: "Parent Flex allocation settles before a dirty Canvas Layer rasterizes; clean sibling bitmaps stay cached.",
+    summary:
+      "Parent Flex allocation settles before a dirty Canvas Layer rasterizes; clean sibling bitmaps stay cached.",
     api: ["Flex", "Layer", "signal", "computed", "useLayoutBox"],
-    objectives: ["Change parent width and Layer content in one signal update with one final-size raster.", "Inspect moved hit targets, cleared old pixels and clean sibling bitmap reuse."],
-    prompts: { gesture: "Resize + content, then click the bitmap at its new edge. Content only adds one raster; Root paint only adds none. Green stays cached.", code: "The allocated Layer takes its size from Flex. Compare content raster history with parent width." },
-    apiNotes: ["Experimental allocation-dependent managed Canvas Layers only.", "Renderer-participant work and deferred root payloads retain existing scheduling; external renderer allocation integration remains separate."],
+    objectives: [
+      "Change parent width and Layer content in one signal update with one final-size raster.",
+      "Inspect moved hit targets, cleared old pixels and clean sibling bitmap reuse.",
+    ],
+    prompts: {
+      gesture:
+        "Resize + content, then click the bitmap at its new edge. Content only adds one raster; Root paint only adds none. Green stays cached.",
+      code: "The allocated Layer takes its size from Flex. Compare content raster history with parent width.",
+    },
+    apiNotes: [
+      "Experimental allocation-dependent managed Canvas Layers only.",
+      "Renderer-participant work and deferred root payloads retain existing scheduling; external renderer allocation integration remains separate.",
+    ],
     canvas: { width: 760, height: 460 },
     related: ["wasm-flex-intrinsic-text", "layer", "flex"],
+
+    exportName: "WasmFlexLayerExample",
     load: () => import("./learning/layout/wasm-flex-layer.example"),
   },
   {
@@ -2792,13 +4172,26 @@ const drafts = [
     shortTitle: "WASM renderer sizing",
     section: "layout",
     order: 136,
-    summary: "A public defineRenderLayer renderer inside a Flex-allocated Layer receives final sizes and commits matching edge targets.",
+    summary:
+      "A public defineRenderLayer renderer inside a Flex-allocated Layer receives final sizes and commits matching edge targets.",
     api: ["Flex", "Layer", "defineRenderLayer", "signal", "computed"],
-    objectives: ["Keep public renderer resize/render and committed input geometry consistent with parent allocation.", "Inspect persistent resource ownership, one final-size render and clean sibling reuse."],
-    prompts: { gesture: "Resize + content, then click the outlined right edge. Content only adds one renderer call; Root paint only adds none.", code: "The renderer uses public create/update/resize/render/interaction/dispose callbacks. No internal renderer-work entry is used." },
-    apiNotes: ["Public defineRenderLayer lifecycle runs inline in Canvas traversal, so the allocated Canvas Layer handoff applies.", "Friend-only resource/draw/compose work queues retain existing exclusions; no general renderer-participant handoff is claimed."],
+    objectives: [
+      "Keep public renderer resize/render and committed input geometry consistent with parent allocation.",
+      "Inspect persistent resource ownership, one final-size render and clean sibling reuse.",
+    ],
+    prompts: {
+      gesture:
+        "Resize + content, then click the outlined right edge. Content only adds one renderer call; Root paint only adds none.",
+      code: "The renderer uses public create/update/resize/render/interaction/dispose callbacks. No internal renderer-work entry is used.",
+    },
+    apiNotes: [
+      "Public defineRenderLayer lifecycle runs inline in Canvas traversal, so the allocated Canvas Layer handoff applies.",
+      "Friend-only resource/draw/compose work queues retain existing exclusions; no general renderer-participant handoff is claimed.",
+    ],
     canvas: { width: 760, height: 460 },
     related: ["wasm-flex-layer", "three-layer", "layer"],
+
+    exportName: "WasmFlexRenderLayerExample",
     load: () => import("./learning/layout/wasm-flex-render-layer.example"),
   },
   {
@@ -2807,13 +4200,26 @@ const drafts = [
     shortTitle: "WASM reusable panel",
     section: "layout",
     order: 137,
-    summary: "An ordinary public panel component returns a Layer while preserving final allocation, renderer resources and committed edge targets.",
+    summary:
+      "An ordinary public panel component returns a Layer while preserving final allocation, renderer resources and committed edge targets.",
     api: ["Flex", "Layer", "defineRenderLayer", "useLayoutBox"],
-    objectives: ["Compose a reusable panel through public style and useLayoutBox without exposing its children to the layout engine.", "Keep one final-size renderer call and one ordinary panel traversal per root frame."],
-    prompts: { gesture: "Resize + content, then click the outlined edge. Watch panel traversals, final-size render history and persistent creates.", code: "Panel is an ordinary synchronous function accepting public style and children. It returns Layer; no internal descriptor or structural API is needed." },
-    apiNotes: ["Experimental inherited finite allocation through ordinary components; arbitrary intrinsic measurement remains opaque.", "Public renderer lifecycle is inline. Friend-work and deferred payload exclusions remain."],
+    objectives: [
+      "Compose a reusable panel through public style and useLayoutBox without exposing its children to the layout engine.",
+      "Keep one final-size renderer call and one ordinary panel traversal per root frame.",
+    ],
+    prompts: {
+      gesture:
+        "Resize + content, then click the outlined edge. Watch panel traversals, final-size render history and persistent creates.",
+      code: "Panel is an ordinary synchronous function accepting public style and children. It returns Layer; no internal descriptor or structural API is needed.",
+    },
+    apiNotes: [
+      "Experimental inherited finite allocation through ordinary components; arbitrary intrinsic measurement remains opaque.",
+      "Public renderer lifecycle is inline. Friend-work and deferred payload exclusions remain.",
+    ],
     canvas: { width: 760, height: 460 },
     related: ["wasm-flex-render-layer", "wasm-flex-layer", "layer"],
+
+    exportName: "WasmFlexPanelExample",
     load: () => import("./learning/layout/wasm-flex-panel.example"),
   },
   {
@@ -2822,13 +4228,26 @@ const drafts = [
     shortTitle: "Yoga migration rehearsal",
     section: "layout",
     order: 138,
-    summary: "Compare three pinned Yoga 3.2.1 numeric references with an explicitly translated public Pibbl row.",
+    summary:
+      "Compare three pinned Yoga 3.2.1 numeric references with an explicitly translated public Pibbl row.",
     api: ["Flex", "Rectangle", "signal", "useLayoutBox"],
-    objectives: ["Make row, shrink, minimum and gap policies explicit when translating a finite Yoga layout.", "Compare recorded geometry with real public Pibbl allocations without bundling Yoga into the app."],
-    prompts: { gesture: "Next case + resize cycles grow, cap and shrink. Compare sizes and positions on both sides; click the Pibbl panels. Paint only should reuse numeric work.", code: "The Yoga reference is pinned to 3.2.1/042f5013152e. The after side uses public Flex fields and explicit minimums, not a compatibility selector." },
-    apiNotes: ["Only three integer finite nowrap cases with zero padding/border and rounding disabled. Recorded reference is not a live Yoga runtime.", "No parity or production migration claim. Broader geometry, box-model conversion, fonts and WASM packaging remain unfinished."],
+    objectives: [
+      "Make row, shrink, minimum and gap policies explicit when translating a finite Yoga layout.",
+      "Compare recorded geometry with real public Pibbl allocations without bundling Yoga into the app.",
+    ],
+    prompts: {
+      gesture:
+        "Next case + resize cycles grow, cap and shrink. Compare sizes and positions on both sides; click the Pibbl panels. Paint only should reuse numeric work.",
+      code: "The Yoga reference is pinned to 3.2.1/042f5013152e. The after side uses public Flex fields and explicit minimums, not a compatibility selector.",
+    },
+    apiNotes: [
+      "Only three integer finite nowrap cases with zero padding/border and rounding disabled. Recorded reference is not a live Yoga runtime.",
+      "No parity or production migration claim. Broader geometry, box-model conversion, fonts and WASM packaging remain unfinished.",
+    ],
     canvas: { width: 760, height: 460 },
     related: ["wasm-flex-constraints", "wasm-flex-panel", "flex"],
+
+    exportName: "WasmYogaMigrationExample",
     load: () => import("./learning/layout/wasm-yoga-migration.example"),
   },
   {
@@ -2837,13 +4256,26 @@ const drafts = [
     shortTitle: "WASM built lifecycle",
     section: "layout",
     order: 139,
-    summary: "Mount and dispose a constrained Text/Layer/renderer composition through public package entries, with exact ownership counters.",
+    summary:
+      "Mount and dispose a constrained Text/Layer/renderer composition through public package entries, with exact ownership counters.",
     api: ["pibbl", "Flex", "Layer", "Text", "defineRenderLayer", "signal"],
-    objectives: ["Exercise reactive geometry and edge targets using the unpublished built WASM artifact.", "Observe layout ownership returning to baseline and renderer creates matching disposes across remounts."],
-    prompts: { gesture: "Resize and change text, click the outlined edge, dispose, mutate while detached, and remount. Inspect the counters below.", code: "The application imports public entries only. The local layout-wasm-built lane resolves the generated private package; normal builds remain JavaScript." },
-    apiNotes: ["Experimental local build rehearsal, not a production distribution contract.", "Controls and diagnostics are application-owned HTML outside the Canvas; no semantic DOM is generated by Pibbl."],
+    objectives: [
+      "Exercise reactive geometry and edge targets using the unpublished built WASM artifact.",
+      "Observe layout ownership returning to baseline and renderer creates matching disposes across remounts.",
+    ],
+    prompts: {
+      gesture:
+        "Resize and change text, click the outlined edge, dispose, mutate while detached, and remount. Inspect the counters below.",
+      code: "The application imports public entries only. The local layout-wasm-built lane resolves the generated private package; normal builds remain JavaScript.",
+    },
+    apiNotes: [
+      "Experimental local build rehearsal, not a production distribution contract.",
+      "Controls and diagnostics are application-owned HTML outside the Canvas; no semantic DOM is generated by Pibbl.",
+    ],
     canvas: { width: 760, height: 460 },
     related: ["wasm-yoga-migration", "wasm-flex-panel", "layer"],
+
+    exportName: "WasmBuiltLifecycleExample",
     load: () => import("./learning/layout/wasm-built-lifecycle.example"),
   },
   {
@@ -2852,13 +4284,26 @@ const drafts = [
     shortTitle: "WASM finite row wrap",
     section: "layout",
     order: 141,
-    summary: "Resize a finite row to form a second line through WASM while preserving keyed cards, Text widths and hit geometry.",
+    summary:
+      "Resize a finite row to form a second line through WASM while preserving keyed cards, Text widths and hit geometry.",
     api: ["Flex", "Text", "signal", "useLayoutBox", "useCanvasContext"],
-    objectives: ["Observe WASM line formation and per-line allocation with the existing public wrap style.", "Keep hit targets and Text at the final card widths while paint-only changes reuse numeric work."],
-    prompts: { gesture: "Resize the row to move C down and widen it; click its old and new positions. Change Text or paint and watch lineFormations/solves stay unchanged.", code: "Cards are ordinary opaque components with declared finite height. A separate focused regression covers direct Text auto cross-size at final per-line width." },
-    apiNotes: ["Finite row demonstration; the separate column example requires declared item sizes. Intrinsic wrapped containers remain unsupported.", "No reverse/RTL, baseline, CSS completeness or Yoga parity claim. The normal build retains its existing solver."],
+    objectives: [
+      "Observe WASM line formation and per-line allocation with the existing public wrap style.",
+      "Keep hit targets and Text at the final card widths while paint-only changes reuse numeric work.",
+    ],
+    prompts: {
+      gesture:
+        "Resize the row to move C down and widen it; click its old and new positions. Change Text or paint and watch lineFormations/solves stay unchanged.",
+      code: "Cards are ordinary opaque components with declared finite height. A separate focused regression covers direct Text auto cross-size at final per-line width.",
+    },
+    apiNotes: [
+      "Finite row demonstration; the separate column example requires declared item sizes. Intrinsic wrapped containers remain unsupported.",
+      "No reverse/RTL, baseline, CSS completeness or Yoga parity claim. The normal build retains its existing solver.",
+    ],
     canvas: { width: 760, height: 460 },
     related: ["wasm-flex-column-wrap", "wasm-flex-text", "flex"],
+
+    exportName: "WasmFlexWrapExample",
     load: () => import("./learning/layout/wasm-flex-wrap.example"),
   },
   {
@@ -2867,13 +4312,26 @@ const drafts = [
     shortTitle: "WASM column wrap",
     section: "layout",
     order: 142,
-    summary: "Shrink a finite column's height to move keyed cards into a second column using the existing WASM line kernel.",
+    summary:
+      "Shrink a finite column's height to move keyed cards into a second column using the existing WASM line kernel.",
     api: ["Flex", "Text", "signal", "useLayoutBox"],
-    objectives: ["Reuse WASM line formation and placement across row and column axes.", "Declare item main sizes and cross widths to avoid intrinsic width/height cycles."],
-    prompts: { gesture: "Resize height to move C right and make it taller. Click its old and new positions; Text/paint changes should reuse numeric work.", code: "Each card declares flexBasis84, minHeight0 and width192. No ordinary component is invoked speculatively for measurement." },
-    apiNotes: ["Experimental finite columns require declared height or flexBasis and declared width; automatic measured item sizes reject explicitly.", "No intrinsic wrapped-container sizing, reverse/RTL, baseline or Yoga parity claim."],
+    objectives: [
+      "Reuse WASM line formation and placement across row and column axes.",
+      "Declare item main sizes and cross widths to avoid intrinsic width/height cycles.",
+    ],
+    prompts: {
+      gesture:
+        "Resize height to move C right and make it taller. Click its old and new positions; Text/paint changes should reuse numeric work.",
+      code: "Each card declares flexBasis84, minHeight0 and width192. No ordinary component is invoked speculatively for measurement.",
+    },
+    apiNotes: [
+      "Experimental finite columns require declared height or flexBasis and declared width; automatic measured item sizes reject explicitly.",
+      "No intrinsic wrapped-container sizing, reverse/RTL, baseline or Yoga parity claim.",
+    ],
     canvas: { width: 760, height: 460 },
     related: ["wasm-flex-wrap", "wasm-flex-column-text", "flex"],
+
+    exportName: "WasmFlexColumnWrapExample",
     load: () => import("./learning/layout/wasm-flex-column-wrap.example"),
   },
   {
@@ -2882,13 +4340,26 @@ const drafts = [
     shortTitle: "WASM keyed wrap",
     section: "layout",
     order: 143,
-    summary: "Reorder, remove and restore keyed cards across wrapped rows and declared columns while observing identity, targets and ownership.",
+    summary:
+      "Reorder, remove and restore keyed cards across wrapped rows and declared columns while observing identity, targets and ownership.",
     api: ["Flex", "signal", "useConst", "useLayoutBox"],
-    objectives: ["Keep surviving mounted and numeric identities when source-order keys move between lines.", "Release removed items and restore only their own resources while geometry and targets agree."],
-    prompts: { gesture: "Reverse order and compare mount stamps. Remove B, click moved cards, restore B and check fresh B stamps; paint should reuse solves.", code: "One shared key signal feeds separate row/column Flex owners. Keys preserve each owner's identities; removal ends that lifetime." },
-    apiNotes: ["Data reorder changes source order; it does not introduce CSS order, reverse-axis or RTL semantics.", "Finite rows and declared-size columns only. No general intrinsic wrapping or Yoga parity claim."],
+    objectives: [
+      "Keep surviving mounted and numeric identities when source-order keys move between lines.",
+      "Release removed items and restore only their own resources while geometry and targets agree.",
+    ],
+    prompts: {
+      gesture:
+        "Reverse order and compare mount stamps. Remove B, click moved cards, restore B and check fresh B stamps; paint should reuse solves.",
+      code: "One shared key signal feeds separate row/column Flex owners. Keys preserve each owner's identities; removal ends that lifetime.",
+    },
+    apiNotes: [
+      "Data reorder changes source order; it does not introduce CSS order, reverse-axis or RTL semantics.",
+      "Finite rows and declared-size columns only. No general intrinsic wrapping or Yoga parity claim.",
+    ],
     canvas: { width: 760, height: 460 },
     related: ["wasm-flex-wrap", "wasm-flex-column-wrap", "wasm-flex-text"],
+
+    exportName: "WasmFlexKeyedWrapExample",
     load: () => import("./learning/layout/wasm-flex-keyed-wrap.example"),
   },
   {
@@ -2897,13 +4368,30 @@ const drafts = [
     shortTitle: "WASM nested intrinsic",
     section: "layout",
     order: 144,
-    summary: "Compose a descriptor Card with two known intrinsic columns; settled widths determine Text height and the following sibling's position.",
+    summary:
+      "Compose a descriptor Card with two known intrinsic columns; settled widths determine Text height and the following sibling's position.",
     api: ["Flex", "Text", "signal", "useLayoutBox", "useCanvasContext"],
-    objectives: ["Measure known nested columns without speculative ordinary-component execution.", "Observe width/text and keyed membership invalidation, following targets and bounded generic-font measurement reuse."],
-    prompts: { gesture: "Toggle width and change Text, then reverse/remove/restore paragraphs and click the moved sibling. Paint reuses WASM solves and bounded nested aggregate measurements.", code: "card(title) is an ordinary descriptor helper invoked by Workspace. The engine measures its returned built-ins, not the helper. The declared zero-size Boundary runs only in normal rendering." },
-    apiNotes: ["Known nowrap columns with settled widths only; no ordinary JSX component discovery, percentage feedback or general intrinsic layout.", "Known nested aggregate snapshots reuse generic-font measurement; font-load invalidation remains unsupported."],
+    objectives: [
+      "Measure known nested columns without speculative ordinary-component execution.",
+      "Observe width/text and keyed membership invalidation, following targets and bounded generic-font measurement reuse.",
+    ],
+    prompts: {
+      gesture:
+        "Toggle width and change Text, then reverse/remove/restore paragraphs and click the moved sibling. Paint reuses WASM solves and bounded nested aggregate measurements.",
+      code: "card(title) is an ordinary descriptor helper invoked by Workspace. The engine measures its returned built-ins, not the helper. The declared zero-size Boundary runs only in normal rendering.",
+    },
+    apiNotes: [
+      "Known nowrap columns with settled widths only; no ordinary JSX component discovery, percentage feedback or general intrinsic layout.",
+      "Known nested aggregate snapshots reuse generic-font measurement; font-load invalidation remains unsupported.",
+    ],
     canvas: { width: 760, height: 460 },
-    related: ["wasm-flex-intrinsic-text", "wasm-flex-column-text", "wasm-flex-panel"],
+    related: [
+      "wasm-flex-intrinsic-text",
+      "wasm-flex-column-text",
+      "wasm-flex-panel",
+    ],
+
+    exportName: "WasmFlexNestedIntrinsicExample",
     load: () => import("./learning/layout/wasm-flex-nested-intrinsic.example"),
   },
   {
@@ -2929,6 +4417,8 @@ const drafts = [
     ],
     canvas: { width: 720, height: 420 },
     related: ["flex", "flow", "absolute-and-overlay"],
+
+    exportName: "GridStudy",
     load: () => import("./learning/layout/grid.example"),
   },
   {
@@ -2954,8 +4444,9 @@ const drafts = [
     ],
     canvas: { width: 720, height: 420 },
     related: ["mouse-down", "mouse-up", "overlap-and-paint-order"],
+
     exportName: "ClickStudy",
-    load: () => loadComponentExample(import("./learning/mouse-events/click.example").then(module => module.ClickStudy)),
+    load: () => import("./learning/mouse-events/click.example"),
   },
   {
     slug: "double-click",
@@ -2980,6 +4471,8 @@ const drafts = [
     ],
     canvas: { width: 720, height: 420 },
     related: ["click", "event-sequences"],
+
+    exportName: "DoubleClickStudy",
     load: () => import("./learning/mouse-events/double-click.example"),
   },
   {
@@ -3005,6 +4498,8 @@ const drafts = [
     ],
     canvas: { width: 720, height: 420 },
     related: ["mouse-down", "mouse-up", "event-sequences"],
+
+    exportName: "ContextMenuStudy",
     load: () => import("./learning/mouse-events/context-menu.example"),
   },
   {
@@ -3030,6 +4525,8 @@ const drafts = [
     ],
     canvas: { width: 720, height: 420 },
     related: ["mouse-over", "mouse-out", "event-sequences"],
+
+    exportName: "MouseMoveStudy",
     load: () => import("./learning/mouse-events/mouse-move.example"),
   },
   {
@@ -3055,6 +4552,8 @@ const drafts = [
     ],
     canvas: { width: 720, height: 420 },
     related: ["mouse-out", "mouse-move", "event-sequences"],
+
+    exportName: "MouseOverStudy",
     load: () => import("./learning/mouse-events/mouse-over.example"),
   },
   {
@@ -3080,6 +4579,8 @@ const drafts = [
     ],
     canvas: { width: 720, height: 420 },
     related: ["mouse-over", "mouse-move", "event-sequences"],
+
+    exportName: "MouseOutStudy",
     load: () => import("./learning/mouse-events/mouse-out.example"),
   },
   {
@@ -3105,6 +4606,8 @@ const drafts = [
     ],
     canvas: { width: 720, height: 420 },
     related: ["mouse-up", "click", "event-sequences"],
+
+    exportName: "MouseDownStudy",
     load: () => import("./learning/mouse-events/mouse-down.example"),
   },
   {
@@ -3131,6 +4634,8 @@ const drafts = [
     ],
     canvas: { width: 720, height: 420 },
     related: ["mouse-down", "click", "event-sequences"],
+
+    exportName: "MouseUpStudy",
     load: () => import("./learning/mouse-events/mouse-up.example"),
   },
   {
@@ -3171,6 +4676,8 @@ const drafts = [
       "touch-events",
       "mouse-boundaries-and-auxiliary-click",
     ],
+
+    exportName: "PointerEventsStudy",
     load: () => import("./learning/user-events/pointer-events.example"),
   },
   {
@@ -3203,6 +4710,8 @@ const drafts = [
     ],
     canvas: { width: 720, height: 420 },
     related: ["pointer-events", "propagation-and-cancellation"],
+
+    exportName: "PointerCaptureStudy",
     load: () => import("./learning/user-events/pointer-capture.example"),
   },
   {
@@ -3229,6 +4738,8 @@ const drafts = [
     ],
     canvas: { width: 720, height: 420 },
     related: ["pointer-events", "pointer-capture", "wheel"],
+
+    exportName: "TouchEventsStudy",
     load: () => import("./learning/user-events/touch-events.example"),
   },
   {
@@ -3255,6 +4766,8 @@ const drafts = [
     ],
     canvas: { width: 720, height: 420 },
     related: ["touch-events", "propagation-and-cancellation"],
+
+    exportName: "WheelStudy",
     load: () => import("./learning/user-events/wheel.example"),
   },
   {
@@ -3281,6 +4794,8 @@ const drafts = [
     ],
     canvas: { width: 720, height: 420 },
     related: ["mouse-over", "mouse-out", "event-sequences"],
+
+    exportName: "MouseBoundariesAndAuxiliaryClickStudy",
     load: () =>
       import("./learning/user-events/mouse-boundaries-and-auxiliary-click.example"),
   },
@@ -3315,6 +4830,8 @@ const drafts = [
     ],
     canvas: { width: 720, height: 420 },
     related: ["custom-event-targets", "pointer-capture", "event-sequences"],
+
+    exportName: "PropagationAndCancellationStudy",
     load: () =>
       import("./learning/user-events/propagation-and-cancellation.example"),
   },
@@ -3342,6 +4859,8 @@ const drafts = [
     ],
     canvas: { width: 720, height: 420 },
     related: ["propagation-and-cancellation", "hit-areas-and-cursors"],
+
+    exportName: "CustomEventTargetsStudy",
     load: () => import("./learning/user-events/custom-event-targets.example"),
   },
   {
@@ -3376,6 +4895,8 @@ const drafts = [
     ],
     canvas: { width: 720, height: 420 },
     related: ["pointer-capture", "propagation-and-cancellation"],
+
+    exportName: "DragAndDropExample",
     load: () => import("./learning/user-events/drag-and-drop.example"),
   },
   {
@@ -3411,6 +4932,8 @@ const drafts = [
     ],
     canvas: { width: 720, height: 420 },
     related: ["keyboard-events-and-activation", "directional-navigation"],
+
+    exportName: "FocusManagementExample",
     load: () => import("./learning/keyboard-focus/focus-management.example"),
   },
   {
@@ -3437,6 +4960,8 @@ const drafts = [
     ],
     canvas: { width: 720, height: 420 },
     related: ["focus-management", "directional-navigation"],
+
+    exportName: "KeyboardEventsAndActivationExample",
     load: () =>
       import("./learning/keyboard-focus/keyboard-events-and-activation.example"),
   },
@@ -3464,6 +4989,8 @@ const drafts = [
     ],
     canvas: { width: 720, height: 420 },
     related: ["focus-management", "nested-directional-navigation"],
+
+    exportName: "DirectionalNavigationExample",
     load: () =>
       import("./learning/keyboard-focus/directional-navigation.example"),
   },
@@ -3491,6 +5018,8 @@ const drafts = [
     ],
     canvas: { width: 720, height: 520 },
     related: ["directional-navigation", "keyboard-events-and-activation"],
+
+    exportName: "NestedDirectionalNavigationExample",
     load: () =>
       import("./learning/keyboard-focus/nested-directional-navigation.example"),
   },
@@ -3530,6 +5059,8 @@ const drafts = [
     ],
     canvas: { width: 720, height: 420 },
     related: ["focus-management", "keyboard-events-and-activation"],
+
+    exportName: "EditingCompositionAndClipboardExample",
     load: () =>
       import("./learning/keyboard-focus/editing-composition-and-clipboard.example"),
   },
@@ -3563,6 +5094,8 @@ const drafts = [
     ],
     canvas: { width: 720, height: 420 },
     related: ["mouse-over", "mouse-out", "overlap-and-paint-order"],
+
+    exportName: "EventSequenceStudy",
     load: () =>
       import("./learning/advanced-interactions/event-sequences.example"),
   },
@@ -3590,6 +5123,8 @@ const drafts = [
     ],
     canvas: { width: 720, height: 420 },
     related: ["line", "overlap-and-paint-order"],
+
+    exportName: "HitAreaStudy",
     load: () =>
       import("./learning/advanced-interactions/hit-areas-and-cursors.example"),
   },
@@ -3616,6 +5151,8 @@ const drafts = [
     ],
     canvas: { width: 720, height: 420 },
     related: ["click", "layer", "transformed-clipped-layered-targets"],
+
+    exportName: "PaintOrderStudy",
     load: () =>
       import("./learning/advanced-interactions/overlap-and-paint-order.example"),
   },
@@ -3642,6 +5179,8 @@ const drafts = [
     ],
     canvas: { width: 720, height: 420 },
     related: ["group", "clip", "layer"],
+
+    exportName: "ComposedTargetStudy",
     load: () =>
       import("./learning/advanced-interactions/transformed-clipped-layered-targets.example"),
   },
@@ -3795,20 +5334,28 @@ const orderedDrafts = [...drafts].sort(
 export const learningExampleCatalog = validateLearningExampleCatalog(
   orderedDrafts.map((draft, index): LearningExampleCatalogEntry => {
     const browseGroup = browseGroupFor(draft.section, draft.slug);
+    const settings: LearningDraft = draft;
     return {
       ...draft,
       authoring: "authoring" in draft ? draft.authoring : "jsx",
       ...(browseGroup ? { browseGroup } : {}),
       source: {
         path: sourcePath(draft.section, draft.slug),
-        ...("exportName" in draft ? { exportName: draft.exportName } : {}),
+        exportName: draft.exportName,
+        ...(settings.config ? { config: settings.config } : {}),
+        ...(settings.htmlOverlay ? { htmlOverlay: true } : {}),
       },
       relationships: {
         previous: orderedDrafts[index - 1]?.slug,
         next: orderedDrafts[index + 1]?.slug,
         related: draft.related ?? [],
       },
-      load: async () => (await draft.load()) as never,
+      load: () =>
+        loadComponentExample(draft.load(), {
+          exportName: draft.exportName,
+          config: settings.config,
+          htmlOverlay: settings.htmlOverlay,
+        }),
     };
   }),
 );
@@ -3914,9 +5461,9 @@ export function getLearningExamplesByBrowseGroup(
  */
 export async function loadLearningExample(entry: LearningExampleCatalogEntry) {
   const module = await entry.load();
-  if (typeof module.default !== "function") {
+  if (typeof module.mount !== "function") {
     throw new Error(
-      `Learning example "${entry.slug}" has no default mount function.`,
+      `Learning example "${entry.slug}" has no selected component host.`,
     );
   }
   return module;

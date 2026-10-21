@@ -20,32 +20,50 @@ frame; an ordinary animation program can change a frame signal.
 
 ## Draw one frame
 
-Start with a regular grid. This complete mount function draws its first cell and
-returns cleanup for the caller to run when leaving the page.
+Start with a regular grid. The component owns its loaded sheet and releases it
+when removed. A sheet that finishes loading after removal is released immediately.
 
 ```tsx
-import { pibbl } from "@pibbl/core";
-import { Sprite, loadSpriteSheet } from "@pibbl/core/sprites";
+import { Text, useReaction, useSignal } from "@pibbl/core";
+import { Sprite, loadSpriteSheet, type SpriteSheet } from "@pibbl/core/sprites";
 
-export async function mountSprite(canvas: HTMLCanvasElement) {
-  const sheet = await loadSpriteSheet("/coin.png", {
-    grid: { frameWidth: 32, frameHeight: 32 },
-  });
-  try {
-    const app = pibbl(
-      canvas,
-      <Sprite frame={sheet.frames[0]} sampling="nearest" />,
+export function Coin() {
+  const sheet = useSignal<SpriteSheet | undefined>(undefined);
+  const error = useSignal("");
+  useReaction(() => {
+    let active = true;
+    let resource: SpriteSheet | undefined;
+    void loadSpriteSheet("/coin.png", {
+      grid: { frameWidth: 32, frameHeight: 32 },
+    }).then(
+      (value) => {
+        if (!active) {
+          value.dispose();
+          return;
+        }
+        resource = value;
+        sheet.set(value);
+      },
+      (reason) => {
+        if (active) error.set(String(reason));
+      },
     );
     return () => {
-      app.dispose(); // Unmount consumers before releasing their images.
-      sheet.dispose();
+      active = false;
+      resource?.dispose();
     };
-  } catch (error) {
-    sheet.dispose();
-    throw error;
-  }
+  }, []);
+  const ready = sheet.get();
+  return ready ? (
+    <Sprite frame={ready.frames[0]} sampling="nearest" />
+  ) : (
+    <Text>{error.get() || "Loading sprite sheet…"}</Text>
+  );
 }
 ```
+
+Mount it with `pibbl(canvas, <Coin />)` and dispose the returned controller
+when leaving the page. Studio handles that host lifecycle for editable examples.
 
 ## Animate a frame signal
 

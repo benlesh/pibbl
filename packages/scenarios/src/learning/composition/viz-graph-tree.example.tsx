@@ -1,13 +1,11 @@
+import { TidyTree } from "@pibbl/core/viz";
 import {
   FocusManagement,
   Group,
   Rectangle,
   Text,
-  pibbl,
   useSignal,
-  type PibblController,
 } from "@pibbl/core";
-import { TidyTree } from "@pibbl/core/viz";
 
 type Role = {
   id: string;
@@ -128,11 +126,10 @@ function Scene() {
     </Group>
   );
 }
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(
-    canvas,
+export function VizGraphTreeExample() {
+  return (
     <FocusManagement>
       <Scene />
-    </FocusManagement>,
+    </FocusManagement>
   );
 }

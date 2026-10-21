@@ -220,7 +220,8 @@ export function mountSearchDialog(
   const setActiveResult = (index: number) => {
     if (activeResult === index) return;
     activeResult = index;
-    for (const [position, option] of [...results.children].entries()) {
+    for (let position = 0; position < results.children.length; position++) {
+      const option = results.children[position];
       option.classList.toggle("is-active", position === index);
       option.setAttribute("aria-selected", String(position === index));
     }

@@ -5,14 +5,19 @@ import {
   Path,
   Rectangle,
   Text,
-  pibbl,
   useLayoutBox,
   useSignal,
-  type PibblController,
   type PibblPointerEvent,
   type WritableSignal,
 } from "@pibbl/core";
-import { Axis, BarSeries, useBarScale, useLinearScale, BarScale, LinearScale } from "@pibbl/core/viz";
+import {
+  Axis,
+  BarSeries,
+  BarScale,
+  LinearScale,
+  useBarScale,
+  useLinearScale,
+} from "@pibbl/core/viz";
 
 interface Reading {
   category: string;
@@ -124,17 +129,15 @@ function Bars({
       const start = band.map(row.category);
       if (start === undefined || row.value === 0) return false;
       const end = values.map(row.value);
-      return (
-        horizontal
-          ? x >= Math.min(end, baseline) &&
+      return horizontal
+        ? x >= Math.min(end, baseline) &&
             x <= Math.max(end, baseline) &&
             y >= start &&
             y <= start + band.bandwidth
-          : x >= start &&
+        : x >= start &&
             x <= start + band.bandwidth &&
             y >= Math.min(end, baseline) &&
-            y <= Math.max(end, baseline)
-      );
+            y <= Math.max(end, baseline);
     });
     selected.set(hit?.category ?? null);
   }
@@ -159,9 +162,7 @@ function Bars({
             pointerEvents="none"
             style={{
               coords: [
-                horizontal
-                  ? [values.map(tick), 0]
-                  : [0, values.map(tick)],
+                horizontal ? [values.map(tick), 0] : [0, values.map(tick)],
                 horizontal
                   ? [values.map(tick), band.frame.height]
                   : [band.frame.width, values.map(tick)],
@@ -179,7 +180,8 @@ function Bars({
         tickFormat={(value) =>
           typeof value === "string" && band.step < 105
             ? abbreviations[value]
-            : String(value)}
+            : String(value)
+        }
         style={{ fill: muted, stroke: "#b5c0bf" }}
       />
       <Axis
@@ -187,7 +189,10 @@ function Bars({
         position={horizontal ? "top" : "left"}
         tickCount={8}
         tickFormat={(value) =>
-          typeof value === "number" && value === 0 ? "0" : `${Number(value) / 1000}k`}
+          typeof value === "number" && value === 0
+            ? "0"
+            : `${Number(value) / 1000}k`
+        }
         style={{ fill: muted, stroke: "#b5c0bf" }}
       />
       <BarSeries
@@ -210,7 +215,9 @@ function Bars({
         style={{
           coords: [
             horizontal ? [baseline, 0] : [0, baseline],
-            horizontal ? [baseline, band.frame.height] : [band.frame.width, baseline],
+            horizontal
+              ? [baseline, band.frame.height]
+              : [band.frame.width, baseline],
           ],
           stroke: ink,
           strokeWidth: 1,
@@ -245,7 +252,11 @@ function Bars({
               style={{
                 left: horizontal ? end + (row.value < 0 ? -8 : 8) : center,
                 top: horizontal ? center : end + (row.value < 0 ? 12 : -20),
-                textAlign: horizontal ? row.value < 0 ? "right" : "left" : "center",
+                textAlign: horizontal
+                  ? row.value < 0
+                    ? "right"
+                    : "left"
+                  : "center",
                 textBaseline: horizontal ? "middle" : "alphabetic",
                 font: "bold 13px sans-serif",
                 fill: ink,
@@ -284,7 +295,7 @@ function Bars({
   );
 }
 
-function Scene() {
+export function Scene() {
   const box = useLayoutBox();
   const order = useSignal<readonly string[]>(
     initial.map((row) => row.category),
@@ -296,7 +307,10 @@ function Scene() {
   const mode = orientation.get();
   const narrow = box.width < 480;
   const origin = { x: mode === "horizontal" ? 128 : 65, y: narrow ? 240 : 190 };
-  const width = Math.max(220, (box.width - origin.x - 35) * (compact.get() ? 0.75 : 1));
+  const width = Math.max(
+    220,
+    (box.width - origin.x - 35) * (compact.get() ? 0.75 : 1),
+  );
   const height = Math.max(60, box.height - origin.y - 110);
   return (
     <Group>
@@ -341,7 +355,8 @@ function Scene() {
         action={() =>
           orientation.set(
             orientation.get() === "vertical" ? "horizontal" : "vertical",
-          )}
+          )
+        }
       />
       <Text
         pointerEvents="none"
@@ -384,8 +399,4 @@ function Scene() {
       </Group>
     </Group>
   );
-}
-
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(canvas, <Scene />, { viewport: "responsive" });
 }

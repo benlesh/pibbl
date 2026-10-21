@@ -1,16 +1,14 @@
 import {
   Absolute,
-  pibbl,
-  useLayoutBox,
-  useRef,
-  useSignal,
   Fragment,
   Group,
   Path,
   Rectangle,
   Text,
+  useLayoutBox,
+  useRef,
+  useSignal,
   type BoxStyle,
-  type PibblController,
   type PibblNode,
   type PibblPointerEvent,
   type PibblWheelEvent,
@@ -282,13 +280,23 @@ function Toolbar({
     />,
     <Text
       pointerEvents="none"
-      style={{ left: 24, top: 34, fill: "#17211d", font: "900 22px sans-serif" }}
+      style={{
+        left: 24,
+        top: 34,
+        fill: "#17211d",
+        font: "900 22px sans-serif",
+      }}
     >
       WORKFLOW MAP
     </Text>,
     <Text
       pointerEvents="none"
-      style={{ left: 250, top: 32, fill: "#667066", font: "600 13px sans-serif" }}
+      style={{
+        left: 250,
+        top: 32,
+        fill: "#667066",
+        font: "600 13px sans-serif",
+      }}
     >
       Drag to pan · Wheel to zoom
     </Text>,
@@ -415,7 +423,7 @@ function StatusBar({
   ];
 }
 
-function DiagramEditor(): PibblNode {
+export function DiagramEditor(): PibblNode {
   const nodes = useSignal<readonly DiagramNode[]>(INITIAL_NODES);
   const selectedNodeId = useSignal<NodeId | null>("sketch");
   const view = useSignal<ViewTransform>(INITIAL_VIEW);
@@ -455,7 +463,8 @@ function DiagramEditor(): PibblNode {
                 y: session.nodeStart.y + point.y - session.pointerStart.y,
               }
             : candidate,
-        ));
+        ),
+      );
     },
     onPointerUp(event) {
       if (gestureSession.current?.pointerId !== event.pointerId) return;
@@ -495,7 +504,9 @@ function DiagramEditor(): PibblNode {
       event.currentTarget.releasePointerCapture(event.pointerId);
     gestureSession.current = null;
   };
-  const selectedNode = nodes.get().find((node) => node.id === selectedNodeId.get());
+  const selectedNode = nodes
+    .get()
+    .find((node) => node.id === selectedNodeId.get());
   return (
     <Absolute style={{ width: 960, height: 600 }}>
       <Toolbar
@@ -515,7 +526,9 @@ function DiagramEditor(): PibblNode {
         onClearSelection={() => selectedNodeId.set(null)}
         onWheel={(event) => {
           event.preventDefault();
-          view.update((current) => zoomAroundPoint(current, event, event.deltaY));
+          view.update((current) =>
+            zoomAroundPoint(current, event, event.deltaY),
+          );
         }}
         nodePointerHandlers={nodePointerHandlers}
         onWorkspacePointerDown={onWorkspacePointerDown}
@@ -531,8 +544,4 @@ function DiagramEditor(): PibblNode {
       />
     </Absolute>
   );
-}
-
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(canvas, <DiagramEditor />);
 }

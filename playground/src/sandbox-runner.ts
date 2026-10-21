@@ -1,6 +1,8 @@
 import { respondWithSandboxAsset, sandboxAssetSource } from "./sandbox-assets";
 import runtimeSource from "virtual:pibbl-runtime-source";
 import { toRunnableScript } from "./sandbox-module";
+import type { PibblConfig } from "@pibbl/core";
+import { prepareExampleHost } from "../../packages/scenarios/src/example-host";
 
 const PROTOCOL = "pibbl-studio";
 const VERSION = 1;
@@ -46,7 +48,9 @@ export interface PreviewEvent {
 
 interface RunOptions {
   code: string;
-  exportName?: string;
+  exportName: string;
+  config?: PibblConfig;
+  htmlOverlay?: boolean;
   width: number;
   height: number;
   onEvent: (event: PreviewEvent) => void;
@@ -70,11 +74,15 @@ function escapeScript(source: string): string {
 function createFrameSource(options: {
   runId: number;
   code: string;
-  exportName?: string;
+  exportName: string;
+  config?: PibblConfig;
+  htmlOverlay?: boolean;
   width: number;
   height: number;
 }): string {
-  const runnable = toRunnableScript(options.code, { exportName: options.exportName });
+  const runnable = toRunnableScript(options.code, {
+    exportName: options.exportName,
+  });
   const boot = `
     const protocol = '${PROTOCOL}';
     const version = ${VERSION};
@@ -91,10 +99,12 @@ function createFrameSource(options: {
         send({ kind: 'log', level, args: args.map(printable) });
       };
     }
+    const prepareHost = ${prepareExampleHost.toString()};
     let controller;
+    let host;
     const dispose = () => {
-      controller?.dispose();
-      controller = undefined;
+      try { controller?.dispose(); }
+      finally { controller = undefined; host?.dispose(); host = undefined; }
     };
     addEventListener('message', event => {
       const message = event.data;
@@ -107,13 +117,15 @@ function createFrameSource(options: {
     try {
       ${runnable}
       const canvas = document.querySelector('canvas');
-      const mountedController = globalThis.__PIBBL_EXAMPLE_MOUNT__(canvas);
+      host = prepareHost(canvas, ${JSON.stringify({ config: options.config, htmlOverlay: options.htmlOverlay })});
+      const mountedController = globalThis.__PIBBL_EXAMPLE_MOUNT__(canvas, host.config);
       if (!mountedController || typeof mountedController.dispose !== 'function') {
         throw new Error('Preview mount must return a controller with dispose().');
       }
       controller = mountedController;
       send({ kind: 'mounted' });
     } catch (error) {
+      dispose();
       send({ kind: 'error', message: error instanceof Error ? error.message : printable(error) });
     }
   `;
@@ -160,6 +172,8 @@ export class SandboxPreview {
       runId,
       code: options.code,
       exportName: options.exportName,
+      config: options.config,
+      htmlOverlay: options.htmlOverlay,
       width: options.width,
       height: options.height,
     });

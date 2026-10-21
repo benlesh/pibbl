@@ -1,19 +1,17 @@
 import {
-  pibbl,
+  FocusManagement,
+  Group,
+  Rectangle,
+  Text,
   usePlayback,
   useSignal,
   useAnimatedValue,
-  FocusManagement,
-  Group,
   marker,
   parallel,
-  Rectangle,
   sequence,
   spring,
-  Text,
   drive,
   tween,
-  type PibblController,
 } from "@pibbl/core";
 
 function AnimatedCard() {
@@ -26,7 +24,11 @@ function AnimatedCard() {
   });
   const targetScale = useSignal(1);
   const message = useSignal("CLICK OR PRESS ENTER");
-  const presentedScale = useAnimatedValue(targetScale.get(), { animation: spring({ stiffness: 240, damping: 22 }), initial: 1, debugName: "learning target scale" });
+  const presentedScale = useAnimatedValue(targetScale.get(), {
+    animation: spring({ stiffness: 240, damping: 22 }),
+    initial: 1,
+    debugName: "learning target scale",
+  });
 
   const entrance = sequence(
     parallel(
@@ -168,11 +170,10 @@ function AnimatedCard() {
   ];
 }
 
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(
-    canvas,
+export function SignalsAndAnimationExample() {
+  return (
     <FocusManagement>
       <AnimatedCard />
-    </FocusManagement>,
+    </FocusManagement>
   );
 }

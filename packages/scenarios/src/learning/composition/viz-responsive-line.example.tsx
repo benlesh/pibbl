@@ -7,15 +7,19 @@ import {
   Path,
   Text,
   batch,
-  pibbl,
   useLayoutBox,
   useSignal,
-  type PibblController,
   type PibblPointerEvent,
   type PibblEventTarget,
   type WritableSignal,
 } from "@pibbl/core";
-import { Axis, LineSeries, ScaleAdjust, useLinearScale, LinearScale } from "@pibbl/core/viz";
+import {
+  Axis,
+  LineSeries,
+  ScaleAdjust,
+  LinearScale,
+  useLinearScale,
+} from "@pibbl/core/viz";
 
 type Window = readonly [number, number];
 type PanelSnapshot = { width: number; height: number; domain: Window };
@@ -750,7 +754,8 @@ function Brush({
         <Rectangle
           key="hit"
           style={{
-            left: mode === "start" ? px - 9 : px - Math.min(9, (right - left) / 2),
+            left:
+              mode === "start" ? px - 9 : px - Math.min(9, (right - left) / 2),
             top: -3,
             width: 9 + Math.min(9, (right - left) / 2),
             height: height + 6,
@@ -930,7 +935,9 @@ function Plot({
             scale="x"
             position="bottom"
             tickCount={5}
-            tickFormat={(value) => typeof value === "string" ? value : date(Math.round(value))}
+            tickFormat={(value) =>
+              typeof value === "string" ? value : date(Math.round(value))
+            }
             style={{ stroke: "#ccd7e3", fill: muted, font: "11px sans-serif" }}
           />
           <Line
@@ -1167,9 +1174,6 @@ function Scene({ fixture }: { fixture: Fixture }) {
   );
 }
 // VIZ_FOUNDATION_SOURCE_ID = 'viz-foundation-example'
-export default function mount(
-  canvas: HTMLCanvasElement,
-  fixture: Fixture = {},
-): PibblController {
-  return pibbl(canvas, <Scene fixture={fixture} />, { viewport: "responsive" });
+export function VizResponsiveLineExample(fixture: Fixture = {}) {
+  return <Scene fixture={fixture} />;
 }

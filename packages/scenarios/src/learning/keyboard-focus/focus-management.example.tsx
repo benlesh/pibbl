@@ -1,12 +1,10 @@
 import {
-  pibbl,
-  useEventListener,
-  useEventTarget,
-  useSignal,
   FocusManagement,
   Rectangle,
   Text,
-  type PibblController,
+  useEventListener,
+  useEventTarget,
+  useSignal,
   type PibblEvent,
 } from "@pibbl/core";
 function boxPath(x: number, y: number, width: number, height: number): Path2D {
@@ -256,11 +254,10 @@ function FocusManagementLesson() {
     </Text>,
   ];
 }
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(
-    canvas,
+export function FocusManagementExample() {
+  return (
     <FocusManagement>
       <FocusManagementLesson />
-    </FocusManagement>,
+    </FocusManagement>
   );
 }

@@ -1,12 +1,10 @@
 import {
-  pibbl,
-  useSignal,
   Rectangle,
   Text,
-  type PibblController,
+  useSignal,
   type PibblPointerEvent,
 } from "@pibbl/core";
-function PointerCaptureStudy() {
+export function PointerCaptureStudy() {
   const capturedId = useSignal<number | null>(null);
   const trace = useSignal<readonly string[]>([]);
   const position = useSignal({
@@ -92,7 +90,9 @@ function PointerCaptureStudy() {
         textAlign: "center",
       }}
     >
-      {capturedId.get() === null ? "PRESS AND DRAG" : `CAPTURING #${capturedId.get()}`}
+      {capturedId.get() === null
+        ? "PRESS AND DRAG"
+        : `CAPTURING #${capturedId.get()}`}
     </Text>,
     <Text
       style={{
@@ -172,7 +172,4 @@ function PointerCaptureStudy() {
       {trace.get().length ? trace.get().join("\n") : "Trace waits for a press."}
     </Text>,
   ];
-}
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(canvas, <PointerCaptureStudy />);
 }

@@ -1,12 +1,10 @@
 /** @jsxImportSource @pibbl/core */
 import {
-  pibbl,
   Group,
   Rectangle,
   Text,
   FocusManagement,
   useSignal,
-  type PibblController,
   type TextureRecipe,
 } from "@pibbl/core";
 import {
@@ -136,7 +134,7 @@ function PatternCard({
   );
 }
 
-function FabricExplorer() {
+export function FabricExplorer() {
   const state = useSignal({
     palette: 0,
     tile: 128,
@@ -308,7 +306,4 @@ function FabricExplorer() {
       </Group>
     </FocusManagement>
   );
-}
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(canvas, <FabricExplorer />);
 }

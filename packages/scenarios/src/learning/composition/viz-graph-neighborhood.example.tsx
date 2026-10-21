@@ -1,13 +1,11 @@
+import { GraphNode, RadialNeighborhood } from "@pibbl/core/viz";
 import {
   FocusManagement,
   Group,
   Rectangle,
   Text,
-  pibbl,
   useSignal,
-  type PibblController,
 } from "@pibbl/core";
-import { GraphNode, RadialNeighborhood } from "@pibbl/core/viz";
 
 const incident = {
   nodes: [
@@ -190,11 +188,10 @@ function Scene() {
   );
 }
 
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(
-    canvas,
+export function VizGraphNeighborhoodExample() {
+  return (
     <FocusManagement>
       <Scene />
-    </FocusManagement>,
+    </FocusManagement>
   );
 }

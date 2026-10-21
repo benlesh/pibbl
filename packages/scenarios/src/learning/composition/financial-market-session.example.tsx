@@ -4,27 +4,25 @@ import {
   FocusManagement,
   Rectangle,
   Text,
-  pibbl,
   useLayoutBox,
   useSignal,
-  type PibblController,
   type PibblLogicalMouseEvent,
   type PibblNode,
 } from "@pibbl/core";
 import {
   CandlestickSeries,
-  LinearScale,
   TradingTimeScale,
   LineSeries,
   PlotSeries,
-  LogScale,
   ReferenceLine,
   GridLines,
+  ScaleAdjust,
+  VolumeSeries,
+  LinearScale,
+  LogScale,
   formatNumber,
   visibleOhlcPriceExtent,
   padLinearDomain,
-  ScaleAdjust,
-  VolumeSeries,
 } from "@pibbl/core/viz";
 import {
   useCandleInspection,
@@ -936,12 +934,10 @@ function Session() {
   );
 }
 /** Mount the responsive financial workstation; disposal releases events and captures. */
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(
-    canvas,
+export function FinancialMarketSessionExample() {
+  return (
     <FocusManagement>
       <Session />
-    </FocusManagement>,
-    { viewport: "responsive" },
+    </FocusManagement>
   );
 }

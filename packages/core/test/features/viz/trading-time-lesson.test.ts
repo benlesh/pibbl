@@ -1,5 +1,10 @@
-import mount from "../../../../scenarios/src/learning/composition/financial-trading-time.example.js";
+import { FinancialTradingTimeExample as mountComponent } from "../../../../scenarios/src/learning/composition/financial-trading-time.example.js";
 import { afterEach, expect, it, vi } from "vitest";
+import { createExampleMount } from "../../../../scenarios/src/example-host";
+
+const mount = createExampleMount(mountComponent, {
+  config: { viewport: "responsive" },
+});
 
 const cleanups: (() => void)[] = [];
 afterEach(() => {

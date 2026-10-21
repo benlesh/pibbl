@@ -21,9 +21,8 @@ const options: ComparisonBaseOptions<(typeof prices)[number]> = {
 const returns:
   readonly PercentageReturnPoint<(typeof prices)[number]>[] | undefined =
   percentageReturns(prices, options);
-export default function mount(canvas: HTMLCanvasElement) {
-  return pibbl(
-    canvas,
+export function FinancialPercentageReturnsExample() {
+  return (
     <FocusManagement>
       <UTCScale
         id="time"
@@ -56,7 +55,7 @@ export default function mount(canvas: HTMLCanvasElement) {
           )}
         </LinearScale>
       </UTCScale>
-    </FocusManagement>,
+    </FocusManagement>
   );
 }
 
@@ -64,5 +63,5 @@ const canvas = document.createElement("canvas");
 canvas.width = 320;
 canvas.height = 220;
 document.body.append(canvas);
-const app = mount(canvas);
+const app = pibbl(canvas, <FinancialPercentageReturnsExample />);
 window.addEventListener("pagehide", () => app.dispose(), { once: true });

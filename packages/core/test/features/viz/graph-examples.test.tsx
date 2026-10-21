@@ -1,6 +1,6 @@
 import { expect, it, vi } from "vitest";
-import mountDependency from "../../../../scenarios/src/learning/composition/viz-graph-dependency.example.js";
-import mountForce from "../../../../scenarios/src/learning/composition/viz-graph-force.example.js";
+import { VizGraphDependencyExample as mountDependencyComponent } from "../../../../scenarios/src/learning/composition/viz-graph-dependency.example.js";
+import { VizGraphForceExample as mountForceComponent } from "../../../../scenarios/src/learning/composition/viz-graph-force.example.js";
 import {
   clickLogicalPoint,
   pointerDownLogicalPoint,
@@ -8,6 +8,11 @@ import {
   pointerUpLogicalPoint,
 } from "../../support/user-input.js";
 import { testRuntime } from "./support/runtime.js";
+import { createExampleMount } from "../../../../scenarios/src/example-host";
+
+const mountDependency = createExampleMount(mountDependencyComponent);
+const mountForce = createExampleMount(mountForceComponent);
+
 function click(canvas: HTMLCanvasElement, x: number, y: number) {
   const r = canvas.getBoundingClientRect();
   for (const type of ["mousedown", "mouseup", "click"])

@@ -1,5 +1,5 @@
-import { pibbl, useSignal, Rectangle, Text, type PibblController } from "@pibbl/core";
-function TypeStudy() {
+import { Rectangle, Text, useSignal } from "@pibbl/core";
+export function TypeStudy() {
   const accent = useSignal("#1f4bd8");
   return [
     <Rectangle
@@ -69,7 +69,4 @@ function TypeStudy() {
       {accent.get()}
     </Text>,
   ];
-}
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(canvas, <TypeStudy />);
 }

@@ -3,9 +3,7 @@ import {
   Group,
   Rectangle,
   Text,
-  pibbl,
   useSignal,
-  type PibblController,
 } from "@pibbl/core";
 import {
   GraphEdge,
@@ -110,11 +108,10 @@ function Scene() {
     </Group>
   );
 }
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(
-    canvas,
+export function VizGraphNeighborhoodReconstructionExample() {
+  return (
     <FocusManagement>
       <Scene />
-    </FocusManagement>,
+    </FocusManagement>
   );
 }

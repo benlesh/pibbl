@@ -1,13 +1,12 @@
 import {
+  useConst,
   Clip,
   FocusManagement,
   Group,
   Rectangle,
   Text,
-  pibbl,
   useLayoutBox,
   useSignal,
-  type PibblController,
   type PibblLogicalMouseEvent,
 } from "@pibbl/core";
 import {
@@ -443,28 +442,26 @@ interface WorkbenchOptions {
 }
 
 /** Mount the public simulated inspection workbench; dispose the controller on removal. */
-export default function mount(
-  canvas: HTMLCanvasElement,
-  options: WorkbenchOptions = {},
-): PibblController {
-  const state: WorkbenchEvidence = {
-    sourceIndex: null,
-    recorded: null,
-    estimate: null,
-    nearestMark: null,
-    paintedMark: null,
-    desk: null,
-    memoized: false,
-  };
-  const publish = (patch: Partial<WorkbenchEvidence>) => {
-    Object.assign(state, patch);
-    options.onEvidence?.({ ...state });
-  };
-  return pibbl(
-    canvas,
-    <FocusManagement>
-      <Workbench onEvidence={publish} />
-    </FocusManagement>,
-    { pixelRatio: 1 },
-  );
+export function VizInspectionWorkbenchExample(options: WorkbenchOptions = {}) {
+  return useConst(() => {
+    const state: WorkbenchEvidence = {
+      sourceIndex: null,
+      recorded: null,
+      estimate: null,
+      nearestMark: null,
+      paintedMark: null,
+      desk: null,
+      memoized: false,
+    };
+    const publish = (patch: Partial<WorkbenchEvidence>) => {
+      Object.assign(state, patch);
+      options.onEvidence?.({ ...state });
+    };
+
+    return (
+      <FocusManagement>
+        <Workbench onEvidence={publish} />
+      </FocusManagement>
+    );
+  });
 }

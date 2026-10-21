@@ -1,6 +1,5 @@
 /** @jsxImportSource @pibbl/core */
 import {
-  pibbl,
   Group,
   Rectangle,
   Text,
@@ -9,7 +8,6 @@ import {
   useSignal,
   definePrimitive,
   type PibblNode,
-  type PibblController,
 } from "@pibbl/core";
 import {
   softNoise,
@@ -176,7 +174,7 @@ function Surface({
   );
 }
 
-function MaterialOverlay() {
+export function MaterialOverlay() {
   const state = useSignal({
     strength: 0.45,
     tile: 96,
@@ -404,7 +402,4 @@ function MaterialOverlay() {
       </Group>
     </FocusManagement>
   );
-}
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(canvas, <MaterialOverlay />);
 }

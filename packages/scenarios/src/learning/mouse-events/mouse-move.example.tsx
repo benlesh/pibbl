@@ -1,5 +1,5 @@
-import { pibbl, useSignal, Rectangle, Text, type PibblController } from "@pibbl/core";
-function MouseMoveStudy() {
+import { Rectangle, Text, useSignal } from "@pibbl/core";
+export function MouseMoveStudy() {
   const trail = useSignal<readonly [number, number][]>([]);
   return [
     <Rectangle
@@ -50,7 +50,4 @@ function MouseMoveStudy() {
         : "MOVE INSIDE THE FIELD"}
     </Text>,
   ];
-}
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(canvas, <MouseMoveStudy />);
 }

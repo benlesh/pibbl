@@ -1,8 +1,22 @@
-import sessionMount from "../../../../scenarios/src/learning/composition/financial-market-session.example.js";
-import tradingMount from "../../../../scenarios/src/learning/composition/financial-trading-time.example.js";
-import candleMount from "../../../../scenarios/src/learning/composition/financial-candles.example.js";
-import volumeMount from "../../../../scenarios/src/learning/composition/financial-volume.example.js";
+import { FinancialMarketSessionExample as sessionMountComponent } from "../../../../scenarios/src/learning/composition/financial-market-session.example.js";
+import { FinancialTradingTimeExample as tradingMountComponent } from "../../../../scenarios/src/learning/composition/financial-trading-time.example.js";
+import { FinancialCandlesExample as candleMountComponent } from "../../../../scenarios/src/learning/composition/financial-candles.example.js";
+import { FinancialVolumeExample as volumeMountComponent } from "../../../../scenarios/src/learning/composition/financial-volume.example.js";
 import { afterEach, expect, it, vi } from "vitest";
+import { createExampleMount } from "../../../../scenarios/src/example-host";
+
+const sessionMount = createExampleMount(sessionMountComponent, {
+  config: { viewport: "responsive" },
+});
+const tradingMount = createExampleMount(tradingMountComponent, {
+  config: { viewport: "responsive" },
+});
+const candleMount = createExampleMount(candleMountComponent, {
+  config: { viewport: "responsive" },
+});
+const volumeMount = createExampleMount(volumeMountComponent, {
+  config: { viewport: "responsive" },
+});
 
 const cleanups: (() => void)[] = [];
 const frames = new Map<number, FrameRequestCallback>();

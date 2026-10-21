@@ -1,7 +1,4 @@
 import {
-  batch,
-  pibbl,
-  degrees,
   DragHandle,
   Flex,
   FocusManagement,
@@ -10,10 +7,11 @@ import {
   ResizeHandles,
   RotationHandle,
   Text,
+  batch,
+  degrees,
   useLayoutBox,
   useManipulation,
   useSignal,
-  type PibblController,
   type PibblManipulationController,
 } from "@pibbl/core";
 
@@ -280,11 +278,10 @@ function Scene() {
     </>
   );
 }
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(
-    canvas,
+export function ManipulationExample() {
+  return (
     <FocusManagement>
       <Scene />
-    </FocusManagement>,
+    </FocusManagement>
   );
 }

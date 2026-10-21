@@ -1,13 +1,11 @@
+import { ChordDiagram } from "@pibbl/core/viz";
 import {
   FocusManagement,
   Group,
   Rectangle,
   Text,
-  pibbl,
   useSignal,
-  type PibblController,
 } from "@pibbl/core";
-import { ChordDiagram } from "@pibbl/core/viz";
 
 const districts = ["North", "Central", "East", "Harbor"].map((id) => ({ id }));
 
@@ -226,11 +224,10 @@ function Scene() {
   );
 }
 
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(
-    canvas,
+export function VizGraphChordExample() {
+  return (
     <FocusManagement>
       <Scene />
-    </FocusManagement>,
+    </FocusManagement>
   );
 }

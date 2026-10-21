@@ -1,13 +1,12 @@
 /** @jsxImportSource @pibbl/core */
 import {
-  pibbl,
+  useCanvasContext,
   Group,
   Rectangle,
   Text,
   FocusManagement,
   useSignal,
   useReaction,
-  type PibblController,
 } from "@pibbl/core";
 import { ReactionDiffusion, type TextureRenderer } from "@pibbl/core/textures";
 
@@ -223,6 +222,7 @@ function GrowingReveal({ canvas }: { canvas: HTMLCanvasElement }) {
     </FocusManagement>
   );
 }
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(canvas, <GrowingReveal canvas={canvas} />);
+export function GrowingRevealExample() {
+  const canvas = useCanvasContext().canvas as HTMLCanvasElement;
+  return <GrowingReveal canvas={canvas} />;
 }

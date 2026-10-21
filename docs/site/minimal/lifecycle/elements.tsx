@@ -21,7 +21,9 @@ const canvas = document.createElement("canvas");
 canvas.width = 320;
 canvas.height = 120;
 document.body.append(canvas);
-const Label: PibblComponent<{ value: string }> = ({ value }): PibblRenderResult => {
+const Label: PibblComponent<{ value: string }> = ({
+  value,
+}): PibblRenderResult => {
   const words: PibblTextChild = ["Hello ", value];
   const text: PibblTextInput = words;
   return (

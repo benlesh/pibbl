@@ -5,17 +5,32 @@ import {
   Line,
   Rectangle,
   Text,
+  useCanvasContext,
+  useReaction,
   batch,
-  pibbl,
   useLayoutBox,
   useSignal,
-  type PibblController,
   type PibblPointerEvent,
   type WritableSignal,
   type SignalValue,
   type Signal,
 } from "@pibbl/core";
-import { Axis, LineSeries, HoverData, AnchoredLayout, closestPoint, closestX, defineSeries, interpolateX, linearInterpolation, type HoverQueryContext, type HoverHit, type HoverSample, useLinearScale, LinearScale } from "@pibbl/core/viz";
+import {
+  Axis,
+  LineSeries,
+  HoverData,
+  AnchoredLayout,
+  LinearScale,
+  closestPoint,
+  closestX,
+  defineSeries,
+  interpolateX,
+  linearInterpolation,
+  type HoverQueryContext,
+  type HoverHit,
+  type HoverSample,
+  useLinearScale,
+} from "@pibbl/core/viz";
 type Row = { id?: string; x: number; y: number | null | undefined };
 type Mode = "closest-point" | "nearest-per-line" | "interpolated-x";
 type Reading = {
@@ -27,7 +42,14 @@ type Reading = {
   distance: { space: "plot-pixels" | "domain-x"; value: number } | null;
   provenance:
     | { kind: "recorded"; index: number; id: string | null }
-    | { kind: "interpolated"; beforeIndex: number; afterIndex: number; beforeId: string | null; afterId: string | null; fraction: number };
+    | {
+        kind: "interpolated";
+        beforeIndex: number;
+        afterIndex: number;
+        beforeId: string | null;
+        afterId: string | null;
+        fraction: number;
+      };
 };
 type Snapshot = {
   duplicateX: "error" | "first" | "last";
@@ -158,11 +180,18 @@ function Plot({
     yScale: "co2",
     interpolation: linearInterpolation(),
   });
-  function provenance(hit: HoverHit<Row> | HoverSample<Row>): Reading["provenance"] {
-    if ("kind" in hit && hit.kind === "interpolated") return {
-      kind: "interpolated", beforeIndex: hit.beforeIndex, afterIndex: hit.afterIndex,
-      beforeId: hit.before.id ?? null, afterId: hit.after.id ?? null, fraction: hit.fraction,
-    };
+  function provenance(
+    hit: HoverHit<Row> | HoverSample<Row>,
+  ): Reading["provenance"] {
+    if ("kind" in hit && hit.kind === "interpolated")
+      return {
+        kind: "interpolated",
+        beforeIndex: hit.beforeIndex,
+        afterIndex: hit.afterIndex,
+        beforeId: hit.before.id ?? null,
+        afterId: hit.after.id ?? null,
+        fraction: hit.fraction,
+      };
     return { kind: "recorded", index: hit.index, id: hit.datum.id ?? null };
   }
   function query(context: HoverQueryContext) {
@@ -268,7 +297,11 @@ function Plot({
         position="bottom"
         tickCount={5}
         tickFormat={(value) =>
-          typeof value === "string" ? value : fixture.xDomain ? String(Math.round(value)) : date(value).slice(0, 7)
+          typeof value === "string"
+            ? value
+            : fixture.xDomain
+              ? String(Math.round(value))
+              : date(value).slice(0, 7)
         }
         style={{ font: "10px sans-serif", fill: muted, stroke: "#bac8d5" }}
       />
@@ -401,7 +434,11 @@ function Plot({
                       </Text>
                       <Text
                         pointerEvents="none"
-                        style={{ top: 34, font: "10px sans-serif", fill: muted }}
+                        style={{
+                          top: 34,
+                          font: "10px sans-serif",
+                          fill: muted,
+                        }}
                       >
                         {fixture.xDomain
                           ? `x = ${result.x.toFixed(2)}`
@@ -440,7 +477,9 @@ function Scene({ fixture }: { fixture: Fixture }) {
         pointerEvents="none"
         style={{ width: box.width, height: box.height, fill: "#f4f7fb" }}
       />
-      <Text style={{ left: 24, top: 20, font: "bold 24px sans-serif", fill: ink }}>
+      <Text
+        style={{ left: 24, top: 20, font: "bold 24px sans-serif", fill: ink }}
+      >
         Two lines. Three questions.
       </Text>
       <Text style={{ left: 24, top: 55, font: "12px sans-serif", fill: muted }}>
@@ -479,7 +518,12 @@ function Scene({ fixture }: { fixture: Fixture }) {
         </Group>
       ))}
       <Text
-        style={{ left: 24, top: top - 30, font: "11px sans-serif", fill: muted }}
+        style={{
+          left: 24,
+          top: top - 30,
+          font: "11px sans-serif",
+          fill: muted,
+        }}
       >
         Move to inspect · Press and drag the guide
       </Text>
@@ -524,34 +568,21 @@ function Scene({ fixture }: { fixture: Fixture }) {
   );
 }
 // VIZ_HOVER_SOURCE_ID = 'viz-hover-example'
-export default function mount(
-  canvas: HTMLCanvasElement,
-  fixture: Fixture = {},
-): PibblController {
-  const minHeight = canvas.style.minHeight,
-    touchAction = canvas.style.touchAction;
-  canvas.style.minHeight = "620px";
-  canvas.style.touchAction = "none";
-  const host = canvas.parentElement,
-    overflow = host?.style.overflow;
-  if (host) host.style.overflow = "auto";
-  function restore() {
-    canvas.style.minHeight = minHeight;
-    canvas.style.touchAction = touchAction;
-    if (host) host.style.overflow = overflow ?? "";
-  }
-  try {
-    const controller = pibbl(canvas, <Scene fixture={fixture} />, {
-      viewport: "responsive",
-    });
-    return {
-      dispose() {
-        controller.dispose();
-        restore();
-      },
+export function VizHoverComparisonExample(fixture: Fixture = {}) {
+  const canvas = useCanvasContext().canvas as HTMLCanvasElement;
+  useReaction(() => {
+    const minHeight = canvas.style.minHeight;
+    const touchAction = canvas.style.touchAction;
+    const host = canvas.parentElement;
+    const overflow = host?.style.overflow;
+    canvas.style.minHeight = "620px";
+    canvas.style.touchAction = "none";
+    if (host) host.style.overflow = "auto";
+    return () => {
+      canvas.style.minHeight = minHeight;
+      canvas.style.touchAction = touchAction;
+      if (host) host.style.overflow = overflow ?? "";
     };
-  } catch (error) {
-    restore();
-    throw error;
-  }
+  }, [canvas]);
+  return <Scene fixture={fixture} />;
 }

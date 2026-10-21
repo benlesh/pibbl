@@ -1,5 +1,11 @@
-import mount from "../../../../scenarios/src/learning/composition/financial-live-monitor.example.js";
+import { FinancialLiveMonitorExample as mountComponent } from "../../../../scenarios/src/learning/composition/financial-live-monitor.example.js";
 import { afterEach, expect, it, vi } from "vitest";
+import { createExampleMount } from "../../../../scenarios/src/example-host";
+
+const mount = createExampleMount(mountComponent, {
+  config: { viewport: "responsive" },
+});
+
 afterEach(() => {
   document.body.replaceChildren();
   vi.restoreAllMocks();
@@ -76,76 +82,138 @@ it("preserves the time window across aggregation and suspends follow on wheel br
   const s = scene();
   try {
     expect(s.flush()).toContain("Live Market Monitor");
-    expect(s.flush().some(text => text.includes("60 minutes wide"))).toBe(true);
-    expect(s.click(440, 100).some(text => text.includes("15m bars"))).toBe(true);
-    expect(s.flush().some(text => text.includes("60 minutes wide"))).toBe(true);
-    s.canvas.dispatchEvent(new WheelEvent("wheel", {clientX:500,clientY:240,deltaY:-100,bubbles:true,cancelable:true}));
-    for(let i=0;i<8;i++) s.flush();
-    expect(s.flush().some(text => text.includes("BROWSING HISTORY"))).toBe(true);
-    const before = s.flush().find(text => text.includes("minutes wide"));
-    expect(s.click(140, 100).find(text => text.includes("minutes wide"))).toBe(before);
-    expect(s.click(370, 130).some(text => text.includes("FOLLOWING LATEST"))).toBe(true);
-  } finally { s.controller.dispose(); }
+    expect(s.flush().some((text) => text.includes("60 minutes wide"))).toBe(
+      true,
+    );
+    expect(s.click(440, 100).some((text) => text.includes("15m bars"))).toBe(
+      true,
+    );
+    expect(s.flush().some((text) => text.includes("60 minutes wide"))).toBe(
+      true,
+    );
+    s.canvas.dispatchEvent(
+      new WheelEvent("wheel", {
+        clientX: 500,
+        clientY: 240,
+        deltaY: -100,
+        bubbles: true,
+        cancelable: true,
+      }),
+    );
+    for (let i = 0; i < 8; i++) s.flush();
+    expect(s.flush().some((text) => text.includes("BROWSING HISTORY"))).toBe(
+      true,
+    );
+    const before = s.flush().find((text) => text.includes("minutes wide"));
+    expect(
+      s.click(140, 100).find((text) => text.includes("minutes wide")),
+    ).toBe(before);
+    expect(
+      s.click(370, 130).some((text) => text.includes("FOLLOWING LATEST")),
+    ).toBe(true);
+  } finally {
+    s.controller.dispose();
+  }
 });
 it("keeps the phone readable and restores touch policy on disposal", () => {
-  const s=scene(360,300);
-  try { expect(s.flush()).toContain("Live Market Monitor"); expect(s.canvas.style.touchAction).toBe("none"); s.click(310,100); s.click(315,20); } finally {s.controller.dispose();}
+  const s = scene(360, 300);
+  try {
+    expect(s.flush()).toContain("Live Market Monitor");
+    expect(s.canvas.style.touchAction).toBe("none");
+    s.click(310, 100);
+    s.click(315, 20);
+  } finally {
+    s.controller.dispose();
+  }
   expect(s.canvas.style.touchAction).toBe("");
 });
 
 it("Step advances one displayed bar and Play advances the replay clock", () => {
   const nativeMedia = window.matchMedia.bind(window);
-  vi.spyOn(window, "matchMedia").mockImplementation(query => {
-    const media = nativeMedia(query); Object.defineProperty(media, "matches", { value: false }); return media;
+  vi.spyOn(window, "matchMedia").mockImplementation((query) => {
+    const media = nativeMedia(query);
+    Object.defineProperty(media, "matches", { value: false });
+    return media;
   });
   const timers: (() => void)[] = [];
   vi.spyOn(window, "setInterval").mockImplementation((callback) => {
-    if(typeof callback === "function") timers.push(callback as () => void);
+    if (typeof callback === "function") timers.push(callback as () => void);
     return 123 as unknown as ReturnType<typeof window.setInterval>;
   });
   vi.spyOn(window, "clearInterval").mockImplementation(() => {});
-  const s=scene();
+  const s = scene();
   try {
     s.flush();
-    expect(s.click(130,100).some(text => text.includes("15:35:00"))).toBe(true);
-    s.click(40,100);
+    expect(s.click(130, 100).some((text) => text.includes("15:35:00"))).toBe(
+      true,
+    );
+    s.click(40, 100);
     expect(timers.length).toBeGreaterThan(0);
-    timers.at(-1)!(); s.flush(); s.flush();
-    const intermediate=s.flush().find(text => text.includes("REPLAY RUNNING"))!;
-    const receivedVolume=/Vol ([^·]+)/.exec(s.flush().find(text=>text.startsWith("VWAP $"))!)![1];
+    timers.at(-1)!();
+    s.flush();
+    s.flush();
+    const intermediate = s
+      .flush()
+      .find((text) => text.includes("REPLAY RUNNING"))!;
+    const receivedVolume = /Vol ([^·]+)/.exec(
+      s.flush().find((text) => text.startsWith("VWAP $"))!,
+    )![1];
     expect(intermediate).not.toContain("15:35:00");
     expect(intermediate).not.toContain("15:35:30");
-    for(let i=0;i<8;i++) s.flush();
-    expect(s.flush().some(text => text.includes("15:35:30"))).toBe(true);
-    expect(/Vol ([^·]+)/.exec(s.flush().find(text=>text.startsWith("VWAP $"))!)![1]).toBe(receivedVolume);
-  } finally {s.controller.dispose();}
+    for (let i = 0; i < 8; i++) s.flush();
+    expect(s.flush().some((text) => text.includes("15:35:30"))).toBe(true);
+    expect(
+      /Vol ([^·]+)/.exec(
+        s.flush().find((text) => text.startsWith("VWAP $"))!,
+      )![1],
+    ).toBe(receivedVolume);
+  } finally {
+    s.controller.dispose();
+  }
 });
 
 it("keeps clock-aligned ticks anchored while the window scrolls", () => {
-  const s=scene();
+  const s = scene();
   try {
     s.flush();
-    const before=s.positions().find(point=>point.text === "14:40")!;
+    const before = s.positions().find((point) => point.text === "14:40")!;
     expect(before).toBeDefined();
-    s.click(130,100);
-    const after=s.positions().find(point=>point.text === "14:40")!;
+    s.click(130, 100);
+    const after = s.positions().find((point) => point.text === "14:40")!;
     expect(after).toBeDefined();
-    expect(after.x).toBeCloseTo(before.x - (960-18-55)*5/60, 3);
-  } finally {s.controller.dispose();}
+    expect(after.x).toBeCloseTo(before.x - ((960 - 18 - 55) * 5) / 60, 3);
+  } finally {
+    s.controller.dispose();
+  }
 });
 
 it("retains the same tick interval throughout thirty-minute follow animation", () => {
-  const nativeMedia=window.matchMedia.bind(window);
-  vi.spyOn(window,"matchMedia").mockImplementation(query => {const media=nativeMedia(query); Object.defineProperty(media,"matches",{value:false});return media;});
-  const timers: (()=>void)[]=[];
-  vi.spyOn(window,"setInterval").mockImplementation(callback => {timers.push(callback as ()=>void); return 123 as unknown as ReturnType<typeof window.setInterval>;});
-  vi.spyOn(window,"clearInterval").mockImplementation(()=>{});
-  const s=scene(360,300);
+  const nativeMedia = window.matchMedia.bind(window);
+  vi.spyOn(window, "matchMedia").mockImplementation((query) => {
+    const media = nativeMedia(query);
+    Object.defineProperty(media, "matches", { value: false });
+    return media;
+  });
+  const timers: (() => void)[] = [];
+  vi.spyOn(window, "setInterval").mockImplementation((callback) => {
+    timers.push(callback as () => void);
+    return 123 as unknown as ReturnType<typeof window.setInterval>;
+  });
+  vi.spyOn(window, "clearInterval").mockImplementation(() => {});
+  const s = scene(360, 300);
   try {
-    s.flush();s.click(35,130);s.click(305,130);s.click(35,100);
-    for(let update=0;update<8;update++) {
+    s.flush();
+    s.click(35, 130);
+    s.click(305, 130);
+    s.click(35, 100);
+    for (let update = 0; update < 8; update++) {
       timers.at(-1)!();
-      for(let frame=0;frame<5;frame++) {s.flush();expect(s.positions().some(p=>p.text==="15:10")).toBe(true);}
+      for (let frame = 0; frame < 5; frame++) {
+        s.flush();
+        expect(s.positions().some((p) => p.text === "15:10")).toBe(true);
+      }
     }
-  } finally {s.controller.dispose();}
+  } finally {
+    s.controller.dispose();
+  }
 });

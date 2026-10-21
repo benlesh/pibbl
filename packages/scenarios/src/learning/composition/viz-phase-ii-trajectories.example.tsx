@@ -1,19 +1,4 @@
 import {
-  Absolute,
-  Group,
-  Line,
-  Rectangle,
-  Text,
-  pibbl,
-  signal,
-  useLayoutBox,
-  useReaction,
-  useSignal,
-  type PibblNode,
-  type PibblController,
-  type WritableSignal,
-} from "@pibbl/core";
-import {
   Axis,
   LinearScale,
   LineSeries,
@@ -22,6 +7,21 @@ import {
   ReferenceLine,
   TrajectorySeries,
 } from "@pibbl/core/viz";
+import {
+  useConst,
+  Absolute,
+  Group,
+  Line,
+  Rectangle,
+  Text,
+  useCanvasContext,
+  signal,
+  useLayoutBox,
+  useReaction,
+  useSignal,
+  type PibblNode,
+  type WritableSignal,
+} from "@pibbl/core";
 
 type Arm = "Candidate" | "Placebo";
 interface Visit {
@@ -718,12 +718,11 @@ function Scene({
   );
 }
 
-const mounts = new WeakMap<HTMLCanvasElement, PibblController>();
-export default function mount(
+function createVizPhaseIiTrajectoriesExampleContent(
   canvas: HTMLCanvasElement,
   fixture: Fixture = {},
-): PibblController {
-  mounts.get(canvas)?.dispose();
+) {
+  let node: PibblNode;
   const selectedParticipant =
       fixture.selectedParticipant ?? signal<string | null>(null),
     showTracks = fixture.showTracks ?? signal(true);
@@ -817,35 +816,37 @@ export default function mount(
     }
   };
   try {
-    const controller = pibbl(
-      canvas,
+    node = (
       <Scene
         canvas={canvas}
         fixture={{ ...fixture, selectedParticipant, showTracks }}
-      />,
-      { viewport: "responsive" },
+      />
     );
     let disposed = false;
-    const owned: PibblController = {
+    const owned = {
       dispose() {
         if (disposed) return;
         disposed = true;
-        mounts.delete(canvas);
-        try {
-          controller.dispose();
-        } finally {
-          controls.remove();
-          details.remove();
-          restore();
-        }
+
+        controls.remove();
+        details.remove();
+        restore();
       },
     };
-    mounts.set(canvas, owned);
-    return owned;
+    return { node, ...owned };
   } catch (error) {
     controls.remove();
     details.remove();
     restore();
     throw error;
   }
+}
+
+export function VizPhaseIiTrajectoriesExample(fixture: Fixture = {}) {
+  const canvas = useCanvasContext().canvas as HTMLCanvasElement;
+  const resource = useConst(() =>
+    createVizPhaseIiTrajectoriesExampleContent(canvas, fixture),
+  );
+  useReaction(() => resource.dispose, []);
+  return resource.node;
 }

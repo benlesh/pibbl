@@ -1,12 +1,5 @@
-import {
-  pibbl,
-  useSignal,
-  Grid,
-  Rectangle,
-  Text,
-  type PibblController,
-} from "@pibbl/core";
-function GridStudy() {
+import { Grid, Rectangle, Text, useSignal } from "@pibbl/core";
+export function GridStudy() {
   const active = useSignal(false);
   return [
     <Rectangle
@@ -83,7 +76,4 @@ function GridStudy() {
       {"EXPLICIT TRACKS · EXPLICIT PLACEMENT"}
     </Text>,
   ];
-}
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(canvas, <GridStudy />);
 }

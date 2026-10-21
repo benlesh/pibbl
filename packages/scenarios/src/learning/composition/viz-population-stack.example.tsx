@@ -4,10 +4,8 @@ import {
   Overlay,
   Rectangle,
   Text,
-  pibbl,
   useLayoutBox,
   useSignal,
-  type PibblController,
   type PibblPointerEvent,
 } from "@pibbl/core";
 import {
@@ -336,15 +334,10 @@ function Scene({ options }: { options: RecipeOptions }) {
     </>
   );
 }
-export default function mount(
-  canvas: HTMLCanvasElement,
-  options: RecipeOptions = {},
-): PibblController {
-  return pibbl(
-    canvas,
+export function VizPopulationStackExample(options: RecipeOptions = {}) {
+  return (
     <FocusManagement>
       <Scene options={options} />
-    </FocusManagement>,
-    { viewport: "responsive" },
+    </FocusManagement>
   );
 }

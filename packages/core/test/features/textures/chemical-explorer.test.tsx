@@ -1,11 +1,15 @@
 import { userEvent } from "vitest/browser";
 import { afterEach, expect, it, vi } from "vitest";
-import mount from "../../../../scenarios/src/learning/composition/chemical-explorer.example";
+import { Explorer as mountComponent } from "../../../../scenarios/src/learning/composition/chemical-explorer.example";
 import {
   ManualSchedulerDriver,
   installSchedulerDriverForTest,
 } from "../../../src/lib/scheduler/testing.js";
 import { clearSharedState } from "../../../src/lib/global-state.js";
+import { createExampleMount } from "../../../../scenarios/src/example-host";
+
+const mount = createExampleMount(mountComponent);
+
 afterEach(() => {
   clearSharedState();
   vi.restoreAllMocks();

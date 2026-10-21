@@ -1,5 +1,5 @@
-import { pibbl, useSignal, Rectangle, Text, type PibblController } from "@pibbl/core";
-function EventSequenceStudy() {
+import { Rectangle, Text, useSignal } from "@pibbl/core";
+export function EventSequenceStudy() {
   const events = useSignal<readonly string[]>([]);
   const record = (value: string) =>
     events.update((current) => [...current.slice(-5), value]);
@@ -66,10 +66,9 @@ function EventSequenceStudy() {
         textAlign: "center",
       }}
     >
-      {events.get().length ? events.get().join("  →  ") : "MOVE A → B, THEN CLICK"}
+      {events.get().length
+        ? events.get().join("  →  ")
+        : "MOVE A → B, THEN CLICK"}
     </Text>,
   ];
-}
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(canvas, <EventSequenceStudy />);
 }

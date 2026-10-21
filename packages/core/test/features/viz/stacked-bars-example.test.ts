@@ -1,6 +1,12 @@
 import { afterEach, expect, it, vi } from "vitest";
-import mount from "../../../../scenarios/src/learning/composition/viz-stacked-bars.example.js";
+import { Scene as mountComponent } from "../../../../scenarios/src/learning/composition/viz-stacked-bars.example.js";
 import { testRuntime } from "./support/runtime.js";
+import { createExampleMount } from "../../../../scenarios/src/example-host";
+
+const mount = createExampleMount(mountComponent, {
+  config: { viewport: "responsive" },
+});
+
 let runtime: ReturnType<typeof testRuntime>;
 afterEach(() => runtime?.dispose());
 
@@ -8,9 +14,15 @@ it("runs the stacked cash-flow lesson with segment inspection and interactive re
   runtime = testRuntime();
   const positions: [string, number][] = [];
   const original = CanvasRenderingContext2D.prototype.fillText;
-  const text = vi.spyOn(CanvasRenderingContext2D.prototype, "fillText")
-    .mockImplementation(function (this: CanvasRenderingContext2D, ...args: Parameters<CanvasRenderingContext2D["fillText"]>) {
-      const point = new DOMPoint(args[1], args[2]).matrixTransform(this.getTransform());
+  const text = vi
+    .spyOn(CanvasRenderingContext2D.prototype, "fillText")
+    .mockImplementation(function (
+      this: CanvasRenderingContext2D,
+      ...args: Parameters<CanvasRenderingContext2D["fillText"]>
+    ) {
+      const point = new DOMPoint(args[1], args[2]).matrixTransform(
+        this.getTransform(),
+      );
       positions.push([args[0], point.x]);
       original.apply(this, args);
     });
@@ -51,9 +63,9 @@ it("runs the stacked cash-flow lesson with segment inspection and interactive re
     expect(labels()).toContain("Show costs");
     const before = positions.findLast((call) => call[0] === "Q4")![1];
     click(390);
-    expect(
-      positions.findLast((call) => call[0] === "Q4")![1],
-    ).toBeLessThan(before);
+    expect(positions.findLast((call) => call[0] === "Q4")![1]).toBeLessThan(
+      before,
+    );
   } finally {
     controller.dispose();
   }

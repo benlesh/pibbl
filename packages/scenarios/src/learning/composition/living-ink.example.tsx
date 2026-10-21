@@ -1,6 +1,6 @@
 /** @jsxImportSource @pibbl/core */
 import {
-  pibbl,
+  useCanvasContext,
   Group,
   Rectangle,
   Text,
@@ -9,9 +9,12 @@ import {
   useConst,
   type PibblPointerEvent,
   useReaction,
-  type PibblController,
 } from "@pibbl/core";
-import { useTexture, reactionDiffusion, texturePalettes } from "@pibbl/core/textures";
+import {
+  useTexture,
+  reactionDiffusion,
+  texturePalettes,
+} from "@pibbl/core/textures";
 
 const palettes = [
   texturePalettes.lagoon,
@@ -285,6 +288,7 @@ function LivingInk({ canvas }: { canvas: HTMLCanvasElement }) {
   );
 }
 
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(canvas, <LivingInk canvas={canvas} />);
+export function LivingInkExample() {
+  const canvas = useCanvasContext().canvas as HTMLCanvasElement;
+  return <LivingInk canvas={canvas} />;
 }

@@ -1,15 +1,8 @@
-import {
-  pibbl,
-  useSignal,
-  Rectangle,
-  Text,
-  type PibblController,
-  type PibblWheelEvent,
-} from "@pibbl/core";
+import { Rectangle, Text, useSignal, type PibblWheelEvent } from "@pibbl/core";
 function wheelSummary(event: PibblWheelEvent): string {
   return `Δ ${event.deltaX.toFixed(1)}, ${event.deltaY.toFixed(1)}, ${event.deltaZ.toFixed(1)} mode=${event.deltaMode} at ${Math.round(event.x)},${Math.round(event.y)} buttons=${event.buttons} ${event.ctrlKey ? "ctrl" : ""}${event.shiftKey ? "shift" : ""}`;
 }
-function WheelStudy() {
+export function WheelStudy() {
   const trace = useSignal<readonly string[]>([]);
   const count = useSignal(0);
   const cancelled = useSignal(false);
@@ -101,7 +94,4 @@ function WheelStudy() {
         : "Trace reports deltaX, deltaY, deltaZ, deltaMode, logical coordinates, buttons, and modifiers."}
     </Text>,
   ];
-}
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(canvas, <WheelStudy />);
 }

@@ -1,12 +1,5 @@
-import {
-  pibbl,
-  useSignal,
-  HorizontalLine,
-  Rectangle,
-  Text,
-  type PibblController,
-} from "@pibbl/core";
-function HorizontalStudy() {
+import { HorizontalLine, Rectangle, Text, useSignal } from "@pibbl/core";
+export function HorizontalStudy() {
   const band = useSignal("none");
   const rule = (y: number, color: string, name: string) => (
     <HorizontalLine
@@ -58,7 +51,4 @@ function HorizontalStudy() {
       {band.get() === "none" ? "SWEEP THE LINES" : band.get().toUpperCase()}
     </Text>,
   ];
-}
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(canvas, <HorizontalStudy />);
 }

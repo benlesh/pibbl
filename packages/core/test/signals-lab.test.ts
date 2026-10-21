@@ -1,4 +1,4 @@
-import type { ScenarioController, SignalsLabState } from '@pibbl/scenarios';
+import type { ScenarioController, SignalsLabState } from "@pibbl/scenarios";
 import {
   getLearningExampleBySlug,
   getLearningExampleRoute,
@@ -6,12 +6,12 @@ import {
   loadLearningExample,
   loadScenario,
   signalsLabScenarioEntry,
-} from '@pibbl/scenarios';
-import { afterEach, describe, expect, it, vi } from 'vitest';
-import signalsLabSource from '../../scenarios/src/signals-lab.example.tsx?raw';
-import signalsLearningSource from '../../scenarios/src/learning/start/signals.example.tsx?raw';
-import signalInputsLearningSource from '../../scenarios/src/learning/composition/signal-inputs.example.tsx?raw';
-import { clickLogicalPoint } from './support/user-input';
+} from "@pibbl/scenarios";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import signalsLabSource from "../../scenarios/src/signals-lab.example.tsx?raw";
+import signalsLearningSource from "../../scenarios/src/learning/start/signals.example.tsx?raw";
+import signalInputsLearningSource from "../../scenarios/src/learning/composition/signal-inputs.example.tsx?raw";
+import { clickLogicalPoint } from "./support/user-input";
 
 const activeControllers = new Set<ScenarioController<SignalsLabState>>();
 
@@ -19,15 +19,15 @@ class ManualFrames {
   private readonly callbacks = new Map<number, FrameRequestCallback>();
   private nextId = 1;
   private readonly request = vi
-    .spyOn(globalThis, 'requestAnimationFrame')
-    .mockImplementation(callback => {
+    .spyOn(globalThis, "requestAnimationFrame")
+    .mockImplementation((callback) => {
       const id = this.nextId++;
       this.callbacks.set(id, callback);
       return id;
     });
   private readonly cancel = vi
-    .spyOn(globalThis, 'cancelAnimationFrame')
-    .mockImplementation(id => {
+    .spyOn(globalThis, "cancelAnimationFrame")
+    .mockImplementation((id) => {
       this.callbacks.delete(id);
     });
 
@@ -37,7 +37,7 @@ class ManualFrames {
 
   flushOne(): void {
     const entry = this.callbacks.entries().next().value;
-    if (!entry) throw new Error('Expected one pending host frame.');
+    if (!entry) throw new Error("Expected one pending host frame.");
     const [id, callback] = entry;
     this.callbacks.delete(id);
     callback(0);
@@ -49,16 +49,19 @@ class ManualFrames {
   }
 }
 
-async function drainFrames<T>(frames: ManualFrames, pending: Promise<T>): Promise<T> {
+async function drainFrames<T>(
+  frames: ManualFrames,
+  pending: Promise<T>,
+): Promise<T> {
   let resolved = false;
   let failure: unknown;
   let result: T | undefined;
   void pending.then(
-    value => {
+    (value) => {
       result = value;
       resolved = true;
     },
-    error => {
+    (error) => {
       failure = error;
       resolved = true;
     },
@@ -70,13 +73,18 @@ async function drainFrames<T>(frames: ManualFrames, pending: Promise<T>): Promis
     if (frames.pendingCount === 0) {
       emptyTurns += 1;
       if (emptyTurns < 4) continue;
-      throw new Error('Signal laboratory did not request a pending host frame.');
+      throw new Error(
+        "Signal laboratory did not request a pending host frame.",
+      );
     }
     emptyTurns = 0;
     frames.flushOne();
   }
   if (failure) throw failure;
-  if (!resolved) throw new Error('Signal laboratory did not settle through the host frame queue.');
+  if (!resolved)
+    throw new Error(
+      "Signal laboratory did not settle through the host frame queue.",
+    );
   return result as T;
 }
 
@@ -88,10 +96,10 @@ afterEach(async () => {
 });
 
 async function mountSignalsLab() {
-  const canvas = document.createElement('canvas');
+  const canvas = document.createElement("canvas");
   canvas.width = signalsLabScenarioEntry.canvas.width;
   canvas.height = signalsLabScenarioEntry.canvas.height;
-  const referenceHost = document.createElement('div');
+  const referenceHost = document.createElement("div");
   document.body.replaceChildren(canvas, referenceHost);
   const definition = await loadScenario(signalsLabScenarioEntry);
   const controller = await definition.mount({ canvas, referenceHost });
@@ -100,77 +108,103 @@ async function mountSignalsLab() {
   return { canvas, controller, definition, referenceHost };
 }
 
-describe('first-class signal public scenarios', () => {
-  it('registers learning and laboratory routes with public-package-only sources', () => {
-    const learning = getLearningExampleBySlug('signals');
+describe("first-class signal public scenarios", () => {
+  it("registers learning and laboratory routes with public-package-only sources", () => {
+    const learning = getLearningExampleBySlug("signals");
     expect(learning).toMatchObject({
-      slug: 'signals',
-      section: 'start',
-      api: ['signal', 'computed', 'useSignal'],
-      source: { path: 'packages/scenarios/src/learning/start/signals.example.tsx' },
-    });
-    expect(learning && getLearningExampleRoute(learning)).toBe('#/examples/start/signals');
-    const signalInputs = getLearningExampleBySlug('signal-inputs');
-    expect(signalInputs).toMatchObject({
-      slug: 'signal-inputs',
-      section: 'composition',
-      api: [
-        'SignalValue',
-        'resolveSignalValue',
-        'batch',
-        'useComputed',
-        'useReaction',
-      ],
+      slug: "signals",
+      section: "start",
+      api: ["signal", "computed", "useSignal"],
       source: {
-        path: 'packages/scenarios/src/learning/composition/signal-inputs.example.tsx',
+        path: "packages/scenarios/src/learning/start/signals.example.tsx",
       },
     });
-    expect(signalInputs && getLearningExampleRoute(signalInputs))
-      .toBe('#/examples/composition/signal-inputs');
-    expect(getScenarioRoute(signalsLabScenarioEntry)).toBe('#/testing/signals');
+    expect(learning && getLearningExampleRoute(learning)).toBe(
+      "#/examples/start/signals",
+    );
+    const signalInputs = getLearningExampleBySlug("signal-inputs");
+    expect(signalInputs).toMatchObject({
+      slug: "signal-inputs",
+      section: "composition",
+      api: [
+        "SignalValue",
+        "resolveSignalValue",
+        "batch",
+        "useComputed",
+        "useReaction",
+      ],
+      source: {
+        path: "packages/scenarios/src/learning/composition/signal-inputs.example.tsx",
+      },
+    });
+    expect(signalInputs && getLearningExampleRoute(signalInputs)).toBe(
+      "#/examples/composition/signal-inputs",
+    );
+    expect(getScenarioRoute(signalsLabScenarioEntry)).toBe("#/testing/signals");
 
-    for (const source of [signalsLearningSource, signalInputsLearningSource, signalsLabSource]) {
+    for (const source of [
+      signalsLearningSource,
+      signalInputsLearningSource,
+      signalsLabSource,
+    ]) {
       expect(source).toMatch(/from ['"]@pibbl\/core['"]/u);
       expect(source).not.toMatch(/@pibbl\/core\/(?:internal|lib|src)\b/u);
-      expect(source).not.toMatch(/(?:ManualFrames|flushPending|requestAnimationFrame)/u);
+      expect(source).not.toMatch(
+        /(?:ManualFrames|flushPending|requestAnimationFrame)/u,
+      );
     }
-    expect(signalsLearningSource).toContain('fill: color');
-    expect(signalsLearningSource).toContain('{signalSummary}');
-    expect(signalsLearningSource).toContain('.update(');
-    expect(signalsLearningSource).toContain('computed(');
-    expect(signalInputsLearningSource).toContain('resolveSignalValue(props.data)');
-    expect(signalInputsLearningSource).toContain('<LineSeries data={data} domain={domain} />');
-    expect(signalInputsLearningSource).toContain('batch(() =>');
-    expect(signalInputsLearningSource).toContain('useReaction(() =>');
+    expect(signalsLearningSource).toContain("fill: color");
+    expect(signalsLearningSource).toContain("{signalSummary}");
+    expect(signalsLearningSource).toContain(".update(");
+    expect(signalsLearningSource).toContain("computed(");
+    expect(signalInputsLearningSource).toContain(
+      "resolveSignalValue(props.data)",
+    );
+    expect(signalInputsLearningSource).toContain(
+      "<LineSeries data={data} domain={domain} />",
+    );
+    expect(signalInputsLearningSource).toContain("batch(() =>");
+    expect(signalInputsLearningSource).toContain("useReaction(() =>");
     expect(signalsLabSource).toContain(
       "SIGNALS_LAB_SOURCE_ID = 'first-class-signals-laboratory-example'",
     );
   });
 
-  it('mounts the learning example with receiver-owned inputs and updates its writable signal on click', async () => {
-    const entry = getLearningExampleBySlug('signals');
-    if (!entry) throw new Error('Missing signals learning example.');
-    const canvas = document.createElement('canvas');
+  it("mounts the learning example with receiver-owned inputs and updates its writable signal on click", async () => {
+    const entry = getLearningExampleBySlug("signals");
+    if (!entry) throw new Error("Missing signals learning example.");
+    const canvas = document.createElement("canvas");
     canvas.width = entry.canvas.width;
     canvas.height = entry.canvas.height;
     document.body.appendChild(canvas);
-    const controller = (await loadLearningExample(entry)).default(canvas);
+    const controller = (await loadLearningExample(entry)).mount(canvas);
     try {
-      await new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
-      const before = Array.from(canvas.getContext('2d')!.getImageData(170, 200, 1, 1).data);
+      await new Promise<void>((resolve) =>
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+      );
+      const before = Array.from(
+        canvas.getContext("2d")!.getImageData(170, 200, 1, 1).data,
+      );
       await clickLogicalPoint(canvas, { x: 170, y: 140 });
-      await new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
-      const after = Array.from(canvas.getContext('2d')!.getImageData(170, 200, 1, 1).data);
+      await new Promise<void>((resolve) =>
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+      );
+      const after = Array.from(
+        canvas.getContext("2d")!.getImageData(170, 200, 1, 1).data,
+      );
       expect(before).not.toEqual(after);
     } finally {
       controller.dispose();
     }
   });
 
-  it('drives every action through complete source, consumer, and render state vectors', async () => {
-    const { canvas, controller, definition, referenceHost } = await mountSignalsLab();
-    expect(referenceHost.querySelectorAll('canvas')).toHaveLength(1);
-    expect(definition.actionIds).toEqual(signalsLabScenarioEntry.actions.map(action => action.id));
+  it("drives every action through complete source, consumer, and render state vectors", async () => {
+    const { canvas, controller, definition, referenceHost } =
+      await mountSignalsLab();
+    expect(referenceHost.querySelectorAll("canvas")).toHaveLength(1);
+    expect(definition.actionIds).toEqual(
+      signalsLabScenarioEntry.actions.map((action) => action.id),
+    );
     expect(controller.getState()).toMatchObject({
       direct: 1,
       derivedSource: 0,
@@ -180,7 +214,7 @@ describe('first-class signal public scenarios', () => {
       layerA: 1,
       layerB: 1,
       retained: 0,
-      selectedSource: 'left',
+      selectedSource: "left",
       computed: 0,
       computedEvaluations: 1,
       writes: 0,
@@ -199,10 +233,10 @@ describe('first-class signal public scenarios', () => {
       rootRenders: { a: 1, b: 1 },
       layerChildRenders: { a: 1, b: 1 },
       consumerCount: 5,
-      lastAction: 'mount',
+      lastAction: "mount",
     });
 
-    await controller.perform('direct-write');
+    await controller.perform("direct-write");
     await controller.settled();
     expect(controller.getState()).toMatchObject({
       direct: 2,
@@ -213,16 +247,16 @@ describe('first-class signal public scenarios', () => {
       layerA: 1,
       layerB: 1,
       retained: 0,
-      selectedSource: 'left',
+      selectedSource: "left",
       computed: 0,
       computedEvaluations: 1,
       rootRenders: { a: 2, b: 1 },
       layerChildRenders: { a: 1, b: 1 },
       consumerCount: 5,
-      lastAction: 'direct-write',
+      lastAction: "direct-write",
     });
 
-    await controller.perform('equal-write');
+    await controller.perform("equal-write");
     await controller.settled();
     expect(controller.getState()).toMatchObject({
       direct: 2,
@@ -233,16 +267,16 @@ describe('first-class signal public scenarios', () => {
       layerA: 1,
       layerB: 1,
       retained: 0,
-      selectedSource: 'left',
+      selectedSource: "left",
       computed: 0,
       computedEvaluations: 1,
       rootRenders: { a: 2, b: 1 },
       layerChildRenders: { a: 1, b: 1 },
       consumerCount: 5,
-      lastAction: 'equal-write',
+      lastAction: "equal-write",
     });
 
-    await controller.perform('computed-equal-write');
+    await controller.perform("computed-equal-write");
     await controller.settled();
     expect(controller.getState()).toMatchObject({
       direct: 2,
@@ -253,16 +287,16 @@ describe('first-class signal public scenarios', () => {
       layerA: 1,
       layerB: 1,
       retained: 0,
-      selectedSource: 'left',
+      selectedSource: "left",
       computed: 0,
       computedEvaluations: 2,
       rootRenders: { a: 2, b: 1 },
       layerChildRenders: { a: 1, b: 1 },
       consumerCount: 5,
-      lastAction: 'computed-equal-write',
+      lastAction: "computed-equal-write",
     });
 
-    await controller.perform('dependency-switch');
+    await controller.perform("dependency-switch");
     await controller.settled();
     expect(controller.getState()).toMatchObject({
       direct: 2,
@@ -273,16 +307,16 @@ describe('first-class signal public scenarios', () => {
       layerA: 1,
       layerB: 1,
       retained: 0,
-      selectedSource: 'right',
+      selectedSource: "right",
       computed: 20,
       computedEvaluations: 3,
       rootRenders: { a: 3, b: 1 },
       layerChildRenders: { a: 1, b: 1 },
       consumerCount: 5,
-      lastAction: 'dependency-switch',
+      lastAction: "dependency-switch",
     });
 
-    await controller.perform('shared-roots');
+    await controller.perform("shared-roots");
     await controller.settled();
     expect(controller.getState()).toMatchObject({
       direct: 2,
@@ -293,34 +327,34 @@ describe('first-class signal public scenarios', () => {
       layerA: 1,
       layerB: 1,
       retained: 0,
-      selectedSource: 'right',
+      selectedSource: "right",
       computed: 20,
       computedEvaluations: 3,
       rootRenders: { a: 4, b: 2 },
       layerChildRenders: { a: 1, b: 1 },
       consumerCount: 5,
-      lastAction: 'shared-roots',
+      lastAction: "shared-roots",
     });
 
-    const primaryContext = canvas.getContext('2d');
-    if (!primaryContext) throw new Error('Signals laboratory primary Canvas has no 2D context.');
+    const primaryContext = canvas.getContext("2d");
+    if (!primaryContext)
+      throw new Error("Signals laboratory primary Canvas has no 2D context.");
     const nativeDrawImage = primaryContext.drawImage;
     let layerAChildPrecededParentComposite = false;
-    const drawImage = vi.spyOn(primaryContext, 'drawImage').mockImplementation(function(
-      this: CanvasRenderingContext2D,
-      ...args
-    ) {
-      const beforeComposite = controller.getState();
-      if (
-        this.getTransform().e === 24 &&
-        beforeComposite.layerChildRenders.a === 2 &&
-        beforeComposite.layerChildRenders.b === 1
-      ) {
-        layerAChildPrecededParentComposite = true;
-      }
-      return Reflect.apply(nativeDrawImage, this, args);
-    });
-    await controller.perform('layer-local-write');
+    const drawImage = vi
+      .spyOn(primaryContext, "drawImage")
+      .mockImplementation(function (this: CanvasRenderingContext2D, ...args) {
+        const beforeComposite = controller.getState();
+        if (
+          this.getTransform().e === 24 &&
+          beforeComposite.layerChildRenders.a === 2 &&
+          beforeComposite.layerChildRenders.b === 1
+        ) {
+          layerAChildPrecededParentComposite = true;
+        }
+        return Reflect.apply(nativeDrawImage, this, args);
+      });
+    await controller.perform("layer-local-write");
     await controller.settled();
     drawImage.mockRestore();
     expect(layerAChildPrecededParentComposite).toBe(true);
@@ -333,16 +367,16 @@ describe('first-class signal public scenarios', () => {
       layerA: 2,
       layerB: 1,
       retained: 0,
-      selectedSource: 'right',
+      selectedSource: "right",
       computed: 20,
       computedEvaluations: 3,
       rootRenders: { a: 5, b: 2 },
       layerChildRenders: { a: 2, b: 1 },
       consumerCount: 5,
-      lastAction: 'layer-local-write',
+      lastAction: "layer-local-write",
     });
 
-    await controller.perform('remove-consumer');
+    await controller.perform("remove-consumer");
     await controller.settled();
     expect(controller.getState()).toMatchObject({
       direct: 2,
@@ -353,17 +387,17 @@ describe('first-class signal public scenarios', () => {
       layerA: 2,
       layerB: 1,
       retained: 1,
-      selectedSource: 'right',
+      selectedSource: "right",
       computed: 20,
       computedEvaluations: 3,
       rootRenders: { a: 6, b: 2 },
       layerChildRenders: { a: 2, b: 1 },
       consumerCount: 4,
-      lastAction: 'remove-consumer',
+      lastAction: "remove-consumer",
     });
 
     const beforeBatch = controller.getState();
-    await controller.perform('batched-write');
+    await controller.perform("batched-write");
     await controller.settled();
     expect(controller.getState()).toMatchObject({
       direct: 3,
@@ -374,11 +408,11 @@ describe('first-class signal public scenarios', () => {
         a: beforeBatch.rootRenders.a + 1,
         b: beforeBatch.rootRenders.b + 1,
       },
-      lastAction: 'batched-write',
+      lastAction: "batched-write",
     });
 
     const beforeReaction = controller.getState();
-    await controller.perform('reaction-only');
+    await controller.perform("reaction-only");
     await controller.settled();
     expect(controller.getState()).toMatchObject({
       writes: beforeReaction.writes + 1,
@@ -386,10 +420,10 @@ describe('first-class signal public scenarios', () => {
       reactionCleanups: beforeReaction.reactionCleanups + 1,
       rootRenders: beforeReaction.rootRenders,
       layerChildRenders: beforeReaction.layerChildRenders,
-      lastAction: 'reaction-only',
+      lastAction: "reaction-only",
     });
 
-    await controller.perform('reset');
+    await controller.perform("reset");
     await controller.settled();
     expect(controller.getState()).toMatchObject({
       direct: 1,
@@ -400,29 +434,32 @@ describe('first-class signal public scenarios', () => {
       layerA: 1,
       layerB: 1,
       retained: 0,
-      selectedSource: 'left',
+      selectedSource: "left",
       computed: 0,
       computedEvaluations: 1,
       rootRenders: { a: 1, b: 1 },
       layerChildRenders: { a: 1, b: 1 },
       consumerCount: 5,
-      lastAction: 'reset',
+      lastAction: "reset",
     });
   });
 
-  it('uses one host callback for a shared write and none for a removed retained consumer', async () => {
+  it("uses one host callback for a shared write and none for a removed retained consumer", async () => {
     const frames = new ManualFrames();
     try {
-      const canvas = document.createElement('canvas');
+      const canvas = document.createElement("canvas");
       canvas.width = signalsLabScenarioEntry.canvas.width;
       canvas.height = signalsLabScenarioEntry.canvas.height;
-      const referenceHost = document.createElement('div');
+      const referenceHost = document.createElement("div");
       document.body.replaceChildren(canvas, referenceHost);
       const definition = await loadScenario(signalsLabScenarioEntry);
-      const controller = await drainFrames(frames, definition.mount({ canvas, referenceHost }));
+      const controller = await drainFrames(
+        frames,
+        definition.mount({ canvas, referenceHost }),
+      );
       activeControllers.add(controller);
 
-      const computedEqual = controller.perform('computed-equal-write');
+      const computedEqual = controller.perform("computed-equal-write");
       expect(frames.pendingCount).toBe(2);
       expect(controller.getState()).toMatchObject({
         computed: 0,
@@ -437,14 +474,14 @@ describe('first-class signal public scenarios', () => {
       });
       await drainFrames(frames, computedEqual);
 
-      const shared = controller.perform('shared-roots');
+      const shared = controller.perform("shared-roots");
       expect(frames.pendingCount).toBe(2);
       frames.flushOne();
       expect(controller.getState().rootRenders).toEqual({ a: 2, b: 2 });
       expect(frames.pendingCount).toBe(1);
       await drainFrames(frames, shared);
 
-      const removal = controller.perform('remove-consumer');
+      const removal = controller.perform("remove-consumer");
       expect(frames.pendingCount).toBe(2);
       frames.flushOne();
       expect(frames.pendingCount).toBe(1);

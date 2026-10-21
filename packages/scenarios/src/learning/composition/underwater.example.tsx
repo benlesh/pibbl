@@ -1,16 +1,14 @@
 import {
-  pibbl,
-  defineTexture,
   DragHandle,
   Group,
   Layer,
   ManipulationFrame,
   Rectangle,
   Text,
+  defineTexture,
   useManipulation,
   useSignal,
   useTexture,
-  type PibblController,
   type PibblManipulationBox,
 } from "@pibbl/core";
 import { displacement, reflectedLight } from "@pibbl/core/filters";
@@ -31,7 +29,7 @@ const skyReflection = defineTexture({
   },
 });
 
-function Underwater() {
+export function Underwater() {
   const enabled = useSignal(true);
   const paused = useSignal(false);
   const strength = useSignal(8);
@@ -448,8 +446,4 @@ function Underwater() {
       </Text>
     </Group>
   );
-}
-
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(canvas, <Underwater />);
 }

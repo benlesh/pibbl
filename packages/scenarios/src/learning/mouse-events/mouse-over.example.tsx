@@ -1,5 +1,5 @@
-import { pibbl, useSignal, Rectangle, Text, type PibblController } from "@pibbl/core";
-function MouseOverStudy() {
+import { Rectangle, Text, useSignal } from "@pibbl/core";
+export function MouseOverStudy() {
   const active = useSignal("none");
   const card = (x: number, color: string, label: string) => [
     <Rectangle
@@ -52,7 +52,4 @@ function MouseOverStudy() {
       {active.get() === "none" ? "ENTER A CARD" : `${active.get()} / ENTERED`}
     </Text>,
   ];
-}
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(canvas, <MouseOverStudy />);
 }

@@ -1,8 +1,12 @@
 import { expect, it, vi } from "vitest";
-import mount from "../../../../scenarios/src/learning/composition/viz-pie-composition.example.js";
+import { Scene as mountComponent } from "../../../../scenarios/src/learning/composition/viz-pie-composition.example.js";
 import { getLearningExampleBySlug } from "@pibbl/scenarios";
 import { loadWorkbenchSource } from "../../../../../playground/src/learning-sources.js";
 import { validateLearningSourceText } from "../../../../../tooling/learning-source-contract.js";
+import { createExampleMount } from "../../../../scenarios/src/example-host";
+
+const mount = createExampleMount(mountComponent);
+
 it("runs the editable pie example and retains pinned category identity when slices reorder", async () => {
   const entry = getLearningExampleBySlug("viz-pie-composition")!;
   const source = await loadWorkbenchSource(entry);
@@ -10,6 +14,7 @@ it("runs the editable pie example and retains pinned category identity when slic
     authoring: "jsx",
     label: "Pie composition",
     sourcePath: entry.source.path,
+    exportName: entry.source.exportName,
   });
   const canvas = document.createElement("canvas");
   canvas.width = 1000;

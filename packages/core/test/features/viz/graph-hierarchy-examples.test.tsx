@@ -1,15 +1,33 @@
 import { userEvent } from "vitest/browser";
 import { afterEach, expect, it, vi } from "vitest";
 import { testRuntime } from "./support/runtime.js";
-import mountTree from "../../../../scenarios/src/learning/composition/viz-graph-tree.example.js";
-import mountTreemap from "../../../../scenarios/src/learning/composition/viz-graph-treemap.example.js";
-import mountIcicle from "../../../../scenarios/src/learning/composition/viz-graph-icicle.example.js";
-import mountNeighborhood from "../../../../scenarios/src/learning/composition/viz-graph-neighborhood.example.js";
-import mountTreeReconstruction from "../../../../scenarios/src/learning/composition/viz-graph-tree-reconstruction.example.js";
-import mountTreemapReconstruction from "../../../../scenarios/src/learning/composition/viz-graph-treemap-reconstruction.example.js";
-import mountIcicleReconstruction from "../../../../scenarios/src/learning/composition/viz-graph-icicle-reconstruction.example.js";
-import mountNeighborhoodReconstruction from "../../../../scenarios/src/learning/composition/viz-graph-neighborhood-reconstruction.example.js";
+import { VizGraphTreeExample as mountTreeComponent } from "../../../../scenarios/src/learning/composition/viz-graph-tree.example.js";
+import { Scene as mountTreemapComponent } from "../../../../scenarios/src/learning/composition/viz-graph-treemap.example.js";
+import { Scene as mountIcicleComponent } from "../../../../scenarios/src/learning/composition/viz-graph-icicle.example.js";
+import { VizGraphNeighborhoodExample as mountNeighborhoodComponent } from "../../../../scenarios/src/learning/composition/viz-graph-neighborhood.example.js";
+import { VizGraphTreeReconstructionExample as mountTreeReconstructionComponent } from "../../../../scenarios/src/learning/composition/viz-graph-tree-reconstruction.example.js";
+import { VizGraphTreemapReconstructionExample as mountTreemapReconstructionComponent } from "../../../../scenarios/src/learning/composition/viz-graph-treemap-reconstruction.example.js";
+import { VizGraphIcicleReconstructionExample as mountIcicleReconstructionComponent } from "../../../../scenarios/src/learning/composition/viz-graph-icicle-reconstruction.example.js";
+import { VizGraphNeighborhoodReconstructionExample as mountNeighborhoodReconstructionComponent } from "../../../../scenarios/src/learning/composition/viz-graph-neighborhood-reconstruction.example.js";
 import type { PibblController } from "@pibbl/core";
+import { createExampleMount } from "../../../../scenarios/src/example-host";
+
+const mountTree = createExampleMount(mountTreeComponent);
+const mountTreemap = createExampleMount(mountTreemapComponent);
+const mountIcicle = createExampleMount(mountIcicleComponent);
+const mountNeighborhood = createExampleMount(mountNeighborhoodComponent);
+const mountTreeReconstruction = createExampleMount(
+  mountTreeReconstructionComponent,
+);
+const mountTreemapReconstruction = createExampleMount(
+  mountTreemapReconstructionComponent,
+);
+const mountIcicleReconstruction = createExampleMount(
+  mountIcicleReconstructionComponent,
+);
+const mountNeighborhoodReconstruction = createExampleMount(
+  mountNeighborhoodReconstructionComponent,
+);
 
 afterEach(() => {
   document.body.replaceChildren();

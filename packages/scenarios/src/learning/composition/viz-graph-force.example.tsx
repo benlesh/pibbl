@@ -3,10 +3,10 @@ import {
   Group,
   Rectangle,
   Text,
-  pibbl,
+  useCanvasContext,
+  useReaction,
   useSignal,
   useRef,
-  type PibblController,
   type PibblPointerEvent,
 } from "@pibbl/core";
 import {
@@ -375,22 +375,18 @@ function Scene() {
     </Group>
   );
 }
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  const previousTouchAction = canvas.style.touchAction;
-  canvas.style.touchAction = "none";
-  let disposed = false;
-  const app = pibbl(
-    canvas,
+export function VizGraphForceExample() {
+  const canvas = useCanvasContext().canvas as HTMLCanvasElement;
+  useReaction(() => {
+    const previous = canvas.style.touchAction;
+    canvas.style.touchAction = "none";
+    return () => {
+      canvas.style.touchAction = previous;
+    };
+  }, [canvas]);
+  return (
     <FocusManagement>
       <Scene />
-    </FocusManagement>,
+    </FocusManagement>
   );
-  return {
-    dispose() {
-      if (disposed) return;
-      disposed = true;
-      app.dispose();
-      canvas.style.touchAction = previousTouchAction;
-    },
-  };
 }

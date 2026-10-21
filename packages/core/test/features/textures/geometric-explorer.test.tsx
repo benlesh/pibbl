@@ -1,10 +1,19 @@
 import { afterEach, expect, it, vi } from "vitest";
-import mount from "../../../../scenarios/src/learning/composition/geometric-explorer.example";
+import { GeometricExplorerExample as mountComponent } from "../../../../scenarios/src/learning/composition/geometric-explorer.example";
 import {
   ManualSchedulerDriver,
   installSchedulerDriverForTest,
 } from "../../../src/lib/scheduler/testing.js";
 import { clearSharedState } from "../../../src/lib/global-state.js";
+import { createExampleMount } from "../../../../scenarios/src/example-host";
+
+const mount = createExampleMount(mountComponent, {
+  config: {
+    viewport: { width: 980, height: 940 },
+  },
+  htmlOverlay: true,
+});
+
 afterEach(() => {
   clearSharedState();
   vi.restoreAllMocks();

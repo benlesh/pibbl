@@ -1,14 +1,12 @@
+import { BipartiteGraph, GraphNode } from "@pibbl/core/viz";
 import {
   FocusManagement,
   Group,
   Rectangle,
   SvgPath,
   Text,
-  pibbl,
   useSignal,
-  type PibblController,
 } from "@pibbl/core";
-import { BipartiteGraph, GraphNode } from "@pibbl/core/viz";
 
 const partners = [
   "River Watch",
@@ -282,11 +280,10 @@ function Scene() {
   );
 }
 
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(
-    canvas,
+export function VizGraphBipartiteExample() {
+  return (
     <FocusManagement>
       <Scene />
-    </FocusManagement>,
+    </FocusManagement>
   );
 }

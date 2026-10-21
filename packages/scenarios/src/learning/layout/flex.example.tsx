@@ -1,12 +1,10 @@
 import {
-  pibbl,
-  useLayoutBox,
-  useSignal,
   Flex,
   Rectangle,
   Text,
+  useLayoutBox,
+  useSignal,
   type BoxStyle,
-  type PibblController,
   type FlexItemStyle,
 } from "@pibbl/core";
 
@@ -34,7 +32,7 @@ function FlexCard({ onSelect, side, style: _specifiedStyle }: FlexCardProps) {
   );
 }
 
-function FlexStudy() {
+export function FlexStudy() {
   const active = useSignal<"left" | "right">("left");
   return [
     <Rectangle
@@ -81,7 +79,4 @@ function FlexStudy() {
       {"GROW · SHRINK · ALIGN"}
     </Text>,
   ];
-}
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(canvas, <FlexStudy />);
 }

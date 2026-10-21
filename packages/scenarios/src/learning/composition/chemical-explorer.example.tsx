@@ -1,13 +1,11 @@
 /** @jsxImportSource @pibbl/core */
 import {
-  pibbl,
   Group,
   Rectangle,
   Text,
   FocusManagement,
   useSignal,
   useConst,
-  type PibblController,
   type TextureRecipe,
   type PibblPointerEvent,
 } from "@pibbl/core";
@@ -292,7 +290,7 @@ function Field({
     </Group>
   );
 }
-function Explorer() {
+export function Explorer() {
   const state = useSignal<Controls>({
     model: 0,
     preset: 0,
@@ -482,7 +480,4 @@ function Explorer() {
       </Group>
     </FocusManagement>
   );
-}
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(canvas, <Explorer />);
 }

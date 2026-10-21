@@ -58,10 +58,10 @@ Intl locale data. No locale or unit is inferred from the data.
 The editable [minimal numeric demo](#/examples/composition/viz-numeric-axis)
 and [NOAA example](#/examples/composition/viz-utc-climate) uses these
 helpers with height-dependent tick density and label collision handling.
-This complete mount demonstrates every helper:
+This component demonstrates every helper:
 
 ```tsx
-import { Group, pibbl } from "@pibbl/core";
+import { Group } from "@pibbl/core";
 import {
   Axis,
   LinearScale,
@@ -70,10 +70,9 @@ import {
   formatNumber,
 } from "@pibbl/core/viz";
 
-export default function mount(canvas: HTMLCanvasElement) {
+export function NumericAxisExample() {
   const domain = niceLinearDomain([0.13, 0.97]);
-  return pibbl(
-    canvas,
+  return (
     <Group style={{ translateX: 24, translateY: 24 }}>
       <LinearScale id="value" domain={domain} range={[0, 240]}>
         <Axis
@@ -90,7 +89,7 @@ export default function mount(canvas: HTMLCanvasElement) {
           }
         />
       </LinearScale>
-    </Group>,
+    </Group>
   );
 }
 ```

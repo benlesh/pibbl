@@ -1,10 +1,17 @@
 import { expect, it, vi } from "vitest";
-import dependency from "../../../../scenarios/src/learning/composition/viz-graph-dependency.example.js";
-import force from "../../../../scenarios/src/learning/composition/viz-graph-force.example.js";
-import matrix from "../../../../scenarios/src/learning/composition/viz-graph-matrix.example.js";
-import sankey from "../../../../scenarios/src/learning/composition/viz-graph-sankey.example.js";
-import bipartite from "../../../../scenarios/src/learning/composition/viz-graph-bipartite.example.js";
+import { VizGraphDependencyExample as dependencyComponent } from "../../../../scenarios/src/learning/composition/viz-graph-dependency.example.js";
+import { VizGraphForceExample as forceComponent } from "../../../../scenarios/src/learning/composition/viz-graph-force.example.js";
+import { VizGraphMatrixExample as matrixComponent } from "../../../../scenarios/src/learning/composition/viz-graph-matrix.example.js";
+import { VizGraphSankeyExample as sankeyComponent } from "../../../../scenarios/src/learning/composition/viz-graph-sankey.example.js";
+import { VizGraphBipartiteExample as bipartiteComponent } from "../../../../scenarios/src/learning/composition/viz-graph-bipartite.example.js";
 import { testRuntime } from "./support/runtime.js";
+import { createExampleMount } from "../../../../scenarios/src/example-host";
+
+const dependency = createExampleMount(dependencyComponent);
+const force = createExampleMount(forceComponent);
+const matrix = createExampleMount(matrixComponent);
+const sankey = createExampleMount(sankeyComponent);
+const bipartite = createExampleMount(bipartiteComponent);
 
 function click(canvas: HTMLCanvasElement, x: number, y: number) {
   const rect = canvas.getBoundingClientRect();

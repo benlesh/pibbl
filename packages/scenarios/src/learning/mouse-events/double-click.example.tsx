@@ -1,5 +1,5 @@
-import { pibbl, useSignal, Rectangle, Text, type PibblController } from "@pibbl/core";
-function DoubleClickStudy() {
+import { Rectangle, Text, useSignal } from "@pibbl/core";
+export function DoubleClickStudy() {
   const stamps = useSignal(0);
   return [
     <Rectangle
@@ -47,7 +47,4 @@ function DoubleClickStudy() {
       {"A SECONDARY GESTURE"}
     </Text>,
   ];
-}
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(canvas, <DoubleClickStudy />);
 }

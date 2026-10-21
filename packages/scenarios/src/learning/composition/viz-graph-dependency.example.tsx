@@ -3,9 +3,7 @@ import {
   Group,
   Rectangle,
   Text,
-  pibbl,
   useSignal,
-  type PibblController,
 } from "@pibbl/core";
 import { DependencyGraph, type VizKey } from "@pibbl/core/viz";
 // Illustrative deployment model for a commerce platform; durations are engineering estimates.
@@ -158,11 +156,10 @@ function Scene() {
     </Group>
   );
 }
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(
-    canvas,
+export function VizGraphDependencyExample() {
+  return (
     <FocusManagement>
       <Scene />
-    </FocusManagement>,
+    </FocusManagement>
   );
 }

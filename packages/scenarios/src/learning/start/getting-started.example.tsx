@@ -1,4 +1,4 @@
-import { useSignal, Rectangle, Text } from "@pibbl/core";
+import { Rectangle, Text, useSignal } from "@pibbl/core";
 
 interface PosterCardProps {
   message: string;

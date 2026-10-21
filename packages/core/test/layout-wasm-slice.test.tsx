@@ -1,9 +1,13 @@
 import yogaReference from '../../../tooling/layout-yoga-rehearsal/reference.json';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createElement, Flex, Text, Rectangle, measureElement, pibbl, useLayoutBox, Layer, signal, computed, type PibblNode } from '@pibbl/core';
-import mountWasmFlexText from '../../scenarios/src/learning/layout/wasm-flex-text.example';
+import { WasmFlexTextExample as mountWasmFlexTextComponent } from "../../scenarios/src/learning/layout/wasm-flex-text.example";
 import { snapshotWasmLayoutDiagnostics, experimentalLayout } from '../src/lib/layout/wasm/region';
 import { layoutFlex } from '../src/lib/layout/flex';
+import { createExampleMount } from "../../scenarios/src/example-host";
+
+const mountWasmFlexText = createExampleMount(mountWasmFlexTextComponent);
+
 
 const service = { measureText: (value: string) => ({ width: value.length * 10 } as TextMetrics) };
 const measurement = { service, measureElement: (element: Parameters<typeof measureElement>[0], constraints: Parameters<typeof measureElement>[1]) => measureElement(element, constraints, service) };
@@ -291,7 +295,8 @@ it('measures column Text auto basis at its final max-width before placing the ne
 });
 
 it.runIf(experimentalLayout)('reflows the exact column scenario and moves its following sibling hit target in the same frame', async () => {
-  const { default: mountColumn } = await import('../../scenarios/src/learning/layout/wasm-flex-column-text.example');
+  const mountColumnModule = await import('../../scenarios/src/learning/layout/wasm-flex-column-text.example');
+const mountColumn = createExampleMount(mountColumnModule.WasmFlexColumnTextExample);
   const baseline = snapshotWasmLayoutDiagnostics();
   const canvas = document.createElement('canvas'); canvas.width = 760; canvas.height = 460;
   document.body.append(canvas);
@@ -383,7 +388,8 @@ it.runIf(experimentalLayout)('computes nowrap distributed main offsets through W
 });
 
 it.runIf(experimentalLayout)('switches the exact mounted example between column and row without replacing layout ownership', async () => {
-  const { default: mount } = await import('../../scenarios/src/learning/layout/wasm-flex-column-text.example');
+  const mountModule = await import('../../scenarios/src/learning/layout/wasm-flex-column-text.example');
+const mount = createExampleMount(mountModule.WasmFlexColumnTextExample);
   const baseline = snapshotWasmLayoutDiagnostics();
   const canvas = document.createElement('canvas'); canvas.width = 760; canvas.height = 460;
   document.body.append(canvas);
@@ -422,7 +428,8 @@ it.runIf(experimentalLayout)('switches the exact mounted example between column 
 });
 
 it.runIf(experimentalLayout)('freezes a signal-capped public panel and gives remaining space to its sibling', async () => {
-  const { default: mount } = await import('../../scenarios/src/learning/layout/wasm-flex-constraints.example');
+  const mountModule = await import('../../scenarios/src/learning/layout/wasm-flex-constraints.example');
+const mount = createExampleMount(mountModule.WasmFlexConstraintsExample);
   const baseline = snapshotWasmLayoutDiagnostics();
   const canvas = document.createElement('canvas'); canvas.width = 760; canvas.height = 460;
   document.body.append(canvas);
@@ -496,7 +503,8 @@ it.runIf(experimentalLayout)('measures an intrinsic built-in column around wrapp
 });
 
 it.runIf(experimentalLayout)('updates intrinsic built-in Text height and following sibling input together', async () => {
-  const { default: mount } = await import('../../scenarios/src/learning/layout/wasm-flex-intrinsic-text.example');
+  const mountModule = await import('../../scenarios/src/learning/layout/wasm-flex-intrinsic-text.example');
+const mount = createExampleMount(mountModule.WasmFlexIntrinsicTextExample);
   const baseline = snapshotWasmLayoutDiagnostics();
   const canvas = document.createElement('canvas'); canvas.width = 760; canvas.height = 460;
   document.body.append(canvas);
@@ -620,7 +628,8 @@ it.runIf(experimentalLayout)('rasterizes an allocated Layer once after parent wi
 });
 
 it.runIf(experimentalLayout)('composes the exact allocated Layer example with current pixels, hits and cached siblings', async () => {
-  const { default: mount } = await import('../../scenarios/src/learning/layout/wasm-flex-layer.example');
+  const mountModule = await import('../../scenarios/src/learning/layout/wasm-flex-layer.example');
+const mount = createExampleMount(mountModule.WasmFlexLayerExample);
   const baseline = snapshotWasmLayoutDiagnostics();
   const canvas = document.createElement('canvas'); canvas.width = 760; canvas.height = 460;
   document.body.append(canvas);
@@ -655,7 +664,8 @@ for (const scenario of [
   { name: 'opaque panel', load: () => import('../../scenarios/src/learning/layout/wasm-flex-panel.example') },
 ]) {
 it.runIf(experimentalLayout)(`sizes the public renderer lifecycle and committed target inside an allocated ${scenario.name}`, async () => {
-  const { default: mount } = await scenario.load();
+  const mountModule = await scenario.load();
+const mount = createExampleMount("WasmFlexRenderLayerExample" in mountModule ? mountModule.WasmFlexRenderLayerExample : mountModule.WasmFlexPanelExample);
   const baseline = snapshotWasmLayoutDiagnostics();
   const canvas = document.createElement('canvas'); canvas.width = 760; canvas.height = 460;
   document.body.append(canvas);
@@ -716,7 +726,8 @@ it.runIf(experimentalLayout)('carries final allocation through an ordinary panel
 });
 
 it.runIf(experimentalLayout)('rehearses three pinned Yoga numeric cases through the public Pibbl example', async () => {
-  const { default: mount } = await import('../../scenarios/src/learning/layout/wasm-yoga-migration.example');
+  const mountModule = await import('../../scenarios/src/learning/layout/wasm-yoga-migration.example');
+const mount = createExampleMount(mountModule.WasmYogaMigrationExample);
   const baseline = snapshotWasmLayoutDiagnostics();
   const canvas = document.createElement('canvas'); canvas.width = 760; canvas.height = 460;
   document.body.append(canvas);
@@ -764,7 +775,8 @@ it.runIf(experimentalLayout)('forms finite row wrap lines in WASM and remeasures
 });
 
 it.runIf(experimentalLayout)('drives public row wrap geometry, targets and reuse with width/Text/paint signals', async () => {
-  const { default: mount } = await import('../../scenarios/src/learning/layout/wasm-flex-wrap.example');
+  const mountModule = await import('../../scenarios/src/learning/layout/wasm-flex-wrap.example');
+const mount = createExampleMount(mountModule.WasmFlexWrapExample);
   const baseline = snapshotWasmLayoutDiagnostics();
   const canvas = document.createElement('canvas'); canvas.width = 760; canvas.height = 460; document.body.append(canvas);
   const controller = mount(canvas); controllers.push(controller); await nextFrame();
@@ -812,7 +824,8 @@ it.runIf(experimentalLayout)('wraps finite declared column items and rejects int
 });
 
 it.runIf(experimentalLayout)('drives public column wrap height, hit targets and declared-width Text through signals', async () => {
-  const { default: mount } = await import('../../scenarios/src/learning/layout/wasm-flex-column-wrap.example');
+  const mountModule = await import('../../scenarios/src/learning/layout/wasm-flex-column-wrap.example');
+const mount = createExampleMount(mountModule.WasmFlexColumnWrapExample);
   const baseline = snapshotWasmLayoutDiagnostics();
   const canvas = document.createElement('canvas'); canvas.width = 760; canvas.height = 460; document.body.append(canvas);
   const controller = mount(canvas); controllers.push(controller); await nextFrame();
@@ -840,7 +853,8 @@ it.runIf(experimentalLayout)('drives public column wrap height, hit targets and 
 });
 
 it.runIf(experimentalLayout)('preserves keyed identities through wrapped row/column reorder removal and restore', async () => {
-  const { default: mount } = await import('../../scenarios/src/learning/layout/wasm-flex-keyed-wrap.example');
+  const mountModule = await import('../../scenarios/src/learning/layout/wasm-flex-keyed-wrap.example');
+const mount = createExampleMount(mountModule.WasmFlexKeyedWrapExample);
   const baseline = snapshotWasmLayoutDiagnostics();
   const canvas = document.createElement('canvas'); canvas.width = 760; canvas.height = 460; document.body.append(canvas);
   const controller = mount(canvas); controllers.push(controller); await nextFrame();
@@ -939,7 +953,8 @@ it.runIf(experimentalLayout)('measures nested intrinsic built-in columns at boun
 });
 
 it.runIf(experimentalLayout)('reflows a public nested descriptor Card and following target without speculative probe execution', async () => {
-  const { default: mount } = await import('../../scenarios/src/learning/layout/wasm-flex-nested-intrinsic.example');
+  const mountModule = await import('../../scenarios/src/learning/layout/wasm-flex-nested-intrinsic.example');
+const mount = createExampleMount(mountModule.WasmFlexNestedIntrinsicExample);
   const baseline = snapshotWasmLayoutDiagnostics();
   const canvas = document.createElement('canvas'); canvas.width = 760; canvas.height = 460; document.body.append(canvas);
   const controller = mount(canvas); controllers.push(controller); await nextFrame();
@@ -1004,7 +1019,8 @@ it.runIf(experimentalLayout)('refreshes nested cache subscriptions, metrics and 
 });
 
 it.runIf(experimentalLayout)('invalidates nested keyed membership while releasing removed measurement receivers', async () => {
-  const { default: mount } = await import('../../scenarios/src/learning/layout/wasm-flex-nested-intrinsic.example');
+  const mountModule = await import('../../scenarios/src/learning/layout/wasm-flex-nested-intrinsic.example');
+const mount = createExampleMount(mountModule.WasmFlexNestedIntrinsicExample);
   const baseline = snapshotWasmLayoutDiagnostics();
   const canvas = document.createElement('canvas'); canvas.width=760; canvas.height=460; document.body.append(canvas);
   const controller = mount(canvas); controllers.push(controller); await nextFrame();

@@ -1,5 +1,25 @@
 import { pibbl, Overlay } from "@pibbl/core";
-import { Axis, type AxisProps, type AxisStyle, type BandCategory, type BandDomain, type BarScaleProps, type BandScaleRange, type LinearDomain, type LinearScaleProps, type ResolvedBandScale, type ResolvedLinearScale, type ResolvedScale, type ScaleId, type ScaleLayoutStyle, BarScale, LinearScale, type ScaleRange, useLinearScale, useBarScale } from "@pibbl/core/viz";
+import {
+  Axis,
+  type AxisProps,
+  type AxisStyle,
+  type BandCategory,
+  type BandDomain,
+  type BarScaleProps,
+  type BandScaleRange,
+  type LinearDomain,
+  type LinearScaleProps,
+  type ResolvedBandScale,
+  type ResolvedLinearScale,
+  type ResolvedScale,
+  type ScaleId,
+  type ScaleLayoutStyle,
+  BarScale,
+  LinearScale,
+  type ScaleRange,
+  useLinearScale,
+  useBarScale,
+} from "@pibbl/core/viz";
 
 const xId: ScaleId = "month";
 const yId: ScaleId = "sales";

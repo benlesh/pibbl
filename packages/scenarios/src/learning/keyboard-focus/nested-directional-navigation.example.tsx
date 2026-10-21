@@ -1,12 +1,10 @@
 import {
-  pibbl,
-  useEventTarget,
-  useSignal,
   FocusManagement,
   KeyboardNavigation,
   Rectangle,
   Text,
-  type PibblController,
+  useEventTarget,
+  useSignal,
   type PibblKeyboardEvent,
 } from "@pibbl/core";
 function boxPath(x: number, y: number, width: number, height: number): Path2D {
@@ -313,11 +311,10 @@ function NestedDirectionalNavigationLesson() {
     >{`LAST INPUT: ${status.get().input}`}</Text>,
   ];
 }
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(
-    canvas,
+export function NestedDirectionalNavigationExample() {
+  return (
     <FocusManagement>
       <NestedDirectionalNavigationLesson />
-    </FocusManagement>,
+    </FocusManagement>
   );
 }

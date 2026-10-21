@@ -1,13 +1,11 @@
 /** @jsxImportSource @pibbl/core */
 import {
-  pibbl,
   Group,
   Rectangle,
   Text,
   FocusManagement,
   useSignal,
   useReaction,
-  type PibblController,
   type Texture,
   type TextureRecipe,
 } from "@pibbl/core";
@@ -119,7 +117,11 @@ function PatternCard({
           top: 154,
           width: 256,
           height: 112,
-          fill: texture.paint({ mode: "repeat", tileWidth: 128, tileHeight: 128 }),
+          fill: texture.paint({
+            mode: "repeat",
+            tileWidth: 128,
+            tileHeight: 128,
+          }),
         }}
       />
       <Rectangle
@@ -196,7 +198,7 @@ function InkCard({
     </>
   );
 }
-function TextureExplorer() {
+export function TextureExplorer() {
   const state = useSignal({
     palette: 0,
     tile: 80,
@@ -401,7 +403,4 @@ function TextureExplorer() {
       </Group>
     </FocusManagement>
   );
-}
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(canvas, <TextureExplorer />);
 }

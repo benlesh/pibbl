@@ -1,5 +1,19 @@
-import { pibbl, Path, PathGeometry, Circle, Line, Rectangle, Text, useConst, useSignal, useRef, type PibblController, type PibblPointerEvent, type PathQuadCorners, type PathQuadMode, transformPath, quadTransform } from '@pibbl/core';
-
+import {
+  Path,
+  Circle,
+  Line,
+  Rectangle,
+  Text,
+  PathGeometry,
+  useConst,
+  useSignal,
+  useRef,
+  type PibblPointerEvent,
+  type PathQuadCorners,
+  type PathQuadMode,
+  transformPath,
+  quadTransform,
+} from "@pibbl/core";
 
 const source = { x: 0, y: 0, width: 240, height: 300 };
 const initial: PathQuadCorners = {
@@ -52,11 +66,15 @@ function rocket() {
   return [grid, flame, hull, stripe, shine];
 }
 
-function WarpStudy() {
+export function WarpStudy() {
   const original = useConst(rocket);
   const transform = (corners: PathQuadCorners, mode: PathQuadMode) =>
     original.map((path) =>
-      transformPath(path, quadTransform({ source, destination: corners, mode }), { tolerance: 0.3, maxSegments: 20_000 }),
+      transformPath(
+        path,
+        quadTransform({ source, destination: corners, mode }),
+        { tolerance: 0.3, maxSegments: 20_000 },
+      ),
     );
   const state = useSignal(
     useConst(() => ({
@@ -356,8 +374,4 @@ function WarpStudy() {
       {label("RESET ↗", 779, 528, "10px monospace", "#e3e8fa")}
     </>
   );
-}
-
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(canvas, <WarpStudy />);
 }

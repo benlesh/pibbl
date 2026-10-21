@@ -4,14 +4,19 @@ import {
   Line,
   Rectangle,
   Text,
-  pibbl,
   useLayoutBox,
   useSignal,
-  type PibblController,
   type PibblPointerEvent,
   type WritableSignal,
 } from "@pibbl/core";
-import { Axis, BarSeries, useBarScale, useLinearScale, BarScale, LinearScale } from "@pibbl/core/viz";
+import {
+  Axis,
+  BarSeries,
+  BarScale,
+  LinearScale,
+  useBarScale,
+  useLinearScale,
+} from "@pibbl/core/viz";
 
 const periods = ["Q1", "Q2", "Q3", "Q4"];
 // Illustrative business cash flow, in thousands of dollars; not reported financial data.
@@ -139,7 +144,9 @@ function Plot({
         scale="cash"
         position="left"
         tickCount={cash.frame.height >= 250 ? 9 : 5}
-        tickFormat={(value) => typeof value === "number" ? money(value) : value}
+        tickFormat={(value) =>
+          typeof value === "number" ? money(value) : value
+        }
         style={{ stroke: "#a4b3b7", fill: "#637785", font: "11px sans-serif" }}
       />
       <BarSeries
@@ -204,7 +211,7 @@ function Plot({
     </Group>
   );
 }
-function Scene() {
+export function Scene() {
   const box = useLayoutBox();
   const reversed = useSignal(false);
   const costs = useSignal(true);
@@ -223,10 +230,14 @@ function Scene() {
         pointerEvents="none"
         style={{ width: box.width, height: box.height, fill: "#fffdf8" }}
       />
-      <Text style={{ left: 28, top: 25, font: "bold 26px sans-serif", fill: ink }}>
+      <Text
+        style={{ left: 28, top: 25, font: "bold 26px sans-serif", fill: ink }}
+      >
         Quarterly cash flow
       </Text>
-      <Text style={{ left: 28, top: 59, font: "12px sans-serif", fill: "#637785" }}>
+      <Text
+        style={{ left: 28, top: 59, font: "12px sans-serif", fill: "#637785" }}
+      >
         Illustrative business · amounts in $ thousands
       </Text>
       <Button
@@ -262,7 +273,9 @@ function Scene() {
           }}
         >
           <Rectangle style={{ width: 12, height: 12, fill: component.color }} />
-          <Text style={{ left: 19, top: 10, font: "12px sans-serif", fill: ink }}>
+          <Text
+            style={{ left: 19, top: 10, font: "12px sans-serif", fill: ink }}
+          >
             {component.name}
           </Text>
         </Group>
@@ -292,7 +305,4 @@ function Scene() {
       </Group>
     </Group>
   );
-}
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(canvas, <Scene />, { viewport: "responsive" });
 }

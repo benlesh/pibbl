@@ -1,4 +1,9 @@
-import { pibbl, Rectangle, type Canvas, type PibblController } from "@pibbl/core";
+import {
+  pibbl,
+  Rectangle,
+  type Canvas,
+  type PibblController,
+} from "@pibbl/core";
 
 const canvas: Canvas = document.createElement("canvas");
 canvas.width = 360;

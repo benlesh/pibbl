@@ -25,17 +25,17 @@ const ema: readonly MovingAveragePoint<(typeof prices)[number]>[] =
 const bands: readonly BollingerBandPoint<(typeof prices)[number]>[] =
   bollingerBands(prices, bandOptions);
 
-export default function mount(canvas: HTMLCanvasElement) {
+export function FinancialIndicatorsExample() {
   const last = prices.length - 1;
-  return pibbl(
-    canvas,
+
+  return (
     <FocusManagement>
       <Text
         style={{ left: 16, top: 18, font: "12px sans-serif", fill: "#18283d" }}
       >
         {`SMA ${sma[last]!.average} · EMA ${ema[last]!.average} · band mean ${bands[last]!.mean}`}
       </Text>
-    </FocusManagement>,
+    </FocusManagement>
   );
 }
 
@@ -43,5 +43,5 @@ const canvas = document.createElement("canvas");
 canvas.width = 320;
 canvas.height = 220;
 document.body.append(canvas);
-const app = mount(canvas);
+const app = pibbl(canvas, <FinancialIndicatorsExample />);
 window.addEventListener("pagehide", () => app.dispose(), { once: true });

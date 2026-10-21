@@ -14,10 +14,12 @@ const SOURCE_PREFIX = "../../";
 function sourceLoaders(
   modules: Readonly<Record<string, () => Promise<string>>>,
 ): ReadonlyMap<string, () => Promise<string>> {
-  return new Map(Object.entries(modules).map(([path, load]) => [
-    path.startsWith(SOURCE_PREFIX) ? path.slice(SOURCE_PREFIX.length) : path,
-    load,
-  ]));
+  return new Map(
+    Object.entries(modules).map(([path, load]) => [
+      path.startsWith(SOURCE_PREFIX) ? path.slice(SOURCE_PREFIX.length) : path,
+      load,
+    ]),
+  );
 }
 
 function sourcePaths(
@@ -47,17 +49,20 @@ export async function loadWorkbenchSource(
     );
   const source = await load();
   const exportName = entry.source.exportName;
-  const hasEntry = exportName
-    ? parse(source, { sourceType: "module", plugins: ["typescript", "jsx"] }).program.body.some(statement =>
+  const hasEntry = parse(source, {
+    sourceType: "module",
+    plugins: ["typescript", "jsx"],
+  }).program.body.some(
+    (statement) =>
       statement.type === "ExportNamedDeclaration" &&
       statement.declaration?.type === "FunctionDeclaration" &&
       statement.declaration.id?.name === exportName &&
-      !statement.declaration.async && !statement.declaration.generator,
-    )
-    : /^export default function mount\(\s*canvas:\s*HTMLCanvasElement(?:,\s*\w+:\s*\w+\s*=\s*\{\})?,?\s*\):\s*PibblController/mu.test(source);
+      !statement.declaration.async &&
+      !statement.declaration.generator,
+  );
   if (!hasEntry) {
     throw new Error(
-      `Workbench source "${entry.source.path}" must export ${exportName ? `the named component "${exportName}"` : "a legacy mount function"}.`,
+      `Workbench source "${entry.source.path}" must export the named component "${exportName}".`,
     );
   }
   return source;

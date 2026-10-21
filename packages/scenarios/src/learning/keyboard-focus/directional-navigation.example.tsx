@@ -1,12 +1,10 @@
 import {
-  pibbl,
-  useEventTarget,
-  useSignal,
   FocusManagement,
   KeyboardNavigation,
   Rectangle,
   Text,
-  type PibblController,
+  useEventTarget,
+  useSignal,
 } from "@pibbl/core";
 function boxPath(x: number, y: number, width: number, height: number): Path2D {
   const path = new Path2D();
@@ -218,11 +216,10 @@ function DirectionalNavigationLesson() {
     </Text>,
   ];
 }
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(
-    canvas,
+export function DirectionalNavigationExample() {
+  return (
     <FocusManagement>
       <DirectionalNavigationLesson />
-    </FocusManagement>,
+    </FocusManagement>
   );
 }

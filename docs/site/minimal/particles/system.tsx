@@ -46,7 +46,10 @@ burstButton.addEventListener("click", () => activeSystem?.emit("spark", burst));
 
 function App() {
   const options: PibblParticleSystemOptions = { seed: 7, autoplay: true };
-  const system: PibblParticleSystem<"spark"> = useParticleSystem(effect, options);
+  const system: PibblParticleSystem<"spark"> = useParticleSystem(
+    effect,
+    options,
+  );
   activeSystem = system;
   const status: PibblParticleSystemStatus = system.status.get();
   const execution: PibblParticleExecution = system.execution.get();

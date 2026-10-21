@@ -41,10 +41,7 @@ const RESTRICTED_MODULE_EXPORTS = new Map<string, ReadonlySet<string>>([
       "Vector2",
     ]),
   ],
-  [
-    "three/addons/controls/OrbitControls.js",
-    new Set(["OrbitControls"]),
-  ],
+  ["three/addons/controls/OrbitControls.js", new Set(["OrbitControls"])],
 ]);
 
 interface SourceEdit {
@@ -58,8 +55,7 @@ function invalidModuleShape(): Error {
     "Lessons may contain named imports only from @pibbl/core/machines, @pibbl/core/machines/animation, @pibbl/core/sprites and its format adapters, @pibbl/core, @pibbl/core/filters, @pibbl/core/viz, @pibbl/core/textures, " +
       "@pibbl/core/jsx-runtime, @pibbl/core/jsx-dev-runtime, @pibbl/core/particles, " +
       "@pibbl/core/physics/2d, @pibbl/core/physics/2d/geometry, @pibbl/three, three, and " +
-      "three/addons/controls/OrbitControls.js, with a catalog-selected named component export " +
-      "or one legacy default mount(canvas) export.",
+      "three/addons/controls/OrbitControls.js, with a catalog-selected named component export.",
   );
 }
 
@@ -111,7 +107,7 @@ function uniqueRuntimeBinding(identifiers: ReadonlySet<string>): string {
 
 export function toRunnableScript(
   emittedCode: string,
-  options: { exportName?: string } = {},
+  options: { exportName: string },
 ): string {
   let file;
   try {
@@ -130,9 +126,34 @@ export function toRunnableScript(
   const bindings = new Map<string, string[]>();
   const localBindings = new Set<string>();
   const edits: SourceEdit[] = [];
-  let mountExports = 0;
   let emptyExports = 0;
   let componentName: string | undefined;
+  const exports = new Map<string, string>();
+  const functions = new Map<
+    string,
+    {
+      async: boolean;
+      generator?: boolean | null;
+      params: readonly { type: string }[];
+    }
+  >();
+  for (const statement of file.program.body) {
+    const declaration =
+      statement.type === "ExportNamedDeclaration"
+        ? statement.declaration
+        : statement;
+    if (declaration?.type === "FunctionDeclaration" && declaration.id)
+      functions.set(declaration.id.name, declaration);
+    if (declaration?.type === "VariableDeclaration")
+      for (const binding of declaration.declarations) {
+        if (
+          binding.id.type === "Identifier" &&
+          (binding.init?.type === "ArrowFunctionExpression" ||
+            binding.init?.type === "FunctionExpression")
+        )
+          functions.set(binding.id.name, binding.init);
+      }
+  }
 
   for (const statement of file.program.body) {
     if (statement.type === "ImportDeclaration") {
@@ -187,106 +208,74 @@ export function toRunnableScript(
       continue;
     }
 
-    if (statement.type === "ExportNamedDeclaration" && statement.declaration) {
-      const declaration = statement.declaration;
-      if (
-        !options.exportName ||
-        statement.source ||
-        declaration.type !== "FunctionDeclaration" ||
-        !declaration.id ||
-        declaration.async ||
-        declaration.generator
-      ) {
-        throw invalidModuleShape();
-      }
-      if (declaration.id.name === options.exportName) {
-        componentName = declaration.id.name;
-      }
-      const exportToken = file.tokens?.find(
-        token => token.start === statement.start && token.type.label === "export",
-      );
-      if (!exportToken) throw invalidModuleShape();
-      edits.push({
-        start: requiredOffset(exportToken.start),
-        end: requiredOffset(exportToken.end),
-        replacement: "",
-      });
-      continue;
-    }
-
-    if (statement.type === "ExportDefaultDeclaration") {
-      const declaration = statement.declaration;
-      if (
-        options.exportName ||
-        ++mountExports !== 1 ||
-        declaration.type !== "FunctionDeclaration" ||
-        declaration.async ||
-        declaration.generator ||
-        !declaration.id
-      ) {
-        throw invalidModuleShape();
-      }
-      if (
-        declaration.id.name !== "mount" ||
-        declaration.params.length < 1 ||
-        declaration.params.slice(1).some(parameter => parameter.type !== "AssignmentPattern") ||
-        declaration.params[0]?.type !== "Identifier" ||
-        declaration.params[0].name !== "canvas"
-      ) {
-        throw invalidModuleShape();
-      }
-      const statementStart = requiredOffset(statement.start);
-      const declarationStart = requiredOffset(declaration.start);
-      const keywordTokens = file.tokens?.filter(
-        (token) =>
-          requiredOffset(token.start) >= statementStart &&
-          requiredOffset(token.end) <= declarationStart &&
-          (token.type.label === "export" || token.type.label === "default"),
-      );
-      if (keywordTokens?.length !== 2) throw invalidModuleShape();
-      for (const token of keywordTokens) {
-        edits.push({
-          start: requiredOffset(token.start),
-          end: requiredOffset(token.end),
-          replacement: "",
-        });
-      }
-      continue;
-    }
-
     if (statement.type.startsWith("Export")) {
-      if (
-        statement.type !== "ExportNamedDeclaration" ||
-        statement.declaration ||
-        statement.source ||
-        statement.specifiers.length !== 0 ||
-        ++emptyExports !== 1
-      ) {
+      if (statement.type !== "ExportNamedDeclaration" || statement.source)
         throw invalidModuleShape();
-      }
-      const statementStart = requiredOffset(statement.start);
-      const statementEnd = requiredOffset(statement.end);
-      const syntaxTokens = file.tokens?.filter(
-        (token) =>
-          requiredOffset(token.start) >= statementStart &&
-          requiredOffset(token.end) <= statementEnd &&
-          typeof token.type !== "string",
-      );
-      if (!syntaxTokens?.length) throw invalidModuleShape();
-      for (const token of syntaxTokens) {
+      if (statement.declaration) {
+        const declaration = statement.declaration;
+        if (declaration.type === "FunctionDeclaration" && declaration.id) {
+          exports.set(declaration.id.name, declaration.id.name);
+        } else if (declaration.type === "VariableDeclaration") {
+          for (const binding of declaration.declarations) {
+            if (binding.id.type !== "Identifier") throw invalidModuleShape();
+            exports.set(binding.id.name, binding.id.name);
+          }
+        } else throw invalidModuleShape();
+        const token = file.tokens?.find(
+          (token) =>
+            token.start === statement.start && token.type.label === "export",
+        );
+        if (!token) throw invalidModuleShape();
         edits.push({
           start: requiredOffset(token.start),
           end: requiredOffset(token.end),
           replacement: "",
         });
+      } else {
+        if (!statement.specifiers.length && ++emptyExports !== 1)
+          throw invalidModuleShape();
+        for (const specifier of statement.specifiers) {
+          if (
+            specifier.type !== "ExportSpecifier" ||
+            specifier.exported.type !== "Identifier"
+          )
+            throw invalidModuleShape();
+          exports.set(specifier.exported.name, specifier.local.name);
+        }
+        const start = requiredOffset(statement.start);
+        const end = requiredOffset(statement.end);
+        const tokens = file.tokens?.filter(
+          (token) =>
+            requiredOffset(token.start) >= start &&
+            requiredOffset(token.end) <= end &&
+            typeof token.type !== "string",
+        );
+        if (!tokens?.length) throw invalidModuleShape();
+        for (const token of tokens)
+          edits.push({
+            start: requiredOffset(token.start),
+            end: requiredOffset(token.end),
+            replacement: "",
+          });
       }
     }
   }
+  componentName = exports.get(options.exportName);
 
   if (options.exportName && !componentName) {
-    throw new Error(`Preview component export "${options.exportName}" was not found. Keep the catalog-selected export when editing the lesson.`);
+    throw new Error(
+      `Preview component export "${options.exportName}" was not found. Keep the catalog-selected export when editing the lesson.`,
+    );
   }
-  if (bindings.size === 0 || (!componentName && mountExports !== 1)) {
+  const component = functions.get(componentName!);
+  if (
+    bindings.size === 0 ||
+    !component ||
+    component.async ||
+    component.generator ||
+    component.params.length > 1 ||
+    component.params.some((parameter) => parameter.type !== "AssignmentPattern")
+  ) {
     throw invalidModuleShape();
   }
 
@@ -304,9 +293,7 @@ export function toRunnableScript(
 "use strict";
 ${runtimeBindings}
 ${runnable}
-return ${componentName
-    ? `(canvas) => ${runtimeBinding}.pibbl(canvas, ${runtimeBinding}.createElement(${componentName}, null))`
-    : "mount"};
+return (canvas, config) => ${runtimeBinding}.pibbl(canvas, ${runtimeBinding}.createElement(${componentName}, null), config);
 })(globalThis["PIBBL_CORE"]);`;
 
   try {

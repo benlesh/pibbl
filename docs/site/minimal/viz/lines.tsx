@@ -1,5 +1,16 @@
 import { pibbl } from "@pibbl/core";
-import { Axis, LineSeries, ScaleAdjust, type LineAccessor, type LineCoordinate, type LineCurve, type LineSeriesProps, type LineSeriesStyle, type ScaleAdjustProps, LinearScale } from "@pibbl/core/viz";
+import {
+  Axis,
+  LineSeries,
+  ScaleAdjust,
+  type LineAccessor,
+  type LineCoordinate,
+  type LineCurve,
+  type LineSeriesProps,
+  type LineSeriesStyle,
+  type ScaleAdjustProps,
+  LinearScale,
+} from "@pibbl/core/viz";
 
 type Reading = { day: number; value: number | null };
 const data: readonly Reading[] = [
@@ -39,7 +50,7 @@ const app = pibbl(
     range="width"
     style={{ width: 320, height: 220 }}
   >
-    <LinearScale id="value"  domain={[0, 40]} range="height" reverse>
+    <LinearScale id="value" domain={[0, 40]} range="height" reverse>
       <LineSeries {...line} />
       <ScaleAdjust {...marker} />
     </LinearScale>

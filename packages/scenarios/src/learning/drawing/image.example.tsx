@@ -1,11 +1,4 @@
-import {
-  pibbl,
-  useSignal,
-  Image,
-  Rectangle,
-  Text,
-  type PibblController,
-} from "@pibbl/core";
+import { Image, Rectangle, Text, useSignal } from "@pibbl/core";
 const postcard = `data:image/svg+xml,${encodeURIComponent(`
   <svg xmlns="http://www.w3.org/2000/svg" width="440" height="240">
     <rect width="440" height="240" fill="#1f4bd8"/>
@@ -14,7 +7,7 @@ const postcard = `data:image/svg+xml,${encodeURIComponent(`
     <path d="M0 224 L116 132 L202 202 L260 164 L338 222 V240 H0Z" fill="#ff6b57"/>
   </svg>
 `)}`;
-function ImageStudy() {
+export function ImageStudy() {
   const clicks = useSignal(0);
   return [
     <Rectangle
@@ -59,10 +52,9 @@ function ImageStudy() {
         textAlign: "center",
       }}
     >
-      {clicks.get() ? `POSTCARD PICKS / ${clicks.get()}` : "IMAGE / CLICK THE POSTCARD"}
+      {clicks.get()
+        ? `POSTCARD PICKS / ${clicks.get()}`
+        : "IMAGE / CLICK THE POSTCARD"}
     </Text>,
   ];
-}
-export default function mount(canvas: HTMLCanvasElement): PibblController {
-  return pibbl(canvas, <ImageStudy />);
 }

@@ -1,6 +1,12 @@
 import { afterEach, expect, it } from "vitest";
-import mount from "../../../../scenarios/src/learning/composition/viz-population-stack.example.js";
+import { VizPopulationStackExample as mountComponent } from "../../../../scenarios/src/learning/composition/viz-population-stack.example.js";
 import { testRuntime } from "./support/runtime.js";
+import { createExampleMount } from "../../../../scenarios/src/example-host";
+
+const mount = createExampleMount(mountComponent, {
+  config: { viewport: "responsive" },
+});
+
 let runtime: ReturnType<typeof testRuntime>;
 afterEach(() => runtime?.dispose());
 type Options = NonNullable<Parameters<typeof mount>[1]>;

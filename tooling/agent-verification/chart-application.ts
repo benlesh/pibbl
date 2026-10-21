@@ -1,5 +1,10 @@
 import { signal, type WritableSignal } from '@pibbl/core';
-import mountChart from '../../packages/scenarios/src/learning/composition/viz-hover-comparison.example';
+import { VizHoverComparisonExample as mountChartComponent } from "../../packages/scenarios/src/learning/composition/viz-hover-comparison.example";
+import { createExampleMount } from "../../packages/scenarios/src/example-host";
+
+const mountChart = createExampleMount(mountChartComponent, { config: {
+      viewport: "responsive" } });
+
 
 type Row = { id: string; x: number; y: number };
 

@@ -1,5 +1,12 @@
 import { expect, it, vi } from "vitest";
-import mount from "../../../../scenarios/src/learning/composition/viz-points-and-inspection.example.js";
+import { VizPointsAndInspectionExample as mountComponent } from "../../../../scenarios/src/learning/composition/viz-points-and-inspection.example.js";
+import { createExampleMount } from "../../../../scenarios/src/example-host";
+
+const mount = createExampleMount(mountComponent, {
+  config: {
+    viewport: "responsive",
+  },
+});
 
 it("plots the static Palmer Penguins measurements without inventing missing values", async () => {
   const canvas = document.createElement("canvas");
