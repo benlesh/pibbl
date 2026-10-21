@@ -160,11 +160,13 @@ export function IntervalDiamondSeries<D>(
     const lo = values.map(row.lower),
       hi = values.map(row.upper),
       point = values.map(row.estimate);
-    if (
-      ![center - halfHeight, center + halfHeight, lo, hi, point].every(
-        Number.isFinite,
-      )
-    )
+    if (!(
+      Number.isFinite(center - halfHeight) &&
+      Number.isFinite(center + halfHeight) &&
+      Number.isFinite(lo) &&
+      Number.isFinite(hi) &&
+      Number.isFinite(point)
+    ))
       throw new RangeError(
         `${receiver}: mapped coordinates must be finite (row ${i}).`,
       );

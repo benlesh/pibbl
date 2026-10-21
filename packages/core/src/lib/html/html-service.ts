@@ -127,7 +127,12 @@ export class HtmlService implements HtmlBridge {
     const rootMatrix = new DOMMatrix().scale(1 / surface.backingPixelsPerCssPixelX, 1 / surface.backingPixelsPerCssPixelY).multiply(surface.renderTransform);
     const projections: Projection[] = [];
     const visited = new Set<PibblInstance>();
-    const walk = (instance: PibblInstance, world: DOMMatrix, clips: Clip[], opacity: number) => {
+    const walk = (
+      instance: PibblInstance,
+      world: DOMMatrix,
+      clips: Clip[],
+      opacity: number,
+    ) => {
       visited.add(instance);
       for (const entry of this.pending!.get(instance) ?? []) {
         const inherited = clips.concat(entry.clips.map(clip => {
@@ -139,7 +144,15 @@ export class HtmlService implements HtmlBridge {
           walk(entry.child, childWorld, inherited.concat({ data: rectangleSvg(entry.bounds), matrix: childWorld, rule: 'nonzero' }), opacity * entry.opacity);
         } else if (!entry.slot.disposed) {
           const hostWorld = world.multiply(entry.matrix);
-          if (![hostWorld.a,hostWorld.b,hostWorld.c,hostWorld.d,hostWorld.e,hostWorld.f].every(Number.isFinite)) throw new Error('HtmlBox transform must be finite.');
+          if (!(
+            Number.isFinite(hostWorld.a) &&
+            Number.isFinite(hostWorld.b) &&
+            Number.isFinite(hostWorld.c) &&
+            Number.isFinite(hostWorld.d) &&
+            Number.isFinite(hostWorld.e) &&
+            Number.isFinite(hostWorld.f)
+          ))
+            throw new Error('HtmlBox transform must be finite.');
           projections.push({ registration: entry, world: hostWorld, clips: inherited, opacity: opacity * entry.opacity });
         }
       }

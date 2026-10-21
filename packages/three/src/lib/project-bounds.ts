@@ -33,9 +33,12 @@ export function projectObjectBounds(
   let right = Number.NEGATIVE_INFINITY;
   let bottom = Number.NEGATIVE_INFINITY;
 
-  for (const x of [bounds.min.x, bounds.max.x]) {
-    for (const y of [bounds.min.y, bounds.max.y]) {
-      for (const z of [bounds.min.z, bounds.max.z]) {
+  for (let xi = 0; xi < 2; xi++) {
+    const x = xi === 0 ? bounds.min.x : bounds.max.x;
+    for (let yi = 0; yi < 2; yi++) {
+      const y = yi === 0 ? bounds.min.y : bounds.max.y;
+      for (let zi = 0; zi < 2; zi++) {
+        const z = zi === 0 ? bounds.min.z : bounds.max.z;
         point.set(x, y, z).project(camera);
         if (!Number.isFinite(point.x) || !Number.isFinite(point.y)) {
           return undefined;

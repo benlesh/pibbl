@@ -282,16 +282,12 @@ function validateSession(state: ManipulationState): Session | undefined {
     return;
   }
   if (
-    ["a", "b", "c", "d", "e", "f"].some(
-      (key) =>
-        Math.abs(state.parent[key as "a"] - session.parent[key as "a"]) >
-        1e-10 *
-          Math.max(
-            1,
-            Math.abs(state.parent[key as "a"]),
-            Math.abs(session.parent[key as "a"]),
-          ),
-    )
+    transformValueChanged(state.parent.a, session.parent.a) ||
+    transformValueChanged(state.parent.b, session.parent.b) ||
+    transformValueChanged(state.parent.c, session.parent.c) ||
+    transformValueChanged(state.parent.d, session.parent.d) ||
+    transformValueChanged(state.parent.e, session.parent.e) ||
+    transformValueChanged(state.parent.f, session.parent.f)
   ) {
     cancel(state, "coordinate-space-changed");
     return;
@@ -607,4 +603,8 @@ export function manipulationHandlers(
       else updateModifiers(state, key);
     },
   };
+}
+
+function transformValueChanged(current: number, previous: number): boolean {
+  return Math.abs(current - previous) > 1e-10 * Math.max(1, Math.abs(current), Math.abs(previous));
 }

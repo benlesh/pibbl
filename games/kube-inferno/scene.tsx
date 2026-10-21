@@ -294,7 +294,7 @@ export const Effects = definePrimitive<{
   c.fillStyle = n.dead ? "#ff6278" : n.load > 1 ? orange : cyan;
   c.fillRect(x - 40, y + 55, 80 * Math.min(n.load, 1), 4);
   // Connection ports are distinct from the building selection target.
-  for (const side of [-1, 1]) {
+  for (let side = -1; side <= 1; side += 2) {
     c.beginPath();
     c.arc(x + side * 75, n.y - 8, 5, 0, 7);
     c.fillStyle = "#071624";

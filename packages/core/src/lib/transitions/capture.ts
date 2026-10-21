@@ -5,6 +5,7 @@ import { PIBBL_FILTER_EXECUTOR, type PibblFilter, type PibblFilterExecutor } fro
 import type { PibblInstance } from '../types.js';
 import type { FilterWindows } from '../filter/filter-region.js';
 
+
 const SCRATCH = Symbol('pibbl.transition.capture');
 class TransitionSurfaces {
   private surfaces: OffscreenCanvas[] = [];
@@ -63,7 +64,10 @@ export function captureTransition(draw: (frame: CaptureFrame) => void): PibblFil
 export interface TransitionRegion { readonly x: number; readonly y: number; readonly width: number; readonly height: number }
 export function regionSnapshot(value: TransitionRegion): Readonly<TransitionRegion> {
   const region = Object.freeze({ ...value });
-  for (const key of ['x', 'y', 'width', 'height'] as const) finite(region[key], `region.${key}`);
+  finite(region.x, 'region.x');
+  finite(region.y, 'region.y');
+  finite(region.width, 'region.width');
+  finite(region.height, 'region.height');
   if (region.width <= 0 || region.height <= 0) throw new RangeError('Transition region must have positive width and height.');
   return region;
 }

@@ -184,7 +184,7 @@ function intervalSeries<D>(
     const lo = values.map(coordinates.lower),
       hi = values.map(coordinates.upper),
       point = values.map(coordinates.estimate);
-    if (![center, lo, hi, point].every(Number.isFinite))
+    if (!(Number.isFinite(center) && Number.isFinite(lo) && Number.isFinite(hi) && Number.isFinite(point)))
       throw new RangeError(
         `${receiver}: mapped coordinates must be finite (row ${i}).`,
       );

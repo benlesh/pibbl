@@ -187,15 +187,9 @@ export function validatePairedCurveGeometry(
   let lowerStart = lower.start;
   let orientation = 0;
   for (let i = 0; i < upper.segments.length && orientation === 0; i++) {
-    for (const value of [
-      upperStart[1] - lowerStart[1],
-      upper.segments[i].end[1] - lower.segments[i].end[1],
-    ]) {
-      if (value !== 0) {
-        orientation = Math.sign(value);
-        break;
-      }
-    }
+    const startDifference = upperStart[1] - lowerStart[1];
+    const endDifference = upper.segments[i].end[1] - lower.segments[i].end[1];
+    orientation = Math.sign(startDifference !== 0 ? startDifference : endDifference);
     upperStart = upper.segments[i].end;
     lowerStart = lower.segments[i].end;
   }

@@ -33,9 +33,11 @@ export function validateFontContainer(
   // appearance even where an ordinary outline also exists.
   if (
     !monochromeFallback &&
-    [0x434f4c52, 0x53564720, 0x73626978, 0x43424454, 0x45424454].some((tag) =>
-      tables.has(tag),
-    )
+    (tables.has(0x434f4c52) ||
+      tables.has(0x53564720) ||
+      tables.has(0x73626978) ||
+      tables.has(0x43424454) ||
+      tables.has(0x45424454))
   ) {
     throw new Error(
       "Color/bitmap/SVG fonts require explicit monochromeFallback and usable outlines.",

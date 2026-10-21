@@ -189,11 +189,18 @@ export class ElectricMemory {
     );
     this.tokens.clear();
     this.ids = [undefined];
-    for (const id of [...this.ordered.map((s) => s.id), ...old])
+    for (const site of this.ordered) {
+      if (!this.tokens.has(site.id)) {
+        this.tokens.set(site.id, this.ids.length);
+        this.ids.push(site.id);
+      }
+    }
+    for (const id of old) {
       if (id !== undefined && !this.tokens.has(id)) {
         this.tokens.set(id, this.ids.length);
         this.ids.push(id);
       }
+    }
     for (let i = 0; i < 32; i++)
       this.data[T + i * 14] =
         old[i] === undefined ? 0 : this.tokens.get(old[i]!)!;

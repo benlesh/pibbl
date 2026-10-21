@@ -22,7 +22,17 @@ export function ReferenceBand(props: ReferenceBandProps) {
   const scale = source.get();
   if (scale.type === "point" || scale.type === "band") throw new TypeError("ReferenceBand requires a continuous scale.");
   const values = resolveSignalValue(props.values), span = resolveSignalValue(props.span);
-  for (const pair of [values, span]) if (!Array.isArray(pair) || pair.length !== 2 || !pair.every(value => typeof value === "number" && Number.isFinite(value))) throw new RangeError("ReferenceBand values and span require two finite endpoints.");
+  if (
+    !Array.isArray(values) ||
+    values.length !== 2 ||
+    !values.every(
+      value => typeof value === "number" && Number.isFinite(value),
+    ) ||
+    !Array.isArray(span) ||
+    span.length !== 2 ||
+    !span.every(value => typeof value === "number" && Number.isFinite(value))
+  )
+    throw new RangeError("ReferenceBand values and span require two finite endpoints.");
   const lo = Math.min(...scale.domain), hi = Math.max(...scale.domain);
   if (values.some(value => value < lo || value > hi)) throw new RangeError("ReferenceBand values must be within the scale domain.");
   const a = scale.map(values[0]), b = scale.map(values[1]);

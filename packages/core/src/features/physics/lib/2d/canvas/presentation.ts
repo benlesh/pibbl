@@ -157,8 +157,11 @@ function validateFiniteInvertible(
   matrix: DOMMatrixReadOnly,
   label: string,
 ): void {
-  const values = [matrix.a, matrix.b, matrix.c, matrix.d, matrix.e, matrix.f];
-  if (values.some((value) => !Number.isFinite(value))) {
+  if (
+    !Number.isFinite(matrix.a) || !Number.isFinite(matrix.b) ||
+    !Number.isFinite(matrix.c) || !Number.isFinite(matrix.d) ||
+    !Number.isFinite(matrix.e) || !Number.isFinite(matrix.f)
+  ) {
     throw new TypeError(`${label} must contain only finite values.`);
   }
   if (Math.abs(matrix.a * matrix.d - matrix.b * matrix.c) <= 1e-10) {

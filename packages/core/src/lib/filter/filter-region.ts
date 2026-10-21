@@ -136,7 +136,7 @@ function projectBounds(
 ): LayoutBox | undefined {
   const right = bounds.x + bounds.width;
   const bottom = bounds.y + bounds.height;
-  if (![bounds.x, bounds.y, right, bottom].every(Number.isFinite)) {
+  if (!(Number.isFinite(bounds.x) && Number.isFinite(bounds.y) && Number.isFinite(right) && Number.isFinite(bottom))) {
     return undefined;
   }
 
@@ -252,7 +252,12 @@ function snapToBackingPixels(
   const scaledTop = bounds.y * density;
   const scaledRight = (bounds.x + bounds.width) * density;
   const scaledBottom = (bounds.y + bounds.height) * density;
-  if (![scaledLeft, scaledTop, scaledRight, scaledBottom].every(Number.isFinite)) {
+  if (!(
+    Number.isFinite(scaledLeft) &&
+    Number.isFinite(scaledTop) &&
+    Number.isFinite(scaledRight) &&
+    Number.isFinite(scaledBottom)
+  )) {
     throw filterRegionError(
       { scaledLeft, scaledTop, scaledRight, scaledBottom },
       'filter backing edge arithmetic overflowed',
@@ -374,14 +379,15 @@ function assertCanvasPixelBounds(bounds: Readonly<PixelBounds>): void {
 }
 
 function isFiniteAffine(matrix: DOMMatrixReadOnly): boolean {
-  return matrix.is2D && [
-    matrix.a,
-    matrix.b,
-    matrix.c,
-    matrix.d,
-    matrix.e,
-    matrix.f,
-  ].every(Number.isFinite);
+  return (
+    matrix.is2D &&
+    Number.isFinite(matrix.a) &&
+    Number.isFinite(matrix.b) &&
+    Number.isFinite(matrix.c) &&
+    Number.isFinite(matrix.d) &&
+    Number.isFinite(matrix.e) &&
+    Number.isFinite(matrix.f)
+  );
 }
 
 function filterRegionError(value: unknown, reason: string): Error {

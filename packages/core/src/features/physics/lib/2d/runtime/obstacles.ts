@@ -65,9 +65,7 @@ export class CommittedObstacles2D {
             canonicalLeafIndex,
           });
         if (radius > 0)
-          for (const y of [-1, 1])
-            for (const x of [-1, 1])
-              parts.push({
+          for (let y = -1; y <= 1; y += 2) for (let x = -1; x <= 1; x += 2) parts.push({
                 kind: "circle",
                 center: new Float64Array([
                   center[0]! + x * (hw - radius),

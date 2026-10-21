@@ -693,34 +693,29 @@ function affineMatrix(matrix: DOMMatrix2DInit): Affine {
   const value = matrix as DOMMatrixInit;
   if (
     value.is2D === false ||
-    ['m13', 'm14', 'm23', 'm24', 'm31', 'm32', 'm34', 'm43'].some(
-      (k) =>
-        value[k as keyof DOMMatrixInit] !== undefined &&
-        value[k as keyof DOMMatrixInit] !== 0,
-    ) ||
-    [value.m33, value.m44].some((n) => n !== undefined && n !== 1)
+    nonzeroMatrixValue(value.m13) || nonzeroMatrixValue(value.m14) ||
+    nonzeroMatrixValue(value.m23) || nonzeroMatrixValue(value.m24) ||
+    nonzeroMatrixValue(value.m31) || nonzeroMatrixValue(value.m32) ||
+    nonzeroMatrixValue(value.m34) || nonzeroMatrixValue(value.m43) ||
+    (value.m33 !== undefined && value.m33 !== 1) ||
+    (value.m44 !== undefined && value.m44 !== 1)
   )
     throw new RangeError('Expected a finite 2D affine matrix.');
-  const pairs = [
-    ['a', 'm11', 1],
-    ['b', 'm12', 0],
-    ['c', 'm21', 0],
-    ['d', 'm22', 1],
-    ['e', 'm41', 0],
-    ['f', 'm42', 0],
-  ] as const;
-  const result = {} as Record<string, number>;
-  for (const [key, alias, fallback] of pairs) {
-    const a = value[key],
-      b = value[alias];
-    if (a !== undefined && b !== undefined && a !== b)
-      throw new TypeError('Conflicting affine matrix aliases.');
-    result[key] = coordinate(
-      a === undefined ? (b === undefined ? fallback : b) : a,
-    );
-  }
-  return result as unknown as Affine;
+  return {
+    a: affineValue(value.a, value.m11, 1),
+    b: affineValue(value.b, value.m12, 0),
+    c: affineValue(value.c, value.m21, 0),
+    d: affineValue(value.d, value.m22, 1),
+    e: affineValue(value.e, value.m41, 0),
+    f: affineValue(value.f, value.m42, 0),
+  };
 }
+function affineValue(value: number | undefined, alias: number | undefined, fallback: number): number {
+  if (value !== undefined && alias !== undefined && value !== alias)
+    throw new TypeError('Conflicting affine matrix aliases.');
+  return coordinate(value === undefined ? (alias === undefined ? fallback : alias) : value);
+}
+
 function applyAffine(path: PathGeometry, m: Affine): PathGeometry {
   const p = (x: number, y: number, vector = false) => ({
     x: coordinate(m.a * x + m.c * y + (vector ? 0 : m.e)),
@@ -773,4 +768,8 @@ function applyAffine(path: PathGeometry, m: Affine): PathGeometry {
   const result = new PathGeometry();
   result.spliceSegments(0, 0, segments);
   return result;
+}
+
+function nonzeroMatrixValue(value: number | undefined): boolean {
+  return value !== undefined && value !== 0;
 }

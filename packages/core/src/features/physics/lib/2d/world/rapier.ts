@@ -209,15 +209,12 @@ export class RapierSimulation2D {
       const body = this.world.getRigidBody(binding.handle);
       const position = body.translation();
       const velocity = body.linvel();
-      for (const value of [
-        position.x,
-        position.y,
-        velocity.x,
-        velocity.y,
-        body.rotation(),
-        body.angvel(),
-      ])
-        validateEngineNumber(value);
+      validateEngineNumber(position.x);
+      validateEngineNumber(position.y);
+      validateEngineNumber(velocity.x);
+      validateEngineNumber(velocity.y);
+      validateEngineNumber(body.rotation());
+      validateEngineNumber(body.angvel());
       const target = kinematicTargets.get(index);
       bodies.positionX[index] =
         target?.x ?? logicalValue(position.x, bodies.positionX[index]!);
@@ -431,21 +428,18 @@ export class RapierSimulation2D {
       const generation = bodies.generations[index]!;
       if (!bodies.has(index, generation)) continue;
       const flags = bodies.flags[index]!;
-      for (const value of [
-        bodies.positionX[index]! / SCALE,
-        bodies.positionY[index]! / SCALE,
-        bodies.linearVelocityX[index]! / SCALE,
-        bodies.linearVelocityY[index]! / SCALE,
-        bodies.rotationRadians[index]!,
-        bodies.angularVelocity[index]!,
-        bodies.forceX[index]! / SCALE,
-        bodies.forceY[index]! / SCALE,
-        bodies.torque[index]! / (SCALE * SCALE),
-        bodies.gravityScale[index]!,
-        bodies.linearDamping[index]!,
-        bodies.angularDamping[index]!,
-      ])
-        validateEngineNumber(value);
+      validateEngineNumber(bodies.positionX[index]! / SCALE);
+      validateEngineNumber(bodies.positionY[index]! / SCALE);
+      validateEngineNumber(bodies.linearVelocityX[index]! / SCALE);
+      validateEngineNumber(bodies.linearVelocityY[index]! / SCALE);
+      validateEngineNumber(bodies.rotationRadians[index]!);
+      validateEngineNumber(bodies.angularVelocity[index]!);
+      validateEngineNumber(bodies.forceX[index]! / SCALE);
+      validateEngineNumber(bodies.forceY[index]! / SCALE);
+      validateEngineNumber(bodies.torque[index]! / (SCALE * SCALE));
+      validateEngineNumber(bodies.gravityScale[index]!);
+      validateEngineNumber(bodies.linearDamping[index]!);
+      validateEngineNumber(bodies.angularDamping[index]!);
       if (bodies.inverseMass[index]! > 0)
         validateEngineNumber(1 / bodies.inverseMass[index]!);
       if (bodies.inverseInertia[index]! > 0)
@@ -711,8 +705,10 @@ function leafDescriptor(
     else if (typeof value === "number")
       validateEngineNumber(key === "rotationRadians" ? value : value / SCALE);
   }
-  for (const value of [shape.localPose.x, shape.localPose.y, centerX, centerY])
-    validateEngineNumber(value / SCALE);
+  validateEngineNumber(shape.localPose.x / SCALE);
+  validateEngineNumber(shape.localPose.y / SCALE);
+  validateEngineNumber(centerX / SCALE);
+  validateEngineNumber(centerY / SCALE);
   let desc: RAPIER.ColliderDesc;
   let x = 0,
     y = 0,

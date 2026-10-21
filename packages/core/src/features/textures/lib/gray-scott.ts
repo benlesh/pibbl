@@ -35,11 +35,14 @@ export function grayScottConfig(options: ReactionDiffusionOptions) {
     throw new TypeError("Unknown reaction-diffusion preset.");
   const feed = options.feed ?? grayScottPresets[preset].feed;
   const kill = options.kill ?? grayScottPresets[preset].kill;
-  if (
-    ![feed, kill].every(
-      (value) => Number.isFinite(value) && value >= 0 && value <= 0.1,
-    )
-  )
+  if (!(
+    Number.isFinite(feed) &&
+    feed >= 0 &&
+    feed <= 0.1 &&
+    Number.isFinite(kill) &&
+    kill >= 0 &&
+    kill <= 0.1
+  ))
     throw new RangeError(
       "Gray–Scott feed and kill must be finite values in [0, 0.1].",
     );

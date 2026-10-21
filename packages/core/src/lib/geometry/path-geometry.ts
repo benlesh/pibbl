@@ -256,7 +256,7 @@ export class PathGeometry implements Iterable<PathSegment> {
    * @param counterclockwise - Whether the arc runs counterclockwise; defaults to false.
    */
   ellipse(x: number, y: number, radiusX: number, radiusY: number, rotation: number, startAngle: number, endAngle: number, counterclockwise = false): void {
-    if (![x, y, radiusX, radiusY, rotation, startAngle, endAngle].every(Number.isFinite)) return;
+    if (!(Number.isFinite(x) && Number.isFinite(y) && Number.isFinite(radiusX) && Number.isFinite(radiusY) && Number.isFinite(rotation) && Number.isFinite(startAngle) && Number.isFinite(endAngle))) return;
     if (radiusX < 0 || radiusY < 0) throw new DOMException('Arc radii must not be negative.', 'IndexSizeError');
     const cos = Math.cos(rotation), sin = Math.sin(rotation);
     const arc: ArcSegment = {
@@ -270,7 +270,7 @@ export class PathGeometry implements Iterable<PathSegment> {
   #appendArc(arc: ArcSegment): void {
     const [x, y] = arcPoint(arc, arc.startAngle);
     const end = arcPoint(arc, arc.startAngle + arc.sweep);
-    if (![x, y, ...end].every(Number.isFinite)) throw new RangeError('Arc coordinates overflowed.');
+    if (!(Number.isFinite(x) && Number.isFinite(y) && Number.isFinite(end[0]) && Number.isFinite(end[1]))) throw new RangeError('Arc coordinates overflowed.');
     const value = state(this);
     ensureRevision(value);
     if (!value.count) append(value, 0, [x, y]);
@@ -289,7 +289,7 @@ export class PathGeometry implements Iterable<PathSegment> {
    * @param radius - Arc radius in path units.
    */
   arcTo(x1: number, y1: number, x2: number, y2: number, radius: number): void {
-    if (![x1, y1, x2, y2, radius].every(Number.isFinite)) return;
+    if (!(Number.isFinite(x1) && Number.isFinite(y1) && Number.isFinite(x2) && Number.isFinite(y2) && Number.isFinite(radius))) return;
     if (radius < 0) throw new DOMException('Arc radius must not be negative.', 'IndexSizeError');
     const value = state(this);
     if (!value.count) { this.moveTo(x1, y1); return; }
@@ -307,7 +307,7 @@ export class PathGeometry implements Iterable<PathSegment> {
     const endX = x1 + vx * distance, endY = y1 + vy * distance;
     const start = Math.atan2(startY - cy, startX - cx);
     const end = Math.atan2(endY - cy, endX - cx);
-    if (![cx, cy, endX, endY].every(Number.isFinite)) throw new RangeError('Arc coordinates overflowed.');
+    if (!(Number.isFinite(cx) && Number.isFinite(cy) && Number.isFinite(endX) && Number.isFinite(endY))) throw new RangeError('Arc coordinates overflowed.');
     this.#appendArc({ type: 'arc', cx, cy, ux: radius, uy: 0, vx: 0, vy: radius,
       startAngle: start, sweep: arcSweep(start, end, cross > 0) });
   }
@@ -320,8 +320,8 @@ export class PathGeometry implements Iterable<PathSegment> {
    * @param height - Signed vertical extent in path units.
    */
   rect(x: number, y: number, width: number, height: number): void {
-    if (![x, y, width, height].every(Number.isFinite)) return;
-    if (![x + width, y + height].every(Number.isFinite)) throw new RangeError('Rectangle coordinates overflowed.');
+    if (!(Number.isFinite(x) && Number.isFinite(y) && Number.isFinite(width) && Number.isFinite(height))) return;
+    if (!(Number.isFinite(x + width) && Number.isFinite(y + height))) throw new RangeError('Rectangle coordinates overflowed.');
     const value = state(this);
     ensureRevision(value);
     append(value, 0, [x, y]);
@@ -344,14 +344,14 @@ export class PathGeometry implements Iterable<PathSegment> {
    */
   roundRect(x: number, y: number, width: number, height: number,
     radii: number | DOMPointInit | (number | DOMPointInit)[] = 0): void {
-    if (![x, y, width, height].every(Number.isFinite)) return;
+    if (!(Number.isFinite(x) && Number.isFinite(y) && Number.isFinite(width) && Number.isFinite(height))) return;
     const list = Array.isArray(radii) ? radii : [radii];
     if (!list.length || list.length > 4) throw new RangeError('Expected one to four corner radii.');
     const values: [number, number][] = [];
     for (const radius of list) {
       const rx = typeof radius === 'number' ? radius : radius.x ?? 0;
       const ry = typeof radius === 'number' ? radius : radius.y ?? 0;
-      if (![rx, ry].every(Number.isFinite)) return;
+      if (!(Number.isFinite(rx) && Number.isFinite(ry))) return;
       if (rx < 0 || ry < 0) throw new RangeError('Corner radii must not be negative.');
       values.push([rx, ry]);
     }
@@ -389,7 +389,7 @@ export class PathGeometry implements Iterable<PathSegment> {
     if (!state(other).count) return;
     const normalized = DOMMatrix.fromMatrix(matrix);
     if (!normalized.is2D) throw new TypeError('PathGeometry requires a 2D affine matrix.');
-    if (![normalized.a, normalized.b, normalized.c, normalized.d, normalized.e, normalized.f].every(Number.isFinite)) return;
+    if (!(Number.isFinite(normalized.a) && Number.isFinite(normalized.b) && Number.isFinite(normalized.c) && Number.isFinite(normalized.d) && Number.isFinite(normalized.e) && Number.isFinite(normalized.f))) return;
     const copy = other.clone();
     copy.transform(normalized);
     const value = state(copy);
@@ -514,14 +514,15 @@ export class PathGeometry implements Iterable<PathSegment> {
     const normalized = DOMMatrix.fromMatrix(input);
     if (!normalized.is2D) throw new TypeError('PathGeometry requires a 2D affine matrix.');
     const { a, b, c, d, e, f } = normalized;
-    if (![a, b, c, d, e, f].every(Number.isFinite)) {
+    if (!(Number.isFinite(a) && Number.isFinite(b) && Number.isFinite(c) && Number.isFinite(d) && Number.isFinite(e) && Number.isFinite(f))) {
       throw new RangeError('Path transform must be finite.');
     }
     const value = state(this);
     if (!value.count) return;
     ensureRevision(value);
     // Two passes keep overflow errors atomic without allocating another buffer.
-    for (const write of [false, true]) {
+    for (let pass = 0; pass < 2; pass++) {
+      const write = pass === 1;
       visitPathGeometry(this, (type, data, offset) => {
         const length = type === 5 ? 6 : widths[type];
         for (let i = 0; i < length; i += 2) {

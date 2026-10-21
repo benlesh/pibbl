@@ -40,6 +40,8 @@ import { recordLayoutEvaluation } from './diagnostics.js';
 import { assertSupportedChildPosition } from './positioning-diagnostics.js';
 import { measureElement } from './measure.js';
 import type { Constraints, LayoutBox } from './types.js';
+const unsupportedProperties = ['gridColumnEnd', 'gridRowEnd', 'gridArea', 'order'] as const;
+
 
 /**
  * A fixed logical size, percentage of available space, or fractional share of remaining grid space.
@@ -820,7 +822,8 @@ function rejectUnsupportedItemFields(
   style: Readonly<Record<string, unknown>>,
   container: Readonly<LayoutBox>,
 ): void {
-  for (const property of ['gridColumnEnd', 'gridRowEnd', 'gridArea', 'order']) {
+  for (let propertyIndex = 0; propertyIndex < unsupportedProperties.length; propertyIndex++) {
+    const property = unsupportedProperties[propertyIndex];
     if (style[property] !== undefined) {
       throw childDiagnostic(
         child,

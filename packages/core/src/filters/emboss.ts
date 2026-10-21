@@ -109,8 +109,15 @@ const executor: PibblFilterExecutor = {
       height: number;
     };
     if (
-      ![x, y, width, height].every(
-        (value) => typeof value === "number" && Number.isFinite(value),
+      !(
+        typeof x === "number" &&
+        Number.isFinite(x) &&
+        typeof y === "number" &&
+        Number.isFinite(y) &&
+        typeof width === "number" &&
+        Number.isFinite(width) &&
+        typeof height === "number" &&
+        Number.isFinite(height)
       ) ||
       width <= 0 ||
       height <= 0

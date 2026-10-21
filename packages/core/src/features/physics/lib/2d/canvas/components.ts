@@ -19,6 +19,11 @@ import type { PibblPhysicsShape2D, PibblPhysicsVector2 } from '../../../2d-geome
 import { boundsOfShape2D, capsuleShape2D, chainShape2D, segmentShape2D } from '../shapes.js';
 import { requireShapeRecord2D, type ConvexLeaf2D } from '../shape-records.js';
 import { installCustomShapeResolver2D } from './inference.js';
+const layoutPropertyKeys = [
+    'width', 'height', 'minWidth', 'maxWidth', 'minHeight', 'maxHeight', 'padding', 'overflow',
+    'left', 'top', 'alignSelf', 'justifySelf', 'flexBasis', 'flexGrow', 'flexShrink',
+    'gridColumnStart', 'gridColumnSpan', 'gridRowStart', 'gridRowSpan',
+  ] as const;
 
 type ResolvedPhysicsShapeStyle2D = Readonly<PhysicsShape2DStyle>;
 type ResolvedCapsuleStyle2D = Omit<Readonly<Capsule2DStyle>, 'start' | 'end'> & {
@@ -284,11 +289,10 @@ function appendCapsule(path: Path2D, start: Float64Array, end: Float64Array, rad
 
 function stripLayout<T extends Readonly<Record<PropertyKey, unknown>>>(style: T): T {
   const result = { ...style } as Record<PropertyKey, unknown>;
-  for (const key of [
-    'width', 'height', 'minWidth', 'maxWidth', 'minHeight', 'maxHeight', 'padding', 'overflow',
-    'left', 'top', 'alignSelf', 'justifySelf', 'flexBasis', 'flexGrow', 'flexShrink',
-    'gridColumnStart', 'gridColumnSpan', 'gridRowStart', 'gridRowSpan',
-  ]) delete result[key];
+  for (let keyIndex = 0; keyIndex < layoutPropertyKeys.length; keyIndex++) {
+    const key = layoutPropertyKeys[keyIndex];
+    delete result[key];
+  }
   return result as T;
 }
 

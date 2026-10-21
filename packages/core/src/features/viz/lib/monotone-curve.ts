@@ -66,7 +66,7 @@ function monotoneSegments(points: readonly SeriesCurvePoint[]) {
       end[0] - (end[0] - start[0]) / 3,
       end[1] - (slopes[index + 1] * width) / 3,
     ];
-    if (![...control1, ...control2, ...end].every(Number.isFinite))
+    if ((!Number.isFinite(control1[0]) || !Number.isFinite(control1[1]) || !Number.isFinite(control2[0]) || !Number.isFinite(control2[1]) || !Number.isFinite(end[0]) || !Number.isFinite(end[1])))
       throw new RangeError("monotoneX generated non-finite cubic controls.");
     return Object.freeze({ end, control1, control2 });
   });

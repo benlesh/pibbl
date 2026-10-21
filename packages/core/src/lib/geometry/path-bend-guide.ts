@@ -52,7 +52,7 @@ export function prepareBendGuide(path: PathGeometry): PreparedBendGuide {
     const span = straightSpan(raw);
     const first = tangent(span, false), last = tangent(span, true);
     if (spans.length) sameTangent(tangent(spans.at(-1)!, true), first);
-    if (![...first, ...last].every(Number.isFinite)) throw new RangeError('Guide limiting tangent is not finite.');
+    if ((!Number.isFinite(first[0]) || !Number.isFinite(first[1]) || !Number.isFinite(last[0]) || !Number.isFinite(last[1]))) throw new RangeError('Guide limiting tangent is not finite.');
     spans.push(span);
   }
 }

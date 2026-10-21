@@ -596,8 +596,8 @@ function includeBoxCorners(
   bounds: Float64Array,
   point: Float64Array,
 ): void {
-  for (const xSign of [-1, 1]) {
-    for (const ySign of [-1, 1]) {
+  for (let xSign = -1; xSign <= 1; xSign += 2) {
+    for (let ySign = -1; ySign <= 1; ySign += 2) {
       transformPointInto(
         point,
         0,
@@ -745,13 +745,12 @@ function roundedBoxContour(
   center: Float64Array,
 ): Float64Array {
   const points: Float64Array[] = [];
-  const cornerData = [
-    [halfWidth - radii[1]!, -halfHeight + radii[1]!, -Math.PI / 2, 0, radii[1]!],
-    [halfWidth - radii[2]!, halfHeight - radii[2]!, 0, Math.PI / 2, radii[2]!],
-    [-halfWidth + radii[3]!, halfHeight - radii[3]!, Math.PI / 2, Math.PI, radii[3]!],
-    [-halfWidth + radii[0]!, -halfHeight + radii[0]!, Math.PI, 3 * Math.PI / 2, radii[0]!],
-  ] as const;
-  for (const [x, y, start, end, radius] of cornerData) {
+  for (let corner = 0; corner < 4; corner++) {
+    const radius = radii[(corner + 1) % 4]!;
+    const x = corner < 2 ? halfWidth - radius : -halfWidth + radius;
+    const y = corner === 0 || corner === 3 ? -halfHeight + radius : halfHeight - radius;
+    const start = (corner - 1) * Math.PI / 2;
+    const end = corner * Math.PI / 2;
     const cornerPoints = radius === 0
       ? [new Float64Array([center[0]! + x, center[1]! + y])]
       : flattenCircularSweep(center[0]! + x, center[1]! + y, radius, start, end, false);

@@ -7,9 +7,8 @@ function route(
   arrowLength = 0,
 ): GraphRoute {
   const { sourceAnchor: a, targetAnchor: b } = endpoints;
-  for (const point of [a, b])
-    if (!Number.isFinite(point.x) || !Number.isFinite(point.y))
-      throw new RangeError("Route anchors must be finite.");
+  if ((!Number.isFinite(a.x) || !Number.isFinite(a.y)) || (!Number.isFinite(b.x) || !Number.isFinite(b.y)))
+        throw new RangeError("Route anchors must be finite.");
   if (!Number.isFinite(arrowLength) || arrowLength < 0)
     throw new RangeError("arrowLength must be finite and nonnegative.");
   const angle = Math.atan2(b.y - a.y, b.x - a.x),

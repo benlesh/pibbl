@@ -70,9 +70,8 @@ export function layoutDependencies<N, E>(
     { nodes, edges } = graphRecords(graph, options);
   const rankGap = options.rankGap ?? 72,
     gap = options.nodeGap ?? 24;
-  for (const value of [rankGap, gap])
-    if (!Number.isFinite(value) || value < 0)
-      throw new RangeError("Graph gaps must be finite and nonnegative.");
+  if ((!Number.isFinite(rankGap) || rankGap < 0) || (!Number.isFinite(gap) || gap < 0))
+        throw new RangeError("Graph gaps must be finite and nonnegative.");
   const incoming = new Map<VizKey, number>(
       [...nodes.keys()].map((key) => [key, 0]),
     ),

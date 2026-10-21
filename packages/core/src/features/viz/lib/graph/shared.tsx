@@ -30,6 +30,23 @@ import type {
   LabelStyle,
   VizKey,
 } from "./types.js";
+const boundsKeys = ["x", "y", "width", "height"] as const;
+const graphLayoutKeys = [
+    "rankGap",
+    "nodeGap",
+    "levelGap",
+    "siblingGap",
+    "cellGap",
+    "rowLabelWidth",
+    "columnLabelHeight",
+    "nodeWidth",
+    "columnGap",
+    "headerHeight",
+    "ringGap",
+    "bandWidth",
+    "padAngle",
+    "startAngle",
+  ] as const;
 
 /** Read an application's typed property or accessor without normalizing away its record. */
 export function readAccessor<D, V>(datum: D, accessor: Accessor<D, V>): V {
@@ -39,7 +56,8 @@ export function readAccessor<D, V>(datum: D, accessor: Accessor<D, V>): V {
 }
 /** Validate a finite rectangle in local logical units. */
 export function validateBounds(bounds: Bounds): Bounds {
-  for (const key of ["x", "y", "width", "height"] as const) {
+  for (let keyIndex = 0; keyIndex < boundsKeys.length; keyIndex++) {
+    const key = boundsKeys[keyIndex];
     if (
       !Number.isFinite(bounds[key]) ||
       ((key === "width" || key === "height") && bounds[key] < 0)
@@ -108,23 +126,10 @@ export function useGraphFrame<S extends GStyle>(
     height: box.borderBox.height,
   });
   const groupStyle = { ...style, width: bounds.width, height: bounds.height };
-  for (const key of [
-    "rankGap",
-    "nodeGap",
-    "levelGap",
-    "siblingGap",
-    "cellGap",
-    "rowLabelWidth",
-    "columnLabelHeight",
-    "nodeWidth",
-    "columnGap",
-    "headerHeight",
-    "ringGap",
-    "bandWidth",
-    "padAngle",
-    "startAngle",
-  ])
+  for (let keyIndex = 0; keyIndex < graphLayoutKeys.length; keyIndex++) {
+    const key = graphLayoutKeys[keyIndex];
     delete (groupStyle as unknown as Record<string, unknown>)[key];
+  }
   return { bounds, style, groupStyle };
 }
 /** Resolve a per-item paint callback without hiding its signal reads. */

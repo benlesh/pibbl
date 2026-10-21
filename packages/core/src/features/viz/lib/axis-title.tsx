@@ -27,7 +27,13 @@ export function AxisTitle(props: AxisTitleProps) {
   const source = lookupScale(props.scale, "AxisTitle");
   if (!source) throw new TypeError("AxisTitle requires a scale ID.");
   const scale = source.get(), label = resolveSignalValue(props.label), unit = resolveSignalValue(props.unit) ?? "";
-  if ([label, unit].some(value => typeof value !== "string" || /[\r\n]/.test(value))) throw new TypeError("AxisTitle label and unit must be single-line strings.");
+  if (
+    typeof label !== "string" ||
+    /[\r\n]/.test(label) ||
+    typeof unit !== "string" ||
+    /[\r\n]/.test(unit)
+  )
+    throw new TypeError("AxisTitle label and unit must be single-line strings.");
   const offset = resolveSignalValue(props.offset) ?? 40;
   if (typeof offset !== "number" || !Number.isFinite(offset) || offset < 0) throw new RangeError("AxisTitle offset must be finite and nonnegative.");
   const horizontal = props.position === "top" || props.position === "bottom";
@@ -35,7 +41,13 @@ export function AxisTitle(props: AxisTitleProps) {
   const x = horizontal ? midpoint : props.position === "left" ? -offset : scale.frame.width + offset;
   const y = horizontal ? props.position === "top" ? -offset : scale.frame.height + offset : midpoint;
   const style = resolveSignalValue(props.style) ?? {};
-  return <Group style={{ translateX: x, translateY: y }}><Group style={{ rotationDegrees: horizontal ? 0 : props.position === "left" ? -90 : 90 }}>
-    <Text pointerEvents="none" style={{ textAlign: "center", textBaseline: "middle", font: resolveSignalValue(style.font) ?? "12px sans-serif", fill: resolveSignalValue(style.fill) ?? "#617783", opacity: opacity(resolveSignalValue(style.opacity) ?? 1, "AxisTitle") }}>{unit ? `${label} (${unit})` : label}</Text>
-  </Group></Group>;
+  return (
+    <Group style={{ translateX: x, translateY: y }}>
+      <Group style={{ rotationDegrees: horizontal ? 0 : props.position === "left" ? -90 : 90 }}>
+        <Text pointerEvents="none" style={{ textAlign: "center", textBaseline: "middle", font: resolveSignalValue(style.font) ?? "12px sans-serif", fill: resolveSignalValue(style.fill) ?? "#617783", opacity: opacity(resolveSignalValue(style.opacity) ?? 1, "AxisTitle") }}>
+          {unit ? `${label} (${unit})` : label}
+        </Text>
+      </Group>
+    </Group>
+  );
 }

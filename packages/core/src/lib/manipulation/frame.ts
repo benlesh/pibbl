@@ -94,7 +94,12 @@ export const ManipulationFrame = definePrimitive<FrameProps, FrameStyle>(
     }
     const box = state.options.box.get();
     if (
-      ![box.left, box.top, style.width, style.height].every(Number.isFinite) ||
+      !(
+        Number.isFinite(box.left) &&
+        Number.isFinite(box.top) &&
+        Number.isFinite(style.width) &&
+        Number.isFinite(style.height)
+      ) ||
       style.width <= 0 ||
       style.height <= 0
     )

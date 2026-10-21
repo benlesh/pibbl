@@ -39,28 +39,6 @@ export function inkBounds(path: PathGeometry): Readonly<InkBounds> | null {
     minY = Math.min(minY, b);
     maxY = Math.max(maxY, b);
   };
-  const cubicRoots = (p0: number, p1: number, p2: number, p3: number) => {
-    // Normalize first to keep coefficient arithmetic finite for large coordinates.
-    const scale = Math.max(
-      Math.abs(p0),
-      Math.abs(p1),
-      Math.abs(p2),
-      Math.abs(p3),
-      1,
-    );
-    p0 /= scale;
-    p1 /= scale;
-    p2 /= scale;
-    p3 /= scale;
-    const a = -p0 + 3 * p1 - 3 * p2 + p3;
-    const b = 2 * (p0 - 2 * p1 + p2),
-      c = p1 - p0;
-    if (a === 0) return b === 0 ? [] : [-c / b];
-    const discriminant = b * b - 4 * a * c;
-    if (discriminant < 0) return [];
-    const q = -0.5 * (b + (b < 0 ? -1 : 1) * Math.sqrt(discriminant));
-    return q === 0 ? [-b / (2 * a)] : [q / a, c / q];
-  };
   const lerp = (a: number, b: number, t: number) => a * (1 - t) + b * t;
   const quadratic = (a: number, b: number, c: number, t: number) =>
     lerp(lerp(a, b, t), lerp(b, c, t), t);
@@ -93,10 +71,8 @@ export function inkBounds(path: PathGeometry): Readonly<InkBounds> | null {
         c /= scale;
         return (a - b) / (a - 2 * b + c);
       };
-      for (const t of [
-        root(x, segment.cpx, segment.x),
-        root(y, segment.cpy, segment.y),
-      ]) {
+      for (let axis = 0; axis < 2; axis++) {
+        const t = axis === 0 ? root(x, segment.cpx, segment.x) : root(y, segment.cpy, segment.y);
         if (t > 0 && t < 1)
           include(
             quadratic(x, segment.cpx, segment.x, t),
@@ -104,15 +80,45 @@ export function inkBounds(path: PathGeometry): Readonly<InkBounds> | null {
           );
       }
     } else if (segment.type === "cubic") {
-      for (const t of [
-        ...cubicRoots(x, segment.cp1x, segment.cp2x, segment.x),
-        ...cubicRoots(y, segment.cp1y, segment.cp2y, segment.y),
-      ]) {
-        if (t > 0 && t < 1)
+      for (let axis = 0; axis < 2; axis++) {
+        let p0 = axis === 0 ? x : y;
+        let p1 = axis === 0 ? segment.cp1x : segment.cp1y;
+        let p2 = axis === 0 ? segment.cp2x : segment.cp2y;
+        let p3 = axis === 0 ? segment.x : segment.y;
+        // Normalize first to keep coefficient arithmetic finite for large coordinates.
+        const scale = Math.max(
+      Math.abs(p0),
+      Math.abs(p1),
+      Math.abs(p2),
+      Math.abs(p3),
+      1,
+    );
+        p0 /= scale;
+        p1 /= scale;
+        p2 /= scale;
+        p3 /= scale;
+        const a = -p0 + 3 * p1 - 3 * p2 + p3;
+        const b = 2 * (p0 - 2 * p1 + p2),
+      c = p1 - p0;
+        let firstRoot: number, secondRoot = NaN;
+        if (a === 0) {
+          if (b === 0) continue;
+          firstRoot = -c / b;
+        } else {
+          const discriminant = b * b - 4 * a * c;
+          if (discriminant < 0) continue;
+          const q = -0.5 * (b + (b < 0 ? -1 : 1) * Math.sqrt(discriminant));
+          firstRoot = q === 0 ? -b / (2 * a) : q / a;
+          if (q !== 0) secondRoot = c / q;
+        }
+        for (let rootIndex = 0; rootIndex < 2; rootIndex++) {
+          const t = rootIndex === 0 ? firstRoot : secondRoot;
+          if (t > 0 && t < 1)
           include(
             cubic(x, segment.cp1x, segment.cp2x, segment.x, t),
             cubic(y, segment.cp1y, segment.cp2y, segment.y, t),
           );
+        }
       }
     }
     x = segment.x;
