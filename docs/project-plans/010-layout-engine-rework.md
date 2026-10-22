@@ -36,7 +36,9 @@ and scrolls the preview panel once ready. No scheduler fix was needed.
 Earlier numerical slice forecasts are historical estimates, not remaining-work
 counts or new scope. Completion is measured against the accepted proposal and its
 33-capability manifest, rather than by adding controls or exhausting a slice count.
-These six exit families remain open; exactly one implementation slice is queued.
+The fixed denominator is the manifest's 33 capabilities and seven release-gate
+groups. The summary below groups work for readability; it does not add exits.
+Exactly one implementation slice is queued.
 
 | Exit                                               | Required completion evidence                                                                                                                                                                                                                                                                             | Current dependency or blocker                                                                                                                                                   |
 | -------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -46,6 +48,22 @@ These six exit families remain open; exactly one implementation slice is queued.
 | Migration and conformance                          | Version/commit/configuration-bound Yoga corpus with explicit Pibbl conversions/divergences; supported public Pibbl migration app and documented framework-author path using the same semantics; all unsupported entries visible                                                                          | Only three historical pinned fixtures exist so far; slice37 expands the delivered Rectangle conversion evidence. Standalone API details must follow the public design agreement |
 | Reproducible performance                           | Comparable kernel, JS integration and whole Canvas workloads, structural work/allocation counts and reproducible timing receipts under documented environments                                                                                                                                           | Correct broad graph/algorithms precede timing claims; current counters demonstrate only their bounded paths                                                                     |
 | Final integration and release                      | Accepted behavior migrated across consumers/docs/editor/types/packed output, source/built browser and lifecycle evidence, documented Node24/pnpm11.21 trust gate, then the requested separate hyper-critical whole-codebase review                                                                       | Full supported behavior and prior exits must land before final aggregate verification/review; Node26 receipts are not Node24 release evidence                                   |
+
+The exact seven manifest gates remain open as follows:
+
+| Gate ID                       | Status                    | Completion evidence                                                                                                                                                         | Predecessor                                      |
+| ----------------------------- | ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
+| `flex-core`                   | Partial/experimental      | All enumerated Flex cases, values/defaults and interactions classified against pinned fixtures                                                                              | None                                             |
+| `box-and-direction`           | Partial                   | Box sizing, borders/padding, margins, direction/logical edges and aspect-ratio fixtures                                                                                     | `flex-core`                                      |
+| `measurement-and-intrinsic`   | Partial/experimental      | Supported constraints, baseline/providers and nested prepared-tree intrinsic contributions with failure/callback evidence                                                   | `flex-core`                                      |
+| `placement-and-participation` | Partial                   | Containing-block, relative/static/absolute, hidden/contents identity, geometry and input evidence                                                                           | Box/direction and measurement/intrinsic          |
+| `reactivity-and-publication`  | Partial foundations       | Root-wide shared WASM prepared graph, rollback and fail-closed atomic geometry, work-admission/caching/ownership counters                                                   | Measurement/intrinsic                            |
+| `migration-and-conformance`   | Partial rehearsal         | Standalone `@pibbl/layout`, both framework-host and Pibbl application migration rehearsals, classified versioned Yoga differential, source/built/packed deployment evidence | Prior five gates                                 |
+| `grid-beyond-yoga`            | Missing target completion | Declared explicit/implicit Grid and intrinsic vocabulary matrix with nested Flex interaction evidence                                                                       | Measurement/intrinsic and reactivity/publication |
+
+Performance and final release verification are cross-cutting evidence requirements,
+not extra capabilities. Adoption requires the same shared WASM across supported
+layout families, with no hidden legacy fallback. Published exclusions remain fixed.
 
 This preserves the proposal's explicit exclusions: full CSS, vertical writing and
 subgrid are outside the first release; overflow sizing does not promise a scrolling
