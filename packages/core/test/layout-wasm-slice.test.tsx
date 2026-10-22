@@ -2051,3 +2051,24 @@ it.runIf(experimentalLayout)('measures a wrapped Flow at settled width inside an
   const updated = snapshotWasmLayoutDiagnostics(); expect(updated.activeArenas).toBe(mounted.activeArenas); expect(updated.nodeCreates).toBe(mounted.nodeCreates);
   controller.dispose(); const disposed = snapshotWasmLayoutDiagnostics(); expect([disposed.activeArenas,disposed.activeNodes,disposed.activeWasmInstances]).toEqual([baseline.activeArenas,baseline.activeNodes,baseline.activeWasmInstances]);
 });
+
+it.runIf(experimentalLayout)('measures fixed Grid rows inside an intrinsic Flex column and rejects indefinite fraction rows', async () => {
+  const baseline = snapshotWasmLayoutDiagnostics(), rows = signal<readonly [number,number]>([20,30]); let hits = 0;
+  const grid = createElement(Grid, { style: { gridTemplateColumns: ['1fr'], gridTemplateRows: rows, gap: 5, minHeight: 0, flexShrink: 0 }, children: createElement(Rectangle, { style: { width: '100%', height: '100%', gridColumnStart: 1, gridRowStart: 2, fill: 'blue' } }) });
+  const card = createElement(Flex, { style: { width: 100, flexDirection: 'column', alignItems: 'stretch', minHeight: 0, flexShrink: 0 }, children: grid });
+  expect(measureElement(card, { minWidth: 0, maxWidth: 100, minHeight: 0, maxHeight: 100 }, service)).toEqual({ status: 'measured', size: { width: 100, height: 55 } });
+  const indefinite = createElement(Flex, { style: { width: 100, flexDirection: 'column' }, children: createElement(Grid, { style: { gridTemplateColumns: ['1fr'], gridTemplateRows: ['1fr'], minHeight: 0, flexShrink: 0 }, children: [] }) });
+  expect(measureElement(indefinite, { minWidth: 0, maxWidth: 100, minHeight: 0, maxHeight: 100 }, service)).toMatchObject({ status: 'unsupported' });
+  const canvas = document.createElement('canvas'); canvas.width = 120; canvas.height = 100; document.body.append(canvas);
+  const scene = createElement(Flex, { style: { width: 100, height: 100, flexDirection: 'column', alignItems: 'stretch' }, children: [
+    createElement(Flex, { style: { minHeight: 0, flexShrink: 0, flexDirection: 'column', alignItems: 'stretch' }, children: grid }),
+    createElement(Rectangle, { style: { width: '100%', height: 10, minHeight: 0, flexShrink: 0, fill: 'red' }, onClick: () => hits++ }),
+  ] });
+  const controller = pibbl(canvas, scene); controllers.push(controller); await nextFrame();
+  expect([...canvas.getContext('2d')!.getImageData(5,60,1,1).data]).toEqual([255,0,0,255]); clickCanvas(canvas,5,60); expect(hits).toBe(1);
+  const mounted = snapshotWasmLayoutDiagnostics(); rows.set([40,30]); await nextFrame();
+  expect([...canvas.getContext('2d')!.getImageData(5,80,1,1).data]).toEqual([255,0,0,255]);
+  expect([...canvas.getContext('2d')!.getImageData(5,60,1,1).data]).toEqual([0,0,255,255]); clickCanvas(canvas,5,60); expect(hits).toBe(1); clickCanvas(canvas,5,80); expect(hits).toBe(2);
+  const updated = snapshotWasmLayoutDiagnostics(); expect(updated.activeArenas).toBe(mounted.activeArenas); expect(updated.nodeCreates).toBe(mounted.nodeCreates); expect(updated.gridTrackResolutions-mounted.gridTrackResolutions).toBe(1); expect(updated.gridCellPlacements-mounted.gridCellPlacements).toBe(1);
+  controller.dispose(); const disposed = snapshotWasmLayoutDiagnostics(); expect([disposed.activeArenas,disposed.activeNodes,disposed.activeWasmInstances]).toEqual([baseline.activeArenas,baseline.activeNodes,baseline.activeWasmInstances]);
+});

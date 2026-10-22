@@ -2,7 +2,7 @@ import { createElement, Rectangle, signal } from '@pibbl/core';
 import { pibblSync } from '@pibbl/core/sync';
 import { LayoutPreflightLab, HtmlProjectionLab } from '../../../packages/scenarios/src/layout-preflight-lab';
 
-const width = signal(80), grow = signal(0), minimum = signal(0), nested = signal(false), direct = signal(false), described = signal(false), layer = signal(false), grid = signal(false), gridRoot = signal(false), flowRoot = signal(false), overlayRoot = signal(false), absoluteRoot = signal(false), layerGrid = signal(false), directLayer = signal(false), describedLayer = signal(false), intrinsicFlow = signal(false), flow = signal(false), nativeGrid = signal(false), nativeFlow = signal(false), nativeSpan = signal(false), nativeFill = signal('red'), healthyWidth = signal(50);
+const width = signal(80), grow = signal(0), minimum = signal(0), nested = signal(false), direct = signal(false), described = signal(false), layer = signal(false), grid = signal(false), gridRoot = signal(false), flowRoot = signal(false), overlayRoot = signal(false), absoluteRoot = signal(false), layerGrid = signal(false), directLayer = signal(false), describedLayer = signal(false), intrinsicFlow = signal(false), intrinsicGrid = signal(false), intrinsicRow = signal(10), flow = signal(false), nativeGrid = signal(false), nativeFlow = signal(false), nativeSpan = signal(false), nativeFill = signal('red'), healthyWidth = signal(50);
 let evaluations = 0, allocatedWidth = 0, hits = 0, failures = 0, layerHits = 0, nativeHits = 0;
 const nativeWidths = [0, 0, 0];
 const title = document.createElement('h1'); title.textContent = 'Known sibling layout preflight';
@@ -12,7 +12,7 @@ const healthy = document.createElement('canvas'); healthy.width = 100; healthy.h
 canvas.style.border = healthy.style.border = '1px solid #94a3b8';
 const controls = document.createElement('div'), state = document.createElement('pre');
 document.body.append(title, description, canvas, healthy, controls, state);
-const scene = createElement(LayoutPreflightLab, { width, grow, minimum, nested, direct, described, layer, grid, gridRoot, flowRoot, overlayRoot, absoluteRoot, layerGrid, directLayer, describedLayer, intrinsicFlow, flow, nativeGrid, nativeFlow, nativeSpan, nativeFill, nativeWidth: (index: number, value: number) => { nativeWidths[index] = value; }, nativeHit: () => { nativeHits++; },
+const scene = createElement(LayoutPreflightLab, { width, grow, minimum, nested, direct, described, layer, grid, gridRoot, flowRoot, overlayRoot, absoluteRoot, layerGrid, directLayer, describedLayer, intrinsicFlow, intrinsicGrid, intrinsicRow, flow, nativeGrid, nativeFlow, nativeSpan, nativeFill, nativeWidth: (index: number, value: number) => { nativeWidths[index] = value; }, nativeHit: () => { nativeHits++; },
   evaluate: (value: number) => { evaluations++; allocatedWidth = value; }, hit: () => { hits++; }, layerHit: () => { layerHits++; },
 });
 let subject = pibblSync(canvas, scene);
@@ -40,6 +40,8 @@ window.addEventListener('error', error);
 for (const [label, action] of [
   ['Fail HTML projection', () => { htmlOverflow.set(true); healthyWidth.set(70); }],
   ['Recover HTML', () => { htmlOverflow.set(false); htmlSubject = pibblSync(htmlCanvas, htmlScene); }],
+  ['Use intrinsic Grid card', () => { intrinsicGrid.set(true); }],
+  ['Grow intrinsic Grid row', () => { intrinsicRow.set(25); }],
   ['Use intrinsic Flow card', () => { width.set(100); intrinsicFlow.set(true); }],
   ['Widen intrinsic Flow card', () => { width.set(160); }],
   ['Use native Flow wrap', () => { width.set(60); nativeFill.set('blue'); nativeFlow.set(true); }],

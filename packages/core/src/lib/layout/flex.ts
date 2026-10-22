@@ -1,3 +1,4 @@
+import { Grid } from './grid.js';
 import { Flow } from './flow.js';
 import type { PreparedFlexLayoutPlan, PreparedLayoutSlot } from './prepared-root.js';
 import { isKnownLayoutType, registerKnownLayoutPreflight, stagePreparedChildStyle, takePreparedChildStyle, hasPreparedChildStyles, claimPreparedFlexPlan, stagePreparedLayoutPlan, preflightKnownLayout, attachPreparedLayoutSlot } from './prepared-root.js';
@@ -439,7 +440,7 @@ function measureFlex(
     let baseMain: number;
     let baseCross: number;
     if (experimentalLayout && !row && widthDefinite && !heightDefinite &&
-      (child.type === Text || layoutChild.type === Flow || layoutChild.type === Flex && isColumnDirection(style.flexDirection) && (style.flexWrap ?? 'nowrap') === 'nowrap') &&
+      (child.type === Text || layoutChild.type === Flow || layoutChild.type === Grid || layoutChild.type === Flex && isColumnDirection(style.flexDirection) && (style.flexWrap ?? 'nowrap') === 'nowrap') &&
       (mainValue === undefined || mainValue === 'auto' || crossValue === undefined || crossValue === 'auto')) {
       // Descend only through known built-in columns at settled content widths.
       // The shared measurement context detects descriptor cycles; there is no
@@ -632,7 +633,7 @@ function resolveFlexPlacements(
       BoxStyle & FlexItemStyle & LayoutItemStyle & Record<string, unknown>
     >;
     const layoutChild = isLayoutComponent(child.type) ? prepareLayoutComponent(child, { receiverToken }) : child;
-    const knownIntrinsicLayout = child.type === Flex || layoutChild.type === Flow || layoutChild.type === Flex &&
+    const knownIntrinsicLayout = child.type === Flex || layoutChild.type === Flow || layoutChild.type === Grid || layoutChild.type === Flex &&
       isColumnDirection(normalized.flexDirection) && (normalized.flexWrap ?? 'nowrap') === 'nowrap';
     assertSupportedChildPosition('Flex', child, normalized);
     rejectUnsupportedItemFields(child, normalized, container);

@@ -1,7 +1,7 @@
 import { Absolute, Flex, Flow, Grid, Group, HtmlBox, Layer, Overlay, Rectangle, useLayoutBox, defineLayoutComponent, type FlexStyle, type PibblNodeInput, type Signal } from '@pibbl/core';
 
 interface LabProps {
-  width: Signal<number>; grow: Signal<number>; minimum: Signal<number>; nested: Signal<boolean>; direct: Signal<boolean>; described: Signal<boolean>; layer: Signal<boolean>; grid: Signal<boolean>; gridRoot: Signal<boolean>; flowRoot: Signal<boolean>; overlayRoot: Signal<boolean>; absoluteRoot: Signal<boolean>; layerGrid: Signal<boolean>; directLayer: Signal<boolean>; describedLayer: Signal<boolean>; intrinsicFlow: Signal<boolean>; flow: Signal<boolean>; nativeGrid: Signal<boolean>; nativeFlow: Signal<boolean>; nativeSpan: Signal<boolean>; nativeFill: Signal<string>; nativeWidth: (index: number, width: number) => void; nativeHit: () => void;
+  width: Signal<number>; grow: Signal<number>; minimum: Signal<number>; nested: Signal<boolean>; direct: Signal<boolean>; described: Signal<boolean>; layer: Signal<boolean>; grid: Signal<boolean>; gridRoot: Signal<boolean>; flowRoot: Signal<boolean>; overlayRoot: Signal<boolean>; absoluteRoot: Signal<boolean>; layerGrid: Signal<boolean>; directLayer: Signal<boolean>; describedLayer: Signal<boolean>; intrinsicFlow: Signal<boolean>; intrinsicGrid: Signal<boolean>; intrinsicRow: Signal<number>; flow: Signal<boolean>; nativeGrid: Signal<boolean>; nativeFlow: Signal<boolean>; nativeSpan: Signal<boolean>; nativeFill: Signal<string>; nativeWidth: (index: number, width: number) => void; nativeHit: () => void;
   evaluate: (width: number) => void; hit: () => void; layerHit: () => void;
 }
 function PreflightProbe({ evaluate, hit }: {
@@ -15,7 +15,15 @@ function PreflightProbe({ evaluate, hit }: {
 const DescribedCard = defineLayoutComponent((props: { style: FlexStyle; children: PibblNodeInput }) => <Flex style={props.style}>{props.children}</Flex>);
 
 /** Deterministic public-surface fixture; the host owns fault/recovery controls. */
-export function LayoutPreflightLab({ width, grow, minimum, nested, direct, described, layer, grid, gridRoot, flowRoot, overlayRoot, absoluteRoot, layerGrid, directLayer, describedLayer, intrinsicFlow, flow, nativeGrid, nativeFlow, nativeSpan, nativeFill, nativeWidth, nativeHit, evaluate, hit, layerHit }: LabProps) {
+export function LayoutPreflightLab({ width, grow, minimum, nested, direct, described, layer, grid, gridRoot, flowRoot, overlayRoot, absoluteRoot, layerGrid, directLayer, describedLayer, intrinsicFlow, intrinsicGrid, intrinsicRow, flow, nativeGrid, nativeFlow, nativeSpan, nativeFill, nativeWidth, nativeHit, evaluate, hit, layerHit }: LabProps) {
+  if (intrinsicGrid.get()) return <Flex style={{ width: 100, height: 100, flexDirection: 'column', alignItems: 'stretch' }}>
+    <Flex style={{ minHeight: 0, flexShrink: 0, flexDirection: 'column', alignItems: 'stretch' }}>
+      <Grid style={{ gridTemplateColumns: ['1fr'], gridTemplateRows: [intrinsicRow.get(), 15], gap: 5, minHeight: 0, flexShrink: 0 }}>
+        <Rectangle style={{ width: '100%', height: '100%', gridColumnStart: 1, gridRowStart: 2, fill: 'blue' }} />
+      </Grid>
+    </Flex>
+    <Rectangle style={{ width: '100%', height: 10, minHeight: 0, flexShrink: 0, fill: 'red' }} onClick={nativeHit} />
+  </Flex>;
   if (intrinsicFlow.get()) return <Flex style={{ width, height: 100, flexDirection: 'column', alignItems: 'stretch' }}>
     <Flex style={{ minHeight: 0, flexShrink: 0, flexDirection: 'column', alignItems: 'stretch' }}>
       <Flow style={{ minHeight: 0, flexShrink: 0, wrap: true, gap: 5, lineGap: 5 }}>

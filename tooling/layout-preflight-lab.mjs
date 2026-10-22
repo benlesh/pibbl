@@ -31,7 +31,26 @@ else {
     }
     const state = () => lab.locator('pre').evaluate(element => JSON.parse(element.textContent));
     await lab.waitForFunction(() => JSON.parse(document.querySelector('pre').textContent).evaluations === 1);
-    if (process.argv.includes('--intrinsic-flow')) {
+    if (process.argv.includes('--intrinsic-grid')) {
+      const placements = () => lab.evaluate(() => globalThis.__PIBBL_LAYOUT_DIAGNOSTICS__().gridCellPlacements);
+      const before = await placements();
+      await lab.getByRole('button', { name: 'Use intrinsic Grid card', exact: true }).click();
+      await lab.waitForFunction(before => globalThis.__PIBBL_LAYOUT_DIAGNOSTICS__().gridCellPlacements === before + 1, before);
+      assert.deepEqual(await lab.locator('#subject').evaluate(canvas => [...canvas.getContext('2d').getImageData(5,35,1,1).data]), [255,0,0,255]);
+      await lab.locator('#subject').click({ position: { x: 6, y: 36 } });
+      await lab.waitForFunction(() => JSON.parse(document.querySelector('pre').textContent).nativeHits === 1);
+      await lab.getByRole('button', { name: 'Grow intrinsic Grid row', exact: true }).click();
+      await lab.waitForFunction(before => globalThis.__PIBBL_LAYOUT_DIAGNOSTICS__().gridCellPlacements === before + 2, before);
+      assert.deepEqual(await lab.locator('#subject').evaluate(canvas => [...canvas.getContext('2d').getImageData(5,50,1,1).data]), [255,0,0,255]);
+      assert.deepEqual(await lab.locator('#subject').evaluate(canvas => [...canvas.getContext('2d').getImageData(5,35,1,1).data]), [0,0,255,255]);
+      await lab.locator('#subject').click({ position: { x: 6, y: 36 } }); assert.equal((await state()).nativeHits, 1);
+      await lab.locator('#subject').click({ position: { x: 6, y: 51 } });
+      await lab.waitForFunction(() => JSON.parse(document.querySelector('pre').textContent).nativeHits === 2);
+      const disposed = await lab.evaluate(() => { dispatchEvent(new PageTransitionEvent('pagehide')); return globalThis.__PIBBL_LAYOUT_DIAGNOSTICS__(); });
+      assert.deepEqual(['activeNodes','activeArenas','activeWasmInstances','cachedMeasurements'].map(key => disposed[key]), [0,0,0,0]);
+      assert.deepEqual(errors, []);
+      console.warn(`${built ? 'Built' : 'Source'} intrinsic Grid: footer30→45, moved pixels/targets, one native cell batch per row change, cleanup0/0/0/0; ${coreInputs.length} public core inputs`);
+    } else if (process.argv.includes('--intrinsic-flow')) {
       const placements = () => lab.evaluate(() => globalThis.__PIBBL_LAYOUT_DIAGNOSTICS__().flowPlacements);
       const before = await placements();
       await lab.getByRole('button', { name: 'Use intrinsic Flow card', exact: true }).click();

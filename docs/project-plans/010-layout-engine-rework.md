@@ -2,7 +2,8 @@
 
 ## Current checkpoint and single next slice — 2026-10-22
 
-Latest delivery is slice62 (settled-width intrinsic Flow in Flex columns).
+Latest delivery is slice63 (fixed-row intrinsic Grid in Flex columns).
+Slice62 is `4f358f70` (settled-width intrinsic Flow in Flex columns).
 Slice61 is `a3ef3378` (pure described Layer children).
 Slice60 is `c90df382` (direct-entry Layer child preparation).
 Slice59 is `d7649a75`, corrected by `ab2adb72` (known-family Layer children).
@@ -12,8 +13,8 @@ Slice56 is `cf2c7bc5` (prepared Flow-root planning/adoption).
 Slice55 is `1510efe3` (prepared Grid-root planning/adoption).
 Slice54 `773da7b9`,53 `aaa7ddcb`,52 `b5381e0d` are consolidated in `f322a709`.
 Every slice has its own commit. The fixed33-capability/seven-gate denominator is
-unchanged; all seven gates remain open. The single next slice is63, fixed-row intrinsic Grid in Flex columns. Source5192/built5193, `#/testing/layout-preflight`:
-Use intrinsic Flow card, then Widen intrinsic Flow card; inspect the moving red footer.
+unchanged; all seven gates remain open. The single next slice is64, pinned Yoga column conformance. Source5192/built5193, `#/testing/layout-preflight`:
+Use intrinsic Grid card, then Grow intrinsic Grid row; inspect the moving red footer.
 Native Grid tracks/spans and Flow wrap controls remain available.
 
 The loading/named-component integration is ready for source feedback on branch
@@ -1005,14 +1006,31 @@ Packed228installed-input Bundler/NodeNext/lifecycle pass. Kernel65282bytes uncha
 Logs `/tmp/pibbl-slice62-*`; Node26.9.0/pnpm11.21.0deps/Chromium. No broad intrinsic,
 new automatic-minimum policy, Node24/full trust or Yoga parity claim.
 
-## [NEXT] Fixed-row intrinsic Grid in Flex columns (slice 63)
+### Slice 63 — fixed-row intrinsic Grid in Flex columns
 
-Admit known Grid automatic heights through the same finite-width nowrap column
-measurement seam, bounded to Grid's existing fixed-row intrinsic contract. Public
-RED: fixed track sums/gaps place the following footer and row changes move its
-pixel/hit geometry. Reject fractional/percentage rows without a definite height
-through the existing unsupported result; no implicit/intrinsic-track vocabulary,
-arbitrary providers or API/ABI change. Consolidate61–63 after delivery.
+Known Grid roots contribute automatic height through the same settled-width
+nowrap column measurement seam. Grid's existing pure fixed-row sum/gap contract
+is reused; mounted explicit tracks/cells retain their native kernel. Fraction rows
+without definite height remain unsupported. No new track vocabulary/minimum policy.
+
+Public RED returned unsupported instead of100×55. Green public measure/render
+proof includes gap sums, live rows20/30→40/30 moving footer55→75, old/new pixels/
+targets, stable nodes/arenas, one changed native track axis and one cell batch.
+Indefinite fraction rows retain unsupported results. Focused158pass/1normal-only
+skip across four files; normal52tests pass. Types/lint clean. Source/built Studio
+`--intrinsic-grid` each proves footer30→45, moved targets, one native cell batch per
+row change, cleanup0/0/0/0 and225public inputs. Packed228installed-input Bundler/
+NodeNext/lifecycle pass. Kernel65282bytes unchanged. Logs `/tmp/pibbl-slice63-*`;
+Node26.9.0/pnpm11.21.0deps/Chromium, no Node24/full trust or broad Grid parity.
+
+## [NEXT] Pinned Yoga column conformance (slice 64)
+
+Extend the exact version/commit/configuration-bound differential corpus beyond
+its five row cases to the already supported numeric column subset. Use generated
+native Yoga output, documented content-box/explicit-minimum conversions and public
+Pibbl geometry/interaction evidence, with visible divergence classifications.
+Do not claim broad parity or choose unresolved intrinsic/box policies. Consolidate
+61–63 before starting64; the fixed33-capability/seven-gate scope remains unchanged.
 
 ### Consolidation 20 completed for delivery slices 58–60
 

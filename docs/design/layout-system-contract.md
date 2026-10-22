@@ -389,7 +389,8 @@ records persist, restored keys start new lifetimes, targets follow placement, an
 disposal returns owned nodes/arenas/measurement entries to baseline. Data reorder
 changes source paint order; it does not add CSS order, reversed axes or RTL.
 The experimental lane also measures Text leaves and nested known built-in nowrap
-columns, plus known Flow roots using their existing wrap measurement, in an
+columns, known Flow roots using existing wrap measurement, and Grid roots using
+existing fixed-row sums/gaps (indefinite fraction/percentage rows remain unsupported), in an
 auto-height built-in nowrap column whose width is declared or
 stretched from a definite parent column allocation. Each known measured child receives
 its settled content width before dependent height measurement; parent measurement
