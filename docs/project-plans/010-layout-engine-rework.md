@@ -2,7 +2,7 @@
 
 ## Current checkpoint and single next slice — 2026-10-22
 
-Latest delivery is slice51 (Flow-entry known Flex preparation).
+Latest delivery is slice51 `7ea95367` (Flow-entry known Flex preparation).
 Slice50 is `c8b163aa` (Grid-entry known Flex preparation).
 Slice49 is `d6f12813` (known Layer-to-Flex preparation/adoption).
 Slice48 is `cb863bc2` (finite HTML projection preparation).
@@ -783,6 +783,38 @@ resolution evidence across resize versus paint-only updates, plus exact teardown
 Use per-region numeric storage and the pinned compiler build/native test gate.
 This does not add auto placement, implicit/intrinsic tracks, native Grid placement
 or complete all-family topology. Consolidate52–54 after three deliveries.
+
+### Consolidation 17 completed for delivery slices 49–51
+
+Separate commits49 `d6f12813`,50 `c8b163aa`,51 `7ea95367`. One bounded combined
+Chromium run passes187tests/1normal-onlyskip across nine layout/HTML files. Normal
+Grid/Flow/structural checks49pass/70experimental skips, types/lint clean. Installed
+packed228-input Bundler/NodeNext and structural lifecycle pass. Source/built Studio
+Layer/Grid/Flow receipts each225public inputs verify failure isolation, recovery
+pixels/targets and cleanup0/0/0/0. Matching59181-byte kernel unchanged. Logs
+`/tmp/pibbl-consolidation17-*` and `/tmp/pibbl-slice49-*` through51. Node26.9.0/
+pnpm11.21.0deps/Chromium; no Node24/full trust or broad parity/performance claim.
+
+The ledger credits bounded Layer allocation-to-raster adoption and Grid/Flow entry
+preparation, not native Grid/Flow solving or complete root topology. Remaining
+publication blockers are concrete: all-family staged geometry before traversal;
+nonthrowing matching Canvas paint/hit/focus/HTML adoption; fallible publication
+preflight beyond known Flex and finite HTML projections. Ordinary opaque boundaries
+and unprepared outer siblings are still outside these bounded preparations.
+
+All seven release gates remain open:
+
+| Gate                    | Concrete remaining work                                                                                                                                                                             |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Flex core               | Complete pinned Yoga matrix for nested percentages, fractional/huge factors, distribution/negative free space, min/max, automatic minimum and wrapping.                                             |
+| Box/direction           | Percentage/logical/auto margins and padding, layout border/box sizing, aspect ratio, horizontal RTL/edge precedence.                                                                                |
+| Measurement/intrinsic   | Prepared cross-family constraint feedback, nested wrap, baselines, custom-leaf protocol/counts/errors and overflow sizing.                                                                          |
+| Placement/participation | Relative/static/absolute/containing-block matrix and hidden/contents identity/event/clip behavior.                                                                                                  |
+| Reactivity/publication  | Complete role-aware graph/batched topology/minimal visits, the three publication blockers above, cache equivalence and failure/cancellation stress.                                                 |
+| Migration/conformance   | Standalone package/no Canvas import, both real migration rehearsals, classified pinned conversions, rounding/DPR matrix, reproducible kernel/JS/full-app performance and Node24 trust/final review. |
+| Grid beyond Yoga        | Native explicit track foothold next; complete spans/intrinsic/fraction/minmax/percentage behavior, implicit/auto/dense/sparse tracks and intrinsic vocabulary remain.                               |
+
+The fixed33-capability denominator and five pinned Yoga cases are unchanged.
 
 ### Consolidation 16 completed for delivery slices 46–48
 

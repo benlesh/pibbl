@@ -599,7 +599,8 @@
           "one mutable instance per root including managed Layers",
           "isolated generational native region handles",
           "settled Absolute-to-Flex and nested Flex plans reused during traversal",
-          "direct and opaque-boundary Flex entries and pure described Flex roots reuse prepared ownership"
+          "direct and opaque-boundary Flex entries and pure described Flex roots reuse prepared ownership",
+          "known Layer direct Flex roots and Grid/Flow entry Flex placements carry exact receiver plans into traversal"
         ],
         "negative": [
           "failed known-layout preparation releases provisional regions",
@@ -628,17 +629,20 @@
         "positive": [
           "settled known sibling and nested Flex plans before opaque descendant evaluation",
           "normal traversal adopts prepared regions without another allocation pass",
-          "all pending HTML numeric projection work settles before host DOM mutation or callbacks"
+          "all pending HTML numeric projection work settles before host DOM mutation or callbacks",
+          "Grid/Flow settle existing placements before known Flex child preflight; Layer transfers plans across child-instance raster boundary"
         ],
         "negative": [
           "later known Flex factor/sizing failures prevent earlier opaque evaluation",
           "failed preparation and root disposal release owned regions",
-          "later finite-transform border overflow prevents earlier HTML updater and clears failed HTML"
+          "later finite-transform border overflow prevents earlier HTML updater and clears failed HTML",
+          "later known Layer/Grid/Flow Flex input failure prevents earlier opaque evaluation inside the prepared boundary"
         ],
         "interaction": [
           "source/built explicit recovery geometry and targets",
           "independent Canvas root remains usable during known-layout failure",
-          "source/built HTML recovery restores native activation while independent Canvas updates"
+          "source/built HTML recovery restores native activation while independent Canvas updates",
+          "positioned Layer children and Grid/Flow recovery pixels/hits preserve settled geometry"
         ],
         "yogaCases": [],
         "missing": [
