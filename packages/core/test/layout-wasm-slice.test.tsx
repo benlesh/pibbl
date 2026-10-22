@@ -1233,3 +1233,54 @@ it.runIf(experimentalLayout)('places wrap-reverse lines and cross alignment with
   expect([...canvas.getContext('2d')!.getImageData(5, 32, 1, 1).data]).toEqual([0, 128, 0, 255]);
   clickCanvas(canvas, 75, 40); clickCanvas(canvas, 5, 32); expect(hits).toEqual(['B', 'C']);
 });
+
+it.runIf(experimentalLayout)('shares one root WASM instance across independent Flex regions while isolating roots', async () => {
+  const instantiate = vi.spyOn(WebAssembly.Instance.prototype, 'exports', 'get');
+  const width = signal(100); const visible = signal(true);
+  const justify = signal<'flex-start' | 'flex-end'>('flex-start');
+  const pair = (left: number, value: number | typeof width) => createElement(Flex, { style: { left, width: value, height: 20, justifyContent: left === 0 ? justify : 'flex-start' }, children: [
+    createElement(Rectangle, { style: { width: 60, height: 20, minWidth: 0, fill: 'red' } }),
+    createElement(Rectangle, { style: { width: 60, height: 20, minWidth: 0, fill: 'blue' } }),
+  ] });
+  const App = () => [pair(0, width), visible.get() ? pair(120, 80) : null];
+  const first = document.createElement('canvas'); first.width = 220; first.height = 30; document.body.append(first);
+  const a = pibbl(first, createElement(App, {})); controllers.push(a); await nextFrame();
+  expect(instantiate).toHaveBeenCalledTimes(1);
+  const pixel = (canvas: HTMLCanvasElement, x: number) => [...canvas.getContext('2d')!.getImageData(x, 10, 1, 1).data];
+  expect(pixel(first, 49)).toEqual([255, 0, 0, 255]); expect(pixel(first, 50)).toEqual([0, 0, 255, 255]);
+  expect(pixel(first, 159)).toEqual([255, 0, 0, 255]); expect(pixel(first, 160)).toEqual([0, 0, 255, 255]);
+  expect(snapshotWasmLayoutDiagnostics().activeWasmInstances).toBe(1);
+  expect(snapshotWasmLayoutDiagnostics().activeArenas).toBe(2);
+  const beforePlacement = snapshotWasmLayoutDiagnostics(); justify.set('flex-end'); await nextFrame();
+  expect(snapshotWasmLayoutDiagnostics().solves).toBe(beforePlacement.solves);
+  expect(snapshotWasmLayoutDiagnostics().mainPlacements).toBe(beforePlacement.mainPlacements + 1);
+  expect(pixel(first, 49)).toEqual([255, 0, 0, 255]); expect(pixel(first, 50)).toEqual([0, 0, 255, 255]);
+  const beforeWidth = snapshotWasmLayoutDiagnostics(); width.set(120); await nextFrame();
+  expect(snapshotWasmLayoutDiagnostics().solves).toBe(beforeWidth.solves + 1);
+  expect(pixel(first, 59)).toEqual([255, 0, 0, 255]); expect(pixel(first, 60)).toEqual([0, 0, 255, 255]);
+  expect(pixel(first, 160)).toEqual([0, 0, 255, 255]); expect(instantiate).toHaveBeenCalledTimes(1);
+  visible.set(false); await nextFrame(); expect(instantiate).toHaveBeenCalledTimes(1);
+  visible.set(true); await nextFrame(); expect(pixel(first, 160)).toEqual([0, 0, 255, 255]); expect(instantiate).toHaveBeenCalledTimes(1);
+  const second = document.createElement('canvas'); second.width = 100; second.height = 30; document.body.append(second);
+  const b = pibbl(second, pair(0, 80)); controllers.push(b); await nextFrame(); expect(instantiate).toHaveBeenCalledTimes(2);
+  a.dispose(); expect(snapshotWasmLayoutDiagnostics().activeWasmInstances).toBe(1); expect(pixel(second, 40)).toEqual([0, 0, 255, 255]); b.dispose();
+  expect(snapshotWasmLayoutDiagnostics().activeWasmInstances).toBe(0);
+  expect(snapshotWasmLayoutDiagnostics().activeArenas).toBe(0);
+});
+
+it.runIf(experimentalLayout)('shares the owning root instance with Flex inside a managed Layer', async () => {
+  const baseline = snapshotWasmLayoutDiagnostics();
+  const canvas = document.createElement('canvas'); canvas.width = 120; canvas.height = 40; document.body.append(canvas);
+  const inner = createElement(Flex, { style: { width: 80, height: 20 }, children: createElement(Rectangle, { style: { width: 80, height: 20, fill: 'red' } }) });
+  const controller = pibbl(canvas, createElement(Flex, { style: { width: 100, height: 40 }, children: createElement(Layer, { style: { width: 80, height: 20, minWidth: 0 }, children: inner }) }));
+  controllers.push(controller); await nextFrame();
+  const mounted = snapshotWasmLayoutDiagnostics();
+  expect(mounted.activeWasmInstances).toBe(baseline.activeWasmInstances + 1);
+  expect(mounted.activeArenas).toBe(baseline.activeArenas + 2);
+  expect([...canvas.getContext('2d')!.getImageData(10, 10, 1, 1).data]).toEqual([255, 0, 0, 255]);
+  controller.dispose(); controller.dispose();
+  const disposed = snapshotWasmLayoutDiagnostics();
+  expect(disposed.activeWasmInstances).toBe(baseline.activeWasmInstances);
+  expect(disposed.activeArenas).toBe(baseline.activeArenas);
+  expect(disposed.activeNodes).toBe(baseline.activeNodes);
+});

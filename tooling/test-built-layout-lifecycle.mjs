@@ -12,7 +12,7 @@ try {
   await page.locator('iframe[srcdoc]').waitFor({ state: 'attached' });
   await page.locator('iframe[srcdoc]').scrollIntoViewIfNeeded();
   const frame = page.frameLocator('iframe[srcdoc]');
-  await frame.getByRole('button', { name: 'Dispose mount', exact: true }).waitFor({ timeout: 8000 });
+  await frame.getByRole('button', { name: 'Remove content', exact: true }).waitFor({ timeout: 8000 });
   const state = async () => JSON.parse(await frame.locator('pre').innerText());
   const wait = async predicate => {
     for (let i = 0; i < 60; i++) {
@@ -23,8 +23,9 @@ try {
     throw new Error(`State did not settle: ${JSON.stringify(await state())}`);
   };
   const initial = await wait(s => s.mounted && s.rendererCreates === 1 && s.rendererWidth === 324);
-  const ownership = s => ['activeNodes', 'activeArenas', 'cachedMeasurements'].map(key => s.layout[key] - s.baseline[key]);
+  const ownership = s => ['activeNodes', 'activeArenas', 'cachedMeasurements', 'activeWasmInstances'].map(key => s.layout[key] - s.baseline[key]);
   assert.ok(ownership(initial)[0] > 0);
+  assert.equal(ownership(initial)[1], 2); assert.equal(ownership(initial)[3], 1);
   const clickEdge = async (previousY) => {
     const box = await frame.locator('canvas').boundingBox();
     const logical = await state();
@@ -47,21 +48,22 @@ try {
   await wait(s => s.hits === 3);
   const narrow = await state();
   for (let i = 0; i < 4; i++) {
-    await frame.getByRole('button', { name: 'Dispose mount', exact: true }).click();
+    await frame.getByRole('button', { name: 'Remove content', exact: true }).click();
     const disposed = await wait(s => !s.mounted && s.rendererDisposes === s.rendererCreates);
-    assert.deepEqual(ownership(disposed), [0, 0, 0]);
+    assert.deepEqual(ownership(disposed), [0, 0, 0, 1]);
     const before = { ...disposed.layout };
     await frame.getByRole('button', { name: 'Change text', exact: true }).click();
     await page.waitForTimeout(120);
     const detached = await state();
     assert.deepEqual(detached.layout, before, 'Detached input must request no layout work');
-    await frame.getByRole('button', { name: 'Mount', exact: true }).click();
+    await frame.getByRole('button', { name: 'Restore content', exact: true }).click();
     await wait(s => s.mounted && s.rendererCreates === i + 2 && s.layout.activeArenas === narrow.layout.activeArenas && s.layout.activeNodes === initial.layout.activeNodes);
+    assert.equal(ownership(await state())[3], 1);
     assert.ok((await state()).layout.cachedMeasurements <= initial.layout.activeNodes * 2);
   }
-  await frame.getByRole('button', { name: 'Dispose mount', exact: true }).click();
+  await frame.getByRole('button', { name: 'Remove content', exact: true }).click();
   const final = await wait(s => !s.mounted && s.rendererDisposes === 5);
-  assert.deepEqual(ownership(final), [0, 0, 0]);
+  assert.deepEqual(ownership(final), [0, 0, 0, 1]);
   const sandbox = page.frames().find(item => item.url() === 'about:srcdoc');
   const proof = await sandbox.evaluate(() => globalThis.__PIBBL_BUILT_LAYOUT_PROOF__);
   if (!sourceLane) {
@@ -69,6 +71,11 @@ try {
     assert.ok(proof.coreInputs.length > 0);
     assert.ok(proof.coreInputs.every(path => path.includes('packages/core/.layout-wasm-package/dist/')));
   }
+  const rootDisposed = await sandbox.evaluate(() => {
+    dispatchEvent(new PageTransitionEvent('pagehide'));
+    return globalThis.__PIBBL_LAYOUT_DIAGNOSTICS__();
+  });
+  assert.deepEqual(['activeNodes', 'activeArenas', 'cachedMeasurements', 'activeWasmInstances'].map(key => rootDisposed[key]), [0, 0, 0, 0]);
   assert.deepEqual(errors, []);
-  console.warn(`${sourceLane ? 'Source' : 'Built'} lifecycle: 5 creates/5 disposes, ownership ${ownership(initial).join('/')} to 0/0/0 restored, detached signals inert, final allocation hit targets agree; ${proof?.coreInputs.length ?? 'source'} core inputs`);
+  console.warn(`${sourceLane ? 'Source' : 'Built'} lifecycle: 5 creates/5 disposes, ownership ${ownership(initial).join('/')} to 0/0/0/1 while root lives, then 0/0/0/0 on root disposal, detached signals inert, final allocation hit targets agree; ${proof?.coreInputs.length ?? 'source'} core inputs`);
 } finally { await browser.close(); }

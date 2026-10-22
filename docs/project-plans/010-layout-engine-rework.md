@@ -491,12 +491,34 @@ built466inputs. Read-only focused review found no material issue. Logs
 Hands-on ports5192/5193, keyed-wrap route: click a collection heading to flip cross
 lines, Flip axes for main placement, Reverse order for source key order.
 
-**Exactly one selected next delivery slice: 42 — root-owned shared WASM arena.**
-Give independent mounted Flex regions separate handles/records in one root-owned
-instance, preserve cross-root isolation and exact teardown, and keep pure helpers
-isolated. This is a prerequisite toward the accepted root-wide prepared layout and
-publication gate, not a claim to complete that graph. No new public API is proposed.
-Consolidate40–42 after this third delivery.
+### Slice 42 — root-owned shared WASM instance and isolated region handles
+
+One lazy mutable native instance now belongs to the top-level Canvas root,
+including managed Layers. Generational region handles own independent node/cross/
+line vectors; JS identity, results and measurement caches stay region-owned.
+Different roots and pure helpers remain isolated. Region removal releases handles;
+an empty live root retains its instance until root disposal. Trap poisoning drops
+an instance without native re-entry and invalidates peer cache admission. Stale
+handles fail closed; exhausted generations retire slots instead of wrapping.
+
+The public sibling/root test failed first (two instances instead of one). Fresh
+focused experimental checks:90passed/1normal-onlyskip; normal42passed/49experimental
+skips. Public evidence covers cached A→B→A placement without solving, independent
+width changes, remove/restore, cross-root isolation, managed-Layer sharing and
+idempotent disposal. Five native tests pass, including stale generation/reuse,
+exhaustion, isolated cached placement and terminal disposal. Old ABI publication
+is rejected. Typecheck and changed-code lint pass. Matching59181-byte artifact
+built with pinned Rust1.99.0; native tests run in the compiler-backed build.
+
+Source/built public keyed collections share one instance/two handles, preserve
+geometry/input/cache behavior and dispose to zero. Managed-Layer lifecycle probes
+complete five remove/restore cycles:4nodes/2handles/2measurements/1instance becomes
+0/0/0/1 while the root lives, then0/0/0/0 on root disposal. Detached inputs stay
+inert; built466inputs. Packed consumer227installed inputs, strict Bundler/NodeNext
+and structural lifecycle pass. Focused read-only native/host review found no
+material issue. Logs `/tmp/pibbl-slice42-*`. Node26.9.0/pnpm11.21.0deps/Chromium;
+no Node24 aggregate trust claim. Hands-on ports5192/5193, keyed-wrap and
+wasm-built-lifecycle routes. No complete prepared graph/publication claim.
 
 ### Consolidation 13 completed for delivery slices 37–39
 
@@ -1812,7 +1834,7 @@ three pinned Yoga cases, and keeps unaccepted API signatures and missing release
 gates explicit. It is support work, not an additional delivered capability slice.
 Group9 has two deliveries; consolidate after the next closely related slice.
 
-## [NEXT] Root-owned shared WASM arena (slice 42)
+## Root-owned shared WASM arena (slice 42, delivered)
 
 Independent mounted Flex regions should keep separate handles, records/caches and
 lifecycle while sharing one mutable WASM instance per owning root. Different roots

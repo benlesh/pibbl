@@ -215,8 +215,8 @@ function createWasmBuiltLifecycleExampleContent(canvas: HTMLCanvasElement) {
   button("Change text", () =>
     text.update((value) => (value === shortText ? longText : shortText)),
   );
-  button("Dispose mount", stop);
-  button("Mount", start);
+  button("Remove content", stop);
+  button("Restore content", start);
   canvas.insertAdjacentElement("afterend", controls);
   controls.insertAdjacentElement("afterend", status);
   refresh();

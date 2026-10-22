@@ -28,3 +28,14 @@ describe('layout entry import inertness', () => {
   });
 
 });
+
+it('rejects an older region ABI before publishing compiled code', async () => {
+  vi.resetModules();
+  const { publishLayoutModule, hasReadyLayoutModule } = await import('./module.js');
+  const legacyExports: WebAssembly.ModuleExportDescriptor[] = [
+    { name: 'memory', kind: 'memory' }, { name: 'solve', kind: 'function' }, { name: 'dispose', kind: 'function' },
+  ];
+  vi.spyOn(WebAssembly.Module, 'exports').mockReturnValue(legacyExports);
+  expect(() => publishLayoutModule({} as WebAssembly.Module)).toThrow('ABI is incompatible');
+  expect(hasReadyLayoutModule()).toBe(false);
+});

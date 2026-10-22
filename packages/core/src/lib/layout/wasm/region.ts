@@ -3,7 +3,7 @@ import type { FlexAllocationCache } from '../flex-allocation-cache.js';
 import { readyLayoutModule } from './module.js';
 import { GLOBAL_STATE } from '../../global-state.js';
 import { signalGraphSnapshot } from '../../signals/graph.js';
-import type { PibblComponentRefs } from '../../types.js';
+import type { PibblComponentRefs, PibblInstance } from '../../types.js';
 
 /** Internal build lane; deliberately no application engine selector. */
 declare const __PIBBL_LAYOUT_WASM__: boolean;
@@ -11,7 +11,7 @@ const buildEnvironment = import.meta.env;
 export const experimentalLayout =
   (typeof __PIBBL_LAYOUT_WASM__ !== 'undefined' && __PIBBL_LAYOUT_WASM__) ||
   buildEnvironment?.MODE === 'layout-wasm';
-const counters = { lineFormations: 0, cachedMeasurements: 0, mainPlacements: 0, crossPlacements: 0, solves: 0, measuredLeaves: 0, nodeReuses: 0, nodeCreates: 0, activeNodes: 0, activeArenas: 0, frames: 0, allocationPasses: 0, allocationItemVisits: 0, allocationCacheHits: 0 };
+const counters = { lineFormations: 0, cachedMeasurements: 0, mainPlacements: 0, crossPlacements: 0, solves: 0, measuredLeaves: 0, nodeReuses: 0, nodeCreates: 0, activeNodes: 0, activeArenas: 0, activeWasmInstances: 0, wasmInstanceCreates: 0, frames: 0, allocationPasses: 0, allocationItemVisits: 0, allocationCacheHits: 0 };
 export function snapshotWasmLayoutDiagnostics() {
   const signals = signalGraphSnapshot();
   return {
@@ -33,18 +33,76 @@ if (experimentalLayout) {
 }
 interface Kernel {
   memory: WebAssembly.Memory;
-  resize(count: number): number;
-  solve(main: number, gap: number): number;
-  solve_wrap(main: number, gap: number): number;
-  place_wrap_main(main: number, gap: number, alignment: number, reverse: number): number;
-  place_wrap_cross(size: number, gap: number, alignment: number, reverse: number): number;
-  resize_cross(count: number): number;
-  place_cross(size: number): number;
-  place_main(main: number, gap: number, alignment: number, reverse: number): number;
+  arena_create(): number;
+  arena_generation(handle: number): number;
+  arena_dispose(handle: number, generation: number): number;
+  resize(handle: number, generation: number, count: number): number;
+  solve(handle: number, generation: number, main: number, gap: number): number;
+  solve_wrap(handle: number, generation: number, main: number, gap: number): number;
+  place_wrap_main(handle: number, generation: number, main: number, gap: number, alignment: number, reverse: number): number;
+  place_wrap_cross(handle: number, generation: number, size: number, gap: number, alignment: number, reverse: number): number;
+  resize_cross(handle: number, generation: number, count: number): number;
+  place_cross(handle: number, generation: number, size: number): number;
+  place_main(handle: number, generation: number, main: number, gap: number, alignment: number, reverse: number): number;
   dispose(): void;
 }
-function instantiate(): Kernel {
-  return new WebAssembly.Instance(readyLayoutModule()).exports as unknown as Kernel;
+const rootOwners = new WeakMap<PibblInstance, RootLayoutOwner>();
+class RootLayoutOwner {
+  private exports: Kernel | undefined;
+  private handles = new Map<number, number>();
+  private teardown: (() => void) | undefined;
+  constructor(private readonly mount?: PibblInstance) {
+    if (mount?.mainTeardowns.closed) throw new Error('Cannot allocate layout for a disposed root.');
+    this.exports = new WebAssembly.Instance(readyLayoutModule()).exports as unknown as Kernel;
+    counters.activeWasmInstances++; counters.wasmInstanceCreates++;
+    if (mount) {
+      this.teardown = () => this.dispose();
+      mount.mainTeardowns.add(this.teardown);
+    }
+  }
+  get kernel(): Kernel {
+    if (!this.exports) throw new Error('The root layout instance is disposed.');
+    return this.exports;
+  }
+  has(handle: number, generation: number): boolean { return this.handles.get(handle) === generation && generation !== 0; }
+  create(): { handle: number; generation: number } {
+    const handle = this.kernel.arena_create();
+    const generation = handle ? this.kernel.arena_generation(handle) : 0;
+    if (!handle || !generation) throw new Error('Layout region handle allocation failed.');
+    this.handles.set(handle, generation); counters.activeArenas++;
+    return { handle, generation };
+  }
+  release(handle: number, generation: number): void {
+    if (!this.has(handle, generation)) return;
+    try {
+      if (this.kernel.arena_dispose(handle, generation) !== 0) throw new Error('Layout region generation is stale.');
+    } catch (error) {
+      this.dispose(error instanceof WebAssembly.RuntimeError);
+      throw error;
+    } finally {
+      if (this.has(handle, generation)) { this.handles.delete(handle); counters.activeArenas--; }
+    }
+  }
+  dispose(trapped = false): void {
+    const kernel = this.exports;
+    if (!kernel) return;
+    this.exports = undefined;
+    counters.activeArenas -= this.handles.size; this.handles.clear();
+    counters.activeWasmInstances--;
+    if (this.mount) {
+      if (rootOwners.get(this.mount) === this) rootOwners.delete(this.mount);
+      if (this.teardown) this.mount.mainTeardowns.remove(this.teardown);
+      this.teardown = undefined;
+    }
+    // A trap can leave Rust RefCell borrows locked; do not re-enter that instance.
+    if (!trapped) kernel.dispose();
+  }
+}
+function acquireRootOwner(mount?: PibblInstance): RootLayoutOwner {
+  if (!mount) return new RootLayoutOwner();
+  let owner = rootOwners.get(mount);
+  if (!owner) { owner = new RootLayoutOwner(mount); rootOwners.set(mount, owner); }
+  return owner;
 }
 export interface NumericFlexItem {
   baseMain: number; minMain: number; maxMain: number; paddingMain: number;
@@ -59,8 +117,29 @@ export interface NumericFlexCrossItem {
 type CrossAlignment = Exclude<NumericFlexCrossItem['alignSelf'], 'auto'>;
 const alignmentCodes: Record<CrossAlignment, number> = { stretch: 0, 'flex-start': 1, 'flex-end': 2, center: 3 };
 export class LayoutRegion {
-  allocationCache: FlexAllocationCache | undefined;
-  private kernel: Kernel | undefined;
+  private cachedAllocation: FlexAllocationCache | undefined;
+  private layoutOwner: RootLayoutOwner | undefined;
+  private handle = 0;
+  private generation = 0;
+  constructor(private readonly mountOwner?: PibblInstance) {}
+  get allocationCache(): FlexAllocationCache | undefined {
+    return this.layoutOwner && !this.layoutOwner.has(this.handle, this.generation) ? undefined : this.cachedAllocation;
+  }
+  set allocationCache(value: FlexAllocationCache | undefined) { this.cachedAllocation = value; }
+  private ensureOwner(): Kernel {
+    if (this.layoutOwner && !this.layoutOwner.has(this.handle, this.generation)) this.dispose();
+    if (!this.layoutOwner) {
+      this.layoutOwner = acquireRootOwner(this.mountOwner);
+      const region = this.layoutOwner.create();
+      this.handle = region.handle; this.generation = region.generation;
+    }
+    return this.layoutOwner.kernel;
+  }
+  private fail(error: unknown): never {
+    if (error instanceof WebAssembly.RuntimeError) this.layoutOwner?.dispose(true);
+    this.dispose();
+    throw error;
+  }
   private records = new Map<object, readonly number[]>();
   private identities = new Map<object, Map<string, object>>();
   identity(type: object, key: string): object {
@@ -113,10 +192,13 @@ export class LayoutRegion {
   }
 
   solve(items: NumericFlexItem[], main: number, gap: number, wrap = false): void {
-    if (!this.kernel) { this.kernel = instantiate(); counters.activeArenas++; }
+    try { this.solveRegion(items, main, gap, wrap); } catch (error) { this.fail(error); }
+  }
+  private solveRegion(items: NumericFlexItem[], main: number, gap: number, wrap: boolean): void {
+    const kernel = this.ensureOwner();
     let changed = wrap !== this.wrap || main !== this.main || gap !== this.gap || items.length !== this.order.length;
-    const pointer = this.kernel.resize(items.length);
-    const view = new Float64Array(this.kernel.memory.buffer, pointer, items.length * 10);
+    const pointer = kernel.resize(this.handle, this.generation, items.length);
+    const view = new Float64Array(kernel.memory.buffer, pointer, items.length * 10);
     const alive = new Set<object>();
     for (const [i, item] of items.entries()) {
       const token = item.layoutToken ?? item.receiverToken;
@@ -140,17 +222,13 @@ export class LayoutRegion {
     }
     if (changed) {
       try {
-        const status = wrap ? this.kernel.solve_wrap(main, gap) : this.kernel.solve(main, gap);
+        const status = wrap ? kernel.solve_wrap(this.handle, this.generation, main, gap) : kernel.solve(this.handle, this.generation, main, gap);
         if (status !== 0) throw new Error(`Experimental Flex WASM allocation failed (${status}); numeric overflow or no progress.`);
         // Rust scratch allocations may grow memory while solving. Never retain
         // an input view across that boundary.
-        const output = new Float64Array(this.kernel.memory.buffer, pointer, items.length * 10);
+        const output = new Float64Array(kernel.memory.buffer, pointer, items.length * 10);
         this.results = items.map((_, i) => output[i * 10 + 6]);
-      } catch (error) {
-        // A failed revision must never become a cache hit on retry.
-        this.dispose();
-        throw error;
-      }
+      } catch (error) { this.fail(error); }
       counters.solves++; this.allocationRevision++;
       if (wrap) counters.lineFormations++;
       this.wrap = wrap;
@@ -159,23 +237,25 @@ export class LayoutRegion {
     items.forEach((item, i) => { item.targetMain = this.results[i]; });
   }
   placeMain(main: number, gap: number, alignment: 'flex-start' | 'flex-end' | 'center' | 'space-between' | 'space-around' | 'space-evenly', reverse = false): readonly number[] {
-    if (!this.kernel) throw new Error('Experimental Flex main placement requires a solved region.');
+    if (!this.layoutOwner?.has(this.handle, this.generation)) throw new Error('Experimental Flex main placement requires a solved region.');
+    const kernel = this.layoutOwner.kernel;
     const code = ['flex-start', 'flex-end', 'center', 'space-between', 'space-around', 'space-evenly'].indexOf(alignment);
     const key = `${this.allocationRevision}:${main}:${gap}:${code}:${reverse ? 1 : 0}`;
     if (key !== this.mainPlacementKey) {
       try {
-        const pointer = this.kernel.resize(this.order.length);
-        const status = this.wrap ? this.kernel.place_wrap_main(main, gap, code, reverse ? 1 : 0) : this.kernel.place_main(main, gap, code, reverse ? 1 : 0);
+        const pointer = kernel.resize(this.handle, this.generation, this.order.length);
+        const status = this.wrap ? kernel.place_wrap_main(this.handle, this.generation, main, gap, code, reverse ? 1 : 0) : kernel.place_main(this.handle, this.generation, main, gap, code, reverse ? 1 : 0);
         if (status !== 0) throw new Error(`Experimental Flex WASM main placement failed (${status}); nonfinite geometry.`);
-        const output = new Float64Array(this.kernel.memory.buffer, pointer, this.order.length * 10);
+        const output = new Float64Array(kernel.memory.buffer, pointer, this.order.length * 10);
         this.mainOffsets = this.order.map((_, i) => output[i * 10 + 7]);
         this.mainPlacementKey = key; counters.mainPlacements++;
-      } catch (error) { this.dispose(); throw error; }
+      } catch (error) { this.fail(error); }
     }
     return this.mainOffsets;
   }
   placeCross(items: readonly NumericFlexCrossItem[], size: number, alignment: CrossAlignment, wrap?: { gap: number; alignContent: string; reverse?: boolean }) {
-    if (!this.kernel) throw new Error('Experimental Flex cross placement requires a solved region.');
+    if (!this.layoutOwner?.has(this.handle, this.generation)) throw new Error('Experimental Flex cross placement requires a solved region.');
+    const kernel = this.layoutOwner.kernel;
     const records = items.map(item => [item.preferredCross, item.paddingCross, item.minCross, item.maxCross,
       item.crossAuto ? 1 : 0, alignmentCodes[item.alignSelf === 'auto' ? alignment : item.alignSelf], 0, 0, item.marginCrossBefore ?? 0, item.marginCrossAfter ?? 0]);
     const code = wrap ? ['flex-start', 'flex-end', 'center', 'space-between', 'space-around', 'space-evenly', 'stretch'].indexOf(wrap.alignContent) : -1;
@@ -184,22 +264,23 @@ export class LayoutRegion {
       records.some((record, i) => record.some((value, j) => value !== this.crossRecords[i]?.[j]));
     if (changed) {
       try {
-        const pointer = this.kernel.resize_cross(records.length);
-        const input = new Float64Array(this.kernel.memory.buffer, pointer, records.length * 10);
+        const pointer = kernel.resize_cross(this.handle, this.generation, records.length);
+        const input = new Float64Array(kernel.memory.buffer, pointer, records.length * 10);
         records.forEach((record, i) => input.set(record, i * 10));
-        const status = wrap ? this.kernel.place_wrap_cross(size, wrap.gap, code, wrap.reverse ? 1 : 0) : this.kernel.place_cross(size);
+        const status = wrap ? kernel.place_wrap_cross(this.handle, this.generation, size, wrap.gap, code, wrap.reverse ? 1 : 0) : kernel.place_cross(this.handle, this.generation, size);
         if (status !== 0) throw new Error(`Experimental Flex WASM cross placement failed (${status}); invalid or nonfinite geometry.`);
-        const output = new Float64Array(this.kernel.memory.buffer, pointer, records.length * 10);
+        const output = new Float64Array(kernel.memory.buffer, pointer, records.length * 10);
         this.crossResults = records.map((_, i) => ({ outerCross: output[i * 10 + 6], offset: output[i * 10 + 7] }));
         this.crossRecords = records; this.crossSize = size; this.crossModeKey = modeKey;
         counters.crossPlacements++;
-      } catch (error) { this.dispose(); throw error; }
+      } catch (error) { this.fail(error); }
     }
     return this.crossResults;
   }
   dispose(): void {
     this.allocationCache = undefined;
-    if (this.kernel) { this.kernel.dispose(); this.kernel = undefined; counters.activeArenas--; }
+    const owner = this.layoutOwner, handle = this.handle, generation = this.generation;
+    this.layoutOwner = undefined; this.handle = 0; this.generation = 0;
     counters.activeNodes -= this.records.size;
     for (const token of this.measurements.keys()) this.releaseMeasurements(token);
     if (this.textMaximums) for (const token of this.textMaximums.keys()) this.releaseMeasurements(token);
@@ -207,6 +288,7 @@ export class LayoutRegion {
     this.records.clear(); this.identities.clear(); this.results = []; this.order = []; this.main = -1; this.gap = -1;
     this.mainPlacementKey = ""; this.mainOffsets = [];
     this.crossRecords = []; this.crossResults = []; this.crossSize = -1; this.crossModeKey = ""; this.wrap = false;
+    if (owner) { try { owner.release(handle, generation); } finally { if (!this.mountOwner) owner.dispose(); } }
   }
 }
 const regions = new WeakMap<PibblComponentRefs<any>, LayoutRegion>();
@@ -219,7 +301,7 @@ export function mountedLayoutRegion(): LayoutRegion | undefined {
   if (owner && frame && lastFrames.get(owner) !== frame) { lastFrames.set(owner, frame); counters.frames++; }
   let region = regions.get(refs);
   if (!region) {
-    region = new LayoutRegion(); regions.set(refs, region);
+    region = new LayoutRegion(owner?.interactionRoot ?? owner); regions.set(refs, region);
     refs.teardowns.add(() => { region!.dispose(); regions.delete(refs); });
   }
   return region;

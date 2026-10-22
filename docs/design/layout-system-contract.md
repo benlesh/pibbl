@@ -232,6 +232,17 @@ inputs and bounds retain their validation; signed leading/trailing margins occup
 separate slots. Allocation and main/cross placement run in the same kernel; output
 border boxes and both source/built loading forms use the matching artifact.
 
+Mounted experimental Flex regions share one lazy mutable WASM instance owned by
+the top-level Canvas root, including regions inside managed Layers. Each region
+owns a separate generational native handle and its own records, line data and JS
+caches; releasing a region does not release its peers. Removing all layout content
+releases the handles while retaining the instance until root disposal. Different
+Canvas roots and standalone pure helper calls have isolated mutable instances.
+Root teardown is idempotent. Native traps poison the shared instance without
+re-entering it; stale region caches cannot be reused on the next solve. Retired
+handle generations never wrap. This ownership foundation is not a root-wide
+prepared graph or a transactional geometry-publication guarantee.
+
 For the same direct Text subset, automatic width and basis use the natural width
 before wrapping, not the containing row's constrained width. The natural query
 follows wrapped Text's existing removal of leading ASCII spaces; empty/space-only

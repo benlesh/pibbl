@@ -22,7 +22,7 @@ try {
   await page.waitForTimeout(180);
   const initial = await state();
   assert.equal(initial.boxes['row:C'].y, 272); assert.equal(initial.boxes['column:C'].x, 582);
-  assert.equal(initial.layout.activeNodes, 6); assert.equal(initial.layout.activeArenas, 2);
+  assert.equal(initial.layout.activeNodes, 6); assert.equal(initial.layout.activeArenas, 2); assert.equal(initial.layout.activeWasmInstances, 1);
   const reversedAxes = await click(660,118);
   assert.equal(reversedAxes.reverseAxes, true);
   assert.deepEqual(reversedAxes.keys, initial.keys);
@@ -88,7 +88,7 @@ try {
     dispatchEvent(new PageTransitionEvent('pagehide'));
     return globalThis.__PIBBL_LAYOUT_DIAGNOSTICS__();
   });
-  assert.deepEqual([disposed.activeNodes, disposed.activeArenas, disposed.cachedMeasurements], [0,0,0]);
+  assert.deepEqual([disposed.activeNodes, disposed.activeArenas, disposed.cachedMeasurements, disposed.activeWasmInstances], [0,0,0,0]);
   await page.waitForTimeout(180);
   assert.deepEqual(await sandbox.evaluate(() => globalThis.__PIBBL_LAYOUT_DIAGNOSTICS__()), disposed);
   assert.deepEqual(errors, []);

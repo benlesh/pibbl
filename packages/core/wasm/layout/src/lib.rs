@@ -1,39 +1,91 @@
 //! Experimental region-owned f64 Flex allocator. No rendering or scheduling.
 use std::cell::RefCell;
 const STRIDE: usize = 10; // basis, min, max, padding, grow, shrink, result, frozen/offset, margin before, margin after
+#[derive(Default)]
+struct Arena { nodes: Vec<f64>, lines: Vec<(usize, usize)>, cross: Vec<f64> }
+struct ArenaSlot { generation: u32, arena: Option<Arena> }
+struct ArenaPool { slots: Vec<ArenaSlot>, closed: bool }
 thread_local! {
-    static NODES: RefCell<Vec<f64>> = const { RefCell::new(Vec::new()) };
-    static LINES: RefCell<Vec<(usize, usize)>> = const { RefCell::new(Vec::new()) };
-    static CROSS: RefCell<Vec<f64>> = const { RefCell::new(Vec::new()) };
+    static ARENAS: RefCell<ArenaPool> = const { RefCell::new(ArenaPool { slots: Vec::new(), closed: false }) };
 }
-
+fn with_arena<R>(handle: u32, generation: u32, invalid: R, work: impl FnOnce(&mut Arena) -> R) -> R {
+    ARENAS.with(|pool| {
+        let mut pool = pool.borrow_mut();
+        if pool.closed || generation == 0 { return invalid; }
+        let Some(index) = handle.checked_sub(1) else { return invalid; };
+        let Some(slot) = pool.slots.get_mut(index as usize) else { return invalid; };
+        if slot.generation != generation { return invalid; }
+        let Some(arena) = slot.arena.as_mut() else { return invalid; };
+        work(arena)
+    })
+}
 #[no_mangle]
-pub extern "C" fn resize(count: usize) -> *mut f64 {
-    NODES.with(|nodes| {
-        let mut nodes = nodes.borrow_mut();
-        nodes.resize(count * STRIDE, 0.0);
-        nodes.as_mut_ptr()
+pub extern "C" fn arena_create() -> u32 {
+    ARENAS.with(|pool| {
+        let mut pool = pool.borrow_mut();
+        if pool.closed { return 0; }
+        for (index, slot) in pool.slots.iter_mut().enumerate() {
+            if slot.arena.is_none() && slot.generation != u32::MAX {
+                slot.generation += 1;
+                slot.arena = Some(Arena::default());
+                return (index + 1) as u32;
+            }
+        }
+        let Some(handle) = pool.slots.len().checked_add(1).and_then(|n| u32::try_from(n).ok()) else { return 0; };
+        pool.slots.push(ArenaSlot { generation: 1, arena: Some(Arena::default()) });
+        handle
+    })
+}
+#[no_mangle]
+pub extern "C" fn arena_generation(handle: u32) -> u32 {
+    ARENAS.with(|pool| {
+        let pool = pool.borrow();
+        if pool.closed { return 0; }
+        let Some(index) = handle.checked_sub(1) else { return 0; };
+        match pool.slots.get(index as usize) { Some(slot) if slot.arena.is_some() => slot.generation, _ => 0 }
+    })
+}
+#[no_mangle]
+pub extern "C" fn arena_dispose(handle: u32, generation: u32) -> u32 {
+    ARENAS.with(|pool| {
+        let mut pool = pool.borrow_mut();
+        if pool.closed { return 1; }
+        let Some(index) = handle.checked_sub(1) else { return 1; };
+        let Some(slot) = pool.slots.get_mut(index as usize) else { return 1; };
+        if slot.generation != generation || slot.arena.is_none() { return 1; }
+        slot.arena = None;
+        0
+    })
+}
+#[no_mangle]
+pub extern "C" fn resize(handle: u32, generation: u32, count: usize) -> *mut f64 {
+    with_arena(handle, generation, std::ptr::null_mut(), |arena| {
+        let Some(length) = count.checked_mul(STRIDE) else { return std::ptr::null_mut(); };
+        arena.nodes.resize(length, 0.0);
+        arena.nodes.as_mut_ptr()
     })
 }
 #[no_mangle]
 pub extern "C" fn dispose() {
-    NODES.with(|n| *n.borrow_mut() = Vec::new());
-    CROSS.with(|n| *n.borrow_mut() = Vec::new());
-    LINES.with(|n| *n.borrow_mut() = Vec::new());
+    ARENAS.with(|pool| {
+        let mut pool = pool.borrow_mut();
+        pool.closed = true;
+        pool.slots = Vec::new();
+    });
 }
 
 // preferred border cross, padding, min, max, auto, alignment, border result, offset, margin before, margin after.
 #[no_mangle]
-pub extern "C" fn resize_cross(count: usize) -> *mut f64 {
-    CROSS.with(|records| {
-        let mut records = records.borrow_mut();
-        records.resize(count * STRIDE, 0.0);
-        records.as_mut_ptr()
+pub extern "C" fn resize_cross(handle: u32, generation: u32, count: usize) -> *mut f64 {
+    with_arena(handle, generation, std::ptr::null_mut(), |arena| {
+        let Some(length) = count.checked_mul(STRIDE) else { return std::ptr::null_mut(); };
+        arena.cross.resize(length, 0.0);
+        arena.cross.as_mut_ptr()
     })
 }
 #[no_mangle]
-pub extern "C" fn place_cross(size: f64) -> u32 {
-    CROSS.with(|records| align_cross(&mut records.borrow_mut(), size, false))
+pub extern "C" fn place_cross(handle: u32, generation: u32, size: f64) -> u32 {
+    with_arena(handle, generation, 1, |arena| align_cross(&mut arena.cross, size, false))
 }
 fn align_cross(records: &mut [f64], size: f64, reverse: bool) -> u32 {
     if !size.is_finite() || size < 0.0 { return 1; }
@@ -63,8 +115,8 @@ fn align_cross(records: &mut [f64], size: f64, reverse: bool) -> u32 {
 
 // Reuses the solved allocation records; slot seven becomes main-axis offset.
 #[no_mangle]
-pub extern "C" fn place_main(main: f64, gap: f64, alignment: u32, reverse: u32) -> u32 {
-    NODES.with(|nodes| align_main(&mut nodes.borrow_mut(), main, gap, alignment, reverse))
+pub extern "C" fn place_main(handle: u32, generation: u32, main: f64, gap: f64, alignment: u32, reverse: u32) -> u32 {
+    with_arena(handle, generation, 1, |arena| align_main(&mut arena.nodes, main, gap, alignment, reverse))
 }
 fn align_main(nodes: &mut [f64], main: f64, gap: f64, alignment: u32, reverse: u32) -> u32 {
     if !main.is_finite() || main < 0.0 || !gap.is_finite() || gap < 0.0 || alignment > 5 || reverse > 1 { return 1; }
@@ -101,15 +153,14 @@ fn distribution(free: f64, count: usize, alignment: u32) -> (f64, f64) {
 // existing finite freeze allocator resolves each range. All records stay owned
 // by one region; line boundaries never delete sibling identities or caches.
 #[no_mangle]
-pub extern "C" fn solve_wrap(main: f64, gap: f64) -> u32 {
-    NODES.with(|nodes| {
-        let mut nodes = nodes.borrow_mut();
-        let lines = match form_lines(&nodes, main, gap) { Ok(lines) => lines, Err(status) => return status };
+pub extern "C" fn solve_wrap(handle: u32, generation: u32, main: f64, gap: f64) -> u32 {
+    with_arena(handle, generation, 1, |arena| {
+        let lines = match form_lines(&arena.nodes, main, gap) { Ok(lines) => lines, Err(status) => return status };
         for &(start, end) in &lines {
-            let status = allocate(&mut nodes[start*STRIDE..end*STRIDE], main, gap);
+            let status = allocate(&mut arena.nodes[start*STRIDE..end*STRIDE], main, gap);
             if status != 0 { return status; }
         }
-        LINES.with(|ranges| *ranges.borrow_mut() = lines);
+        arena.lines = lines;
         0
     })
 }
@@ -132,21 +183,20 @@ fn form_lines(nodes: &[f64], main: f64, gap: f64) -> Result<Vec<(usize, usize)>,
     Ok(lines)
 }
 #[no_mangle]
-pub extern "C" fn place_wrap_main(main: f64, gap: f64, alignment: u32, reverse: u32) -> u32 {
-    NODES.with(|nodes| LINES.with(|lines| {
-        let mut nodes = nodes.borrow_mut();
-        for &(start, end) in lines.borrow().iter() {
-            let status = align_main(&mut nodes[start*STRIDE..end*STRIDE], main, gap, alignment, reverse);
+pub extern "C" fn place_wrap_main(handle: u32, generation: u32, main: f64, gap: f64, alignment: u32, reverse: u32) -> u32 {
+    with_arena(handle, generation, 1, |arena| {
+        for &(start, end) in &arena.lines {
+            let status = align_main(&mut arena.nodes[start*STRIDE..end*STRIDE], main, gap, alignment, reverse);
             if status != 0 { return status; }
         }
         0
-    }))
+    })
 }
 #[no_mangle]
-pub extern "C" fn place_wrap_cross(size: f64, gap: f64, alignment: u32, reverse: u32) -> u32 {
-    CROSS.with(|records| LINES.with(|lines| {
-        let mut records = records.borrow_mut();
-        let lines = lines.borrow();
+pub extern "C" fn place_wrap_cross(handle: u32, generation: u32, size: f64, gap: f64, alignment: u32, reverse: u32) -> u32 {
+    with_arena(handle, generation, 1, |arena| {
+        let records = &mut arena.cross;
+        let lines = &arena.lines;
         if !size.is_finite() || size < 0.0 || !gap.is_finite() || gap < 0.0 || alignment > 6 || reverse > 1 { return 1; }
         if lines.last().map_or(0, |&(_,end)| end) != records.len()/STRIDE { return 1; }
         let mut sizes = Vec::with_capacity(lines.len());
@@ -180,12 +230,12 @@ pub extern "C" fn place_wrap_cross(size: f64, gap: f64, alignment: u32, reverse:
             cursor += cross + gap + between;
         }
         0
-    }))
+    })
 }
 
 #[no_mangle]
-pub extern "C" fn solve(main: f64, gap: f64) -> u32 {
-    NODES.with(|nodes| allocate(&mut nodes.borrow_mut(), main, gap))
+pub extern "C" fn solve(handle: u32, generation: u32, main: f64, gap: f64) -> u32 {
+    with_arena(handle, generation, 1, |arena| allocate(&mut arena.nodes, main, gap))
 }
 fn allocate(nodes: &mut [f64], main: f64, gap: f64) -> u32 {
     if !main.is_finite() || main < 0.0 || !gap.is_finite() || gap < 0.0 { return 1; }
@@ -270,4 +320,35 @@ mod tests {
         assert_eq!(align_cross(&mut cross,30.,true),0);
         assert_eq!((cross[7],cross[17]),(3.,11.));
     }
+    #[test] fn arena_handles_isolate_cached_placement_and_reject_stale_generations() {
+        let a = arena_create(); let ga = arena_generation(a);
+        let b = arena_create(); let gb = arena_generation(b);
+        assert_ne!(a, b);
+        let pa = resize(a, ga, 2);
+        let pb = resize(b, gb, 2);
+        unsafe {
+            std::slice::from_raw_parts_mut(pa, 20).copy_from_slice(&[80.,0.,f64::INFINITY,0.,0.,1.,0.,0.,0.,0.,80.,0.,f64::INFINITY,0.,0.,1.,0.,0.,0.,0.]);
+            std::slice::from_raw_parts_mut(pb, 20).copy_from_slice(&[40.,0.,f64::INFINITY,0.,0.,1.,0.,0.,0.,0.,40.,0.,f64::INFINITY,0.,0.,1.,0.,0.,0.,0.]);
+        }
+        assert_eq!(solve_wrap(a,ga,100.,0.),0);
+        assert_eq!(solve(b,gb,60.,0.),0);
+        assert_eq!(place_wrap_main(a,ga,100.,0.,0,0),0);
+        unsafe { assert_eq!((*pa.add(6),*pa.add(16),*pa.add(17)),(80.,80.,0.)); }
+        assert_eq!(place_main(b,gb,60.,0.,0,0),0);
+        unsafe { assert_eq!((*pb.add(6),*pb.add(16),*pb.add(17)),(30.,30.,30.)); }
+        assert_eq!(arena_dispose(a,ga),0);
+        assert_eq!(arena_dispose(a,ga),1);
+        let c = arena_create(); let gc = arena_generation(c);
+        assert_eq!(c,a); assert_ne!(gc,ga);
+        assert_eq!(solve(a,ga,100.,0.),1);
+        assert_eq!(place_main(b,gb,60.,0.,0,1),0);
+        assert_eq!(arena_dispose(c,gc),0);
+        ARENAS.with(|pool| pool.borrow_mut().slots[(c-1) as usize].generation=u32::MAX);
+        let d = arena_create();
+        assert_ne!(d,c); assert_eq!(arena_dispose(c,u32::MAX),1);
+        dispose(); dispose();
+        assert_eq!(arena_create(),0);
+        assert_eq!(arena_dispose(b,gb),1);
+    }
+
 }

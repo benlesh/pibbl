@@ -31,7 +31,10 @@ export function publishLayoutModule(module: WebAssembly.Module): void {
   const exports = WebAssembly.Module.exports(module);
   if (!exports.some(entry => entry.name === 'memory' && entry.kind === 'memory') ||
       !exports.some(entry => entry.name === 'solve' && entry.kind === 'function') ||
-      !exports.some(entry => entry.name === 'dispose' && entry.kind === 'function')) {
+      !exports.some(entry => entry.name === 'dispose' && entry.kind === 'function') ||
+      !exports.some(entry => entry.name === 'arena_create' && entry.kind === 'function') ||
+      !exports.some(entry => entry.name === 'arena_generation' && entry.kind === 'function') ||
+      !exports.some(entry => entry.name === 'arena_dispose' && entry.kind === 'function')) {
     throw new Error('Layout WASM ABI is incompatible with this runtime.');
   }
   compiled = module;
