@@ -2,7 +2,8 @@
 
 ## Current checkpoint and single next slice — 2026-10-22
 
-Latest delivery is slice50 (Grid-entry known Flex preparation).
+Latest delivery is slice51 (Flow-entry known Flex preparation).
+Slice50 is `c8b163aa` (Grid-entry known Flex preparation).
 Slice49 is `d6f12813` (known Layer-to-Flex preparation/adoption).
 Slice48 is `cb863bc2` (finite HTML projection preparation).
 Slice47 `9a7b1b0a` prepares pure described Flex roots; slice46 `242cba11` handles
@@ -754,6 +755,34 @@ isolation,100px recovery, both cell pixels/targets and cleanup0/0/0/0 with225pub
 inputs each. Packed228installed-input Bundler/NodeNext/lifecycle pass. Kernel59181
 bytes unchanged. Logs `/tmp/pibbl-slice50-*`; Node26.9.0/pnpm11.21.0deps/Chromium,
 no Node24/full trust claim. All seven gates remain open.
+
+### Slice 51 — Flow-entry known Flex preparation
+
+Flow finishes its existing measurement/sequential/wrap placement pass, then prepares
+direct known Flex roots before opaque child traversal. Grid/Flow share one internal
+placed-clone handoff with no added per-item wrapper allocation, extra placement
+pass, native Flow solver or cache. The settled clone's source, receiver and content
+allocation carry the same prepared Flex region into normal rendering.
+
+Public RED showed an earlier opaque child evaluating twice instead of once before
+a later factor failure. Recovery verifies the transparent10px gap, blue pixels,
+matching target and zero nodes/arenas/native-instance ownership after disposal.
+Focused experimental119tests pass across layout-WASM/Grid/Flow/structural Card;
+normal49pass/70experimental skips. Types/lint pass. Source/built Studio `--flow`
+each pass failure isolation, recovery pixels, red/blue targeting and cleanup0/0/0/0
+with225public inputs. Kernel59181bytes unchanged. Logs `/tmp/pibbl-slice51-*`;
+Node26.9.0/pnpm11.21.0deps/Chromium, no Node24/full trust claim.
+
+## [NEXT] Native explicit Grid track resolution (slice 52)
+
+Resolve existing finite numeric, percentage and fractional Grid tracks in the
+shared root-owned WASM arena. Preserve current Grid child placement/public API and
+ordinary build; experimental Grid must call native track resolution with no hidden
+JS fallback. Public RED combines exact mixed-track geometry/moved hits with native
+resolution evidence across resize versus paint-only updates, plus exact teardown.
+Use per-region numeric storage and the pinned compiler build/native test gate.
+This does not add auto placement, implicit/intrinsic tracks, native Grid placement
+or complete all-family topology. Consolidate52–54 after three deliveries.
 
 ### Consolidation 16 completed for delivery slices 46–48
 

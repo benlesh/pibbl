@@ -302,6 +302,12 @@ Rendering consumes the same Flex plan/region; Grid does not run another placemen
 pass or gain a native Grid solver. This does not discover Grid internals across
 an earlier outer opaque boundary or add Grid auto-placement/intrinsic behavior.
 
+Flow likewise completes its existing measurement/sequential/wrap placement pass
+before preparing direct known Flex roots. It shares Grid's placed-clone handoff,
+without extra per-item wrapper allocations or a second placement pass. Ordinary
+children remain opaque, and normal traversal claims the same native Flex region.
+Flow's own placement still uses its current JavaScript algorithm.
+
 For the same direct Text subset, automatic width and basis use the natural width
 before wrapping, not the containing row's constrained width. The natural query
 follows wrapped Text's existing removal of leading ASCII spaces; empty/space-only

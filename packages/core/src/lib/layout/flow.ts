@@ -1,3 +1,5 @@
+import { experimentalLayout } from './wasm/region.js';
+import { preparePlacedKnownLayout } from './prepared-root.js';
 import { preparedStyleValue, preparedStyleQuery, type PreparedQuery } from '../style/responsive.js';
 import { definePrimitive } from '../define-primitive.js';
 import { clonePibblElement } from '../element/create-element.js';
@@ -147,7 +149,11 @@ function renderFlow(
   return placeDirectChildren(
     children,
     localContent,
-    () => placements[index++],
+    (_child, occurrence) => {
+      const placement = placements[index++];
+      if (experimentalLayout) preparePlacedKnownLayout(placement.element, occurrence);
+      return placement;
+    },
     style.overflow,
   );
 }

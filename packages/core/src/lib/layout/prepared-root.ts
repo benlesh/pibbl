@@ -1,3 +1,5 @@
+import { peekPreNormalizedStyle } from '../style/resolve-dispatch.js';
+import type { BoxStyle } from '../style/types.js';
 import { isLayoutComponent, prepareLayoutComponent } from './define-layout-component.js';
 import { getElementMetadata, setElementMetadata, getPrimitiveReceiverToken } from '../element/metadata.js';
 import { LayoutRegion, adoptMountedLayoutRegion } from './wasm/region.js';
@@ -181,4 +183,16 @@ function retainPreparedSubtree(parent: PreparedLayoutSlot, pending: Map<Prepared
     if (entry) entry.claimed = true;
     retainPreparedSubtree(child, pending);
   }
+}
+
+
+/** Carries a settled placement into known preparation without a second placement pass. */
+export function preparePlacedKnownLayout(element: PibblElement<any>, occurrence: number): void {
+  const prepared = peekPreNormalizedStyle(element);
+  if (!prepared) throw new Error('Known layout preparation requires settled receiver inputs.');
+  const settled = prepared.style as Readonly<BoxStyle>;
+  const width = settled.width, height = settled.height;
+  if (typeof width !== 'number' || typeof height !== 'number') throw new Error('Known layout preparation requires settled content geometry.');
+  const slot = preflightKnownLayout(prepared.source, prepared.style, { x: 0, y: 0, width, height }, getPrimitiveReceiverToken(element), occurrence);
+  attachPreparedLayoutSlot(element, slot);
 }

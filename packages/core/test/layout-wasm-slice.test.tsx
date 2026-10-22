@@ -1,6 +1,6 @@
 import yogaReference from '../../../tooling/layout-yoga-rehearsal/reference.json';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
-import { createElement, Absolute, Flex, Grid, Text, Rectangle, measureElement, useLayoutBox, useConst, Layer, signal, computed, type PibblNode } from '@pibbl/core';
+import { createElement, Absolute, Flex, Grid, Flow, Text, Rectangle, measureElement, useLayoutBox, useConst, Layer, signal, computed, type PibblNode } from '@pibbl/core';
 import { pibblSync as pibbl } from '@pibbl/core/sync';
 import { prepareLayoutEngineSync } from '../src/lib/layout/wasm/embedded';
 import { WasmFlexTextExample as mountWasmFlexTextComponent } from "../../scenarios/src/learning/layout/wasm-flex-text.example";
@@ -1612,6 +1612,31 @@ it.runIf(experimentalLayout)('prepares a later Grid Flex cell before an earlier 
     expect([...canvas.getContext('2d')!.getImageData(105, 10, 1, 1).data]).toEqual([255, 0, 0, 255]);
     expect([...canvas.getContext('2d')!.getImageData(210, 10, 1, 1).data]).toEqual([0, 0, 255, 255]);
     clickCanvas(canvas, 210, 10); expect(hits).toBe(1);
+    controller.dispose(); const disposed = snapshotWasmLayoutDiagnostics();
+    expect(disposed.activeNodes).toBe(baseline.activeNodes); expect(disposed.activeArenas).toBe(baseline.activeArenas); expect(disposed.activeWasmInstances).toBe(baseline.activeWasmInstances);
+  } finally { window.removeEventListener('error', prevent); }
+});
+
+
+it.runIf(experimentalLayout)('prepares a later Flow Flex before an earlier opaque child evaluates', async () => {
+  const baseline = snapshotWasmLayoutDiagnostics();
+  const width = signal(200), grow = signal(1); let evaluations = 0, hits = 0;
+  function Probe(_props: { style: Record<string, unknown> }) { evaluations++; return createElement(Rectangle, { style: { width: useLayoutBox().width, height: 20, fill: 'red' } }); }
+  const scene = createElement(Flow, { style: { width, height: 20, direction: 'horizontal', wrap: false, gap: 10 }, children: [
+    createElement(Probe, { style: { width: 80, height: 20 } }),
+    createElement(Flex, { key: 'later', style: { width: 80, height: 20 }, children: createElement(Rectangle, { style: { width: 20, height: 20, minWidth: 0, flexGrow: grow, fill: 'blue' }, onClick: () => hits++ }) }),
+  ] });
+  const canvas = document.createElement('canvas'); canvas.width = 240; canvas.height = 30; document.body.append(canvas);
+  const errors: unknown[] = []; const prevent = (event: ErrorEvent) => { errors.push(event.error); event.preventDefault(); }; window.addEventListener('error', prevent);
+  try {
+    const controller = pibbl(canvas, scene); controllers.push(controller); await nextFrame(); expect(errors).toEqual([]); expect(evaluations).toBe(1);
+    width.set(220); grow.set(-1); await nextFrame();
+    expect(errors.some(error => error instanceof Error && error.message.includes('flexGrow received -1'))).toBe(true);
+    expect(evaluations).toBe(1); clickCanvas(canvas, 160, 10); expect(hits).toBe(0);
+    grow.set(1); pibbl(canvas, scene); await nextFrame(); expect(evaluations).toBe(2);
+    expect([...canvas.getContext('2d')!.getImageData(85, 10, 1, 1).data]).toEqual([0, 0, 0, 0]);
+    expect([...canvas.getContext('2d')!.getImageData(160, 10, 1, 1).data]).toEqual([0, 0, 255, 255]);
+    clickCanvas(canvas, 160, 10); expect(hits).toBe(1);
     controller.dispose(); const disposed = snapshotWasmLayoutDiagnostics();
     expect(disposed.activeNodes).toBe(baseline.activeNodes); expect(disposed.activeArenas).toBe(baseline.activeArenas); expect(disposed.activeWasmInstances).toBe(baseline.activeWasmInstances);
   } finally { window.removeEventListener('error', prevent); }
