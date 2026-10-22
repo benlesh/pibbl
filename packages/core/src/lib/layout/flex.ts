@@ -1,3 +1,4 @@
+import { isLayoutComponent, prepareLayoutComponent } from './define-layout-component.js';
 import { allocationInputRevision } from './allocation-revision.js';
 import { FlexAllocationCache, frozenFlexInputs, type CachedFlexPlacement } from './flex-allocation-cache.js';
 import { experimentalLayout, LayoutRegion, mountedLayoutRegion, recordWasmMeasurement, recordWasmAllocationPass, recordWasmAllocationItem, recordWasmAllocationCacheHit } from './wasm/region.js';
@@ -539,6 +540,9 @@ function resolveFlexPlacements(
     const normalized = preparedStyleValue(prepared) as Readonly<
       BoxStyle & FlexItemStyle & LayoutItemStyle & Record<string, unknown>
     >;
+    const layoutChild = isLayoutComponent(child.type) ? prepareLayoutComponent(child, { receiverToken }) : child;
+    const knownIntrinsicFlex = child.type === Flex || layoutChild.type === Flex &&
+      (normalized.flexDirection ?? 'row') === 'column' && (normalized.flexWrap ?? 'nowrap') === 'nowrap';
     assertSupportedChildPosition('Flex', child, normalized);
     rejectUnsupportedItemFields(child, normalized, container);
     const grow = nonnegativeFactor(normalized.flexGrow ?? 0, 'flexGrow', child, container);
@@ -592,7 +596,7 @@ function resolveFlexPlacements(
       options.alignItems !== 'stretch';
     // A finite column cross allocation determines a stretched built-in child's
     // width without measuring its intrinsic height. Resolve bounds/padding first.
-    const deferredIntrinsicColumn = experimentalLayout && !row && child.type === Flex &&
+    const deferredIntrinsicColumn = experimentalLayout && !row && knownIntrinsicFlex &&
       needsMeasuredMain && crossAuto && effectiveAlignment(alignment, options.alignItems) === 'stretch';
     if (!deferredIntrinsicColumn && (needsMeasuredMain || needsMeasuredCross || crossAuto)) {
       const constraints = {
@@ -694,7 +698,7 @@ function resolveFlexPlacements(
     }
     // Settle width-dependent height before using an automatic main basis.
     // The experimental built-in intrinsic column uses the same final-width rule.
-    if (!row && options.flexWrap === 'nowrap' && (child.type === Text || experimentalLayout && child.type === Flex) && needsMeasuredMain) {
+    if (!row && options.flexWrap === 'nowrap' && (child.type === Text || experimentalLayout && knownIntrinsicFlex) && needsMeasuredMain) {
       const preferredWidth = crossAuto ?
         effectiveAlignment(alignment, options.alignItems) === 'stretch' ?
           Math.max(0, crossSize - paddingCross) : measured?.width ?? 0 :
@@ -702,8 +706,8 @@ function resolveFlexPlacements(
       const usedWidth = clamp(preferredWidth, minCross, maxCross);
       if (child.type === Text || usedWidth !== measured?.width) {
         const measuredStyle = { ...normalized, width: usedWidth };
-        const measurementChild = clonePibblElement(child);
-        setPreNormalizedStyle(measurementChild, measuredStyle, child, receiverToken, preparedStyleQuery(prepared));
+        const measurementChild = clonePibblElement(layoutChild);
+        setPreNormalizedStyle(measurementChild, measuredStyle, layoutChild, getPrimitiveReceiverToken(layoutChild) ?? receiverToken, preparedStyleQuery(prepared));
         const result = measureFlexChild(measurementChild, {
           minWidth: 0, maxWidth: usedWidth,
           minHeight: 0, maxHeight: container.height,

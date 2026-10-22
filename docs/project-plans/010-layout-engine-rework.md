@@ -35,7 +35,7 @@ Current estimate remains a range, not a promise: the original forecast was 36
 additional slices including 25. Three deliveries are now integrated; loading was
 an accepted scope addition to that forecast. Roughly 34 delivery slices remain,
 subject to reassessment against the same proposal exits after the next group.
-Slice 28 is delivered below. Roughly 30 delivery slices remain after slice 31 against the same
+Slice 28 is delivered below. Roughly 29 delivery slices remain after slice 32 against the same
 forecast, subject to reassessment after this group. Area estimates are not parallel
 work queues.
 
@@ -218,12 +218,35 @@ choose Toggle pure Card, then width/Text/key controls and the green footer. This
 group11's first delivery; consolidate after31–33. End-of-all-work whole-codebase
 review remains deferred as requested.
 
-**Exactly one selected next delivery slice: 32 — settled width through a structural
-Card.** Recognize the prepared root's proven Flex column capability when assigning
-a finite cross allocation, keeping the wrapper for identity and rendering. Remove
-the application's explicit-width calculation, establish the failing public geometry
-contract first, and reuse existing measurement/provision tokens. No new public API,
-new cache, speculative component execution or production-engine switch.
+### Slice 32 — settled width through a structural Card
+
+A direct Card with a proven nowrap-column Flex root now uses the existing finite
+stretched cross-allocation path. Parent bounds and root padding determine content
+width before Text determines height. The wrapper retains numeric/identity ownership;
+measurement clones carry the root's receiver token so preparation and paint share
+one description. No new API, cache, scheduler or generic component discovery.
+The public example no longer calculates root width from the workspace signal.
+
+The focused public regression failed with unsupported automatic height before the
+change (`/tmp/pibbl-slice32-red.txt`) and passed afterward. Three files / 83 focused
+experimental checks passed. Normal public Card/guard/lifecycle checks: 7 passed /
+3 experimental cases skipped. Repository typecheck, scoped lint and matching private
+package build passed. Node26.9.0/pnpm11.21.0 dependencies/Chromium; no aggregate gate
+or Node24 claim.
+
+Coherent source and built `--structural` browser probes passed footer320→360→280,
+one description per width transaction, ordinary-only probe evaluation, moved hits,
+keyed detach/restore and zero disposal resources. Built provenance466 private dist
+inputs. Logs `/tmp/pibbl-slice32-{source,built}-browser.log`. Same runnable ports5192/
+5193 and `#/examples/layout/wasm-flex-nested-intrinsic`, Toggle pure Card.
+This is group11's second delivery; consolidate31–33 after the next slice.
+
+**Exactly one selected next delivery slice: 33 — nested structural Card intrinsic
+columns.** Extend the already-known finite-width intrinsic column measurement loop
+to a nested Card's prepared Flex column root. Retain wrapper identity and canonical
+root receiver tokens; establish a public failing nested composition before edits.
+No unrestricted graph, row/wrapped/query intrinsic sizing, new API or default solver
+switch. Consolidate31–33 after this third delivery.
 
 Current acceptance gaps remain broader than loading: general automatic minimum and
 intrinsic sizing rules, structural component preparation, root-wide prepared graph
@@ -1456,15 +1479,15 @@ three pinned Yoga cases, and keeps unaccepted API signatures and missing release
 gates explicit. It is support work, not an additional delivered capability slice.
 Group9 has two deliveries; consolidate after the next closely related slice.
 
-## [NEXT] Settled width through a structural Card (slice 32)
+## [NEXT] Nested structural Card intrinsic columns (slice 33)
 
-The first Card prototype explicitly calculates its root content width. Reuse the
-existing finite stretched-column allocation for a Card's prepared root Flex,
-retaining Card identity and root receiver tokens. Prove the public example works
-without the width calculation, updates wrapped height and following hit targets,
-and describes once per transaction. Keep recursive intrinsic Card graphs, rows,
-wrapped columns, responsive queries and opaque roots conservative. This is group11's
-second delivery; consolidate after31–33.
+A finite settled-width Card should be able to contain another pure Card whose
+known nowrap Flex column root contributes automatic height. Reuse the existing
+recursive known-column path, keeping each description once per receiver/transaction
+and carrying canonical root tokens into measurement clones and paint. The public
+example should remove an inner descriptor-only restriction, preserve footer hits
+and teardown, then consolidate group11 (31–33). Unknown/provider/query/cycle paths
+stay conservative; no general retained preparation graph is claimed.
 
 Slice 26 delivery (2026-10-21): completed the in-progress private role foundation
 before any loading migration. Existing receiver edges carry staged masks; successful

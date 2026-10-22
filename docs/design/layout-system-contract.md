@@ -287,12 +287,15 @@ mounted ownership. Hooks, Canvas access, allocation reads and signal writes thro
 resource creation is outside the pure-description contract. No scheduler or second
 reactive graph is added.
 
-The initial intrinsic prototype requires a declared finite content width on the
-root nowrap column. It supports the existing generic wrapped Text measurement,
+A direct structural Card in a finite mounted nowrap column may receive its
+stretched width through a prepared root nowrap Flex column, including numeric
+cross-size bounds and padding. The existing column path settles that content width
+before intrinsic height measurement. The Card remains the numeric/identity owner;
+measurement clones use the prepared root's receiver token, matching its paint path.
+It supports the existing generic wrapped Text measurement,
 including following-sibling geometry and hits in the experimental lane. Known
-fully definite roots can be measured in normal builds too. Automatic width through
-an opaque wrapper, general nested structural intrinsic sizing and aggregate Card
-measurement reuse remain unimplemented; unsupported cases stay diagnostic. See
+fully definite roots can be measured in normal builds too. General nested structural intrinsic sizing and aggregate Card measurement reuse
+remain unimplemented; unsupported cases stay diagnostic. See
 [the API page](../site/api/functions/define-layout-component.md) and
 [Plan 010](../project-plans/010-layout-engine-rework.md).
 

@@ -4378,7 +4378,7 @@ const drafts = [
     prompts: {
       gesture:
         "Toggle pure Card to compare opt-in structural preparation, then change width/Text and click the moved sibling. The ordinary descriptor mode preserves bounded nested paint measurement reuse.",
-      code: "Compare the descriptor helper with defineLayoutComponent. The pure Card shares one prepared root per transaction and currently declares its finite content width. The zero-size Boundary runs only after allocation.",
+      code: "Compare the descriptor helper with defineLayoutComponent. The pure Card shares one prepared root per transaction and receives its settled width from the parent column. The zero-size Boundary runs only after allocation.",
     },
     apiNotes: [
       "Known nowrap columns with settled widths only; no ordinary JSX component discovery, percentage feedback or general intrinsic layout.",

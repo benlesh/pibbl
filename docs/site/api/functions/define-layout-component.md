@@ -40,7 +40,7 @@ export function CardExample() {
     <Flex style={{ width: 240, height: 220, flexDirection: "column", gap: 12 }}>
       <Card
         title="A reusable title that can wrap"
-        style={{ width: 224, minHeight: 0, flexShrink: 0 }}
+        style={{ maxWidth: 224, minHeight: 0, flexShrink: 0 }}
       />
       <Rectangle
         style={{

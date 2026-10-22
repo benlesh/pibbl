@@ -120,3 +120,35 @@ it('keeps Card identity while a changed root key remounts owned descendants', as
   controller.dispose(); controller = undefined;
   expect(cleanups).toBe(2);
 });
+
+it.runIf(experimentalLayout)('settles a structural Card root width before measuring its automatic height', async () => {
+  const target = document.createElement('canvas'); target.width = 400; target.height = 400;
+  document.body.append(target);
+  const width = signal(180);
+  let descriptions = 0;
+  const Card = defineLayoutComponent(() => {
+    descriptions++;
+    return <Flex style={{ flexDirection: 'column', maxWidth: 164, padding: 8, minHeight: 0, flexShrink: 0 }}>
+      <Text style={{ minHeight: 0, flexShrink: 0, wrap: true, font: '16px monospace', lineHeight: 20 }}>A reusable Card determines its height from the finite width allocated by its parent.</Text>
+    </Flex>;
+  });
+  controller = pibblSync(target, <Flex style={{ width, height: 380, flexDirection: 'column', gap: 12 }}>
+    <Card />
+    <Rectangle style={{ width: 180, height: 24, minHeight: 0, flexShrink: 0, fill: '#426b61' }} />
+  </Flex>);
+  await nextFrame();
+  const footerTop = () => {
+    const context = target.getContext('2d')!;
+    for (let y = 0; y < 400; y++) {
+      const value = context.getImageData(5, y, 1, 1).data;
+      if (value[0] === 66 && value[1] === 107 && value[2] === 97 && value[3] === 255) return y;
+    }
+    throw new Error('Footer did not paint');
+  };
+  const wide = footerTop();
+  expect(descriptions).toBe(1);
+  width.set(120);
+  await nextFrame();
+  expect(footerTop()).toBeGreaterThan(wide);
+  expect(descriptions).toBe(2);
+});

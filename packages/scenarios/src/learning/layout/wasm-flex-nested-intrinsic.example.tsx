@@ -40,12 +40,11 @@ function createWasmFlexNestedIntrinsicExampleContent(
   }
   // An ordinary descriptor helper, called by Workspace in normal rendering.
   // The engine measures only its returned built-ins; it never invokes this helper.
-  function card(title: string, declaredWidth?: number) {
+  function card(title: string) {
     return (
       <Flex
         style={{
           flexDirection: "column",
-          width: declaredWidth,
           maxWidth: 360,
           padding: 12,
           gap: 8,
@@ -115,7 +114,7 @@ function createWasmFlexNestedIntrinsicExampleContent(
   }
   const Card = defineLayoutComponent(({ title }: { title: string }) => {
     descriptions++;
-    return card(title, Math.max(0, Math.min(360, width.get() - 24)));
+    return card(title);
   });
   function Footer({ style: _style }: { style: BoxStyle & FlexItemStyle }) {
     const box = useLayoutBox(),
