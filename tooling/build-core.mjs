@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 const root = fileURLToPath(new URL('../packages/core/', import.meta.url));
 const experimental = process.argv.includes('--layout-wasm');
 const output = experimental ? '.layout-wasm-package/dist' : 'dist';
-const defines = { 'import.meta.env': 'undefined', __PIBBL_LAYOUT_WASM__: String(experimental) };
+const defines = { __PIBBL_LAYOUT_WASM__: String(experimental) };
 const entries = ['index', 'sync', 'internal', 'types', 'filters', 'jsx-runtime', 'jsx-dev-runtime'];
 const features = ['machines/index', 'machines/animation', 'sprites/index', 'sprites/formats/aseprite', 'sprites/formats/texture-packer', 'particles/index', 'viz/index', 'viz/inspection', 'textures/index', 'physics/2d', 'physics/2d-geometry', 'physics/2d-testing'];
 // Preserve module boundaries and one shared runtime; only the private upstream
@@ -29,6 +29,10 @@ await build({
   plugins: [{
     name: 'private-rapier-engine',
     setup(builder) {
+      builder.onLoad({ filter: /lib\/layout\/wasm\/region\.ts$/ }, async ({ path }) => ({
+        contents: (await readFile(path, 'utf8')).replace('const buildEnvironment = import.meta.env;', 'const buildEnvironment = undefined;'),
+        loader: 'ts',
+      }));
       builder.onLoad({ filter: /features\/physics\/lib\/2d\/world\/rapier\.ts$/ }, async ({ path }) => ({
         contents: (await readFile(path, 'utf8')).replace('"@dimforge/rapier2d-compat"', '"./rapier-engine.js"'),
         loader: 'ts',
@@ -44,11 +48,6 @@ await build({
 });
 await Promise.all([...entries, ...features.map(entry => `features/${entry}`)].map(entry => writeFile(resolve(root, `${output}/${entry}.mjs`), `export * from './${basename(entry)}.js';\n`)));
 
-// The async entry keeps its loader URL relative to this module after packaging.
-// The artifact is generated and hash-checked before every core build.
-await copyFile(
-  resolve(root, 'src/lib/layout/wasm/layout.wasm'),
-  resolve(root, `${output}/lib/layout/wasm/layout.wasm`),
-);
-
 preserveDeclarationJsdoc(resolve(root, 'src'), resolve(root, output));
+
+await copyFile(resolve(root, 'src/lib/layout/wasm/layout.wasm'), resolve(root, `${output}/lib/layout/wasm/layout.wasm`));

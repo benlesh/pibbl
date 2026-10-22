@@ -53,3 +53,13 @@ test("every catalog entry compiles its selected named component for Studio", () 
     );
   }
 });
+
+test("public documentation does not teach default mount wrappers", () => {
+  for (const path of globSync("docs/site/**/*.{md,mdx,tsx}")) {
+    assert.doesNotMatch(
+      readFileSync(path, "utf8"),
+      /export default function mount\b/,
+      path,
+    );
+  }
+});

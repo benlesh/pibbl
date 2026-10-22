@@ -47,7 +47,6 @@ interface ConsumerState extends SignalDependencyConsumer {
   dirty: boolean;
   disposed: boolean;
   releaseCount: number;
-  pendingInvalidationRoles: number;
 }
 
 const consumerStates = new WeakMap<SignalRenderConsumer, ConsumerState>();
@@ -73,7 +72,6 @@ export function createSignalRenderConsumer(
     dirty: true,
     disposed: false,
     releaseCount: 0,
-    pendingInvalidationRoles: 0,
     renderInvalidation: true,
     addDependency(node, role?: SignalDependencyRoleInput): void {
       if (!state.collecting) return;
@@ -81,7 +79,6 @@ export function createSignalRenderConsumer(
     },
     notify(_node, dependencyRoles = 64): void {
       if (state.disposed) return;
-      state.pendingInvalidationRoles |= dependencyRoles;
       recordSignalInputInvalidation(dependencyRoles);
       if (state.dirty) return;
       state.dirty = true;
@@ -97,7 +94,6 @@ export function createSignalRenderConsumer(
     markClean(): void {
       if (!state.disposed) {
         state.dirty = false;
-        state.pendingInvalidationRoles = 0;
       }
     },
   };
@@ -155,7 +151,7 @@ export function collectComponentSignalReads<T>(
   let collector: SignalDependencyCollector;
   if (state === undefined) {
     collector = {
-    addDependency(node: SignalNode<unknown>, role?: SignalDependencyRoleInput): void {
+      addDependency(node: SignalNode<unknown>, role?: SignalDependencyRoleInput): void {
         if (committed) return;
         if (state === undefined) {
           const options = createOptions();

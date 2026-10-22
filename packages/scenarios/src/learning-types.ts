@@ -167,13 +167,13 @@ export interface LearningExampleMetadata extends WorkbenchSourceMetadata {
  * The mounted learning example's ownership and cleanup interface.
  *
  * @param canvas - Canvas on which to mount the example.
- * @returns A controller whose dispose method releases the example mount. See {@link PibblController}
- * .
+ * @returns A Promise for a controller whose dispose method releases the example mount
+ * after asynchronous runtime preparation. See {@link PibblController}.
  *
  * @see {@link PibblController}
  * @see {@link LearningExampleModule}
  */
-export type LearningMount = (canvas: HTMLCanvasElement) => PibblController;
+export type LearningMount = (canvas: HTMLCanvasElement) => Promise<PibblController>;
 
 /**
  * The executable module loaded by a public learning catalog entry.

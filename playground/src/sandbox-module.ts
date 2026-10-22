@@ -293,7 +293,7 @@ export function toRunnableScript(
 "use strict";
 ${runtimeBindings}
 ${runnable}
-return async (canvas, config) => await ${runtimeBinding}.pibbl(canvas, ${runtimeBinding}.createElement(${componentName}, null), config);
+return (canvas, config) => ${runtimeBinding}.pibbl(canvas, ${runtimeBinding}.createElement(${componentName}, null), config);
 })(globalThis["PIBBL_CORE"]);`;
 
   try {

@@ -177,7 +177,7 @@ describe("first-class signal public scenarios", () => {
     canvas.width = entry.canvas.width;
     canvas.height = entry.canvas.height;
     document.body.appendChild(canvas);
-    const controller = (await loadLearningExample(entry)).mount(canvas);
+    const controller = await (await loadLearningExample(entry)).mount(canvas);
     try {
       await new Promise<void>((resolve) =>
         requestAnimationFrame(() => requestAnimationFrame(() => resolve())),

@@ -1,4 +1,4 @@
-import { pibblSync } from '../pibbl-sync.js';
+import { pibblSync } from '../../sync.js';
 import { cdp, userEvent } from 'vitest/browser';
 import { afterEach, beforeEach } from 'vitest';
 import { getPibblInstance } from '../global-state';

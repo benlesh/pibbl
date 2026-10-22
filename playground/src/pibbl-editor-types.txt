@@ -4629,5 +4629,5 @@ export function emboss(map: SignalValue<import('@pibbl/core').TexturePaint>, opt
   export function texturePacker(): SpriteSheetFormat;
 
 /* @pibbl-studio-module @pibbl/core/sync */
-import type { PibblNode, PibblConfig, PibblController } from "@pibbl/core";
+import type { PibblNode, PibblConfig, PibblController } from '@pibbl/core';
 export function pibblSync(canvas: HTMLCanvasElement, element: PibblNode, config?: PibblConfig): PibblController;

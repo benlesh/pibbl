@@ -2,7 +2,7 @@ import { respondWithSandboxAsset, sandboxAssetSource } from "./sandbox-assets";
 import runtimeSource from "virtual:pibbl-runtime-source";
 import { toRunnableScript } from "./sandbox-module";
 import type { PibblConfig } from "@pibbl/core";
-import { prepareExampleHost } from "../../packages/scenarios/src/example-host";
+import { prepareExampleHost } from "../../packages/scenarios/src/example-surface";
 
 const PROTOCOL = "pibbl-studio";
 const VERSION = 1;
@@ -101,11 +101,9 @@ function createFrameSource(options: {
     }
     const prepareHost = ${prepareExampleHost.toString()};
     let controller;
-    let disposed = false;
-    const lifetime = new AbortController();
     let host;
+    const lifetime = new AbortController();
     const dispose = () => {
-      disposed = true;
       lifetime.abort();
       try { controller?.dispose(); }
       finally { controller = undefined; host?.dispose(); host = undefined; }
@@ -126,12 +124,16 @@ function createFrameSource(options: {
       if (!mountedController || typeof mountedController.dispose !== 'function') {
         throw new Error('Preview mount must return a controller with dispose().');
       }
-      if (disposed) mountedController.dispose();
-      else controller = mountedController;
-      send({ kind: 'mounted' });
+      if (lifetime.signal.aborted) {
+        mountedController.dispose();
+      } else {
+        controller = mountedController;
+        send({ kind: 'mounted' });
+      }
     } catch (error) {
+      const cancelled = lifetime.signal.aborted;
       dispose();
-      send({ kind: 'error', message: error instanceof Error ? error.message : printable(error) });
+      if (!cancelled) send({ kind: 'error', message: error instanceof Error ? error.message : printable(error) });
     }
   `;
   // Keep bundled names separate from boot variables while awaiting WASM startup.

@@ -402,7 +402,7 @@ describe("first-class Canvas particle public scenarios", () => {
     canvas.style.cssText = `display:block;width:${canvas.width}px;height:${canvas.height}px`;
     document.body.replaceChildren(canvas);
     const module = await loadLearningExample(entry);
-    const controller = module.mount(canvas);
+    const controller = await module.mount(canvas);
     const capturedPointers = new Set<number>();
     vi.spyOn(canvas, "setPointerCapture").mockImplementation((pointerId) => {
       capturedPointers.add(pointerId);

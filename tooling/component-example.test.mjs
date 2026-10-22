@@ -73,3 +73,32 @@ test("Studio selects the catalog entry when a module exports several components"
     /Missing/,
   );
 });
+
+test("Studio accepts a named export list emitted by a compiler", () => {
+  assert.doesNotThrow(() =>
+    toRunnableScript(
+      `
+    import { Rectangle } from "@pibbl/core";
+    const Plot = () => null;
+    export { Plot as Lesson };
+  `,
+      { exportName: "Lesson" },
+    ),
+  );
+});
+
+test("source validation rejects the removed default mount convention", () => {
+  assert.throws(
+    () =>
+      validateLearningSourceText(
+        `
+    import { pibbl, Rectangle, type PibblController } from "@pibbl/core";
+    export default function mount(canvas: HTMLCanvasElement): PibblController {
+      return pibbl(canvas, <Rectangle style={{ width: 20, height: 20 }} />);
+    }
+  `,
+        { authoring: "jsx", label: "obsolete lesson" },
+      ),
+    /named component/,
+  );
+});

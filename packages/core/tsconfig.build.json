@@ -10,14 +10,14 @@
     "outDir": "./dist",
     "paths": {
       "@pibbl/core": ["./src/index.ts"],
-      "@pibbl/core/internal": ["./src/internal.ts"]
+      "@pibbl/core/internal": ["./src/internal.ts"],
+      "@pibbl/core/sync": ["./src/sync.ts"]
     },
     "rootDir": "./src",
     "types": []
   },
   "files": [
     "src/index.ts",
-    "src/sync.ts",
     "src/internal.ts",
     "src/filters.ts",
     "src/types.ts",
@@ -34,7 +34,8 @@
     "src/features/physics/2d.ts",
     "src/features/physics/2d-geometry.ts",
     "src/features/physics/2d-testing.ts",
-    "src/features/viz/inspection.ts"
+    "src/features/viz/inspection.ts",
+    "src/sync.ts"
   ],
   "include": []
 }

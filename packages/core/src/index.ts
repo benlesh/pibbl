@@ -151,8 +151,7 @@ export {
   type SvgPathOptions,
 } from './lib/geometry/svg-path.js';
 export type { RoundedCornerPathOptions } from './lib/geometry/rounded-corners.js';
-export { pibbl } from './lib/pibbl.js';
-export { prepareLayoutEngine } from './lib/layout/wasm/loader.js';
+export { pibbl, prepareLayoutEngine } from './lib/pibbl.js';
 export {
   batch,
   computed,

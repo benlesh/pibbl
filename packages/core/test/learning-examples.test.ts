@@ -114,7 +114,7 @@ async function renderLearningExample(slug: string): Promise<{
   };
 
   const module = await loadLearningExample(entry);
-  const controller = module.mount(canvas);
+  const controller = await module.mount(canvas);
   mountedControllers.push(controller);
   await new Promise<void>((resolve) =>
     requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
@@ -197,8 +197,8 @@ describe("learning example catalog", () => {
       function SceneExample() {
         return <Layer style={{ width: 320, height: 180 }} />;
       }
-      export default function mount(canvas: HTMLCanvasElement): PibblController {
-        return pibbl(canvas, <SceneExample />);
+      export function Example() {
+        return ( <SceneExample />);
       }
     `;
 
@@ -259,8 +259,8 @@ describe("learning example catalog", () => {
           </PhysicsWorld2D>
         );
       }
-      export default function mount(canvas: HTMLCanvasElement): PibblController {
-        return pibbl(canvas, <Scene />);
+      export function Example() {
+        return ( <Scene />);
       }
     `;
 
@@ -308,11 +308,11 @@ describe("learning example catalog", () => {
       import { pibbl, createElement, Group, type PibblController } from "@pibbl/core";
       interface Widget { value: number }
       function identity<T>(value: T): T { return value; }
-      export default function mount(canvas: HTMLCanvasElement): PibblController {
+      export function Example() {
         const widget = identity<Widget>({ value: 1 });
         const asserted = widget as Widget;
         const compared = asserted.value < 2 && asserted.value > 0;
-        return pibbl(canvas, createElement(Group, { key: compared ? "yes" : "no" }));
+        return ( createElement(Group, { key: compared ? "yes" : "no" }));
       }
     `;
 
@@ -330,8 +330,8 @@ describe("learning example catalog", () => {
           </Group>
         );
       }
-      export default function mount(canvas: HTMLCanvasElement): PibblController {
-        return pibbl(canvas, <Scene />);
+      export function Example() {
+        return ( <Scene />);
       }
     `;
 
@@ -354,8 +354,8 @@ describe("learning example catalog", () => {
         import { pibbl, createElement, Group, type PibblController } from "@pibbl/core";
         function Scene() { return <Group />; }
         const child = ${construction};
-        export default function mount(canvas: HTMLCanvasElement): PibblController {
-          return pibbl(canvas, <Group>{child as never}</Group>);
+        export function Example() {
+          return ( <Group>{child as never}</Group>);
         }
       `;
 
@@ -379,8 +379,8 @@ describe("learning example catalog", () => {
         import { pibbl, createElement, Group, type PibblController } from "@pibbl/core";
         function Scene() { return createElement(Group, null); }
         const child = ${construction};
-        export default function mount(canvas: HTMLCanvasElement): PibblController {
-          return pibbl(canvas, createElement(Group, null, child as never));
+        export function Example() {
+          return ( createElement(Group, null, child as never));
         }
       `;
 
@@ -409,8 +409,8 @@ describe("learning example catalog", () => {
       import { pibbl, createElement, Group, type PibblController } from "@pibbl/core";
       function Scene() { return createElement(Group, null); }
       ${setup}
-      export default function mount(canvas: HTMLCanvasElement): PibblController {
-        return pibbl(canvas, createElement(Group, null, child as never));
+      export function Example() {
+        return ( createElement(Group, null, child as never));
       }
     `;
 
@@ -428,7 +428,7 @@ describe("learning example catalog", () => {
       `
         import * as Pibbl from "@pibbl/core";
         type PibblController = Pibbl.PibblController;
-        export default function mount(canvas: HTMLCanvasElement): PibblController {
+        export function Example() {
           return Pibbl.pibbl(canvas, Pibbl.createElement(Pibbl.rect, { width: 10, height: 10 }));
         }
       `,
@@ -437,8 +437,8 @@ describe("learning example catalog", () => {
       "default import",
       `
         import Pibbl, { createElement, Group, type PibblController } from "@pibbl/core";
-        export default function mount(canvas: HTMLCanvasElement): PibblController {
-          return Pibbl.pibbl(canvas, createElement(Group, null));
+        export function Example() {
+          return pibbl(canvas, createElement(Group, null));
         }
       `,
     ],
@@ -447,8 +447,8 @@ describe("learning example catalog", () => {
       `
         import "./helper";
         import { pibbl, createElement, Group, type PibblController } from "@pibbl/core";
-        export default function mount(canvas: HTMLCanvasElement): PibblController {
-          return pibbl(canvas, createElement(Group, null));
+        export function Example() {
+          return ( createElement(Group, null));
         }
       `,
     ],
@@ -457,9 +457,9 @@ describe("learning example catalog", () => {
       `
         import { helper } from "./helper";
         import { pibbl, createElement, Group, type PibblController } from "@pibbl/core";
-        export default function mount(canvas: HTMLCanvasElement): PibblController {
+        export function Example() {
           helper();
-          return pibbl(canvas, createElement(Group, null));
+          return ( createElement(Group, null));
         }
       `,
     ],
@@ -468,8 +468,8 @@ describe("learning example catalog", () => {
       `
         import { pibbl, createElement, Group, type PibblController } from "@pibbl/core";
         void import("./helper");
-        export default function mount(canvas: HTMLCanvasElement): PibblController {
-          return pibbl(canvas, createElement(Group, null));
+        export function Example() {
+          return ( createElement(Group, null));
         }
       `,
     ],
@@ -477,8 +477,8 @@ describe("learning example catalog", () => {
       "aliased legacy import",
       `
         import { pibbl, createElement, rect as Draw, type PibblController } from "@pibbl/core";
-        export default function mount(canvas: HTMLCanvasElement): PibblController {
-          return pibbl(canvas, createElement(Draw, { width: 10, height: 10 }));
+        export function Example() {
+          return ( createElement(Draw, { width: 10, height: 10 }));
         }
       `,
     ],
@@ -486,8 +486,8 @@ describe("learning example catalog", () => {
       "aliased legacy focus import",
       `
         import { pibbl, createElement, Group, ${removedFocusWrapper} as FocusPolicy, type PibblController } from "@pibbl/core";
-        export default function mount(canvas: HTMLCanvasElement): PibblController {
-          return pibbl(canvas, FocusPolicy(createElement(Group, null)));
+        export function Example() {
+          return ( FocusPolicy(createElement(Group, null)));
         }
       `,
     ],
@@ -495,8 +495,8 @@ describe("learning example catalog", () => {
       "legacy local alias",
       `
         import { pibbl, createElement, Rectangle as rect, type PibblController } from "@pibbl/core";
-        export default function mount(canvas: HTMLCanvasElement): PibblController {
-          return pibbl(canvas, createElement(rect, { width: 10, height: 10 }));
+        export function Example() {
+          return ( createElement(rect, { width: 10, height: 10 }));
         }
       `,
     ],
@@ -505,7 +505,7 @@ describe("learning example catalog", () => {
       `
         import type { PibblController } from "@pibbl/core";
         function createElement(): never { throw new Error("unused"); }
-        export default function mount(canvas: HTMLCanvasElement): PibblController {
+        export function Example() {
           void canvas;
           return createElement();
         }
@@ -516,8 +516,8 @@ describe("learning example catalog", () => {
       `
         import { pibbl, createElement, Group, type PibblController } from "@pibbl/core";
         const SOURCE_ID = "fixture";
-        export default function mount(canvas: HTMLCanvasElement): PibblController {
-          return pibbl(canvas, createElement(Group, { key: SOURCE_ID }));
+        export function Example() {
+          return ( createElement(Group, { key: SOURCE_ID }));
         }
       `,
     ],
@@ -527,8 +527,8 @@ describe("learning example catalog", () => {
         import { pibbl, createElement, Group, type PibblController } from "@pibbl/core";
         function test(): void {}
         test();
-        export default function mount(canvas: HTMLCanvasElement): PibblController {
-          return pibbl(canvas, createElement(Group, null));
+        export function Example() {
+          return ( createElement(Group, null));
         }
       `,
     ],
@@ -540,9 +540,9 @@ describe("learning example catalog", () => {
     const source = `
       import { pibbl, createElement, Group, type PibblController } from "@pibbl/core";
       interface Notes { text: string; render: string }
-      export default function mount(canvas: HTMLCanvasElement): PibblController {
+      export function Example() {
         const notes: Notes = { text: "${removedDefinitionWrapper}", render: "${removedFocusWrapper}" };
-        return pibbl(canvas, createElement(Group, { key: notes.text }));
+        return ( createElement(Group, { key: notes.text }));
       }
     `;
 
@@ -555,8 +555,8 @@ describe("learning example catalog", () => {
       "jsx" as const,
       `
         import { pibbl, Text as Label, type PibblController } from "@pibbl/core";
-        export default function mount(canvas: HTMLCanvasElement): PibblController {
-          return pibbl(canvas, <Label style={{ text: "legacy" }} />);
+        export function Example() {
+          return ( <Label style={{ text: "legacy" }} />);
         }
       `,
     ],
@@ -565,8 +565,8 @@ describe("learning example catalog", () => {
       "jsx" as const,
       `
         import { pibbl, Layer as Surface, Rectangle, type PibblController } from "@pibbl/core";
-        export default function mount(canvas: HTMLCanvasElement): PibblController {
-          return pibbl(canvas, <Surface render={<Rectangle style={{ width: 10, height: 10 }} />} />);
+        export function Example() {
+          return ( <Surface render={<Rectangle style={{ width: 10, height: 10 }} />} />);
         }
       `,
     ],
@@ -575,8 +575,8 @@ describe("learning example catalog", () => {
       "createElement" as const,
       `
         import { pibbl, createElement, Text as Label, type PibblController } from "@pibbl/core";
-        export default function mount(canvas: HTMLCanvasElement): PibblController {
-          return pibbl(canvas, createElement(Label, { style: { text: "legacy" } }));
+        export function Example() {
+          return ( createElement(Label, { style: { text: "legacy" } }));
         }
       `,
     ],
@@ -585,8 +585,8 @@ describe("learning example catalog", () => {
       "createElement" as const,
       `
         import { pibbl, createElement, Group, Layer as Surface, type PibblController } from "@pibbl/core";
-        export default function mount(canvas: HTMLCanvasElement): PibblController {
-          return pibbl(canvas, createElement(Surface, { render: createElement(Group, null) }));
+        export function Example() {
+          return ( createElement(Surface, { render: createElement(Group, null) }));
         }
       `,
     ],
@@ -604,8 +604,8 @@ describe("learning example catalog", () => {
       `
         import { pibbl, Text, type PibblController } from "@pibbl/core";
         const Label = Text;
-        export default function mount(canvas: HTMLCanvasElement): PibblController {
-          return pibbl(canvas, <Label style={{ text: "legacy" }}>Legacy</Label>);
+        export function Example() {
+          return ( <Label style={{ text: "legacy" }}>Legacy</Label>);
         }
       `,
     ],
@@ -616,8 +616,8 @@ describe("learning example catalog", () => {
         import { pibbl, Layer, Rectangle, type PibblController } from "@pibbl/core";
         const { Layer: Surface } = { Layer };
         const props = { render: <Rectangle style={{ width: 10, height: 10 }} /> };
-        export default function mount(canvas: HTMLCanvasElement): PibblController {
-          return pibbl(canvas, <Surface {...props} />);
+        export function Example() {
+          return ( <Surface {...props} />);
         }
       `,
     ],
@@ -629,8 +629,8 @@ describe("learning example catalog", () => {
         function Scene(createElement: () => never): never {
           return createElement();
         }
-        export default function mount(canvas: HTMLCanvasElement): PibblController {
-          return pibbl(canvas, Scene(() => { throw new Error("fixture"); }));
+        export function Example() {
+          return ( Scene(() => { throw new Error("fixture"); }));
         }
       `,
     ],
@@ -641,8 +641,8 @@ describe("learning example catalog", () => {
         import { pibbl, createElement, Group, type PibblController } from "@pibbl/core";
         function localCreateElement(): never { throw new Error("fixture"); }
         createElement = localCreateElement;
-        export default function mount(canvas: HTMLCanvasElement): PibblController {
-          return pibbl(canvas, createElement(Group, null));
+        export function Example() {
+          return ( createElement(Group, null));
         }
       `,
     ],
@@ -693,8 +693,8 @@ describe("learning example catalog", () => {
       const source = `
       import { pibbl, createElement, Group, type PibblController } from "@pibbl/core";
       ${setup}
-      export default function mount(canvas: HTMLCanvasElement): PibblController {
-        return pibbl(canvas, scene as never);
+      export function Example() {
+        return ( scene as never);
       }
     `;
 
@@ -725,8 +725,8 @@ describe("learning example catalog", () => {
       }
       void objectBuilder;
       void Builder;
-      export default function mount(canvas: HTMLCanvasElement): PibblController {
-        return pibbl(canvas, createElement(Group, null));
+      export function Example() {
+        return ( createElement(Group, null));
       }
     `);
   });
@@ -738,8 +738,8 @@ describe("learning example catalog", () => {
       `
         import { pibbl, Text, type PibblController } from "@pibbl/core";
         const style = { text: "legacy" };
-        export default function mount(canvas: HTMLCanvasElement): PibblController {
-          return pibbl(canvas, <Text style={style}>Visible</Text>);
+        export function Example() {
+          return ( <Text style={style}>Visible</Text>);
         }
       `,
     ],
@@ -749,8 +749,8 @@ describe("learning example catalog", () => {
       `
         import { pibbl, Text, type PibblController } from "@pibbl/core";
         const props = { style: { text: "legacy" } };
-        export default function mount(canvas: HTMLCanvasElement): PibblController {
-          return pibbl(canvas, <Text {...props}>Visible</Text>);
+        export function Example() {
+          return ( <Text {...props}>Visible</Text>);
         }
       `,
     ],
@@ -760,8 +760,8 @@ describe("learning example catalog", () => {
       `
         import { pibbl, Rectangle, type PibblController } from "@pibbl/core";
         const box = { width: 10, height: 10 };
-        export default function mount(canvas: HTMLCanvasElement): PibblController {
-          return pibbl(canvas, <Rectangle style={{ ...box }} />);
+        export function Example() {
+          return ( <Rectangle style={{ ...box }} />);
         }
       `,
     ],
@@ -771,8 +771,8 @@ describe("learning example catalog", () => {
       `
         import { pibbl, createElement, Text, type PibblController } from "@pibbl/core";
         const style = { text: "legacy" };
-        export default function mount(canvas: HTMLCanvasElement): PibblController {
-          return pibbl(canvas, createElement(Text, { style }, "Visible"));
+        export function Example() {
+          return ( createElement(Text, { style }, "Visible"));
         }
       `,
     ],
@@ -782,8 +782,8 @@ describe("learning example catalog", () => {
       `
         import { pibbl, createElement, Layer, Group, type PibblController } from "@pibbl/core";
         const props = { render: createElement(Group, null) };
-        export default function mount(canvas: HTMLCanvasElement): PibblController {
-          return pibbl(canvas, createElement(Layer, props));
+        export function Example() {
+          return ( createElement(Layer, props));
         }
       `,
     ],
@@ -793,8 +793,8 @@ describe("learning example catalog", () => {
       `
         import { pibbl, createElement, Text, type PibblController } from "@pibbl/core";
         const props = { style: { text: "legacy" } };
-        export default function mount(canvas: HTMLCanvasElement): PibblController {
-          return pibbl(canvas, createElement(Text, { ...props }, "Visible"));
+        export function Example() {
+          return ( createElement(Text, { ...props }, "Visible"));
         }
       `,
     ],
@@ -818,8 +818,8 @@ describe("learning example catalog", () => {
     expectInvalidNonJsxSource(`
       import { pibbl, createElement, Group, type PibblController } from "@pibbl/core";
       ${extraModuleSyntax}
-      export default function mount(canvas: HTMLCanvasElement): PibblController {
-        return pibbl(canvas, createElement(Group, null));
+      export function Example() {
+        return ( createElement(Group, null));
       }
     `);
   });
@@ -848,8 +848,8 @@ describe("learning example catalog", () => {
     expectInvalidLearningSource(
       `
         import { pibbl, ${componentName}, type PibblController } from "@pibbl/core";
-        export default function mount(canvas: HTMLCanvasElement): PibblController {
-          return pibbl(canvas, <>{${componentName}({})}</>);
+        export function Example() {
+          return ( <>{${componentName}({})}</>);
         }
       `,
       "jsx",
@@ -859,8 +859,8 @@ describe("learning example catalog", () => {
   it("rejects a component call mixed into the createElement lesson", () => {
     expectInvalidNonJsxSource(`
       import { pibbl, createElement, Group, Rectangle, type PibblController } from "@pibbl/core";
-      export default function mount(canvas: HTMLCanvasElement): PibblController {
-        return pibbl(canvas, createElement(Group, null, Rectangle({})));
+      export function Example() {
+        return ( createElement(Group, null, Rectangle({})));
       }
     `);
   });
@@ -874,8 +874,8 @@ describe("learning example catalog", () => {
     expectInvalidNonJsxSource(`
       import { pibbl, createElement, Group, type PibblController } from "@pibbl/core";
       const invalid = ${invocation};
-      export default function mount(canvas: HTMLCanvasElement): PibblController {
-        return pibbl(canvas, createElement(Group, { key: String(invalid) }));
+      export function Example() {
+        return ( createElement(Group, { key: String(invalid) }));
       }
     `);
   });
@@ -886,9 +886,9 @@ describe("learning example catalog", () => {
         `
           import { pibbl, createElement, Group, type PibblController } from "@pibbl/core";
           const invalid = pibbl\`fixture\`;
-          export default function mount(canvas: HTMLCanvasElement): PibblController {
+          export function Example() {
             void invalid;
-            return pibbl(canvas, createElement(Group, null));
+            return ( createElement(Group, null));
           }
         `,
         { authoring: "createElement", label: "fixture" },
@@ -920,8 +920,8 @@ describe("learning example catalog", () => {
           const y = measurement.status === "measured" ? measurement.size.height : 20;
           return <Text style={{ x: length, y }}>{doubled}</Text>;
         }
-        export default function mount(canvas: HTMLCanvasElement): PibblController {
-          return pibbl(canvas, <RuntimeFunctionStudy />);
+        export function Example() {
+          return ( <RuntimeFunctionStudy />);
         }
       `,
       "jsx",
@@ -947,8 +947,8 @@ describe("learning example catalog", () => {
   ])("rejects %s as an uninspectable props object", (_name, scene, imports) => {
     expectUninspectableNonJsxSource(`
       import { pibbl, createElement, ${imports}, type PibblController } from "@pibbl/core";
-      export default function mount(canvas: HTMLCanvasElement): PibblController {
-        return pibbl(canvas, ${scene});
+      export function Example() {
+        return ( ${scene});
       }
     `);
   });
@@ -1007,8 +1007,8 @@ describe("learning example catalog", () => {
         type PibblController,
       } from "@pibbl/core";
       ${declarations}
-      export default function mount(canvas: HTMLCanvasElement): PibblController {
-        return pibbl(canvas, createElement(Group, null));
+      export function Example() {
+        return ( createElement(Group, null));
       }
     `);
     },
@@ -1018,8 +1018,8 @@ describe("learning example catalog", () => {
     expectInvalidNonJsxSource(`
       import { pibbl, createElement, Group, Text, type PibblController } from "@pibbl/core";
       const vocabulary = { [Text]: "text" };
-      export default function mount(canvas: HTMLCanvasElement): PibblController {
-        return pibbl(canvas, createElement(Group, { key: String(vocabulary) }));
+      export function Example() {
+        return ( createElement(Group, { key: String(vocabulary) }));
       }
     `);
   });
@@ -1048,8 +1048,8 @@ describe("learning example catalog", () => {
       declare const module: { exports: unknown };
       declare const exports: Record<string, unknown>;
       ${commonJsSyntax}
-      export default function mount(canvas: HTMLCanvasElement): PibblController {
-        return pibbl(canvas, createElement(Group, null));
+      export function Example() {
+        return ( createElement(Group, null));
       }
     `);
   });
@@ -1084,8 +1084,8 @@ describe("learning example catalog", () => {
         `
           import { pibbl, createElement, Group, type PibblController } from "@pibbl/core";
           ${commonJsSyntax}
-          export default function mount(canvas: HTMLCanvasElement): PibblController {
-            return pibbl(canvas, createElement(Group, null));
+          export function Example() {
+            return ( createElement(Group, null));
           }
         `,
         { authoring: "createElement", label: "fixture" },
@@ -1148,8 +1148,8 @@ describe("learning example catalog", () => {
         `
           import { pibbl, createElement, Group, type PibblController } from "@pibbl/core";
           ${commonJsSyntax}
-          export default function mount(canvas: HTMLCanvasElement): PibblController {
-            return pibbl(canvas, createElement(Group, null));
+          export function Example() {
+            return ( createElement(Group, null));
           }
         `,
         { authoring: "createElement", label: "fixture" },
@@ -1176,8 +1176,8 @@ describe("learning example catalog", () => {
       loader[\`module\`][\`exports\`] = {};
       void (globalThis as any)[\`location\`];
       void (globalThis as any)[(\`location\` as const)];
-      export default function mount(canvas: HTMLCanvasElement): PibblController {
-        return pibbl(canvas, createElement(Group, null));
+      export function Example() {
+        return ( createElement(Group, null));
       }
     `);
   });
@@ -1192,8 +1192,8 @@ describe("learning example catalog", () => {
       void vocabulary.require;
       void new Labels().module();
       void label("require");
-      export default function mount(canvas: HTMLCanvasElement): PibblController {
-        return pibbl(canvas, createElement(Group, null));
+      export function Example() {
+        return ( createElement(Group, null));
       }
     `);
   });
@@ -1217,11 +1217,11 @@ describe("learning example catalog", () => {
     );
   });
 
-  it("contains 153 unique, ordered, source-backed routes including financial, scientific, texture, and graph examples", async () => {
+  it("contains 166 unique, ordered, source-backed routes including financial, scientific, texture, and graph examples", async () => {
     expect(validateLearningExampleCatalog(learningExampleCatalog)).toBe(
       learningExampleCatalog,
     );
-    expect(learningExampleCatalog).toHaveLength(153);
+    expect(learningExampleCatalog).toHaveLength(166);
     expect(
       learningExampleCatalog
         .filter((entry) =>
@@ -1439,6 +1439,11 @@ describe("learning example catalog", () => {
         "flow",
         "grid",
         "responsive-styles",
+        "wasm-flex-text", "wasm-flex-column-text", "wasm-flex-constraints",
+        "wasm-flex-intrinsic-text", "wasm-flex-layer", "wasm-flex-render-layer",
+        "wasm-flex-panel", "wasm-yoga-migration", "wasm-built-lifecycle",
+        "wasm-flex-wrap", "wasm-flex-column-wrap", "wasm-flex-keyed-wrap",
+        "wasm-flex-nested-intrinsic",
       ],
       "events-and-interaction": [
         "click",
@@ -1615,7 +1620,7 @@ describe("learning example catalog", () => {
     expect(signals).toMatchObject({
       api: ["signal", "computed", "useSignal"],
       source: {
-        exportName: "Fixture",
+        exportName: "SignalCard",
         path: "packages/scenarios/src/learning/start/signals.example.tsx",
       },
     });
@@ -1879,7 +1884,7 @@ describe("learning example catalog", () => {
 
   it("contains exactly the five canonical layout lessons", async () => {
     const layouts = learningExampleCatalog.filter(
-      (entry) => entry.section === "layout",
+      (entry) => entry.section === "layout" && !entry.slug.startsWith("wasm-"),
     );
     expect(layouts.map((entry) => entry.slug)).toEqual([
       "absolute-and-overlay",

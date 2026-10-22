@@ -1,18 +1,26 @@
 // Only these public, noncredentialed assets may be fetched by the host for an
 // opaque-origin preview. User-authored fetches keep normal browser behavior.
 const textAssets = new Set([
+  "/pibbl-layout/layout.wasm",
   "/pibbl-text/engine.mjs",
   "/pibbl-text/engine.wasm",
   "/pibbl-text/ABeeZee-Regular.ttf",
   "/pibbl-text/Lato-Regular.ttf",
 ]);
 
+function sandboxAssetBase(origin: string): string {
+  const path = new URL(import.meta.env.BASE_URL ?? "/", origin).pathname;
+  return path.endsWith("/") ? path : `${path}/`;
+}
+
 export function isSandboxAsset(url: URL, origin: string): boolean {
+  const base = sandboxAssetBase(origin);
   return (
     url.origin === origin &&
     !url.search &&
     !url.hash &&
-    (textAssets.has(url.pathname) || url.pathname.endsWith("/pibbl-layout/layout.wasm"))
+    url.pathname.startsWith(base) &&
+    textAssets.has(`/${url.pathname.slice(base.length)}`)
   );
 }
 
@@ -37,8 +45,7 @@ export function installSandboxAssetFetch(options: {
       url.origin !== origin ||
       url.search ||
       url.hash ||
-      (!options.paths.includes(url.pathname) &&
-        !url.pathname.endsWith("/pibbl-layout/layout.wasm"))
+      !options.paths.includes(url.pathname)
     ) {
       return nativeFetch(input, init);
     }
@@ -127,5 +134,7 @@ export function sandboxAssetSource(options: {
   version: number;
   runId: number;
 }): string {
-  return `(${installSandboxAssetFetch.toString()})(${JSON.stringify({ ...options, paths: [...textAssets] })});`;
+  const base = sandboxAssetBase(window.location.origin);
+  const paths = [...textAssets].map(path => `${base}${path.slice(1)}`);
+  return `(${installSandboxAssetFetch.toString()})(${JSON.stringify({ ...options, paths })});`;
 }

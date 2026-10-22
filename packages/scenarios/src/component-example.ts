@@ -8,7 +8,7 @@ export async function loadComponentExample(
 ): Promise<LearningExampleModule> {
   const [module, { mountExampleComponent }] = await Promise.all([
     pending,
-    import("./example-host"),
+    import("./async-example-host"),
   ]);
   const Component = (module as Record<string, unknown>)[options.exportName];
   if (typeof Component !== "function")

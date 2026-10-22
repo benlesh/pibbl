@@ -4,9 +4,50 @@ import {
   respondWithSandboxAsset,
 } from "../../../playground/src/sandbox-assets";
 
-afterEach(() => vi.restoreAllMocks());
+afterEach(() => {
+  vi.restoreAllMocks();
+  vi.unstubAllEnvs();
+});
 
-describe("Studio text asset transport", () => {
+describe("Studio asset transport", () => {
+  it("keeps the closed layout asset allowlist within the configured deployment base", () => {
+    vi.stubEnv("BASE_URL", "/nested/studio/");
+    const origin = window.location.origin;
+    expect(
+      isSandboxAsset(
+        new URL("/nested/studio/pibbl-layout/layout.wasm", origin),
+        origin,
+      ),
+    ).toBe(true);
+    expect(
+      isSandboxAsset(
+        new URL("/other/pibbl-layout/layout.wasm", origin),
+        origin,
+      ),
+    ).toBe(false);
+    expect(
+      isSandboxAsset(
+        new URL("/nested/studio/pibbl-layout/private.json", origin),
+        origin,
+      ),
+    ).toBe(false);
+  });
+  it("allows the exact root layout asset from a nested Studio page", () => {
+    const origin = window.location.origin;
+    const base = `${origin}/releases/abc/playground/`;
+    expect(
+      isSandboxAsset(new URL("/pibbl-layout/layout.wasm", base), origin),
+    ).toBe(true);
+    expect(
+      isSandboxAsset(new URL("/pibbl-layout/private.json", base), origin),
+    ).toBe(false);
+    expect(
+      isSandboxAsset(
+        new URL("/pibbl-layout/layout.wasm?token=x", base),
+        origin,
+      ),
+    ).toBe(false);
+  });
   it("limits host reads to the exact public text assets on its own origin", () => {
     const origin = window.location.origin;
     expect(
@@ -24,13 +65,11 @@ describe("Studio text asset transport", () => {
   });
 
   it("transfers asset bytes without credentials and refuses redirects", async () => {
-    const fetch = vi
-      .spyOn(globalThis, "fetch")
-      .mockResolvedValue(
-        new Response(new Uint8Array([1, 2, 3]), {
-          headers: { "Content-Type": "font/ttf" },
-        }),
-      );
+    const fetch = vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(new Uint8Array([1, 2, 3]), {
+        headers: { "Content-Type": "font/ttf" },
+      }),
+    );
     const channel = new MessageChannel();
     const response = new Promise<MessageEvent>((resolve) => {
       channel.port1.onmessage = resolve;

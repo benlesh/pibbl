@@ -9,6 +9,8 @@ try {
   page.on('pageerror', error => errors.push(error.message));
   page.on('console', message => { if (message.type() === 'error') errors.push(message.text()); });
   await page.goto(`${base}/#/examples/layout/wasm-flex-keyed-wrap`);
+  await page.locator('iframe[srcdoc]').waitFor({ state: 'attached' });
+  await page.locator('iframe[srcdoc]').scrollIntoViewIfNeeded();
   const frame = page.frameLocator('iframe[srcdoc]'); await frame.locator('pre').waitFor({ timeout: 10000 });
   const state = async () => JSON.parse(await frame.locator('pre').innerText());
   const click = async (x, y) => {

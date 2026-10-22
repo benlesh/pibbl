@@ -23,10 +23,6 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.mjs"
     },
-    "./sync": {
-      "types": "./dist/sync.d.ts",
-      "default": "./dist/sync.mjs"
-    },
     "./internal": {
       "types": "./dist/internal.d.ts",
       "default": "./dist/internal.mjs"
@@ -94,7 +90,12 @@
     "./viz/inspection": {
       "types": "./dist/features/viz/inspection.d.ts",
       "default": "./dist/features/viz/inspection.mjs"
-    }
+    },
+    "./sync": {
+      "types": "./dist/sync.d.ts",
+      "default": "./dist/sync.mjs"
+    },
+    "./layout.wasm": "./dist/lib/layout/wasm/layout.wasm"
   },
   "main": "./dist/index.mjs",
   "module": "./dist/index.mjs",
@@ -109,9 +110,6 @@
       ],
       "internal": [
         "./dist/internal.d.ts"
-      ],
-      "sync": [
-        "./dist/sync.d.ts"
       ],
       "*": [
         "./dist/*",
@@ -158,6 +156,9 @@
       ],
       "viz/inspection": [
         "./dist/features/viz/inspection.d.ts"
+      ],
+      "sync": [
+        "./dist/sync.d.ts"
       ]
     }
   },

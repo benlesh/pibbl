@@ -6,7 +6,7 @@
  * host frame according to its public fixed-step configuration.
  */
 import type { PibblController, PibblNode } from "@pibbl/core";
-import { pibblSync } from "../../lib/pibbl-sync.js";
+import { pibblSync } from "../../sync.js";
 import {
   PibblInternalManualSchedulerDriver,
   pibblInternalInstallTestSchedulerDriver,

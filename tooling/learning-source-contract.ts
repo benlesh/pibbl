@@ -66,6 +66,7 @@ const THREE_MODULE = "three";
 const THREE_ORBIT_CONTROLS_MODULE = "three/addons/controls/OrbitControls.js";
 const WEBGL_MODULE = ["@pibbl", "webgl"].join("/");
 const LEARNING_VALUE_MODULES = new Set([
+  "@pibbl/core/sync",
   "@pibbl/text",
   "@pibbl/core/machines",
   "@pibbl/core/sprites",
@@ -329,23 +330,13 @@ function parseSource(source: string, label: string): SyntaxNode {
   }
 }
 
-function typeReferenceName(annotation: unknown): string | undefined {
-  if (!isNode(annotation) || annotation.type !== "TSTypeAnnotation") {
-    return undefined;
-  }
-  const typeAnnotation = annotation.typeAnnotation;
-  if (!isNode(typeAnnotation) || typeAnnotation.type !== "TSTypeReference") {
-    return undefined;
-  }
-  return identifierName(typeAnnotation.typeName);
-}
-
 function hasExampleEntry(
   programBody: readonly SyntaxNode[],
   exportName?: string,
 ): boolean {
-  if (exportName)
-    return programBody.some((statement) => {
+  return (
+    !!exportName &&
+    programBody.some((statement) => {
       const declaration = statement.declaration;
       return (
         statement.type === "ExportNamedDeclaration" &&
@@ -359,33 +350,7 @@ function hasExampleEntry(
         declaration.async !== true &&
         declaration.generator !== true
       );
-    });
-  const defaults = programBody.filter(
-    (statement) => statement.type === "ExportDefaultDeclaration",
-  );
-  if (defaults.length !== 1) return false;
-  const declaration = defaults[0]?.declaration;
-  if (
-    !isNode(declaration) ||
-    declaration.type !== "FunctionDeclaration" ||
-    declaration.async === true ||
-    declaration.generator === true
-  ) {
-    return false;
-  }
-  const parameters = nodes(declaration.params);
-  const name = identifierName(declaration.id);
-  const canvas = parameters[0];
-  return (
-    name === "mount" &&
-    parameters.length >= 1 &&
-    parameters
-      .slice(1)
-      .every((parameter) => parameter.type === "AssignmentPattern") &&
-    canvas?.type === "Identifier" &&
-    canvas.name === "canvas" &&
-    typeReferenceName(canvas.typeAnnotation) === "HTMLCanvasElement" &&
-    typeReferenceName(declaration.returnType) === "PibblController"
+    })
   );
 }
 
@@ -934,6 +899,17 @@ function inspectSource(
   const file = parseSource(source, label);
   const program = isNode(file.program) ? file.program : undefined;
   const programBody = nodes(program?.body);
+  const namedEntries = programBody.filter(
+    (statement) =>
+      statement.type === "ExportNamedDeclaration" &&
+      isNode(statement.declaration) &&
+      statement.declaration.type === "FunctionDeclaration",
+  );
+  const selectedExport =
+    exportName ??
+    (namedEntries.length === 1 && isNode(namedEntries[0]?.declaration)
+      ? identifierName(namedEntries[0].declaration.id)
+      : undefined);
   const valueImports = new Map<string, string>();
   const namespaceBindings = new Set<string>();
   const coreNamespaceBindings = new Set<string>();
@@ -965,7 +941,7 @@ function inspectSource(
       if (
         (statement.type === "ExportNamedDeclaration" &&
           !(
-            exportName &&
+            selectedExport &&
             isNode(statement.declaration) &&
             statement.declaration.type === "FunctionDeclaration" &&
             statement.declaration.async !== true &&
@@ -1409,7 +1385,7 @@ function inspectSource(
 
   return {
     hasBindingViolation,
-    hasExampleEntry: hasExampleEntry(programBody, exportName),
+    hasExampleEntry: hasExampleEntry(programBody, selectedExport),
     hasCommonJsSyntax,
     hasCoreValueImport,
     hasOrbitControlsValueImport,
@@ -1510,7 +1486,7 @@ export function validateScenarioSourceText(
   ) {
     throw invalid(
       label,
-      "must use supported static imports from @pibbl/core, @pibbl/text, @pibbl/core/viz, @pibbl/core/particles, @pibbl/core/physics/2d, @pibbl/three, three, and supported Three addons; relative imports must be type-only; and at least one public @pibbl/core value is required.",
+      "must use supported static imports from @pibbl/core, @pibbl/core/sync, @pibbl/text, @pibbl/core/viz, @pibbl/core/particles, @pibbl/core/physics/2d, @pibbl/three, three, and supported Three addons; relative imports must be type-only; and at least one public @pibbl/core value is required.",
     );
   }
   if (inspection.hasLegacyTypes) {
@@ -1677,7 +1653,7 @@ export function validateLearningSourceText(
       label,
       exportName
         ? `must export the catalog-selected component "${exportName}".`
-        : "must export the legacy mount(canvas) contract, or select a named component in the catalog.",
+        : "must export a named component; select its export in the catalog when the module has several exports.",
     );
   }
   if (inspection.hasBindingViolation) {

@@ -237,6 +237,10 @@ function createWasmFlexIntrinsicTextExampleContent(canvas: HTMLCanvasElement) {
 }
 
 export function WasmFlexIntrinsicTextExample() {
+  if (!(globalThis as typeof globalThis & { __PIBBL_LAYOUT_DIAGNOSTICS__?: unknown }).__PIBBL_LAYOUT_DIAGNOSTICS__) {
+    return <Text style={{ left: 28, top: 48, font: '18px sans-serif', fill: '#19375b' }}>Start Studio with --mode layout-wasm to run this experimental intrinsic layout.</Text>;
+  }
+
   const canvas = useCanvasContext().canvas as HTMLCanvasElement;
   const resource = useConst(() =>
     createWasmFlexIntrinsicTextExampleContent(canvas),

@@ -27,7 +27,6 @@ function createWasmFlexRenderLayerExampleContent(canvas: HTMLCanvasElement) {
     lastHit = -1;
   const resizeWidths: number[] = [];
   const target = {};
-  let refresh = () => {};
   const External = defineRenderLayer<
     { stamp: number; ink: string },
     { ctx: OffscreenCanvasRenderingContext2D; stamp: number; ink: string }
@@ -222,7 +221,7 @@ function createWasmFlexRenderLayerExampleContent(canvas: HTMLCanvasElement) {
   panel.style.cssText =
     "font:12px monospace;white-space:pre-wrap;color:#19375b;padding:12px;background:#e7e5df";
   canvas.insertAdjacentElement("afterend", panel);
-  refresh = () => {
+  const refresh = () => {
     panel.textContent = `${
       read
         ? "EXPERIMENTAL WASM · " +

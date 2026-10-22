@@ -7,9 +7,13 @@ const browser = await chromium.launch({ headless: true });
 try {
   const page = await browser.newPage({ viewport: { width: 1440, height: 1100 } });
   const errors = [];
+  const layoutDownloads = [];
+  page.on('response', response => { if (new URL(response.url()).pathname.endsWith('/layout.wasm')) layoutDownloads.push({url:response.url(),status:response.status()}); });
   page.on('pageerror', error => errors.push(error.message));
   page.on('console', message => { if (message.type() === 'error') errors.push(message.text()); });
   await page.goto(`${base}/#/examples/layout/wasm-flex-nested-intrinsic`);
+  await page.locator('iframe[srcdoc]').waitFor({ state: 'attached' });
+  await page.locator('iframe[srcdoc]').scrollIntoViewIfNeeded();
   const frame = page.frameLocator('iframe[srcdoc]'); await frame.locator('pre').waitFor({ timeout: 10000 });
   const state = async () => JSON.parse(await frame.locator('pre').innerText());
   const click = async (x, y) => {
@@ -80,5 +84,8 @@ try {
   await page.waitForTimeout(180);
   assert.deepEqual(await sandbox.evaluate(() => globalThis.__PIBBL_LAYOUT_DIAGNOSTICS__()), disposed);
   assert.deepEqual(errors, []);
+  if (!base.includes('/offline')) {
+    assert.ok(layoutDownloads.some(download => download.status === 200), 'Async public mounting must fetch the external layout asset');
+  } else assert.equal(layoutDownloads.length, 0, 'Embedded sync must work without any external layout request');
   console.warn(`${sourceLane ? 'Source' : 'Built'} nested intrinsic: footer ${initial.footerBox.y}→${narrow.footerBox.y}→${short.footerBox.y}, probe normal-only, moved targets, keyed remove/restore, detached source inert, bounded paint reuse, receiver roles, zero disposal ownership; ${proof?.coreInputs.length ?? 'source'} inputs`);
 } finally { await browser.close(); }

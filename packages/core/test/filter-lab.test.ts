@@ -202,7 +202,7 @@ describe("first-class filter public scenarios", () => {
     });
 
     const definition = await loadLearningExample(entry);
-    const controller = definition.mount(canvas);
+    const controller = await definition.mount(canvas);
     try {
       await nextPaint();
       expect({

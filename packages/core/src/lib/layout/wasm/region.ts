@@ -1,5 +1,5 @@
 /// <reference types="vite/client" />
-import { getPreparedLayoutModule } from './module-cache.js';
+import { readyLayoutModule } from './module.js';
 import { GLOBAL_STATE } from '../../global-state.js';
 import { signalGraphSnapshot } from '../../signals/graph.js';
 import type { PibblComponentRefs } from '../../types.js';
@@ -43,7 +43,7 @@ interface Kernel {
   dispose(): void;
 }
 function instantiate(): Kernel {
-  return new WebAssembly.Instance(getPreparedLayoutModule()).exports as unknown as Kernel;
+  return new WebAssembly.Instance(readyLayoutModule()).exports as unknown as Kernel;
 }
 export interface NumericFlexItem {
   baseMain: number; minMain: number; maxMain: number; paddingMain: number;

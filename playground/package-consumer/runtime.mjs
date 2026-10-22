@@ -62,6 +62,7 @@ const expected = [
   "batch",
   "computed",
   "pibbl",
+  "prepareLayoutEngine",
   "createArcPath",
   "createCirclePath",
   "createElement",
@@ -523,3 +524,7 @@ for (const name of [
 for (const name of ['raycast2D', 'shapeCast2D', 'overlapShape2D', 'queryAabb2D', 'queryPoint2D']) {
   if (name in physics2d) throw new Error(`Removed selector-driven query remains: ${name}`);
 }
+
+const sync = await import('@pibbl/core/sync');
+if (JSON.stringify(Object.keys(sync)) !== JSON.stringify(['pibblSync'])) throw new Error('Sync entry must expose its explicit synchronous operation only.');
+if ('pibblSync' in core || typeof sync.pibblSync !== 'function') throw new Error('Embedded mount must remain a separate entry.');

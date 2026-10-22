@@ -15,7 +15,7 @@ export function auditPublicJsdoc(root, { built = false } = {}) {
   for (const { directory, manifest } of packages) {
     for (const [subpath, descriptor] of Object.entries(manifest.exports ?? {})) {
       const target = typeof descriptor === 'string' ? descriptor : descriptor.types;
-      if (!target || target.endsWith('.json')) continue;
+      if (!target || target.endsWith('.json') || target.endsWith('.wasm')) continue;
       const source = built ? target : target.replace('./dist/', './src/').replace(/\.d\.ts$/, '.ts');
       entryPaths.set(manifest.name + (subpath === '.' ? '' : subpath.slice(1)), resolve(directory, source));
     }

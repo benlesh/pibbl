@@ -2,7 +2,8 @@
 import { targetingIdentityPlugin } from '../tooling/agent-verification/identity-plugin.mjs';
 import { textAssets } from "../tooling/text-assets.ts";
 import { layoutAssets } from "../tooling/layout-assets.ts";
-import { defineConfig } from "vite";
+import { defineConfig, searchForWorkspaceRoot } from "vite";
+import { realpathSync } from "node:fs";
 import { resolve } from "node:path";
 import { assertBuiltCore } from "../tooling/assert-built-core.ts";
 import { pibblRuntimeSource } from "../tooling/pibbl-runtime-source.ts";
@@ -57,7 +58,15 @@ export default defineConfig(({ mode }) => {
     define: {
       __PIBBL_STUDIO_DOCS_ACCEPTANCE__: JSON.stringify(isStudioDocsAcceptance),
     },
-    server: { headers: sandboxAssetHeaders },
+    server: {
+      headers: sandboxAssetHeaders,
+      fs: {
+        allow: [
+          searchForWorkspaceRoot(import.meta.dirname),
+          realpathSync(resolve(import.meta.dirname, "../node_modules")),
+        ],
+      },
+    },
     preview: { headers: sandboxAssetHeaders },
     build: isStudioDocsAcceptance
       ? { outDir: studioDocsAcceptanceOutput }

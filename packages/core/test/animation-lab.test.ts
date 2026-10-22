@@ -204,7 +204,7 @@ describe("first-class animation public scenarios", () => {
     window.addEventListener("error", captureError);
     window.addEventListener("unhandledrejection", captureRejection);
     const module = await loadLearningExample(learning);
-    const controller = module.mount(canvas);
+    const controller = await module.mount(canvas);
 
     try {
       flushAfter();

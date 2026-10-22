@@ -224,7 +224,7 @@ async function renderTutorialSnapshot(slug: string): Promise<{
   let mountedController: { dispose: () => void } | undefined;
   try {
     const module = await loadTutorialSnapshot(entry);
-    const runtimeController = module.mount(canvas);
+    const runtimeController = await module.mount(canvas);
     mountedController = {
       dispose(): void {
         try {
@@ -258,7 +258,7 @@ afterEach(() => {
   document.body.replaceChildren();
 });
 
-const module = async () => ({ mount: () => ({ dispose() {} }) });
+const module = async () => ({ mount: async () => ({ dispose() {} }) });
 const canonicalSnapshots = [
   ["canvas-scene", "canvas-scene"],
   ["first-node", "first-node"],

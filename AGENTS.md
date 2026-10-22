@@ -371,6 +371,16 @@ Exact implemented contracts and records live in:
 - `docs/superpowers/plans/2026-08-17-style-and-layout-implementation.md`
 - `docs/project-plans/003-first-class-style-and-layout.md`
 
+## Studio example authoring
+
+Learning examples and tutorial snapshots export descriptive named components.
+Their catalog metadata selects `source.exportName` and owns optional surface
+configuration and HTML-overlay setup. Studio awaits mounting the selected component
+with `pibbl`, disposes it before rerunning, and owns the Canvas host lifetime. Do
+not add default component exports or per-example `mount` wrappers. Keep component
+state and resource cleanup in ordinary Pibbl hooks; deterministic labs may use the
+shared private synchronous example host to supply fixtures through component props.
+
 ## Shipped JSX component authoring
 
 The implemented 2026-09-01 design replaced the factory-first surface with

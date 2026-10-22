@@ -1,5 +1,70 @@
 # 010 — Experimental layout engine rework
 
+## Current checkpoint and single next slice — 2026-10-22
+
+The loading/named-component integration is ready for source feedback on branch
+`codex/layout-integration-20261022`. It combines the saved loading checkpoint with
+allocation-discipline commit 8466d093 (integrated as 147208d1), the newer cancellable
+async catalog host, shared sync/async example ownership and sandbox cleanup. There
+is one compiled-module cache and one pending-mount registry. Superseded private
+loading files were removed; the previous public loading suite remains as a
+separate checkpoint regression suite. Original checkouts and backups are retained.
+
+**Exactly one selected next delivery slice: 28 — genuine paint-only Flex allocation
+reuse.** Establish a public failing regression showing that a paint-only receiver
+change repaints correctly without recomputing the unchanged parent allocation.
+Keep meaningful geometry/input/cleanup assertions and a structural work counter;
+role-notification counts and unchanged WASM solve counts alone do not satisfy it.
+No new public selector, second scheduler, speculative component execution or
+production-default solver switch is authorized by that slice.
+
+Current acceptance gaps remain broader than loading: general automatic minimum and
+intrinsic sizing rules, structural component preparation, root-wide prepared graph
+and transactional geometry, remaining Flex semantics, Grid/other layout families,
+pinned Yoga conformance, and comparative performance/release gates. The proposal's
+content-based automatic minimum is the target; the experimental explicit-minimum
+subset is not equivalent. Implement specified min-content behavior with migration
+examples before default adoption. Prototype a real reusable Card before freezing
+`defineLayoutComponent` or an alternative structural capability; ordinary opaque
+components must still execute once after allocation. Keep the normal JS solver
+until conformance, migration and performance exits have evidence. None of these
+future API choices blocks slice 28 or reopens the accepted async/sync mount contract.
+
+Fresh focused receipts (macOS, Node 26.9.0, installed pnpm 11.21.0 dependencies,
+Playwright Chromium, 2026-10-22): combined loading/host/sandbox/navigation/import
+suite 15 files / 30 tests passed; WASM layout/roles/import suite 5 files / 86 tests
+passed; normal catalog consumer suite 5 files / 344 tests passed; named component
+contract tools 8 tests passed. Clean core build and isolated packed consumer passed,
+including strict Bundler/NodeNext types, nested-base asset fetching and async-only
+embedded-payload exclusion. Direct repository TypeScript check passed after linking the already-installed
+website dependencies into the isolated checkout; no aggregate trust/Node 24 result
+is claimed.
+
+The coordinator independently used Chromium to inspect source pixels and interact
+again after the final source reload, explicitly bringing the Canvas into view:
+width 560→320, stable nodeCreates=3, paint changed text color while solves=3 and
+measuredLeaves=8 remained unchanged, with no page errors. Screenshot:
+`/tmp/pibbl-integration-clean-visible-20261022.png`. This is browser evidence, not a
+Mac-native view claim. Source feedback URL:
+`http://127.0.0.1:5192/#/examples/layout/wasm-flex-text`; built feedback URL uses
+port 5193. The small heading control waits until workspace startup and jumps to the preview
+panel. The first-frame browser probes explicitly reveal the iframe before waiting
+for diagnostics; offscreen iframe animation throttling is not evidence of a mount
+or scheduler failure. A built nested
+interaction probe overlapped server/config updates and reported a footer-hit
+mismatch; preserve its assertion and require a fresh stable-server replay before
+calling that browser lane verified. Linked dependency asset 403s are addressed by
+Vite allowing only this workspace's resolved dependency directory, retaining strict
+filesystem checks. The base-aware exact asset allowlist has a failing-then-passing
+regression; arbitrary suffix paths remain rejected.
+
+Primary backup receipts live at `/tmp/pibbl-integration-*-20261022.*`; the additional
+pre-reconciliation archive is `/tmp/pibbl-integration-before-reconcile-20261022.tar.gz`.
+The primary checkout is untouched. This checkpoint excludes its unrelated website,
+brand, broad documentation and private-harness formatting changes. Their originals
+remain there and in the saved archive. This is a runnable integration checkpoint,
+not completion of the full layout-engine proposal.
+
 Authorized 2026-10-21. Starting points: [proposal](layout-engine-rework-proposal.md)
 and its four linked research/design documents. This is experimental work, not a
 replacement of current shipped layout contracts or a feature-complete engine.

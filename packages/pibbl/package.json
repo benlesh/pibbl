@@ -85,7 +85,12 @@
     "./viz/inspection": {
       "types": "./dist/viz/inspection.d.ts",
       "default": "./dist/viz/inspection.mjs"
-    }
+    },
+    "./sync": {
+      "types": "./dist/sync.d.ts",
+      "default": "./dist/sync.mjs"
+    },
+    "./layout.wasm": "./dist/layout.wasm"
   },
   "main": "./dist/index.mjs",
   "module": "./dist/index.mjs",
@@ -142,6 +147,9 @@
       ],
       "viz/inspection": [
         "./dist/viz/inspection.d.ts"
+      ],
+      "sync": [
+        "./dist/sync.d.ts"
       ]
     }
   },

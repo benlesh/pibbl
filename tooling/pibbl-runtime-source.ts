@@ -1,11 +1,10 @@
 import { build, type Metafile } from "esbuild";
-import { readFile } from "node:fs/promises";
 import { isAbsolute, resolve, sep } from "node:path";
 
 const VIRTUAL_RUNTIME_ID = "virtual:pibbl-runtime-source";
 const RESOLVED_RUNTIME_ID = `\0${VIRTUAL_RUNTIME_ID}`;
 const PIBBL_ENTRY_POINT =
-  /^@pibbl\/(?:core(?:\/(?:filters|internal|sync|jsx-runtime|jsx-dev-runtime|particles|textures|viz(?:\/inspection)?|machines(?:\/animation)?|sprites(?:\/formats\/(?:aseprite|texture-packer))?|physics\/2d(?:\/geometry)?))?|three|text)$/;
+  /^@pibbl\/(?:core(?:\/(?:sync|filters|internal|jsx-runtime|jsx-dev-runtime|particles|textures|viz(?:\/inspection)?|machines(?:\/animation)?|sprites(?:\/formats\/(?:aseprite|texture-packer))?|physics\/2d(?:\/geometry)?))?|three|text)$/;
 const THREE_ENTRY_POINT = /^three(?:\/addons\/controls\/OrbitControls\.js)?$/;
 
 const threeEntryPoints = new Map([
@@ -29,6 +28,7 @@ function pibblEntryPoints(mode: string): ReadonlyMap<string, string> {
   const directory = mode === "layout-wasm-built" ? ".layout-wasm-package/dist" : mode === "built" ? "dist" : "src";
   const extension = mode === "built" || mode === "layout-wasm-built" ? "mjs" : "ts";
   return new Map([
+    ["@pibbl/core/sync", resolve(import.meta.dirname, `../packages/core/${directory}/sync.${extension}`)],
     ["@pibbl/core/viz/inspection", resolve(import.meta.dirname, `../packages/core/${directory}/features/viz/inspection.${extension}`)],
     ["@pibbl/core/machines", resolve(import.meta.dirname, `../packages/core/${directory}/features/machines/index.${extension}`)],
     ["@pibbl/core/machines/animation", resolve(import.meta.dirname, `../packages/core/${directory}/features/machines/animation.${extension}`)],
@@ -51,13 +51,6 @@ function pibblEntryPoints(mode: string): ReadonlyMap<string, string> {
       resolve(
         import.meta.dirname,
         `../packages/core/${directory}/index.${extension}`,
-      ),
-    ],
-    [
-      "@pibbl/core/sync",
-      resolve(
-        import.meta.dirname,
-        `../packages/core/${directory}/sync.${extension}`,
       ),
     ],
     [
@@ -176,25 +169,15 @@ export function pibblRuntimeSource(mode: string) {
           loader: "ts",
         },
         bundle: true,
-        define: { "import.meta.env.DEV": production ? "false" : "true", "import.meta.env": JSON.stringify({ MODE: mode, DEV: !production }) },
+        define: { __PIBBL_LAYOUT_ASSET_URL__: JSON.stringify(`${base.endsWith("/") ? base : `${base}/`}pibbl-layout/layout.wasm`), "import.meta.env.DEV": production ? "false" : "true", "import.meta.env": JSON.stringify({ MODE: mode, DEV: !production }) },
         format: "esm",
+        minifySyntax: true,
         metafile: true,
         platform: "browser",
         plugins: [
           {
             name: "pibbl-studio-runtime-entries",
             setup(build) {
-              build.onLoad({ filter: /packages\/core\/(?:src|dist|\.layout-wasm-package\/dist)\/lib\/layout\/wasm\/loader\.(?:ts|js)$/ }, async ({ path }) => {
-                const source = await readFile(path, "utf8");
-                const externalAsset = `${base.endsWith("/") ? base : `${base}/`}pibbl-layout/layout.wasm`;
-                const contents = source.replace(
-                  /new URL\(['"]\.\/layout\.wasm['"], import\.meta\.url\)/u,
-                  `new URL(${JSON.stringify(externalAsset)}, document.baseURI)`,
-                );
-                if (contents === source)
-                  throw new Error("Studio layout loader must retain its external WASM URL expression.");
-                return { contents, loader: path.endsWith(".ts") ? "ts" : "js" };
-              });
               build.onResolve({ filter: /engine\.mjs$/ }, (args) => {
                 if (!args.importer.includes("/packages/text/"))
                   return undefined;

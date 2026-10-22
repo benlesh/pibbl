@@ -4,16 +4,17 @@ import { assign, defineMachine, useMachine } from "@pibbl/core/machines";
 type Context = { attempts: number; message: string };
 type Event = { type: "LOAD" } | { type: "CANCEL" } | { type: "RESET" };
 
+const beginLoading = assign<Context, Event, undefined>(({ context }) => ({
+  attempts: context.attempts + 1,
+  message: "Loading…",
+}));
+
 const loader = defineMachine<Context, Event>({
   initial: "idle",
   context: () => ({ attempts: 0, message: "Ready to load" }),
   states: {
-    idle: { on: { LOAD: "loading" } },
+    idle: { on: { LOAD: { target: "loading", actions: beginLoading } } },
     loading: {
-      entry: assign(({ context }) => ({
-        attempts: context.attempts + 1,
-        message: "Loading…",
-      })),
       invoke: {
         task: ({ context, signal }) =>
           new Promise<string>((resolve, reject) => {
@@ -44,7 +45,7 @@ const loader = defineMachine<Context, Event>({
         },
       },
     },
-    failed: { on: { LOAD: "loading" } },
+    failed: { on: { LOAD: { target: "loading", actions: beginLoading } } },
     ready: {},
   },
   on: {
