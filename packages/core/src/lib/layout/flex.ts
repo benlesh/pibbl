@@ -51,7 +51,7 @@ import { measureElement, withIsolatedRenderState } from './measure.js';
 import { withSignalWriteForbidden } from '../signals/graph.js';
 import type { Constraints, LayoutBox } from './types.js';
 
-type FlexDirection = 'row' | 'column';
+type FlexDirection = 'row' | 'column' | 'row-reverse' | 'column-reverse';
 type FlexWrap = 'nowrap' | 'wrap';
 type MainAlignment =
   | 'flex-start'
@@ -293,7 +293,7 @@ function measureFlex(
   if ((input.style.flexWrap ?? 'nowrap') !== 'nowrap') {
     return unsupportedIntrinsic('requires nowrap because wrapped intrinsic sizing is deferred');
   }
-  const row = (input.style.flexDirection ?? 'row') === 'row';
+  const row = isRowDirection(input.style.flexDirection);
   const diagnosticBox = {
     x: 0,
     y: 0,
@@ -364,7 +364,7 @@ function measureFlex(
     let baseMain: number;
     let baseCross: number;
     if (experimentalLayout && !row && widthDefinite && !heightDefinite &&
-      (child.type === Text || layoutChild.type === Flex && (style.flexDirection ?? 'row') === 'column' && (style.flexWrap ?? 'nowrap') === 'nowrap') &&
+      (child.type === Text || layoutChild.type === Flex && isColumnDirection(style.flexDirection) && (style.flexWrap ?? 'nowrap') === 'nowrap') &&
       (mainValue === undefined || mainValue === 'auto' || crossValue === undefined || crossValue === 'auto')) {
       // Descend only through known built-in columns at settled content widths.
       // The shared measurement context detects descriptor cycles; there is no
@@ -532,7 +532,8 @@ function resolveFlexPlacements(
   if (region) recordWasmAllocationPass();
   assertFiniteBox(container);
   const options = normalizeFlexOptions(style, container);
-  const row = options.flexDirection === 'row';
+  const row = isRowDirection(options.flexDirection);
+  const reverse = options.flexDirection === 'row-reverse' || options.flexDirection === 'column-reverse';
   const mainSize = row ? container.width : container.height;
   const crossSize = row ? container.height : container.width;
   const mainGap = row ? options.columnGap : options.rowGap;
@@ -556,7 +557,7 @@ function resolveFlexPlacements(
     >;
     const layoutChild = isLayoutComponent(child.type) ? prepareLayoutComponent(child, { receiverToken }) : child;
     const knownIntrinsicFlex = child.type === Flex || layoutChild.type === Flex &&
-      (normalized.flexDirection ?? 'row') === 'column' && (normalized.flexWrap ?? 'nowrap') === 'nowrap';
+      isColumnDirection(normalized.flexDirection) && (normalized.flexWrap ?? 'nowrap') === 'nowrap';
     assertSupportedChildPosition('Flex', child, normalized);
     rejectUnsupportedItemFields(child, normalized, container);
     const allMargin = numericMargin(normalized.margin, 'margin', child, container);
@@ -564,8 +565,8 @@ function resolveFlexPlacements(
     const marginRight = numericMargin(normalized.marginRight === undefined ? allMargin : normalized.marginRight, 'marginRight', child, container);
     const marginBottom = numericMargin(normalized.marginBottom === undefined ? allMargin : normalized.marginBottom, 'marginBottom', child, container);
     const marginLeft = numericMargin(normalized.marginLeft === undefined ? allMargin : normalized.marginLeft, 'marginLeft', child, container);
-    const marginMainBefore = row ? marginLeft : marginTop;
-    const marginMainAfter = row ? marginRight : marginBottom;
+    const marginMainBefore = row ? reverse ? marginRight : marginLeft : reverse ? marginBottom : marginTop;
+    const marginMainAfter = row ? reverse ? marginLeft : marginRight : reverse ? marginTop : marginBottom;
     const marginCrossBefore = row ? marginTop : marginLeft;
     const marginCrossAfter = row ? marginBottom : marginRight;
     const grow = nonnegativeFactor(normalized.flexGrow ?? 0, 'flexGrow', child, container);
@@ -830,7 +831,7 @@ function resolveFlexPlacements(
   }
 
   const crossPlacements = region?.placeCross(items, crossSize, options.alignItems, wrappedRegion ? { gap: crossGap, alignContent: options.alignContent } : undefined);
-  const mainPlacements = region?.placeMain(mainSize, mainGap, options.justifyContent);
+  const mainPlacements = region?.placeMain(mainSize, mainGap, options.justifyContent, reverse);
   const placements: FlexPlacement[] = [];
   let mainIndex = 0;
   let crossIndex = 0;
@@ -903,13 +904,17 @@ function genericTextFont(style: Readonly<Record<string, unknown>>): boolean {
 }
 function measurementStyle(style: Readonly<Record<string, unknown>>) {
   const { fill: _fill, stroke: _stroke, opacity: _opacity, cursor: _cursor, filter: _filter, ...metrics } = style;
-  return metrics;
+  // Rest construction owns this fresh snapshot; normalize geometry-equivalent axes.
+  const owned = metrics as Record<string, unknown>;
+  if (owned.flexDirection === 'row-reverse') owned.flexDirection = 'row';
+  else if (owned.flexDirection === 'column-reverse') owned.flexDirection = 'column';
+  return owned;
 }
 
 // Resolve every receiver even on cache hits so normal traversal adopts current
 // subscriptions. Retain only scalar snapshots, never descriptors or provisions.
 function intrinsicTextSnapshot(child: PibblElement<any>, style: Readonly<BoxStyle & Record<string, unknown>>, constraints: Constraints): unknown[] | undefined {
-  if (child.type !== Flex || style.flexDirection !== 'column' || (style.flexWrap ?? 'nowrap') !== 'nowrap' ||
+  if (child.type !== Flex || !isColumnDirection(style.flexDirection) || (style.flexWrap ?? 'nowrap') !== 'nowrap' ||
     typeof style.width !== 'number' || (style.height !== undefined && style.height !== 'auto')) return;
   return withSignalWriteForbidden('Signal writes are forbidden during Pibbl measurement', () => withIsolatedRenderState(() => {
     const previous = GLOBAL_STATE.primitiveReceiverToken;
@@ -929,7 +934,7 @@ function intrinsicTextSnapshot(child: PibblElement<any>, style: Readonly<BoxStyl
           if (leaf.type === Text) {
             if (!genericTextFont(leafStyle)) return;
             content = prepareLayoutTextContent(leaf.props, { receiverToken: receiver });
-          } else if (leaf.type === Flex && (leafStyle.flexDirection ?? 'row') === 'column' && (leafStyle.flexWrap ?? 'nowrap') === 'nowrap' && (leafStyle.height === undefined || leafStyle.height === 'auto')) {
+          } else if (leaf.type === Flex && isColumnDirection(leafStyle.flexDirection) && (leafStyle.flexWrap ?? 'nowrap') === 'nowrap' && (leafStyle.height === undefined || leafStyle.height === 'auto')) {
             const padding = normalizeEdges(leafStyle.padding, 'padding', childContext(leaf, { x: 0, y: 0, width, height: constraints.maxHeight }));
             const available = typeof leafStyle.width === 'number' ? leafStyle.width : Math.max(0, width-padding.left-padding.right);
             const usedWidth = clamp(available, typeof leafStyle.minWidth === 'number' ? leafStyle.minWidth : 0, typeof leafStyle.maxWidth === 'number' ? leafStyle.maxWidth : Infinity);
@@ -1153,11 +1158,22 @@ function distributeAlignment(
   return { start: 0, between: 0 };
 }
 
+function isRowDirection(direction: unknown): boolean {
+  return direction === undefined || direction === 'row' || direction === 'row-reverse';
+}
+function isColumnDirection(direction: unknown): boolean {
+  return direction === 'column' || direction === 'column-reverse';
+}
+
 function normalizeFlexOptions(
   style: Readonly<FlexStyle>,
   container: Readonly<LayoutBox>,
 ) {
-  const flexDirection = supported(style.flexDirection ?? 'row', ['row', 'column'], 'flexDirection', container);
+  const flexDirection = style.flexDirection ?? 'row';
+  if (flexDirection !== 'row' && flexDirection !== 'column' &&
+      !(experimentalLayout && (flexDirection === 'row-reverse' || flexDirection === 'column-reverse'))) {
+    throw optionDiagnostic('flexDirection', flexDirection, container, 'uses an unsupported flex direction in this build');
+  }
   const flexWrap = supported(style.flexWrap ?? 'nowrap', ['nowrap', 'wrap'], 'flexWrap', container);
   const justifyContent = supported(
     style.justifyContent ?? 'flex-start',
@@ -1378,6 +1394,7 @@ function optionDiagnostic(
   property: string,
   value: unknown,
   container: Readonly<LayoutBox>,
+  reason = 'uses an unsupported flex value',
 ) {
   return layoutDiagnostic({
     component: 'Flex',
@@ -1385,7 +1402,7 @@ function optionDiagnostic(
     value,
     algorithm: 'flex',
     constraints: constraintsFor(container),
-    reason: 'uses an unsupported flex value',
+    reason,
   });
 }
 

@@ -443,7 +443,7 @@ describe('CSS-compatible flex geometry', () => {
       measurement,
     )).toThrowError(/minWidth.*explicit/i);
     for (const style of [
-      { flexDirection: 'row-reverse' },
+      { flexDirection: 'diagonal' },
       { flexWrap: 'wrap-reverse' },
       { gap: '10%' },
     ]) {
@@ -498,5 +498,10 @@ describe('CSS-compatible flex geometry', () => {
   });
 
   // @ts-expect-error reverse directions are outside the supported matrix
-  void createElement(Flex, { style: { flexDirection: 'row-reverse' }, children: [] });
+  void createElement(Flex, { style: { flexDirection: 'diagonal' }, children: [] });
+});
+
+it.runIf(!experimentalLayout)('retains explicit normal-build reverse-direction diagnostics', () => {
+  expect(() => layoutFlex({ x: 0, y: 0, width: 100, height: 20 }, [], { flexDirection: 'row-reverse' }, measurement)).toThrow(/unsupported flex direction/);
+  expect(() => layoutFlex({ x: 0, y: 0, width: 100, height: 20 }, [], { flexDirection: 'column-reverse' }, measurement)).toThrow(/unsupported flex direction/);
 });

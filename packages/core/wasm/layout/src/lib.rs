@@ -63,11 +63,11 @@ fn align_cross(records: &mut [f64], size: f64) -> u32 {
 
 // Reuses the solved allocation records; slot seven becomes main-axis offset.
 #[no_mangle]
-pub extern "C" fn place_main(main: f64, gap: f64, alignment: u32) -> u32 {
-    NODES.with(|nodes| align_main(&mut nodes.borrow_mut(), main, gap, alignment))
+pub extern "C" fn place_main(main: f64, gap: f64, alignment: u32, reverse: u32) -> u32 {
+    NODES.with(|nodes| align_main(&mut nodes.borrow_mut(), main, gap, alignment, reverse))
 }
-fn align_main(nodes: &mut [f64], main: f64, gap: f64, alignment: u32) -> u32 {
-    if !main.is_finite() || main < 0.0 || !gap.is_finite() || gap < 0.0 || alignment > 5 { return 1; }
+fn align_main(nodes: &mut [f64], main: f64, gap: f64, alignment: u32, reverse: u32) -> u32 {
+    if !main.is_finite() || main < 0.0 || !gap.is_finite() || gap < 0.0 || alignment > 5 || reverse > 1 { return 1; }
     let count = nodes.len() / STRIDE;
     if count == 0 { return 0; }
     let occupied = nodes.chunks_exact(STRIDE).fold(count.saturating_sub(1) as f64 * gap, |sum,n| sum+n[6]+n[3]+n[8]+n[9]);
@@ -76,7 +76,7 @@ fn align_main(nodes: &mut [f64], main: f64, gap: f64, alignment: u32) -> u32 {
     let mut cursor = start;
     for n in nodes.chunks_exact_mut(STRIDE) {
         if !cursor.is_finite() { return 1; }
-        n[7] = cursor + n[8];
+        n[7] = if reverse == 1 { main - cursor - n[8] - n[6] - n[3] } else { cursor + n[8] };
         cursor += n[6]+n[3]+n[8]+n[9]+gap+between;
         if !n[7].is_finite() || !cursor.is_finite() { return 1; }
     }
@@ -132,11 +132,11 @@ fn form_lines(nodes: &[f64], main: f64, gap: f64) -> Result<Vec<(usize, usize)>,
     Ok(lines)
 }
 #[no_mangle]
-pub extern "C" fn place_wrap_main(main: f64, gap: f64, alignment: u32) -> u32 {
+pub extern "C" fn place_wrap_main(main: f64, gap: f64, alignment: u32, reverse: u32) -> u32 {
     NODES.with(|nodes| LINES.with(|lines| {
         let mut nodes = nodes.borrow_mut();
         for &(start, end) in lines.borrow().iter() {
-            let status = align_main(&mut nodes[start*STRIDE..end*STRIDE], main, gap, alignment);
+            let status = align_main(&mut nodes[start*STRIDE..end*STRIDE], main, gap, alignment, reverse);
             if status != 0 { return status; }
         }
         0

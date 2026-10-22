@@ -126,20 +126,36 @@
       "id": "flex.reverse-and-wrap-reverse",
       "target": "parity",
       "group": "flex-core",
-      "current": "rejected",
-      "status": "missing",
+      "current": "experimental row-reverse and column-reverse main placement, including finite wrapping; wrap-reverse and RTL remain unsupported",
+      "status": "experimental",
       "evidence": {
-        "positive": [],
-        "negative": ["current rejection"],
-        "interaction": [],
+        "positive": [
+          "row/column reverse with physical margins",
+          "source-formed wrapped line reversal",
+          "direction-relative flex-start/flex-end/center"
+        ],
+        "negative": [
+          "normal JavaScript build diagnostics",
+          "wrap-reverse unsupported"
+        ],
+        "interaction": [
+          "source paint/hit priority under overlap",
+          "axis flip preserves keys/mounts/nodes",
+          "main placement changes without allocation/measurement work",
+          "source/built moved targets and keyed lifecycle"
+        ],
         "yogaCases": [],
         "missing": [
-          "row/column reverse",
           "wrap-reverse",
-          "RTL composition",
-          "source paint-order proof"
+          "RTL interaction",
+          "pinned Yoga reverse fixtures"
         ]
-      }
+      },
+      "evidenceRefs": [
+        "packages/core/test/layout-wasm-slice.test.tsx",
+        "tooling/test-wasm-wrapped-collections.mjs",
+        "docs/design/layout-system-contract.md"
+      ]
     },
     {
       "id": "flex.grow-shrink-basis",

@@ -36,11 +36,11 @@ interface Kernel {
   resize(count: number): number;
   solve(main: number, gap: number): number;
   solve_wrap(main: number, gap: number): number;
-  place_wrap_main(main: number, gap: number, alignment: number): number;
+  place_wrap_main(main: number, gap: number, alignment: number, reverse: number): number;
   place_wrap_cross(size: number, gap: number, alignment: number): number;
   resize_cross(count: number): number;
   place_cross(size: number): number;
-  place_main(main: number, gap: number, alignment: number): number;
+  place_main(main: number, gap: number, alignment: number, reverse: number): number;
   dispose(): void;
 }
 function instantiate(): Kernel {
@@ -158,14 +158,14 @@ export class LayoutRegion {
     }
     items.forEach((item, i) => { item.targetMain = this.results[i]; });
   }
-  placeMain(main: number, gap: number, alignment: 'flex-start' | 'flex-end' | 'center' | 'space-between' | 'space-around' | 'space-evenly'): readonly number[] {
+  placeMain(main: number, gap: number, alignment: 'flex-start' | 'flex-end' | 'center' | 'space-between' | 'space-around' | 'space-evenly', reverse = false): readonly number[] {
     if (!this.kernel) throw new Error('Experimental Flex main placement requires a solved region.');
     const code = ['flex-start', 'flex-end', 'center', 'space-between', 'space-around', 'space-evenly'].indexOf(alignment);
-    const key = `${this.allocationRevision}:${main}:${gap}:${code}`;
+    const key = `${this.allocationRevision}:${main}:${gap}:${code}:${reverse ? 1 : 0}`;
     if (key !== this.mainPlacementKey) {
       try {
         const pointer = this.kernel.resize(this.order.length);
-        const status = this.wrap ? this.kernel.place_wrap_main(main, gap, code) : this.kernel.place_main(main, gap, code);
+        const status = this.wrap ? this.kernel.place_wrap_main(main, gap, code, reverse ? 1 : 0) : this.kernel.place_main(main, gap, code, reverse ? 1 : 0);
         if (status !== 0) throw new Error(`Experimental Flex WASM main placement failed (${status}); nonfinite geometry.`);
         const output = new Float64Array(this.kernel.memory.buffer, pointer, this.order.length * 10);
         this.mainOffsets = this.order.map((_, i) => output[i * 10 + 7]);

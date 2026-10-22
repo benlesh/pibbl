@@ -198,6 +198,16 @@ existing visible/clip container behavior applies. This follows Text's existing
 literal-space wrapping, not CSS/Unicode line breaking. Custom fonts, responsive
 queries, percentage width/maxWidth, other fitting modes, columns and wrapped Flex
 lines keep the explicit-minimum diagnostic. Intrinsic Flex measurement is unchanged.
+Experimental `row-reverse` and `column-reverse` retain their row/column sizing
+axis and reverse main-axis placement within each source-formed nowrap/wrapped line.
+Physical leading/trailing margins follow that direction. `flex-start`/`flex-end`
+are relative to its main direction; cross line stacking stays forward. Source
+traversal, identity, paint/event priority and tab order do not reverse. Text is not
+mirrored. Main placement runs in WASM; flipping only main direction reuses unchanged
+allocation and same-axis measurement data, with direction included in placement
+cache keys. Normal JavaScript Flex retains its unsupported-direction diagnostic.
+`wrap-reverse` and RTL remain unsupported.
+
 The experimental allocator also supports direct-item numeric physical
 `margin`, `marginTop`, `marginRight`, `marginBottom` and `marginLeft`. Values are
 finite logical Canvas units, default zero; a specific edge overrides the uniform

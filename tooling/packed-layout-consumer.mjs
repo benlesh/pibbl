@@ -88,9 +88,10 @@ try {
     ),
   );
   await writeFile(join(consumer, "margin-types.ts"), `
-import { createElement, Rectangle, type FlexItemStyle } from '@pibbl/core';
+import { createElement, Rectangle, Flex, type FlexItemStyle } from '@pibbl/core';
 const margin: FlexItemStyle = { margin: 5, marginTop: -2, marginRight: 3, marginBottom: 4, marginLeft: 6 };
 export const rectangle = createElement(Rectangle, { style: { width: 20, height: 20, ...margin } });
+export const reverseFlex = createElement(Flex, { style: { width: 100, height: 40, flexDirection: 'row-reverse' }, children: rectangle });
 `);
   for (const resolution of ["Bundler", "NodeNext"]) {
     await writeFile(

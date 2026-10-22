@@ -5,6 +5,7 @@ import {
   useReaction,
   type PibblNode,
   signal,
+  computed,
   useConst,
   useLayoutBox,
   useCanvasContext,
@@ -17,6 +18,9 @@ function createWasmFlexKeyedWrapExampleContent(canvas: HTMLCanvasElement) {
   const keys = signal(["A", "B", "C"]);
   const selected = signal("none");
   const ink = signal("#19375b");
+  const reverseAxes = signal(false);
+  const rowDirection = computed(() => reverseAxes.get() ? "row-reverse" : "row");
+  const columnDirection = computed(() => reverseAxes.get() ? "column-reverse" : "column");
   let serial = 0,
     hits = 0;
   let rootTransform = new DOMMatrix();
@@ -104,7 +108,7 @@ function createWasmFlexKeyedWrapExampleContent(canvas: HTMLCanvasElement) {
             top: 180,
             width: 360,
             height: 220,
-            flexDirection: "row",
+            flexDirection: rowDirection,
             flexWrap: "wrap",
             gap: 12,
             alignContent: "flex-start",
@@ -126,7 +130,7 @@ function createWasmFlexKeyedWrapExampleContent(canvas: HTMLCanvasElement) {
             top: 180,
             width: 292,
             height: 180,
-            flexDirection: "column",
+            flexDirection: columnDirection,
             flexWrap: "wrap",
             gap: 12,
             alignContent: "flex-start",
@@ -149,10 +153,12 @@ function createWasmFlexKeyedWrapExampleContent(canvas: HTMLCanvasElement) {
     x,
     label,
     onClick,
+    width: buttonWidth = 140,
   }: {
     x: number;
     label: string;
     onClick(): void;
+    width?: number;
   }) {
     return (
       <>
@@ -160,7 +166,7 @@ function createWasmFlexKeyedWrapExampleContent(canvas: HTMLCanvasElement) {
           style={{
             left: x,
             top: 100,
-            width: 140,
+            width: buttonWidth,
             height: 36,
             fill: "#19375b",
             cursor: "pointer",
@@ -228,6 +234,7 @@ function createWasmFlexKeyedWrapExampleContent(canvas: HTMLCanvasElement) {
           ink.update((value) => (value === "#19375b" ? "#a63758" : "#19375b"))
         }
       />
+      <Button x={636} width={96} label="Flip axes" onClick={() => reverseAxes.update(value => !value)} />
       <Text
         style={{
           left: 28,
@@ -264,12 +271,13 @@ function createWasmFlexKeyedWrapExampleContent(canvas: HTMLCanvasElement) {
     panel.textContent = JSON.stringify({
       lane: read ? "experimental WASM" : "normal JavaScript",
       keys: keys.get(),
+      reverseAxes: reverseAxes.get(),
       selected: selected.get(),
       hits,
       boxes: Object.fromEntries(boxes),
       layout: read?.() ?? {},
       limits:
-        "Finite row/declared-column wrap only; no intrinsic wrapped-container sizing, reverse-axis/RTL or Yoga parity claim. Reversing data preserves source paint order.",
+        "Finite row/declared-column wrap only; no intrinsic wrapped-container sizing, wrap-reverse/RTL or Yoga parity claim. Reversing data preserves source paint order.",
     });
   };
   refresh();

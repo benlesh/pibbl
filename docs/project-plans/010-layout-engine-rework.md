@@ -437,11 +437,36 @@ Node26.9.0/pnpm11.21.0 deps/Chromium; pinned Rust1.99.0 isolated under/tmp.
 Same ports5192/5193 and wasm-flex-text route, Compare Text minimum, lower-right
 margin row: left toggles signed margin, right toggles wrapping then moves below.
 
-**Exactly one selected next delivery slice: 40 — reverse main-axis Flex placement.**
-Present the exact direction union and source-order semantics, then establish public
-row-reverse/column-reverse placement with signed margins, wrapping and hit behavior.
-Use the same WASM placement records; no array reversal or second solver.
-Consolidate37–39 before production changes for40.
+### Slice 40 — reverse main-axis placement with unchanged source order
+
+Presented public direction union adds row-reverse/column-reverse in the experimental
+build; normal JavaScript retains its diagnostic. Axis detection and intrinsic
+column eligibility remain row/column aware, same-axis measurement snapshots
+normalize direction, physical main margins map to the selected leading/trailing
+edges, and main placement cache keys include direction. Both nowrap/wrapped WASM
+main exports mirror each solved border-box offset within its source-formed line.
+No descriptor array, text, identity, source paint/hit priority or tab order reverses.
+
+The focused public test failed before runtime edits. Fresh97experimental checks
+pass/1normal-onlyskip; normal43pass/5experimental skips. Coverage includes physical
+margins, both axes, per-line wrap, direction-relative alignment and overlapping
+pixel/hit priority. Typecheck/lint, public/editor parity and catalog pass. Installed
+strict Bundler/NodeNext consumers accept the reverse direction and margin fields;
+227installed dist inputs and structural lifecycle pass. Matching57590-byte artifact
+uses pinned Rust1.99.0; no public ABI export changes beyond existing style values.
+
+Source/built keyed collection probes pass separate Flip axes and source-key reorder
+controls. Keys, stamps and nodes remain stable on direction flip; solve and measured
+leaf counters stay flat while main placement runs. Old positions hit the newly
+occupying child, moved positions hit the expected child; remove/restore, paint reuse
+and cleanup0/0/0 remain correct, no errors; built466inputs. Logs
+`/tmp/pibbl-slice40-*`. Node26.9.0/pnpm11.21.0 deps/Chromium; no Node24/full trust claim.
+Hands-on ports5192/5193, `#/examples/layout/wasm-flex-keyed-wrap`, Flip axes.
+
+**Exactly one selected next delivery slice: 41 — wrap-reverse cross-line placement.**
+Extend the existing wrap value union and kernel cross placement, preserving source
+line membership, main order, signed physical margin ownership and all node identities.
+Public positive/negative cross placement and moved-hit evidence precede implementation.
 
 ### Consolidation 13 completed for delivery slices 37–39
 
@@ -1757,13 +1782,12 @@ three pinned Yoga cases, and keeps unaccepted API signatures and missing release
 gates explicit. It is support work, not an additional delivered capability slice.
 Group9 has two deliveries; consolidate after the next closely related slice.
 
-## [NEXT] Reverse main-axis Flex placement (slice 40)
+## [NEXT] Wrap-reverse cross-line placement (slice 41)
 
-Complete row-reverse and column-reverse in the experimental shared allocator and
-placement path. Source traversal, identity, paint/event priority and tab order stay
-unchanged. Resolve physical leading/trailing margins in the selected main direction,
-position every border box from the correct edge, and prove wrapped/nowrap geometry.
-Wrap-reverse and RTL remain visible in the same existing capability entry.
+Complete experimental wrap-reverse on both main axes, including combination with
+reverse main direction. Cross start/end and physical leading/trailing margins follow
+the reversed cross direction; source line membership, keys and paint/hit order stay
+unchanged. Preserve normal-build diagnostics and explicit RTL deferral.
 
 Slice 26 delivery (2026-10-21): completed the in-progress private role foundation
 before any loading migration. Existing receiver edges carry staged masks; successful
