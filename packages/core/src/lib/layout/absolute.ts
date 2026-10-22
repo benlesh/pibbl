@@ -72,7 +72,7 @@ interface ResolvedAbsoluteStyle extends SystemStyle {
   overflow: 'visible' | 'clip';
 }
 
-type LayoutReceiver = 'Absolute' | 'Overlay' | 'Flow' | 'Flex' | 'Grid';
+type LayoutReceiver = 'Absolute' | 'Overlay' | 'Flow' | 'Flex' | 'Grid' | 'Layer';
 
 const preparedLayoutTransactions = new WeakMap<
   PibblRenderTransaction,

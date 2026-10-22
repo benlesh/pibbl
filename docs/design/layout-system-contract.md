@@ -286,6 +286,15 @@ internals are discovered only from that execution. Already-prepared Flex regions
 consume their plans without preparing descendants again. This does not preflight
 unknown siblings outside the boundary or roll back earlier Canvas pixels.
 
+A known managed Layer occurrence can prepare its direct built-in Flex roots at
+the settled Layer allocation before earlier sibling traversal. Preparation creates
+no child instance or bitmap surface. The exact descriptor and receiver token pass
+through the Layer's private fragment; child rendering adopts the same transaction
+plan and shared-root native region. Authored child offsets remain unapplied until
+normal child rendering. A clean Layer retains its existing descendant ownership
+without invoking opaque children again. Removal releases its prepared descendants;
+restoration creates fresh regions. Arbitrary Layer descendants remain opaque.
+
 For the same direct Text subset, automatic width and basis use the natural width
 before wrapping, not the containing row's constrained width. The natural query
 follows wrapped Text's existing removal of leading ASCII spaces; empty/space-only

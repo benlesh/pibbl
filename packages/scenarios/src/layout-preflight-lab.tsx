@@ -1,8 +1,8 @@
-import { Absolute, Flex, Group, HtmlBox, Rectangle, useLayoutBox, defineLayoutComponent, type FlexStyle, type PibblNodeInput, type Signal } from '@pibbl/core';
+import { Absolute, Flex, Group, HtmlBox, Layer, Rectangle, useLayoutBox, defineLayoutComponent, type FlexStyle, type PibblNodeInput, type Signal } from '@pibbl/core';
 
 interface LabProps {
-  width: Signal<number>; grow: Signal<number>; minimum: Signal<number>; nested: Signal<boolean>; direct: Signal<boolean>; described: Signal<boolean>;
-  evaluate: (width: number) => void; hit: () => void;
+  width: Signal<number>; grow: Signal<number>; minimum: Signal<number>; nested: Signal<boolean>; direct: Signal<boolean>; described: Signal<boolean>; layer: Signal<boolean>;
+  evaluate: (width: number) => void; hit: () => void; layerHit: () => void;
 }
 function PreflightProbe({ evaluate, hit }: {
   evaluate: (width: number) => void; hit: () => void;
@@ -15,9 +15,13 @@ function PreflightProbe({ evaluate, hit }: {
 const DescribedCard = defineLayoutComponent((props: { style: FlexStyle; children: PibblNodeInput }) => <Flex style={props.style}>{props.children}</Flex>);
 
 /** Deterministic public-surface fixture; the host owns fault/recovery controls. */
-export function LayoutPreflightLab({ width, grow, minimum, nested, direct, described, evaluate, hit }: LabProps) {
+export function LayoutPreflightLab({ width, grow, minimum, nested, direct, described, layer, evaluate, hit, layerHit }: LabProps) {
   const probe = <PreflightProbe evaluate={evaluate} hit={hit} style={{ width: 80, height: 30, minWidth: 0, flexGrow: 1 }} />;
-  const blue = <Rectangle style={{ width: 80, height: 30, minWidth: minimum, maxWidth: 80, flexGrow: grow, fill: '#344c77' }} />;
+  const blue = <Rectangle style={{ width: 80, height: 30, minWidth: minimum, maxWidth: 80, flexGrow: grow, fill: '#344c77' }} onClick={layerHit} />;
+  if (layer.get()) return <Absolute style={{ width: 240, height: 40 }}>
+    <Flex style={{ width, height: 30 }}>{probe}</Flex>
+    <Layer style={{ left: 140, width: 100, height: 30 }}><Flex style={{ width: 80, height: 30 }}>{blue}</Flex></Layer>
+  </Absolute>;
   const directRoot = direct.get(), describedRoot = described.get();
   const inner = describedRoot ? <DescribedCard key="inner" style={{ width: 80, height: 30, minWidth: 0, flexShrink: 0 }}>{blue}</DescribedCard> :
     <Flex key="inner" style={{ width: 80, height: 30, minWidth: 0, flexShrink: 0 }}>{blue}</Flex>;

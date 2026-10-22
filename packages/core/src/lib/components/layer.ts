@@ -1,8 +1,13 @@
+import { registerKnownLayoutPreflight, isKnownLayoutType, preflightKnownLayout, attachPreparedLayoutSlot, stagePreparedBoundaryChildren, takePreparedBoundaryChildren, retainPreparedBoundarySubtree } from '../layout/prepared-root.js';
+import { prepareLayoutChildren, prepareDirectChildStyle, resolveContainerBox } from '../layout/absolute.js';
+import { setPreNormalizedStyle } from '../style/resolve-dispatch.js';
+import { getChildPrimitiveReceiverToken } from '../element/metadata.js';
+import { preparedStyleValue, preparedStyleQuery } from '../style/responsive.js';
 import { experimentalLayout } from '../layout/wasm/region.js';
 import { hasParentLayoutAllocation } from '../layout/context.js';
 import { definePrimitive } from '../define-primitive.js';
 import { materializeContainerChildren } from '../element/children.js';
-import { createElement } from '../element/create-element.js';
+import { clonePibblElement, createElement } from '../element/create-element.js';
 import { Fragment, type FragmentProps } from '../element/fragment.js';
 import { executeRender } from '../execute-render.js';
 import {
@@ -89,7 +94,7 @@ function renderLayer(
   ctx: RenderingContext2D,
 ) {
   wireStructuralEvents(props);
-  const materializedChildren = materializeContainerChildren(
+  const materializedChildren = (experimentalLayout ? takePreparedBoundaryChildren(GLOBAL_STATE.componentRefs!.element) : undefined) ?? materializeContainerChildren(
     props.children,
     'Layer',
   );
@@ -192,6 +197,7 @@ function renderLayer(
     completeInstanceRenderRevision(layerPibbl, renderedRevision);
     slot.retainedTree = snapshotLayerNodeTree(nextRoot);
   } else {
+    if (experimentalLayout) retainPreparedBoundarySubtree(componentRefs.element);
     parentInstance.eventRoot.focusPolicy?.replayRetainedSubtree(layerPibbl);
   }
   const renderedFocusPolicy = parentInstance.eventRoot.focusPolicy;
@@ -232,6 +238,30 @@ export const Layer = definePrimitive<
 >(renderLayer, {
   childInput: 'structural',
   resolveStyle: resolveLayerStyle,
+});
+
+if (experimentalLayout) registerKnownLayoutPreflight(Layer, (element, _style, content, receiver, slot) => {
+  const previous = GLOBAL_STATE.primitiveReceiverToken;
+  GLOBAL_STATE.primitiveReceiverToken = receiver;
+  try {
+    const children = prepareLayoutChildren(element.props.children, 'Layer');
+    const placed = children.slice();
+    let occurrence = 0;
+    for (let index = 0; index < children.length; index++) {
+      const child = children[index];
+      // Layer is a raster boundary, not a layout algorithm for arbitrary children.
+      if (child.type === Layer || !isKnownLayoutType(child.type)) continue;
+      const token = getChildPrimitiveReceiverToken(GLOBAL_STATE.renderTransaction, receiver, index);
+      const prepared = prepareDirectChildStyle(child, token, content, true);
+      const style = preparedStyleValue(prepared);
+      const box = resolveContainerBox(style, { component: 'Flex', algorithm: 'render-dispatch', allocation: content, percentageBasis: content, constraints: { minWidth: 0, maxWidth: content.width, minHeight: 0, maxHeight: content.height } }, 'Flex', 'flex');
+      const nested = preflightKnownLayout(child, style, { x: 0, y: 0, width: box.contentBox.width, height: box.contentBox.height }, token, child.key === undefined ? occurrence++ : 0, slot);
+      const clone = clonePibblElement(child);
+      setPreNormalizedStyle(clone, style, child, token, preparedStyleQuery(prepared));
+      attachPreparedLayoutSlot(clone, nested); placed[index] = clone;
+    }
+    stagePreparedBoundaryChildren(slot, placed);
+  } finally { GLOBAL_STATE.primitiveReceiverToken = previous; }
 });
 
 function resolveLayerStyle(

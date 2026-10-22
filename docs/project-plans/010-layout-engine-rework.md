@@ -2,12 +2,12 @@
 
 ## Current checkpoint and single next slice — 2026-10-22
 
-Latest delivery is slice48 `cb863bc2` (finite HTML projection preparation).
+Latest delivery is slice49 (known Layer-to-Flex preparation/adoption).
+Slice48 is `cb863bc2` (finite HTML projection preparation).
 Slice47 `9a7b1b0a` prepares pure described Flex roots; slice46 `242cba11` handles
 direct and opaque-boundary Flex entries. Every slice has its own commit.
 Consolidation46–48 is recorded below. The fixed33-capability/seven-gate denominator
-is unchanged; all seven gates remain open. The single next slice is49, known Layer
-to direct Flex preparation/adoption. Source5192/built5193,
+is unchanged; all seven gates remain open. The next prerequisite is selected in the single NEXT heading below. Source5192/built5193,
 `#/testing/layout-preflight`: Fail HTML projection, Recover HTML, then Native HTML
 host. Earlier layout failure/recovery controls remain available.
 
@@ -713,17 +713,28 @@ Bundler/NodeNext and structural lifecycle pass; matching59181-byte kernel unchan
 Focused read-only review found no material findings. Logs `/tmp/pibbl-slice48-*`.
 Node26.9.0/pnpm11.21.0deps/Chromium; no Node24/full trust claim.
 
-## [NEXT] Known Layer-to-Flex preparation and adoption (slice 49)
+### Slice 49 — known Layer-to-Flex preparation and adoption
 
-Preflight a managed Layer's direct known Flex root from its settled allocation,
-before earlier opaque sibling evaluation and before child bitmap work. Reuse the
-root transaction and shared-root native region ownership; carry the exact prepared
-descriptor through the private Layer fragment into child rendering. Do not create
-a child instance/OffscreenCanvas during preflight or evaluate arbitrary components.
-First public RED: later Layer Flex factor failure prevents earlier opaque sibling
-and child probe evaluation. Recovery must prove Layer geometry/pixels/targets and
-zero resource ownership after disposal. Preserve Layer cache behavior and identity.
-This is a bounded allocation-to-raster prerequisite, not a complete prepared graph.
+Known Layer boundaries prepare direct Flex roots using their settled allocation
+and the same root transaction. No child OffscreenCanvas/instance is created by
+preflight. Cloned descriptors preserve authored offsets and receiver identity;
+child rendering claims the prepared plan/region. Clean Layer cache hits retain
+mounted ownership without opaque child re-evaluation. Removal/restoration and
+actual disposal release exact ownership, including one shared native instance.
+
+Public RED showed earlier evaluations2instead of1 on later Layer factor failure.
+Focused review caught consumed left/top in the first clone handoff; a positioned
+pixel/hit RED reproduced it, and the corrected handoff preserves both coordinates.
+Read-only follow-up confirmed the finding resolved. The expanded public test proves
+cache reuse, one native instance/two regions, factor failure isolation, recovery,
+offset pixels/hits, removal/restoration and zero resource ownership after disposal.
+
+Fresh experimental136passed/1normal-onlyskip across five layout/HTML files;
+normal57passed/68experimental skips. Types/targeted lint pass. Source/built Studio
+`--layer` pass earlier failure isolation,100px recovery, retained blue Layer pixels
+and target, independent root updates, teardown0/0/0/0;225public inputs each. Packed
+228installed-input Bundler/NodeNext/lifecycle pass. Kernel59181bytes unchanged.
+Logs `/tmp/pibbl-slice49-*`; Node26.9.0/pnpm11.21.0deps/Chromium, no Node24/full trust.
 
 ### Consolidation 16 completed for delivery slices 46–48
 

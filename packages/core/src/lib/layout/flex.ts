@@ -1,5 +1,5 @@
 import type { PreparedLayoutPlan, PreparedLayoutSlot } from './prepared-root.js';
-import { registerKnownLayoutPreflight, stagePreparedChildStyle, takePreparedChildStyle, hasPreparedChildStyles, claimPreparedLayoutPlan, stagePreparedLayoutPlan, preflightKnownLayout, attachPreparedLayoutSlot } from './prepared-root.js';
+import { isKnownLayoutType, registerKnownLayoutPreflight, stagePreparedChildStyle, takePreparedChildStyle, hasPreparedChildStyles, claimPreparedLayoutPlan, stagePreparedLayoutPlan, preflightKnownLayout, attachPreparedLayoutSlot } from './prepared-root.js';
 import { isLayoutComponent, prepareLayoutComponent } from './define-layout-component.js';
 import { allocationInputRevision } from './allocation-revision.js';
 import { FlexAllocationCache, frozenFlexInputs, type CachedFlexPlacement } from './flex-allocation-cache.js';
@@ -321,7 +321,7 @@ function prepareFlexDescendants(plan: Pick<PreparedLayoutPlan, 'children' | 'pla
   let descriptionOccurrences: Map<Function, number> | undefined;
     for (let index = 0; index < plan.children.length; index++) {
       const child = plan.children[index];
-      if (child.type !== Flex && !isLayoutComponent(child.type)) continue;
+      if (!isKnownLayoutType(child.type) && !isLayoutComponent(child.type)) continue;
       let occurrence = 0;
       if (child.key === undefined) {
         if (child.type === Flex) occurrence = flexOccurrence++;
