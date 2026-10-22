@@ -322,6 +322,11 @@ before preparing direct known Flex roots. It shares Grid's placed-clone handoff,
 without extra per-item wrapper allocations or a second placement pass. Ordinary
 children remain opaque, and normal traversal claims the same native Flex region.
 Experimental mounted Flow places resolved numeric items in the shared native arena; its JavaScript measurement and ordinary-build/pure-helper paths remain.
+Known Flow roots also prepare their existing measurement/native placement before
+earlier outer opaque siblings, recursively prepare known placed descendants, and
+render by adopting the same region/plan. Grid and Flow share this known-descendant
+handoff. A definite-root leaf proof measures once per transaction; other intrinsic
+constraint demands retain the existing measurement contract.
 
 For the same direct Text subset, automatic width and basis use the natural width
 before wrapping, not the containing row's constrained width. The natural query

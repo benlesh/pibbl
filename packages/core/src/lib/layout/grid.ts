@@ -1,6 +1,5 @@
-import { isLayoutComponent } from './define-layout-component.js';
 import { experimentalLayout, mountedLayoutRegion, type LayoutRegion } from './wasm/region.js';
-import { isKnownLayoutType, registerKnownLayoutPreflight, claimPreparedLayoutPlan, stagePreparedLayoutPlan, preparePlacedKnownLayout, type PreparedLayoutPlan, type PreparedLayoutSlot } from './prepared-root.js';
+import { prepareKnownLayoutDescendants, registerKnownLayoutPreflight, claimPreparedLayoutPlan, stagePreparedLayoutPlan, preparePlacedKnownLayout, type PreparedLayoutPlan } from './prepared-root.js';
 import { preparedStyleValue, preparedStyleQuery } from '../style/responsive.js';
 import { definePrimitive } from '../define-primitive.js';
 import { clonePibblElement } from '../element/create-element.js';
@@ -212,23 +211,10 @@ if (experimentalLayout) registerKnownLayoutPreflight(Grid, (element, style, cont
     const region = slot.acquire();
     const placements = resolveGridPlacements(content, children, options, { service, measureElement: (child, constraints) => measureElement(child, constraints, service) }, region);
     const plan: PreparedLayoutPlan = { region, content, children, placements };
-    prepareGridDescendants(plan, slot);
+    prepareKnownLayoutDescendants(plan, slot);
     stagePreparedLayoutPlan(slot, plan);
   } finally { GLOBAL_STATE.primitiveReceiverToken = previous; }
 });
-function prepareGridDescendants(plan: PreparedLayoutPlan, parentSlot: PreparedLayoutSlot): void {
-  let occurrences: Map<Function, number> | undefined;
-  for (let index = 0; index < plan.children.length; index++) {
-    const child = plan.children[index];
-    if (!isKnownLayoutType(child.type) && !isLayoutComponent(child.type)) continue;
-    let occurrence = 0;
-    if (child.key === undefined) {
-      occurrences ??= new Map(); occurrence = occurrences.get(child.type) ?? 0;
-      occurrences.set(child.type, occurrence + 1);
-    }
-    preparePlacedKnownLayout(plan.placements[index].element, occurrence, parentSlot);
-  }
-}
 
 export function layoutGrid(
   container: Readonly<LayoutBox>,

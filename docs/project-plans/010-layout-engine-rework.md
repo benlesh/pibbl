@@ -2,11 +2,12 @@
 
 ## Current checkpoint and single next slice — 2026-10-22
 
-Latest delivery is slice55 (prepared Grid-root planning/adoption).
+Latest delivery is slice56 (prepared Flow-root planning/adoption).
+Slice55 is `1510efe3` (prepared Grid-root planning/adoption).
 Slice54 `773da7b9`,53 `aaa7ddcb`,52 `b5381e0d` are consolidated in `f322a709`.
 Every slice has its own commit. The fixed33-capability/seven-gate denominator is
-unchanged; all seven gates remain open. The single next slice is56, prepared
-Flow-root planning/adoption. Source5192/built5193, `#/testing/layout-preflight`:
+unchanged; all seven gates remain open. The single next slice is57, prepared
+Overlay-root planning/adoption. Source5192/built5193, `#/testing/layout-preflight`:
 Use prepared Grid root, Fail later sibling, Recover, then red right edge/blue cell.
 Native Grid tracks/spans and Flow wrap controls remain available.
 
@@ -857,15 +858,36 @@ exact2axes/1cell-batch/3arenas on recovery, cleanup0/0/0/0 with225public inputs.
 Packed228installed-input Bundler/NodeNext/lifecycle pass. Kernel65282bytes unchanged.
 Logs `/tmp/pibbl-slice55-*`; Node26.9.0/pnpm11.21.0deps/Chromium, no Node24/full trust.
 
-## [NEXT] Prepared Flow-root planning and adoption (slice 56)
+### Slice 56 — prepared Flow-root planning and adoption
 
-Prepare a known Flow root's existing measurement/native placement and known child
-plans before earlier outer opaque siblings, then claim exactly that region/placed
-plan in rendering. Public RED: later Flow's nested Flex failure prevents earlier
-Absolute sibling evaluation. Recovery proves layout/hit geometry and one native
-Flow placement with stable region ownership; preserve measurement invalidation,
-wrap/alignment, receiver roles and exact cleanup. No new ABI/API or speculative
-component execution. Consolidate55–57 after the third delivery.
+Known Flow roots prepare existing measurement/native placement under their receiver,
+then recursively prepare known settled descendants before outer opaque traversal.
+Rendering adopts that region/plan and skips duplicate placement/child preparation.
+Grid/Flow share the known-descendant handoff; Flow allocation shares one measuring
+path. Settled placements carry explicit used content dimensions.
+
+Public RED showed earlier opaque evaluations3instead of2 on later nested Flex
+failure. Green proves failure clears arenas, successful resizing uses one native
+Flow placement/one Flex solve without node/region creation, and recovery paints/
+targets the new width. A definite-root public custom leaf separately measures once
+per transaction, using the required explicit auto-style resolver. Vertical wrap
+and measured Text invalidation remain green. Focused127checks plus the leaf-count
+proof pass; normal49pass/79experimental skips. Types/lint clean. Root focused
+inspection found no material issue. Source/built Studio `--flow-root` each passes
+failure isolation, recovery pixels/red+blue targets, one Flow placement/3arenas on
+recovery, cleanup0/0/0/0 with225public inputs. Packed228installed-input Bundler/
+NodeNext/lifecycle pass. Kernel65282bytes unchanged. Logs `/tmp/pibbl-slice56-*`;
+Node26.9.0/pnpm11.21.0deps/Chromium, no Node24/full trust claim.
+
+## [NEXT] Prepared Overlay-root planning and adoption (slice 57)
+
+Prepare Overlay's current settled child placements and known nested Grid/Flow/Flex
+plans before earlier outer opaque siblings, then claim those exact descriptors in
+rendering. Overlay owns structural slots but no unnecessary native arena. Public
+RED: a later Overlay's nested native sizing failure prevents earlier evaluation;
+recovery preserves alignment/pixels/hits and no duplicate native child work.
+Use the existing root transaction, receiver and teardown ownership. No new ABI/API
+or event/focus staging claim. Consolidate55–57 after this delivery.
 
 ### Consolidation 18 completed for delivery slices 52–54
 

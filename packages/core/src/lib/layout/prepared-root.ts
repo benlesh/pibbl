@@ -201,3 +201,19 @@ export function preparePlacedKnownLayout(element: PibblElement<any>, occurrence:
   const slot = preflightKnownLayout(prepared.source, prepared.style, { x: 0, y: 0, width, height }, getPrimitiveReceiverToken(element), occurrence, parentSlot);
   attachPreparedLayoutSlot(element, slot);
 }
+
+
+/** Recursively admits known placed roots without evaluating opaque components. */
+export function prepareKnownLayoutDescendants(plan: Pick<PreparedLayoutPlan, 'children' | 'placements'>, parentSlot: PreparedLayoutSlot): void {
+  let occurrences: Map<Function, number> | undefined;
+  for (let index = 0; index < plan.children.length; index++) {
+    const child = plan.children[index];
+    if (!isKnownLayoutType(child.type) && !isLayoutComponent(child.type)) continue;
+    let occurrence = 0;
+    if (child.key === undefined) {
+      occurrences ??= new Map(); occurrence = occurrences.get(child.type) ?? 0;
+      occurrences.set(child.type, occurrence + 1);
+    }
+    preparePlacedKnownLayout(plan.placements[index].element, occurrence, parentSlot);
+  }
+}

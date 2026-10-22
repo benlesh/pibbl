@@ -1,5 +1,5 @@
 import { experimentalLayout, mountedLayoutRegion, type LayoutRegion } from './wasm/region.js';
-import { preparePlacedKnownLayout } from './prepared-root.js';
+import { prepareKnownLayoutDescendants, registerKnownLayoutPreflight, claimPreparedLayoutPlan, stagePreparedLayoutPlan, preparePlacedKnownLayout, type PreparedLayoutPlan } from './prepared-root.js';
 import { preparedStyleValue, preparedStyleQuery, type PreparedQuery } from '../style/responsive.js';
 import { definePrimitive } from '../define-primitive.js';
 import { clonePibblElement } from '../element/create-element.js';
@@ -102,6 +102,7 @@ export interface FlowMeasurementInput {
 }
 
 interface FlowPlacement {
+  usedWidth: number; usedHeight: number;
   box: LayoutBox;
   element: PibblElement<any>;
 }
@@ -112,7 +113,6 @@ function renderFlow(
   ctx: RenderingContext2D,
 ) {
   wireStructuralEvents(props);
-  const children = prepareLayoutChildren(props.children, 'Flow');
   recordLayoutEvaluation();
   const content = style.box.contentBox;
   ctx.translate(content.x, content.y);
@@ -124,37 +124,18 @@ function renderFlow(
   });
   const releaseLayout = pushLayoutBox(localContent);
   GLOBAL_STATE.componentRefs!.onAfterRender = releaseLayout;
-  const service = {
-    measureText(value: string, font: string) {
-      ctx.save();
-      try {
-        ctx.font = font;
-        return ctx.measureText(value);
-      } finally {
-        ctx.restore();
-      }
-    },
-  };
-  const nativeRegion = experimentalLayout ? mountedLayoutRegion() : undefined;
+  const prepared = experimentalLayout ? claimPreparedLayoutPlan(GLOBAL_STATE.componentRefs!.element, localContent) : undefined;
+  const nativeRegion = prepared?.region ?? (experimentalLayout ? mountedLayoutRegion() : undefined);
   if (experimentalLayout && !nativeRegion) throw new Error('Experimental Flow requires its mounted native region.');
-  const placements = resolveFlowPlacements(
-    localContent,
-    children,
-    style,
-    {
-      service,
-      measureElement: (element, constraints) =>
-        measureElement(element, constraints, service),
-    },
-    nativeRegion,
-  );
+  const plan = prepared ?? prepareFlowAllocation(props, style, localContent, ctx, nativeRegion);
+  const { children, placements } = plan;
   let index = 0;
   return placeDirectChildren(
     children,
     localContent,
     (_child, occurrence) => {
       const placement = placements[index++];
-      if (experimentalLayout) preparePlacedKnownLayout(placement.element, occurrence);
+      if (experimentalLayout && !prepared) preparePlacedKnownLayout(placement.element, occurrence);
       return placement;
     },
     style.overflow,
@@ -184,6 +165,27 @@ export const Flow = definePrimitive<
     ...normalizeFlowOptions(style, context.allocation),
   }),
   measure: input => measureFlow(input),
+});
+
+function prepareFlowAllocation(props: FlowProps, style: Readonly<FlowStyle>, content: Readonly<LayoutBox>, ctx: RenderingContext2D, region?: LayoutRegion): { children: readonly PibblElement<any>[]; placements: FlowPlacement[] } {
+  const children = prepareLayoutChildren(props.children, 'Flow');
+  const service = { measureText(value: string, font: string) { ctx.save(); try { ctx.font = font; return ctx.measureText(value); } finally { ctx.restore(); } } };
+  const placements = resolveFlowPlacements(content, children, style, { service, measureElement: (child, constraints) => measureElement(child, constraints, service) }, region);
+  return { children, placements };
+}
+if (experimentalLayout) registerKnownLayoutPreflight(Flow, (element, style, content, receiver, slot) => {
+  const previous = GLOBAL_STATE.primitiveReceiverToken;
+  GLOBAL_STATE.primitiveReceiverToken = receiver;
+  try {
+    const options = normalizeFlowOptions(style as Readonly<FlowStyle>, content);
+    const ctx = GLOBAL_STATE.renderContext;
+    if (!ctx) throw new Error('Known Flow preparation requires a Canvas measurement context.');
+    const region = slot.acquire();
+    const allocation = prepareFlowAllocation(element.props as FlowProps, options, content, ctx, region);
+    const plan: PreparedLayoutPlan = { region, content, ...allocation };
+    prepareKnownLayoutDescendants(plan, slot);
+    stagePreparedLayoutPlan(slot, plan);
+  } finally { GLOBAL_STATE.primitiveReceiverToken = previous; }
 });
 
 export function layoutFlow(
@@ -284,17 +286,15 @@ function resolveFlowPlacements(
 
   const nativeBoxes = nativeRegion?.placeFlow(items, { horizontal: options.direction === 'horizontal', mainBound: options.direction === 'horizontal' ? container.width : container.height, gap: options.gap, lineGap: options.lineGap, wrap: options.wrap });
   const boxes = nativeBoxes ?? arrangeFlowItems(container, items, options);
-  return boxes.map((box, index) => ({
-    box: nativeBoxes && (container.x !== 0 || container.y !== 0) ? { x: container.x + box.x, y: container.y + box.y, width: box.width, height: box.height } : box,
-    element: childWithUsedSize(
-      items[index].child,
-      items[index].normalized,
-      Math.max(0, box.width - items[index].horizontalPadding),
-      Math.max(0, box.height - items[index].verticalPadding),
-      items[index].receiverToken,
-      items[index].query,
-    ),
-  }));
+  return boxes.map((box, index) => {
+    const usedWidth = Math.max(0, box.width - items[index].horizontalPadding);
+    const usedHeight = Math.max(0, box.height - items[index].verticalPadding);
+    return {
+      box: nativeBoxes && (container.x !== 0 || container.y !== 0) ? { x: container.x + box.x, y: container.y + box.y, width: box.width, height: box.height } : box,
+      usedWidth, usedHeight,
+      element: childWithUsedSize(items[index].child, items[index].normalized, usedWidth, usedHeight, items[index].receiverToken, items[index].query),
+    };
+  });
 }
 
 function measureFlow(
