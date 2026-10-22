@@ -61,9 +61,11 @@
       { "id": "column-cap", "covers": ["flex.row-column-nowrap-wrap", "flex.grow-shrink-basis", "flex.min-max"], "classification": "exact explicit finite inputs; first maxHeight30" },
       { "id": "column-shrink", "covers": ["flex.row-column-nowrap-wrap", "flex.grow-shrink-basis", "flex.min-max"], "classification": "exact explicit finite inputs; first minHeight60, second minHeight0" },
       { "id": "row-reverse-cap", "covers": ["flex.reverse-and-wrap-reverse", "flex.min-max"], "classification": "exact finite LTR main-axis reversal; first maxWidth80" },
-      { "id": "column-reverse-cap", "covers": ["flex.reverse-and-wrap-reverse", "flex.min-max"], "classification": "exact finite LTR main-axis reversal; first maxHeight30" }
+      { "id": "column-reverse-cap", "covers": ["flex.reverse-and-wrap-reverse", "flex.min-max"], "classification": "exact finite LTR main-axis reversal; first maxHeight30" },
+      { "id": "row-wrap", "covers": ["flex.row-column-nowrap-wrap", "flex.numeric-gap"], "classification": "exact finite three-item source-formed lines; numeric basis/minimum/gap" },
+      { "id": "row-wrap-reverse", "covers": ["flex.reverse-and-wrap-reverse", "flex.row-column-nowrap-wrap"], "classification": "exact finite reversed cross placement; source A/B/C order unchanged" }
     ],
-    "limit": "Ten exact finite row/column/reverse fixtures; one explicit content-box/numeric-padding conversion. This does not establish general box-sizing, percentage, intrinsic or CSS parity."
+    "limit": "Twelve exact finite row/column/reverse/wrap fixtures; one explicit content-box/numeric-padding conversion. This does not establish general box-sizing, percentage, intrinsic or CSS parity."
   },
   "gateGroups": [
     {
@@ -123,8 +125,8 @@
         "positive": ["public Flex/Text scenarios"],
         "negative": ["intrinsic wrapped containers rejected"],
         "interaction": ["wrapped target geometry"],
-        "yogaCases": [],
-        "missing": ["nested percentages", "release-pinned Yoga cases"]
+        "yogaCases": ["column-grow", "column-cap", "column-shrink", "row-wrap", "row-wrap-reverse"],
+        "missing": ["nested percentages", "broader release-pinned wrapping matrix"]
       }
     },
     {
@@ -155,10 +157,10 @@
           "cross-line flip preserves keys/mounts and allocation/measurement/main work",
           "negative reversed cross overlap retains source paint/hit priority"
         ],
-        "yogaCases": ["row-reverse-cap", "column-reverse-cap"],
+        "yogaCases": ["row-reverse-cap", "column-reverse-cap", "row-wrap-reverse"],
         "missing": [
           "RTL interaction",
-          "pinned Yoga wrap-reverse fixtures and broader reverse matrix"
+          "broader reverse/wrap-reverse and combined-axis matrix"
         ]
       },
       "evidenceRefs": [
@@ -841,7 +843,7 @@
       "id": "migration.versioned-yoga-conversion",
       "target": "parity",
       "group": "migration-and-conformance",
-      "current": "ten-case pinned row/column/reverse rehearsal, including direct empty Rectangle shrink and one content-box padding conversion",
+      "current": "twelve-case pinned row/column/reverse/wrap rehearsal, including direct empty Rectangle shrink and one content-box padding conversion",
       "status": "experimental",
       "unresolvedPolicy": "Implementation direction is authorized; conversion/analyzer return contracts and supported compatibility policy remain to be specified.",
       "evidenceRefs": [
@@ -850,7 +852,7 @@
         "packages/core/test/layout-wasm-slice.test.tsx"
       ],
       "evidence": {
-        "positive": ["ten-case Yoga 3.2.1 rehearsal"],
+        "positive": ["twelve-case Yoga 3.2.1 rehearsal"],
         "negative": ["no profile or public selector"],
         "interaction": ["migration example resize"],
         "yogaCases": [
@@ -863,7 +865,9 @@
           "column-cap",
           "column-shrink",
           "row-reverse-cap",
-          "column-reverse-cap"
+          "column-reverse-cap",
+          "row-wrap",
+          "row-wrap-reverse"
         ],
         "missing": [
           "style/tree analysis",

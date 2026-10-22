@@ -87,6 +87,8 @@ if (source) {
         direction: "LTR",
         flexDirection: "explicit row/column/reverse per case",
         alignItems: "flex-start",
+        alignContent: "flex-start",
+        flexWrap: "explicit nowrap/wrap/wrap-reverse per case",
         gap: "12 in numeric flex cases; 0 in rectangle cases",
         shrink: 1,
         padding: "10 in rectangle-percent-content-box; otherwise 0",

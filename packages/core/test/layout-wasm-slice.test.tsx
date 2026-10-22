@@ -734,7 +734,7 @@ it.runIf(experimentalLayout)('carries final allocation through an ordinary panel
   expect(panels).toBe(initialPanels+1);
 });
 
-it.runIf(experimentalLayout)('rehearses ten pinned Yoga cases through the public Pibbl example', async () => {
+it.runIf(experimentalLayout)('rehearses twelve pinned Yoga cases through the public Pibbl example', async () => {
   const mountModule = await import('../../scenarios/src/learning/layout/wasm-yoga-migration.example');
 const mount = createExampleMount(mountModule.WasmYogaMigrationExample);
   const baseline = snapshotWasmLayoutDiagnostics();
@@ -760,36 +760,37 @@ const mount = createExampleMount(mountModule.WasmYogaMigrationExample);
       for (const [index, box] of fixture.boxes.entries()) {
         expect([...ctx.getImageData(392 + box.x + 1, 241, 1, 1).data]).toEqual(index === 0 ? [214, 227, 219, 255] : [225, 219, 202, 255]);
         clickCanvas(canvas, 392 + box.x + 2, 242);
-        await expect.poll(() => canvas.nextElementSibling?.textContent).toContain(`selected: ${index === 0 ? 'A' : 'B'}`);
+        await expect.poll(() => canvas.nextElementSibling?.textContent).toContain(`selected: ${String.fromCharCode(65+index)}`);
       }
     } else {
       const column = fixture.flexDirection.startsWith('column');
-      for (const box of fixture.boxes) {
-        expect(labels.some(label => label.text === (column ? `${box.width} × ${box.height} px` : `${box.width} px`) && label.x === 392+box.x+(column ? 4 : 12) && label.y === 240+box.y+(column ? 16 : 38))).toBe(true);
+      for (const [boxIndex,box] of fixture.boxes.entries()) {
+        expect(labels.some(label => label.text === (fixture.flexWrap !== 'nowrap' ? `${String.fromCharCode(65+boxIndex)} ${box.width}×${box.height}` : column ? `${box.width} × ${box.height} px` : `${box.width} px`) && label.x === 392+box.x+(column || fixture.flexWrap !== 'nowrap' ? 4 : 12) && label.y === 240+box.y+(fixture.flexWrap !== 'nowrap' ? 4 : column ? 16 : 38))).toBe(true);
       }
     }
     const column = fixture.flexDirection.startsWith('column');
     if (!fixture.name.startsWith('rectangle-')) {
       const shrinking = fixture.name === 'shrink' || fixture.name === 'column-shrink';
+      const wrapped = fixture.flexWrap !== 'nowrap';
       const capped = fixture.name.endsWith('cap');
-      const children = [0,1].map(index => createElement(Rectangle, { style: {
-        width: column ? 80 : 60, height: 80,
+      const children = fixture.boxes.map((_box,index) => createElement(Rectangle, { style: {
+        width: column ? 80 : 60, height: wrapped ? 20 : 80,
         flexBasis: column ? shrinking ? 80 : 20 : shrinking ? 180 : 60,
-        flexGrow: shrinking ? 0 : 1, flexShrink: 1,
+        flexGrow: wrapped || shrinking ? 0 : 1, flexShrink: 1,
         minWidth: column ? undefined : shrinking && index === 0 ? 120 : 0,
         minHeight: column ? shrinking && index === 0 ? 60 : 0 : undefined,
         maxWidth: !column && capped && index === 0 ? 80 : undefined,
         maxHeight: column && capped && index === 0 ? 30 : undefined,
       } }));
-      expect(layoutFlex({ x: 0, y: 0, width: fixture.width, height: fixture.height }, children, { flexDirection: fixture.flexDirection as 'row' | 'column' | 'row-reverse' | 'column-reverse', alignItems: 'flex-start', gap: 12 }, measurement)).toEqual(fixture.boxes);
+      expect(layoutFlex({ x: 0, y: 0, width: fixture.width, height: fixture.height }, children, { flexDirection: fixture.flexDirection as 'row' | 'column' | 'row-reverse' | 'column-reverse', flexWrap: fixture.flexWrap as 'nowrap' | 'wrap' | 'wrap-reverse', alignContent: 'flex-start', alignItems: 'flex-start', gap: 12 }, measurement)).toEqual(fixture.boxes);
       for (const [index,box] of fixture.boxes.entries()) {
-        clickCanvas(canvas,394+box.x,242+box.y); await expect.poll(() => canvas.nextElementSibling?.textContent).toContain(`selected: ${index === 0 ? 'A' : 'B'}`);
+        clickCanvas(canvas,394+box.x,242+box.y); await expect.poll(() => canvas.nextElementSibling?.textContent).toContain(`selected: ${String.fromCharCode(65+index)}`);
       }
       const gap = column ? Math.min(...fixture.boxes.map(box => box.y+box.height))+6 : Math.min(...fixture.boxes.map(box => box.x+box.width))+6;
-      clickCanvas(canvas,column ? 396 : 392+gap,column ? 240+gap : 244); await nextFrame();
-      expect(canvas.nextElementSibling?.textContent).toContain('selected: B');
+      clickCanvas(canvas,column ? 396 : 392+gap,column ? 240+gap : 244+fixture.boxes[0].y); await nextFrame();
+      expect(canvas.nextElementSibling?.textContent).toContain(`selected: ${String.fromCharCode(64+fixture.boxes.length)}`);
     }
-    expect(fixture.boxes.reduce((sum,box) => sum+(column ? box.height : box.width),fixture.name.startsWith('rectangle-') ? 0 : 12)).toBe(column ? fixture.height : fixture.width);
+    if (fixture.flexWrap === 'nowrap') expect(fixture.boxes.reduce((sum,box) => sum+(column ? box.height : box.width),fixture.name.startsWith('rectangle-') ? 0 : 12)).toBe(column ? fixture.height : fixture.width);
   }
   const beforePaint = snapshotWasmLayoutDiagnostics();
   clickCanvas(canvas,300,158); await nextFrame();
@@ -2101,4 +2102,8 @@ it('records pinned native Yoga column grow, cap and shrink fixtures', () => {
 
 it('records pinned native Yoga reverse-axis cap fixtures', () => {
   expect(yogaReference.cases.map(fixture => fixture.name)).toEqual(expect.arrayContaining(['row-reverse-cap','column-reverse-cap']));
+});
+
+it('records pinned native Yoga row wrap and cross-reversal fixtures', () => {
+  expect(yogaReference.cases.map(fixture => fixture.name)).toEqual(expect.arrayContaining(['row-wrap','row-wrap-reverse']));
 });

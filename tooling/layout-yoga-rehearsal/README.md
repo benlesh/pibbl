@@ -23,7 +23,7 @@ minimum0 except shrink A. Two additional direct empty-Rectangle cases use gap0:
 
 The padded case explicitly selects Yoga content-box sizing, matching Pibbl's
 content-box dimensions and minimum plus outer padding. Its outer height is100px;
-other cases are80px. Root height100px, LTR/nowrap/start, border0 and rounding0 are fixed.
+other cases are80px. Root height100px, LTR/start, border0 and rounding0 are fixed.
 
 Three numeric column cases use parent100×100px, child cross width80px, gap12px
 and shrink1:
@@ -45,8 +45,16 @@ A80×80 at220,0 and B208×80 at0,0; `column-reverse-cap` places A80×30 at0,70 a
 B80×58 at0,0. Inputs match the corresponding cap case except explicit reverse
 direction. Source A/B order stays fixed, both target identities remain stable,
 and the12px main-axis gap misses. Classification is exact explicit finite input
-geometry, not RTL or cross-axis reversal. These ten exact geometries do not prove general percentages, box
-sizing, automatic minima, text, fractional precision, wrapping, wrap-reverse or RTL. No Yoga implementation is bundled in Studio.
+geometry, not RTL or cross-axis reversal. The finite `row-wrap` and `row-wrap-reverse` cases use a150×100px parent, three
+60×20px items, numeric basis60, grow0/shrink1, minWidth0, gap12 and explicit
+start line alignment. Normal lines place A/B at y0 and C at y32; wrap-reverse
+places A/B at y80 and C at y48. Source A/B/C order remains fixed, all three
+identities are targeted publicly, and gaps miss. Classification is exact finite
+source-formed line/cross-reversal geometry.
+
+These twelve exact geometries do not prove general percentages, box
+sizing, automatic minima, text, fractional precision, general wrapping interactions, combined main/cross
+reversal or RTL. No Yoga implementation is bundled in Studio.
 
 ## Version, source and reproduction
 
@@ -71,7 +79,7 @@ node tree and configuration in the probe. This needs Git, tar and a C++20 compil
 The fresh receipt used Apple clang 21.0.0 on the recorded Node 26.9.0 host.
 
 Configuration explicitly sets `useWebDefaults=false`, point scale 0 (no rounding),
-no errata, per-case row/column, LTR, start alignment and gap. Default experiments remain disabled.
+no errata, per-case axes/wrap/reverse, LTR, start item/line alignment and gap. Default experiments remain disabled.
 This probes the native implementation; it is not a Yoga JS/WASM loading or speed
 comparison. All recorded integer dimensions are exactly representable in both engines.
 

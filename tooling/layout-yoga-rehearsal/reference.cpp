@@ -2,26 +2,35 @@
 #include <yoga/Yoga.h>
 #include <iostream>
 int main() {
-  const char* names[] = {"grow", "cap", "shrink", "rectangle-shrink", "rectangle-percent-content-box", "column-grow", "column-cap", "column-shrink", "row-reverse-cap", "column-reverse-cap"};
+  const char* names[] = {"grow", "cap", "shrink", "rectangle-shrink", "rectangle-percent-content-box", "column-grow", "column-cap", "column-shrink", "row-reverse-cap", "column-reverse-cap", "row-wrap", "row-wrap-reverse"};
   std::cout << "[";
-  for (int i = 0; i < 10; i++) {
+  for (int i = 0; i < 12; i++) {
     auto config = YGConfigNew();
     YGConfigSetUseWebDefaults(config, false);
     YGConfigSetPointScaleFactor(config, 0);
     YGConfigSetErrata(config, YGErrataNone);
-    const bool column = i >= 5 && i != 8;
-    const bool reverse = i >= 8;
-    const auto width = column ? 100 : i == 2 ? 220 : i == 3 ? 100 : i == 4 ? 200 : 300;
+    const bool column = (i >= 5 && i <= 7) || i == 9;
+    const bool reverse = i == 8 || i == 9;
+    const bool wrapped = i >= 10;
+    const int count = wrapped ? 3 : 2;
+    const auto width = wrapped ? 150 : column ? 100 : i == 2 ? 220 : i == 3 ? 100 : i == 4 ? 200 : 300;
     auto root = YGNodeNewWithConfig(config);
     YGNodeStyleSetWidth(root, width);
     YGNodeStyleSetHeight(root, 100);
     YGNodeStyleSetFlexDirection(root, column ? (reverse ? YGFlexDirectionColumnReverse : YGFlexDirectionColumn) : (reverse ? YGFlexDirectionRowReverse : YGFlexDirectionRow));
     YGNodeStyleSetAlignItems(root, YGAlignFlexStart);
-    YGNodeStyleSetGap(root, YGGutterAll, i < 3 || column || reverse ? 12 : 0);
-    for (int j = 0; j < 2; j++) {
+    YGNodeStyleSetAlignContent(root, YGAlignFlexStart);
+    YGNodeStyleSetFlexWrap(root, i == 11 ? YGWrapWrapReverse : wrapped ? YGWrapWrap : YGWrapNoWrap);
+    YGNodeStyleSetGap(root, YGGutterAll, i < 3 || column || reverse || wrapped ? 12 : 0);
+    for (int j = 0; j < count; j++) {
       auto child = YGNodeNewWithConfig(config);
       YGNodeStyleSetFlexShrink(child, 1);
-      if (column) {
+      if (wrapped) {
+        YGNodeStyleSetWidth(child, 60);
+        YGNodeStyleSetFlexBasis(child, 60);
+        YGNodeStyleSetFlexGrow(child, 0);
+        YGNodeStyleSetMinWidth(child, 0);
+      } else if (column) {
         YGNodeStyleSetWidth(child, 80);
         YGNodeStyleSetFlexBasis(child, i == 7 ? 80 : 20);
         YGNodeStyleSetFlexGrow(child, i == 7 ? 0 : 1);
@@ -41,13 +50,13 @@ int main() {
           if (j == 0) YGNodeStyleSetMinWidth(child, 90);
         }
       }
-      YGNodeStyleSetHeight(child, 80);
+      YGNodeStyleSetHeight(child, wrapped ? 20 : 80);
       YGNodeInsertChild(root, child, j);
     }
     YGNodeCalculateLayout(root, YGUndefined, YGUndefined, YGDirectionLTR);
     if (i) std::cout << ",";
-    std::cout << "{\"name\":\"" << names[i] << "\",\"width\":" << width << ",\"height\":100,\"flexDirection\":\"" << (column ? (reverse ? "column-reverse" : "column") : (reverse ? "row-reverse" : "row")) << "\",\"boxes\":[";
-    for (int j = 0; j < 2; j++) {
+    std::cout << "{\"name\":\"" << names[i] << "\",\"width\":" << width << ",\"height\":100,\"flexDirection\":\"" << (column ? (reverse ? "column-reverse" : "column") : (reverse ? "row-reverse" : "row")) << "\",\"flexWrap\":\"" << (i == 11 ? "wrap-reverse" : wrapped ? "wrap" : "nowrap") << "\",\"boxes\":[";
+    for (int j = 0; j < count; j++) {
       auto child = YGNodeGetChild(root, j);
       if (j) std::cout << ",";
       std::cout << "{\"x\":" << YGNodeLayoutGetLeft(child) << ",\"y\":" << YGNodeLayoutGetTop(child) << ",\"width\":" << YGNodeLayoutGetWidth(child) << ",\"height\":" << YGNodeLayoutGetHeight(child) << "}";

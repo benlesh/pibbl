@@ -2,7 +2,8 @@
 
 ## Current checkpoint and single next slice — 2026-10-22
 
-Latest delivery is slice65 (pinned Yoga reverse-axis conformance).
+Latest delivery is slice66 (pinned Yoga wrap/cross-reversal conformance).
+Slice65 is `fcfea332` (pinned Yoga reverse-axis conformance).
 Slice64 is `f5639a2e` (pinned Yoga column conformance).
 Slice63 is `440f7c32` (fixed-row intrinsic Grid in Flex columns).
 Slice62 is `4f358f70` (settled-width intrinsic Flow in Flex columns).
@@ -15,9 +16,9 @@ Slice56 is `cf2c7bc5` (prepared Flow-root planning/adoption).
 Slice55 is `1510efe3` (prepared Grid-root planning/adoption).
 Slice54 `773da7b9`,53 `aaa7ddcb`,52 `b5381e0d` are consolidated in `f322a709`.
 Every slice has its own commit. The fixed33-capability/seven-gate denominator is
-unchanged; all seven gates remain open. The single next slice is66, pinned Yoga wrap/cross-reversal conformance. Source5192/built5193, `#/testing/layout-preflight`:
+unchanged; all seven gates remain open. The single next slice is67, coherent content-box/border-box sizing. Source5192/built5193, `#/testing/layout-preflight`:
 Source5192/built5193 `#/examples/layout/wasm-yoga-migration`: Next case + resize
-cycles ten fixtures, including reversed row/column caps; click both panel targets.
+cycles twelve fixtures, including row wrap/cross reversal; click A/B/C targets.
 Native Grid tracks/spans and Flow wrap controls remain available.
 
 The loading/named-component integration is ready for source feedback on branch
@@ -63,7 +64,7 @@ Exactly one implementation slice is queued.
 | Flex and native sizing                             | Implement and classify the accepted matrix: reverse/wrap-reverse, margins/auto margins, percentages/gaps, box sizing/borders, aspect ratio, baselines, RTL/logical edges, containing blocks and hidden/contents participation; positive/negative/interaction geometry fixtures for every supported entry | Current experimental subset is bounded; unresolved native minimum/provider and precedence policies require exact designs before those paths broaden                                                          |
 | Grid and other layout families                     | Preserve Absolute/Overlay/Flow and complete the declared Grid track/placement/implicit/intrinsic target, with mixed nested examples and semantic geometry tests                                                                                                                                          | General nested preparation and intrinsic constraints must be available first; current Grid subset is not completion                                                                                          |
 | Prepared transactional geometry and reactive reuse | One root-wide prepared ownership model; stable identity, changed-geometry publication, rollback/failure isolation, receiver roles and bounded invalidation; public nested component/Layer/external-renderer tests with deterministic cleanup                                                             | Shared root instances, bounded known Flex plans, pure Card/known columns and frozen allocation caches are foundations, not a full graph or atomic publication                                                |
-| Migration and conformance                          | Version/commit/configuration-bound Yoga corpus with explicit Pibbl conversions/divergences; supported public Pibbl migration app and documented framework-author path using the same semantics; all unsupported entries visible                                                                          | Five exact pinned Yoga fixtures exist, including the Rectangle conversion cases from slice37; the broad classified corpus remains incomplete. Standalone API details must follow the public design agreement |
+| Migration and conformance                          | Version/commit/configuration-bound Yoga corpus with explicit Pibbl conversions/divergences; supported public Pibbl migration app and documented framework-author path using the same semantics; all unsupported entries visible                                                                          | Twelve exact pinned Yoga fixtures exist, including finite row/column/reverse/wrap and the Rectangle conversion cases; the broad classified corpus remains incomplete. Standalone API details must follow the public design agreement |
 | Reproducible performance                           | Comparable kernel, JS integration and whole Canvas workloads, structural work/allocation counts and reproducible timing receipts under documented environments                                                                                                                                           | Correct broad graph/algorithms precede timing claims; current counters demonstrate only their bounded paths                                                                                                  |
 | Final integration and release                      | Accepted behavior migrated across consumers/docs/editor/types/packed output, source/built browser and lifecycle evidence, documented Node24/pnpm11.21 trust gate, then the requested separate hyper-critical whole-codebase review                                                                       | Full supported behavior and prior exits must land before final aggregate verification/review; Node26 receipts are not Node24 release evidence                                                                |
 
@@ -1063,13 +1064,35 @@ package contents unchanged; last packed228receipt remains64, not a new65run.
 Logs `/tmp/pibbl-slice65-*`; Node26.9.0/pnpm11.21.0deps/Chromium/Apple C++20.
 No Node24/full trust, performance or broad Yoga parity claim.
 
-## [NEXT] Pinned Yoga wrap/cross-reversal conformance (slice 66)
+### Slice 66 — pinned Yoga wrap/cross-reversal conformance
 
-Add finite three-item row wrap and wrap-reverse cases to the same native oracle.
-Record source-formed line positions and reversed cross placement, with all three
-public target identities and gap misses. Keep explicit numeric bases/minima and
-no rounding; no RTL, intrinsic or percentage policy. Consolidate64–66 after this
-delivery; all seven release gates and fixed33-capability scope remain open.
+Twelve native-generated cases now include finite three-item row wrap and
+wrap-reverse. Explicit150×100 parent, basis60/grow0/shrink1/minWidth0, height20,
+gap12 and start line alignment form A/B then C. Normal y0/32 becomes reversed
+cross y80/48. Receipts bind axes, wrap and line alignment to native source/hash;
+classification is finite source-formed lines/cross reversal, not general wrapping,
+RTL, intrinsic percentages or combined main/cross reversal.
+
+Public RED required missing wrap records. Focused4tests compare all twelve cases,
+including full numeric geometry, compact labels, A/B/C target identities, gap
+misses and paint-only reuse. Native generation and independent no-write reproduction
+plus recorded/embedded checks pass; types/lint clean. Source/built Studio replay
+all twelve with zero errors and exact cleanup; built467inputs. Actual comparison
+was visually inspected at `/tmp/pibbl-yoga-comparison.png`; labels fit, both sides
+match and no baseline changed. Runtime/kernel/package unchanged; last packed228
+receipt remains64. Logs `/tmp/pibbl-slice66-*`; Node26.9.0/pnpm11.21.0deps/Chromium/
+Apple C++20. No Node24/full trust, performance or broad Yoga parity claim.
+
+## [NEXT] Coherent content-box/border-box sizing (slice 67)
+
+Define the exact public `boxSizing` policy before implementation: preserve current
+content-box default and add explicit border-box for dimensions, bounds and Flex
+basis together. Use existing shared box/placement/measurement seams so allocations
+subtract padding once, including prepared/cached clones and percentage resolution.
+Resolve contradictory size-versus-padding behavior explicitly; do not silently
+choose CSS overflow or equate painted stroke with layout border. Deliver one public
+row/column geometry/hit/scenario slice, then harden the broader matrix. No new WASM
+ABI should be needed. Consolidate64–66 before starting67; all seven gates stay open.
 
 ### Consolidation 21 completed for delivery slices 61–63
 
