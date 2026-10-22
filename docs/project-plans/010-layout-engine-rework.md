@@ -566,16 +566,56 @@ closing the browser. The virtual lab bundle now watches real source dependencies
 Logs `/tmp/pibbl-slice43-studio-*-cleanup.txt`. This correction is a separate
 focused commit; the slice44 red sizing regression remains uncommitted work.
 
-## [NEXT] Known sibling geometry preparation (slice 44)
+### Slice 44 — known sibling geometry preparation
 
-Extend the bounded Absolute→known Flex preparation from input syntax to fallible
-allocation/measurement work before sibling component evaluation. Reuse settled
-geometry in normal traversal without a second solve or speculative ordinary
-component execution; stage ownership through the existing root transaction and
-release unconsumed plans on failure. First establish a public failure caused by
-later sizing/measurement after valid syntax, then recovery, stable identity,
-independent-root isolation and deterministic cleanup. Keep the same33-capability/
-seven-gate denominator; do not claim a general prepared graph or pixel rollback.
+Absolute→direct Flex preparation now runs the existing allocation and demanded
+pure measurement path before sibling component traversal. Stable parent-owned
+slots use placement type/key/occurrence identity, carry a clone-preserved private
+annotation and retain one root-owned native region. Rendering claims its staged
+child placements and adopts that same region into actual component teardown.
+Unclaimed plans release on transaction completion; failed root cleanup also
+releases acquired regions. Removed slots are deleted, stale teardown cannot remove
+a replacement slot, and surviving keyed regions retain records across frames.
+No native ABI, second solver or speculative ordinary component evaluation.
+
+The public sizing regression failed before runtime edits: valid syntax with a
+later minWidth90/maxWidth80 allowed an earlier probe to run. It now fails before
+that evaluation, releases provisional handles/nodes and explicitly recovers at the
+latest100px width. Successful width updates allocate exactly once per region,
+solve only the changed region and create no numeric records. Keyed reorder keeps
+component stamps/nodes, moved hit targets agree, removal releases one region and
+restoration creates only that occurrence. Wrapped Text allocation uses one mounted
+allocation pass, reuses numeric records, changes the paragraph hit height and
+keeps its adjacent probe at the final location.
+
+Fresh experimental115passed/1normal-onlyskip; normal57passed/59experimental skips.
+Source and built Studio sizing-fault controls pass failure ordering, independent
+root updates, explicit recovery pixels/right-edge hit and actual root
+cleanup0/0/0/0;225public core inputs per lane. Packed228installed-input strict
+Bundler/NodeNext and structural lifecycle pass. Final Typecheck, changed-code lint and source/built/editor exact public export
+parity pass. Matching59181-byte native artifact is unchanged. Focused
+read-only review found no material issue in plan/constraint matching, native region
+adoption, transaction cleanup or persistent cache reuse. Logs
+`/tmp/pibbl-slice44-*`. Node26.9.0/pnpm11.21.0deps/Chromium; no Node24/full trust
+claim. All seven gates remain open: this does not prepare every descendant,
+introduce a native topology transaction or guarantee atomic HTML/focus publication.
+
+Hands-on source: `http://127.0.0.1:5192/#/testing/layout-preflight`, built5193.
+Click Fail later sizing, Recover, then the red box's right edge. The green root
+continues updating and the host controls remain usable through the failure.
+
+## [NEXT] Nested known Flex geometry preparation (slice 45)
+
+Extend prepared slots hierarchically to direct built-in Flex descendants of a
+prepared Flex. Use each child's settled content allocation, preserve type/key/
+occurrence identity before actual component refs exist, and consume the same plan
+in normal traversal without a second allocation/measurement pass. Establish a
+public failure where a later inner Flex becomes invalid and an earlier opaque
+outer child must not run; provide repair geometry/hits, stable keyed lifecycle,
+independent-root isolation and exact cleanup in the shared Studio lab. Do not
+speculatively execute ordinary components, add another solver or broaden to every
+layout family/HTML/focus publication. Keep33capabilities/seven gates fixed.
+Consolidate43–45 after this third delivery and reconcile partial evidence ledger.
 
 ### Consolidation 14 completed for delivery slices 40–42
 

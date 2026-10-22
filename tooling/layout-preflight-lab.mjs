@@ -31,7 +31,7 @@ else {
     }
     const state = () => lab.locator('pre').evaluate(element => JSON.parse(element.textContent));
     await lab.waitForFunction(() => JSON.parse(document.querySelector('pre').textContent).evaluations === 1);
-    await lab.getByRole('button', { name: 'Fail later sibling', exact: true }).click();
+    await lab.getByRole('button', { name: process.argv.includes('--sizing') ? 'Fail later sizing' : 'Fail later sibling', exact: true }).click();
     await lab.waitForFunction(() => JSON.parse(document.querySelector('pre').textContent).failures === 1);
     assert.equal((await state()).evaluations, 1);
     assert.deepEqual(await lab.locator('#healthy').evaluate(canvas => [...canvas.getContext('2d').getImageData(65, 10, 1, 1).data]), [0,128,0,255]);

@@ -1,3 +1,6 @@
+import { getElementMetadata, setElementMetadata } from '../element/metadata.js';
+import { LayoutRegion, adoptMountedLayoutRegion } from './wasm/region.js';
+import type { PibblComponentRefs, PibblInstance } from '../types.js';
 import { GLOBAL_STATE } from '../global-state.js';
 import type { PibblElement } from '../element/types.js';
 import type { PibblRenderTransaction, SystemStyle } from '../types.js';
@@ -5,14 +8,80 @@ import type { ResponsiveStylePreparation } from '../style/responsive.js';
 import type { LayoutBox } from './types.js';
 
 type PreparedStyle = Readonly<SystemStyle> | ResponsiveStylePreparation<Readonly<SystemStyle>>;
-type Preflight = (element: PibblElement<any>, style: Readonly<SystemStyle>, content: Readonly<LayoutBox>, receiver: object) => void;
+type Preflight = (element: PibblElement<any>, style: Readonly<SystemStyle>, content: Readonly<LayoutBox>, receiver: object, slot: PreparedLayoutSlot) => void;
 const preflights = new WeakMap<Function, Preflight>();
 const snapshots = new WeakMap<PibblRenderTransaction, WeakMap<object, { child: PibblElement<any>; width: number; height: number; prepared: PreparedStyle }>>();
 
 /** Registers only known declarative input preparation, never component evaluation. */
 export function registerKnownLayoutPreflight(type: Function, preflight: Preflight): void { preflights.set(type, preflight); }
-export function preflightKnownLayout(element: PibblElement<any>, style: Readonly<SystemStyle>, content: Readonly<LayoutBox>, receiver?: object): void {
-  if (receiver && GLOBAL_STATE.renderTransaction) preflights.get(element.type)?.(element, style, content, receiver);
+export function preflightKnownLayout(element: PibblElement<any>, style: Readonly<SystemStyle>, content: Readonly<LayoutBox>, receiver?: object, occurrence = 0): PreparedLayoutSlot | undefined {
+  const preflight = preflights.get(element.type);
+  const parent = GLOBAL_STATE.componentRefs, owner = GLOBAL_STATE.currentPibblInstance;
+  if (!preflight || !receiver || !parent || !owner || !GLOBAL_STATE.renderTransaction) return;
+  let types = slots.get(parent);
+  if (!types) {
+    types = new Map(); slots.set(parent, types);
+    const owned = types;
+    parent.teardowns.add(() => { for (const entries of owned.values()) for (const slot of entries.values()) slot.dispose(); owned.clear(); slots.delete(parent); });
+  }
+  let entries = types.get(element.type);
+  if (!entries) { entries = new Map(); types.set(element.type, entries); }
+  const key = element.key === undefined ? `occurrence:${occurrence}` : `key:${element.key}`;
+  let slot = entries.get(key);
+  if (!slot) {
+    const ownedEntries = entries, ownedTypes = types;
+    const created = new PreparedLayoutSlot(owner.interactionRoot ?? owner, () => {
+      if (ownedEntries.get(key) !== created) return;
+      ownedEntries.delete(key);
+      if (!ownedEntries.size) ownedTypes.delete(element.type);
+    });
+    slot = created; entries.set(key, slot);
+  }
+  preflight(element, style, content, receiver, slot);
+  return slot;
+}
+export function attachPreparedLayoutSlot(element: PibblElement<any>, slot?: PreparedLayoutSlot): void {
+  if (slot) setElementMetadata(element, { ...getElementMetadata(element), preparedLayoutSlot: slot });
+}
+export interface PreparedLayoutPlan {
+  readonly region: LayoutRegion;
+  readonly content: Readonly<LayoutBox>;
+  readonly children: readonly PibblElement<any>[];
+  readonly placements: { box: LayoutBox; usedWidth: number; usedHeight: number; element: PibblElement<any> }[];
+  readonly cached: boolean;
+  readonly revision: number;
+}
+export class PreparedLayoutSlot {
+  region: LayoutRegion | undefined;
+  constructor(private readonly owner: PibblInstance, private readonly release: () => void) {}
+  acquire(): LayoutRegion { return this.region ??= new LayoutRegion(this.owner); }
+  dispose(): void { const region = this.region; this.region = undefined; try { region?.dispose(); } finally { this.release(); } }
+  claim(region: LayoutRegion): void {
+    if (this.region !== region) throw new Error('Prepared layout region is stale.');
+    adoptMountedLayoutRegion(region, () => { if (this.region === region) { this.region = undefined; this.release(); } });
+  }
+}
+const slots = new WeakMap<PibblComponentRefs<any>, Map<Function, Map<string, PreparedLayoutSlot>>>();
+const plans = new WeakMap<PibblRenderTransaction, Map<PreparedLayoutSlot, { plan: PreparedLayoutPlan; claimed: boolean }>>();
+export function stagePreparedLayoutPlan(slot: PreparedLayoutSlot, plan: PreparedLayoutPlan): void {
+  const transaction = GLOBAL_STATE.renderTransaction!;
+  let pending = plans.get(transaction);
+  if (!pending) {
+    pending = new Map(); plans.set(transaction, pending);
+    const owned = pending;
+    transaction.onFinish(() => { for (const [slot, entry] of owned) if (!entry.claimed) slot.dispose(); owned.clear(); plans.delete(transaction); });
+  }
+  if (pending.has(slot)) throw new Error('Duplicate known layout occurrence during preparation.');
+  pending.set(slot, { plan, claimed: false });
+}
+export function claimPreparedLayoutPlan(element: PibblElement<any>, content: Readonly<LayoutBox>): PreparedLayoutPlan | undefined {
+  const transaction = GLOBAL_STATE.renderTransaction;
+  const slot = getElementMetadata(element)?.preparedLayoutSlot as PreparedLayoutSlot | undefined;
+  if (!transaction || !slot) return;
+  const entry = plans.get(transaction)?.get(slot);
+  if (!entry || entry.claimed || entry.plan.content.width !== content.width || entry.plan.content.height !== content.height) throw new Error('Prepared layout plan does not match its allocation.');
+  slot.claim(entry.plan.region); entry.claimed = true;
+  return entry.plan;
 }
 export function stagePreparedChildStyle(child: PibblElement<any>, receiver: object, content: Readonly<LayoutBox>, prepared: PreparedStyle): void {
   const transaction = GLOBAL_STATE.renderTransaction;

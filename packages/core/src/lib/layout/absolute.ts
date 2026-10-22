@@ -1,4 +1,4 @@
-import { preflightKnownLayout, takePreparedChildStyle } from './prepared-root.js';
+import { preflightKnownLayout, takePreparedChildStyle, attachPreparedLayoutSlot } from './prepared-root.js';
 import { isLayoutComponent, prepareLayoutComponent } from './define-layout-component.js';
 import { ResponsiveStylePreparation, preparedStyleValue, preparedStyleQuery, type PreparedQuery } from '../style/responsive.js';
 import { definePrimitive } from '../define-primitive.js';
@@ -102,15 +102,11 @@ function renderAbsolute(
   return placeDirectChildren(
     children,
     localContent,
-    child => resolveAbsoluteChildPlacement(
-      localContent,
-      child,
-      getChildPrimitiveReceiverToken(
-        GLOBAL_STATE.renderTransaction,
-        GLOBAL_STATE.primitiveReceiverToken,
-        occurrence++,
-      ),
-    ),
+    (child, childOccurrence) => {
+      return resolveAbsoluteChildPlacement(localContent, child, getChildPrimitiveReceiverToken(
+        GLOBAL_STATE.renderTransaction, GLOBAL_STATE.primitiveReceiverToken, occurrence++,
+      ), childOccurrence);
+    },
     style.overflow,
   );
 }
@@ -159,6 +155,7 @@ function resolveAbsoluteChildPlacement(
   container: Readonly<LayoutBox>,
   child: PibblElement<any>,
   receiverToken?: object,
+  occurrence = 0,
 ): { box: LayoutBox; element: PibblElement<any> } {
   const prepared = prepareDirectChildStyle(child, receiverToken, container);
   const style = preparedStyleValue(prepared) as Readonly<
@@ -174,18 +171,17 @@ function resolveAbsoluteChildPlacement(
     width: resolved.borderBox.width,
     height: resolved.borderBox.height,
   };
-  preflightKnownLayout(child, style, { x: 0, y: 0, width: resolved.contentBox.width, height: resolved.contentBox.height }, receiverToken);
-  return {
-    box,
-    element: childWithUsedSize(
+  const slot = preflightKnownLayout(child, style, { x: 0, y: 0, width: resolved.contentBox.width, height: resolved.contentBox.height }, receiverToken, occurrence);
+  const element = childWithUsedSize(
       child,
       style,
       resolved.contentBox.width,
       resolved.contentBox.height,
       receiverToken,
       preparedStyleQuery(prepared),
-    ),
-  };
+    );
+  attachPreparedLayoutSlot(element, slot);
+  return { box, element };
 }
 
 /** @internal Carries normalized finite content size into the eventual render. */
@@ -298,7 +294,7 @@ export function prepareDirectChildStyle(
 export function placeDirectChildren(
   children: readonly PibblElement<any>[],
   contentBox: Readonly<LayoutBox>,
-  place: (child: PibblElement<any>) => LayoutBox | {
+  place: (child: PibblElement<any>, occurrence: number) => LayoutBox | {
     box: LayoutBox;
     element: PibblElement<any>;
   },
@@ -313,7 +309,7 @@ export function placeDirectChildren(
     if (child.key === undefined) {
       occurrences.set(child.type, occurrence + 1);
     }
-    const placement = place(child);
+    const placement = place(child, occurrence);
     const box = 'box' in placement ? placement.box : placement;
     const element = 'box' in placement ? placement.element : child;
     placed.push(placeChild({

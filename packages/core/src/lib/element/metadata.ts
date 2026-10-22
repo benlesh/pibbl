@@ -32,6 +32,7 @@ export interface InternalElementMetadata {
   readonly primitiveReceiverToken?: object;
   readonly policyPreparationSource?: PibblElement<any>;
   readonly layoutDescriptionSource?: PibblElement<any>;
+  readonly preparedLayoutSlot?: object;
   identityHint?: unknown;
   placementConsumed?: boolean;
   placementSignalHandoff?: Readonly<SystemStyle>;

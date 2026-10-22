@@ -1,4 +1,4 @@
-import { registerKnownLayoutPreflight, stagePreparedChildStyle, takePreparedChildStyle, hasPreparedChildStyles } from './prepared-root.js';
+import { registerKnownLayoutPreflight, stagePreparedChildStyle, takePreparedChildStyle, hasPreparedChildStyles, claimPreparedLayoutPlan, stagePreparedLayoutPlan } from './prepared-root.js';
 import { isLayoutComponent, prepareLayoutComponent } from './define-layout-component.js';
 import { allocationInputRevision } from './allocation-revision.js';
 import { FlexAllocationCache, frozenFlexInputs, type CachedFlexPlacement } from './flex-allocation-cache.js';
@@ -176,7 +176,42 @@ function renderFlex(
   });
   const releaseLayout = pushLayoutBox(localContent);
   GLOBAL_STATE.componentRefs!.onAfterRender = releaseLayout;
-  const service = {
+  const service = flexMeasurementService(ctx);
+  const prepared = experimentalLayout ? claimPreparedLayoutPlan(GLOBAL_STATE.componentRefs!.element, localContent) : undefined;
+  const region = experimentalLayout ? mountedLayoutRegion() : undefined;
+  const plan = prepared ?? prepareFlexAllocation(props, style, localContent, service, region);
+  const { children, placements, revision } = plan;
+  if (!plan.cached) {
+    const transaction = GLOBAL_STATE.renderTransaction;
+    if (region && transaction && frozenFlexInputs(props.children)) {
+      const input = props.children;
+      const owner = GLOBAL_STATE.componentRefs!;
+      const snapshot: CachedFlexPlacement[] = [];
+      for (const placement of placements) {
+        snapshot.push({
+          box: { x: placement.box.x, y: placement.box.y, width: placement.box.width, height: placement.box.height },
+          usedWidth: placement.usedWidth, usedHeight: placement.usedHeight,
+        });
+      }
+      transaction.onFinish(success => {
+        if (!success || owner.teardowns.closed || allocationInputRevision() !== revision) return;
+        const cache = new FlexAllocationCache();
+        cache.store(input, revision, localContent, style, snapshot);
+        region.allocationCache = cache;
+      });
+    }
+  }
+  let index = 0;
+  return placeDirectChildren(
+    children,
+    localContent,
+    () => placements[index++],
+    style.overflow,
+  );
+}
+
+function flexMeasurementService(ctx: RenderingContext2D): CanvasMeasurementService {
+  return {
     measureText(value: string, font: string) {
       ctx.save();
       try {
@@ -187,7 +222,9 @@ function renderFlex(
       }
     },
   };
-  const region = experimentalLayout ? mountedLayoutRegion() : undefined;
+}
+
+function prepareFlexAllocation(props: FlexProps, style: Readonly<ResolvedFlexStyle>, localContent: Readonly<LayoutBox>, service: CanvasMeasurementService, region?: LayoutRegion) {
   const revision = allocationInputRevision();
   // Decide before materializing or inspecting children; normal paint traversal
   // still visits them and resolves their current receiver-owned paint inputs.
@@ -216,32 +253,8 @@ function renderFlex(
       service,
       measureElement: (element, constraints) => measureElement(element, constraints, service),
     }, region);
-    const transaction = GLOBAL_STATE.renderTransaction;
-    if (region && transaction && frozenFlexInputs(props.children)) {
-      const input = props.children;
-      const owner = GLOBAL_STATE.componentRefs!;
-      const snapshot: CachedFlexPlacement[] = [];
-      for (const placement of placements) {
-        snapshot.push({
-          box: { x: placement.box.x, y: placement.box.y, width: placement.box.width, height: placement.box.height },
-          usedWidth: placement.usedWidth, usedHeight: placement.usedHeight,
-        });
-      }
-      transaction.onFinish(success => {
-        if (!success || owner.teardowns.closed || allocationInputRevision() !== revision) return;
-        const cache = new FlexAllocationCache();
-        cache.store(input, revision, localContent, style, snapshot);
-        region.allocationCache = cache;
-      });
-    }
   }
-  let index = 0;
-  return placeDirectChildren(
-    children,
-    localContent,
-    () => placements[index++],
-    style.overflow,
-  );
+  return { children, placements, revision, content: localContent, cached: cached !== undefined };
 }
 
 /**
@@ -273,8 +286,7 @@ export const Flex = definePrimitive<
 
 // A known Absolute sibling boundary resolves these receiver inputs before any
 // sibling's opaque component executes. Geometry still solves in normal traversal.
-registerKnownLayoutPreflight(Flex, (element, style, content, receiver) => {
-  if (!experimentalLayout) return;
+if (experimentalLayout) registerKnownLayoutPreflight(Flex, (element, style, content, receiver, slot) => {
   normalizeFlexOptions(style as Readonly<FlexStyle>, content);
   const previous = GLOBAL_STATE.primitiveReceiverToken;
   GLOBAL_STATE.primitiveReceiverToken = receiver;
@@ -291,6 +303,12 @@ registerKnownLayoutPreflight(Flex, (element, style, content, receiver) => {
       nonnegativeFactor(normalized.flexShrink ?? 1, 'flexShrink', child, content);
       stagePreparedChildStyle(child, token, content, prepared);
     }
+    const ctx = GLOBAL_STATE.renderContext;
+    if (!ctx) throw new Error('Known layout preparation requires a Canvas measurement context.');
+    const region = slot.acquire();
+    const resolved = { box: { contentBox: content }, overflow: (style as Readonly<FlexStyle>).overflow ?? 'visible', ...normalizeFlexOptions(style as Readonly<FlexStyle>, content) } as Readonly<ResolvedFlexStyle>;
+    const plan = prepareFlexAllocation(element.props as FlexProps, resolved, content, flexMeasurementService(ctx), region);
+    stagePreparedLayoutPlan(slot, { ...plan, region });
   } finally { GLOBAL_STATE.primitiveReceiverToken = previous; }
 });
 

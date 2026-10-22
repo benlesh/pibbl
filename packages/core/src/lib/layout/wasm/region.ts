@@ -306,6 +306,20 @@ export function mountedLayoutRegion(): LayoutRegion | undefined {
   }
   return region;
 }
+/** Adopts a preflighted region without creating a second mutable owner. */
+export function adoptMountedLayoutRegion(region: LayoutRegion, release: () => void): void {
+  const refs = GLOBAL_STATE.componentRefs;
+  if (!refs) throw new Error('Prepared layout adoption requires a mounted component.');
+  const previous = regions.get(refs);
+  if (previous === region) return;
+  previous?.dispose();
+  regions.set(refs, region);
+  refs.teardowns.add(() => {
+    if (regions.get(refs) !== region) return;
+    regions.delete(refs); region.dispose(); release();
+  });
+}
+
 export function recordWasmMeasurement(): void { counters.measuredLeaves++; }
 
 export function recordWasmAllocationPass(): void { counters.allocationPasses++; }

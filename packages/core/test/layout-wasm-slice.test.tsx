@@ -1,6 +1,6 @@
 import yogaReference from '../../../tooling/layout-yoga-rehearsal/reference.json';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
-import { createElement, Absolute, Flex, Text, Rectangle, measureElement, useLayoutBox, Layer, signal, computed, type PibblNode } from '@pibbl/core';
+import { createElement, Absolute, Flex, Text, Rectangle, measureElement, useLayoutBox, useConst, Layer, signal, computed, type PibblNode } from '@pibbl/core';
 import { pibblSync as pibbl } from '@pibbl/core/sync';
 import { prepareLayoutEngineSync } from '../src/lib/layout/wasm/embedded';
 import { WasmFlexTextExample as mountWasmFlexTextComponent } from "../../scenarios/src/learning/layout/wasm-flex-text.example";
@@ -1318,4 +1318,85 @@ it.runIf(experimentalLayout)('normalizes a preflighted receiver once per transac
   expect([sequences, normalizations, renders]).toEqual([1, 1, 1]);
   width.set(90); await nextFrame();
   expect([sequences, normalizations, renders]).toEqual([2, 2, 2]);
+});
+
+it.runIf(experimentalLayout)('prepares later known sibling sizing failures before evaluating an earlier opaque child', async () => {
+  const width = signal(80), minimum = signal(0); let evaluations = 0;
+  function Probe(_props: { style: Record<string, unknown> }) { evaluations++; const box = useLayoutBox(); return createElement(Rectangle, { style: { width: box.width, height: 20, fill: 'red' } }); }
+  const scene = createElement(Absolute, { style: { width: 220, height: 30 }, children: [
+    createElement(Flex, { style: { width, height: 20 }, children: createElement(Probe, { style: { width: 80, height: 20, minWidth: 0, flexGrow: 1 } }) }),
+    createElement(Flex, { style: { left: 120, width: 80, height: 20 }, children: createElement(Rectangle, { style: { width: 80, height: 20, minWidth: minimum, maxWidth: 80, fill: 'blue' } }) }),
+  ] });
+  const canvas = document.createElement('canvas'); canvas.width = 220; canvas.height = 30; document.body.append(canvas);
+  const errors: unknown[] = []; const prevent = (event: ErrorEvent) => { errors.push(event.error); event.preventDefault(); }; window.addEventListener('error', prevent);
+  try {
+    const baseline = snapshotWasmLayoutDiagnostics();
+    const controller = pibbl(canvas, scene); controllers.push(controller); await nextFrame(); expect(evaluations).toBe(1);
+    expect(snapshotWasmLayoutDiagnostics().allocationPasses).toBe(baseline.allocationPasses + 2);
+    expect(snapshotWasmLayoutDiagnostics().solves).toBe(baseline.solves + 2);
+    const mounted = snapshotWasmLayoutDiagnostics(); width.set(90); await nextFrame();
+    expect(evaluations).toBe(2);
+    expect(snapshotWasmLayoutDiagnostics().nodeCreates).toBe(mounted.nodeCreates);
+    expect(snapshotWasmLayoutDiagnostics().allocationPasses).toBe(mounted.allocationPasses + 2);
+    expect(snapshotWasmLayoutDiagnostics().solves).toBe(mounted.solves + 1);
+    width.set(100); minimum.set(90); await nextFrame();
+    expect(errors.some(error => error instanceof Error && error.message.includes('minimum must not exceed maximum'))).toBe(true);
+    expect(evaluations).toBe(2);
+    expect(snapshotWasmLayoutDiagnostics().activeArenas).toBe(baseline.activeArenas);
+    expect(snapshotWasmLayoutDiagnostics().activeNodes).toBe(baseline.activeNodes);
+    minimum.set(0); pibbl(canvas, scene); await nextFrame(); expect(evaluations).toBe(3);
+    expect([...canvas.getContext('2d')!.getImageData(90, 10, 1, 1).data]).toEqual([255, 0, 0, 255]);
+  } finally { window.removeEventListener('error', prevent); }
+});
+
+it.runIf(experimentalLayout)('retains prepared keyed region ownership through reorder and releases removed slots', async () => {
+  const order = signal(['A', 'B']); let serial = 0;
+  const stamps = new Map<string, number>(); const hits: string[] = [];
+  function Probe({ name }: { name: string; style: Record<string, unknown> }) {
+    stamps.set(name, useConst(() => ++serial));
+    const box = useLayoutBox();
+    return createElement(Rectangle, { style: { width: box.width, height: box.height, fill: 'red' }, onClick: () => hits.push(name) });
+  }
+  function Scene() { return createElement(Absolute, { style: { width: 220, height: 30 }, children: order.get().map((name, index) => createElement(Flex, { key: name, style: { left: index * 100, width: 80, height: 20 }, children: createElement(Probe, { name, style: { width: 80, height: 20, minWidth: 0 } }) })) }); }
+  const canvas = document.createElement('canvas'); canvas.width = 220; canvas.height = 30; document.body.append(canvas);
+  const baseline = snapshotWasmLayoutDiagnostics(); const controller = pibbl(canvas, createElement(Scene, {})); controllers.push(controller); await nextFrame();
+  const a = stamps.get('A'), b = stamps.get('B'), mounted = snapshotWasmLayoutDiagnostics();
+  expect(mounted.activeArenas).toBe(baseline.activeArenas + 2);
+  order.set(['B', 'A']); await nextFrame();
+  expect([stamps.get('A'), stamps.get('B')]).toEqual([a, b]);
+  expect(snapshotWasmLayoutDiagnostics().nodeCreates).toBe(mounted.nodeCreates);
+  clickCanvas(canvas, 10, 10); clickCanvas(canvas, 110, 10); expect(hits).toEqual(['B', 'A']);
+  order.set(['A']); await nextFrame(); expect(snapshotWasmLayoutDiagnostics().activeArenas).toBe(baseline.activeArenas + 1);
+  order.set(['B', 'A']); await nextFrame();
+  expect(stamps.get('A')).toBe(a); expect(stamps.get('B')).not.toBe(b);
+  expect(snapshotWasmLayoutDiagnostics().nodeCreates).toBe(mounted.nodeCreates + 1);
+  controller.dispose(); const disposed = snapshotWasmLayoutDiagnostics();
+  expect([disposed.activeArenas, disposed.activeNodes, disposed.activeWasmInstances]).toEqual([baseline.activeArenas, baseline.activeNodes, baseline.activeWasmInstances]);
+});
+
+it.runIf(experimentalLayout)('consumes prepared wrapped Text allocations without a second measurement or solve', async () => {
+  const width = signal(180); let probes = 0; const hits: string[] = [];
+  const allocations: number[] = [];
+  function Probe(_props: { style: Record<string, unknown> }) {
+    probes++; const box = useLayoutBox(); allocations.push(box.width);
+    return createElement(Rectangle, { style: { width: box.width, height: 20, fill: 'red' } });
+  }
+  const text = createElement(Text, { onClick: () => hits.push('text'), children: 'aaaa aaaa aaaa aaaa', style: { flexBasis: 0, flexGrow: 1, minWidth: 0, wrap: true, font: '10px monospace', lineHeight: 10 } });
+  const probe = createElement(Probe, { style: { width: 30, height: 20, minWidth: 0, flexShrink: 0 } });
+  const flexChildren = [text, probe];
+  const canvas = document.createElement('canvas'); canvas.width = 200; canvas.height = 100; document.body.append(canvas);
+  const scene = createElement(Absolute, { style: { width: 200, height: 100 }, children: createElement(Flex, { style: { width, height: 100, alignItems: 'flex-start' }, children: flexChildren }) });
+  const baseline = snapshotWasmLayoutDiagnostics(); const controller = pibbl(canvas, scene); controllers.push(controller); await nextFrame();
+  const mounted = snapshotWasmLayoutDiagnostics(); expect(probes).toBe(1); expect(allocations).toEqual([30]);
+  expect(mounted.allocationPasses).toBe(baseline.allocationPasses + 1); expect(mounted.solves).toBe(baseline.solves + 1);
+  expect(mounted.measuredLeaves - baseline.measuredLeaves).toBeGreaterThan(0);
+  const numeric = layoutFlex({ x: 0, y: 0, width: 180, height: 100 }, flexChildren, { alignItems: 'flex-start' }, { service: { measureText(value, font) { const ctx = canvas.getContext('2d')!; ctx.font = font; return ctx.measureText(value); } }, measureElement: (element, constraints) => measureElement(element, constraints, { measureText(value, font) { const ctx = canvas.getContext('2d')!; ctx.font = font; return ctx.measureText(value); } }) });
+  expect(numeric[0].height).toBe(10); expect(numeric[1].x).toBe(150);
+  clickCanvas(canvas, 45, 15); expect(hits).toEqual([]);
+  const beforeNarrow = snapshotWasmLayoutDiagnostics(); width.set(90); await nextFrame();
+  const narrow = snapshotWasmLayoutDiagnostics(); expect(probes).toBe(2);
+  expect(narrow.allocationPasses).toBe(beforeNarrow.allocationPasses + 1); expect(narrow.solves).toBe(beforeNarrow.solves + 1);
+  expect(narrow.nodeCreates).toBe(beforeNarrow.nodeCreates);
+  expect([...canvas.getContext('2d')!.getImageData(65, 5, 1, 1).data]).toEqual([255, 0, 0, 255]);
+  clickCanvas(canvas, 45, 15); expect(hits).toEqual(['text']);
 });

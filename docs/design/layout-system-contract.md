@@ -253,6 +253,18 @@ preflight does not pre-solve all geometry, measure arbitrary descendants, valida
 all fallible layout operations or provide pixel rollback. Direct roots and other
 layout-family boundaries retain their current traversal behavior.
 
+Those direct known Flex siblings also prepare their own allocations and demanded
+pure measurements before sibling component traversal. Stable slots use the parent
+occurrence's type/key/occurrence identity and own the same root-native region later
+adopted by the mounted Flex. A transaction-local plan carries settled child
+placements; rendering consumes it without another allocation pass. Successful
+surviving slots retain their numeric records; actual removal releases them and
+restoration creates fresh ownership. Failed transactions release unclaimed plans,
+and normal component teardown releases claimed regions. The slot annotation follows
+internal element clones. Opaque components still run only in source traversal.
+This is bounded Absolute-to-direct-Flex preparation, not recursive preparation of
+all known descendants or atomic event/focus/HTML publication.
+
 For the same direct Text subset, automatic width and basis use the natural width
 before wrapping, not the containing row's constrained width. The natural query
 follows wrapped Text's existing removal of leading ASCII spaces; empty/space-only
