@@ -2,6 +2,13 @@
 
 ## Current checkpoint and single next slice — 2026-10-22
 
+Latest committed delivery is slice39: experimental numeric physical margins in
+finite nowrap/wrapped rows and columns, shared WASM allocation/placement, with
+source/built/public interaction and cleanup evidence. Slices37–39 are committed
+separately. The fixed seven release gates remain open; this is incremental delivery,
+not completion of the replacement. Exactly one next slice is40, reverse main-axis
+placement. Source5192/built5193, wasm-flex-text, Compare Text minimum.
+
 The loading/named-component integration is ready for source feedback on branch
 `codex/layout-integration-20261022`. It combines the saved loading checkpoint with
 allocation-discipline commit 8466d093 (integrated as 147208d1), the newer cancellable
@@ -435,6 +442,35 @@ Present the exact direction union and source-order semantics, then establish pub
 row-reverse/column-reverse placement with signed margins, wrapping and hit behavior.
 Use the same WASM placement records; no array reversal or second solver.
 Consolidate37–39 before production changes for40.
+
+### Consolidation 13 completed for delivery slices 37–39
+
+Separate slice commits:37 `2106fcc9`,38 `cc11a8dd`,39 `fb83e2b8`. The pinned
+Yoga corpus expands3→5 cases, and the existing physical-margin capability moves
+from absent to experimental numeric nowrap/wrapped support. No release-gate group
+is complete, no exclusion changes, and no extra capability was invented.
+
+One kernel remains responsible for allocation/line formation/main/cross placement.
+The private10-f64 records separate signed margins from nonnegative padding/bounds;
+JS prepares receiver-owned styles and publishes returned border boxes. Numeric
+margin validation is shared; explicit per-side calls preserve allocation discipline.
+The normal solver is retained intentionally until the accepted all-family adoption
+gate; it rejects new margin behavior. There is no new scheduler, event system,
+retained draw graph or duplicate subscriptions. Review's negative intrinsic-size
+finding is fixed by its red/green public regression.
+
+Fresh combined evidence reuses unchanged95experimental checks, normal42pass/5skip,
+typecheck/lint, source/built margin/Text/cache/cleanup probes and matching57438-byte
+artifact. A new built migration replay passes all5pinned cases with466private dist
+inputs and cleanup0/0/0. Recorded oracle/probe hash and source fingerprint checks,
+and catalog166lessons/12snapshots/33labs pass. Packed strict margin declarations/
+227-input lifecycle evidence was obtained at slice38 with the same10-slot ABI;
+slice39's changed wrap arithmetic is covered in current source/built public checks.
+Do not misreport that earlier packed binary as a fresh39 tarball run.
+Logs `/tmp/pibbl-consolidation13-*` plus slice38/39 receipts. Node26.9.0/pnpm11.21.0
+dependencies/Chromium; compiler pinned Rust1.99.0, native Yoga Appleclang21.0.0.
+No full trust, Node24, broad Yoga parity or comparative speed claim. Exactly one
+next delivery remains40 in the existing reverse-direction capability.
 
 ### Consolidation 12 completed for delivery slices 34–36
 
