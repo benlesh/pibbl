@@ -2,7 +2,8 @@
 
 ## Current checkpoint and single next slice — 2026-10-22
 
-Latest delivery is slice61 (pure described Layer children).
+Latest delivery is slice62 (settled-width intrinsic Flow in Flex columns).
+Slice61 is `a3ef3378` (pure described Layer children).
 Slice60 is `c90df382` (direct-entry Layer child preparation).
 Slice59 is `d7649a75`, corrected by `ab2adb72` (known-family Layer children).
 Slice58 is `edcf60a6` (prepared Absolute-root planning/adoption).
@@ -11,8 +12,8 @@ Slice56 is `cf2c7bc5` (prepared Flow-root planning/adoption).
 Slice55 is `1510efe3` (prepared Grid-root planning/adoption).
 Slice54 `773da7b9`,53 `aaa7ddcb`,52 `b5381e0d` are consolidated in `f322a709`.
 Every slice has its own commit. The fixed33-capability/seven-gate denominator is
-unchanged; all seven gates remain open. The single next slice is62, settled-width intrinsic Flow in Flex columns. Source5192/built5193, `#/testing/layout-preflight`:
-Use described Layer child, Fail later sibling, Recover, then red right edge/blue cell.
+unchanged; all seven gates remain open. The single next slice is63, fixed-row intrinsic Grid in Flex columns. Source5192/built5193, `#/testing/layout-preflight`:
+Use intrinsic Flow card, then Widen intrinsic Flow card; inspect the moving red footer.
 Native Grid tracks/spans and Flow wrap controls remain available.
 
 The loading/named-component integration is ready for source feedback on branch
@@ -984,14 +985,34 @@ packed228installed-input Bundler/NodeNext/lifecycle pass. Kernel65282bytes uncha
 Logs `/tmp/pibbl-slice61-*`; Node26.9.0/pnpm11.21.0deps/Chromium. No Node24/full trust
 or general atomic-publication claim.
 
-## [NEXT] Settled-width intrinsic Flow in Flex columns (slice 62)
+### Slice 62 — settled-width intrinsic Flow in Flex columns
 
-Use Flow's existing pure measurement at its final allocated width when a known
-Flow contributes an automatic height to a nowrap Flex column. Require the current
-explicit minimum/finite-width rules; do not choose new automatic-minimum policy.
-Public RED must show wrapped rows contributing the correct following-footer
-position under width changes, with matching pixels/hits and known-only traversal.
-No arbitrary component execution or new API/ABI. Group21 is61–63, then consolidate.
+Known Flow roots now contribute automatic height to finite-width nowrap Flex
+columns using Flow's existing pure wrap measurement. The same bounded eligibility
+is used for recursive intrinsic measurement, deferring stretch width and measuring
+at final clamped width. Explicit minimum, no intrinsic growth, percentage/bounds,
+cycle detection and opaque-component rules remain unchanged. Pure measurement is
+host work; mounted Flow still performs native numeric placement.
+
+Public RED returned unsupported instead of100×40 for a three-item wrapping Flow.
+Green public measurement/render proof moves footer40→25 as width100→160, checks
+old/new pixels/targets and stable nodes/arenas. A maxWidth100 bound holds footer40
+even when parent widens, then lifting it moves footer25. Focused163pass/1normal-only
+skip across four files plus final clamped proof pass; normal58tests pass. Types/
+lint clean. Source/built Studio `--intrinsic-flow` each proves footer40→25, moved
+targets, one native Flow batch per resize, cleanup0/0/0/0 and225public inputs.
+Packed228installed-input Bundler/NodeNext/lifecycle pass. Kernel65282bytes unchanged.
+Logs `/tmp/pibbl-slice62-*`; Node26.9.0/pnpm11.21.0deps/Chromium. No broad intrinsic,
+new automatic-minimum policy, Node24/full trust or Yoga parity claim.
+
+## [NEXT] Fixed-row intrinsic Grid in Flex columns (slice 63)
+
+Admit known Grid automatic heights through the same finite-width nowrap column
+measurement seam, bounded to Grid's existing fixed-row intrinsic contract. Public
+RED: fixed track sums/gaps place the following footer and row changes move its
+pixel/hit geometry. Reject fractional/percentage rows without a definite height
+through the existing unsupported result; no implicit/intrinsic-track vocabulary,
+arbitrary providers or API/ABI change. Consolidate61–63 after delivery.
 
 ### Consolidation 20 completed for delivery slices 58–60
 

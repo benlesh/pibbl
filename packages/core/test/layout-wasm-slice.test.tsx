@@ -2029,3 +2029,25 @@ it.runIf(experimentalLayout)(`prepares a later Layer described ${Root.name} root
 
 
 }
+
+it.runIf(experimentalLayout)('measures a wrapped Flow at settled width inside an intrinsic Flex column', async () => {
+  const baseline = snapshotWasmLayoutDiagnostics(), width = signal(100), maximum = signal(100); let hits = 0;
+  const flow = createElement(Flow, { style: { maxWidth: maximum, minHeight: 0, flexShrink: 0, direction: 'horizontal', wrap: true, gap: 5, lineGap: 5 }, children: [0,1,2].map(key => createElement(Rectangle, { key, style: { width: 70, height: 10, fill: 'blue' } })) });
+  const card = createElement(Flex, { style: { width: 100, flexDirection: 'column', alignItems: 'stretch', minHeight: 0, flexShrink: 0 }, children: flow });
+  expect(measureElement(card, { minWidth: 0, maxWidth: 100, minHeight: 0, maxHeight: 100 }, service)).toEqual({ status: 'measured', size: { width: 100, height: 40 } });
+  const canvas = document.createElement('canvas'); canvas.width = 200; canvas.height = 100; document.body.append(canvas);
+  const scene = createElement(Flex, { style: { width, height: 100, flexDirection: 'column', alignItems: 'stretch' }, children: [
+    createElement(Flex, { style: { minHeight: 0, flexShrink: 0, flexDirection: 'column', alignItems: 'stretch' }, children: flow }),
+    createElement(Rectangle, { style: { width: '100%', height: 10, minHeight: 0, flexShrink: 0, fill: 'red' }, onClick: () => hits++ }),
+  ] });
+  const controller = pibbl(canvas, scene); controllers.push(controller); await nextFrame();
+  expect([...canvas.getContext('2d')!.getImageData(5,45,1,1).data]).toEqual([255,0,0,255]); clickCanvas(canvas,5,45); expect(hits).toBe(1);
+  const mounted = snapshotWasmLayoutDiagnostics();
+  width.set(160); await nextFrame();
+  expect([...canvas.getContext('2d')!.getImageData(5,45,1,1).data]).toEqual([255,0,0,255]);
+  maximum.set(160); await nextFrame();
+  expect([...canvas.getContext('2d')!.getImageData(5,30,1,1).data]).toEqual([255,0,0,255]);
+  expect([...canvas.getContext('2d')!.getImageData(5,45,1,1).data]).toEqual([0,0,0,0]); clickCanvas(canvas,5,45); expect(hits).toBe(1); clickCanvas(canvas,5,30); expect(hits).toBe(2);
+  const updated = snapshotWasmLayoutDiagnostics(); expect(updated.activeArenas).toBe(mounted.activeArenas); expect(updated.nodeCreates).toBe(mounted.nodeCreates);
+  controller.dispose(); const disposed = snapshotWasmLayoutDiagnostics(); expect([disposed.activeArenas,disposed.activeNodes,disposed.activeWasmInstances]).toEqual([baseline.activeArenas,baseline.activeNodes,baseline.activeWasmInstances]);
+});

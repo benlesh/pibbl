@@ -1,3 +1,4 @@
+import { Flow } from './flow.js';
 import type { PreparedFlexLayoutPlan, PreparedLayoutSlot } from './prepared-root.js';
 import { isKnownLayoutType, registerKnownLayoutPreflight, stagePreparedChildStyle, takePreparedChildStyle, hasPreparedChildStyles, claimPreparedFlexPlan, stagePreparedLayoutPlan, preflightKnownLayout, attachPreparedLayoutSlot } from './prepared-root.js';
 import { isLayoutComponent, prepareLayoutComponent } from './define-layout-component.js';
@@ -438,7 +439,7 @@ function measureFlex(
     let baseMain: number;
     let baseCross: number;
     if (experimentalLayout && !row && widthDefinite && !heightDefinite &&
-      (child.type === Text || layoutChild.type === Flex && isColumnDirection(style.flexDirection) && (style.flexWrap ?? 'nowrap') === 'nowrap') &&
+      (child.type === Text || layoutChild.type === Flow || layoutChild.type === Flex && isColumnDirection(style.flexDirection) && (style.flexWrap ?? 'nowrap') === 'nowrap') &&
       (mainValue === undefined || mainValue === 'auto' || crossValue === undefined || crossValue === 'auto')) {
       // Descend only through known built-in columns at settled content widths.
       // The shared measurement context detects descriptor cycles; there is no
@@ -631,7 +632,7 @@ function resolveFlexPlacements(
       BoxStyle & FlexItemStyle & LayoutItemStyle & Record<string, unknown>
     >;
     const layoutChild = isLayoutComponent(child.type) ? prepareLayoutComponent(child, { receiverToken }) : child;
-    const knownIntrinsicFlex = child.type === Flex || layoutChild.type === Flex &&
+    const knownIntrinsicLayout = child.type === Flex || layoutChild.type === Flow || layoutChild.type === Flex &&
       isColumnDirection(normalized.flexDirection) && (normalized.flexWrap ?? 'nowrap') === 'nowrap';
     assertSupportedChildPosition('Flex', child, normalized);
     rejectUnsupportedItemFields(child, normalized, container);
@@ -698,7 +699,7 @@ function resolveFlexPlacements(
       options.alignItems !== 'stretch';
     // A finite column cross allocation determines a stretched built-in child's
     // width without measuring its intrinsic height. Resolve bounds/padding first.
-    const deferredIntrinsicColumn = experimentalLayout && !row && knownIntrinsicFlex &&
+    const deferredIntrinsicColumn = experimentalLayout && !row && knownIntrinsicLayout &&
       needsMeasuredMain && crossAuto && effectiveAlignment(alignment, options.alignItems) === 'stretch';
     if (!deferredIntrinsicColumn && (needsMeasuredMain || needsMeasuredCross || crossAuto)) {
       const constraints = {
@@ -800,7 +801,7 @@ function resolveFlexPlacements(
     }
     // Settle width-dependent height before using an automatic main basis.
     // The experimental built-in intrinsic column uses the same final-width rule.
-    if (!row && options.flexWrap === 'nowrap' && (child.type === Text || experimentalLayout && knownIntrinsicFlex) && needsMeasuredMain) {
+    if (!row && options.flexWrap === 'nowrap' && (child.type === Text || experimentalLayout && knownIntrinsicLayout) && needsMeasuredMain) {
       const preferredWidth = crossAuto ?
         effectiveAlignment(alignment, options.alignItems) === 'stretch' ?
           Math.max(0, crossSize - paddingCross - marginCrossBefore - marginCrossAfter) : measured?.width ?? 0 :
