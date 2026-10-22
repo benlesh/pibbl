@@ -281,6 +281,16 @@ was moved to unsupported Text, its focused 35 checks passed. Logs
 `/tmp/pibbl-slice34-{red,focused,normal,boundary,typecheck,lint}.txt`.
 Environment Node 26.9.0 / pnpm 11.21.0 dependencies / Chromium.
 
+Slice 34 public Studio follow-up: Minimum comparison includes two 80px empty
+Rectangles in a 100px row, omitting minima. Source and built browser probes click
+both sides of the 50px boundary and the right interior, alongside existing Text,
+frozen allocation reuse and exact cleanup assertions. Scaled Studio clicks use
+interior coordinates; the mounted public test checks exact adjacent pixels/hits.
+Both pass with no page errors, built provenance 466 inputs. Logs
+`/tmp/pibbl-slice34-{source,built}-browser.log`. Inspect
+http://127.0.0.1:5192/#/examples/layout/wasm-flex-text, Compare Text minimum,
+then the boxes on the right. Built equivalent on port 5193.
+
 **Exactly one selected next delivery slice: 35 — matching empty Rectangle
 contributions through intrinsic Flex measurement.** Establish the public
 measureElement regression first and share the bounded eligibility policy without

@@ -146,6 +146,11 @@ function createWasmFlexTextContent() {
         <Text style={{ flexBasis: basis, flexShrink: 1, wrap: true, font: "20px monospace", lineHeight: 24, fill: ink }}>{minimumWord}</Text>
         <Rectangle onClick={() => selected.set("auto minimum sibling")} style={{ width: 100, height: 40, minWidth: 0, flexShrink: 0, fill: "#426b61", cursor: "pointer" }} />
       </Flex>
+      <Text pointerEvents="none" style={{ left: 480, top: 278, font: "12px sans-serif", fill: "#475569" }}>Empty boxes: 80 + 80 → 50 + 50</Text>
+      <Flex style={{ left: 500, top: 300, width: 100, height: 40 }}>
+        <Rectangle onClick={() => selected.set("empty left")} style={{ width: 80, height: 40, fill: "#6e3e79", cursor: "pointer" }} />
+        <Rectangle onClick={() => selected.set("empty right")} style={{ width: 80, height: 40, fill: "#426b61", cursor: "pointer" }} />
+      </Flex>
       <Text pointerEvents="none" style={{ left: 28, top: 348, font: "12px sans-serif", fill: "#475569" }}>Explicit minWidth: 0 lets the box shrink. Visible text can overflow its box.</Text>
       <Rectangle pointerEvents="none" style={{ left: 28, top: 388, width: minimumRowWidth, height: 48, stroke: "#a63758", strokeWidth: 1 }} />
       <Flex style={{ left: 28, top: 390, width: minimumRowWidth, height: 44, alignItems: "flex-start" }}>

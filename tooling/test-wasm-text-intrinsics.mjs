@@ -33,6 +33,9 @@ try {
   assert.equal(painted.allocationItemVisits, frozen.allocationItemVisits);
   assert.ok(painted.allocationCacheHits > frozen.allocationCacheHits);
   await click(500, 40); // Minimum comparison.
+  await click(548, 320); await selected('empty left');
+  await click(552, 320); await selected('empty right');
+  await click(598, 320); await selected('empty right');
   await click(500, 110); // Natural basis.
   assert.match(await frame.locator('pre').innerText(), /basis: auto/);
   await click(205, 290); await selected('auto minimum sibling');
