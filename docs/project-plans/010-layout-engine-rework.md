@@ -155,12 +155,28 @@ scenario-discovery checks passed. Node 26.9.0 / installed pnpm 11.21.0 dependenc
 Playwright Chromium; no aggregate trust or Node 24 claim. Runtime source and built
 previews were restarted after the cache fix at ports 5192 and 5193. Public example:
 `#/examples/layout/wasm-flex-text`, Compare Text minimum → Toggle auto basis →
-Change text / Toggle width. Browser/review receipts are pending for this final
-runtime version; group 10 consolidation follows this third slice before new work.
+Change text / Toggle width. Final source and built browser checks passed through
+`tooling/test-wasm-text-intrinsics.mjs`: frozen paint allocation reuse, natural
+basis/text changes, old-position misses/current-position hits, and zero
+nodes/arenas/measurement entries after disposal. Built provenance is 465 inputs,
+all from the private package dist. Logs are
+`/tmp/pibbl-group10-source-browser.log` and
+`/tmp/pibbl-group10-built-browser.log`. No page errors.
+
+### Consolidation 10 completed for delivery slices 28–30
+
+Separate delivery commits: 3ad6be75, 217d6ec5 and 98cc8bd7. The focused 86-test
+experimental run, normal 36-test lane, typecheck/lint, private build, JSDoc and
+scenario checks are recorded above; the final reproducible source/built browser
+probe closes the pending runtime receipt. No unchanged broad trust gate or extra
+reviewer was launched. Per the maintainer's latest instruction, continue through
+accepted work without per-slice feedback waits; the requested whole-codebase
+hypercritical architecture/performance review belongs at the end of all work.
+This consolidation does not turn the experimental subset into full feature
+completion or Yoga parity.
 
 **Exactly one selected next delivery slice: 31 — reusable intrinsic Card contract
-and prototype.** First complete bounded consolidation 10 for 28–30, including the
-final slice 30 browser/review receipts. Then present the proposed
+and prototype.** Consolidation 10 is complete. Present the proposed
 `defineLayoutComponent(describe)` signature and one real Card composition before
 core implementation. The proposal's pure callback can expose a known subtree for
 intrinsic preparation without speculatively running an ordinary component.
@@ -1401,10 +1417,9 @@ Group9 has two deliveries; consolidate after the next closely related slice.
 
 ## [NEXT] Reusable intrinsic Card contract and prototype (slice 31)
 
-Prerequisite: consolidate group 10 (28–30) using the final slice 30 browser and
-focused-review receipts plus the already recorded proportional checks. Do not
-repeat broad unchanged suites or launch another reviewer. No new capability starts
-before this bounded consolidation is recorded.
+Consolidation 10 (28–30) is complete with final source/built browser evidence.
+Do not repeat broad unchanged suites or launch another reviewer. The requested
+whole-codebase review remains an end-of-work step.
 
 The next material design boundary is the proposal's opt-in structural operation:
 
