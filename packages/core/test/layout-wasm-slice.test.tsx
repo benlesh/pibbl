@@ -1163,11 +1163,27 @@ it.runIf(experimentalLayout)('places numeric cross margins and rejects unsupport
     const invalid = createElement(Rectangle, { style: { width: 20, height: 20, minWidth: 0, margin } as any });
     expect(() => layoutFlex({ x: 0, y: 0, width: 100, height: 30 }, [invalid], {}, measurement)).toThrow(/margin.*finite number/);
   }
-  expect(() => layoutFlex({ x: 0, y: 0, width: 100, height: 100 }, [child()], { flexWrap: 'wrap' }, measurement)).toThrow(/margin.*nowrap/);
 });
 
 it.runIf(experimentalLayout)('rejects physical margins under other layout families rather than ignoring them', async () => {
   const { prepareDirectChildStyle } = await import('../src/lib/layout/absolute');
   const child = createElement(Rectangle, { style: { width: 20, height: 20, marginLeft: 5 } });
-  expect(() => prepareDirectChildStyle(child)).toThrow(/margins.*nowrap Flex/);
+  expect(() => prepareDirectChildStyle(child)).toThrow(/margins.*experimental Flex/);
+});
+
+it.runIf(experimentalLayout)('forms wrapped margin lines and preserves source paint/hit order under negative overlap', async () => {
+  const positive = () => createElement(Rectangle, { style: { width: 80, height: 20, minWidth: 0, margin: 5 } });
+  expect(layoutFlex({ x: 0, y: 0, width: 180, height: 60 }, [positive(), positive(), positive()], { flexWrap: 'wrap', alignContent: 'flex-start' }, measurement))
+    .toEqual([{ x: 5, y: 5, width: 80, height: 20 }, { x: 95, y: 5, width: 80, height: 20 }, { x: 5, y: 35, width: 80, height: 20 }]);
+  const column = () => createElement(Rectangle, { style: { width: 20, height: 80, minHeight: 0, margin: 5 } });
+  expect(layoutFlex({ x: 0, y: 0, width: 60, height: 180 }, [column(), column(), column()], { flexDirection: 'column', flexWrap: 'wrap', alignContent: 'flex-start' }, measurement))
+    .toEqual([{ x: 5, y: 5, width: 20, height: 80 }, { x: 5, y: 95, width: 20, height: 80 }, { x: 35, y: 5, width: 20, height: 80 }]);
+  const canvas = document.createElement('canvas'); canvas.width = 180; canvas.height = 60; document.body.append(canvas);
+  const hits: string[] = [];
+  const child = (name: string, fill: string) => createElement(Rectangle, { style: { width: 80, height: 20, minWidth: 0, marginRight: -10, marginBottom: -5, fill }, onClick: () => hits.push(name) });
+  const root = createElement(Flex, { style: { width: 140, height: 50, flexWrap: 'wrap', alignContent: 'flex-start', alignItems: 'flex-start' }, children: [child('A', 'red'), child('B', 'blue'), child('C', 'green')] });
+  const controller = pibbl(canvas, root); controllers.push(controller); await nextFrame();
+  expect([...canvas.getContext('2d')!.getImageData(75, 5, 1, 1).data]).toEqual([0, 0, 255, 255]);
+  expect([...canvas.getContext('2d')!.getImageData(5, 17, 1, 1).data]).toEqual([0, 128, 0, 255]);
+  clickCanvas(canvas, 75, 5); clickCanvas(canvas, 5, 17); expect(hits).toEqual(['B', 'C']);
 });

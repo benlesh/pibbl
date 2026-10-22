@@ -117,7 +117,7 @@ export interface ResolvedBoxStyle {
  * @see {@link PathStyle}
  */
 export interface LayoutItemStyle extends PositioningStyle {
-  /** Uniform physical margin in logical Canvas units; finite negative values are allowed. Specific edges override this value. Consumed by experimental nowrap Flex only. See {@link LayoutItemStyle}. */
+  /** Uniform physical margin in logical Canvas units; finite negative values are allowed. Specific edges override this value. Consumed by experimental Flex only. See {@link LayoutItemStyle}. */
   margin?: number;
   /** Physical top margin overriding margin. See {@link LayoutItemStyle}. */
   marginTop?: number;

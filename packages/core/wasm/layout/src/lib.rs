@@ -154,8 +154,10 @@ pub extern "C" fn place_wrap_cross(size: f64, gap: f64, alignment: u32) -> u32 {
         for &(start, end) in lines.iter() {
             let mut cross = 0.0_f64;
             for n in records[start*STRIDE..end*STRIDE].chunks_exact(STRIDE) {
-                if !n[0].is_finite() || n[0] < 0.0 { return 1; }
-                cross = cross.max(n[0]);
+                if !n[0].is_finite() || n[0] < 0.0 || !n[8].is_finite() || !n[9].is_finite() { return 1; }
+                let outer = n[0] + n[8] + n[9];
+                if !outer.is_finite() { return 1; }
+                cross = cross.max(outer);
             }
             occupied += cross; sizes.push(cross);
         }

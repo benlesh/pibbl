@@ -276,7 +276,7 @@ export function prepareDirectChildStyle(
       values.marginRight !== undefined ? 'marginRight' : values.marginBottom !== undefined ? 'marginBottom' :
       values.marginLeft !== undefined ? 'marginLeft' : undefined;
     if (property) throw layoutDiagnostic({ component: child.type.name, algorithm: 'layout', property,
-      value: values[property], reason: 'physical margins currently require experimental nowrap Flex' });
+      value: values[property], reason: 'physical margins currently require experimental Flex' });
   }
   const filter = extractSystemFilter(style);
   const normalized = definition?.normalizeStyle ?

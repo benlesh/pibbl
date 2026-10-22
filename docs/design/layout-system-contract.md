@@ -198,7 +198,7 @@ existing visible/clip container behavior applies. This follows Text's existing
 literal-space wrapping, not CSS/Unicode line breaking. Custom fonts, responsive
 queries, percentage width/maxWidth, other fitting modes, columns and wrapped Flex
 lines keep the explicit-minimum diagnostic. Intrinsic Flex measurement is unchanged.
-The experimental nowrap allocator also supports direct-item numeric physical
+The experimental allocator also supports direct-item numeric physical
 `margin`, `marginTop`, `marginRight`, `marginBottom` and `marginLeft`. Values are
 finite logical Canvas units, default zero; a specific edge overrides the uniform
 `margin`. Negative margins may overlap siblings or protrude beyond the parent;
@@ -207,8 +207,9 @@ Margins participate in main free-space distribution and cross alignment outside
 padding and the border box. `useLayoutBox`, paint and hit bounds cover only the
 shifted border box. Margin-only space is not interactive. Auto intrinsic dimensions
 clamp the final signed accumulation at zero, without clamping individual margins.
-Margin receiver inputs are layout roles. Wrapped Flex and other layout families
-reject these fields in this slice; normal JavaScript Flex retains its diagnostic.
+Margin receiver inputs are layout roles. Finite row/column wrapping includes
+margins in line formation and line cross extents, including negative overlap.
+Other layout families reject these fields; normal JavaScript Flex retains its diagnostic.
 Percentage, auto and logical margins are not yet supported.
 
 The shared private WASM records are ten f64 slots: nonnegative sizing/padding

@@ -284,7 +284,7 @@
       "id": "flex.margin",
       "target": "parity",
       "group": "box-and-direction",
-      "current": "experimental numeric physical margins on direct nowrap Flex items; finite negatives and specific-edge precedence; other layout families and normal JavaScript Flex reject",
+      "current": "experimental numeric physical margins on direct nowrap/wrapped row/column Flex items; finite negatives and specific-edge precedence; other families and normal JavaScript Flex reject",
       "status": "experimental",
       "unresolvedPolicy": "Numeric physical signatures are selected; percentages, logical edges and auto margins remain subsequent supported-matrix work.",
       "evidence": {
@@ -292,21 +292,24 @@
           "nowrap row/column numeric margins",
           "negative leading margin",
           "cross stretch and specific-edge precedence",
-          "final intrinsic auto dimension clamped after signed accumulation"
+          "final intrinsic auto dimension clamped after signed accumulation",
+          "wrapped row and column margin-box line extents",
+          "negative margin overlap within and between lines"
         ],
         "negative": [
           "percentage/auto/nonfinite/null rejection",
-          "wrapped and other layout families reject",
+          "other layout families reject",
           "normal JavaScript Flex diagnostic"
         ],
         "interaction": [
           "margin-only misses and shifted border hits",
           "margin signal classified layout input",
-          "source/built and installed artifact teardown"
+          "source/built and installed artifact teardown",
+          "wrapped margin source paint/hit order",
+          "public right-box wrap toggle moves target"
         ],
         "yogaCases": [],
         "missing": [
-          "wrapped margins",
           "percentage margins",
           "logical edges",
           "remaining overflow and opposing negative margin matrix"

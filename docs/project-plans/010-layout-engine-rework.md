@@ -409,10 +409,32 @@ Chromium; no Node24 trust or performance claim. Logs `/tmp/pibbl-slice38-*`.
 Hands-on ports5192/5193, wasm-flex-text, Compare Text minimum: lower-right margin
 row toggles5/-5 by clicking its left box. Margins preserve source paint order.
 
-**Exactly one selected next delivery slice: 39 — wrapped physical Flex margins.**
-The existing signed main-axis records already include margins in line formation;
-complete line cross-size accounting, remove the explicit wrapped diagnostic only
-after a public wrapped geometry/input regression passes. Consolidate37–39 afterward.
+### Slice 39 — physical margins in finite wrapped Flex
+
+The public wrapped regression failed at the explicit margin diagnostic before
+changes. Existing main records already include signed margins in line formation;
+WASM line cross extents now include the signed cross margins, check finite results
+and floor the resulting line extent at zero. Main allocation/placement and child
+border boxes keep the shared kernel contract. Wrapped intrinsic sizing remains
+unsupported; normal JavaScript and other layout families retain diagnostics.
+
+Fresh95 experimental tests pass, including positive wrapped row/column geometry
+and negative overlap within/between lines. Pixels and clicks prove later source
+items remain topmost. Normal42pass/5skip; root typecheck, scoped lint and matching
+57438-byte artifact/private package build pass. Actual source/built Studio probes
+pass right-box wrap/nowrap toggles and the moved target, previous negative-margin,
+Text/percentage/frozen proofs, no errors and cleanup0/0/0. Built466inputs. The
+five pinned migration cases also pass on this combined built artifact. Logs
+`/tmp/pibbl-slice39-*` and `/tmp/pibbl-consolidation13-yoga-browser.log`.
+Node26.9.0/pnpm11.21.0 deps/Chromium; pinned Rust1.99.0 isolated under/tmp.
+Same ports5192/5193 and wasm-flex-text route, Compare Text minimum, lower-right
+margin row: left toggles signed margin, right toggles wrapping then moves below.
+
+**Exactly one selected next delivery slice: 40 — reverse main-axis Flex placement.**
+Present the exact direction union and source-order semantics, then establish public
+row-reverse/column-reverse placement with signed margins, wrapping and hit behavior.
+Use the same WASM placement records; no array reversal or second solver.
+Consolidate37–39 before production changes for40.
 
 ### Consolidation 12 completed for delivery slices 34–36
 
@@ -1699,13 +1721,13 @@ three pinned Yoga cases, and keeps unaccepted API signatures and missing release
 gates explicit. It is support work, not an additional delivered capability slice.
 Group9 has two deliveries; consolidate after the next closely related slice.
 
-## [NEXT] Wrapped physical Flex margins (slice 39)
+## [NEXT] Reverse main-axis Flex placement (slice 40)
 
-Complete the same numeric physical margin contract in existing finite row/column
-wrapping. Shared WASM line boundaries, cross extents and offsets must include
-signed margins while publishing only border boxes. Keep intrinsic wrapped sizing,
-percentage/auto/logical margins and normal JavaScript diagnostics conservative.
-Start with a public wrapped geometry/input failure; consolidate37–39 on delivery.
+Complete row-reverse and column-reverse in the experimental shared allocator and
+placement path. Source traversal, identity, paint/event priority and tab order stay
+unchanged. Resolve physical leading/trailing margins in the selected main direction,
+position every border box from the correct edge, and prove wrapped/nowrap geometry.
+Wrap-reverse and RTL remain visible in the same existing capability entry.
 
 Slice 26 delivery (2026-10-21): completed the in-progress private role foundation
 before any loading migration. Existing receiver edges carry staged masks; successful

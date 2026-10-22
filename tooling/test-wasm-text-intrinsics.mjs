@@ -42,6 +42,9 @@ try {
   await click(500, 400); await selected('margin left'); // Shifted border now hits.
   assert.match(await frame.locator('pre').innerText(), /margin left: 5/);
   await click(560, 400); await selected('margin right');
+  assert.match(await frame.locator('pre').innerText(), /margin wrap: wrap/);
+  await click(510, 420); await selected('margin right');
+  assert.match(await frame.locator('pre').innerText(), /margin wrap: nowrap/);
   await click(500, 110); // Natural basis.
   assert.match(await frame.locator('pre').innerText(), /basis: auto/);
   await click(205, 290); await selected('auto minimum sibling');

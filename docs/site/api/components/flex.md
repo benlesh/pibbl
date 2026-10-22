@@ -30,11 +30,10 @@ scrolling are outside the normal supported subset.
 Explore the [Flex live example](#/examples/layout/flex).
 
 The experimental `layout-wasm` Studio build additionally supports finite numeric
-physical margins in nowrap rows and columns. `margin` sets all four edges;
+physical margins in finite rows and columns, with nowrap or wrap. `margin` sets all four edges;
 `marginTop`, `marginRight`, `marginBottom` and `marginLeft` override individual
 edges. Values use logical Canvas units and may be negative. Margins stay outside
-paint and hit bounds. Normal JavaScript Flex, wrapped experimental Flex and other
-layout families currently reject these fields. Percentage, auto and logical
+paint and hit bounds. Normal JavaScript Flex and other layout families currently reject these fields. Percentage, auto and logical
 margins remain unsupported.
 
 ```tsx
@@ -46,4 +45,4 @@ margins remain unsupported.
 
 In that experimental build each painted box is 40 units wide, with a 5-unit
 outer margin on each side. See the [experimental public example](#/examples/layout/wasm-flex-text)
-and choose Compare Text minimum; the lower right boxes toggle a negative margin.
+and choose Compare Text minimum; the lower right boxes toggle a negative margin and wrapping.

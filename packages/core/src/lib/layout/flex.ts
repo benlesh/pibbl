@@ -568,7 +568,6 @@ function resolveFlexPlacements(
     const marginMainAfter = row ? marginRight : marginBottom;
     const marginCrossBefore = row ? marginTop : marginLeft;
     const marginCrossAfter = row ? marginBottom : marginRight;
-    if (options.flexWrap !== 'nowrap' && hasPhysicalMargin(normalized)) throw childDiagnostic(child, 'margin', normalized.margin, container, 'physical margins currently require nowrap Flex');
     const grow = nonnegativeFactor(normalized.flexGrow ?? 0, 'flexGrow', child, container);
     const shrink = nonnegativeFactor(
       normalized.flexShrink ?? 1,
