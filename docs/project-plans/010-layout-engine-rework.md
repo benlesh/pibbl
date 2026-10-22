@@ -308,6 +308,13 @@ fixture discovery passes. Full catalog validation currently fails on the earlier
 this is recorded as an outstanding catalog gate, not a successful aggregate check.
 Environment remains Node 26.9.0 / pnpm 11.21.0 dependencies / Chromium.
 
+Catalog integration follow-up: normal inline style objects are frozen immediately
+before their props/descriptors, preserving the same immutable authoring contract
+without relaxing the catalog validator. The generated scenario index was refreshed.
+Catalog validation passes for 166 lessons, 12 snapshots and 33 labs. Seven focused
+public paint-reuse/Text-basis checks pass; root typecheck passes.
+Logs `/tmp/pibbl-consolidation11-{catalog-fix,frozen-fix}.txt`.
+
 The capability manifest records only bounded nested Card evidence. General graph,
 transactional publication, provider/intrinsic rules, Flex/Grid coverage, pinned
 Yoga conversion and release/performance gates remain open. At consolidation time, the selected next

@@ -127,13 +127,16 @@ function createWasmFlexTextContent() {
   }
   // Existing Object.freeze authoring opts this small static subtree into the
   // experimental proof. The ordinary paragraphs keep the conservative path.
-  const frozenA = <Text key="frozen-A" onClick={() => selected.set("frozen A")} style={Object.freeze({ flexBasis: 270, minWidth: 0, flexGrow: 1, flexShrink: 1, wrap: true, font: "16px sans-serif", lineHeight: 24, fill: ink, cursor: "pointer" })}>{paragraph}</Text>;
-  const frozenB = <Text key="frozen-B" onClick={() => selected.set("frozen B")} style={Object.freeze({ flexBasis: 270, minWidth: 0, flexGrow: 1, flexShrink: 1, wrap: true, font: "16px sans-serif", lineHeight: 24, fill: ink, cursor: "pointer" })}>{secondaryParagraph}</Text>;
-  Object.freeze(frozenA.props); Object.freeze(frozenA);
-  Object.freeze(frozenB.props); Object.freeze(frozenB);
+  const frozenA = <Text key="frozen-A" onClick={() => selected.set("frozen A")} style={{ flexBasis: 270, minWidth: 0, flexGrow: 1, flexShrink: 1, wrap: true, font: "16px sans-serif", lineHeight: 24, fill: ink, cursor: "pointer" }}>{paragraph}</Text>;
+  const frozenB = <Text key="frozen-B" onClick={() => selected.set("frozen B")} style={{ flexBasis: 270, minWidth: 0, flexGrow: 1, flexShrink: 1, wrap: true, font: "16px sans-serif", lineHeight: 24, fill: ink, cursor: "pointer" }}>{secondaryParagraph}</Text>;
+  const frozenAStyle = (frozenA.props as Readonly<{ style: object }>).style;
+  const frozenBStyle = (frozenB.props as Readonly<{ style: object }>).style;
+  Object.freeze(frozenAStyle); Object.freeze(frozenA.props); Object.freeze(frozenA);
+  Object.freeze(frozenBStyle); Object.freeze(frozenB.props); Object.freeze(frozenB);
   const frozenChildren = Object.freeze([frozenA, frozenB]);
-  const frozenPanel = <Flex style={Object.freeze({ left: 28, top: 260, width, height: 200, gap: 20, alignItems: "flex-start" })}>{frozenChildren}</Flex>;
-  Object.freeze(frozenPanel.props); Object.freeze(frozenPanel);
+  const frozenPanel = <Flex style={{ left: 28, top: 260, width, height: 200, gap: 20, alignItems: "flex-start" }}>{frozenChildren}</Flex>;
+  const frozenPanelStyle = (frozenPanel.props as Readonly<{ style: object }>).style;
+  Object.freeze(frozenPanelStyle); Object.freeze(frozenPanel.props); Object.freeze(frozenPanel);
   function MinimumComparison() {
     const basis = naturalBasis.get() ? "auto" : 200;
     return <>
