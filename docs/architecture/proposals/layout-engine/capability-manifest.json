@@ -598,7 +598,8 @@
           "keyed removal/disposal",
           "one mutable instance per root including managed Layers",
           "isolated generational native region handles",
-          "settled Absolute-to-Flex and nested Flex plans reused during traversal"
+          "settled Absolute-to-Flex and nested Flex plans reused during traversal",
+          "direct and opaque-boundary Flex entries and pure described Flex roots reuse prepared ownership"
         ],
         "negative": [
           "failed known-layout preparation releases provisional regions",
@@ -621,34 +622,38 @@
       "id": "geometry.transactional-publication",
       "target": "preserve",
       "group": "reactivity-and-publication",
-      "current": "bounded known Flex geometry preflight and transaction-local plans; general publication remains incomplete",
+      "current": "bounded known Flex preparation and finite root-wide HTML projection preflight; general matching publication remains incomplete",
       "status": "experimental",
       "evidence": {
         "positive": [
           "settled known sibling and nested Flex plans before opaque descendant evaluation",
-          "normal traversal adopts prepared regions without another allocation pass"
+          "normal traversal adopts prepared regions without another allocation pass",
+          "all pending HTML numeric projection work settles before host DOM mutation or callbacks"
         ],
         "negative": [
           "later known Flex factor/sizing failures prevent earlier opaque evaluation",
-          "failed preparation and root disposal release owned regions"
+          "failed preparation and root disposal release owned regions",
+          "later finite-transform border overflow prevents earlier HTML updater and clears failed HTML"
         ],
         "interaction": [
           "source/built explicit recovery geometry and targets",
-          "independent Canvas root remains usable during known-layout failure"
+          "independent Canvas root remains usable during known-layout failure",
+          "source/built HTML recovery restores native activation while independent Canvas updates"
         ],
         "yogaCases": [],
         "missing": [
           "general staged geometry across all layout families",
-          "nonthrowing matching hit/focus/HTML adoption",
-          "fallible publication preflight beyond known Flex",
-          "direct and opaque-boundary Flex entry preparation"
+          "nonthrowing matching Canvas/hit/focus/HTML adoption",
+          "fallible publication preflight beyond bounded Flex and HTML numeric geometry"
         ]
       },
       "evidenceRefs": [
         "packages/core/test/layout-wasm-slice.test.tsx",
         "packages/scenarios/src/layout-preflight-lab.tsx",
         "tooling/layout-preflight-lab.mjs",
-        "docs/project-plans/010-layout-engine-rework.md"
+        "docs/project-plans/010-layout-engine-rework.md",
+        "packages/core/test/html-box-layers.test.tsx",
+        "docs/design/html-box-contract.md"
       ]
     },
     {

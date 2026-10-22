@@ -2,14 +2,14 @@
 
 ## Current checkpoint and single next slice — 2026-10-22
 
-Latest delivery is slice48 (finite HTML projection preparation). Slice47 `9a7b1b0a`:
-pure layout-description wrappers with a known Flex
-root participate in preparation while preserving wrapper identity and distinct root
-receiver ownership. Slice46 is `242cba11`; consolidation43–45 is `269f28a8`.
-Each slice is committed separately. The fixed33-capability/seven-gate denominator
-is unchanged; all seven gates remain open. The next prerequisite is selected in the single NEXT heading below. Source5192/built5193,
-`#/testing/layout-preflight`: Use described layout, Fail later sibling or sizing,
-Recover, then click the red box's right edge.
+Latest delivery is slice48 `cb863bc2` (finite HTML projection preparation).
+Slice47 `9a7b1b0a` prepares pure described Flex roots; slice46 `242cba11` handles
+direct and opaque-boundary Flex entries. Every slice has its own commit.
+Consolidation46–48 is recorded below. The fixed33-capability/seven-gate denominator
+is unchanged; all seven gates remain open. The single next slice is49, known Layer
+to direct Flex preparation/adoption. Source5192/built5193,
+`#/testing/layout-preflight`: Fail HTML projection, Recover HTML, then Native HTML
+host. Earlier layout failure/recovery controls remain available.
 
 The loading/named-component integration is ready for source feedback on branch
 `codex/layout-integration-20261022`. It combines the saved loading checkpoint with
@@ -712,6 +712,34 @@ recovered native button activation and pagehide cleanup. Packed228installed-inpu
 Bundler/NodeNext and structural lifecycle pass; matching59181-byte kernel unchanged.
 Focused read-only review found no material findings. Logs `/tmp/pibbl-slice48-*`.
 Node26.9.0/pnpm11.21.0deps/Chromium; no Node24/full trust claim.
+
+## [NEXT] Known Layer-to-Flex preparation and adoption (slice 49)
+
+Preflight a managed Layer's direct known Flex root from its settled allocation,
+before earlier opaque sibling evaluation and before child bitmap work. Reuse the
+root transaction and shared-root native region ownership; carry the exact prepared
+descriptor through the private Layer fragment into child rendering. Do not create
+a child instance/OffscreenCanvas during preflight or evaluate arbitrary components.
+First public RED: later Layer Flex factor failure prevents earlier opaque sibling
+and child probe evaluation. Recovery must prove Layer geometry/pixels/targets and
+zero resource ownership after disposal. Preserve Layer cache behavior and identity.
+This is a bounded allocation-to-raster prerequisite, not a complete prepared graph.
+
+### Consolidation 16 completed for delivery slices 46–48
+
+Separate deliveries46 `242cba11`,47 `9a7b1b0a`,48 `cb863bc2`. One bounded combined
+Chromium run passes146tests/1normal-onlyskip across prepared Flex, Absolute, normal
+Flex, structural Card and HTML geometry/focus/ownership. Types/lint and packed228
+installed-input Bundler/NodeNext/lifecycle checks pass. Source/built HTML Studio
+replays each pass with225public inputs; existing described/direct/nested source
+controls also pass recovery, targeting and shared cleanup0/0/0/0. Logs
+`/tmp/pibbl-consolidation16-*` and `/tmp/pibbl-slice48-*`. Kernel59181bytes unchanged.
+Node26.9.0/pnpm11.21.0deps/Chromium; no Node24/full trust claim.
+
+The ledger credits described/direct Flex preparation and bounded root-wide HTML
+numeric preflight. Complete all-family graph/topology/minimal visits and matching
+Canvas/event/focus/HTML adoption remain missing. All seven gates stay open; five
+pinned Yoga cases remain the only classified oracle cases. No baseline changes.
 
 ### Consolidation 15 completed for delivery slices 43–45
 
