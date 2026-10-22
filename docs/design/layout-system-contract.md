@@ -294,28 +294,31 @@ internals are discovered only from that execution. Already-prepared Flex regions
 consume their plans without preparing descendants again. This does not preflight
 unknown siblings outside the boundary or roll back earlier Canvas pixels.
 
-A known managed Layer occurrence can prepare its direct built-in Flex roots at
+A known managed Layer occurrence can prepare direct registered Flex, Grid, Flow,
+Overlay and Absolute roots at
 the settled Layer allocation before earlier sibling traversal. Preparation creates
 no child instance or bitmap surface. The exact descriptor and receiver token pass
 through the Layer's private fragment; child rendering adopts the same transaction
 plan and shared-root native region. Authored child offsets remain unapplied until
 normal child rendering. A clean Layer retains its existing descendant ownership
 without invoking opaque children again. Removal releases its prepared descendants;
-restoration creates fresh regions. Arbitrary Layer descendants remain opaque.
+restoration creates fresh regions. Unkeyed occurrences are tracked by root type.
+Ordinary components and unproven wrapper entries remain opaque.
 
 A Grid entry settles its existing explicit tracks and cell placements before
 preparing direct known Flex roots from those exact placed clones, receiver tokens
 and content allocations. All placements prepare before opaque cell traversal.
-Rendering consumes the same Flex plan/region; Grid does not run another placement
-pass or gain a native Grid solver. This does not discover Grid internals across
-an earlier outer opaque boundary or add Grid auto-placement/intrinsic behavior.
+Rendering consumes the same Flex plan/region. Grid tracks and explicit cell areas
+use the native kernel described above; auto-placement/intrinsic behavior remains
+outside this bounded subset.
 
 A known Grid root also participates in outer preparation. Under its receiver,
 Grid resolves the existing native track/cell plan, settles its child descriptors,
 and prepares known descendants before earlier outer opaque siblings. Rendering
 claims the same native region and placed plan once, without another Grid pass.
 Shared prepared plans carry common geometry; only Flex plans carry Flex cache
-revision metadata. The direct-Flex Layer discovery boundary remains unchanged.
+revision metadata. Layer carries registered known-root plans across its raster
+boundary as described above.
 
 Flow likewise completes its existing measurement/sequential/wrap placement pass
 before preparing direct known Flex roots. It shares Grid's placed-clone handoff,

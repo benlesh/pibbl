@@ -1,5 +1,4 @@
-import { Flex } from '../layout/flex.js';
-import { registerKnownLayoutPreflight, preflightKnownLayout, attachPreparedLayoutSlot, stagePreparedBoundaryChildren, takePreparedBoundaryChildren, retainPreparedBoundarySubtree } from '../layout/prepared-root.js';
+import { isKnownLayoutType, registerKnownLayoutPreflight, preflightKnownLayout, attachPreparedLayoutSlot, stagePreparedBoundaryChildren, takePreparedBoundaryChildren, retainPreparedBoundarySubtree } from '../layout/prepared-root.js';
 import { prepareLayoutChildren, prepareDirectChildStyle, resolveContainerBox } from '../layout/absolute.js';
 import { setPreNormalizedStyle } from '../style/resolve-dispatch.js';
 import { getChildPrimitiveReceiverToken } from '../element/metadata.js';
@@ -247,16 +246,22 @@ if (experimentalLayout) registerKnownLayoutPreflight(Layer, (element, _style, co
   try {
     const children = prepareLayoutChildren(element.props.children, 'Layer');
     const placed = children.slice();
-    let occurrence = 0;
+    let occurrences: Map<Function, number> | undefined;
     for (let index = 0; index < children.length; index++) {
       const child = children[index];
       // Layer is a raster boundary, not a layout algorithm for arbitrary children.
-      if (child.type !== Flex) continue;
+      if (!isKnownLayoutType(child.type)) continue;
+      let occurrence = 0;
+      if (child.key === undefined) {
+        occurrences ??= new Map(); occurrence = occurrences.get(child.type) ?? 0;
+        occurrences.set(child.type, occurrence + 1);
+      }
+      const component = child.type.name || 'Layout';
       const token = getChildPrimitiveReceiverToken(GLOBAL_STATE.renderTransaction, receiver, index);
       const prepared = prepareDirectChildStyle(child, token, content, true);
       const style = preparedStyleValue(prepared);
-      const box = resolveContainerBox(style, { component: 'Flex', algorithm: 'render-dispatch', allocation: content, percentageBasis: content, constraints: { minWidth: 0, maxWidth: content.width, minHeight: 0, maxHeight: content.height } }, 'Flex', 'flex');
-      const nested = preflightKnownLayout(child, style, { x: 0, y: 0, width: box.contentBox.width, height: box.contentBox.height }, token, child.key === undefined ? occurrence++ : 0, slot);
+      const box = resolveContainerBox(style, { component, algorithm: 'render-dispatch', allocation: content, percentageBasis: content, constraints: { minWidth: 0, maxWidth: content.width, minHeight: 0, maxHeight: content.height } }, component, 'render-dispatch');
+      const nested = preflightKnownLayout(child, style, { x: 0, y: 0, width: box.contentBox.width, height: box.contentBox.height }, token, occurrence, slot);
       const clone = clonePibblElement(child);
       setPreNormalizedStyle(clone, style, child, token, preparedStyleQuery(prepared));
       attachPreparedLayoutSlot(clone, nested); placed[index] = clone;

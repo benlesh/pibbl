@@ -2,14 +2,15 @@
 
 ## Current checkpoint and single next slice — 2026-10-22
 
-Latest delivery is slice58 (prepared Absolute-root planning/adoption).
+Latest delivery is slice59 (known-family Layer child preparation).
+Slice58 is `edcf60a6` (prepared Absolute-root planning/adoption).
 Slice57 is `bf03d14f` (prepared Overlay-root planning/adoption).
 Slice56 is `cf2c7bc5` (prepared Flow-root planning/adoption).
 Slice55 is `1510efe3` (prepared Grid-root planning/adoption).
 Slice54 `773da7b9`,53 `aaa7ddcb`,52 `b5381e0d` are consolidated in `f322a709`.
 Every slice has its own commit. The fixed33-capability/seven-gate denominator is
-unchanged; all seven gates remain open. The single next slice is59, known-family Layer child preparation. Source5192/built5193, `#/testing/layout-preflight`:
-Use prepared Absolute root, Fail later sibling, Recover, then red right edge/blue cell.
+unchanged; all seven gates remain open. The single next slice is60, direct-entry Layer child preparation. Source5192/built5193, `#/testing/layout-preflight`:
+Use Layer Grid root, Fail later sibling, Recover, then red right edge/blue cell.
 Native Grid tracks/spans and Flow wrap controls remain available.
 
 The loading/named-component integration is ready for source feedback on branch
@@ -915,14 +916,32 @@ Logs `/tmp/pibbl-slice58-*`; Node26.9.0/pnpm11.21.0deps/Chromium, no Node24/full
 This is bounded known-root preparation, not arbitrary component pre-execution or
 matching root-wide Canvas/hit/focus/HTML transactional publication.
 
-## [NEXT] Known-family Layer child preparation (slice 59)
+### Slice 59 — known-family Layer child preparation
 
-Extend the existing direct-Flex Layer bridge to registered known structural roots.
-Use the same root transaction, receiver inputs, parent-owned slots and cached
-subtree retention across the child-instance raster boundary. Public RED must catch
-a later Layer→known-layout→Flex failure before earlier opaque siblings; preserve
-authored positions, clean Layer caches, recovery targets and exact teardown.
-No new public API or native ABI. Group20 is58–60, then bounded consolidation.
+Layer's existing bridge admits direct registered Grid/Flow/Overlay/Absolute roots
+alongside Flex, with per-type unkeyed identity. The original normalized descriptor
+and receiver snapshot cross the private fragment; authored offsets are applied only
+by normal rendering. Preparation still creates no child surface/instance and Layer
+adds no numeric arena. Ordinary functions and unproven wrapper entries stay opaque.
+
+Public RED reproduced earlier evaluations3instead of2 for Layer→Grid→Flex failure.
+Green matrix covers all four added families, positioned pixels/hits, clean bitmap
+reuse, removal/restoration and exact ownership. Focused141tests across three files
+pass; normal57tests pass. Types/lint clean; root inspection found no material issue.
+Source/built Studio `--layer-grid` each passes earlier-sibling failure isolation,
+recovery2Gridaxes/1cellbatch/3arenas, positioned blue hit and cleanup0/0/0/0 with
+225public inputs. Packed228installed-input Bundler/NodeNext/lifecycle pass.
+Kernel65282bytes unchanged. Logs `/tmp/pibbl-slice59-*`; Node26.9.0/pnpm11.21.0deps/
+Chromium, no Node24/full trust or atomic publication claim.
+
+## [NEXT] Direct-entry Layer child preparation (slice 60)
+
+Inspect and close the known-child preparation gap when Layer enters directly or
+through an opaque component instead of being preflighted by an outer known root.
+Use the existing transaction/boundary ownership, catch later known-child failures
+before earlier opaque children and child bitmap work, preserve cached descendants,
+and prove public recovery/teardown. No arbitrary component pre-execution, public
+API or native ABI change. Consolidate58–60 after delivery.
 
 ### Consolidation 19 completed for delivery slices 55–57
 
