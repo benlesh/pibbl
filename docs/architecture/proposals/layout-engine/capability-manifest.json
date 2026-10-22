@@ -582,7 +582,7 @@
       "id": "reactivity.incremental-layout",
       "target": "beyond",
       "group": "reactivity-and-publication",
-      "current": "root-owned shared WASM instance, isolated generational regions and bounded prepared Flex plans",
+      "current": "root-owned shared WASM instance, isolated generational regions, bounded prepared Flex plans and native Grid/Flow numeric kernels",
       "status": "experimental",
       "evidenceRefs": [
         "packages/core/test/layout-wasm-slice.test.tsx",
@@ -600,7 +600,8 @@
           "isolated generational native region handles",
           "settled Absolute-to-Flex and nested Flex plans reused during traversal",
           "direct and opaque-boundary Flex entries and pure described Flex roots reuse prepared ownership",
-          "known Layer direct Flex roots and Grid/Flow entry Flex placements carry exact receiver plans into traversal"
+          "known Layer direct Flex roots and Grid/Flow entry Flex placements carry exact receiver plans into traversal",
+          "mounted Grid tracks/cell areas and resolved Flow line/wrap placement use the existing root-owned arena protocol"
         ],
         "negative": [
           "failed known-layout preparation releases provisional regions",
@@ -709,7 +710,11 @@
       "status": "experimental",
       "evidenceRefs": ["packages/core/test/layout-wasm-slice.test.tsx"],
       "evidence": {
-        "positive": ["measurement cache", "receiver cleanup"],
+        "positive": [
+          "measurement cache",
+          "receiver cleanup",
+          "native Grid axis/cell and Flow item/options numeric snapshots reuse paint-only work; measured Text changes invalidate Flow placement"
+        ],
         "negative": [],
         "interaction": ["paint-only update"],
         "yogaCases": [],
@@ -739,15 +744,30 @@
       "id": "grid.explicit-placement",
       "target": "beyond",
       "group": "grid-beyond-yoga",
-      "current": "subset",
+      "current": "public explicit subset; experimental native numeric/percentage/fr tracks and batched explicit cell areas, with JS child measurement/alignment",
       "status": "partial",
       "evidence": {
-        "positive": ["existing Grid"],
-        "negative": [],
-        "interaction": [],
+        "positive": [
+          "existing Grid",
+          "native mixed tracks resize200\u2192260 with unchanged-axis reuse",
+          "native spanning areas170\u00d745\u2192230\u00d745 and one-pixel spans after huge leading tracks"
+        ],
+        "negative": [
+          "invalid/unresolved/stale native records rejected",
+          "WASM memory-growth result view refreshed before caching"
+        ],
+        "interaction": [
+          "source/built moved targets, paint-only numeric reuse and exact native teardown"
+        ],
         "yogaCases": [],
         "missing": ["spans", "intrinsic/fr/minmax tracks", "percentages"]
-      }
+      },
+      "evidenceRefs": [
+        "packages/core/test/layout-wasm-slice.test.tsx",
+        "packages/core/wasm/layout/src/lib.rs",
+        "tooling/layout-preflight-lab.mjs",
+        "docs/project-plans/010-layout-engine-rework.md"
+      ]
     },
     {
       "id": "grid.implicit-tracks-and-auto-placement",

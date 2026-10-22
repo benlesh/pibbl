@@ -2,7 +2,7 @@
 
 ## Current checkpoint and single next slice — 2026-10-22
 
-Latest delivery is slice54 (native Flow sequential/wrap placement).
+Latest delivery is slice54 `773da7b9` (native Flow sequential/wrap placement).
 Slice53 is `aaa7ddcb` (native explicit Grid cell areas).
 Slice52 is `b5381e0d` (native explicit Grid track resolution).
 Slice51 is `7ea95367` (Flow-entry known Flex preparation).
@@ -853,6 +853,32 @@ Flex factor failure prevents an earlier opaque Absolute sibling evaluation.
 Recovery proves Grid pixels/hits and no duplicate native plan/region. Reuse the
 root transaction and native solver; no new ABI/API, arbitrary component execution
 or general all-family graph claim. Consolidate55–57 after three deliveries.
+
+### Consolidation 18 completed for delivery slices 52–54
+
+Separate commits52 `b5381e0d`,53 `aaa7ddcb`,54 `773da7b9`. The native arena now
+resolves explicit Grid tracks/areas and measured Flow line/wrap placement. It keeps
+one root-owned instance, isolated generational storage, owned numeric-only caches
+and exact teardown. Forced memory-growth RED→green caught and fixed a detached
+track-result view before cached publication. No application API/scheduler change.
+
+One bounded combined Chromium run passes198tests/1normal-onlyskip across ten
+prepared/native layout, ABI and HTML ownership files. Native8tests pass; final
+compiler-produced binary65282bytes. Types/lint pass. Normal focused31pass/
+71experimental skips. Packed228installed-input Bundler/NodeNext/lifecycle pass.
+All native Grid tracks/spans and Flow source/built Studio proofs pass against this
+final artifact,225public inputs per lane, cache-work counts and cleanup0/0/0/0.
+Logs `/tmp/pibbl-consolidation18-*` and `/tmp/pibbl-slice52-*` through54.
+Node26.9.0/pnpm11.21.0deps/Chromium; no Node24/full trust/parity/performance claim.
+
+The ledger credits these native numeric subsets. Still missing: Grid child
+measurement/alignment adoption, native Absolute/Overlay, complete cross-family
+prepared root graph and batched topology/minimal visits, matching staged Canvas/
+hit/focus/HTML publication, the remaining33-capability semantics, classified Yoga
+matrix, standalone package/two migrations, performance and final trust/review.
+The seven-gate table in consolidation17 remains the explicit exit list; no gate
+closes, no capability denominator changes, and the pinned Yoga corpus stays5cases.
+Known Grid-root preflight/adoption is the single next prerequisite55.
 
 ### Consolidation 17 completed for delivery slices 49–51
 
