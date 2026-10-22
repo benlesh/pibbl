@@ -231,16 +231,21 @@
       "id": "flex.nested-intrinsic-containers",
       "target": "parity",
       "group": "measurement-and-intrinsic",
-      "current": "known built-in nowrap column/direct Text subset only",
+      "current": "known built-in nowrap column/direct Text plus single-root pure structural Cards at settled finite width",
       "status": "experimental",
       "evidenceRefs": [
         "packages/core/test/layout-wasm-slice.test.tsx",
-        "tooling/test-wasm-nested-intrinsic.mjs"
+        "tooling/test-wasm-nested-intrinsic.mjs",
+        "packages/core/test/layout-structural-card.test.tsx"
       ],
       "evidence": {
-        "positive": ["nested intrinsic Card scenario"],
+        "positive": [
+          "nested intrinsic Card scenario",
+          "single-root pure structural Card at settled finite width",
+          "nested finite pure Card column"
+        ],
         "negative": [
-          "opaque components and wrapped intrinsic containers unsupported"
+          "ordinary/opaque components, non-Flex prepared roots and wrapped intrinsic containers unsupported"
         ],
         "interaction": ["text width, keyed restore, moved footer target"],
         "yogaCases": [],

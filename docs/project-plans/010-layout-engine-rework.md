@@ -267,6 +267,33 @@ this does not establish a general prepared graph or arbitrary callback terminati
 minimum policy.** Present the bounded native policy before implementation, retain
 explicit minimum precedence, and establish a public shrink regression first.
 
+### Consolidation 11 completed for delivery slices 31–33
+
+Slices 31, 32 and 33 remain separate commits (`2ff1a34f`, `ff0a267a`,
+`84fec328`). The bounded preparation path shares the existing transaction cache,
+receiver tokens, measurement cycle guard and wrapper lifecycle; no parallel graph,
+scheduler or retained geometry system was introduced. Cycle-source metadata fixes
+clone identity rather than adding a second recursion mechanism. Focused review
+found no material issues; direct public regressions additionally established
+receiver provision ownership and shared-root cycle rejection.
+
+The unchanged combined checks are 85 experimental tests and 16 normal tests
+(5 experimental skips), typecheck, scoped lint, source/built structural browser
+receipts and cleanup. A fresh installed tarball structural run passes strict
+Bundler/NodeNext consumers, 227 installed dist inputs, zero sync external downloads,
+footer movement, both Card descriptions, keyed restore and exact teardown.
+`/tmp/pibbl-consolidation11-packed.txt` records its digest and result. Exact
+source/built/editor public export parity and public JSDoc checks pass. Source
+fixture discovery passes. Full catalog validation currently fails on the earlier
+`wasm-flex-text` frozen descriptor authoring rule (inline object props/styles);
+this is recorded as an outstanding catalog gate, not a successful aggregate check.
+Environment remains Node 26.9.0 / pnpm 11.21.0 dependencies / Chromium.
+
+The capability manifest records only bounded nested Card evidence. General graph,
+transactional publication, provider/intrinsic rules, Flex/Grid coverage, pinned
+Yoga conversion and release/performance gates remain open. Exactly one next
+slice remains 34 as selected above; no per-slice approval pause is required.
+
 Current acceptance gaps remain broader than loading: general automatic minimum and
 intrinsic sizing rules, structural component preparation, root-wide prepared graph
 and transactional geometry, remaining Flex semantics, Grid/other layout families,
