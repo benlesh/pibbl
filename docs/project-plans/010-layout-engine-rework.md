@@ -520,6 +520,28 @@ material issue. Logs `/tmp/pibbl-slice42-*`. Node26.9.0/pnpm11.21.0deps/Chromium
 no Node24 aggregate trust claim. Hands-on ports5192/5193, keyed-wrap and
 wasm-built-lifecycle routes. No complete prepared graph/publication claim.
 
+### Consolidation 14 completed for delivery slices 40–42
+
+Separate commits:40 `69fcb3a6`,41 `e868fafe`,42 `b56241f9`. Main-axis and
+cross-line reversal now use the shared kernel while preserving source traversal,
+identity, paint/hit priority and normal-lane diagnostics. Slice42 changes mutable
+ownership from per-region instances to root-owned instances with independent
+generational native regions; it does not merge their caches or line records.
+
+The fixed denominator remains33capabilities/seven release gates, all seven open.
+These deliveries strengthen flex-core, box/direction and reactivity foundations;
+none completes a gate. Five pinned Yoga fixtures remain the only classified oracle
+cases. Source/built geometry, hits, placement-only work and cleanup passed for the
+reverse controls; five native tests and the source/built managed-Layer lifecycle
+passed for shared ownership. Latest packed227-input consumer and strict Bundler/
+NodeNext checks pass. No changed screenshots/baselines or performance-parity claims.
+
+Node26.9.0 remains the local verification environment; Node24/full trust, full
+prepared graph/atomic publication, remaining measurement/Flex/Grid semantics,
+standalone package/default-engine migration, both full migration rehearsals and
+reproducible performance gates remain outstanding. Continue within that accepted
+scope; source/built ports5192/5193 remain available.
+
 ### Consolidation 13 completed for delivery slices 37–39
 
 Separate slice commits:37 `2106fcc9`,38 `cc11a8dd`,39 `fb83e2b8`. The pinned
