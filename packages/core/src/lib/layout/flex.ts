@@ -318,13 +318,22 @@ if (experimentalLayout) registerKnownLayoutPreflight(Flex, (element, style, cont
 /** Known descendants prepare only after this boundary's own allocation settles. */
 function prepareFlexDescendants(plan: Pick<PreparedLayoutPlan, 'children' | 'placements'>, parentSlot?: PreparedLayoutSlot): void {
   let flexOccurrence = 0;
+  let descriptionOccurrences: Map<Function, number> | undefined;
     for (let index = 0; index < plan.children.length; index++) {
       const child = plan.children[index];
-      if (child.type !== Flex) continue;
-      const occurrence = child.key === undefined ? flexOccurrence++ : 0;
+      if (child.type !== Flex && !isLayoutComponent(child.type)) continue;
+      let occurrence = 0;
+      if (child.key === undefined) {
+        if (child.type === Flex) occurrence = flexOccurrence++;
+        else {
+          descriptionOccurrences ??= new Map();
+          occurrence = descriptionOccurrences.get(child.type) ?? 0;
+          descriptionOccurrences.set(child.type, occurrence + 1);
+        }
+      }
       const placement = plan.placements[index];
       const prepared = peekPreNormalizedStyle(placement.element);
-      if (!prepared) throw new Error('Nested known Flex requires settled receiver inputs.');
+      if (!prepared) throw new Error('Known layout preparation requires settled receiver inputs.');
       const receiver = getPrimitiveReceiverToken(placement.element);
       const nested = preflightKnownLayout(child, prepared.style, { x: 0, y: 0, width: placement.usedWidth, height: placement.usedHeight }, receiver, occurrence, parentSlot);
       attachPreparedLayoutSlot(placement.element, nested);

@@ -1,4 +1,5 @@
-import { getElementMetadata, setElementMetadata } from '../element/metadata.js';
+import { isLayoutComponent, prepareLayoutComponent } from './define-layout-component.js';
+import { getElementMetadata, setElementMetadata, getPrimitiveReceiverToken } from '../element/metadata.js';
 import { LayoutRegion, adoptMountedLayoutRegion } from './wasm/region.js';
 import type { PibblComponentRefs, PibblInstance } from '../types.js';
 import { GLOBAL_STATE } from '../global-state.js';
@@ -15,9 +16,13 @@ const snapshots = new WeakMap<PibblRenderTransaction, WeakMap<object, { child: P
 /** Registers only known declarative input preparation, never component evaluation. */
 export function registerKnownLayoutPreflight(type: Function, preflight: Preflight): void { preflights.set(type, preflight); }
 export function preflightKnownLayout(element: PibblElement<any>, style: Readonly<SystemStyle>, content: Readonly<LayoutBox>, receiver?: object, occurrence = 0, parentSlot?: PreparedLayoutSlot): PreparedLayoutSlot | undefined {
-  const preflight = preflights.get(element.type);
   const parent = GLOBAL_STATE.componentRefs, owner = GLOBAL_STATE.currentPibblInstance;
-  if (!preflight || !receiver || !parent || !owner || !GLOBAL_STATE.renderTransaction) return;
+  if (!receiver || !parent || !owner || !GLOBAL_STATE.renderTransaction) return;
+  const root = isLayoutComponent(element.type) ? prepareLayoutComponent(element, { receiverToken: receiver }) : element;
+  const preflight = preflights.get(root.type);
+  if (!preflight) return;
+  const rootReceiver = root === element ? receiver : getPrimitiveReceiverToken(root);
+  if (!rootReceiver) throw new Error('A prepared layout description requires its own root receiver.');
   const transaction = GLOBAL_STATE.renderTransaction;
   let visiting = activeDescriptions.get(transaction);
   if (!visiting) { visiting = new Set(); activeDescriptions.set(transaction, visiting); }
@@ -35,16 +40,24 @@ export function preflightKnownLayout(element: PibblElement<any>, style: Readonly
   if (!entries) { entries = new Map(); types.set(element.type, entries); }
   const key = element.key === undefined ? `occurrence:${occurrence}` : `key:${element.key}`;
   let slot = entries.get(key);
+  if (slot && !slot.matchesRoot(root)) {
+    slot.dispose(); slot = undefined;
+    // Releasing the last old occurrence removes its type table.
+    types.set(element.type, entries);
+  }
   if (!slot) {
     const ownedEntries = entries, ownedTypes = types;
-    const created = new PreparedLayoutSlot(owner.interactionRoot ?? owner, () => {
-      if (ownedEntries.get(key) !== created) return;
-      ownedEntries.delete(key);
-      if (!ownedEntries.size) ownedTypes.delete(element.type);
+    const created = new PreparedLayoutSlot(owner.interactionRoot ?? owner, {
+      rootType: root.type, rootKey: root.key,
+      release: () => {
+        if (ownedEntries.get(key) !== created) return;
+        ownedEntries.delete(key);
+        if (!ownedEntries.size) ownedTypes.delete(element.type);
+      },
     });
     slot = created; entries.set(key, slot);
   }
-  preflight(element, style, content, receiver, slot);
+  preflight(root, style, content, rootReceiver, slot);
   return slot;
   } finally { visiting.delete(source); }
 }
@@ -66,7 +79,13 @@ export class PreparedLayoutSlot {
     for (const entries of this.children.values()) for (const child of entries.values()) child.dispose();
     this.children.clear();
   }
-  constructor(private readonly owner: PibblInstance, private readonly release: () => void) {}
+  private readonly rootType: Function;
+  private readonly rootKey: string | undefined;
+  private readonly release: () => void;
+  constructor(private readonly owner: PibblInstance, options: { rootType: Function; rootKey?: string; release: () => void }) {
+    this.rootType = options.rootType; this.rootKey = options.rootKey; this.release = options.release;
+  }
+  matchesRoot(root: PibblElement<any>): boolean { return this.rootType === root.type && this.rootKey === root.key; }
   acquire(): LayoutRegion { return this.region ??= new LayoutRegion(this.owner); }
   dispose(): void { const region = this.region; this.region = undefined; try { this.disposeChildren(); region?.dispose(); } finally { this.release(); } }
   claim(region: LayoutRegion): void {

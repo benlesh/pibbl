@@ -1503,3 +1503,48 @@ it.runIf(experimentalLayout).each([false, true])('prepares a direct or opaque-bo
     expect(outerCalls).toBe(opaque ? 4 : 0); expect(outerWidths.every(value => value === 220)).toBe(true);
   } finally { window.removeEventListener('error', prevent); }
 });
+
+it.runIf(experimentalLayout)('prepares a described Flex root before earlier opaque siblings with one description per transaction', async () => {
+  const { defineLayoutComponent } = await import('@pibbl/core');
+  const width = signal(180), grow = signal(0); let evaluations = 0, descriptions = 0, hits = 0;
+  function Probe(_props: { style: Record<string, unknown> }) { evaluations++; const box = useLayoutBox(); return createElement(Rectangle, { style: { width: box.width, height: 20, fill: 'red' }, onClick: () => hits++ }); }
+  const Card = defineLayoutComponent((props: { style: import('@pibbl/core').FlexStyle; grow: typeof grow }) => {
+    descriptions++;
+    return createElement(Flex, { style: props.style, children: createElement(Rectangle, { style: { width: 80, height: 20, minWidth: 0, flexGrow: props.grow, fill: 'blue' } }) });
+  });
+  const scene = createElement(Flex, { style: { width, height: 20 }, children: [
+    createElement(Probe, { style: { width: 20, height: 20, minWidth: 0, flexGrow: 1 } }),
+    createElement(Card, { key: 'card', style: { width: 80, height: 20, minWidth: 0, flexShrink: 0 }, grow }),
+  ] });
+  const canvas = document.createElement('canvas'); canvas.width = 220; canvas.height = 30; document.body.append(canvas);
+  const errors: unknown[] = []; const prevent = (event: ErrorEvent) => { errors.push(event.error); event.preventDefault(); }; window.addEventListener('error', prevent);
+  try {
+    const controller = pibbl(canvas, scene); controllers.push(controller); await nextFrame(); expect([evaluations, descriptions]).toEqual([1, 1]);
+    const mounted = snapshotWasmLayoutDiagnostics(); width.set(190); await nextFrame(); expect([evaluations, descriptions]).toEqual([2, 2]);
+    expect(snapshotWasmLayoutDiagnostics().nodeCreates).toBe(mounted.nodeCreates);
+    width.set(200); grow.set(-1); await nextFrame();
+    expect(errors.some(error => error instanceof Error && error.message.includes('flexGrow received -1'))).toBe(true);
+    expect([evaluations, descriptions]).toEqual([2, 3]); clickCanvas(canvas, 110, 10); expect(hits).toBe(0);
+    grow.set(0); pibbl(canvas, scene); await nextFrame(); expect([evaluations, descriptions]).toEqual([3, 4]);
+    expect([...canvas.getContext('2d')!.getImageData(110, 10, 1, 1).data]).toEqual([255, 0, 0, 255]);
+    clickCanvas(canvas, 110, 10); expect(hits).toBe(1);
+  } finally { window.removeEventListener('error', prevent); }
+});
+
+it.runIf(experimentalLayout)('replaces a prepared described root region when its own key changes', async () => {
+  const { defineLayoutComponent, useReaction } = await import('@pibbl/core');
+  const rootKey = signal('first'); let mounts = 0, cleanups = 0;
+  function Owned(_props: { style: Record<string, unknown> }) {
+    useConst(() => ++mounts); useReaction(() => () => { cleanups++; }, []);
+    return createElement(Rectangle, { style: { width: 10, height: 10, fill: 'red' } });
+  }
+  const Card = defineLayoutComponent(() => createElement(Flex, { key: rootKey.get(), style: { width: 40, height: 40, minWidth: 0, flexShrink: 0 }, children: createElement(Owned, { style: { width: 10, height: 10, minWidth: 0, flexShrink: 0 } }) }));
+  const canvas = document.createElement('canvas'); canvas.width = 100; canvas.height = 100; document.body.append(canvas);
+  const baseline = snapshotWasmLayoutDiagnostics(); const controller = pibbl(canvas, createElement(Flex, { style: { width: 100, height: 100 }, children: createElement(Card, {}) })); controllers.push(controller); await nextFrame();
+  const mounted = snapshotWasmLayoutDiagnostics(); expect(mounted.activeArenas).toBe(baseline.activeArenas + 2); expect(mounts).toBe(1);
+  rootKey.set('second'); await nextFrame();
+  expect([mounts, cleanups]).toEqual([2, 1]); expect(snapshotWasmLayoutDiagnostics().activeArenas).toBe(mounted.activeArenas);
+  expect(snapshotWasmLayoutDiagnostics().nodeCreates).toBe(mounted.nodeCreates + 1);
+  controller.dispose(); const disposed = snapshotWasmLayoutDiagnostics(); expect(cleanups).toBe(2);
+  expect([disposed.activeArenas, disposed.activeNodes, disposed.activeWasmInstances]).toEqual([baseline.activeArenas, baseline.activeNodes, baseline.activeWasmInstances]);
+});

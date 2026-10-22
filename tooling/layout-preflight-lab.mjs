@@ -32,8 +32,8 @@ else {
     const state = () => lab.locator('pre').evaluate(element => JSON.parse(element.textContent));
     await lab.waitForFunction(() => JSON.parse(document.querySelector('pre').textContent).evaluations === 1);
     let expectedEvaluations = 1;
-    if (process.argv.includes('--nested') || process.argv.includes('--direct')) {
-      await lab.getByRole('button', { name: process.argv.includes('--direct') ? 'Use direct root' : 'Use nested layout', exact: true }).click();
+    if (process.argv.includes('--nested') || process.argv.includes('--direct') || process.argv.includes('--described')) {
+      await lab.getByRole('button', { name: process.argv.includes('--described') ? 'Use described layout' : process.argv.includes('--direct') ? 'Use direct root' : 'Use nested layout', exact: true }).click();
       await lab.waitForFunction(() => JSON.parse(document.querySelector('pre').textContent).evaluations === 2);
       expectedEvaluations = 2;
     }

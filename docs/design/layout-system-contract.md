@@ -271,8 +271,12 @@ same type/key/occurrence identity, including before actual component refs exist.
 Nested rendering adopts those plans without re-solving. Active-path descriptor
 cycles fail before recursive region growth; the guard does not retain a global
 visited set. Parent removal releases descendant slots, while surviving keyed
-subtrees retain their regions. Ordinary components, layout-description wrappers,
-and other layout families are not recursively discovered by this preparation path.
+subtrees retain their regions. Pure layout-description wrappers whose one known
+root is Flex participate through the same preparation. Logical wrapper identity
+owns the slot while the described root keeps its distinct receiver token. A changed
+returned-root type/key replaces region ownership, and delayed old teardown cannot
+release the replacement. Descriptions run once per receiver/transaction. Ordinary
+components and other layout families are not recursively discovered by this path.
 
 A mounted Flex that was not prepared by its parent first settles its own allocation,
 then runs that same known-descendant preparation before visiting its children.

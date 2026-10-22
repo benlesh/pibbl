@@ -82,8 +82,10 @@ export function prepareLayoutComponent(
 /** Carries the parent's settled content size into the same prepared root. */
 export function placedLayoutComponentRoot(element: PibblElement<any>, style?: PreparedStyleInput): PibblElement<any> {
   const root = prepareLayoutComponent(element);
-  if (!style) return root;
+  const slot = getElementMetadata(element)?.preparedLayoutSlot;
+  if (!style && !slot) return root;
   const placed = clonePibblElement(root);
-  setPreNormalizedStyle(placed, style.style, root, getPrimitiveReceiverToken(root), style.query);
+  if (style) setPreNormalizedStyle(placed, style.style, root, getPrimitiveReceiverToken(root), style.query);
+  if (slot) setElementMetadata(placed, { ...getElementMetadata(placed), preparedLayoutSlot: slot });
   return placed;
 }
