@@ -4229,7 +4229,7 @@ const drafts = [
     section: "layout",
     order: 138,
     summary:
-      "Compare three pinned Yoga 3.2.1 numeric references with an explicitly translated public Pibbl row.",
+      "Compare five pinned Yoga 3.2.1 references, including direct empty boxes and one content-box padding conversion.",
     api: ["Flex", "Rectangle", "signal", "useLayoutBox"],
     objectives: [
       "Make row, shrink, minimum and gap policies explicit when translating a finite Yoga layout.",
@@ -4237,11 +4237,11 @@ const drafts = [
     ],
     prompts: {
       gesture:
-        "Next case + resize cycles grow, cap and shrink. Compare sizes and positions on both sides; click the Pibbl panels. Paint only should reuse numeric work.",
+        "Next case + resize cycles five fixtures. Compare sizes and positions on both sides; click the Pibbl panels and direct boxes. Paint only should reuse numeric work.",
       code: "The Yoga reference is pinned to 3.2.1/042f5013152e. The after side uses public Flex fields and explicit minimums, not a compatibility selector.",
     },
     apiNotes: [
-      "Only three integer finite nowrap cases with zero padding/border and rounding disabled. Recorded reference is not a live Yoga runtime.",
+      "Five finite nowrap cases, including one explicit content-box padding conversion; borders are zero and rounding is disabled. Recorded reference is not a live Yoga runtime.",
       "No parity or production migration claim. Broader geometry, box-model conversion, fonts and WASM packaging remain unfinished.",
     ],
     canvas: { width: 760, height: 460 },

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "status": "proposed",
-  "asOf": "2026-10-21",
+  "asOf": "2026-10-22",
   "purpose": "First-release capability denominator and evidence ledger. This file does not define a public API, enable the experimental engine, or claim Yoga parity.",
   "baseline": {
     "oracle": "Yoga",
@@ -44,9 +44,21 @@
       {
         "id": "shrink",
         "covers": ["flex.grow-shrink-basis", "flex.min-max"]
+      },
+      {
+        "id": "rectangle-shrink",
+        "covers": ["flex.automatic-minimum", "flex.grow-shrink-basis"]
+      },
+      {
+        "id": "rectangle-percent-content-box",
+        "covers": [
+          "flex.automatic-minimum",
+          "flex.grow-shrink-basis",
+          "flex.min-max"
+        ]
       }
     ],
-    "limit": "These three exact numeric row cases are the only current pinned Yoga geometry evidence."
+    "limit": "Five exact finite row fixtures; one explicit content-box/numeric-padding conversion. This does not establish general box-sizing, percentage, intrinsic or CSS parity."
   },
   "gateGroups": [
     {
@@ -212,7 +224,9 @@
       "evidenceRefs": [
         "packages/core/test/layout-text-auto-minimum.test.tsx",
         "docs/design/layout-system-contract.md",
-        "packages/core/test/layout-wasm-slice.test.tsx"
+        "packages/core/test/layout-wasm-slice.test.tsx",
+        "tooling/layout-yoga-rehearsal/reference.json",
+        "tooling/test-wasm-yoga-migration.mjs"
       ],
       "evidence": {
         "positive": [
@@ -227,7 +241,7 @@
           "resized sibling hit geometry in public example",
           "public Rectangle 50/50 paint and click boundary"
         ],
-        "yogaCases": [],
+        "yogaCases": ["rectangle-shrink", "rectangle-percent-content-box"],
         "missing": [
           "general text/font/line-breaking rules",
           "images",
@@ -713,7 +727,7 @@
       "id": "migration.versioned-yoga-conversion",
       "target": "parity",
       "group": "migration-and-conformance",
-      "current": "three-case rehearsal only",
+      "current": "five-case pinned rehearsal, including direct empty Rectangle shrink and one content-box padding conversion",
       "status": "experimental",
       "unresolvedPolicy": "Implementation direction is authorized; conversion/analyzer return contracts and supported compatibility policy remain to be specified.",
       "evidenceRefs": [
@@ -722,10 +736,16 @@
         "packages/core/test/layout-wasm-slice.test.tsx"
       ],
       "evidence": {
-        "positive": ["three-case Yoga 3.2.1 rehearsal"],
+        "positive": ["five-case Yoga 3.2.1 rehearsal"],
         "negative": ["no profile or public selector"],
         "interaction": ["migration example resize"],
-        "yogaCases": ["grow", "cap", "shrink"],
+        "yogaCases": [
+          "grow",
+          "cap",
+          "shrink",
+          "rectangle-shrink",
+          "rectangle-percent-content-box"
+        ],
         "missing": [
           "style/tree analysis",
           "classified divergence manifest",

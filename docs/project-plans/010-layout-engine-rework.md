@@ -358,10 +358,30 @@ and zero teardown resources; built provenance466 inputs. Logs
 `/tmp/pibbl-slice36-{source,built}-browser.log`. Node26.9.0 / pnpm11.21.0
 installed dependencies / Chromium. Same ports5192/5193 and wasm-flex-text route.
 
-**Exactly one selected next delivery slice: 37 — pinned Yoga empty-Rectangle
-conversion evidence.** Extend the existing pinned native reference with numeric
-and percentage shrink, explicit minima and content-box padding conversions.
-Consolidate34–36 before production changes for37.
+### Slice 37 — pinned empty Rectangle conversion evidence
+
+The native probe freshly reproduced Yoga3.2.1 commit
+`042f5013152eb81c1552dec945b88f7b95ca350f` from a checkout at that exact revision.
+Two added fixtures prove numeric empty shrink50/50 and percentage basis with
+explicit content-box sizing/padding/minimum110/90. Probe and license hashes bind
+the generated record; no Yoga implementation is shipped. Existing three fixtures
+remain unchanged. This is bounded conversion evidence, not broad parity.
+
+A public example regression failed before direct Rectangle migration rendering
+was added. All43 focused public checks now pass, including semantic allocations
+against recorded boxes, pixels and A/B target clicks. Source and built five-case
+Studio probes pass with no errors, cleanup0/0/0 and466built inputs. Root typecheck,
+scoped lint and recorded provenance validation pass. Logs
+`/tmp/pibbl-slice37-{oracle,recorded,red,focused,typecheck,lint}.txt` and
+`/tmp/pibbl-slice37-{source,built}-browser.log`. Environment remains Node26.9.0,
+pnpm11.21.0 dependencies, Chromium; native compiler used by the pinned generator.
+Hands-on ports5192/5193, `#/examples/layout/wasm-yoga-migration`, Next case + resize
+cycles five fixtures; click the right-side boxes.
+
+**Exactly one selected next delivery slice: 38 — numeric physical Flex margins.**
+Present exact public style signatures and precedence before implementation, then
+prove one complete allocation/placement/hit slice through the public API. This
+addresses the existing box/direction margin capability, not a new scope item.
 
 ### Consolidation 12 completed for delivery slices 34–36
 
@@ -1648,13 +1668,12 @@ three pinned Yoga cases, and keeps unaccepted API signatures and missing release
 gates explicit. It is support work, not an additional delivered capability slice.
 Group9 has two deliveries; consolidate after the next closely related slice.
 
-## [NEXT] Pinned Yoga empty Rectangle conversions (slice 37)
+## [NEXT] Numeric physical Flex margins (slice 38)
 
-Extend the existing exact-commit native Yoga probe with the delivered empty
-Rectangle minimum/shrink behavior. Bind new probe provenance and public Pibbl
-geometry comparisons to numeric/percentage dimensions, explicit minima and
-content-box padding conversion; record any intentional native divergence explicitly.
-No claim of complete Yoga or CSS parity follows from this bounded matrix.
+Implement a bounded complete slice of the existing margin capability. Specify
+public numeric shorthand/physical edges and precedence, negative-value behavior,
+allocation/placement and hit geometry before runtime edits. Percentage/logical/auto
+margins remain tracked in the same fixed capability entry, not newly invented exits.
 
 Slice 26 delivery (2026-10-21): completed the in-progress private role foundation
 before any loading migration. Existing receiver edges carry staged masks; successful

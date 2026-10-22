@@ -2,10 +2,10 @@
 
 This is a numeric migration rehearsal, not Yoga parity, a compatibility profile,
 performance evidence, or a production WASM migration. Run Studio in `layout-wasm`
-mode and open http://127.0.0.1:5187/#/examples/layout/wasm-yoga-migration.
+mode and open http://127.0.0.1:5192/#/examples/layout/wasm-yoga-migration.
 
 The left side draws recorded Yoga geometry. The right side uses ordinary public
-Pibbl `Flex` and `useLayoutBox`. **Next case + resize** cycles these exact fixtures:
+Pibbl `Flex`, direct `Rectangle` and `useLayoutBox`. **Next case + resize** cycles these exact fixtures:
 
 | Case   | Parent width | Basis per item | Grow per item | A bound        | A/B widths   |
 | ------ | -----------: | -------------: | ------------: | -------------- | ------------ |
@@ -13,12 +13,19 @@ Pibbl `Flex` and `useLayoutBox`. **Next case + resize** cycles these exact fixtu
 | cap    |       300 px |          60 px |             1 | maximum 80 px  | 80 / 208 px  |
 | shrink |       220 px |         180 px |             0 | minimum 120 px | 120 / 88 px  |
 
-All children have height 80 px, explicit shrink 1, and minimum width 0 except
-shrink A. Parent height is 100 px, gap 12 px, direction LTR, row, nowrap, start
-alignment/justification. Padding, borders and margins are zero. Positions, heights
-and widths are recorded in `reference.json`; exact integer coordinates match in
-these three cases. No observed divergence in these cases implies anything about
-fractional precision, text, padded boxes, wrapping or other configurations.
+The original grow/cap/shrink cases use height80px, shrink1, gap12px and explicit
+minimum0 except shrink A. Two additional direct empty-Rectangle cases use gap0:
+
+| Case                          | Parent | Authored child input                                                         | A/B outer widths |
+| ----------------------------- | -----: | ---------------------------------------------------------------------------- | ---------------- |
+| rectangle-shrink              |  100px | width80px, height80px, shrink1, omitted minima                               | 50 / 50px        |
+| rectangle-percent-content-box |  200px | width80px, height80px, basis70%, padding10px, shrink1; A content minimum90px | 110 / 90px       |
+
+The padded case explicitly selects Yoga content-box sizing, matching Pibbl's
+content-box dimensions and minimum plus outer padding. Its outer height is100px;
+other cases are80px. Root height100px, LTR/row/nowrap/start, border0 and rounding0
+are fixed. These five exact geometries do not prove general percentages, box sizing,
+text, fractional precision or wrapping. No Yoga implementation is bundled in Studio.
 
 ## Version, source and reproduction
 
@@ -45,7 +52,7 @@ The fresh receipt used Apple clang 21.0.0 on the recorded Node 26.9.0 host.
 Configuration explicitly sets `useWebDefaults=false`, point scale 0 (no rounding),
 no errata, row, LTR, start alignment and gap. Default experiments remain disabled.
 This probes the native implementation; it is not a Yoga JS/WASM loading or speed
-comparison. All three integer dimensions are exactly representable in both engines.
+comparison. All recorded integer dimensions are exactly representable in both engines.
 
 Without `--source`, the command checks only recorded provenance and consistency
 with the example's embedded data. It does **not** rerun Yoga:
@@ -104,16 +111,16 @@ Make policies explicit instead of copying defaults:
 
 - Native Yoga configuration defaults to column and shrink 0; this reference sets
   row and shrink 1 explicitly. Pibbl's native defaults are row and shrink 1.
-- Pibbl requires an explicit main-axis minimum for these automatic/shrinking items;
-  use `minWidth: 0` here and the stated floor for shrink A. This is not CSS auto-min.
-- This receipt has no padding/borders. Yoga's box-sizing policy and Pibbl's
-  content-box authoring need a separate conversion; these matches do not prove it.
+- Ordinary Panel wrappers retain explicit minima. Direct empty Rectangles use
+  the bounded native zero content minimum; the padded case retains A's explicit floor.
+- The new padded case explicitly selects Yoga content-box. It proves that one
+  conversion with numeric padding, not general border-box/border or percentage-padding parity.
 - Point scale 0 avoids Yoga pixel rounding. Pibbl retains logical coordinates;
   there is no general rounding-policy equivalence claim.
 
 ## Unsupported and production boundary
 
-The experiment does not cover wrap/reverse/RTL, margins/logical edges, auto minimums,
+The experiment does not cover wrap/reverse/RTL, margins/logical edges, general automatic minima,
 baselines, absolute/hidden/contents participation, text/font measurement, broad
 intrinsic sizing or Grid. It supplies no versioned public compatibility selector.
 

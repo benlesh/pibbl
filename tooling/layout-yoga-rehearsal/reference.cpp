@@ -2,32 +2,43 @@
 #include <yoga/Yoga.h>
 #include <iostream>
 int main() {
-  const char* names[] = {"grow", "cap", "shrink"};
+  const char* names[] = {"grow", "cap", "shrink", "rectangle-shrink", "rectangle-percent-content-box"};
   std::cout << "[";
-  for (int i = 0; i < 3; i++) {
+  for (int i = 0; i < 5; i++) {
     auto config = YGConfigNew();
     YGConfigSetUseWebDefaults(config, false);
     YGConfigSetPointScaleFactor(config, 0);
     YGConfigSetErrata(config, YGErrataNone);
+    const auto width = i == 2 ? 220 : i == 3 ? 100 : i == 4 ? 200 : 300;
     auto root = YGNodeNewWithConfig(config);
-    YGNodeStyleSetWidth(root, i == 2 ? 220 : 300);
+    YGNodeStyleSetWidth(root, width);
     YGNodeStyleSetHeight(root, 100);
     YGNodeStyleSetFlexDirection(root, YGFlexDirectionRow);
     YGNodeStyleSetAlignItems(root, YGAlignFlexStart);
-    YGNodeStyleSetGap(root, YGGutterAll, 12);
+    YGNodeStyleSetGap(root, YGGutterAll, i < 3 ? 12 : 0);
     for (int j = 0; j < 2; j++) {
       auto child = YGNodeNewWithConfig(config);
-      YGNodeStyleSetFlexBasis(child, i == 2 ? 180 : 60);
-      YGNodeStyleSetFlexGrow(child, i == 2 ? 0 : 1);
       YGNodeStyleSetFlexShrink(child, 1);
-      YGNodeStyleSetMinWidth(child, i == 2 && j == 0 ? 120 : 0);
-      if (i == 1 && j == 0) YGNodeStyleSetMaxWidth(child, 80);
+      if (i < 3) {
+        YGNodeStyleSetFlexBasis(child, i == 2 ? 180 : 60);
+        YGNodeStyleSetFlexGrow(child, i == 2 ? 0 : 1);
+        YGNodeStyleSetMinWidth(child, i == 2 && j == 0 ? 120 : 0);
+        if (i == 1 && j == 0) YGNodeStyleSetMaxWidth(child, 80);
+      } else {
+        YGNodeStyleSetWidth(child, 80);
+        if (i == 4) {
+          YGNodeStyleSetBoxSizing(child, YGBoxSizingContentBox);
+          YGNodeStyleSetFlexBasisPercent(child, 70);
+          YGNodeStyleSetPadding(child, YGEdgeAll, 10);
+          if (j == 0) YGNodeStyleSetMinWidth(child, 90);
+        }
+      }
       YGNodeStyleSetHeight(child, 80);
       YGNodeInsertChild(root, child, j);
     }
     YGNodeCalculateLayout(root, YGUndefined, YGUndefined, YGDirectionLTR);
     if (i) std::cout << ",";
-    std::cout << "{\"name\":\"" << names[i] << "\",\"width\":" << (i == 2 ? 220 : 300) << ",\"boxes\":[";
+    std::cout << "{\"name\":\"" << names[i] << "\",\"width\":" << width << ",\"boxes\":[";
     for (int j = 0; j < 2; j++) {
       auto child = YGNodeGetChild(root, j);
       if (j) std::cout << ",";

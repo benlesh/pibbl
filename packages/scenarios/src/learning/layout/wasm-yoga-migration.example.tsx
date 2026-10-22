@@ -17,61 +17,97 @@ function createWasmYogaMigrationExampleContent(canvas: HTMLCanvasElement) {
   // Recorded Yoga 3.2.1 geometry; generated/checked by tooling/layout-yoga-rehearsal.mjs.
   // BEGIN YOGA REFERENCE
   const fixtureCases = [
-    {
-      name: "grow",
-      width: 300,
-      boxes: [
-        {
-          x: 0,
-          y: 0,
-          width: 144,
-          height: 80,
-        },
-        {
-          x: 156,
-          y: 0,
-          width: 144,
-          height: 80,
-        },
-      ],
-    },
-    {
-      name: "cap",
-      width: 300,
-      boxes: [
-        {
-          x: 0,
-          y: 0,
-          width: 80,
-          height: 80,
-        },
-        {
-          x: 92,
-          y: 0,
-          width: 208,
-          height: 80,
-        },
-      ],
-    },
-    {
-      name: "shrink",
-      width: 220,
-      boxes: [
-        {
-          x: 0,
-          y: 0,
-          width: 120,
-          height: 80,
-        },
-        {
-          x: 132,
-          y: 0,
-          width: 88,
-          height: 80,
-        },
-      ],
-    },
-  ] as const;
+  {
+    "name": "grow",
+    "width": 300,
+    "boxes": [
+      {
+        "x": 0,
+        "y": 0,
+        "width": 144,
+        "height": 80
+      },
+      {
+        "x": 156,
+        "y": 0,
+        "width": 144,
+        "height": 80
+      }
+    ]
+  },
+  {
+    "name": "cap",
+    "width": 300,
+    "boxes": [
+      {
+        "x": 0,
+        "y": 0,
+        "width": 80,
+        "height": 80
+      },
+      {
+        "x": 92,
+        "y": 0,
+        "width": 208,
+        "height": 80
+      }
+    ]
+  },
+  {
+    "name": "shrink",
+    "width": 220,
+    "boxes": [
+      {
+        "x": 0,
+        "y": 0,
+        "width": 120,
+        "height": 80
+      },
+      {
+        "x": 132,
+        "y": 0,
+        "width": 88,
+        "height": 80
+      }
+    ]
+  },
+  {
+    "name": "rectangle-shrink",
+    "width": 100,
+    "boxes": [
+      {
+        "x": 0,
+        "y": 0,
+        "width": 50,
+        "height": 80
+      },
+      {
+        "x": 50,
+        "y": 0,
+        "width": 50,
+        "height": 80
+      }
+    ]
+  },
+  {
+    "name": "rectangle-percent-content-box",
+    "width": 200,
+    "boxes": [
+      {
+        "x": 0,
+        "y": 0,
+        "width": 110,
+        "height": 100
+      },
+      {
+        "x": 110,
+        "y": 0,
+        "width": 90,
+        "height": 100
+      }
+    ]
+  }
+] as const;
   // END YOGA REFERENCE
   const index = signal(0);
   const ink = signal("#19375b");
@@ -113,6 +149,8 @@ function createWasmYogaMigrationExampleContent(canvas: HTMLCanvasElement) {
   function Workspace() {
     const fixture = fixtureCases[index.get()];
     const shrinking = fixture.name === "shrink";
+    const rectangles = fixture.name.startsWith("rectangle-");
+    const padded = fixture.name === "rectangle-percent-content-box";
     return (
       <>
         <Text
@@ -176,9 +214,20 @@ function createWasmYogaMigrationExampleContent(canvas: HTMLCanvasElement) {
             height: 100,
             flexDirection: "row",
             alignItems: "flex-start",
-            gap: 12,
+            gap: rectangles ? 0 : 12,
           }}
         >
+          {rectangles ? <>
+            <Rectangle onClick={() => selected.set("A")} style={{
+              width: 80, height: 80, flexBasis: padded ? "70%" : "auto", flexShrink: 1,
+              minWidth: padded ? 90 : undefined, padding: padded ? 10 : 0,
+              fill: "#d6e3db", cursor: "pointer",
+            }} />
+            <Rectangle onClick={() => selected.set("B")} style={{
+              width: 80, height: 80, flexBasis: padded ? "70%" : "auto", flexShrink: 1,
+              padding: padded ? 10 : 0, fill: "#e1dbca", cursor: "pointer",
+            }} />
+          </> : <>
           <Panel
             name="A"
             style={{
@@ -200,6 +249,7 @@ function createWasmYogaMigrationExampleContent(canvas: HTMLCanvasElement) {
               height: 80,
             }}
           />
+          </>}
         </Flex>
         <Text
           style={{
@@ -208,7 +258,7 @@ function createWasmYogaMigrationExampleContent(canvas: HTMLCanvasElement) {
             font: "14px monospace",
             fill: "#19375b",
           }}
-        >{`${fixture.name} · parent ${fixture.width} px · gap 12 px`}</Text>
+        >{`${fixture.name} · parent ${fixture.width} px · gap ${rectangles ? 0 : 12} px`}</Text>
       </>
     );
   }
@@ -228,13 +278,12 @@ function createWasmYogaMigrationExampleContent(canvas: HTMLCanvasElement) {
       <Text
         style={{ left: 28, top: 62, font: "14px sans-serif", fill: "#475569" }}
       >
-        Three numeric cases. Left is recorded geometry, not a live Yoga runtime.
+        Five pinned cases. Left is recorded geometry, not a live Yoga runtime.
       </Text>
       <Text
         style={{ left: 28, top: 100, font: "13px sans-serif", fill: "#475569" }}
       >
-        Explicit row, shrink 1, minimums and gap. No padding, borders or
-        rounding.
+        Explicit row and shrink 1; empty boxes and one content-box padding conversion.
       </Text>
       <Rectangle
         style={{
@@ -290,8 +339,7 @@ function createWasmYogaMigrationExampleContent(canvas: HTMLCanvasElement) {
           fill: "#475569",
         }}
       >
-        Experimental nowrap subset only. No parity, font migration, CSS
-        box-model conversion or production WASM package is implied.
+        Experimental nowrap subset only. One explicit padding conversion does not establish general CSS/Yoga parity or font migration.
       </Text>
     </>
   );
@@ -312,7 +360,7 @@ function createWasmYogaMigrationExampleContent(canvas: HTMLCanvasElement) {
             .map(([key, value]) => `${key}: ${value}`)
             .join(" · ")
         : "Normal JS build"
-    }\nYoga 3.2.1 · 042f5013152e · ${fixtureCases[index.get()].name} · actual A: ${actual.get("A")} px · B: ${actual.get("B")} px · selected: ${selected.get()}`;
+    }\nYoga 3.2.1 · 042f5013152e · ${fixtureCases[index.get()].name} · actual A: ${fixtureCases[index.get()].name.startsWith("rectangle-") ? "direct Canvas boxes" : `${actual.get("A")} px · B: ${actual.get("B")} px`} · selected: ${selected.get()}`;
   };
   refresh();
   const timer = window.setInterval(refresh, 200);

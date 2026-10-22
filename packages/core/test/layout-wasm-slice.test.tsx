@@ -734,7 +734,7 @@ it.runIf(experimentalLayout)('carries final allocation through an ordinary panel
   expect(panels).toBe(initialPanels+1);
 });
 
-it.runIf(experimentalLayout)('rehearses three pinned Yoga numeric cases through the public Pibbl example', async () => {
+it.runIf(experimentalLayout)('rehearses five pinned Yoga cases through the public Pibbl example', async () => {
   const mountModule = await import('../../scenarios/src/learning/layout/wasm-yoga-migration.example');
 const mount = createExampleMount(mountModule.WasmYogaMigrationExample);
   const baseline = snapshotWasmLayoutDiagnostics();
@@ -749,10 +749,25 @@ const mount = createExampleMount(mountModule.WasmYogaMigrationExample);
   const controller = mount(canvas); controllers.push(controller); await nextFrame();
   for (const [index, fixture] of yogaReference.cases.entries()) {
     if (index) { labels.length = 0; clickCanvas(canvas,60,158); await nextFrame(); }
-    for (const box of fixture.boxes) {
-      expect(labels.some(label => label.text === `${box.width} px` && label.x === 392+box.x+12 && label.y === 240+box.y+38)).toBe(true);
+    if (fixture.name.startsWith('rectangle-')) {
+      const padded = fixture.name === 'rectangle-percent-content-box';
+      const children = [0, 1].map(index => createElement(Rectangle, { style: {
+        width: 80, height: 80, flexShrink: 1,
+        flexBasis: padded ? '70%' : 'auto', padding: padded ? 10 : 0,
+        minWidth: padded && index === 0 ? 90 : undefined,
+      } }));
+      expect(layoutFlex({ x: 0, y: 0, width: fixture.width, height: 100 }, children, { alignItems: 'flex-start' }, measurement)).toEqual(fixture.boxes);
+      for (const [index, box] of fixture.boxes.entries()) {
+        expect([...ctx.getImageData(392 + box.x + 1, 241, 1, 1).data]).toEqual(index === 0 ? [214, 227, 219, 255] : [225, 219, 202, 255]);
+        clickCanvas(canvas, 392 + box.x + 2, 242);
+        await expect.poll(() => canvas.nextElementSibling?.textContent).toContain(`selected: ${index === 0 ? 'A' : 'B'}`);
+      }
+    } else {
+      for (const box of fixture.boxes) {
+        expect(labels.some(label => label.text === `${box.width} px` && label.x === 392+box.x+12 && label.y === 240+box.y+38)).toBe(true);
+      }
     }
-    expect(fixture.boxes.reduce((sum,box) => sum+box.width,12)).toBe(fixture.width);
+    expect(fixture.boxes.reduce((sum,box) => sum+box.width,fixture.name.startsWith('rectangle-') ? 0 : 12)).toBe(fixture.width);
   }
   const beforePaint = snapshotWasmLayoutDiagnostics();
   clickCanvas(canvas,300,158); await nextFrame();
