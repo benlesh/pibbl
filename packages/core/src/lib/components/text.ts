@@ -236,6 +236,28 @@ function measureTextStyle(
   };
 }
 
+/** @internal Longest run under Text's existing ASCII-space wrapping contract. */
+export function measureLayoutTextMinimumWidth(
+  props: Readonly<TextProps>,
+  options: { font: string; service: CanvasMeasurementService; receiverToken?: object },
+): number {
+  const text = prepareLayoutTextContent(props, { receiverToken: options.receiverToken });
+  let longest = 0;
+  let start = 0;
+  for (let index = 0; index <= text.length; index++) {
+    if (index !== text.length && text.charCodeAt(index) !== 32) continue;
+    if (index > start) {
+      const width = options.service.measureText(text.slice(start, index), options.font).width;
+      if (!Number.isFinite(width) || width < 0) {
+        throw new Error('Text intrinsic measurement requires finite nonnegative word widths.');
+      }
+      if (width > longest) longest = width;
+    }
+    start = index + 1;
+  }
+  return longest;
+}
+
 /** @internal Prepare measured Text through its existing transaction/receiver ownership. */
 export function prepareLayoutTextContent(
   props: Readonly<TextProps>, options: { receiverToken?: object },

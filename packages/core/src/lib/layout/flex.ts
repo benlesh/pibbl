@@ -1,7 +1,7 @@
 import { allocationInputRevision } from './allocation-revision.js';
 import { FlexAllocationCache, frozenFlexInputs, type CachedFlexPlacement } from './flex-allocation-cache.js';
 import { experimentalLayout, LayoutRegion, mountedLayoutRegion, recordWasmMeasurement, recordWasmAllocationPass, recordWasmAllocationItem, recordWasmAllocationCacheHit } from './wasm/region.js';
-import { Text, prepareLayoutTextContent } from '../components/text.js';
+import { Text, prepareLayoutTextContent, measureLayoutTextMinimumWidth } from '../components/text.js';
 
 const unsupportedProperties = ['order', 'margin', 'marginLeft', 'marginRight', 'marginTop', 'marginBottom'] as const;
 
@@ -550,7 +550,17 @@ function resolveFlexPlacements(
     );
     const basisValue = normalized.flexBasis ?? 'auto';
     const minimumProperty = row ? 'minWidth' : 'minHeight';
-    if ((shrink > 0 || basisValue === 'auto') && normalized[minimumProperty] === undefined) {
+    // A bounded native Text contribution; other missing minima keep their
+    // diagnostic. A flex basis is a distribution input, never a width cap.
+    const automaticTextMinimum = experimentalLayout && row && options.flexWrap === 'nowrap' &&
+      child.type === Text && normalized[minimumProperty] === undefined && shrink > 0 &&
+      normalized.wrap === true && (normalized.fit === undefined || normalized.fit === 'visible') &&
+      !preparedStyleQuery(prepared) &&
+      (normalized.width === undefined || normalized.width === 'auto' || typeof normalized.width === 'number') &&
+      (normalized.maxWidth === undefined || typeof normalized.maxWidth === 'number') &&
+      genericTextFont(normalized) && (typeof basisValue === 'number' ||
+        basisValue === 'auto' && typeof normalized.width === 'number');
+    if ((shrink > 0 || basisValue === 'auto') && normalized[minimumProperty] === undefined && !automaticTextMinimum) {
       throw childDiagnostic(
         child,
         minimumProperty,
@@ -616,7 +626,7 @@ function resolveFlexPlacements(
     const padding = normalizeEdges(normalized.padding, 'padding', childContext(child, container));
     const paddingMain = row ? padding.left + padding.right : padding.top + padding.bottom;
     const paddingCross = row ? padding.top + padding.bottom : padding.left + padding.right;
-    const minMain = resolveOptionalBound(
+    let minMain = resolveOptionalBound(
       normalized[minimumProperty],
       mainReference,
       minimumProperty,
@@ -633,6 +643,16 @@ function resolveFlexPlacements(
       child,
       container,
     );
+    if (automaticTextMinimum) {
+      if (region) recordWasmMeasurement();
+      const contentMinimum = measureLayoutTextMinimumWidth(child.props, {
+        font: normalized.font as string ?? '13px sans-serif',
+        service: measurement.service,
+        receiverToken,
+      });
+      minMain = Math.min(contentMinimum, maxMain,
+        typeof specifiedMain === 'number' ? specifiedMain : Number.POSITIVE_INFINITY);
+    }
     const minCrossProperty = row ? 'minHeight' : 'minWidth';
     const maxCrossProperty = row ? 'maxHeight' : 'maxWidth';
     const minCross = resolveOptionalBound(

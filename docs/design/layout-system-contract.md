@@ -179,7 +179,21 @@ It supports nowrap rows/columns, finite row wrap, and finite column wrap with
 declared height/flexBasis and width; wrapped line formation,
 per-line allocation and line/item offsets run in WASM. Direct Text in rows is remeasured
 at its final per-line content width before line cross sizes settle. Main-axis
-minimums remain explicit. Wrapped columns reject automatic measured main bases and automatic cross widths
+minimums remain explicit except for this bounded automatic Text minimum in a
+nowrap row: a direct Text with `wrap: true`, default/visible fit, a generic px font,
+positive shrink, and numeric basis (or auto basis with numeric width) may omit
+`minWidth`. Its content minimum is the width of its longest ASCII-space-delimited
+run, capped by numeric declared width and maxWidth, never by flexBasis alone.
+Padding remains outside that content minimum. Explicit `minWidth`, including 0,
+takes precedence. If the minimum exceeds available room, the row overflows;
+existing visible/clip container behavior applies. This follows Text's existing
+literal-space wrapping, not CSS/Unicode line breaking. Custom fonts, responsive
+queries, percentage width/maxWidth, other fitting modes, columns and wrapped Flex
+lines keep the explicit-minimum diagnostic. Intrinsic Flex measurement is unchanged.
+Automatic-minimum queries currently remeasure their word runs on allocation misses;
+the measuredLeaves counter includes each such leaf request, not each Canvas word
+measurement call. No automatic-minimum cache or performance improvement is claimed.
+Wrapped columns reject automatic measured main bases and automatic cross widths
 before measurement; intrinsic wrapped containers remain unsupported;
 normal builds retain the existing solver. This is not a released replacement,
 Yoga parity, or a standalone layout API. See [Plan 010](../project-plans/010-layout-engine-rework.md)

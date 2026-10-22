@@ -4046,7 +4046,7 @@ const drafts = [
     },
     apiNotes: [
       "Experimental, nowrap only. Not Yoga parity or a released replacement engine.",
-      "Explicit minimums and definite nested container sizes remain required. No performance claim.",
+      "Compare Text minimum contrasts the bounded generic-font word minimum with explicit minWidth: 0. Other items still require explicit minimums; no performance claim.",
     ],
     canvas: { width: 760, height: 460 },
     related: ["wasm-flex-column-text", "flex", "responsive-styles"],

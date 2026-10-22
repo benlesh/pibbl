@@ -200,15 +200,25 @@
       "id": "flex.automatic-minimum",
       "target": "parity",
       "group": "flex-core",
-      "current": "explicit main-axis minimum required in common shrink/auto cases",
-      "status": "missing",
-      "unresolvedPolicy": "Choose native content-based automatic-minimum and overflow behavior, then define any Yoga conversion difference.",
+      "current": "experimental direct wrapped Text in nowrap rows uses longest ASCII-space-delimited run, capped by numeric width/maxWidth; explicit zero overrides; other cases require explicit minima",
+      "status": "experimental",
+      "unresolvedPolicy": "Native bounded Text policy is selected; general intrinsic providers, other fitting/overflow modes and Yoga conversion differences remain unresolved.",
+      "evidenceRefs": [
+        "packages/core/test/layout-text-auto-minimum.test.tsx",
+        "docs/design/layout-system-contract.md"
+      ],
       "evidence": {
-        "positive": [],
-        "negative": ["current explicit-minimum diagnostic"],
-        "interaction": [],
+        "positive": ["public Text automatic/zero-minimum comparison"],
+        "negative": ["current explicit-minimum diagnostic for other items"],
+        "interaction": ["resized sibling hit geometry in public example"],
         "yogaCases": [],
-        "missing": ["unbreakable text", "images", "aspect ratio", "overflow"]
+        "missing": [
+          "general text/font/line-breaking rules",
+          "images",
+          "aspect ratio",
+          "other overflow and fitting modes",
+          "pinned native/Yoga divergence"
+        ]
       }
     },
     {

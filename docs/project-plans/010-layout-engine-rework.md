@@ -35,7 +35,7 @@ Current estimate remains a range, not a promise: the original forecast was 36
 additional slices including 25. Three deliveries are now integrated; loading was
 an accepted scope addition to that forecast. Roughly 34 delivery slices remain,
 subject to reassessment against the same proposal exits after the next group.
-Slice 28 is delivered below. Roughly 33 delivery slices remain against the same
+Slice 28 is delivered below. Roughly 32 delivery slices remain after slice 29 against the same
 forecast, subject to reassessment after this group. Area estimates are not parallel
 work queues.
 
@@ -77,11 +77,58 @@ Slice ready for feedback: source
 Choose **Toggle frozen proof**, then Paint, Toggle width and Change Text. This is
 bounded allocation reuse, not general zero-visit layout or full feature completion.
 
-**Exactly one selected next delivery slice: 29 — automatic main-axis Text minimum.**
-Establish the smallest public regression for content-based minimum sizing before
-production changes. Resolve the exact supported Text/min-content boundary from
-current measurement and proposal contracts; keep opaque structures conservative.
-No new public API, production-default solver switch or parallel feature queue.
+### Slice 29 — bounded direct Text automatic minimum
+
+Second delivery in group 10 (slices 28–30). The experimental mounted nowrap row
+accepts omitted minWidth only for direct wrapped Text with generic px font,
+default/visible fit, positive shrink and numeric basis (or auto basis plus numeric
+width). No query, percentage width/maxWidth or other layout/fitting path is added.
+The minimum is its longest literal-space-delimited run measured with the existing
+Canvas service, capped by numeric width/maxWidth. Flex basis does not cap it.
+Explicit zero retains deliberate shrinking; insufficient row space overflows
+through existing visible/clip container composition. The normal JS path and all
+public signatures are unchanged. This selects the bounded native policy only;
+general intrinsic/provider and Yoga conversion rules remain open.
+
+A new public regression first failed with the existing explicit-minimum diagnostic
+(`/tmp/pibbl-slice29-red.txt`). After fixing a new fixture's top coordinate, the
+public scene passed. Comparison controls were established with a separate failing
+regression; a later failed-then-passed text update connects Change text to both
+comparison rows. Public and supplemental evidence covers actual pixels, explicit
+zero, declared width/maxWidth caps, flexBasis not being a cap, and excluded clip.
+The helper uses Text's existing ASCII-space break contract and receiver-owned
+content preparation; each uncached minimum query increments measuredLeaves.
+No query cache, complete Canvas-call counter or performance gain is claimed.
+
+Fresh focused evidence: four files / 79 tests passed before the added boundary
+matrix; the final six-case minimum suite passed including text input updates.
+Normal JS focused evidence: 36 passed / 5 experimental cases skipped before the
+supplemental matrix. Direct repository typecheck and scoped lint passed. The reused focused reviewer
+found no material findings in the minimum helper, eligibility/caps or receiver
+ownership; no extra reviewer was launched. Environment:
+Node 26.9.0, installed pnpm 11.21.0 dependencies, Playwright Chromium. No aggregate
+trust/Node 24/full Yoga parity claim.
+
+Independent source and built browsers passed width320, old/moved sibling hit
+positions for both rows, no page errors and zero nodes/arenas/measurement entries
+after disposal. Logs `/tmp/pibbl-slice29-source-browser.log` and
+`/tmp/pibbl-slice29-built-browser.log`; inspected screenshot
+`/tmp/pibbl-slice29-source-visible.png`. These checks preceded the small Change text
+wiring, whose public headless regression passes. Source and built runtime artifacts
+contain the minimum helper and measurement accounting (verified in the private
+package dist and the built-lane resolver); the WASM binary remains
+56793 bytes. Browser feedback URL remains ports 5192/5193, example
+`#/examples/layout/wasm-flex-text`: choose Compare Text minimum, Toggle width and
+Change text; click green siblings. This is slice ready for feedback, not feature
+completion.
+
+**Exactly one selected next delivery slice: 30 — natural automatic Text basis.**
+For the same eligible direct Text in a mounted nowrap row, replace the current
+container-constrained wrapped width with a real maximum-content query when width
+and flexBasis are automatic. Preserve the word floor and explicit zero behavior,
+then remeasure height at final allocation. Establish a public failing geometry
+regression first; no arbitrary callback probing, new public API or default engine
+switch. Consolidate group 10 after this third delivery, before selecting more work.
 
 Current acceptance gaps remain broader than loading: general automatic minimum and
 intrinsic sizing rules, structural component preparation, root-wide prepared graph
@@ -1314,15 +1361,16 @@ three pinned Yoga cases, and keeps unaccepted API signatures and missing release
 gates explicit. It is support work, not an additional delivered capability slice.
 Group9 has two deliveries; consolidate after the next closely related slice.
 
-## [NEXT] Automatic main-axis Text minimum (slice 29)
+## [NEXT] Natural automatic Text basis (slice 30)
 
-Replace one bounded explicit-minimum restriction with the proposal's content-based
-Text minimum through the supported public surface. First pin a public failing
-geometry regression and a manually usable example; preserve explicit minWidth: 0
-as the deliberate shrink escape hatch. Determine exact eligibility and measurement
-semantics before production edits. This does not authorize general CSS intrinsic
-sizing, structural component execution or default solver adoption. Consolidate the
-new group after deliveries 28–30.
+A bounded direct wrapped Text in an experimental nowrap row currently measures
+its automatic basis at the container constraint, so a short label claims the
+whole row before shrinking. Use a dedicated Text maximum-content contribution
+instead, retain the automatic word minimum and final-width height measurement,
+and verify sibling geometry/hits through the existing comparison example.
+Keep generic fonts, visible fit and known direct Text eligibility; columns,
+wrapped Flex lines, opaque/custom providers and general intrinsic sizing stay out.
+This is group 10's third delivery; consolidate 28–30 afterwards.
 
 Slice 26 delivery (2026-10-21): completed the in-progress private role foundation
 before any loading migration. Existing receiver edges carry staged masks; successful
