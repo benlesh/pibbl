@@ -206,7 +206,7 @@
       "id": "flex.automatic-minimum",
       "target": "parity",
       "group": "flex-core",
-      "current": "experimental direct wrapped Text in nowrap rows uses longest ASCII-space-delimited run, capped by numeric width/maxWidth; explicit zero overrides; other cases require explicit minima; direct empty Rectangles with finite numeric width/height use zero automatic minimum in allocation",
+      "current": "experimental bounded wrapped Text content minima; direct empty Rectangle zero content minima with numeric/percentage dimensions; numeric empty Rectangle intrinsic Flex contributions",
       "status": "experimental",
       "unresolvedPolicy": "Native bounded Text policy is selected; general intrinsic providers, other fitting/overflow modes and Yoga conversion differences remain unresolved.",
       "evidenceRefs": [
@@ -217,7 +217,10 @@
       "evidence": {
         "positive": [
           "public Text automatic/zero-minimum comparison",
-          "empty Rectangle direct row/column shrink, explicit minimum and no-shrink precedence"
+          "empty Rectangle direct row/column shrink, explicit minimum and no-shrink precedence",
+          "percentage Rectangle row/column shrink",
+          "outer padding floor under zero content minimum",
+          "numeric Rectangle intrinsic Flex measurement"
         ],
         "negative": ["current explicit-minimum diagnostic for other items"],
         "interaction": [

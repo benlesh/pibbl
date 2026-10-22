@@ -31,13 +31,28 @@ in-flight HMR footer mismatch and offscreen blank probes described below. The
 navigation test also verifies the control is disabled during asynchronous startup
 and scrolls the preview panel once ready. No scheduler fix was needed.
 
-Current estimate remains a range, not a promise: the original forecast was 36
-additional slices including 25. Three deliveries are now integrated; loading was
-an accepted scope addition to that forecast. Roughly 34 delivery slices remain,
-subject to reassessment against the same proposal exits after the next group.
-Slice 28 is delivered below. Roughly 25 delivery slices remain after slice 36 against the same
-forecast, subject to reassessment after this group. Area estimates are not parallel
-work queues.
+### Finite accepted exit checklist (reconciled after slice 36)
+
+Earlier numerical slice forecasts are historical estimates, not remaining-work
+counts or new scope. Completion is measured against the accepted proposal and its
+33-capability manifest, rather than by adding controls or exhausting a slice count.
+These six exit families remain open; exactly one implementation slice is queued.
+
+| Exit                                               | Required completion evidence                                                                                                                                                                                                                                                                             | Current dependency or blocker                                                                                                                                                   |
+| -------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Flex and native sizing                             | Implement and classify the accepted matrix: reverse/wrap-reverse, margins/auto margins, percentages/gaps, box sizing/borders, aspect ratio, baselines, RTL/logical edges, containing blocks and hidden/contents participation; positive/negative/interaction geometry fixtures for every supported entry | Current experimental subset is bounded; unresolved native minimum/provider and precedence policies require exact designs before those paths broaden                             |
+| Grid and other layout families                     | Preserve Absolute/Overlay/Flow and complete the declared Grid track/placement/implicit/intrinsic target, with mixed nested examples and semantic geometry tests                                                                                                                                          | General nested preparation and intrinsic constraints must be available first; current Grid subset is not completion                                                             |
+| Prepared transactional geometry and reactive reuse | One root-wide prepared ownership model; stable identity, changed-geometry publication, rollback/failure isolation, receiver roles and bounded invalidation; public nested component/Layer/external-renderer tests with deterministic cleanup                                                             | Current pure Card/known column path and frozen allocation cache are foundations, not a full graph or atomic geometry publication                                                |
+| Migration and conformance                          | Version/commit/configuration-bound Yoga corpus with explicit Pibbl conversions/divergences; supported public Pibbl migration app and documented framework-author path using the same semantics; all unsupported entries visible                                                                          | Only three historical pinned fixtures exist so far; slice37 expands the delivered Rectangle conversion evidence. Standalone API details must follow the public design agreement |
+| Reproducible performance                           | Comparable kernel, JS integration and whole Canvas workloads, structural work/allocation counts and reproducible timing receipts under documented environments                                                                                                                                           | Correct broad graph/algorithms precede timing claims; current counters demonstrate only their bounded paths                                                                     |
+| Final integration and release                      | Accepted behavior migrated across consumers/docs/editor/types/packed output, source/built browser and lifecycle evidence, documented Node24/pnpm11.21 trust gate, then the requested separate hyper-critical whole-codebase review                                                                       | Full supported behavior and prior exits must land before final aggregate verification/review; Node26 receipts are not Node24 release evidence                                   |
+
+This preserves the proposal's explicit exclusions: full CSS, vertical writing and
+subgrid are outside the first release; overflow sizing does not promise a scrolling
+widget, semantic DOM, editing or a retained rendering scene graph. Optional standalone
+layout distribution follows stabilized integration; no second scheduler is authorized.
+Loading and named-component migration are delivered but do not close these exits.
+The capability manifest and proposal linked below remain the exact scope ledger.
 
 ### Slice 28 — bounded paint-only Flex allocation reuse
 
@@ -329,6 +344,26 @@ installed dependencies / Chromium. Same ports5192/5193 and wasm-flex-text route.
 conversion evidence.** Extend the existing pinned native reference with numeric
 and percentage shrink, explicit minima and content-box padding conversions.
 Consolidate34–36 before production changes for37.
+
+### Consolidation 12 completed for delivery slices 34–36
+
+Slices34 (`86e68112` plus public proof `0f8d17a3`),35 (`09d46791`) and36
+(`818ecb6a`) remain separate commits. Catalog debt is separate `ce2ee87a`.
+One private predicate shares empty-Rectangle eligibility; only finite direct
+allocation admits percentages, while intrinsic measurement stays conservative.
+There is no new subscription, geometry cache, graph, public selector or scheduler.
+The policy is zero content minimum with outer padding floors, explicit minima and
+existing shrink/overflow behavior preserved.
+
+Combined fresh evidence is the unchanged 90 experimental checks, default39pass/
+39skip, root typecheck/scoped lint/private build, and actual source/built public
+percentage-target/Text/frozen-cache/cleanup probes. No duplicate broad rerun was
+needed. Catalog validates166lessons/12snapshots/33labs after the prior authoring
+repair. Logs use `/tmp/pibbl-slice36-*` and
+`/tmp/pibbl-consolidation12-catalog.txt`. No Node24, full trust or comparative speed
+claim is made. The finite exit checklist above replaces overlapping forecasts.
+Exactly one next slice remains37, pinned Yoga conversions, with original scope
+and explicit deferrals preserved.
 
 ### Consolidation 11 completed for delivery slices 31–33
 
