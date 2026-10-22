@@ -295,6 +295,13 @@ normal child rendering. A clean Layer retains its existing descendant ownership
 without invoking opaque children again. Removal releases its prepared descendants;
 restoration creates fresh regions. Arbitrary Layer descendants remain opaque.
 
+A Grid entry settles its existing explicit tracks and cell placements before
+preparing direct known Flex roots from those exact placed clones, receiver tokens
+and content allocations. All placements prepare before opaque cell traversal.
+Rendering consumes the same Flex plan/region; Grid does not run another placement
+pass or gain a native Grid solver. This does not discover Grid internals across
+an earlier outer opaque boundary or add Grid auto-placement/intrinsic behavior.
+
 For the same direct Text subset, automatic width and basis use the natural width
 before wrapping, not the containing row's constrained width. The natural query
 follows wrapped Text's existing removal of leading ASCII spaces; empty/space-only

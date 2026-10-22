@@ -1,7 +1,9 @@
+import { experimentalLayout } from './wasm/region.js';
+import { preflightKnownLayout, attachPreparedLayoutSlot } from './prepared-root.js';
 import { preparedStyleValue, preparedStyleQuery } from '../style/responsive.js';
 import { definePrimitive } from '../define-primitive.js';
 import { clonePibblElement } from '../element/create-element.js';
-import { getChildPrimitiveReceiverToken } from '../element/metadata.js';
+import { getPrimitiveReceiverToken, getChildPrimitiveReceiverToken } from '../element/metadata.js';
 import type { PibblElement } from '../element/types.js';
 import { GLOBAL_STATE } from '../global-state.js';
 import { layoutDiagnostic } from '../style/diagnostics.js';
@@ -11,7 +13,7 @@ import {
 } from '../components/structural-events.js';
 import { normalizeEdges } from '../style/normalize.js';
 import { resolveLength } from '../style/resolve-length.js';
-import { setPreNormalizedStyle } from '../style/resolve-dispatch.js';
+import { peekPreNormalizedStyle, setPreNormalizedStyle } from '../style/resolve-dispatch.js';
 import type {
   BoxStyle,
   GridItemStyle,
@@ -158,7 +160,19 @@ function renderGrid(
   return placeDirectChildren(
     children,
     localContent,
-    () => placements[index++],
+    (child, occurrence) => {
+      const placement = placements[index++];
+      if (experimentalLayout) {
+        const prepared = peekPreNormalizedStyle(placement.element);
+        if (!prepared) throw new Error('Known Grid preparation requires settled receiver inputs.');
+        const settled = prepared.style as Readonly<BoxStyle>;
+        const width = settled.width, height = settled.height;
+        if (typeof width !== 'number' || typeof height !== 'number') throw new Error('Known Grid preparation requires settled content geometry.');
+        const slot = preflightKnownLayout(child, prepared.style, { x: 0, y: 0, width, height }, getPrimitiveReceiverToken(placement.element), occurrence);
+        attachPreparedLayoutSlot(placement.element, slot);
+      }
+      return placement;
+    },
     style.overflow,
   );
 }

@@ -1,12 +1,12 @@
-import { Absolute, Flex, Group, HtmlBox, Layer, Rectangle, useLayoutBox, defineLayoutComponent, type FlexStyle, type PibblNodeInput, type Signal } from '@pibbl/core';
+import { Absolute, Flex, Grid, Group, HtmlBox, Layer, Rectangle, useLayoutBox, defineLayoutComponent, type FlexStyle, type PibblNodeInput, type Signal } from '@pibbl/core';
 
 interface LabProps {
-  width: Signal<number>; grow: Signal<number>; minimum: Signal<number>; nested: Signal<boolean>; direct: Signal<boolean>; described: Signal<boolean>; layer: Signal<boolean>;
+  width: Signal<number>; grow: Signal<number>; minimum: Signal<number>; nested: Signal<boolean>; direct: Signal<boolean>; described: Signal<boolean>; layer: Signal<boolean>; grid: Signal<boolean>;
   evaluate: (width: number) => void; hit: () => void; layerHit: () => void;
 }
 function PreflightProbe({ evaluate, hit }: {
   evaluate: (width: number) => void; hit: () => void;
-  style: { width: number; height: number; minWidth: number; flexGrow: number };
+  style: { width: number; height: number; minWidth: number; flexGrow: number; gridColumnStart?: number; gridRowStart?: number };
 }) {
   const box = useLayoutBox(); evaluate(box.width);
   return <Rectangle style={{ width: box.width, height: 30, fill: '#c45139' }} onClick={hit} />;
@@ -15,9 +15,13 @@ function PreflightProbe({ evaluate, hit }: {
 const DescribedCard = defineLayoutComponent((props: { style: FlexStyle; children: PibblNodeInput }) => <Flex style={props.style}>{props.children}</Flex>);
 
 /** Deterministic public-surface fixture; the host owns fault/recovery controls. */
-export function LayoutPreflightLab({ width, grow, minimum, nested, direct, described, layer, evaluate, hit, layerHit }: LabProps) {
+export function LayoutPreflightLab({ width, grow, minimum, nested, direct, described, layer, grid, evaluate, hit, layerHit }: LabProps) {
   const probe = <PreflightProbe evaluate={evaluate} hit={hit} style={{ width: 80, height: 30, minWidth: 0, flexGrow: 1 }} />;
   const blue = <Rectangle style={{ width: 80, height: 30, minWidth: minimum, maxWidth: 80, flexGrow: grow, fill: '#344c77' }} onClick={layerHit} />;
+  if (grid.get()) return <Grid style={{ width: width.get() + 80, height: 30, gridTemplateColumns: [width.get(), 80], gridTemplateRows: [30] }}>
+    <PreflightProbe evaluate={evaluate} hit={hit} style={{ width: width.get(), height: 30, minWidth: 0, flexGrow: 0, gridColumnStart: 1, gridRowStart: 1 }} />
+    <Flex style={{ width: 80, height: 30, gridColumnStart: 2, gridRowStart: 1 }}>{blue}</Flex>
+  </Grid>;
   if (layer.get()) return <Absolute style={{ width: 240, height: 40 }}>
     <Flex style={{ width, height: 30 }}>{probe}</Flex>
     <Layer style={{ left: 140, width: 100, height: 30 }}><Flex style={{ width: 80, height: 30 }}>{blue}</Flex></Layer>

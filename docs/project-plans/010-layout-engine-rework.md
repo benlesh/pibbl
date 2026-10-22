@@ -2,7 +2,8 @@
 
 ## Current checkpoint and single next slice — 2026-10-22
 
-Latest delivery is slice49 (known Layer-to-Flex preparation/adoption).
+Latest delivery is slice50 (Grid-entry known Flex preparation).
+Slice49 is `d6f12813` (known Layer-to-Flex preparation/adoption).
 Slice48 is `cb863bc2` (finite HTML projection preparation).
 Slice47 `9a7b1b0a` prepares pure described Flex roots; slice46 `242cba11` handles
 direct and opaque-boundary Flex entries. Every slice has its own commit.
@@ -735,6 +736,24 @@ normal57passed/68experimental skips. Types/targeted lint pass. Source/built Stud
 and target, independent root updates, teardown0/0/0/0;225public inputs each. Packed
 228installed-input Bundler/NodeNext/lifecycle pass. Kernel59181bytes unchanged.
 Logs `/tmp/pibbl-slice49-*`; Node26.9.0/pnpm11.21.0deps/Chromium, no Node24/full trust.
+
+### Slice 50 — Grid-entry known Flex preparation
+
+Grid reuses its existing explicit track/cell placement pass. The existing
+all-placement-before-traversal callback prepares known Flex cell roots from the
+exact clone/receiver/content allocation, then carries the prepared slot into normal
+rendering. No additional Grid solve, native Grid region or topology handoff.
+Outer earlier boundaries are not discovered; current Grid semantics stay intact.
+
+Public RED showed an earlier opaque cell evaluating twice instead of once before
+the later Flex factor failure. Recovery uses changed110px fractional tracks,
+matching red/blue pixels and blue cell targets, and releases nodes/arenas/instance.
+Experimental96tests pass across layout-WASM/Grid/structural Card; normal27pass/
+69experimental skips. Types/lint pass. Source/built Studio `--grid` pass failure
+isolation,100px recovery, both cell pixels/targets and cleanup0/0/0/0 with225public
+inputs each. Packed228installed-input Bundler/NodeNext/lifecycle pass. Kernel59181
+bytes unchanged. Logs `/tmp/pibbl-slice50-*`; Node26.9.0/pnpm11.21.0deps/Chromium,
+no Node24/full trust claim. All seven gates remain open.
 
 ### Consolidation 16 completed for delivery slices 46–48
 
