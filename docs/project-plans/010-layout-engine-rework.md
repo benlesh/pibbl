@@ -2,7 +2,7 @@
 
 ## Current checkpoint and single next slice — 2026-10-22
 
-Latest delivery is slice66 (pinned Yoga wrap/cross-reversal conformance).
+Latest delivery is slice66 `6648bf66` (pinned Yoga wrap/cross-reversal conformance).
 Slice65 is `fcfea332` (pinned Yoga reverse-axis conformance).
 Slice64 is `f5639a2e` (pinned Yoga column conformance).
 Slice63 is `440f7c32` (fixed-row intrinsic Grid in Flex columns).
@@ -1092,7 +1092,35 @@ subtract padding once, including prepared/cached clones and percentage resolutio
 Resolve contradictory size-versus-padding behavior explicitly; do not silently
 choose CSS overflow or equate painted stroke with layout border. Deliver one public
 row/column geometry/hit/scenario slice, then harden the broader matrix. No new WASM
-ABI should be needed. Consolidate64–66 before starting67; all seven gates stay open.
+ABI should be needed. Consolidation22 for64–66 is complete; all seven gates stay open.
+
+### Consolidation 22 completed for delivery slices 64–66
+
+Separate64 `f5639a2e`,65 `fcfea332`,66 `6648bf66`. The pinned native Yoga3.2.1
+042f5013152eb81c1552dec945b88f7b95ca350f corpus grows from five to twelve classified
+finite cases: numeric columns, capped main-axis reversals and three-item wrapped/
+cross-reversed lines. Full dimensions/positions, explicit case axes/wrap, compiler
+probe hash and the recorded public example agree. Yoga is not bundled at runtime.
+
+Fresh combined Chromium run:273passed/1normal-onlyskip across12 layout, Layer,
+ABI and HTML ownership files. Native generation plus independent no-write
+reproduction and recorded/embedded checks pass. Final source/built Studio replays
+all twelve fixtures with correct identities/gap misses, zero errors and cleanup;
+built467private inputs. Visual inspection confirms readable matching panels; no
+baseline changes. Types/lint clean. Runtime/kernel/package unchanged throughout
+64–66, so the last packed228Bundler/NodeNext/lifecycle receipt is64, not repeated
+unchanged65/66 evidence. Logs `/tmp/pibbl-consolidation22-focused.txt` and
+`/tmp/pibbl-slice64-*` through66; Node26.9.0/pnpm11.21.0deps/Chromium/Apple C++20.
+No Node24 trust, speed or broad parity claim.
+
+The fixed33 capabilities and all seven open gates remain unchanged. Twelve exact
+cases improve the corpus but do not close Flex/box/RTL/aspect, intrinsic providers/
+feedback, participation, full prepared topology/minimal visits, matching atomic
+Canvas/hit/focus/HTML publication, standalone/framework/Pibbl migrations, broad
+Yoga matrix or implicit/intrinsic Grid. Reproducible kernel/host/full-app timing,
+inert/tree-shaking evidence, Node24 trust and final separate critical review remain
+cross-cutting exits. Exactly one next67 defines and implements coherent boxSizing;
+current content-box default must remain stable and stroke is not a layout border.
 
 ### Consolidation 21 completed for delivery slices 61–63
 
