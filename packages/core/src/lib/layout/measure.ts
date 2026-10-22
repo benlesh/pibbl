@@ -11,7 +11,7 @@ import {
   createPrimitiveReceiverToken,
   getPrimitiveDefinition,
   getPrimitiveReceiverToken,
-  getPolicyPreparationSource,
+  getElementMetadata,
 } from '../element/metadata.js';
 import { resolvePrimitiveInputs } from '../element/resolve-primitive-inputs.js';
 import { recordLayoutMeasurement } from './diagnostics.js';
@@ -79,7 +79,8 @@ function measureElementInternal(
   const definition = getPrimitiveDefinition(type);
   const component = type.name || 'Anonymous';
   const preNormalized = takePreNormalizedStyle(element);
-  const source = getPolicyPreparationSource(element) ??
+  const metadata = getElementMetadata(element);
+  const source = metadata?.policyPreparationSource ?? metadata?.layoutDescriptionSource ??
     preNormalized?.source ??
     element;
   if (context.active.has(source)) {

@@ -312,6 +312,7 @@ function measureFlex(
     const style = preparedStyleValue(prepared) as Readonly<
       BoxStyle & FlexItemStyle & LayoutItemStyle & Record<string, unknown>
     >;
+    const layoutChild = isLayoutComponent(child.type) ? prepareLayoutComponent(child, { receiverToken }) : child;
     rejectUnsupportedItemFields(child, style, diagnosticBox);
     const grow = nonnegativeFactor(
       style.flexGrow ?? 0,
@@ -350,7 +351,7 @@ function measureFlex(
     let baseMain: number;
     let baseCross: number;
     if (experimentalLayout && !row && widthDefinite && !heightDefinite &&
-      (child.type === Text || child.type === Flex && (style.flexDirection ?? 'row') === 'column' && (style.flexWrap ?? 'nowrap') === 'nowrap') &&
+      (child.type === Text || layoutChild.type === Flex && (style.flexDirection ?? 'row') === 'column' && (style.flexWrap ?? 'nowrap') === 'nowrap') &&
       (mainValue === undefined || mainValue === 'auto' || crossValue === undefined || crossValue === 'auto')) {
       // Descend only through known built-in columns at settled content widths.
       // The shared measurement context detects descriptor cycles; there is no
@@ -365,9 +366,9 @@ function measureFlex(
       const maxWidth = intrinsicOptionalNumber(style.maxWidth, Number.POSITIVE_INFINITY, 'maxWidth');
       if (minWidth > maxWidth) throw childDiagnostic(child, 'minWidth', minWidth, diagnosticBox, 'minimum must not exceed maximum');
       const usedWidth = clamp(automaticWidth ? Math.max(0, availableWidth-padding.left-padding.right) : intrinsicNumber(crossValue, 'width'), minWidth, maxWidth);
-      const measuredChild = clonePibblElement(child);
+      const measuredChild = clonePibblElement(layoutChild);
       const measuredStyle = { ...style, width: usedWidth };
-      setPreNormalizedStyle(measuredChild, measuredStyle, child, receiverToken, preparedStyleQuery(prepared));
+      setPreNormalizedStyle(measuredChild, measuredStyle, layoutChild, getPrimitiveReceiverToken(layoutChild) ?? receiverToken, preparedStyleQuery(prepared));
       const result = input.measureElement(measuredChild, { minWidth: 0, maxWidth: usedWidth, minHeight: 0, maxHeight: input.constraints.maxHeight });
       if (result.status !== 'measured') return result;
       baseMain = mainValue === undefined || mainValue === 'auto' ? result.size.height : intrinsicNumber(mainValue, 'flexBasis');

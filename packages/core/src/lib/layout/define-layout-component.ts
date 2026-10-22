@@ -1,7 +1,7 @@
 import type { PibblComponent, PibblElement, PibblNodeInput } from '../element/types.js';
 import { clonePibblElement } from '../element/create-element.js';
 import { materializeContainerChildren } from '../element/children.js';
-import { getChildPrimitiveReceiverToken, getPrimitiveDefinition, getPrimitiveReceiverToken, setPrimitiveReceiverToken } from '../element/metadata.js';
+import { getChildPrimitiveReceiverToken, getElementMetadata, setElementMetadata, getPrimitiveDefinition, getPrimitiveReceiverToken, setPrimitiveReceiverToken } from '../element/metadata.js';
 import { GLOBAL_STATE } from '../global-state.js';
 import { withHooksForbidden } from '../hooks/hook-slot.js';
 import { withSignalWriteForbidden } from '../signals/graph.js';
@@ -58,7 +58,12 @@ export function prepareLayoutComponent(
         if (roots.length !== 1 || !getPrimitiveDefinition(roots[0].type)) {
           throw new Error('A layout description must return exactly one drawing or layout primitive root.');
         }
-        return clonePibblElement(roots[0]);
+        const root = clonePibblElement(roots[0]);
+        setElementMetadata(root, {
+          ...getElementMetadata(root),
+          layoutDescriptionSource: getElementMetadata(roots[0])?.layoutDescriptionSource ?? roots[0],
+        });
+        return root;
       })),
     ),
   );

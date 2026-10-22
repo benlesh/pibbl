@@ -28,6 +28,7 @@ try {
     const selected = await click(620, 40);
     assert.equal(selected.structuralCard, true);
     assert.equal(selected.descriptions, 1);
+    assert.equal(selected.paragraphDescriptions, 1);
   }
   const initial = await state(); assert.equal(initial.footerBox.y, initial.cardBottom+12);
   const narrow = await click(60,110);
@@ -37,7 +38,10 @@ try {
   assert.equal(narrow.layout.paintInputInvalidations, initial.layout.paintInputInvalidations);
   assert.equal(narrow.layout.measurementInputInvalidations, initial.layout.measurementInputInvalidations);
   assert.equal(narrow.probeRenders, initial.probeRenders+1, 'Measurement must not invoke the opaque probe');
-  if (structural) assert.equal(narrow.descriptions, initial.descriptions+1);
+  if (structural) {
+    assert.equal(narrow.descriptions, initial.descriptions+1);
+    assert.equal(narrow.paragraphDescriptions, initial.paragraphDescriptions+1);
+  }
   assert.equal((await click(40,initial.footerBox.y+12)).footerHits, 0);
   assert.equal((await click(40,narrow.footerBox.y+12)).footerHits, 1);
   if (process.env.PIBBL_LAYOUT_SCREENSHOT) await frame.locator('canvas').screenshot({ path: process.env.PIBBL_LAYOUT_SCREENSHOT });

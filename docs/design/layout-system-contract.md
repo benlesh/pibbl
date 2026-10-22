@@ -294,8 +294,11 @@ before intrinsic height measurement. The Card remains the numeric/identity owner
 measurement clones use the prepared root's receiver token, matching its paint path.
 It supports the existing generic wrapped Text measurement,
 including following-sibling geometry and hits in the experimental lane. Known
-fully definite roots can be measured in normal builds too. General nested structural intrinsic sizing and aggregate Card measurement reuse
-remain unimplemented; unsupported cases stay diagnostic. See
+fully definite roots can be measured in normal builds too. Finite nested structural Cards with known nowrap-column Flex roots use the same
+settled-width recursive measurement path. Original descriptor sources survive
+preparation clones so the existing active-source measurement guard detects cyclic
+descriptor dependencies. General structural intrinsic sizing outside that bounded
+column path and aggregate Card measurement reuse remain unimplemented; unsupported cases stay diagnostic. See
 [the API page](../site/api/functions/define-layout-component.md) and
 [Plan 010](../project-plans/010-layout-engine-rework.md).
 

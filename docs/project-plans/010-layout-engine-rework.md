@@ -35,7 +35,7 @@ Current estimate remains a range, not a promise: the original forecast was 36
 additional slices including 25. Three deliveries are now integrated; loading was
 an accepted scope addition to that forecast. Roughly 34 delivery slices remain,
 subject to reassessment against the same proposal exits after the next group.
-Slice 28 is delivered below. Roughly 29 delivery slices remain after slice 32 against the same
+Slice 28 is delivered below. Roughly 28 delivery slices remain after slice 33 against the same
 forecast, subject to reassessment after this group. Area estimates are not parallel
 work queues.
 
@@ -241,12 +241,31 @@ inputs. Logs `/tmp/pibbl-slice32-{source,built}-browser.log`. Same runnable port
 5193 and `#/examples/layout/wasm-flex-nested-intrinsic`, Toggle pure Card.
 This is group11's second delivery; consolidate31–33 after the next slice.
 
-**Exactly one selected next delivery slice: 33 — nested structural Card intrinsic
-columns.** Extend the already-known finite-width intrinsic column measurement loop
-to a nested Card's prepared Flex column root. Retain wrapper identity and canonical
-root receiver tokens; establish a public failing nested composition before edits.
-No unrestricted graph, row/wrapped/query intrinsic sizing, new API or default solver
-switch. Consolidate31–33 after this third delivery.
+### Slice 33 — nested structural Card intrinsic columns
+
+Nested pure Cards now contribute automatic height through their prepared nowrap
+Flex column roots after finite width settles. Canonical receiver tokens preserve
+one description per receiver/transaction and ordinary wrapper identity. Returned
+source metadata preserves cycle detection across preparation clones. The public
+example contains both outer and paragraph Cards without manual width arithmetic.
+
+The public nested regression failed before runtime edits; a shared cyclic root
+also failed with stack overflow before the source-metadata correction. Fresh checks
+on Node 26.9.0, pnpm 11.21.0 dependencies and Chromium: 85 experimental tests passed;
+normal lane 16 passed / 5 experimental cases skipped. Typecheck, scoped lint and
+private package build passed. Source and built structural browser probes passed
+footer 320→360→280, both descriptions once per width transaction, moved hits,
+keyed removal/restoration and zero disposal ownership; built provenance 466 inputs.
+Logs: `/tmp/pibbl-slice33-{focused,normal,typecheck,lint,build}.txt` and
+`/tmp/pibbl-slice33-{source,built}-browser.log`. Focused review found no material issue.
+
+Runnable ports 5192/5193: `#/examples/layout/wasm-flex-nested-intrinsic`, choose
+Toggle pure Card. Nested aggregate heights still remeasure each transaction;
+this does not establish a general prepared graph or arbitrary callback termination.
+
+**Exactly one selected next delivery slice: 34 — direct empty Rectangle automatic
+minimum policy.** Present the bounded native policy before implementation, retain
+explicit minimum precedence, and establish a public shrink regression first.
 
 Current acceptance gaps remain broader than loading: general automatic minimum and
 intrinsic sizing rules, structural component preparation, root-wide prepared graph
@@ -1479,15 +1498,13 @@ three pinned Yoga cases, and keeps unaccepted API signatures and missing release
 gates explicit. It is support work, not an additional delivered capability slice.
 Group9 has two deliveries; consolidate after the next closely related slice.
 
-## [NEXT] Nested structural Card intrinsic columns (slice 33)
+## [NEXT] Direct empty Rectangle automatic minimum (slice 34)
 
-A finite settled-width Card should be able to contain another pure Card whose
-known nowrap Flex column root contributes automatic height. Reuse the existing
-recursive known-column path, keeping each description once per receiver/transaction
-and carrying canonical root tokens into measurement clones and paint. The public
-example should remove an inner descriptor-only restriction, preserve footer hits
-and teardown, then consolidate group11 (31–33). Unknown/provider/query/cycle paths
-stay conservative; no general retained preparation graph is claimed.
+Experimental direct childless Rectangle items with finite authored width and height
+can use a zero automatic minimum, respecting explicit minima and existing shrink
+and clipping policies. Text and opaque/provider components keep their existing
+contracts. Normal JavaScript behavior is unchanged. Confirm the exact bounded
+policy in the implementation receipt before broadening the path.
 
 Slice 26 delivery (2026-10-21): completed the in-progress private role foundation
 before any loading migration. Existing receiver edges carry staged masks; successful

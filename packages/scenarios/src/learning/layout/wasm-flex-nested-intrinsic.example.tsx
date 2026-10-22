@@ -6,6 +6,7 @@ import {
   Text,
   useReaction,
   type PibblNode,
+  type PibblNodeInput,
   signal,
   useLayoutBox,
   useCanvasContext,
@@ -19,7 +20,7 @@ function createWasmFlexNestedIntrinsicExampleContent(
   let node: PibblNode;
   const width = signal(420);
   const structuralCard = signal(false);
-  let descriptions = 0;
+  let descriptions = 0, paragraphDescriptions = 0;
   const longText =
     "Nested columns settle their widths before Text determines their heights. The following sibling uses the complete Card height.";
   const keys = signal(["main", "note"]);
@@ -40,7 +41,53 @@ function createWasmFlexNestedIntrinsicExampleContent(
   }
   // An ordinary descriptor helper, called by Workspace in normal rendering.
   // The engine measures only its returned built-ins; it never invokes this helper.
-  function card(title: string) {
+  function paragraphColumn() {
+    return (
+      <Flex
+        style={{
+          flexDirection: "column",
+          maxWidth: 300,
+          padding: 8,
+          gap: 6,
+          minHeight: 0,
+          flexShrink: 0,
+        }}
+      >
+        {keys.get().map((key) =>
+          key === "main" ? (
+            <Text
+              key={key}
+              style={{
+                wrap: true,
+                font: "14px sans-serif",
+                lineHeight: 20,
+                fill: ink,
+                minHeight: 0,
+                flexShrink: 0,
+              }}
+            >
+              {paragraph}
+            </Text>
+          ) : (
+            <Text
+              key={key}
+              style={{
+                wrap: true,
+                font: "12px sans-serif",
+                lineHeight: 16,
+                fill: "#475569",
+                minHeight: 0,
+                flexShrink: 0,
+              }}
+            >
+              Built-in descriptors only.
+            </Text>
+          ),
+        )}
+      </Flex>
+    );
+  }
+  function card({ title, body = paragraphColumn() }: { title: string; body?: PibblNodeInput }) {
     return (
       <Flex
         style={{
@@ -64,57 +111,20 @@ function createWasmFlexNestedIntrinsicExampleContent(
         >
           {title}
         </Text>
-        <Flex
-          style={{
-            flexDirection: "column",
-            maxWidth: 300,
-            padding: 8,
-            gap: 6,
-            minHeight: 0,
-            flexShrink: 0,
-          }}
-        >
-          {keys.get().map((key) =>
-            key === "main" ? (
-              <Text
-                key={key}
-                style={{
-                  wrap: true,
-                  font: "14px sans-serif",
-                  lineHeight: 20,
-                  fill: ink,
-                  minHeight: 0,
-                  flexShrink: 0,
-                }}
-              >
-                {paragraph}
-              </Text>
-            ) : (
-              <Text
-                key={key}
-                style={{
-                  wrap: true,
-                  font: "12px sans-serif",
-                  lineHeight: 16,
-                  fill: "#475569",
-                  minHeight: 0,
-                  flexShrink: 0,
-                }}
-              >
-                Built-in descriptors only.
-              </Text>
-            ),
-          )}
-        </Flex>
+        {body}
         <Boundary
           style={{ width: 0, height: 0, minHeight: 0, flexShrink: 0 }}
         />
       </Flex>
     );
   }
+  const ParagraphCard = defineLayoutComponent(() => {
+    paragraphDescriptions++;
+    return paragraphColumn();
+  });
   const Card = defineLayoutComponent(({ title }: { title: string }) => {
     descriptions++;
-    return card(title);
+    return card({ title, body: <ParagraphCard /> });
   });
   function Footer({ style: _style }: { style: BoxStyle & FlexItemStyle }) {
     const box = useLayoutBox(),
@@ -167,7 +177,7 @@ function createWasmFlexNestedIntrinsicExampleContent(
           gap: 12,
         }}
       >
-        {structuralCard.get() ? <Card title="Reusable descriptor Card" /> : card("Reusable descriptor Card")}
+        {structuralCard.get() ? <Card title="Reusable descriptor Card" /> : card({ title: "Reusable descriptor Card" })}
         <Footer
           style={{ width: 180, height: 36, minHeight: 0, flexShrink: 0 }}
         />
@@ -289,6 +299,7 @@ function createWasmFlexNestedIntrinsicExampleContent(
       width: width.get(),
       structuralCard: structuralCard.get(),
       descriptions,
+      paragraphDescriptions,
       keys: keys.get(),
       cardBottom,
       footerBox,

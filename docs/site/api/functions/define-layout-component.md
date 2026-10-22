@@ -70,5 +70,8 @@ An ordinary component remains opaque to intrinsic measurement.
 
 This initial capability uses existing measurement support: a finite-width nowrap
 column containing wrapped Text is supported in the experimental layout lane.
-Other intrinsic structures retain contextual unsupported-measurement diagnostics;
+Nested Cards below known nowrap-column roots use that same settled-width path,
+with each description prepared once per receiver and transaction. Descriptor cycles
+retain the existing cyclic-measurement diagnostic. Other intrinsic structures retain
+contextual unsupported-measurement diagnostics;
 this does not enable general CSS sizing or switch the production layout engine.

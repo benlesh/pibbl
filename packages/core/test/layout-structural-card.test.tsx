@@ -62,9 +62,11 @@ it.runIf(experimentalLayout)('exposes the reusable Card in the nested public exa
   const initial = await click(620, 40);
   expect(initial.structuralCard).toBe(true);
   expect(initial.descriptions).toBe(1);
+  expect(initial.paragraphDescriptions).toBe(1);
   const narrow = await click(60, 110);
   expect(narrow.footerBox.y).toBeGreaterThan(initial.footerBox.y);
   expect(narrow.descriptions).toBe(initial.descriptions + 1);
+  expect(narrow.paragraphDescriptions).toBe(initial.paragraphDescriptions + 1);
   expect(narrow.layout.nodeCreates).toBe(initial.layout.nodeCreates);
   expect(narrow.probeRenders).toBe(initial.probeRenders + 1);
   expect((await click(40, initial.footerBox.y + 5)).footerHits).toBe(0);
@@ -151,4 +153,52 @@ it.runIf(experimentalLayout)('settles a structural Card root width before measur
   await nextFrame();
   expect(footerTop()).toBeGreaterThan(wide);
   expect(descriptions).toBe(2);
+});
+
+it.runIf(experimentalLayout)('measures nested structural Cards once each at their settled widths', async () => {
+  const target = document.createElement('canvas'); target.width = 400; target.height = 400;
+  document.body.append(target);
+  const width = signal(180);
+  const text = signal('Nested reusable Cards determine their heights from the widths allocated by their parent columns.');
+  let outerDescriptions = 0, innerDescriptions = 0;
+  const InnerCard = defineLayoutComponent(() => {
+    innerDescriptions++;
+    return <Flex style={{ flexDirection: 'column', maxWidth: 140, padding: 4, minHeight: 0, flexShrink: 0 }}>
+      <Text style={{ minHeight: 0, flexShrink: 0, wrap: true, font: '16px monospace', lineHeight: 20 }}>{text.get()}</Text>
+    </Flex>;
+  });
+  const OuterCard = defineLayoutComponent(() => {
+    outerDescriptions++;
+    return <Flex style={{ flexDirection: 'column', maxWidth: 164, padding: 8, minHeight: 0, flexShrink: 0 }}><InnerCard /></Flex>;
+  });
+  controller = pibblSync(target, <Flex style={{ width, height: 380, flexDirection: 'column', gap: 12 }}>
+    <OuterCard />
+    <Rectangle style={{ width: 180, height: 24, minHeight: 0, flexShrink: 0, fill: '#426b61' }} />
+  </Flex>);
+  await nextFrame();
+  const footerTop = () => {
+    const context = target.getContext('2d')!;
+    for (let y = 0; y < 400; y++) {
+      const value = context.getImageData(5, y, 1, 1).data;
+      if (value[0] === 66 && value[1] === 107 && value[2] === 97 && value[3] === 255) return y;
+    }
+    throw new Error('Footer did not paint');
+  };
+  const wide = footerTop();
+  expect([outerDescriptions, innerDescriptions]).toEqual([1, 1]);
+  width.set(120);
+  await nextFrame();
+  expect(footerTop()).toBeGreaterThan(wide);
+  expect([outerDescriptions, innerDescriptions]).toEqual([2, 2]);
+  text.set('Short card.');
+  await nextFrame();
+  expect(footerTop()).toBeLessThan(wide);
+  expect([outerDescriptions, innerDescriptions]).toEqual([3, 3]);
+});
+
+it.runIf(experimentalLayout)('keeps the existing measurement cycle guard across structural preparation clones', () => {
+  let root = <Flex style={{ width: 164, flexDirection: 'column', minHeight: 0, flexShrink: 0 }}>{null}</Flex>;
+  const Cyclic = defineLayoutComponent(() => root);
+  root = <Flex style={{ width: 164, flexDirection: 'column', minHeight: 0, flexShrink: 0 }}><Cyclic /></Flex>;
+  expect(() => measureElement(<Cyclic />, constraints, service)).toThrow(/cyclic measurement dependency/);
 });
