@@ -1,3 +1,5 @@
+import { experimentalLayout } from './wasm/region.js';
+import { registerKnownLayoutPreflight, claimPreparedLayoutPlan, stagePreparedLayoutPlan, prepareKnownLayoutDescendants, preparePlacedKnownLayout, type PreparedLayoutPlan } from './prepared-root.js';
 import { preparedStyleValue, preparedStyleQuery } from '../style/responsive.js';
 import { definePrimitive } from '../define-primitive.js';
 import { GLOBAL_STATE } from '../global-state.js';
@@ -66,7 +68,7 @@ function renderOverlay(
   ctx: RenderingContext2D,
 ) {
   wireStructuralEvents(props);
-  const children = prepareLayoutChildren(props.children, 'Overlay');
+  const ordinaryChildren = experimentalLayout ? undefined : prepareLayoutChildren(props.children, 'Overlay');
   recordLayoutEvaluation();
   const content = style.box.contentBox;
   ctx.translate(content.x, content.y);
@@ -79,20 +81,19 @@ function renderOverlay(
   const releaseLayout = pushLayoutBox(localContent);
   GLOBAL_STATE.componentRefs!.onAfterRender = releaseLayout;
 
+  const prepared = experimentalLayout ? claimPreparedLayoutPlan(GLOBAL_STATE.componentRefs!.element, localContent) : undefined;
+  const children = prepared?.children ?? ordinaryChildren ?? prepareLayoutChildren(props.children, 'Overlay');
+  const placements = prepared?.placements ?? (experimentalLayout ? prepareOverlayPlacements(children, localContent, style) : undefined);
+  let placementIndex = 0;
   let occurrence = 0;
   return placeDirectChildren(
     children,
     localContent,
-    child => resolveOverlayChildPlacement(
-      localContent,
-      child,
-      style,
-      getChildPrimitiveReceiverToken(
-        GLOBAL_STATE.renderTransaction,
-        GLOBAL_STATE.primitiveReceiverToken,
-        occurrence++,
-      ),
-    ),
+    (child, childOccurrence) => {
+      const placement = placements ? placements[placementIndex++] : resolveOverlayChildPlacement(localContent, child, style, getChildPrimitiveReceiverToken(GLOBAL_STATE.renderTransaction, GLOBAL_STATE.primitiveReceiverToken, occurrence++));
+      if (experimentalLayout && !prepared) preparePlacedKnownLayout(placement.element, childOccurrence);
+      return placement;
+    },
     style.overflow,
   );
 }
@@ -120,6 +121,25 @@ export const Overlay = definePrimitive<
     alignItems: style.alignItems ?? 'stretch',
     justifyItems: style.justifyItems ?? 'stretch',
   }),
+});
+
+function prepareOverlayPlacements(children: readonly PibblElement<any>[], content: Readonly<LayoutBox>, alignment: Readonly<Pick<OverlayStyle, 'alignItems' | 'justifyItems'>>): { box: LayoutBox; element: PibblElement<any> }[] {
+  const placements = new Array<{ box: LayoutBox; element: PibblElement<any> }>(children.length);
+  for (let index = 0; index < children.length; index++) {
+    placements[index] = resolveOverlayChildPlacement(content, children[index], alignment, getChildPrimitiveReceiverToken(GLOBAL_STATE.renderTransaction, GLOBAL_STATE.primitiveReceiverToken, index));
+  }
+  return placements;
+}
+if (experimentalLayout) registerKnownLayoutPreflight(Overlay, (element, style, content, receiver, slot) => {
+  // The registry owns this structural slot; Overlay needs no numeric arena.
+  const previous = GLOBAL_STATE.primitiveReceiverToken;
+  GLOBAL_STATE.primitiveReceiverToken = receiver;
+  try {
+    const children = prepareLayoutChildren(element.props.children, 'Overlay');
+    const plan: PreparedLayoutPlan = { content, children, placements: prepareOverlayPlacements(children, content, style as Readonly<OverlayStyle>) };
+    prepareKnownLayoutDescendants(plan, slot);
+    stagePreparedLayoutPlan(slot, plan);
+  } finally { GLOBAL_STATE.primitiveReceiverToken = previous; }
 });
 
 export function placeOverlayChild(

@@ -68,19 +68,19 @@ export function attachPreparedLayoutSlot(element: PibblElement<any>, slot?: Prep
   if (slot) setElementMetadata(element, { ...getElementMetadata(element), preparedLayoutSlot: slot });
 }
 export interface PreparedLayoutPlan {
-  readonly region: LayoutRegion;
+  readonly region?: LayoutRegion;
   readonly content: Readonly<LayoutBox>;
   readonly children: readonly PibblElement<any>[];
-  readonly placements: { box: LayoutBox; usedWidth: number; usedHeight: number; element: PibblElement<any> }[];
+  readonly placements: { box: LayoutBox; element: PibblElement<any> }[];
 }
-export interface PreparedFlexLayoutPlan extends PreparedLayoutPlan { readonly cached: boolean; readonly revision: number; }
+export interface PreparedFlexLayoutPlan extends PreparedLayoutPlan { readonly region: LayoutRegion; readonly cached: boolean; readonly revision: number; readonly placements: { box: LayoutBox; usedWidth: number; usedHeight: number; element: PibblElement<any> }[]; }
 export class PreparedLayoutSlot {
   region: LayoutRegion | undefined;
   private boundaryOwner: PibblComponentRefs<any> | undefined;
   claimBoundary(): void {
     const refs = GLOBAL_STATE.componentRefs!;
     if (this.boundaryOwner === refs) return;
-    this.boundaryOwner = refs; refs.teardowns.add(() => this.dispose());
+    this.boundaryOwner = refs; refs.teardowns.add(() => { if (this.boundaryOwner === refs) this.dispose(); });
   }
   readonly children = new Map<Function, Map<string, PreparedLayoutSlot>>();
   private disposeChildren(): void {
@@ -121,13 +121,14 @@ export function claimPreparedLayoutPlan(element: PibblElement<any>, content: Rea
   if (!transaction || !slot) return;
   const entry = plans.get(transaction)?.get(slot);
   if (!entry || entry.claimed || entry.plan.content.width !== content.width || entry.plan.content.height !== content.height) throw new Error('Prepared layout plan does not match its allocation.');
-  slot.claim(entry.plan.region); entry.claimed = true;
+  if (entry.plan.region) slot.claim(entry.plan.region); else slot.claimBoundary();
+  entry.claimed = true;
   return entry.plan;
 }
 export function claimPreparedFlexPlan(element: PibblElement<any>, content: Readonly<LayoutBox>): PreparedFlexLayoutPlan | undefined {
   const plan = claimPreparedLayoutPlan(element, content);
   if (!plan) return;
-  if (!('cached' in plan) || typeof plan.cached !== 'boolean' || !('revision' in plan) || typeof plan.revision !== 'number') throw new Error('Prepared Flex plan is incompatible with this boundary.');
+  if (!plan.region || !('cached' in plan) || typeof plan.cached !== 'boolean' || !('revision' in plan) || typeof plan.revision !== 'number') throw new Error('Prepared Flex plan is incompatible with this boundary.');
   return plan as PreparedFlexLayoutPlan;
 }
 export function stagePreparedChildStyle(child: PibblElement<any>, receiver: object, content: Readonly<LayoutBox>, prepared: PreparedStyle): void {

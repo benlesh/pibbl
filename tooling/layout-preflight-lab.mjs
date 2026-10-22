@@ -112,8 +112,8 @@ else {
       console.warn(`${built ? 'Built' : 'Source'} HTML projection: overflow rejected before earlier update, abort/DOM cleanup, independent root and native recovery pass; ${coreInputs.length} public core inputs`);
     } else {
     let expectedEvaluations = 1;
-    if (process.argv.includes('--flow-root') || process.argv.includes('--grid-root') || process.argv.includes('--flow') || process.argv.includes('--grid') || process.argv.includes('--layer') || process.argv.includes('--nested') || process.argv.includes('--direct') || process.argv.includes('--described')) {
-      await lab.getByRole('button', { name: process.argv.includes('--flow-root') ? 'Use prepared Flow root' : process.argv.includes('--grid-root') ? 'Use prepared Grid root' : process.argv.includes('--flow') ? 'Use Flow sequence' : process.argv.includes('--grid') ? 'Use Grid cells' : process.argv.includes('--layer') ? 'Use Layer boundary' : process.argv.includes('--described') ? 'Use described layout' : process.argv.includes('--direct') ? 'Use direct root' : 'Use nested layout', exact: true }).click();
+    if (process.argv.includes('--overlay-root') || process.argv.includes('--flow-root') || process.argv.includes('--grid-root') || process.argv.includes('--flow') || process.argv.includes('--grid') || process.argv.includes('--layer') || process.argv.includes('--nested') || process.argv.includes('--direct') || process.argv.includes('--described')) {
+      await lab.getByRole('button', { name: process.argv.includes('--overlay-root') ? 'Use prepared Overlay root' : process.argv.includes('--flow-root') ? 'Use prepared Flow root' : process.argv.includes('--grid-root') ? 'Use prepared Grid root' : process.argv.includes('--flow') ? 'Use Flow sequence' : process.argv.includes('--grid') ? 'Use Grid cells' : process.argv.includes('--layer') ? 'Use Layer boundary' : process.argv.includes('--described') ? 'Use described layout' : process.argv.includes('--direct') ? 'Use direct root' : 'Use nested layout', exact: true }).click();
       await lab.waitForFunction(() => JSON.parse(document.querySelector('pre').textContent).evaluations === 2);
       expectedEvaluations = 2;
     }
@@ -124,7 +124,7 @@ else {
     assert.deepEqual(await lab.locator('#healthy').evaluate(canvas => [...canvas.getContext('2d').getImageData(65, 10, 1, 1).data]), [0,128,0,255]);
     await lab.locator('#subject').click({ position: { x: 91, y: 11 } }); assert.equal((await state()).hits, 0);
     const flowBeforeRecovery = process.argv.includes('--flow-root') ? await lab.evaluate(() => globalThis.__PIBBL_LAYOUT_DIAGNOSTICS__()) : undefined;
-    const gridBeforeRecovery = process.argv.includes('--grid-root') ? await lab.evaluate(() => globalThis.__PIBBL_LAYOUT_DIAGNOSTICS__()) : undefined;
+    const gridBeforeRecovery = (process.argv.includes('--overlay-root') || process.argv.includes('--grid-root')) ? await lab.evaluate(() => globalThis.__PIBBL_LAYOUT_DIAGNOSTICS__()) : undefined;
     await lab.getByRole('button', { name: 'Recover', exact: true }).click();
     await lab.waitForFunction(expected => JSON.parse(document.querySelector('pre').textContent).evaluations === expected, expectedEvaluations + 1);
     assert.equal((await state()).allocatedWidth, 100);
@@ -136,7 +136,7 @@ else {
       await lab.locator('#subject').click({ position: { x: 151, y: 11 } });
       await lab.waitForFunction(() => JSON.parse(document.querySelector('pre').textContent).layerHits === 1);
     }
-    if (process.argv.includes('--flow-root') || process.argv.includes('--grid-root') || process.argv.includes('--grid') || process.argv.includes('--flow')) {
+    if (process.argv.includes('--overlay-root') || process.argv.includes('--flow-root') || process.argv.includes('--grid-root') || process.argv.includes('--grid') || process.argv.includes('--flow')) {
       assert.deepEqual(await lab.locator('#subject').evaluate(canvas => [...canvas.getContext('2d').getImageData(150, 10, 1, 1).data]), [52,76,119,255]);
       await lab.locator('#subject').click({ position: { x: 151, y: 11 } });
       await lab.waitForFunction(() => JSON.parse(document.querySelector('pre').textContent).layerHits === 1);

@@ -328,6 +328,12 @@ render by adopting the same region/plan. Grid and Flow share this known-descenda
 handoff. A definite-root leaf proof measures once per transaction; other intrinsic
 constraint demands retain the existing measurement contract.
 
+Known Overlay roots stage their existing aligned placements and prepare known
+nested layout descendants before outer opaque siblings. Rendering adopts the same
+plan. Overlay owns a structural identity slot, without a numeric native arena;
+Grid/Flex descendants retain their existing arena ownership. Ordinary components
+remain opaque and this does not establish complete root-wide publication.
+
 For the same direct Text subset, automatic width and basis use the natural width
 before wrapping, not the containing row's constrained width. The natural query
 follows wrapped Text's existing removal of leading ASCII spaces; empty/space-only

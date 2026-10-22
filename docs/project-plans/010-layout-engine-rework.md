@@ -2,13 +2,14 @@
 
 ## Current checkpoint and single next slice — 2026-10-22
 
-Latest delivery is slice56 (prepared Flow-root planning/adoption).
+Latest delivery is slice57 (prepared Overlay-root planning/adoption).
+Slice56 is `cf2c7bc5` (prepared Flow-root planning/adoption).
 Slice55 is `1510efe3` (prepared Grid-root planning/adoption).
 Slice54 `773da7b9`,53 `aaa7ddcb`,52 `b5381e0d` are consolidated in `f322a709`.
 Every slice has its own commit. The fixed33-capability/seven-gate denominator is
-unchanged; all seven gates remain open. The single next slice is57, prepared
-Overlay-root planning/adoption. Source5192/built5193, `#/testing/layout-preflight`:
-Use prepared Grid root, Fail later sibling, Recover, then red right edge/blue cell.
+unchanged; all seven gates remain open. The single next slice is58, prepared
+Absolute-root planning/adoption. Source5192/built5193, `#/testing/layout-preflight`:
+Use prepared Overlay root, Fail later sibling, Recover, then red right edge/blue cell.
 Native Grid tracks/spans and Flow wrap controls remain available.
 
 The loading/named-component integration is ready for source feedback on branch
@@ -879,15 +880,29 @@ recovery, cleanup0/0/0/0 with225public inputs. Packed228installed-input Bundler/
 NodeNext/lifecycle pass. Kernel65282bytes unchanged. Logs `/tmp/pibbl-slice56-*`;
 Node26.9.0/pnpm11.21.0deps/Chromium, no Node24/full trust claim.
 
-## [NEXT] Prepared Overlay-root planning and adoption (slice 57)
+### Slice 57 — prepared Overlay-root planning and adoption
 
-Prepare Overlay's current settled child placements and known nested Grid/Flow/Flex
-plans before earlier outer opaque siblings, then claim those exact descriptors in
-rendering. Overlay owns structural slots but no unnecessary native arena. Public
-RED: a later Overlay's nested native sizing failure prevents earlier evaluation;
-recovery preserves alignment/pixels/hits and no duplicate native child work.
-Use the existing root transaction, receiver and teardown ownership. No new ABI/API
-or event/focus staging claim. Consolidate55–57 after this delivery.
+Overlay stages settled placements and recursively prepares known descendants before
+outer opaque siblings. Rendering claims that structural plan without allocating a
+native arena. Flex retains its stronger region/cache contract. Boundary teardown
+checks the exact owner so stale cleanup cannot dispose a replacement slot.
+
+Public RED reproduced earlier evaluations3instead of2. Green covers centered/end
+alignment, nested Grid/Flex failure, resizing, pixels/hit recovery and exact cleanup;
+Overlay adds no arena. Focused124tests across four files pass. Types/lint clean.
+Read-only review found no material issue. Source/built Studio `--overlay-root`
+passes failure isolation, aligned blue target, recovery2Gridaxes/1cellbatch/3arenas
+(including earlier Flex), cleanup0/0/0/0 and225public inputs. Kernel65282bytes
+unchanged. Logs `/tmp/pibbl-slice57-*`; Node26.9.0/pnpm11.21.0deps/Chromium.
+No Node24/full trust or general transactional publication claim.
+
+## [NEXT] Prepared Absolute-root planning and adoption (slice 58)
+
+Prepare known nested Absolute roots through the same arena-free structural plan.
+Public RED: later Overlay→Absolute→Grid→Flex failure must precede earlier opaque
+sibling evaluation. Reuse settled placements, receiver identity and parent-owned
+slots; prove recovery geometry/hits and single native descendant work. No new
+public API or ABI. Consolidate55–57 before starting58.
 
 ### Consolidation 18 completed for delivery slices 52–54
 

@@ -1,4 +1,4 @@
-import type { PreparedLayoutPlan, PreparedLayoutSlot } from './prepared-root.js';
+import type { PreparedFlexLayoutPlan, PreparedLayoutSlot } from './prepared-root.js';
 import { isKnownLayoutType, registerKnownLayoutPreflight, stagePreparedChildStyle, takePreparedChildStyle, hasPreparedChildStyles, claimPreparedFlexPlan, stagePreparedLayoutPlan, preflightKnownLayout, attachPreparedLayoutSlot } from './prepared-root.js';
 import { isLayoutComponent, prepareLayoutComponent } from './define-layout-component.js';
 import { allocationInputRevision } from './allocation-revision.js';
@@ -316,7 +316,7 @@ if (experimentalLayout) registerKnownLayoutPreflight(Flex, (element, style, cont
 });
 
 /** Known descendants prepare only after this boundary's own allocation settles. */
-function prepareFlexDescendants(plan: Pick<PreparedLayoutPlan, 'children' | 'placements'>, parentSlot?: PreparedLayoutSlot): void {
+function prepareFlexDescendants(plan: Pick<PreparedFlexLayoutPlan, 'children' | 'placements'>, parentSlot?: PreparedLayoutSlot): void {
   let flexOccurrence = 0;
   let descriptionOccurrences: Map<Function, number> | undefined;
     for (let index = 0; index < plan.children.length; index++) {
