@@ -4,7 +4,7 @@ import { createElement, Absolute, Flex, Grid, Flow, Text, Rectangle, measureElem
 import { pibblSync as pibbl } from '@pibbl/core/sync';
 import { prepareLayoutEngineSync } from '../src/lib/layout/wasm/embedded';
 import { WasmFlexTextExample as mountWasmFlexTextComponent } from "../../scenarios/src/learning/layout/wasm-flex-text.example";
-import { snapshotWasmLayoutDiagnostics, experimentalLayout } from '../src/lib/layout/wasm/region';
+import { LayoutRegion, snapshotWasmLayoutDiagnostics, experimentalLayout } from '../src/lib/layout/wasm/region';
 import { layoutFlex } from '../src/lib/layout/flex';
 import { createExampleMount } from "../../scenarios/src/example-host";
 
@@ -1671,4 +1671,53 @@ it.runIf(experimentalLayout)('resolves public mixed Grid tracks natively and reu
   expect(resolutions() - before).toBe(3);
   controller.dispose(); const disposed = snapshotWasmLayoutDiagnostics();
   expect(disposed.activeNodes).toBe(baseline.activeNodes); expect(disposed.activeArenas).toBe(baseline.activeArenas); expect(disposed.activeWasmInstances).toBe(baseline.activeWasmInstances);
+});
+
+
+it.runIf(experimentalLayout)('places explicit spanning Grid cells natively and preserves small spans after huge tracks', async () => {
+  const baseline = snapshotWasmLayoutDiagnostics();
+  const placements = () => (snapshotWasmLayoutDiagnostics() as ReturnType<typeof snapshotWasmLayoutDiagnostics> & { gridCellPlacements?: number }).gridCellPlacements ?? 0;
+  const before = placements(); const width = signal(200), fill = signal('blue'); let hits = 0, usedWidth = 0, usedHeight = 0;
+  function Cell(_props: { style: Record<string, unknown> }) {
+    const box = useLayoutBox(); usedWidth = box.width; usedHeight = box.height;
+    return createElement(Rectangle, { style: { width: box.width, height: box.height, fill }, onClick: () => hits++ });
+  }
+  const scene = createElement(Grid, { style: { width, height: 45, gridTemplateColumns: [20, '25%', '1fr'], gridTemplateRows: [20,20], columnGap: 10, rowGap: 5 }, children: createElement(Cell, { style: { width: '100%', height: '100%', gridColumnStart: 2, gridColumnSpan: 2, gridRowStart: 1, gridRowSpan: 2 } }) });
+  const canvas = document.createElement('canvas'); canvas.width = 300; canvas.height = 50; document.body.append(canvas);
+  const controller = pibbl(canvas, scene); controllers.push(controller); await nextFrame();
+  expect([usedWidth, usedHeight]).toEqual([170,45]);
+  expect(placements() - before).toBe(1);
+  clickCanvas(canvas, 210, 40); expect(hits).toBe(0);
+  width.set(260); await nextFrame(); expect([usedWidth, usedHeight]).toEqual([230,45]);
+  expect(placements() - before).toBe(2);
+  clickCanvas(canvas, 210, 40); expect(hits).toBe(1);
+  fill.set('orange'); await nextFrame(); expect(placements() - before).toBe(2);
+  expect([...canvas.getContext('2d')!.getImageData(210, 40, 1, 1).data]).toEqual([255,165,0,255]);
+  pibbl(canvas, createElement(Grid, { style: { width: 100, height: 20, gridTemplateColumns: [1e20,1], gridTemplateRows: [20] }, children: createElement(Cell, { style: { width: '100%', height: 20, gridColumnStart: 2, gridRowStart: 1 } }) }));
+  await nextFrame(); expect([usedWidth,usedHeight]).toEqual([1,20]);
+  controller.dispose(); const disposed = snapshotWasmLayoutDiagnostics();
+  expect(disposed.activeArenas).toBe(baseline.activeArenas); expect(disposed.activeNodes).toBe(baseline.activeNodes); expect(disposed.activeWasmInstances).toBe(baseline.activeWasmInstances);
+});
+
+it.runIf(experimentalLayout)('keeps native Grid track results valid when resolution grows WASM memory', () => {
+  const NativeInstance = WebAssembly.Instance;
+  let growths = 0;
+  vi.stubGlobal('WebAssembly', Object.assign(Object.create(WebAssembly), {
+    Instance: class {
+      readonly exports: WebAssembly.Exports;
+      constructor(module: WebAssembly.Module, imports?: WebAssembly.Imports) {
+        const instance = new NativeInstance(module, imports);
+        const kernel = instance.exports;
+        this.exports = { ...kernel, resolve_grid_tracks: (...args: number[]) => {
+          const status = (kernel.resolve_grid_tracks as (...args: number[]) => number)(...args);
+          (kernel.memory as WebAssembly.Memory).grow(1); growths++; return status;
+        } };
+      }
+    },
+  }));
+  const region = new LayoutRegion();
+  try {
+    expect(region.resolveGridTracks([{ kind: 'fixed', value: 20 }, { kind: 'percentage', factor: 25 }, { kind: 'fraction', factor: 1 }], { axis: 'columns', bound: 200, gap: 10 })).toEqual([20,50,110]);
+    expect(growths).toBe(1);
+  } finally { region.dispose(); vi.unstubAllGlobals(); }
 });

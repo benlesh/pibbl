@@ -31,7 +31,27 @@ else {
     }
     const state = () => lab.locator('pre').evaluate(element => JSON.parse(element.textContent));
     await lab.waitForFunction(() => JSON.parse(document.querySelector('pre').textContent).evaluations === 1);
-    if (process.argv.includes('--native-grid')) {
+    if (process.argv.includes('--native-spans')) {
+      const placements = () => lab.evaluate(() => globalThis.__PIBBL_LAYOUT_DIAGNOSTICS__().gridCellPlacements);
+      const before = await placements();
+      await lab.getByRole('button', { name: 'Use native Grid spans', exact: true }).click();
+      await lab.waitForFunction(() => JSON.parse(document.querySelector('pre').textContent).nativeWidths[2] === 170);
+      assert.equal(await placements() - before, 1);
+      await lab.locator('#subject').click({ position: { x: 211, y: 41 } }); assert.equal((await state()).nativeHits, 0);
+      await lab.getByRole('button', { name: 'Resize native tracks', exact: true }).click();
+      await lab.waitForFunction(() => JSON.parse(document.querySelector('pre').textContent).nativeWidths[2] === 230);
+      assert.equal(await placements() - before, 2);
+      assert.deepEqual(await lab.locator('#subject').evaluate(canvas => [...canvas.getContext('2d').getImageData(210, 40, 1, 1).data]), [0,0,255,255]);
+      await lab.locator('#subject').click({ position: { x: 211, y: 41 } });
+      await lab.waitForFunction(() => JSON.parse(document.querySelector('pre').textContent).nativeHits === 1);
+      await lab.getByRole('button', { name: 'Paint native tracks', exact: true }).click();
+      await lab.waitForFunction(() => [...document.querySelector('#subject').getContext('2d').getImageData(210, 40, 1, 1).data].join() === '255,165,0,255');
+      assert.equal(await placements() - before, 2);
+      const disposed = await lab.evaluate(() => { dispatchEvent(new PageTransitionEvent('pagehide')); return globalThis.__PIBBL_LAYOUT_DIAGNOSTICS__(); });
+      assert.deepEqual(['activeNodes', 'activeArenas', 'activeWasmInstances', 'cachedMeasurements'].map(key => disposed[key]), [0,0,0,0]);
+      assert.deepEqual(errors, []);
+      console.warn(`${built ? 'Built' : 'Source'} native Grid spans:170×45→230×45, moved target, one native batch per geometry change/zero paint-only work, cleanup0/0/0/0; ${coreInputs.length} public core inputs`);
+    } else if (process.argv.includes('--native-grid')) {
       const resolutions = () => lab.evaluate(() => globalThis.__PIBBL_LAYOUT_DIAGNOSTICS__().gridTrackResolutions);
       const before = await resolutions();
       await lab.getByRole('button', { name: 'Use native Grid tracks', exact: true }).click();

@@ -2,7 +2,8 @@
 
 ## Current checkpoint and single next slice — 2026-10-22
 
-Latest delivery is slice52 (native explicit Grid track resolution).
+Latest delivery is slice53 (native explicit Grid cell areas).
+Slice52 is `b5381e0d` (native explicit Grid track resolution).
 Slice51 is `7ea95367` (Flow-entry known Flex preparation).
 Slice50 is `c8b163aa` (Grid-entry known Flex preparation).
 Slice49 is `d6f12813` (known Layer-to-Flex preparation/adoption).
@@ -793,6 +794,40 @@ clean. Focused read-only review found no material findings. Source/built Studio
 `--native-grid` each passes the same public proof and cleanup0/0/0/0 with225inputs.
 Packed228installed-input Bundler/NodeNext/lifecycle pass. Logs `/tmp/pibbl-slice52-*`;
 Node26.9.0/pnpm11.21.0deps/Chromium; no Node24/trust/parity/performance claim.
+
+### Slice 53 — native explicit Grid cell-area placement
+
+Both axes persist independently in the same root-owned arena. Validated explicit
+start/span records resolve in one native batch to local cell boxes, while JS keeps
+parsing/validation, measurement, used sizes and alignment. Native prefix offsets
+preserve source-order sums; each span sums its own tracks rather than subtracting
+large prefixes. Exact numeric-only cache snapshots release transaction descriptors
+and avoid native placement on paint-only updates. Unresolved axes, invalid records
+and stale handles reject without publication.
+
+Public RED reported zero native placements instead of one. Green proves170×45→
+230×45 spans, moved targets, one batch per geometry change/zero paint-only work,
+and a1px span after a1e20px track. Review caught a native prefix allocation growing
+WASM memory: forced-growth RED returned undefined track results; refreshing the
+view after the native call passes. No allocating native call retains a stale view.
+
+Pinned compiler/native gate passes7tests; binary62961bytes. Focused experimental92
+pass; normal24pass/68experimental skips; types/lint clean. Source/built Studio
+`--native-spans` each passes spanning pixels/hits, cache counters and cleanup0/0/0/0
+with225public inputs. Packed228installed-input Bundler/NodeNext/lifecycle pass.
+Logs `/tmp/pibbl-slice53-*`; Node26.9.0/pnpm11.21.0deps/Chromium, no Node24/trust/
+parity/performance claim. Remaining JS child alignment and all-family topology are
+not hidden by this native-area milestone.
+
+## [NEXT] Native Flow sequential and wrap placement (slice 54)
+
+After existing JS style/measurement resolves finite item sizes and alignment,
+perform source-order line formation, main/cross cursors, gaps/line gaps, wrapping
+and cross alignment in the same native arena. Preserve current authoring,
+measurement and child cloning; normal builds retain the existing JS algorithm.
+Public RED proves exact wrapped boxes/center alignment, moved hits after width
+change, native placement evidence and paint-only reuse, followed by exact cleanup.
+No new public API or layout policy. Consolidate52–54 after this delivery.
 
 ### Consolidation 17 completed for delivery slices 49–51
 

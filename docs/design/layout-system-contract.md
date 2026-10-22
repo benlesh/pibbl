@@ -443,7 +443,13 @@ region in the root's shared WASM instance. Numeric/percentage/fraction inputs,
 bounds and gaps are cached independently per axis, so paint-only updates reuse
 resolved tracks and a width change resolves only the changed axis. Native errors
 fail closed; the experimental runtime does not fall back to the JavaScript track
-resolver. Grid child placement still uses JavaScript. The ordinary build and pure
+resolver. Explicit cell areas resolve in one native batch after JS validates the
+source-order start/span inputs. Cached prefix starts preserve left-to-right offset
+sums; span extents sum their own tracks, preserving narrow spans after huge tracks.
+The native cache owns only numeric input/result snapshots and reuses unchanged
+geometry for paint updates. Unresolved axes and invalid/stale records reject
+without publication. JavaScript retains child measurement, sizing and alignment.
+The ordinary build and pure
 layout helpers retain the current JavaScript path; this is not all-family native
 adoption or additional CSS/Yoga parity.
 

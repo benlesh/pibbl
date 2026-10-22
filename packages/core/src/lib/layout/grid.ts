@@ -231,79 +231,15 @@ function resolveGridPlacements(
     'rows',
     container,
   );
+  const nativeItems = nativeRegion ? children.map((child, index) => prepareGridCell(child, index, container, columns.length, rows.length)) : undefined;
+  const nativeBoxes = nativeItems ? nativeRegion!.placeGridCells(nativeItems) : undefined;
   const placements: GridPlacement[] = [];
 
   for (const child of children) {
-    const receiverToken = getChildPrimitiveReceiverToken(
-      GLOBAL_STATE.renderTransaction,
-      GLOBAL_STATE.primitiveReceiverToken,
-      placements.length,
-    );
-    const prepared = prepareDirectChildStyle(child, receiverToken, container);
-    const normalized = preparedStyleValue(prepared) as Readonly<
-      BoxStyle & GridItemStyle & LayoutItemStyle & Record<string, unknown>
-    >;
-    assertSupportedChildPosition('Grid', child, normalized);
-    rejectUnsupportedItemFields(child, normalized, container);
-    const columnStart = placementInteger(
-      normalized.gridColumnStart,
-      'gridColumnStart',
-      child,
-      container,
-      true,
-    );
-    const rowStart = placementInteger(
-      normalized.gridRowStart,
-      'gridRowStart',
-      child,
-      container,
-      true,
-    );
-    const columnSpan = placementInteger(
-      normalized.gridColumnSpan ?? 1,
-      'gridColumnSpan',
-      child,
-      container,
-      false,
-    );
-    const rowSpan = placementInteger(
-      normalized.gridRowSpan ?? 1,
-      'gridRowSpan',
-      child,
-      container,
-      false,
-    );
-    validateStart(
-      columnStart,
-      columns.length,
-      'gridColumnStart',
-      child,
-      container,
-    );
-    validateStart(
-      rowStart,
-      rows.length,
-      'gridRowStart',
-      child,
-      container,
-    );
-    validateSpan(
-      columnStart,
-      columnSpan,
-      columns.length,
-      'gridColumnSpan',
-      child,
-      container,
-    );
-    validateSpan(
-      rowStart,
-      rowSpan,
-      rows.length,
-      'gridRowSpan',
-      child,
-      container,
-    );
-    const area = {
+    const item = nativeItems?.[placements.length] ?? prepareGridCell(child, placements.length, container, columns.length, rows.length);
+    const { prepared, normalized, receiverToken, columnStart, columnSpan, rowStart, rowSpan } = item;
+    const nativeBox = nativeBoxes?.[placements.length];
+    const area = nativeBox ? { x: container.x + nativeBox.x, y: container.y + nativeBox.y, width: nativeBox.width, height: nativeBox.height } : {
       x: container.x + trackOffset(columns, columnStart - 1, options.columnGap),
       y: container.y + trackOffset(rows, rowStart - 1, options.rowGap),
       width: trackSpan(columns, columnStart - 1, columnSpan, options.columnGap),
@@ -415,6 +351,79 @@ export function resolveGridTracks(
   };
   const parsed = parseGridTracks(tracks, axis, container);
   return resolveParsedGridTracks(parsed, bound, gap, axis, container);
+}
+
+function prepareGridCell(child: PibblElement<any>, index: number, container: Readonly<LayoutBox>, columnCount: number, rowCount: number) {
+    const receiverToken = getChildPrimitiveReceiverToken(
+      GLOBAL_STATE.renderTransaction,
+      GLOBAL_STATE.primitiveReceiverToken,
+      index,
+    );
+    const prepared = prepareDirectChildStyle(child, receiverToken, container);
+    const normalized = preparedStyleValue(prepared) as Readonly<
+      BoxStyle & GridItemStyle & LayoutItemStyle & Record<string, unknown>
+    >;
+    assertSupportedChildPosition('Grid', child, normalized);
+    rejectUnsupportedItemFields(child, normalized, container);
+    const columnStart = placementInteger(
+      normalized.gridColumnStart,
+      'gridColumnStart',
+      child,
+      container,
+      true,
+    );
+    const rowStart = placementInteger(
+      normalized.gridRowStart,
+      'gridRowStart',
+      child,
+      container,
+      true,
+    );
+    const columnSpan = placementInteger(
+      normalized.gridColumnSpan ?? 1,
+      'gridColumnSpan',
+      child,
+      container,
+      false,
+    );
+    const rowSpan = placementInteger(
+      normalized.gridRowSpan ?? 1,
+      'gridRowSpan',
+      child,
+      container,
+      false,
+    );
+    validateStart(
+      columnStart,
+      columnCount,
+      'gridColumnStart',
+      child,
+      container,
+    );
+    validateStart(
+      rowStart,
+      rowCount,
+      'gridRowStart',
+      child,
+      container,
+    );
+    validateSpan(
+      columnStart,
+      columnSpan,
+      columnCount,
+      'gridColumnSpan',
+      child,
+      container,
+    );
+    validateSpan(
+      rowStart,
+      rowSpan,
+      rowCount,
+      'gridRowSpan',
+      child,
+      container,
+    );
+  return { child, prepared, normalized, receiverToken, columnStart, columnSpan, rowStart, rowSpan };
 }
 
 function resolveNativeGridTracks(region: LayoutRegion, tracks: readonly ParsedGridTrack[], bound: number, gap: number, axis: 'columns' | 'rows', container: Readonly<LayoutBox>): number[] {

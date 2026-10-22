@@ -2,7 +2,7 @@
 use std::cell::RefCell;
 const STRIDE: usize = 10; // basis, min, max, padding, grow, shrink, result, frozen/offset, margin before, margin after
 #[derive(Default)]
-struct Arena { nodes: Vec<f64>, lines: Vec<(usize, usize)>, cross: Vec<f64>, grid: Vec<f64> }
+struct Arena { nodes: Vec<f64>, lines: Vec<(usize, usize)>, cross: Vec<f64>, grid: [Vec<f64>;2], grid_offsets: [Vec<f64>;2], grid_gaps: [f64;2], grid_ready: [bool;2], grid_cells: Vec<f64> }
 struct ArenaSlot { generation: u32, arena: Option<Arena> }
 struct ArenaPool { slots: Vec<ArenaSlot>, closed: bool }
 thread_local! {
@@ -115,16 +115,58 @@ fn align_cross(records: &mut [f64], size: f64, reverse: bool) -> u32 {
 
 // Independent per-region Grid track records: kind, numeric value, result.
 #[no_mangle]
-pub extern "C" fn resize_grid(handle: u32, generation: u32, count: usize) -> *mut f64 {
+pub extern "C" fn resize_grid(handle: u32, generation: u32, count: usize, axis: usize) -> *mut f64 {
     with_arena(handle, generation, std::ptr::null_mut(), |arena| {
         let Some(length) = count.checked_mul(3) else { return std::ptr::null_mut(); };
-        arena.grid.resize(length, 0.0);
-        arena.grid.as_mut_ptr()
+        if axis > 1 { return std::ptr::null_mut(); }
+        arena.grid_ready[axis] = false;
+        arena.grid[axis].resize(length, 0.0);
+        arena.grid[axis].as_mut_ptr()
     })
 }
 #[no_mangle]
-pub extern "C" fn resolve_grid_tracks(handle: u32, generation: u32, bound: f64, gap: f64) -> u32 {
-    with_arena(handle, generation, 1, |arena| resolve_tracks(&mut arena.grid, bound, gap))
+pub extern "C" fn resolve_grid_tracks(handle: u32, generation: u32, bound: f64, gap: f64, axis: usize) -> u32 {
+    with_arena(handle, generation, 1, |arena| {
+        if axis > 1 { return 1; }
+        let status = resolve_tracks(&mut arena.grid[axis], bound, gap);
+        if status != 0 { return status; }
+        arena.grid_ready[axis] = true;
+        arena.grid_gaps[axis] = gap;
+        arena.grid_offsets[axis].resize(arena.grid[axis].len()/3,0.0);
+        let mut sum = 0.0;
+        for (index, track) in arena.grid[axis].chunks_exact(3).enumerate() {
+            arena.grid_offsets[axis][index] = sum + index as f64 * gap;
+            sum += track[2];
+        }
+        0
+    })
+}
+#[no_mangle]
+pub extern "C" fn resize_grid_cells(handle: u32, generation: u32, count: usize) -> *mut f64 {
+    with_arena(handle, generation, std::ptr::null_mut(), |arena| {
+        let Some(length) = count.checked_mul(8) else { return std::ptr::null_mut(); };
+        arena.grid_cells.resize(length,0.0); arena.grid_cells.as_mut_ptr()
+    })
+}
+#[no_mangle]
+pub extern "C" fn place_grid_cells(handle: u32, generation: u32) -> u32 {
+    with_arena(handle, generation, 1, |arena| {
+        if !arena.grid_ready[0] || !arena.grid_ready[1] { return 1; }
+        for cell in arena.grid_cells.chunks_exact_mut(8) {
+            for axis in 0..2 {
+                let start = cell[axis*2]; let span = cell[axis*2+1];
+                let count = arena.grid[axis].len()/3;
+                if !start.is_finite() || !span.is_finite() || start < 0.0 || span < 1.0 || start.fract() != 0.0 || span.fract() != 0.0 || start + span > count as f64 { return 1; }
+                let offset = arena.grid_offsets[axis][start as usize];
+                let mut size = 0.0;
+                for index in start as usize..(start+span) as usize { size += arena.grid[axis][index*3+2]; }
+                size += (span-1.0)*arena.grid_gaps[axis];
+                if !offset.is_finite() || !size.is_finite() || size < 0.0 { return 1; }
+                cell[4+axis] = offset; cell[6+axis] = size;
+            }
+        }
+        0
+    })
 }
 fn resolve_tracks(tracks: &mut [f64], bound: f64, gap: f64) -> u32 {
     if tracks.len() % 3 != 0 || !bound.is_finite() || bound < 0.0 || !gap.is_finite() || gap < 0.0 { return 1; }
@@ -325,6 +367,32 @@ fn allocate(nodes: &mut [f64], main: f64, gap: f64) -> u32 {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test] fn grid_cells_preserve_spans_precision_and_reject_invalid_or_stale_records() {
+        let h = arena_create(); let g = arena_generation(h);
+        let cols = resize_grid(h,g,3,0); let rows = resize_grid(h,g,2,1);
+        unsafe {
+            std::slice::from_raw_parts_mut(cols,9).copy_from_slice(&[0.,20.,0.,1.,25.,0.,2.,1.,0.]);
+            std::slice::from_raw_parts_mut(rows,6).copy_from_slice(&[0.,20.,0.,0.,20.,0.]);
+        }
+        let unresolved = resize_grid_cells(h,g,1);
+        unsafe { std::slice::from_raw_parts_mut(unresolved,4).copy_from_slice(&[1.,2.,0.,2.]); }
+        assert_eq!(place_grid_cells(h,g),1);
+        assert_eq!(resolve_grid_tracks(h,g,200.,10.,0),0);
+        assert_eq!(resolve_grid_tracks(h,g,45.,5.,1),0);
+        let cells = resize_grid_cells(h,g,1);
+        unsafe { std::slice::from_raw_parts_mut(cells,4).copy_from_slice(&[1.,2.,0.,2.]); }
+        assert_eq!(place_grid_cells(h,g),0);
+        unsafe { assert_eq!((*cells.add(4),*cells.add(5),*cells.add(6),*cells.add(7)),(30.,0.,170.,45.)); }
+        let huge = resize_grid(h,g,2,0);
+        unsafe { std::slice::from_raw_parts_mut(huge,6).copy_from_slice(&[0.,1e20,0.,0.,1.,0.]); }
+        assert_eq!(resolve_grid_tracks(h,g,100.,0.,0),0);
+        unsafe { *cells.add(1)=1.; }
+        assert_eq!(place_grid_cells(h,g),0);
+        unsafe { assert_eq!(*cells.add(6),1.); *cells=0.5; }
+        assert_eq!(place_grid_cells(h,g),1);
+        assert_eq!(arena_dispose(h,g),0);
+        assert!(resize_grid_cells(h,g,1).is_null()); assert_eq!(place_grid_cells(h,g),1);
+    }
     #[test] fn grid_tracks_preserve_mixed_fraction_overflow_and_validation_rules() {
         let mut mixed = [0.,20.,0., 1.,25.,0., 2.,1.,0.];
         assert_eq!(resolve_tracks(&mut mixed,200.,10.),0);
@@ -379,13 +447,13 @@ mod tests {
             std::slice::from_raw_parts_mut(pa, 20).copy_from_slice(&[80.,0.,f64::INFINITY,0.,0.,1.,0.,0.,0.,0.,80.,0.,f64::INFINITY,0.,0.,1.,0.,0.,0.,0.]);
             std::slice::from_raw_parts_mut(pb, 20).copy_from_slice(&[40.,0.,f64::INFINITY,0.,0.,1.,0.,0.,0.,0.,40.,0.,f64::INFINITY,0.,0.,1.,0.,0.,0.,0.]);
         }
-        let grid_a = resize_grid(a,ga,3); let grid_b = resize_grid(b,gb,1);
+        let grid_a = resize_grid(a,ga,3,0); let grid_b = resize_grid(b,gb,1,0);
         unsafe {
             std::slice::from_raw_parts_mut(grid_a,9).copy_from_slice(&[0.,20.,0.,1.,25.,0.,2.,1.,0.]);
             std::slice::from_raw_parts_mut(grid_b,3).copy_from_slice(&[2.,0.5,0.]);
         }
-        assert_eq!(resolve_grid_tracks(a,ga,200.,10.),0);
-        assert_eq!(resolve_grid_tracks(b,gb,100.,0.),0);
+        assert_eq!(resolve_grid_tracks(a,ga,200.,10.,0),0);
+        assert_eq!(resolve_grid_tracks(b,gb,100.,0.,0),0);
         unsafe { assert_eq!((*grid_a.add(8),*grid_b.add(2)),(110.,50.)); }
         assert_eq!(solve_wrap(a,ga,100.,0.),0);
         assert_eq!(solve(b,gb,60.,0.),0);
@@ -398,8 +466,8 @@ mod tests {
         let c = arena_create(); let gc = arena_generation(c);
         assert_eq!(c,a); assert_ne!(gc,ga);
         assert_eq!(solve(a,ga,100.,0.),1);
-        assert!(resize_grid(a,ga,1).is_null());
-        assert_eq!(resolve_grid_tracks(a,ga,100.,0.),1);
+        assert!(resize_grid(a,ga,1,0).is_null());
+        assert_eq!(resolve_grid_tracks(a,ga,100.,0.,0),1);
         assert_eq!(place_main(b,gb,60.,0.,0,1),0);
         assert_eq!(arena_dispose(c,gc),0);
         ARENAS.with(|pool| pool.borrow_mut().slots[(c-1) as usize].generation=u32::MAX);

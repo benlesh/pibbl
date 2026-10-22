@@ -1,7 +1,7 @@
 import { Absolute, Flex, Flow, Grid, Group, HtmlBox, Layer, Rectangle, useLayoutBox, defineLayoutComponent, type FlexStyle, type PibblNodeInput, type Signal } from '@pibbl/core';
 
 interface LabProps {
-  width: Signal<number>; grow: Signal<number>; minimum: Signal<number>; nested: Signal<boolean>; direct: Signal<boolean>; described: Signal<boolean>; layer: Signal<boolean>; grid: Signal<boolean>; flow: Signal<boolean>; nativeGrid: Signal<boolean>; nativeFill: Signal<string>; nativeWidth: (index: number, width: number) => void; nativeHit: () => void;
+  width: Signal<number>; grow: Signal<number>; minimum: Signal<number>; nested: Signal<boolean>; direct: Signal<boolean>; described: Signal<boolean>; layer: Signal<boolean>; grid: Signal<boolean>; flow: Signal<boolean>; nativeGrid: Signal<boolean>; nativeSpan: Signal<boolean>; nativeFill: Signal<string>; nativeWidth: (index: number, width: number) => void; nativeHit: () => void;
   evaluate: (width: number) => void; hit: () => void; layerHit: () => void;
 }
 function PreflightProbe({ evaluate, hit }: {
@@ -15,8 +15,8 @@ function PreflightProbe({ evaluate, hit }: {
 const DescribedCard = defineLayoutComponent((props: { style: FlexStyle; children: PibblNodeInput }) => <Flex style={props.style}>{props.children}</Flex>);
 
 /** Deterministic public-surface fixture; the host owns fault/recovery controls. */
-export function LayoutPreflightLab({ width, grow, minimum, nested, direct, described, layer, grid, flow, nativeGrid, nativeFill, nativeWidth, nativeHit, evaluate, hit, layerHit }: LabProps) {
-  if (nativeGrid.get()) return <NativeGridTracksLab width={width} fill={nativeFill} report={nativeWidth} hit={nativeHit} />;
+export function LayoutPreflightLab({ width, grow, minimum, nested, direct, described, layer, grid, flow, nativeGrid, nativeSpan, nativeFill, nativeWidth, nativeHit, evaluate, hit, layerHit }: LabProps) {
+  if (nativeGrid.get()) return <NativeGridTracksLab width={width} span={nativeSpan} fill={nativeFill} report={nativeWidth} hit={nativeHit} />;
   const probe = <PreflightProbe evaluate={evaluate} hit={hit} style={{ width: 80, height: 30, minWidth: 0, flexGrow: 1 }} />;
   const blue = <Rectangle style={{ width: 80, height: 30, minWidth: minimum, maxWidth: 80, flexGrow: grow, fill: '#344c77' }} onClick={layerHit} />;
   if (flow.get()) return <Flow style={{ width: 240, height: 30, direction: 'horizontal', wrap: false }}>
@@ -61,14 +61,17 @@ export function HtmlProjectionLab({ overflow, mount, laterMount }: {
 
 function NativeGridCell({ index, color, report, hit }: {
   index: number; color: string | Signal<string>; report: (index: number, width: number) => void; hit: () => void;
-  style: { width: string; height: number; gridColumnStart: number; gridRowStart: number };
+  style: { width: string; height: number; gridColumnStart: number; gridRowStart: number; gridColumnSpan?: number; gridRowSpan?: number };
 }) {
   const box = useLayoutBox(); report(index, box.width);
-  return <Rectangle style={{ width: box.width, height: 30, fill: color }} onClick={index === 2 ? hit : undefined} />;
+  return <Rectangle style={{ width: box.width, height: box.height, fill: color }} onClick={index === 2 ? hit : undefined} />;
 }
-function NativeGridTracksLab({ width, fill, report, hit }: {
-  width: Signal<number>; fill: Signal<string>; report: (index: number, width: number) => void; hit: () => void;
+function NativeGridTracksLab({ width, span, fill, report, hit }: {
+  width: Signal<number>; span: Signal<boolean>; fill: Signal<string>; report: (index: number, width: number) => void; hit: () => void;
 }) {
+  if (span.get()) return <Grid style={{ width, height: 45, gridTemplateColumns: [20, '25%', '1fr'], gridTemplateRows: [20,20], columnGap: 10, rowGap: 5 }}>
+    <NativeGridCell index={2} color={fill} report={report} hit={hit} style={{ width: '100%', height: 45, gridColumnStart: 2, gridColumnSpan: 2, gridRowStart: 1, gridRowSpan: 2 }} />
+  </Grid>;
   return <Grid style={{ width, height: 30, gridTemplateColumns: [20, '25%', '1fr'], gridTemplateRows: [30], columnGap: 10 }}>
     <NativeGridCell index={0} color={fill} report={report} hit={hit} style={{ width: '100%', height: 30, gridColumnStart: 1, gridRowStart: 1 }} />
     <NativeGridCell index={1} color="green" report={report} hit={hit} style={{ width: '100%', height: 30, gridColumnStart: 2, gridRowStart: 1 }} />

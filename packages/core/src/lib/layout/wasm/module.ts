@@ -32,6 +32,8 @@ export function publishLayoutModule(module: WebAssembly.Module): void {
   if (!exports.some(entry => entry.name === 'memory' && entry.kind === 'memory') ||
       !exports.some(entry => entry.name === 'solve' && entry.kind === 'function') ||
       !exports.some(entry => entry.name === 'dispose' && entry.kind === 'function') ||
+      !exports.some(entry => entry.name === 'resize_grid_cells' && entry.kind === 'function') ||
+      !exports.some(entry => entry.name === 'place_grid_cells' && entry.kind === 'function') ||
       !exports.some(entry => entry.name === 'resize_grid' && entry.kind === 'function') ||
       !exports.some(entry => entry.name === 'resolve_grid_tracks' && entry.kind === 'function') ||
       !exports.some(entry => entry.name === 'arena_create' && entry.kind === 'function') ||
