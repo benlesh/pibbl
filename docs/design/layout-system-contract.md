@@ -182,6 +182,8 @@ at its final per-line content width before line cross sizes settle. Main-axis
 minimums remain explicit except for two bounded native policies. A direct empty
 Rectangle with no authored children property, no responsive query and finite
 nonnegative numeric width and height uses zero as its automatic main-axis minimum.
+Direct allocation also accepts percentage dimensions resolved against its definite
+parent box; intrinsic Flex measurement retains its percentage rejection.
 This applies to direct allocation in rows and columns and the supported nowrap
 intrinsic Flex measurement path. Explicit minima, padding floors, shrink factors,
 and existing visible/clip behavior still apply. It does not inspect arbitrary

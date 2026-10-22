@@ -35,7 +35,7 @@ Current estimate remains a range, not a promise: the original forecast was 36
 additional slices including 25. Three deliveries are now integrated; loading was
 an accepted scope addition to that forecast. Roughly 34 delivery slices remain,
 subject to reassessment against the same proposal exits after the next group.
-Slice 28 is delivered below. Roughly 26 delivery slices remain after slice 35 against the same
+Slice 28 is delivered below. Roughly 25 delivery slices remain after slice 36 against the same
 forecast, subject to reassessment after this group. Area estimates are not parallel
 work queues.
 
@@ -307,11 +307,28 @@ passes and the source/built public Rectangle/Text/frozen Studio checks pass with
 `/tmp/pibbl-slice35-{red,focused,normal,typecheck,lint,build}.txt` and the slice34
 browser follow-up logs above. Node 26.9.0 / pnpm 11.21.0 dependencies / Chromium.
 
-**Exactly one selected next delivery slice: 36 — percentage-sized empty Rectangle
-automatic minima in finite direct allocation.** Resolve the existing numeric/percent
-size language against definite parent dimensions, preserve explicit minima and
-conservative intrinsic percentage rules, and start with a public shrink failure.
-Consolidate group12 after slices34–36.
+### Slice 36 — percentage-sized empty Rectangle automatic minima
+
+The public finite-row percentage regression failed with the explicit-minWidth
+diagnostic before changes. Direct allocation now accepts authored percentage width
+and height for the same empty Rectangle policy; existing finite parent resolution
+validates lengths and computes the basis. Intrinsic measurement remains numeric
+and keeps its percentage rejection. Explicit bounds, row/column shrink and zero
+content minimum with outer padding floors are covered without provider discovery.
+
+Fresh checks: 90 experimental tests across three files; default JavaScript lane
+39 passed / 39 experimental skips; root typecheck, scoped lint and private package
+build pass. The Studio proof now authors both boxes with 80% width. Source/built
+browser probes pass both targets, existing frozen reuse/Text controls, zero errors
+and zero teardown resources; built provenance466 inputs. Logs
+`/tmp/pibbl-slice36-{red,focused,normal,typecheck,lint,build}.txt` and
+`/tmp/pibbl-slice36-{source,built}-browser.log`. Node26.9.0 / pnpm11.21.0
+installed dependencies / Chromium. Same ports5192/5193 and wasm-flex-text route.
+
+**Exactly one selected next delivery slice: 37 — pinned Yoga empty-Rectangle
+conversion evidence.** Extend the existing pinned native reference with numeric
+and percentage shrink, explicit minima and content-box padding conversions.
+Consolidate34–36 before production changes for37.
 
 ### Consolidation 11 completed for delivery slices 31–33
 
@@ -1578,13 +1595,13 @@ three pinned Yoga cases, and keeps unaccepted API signatures and missing release
 gates explicit. It is support work, not an additional delivered capability slice.
 Group9 has two deliveries; consolidate after the next closely related slice.
 
-## [NEXT] Percentage-sized empty Rectangle minimum (slice 36)
+## [NEXT] Pinned Yoga empty Rectangle conversions (slice 37)
 
-A finite direct Flex allocation should give empty Rectangles with percentage main
-sizes the same zero content minimum as numeric sizes. Existing parent dimension
-resolution, explicit bounds, padding floors and shrink factors determine the final
-boxes. Intrinsic percentage containers remain conservative. Define and test the
-public finite-row shrink contract before changing eligibility.
+Extend the existing exact-commit native Yoga probe with the delivered empty
+Rectangle minimum/shrink behavior. Bind new probe provenance and public Pibbl
+geometry comparisons to numeric/percentage dimensions, explicit minima and
+content-box padding conversion; record any intentional native divergence explicitly.
+No claim of complete Yoga or CSS parity follows from this bounded matrix.
 
 Slice 26 delivery (2026-10-21): completed the in-progress private role foundation
 before any loading migration. Existing receiver edges carry staged masks; successful

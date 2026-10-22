@@ -572,7 +572,7 @@ function resolveFlexPlacements(
         (typeof normalized.width === 'number' || automaticTextBasis));
     // An empty authored rectangle has no intrinsic content contribution. Keep
     // opaque/child-bearing primitives conservative without evaluating children.
-    const automaticRectangleMinimum = hasEmptyRectangleMinimum(child, normalized, preparedStyleQuery(prepared));
+    const automaticRectangleMinimum = hasEmptyRectangleMinimum(child, normalized, preparedStyleQuery(prepared), true);
     if ((shrink > 0 || basisValue === 'auto') && normalized[minimumProperty] === undefined && !automaticTextMinimum && !automaticTextBasis && !automaticRectangleMinimum) {
       throw childDiagnostic(
         child,
@@ -1321,11 +1321,12 @@ function hasEmptyRectangleMinimum(
   child: PibblElement<any>,
   style: Readonly<Record<string, unknown>>,
   query: PreparedQuery | undefined,
+  percentageSizes = false,
 ): boolean {
   return experimentalLayout && child.type === Rectangle &&
     !Object.hasOwn(child.props, 'children') && !query &&
-    typeof style.width === 'number' && Number.isFinite(style.width) && style.width >= 0 &&
-    typeof style.height === 'number' && Number.isFinite(style.height) && style.height >= 0;
+    (typeof style.width === 'number' && Number.isFinite(style.width) && style.width >= 0 || percentageSizes && isPercentage(style.width)) &&
+    (typeof style.height === 'number' && Number.isFinite(style.height) && style.height >= 0 || percentageSizes && isPercentage(style.height));
 }
 
 function clamp(value: number, minimum: number, maximum: number): number {

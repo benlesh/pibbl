@@ -1094,3 +1094,19 @@ it.runIf(experimentalLayout)('measures intrinsic Flex columns containing empty f
   expect(measureElement(column, { minWidth: 0, maxWidth: 100, minHeight: 0, maxHeight: 100 }, service))
     .toEqual({ status: 'measured', size: { width: 100, height: 55 } });
 });
+
+it.runIf(experimentalLayout)('shrinks percentage-sized empty Rectangles against definite parent dimensions', () => {
+  const child = () => createElement(Rectangle, { style: { width: '80%', height: 20 } });
+  expect(layoutFlex({ x: 0, y: 0, width: 100, height: 30 }, [child(), child()], {}, measurement))
+    .toEqual([{ x: 0, y: 0, width: 50, height: 20 }, { x: 50, y: 0, width: 50, height: 20 }]);
+});
+
+it.runIf(experimentalLayout)('keeps percentage Rectangle explicit bounds and content padding floors', () => {
+  const child = (minimum: number) => createElement(Rectangle, { style: { width: '80%', height: 20, minWidth: minimum } });
+  expect(layoutFlex({ x: 0, y: 0, width: 100, height: 30 }, [child(70), child(0)], {}, measurement).map(box => box.width)).toEqual([70, 30]);
+  const padded = () => createElement(Rectangle, { style: { width: '80%', height: 20, padding: 10 } });
+  expect(layoutFlex({ x: 0, y: 0, width: 20, height: 40 }, [padded(), padded()], {}, measurement))
+    .toEqual([{ x: 0, y: 0, width: 20, height: 40 }, { x: 20, y: 0, width: 20, height: 40 }]);
+  const column = () => createElement(Rectangle, { style: { width: 20, height: '80%' } });
+  expect(layoutFlex({ x: 0, y: 0, width: 20, height: 100 }, [column(), column()], { flexDirection: 'column' }, measurement).map(box => box.height)).toEqual([50, 50]);
+});
