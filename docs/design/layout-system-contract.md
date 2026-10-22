@@ -265,6 +265,16 @@ internal element clones. Opaque components still run only in source traversal.
 This is bounded Absolute-to-direct-Flex preparation, not recursive preparation of
 all known descendants or atomic event/focus/HTML publication.
 
+Within that prepared entry, direct built-in Flex descendants recursively prepare
+from their settled content allocations. Each parent slot owns child slots by the
+same type/key/occurrence identity, including before actual component refs exist.
+Nested rendering adopts those plans without re-solving. Active-path descriptor
+cycles fail before recursive region growth; the guard does not retain a global
+visited set. Parent removal releases descendant slots, while surviving keyed
+subtrees retain their regions. Ordinary components, layout-description wrappers,
+other layout families and a direct Flex root without that Absolute entry are not
+recursively discovered by this preparation path.
+
 For the same direct Text subset, automatic width and basis use the natural width
 before wrapping, not the containing row's constrained width. The natural query
 follows wrapped Text's existing removal of leading ASCII spaces; empty/space-only

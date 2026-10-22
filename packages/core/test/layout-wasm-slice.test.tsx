@@ -1374,7 +1374,7 @@ it.runIf(experimentalLayout)('retains prepared keyed region ownership through re
   expect([disposed.activeArenas, disposed.activeNodes, disposed.activeWasmInstances]).toEqual([baseline.activeArenas, baseline.activeNodes, baseline.activeWasmInstances]);
 });
 
-it.runIf(experimentalLayout)('consumes prepared wrapped Text allocations without a second measurement or solve', async () => {
+it.runIf(experimentalLayout).each([false, true])('consumes prepared wrapped Text allocations without a second pass (nested=%s)', async nested => {
   const width = signal(180); let probes = 0; const hits: string[] = [];
   const allocations: number[] = [];
   function Probe(_props: { style: Record<string, unknown> }) {
@@ -1385,18 +1385,89 @@ it.runIf(experimentalLayout)('consumes prepared wrapped Text allocations without
   const probe = createElement(Probe, { style: { width: 30, height: 20, minWidth: 0, flexShrink: 0 } });
   const flexChildren = [text, probe];
   const canvas = document.createElement('canvas'); canvas.width = 200; canvas.height = 100; document.body.append(canvas);
-  const scene = createElement(Absolute, { style: { width: 200, height: 100 }, children: createElement(Flex, { style: { width, height: 100, alignItems: 'flex-start' }, children: flexChildren }) });
+  const row = createElement(Flex, { style: { width: nested ? '100%' : width, height: 100, minHeight: 0, alignItems: 'flex-start' }, children: flexChildren });
+  const scene = createElement(Absolute, { style: { width: 200, height: 100 }, children: nested ? createElement(Flex, { style: { width, height: 100, flexDirection: 'column' }, children: row }) : row });
   const baseline = snapshotWasmLayoutDiagnostics(); const controller = pibbl(canvas, scene); controllers.push(controller); await nextFrame();
   const mounted = snapshotWasmLayoutDiagnostics(); expect(probes).toBe(1); expect(allocations).toEqual([30]);
-  expect(mounted.allocationPasses).toBe(baseline.allocationPasses + 1); expect(mounted.solves).toBe(baseline.solves + 1);
+  expect(mounted.allocationPasses).toBe(baseline.allocationPasses + (nested ? 2 : 1)); expect(mounted.solves).toBe(baseline.solves + (nested ? 2 : 1));
   expect(mounted.measuredLeaves - baseline.measuredLeaves).toBeGreaterThan(0);
   const numeric = layoutFlex({ x: 0, y: 0, width: 180, height: 100 }, flexChildren, { alignItems: 'flex-start' }, { service: { measureText(value, font) { const ctx = canvas.getContext('2d')!; ctx.font = font; return ctx.measureText(value); } }, measureElement: (element, constraints) => measureElement(element, constraints, { measureText(value, font) { const ctx = canvas.getContext('2d')!; ctx.font = font; return ctx.measureText(value); } }) });
   expect(numeric[0].height).toBe(10); expect(numeric[1].x).toBe(150);
   clickCanvas(canvas, 45, 15); expect(hits).toEqual([]);
   const beforeNarrow = snapshotWasmLayoutDiagnostics(); width.set(90); await nextFrame();
   const narrow = snapshotWasmLayoutDiagnostics(); expect(probes).toBe(2);
-  expect(narrow.allocationPasses).toBe(beforeNarrow.allocationPasses + 1); expect(narrow.solves).toBe(beforeNarrow.solves + 1);
+  expect(narrow.allocationPasses).toBe(beforeNarrow.allocationPasses + (nested ? 2 : 1)); expect(narrow.solves).toBe(beforeNarrow.solves + 1);
   expect(narrow.nodeCreates).toBe(beforeNarrow.nodeCreates);
   expect([...canvas.getContext('2d')!.getImageData(65, 5, 1, 1).data]).toEqual([255, 0, 0, 255]);
   clickCanvas(canvas, 45, 15); expect(hits).toEqual(['text']);
+});
+
+it.runIf(experimentalLayout)('prepares a later nested known Flex before an earlier opaque sibling evaluates', async () => {
+  const width = signal(180), grow = signal(0); let evaluations = 0;
+  function Probe(_props: { style: Record<string, unknown> }) { evaluations++; const box = useLayoutBox(); return createElement(Rectangle, { style: { width: box.width, height: 20, fill: 'red' } }); }
+  const scene = createElement(Absolute, { style: { width: 220, height: 30 }, children: createElement(Flex, { style: { width, height: 20 }, children: [
+    createElement(Probe, { style: { width: 20, height: 20, minWidth: 0, flexGrow: 1 } }),
+    createElement(Flex, { key: 'inner', style: { width: 80, height: 20, minWidth: 0, flexShrink: 0 }, children: createElement(Rectangle, { style: { width: 80, height: 20, minWidth: 0, flexGrow: grow, fill: 'blue' } }) }),
+  ] }) });
+  const canvas = document.createElement('canvas'); canvas.width = 220; canvas.height = 30; document.body.append(canvas);
+  const errors: unknown[] = []; const prevent = (event: ErrorEvent) => { errors.push(event.error); event.preventDefault(); }; window.addEventListener('error', prevent);
+  try {
+    const baseline = snapshotWasmLayoutDiagnostics();
+    const controller = pibbl(canvas, scene); controllers.push(controller); await nextFrame(); expect(evaluations).toBe(1);
+    const mounted = snapshotWasmLayoutDiagnostics();
+    expect(mounted.allocationPasses).toBe(baseline.allocationPasses + 2); expect(mounted.solves).toBe(baseline.solves + 2);
+    expect(mounted.activeArenas).toBe(baseline.activeArenas + 2); expect(mounted.activeWasmInstances).toBe(baseline.activeWasmInstances + 1);
+    width.set(190); await nextFrame(); expect(evaluations).toBe(2);
+    expect(snapshotWasmLayoutDiagnostics().allocationPasses).toBe(mounted.allocationPasses + 2);
+    expect(snapshotWasmLayoutDiagnostics().solves).toBe(mounted.solves + 1);
+    expect(snapshotWasmLayoutDiagnostics().nodeCreates).toBe(mounted.nodeCreates);
+    width.set(200); grow.set(-1); await nextFrame();
+    expect(errors.some(error => error instanceof Error && error.message.includes('flexGrow received -1'))).toBe(true);
+    expect(evaluations).toBe(2);
+    grow.set(0); pibbl(canvas, scene); await nextFrame(); expect(evaluations).toBe(3);
+    expect([...canvas.getContext('2d')!.getImageData(110, 10, 1, 1).data]).toEqual([255, 0, 0, 255]);
+  } finally { window.removeEventListener('error', prevent); }
+});
+
+it.runIf(experimentalLayout)('rejects cyclic known Flex descriptions before recursive region growth', async () => {
+  let traversals = 0;
+  let cyclic: PibblNode;
+  const children = { *[Symbol.iterator]() { traversals++; yield cyclic; } };
+  cyclic = createElement(Flex, { style: { width: 80, height: 20, minWidth: 0, flexShrink: 0 }, children });
+  const canvas = document.createElement('canvas'); canvas.width = 100; canvas.height = 30; document.body.append(canvas);
+  const baseline = snapshotWasmLayoutDiagnostics(), errors: unknown[] = [];
+  const prevent = (event: ErrorEvent) => { errors.push(event.error); event.preventDefault(); }; window.addEventListener('error', prevent);
+  try {
+    const controller = pibbl(canvas, createElement(Absolute, { style: { width: 100, height: 30 }, children: cyclic })); controllers.push(controller); await nextFrame();
+    expect(errors.some(error => error instanceof Error && error.message.includes('Known layout descriptions form a cycle'))).toBe(true);
+    expect(traversals).toBe(1);
+    expect(snapshotWasmLayoutDiagnostics().activeArenas).toBe(baseline.activeArenas);
+    expect(snapshotWasmLayoutDiagnostics().activeNodes).toBe(baseline.activeNodes);
+    controller.dispose(); expect(snapshotWasmLayoutDiagnostics().activeWasmInstances).toBe(baseline.activeWasmInstances);
+  } finally { window.removeEventListener('error', prevent); }
+});
+
+it.runIf(experimentalLayout)('retains nested prepared keyed regions through reorder and releases their subtree ownership', async () => {
+  const order = signal(['A', 'B']); let serial = 0;
+  const stamps = new Map<string, number>(); const hits: string[] = [];
+  function Probe({ name }: { name: string; style: Record<string, unknown> }) {
+    stamps.set(name, useConst(() => ++serial));
+    const box = useLayoutBox();
+    return createElement(Rectangle, { style: { width: box.width, height: box.height, fill: 'red' }, onClick: () => hits.push(name) });
+  }
+  function Scene() { return createElement(Absolute, { style: { width: 220, height: 30 }, children: createElement(Flex, { style: { width: 200, height: 20 }, children: order.get().map(name => createElement(Flex, { key: name, style: { width: 80, height: 20, minWidth: 0, flexShrink: 0 }, children: createElement(Probe, { name, style: { width: 80, height: 20, minWidth: 0 } }) })) }) }); }
+  const canvas = document.createElement('canvas'); canvas.width = 220; canvas.height = 30; document.body.append(canvas);
+  const baseline = snapshotWasmLayoutDiagnostics(); const controller = pibbl(canvas, createElement(Scene, {})); controllers.push(controller); await nextFrame();
+  const a = stamps.get('A'), b = stamps.get('B'), mounted = snapshotWasmLayoutDiagnostics();
+  expect(mounted.activeArenas).toBe(baseline.activeArenas + 3);
+  order.set(['B', 'A']); await nextFrame();
+  expect([stamps.get('A'), stamps.get('B')]).toEqual([a, b]);
+  expect(snapshotWasmLayoutDiagnostics().nodeCreates).toBe(mounted.nodeCreates);
+  clickCanvas(canvas, 10, 10); clickCanvas(canvas, 90, 10); expect(hits).toEqual(['B', 'A']);
+  order.set(['A']); await nextFrame(); expect(snapshotWasmLayoutDiagnostics().activeArenas).toBe(baseline.activeArenas + 2);
+  order.set(['B', 'A']); await nextFrame();
+  expect(stamps.get('A')).toBe(a); expect(stamps.get('B')).not.toBe(b);
+  expect(snapshotWasmLayoutDiagnostics().nodeCreates).toBe(mounted.nodeCreates + 2);
+  controller.dispose(); const disposed = snapshotWasmLayoutDiagnostics();
+  expect([disposed.activeArenas, disposed.activeNodes, disposed.activeWasmInstances]).toEqual([baseline.activeArenas, baseline.activeNodes, baseline.activeWasmInstances]);
 });

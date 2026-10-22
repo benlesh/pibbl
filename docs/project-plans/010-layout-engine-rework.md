@@ -604,18 +604,54 @@ Hands-on source: `http://127.0.0.1:5192/#/testing/layout-preflight`, built5193.
 Click Fail later sizing, Recover, then the red box's right edge. The green root
 continues updating and the host controls remain usable through the failure.
 
-## [NEXT] Nested known Flex geometry preparation (slice 45)
+### Slice 45 — hierarchical known Flex geometry preparation
 
-Extend prepared slots hierarchically to direct built-in Flex descendants of a
-prepared Flex. Use each child's settled content allocation, preserve type/key/
-occurrence identity before actual component refs exist, and consume the same plan
-in normal traversal without a second allocation/measurement pass. Establish a
-public failure where a later inner Flex becomes invalid and an earlier opaque
-outer child must not run; provide repair geometry/hits, stable keyed lifecycle,
-independent-root isolation and exact cleanup in the shared Studio lab. Do not
-speculatively execute ordinary components, add another solver or broaden to every
-layout family/HTML/focus publication. Keep33capabilities/seven gates fixed.
-Consolidate43–45 after this third delivery and reconcile partial evidence ledger.
+A prepared Flex now inspects direct built-in Flex descendants after its own
+allocation settles. Stable slots own child-slot maps by type/key/occurrence,
+carry the same clone-preserved annotations and adopt already-computed child
+plans during normal traversal. Final content allocations feed the same existing
+solver/measurement path; there is no alternate solver or temporary native instance.
+An active-path source guard rejects cycles before recursive region growth. Parent
+teardown releases descendants; keyed removal drops only the removed subtree and
+restoration creates its fresh records. Ordinary components remain opaque.
+
+The public nested failure failed first: a later inner Flex's invalid grow value
+allowed an earlier outer probe to run. It now fails before that evaluation and
+recovers with the latest120px allocation. Successful changes use exactly one
+allocation pass per outer/inner region, solve only changed numeric inputs and
+retain records. Nested keyed reorder preserves component stamps/records and
+moved targets; removing/restoring one child releases/recreates only that subtree.
+Direct and nested wrapped Text tests prove final-width geometry and the changed
+paragraph hit height without another mounted allocation pass. Cyclic known Flex
+input stops after one direct child traversal and releases native handles/nodes.
+
+Source and built Studio nested controls pass independent-root pixels, expected
+failure before earlier evaluation, explicit100px recovery/right-edge hit and
+actual root cleanup0/0/0/0. Both bundle225public core inputs, built provenance only
+from private built output. Packed228installed-input strict Bundler/NodeNext and
+structural lifecycle pass. Final types/lint and source/built/editor exact export
+parity pass. Focused review found no material issue in hierarchical slot identity,
+active-path cycle handling, final dimensions, plan claim or descendant cleanup.
+Matching59181-byte artifact unchanged. Fresh focused experimental119passed/
+1normal-onlyskip; normal57passed/63experimental skips. Logs `/tmp/pibbl-slice45-*`. Node26.9.0/pnpm11.21.0deps/Chromium;
+no Node24/full trust claim. This is the known built-in Flex chain entered through
+Absolute, not general root discovery, all layout families, a native topology
+transaction or atomic HTML/focus adoption. Seven release gates remain open.
+
+Hands-on: source `http://127.0.0.1:5192/#/testing/layout-preflight`, built5193.
+Use nested layout, Fail later sibling (or sizing), Recover, then click the red
+box's right edge. Host controls and the independent green root survive failure.
+
+## [NEXT] Direct and opaque-boundary Flex entry preparation (slice 46)
+
+Use the same known-descendant preparation at a mounted Flex entry that was not
+already prepared by Absolute. Direct Flex roots and Flex returned by an ordinary
+component should preflight their known descendants before visiting earlier opaque
+children, after receiving their own final allocation. Keep ordinary functions
+single-evaluation, reuse mounted native regions and computed plans, and add public
+failure/recovery, geometry/hit, work-reuse and cleanup evidence in the existing
+Studio lab. Do not add a universal root walk, another solver, new public API or
+atomic pixel claim. Consolidate43–45 before starting production46.
 
 ### Consolidation 14 completed for delivery slices 40–42
 

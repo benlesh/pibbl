@@ -53,6 +53,11 @@ export function setPreNormalizedStyle(
   if (receiverToken) setPrimitiveReceiverToken(element, receiverToken);
 }
 
+/** @internal Reads a settled descriptor for known descendant preparation. */
+export function peekPreNormalizedStyle(element: PibblElement<any>): PreparedStyleInput | undefined {
+  return preNormalizedStyles.get(element);
+}
+
 /** @internal Consumes an internal normalized-style override exactly once. */
 export function takePreNormalizedStyle(
   element: PibblElement<any>,

@@ -31,13 +31,20 @@ else {
     }
     const state = () => lab.locator('pre').evaluate(element => JSON.parse(element.textContent));
     await lab.waitForFunction(() => JSON.parse(document.querySelector('pre').textContent).evaluations === 1);
+    let expectedEvaluations = 1;
+    if (process.argv.includes('--nested')) {
+      await lab.getByRole('button', { name: 'Use nested layout', exact: true }).click();
+      await lab.waitForFunction(() => JSON.parse(document.querySelector('pre').textContent).evaluations === 2);
+      expectedEvaluations = 2;
+    }
+
     await lab.getByRole('button', { name: process.argv.includes('--sizing') ? 'Fail later sizing' : 'Fail later sibling', exact: true }).click();
     await lab.waitForFunction(() => JSON.parse(document.querySelector('pre').textContent).failures === 1);
-    assert.equal((await state()).evaluations, 1);
+    assert.equal((await state()).evaluations, expectedEvaluations);
     assert.deepEqual(await lab.locator('#healthy').evaluate(canvas => [...canvas.getContext('2d').getImageData(65, 10, 1, 1).data]), [0,128,0,255]);
     await lab.locator('#subject').click({ position: { x: 91, y: 11 } }); assert.equal((await state()).hits, 0);
     await lab.getByRole('button', { name: 'Recover', exact: true }).click();
-    await lab.waitForFunction(() => JSON.parse(document.querySelector('pre').textContent).evaluations === 2);
+    await lab.waitForFunction(expected => JSON.parse(document.querySelector('pre').textContent).evaluations === expected, expectedEvaluations + 1);
     assert.equal((await state()).allocatedWidth, 100);
     assert.deepEqual(await lab.locator('#subject').evaluate(canvas => [...canvas.getContext('2d').getImageData(90, 10, 1, 1).data]), [196,81,57,255]);
     await lab.locator('#subject').click({ position: { x: 91, y: 11 } });

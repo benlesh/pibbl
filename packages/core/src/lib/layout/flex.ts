@@ -1,4 +1,4 @@
-import { registerKnownLayoutPreflight, stagePreparedChildStyle, takePreparedChildStyle, hasPreparedChildStyles, claimPreparedLayoutPlan, stagePreparedLayoutPlan } from './prepared-root.js';
+import { registerKnownLayoutPreflight, stagePreparedChildStyle, takePreparedChildStyle, hasPreparedChildStyles, claimPreparedLayoutPlan, stagePreparedLayoutPlan, preflightKnownLayout, attachPreparedLayoutSlot } from './prepared-root.js';
 import { isLayoutComponent, prepareLayoutComponent } from './define-layout-component.js';
 import { allocationInputRevision } from './allocation-revision.js';
 import { FlexAllocationCache, frozenFlexInputs, type CachedFlexPlacement } from './flex-allocation-cache.js';
@@ -21,7 +21,7 @@ import {
 } from '../components/structural-events.js';
 import { normalizeEdges } from '../style/normalize.js';
 import { resolveLength } from '../style/resolve-length.js';
-import { setPreNormalizedStyle } from '../style/resolve-dispatch.js';
+import { setPreNormalizedStyle, peekPreNormalizedStyle } from '../style/resolve-dispatch.js';
 import type {
   BoxStyle,
   FlexItemStyle,
@@ -308,6 +308,18 @@ if (experimentalLayout) registerKnownLayoutPreflight(Flex, (element, style, cont
     const region = slot.acquire();
     const resolved = { box: { contentBox: content }, overflow: (style as Readonly<FlexStyle>).overflow ?? 'visible', ...normalizeFlexOptions(style as Readonly<FlexStyle>, content) } as Readonly<ResolvedFlexStyle>;
     const plan = prepareFlexAllocation(element.props as FlexProps, resolved, content, flexMeasurementService(ctx), region);
+    let flexOccurrence = 0;
+    for (let index = 0; index < plan.children.length; index++) {
+      const child = plan.children[index];
+      if (child.type !== Flex) continue;
+      const occurrence = child.key === undefined ? flexOccurrence++ : 0;
+      const placement = plan.placements[index];
+      const prepared = peekPreNormalizedStyle(placement.element);
+      if (!prepared) throw new Error('Nested known Flex requires settled receiver inputs.');
+      const receiver = getPrimitiveReceiverToken(placement.element);
+      const nested = preflightKnownLayout(child, prepared.style, { x: 0, y: 0, width: placement.usedWidth, height: placement.usedHeight }, receiver, occurrence, slot);
+      attachPreparedLayoutSlot(placement.element, nested);
+    }
     stagePreparedLayoutPlan(slot, { ...plan, region });
   } finally { GLOBAL_STATE.primitiveReceiverToken = previous; }
 });

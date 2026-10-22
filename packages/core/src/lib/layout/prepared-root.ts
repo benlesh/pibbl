@@ -14,11 +14,18 @@ const snapshots = new WeakMap<PibblRenderTransaction, WeakMap<object, { child: P
 
 /** Registers only known declarative input preparation, never component evaluation. */
 export function registerKnownLayoutPreflight(type: Function, preflight: Preflight): void { preflights.set(type, preflight); }
-export function preflightKnownLayout(element: PibblElement<any>, style: Readonly<SystemStyle>, content: Readonly<LayoutBox>, receiver?: object, occurrence = 0): PreparedLayoutSlot | undefined {
+export function preflightKnownLayout(element: PibblElement<any>, style: Readonly<SystemStyle>, content: Readonly<LayoutBox>, receiver?: object, occurrence = 0, parentSlot?: PreparedLayoutSlot): PreparedLayoutSlot | undefined {
   const preflight = preflights.get(element.type);
   const parent = GLOBAL_STATE.componentRefs, owner = GLOBAL_STATE.currentPibblInstance;
   if (!preflight || !receiver || !parent || !owner || !GLOBAL_STATE.renderTransaction) return;
-  let types = slots.get(parent);
+  const transaction = GLOBAL_STATE.renderTransaction;
+  let visiting = activeDescriptions.get(transaction);
+  if (!visiting) { visiting = new Set(); activeDescriptions.set(transaction, visiting); }
+  const source = getElementMetadata(element)?.layoutDescriptionSource ?? element;
+  if (visiting.has(source)) throw new Error('Known layout descriptions form a cycle.');
+  visiting.add(source);
+  try {
+  let types = parentSlot?.children ?? slots.get(parent);
   if (!types) {
     types = new Map(); slots.set(parent, types);
     const owned = types;
@@ -39,6 +46,7 @@ export function preflightKnownLayout(element: PibblElement<any>, style: Readonly
   }
   preflight(element, style, content, receiver, slot);
   return slot;
+  } finally { visiting.delete(source); }
 }
 export function attachPreparedLayoutSlot(element: PibblElement<any>, slot?: PreparedLayoutSlot): void {
   if (slot) setElementMetadata(element, { ...getElementMetadata(element), preparedLayoutSlot: slot });
@@ -53,14 +61,20 @@ export interface PreparedLayoutPlan {
 }
 export class PreparedLayoutSlot {
   region: LayoutRegion | undefined;
+  readonly children = new Map<Function, Map<string, PreparedLayoutSlot>>();
+  private disposeChildren(): void {
+    for (const entries of this.children.values()) for (const child of entries.values()) child.dispose();
+    this.children.clear();
+  }
   constructor(private readonly owner: PibblInstance, private readonly release: () => void) {}
   acquire(): LayoutRegion { return this.region ??= new LayoutRegion(this.owner); }
-  dispose(): void { const region = this.region; this.region = undefined; try { region?.dispose(); } finally { this.release(); } }
+  dispose(): void { const region = this.region; this.region = undefined; try { this.disposeChildren(); region?.dispose(); } finally { this.release(); } }
   claim(region: LayoutRegion): void {
     if (this.region !== region) throw new Error('Prepared layout region is stale.');
-    adoptMountedLayoutRegion(region, () => { if (this.region === region) { this.region = undefined; this.release(); } });
+    adoptMountedLayoutRegion(region, () => { if (this.region === region) { this.region = undefined; this.disposeChildren(); this.release(); } });
   }
 }
+const activeDescriptions = new WeakMap<PibblRenderTransaction, Set<PibblElement<any>>>();
 const slots = new WeakMap<PibblComponentRefs<any>, Map<Function, Map<string, PreparedLayoutSlot>>>();
 const plans = new WeakMap<PibblRenderTransaction, Map<PreparedLayoutSlot, { plan: PreparedLayoutPlan; claimed: boolean }>>();
 export function stagePreparedLayoutPlan(slot: PreparedLayoutSlot, plan: PreparedLayoutPlan): void {
