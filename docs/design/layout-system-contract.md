@@ -438,6 +438,15 @@ is `max(0, remaining) / max(1, totalFr)`, so a total fraction below one leaves
 unused free space. An area that extends beyond the explicit track matrix is an
 error. Children use definite sizes, stretch, or a supported pure measurement.
 
+In the experimental build, mounted Grid track resolution uses its own generational
+region in the root's shared WASM instance. Numeric/percentage/fraction inputs,
+bounds and gaps are cached independently per axis, so paint-only updates reuse
+resolved tracks and a width change resolves only the changed axis. Native errors
+fail closed; the experimental runtime does not fall back to the JavaScript track
+resolver. Grid child placement still uses JavaScript. The ordinary build and pure
+layout helpers retain the current JavaScript path; this is not all-family native
+adoption or additional CSS/Yoga parity.
+
 Grid rejects missing starts, implicit tracks, auto placement, dense packing,
 automatic/content tracks, `minmax`, `repeat`, subgrid, percentage gaps, named
 areas, end-line syntax, and `order`. It never silently approximates these CSS

@@ -1,7 +1,7 @@
 import { Absolute, Flex, Flow, Grid, Group, HtmlBox, Layer, Rectangle, useLayoutBox, defineLayoutComponent, type FlexStyle, type PibblNodeInput, type Signal } from '@pibbl/core';
 
 interface LabProps {
-  width: Signal<number>; grow: Signal<number>; minimum: Signal<number>; nested: Signal<boolean>; direct: Signal<boolean>; described: Signal<boolean>; layer: Signal<boolean>; grid: Signal<boolean>; flow: Signal<boolean>;
+  width: Signal<number>; grow: Signal<number>; minimum: Signal<number>; nested: Signal<boolean>; direct: Signal<boolean>; described: Signal<boolean>; layer: Signal<boolean>; grid: Signal<boolean>; flow: Signal<boolean>; nativeGrid: Signal<boolean>; nativeFill: Signal<string>; nativeWidth: (index: number, width: number) => void; nativeHit: () => void;
   evaluate: (width: number) => void; hit: () => void; layerHit: () => void;
 }
 function PreflightProbe({ evaluate, hit }: {
@@ -15,7 +15,8 @@ function PreflightProbe({ evaluate, hit }: {
 const DescribedCard = defineLayoutComponent((props: { style: FlexStyle; children: PibblNodeInput }) => <Flex style={props.style}>{props.children}</Flex>);
 
 /** Deterministic public-surface fixture; the host owns fault/recovery controls. */
-export function LayoutPreflightLab({ width, grow, minimum, nested, direct, described, layer, grid, flow, evaluate, hit, layerHit }: LabProps) {
+export function LayoutPreflightLab({ width, grow, minimum, nested, direct, described, layer, grid, flow, nativeGrid, nativeFill, nativeWidth, nativeHit, evaluate, hit, layerHit }: LabProps) {
+  if (nativeGrid.get()) return <NativeGridTracksLab width={width} fill={nativeFill} report={nativeWidth} hit={nativeHit} />;
   const probe = <PreflightProbe evaluate={evaluate} hit={hit} style={{ width: 80, height: 30, minWidth: 0, flexGrow: 1 }} />;
   const blue = <Rectangle style={{ width: 80, height: 30, minWidth: minimum, maxWidth: 80, flexGrow: grow, fill: '#344c77' }} onClick={layerHit} />;
   if (flow.get()) return <Flow style={{ width: 240, height: 30, direction: 'horizontal', wrap: false }}>
@@ -55,4 +56,22 @@ export function HtmlProjectionLab({ overflow, mount, laterMount }: {
     <HtmlBox key="earlier" mount={mount} data={failed} style={{ width: 100, height: 30 }} />
     <Absolute><HtmlBox mount={laterMount} data={0} pointerEvents="none" style={{ left: 110, width: 1e300, height: 2, scaleX: failed ? 1e20 : 1 }} /></Absolute>
   </Group>;
+}
+
+
+function NativeGridCell({ index, color, report, hit }: {
+  index: number; color: string | Signal<string>; report: (index: number, width: number) => void; hit: () => void;
+  style: { width: string; height: number; gridColumnStart: number; gridRowStart: number };
+}) {
+  const box = useLayoutBox(); report(index, box.width);
+  return <Rectangle style={{ width: box.width, height: 30, fill: color }} onClick={index === 2 ? hit : undefined} />;
+}
+function NativeGridTracksLab({ width, fill, report, hit }: {
+  width: Signal<number>; fill: Signal<string>; report: (index: number, width: number) => void; hit: () => void;
+}) {
+  return <Grid style={{ width, height: 30, gridTemplateColumns: [20, '25%', '1fr'], gridTemplateRows: [30], columnGap: 10 }}>
+    <NativeGridCell index={0} color={fill} report={report} hit={hit} style={{ width: '100%', height: 30, gridColumnStart: 1, gridRowStart: 1 }} />
+    <NativeGridCell index={1} color="green" report={report} hit={hit} style={{ width: '100%', height: 30, gridColumnStart: 2, gridRowStart: 1 }} />
+    <NativeGridCell index={2} color="blue" report={report} hit={hit} style={{ width: '100%', height: 30, gridColumnStart: 3, gridRowStart: 1 }} />
+  </Grid>;
 }

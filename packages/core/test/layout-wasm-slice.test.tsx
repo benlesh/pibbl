@@ -1641,3 +1641,34 @@ it.runIf(experimentalLayout)('prepares a later Flow Flex before an earlier opaqu
     expect(disposed.activeNodes).toBe(baseline.activeNodes); expect(disposed.activeArenas).toBe(baseline.activeArenas); expect(disposed.activeWasmInstances).toBe(baseline.activeWasmInstances);
   } finally { window.removeEventListener('error', prevent); }
 });
+
+it.runIf(experimentalLayout)('resolves public mixed Grid tracks natively and reuses them for paint-only updates', async () => {
+  const baseline = snapshotWasmLayoutDiagnostics();
+  const resolutions = () => (snapshotWasmLayoutDiagnostics() as ReturnType<typeof snapshotWasmLayoutDiagnostics> & { gridTrackResolutions?: number }).gridTrackResolutions ?? 0;
+  const before = resolutions(); const width = signal(200), fill = signal('red');
+  const boxes = new Map<number, number>(); let hits = 0;
+  function Cell({ id, color }: { id: number; color: string | typeof fill; style: Record<string, unknown> }) {
+    const box = useLayoutBox(); boxes.set(id, box.width);
+    return createElement(Rectangle, { style: { width: box.width, height: 20, fill: color }, onClick: () => { if (id === 3) hits++; } });
+  }
+  const scene = createElement(Grid, { style: { width, height: 20, gridTemplateColumns: [20, '25%', '1fr'], gridTemplateRows: [20], columnGap: 10 }, children: [
+    createElement(Cell, { id: 1, color: fill, style: { width: '100%', height: 20, gridColumnStart: 1, gridRowStart: 1 } }),
+    createElement(Cell, { id: 2, color: 'green', style: { width: '100%', height: 20, gridColumnStart: 2, gridRowStart: 1 } }),
+    createElement(Cell, { id: 3, color: 'blue', style: { width: '100%', height: 20, gridColumnStart: 3, gridRowStart: 1 } }),
+  ] });
+  const canvas = document.createElement('canvas'); canvas.width = 300; canvas.height = 30; document.body.append(canvas);
+  const controller = pibbl(canvas, scene); controllers.push(controller); await nextFrame();
+  expect([...boxes.values()]).toEqual([20, 50, 110]);
+  clickCanvas(canvas, 100, 10); expect(hits).toBe(1);
+  expect(resolutions() - before).toBe(2);
+  width.set(260); await nextFrame();
+  expect([...boxes.values()]).toEqual([20, 65, 155]);
+  clickCanvas(canvas, 100, 10); expect(hits).toBe(1);
+  clickCanvas(canvas, 110, 10); expect(hits).toBe(2);
+  expect(resolutions() - before).toBe(3);
+  fill.set('orange'); await nextFrame();
+  expect([...canvas.getContext('2d')!.getImageData(10, 10, 1, 1).data]).toEqual([255, 165, 0, 255]);
+  expect(resolutions() - before).toBe(3);
+  controller.dispose(); const disposed = snapshotWasmLayoutDiagnostics();
+  expect(disposed.activeNodes).toBe(baseline.activeNodes); expect(disposed.activeArenas).toBe(baseline.activeArenas); expect(disposed.activeWasmInstances).toBe(baseline.activeWasmInstances);
+});

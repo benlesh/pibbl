@@ -1,4 +1,4 @@
-import { experimentalLayout } from './wasm/region.js';
+import { experimentalLayout, mountedLayoutRegion, type LayoutRegion } from './wasm/region.js';
 import { preparePlacedKnownLayout } from './prepared-root.js';
 import { preparedStyleValue, preparedStyleQuery } from '../style/responsive.js';
 import { definePrimitive } from '../define-primitive.js';
@@ -146,6 +146,8 @@ function renderGrid(
       }
     },
   };
+  const nativeRegion = experimentalLayout ? mountedLayoutRegion() : undefined;
+  if (experimentalLayout && !nativeRegion) throw new Error('Experimental Grid requires its mounted native region.');
   const placements = resolveGridPlacements(
     localContent,
     children,
@@ -155,6 +157,7 @@ function renderGrid(
       measureElement: (element, constraints) =>
         measureElement(element, constraints, service),
     },
+    nativeRegion,
   );
   let index = 0;
   return placeDirectChildren(
@@ -211,16 +214,17 @@ function resolveGridPlacements(
   children: readonly PibblElement<any>[],
   options: Readonly<ReturnType<typeof normalizeGridOptions>>,
   measurement: GridMeasurementInput,
+  nativeRegion?: LayoutRegion,
 ): GridPlacement[] {
   assertFiniteContainer(container);
-  const columns = resolveParsedGridTracks(
+  const columns = nativeRegion ? resolveNativeGridTracks(nativeRegion, options.columns, container.width, options.columnGap, 'columns', container) : resolveParsedGridTracks(
     options.columns,
     container.width,
     options.columnGap,
     'columns',
     container,
   );
-  const rows = resolveParsedGridTracks(
+  const rows = nativeRegion ? resolveNativeGridTracks(nativeRegion, options.rows, container.height, options.rowGap, 'rows', container) : resolveParsedGridTracks(
     options.rows,
     container.height,
     options.rowGap,
@@ -411,6 +415,11 @@ export function resolveGridTracks(
   };
   const parsed = parseGridTracks(tracks, axis, container);
   return resolveParsedGridTracks(parsed, bound, gap, axis, container);
+}
+
+function resolveNativeGridTracks(region: LayoutRegion, tracks: readonly ParsedGridTrack[], bound: number, gap: number, axis: 'columns' | 'rows', container: Readonly<LayoutBox>): number[] {
+  try { return region.resolveGridTracks(tracks, { bound, gap, axis }); }
+  catch (error) { if (error instanceof RangeError) throw trackDiagnostic(tracks, axis, container); throw error; }
 }
 
 function resolveParsedGridTracks(

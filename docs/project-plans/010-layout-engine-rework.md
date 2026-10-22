@@ -2,7 +2,8 @@
 
 ## Current checkpoint and single next slice — 2026-10-22
 
-Latest delivery is slice51 `7ea95367` (Flow-entry known Flex preparation).
+Latest delivery is slice52 (native explicit Grid track resolution).
+Slice51 is `7ea95367` (Flow-entry known Flex preparation).
 Slice50 is `c8b163aa` (Grid-entry known Flex preparation).
 Slice49 is `d6f12813` (known Layer-to-Flex preparation/adoption).
 Slice48 is `cb863bc2` (finite HTML projection preparation).
@@ -773,16 +774,25 @@ each pass failure isolation, recovery pixels, red/blue targeting and cleanup0/0/
 with225public inputs. Kernel59181bytes unchanged. Logs `/tmp/pibbl-slice51-*`;
 Node26.9.0/pnpm11.21.0deps/Chromium, no Node24/full trust claim.
 
-## [NEXT] Native explicit Grid track resolution (slice 52)
+### Slice 52 — native explicit Grid track resolution
 
-Resolve existing finite numeric, percentage and fractional Grid tracks in the
-shared root-owned WASM arena. Preserve current Grid child placement/public API and
-ordinary build; experimental Grid must call native track resolution with no hidden
-JS fallback. Public RED combines exact mixed-track geometry/moved hits with native
-resolution evidence across resize versus paint-only updates, plus exact teardown.
-Use per-region numeric storage and the pinned compiler build/native test gate.
-This does not add auto placement, implicit/intrinsic tracks, native Grid placement
-or complete all-family topology. Consolidate52–54 after three deliveries.
+Mounted experimental Grid resolves finite numeric/percentage/fraction tracks through
+its own generational arena in the same root-owned WASM instance. Columns/rows cache
+exact parsed values, bounds and gaps independently. No experimental runtime JS
+fallback; ordinary builds and pure helpers retain JS. Grid child placement remains
+JS. ABI validation now requires the Grid exports, and stale ABI candidates reject
+before module publication. Native storage is isolated from Flex/peer Grid records.
+
+Public RED passed mixed geometry/hit setup but reported zero native resolutions
+instead of two. Green proves200px→260px tracks20/50/110→20/65/155, moved blue target,
+two initial axes/one resized axis/zero paint-only resolutions and exact teardown.
+Pinned compiler build passes6native tests, including sub-unit fractions, overflow,
+invalid numeric records, peer/Flex isolation and stale handles; binary60781bytes.
+Focused experimental89tests pass; normal23pass/66experimental skips. Types/lint
+clean. Focused read-only review found no material findings. Source/built Studio
+`--native-grid` each passes the same public proof and cleanup0/0/0/0 with225inputs.
+Packed228installed-input Bundler/NodeNext/lifecycle pass. Logs `/tmp/pibbl-slice52-*`;
+Node26.9.0/pnpm11.21.0deps/Chromium; no Node24/trust/parity/performance claim.
 
 ### Consolidation 17 completed for delivery slices 49–51
 

@@ -31,7 +31,28 @@ else {
     }
     const state = () => lab.locator('pre').evaluate(element => JSON.parse(element.textContent));
     await lab.waitForFunction(() => JSON.parse(document.querySelector('pre').textContent).evaluations === 1);
-    if (process.argv.includes('--html')) {
+    if (process.argv.includes('--native-grid')) {
+      const resolutions = () => lab.evaluate(() => globalThis.__PIBBL_LAYOUT_DIAGNOSTICS__().gridTrackResolutions);
+      const before = await resolutions();
+      await lab.getByRole('button', { name: 'Use native Grid tracks', exact: true }).click();
+      await lab.waitForFunction(() => JSON.parse(document.querySelector('pre').textContent).nativeWidths[2] === 110);
+      assert.deepEqual((await state()).nativeWidths, [20,50,110]); assert.equal(await resolutions() - before, 2);
+      await lab.locator('#subject').click({ position: { x: 101, y: 11 } });
+      await lab.waitForFunction(() => JSON.parse(document.querySelector('pre').textContent).nativeHits === 1);
+      await lab.getByRole('button', { name: 'Resize native tracks', exact: true }).click();
+      await lab.waitForFunction(() => JSON.parse(document.querySelector('pre').textContent).nativeWidths[2] === 155);
+      assert.deepEqual((await state()).nativeWidths, [20,65,155]); assert.equal(await resolutions() - before, 3);
+      await lab.locator('#subject').click({ position: { x: 101, y: 11 } }); assert.equal((await state()).nativeHits, 1);
+      await lab.locator('#subject').click({ position: { x: 111, y: 11 } });
+      await lab.waitForFunction(() => JSON.parse(document.querySelector('pre').textContent).nativeHits === 2);
+      await lab.getByRole('button', { name: 'Paint native tracks', exact: true }).click();
+      await lab.waitForFunction(() => [...document.querySelector('#subject').getContext('2d').getImageData(10, 10, 1, 1).data].join() === '255,165,0,255');
+      assert.equal(await resolutions() - before, 3);
+      const disposed = await lab.evaluate(() => { dispatchEvent(new PageTransitionEvent('pagehide')); return globalThis.__PIBBL_LAYOUT_DIAGNOSTICS__(); });
+      assert.deepEqual(['activeNodes', 'activeArenas', 'activeWasmInstances', 'cachedMeasurements'].map(key => disposed[key]), [0,0,0,0]);
+      assert.deepEqual(errors, []);
+      console.warn(`${built ? 'Built' : 'Source'} native Grid tracks: mixed geometry200→260, moved target, two initial axes/one resized axis/zero paint-only native resolutions, cleanup0/0/0/0; ${coreInputs.length} public core inputs`);
+    } else if (process.argv.includes('--html')) {
       await lab.waitForFunction(() => JSON.parse(document.querySelector('pre').textContent).htmlMounts === 1);
       await lab.getByRole('button', { name: 'Fail HTML projection', exact: true }).click();
       await lab.waitForFunction(() => JSON.parse(document.querySelector('pre').textContent).htmlFailures === 1);

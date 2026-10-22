@@ -11,7 +11,7 @@ const buildEnvironment = import.meta.env;
 export const experimentalLayout =
   (typeof __PIBBL_LAYOUT_WASM__ !== 'undefined' && __PIBBL_LAYOUT_WASM__) ||
   buildEnvironment?.MODE === 'layout-wasm';
-const counters = { lineFormations: 0, cachedMeasurements: 0, mainPlacements: 0, crossPlacements: 0, solves: 0, measuredLeaves: 0, nodeReuses: 0, nodeCreates: 0, activeNodes: 0, activeArenas: 0, activeWasmInstances: 0, wasmInstanceCreates: 0, frames: 0, allocationPasses: 0, allocationItemVisits: 0, allocationCacheHits: 0 };
+const counters = { gridTrackResolutions: 0, lineFormations: 0, cachedMeasurements: 0, mainPlacements: 0, crossPlacements: 0, solves: 0, measuredLeaves: 0, nodeReuses: 0, nodeCreates: 0, activeNodes: 0, activeArenas: 0, activeWasmInstances: 0, wasmInstanceCreates: 0, frames: 0, allocationPasses: 0, allocationItemVisits: 0, allocationCacheHits: 0 };
 export function snapshotWasmLayoutDiagnostics() {
   const signals = signalGraphSnapshot();
   return {
@@ -41,6 +41,8 @@ interface Kernel {
   solve_wrap(handle: number, generation: number, main: number, gap: number): number;
   place_wrap_main(handle: number, generation: number, main: number, gap: number, alignment: number, reverse: number): number;
   place_wrap_cross(handle: number, generation: number, size: number, gap: number, alignment: number, reverse: number): number;
+  resize_grid(handle: number, generation: number, count: number): number;
+  resolve_grid_tracks(handle: number, generation: number, bound: number, gap: number): number;
   resize_cross(handle: number, generation: number, count: number): number;
   place_cross(handle: number, generation: number, size: number): number;
   place_main(handle: number, generation: number, main: number, gap: number, alignment: number, reverse: number): number;
@@ -116,7 +118,41 @@ export interface NumericFlexCrossItem {
 }
 type CrossAlignment = Exclude<NumericFlexCrossItem['alignSelf'], 'auto'>;
 const alignmentCodes: Record<CrossAlignment, number> = { stretch: 0, 'flex-start': 1, 'flex-end': 2, center: 3 };
+export type NumericGridTrack = Readonly<{ kind: 'fixed'; value: number }> | Readonly<{ kind: 'percentage' | 'fraction'; factor: number }>;
+interface GridTrackCache { tracks: readonly NumericGridTrack[]; bound: number; gap: number; values: number[]; }
+function sameGridTracks(a: readonly NumericGridTrack[], b: readonly NumericGridTrack[]): boolean {
+  if (a.length !== b.length) return false;
+  for (let index = 0; index < a.length; index++) {
+    const left = a[index], right = b[index];
+    if (left.kind !== right.kind || (left.kind === 'fixed' ? left.value : left.factor) !== (right.kind === 'fixed' ? right.value : right.factor)) return false;
+  }
+  return true;
+}
 export class LayoutRegion {
+  private gridColumns: GridTrackCache | undefined;
+  private gridRows: GridTrackCache | undefined;
+  resolveGridTracks(tracks: readonly NumericGridTrack[], options: { bound: number; gap: number; axis: 'columns' | 'rows' }): number[] {
+    const kernel = this.ensureOwner();
+    const cached = options.axis === 'columns' ? this.gridColumns : this.gridRows;
+    if (cached && cached.bound === options.bound && cached.gap === options.gap && sameGridTracks(cached.tracks, tracks)) return cached.values;
+    try {
+      const pointer = kernel.resize_grid(this.handle, this.generation, tracks.length);
+      if (!pointer && tracks.length) throw new Error('Grid track storage allocation failed.');
+      const records = new Float64Array(kernel.memory.buffer, pointer, tracks.length * 3);
+      for (let index = 0; index < tracks.length; index++) {
+        const track = tracks[index];
+        records[index * 3] = track.kind === 'fixed' ? 0 : track.kind === 'percentage' ? 1 : 2;
+        records[index * 3 + 1] = track.kind === 'fixed' ? track.value : track.factor;
+      }
+      if (kernel.resolve_grid_tracks(this.handle, this.generation, options.bound, options.gap) !== 0) throw new RangeError('Grid native track resolution produced invalid geometry.');
+      const values = new Array<number>(tracks.length);
+      for (let index = 0; index < tracks.length; index++) values[index] = records[index * 3 + 2];
+      const entry = { tracks, bound: options.bound, gap: options.gap, values };
+      if (options.axis === 'columns') this.gridColumns = entry; else this.gridRows = entry;
+      counters.gridTrackResolutions++;
+      return values;
+    } catch (error) { return this.fail(error); }
+  }
   private cachedAllocation: FlexAllocationCache | undefined;
   private layoutOwner: RootLayoutOwner | undefined;
   private handle = 0;
@@ -278,7 +314,7 @@ export class LayoutRegion {
     return this.crossResults;
   }
   dispose(): void {
-    this.allocationCache = undefined;
+    this.allocationCache = undefined; this.gridColumns = undefined; this.gridRows = undefined;
     const owner = this.layoutOwner, handle = this.handle, generation = this.generation;
     this.layoutOwner = undefined; this.handle = 0; this.generation = 0;
     counters.activeNodes -= this.records.size;

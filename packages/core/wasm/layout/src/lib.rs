@@ -2,7 +2,7 @@
 use std::cell::RefCell;
 const STRIDE: usize = 10; // basis, min, max, padding, grow, shrink, result, frozen/offset, margin before, margin after
 #[derive(Default)]
-struct Arena { nodes: Vec<f64>, lines: Vec<(usize, usize)>, cross: Vec<f64> }
+struct Arena { nodes: Vec<f64>, lines: Vec<(usize, usize)>, cross: Vec<f64>, grid: Vec<f64> }
 struct ArenaSlot { generation: u32, arena: Option<Arena> }
 struct ArenaPool { slots: Vec<ArenaSlot>, closed: bool }
 thread_local! {
@@ -109,6 +109,40 @@ fn align_cross(records: &mut [f64], size: f64, reverse: bool) -> u32 {
         n[6] = outer;
         n[7] = if reverse { size - offset - n[8] - outer } else { offset + n[8] };
         if !n[7].is_finite() { return 1; }
+    }
+    0
+}
+
+// Independent per-region Grid track records: kind, numeric value, result.
+#[no_mangle]
+pub extern "C" fn resize_grid(handle: u32, generation: u32, count: usize) -> *mut f64 {
+    with_arena(handle, generation, std::ptr::null_mut(), |arena| {
+        let Some(length) = count.checked_mul(3) else { return std::ptr::null_mut(); };
+        arena.grid.resize(length, 0.0);
+        arena.grid.as_mut_ptr()
+    })
+}
+#[no_mangle]
+pub extern "C" fn resolve_grid_tracks(handle: u32, generation: u32, bound: f64, gap: f64) -> u32 {
+    with_arena(handle, generation, 1, |arena| resolve_tracks(&mut arena.grid, bound, gap))
+}
+fn resolve_tracks(tracks: &mut [f64], bound: f64, gap: f64) -> u32 {
+    if tracks.len() % 3 != 0 || !bound.is_finite() || bound < 0.0 || !gap.is_finite() || gap < 0.0 { return 1; }
+    let mut allocated = (tracks.len() / 3).saturating_sub(1) as f64 * gap;
+    let mut fractions = 0.0;
+    for track in tracks.chunks_exact_mut(3) {
+        if !track[1].is_finite() || track[1] < 0.0 { return 1; }
+        track[2] = if track[0] == 0.0 { track[1] }
+            else if track[0] == 1.0 { bound * track[1] / 100.0 }
+            else if track[0] == 2.0 { fractions += track[1]; 0.0 }
+            else { return 1; };
+        allocated += track[2];
+    }
+    if !allocated.is_finite() || !fractions.is_finite() { return 1; }
+    let unit = (bound - allocated).max(0.0) / fractions.max(1.0);
+    for track in tracks.chunks_exact_mut(3) {
+        if track[0] == 2.0 { track[2] = unit * track[1]; }
+        if !track[2].is_finite() || track[2] < 0.0 { return 1; }
     }
     0
 }
@@ -291,6 +325,21 @@ fn allocate(nodes: &mut [f64], main: f64, gap: f64) -> u32 {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test] fn grid_tracks_preserve_mixed_fraction_overflow_and_validation_rules() {
+        let mut mixed = [0.,20.,0., 1.,25.,0., 2.,1.,0.];
+        assert_eq!(resolve_tracks(&mut mixed,200.,10.),0);
+        assert_eq!((mixed[2],mixed[5],mixed[8]),(20.,50.,110.));
+        assert_eq!(resolve_tracks(&mut mixed,260.,10.),0);
+        assert_eq!((mixed[2],mixed[5],mixed[8]),(20.,65.,155.));
+        let mut fractional = [2.,0.5,0.];
+        assert_eq!(resolve_tracks(&mut fractional,100.,0.),0); assert_eq!(fractional[2],50.);
+        let mut overflow = [0.,200.,0., 2.,1.,0.];
+        assert_eq!(resolve_tracks(&mut overflow,100.,0.),0); assert_eq!(overflow[5],0.);
+        assert_eq!(resolve_tracks(&mut [1.,1e308,0.],100.,0.),1);
+        assert_eq!(resolve_tracks(&mut [2.,1e308,0.,2.,1e308,0.],100.,0.),1);
+        assert_eq!(resolve_tracks(&mut [f64::NAN,1.,0.],100.,0.),1);
+        assert_eq!(resolve_tracks(&mut [0.,-1.,0.],100.,0.),1);
+    }
     #[test] fn cross_bounds_and_overflow_alignment() {
         let mut records = [0., 10., 0., 50., 1., 0., 0., 0., 0., 0.,
             120., 0., 0., f64::INFINITY, 0., 3., 0., 0., 0., 0.];
@@ -330,6 +379,14 @@ mod tests {
             std::slice::from_raw_parts_mut(pa, 20).copy_from_slice(&[80.,0.,f64::INFINITY,0.,0.,1.,0.,0.,0.,0.,80.,0.,f64::INFINITY,0.,0.,1.,0.,0.,0.,0.]);
             std::slice::from_raw_parts_mut(pb, 20).copy_from_slice(&[40.,0.,f64::INFINITY,0.,0.,1.,0.,0.,0.,0.,40.,0.,f64::INFINITY,0.,0.,1.,0.,0.,0.,0.]);
         }
+        let grid_a = resize_grid(a,ga,3); let grid_b = resize_grid(b,gb,1);
+        unsafe {
+            std::slice::from_raw_parts_mut(grid_a,9).copy_from_slice(&[0.,20.,0.,1.,25.,0.,2.,1.,0.]);
+            std::slice::from_raw_parts_mut(grid_b,3).copy_from_slice(&[2.,0.5,0.]);
+        }
+        assert_eq!(resolve_grid_tracks(a,ga,200.,10.),0);
+        assert_eq!(resolve_grid_tracks(b,gb,100.,0.),0);
+        unsafe { assert_eq!((*grid_a.add(8),*grid_b.add(2)),(110.,50.)); }
         assert_eq!(solve_wrap(a,ga,100.,0.),0);
         assert_eq!(solve(b,gb,60.,0.),0);
         assert_eq!(place_wrap_main(a,ga,100.,0.,0,0),0);
@@ -341,6 +398,8 @@ mod tests {
         let c = arena_create(); let gc = arena_generation(c);
         assert_eq!(c,a); assert_ne!(gc,ga);
         assert_eq!(solve(a,ga,100.,0.),1);
+        assert!(resize_grid(a,ga,1).is_null());
+        assert_eq!(resolve_grid_tracks(a,ga,100.,0.),1);
         assert_eq!(place_main(b,gb,60.,0.,0,1),0);
         assert_eq!(arena_dispose(c,gc),0);
         ARENAS.with(|pool| pool.borrow_mut().slots[(c-1) as usize].generation=u32::MAX);
