@@ -334,7 +334,8 @@ function measureFlex(
     const mainProperty = row ? 'width' : 'height';
     const crossProperty = row ? 'height' : 'width';
     const minimumProperty = row ? 'minWidth' : 'minHeight';
-    if ((shrink > 0 || basis === 'auto') && style[minimumProperty] === undefined) {
+    if ((shrink > 0 || basis === 'auto') && style[minimumProperty] === undefined &&
+      !hasEmptyRectangleMinimum(child, style, preparedStyleQuery(prepared))) {
       throw childDiagnostic(
         child,
         minimumProperty,
@@ -571,10 +572,7 @@ function resolveFlexPlacements(
         (typeof normalized.width === 'number' || automaticTextBasis));
     // An empty authored rectangle has no intrinsic content contribution. Keep
     // opaque/child-bearing primitives conservative without evaluating children.
-    const automaticRectangleMinimum = experimentalLayout && child.type === Rectangle &&
-      !Object.hasOwn(child.props, 'children') && !preparedStyleQuery(prepared) &&
-      typeof normalized.width === 'number' && Number.isFinite(normalized.width) && normalized.width >= 0 &&
-      typeof normalized.height === 'number' && Number.isFinite(normalized.height) && normalized.height >= 0;
+    const automaticRectangleMinimum = hasEmptyRectangleMinimum(child, normalized, preparedStyleQuery(prepared));
     if ((shrink > 0 || basisValue === 'auto') && normalized[minimumProperty] === undefined && !automaticTextMinimum && !automaticTextBasis && !automaticRectangleMinimum) {
       throw childDiagnostic(
         child,
@@ -1317,6 +1315,17 @@ function rejectUnsupportedItemFields(
       );
     }
   }
+}
+
+function hasEmptyRectangleMinimum(
+  child: PibblElement<any>,
+  style: Readonly<Record<string, unknown>>,
+  query: PreparedQuery | undefined,
+): boolean {
+  return experimentalLayout && child.type === Rectangle &&
+    !Object.hasOwn(child.props, 'children') && !query &&
+    typeof style.width === 'number' && Number.isFinite(style.width) && style.width >= 0 &&
+    typeof style.height === 'number' && Number.isFinite(style.height) && style.height >= 0;
 }
 
 function clamp(value: number, minimum: number, maximum: number): number {

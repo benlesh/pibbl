@@ -1085,3 +1085,12 @@ it.runIf(experimentalLayout)('keeps explicit rectangle minima and no-shrink poli
   expect(layoutFlex({ x: 0, y: 0, width: 100, height: 100 }, [fixed({ flexShrink: 0 }), fixed({})], {}, measurement).map(box => box.width)).toEqual([80, 20]);
   expect(layoutFlex({ x: 0, y: 0, width: 100, height: 100 }, [fixed({}), fixed({})], { flexDirection: 'column', alignItems: 'flex-start' }, measurement).map(box => box.height)).toEqual([50, 50]);
 });
+
+it.runIf(experimentalLayout)('measures intrinsic Flex columns containing empty fixed-size Rectangles through the public API', () => {
+  const column = createElement(Flex, { style: { flexDirection: 'column', width: 100, gap: 5 }, children: [
+    createElement(Rectangle, { style: { width: 80, height: 20 } }),
+    createElement(Rectangle, { style: { width: 80, height: 30 } }),
+  ] });
+  expect(measureElement(column, { minWidth: 0, maxWidth: 100, minHeight: 0, maxHeight: 100 }, service))
+    .toEqual({ status: 'measured', size: { width: 100, height: 55 } });
+});

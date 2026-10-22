@@ -35,7 +35,7 @@ Current estimate remains a range, not a promise: the original forecast was 36
 additional slices including 25. Three deliveries are now integrated; loading was
 an accepted scope addition to that forecast. Roughly 34 delivery slices remain,
 subject to reassessment against the same proposal exits after the next group.
-Slice 28 is delivered below. Roughly 27 delivery slices remain after slice 34 against the same
+Slice 28 is delivered below. Roughly 26 delivery slices remain after slice 35 against the same
 forecast, subject to reassessment after this group. Area estimates are not parallel
 work queues.
 
@@ -291,10 +291,27 @@ Both pass with no page errors, built provenance 466 inputs. Logs
 http://127.0.0.1:5192/#/examples/layout/wasm-flex-text, Compare Text minimum,
 then the boxes on the right. Built equivalent on port 5193.
 
-**Exactly one selected next delivery slice: 35 — matching empty Rectangle
-contributions through intrinsic Flex measurement.** Establish the public
-measureElement regression first and share the bounded eligibility policy without
-introducing generic provider discovery.
+### Slice 35 — matching intrinsic empty Rectangle contributions
+
+A public measureElement regression failed at the explicit-minHeight guard for a
+finite-width automatic-height Flex column containing two empty fixed Rectangles.
+The shared private eligibility predicate now waives that guard consistently in
+measurement and allocation. Existing zero content minimum, bounds, padding,
+percentage rejection and known-container measurement rules remain responsible for
+the result; no generic provider execution or duplicate policy was added.
+
+Fresh checks: 88 experimental tests across three files, normal 39 passed / 37
+experimental skips, repository typecheck and scoped lint. Matching private build
+passes and the source/built public Rectangle/Text/frozen Studio checks pass with
+466 built inputs and zero cleanup resources. Logs
+`/tmp/pibbl-slice35-{red,focused,normal,typecheck,lint,build}.txt` and the slice34
+browser follow-up logs above. Node 26.9.0 / pnpm 11.21.0 dependencies / Chromium.
+
+**Exactly one selected next delivery slice: 36 — percentage-sized empty Rectangle
+automatic minima in finite direct allocation.** Resolve the existing numeric/percent
+size language against definite parent dimensions, preserve explicit minima and
+conservative intrinsic percentage rules, and start with a public shrink failure.
+Consolidate group12 after slices34–36.
 
 ### Consolidation 11 completed for delivery slices 31–33
 
@@ -1561,12 +1578,13 @@ three pinned Yoga cases, and keeps unaccepted API signatures and missing release
 gates explicit. It is support work, not an additional delivered capability slice.
 Group9 has two deliveries; consolidate after the next closely related slice.
 
-## [NEXT] Empty Rectangle intrinsic Flex contributions (slice 35)
+## [NEXT] Percentage-sized empty Rectangle minimum (slice 36)
 
-Apply the selected finite empty-Rectangle native minimum consistently to supported
-intrinsic Flex measurement. Preserve explicit minima, conservative unknown/provider
-paths and normal JavaScript behavior. Start with a public measureElement failure;
-reuse one eligibility predicate for the direct and measurement paths.
+A finite direct Flex allocation should give empty Rectangles with percentage main
+sizes the same zero content minimum as numeric sizes. Existing parent dimension
+resolution, explicit bounds, padding floors and shrink factors determine the final
+boxes. Intrinsic percentage containers remain conservative. Define and test the
+public finite-row shrink contract before changing eligibility.
 
 Slice 26 delivery (2026-10-21): completed the in-progress private role foundation
 before any loading migration. Existing receiver edges carry staged masks; successful

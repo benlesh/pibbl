@@ -182,8 +182,8 @@ at its final per-line content width before line cross sizes settle. Main-axis
 minimums remain explicit except for two bounded native policies. A direct empty
 Rectangle with no authored children property, no responsive query and finite
 nonnegative numeric width and height uses zero as its automatic main-axis minimum.
-This applies to direct allocation in rows and columns; intrinsic Flex measurement
-retains its explicit-minimum diagnostic. Explicit minima, padding floors, shrink factors,
+This applies to direct allocation in rows and columns and the supported nowrap
+intrinsic Flex measurement path. Explicit minima, padding floors, shrink factors,
 and existing visible/clip behavior still apply. It does not inspect arbitrary
 children or custom providers. Separately, this automatic Text minimum applies in a
 nowrap row: a direct Text with `wrap: true`, default/visible fit, a generic px font,
