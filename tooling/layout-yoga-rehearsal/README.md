@@ -40,8 +40,13 @@ Yoga uses the same explicit values with no rounding. There is no inferred conten
 minimum or compatibility profile. Both x/y and width/height are recorded, public
 labels compare dimensions, and source/built input replays hit both targets while
 main-axis gaps miss. The original padded row case remains an explicit content-box
-conversion. These eight exact geometries do not prove general percentages, box
-sizing, automatic minima, text, fractional precision, wrapping, reverse or RTL. No Yoga implementation is bundled in Studio.
+conversion. Two further capped cases reverse only the main axis: `row-reverse-cap` places
+A80×80 at220,0 and B208×80 at0,0; `column-reverse-cap` places A80×30 at0,70 and
+B80×58 at0,0. Inputs match the corresponding cap case except explicit reverse
+direction. Source A/B order stays fixed, both target identities remain stable,
+and the12px main-axis gap misses. Classification is exact explicit finite input
+geometry, not RTL or cross-axis reversal. These ten exact geometries do not prove general percentages, box
+sizing, automatic minima, text, fractional precision, wrapping, wrap-reverse or RTL. No Yoga implementation is bundled in Studio.
 
 ## Version, source and reproduction
 

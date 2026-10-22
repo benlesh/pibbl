@@ -34,8 +34,8 @@ try {
   }
   // The final column case must leave its 12px main-axis gap untargeted.
   const last = reference.cases.at(-1);
-  if (last.flexDirection === 'column') {
-    await click(396, 240 + last.boxes[0].height + 6);
+  if (last.flexDirection.startsWith('column')) {
+    await click(396, 240 + Math.min(...last.boxes.map(box => box.y + box.height)) + 6);
     assert.ok((await frame.locator('pre').innerText()).includes('selected: B'));
   }
   const proof = await sandbox.evaluate(() => globalThis.__PIBBL_BUILT_LAYOUT_PROOF__);

@@ -59,9 +59,11 @@
       },
       { "id": "column-grow", "covers": ["flex.row-column-nowrap-wrap", "flex.grow-shrink-basis", "flex.numeric-gap"], "classification": "exact explicit finite inputs; column/shrink1/minHeight0" },
       { "id": "column-cap", "covers": ["flex.row-column-nowrap-wrap", "flex.grow-shrink-basis", "flex.min-max"], "classification": "exact explicit finite inputs; first maxHeight30" },
-      { "id": "column-shrink", "covers": ["flex.row-column-nowrap-wrap", "flex.grow-shrink-basis", "flex.min-max"], "classification": "exact explicit finite inputs; first minHeight60, second minHeight0" }
+      { "id": "column-shrink", "covers": ["flex.row-column-nowrap-wrap", "flex.grow-shrink-basis", "flex.min-max"], "classification": "exact explicit finite inputs; first minHeight60, second minHeight0" },
+      { "id": "row-reverse-cap", "covers": ["flex.reverse-and-wrap-reverse", "flex.min-max"], "classification": "exact finite LTR main-axis reversal; first maxWidth80" },
+      { "id": "column-reverse-cap", "covers": ["flex.reverse-and-wrap-reverse", "flex.min-max"], "classification": "exact finite LTR main-axis reversal; first maxHeight30" }
     ],
-    "limit": "Eight exact finite row/column fixtures; one explicit content-box/numeric-padding conversion. This does not establish general box-sizing, percentage, intrinsic or CSS parity."
+    "limit": "Ten exact finite row/column/reverse fixtures; one explicit content-box/numeric-padding conversion. This does not establish general box-sizing, percentage, intrinsic or CSS parity."
   },
   "gateGroups": [
     {
@@ -153,10 +155,10 @@
           "cross-line flip preserves keys/mounts and allocation/measurement/main work",
           "negative reversed cross overlap retains source paint/hit priority"
         ],
-        "yogaCases": [],
+        "yogaCases": ["row-reverse-cap", "column-reverse-cap"],
         "missing": [
           "RTL interaction",
-          "pinned Yoga reverse/wrap-reverse fixtures"
+          "pinned Yoga wrap-reverse fixtures and broader reverse matrix"
         ]
       },
       "evidenceRefs": [
@@ -839,7 +841,7 @@
       "id": "migration.versioned-yoga-conversion",
       "target": "parity",
       "group": "migration-and-conformance",
-      "current": "eight-case pinned row/column rehearsal, including direct empty Rectangle shrink and one content-box padding conversion",
+      "current": "ten-case pinned row/column/reverse rehearsal, including direct empty Rectangle shrink and one content-box padding conversion",
       "status": "experimental",
       "unresolvedPolicy": "Implementation direction is authorized; conversion/analyzer return contracts and supported compatibility policy remain to be specified.",
       "evidenceRefs": [
@@ -848,7 +850,7 @@
         "packages/core/test/layout-wasm-slice.test.tsx"
       ],
       "evidence": {
-        "positive": ["eight-case Yoga 3.2.1 rehearsal"],
+        "positive": ["ten-case Yoga 3.2.1 rehearsal"],
         "negative": ["no profile or public selector"],
         "interaction": ["migration example resize"],
         "yogaCases": [
@@ -859,7 +861,9 @@
           "rectangle-percent-content-box",
           "column-grow",
           "column-cap",
-          "column-shrink"
+          "column-shrink",
+          "row-reverse-cap",
+          "column-reverse-cap"
         ],
         "missing": [
           "style/tree analysis",

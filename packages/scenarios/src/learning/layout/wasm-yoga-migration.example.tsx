@@ -176,6 +176,46 @@ function createWasmYogaMigrationExampleContent(canvas: HTMLCanvasElement) {
         "height": 28
       }
     ]
+  },
+  {
+    "name": "row-reverse-cap",
+    "width": 300,
+    "height": 100,
+    "flexDirection": "row-reverse",
+    "boxes": [
+      {
+        "x": 220,
+        "y": 0,
+        "width": 80,
+        "height": 80
+      },
+      {
+        "x": 0,
+        "y": 0,
+        "width": 208,
+        "height": 80
+      }
+    ]
+  },
+  {
+    "name": "column-reverse-cap",
+    "width": 100,
+    "height": 100,
+    "flexDirection": "column-reverse",
+    "boxes": [
+      {
+        "x": 0,
+        "y": 70,
+        "width": 80,
+        "height": 30
+      },
+      {
+        "x": 0,
+        "y": 0,
+        "width": 80,
+        "height": 58
+      }
+    ]
   }
 ] as const;
   // END YOGA REFERENCE
@@ -220,7 +260,7 @@ function createWasmYogaMigrationExampleContent(canvas: HTMLCanvasElement) {
   }
   function Workspace() {
     const fixture = fixtureCases[index.get()];
-    const column = fixture.flexDirection === "column";
+    const column = fixture.flexDirection.startsWith("column");
     const shrinking = fixture.name === "shrink" || fixture.name === "column-shrink";
     const rectangles = fixture.name.startsWith("rectangle-");
     const padded = fixture.name === "rectangle-percent-content-box";
@@ -310,9 +350,9 @@ function createWasmYogaMigrationExampleContent(canvas: HTMLCanvasElement) {
               flexShrink: 1,
               minWidth: column ? undefined : shrinking ? 120 : 0,
               minHeight: column ? shrinking ? 60 : 0 : undefined,
-              maxHeight: fixture.name === "column-cap" ? 30 : undefined,
+              maxHeight: fixture.name === "column-cap" || fixture.name === "column-reverse-cap" ? 30 : undefined,
               width: column ? 80 : undefined,
-              maxWidth: fixture.name === "cap" ? 80 : undefined,
+              maxWidth: fixture.name === "cap" || fixture.name === "row-reverse-cap" ? 80 : undefined,
               height: 80,
             }}
           />
@@ -358,12 +398,12 @@ function createWasmYogaMigrationExampleContent(canvas: HTMLCanvasElement) {
       <Text
         style={{ left: 28, top: 62, font: "14px sans-serif", fill: "#475569" }}
       >
-        Eight pinned cases. Left is recorded geometry, not a live Yoga runtime.
+        Ten pinned cases. Left is recorded geometry, not a live Yoga runtime.
       </Text>
       <Text
         style={{ left: 28, top: 100, font: "13px sans-serif", fill: "#475569" }}
       >
-        Explicit row/column and shrink 1; empty boxes and one content-box padding conversion.
+        Explicit row/column/reverse and shrink 1; empty boxes and one content-box padding conversion.
       </Text>
       <Rectangle
         style={{
