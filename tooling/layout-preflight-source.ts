@@ -10,6 +10,7 @@ export function layoutPreflightSource(mode: string): Plugin {
     async load(source) {
       if (source !== `\0${id}`) return;
       const lab = await buildLayoutPreflightLab(mode === 'layout-wasm-built');
+      for (const input of lab.inputs) this.addWatchFile(input);
       const proof = { mode, coreInputs: lab.coreInputs };
       const html = '<!doctype html><meta charset="utf-8"><style>body{font:16px system-ui;margin:24px}button{margin:12px;padding:10px}canvas{margin:12px}</style><script type="module">' +
         `globalThis.__PIBBL_PREFLIGHT_PROOF__=${JSON.stringify(proof)};\n` + lab.source.replace(/<\/script/gi, '<\\/script') + '</script>';

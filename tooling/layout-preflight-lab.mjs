@@ -42,6 +42,11 @@ else {
     assert.deepEqual(await lab.locator('#subject').evaluate(canvas => [...canvas.getContext('2d').getImageData(90, 10, 1, 1).data]), [196,81,57,255]);
     await lab.locator('#subject').click({ position: { x: 91, y: 11 } });
     await lab.waitForFunction(() => JSON.parse(document.querySelector('pre').textContent).hits === 1);
-    assert.deepEqual(errors, []); console.warn(`${built ? 'Built' : 'Source'} preflight: later input failure prevents earlier evaluation, independent root updates, recovery100px/hit correct; ${coreInputs.length} public core inputs`);
+    const disposed = await lab.evaluate(() => {
+      dispatchEvent(new PageTransitionEvent('pagehide'));
+      return globalThis.__PIBBL_LAYOUT_DIAGNOSTICS__();
+    });
+    assert.deepEqual(['activeNodes', 'activeArenas', 'activeWasmInstances', 'cachedMeasurements'].map(key => disposed[key]), [0,0,0,0]);
+    assert.deepEqual(errors, []); console.warn(`${built ? 'Built' : 'Source'} preflight: later input failure prevents earlier evaluation, independent root updates, recovery100px/hit correct, root cleanup0/0/0/0; ${coreInputs.length} public core inputs`);
   } finally { await browser?.close(); if (server.listening) await new Promise(resolve => server.close(resolve)); }
 }

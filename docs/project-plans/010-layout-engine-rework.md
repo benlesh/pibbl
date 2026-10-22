@@ -557,6 +557,15 @@ Fail later sibling, Recover, then click the red box's right edge. Independent gr
 Canvas updates through failure; host controls remain usable. Standalone equivalent
 on5194/5195 is supplemental, not the sole hands-on delivery.
 
+Slice43 public-lab follow-up: recovery explicitly retains the controller returned
+by `pibblSync`; the live-root implementation returns its stable controller.
+Fresh source/built Studio checks dispatch actual pagehide after recovery and
+assert nodes/region handles/WASM instances/measurement entries all zero before
+closing the browser. The virtual lab bundle now watches real source dependencies
+(excluding synthetic esbuild definition records), so edits rebuild current code.
+Logs `/tmp/pibbl-slice43-studio-*-cleanup.txt`. This correction is a separate
+focused commit; the slice44 red sizing regression remains uncommitted work.
+
 ## [NEXT] Known sibling geometry preparation (slice 44)
 
 Extend the bounded Absolute→known Flex preparation from input syntax to fallible
