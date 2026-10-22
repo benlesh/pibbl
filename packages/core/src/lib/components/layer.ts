@@ -1,3 +1,4 @@
+import { isLayoutComponent, prepareLayoutComponent } from '../layout/define-layout-component.js';
 import { isKnownLayoutType, registerKnownLayoutPreflight, preflightKnownLayout, attachPreparedLayoutSlot, stagePreparedBoundaryChildren, takePreparedBoundaryChildren, retainPreparedBoundarySubtree } from '../layout/prepared-root.js';
 import { prepareLayoutChildren, prepareDirectChildStyle, resolveContainerBox } from '../layout/absolute.js';
 import { setPreNormalizedStyle } from '../style/resolve-dispatch.js';
@@ -255,20 +256,22 @@ if (experimentalLayout) registerKnownLayoutPreflight(Layer, (element, _style, co
     for (let index = 0; index < children.length; index++) {
       const child = children[index];
       // Layer is a raster boundary, not a layout algorithm for arbitrary children.
-      if (!isKnownLayoutType(child.type)) continue;
+      if (!isKnownLayoutType(child.type) && !isLayoutComponent(child.type)) continue;
       let occurrence = 0;
       if (child.key === undefined) {
         occurrences ??= new Map(); occurrence = occurrences.get(child.type) ?? 0;
         occurrences.set(child.type, occurrence + 1);
       }
-      const component = child.type.name || 'Layout';
       const token = getChildPrimitiveReceiverToken(GLOBAL_STATE.renderTransaction, receiver, index);
+      const root = isLayoutComponent(child.type) ? prepareLayoutComponent(child, { receiverToken: token }) : child;
+      if (!isKnownLayoutType(root.type)) continue;
+      const component = root.type.name || 'Layout';
       const prepared = prepareDirectChildStyle(child, token, content, true);
       const style = preparedStyleValue(prepared);
       const context = { component, algorithm: 'render-dispatch' as const, allocation: content, percentageBasis: content, constraints: { minWidth: 0, maxWidth: content.width, minHeight: 0, maxHeight: content.height } };
       // A nested raster boundary uses Layer's actual dimensions, not box layout.
       let width: number, height: number;
-      if (child.type === Layer) {
+      if (root.type === Layer) {
         const layerStyle = resolveLayerStyle(style, context);
         width = layerStyle.width!; height = layerStyle.height!;
       } else {

@@ -305,7 +305,10 @@ without invoking opaque children again. Removal releases its prepared descendant
 restoration creates fresh regions. Unkeyed occurrences are tracked by root type.
 Nested Layers use their actual raster dimensions, including the existing Layer
 policy for box constraints/padding; retained cleanup marks both numeric and nested
-boundary plans. Ordinary components and unproven wrapper entries remain opaque.
+boundary plans. Pure descriptions are admitted using their cached primitive root and its actual
+sizing policy, including nested Layer defaults. Wrapper identity/receiver owns the
+slot and the returned primitive receiver claims it; descriptions run once per
+transaction. Ordinary components remain opaque.
 
 Direct and opaque-entry experimental Layers prepare the same known children before
 creating or updating their child raster surface. Private transaction clones avoid

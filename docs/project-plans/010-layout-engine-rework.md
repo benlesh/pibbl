@@ -2,7 +2,8 @@
 
 ## Current checkpoint and single next slice — 2026-10-22
 
-Latest delivery is slice60 `c90df382` (direct-entry Layer child preparation).
+Latest delivery is slice61 (pure described Layer children).
+Slice60 is `c90df382` (direct-entry Layer child preparation).
 Slice59 is `d7649a75`, corrected by `ab2adb72` (known-family Layer children).
 Slice58 is `edcf60a6` (prepared Absolute-root planning/adoption).
 Slice57 is `bf03d14f` (prepared Overlay-root planning/adoption).
@@ -10,8 +11,8 @@ Slice56 is `cf2c7bc5` (prepared Flow-root planning/adoption).
 Slice55 is `1510efe3` (prepared Grid-root planning/adoption).
 Slice54 `773da7b9`,53 `aaa7ddcb`,52 `b5381e0d` are consolidated in `f322a709`.
 Every slice has its own commit. The fixed33-capability/seven-gate denominator is
-unchanged; all seven gates remain open. The single next slice is61, pure described Layer children. Source5192/built5193, `#/testing/layout-preflight`:
-Use direct Layer root, Fail later sibling, Recover, then red right edge/blue cell.
+unchanged; all seven gates remain open. The single next slice is62, settled-width intrinsic Flow in Flex columns. Source5192/built5193, `#/testing/layout-preflight`:
+Use described Layer child, Fail later sibling, Recover, then red right edge/blue cell.
 Native Grid tracks/spans and Flow wrap controls remain available.
 
 The loading/named-component integration is ready for source feedback on branch
@@ -964,14 +965,33 @@ Bundler/NodeNext/lifecycle pass. Rebuilt artifact includes `ab2adb72`; kernel652
 bytes unchanged. Logs `/tmp/pibbl-slice60-*`; Node26.9.0/pnpm11.21.0deps/Chromium.
 No Node24/full trust or general atomic publication claim.
 
-## [NEXT] Pure described Layer children (slice 61)
+### Slice 61 — pure described Layer children
 
-Admit direct pure `defineLayoutComponent` children through the same Layer bridge.
-Use the prepared primitive root's receiver/style rather than guessing wrapper
-geometry, with one description evaluation per transaction. Public RED must prove
-later described Grid/Flex failure precedes earlier opaque evaluation; preserve
-positioned geometry, clean bitmap reuse, keyed removal/restoration and ownership.
-Ordinary functions remain opaque. Consolidation20 for58–60 is complete.
+Layer admits pure descriptions, resolves their cached primitive root and uses that
+root's sizing policy/diagnostics. Original wrapper identity and receiver own the
+prepared slot; the root receiver claims it during rendering. A description that
+returns Layer uses actual Layer defaults/constraints rather than ordinary box
+sizing. Unknown returned primitives remain outside known-layout preparation;
+ordinary functions remain opaque. No new public API or ABI.
+
+Public RED showed earlier evaluations3instead of2 for described Grid/Flow/Layer
+nested failure. Green matrix covers actual nested Layer defaults and constraints,
+one description per transaction, clean bitmap reuse, positioned pixels/hits,
+removal/restoration and exact ownership. Focused162tests across four files pass;
+types/lint clean. Root inspection found no material issue. Source/built Studio
+`--described-layer` each passes225public-input failure/recovery/targets/cleanup;
+packed228installed-input Bundler/NodeNext/lifecycle pass. Kernel65282bytes unchanged.
+Logs `/tmp/pibbl-slice61-*`; Node26.9.0/pnpm11.21.0deps/Chromium. No Node24/full trust
+or general atomic-publication claim.
+
+## [NEXT] Settled-width intrinsic Flow in Flex columns (slice 62)
+
+Use Flow's existing pure measurement at its final allocated width when a known
+Flow contributes an automatic height to a nowrap Flex column. Require the current
+explicit minimum/finite-width rules; do not choose new automatic-minimum policy.
+Public RED must show wrapped rows contributing the correct following-footer
+position under width changes, with matching pixels/hits and known-only traversal.
+No arbitrary component execution or new API/ABI. Group21 is61–63, then consolidate.
 
 ### Consolidation 20 completed for delivery slices 58–60
 

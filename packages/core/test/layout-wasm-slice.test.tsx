@@ -1,6 +1,6 @@
 import yogaReference from '../../../tooling/layout-yoga-rehearsal/reference.json';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
-import { createElement, Absolute, Overlay, Flex, Grid, Flow, Text, Rectangle, measureElement, useLayoutBox, useConst, Layer, signal, computed, type PibblNode } from '@pibbl/core';
+import { createElement, Absolute, Overlay, Flex, Grid, Flow, Text, Rectangle, measureElement, useLayoutBox, useConst, Layer, signal, computed, type PibblNode, type PibblNodeInput, type GridStyle, defineLayoutComponent } from '@pibbl/core';
 import { pibblSync as pibbl } from '@pibbl/core/sync';
 import { prepareLayoutEngineSync } from '../src/lib/layout/wasm/embedded';
 import { WasmFlexTextExample as mountWasmFlexTextComponent } from "../../scenarios/src/learning/layout/wasm-flex-text.example";
@@ -1967,6 +1967,65 @@ it.runIf(experimentalLayout)(`prepares direct-entry Layer known children opaque=
     controller.dispose(); const disposed = snapshotWasmLayoutDiagnostics(); expect(disposed.activeArenas).toBe(baseline.activeArenas); expect(disposed.activeNodes).toBe(baseline.activeNodes); expect(disposed.activeWasmInstances).toBe(baseline.activeWasmInstances);
   } finally { window.removeEventListener('error', prevent); }
 });
+
+
+}
+
+for (const Root of [Grid, Flow, Layer]) {
+for (const constrained of Root === Layer ? [false, true] : [false]) {
+for (const defaulted of Root === Layer && !constrained ? [false, true] : [false]) {
+it.runIf(experimentalLayout)(`prepares a later Layer described ${Root.name} root constrained=${constrained} defaulted=${defaulted} before earlier opaque siblings and child bitmap work`, async () => {
+  const baseline = snapshotWasmLayoutDiagnostics();
+  const width = signal(80), grow = signal(0), shown = signal(true);
+  let evaluations = 0, layerEvaluations = 0, hits = 0;
+  function Probe(_props: { style: Record<string, unknown> }) { evaluations++; return createElement(Rectangle, { style: { width: useLayoutBox().width, height: 20, fill: 'red' } }); }
+  function LayerProbe(_props: { style: Record<string, unknown> }) { layerEvaluations++; const box = useLayoutBox(); return createElement(Rectangle, { style: { width: box.width, height: 20, fill: 'blue' }, onClick: () => hits++ }); }
+  let descriptions = 0;
+  const Card = defineLayoutComponent((props: { style: GridStyle; children: PibblNodeInput }) => {
+    descriptions++;
+    return createElement(Root as typeof Grid, { ...props, style: props.style });
+  });
+  const scene = () => createElement(Absolute, { style: { width: 240, height: 30 }, children: [
+    createElement(Flex, { style: { width, height: 20 }, children: createElement(Probe, { style: { width: 80, height: 20, minWidth: 0 } }) }),
+    ...(shown.get() ? [createElement(Layer, { key: 'later', style: { left: 120, width: 100, height: 20 }, children: createElement(Card, { style: { left: 10, top: 3, ...(defaulted ? {} : { width: 100, height: 20 }), ...(constrained ? { maxWidth: 50, padding: 2 } : {}), gridTemplateColumns: ['1fr'], gridTemplateRows: [20] }, children: createElement(Flex, { style: { width: '100%', height: 20, gridColumnStart: 1, gridRowStart: 1 }, children: createElement(LayerProbe, { style: { width: 80, height: 20, minWidth: 0, flexGrow: grow } }) }) }) })] : []),
+  ] });
+  const canvas = document.createElement('canvas'); canvas.width = 240; canvas.height = 30; document.body.append(canvas);
+  const errors: unknown[] = []; const prevent = (event: ErrorEvent) => { errors.push(event.error); event.preventDefault(); }; window.addEventListener('error', prevent);
+  try {
+    const controller = pibbl(canvas, scene()); controllers.push(controller); await nextFrame();
+    expect(errors.map(error => String(error))).toEqual([]); expect([evaluations, layerEvaluations]).toEqual([1, 1]);
+    const mounted = snapshotWasmLayoutDiagnostics();
+    expect(mounted.activeWasmInstances - baseline.activeWasmInstances).toBe(1);
+    expect(mounted.activeArenas - baseline.activeArenas).toBe(Root === Grid || Root === Flow ? 3 : 2);
+    expect(descriptions).toBe(1);
+    width.set(85); await nextFrame();
+    expect([evaluations, layerEvaluations]).toEqual([2, 1]); expect(descriptions).toBe(2);
+    expect(snapshotWasmLayoutDiagnostics().nodeCreates).toBe(mounted.nodeCreates);
+    expect(snapshotWasmLayoutDiagnostics().activeArenas).toBe(mounted.activeArenas);
+    width.set(90); grow.set(-1); await nextFrame();
+    expect(errors.some(error => error instanceof Error && error.message.includes('flexGrow received -1'))).toBe(true);
+    expect([evaluations, layerEvaluations]).toEqual([2, 1]);
+    grow.set(1); pibbl(canvas, scene()); await nextFrame();
+    expect([evaluations, layerEvaluations]).toEqual([3, 2]);
+    expect([...canvas.getContext('2d')!.getImageData(210, 10, 1, 1).data]).toEqual([0, 0, 255, 255]);
+    expect([...canvas.getContext('2d')!.getImageData(125, 10, 1, 1).data]).toEqual([0, 0, 0, 0]);
+    clickCanvas(canvas, 125, 10); expect(hits).toBe(0);
+    clickCanvas(canvas, 210, 10); expect(hits).toBe(1);
+    shown.set(false); pibbl(canvas, scene()); await nextFrame();
+    expect(snapshotWasmLayoutDiagnostics().activeArenas - baseline.activeArenas).toBe(1);
+    shown.set(true); pibbl(canvas, scene()); await nextFrame();
+    expect(layerEvaluations).toBe(3);
+    expect(snapshotWasmLayoutDiagnostics().activeArenas - baseline.activeArenas).toBe(Root === Grid || Root === Flow ? 3 : 2);
+    clickCanvas(canvas, 210, 10); expect(hits).toBe(2);
+    controller.dispose();
+    const disposed = snapshotWasmLayoutDiagnostics();
+    expect(disposed.activeArenas).toBe(baseline.activeArenas); expect(disposed.activeNodes).toBe(baseline.activeNodes); expect(disposed.activeWasmInstances).toBe(baseline.activeWasmInstances);
+  } finally { window.removeEventListener('error', prevent); }
+});
+
+}
+
+}
 
 
 }
