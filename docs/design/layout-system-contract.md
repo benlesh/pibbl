@@ -119,6 +119,14 @@ order.
 
 ## Flow
 
+Experimental mounted Flow retains style validation and pure measurement in JS,
+then resolves source-order line formation, wrapping, gaps/line gaps, and cross
+alignment natively in its root-owned region. Horizontal and vertical mappings
+preserve the same boxes. Numeric-only cache snapshots include resolved item sizes,
+alignment and all placement options, so measured-size changes invalidate placement
+while paint-only updates reuse it. There is no experimental native failure fallback.
+Ordinary builds and pure measurement/layout helpers retain their existing JS path.
+
 `Flow` is Pibbl-native sequential layout rather than CSS inline formatting.
 
 | Container field  | Supported values and default                  |
@@ -306,7 +314,7 @@ Flow likewise completes its existing measurement/sequential/wrap placement pass
 before preparing direct known Flex roots. It shares Grid's placed-clone handoff,
 without extra per-item wrapper allocations or a second placement pass. Ordinary
 children remain opaque, and normal traversal claims the same native Flex region.
-Flow's own placement still uses its current JavaScript algorithm.
+Experimental mounted Flow places resolved numeric items in the shared native arena; its JavaScript measurement and ordinary-build/pure-helper paths remain.
 
 For the same direct Text subset, automatic width and basis use the natural width
 before wrapping, not the containing row's constrained width. The natural query

@@ -31,7 +31,28 @@ else {
     }
     const state = () => lab.locator('pre').evaluate(element => JSON.parse(element.textContent));
     await lab.waitForFunction(() => JSON.parse(document.querySelector('pre').textContent).evaluations === 1);
-    if (process.argv.includes('--native-spans')) {
+    if (process.argv.includes('--native-flow')) {
+      const placements = () => lab.evaluate(() => globalThis.__PIBBL_LAYOUT_DIAGNOSTICS__().flowPlacements);
+      const before = await placements();
+      await lab.getByRole('button', { name: 'Use native Flow wrap', exact: true }).click();
+      await lab.waitForFunction(before => globalThis.__PIBBL_LAYOUT_DIAGNOSTICS__().flowPlacements === before + 1, before);
+      assert.deepEqual(await lab.locator('#subject').evaluate(canvas => [...canvas.getContext('2d').getImageData(37, 2, 1, 1).data]), [0,0,0,0]);
+      assert.deepEqual(await lab.locator('#subject').evaluate(canvas => [...canvas.getContext('2d').getImageData(37, 7, 1, 1).data]), [0,128,0,255]);
+      await lab.locator('#subject').click({ position: { x: 6, y: 31 } });
+      await lab.waitForFunction(() => JSON.parse(document.querySelector('pre').textContent).nativeHits === 1);
+      await lab.getByRole('button', { name: 'Widen native Flow', exact: true }).click();
+      await lab.waitForFunction(before => globalThis.__PIBBL_LAYOUT_DIAGNOSTICS__().flowPlacements === before + 2, before);
+      await lab.locator('#subject').click({ position: { x: 6, y: 31 } }); assert.equal((await state()).nativeHits, 1);
+      await lab.locator('#subject').click({ position: { x: 66, y: 11 } });
+      await lab.waitForFunction(() => JSON.parse(document.querySelector('pre').textContent).nativeHits === 2);
+      await lab.getByRole('button', { name: 'Paint native Flow', exact: true }).click();
+      await lab.waitForFunction(() => [...document.querySelector('#subject').getContext('2d').getImageData(65, 10, 1, 1).data].join() === '255,165,0,255');
+      assert.equal(await placements() - before, 2);
+      const disposed = await lab.evaluate(() => { dispatchEvent(new PageTransitionEvent('pagehide')); return globalThis.__PIBBL_LAYOUT_DIAGNOSTICS__(); });
+      assert.deepEqual(['activeNodes', 'activeArenas', 'activeWasmInstances', 'cachedMeasurements'].map(key => disposed[key]), [0,0,0,0]);
+      assert.deepEqual(errors, []);
+      console.warn(`${built ? 'Built' : 'Source'} native Flow: centered short item/wrapped line→one row, moved hit, one native placement per geometry change/zero paint work, cleanup0/0/0/0; ${coreInputs.length} public core inputs`);
+    } else if (process.argv.includes('--native-spans')) {
       const placements = () => lab.evaluate(() => globalThis.__PIBBL_LAYOUT_DIAGNOSTICS__().gridCellPlacements);
       const before = await placements();
       await lab.getByRole('button', { name: 'Use native Grid spans', exact: true }).click();

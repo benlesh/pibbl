@@ -2,7 +2,8 @@
 
 ## Current checkpoint and single next slice — 2026-10-22
 
-Latest delivery is slice53 (native explicit Grid cell areas).
+Latest delivery is slice54 (native Flow sequential/wrap placement).
+Slice53 is `aaa7ddcb` (native explicit Grid cell areas).
 Slice52 is `b5381e0d` (native explicit Grid track resolution).
 Slice51 is `7ea95367` (Flow-entry known Flex preparation).
 Slice50 is `c8b163aa` (Grid-entry known Flex preparation).
@@ -819,15 +820,39 @@ Logs `/tmp/pibbl-slice53-*`; Node26.9.0/pnpm11.21.0deps/Chromium, no Node24/trus
 parity/performance claim. Remaining JS child alignment and all-family topology are
 not hidden by this native-area milestone.
 
-## [NEXT] Native Flow sequential and wrap placement (slice 54)
+### Slice 54 — native Flow sequential and wrap placement
 
-After existing JS style/measurement resolves finite item sizes and alignment,
-perform source-order line formation, main/cross cursors, gaps/line gaps, wrapping
-and cross alignment in the same native arena. Preserve current authoring,
-measurement and child cloning; normal builds retain the existing JS algorithm.
-Public RED proves exact wrapped boxes/center alignment, moved hits after width
-change, native placement evidence and paint-only reuse, followed by exact cleanup.
-No new public API or layout policy. Consolidate52–54 after this delivery.
+JS keeps style validation/measurement and used-size child cloning. The shared native
+arena now performs source-order lines/cursors, wrap, gaps/line gaps, and start/
+center/end/stretch cross alignment. Horizontal/vertical mappings preserve current
+semantics. Numeric-only caches include resolved sizes/alignment/options; no source
+descriptor retention or experimental JS fallback. No extra intermediate box array
+is created for ordinary zero-origin runtime placement.
+
+Public RED reported zero native placements instead of one. Green proves short-item
+centering, exact second-line gap, wrap→one-row moved targets in both directions,
+paint-only reuse and exact teardown. Measured Text growth separately moves the
+following target and invalidates native placement; fill-only changes do not.
+Native8tests pass, including Flow/Grid/Flex storage isolation and stale handles;
+binary65282bytes. Focused101checks passed before the final extra ABI rejection case;
+final combined198pass/1normal-onlyskip across ten files includes that case. Normal
+31pass/71experimental skips; types/lint clean. Read-only review no material findings.
+Source/built Studio `--native-flow` each passes centered/wrapped geometry, widening,
+moved hits, paint reuse, cleanup0/0/0/0 with225public inputs. Packed228installed-input
+Bundler/NodeNext/lifecycle pass. Logs `/tmp/pibbl-slice54-*` and
+`/tmp/pibbl-consolidation18-focused.txt`; Node26.9.0/pnpm11.21.0deps/Chromium,
+no Node24/trust/parity/performance claim.
+
+## [NEXT] Prepared Grid-root planning and adoption (slice 55)
+
+Include a known Grid root in outer declarative preparation. Compute its existing
+native track/cell plan and settled children under the Grid receiver before earlier
+opaque siblings, recursively prepare known placed descendants, then render by
+claiming the same region and plan exactly once. Public RED: a later Grid's nested
+Flex factor failure prevents an earlier opaque Absolute sibling evaluation.
+Recovery proves Grid pixels/hits and no duplicate native plan/region. Reuse the
+root transaction and native solver; no new ABI/API, arbitrary component execution
+or general all-family graph claim. Consolidate55–57 after three deliveries.
 
 ### Consolidation 17 completed for delivery slices 49–51
 

@@ -1,7 +1,7 @@
 import { Absolute, Flex, Flow, Grid, Group, HtmlBox, Layer, Rectangle, useLayoutBox, defineLayoutComponent, type FlexStyle, type PibblNodeInput, type Signal } from '@pibbl/core';
 
 interface LabProps {
-  width: Signal<number>; grow: Signal<number>; minimum: Signal<number>; nested: Signal<boolean>; direct: Signal<boolean>; described: Signal<boolean>; layer: Signal<boolean>; grid: Signal<boolean>; flow: Signal<boolean>; nativeGrid: Signal<boolean>; nativeSpan: Signal<boolean>; nativeFill: Signal<string>; nativeWidth: (index: number, width: number) => void; nativeHit: () => void;
+  width: Signal<number>; grow: Signal<number>; minimum: Signal<number>; nested: Signal<boolean>; direct: Signal<boolean>; described: Signal<boolean>; layer: Signal<boolean>; grid: Signal<boolean>; flow: Signal<boolean>; nativeGrid: Signal<boolean>; nativeFlow: Signal<boolean>; nativeSpan: Signal<boolean>; nativeFill: Signal<string>; nativeWidth: (index: number, width: number) => void; nativeHit: () => void;
   evaluate: (width: number) => void; hit: () => void; layerHit: () => void;
 }
 function PreflightProbe({ evaluate, hit }: {
@@ -15,7 +15,12 @@ function PreflightProbe({ evaluate, hit }: {
 const DescribedCard = defineLayoutComponent((props: { style: FlexStyle; children: PibblNodeInput }) => <Flex style={props.style}>{props.children}</Flex>);
 
 /** Deterministic public-surface fixture; the host owns fault/recovery controls. */
-export function LayoutPreflightLab({ width, grow, minimum, nested, direct, described, layer, grid, flow, nativeGrid, nativeSpan, nativeFill, nativeWidth, nativeHit, evaluate, hit, layerHit }: LabProps) {
+export function LayoutPreflightLab({ width, grow, minimum, nested, direct, described, layer, grid, flow, nativeGrid, nativeFlow, nativeSpan, nativeFill, nativeWidth, nativeHit, evaluate, hit, layerHit }: LabProps) {
+  if (nativeFlow.get()) return <Flow style={{ width, height: 60, direction: 'horizontal', wrap: true, gap: 5, lineGap: 7, alignItems: 'center' }}>
+    <Rectangle style={{ width: 30, height: 20, fill: 'red' }} />
+    <Rectangle style={{ width: 20, height: 10, fill: 'green' }} />
+    <Rectangle style={{ width: 30, height: 15, fill: nativeFill }} onClick={nativeHit} />
+  </Flow>;
   if (nativeGrid.get()) return <NativeGridTracksLab width={width} span={nativeSpan} fill={nativeFill} report={nativeWidth} hit={nativeHit} />;
   const probe = <PreflightProbe evaluate={evaluate} hit={hit} style={{ width: 80, height: 30, minWidth: 0, flexGrow: 1 }} />;
   const blue = <Rectangle style={{ width: 80, height: 30, minWidth: minimum, maxWidth: 80, flexGrow: grow, fill: '#344c77' }} onClick={layerHit} />;

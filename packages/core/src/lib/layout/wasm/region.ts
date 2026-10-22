@@ -11,7 +11,7 @@ const buildEnvironment = import.meta.env;
 export const experimentalLayout =
   (typeof __PIBBL_LAYOUT_WASM__ !== 'undefined' && __PIBBL_LAYOUT_WASM__) ||
   buildEnvironment?.MODE === 'layout-wasm';
-const counters = { gridCellPlacements: 0, gridTrackResolutions: 0, lineFormations: 0, cachedMeasurements: 0, mainPlacements: 0, crossPlacements: 0, solves: 0, measuredLeaves: 0, nodeReuses: 0, nodeCreates: 0, activeNodes: 0, activeArenas: 0, activeWasmInstances: 0, wasmInstanceCreates: 0, frames: 0, allocationPasses: 0, allocationItemVisits: 0, allocationCacheHits: 0 };
+const counters = { flowPlacements: 0, gridCellPlacements: 0, gridTrackResolutions: 0, lineFormations: 0, cachedMeasurements: 0, mainPlacements: 0, crossPlacements: 0, solves: 0, measuredLeaves: 0, nodeReuses: 0, nodeCreates: 0, activeNodes: 0, activeArenas: 0, activeWasmInstances: 0, wasmInstanceCreates: 0, frames: 0, allocationPasses: 0, allocationItemVisits: 0, allocationCacheHits: 0 };
 export function snapshotWasmLayoutDiagnostics() {
   const signals = signalGraphSnapshot();
   return {
@@ -43,6 +43,8 @@ interface Kernel {
   place_wrap_cross(handle: number, generation: number, size: number, gap: number, alignment: number, reverse: number): number;
   resize_grid(handle: number, generation: number, count: number, axis: number): number;
   resolve_grid_tracks(handle: number, generation: number, bound: number, gap: number, axis: number): number;
+  resize_flow(handle: number, generation: number, count: number): number;
+  place_flow(handle: number, generation: number, bound: number, gap: number, lineGap: number, wrap: number): number;
   resize_grid_cells(handle: number, generation: number, count: number): number;
   place_grid_cells(handle: number, generation: number): number;
   resize_cross(handle: number, generation: number, count: number): number;
@@ -120,6 +122,10 @@ export interface NumericFlexCrossItem {
 }
 type CrossAlignment = Exclude<NumericFlexCrossItem['alignSelf'], 'auto'>;
 const alignmentCodes: Record<CrossAlignment, number> = { stretch: 0, 'flex-start': 1, 'flex-end': 2, center: 3 };
+export interface NumericFlowItem { width: number; height: number; alignment: 'start' | 'center' | 'end' | 'stretch'; }
+interface FlowOptions { horizontal: boolean; mainBound: number; gap: number; lineGap: number; wrap: boolean; }
+interface FlowCache { options: FlowOptions; items: readonly NumericFlowItem[]; boxes: { x: number; y: number; width: number; height: number }[]; }
+const flowAlignmentCodes = { start: 0, center: 1, end: 2, stretch: 3 };
 export interface NumericGridCell { columnStart: number; columnSpan: number; rowStart: number; rowSpan: number; }
 interface GridCellCache { revision: number; cells: readonly NumericGridCell[]; boxes: { x: number; y: number; width: number; height: number }[]; }
 export type NumericGridTrack = Readonly<{ kind: 'fixed'; value: number }> | Readonly<{ kind: 'percentage' | 'fraction'; factor: number }>;
@@ -133,6 +139,37 @@ function sameGridTracks(a: readonly NumericGridTrack[], b: readonly NumericGridT
   return true;
 }
 export class LayoutRegion {
+  private flowCache: FlowCache | undefined;
+  placeFlow(items: readonly NumericFlowItem[], options: FlowOptions): readonly { x: number; y: number; width: number; height: number }[] {
+    const kernel = this.ensureOwner(); const cached = this.flowCache, prior = cached?.options;
+    let equal = prior?.horizontal === options.horizontal && prior.mainBound === options.mainBound && prior.gap === options.gap && prior.lineGap === options.lineGap && prior.wrap === options.wrap && cached!.items.length === items.length;
+    if (equal) for (let index = 0; index < items.length; index++) {
+      const a = cached!.items[index], b = items[index];
+      if (a.width !== b.width || a.height !== b.height || a.alignment !== b.alignment) { equal = false; break; }
+    }
+    if (equal) return cached!.boxes;
+    try {
+      const pointer = kernel.resize_flow(this.handle,this.generation,items.length);
+      if (!pointer && items.length) throw new Error('Flow storage allocation failed.');
+      const records = new Float64Array(kernel.memory.buffer,pointer,items.length*8);
+      const inputs = new Array<NumericFlowItem>(items.length);
+      for (let index = 0; index < items.length; index++) {
+        const item = items[index], offset = index*8;
+        inputs[index] = { width: item.width, height: item.height, alignment: item.alignment };
+        records[offset] = options.horizontal ? item.width : item.height;
+        records[offset+1] = options.horizontal ? item.height : item.width;
+        records[offset+2] = flowAlignmentCodes[item.alignment];
+      }
+      if (kernel.place_flow(this.handle,this.generation,options.mainBound,options.gap,options.lineGap,options.wrap ? 1 : 0) !== 0) throw new RangeError('Native Flow placement produced invalid geometry.');
+      const resolved = new Float64Array(kernel.memory.buffer,pointer,items.length*8);
+      const boxes = new Array<{ x: number; y: number; width: number; height: number }>(items.length);
+      for (let index = 0; index < items.length; index++) {
+        const offset = index*8;
+        boxes[index] = options.horizontal ? { x: resolved[offset+3], y: resolved[offset+4], width: resolved[offset], height: resolved[offset+5] } : { x: resolved[offset+4], y: resolved[offset+3], width: resolved[offset+5], height: resolved[offset] };
+      }
+      this.flowCache = { options: { ...options }, items: inputs, boxes }; counters.flowPlacements++; return boxes;
+    } catch (error) { return this.fail(error); }
+  }
   private gridRevision = 0;
   private gridCells: GridCellCache | undefined;
   private gridColumns: GridTrackCache | undefined;
@@ -352,6 +389,7 @@ export class LayoutRegion {
     return this.crossResults;
   }
   dispose(): void {
+    this.flowCache = undefined;
     this.allocationCache = undefined; this.gridColumns = undefined; this.gridRows = undefined; this.gridCells = undefined; this.gridRevision = 0;
     const owner = this.layoutOwner, handle = this.handle, generation = this.generation;
     this.layoutOwner = undefined; this.handle = 0; this.generation = 0;

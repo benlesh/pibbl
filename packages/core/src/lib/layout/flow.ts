@@ -1,4 +1,4 @@
-import { experimentalLayout } from './wasm/region.js';
+import { experimentalLayout, mountedLayoutRegion, type LayoutRegion } from './wasm/region.js';
 import { preparePlacedKnownLayout } from './prepared-root.js';
 import { preparedStyleValue, preparedStyleQuery, type PreparedQuery } from '../style/responsive.js';
 import { definePrimitive } from '../define-primitive.js';
@@ -135,6 +135,8 @@ function renderFlow(
       }
     },
   };
+  const nativeRegion = experimentalLayout ? mountedLayoutRegion() : undefined;
+  if (experimentalLayout && !nativeRegion) throw new Error('Experimental Flow requires its mounted native region.');
   const placements = resolveFlowPlacements(
     localContent,
     children,
@@ -144,6 +146,7 @@ function renderFlow(
       measureElement: (element, constraints) =>
         measureElement(element, constraints, service),
     },
+    nativeRegion,
   );
   let index = 0;
   return placeDirectChildren(
@@ -199,6 +202,7 @@ function resolveFlowPlacements(
   children: readonly PibblElement<any>[],
   style: Readonly<FlowStyle>,
   measurement: FlowMeasurementInput,
+  nativeRegion?: LayoutRegion,
 ): FlowPlacement[] {
   assertFiniteContainer(container);
   const options = normalizeFlowOptions(style, container);
@@ -278,9 +282,10 @@ function resolveFlowPlacements(
     });
   }
 
-  const boxes = arrangeFlowItems(container, items, options);
+  const nativeBoxes = nativeRegion?.placeFlow(items, { horizontal: options.direction === 'horizontal', mainBound: options.direction === 'horizontal' ? container.width : container.height, gap: options.gap, lineGap: options.lineGap, wrap: options.wrap });
+  const boxes = nativeBoxes ?? arrangeFlowItems(container, items, options);
   return boxes.map((box, index) => ({
-    box,
+    box: nativeBoxes && (container.x !== 0 || container.y !== 0) ? { x: container.x + box.x, y: container.y + box.y, width: box.width, height: box.height } : box,
     element: childWithUsedSize(
       items[index].child,
       items[index].normalized,

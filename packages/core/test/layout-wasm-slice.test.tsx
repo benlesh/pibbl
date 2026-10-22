@@ -1721,3 +1721,52 @@ it.runIf(experimentalLayout)('keeps native Grid track results valid when resolut
     expect(growths).toBe(1);
   } finally { region.dispose(); vi.unstubAllGlobals(); }
 });
+
+it.runIf(experimentalLayout).each(['horizontal', 'vertical'] as const)('places wrapped Flow lines natively with centered items and paint-only reuse (%s)', async direction => {
+  const horizontal = direction === 'horizontal';
+  const baseline = snapshotWasmLayoutDiagnostics();
+  const placements = () => (snapshotWasmLayoutDiagnostics() as ReturnType<typeof snapshotWasmLayoutDiagnostics> & { flowPlacements?: number }).flowPlacements ?? 0;
+  const before = placements(), bound = signal(60), fill = signal('blue'); let hits = 0;
+  const scene = createElement(Flow, { style: { width: horizontal ? bound : 80, height: horizontal ? 80 : bound, direction, wrap: true, gap: 5, lineGap: 7, alignItems: 'center' }, children: [
+    createElement(Rectangle, { style: { width: horizontal ? 30 : 20, height: horizontal ? 20 : 30, fill: 'red' } }),
+    createElement(Rectangle, { style: { width: horizontal ? 20 : 10, height: horizontal ? 10 : 20, fill: 'green' } }),
+    createElement(Rectangle, { style: { width: horizontal ? 30 : 15, height: horizontal ? 15 : 30, fill }, onClick: () => hits++ }),
+  ] });
+  const canvas = document.createElement('canvas'); canvas.width = horizontal ? 140 : 80; canvas.height = horizontal ? 80 : 140; document.body.append(canvas);
+  const pixel = (main: number, cross: number) => [...canvas.getContext('2d')!.getImageData(horizontal ? main : cross, horizontal ? cross : main, 1, 1).data];
+  const click = (main: number, cross: number) => clickCanvas(canvas, horizontal ? main : cross, horizontal ? cross : main);
+  const controller = pibbl(canvas, scene); controllers.push(controller); await nextFrame();
+  expect(pixel(37,2)).toEqual([0,0,0,0]);
+  expect(pixel(37,7)).toEqual([0,128,0,255]);
+  expect(pixel(5,30)).toEqual([0,0,255,255]);
+  expect(placements() - before).toBe(1);
+  click(5,30); expect(hits).toBe(1);
+  bound.set(100); await nextFrame(); expect(placements() - before).toBe(2);
+  click(5,30); expect(hits).toBe(1);
+  click(65,10); expect(hits).toBe(2);
+  fill.set('orange'); await nextFrame(); expect(placements() - before).toBe(2);
+  expect(pixel(65,10)).toEqual([255,165,0,255]);
+  controller.dispose(); const disposed = snapshotWasmLayoutDiagnostics();
+  expect(disposed.activeArenas).toBe(baseline.activeArenas); expect(disposed.activeNodes).toBe(baseline.activeNodes); expect(disposed.activeWasmInstances).toBe(baseline.activeWasmInstances);
+});
+
+it.runIf(experimentalLayout)('invalidates native Flow placement when a measured Text width changes', async () => {
+  const before = snapshotWasmLayoutDiagnostics().flowPlacements;
+  const content = signal('a'), fill = signal('blue'); let hits = 0;
+  const canvas = document.createElement('canvas'); canvas.width = 200; canvas.height = 30; document.body.append(canvas);
+  const ctx = canvas.getContext('2d')!; ctx.save(); ctx.font = '10px monospace';
+  const short = ctx.measureText('a').width, long = ctx.measureText('aaaaa').width; ctx.restore();
+  const scene = createElement(Flow, { style: { width: 200, height: 20, gap: 5 }, children: [
+    createElement(Text, { children: content, style: { font: '10px monospace', lineHeight: 20, height: 20 } }),
+    createElement(Rectangle, { style: { width: 20, height: 20, fill }, onClick: () => hits++ }),
+  ] });
+  const controller = pibbl(canvas, scene); controllers.push(controller); await nextFrame();
+  expect(snapshotWasmLayoutDiagnostics().flowPlacements - before).toBe(1);
+  clickCanvas(canvas, short + 10, 10); expect(hits).toBe(1);
+  content.set('aaaaa'); await nextFrame();
+  expect(snapshotWasmLayoutDiagnostics().flowPlacements - before).toBe(2);
+  clickCanvas(canvas, short + 10, 10); expect(hits).toBe(1);
+  clickCanvas(canvas, long + 10, 10); expect(hits).toBe(2);
+  fill.set('orange'); await nextFrame();
+  expect(snapshotWasmLayoutDiagnostics().flowPlacements - before).toBe(2);
+});

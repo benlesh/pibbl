@@ -2,7 +2,7 @@
 use std::cell::RefCell;
 const STRIDE: usize = 10; // basis, min, max, padding, grow, shrink, result, frozen/offset, margin before, margin after
 #[derive(Default)]
-struct Arena { nodes: Vec<f64>, lines: Vec<(usize, usize)>, cross: Vec<f64>, grid: [Vec<f64>;2], grid_offsets: [Vec<f64>;2], grid_gaps: [f64;2], grid_ready: [bool;2], grid_cells: Vec<f64> }
+struct Arena { nodes: Vec<f64>, lines: Vec<(usize, usize)>, cross: Vec<f64>, grid: [Vec<f64>;2], grid_offsets: [Vec<f64>;2], grid_gaps: [f64;2], grid_ready: [bool;2], grid_cells: Vec<f64>, flow: Vec<f64> }
 struct ArenaSlot { generation: u32, arena: Option<Arena> }
 struct ArenaPool { slots: Vec<ArenaSlot>, closed: bool }
 thread_local! {
@@ -109,6 +109,46 @@ fn align_cross(records: &mut [f64], size: f64, reverse: bool) -> u32 {
         n[6] = outer;
         n[7] = if reverse { size - offset - n[8] - outer } else { offset + n[8] };
         if !n[7].is_finite() { return 1; }
+    }
+    0
+}
+
+#[no_mangle]
+pub extern "C" fn resize_flow(handle: u32, generation: u32, count: usize) -> *mut f64 {
+    with_arena(handle, generation, std::ptr::null_mut(), |arena| {
+        let Some(length) = count.checked_mul(8) else { return std::ptr::null_mut(); };
+        arena.flow.resize(length,0.0); arena.flow.as_mut_ptr()
+    })
+}
+#[no_mangle]
+pub extern "C" fn place_flow(handle: u32, generation: u32, bound: f64, gap: f64, line_gap: f64, wrap: u32) -> u32 {
+    with_arena(handle,generation,1,|arena| arrange_flow(&mut arena.flow,bound,gap,line_gap,wrap))
+}
+fn arrange_flow(items: &mut [f64], bound: f64, gap: f64, line_gap: f64, wrap: u32) -> u32 {
+    if items.len()%8 != 0 || !bound.is_finite() || bound < 0.0 || !gap.is_finite() || gap < 0.0 || !line_gap.is_finite() || line_gap < 0.0 || wrap > 1 { return 1; }
+    for item in items.chunks_exact(8) {
+        if !item[0].is_finite() || item[0] < 0.0 || !item[1].is_finite() || item[1] < 0.0 || !item[2].is_finite() || item[2] < 0.0 || item[2] > 3.0 || item[2].fract() != 0.0 { return 1; }
+    }
+    let count = items.len()/8;
+    let mut start = 0; let mut cross_cursor = 0.0;
+    while start < count {
+        let mut end = start; let mut occupied = 0.0; let mut line_cross: f64 = 0.0;
+        while end < count {
+            let main = items[end*8];
+            let next = if end == start { main } else { occupied + gap + main };
+            if wrap == 1 && end > start && next > bound { break; }
+            occupied = next; line_cross = line_cross.max(items[end*8+1]); end += 1;
+        }
+        let mut main_cursor = 0.0;
+        for index in start..end {
+            let item = &mut items[index*8..index*8+8];
+            let cross_offset = if item[2] == 1.0 { (line_cross-item[1])/2.0 } else if item[2] == 2.0 { line_cross-item[1] } else { 0.0 };
+            item[3] = main_cursor; item[4] = cross_cursor + cross_offset;
+            item[5] = if item[2] == 3.0 { line_cross } else { item[1] };
+            if !item[3].is_finite() || !item[4].is_finite() || !item[5].is_finite() { return 1; }
+            main_cursor += item[0] + gap;
+        }
+        cross_cursor += line_cross + line_gap; start = end;
     }
     0
 }
@@ -367,6 +407,17 @@ fn allocate(nodes: &mut [f64], main: f64, gap: f64) -> u32 {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test] fn flow_lines_wrap_align_and_reject_invalid_inputs() {
+        let mut items = [30.,20.,1.,0.,0.,0.,0.,0., 20.,10.,1.,0.,0.,0.,0.,0., 30.,15.,1.,0.,0.,0.,0.,0.];
+        assert_eq!(arrange_flow(&mut items,60.,5.,7.,1),0);
+        assert_eq!((items[11],items[12],items[19],items[20]),(35.,5.,0.,27.));
+        assert_eq!(arrange_flow(&mut items,100.,5.,7.,1),0);
+        assert_eq!((items[19],items[20]),(60.,2.5));
+        items[10]=3.; assert_eq!(arrange_flow(&mut items,100.,5.,7.,0),0); assert_eq!(items[13],20.);
+        items[2]=4.; assert_eq!(arrange_flow(&mut items,100.,5.,7.,0),1);
+        assert_eq!(arrange_flow(&mut [],100.,-1.,7.,1),1);
+        assert_eq!(arrange_flow(&mut [80.,10.,0.,0.,0.,0.,0.,0.],20.,5.,7.,1),0);
+    }
     #[test] fn grid_cells_preserve_spans_precision_and_reject_invalid_or_stale_records() {
         let h = arena_create(); let g = arena_generation(h);
         let cols = resize_grid(h,g,3,0); let rows = resize_grid(h,g,2,1);
@@ -455,6 +506,10 @@ mod tests {
         assert_eq!(resolve_grid_tracks(a,ga,200.,10.,0),0);
         assert_eq!(resolve_grid_tracks(b,gb,100.,0.,0),0);
         unsafe { assert_eq!((*grid_a.add(8),*grid_b.add(2)),(110.,50.)); }
+        let flow = resize_flow(a,ga,2);
+        unsafe { std::slice::from_raw_parts_mut(flow,16).copy_from_slice(&[30.,20.,1.,0.,0.,0.,0.,0.,20.,10.,1.,0.,0.,0.,0.,0.]); }
+        assert_eq!(place_flow(a,ga,60.,5.,7.,1),0);
+        unsafe { assert_eq!((*flow.add(11),*flow.add(12)),(35.,5.)); assert_eq!(*grid_a.add(8),110.); }
         assert_eq!(solve_wrap(a,ga,100.,0.),0);
         assert_eq!(solve(b,gb,60.,0.),0);
         assert_eq!(place_wrap_main(a,ga,100.,0.,0,0),0);
@@ -466,6 +521,8 @@ mod tests {
         let c = arena_create(); let gc = arena_generation(c);
         assert_eq!(c,a); assert_ne!(gc,ga);
         assert_eq!(solve(a,ga,100.,0.),1);
+        assert!(resize_flow(a,ga,1).is_null());
+        assert_eq!(place_flow(a,ga,100.,0.,0.,0),1);
         assert!(resize_grid(a,ga,1,0).is_null());
         assert_eq!(resolve_grid_tracks(a,ga,100.,0.,0),1);
         assert_eq!(place_main(b,gb,60.,0.,0,1),0);
