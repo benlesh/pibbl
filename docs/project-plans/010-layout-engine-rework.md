@@ -2,7 +2,7 @@
 
 ## Current checkpoint and single next slice — 2026-10-22
 
-Latest delivery is slice60 (direct-entry Layer child preparation).
+Latest delivery is slice60 `c90df382` (direct-entry Layer child preparation).
 Slice59 is `d7649a75`, corrected by `ab2adb72` (known-family Layer children).
 Slice58 is `edcf60a6` (prepared Absolute-root planning/adoption).
 Slice57 is `bf03d14f` (prepared Overlay-root planning/adoption).
@@ -971,7 +971,34 @@ Use the prepared primitive root's receiver/style rather than guessing wrapper
 geometry, with one description evaluation per transaction. Public RED must prove
 later described Grid/Flex failure precedes earlier opaque evaluation; preserve
 positioned geometry, clean bitmap reuse, keyed removal/restoration and ownership.
-Ordinary functions remain opaque. Consolidate58–60 before starting61.
+Ordinary functions remain opaque. Consolidation20 for58–60 is complete.
+
+### Consolidation 20 completed for delivery slices 58–60
+
+Separate58 `edcf60a6`,59 `d7649a75`,60 `c90df382`; focused59 correctness follow-up
+`ab2adb72`. Absolute adds a host structural plan; Layer admits registered known
+roots across its raster boundary, retains nested boundary/numeric ownership, uses
+actual nested raster dimensions and routes direct child invalidation through the
+owning preparation boundary. Host structural planning adds no numeric arena.
+
+Fresh combined Chromium run:263passed/1normal-onlyskip across12 layout, Layer, ABI
+and HTML ownership files. It includes both nested59 regressions and direct/opaque60
+cases. Source/built225public-input replays, rebuilt Layer/Grid replay, and packed228
+installed-input Bundler/NodeNext/lifecycle pass on code containing both59 fixes.
+Normal57Layer/HTML tests pass; types/lint clean. The65282byte/8native-test compiled
+kernel is unchanged by58–60. Logs `/tmp/pibbl-consolidation20-focused.txt` and
+`/tmp/pibbl-slice60-*`; Node26.9.0/pnpm11.21.0deps/Chromium, no Node24 trust claim.
+
+The fixed33-capability/seven-gate ledger is reconciled but all gates remain open.
+The complete remaining-gates table above still applies: Flex semantics, box/RTL/
+aspect matrix, intrinsic providers/baselines, placement/participation, complete
+prepared topology/minimal visits and matching Canvas/hit/focus/HTML publication,
+standalone/framework/Pibbl migration and classified pinned Yoga corpus, plus Grid
+implicit/intrinsic target. Reproducible kernel/host/full-app performance, Node24
+trust and final separate critical review remain cross-cutting exits. Known-root
+preparation is not arbitrary component pre-execution or broad Yoga parity.
+Exactly one next outcome61 admits pure described Layer children using proven root
+receiver/geometry, while ordinary functions remain opaque.
 
 ### Consolidation 19 completed for delivery slices 55–57
 

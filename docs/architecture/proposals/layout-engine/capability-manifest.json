@@ -582,7 +582,7 @@
       "id": "reactivity.incremental-layout",
       "target": "beyond",
       "group": "reactivity-and-publication",
-      "current": "root-owned shared WASM instance, isolated generational regions, bounded prepared Flex/Grid/Flow roots, arena-free Overlay plans and native Grid/Flow numeric kernels",
+      "current": "root-owned shared WASM instance, isolated generational regions, bounded prepared Flex/Grid/Flow roots, arena-free Overlay/Absolute/Layer plans and native Grid/Flow numeric kernels",
       "status": "experimental",
       "evidenceRefs": [
         "packages/core/test/layout-wasm-slice.test.tsx",
@@ -600,7 +600,7 @@
           "isolated generational native region handles",
           "settled Absolute-to-Flex and nested Flex plans reused during traversal",
           "direct and opaque-boundary Flex entries and pure described Flex roots reuse prepared ownership",
-          "known Layer direct Flex roots and Grid/Flow entry Flex placements carry exact receiver plans into traversal",
+          "registered known Layer children and Grid/Flow entry Flex placements carry exact receiver plans into traversal",
           "mounted Grid tracks/cell areas and resolved Flow line/wrap placement use the existing root-owned arena protocol",
           "known Grid/Flow roots adopt the original native plan; Overlay stages aligned host placements without a native arena"
         ],
@@ -625,14 +625,15 @@
       "id": "geometry.transactional-publication",
       "target": "preserve",
       "group": "reactivity-and-publication",
-      "current": "bounded known Flex/Grid/Flow/Overlay preparation and finite root-wide HTML projection preflight; general matching publication remains incomplete",
+      "current": "bounded known Flex/Grid/Flow/Overlay/Absolute/Layer preparation and finite root-wide HTML projection preflight; general matching publication remains incomplete",
       "status": "experimental",
       "evidence": {
         "positive": [
           "settled known sibling and nested Flex plans before opaque descendant evaluation",
           "normal traversal adopts prepared regions without another allocation pass",
           "all pending HTML numeric projection work settles before host DOM mutation or callbacks",
-          "Grid/Flow settle existing placements before known Flex child preflight; Layer transfers plans across child-instance raster boundary"
+          "Grid/Flow settle existing placements before known Flex child preflight; Layer transfers plans across child-instance raster boundary",
+          "direct and opaque-entry Layers prepare known children before raster work; nested boundaries retain both numeric and boundary plans"
         ],
         "negative": [
           "later known Flex factor/sizing failures prevent earlier opaque evaluation",
