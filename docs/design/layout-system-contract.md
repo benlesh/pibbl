@@ -307,6 +307,12 @@ Nested Layers use their actual raster dimensions, including the existing Layer
 policy for box constraints/padding; retained cleanup marks both numeric and nested
 boundary plans. Ordinary components and unproven wrapper entries remain opaque.
 
+Direct and opaque-entry experimental Layers prepare the same known children before
+creating or updating their child raster surface. Private transaction clones avoid
+mutating reusable application descriptors. Managed child invalidation routes through
+the owning parent even without an outer layout allocation, so preparation precedes
+child traversal. Normal builds preserve their existing scheduling path.
+
 A Grid entry settles its existing explicit tracks and cell placements before
 preparing direct known Flex roots from those exact placed clones, receiver tokens
 and content allocations. All placements prepare before opaque cell traversal.

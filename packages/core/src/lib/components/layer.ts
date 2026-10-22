@@ -4,7 +4,6 @@ import { setPreNormalizedStyle } from '../style/resolve-dispatch.js';
 import { getChildPrimitiveReceiverToken } from '../element/metadata.js';
 import { preparedStyleValue, preparedStyleQuery } from '../style/responsive.js';
 import { experimentalLayout } from '../layout/wasm/region.js';
-import { hasParentLayoutAllocation } from '../layout/context.js';
 import { definePrimitive } from '../define-primitive.js';
 import { materializeContainerChildren } from '../element/children.js';
 import { clonePibblElement, createElement } from '../element/create-element.js';
@@ -94,14 +93,20 @@ function renderLayer(
   ctx: RenderingContext2D,
 ) {
   wireStructuralEvents(props);
-  const materializedChildren = (experimentalLayout ? takePreparedBoundaryChildren(GLOBAL_STATE.componentRefs!.element) : undefined) ?? materializeContainerChildren(
-    props.children,
-    'Layer',
-  );
-  const nextRoot = createPrivateLayerRoot(materializedChildren);
   const canvas = GLOBAL_STATE.canvas!;
   const { width = canvas.width, height = canvas.height } = style;
   const componentRefs = GLOBAL_STATE.componentRefs!;
+  let preparedBoundary = componentRefs.element;
+  let preparedChildren = experimentalLayout ? takePreparedBoundaryChildren(preparedBoundary) : undefined;
+  if (experimentalLayout && !preparedChildren) {
+    const slot = preflightKnownLayout(preparedBoundary, style, { x: 0, y: 0, width, height }, GLOBAL_STATE.primitiveReceiverToken);
+    // Keep transaction metadata off the application-owned reusable descriptor.
+    preparedBoundary = clonePibblElement(preparedBoundary);
+    attachPreparedLayoutSlot(preparedBoundary, slot);
+    preparedChildren = takePreparedBoundaryChildren(preparedBoundary);
+  }
+  const materializedChildren = preparedChildren ?? materializeContainerChildren(props.children, 'Layer');
+  const nextRoot = createPrivateLayerRoot(materializedChildren);
   const parentInstance = getCurrentPibblInstance();
   const parentSurface = getSurfaceSnapshot(parentInstance);
   const layerSurface = createLayerSurface(
@@ -148,7 +153,7 @@ function renderLayer(
   const slot = componentRefs.refs[0] as LayerSlot;
   const offscreenCanvas = slot.canvas;
   const layerPibbl = getPibblInstance(offscreenCanvas);
-  if (experimentalLayout) setInstanceAllocationParent(layerPibbl, hasParentLayoutAllocation() ? parentInstance : undefined);
+  if (experimentalLayout) setInstanceAllocationParent(layerPibbl, parentInstance);
   const dimensionsChanged = slot.logicalWidth !== width ||
     slot.logicalHeight !== height;
   const surfaceChanged =
@@ -197,7 +202,7 @@ function renderLayer(
     completeInstanceRenderRevision(layerPibbl, renderedRevision);
     slot.retainedTree = snapshotLayerNodeTree(nextRoot);
   } else {
-    if (experimentalLayout) retainPreparedBoundarySubtree(componentRefs.element);
+    if (experimentalLayout) retainPreparedBoundarySubtree(preparedBoundary);
     parentInstance.eventRoot.focusPolicy?.replayRetainedSubtree(layerPibbl);
   }
   const renderedFocusPolicy = parentInstance.eventRoot.focusPolicy;

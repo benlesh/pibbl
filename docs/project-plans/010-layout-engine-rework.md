@@ -2,15 +2,16 @@
 
 ## Current checkpoint and single next slice — 2026-10-22
 
-Latest delivery is slice59 (known-family Layer child preparation).
+Latest delivery is slice60 (direct-entry Layer child preparation).
+Slice59 is `d7649a75`, corrected by `ab2adb72` (known-family Layer children).
 Slice58 is `edcf60a6` (prepared Absolute-root planning/adoption).
 Slice57 is `bf03d14f` (prepared Overlay-root planning/adoption).
 Slice56 is `cf2c7bc5` (prepared Flow-root planning/adoption).
 Slice55 is `1510efe3` (prepared Grid-root planning/adoption).
 Slice54 `773da7b9`,53 `aaa7ddcb`,52 `b5381e0d` are consolidated in `f322a709`.
 Every slice has its own commit. The fixed33-capability/seven-gate denominator is
-unchanged; all seven gates remain open. The single next slice is60, direct-entry Layer child preparation. Source5192/built5193, `#/testing/layout-preflight`:
-Use Layer Grid root, Fail later sibling, Recover, then red right edge/blue cell.
+unchanged; all seven gates remain open. The single next slice is61, pure described Layer children. Source5192/built5193, `#/testing/layout-preflight`:
+Use direct Layer root, Fail later sibling, Recover, then red right edge/blue cell.
 Native Grid tracks/spans and Flow wrap controls remain available.
 
 The loading/named-component integration is ready for source feedback on branch
@@ -943,14 +944,34 @@ six-case matrix (Grid/Flow/Overlay/Absolute and unconstrained/constrained nested
 Layer) passes, types/lint clean. Logs `/tmp/pibbl-slice59-nested-*`. This is a
 correctness follow-up to59, not a new capability or closed gate.
 
-## [NEXT] Direct-entry Layer child preparation (slice 60)
+### Slice 60 — direct-entry Layer child preparation
 
-Inspect and close the known-child preparation gap when Layer enters directly or
-through an opaque component instead of being preflighted by an outer known root.
-Use the existing transaction/boundary ownership, catch later known-child failures
-before earlier opaque children and child bitmap work, preserve cached descendants,
-and prove public recovery/teardown. No arbitrary component pre-execution, public
-API or native ABI change. Consolidate58–60 after delivery.
+Direct and opaque-entry Layers now prepare known children through their existing
+boundary protocol before allocating/updating the child raster surface. A private
+clone carries transaction metadata; application-owned reusable descriptors stay
+untouched. Managed Layer invalidation routes through its owning parent in the
+experimental lane, including direct entries, so child signal work cannot bypass
+the prepared allocation boundary. Clean bitmap retention remains intact.
+
+Public RED showed earlier evaluations3instead of2. The first implementation also
+exposed allocation mismatch when child updates bypassed the owner; the scheduling
+edge fixes that observable gap. Both direct and opaque-entry public cases pass
+resize/native single-pass, failure isolation, pixel/hit recovery and exact cleanup.
+Focused145tests across three files pass, including corrected59 nested sizing and
+retention; normal57tests pass. Types/lint clean. Source/built `--direct-layer` and
+rebuilt `--layer-grid` pass225public-input recovery/targets/cleanup. Packed228input
+Bundler/NodeNext/lifecycle pass. Rebuilt artifact includes `ab2adb72`; kernel65282
+bytes unchanged. Logs `/tmp/pibbl-slice60-*`; Node26.9.0/pnpm11.21.0deps/Chromium.
+No Node24/full trust or general atomic publication claim.
+
+## [NEXT] Pure described Layer children (slice 61)
+
+Admit direct pure `defineLayoutComponent` children through the same Layer bridge.
+Use the prepared primitive root's receiver/style rather than guessing wrapper
+geometry, with one description evaluation per transaction. Public RED must prove
+later described Grid/Flex failure precedes earlier opaque evaluation; preserve
+positioned geometry, clean bitmap reuse, keyed removal/restoration and ownership.
+Ordinary functions remain opaque. Consolidate58–60 before starting61.
 
 ### Consolidation 19 completed for delivery slices 55–57
 
