@@ -444,7 +444,7 @@ describe('CSS-compatible flex geometry', () => {
     )).toThrowError(/minWidth.*explicit/i);
     for (const style of [
       { flexDirection: 'diagonal' },
-      { flexWrap: 'wrap-reverse' },
+      { flexWrap: 'diagonal' },
       { gap: '10%' },
     ]) {
       expect(() => layoutFlex(
@@ -504,4 +504,5 @@ describe('CSS-compatible flex geometry', () => {
 it.runIf(!experimentalLayout)('retains explicit normal-build reverse-direction diagnostics', () => {
   expect(() => layoutFlex({ x: 0, y: 0, width: 100, height: 20 }, [], { flexDirection: 'row-reverse' }, measurement)).toThrow(/unsupported flex direction/);
   expect(() => layoutFlex({ x: 0, y: 0, width: 100, height: 20 }, [], { flexDirection: 'column-reverse' }, measurement)).toThrow(/unsupported flex direction/);
+  expect(() => layoutFlex({ x: 0, y: 0, width: 100, height: 20 }, [], { flexWrap: 'wrap-reverse' }, measurement)).toThrow(/unsupported flex wrap/);
 });

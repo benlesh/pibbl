@@ -19,6 +19,8 @@ function createWasmFlexKeyedWrapExampleContent(canvas: HTMLCanvasElement) {
   const selected = signal("none");
   const ink = signal("#19375b");
   const reverseAxes = signal(false);
+  const reverseLines = signal(false);
+  const wrapDirection = computed(() => reverseLines.get() ? "wrap-reverse" : "wrap");
   const rowDirection = computed(() => reverseAxes.get() ? "row-reverse" : "row");
   const columnDirection = computed(() => reverseAxes.get() ? "column-reverse" : "column");
   let serial = 0,
@@ -109,7 +111,7 @@ function createWasmFlexKeyedWrapExampleContent(canvas: HTMLCanvasElement) {
             width: 360,
             height: 220,
             flexDirection: rowDirection,
-            flexWrap: "wrap",
+            flexWrap: wrapDirection,
             gap: 12,
             alignContent: "flex-start",
             alignItems: "flex-start",
@@ -131,7 +133,7 @@ function createWasmFlexKeyedWrapExampleContent(canvas: HTMLCanvasElement) {
             width: 292,
             height: 180,
             flexDirection: columnDirection,
-            flexWrap: "wrap",
+            flexWrap: wrapDirection,
             gap: 12,
             alignContent: "flex-start",
             alignItems: "flex-start",
@@ -239,21 +241,25 @@ function createWasmFlexKeyedWrapExampleContent(canvas: HTMLCanvasElement) {
         style={{
           left: 28,
           top: 150,
+          cursor: "pointer",
           font: "bold 14px sans-serif",
           fill: "#19375b",
         }}
+        onClick={() => reverseLines.update(value => !value)}
       >
-        Rows · 360 px wide
+        Rows · click to flip lines
       </Text>
       <Text
         style={{
           left: 440,
           top: 150,
+          cursor: "pointer",
           font: "bold 14px sans-serif",
           fill: "#19375b",
         }}
+        onClick={() => reverseLines.update(value => !value)}
       >
-        Columns · 180 px high
+        Columns · click to flip lines
       </Text>
       <Collections />
     </>
@@ -272,12 +278,13 @@ function createWasmFlexKeyedWrapExampleContent(canvas: HTMLCanvasElement) {
       lane: read ? "experimental WASM" : "normal JavaScript",
       keys: keys.get(),
       reverseAxes: reverseAxes.get(),
+      reverseLines: reverseLines.get(),
       selected: selected.get(),
       hits,
       boxes: Object.fromEntries(boxes),
       layout: read?.() ?? {},
       limits:
-        "Finite row/declared-column wrap only; no intrinsic wrapped-container sizing, wrap-reverse/RTL or Yoga parity claim. Reversing data preserves source paint order.",
+        "Finite row/declared-column wrap only; no intrinsic wrapped-container sizing, RTL or Yoga parity claim. Reversing data preserves source paint order.",
     });
   };
   refresh();

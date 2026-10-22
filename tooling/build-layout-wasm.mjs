@@ -42,6 +42,13 @@ if (process.argv.includes("--check")) {
 } else {
   const temporary = await mkdtemp(join(tmpdir(), "pibbl-layout-build-"));
   try {
+    const tested = spawnSync(
+      process.env.PIBBL_CARGO ?? "cargo",
+      ["test", "--manifest-path", fileURLToPath(new URL("wasm/layout/Cargo.toml", root)),
+        "--locked", "--target-dir", temporary],
+      { stdio: "inherit", cwd: fileURLToPath(new URL("wasm/layout/", root)) },
+    );
+    if (tested.status !== 0) throw new Error("Layout kernel native tests failed; no new WASM artifact was generated.");
     const result = spawnSync(
       process.env.PIBBL_CARGO ?? "cargo",
       [

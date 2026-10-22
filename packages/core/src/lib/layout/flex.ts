@@ -52,7 +52,7 @@ import { withSignalWriteForbidden } from '../signals/graph.js';
 import type { Constraints, LayoutBox } from './types.js';
 
 type FlexDirection = 'row' | 'column' | 'row-reverse' | 'column-reverse';
-type FlexWrap = 'nowrap' | 'wrap';
+type FlexWrap = 'nowrap' | 'wrap' | 'wrap-reverse';
 type MainAlignment =
   | 'flex-start'
   | 'flex-end'
@@ -534,6 +534,7 @@ function resolveFlexPlacements(
   const options = normalizeFlexOptions(style, container);
   const row = isRowDirection(options.flexDirection);
   const reverse = options.flexDirection === 'row-reverse' || options.flexDirection === 'column-reverse';
+  const wrapReverse = options.flexWrap === 'wrap-reverse';
   const mainSize = row ? container.width : container.height;
   const crossSize = row ? container.height : container.width;
   const mainGap = row ? options.columnGap : options.rowGap;
@@ -567,8 +568,8 @@ function resolveFlexPlacements(
     const marginLeft = numericMargin(normalized.marginLeft === undefined ? allMargin : normalized.marginLeft, 'marginLeft', child, container);
     const marginMainBefore = row ? reverse ? marginRight : marginLeft : reverse ? marginBottom : marginTop;
     const marginMainAfter = row ? reverse ? marginLeft : marginRight : reverse ? marginTop : marginBottom;
-    const marginCrossBefore = row ? marginTop : marginLeft;
-    const marginCrossAfter = row ? marginBottom : marginRight;
+    const marginCrossBefore = row ? wrapReverse ? marginBottom : marginTop : wrapReverse ? marginRight : marginLeft;
+    const marginCrossAfter = row ? wrapReverse ? marginTop : marginBottom : wrapReverse ? marginLeft : marginRight;
     const grow = nonnegativeFactor(normalized.flexGrow ?? 0, 'flexGrow', child, container);
     const shrink = nonnegativeFactor(
       normalized.flexShrink ?? 1,
@@ -614,7 +615,7 @@ function resolveFlexPlacements(
     const needsMeasuredMain = basisValue === 'auto' &&
       (specifiedMain === undefined || specifiedMain === 'auto');
     const crossAuto = specifiedCross === undefined || specifiedCross === 'auto';
-    if (experimentalLayout && !row && options.flexWrap === 'wrap' && (needsMeasuredMain || crossAuto)) {
+    if (experimentalLayout && !row && options.flexWrap !== 'nowrap' && (needsMeasuredMain || crossAuto)) {
       throw childDiagnostic(child, needsMeasuredMain ? mainProperty : crossProperty, 'auto', container,
         'Experimental WASM column wrap requires a declared height or flexBasis and a declared width; intrinsic item sizes are unsupported.');
     }
@@ -798,7 +799,7 @@ function resolveFlexPlacements(
     });
   }
 
-  const wrappedRegion = region && options.flexWrap === 'wrap';
+  const wrappedRegion = region && options.flexWrap !== 'nowrap';
   // Rust owns wrapped line boundaries and offsets; JS retains source-order items
   // only for host measurement and immediate rendering, never a second line solver.
   const lines = region ? items.length ? [{ items, crossSize: 0, crossOffset: 0 }] : [] :
@@ -830,7 +831,7 @@ function resolveFlexPlacements(
     resolveLineCrossSizes(lines, crossSize, crossGap, options.alignContent, options.flexWrap === 'wrap');
   }
 
-  const crossPlacements = region?.placeCross(items, crossSize, options.alignItems, wrappedRegion ? { gap: crossGap, alignContent: options.alignContent } : undefined);
+  const crossPlacements = region?.placeCross(items, crossSize, options.alignItems, wrappedRegion ? { gap: crossGap, alignContent: options.alignContent, reverse: wrapReverse } : undefined);
   const mainPlacements = region?.placeMain(mainSize, mainGap, options.justifyContent, reverse);
   const placements: FlexPlacement[] = [];
   let mainIndex = 0;
@@ -1174,7 +1175,10 @@ function normalizeFlexOptions(
       !(experimentalLayout && (flexDirection === 'row-reverse' || flexDirection === 'column-reverse'))) {
     throw optionDiagnostic('flexDirection', flexDirection, container, 'uses an unsupported flex direction in this build');
   }
-  const flexWrap = supported(style.flexWrap ?? 'nowrap', ['nowrap', 'wrap'], 'flexWrap', container);
+  const flexWrap = style.flexWrap ?? 'nowrap';
+  if (flexWrap !== 'nowrap' && flexWrap !== 'wrap' && !(experimentalLayout && flexWrap === 'wrap-reverse')) {
+    throw optionDiagnostic('flexWrap', flexWrap, container, 'uses an unsupported flex wrap in this build');
+  }
   const justifyContent = supported(
     style.justifyContent ?? 'flex-start',
     ['flex-start', 'flex-end', 'center', 'space-between', 'space-around', 'space-evenly'],

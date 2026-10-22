@@ -463,10 +463,40 @@ and cleanup0/0/0 remain correct, no errors; built466inputs. Logs
 `/tmp/pibbl-slice40-*`. Node26.9.0/pnpm11.21.0 deps/Chromium; no Node24/full trust claim.
 Hands-on ports5192/5193, `#/examples/layout/wasm-flex-keyed-wrap`, Flip axes.
 
-**Exactly one selected next delivery slice: 41 — wrap-reverse cross-line placement.**
-Extend the existing wrap value union and kernel cross placement, preserving source
-line membership, main order, signed physical margin ownership and all node identities.
-Public positive/negative cross placement and moved-hit evidence precede implementation.
+### Slice 41 — reversed cross lines and cross alignment
+
+Presented experimental wrap union adds wrap-reverse. Source line membership stays
+unchanged; WASM reflects line placement and each border box's cross alignment,
+including combined reverse main axes and asymmetric physical margins. Main and
+cross placement caches carry independent direction flags. Normal JavaScript keeps
+its wrap diagnostic, RTL stays unsupported, and source paint/hit/tab order remains.
+
+The public regression failed before production edits. Fresh98experimental checks
+pass/1normal-onlyskip; normal43pass/5experimental skips. Native unit fixtures were
+found stale against the prior8→10slot and main-direction ABI: an actual native
+compile failed, fixtures were updated to exact current records/expectations, and
+four native tests now pass (bounds/overflow, distribution, huge factors, signed
+margin reverse positions). Artifact compilation now runs those native tests before
+writing a binary; --check stays compiler-free. Matching57666-byte artifact and
+private package build pass with pinned isolated Rust1.99.0.
+
+Typecheck/lint, exact public/editor parity and catalog pass. Installed strict
+Bundler/NodeNext consumers accept wrap-reverse/row-reverse and margin fields;
+227installed dist structural lifecycle passes. Source/built keyed collection
+probes pass collection-heading cross-line flips, stable keys/stamps, unchanged
+solves/measurements/main placements, cross-placement work only, old misses/new
+hits, existing source reorder/remove/restore and cleanup0/0/0. No errors;
+built466inputs. Read-only focused review found no material issue. Logs
+`/tmp/pibbl-slice41-*`. Node26.9.0/pnpm11.21.0 deps/Chromium; no Node24/full trust claim.
+Hands-on ports5192/5193, keyed-wrap route: click a collection heading to flip cross
+lines, Flip axes for main placement, Reverse order for source key order.
+
+**Exactly one selected next delivery slice: 42 — root-owned shared WASM arena.**
+Give independent mounted Flex regions separate handles/records in one root-owned
+instance, preserve cross-root isolation and exact teardown, and keep pure helpers
+isolated. This is a prerequisite toward the accepted root-wide prepared layout and
+publication gate, not a claim to complete that graph. No new public API is proposed.
+Consolidate40–42 after this third delivery.
 
 ### Consolidation 13 completed for delivery slices 37–39
 
@@ -1782,12 +1812,13 @@ three pinned Yoga cases, and keeps unaccepted API signatures and missing release
 gates explicit. It is support work, not an additional delivered capability slice.
 Group9 has two deliveries; consolidate after the next closely related slice.
 
-## [NEXT] Wrap-reverse cross-line placement (slice 41)
+## [NEXT] Root-owned shared WASM arena (slice 42)
 
-Complete experimental wrap-reverse on both main axes, including combination with
-reverse main direction. Cross start/end and physical leading/trailing margins follow
-the reversed cross direction; source line membership, keys and paint/hit order stay
-unchanged. Preserve normal-build diagnostics and explicit RTL deferral.
+Independent mounted Flex regions should keep separate handles, records/caches and
+lifecycle while sharing one mutable WASM instance per owning root. Different roots
+remain isolated; standalone pure helpers keep isolated temporary owners. Establish
+public two-region/two-root geometry, work-reuse and deterministic teardown evidence
+before changing ownership. Do not claim a complete prepared graph or new public API.
 
 Slice 26 delivery (2026-10-21): completed the in-progress private role foundation
 before any loading migration. Existing receiver edges carry staged masks; successful

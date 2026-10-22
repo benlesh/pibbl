@@ -1214,3 +1214,22 @@ it.runIf(experimentalLayout)('uses main-direction start/end distribution for rev
     expect(layoutFlex({ x: 0, y: 0, width: 100, height: 100 }, [child()], { flexDirection: 'column-reverse', justifyContent, alignItems: 'flex-start' }, measurement)[0].y).toBe(offset);
   }
 });
+
+it.runIf(experimentalLayout)('places wrap-reverse lines and cross alignment with physical margins without reversing source hits', async () => {
+  const rowChild = (height: number, top: number, bottom: number) => createElement(Rectangle, { style: { width: 80, height, minWidth: 0, marginLeft: 5, marginRight: 5, marginTop: top, marginBottom: bottom } });
+  const rowChildren = () => [rowChild(20, 3, 7), rowChild(10, 1, 9), rowChild(20, 3, 7)];
+  expect(layoutFlex({ x: 0, y: 0, width: 180, height: 80 }, rowChildren(), { flexWrap: 'wrap-reverse', alignItems: 'flex-start', alignContent: 'flex-start' }, measurement))
+    .toEqual([{ x: 5, y: 53, width: 80, height: 20 }, { x: 95, y: 61, width: 80, height: 10 }, { x: 5, y: 23, width: 80, height: 20 }]);
+  expect(layoutFlex({ x: 0, y: 0, width: 180, height: 80 }, rowChildren(), { flexDirection: 'row-reverse', flexWrap: 'wrap-reverse', alignItems: 'flex-start', alignContent: 'flex-start' }, measurement))
+    .toEqual([{ x: 95, y: 53, width: 80, height: 20 }, { x: 5, y: 61, width: 80, height: 10 }, { x: 95, y: 23, width: 80, height: 20 }]);
+  const columnChild = (width: number, left: number, right: number) => createElement(Rectangle, { style: { width, height: 80, minHeight: 0, marginTop: 5, marginBottom: 5, marginLeft: left, marginRight: right } });
+  expect(layoutFlex({ x: 0, y: 0, width: 80, height: 180 }, [columnChild(20, 3, 7), columnChild(10, 1, 9), columnChild(20, 3, 7)], { flexDirection: 'column', flexWrap: 'wrap-reverse', alignItems: 'flex-start', alignContent: 'flex-start' }, measurement))
+    .toEqual([{ x: 53, y: 5, width: 20, height: 80 }, { x: 61, y: 95, width: 10, height: 80 }, { x: 23, y: 5, width: 20, height: 80 }]);
+  const canvas = document.createElement('canvas'); canvas.width = 180; canvas.height = 60; document.body.append(canvas); const hits: string[] = [];
+  const child = (name: string, fill: string) => createElement(Rectangle, { style: { width: 80, height: 20, minWidth: 0, marginRight: -10, marginTop: -5, fill }, onClick: () => hits.push(name) });
+  const controller = pibbl(canvas, createElement(Flex, { style: { width: 140, height: 50, flexWrap: 'wrap-reverse', alignItems: 'flex-start', alignContent: 'flex-start' }, children: [child('A', 'red'), child('B', 'blue'), child('C', 'green')] }));
+  controllers.push(controller); await nextFrame();
+  expect([...canvas.getContext('2d')!.getImageData(75, 40, 1, 1).data]).toEqual([0, 0, 255, 255]);
+  expect([...canvas.getContext('2d')!.getImageData(5, 32, 1, 1).data]).toEqual([0, 128, 0, 255]);
+  clickCanvas(canvas, 75, 40); clickCanvas(canvas, 5, 32); expect(hits).toEqual(['B', 'C']);
+});

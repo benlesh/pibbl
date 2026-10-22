@@ -51,6 +51,8 @@ The same experimental build accepts `flexDirection: "row-reverse"` and
 `"column-reverse"`, including finite wrapping. Main-axis placement reverses within
 each line; source keys, paint/hit priority and tab order stay unchanged. Cross-line
 stacking stays forward. `flex-start` and `flex-end` follow the selected main direction.
-Normal JavaScript Flex, `wrap-reverse` and RTL remain outside this experimental slice.
+The experimental build also accepts `flexWrap: "wrap-reverse"`, including reversed
+main axes. It reverses cross lines and cross start/end alignment while preserving
+source order. Normal JavaScript Flex and RTL remain outside this experimental slice.
 Use [Flip axes in the keyed collection example](#/examples/layout/wasm-flex-keyed-wrap)
-to compare placement with its separate Reverse order control.
+to compare placement with its separate Reverse order control. Click either collection heading to flip cross lines.

@@ -126,29 +126,34 @@
       "id": "flex.reverse-and-wrap-reverse",
       "target": "parity",
       "group": "flex-core",
-      "current": "experimental row-reverse and column-reverse main placement, including finite wrapping; wrap-reverse and RTL remain unsupported",
+      "current": "experimental row/column reverse main placement and wrap-reverse cross placement, including combinations; RTL remains unsupported",
       "status": "experimental",
       "evidence": {
         "positive": [
           "row/column reverse with physical margins",
           "source-formed wrapped line reversal",
-          "direction-relative flex-start/flex-end/center"
+          "direction-relative flex-start/flex-end/center",
+          "wrap-reverse row/column cross alignment with asymmetric physical margins",
+          "combined main/cross reversal",
+          "native ten-slot ABI margin and reversal fixtures"
         ],
         "negative": [
-          "normal JavaScript build diagnostics",
-          "wrap-reverse unsupported"
+          "normal JavaScript reverse direction/wrap diagnostics",
+          "RTL unsupported",
+          "native build rejects stale test fixtures"
         ],
         "interaction": [
           "source paint/hit priority under overlap",
           "axis flip preserves keys/mounts/nodes",
           "main placement changes without allocation/measurement work",
-          "source/built moved targets and keyed lifecycle"
+          "source/built moved targets and keyed lifecycle",
+          "cross-line flip preserves keys/mounts and allocation/measurement/main work",
+          "negative reversed cross overlap retains source paint/hit priority"
         ],
         "yogaCases": [],
         "missing": [
-          "wrap-reverse",
           "RTL interaction",
-          "pinned Yoga reverse fixtures"
+          "pinned Yoga reverse/wrap-reverse fixtures"
         ]
       },
       "evidenceRefs": [

@@ -4353,7 +4353,7 @@ const drafts = [
       code: "One shared key signal feeds separate row/column Flex owners. Keys preserve each owner's identities; removal ends that lifetime.",
     },
     apiNotes: [
-      "Data reorder changes source order; Flip axes changes only placement. CSS order, wrap-reverse and RTL remain unsupported.",
+      "Data reorder changes source order; Flip axes and collection headings change main/cross placement only. CSS order and RTL remain unsupported.",
       "Finite rows and declared-size columns only. No general intrinsic wrapping or Yoga parity claim.",
     ],
     canvas: { width: 760, height: 460 },

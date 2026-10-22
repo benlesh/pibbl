@@ -206,7 +206,12 @@ traversal, identity, paint/event priority and tab order do not reverse. Text is 
 mirrored. Main placement runs in WASM; flipping only main direction reuses unchanged
 allocation and same-axis measurement data, with direction included in placement
 cache keys. Normal JavaScript Flex retains its unsupported-direction diagnostic.
-`wrap-reverse` and RTL remain unsupported.
+Experimental `wrap-reverse` reverses cross-line placement and within-line cross
+start/end alignment, including combination with reverse main direction. Physical
+cross margins follow that selected cross direction; line membership, identities,
+source paint/event priority and tab order stay unchanged. Same-membership line flips
+reuse allocation/measurement and main placement, rerunning cross placement only.
+RTL remains unsupported.
 
 The experimental allocator also supports direct-item numeric physical
 `margin`, `marginTop`, `marginRight`, `marginBottom` and `marginLeft`. Values are
