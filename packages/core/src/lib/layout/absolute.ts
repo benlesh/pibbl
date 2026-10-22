@@ -254,6 +254,7 @@ export function prepareDirectChildStyle(
   child: PibblElement<any>,
   receiverToken?: object,
   queryBasis?: Readonly<LayoutBox>,
+  flexMargins = false,
 ): Readonly<SystemStyle> | ResponsiveStylePreparation<Readonly<SystemStyle>> {
   let source = child;
   const prepared = withReceiverInputProvision(
@@ -269,6 +270,14 @@ export function prepareDirectChildStyle(
   );
   const definition = getPrimitiveDefinition(source.type);
   const style = preparedStyleValue(prepared);
+  if (!flexMargins) {
+    const values = style as Readonly<Record<string, unknown>>;
+    const property = values.margin !== undefined ? 'margin' : values.marginTop !== undefined ? 'marginTop' :
+      values.marginRight !== undefined ? 'marginRight' : values.marginBottom !== undefined ? 'marginBottom' :
+      values.marginLeft !== undefined ? 'marginLeft' : undefined;
+    if (property) throw layoutDiagnostic({ component: child.type.name, algorithm: 'layout', property,
+      value: values[property], reason: 'physical margins currently require experimental nowrap Flex' });
+  }
   const filter = extractSystemFilter(style);
   const normalized = definition?.normalizeStyle ?
       definition.normalizeStyle(withoutSystemFilter(style)) :

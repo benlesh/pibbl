@@ -36,6 +36,12 @@ try {
   await click(548, 320); await selected('empty left');
   await click(552, 320); await selected('empty right');
   await click(598, 320); await selected('empty right');
+  await click(500, 400); await selected('empty right'); // Leading margin misses.
+  await click(510, 400); await selected('margin left');
+  assert.match(await frame.locator('pre').innerText(), /margin left: -5/);
+  await click(500, 400); await selected('margin left'); // Shifted border now hits.
+  assert.match(await frame.locator('pre').innerText(), /margin left: 5/);
+  await click(560, 400); await selected('margin right');
   await click(500, 110); // Natural basis.
   assert.match(await frame.locator('pre').innerText(), /basis: auto/);
   await click(205, 290); await selected('auto minimum sibling');

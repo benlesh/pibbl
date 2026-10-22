@@ -378,10 +378,41 @@ pnpm11.21.0 dependencies, Chromium; native compiler used by the pinned generator
 Hands-on ports5192/5193, `#/examples/layout/wasm-yoga-migration`, Next case + resize
 cycles five fixtures; click the right-side boxes.
 
-**Exactly one selected next delivery slice: 38 — numeric physical Flex margins.**
-Present exact public style signatures and precedence before implementation, then
-prove one complete allocation/placement/hit slice through the public API. This
-addresses the existing box/direction margin capability, not a new scope item.
+### Slice 38 — numeric physical margins through shared WASM
+
+Presented public additions are numeric `margin`, `marginTop`, `marginRight`,
+`marginBottom` and `marginLeft` on LayoutItemStyle/FlexItemStyle. Logical Canvas
+units, finite negatives, specific edges over shorthand, default zero; margins are
+outside padding/paint/hit bounds. This first slice supports experimental direct
+nowrap rows/columns and rejects margins under wrapped Flex, other layout families
+and normal JavaScript Flex. Percentage/auto/logical values are not silently ignored.
+
+A public mounted regression failed before implementation. Separate signed margin
+slots extend private main/cross records from8 to10f64; nonnegative padding/bounds
+remain distinct and validated. The same WASM kernel owns allocation and placement.
+Margin signals use layout roles. Review found signed intrinsic accumulation could
+produce negative auto dimensions: a new public test failed, then final accumulation
+was clamped at zero without clamping individual margins.
+
+Fresh evidence:93 focused experimental tests; after semantic/role/unsupported-family
+additions,47 public WASM checks pass. Normal focused lane42pass/5skip. Typecheck,
+scoped lint, exact editor/source/built export parity, public JSDoc and catalog pass.
+Packed installation proves margin field declarations under strict Bundler/NodeNext,
+227 installed dist inputs and structural lifecycle. Source/built public controls
+prove margin-space misses, negative-margin shifted hits, prior Text/percentage/
+frozen reuse and cleanup0/0/0, no errors; built466inputs. The matching artifact is
+57358bytes, compiled with the repository-pinned Rust1.99.0/wasm32 target installed
+only under `/tmp/pibbl-layout-{cargo,rustup}`. Official installer checksum verified;
+no global toolchain or shell configuration change. Node26.9.0/pnpm11.21.0 deps/
+Chromium; no Node24 trust or performance claim. Logs `/tmp/pibbl-slice38-*`.
+
+Hands-on ports5192/5193, wasm-flex-text, Compare Text minimum: lower-right margin
+row toggles5/-5 by clicking its left box. Margins preserve source paint order.
+
+**Exactly one selected next delivery slice: 39 — wrapped physical Flex margins.**
+The existing signed main-axis records already include margins in line formation;
+complete line cross-size accounting, remove the explicit wrapped diagnostic only
+after a public wrapped geometry/input regression passes. Consolidate37–39 afterward.
 
 ### Consolidation 12 completed for delivery slices 34–36
 
@@ -1668,12 +1699,13 @@ three pinned Yoga cases, and keeps unaccepted API signatures and missing release
 gates explicit. It is support work, not an additional delivered capability slice.
 Group9 has two deliveries; consolidate after the next closely related slice.
 
-## [NEXT] Numeric physical Flex margins (slice 38)
+## [NEXT] Wrapped physical Flex margins (slice 39)
 
-Implement a bounded complete slice of the existing margin capability. Specify
-public numeric shorthand/physical edges and precedence, negative-value behavior,
-allocation/placement and hit geometry before runtime edits. Percentage/logical/auto
-margins remain tracked in the same fixed capability entry, not newly invented exits.
+Complete the same numeric physical margin contract in existing finite row/column
+wrapping. Shared WASM line boundaries, cross extents and offsets must include
+signed margins while publishing only border boxes. Keep intrinsic wrapped sizing,
+percentage/auto/logical margins and normal JavaScript diagnostics conservative.
+Start with a public wrapped geometry/input failure; consolidate37–39 on delivery.
 
 Slice 26 delivery (2026-10-21): completed the in-progress private role foundation
 before any loading migration. Existing receiver edges carry staged masks; successful

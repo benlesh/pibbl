@@ -1,6 +1,6 @@
 //! Experimental region-owned f64 Flex allocator. No rendering or scheduling.
 use std::cell::RefCell;
-const STRIDE: usize = 8; // basis, min, max, padding, grow, shrink, result, frozen
+const STRIDE: usize = 10; // basis, min, max, padding, grow, shrink, result, frozen/offset, margin before, margin after
 thread_local! {
     static NODES: RefCell<Vec<f64>> = const { RefCell::new(Vec::new()) };
     static LINES: RefCell<Vec<(usize, usize)>> = const { RefCell::new(Vec::new()) };
@@ -22,7 +22,7 @@ pub extern "C" fn dispose() {
     LINES.with(|n| *n.borrow_mut() = Vec::new());
 }
 
-// preferred outer cross, padding, min, max, auto, alignment, outer result, offset.
+// preferred border cross, padding, min, max, auto, alignment, border result, offset, margin before, margin after.
 #[no_mangle]
 pub extern "C" fn resize_cross(count: usize) -> *mut f64 {
     CROSS.with(|records| {
@@ -39,20 +39,24 @@ fn align_cross(records: &mut [f64], size: f64) -> u32 {
     if !size.is_finite() || size < 0.0 { return 1; }
     for n in records.chunks_exact_mut(STRIDE) {
         if n[..6].iter().enumerate().any(|(i,v)| v.is_nan() || *v < 0.0 || (i != 3 && !v.is_finite()))
+            || !n[8].is_finite() || !n[9].is_finite()
             || n[2] > n[3] || (n[4] != 0.0 && n[4] != 1.0)
             || n[5].fract() != 0.0 || n[5] > 3.0 { return 1; }
         // Alignment is a private numeric policy enum: stretch, start, end, center.
+        let margins = n[8] + n[9];
+        if !margins.is_finite() { return 1; }
         let outer = if n[4] == 1.0 && n[5] == 0.0 {
-            (size - n[1]).max(0.0).clamp(n[2], n[3]) + n[1]
+            (size - margins - n[1]).max(0.0).clamp(n[2], n[3]) + n[1]
         } else { n[0] };
         let offset = match n[5] as u32 {
-            2 => size - outer,
-            3 => (size - outer) / 2.0,
+            2 => size - outer - margins,
+            3 => (size - outer - margins) / 2.0,
             _ => 0.0,
         };
         if !outer.is_finite() || !offset.is_finite() { return 1; }
         n[6] = outer;
-        n[7] = offset;
+        n[7] = offset + n[8];
+        if !n[7].is_finite() { return 1; }
     }
     0
 }
@@ -66,14 +70,15 @@ fn align_main(nodes: &mut [f64], main: f64, gap: f64, alignment: u32) -> u32 {
     if !main.is_finite() || main < 0.0 || !gap.is_finite() || gap < 0.0 || alignment > 5 { return 1; }
     let count = nodes.len() / STRIDE;
     if count == 0 { return 0; }
-    let occupied = nodes.chunks_exact(STRIDE).fold(count.saturating_sub(1) as f64 * gap, |sum,n| sum+n[6]+n[3]);
+    let occupied = nodes.chunks_exact(STRIDE).fold(count.saturating_sub(1) as f64 * gap, |sum,n| sum+n[6]+n[3]+n[8]+n[9]);
     let free = main - occupied;
     let (start, between) = distribution(free, count, alignment);
     let mut cursor = start;
     for n in nodes.chunks_exact_mut(STRIDE) {
         if !cursor.is_finite() { return 1; }
-        n[7] = cursor;
-        cursor += n[6]+n[3]+gap+between;
+        n[7] = cursor + n[8];
+        cursor += n[6]+n[3]+n[8]+n[9]+gap+between;
+        if !n[7].is_finite() || !cursor.is_finite() { return 1; }
     }
     if !free.is_finite() { return 1; }
     0
@@ -114,8 +119,8 @@ fn form_lines(nodes: &[f64], main: f64, gap: f64) -> Result<Vec<(usize, usize)>,
     let mut start = 0;
     let mut used = 0.0;
     for (i, n) in nodes.chunks_exact(STRIDE).enumerate() {
-        if n[..6].iter().enumerate().any(|(j,v)| v.is_nan() || *v < 0.0 || (j != 2 && !v.is_finite())) || n[1] > n[2] { return Err(1); }
-        let outer = n[0].clamp(n[1], n[2]) + n[3];
+        if n[..6].iter().enumerate().any(|(j,v)| v.is_nan() || *v < 0.0 || (j != 2 && !v.is_finite())) || n[1] > n[2] || !n[8].is_finite() || !n[9].is_finite() { return Err(1); }
+        let outer = n[0].clamp(n[1], n[2]) + n[3] + n[8] + n[9];
         if !outer.is_finite() { return Err(1); }
         let candidate = used + gap + outer;
         if i > start && candidate > main {
@@ -187,10 +192,10 @@ fn allocate(nodes: &mut [f64], main: f64, gap: f64) -> u32 {
     let mut base_outer = gaps;
     let mut hypothetical = gaps;
     for n in nodes.chunks_exact_mut(STRIDE) {
-        if n[..6].iter().enumerate().any(|(i,v)| v.is_nan() || *v < 0.0 || (i != 2 && !v.is_finite())) || n[1] > n[2] { return 1; }
+        if n[..6].iter().enumerate().any(|(i,v)| v.is_nan() || *v < 0.0 || (i != 2 && !v.is_finite())) || n[1] > n[2] || !n[8].is_finite() || !n[9].is_finite() { return 1; }
         n[6] = n[0]; n[7] = 0.0;
-        base_outer += n[0] + n[3];
-        hypothetical += n[0].clamp(n[1],n[2]) + n[3];
+        base_outer += n[0] + n[3] + n[8] + n[9];
+        hypothetical += n[0].clamp(n[1],n[2]) + n[3] + n[8] + n[9];
     }
     if !base_outer.is_finite() || !hypothetical.is_finite() { return 1; }
     let growing = hypothetical < main;
@@ -203,7 +208,7 @@ fn allocate(nodes: &mut [f64], main: f64, gap: f64) -> u32 {
     for _ in 0..=count {
         let active = nodes.chunks_exact(STRIDE).filter(|n| n[7] == 0.0).count();
         if active == 0 { return 0; }
-        let fixed = nodes.chunks_exact(STRIDE).fold(gaps, |a,n| a + if n[7] != 0.0 {n[6]+n[3]} else {n[0]+n[3]});
+        let fixed = nodes.chunks_exact(STRIDE).fold(gaps, |a,n| a + n[8] + n[9] + if n[7] != 0.0 {n[6]+n[3]} else {n[0]+n[3]});
         let factor_index = if growing {4} else {5};
         let max_factor = nodes.chunks_exact(STRIDE).filter(|n|n[7]==0.0).map(|n|n[factor_index]).fold(0.0_f64,f64::max);
         let max_basis = if growing {1.0} else {nodes.chunks_exact(STRIDE).filter(|n|n[7]==0.0).map(|n|n[0]).fold(0.0_f64,f64::max)};

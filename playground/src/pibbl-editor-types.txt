@@ -458,10 +458,11 @@ export interface MeshTransformOptions {
     left?: Exclude<Length, 'auto'>; top?: Exclude<Length, 'auto'>;
     alignSelf?: 'auto' | 'start' | 'end' | 'center' | 'stretch' | 'flex-start' | 'flex-end';
     justifySelf?: 'auto' | 'start' | 'end' | 'center' | 'stretch';
+    margin?: number; marginTop?: number; marginRight?: number; marginBottom?: number; marginLeft?: number;
     flexBasis?: Length; flexGrow?: number; flexShrink?: number;
     gridColumnStart?: number; gridColumnSpan?: number; gridRowStart?: number; gridRowSpan?: number;
   }
-  export type FlexItemStyle = Pick<LayoutItemStyle, 'flexBasis' | 'flexGrow' | 'flexShrink'> & { alignSelf?: 'auto' | 'stretch' | 'flex-start' | 'flex-end' | 'center' };
+  export type FlexItemStyle = Pick<LayoutItemStyle, 'flexBasis' | 'flexGrow' | 'flexShrink' | 'margin' | 'marginTop' | 'marginRight' | 'marginBottom' | 'marginLeft'> & { alignSelf?: 'auto' | 'stretch' | 'flex-start' | 'flex-end' | 'center' };
   export interface GridItemStyle extends SystemStyle {
     gridColumnStart?: number; gridColumnSpan?: number; gridRowStart?: number; gridRowSpan?: number;
     alignSelf?: 'auto' | 'stretch' | 'start' | 'center' | 'end';

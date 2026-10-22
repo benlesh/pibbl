@@ -117,6 +117,16 @@ export interface ResolvedBoxStyle {
  * @see {@link PathStyle}
  */
 export interface LayoutItemStyle extends PositioningStyle {
+  /** Uniform physical margin in logical Canvas units; finite negative values are allowed. Specific edges override this value. Consumed by experimental nowrap Flex only. See {@link LayoutItemStyle}. */
+  margin?: number;
+  /** Physical top margin overriding margin. See {@link LayoutItemStyle}. */
+  marginTop?: number;
+  /** Physical right margin overriding margin. See {@link LayoutItemStyle}. */
+  marginRight?: number;
+  /** Physical bottom margin overriding margin. See {@link LayoutItemStyle}. */
+  marginBottom?: number;
+  /** Physical left margin overriding margin. See {@link LayoutItemStyle}. */
+  marginLeft?: number;
   /** This child's cross-axis or block-axis alignment override. See {@link LayoutItemStyle}. */
   alignSelf?: 'auto' | 'start' | 'end' | 'center' | 'stretch' | 'flex-start' | 'flex-end';
   /** This child's inline-axis alignment override. See {@link LayoutItemStyle}. */
@@ -144,7 +154,7 @@ export interface LayoutItemStyle extends PositioningStyle {
  */
 export type FlexItemStyle = Pick<
   LayoutItemStyle,
-  'flexBasis' | 'flexGrow' | 'flexShrink'
+  'flexBasis' | 'flexGrow' | 'flexShrink' | 'margin' | 'marginTop' | 'marginRight' | 'marginBottom' | 'marginLeft'
 > & {
   /** This child's cross-axis or block-axis alignment override. See {@link FlexItemStyle}. */
   alignSelf?: 'auto' | 'stretch' | 'flex-start' | 'flex-end' | 'center';

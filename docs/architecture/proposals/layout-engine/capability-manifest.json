@@ -284,21 +284,40 @@
       "id": "flex.margin",
       "target": "parity",
       "group": "box-and-direction",
-      "current": "absent",
-      "status": "missing",
-      "unresolvedPolicy": "Implementation direction is authorized; public margin field names and logical-edge precedence need exact signatures.",
+      "current": "experimental numeric physical margins on direct nowrap Flex items; finite negatives and specific-edge precedence; other layout families and normal JavaScript Flex reject",
+      "status": "experimental",
+      "unresolvedPolicy": "Numeric physical signatures are selected; percentages, logical edges and auto margins remain subsequent supported-matrix work.",
       "evidence": {
-        "positive": [],
-        "negative": [],
-        "interaction": [],
+        "positive": [
+          "nowrap row/column numeric margins",
+          "negative leading margin",
+          "cross stretch and specific-edge precedence",
+          "final intrinsic auto dimension clamped after signed accumulation"
+        ],
+        "negative": [
+          "percentage/auto/nonfinite/null rejection",
+          "wrapped and other layout families reject",
+          "normal JavaScript Flex diagnostic"
+        ],
+        "interaction": [
+          "margin-only misses and shifted border hits",
+          "margin signal classified layout input",
+          "source/built and installed artifact teardown"
+        ],
         "yogaCases": [],
         "missing": [
-          "physical numeric/percentage margins",
-          "negative margins",
-          "limits",
-          "wrap line breaks"
+          "wrapped margins",
+          "percentage margins",
+          "logical edges",
+          "remaining overflow and opposing negative margin matrix"
         ]
-      }
+      },
+      "evidenceRefs": [
+        "packages/core/test/layout-wasm-slice.test.tsx",
+        "tooling/test-wasm-text-intrinsics.mjs",
+        "docs/design/layout-system-contract.md",
+        "docs/site/api/components/flex.md"
+      ]
     },
     {
       "id": "flex.auto-margin",

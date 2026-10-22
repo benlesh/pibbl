@@ -1125,3 +1125,49 @@ it.runIf(experimentalLayout)('keeps percentage Rectangle explicit bounds and con
   const column = () => createElement(Rectangle, { style: { width: 20, height: '80%' } });
   expect(layoutFlex({ x: 0, y: 0, width: 20, height: 100 }, [column(), column()], { flexDirection: 'column' }, measurement).map(box => box.height)).toEqual([50, 50]);
 });
+
+it.runIf(experimentalLayout)('allocates physical numeric margins outside public Rectangle paint and hit bounds', async () => {
+  const canvas = document.createElement('canvas'); canvas.width = 120; canvas.height = 40; document.body.append(canvas);
+  const left = signal(5); const hits: string[] = [];
+  const children = () => [
+    createElement(Rectangle, { style: { width: 80, height: 20, minWidth: 0, margin: 5, marginLeft: left, marginTop: 3, fill: 'red' }, onClick: () => hits.push('A') }),
+    createElement(Rectangle, { style: { width: 80, height: 20, minWidth: 0, margin: 5, fill: 'blue' }, onClick: () => hits.push('B') }),
+  ];
+  const App = () => createElement(Flex, { style: { width: 100, height: 30, alignItems: 'flex-start' }, children: children() });
+  expect(layoutFlex({ x: 0, y: 0, width: 100, height: 30 }, children(), { alignItems: 'flex-start' }, measurement))
+    .toEqual([{ x: 5, y: 3, width: 40, height: 20 }, { x: 55, y: 5, width: 40, height: 20 }]);
+  const controller = pibbl(canvas, createElement(App, {})); controllers.push(controller); await nextFrame();
+  const initialRoles = snapshotWasmLayoutDiagnostics();
+  const pixel = (x: number, y: number) => [...canvas.getContext('2d')!.getImageData(x, y, 1, 1).data];
+  expect(pixel(4, 4)).toEqual([0, 0, 0, 0]); expect(pixel(5, 3)).toEqual([255, 0, 0, 255]);
+  expect(pixel(44, 4)).toEqual([255, 0, 0, 255]); expect(pixel(45, 4)).toEqual([0, 0, 0, 0]);
+  clickCanvas(canvas, 4, 4); clickCanvas(canvas, 5, 4); clickCanvas(canvas, 55, 6); expect(hits).toEqual(['A', 'B']);
+  left.set(-5); await nextFrame(); clickCanvas(canvas, 0, 4); expect(hits).toEqual(['A', 'B', 'A']);
+  expect(snapshotWasmLayoutDiagnostics().layoutInputInvalidations).toBeGreaterThan(initialRoles.layoutInputInvalidations);
+  expect(snapshotWasmLayoutDiagnostics().paintInputInvalidations).toBe(initialRoles.paintInputInvalidations);
+});
+
+it.runIf(experimentalLayout)('clamps an intrinsic Flex auto dimension after signed margin accumulation', () => {
+  const column = createElement(Flex, { style: { width: 100, flexDirection: 'column' }, children:
+    createElement(Rectangle, { style: { width: 20, height: 10, minHeight: 0, flexShrink: 0, marginTop: -20 } }),
+  });
+  expect(measureElement(column, { minWidth: 0, maxWidth: 100, minHeight: 0, maxHeight: 100 }, service))
+    .toEqual({ status: 'measured', size: { width: 100, height: 0 } });
+});
+
+it.runIf(experimentalLayout)('places numeric cross margins and rejects unsupported margin inputs', () => {
+  const child = () => createElement(Rectangle, { style: { width: 'auto', height: 40, minHeight: 0, margin: 5, marginLeft: 3 } });
+  expect(layoutFlex({ x: 0, y: 0, width: 100, height: 100 }, [child(), child()], { flexDirection: 'column' }, measurement))
+    .toEqual([{ x: 3, y: 5, width: 92, height: 40 }, { x: 3, y: 55, width: 92, height: 40 }]);
+  for (const margin of [NaN, Infinity, '10%', 'auto', null]) {
+    const invalid = createElement(Rectangle, { style: { width: 20, height: 20, minWidth: 0, margin } as any });
+    expect(() => layoutFlex({ x: 0, y: 0, width: 100, height: 30 }, [invalid], {}, measurement)).toThrow(/margin.*finite number/);
+  }
+  expect(() => layoutFlex({ x: 0, y: 0, width: 100, height: 100 }, [child()], { flexWrap: 'wrap' }, measurement)).toThrow(/margin.*nowrap/);
+});
+
+it.runIf(experimentalLayout)('rejects physical margins under other layout families rather than ignoring them', async () => {
+  const { prepareDirectChildStyle } = await import('../src/lib/layout/absolute');
+  const child = createElement(Rectangle, { style: { width: 20, height: 20, marginLeft: 5 } });
+  expect(() => prepareDirectChildStyle(child)).toThrow(/margins.*nowrap Flex/);
+});

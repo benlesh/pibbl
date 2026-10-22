@@ -5,7 +5,7 @@ import { experimentalLayout, LayoutRegion, mountedLayoutRegion, recordWasmMeasur
 import { Rectangle } from '../components/rect.js';
 import { Text, prepareLayoutTextContent, measureLayoutTextMinimumWidth, measureLayoutTextNaturalRun } from '../components/text.js';
 
-const unsupportedProperties = ['order', 'margin', 'marginLeft', 'marginRight', 'marginTop', 'marginBottom'] as const;
+const unsupportedProperties = ['order'] as const;
 
 import { preparedStyleValue, preparedStyleQuery, type PreparedQuery } from '../style/responsive.js';
 import { definePrimitive } from '../define-primitive.js';
@@ -128,6 +128,10 @@ interface FlexItem {
   baseMain: number;
   targetMain: number;
   paddingMain: number;
+  marginMainBefore: number;
+  marginMainAfter: number;
+  marginCrossBefore: number;
+  marginCrossAfter: number;
   preferredCross: number;
   paddingCross: number;
   minMain: number;
@@ -309,12 +313,19 @@ function measureFlex(
       GLOBAL_STATE.primitiveReceiverToken,
       count,
     );
-    const prepared = prepareDirectChildStyle(child, receiverToken, diagnosticBox);
+    const prepared = prepareDirectChildStyle(child, receiverToken, diagnosticBox, true);
     const style = preparedStyleValue(prepared) as Readonly<
       BoxStyle & FlexItemStyle & LayoutItemStyle & Record<string, unknown>
     >;
     const layoutChild = isLayoutComponent(child.type) ? prepareLayoutComponent(child, { receiverToken }) : child;
     rejectUnsupportedItemFields(child, style, diagnosticBox);
+    const allMargin = numericMargin(style.margin, 'margin', child, diagnosticBox);
+    const marginTop = numericMargin(style.marginTop === undefined ? allMargin : style.marginTop, 'marginTop', child, diagnosticBox);
+    const marginRight = numericMargin(style.marginRight === undefined ? allMargin : style.marginRight, 'marginRight', child, diagnosticBox);
+    const marginBottom = numericMargin(style.marginBottom === undefined ? allMargin : style.marginBottom, 'marginBottom', child, diagnosticBox);
+    const marginLeft = numericMargin(style.marginLeft === undefined ? allMargin : style.marginLeft, 'marginLeft', child, diagnosticBox);
+    const marginMain = row ? marginLeft + marginRight : marginTop + marginBottom;
+    const marginCross = row ? marginTop + marginBottom : marginLeft + marginRight;
     const grow = nonnegativeFactor(
       style.flexGrow ?? 0,
       'flexGrow',
@@ -367,7 +378,7 @@ function measureFlex(
       const minWidth = intrinsicOptionalNumber(style.minWidth, 0, 'minWidth');
       const maxWidth = intrinsicOptionalNumber(style.maxWidth, Number.POSITIVE_INFINITY, 'maxWidth');
       if (minWidth > maxWidth) throw childDiagnostic(child, 'minWidth', minWidth, diagnosticBox, 'minimum must not exceed maximum');
-      const usedWidth = clamp(automaticWidth ? Math.max(0, availableWidth-padding.left-padding.right) : intrinsicNumber(crossValue, 'width'), minWidth, maxWidth);
+      const usedWidth = clamp(automaticWidth ? Math.max(0, availableWidth-padding.left-padding.right-marginCross) : intrinsicNumber(crossValue, 'width'), minWidth, maxWidth);
       const measuredChild = clonePibblElement(layoutChild);
       const measuredStyle = { ...style, width: usedWidth };
       setPreNormalizedStyle(measuredChild, measuredStyle, layoutChild, getPrimitiveReceiverToken(layoutChild) ?? receiverToken, preparedStyleQuery(prepared));
@@ -409,14 +420,14 @@ function measureFlex(
       padding.top + padding.bottom;
     const paddingCross = row ? padding.top + padding.bottom :
       padding.left + padding.right;
-    intrinsicMain += clamp(baseMain, minMain, maxMain) + paddingMain;
+    intrinsicMain += clamp(baseMain, minMain, maxMain) + paddingMain + marginMain;
     intrinsicCross = Math.max(
       intrinsicCross,
-      clamp(baseCross, minCross, maxCross) + paddingCross,
+      clamp(baseCross, minCross, maxCross) + paddingCross + marginCross,
     );
     count++;
   }
-  intrinsicMain += Math.max(0, count - 1) * mainGap;
+  intrinsicMain = Math.max(0, intrinsicMain + Math.max(0, count - 1) * mainGap);
   return { status: 'measured', size: {
     width: widthDefinite ? resolveMeasuredContainerLength(
       input.style.width!,
@@ -539,7 +550,7 @@ function resolveFlexPlacements(
     const occurrence = occurrences.get(child.type) ?? 0;
     if (child.key === undefined) occurrences.set(child.type, occurrence + 1);
     const layoutToken = region?.identity(child.type, child.key === undefined ? `occurrence:${occurrence}` : `key:${typeof child.key}:${child.key}`);
-    const prepared = prepareDirectChildStyle(child, receiverToken, container);
+    const prepared = prepareDirectChildStyle(child, receiverToken, container, true);
     const normalized = preparedStyleValue(prepared) as Readonly<
       BoxStyle & FlexItemStyle & LayoutItemStyle & Record<string, unknown>
     >;
@@ -548,6 +559,16 @@ function resolveFlexPlacements(
       (normalized.flexDirection ?? 'row') === 'column' && (normalized.flexWrap ?? 'nowrap') === 'nowrap';
     assertSupportedChildPosition('Flex', child, normalized);
     rejectUnsupportedItemFields(child, normalized, container);
+    const allMargin = numericMargin(normalized.margin, 'margin', child, container);
+    const marginTop = numericMargin(normalized.marginTop === undefined ? allMargin : normalized.marginTop, 'marginTop', child, container);
+    const marginRight = numericMargin(normalized.marginRight === undefined ? allMargin : normalized.marginRight, 'marginRight', child, container);
+    const marginBottom = numericMargin(normalized.marginBottom === undefined ? allMargin : normalized.marginBottom, 'marginBottom', child, container);
+    const marginLeft = numericMargin(normalized.marginLeft === undefined ? allMargin : normalized.marginLeft, 'marginLeft', child, container);
+    const marginMainBefore = row ? marginLeft : marginTop;
+    const marginMainAfter = row ? marginRight : marginBottom;
+    const marginCrossBefore = row ? marginTop : marginLeft;
+    const marginCrossAfter = row ? marginBottom : marginRight;
+    if (options.flexWrap !== 'nowrap' && hasPhysicalMargin(normalized)) throw childDiagnostic(child, 'margin', normalized.margin, container, 'physical margins currently require nowrap Flex');
     const grow = nonnegativeFactor(normalized.flexGrow ?? 0, 'flexGrow', child, container);
     const shrink = nonnegativeFactor(
       normalized.flexShrink ?? 1,
@@ -707,7 +728,7 @@ function resolveFlexPlacements(
     if (!row && options.flexWrap === 'nowrap' && (child.type === Text || experimentalLayout && knownIntrinsicFlex) && needsMeasuredMain) {
       const preferredWidth = crossAuto ?
         effectiveAlignment(alignment, options.alignItems) === 'stretch' ?
-          Math.max(0, crossSize - paddingCross) : measured?.width ?? 0 :
+          Math.max(0, crossSize - paddingCross - marginCrossBefore - marginCrossAfter) : measured?.width ?? 0 :
         resolveItemLength(specifiedCross, crossReference, crossProperty, child, container);
       const usedWidth = clamp(preferredWidth, minCross, maxCross);
       if (child.type === Text || usedWidth !== measured?.width) {
@@ -760,6 +781,7 @@ function resolveFlexPlacements(
       baseMain,
       targetMain: baseMain,
       paddingMain,
+      marginMainBefore, marginMainAfter, marginCrossBefore, marginCrossAfter,
       preferredCross: clamp(preferredCross, minCross, maxCross) + paddingCross,
       paddingCross,
       minMain,
@@ -1303,6 +1325,7 @@ function rejectUnsupportedItemFields(
   style: Readonly<Record<string, unknown>>,
   container: Readonly<LayoutBox>,
 ): void {
+  if (!experimentalLayout && hasPhysicalMargin(style)) throw childDiagnostic(child, 'margin', style.margin, container, 'physical margins require the experimental Flex engine');
   for (let propertyIndex = 0; propertyIndex < unsupportedProperties.length; propertyIndex++) {
     const property = unsupportedProperties[propertyIndex];
     if (style[property] !== undefined) {
@@ -1315,6 +1338,16 @@ function rejectUnsupportedItemFields(
       );
     }
   }
+}
+
+function hasPhysicalMargin(style: Readonly<Record<string, unknown>>): boolean {
+  return style.margin !== undefined || style.marginTop !== undefined || style.marginRight !== undefined ||
+    style.marginBottom !== undefined || style.marginLeft !== undefined;
+}
+function numericMargin(value: unknown, property: string, child: PibblElement<any>, container: Readonly<LayoutBox>): number {
+  if (value === undefined) return 0;
+  if (typeof value !== 'number' || !Number.isFinite(value)) throw childDiagnostic(child, property, value, container, 'margin must be a finite number in logical Canvas units');
+  return value;
 }
 
 function hasEmptyRectangleMinimum(

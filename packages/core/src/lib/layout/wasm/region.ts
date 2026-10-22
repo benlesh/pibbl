@@ -48,10 +48,12 @@ function instantiate(): Kernel {
 }
 export interface NumericFlexItem {
   baseMain: number; minMain: number; maxMain: number; paddingMain: number;
+  marginMainBefore?: number; marginMainAfter?: number;
   grow: number; shrink: number; targetMain: number; receiverToken: object; layoutToken?: object;
 }
 export interface NumericFlexCrossItem {
   preferredCross: number; paddingCross: number; minCross: number; maxCross: number;
+  marginCrossBefore?: number; marginCrossAfter?: number;
   crossAuto: boolean; alignSelf: 'auto' | 'stretch' | 'flex-start' | 'flex-end' | 'center';
 }
 type CrossAlignment = Exclude<NumericFlexCrossItem['alignSelf'], 'auto'>;
@@ -114,17 +116,17 @@ export class LayoutRegion {
     if (!this.kernel) { this.kernel = instantiate(); counters.activeArenas++; }
     let changed = wrap !== this.wrap || main !== this.main || gap !== this.gap || items.length !== this.order.length;
     const pointer = this.kernel.resize(items.length);
-    const view = new Float64Array(this.kernel.memory.buffer, pointer, items.length * 8);
+    const view = new Float64Array(this.kernel.memory.buffer, pointer, items.length * 10);
     const alive = new Set<object>();
     for (const [i, item] of items.entries()) {
       const token = item.layoutToken ?? item.receiverToken;
       alive.add(token);
-      const record = [item.baseMain, item.minMain, item.maxMain, item.paddingMain, item.grow, item.shrink];
+      const record = [item.baseMain, item.minMain, item.maxMain, item.paddingMain, item.grow, item.shrink, 0, 0, item.marginMainBefore ?? 0, item.marginMainAfter ?? 0];
       const previous = this.records.get(token);
       if (previous) counters.nodeReuses++;
       else { counters.nodeCreates++; counters.activeNodes++; }
       if (!previous || record.some((v, n) => v !== previous[n]) || this.order[i] !== token) {
-        view.set(record, i * 8);
+        view.set(record, i * 10);
         this.records.set(token, record);
         changed = true;
       }
@@ -142,8 +144,8 @@ export class LayoutRegion {
         if (status !== 0) throw new Error(`Experimental Flex WASM allocation failed (${status}); numeric overflow or no progress.`);
         // Rust scratch allocations may grow memory while solving. Never retain
         // an input view across that boundary.
-        const output = new Float64Array(this.kernel.memory.buffer, pointer, items.length * 8);
-        this.results = items.map((_, i) => output[i * 8 + 6]);
+        const output = new Float64Array(this.kernel.memory.buffer, pointer, items.length * 10);
+        this.results = items.map((_, i) => output[i * 10 + 6]);
       } catch (error) {
         // A failed revision must never become a cache hit on retry.
         this.dispose();
@@ -165,8 +167,8 @@ export class LayoutRegion {
         const pointer = this.kernel.resize(this.order.length);
         const status = this.wrap ? this.kernel.place_wrap_main(main, gap, code) : this.kernel.place_main(main, gap, code);
         if (status !== 0) throw new Error(`Experimental Flex WASM main placement failed (${status}); nonfinite geometry.`);
-        const output = new Float64Array(this.kernel.memory.buffer, pointer, this.order.length * 8);
-        this.mainOffsets = this.order.map((_, i) => output[i * 8 + 7]);
+        const output = new Float64Array(this.kernel.memory.buffer, pointer, this.order.length * 10);
+        this.mainOffsets = this.order.map((_, i) => output[i * 10 + 7]);
         this.mainPlacementKey = key; counters.mainPlacements++;
       } catch (error) { this.dispose(); throw error; }
     }
@@ -175,7 +177,7 @@ export class LayoutRegion {
   placeCross(items: readonly NumericFlexCrossItem[], size: number, alignment: CrossAlignment, wrap?: { gap: number; alignContent: string }) {
     if (!this.kernel) throw new Error('Experimental Flex cross placement requires a solved region.');
     const records = items.map(item => [item.preferredCross, item.paddingCross, item.minCross, item.maxCross,
-      item.crossAuto ? 1 : 0, alignmentCodes[item.alignSelf === 'auto' ? alignment : item.alignSelf]]);
+      item.crossAuto ? 1 : 0, alignmentCodes[item.alignSelf === 'auto' ? alignment : item.alignSelf], 0, 0, item.marginCrossBefore ?? 0, item.marginCrossAfter ?? 0]);
     const code = wrap ? ['flex-start', 'flex-end', 'center', 'space-between', 'space-around', 'space-evenly', 'stretch'].indexOf(wrap.alignContent) : -1;
     const modeKey = wrap ? `${this.allocationRevision}:${wrap.gap}:${code}` : "nowrap";
     const changed = modeKey !== this.crossModeKey || size !== this.crossSize || records.length !== this.crossRecords.length ||
@@ -183,12 +185,12 @@ export class LayoutRegion {
     if (changed) {
       try {
         const pointer = this.kernel.resize_cross(records.length);
-        const input = new Float64Array(this.kernel.memory.buffer, pointer, records.length * 8);
-        records.forEach((record, i) => input.set(record, i * 8));
+        const input = new Float64Array(this.kernel.memory.buffer, pointer, records.length * 10);
+        records.forEach((record, i) => input.set(record, i * 10));
         const status = wrap ? this.kernel.place_wrap_cross(size, wrap.gap, code) : this.kernel.place_cross(size);
         if (status !== 0) throw new Error(`Experimental Flex WASM cross placement failed (${status}); invalid or nonfinite geometry.`);
-        const output = new Float64Array(this.kernel.memory.buffer, pointer, records.length * 8);
-        this.crossResults = records.map((_, i) => ({ outerCross: output[i * 8 + 6], offset: output[i * 8 + 7] }));
+        const output = new Float64Array(this.kernel.memory.buffer, pointer, records.length * 10);
+        this.crossResults = records.map((_, i) => ({ outerCross: output[i * 10 + 6], offset: output[i * 10 + 7] }));
         this.crossRecords = records; this.crossSize = size; this.crossModeKey = modeKey;
         counters.crossPlacements++;
       } catch (error) { this.dispose(); throw error; }

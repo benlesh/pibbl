@@ -37,6 +37,7 @@ function createWasmFlexTextContent() {
   const frozenProof = signal(false);
   const minimumProof = signal(false);
   const naturalBasis = signal(false);
+  const boxMargin = signal(5);
   const minimumRowWidth = computed(() => width.get() - 200);
   function Button({
     x,
@@ -150,6 +151,11 @@ function createWasmFlexTextContent() {
       <Flex style={{ left: 500, top: 300, width: 100, height: 40 }}>
         <Rectangle onClick={() => selected.set("empty left")} style={{ width: "80%", height: 40, fill: "#6e3e79", cursor: "pointer" }} />
         <Rectangle onClick={() => selected.set("empty right")} style={{ width: "80%", height: 40, fill: "#426b61", cursor: "pointer" }} />
+      </Flex>
+      <Text pointerEvents="none" style={{ left: 480, top: 360, font: "12px sans-serif", fill: "#475569" }}>Margins: click left to toggle 5 / -5</Text>
+      <Flex style={{ left: 500, top: 390, width: 100, height: 40 }}>
+        <Rectangle onClick={() => { selected.set("margin left"); boxMargin.update(value => value === 5 ? -5 : 5); }} style={{ width: 80, height: 30, margin: 5, marginLeft: boxMargin, fill: "#6e3e79", cursor: "pointer" }} />
+        <Rectangle onClick={() => selected.set("margin right")} style={{ width: 80, height: 30, margin: 5, fill: "#426b61", cursor: "pointer" }} />
       </Flex>
       <Text pointerEvents="none" style={{ left: 28, top: 348, font: "12px sans-serif", fill: "#475569" }}>Explicit minWidth: 0 lets the box shrink. Visible text can overflow its box.</Text>
       <Rectangle pointerEvents="none" style={{ left: 28, top: 388, width: minimumRowWidth, height: 48, stroke: "#a63758", strokeWidth: 1 }} />
@@ -293,7 +299,7 @@ function createWasmFlexTextContent() {
   return {
     node,
     readInputs: () =>
-      `${minimumProof.get() ? "TEXT MINIMUM COMPARISON" : frozenProof.get() ? "FROZEN PROOF (keys controls apply to ordinary mode)" : "ORDINARY MODE"} · basis: ${naturalBasis.get() ? "auto" : "200px"} · source: ${alternate.get() ? "B" : "A"} · raw width: ${activeWidth().get()} · used width: ${width.get()} · order: ${keys.get().join(",")} · selected: ${selected.get()}`,
+      `${minimumProof.get() ? "TEXT MINIMUM COMPARISON" : frozenProof.get() ? "FROZEN PROOF (keys controls apply to ordinary mode)" : "ORDINARY MODE"} · basis: ${naturalBasis.get() ? "auto" : "200px"} · source: ${alternate.get() ? "B" : "A"} · raw width: ${activeWidth().get()} · used width: ${width.get()} · order: ${keys.get().join(",")} · margin left: ${boxMargin.get()} · selected: ${selected.get()}`,
   };
 }
 
