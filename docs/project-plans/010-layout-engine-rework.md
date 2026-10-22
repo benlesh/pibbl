@@ -35,7 +35,7 @@ Current estimate remains a range, not a promise: the original forecast was 36
 additional slices including 25. Three deliveries are now integrated; loading was
 an accepted scope addition to that forecast. Roughly 34 delivery slices remain,
 subject to reassessment against the same proposal exits after the next group.
-Slice 28 is delivered below. Roughly 32 delivery slices remain after slice 29 against the same
+Slice 28 is delivered below. Roughly 31 delivery slices remain after slice 30 against the same
 forecast, subject to reassessment after this group. Area estimates are not parallel
 work queues.
 
@@ -122,13 +122,51 @@ package dist and the built-lane resolver); the WASM binary remains
 Change text; click green siblings. This is slice ready for feedback, not feature
 completion.
 
-**Exactly one selected next delivery slice: 30 — natural automatic Text basis.**
-For the same eligible direct Text in a mounted nowrap row, replace the current
-container-constrained wrapped width with a real maximum-content query when width
-and flexBasis are automatic. Preserve the word floor and explicit zero behavior,
-then remeasure height at final allocation. Establish a public failing geometry
-regression first; no arbitrary callback probing, new public API or default engine
-switch. Consolidate group 10 after this third delivery, before selecting more work.
+### Slice 30 — natural direct Text automatic basis
+
+Third delivery in group 10 (28–30). In the same experimental direct generic Text
+nowrap-row subset, omitted/auto width and basis use the natural pre-wrap width.
+Numeric width remains the specified-basis path. Numeric minWidth, including zero,
+retains precedence; omitted minWidth uses slice 29's word floor when shrinking.
+The final allocated width still determines wrapped height. Normal JS behavior and
+public signatures are unchanged. Leading empty ASCII-space words and all-space
+content follow the current wrapped Text implementation rather than a new CSS
+whitespace model.
+
+The first public regression failed with the existing missing-minimum diagnostic
+and wrong sibling pixels (`/tmp/pibbl-slice30-red.txt`). A demo regression failed
+before wiring Toggle auto basis. A whitespace regression then failed because
+natural measurement counted leading spaces that rendering drops; the helper was
+corrected and all three public basis cases pass.
+
+The adjacent contract suite found an actual paint-only measurement regression:
+71 measuredLeaves instead of 70 in the column/row switching example. Preserve that
+assertion. One lazily owned current content/font/natural-width entry per numeric
+item fixes it; current receiver content is prepared before lookup, changed text or
+font replaces it, and node removal/disposal clears it. It is separate from the two
+final-size measurement entries to prevent eviction thrash. Word-minimum queries
+remain uncached and explicitly counted. No complete Canvas-call/performance claim.
+
+Final focused experimental evidence: five files / 86 tests passed, including the
+previous failing paint-only assertion and slices 28–30 public demos. Normal JS:
+36 passed / 12 experimental cases skipped. Repository typecheck, targeted lint,
+private built package (unchanged validated 56793-byte WASM), public JSDoc and
+scenario-discovery checks passed. Node 26.9.0 / installed pnpm 11.21.0 dependencies /
+Playwright Chromium; no aggregate trust or Node 24 claim. Runtime source and built
+previews were restarted after the cache fix at ports 5192 and 5193. Public example:
+`#/examples/layout/wasm-flex-text`, Compare Text minimum → Toggle auto basis →
+Change text / Toggle width. Browser/review receipts are pending for this final
+runtime version; group 10 consolidation follows this third slice before new work.
+
+**Exactly one selected next delivery slice: 31 — reusable intrinsic Card contract
+and prototype.** First complete bounded consolidation 10 for 28–30, including the
+final slice 30 browser/review receipts. Then present the proposed
+`defineLayoutComponent(describe)` signature and one real Card composition before
+core implementation. The proposal's pure callback can expose a known subtree for
+intrinsic preparation without speculatively running an ordinary component.
+Prototype with a per-transaction prepared description before considering any
+cross-frame cache: identity alone never proves nested mutable props unchanged.
+No additional capabilities or new public revision selector are selected.
 
 Current acceptance gaps remain broader than loading: general automatic minimum and
 intrinsic sizing rules, structural component preparation, root-wide prepared graph
@@ -1361,16 +1399,37 @@ three pinned Yoga cases, and keeps unaccepted API signatures and missing release
 gates explicit. It is support work, not an additional delivered capability slice.
 Group9 has two deliveries; consolidate after the next closely related slice.
 
-## [NEXT] Natural automatic Text basis (slice 30)
+## [NEXT] Reusable intrinsic Card contract and prototype (slice 31)
 
-A bounded direct wrapped Text in an experimental nowrap row currently measures
-its automatic basis at the container constraint, so a short label claims the
-whole row before shrinking. Use a dedicated Text maximum-content contribution
-instead, retain the automatic word minimum and final-width height measurement,
-and verify sibling geometry/hits through the existing comparison example.
-Keep generic fonts, visible fit and known direct Text eligibility; columns,
-wrapped Flex lines, opaque/custom providers and general intrinsic sizing stay out.
-This is group 10's third delivery; consolidate 28–30 afterwards.
+Prerequisite: consolidate group 10 (28–30) using the final slice 30 browser and
+focused-review receipts plus the already recorded proportional checks. Do not
+repeat broad unchanged suites or launch another reviewer. No new capability starts
+before this bounded consolidation is recorded.
+
+The next material design boundary is the proposal's opt-in structural operation:
+
+```ts
+declare function defineLayoutComponent<P>(
+  describe: (props: Readonly<P>) => PibblNodeInput,
+): PibblComponent<P>;
+```
+
+A Card returns an ordinary column Flex with wrapped title/body Text and padding.
+An outer finite-width auto-height column places Card above a clickable footer;
+text changes must move the footer's pixels and hit target in the same frame.
+The callback describes structure once per necessary preparation and the same
+returned descriptors are painted. Existing signal reads are allowed; hooks,
+Canvas context, useLayoutBox, writes and resource creation are excluded. Ordinary
+components remain opaque and execute only after their allocation is available.
+A primitive render program is not equivalent to this reusable JSX composition.
+
+Present concise application code, exact style forwarding/ownership and the
+prepared-description identity rules before production implementation. Prefer a
+per-transaction description initially, keeping mutable opaque props conservative,
+rather than introducing a new immutable-authoring promise or public revision knob.
+Prototype the signature against a real Card before freezing it, as the approved
+proposal requires. This selects only the design/prototype boundary; no further
+parallel implementation queue or default-engine migration is authorized here.
 
 Slice 26 delivery (2026-10-21): completed the in-progress private role foundation
 before any loading migration. Existing receiver edges carry staged masks; successful

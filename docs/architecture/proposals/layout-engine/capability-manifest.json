@@ -133,14 +133,20 @@
       "id": "flex.grow-shrink-basis",
       "target": "parity",
       "group": "flex-core",
-      "current": "bounded subset with explicit main minimums",
+      "current": "bounded subset; experimental direct generic wrapped Text in nowrap rows has natural auto basis and a word minimum",
       "status": "experimental",
       "evidenceRefs": [
         "packages/core/test/layout-wasm-slice.test.tsx",
+        "packages/core/test/layout-text-auto-basis.test.tsx",
         "tooling/layout-yoga-rehearsal/reference.json"
       ],
       "evidence": {
-        "positive": ["grow", "cap", "shrink"],
+        "positive": [
+          "grow",
+          "cap",
+          "shrink",
+          "bounded direct Text natural auto basis"
+        ],
         "negative": ["nonfinite intermediate allocation rejection"],
         "interaction": ["signal resize"],
         "yogaCases": ["grow", "cap", "shrink"],

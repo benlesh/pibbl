@@ -1,7 +1,7 @@
 import { allocationInputRevision } from './allocation-revision.js';
 import { FlexAllocationCache, frozenFlexInputs, type CachedFlexPlacement } from './flex-allocation-cache.js';
 import { experimentalLayout, LayoutRegion, mountedLayoutRegion, recordWasmMeasurement, recordWasmAllocationPass, recordWasmAllocationItem, recordWasmAllocationCacheHit } from './wasm/region.js';
-import { Text, prepareLayoutTextContent, measureLayoutTextMinimumWidth } from '../components/text.js';
+import { Text, prepareLayoutTextContent, measureLayoutTextMinimumWidth, measureLayoutTextNaturalRun } from '../components/text.js';
 
 const unsupportedProperties = ['order', 'margin', 'marginLeft', 'marginRight', 'marginTop', 'marginBottom'] as const;
 
@@ -552,15 +552,18 @@ function resolveFlexPlacements(
     const minimumProperty = row ? 'minWidth' : 'minHeight';
     // A bounded native Text contribution; other missing minima keep their
     // diagnostic. A flex basis is a distribution input, never a width cap.
-    const automaticTextMinimum = experimentalLayout && row && options.flexWrap === 'nowrap' &&
-      child.type === Text && normalized[minimumProperty] === undefined && shrink > 0 &&
-      normalized.wrap === true && (normalized.fit === undefined || normalized.fit === 'visible') &&
-      !preparedStyleQuery(prepared) &&
+    const intrinsicTextSizing = experimentalLayout && row && options.flexWrap === 'nowrap' &&
+      child.type === Text && normalized.wrap === true &&
+      (normalized.fit === undefined || normalized.fit === 'visible') && !preparedStyleQuery(prepared) &&
       (normalized.width === undefined || normalized.width === 'auto' || typeof normalized.width === 'number') &&
-      (normalized.maxWidth === undefined || typeof normalized.maxWidth === 'number') &&
-      genericTextFont(normalized) && (typeof basisValue === 'number' ||
-        basisValue === 'auto' && typeof normalized.width === 'number');
-    if ((shrink > 0 || basisValue === 'auto') && normalized[minimumProperty] === undefined && !automaticTextMinimum) {
+      (normalized.maxWidth === undefined || typeof normalized.maxWidth === 'number') && genericTextFont(normalized);
+    const automaticTextBasis = intrinsicTextSizing && basisValue === 'auto' &&
+      (normalized.width === undefined || normalized.width === 'auto') &&
+      (normalized.minWidth === undefined || typeof normalized.minWidth === 'number');
+    const automaticTextMinimum = intrinsicTextSizing && normalized[minimumProperty] === undefined && shrink > 0 &&
+      (typeof basisValue === 'number' || basisValue === 'auto' &&
+        (typeof normalized.width === 'number' || automaticTextBasis));
+    if ((shrink > 0 || basisValue === 'auto') && normalized[minimumProperty] === undefined && !automaticTextMinimum && !automaticTextBasis) {
       throw childDiagnostic(
         child,
         minimumProperty,
@@ -711,7 +714,19 @@ function resolveFlexPlacements(
       }
     }
 
-    const baseMain = resolveBasis(
+    let naturalTextMain: number | undefined;
+    if (automaticTextBasis) {
+      const content = prepareLayoutTextContent(child.props, { receiverToken });
+      const font = normalized.font as string ?? '13px sans-serif';
+      const token = layoutToken ?? receiverToken;
+      naturalTextMain = region?.readTextMaximum(token, content, font);
+      if (naturalTextMain === undefined) {
+        if (region) recordWasmMeasurement();
+        naturalTextMain = measureLayoutTextNaturalRun(content, { font, service: measurement.service });
+        region?.writeTextMaximum(token, content, font, naturalTextMain);
+      }
+    }
+    const baseMain = naturalTextMain ?? resolveBasis(
       basisValue,
       specifiedMain,
       measured?.[mainProperty],

@@ -36,6 +36,7 @@ function createWasmFlexTextContent() {
   const selected = signal("none");
   const frozenProof = signal(false);
   const minimumProof = signal(false);
+  const naturalBasis = signal(false);
   const minimumRowWidth = computed(() => width.get() - 200);
   function Button({
     x,
@@ -134,20 +135,29 @@ function createWasmFlexTextContent() {
   const frozenPanel = <Flex style={Object.freeze({ left: 28, top: 260, width, height: 200, gap: 20, alignItems: "flex-start" })}>{frozenChildren}</Flex>;
   Object.freeze(frozenPanel.props); Object.freeze(frozenPanel);
   function MinimumComparison() {
+    const basis = naturalBasis.get() ? "auto" : 200;
     return <>
       <Text pointerEvents="none" style={{ left: 28, top: 246, font: "12px sans-serif", fill: "#475569" }}>Omitted minWidth: protect the word; narrow rows may overflow their boundary.</Text>
       <Rectangle pointerEvents="none" style={{ left: 28, top: 278, width: minimumRowWidth, height: 48, stroke: "#a63758", strokeWidth: 1 }} />
       <Flex style={{ left: 28, top: 280, width: minimumRowWidth, height: 44, alignItems: "flex-start" }}>
-        <Text style={{ flexBasis: 200, flexShrink: 1, wrap: true, font: "20px monospace", lineHeight: 24, fill: ink }}>{minimumWord}</Text>
+        <Text style={{ flexBasis: basis, flexShrink: 1, wrap: true, font: "20px monospace", lineHeight: 24, fill: ink }}>{minimumWord}</Text>
         <Rectangle onClick={() => selected.set("auto minimum sibling")} style={{ width: 100, height: 40, minWidth: 0, flexShrink: 0, fill: "#426b61", cursor: "pointer" }} />
       </Flex>
       <Text pointerEvents="none" style={{ left: 28, top: 348, font: "12px sans-serif", fill: "#475569" }}>Explicit minWidth: 0 lets the box shrink. Visible text can overflow its box.</Text>
       <Rectangle pointerEvents="none" style={{ left: 28, top: 388, width: minimumRowWidth, height: 48, stroke: "#a63758", strokeWidth: 1 }} />
       <Flex style={{ left: 28, top: 390, width: minimumRowWidth, height: 44, alignItems: "flex-start" }}>
-        <Text style={{ flexBasis: 200, flexShrink: 1, minWidth: 0, wrap: true, font: "20px monospace", lineHeight: 24, fill: ink }}>{minimumWord}</Text>
+        <Text style={{ flexBasis: basis, flexShrink: 1, minWidth: 0, wrap: true, font: "20px monospace", lineHeight: 24, fill: ink }}>{minimumWord}</Text>
         <Rectangle onClick={() => selected.set("zero minimum sibling")} style={{ width: 100, height: 40, minWidth: 0, flexShrink: 0, fill: "#426b61", cursor: "pointer" }} />
       </Flex>
     </>;
+  }
+  function BasisButton() {
+    return <Button x={420} y={96} width={280}
+      label={minimumProof.get() ? "Toggle auto basis" : "Toggle frozen proof"}
+      fill="#426b61" onClick={() => {
+        if (minimumProof.get()) naturalBasis.update(value => !value);
+        else frozenProof.update(value => !value);
+      }} />;
   }
   function Content() {
     if (minimumProof.get()) return <MinimumComparison />;
@@ -194,7 +204,7 @@ function createWasmFlexTextContent() {
           ink.update((c) => (c === "#19375b" ? "#a63758" : "#19375b"))
         }
       />
-      <Button x={420} y={96} width={280} label="Toggle frozen proof" fill="#426b61" onClick={() => frozenProof.update(value => !value)} />
+      <BasisButton />
       {[
         {
           x: 28,
@@ -275,7 +285,7 @@ function createWasmFlexTextContent() {
   return {
     node,
     readInputs: () =>
-      `${minimumProof.get() ? "TEXT MINIMUM COMPARISON" : frozenProof.get() ? "FROZEN PROOF (keys controls apply to ordinary mode)" : "ORDINARY MODE"} · source: ${alternate.get() ? "B" : "A"} · raw width: ${activeWidth().get()} · used width: ${width.get()} · order: ${keys.get().join(",")} · selected: ${selected.get()}`,
+      `${minimumProof.get() ? "TEXT MINIMUM COMPARISON" : frozenProof.get() ? "FROZEN PROOF (keys controls apply to ordinary mode)" : "ORDINARY MODE"} · basis: ${naturalBasis.get() ? "auto" : "200px"} · source: ${alternate.get() ? "B" : "A"} · raw width: ${activeWidth().get()} · used width: ${width.get()} · order: ${keys.get().join(",")} · selected: ${selected.get()}`,
   };
 }
 

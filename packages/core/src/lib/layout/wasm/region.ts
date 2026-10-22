@@ -82,6 +82,16 @@ export class LayoutRegion {
   private crossResults: readonly { outerCross: number; offset: number }[] = [];
   private readonly measurements = new Map<object, Map<string, { width: number; height: number }>>();
 
+  private textMaximums: Map<object, { content: string; font: string; width: number }> | undefined;
+  readTextMaximum(token: object, content: string, font: string): number | undefined {
+    const entry = this.textMaximums?.get(token);
+    return entry?.content === content && entry.font === font ? entry.width : undefined;
+  }
+  writeTextMaximum(token: object, content: string, font: string, width: number): void {
+    const entries = this.textMaximums ??= new Map();
+    if (!entries.has(token)) counters.cachedMeasurements++;
+    entries.set(token, { content, font, width });
+  }
   readMeasurement(token: object, key: string) {
     const entries = this.measurements.get(token), result = entries?.get(key);
     if (entries && result) { entries.delete(key); entries.set(key, result); }
@@ -95,6 +105,7 @@ export class LayoutRegion {
     entries.set(key, { ...size }); counters.cachedMeasurements++;
   }
   private releaseMeasurements(token: object): void {
+    if (this.textMaximums?.delete(token)) counters.cachedMeasurements--;
     counters.cachedMeasurements -= this.measurements.get(token)?.size ?? 0;
     this.measurements.delete(token);
   }
@@ -189,6 +200,8 @@ export class LayoutRegion {
     if (this.kernel) { this.kernel.dispose(); this.kernel = undefined; counters.activeArenas--; }
     counters.activeNodes -= this.records.size;
     for (const token of this.measurements.keys()) this.releaseMeasurements(token);
+    if (this.textMaximums) for (const token of this.textMaximums.keys()) this.releaseMeasurements(token);
+    this.textMaximums = undefined;
     this.records.clear(); this.identities.clear(); this.results = []; this.order = []; this.main = -1; this.gap = -1;
     this.mainPlacementKey = ""; this.mainOffsets = [];
     this.crossRecords = []; this.crossResults = []; this.crossSize = -1; this.crossModeKey = ""; this.wrap = false;

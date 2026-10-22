@@ -181,7 +181,7 @@ per-line allocation and line/item offsets run in WASM. Direct Text in rows is re
 at its final per-line content width before line cross sizes settle. Main-axis
 minimums remain explicit except for this bounded automatic Text minimum in a
 nowrap row: a direct Text with `wrap: true`, default/visible fit, a generic px font,
-positive shrink, and numeric basis (or auto basis with numeric width) may omit
+positive shrink, and numeric or automatic basis may omit
 `minWidth`. Its content minimum is the width of its longest ASCII-space-delimited
 run, capped by numeric declared width and maxWidth, never by flexBasis alone.
 Padding remains outside that content minimum. Explicit `minWidth`, including 0,
@@ -190,6 +190,16 @@ existing visible/clip container behavior applies. This follows Text's existing
 literal-space wrapping, not CSS/Unicode line breaking. Custom fonts, responsive
 queries, percentage width/maxWidth, other fitting modes, columns and wrapped Flex
 lines keep the explicit-minimum diagnostic. Intrinsic Flex measurement is unchanged.
+For the same direct Text subset, automatic width and basis use the natural width
+before wrapping, not the containing row's constrained width. The natural query
+follows wrapped Text's existing removal of leading ASCII spaces; empty/space-only
+content contributes zero. Explicit numeric minWidth (including zero) is supported;
+other minimum values retain the existing constrained-basis path. Final allocated
+width still determines wrapped height. One current content/font/natural-width
+entry per numeric item is retained separately from its two final-size measurement
+entries; current receiver content is read before any hit. Content/font changes
+replace it, removal releases it, and region disposal clears it. This is a bounded
+known-Text query, not speculative measurement of arbitrary providers.
 Automatic-minimum queries currently remeasure their word runs on allocation misses;
 the measuredLeaves counter includes each such leaf request, not each Canvas word
 measurement call. No automatic-minimum cache or performance improvement is claimed.

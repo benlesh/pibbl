@@ -236,6 +236,22 @@ function measureTextStyle(
   };
 }
 
+/** @internal Measure a materialized value without bypassing receiver reads. */
+export function measureLayoutTextNaturalRun(
+  text: string, options: { font: string; service: CanvasMeasurementService },
+): number {
+  // wrapText discards leading empty words but preserves later spaces. Use the
+  // same boundary rather than adding a CSS whitespace-normalization policy.
+  let start = 0;
+  while (text.charCodeAt(start) === 32) start++;
+  if (start === text.length) return 0;
+  const width = options.service.measureText(text.slice(start), options.font).width;
+  if (!Number.isFinite(width) || width < 0) {
+    throw new Error('Text intrinsic measurement requires a finite nonnegative natural width.');
+  }
+  return width;
+}
+
 /** @internal Longest run under Text's existing ASCII-space wrapping contract. */
 export function measureLayoutTextMinimumWidth(
   props: Readonly<TextProps>,
