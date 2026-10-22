@@ -35,7 +35,7 @@ Current estimate remains a range, not a promise: the original forecast was 36
 additional slices including 25. Three deliveries are now integrated; loading was
 an accepted scope addition to that forecast. Roughly 34 delivery slices remain,
 subject to reassessment against the same proposal exits after the next group.
-Slice 28 is delivered below. Roughly 28 delivery slices remain after slice 33 against the same
+Slice 28 is delivered below. Roughly 27 delivery slices remain after slice 34 against the same
 forecast, subject to reassessment after this group. Area estimates are not parallel
 work queues.
 
@@ -263,9 +263,28 @@ Runnable ports 5192/5193: `#/examples/layout/wasm-flex-nested-intrinsic`, choose
 Toggle pure Card. Nested aggregate heights still remeasure each transaction;
 this does not establish a general prepared graph or arbitrary callback termination.
 
-**Exactly one selected next delivery slice: 34 — direct empty Rectangle automatic
-minimum policy.** Present the bounded native policy before implementation, retain
-explicit minimum precedence, and establish a public shrink regression first.
+### Slice 34 — empty Rectangle automatic minimum
+
+Selected native policy: experimental direct empty Rectangle items with no authored
+children property or responsive query and finite nonnegative numeric width/height
+use zero automatic main minimum. Explicit minima, padding floors and shrink factors
+still win. Text and custom providers retain their bounded rules. Intrinsic Flex
+measurement still requires explicit minima; this slice changes direct allocation.
+Normal JavaScript behavior is unchanged.
+
+The public mount regression failed with the expected explicit-minWidth diagnostic
+before production changes. Semantic allocations prove 50/50 shrink; Canvas pixels
+and clicks establish the same boundary. Additional cases prove explicit 70/30,
+no-shrink 80/20 and column 50/50. Fresh experimental checks: 87 passed across three
+files; normal lane 39 passed / 36 experimental skips. After the diagnostic fixture
+was moved to unsupported Text, its focused 35 checks passed. Logs
+`/tmp/pibbl-slice34-{red,focused,normal,boundary,typecheck,lint}.txt`.
+Environment Node 26.9.0 / pnpm 11.21.0 dependencies / Chromium.
+
+**Exactly one selected next delivery slice: 35 — matching empty Rectangle
+contributions through intrinsic Flex measurement.** Establish the public
+measureElement regression first and share the bounded eligibility policy without
+introducing generic provider discovery.
 
 ### Consolidation 11 completed for delivery slices 31–33
 
@@ -291,8 +310,8 @@ Environment remains Node 26.9.0 / pnpm 11.21.0 dependencies / Chromium.
 
 The capability manifest records only bounded nested Card evidence. General graph,
 transactional publication, provider/intrinsic rules, Flex/Grid coverage, pinned
-Yoga conversion and release/performance gates remain open. Exactly one next
-slice remains 34 as selected above; no per-slice approval pause is required.
+Yoga conversion and release/performance gates remain open. At consolidation time, the selected next
+slice was 34; no per-slice approval pause is required.
 
 Current acceptance gaps remain broader than loading: general automatic minimum and
 intrinsic sizing rules, structural component preparation, root-wide prepared graph
@@ -1525,13 +1544,12 @@ three pinned Yoga cases, and keeps unaccepted API signatures and missing release
 gates explicit. It is support work, not an additional delivered capability slice.
 Group9 has two deliveries; consolidate after the next closely related slice.
 
-## [NEXT] Direct empty Rectangle automatic minimum (slice 34)
+## [NEXT] Empty Rectangle intrinsic Flex contributions (slice 35)
 
-Experimental direct childless Rectangle items with finite authored width and height
-can use a zero automatic minimum, respecting explicit minima and existing shrink
-and clipping policies. Text and opaque/provider components keep their existing
-contracts. Normal JavaScript behavior is unchanged. Confirm the exact bounded
-policy in the implementation receipt before broadening the path.
+Apply the selected finite empty-Rectangle native minimum consistently to supported
+intrinsic Flex measurement. Preserve explicit minima, conservative unknown/provider
+paths and normal JavaScript behavior. Start with a public measureElement failure;
+reuse one eligibility predicate for the direct and measurement paths.
 
 Slice 26 delivery (2026-10-21): completed the in-progress private role foundation
 before any loading migration. Existing receiver edges carry staged masks; successful

@@ -179,7 +179,13 @@ It supports nowrap rows/columns, finite row wrap, and finite column wrap with
 declared height/flexBasis and width; wrapped line formation,
 per-line allocation and line/item offsets run in WASM. Direct Text in rows is remeasured
 at its final per-line content width before line cross sizes settle. Main-axis
-minimums remain explicit except for this bounded automatic Text minimum in a
+minimums remain explicit except for two bounded native policies. A direct empty
+Rectangle with no authored children property, no responsive query and finite
+nonnegative numeric width and height uses zero as its automatic main-axis minimum.
+This applies to direct allocation in rows and columns; intrinsic Flex measurement
+retains its explicit-minimum diagnostic. Explicit minima, padding floors, shrink factors,
+and existing visible/clip behavior still apply. It does not inspect arbitrary
+children or custom providers. Separately, this automatic Text minimum applies in a
 nowrap row: a direct Text with `wrap: true`, default/visible fit, a generic px font,
 positive shrink, and numeric or automatic basis may omit
 `minWidth`. Its content minimum is the width of its longest ASCII-space-delimited

@@ -1057,3 +1057,31 @@ const mount = createExampleMount(mountModule.WasmFlexNestedIntrinsicExample);
   controller.dispose(); const disposed=snapshotWasmLayoutDiagnostics();
   expect(disposed.cachedMeasurements).toBe(baseline.cachedMeasurements); expect(disposed.activeNodes).toBe(baseline.activeNodes); expect(disposed.activeArenas).toBe(baseline.activeArenas);
 });
+
+
+it.runIf(experimentalLayout)('shrinks empty fixed-size Rectangles with an automatic zero minimum through the public mount', async () => {
+  const fixed = () => createElement(Rectangle, { style: { width: 80, height: 20 } });
+  expect(layoutFlex({ x: 0, y: 0, width: 100, height: 20 }, [fixed(), fixed()], {}, measurement))
+    .toEqual([{ x: 0, y: 0, width: 50, height: 20 }, { x: 50, y: 0, width: 50, height: 20 }]);
+  const canvas = document.createElement('canvas');
+  canvas.width = 120; canvas.height = 30; document.body.append(canvas);
+  const hits: number[] = [];
+  const App = () => createElement(Flex, { style: { width: 100, height: 20 }, children: [
+    createElement(Rectangle, { style: { width: 80, height: 20, fill: 'red' }, onClick: () => hits.push(0) }),
+    createElement(Rectangle, { style: { width: 80, height: 20, fill: 'blue' }, onClick: () => hits.push(1) }),
+  ] });
+  const controller = pibbl(canvas, createElement(App, {})); controllers.push(controller);
+  await nextFrame();
+  const context = canvas.getContext('2d')!;
+  expect([...context.getImageData(49, 10, 1, 1).data]).toEqual([255, 0, 0, 255]);
+  expect([...context.getImageData(50, 10, 1, 1).data]).toEqual([0, 0, 255, 255]);
+  clickCanvas(canvas, 49, 10); clickCanvas(canvas, 50, 10); clickCanvas(canvas, 99, 10); clickCanvas(canvas, 101, 10);
+  expect(hits).toEqual([0, 1, 1]);
+});
+
+it.runIf(experimentalLayout)('keeps explicit rectangle minima and no-shrink policy while supporting column auto minima', () => {
+  const fixed = (style: Record<string, number>) => createElement(Rectangle, { style: { width: 80, height: 80, ...style } });
+  expect(layoutFlex({ x: 0, y: 0, width: 100, height: 100 }, [fixed({ minWidth: 70 }), fixed({})], {}, measurement).map(box => box.width)).toEqual([70, 30]);
+  expect(layoutFlex({ x: 0, y: 0, width: 100, height: 100 }, [fixed({ flexShrink: 0 }), fixed({})], {}, measurement).map(box => box.width)).toEqual([80, 20]);
+  expect(layoutFlex({ x: 0, y: 0, width: 100, height: 100 }, [fixed({}), fixed({})], { flexDirection: 'column', alignItems: 'flex-start' }, measurement).map(box => box.height)).toEqual([50, 50]);
+});

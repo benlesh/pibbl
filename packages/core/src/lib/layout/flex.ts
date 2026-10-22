@@ -2,6 +2,7 @@ import { isLayoutComponent, prepareLayoutComponent } from './define-layout-compo
 import { allocationInputRevision } from './allocation-revision.js';
 import { FlexAllocationCache, frozenFlexInputs, type CachedFlexPlacement } from './flex-allocation-cache.js';
 import { experimentalLayout, LayoutRegion, mountedLayoutRegion, recordWasmMeasurement, recordWasmAllocationPass, recordWasmAllocationItem, recordWasmAllocationCacheHit } from './wasm/region.js';
+import { Rectangle } from '../components/rect.js';
 import { Text, prepareLayoutTextContent, measureLayoutTextMinimumWidth, measureLayoutTextNaturalRun } from '../components/text.js';
 
 const unsupportedProperties = ['order', 'margin', 'marginLeft', 'marginRight', 'marginTop', 'marginBottom'] as const;
@@ -568,7 +569,13 @@ function resolveFlexPlacements(
     const automaticTextMinimum = intrinsicTextSizing && normalized[minimumProperty] === undefined && shrink > 0 &&
       (typeof basisValue === 'number' || basisValue === 'auto' &&
         (typeof normalized.width === 'number' || automaticTextBasis));
-    if ((shrink > 0 || basisValue === 'auto') && normalized[minimumProperty] === undefined && !automaticTextMinimum && !automaticTextBasis) {
+    // An empty authored rectangle has no intrinsic content contribution. Keep
+    // opaque/child-bearing primitives conservative without evaluating children.
+    const automaticRectangleMinimum = experimentalLayout && child.type === Rectangle &&
+      !Object.hasOwn(child.props, 'children') && !preparedStyleQuery(prepared) &&
+      typeof normalized.width === 'number' && Number.isFinite(normalized.width) && normalized.width >= 0 &&
+      typeof normalized.height === 'number' && Number.isFinite(normalized.height) && normalized.height >= 0;
+    if ((shrink > 0 || basisValue === 'auto') && normalized[minimumProperty] === undefined && !automaticTextMinimum && !automaticTextBasis && !automaticRectangleMinimum) {
       throw childDiagnostic(
         child,
         minimumProperty,

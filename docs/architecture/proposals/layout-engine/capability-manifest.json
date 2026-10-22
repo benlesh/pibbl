@@ -206,17 +206,24 @@
       "id": "flex.automatic-minimum",
       "target": "parity",
       "group": "flex-core",
-      "current": "experimental direct wrapped Text in nowrap rows uses longest ASCII-space-delimited run, capped by numeric width/maxWidth; explicit zero overrides; other cases require explicit minima",
+      "current": "experimental direct wrapped Text in nowrap rows uses longest ASCII-space-delimited run, capped by numeric width/maxWidth; explicit zero overrides; other cases require explicit minima; direct empty Rectangles with finite numeric width/height use zero automatic minimum in allocation",
       "status": "experimental",
       "unresolvedPolicy": "Native bounded Text policy is selected; general intrinsic providers, other fitting/overflow modes and Yoga conversion differences remain unresolved.",
       "evidenceRefs": [
         "packages/core/test/layout-text-auto-minimum.test.tsx",
-        "docs/design/layout-system-contract.md"
+        "docs/design/layout-system-contract.md",
+        "packages/core/test/layout-wasm-slice.test.tsx"
       ],
       "evidence": {
-        "positive": ["public Text automatic/zero-minimum comparison"],
+        "positive": [
+          "public Text automatic/zero-minimum comparison",
+          "empty Rectangle direct row/column shrink, explicit minimum and no-shrink precedence"
+        ],
         "negative": ["current explicit-minimum diagnostic for other items"],
-        "interaction": ["resized sibling hit geometry in public example"],
+        "interaction": [
+          "resized sibling hit geometry in public example",
+          "public Rectangle 50/50 paint and click boundary"
+        ],
         "yogaCases": [],
         "missing": [
           "general text/font/line-breaking rules",

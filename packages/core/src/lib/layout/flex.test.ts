@@ -1,5 +1,6 @@
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 import { Rectangle } from '../components/rect';
+import { Text } from '../components/text';
 import type { Length } from '../style/types';
 import type { PibblElement, SystemStyle } from '../types';
 import { Flex, layoutFlex } from './flex';
@@ -437,7 +438,7 @@ describe('CSS-compatible flex geometry', () => {
   it('requires explicit main-axis minimums and rejects unsupported values', () => {
     expect(() => layoutFlex(
       { x: 0, y: 0, width: 100, height: 20 },
-      [createElement(Rectangle, { style: { width: 20, height: 10, flexBasis: 'auto' } })],
+      [createElement(Text, { children: 'opaque minimum', style: { width: 20, height: 10, flexBasis: 'auto' } })],
       {},
       measurement,
     )).toThrowError(/minWidth.*explicit/i);
