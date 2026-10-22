@@ -1,4 +1,5 @@
 /// <reference types="vite/client" />
+import type { FlexAllocationCache } from '../flex-allocation-cache.js';
 import { readyLayoutModule } from './module.js';
 import { GLOBAL_STATE } from '../../global-state.js';
 import { signalGraphSnapshot } from '../../signals/graph.js';
@@ -10,7 +11,7 @@ const buildEnvironment = import.meta.env;
 export const experimentalLayout =
   (typeof __PIBBL_LAYOUT_WASM__ !== 'undefined' && __PIBBL_LAYOUT_WASM__) ||
   buildEnvironment?.MODE === 'layout-wasm';
-const counters = { lineFormations: 0, cachedMeasurements: 0, mainPlacements: 0, crossPlacements: 0, solves: 0, measuredLeaves: 0, nodeReuses: 0, nodeCreates: 0, activeNodes: 0, activeArenas: 0, frames: 0 };
+const counters = { lineFormations: 0, cachedMeasurements: 0, mainPlacements: 0, crossPlacements: 0, solves: 0, measuredLeaves: 0, nodeReuses: 0, nodeCreates: 0, activeNodes: 0, activeArenas: 0, frames: 0, allocationPasses: 0, allocationItemVisits: 0, allocationCacheHits: 0 };
 export function snapshotWasmLayoutDiagnostics() {
   const signals = signalGraphSnapshot();
   return {
@@ -56,6 +57,7 @@ export interface NumericFlexCrossItem {
 type CrossAlignment = Exclude<NumericFlexCrossItem['alignSelf'], 'auto'>;
 const alignmentCodes: Record<CrossAlignment, number> = { stretch: 0, 'flex-start': 1, 'flex-end': 2, center: 3 };
 export class LayoutRegion {
+  allocationCache: FlexAllocationCache | undefined;
   private kernel: Kernel | undefined;
   private records = new Map<object, readonly number[]>();
   private identities = new Map<object, Map<string, object>>();
@@ -183,6 +185,7 @@ export class LayoutRegion {
     return this.crossResults;
   }
   dispose(): void {
+    this.allocationCache = undefined;
     if (this.kernel) { this.kernel.dispose(); this.kernel = undefined; counters.activeArenas--; }
     counters.activeNodes -= this.records.size;
     for (const token of this.measurements.keys()) this.releaseMeasurements(token);
@@ -207,3 +210,7 @@ export function mountedLayoutRegion(): LayoutRegion | undefined {
   return region;
 }
 export function recordWasmMeasurement(): void { counters.measuredLeaves++; }
+
+export function recordWasmAllocationPass(): void { counters.allocationPasses++; }
+export function recordWasmAllocationItem(): void { counters.allocationItemVisits++; }
+export function recordWasmAllocationCacheHit(): void { counters.allocationCacheHits++; }

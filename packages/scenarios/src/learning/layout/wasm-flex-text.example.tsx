@@ -33,6 +33,7 @@ function createWasmFlexTextContent() {
   const secondaryParagraph = signal(secondText);
   const keys = signal<readonly ("A" | "B")[]>(["A", "B"]);
   const selected = signal("none");
+  const frozenProof = signal(false);
   function Button({
     x,
     y,
@@ -120,6 +121,22 @@ function createWasmFlexTextContent() {
       </Flex>
     );
   }
+  // Existing Object.freeze authoring opts this small static subtree into the
+  // experimental proof. The ordinary paragraphs keep the conservative path.
+  const frozenA = <Text key="frozen-A" onClick={() => selected.set("frozen A")} style={Object.freeze({ flexBasis: 270, minWidth: 0, flexGrow: 1, flexShrink: 1, wrap: true, font: "16px sans-serif", lineHeight: 24, fill: ink, cursor: "pointer" })}>{paragraph}</Text>;
+  const frozenB = <Text key="frozen-B" onClick={() => selected.set("frozen B")} style={Object.freeze({ flexBasis: 270, minWidth: 0, flexGrow: 1, flexShrink: 1, wrap: true, font: "16px sans-serif", lineHeight: 24, fill: ink, cursor: "pointer" })}>{secondaryParagraph}</Text>;
+  Object.freeze(frozenA.props); Object.freeze(frozenA);
+  Object.freeze(frozenB.props); Object.freeze(frozenB);
+  const frozenChildren = Object.freeze([frozenA, frozenB]);
+  const frozenPanel = <Flex style={Object.freeze({ left: 28, top: 260, width, height: 200, gap: 20, alignItems: "flex-start" })}>{frozenChildren}</Flex>;
+  Object.freeze(frozenPanel.props); Object.freeze(frozenPanel);
+  function Content() {
+    if (!frozenProof.get()) return <Paragraphs />;
+    return <>
+      <Text pointerEvents="none" style={{ left: 28, top: 238, font: "12px sans-serif", fill: "#475569" }}>Frozen proof: Paint only reuses allocation. Width and text still invalidate it.</Text>
+      {frozenPanel}
+    </>;
+  }
   const node = (
     <>
       <Rectangle style={{ width: 760, height: 460, fill: "#f3f0e8" }} />
@@ -156,6 +173,7 @@ function createWasmFlexTextContent() {
           ink.update((c) => (c === "#19375b" ? "#a63758" : "#19375b"))
         }
       />
+      <Button x={420} y={96} width={280} label="Toggle frozen proof" fill="#426b61" onClick={() => frozenProof.update(value => !value)} />
       {[
         {
           x: 28,
@@ -230,13 +248,13 @@ function createWasmFlexTextContent() {
           onClick={button.click}
         />
       ))}
-      <Paragraphs />
+      <Content />
     </>
   );
   return {
     node,
     readInputs: () =>
-      `source: ${alternate.get() ? "B" : "A"} · raw width: ${activeWidth().get()} · used width: ${width.get()} · order: ${keys.get().join(",")} · selected: ${selected.get()}`,
+      `${frozenProof.get() ? "FROZEN PROOF (keys controls apply to ordinary mode)" : "ORDINARY MODE"} · source: ${alternate.get() ? "B" : "A"} · raw width: ${activeWidth().get()} · used width: ${width.get()} · order: ${keys.get().join(",")} · selected: ${selected.get()}`,
   };
 }
 

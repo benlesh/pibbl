@@ -34,6 +34,11 @@ export interface PreparedStyleInput {
   source: PibblElement<any>;
   query?: PreparedQuery;
 }
+const allocatedContentSizes = new WeakMap<PibblElement<any>, { width: number; height: number }>();
+export function setAllocatedContentSize(element: PibblElement<any>, width: number, height: number): void {
+  allocatedContentSizes.set(element, { width, height });
+}
+
 const preNormalizedStyles = new WeakMap<PibblElement<any>, PreparedStyleInput>();
 
 /** @internal Carries one normalized style through an internal placement descriptor. */
@@ -134,13 +139,16 @@ export function resolveElementStyle<
     combined,
     context,
   );
-  const normalized = preNormalized ?
+  const normalizedInput = preNormalized ?
       withoutSystemFilter(handoffStyle) as Readonly<N> :
     definition.normalizeStyle ?
         definition.normalizeStyle(
           withoutSystemFilter(handoffStyle) as SpecifiedStyle<S>,
         ) :
         withoutSystemFilter(handoffStyle) as unknown as Readonly<N>;
+  const usedSize = allocatedContentSizes.get(element);
+  allocatedContentSizes.delete(element);
+  const normalized = usedSize ? { ...normalizedInput, width: usedSize.width, height: usedSize.height } as Readonly<N> : normalizedInput;
   const resolved = definition.resolveStyle ?
       definition.resolveStyle(normalized, context) :
       normalized as unknown as ResolvedStyle<R>;

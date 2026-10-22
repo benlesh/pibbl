@@ -1,4 +1,6 @@
-import { experimentalLayout, LayoutRegion, mountedLayoutRegion, recordWasmMeasurement } from './wasm/region.js';
+import { allocationInputRevision } from './allocation-revision.js';
+import { FlexAllocationCache, frozenFlexInputs, type CachedFlexPlacement } from './flex-allocation-cache.js';
+import { experimentalLayout, LayoutRegion, mountedLayoutRegion, recordWasmMeasurement, recordWasmAllocationPass, recordWasmAllocationItem, recordWasmAllocationCacheHit } from './wasm/region.js';
 import { Text, prepareLayoutTextContent } from '../components/text.js';
 
 const unsupportedProperties = ['order', 'margin', 'marginLeft', 'marginRight', 'marginTop', 'marginBottom'] as const;
@@ -33,6 +35,7 @@ import type {
 } from '../types.js';
 import {
   childWithUsedSize,
+  childWithCachedUsedSize,
   prepareDirectChildStyle,
   materializeLayoutChildren,
   placeDirectChildren,
@@ -144,7 +147,7 @@ interface FlexLine {
   crossOffset: number;
 }
 
-interface FlexPlacement {
+interface FlexPlacement extends CachedFlexPlacement {
   box: LayoutBox;
   element: PibblElement<any>;
 }
@@ -155,7 +158,6 @@ function renderFlex(
   ctx: RenderingContext2D,
 ) {
   wireStructuralEvents(props);
-  const children = prepareLayoutChildren(props.children, 'Flex');
   recordLayoutEvaluation();
   const content = style.box.contentBox;
   ctx.translate(content.x, content.y);
@@ -178,17 +180,50 @@ function renderFlex(
       }
     },
   };
-  const placements = resolveFlexPlacements(
-    localContent,
-    children,
-    style,
-    {
+  const region = experimentalLayout ? mountedLayoutRegion() : undefined;
+  const revision = allocationInputRevision();
+  // Decide before materializing or inspecting children; normal paint traversal
+  // still visits them and resolves their current receiver-owned paint inputs.
+  const cached = region?.allocationCache?.read(props.children, revision, localContent, style);
+  const children = prepareLayoutChildren(props.children, 'Flex');
+  let placements: FlexPlacement[];
+  if (cached) {
+    recordWasmAllocationCacheHit();
+    placements = [];
+    for (let index = 0; index < children.length; index++) {
+      const allocation = cached[index];
+      placements.push({
+        box: allocation.box,
+        usedWidth: allocation.usedWidth,
+        usedHeight: allocation.usedHeight,
+        element: childWithCachedUsedSize(children[index], allocation.usedWidth, allocation.usedHeight),
+      });
+    }
+  } else {
+    if (region) region.allocationCache = undefined;
+    placements = resolveFlexPlacements(localContent, children, style, {
       service,
-      measureElement: (element, constraints) =>
-        measureElement(element, constraints, service),
-    },
-    experimentalLayout ? mountedLayoutRegion() : undefined,
-  );
+      measureElement: (element, constraints) => measureElement(element, constraints, service),
+    }, region);
+    const transaction = GLOBAL_STATE.renderTransaction;
+    if (region && transaction && frozenFlexInputs(props.children)) {
+      const input = props.children;
+      const owner = GLOBAL_STATE.componentRefs!;
+      const snapshot: CachedFlexPlacement[] = [];
+      for (const placement of placements) {
+        snapshot.push({
+          box: { x: placement.box.x, y: placement.box.y, width: placement.box.width, height: placement.box.height },
+          usedWidth: placement.usedWidth, usedHeight: placement.usedHeight,
+        });
+      }
+      transaction.onFinish(success => {
+        if (!success || owner.teardowns.closed || allocationInputRevision() !== revision) return;
+        const cache = new FlexAllocationCache();
+        cache.store(input, revision, localContent, style, snapshot);
+        region.allocationCache = cache;
+      });
+    }
+  }
   let index = 0;
   return placeDirectChildren(
     children,
@@ -479,6 +514,7 @@ function resolveFlexPlacements(
   measurement: FlexMeasurementInput,
   region?: LayoutRegion,
 ): FlexPlacement[] {
+  if (region) recordWasmAllocationPass();
   assertFiniteBox(container);
   const options = normalizeFlexOptions(style, container);
   const row = options.flexDirection === 'row';
@@ -490,6 +526,7 @@ function resolveFlexPlacements(
 
   const occurrences = new Map<object, number>();
   for (const child of children) {
+    if (region) recordWasmAllocationItem();
     const receiverToken = getChildPrimitiveReceiverToken(
       GLOBAL_STATE.renderTransaction,
       GLOBAL_STATE.primitiveReceiverToken,
@@ -776,6 +813,8 @@ function resolveFlexPlacements(
         height: row ? Math.max(0, outerCross - item.paddingCross) : item.targetMain,
       };
       placements.push({
+        usedWidth: usedStyle.width,
+        usedHeight: usedStyle.height,
         box,
         element: childWithUsedSize(
           item.child,

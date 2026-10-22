@@ -15,7 +15,7 @@ import { normalizeEdges } from '../style/normalize.js';
 import { resolveLength } from '../style/resolve-length.js';
 import {
   extractSystemFilter,
-  setPreNormalizedStyle,
+  setPreNormalizedStyle, setAllocatedContentSize,
   withoutSystemFilter,
 } from '../style/resolve-dispatch.js';
 import type {
@@ -201,6 +201,14 @@ export function childWithUsedSize(
     width,
     height,
   }), child, receiverToken, query);
+  return renderedChild;
+}
+
+/** Rebinds current raw inputs while carrying only a settled content allocation. */
+export function childWithCachedUsedSize(child: PibblElement<any>, width: number, height: number): PibblElement<any> {
+  const renderedChild = clonePibblElement(child);
+  setPlacementConsumed(renderedChild);
+  setAllocatedContentSize(renderedChild, width, height);
   return renderedChild;
 }
 

@@ -1,3 +1,4 @@
+import { invalidateAllocationInputs } from '../layout/allocation-revision.js';
 import type { ManualSchedulerDriver } from './testing.js';
 import { RootRenderTransaction } from '../render-transaction.js';
 import { executeRender } from "../execute-render.js";
@@ -45,6 +46,7 @@ interface PendingInstanceWork {
 }
 
 interface InstanceRenderRequest {
+  readonly signalInput?: boolean;
   readonly pendingRoot: PibblInstance["pendingRoot"];
   readonly pendingUpdateParents: boolean;
 }
@@ -188,6 +190,7 @@ export function requestInstanceRender(
     pendingUpdateParents: false,
   },
 ): number {
+  if (!request.signalInput) invalidateAllocationInputs();
   const revision = ++nextWorkRevision;
   const target = shouldDeferNewFrameWork()
     ? nextInstanceWork

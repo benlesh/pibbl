@@ -2,6 +2,7 @@ import {
   clearComponentState,
   getAnonElemName,
   GLOBAL_STATE,
+  NO_PENDING_ROOT,
 } from './global-state.js';
 import { Teardowns } from './teardowns.js';
 import { PibblComponentRefs } from './types.js';
@@ -326,6 +327,8 @@ function renderComponentElement<P>(
   }
 }
 
+let signalInputRender: Parameters<typeof requestInstanceRender>[1];
+
 function componentSignalReadOptions(
   componentRefs: PibblComponentRefs<any>,
 ) {
@@ -341,7 +344,7 @@ function componentSignalReadOptions(
       ) {
         return;
       }
-      requestInstanceRender(pibblInstance);
+      requestInstanceRender(pibblInstance, signalInputRender ??= { pendingRoot: NO_PENDING_ROOT, pendingUpdateParents: false, signalInput: true });
     },
     onMaterialize: () => {
       if (componentRefs.signalConsumerTeardownAttached) return;

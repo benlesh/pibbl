@@ -35,15 +35,53 @@ Current estimate remains a range, not a promise: the original forecast was 36
 additional slices including 25. Three deliveries are now integrated; loading was
 an accepted scope addition to that forecast. Roughly 34 delivery slices remain,
 subject to reassessment against the same proposal exits after the next group.
-Only slice 28 below is selected; the area estimates are not parallel work queues.
+Slice 28 is delivered below. Roughly 33 delivery slices remain against the same
+forecast, subject to reassessment after this group. Area estimates are not parallel
+work queues.
 
-**Exactly one selected next delivery slice: 28 — genuine paint-only Flex allocation
-reuse.** Establish a public failing regression showing that a paint-only receiver
-change repaints correctly without recomputing the unchanged parent allocation.
-Keep meaningful geometry/input/cleanup assertions and a structural work counter;
-role-notification counts and unchanged WASM solve counts alone do not satisfy it.
-No new public selector, second scheduler, speculative component execution or
-production-default solver switch is authorized by that slice.
+### Slice 28 — bounded paint-only Flex allocation reuse
+
+The accepted scope is an internal fast path for explicitly frozen direct Rectangle
+and Text descriptors, props, styles and child arrays. Mutable authoring, accessors,
+opaque components, responsive/custom styles and custom fonts stay conservative.
+Text eligibility uses generic font families only. No public API or immutable
+ordinary-JSX contract was introduced.
+
+The public regression failed before production changes: paint changed pixels but
+allocationPasses rose from 1 to 2. The paired mutable-width characterization passed
+and continues to pass. The implementation checks identity and scalar settings
+before child preparation, caches scalar geometry with weak input ownership, and
+rebinds raw children so current paint and interaction inputs resolve normally.
+Every non-paint signal notification invalidates the conservative realm revision,
+including a notification after paint has already dirtied the consumer. Successful
+transactions publish the cache; mounted-region disposal clears it.
+
+Fresh focused experimental checks passed: 5 files / 77 tests, covering actual
+allocation/item visits, changed pixels, mixed paint/width batches, text metric
+changes, mutable/accessor fallbacks and owned-resource cleanup. Repository
+TypeScript and targeted ESLint passed. One reused independent reviewer found no
+material findings. Node 26.9.0, installed pnpm 11.21.0 dependencies and Playwright
+Chromium were used; no aggregate trust or Node 24 result is claimed.
+
+Independent source and built browser checks passed through the public example:
+after entering frozen mode allocationPasses=5, allocationItemVisits=8, cacheHits=0;
+Paint leaves passes/items unchanged and raises hits to 1. Width 320 recomputes
+passes=6/items=10. The old paragraph position misses and the moved visible text
+selects frozenB. No page errors. Logs:
+`/tmp/pibbl-slice28-source-counters.log` and
+`/tmp/pibbl-slice28-built-counters.log`; inspected screenshot:
+`/tmp/pibbl-slice28-source-visible.png`.
+
+Slice ready for feedback: source
+`http://127.0.0.1:5192/#/examples/layout/wasm-flex-text` and built port 5193.
+Choose **Toggle frozen proof**, then Paint, Toggle width and Change Text. This is
+bounded allocation reuse, not general zero-visit layout or full feature completion.
+
+**Exactly one selected next delivery slice: 29 — automatic main-axis Text minimum.**
+Establish the smallest public regression for content-based minimum sizing before
+production changes. Resolve the exact supported Text/min-content boundary from
+current measurement and proposal contracts; keep opaque structures conservative.
+No new public API, production-default solver switch or parallel feature queue.
 
 Current acceptance gaps remain broader than loading: general automatic minimum and
 intrinsic sizing rules, structural component preparation, root-wide prepared graph
@@ -1276,19 +1314,15 @@ three pinned Yoga cases, and keeps unaccepted API signatures and missing release
 gates explicit. It is support work, not an additional delivered capability slice.
 Group9 has two deliveries; consolidate after the next closely related slice.
 
-## [NEXT] Paint-only reuse of a stable experimental Flex allocation
+## [NEXT] Automatic main-axis Text minimum (slice 29)
 
-Smallest next outcome: a supported stable direct Flex/Text composition can repaint
-from a paint-only receiver change without recomputing its parent allocation or
-remeasuring Text. Use slice26 roles to distinguish required work while retaining
-ordinary immediate-mode drawing. Establish the failing public regression before
-production changes; counters must describe real skipped computation, not be moved
-past a full normalization scan. Unknown/structural changes stay conservative and
-width/Text changes still update geometry and input targets in the same frame.
-Resolve the retained preparation boundary from current code before committing to
-a general graph. No new public API or speculative ordinary-component execution.
-This is selected for design/implementation next, followed by group9 consolidation;
-it does not itself close root-wide zero-visit or full preparation milestones.
+Replace one bounded explicit-minimum restriction with the proposal's content-based
+Text minimum through the supported public surface. First pin a public failing
+geometry regression and a manually usable example; preserve explicit minWidth: 0
+as the deliberate shrink escape hatch. Determine exact eligibility and measurement
+semantics before production edits. This does not authorize general CSS intrinsic
+sizing, structural component execution or default solver adoption. Consolidate the
+new group after deliveries 28–30.
 
 Slice 26 delivery (2026-10-21): completed the in-progress private role foundation
 before any loading migration. Existing receiver edges carry staged masks; successful

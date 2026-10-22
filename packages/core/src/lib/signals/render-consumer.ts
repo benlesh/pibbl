@@ -1,3 +1,4 @@
+import { invalidateAllocationInputs } from '../layout/allocation-revision.js';
 import {
   recordRendererConsumerCreated,
   recordRendererConsumerReleased,
@@ -80,6 +81,7 @@ export function createSignalRenderConsumer(
     notify(_node, dependencyRoles = 64): void {
       if (state.disposed) return;
       recordSignalInputInvalidation(dependencyRoles);
+      if (dependencyRoles !== 8) invalidateAllocationInputs();
       if (state.dirty) return;
       state.dirty = true;
       options.invalidate();
