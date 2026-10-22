@@ -276,7 +276,7 @@
       "id": "flex.nested-intrinsic-containers",
       "target": "parity",
       "group": "measurement-and-intrinsic",
-      "current": "known built-in nowrap column/direct Text plus single-root pure structural Cards at settled finite width",
+      "current": "known nowrap Flex columns, Text, Flow wrap measurement and fixed-row Grid at settled finite width; pure structural descriptions",
       "status": "experimental",
       "evidenceRefs": [
         "packages/core/test/layout-wasm-slice.test.tsx",
@@ -287,16 +287,18 @@
         "positive": [
           "nested intrinsic Card scenario",
           "single-root pure structural Card at settled finite width",
-          "nested finite pure Card column"
+          "nested finite pure Card column",
+          "Flow automatic height uses final clamped width and moves following footer",
+          "Grid fixed-row sums/gaps contribute automatic height and move following footer"
         ],
         "negative": [
-          "ordinary/opaque components, non-Flex prepared roots and wrapped intrinsic containers unsupported"
+          "ordinary opaque providers, intrinsic wrapped Flex containers, indefinite Grid fraction/percentage rows and unresolved feedback remain unsupported"
         ],
         "interaction": ["text width, keyed restore, moved footer target"],
         "yogaCases": [],
         "missing": [
-          "prepared Flex/Grid/Flow tree",
-          "nested wrapping",
+          "complete intrinsic Flex/Grid/Flow constraint graph",
+          "wrapped intrinsic Flex containers",
           "constraint feedback"
         ]
       }
@@ -602,7 +604,8 @@
           "direct and opaque-boundary Flex entries and pure described Flex roots reuse prepared ownership",
           "registered known Layer children and Grid/Flow entry Flex placements carry exact receiver plans into traversal",
           "mounted Grid tracks/cell areas and resolved Flow line/wrap placement use the existing root-owned arena protocol",
-          "known Grid/Flow roots adopt the original native plan; Overlay stages aligned host placements without a native arena"
+          "known Grid/Flow roots adopt the original native plan; Overlay stages aligned host placements without a native arena",
+          "Layer admits pure described known roots using cached primitive receiver and actual root sizing"
         ],
         "negative": [
           "failed known-layout preparation releases provisional regions",

@@ -2,7 +2,7 @@
 
 ## Current checkpoint and single next slice — 2026-10-22
 
-Latest delivery is slice63 (fixed-row intrinsic Grid in Flex columns).
+Latest delivery is slice63 `440f7c32` (fixed-row intrinsic Grid in Flex columns).
 Slice62 is `4f358f70` (settled-width intrinsic Flow in Flex columns).
 Slice61 is `a3ef3378` (pure described Layer children).
 Slice60 is `c90df382` (direct-entry Layer child preparation).
@@ -1029,8 +1029,35 @@ Extend the exact version/commit/configuration-bound differential corpus beyond
 its five row cases to the already supported numeric column subset. Use generated
 native Yoga output, documented content-box/explicit-minimum conversions and public
 Pibbl geometry/interaction evidence, with visible divergence classifications.
-Do not claim broad parity or choose unresolved intrinsic/box policies. Consolidate
-61–63 before starting64; the fixed33-capability/seven-gate scope remains unchanged.
+Do not claim broad parity or choose unresolved intrinsic/box policies. Consolidation21 for
+61–63 is complete; the fixed33-capability/seven-gate scope remains unchanged.
+
+### Consolidation 21 completed for delivery slices 61–63
+
+Separate61 `a3ef3378`,62 `4f358f70`,63 `440f7c32`. Pure described Layer children
+use the returned primitive receiver/sizing; known Flow and fixed-row Grid can
+contribute automatic heights at settled nowrap-column widths. Intrinsic measure
+uses existing host hooks; native mounted Flow/Grid placement is unchanged.
+
+Fresh combined Chromium run:270passed/1normal-onlyskip across12 prepared layout,
+Layer, ABI and HTML ownership files. It includes described default/constrained
+Layers, Flow max-width wrapping and Grid fractional-row rejection. Source/built
+225public-input replays and packed228installed-input Bundler/NodeNext/lifecycle
+pass on the final artifact. Normal focused58Flex/Flow and52Flex/Grid tests pass;
+types/lint clean. Kernel65282bytes/8native tests unchanged. Logs
+`/tmp/pibbl-consolidation21-focused.txt` and `/tmp/pibbl-slice61-*` through63;
+Node26.9.0/pnpm11.21.0deps/Chromium, no Node24 aggregate trust claim.
+
+All seven gates remain open with the same33-capability denominator and complete
+remaining-gates table above. Remaining intrinsic limits include indefinite Grid
+fraction/percentage rows, intrinsic wrapped Flex, arbitrary opaque providers,
+feedback and full graph/minimal-visit evidence. The new imports from Flex to Flow/
+Grid require eventual dedicated inert-import/tree-shaking evidence; no bundle-size
+claim is inferred from these correctness receipts. Box/RTL/aspect, participation,
+matching transactional publication, standalone/framework/Pibbl migrations, broad
+pinned Yoga corpus, implicit/intrinsic Grid, reproducible performance, Node24 trust
+and final critical review remain. Exactly one next64 extends native pinned Yoga
+column comparisons for already supported behavior; it closes no gate by itself.
 
 ### Consolidation 20 completed for delivery slices 58–60
 
