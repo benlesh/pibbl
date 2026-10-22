@@ -2,14 +2,14 @@
 
 ## Current checkpoint and single next slice — 2026-10-22
 
-Latest delivery is slice57 `bf03d14f` (prepared Overlay-root planning/adoption).
+Latest delivery is slice58 (prepared Absolute-root planning/adoption).
+Slice57 is `bf03d14f` (prepared Overlay-root planning/adoption).
 Slice56 is `cf2c7bc5` (prepared Flow-root planning/adoption).
 Slice55 is `1510efe3` (prepared Grid-root planning/adoption).
 Slice54 `773da7b9`,53 `aaa7ddcb`,52 `b5381e0d` are consolidated in `f322a709`.
 Every slice has its own commit. The fixed33-capability/seven-gate denominator is
-unchanged; all seven gates remain open. The single next slice is58, prepared
-Absolute-root planning/adoption. Source5192/built5193, `#/testing/layout-preflight`:
-Use prepared Overlay root, Fail later sibling, Recover, then red right edge/blue cell.
+unchanged; all seven gates remain open. The single next slice is59, known-family Layer child preparation. Source5192/built5193, `#/testing/layout-preflight`:
+Use prepared Absolute root, Fail later sibling, Recover, then red right edge/blue cell.
 Native Grid tracks/spans and Flow wrap controls remain available.
 
 The loading/named-component integration is ready for source feedback on branch
@@ -896,13 +896,33 @@ passes failure isolation, aligned blue target, recovery2Gridaxes/1cellbatch/3are
 unchanged. Logs `/tmp/pibbl-slice57-*`; Node26.9.0/pnpm11.21.0deps/Chromium.
 No Node24/full trust or general transactional publication claim.
 
-## [NEXT] Prepared Absolute-root planning and adoption (slice 58)
+### Slice 58 — prepared Absolute-root planning and adoption
 
-Prepare known nested Absolute roots through the same arena-free structural plan.
-Public RED: later Overlay→Absolute→Grid→Flex failure must precede earlier opaque
-sibling evaluation. Reuse settled placements, receiver identity and parent-owned
-slots; prove recovery geometry/hits and single native descendant work. No new
-public API or ABI. Consolidation19 for55–57 is complete.
+Known Absolute roots stage existing placements, recursively prepare known children,
+and claim the exact plan during traversal. Child placement itself is now pure with
+respect to known-layout preparation, avoiding unparented duplicate slots. The
+ordinary experimental entry prepares each settled child before traversal; normal
+builds retain their immediate placement path. Absolute adds no numeric arena.
+
+Public RED reproduced earlier evaluations3instead of2 for later Overlay→Absolute→
+Grid→Flex failure. Green covers one native child pass on resize, aligned geometry,
+failure cleanup and recovered pixel/hit. Focused147tests across six files pass;
+normal17tests pass. Types/lint clean. Root inspection found no material issue.
+Source/built Studio `--absolute-root` proves failure isolation, recovery2Gridaxes/
+1cellbatch/3arenas, red/blue targets and cleanup0/0/0/0 with225public inputs.
+Packed228installed-input Bundler/NodeNext/lifecycle pass. Kernel65282bytes unchanged.
+Logs `/tmp/pibbl-slice58-*`; Node26.9.0/pnpm11.21.0deps/Chromium, no Node24/full trust.
+This is bounded known-root preparation, not arbitrary component pre-execution or
+matching root-wide Canvas/hit/focus/HTML transactional publication.
+
+## [NEXT] Known-family Layer child preparation (slice 59)
+
+Extend the existing direct-Flex Layer bridge to registered known structural roots.
+Use the same root transaction, receiver inputs, parent-owned slots and cached
+subtree retention across the child-instance raster boundary. Public RED must catch
+a later Layer→known-layout→Flex failure before earlier opaque siblings; preserve
+authored positions, clean Layer caches, recovery targets and exact teardown.
+No new public API or native ABI. Group20 is58–60, then bounded consolidation.
 
 ### Consolidation 19 completed for delivery slices 55–57
 

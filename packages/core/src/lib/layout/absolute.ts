@@ -1,4 +1,5 @@
-import { preflightKnownLayout, takePreparedChildStyle, attachPreparedLayoutSlot } from './prepared-root.js';
+import { experimentalLayout } from './wasm/region.js';
+import { registerKnownLayoutPreflight, claimPreparedLayoutPlan, stagePreparedLayoutPlan, prepareKnownLayoutDescendants, preparePlacedKnownLayout, takePreparedChildStyle, type PreparedLayoutPlan } from './prepared-root.js';
 import { isLayoutComponent, prepareLayoutComponent } from './define-layout-component.js';
 import { ResponsiveStylePreparation, preparedStyleValue, preparedStyleQuery, type PreparedQuery } from '../style/responsive.js';
 import { definePrimitive } from '../define-primitive.js';
@@ -85,7 +86,7 @@ function renderAbsolute(
   ctx: RenderingContext2D,
 ) {
   wireStructuralEvents(props);
-  const children = prepareLayoutChildren(props.children, 'Absolute');
+  const ordinaryChildren = experimentalLayout ? undefined : prepareLayoutChildren(props.children, 'Absolute');
   recordLayoutEvaluation();
   const content = style.box.contentBox;
   ctx.translate(content.x, content.y);
@@ -98,14 +99,19 @@ function renderAbsolute(
   const releaseLayout = pushLayoutBox(localContent);
   GLOBAL_STATE.componentRefs!.onAfterRender = releaseLayout;
 
+  const prepared = experimentalLayout ? claimPreparedLayoutPlan(GLOBAL_STATE.componentRefs!.element, localContent) : undefined;
+  const children = prepared?.children ?? ordinaryChildren ?? prepareLayoutChildren(props.children, 'Absolute');
+  let placementIndex = 0;
   let occurrence = 0;
   return placeDirectChildren(
     children,
     localContent,
     (child, childOccurrence) => {
-      return resolveAbsoluteChildPlacement(localContent, child, getChildPrimitiveReceiverToken(
+      const placement = prepared ? prepared.placements[placementIndex++] : resolveAbsoluteChildPlacement(localContent, child, getChildPrimitiveReceiverToken(
         GLOBAL_STATE.renderTransaction, GLOBAL_STATE.primitiveReceiverToken, occurrence++,
-      ), childOccurrence);
+      ));
+      if (experimentalLayout && !prepared) preparePlacedKnownLayout(placement.element, childOccurrence);
+      return placement;
     },
     style.overflow,
   );
@@ -134,6 +140,21 @@ export const Absolute = definePrimitive<
   }),
 });
 
+if (experimentalLayout) registerKnownLayoutPreflight(Absolute, (element, _style, content, receiver, slot) => {
+  const previous = GLOBAL_STATE.primitiveReceiverToken;
+  GLOBAL_STATE.primitiveReceiverToken = receiver;
+  try {
+    const children = prepareLayoutChildren(element.props.children, 'Absolute');
+    const placements = new Array<{ box: LayoutBox; element: PibblElement<any> }>(children.length);
+    for (let index = 0; index < children.length; index++) {
+      placements[index] = resolveAbsoluteChildPlacement(content, children[index], getChildPrimitiveReceiverToken(GLOBAL_STATE.renderTransaction, receiver, index));
+    }
+    const plan: PreparedLayoutPlan = { content, children, placements };
+    prepareKnownLayoutDescendants(plan, slot);
+    stagePreparedLayoutPlan(slot, plan);
+  } finally { GLOBAL_STATE.primitiveReceiverToken = previous; }
+});
+
 /** @internal Resolves a layout container without inspecting its children. */
 export function resolveContainerBox(
   style: Readonly<BoxStyle>,
@@ -155,7 +176,6 @@ function resolveAbsoluteChildPlacement(
   container: Readonly<LayoutBox>,
   child: PibblElement<any>,
   receiverToken?: object,
-  occurrence = 0,
 ): { box: LayoutBox; element: PibblElement<any> } {
   const prepared = prepareDirectChildStyle(child, receiverToken, container);
   const style = preparedStyleValue(prepared) as Readonly<
@@ -171,7 +191,6 @@ function resolveAbsoluteChildPlacement(
     width: resolved.borderBox.width,
     height: resolved.borderBox.height,
   };
-  const slot = preflightKnownLayout(child, style, { x: 0, y: 0, width: resolved.contentBox.width, height: resolved.contentBox.height }, receiverToken, occurrence);
   const element = childWithUsedSize(
       child,
       style,
@@ -180,7 +199,6 @@ function resolveAbsoluteChildPlacement(
       receiverToken,
       preparedStyleQuery(prepared),
     );
-  attachPreparedLayoutSlot(element, slot);
   return { box, element };
 }
 

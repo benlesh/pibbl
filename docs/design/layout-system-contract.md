@@ -334,6 +334,11 @@ plan. Overlay owns a structural identity slot, without a numeric native arena;
 Grid/Flex descendants retain their existing arena ownership. Ordinary components
 remain opaque and this does not establish complete root-wide publication.
 
+Known Absolute roots also stage existing placements and recursively prepare known
+children before outer opaque siblings. Rendering claims those exact descriptors;
+structural slots add no native arena. Settling a child placement itself does not
+create a second unparented known-root plan. Ordinary components remain opaque.
+
 For the same direct Text subset, automatic width and basis use the natural width
 before wrapping, not the containing row's constrained width. The natural query
 follows wrapped Text's existing removal of leading ASCII spaces; empty/space-only
