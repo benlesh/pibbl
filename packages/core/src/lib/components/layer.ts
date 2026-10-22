@@ -260,8 +260,17 @@ if (experimentalLayout) registerKnownLayoutPreflight(Layer, (element, _style, co
       const token = getChildPrimitiveReceiverToken(GLOBAL_STATE.renderTransaction, receiver, index);
       const prepared = prepareDirectChildStyle(child, token, content, true);
       const style = preparedStyleValue(prepared);
-      const box = resolveContainerBox(style, { component, algorithm: 'render-dispatch', allocation: content, percentageBasis: content, constraints: { minWidth: 0, maxWidth: content.width, minHeight: 0, maxHeight: content.height } }, component, 'render-dispatch');
-      const nested = preflightKnownLayout(child, style, { x: 0, y: 0, width: box.contentBox.width, height: box.contentBox.height }, token, occurrence, slot);
+      const context = { component, algorithm: 'render-dispatch' as const, allocation: content, percentageBasis: content, constraints: { minWidth: 0, maxWidth: content.width, minHeight: 0, maxHeight: content.height } };
+      // A nested raster boundary uses Layer's actual dimensions, not box layout.
+      let width: number, height: number;
+      if (child.type === Layer) {
+        const layerStyle = resolveLayerStyle(style, context);
+        width = layerStyle.width!; height = layerStyle.height!;
+      } else {
+        const box = resolveContainerBox(style, context, component, 'render-dispatch');
+        width = box.contentBox.width; height = box.contentBox.height;
+      }
+      const nested = preflightKnownLayout(child, style, { x: 0, y: 0, width, height }, token, occurrence, slot);
       const clone = clonePibblElement(child);
       setPreNormalizedStyle(clone, style, child, token, preparedStyleQuery(prepared));
       attachPreparedLayoutSlot(clone, nested); placed[index] = clone;

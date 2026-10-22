@@ -1892,8 +1892,9 @@ it.runIf(experimentalLayout)('prepares a nested Absolute root before opaque sibl
   } finally { window.removeEventListener('error', prevent); }
 });
 
-for (const Root of [Grid, Flow, Overlay, Absolute]) {
-it.runIf(experimentalLayout)(`prepares a later Layer known ${Root.name} root before earlier opaque siblings and child bitmap work`, async () => {
+for (const Root of [Grid, Flow, Overlay, Absolute, Layer]) {
+for (const constrained of Root === Layer ? [false, true] : [false]) {
+it.runIf(experimentalLayout)(`prepares a later Layer known ${Root.name} root constrained=${constrained} before earlier opaque siblings and child bitmap work`, async () => {
   const baseline = snapshotWasmLayoutDiagnostics();
   const width = signal(80), grow = signal(0), shown = signal(true);
   let evaluations = 0, layerEvaluations = 0, hits = 0;
@@ -1901,7 +1902,7 @@ it.runIf(experimentalLayout)(`prepares a later Layer known ${Root.name} root bef
   function LayerProbe(_props: { style: Record<string, unknown> }) { layerEvaluations++; const box = useLayoutBox(); return createElement(Rectangle, { style: { width: box.width, height: 20, fill: 'blue' }, onClick: () => hits++ }); }
   const scene = () => createElement(Absolute, { style: { width: 240, height: 30 }, children: [
     createElement(Flex, { style: { width, height: 20 }, children: createElement(Probe, { style: { width: 80, height: 20, minWidth: 0 } }) }),
-    ...(shown.get() ? [createElement(Layer, { key: 'later', style: { left: 120, width: 100, height: 20 }, children: createElement(Root as typeof Grid, { style: { left: 10, top: 3, width: 100, height: 20, gridTemplateColumns: ['1fr'], gridTemplateRows: [20] }, children: createElement(Flex, { style: { width: '100%', height: 20, gridColumnStart: 1, gridRowStart: 1 }, children: createElement(LayerProbe, { style: { width: 80, height: 20, minWidth: 0, flexGrow: grow } }) }) }) })] : []),
+    ...(shown.get() ? [createElement(Layer, { key: 'later', style: { left: 120, width: 100, height: 20 }, children: createElement(Root as typeof Grid, { style: { left: 10, top: 3, width: 100, height: 20, ...(constrained ? { maxWidth: 50, padding: 2 } : {}), gridTemplateColumns: ['1fr'], gridTemplateRows: [20] }, children: createElement(Flex, { style: { width: '100%', height: 20, gridColumnStart: 1, gridRowStart: 1 }, children: createElement(LayerProbe, { style: { width: 80, height: 20, minWidth: 0, flexGrow: grow } }) }) }) })] : []),
   ] });
   const canvas = document.createElement('canvas'); canvas.width = 240; canvas.height = 30; document.body.append(canvas);
   const errors: unknown[] = []; const prevent = (event: ErrorEvent) => { errors.push(event.error); event.preventDefault(); }; window.addEventListener('error', prevent);
@@ -1935,5 +1936,7 @@ it.runIf(experimentalLayout)(`prepares a later Layer known ${Root.name} root bef
     expect(disposed.activeArenas).toBe(baseline.activeArenas); expect(disposed.activeNodes).toBe(baseline.activeNodes); expect(disposed.activeWasmInstances).toBe(baseline.activeWasmInstances);
   } finally { window.removeEventListener('error', prevent); }
 });
+
+}
 
 }

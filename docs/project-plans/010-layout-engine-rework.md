@@ -934,6 +934,15 @@ recovery2Gridaxes/1cellbatch/3arenas, positioned blue hit and cleanup0/0/0/0 wit
 Kernel65282bytes unchanged. Logs `/tmp/pibbl-slice59-*`; Node26.9.0/pnpm11.21.0deps/
 Chromium, no Node24/full trust or atomic publication claim.
 
+Slice59 review follow-up: direct registered Layer children exposed two defects.
+Public RED showed a clean outer Layer releasing its inner boundary's prepared
+subtree, and width100/maxWidth50/padding2 preparing a different allocation from
+Layer's actual renderer. Retention now claims both numeric and boundary entries
+recursively; nested Layer preparation uses `resolveLayerStyle` dimensions. The
+six-case matrix (Grid/Flow/Overlay/Absolute and unconstrained/constrained nested
+Layer) passes, types/lint clean. Logs `/tmp/pibbl-slice59-nested-*`. This is a
+correctness follow-up to59, not a new capability or closed gate.
+
 ## [NEXT] Direct-entry Layer child preparation (slice 60)
 
 Inspect and close the known-child preparation gap when Layer enters directly or

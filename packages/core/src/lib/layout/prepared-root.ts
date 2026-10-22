@@ -181,13 +181,15 @@ export function retainPreparedBoundarySubtree(element: PibblElement<any>): void 
   const transaction = GLOBAL_STATE.renderTransaction;
   const slot = getElementMetadata(element)?.preparedLayoutSlot as PreparedLayoutSlot | undefined;
   if (!transaction || !slot) return;
-  retainPreparedSubtree(slot, plans.get(transaction));
+  retainPreparedSubtree(slot, plans.get(transaction), boundaryChildren.get(transaction));
 }
-function retainPreparedSubtree(parent: PreparedLayoutSlot, pending: Map<PreparedLayoutSlot, { plan: PreparedLayoutPlan; claimed: boolean }> | undefined): void {
+function retainPreparedSubtree(parent: PreparedLayoutSlot, pending: Map<PreparedLayoutSlot, { plan: PreparedLayoutPlan; claimed: boolean }> | undefined, boundaries: Map<PreparedLayoutSlot, { children: readonly PibblElement<any>[]; claimed: boolean }> | undefined): void {
   for (const entries of parent.children.values()) for (const child of entries.values()) {
     const entry = pending?.get(child);
     if (entry) entry.claimed = true;
-    retainPreparedSubtree(child, pending);
+    const boundary = boundaries?.get(child);
+    if (boundary) boundary.claimed = true;
+    retainPreparedSubtree(child, pending, boundaries);
   }
 }
 

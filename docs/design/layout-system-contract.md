@@ -295,7 +295,7 @@ consume their plans without preparing descendants again. This does not preflight
 unknown siblings outside the boundary or roll back earlier Canvas pixels.
 
 A known managed Layer occurrence can prepare direct registered Flex, Grid, Flow,
-Overlay and Absolute roots at
+Overlay, Absolute and nested Layer roots at
 the settled Layer allocation before earlier sibling traversal. Preparation creates
 no child instance or bitmap surface. The exact descriptor and receiver token pass
 through the Layer's private fragment; child rendering adopts the same transaction
@@ -303,7 +303,9 @@ plan and shared-root native region. Authored child offsets remain unapplied unti
 normal child rendering. A clean Layer retains its existing descendant ownership
 without invoking opaque children again. Removal releases its prepared descendants;
 restoration creates fresh regions. Unkeyed occurrences are tracked by root type.
-Ordinary components and unproven wrapper entries remain opaque.
+Nested Layers use their actual raster dimensions, including the existing Layer
+policy for box constraints/padding; retained cleanup marks both numeric and nested
+boundary plans. Ordinary components and unproven wrapper entries remain opaque.
 
 A Grid entry settles its existing explicit tracks and cell placements before
 preparing direct known Flex roots from those exact placed clones, receiver tokens
