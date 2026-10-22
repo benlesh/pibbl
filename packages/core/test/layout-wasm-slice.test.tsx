@@ -1,6 +1,6 @@
 import yogaReference from '../../../tooling/layout-yoga-rehearsal/reference.json';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
-import { createElement, Flex, Text, Rectangle, measureElement, useLayoutBox, Layer, signal, computed, type PibblNode } from '@pibbl/core';
+import { createElement, Absolute, Flex, Text, Rectangle, measureElement, useLayoutBox, Layer, signal, computed, type PibblNode } from '@pibbl/core';
 import { pibblSync as pibbl } from '@pibbl/core/sync';
 import { prepareLayoutEngineSync } from '../src/lib/layout/wasm/embedded';
 import { WasmFlexTextExample as mountWasmFlexTextComponent } from "../../scenarios/src/learning/layout/wasm-flex-text.example";
@@ -1283,4 +1283,39 @@ it.runIf(experimentalLayout)('shares the owning root instance with Flex inside a
   expect(disposed.activeWasmInstances).toBe(baseline.activeWasmInstances);
   expect(disposed.activeArenas).toBe(baseline.activeArenas);
   expect(disposed.activeNodes).toBe(baseline.activeNodes);
+});
+
+it.runIf(experimentalLayout)('preflights later known sibling Flex inputs before evaluating an earlier opaque child', async () => {
+  const width = signal(80), grow = signal(0); let evaluations = 0;
+  function Probe(_props: { style: Record<string, unknown> }) { evaluations++; const box = useLayoutBox(); return createElement(Rectangle, { style: { width: box.width, height: 20, fill: 'red' } }); }
+  const scene = createElement(Absolute, { style: { width: 220, height: 30 }, children: [
+    createElement(Flex, { style: { width, height: 20 }, children: createElement(Probe, { style: { width: 80, height: 20, minWidth: 0, flexGrow: 1 } }) }),
+    createElement(Flex, { style: { left: 120, width: 80, height: 20 }, children: createElement(Rectangle, { style: { width: 80, height: 20, minWidth: 0, flexGrow: grow, fill: 'blue' } }) }),
+  ] });
+  const canvas = document.createElement('canvas'); canvas.width = 220; canvas.height = 30; document.body.append(canvas);
+  const errors: unknown[] = []; const prevent = (event: ErrorEvent) => { errors.push(event.error); event.preventDefault(); }; window.addEventListener('error', prevent);
+  try {
+    const controller = pibbl(canvas, scene); controllers.push(controller); await nextFrame(); expect(evaluations).toBe(1);
+    width.set(100); grow.set(-1); await nextFrame();
+    expect(errors.some(error => error instanceof Error && error.message.includes('flexGrow received -1'))).toBe(true); expect(evaluations).toBe(1);
+    grow.set(0); pibbl(canvas, scene); await nextFrame(); expect(evaluations).toBe(2);
+    expect([...canvas.getContext('2d')!.getImageData(90, 10, 1, 1).data]).toEqual([255, 0, 0, 255]);
+  } finally { window.removeEventListener('error', prevent); }
+});
+
+it.runIf(experimentalLayout)('normalizes a preflighted receiver once per transaction without executing its component early', async () => {
+  const { definePrimitive } = await import('@pibbl/core');
+  let normalizations = 0, renders = 0, sequences = 0;
+  type Style = { width: number; height: number; minWidth: number; custom: null };
+  const Leaf = definePrimitive<{}, Style, Style, Style>((_props, style, ctx) => { renders++; ctx.fillRect(0, 0, style.width, style.height); }, {
+    normalizeStyle(style) { normalizations++; return style; },
+  });
+  const width = signal(80);
+  const children = { *[Symbol.iterator]() { sequences++; yield createElement(Leaf, { style: { width: 80, height: 20, minWidth: 0, custom: null } }); } };
+  const canvas = document.createElement('canvas'); canvas.width = 100; canvas.height = 30; document.body.append(canvas);
+  const controller = pibbl(canvas, createElement(Absolute, { style: { width: 100, height: 30 }, children: createElement(Flex, { style: { width, height: 20 }, children }) }));
+  controllers.push(controller); await nextFrame();
+  expect([sequences, normalizations, renders]).toEqual([1, 1, 1]);
+  width.set(90); await nextFrame();
+  expect([sequences, normalizations, renders]).toEqual([2, 2, 2]);
 });

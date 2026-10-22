@@ -243,6 +243,16 @@ re-entering it; stale region caches cannot be reused on the next solve. Retired
 handle generations never wrap. This ownership foundation is not a root-wide
 prepared graph or a transactional geometry-publication guarantee.
 
+In the experimental lane, an Absolute boundary preflights its direct known Flex
+siblings' normalized container options, direct-child position/participation syntax
+and grow/shrink factors before visiting any sibling's ordinary components. It
+shares receiver-owned child sequences and normalized styles within that root
+transaction; failed transactions discard these provisional inputs. Opaque
+components still execute once with their final allocation. This bounded input
+preflight does not pre-solve all geometry, measure arbitrary descendants, validate
+all fallible layout operations or provide pixel rollback. Direct roots and other
+layout-family boundaries retain their current traversal behavior.
+
 For the same direct Text subset, automatic width and basis use the natural width
 before wrapping, not the containing row's constrained width. The natural query
 follows wrapped Text's existing removal of leading ASCII spaces; empty/space-only

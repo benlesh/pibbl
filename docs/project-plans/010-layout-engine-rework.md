@@ -520,6 +520,54 @@ material issue. Logs `/tmp/pibbl-slice42-*`. Node26.9.0/pnpm11.21.0deps/Chromium
 no Node24 aggregate trust claim. Hands-on ports5192/5193, keyed-wrap and
 wasm-built-lifecycle routes. No complete prepared graph/publication claim.
 
+### Slice 43 — known sibling Flex input preflight
+
+An experimental Absolute boundary now prepares direct known Flex siblings'
+container options, direct-child position/participation syntax and grow/shrink
+factors before visiting ordinary descendants. A root-transaction-local lookup
+shares receiver-owned normalized styles with normal allocation and frozen-cache
+paths. Existing transaction child materialization is reused, opaque components
+are never speculatively evaluated, and geometry solves only during normal traversal.
+Transaction completion drops pending snapshots; existing failure cleanup releases
+provisional receiver subscriptions and mounted handles. No native ABI change.
+
+The focused public regression failed first: the earlier opaque probe ran twice
+when a later sibling became invalid. It now runs once until explicit recovery,
+then receives the latest100px allocation. A separate focused public primitive/
+iterable test proves one child-sequence traversal, one normalization and one render
+per transaction. Source and built Studio labs both prove expected failure before
+earlier evaluation, independent-root green pixels, absent failed targets, recovery
+geometry and the new right-edge hit. Both use225public core inputs; the built
+provenance contains only private built entries. Controls belong to the application
+host outside the failed Canvas, not to a per-example mount wrapper.
+
+Fresh focused experimental112passed/1normal-onlyskip, including the callback-once
+check. Normal57passed/55experimental skips. Typecheck,
+changed-code lint and source/built/editor exact export parity pass. Private package
+still uses matching59181-byte binary. Packed228installed-input consumer passes
+strict Bundler/NodeNext and structural lifecycle. Focused read-only runtime review
+found no material issue in transaction tokens, snapshot adoption, cached placement
+or failure cleanup. Logs `/tmp/pibbl-slice43-*`. Node26.9.0/pnpm11.21.0deps/Chromium;
+no Node24/full trust claim. Limits: no complete known-tree solve/preflight, general
+prepared graph, native topology transaction, atomic geometry/HTML/focus generation
+or pixel rollback. All seven release gates remain open.
+
+Hands-on Studio: `http://127.0.0.1:5192/#/testing/layout-preflight`, built on5193.
+Fail later sibling, Recover, then click the red box's right edge. Independent green
+Canvas updates through failure; host controls remain usable. Standalone equivalent
+on5194/5195 is supplemental, not the sole hands-on delivery.
+
+## [NEXT] Known sibling geometry preparation (slice 44)
+
+Extend the bounded Absolute→known Flex preparation from input syntax to fallible
+allocation/measurement work before sibling component evaluation. Reuse settled
+geometry in normal traversal without a second solve or speculative ordinary
+component execution; stage ownership through the existing root transaction and
+release unconsumed plans on failure. First establish a public failure caused by
+later sizing/measurement after valid syntax, then recovery, stable identity,
+independent-root isolation and deterministic cleanup. Keep the same33-capability/
+seven-gate denominator; do not claim a general prepared graph or pixel rollback.
+
 ### Consolidation 14 completed for delivery slices 40–42
 
 Separate commits:40 `69fcb3a6`,41 `e868fafe`,42 `b56241f9`. Main-axis and

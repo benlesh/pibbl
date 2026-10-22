@@ -1,3 +1,4 @@
+import { layoutPreflightSource } from '../tooling/layout-preflight-source';
 
 import { targetingIdentityPlugin } from '../tooling/agent-verification/identity-plugin.mjs';
 import { textAssets } from "../tooling/text-assets.ts";
@@ -47,6 +48,7 @@ export default defineConfig(({ mode }) => {
       targetingIdentityPlugin(resolve(import.meta.dirname, "..")),
       textAssets(),
       layoutAssets(),
+      layoutPreflightSource(mode),
       ...(mode === "built" ? [assertBuiltCore()] : []),
       pibblRuntimeSource(mode),
       pibblStudioDocs({ repositoryRoot: resolve(import.meta.dirname, "..") }),

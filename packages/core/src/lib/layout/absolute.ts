@@ -1,3 +1,4 @@
+import { preflightKnownLayout, takePreparedChildStyle } from './prepared-root.js';
 import { isLayoutComponent, prepareLayoutComponent } from './define-layout-component.js';
 import { ResponsiveStylePreparation, preparedStyleValue, preparedStyleQuery, type PreparedQuery } from '../style/responsive.js';
 import { definePrimitive } from '../define-primitive.js';
@@ -173,6 +174,7 @@ function resolveAbsoluteChildPlacement(
     width: resolved.borderBox.width,
     height: resolved.borderBox.height,
   };
+  preflightKnownLayout(child, style, { x: 0, y: 0, width: resolved.contentBox.width, height: resolved.contentBox.height }, receiverToken);
   return {
     box,
     element: childWithUsedSize(
@@ -256,6 +258,8 @@ export function prepareDirectChildStyle(
   queryBasis?: Readonly<LayoutBox>,
   flexMargins = false,
 ): Readonly<SystemStyle> | ResponsiveStylePreparation<Readonly<SystemStyle>> {
+  const staged = takePreparedChildStyle(child, receiverToken, queryBasis);
+  if (staged) return staged;
   let source = child;
   const prepared = withReceiverInputProvision(
     GLOBAL_STATE.renderTransaction,

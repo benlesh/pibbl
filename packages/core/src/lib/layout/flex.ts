@@ -1,3 +1,4 @@
+import { registerKnownLayoutPreflight, stagePreparedChildStyle, takePreparedChildStyle, hasPreparedChildStyles } from './prepared-root.js';
 import { isLayoutComponent, prepareLayoutComponent } from './define-layout-component.js';
 import { allocationInputRevision } from './allocation-revision.js';
 import { FlexAllocationCache, frozenFlexInputs, type CachedFlexPlacement } from './flex-allocation-cache.js';
@@ -198,11 +199,15 @@ function renderFlex(
     placements = [];
     for (let index = 0; index < children.length; index++) {
       const allocation = cached[index];
+      const child = children[index];
+      const receiver = hasPreparedChildStyles() ? getChildPrimitiveReceiverToken(GLOBAL_STATE.renderTransaction, GLOBAL_STATE.primitiveReceiverToken, index) : undefined;
+      const prepared = takePreparedChildStyle(child, receiver, localContent);
       placements.push({
         box: allocation.box,
         usedWidth: allocation.usedWidth,
         usedHeight: allocation.usedHeight,
-        element: childWithCachedUsedSize(children[index], allocation.usedWidth, allocation.usedHeight),
+        element: prepared ? childWithUsedSize(child, preparedStyleValue(prepared), allocation.usedWidth, allocation.usedHeight, receiver, preparedStyleQuery(prepared)) :
+          childWithCachedUsedSize(child, allocation.usedWidth, allocation.usedHeight),
       });
     }
   } else {
@@ -264,6 +269,29 @@ export const Flex = definePrimitive<
     ...normalizeFlexOptions(style, context.allocation),
   }),
   measure: input => measureFlex(input),
+});
+
+// A known Absolute sibling boundary resolves these receiver inputs before any
+// sibling's opaque component executes. Geometry still solves in normal traversal.
+registerKnownLayoutPreflight(Flex, (element, style, content, receiver) => {
+  if (!experimentalLayout) return;
+  normalizeFlexOptions(style as Readonly<FlexStyle>, content);
+  const previous = GLOBAL_STATE.primitiveReceiverToken;
+  GLOBAL_STATE.primitiveReceiverToken = receiver;
+  try {
+    const children = prepareLayoutChildren(element.props.children, 'Flex');
+    for (let index = 0; index < children.length; index++) {
+      const child = children[index];
+      const token = getChildPrimitiveReceiverToken(GLOBAL_STATE.renderTransaction, receiver, index);
+      const prepared = prepareDirectChildStyle(child, token, content, true);
+      const normalized = preparedStyleValue(prepared) as Readonly<BoxStyle & FlexItemStyle & LayoutItemStyle & Record<string, unknown>>;
+      assertSupportedChildPosition('Flex', child, normalized);
+      rejectUnsupportedItemFields(child, normalized, content);
+      nonnegativeFactor(normalized.flexGrow ?? 0, 'flexGrow', child, content);
+      nonnegativeFactor(normalized.flexShrink ?? 1, 'flexShrink', child, content);
+      stagePreparedChildStyle(child, token, content, prepared);
+    }
+  } finally { GLOBAL_STATE.primitiveReceiverToken = previous; }
 });
 
 function measureFlex(
