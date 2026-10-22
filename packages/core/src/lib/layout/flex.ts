@@ -1,3 +1,4 @@
+import type { PreparedLayoutPlan, PreparedLayoutSlot } from './prepared-root.js';
 import { registerKnownLayoutPreflight, stagePreparedChildStyle, takePreparedChildStyle, hasPreparedChildStyles, claimPreparedLayoutPlan, stagePreparedLayoutPlan, preflightKnownLayout, attachPreparedLayoutSlot } from './prepared-root.js';
 import { isLayoutComponent, prepareLayoutComponent } from './define-layout-component.js';
 import { allocationInputRevision } from './allocation-revision.js';
@@ -180,6 +181,7 @@ function renderFlex(
   const prepared = experimentalLayout ? claimPreparedLayoutPlan(GLOBAL_STATE.componentRefs!.element, localContent) : undefined;
   const region = experimentalLayout ? mountedLayoutRegion() : undefined;
   const plan = prepared ?? prepareFlexAllocation(props, style, localContent, service, region);
+  if (experimentalLayout && !prepared) prepareFlexDescendants(plan);
   const { children, placements, revision } = plan;
   if (!plan.cached) {
     const transaction = GLOBAL_STATE.renderTransaction;
@@ -308,7 +310,14 @@ if (experimentalLayout) registerKnownLayoutPreflight(Flex, (element, style, cont
     const region = slot.acquire();
     const resolved = { box: { contentBox: content }, overflow: (style as Readonly<FlexStyle>).overflow ?? 'visible', ...normalizeFlexOptions(style as Readonly<FlexStyle>, content) } as Readonly<ResolvedFlexStyle>;
     const plan = prepareFlexAllocation(element.props as FlexProps, resolved, content, flexMeasurementService(ctx), region);
-    let flexOccurrence = 0;
+    prepareFlexDescendants(plan, slot);
+    stagePreparedLayoutPlan(slot, { ...plan, region });
+  } finally { GLOBAL_STATE.primitiveReceiverToken = previous; }
+});
+
+/** Known descendants prepare only after this boundary's own allocation settles. */
+function prepareFlexDescendants(plan: Pick<PreparedLayoutPlan, 'children' | 'placements'>, parentSlot?: PreparedLayoutSlot): void {
+  let flexOccurrence = 0;
     for (let index = 0; index < plan.children.length; index++) {
       const child = plan.children[index];
       if (child.type !== Flex) continue;
@@ -317,12 +326,10 @@ if (experimentalLayout) registerKnownLayoutPreflight(Flex, (element, style, cont
       const prepared = peekPreNormalizedStyle(placement.element);
       if (!prepared) throw new Error('Nested known Flex requires settled receiver inputs.');
       const receiver = getPrimitiveReceiverToken(placement.element);
-      const nested = preflightKnownLayout(child, prepared.style, { x: 0, y: 0, width: placement.usedWidth, height: placement.usedHeight }, receiver, occurrence, slot);
+      const nested = preflightKnownLayout(child, prepared.style, { x: 0, y: 0, width: placement.usedWidth, height: placement.usedHeight }, receiver, occurrence, parentSlot);
       attachPreparedLayoutSlot(placement.element, nested);
     }
-    stagePreparedLayoutPlan(slot, { ...plan, region });
-  } finally { GLOBAL_STATE.primitiveReceiverToken = previous; }
-});
+}
 
 function measureFlex(
   input: MeasureInput<FlexProps, FlexStyle>,

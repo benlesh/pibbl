@@ -2,7 +2,7 @@ import { createElement, Rectangle, signal } from '@pibbl/core';
 import { pibblSync } from '@pibbl/core/sync';
 import { LayoutPreflightLab } from '../../../packages/scenarios/src/layout-preflight-lab';
 
-const width = signal(80), grow = signal(0), minimum = signal(0), nested = signal(false), healthyWidth = signal(50);
+const width = signal(80), grow = signal(0), minimum = signal(0), nested = signal(false), direct = signal(false), healthyWidth = signal(50);
 let evaluations = 0, allocatedWidth = 0, hits = 0, failures = 0;
 const title = document.createElement('h1'); title.textContent = 'Known sibling layout preflight';
 const description = document.createElement('p'); description.textContent = 'Fail the later blue sibling: the earlier red component must not run. The green independent root still updates. Recover explicitly resubmits the scene at the latest 100px width, then click its right edge.';
@@ -11,7 +11,7 @@ const healthy = document.createElement('canvas'); healthy.width = 100; healthy.h
 canvas.style.border = healthy.style.border = '1px solid #94a3b8';
 const controls = document.createElement('div'), state = document.createElement('pre');
 document.body.append(title, description, canvas, healthy, controls, state);
-const scene = createElement(LayoutPreflightLab, { width, grow, minimum, nested,
+const scene = createElement(LayoutPreflightLab, { width, grow, minimum, nested, direct,
   evaluate: (value: number) => { evaluations++; allocatedWidth = value; }, hit: () => { hits++; },
 });
 let subject = pibblSync(canvas, scene);
@@ -23,6 +23,7 @@ const error = (event: ErrorEvent) => {
 window.addEventListener('error', error);
 for (const [label, action] of [
   ['Use nested layout', () => { nested.set(true); }],
+  ['Use direct root', () => { direct.set(true); }],
   ['Fail later sibling', () => { width.set(100); grow.set(-1); healthyWidth.set(70); }],
   ['Fail later sizing', () => { width.set(100); minimum.set(90); healthyWidth.set(70); }],
   ['Recover', () => { grow.set(0); minimum.set(0); subject = pibblSync(canvas, scene); }],

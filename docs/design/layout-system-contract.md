@@ -250,8 +250,8 @@ shares receiver-owned child sequences and normalized styles within that root
 transaction; failed transactions discard these provisional inputs. Opaque
 components still execute once with their final allocation. This bounded input
 preflight does not pre-solve all geometry, measure arbitrary descendants, validate
-all fallible layout operations or provide pixel rollback. Direct roots and other
-layout-family boundaries retain their current traversal behavior.
+all fallible layout operations or provide pixel rollback. Other layout-family
+boundaries retain their current traversal behavior.
 
 Those direct known Flex siblings also prepare their own allocations and demanded
 pure measurements before sibling component traversal. Stable slots use the parent
@@ -262,8 +262,8 @@ surviving slots retain their numeric records; actual removal releases them and
 restoration creates fresh ownership. Failed transactions release unclaimed plans,
 and normal component teardown releases claimed regions. The slot annotation follows
 internal element clones. Opaque components still run only in source traversal.
-This is bounded Absolute-to-direct-Flex preparation, not recursive preparation of
-all known descendants or atomic event/focus/HTML publication.
+This remains known Flex preparation rather than a general all-family graph or
+atomic event/focus/HTML publication.
 
 Within that prepared entry, direct built-in Flex descendants recursively prepare
 from their settled content allocations. Each parent slot owns child slots by the
@@ -272,8 +272,15 @@ Nested rendering adopts those plans without re-solving. Active-path descriptor
 cycles fail before recursive region growth; the guard does not retain a global
 visited set. Parent removal releases descendant slots, while surviving keyed
 subtrees retain their regions. Ordinary components, layout-description wrappers,
-other layout families and a direct Flex root without that Absolute entry are not
-recursively discovered by this preparation path.
+and other layout families are not recursively discovered by this preparation path.
+
+A mounted Flex that was not prepared by its parent first settles its own allocation,
+then runs that same known-descendant preparation before visiting its children.
+This includes direct Flex roots and Flex returned by an ordinary component. The
+ordinary boundary executes once in source order with its final allocation; its
+internals are discovered only from that execution. Already-prepared Flex regions
+consume their plans without preparing descendants again. This does not preflight
+unknown siblings outside the boundary or roll back earlier Canvas pixels.
 
 For the same direct Text subset, automatic width and basis use the natural width
 before wrapping, not the containing row's constrained width. The natural query

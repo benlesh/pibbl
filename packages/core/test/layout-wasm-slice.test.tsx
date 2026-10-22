@@ -1471,3 +1471,35 @@ it.runIf(experimentalLayout)('retains nested prepared keyed regions through reor
   controller.dispose(); const disposed = snapshotWasmLayoutDiagnostics();
   expect([disposed.activeArenas, disposed.activeNodes, disposed.activeWasmInstances]).toEqual([baseline.activeArenas, baseline.activeNodes, baseline.activeWasmInstances]);
 });
+
+it.runIf(experimentalLayout).each([false, true])('prepares a direct or opaque-boundary Flex entry before earlier children (opaque=%s)', async opaque => {
+  const width = signal(180), grow = signal(0); let evaluations = 0;
+  function Probe(_props: { style: Record<string, unknown> }) { evaluations++; const box = useLayoutBox(); return createElement(Rectangle, { style: { width: box.width, height: 20, fill: 'red' } }); }
+  const flex = createElement(Flex, { style: { width, height: 20 }, children: [
+    createElement(Probe, { style: { width: 20, height: 20, minWidth: 0, flexGrow: 1 } }),
+    createElement(Flex, { key: 'inner', style: { width: 80, height: 20, minWidth: 0, flexShrink: 0 }, children: createElement(Rectangle, { style: { width: 80, height: 20, minWidth: 0, flexGrow: grow, fill: 'blue' } }) }),
+  ] });
+  let outerCalls = 0; const outerWidths: number[] = [];
+  function Boundary() { outerCalls++; outerWidths.push(useLayoutBox().width); return flex; }
+  const scene = opaque ? createElement(Boundary, {}) : flex;
+  const canvas = document.createElement('canvas'); canvas.width = 220; canvas.height = 30; document.body.append(canvas);
+  const errors: unknown[] = []; const prevent = (event: ErrorEvent) => { errors.push(event.error); event.preventDefault(); }; window.addEventListener('error', prevent);
+  try {
+    const baseline = snapshotWasmLayoutDiagnostics();
+    const controller = pibbl(canvas, scene); controllers.push(controller); await nextFrame(); expect(evaluations).toBe(1);
+    expect(outerCalls).toBe(opaque ? 1 : 0);
+    const mounted = snapshotWasmLayoutDiagnostics();
+    expect(mounted.allocationPasses).toBe(baseline.allocationPasses + 2); expect(mounted.solves).toBe(baseline.solves + 2);
+    expect(mounted.activeArenas).toBe(baseline.activeArenas + 2); expect(mounted.activeWasmInstances).toBe(baseline.activeWasmInstances + 1);
+    width.set(190); await nextFrame(); expect(evaluations).toBe(2);
+    expect(snapshotWasmLayoutDiagnostics().allocationPasses).toBe(mounted.allocationPasses + 2);
+    expect(snapshotWasmLayoutDiagnostics().solves).toBe(mounted.solves + 1);
+    expect(snapshotWasmLayoutDiagnostics().nodeCreates).toBe(mounted.nodeCreates);
+    width.set(200); grow.set(-1); await nextFrame();
+    expect(errors.some(error => error instanceof Error && error.message.includes('flexGrow received -1'))).toBe(true);
+    expect(evaluations).toBe(2); expect(outerCalls).toBe(opaque ? 3 : 0);
+    grow.set(0); pibbl(canvas, scene); await nextFrame(); expect(evaluations).toBe(3);
+    expect([...canvas.getContext('2d')!.getImageData(110, 10, 1, 1).data]).toEqual([255, 0, 0, 255]);
+    expect(outerCalls).toBe(opaque ? 4 : 0); expect(outerWidths.every(value => value === 220)).toBe(true);
+  } finally { window.removeEventListener('error', prevent); }
+});

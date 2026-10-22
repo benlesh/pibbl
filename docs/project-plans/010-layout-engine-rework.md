@@ -642,16 +642,48 @@ Hands-on: source `http://127.0.0.1:5192/#/testing/layout-preflight`, built5193.
 Use nested layout, Fail later sibling (or sizing), Recover, then click the red
 box's right edge. Host controls and the independent green root survive failure.
 
-## [NEXT] Direct and opaque-boundary Flex entry preparation (slice 46)
+### Slice 46 — direct and opaque-boundary Flex entry preparation
 
-Use the same known-descendant preparation at a mounted Flex entry that was not
-already prepared by Absolute. Direct Flex roots and Flex returned by an ordinary
-component should preflight their known descendants before visiting earlier opaque
-children, after receiving their own final allocation. Keep ordinary functions
-single-evaluation, reuse mounted native regions and computed plans, and add public
-failure/recovery, geometry/hit, work-reuse and cleanup evidence in the existing
-Studio lab. Do not add a universal root walk, another solver, new public API or
-atomic pixel claim. Consolidate43–45 before starting production46.
+A Flex without an inherited prepared plan now settles its own allocation and calls
+the same known-descendant preparation before visiting children. Absolute-prepared
+regions retain their existing claim path and do not prepare twice. Direct Flex
+roots and Flex returned by ordinary components therefore use the same settled
+nested plans, mounted regions and root-native instance. Ordinary functions still
+execute once after receiving their final allocation; no universal root walk or
+new public API is introduced.
+
+Two focused public cases failed first: a direct entry and one returned by an
+ordinary boundary both let the earlier probe run on a later nested failure. They
+now stop before that child evaluation, explicitly recover with latest geometry,
+allocate once per region, solve only the changed numeric region and retain records.
+The ordinary boundary runs once per frame with the unchanged220px root allocation.
+The existing Studio lab's Use direct root control reproduces that boundary; source
+and built cases pass expected failure, independent-root pixels,100px recovery,
+right-edge hit and actual cleanup0/0/0/0, with225public core inputs each.
+
+Fresh focused experimental121passed/1normal-onlyskip; normal57passed/65experimental
+skips. Types/lint and source/built/editor public export parity pass. Packed228-input
+strict Bundler/NodeNext and structural lifecycle pass. Matching59181-byte native
+artifact is unchanged. Logs `/tmp/pibbl-slice46-*`. Node26.9.0/pnpm11.21.0deps/
+Chromium; no Node24/full trust claim. Pure layout-description wrappers, other layout
+families, native topology transactions, minimal graph visits and matching atomic
+HTML/focus publication remain later work; all seven gates stay open.
+
+Hands-on source `http://127.0.0.1:5192/#/testing/layout-preflight`, built5193:
+Use direct root, Fail later sibling or sizing, Recover, then the red right edge.
+The independent green Canvas and host controls remain usable.
+
+## [NEXT] Pure layout-description preparation (slice 47)
+
+Include accepted defineLayoutComponent wrappers whose one known root is Flex in
+known-descendant preparation. Keep logical wrapper type/key/occurrence identity,
+its distinct receiver ownership and the root's receiver token; propagate the slot
+to the same prepared root used by actual rendering. Descriptions must run once per
+receiver/transaction, while ordinary components remain opaque. First establish a
+public later-wrapper failure preventing an earlier opaque child from evaluating;
+then prove recovery geometry/hits, stable identity, work reuse and teardown in the
+existing Studio lab. No new API or speculative arbitrary component execution.
+Consolidate46–48 after the third delivery; the fixed33/seven denominator remains.
 
 ### Consolidation 15 completed for delivery slices 43–45
 
