@@ -56,9 +56,12 @@
           "flex.grow-shrink-basis",
           "flex.min-max"
         ]
-      }
+      },
+      { "id": "column-grow", "covers": ["flex.row-column-nowrap-wrap", "flex.grow-shrink-basis", "flex.numeric-gap"], "classification": "exact explicit finite inputs; column/shrink1/minHeight0" },
+      { "id": "column-cap", "covers": ["flex.row-column-nowrap-wrap", "flex.grow-shrink-basis", "flex.min-max"], "classification": "exact explicit finite inputs; first maxHeight30" },
+      { "id": "column-shrink", "covers": ["flex.row-column-nowrap-wrap", "flex.grow-shrink-basis", "flex.min-max"], "classification": "exact explicit finite inputs; first minHeight60, second minHeight0" }
     ],
-    "limit": "Five exact finite row fixtures; one explicit content-box/numeric-padding conversion. This does not establish general box-sizing, percentage, intrinsic or CSS parity."
+    "limit": "Eight exact finite row/column fixtures; one explicit content-box/numeric-padding conversion. This does not establish general box-sizing, percentage, intrinsic or CSS parity."
   },
   "gateGroups": [
     {
@@ -182,7 +185,7 @@
         ],
         "negative": ["nonfinite intermediate allocation rejection"],
         "interaction": ["signal resize"],
-        "yogaCases": ["grow", "cap", "shrink"],
+        "yogaCases": ["grow", "cap", "shrink", "column-grow", "column-cap", "column-shrink"],
         "missing": [
           "fractional-factor differential coverage",
           "zero-basis differential coverage",
@@ -231,7 +234,7 @@
         "positive": ["cap", "shrink"],
         "negative": ["opposing limits rejection"],
         "interaction": [],
-        "yogaCases": ["cap", "shrink"],
+        "yogaCases": ["cap", "shrink", "column-cap", "column-shrink"],
         "missing": ["full percentage rules", "definite/indefinite owner matrix"]
       }
     },
@@ -375,7 +378,7 @@
         "positive": ["grow", "cap", "shrink"],
         "negative": ["negative/nonfinite validation"],
         "interaction": ["wrapped layouts"],
-        "yogaCases": ["grow", "cap", "shrink"],
+        "yogaCases": ["grow", "cap", "shrink", "column-grow", "column-cap", "column-shrink"],
         "missing": ["release wrap edge-count cases"]
       }
     },
@@ -681,7 +684,7 @@
         "positive": ["unrounded three-case receipt"],
         "negative": [],
         "interaction": [],
-        "yogaCases": ["grow", "cap", "shrink"],
+        "yogaCases": ["grow", "cap", "shrink", "column-grow", "column-cap", "column-shrink"],
         "missing": [
           "DPR",
           "negative/fractional/large positions",
@@ -836,7 +839,7 @@
       "id": "migration.versioned-yoga-conversion",
       "target": "parity",
       "group": "migration-and-conformance",
-      "current": "five-case pinned rehearsal, including direct empty Rectangle shrink and one content-box padding conversion",
+      "current": "eight-case pinned row/column rehearsal, including direct empty Rectangle shrink and one content-box padding conversion",
       "status": "experimental",
       "unresolvedPolicy": "Implementation direction is authorized; conversion/analyzer return contracts and supported compatibility policy remain to be specified.",
       "evidenceRefs": [
@@ -845,7 +848,7 @@
         "packages/core/test/layout-wasm-slice.test.tsx"
       ],
       "evidence": {
-        "positive": ["five-case Yoga 3.2.1 rehearsal"],
+        "positive": ["eight-case Yoga 3.2.1 rehearsal"],
         "negative": ["no profile or public selector"],
         "interaction": ["migration example resize"],
         "yogaCases": [
@@ -853,7 +856,10 @@
           "cap",
           "shrink",
           "rectangle-shrink",
-          "rectangle-percent-content-box"
+          "rectangle-percent-content-box",
+          "column-grow",
+          "column-cap",
+          "column-shrink"
         ],
         "missing": [
           "style/tree analysis",

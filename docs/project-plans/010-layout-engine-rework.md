@@ -2,7 +2,8 @@
 
 ## Current checkpoint and single next slice — 2026-10-22
 
-Latest delivery is slice63 `440f7c32` (fixed-row intrinsic Grid in Flex columns).
+Latest delivery is slice64 (pinned Yoga column conformance).
+Slice63 is `440f7c32` (fixed-row intrinsic Grid in Flex columns).
 Slice62 is `4f358f70` (settled-width intrinsic Flow in Flex columns).
 Slice61 is `a3ef3378` (pure described Layer children).
 Slice60 is `c90df382` (direct-entry Layer child preparation).
@@ -13,8 +14,9 @@ Slice56 is `cf2c7bc5` (prepared Flow-root planning/adoption).
 Slice55 is `1510efe3` (prepared Grid-root planning/adoption).
 Slice54 `773da7b9`,53 `aaa7ddcb`,52 `b5381e0d` are consolidated in `f322a709`.
 Every slice has its own commit. The fixed33-capability/seven-gate denominator is
-unchanged; all seven gates remain open. The single next slice is64, pinned Yoga column conformance. Source5192/built5193, `#/testing/layout-preflight`:
-Use intrinsic Grid card, then Grow intrinsic Grid row; inspect the moving red footer.
+unchanged; all seven gates remain open. The single next slice is65, pinned Yoga reverse-axis conformance. Source5192/built5193, `#/testing/layout-preflight`:
+Source5192/built5193 `#/examples/layout/wasm-yoga-migration`: Next case + resize
+cycles eight fixtures, including column grow/cap/shrink; click both panel targets.
 Native Grid tracks/spans and Flow wrap controls remain available.
 
 The loading/named-component integration is ready for source feedback on branch
@@ -1023,14 +1025,32 @@ row change, cleanup0/0/0/0 and225public inputs. Packed228installed-input Bundler
 NodeNext/lifecycle pass. Kernel65282bytes unchanged. Logs `/tmp/pibbl-slice63-*`;
 Node26.9.0/pnpm11.21.0deps/Chromium, no Node24/full trust or broad Grid parity.
 
-## [NEXT] Pinned Yoga column conformance (slice 64)
+### Slice 64 — pinned Yoga column conformance
 
-Extend the exact version/commit/configuration-bound differential corpus beyond
-its five row cases to the already supported numeric column subset. Use generated
-native Yoga output, documented content-box/explicit-minimum conversions and public
-Pibbl geometry/interaction evidence, with visible divergence classifications.
-Do not claim broad parity or choose unresolved intrinsic/box policies. Consolidation21 for
-61–63 is complete; the fixed33-capability/seven-gate scope remains unchanged.
+Native Yoga3.2.1 at042f5013152eb81c1552dec945b88f7b95ca350f now generates eight
+exact cases: previous five rows plus column grow/cap/shrink. Explicit100×100 parent,
+80px cross width, gap12 and main minima yield heights44/44,30/58,60/28 with recorded
+positions. Receipt output prints full width×height@x,y, avoiding width-only column
+claims. Probe hash and embedded public reference are regenerated from native code.
+Classification is exact finite explicit inputs, plus the pre-existing content-box
+row conversion; there is no broad default, intrinsic, reverse/RTL or parity claim.
+
+Public RED required missing column records. The public example then compares all
+positions/dimensions, both targets, untargeted column gaps and paint-only reuse.
+Focused2tests pass. Native generation and independent no-write reproduction agree;
+record-only provenance/embedded check passes. Types/lint clean. Source/built Studio
+replay all eight cases with zero errors and exact cleanup; built467private inputs.
+Packed228installed-input Bundler/NodeNext/lifecycle pass. Runtime/kernel unchanged.
+Logs `/tmp/pibbl-slice64-*`; Node26.9.0/pnpm11.21.0deps/Chromium/Apple C++20 compiler.
+No Node24/full trust, performance or general Yoga parity result.
+
+## [NEXT] Pinned Yoga reverse-axis conformance (slice 65)
+
+Extend the same exact native corpus to supported row-reverse and column-reverse
+numeric layouts. Preserve source order/identity and compare positions/dimensions,
+click targets and gaps. Use explicit finite sizing, shrink/minimum defaults and
+no rounding. Do not infer RTL, wrap-reverse or intrinsic policy. Group22 is64–66,
+then bounded consolidation; all seven release gates remain open.
 
 ### Consolidation 21 completed for delivery slices 61–63
 

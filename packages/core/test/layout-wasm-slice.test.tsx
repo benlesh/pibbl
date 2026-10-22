@@ -734,7 +734,7 @@ it.runIf(experimentalLayout)('carries final allocation through an ordinary panel
   expect(panels).toBe(initialPanels+1);
 });
 
-it.runIf(experimentalLayout)('rehearses five pinned Yoga cases through the public Pibbl example', async () => {
+it.runIf(experimentalLayout)('rehearses eight pinned Yoga cases through the public Pibbl example', async () => {
   const mountModule = await import('../../scenarios/src/learning/layout/wasm-yoga-migration.example');
 const mount = createExampleMount(mountModule.WasmYogaMigrationExample);
   const baseline = snapshotWasmLayoutDiagnostics();
@@ -763,11 +763,24 @@ const mount = createExampleMount(mountModule.WasmYogaMigrationExample);
         await expect.poll(() => canvas.nextElementSibling?.textContent).toContain(`selected: ${index === 0 ? 'A' : 'B'}`);
       }
     } else {
+      const column = fixture.flexDirection === 'column';
       for (const box of fixture.boxes) {
-        expect(labels.some(label => label.text === `${box.width} px` && label.x === 392+box.x+12 && label.y === 240+box.y+38)).toBe(true);
+        expect(labels.some(label => label.text === (column ? `${box.width} × ${box.height} px` : `${box.width} px`) && label.x === 392+box.x+(column ? 4 : 12) && label.y === 240+box.y+(column ? 16 : 38))).toBe(true);
       }
     }
-    expect(fixture.boxes.reduce((sum,box) => sum+box.width,fixture.name.startsWith('rectangle-') ? 0 : 12)).toBe(fixture.width);
+    if (fixture.flexDirection === 'column') {
+      const shrinking = fixture.name === 'column-shrink';
+      const children = [0,1].map(index => createElement(Rectangle, { style: { width: 80, height: 80, flexBasis: shrinking ? 80 : 20, flexGrow: shrinking ? 0 : 1, flexShrink: 1, minHeight: shrinking && index === 0 ? 60 : 0, maxHeight: fixture.name === 'column-cap' && index === 0 ? 30 : undefined } }));
+      expect(layoutFlex({ x: 0, y: 0, width: fixture.width, height: fixture.height }, children, { flexDirection: 'column', alignItems: 'flex-start', gap: 12 }, measurement)).toEqual(fixture.boxes);
+      expect(fixture.boxes.reduce((sum,box) => sum+box.height,12)).toBe(fixture.height);
+      for (const [index,box] of fixture.boxes.entries()) {
+        clickCanvas(canvas,394+box.x,242+box.y); await expect.poll(() => canvas.nextElementSibling?.textContent).toContain(`selected: ${index === 0 ? 'A' : 'B'}`);
+      }
+      clickCanvas(canvas,396,240+fixture.boxes[0].height+6); await nextFrame();
+      expect(canvas.nextElementSibling?.textContent).toContain('selected: B');
+    } else {
+      expect(fixture.boxes.reduce((sum,box) => sum+box.width,fixture.name.startsWith('rectangle-') ? 0 : 12)).toBe(fixture.width);
+    }
   }
   const beforePaint = snapshotWasmLayoutDiagnostics();
   clickCanvas(canvas,300,158); await nextFrame();
@@ -2071,4 +2084,8 @@ it.runIf(experimentalLayout)('measures fixed Grid rows inside an intrinsic Flex 
   expect([...canvas.getContext('2d')!.getImageData(5,60,1,1).data]).toEqual([0,0,255,255]); clickCanvas(canvas,5,60); expect(hits).toBe(1); clickCanvas(canvas,5,80); expect(hits).toBe(2);
   const updated = snapshotWasmLayoutDiagnostics(); expect(updated.activeArenas).toBe(mounted.activeArenas); expect(updated.nodeCreates).toBe(mounted.nodeCreates); expect(updated.gridTrackResolutions-mounted.gridTrackResolutions).toBe(1); expect(updated.gridCellPlacements-mounted.gridCellPlacements).toBe(1);
   controller.dispose(); const disposed = snapshotWasmLayoutDiagnostics(); expect([disposed.activeArenas,disposed.activeNodes,disposed.activeWasmInstances]).toEqual([baseline.activeArenas,baseline.activeNodes,baseline.activeWasmInstances]);
+});
+
+it('records pinned native Yoga column grow, cap and shrink fixtures', () => {
+  expect(yogaReference.cases.map(fixture => fixture.name)).toEqual(expect.arrayContaining(['column-grow','column-cap','column-shrink']));
 });

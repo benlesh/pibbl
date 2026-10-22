@@ -3,15 +3,15 @@
   "commit": "042f5013152eb81c1552dec945b88f7b95ca350f",
   "license": "MIT",
   "licenseSha256": "52412d7bc7ce4157ea628bbaacb8829e0a9cb3c58f57f99176126bc8cf2bfc85",
-  "probeSha256": "cdcbb9f7c3a8c03a0261f2cac1713ee9fe69e206af884b0eec10489a3f8cb976",
+  "probeSha256": "9f3c089f50b4aadb3f58596c31758a80f27ea5184f8f5d08c638c69816457007",
   "configuration": {
     "useWebDefaults": false,
     "pointScaleFactor": 0,
     "errata": "none",
     "direction": "LTR",
-    "flexDirection": "row",
+    "flexDirection": "row in original cases; column in column-*",
     "alignItems": "flex-start",
-    "gap": "12 in grow/cap/shrink; 0 in rectangle cases",
+    "gap": "12 in grow/cap/shrink and column cases; 0 in rectangle cases",
     "shrink": 1,
     "padding": "10 in rectangle-percent-content-box; otherwise 0",
     "boxSizing": "content-box in rectangle-percent-content-box; otherwise Yoga default",
@@ -21,6 +21,8 @@
     {
       "name": "grow",
       "width": 300,
+      "height": 100,
+      "flexDirection": "row",
       "boxes": [
         {
           "x": 0,
@@ -39,6 +41,8 @@
     {
       "name": "cap",
       "width": 300,
+      "height": 100,
+      "flexDirection": "row",
       "boxes": [
         {
           "x": 0,
@@ -57,6 +61,8 @@
     {
       "name": "shrink",
       "width": 220,
+      "height": 100,
+      "flexDirection": "row",
       "boxes": [
         {
           "x": 0,
@@ -75,6 +81,8 @@
     {
       "name": "rectangle-shrink",
       "width": 100,
+      "height": 100,
+      "flexDirection": "row",
       "boxes": [
         {
           "x": 0,
@@ -93,6 +101,8 @@
     {
       "name": "rectangle-percent-content-box",
       "width": 200,
+      "height": 100,
+      "flexDirection": "row",
       "boxes": [
         {
           "x": 0,
@@ -105,6 +115,66 @@
           "y": 0,
           "width": 90,
           "height": 100
+        }
+      ]
+    },
+    {
+      "name": "column-grow",
+      "width": 100,
+      "height": 100,
+      "flexDirection": "column",
+      "boxes": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 80,
+          "height": 44
+        },
+        {
+          "x": 0,
+          "y": 56,
+          "width": 80,
+          "height": 44
+        }
+      ]
+    },
+    {
+      "name": "column-cap",
+      "width": 100,
+      "height": 100,
+      "flexDirection": "column",
+      "boxes": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 80,
+          "height": 30
+        },
+        {
+          "x": 0,
+          "y": 42,
+          "width": 80,
+          "height": 58
+        }
+      ]
+    },
+    {
+      "name": "column-shrink",
+      "width": 100,
+      "height": 100,
+      "flexDirection": "column",
+      "boxes": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 80,
+          "height": 60
+        },
+        {
+          "x": 0,
+          "y": 72,
+          "width": 80,
+          "height": 28
         }
       ]
     }

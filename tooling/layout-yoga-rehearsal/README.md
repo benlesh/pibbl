@@ -23,9 +23,25 @@ minimum0 except shrink A. Two additional direct empty-Rectangle cases use gap0:
 
 The padded case explicitly selects Yoga content-box sizing, matching Pibbl's
 content-box dimensions and minimum plus outer padding. Its outer height is100px;
-other cases are80px. Root height100px, LTR/row/nowrap/start, border0 and rounding0
-are fixed. These five exact geometries do not prove general percentages, box sizing,
-text, fractional precision or wrapping. No Yoga implementation is bundled in Studio.
+other cases are80px. Root height100px, LTR/nowrap/start, border0 and rounding0 are fixed.
+
+Three numeric column cases use parent100×100px, child cross width80px, gap12px
+and shrink1:
+
+| Case | Basis | Grow | A height bound | A/B heights | A/B y |
+| --- | ---: | ---: | --- | --- | --- |
+| column-grow | 20px | 1 | min0 | 44/44px | 0/56px |
+| column-cap | 20px | 1 | max30px, min0 | 30/58px | 0/42px |
+| column-shrink | 80px | 0 | min60px; B min0 | 60/28px | 0/72px |
+
+Classification: exact geometry under explicit native inputs. Pibbl preserves its
+row default; these cases explicitly select column, shrink1 and main-axis minima.
+Yoga uses the same explicit values with no rounding. There is no inferred content
+minimum or compatibility profile. Both x/y and width/height are recorded, public
+labels compare dimensions, and source/built input replays hit both targets while
+main-axis gaps miss. The original padded row case remains an explicit content-box
+conversion. These eight exact geometries do not prove general percentages, box
+sizing, automatic minima, text, fractional precision, wrapping, reverse or RTL. No Yoga implementation is bundled in Studio.
 
 ## Version, source and reproduction
 
@@ -50,7 +66,7 @@ node tree and configuration in the probe. This needs Git, tar and a C++20 compil
 The fresh receipt used Apple clang 21.0.0 on the recorded Node 26.9.0 host.
 
 Configuration explicitly sets `useWebDefaults=false`, point scale 0 (no rounding),
-no errata, row, LTR, start alignment and gap. Default experiments remain disabled.
+no errata, per-case row/column, LTR, start alignment and gap. Default experiments remain disabled.
 This probes the native implementation; it is not a Yoga JS/WASM loading or speed
 comparison. All recorded integer dimensions are exactly representable in both engines.
 

@@ -85,9 +85,9 @@ if (source) {
         pointScaleFactor: 0,
         errata: "none",
         direction: "LTR",
-        flexDirection: "row",
+        flexDirection: "row in original cases; column in column-*",
         alignItems: "flex-start",
-        gap: "12 in grow/cap/shrink; 0 in rectangle cases",
+        gap: "12 in grow/cap/shrink and column cases; 0 in rectangle cases",
         shrink: 1,
         padding: "10 in rectangle-percent-content-box; otherwise 0",
         boxSizing: "content-box in rectangle-percent-content-box; otherwise Yoga default",
@@ -142,5 +142,5 @@ if (writing)
 else if (JSON.stringify(JSON.parse(match[1])) !== JSON.stringify(record.cases))
   throw new Error("Public reference differs from recorded Yoga geometry");
 process.stdout.write(
-  `${source ? "Reproduced" : "Checked recorded"} Yoga ${record.version} ${commit}: ${record.cases.map((value) => value.name + ":" + value.boxes.map((box) => box.width).join("/")).join(", ")}\n`,
+  `${source ? "Reproduced" : "Checked recorded"} Yoga ${record.version} ${commit}: ${record.cases.map((value) => value.name + ":" + value.boxes.map((box) => `${box.width}×${box.height}@${box.x},${box.y}`).join("/")).join(", ")}\n`,
 );
