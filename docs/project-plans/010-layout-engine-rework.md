@@ -10,6 +10,33 @@ is one compiled-module cache and one pending-mount registry. Superseded private
 loading files were removed; the previous public loading suite remains as a
 separate checkpoint regression suite. Original checkouts and backups are retained.
 
+### Consolidation 9 completed for delivery slices 25–27
+
+This is the bounded consolidation after three delivered slices: portable packed
+consumer (25), receiver input roles (26), and external loading/explicit sync mounts
+(27). Reconciliation commits are 147208d1 and 1485beb6, not additional feature
+slices. One focused read-only review of 1485beb6 against 147208d1 found no material
+loading/mount arbitration, named-host ownership, asset-base or jump-startup issues.
+No additional reviewer or broad aggregate gate was launched.
+
+Stable source and built nested browser replays both passed after explicitly
+revealing the iframe: footer 320→360→280, moved hits, keyed detach/restore, receiver
+roles and zero owned layout resources after disposal. The built receipt contains
+463 private built inputs. Logs are
+`/tmp/pibbl-integration-clean-source-nested-20261022.log` and
+`/tmp/pibbl-integration-clean-built-nested-20261022.log`. Final early-jump visual
+inspection shows the actual Canvas and controls, width 320 and no errors:
+`/tmp/pibbl-integration-final-jump-20261022.png`. These fresh receipts supersede the
+in-flight HMR footer mismatch and offscreen blank probes described below. The
+navigation test also verifies the control is disabled during asynchronous startup
+and scrolls the preview panel once ready. No scheduler fix was needed.
+
+Current estimate remains a range, not a promise: the original forecast was 36
+additional slices including 25. Three deliveries are now integrated; loading was
+an accepted scope addition to that forecast. Roughly 34 delivery slices remain,
+subject to reassessment against the same proposal exits after the next group.
+Only slice 28 below is selected; the area estimates are not parallel work queues.
+
 **Exactly one selected next delivery slice: 28 — genuine paint-only Flex allocation
 reuse.** Establish a public failing regression showing that a paint-only receiver
 change repaints correctly without recomputing the unchanged parent allocation.
