@@ -582,21 +582,38 @@
       "id": "reactivity.incremental-layout",
       "target": "beyond",
       "group": "reactivity-and-publication",
-      "current": "receiver ownership and bounded caches in demonstrated cases",
+      "current": "root-owned shared WASM instance, isolated generational regions and bounded prepared Flex plans",
       "status": "experimental",
       "evidenceRefs": [
         "packages/core/test/layout-wasm-slice.test.tsx",
-        "tooling/test-wasm-nested-intrinsic.mjs"
+        "tooling/test-wasm-nested-intrinsic.mjs",
+        "tooling/test-wasm-wrapped-collections.mjs",
+        "tooling/test-built-layout-lifecycle.mjs",
+        "tooling/layout-preflight-lab.mjs",
+        "docs/project-plans/010-layout-engine-rework.md"
       ],
       "evidence": {
-        "positive": ["paint-only cache reuse", "keyed removal/disposal"],
-        "negative": [],
-        "interaction": ["signal updates"],
+        "positive": [
+          "paint-only cache reuse",
+          "keyed removal/disposal",
+          "one mutable instance per root including managed Layers",
+          "isolated generational native region handles",
+          "settled Absolute-to-Flex and nested Flex plans reused during traversal"
+        ],
+        "negative": [
+          "failed known-layout preparation releases provisional regions",
+          "active-path known Flex cycles rejected"
+        ],
+        "interaction": [
+          "signal updates",
+          "prepared-region keyed reorder preserves targets",
+          "independent root updates through known-layout failure"
+        ],
         "yogaCases": [],
         "missing": [
-          "role-aware graph",
+          "complete role-aware prepared graph",
           "minimal visit proof",
-          "root-wide arena"
+          "all-family root-wide prepared graph and batched topology revisions"
         ]
       }
     },
@@ -604,20 +621,35 @@
       "id": "geometry.transactional-publication",
       "target": "preserve",
       "group": "reactivity-and-publication",
-      "current": "existing transaction is not general geometry rollback",
-      "status": "missing",
+      "current": "bounded known Flex geometry preflight and transaction-local plans; general publication remains incomplete",
+      "status": "experimental",
       "evidence": {
-        "positive": [],
-        "negative": [],
-        "interaction": [],
+        "positive": [
+          "settled known sibling and nested Flex plans before opaque descendant evaluation",
+          "normal traversal adopts prepared regions without another allocation pass"
+        ],
+        "negative": [
+          "later known Flex factor/sizing failures prevent earlier opaque evaluation",
+          "failed preparation and root disposal release owned regions"
+        ],
+        "interaction": [
+          "source/built explicit recovery geometry and targets",
+          "independent Canvas root remains usable during known-layout failure"
+        ],
         "yogaCases": [],
         "missing": [
-          "staged geometry",
-          "hit/focus/HTML adoption",
-          "failure preflight",
-          "independent-root isolation"
+          "general staged geometry across all layout families",
+          "nonthrowing matching hit/focus/HTML adoption",
+          "fallible publication preflight beyond known Flex",
+          "direct and opaque-boundary Flex entry preparation"
         ]
-      }
+      },
+      "evidenceRefs": [
+        "packages/core/test/layout-wasm-slice.test.tsx",
+        "packages/scenarios/src/layout-preflight-lab.tsx",
+        "tooling/layout-preflight-lab.mjs",
+        "docs/project-plans/010-layout-engine-rework.md"
+      ]
     },
     {
       "id": "rounding-and-point-scale",

@@ -653,6 +653,32 @@ failure/recovery, geometry/hit, work-reuse and cleanup evidence in the existing
 Studio lab. Do not add a universal root walk, another solver, new public API or
 atomic pixel claim. Consolidate43–45 before starting production46.
 
+### Consolidation 15 completed for delivery slices 43–45
+
+Separate commits:43 `6b8fffd0`, its focused public-lab cleanup/watching correction
+`ae71a179`,44 `2c68833e`,45 `3e0d3a2b`. One root-owned native instance remains
+the mutable boundary. Known Absolute→Flex and direct nested built-in Flex regions
+now prepare receiver inputs and demanded geometry before opaque descendants, then
+actual rendering adopts the same plans/regions. There is one existing solver,
+transaction and scheduler; ordinary application components are not discovered by
+speculative evaluation. No screenshot/baseline or public API change.
+
+The fixed33-capability/seven-gate ledger now credits slice42's root instance and
+generational region ownership, plus43–45's bounded input/geometry preparation and
+independent-root failure evidence. Transactional publication moves from missing
+to an explicitly experimental foundation. Full graph, minimal visits, all-family
+staging and matching nonthrowing event/focus/HTML publication remain missing;
+no gate closes. Five pinned Yoga fixtures remain the only classified oracle cases.
+
+Fresh final focused119experimental pass/1normal-onlyskip; normal57pass/63skips.
+Types/lint/public export parity pass. Source/built Studio fault/recovery/root
+cleanup use225public inputs; packed228-input strict Bundler/NodeNext and structural
+lifecycle pass. Binary stays59181bytes, unchanged from42; no fresh native rebuild
+or performance claim is needed for these host-only slices. Focused read-only
+reviews found no material issue in the changed runtime paths. Node26.9.0/pnpm11.21.0
+deps/Chromium remains the verified environment; Node24/full trust and final
+whole-codebase review are outstanding. Exactly one selected next slice is46 above.
+
 ### Consolidation 14 completed for delivery slices 40–42
 
 Separate commits:40 `69fcb3a6`,41 `e868fafe`,42 `b56241f9`. Main-axis and
