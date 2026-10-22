@@ -582,7 +582,7 @@
       "id": "reactivity.incremental-layout",
       "target": "beyond",
       "group": "reactivity-and-publication",
-      "current": "root-owned shared WASM instance, isolated generational regions, bounded prepared Flex plans and native Grid/Flow numeric kernels",
+      "current": "root-owned shared WASM instance, isolated generational regions, bounded prepared Flex/Grid/Flow roots, arena-free Overlay plans and native Grid/Flow numeric kernels",
       "status": "experimental",
       "evidenceRefs": [
         "packages/core/test/layout-wasm-slice.test.tsx",
@@ -601,7 +601,8 @@
           "settled Absolute-to-Flex and nested Flex plans reused during traversal",
           "direct and opaque-boundary Flex entries and pure described Flex roots reuse prepared ownership",
           "known Layer direct Flex roots and Grid/Flow entry Flex placements carry exact receiver plans into traversal",
-          "mounted Grid tracks/cell areas and resolved Flow line/wrap placement use the existing root-owned arena protocol"
+          "mounted Grid tracks/cell areas and resolved Flow line/wrap placement use the existing root-owned arena protocol",
+          "known Grid/Flow roots adopt the original native plan; Overlay stages aligned host placements without a native arena"
         ],
         "negative": [
           "failed known-layout preparation releases provisional regions",
@@ -624,7 +625,7 @@
       "id": "geometry.transactional-publication",
       "target": "preserve",
       "group": "reactivity-and-publication",
-      "current": "bounded known Flex preparation and finite root-wide HTML projection preflight; general matching publication remains incomplete",
+      "current": "bounded known Flex/Grid/Flow/Overlay preparation and finite root-wide HTML projection preflight; general matching publication remains incomplete",
       "status": "experimental",
       "evidence": {
         "positive": [

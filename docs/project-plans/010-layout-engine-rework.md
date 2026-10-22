@@ -2,7 +2,7 @@
 
 ## Current checkpoint and single next slice — 2026-10-22
 
-Latest delivery is slice57 (prepared Overlay-root planning/adoption).
+Latest delivery is slice57 `bf03d14f` (prepared Overlay-root planning/adoption).
 Slice56 is `cf2c7bc5` (prepared Flow-root planning/adoption).
 Slice55 is `1510efe3` (prepared Grid-root planning/adoption).
 Slice54 `773da7b9`,53 `aaa7ddcb`,52 `b5381e0d` are consolidated in `f322a709`.
@@ -902,7 +902,33 @@ Prepare known nested Absolute roots through the same arena-free structural plan.
 Public RED: later Overlay→Absolute→Grid→Flex failure must precede earlier opaque
 sibling evaluation. Reuse settled placements, receiver identity and parent-owned
 slots; prove recovery geometry/hits and single native descendant work. No new
-public API or ABI. Consolidate55–57 before starting58.
+public API or ABI. Consolidation19 for55–57 is complete.
+
+### Consolidation 19 completed for delivery slices 55–57
+
+Separate commits55 `1510efe3`,56 `cf2c7bc5`,57 `bf03d14f`. Known Grid and Flow
+roots adopt their existing native plans; Overlay stages aligned host placements
+and owns a structural slot with no numeric arena. This distinction is recorded in
+the fixed33-capability manifest. No gate closes: all seven remain open.
+
+Fresh bounded Chromium combined run:209passed/1normal-onlyskip across11 layout,
+ABI and HTML ownership files. Slice57 normal11passed/75experimental skips;
+source/built225public inputs and packed228installed inputs pass. Types/lint clean.
+The compiler-produced65282byte/8native-test kernel is unchanged by55–57; no fresh
+native compilation was necessary. Node26.9.0/pnpm11.21.0deps/Chromium, no Node24
+aggregate trust result. Logs `/tmp/pibbl-consolidation19-focused.txt` and
+`/tmp/pibbl-slice57-*`.
+
+The complete remaining seven-gate table at the top remains applicable: Flex and
+box/direction matrices, intrinsic/provider constraints, placement/participation,
+all-family prepared ownership and matching Canvas/hit/focus/HTML publication,
+standalone/framework and Pibbl migration plus classified pinned Yoga corpus,
+and Grid implicit/intrinsic target remain incomplete. Reproducible kernel/host/
+whole-app performance, Node24 trust and final separate critical review remain
+cross-cutting exits. Five pinned Yoga fixtures do not establish broad parity.
+The single next outcome58 is arena-free nested Absolute preparation; ordinary
+opaque components, Layer's broader family boundary and atomic publication remain
+explicit subsequent gaps, not silently included in this slice.
 
 ### Consolidation 18 completed for delivery slices 52–54
 
