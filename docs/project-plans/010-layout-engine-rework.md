@@ -35,7 +35,7 @@ Current estimate remains a range, not a promise: the original forecast was 36
 additional slices including 25. Three deliveries are now integrated; loading was
 an accepted scope addition to that forecast. Roughly 34 delivery slices remain,
 subject to reassessment against the same proposal exits after the next group.
-Slice 28 is delivered below. Roughly 31 delivery slices remain after slice 30 against the same
+Slice 28 is delivered below. Roughly 30 delivery slices remain after slice 31 against the same
 forecast, subject to reassessment after this group. Area estimates are not parallel
 work queues.
 
@@ -175,14 +175,55 @@ hypercritical architecture/performance review belongs at the end of all work.
 This consolidation does not turn the experimental subset into full feature
 completion or Yoga parity.
 
-**Exactly one selected next delivery slice: 31 — reusable intrinsic Card contract
-and prototype.** Consolidation 10 is complete. Present the proposed
-`defineLayoutComponent(describe)` signature and one real Card composition before
-core implementation. The proposal's pure callback can expose a known subtree for
-intrinsic preparation without speculatively running an ordinary component.
-Prototype with a per-transaction prepared description before considering any
-cross-frame cache: identity alone never proves nested mutable props unchanged.
-No additional capabilities or new public revision selector are selected.
+### Slice 31 — pure structural Card prototype
+
+Adds the proposal's `defineLayoutComponent<P>(describe: (props: Readonly<P>) =>
+PibblNodeInput): PibblComponent<P>` operation. A description exposes one known
+primitive root and forwards style explicitly. It retains the Card's ordinary
+identity boundary and the returned root's own identity, rather than flattening
+away their lifecycle distinction. Existing transaction/receiver provisions share
+one root across style inspection, measurement and paint; no cross-frame cache or
+immutable-props promise. Hooks/Canvas/allocation reads and signal writes are
+forbidden. Ordinary components below declared boxes execute only after allocation.
+
+Public failing import/API and scenario regressions preceded production changes.
+The direct-mount root-key test then exposed lost structural signal ownership;
+collecting through a receiver provision during isolation and adopting after owner
+restoration fixes it. Root key changes now remount and clean descendants exactly.
+Initial support uses an explicit finite width on the described column; automatic
+width and general nested structural contributions remain later work. Card aggregate
+measurement is not cached between transactions.
+
+Fresh checks: 9 focused public Card/guard/lifecycle tests passed; adjacent Flex,
+WASM-layout and provision suite totals 4 files / 87 tests. Repository typecheck,
+targeted lint, public JSDoc and exact source/built/editor export parity passed.
+The initially missing editor declaration prevented iframe creation; adding the
+exact maintained signature resolves it. Private and normal package outputs were
+built. Installed offline tarball consumer passed strict Bundler/NodeNext, public
+structural scenario, exact cleanup and 227 installed dist inputs. Its explicit-sync
+entry requires zero external layout downloads; Studio async lanes still require
+an actual fetched asset. No broad aggregate trust or Node 24 claim.
+
+Source and built browser runs passed footer320→360→280, old/current hit targets,
+keyed remove/restore, ordinary-only probes, one description per width transaction,
+and zero nodes/arenas/measurement entries after disposal. Built provenance is466
+private dist inputs. Logs `/tmp/pibbl-slice31-{source,built}-browser.log`,
+`/tmp/pibbl-slice31-packed.txt`, `/tmp/pibbl-slice31-focused.txt` and
+`/tmp/pibbl-slice31-studio-parity.txt`. One reused focused reviewer found no material
+issues; direct-mount ownership was additionally established by the later red/green
+regression. Environment Node26.9.0/pnpm11.21.0 dependencies/Chromium.
+
+Runnable source/built ports5192/5193: `#/examples/layout/wasm-flex-nested-intrinsic`;
+choose Toggle pure Card, then width/Text/key controls and the green footer. This is
+group11's first delivery; consolidate after31–33. End-of-all-work whole-codebase
+review remains deferred as requested.
+
+**Exactly one selected next delivery slice: 32 — settled width through a structural
+Card.** Recognize the prepared root's proven Flex column capability when assigning
+a finite cross allocation, keeping the wrapper for identity and rendering. Remove
+the application's explicit-width calculation, establish the failing public geometry
+contract first, and reuse existing measurement/provision tokens. No new public API,
+new cache, speculative component execution or production-engine switch.
 
 Current acceptance gaps remain broader than loading: general automatic minimum and
 intrinsic sizing rules, structural component preparation, root-wide prepared graph
@@ -1415,36 +1456,15 @@ three pinned Yoga cases, and keeps unaccepted API signatures and missing release
 gates explicit. It is support work, not an additional delivered capability slice.
 Group9 has two deliveries; consolidate after the next closely related slice.
 
-## [NEXT] Reusable intrinsic Card contract and prototype (slice 31)
+## [NEXT] Settled width through a structural Card (slice 32)
 
-Consolidation 10 (28–30) is complete with final source/built browser evidence.
-Do not repeat broad unchanged suites or launch another reviewer. The requested
-whole-codebase review remains an end-of-work step.
-
-The next material design boundary is the proposal's opt-in structural operation:
-
-```ts
-declare function defineLayoutComponent<P>(
-  describe: (props: Readonly<P>) => PibblNodeInput,
-): PibblComponent<P>;
-```
-
-A Card returns an ordinary column Flex with wrapped title/body Text and padding.
-An outer finite-width auto-height column places Card above a clickable footer;
-text changes must move the footer's pixels and hit target in the same frame.
-The callback describes structure once per necessary preparation and the same
-returned descriptors are painted. Existing signal reads are allowed; hooks,
-Canvas context, useLayoutBox, writes and resource creation are excluded. Ordinary
-components remain opaque and execute only after their allocation is available.
-A primitive render program is not equivalent to this reusable JSX composition.
-
-Present concise application code, exact style forwarding/ownership and the
-prepared-description identity rules before production implementation. Prefer a
-per-transaction description initially, keeping mutable opaque props conservative,
-rather than introducing a new immutable-authoring promise or public revision knob.
-Prototype the signature against a real Card before freezing it, as the approved
-proposal requires. This selects only the design/prototype boundary; no further
-parallel implementation queue or default-engine migration is authorized here.
+The first Card prototype explicitly calculates its root content width. Reuse the
+existing finite stretched-column allocation for a Card's prepared root Flex,
+retaining Card identity and root receiver tokens. Prove the public example works
+without the width calculation, updates wrapped height and following hit targets,
+and describes once per transaction. Keep recursive intrinsic Card graphs, rows,
+wrapped columns, responsive queries and opaque roots conservative. This is group11's
+second delivery; consolidate after31–33.
 
 Slice 26 delivery (2026-10-21): completed the in-progress private role foundation
 before any loading migration. Existing receiver edges carry staged masks; successful

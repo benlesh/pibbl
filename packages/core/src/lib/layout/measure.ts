@@ -1,3 +1,4 @@
+import { isLayoutComponent, placedLayoutComponentRoot } from './define-layout-component.js';
 import { getStyleMeasurementMode, withStyleMeasurement, rejectResponsiveMeasurement, UnsupportedResponsiveMeasurement } from '../style/responsive.js';
 import { layoutDiagnostic } from '../style/diagnostics.js';
 import { GLOBAL_STATE } from '../global-state.js';
@@ -90,6 +91,16 @@ function measureElementInternal(
       constraints,
       reason: 'cyclic measurement dependency is not supported',
     });
+  }
+  if (isLayoutComponent(type)) {
+    context.active.add(source);
+    context.stack.push(element);
+    try {
+      return measureElementInternal(placedLayoutComponentRoot(element, preNormalized), constraints, service, context);
+    } finally {
+      context.stack.pop();
+      context.active.delete(source);
+    }
   }
   if (!definition?.measure) {
     return {

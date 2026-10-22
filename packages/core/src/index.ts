@@ -434,3 +434,5 @@ export type {
   PibblGifExportOptions,
   PibblRenderCompletion,
 } from './lib/recording/types.js';
+
+export { defineLayoutComponent } from './lib/layout/define-layout-component.js';

@@ -1,3 +1,4 @@
+import { isLayoutComponent, placedLayoutComponentRoot } from './layout/define-layout-component.js';
 import {
   clearComponentState,
   getAnonElemName,
@@ -303,7 +304,9 @@ function renderComponentElement<P>(
                 enterPlacementHandoffCapture(props, consumedStyle) :
                 undefined;
               try {
-                return componentRefs.element.type(props);
+                return isLayoutComponent(componentRefs.element.type) ?
+                  placedLayoutComponentRoot(componentRefs.element, preparedStyle) :
+                  componentRefs.element.type(props);
               } finally {
                 releaseHandoff?.();
               }

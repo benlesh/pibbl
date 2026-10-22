@@ -119,12 +119,14 @@ try {
   ]);
   await writeFile(
     join(consumer, "entry.ts"),
-    `import mount from './example';
+    `import { WasmFlexNestedIntrinsicExample } from './example';
+import { createElement } from '@pibbl/core';
+import { pibblSync } from '@pibbl/core/sync';
 const receipt = globalThis.__PIBBL_PACKED_PROOF__;
 if(receipt.modules || receipt.instances || receipt.frames) throw Error('Import-time work');
 receipt.importInert = true;
 globalThis.requestAnimationFrame = receipt.request;
-const controller = mount(document.querySelector('canvas')!);
+const controller = pibblSync(document.querySelector('canvas')!, createElement(WasmFlexNestedIntrinsicExample, {}));
 addEventListener('pagehide', () => controller.dispose(), {once:true});`,
   );
   const bundle = await build({
@@ -182,6 +184,7 @@ addEventListener('pagehide', () => controller.dispose(), {once:true});`,
         join(root, "tooling/test-wasm-nested-intrinsic.mjs"),
         address,
         "--packed",
+        ...(process.argv.includes("--structural") ? ["--structural"] : []),
       ]),
     );
   } else {

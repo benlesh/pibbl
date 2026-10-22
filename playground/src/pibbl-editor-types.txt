@@ -693,6 +693,8 @@ export interface MeshTransformOptions {
   type ChildrenArguments<P> = P extends unknown ? 'children' extends keyof P ? [] | [ChildrenForProps<P>] | MultipleChildren<ChildrenForProps<P>> : [] : never;
   export function createElement<P>(type: PibblElementType<P>, props: ElementInputOrNull<P>, ...children: ChildrenArguments<P>): PibblElement<P>;
   export function Fragment(props: { children?: PibblNodeInput }): PibblNodeInput;
+  /** Defines one pure structural root shared by measurement and paint per transaction. */
+  export function defineLayoutComponent<P>(describe: (props: Readonly<P>) => PibblNodeInput): PibblComponent<P>;
   export function definePrimitive<P = Record<string, never>, S extends SystemStyle = SystemStyle, N extends SystemStyle = S, R extends SystemStyle = N>(render: PrimitiveRender<P, R> & PrimitiveStyleGuard<S, N, R> & (PrimitiveInput<P, S> extends never ? never : unknown), ...capabilityArguments: PrimitiveCapabilityArguments<P, S, N, R>): PibblPrimitiveComponent<PrimitiveProgramProps<P>, PrimitiveInput<P, S>>;
   export function defineRenderLayer<Props, Resources, Target extends object = object>(definition: PibblRenderLayerDefinition<Props, Resources, Target>): PibblComponent<PibblRenderLayerProps<Props>>;
   export const Rectangle: PibblPrimitiveComponent<RectangleProps, PrimitiveInput<RectangleProps, RectStyle>>;

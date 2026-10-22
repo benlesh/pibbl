@@ -3,6 +3,7 @@ import { chromium } from 'playwright';
 const base = process.argv.slice(2).find(argument => !argument.startsWith('--')) ?? 'http://127.0.0.1:5188';
 const sourceLane = process.argv.includes('--source');
 const packedLane = process.argv.includes('--packed');
+const structural = process.argv.includes('--structural');
 const browser = await chromium.launch({ headless: true });
 try {
   const page = await browser.newPage({ viewport: { width: 1440, height: 1100 } });
@@ -23,6 +24,11 @@ try {
     await page.waitForTimeout(180); return state();
   };
   await page.waitForTimeout(180);
+  if (structural) {
+    const selected = await click(620, 40);
+    assert.equal(selected.structuralCard, true);
+    assert.equal(selected.descriptions, 1);
+  }
   const initial = await state(); assert.equal(initial.footerBox.y, initial.cardBottom+12);
   const narrow = await click(60,110);
   assert.ok(narrow.footerBox.y > initial.footerBox.y); assert.equal(narrow.footerBox.y, narrow.cardBottom+12);
@@ -31,6 +37,7 @@ try {
   assert.equal(narrow.layout.paintInputInvalidations, initial.layout.paintInputInvalidations);
   assert.equal(narrow.layout.measurementInputInvalidations, initial.layout.measurementInputInvalidations);
   assert.equal(narrow.probeRenders, initial.probeRenders+1, 'Measurement must not invoke the opaque probe');
+  if (structural) assert.equal(narrow.descriptions, initial.descriptions+1);
   assert.equal((await click(40,initial.footerBox.y+12)).footerHits, 0);
   assert.equal((await click(40,narrow.footerBox.y+12)).footerHits, 1);
   if (process.env.PIBBL_LAYOUT_SCREENSHOT) await frame.locator('canvas').screenshot({ path: process.env.PIBBL_LAYOUT_SCREENSHOT });
@@ -43,7 +50,8 @@ try {
   assert.equal(painted.layout.measurementInputInvalidations, short.layout.measurementInputInvalidations);
   assert.equal(painted.layout.unknownInputInvalidations, short.layout.unknownInputInvalidations);
   assert.equal(painted.layout.solves, short.layout.solves);
-  assert.equal(painted.layout.measuredLeaves, short.layout.measuredLeaves, 'Nested aggregate paint reuse');
+  if (!structural) assert.equal(painted.layout.measuredLeaves, short.layout.measuredLeaves, 'Nested aggregate paint reuse');
+  // Structural Cards currently remeasure aggregate height each transaction.
   const reversed = await click(40,426);
   assert.equal(reversed.layout.nodeCreates, painted.layout.nodeCreates);
   assert.deepEqual(reversed.keys, ['note','main']);
@@ -52,7 +60,7 @@ try {
   assert.ok(removed.footerBox.y < reversed.footerBox.y);
   assert.equal(removed.layout.activeNodes, reversed.layout.activeNodes-1);
   const detached = await click(240,110);
-  assert.equal(detached.layout.measuredLeaves, removed.layout.measuredLeaves);
+  if (!structural) assert.equal(detached.layout.measuredLeaves, removed.layout.measuredLeaves);
   assert.equal(detached.probeRenders, removed.probeRenders);
   assert.equal((await click(40,reversed.footerBox.y+30)).footerHits, 1);
   assert.equal((await click(40,removed.footerBox.y+12)).footerHits, 2);
@@ -63,7 +71,7 @@ try {
   assert.equal(restored.footerBox.y, narrow.footerBox.y);
   assert.ok(restored.layout.cachedMeasurements <= 2*restored.layout.activeNodes);
   const repainted = await click(432,110);
-  assert.equal(repainted.layout.measuredLeaves, restored.layout.measuredLeaves);
+  if (!structural) assert.equal(repainted.layout.measuredLeaves, restored.layout.measuredLeaves);
   const sandbox = page.frames().find(item => item.url() === 'about:srcdoc');
   const proof = await sandbox.evaluate(() => globalThis.__PIBBL_BUILT_LAYOUT_PROOF__);
   if (!sourceLane) {
@@ -84,8 +92,8 @@ try {
   await page.waitForTimeout(180);
   assert.deepEqual(await sandbox.evaluate(() => globalThis.__PIBBL_LAYOUT_DIAGNOSTICS__()), disposed);
   assert.deepEqual(errors, []);
-  if (!base.includes('/offline')) {
+  if (!base.includes('/offline') && !packedLane) {
     assert.ok(layoutDownloads.some(download => download.status === 200), 'Async public mounting must fetch the external layout asset');
   } else assert.equal(layoutDownloads.length, 0, 'Embedded sync must work without any external layout request');
-  console.warn(`${sourceLane ? 'Source' : 'Built'} nested intrinsic: footer ${initial.footerBox.y}→${narrow.footerBox.y}→${short.footerBox.y}, probe normal-only, moved targets, keyed remove/restore, detached source inert, bounded paint reuse, receiver roles, zero disposal ownership; ${proof?.coreInputs.length ?? 'source'} inputs`);
+  console.warn(`${sourceLane ? 'Source' : 'Built'} nested intrinsic: footer ${initial.footerBox.y}→${narrow.footerBox.y}→${short.footerBox.y}, probe normal-only, moved targets, keyed remove/restore, detached source inert, ${structural ? 'per-transaction Card preparation' : 'bounded paint reuse'}, receiver roles, zero disposal ownership; ${proof?.coreInputs.length ?? 'source'} inputs`);
 } finally { await browser.close(); }

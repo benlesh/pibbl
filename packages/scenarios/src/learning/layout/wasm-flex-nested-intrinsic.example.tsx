@@ -1,5 +1,6 @@
 import {
   useConst,
+  defineLayoutComponent,
   Flex,
   Rectangle,
   Text,
@@ -17,6 +18,8 @@ function createWasmFlexNestedIntrinsicExampleContent(
 ) {
   let node: PibblNode;
   const width = signal(420);
+  const structuralCard = signal(false);
+  let descriptions = 0;
   const longText =
     "Nested columns settle their widths before Text determines their heights. The following sibling uses the complete Card height.";
   const keys = signal(["main", "note"]);
@@ -37,11 +40,12 @@ function createWasmFlexNestedIntrinsicExampleContent(
   }
   // An ordinary descriptor helper, called by Workspace in normal rendering.
   // The engine measures only its returned built-ins; it never invokes this helper.
-  function card(title: string) {
+  function card(title: string, declaredWidth?: number) {
     return (
       <Flex
         style={{
           flexDirection: "column",
+          width: declaredWidth,
           maxWidth: 360,
           padding: 12,
           gap: 8,
@@ -109,6 +113,10 @@ function createWasmFlexNestedIntrinsicExampleContent(
       </Flex>
     );
   }
+  const Card = defineLayoutComponent(({ title }: { title: string }) => {
+    descriptions++;
+    return card(title, Math.max(0, Math.min(360, width.get() - 24)));
+  });
   function Footer({ style: _style }: { style: BoxStyle & FlexItemStyle }) {
     const box = useLayoutBox(),
       transform = rootTransform
@@ -160,7 +168,7 @@ function createWasmFlexNestedIntrinsicExampleContent(
           gap: 12,
         }}
       >
-        {card("Reusable descriptor Card")}
+        {structuralCard.get() ? <Card title="Reusable descriptor Card" /> : card("Reusable descriptor Card")}
         <Footer
           style={{ width: 180, height: 36, minHeight: 0, flexShrink: 0 }}
         />
@@ -224,6 +232,7 @@ function createWasmFlexNestedIntrinsicExampleContent(
         Two known columns size from wrapped Text. The following sibling moves
         with them.
       </Text>
+      <Button x={548} y={24} label="Toggle pure Card" onClick={() => structuralCard.update(value => !value)} />
       <Button
         x={28}
         label="Toggle width"
@@ -279,6 +288,8 @@ function createWasmFlexNestedIntrinsicExampleContent(
     panel.textContent = JSON.stringify({
       lane: read ? "experimental WASM" : "normal JavaScript",
       width: width.get(),
+      structuralCard: structuralCard.get(),
+      descriptions,
       keys: keys.get(),
       cardBottom,
       footerBox,

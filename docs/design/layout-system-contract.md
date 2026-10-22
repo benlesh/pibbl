@@ -267,6 +267,35 @@ This does not integrate the separate friend-only renderer-work queue.
 These are scoped experimental receipts, not a root prepared-tree, custom-font
 revision, or Layer allocation-ordering contract.
 
+## Pure reusable layout descriptions
+
+`defineLayoutComponent(describe)` returns a `PibblComponent` whose readonly-props
+callback exposes one known drawing/layout primitive root for preparation. Empty
+values and transparent unkeyed fragments may surround that root; multiple roots,
+an opaque function root or another layout-component root are rejected. Ordinary
+components may remain below a known root when their declared boxes suffice; they
+are never invoked by measurement. The callback forwards any exposed style prop
+explicitly. Parent layout inspects the described root's declared style and carries
+its settled content size into that same root when painting.
+
+The Card remains an ordinary type/key identity boundary, with its returned root's
+own type/key identity and teardown preserved beneath it. A transaction/receiver
+cache shares one prepared descriptor between style preparation, measurement and
+paint. There is no cross-frame prop-identity cache. Pure callbacks can read existing
+signals, collected with existing receiver provisions and adopted only with restored
+mounted ownership. Hooks, Canvas access, allocation reads and signal writes throw;
+resource creation is outside the pure-description contract. No scheduler or second
+reactive graph is added.
+
+The initial intrinsic prototype requires a declared finite content width on the
+root nowrap column. It supports the existing generic wrapped Text measurement,
+including following-sibling geometry and hits in the experimental lane. Known
+fully definite roots can be measured in normal builds too. Automatic width through
+an opaque wrapper, general nested structural intrinsic sizing and aggregate Card
+measurement reuse remain unimplemented; unsupported cases stay diagnostic. See
+[the API page](../site/api/functions/define-layout-component.md) and
+[Plan 010](../project-plans/010-layout-engine-rework.md).
+
 ## Grid
 
 `Grid` implements explicit tracks and explicit placement only. Both

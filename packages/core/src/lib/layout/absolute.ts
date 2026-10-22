@@ -1,3 +1,4 @@
+import { isLayoutComponent, prepareLayoutComponent } from './define-layout-component.js';
 import { ResponsiveStylePreparation, preparedStyleValue, preparedStyleQuery, type PreparedQuery } from '../style/responsive.js';
 import { definePrimitive } from '../define-primitive.js';
 import { EMPTY_STYLE } from '../style/empty-style.js';
@@ -254,15 +255,19 @@ export function prepareDirectChildStyle(
   receiverToken?: object,
   queryBasis?: Readonly<LayoutBox>,
 ): Readonly<SystemStyle> | ResponsiveStylePreparation<Readonly<SystemStyle>> {
-  const definition = getPrimitiveDefinition(child.type);
+  let source = child;
   const prepared = withReceiverInputProvision(
     GLOBAL_STATE.renderTransaction,
     receiverToken,
-    () => resolvePrimitiveStyleInput(
-      (child.props as { readonly style?: unknown }).style,
-      child, queryBasis,
-    ) ?? EMPTY_STYLE,
+    () => {
+      if (isLayoutComponent(child.type)) source = prepareLayoutComponent(child, { receiverToken });
+      return resolvePrimitiveStyleInput(
+        (source.props as { readonly style?: unknown }).style,
+        source, queryBasis,
+      ) ?? EMPTY_STYLE;
+    },
   );
+  const definition = getPrimitiveDefinition(source.type);
   const style = preparedStyleValue(prepared);
   const filter = extractSystemFilter(style);
   const normalized = definition?.normalizeStyle ?

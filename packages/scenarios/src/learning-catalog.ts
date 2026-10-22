@@ -4370,19 +4370,19 @@ const drafts = [
     order: 144,
     summary:
       "Compose a descriptor Card with two known intrinsic columns; settled widths determine Text height and the following sibling's position.",
-    api: ["Flex", "Text", "signal", "useLayoutBox", "useCanvasContext"],
+    api: ["Flex", "Text", "defineLayoutComponent", "signal", "useLayoutBox", "useCanvasContext"],
     objectives: [
       "Measure known nested columns without speculative ordinary-component execution.",
       "Observe width/text and keyed membership invalidation, following targets and bounded generic-font measurement reuse.",
     ],
     prompts: {
       gesture:
-        "Toggle width and change Text, then reverse/remove/restore paragraphs and click the moved sibling. Paint reuses WASM solves and bounded nested aggregate measurements.",
-      code: "card(title) is an ordinary descriptor helper invoked by Workspace. The engine measures its returned built-ins, not the helper. The declared zero-size Boundary runs only in normal rendering.",
+        "Toggle pure Card to compare opt-in structural preparation, then change width/Text and click the moved sibling. The ordinary descriptor mode preserves bounded nested paint measurement reuse.",
+      code: "Compare the descriptor helper with defineLayoutComponent. The pure Card shares one prepared root per transaction and currently declares its finite content width. The zero-size Boundary runs only after allocation.",
     },
     apiNotes: [
       "Known nowrap columns with settled widths only; no ordinary JSX component discovery, percentage feedback or general intrinsic layout.",
-      "Known nested aggregate snapshots reuse generic-font measurement; font-load invalidation remains unsupported.",
+      "The pure Card retains normal type/key ownership but does not yet reuse aggregate intrinsic measurements across transactions; custom-font invalidation remains unsupported.",
     ],
     canvas: { width: 760, height: 460 },
     related: [
