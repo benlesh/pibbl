@@ -291,6 +291,56 @@ describe("HtmlBox geometry, composition and ownership", () => {
     }
   });
 
+  it("validates all projected bounds before updating an earlier HTML host", () => {
+    const driver = new ManualSchedulerDriver();
+    const restore = installSchedulerDriverForTest(driver);
+    const { canvas, overlay } = surface();
+    let updates = 0;
+    let laterMounts = 0;
+    const mount = () => () => {
+      updates++;
+    };
+    const laterMount = () => {
+      laterMounts++;
+      return () => {};
+    };
+    const scene = (overflow: boolean) => (
+      <Group>
+        <HtmlBox
+          key="earlier"
+          mount={mount}
+          data={overflow}
+          style={{ width: 20, height: 20 }}
+        />
+        <Absolute>
+          <HtmlBox
+            mount={laterMount}
+            data={0}
+            style={{ width: 1e300, height: 2, scaleX: overflow ? 1e20 : 1 }}
+          />
+        </Absolute>
+      </Group>
+    );
+    const controller = pibbl(canvas, scene(false), { htmlOverlay: overlay });
+    try {
+      driver.flush(1);
+      expect(laterMounts).toBe(1);
+      pibbl(canvas, scene(true));
+      expect(() => driver.flush(2)).toThrow(
+        "HtmlBox projection must be finite",
+      );
+      expect(updates).toBe(0);
+      expect(laterMounts).toBe(1);
+      expect(overlay.childNodes.length).toBe(0);
+      pibbl(canvas, scene(false));
+      driver.flush(3);
+      expect(overlay.querySelectorAll("[data-pibbl-html-box]")).toHaveLength(2);
+    } finally {
+      controller.dispose();
+      restore();
+    }
+  });
+
   it("aborts failed mounts and updates while still connected, and can render again", () => {
     const driver = new ManualSchedulerDriver();
     const restore = installSchedulerDriverForTest(driver);

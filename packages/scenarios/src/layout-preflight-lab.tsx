@@ -1,4 +1,4 @@
-import { Absolute, Flex, Rectangle, useLayoutBox, defineLayoutComponent, type FlexStyle, type PibblNodeInput, type Signal } from '@pibbl/core';
+import { Absolute, Flex, Group, HtmlBox, Rectangle, useLayoutBox, defineLayoutComponent, type FlexStyle, type PibblNodeInput, type Signal } from '@pibbl/core';
 
 interface LabProps {
   width: Signal<number>; grow: Signal<number>; minimum: Signal<number>; nested: Signal<boolean>; direct: Signal<boolean>; described: Signal<boolean>;
@@ -29,4 +29,18 @@ export function LayoutPreflightLab({ width, grow, minimum, nested, direct, descr
     <Flex style={{ left: 140, width: 80, height: 30 }}>{blue}</Flex>
   </>;
   return directRoot ? content : <Absolute style={{ width: 240, height: 40 }}>{content}</Absolute>;
+}
+
+
+/** Public HTML publication failure fixture; overlay ownership stays with the host. */
+export function HtmlProjectionLab({ overflow, mount, laterMount }: {
+  overflow: Signal<boolean>;
+  mount: (element: HTMLDivElement, data: boolean, signal: AbortSignal) => (data: boolean) => void;
+  laterMount: (element: HTMLDivElement, data: number, signal: AbortSignal) => (data: number) => void;
+}) {
+  const failed = overflow.get();
+  return <Group>
+    <HtmlBox key="earlier" mount={mount} data={failed} style={{ width: 100, height: 30 }} />
+    <Absolute><HtmlBox mount={laterMount} data={0} pointerEvents="none" style={{ left: 110, width: 1e300, height: 2, scaleX: failed ? 1e20 : 1 }} /></Absolute>
+  </Group>;
 }

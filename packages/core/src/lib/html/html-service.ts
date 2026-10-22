@@ -9,7 +9,7 @@ const SVG = 'http://www.w3.org/2000/svg';
 let nextId = 0;
 type Entry = HtmlBoxRegistration | { child: PibblInstance; matrix: DOMMatrix; clips: readonly PibblClippingStackEntry[]; opacity: number; bounds: {x:number;y:number;width:number;height:number} };
 type Clip = { data: string; matrix: DOMMatrix; rule: CanvasFillRule };
-interface Projection { registration: HtmlBoxRegistration; world: DOMMatrix; clips: Clip[]; opacity: number; }
+interface Projection { registration: HtmlBoxRegistration; matrix: DOMMatrix; bounds: { x: number; y: number; width: number; height: number }; visible: boolean; clips: Clip[]; opacity: number; }
 
 export function requireHtmlService(owner: PibblInstance): HtmlService {
   const root = owner.eventRoot;
@@ -153,7 +153,7 @@ export class HtmlService implements HtmlBridge {
             Number.isFinite(hostWorld.f)
           ))
             throw new Error('HtmlBox transform must be finite.');
-          projections.push({ registration: entry, world: hostWorld, clips: inherited, opacity: opacity * entry.opacity });
+          projections.push(prepareProjection(entry, hostWorld, rootMatrix, inherited, opacity * entry.opacity));
         }
       }
     };
@@ -162,7 +162,7 @@ export class HtmlService implements HtmlBridge {
     for (const slot of this.live) if (!desired.has(slot)) this.retire(slot);
     if (projections.length) this.ensureDOM();
     if (this.viewport) this.viewport.hidden = false;
-    for (const [index, projection] of projections.entries()) this.apply(projection, rootMatrix, index);
+    for (const [index, projection] of projections.entries()) this.apply(projection, index);
     this.snapshots = new Map([...this.pending].filter(([owner]) => visited.has(owner)));
   }
 
@@ -179,8 +179,8 @@ export class HtmlService implements HtmlBridge {
     this.root.htmlOverlay!.append(this.svg, this.viewport);
   }
 
-  private apply(projection: Projection, rootMatrix: DOMMatrix, index: number): void {
-    const { registration: r, world, clips, opacity } = projection;
+  private apply(projection: Projection, index: number): void {
+    const { registration: r, matrix, bounds, visible, clips, opacity } = projection;
     const slot = r.slot;
     const first = !slot.shell;
     const doc = this.root.canvas!.ownerDocument;
@@ -194,9 +194,6 @@ export class HtmlService implements HtmlBridge {
       slot.region.content = slot.content;
       this.live.add(slot);
     }
-    const matrix = rootMatrix.multiply(world);
-    const determinant = matrix.a * matrix.d - matrix.b * matrix.c;
-    const visible = r.border.width > 0 && r.border.height > 0 && determinant !== 0;
     slot.shell!.style.width = `${r.border.width}px`; slot.shell!.style.height = `${r.border.height}px`;
     slot.shell!.style.transform = cssMatrix(matrix); slot.shell!.style.zIndex = String(index);
     slot.shell!.style.opacity = String(opacity); slot.shell!.style.overflow = r.overflow;
@@ -206,11 +203,9 @@ export class HtmlService implements HtmlBridge {
     slot.shell!.inert = !visible || !r.interactive;
     slot.shell!.style.visibility = visible ? 'visible' : 'hidden';
     slot.region.active = visible && r.interactive;
-    const corners = [[0,0],[r.border.width,0],[0,r.border.height],[r.border.width,r.border.height]].map(([x,y]) => world.transformPoint({x,y}));
-    const xs = corners.map(p => p.x), ys = corners.map(p => p.y);
-    slot.region.rootBounds = { x: Math.min(...xs), y: Math.min(...ys), width: Math.max(...xs)-Math.min(...xs), height: Math.max(...ys)-Math.min(...ys) };
+    slot.region.rootBounds = bounds;
     slot.callback = r.onFocusChange;
-    if (visible) this.applyClips(slot, clips, world.inverse());
+    if (visible) this.applyClips(slot, clips);
     try {
       if (first) {
         const update = withSignalWriteForbidden('HtmlBox mount', () => slot.mount(slot.content!, r.data, slot.abort!.signal));
@@ -225,7 +220,7 @@ export class HtmlService implements HtmlBridge {
     slot.shell!.style.visibility = visible ? 'visible' : 'hidden';
   }
 
-  private applyClips(slot: HtmlBoxSlot, clips: Clip[], inverseWorld: DOMMatrix): void {
+  private applyClips(slot: HtmlBoxSlot, clips: Clip[]): void {
     const definitions = slot.clipping!;
     const doc = this.root.canvas!.ownerDocument;
     while (definitions.length < clips.length) {
@@ -239,7 +234,7 @@ export class HtmlService implements HtmlBridge {
       const definition = definitions[index]; const path = definition.firstElementChild!;
       setAttribute(path, 'd', clip.data);
       setAttribute(path, 'clip-rule', clip.rule);
-      setAttribute(path, 'transform', cssMatrix(inverseWorld.multiply(clip.matrix)));
+      setAttribute(path, 'transform', cssMatrix(clip.matrix));
       if (index + 1 < clips.length) setAttribute(definition, 'clip-path', `url(#${definitions[index+1].id})`);
       else definition.removeAttribute('clip-path');
     });
@@ -264,3 +259,47 @@ export function snapshotClips(clips: readonly PibblClippingStackEntry[]): PibblC
 }
 function cssMatrix(m: DOMMatrixReadOnly): string { return `matrix(${m.a},${m.b},${m.c},${m.d},${m.e},${m.f})`; }
 function setAttribute(element: Element, name: string, value: string): void { if (element.getAttribute(name) !== value) element.setAttribute(name, value); }
+
+
+/** Settle all fallible numeric projection work before publishing any host. */
+function prepareProjection(registration: HtmlBoxRegistration, world: DOMMatrix, rootMatrix: DOMMatrix, clips: Clip[], opacity: number): Projection {
+  const matrix = rootMatrix.multiply(world);
+  assertFiniteProjectionMatrix(matrix);
+  const width = registration.border.width;
+  const height = registration.border.height;
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  for (let space = 0; space < 2; space++) {
+    const transform = space === 0 ? world : matrix;
+    let left = Infinity, top = Infinity, right = -Infinity, bottom = -Infinity;
+    for (let corner = 0; corner < 4; corner++) {
+      const x = corner & 1 ? width : 0;
+      const y = corner & 2 ? height : 0;
+      const projectedX = transform.a * x + transform.c * y + transform.e;
+      const projectedY = transform.b * x + transform.d * y + transform.f;
+      if (!Number.isFinite(projectedX) || !Number.isFinite(projectedY)) throw new Error('HtmlBox projection must be finite.');
+      left = Math.min(left, projectedX); top = Math.min(top, projectedY);
+      right = Math.max(right, projectedX); bottom = Math.max(bottom, projectedY);
+    }
+    if (!Number.isFinite(right - left) || !Number.isFinite(bottom - top)) throw new Error('HtmlBox projection must be finite.');
+    if (space === 0) { minX = left; minY = top; maxX = right; maxY = bottom; }
+  }
+  const bounds = { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
+  if (!Number.isFinite(bounds.width) || !Number.isFinite(bounds.height)) throw new Error('HtmlBox projection must be finite.');
+  const determinant = matrix.a * matrix.d - matrix.b * matrix.c;
+  if (Number.isNaN(determinant)) throw new Error('HtmlBox projection must be finite.');
+  const visible = width > 0 && height > 0 && determinant !== 0;
+  const localClips: Clip[] = [];
+  if (visible && clips.length) {
+    const inverse = world.inverse();
+    assertFiniteProjectionMatrix(inverse);
+    for (const clip of clips) {
+      const local = inverse.multiply(clip.matrix);
+      assertFiniteProjectionMatrix(local);
+      localClips.push({ data: clip.data, rule: clip.rule, matrix: local });
+    }
+  }
+  return { registration, matrix, bounds, visible, clips: localClips, opacity };
+}
+function assertFiniteProjectionMatrix(matrix: DOMMatrixReadOnly): void {
+  if (!(Number.isFinite(matrix.a) && Number.isFinite(matrix.b) && Number.isFinite(matrix.c) && Number.isFinite(matrix.d) && Number.isFinite(matrix.e) && Number.isFinite(matrix.f))) throw new Error('HtmlBox projection must be finite.');
+}

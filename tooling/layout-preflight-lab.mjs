@@ -31,6 +31,24 @@ else {
     }
     const state = () => lab.locator('pre').evaluate(element => JSON.parse(element.textContent));
     await lab.waitForFunction(() => JSON.parse(document.querySelector('pre').textContent).evaluations === 1);
+    if (process.argv.includes('--html')) {
+      await lab.waitForFunction(() => JSON.parse(document.querySelector('pre').textContent).htmlMounts === 1);
+      await lab.getByRole('button', { name: 'Fail HTML projection', exact: true }).click();
+      await lab.waitForFunction(() => JSON.parse(document.querySelector('pre').textContent).htmlFailures === 1);
+      assert.equal((await state()).htmlUpdates, 0);
+      assert.equal((await state()).htmlAborts, 1);
+      assert.equal(await lab.locator('#projection-overlay').evaluate(element => element.childNodes.length), 0);
+      assert.deepEqual(await lab.locator('#healthy').evaluate(canvas => [...canvas.getContext('2d').getImageData(65, 10, 1, 1).data]), [0,128,0,255]);
+      await lab.getByRole('button', { name: 'Recover HTML', exact: true }).click();
+      await lab.waitForFunction(() => JSON.parse(document.querySelector('pre').textContent).htmlMounts === 2);
+      await lab.getByRole('button', { name: 'Native HTML host', exact: true }).click();
+      assert.equal((await state()).htmlClicks, 1);
+      await lab.evaluate(() => dispatchEvent(new PageTransitionEvent('pagehide')));
+      assert.equal(await lab.locator('#projection-overlay').evaluate(element => element.childNodes.length), 0);
+      assert.equal((await state()).htmlUpdates, 0);
+      assert.deepEqual(errors, []);
+      console.warn(`${built ? 'Built' : 'Source'} HTML projection: overflow rejected before earlier update, abort/DOM cleanup, independent root and native recovery pass; ${coreInputs.length} public core inputs`);
+    } else {
     let expectedEvaluations = 1;
     if (process.argv.includes('--nested') || process.argv.includes('--direct') || process.argv.includes('--described')) {
       await lab.getByRole('button', { name: process.argv.includes('--described') ? 'Use described layout' : process.argv.includes('--direct') ? 'Use direct root' : 'Use nested layout', exact: true }).click();
@@ -55,5 +73,6 @@ else {
     });
     assert.deepEqual(['activeNodes', 'activeArenas', 'activeWasmInstances', 'cachedMeasurements'].map(key => disposed[key]), [0,0,0,0]);
     assert.deepEqual(errors, []); console.warn(`${built ? 'Built' : 'Source'} preflight: later input failure prevents earlier evaluation, independent root updates, recovery100px/hit correct, root cleanup0/0/0/0; ${coreInputs.length} public core inputs`);
+    }
   } finally { await browser?.close(); if (server.listening) await new Promise(resolve => server.close(resolve)); }
 }

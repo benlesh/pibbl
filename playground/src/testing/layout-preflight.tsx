@@ -1,6 +1,6 @@
 import { createElement, Rectangle, signal } from '@pibbl/core';
 import { pibblSync } from '@pibbl/core/sync';
-import { LayoutPreflightLab } from '../../../packages/scenarios/src/layout-preflight-lab';
+import { LayoutPreflightLab, HtmlProjectionLab } from '../../../packages/scenarios/src/layout-preflight-lab';
 
 const width = signal(80), grow = signal(0), minimum = signal(0), nested = signal(false), direct = signal(false), described = signal(false), healthyWidth = signal(50);
 let evaluations = 0, allocatedWidth = 0, hits = 0, failures = 0;
@@ -16,12 +16,29 @@ const scene = createElement(LayoutPreflightLab, { width, grow, minimum, nested, 
 });
 let subject = pibblSync(canvas, scene);
 const independent = pibblSync(healthy, createElement(Rectangle, { style: { width: healthyWidth, height: 30, fill: '#008000' } }));
-const refresh = () => { state.textContent = JSON.stringify({ evaluations, allocatedWidth, hits, failures, healthyWidth: healthyWidth.get() }); };
+const htmlOverflow = signal(false);
+let htmlMounts = 0, htmlUpdates = 0, htmlAborts = 0, htmlFailures = 0, htmlClicks = 0;
+const htmlWrapper = document.createElement('div'); htmlWrapper.style.cssText = 'position:relative;width:240px;height:40px;isolation:isolate';
+const htmlCanvas = document.createElement('canvas'); htmlCanvas.width = 240; htmlCanvas.height = 40; htmlCanvas.style.cssText = 'display:block;width:100%;height:100%;margin:0';
+const htmlOverlay = document.createElement('div'); htmlOverlay.id = 'projection-overlay'; htmlOverlay.style.cssText = 'position:absolute;inset:0;pointer-events:none';
+htmlWrapper.append(htmlCanvas, htmlOverlay); document.body.insertBefore(htmlWrapper, controls);
+const htmlScene = createElement(HtmlProjectionLab, { overflow: htmlOverflow,
+  mount: (element: HTMLDivElement, _data: boolean, abort: AbortSignal) => {
+    htmlMounts++; const button = document.createElement('button'); button.textContent = 'Native HTML host'; button.style.cssText = 'margin:0;padding:0;width:96px;height:24px'; button.addEventListener('click', () => { htmlClicks++; refresh(); }, { signal: abort }); element.append(button);
+    abort.addEventListener('abort', () => { htmlAborts++; }); return () => { htmlUpdates++; };
+  },
+  laterMount: () => () => {},
+});
+let htmlSubject = pibblSync(htmlCanvas, htmlScene, { htmlOverlay });
+const refresh = () => { state.textContent = JSON.stringify({ evaluations, allocatedWidth, hits, failures, healthyWidth: healthyWidth.get(), htmlMounts, htmlUpdates, htmlAborts, htmlFailures, htmlClicks }); };
 const error = (event: ErrorEvent) => {
+  if (String(event.error?.message).includes('HtmlBox projection must be finite')) { htmlFailures++; event.preventDefault(); refresh(); }
   if (String(event.error?.message).includes('flexGrow received -1') || String(event.error?.message).includes('minimum must not exceed maximum')) { failures++; event.preventDefault(); refresh(); }
 };
 window.addEventListener('error', error);
 for (const [label, action] of [
+  ['Fail HTML projection', () => { htmlOverflow.set(true); healthyWidth.set(70); }],
+  ['Recover HTML', () => { htmlOverflow.set(false); htmlSubject = pibblSync(htmlCanvas, htmlScene); }],
   ['Use nested layout', () => { nested.set(true); }],
   ['Use direct root', () => { direct.set(true); }],
   ['Use described layout', () => { described.set(true); }],
@@ -32,4 +49,4 @@ for (const [label, action] of [
   const button = document.createElement('button'); button.textContent = label; button.onclick = () => { action(); refresh(); }; controls.append(button);
 }
 const timer = window.setInterval(refresh, 50); refresh();
-window.addEventListener('pagehide', () => { clearInterval(timer); window.removeEventListener('error', error); subject.dispose(); independent.dispose(); }, { once: true });
+window.addEventListener('pagehide', () => { clearInterval(timer); window.removeEventListener('error', error); subject.dispose(); independent.dispose(); htmlSubject.dispose(); }, { once: true });

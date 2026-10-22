@@ -2,12 +2,12 @@
 
 ## Current checkpoint and single next slice — 2026-10-22
 
-Latest delivery is slice47: pure layout-description wrappers with a known Flex
+Latest delivery is slice48 (finite HTML projection preparation). Slice47 `9a7b1b0a`:
+pure layout-description wrappers with a known Flex
 root participate in preparation while preserving wrapper identity and distinct root
 receiver ownership. Slice46 is `242cba11`; consolidation43–45 is `269f28a8`.
 Each slice is committed separately. The fixed33-capability/seven-gate denominator
-is unchanged; all seven gates remain open. Exactly one next slice is48, finite
-HTML projection preparation before publication. Source5192/built5193,
+is unchanged; all seven gates remain open. The next prerequisite is selected in the single NEXT heading below. Source5192/built5193,
 `#/testing/layout-preflight`: Use described layout, Fail later sibling or sizing,
 Recover, then click the red box's right edge.
 
@@ -694,17 +694,24 @@ Bundler/NodeNext and structural lifecycle checks pass. Matching59181-byte native
 artifact is unchanged. Focused read-only review found no material findings. Logs
 `/tmp/pibbl-slice47-*`; Node26.9.0/pnpm11.21.0deps/Chromium, no Node24/full trust claim.
 
-## [NEXT] Finite HTML projection preparation (slice 48)
+### Slice 48 — finite HTML projection preparation
 
-Validate every pending HtmlBox projection's CSS transform, transformed border
-corners, final root bounds and visible clip-local transforms before retiring live
-hosts, changing DOM or invoking mount/update callbacks. Establish a public failing
-test where a later finite transform overflows its border geometry: an earlier
-host's update callback must not run. Preserve existing fail-closed root cleanup
-and explicit recovery; do not promise rollback of earlier Canvas pixels or old
-DOM retention. No new API, native ABI or scheduler mechanism. Matching complete
-Canvas/event/focus/HTML publication remains an open gate. Consolidate46–48 after
-this delivery; the fixed33/seven denominator remains.
+All pending HtmlBox projections now settle numeric geometry before retiring hosts,
+mutating DOM or invoking mount/update callbacks: CSS matrices, logical/CSS border
+corners and extents, visibility and visible clip-local inverse transforms. A public
+Absolute-allocated1e300px border with finite1e20scale reproduced the gap: unchanged
+production did not throw. The fixed generation fails before the earlier updater,
+cleans affected HTML, and explicitly recovers. Existing singular/hidden behavior
+and failure cleanup remain; no Canvas rollback or complete matching publication
+claim. Fixed-corner validation avoids temporary corner arrays.
+
+Focused HTML geometry/ownership/focus23tests pass; types and targeted lint pass.
+Source/built Studio `--html` each pass with225public inputs, no unexpected errors:
+no earlier update, one abort, empty failed overlay, healthy independent Canvas,
+recovered native button activation and pagehide cleanup. Packed228installed-input
+Bundler/NodeNext and structural lifecycle pass; matching59181-byte kernel unchanged.
+Focused read-only review found no material findings. Logs `/tmp/pibbl-slice48-*`.
+Node26.9.0/pnpm11.21.0deps/Chromium; no Node24/full trust claim.
 
 ### Consolidation 15 completed for delivery slices 43–45
 
