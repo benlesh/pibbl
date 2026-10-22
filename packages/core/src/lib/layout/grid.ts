@@ -1,5 +1,6 @@
+import { isLayoutComponent } from './define-layout-component.js';
 import { experimentalLayout, mountedLayoutRegion, type LayoutRegion } from './wasm/region.js';
-import { preparePlacedKnownLayout } from './prepared-root.js';
+import { isKnownLayoutType, registerKnownLayoutPreflight, claimPreparedLayoutPlan, stagePreparedLayoutPlan, preparePlacedKnownLayout, type PreparedLayoutPlan, type PreparedLayoutSlot } from './prepared-root.js';
 import { preparedStyleValue, preparedStyleQuery } from '../style/responsive.js';
 import { definePrimitive } from '../define-primitive.js';
 import { clonePibblElement } from '../element/create-element.js';
@@ -113,6 +114,7 @@ interface ResolvedGridStyle extends SystemStyle {
 }
 
 interface GridPlacement {
+  usedWidth: number; usedHeight: number;
   box: LayoutBox;
   element: PibblElement<any>;
 }
@@ -123,7 +125,6 @@ function renderGrid(
   ctx: RenderingContext2D,
 ) {
   wireStructuralEvents(props);
-  const children = prepareLayoutChildren(props.children, 'Grid');
   recordLayoutEvaluation();
   const content = style.box.contentBox;
   ctx.translate(content.x, content.y);
@@ -135,6 +136,8 @@ function renderGrid(
   });
   const releaseLayout = pushLayoutBox(localContent);
   GLOBAL_STATE.componentRefs!.onAfterRender = releaseLayout;
+  const prepared = experimentalLayout ? claimPreparedLayoutPlan(GLOBAL_STATE.componentRefs!.element, localContent) : undefined;
+  const children = prepared?.children ?? prepareLayoutChildren(props.children, 'Grid');
   const service = {
     measureText(value: string, font: string) {
       ctx.save();
@@ -146,9 +149,9 @@ function renderGrid(
       }
     },
   };
-  const nativeRegion = experimentalLayout ? mountedLayoutRegion() : undefined;
+  const nativeRegion = prepared?.region ?? (experimentalLayout ? mountedLayoutRegion() : undefined);
   if (experimentalLayout && !nativeRegion) throw new Error('Experimental Grid requires its mounted native region.');
-  const placements = resolveGridPlacements(
+  const placements = prepared?.placements ?? resolveGridPlacements(
     localContent,
     children,
     style,
@@ -165,7 +168,7 @@ function renderGrid(
     localContent,
     (_child, occurrence) => {
       const placement = placements[index++];
-      if (experimentalLayout) preparePlacedKnownLayout(placement.element, occurrence);
+      if (experimentalLayout && !prepared) preparePlacedKnownLayout(placement.element, occurrence);
       return placement;
     },
     style.overflow,
@@ -196,6 +199,36 @@ export const Grid = definePrimitive<
   }),
   measure: (input) => measureGrid(input),
 });
+
+if (experimentalLayout) registerKnownLayoutPreflight(Grid, (element, style, content, receiver, slot) => {
+  const previous = GLOBAL_STATE.primitiveReceiverToken;
+  GLOBAL_STATE.primitiveReceiverToken = receiver;
+  try {
+    const children = prepareLayoutChildren(element.props.children, 'Grid');
+    const options = normalizeGridOptions(style as Readonly<GridStyle>, content);
+    const ctx = GLOBAL_STATE.renderContext;
+    if (!ctx) throw new Error('Known Grid preparation requires a Canvas measurement context.');
+    const service = { measureText(value: string, font: string) { ctx.save(); try { ctx.font = font; return ctx.measureText(value); } finally { ctx.restore(); } } };
+    const region = slot.acquire();
+    const placements = resolveGridPlacements(content, children, options, { service, measureElement: (child, constraints) => measureElement(child, constraints, service) }, region);
+    const plan: PreparedLayoutPlan = { region, content, children, placements };
+    prepareGridDescendants(plan, slot);
+    stagePreparedLayoutPlan(slot, plan);
+  } finally { GLOBAL_STATE.primitiveReceiverToken = previous; }
+});
+function prepareGridDescendants(plan: PreparedLayoutPlan, parentSlot: PreparedLayoutSlot): void {
+  let occurrences: Map<Function, number> | undefined;
+  for (let index = 0; index < plan.children.length; index++) {
+    const child = plan.children[index];
+    if (!isKnownLayoutType(child.type) && !isLayoutComponent(child.type)) continue;
+    let occurrence = 0;
+    if (child.key === undefined) {
+      occurrences ??= new Map(); occurrence = occurrences.get(child.type) ?? 0;
+      occurrences.set(child.type, occurrence + 1);
+    }
+    preparePlacedKnownLayout(plan.placements[index].element, occurrence, parentSlot);
+  }
+}
 
 export function layoutGrid(
   container: Readonly<LayoutBox>,
@@ -323,6 +356,7 @@ function resolveGridPlacements(
       height: border.height,
     };
     placements.push({
+      usedWidth: resolved.contentBox.width, usedHeight: resolved.contentBox.height,
       box,
       element: childWithUsedSize(
         child,

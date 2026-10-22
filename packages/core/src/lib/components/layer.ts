@@ -1,4 +1,5 @@
-import { registerKnownLayoutPreflight, isKnownLayoutType, preflightKnownLayout, attachPreparedLayoutSlot, stagePreparedBoundaryChildren, takePreparedBoundaryChildren, retainPreparedBoundarySubtree } from '../layout/prepared-root.js';
+import { Flex } from '../layout/flex.js';
+import { registerKnownLayoutPreflight, preflightKnownLayout, attachPreparedLayoutSlot, stagePreparedBoundaryChildren, takePreparedBoundaryChildren, retainPreparedBoundarySubtree } from '../layout/prepared-root.js';
 import { prepareLayoutChildren, prepareDirectChildStyle, resolveContainerBox } from '../layout/absolute.js';
 import { setPreNormalizedStyle } from '../style/resolve-dispatch.js';
 import { getChildPrimitiveReceiverToken } from '../element/metadata.js';
@@ -250,7 +251,7 @@ if (experimentalLayout) registerKnownLayoutPreflight(Layer, (element, _style, co
     for (let index = 0; index < children.length; index++) {
       const child = children[index];
       // Layer is a raster boundary, not a layout algorithm for arbitrary children.
-      if (child.type === Layer || !isKnownLayoutType(child.type)) continue;
+      if (child.type !== Flex) continue;
       const token = getChildPrimitiveReceiverToken(GLOBAL_STATE.renderTransaction, receiver, index);
       const prepared = prepareDirectChildStyle(child, token, content, true);
       const style = preparedStyleValue(prepared);

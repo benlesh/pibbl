@@ -1,5 +1,5 @@
 import type { PreparedLayoutPlan, PreparedLayoutSlot } from './prepared-root.js';
-import { isKnownLayoutType, registerKnownLayoutPreflight, stagePreparedChildStyle, takePreparedChildStyle, hasPreparedChildStyles, claimPreparedLayoutPlan, stagePreparedLayoutPlan, preflightKnownLayout, attachPreparedLayoutSlot } from './prepared-root.js';
+import { isKnownLayoutType, registerKnownLayoutPreflight, stagePreparedChildStyle, takePreparedChildStyle, hasPreparedChildStyles, claimPreparedFlexPlan, stagePreparedLayoutPlan, preflightKnownLayout, attachPreparedLayoutSlot } from './prepared-root.js';
 import { isLayoutComponent, prepareLayoutComponent } from './define-layout-component.js';
 import { allocationInputRevision } from './allocation-revision.js';
 import { FlexAllocationCache, frozenFlexInputs, type CachedFlexPlacement } from './flex-allocation-cache.js';
@@ -178,7 +178,7 @@ function renderFlex(
   const releaseLayout = pushLayoutBox(localContent);
   GLOBAL_STATE.componentRefs!.onAfterRender = releaseLayout;
   const service = flexMeasurementService(ctx);
-  const prepared = experimentalLayout ? claimPreparedLayoutPlan(GLOBAL_STATE.componentRefs!.element, localContent) : undefined;
+  const prepared = experimentalLayout ? claimPreparedFlexPlan(GLOBAL_STATE.componentRefs!.element, localContent) : undefined;
   const region = experimentalLayout ? mountedLayoutRegion() : undefined;
   const plan = prepared ?? prepareFlexAllocation(props, style, localContent, service, region);
   if (experimentalLayout && !prepared) prepareFlexDescendants(plan);

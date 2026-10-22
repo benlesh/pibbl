@@ -2,19 +2,13 @@
 
 ## Current checkpoint and single next slice — 2026-10-22
 
-Latest delivery is slice54 `773da7b9` (native Flow sequential/wrap placement).
-Slice53 is `aaa7ddcb` (native explicit Grid cell areas).
-Slice52 is `b5381e0d` (native explicit Grid track resolution).
-Slice51 is `7ea95367` (Flow-entry known Flex preparation).
-Slice50 is `c8b163aa` (Grid-entry known Flex preparation).
-Slice49 is `d6f12813` (known Layer-to-Flex preparation/adoption).
-Slice48 is `cb863bc2` (finite HTML projection preparation).
-Slice47 `9a7b1b0a` prepares pure described Flex roots; slice46 `242cba11` handles
-direct and opaque-boundary Flex entries. Every slice has its own commit.
-Consolidation46–48 is recorded below. The fixed33-capability/seven-gate denominator
-is unchanged; all seven gates remain open. The next prerequisite is selected in the single NEXT heading below. Source5192/built5193,
-`#/testing/layout-preflight`: Fail HTML projection, Recover HTML, then Native HTML
-host. Earlier layout failure/recovery controls remain available.
+Latest delivery is slice55 (prepared Grid-root planning/adoption).
+Slice54 `773da7b9`,53 `aaa7ddcb`,52 `b5381e0d` are consolidated in `f322a709`.
+Every slice has its own commit. The fixed33-capability/seven-gate denominator is
+unchanged; all seven gates remain open. The single next slice is56, prepared
+Flow-root planning/adoption. Source5192/built5193, `#/testing/layout-preflight`:
+Use prepared Grid root, Fail later sibling, Recover, then red right edge/blue cell.
+Native Grid tracks/spans and Flow wrap controls remain available.
 
 The loading/named-component integration is ready for source feedback on branch
 `codex/layout-integration-20261022`. It combines the saved loading checkpoint with
@@ -843,16 +837,35 @@ Bundler/NodeNext/lifecycle pass. Logs `/tmp/pibbl-slice54-*` and
 `/tmp/pibbl-consolidation18-focused.txt`; Node26.9.0/pnpm11.21.0deps/Chromium,
 no Node24/trust/parity/performance claim.
 
-## [NEXT] Prepared Grid-root planning and adoption (slice 55)
+### Slice 55 — prepared Grid-root planning and adoption
 
-Include a known Grid root in outer declarative preparation. Compute its existing
-native track/cell plan and settled children under the Grid receiver before earlier
-opaque siblings, recursively prepare known placed descendants, then render by
-claiming the same region and plan exactly once. Public RED: a later Grid's nested
-Flex factor failure prevents an earlier opaque Absolute sibling evaluation.
-Recovery proves Grid pixels/hits and no duplicate native plan/region. Reuse the
-root transaction and native solver; no new ABI/API, arbitrary component execution
-or general all-family graph claim. Consolidate55–57 after three deliveries.
+Known Grid roots now resolve their native track/cell plan and settled descriptors
+under their own receiver during outer preparation. Known placed descendants share
+the parent slot hierarchy. Actual Grid rendering claims the same region/plan once
+and skips duplicate child preparation. Common plan geometry is separate from
+Flex-only cache/revision metadata; no dummy cache values for Grid. Layer retains
+its existing direct-Flex discovery boundary as the known registry grows.
+
+Public RED showed earlier opaque evaluations3instead of2 before a later Grid's
+nested Flex failure. Green proves failure stops earlier evaluation and clears all
+arenas/nodes; recovery paints/targets the new cell. A successful resize uses one
+changed-axis resolution, one cell batch and one Flex solve with no node/region
+creation. Focused151pass/1normal-onlyskip; normal63pass/77experimental skips.
+Types/lint pass, focused read-only review no material findings. Source/built Studio
+`--grid-root` each passes failure isolation, recovery pixels/red+blue targets,
+exact2axes/1cell-batch/3arenas on recovery, cleanup0/0/0/0 with225public inputs.
+Packed228installed-input Bundler/NodeNext/lifecycle pass. Kernel65282bytes unchanged.
+Logs `/tmp/pibbl-slice55-*`; Node26.9.0/pnpm11.21.0deps/Chromium, no Node24/full trust.
+
+## [NEXT] Prepared Flow-root planning and adoption (slice 56)
+
+Prepare a known Flow root's existing measurement/native placement and known child
+plans before earlier outer opaque siblings, then claim exactly that region/placed
+plan in rendering. Public RED: later Flow's nested Flex failure prevents earlier
+Absolute sibling evaluation. Recovery proves layout/hit geometry and one native
+Flow placement with stable region ownership; preserve measurement invalidation,
+wrap/alignment, receiver roles and exact cleanup. No new ABI/API or speculative
+component execution. Consolidate55–57 after the third delivery.
 
 ### Consolidation 18 completed for delivery slices 52–54
 

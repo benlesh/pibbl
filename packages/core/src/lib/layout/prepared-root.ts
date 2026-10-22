@@ -72,9 +72,8 @@ export interface PreparedLayoutPlan {
   readonly content: Readonly<LayoutBox>;
   readonly children: readonly PibblElement<any>[];
   readonly placements: { box: LayoutBox; usedWidth: number; usedHeight: number; element: PibblElement<any> }[];
-  readonly cached: boolean;
-  readonly revision: number;
 }
+export interface PreparedFlexLayoutPlan extends PreparedLayoutPlan { readonly cached: boolean; readonly revision: number; }
 export class PreparedLayoutSlot {
   region: LayoutRegion | undefined;
   private boundaryOwner: PibblComponentRefs<any> | undefined;
@@ -124,6 +123,12 @@ export function claimPreparedLayoutPlan(element: PibblElement<any>, content: Rea
   if (!entry || entry.claimed || entry.plan.content.width !== content.width || entry.plan.content.height !== content.height) throw new Error('Prepared layout plan does not match its allocation.');
   slot.claim(entry.plan.region); entry.claimed = true;
   return entry.plan;
+}
+export function claimPreparedFlexPlan(element: PibblElement<any>, content: Readonly<LayoutBox>): PreparedFlexLayoutPlan | undefined {
+  const plan = claimPreparedLayoutPlan(element, content);
+  if (!plan) return;
+  if (!('cached' in plan) || typeof plan.cached !== 'boolean' || !('revision' in plan) || typeof plan.revision !== 'number') throw new Error('Prepared Flex plan is incompatible with this boundary.');
+  return plan as PreparedFlexLayoutPlan;
 }
 export function stagePreparedChildStyle(child: PibblElement<any>, receiver: object, content: Readonly<LayoutBox>, prepared: PreparedStyle): void {
   const transaction = GLOBAL_STATE.renderTransaction;
@@ -187,12 +192,12 @@ function retainPreparedSubtree(parent: PreparedLayoutSlot, pending: Map<Prepared
 
 
 /** Carries a settled placement into known preparation without a second placement pass. */
-export function preparePlacedKnownLayout(element: PibblElement<any>, occurrence: number): void {
+export function preparePlacedKnownLayout(element: PibblElement<any>, occurrence: number, parentSlot?: PreparedLayoutSlot): void {
   const prepared = peekPreNormalizedStyle(element);
   if (!prepared) throw new Error('Known layout preparation requires settled receiver inputs.');
   const settled = prepared.style as Readonly<BoxStyle>;
   const width = settled.width, height = settled.height;
   if (typeof width !== 'number' || typeof height !== 'number') throw new Error('Known layout preparation requires settled content geometry.');
-  const slot = preflightKnownLayout(prepared.source, prepared.style, { x: 0, y: 0, width, height }, getPrimitiveReceiverToken(element), occurrence);
+  const slot = preflightKnownLayout(prepared.source, prepared.style, { x: 0, y: 0, width, height }, getPrimitiveReceiverToken(element), occurrence, parentSlot);
   attachPreparedLayoutSlot(element, slot);
 }

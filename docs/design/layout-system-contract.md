@@ -310,6 +310,13 @@ Rendering consumes the same Flex plan/region; Grid does not run another placemen
 pass or gain a native Grid solver. This does not discover Grid internals across
 an earlier outer opaque boundary or add Grid auto-placement/intrinsic behavior.
 
+A known Grid root also participates in outer preparation. Under its receiver,
+Grid resolves the existing native track/cell plan, settles its child descriptors,
+and prepares known descendants before earlier outer opaque siblings. Rendering
+claims the same native region and placed plan once, without another Grid pass.
+Shared prepared plans carry common geometry; only Flex plans carry Flex cache
+revision metadata. The direct-Flex Layer discovery boundary remains unchanged.
+
 Flow likewise completes its existing measurement/sequential/wrap placement pass
 before preparing direct known Flex roots. It shares Grid's placed-clone handoff,
 without extra per-item wrapper allocations or a second placement pass. Ordinary

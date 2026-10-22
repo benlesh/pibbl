@@ -1770,3 +1770,32 @@ it.runIf(experimentalLayout)('invalidates native Flow placement when a measured 
   fill.set('orange'); await nextFrame();
   expect(snapshotWasmLayoutDiagnostics().flowPlacements - before).toBe(2);
 });
+
+it.runIf(experimentalLayout)('prepares a later Grid root before earlier opaque siblings and adopts its native plan once', async () => {
+  const baseline = snapshotWasmLayoutDiagnostics(), width = signal(100), grow = signal(1);
+  let evaluations = 0, hits = 0;
+  function Probe(_props: { style: Record<string, unknown> }) { evaluations++; return createElement(Rectangle, { style: { width: 80, height: 20, fill: 'red' } }); }
+  const scene = createElement(Absolute, { style: { width: 260, height: 30 }, children: [
+    createElement(Probe, { style: { width: 80, height: 20 } }),
+    createElement(Grid, { key: 'later', style: { left: 120, width, height: 20, gridTemplateColumns: ['1fr'], gridTemplateRows: [20] }, children: createElement(Flex, { style: { width: '100%', height: 20, gridColumnStart: 1, gridRowStart: 1 }, children: createElement(Rectangle, { style: { width: 20, height: 20, minWidth: 0, flexGrow: grow, fill: 'blue' }, onClick: () => hits++ }) }) }),
+  ] });
+  const canvas = document.createElement('canvas'); canvas.width = 260; canvas.height = 30; document.body.append(canvas);
+  const errors: unknown[] = []; const prevent = (event: ErrorEvent) => { errors.push(event.error); event.preventDefault(); }; window.addEventListener('error', prevent);
+  try {
+    const controller = pibbl(canvas, scene); controllers.push(controller); await nextFrame(); expect(errors).toEqual([]); expect(evaluations).toBe(1);
+    const mounted = snapshotWasmLayoutDiagnostics(); expect(mounted.activeArenas - baseline.activeArenas).toBe(2); expect(mounted.activeWasmInstances - baseline.activeWasmInstances).toBe(1);
+    width.set(110); await nextFrame(); expect(evaluations).toBe(2);
+    const updated = snapshotWasmLayoutDiagnostics();
+    expect(updated.gridTrackResolutions - mounted.gridTrackResolutions).toBe(1);
+    expect(updated.gridCellPlacements - mounted.gridCellPlacements).toBe(1);
+    expect(updated.solves - mounted.solves).toBe(1); expect(updated.activeArenas).toBe(mounted.activeArenas); expect(updated.nodeCreates).toBe(mounted.nodeCreates);
+    width.set(120); grow.set(-1); await nextFrame();
+    expect(errors.some(error => error instanceof Error && error.message.includes('flexGrow received -1'))).toBe(true);
+    expect(evaluations).toBe(2); expect(snapshotWasmLayoutDiagnostics().activeArenas).toBe(baseline.activeArenas); expect(snapshotWasmLayoutDiagnostics().activeNodes).toBe(baseline.activeNodes); clickCanvas(canvas, 225, 10); expect(hits).toBe(0);
+    grow.set(1); pibbl(canvas, scene); await nextFrame(); expect(evaluations).toBe(3);
+    expect([...canvas.getContext('2d')!.getImageData(235, 10, 1, 1).data]).toEqual([0,0,255,255]);
+    clickCanvas(canvas, 235, 10); expect(hits).toBe(1);
+    controller.dispose(); const disposed = snapshotWasmLayoutDiagnostics();
+    expect(disposed.activeArenas).toBe(baseline.activeArenas); expect(disposed.activeNodes).toBe(baseline.activeNodes); expect(disposed.activeWasmInstances).toBe(baseline.activeWasmInstances);
+  } finally { window.removeEventListener('error', prevent); }
+});
