@@ -124,6 +124,8 @@ export interface ResolvedBoxStyle {
  * @see {@link PathStyle}
  */
 export interface LayoutItemStyle extends PositioningStyle {
+  /** Positive finite outer width/height ratio consumed by finite nowrap Flex. Final main size derives cross size before cross bounds; intrinsic main sizing is unsupported. See {@link FlexItemStyle}. */
+  aspectRatio?: number;
   /** Uniform physical margin in logical Canvas units; finite negative values are allowed. Specific edges override this value. Consumed by experimental Flex only. See {@link LayoutItemStyle}. */
   margin?: number;
   /** Physical top margin overriding margin. See {@link LayoutItemStyle}. */
@@ -161,7 +163,7 @@ export interface LayoutItemStyle extends PositioningStyle {
  */
 export type FlexItemStyle = Pick<
   LayoutItemStyle,
-  'flexBasis' | 'flexGrow' | 'flexShrink' | 'margin' | 'marginTop' | 'marginRight' | 'marginBottom' | 'marginLeft'
+  'aspectRatio' | 'flexBasis' | 'flexGrow' | 'flexShrink' | 'margin' | 'marginTop' | 'marginRight' | 'marginBottom' | 'marginLeft'
 > & {
   /** This child's cross-axis or block-axis alignment override. See {@link FlexItemStyle}. */
   alignSelf?: 'auto' | 'stretch' | 'flex-start' | 'flex-end' | 'center';

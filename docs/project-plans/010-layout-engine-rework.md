@@ -2,7 +2,8 @@
 
 ## Current checkpoint and single next slice — 2026-10-22
 
-Latest delivery is slice71 (pinned asymmetric layout-border conformance).
+Latest delivery is slice72 (finite Flex outer-box aspect ratios).
+Slice71 is `ac38f518` (pinned asymmetric layout-border conformance).
 Slice70 is `b7d5dc68` (explicit layout border widths).
 Slice69 is `9b530832` (Studio runtime dependency invalidation).
 Slice68 is `df3d0974` (pinned border-box bounds and percentage conformance).
@@ -21,7 +22,7 @@ Slice56 is `cf2c7bc5` (prepared Flow-root planning/adoption).
 Slice55 is `1510efe3` (prepared Grid-root planning/adoption).
 Slice54 `773da7b9`,53 `aaa7ddcb`,52 `b5381e0d` are consolidated in `f322a709`.
 Every slice has its own commit. The fixed33-capability/seven-gate denominator is
-unchanged; all seven gates remain open. The single next slice is72, finite outer-box aspect ratios. Source5192/built5193, `#/testing/layout-preflight`:
+unchanged; all seven gates remain open. The single next slice is73, close the finite numeric-gap capability evidence. Source5192/built5193, `#/testing/layout-preflight`:
 Source5192/built5193 `#/examples/layout/wasm-yoga-migration`: Next case + resize
 cycles sixteen fixtures, including asymmetric border-box row/column cases; click A/B/C targets.
 Canonical built comparison: http://127.0.0.1:5193/#/examples/layout/wasm-yoga-migration.
@@ -1191,15 +1192,46 @@ No baseline rewritten. Runtime/kernel unchanged from70; packed230 receipt remain
 Logs `/tmp/pibbl-slice71-*`; Node26.9.0/Chromium/Apple C++20. This bounded corpus
 does not establish broad border/intrinsic or CSS/Yoga parity. All seven gates open.
 
-## [NEXT] Finite outer-box aspect ratios (slice 72)
+### Slice 72 — finite Flex outer-box aspect ratios
 
-Select positive finite numeric `BoxStyle.aspectRatio` as outer width divided by
-outer height, matching independently probed pinned Yoga. Resolve the definite
-axis through boxSizing/insets first, derive the missing outer axis, then subtract
-insets once. Both explicit dimensions win; establish finite bounds and Flex
-final-main sizing rules before production. Public row/column and inset evidence
-first. Intrinsic indefinite/fixed-point cases remain outside the first slice;
-Layer keeps its separate raster contract. Group24 is70–72, then consolidation.
+`LayoutItemStyle.aspectRatio?: number`, included in `FlexItemStyle`, is a positive
+finite outer width/height ratio for finite nowrap Flex items. Final main allocation
+(including shrink/grow/bounds) derives preferred cross size, overriding explicit
+cross size and default stretch; combined insets floor content, then cross bounds
+clamp independently and may break the ratio without recomputing main. Definite
+main dimension/basis required. Intrinsic, wrapped, other-parent and root ratio
+sizing remain deferred; pure intrinsic Flex measurement reports unsupported.
+The no-ratio path skips the additional derivation traversal. No native ABI change.
+
+Public row/column RED preceded runtime changes. Shrink/signal/hit/identity,
+explicit cross, numeric basis, combined insets and cross bounds pass. Focused
+experimental208pass/1normal-onlyskip in6files; normal3pass/109skip. Source/built
+Studio `--aspect-ratio`: outer main100→105→131, ratio3 cross and inset signals,
+moved targets,227public core inputs, exact cleanup and errors[]. Native probe
+source is preserved with `--source /path/to/yoga --aspect-probe`, commit and hash;
+outer semantics and surprising explicit-cross override were established before
+production. It is independent discovery evidence, not an expansion of16cases.
+
+Fresh full packed command passes230installed-dist inputs, explicit aspect
+Bundler/NodeNext declarations, actual installed90×30 pixels and lifecycle cleanup.
+The temporary Canvas probe initially failed because it was detached; final
+fixture connects/sizes its host, waits the scheduled render and removes/disposes
+it before the existing main scenario. Failure logs retained. Editor authoring,
+types/lint, linked JSDoc and Studio metadata/render/search/coverage pass. Scoped
+reused review: no material findings. Logs `/tmp/pibbl-slice72-*`.
+Node26.9.0/pnpm11.21.0deps/Chromium/Apple C++20. Kernel65282bytes unchanged.
+All seven release gates remain open; aspect remains experimental.
+
+## [NEXT] Close finite numeric-gap capability evidence (slice 73)
+
+Close the fixed `flex.numeric-gap` preserve entry with concrete release evidence:
+empty/single-item layouts, no leading/trailing gap, wrapped line edge counts,
+physical rowGap/columnGap axes and precedence, finite validation, signal-driven
+paint/hit geometry, pinned native provenance and public source/built execution.
+Reuse existing runtime and evidence where already sufficient; fix actual failures
+only. Mark the capability complete only when these criteria pass, without closing
+the broader Flex gate or expanding the33-capability denominator. Consolidate
+70–72 as group24 first, then73–75 as group25.
 
 ### Consolidation 23 completed for delivery slices 67–69
 

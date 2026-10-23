@@ -303,3 +303,16 @@ and actual installed bundle provenance. This establishes portable local package
 installation, without publishing, changing the normal engine or extracting the
 eventual standalone layout package. Node 24 and full release verification remain
 separate gates.
+
+## Independent aspect precedence probe
+
+Run `node tooling/layout-yoga-rehearsal.mjs --source /path/to/yoga --aspect-probe`.
+This compiles `aspect-probe.cpp` against the same pinned source/configuration,
+prints the commit and probe hash plus raw dimensions, and releases its temporary
+checkout. It does not rewrite or expand the16-case interactive corpus. Supported
+finite Flex cases show outer ratio3 overriding explicit cross50 and default
+stretch: width90→height30; minHeight40/maxHeight20 clamp afterward; two shrinkable
+width90 items in100 settle50×16⅔. Insets distinguish outer from content ratio:
+content-box width90 plus horizontal14 gives outer104, then outerheight104/3.
+The probe also records height-driven row behavior as discovery input; that
+intrinsic main inference is outside the initial Pibbl finite-main ratio slice.

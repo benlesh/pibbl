@@ -146,6 +146,7 @@ interface FlexItem {
   grow: number;
   shrink: number;
   crossAuto: boolean;
+  aspectRatio?: number;
   alignSelf: CrossAlignment | 'auto';
   receiverToken: object;
   layoutToken?: object;
@@ -397,6 +398,7 @@ function measureFlex(
     if (style.boxSizing !== undefined) style = contentBoxStyle(style, { width: diagnosticBox.width, height: diagnosticBox.height, mainAxis: row ? 'width' : 'height', context: childContext(child, diagnosticBox) });
     const layoutChild = isLayoutComponent(child.type) ? prepareLayoutComponent(child, { receiverToken }) : child;
     rejectUnsupportedItemFields(child, style, diagnosticBox);
+    if (style.aspectRatio !== undefined) return unsupportedIntrinsic('does not support aspectRatio during intrinsic measurement');
     const allMargin = numericMargin(style.margin, 'margin', child, diagnosticBox);
     const marginTop = numericMargin(style.marginTop === undefined ? allMargin : style.marginTop, 'marginTop', child, diagnosticBox);
     const marginRight = numericMargin(style.marginRight === undefined ? allMargin : style.marginRight, 'marginRight', child, diagnosticBox);
@@ -614,6 +616,7 @@ function resolveFlexPlacements(
   const mainGap = row ? options.columnGap : options.rowGap;
   const crossGap = row ? options.rowGap : options.columnGap;
   const items: FlexItem[] = [];
+  let hasAspectRatio = false;
 
   const occurrences = new Map<object, number>();
   for (const child of children) {
@@ -631,6 +634,14 @@ function resolveFlexPlacements(
       BoxStyle & FlexItemStyle & LayoutItemStyle & Record<string, unknown>
     >;
     if (normalized.boxSizing !== undefined) normalized = contentBoxStyle(normalized, { width: container.width, height: container.height, mainAxis: row ? 'width' : 'height', context: childContext(child, container) });
+    const aspectRatio = normalized.aspectRatio;
+    if (aspectRatio !== undefined && (typeof aspectRatio !== 'number' || !Number.isFinite(aspectRatio) || aspectRatio <= 0)) {
+      throw childDiagnostic(child, 'aspectRatio', aspectRatio, container, 'must be a positive finite outer width/height ratio');
+    }
+    if (aspectRatio !== undefined) hasAspectRatio = true;
+    if (aspectRatio !== undefined && options.flexWrap !== 'nowrap') {
+      throw childDiagnostic(child, 'aspectRatio', aspectRatio, container, 'currently requires nowrap Flex');
+    }
     const layoutChild = isLayoutComponent(child.type) ? prepareLayoutComponent(child, { receiverToken }) : child;
     const knownIntrinsicLayout = child.type === Flex || layoutChild.type === Flow || layoutChild.type === Grid || layoutChild.type === Flex &&
       isColumnDirection(normalized.flexDirection) && (normalized.flexWrap ?? 'nowrap') === 'nowrap';
@@ -689,19 +700,20 @@ function resolveFlexPlacements(
     const specifiedCross = normalized[crossProperty];
     const needsMeasuredMain = basisValue === 'auto' &&
       (specifiedMain === undefined || specifiedMain === 'auto');
+    if (aspectRatio !== undefined && needsMeasuredMain) throw childDiagnostic(child, 'aspectRatio', aspectRatio, container, 'requires a definite main dimension or flexBasis; intrinsic aspect sizing is unsupported');
     const crossAuto = specifiedCross === undefined || specifiedCross === 'auto';
     if (experimentalLayout && !row && options.flexWrap !== 'nowrap' && (needsMeasuredMain || crossAuto)) {
       throw childDiagnostic(child, needsMeasuredMain ? mainProperty : crossProperty, 'auto', container,
         'Experimental WASM column wrap requires a declared height or flexBasis and a declared width; intrinsic item sizes are unsupported.');
     }
     const alignment = normalizeItemAlignment(normalized.alignSelf, child, container);
-    const needsMeasuredCross = crossAuto && alignment !== 'stretch' &&
+    const needsMeasuredCross = aspectRatio === undefined && crossAuto && alignment !== 'stretch' &&
       options.alignItems !== 'stretch';
     // A finite column cross allocation determines a stretched built-in child's
     // width without measuring its intrinsic height. Resolve bounds/padding first.
-    const deferredIntrinsicColumn = experimentalLayout && !row && knownIntrinsicLayout &&
+    const deferredIntrinsicColumn = aspectRatio === undefined && experimentalLayout && !row && knownIntrinsicLayout &&
       needsMeasuredMain && crossAuto && effectiveAlignment(alignment, options.alignItems) === 'stretch';
-    if (!deferredIntrinsicColumn && (needsMeasuredMain || needsMeasuredCross || crossAuto)) {
+    if (!deferredIntrinsicColumn && (needsMeasuredMain || aspectRatio === undefined && (needsMeasuredCross || crossAuto))) {
       const constraints = {
         minWidth: 0,
         maxWidth: container.width,
@@ -842,7 +854,7 @@ function resolveFlexPlacements(
       child,
       container,
     );
-    const preferredCross = crossAuto ?
+    const preferredCross = aspectRatio !== undefined ? 0 : crossAuto ?
       measured?.[crossProperty] ?? 0 :
       resolveItemLength(
         specifiedCross,
@@ -866,7 +878,8 @@ function resolveFlexPlacements(
       maxCross,
       grow,
       shrink,
-      crossAuto,
+      crossAuto: aspectRatio === undefined && crossAuto,
+      aspectRatio,
       alignSelf: alignment,
       receiverToken,
       layoutToken,
@@ -883,6 +896,13 @@ function resolveFlexPlacements(
   for (const line of lines) {
     if (region) region.solve(line.items, mainSize, mainGap, !!wrappedRegion);
     else resolveFlexibleLengths(line, mainSize, mainGap);
+    if (hasAspectRatio) for (const item of line.items) {
+      if (item.aspectRatio === undefined) continue;
+      const outerMain = item.targetMain + item.paddingMain;
+      const outerCross = row ? outerMain / item.aspectRatio : outerMain * item.aspectRatio;
+      if (!Number.isFinite(outerCross)) throw childDiagnostic(item.child, 'aspectRatio', item.aspectRatio, container, 'derived cross size must be finite');
+      item.preferredCross = clamp(Math.max(0, outerCross - item.paddingCross), item.minCross, item.maxCross) + item.paddingCross;
+    }
     // Text height depends on its used width, not its pre-flex basis.
     if (row) for (const item of line.items) {
       if (!item.crossAuto || (item.child.type !== Text && !(experimentalLayout && item.child.type === Flex))) continue;

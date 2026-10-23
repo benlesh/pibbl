@@ -31,7 +31,29 @@ else {
     }
     const state = () => lab.locator('pre').evaluate(element => JSON.parse(element.textContent));
     await lab.waitForFunction(() => JSON.parse(document.querySelector('pre').textContent).evaluations === 1);
-    if (process.argv.includes('--box-sizing')) {
+    if (process.argv.includes('--aspect-ratio')) {
+      await lab.getByRole('button', { name: 'Use aspect-ratio card', exact: true }).click();
+      await lab.waitForFunction(() => Math.abs(JSON.parse(document.querySelector('pre').textContent).nativeWidths[0] - (100/3-20)) < 1e-8);
+      assert.equal((await state()).allocatedWidth, 80);
+      await lab.getByRole('button', { name: 'Grow box basis', exact: true }).click();
+      await lab.waitForFunction(() => JSON.parse(document.querySelector('pre').textContent).nativeWidths[0] === 15);
+      assert.equal((await state()).allocatedWidth, 85);
+      await lab.locator('#subject').click({ position: { x: 107, y: 5 } });
+      await lab.waitForFunction(() => JSON.parse(document.querySelector('pre').textContent).nativeHits === 1);
+      await lab.getByRole('button', { name: 'Add layout border', exact: true }).click();
+      await lab.waitForFunction(() => JSON.parse(document.querySelector('pre').textContent).nativeWidths[0] === 9);
+      assert.equal((await state()).allocatedWidth, 79);
+      await lab.getByRole('button', { name: 'Use content-box sizing', exact: true }).click();
+      await lab.waitForFunction(() => Math.abs(JSON.parse(document.querySelector('pre').textContent).nativeWidths[0] - (131/3-26)) < 1e-8);
+      assert.equal((await state()).allocatedWidth, 105);
+      await lab.locator('#subject').click({ position: { x: 107, y: 5 } }); assert.equal((await state()).nativeHits, 1);
+      await lab.locator('#subject').click({ position: { x: 133, y: 5 } });
+      await lab.waitForFunction(() => JSON.parse(document.querySelector('pre').textContent).nativeHits === 2);
+      const disposed = await lab.evaluate(() => { dispatchEvent(new PageTransitionEvent('pagehide')); return globalThis.__PIBBL_LAYOUT_DIAGNOSTICS__(); });
+      assert.deepEqual(['activeNodes','activeArenas','activeWasmInstances','cachedMeasurements'].map(key => disposed[key]), [0,0,0,0]);
+      assert.deepEqual(errors, []);
+      console.warn(`${built ? 'Built' : 'Source'} aspectRatio: final outer main100→105→131, ratio3 cross, combined insets, moved targets, cleanup0/0/0/0; ${coreInputs.length} public core inputs`);
+    } else if (process.argv.includes('--box-sizing')) {
       await lab.getByRole('button', { name: 'Use border-box card', exact: true }).click();
       await lab.waitForFunction(() => JSON.parse(document.querySelector('pre').textContent).allocatedWidth === 80);
       assert.deepEqual(await lab.locator('#subject').evaluate(canvas => [...canvas.getContext('2d').getImageData(102,5,1,1).data]), [0,0,255,255]);

@@ -93,7 +93,7 @@ const box: BoxStyle = { boxSizing: 'border-box', width: '50%', height: 30, paddi
 export const sized = createElement(Rectangle, { style: { ...box, width: 100, height: 30 } });
 // @ts-expect-error Box sizing is a closed policy, not arbitrary CSS.
 const invalidBox: BoxStyle = { boxSizing: 'padding-box' };
-const margin: FlexItemStyle = { margin: 5, marginTop: -2, marginRight: 3, marginBottom: 4, marginLeft: 6 };
+const margin: FlexItemStyle = { aspectRatio: 3, margin: 5, marginTop: -2, marginRight: 3, marginBottom: 4, marginLeft: 6 };
 export const rectangle = createElement(Rectangle, { style: { width: 20, height: 20, ...margin } });
 export const reverseFlex = createElement(Flex, { style: { width: 100, height: 40, flexDirection: 'row-reverse', flexWrap: 'wrap-reverse' }, children: rectangle });
 `);
@@ -130,12 +130,15 @@ export const reverseFlex = createElement(Flex, { style: { width: 100, height: 40
   await writeFile(
     join(consumer, "entry.ts"),
     `import { WasmFlexNestedIntrinsicExample } from './example';
-import { createElement } from '@pibbl/core';
+import { createElement, Flex, Rectangle } from '@pibbl/core';
 import { pibblSync } from '@pibbl/core/sync';
 const receipt = globalThis.__PIBBL_PACKED_PROOF__;
 if(receipt.modules || receipt.instances || receipt.frames) throw Error('Import-time work');
 receipt.importInert = true;
 globalThis.requestAnimationFrame = receipt.request;
+const aspectCanvas = document.createElement('canvas'); aspectCanvas.width=120; aspectCanvas.height=80; aspectCanvas.style.cssText='width:120px;height:80px'; document.body.append(aspectCanvas);
+const aspectController=pibblSync(aspectCanvas,createElement(Flex,{style:{width:100,height:60},children:createElement(Rectangle,{style:{width:90,height:50,minWidth:0,flexShrink:0,aspectRatio:3,fill:'red'}})}));
+try { await new Promise(resolve => requestAnimationFrame(resolve)); const context=aspectCanvas.getContext('2d')!; if(context.getImageData(85,25,1,1).data[3]!==255||context.getImageData(85,35,1,1).data[3]!==0)throw Error('installed aspect ratio geometry '+JSON.stringify({width:aspectCanvas.width,height:aspectCanvas.height,inside:[...context.getImageData(85,25,1,1).data],outside:[...context.getImageData(85,35,1,1).data]})); receipt.aspectRatio=true; } finally { aspectController.dispose(); aspectCanvas.remove(); }
 const controller = pibblSync(document.querySelector('canvas')!, createElement(WasmFlexNestedIntrinsicExample, {}));
 addEventListener('pagehide', () => controller.dispose(), {once:true});`,
   );

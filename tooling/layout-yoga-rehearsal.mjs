@@ -25,6 +25,8 @@ if (sourceIndex >= 0 && (!source || source.startsWith("--")))
 const writing = process.argv.includes("--write");
 if (writing && !source)
   throw new Error("--write requires --source <Yoga Git checkout>");
+if (process.argv.includes("--aspect-probe") && (!source || writing)) throw new Error("--aspect-probe requires --source and cannot use --write");
+function run() {
 let record = source ? undefined : JSON.parse(readFileSync(recordPath, "utf8"));
 if (source) {
   const temporary = mkdtempSync(join(tmpdir(), "pibbl-yoga-3.2.1-"));
@@ -59,7 +61,8 @@ if (source) {
     }
     collect(join(temporary, "yoga"));
     const executable = join(temporary, "reference");
-    const probe = join(folder, "reference.cpp");
+    const aspectProbe = process.argv.includes("--aspect-probe");
+    const probe = join(folder, aspectProbe ? "aspect-probe.cpp" : "reference.cpp");
     execFileSync("c++", [
       "-std=c++20",
       "-O2",
@@ -70,6 +73,11 @@ if (source) {
       "-o",
       executable,
     ]);
+    if (aspectProbe) {
+      process.stderr.write(`Pinned Yoga 3.2.1 ${commit}; aspect probe SHA256 ${createHash("sha256").update(readFileSync(probe)).digest("hex")}\n`);
+      process.stderr.write(execFileSync(executable, { encoding: "utf8" }));
+      return;
+    }
     record = {
       version: "3.2.1",
       commit,
@@ -146,3 +154,6 @@ else if (JSON.stringify(JSON.parse(match[1])) !== JSON.stringify(record.cases))
 process.stdout.write(
   `${source ? "Reproduced" : "Checked recorded"} Yoga ${record.version} ${commit}: ${record.cases.map((value) => value.name + ":" + value.boxes.map((box) => `${box.width}×${box.height}@${box.x},${box.y}`).join("/")).join(", ")}\n`,
 );
+
+}
+run();

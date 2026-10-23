@@ -112,6 +112,27 @@ measurement use combined insets once; border-box floors include both. Percentage
 and logical border aliases are outside this slice. `strokeWidth` remains paint.
 Layer raster sizing continues to ignore these layout fields by its existing rule.
 
+### Finite Flex item aspect ratios
+
+`LayoutItemStyle.aspectRatio?: number` is included in `FlexItemStyle` and is
+consumed only by finite nowrap Flex. It must be positive and finite. A numeric
+or percentage definite main dimension or basis is required; both-auto/intrinsic
+main sizing and wrapped ratio items are diagnosed as unsupported. Other parent
+layout families do not apply this Flex participation field. Root sizing and
+Layer raster sizing retain their separate rules.
+
+The ratio is outer width divided by outer height. After main-axis Flex solving,
+including grow/shrink and main bounds, derive preferred outer cross size from
+that final main allocation. This overrides declared cross dimensions and default
+stretch, matching pinned Yoga3.2.1. Subtract combined border/padding cross insets,
+floor content at zero, clamp cross content bounds, then add insets once. Cross
+bounds can break the ratio; main size is not recomputed. Width90/height50/ratio3
+in a row yields90×30; maxHeight20 yields90×20; two width90 shrinkable items in a
+100px row yield50×16⅔ each. A column derives width from final height instead.
+Margins remain outside the ratio. General intrinsic and coupled-axis ratio
+measurement are deferred and pure intrinsic Flex measurement reports unsupported.
+The reproducible native semantic probe is `tooling/layout-yoga-rehearsal/aspect-probe.cpp`.
+
 ## Absolute
 
 `Absolute` anchors every direct child independently. Container size defaults to

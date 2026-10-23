@@ -13,6 +13,7 @@ const LAYOUT_PARTICIPATION_KEYS = new Set([
   'padding',
   'boxSizing',
   'borderWidth',
+  'aspectRatio',
   'margin',
   'marginTop',
   'marginRight',

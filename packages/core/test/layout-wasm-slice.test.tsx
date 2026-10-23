@@ -2223,3 +2223,49 @@ it('keeps Layer raster sizing independent from layout border and padding insets'
 it('records pinned asymmetric layout-border geometry on both Flex axes', () => {
   expect(yogaReference.cases.map(fixture => fixture.name)).toEqual(expect.arrayContaining(['border-box-asymmetric-row','border-box-asymmetric-column']));
 });
+
+for (const axis of ['row','column'] as const) {
+it(`derives ${axis} aspect geometry from final outer main allocation`, async () => {
+  const main = signal(100); let hits = 0, mounts = 0;
+  const sizes: { width: number; height: number }[] = [];
+  function Content(_props: { style: Record<string, unknown> }) {
+    useConst(() => { mounts++; }); const box = useLayoutBox(); sizes.push({ width: box.width, height: box.height });
+    return createElement(Rectangle, { style: { width: box.width, height: box.height, fill: 'red' }, onClick: () => hits++ });
+  }
+  const children = [0,1].map(index => createElement(Flex, { key: index, style: {
+    width: axis === 'row' ? 90 : 50, height: axis === 'row' ? 50 : 90,
+    minWidth: 0, minHeight: 0, flexShrink: 1, aspectRatio: 3,
+  }, children: createElement(Content, { style: { width: '100%', height: '100%', minWidth: 0, flexShrink: 0 } }) }));
+  const canvas = document.createElement('canvas'); canvas.width = 320; canvas.height = 220; document.body.append(canvas);
+  const controller = pibbl(canvas, createElement(Flex, { style: { width: axis === 'row' ? main : 320, height: axis === 'row' ? 220 : main, flexDirection: axis }, children })); controllers.push(controller); await nextFrame();
+  expect(sizes.at(-1)?.width).toBeCloseTo(axis === 'row' ? 50 : 150); expect(sizes.at(-1)?.height).toBeCloseTo(axis === 'row' ? 50/3 : 50);
+  const x = axis === 'row' ? 55 : 140, y = axis === 'row' ? 12 : 55;
+  clickCanvas(canvas,x,y); expect(hits).toBe(1);
+  main.set(60); await nextFrame(); expect(sizes.at(-1)?.width).toBeCloseTo(axis === 'row' ? 30 : 90); expect(sizes.at(-1)?.height).toBeCloseTo(axis === 'row' ? 10 : 30);
+  clickCanvas(canvas,x,y); expect(hits).toBe(1); clickCanvas(canvas, axis === 'row' ? 35 : 80, axis === 'row' ? 5 : 35); expect(hits).toBe(2); expect(mounts).toBe(2);
+  controller.dispose();
+});
+}
+
+it('applies outer aspect ratios after insets and clamps cross bounds independently', () => {
+  const container = { x: 0, y: 0, width: 300, height: 200 };
+  const edges = { padding: { left: 3, right: 5, top: 7, bottom: 11 }, borderWidth: { left: 2, right: 4, top: 6, bottom: 8 } };
+  for (const boxed of [false,true]) {
+    const child = createElement(Rectangle, { style: { ...edges, boxSizing: boxed ? 'border-box' : 'content-box', width: boxed ? 104 : 90, height: 50, aspectRatio: 3, minWidth: 0, minHeight: 0, flexShrink: 0 } });
+    const box = layoutFlex(container, [child], {}, measurement)[0];
+    expect(box.width).toBe(104); expect(box.height).toBeCloseTo(104/3);
+  }
+  for (const [bound,height] of [{ maxHeight: 20 },{ minHeight: 40 }].map(style => [style,style.maxHeight ?? style.minHeight] as const)) {
+    const child = createElement(Rectangle, { style: { width: 90, height: 50, minWidth: 0, flexShrink: 0, aspectRatio: 3, ...bound } });
+    expect(layoutFlex(container,[child],{},measurement)[0]).toMatchObject({ width: 90, height });
+  }
+  const basis = createElement(Rectangle, { style: { width: 'auto', height: 50, flexBasis: 90, minWidth: 0, flexShrink: 0, aspectRatio: 3 } });
+  expect(layoutFlex(container,[basis],{},measurement)[0]).toMatchObject({ width: 90, height: 30 });
+  for (const ratio of [0,-1,Infinity,NaN]) {
+    const child = createElement(Rectangle,{ style: { width: 90,height: 50,minWidth: 0,flexShrink: 0,aspectRatio: ratio } });
+    expect(() => layoutFlex(container,[child],{},measurement)).toThrow(/positive finite/);
+  }
+  expect(() => layoutFlex(container,[basis],{ flexWrap: 'wrap' },measurement)).toThrow(/nowrap/);
+  const intrinsic = createElement(Rectangle,{ style: { width: 'auto',height: 50,minWidth: 0,flexShrink: 0,aspectRatio: 3 } });
+  expect(() => layoutFlex(container,[intrinsic],{},measurement)).toThrow(/definite main dimension or flexBasis/);
+});

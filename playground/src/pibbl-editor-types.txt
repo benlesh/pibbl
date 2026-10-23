@@ -457,6 +457,7 @@ export interface MeshTransformOptions {
   }
   export interface ResolvedBoxStyle { borderBox: LayoutBox; contentBox: LayoutBox }
   export interface LayoutItemStyle {
+    aspectRatio?: number;
     left?: Exclude<Length, 'auto'>; top?: Exclude<Length, 'auto'>;
     alignSelf?: 'auto' | 'start' | 'end' | 'center' | 'stretch' | 'flex-start' | 'flex-end';
     justifySelf?: 'auto' | 'start' | 'end' | 'center' | 'stretch';
@@ -464,7 +465,7 @@ export interface MeshTransformOptions {
     flexBasis?: Length; flexGrow?: number; flexShrink?: number;
     gridColumnStart?: number; gridColumnSpan?: number; gridRowStart?: number; gridRowSpan?: number;
   }
-  export type FlexItemStyle = Pick<LayoutItemStyle, 'flexBasis' | 'flexGrow' | 'flexShrink' | 'margin' | 'marginTop' | 'marginRight' | 'marginBottom' | 'marginLeft'> & { alignSelf?: 'auto' | 'stretch' | 'flex-start' | 'flex-end' | 'center' };
+  export type FlexItemStyle = Pick<LayoutItemStyle, 'aspectRatio' | 'flexBasis' | 'flexGrow' | 'flexShrink' | 'margin' | 'marginTop' | 'marginRight' | 'marginBottom' | 'marginLeft'> & { alignSelf?: 'auto' | 'stretch' | 'flex-start' | 'flex-end' | 'center' };
   export interface GridItemStyle extends SystemStyle {
     gridColumnStart?: number; gridColumnSpan?: number; gridRowStart?: number; gridRowSpan?: number;
     alignSelf?: 'auto' | 'stretch' | 'start' | 'center' | 'end';

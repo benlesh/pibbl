@@ -15,7 +15,9 @@ try {
   await page.goto(`${base}/#/examples/layout/wasm-flex-nested-intrinsic`);
   await page.locator('iframe[srcdoc]').waitFor({ state: 'attached' });
   await page.locator('iframe[srcdoc]').scrollIntoViewIfNeeded();
-  const frame = page.frameLocator('iframe[srcdoc]'); await frame.locator('pre').waitFor({ timeout: 10000 });
+  const frame = page.frameLocator('iframe[srcdoc]');
+  try { await frame.locator('pre').waitFor({ timeout: 10000 }); }
+  catch (error) { throw new Error(`${error.message}; browser errors: ${JSON.stringify(errors)}`, { cause: error }); }
   const state = async () => JSON.parse(await frame.locator('pre').innerText());
   const click = async (x, y) => {
     const bounds = await frame.locator('canvas').boundingBox();
@@ -84,6 +86,7 @@ try {
     if (packedLane) {
       const receipt = await sandbox.evaluate(() => ({...globalThis.__PIBBL_PACKED_PROOF__, request: undefined}));
       assert.equal(receipt.importInert, true);
+      assert.equal(receipt.aspectRatio, true, 'Installed package must honor final-main outer aspect geometry');
       assert.ok(receipt.modules > 0 && receipt.instances > 0, 'Installed package must execute embedded WASM');
       assert.match(proof.sha256, /^[a-f0-9]{64}$/);
     }

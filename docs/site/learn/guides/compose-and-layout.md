@@ -279,3 +279,11 @@ paint. Padding and borders combine once: content-box40×30 with padding10 and
 borderWidth2 occupies64×54; border-box64×54 preserves40×30 content.
 `strokeWidth` remains independent paint. Percentage/logical border aliases are
 not supported. Layer raster sizing retains its separate width/height policy.
+
+For a finite nowrap Flex item, `style={{ width: 90, height: 50, minWidth: 0,
+flexShrink: 0, aspectRatio: 3 }}` produces an outer90×30 box. The ratio follows
+the final main allocation, so shrinking the width to50 derives height16⅔.
+Cross min/max clamp afterward and may break the ratio. Borders and padding are
+included in the ratio; margins are outside it. This Flex-only field requires a
+definite main dimension or basis; intrinsic, wrapped and root ratio sizing remain
+outside this slice.
