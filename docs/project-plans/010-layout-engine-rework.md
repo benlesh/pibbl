@@ -2,7 +2,8 @@
 
 ## Current checkpoint and single next slice — 2026-10-23
 
-Latest delivery is slice120 (bounded explicit direct-Flex static/relative positioning).
+Latest delivery is slice120 `a9d79df8` (bounded explicit direct-Flex static/relative positioning).
+Consolidation40 for118–120 passes below (one corrected sequential-walk selector).
 Slice119 is `346bc95d` (concise public corpus and exhaustive private rehearsal).
 Slice118 is `19bd8853` (measurement-only reactive column content evidence).
 Slice117 is `dd7f292f` (finite column custom-provider exact-width measurement).
@@ -3263,14 +3264,34 @@ was added after review and passes. No baseline rewritten. Node26.9.0/macOS
 Chromium; no Node24 aggregate trust claim. Fixed33capabilities now8complete,
 12experimental,6partial,6missing,1excluded; all7group gates remain open.
 
-## [NEXT] Consolidation40 for slices118–120
+## Consolidation40 completed for slices118–120
 
-Commit120 separately, then combine the established layout/loading matrix with
-new positioning tests in experimental and normal lanes. After that checkpoint,
-continue exactly one bounded decorated-parent static/relative positioning slice
-with asymmetric padding/border. This closes the next manifest evidence gap
-without adding absolute or containing-block semantics. Full-program review stays
-at the program end.
+Separate delivery commits118 `19bd8853`,119 `346bc95d`,120 `a9d79df8`.
+Fresh25-file experimental matrix initially549passed/1failed/9skipped559 in79.12s.
+The failure was a generic sequential rehearsal selector: it included the new
+relative family after skipping intervening dedicated families, so navigation was
+on a different fixture. The selector now leaves positioning to its dedicated
+source/built/public/packed proofs. No runtime change was needed. The single
+failed test was rerun after correction:1passed/412skipped in56.58s. Combined
+experimental coverage is550passing/9skipped559; this is a corrected segmented
+receipt, not an uninterrupted whole-matrix pass. Logs
+`/tmp/pibbl-consolidation40-focused.txt` and
+`/tmp/pibbl-consolidation40-walk-corrected.txt`.
+Normal25-file matrix203passed/356skipped559 in3.85s, log
+`/tmp/pibbl-consolidation40-normal.txt`. TypeScript and changed test lint pass.
+No production/kernel/ABI change, status promotion, baseline rewrite or Node24
+aggregate trust claim. Source/built/installed120 receipts remain current.
+
+## [NEXT] Decorated-parent static and relative positioning evidence (slice121)
+
+Verify the same direct finite row-nowrap API with asymmetric padding and layout
+border on a204×104 border-box parent, yielding160×60 content. Add four isolated
+pinned static/relative × LTR/RTL cases, public semantic geometry/hit/focus/keyed
+identity/paint reuse/cleanup, source/built replay and installed proof. Evidence
+only if existing production passes; do not invent a production RED. Preserve
+positioning status experimental and all7release gates open. Then advance a
+material remaining absolute participation/containing-block gap rather than
+multiplying supported relative permutations. Full-program review stays at the end.
 
 ### Consolidation 24 completed for delivery slices 70–72
 

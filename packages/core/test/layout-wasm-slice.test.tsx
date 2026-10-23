@@ -872,7 +872,7 @@ const mount = createExampleMount(mountModule.WasmYogaMigrationExample);
   if(logicalPadding)for(let section=0;section<8;section++){clickCanvas(canvas,520,158);await nextFrame();}
   // This walk advances Next case through the contiguous original families. Later
   // sections (including rounding) have dedicated semantic tests and browser drivers.
-  const cases=yogaReference.cases.filter(fixture=>!('customColumnMeasureFixture' in fixture) && !('nestedDecoratedColumnCrossMinFixture' in fixture) && !('nestedDecoratedColumnCrossMaxFixture' in fixture) && !('nestedDecoratedCrossMaxFixture' in fixture) && !('nestedDecoratedCrossMinFixture' in fixture) && !('nestedCrossMinFixture' in fixture) && !('roundingFixture' in fixture) && !('intrinsicFixture' in fixture) && !('directionMatrixFixture' in fixture) && !('autoMarginFixture' in fixture) && ('contentBoxes' in fixture)===logicalPadding);
+  const cases=yogaReference.cases.filter(fixture=>!('relativeStaticFixture' in fixture) && !('decoratedRelativeStaticFixture' in fixture) && !('customColumnMeasureFixture' in fixture) && !('nestedDecoratedColumnCrossMinFixture' in fixture) && !('nestedDecoratedColumnCrossMaxFixture' in fixture) && !('nestedDecoratedCrossMaxFixture' in fixture) && !('nestedDecoratedCrossMinFixture' in fixture) && !('nestedCrossMinFixture' in fixture) && !('roundingFixture' in fixture) && !('intrinsicFixture' in fixture) && !('directionMatrixFixture' in fixture) && !('autoMarginFixture' in fixture) && ('contentBoxes' in fixture)===logicalPadding);
   for (const [index, fixture] of cases.entries()) {
     const expected = fixture.pibblBoxes ?? fixture.boxes;
     if (index) { labels.length = 0; clickCanvas(canvas,60,158); await nextFrame(); }
