@@ -230,5 +230,14 @@ visible/default fit and overflow; aspect sizing and prepared queries are exclude
 Text is measured at final width before auto-margin placement, and auto cross edges
 suppress stretch. The Studio comparison’s Text cross-auto section demonstrates
 width80→40 changing height20→30 and moving the Text top80→70 without replacing focus.
-Custom/opaque components, wrapping rows, column automatic cross sizing and pure
+Opaque components, wrapping rows, column automatic cross sizing and pure
 intrinsic owners retain their existing diagnostics.
+
+
+Direct custom primitives with both pure `measureIntrinsic` and `measure` providers
+may also use measured automatic height in a finite experimental nowrap row at
+declared numeric width, without aspect sizing or prepared queries. Resolve
+participation styles with `resolveStyle` and return allocated drawing dimensions.
+The Studio custom cross-auto section lays out eight jobs: width80→40 changes
+height20→40 and top80→60. Wrapping rows, automatic widths, columns and pure
+intrinsic owners remain outside this bounded contract.

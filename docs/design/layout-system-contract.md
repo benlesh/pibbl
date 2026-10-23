@@ -1057,7 +1057,8 @@ Direct `Text` in a finite experimental nowrap row may omit height or use automat
 height with a cross-auto margin. Width must be a declared finite nonnegative
 number; wrapping must be enabled, font generic, fit/overflow visible/default, and
 there must be no aspect ratio or prepared style query. Unsupported Text shapes,
-custom/opaque components and columns retain the existing explicit diagnostic.
+opaque components and columns retain the existing explicit diagnostic. Direct custom
+primitives have the separate bounded contract below.
 This is allocated Text sizing, not pure intrinsic Flex-owner measurement.
 
 The existing initial and final-main-width measurement passes determine Text’s
@@ -1074,3 +1075,24 @@ callback. Its callback provenance is recorded and it makes no font-rendering
 parity claim. The browser uses ordinary Canvas Text. Source/built instrumentation
 normalizes draws through the actual root transform before comparing logical
 geometry, so Studio scaling is not mistaken for a layout difference.
+
+
+### Measured direct custom primitive cross-auto sizing
+
+A direct `definePrimitive` child with both pure `measureIntrinsic` and `measure`
+providers may use automatic height with a cross-auto margin in a finite
+experimental nowrap row. It requires a declared finite nonnegative numeric width
+and no aspect ratio or prepared query. Existing initial and final allocated-width
+measurement determines height before auto absorption and suppresses stretch.
+The primitive must resolve participation styles through `resolveStyle`, returning
+allocated dimensions in its resolved drawing style; automatic margins are not
+drawing inputs. No public API or native protocol is added.
+
+The eight-job public example uses20px columns and10px rows: width80→40 changes
+height20→40 and top80→60 in a100px row. Both native records use that explicit
+application measurement callback. Stable props/style inputs permit paint-only
+measurement reuse; changed props or inputs retain conservative invalidation.
+Missing either provider, automatic width, wrapped rows, aspect sizing, column
+automatic cross size and pure intrinsic owners remain unsupported. A required
+final-width measurement failure prevents earlier paint, releases layout ownership
+and permits clean remount.

@@ -271,3 +271,12 @@ or `{ status: "unsupported", reason }`. Dimensions are finite and nonnegative;
 minimum width cannot exceed preferred width. Heights describe the content at the
 corresponding intrinsic width and need not be ordered. Existing `measure` is
 unchanged. A definite basis and explicit `minWidth: 0` avoid intrinsic queries.
+
+
+Direct custom primitives with both pure `measureIntrinsic` and `measure` providers
+may also use measured automatic height in a finite experimental nowrap row at
+declared numeric width, without aspect sizing or prepared queries. Resolve
+participation styles with `resolveStyle` and return allocated drawing dimensions.
+The Studio custom cross-auto section lays out eight jobs: width80→40 changes
+height20→40 and top80→60. Wrapping rows, automatic widths, columns and pure
+intrinsic owners remain outside this bounded contract.

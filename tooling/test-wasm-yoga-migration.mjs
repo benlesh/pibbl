@@ -14,6 +14,7 @@ const directionMatrixOnly = process.argv.includes('--direction-matrix');
 const autoMarginsOnly = process.argv.includes('--auto-margins');
 const autoOpposingOnly = process.argv.includes('--auto-opposing');
 const autoShorthandOnly = process.argv.includes('--auto-shorthand');
+const customCrossAutoOnly = process.argv.includes('--custom-cross-auto');
 const textCrossAutoOnly = process.argv.includes('--text-cross-auto');
 const crossAutoDirectionsOnly = process.argv.includes('--cross-auto-directions');
 const crossAutoMarginsOnly = process.argv.includes('--cross-auto-margins');
@@ -63,8 +64,9 @@ try {
     } });
     await page.waitForTimeout(240);
   };
-  const cases = textCrossAutoOnly ? reference.cases.filter(fixture => fixture.textCrossAutoFixture) : autoOpposingOnly ? reference.cases.filter(fixture => fixture.autoOpposingMarginFixture) : autoShorthandOnly ? reference.cases.filter(fixture => fixture.autoShorthandMarginFixture) : crossAutoDirectionsOnly ? reference.cases.filter(fixture => fixture.autoCrossDirectionFixture) : crossAutoMarginsOnly ? reference.cases.filter(fixture => fixture.autoCrossMarginFixture) : wrappedAutoMarginsOnly ? reference.cases.filter(fixture => fixture.autoWrappedMarginFixture) : autoMarginsOnly ? reference.cases.filter(fixture => fixture.autoMarginFixture) : directionMatrixOnly ? reference.cases.filter(fixture => fixture.directionMatrixFixture) : intrinsicOnly ? reference.cases.filter(fixture => fixture.intrinsicFixture) : logicalBordersOnly ? reference.cases.filter(fixture => fixture.name.startsWith('logical-border-')) : logicalPaddingOnly ? reference.cases.filter(fixture => fixture.name.startsWith('logical-padding-')) : marginOnly ? reference.cases.filter(fixture => fixture.name.startsWith('margin-percent-')) : crossOnly ? reference.cases.filter(fixture => fixture.name.startsWith('cross-percent-')) : paddingOnly ? reference.cases.filter(fixture => fixture.name.startsWith('padding-percent-')) : gapOnly ? reference.cases.filter(fixture => fixture.name.startsWith('gap-percent-')) : aspectOnly ? reference.cases.filter(fixture => fixture.name.startsWith('aspect-wrap-')) : percentageOnly ? reference.cases.filter(fixture => fixture.name.startsWith('percent-')) : reference.cases;
-  if (textCrossAutoOnly) { for(let section=0;section<18;section++) { if (section === 17) await clearTextCrossAutoDraws(); await click(520,158); } }
+  const cases = customCrossAutoOnly ? reference.cases.filter(fixture => fixture.customCrossAutoFixture) : textCrossAutoOnly ? reference.cases.filter(fixture => fixture.textCrossAutoFixture) : autoOpposingOnly ? reference.cases.filter(fixture => fixture.autoOpposingMarginFixture) : autoShorthandOnly ? reference.cases.filter(fixture => fixture.autoShorthandMarginFixture) : crossAutoDirectionsOnly ? reference.cases.filter(fixture => fixture.autoCrossDirectionFixture) : crossAutoMarginsOnly ? reference.cases.filter(fixture => fixture.autoCrossMarginFixture) : wrappedAutoMarginsOnly ? reference.cases.filter(fixture => fixture.autoWrappedMarginFixture) : autoMarginsOnly ? reference.cases.filter(fixture => fixture.autoMarginFixture) : directionMatrixOnly ? reference.cases.filter(fixture => fixture.directionMatrixFixture) : intrinsicOnly ? reference.cases.filter(fixture => fixture.intrinsicFixture) : logicalBordersOnly ? reference.cases.filter(fixture => fixture.name.startsWith('logical-border-')) : logicalPaddingOnly ? reference.cases.filter(fixture => fixture.name.startsWith('logical-padding-')) : marginOnly ? reference.cases.filter(fixture => fixture.name.startsWith('margin-percent-')) : crossOnly ? reference.cases.filter(fixture => fixture.name.startsWith('cross-percent-')) : paddingOnly ? reference.cases.filter(fixture => fixture.name.startsWith('padding-percent-')) : gapOnly ? reference.cases.filter(fixture => fixture.name.startsWith('gap-percent-')) : aspectOnly ? reference.cases.filter(fixture => fixture.name.startsWith('aspect-wrap-')) : percentageOnly ? reference.cases.filter(fixture => fixture.name.startsWith('percent-')) : reference.cases;
+  if (customCrossAutoOnly) { for(let section=0;section<19;section++) await click(520,158); }
+  else if (textCrossAutoOnly) { for(let section=0;section<18;section++) { if (section === 17) await clearTextCrossAutoDraws(); await click(520,158); } }
   else if (autoOpposingOnly) { for(let section=0;section<17;section++) await click(520,158); }
   else if (autoShorthandOnly) { for(let section=0;section<16;section++) await click(520,158); }
   else if (crossAutoDirectionsOnly) { for(let section=0;section<15;section++) await click(520,158); }
@@ -124,6 +126,7 @@ try {
       await click(392 + sibling.x + sibling.width / 2, 240 + sibling.y + sibling.height / 2);
       assert.ok((await frame.locator('pre').innerText()).includes('selected: B'), `${fixture.name}: sibling center targets B`);
       previousTextCrossSiblingStamp = state.stamps.B;
+      previousDirectionStamps = { B: state.stamps.B }; previousLiveNames = ['B'];
       continue;
     }
     if (fixture.directionMatrixFixture || fixture.autoMarginFixture) {

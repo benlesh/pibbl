@@ -4008,3 +4008,179 @@ it.runIf(experimentalLayout).each([
   const text = createElement(Text, { children: 'aaaa aaaa aaaa', style: { width: 80, minWidth: 0, flexShrink: 0, wrap: true, font: '10px monospace', lineHeight: 10, marginTop: 'auto', ...style } as import('@pibbl/core').TextStyle });
   expect(() => layoutFlex({ x: 0, y: 0, width: 160, height: 100 }, [text], options, measurement)).toThrow(/auto cross-axis margins/);
 });
+
+it.runIf(experimentalLayout)('measures a finite custom primitive before allocating an automatic cross-axis margin', async () => {
+  type AutoCrossPrimitiveStyle = import('@pibbl/core').SystemStyle & {
+    width?: number;
+    height?: number;
+    minWidth?: number;
+    flexShrink?: number;
+    marginTop?: import('@pibbl/core').FlexMargin;
+  };
+  const baseline = snapshotWasmLayoutDiagnostics();
+  const ownerWidth = signal(80);
+  const siblingPaint = signal('#2f6b97');
+  const hits = signal<string[]>([]);
+  const focused: string[] = [];
+  const rendered: Array<{ x: number; y: number; width: number; height: number; stamp: number }> = [];
+  let finiteMeasureCalls = 0;
+  let stamp = 0;
+  const Leaf = definePrimitive<{ hits: typeof hits }, AutoCrossPrimitiveStyle, AutoCrossPrimitiveStyle, import('@pibbl/core').SystemStyle & { width: number; height: number }>(props => {
+    const box = useLayoutBox();
+    const transform = useCanvasContext().getTransform();
+    const instance = useConst(() => ++stamp);
+    rendered.push({ x: transform.e, y: transform.f, width: box.width, height: box.height, stamp: instance });
+    return <Rectangle
+      keyboardFocusable
+      onFocus={() => focused.push('leaf')}
+      onClick={() => props.hits.update(value => [...value, 'leaf'])}
+      style={{ width: box.width, height: box.height, fill: '#19375b', cursor: 'pointer' }}
+    />;
+  }, {
+    preserveSignalProps: ['hits'],
+    resolveStyle: (_style, context) => ({ width: context.allocation.width, height: context.allocation.height }),
+    measureIntrinsic: () => ({
+      status: 'measured' as const,
+      minContent: { width: 0, height: 20 },
+      maxContent: { width: 100, height: 20 },
+    }),
+    measure: ({ constraints }) => {
+      finiteMeasureCalls++;
+      return {
+        status: 'measured' as const,
+        size: { width: constraints.maxWidth, height: constraints.maxWidth >= 80 ? 20 : 40 },
+      };
+    },
+  });
+  const scene = <FocusManagement><Flex style={{ width: 160, height: 100 }}>
+      <Leaf key="leaf" hits={hits} style={{ width: ownerWidth, flexShrink: 1, marginTop: 'auto' }} />
+      <Rectangle
+        key="sibling"
+        keyboardFocusable
+        onFocus={() => focused.push('sibling')}
+        onClick={() => hits.update(value => [...value, 'sibling'])}
+        style={{ width: 40, height: 40, minWidth: 0, minHeight: 0, flexShrink: 0, fill: siblingPaint, cursor: 'pointer' }}
+      />
+    </Flex></FocusManagement>;
+  const canvas = document.createElement('canvas'); canvas.width = 160; canvas.height = 100; document.body.append(canvas);
+  const controller = pibbl(canvas, scene); controllers.push(controller); await nextFrame();
+  expect(rendered.at(-1)).toEqual({ x: 0, y: 80, width: 80, height: 20, stamp: 1 });
+  canvas.focus({ preventScroll: true });
+  canvas.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', code: 'Tab', bubbles: true, cancelable: true }));
+  expect(focused).toEqual(['leaf', 'sibling']);
+  clickCanvas(canvas, 5, 75); await nextFrame(); expect(hits.get()).toEqual([]);
+  clickCanvas(canvas, 5, 85); await nextFrame(); expect(hits.get()).toEqual(['leaf']);
+  const initial = snapshotWasmLayoutDiagnostics();
+  const initialFiniteCalls = finiteMeasureCalls;
+
+  const beforeWidthFocus = focused.slice();
+  ownerWidth.set(40); await nextFrame();
+  expect(focused).toEqual(beforeWidthFocus);
+  expect(rendered.at(-1)).toEqual({ x: 0, y: 60, width: 40, height: 40, stamp: 1 });
+  const narrowed = snapshotWasmLayoutDiagnostics();
+  expect(finiteMeasureCalls).toBeGreaterThan(initialFiniteCalls);
+  expect(narrowed.solves).toBeGreaterThan(initial.solves);
+  expect(narrowed.measuredLeaves).toBeGreaterThan(initial.measuredLeaves);
+  expect(narrowed.nodeCreates).toBe(initial.nodeCreates);
+  clickCanvas(canvas, 5, 75); await nextFrame(); expect(hits.get()).toEqual(['leaf', 'leaf']);
+  clickCanvas(canvas, 100, 20); await nextFrame(); expect(hits.get()).toEqual(['leaf', 'leaf']);
+  clickCanvas(canvas, 60, 20); await nextFrame(); expect(hits.get()).toEqual(['leaf', 'leaf', 'sibling']);
+
+  const beforePaint = snapshotWasmLayoutDiagnostics();
+  const beforePaintFiniteCalls = finiteMeasureCalls;
+  siblingPaint.set('#a63758'); await nextFrame();
+  const painted = snapshotWasmLayoutDiagnostics();
+  expect(finiteMeasureCalls).toBe(beforePaintFiniteCalls);
+  expect(painted.solves).toBe(beforePaint.solves);
+  expect(painted.measuredLeaves).toBe(beforePaint.measuredLeaves);
+  expect(painted.nodeCreates).toBe(initial.nodeCreates);
+  controller.dispose();
+  const disposed = snapshotWasmLayoutDiagnostics();
+  expect(disposed.activeNodes).toBe(baseline.activeNodes);
+  expect(disposed.activeArenas).toBe(baseline.activeArenas);
+  expect(disposed.cachedMeasurements).toBe(baseline.cachedMeasurements);
+});
+
+it.runIf(experimentalLayout)('keeps automatic cross-margin custom primitive admission finite and direct', () => {
+  type Style = import('@pibbl/core').SystemStyle & {
+    width?: number | 'auto';
+    height?: number | 'auto';
+    minWidth?: number;
+    flexShrink?: number;
+    marginTop?: import('@pibbl/core').FlexMargin;
+    marginLeft?: import('@pibbl/core').FlexMargin;
+    aspectRatio?: number;
+  };
+  type Resolved = import('@pibbl/core').SystemStyle & { width: number; height: number };
+  const resolveStyle = (_style: Style, context: { allocation: { width: number; height: number } }): Resolved => ({ width: context.allocation.width, height: context.allocation.height });
+  const intrinsic = () => ({ status: 'measured' as const, minContent: { width: 0, height: 20 }, maxContent: { width: 100, height: 20 } });
+  const finite = ({ constraints }: { constraints: { maxWidth: number } }) => ({ status: 'measured' as const, size: { width: constraints.maxWidth, height: 20 } });
+  const Both = definePrimitive<{}, Style, Style, Resolved>(() => undefined, { resolveStyle, measureIntrinsic: intrinsic, measure: finite });
+  const IntrinsicOnly = definePrimitive<{}, Style, Style, Resolved>(() => undefined, { resolveStyle, measureIntrinsic: intrinsic });
+  const MeasureOnly = definePrimitive<{}, Style, Style, Resolved>(() => undefined, { resolveStyle, measure: finite });
+  const row = { x: 0, y: 0, width: 160, height: 100 };
+  const automaticCross = { width: 80, flexShrink: 1, marginTop: 'auto' as const };
+  const expectRejected = (child: PibblNode, options: FlexStyle = {}) => {
+    expect(() => layoutFlex(row, [child], options, measurement)).toThrow(/auto cross-axis margins/);
+  };
+  expectRejected(createElement(IntrinsicOnly, { style: automaticCross }));
+  expectRejected(createElement(MeasureOnly, { style: automaticCross }));
+  expectRejected(createElement(Both, { style: automaticCross }), { flexWrap: 'wrap' });
+  expectRejected(createElement(Both, { style: { ...automaticCross, width: 'auto' } }));
+  expectRejected(createElement(Both, { style: { ...automaticCross, aspectRatio: 2 } }));
+  expectRejected(createElement(Both, { style: { height: 80, flexShrink: 1, marginLeft: 'auto' } }), { flexDirection: 'column' });
+});
+
+it.runIf(experimentalLayout)('fails an automatic cross-margin custom final-width measurement before earlier paint and remounts cleanly', async () => {
+  type Style = import('@pibbl/core').SystemStyle & {
+    width?: number;
+    height?: number;
+    minWidth?: number;
+    flexShrink?: number;
+    marginTop?: import('@pibbl/core').FlexMargin;
+  };
+  type Resolved = import('@pibbl/core').SystemStyle & { width: number; height: number };
+  const baseline = snapshotWasmLayoutDiagnostics();
+  const ownerWidth = signal(80);
+  const fail = signal(false);
+  let earlierPaints = 0;
+  const Leaf = definePrimitive<{}, Style, Style, Resolved>(() => {
+    const box = useLayoutBox();
+    return <Rectangle style={{ width: box.width, height: box.height, fill: '#19375b' }} />;
+  }, {
+    resolveStyle: (_style, context) => ({ width: context.allocation.width, height: context.allocation.height }),
+    measureIntrinsic: () => ({ status: 'measured' as const, minContent: { width: 0, height: 20 }, maxContent: { width: 100, height: 20 } }),
+    measure: ({ constraints }) => fail.get() && constraints.minWidth === constraints.maxWidth
+      ? { status: 'unsupported' as const, reason: 'finite custom provider unavailable' }
+      : { status: 'measured' as const, size: { width: constraints.maxWidth, height: constraints.maxWidth >= 80 ? 20 : 40 } },
+  });
+  function Earlier(_props: { style: import('@pibbl/core').SystemStyle & { width: number; height: number; minWidth: number; flexShrink: number } }) { earlierPaints++; return <Rectangle style={{ width: 60, height: 20, minWidth: 0, flexShrink: 0, fill: '#a63758' }} />; }
+  const scene = <Absolute style={{ width: 260, height: 100 }}>
+    <Flex style={{ width: 60, height: 40 }}><Earlier style={{ width: 60, height: 20, minWidth: 0, flexShrink: 0 }} /></Flex>
+    <Flex style={{ left: 100, width: 160, height: 100 }}>
+      <Leaf key="leaf" style={{ width: ownerWidth, flexShrink: 1, marginTop: 'auto' }} />
+      <Rectangle key="sibling" style={{ width: 40, height: 40, minWidth: 0, minHeight: 0, flexShrink: 0, fill: '#2f6b97' }} />
+    </Flex>
+  </Absolute>;
+  const canvas = document.createElement('canvas'); canvas.width = 260; canvas.height = 100; document.body.append(canvas);
+  const errors: unknown[] = [];
+  const prevent = (event: ErrorEvent) => { errors.push(event.error); event.preventDefault(); };
+  window.addEventListener('error', prevent);
+  try {
+    const controller = pibbl(canvas, scene); controllers.push(controller); await nextFrame();
+    expect(earlierPaints).toBe(1);
+    fail.set(true); ownerWidth.set(40); await nextFrame();
+    expect(errors.some(error => error instanceof Error && error.message.includes('final-width measurement is required but unsupported: finite custom provider unavailable'))).toBe(true);
+    expect(earlierPaints).toBe(1);
+    expect(snapshotWasmLayoutDiagnostics().activeNodes).toBe(baseline.activeNodes);
+    expect(snapshotWasmLayoutDiagnostics().activeArenas).toBe(baseline.activeArenas);
+    expect(snapshotWasmLayoutDiagnostics().cachedMeasurements).toBe(baseline.cachedMeasurements);
+
+    fail.set(false);
+    const remounted = pibbl(canvas, scene); controllers.push(remounted); await nextFrame();
+    expect(earlierPaints).toBe(2);
+    expect([...canvas.getContext('2d')!.getImageData(105, 65, 1, 1).data]).toEqual([25, 55, 91, 255]);
+  } finally {
+    window.removeEventListener('error', prevent);
+  }
+});

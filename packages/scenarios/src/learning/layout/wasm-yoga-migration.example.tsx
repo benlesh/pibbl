@@ -1,5 +1,9 @@
 import {
   useConst,
+  computed,
+  definePrimitive,
+  type SystemStyle,
+  type FlexMargin,
   Flex,
   Rectangle,
   Text,
@@ -319,7 +323,9 @@ function createWasmYogaMigrationExampleContent(canvas: HTMLCanvasElement) {
     {"name":"auto-opposing-cross-min","width":200,"height":100,"gap":0,"flexDirection":"row","flexWrap":"nowrap","containerStyle":{"alignItems":"center","justifyContent":"flex-start"},"autoMarginFixture":true,"autoOpposingMarginFixture":true,"boxes":[{"x":0,"y":30,"width":40,"height":40},{"x":40,"y":40,"width":40,"height":20}],"itemStyles":[{"width":40,"height":20,"minWidth":0,"minHeight":40,"flexGrow":0,"flexShrink":0,"marginTop":"auto","marginBottom":"auto"},{"width":40,"height":20,"minWidth":0,"minHeight":0,"flexGrow":0,"flexShrink":0}]},
     {"name":"auto-opposing-cross-max","width":200,"height":100,"gap":0,"flexDirection":"row","flexWrap":"nowrap","containerStyle":{"alignItems":"center","justifyContent":"flex-start"},"autoMarginFixture":true,"autoOpposingMarginFixture":true,"boxes":[{"x":0,"y":35,"width":40,"height":30},{"x":40,"y":40,"width":40,"height":20}],"itemStyles":[{"width":40,"height":80,"minWidth":0,"minHeight":0,"flexGrow":0,"flexShrink":0,"maxHeight":30,"marginTop":"auto","marginBottom":"auto"},{"width":40,"height":20,"minWidth":0,"minHeight":0,"flexGrow":0,"flexShrink":0}]},
     {"name":"text-cross-auto-top-stretch-wide","width":160,"height":100,"gap":0,"flexDirection":"row","flexWrap":"nowrap","containerStyle":{"alignItems":"stretch","justifyContent":"flex-start"},"autoMarginFixture":true,"textCrossAutoFixture":true,"textValue":"aaaa aaaa aaaa","textMeasure":{"kind":"deterministic-callback","font":"10px monospace","glyphAdvance":6,"spaceAdvance":6,"lineHeight":10,"wrapAtSpaces":true,"fontParityClaim":false,"calls":1},"boxes":[{"x":0,"y":80,"width":80,"height":20},{"x":80,"y":0,"width":40,"height":40}],"itemStyles":[{"width":80,"wrap":true,"font":"10px monospace","lineHeight":10,"minWidth":0,"minHeight":0,"flexGrow":0,"flexShrink":0,"marginTop":"auto"},{"width":40,"height":40,"minWidth":0,"minHeight":0,"flexGrow":0,"flexShrink":0}]},
-    {"name":"text-cross-auto-top-stretch-narrow","width":160,"height":100,"gap":0,"flexDirection":"row","flexWrap":"nowrap","containerStyle":{"alignItems":"stretch","justifyContent":"flex-start"},"autoMarginFixture":true,"textCrossAutoFixture":true,"textValue":"aaaa aaaa aaaa","textMeasure":{"kind":"deterministic-callback","font":"10px monospace","glyphAdvance":6,"spaceAdvance":6,"lineHeight":10,"wrapAtSpaces":true,"fontParityClaim":false,"calls":1},"boxes":[{"x":0,"y":70,"width":40,"height":30},{"x":40,"y":0,"width":40,"height":40}],"itemStyles":[{"width":40,"wrap":true,"font":"10px monospace","lineHeight":10,"minWidth":0,"minHeight":0,"flexGrow":0,"flexShrink":0,"marginTop":"auto"},{"width":40,"height":40,"minWidth":0,"minHeight":0,"flexGrow":0,"flexShrink":0}]}
+    {"name":"text-cross-auto-top-stretch-narrow","width":160,"height":100,"gap":0,"flexDirection":"row","flexWrap":"nowrap","containerStyle":{"alignItems":"stretch","justifyContent":"flex-start"},"autoMarginFixture":true,"textCrossAutoFixture":true,"textValue":"aaaa aaaa aaaa","textMeasure":{"kind":"deterministic-callback","font":"10px monospace","glyphAdvance":6,"spaceAdvance":6,"lineHeight":10,"wrapAtSpaces":true,"fontParityClaim":false,"calls":1},"boxes":[{"x":0,"y":70,"width":40,"height":30},{"x":40,"y":0,"width":40,"height":40}],"itemStyles":[{"width":40,"wrap":true,"font":"10px monospace","lineHeight":10,"minWidth":0,"minHeight":0,"flexGrow":0,"flexShrink":0,"marginTop":"auto"},{"width":40,"height":40,"minWidth":0,"minHeight":0,"flexGrow":0,"flexShrink":0}]},
+    {"name":"custom-cross-auto-top-stretch-wide","width":160,"height":100,"gap":0,"flexDirection":"row","flexWrap":"nowrap","containerStyle":{"alignItems":"stretch","justifyContent":"flex-start"},"autoMarginFixture":true,"customCrossAutoFixture":true,"customMeasure":{"kind":"deterministic-cell-callback","jobs":8,"cellWidth":20,"rowHeight":10,"columns":"max(1,floor(width/20))","rows":"ceil(8/columns)","calls":1},"boxes":[{"x":0,"y":80,"width":80,"height":20},{"x":80,"y":0,"width":40,"height":40}],"itemStyles":[{"width":80,"minWidth":0,"flexShrink":0,"marginTop":"auto"},{"width":40,"height":40,"minWidth":0,"minHeight":0,"flexGrow":0,"flexShrink":0}]},
+    {"name":"custom-cross-auto-top-stretch-narrow","width":160,"height":100,"gap":0,"flexDirection":"row","flexWrap":"nowrap","containerStyle":{"alignItems":"stretch","justifyContent":"flex-start"},"autoMarginFixture":true,"customCrossAutoFixture":true,"customMeasure":{"kind":"deterministic-cell-callback","jobs":8,"cellWidth":20,"rowHeight":10,"columns":"max(1,floor(width/20))","rows":"ceil(8/columns)","calls":1},"boxes":[{"x":0,"y":60,"width":40,"height":40},{"x":40,"y":0,"width":40,"height":40}],"itemStyles":[{"width":40,"minWidth":0,"flexShrink":0,"marginTop":"auto"},{"width":40,"height":40,"minWidth":0,"minHeight":0,"flexGrow":0,"flexShrink":0}]}
   ] as const;
   // END YOGA REFERENCE
   const index = signal(0);
@@ -393,6 +399,24 @@ function createWasmYogaMigrationExampleContent(canvas: HTMLCanvasElement) {
       </>
     );
   }
+  type AutoQueueStyle = SystemStyle & { width?: number; height?: number; minWidth?: number; flexShrink?: number; marginTop?: FlexMargin };
+  const AutoQueue = definePrimitive<{ name: string }, AutoQueueStyle, AutoQueueStyle, SystemStyle & { width: number; height: number }>(props => {
+    const box = recordBox(props.name);
+    actual.set(props.name, `${box.width} × ${box.height}`);
+    const columns = Math.max(1, Math.floor(box.width / 20));
+    const tiles: PibblNode[] = [];
+    for (let job = 0; job < 8; job++) tiles.push(<Rectangle key={job} pointerEvents="none" style={{ left: (job % columns) * 20 + 1, top: Math.floor(job / columns) * 10 + 1, width: 18, height: 8, fill: "#426b61" }} />);
+    return <><Rectangle onClick={() => { hits++; selected.set(props.name); }} style={{ width: box.width, height: box.height, fill: "#d6e3db", cursor: "pointer" }} />{tiles}</>;
+  }, {
+    resolveStyle: (_style, context) => ({ width: context.allocation.width, height: context.allocation.height }),
+    measureIntrinsic: () => ({ status: "measured", minContent: { width: 20, height: 80 }, maxContent: { width: 160, height: 10 } }),
+    measure: ({ constraints }) => {
+      const columns = Math.max(1, Math.floor(constraints.maxWidth / 20));
+      return { status: "measured", size: { width: constraints.maxWidth, height: Math.ceil(8 / columns) * 10 } };
+    },
+  });
+  const queueWidth = computed(() => { const fixture = fixtureCases[index.get()]; return "customCrossAutoFixture" in fixture ? fixture.itemStyles[0].width : 80; });
+  const queueNode = <AutoQueue key={0} name="A" style={{ width: queueWidth, minWidth: 0, flexShrink: 0, marginTop: "auto" }} />;
   function Workspace() {
     rootTransform=useCanvasContext().getTransform();
     const fixture = fixtureCases[index.get()];
@@ -498,6 +522,7 @@ function createWasmYogaMigrationExampleContent(canvas: HTMLCanvasElement) {
             : "nestedBoxes" in fixture ? fixture.itemStyles.map((style,itemIndex) => itemIndex<3
             ? <NestedCard key={itemIndex} name={String.fromCharCode(65+itemIndex)} column={column} style={style} />
             : <Panel key={itemIndex} name="D" column={column} wrapped={wrapped} style={style} />)
+            : "customCrossAutoFixture" in fixture ? <>{queueNode}<Panel key={1} name="B" style={fixture.itemStyles[1]} /></>
             : "textCrossAutoFixture" in fixture ? <>
               <Text key={0} onClick={() => { hits++; selected.set("A"); }} style={{ width: fixture.itemStyles[0].width, minWidth: 0, minHeight: 0, flexGrow: 0, flexShrink: 0, wrap: true, font: "10px monospace", lineHeight: 10, marginTop: "auto", fill: "#19375b", cursor: "pointer" }}>{fixture.textValue}</Text>
               <Panel key={1} name="B" style={fixture.itemStyles[1]} />
@@ -564,6 +589,8 @@ function createWasmYogaMigrationExampleContent(canvas: HTMLCanvasElement) {
           }}
         >{intrinsicFixture
           ? `finite row wrap · numeric direct leaves settle ${fixture.boxes[0].width} × ${fixture.boxes[0].height} before footer B at y ${fixture.boxes[1].y}`
+          : "customCrossAutoFixture" in fixture
+          ? "8 job tiles · 20px columns × 10px rows · pure measured height controls top auto margin · click A/B"
           : "textCrossAutoFixture" in fixture
           ? "direct wrapped Text · measured height controls top auto margin · stretch is suppressed · native callback is a sizing probe, not font parity"
           : "autoOpposingMarginFixture" in fixture
@@ -687,7 +714,8 @@ function createWasmYogaMigrationExampleContent(canvas: HTMLCanvasElement) {
         const autoShorthand = fixtureCases.findIndex(fixture => fixture.name === "auto-shorthand-all-ltr");
         const autoOpposing = fixtureCases.findIndex(fixture => fixture.name === "auto-opposing-main-grow-consumes");
         const textCrossAuto = fixtureCases.findIndex(fixture => fixture.name === "text-cross-auto-top-stretch-wide");
-        return value < bounds ? bounds : value < aspect ? aspect : value < gaps ? gaps : value < padding ? padding : value < crossBounds ? crossBounds : value < margins ? margins : value < nested ? nested : value < logicalPadding ? logicalPadding : value < logicalBorders ? logicalBorders : value < intrinsic ? intrinsic : value < directionMatrix ? directionMatrix : value < autoMargins ? autoMargins : value < wrappedAutoMargins ? wrappedAutoMargins : value < crossAutoMargins ? crossAutoMargins : value < crossAutoDirections ? crossAutoDirections : value < autoShorthand ? autoShorthand : value < autoOpposing ? autoOpposing : value < textCrossAuto ? textCrossAuto : 0;
+        const customCrossAuto = fixtureCases.findIndex(fixture => fixture.name === "custom-cross-auto-top-stretch-wide");
+        return value < bounds ? bounds : value < aspect ? aspect : value < gaps ? gaps : value < padding ? padding : value < crossBounds ? crossBounds : value < margins ? margins : value < nested ? nested : value < logicalPadding ? logicalPadding : value < logicalBorders ? logicalBorders : value < intrinsic ? intrinsic : value < directionMatrix ? directionMatrix : value < autoMargins ? autoMargins : value < wrappedAutoMargins ? wrappedAutoMargins : value < crossAutoMargins ? crossAutoMargins : value < crossAutoDirections ? crossAutoDirections : value < autoShorthand ? autoShorthand : value < autoOpposing ? autoOpposing : value < textCrossAuto ? textCrossAuto : value < customCrossAuto ? customCrossAuto : 0;
       })} />
       <Text pointerEvents="none" style={{left:496,top:150,font:"14px sans-serif",fill:"#ffffff"}}>Next section</Text>
       <Workspace />

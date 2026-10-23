@@ -1589,9 +1589,19 @@
         "id": "text-cross-auto-top-stretch-narrow",
         "covers": ["flex.auto-margin", "flex.min-max"],
         "note": "Native callback supplies explicit deterministic word-wrap measurement; no font-rendering parity claim."
+      },
+      {
+        "id": "custom-cross-auto-top-stretch-wide",
+        "covers": ["flex.auto-margin", "flex.min-max"],
+        "note": "Native callback supplies explicit eight-job measurement."
+      },
+      {
+        "id": "custom-cross-auto-top-stretch-narrow",
+        "covers": ["flex.auto-margin", "flex.min-max"],
+        "note": "Native callback supplies explicit eight-job measurement."
       }
     ],
-    "limit": "303 records:209 native matches and94 explicitly classified differences. Two Text cross-auto records use an explicit deterministic measurement callback, not font-rendering parity. Finite evidence remains bounded and does not establish general intrinsic, percentage, auto-margin or CSS parity."
+    "limit": "305 records:211 native matches and94 explicitly classified differences. Two custom cross-auto records use an explicit eight-job measurement callback. Two Text cross-auto records use an explicit deterministic measurement callback, not font-rendering parity. Finite evidence remains bounded and does not establish general intrinsic, percentage, auto-margin or CSS parity."
   },
   "gateGroups": [
     {
@@ -2073,9 +2083,9 @@
       "id": "flex.auto-margin",
       "target": "parity",
       "group": "box-and-direction",
-      "current": "experimental finite main/cross-axis auto margins in rows/columns, all main directions, nowrap/wrap/wrap-reverse and LTR/RTL; physical and logical edges; explicit finite numeric cross size and no aspect sizing for cross auto; sizing precedes positive absorption and cross auto overrides alignment; uniform auto shorthand resolves before physical/logical edge overrides; numeric main/cross min-max and opposing-slot interactions have pinned public evidence; direct generic wrapped Text in finite nowrap rows may use measured automatic height at declared numeric width",
+      "current": "experimental finite main/cross-axis auto margins in rows/columns, all main directions, nowrap/wrap/wrap-reverse and LTR/RTL; physical and logical edges; explicit finite numeric cross size and no aspect sizing for cross auto; sizing precedes positive absorption and cross auto overrides alignment; uniform auto shorthand resolves before physical/logical edge overrides; numeric main/cross min-max and opposing-slot interactions have pinned public evidence; direct generic wrapped Text and custom primitives with both pure providers in finite nowrap rows may use measured automatic height at declared numeric width",
       "status": "partial",
-      "unresolvedPolicy": "Finite explicit-cross main/cross directions, shorthand and numeric bounds are evidenced. Direct generic Text automatic height is supported in finite nowrap rows at declared width. Other automatic/custom/layout cross sizing, wrapping/column Text and pure intrinsic owners remain outstanding; broader percentage/intrinsic feedback follows separate sizing gates.",
+      "unresolvedPolicy": "Finite explicit-cross main/cross directions, shorthand and numeric bounds are evidenced. Direct generic Text and paired pure-provider custom primitive automatic height are supported in finite nowrap rows at declared width. Other automatic/layout cross sizing, wrapping/column Text and pure intrinsic owners remain outstanding; broader percentage/intrinsic feedback follows separate sizing gates.",
       "evidence": {
         "positive": [
           "left/right/both slots divide positive free space after flexible sizing and before justification",
@@ -2088,6 +2098,7 @@
           "slice101: 36 additional physical cross-auto directions; effective cross reversal maps flags through the existing native conversion; logical column inline start/end and LTR/RTL oversized-item overflow remain coherent",
           "slice102: uniform margin auto fills four slots before physical/logical overrides; explicit zero removes only that edge; RTL distinguishes physical left from logical start",
           "slice103: grow consumes free space before opposing slots; maxWidth freezing releases remainder to slots; shrink minWidth freezes before absorption; numeric opposite margin and cross min/max precede auto sharing",
+          "slice105: direct paired-provider custom primitive measures final width before auto absorption; stable inputs reuse paint measurements, failed final width releases ownership before paint",
           "slice104: direct wrapped generic Text initial/final-width measurement precedes cross-auto absorption and suppresses stretch; width80 to40 produces height20 to30 and top80 to70 without replacing native identities"
         ],
         "negative": [
@@ -2208,7 +2219,9 @@
           "auto-opposing-cross-min",
           "auto-opposing-cross-max",
           "text-cross-auto-top-stretch-wide",
-          "text-cross-auto-top-stretch-narrow"
+          "text-cross-auto-top-stretch-narrow",
+          "custom-cross-auto-top-stretch-wide",
+          "custom-cross-auto-top-stretch-narrow"
         ],
         "missing": [
           "other automatic/custom/layout cross sizing and wrapping/column Text",

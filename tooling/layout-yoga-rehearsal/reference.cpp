@@ -1241,6 +1241,26 @@ static void textCrossAutoCases() {
  }
 }
 
+static int customMeasureCalls = 0;
+static YGSize customCellMeasure(YGNodeConstRef, float width, YGMeasureMode widthMode, float, YGMeasureMode) {
+  customMeasureCalls++;
+  const float usedWidth = widthMode == YGMeasureModeUndefined ? 160 : width;
+  const int columns = std::max(1, int(usedWidth / 20));
+  const int rows = (8 + columns - 1) / columns;
+  return {usedWidth, float(rows * 10)};
+}
+static void customCrossAutoCases() {
+  for (int narrow = 0; narrow < 2; ++narrow) {
+    const int width = narrow ? 40 : 80; customMeasureCalls = 0;
+    auto config = YGConfigNew(); YGConfigSetUseWebDefaults(config,false); YGConfigSetPointScaleFactor(config,0); YGConfigSetErrata(config,YGErrataNone);
+    auto root=YGNodeNewWithConfig(config);YGNodeStyleSetWidth(root,160);YGNodeStyleSetHeight(root,100);YGNodeStyleSetFlexDirection(root,YGFlexDirectionRow);YGNodeStyleSetFlexWrap(root,YGWrapNoWrap);YGNodeStyleSetAlignItems(root,YGAlignStretch);YGNodeStyleSetJustifyContent(root,YGJustifyFlexStart);
+    auto a=YGNodeNewWithConfig(config),b=YGNodeNewWithConfig(config);YGNodeStyleSetWidth(a,width);YGNodeStyleSetFlexGrow(a,0);YGNodeStyleSetFlexShrink(a,0);setMinZero(a);YGNodeSetMeasureFunc(a,customCellMeasure);YGNodeStyleSetMarginAuto(a,YGEdgeTop);
+    YGNodeStyleSetWidth(b,40);YGNodeStyleSetHeight(b,40);YGNodeStyleSetFlexGrow(b,0);YGNodeStyleSetFlexShrink(b,0);setMinZero(b);YGNodeInsertChild(root,a,0);YGNodeInsertChild(root,b,1);YGNodeCalculateLayout(root,YGUndefined,YGUndefined,YGDirectionLTR);
+    std::cout << ",{\"name\":\"custom-cross-auto-top-stretch-"<<(narrow?"narrow":"wide")<<"\",\"width\":160,\"height\":100,\"gap\":0,\"flexDirection\":\"row\",\"flexWrap\":\"nowrap\",\"containerStyle\":{\"alignItems\":\"stretch\",\"justifyContent\":\"flex-start\"},\"autoMarginFixture\":true,\"customCrossAutoFixture\":true,\"customMeasure\":{\"kind\":\"deterministic-cell-callback\",\"jobs\":8,\"cellWidth\":20,\"rowHeight\":10,\"columns\":\"max(1,floor(width/20))\",\"rows\":\"ceil(8/columns)\",\"calls\":"<<customMeasureCalls<<"},\"boxes\":[";printBox(a);std::cout<<',';printBox(b);std::cout<<"],\"itemStyles\":[{\"width\":"<<width<<",\"minWidth\":0,\"flexShrink\":0,\"marginTop\":\"auto\"},{\"width\":40,\"height\":40,\"minWidth\":0,\"minHeight\":0,\"flexGrow\":0,\"flexShrink\":0}]}\n";
+    YGNodeFreeRecursive(root);YGConfigFree(config);
+  }
+}
+
 int main() {
   const char* names[] = {"grow", "cap", "shrink", "rectangle-shrink", "rectangle-percent-content-box", "column-grow", "column-cap", "column-shrink", "row-reverse-cap", "column-reverse-cap", "row-wrap", "row-wrap-reverse", "border-box-floor-bounds", "border-box-percentage", "border-box-asymmetric-row", "border-box-asymmetric-column", "zero-fractional-grow", "fractional-shrink", "grow-freeze-release", "shrink-freeze-release", "large-finite-differential", "subunit-zero-grow", "subunit-shrink-policy", "initial-freeze-grow-policy", "initial-freeze-shrink-policy"};
   std::cout << "[";
@@ -1377,5 +1397,6 @@ int main() {
   autoShorthandMarginCases();
   autoOpposingMarginCases();
   textCrossAutoCases();
+  customCrossAutoCases();
   std::cout << "]\n";
 }

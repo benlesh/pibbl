@@ -722,14 +722,16 @@ function resolveFlexPlacements(
     const autoBottom = marginBottomValue === 'auto', autoLeft = marginLeftValue === 'auto';
     const declaredCrossSize = row ? normalized.height : normalized.width;
     const hasAutoCrossMargin = row ? autoTop || autoBottom : autoLeft || autoRight;
-    const measuredTextCrossAuto = hasAutoCrossMargin && experimentalLayout && row && options.flexWrap === 'nowrap' &&
-      child.type === Text && normalized.wrap === true &&
+    const measuredAutoCross = hasAutoCrossMargin && experimentalLayout && row && options.flexWrap === 'nowrap' &&
       (declaredCrossSize === undefined || declaredCrossSize === 'auto') &&
       typeof declared.width === 'number' && typeof normalized.width === 'number' && Number.isFinite(normalized.width) && normalized.width >= 0 &&
+      !preparedStyleQuery(prepared) && aspectRatio === undefined;
+    const measuredTextCrossAuto = measuredAutoCross && child.type === Text && normalized.wrap === true &&
       (normalized.fit === undefined || normalized.fit === 'visible') &&
-      (normalized.overflow === undefined || normalized.overflow === 'visible') &&
-      !preparedStyleQuery(prepared) && aspectRatio === undefined && genericTextFont(normalized);
-    if (hasAutoCrossMargin && !measuredTextCrossAuto &&
+      (normalized.overflow === undefined || normalized.overflow === 'visible') && genericTextFont(normalized);
+    const autoCrossDefinition = measuredAutoCross && !measuredTextCrossAuto ? getPrimitiveDefinition(child.type) : undefined;
+    const measuredPrimitiveCrossAuto = !!autoCrossDefinition?.measureIntrinsic && !!autoCrossDefinition.measure;
+    if (hasAutoCrossMargin && !measuredTextCrossAuto && !measuredPrimitiveCrossAuto &&
         (typeof declaredCrossSize !== 'number' || !Number.isFinite(declaredCrossSize) || declaredCrossSize < 0 || aspectRatio !== undefined)) {
       throw childDiagnostic(child, row ? autoTop ? 'marginTop' : 'marginBottom' : autoLeft ? marginLeftProperty : marginRightProperty, 'auto', container, 'auto cross-axis margins require a finite numeric child cross size without aspect sizing');
     }

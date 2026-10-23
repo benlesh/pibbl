@@ -2,7 +2,8 @@
 
 ## Current checkpoint and single next slice — 2026-10-23
 
-Latest delivery is slice104 (measured Text cross-auto sizing), recorded below.
+Latest delivery is slice105 (measured custom primitive cross-auto sizing), recorded below.
+Slice104 is `9c974fe1` (measured Text cross-auto sizing).
 Slice103 is `d8e5bf09` (opposing auto-margin bounds evidence).
 Slice102 is `dc0565a6` (auto shorthand and edge precedence).
 Slice101 is `e2418916` (finite cross-auto direction coverage).
@@ -56,7 +57,7 @@ Slice54 `773da7b9`,53 `aaa7ddcb`,52 `b5381e0d` are consolidated in `f322a709`.
 Every slice has its own commit. The fixed33-capability/seven-gate denominator is
 unchanged; all seven gates remain open. Consolidation26 is `2cd357d4`; consolidation27 is `abbaf209`; consolidation28 is `dfd16c8f`; consolidation29 is `f2e38dc6`; consolidation30 is recorded below; slices91–93 are delivered below; consolidation31 passed below; slices95–96 direction evidence passed below; consolidation32 for94–96 passed below; slices97–99 are delivered below; consolidation33 passed below; consolidation34 of100–102 passed below; the single next delivery is105, measured custom primitive cross-auto sizing. Source5192/built5193, `#/testing/layout-preflight`:
 Source5192/built5193 `#/examples/layout/wasm-yoga-migration`: Next case + resize
-cycles303 records:209matches/94classified differences; click A/B/C targets.
+cycles305 records:211matches/94classified differences; click A/B/C targets.
 Canonical built comparison: http://127.0.0.1:5193/#/examples/layout/wasm-yoga-migration.
 Native Grid tracks/spans and Flow wrap controls remain available.
 
@@ -2648,14 +2649,34 @@ Fixed33 stays5complete/11experimental/8partial/8missing/1excluded, all7gates ope
 Auto-margin remains partial. Consolidate103–105 after105; final whole-codebase
 review stays at full program end. No Node24 aggregate trust claim.
 
-## [NEXT] Measured custom primitive cross-auto sizing (slice 105)
+## Delivered measured custom primitive cross-auto sizing (slice 105)
 
-Extend the existing final-width direct primitive measurement path to automatic
-cross margins in a finite nowrap row. Require both ordinary and intrinsic pure
-measurement, finite declared width, no aspect/query. Prove measured20→40 height
-and top80→60 on width80→40, public focus/hit/identity/cache ownership, and explicit
-unsupported/failure cleanup. Keep other layout/column/wrapping/intrinsic owner gaps
-visible. Then consolidate103–105 before the next implementation expansion.
+Direct primitives with both pure measurement providers now admit automatic height
+and cross-auto margins in finite nowrap rows at declared numeric width, without
+aspect/query sizing. The eight-job example changes width80→40, height20→40,
+top80→60; sibling position, focus, hit targeting and native identity follow.
+Stable descriptors retain paint-only reuse. Missing providers and unsupported
+shapes retain diagnostics; final-width failure restores ownership before paint
+and allows clean remount. Existing cache invalidation and native v5 are unchanged.
+
+Source/built two-case replay passes, built469 inputs; installed102auto+24direction
+cases pass with strict Bundler/NodeNext types and230 inputs. Tarball SHA256
+`23c6cfb61f293b8dc0a4d52194fd57f9d5847ca5dfd8b87b0c3d2f32a50bcf33`.
+Corpus305=211matches+94classified; custom callbacks explicitly model eight jobs.
+Focused custom-provider checks pass3/384skipped, including six unsupported
+shapes and required final-width failure/remount cleanup. Types/lint, docs109RED,
+JSDoc, catalog and305-case native provenance pass. Scoped review found no material
+issue. Source comparison URL:
+http://127.0.0.1:5192/#/examples/layout/wasm-yoga-migration — Next section19times.
+Auto-margin remains partial; fixed33 counts5complete/11experimental/8partial/
+8missing/1excluded and all7gates open. No Node24 aggregate trust claim.
+
+## [NEXT] Consolidation 35 for slices 103–105
+
+Run the bounded combined layout/measurement/ownership suites in experimental and
+ordinary modes before selecting the next implementation gap. Preserve the fixed
+capability denominator and remaining wrapping/column/layout automatic cross and
+pure intrinsic owner gaps. Final whole-codebase review stays at full program end.
 
 ### Consolidation 24 completed for delivery slices 70–72
 
