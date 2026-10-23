@@ -1935,7 +1935,7 @@
       "id": "flex.min-max",
       "target": "parity",
       "group": "flex-core",
-      "current": "numeric bounds, definite-owner percentage main-axis caps/floors and wrapped stretched cross bounds in row/column, including owner resize; intrinsic percentage owners remain explicitly unsupported; bounded direct nested row Flex cross minimum resolves from a definite wrapped outer owner; decorated border-box row-reverse/wrap nested cross minima use the final content owner",
+      "current": "numeric bounds, definite-owner percentage main-axis caps/floors and wrapped stretched cross bounds in row/column, including owner resize; an acyclic exact caller width/height supplies an omitted LTR nowrap row/column main reference for direct percentage bounds; intrinsic percentage owners remain explicitly unsupported; bounded direct nested row Flex cross minimum resolves from a definite wrapped outer owner; decorated border-box row-reverse/wrap nested cross minima use the final content owner",
       "status": "partial",
       "evidenceRefs": [
         "packages/core/src/lib/layout/flex.test.ts",
@@ -1944,6 +1944,7 @@
         "tooling/test-wasm-yoga-migration.mjs",
         "tooling/packed-layout-consumer.mjs",
         "packages/core/test/layout-exact-row-measurement.test.tsx",
+        "packages/core/test/layout-exact-column-measurement.test.tsx",
         "packages/scenarios/src/learning/layout/wasm-flex-intrinsic-primitive.example.tsx",
         "tooling/test-wasm-intrinsic-primitive.mjs"
       ],
@@ -1961,14 +1962,15 @@
           "Decorated column-reverse definite width20/minWidth60% gives nested width60\u219296 and C x94\u2192130 from content cross100\u2192160",
           "Decorated row-reverse maxWidth25% under content width100→140 freezes A at25→35 while column-reverse minHeight70% under content height100→140 floors A70→98 with negative free space",
           "Symmetric decorated row-reverse minWidth70% floors A70→98 and column-reverse maxHeight25% caps A25→35 across content main100→140; both complementary sibling extents match pinned native output",
-          "Omitted-width LTR nowrap row measurement resolves direct percentage main bounds from finite equal min/max width constraints, including exact zero, and preserves natural cross size"
+          "Omitted-width LTR nowrap row measurement resolves direct percentage main bounds from finite equal min/max width constraints, including exact zero, and preserves natural cross size",
+          "Omitted-height LTR nowrap column measurement resolves direct percentage main bounds from finite equal min/max height constraints, including exact zero, and preserves natural cross size"
         ],
         "negative": [
           "opposing limits rejection",
           "negative/nonfinite/malformed percentages rejected",
           "resolved opposing percent bounds rejected",
           "percentage-dependent intrinsic measurement remains unsupported without resource allocation",
-          "Maximum-only and unbounded row availability cannot supply a percentage main-bound basis; conflicting resolved bounds diagnose before provider evaluation"
+          "Maximum-only and unbounded row/column availability cannot supply a percentage main-bound basis; conflicting resolved bounds diagnose before provider evaluation"
         ],
         "interaction": [
           "owner resize recomputes percent limits and moves hit targets in the same frame",
@@ -1980,7 +1982,8 @@
           "Column leaf expansion admits formerly empty52,136; width-only updates preserve keys/main solves/lines, and paint uses zero pure measures",
           "Point100,136 transfers from C to expanded A1 while new C remains targetable; keys/main solves/lines reuse, zero paint measurement",
           "Source/built four-case replay and installed public mounts verify exact native world boxes, formerly empty point transfers to B, stable keys/nodes, paint solve reuse and exact teardown",
-          "Paired provider composes nested exact-width measurement with rendered row: owner80→40 caps A20→10, moves B hit target, preserves keys and paint reuse, and disposes measurement ownership"
+          "Paired provider composes nested exact-width measurement with rendered row: owner80→40 caps A20→10, moves B hit target, preserves keys and paint reuse, and disposes measurement ownership",
+          "A one-auto absolute paired provider receives unbounded width plus exact height, composes an omitted-height column: owner80→40 caps A20→10, moves B target, preserves keys and paint reuse, and disposes measurement ownership"
         ],
         "yogaCases": [
           "cap",
@@ -2023,7 +2026,7 @@
           "decorated-main-cap-column-reverse-resized"
         ],
         "missing": [
-          "column exact-availability main-bound measurement and remaining indefinite-owner policy beyond the bounded exact row admission"
+          "indefinite-owner policy and explicit measured-owner matrix beyond acyclic exact row/column availability"
         ]
       }
     },

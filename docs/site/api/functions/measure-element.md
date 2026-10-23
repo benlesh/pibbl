@@ -58,6 +58,12 @@ Definite-main, declared-cross children can then resolve percentage `minWidth` an
 zero is valid. A maximum alone or unbounded availability does not supply a
 percentage basis. Other intrinsic measurement restrictions still apply.
 
+The column counterpart uses equal finite `minHeight` and `maxHeight` for an
+omitted/automatic-height LTR, unwrapped `Flex`. Direct percentage height bounds
+resolve against that height; the result retains its natural width. A maximum
+alone remains an availability limit. These are single-main-axis admissions;
+they do not define cyclic percentage sizing or a new both-axes-exact shortcut.
+
 The [custom intrinsic leaf example](#/examples/layout/wasm-flex-intrinsic-primitive)
 uses this existing operation inside a paired provider, then renders the same
 percentage-capped row with matching pointer targets.

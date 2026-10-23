@@ -127,6 +127,7 @@ try {
       assert.equal(receipt.customColumnMeasure, true, 'Installed package must measure a finite column custom queue at its exact width, move the follower target, reuse nodes on paint, and clean up');
       assert.equal(receipt.columnAutomaticProviderMinimum, true, 'Installed paired providers must use their exact-width finite measurement as the automatic column minimum, preserve the minHeight zero escape, targets, paint reuse and cleanup');
       assert.equal(receipt.exactRowMeasurementBounds, true, 'Installed Flex measurement must admit only exact finite row width for percentage main bounds, preserve paired wrapper geometry, reuse paint, and clean up');
+      assert.equal(receipt.exactColumnMeasurementBounds, true, 'Installed Flex measurement must admit only exact finite column height for percentage main bounds, preserve paired absolute wrapper geometry, reuse paint, and clean up');
       console.warn('Packed auto margins: 104 fixture cases passed');
       assert.equal(receipt.logicalMargins, true, 'Installed logical percentage margins must move Layer targets without new native nodes');
       assert.equal(receipt.layoutDirection, true, 'Installed direction must reach retained Layer geometry and targets');

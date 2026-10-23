@@ -1221,6 +1221,15 @@ automatic child cross size and cyclic/indefinite owners outside documented paths
 No new public signature, measurement vocabulary, resource owner, cache or fixed
 point is introduced. Intrinsic-pair heights retain their width-specific meaning.
 
+The column counterpart takes equal finite, nonnegative `minHeight` and `maxHeight`
+for an omitted/automatic-height LTR `column`, `nowrap` Flex. Its numeric-main,
+declared-cross contributions may use percentage `minHeight`/`maxHeight` against
+that exact height, returning natural width and exact main height. Exact zero is
+valid. A maximum-only or unbounded height remains unsupported when those bounds
+need a basis; contradictory resolved bounds diagnose before child evaluation.
+This is a one-axis exact admission with natural opposite extent, not a new
+both-axes-exact fast path. The existing all-authored-dimensions shortcut remains.
+
 The public intrinsic-provider lesson composes the existing finite column provider
 with a measured row. The column delivers exact width80→40; the nested row omits
 its own width and measures against that exact constraint. Its first40px item is
@@ -1228,6 +1237,14 @@ capped at25%, so render allocation becomes20→10 beside a fixed20px target. The
 same supported Flex composition renders the measured result. Measurement-only
 callbacks remain pure and owned by the existing layout region; sibling paint
 reuses the constrained result and teardown releases its dependencies.
+The same private cap primitive also renders a column. An existing one-auto-axis
+absolute provider supplies exact height80→40 and unbounded width, so the measured
+column caps its first40px item to20→10 and moves its fixed20px target y20→10.
+Its unbounded intrinsic-pair request explicitly returns unsupported: this example
+requires an exact main-axis owner and does not invent zero/cyclic contributions.
+Both widgets use one Owner control, owned geometry/stamp inspection and the same
+finite measurement operation. Affine-inverse inspection coordinates tolerate only
+1e-9 logical-unit roundoff; allocated extents and identities remain exact.
 
 ### Experimental finite wrapped-row intrinsic height
 

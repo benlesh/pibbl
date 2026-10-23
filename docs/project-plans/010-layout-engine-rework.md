@@ -20,7 +20,8 @@ No new runtime behavior, capability promotion, or aggregate Node24 trust claim.
 Slice145 started with two public tests failing numeric-only admission before
 production changes; its completed evidence is recorded below.
 
-Latest runtime delivery is slice152 (exact caller-width row measurement).
+Latest runtime delivery is slice153 (exact caller-height column measurement).
+Slice152 is `5cb9ca57` (exact caller-width row measurement).
 Slice151 is `58dc7783` (symmetric decorated reverse main bounds).
 Slice150 is `f592b00c` (decorated reverse main percentage bounds).
 Consolidation50 is `a88ea6c4` for148–150.
@@ -4557,16 +4558,54 @@ Typecheck, changed-code lint,170-lesson catalog and documentation checks passed
 The native717-record corpus is unchanged; no new native parity or aggregate trust
 claim. Fixed ledger9/11/6/6/1 and all7 release gates remain unchanged.
 
-## [NEXT] Exact caller-height column measurement (153)
+## [DONE] Slice153: exact caller-height column measurement
 
-Complete the symmetric acyclic constraint admission through the same public API:
-a finite equal minHeight/maxHeight supplies the definite main reference for an
-omitted/automatic-height LTR nowrap column with numeric-main, declared-cross
-contributions and percentage minHeight/maxHeight. Test exact, zero, maximum-only,
-unbounded and conflicting bounds before production changes; demonstrate one
-public composition and installed receipt. Do not reinterpret width-paired
-intrinsic heights or silently define cyclic percentage behavior. Consolidation51
-follows151–153, retaining broader indefinite-owner policy as an explicit exit.
+The existing public `measureElement(element, Constraints, service)` and nested
+measurement callback now recognize a finite equal minHeight/maxHeight as a
+definite content height for omitted/automatic-height LTR nowrap columns. Direct
+numeric-main, declared-cross contributions may resolve percentage minHeight/maxHeight
+against it. Maximum-only and unbounded availability remain unsupported when those
+bounds need a basis; zero is exact; conflicting resolved bounds diagnose before
+provider evaluation. This is the symmetric acyclic counterpart to slice152: it
+does not reinterpret width-paired intrinsic heights, add a signature, cache,
+keyword vocabulary, fixed point or general indefinite-owner rule.
+
+`layout-exact-column-measurement.test.tsx` is a supported public-API proof for
+exact, at-most, unbounded, contradictory and zero constraints. Its focused
+experimental lane passed 43 tests/1 skip across three files; normal mode passed
+40 tests/4 skips. The installed Node24 packed consumer passed strict
+Bundler/NodeNext/runtime verification with `exactColumnMeasurementBounds=true`,
+245 dist inputs and exact absolute-wrapper geometry, target transfer, paint reuse
+and cleanup. The source Studio driver passed all four intrinsic flags, including
+exact row and column, with no page errors and cleanup `[0,0,0]`.
+
+The existing intrinsic-provider lesson now shows one shared exact-cap composition:
+a finite row measures omitted width and a one-auto absolute paired provider
+measures omitted height with unbounded width. In both cases owner80→40 caps
+A20→10 beside fixed B20, with geometry, target and transformed-pixel evidence
+before cache and cleanup assertions. It adds no controls or public API.
+
+Fresh frozen-file source and built Studio replays passed all four flags; built
+used469 dist inputs, both retained provider/measurement counts on paint, cleanup
+was `[0,0,0]`, and browser errors were empty. Logs:
+`/tmp/pibbl-slice153-source-final.txt` and
+`/tmp/pibbl-slice153-built-final.txt`. The earlier built HMR counter reset is
+superseded by this independent clean replay. Final packed proof passed245 inputs
+with tarball SHA256
+`a4a8f7b12d901bd6a21d0a2147abb18ec06e1929de6ada80ad8e4ede13194fdc`.
+Typecheck, changed-code lint and170/12/33 catalog validation passed. No aggregate
+trust claim. The native corpus remains717 records and no native parity claim is added.
+`flex.min-max` remains partial only for the separate indefinite-owner and broader
+measured-owner policy; fixed ledger9/11/6/6/1 and all7 release gates remain open.
+
+## [NEXT] Consolidation51 for slices151–153
+
+Consolidate the finite reverse
+main-bound matrix with exact caller row/column availability receipts. Preserve the
+partial `flex.min-max` status and its explicit indefinite-owner boundary; do not
+promote a maximum-only constraint to a definite owner or introduce intrinsic
+keywords/cyclic percentage feedback. Run only proportional source, built, packed,
+type, documentation and catalog evidence, then record exact commands and output.
 
 ### Finite positioning exit matrix after134
 

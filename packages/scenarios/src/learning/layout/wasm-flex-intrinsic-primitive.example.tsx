@@ -59,13 +59,21 @@ const IntrinsicChip = definePrimitive<{ minimum: Signal<number> }, IntrinsicChip
   },
 );
 
-interface ExactRowStyle extends SystemStyle {
-  readonly width?: number;
+interface ExactCapStyle extends SystemStyle {
+  readonly position?: "absolute";
+  readonly left?: number;
+  readonly top?: number;
+  readonly width?: number | "auto";
   readonly height?: number | "auto";
+  readonly minWidth?: number;
   readonly minHeight?: number;
   readonly flexGrow?: number;
   readonly flexShrink?: number;
 }
+
+type ExactCapAxis = "row" | "column";
+type ExactCapName = "A" | "B";
+
 
 const AdaptiveIntrinsicChip = definePrimitive<{ hits: WritableSignal<number> }, IntrinsicChipStyle>(
   function renderAdaptiveIntrinsicChip(props) {
@@ -111,40 +119,45 @@ function createWasmFlexIntrinsicPrimitiveContent(canvas: HTMLCanvasElement) {
   const paint = signal("#426b61");
   const followerHits = signal(0);
   const columnFollowerHits = signal(0);
-  const exactRowHits = signal(0);
+  const exactCapHits = signal(0);
   const adaptiveOwner = signal(140);
   const adaptivePaint = signal("#426b61");
   const adaptiveHits = signal(0);
   const stamp = ++nextStamp;
   let disposed = false;
 
-  let exactRowMeasureCalls = 0;
-  let exactRowStamp = 0;
-  let exactRowBasis: DOMMatrix;
-  const exactRowBoxes: Record<string, { x: number; y: number; width: number; height: number; stamp: number }> = {};
-  function ExactRowCell({ name, hits, style: _style }: { name: 'A' | 'B'; hits: WritableSignal<number>; style: BoxStyle & FlexItemStyle }) {
+  let exactCapMeasureCalls = 0;
+  let exactCapStamp = 0;
+  const exactCapBases: Partial<Record<ExactCapAxis, DOMMatrix>> = {};
+  const exactCapBoxes: Partial<Record<ExactCapAxis, Record<ExactCapName, { x: number; y: number; width: number; height: number; stamp: number }>>> = {};
+  function ExactCapCell({ axis, name, hits, style: _style }: { axis: ExactCapAxis; name: ExactCapName; hits: WritableSignal<number>; style: BoxStyle & FlexItemStyle }) {
     const box = useLayoutBox();
     const matrix = useCanvasContext().getTransform();
-    const point = exactRowBasis.inverse().transformPoint({ x: matrix.e, y: matrix.f });
-    const stamp = useConst(() => ++exactRowStamp);
-    exactRowBoxes[name] = { x: point.x, y: point.y, width: box.width, height: box.height, stamp };
+    const basis = exactCapBases[axis]!;
+    const point = basis.inverse().transformPoint({ x: matrix.e, y: matrix.f });
+    const stamp = useConst(() => ++exactCapStamp);
+    (exactCapBoxes[axis] ??= {} as Record<ExactCapName, { x: number; y: number; width: number; height: number; stamp: number }>)[name] = { x: point.x, y: point.y, width: box.width, height: box.height, stamp };
     return <Rectangle
-      onClick={name === 'B' ? () => hits.update(value => value + 1) : undefined}
-      style={{ width: box.width, height: box.height, fill: name === 'A' ? '#6e3e79' : '#426b61', cursor: name === 'B' ? 'pointer' : undefined }}
+      onClick={name === "B" ? () => hits.update(value => value + 1) : undefined}
+      style={{ width: box.width, height: box.height, fill: name === "A" ? "#6e3e79" : "#426b61", cursor: name === "B" ? "pointer" : undefined }}
     />;
   }
 
-
-  const ExactPercentageCap = definePrimitive<{ hits: WritableSignal<number> }, ExactRowStyle, ExactRowStyle, SystemStyle & { width: number; height: number }>(
+  const ExactPercentageCap = definePrimitive<{ axis: ExactCapAxis; hits: WritableSignal<number> }, ExactCapStyle, ExactCapStyle, SystemStyle & { width: number; height: number }>(
     function renderExactPercentageCap(props) {
       const box = useLayoutBox();
-      exactRowBasis = useCanvasContext().getTransform();
+      exactCapBases[props.axis] = useCanvasContext().getTransform();
+      const row = props.axis === "row";
+      const firstStyle = row ?
+        { width: 40, height: 20, flexBasis: 40, flexGrow: 0, flexShrink: 0, minWidth: 0, maxWidth: "25%" as const } :
+        { width: 20, height: 40, flexBasis: 40, flexGrow: 0, flexShrink: 0, minHeight: 0, maxHeight: "25%" as const };
+      const secondStyle = row ?
+        { width: 20, height: 20, flexBasis: 20, flexGrow: 0, flexShrink: 0, minWidth: 0 } :
+        { width: 20, height: 20, flexBasis: 20, flexGrow: 0, flexShrink: 0, minHeight: 0 };
       return (
-        <Flex style={{ width: box.width, height: box.height, flexDirection: "row", alignItems: "flex-start" }}>
-          <ExactRowCell key="A" name="A" hits={props.hits} style={{ width: 40, height: 20, flexBasis: 40, flexGrow: 0, flexShrink: 0, minWidth: 0, maxWidth: "25%" }} />
-          <ExactRowCell key="B" name="B" hits={props.hits}
-            style={{ width: 20, height: 20, flexBasis: 20, flexGrow: 0, flexShrink: 0, minWidth: 0 }}
-          />
+        <Flex style={{ width: box.width, height: box.height, flexDirection: props.axis, alignItems: "flex-start" }}>
+          <ExactCapCell key="A" axis={props.axis} name="A" hits={props.hits} style={firstStyle} />
+          <ExactCapCell key="B" axis={props.axis} name="B" hits={props.hits} style={secondStyle} />
         </Flex>
       );
     },
@@ -152,18 +165,20 @@ function createWasmFlexIntrinsicPrimitiveContent(canvas: HTMLCanvasElement) {
       preserveSignalProps: ["hits"],
       resolveStyle: (_style, context) => ({ width: context.allocation.width, height: context.allocation.height }),
       measureIntrinsic: () => ({
-        status: "measured" as const,
-        minContent: { width: 0, height: 20 },
-        maxContent: { width: 60, height: 20 },
+        status: "unsupported" as const,
+        reason: "Percentage main bounds require an exact main-axis owner.",
       }),
-      measure: ({ constraints, measureElement }): MeasureResult => {
-        exactRowMeasureCalls++;
+      measure: ({ props, constraints, measureElement }): MeasureResult => {
+        exactCapMeasureCalls++;
+        const row = props.axis === "row";
         return measureElement(
-          <Flex style={{ flexDirection: "row", flexWrap: "nowrap", alignItems: "flex-start" }}>
-          <Rectangle style={{ width: 40, height: 20, flexBasis: 40, flexGrow: 0, flexShrink: 0, minWidth: 0, maxWidth: "25%", fill: "#6e3e79" }} />
-          <Rectangle style={{ width: 20, height: 20, flexBasis: 20, flexGrow: 0, flexShrink: 0, minWidth: 0, fill: "#426b61" }} />
-        </Flex>,
-        { minWidth: constraints.minWidth, maxWidth: constraints.maxWidth, minHeight: 0, maxHeight: Number.POSITIVE_INFINITY },
+          <Flex style={{ flexDirection: props.axis, flexWrap: "nowrap", alignItems: "flex-start" }}>
+            <Rectangle style={{ width: row ? 40 : 20, height: row ? 20 : 40, flexBasis: 40, flexGrow: 0, flexShrink: 0, minWidth: row ? 0 : undefined, minHeight: row ? undefined : 0, maxWidth: row ? "25%" : undefined, maxHeight: row ? undefined : "25%" }} />
+            <Rectangle style={{ width: 20, height: 20, flexBasis: 20, flexGrow: 0, flexShrink: 0, minWidth: row ? 0 : undefined, minHeight: row ? undefined : 0 }} />
+          </Flex>,
+          row ?
+            { minWidth: constraints.minWidth, maxWidth: constraints.maxWidth, minHeight: 0, maxHeight: Number.POSITIVE_INFINITY } :
+            { minWidth: 0, maxWidth: Number.POSITIVE_INFINITY, minHeight: constraints.minHeight, maxHeight: constraints.maxHeight },
         );
       },
     },
@@ -210,10 +225,10 @@ function createWasmFlexIntrinsicPrimitiveContent(canvas: HTMLCanvasElement) {
     <>
       <Rectangle style={{ width: 760, height: 360, fill: "#f3f0e8" }} />
       <Text style={{ left: 28, top: 24, font: "bold 24px sans-serif", fill: "#19375b" }}>
-        WASM · custom intrinsic leaf
+        WASM · custom intrinsic leaves
       </Text>
       <Text style={{ left: 28, top: 62, font: "14px sans-serif", fill: "#475569" }}>
-        One custom primitive declares both content contributions. The blue follower keeps its paint and hit box aligned.
+        Custom primitives declare content sizes. Blue targets follow measured allocations and percentage bounds.
       </Text>
       <Button
         x={28}
@@ -309,13 +324,16 @@ function createWasmFlexIntrinsicPrimitiveContent(canvas: HTMLCanvasElement) {
         fill="#426b61"
       />
       <Text style={{ left: 72, top: 268, font: "bold 12px sans-serif", fill: "#19375b" }}>
-        Exact owner → 25% cap + 20 px sibling
+        Row · 25% cap + 20 px
       </Text>
       <Flex style={{ left: 72, top: 288, width: owner, height: 20, flexDirection: "column", alignItems: "flex-start" }}>
-        <ExactPercentageCap
-          hits={exactRowHits}
-          style={{ width: owner, height: "auto", minHeight: 0, flexGrow: 0, flexShrink: 0 }}
-        />
+        <ExactPercentageCap axis="row" hits={exactCapHits} style={{ width: owner, height: "auto", minHeight: 0, flexGrow: 0, flexShrink: 0 }} />
+      </Flex>
+      <Text style={{ left: 330, top: 234, font: "bold 12px sans-serif", fill: "#19375b" }}>
+        Column · 25% cap + 20 px
+      </Text>
+      <Flex style={{ left: 330, top: 250, width: 20, height: owner, flexDirection: "row", alignItems: "flex-start" }}>
+        <ExactPercentageCap axis="column" hits={exactCapHits} style={{ position: "absolute", left: 0, top: 0, width: "auto", height: owner, minWidth: 0, flexGrow: 0, flexShrink: 0 }} />
       </Flex>
       <Text style={{ left: 28, top: 220, font: "14px sans-serif", fill: "#475569" }}>
         Preferred: 100 × 20 · intrinsic minimum: {minimum} · owner: {owner} · explicit minWidth: {escapeLabel}
@@ -367,7 +385,7 @@ function createWasmFlexIntrinsicPrimitiveContent(canvas: HTMLCanvasElement) {
   canvas.insertAdjacentElement("afterend", panel);
   const refresh = () => {
     panel.textContent = read
-      ? `EXPERIMENTAL WASM · ${Object.entries(read()).map(([key, value]) => `${key}: ${value}`).join(" · ")}\nprovider calls: ${providerCalls} · column measure calls: ${columnMeasureCalls} · exact row measure calls: ${exactRowMeasureCalls} · stamp: ${stamp} · follower hits: ${followerHits.get()} · column follower hits: ${columnFollowerHits.get()} · exact row hits: ${exactRowHits.get()} · minimum: ${minimum.get()} · owner: ${owner.get()} · escape: ${escaped.get()}\nadaptive owner: ${adaptiveOwner.get()} · adaptive hits: ${adaptiveHits.get()} · adaptive finite calls: ${adaptiveFiniteCalls} · adaptive paint: ${adaptivePaint.get()} · disposed: ${disposed}\nexact row state: ${JSON.stringify({ boxes: exactRowBoxes, basis: exactRowBasis })}`
+      ? `EXPERIMENTAL WASM · ${Object.entries(read()).map(([key, value]) => `${key}: ${value}`).join(" · ")}\nprovider calls: ${providerCalls} · column measure calls: ${columnMeasureCalls} · exact cap measure calls: ${exactCapMeasureCalls} · stamp: ${stamp} · follower hits: ${followerHits.get()} · column follower hits: ${columnFollowerHits.get()} · exact cap hits: ${exactCapHits.get()} · minimum: ${minimum.get()} · owner: ${owner.get()} · escape: ${escaped.get()}\nadaptive owner: ${adaptiveOwner.get()} · adaptive hits: ${adaptiveHits.get()} · adaptive finite calls: ${adaptiveFiniteCalls} · adaptive paint: ${adaptivePaint.get()} · disposed: ${disposed}\nexact cap state: ${JSON.stringify({ boxes: exactCapBoxes, bases: exactCapBases })}`
       : "Normal JS build. Start Studio with --mode layout-wasm to inspect the experimental intrinsic provider.";
   };
   refresh();

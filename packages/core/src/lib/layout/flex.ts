@@ -408,7 +408,7 @@ function measureFlex(
   input: MeasureInput<FlexProps, FlexStyle>,
 ): MeasureResult {
   const children = prepareLayoutChildren(input.props.children, 'Flex');
-  // Exact caller availability is a definite content width. A finite maximum
+  // Exact caller availability supplies a definite main axis. A finite maximum
   // alone remains an availability limit, never a percentage containing size.
   const automaticWidth = input.style.width === undefined || input.style.width === 'auto';
   const exactRowWidth = experimentalLayout && automaticWidth &&
@@ -418,10 +418,18 @@ function measureFlex(
     input.constraints.minWidth === input.constraints.maxWidth &&
     Number.isFinite(input.constraints.maxWidth) && input.constraints.maxWidth >= 0 ?
     input.constraints.maxWidth : undefined;
+  const automaticHeight = input.style.height === undefined || input.style.height === 'auto';
+  const exactColumnHeight = experimentalLayout && automaticHeight &&
+    input.style.flexDirection === 'column' &&
+    (input.style.flexWrap ?? 'nowrap') === 'nowrap' &&
+    (input.style.layoutDirection ?? getLayoutDirection()) === 'ltr' &&
+    input.constraints.minHeight === input.constraints.maxHeight &&
+    Number.isFinite(input.constraints.maxHeight) && input.constraints.maxHeight >= 0 ?
+    input.constraints.maxHeight : undefined;
+  const measuredHeight = exactColumnHeight ?? input.style.height;
   const measuredWidth = exactRowWidth ?? input.style.width;
   const widthDefinite = measuredWidth !== undefined && measuredWidth !== 'auto';
-  const heightDefinite = input.style.height !== undefined &&
-    input.style.height !== 'auto';
+  const heightDefinite = measuredHeight !== undefined && measuredHeight !== 'auto';
   if (widthDefinite && heightDefinite) {
     return { status: 'measured', size: {
       width: resolveMeasuredContainerLength(
@@ -431,7 +439,7 @@ function measureFlex(
         input.constraints,
       ),
       height: resolveMeasuredContainerLength(
-        input.style.height!,
+        measuredHeight!,
         input.constraints.maxHeight,
         'height',
         input.constraints,
@@ -501,6 +509,19 @@ function measureFlex(
       };
       if (typeof style.minWidth === 'number' && typeof style.maxWidth === 'number' && style.minWidth > style.maxWidth) {
         throw childDiagnostic(child, 'minWidth', style.minWidth, diagnosticBox, 'minimum must not exceed maximum');
+      }
+    }
+    if (experimentalLayout && automaticHeight && options.flexDirection === 'column' &&
+      options.flexWrap === 'nowrap' && options.layoutDirection === 'ltr' &&
+      (isPercentage(style.minHeight) || isPercentage(style.maxHeight))) {
+      if (exactColumnHeight === undefined) return unsupportedIntrinsic('requires an exact finite column height to resolve percentage main bounds');
+      const context = childContext(child, diagnosticBox);
+      style = { ...style,
+        minHeight: isPercentage(style.minHeight) ? resolveLength(style.minHeight!, exactColumnHeight, 'minHeight', context) : style.minHeight,
+        maxHeight: isPercentage(style.maxHeight) ? resolveLength(style.maxHeight!, exactColumnHeight, 'maxHeight', context) : style.maxHeight,
+      };
+      if (typeof style.minHeight === 'number' && typeof style.maxHeight === 'number' && style.minHeight > style.maxHeight) {
+        throw childDiagnostic(child, 'minHeight', style.minHeight, diagnosticBox, 'minimum must not exceed maximum');
       }
     }
     if (style.boxSizing !== undefined) style = contentBoxStyle(style, { width: diagnosticBox.width, height: diagnosticBox.height, mainAxis: row ? 'width' : 'height', context: childContext(child, diagnosticBox) });
@@ -646,7 +667,7 @@ function measureFlex(
       input.constraints,
     ) : row ? intrinsicMain : intrinsicCross,
     height: heightDefinite ? resolveMeasuredContainerLength(
-      input.style.height!,
+      measuredHeight!,
       input.constraints.maxHeight,
       'height',
       input.constraints,

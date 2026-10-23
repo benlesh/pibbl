@@ -4393,26 +4393,26 @@ const drafts = [
   },
   {
     slug: "wasm-flex-intrinsic-primitive",
-    title: "Experimental WASM custom intrinsic leaf",
-    shortTitle: "WASM intrinsic leaf",
+    title: "Experimental WASM custom intrinsic leaves",
+    shortTitle: "WASM intrinsic leaves",
     section: "layout",
     order: 146,
     summary:
-      "Custom primitives supply paired intrinsic content sizes and finite height at the settled width, keeping paint and targets aligned in a Flex row.",
-    api: ["Flex", "definePrimitive", "signal", "useLayoutBox"],
+      "Custom primitives combine intrinsic minima, finite measurements and exact-main percentage bounds with matching paint and targets.",
+    api: ["Flex", "definePrimitive", "measureElement", "signal", "useLayoutBox"],
     objectives: [
-      "Use one pure custom intrinsic provider for a direct finite row leaf.",
-      "Compare automatic minimum protection with the explicit minWidth: 0 escape while preserving the following target.",
+      "Supply bounded intrinsic row and column minima with explicit zero-minimum escapes.",
+      "Compose exact-main measurement with percentage-capped rows and columns while preserving geometry and targets.",
     ],
     prompts: {
       gesture:
-        "Toggle Minimum and Owner, then click the follower. Minimum escape permits shrink below its minimum. On the right, Adaptive owner narrows and raises the leaf; Adaptive paint recolors its sibling without another finite query.",
+        "Toggle Minimum and Minimum escape to compare protected content. Owner resizes both percentage caps at the bottom; click their green siblings. Adaptive owner and Adaptive paint demonstrate exact-width reflow and paint reuse.",
       code:
-        "IntrinsicChip returns paired content sizes. AdaptiveIntrinsicChip also supplies measure at the settled content width. Both render from useLayoutBox; measurement never paints or allocates resources.",
+        "IntrinsicChip supplies content sizes and finite height. ExactPercentageCap calls nested measureElement with an exact main constraint, then renders from useLayoutBox. Measurement never paints or acquires resources.",
     },
     apiNotes: [
-      "Experimental direct custom primitive in a finite nowrap row only; no nested provider, baseline, Grid, Flow, column, or general intrinsic-layout claim.",
-      "Unsupported providers retain the existing actionable automatic-minimum diagnostic; minWidth: 0 is the explicit escape.",
+      "Experimental bounded direct row/column providers and exact-main measurements; this does not establish baseline, Grid, Flow or general intrinsic graphs.",
+      "Cap widgets reject unbounded intrinsic requests and require an exact main owner. Explicit zero minima remain the escape from content protection.",
     ],
     canvas: { width: 760, height: 360 },
     related: ["wasm-flex-intrinsic-text", "wasm-flex-constraints", "flex"],
