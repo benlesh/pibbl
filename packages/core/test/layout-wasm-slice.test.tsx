@@ -1,3 +1,4 @@
+import { WasmFlexIntrinsicWrapExample } from '../../scenarios/src/learning/layout/wasm-flex-intrinsic-wrap.example';
 import yogaReference from '../../../tooling/layout-yoga-rehearsal/reference.json';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { createElement, Absolute, Overlay, Flex, Grid, Flow, Group, Clip, Text, Rectangle, measureElement, useLayoutBox, useConst, Layer, signal, computed, type PibblNode, type PibblNodeInput, type GridStyle, type FlexStyle, type RectStyle, defineLayoutComponent, definePrimitive } from '@pibbl/core';
@@ -800,7 +801,7 @@ const mount = createExampleMount(mountModule.WasmYogaMigrationExample);
   });
   const controller = mount(canvas); controllers.push(controller); await nextFrame();
   if(logicalPadding)for(let section=0;section<8;section++){clickCanvas(canvas,520,158);await nextFrame();}
-  const cases=yogaReference.cases.filter(fixture=>('contentBoxes' in fixture)===logicalPadding);
+  const cases=yogaReference.cases.filter(fixture=>!('intrinsicFixture' in fixture) && ('contentBoxes' in fixture)===logicalPadding);
   for (const [index, fixture] of cases.entries()) {
     const expected = fixture.pibblBoxes ?? fixture.boxes;
     if (index) { labels.length = 0; clickCanvas(canvas,60,158); await nextFrame(); }
@@ -3106,4 +3107,64 @@ for(const invalid of ['negative-min','nonfinite-max','inverted-width','negative-
  const Leaf=definePrimitive<{tag?:string},IntrinsicLeafTestStyle>(()=>undefined,{measureIntrinsic:()=>({status:'measured',minContent:{width:invalid==='negative-min'?-1:invalid==='inverted-width'?101:40,height:invalid==='negative-height'?-1:20},maxContent:{width:invalid==='nonfinite-max'?NaN:100,height:20}})});
  const child=createElement(Leaf,{style:{height:20,flexShrink:1}});
  expect(()=>layoutFlex({x:0,y:0,width:80,height:30},[child],{},measurement)).toThrow(/finite|nonnegative|min-content/);
+});
+
+it.runIf(experimentalLayout)('measures finite row-wrap height from direct numeric rectangles',()=>{
+ const children=[20,30,20].map(height=>createElement(Rectangle,{style:{width:70,height,minWidth:0,minHeight:0,flexShrink:0}}));
+ const wrapped=(width:number)=>createElement(Flex,{style:{width,flexDirection:'row',flexWrap:'wrap',gap:10,alignItems:'flex-start'},children});
+ expect(measureElement(wrapped(160),{minWidth:0,maxWidth:200,minHeight:0,maxHeight:300},service)).toEqual({status:'measured',size:{width:160,height:60}});
+ expect(measureElement(wrapped(90),{minWidth:0,maxWidth:200,minHeight:0,maxHeight:300},service)).toEqual({status:'measured',size:{width:90,height:90}});
+ expect(measureElement(wrapped(90),{minWidth:0,maxWidth:200,minHeight:0,maxHeight:10},service)).toEqual({status:'measured',size:{width:90,height:90}});
+});
+
+it.runIf(experimentalLayout)('moves the public intrinsic-wrap footer after its owner changes line count',async()=>{
+ const baseline=snapshotWasmLayoutDiagnostics();const canvas=document.createElement('canvas');canvas.width=760;canvas.height=360;document.body.append(canvas);
+ const controller=pibbl(canvas,createElement(WasmFlexIntrinsicWrapExample,{}));controllers.push(controller);await nextFrame();
+ clickCanvas(canvas,40,235);await new Promise(resolve=>setTimeout(resolve,220));expect(document.querySelector('pre')!.textContent).toContain('footer hits: 1');
+ clickCanvas(canvas,108,114);await nextFrame();clickCanvas(canvas,40,235);await new Promise(resolve=>setTimeout(resolve,220));expect(document.querySelector('pre')!.textContent).toContain('footer hits: 1');
+ clickCanvas(canvas,40,265);await new Promise(resolve=>setTimeout(resolve,220));expect(document.querySelector('pre')!.textContent).toContain('footer hits: 2');
+ controller.dispose();expect(snapshotWasmLayoutDiagnostics().activeNodes).toBe(baseline.activeNodes);expect(snapshotWasmLayoutDiagnostics().activeArenas).toBe(baseline.activeArenas);
+});
+
+it.runIf(experimentalLayout)('rejects overflowing intrinsic wrapped outer extents before placement',()=>{
+ const wrapped=createElement(Flex,{style:{width:90,flexWrap:'wrap'},children:createElement(Rectangle,{style:{width:0,height:20,minWidth:0,minHeight:0,flexShrink:0,marginLeft:1e308,marginRight:1e308}})});
+ expect(()=>measureElement(wrapped,{minWidth:0,maxWidth:200,minHeight:0,maxHeight:300},service)).toThrow(/finite|overflow/);
+});
+
+it.runIf(experimentalLayout)('matches pinned Yoga intrinsic row-wrap content and final leaf geometry',()=>{
+ for(const fixture of yogaReference.cases){
+  if(!fixture.intrinsicFixture||!fixture.innerStyle||!fixture.intrinsicLeafStyles||!fixture.intrinsicNestedBoxes)continue;
+  const children=fixture.intrinsicLeafStyles.map(style=>createElement(Rectangle,{style:style as RectStyle}));
+  const inner=createElement(Flex,{style:fixture.innerStyle as FlexStyle,children});
+  const expected=fixture.boxes[0];
+  expect(measureElement(inner,{minWidth:0,maxWidth:fixture.width,minHeight:0,maxHeight:fixture.height},service)).toEqual({status:'measured',size:{width:expected.width,height:expected.height}});
+  expect(layoutFlex(expected,children,{...(fixture.innerStyle as FlexStyle),alignItems:'flex-start'},measurement)).toEqual(fixture.intrinsicNestedBoxes);
+ }
+});
+
+it.runIf(experimentalLayout)('keeps oversized finite wrapped items on separate lines when candidate sums overflow',()=>{
+ const children=[0,1].map(()=>createElement(Rectangle,{style:{width:1e308,height:20,minWidth:0,minHeight:0,flexShrink:0}}));
+ const wrapped=createElement(Flex,{style:{width:90,flexWrap:'wrap'},children});
+ expect(measureElement(wrapped,{minWidth:0,maxWidth:200,minHeight:0,maxHeight:300},service)).toEqual({status:'measured',size:{width:90,height:40}});
+});
+it.runIf(experimentalLayout)('uses native sequential outer-extent arithmetic before margin cancellation',()=>{
+ const wrapped=createElement(Flex,{style:{width:90,flexWrap:'wrap'},children:createElement(Rectangle,{style:{width:1e308,height:20,minWidth:0,minHeight:0,flexShrink:0,marginLeft:1e308,marginRight:-1e308}})});
+ expect(()=>measureElement(wrapped,{minWidth:0,maxWidth:200,minHeight:0,maxHeight:300},service)).toThrow(/finite|overflow/);
+});
+
+for(const kind of ['grow','shrink','percentage','automatic-height','text','column','rtl','reverse'] as const)it.runIf(experimentalLayout)(`keeps unsupported wrapped intrinsic shape explicit: ${kind}`,()=>{
+ const child=kind==='text'?createElement(Text,{children:'opaque contribution',style:{width:70,height:20,minWidth:0,minHeight:0,flexShrink:0}}):createElement(Rectangle,{style:{width:kind==='percentage'?'50%':70,height:kind==='automatic-height'?undefined:20,minWidth:0,minHeight:0,flexGrow:kind==='grow'?1:0,flexShrink:kind==='shrink'?1:0} as RectStyle});
+ const root=createElement(Flex,{style:{width:160,flexWrap:kind==='reverse'?'wrap-reverse':'wrap',flexDirection:kind==='column'?'column':'row',layoutDirection:kind==='rtl'?'rtl':'ltr'},children:child});
+ expect(measureElement(root,{minWidth:0,maxWidth:200,minHeight:0,maxHeight:300},service).status).toBe('unsupported');
+});
+it.runIf(experimentalLayout)('measures exact-fit and next-line wrapped border boxes with insets once',()=>{
+ const children=[0,1].map(()=>createElement(Rectangle,{style:{boxSizing:'border-box',width:80,height:40,padding:5,borderWidth:5,minWidth:0,minHeight:0,flexShrink:0}}));
+ for(const width of [160,159]){
+  const root=createElement(Flex,{style:{width,flexWrap:'wrap'},children});
+  expect(measureElement(root,{minWidth:0,maxWidth:200,minHeight:0,maxHeight:10},service)).toEqual({status:'measured',size:{width,height:width===160?40:80}});
+ }
+});
+it.skipIf(experimentalLayout)('retains ordinary wrapped intrinsic rejection',()=>{
+ const root=createElement(Flex,{style:{width:160,flexWrap:'wrap'},children:createElement(Rectangle,{style:{width:70,height:20,minWidth:0,minHeight:0,flexShrink:0}})});
+ expect(measureElement(root,{minWidth:0,maxWidth:200,minHeight:0,maxHeight:300},service).status).toBe('unsupported');
 });

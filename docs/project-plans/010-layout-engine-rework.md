@@ -40,7 +40,7 @@ Slice56 is `cf2c7bc5` (prepared Flow-root planning/adoption).
 Slice55 is `1510efe3` (prepared Grid-root planning/adoption).
 Slice54 `773da7b9`,53 `aaa7ddcb`,52 `b5381e0d` are consolidated in `f322a709`.
 Every slice has its own commit. The fixed33-capability/seven-gate denominator is
-unchanged; all seven gates remain open. Consolidation26 is `2cd357d4`; consolidation27 is `abbaf209`; consolidation28 is `dfd16c8f`; consolidation29 is `f2e38dc6`; consolidation30 is recorded below; slices91–92 are delivered below; the single next slice is93, a known Flex intrinsic owner. Source5192/built5193, `#/testing/layout-preflight`:
+unchanged; all seven gates remain open. Consolidation26 is `2cd357d4`; consolidation27 is `abbaf209`; consolidation28 is `dfd16c8f`; consolidation29 is `f2e38dc6`; consolidation30 is recorded below; slices91–93 are delivered below; the single next milestone is consolidation31 for91–93. Source5192/built5193, `#/testing/layout-preflight`:
 Source5192/built5193 `#/examples/layout/wasm-yoga-migration`: Next case + resize
 cycles159 records:136matches/23classified differences; click A/B/C targets.
 Canonical built comparison: http://127.0.0.1:5193/#/examples/layout/wasm-yoga-migration.
@@ -2139,18 +2139,50 @@ trust claim. Native kernel and corpus177/154matches/23classified are unchanged.
 Custom measurement remains partial; broader intrinsic owners, constraints,
 baselines and feedback still need evidence. Fixed33/seven gates remain open.
 
-## [NEXT] Known Flex intrinsic owner (slice 93)
+## Slice 93 delivered — finite wrapped-row intrinsic height
 
-Advance the existing intrinsic owner graph through supported public Flex, without
-another API. Probe prepared-owner adoption of direct custom intrinsic leaves first;
-if current recursive preparation already covers it, preserve that evidence and
-implement the concrete missing finite-width wrapped row intrinsic-height case.
-Start with declared finite child dimensions/minima, numeric gaps/insets and one
-known parent allocation. Settle line geometry before painting and move the
-following footer’s target when width changes. Do not discover opaque component
-internals or approximate intrinsic callbacks. First public RED→runnable source,
-then bounded hardening, source/built/installed verification and separate commit.
-After93 consolidate91–93; final whole-codebase review remains at full program end.
+A finite numeric-width LTR row-wrap Flex with automatic height measures direct
+empty numeric Rectangles with zero grow/shrink and automatic basis. Existing
+normalization supplies bounds, numeric gaps/margins/insets and outer extents;
+line cross maxima plus row gaps provide the content height. Parent adds own
+insets once and places following targets before painting. Available maximum
+height does not become definite. Other intrinsic shapes explicitly reject.
+
+Public RED was the existing nowrap-only unsupported result. First pure and
+mounted public scenario tests passed, followed by source Studio feedback. Width
+160→90→160 yields inner height60→90→60 and footer y230→260→230; former target
+misses/new target hits, identity remains stamp1, cleanup is0/0/0. Source and built
+replays pass; built uses469 core inputs. URL:
+`http://127.0.0.1:5192/#/examples/layout/wasm-flex-intrinsic-wrap`.
+Two pinned Yoga cases independently match content/leaf geometry and footer
+positions in source and built comparison. Corpus179:156matches/23classified.
+
+Scoped review caught finite outer-extent overflow; a focused RED now rejects it.
+Two additional REDs pinned native sequential edge arithmetic and preserved
+separate lines when a transient positive candidate sum overflows. Final focused
+run:6passed/328skipped; shape/inset boundary matrix:9passed/335skipped; ordinary
+rejection:1passed/343skipped. Available-height, exact-fit inset, unsupported
+provider/Text/percentage/reverse/RTL/column/flexible-child shapes are covered.
+No native kernel or baseline change. Types/lint/docs109RED probes/JSDoc/catalog/
+discovery/provenance/whitespace pass. A dead accumulator assignment was removed
+by final lint cleanup without changing geometry.
+
+Fresh installed package passes native-driven footer pixels/targets/return-width,
+identity, paint and exact cleanup, Bundler/NodeNext:230inputs, SHA256
+`ed20e0b095a9eaeece709d876f594b1b771238168f50f6f6db3a3b1be7ff0bb9`.
+Node26.9.0/Chromium; no Node24 aggregate trust claim. General wrapped intrinsic
+owners and feedback remain open. Fixed33 capabilities/seven release gates remain.
+
+## [NEXT] Consolidation 31 for slices 91–93
+
+91 `3f943f70`,92 `02f21ea3`,93 separately committed immediately after this record.
+Run the same bounded ten-file layout/measurement/reuse suite in experimental and
+ordinary modes. Reuse fresh slice package/native/browser/static evidence unless a
+new issue requires a repeat. Reconcile milestones and remaining gate exits, then
+select exactly one next material outcome. The likely next94 is constrained
+finite measurement at a custom intrinsic leaf’s settled row width, using existing
+`measure` rather than inventing a new API. Whole-codebase review stays at the full
+program end; do not stop at this consolidation handoff.
 
 ### Consolidation 24 completed for delivery slices 70–72
 

@@ -3,7 +3,7 @@
   "commit": "042f5013152eb81c1552dec945b88f7b95ca350f",
   "license": "MIT",
   "licenseSha256": "52412d7bc7ce4157ea628bbaacb8829e0a9cb3c58f57f99176126bc8cf2bfc85",
-  "probeSha256": "4ec5863c803f172fd5ebb3f92245c2ef4734eb71635d096e43553d1adc2f520d",
+  "probeSha256": "cf2d4ceac2c43b1d5ada3ca1ff325e6f23a57ef5c429eab661261a17560eefb0",
   "configuration": {
     "useWebDefaults": false,
     "pointScaleFactor": 0,
@@ -8728,6 +8728,186 @@
           "borderStartWidth": 0
         }
       ]
+    },
+    {
+      "name": "intrinsic-row-wrap-column-wide",
+      "width": 200,
+      "height": 180,
+      "gap": 10,
+      "flexDirection": "column",
+      "flexWrap": "nowrap",
+      "containerStyle": {
+        "alignItems": "flex-start",
+        "alignContent": "flex-start"
+      },
+      "intrinsicFixture": true,
+      "boxes": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 160,
+          "height": 60
+        },
+        {
+          "x": 0,
+          "y": 70,
+          "width": 80,
+          "height": 20
+        }
+      ],
+      "intrinsicNestedBoxes": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 70,
+          "height": 20
+        },
+        {
+          "x": 80,
+          "y": 0,
+          "width": 70,
+          "height": 30
+        },
+        {
+          "x": 0,
+          "y": 40,
+          "width": 70,
+          "height": 20
+        }
+      ],
+      "innerStyle": {
+        "width": 160,
+        "flexWrap": "wrap",
+        "gap": 10,
+        "flexGrow": 0,
+        "flexShrink": 0,
+        "minWidth": 0,
+        "minHeight": 0
+      },
+      "intrinsicLeafStyles": [
+        {
+          "width": 70,
+          "height": 20,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0
+        },
+        {
+          "width": 70,
+          "height": 30,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0
+        },
+        {
+          "width": 70,
+          "height": 20,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0
+        }
+      ],
+      "footerStyle": {
+        "width": 80,
+        "height": 20,
+        "flexGrow": 0,
+        "flexShrink": 0,
+        "minWidth": 0,
+        "minHeight": 0
+      }
+    },
+    {
+      "name": "intrinsic-row-wrap-column-narrow",
+      "width": 200,
+      "height": 180,
+      "gap": 10,
+      "flexDirection": "column",
+      "flexWrap": "nowrap",
+      "containerStyle": {
+        "alignItems": "flex-start",
+        "alignContent": "flex-start"
+      },
+      "intrinsicFixture": true,
+      "boxes": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 90,
+          "height": 90
+        },
+        {
+          "x": 0,
+          "y": 100,
+          "width": 80,
+          "height": 20
+        }
+      ],
+      "intrinsicNestedBoxes": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 70,
+          "height": 20
+        },
+        {
+          "x": 0,
+          "y": 30,
+          "width": 70,
+          "height": 30
+        },
+        {
+          "x": 0,
+          "y": 70,
+          "width": 70,
+          "height": 20
+        }
+      ],
+      "innerStyle": {
+        "width": 90,
+        "flexWrap": "wrap",
+        "gap": 10,
+        "flexGrow": 0,
+        "flexShrink": 0,
+        "minWidth": 0,
+        "minHeight": 0
+      },
+      "intrinsicLeafStyles": [
+        {
+          "width": 70,
+          "height": 20,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0
+        },
+        {
+          "width": 70,
+          "height": 30,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0
+        },
+        {
+          "width": 70,
+          "height": 20,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0
+        }
+      ],
+      "footerStyle": {
+        "width": 80,
+        "height": 20,
+        "flexGrow": 0,
+        "flexShrink": 0,
+        "minWidth": 0,
+        "minHeight": 0
+      }
     }
   ]
 }

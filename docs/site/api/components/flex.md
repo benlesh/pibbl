@@ -191,3 +191,12 @@ before content-box/border-box conversion and inset floors. These widths reserve
 layout space; painted strokes remain independent. Layer’s own raster dimensions
 and child origin retain their existing physical-border behavior. Raw logical
 border inputs remain ineligible for frozen allocation caching.
+
+The experimental build supports auto-height row wrapping at a finite numeric
+width for direct empty numeric Rectangles with zero grow/shrink and automatic
+basis. Numeric gaps and insets follow the normal box rules; available maximum
+height does not act as a definite height. A known parent can place a following
+sibling from the measured line height. Try the
+[intrinsic wrapped row](#/examples/layout/wasm-flex-intrinsic-wrap).
+Percentage-dependent owners, flexible children, Text/custom providers, intrinsic
+width, and column/reverse/RTL intrinsic wrapping remain outside this bounded path.

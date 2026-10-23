@@ -377,9 +377,7 @@ function measureFlex(
       ),
     } };
   }
-  if ((input.style.flexWrap ?? 'nowrap') !== 'nowrap') {
-    return unsupportedIntrinsic('requires nowrap because wrapped intrinsic sizing is deferred');
-  }
+  const wrappedIntrinsic = (input.style.flexWrap ?? 'nowrap') !== 'nowrap';
   if (isPercentage(input.style.gap) || isPercentage(input.style.rowGap) || isPercentage(input.style.columnGap)) return unsupportedIntrinsic('does not support percentage gaps without an actual finite content allocation');
   const row = isRowDirection(input.style.flexDirection);
   const diagnosticBox = {
@@ -391,7 +389,10 @@ function measureFlex(
       input.constraints.maxHeight : 0,
   };
   const options = normalizeFlexOptions(input.style, diagnosticBox);
+  if (wrappedIntrinsic && !(experimentalLayout && options.flexDirection === 'row' && options.flexWrap === 'wrap' && options.layoutDirection === 'ltr' && typeof input.style.width === 'number' && !heightDefinite)) return unsupportedIntrinsic('wrapped intrinsic height requires a finite numeric row width, LTR wrap and automatic height');
+  const wrapWidth = wrappedIntrinsic ? resolveMeasuredContainerLength(input.style.width!, input.constraints.maxWidth, 'width', input.constraints) : 0;
   const mainGap = row ? options.columnGap : options.rowGap;
+  let lineMain = 0, lineCross = 0, lineItems = 0, wrappedHeight = 0;
   let intrinsicMain = 0;
   let intrinsicCross = 0;
   let count = 0;
@@ -458,6 +459,7 @@ function measureFlex(
       diagnosticBox,
     );
     const basis = style.flexBasis ?? 'auto';
+    if (wrappedIntrinsic && (!hasEmptyRectangleMinimum(child, style, preparedStyleQuery(prepared)) || shrink !== 0 || basis !== 'auto')) return unsupportedIntrinsic('wrapped intrinsic height requires direct empty numeric Rectangles with zero flexGrow/flexShrink and automatic basis');
     const mainProperty = row ? 'width' : 'height';
     const crossProperty = row ? 'height' : 'width';
     const minimumProperty = row ? 'minWidth' : 'minHeight';
@@ -532,6 +534,22 @@ function measureFlex(
       padding.top + padding.bottom;
     const paddingCross = row ? padding.top + padding.bottom :
       padding.left + padding.right;
+    if (wrappedIntrinsic) {
+      const outerMain = clamp(baseMain, minMain, maxMain) + paddingMain + marginLeft + marginRight;
+      const crossExtent = clamp(baseCross, minCross, maxCross) + paddingCross + marginTop + marginBottom;
+      const nextMain = lineMain + (lineItems > 0 ? mainGap : 0) + outerMain;
+      if (!Number.isFinite(outerMain) || !Number.isFinite(crossExtent)) throw childDiagnostic(child, 'intrinsicLine', nextMain, diagnosticBox, 'wrapped intrinsic outer extents and line widths must remain finite');
+      const outerCross = Math.max(0, crossExtent);
+      if (lineItems > 0 && nextMain > wrapWidth) {
+        wrappedHeight += lineCross + options.rowGap;
+        if (!Number.isFinite(wrappedHeight)) throw childDiagnostic(child, 'intrinsicLine', wrappedHeight, diagnosticBox, 'wrapped intrinsic accumulated height must remain finite');
+        lineCross = 0; lineItems = 0;
+      }
+      lineMain = lineItems > 0 ? nextMain : outerMain;
+      if (!Number.isFinite(lineMain)) throw childDiagnostic(child, 'intrinsicLine', lineMain, diagnosticBox, 'wrapped intrinsic accumulated line width must remain finite');
+      lineCross = Math.max(lineCross, outerCross);
+      lineItems++;
+    }
     intrinsicMain += clamp(baseMain, minMain, maxMain) + paddingMain + marginMain;
     intrinsicCross = Math.max(
       intrinsicCross,
@@ -552,7 +570,7 @@ function measureFlex(
       input.constraints.maxHeight,
       'height',
       input.constraints,
-    ) : row ? intrinsicCross : intrinsicMain,
+    ) : row ? wrappedIntrinsic ? wrappedHeight + lineCross : intrinsicCross : intrinsicMain,
   } };
 }
 

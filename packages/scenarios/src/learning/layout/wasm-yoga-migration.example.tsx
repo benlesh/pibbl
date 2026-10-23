@@ -193,7 +193,9 @@ function createWasmYogaMigrationExampleContent(canvas: HTMLCanvasElement) {
     {"name":"logical-border-start-zero-rtl-logical-first-content-box","width":200,"height":100,"gap":0,"flexDirection":"row","flexWrap":"nowrap","layoutDirection":"rtl","containerStyle":{"alignItems":"flex-start","justifyContent":"flex-start"},"boxes":[{"x":92,"y":0,"width":108,"height":70}],"contentBoxes":[{"x":100,"y":5,"width":100,"height":60}],"itemStyles":[{"boxSizing":"content-box","width":100,"height":60,"flexShrink":0,"minWidth":0,"minHeight":0,"borderWidth":{"left":8,"right":20,"top":5,"bottom":5},"borderStartWidth":0}]},
     {"name":"logical-border-start-zero-rtl-logical-first-border-box","width":200,"height":100,"gap":0,"flexDirection":"row","flexWrap":"nowrap","layoutDirection":"rtl","containerStyle":{"alignItems":"flex-start","justifyContent":"flex-start"},"boxes":[{"x":100,"y":0,"width":100,"height":60}],"contentBoxes":[{"x":108,"y":5,"width":92,"height":50}],"itemStyles":[{"boxSizing":"border-box","width":100,"height":60,"flexShrink":0,"minWidth":0,"minHeight":0,"borderWidth":{"left":8,"right":20,"top":5,"bottom":5},"borderStartWidth":0}]},
     {"name":"logical-border-end-thirty-parent-rtl-child-ltr-border-box","width":200,"height":100,"gap":0,"flexDirection":"row","flexWrap":"nowrap","layoutDirection":"rtl","containerStyle":{"alignItems":"flex-start","justifyContent":"flex-start"},"boxes":[{"x":100,"y":0,"width":100,"height":60}],"contentBoxes":[{"x":108,"y":5,"width":62,"height":50}],"itemStyles":[{"boxSizing":"border-box","width":100,"height":60,"flexShrink":0,"minWidth":0,"minHeight":0,"borderWidth":{"left":8,"right":20,"top":5,"bottom":5},"layoutDirection":"ltr","borderEndWidth":30}]},
-    {"name":"logical-border-start-zero-parent-rtl-child-ltr-border-box","width":200,"height":100,"gap":0,"flexDirection":"row","flexWrap":"nowrap","layoutDirection":"rtl","containerStyle":{"alignItems":"flex-start","justifyContent":"flex-start"},"boxes":[{"x":100,"y":0,"width":100,"height":60}],"contentBoxes":[{"x":100,"y":5,"width":80,"height":50}],"itemStyles":[{"boxSizing":"border-box","width":100,"height":60,"flexShrink":0,"minWidth":0,"minHeight":0,"borderWidth":{"left":8,"right":20,"top":5,"bottom":5},"layoutDirection":"ltr","borderStartWidth":0}]}
+    {"name":"logical-border-start-zero-parent-rtl-child-ltr-border-box","width":200,"height":100,"gap":0,"flexDirection":"row","flexWrap":"nowrap","layoutDirection":"rtl","containerStyle":{"alignItems":"flex-start","justifyContent":"flex-start"},"boxes":[{"x":100,"y":0,"width":100,"height":60}],"contentBoxes":[{"x":100,"y":5,"width":80,"height":50}],"itemStyles":[{"boxSizing":"border-box","width":100,"height":60,"flexShrink":0,"minWidth":0,"minHeight":0,"borderWidth":{"left":8,"right":20,"top":5,"bottom":5},"layoutDirection":"ltr","borderStartWidth":0}]},
+    {"name":"intrinsic-row-wrap-column-wide","width":200,"height":180,"gap":10,"flexDirection":"column","flexWrap":"nowrap","containerStyle":{"alignItems":"flex-start","alignContent":"flex-start"},"intrinsicFixture":true,"boxes":[{"x":0,"y":0,"width":160,"height":60},{"x":0,"y":70,"width":80,"height":20}],"intrinsicNestedBoxes":[{"x":0,"y":0,"width":70,"height":20},{"x":80,"y":0,"width":70,"height":30},{"x":0,"y":40,"width":70,"height":20}],"innerStyle":{"width":160,"flexWrap":"wrap","gap":10,"flexGrow":0,"flexShrink":0,"minWidth":0,"minHeight":0},"intrinsicLeafStyles":[{"width":70,"height":20,"flexGrow":0,"flexShrink":0,"minWidth":0,"minHeight":0},{"width":70,"height":30,"flexGrow":0,"flexShrink":0,"minWidth":0,"minHeight":0},{"width":70,"height":20,"flexGrow":0,"flexShrink":0,"minWidth":0,"minHeight":0}],"footerStyle":{"width":80,"height":20,"flexGrow":0,"flexShrink":0,"minWidth":0,"minHeight":0}},
+    {"name":"intrinsic-row-wrap-column-narrow","width":200,"height":180,"gap":10,"flexDirection":"column","flexWrap":"nowrap","containerStyle":{"alignItems":"flex-start","alignContent":"flex-start"},"intrinsicFixture":true,"boxes":[{"x":0,"y":0,"width":90,"height":90},{"x":0,"y":100,"width":80,"height":20}],"intrinsicNestedBoxes":[{"x":0,"y":0,"width":70,"height":20},{"x":0,"y":30,"width":70,"height":30},{"x":0,"y":70,"width":70,"height":20}],"innerStyle":{"width":90,"flexWrap":"wrap","gap":10,"flexGrow":0,"flexShrink":0,"minWidth":0,"minHeight":0},"intrinsicLeafStyles":[{"width":70,"height":20,"flexGrow":0,"flexShrink":0,"minWidth":0,"minHeight":0},{"width":70,"height":30,"flexGrow":0,"flexShrink":0,"minWidth":0,"minHeight":0},{"width":70,"height":20,"flexGrow":0,"flexShrink":0,"minWidth":0,"minHeight":0}],"footerStyle":{"width":80,"height":20,"flexGrow":0,"flexShrink":0,"minWidth":0,"minHeight":0}}
   ] as const;
   // END YOGA REFERENCE
   const index = signal(0);
@@ -281,6 +283,7 @@ function createWasmYogaMigrationExampleContent(canvas: HTMLCanvasElement) {
     const shrinking = fixture.name === "shrink" || fixture.name === "column-shrink";
     const rectangles = fixture.name.startsWith("rectangle-");
     const padded = fixture.name === "rectangle-percent-content-box";
+    const intrinsicFixture = "intrinsicFixture" in fixture;
     return (
       <>
         <Text
@@ -336,6 +339,7 @@ function createWasmYogaMigrationExampleContent(canvas: HTMLCanvasElement) {
             >{column ? `${box.width} × ${box.height} px` : `${box.width} px`}</Text>}
           </>
         ))}
+        {intrinsicFixture && fixture.intrinsicNestedBoxes.map((box, i) => <Rectangle key={`intrinsic-reference-${i}`} pointerEvents="none" style={{left:28+box.x,top:240+box.y,width:box.width,height:box.height,fill:i===1?"#6e3e79":"#426b61"}} />)}
         {"contentBoxes" in fixture && fixture.contentBoxes.map((box, i) => <Rectangle key={`content-${i}`} pointerEvents="none" style={{left:28+box.x,top:240+box.y,width:box.width,height:box.height,fill:"#426b61"}} />)}
         <Flex
           style={{
@@ -356,7 +360,12 @@ function createWasmYogaMigrationExampleContent(canvas: HTMLCanvasElement) {
             rowGap: "containerStyle" in fixture && "rowGap" in fixture.containerStyle ? fixture.containerStyle.rowGap : undefined,
           }}
         >
-          {"contentBoxes" in fixture ? <Flex style={{width:fixture.itemStyles[0].width,height:fixture.itemStyles[0].height,boxSizing:fixture.itemStyles[0].boxSizing,minWidth:0,minHeight:0,flexShrink:0,padding:"padding" in fixture.itemStyles[0]?fixture.itemStyles[0].padding:undefined,borderWidth:"borderWidth" in fixture.itemStyles[0]?fixture.itemStyles[0].borderWidth:undefined,borderStartWidth:"borderStartWidth" in fixture.itemStyles[0]?fixture.itemStyles[0].borderStartWidth:undefined,borderEndWidth:"borderEndWidth" in fixture.itemStyles[0]?fixture.itemStyles[0].borderEndWidth:undefined,layoutDirection:"layoutDirection" in fixture.itemStyles[0]?fixture.itemStyles[0].layoutDirection:undefined,paddingStart:"paddingStart" in fixture.itemStyles[0]?fixture.itemStyles[0].paddingStart:undefined,paddingEnd:"paddingEnd" in fixture.itemStyles[0]?fixture.itemStyles[0].paddingEnd:undefined}}><LogicalPaddingLeaf style={{width:"100%",height:"100%",flexShrink:0,minWidth:0,minHeight:0}} /></Flex>
+          {intrinsicFixture ? <>
+            <Flex style={{width:fixture.innerStyle.width,flexDirection:"row",flexWrap:fixture.innerStyle.flexWrap,gap:fixture.innerStyle.gap,alignItems:"flex-start",flexGrow:fixture.innerStyle.flexGrow,flexShrink:fixture.innerStyle.flexShrink,minWidth:fixture.innerStyle.minWidth,minHeight:fixture.innerStyle.minHeight}}>
+              {fixture.intrinsicLeafStyles.map((style, itemIndex) => <Rectangle key={`intrinsic-leaf-${itemIndex}`} style={{width:style.width,height:style.height,flexGrow:style.flexGrow,flexShrink:style.flexShrink,minWidth:style.minWidth,minHeight:style.minHeight,fill:itemIndex===1?"#6e3e79":"#426b61"}} />)}
+            </Flex>
+            <Panel name="B" style={fixture.footerStyle} />
+          </> : "contentBoxes" in fixture ? <Flex style={{width:fixture.itemStyles[0].width,height:fixture.itemStyles[0].height,boxSizing:fixture.itemStyles[0].boxSizing,minWidth:0,minHeight:0,flexShrink:0,padding:"padding" in fixture.itemStyles[0]?fixture.itemStyles[0].padding:undefined,borderWidth:"borderWidth" in fixture.itemStyles[0]?fixture.itemStyles[0].borderWidth:undefined,borderStartWidth:"borderStartWidth" in fixture.itemStyles[0]?fixture.itemStyles[0].borderStartWidth:undefined,borderEndWidth:"borderEndWidth" in fixture.itemStyles[0]?fixture.itemStyles[0].borderEndWidth:undefined,layoutDirection:"layoutDirection" in fixture.itemStyles[0]?fixture.itemStyles[0].layoutDirection:undefined,paddingStart:"paddingStart" in fixture.itemStyles[0]?fixture.itemStyles[0].paddingStart:undefined,paddingEnd:"paddingEnd" in fixture.itemStyles[0]?fixture.itemStyles[0].paddingEnd:undefined}}><LogicalPaddingLeaf style={{width:"100%",height:"100%",flexShrink:0,minWidth:0,minHeight:0}} /></Flex>
             : "nestedBoxes" in fixture ? fixture.itemStyles.map((style,itemIndex) => itemIndex<3
             ? <NestedCard key={itemIndex} name={String.fromCharCode(65+itemIndex)} column={column} style={style} />
             : <Panel key={itemIndex} name="D" column={column} wrapped={wrapped} style={style} />)
@@ -420,7 +429,9 @@ function createWasmYogaMigrationExampleContent(canvas: HTMLCanvasElement) {
             font: "12px monospace",
             fill: "#19375b",
           }}
-        >{"contentBoxes" in fixture
+        >{intrinsicFixture
+          ? `finite row wrap · numeric direct leaves settle ${fixture.boxes[0].width} × ${fixture.boxes[0].height} before footer B at y ${fixture.boxes[1].y}`
+          : "contentBoxes" in fixture
           ? `${fixture.layoutDirection} row · logical inline padding overrides physical edges · inner leaf records the final content origin`
           : "nestedBoxes" in fixture
           ? `${fixture.flexDirection} ${fixture.flexWrap} · inner children40% + gap10% use final allocated card · keyed D follows outer reflow`
@@ -514,7 +525,8 @@ function createWasmYogaMigrationExampleContent(canvas: HTMLCanvasElement) {
         const crossBounds = fixtureCases.findIndex(fixture => fixture.name === "cross-percent-row-min");
         const logicalPadding = fixtureCases.findIndex(fixture => fixture.name === "logical-padding-end-percent-ltr-logical-last");
         const logicalBorders = fixtureCases.findIndex(fixture => fixture.name === "logical-border-end-thirty-ltr-logical-last-content-box");
-        return value < bounds ? bounds : value < aspect ? aspect : value < gaps ? gaps : value < padding ? padding : value < crossBounds ? crossBounds : value < margins ? margins : value < nested ? nested : value < logicalPadding ? logicalPadding : value < logicalBorders ? logicalBorders : 0;
+        const intrinsic = fixtureCases.findIndex(fixture => fixture.name === "intrinsic-row-wrap-column-wide");
+        return value < bounds ? bounds : value < aspect ? aspect : value < gaps ? gaps : value < padding ? padding : value < crossBounds ? crossBounds : value < margins ? margins : value < nested ? nested : value < logicalPadding ? logicalPadding : value < logicalBorders ? logicalBorders : value < intrinsic ? intrinsic : 0;
       })} />
       <Text pointerEvents="none" style={{left:496,top:150,font:"14px sans-serif",fill:"#ffffff"}}>Next section</Text>
       <Workspace />
@@ -550,7 +562,7 @@ function createWasmYogaMigrationExampleContent(canvas: HTMLCanvasElement) {
             .map(([key, value]) => `${key}: ${value}`)
             .join(" · ")
         : "Normal JS build"
-    }\nYoga 3.2.1 · 042f5013152e · ${fixture.name}${"comparisonLabel" in fixture ? " · "+fixture.comparisonLabel : ""} · actual A: ${"contentBoxes" in fixture ? `content ${actual.get("A1")} px` : fixture.name.startsWith("rectangle-") ? "direct Canvas boxes" : `${actual.get("A")} px · B: ${actual.get("B")} px`} · selected: ${selected.get()}${"contentBoxes" in fixture ? "\ncontent state: "+JSON.stringify({boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits}) : "nestedBoxes" in fixture ? "\nnested state: "+JSON.stringify({boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits}) : ""}`;
+    }\nYoga 3.2.1 · 042f5013152e · ${fixture.name}${"comparisonLabel" in fixture ? " · "+fixture.comparisonLabel : ""} · actual A: ${"intrinsicFixture" in fixture ? `direct wrapped leaves · footer B: ${actual.get("B")} px` : "contentBoxes" in fixture ? `content ${actual.get("A1")} px` : fixture.name.startsWith("rectangle-") ? "direct Canvas boxes" : `${actual.get("A")} px · B: ${actual.get("B")} px`} · selected: ${selected.get()}${"intrinsicFixture" in fixture ? "\nintrinsic state: "+JSON.stringify({boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits}) : "contentBoxes" in fixture ? "\ncontent state: "+JSON.stringify({boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits}) : "nestedBoxes" in fixture ? "\nnested state: "+JSON.stringify({boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits}) : ""}`;
   };
   refresh();
   const timer = window.setInterval(refresh, 200);

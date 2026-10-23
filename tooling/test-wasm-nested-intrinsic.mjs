@@ -109,6 +109,7 @@ try {
       assert.equal(receipt.logicalPadding, true, 'Installed logical padding must preserve owner width, receiver direction, pixels, targets and identity');
       assert.equal(receipt.logicalBorders, true, 'Installed logical borders must preserve logical-edge precedence, receiver direction, pixels, targets and identity');
       assert.equal(receipt.intrinsicProvider, true, 'Installed custom intrinsic providers must query finite bounds, move targets, reuse paint and dispose exactly');
+      assert.equal(receipt.intrinsicWrappedHeight, true, 'Installed nested row wrapping must settle auto height before placing the following column target');
       assert.equal(receipt.logicalMargins, true, 'Installed logical percentage margins must move Layer targets without new native nodes');
       assert.equal(receipt.layoutDirection, true, 'Installed direction must reach retained Layer geometry and targets');
       assert.equal(receipt.nestedPercentageWrapping, true, 'Installed nested percentages must use final row/column nowrap/wrap owners across all eight native cases');

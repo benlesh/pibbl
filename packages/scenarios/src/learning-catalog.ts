@@ -4074,7 +4074,7 @@ const drafts = [
     },
     apiNotes: [
       "Experimental nowrap column sizing; explicit minimums and a definite container remain required.",
-      "Custom-font revisions, wrapped Flex lines and general prepared intrinsic containers remain deferred.",
+      "Custom-font revisions, Text-bearing wrapped Flex lines and general prepared intrinsic containers remain deferred.",
     ],
     canvas: { width: 760, height: 460 },
     related: ["wasm-flex-text", "flex"],
@@ -4326,13 +4326,42 @@ const drafts = [
     },
     apiNotes: [
       "Experimental finite columns accept declared sizes or bounded direct generic Text at fixed numeric width. Other providers and automatic measured widths remain unsupported.",
-      "No intrinsic wrapped-container sizing, reverse/RTL, baseline or Yoga parity claim.",
+      "This finite-row lesson does not claim general intrinsic sizing or Yoga parity; the intrinsic-wrap lesson covers bounded numeric auto-height rows.",
     ],
     canvas: { width: 760, height: 460 },
     related: ["wasm-flex-wrap", "wasm-flex-column-text", "flex"],
 
     exportName: "WasmFlexColumnWrapExample",
     load: () => import("./learning/layout/wasm-flex-column-wrap.example"),
+  },
+  {
+    slug: "wasm-flex-intrinsic-wrap",
+    title: "Experimental WASM intrinsic wrapped row",
+    shortTitle: "WASM intrinsic wrap",
+    section: "layout",
+    order: 147,
+    summary:
+      "A finite wrapped row with numeric children measures its line height before the following footer is placed.",
+    api: ["Flex", "Rectangle", "signal"],
+    objectives: [
+      "Measure a finite row-wrap owner before its following sibling is placed.",
+      "Keep the moved footer's paint and pointer target synchronized when line formation changes.",
+    ],
+    prompts: {
+      gesture:
+        "Toggle Owner width. The 160px row forms two lines and the footer starts at y 230; at 90px it forms three lines and the footer moves to y 260. Click the green footer after each move. Paint only recolors it without changing its geometry.",
+      code:
+        "Every wrapped child has a declared numeric size and zero growth/shrink. The parent measures only this finite row-wrap shape; Text, custom leaves, percentage sizing and nested intrinsic wrappers remain outside this example.",
+    },
+    apiNotes: [
+      "Experimental row wrap with a finite width and direct numeric children only; no CSS/Yoga parity or general intrinsic-wrap claim.",
+      "Column wrap, automatic child dimensions, growth/shrink redistribution, percentages, Text and arbitrary nested layout still reject intrinsic measurement.",
+    ],
+    canvas: { width: 760, height: 360 },
+    related: ["wasm-flex-wrap", "wasm-flex-intrinsic-text", "flex"],
+
+    exportName: "WasmFlexIntrinsicWrapExample",
+    load: () => import("./learning/layout/wasm-flex-intrinsic-wrap.example"),
   },
   {
     slug: "wasm-flex-intrinsic-primitive",

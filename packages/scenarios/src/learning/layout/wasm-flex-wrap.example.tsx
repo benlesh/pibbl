@@ -201,7 +201,7 @@ function createWasmFlexWrapExampleContent(canvas: HTMLCanvasElement) {
       boxes: Object.fromEntries(boxes),
       layout: read?.() ?? {},
       limits:
-        "Finite row demo. Column wrap requires declared item sizes; reverse/RTL and intrinsic wrapped containers remain unsupported. No Yoga parity claim.",
+        "Finite row demo. Column wrap requires declared item sizes. Auto-height numeric rows have a separate example; broader intrinsic sizing remains unsupported. No Yoga parity claim.",
     });
   };
   refresh();

@@ -1088,7 +1088,7 @@
       "id": "flex.nested-intrinsic-containers",
       "target": "parity",
       "group": "measurement-and-intrinsic",
-      "current": "known nowrap Flex columns, Text, Flow wrap measurement and fixed-row Grid at settled finite width; pure structural descriptions",
+      "current": "known nowrap Flex columns, bounded finite-width numeric row-wrap auto height, Text, Flow wrap measurement and fixed-row Grid at settled finite width; pure structural descriptions",
       "status": "experimental",
       "evidenceRefs": [
         "packages/core/test/layout-wasm-slice.test.tsx",
@@ -1105,14 +1105,14 @@
           "known child percentage cross widths/bounds resolve once against explicit numeric column content width before intrinsic height"
         ],
         "negative": [
-          "ordinary opaque providers, intrinsic wrapped Flex containers, indefinite Grid fraction/percentage rows and unresolved feedback remain unsupported",
+          "ordinary opaque providers, wrapped intrinsic shapes beyond direct numeric row leaves, indefinite Grid fraction/percentage rows and unresolved feedback remain unsupported",
           "percentage main sizing, percentage-dependent owners, conflicting cross bounds and malformed cross percentages remain rejected during intrinsic measurement"
         ],
         "interaction": ["text width, keyed restore, moved footer target"],
         "yogaCases": [],
         "missing": [
           "complete intrinsic Flex/Grid/Flow constraint graph",
-          "wrapped intrinsic Flex containers",
+          "general wrapped intrinsic Flex containers",
           "constraint feedback"
         ]
       }

@@ -868,3 +868,28 @@ nested props/styles remeasure. Own paint-style changes also remeasure because a
 provider can read its entire style; the example demonstrates unrelated sibling
 paint reuse. This is not a general nested intrinsic graph, unbounded consumer,
 baseline provider, column/wrap, Flow or Grid implementation.
+
+### Experimental finite wrapped-row intrinsic height
+
+A Flex with a finite numeric content width, `flexDirection: "row"`, LTR
+`flexWrap: "wrap"` and automatic height can measure direct empty Rectangles with
+numeric dimensions and bounds, zero grow/shrink and automatic basis. Numeric
+gaps, margins and layout insets use the existing normalization and content/outer
+box rules. Parent allocation supplies the final width before line measurement.
+Line formation uses clamped outer main extents and the same strict greater-than
+break rule as placement; height is the sum of line cross maxima and row gaps.
+Own insets are added once by the parent. Available maximum height never becomes
+a definite height; natural content can overflow availability, while the parent
+retains responsibility for declared bounds and final allocation.
+
+Every outer extent and line accumulation must remain finite. Oversized finite
+items terminate as one item per line; empty content has zero content height.
+The known owner places following siblings from this measured height before paint.
+The public learning example proves footer paint and targets move together when
+width160 forms two lines and width90 forms three. Two pinned Yoga fixtures also
+compare full leaf geometry and the following footer.
+
+This does not add intrinsic-width solving, column/reverse/RTL wrapping, flexible
+child redistribution, percentage-dependent sizing, Text/custom providers inside
+wrapped owners, or an arbitrary nested intrinsic graph. Unsupported shapes retain
+explicit diagnostics. The ordinary JavaScript build retains its existing scope.

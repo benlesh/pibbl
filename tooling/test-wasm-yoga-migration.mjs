@@ -7,6 +7,7 @@ const reference = JSON.parse(readFileSync(new URL('./layout-yoga-rehearsal/refer
 const base = process.argv[2] ?? 'http://127.0.0.1:5192';
 const built = process.argv.includes('--built');
 const marginOnly = process.argv.includes('--percentage-margins');
+const intrinsicOnly = process.argv.includes('--intrinsic-wrap');
 const logicalBordersOnly = process.argv.includes('--logical-borders');
 const logicalPaddingOnly = process.argv.includes('--logical-padding');
 const crossOnly = process.argv.includes('--wrapped-cross-bounds');
@@ -37,8 +38,9 @@ try {
     } });
     await page.waitForTimeout(240);
   };
-  const cases = logicalBordersOnly ? reference.cases.filter(fixture => fixture.name.startsWith('logical-border-')) : logicalPaddingOnly ? reference.cases.filter(fixture => fixture.name.startsWith('logical-padding-')) : marginOnly ? reference.cases.filter(fixture => fixture.name.startsWith('margin-percent-')) : crossOnly ? reference.cases.filter(fixture => fixture.name.startsWith('cross-percent-')) : paddingOnly ? reference.cases.filter(fixture => fixture.name.startsWith('padding-percent-')) : gapOnly ? reference.cases.filter(fixture => fixture.name.startsWith('gap-percent-')) : aspectOnly ? reference.cases.filter(fixture => fixture.name.startsWith('aspect-wrap-')) : percentageOnly ? reference.cases.filter(fixture => fixture.name.startsWith('percent-')) : reference.cases;
-  if (percentageOnly || aspectOnly || gapOnly || paddingOnly || crossOnly || marginOnly || logicalPaddingOnly || logicalBordersOnly) {
+  const cases = intrinsicOnly ? reference.cases.filter(fixture => fixture.intrinsicFixture) : logicalBordersOnly ? reference.cases.filter(fixture => fixture.name.startsWith('logical-border-')) : logicalPaddingOnly ? reference.cases.filter(fixture => fixture.name.startsWith('logical-padding-')) : marginOnly ? reference.cases.filter(fixture => fixture.name.startsWith('margin-percent-')) : crossOnly ? reference.cases.filter(fixture => fixture.name.startsWith('cross-percent-')) : paddingOnly ? reference.cases.filter(fixture => fixture.name.startsWith('padding-percent-')) : gapOnly ? reference.cases.filter(fixture => fixture.name.startsWith('gap-percent-')) : aspectOnly ? reference.cases.filter(fixture => fixture.name.startsWith('aspect-wrap-')) : percentageOnly ? reference.cases.filter(fixture => fixture.name.startsWith('percent-')) : reference.cases;
+  if (intrinsicOnly) { for(let section=0;section<10;section++) await click(520,158); }
+  else if (percentageOnly || aspectOnly || gapOnly || paddingOnly || crossOnly || marginOnly || logicalPaddingOnly || logicalBordersOnly) {
     assert.ok((await frame.locator('pre').innerText()).includes('grow'));
     await click(396,244);
     assert.ok((await frame.locator('pre').innerText()).includes('selected: A'));
@@ -61,6 +63,13 @@ try {
     assert.ok((await frame.locator('pre').innerText()).includes(fixture.name));
     if (fixture.classification) assert.ok((await frame.locator('pre').innerText()).includes(fixture.comparisonLabel), 'Classified difference must be explicitly labeled');
     const expected = fixture.pibblBoxes ?? fixture.boxes;
+    if (fixture.intrinsicFixture) {
+      const state=JSON.parse((await frame.locator('pre').innerText()).split('intrinsic state: ')[1]);
+      assert.deepEqual(state.boxes.B,fixture.boxes[1]);
+      const footer=fixture.boxes[1];await click(394+footer.x,242+footer.y);
+      assert.ok((await frame.locator('pre').innerText()).includes('selected: B'));
+      continue;
+    }
     if ('contentBoxes' in fixture) {
       const leaf=fixture.contentBoxes[0];
       await click(392+leaf.x+2,240+leaf.y+2);

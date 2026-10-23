@@ -688,6 +688,55 @@ static void logicalBorderCases() {
   }
 }
 
+
+static void intrinsicRowWrapAutoHeightCases() {
+  for (int caseIndex = 0; caseIndex < 2; ++caseIndex) {
+    const bool narrow = caseIndex == 1;
+    const float innerWidth = narrow ? 90 : 160;
+    auto config = YGConfigNew();
+    YGConfigSetUseWebDefaults(config, false);
+    YGConfigSetPointScaleFactor(config, 0);
+    YGConfigSetErrata(config, YGErrataNone);
+    auto outer = YGNodeNewWithConfig(config);
+    YGNodeStyleSetWidth(outer, 200); YGNodeStyleSetHeight(outer, 180);
+    YGNodeStyleSetFlexDirection(outer, YGFlexDirectionColumn);
+    YGNodeStyleSetGap(outer, YGGutterAll, 10);
+    YGNodeStyleSetAlignItems(outer, YGAlignFlexStart);
+    YGNodeStyleSetAlignContent(outer, YGAlignFlexStart);
+    auto inner = YGNodeNewWithConfig(config);
+    YGNodeStyleSetWidth(inner, innerWidth);
+    YGNodeStyleSetFlexDirection(inner, YGFlexDirectionRow);
+    YGNodeStyleSetFlexWrap(inner, YGWrapWrap);
+    YGNodeStyleSetGap(inner, YGGutterAll, 10);
+    YGNodeStyleSetFlexGrow(inner, 0); YGNodeStyleSetFlexShrink(inner, 0); setMinZero(inner);
+    const float heights[] = {20, 30, 20};
+    for (int index = 0; index < 3; ++index) {
+      auto leaf = YGNodeNewWithConfig(config);
+      YGNodeStyleSetWidth(leaf, 70); YGNodeStyleSetHeight(leaf, heights[index]);
+      YGNodeStyleSetFlexGrow(leaf, 0); YGNodeStyleSetFlexShrink(leaf, 0); setMinZero(leaf);
+      YGNodeInsertChild(inner, leaf, index);
+    }
+    auto footer = YGNodeNewWithConfig(config);
+    YGNodeStyleSetWidth(footer, 80); YGNodeStyleSetHeight(footer, 20);
+    YGNodeStyleSetFlexGrow(footer, 0); YGNodeStyleSetFlexShrink(footer, 0); setMinZero(footer);
+    YGNodeInsertChild(outer, inner, 0); YGNodeInsertChild(outer, footer, 1);
+    YGNodeCalculateLayout(outer, YGUndefined, YGUndefined, YGDirectionLTR);
+    std::cout << ",{\"name\":\"intrinsic-row-wrap-column-" << (narrow ? "narrow" : "wide")
+              << "\",\"width\":200,\"height\":180,\"gap\":10,\"flexDirection\":\"column\",\"flexWrap\":\"nowrap\""
+              << ",\"containerStyle\":{\"alignItems\":\"flex-start\",\"alignContent\":\"flex-start\"},\"intrinsicFixture\":true,\"boxes\":[";
+    printBox(inner); std::cout << ','; printBox(footer);
+    std::cout << "],\"intrinsicNestedBoxes\":[";
+    for (int index = 0; index < 3; ++index) {
+      if (index) std::cout << ',';
+      printBox(YGNodeGetChild(inner, index), YGNodeLayoutGetLeft(inner), YGNodeLayoutGetTop(inner));
+    }
+    std::cout << "],\"innerStyle\":{\"width\":" << innerWidth
+              << ",\"flexWrap\":\"wrap\",\"gap\":10,\"flexGrow\":0,\"flexShrink\":0,\"minWidth\":0,\"minHeight\":0}"
+              << ",\"intrinsicLeafStyles\":[{\"width\":70,\"height\":20,\"flexGrow\":0,\"flexShrink\":0,\"minWidth\":0,\"minHeight\":0},{\"width\":70,\"height\":30,\"flexGrow\":0,\"flexShrink\":0,\"minWidth\":0,\"minHeight\":0},{\"width\":70,\"height\":20,\"flexGrow\":0,\"flexShrink\":0,\"minWidth\":0,\"minHeight\":0}]"
+              << ",\"footerStyle\":{\"width\":80,\"height\":20,\"flexGrow\":0,\"flexShrink\":0,\"minWidth\":0,\"minHeight\":0}}";
+    YGNodeFreeRecursive(outer); YGConfigFree(config);
+  }
+}
 int main() {
   const char* names[] = {"grow", "cap", "shrink", "rectangle-shrink", "rectangle-percent-content-box", "column-grow", "column-cap", "column-shrink", "row-reverse-cap", "column-reverse-cap", "row-wrap", "row-wrap-reverse", "border-box-floor-bounds", "border-box-percentage", "border-box-asymmetric-row", "border-box-asymmetric-column", "zero-fractional-grow", "fractional-shrink", "grow-freeze-release", "shrink-freeze-release", "large-finite-differential", "subunit-zero-grow", "subunit-shrink-policy", "initial-freeze-grow-policy", "initial-freeze-shrink-policy"};
   std::cout << "[";
@@ -813,5 +862,6 @@ int main() {
   logicalMarginCases();
   logicalPaddingCases();
   logicalBorderCases();
+  intrinsicRowWrapAutoHeightCases();
   std::cout << "]\n";
 }
