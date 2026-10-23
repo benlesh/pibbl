@@ -85,7 +85,7 @@ origin includes the parent border but not its padding. Right/bottom measure from
 the opposite inner border edge. With both horizontal insets, left wins in LTR
 and right wins in RTL; top wins vertically. A width or height may instead be `"auto"` or omitted when either both finite
 physical insets on that axis are supplied, or the opposite axis is explicitly
-finite numeric with a positive finite `aspectRatio` in a row allocation. Opposing insets win for
+finite numeric with a positive finite `aspectRatio`. Opposing insets win for
 their automatic axis: the parent inner-border/padding-box extent minus those
 two insets becomes the finite used dimension. Otherwise Pibbl derives the
 automatic outer dimension from the declared numeric opposite axis before bounds.
@@ -100,15 +100,15 @@ child, infer intrinsic size, or add opposite-inset stretch semantics outside
 that bounded axis. Placement is resolved before world transforms, and forwarded
 placement is consumed once.
 
-`aspectRatio` is admitted only in a row allocation with exactly one automatic dimension and one
+`aspectRatio` is admitted with exactly one automatic dimension and one
 explicit finite numeric dimension. Both-automatic and both-explicit ratio cases
 remain unsupported. Without a ratio, both automatic axes may still use their
 own opposing inset pairs.
 
 Fixed finite numeric and opposing-inset automatic absolute boxes participate in
 all four experimental nowrap main directions and LTR/RTL. Numeric bounds clamp
-fixed and derived axes before anchoring in every direction. Aspect derivation and
-natural provider measurement remain limited to `row`; non-row attempts reject
+fixed and derived axes before anchoring in every direction. Aspect derivation uses the declared opposite dimension in every direction.
+Natural provider measurement remains limited to `row`; non-row attempts reject
 before invoking providers. No intrinsic query is needed for opposing-inset sizing.
 
 On an axis without either inset, the fixed child aligns within the parent content

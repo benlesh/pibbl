@@ -109,7 +109,7 @@ percent-inset resolution, wrapping, or other layout-family support.
 
 Experimental direct nowrap Flex children in any main direction may also select `position: "absolute"`
 with finite numeric width/height or automatic/omitted axes paired with both
-finite numeric physical insets on each automatic axis. In a row, with a positive finite
+finite numeric physical insets on each automatic axis. With a positive finite
 `aspectRatio`, exactly one automatic axis may instead derive from the declared
 finite numeric opposite axis. Both-automatic and both-explicit ratio cases remain
 outside this admission. This excludes the child from Flex line allocation while preserving authored
@@ -127,7 +127,7 @@ recouple an aspect ratio. A numeric
 minimum above its maximum rejects; percent and automatic bounds remain outside
 this admission. Direct layout children, child box decoration, margins and nonzero flex
 factors remain unsupported, along with general nested containing blocks. Unpaired
-automatic sizing requires the documented row-only aspect or paired-provider path.
+automatic sizing requires the documented aspect path or row-only paired-provider path.
 
 ## FlexMargin
 
@@ -357,9 +357,10 @@ the same padding-box reference. Without an inset, `justifyContent` controls the
 main axis and `alignItems` the cross axis, including reversal and horizontal RTL.
 A fixed box keeps its size under stretch. Authored paint, click and focus order
 remain unchanged. Numeric bounds apply to fixed and derived axes before inset
-anchoring in every direction. Aspect derivation and natural measured dimensions
-remain row-only. An automatic axis in another direction requires its opposing
-physical inset pair; it does not invoke a measurement provider.
+anchoring in every direction. Exactly-one-auto aspect derivation also applies in every direction, with paired
+insets taking precedence and numeric bounds applied afterward. Natural measured
+dimensions remain row-only; other automatic axes need their opposing physical
+inset pair or the admitted aspect path.
 
 ### Experimental measured absolute size
 

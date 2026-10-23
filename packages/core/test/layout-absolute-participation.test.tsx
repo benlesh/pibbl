@@ -1098,3 +1098,53 @@ it.runIf(experimentalLayout)('settles opposing-inset automatic and fixed numeric
   controller.dispose();
   expect(snapshotWasmLayoutDiagnostics().activeNodes).toBe(baseline.activeNodes); expect(snapshotWasmLayoutDiagnostics().activeArenas).toBe(baseline.activeArenas); expect(snapshotWasmLayoutDiagnostics().cachedMeasurements).toBe(baseline.cachedMeasurements);
 });
+
+it.runIf(experimentalLayout)('derives one automatic absolute aspect axis across finite nowrap main directions', async () => {
+  const baseline = snapshotWasmLayoutDiagnostics();
+  type Direction = 'row' | 'row-reverse' | 'column' | 'column-reverse';
+  type PlacementStyle = PibblResponsiveStyle<RectStyle & FlexItemStyle>;
+  const ownerWidth = signal(204), ownerHeight = signal(104);
+  const direction = signal<Direction>('row'); const writing = signal<'ltr' | 'rtl'>('ltr');
+  const variant = signal<'width-bound' | 'height-bound' | 'height-pair'>('width-bound');
+  const ink = signal('#a63758');
+  const boxes = new Map<string, { x: number; y: number; width: number; height: number; stamp: number }>(); let nextStamp = 1;
+  function Probe({ name, style: _style }: { readonly name: 'A' | 'absolute' | 'B'; readonly style: PlacementStyle }) {
+    const box = useLayoutBox(), transform = useCanvasContext().getTransform(), stamp = useConst(() => nextStamp++);
+    boxes.set(name, { x: transform.e, y: transform.f, width: box.width, height: box.height, stamp });
+    return <Rectangle style={{ width: box.width, height: box.height, fill: name === 'absolute' ? ink : '#19375b' }} />;
+  }
+  function Scene() {
+    const ordinary: PlacementStyle = { width: 50, height: 20, minWidth: 0, minHeight: 0, flexGrow: 0, flexShrink: 0 };
+    const absolute: PlacementStyle = variant.get() === 'width-bound'
+      ? { position: 'absolute', width: 80, height: 'auto', aspectRatio: 2, left: 12, top: 8, minWidth: 100, flexGrow: 0, flexShrink: 0 }
+      : variant.get() === 'height-bound'
+        ? { position: 'absolute', width: 'auto', height: 30, aspectRatio: 2, right: 18, bottom: 10, maxHeight: 20, flexGrow: 0, flexShrink: 0 }
+        : { position: 'absolute', width: 80, height: 'auto', aspectRatio: 2, left: 12, top: 8, bottom: 10, flexGrow: 0, flexShrink: 0 };
+    return <Flex style={{ width: ownerWidth.get(), height: ownerHeight.get(), boxSizing: 'border-box', padding: { left: 10, right: 30, top: 20, bottom: 20 }, borderWidth: 2, flexDirection: direction.get(), flexWrap: 'nowrap', layoutDirection: writing.get(), alignItems: 'flex-start', gap: 10 }}>
+      <Probe key="A" name="A" style={ordinary} /><Probe key="absolute" name="absolute" style={absolute} /><Probe key="B" name="B" style={ordinary} />
+    </Flex>;
+  }
+  const canvas = document.createElement('canvas'); canvas.width = 244; canvas.height = 144; document.body.append(canvas);
+  const controller = pibbl(canvas, <Scene />); controllers.push(controller); await nextFrame();
+  const flow = (main: Direction, rtl: boolean, resized = false) => {
+    const x = rtl ? (resized ? 162 : 122) : 12;
+    if (main === 'row') return [{ x, y: 22 }, { x: rtl ? x - 60 : x + 60, y: 22 }];
+    if (main === 'row-reverse') return [{ x: rtl ? 12 : (resized ? 162 : 122), y: 22 }, { x: rtl ? 72 : (resized ? 102 : 62), y: 22 }];
+    if (main === 'column') return [{ x, y: 22 }, { x, y: 52 }];
+    return [{ x, y: resized ? 102 : 62 }, { x, y: resized ? 72 : 32 }];
+  };
+  for (const main of ['row', 'row-reverse', 'column', 'column-reverse'] as const) for (const rtl of [false, true]) {
+    direction.set(main); writing.set(rtl ? 'rtl' : 'ltr'); ownerWidth.set(204); ownerHeight.set(104);
+    for (const [next, absolute] of [['width-bound', { x: 14, y: 10, width: 100, height: 40 }], ['height-bound', { x: 124, y: 72, width: 60, height: 20 }], ['height-pair', { x: 14, y: 10, width: 80, height: 82 }]] as const) {
+      variant.set(next); await nextFrame(); const slots = flow(main, rtl);
+      expect(boxes.get('A')).toMatchObject({ ...slots[0], width: 50, height: 20, stamp: 1 }); expect(boxes.get('B')).toMatchObject({ ...slots[1], width: 50, height: 20, stamp: 3 }); expect(boxes.get('absolute')).toMatchObject({ ...absolute, stamp: 2 });
+    }
+  }
+  variant.set('height-pair'); direction.set('column-reverse'); writing.set('rtl'); ownerWidth.set(244); ownerHeight.set(144); await nextFrame();
+  expect(boxes.get('absolute')).toMatchObject({ x: 14, y: 10, width: 80, height: 122, stamp: 2 });
+  const beforePaint = snapshotWasmLayoutDiagnostics(); ink.set('#426b61'); await nextFrame(); expect(snapshotWasmLayoutDiagnostics().solves).toBe(beforePaint.solves); expect(snapshotWasmLayoutDiagnostics().nodeCreates).toBe(beforePaint.nodeCreates);
+  expect([...canvas.getContext('2d')!.getImageData(24, 20, 1, 1).data]).toEqual([66, 107, 97, 255]);
+  controller.dispose();
+  const disposed = snapshotWasmLayoutDiagnostics();
+  expect([disposed.activeNodes, disposed.activeArenas, disposed.cachedMeasurements]).toEqual([baseline.activeNodes, baseline.activeArenas, baseline.cachedMeasurements]);
+});

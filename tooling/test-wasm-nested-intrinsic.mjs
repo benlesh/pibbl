@@ -132,6 +132,7 @@ try {
       assert.equal(receipt.absoluteMainDirections, true, 'Installed fixed absolute boxes must preserve physical insets and align correctly across row/column forward/reverse and RTL directions');
       assert.equal(receipt.relativeMainDirections, true, 'Installed static/relative boxes must preserve physical final-world translation across all nowrap directions and classify Yoga reverse differences');
       assert.equal(receipt.absoluteMainBounds, true, 'Installed opposing-inset automatic boxes and numeric clamps must preserve physical geometry across every nowrap direction and RTL');
+      assert.equal(receipt.absoluteMainAspect, true, 'Installed one-auto absolute aspect boxes must derive from declared dimensions, clamp after derivation, and preserve paired-inset precedence without measurement');
       assert.equal(receipt.absoluteContainingBlock, true, 'Installed static Flex inherits its ancestor box while relative and omitted Flex own their local absolute child');
       assert.equal(receipt.absoluteDerivedSize, true, 'Installed opposing insets must derive a finite auto absolute size, preserve forwarding, source order, identity and cleanup');
       assert.equal(receipt.absoluteAspect, true, 'Installed absolute aspect sizing preserves declared-axis bounds and opposing-inset precedence without measurement');

@@ -92,8 +92,8 @@ describe('bounded direct-Flex absolute admission', () => {
   it.runIf(!experimentalLayout)('rejects column absolute participation in the normal runtime', () => {
     expect(mount(<Flex style={{ width: 200, height: 100, flexDirection: 'column' }}><Rectangle style={fixed} /></Flex>)).toThrow('PIBBL_LAYOUT_UNSUPPORTED_POSITION');
   });
-  it.runIf(experimentalLayout).each(['row-reverse', 'column', 'column-reverse'] as const)('keeps unpaired automatic axes and aspect derivation outside expanded %s absolute placement', flexDirection => {
-    for (const style of [{ ...fixed, width: 'auto' as const }, { ...fixed, width: 'auto' as const, aspectRatio: 2 }]) {
+  it.runIf(experimentalLayout).each(['row-reverse', 'column', 'column-reverse'] as const)('keeps unpaired automatic axes and ambiguous aspect sizing outside expanded %s absolute placement', flexDirection => {
+    for (const style of [{ ...fixed, width: 'auto' as const }, { ...fixed, aspectRatio: 2 }, { ...fixed, width: 'auto' as const, height: 'auto' as const, aspectRatio: 2 }]) {
       expect(mount(<Flex style={{ width: 200, height: 100, flexDirection }}><Rectangle style={style} /></Flex>)).toThrow('PIBBL_LAYOUT_UNSUPPORTED_POSITION');
     }
   });
@@ -105,7 +105,7 @@ describe('bounded direct-Flex absolute admission', () => {
       measure: () => { calls++; return { status: 'measured', size: { width: 60, height: 20 } }; },
     });
     for (const style of [{ width: 'auto' as const, height: 20 }, { width: 80, height: 'auto' as const }]) {
-      expect(mount(<Flex style={{ width: 200, height: 100, flexDirection }}><Leaf style={{ ...style, position: 'absolute', left: 12, top: 8 }} /></Flex>)).toThrow('absolute aspect derivation and natural measurement currently require a row');
+      expect(mount(<Flex style={{ width: 200, height: 100, flexDirection }}><Leaf style={{ ...style, position: 'absolute', left: 12, top: 8 }} /></Flex>)).toThrow('absolute natural measurement currently requires a row');
     }
     expect(calls).toBe(0);
   });

@@ -2,13 +2,14 @@
 
 ## Current checkpoint and single next slice — 2026-10-23
 
-Latest delivery is slice132 `43f17fc1` (opposing-inset absolute size/bounds across all main directions).
+Latest delivery is slice133 (absolute aspect sizing across all main directions; this commit).
+Slice132 is `43f17fc1` (opposing-inset absolute size/bounds main directions).
 Slice131 is `b0ab5061` (physical static/relative main directions).
 Slice130 is `2bbe4181` (fixed absolute main directions).
 Slice129 is `398dfa54` (bounded measured absolute natural height).
 Slice128 is `2539ff32` (bounded measured absolute natural width).
 Slice127 is `dfc5843c` (bounded absolute aspect-ratio derivation).
-Consolidation44 for130–132 passes below; consolidation43 is `ce7f45a1` for127–129; consolidation42 is `99dfdf49` for124–126.
+Consolidation44 is `2d372f72` for130–132; consolidation43 is `ce7f45a1` for127–129; consolidation42 is `99dfdf49` for124–126.
 Slice126 is `0bda56ec` (numeric absolute size bounds).
 Slice125 is `6603731e` (declarative static Flex containing-block ownership).
 Slice124 is `77452150` (opposing-inset derived absolute dimensions).
@@ -91,11 +92,11 @@ Slice55 is `1510efe3` (prepared Grid-root planning/adoption).
 Slice54 `773da7b9`,53 `aaa7ddcb`,52 `b5381e0d` are consolidated in `f322a709`.
 Every slice has its own commit. The fixed33-capability/seven-gate denominator is
 unchanged; all seven gates remain open. Earlier checkpoints are recorded below.
-Current corpus:423 records,325 native matches and98 classified differences.
+Current corpus:441 records,343 native matches and98 classified differences.
 The concise public lesson retains5 cases; the complete corpus is private testing
 input. Current runnable source/built comparison:
 `http://127.0.0.1:5192/#/testing/layout-yoga-migration` and port5193.
-Click Latest for the absolute size/bounds direction family; Next case advances its twenty-four native-matching records.
+Click Latest for the absolute aspect direction family; Next case advances its eighteen native-matching records.
 The public lesson is `#/examples/layout/wasm-yoga-migration`.
 
 The loading/named-component integration is ready for source feedback on branch
@@ -3755,20 +3756,47 @@ remain open. Direction coverage does not close the general positioning, intrinsi
 publication, migration, Grid, reproducible performance or release exits. No baseline
 rewrite, performance/parity promotion or Node24 aggregate trust claim.
 
-## [NEXT] Exactly-one-auto absolute aspect sizing across main directions (slice133)
+## Slice133 delivered: exactly-one-auto absolute aspect main directions
 
-Reuse declared-axis aspect derivation in all finite nowrap main directions and
-LTR/RTL. Paired insets retain precedence, bounds clamp independently afterward,
-and natural providers/containing/wrapping stay excluded. Pinned probe and public
-RED prepared. Commit133 separately; next consolidation follows133–135.
+The existing declared-axis aspect path now supports every finite nowrap main
+direction and LTR/RTL. Exactly one automatic axis, a positive finite ratio and
+explicit finite opposite dimension remain required. Paired insets win; otherwise
+derivation uses the declared opposite axis before independent numeric clamps.
+Natural provider sizing remains row-only. No measurement, containing, wrapping,
+child-decoration/margin or known-layout expansion; no API/ABI/cache/kernel change.
 
-### Finite positioning exit matrix after132
+Public RED fails only at missing non-row admission (2older aspect tests pass).
+Green covers3profiles across8 directionality combinations, unchanged flow slots,
+stable keys, paired-height resize82→122, actual paint pixels, no-solve paint and
+exact disposal. Focused3files71pass/2normal-onlyskip73; normal41pass/32skip73.
+Latest1pass/413skip414. Eighteen pinned records bring441cases=343matches+
+98classified. Source/built18pass227source/dist inputs, errors[]/cleanup[0,0,0];
+screenshot inspected. Public5/full441 boundary passes. Scoped review found no
+material issue. Fresh installed245dist inputs, strict Bundler/NodeNext, explicit
+absoluteMainAspect receipt, previous placement/measurement and104auto-margin
+receipts pass. Tarball SHA256
+`88987902e230204d91dbd1afe3aaf281c618537cef9d88282eb19403712f1e76`.
+Types, changed-code lint, docs109RED probes/JSDoc pass.
+Logs `/tmp/pibbl-slice133-{public-red,public-green,focused,normal,latest,native,source,built,packed,types-final,lint,docs}.txt`.
+Kernel68649bytes/SHA unchanged; Node26.9.0/macOSChromium, no Node24 trust or
+uninterrupted441-case browser claim. Fixed33/all7open gates unchanged.
+
+## [NEXT] Paired-provider absolute sizing across main directions (slice134)
+
+Extend the existing exactly-one-auto paired pure provider queries across finite
+nowrap directions and LTR/RTL. Preserve declared exact/unbounded envelopes,
+bounds ordering, conservative revision/snapshot caching, stable keyed identities,
+measurement signal ownership and cleanup. No both-auto/Text/image, containing or
+wrapping expansion. Public RED/native evidence before production; separate134commit.
+Next consolidation follows133–135.
+
+### Finite positioning exit matrix after133
 
 This refines existing manifest entries; it adds no capability or release gate.
 
 | Existing exit | Evidence still required before closing it |
 | --- | --- |
-| Direct static/relative/absolute placement | All accepted main directions and wrapping contexts, inset precedence and no-inset alignment, logical/percentage policy, supported child box and size constraints; pinned semantic geometry plus public paint/hit/focus evidence. Static/relative leaves and fixed/opposing-inset absolute sizing/bounds cover nowrap directions; known positioned owners, aspect and natural provider paths remain row-only. |
+| Direct static/relative/absolute placement | All accepted main directions and wrapping contexts, inset precedence and no-inset alignment, logical/percentage policy, supported child box and size constraints; pinned semantic geometry plus public paint/hit/focus evidence. Static/relative leaves and fixed/opposing-inset absolute sizing/bounds cover nowrap directions; known positioned owners and natural provider paths remain row-only; aspect now covers nowrap main directions. |
 | Absolute intrinsic dimensions | Built-in Text/font and image contributions, both-auto sizing, nested described owners and supported constraint feedback. The paired-provider one-auto paths in128–129 do not supply these contracts. |
 | General containing-block ownership | Exact override, transformed/opaque/boxless ancestry policy and lifecycle evidence, retaining legacy omission only where specified. Direct static Flex chains alone do not close it. |
 | Hidden/contents participation | Declared retention/disposal, boxless layout contribution, identity, source order, clips, events and visibility transitions; current implementation is missing. |

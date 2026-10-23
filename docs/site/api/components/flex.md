@@ -385,9 +385,10 @@ the same padding-box reference. Without an inset, `justifyContent` controls the
 main axis and `alignItems` the cross axis, including reversal and horizontal RTL.
 A fixed box keeps its size under stretch. Authored paint, click and focus order
 remain unchanged. Numeric bounds apply to fixed and derived axes before inset
-anchoring in every direction. Aspect derivation and natural measured dimensions
-remain row-only. An automatic axis in another direction requires its opposing
-physical inset pair; it does not invoke a measurement provider.
+anchoring in every direction. Exactly-one-auto aspect derivation also applies in every direction, with paired
+insets taking precedence and numeric bounds applied afterward. Natural measured
+dimensions remain row-only; other automatic axes need their opposing physical
+inset pair or the admitted aspect path.
 
 ### Experimental measured absolute size
 
