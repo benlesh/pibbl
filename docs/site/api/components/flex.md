@@ -31,6 +31,48 @@ const basicFlex = (
 
 Explore the [Flex live example](#/examples/layout/flex).
 
+Experimental layout also provides a bounded direct-child placement adjustment
+for a finite row-nowrap Flex allocation. `position: "static"` keeps the normal
+slot and ignores insets. `position: "relative"` keeps the normal slot, then
+offsets its final geometry without moving siblings. In LTR, `left` wins over
+`right`; in RTL, `right` wins over `left`; `top` wins over `bottom`.
+
+```tsx
+const relativeFlex = (
+  <Flex
+    style={{
+      width: 160,
+      height: 60,
+      flexDirection: "row",
+      flexWrap: "nowrap",
+      gap: 10,
+      layoutDirection: "rtl",
+    }}
+  >
+    <Rectangle
+      style={{
+        width: 50,
+        height: 20,
+        flexGrow: 0,
+        flexShrink: 0,
+        position: "relative",
+        left: 12,
+        right: 18,
+        top: 8,
+        bottom: 10,
+        fill: "#2563eb",
+      }}
+    />
+    <Rectangle style={{ width: 50, height: 20, flexGrow: 0, flexShrink: 0, fill: "#f59e0b" }} />
+  </Flex>
+);
+```
+
+The first rectangle still reserves its RTL slot, then shifts 18 units left and
+8 units down; the second remains in its original slot. This is experimental
+layout only. It does not add CSS absolute positioning, containing blocks,
+percent insets, wrapping, other layout parents, or normal JavaScript Flex.
+
 The experimental `layout-wasm` Studio build additionally supports finite numeric
 physical margins in finite rows and columns, with nowrap or wrap. `margin` sets all four edges;
 `marginTop`, `marginRight`, `marginBottom` and `marginLeft` override individual

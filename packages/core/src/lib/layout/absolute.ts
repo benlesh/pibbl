@@ -48,6 +48,7 @@ import {
 } from './place-child.js';
 import type { LayoutBox } from './types.js';
 import { withReceiverInputProvision } from '../signals/input-provision.js';
+import { assertSupportedChildPosition } from './positioning-diagnostics.js';
 
 /**
  * Supported geometry and presentation properties for Absolute.
@@ -182,6 +183,8 @@ function resolveAbsoluteChildPlacement(
   const style = preparedStyleValue(prepared) as Readonly<
     BoxStyle & LayoutItemStyle
   >;
+  // Absolute retains legacy left/top placement but never accepts Flex's explicit mode.
+  assertSupportedChildPosition('Absolute', child, style, false, false);
   const resolved = resolveDirectChildBox(container, child, 'absolute', style);
   const context = childDiagnosticContext(child, container, 'absolute');
   const left = resolveLength(style.left ?? 0, container.width, 'left', context)!;

@@ -24,13 +24,13 @@ let activeSignalHandoff: {
 } | undefined;
 
 function hasPositioning(style: Readonly<Record<PropertyKey, unknown>>): boolean {
-  if (Object.hasOwn(style, 'left') || Object.hasOwn(style, 'top')) return true;
+  if (Object.hasOwn(style, 'position') || Object.hasOwn(style, 'left') || Object.hasOwn(style, 'right') || Object.hasOwn(style, 'top') || Object.hasOwn(style, 'bottom')) return true;
   const when = style.when;
   return Array.isArray(when) && when.some((rule) => {
     if (!rule || typeof rule !== 'object') return false;
     const patch = (rule as { style?: unknown }).style;
     return !!patch && typeof patch === 'object' &&
-      (Object.hasOwn(patch, 'left') || Object.hasOwn(patch, 'top'));
+      (Object.hasOwn(patch, 'position') || Object.hasOwn(patch, 'left') || Object.hasOwn(patch, 'right') || Object.hasOwn(patch, 'top') || Object.hasOwn(patch, 'bottom'));
   });
 }
 
@@ -123,10 +123,20 @@ export function getPlacementSignalHandoff(
  * @see {@link SystemStyle}
  */
 export interface PositioningStyle extends SystemStyle {
-  /** Left edge coordinate or inset. See {@link Length}. */
+  /**
+   * Experimental direct-Flex placement mode. In a finite row-nowrap Flex, static
+   * keeps the allocated slot and ignores insets; relative offsets final geometry
+   * once without moving siblings. Omission retains legacy local left/top behavior.
+   */
+  position?: 'static' | 'relative';
+  /** Left edge coordinate or inset. Experimental relative Flex accepts finite numeric insets only. See {@link Length}. */
   left?: Exclude<Length, 'auto'>;
-  /** Top edge value or top envelope guide. See {@link Length}. */
+  /** Right edge inset for experimental relative Flex; must be finite numeric. */
+  right?: number;
+  /** Top edge value or inset. Experimental relative Flex accepts finite numeric insets only. See {@link Length}. */
   top?: Exclude<Length, 'auto'>;
+  /** Bottom edge inset for experimental relative Flex; must be finite numeric. */
+  bottom?: number;
 }
 
 export interface ResolvedPosition {

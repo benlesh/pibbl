@@ -1048,14 +1048,18 @@ createElement(Line, { style: { coords: [[0, 0], [20, 10]], fill: 'red' } });
 createElement(HorizontalLine, { y: 12 });
 // @ts-expect-error horizontal line requires style.y
 createElement(HorizontalLine, { style: { stroke: 'black' } });
-// @ts-expect-error legacy horizontal endpoint names are not supported
-createElement(HorizontalLine, { style: { y: 12, right: 40 } });
+// right is a numeric positioning inset, independent of horizontal-line endpoints.
+createElement(HorizontalLine, { style: { y: 12, right: 40, position: "relative" } });
+// @ts-expect-error new right inset requires a number
+createElement(HorizontalLine, { style: { y: 12, right: "10%", position: "relative" } });
 // @ts-expect-error vertical-line geometry is style-only
 createElement(VerticalLine, { x: 12 });
 // @ts-expect-error vertical line requires style.x
 createElement(VerticalLine, { style: { stroke: 'black' } });
-// @ts-expect-error legacy vertical endpoint names are not supported
-createElement(VerticalLine, { style: { x: 12, bottom: 40 } });
+// bottom is a numeric positioning inset, independent of vertical-line endpoints.
+createElement(VerticalLine, { style: { x: 12, bottom: 40, position: "relative" } });
+// @ts-expect-error new bottom inset requires a number
+createElement(VerticalLine, { style: { x: 12, bottom: "10%", position: "relative" } });
 // @ts-expect-error text content is supplied through children, not a program prop
 createElement(Text, { text: 'legacy' });
 // @ts-expect-error text is not a style property

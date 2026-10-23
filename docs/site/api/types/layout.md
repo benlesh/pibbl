@@ -98,6 +98,15 @@ root ratio sizing remain outside this contract.
 `FlexItemStyle` is the direct-child participation style consumed by a `Flex`
 parent; it does not create a CSS cascade.
 
+In experimental layout, a direct child in a finite LTR or RTL row-nowrap
+`Flex` may choose `position: "static"` or `"relative"`. Static retains its
+ordinary Flex slot and ignores insets. Relative retains that slot, then applies
+finite numeric `left`/`right`/`top`/`bottom` once to final geometry. LTR
+prefers left over right, RTL prefers right over left, and top prefers bottom.
+Omitting `position` preserves the existing Flex placement rules. This bounded
+feature does not provide CSS absolute positioning, containing blocks,
+percent-inset resolution, wrapping, or other layout-family support.
+
 ## FlexMargin
 
 `FlexMargin = number | Percentage | "auto"` describes physical and logical margin

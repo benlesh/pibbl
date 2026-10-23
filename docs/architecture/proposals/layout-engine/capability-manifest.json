@@ -1609,7 +1609,7 @@
         "covers": ["flex.auto-margin", "flex.min-max"]
       }
     ],
-    "limit": "307 records:213 native matches and94 explicitly classified differences. Two custom cross-auto records use an explicit eight-job measurement callback. Two Text cross-auto records use an explicit deterministic measurement callback, not font-rendering parity. Finite evidence remains bounded and does not establish general intrinsic, percentage, auto-margin or CSS parity."
+    "limit": "326 records:232 native matches and94 explicitly classified differences. Two custom cross-auto records use an explicit eight-job measurement callback. Two Text cross-auto records use an explicit deterministic measurement callback, not font-rendering parity. Finite evidence remains bounded and does not establish general intrinsic, percentage, auto-margin or CSS parity."
   },
   "gateGroups": [
     {
@@ -2564,15 +2564,35 @@
       "id": "position.relative-static-absolute",
       "target": "parity",
       "group": "placement-and-participation",
-      "current": "local offsets plus dedicated Absolute",
-      "status": "missing",
-      "unresolvedPolicy": "Implementation direction is authorized; position values, all-inset semantics, and compatibility lowering for Absolute need exact definitions.",
+      "current": "experimental direct finite row-nowrap Flex static/relative physical numeric insets in LTR/RTL; legacy local offsets and dedicated Absolute retained",
+      "status": "experimental",
+      "unresolvedPolicy": "Absolute participation, containing blocks, nested static ownership and wider layout admission remain open.",
       "evidence": {
-        "positive": ["current Absolute"],
-        "negative": [],
-        "interaction": [],
-        "yogaCases": [],
-        "missing": ["padding/border", "opposite insets", "nested static nodes"]
+        "positive": [
+          "packages/core/test/layout-relative-position.test.tsx: public static to relative slots, LTR/RTL precedence, right/bottom only, forwarded style consumed once",
+          "tooling/packed-layout-consumer.mjs: installed relativeStatic receipt"
+        ],
+        "negative": [
+          "packages/core/test/layout-positioning-diagnostics.test.tsx: unsupported contexts and unmoded opposite insets"
+        ],
+        "interaction": [
+          "slice120: paint/hit/focus geometry, sibling slots, stable keyed/native identity, receiver-owned paint reuse and exact teardown"
+        ],
+        "yogaCases": [
+          "position-static-all-ltr",
+          "position-static-all-rtl",
+          "position-relative-all-ltr",
+          "position-relative-all-rtl",
+          "position-relative-right-bottom-ltr",
+          "position-relative-right-bottom-rtl"
+        ],
+        "missing": [
+          "decorated parent padding/border",
+          "absolute participation and opposite anchoring",
+          "nested static nodes",
+          "column/wrap positioning",
+          "containing-block ownership"
+        ]
       }
     },
     {

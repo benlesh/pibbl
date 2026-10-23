@@ -159,12 +159,13 @@ export function resolveElementStyle<
       definition.resolveStyle(normalized, context) :
       normalized as unknown as ResolvedStyle<R>;
   const positioning = normalized as Readonly<PositioningStyle>;
+  const forwarded = forwardedStyle as Readonly<PositioningStyle> | undefined;
+  assertExplicitPositionBoundary(positioning, forwarded, isPlacementConsumed(element), context);
   const hasLeft = positioning.left !== undefined;
   const hasTop = positioning.top !== undefined;
   let positioned = resolved;
   if (definition.backend === CANVAS_2D_BACKEND.token && (hasLeft || hasTop)) {
     const standalone = resolveStandalonePosition(normalized, context);
-    const forwarded = forwardedStyle as Readonly<PositioningStyle> | undefined;
     const consumesOuterPosition = isPlacementConsumed(element);
     const position = {
       left: consumesOuterPosition ||
@@ -189,6 +190,53 @@ export function resolveElementStyle<
     opaqueStyleProperties.get(type) ?? new Set(),
   );
   return final;
+}
+
+
+function assertExplicitPositionBoundary(
+  positioning: Readonly<PositioningStyle>,
+  forwarded: Readonly<PositioningStyle> | undefined,
+  consumesOuterPosition: boolean,
+  context: Readonly<StyleResolutionContext>,
+): void {
+  const position = positioning.position;
+  const hasRightOrBottom = positioning.right !== undefined || positioning.bottom !== undefined;
+  if (position === undefined) {
+    if (!hasRightOrBottom) return;
+    throw layoutDiagnostic({
+      component: context.component,
+      property: positioning.right !== undefined ? 'right' : 'bottom',
+      value: positioning.right ?? positioning.bottom,
+      algorithm: 'render-dispatch',
+      constraints: context.constraints,
+      reason: 'PIBBL_LAYOUT_IGNORED_POSITION: right/bottom require position: relative in a supported direct Flex child',
+    });
+  }
+  if (position !== 'static' && position !== 'relative') {
+    throw layoutDiagnostic({
+      component: context.component,
+      property: 'position',
+      value: position,
+      algorithm: 'render-dispatch',
+      constraints: context.constraints,
+      reason: 'PIBBL_LAYOUT_UNSUPPORTED_POSITION: uses an unsupported placement mode',
+    });
+  }
+  if (consumesOuterPosition) return;
+  if (forwarded !== undefined &&
+    Object.is(positioning.position, forwarded.position) &&
+    Object.is(positioning.left, forwarded.left) &&
+    Object.is(positioning.right, forwarded.right) &&
+    Object.is(positioning.top, forwarded.top) &&
+    Object.is(positioning.bottom, forwarded.bottom)) return;
+  throw layoutDiagnostic({
+    component: context.component,
+    property: 'position',
+    value: position,
+    algorithm: 'render-dispatch',
+    constraints: context.constraints,
+    reason: 'PIBBL_LAYOUT_UNSUPPORTED_POSITION: requires direct Flex placement or one exact forwarded position/inset style',
+  });
 }
 
 function assertResolvedValue(

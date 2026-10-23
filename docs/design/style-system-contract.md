@@ -182,6 +182,14 @@ scientific notation, malformed strings, and non-finite results reject.
   override. Automatic margins and participation in other layout families remain
   unsupported. Parent placement uses `left`/`top`; drawing-local geometry
   uses `x`/`y` (`x1`/`x2` or `y1`/`y2` for line helpers).
+- Experimental direct children of a finite row-nowrap `Flex` may explicitly set
+  `position: "static" | "relative"`. Static keeps its Flex slot and ignores
+  insets. Relative keeps that slot and applies finite numeric physical
+  `left`/`right`/`top`/`bottom` once to final geometry: LTR prefers left, RTL
+  prefers right, and top prefers bottom. Omitted `position` keeps the existing
+  Flex `left`/`top` diagnostic. This is not an Absolute or containing-block
+  model; percentages, wrapping, other layout parents, and normal JavaScript
+  Flex remain unsupported.
 - Experimental `paddingStart` and `paddingEnd` override their direction-mapped
   physical padding edge, including zero and independent of declaration order.
   Values are nonnegative; percentages require actual allocated Flex ownership and

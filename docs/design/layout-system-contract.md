@@ -39,6 +39,30 @@ A child's parent-relative placement lives in its own specified style:
 - `flexBasis`, `flexGrow`, and `flexShrink` are consumed only by Flex;
 - Grid consumes one-based starts and positive spans.
 
+### Experimental direct-Flex static and relative insets
+
+Experimental finite `Flex` additionally accepts an explicit direct-child
+`position: "static" | "relative"` in a row, nowrap allocation under either
+LTR or RTL. This is a placement adjustment, not a new containing-block or
+out-of-flow system:
+
+- Omitting `position` preserves the existing parent-owned placement behavior
+  and its diagnostics for authored `left`/`top` under Flex.
+- `position: "static"` reserves the ordinary Flex slot and ignores all four
+  physical inset values.
+- `position: "relative"` first reserves that same slot, then translates its
+  final paint, hit, and focus geometry once. Its local `useLayoutBox()`
+  allocation and sibling allocation do not change.
+- `left`, `right`, `top`, and `bottom` are finite numeric insets on this path.
+  In LTR, `left` takes precedence over `right`; in RTL, `right` takes
+  precedence over `left`; `top` takes precedence over `bottom`. The losing
+  opposite inset is ignored. A sole right or bottom inset shifts negatively.
+
+`Absolute` keeps its existing independent `left`/`top` contract. This slice
+does not add absolute positioning, right/bottom anchoring, containing blocks,
+percent relative insets, wrapping, Flow/Grid/Overlay participation, or normal
+JavaScript Flex support.
+
 `PibblRenderLayerStyle` accepts the shared box and layout-item fields. Each
 omitted layer dimension uses its current finite logical allocation; an explicit
 or allocated width and height must resolve to positive finite values. A render

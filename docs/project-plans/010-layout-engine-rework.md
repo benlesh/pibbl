@@ -2,7 +2,8 @@
 
 ## Current checkpoint and single next slice — 2026-10-23
 
-Latest delivery is slice119 (concise public corpus and exhaustive private rehearsal).
+Latest delivery is slice120 (bounded explicit direct-Flex static/relative positioning).
+Slice119 is `346bc95d` (concise public corpus and exhaustive private rehearsal).
 Slice118 is `19bd8853` (measurement-only reactive column content evidence).
 Slice117 is `dd7f292f` (finite column custom-provider exact-width measurement).
 Consolidation39 passes for115–117 below.
@@ -3224,19 +3225,52 @@ No runtime/ABI/kernel change or status promotion:33capabilities remain8complete,
 11experimental,6partial,7missing,1excluded; all7group gates open. Node26.9.0/macOS
 Chromium, no Node24 aggregate trust claim. Full program review stays at the end.
 
-## [NEXT] Explicit finite Flex static and relative positioning (slice120)
+## Slice120 delivered: explicit finite Flex static and relative positioning
 
-Add explicit static/relative plus four physical numeric insets on direct finite
-experimental row-nowrap Flex children in LTR/RTL. Omitted position retains legacy
-behavior; static reserves its slot and ignores insets; relative shifts final
-paint/hit/focus geometry while siblings keep their slots. Top beats bottom; left
-wins LTR and right wins RTL. Other positioning contexts remain unsupported for
-this first admission; Absolute and containing-block ownership do not change.
-The isolated public test has reproduced the current ignored-position diagnostic
-for explicit static. Keep conservative unknown-component invalidation rather than
-inventing a retained placement cache; receiver-owned paint still reuses layout.
-Present the exact public fields/JSDoc and deliver source/built/packed proof.
-Consolidation40 follows118–120. The whole accepted program remains open.
+Public `style.position: "static" | "relative"` plus numeric `right`/`bottom`
+join legacy `left`/`top`. The admitted path is direct finite experimental
+row-nowrap Flex children in LTR/RTL. Static ignores insets; relative moves final
+paint/hit/focus geometry once while preserving sibling slots. Left wins LTR,
+right wins RTL, top wins vertically. Left/top retain legacy Length types for
+omitted mode; all explicit-mode insets must be finite numbers. Absolute,
+containing blocks, columns, wrapping and other placement contexts remain open.
+Unsupported contexts, unmoded opposite insets and modified forwarded position
+styles reject explicitly. Exact style forwarding consumes placement once.
+
+Test-first receipt `/tmp/pibbl-slice120-public-red.txt` records the initial
+explicit-static rejection; `/tmp/pibbl-slice120-boundary-red-final.txt` records
+six boundary failures before the fix (four missing rejections, two diagnostic
+prefix mismatches), with six existing tests passing. Initial test-harness
+cleanup faults are diagnostic receipts, not runtime regressions. Final focused
+position tests pass17; normal-mode earlier12pass/4skip; legacy geometry/layout
+regressions67pass; Latest-proof navigation1pass/412skip. Conservative component
+invalidation is preserved: a component reading position/direction signals may
+recreate props and solve; receiver-owned paint-only updates reuse layout.
+
+Pinned Yoga3.2.1 native reproduction adds six isolated cases:326total,
+232matches/94classified differences. No WASM ABI/kernel/Rust change:68649bytes,
+SHA256 `029fd944e878b879a235461dcfac17219948569198795428caff12c4c388bfe9`.
+Final source/built six-case replays pass with227core/dist inputs, no browser
+errors, exact geometry/hits/keyed identity and cleanup[0,0,0]. Logs
+`/tmp/pibbl-slice120-source-final.txt`, `...built-final.txt`. Public five-case
+lesson remains separate from exhaustive private fixtures. Fresh installed
+package proof passes245dist inputs, strict Bundler/NodeNext types, static→relative
+LTR/RTL and sole right/bottom geometry/hits/focus/identity/paint reuse/cleanup;
+tarball SHA256 `d3c231540ffe509de5960e66bce28dcaa6fd2af0fddf4063effab415cf96c893`.
+Docs109RED probes, public JSDoc, TypeScript and changed-code lint pass. Scoped
+boundary review found no remaining material issue; modified-forwarding regression
+was added after review and passes. No baseline rewritten. Node26.9.0/macOS
+Chromium; no Node24 aggregate trust claim. Fixed33capabilities now8complete,
+12experimental,6partial,6missing,1excluded; all7group gates remain open.
+
+## [NEXT] Consolidation40 for slices118–120
+
+Commit120 separately, then combine the established layout/loading matrix with
+new positioning tests in experimental and normal lanes. After that checkpoint,
+continue exactly one bounded decorated-parent static/relative positioning slice
+with asymmetric padding/border. This closes the next manifest evidence gap
+without adding absolute or containing-block semantics. Full-program review stays
+at the program end.
 
 ### Consolidation 24 completed for delivery slices 70–72
 

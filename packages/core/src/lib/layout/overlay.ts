@@ -26,6 +26,7 @@ import {
 } from './absolute.js';
 import { pushLayoutBox } from './context.js';
 import { recordLayoutEvaluation } from './diagnostics.js';
+import { assertSupportedChildPosition } from './positioning-diagnostics.js';
 import type { LayoutBox } from './types.js';
 
 type OverlayAlignment = 'start' | 'center' | 'end' | 'stretch';
@@ -160,6 +161,7 @@ function resolveOverlayChildPlacement(
   const item = preparedStyleValue(prepared) as Readonly<
     BoxStyle & LayoutItemStyle
   >;
+  assertSupportedChildPosition('Overlay', child, item, false, false);
   const resolved = resolveDirectChildBox(
     container,
     child,

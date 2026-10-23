@@ -4907,13 +4907,16 @@ it.runIf(experimentalLayout)('jumps directly to the latest public proof and pres
   const canvas = document.createElement('canvas'); canvas.width = 760; canvas.height = 540; document.body.append(canvas);
   const controller = createExampleMount(WasmYogaMigrationExample)(canvas, { fixtures: fullYogaMigrationFixtures }); controllers.push(controller); await nextFrame();
   const last = yogaReference.cases.at(-1)!;
-  const firstName = last.name.replace(/-resized$/, '');
+  const firstName = 'relativeStaticFixture' in last
+    ? yogaReference.cases.find(fixture => 'relativeStaticFixture' in fixture)!.name
+    : last.name.replace(/-resized$/, '');
   clickCanvas(canvas, 650, 158); await nextFrame();
   await expect.poll(() => canvas.nextElementSibling?.textContent).toContain(firstName);
-  if (last.name !== firstName) {
+  const firstIndex = yogaReference.cases.findIndex(fixture => fixture.name === firstName);
+  for (let index = firstIndex; index < yogaReference.cases.length - 1; index++) {
     clickCanvas(canvas, 60, 158); await nextFrame();
-    await expect.poll(() => canvas.nextElementSibling?.textContent).toContain(last.name);
   }
+  await expect.poll(() => canvas.nextElementSibling?.textContent).toContain(last.name);
   clickCanvas(canvas, 520, 158); await nextFrame();
   await expect.poll(() => canvas.nextElementSibling?.textContent).toContain('· grow ·');
 });

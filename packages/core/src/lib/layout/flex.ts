@@ -159,6 +159,8 @@ interface FlexItem {
   receiverToken: object;
   layoutToken?: object;
   query?: PreparedQuery;
+  relativeX: number;
+  relativeY: number;
 }
 
 interface FlexLine {
@@ -316,7 +318,7 @@ if (experimentalLayout) registerKnownLayoutPreflight(Flex, (element, style, cont
         if (prepared instanceof ResponsiveStylePreparation) prepared.style = normalized;
         else prepared = normalized;
       }
-      assertSupportedChildPosition('Flex', child, normalized);
+      assertSupportedChildPosition('Flex', child, normalized, true);
       rejectUnsupportedItemFields(child, normalized, content);
       nonnegativeFactor(normalized.flexGrow ?? 0, 'flexGrow', child, content);
       nonnegativeFactor(normalized.flexShrink ?? 1, 'flexShrink', child, content);
@@ -706,8 +708,23 @@ function resolveFlexPlacements(
     const layoutChild = isLayoutComponent(child.type) ? prepareLayoutComponent(child, { receiverToken }) : child;
     const knownIntrinsicLayout = child.type === Flex || layoutChild.type === Flow || layoutChild.type === Grid || layoutChild.type === Flex &&
       isColumnDirection(normalized.flexDirection) && (normalized.flexWrap ?? 'nowrap') === 'nowrap';
-    assertSupportedChildPosition('Flex', child, normalized);
+    assertSupportedChildPosition('Flex', child, normalized, true);
     rejectUnsupportedItemFields(child, normalized, container);
+    let relativeX = 0;
+    let relativeY = 0;
+    const position = normalized.position;
+    if (position !== undefined) {
+      assertSupportedRelativeFlexPosition(child, position, options, container);
+      const left = numericRelativeInset(normalized.left, 'left', child, container);
+      const right = numericRelativeInset(normalized.right, 'right', child, container);
+      const top = numericRelativeInset(normalized.top, 'top', child, container);
+      const bottom = numericRelativeInset(normalized.bottom, 'bottom', child, container);
+      if (position === 'relative') {
+        if (options.layoutDirection === 'rtl') relativeX = right === undefined ? left ?? 0 : -right;
+        else relativeX = left === undefined ? right === undefined ? 0 : -right : left;
+        relativeY = top === undefined ? bottom === undefined ? 0 : -bottom : top;
+      }
+    }
     const allMargin = normalized.margin === 'auto' ? 'auto' : allocatedMargin(normalized.margin, 'margin', child, container);
     const marginDirection = layoutChild.type === Flex ? normalized.layoutDirection ?? options.layoutDirection : options.layoutDirection;
     const logicalLeft = marginDirection === 'rtl' ? normalized.marginEnd : normalized.marginStart;
@@ -1028,6 +1045,8 @@ function resolveFlexPlacements(
       receiverToken,
       layoutToken,
       query: preparedStyleQuery(prepared),
+      relativeX,
+      relativeY,
     });
   }
 
@@ -1105,16 +1124,17 @@ function resolveFlexPlacements(
         crossOffset = alignmentOffset(alignment, line.crossSize, outerCross);
       }
       const outerMain = item.targetMain + item.paddingMain;
-      const box = row ? {
-        x: container.x + mainCursor,
-        y: container.y + line.crossOffset + crossOffset,
-        width: outerMain,
-        height: outerCross,
-      } : {
-        x: container.x + line.crossOffset + crossOffset,
-        y: container.y + mainCursor,
-        width: outerCross,
-        height: outerMain,
+      const x = row ?
+        container.x + mainCursor + item.relativeX :
+        container.x + line.crossOffset + crossOffset + item.relativeX;
+      const y = row ?
+        container.y + line.crossOffset + crossOffset + item.relativeY :
+        container.y + mainCursor + item.relativeY;
+      const box = {
+        x: finiteRelativePlacement(x, 'left', item.child, container),
+        y: finiteRelativePlacement(y, 'top', item.child, container),
+        width: row ? outerMain : outerCross,
+        height: row ? outerCross : outerMain,
       };
       const usedStyle = {
         ...item.normalized,
@@ -1598,6 +1618,46 @@ function alignmentOffset(
   if (alignment === 'center') return (lineSize - itemSize) / 2;
   if (alignment === 'flex-end') return lineSize - itemSize;
   return 0;
+}
+
+
+function finiteRelativePlacement(
+  value: number,
+  property: 'left' | 'top',
+  child: PibblElement<any>,
+  container: Readonly<LayoutBox>,
+): number {
+  if (!Number.isFinite(value)) {
+    throw childDiagnostic(child, property, value, container, 'resolved relative placement arithmetic must remain finite');
+  }
+  return value;
+}
+
+function assertSupportedRelativeFlexPosition(
+  child: PibblElement<any>,
+  position: unknown,
+  options: Readonly<Pick<ResolvedFlexStyle, 'flexDirection' | 'flexWrap' | 'layoutDirection'>>,
+  container: Readonly<LayoutBox>,
+): void {
+  if (!experimentalLayout || (position !== 'static' && position !== 'relative')) {
+    throw childDiagnostic(child, 'position', position, container, 'PIBBL_LAYOUT_UNSUPPORTED_POSITION: uses an unsupported Flex placement mode');
+  }
+  if (options.flexDirection !== 'row' || options.flexWrap !== 'nowrap') {
+    throw childDiagnostic(child, 'position', position, container, 'PIBBL_LAYOUT_UNSUPPORTED_POSITION: currently requires a finite row nowrap Flex allocation');
+  }
+}
+
+function numericRelativeInset(
+  value: unknown,
+  property: 'left' | 'right' | 'top' | 'bottom',
+  child: PibblElement<any>,
+  container: Readonly<LayoutBox>,
+): number | undefined {
+  if (value === undefined) return;
+  if (typeof value !== 'number' || !Number.isFinite(value)) {
+    throw childDiagnostic(child, property, value, container, 'currently requires a finite numeric relative inset');
+  }
+  return value;
 }
 
 function rejectUnsupportedItemFields(

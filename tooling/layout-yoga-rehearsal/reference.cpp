@@ -1570,6 +1570,64 @@ static void customColumnMeasureCases() {
   }
 }
 
+static void relativeStaticCases() {
+  for (int variant = 0; variant < 6; ++variant) {
+    const bool rtl = variant == 1 || variant == 3 || variant == 5;
+    const bool relative = variant >= 2;
+    const bool soleOpposite = variant >= 4;
+    auto config = YGConfigNew();
+    YGConfigSetUseWebDefaults(config, false);
+    YGConfigSetPointScaleFactor(config, 0);
+    YGConfigSetErrata(config, YGErrataNone);
+    auto root = YGNodeNewWithConfig(config);
+    YGNodeStyleSetWidth(root, 160);
+    YGNodeStyleSetHeight(root, 60);
+    YGNodeStyleSetFlexDirection(root, YGFlexDirectionRow);
+    YGNodeStyleSetFlexWrap(root, YGWrapNoWrap);
+    YGNodeStyleSetAlignItems(root, YGAlignFlexStart);
+    YGNodeStyleSetGap(root, YGGutterAll, 10);
+    for (int item = 0; item < 2; ++item) {
+      auto child = YGNodeNewWithConfig(config);
+      YGNodeStyleSetWidth(child, 50);
+      YGNodeStyleSetHeight(child, 20);
+      YGNodeStyleSetFlexGrow(child, 0);
+      YGNodeStyleSetFlexShrink(child, 0);
+      YGNodeStyleSetMinWidth(child, 0);
+      YGNodeStyleSetMinHeight(child, 0);
+      if (item == 0) {
+        YGNodeStyleSetPositionType(child, relative ? YGPositionTypeRelative : YGPositionTypeStatic);
+        if (soleOpposite) {
+          YGNodeStyleSetPosition(child, YGEdgeRight, 18);
+          YGNodeStyleSetPosition(child, YGEdgeBottom, 10);
+        } else {
+          YGNodeStyleSetPosition(child, YGEdgeLeft, 12);
+          YGNodeStyleSetPosition(child, YGEdgeRight, 18);
+          YGNodeStyleSetPosition(child, YGEdgeTop, 8);
+          YGNodeStyleSetPosition(child, YGEdgeBottom, 10);
+        }
+      }
+      YGNodeInsertChild(root, child, item);
+    }
+    YGNodeCalculateLayout(root, YGUndefined, YGUndefined, rtl ? YGDirectionRTL : YGDirectionLTR);
+    const char* mode = relative ? "relative" : "static";
+    std::cout << ",{\"name\":\"position-" << mode << (soleOpposite ? "-right-bottom-" : "-all-") << (rtl ? "rtl" : "ltr")
+              << "\",\"width\":160,\"height\":60,\"gap\":10,\"flexDirection\":\"row\",\"flexWrap\":\"nowrap\",\"layoutDirection\":\"" << (rtl ? "rtl" : "ltr")
+              << "\",\"containerStyle\":{\"alignItems\":\"flex-start\"},\"relativeStaticFixture\":true,\"boxes\":[";
+    for (int item = 0; item < 2; ++item) {
+      auto child = YGNodeGetChild(root, item);
+      if (item) std::cout << ",";
+      std::cout << "{\"x\":" << YGNodeLayoutGetLeft(child) << ",\"y\":" << YGNodeLayoutGetTop(child)
+                << ",\"width\":" << YGNodeLayoutGetWidth(child) << ",\"height\":" << YGNodeLayoutGetHeight(child) << "}";
+    }
+    std::cout << "],\"itemStyles\":[{\"width\":50,\"height\":20,\"flexGrow\":0,\"flexShrink\":0,\"minWidth\":0,\"minHeight\":0,\"position\":\"" << mode << "\"";
+    if (soleOpposite) std::cout << ",\"right\":18,\"bottom\":10";
+    else std::cout << ",\"left\":12,\"right\":18,\"top\":8,\"bottom\":10";
+    std::cout << "},{\"width\":50,\"height\":20,\"flexGrow\":0,\"flexShrink\":0,\"minWidth\":0,\"minHeight\":0}]}";
+    YGNodeFreeRecursive(root);
+    YGConfigFree(config);
+  }
+}
+
 int main() {
   const char* names[] = {"grow", "cap", "shrink", "rectangle-shrink", "rectangle-percent-content-box", "column-grow", "column-cap", "column-shrink", "row-reverse-cap", "column-reverse-cap", "row-wrap", "row-wrap-reverse", "border-box-floor-bounds", "border-box-percentage", "border-box-asymmetric-row", "border-box-asymmetric-column", "zero-fractional-grow", "fractional-shrink", "grow-freeze-release", "shrink-freeze-release", "large-finite-differential", "subunit-zero-grow", "subunit-shrink-policy", "initial-freeze-grow-policy", "initial-freeze-shrink-policy"};
   std::cout << "[";
@@ -1715,5 +1773,6 @@ int main() {
   nestedCrossMaximumDecoratedColumnReverseCases();
   nestedCrossMinimumDecoratedColumnReverseCases();
   customColumnMeasureCases();
+  relativeStaticCases();
   std::cout << "]\n";
 }
