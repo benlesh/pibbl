@@ -526,9 +526,41 @@
           "flex.row-column-nowrap-wrap",
           "flex.reverse-and-wrap-reverse"
         ]
+      },
+      {
+        "id": "gap-percent-row-nowrap",
+        "covers": ["flex.percentage-gap", "flex.row-column-nowrap-wrap"]
+      },
+      {
+        "id": "gap-percent-row-nowrap-resized",
+        "covers": ["flex.percentage-gap", "flex.row-column-nowrap-wrap"]
+      },
+      {
+        "id": "gap-percent-row-wrap",
+        "covers": ["flex.percentage-gap", "flex.row-column-nowrap-wrap"]
+      },
+      {
+        "id": "gap-percent-row-wrap-resized",
+        "covers": ["flex.percentage-gap", "flex.row-column-nowrap-wrap"]
+      },
+      {
+        "id": "gap-percent-column-nowrap",
+        "covers": ["flex.percentage-gap", "flex.row-column-nowrap-wrap"]
+      },
+      {
+        "id": "gap-percent-column-nowrap-resized",
+        "covers": ["flex.percentage-gap", "flex.row-column-nowrap-wrap"]
+      },
+      {
+        "id": "gap-percent-column-wrap",
+        "covers": ["flex.percentage-gap", "flex.row-column-nowrap-wrap"]
+      },
+      {
+        "id": "gap-percent-column-wrap-resized",
+        "covers": ["flex.percentage-gap", "flex.row-column-nowrap-wrap"]
       }
     ],
-    "limit": "Ninety-one records:80 native matches and11 explicitly classified CSS allocation/safe-overflow differences; finite row/column/reverse/wrap, box conversion, distribution, definite percentage bounds and wrapped aspect ratios. This does not establish general box-sizing, percentage, intrinsic or CSS parity."
+    "limit": "Ninety-nine records:88 native matches and11 explicitly classified CSS allocation/safe-overflow differences; finite row/column/reverse/wrap, box conversion, distribution, definite percentage bounds, wrapped aspect ratios and allocated-owner percentage gaps. This does not establish general box-sizing, percentage, intrinsic or CSS parity."
   },
   "gateGroups": [
     {
@@ -1015,15 +1047,47 @@
       "id": "flex.percentage-gap",
       "target": "parity",
       "group": "box-and-direction",
-      "current": "rejected",
-      "status": "missing",
-      "unresolvedPolicy": "Indefinite intrinsic-cycle resolution must be specified before implementation.",
+      "current": "experimental percentages resolved from finite allocated Flex content axes; columnGap uses width and rowGap uses height",
+      "status": "experimental",
+      "unresolvedPolicy": "Finite allocated-owner policy selected; intrinsic/max-only owners explicitly unsupported. No zero fallback or cyclic fixed-point inference.",
+      "evidenceRefs": [
+        "packages/core/test/layout-wasm-slice.test.tsx",
+        "tooling/layout-yoga-rehearsal/reference.json",
+        "tooling/test-wasm-yoga-migration.mjs",
+        "tooling/packed-layout-consumer.mjs",
+        "docs/design/layout-system-contract.md"
+      ],
       "evidence": {
-        "positive": [],
-        "negative": ["current rejection"],
-        "interaction": [],
-        "yogaCases": [],
-        "missing": ["definite parent", "indefinite parent", "nested Flex/Grid"]
+        "positive": [
+          "row/column nowrap and wrap",
+          "physical content-axis references after asymmetric padding",
+          "shorthand axis resolution and explicit override",
+          "nested Grid cell allocation"
+        ],
+        "negative": [
+          "ordinary JavaScript percentages rejected",
+          "invalid/negative percentage strings rejected",
+          "intrinsic percentage-gap owners unsupported before native allocation"
+        ],
+        "interaction": [
+          "owner resize moves gaps and targets without new nodes",
+          "source/built comparison and installed packed padded owner",
+          "exact disposal"
+        ],
+        "yogaCases": [
+          "gap-percent-row-nowrap",
+          "gap-percent-row-nowrap-resized",
+          "gap-percent-row-wrap",
+          "gap-percent-row-wrap-resized",
+          "gap-percent-column-nowrap",
+          "gap-percent-column-nowrap-resized",
+          "gap-percent-column-wrap",
+          "gap-percent-column-wrap-resized"
+        ],
+        "missing": [
+          "indefinite intrinsic cycle semantics",
+          "broader nested owner graph"
+        ]
       }
     },
     {

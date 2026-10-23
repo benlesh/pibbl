@@ -97,7 +97,11 @@ subset.
 ## FlexStyle
 
 `FlexStyle` is the declared container style for `Flex`. Reverse/reordered
-flexing, advanced intrinsic sizing, margins, and scrolling are unsupported.
+flexing, advanced intrinsic sizing, margins, and scrolling are outside the normal build.
+Experimental finite allocated Flex accepts `gap`, `rowGap`, and `columnGap` as
+`number | Percentage`. Column percentages use content width; row percentages use
+content height, including column Flex. Intrinsic/max-only percentage-gap owners
+remain unsupported.
 
 ## FlowProps
 

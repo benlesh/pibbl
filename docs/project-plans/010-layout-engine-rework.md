@@ -2,7 +2,8 @@
 
 ## Current checkpoint and single next slice — 2026-10-22
 
-Latest delivery is slice79 (settled-column percentage cross constraints).
+Latest delivery is slice80 (finite allocated-owner percentage gaps).
+Slice79 is `dbffc7c1` (settled-column percentage cross constraints).
 Slice78 is `a96ee4a2` (finite wrapped aspect-ratio participation).
 Slice77 is `239df577` (definite percentage bounds and worktree catalog isolation).
 Slice76 is `c787d7d9` (safe overflow and finite distribution evidence).
@@ -29,9 +30,9 @@ Slice56 is `cf2c7bc5` (prepared Flow-root planning/adoption).
 Slice55 is `1510efe3` (prepared Grid-root planning/adoption).
 Slice54 `773da7b9`,53 `aaa7ddcb`,52 `b5381e0d` are consolidated in `f322a709`.
 Every slice has its own commit. The fixed33-capability/seven-gate denominator is
-unchanged; all seven gates remain open. Consolidation26 is `2cd357d4`; the single next slice is80, finite allocated-owner percentage gaps. Source5192/built5193, `#/testing/layout-preflight`:
+unchanged; all seven gates remain open. Consolidation26 is `2cd357d4`; the single next slice is81, finite allocated-child percentage padding. Source5192/built5193, `#/testing/layout-preflight`:
 Source5192/built5193 `#/examples/layout/wasm-yoga-migration`: Next case + resize
-cycles91 records:80matches/11classified CSS differences; click A/B/C targets.
+cycles99 records:88matches/11classified CSS differences; click A/B/C targets.
 Canonical built comparison: http://127.0.0.1:5193/#/examples/layout/wasm-yoga-migration.
 Native Grid tracks/spans and Flow wrap controls remain available.
 
@@ -1500,18 +1501,56 @@ No native kernel or visual baseline change. Node26.9.0; no aggregate trust claim
 Fixed33 counts unchanged; this prerequisite does not complete the full min/max or
 intrinsic owner graph. Next consolidation is after an appropriate3–4slice group.
 
-## [NEXT] Finite allocated-owner percentage gaps (slice 80)
+## Slice 80 delivered — finite allocated-owner percentage gaps
 
-Pin independent Yoga3.2.1 native physical row/column percentage-gap references with
-unequal owner dimensions, padding and resize before selecting exact public types
-and reference policy. Existing gap/rowGap/columnGap are the only candidate fields.
-Specify that only an actual finite content allocation supplies a percentage
-reference; intrinsic/max-only owners remain explicitly unsupported rather than
-using zero, iteration or an inferred definite size. Present material public type
-changes before production, add failing public geometry/negative tests, and expose
-resize/target behavior through an existing comparison. Preserve numeric gap
-behavior and no-allocation/ownership guarantees. Classify any native/CSS policy
-difference explicitly. No broad intrinsic-cycle or full percentage parity claim.
+Experimental Flex gap/rowGap/columnGap now accept number|Percentage. Column gap
+uses actual content width, row gap actual content height in both Flex directions;
+shorthand resolves independently before axis overrides. Native Yoga3.2.1 confirms
+this with unequal dimensions and asymmetric padding. Intrinsic/max-only owners
+remain explicitly unsupported; no zero fallback/fixed-point inference. Numeric
+contract remains complete and ordinary JavaScript rejects percentage gaps.
+
+Public TDD: five focused cases fail before the change. The mounted padded-owner
+case also failed after the first change: resolveStyle had normalized against the
+parent allocation. Corrected to resolveContainerBox's content allocation, then
+exact pixels/targets pass. Native eight initial/resized row/column nowrap/wrap
+records increase corpus99:88matches/11prior classified differences. Root300×200
+padding L10/R30/T20/B40 means content260×140: column10%=26,row20%=28;
+resized360×250 gives32/38. Source5192/built5193 replay eight new cases plus prior
+grow targets; old target becomes gap, new target hits, nodes stable, errors[],
+cleanup0/0/0, built469private dist inputs and actual worktree760×540catalog.
+Source initial no-iframe failure was real stale editor number-only declarations;
+updated public editor fields, then replay passes. Logs
+`/tmp/pibbl-slice80-{red,padding,padding-green,source,source-fixed,built}.txt`.
+
+Final focused Chromium178passed/1normal-onlyskip; ordinary gap boundary13passed.
+Nested Grid cell actual allocation, shorthand/override and malformed/negative
+inputs included. Packed fresh230installed dist inputs, Bundler/NodeNext percentage
+acceptance and pixel-string type rejection, padded percentage gap resize/target
+and exact disposal pass. Tarball SHA256
+`f5d3064b249da902c459e5cfe80ed10498fea110d6e813bfb0ab22c16ced63fb`.
+Logs `/tmp/pibbl-slice80-{final-focused,normal,final-packed}.txt`.
+Types/lint/JSDoc/format/provenance and documentation109REDmutation probes pass.
+Scoped reused review no material findings. Kernel65383bytes unchanged; no baseline
+rewrite. Node26.9.0, no Node24 aggregate-trust claim. Accurate comparison catalog
+metadata replaces stale five-case wording.
+
+Fixed33 now3complete,12experimental,7partial,10missing,1excluded. Percentage-gap
+entry is experimental; indefinite intrinsic cycles and broader nested owner graph
+still missing. All seven release gates remain open.
+
+## [NEXT] Finite allocated-child percentage padding (slice 81)
+
+Pin native asymmetric physical percentage padding with owner width distinct from
+height. All edges use containing Flex content width. Widen only padding values,
+keep borders numeric and logical edges deferred. Require actual finite allocated
+Flex ownership; pure intrinsic/max-only and other-parent percentage padding remain
+unsupported. Present exact public types, add failing public geometry and box-sizing
+conversion tests before implementation. Resolve once before outer/content box
+conversion, and carry canonical numeric inputs into child paint/hit preparation.
+Use existing comparison source/built and installed consumer for geometry, moved
+targets and teardown. Consolidate79–81 afterward. This does not authorize cyclic
+intrinsic inference, logical padding or percentage borders.
 
 ### Consolidation 24 completed for delivery slices 70–72
 

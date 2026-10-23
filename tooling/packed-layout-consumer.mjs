@@ -95,7 +95,9 @@ export const sized = createElement(Rectangle, { style: { ...box, width: 100, hei
 const invalidBox: BoxStyle = { boxSizing: 'padding-box' };
 const margin: FlexItemStyle = { aspectRatio: 3, alignSelf: 'start', margin: 5, marginTop: -2, marginRight: 3, marginBottom: 4, marginLeft: 6 };
 export const rectangle = createElement(Rectangle, { style: { width: 20, height: 20, ...margin } });
-export const reverseFlex = createElement(Flex, { style: { width: 100, height: 40, flexDirection: 'row-reverse', flexWrap: 'wrap-reverse', justifyContent: 'start', alignItems: 'end', alignContent: 'start' }, children: rectangle });
+// @ts-expect-error Gap strings are percentages, not CSS pixel lengths.
+export const invalidGap = createElement(Flex, { style: { gap: '10px' }, children: rectangle });
+export const reverseFlex = createElement(Flex, { style: { width: 100, height: 40, gap: '10%', rowGap: '20%', columnGap: 5, flexDirection: 'row-reverse', flexWrap: 'wrap-reverse', justifyContent: 'start', alignItems: 'end', alignContent: 'start' }, children: rectangle });
 `);
   for (const resolution of ["Bundler", "NodeNext"]) {
     await writeFile(
@@ -153,6 +155,10 @@ const wrapCanvas=document.createElement('canvas');wrapCanvas.width=200;wrapCanva
 const wrapWidth=signal(200);let wrapHits=0;
 const wrapController=pibblSync(wrapCanvas,createElement(Flex,{style:{width:wrapWidth,height:200,flexWrap:'wrap',columnGap:12,rowGap:10,alignItems:'flex-start',alignContent:'flex-start'},children:[0,1,2].map(index=>createElement(Rectangle,{onClick:()=>{if(index===2)wrapHits++;},style:{width:80,height:'auto',flexBasis:80,flexGrow:1,flexShrink:0,minWidth:0,minHeight:0,aspectRatio:2,fill:'blue'}}))}));
 try{const clickWrap=(y:number)=>{const rect=wrapCanvas.getBoundingClientRect();for(const type of ['mousedown','mouseup','click'])wrapCanvas.dispatchEvent(new MouseEvent(type,{clientX:rect.left+5,clientY:rect.top+y,bubbles:true,button:0}));};await new Promise(resolve=>requestAnimationFrame(resolve));const context=wrapCanvas.getContext('2d')!;if(context.getImageData(5,145,1,1).data[2]!==255)throw Error('installed wrapped ratio initial box');clickWrap(145);wrapWidth.set(172);await new Promise(resolve=>requestAnimationFrame(resolve));if(context.getImageData(5,145,1,1).data[3]!==0||context.getImageData(5,54,1,1).data[2]!==255)throw Error('installed wrapped ratio resized box');clickWrap(145);clickWrap(54);if(wrapHits!==2)throw Error('installed wrapped ratio moved target '+wrapHits);receipt.wrappedAspectRatio=true;}finally{wrapController.dispose();wrapCanvas.remove();}
+const gapCanvas=document.createElement('canvas');gapCanvas.width=400;gapCanvas.height=300;gapCanvas.style.cssText='width:400px;height:300px';document.body.append(gapCanvas);
+const gapWidth=signal(300),gapHeight=signal(200);let gapHits=0;
+const gapController=pibblSync(gapCanvas,createElement(Flex,{style:{boxSizing:'border-box',width:gapWidth,height:gapHeight,padding:{left:10,right:30,top:20,bottom:40},columnGap:'10%',rowGap:'20%',alignItems:'flex-start'},children:[0,1].map(index=>createElement(Rectangle,{onClick:()=>{if(index===1)gapHits++;},style:{width:100,height:30,flexBasis:100,flexGrow:1,flexShrink:0,minWidth:0,fill:index?'blue':'red'}}))}));
+try{const clickGap=(x:number)=>{const rect=gapCanvas.getBoundingClientRect();for(const type of ['mousedown','mouseup','click'])gapCanvas.dispatchEvent(new MouseEvent(type,{clientX:rect.left+x,clientY:rect.top+25,bubbles:true,button:0}));};await new Promise(resolve=>requestAnimationFrame(resolve));const context=gapCanvas.getContext('2d')!;if(context.getImageData(157,25,1,1).data[2]!==255)throw Error('installed percentage gap content reference');clickGap(157);gapWidth.set(360);gapHeight.set(250);await new Promise(resolve=>requestAnimationFrame(resolve));if(context.getImageData(157,25,1,1).data[3]!==0||context.getImageData(190,25,1,1).data[2]!==255)throw Error('installed resized percentage gap');clickGap(157);clickGap(190);if(gapHits!==2)throw Error('installed percentage gap target '+gapHits);receipt.percentageGaps=true;}finally{gapController.dispose();gapCanvas.remove();}
 const controller = pibblSync(document.querySelector('canvas')!, createElement(WasmFlexNestedIntrinsicExample, {}));
 addEventListener('pagehide', () => controller.dispose(), {once:true});`,
   );

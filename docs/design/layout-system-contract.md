@@ -207,6 +207,18 @@ direction, margin collapsing, or baseline alignment.
 | `gap`, `rowGap`, `columnGap` | finite nonnegative numbers; axis values override `gap`; default `0`                                                      |
 | item fields                  | `flexBasis: auto`, `flexGrow: 0`, `flexShrink: 1`, `alignSelf: auto` by default                                          |
 
+Experimental allocated Flex also accepts `Percentage` values for `gap`, `rowGap`
+and `columnGap`. Resolve column gap against actual content width and row gap
+against actual content height, after owner padding/borders; this stays physical
+in column Flex. Shorthand percentages resolve independently on both axes, then
+explicit row/column values override them. Nonnegative finite results are required.
+Numeric behavior remains unchanged and ordinary JavaScript Flex rejects percentage
+gaps. Pure intrinsic/max-only owner measurement reports unsupported rather than
+using a maximum as definite, dropping percentages to zero, or iterating a cycle.
+For outer300×200 with padding L10/R30/T20/B40, content260×140 produces26column-gap
+units from10% and28row-gap units from20%. Native pinned fixtures and the public
+comparison prove nowrap/wrap, resize, target movement and exact ownership.
+
 Basis may be a definite number/percentage or pure measured `auto`. Whenever an
 item can shrink or uses measured/automatic basis, it must declare `minWidth` in
 a row or `minHeight` in a column. Pibbl does not invent the browser's automatic

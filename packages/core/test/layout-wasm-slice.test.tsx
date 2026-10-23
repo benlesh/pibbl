@@ -796,7 +796,8 @@ const mount = createExampleMount(mountModule.WasmYogaMigrationExample);
         maxWidth: !column && capped && index === 0 ? 80 : undefined,
         maxHeight: column && capped && index === 0 ? 30 : undefined,
       } }); });
-      expect(layoutFlex({ x: 0, y: 0, width: fixture.width, height: fixture.height }, children, { flexDirection: fixture.flexDirection as 'row' | 'column' | 'row-reverse' | 'column-reverse', flexWrap: fixture.flexWrap as 'nowrap' | 'wrap' | 'wrap-reverse', alignContent: 'flex-start', alignItems: 'flex-start', gap: fixture.gap, ...(fixture.containerStyle as FlexStyle | undefined) }, measurement)).toEqual(expected);
+      const gapContent = fixture.name.startsWith('gap-percent-') ? {x:10,y:20,width:fixture.width-40,height:fixture.height-60} : {x:0,y:0,width:fixture.width,height:fixture.height};
+      expect(layoutFlex(gapContent, children, { flexDirection: fixture.flexDirection as 'row' | 'column' | 'row-reverse' | 'column-reverse', flexWrap: fixture.flexWrap as 'nowrap' | 'wrap' | 'wrap-reverse', alignContent: 'flex-start', alignItems: 'flex-start', gap: fixture.gap, ...(fixture.containerStyle as FlexStyle | undefined) }, measurement)).toEqual(expected);
       for (const [index,box] of expected.entries()) {
         clickCanvas(canvas,394+box.x,242+box.y); await expect.poll(() => canvas.nextElementSibling?.textContent).toContain(`selected: ${String.fromCharCode(65+index)}`);
       }
@@ -2539,4 +2540,52 @@ it.runIf(experimentalLayout)('publishes coupled wrapped ratio size and moved tar
 it('records pinned wrapped ratio owner pairs for both axes and line directions', () => {
   const names=yogaReference.cases.map(fixture=>fixture.name);
   for(const axis of ['row','column'])for(const reverse of ['', '-reverse'])for(const resized of ['', '-resized'])expect(names).toContain(`aspect-wrap-${axis}${reverse}${resized}`);
+});
+
+for(const axis of ['row','column'] as const)for(const wrap of [false,true]) {
+  it.runIf(experimentalLayout)(`resolves finite ${axis} percentage gaps wrap=${wrap} against physical content axes`,()=>{
+    const column=axis==='column';
+    const children=Array.from({length:wrap?3:2},()=>createElement(Rectangle,{style:{width:column?30:100,height:column?50:30,flexBasis:column?50:100,flexGrow:wrap?0:1,flexShrink:0,minWidth:0,minHeight:0}}));
+    const boxes=layoutFlex({x:0,y:0,width:260,height:140},children,{flexDirection:axis,flexWrap:wrap?'wrap':'nowrap',columnGap:'10%',rowGap:'20%',alignItems:'flex-start',alignContent:'flex-start'},measurement);
+    expect(boxes).toEqual(column ? wrap ? [{x:0,y:0,width:30,height:50},{x:0,y:78,width:30,height:50},{x:56,y:0,width:30,height:50}] : [{x:0,y:0,width:30,height:56},{x:0,y:84,width:30,height:56}] : wrap ? [{x:0,y:0,width:100,height:30},{x:126,y:0,width:100,height:30},{x:0,y:58,width:100,height:30}] : [{x:0,y:0,width:117,height:30},{x:143,y:0,width:117,height:30}]);
+  });
+}
+it.runIf(experimentalLayout)('keeps percentage gap intrinsic cycles unsupported without allocating native resources',()=>{
+  const before=snapshotWasmLayoutDiagnostics();
+  const owner=createElement(Flex,{style:{width:200,flexDirection:'column',gap:'10%'},children:createElement(Rectangle,{style:{width:20,height:20,minHeight:0}})});
+  expect(measureElement(owner,{minWidth:0,maxWidth:200,minHeight:0,maxHeight:100},service)).toMatchObject({status:'unsupported',reason:expect.stringContaining('percentage gap')});
+  const after=snapshotWasmLayoutDiagnostics();expect(after.nodeCreates).toBe(before.nodeCreates);expect(after.activeArenas).toBe(before.activeArenas);
+});
+
+it.runIf(experimentalLayout)('moves percentage-gap targets using padded owner content dimensions without remount',async()=>{
+  const baseline=snapshotWasmLayoutDiagnostics();const width=signal(300),height=signal(200);let hits=0;
+  const canvas=document.createElement('canvas');canvas.width=400;canvas.height=300;document.body.append(canvas);
+  const scene=createElement(Flex,{style:{boxSizing:'border-box',width,height,padding:{left:10,right:30,top:20,bottom:40},rowGap:'20%',columnGap:'10%',alignItems:'flex-start'},children:[0,1].map(index=>createElement(Rectangle,{key:index,onClick:()=>{if(index===1)hits++;},style:{width:100,height:30,flexBasis:100,flexGrow:1,flexShrink:0,minWidth:0,fill:index?'blue':'red'}}))});
+  const controller=pibbl(canvas,scene);controllers.push(controller);await nextFrame();
+  expect([...canvas.getContext('2d')!.getImageData(157,25,1,1).data]).toEqual([0,0,255,255]);clickCanvas(canvas,157,25);expect(hits).toBe(1);
+  const mounted=snapshotWasmLayoutDiagnostics();width.set(360);height.set(250);await nextFrame();
+  expect([...canvas.getContext('2d')!.getImageData(157,25,1,1).data]).toEqual([0,0,0,0]);clickCanvas(canvas,157,25);expect(hits).toBe(1);clickCanvas(canvas,190,25);expect(hits).toBe(2);
+  expect(snapshotWasmLayoutDiagnostics().nodeCreates).toBe(mounted.nodeCreates);expect(snapshotWasmLayoutDiagnostics().solves).toBeGreaterThan(mounted.solves);
+  controller.dispose();const disposed=snapshotWasmLayoutDiagnostics();expect([disposed.activeNodes,disposed.activeArenas,disposed.cachedMeasurements]).toEqual([baseline.activeNodes,baseline.activeArenas,baseline.cachedMeasurements]);
+});
+
+it.runIf(experimentalLayout)('resolves shorthand percentage gaps independently before physical overrides',()=>{
+  const children=[0,1,2].map(()=>createElement(Rectangle,{style:{width:40,height:20,flexBasis:40,flexShrink:0,minWidth:0}}));
+  const box={x:0,y:0,width:100,height:200};
+  expect(layoutFlex(box,children,{gap:'10%',flexWrap:'wrap',alignContent:'flex-start',alignItems:'flex-start'},measurement)).toEqual([{x:0,y:0,width:40,height:20},{x:50,y:0,width:40,height:20},{x:0,y:40,width:40,height:20}]);
+  expect(layoutFlex(box,children,{gap:'10%',rowGap:5,flexWrap:'wrap',alignContent:'flex-start',alignItems:'flex-start'},measurement)[2].y).toBe(25);
+});
+for(const property of ['gap','rowGap','columnGap'] as const)for(const value of ['-10%','NaN%','Infinity%','10px']) {
+  it(`rejects invalid percentage gap ${property}=${value}`,()=>{
+    expect(()=>layoutFlex({x:0,y:0,width:100,height:200},[],{[property]:value} as unknown as FlexStyle,measurement)).toThrow(new RegExp(property));
+  });
+}
+it.runIf(!experimentalLayout)('keeps percentage gaps explicitly unsupported in ordinary JavaScript Flex',()=>{
+  expect(()=>layoutFlex({x:0,y:0,width:100,height:200},[],{gap:'10%'},measurement)).toThrow(/gap/);
+});
+it.runIf(experimentalLayout)('resolves nested percentage gaps from the actual Grid cell content allocation',async()=>{
+  const width=signal(400);let hits=0;const canvas=document.createElement('canvas');canvas.width=500;canvas.height=120;document.body.append(canvas);
+  const scene=createElement(Grid,{style:{width,height:100,gridTemplateColumns:['1fr','1fr'],gridTemplateRows:[100]},children:createElement(Flex,{style:{gridColumnStart:1,gridRowStart:1,padding:10,gap:'10%',alignItems:'flex-start'},children:[0,1].map(index=>createElement(Rectangle,{onClick:()=>{if(index===1)hits++;},style:{width:80,height:20,flexBasis:80,flexGrow:1,flexShrink:0,minWidth:0,fill:index?'blue':'red'}}))})});
+  const controller=pibbl(canvas,scene);controllers.push(controller);await nextFrame();clickCanvas(canvas,112,15);expect(hits).toBe(1);const before=snapshotWasmLayoutDiagnostics();
+  width.set(440);await nextFrame();clickCanvas(canvas,112,15);expect(hits).toBe(1);clickCanvas(canvas,124,15);expect(hits).toBe(2);expect(snapshotWasmLayoutDiagnostics().nodeCreates).toBe(before.nodeCreates);
 });

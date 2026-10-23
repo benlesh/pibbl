@@ -4229,7 +4229,7 @@ const drafts = [
     section: "layout",
     order: 138,
     summary:
-      "Compare five pinned Yoga 3.2.1 references, including direct empty boxes and one content-box padding conversion.",
+      "Compare pinned Yoga 3.2.1 boxes with live Flex allocation, bounds, wrapped aspect ratios and percentage gaps.",
     api: ["Flex", "Rectangle", "signal", "useLayoutBox"],
     objectives: [
       "Make row, shrink, minimum and gap policies explicit when translating a finite Yoga layout.",
@@ -4237,11 +4237,11 @@ const drafts = [
     ],
     prompts: {
       gesture:
-        "Next case + resize cycles five fixtures. Compare sizes and positions on both sides; click the Pibbl panels and direct boxes. Paint only should reuse numeric work.",
+        "Next case + resize cycles recorded fixtures; Next section jumps to percentage bounds, wrapped ratios and percentage gaps. Click Pibbl boxes to compare moved targets. Paint only reuses numeric work.",
       code: "The Yoga reference is pinned to 3.2.1/042f5013152e. The after side uses public Flex fields and explicit minimums, not a compatibility selector.",
     },
     apiNotes: [
-      "Five finite nowrap cases, including one explicit content-box padding conversion; borders are zero and rounding is disabled. Recorded reference is not a live Yoga runtime.",
+      "Finite row/column, reverse/wrap, box bounds, distribution, ratios and percentage gaps; classified differences are labeled. Recorded Yoga is not a live runtime; rounding is disabled.",
       "No parity or production migration claim. Broader geometry, box-model conversion, fonts and WASM packaging remain unfinished.",
     ],
     canvas: { width: 760, height: 540 },

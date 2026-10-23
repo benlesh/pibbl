@@ -6,6 +6,7 @@ import { chromium } from 'playwright';
 const reference = JSON.parse(readFileSync(new URL('./layout-yoga-rehearsal/reference.json', import.meta.url), 'utf8'));
 const base = process.argv[2] ?? 'http://127.0.0.1:5192';
 const built = process.argv.includes('--built');
+const gapOnly = process.argv.includes('--percentage-gaps');
 const aspectOnly = process.argv.includes('--wrapped-aspect');
 const percentageOnly = process.argv.includes('--percentage-bounds');
 const browser = await chromium.launch({ headless: true });
@@ -31,15 +32,16 @@ try {
     } });
     await page.waitForTimeout(240);
   };
-  const cases = aspectOnly ? reference.cases.filter(fixture => fixture.name.startsWith('aspect-wrap-')) : percentageOnly ? reference.cases.filter(fixture => fixture.name.startsWith('percent-')) : reference.cases;
-  if (percentageOnly || aspectOnly) {
+  const cases = gapOnly ? reference.cases.filter(fixture => fixture.name.startsWith('gap-percent-')) : aspectOnly ? reference.cases.filter(fixture => fixture.name.startsWith('aspect-wrap-')) : percentageOnly ? reference.cases.filter(fixture => fixture.name.startsWith('percent-')) : reference.cases;
+  if (percentageOnly || aspectOnly || gapOnly) {
     assert.ok((await frame.locator('pre').innerText()).includes('grow'));
     await click(396,244);
     assert.ok((await frame.locator('pre').innerText()).includes('selected: A'));
     await click(552,244);
     assert.ok((await frame.locator('pre').innerText()).includes('selected: B'));
     await click(520,158);
-    if (aspectOnly) await click(520,158);
+    if (aspectOnly || gapOnly) await click(520,158);
+    if (gapOnly) await click(520,158);
   }
   let previousOwner;
   for (const [index, fixture] of cases.entries()) {
@@ -48,7 +50,7 @@ try {
     assert.ok((await frame.locator('pre').innerText()).includes(fixture.name));
     if (fixture.classification) assert.ok((await frame.locator('pre').innerText()).includes(fixture.comparisonLabel), 'Classified difference must be explicitly labeled');
     const expected = fixture.pibblBoxes ?? fixture.boxes;
-    if ((fixture.name.startsWith('percent-cap-') || fixture.name.startsWith('aspect-wrap-')) && fixture.name.endsWith('-resized')) {
+    if ((fixture.name.startsWith('percent-cap-') || fixture.name.startsWith('aspect-wrap-') || fixture.name.startsWith('gap-percent-')) && fixture.name.endsWith('-resized')) {
       assert.equal(previousOwner.name, fixture.name.replace('-resized',''));
       const resized = await sandbox.evaluate(() => globalThis.__PIBBL_LAYOUT_DIAGNOSTICS__());
       assert.ok(resized.solves > previousOwner.layout.solves);
@@ -58,15 +60,16 @@ try {
       await click(396 + expected[0].x,244 + expected[0].y);
       assert.ok((await frame.locator('pre').innerText()).includes('selected: A'));
       const aspect = fixture.name.startsWith('aspect-wrap-');
+      const percentageGap = fixture.name.startsWith('gap-percent-');
       const oldCross = fixture.flexWrap === 'wrap-reverse' ? 45 : 145;
-      await click(aspect ? column ? 392 + oldCross : 396 : column ? 396 : 458, aspect ? column ? 244 : 240 + oldCross : column ? 306 : 244);
+      await click(percentageGap ? 396 + previousOwner.boxes[1].x : aspect ? column ? 392 + oldCross : 396 : column ? 396 : 458, percentageGap ? 244 + previousOwner.boxes[1].y : aspect ? column ? 244 : 240 + oldCross : column ? 306 : 244);
       assert.ok((await frame.locator('pre').innerText()).includes('selected: A'), 'Former target must become a gap after owner resize');
     }
     for (const [index, box] of expected.entries()) {
       await click(392 + box.x + 4, 240 + box.y + 4);
       assert.ok((await frame.locator('pre').innerText()).includes(`selected: ${String.fromCharCode(65+index)}`), `${fixture.name}: target ${index}; ${(await frame.locator('pre').innerText()).slice(-350)}`);
     }
-    if ((fixture.name.startsWith('percent-cap-') || fixture.name.startsWith('aspect-wrap-')) && !fixture.name.endsWith('-resized')) previousOwner = {name:fixture.name,layout:await sandbox.evaluate(() => globalThis.__PIBBL_LAYOUT_DIAGNOSTICS__())};
+    if ((fixture.name.startsWith('percent-cap-') || fixture.name.startsWith('aspect-wrap-') || fixture.name.startsWith('gap-percent-')) && !fixture.name.endsWith('-resized')) previousOwner = {name:fixture.name,boxes:expected,layout:await sandbox.evaluate(() => globalThis.__PIBBL_LAYOUT_DIAGNOSTICS__())};
   }
   assert.ok(catalogUrls.length > 0, 'Studio replay must observe its actual catalog source');
   let catalogSurface;

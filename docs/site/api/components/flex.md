@@ -126,3 +126,11 @@ percentage-dependent owners remain unsupported. In the
 [nested-column example](#/examples/layout/wasm-flex-nested-intrinsic), toggle
 50% paragraph cap and Toggle width; the following box and its click target move
 together.
+
+In experimental allocated Flex, `gap`, `rowGap`, and `columnGap` also accept
+percentages. `columnGap: "10%"` uses content width; `rowGap: "20%"` uses content
+height, regardless of Flex direction. `gap: "10%"` resolves separately on each
+axis before specific values override it. Owner padding and borders are excluded
+from the percentage reference. Intrinsic/max-only owners remain unsupported.
+In the [comparison example](#/examples/layout/wasm-yoga-migration), click Next
+section three times to inspect the pinned percentage-gap resize cases.

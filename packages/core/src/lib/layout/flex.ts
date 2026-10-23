@@ -28,6 +28,7 @@ import { resolveLength } from '../style/resolve-length.js';
 import { setPreNormalizedStyle, peekPreNormalizedStyle } from '../style/resolve-dispatch.js';
 import type {
   BoxStyle,
+  Percentage,
   FlexItemStyle,
   LayoutItemStyle,
   ResolvedBoxStyle,
@@ -88,12 +89,12 @@ export interface FlexStyle extends BoxStyle, LayoutItemStyle {
    * {@link CrossAlignment}, {@link MainAlignment}.
    */
   alignContent?: CrossAlignment | MainAlignment | 'start' | 'end';
-  /** Spacing between adjacent items. See {@link FlexStyle}. */
-  gap?: number;
-  /** Space between adjacent rows or items on the row axis. See {@link FlexStyle}. */
-  rowGap?: number;
-  /** Space between adjacent columns or items on the column axis. See {@link FlexStyle}. */
-  columnGap?: number;
+  /** Numeric spacing, or experimental allocated-axis percentages. See {@link Percentage}, {@link FlexStyle}. */
+  gap?: number | Percentage;
+  /** Physical row spacing; experimental percentages use content height. See {@link Percentage}, {@link FlexStyle}. */
+  rowGap?: number | Percentage;
+  /** Physical column spacing; experimental percentages use content width. See {@link Percentage}, {@link FlexStyle}. */
+  columnGap?: number | Percentage;
 }
 
 /**
@@ -282,11 +283,10 @@ export const Flex = definePrimitive<
   ResolvedFlexStyle
 >(renderFlex, {
   childInput: 'structural',
-  resolveStyle: (style, context) => ({
-    box: resolveContainerBox(style, context, 'Flex', 'flex'),
-    overflow: style.overflow ?? 'visible',
-    ...normalizeFlexOptions(style, context.allocation),
-  }),
+  resolveStyle: (style, context) => {
+    const box = resolveContainerBox(style, context, 'Flex', 'flex');
+    return { box, overflow: style.overflow ?? 'visible', ...normalizeFlexOptions(style, box.contentBox) };
+  },
   measure: input => measureFlex(input),
 });
 
@@ -371,6 +371,7 @@ function measureFlex(
   if ((input.style.flexWrap ?? 'nowrap') !== 'nowrap') {
     return unsupportedIntrinsic('requires nowrap because wrapped intrinsic sizing is deferred');
   }
+  if (isPercentage(input.style.gap) || isPercentage(input.style.rowGap) || isPercentage(input.style.columnGap)) return unsupportedIntrinsic('does not support percentage gaps without an actual finite content allocation');
   const row = isRowDirection(input.style.flexDirection);
   const diagnosticBox = {
     x: 0,
@@ -1301,15 +1302,17 @@ function normalizeFlexOptions(
     'alignContent',
     container,
   );
-  const gap = nonnegativeGap(style.gap ?? 0, 'gap', container);
+  const gap = style.gap ?? 0;
+  const columnGap = nonnegativeGap(gap, 'gap', container, container.width);
+  const rowGap = typeof gap === 'number' ? columnGap : nonnegativeGap(gap, 'gap', container, container.height);
   return {
     flexDirection: flexDirection as FlexDirection,
     flexWrap: flexWrap as FlexWrap,
     justifyContent: justifyContent as MainAlignment,
     alignItems: alignItems as CrossAlignment,
     alignContent: alignContent as CrossAlignment | MainAlignment,
-    rowGap: nonnegativeGap(style.rowGap ?? gap, 'rowGap', container),
-    columnGap: nonnegativeGap(style.columnGap ?? gap, 'columnGap', container),
+    rowGap: style.rowGap === undefined ? rowGap : nonnegativeGap(style.rowGap, 'rowGap', container, container.height),
+    columnGap: style.columnGap === undefined ? columnGap : nonnegativeGap(style.columnGap, 'columnGap', container, container.width),
   };
 }
 
@@ -1327,11 +1330,15 @@ function nonnegativeGap(
   value: unknown,
   property: string,
   container: Readonly<LayoutBox>,
+  reference: number,
 ): number {
-  if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) {
+  const resolved = experimentalLayout && isPercentage(value)
+    ? resolveLength(value as Percentage, reference, property, { component: 'Flex', algorithm: 'flex', constraints: constraintsFor(container) })
+    : value;
+  if (typeof resolved !== 'number' || !Number.isFinite(resolved) || resolved < 0) {
     throw optionDiagnostic(property, value, container);
   }
-  return value;
+  return resolved;
 }
 
 function nonnegativeFactor(

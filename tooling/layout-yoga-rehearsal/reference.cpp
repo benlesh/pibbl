@@ -90,6 +90,78 @@ static void wrappedAspectCases() {
     std::cout<<"]}";YGNodeFreeRecursive(root);YGConfigFree(config);
   }
 }
+static void percentageGapCases() {
+  for (int axis = 0; axis < 2; ++axis) {
+    const bool column = axis == 1;
+    for (int wrapIndex = 0; wrapIndex < 2; ++wrapIndex) {
+      const bool wrap = wrapIndex == 1;
+      for (int resizeIndex = 0; resizeIndex < 2; ++resizeIndex) {
+        const bool resized = resizeIndex == 1;
+        const float width = resized ? 360 : 300;
+        const float height = resized ? 250 : 200;
+        auto config = YGConfigNew();
+        YGConfigSetUseWebDefaults(config, false);
+        YGConfigSetPointScaleFactor(config, 0);
+        YGConfigSetErrata(config, YGErrataNone);
+        auto root = YGNodeNewWithConfig(config);
+        YGNodeStyleSetBoxSizing(root, YGBoxSizingBorderBox);
+        YGNodeStyleSetWidth(root, width);
+        YGNodeStyleSetHeight(root, height);
+        YGNodeStyleSetFlexDirection(root, column ? YGFlexDirectionColumn : YGFlexDirectionRow);
+        YGNodeStyleSetFlexWrap(root, wrap ? YGWrapWrap : YGWrapNoWrap);
+        YGNodeStyleSetAlignItems(root, YGAlignFlexStart);
+        YGNodeStyleSetAlignContent(root, YGAlignFlexStart);
+        YGNodeStyleSetPadding(root, YGEdgeLeft, 10);
+        YGNodeStyleSetPadding(root, YGEdgeRight, 30);
+        YGNodeStyleSetPadding(root, YGEdgeTop, 20);
+        YGNodeStyleSetPadding(root, YGEdgeBottom, 40);
+        YGNodeStyleSetGapPercent(root, YGGutterColumn, 10);
+        YGNodeStyleSetGapPercent(root, YGGutterRow, 20);
+        const int count = wrap ? 3 : 2;
+        for (int item = 0; item < count; ++item) {
+          auto child = YGNodeNewWithConfig(config);
+          YGNodeStyleSetWidth(child, column ? 30 : 100);
+          YGNodeStyleSetHeight(child, column ? 50 : 30);
+          YGNodeStyleSetFlexBasis(child, column ? 50 : 100);
+          YGNodeStyleSetFlexGrow(child, wrap ? 0 : 1);
+          YGNodeStyleSetFlexShrink(child, 0);
+          YGNodeStyleSetMinWidth(child, 0);
+          YGNodeStyleSetMinHeight(child, 0);
+          YGNodeInsertChild(root, child, item);
+        }
+        YGNodeCalculateLayout(root, YGUndefined, YGUndefined, YGDirectionLTR);
+        std::cout << ",{\"name\":\"gap-percent-" << (column ? "column" : "row")
+                  << '-' << (wrap ? "wrap" : "nowrap") << (resized ? "-resized" : "")
+                  << "\",\"width\":" << width << ",\"height\":" << height
+                  << ",\"gap\":0,\"flexDirection\":\"" << (column ? "column" : "row")
+                  << "\",\"flexWrap\":\"" << (wrap ? "wrap" : "nowrap")
+                  << "\",\"containerStyle\":{\"boxSizing\":\"border-box\",\"padding\":{\"left\":10,\"right\":30,\"top\":20,\"bottom\":40},\"alignContent\":\"flex-start\",\"alignItems\":\"flex-start\",\"rowGap\":\"20%\",\"columnGap\":\"10%\"},\"boxes\":[";
+        for (int item = 0; item < count; ++item) {
+          if (item) std::cout << ',';
+          auto child = YGNodeGetChild(root, item);
+          std::cout << "{\"x\":" << YGNodeLayoutGetLeft(child)
+                    << ",\"y\":" << YGNodeLayoutGetTop(child)
+                    << ",\"width\":" << YGNodeLayoutGetWidth(child)
+                    << ",\"height\":" << YGNodeLayoutGetHeight(child) << '}';
+        }
+        std::cout << "],\"itemStyles\":[";
+        for (int item = 0; item < count; ++item) {
+          if (item) std::cout << ',';
+          std::cout << "{\"width\":" << (column ? 30 : 100)
+                    << ",\"height\":" << (column ? 50 : 30)
+                    << ",\"flexBasis\":" << (column ? 50 : 100)
+                    << ",\"flexGrow\":" << (wrap ? 0 : 1)
+                    << ",\"flexShrink\":0,\"minWidth\":0,\"minHeight\":0}";
+        }
+        std::cout << "]}";
+        YGNodeFreeRecursive(root);
+        YGConfigFree(config);
+      }
+    }
+  }
+}
+
+
 int main() {
   const char* names[] = {"grow", "cap", "shrink", "rectangle-shrink", "rectangle-percent-content-box", "column-grow", "column-cap", "column-shrink", "row-reverse-cap", "column-reverse-cap", "row-wrap", "row-wrap-reverse", "border-box-floor-bounds", "border-box-percentage", "border-box-asymmetric-row", "border-box-asymmetric-column", "zero-fractional-grow", "fractional-shrink", "grow-freeze-release", "shrink-freeze-release", "large-finite-differential", "subunit-zero-grow", "subunit-shrink-policy", "initial-freeze-grow-policy", "initial-freeze-shrink-policy"};
   std::cout << "[";
@@ -204,5 +276,6 @@ int main() {
   distributionCases();
   percentageBoundsCases();
   wrappedAspectCases();
+  percentageGapCases();
   std::cout << "]\n";
 }
