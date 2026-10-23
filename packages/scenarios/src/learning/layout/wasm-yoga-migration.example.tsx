@@ -316,6 +316,7 @@ function createWasmYogaMigrationExampleContent(canvas: HTMLCanvasElement, fixtur
     const absoluteDerivedSizeFixture = fixture.absoluteDerivedSizeFixture === true;
     const nestedContainingBlockFixture = fixture.nestedContainingBlockFixture === true;
     const nestedContainingBlockDirectionFixture = fixture.nestedContainingBlockDirectionFixture === true;
+    const containingOwnerStyle = nestedContainingBlockFixture || nestedContainingBlockDirectionFixture ? requireFixtureValue(fixture.nestedOwnerStyle, "nestedOwnerStyle") : undefined;
     const absoluteBoundsFixture = fixture.absoluteBoundsFixture === true;
     const absoluteAspectFixture = fixture.absoluteAspectFixture === true;
     const absoluteMeasuredWidthFixture = fixture.absoluteMeasuredWidthFixture === true;
@@ -408,7 +409,23 @@ function createWasmYogaMigrationExampleContent(canvas: HTMLCanvasElement, fixtur
           }}
         >
           {nestedContainingBlockFixture || nestedContainingBlockDirectionFixture ? <>
-            <Flex key="owner" style={requireFixtureValue(fixture.nestedOwnerStyle, "nestedOwnerStyle")}>
+            <Flex key="owner" style={{
+              position: containingOwnerStyle?.position,
+              width: containingOwnerStyle?.width,
+              height: containingOwnerStyle?.height,
+              minWidth: containingOwnerStyle?.minWidth,
+              maxWidth: containingOwnerStyle?.maxWidth,
+              minHeight: containingOwnerStyle?.minHeight,
+              maxHeight: containingOwnerStyle?.maxHeight,
+              flexDirection: containingOwnerStyle?.flexDirection,
+              flexWrap: containingOwnerStyle?.flexWrap,
+              flexBasis: containingOwnerStyle?.flexBasis,
+              flexGrow: containingOwnerStyle?.flexGrow,
+              flexShrink: containingOwnerStyle?.flexShrink,
+              alignItems: containingOwnerStyle?.alignItems,
+              marginLeft: containingOwnerStyle?.marginLeft,
+              marginTop: containingOwnerStyle?.marginTop,
+            }}>
               <Panel key="background" name="A" style={{width:"100%",height:"100%",minWidth:0,minHeight:0,flexShrink:0}} />
               <Panel key="absolute" name="ABS" style={requireFixtureValue(fixture.nestedItemStyles, "nestedItemStyles")[0]} />
             </Flex>

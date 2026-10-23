@@ -24,15 +24,15 @@ symbols:
     GridProps,
     GridStyle,
     GridTrack,
+    IntrinsicAxisConstraints,
+    IntrinsicConstraints,
+    IntrinsicMeasureInput,
+    IntrinsicSizesResult,
     LayoutBox,
     LayoutDiagnosticContext,
     LayoutDiagnosticInput,
     LayoutItemStyle,
     Length,
-    IntrinsicAxisConstraints,
-    IntrinsicConstraints,
-    IntrinsicMeasureInput,
-    IntrinsicSizesResult,
     MeasureInput,
     MeasureResult,
     OverlayStyle,
@@ -191,96 +191,6 @@ auto-placement and advanced intrinsic sizing are not supported.
 
 `GridTrack` describes one explicit Grid track in Pibbl's supported subset.
 
-## LayoutBox
-
-`LayoutBox` is the stable readonly child-local allocation available during
-render through `useLayoutBox`.
-
-## LayoutDiagnosticContext
-
-`LayoutDiagnosticContext` carries component and algorithm context for a public
-layout/style validation failure.
-
-## LayoutDiagnosticInput
-
-`LayoutDiagnosticInput` is the structured public input accepted by
-`layoutDiagnostic` to identify property, supplied value, and optional
-constraints.
-
-## LayoutItemStyle
-
-`LayoutItemStyle` is the shared direct-child participation vocabulary for
-Absolute, Overlay, Flex, and Grid parents.
-
-## Length
-
-`Length` is Pibbl's public numeric/percentage/`"auto"` length vocabulary.
-Resolution requires a definite percentage basis when a percentage is used.
-
-## MeasureInput
-
-`MeasureInput` describes an opt-in primitive's pure measurement request.
-
-## MeasureResult
-
-`MeasureResult` is the result of `measureElement` and distinguishes supported
-measurement from an unsupported primitive capability.
-
-## OverlayStyle
-
-`OverlayStyle` is the declared shared-allocation style for `Overlay` children.
-
-## Percentage
-
-`Percentage` is the public percentage-length form. It resolves only against a
-definite nonnegative reference dimension.
-
-## ResolvedBoxStyle
-
-`ResolvedBoxStyle` is the finite box result with its resolved border/content
-geometry after box-style validation.
-
-## Size
-
-`Size` is the finite width/height record used by layout and measurement.
-
-`style.borderWidth` reserves finite nonnegative layout insets, using a number or
-physical `{ top, right, bottom, left }` edges. It defaults to zero and does not
-paint. Padding and borders combine once: content-box40×30 with padding10 and
-borderWidth2 occupies64×54; border-box64×54 preserves40×30 content.
-`strokeWidth` remains independent paint. Percentage/logical border aliases are
-not supported. Layer raster sizing retains its separate width/height policy.
-
-Flex alignment values include `start` and `end` on `FlexStyle.justifyContent`,
-`alignItems`, `alignContent`, and `FlexItemStyle.alignSelf`. These keep their
-physical LTR edges under experimental main/cross reversal; `flex-start` and
-`flex-end` follow the reversed Flex axes. Experimental `FlexStyle.layoutDirection?: "ltr" | "rtl"` inherits through layout contexts and Layers, defaults to LTR at a root, and permits explicit LTR override. RTL mirrors row main and column cross placement; logical margin and padding edges are specified below; logical borders remain unsupported.
-
-`LayoutItemStyle.marginStart` and `.marginEnd`, also included in `FlexItemStyle`,
-are `number | Percentage` in experimental Flex. They map through inherited
-direction, or a child Flex’s explicit direction. Logical edges override physical
-edges and the uniform `margin` shorthand; zero is explicit and property order
-does not matter. Signed percentages use the containing Flex content width.
-Other layout families and normal JavaScript Flex reject these margins.
-
-`BoxStyle.paddingStart` and `.paddingEnd` are nonnegative `number | Percentage`
-values in experimental box layout. They override the mapped physical `padding`
-edge, including zero, independently of property order. Direction is inherited or
-comes from a child Flex’s explicit `layoutDirection`. Percentage reference is the
-containing Flex content width; raw/intrinsic percentages remain unsupported.
-Layer raster sizing keeps its separate padding-independent policy. Explore
-[logical padding](#/examples/layout/wasm-logical-padding).
-
-Experimental `BoxStyle.borderStartWidth?: number` and `borderEndWidth?: number`
-map through the receiving box’s direction and override the corresponding physical
-`borderWidth` edge, including zero, independently of declaration order. Values
-must be finite nonnegative numbers; percentages are unsupported. A child Flex’s
-explicit direction overrides inheritance. Allocation canonicalizes logical widths
-before content-box/border-box conversion and inset floors. These widths reserve
-layout space; painted strokes remain independent. Layer’s own raster dimensions
-and child origin retain their existing physical-border behavior. Raw logical
-border inputs remain ineligible for frozen allocation caching.
-
 ## IntrinsicAxisConstraints
 
 One available axis is `{ kind: "bounded", min, max }` or
@@ -399,3 +309,93 @@ Direct generic visible Text additionally supports automatic height at declared
 width, unwrapped natural width at declared height, or unwrapped both-auto ink
 dimensions without opposing pairs or aspect. Canvas ink metrics supply dimensions;
 final content alignment or physical insets place them after independent bounds.
+
+## LayoutBox
+
+`LayoutBox` is the stable readonly child-local allocation available during
+render through `useLayoutBox`.
+
+## LayoutDiagnosticContext
+
+`LayoutDiagnosticContext` carries component and algorithm context for a public
+layout/style validation failure.
+
+## LayoutDiagnosticInput
+
+`LayoutDiagnosticInput` is the structured public input accepted by
+`layoutDiagnostic` to identify property, supplied value, and optional
+constraints.
+
+## LayoutItemStyle
+
+`LayoutItemStyle` is the shared direct-child participation vocabulary for
+Absolute, Overlay, Flex, and Grid parents.
+
+## Length
+
+`Length` is Pibbl's public numeric/percentage/`"auto"` length vocabulary.
+Resolution requires a definite percentage basis when a percentage is used.
+
+## MeasureInput
+
+`MeasureInput` describes an opt-in primitive's pure measurement request.
+
+## MeasureResult
+
+`MeasureResult` is the result of `measureElement` and distinguishes supported
+measurement from an unsupported primitive capability.
+
+## OverlayStyle
+
+`OverlayStyle` is the declared shared-allocation style for `Overlay` children.
+
+## Percentage
+
+`Percentage` is the public percentage-length form. It resolves only against a
+definite nonnegative reference dimension.
+
+## ResolvedBoxStyle
+
+`ResolvedBoxStyle` is the finite box result with its resolved border/content
+geometry after box-style validation.
+
+## Size
+
+`Size` is the finite width/height record used by layout and measurement.
+
+`style.borderWidth` reserves finite nonnegative layout insets, using a number or
+physical `{ top, right, bottom, left }` edges. It defaults to zero and does not
+paint. Padding and borders combine once: content-box40×30 with padding10 and
+borderWidth2 occupies64×54; border-box64×54 preserves40×30 content.
+`strokeWidth` remains independent paint. Percentage/logical border aliases are
+not supported. Layer raster sizing retains its separate width/height policy.
+
+Flex alignment values include `start` and `end` on `FlexStyle.justifyContent`,
+`alignItems`, `alignContent`, and `FlexItemStyle.alignSelf`. These keep their
+physical LTR edges under experimental main/cross reversal; `flex-start` and
+`flex-end` follow the reversed Flex axes. Experimental `FlexStyle.layoutDirection?: "ltr" | "rtl"` inherits through layout contexts and Layers, defaults to LTR at a root, and permits explicit LTR override. RTL mirrors row main and column cross placement; logical margin and padding edges are specified below; logical borders remain unsupported.
+
+`LayoutItemStyle.marginStart` and `.marginEnd`, also included in `FlexItemStyle`,
+are `number | Percentage` in experimental Flex. They map through inherited
+direction, or a child Flex’s explicit direction. Logical edges override physical
+edges and the uniform `margin` shorthand; zero is explicit and property order
+does not matter. Signed percentages use the containing Flex content width.
+Other layout families and normal JavaScript Flex reject these margins.
+
+`BoxStyle.paddingStart` and `.paddingEnd` are nonnegative `number | Percentage`
+values in experimental box layout. They override the mapped physical `padding`
+edge, including zero, independently of property order. Direction is inherited or
+comes from a child Flex’s explicit `layoutDirection`. Percentage reference is the
+containing Flex content width; raw/intrinsic percentages remain unsupported.
+Layer raster sizing keeps its separate padding-independent policy. Explore
+[logical padding](#/examples/layout/wasm-logical-padding).
+
+Experimental `BoxStyle.borderStartWidth?: number` and `borderEndWidth?: number`
+map through the receiving box’s direction and override the corresponding physical
+`borderWidth` edge, including zero, independently of declaration order. Values
+must be finite nonnegative numbers; percentages are unsupported. A child Flex’s
+explicit direction overrides inheritance. Allocation canonicalizes logical widths
+before content-box/border-box conversion and inset floors. These widths reserve
+layout space; painted strokes remain independent. Layer’s own raster dimensions
+and child origin retain their existing physical-border behavior. Raw logical
+border inputs remain ineligible for frozen allocation caching.

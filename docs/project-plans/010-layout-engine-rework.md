@@ -2,8 +2,26 @@
 
 ## Current checkpoint and single next slice — 2026-10-23
 
+Public lesson companion for142–144: physical percentage placement combines
+natural-height wrapping Text, a toggled static/relative card and an absolute
+badge. Source: `http://127.0.0.1:5192/#/examples/layout/wasm-flex-percent-placement`;
+built: `http://127.0.0.1:5193/#/examples/layout/wasm-flex-percent-placement`.
+Resize the cards, toggle the relative offset, and click the green card/red badge.
+Fresh Node26.9.0/Chromium checks passed one focused browser test (414 skipped),
+source and built geometry/pixels, Text reflow from11 to12 draw lines, both click
+targets, and cleanup counters `[0,0,0]`; built proof used469 dist inputs.
+Typecheck, changed-code lint, catalog (170 lessons/12 snapshots/33 labs), and
+Studio documentation checks passed. This companion repairs missing Studio
+positioning declarations and strict inline authoring for the older containing
+owner. Layout type headings/frontmatter now follow the required alphabetical
+order. The comparison driver checks the actual `grow` flow gap per fixture and
+navigates the containing-direction section rather than the newer Latest proof.
+No new runtime behavior, capability promotion, or aggregate Node24 trust claim.
+Slice145 remains the next runtime slice; its percentage-size public tests have
+failed against the current numeric-only admission before production changes.
+
 Latest delivery is slice144 `ced23362` (physical percentage static/relative insets).
-Consolidation48 is this commit for142–144.
+Consolidation48 is `70b2a85e` for142–144.
 Slice143 is `f644de8c` (physical percentage absolute insets).
 Slice142 is `357167b2` (wrapped absolute omitted-axis alignment).
 Slice141 is `187bec28` (static/relative primitive leaves across wrapped Flex).

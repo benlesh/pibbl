@@ -5147,3 +5147,28 @@ it.runIf(experimentalLayout)('tracks a paired finite-column provider content sig
   const disposed = snapshotWasmLayoutDiagnostics();
   expect([disposed.activeNodes, disposed.activeArenas, disposed.cachedMeasurements]).toEqual([baseline.activeNodes, baseline.activeArenas, baseline.cachedMeasurements]);
 });
+
+it.runIf(experimentalLayout)('keeps the public percentage placement lesson responsive and targetable', async () => {
+  const scenario = await import('../../scenarios/src/learning/layout/wasm-flex-percent-placement.example');
+  const mount = createExampleMount(scenario.WasmFlexPercentPlacementExample);
+  const canvas = document.createElement('canvas'); canvas.width = 760; canvas.height = 460; document.body.append(canvas);
+  const controller = mount(canvas); controllers.push(controller); await nextFrame();
+  const read = () => JSON.parse(canvas.nextElementSibling!.textContent!);
+  await expect.poll(() => canvas.nextElementSibling?.textContent).toContain('"relative":true');
+  await expect.poll(() => read().boxes.relative).toBeDefined();
+  const initial = read(), moved = initial.boxes.relative, badge = initial.boxes.badge;
+  expect(moved.x).toBeCloseTo(262.8); expect(moved.y).toBeCloseTo(220);
+  expect(badge.x).toBeCloseTo(382); expect(badge.y).toBeCloseTo(338);
+  const pixel = canvas.getContext('2d')!.getImageData(Math.ceil(moved.x) + 4, Math.ceil(moved.y) + 4, 1, 1).data;
+  expect([...pixel]).toEqual([214, 227, 219, 255]);
+  clickCanvas(canvas, moved.x + 4, moved.y + 4); await expect.poll(() => canvas.nextElementSibling?.textContent).toContain('"selected":"relative"');
+  clickCanvas(canvas, 236, 118); await expect.poll(() => canvas.nextElementSibling?.textContent).toContain('"relative":false');
+  const staticBox = read().boxes.relative;
+  expect(staticBox.x).toBeCloseTo(216); expect(staticBox.y).toBeCloseTo(180);
+  clickCanvas(canvas, 40, 118); await expect.poll(() => canvas.nextElementSibling?.textContent).toContain('"width":360');
+  const narrow = read();
+  expect(narrow.boxes.badge.x).toBeCloseTo(256); expect(narrow.boxes.badge.y).toBeCloseTo(338);
+  clickCanvas(canvas, narrow.boxes.badge.x + 4, narrow.boxes.badge.y + 4);
+  await expect.poll(() => canvas.nextElementSibling?.textContent).toContain('"selected":"badge"');
+  expect(narrow.units).toContain('content width / content height');
+});

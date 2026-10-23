@@ -4251,6 +4251,34 @@ const drafts = [
     load: () => import("./learning/layout/wasm-yoga-migration.example"),
   },
   {
+    slug: "wasm-flex-percent-placement",
+    title: "Experimental physical percent placement",
+    shortTitle: "WASM percent placement",
+    section: "layout",
+    order: 12014,
+    summary:
+      "A responsive wrapped card row keeps direct Text natural height while relative and absolute percentage placement use their documented physical boxes.",
+    api: ["Flex", "Rectangle", "Text", "signal", "useLayoutBox"],
+    objectives: [
+      "Resize a finite wrapped card row and observe final-width Text reflow.",
+      "Compare a relative content-box percentage offset with an absolute padding-box percentage badge.",
+    ],
+    prompts: {
+      gesture:
+        "Resize cards, toggle the green card's relative offset, then click the green card and the red badge.",
+      code: "The direct Text leaves use natural height. The relative card and absolute badge use the same public physical inset fields with different documented reference boxes.",
+    },
+    apiNotes: [
+      "Experimental finite Flex only. Relative percentages resolve against the parent content box; absolute percentages resolve against the selected padding box.",
+      "This is a runnable composition, not CSS parity: nested positioning owners, logical insets, and normal JavaScript experimental layout remain outside the lesson.",
+    ],
+    canvas: { width: 760, height: 460 },
+    related: ["wasm-yoga-migration", "wasm-flex-wrap", "flex"],
+
+    exportName: "WasmFlexPercentPlacementExample",
+    load: () => import("./learning/layout/wasm-flex-percent-placement.example"),
+  },
+  {
     slug: "wasm-built-lifecycle",
     title: "Experimental built consumer lifecycle",
     shortTitle: "WASM built lifecycle",

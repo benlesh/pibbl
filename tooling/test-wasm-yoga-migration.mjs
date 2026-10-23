@@ -152,7 +152,12 @@ try {
   else if (absoluteTextWidthOnly) { await clearTextCrossAutoDraws(); await click(650, 158); }
   else if (absoluteTextHeightOnly) { await clearTextCrossAutoDraws(); await click(650, 158); }
   else if (absoluteWrappedRowOnly) { await click(650, 158); }
-  else if (containingBlockDirectionOnly) { await click(650, 158); }
+  else if (containingBlockDirectionOnly) {
+    for (let section = 0; section < availableCases.length; section++) {
+      if ((await frame.locator('pre').innerText()).includes(` · ${cases[0].name} ·`)) break;
+      await click(520, 158);
+    }
+  }
   else if (absoluteMeasuredMainOnly) { await click(650, 158); }
   else if (absoluteMainAspectOnly) { await click(650, 158); }
   else if (absoluteMainBoundsOnly) { await click(650, 158); }
@@ -731,6 +736,11 @@ try {
       await click(392 + box.x + 4, 240 + box.y + 4);
       assert.ok((await frame.locator('pre').innerText()).includes(`selected: ${String.fromCharCode(65+index)}`), `${fixture.name}: target ${index}; ${(await frame.locator('pre').innerText()).slice(-350)}`);
     }
+    if (fixture.name === 'grow') {
+      assert.deepEqual(expected, [{ x: 0, y: 0, width: 144, height: 80 }, { x: 156, y: 0, width: 144, height: 80 }]);
+      await click(542, 244);
+      assert.ok((await frame.locator('pre').innerText()).includes('selected: B'), 'grow: the gap preserves the previously selected second card');
+    }
     if ((fixture.name.startsWith('percent-cap-') || fixture.name.startsWith('aspect-wrap-') || fixture.name.startsWith('gap-percent-') || fixture.name.startsWith('padding-percent-') || fixture.name.startsWith('cross-percent-') || fixture.name.startsWith('margin-percent-')) && !fixture.name.endsWith('-resized')) previousOwner = {name:fixture.name,boxes:expected,layout:await sandbox.evaluate(() => globalThis.__PIBBL_LAYOUT_DIAGNOSTICS__())};
   }
   if (customColumnMeasureOnly) {
@@ -778,15 +788,6 @@ try {
       assert.deepEqual(catalogSurface, {width:760,height:540}, 'Served surface metadata must match the public example');
     }
     assert.ok((await frame.locator('pre').innerText()).includes('fixture count: 5'), 'public lesson must not embed the exhaustive corpus');
-  }
-  // Source-formed lines and reversed placement retain identities; gaps miss.
-  const last = cases.at(-1);
-  const lastBoxes = last.pibblBoxes ?? last.boxes;
-  const column = last.flexDirection.startsWith('column');
-  if (!relativePercentageOnly && !absolutePercentageOnly && !relativeWrappedDirectionOnly && !absoluteWrappedAlignmentOnly && !absoluteAnchoredWrapOnly && !absoluteTextBothOnly && !absoluteTextWidthOnly && !absoluteTextHeightOnly && !absoluteWrappedRowOnly && !containingBlockDirectionOnly && !absoluteMeasuredOnly && !absoluteMeasuredHeightOnly && !absoluteMeasuredMainOnly && !absoluteMainDirectionOnly && !absoluteMainBoundsOnly && !absoluteMainAspectOnly && !relativeMainDirectionOnly && !absoluteAspectOnly && !absoluteBoundsOnly && !containingBlockOnly && !absoluteDerivedOnly && !absoluteAlignmentOnly && !absoluteParticipationOnly && !relativePositionOnly && !decoratedRelativePositionOnly && !roundingOnly && !nestedCrossMinOnly && !nestedDecoratedCrossMinOnly && !nestedDecoratedCrossMaxOnly && !nestedDecoratedColumnCrossMaxOnly && !nestedDecoratedColumnCrossMinOnly && !customColumnMeasureOnly && !last.directionMatrixFixture && last.gap > 0) {
-  const gap = column ? Math.min(...lastBoxes.map(box => box.y + box.height)) + 6 : Math.min(...lastBoxes.map(box => box.x + box.width)) + 6;
-  await click(column ? 396+lastBoxes[0].x : 392+gap, column ? 240+gap : 244+lastBoxes[0].y);
-  assert.ok((await frame.locator('pre').innerText()).includes(`selected: ${String.fromCharCode(64+lastBoxes.length)}`));
   }
   if (process.argv.includes('--screenshot')) await frame.locator('canvas').screenshot({ path: '/tmp/pibbl-yoga-comparison.png' });
   const proof = publicConcise ? await sandbox.evaluate(() => globalThis.__PIBBL_BUILT_LAYOUT_PROOF__) : privateProof;
