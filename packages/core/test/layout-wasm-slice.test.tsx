@@ -3385,15 +3385,18 @@ it.runIf(experimentalLayout)('renders, targets, and releases every pinned public
     readonly flexWrap: 'wrap' | 'wrap-reverse';
     readonly layoutDirection: 'ltr' | 'rtl';
     readonly containerStyle: FlexStyle;
-    readonly pibblBoxes: readonly { readonly x: number; readonly y: number; readonly width: number; readonly height: number }[];
+    readonly pibblBoxes?: readonly { readonly x: number; readonly y: number; readonly width: number; readonly height: number }[];
     readonly boxes: readonly { readonly x: number; readonly y: number; readonly width: number; readonly height: number }[];
     readonly itemStyles: readonly RectStyle[];
   };
   const fixtures = yogaReference.cases.filter(fixture => 'directionMatrixFixture' in fixture) as unknown as readonly DirectionFixture[];
-  expect(fixtures).toHaveLength(16);
+  expect(fixtures).toHaveLength(24);
+  expect(fixtures.filter(fixture => fixture.name.startsWith('direction-insets-'))).toHaveLength(4);
+  expect(fixtures.filter(fixture => fixture.name.startsWith('direction-margins-'))).toHaveLength(4);
   const baseline = snapshotWasmLayoutDiagnostics();
   const fills: readonly [number, number, number][] = [[214, 227, 219], [225, 219, 202], [66, 107, 97]];
   for (const fixture of fixtures) {
+    const expected = fixture.pibblBoxes ?? fixture.boxes;
     const hits: number[] = [];
     const boxes = new Map<number, { x: number; y: number; width: number; height: number }>();
     function Probe({ index, style: _style }: { index: number; style: RectStyle }) {
@@ -3428,8 +3431,8 @@ it.runIf(experimentalLayout)('renders, targets, and releases every pinned public
     try {
       await nextFrame();
       const context = canvas.getContext('2d')!;
-      for (let index = 0; index < fixture.pibblBoxes.length; index++) {
-        const box = fixture.pibblBoxes[index]!;
+      for (let index = 0; index < expected.length; index++) {
+        const box = expected[index]!;
         expect(boxes.get(index), `${fixture.name}: preserved world box ${index}`).toEqual(box);
         const x = box.x + box.width / 2;
         const y = box.y + box.height / 2;

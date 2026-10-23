@@ -793,6 +793,72 @@ static void directionMatrixCases() {
     }
   }
 }
+static void directionIsolationCases() {
+  const float widths[] = {40, 50, 60}, heights[] = {20, 28, 16};
+  for (int isolateInsets = 0; isolateInsets < 2; ++isolateInsets) {
+    for (int reverseWrap = 0; reverseWrap < 2; ++reverseWrap) {
+      for (int rtl = 0; rtl < 2; ++rtl) {
+        auto config = YGConfigNew();
+        YGConfigSetUseWebDefaults(config, false); YGConfigSetPointScaleFactor(config, 0); YGConfigSetErrata(config, YGErrataNone);
+        auto root = YGNodeNewWithConfig(config);
+        YGNodeStyleSetBoxSizing(root, YGBoxSizingBorderBox);
+        YGNodeStyleSetWidth(root, 160); YGNodeStyleSetHeight(root, 90);
+        YGNodeStyleSetFlexDirection(root, YGFlexDirectionColumn);
+        YGNodeStyleSetFlexWrap(root, reverseWrap ? YGWrapWrapReverse : YGWrapWrap);
+        YGNodeStyleSetGap(root, YGGutterAll, 8); YGNodeStyleSetAlignItems(root, YGAlignCenter); YGNodeStyleSetAlignContent(root, YGAlignFlexStart);
+        if (isolateInsets) {
+          YGNodeStyleSetPadding(root, YGEdgeLeft, 5); YGNodeStyleSetPadding(root, YGEdgeRight, 9); YGNodeStyleSetPadding(root, YGEdgeTop, 2); YGNodeStyleSetPadding(root, YGEdgeBottom, 2); YGNodeStyleSetPadding(root, YGEdgeStart, 0);
+          YGNodeStyleSetBorder(root, YGEdgeLeft, 3); YGNodeStyleSetBorder(root, YGEdgeRight, 7); YGNodeStyleSetBorder(root, YGEdgeTop, 1); YGNodeStyleSetBorder(root, YGEdgeBottom, 1); YGNodeStyleSetBorder(root, YGEdgeStart, 2);
+        }
+        for (int index = 0; index < 3; ++index) {
+          auto child = YGNodeNewWithConfig(config);
+          YGNodeStyleSetBoxSizing(child, YGBoxSizingContentBox); YGNodeStyleSetWidth(child, widths[index]); YGNodeStyleSetHeight(child, heights[index]);
+          YGNodeStyleSetMinWidth(child, 0); YGNodeStyleSetMaxWidth(child, 45); YGNodeStyleSetMinHeight(child, 0); YGNodeStyleSetFlexGrow(child, 0); YGNodeStyleSetFlexShrink(child, 0);
+          if (!isolateInsets) {
+            YGNodeStyleSetMargin(child, YGEdgeStart, 6); YGNodeStyleSetMargin(child, YGEdgeEnd, 3); YGNodeStyleSetMargin(child, YGEdgeTop, 2); YGNodeStyleSetMargin(child, YGEdgeBottom, 4);
+          }
+          YGNodeInsertChild(root, child, index);
+        }
+        YGNodeCalculateLayout(root, YGUndefined, YGUndefined, rtl ? YGDirectionRTL : YGDirectionLTR);
+        const char* name = isolateInsets ? "direction-insets" : "direction-margins";
+        std::cout << ",{\"name\":\"" << name << "-column-" << (reverseWrap ? "wrap-reverse" : "wrap") << '-' << (rtl ? "rtl" : "ltr")
+                  << "\",\"width\":160,\"height\":90,\"gap\":8,\"flexDirection\":\"column\",\"flexWrap\":\"" << (reverseWrap ? "wrap-reverse" : "wrap") << "\",\"layoutDirection\":\"" << (rtl ? "rtl" : "ltr")
+                  << "\",\"containerStyle\":{\"boxSizing\":\"border-box\",\"alignItems\":\"center\",\"alignContent\":\"flex-start\"";
+        if (isolateInsets) std::cout << ",\"padding\":{\"left\":5,\"right\":9,\"top\":2,\"bottom\":2},\"paddingStart\":0,\"borderWidth\":{\"left\":3,\"right\":7,\"top\":1,\"bottom\":1},\"borderStartWidth\":2";
+        std::cout << "},\"directionMatrixFixture\":true,\"boxes\":[";
+        for (int index = 0; index < 3; ++index) { if (index) std::cout << ','; printBox(YGNodeGetChild(root, index)); }
+        if (isolateInsets && reverseWrap) {
+          const double reflectionDelta = rtl ? 6 : -14;
+          std::cout << "],\"classification\":\"preserved-content-box-reflection\",\"comparisonLabel\":\"Preserved Pibbl content-box wrap reflection; Yoga root-edge reflection differs (not parity).\",\"pibblBoxes\":[";
+          for (int index = 0; index < 3; ++index) {
+            if (index) std::cout << ',';
+            const auto child = YGNodeGetChild(root, index);
+            std::cout << "{\"x\":" << YGNodeLayoutGetLeft(child) + reflectionDelta << ",\"y\":" << YGNodeLayoutGetTop(child) << ",\"width\":" << YGNodeLayoutGetWidth(child) << ",\"height\":" << YGNodeLayoutGetHeight(child) << '}';
+          }
+        } else if (!isolateInsets) {
+          const double marginDelta = rtl ? -1.5 : 1.5;
+          std::cout << "],\"classification\":\"preserved-physical-cross-margin\",\"comparisonLabel\":\"Preserved Pibbl physical cross-margin centering; Yoga differs (not parity).\",\"pibblBoxes\":[";
+          for (int index = 0; index < 3; ++index) {
+            if (index) std::cout << ',';
+            const auto child = YGNodeGetChild(root, index);
+            std::cout << "{\"x\":" << YGNodeLayoutGetLeft(child) + marginDelta << ",\"y\":" << YGNodeLayoutGetTop(child) << ",\"width\":" << YGNodeLayoutGetWidth(child) << ",\"height\":" << YGNodeLayoutGetHeight(child) << '}';
+          }
+        }
+        std::cout << "],\"itemStyles\":[";
+        for (int index = 0; index < 3; ++index) {
+          if (index) std::cout << ',';
+          std::cout << "{\"boxSizing\":\"content-box\",\"width\":" << widths[index] << ",\"height\":" << heights[index]
+                    << ",\"minWidth\":0,\"maxWidth\":45,\"minHeight\":0,\"flexGrow\":0,\"flexShrink\":0";
+          if (!isolateInsets) std::cout << ",\"marginStart\":6,\"marginEnd\":3,\"marginTop\":2,\"marginBottom\":4";
+          std::cout << '}';
+        }
+        std::cout << "]}";
+        YGNodeFreeRecursive(root); YGConfigFree(config);
+      }
+    }
+  }
+}
+
 int main() {
   const char* names[] = {"grow", "cap", "shrink", "rectangle-shrink", "rectangle-percent-content-box", "column-grow", "column-cap", "column-shrink", "row-reverse-cap", "column-reverse-cap", "row-wrap", "row-wrap-reverse", "border-box-floor-bounds", "border-box-percentage", "border-box-asymmetric-row", "border-box-asymmetric-column", "zero-fractional-grow", "fractional-shrink", "grow-freeze-release", "shrink-freeze-release", "large-finite-differential", "subunit-zero-grow", "subunit-shrink-policy", "initial-freeze-grow-policy", "initial-freeze-shrink-policy"};
   std::cout << "[";
@@ -920,5 +986,6 @@ int main() {
   logicalBorderCases();
   intrinsicRowWrapAutoHeightCases();
   directionMatrixCases();
+  directionIsolationCases();
   std::cout << "]\n";
 }

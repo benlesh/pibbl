@@ -830,6 +830,50 @@
           "flex.margin",
           "box.padding-and-layout-border"
         ]
+      },
+      {
+        "id": "direction-margins-column-wrap-ltr",
+        "covers": ["direction.rtl-and-logical-edges", "flex.margin"]
+      },
+      {
+        "id": "direction-margins-column-wrap-rtl",
+        "covers": ["direction.rtl-and-logical-edges", "flex.margin"]
+      },
+      {
+        "id": "direction-margins-column-wrap-reverse-ltr",
+        "covers": ["direction.rtl-and-logical-edges", "flex.margin"]
+      },
+      {
+        "id": "direction-margins-column-wrap-reverse-rtl",
+        "covers": ["direction.rtl-and-logical-edges", "flex.margin"]
+      },
+      {
+        "id": "direction-insets-column-wrap-ltr",
+        "covers": [
+          "direction.rtl-and-logical-edges",
+          "box.padding-and-layout-border"
+        ]
+      },
+      {
+        "id": "direction-insets-column-wrap-rtl",
+        "covers": [
+          "direction.rtl-and-logical-edges",
+          "box.padding-and-layout-border"
+        ]
+      },
+      {
+        "id": "direction-insets-column-wrap-reverse-ltr",
+        "covers": [
+          "direction.rtl-and-logical-edges",
+          "box.padding-and-layout-border"
+        ]
+      },
+      {
+        "id": "direction-insets-column-wrap-reverse-rtl",
+        "covers": [
+          "direction.rtl-and-logical-edges",
+          "box.padding-and-layout-border"
+        ]
       }
     ],
     "limit": "135 records:116 native matches and19 explicitly classified CSS allocation/safe-overflow/physical-margin differences; finite row/column/reverse/wrap, box conversion, distribution, definite percentage bounds, wrapped aspect ratios, allocated-owner percentage gaps/padding/cross bounds, nowrap/wrap/wrap-reverse physical margins and finite nested percentage owners. This does not establish general intrinsic, percentage or CSS parity."
@@ -1553,16 +1597,17 @@
       "id": "direction.rtl-and-logical-edges",
       "target": "parity",
       "group": "box-and-direction",
-      "current": "experimental inherited Flex LTR/RTL direction with receiver-aware logical margins, padding and numeric borders; sixteen combined reverse/wrap/min/max fixtures, source focus order and content-box reflection recorded",
-      "status": "partial",
-      "unresolvedPolicy": "The combined direction matrix passes the preserved Pibbl contract. Margin-box centering and asymmetric root content-box reflection differ from Yoga and are explicitly classified; independent zero-margin/root-inset isolates remain before capability completion.",
+      "current": "bounded experimental inherited Flex LTR/RTL direction and receiver-aware logical margins, padding and numeric borders; reverse/wrap/min/max direction matrix complete for the stated supported contract, with preserved native-oracle differences explicitly classified",
+      "status": "complete",
+      "unresolvedPolicy": "No unresolved direction policy in the stated finite experimental Flex contract. Pibbl preserves margin-box centering and content-box wrap reflection; Yoga differences are independently isolated and labeled. General CSS compatibility and unimplemented margin/intrinsic features remain separate capabilities.",
       "evidence": {
         "positive": [
           "slice88: inherited direction and explicit LTR override; row/column/reverse placement",
           "slice89: logical margin edge precedence, signed percentages, explicit zero and child Flex direction override",
           "slice90: logical padding zero/end-percentage precedence and exact native content geometry in both directions",
           "slice91: numeric logical border precedence, explicit zero, both sizing modes and receiver override in eighteen native cases",
-          "slice95: sixteen row/column \u00d7 forward/reverse \u00d7 wrap/wrap-reverse \u00d7 LTR/RTL combined logical inset/margin/min/max fixtures with exact public world boxes"
+          "slice95: sixteen row/column \u00d7 forward/reverse \u00d7 wrap/wrap-reverse \u00d7 LTR/RTL combined logical inset/margin/min/max fixtures with exact public world boxes",
+          "slice96: four zero-margin asymmetric-root-inset and four zero-root-inset logical-margin column fixtures isolate wrap/wrap-reverse LTR/RTL; exact public world boxes before pixels and hits"
         ],
         "negative": [
           "normal JavaScript RTL rejected; invalid direction rejected; stale ABI rejected"
@@ -1570,16 +1615,24 @@
         "interaction": [
           "source/built keyed wrap mirroring, stable stamps, moved hits, paint reuse, cleanup",
           "installed package direction signal reaches retained Layer",
-          "slice95: keyed focus retained across RTL; Tab/Shift-Tab use source order; overlapping paint/hit priority unchanged; source/built keyed fixture transitions and installed package targets release owned resources"
+          "slice95: keyed focus retained across RTL; Tab/Shift-Tab use source order; overlapping paint/hit priority unchanged; source/built keyed fixture transitions and installed package targets release owned resources",
+          "slice96: all24 direction cases source/built/installed with stable keyed panels, correct A/B/C targets and exact node/arena/measurement-cache disposal"
         ],
         "yogaCases": [
           "layout-direction-{row,row-reverse,column,column-reverse}-{ltr,rtl}",
-          "direction-matrix-{row,row-reverse,column,column-reverse}-{wrap,wrap-reverse}-{ltr,rtl}: preserved margin centering/content-box reflection explicitly classified"
+          "direction-matrix-{row,row-reverse,column,column-reverse}-{wrap,wrap-reverse}-{ltr,rtl}: preserved margin centering/content-box reflection explicitly classified",
+          "direction-insets-column-{wrap,wrap-reverse}-{ltr,rtl}: two exact matches; two preserved-content-box-reflection differences",
+          "direction-margins-column-{wrap,wrap-reverse}-{ltr,rtl}: four preserved-physical-cross-margin differences"
         ],
-        "missing": [
-          "independent margin-only and zero-margin asymmetric-root-inset direction isolates"
-        ]
-      }
+        "missing": []
+      },
+      "evidenceRefs": [
+        "packages/core/test/layout-wasm-slice.test.tsx",
+        "tooling/layout-yoga-rehearsal/reference.json",
+        "tooling/test-wasm-yoga-migration.mjs",
+        "tooling/packed-layout-consumer.mjs",
+        "docs/design/layout-system-contract.md#experimental-inherited-inline-direction"
+      ]
     },
     {
       "id": "flex.baselines",

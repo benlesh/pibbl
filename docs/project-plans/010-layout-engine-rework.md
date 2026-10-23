@@ -2,7 +2,8 @@
 
 ## Current checkpoint and single next slice — 2026-10-23
 
-Latest delivery is slice95 (combined direction evidence), recorded below.
+Latest delivery is slice96 (isolated direction policies), recorded below.
+Slice95 is `69b187a6` (combined direction evidence).
 Slice94 is `196e8275` (final-width custom measurement).
 Slice93 is `a7c36733` (finite wrapped-row intrinsic height).
 Slice92 is `02f21ea3` (custom intrinsic providers).
@@ -45,9 +46,9 @@ Slice56 is `cf2c7bc5` (prepared Flow-root planning/adoption).
 Slice55 is `1510efe3` (prepared Grid-root planning/adoption).
 Slice54 `773da7b9`,53 `aaa7ddcb`,52 `b5381e0d` are consolidated in `f322a709`.
 Every slice has its own commit. The fixed33-capability/seven-gate denominator is
-unchanged; all seven gates remain open. Consolidation26 is `2cd357d4`; consolidation27 is `abbaf209`; consolidation28 is `dfd16c8f`; consolidation29 is `f2e38dc6`; consolidation30 is recorded below; slices91–93 are delivered below; consolidation31 passed below; slice95 combined direction evidence passed below; the single next delivery is96, independent direction-policy isolates. Source5192/built5193, `#/testing/layout-preflight`:
+unchanged; all seven gates remain open. Consolidation26 is `2cd357d4`; consolidation27 is `abbaf209`; consolidation28 is `dfd16c8f`; consolidation29 is `f2e38dc6`; consolidation30 is recorded below; slices91–93 are delivered below; consolidation31 passed below; slices95–96 direction evidence passed below; consolidation32 for94–96 follows before the next delivery97, finite main-axis auto margins. Source5192/built5193, `#/testing/layout-preflight`:
 Source5192/built5193 `#/examples/layout/wasm-yoga-migration`: Next case + resize
-cycles195 records:156matches/39classified differences; click A/B/C targets.
+cycles203 records:158matches/45classified differences; click A/B/C targets.
 Canonical built comparison: http://127.0.0.1:5193/#/examples/layout/wasm-yoga-migration.
 Native Grid tracks/spans and Flow wrap controls remain available.
 
@@ -2286,16 +2287,45 @@ JSDoc and whitespace pass. No visual baselines changed. Node26.9.0/Chromium;
 no Node24 aggregate trust claim. Fixed33 stays4complete/11experimental/8partial/
 9missing/1excluded; all seven gates remain open.
 
-## [NEXT] Independent direction-policy isolates (slice 96)
+## Delivered isolated direction policies (slice 96)
 
-Separate the combined direction matrix's margin centering from asymmetric parent
-insets: native/public zero-margin column wrap/wrap-reverse LTR/RTL fixtures and
-no-root-inset logical-margin counterparts. Preserve existing margin-box and
-content-box contracts; classify each oracle difference at its actual source.
-Only promote the direction entry if complete geometry, interaction, negative,
-source/built/installed and cleanup evidence meets its stated exit. No new API,
-extra writer or duplicate review. Then consolidate94–96. Other fixed-program
-capabilities and all release gates remain outstanding.
+Eight pinned Yoga3.2.1/public fixtures separate the two existing rules exposed in95.
+Four zero-margin columns isolate asymmetric parent insets: wrap matches native
+in both directions, while wrap-reverse differs by−14px in LTR or+6px in RTL,
+explicitly `preserved-content-box-reflection`. Four zero-root-inset logical-margin
+columns isolate±1.5px margin-box centering under either wrapping direction,
+explicitly `preserved-physical-cross-margin`. There is no runtime/API change.
+The native corpus is203:158matches/45classified differences.
+
+All24 direction fixtures pass complete public semantic world boxes, pixels and
+A/B/C hits; source5192/built5193 retain keyed stamps and dispose to zero owned
+resources with no browser errors. Fresh installed packed consumer passes all24
+and each node/arena/measurement-cache cleanup, strict Bundler/NodeNext and230
+installed inputs. Unchanged kernel/tarball SHA is the94/95 value recorded above.
+Focused Chromium4pass/349skip; the new eight-case evidence guard first failed
+against16records, then passed24. Native provenance, types/lint, catalog, docs109RED,
+JSDoc and whitespace pass. No baseline rewrite or Node24 aggregate claim.
+
+The direction entry is capability-complete for the stated finite experimental
+Flex contract, including independently classified preserves. It does not promise
+universal Yoga/CSS parity, complete margin/intrinsic behavior or enable the engine.
+Fixed33 is now5complete/11experimental/7partial/9missing/1excluded; all seven
+release gates remain open. Prior88–91 inheritance/receiver override, Layer,
+normal-build/invalid-direction/ABI negatives and95keyed focus/source priority are
+retained. Bounded consolidation32 of94–96 is next, then delivery97 below.
+
+## [NEXT] Finite main-axis auto margins (slice 97)
+
+Target the existing missing `flex.auto-margins` capability with the smallest
+public slice: finite positive-free-space LTR row-nowrap physical main edges.
+Application code should use existing Flex composition with `marginLeft: "auto"`
+or `marginRight: "auto"`; named margin data changes no return contract. Define
+exact precedence and unsupported-shape diagnostics before production. Auto slots
+are zero during flexible sizing, then divide remaining positive free space and
+suppress justify distribution; do not rerun sizing with the resulting margins.
+Prove pinned geometry, owner resize/moved hits, paint reuse, source/built/packed
+and ownership. Extend only after focused feedback evidence. Keep remaining auto
+margin directions/cross axes and all other fixed-program gaps visible.
 
 ### Consolidation 24 completed for delivery slices 70–72
 

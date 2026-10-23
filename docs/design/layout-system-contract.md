@@ -765,7 +765,7 @@ rendering remain unchanged. Existing allocation contexts, receiver signal inputs
 prepared plans and placement caches carry direction; no separate cascade or
 scheduler is introduced. Plans reject mismatched direction before adoption. The
 WASM cross-placement ABI is identified by the `layout_abi_v1` export marker;
-older modules are rejected before publishing compiled code. Logical margin edges are specified below; logical padding is specified below; logical border edges remain a subsequent capability.
+older modules are rejected before publishing compiled code. Logical margin edges are specified below; logical padding is specified below; numeric logical border edges are specified below.
 
 The combined slice95 direction matrix deliberately preserves two existing rules.
 Wrapped cross-axis `center` aligns the margin box: margins top2/bottom4 shift the
@@ -777,7 +777,12 @@ outer box. Asymmetric parent insets therefore add a separate difference. The
 native comparison labels both policies and records native `boxes` separately
 from preserved `pibblBoxes`; these fixtures are not parity claims. Main direction,
 source paint/hit priority, keyed focus and Tab order retain their existing rules.
-Independent margin-only and zero-margin inset isolates remain the next exit.
+Slice96 isolates these policies in eight additional pinned fixtures. Zero-margin
+columns match native geometry under wrap in LTR/RTL. Under wrap-reverse the
+existing asymmetric insets give Pibbl an x offset−14 in LTR or+6 in RTL relative
+to Yoga. With root insets zero, logical margins alone produce the±1.5 difference
+under either wrapping direction. Both native and preserved coordinates are
+recorded; no renderer or border-box sizing rule changes.
 
 ## Experimental logical Flex margins
 
