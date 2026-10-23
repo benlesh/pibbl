@@ -2,7 +2,8 @@
 
 ## Current checkpoint and single next slice — 2026-10-23
 
-Latest delivery is slice138 (built-in unwrapped Text natural absolute width; this commit).
+Latest delivery is slice138 `b84f5322` (built-in unwrapped Text natural absolute width).
+Consolidation46 for136–138 is this checkpoint commit.
 Slice137 is `3ad9598a` (wrapped Text automatic absolute height).
 Slice136 is `6c30acfb` (fixed physical-inset absolute leaves in normal wrapped rows).
 Slice135 is `65b8bb94` (fixed declarative containing chains across nowrap directions).
@@ -3975,13 +3976,32 @@ Logs `/tmp/pibbl-slice138-{public-red,public-green,public-both,focused-final,nor
 No kernel change, full487-case replay, font parity, speed or Node24 trust claim.
 Fixed33 capabilities and all seven open release gates unchanged.
 
-## [NEXT] Consolidation46 for slices136–138
+## Consolidation46 completed for slices136–138
 
-Run the bounded experimental and normal regression lanes with the new public
-Text/wrapped-positioning files, record fresh results, then select the next material
-intrinsic sizing contract. Both-auto, image/nested ownership, wider wrapping,
-containing overrides, hidden/contents, transactionality and release gates remain
-open; none is closed merely by adding comparison records.
+Fresh Node26.9.0/macOS Chromium:32 files,642passed/11skipped653 experimental
+in79.83s; normal233passed/420skipped653 in4.51s. Expected negative diagnostics
+were emitted; no assertions failed. Logs
+`/tmp/pibbl-consolidation46-{focused,normal,docs}.txt`. Documentation109 mutation
+probes pass. This is bounded consolidation, not the Node24 aggregate trust gate.
+
+## [NEXT] Natural unwrapped Text height and both-auto ink dimensions (139)
+
+Direct generic unwrapped visible Text may use natural height at a numeric width
+or both automatic dimensions, avoiding an arbitrary failure when the same Text
+changes from automatic to explicit width. Use the existing Canvas ink-bounds
+contract; one unbounded-both query on a measurement copy omitting both axes can
+supply both natural dimensions. Preserve existing identity/revision keys, apply
+numeric bounds afterward and reuse physical anchoring. Keep both-auto aspect and
+mixed opposing-pair/measurement feedback outside admission; fully paired existing
+derivation and one-auto pair/aspect precedence remain unchanged.
+
+Public RED must use actual Canvas metrics and distinguish allocation origin from
+glyph bounds/baseline offsets. Content changes width; font changes can change both
+axes. Native synthetic probes remain classified query-source evidence, not stored
+platform geometry. Add the minimal runnable public slice first, then harden cache,
+constraints, source focus/hits and cleanup proportionately. Image/nested intrinsic
+ownership, wider wrapping, containing overrides, hidden/contents, transactional
+publication and release gates remain open.
 
 ### Finite positioning exit matrix after134
 
