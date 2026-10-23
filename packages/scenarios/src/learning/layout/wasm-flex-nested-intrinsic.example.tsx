@@ -20,6 +20,7 @@ function createWasmFlexNestedIntrinsicExampleContent(
   let node: PibblNode;
   const width = signal(420);
   const structuralCard = signal(false);
+  const percentageCap = signal(false);
   let descriptions = 0, paragraphDescriptions = 0;
   const longText =
     "Nested columns settle their widths before Text determines their heights. The following sibling uses the complete Card height.";
@@ -46,7 +47,7 @@ function createWasmFlexNestedIntrinsicExampleContent(
       <Flex
         style={{
           flexDirection: "column",
-          maxWidth: 300,
+          maxWidth: percentageCap.get() ? "50%" : 300,
           padding: 8,
           gap: 6,
           minHeight: 0,
@@ -241,6 +242,7 @@ function createWasmFlexNestedIntrinsicExampleContent(
         Two known columns size from wrapped Text. The following sibling moves
         with them.
       </Text>
+      <Button x={548} y={62} label="50% paragraph cap" onClick={() => percentageCap.update(value => !value)} />
       <Button x={548} y={24} label="Toggle pure Card" onClick={() => structuralCard.update(value => !value)} />
       <Button
         x={28}
@@ -298,6 +300,7 @@ function createWasmFlexNestedIntrinsicExampleContent(
       lane: read ? "experimental WASM" : "normal JavaScript",
       width: width.get(),
       structuralCard: structuralCard.get(),
+      percentageCap: percentageCap.get(),
       descriptions,
       paragraphDescriptions,
       keys: keys.get(),

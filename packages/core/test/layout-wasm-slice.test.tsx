@@ -2091,6 +2091,56 @@ it.runIf(experimentalLayout)('measures a wrapped Flow at settled width inside an
   controller.dispose(); const disposed = snapshotWasmLayoutDiagnostics(); expect([disposed.activeArenas,disposed.activeNodes,disposed.activeWasmInstances]).toEqual([baseline.activeArenas,baseline.activeNodes,baseline.activeWasmInstances]);
 });
 
+for (const property of ['width','minWidth','maxWidth'] as const) {
+  it.runIf(experimentalLayout)(`measures percentage cross ${property} at an explicit numeric column owner width`, () => {
+    const flow = createElement(Flow,{style:{direction:'horizontal',wrap:true,gap:5,lineGap:5,minHeight:0,flexShrink:0,...(property === 'minWidth' ? {width:40} : {}),[property]:'50%'},children:[0,1,2].map(key=>createElement(Rectangle,{key,style:{width:70,height:10}}))});
+    const owner = (width:number) => createElement(Flex,{style:{width,flexDirection:'column',alignItems:'stretch'},children:flow});
+    expect(measureElement(owner(200),{minWidth:0,maxWidth:400,minHeight:0,maxHeight:100},service)).toEqual({status:'measured',size:{width:200,height:40}});
+    expect(measureElement(owner(320),{minWidth:0,maxWidth:400,minHeight:0,maxHeight:100},service)).toEqual({status:'measured',size:{width:320,height:25}});
+  });
+}
+
+it.runIf(experimentalLayout)('bounds settled percentage cross measurement before child border-box conversion', () => {
+  const flow = createElement(Flow,{style:{boxSizing:'border-box',maxWidth:'50%',padding:{left:10,right:10,top:2,bottom:3},borderWidth:1,direction:'horizontal',wrap:true,gap:5,lineGap:5,minHeight:0,flexShrink:0},children:[0,1,2].map(key=>createElement(Rectangle,{key,style:{width:70,height:10}}))});
+  const owner = createElement(Flex,{style:{width:200,flexDirection:'column'},children:flow});
+  expect(measureElement(owner,{minWidth:0,maxWidth:400,minHeight:0,maxHeight:100},service)).toEqual({status:'measured',size:{width:200,height:47}});
+});
+it.runIf(experimentalLayout)('uses owner border-box content width as the percentage measurement reference',()=>{
+  const flow=createElement(Flow,{style:{maxWidth:'50%',direction:'horizontal',wrap:true,gap:5,lineGap:5,minHeight:0,flexShrink:0},children:[0,1,2].map(key=>createElement(Rectangle,{key,style:{width:45,height:10}}))});
+  const owner=createElement(Flex,{style:{boxSizing:'border-box',width:200,padding:10,borderWidth:{left:2,right:4},flexDirection:'column'},children:flow});
+  expect(measureElement(owner,{minWidth:0,maxWidth:400,minHeight:0,maxHeight:100},service)).toEqual({status:'measured',size:{width:174,height:40}});
+});
+it.runIf(experimentalLayout)('rejects conflicting settled percentage cross bounds',()=>{
+  const child=createElement(Flow,{style:{minWidth:'75%',maxWidth:'50%',minHeight:0},children:[]});
+  expect(()=>measureElement(createElement(Flex,{style:{width:200,flexDirection:'column'},children:child}),{minWidth:0,maxWidth:200,minHeight:0,maxHeight:100},service)).toThrow(/minimum/);
+});
+it.runIf(experimentalLayout)('measures known wrapped Text at its settled percentage cross width',()=>{
+  const child=createElement(Text,{children:'aaaa aaaa aaaa',style:{width:'50%',wrap:true,lineHeight:10,minHeight:0,flexShrink:0}});
+  for(const [width,height] of [[200,20],[320,10]]) {
+    expect(measureElement(createElement(Flex,{style:{width,flexDirection:'column'},children:child}),{minWidth:0,maxWidth:400,minHeight:0,maxHeight:100},service)).toEqual({status:'measured',size:{width,height}});
+  }
+});
+it.runIf(experimentalLayout)('keeps percentage cross measurement bounded to explicit numeric owners and known children', () => {
+  const flow = (style:Record<string,unknown>={})=>createElement(Flow,{style:{maxWidth:'50%',minHeight:0,flexShrink:0,...style},children:[]});
+  const constraints={minWidth:0,maxWidth:200,minHeight:0,maxHeight:100};
+  for(const width of [undefined,'auto','50%'] as const) {
+    const owner=createElement(Flex,{style:{width,flexDirection:'column'},children:flow()});
+    expect(measureElement(owner,constraints,service).status).toBe('unsupported');
+  }
+  for(const style of [{height:'50%'},{minHeight:'50%'},{maxHeight:'50%'},{flexBasis:'50%'}]) {
+    expect(measureElement(createElement(Flex,{style:{width:200,flexDirection:'column'},children:flow(style)}),constraints,service).status).toBe('unsupported');
+  }
+  let calls=0;function Opaque(_props:{style:Record<string,unknown>}){calls++;return null;}
+  expect(measureElement(createElement(Flex,{style:{width:200,flexDirection:'column'},children:createElement(Opaque,{style:{maxWidth:'50%',minHeight:0}})}),constraints,service).status).toBe('unsupported');
+  expect(calls).toBe(0);
+});
+for(const value of ['-10%','NaN%','Infinity%']) {
+  it.runIf(experimentalLayout)(`rejects invalid settled percentage cross bound ${value}`,()=>{
+    const child=createElement(Flow,{style:{maxWidth:value as '50%',minHeight:0},children:[]});
+    expect(()=>measureElement(createElement(Flex,{style:{width:200,flexDirection:'column'},children:child}),{minWidth:0,maxWidth:200,minHeight:0,maxHeight:100},service)).toThrow(/maxWidth/);
+  });
+}
+
 it.runIf(experimentalLayout)('measures fixed Grid rows inside an intrinsic Flex column and rejects indefinite fraction rows', async () => {
   const baseline = snapshotWasmLayoutDiagnostics(), rows = signal<readonly [number,number]>([20,30]); let hits = 0;
   const grid = createElement(Grid, { style: { gridTemplateColumns: ['1fr'], gridTemplateRows: rows, gap: 5, minHeight: 0, flexShrink: 0 }, children: createElement(Rectangle, { style: { width: '100%', height: '100%', gridColumnStart: 1, gridRowStart: 2, fill: 'blue' } }) });

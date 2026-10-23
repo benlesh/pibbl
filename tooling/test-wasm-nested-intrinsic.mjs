@@ -78,6 +78,20 @@ try {
   assert.ok(restored.layout.cachedMeasurements <= 2*restored.layout.activeNodes);
   const repainted = await click(432,110);
   if (!structural) assert.equal(repainted.layout.measuredLeaves, restored.layout.measuredLeaves);
+  // Isolate the settled-owner percentage cap with short text so both sizes fit.
+  await click(236,110);
+  await click(60,110);
+  const capped = await click(620,78);
+  assert.equal(capped.percentageCap, true);
+  assert.equal(capped.width, 420);
+  const cappedNarrow = await click(60,110);
+  assert.equal(cappedNarrow.width, 220);
+  assert.ok(cappedNarrow.footerBox.y > capped.footerBox.y, 'Percentage cap must track the settled column width');
+  assert.equal(cappedNarrow.footerBox.y, cappedNarrow.cardBottom+12);
+  assert.equal(cappedNarrow.layout.nodeCreates, capped.layout.nodeCreates);
+  const previousHits = cappedNarrow.footerHits;
+  assert.equal((await click(40,capped.footerBox.y+4)).footerHits, previousHits, 'Old percentage-constrained target must miss');
+  assert.equal((await click(40,cappedNarrow.footerBox.y+4)).footerHits, previousHits+1);
   const sandbox = page.frames().find(item => item.url() === 'about:srcdoc');
   const proof = await sandbox.evaluate(() => globalThis.__PIBBL_BUILT_LAYOUT_PROOF__);
   if (!sourceLane) {
@@ -107,5 +121,5 @@ try {
   if (!base.includes('/offline') && !packedLane) {
     assert.ok(layoutDownloads.some(download => download.status === 200), 'Async public mounting must fetch the external layout asset');
   } else assert.equal(layoutDownloads.length, 0, 'Embedded sync must work without any external layout request');
-  console.warn(`${sourceLane ? 'Source' : 'Built'} nested intrinsic: footer ${initial.footerBox.y}→${narrow.footerBox.y}→${short.footerBox.y}, probe normal-only, moved targets, keyed remove/restore, detached source inert, ${structural ? 'per-transaction Card preparation' : 'bounded paint reuse'}, receiver roles, zero disposal ownership; ${proof?.coreInputs.length ?? 'source'} inputs`);
+  console.warn(`${sourceLane ? 'Source' : 'Built'} nested intrinsic: footer ${initial.footerBox.y}→${narrow.footerBox.y}→${short.footerBox.y}, probe normal-only, moved targets, keyed remove/restore, detached source inert, ${structural ? 'per-transaction Card preparation' : 'bounded paint reuse'}, receiver roles, percentage cross cap with moved targets, zero disposal ownership; ${proof?.coreInputs.length ?? 'source'} inputs`);
 } finally { await browser.close(); }

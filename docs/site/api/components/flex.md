@@ -116,3 +116,13 @@ In the experimental build, the first line has two94×47 boxes and the second has
 one200×100 box. In the [comparison example](#/examples/layout/wasm-yoga-migration),
 click Next section twice, then Next case + resize to inspect owner resizing and
 row/column reversed wrapping with the same public style.
+
+Experimental intrinsic measurement also accepts percentage child `width`,
+`minWidth` and `maxWidth` in a nowrap column with an explicit numeric content
+width. The measured child must be known Text, Flow, Grid, or a known nowrap
+column. Percentages use the settled owner content width; border-box conversion
+then subtracts the child's insets once. Percentage main sizes and indefinite or
+percentage-dependent owners remain unsupported. In the
+[nested-column example](#/examples/layout/wasm-flex-nested-intrinsic), toggle
+50% paragraph cap and Toggle width; the following box and its click target move
+together.

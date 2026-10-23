@@ -458,8 +458,15 @@ its settled content width before dependent height measurement; parent measuremen
 adds its padding once. Recursion uses the shared cycle-detecting measurement
 context, without speculative ordinary component execution or a fixed-point loop. Padding and width bounds settle before intrinsic height measurement.
 A standalone maximum-width constraint alone does not become a definite width. Text width is definite or stretches, children
-have explicit main minimums and no intrinsic growth, and percentage child sizes
-remain unsupported. Final constrained container width settles before dependent
+have explicit main minimums and no intrinsic growth. For a column with an explicit
+numeric content width, known Text, Flow, Grid and nowrap-column children may use
+percentage `width`, `minWidth` and `maxWidth`: resolve once against that owner
+content width, then convert a child's border-box inputs before dependent height
+measurement. Width200 with a50% cap means100 outer units for a border-box child;
+an owner border-box200 with20padding and6horizontal border supplies174content
+units, so its50% cap is87. Main-axis percentages, a percentage-dependent or
+indefinite owner and generic component discovery remain unsupported in this path.
+No maximum-only constraint becomes definite and no fixed-point iteration is added. Final constrained container width settles before dependent
 Text height in either parent axis. Arbitrary components remain opaque; this is not
 a general prepared-component protocol. Direct-Text intrinsic snapshots reuse the region-owned two-entry measurement cache
 for explicitly generic fonts. Keys include resolved content, metric styles,

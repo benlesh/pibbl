@@ -395,8 +395,22 @@ function measureFlex(
     let style = preparedStyleValue(prepared) as Readonly<
       BoxStyle & FlexItemStyle & LayoutItemStyle & Record<string, unknown>
     >;
-    if (style.boxSizing !== undefined) style = contentBoxStyle(style, { width: diagnosticBox.width, height: diagnosticBox.height, mainAxis: row ? 'width' : 'height', context: childContext(child, diagnosticBox) });
     const layoutChild = isLayoutComponent(child.type) ? prepareLayoutComponent(child, { receiverToken }) : child;
+    const settledColumnChild = experimentalLayout && !row && typeof input.style.width === 'number' && !heightDefinite &&
+      (child.type === Text || layoutChild.type === Flow || layoutChild.type === Grid || layoutChild.type === Flex && isColumnDirection(style.flexDirection) && (style.flexWrap ?? 'nowrap') === 'nowrap');
+    if (settledColumnChild && (isPercentage(style.width) || isPercentage(style.minWidth) || isPercentage(style.maxWidth))) {
+      if (isPercentage(style.height) || isPercentage(style.flexBasis) || isPercentage(style.minHeight) || isPercentage(style.maxHeight)) return unsupportedIntrinsic('does not support percentage child main sizes or bounds');
+      const reference = resolveMeasuredContainerLength(input.style.width!, input.constraints.maxWidth, 'width', input.constraints);
+      const context = childContext(child, diagnosticBox);
+      // Resolve only against an explicit owner, before converting outer box inputs.
+      // Keep numeric hot paths allocation-free and leave indefinite owners unsupported.
+      style = { ...style,
+        width: isPercentage(style.width) ? resolveLength(style.width!, reference, 'width', context) : style.width,
+        minWidth: isPercentage(style.minWidth) ? resolveLength(style.minWidth!, reference, 'minWidth', context) : style.minWidth,
+        maxWidth: isPercentage(style.maxWidth) ? resolveLength(style.maxWidth!, reference, 'maxWidth', context) : style.maxWidth,
+      };
+    }
+    if (style.boxSizing !== undefined) style = contentBoxStyle(style, { width: diagnosticBox.width, height: diagnosticBox.height, mainAxis: row ? 'width' : 'height', context: childContext(child, diagnosticBox) });
     rejectUnsupportedItemFields(child, style, diagnosticBox);
     if (style.aspectRatio !== undefined) return unsupportedIntrinsic('does not support aspectRatio during intrinsic measurement');
     const allMargin = numericMargin(style.margin, 'margin', child, diagnosticBox);

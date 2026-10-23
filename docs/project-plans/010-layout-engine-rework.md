@@ -2,7 +2,8 @@
 
 ## Current checkpoint and single next slice — 2026-10-22
 
-Latest delivery is slice78 `a96ee4a2` (finite wrapped aspect-ratio participation).
+Latest delivery is slice79 (settled-column percentage cross constraints).
+Slice78 is `a96ee4a2` (finite wrapped aspect-ratio participation).
 Slice77 is `239df577` (definite percentage bounds and worktree catalog isolation).
 Slice76 is `c787d7d9` (safe overflow and finite distribution evidence).
 Slice75 is `bcf4f02e` (direction-independent start/end alignment).
@@ -28,7 +29,7 @@ Slice56 is `cf2c7bc5` (prepared Flow-root planning/adoption).
 Slice55 is `1510efe3` (prepared Grid-root planning/adoption).
 Slice54 `773da7b9`,53 `aaa7ddcb`,52 `b5381e0d` are consolidated in `f322a709`.
 Every slice has its own commit. The fixed33-capability/seven-gate denominator is
-unchanged; all seven gates remain open. Consolidation26 is complete; the single next slice is79, percentage cross constraints at an explicitly settled column width. Source5192/built5193, `#/testing/layout-preflight`:
+unchanged; all seven gates remain open. Consolidation26 is `2cd357d4`; the single next slice is80, finite allocated-owner percentage gaps. Source5192/built5193, `#/testing/layout-preflight`:
 Source5192/built5193 `#/examples/layout/wasm-yoga-migration`: Next case + resize
 cycles91 records:80matches/11classified CSS differences; click A/B/C targets.
 Canonical built comparison: http://127.0.0.1:5193/#/examples/layout/wasm-yoga-migration.
@@ -1473,18 +1474,44 @@ Fixed33 remains3complete,11experimental,7partial,11missing,1excluded; all seven
 release gates open. This checkpoint does not close broad intrinsic ownership,
 RTL/logical-edge policy, Grid, migration or release evidence.
 
-## [NEXT] Settled-column percentage cross constraints (slice 79)
+## Slice 79 delivered — percentage cross constraints at a settled column width
 
-Allow child width/minWidth/maxWidth percentages during bounded experimental
-intrinsic measurement only for known Text/Flow/Grid/nowrap-column children of an
-explicit numeric-width auto-height column. Resolve once against the owner's settled
-content width, preserving box conversion, final measurement/paint agreement,
-reactive owner changes, targets, identity and cleanup. Add a failing public test
-before implementation and expose the behavior in the existing nested-intrinsic
-example. Percentage main sizing, percentage-dependent or indefinite owners,
-wrapped intrinsic Flex and generic components remain unsupported. No new public
-signature or native ABI. This is a finite prerequisite for the min/max and nested
-intrinsic gates, not a solution to cyclic percentage sizing or full Yoga parity.
+Experimental intrinsic measurement now resolves known child width/minWidth/maxWidth
+percentages once against an explicit numeric owner content width, before child
+border-box conversion and dependent height measurement. This extends existing
+Text/Flow/Grid/nowrap-column admission without a new public signature or native ABI.
+Main percentages, percentage-dependent/indefinite owners and ordinary opaque
+components remain unsupported; invalid/conflicting cross bounds throw.
+
+Three focused public tests fail before the production change and pass afterward.
+Final focused Chromium158passed; owner border-box200 with padding20/borders6
+references174content width, child border-box50% resolves before insets, wrapped
+Text and Flow resize semantics are exact. Normal boundary checks pass. Source5192
+and built5193 nested example add50% paragraph cap; owner resize moves following
+footer/target with stable node creates, old point misses/new point hits, exact
+cleanup. Built structural Card proof469private dist inputs. Installed packed public
+example uses the same percentage interaction driver;230installed dist inputs,
+Bundler/NodeNext, zero ownership after disposal. Tarball SHA256
+`f3978041a96c35d779f0e68606b277b330d03b51d46dcc392daad68e4bcfd8fb`.
+Logs `/tmp/pibbl-slice79-{red,green,bounds,focused,source,built,packed,normal}.txt`.
+Types/lint/JSDoc and documentation109REDmutation probes pass. Independent scoped
+review found no material issue; requested box-conversion/rejection matrix included.
+No native kernel or visual baseline change. Node26.9.0; no aggregate trust claim.
+Fixed33 counts unchanged; this prerequisite does not complete the full min/max or
+intrinsic owner graph. Next consolidation is after an appropriate3–4slice group.
+
+## [NEXT] Finite allocated-owner percentage gaps (slice 80)
+
+Pin independent Yoga3.2.1 native physical row/column percentage-gap references with
+unequal owner dimensions, padding and resize before selecting exact public types
+and reference policy. Existing gap/rowGap/columnGap are the only candidate fields.
+Specify that only an actual finite content allocation supplies a percentage
+reference; intrinsic/max-only owners remain explicitly unsupported rather than
+using zero, iteration or an inferred definite size. Present material public type
+changes before production, add failing public geometry/negative tests, and expose
+resize/target behavior through an existing comparison. Preserve numeric gap
+behavior and no-allocation/ownership guarantees. Classify any native/CSS policy
+difference explicitly. No broad intrinsic-cycle or full percentage parity claim.
 
 ### Consolidation 24 completed for delivery slices 70–72
 
