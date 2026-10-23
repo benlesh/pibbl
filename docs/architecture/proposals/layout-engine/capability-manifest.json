@@ -135,9 +135,17 @@
       {"id": "percent-cap-column", "covers": ["flex.min-max"], "classification": "exact finite declared inputs"},
       {"id": "percent-cap-column-resized", "covers": ["flex.min-max"], "classification": "exact finite declared inputs"},
       {"id": "percent-floor-column", "covers": ["flex.min-max"], "classification": "exact finite declared inputs"},
-      {"id": "percent-floor-column-resized", "covers": ["flex.min-max"], "classification": "exact finite declared inputs"}
+      {"id": "percent-floor-column-resized", "covers": ["flex.min-max"], "classification": "exact finite declared inputs"},
+      {"id": "aspect-wrap-row", "covers": ["box.aspect-ratio", "flex.row-column-nowrap-wrap", "flex.reverse-and-wrap-reverse"]},
+      {"id": "aspect-wrap-row-resized", "covers": ["box.aspect-ratio", "flex.row-column-nowrap-wrap", "flex.reverse-and-wrap-reverse"]},
+      {"id": "aspect-wrap-row-reverse", "covers": ["box.aspect-ratio", "flex.row-column-nowrap-wrap", "flex.reverse-and-wrap-reverse"]},
+      {"id": "aspect-wrap-row-reverse-resized", "covers": ["box.aspect-ratio", "flex.row-column-nowrap-wrap", "flex.reverse-and-wrap-reverse"]},
+      {"id": "aspect-wrap-column", "covers": ["box.aspect-ratio", "flex.row-column-nowrap-wrap", "flex.reverse-and-wrap-reverse"]},
+      {"id": "aspect-wrap-column-resized", "covers": ["box.aspect-ratio", "flex.row-column-nowrap-wrap", "flex.reverse-and-wrap-reverse"]},
+      {"id": "aspect-wrap-column-reverse", "covers": ["box.aspect-ratio", "flex.row-column-nowrap-wrap", "flex.reverse-and-wrap-reverse"]},
+      {"id": "aspect-wrap-column-reverse-resized", "covers": ["box.aspect-ratio", "flex.row-column-nowrap-wrap", "flex.reverse-and-wrap-reverse"]}
     ],
-    "limit": "Eighty-three records:72 native matches and11 explicitly classified CSS allocation/safe-overflow differences; finite row/column/reverse/wrap, box conversion, distribution and definite percentage bounds. This does not establish general box-sizing, percentage, intrinsic or CSS parity."
+    "limit": "Ninety-one records:80 native matches and11 explicitly classified CSS allocation/safe-overflow differences; finite row/column/reverse/wrap, box conversion, distribution, definite percentage bounds and wrapped aspect ratios. This does not establish general box-sizing, percentage, intrinsic or CSS parity."
   },
   "gateGroups": [
     {
@@ -609,9 +617,9 @@
       "id": "box.aspect-ratio",
       "target": "parity",
       "group": "box-and-direction",
-      "current": "positive finite FlexItemStyle/ LayoutItemStyle aspectRatio for finite nowrap Flex; final outer main derives cross before bounds",
+      "current": "positive finite FlexItemStyle/ LayoutItemStyle aspectRatio for finite nowrap/wrapped Flex; final per-line outer main derives cross before bounds",
       "status": "experimental",
-      "unresolvedPolicy": "Finite Flex outer ratio and cross override/clamp precedence selected from pinned Yoga; intrinsic, wrapped and other-parent ratio rules remain deferred.",
+      "unresolvedPolicy": "Finite Flex outer ratio and cross override/clamp precedence selected from pinned Yoga; intrinsic and other-parent ratio rules remain deferred.",
       "evidenceRefs": [
         "packages/core/test/layout-wasm-slice.test.tsx",
         "tooling/layout-yoga-rehearsal/aspect-probe.cpp",
@@ -620,11 +628,11 @@
         "tooling/packed-layout-consumer.mjs"
       ],
       "evidence": {
-        "positive": ["row/column final-main shrink derivation", "explicit cross and default stretch overridden", "combined outer insets and independent cross bounds", "numeric definite basis"],
-        "negative": ["nonpositive/nonfinite ratios rejected", "wrapped and intrinsic-main ratio items diagnosed", "derived overflow rejected"],
+        "positive": ["row/column final-main shrink derivation", "explicit cross and default stretch overridden", "combined outer insets and independent cross bounds", "numeric definite basis", "row/column wrap and wrap-reverse with owner resize"],
+        "negative": ["nonpositive/nonfinite ratios rejected", "intrinsic-main ratio items diagnosed, including wrapped containers", "derived overflow rejected"],
         "interaction": ["ratio/basis/border signals update targets without remount", "source/built Studio card", "installed package ratio pixel geometry and exact cleanup"],
-        "yogaCases": [],
-        "missing": ["intrinsic both-auto and cross-to-main inference", "wrapped ratios", "other parent families and root sizing", "general image/intrinsic and coupled-axis bounds"]
+        "yogaCases": ["aspect-wrap-row", "aspect-wrap-row-resized", "aspect-wrap-row-reverse", "aspect-wrap-row-reverse-resized", "aspect-wrap-column", "aspect-wrap-column-resized", "aspect-wrap-column-reverse", "aspect-wrap-column-reverse-resized"],
+        "missing": ["intrinsic both-auto and cross-to-main inference", "other parent families and root sizing", "general image/intrinsic and coupled-axis bounds"]
       }
     },
     {

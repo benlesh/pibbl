@@ -6,6 +6,7 @@ import { chromium } from 'playwright';
 const reference = JSON.parse(readFileSync(new URL('./layout-yoga-rehearsal/reference.json', import.meta.url), 'utf8'));
 const base = process.argv[2] ?? 'http://127.0.0.1:5192';
 const built = process.argv.includes('--built');
+const aspectOnly = process.argv.includes('--wrapped-aspect');
 const percentageOnly = process.argv.includes('--percentage-bounds');
 const browser = await chromium.launch({ headless: true });
 try {
@@ -30,14 +31,15 @@ try {
     } });
     await page.waitForTimeout(240);
   };
-  const cases = percentageOnly ? reference.cases.filter(fixture => fixture.name.startsWith('percent-')) : reference.cases;
-  if (percentageOnly) {
+  const cases = aspectOnly ? reference.cases.filter(fixture => fixture.name.startsWith('aspect-wrap-')) : percentageOnly ? reference.cases.filter(fixture => fixture.name.startsWith('percent-')) : reference.cases;
+  if (percentageOnly || aspectOnly) {
     assert.ok((await frame.locator('pre').innerText()).includes('grow'));
     await click(396,244);
     assert.ok((await frame.locator('pre').innerText()).includes('selected: A'));
     await click(552,244);
     assert.ok((await frame.locator('pre').innerText()).includes('selected: B'));
     await click(520,158);
+    if (aspectOnly) await click(520,158);
   }
   let previousOwner;
   for (const [index, fixture] of cases.entries()) {
@@ -46,23 +48,25 @@ try {
     assert.ok((await frame.locator('pre').innerText()).includes(fixture.name));
     if (fixture.classification) assert.ok((await frame.locator('pre').innerText()).includes(fixture.comparisonLabel), 'Classified difference must be explicitly labeled');
     const expected = fixture.pibblBoxes ?? fixture.boxes;
-    if (fixture.name.startsWith('percent-cap-') && fixture.name.endsWith('-resized')) {
+    if ((fixture.name.startsWith('percent-cap-') || fixture.name.startsWith('aspect-wrap-')) && fixture.name.endsWith('-resized')) {
       assert.equal(previousOwner.name, fixture.name.replace('-resized',''));
       const resized = await sandbox.evaluate(() => globalThis.__PIBBL_LAYOUT_DIAGNOSTICS__());
       assert.ok(resized.solves > previousOwner.layout.solves);
       assert.equal(resized.nodeCreates, previousOwner.layout.nodeCreates);
       assert.equal(resized.measuredLeaves, previousOwner.layout.measuredLeaves);
       const column = fixture.flexDirection === 'column';
-      await click(396,244);
+      await click(396 + expected[0].x,244 + expected[0].y);
       assert.ok((await frame.locator('pre').innerText()).includes('selected: A'));
-      await click(column ? 396 : 458, column ? 306 : 244);
+      const aspect = fixture.name.startsWith('aspect-wrap-');
+      const oldCross = fixture.flexWrap === 'wrap-reverse' ? 45 : 145;
+      await click(aspect ? column ? 392 + oldCross : 396 : column ? 396 : 458, aspect ? column ? 244 : 240 + oldCross : column ? 306 : 244);
       assert.ok((await frame.locator('pre').innerText()).includes('selected: A'), 'Former target must become a gap after owner resize');
     }
     for (const [index, box] of expected.entries()) {
       await click(392 + box.x + 4, 240 + box.y + 4);
       assert.ok((await frame.locator('pre').innerText()).includes(`selected: ${String.fromCharCode(65+index)}`), `${fixture.name}: target ${index}; ${(await frame.locator('pre').innerText()).slice(-350)}`);
     }
-    if (fixture.name.startsWith('percent-cap-') && !fixture.name.endsWith('-resized')) previousOwner = {name:fixture.name,layout:await sandbox.evaluate(() => globalThis.__PIBBL_LAYOUT_DIAGNOSTICS__())};
+    if ((fixture.name.startsWith('percent-cap-') || fixture.name.startsWith('aspect-wrap-')) && !fixture.name.endsWith('-resized')) previousOwner = {name:fixture.name,layout:await sandbox.evaluate(() => globalThis.__PIBBL_LAYOUT_DIAGNOSTICS__())};
   }
   assert.ok(catalogUrls.length > 0, 'Studio replay must observe its actual catalog source');
   let catalogSurface;
@@ -82,7 +86,7 @@ try {
   const column = last.flexDirection.startsWith('column');
   if (last.gap > 0) {
   const gap = column ? Math.min(...lastBoxes.map(box => box.y + box.height)) + 6 : Math.min(...lastBoxes.map(box => box.x + box.width)) + 6;
-  await click(column ? 396 : 392+gap, column ? 240+gap : 244+lastBoxes[0].y);
+  await click(column ? 396+lastBoxes[0].x : 392+gap, column ? 240+gap : 244+lastBoxes[0].y);
   assert.ok((await frame.locator('pre').innerText()).includes(`selected: ${String.fromCharCode(64+lastBoxes.length)}`));
   }
   if (process.argv.includes('--screenshot')) await frame.locator('canvas').screenshot({ path: '/tmp/pibbl-yoga-comparison.png' });

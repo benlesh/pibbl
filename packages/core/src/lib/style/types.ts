@@ -124,7 +124,7 @@ export interface ResolvedBoxStyle {
  * @see {@link PathStyle}
  */
 export interface LayoutItemStyle extends PositioningStyle {
-  /** Positive finite outer width/height ratio consumed by finite nowrap Flex. Final main size derives cross size before cross bounds; intrinsic main sizing is unsupported. See {@link FlexItemStyle}. */
+  /** Positive finite outer width/height ratio consumed by finite Flex, including wrapped lines. Final per-line main size derives cross size before cross bounds; intrinsic main sizing is unsupported. See {@link FlexItemStyle}. */
   aspectRatio?: number;
   /** Uniform physical margin in logical Canvas units; finite negative values are allowed. Specific edges override this value. Consumed by experimental Flex only. See {@link LayoutItemStyle}. */
   margin?: number;

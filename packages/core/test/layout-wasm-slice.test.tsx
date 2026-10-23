@@ -2273,9 +2273,10 @@ it('applies outer aspect ratios after insets and clamps cross bounds independent
     const child = createElement(Rectangle,{ style: { width: 90,height: 50,minWidth: 0,flexShrink: 0,aspectRatio: ratio } });
     expect(() => layoutFlex(container,[child],{},measurement)).toThrow(/positive finite/);
   }
-  expect(() => layoutFlex(container,[basis],{ flexWrap: 'wrap' },measurement)).toThrow(/nowrap/);
+  expect(layoutFlex(container,[basis],{ flexWrap: 'wrap' },measurement)[0]).toMatchObject({width:90,height:30});
   const intrinsic = createElement(Rectangle,{ style: { width: 'auto',height: 50,minWidth: 0,flexShrink: 0,aspectRatio: 3 } });
   expect(() => layoutFlex(container,[intrinsic],{},measurement)).toThrow(/definite main dimension or flexBasis/);
+  expect(() => layoutFlex(container,[intrinsic],{flexWrap: "wrap"},measurement)).toThrow(/definite main dimension or flexBasis/);
 });
 
 it.runIf(experimentalLayout)('uses physical gap overrides without trailing wrapped line gaps', () => {
@@ -2465,3 +2466,27 @@ for (const axis of ['row', 'column'] as const) {
     expect(snapshotWasmLayoutDiagnostics().activeArenas).toBe(before.activeArenas);
   });
 }
+
+for (const axis of ['row','column'] as const) for (const wrap of ['wrap','wrap-reverse'] as const) {
+  it.runIf(experimentalLayout || wrap === 'wrap')(`derives final per-line ratio sizes in ${axis} ${wrap}`, () => {
+    const column=axis==='column', reverse=wrap==='wrap-reverse';
+    const children=[0,1,2].map(()=>createElement(Rectangle,{style:{width:column?'auto':80,height:column?80:'auto',flexBasis:80,flexGrow:1,flexShrink:0,minWidth:0,minHeight:0,aspectRatio:column?.5:2}}));
+    expect(layoutFlex({x:0,y:0,width:200,height:200},children,{flexDirection:axis,flexWrap:wrap,alignContent:'flex-start',alignItems:'flex-start',rowGap:column?12:10,columnGap:column?10:12},measurement)).toEqual(column
+      ? [{x:reverse?153:0,y:0,width:47,height:94},{x:reverse?153:0,y:106,width:47,height:94},{x:reverse?43:57,y:0,width:100,height:200}]
+      : [{x:0,y:reverse?153:0,width:94,height:47},{x:106,y:reverse?153:0,width:94,height:47},{x:0,y:reverse?43:57,width:200,height:100}]);
+  });
+}
+it.runIf(experimentalLayout)('publishes coupled wrapped ratio size and moved targets after owner resize', async () => {
+  const main=signal(200);let mounts=0,hits=0;const sizes=new Map<number,{width:number;height:number}>();
+  function Card({index,style:_style}:{index:number;style:Record<string,unknown>}){useConst(()=>++mounts);const box=useLayoutBox();sizes.set(index,{width:box.width,height:box.height});return createElement(Rectangle,{style:{width:box.width,height:box.height,fill:index===2?'blue':'red'},onClick:()=>{if(index===2)hits++;}});}
+  const canvas=document.createElement('canvas');canvas.width=220;canvas.height=220;document.body.append(canvas);
+  const baseline=snapshotWasmLayoutDiagnostics();
+  const controller=pibbl(canvas,createElement(Flex,{style:{width:main,height:200,flexWrap:'wrap',alignContent:'flex-start',alignItems:'flex-start',columnGap:12,rowGap:10},children:[0,1,2].map(index=>createElement(Card,{key:index,index,style:{width:80,height:'auto',flexBasis:80,flexGrow:1,flexShrink:0,minWidth:0,minHeight:0,aspectRatio:2}}))}));controllers.push(controller);await nextFrame();
+  expect(sizes.get(0)).toEqual({width:94,height:47});expect(sizes.get(2)).toEqual({width:200,height:100});clickCanvas(canvas,5,145);expect(hits).toBe(1);const before=snapshotWasmLayoutDiagnostics();
+  main.set(172);await nextFrame();expect(sizes.get(0)).toEqual({width:80,height:40});expect(sizes.get(2)).toEqual({width:172,height:86});clickCanvas(canvas,5,145);expect(hits).toBe(1);clickCanvas(canvas,5,54);expect(hits).toBe(2);expect([...canvas.getContext('2d')!.getImageData(5,145,1,1).data]).toEqual([0,0,0,0]);expect([...canvas.getContext('2d')!.getImageData(5,54,1,1).data]).toEqual([0,0,255,255]);const after=snapshotWasmLayoutDiagnostics();expect(after.solves).toBeGreaterThan(before.solves);expect(after.nodeCreates).toBe(before.nodeCreates);expect(mounts).toBe(3);controller.dispose();expect(snapshotWasmLayoutDiagnostics().activeNodes).toBe(baseline.activeNodes);expect(snapshotWasmLayoutDiagnostics().activeArenas).toBe(baseline.activeArenas);
+});
+
+it('records pinned wrapped ratio owner pairs for both axes and line directions', () => {
+  const names=yogaReference.cases.map(fixture=>fixture.name);
+  for(const axis of ['row','column'])for(const reverse of ['', '-reverse'])for(const resized of ['', '-resized'])expect(names).toContain(`aspect-wrap-${axis}${reverse}${resized}`);
+});

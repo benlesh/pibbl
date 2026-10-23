@@ -115,15 +115,15 @@ Layer raster sizing continues to ignore these layout fields by its existing rule
 ### Finite Flex item aspect ratios
 
 `LayoutItemStyle.aspectRatio?: number` is included in `FlexItemStyle` and is
-consumed only by finite nowrap Flex. It must be positive and finite. A numeric
+consumed only by finite Flex, including wrapped lines. It must be positive and finite. A numeric
 or percentage definite main dimension or basis is required; both-auto/intrinsic
-main sizing and wrapped ratio items are diagnosed as unsupported. Other parent
+main sizing is diagnosed as unsupported. Other parent
 layout families do not apply this Flex participation field. Root sizing and
 Layer raster sizing retain their separate rules.
 
 The ratio is outer width divided by outer height. After main-axis Flex solving,
 including grow/shrink and main bounds, derive preferred outer cross size from
-that final main allocation. This overrides declared cross dimensions and default
+that final per-line main allocation. Wrapped line cross sizes and reversed cross placement use these derived sizes. This overrides declared cross dimensions and default
 stretch, matching pinned Yoga3.2.1. Subtract combined border/padding cross insets,
 floor content at zero, clamp cross content bounds, then add insets once. Cross
 bounds can break the ratio; main size is not recomputed. Width90/height50/ratio3

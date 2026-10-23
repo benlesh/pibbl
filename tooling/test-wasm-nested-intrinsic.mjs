@@ -87,6 +87,7 @@ try {
       const receipt = await sandbox.evaluate(() => ({...globalThis.__PIBBL_PACKED_PROOF__, request: undefined}));
       assert.equal(receipt.importInert, true);
       assert.equal(receipt.aspectRatio, true, 'Installed package must honor final-main outer aspect geometry');
+      assert.equal(receipt.wrappedAspectRatio, true, 'Installed package must move wrapped ratio paint and targets after resize');
       assert.equal(receipt.frozenPartial, true, 'Installed package must use initially frozen sizes for partial factors');
       assert.equal(receipt.safeOverflow, true, 'Installed package must use safe overflow start');
       assert.equal(receipt.percentageBounds, true, 'Installed percentage caps must recompute against the resized owner and move targets');

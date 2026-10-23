@@ -3330,6 +3330,534 @@ function createWasmYogaMigrationExampleContent(canvas: HTMLCanvasElement) {
         "minHeight": 0
       }
     ]
+  },
+  {
+    "name": "aspect-wrap-row",
+    "width": 200,
+    "height": 200,
+    "gap": 12,
+    "flexDirection": "row",
+    "flexWrap": "wrap",
+    "containerStyle": {
+      "alignContent": "flex-start",
+      "alignItems": "flex-start",
+      "rowGap": 10,
+      "columnGap": 12
+    },
+    "boxes": [
+      {
+        "x": 0,
+        "y": 0,
+        "width": 94,
+        "height": 47
+      },
+      {
+        "x": 106,
+        "y": 0,
+        "width": 94,
+        "height": 47
+      },
+      {
+        "x": 0,
+        "y": 57,
+        "width": 200,
+        "height": 100
+      }
+    ],
+    "itemStyles": [
+      {
+        "width": 80,
+        "height": "auto",
+        "flexBasis": 80,
+        "flexGrow": 1,
+        "flexShrink": 0,
+        "minWidth": 0,
+        "minHeight": 0,
+        "aspectRatio": 2
+      },
+      {
+        "width": 80,
+        "height": "auto",
+        "flexBasis": 80,
+        "flexGrow": 1,
+        "flexShrink": 0,
+        "minWidth": 0,
+        "minHeight": 0,
+        "aspectRatio": 2
+      },
+      {
+        "width": 80,
+        "height": "auto",
+        "flexBasis": 80,
+        "flexGrow": 1,
+        "flexShrink": 0,
+        "minWidth": 0,
+        "minHeight": 0,
+        "aspectRatio": 2
+      }
+    ]
+  },
+  {
+    "name": "aspect-wrap-row-resized",
+    "width": 172,
+    "height": 200,
+    "gap": 12,
+    "flexDirection": "row",
+    "flexWrap": "wrap",
+    "containerStyle": {
+      "alignContent": "flex-start",
+      "alignItems": "flex-start",
+      "rowGap": 10,
+      "columnGap": 12
+    },
+    "boxes": [
+      {
+        "x": 0,
+        "y": 0,
+        "width": 80,
+        "height": 40
+      },
+      {
+        "x": 92,
+        "y": 0,
+        "width": 80,
+        "height": 40
+      },
+      {
+        "x": 0,
+        "y": 50,
+        "width": 172,
+        "height": 86
+      }
+    ],
+    "itemStyles": [
+      {
+        "width": 80,
+        "height": "auto",
+        "flexBasis": 80,
+        "flexGrow": 1,
+        "flexShrink": 0,
+        "minWidth": 0,
+        "minHeight": 0,
+        "aspectRatio": 2
+      },
+      {
+        "width": 80,
+        "height": "auto",
+        "flexBasis": 80,
+        "flexGrow": 1,
+        "flexShrink": 0,
+        "minWidth": 0,
+        "minHeight": 0,
+        "aspectRatio": 2
+      },
+      {
+        "width": 80,
+        "height": "auto",
+        "flexBasis": 80,
+        "flexGrow": 1,
+        "flexShrink": 0,
+        "minWidth": 0,
+        "minHeight": 0,
+        "aspectRatio": 2
+      }
+    ]
+  },
+  {
+    "name": "aspect-wrap-row-reverse",
+    "width": 200,
+    "height": 200,
+    "gap": 12,
+    "flexDirection": "row",
+    "flexWrap": "wrap-reverse",
+    "containerStyle": {
+      "alignContent": "flex-start",
+      "alignItems": "flex-start",
+      "rowGap": 10,
+      "columnGap": 12
+    },
+    "boxes": [
+      {
+        "x": 0,
+        "y": 153,
+        "width": 94,
+        "height": 47
+      },
+      {
+        "x": 106,
+        "y": 153,
+        "width": 94,
+        "height": 47
+      },
+      {
+        "x": 0,
+        "y": 43,
+        "width": 200,
+        "height": 100
+      }
+    ],
+    "itemStyles": [
+      {
+        "width": 80,
+        "height": "auto",
+        "flexBasis": 80,
+        "flexGrow": 1,
+        "flexShrink": 0,
+        "minWidth": 0,
+        "minHeight": 0,
+        "aspectRatio": 2
+      },
+      {
+        "width": 80,
+        "height": "auto",
+        "flexBasis": 80,
+        "flexGrow": 1,
+        "flexShrink": 0,
+        "minWidth": 0,
+        "minHeight": 0,
+        "aspectRatio": 2
+      },
+      {
+        "width": 80,
+        "height": "auto",
+        "flexBasis": 80,
+        "flexGrow": 1,
+        "flexShrink": 0,
+        "minWidth": 0,
+        "minHeight": 0,
+        "aspectRatio": 2
+      }
+    ]
+  },
+  {
+    "name": "aspect-wrap-row-reverse-resized",
+    "width": 172,
+    "height": 200,
+    "gap": 12,
+    "flexDirection": "row",
+    "flexWrap": "wrap-reverse",
+    "containerStyle": {
+      "alignContent": "flex-start",
+      "alignItems": "flex-start",
+      "rowGap": 10,
+      "columnGap": 12
+    },
+    "boxes": [
+      {
+        "x": 0,
+        "y": 160,
+        "width": 80,
+        "height": 40
+      },
+      {
+        "x": 92,
+        "y": 160,
+        "width": 80,
+        "height": 40
+      },
+      {
+        "x": 0,
+        "y": 64,
+        "width": 172,
+        "height": 86
+      }
+    ],
+    "itemStyles": [
+      {
+        "width": 80,
+        "height": "auto",
+        "flexBasis": 80,
+        "flexGrow": 1,
+        "flexShrink": 0,
+        "minWidth": 0,
+        "minHeight": 0,
+        "aspectRatio": 2
+      },
+      {
+        "width": 80,
+        "height": "auto",
+        "flexBasis": 80,
+        "flexGrow": 1,
+        "flexShrink": 0,
+        "minWidth": 0,
+        "minHeight": 0,
+        "aspectRatio": 2
+      },
+      {
+        "width": 80,
+        "height": "auto",
+        "flexBasis": 80,
+        "flexGrow": 1,
+        "flexShrink": 0,
+        "minWidth": 0,
+        "minHeight": 0,
+        "aspectRatio": 2
+      }
+    ]
+  },
+  {
+    "name": "aspect-wrap-column",
+    "width": 200,
+    "height": 200,
+    "gap": 12,
+    "flexDirection": "column",
+    "flexWrap": "wrap",
+    "containerStyle": {
+      "alignContent": "flex-start",
+      "alignItems": "flex-start",
+      "rowGap": 12,
+      "columnGap": 10
+    },
+    "boxes": [
+      {
+        "x": 0,
+        "y": 0,
+        "width": 47,
+        "height": 94
+      },
+      {
+        "x": 0,
+        "y": 106,
+        "width": 47,
+        "height": 94
+      },
+      {
+        "x": 57,
+        "y": 0,
+        "width": 100,
+        "height": 200
+      }
+    ],
+    "itemStyles": [
+      {
+        "width": "auto",
+        "height": 80,
+        "flexBasis": 80,
+        "flexGrow": 1,
+        "flexShrink": 0,
+        "minWidth": 0,
+        "minHeight": 0,
+        "aspectRatio": 0.5
+      },
+      {
+        "width": "auto",
+        "height": 80,
+        "flexBasis": 80,
+        "flexGrow": 1,
+        "flexShrink": 0,
+        "minWidth": 0,
+        "minHeight": 0,
+        "aspectRatio": 0.5
+      },
+      {
+        "width": "auto",
+        "height": 80,
+        "flexBasis": 80,
+        "flexGrow": 1,
+        "flexShrink": 0,
+        "minWidth": 0,
+        "minHeight": 0,
+        "aspectRatio": 0.5
+      }
+    ]
+  },
+  {
+    "name": "aspect-wrap-column-resized",
+    "width": 200,
+    "height": 172,
+    "gap": 12,
+    "flexDirection": "column",
+    "flexWrap": "wrap",
+    "containerStyle": {
+      "alignContent": "flex-start",
+      "alignItems": "flex-start",
+      "rowGap": 12,
+      "columnGap": 10
+    },
+    "boxes": [
+      {
+        "x": 0,
+        "y": 0,
+        "width": 40,
+        "height": 80
+      },
+      {
+        "x": 0,
+        "y": 92,
+        "width": 40,
+        "height": 80
+      },
+      {
+        "x": 50,
+        "y": 0,
+        "width": 86,
+        "height": 172
+      }
+    ],
+    "itemStyles": [
+      {
+        "width": "auto",
+        "height": 80,
+        "flexBasis": 80,
+        "flexGrow": 1,
+        "flexShrink": 0,
+        "minWidth": 0,
+        "minHeight": 0,
+        "aspectRatio": 0.5
+      },
+      {
+        "width": "auto",
+        "height": 80,
+        "flexBasis": 80,
+        "flexGrow": 1,
+        "flexShrink": 0,
+        "minWidth": 0,
+        "minHeight": 0,
+        "aspectRatio": 0.5
+      },
+      {
+        "width": "auto",
+        "height": 80,
+        "flexBasis": 80,
+        "flexGrow": 1,
+        "flexShrink": 0,
+        "minWidth": 0,
+        "minHeight": 0,
+        "aspectRatio": 0.5
+      }
+    ]
+  },
+  {
+    "name": "aspect-wrap-column-reverse",
+    "width": 200,
+    "height": 200,
+    "gap": 12,
+    "flexDirection": "column",
+    "flexWrap": "wrap-reverse",
+    "containerStyle": {
+      "alignContent": "flex-start",
+      "alignItems": "flex-start",
+      "rowGap": 12,
+      "columnGap": 10
+    },
+    "boxes": [
+      {
+        "x": 153,
+        "y": 0,
+        "width": 47,
+        "height": 94
+      },
+      {
+        "x": 153,
+        "y": 106,
+        "width": 47,
+        "height": 94
+      },
+      {
+        "x": 43,
+        "y": 0,
+        "width": 100,
+        "height": 200
+      }
+    ],
+    "itemStyles": [
+      {
+        "width": "auto",
+        "height": 80,
+        "flexBasis": 80,
+        "flexGrow": 1,
+        "flexShrink": 0,
+        "minWidth": 0,
+        "minHeight": 0,
+        "aspectRatio": 0.5
+      },
+      {
+        "width": "auto",
+        "height": 80,
+        "flexBasis": 80,
+        "flexGrow": 1,
+        "flexShrink": 0,
+        "minWidth": 0,
+        "minHeight": 0,
+        "aspectRatio": 0.5
+      },
+      {
+        "width": "auto",
+        "height": 80,
+        "flexBasis": 80,
+        "flexGrow": 1,
+        "flexShrink": 0,
+        "minWidth": 0,
+        "minHeight": 0,
+        "aspectRatio": 0.5
+      }
+    ]
+  },
+  {
+    "name": "aspect-wrap-column-reverse-resized",
+    "width": 200,
+    "height": 172,
+    "gap": 12,
+    "flexDirection": "column",
+    "flexWrap": "wrap-reverse",
+    "containerStyle": {
+      "alignContent": "flex-start",
+      "alignItems": "flex-start",
+      "rowGap": 12,
+      "columnGap": 10
+    },
+    "boxes": [
+      {
+        "x": 160,
+        "y": 0,
+        "width": 40,
+        "height": 80
+      },
+      {
+        "x": 160,
+        "y": 92,
+        "width": 40,
+        "height": 80
+      },
+      {
+        "x": 64,
+        "y": 0,
+        "width": 86,
+        "height": 172
+      }
+    ],
+    "itemStyles": [
+      {
+        "width": "auto",
+        "height": 80,
+        "flexBasis": 80,
+        "flexGrow": 1,
+        "flexShrink": 0,
+        "minWidth": 0,
+        "minHeight": 0,
+        "aspectRatio": 0.5
+      },
+      {
+        "width": "auto",
+        "height": 80,
+        "flexBasis": 80,
+        "flexGrow": 1,
+        "flexShrink": 0,
+        "minWidth": 0,
+        "minHeight": 0,
+        "aspectRatio": 0.5
+      },
+      {
+        "width": "auto",
+        "height": 80,
+        "flexBasis": 80,
+        "flexGrow": 1,
+        "flexShrink": 0,
+        "minWidth": 0,
+        "minHeight": 0,
+        "aspectRatio": 0.5
+      }
+    ]
   }
 ] as const;
   // END YOGA REFERENCE
@@ -3510,6 +4038,8 @@ function createWasmYogaMigrationExampleContent(canvas: HTMLCanvasElement) {
           style={{
             left: 28,
             top: 492,
+            width: 700,
+            wrap: true,
             font: "12px monospace",
             fill: "#19375b",
           }}
@@ -3583,8 +4113,12 @@ function createWasmYogaMigrationExampleContent(canvas: HTMLCanvasElement) {
       >
         Paint only
       </Text>
-      <Rectangle style={{left:484,top:142,width:248,height:36,fill:"#426b61",cursor:"pointer"}} onClick={() => index.set(fixtureCases.findIndex(fixture => fixture.name === "percent-cap-row"))} />
-      <Text pointerEvents="none" style={{left:496,top:150,font:"14px sans-serif",fill:"#ffffff"}}>Percentage bounds</Text>
+      <Rectangle style={{left:484,top:142,width:248,height:36,fill:"#426b61",cursor:"pointer"}} onClick={() => index.update(value => {
+        const bounds = fixtureCases.findIndex(fixture => fixture.name === "percent-cap-row");
+        const aspect = fixtureCases.findIndex(fixture => fixture.name === "aspect-wrap-row");
+        return value < bounds ? bounds : value < aspect ? aspect : 0;
+      })} />
+      <Text pointerEvents="none" style={{left:496,top:150,font:"14px sans-serif",fill:"#ffffff"}}>Next section</Text>
       <Workspace />
       <Text
         style={{

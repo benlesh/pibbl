@@ -2,7 +2,8 @@
 
 ## Current checkpoint and single next slice — 2026-10-22
 
-Latest delivery is slice77 (definite percentage bounds and worktree catalog isolation).
+Latest delivery is slice78 (finite wrapped aspect-ratio participation).
+Slice77 is `239df577` (definite percentage bounds and worktree catalog isolation).
 Slice76 is `c787d7d9` (safe overflow and finite distribution evidence).
 Slice75 is `bcf4f02e` (direction-independent start/end alignment).
 Slice74 is `e6175c94` (finite allocation evidence and initial-freeze correction).
@@ -27,9 +28,9 @@ Slice56 is `cf2c7bc5` (prepared Flow-root planning/adoption).
 Slice55 is `1510efe3` (prepared Grid-root planning/adoption).
 Slice54 `773da7b9`,53 `aaa7ddcb`,52 `b5381e0d` are consolidated in `f322a709`.
 Every slice has its own commit. The fixed33-capability/seven-gate denominator is
-unchanged; all seven gates remain open. The single next slice is78, finite wrapped aspect-ratio participation. Source5192/built5193, `#/testing/layout-preflight`:
+unchanged; all seven gates remain open. The next milestone is consolidation26 for slices76–78. Source5192/built5193, `#/testing/layout-preflight`:
 Source5192/built5193 `#/examples/layout/wasm-yoga-migration`: Next case + resize
-cycles83 records:72matches/11classified CSS differences; click A/B/C targets.
+cycles91 records:80matches/11classified CSS differences; click A/B/C targets.
 Canonical built comparison: http://127.0.0.1:5193/#/examples/layout/wasm-yoga-migration.
 Native Grid tracks/spans and Flow wrap controls remain available.
 
@@ -1422,16 +1423,36 @@ Fixed33 counts unchanged:3complete,11experimental,7partial,11missing,1excluded;
 all seven release gates open. Consolidation76–78 will include compact embedded
 case records and the previously recorded documentation-classification debt.
 
-## [NEXT] Finite wrapped aspect-ratio participation (slice 78)
+## Slice 78 delivered — finite wrapped aspect ratios
 
-Extend the existing outer aspectRatio contract to finite declared-main/basis
-wrapped Flex items, both axes and wrap-reverse. Keep final per-line main
-allocation as ratio input, cross bounds and outer insets, source paint/hit order,
-identity and teardown. Pin native row/column geometry, define failing public
-cases before removing the current blanket nowrap restriction, and expose coupled
-owner-resize geometry through the existing comparison. Keep intrinsic main/both
-auto and other-parent ratio inference outside this bounded slice. No new public
-signature or native ABI is required. Consolidate76–78 afterward.
+Finite declared-main/basis Flex items now derive cross size from each line's final
+main allocation in row/column wrap and wrap-reverse. No public signature or native
+ABI change. Intrinsic-main ratio inference remains rejected, including wrapped
+containers. Native pinned Yoga adds eight initial/resized fixtures: corpus91,
+80matches/11preserved classified differences. Root200→172 derives94×47→80×40
+on the first row and200×100→172×86 on the second; columns transpose the geometry.
+
+Fresh focused experimental Chromium:147passed; final aspect subset passes after
+adding explicit wrapped intrinsic rejection. Source5192/built5193 replay all eight
+new cases plus prior grow targets, owner-resize old-target misses/new-target hits,
+stable node ownership and exact disposal. Built proof469private dist inputs,
+actual worktree catalog760×540, errors[], cleanup0/0/0. Logs
+`/tmp/pibbl-slice78-{focused,final-aspect,source,built}.txt`.
+Packed fresh offline consumer passes230installed dist inputs, Bundler/NodeNext,
+wrapped ratio resize pixels and hit targets plus exact final ownership cleanup.
+Tarball SHA256 `e17cf20f6efb6216a0b7c665de3a89a04783b4c39b94d0414f12aff3ceb994f3`.
+Types/lint/provenance pass. Kernel65383bytes unchanged. Node26.9.0; no Node24
+aggregate-trust claim. Independent scoped review found no production issue and
+its requested wrapped intrinsic negative is included. No baseline rewritten.
+
+## [NEXT] Consolidation 26 — slices 76–78
+
+Commit78 separately, then compact embedded comparison records without changing
+canonical oracle data; classify the nine known Markdown files in the documentation
+gate; run proportional combined verification. Fixed33 remains3complete,
+11experimental,7partial,11missing,1excluded and all seven gates open. Select the
+next authorized finite capability after consolidation; broader intrinsic owner,
+RTL, Grid, migration and release exits remain outstanding.
 
 ### Consolidation 24 completed for delivery slices 70–72
 

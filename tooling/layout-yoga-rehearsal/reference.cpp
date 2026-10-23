@@ -76,6 +76,20 @@ static void percentageBoundsCases() {
     std::cout<<"]}";YGNodeFreeRecursive(root);YGConfigFree(config);
   }
 }
+static void wrappedAspectCases() {
+  for(int axis=0;axis<2;axis++)for(int reverse=0;reverse<2;reverse++)for(int resized=0;resized<2;resized++) {
+    const bool column=axis==1;const int main=resized?172:200;
+    auto config=YGConfigNew();YGConfigSetUseWebDefaults(config,false);YGConfigSetPointScaleFactor(config,0);YGConfigSetErrata(config,YGErrataNone);
+    auto root=YGNodeNewWithConfig(config);YGNodeStyleSetWidth(root,column?200:main);YGNodeStyleSetHeight(root,column?main:200);YGNodeStyleSetFlexDirection(root,column?YGFlexDirectionColumn:YGFlexDirectionRow);YGNodeStyleSetFlexWrap(root,reverse?YGWrapWrapReverse:YGWrapWrap);YGNodeStyleSetAlignItems(root,YGAlignFlexStart);YGNodeStyleSetAlignContent(root,YGAlignFlexStart);YGNodeStyleSetGap(root,YGGutterColumn,column?10:12);YGNodeStyleSetGap(root,YGGutterRow,column?12:10);
+    for(int j=0;j<3;j++){auto child=YGNodeNewWithConfig(config);if(column)YGNodeStyleSetHeight(child,80);else YGNodeStyleSetWidth(child,80);YGNodeStyleSetFlexBasis(child,80);YGNodeStyleSetFlexGrow(child,1);YGNodeStyleSetFlexShrink(child,0);YGNodeStyleSetMinWidth(child,0);YGNodeStyleSetMinHeight(child,0);YGNodeStyleSetAspectRatio(child,column?.5:2);YGNodeInsertChild(root,child,j);}
+    YGNodeCalculateLayout(root,YGUndefined,YGUndefined,YGDirectionLTR);
+    std::cout<<",{\"name\":\"aspect-wrap-"<<(column?"column":"row")<<(reverse?"-reverse":"")<<(resized?"-resized":"")<<"\",\"width\":"<<(column?200:main)<<",\"height\":"<<(column?main:200)<<",\"gap\":12,\"flexDirection\":\""<<(column?"column":"row")<<"\",\"flexWrap\":\""<<(reverse?"wrap-reverse":"wrap")<<"\",\"containerStyle\":{\"alignContent\":\"flex-start\",\"alignItems\":\"flex-start\",\"rowGap\":"<<(column?12:10)<<",\"columnGap\":"<<(column?10:12)<<"},\"boxes\":[";
+    for(int j=0;j<3;j++){auto child=YGNodeGetChild(root,j);if(j)std::cout<<",";std::cout<<"{\"x\":"<<YGNodeLayoutGetLeft(child)<<",\"y\":"<<YGNodeLayoutGetTop(child)<<",\"width\":"<<YGNodeLayoutGetWidth(child)<<",\"height\":"<<YGNodeLayoutGetHeight(child)<<"}";}
+    std::cout<<"],\"itemStyles\":[";
+    for(int j=0;j<3;j++){if(j)std::cout<<",";std::cout<<"{\"width\":"<<(column?"\"auto\"":"80")<<",\"height\":"<<(column?"80":"\"auto\"")<<",\"flexBasis\":80,\"flexGrow\":1,\"flexShrink\":0,\"minWidth\":0,\"minHeight\":0,\"aspectRatio\":"<<(column?.5:2)<<"}";}
+    std::cout<<"]}";YGNodeFreeRecursive(root);YGConfigFree(config);
+  }
+}
 int main() {
   const char* names[] = {"grow", "cap", "shrink", "rectangle-shrink", "rectangle-percent-content-box", "column-grow", "column-cap", "column-shrink", "row-reverse-cap", "column-reverse-cap", "row-wrap", "row-wrap-reverse", "border-box-floor-bounds", "border-box-percentage", "border-box-asymmetric-row", "border-box-asymmetric-column", "zero-fractional-grow", "fractional-shrink", "grow-freeze-release", "shrink-freeze-release", "large-finite-differential", "subunit-zero-grow", "subunit-shrink-policy", "initial-freeze-grow-policy", "initial-freeze-shrink-policy"};
   std::cout << "[";
@@ -189,5 +203,6 @@ int main() {
   }
   distributionCases();
   percentageBoundsCases();
+  wrappedAspectCases();
   std::cout << "]\n";
 }

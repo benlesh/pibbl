@@ -81,10 +81,10 @@ to all sides and omitted sides resolve to zero.
 ## FlexItemStyle
 
 Optional numeric `aspectRatio` is outer width divided by outer height for finite
-nowrap Flex items. Final main allocation derives cross size, overriding explicit
+Flex items, including wrapped lines. Final per-line main allocation derives cross size, overriding explicit
 cross size and stretch; cross bounds may break the ratio. Supply a definite main
-dimension or basis. Intrinsic main sizing, wrapping, other layout families and
-root ratio sizing are outside this first slice.
+dimension or basis. Intrinsic main sizing, other layout families and
+root ratio sizing remain outside this contract.
 
 `FlexItemStyle` is the direct-child participation style consumed by a `Flex`
 parent; it does not create a CSS cascade.

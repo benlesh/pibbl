@@ -639,9 +639,6 @@ function resolveFlexPlacements(
       throw childDiagnostic(child, 'aspectRatio', aspectRatio, container, 'must be a positive finite outer width/height ratio');
     }
     if (aspectRatio !== undefined) hasAspectRatio = true;
-    if (aspectRatio !== undefined && options.flexWrap !== 'nowrap') {
-      throw childDiagnostic(child, 'aspectRatio', aspectRatio, container, 'currently requires nowrap Flex');
-    }
     const layoutChild = isLayoutComponent(child.type) ? prepareLayoutComponent(child, { receiverToken }) : child;
     const knownIntrinsicLayout = child.type === Flex || layoutChild.type === Flow || layoutChild.type === Grid || layoutChild.type === Flex &&
       isColumnDirection(normalized.flexDirection) && (normalized.flexWrap ?? 'nowrap') === 'nowrap';
@@ -702,7 +699,7 @@ function resolveFlexPlacements(
       (specifiedMain === undefined || specifiedMain === 'auto');
     if (aspectRatio !== undefined && needsMeasuredMain) throw childDiagnostic(child, 'aspectRatio', aspectRatio, container, 'requires a definite main dimension or flexBasis; intrinsic aspect sizing is unsupported');
     const crossAuto = specifiedCross === undefined || specifiedCross === 'auto';
-    if (experimentalLayout && !row && options.flexWrap !== 'nowrap' && (needsMeasuredMain || crossAuto)) {
+    if (experimentalLayout && !row && options.flexWrap !== 'nowrap' && (needsMeasuredMain || aspectRatio === undefined && crossAuto)) {
       throw childDiagnostic(child, needsMeasuredMain ? mainProperty : crossProperty, 'auto', container,
         'Experimental WASM column wrap requires a declared height or flexBasis and a declared width; intrinsic item sizes are unsupported.');
     }
