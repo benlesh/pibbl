@@ -15,7 +15,7 @@ import {
 import { resolvePrimitiveStyleInput } from '../element/resolve-primitive-inputs.js';
 import type { PibblElement } from '../element/types.js';
 import { GLOBAL_STATE } from '../global-state.js';
-import { normalizeEdges } from '../style/normalize.js';
+import { normalizeBoxInsets } from './box-insets.js';
 import { resolveLength } from '../style/resolve-length.js';
 import {
   extractSystemFilter,
@@ -436,7 +436,7 @@ function resolveLayoutBox(
     'maxHeight',
     diagnosticContext,
   );
-  const padding = normalizeEdges(style.padding, 'padding', diagnosticContext);
+  const padding = normalizeBoxInsets(style, diagnosticContext);
   const allowOverflow = requireDefinite;
   const maxConstraintWidth = allowOverflow ? allocationCeiling(
     context.allocation.width,

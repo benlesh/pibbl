@@ -52,10 +52,10 @@ finite box and the independent `left`/`top` placement vocabulary for children.
 ## BoxStyle
 
 `BoxStyle` is the shared declared-box vocabulary: dimensions, min/max limits,
-padding, and the local inputs needed to resolve a finite box. Its optional
-`boxSizing` policy defaults to `"content-box"`; `"border-box"` includes padding
-in dimensions, min/max and Flex basis. Percentages resolve before padding is
-subtracted, and the outer border-box size floors at total axis padding. Painted
+padding, layout borders, and the local inputs needed to resolve a finite box. Its optional
+`boxSizing` policy defaults to `"content-box"`; `"border-box"` includes padding and layout borders
+in dimensions, min/max and Flex basis. Percentages resolve before combined insets are
+subtracted, and the outer border-box size floors at total axis padding plus borders. Painted
 strokes remain independent. See [`resolveBox`](#/api/functions/resolve-box).
 
 ## CanvasMeasurementService
@@ -171,3 +171,10 @@ geometry after box-style validation.
 ## Size
 
 `Size` is the finite width/height record used by layout and measurement.
+
+`style.borderWidth` reserves finite nonnegative layout insets, using a number or
+physical `{ top, right, bottom, left }` edges. It defaults to zero and does not
+paint. Padding and borders combine once: content-box40×30 with padding10 and
+borderWidth2 occupies64×54; border-box64×54 preserves40×30 content.
+`strokeWidth` remains independent paint. Percentage/logical border aliases are
+not supported. Layer raster sizing retains its separate width/height policy.

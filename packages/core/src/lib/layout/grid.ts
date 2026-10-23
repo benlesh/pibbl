@@ -12,7 +12,7 @@ import {
   type PibblStructuralEventProps,
   wireStructuralEvents,
 } from '../components/structural-events.js';
-import { normalizeEdges } from '../style/normalize.js';
+import { normalizeBoxInsets } from './box-insets.js';
 import { resolveLength } from '../style/resolve-length.js';
 import { setPreNormalizedStyle } from '../style/resolve-dispatch.js';
 import type {
@@ -314,11 +314,7 @@ function resolveGridPlacements(
         );
       }
     }
-    const padding = normalizeEdges(
-      normalized.padding,
-      'padding',
-      childContext(child, container),
-    );
+    const padding = normalizeBoxInsets(normalized, childContext(child, container));
     const usedStyle = {
       ...normalized,
       width: widthAuto

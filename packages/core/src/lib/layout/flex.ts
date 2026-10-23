@@ -23,7 +23,7 @@ import {
   type PibblStructuralEventProps,
   wireStructuralEvents,
 } from '../components/structural-events.js';
-import { normalizeEdges } from '../style/normalize.js';
+import { normalizeBoxInsets } from './box-insets.js';
 import { resolveLength } from '../style/resolve-length.js';
 import { setPreNormalizedStyle, peekPreNormalizedStyle } from '../style/resolve-dispatch.js';
 import type {
@@ -447,7 +447,7 @@ function measureFlex(
       // Descend only through known built-in columns at settled content widths.
       // The shared measurement context detects descriptor cycles; there is no
       // speculative component execution, percentage feedback or fixed-point loop.
-      const padding = normalizeEdges(style.padding, 'padding', childContext(child, diagnosticBox));
+      const padding = normalizeBoxInsets(style, childContext(child, diagnosticBox));
       const automaticWidth = crossValue === undefined || crossValue === 'auto';
       if (automaticWidth && effectiveAlignment(normalizeItemAlignment(style.alignSelf, child, diagnosticBox), options.alignItems) !== 'stretch') {
         return unsupportedIntrinsic('requires stretch or a definite child width in an auto-height column');
@@ -489,11 +489,7 @@ function measureFlex(
       Number.POSITIVE_INFINITY,
       maxCrossProperty,
     );
-    const padding = normalizeEdges(
-      style.padding,
-      'padding',
-      childContext(child, diagnosticBox),
-    );
+    const padding = normalizeBoxInsets(style, childContext(child, diagnosticBox));
     const paddingMain = row ? padding.left + padding.right :
       padding.top + padding.bottom;
     const paddingCross = row ? padding.top + padding.bottom :
@@ -737,7 +733,7 @@ function resolveFlexPlacements(
       }
     }
 
-    const padding = normalizeEdges(normalized.padding, 'padding', childContext(child, container));
+    const padding = normalizeBoxInsets(normalized, childContext(child, container));
     const paddingMain = row ? padding.left + padding.right : padding.top + padding.bottom;
     const paddingCross = row ? padding.top + padding.bottom : padding.left + padding.right;
     let minMain = resolveOptionalBound(
@@ -1015,7 +1011,7 @@ function intrinsicTextSnapshot(child: PibblElement<any>, style: Readonly<BoxStyl
             if (!genericTextFont(leafStyle)) return;
             content = prepareLayoutTextContent(leaf.props, { receiverToken: receiver });
           } else if (leaf.type === Flex && isColumnDirection(leafStyle.flexDirection) && (leafStyle.flexWrap ?? 'nowrap') === 'nowrap' && (leafStyle.height === undefined || leafStyle.height === 'auto')) {
-            const padding = normalizeEdges(leafStyle.padding, 'padding', childContext(leaf, { x: 0, y: 0, width, height: constraints.maxHeight }));
+            const padding = normalizeBoxInsets(leafStyle, childContext(leaf, { x: 0, y: 0, width, height: constraints.maxHeight }));
             const available = typeof leafStyle.width === 'number' ? leafStyle.width : Math.max(0, width-padding.left-padding.right);
             const usedWidth = clamp(available, typeof leafStyle.minWidth === 'number' ? leafStyle.minWidth : 0, typeof leafStyle.maxWidth === 'number' ? leafStyle.maxWidth : Infinity);
             content = visit(leaf, leafStyle, receiver, usedWidth);

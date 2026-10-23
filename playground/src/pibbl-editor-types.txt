@@ -452,7 +452,8 @@ export interface MeshTransformOptions {
     width?: Length; height?: Length;
     minWidth?: Exclude<Length, 'auto'>; maxWidth?: Exclude<Length, 'auto'>;
     minHeight?: Exclude<Length, 'auto'>; maxHeight?: Exclude<Length, 'auto'>;
-    padding?: EdgeValues; overflow?: 'visible' | 'clip';
+    padding?: EdgeValues;
+    borderWidth?: EdgeValues; overflow?: 'visible' | 'clip';
   }
   export interface ResolvedBoxStyle { borderBox: LayoutBox; contentBox: LayoutBox }
   export interface LayoutItemStyle {

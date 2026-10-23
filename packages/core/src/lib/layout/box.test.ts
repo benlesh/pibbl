@@ -167,3 +167,13 @@ it('resolves border-box percentages before subtracting padding and validates out
   expect(resolveBox({ boxSizing: 'border-box', width: '50%', height: '50%', padding: 10 }, constraints)).toEqual({ borderBox: { x: 0, y: 0, width: 100, height: 50 }, contentBox: { x: 10, y: 10, width: 80, height: 30 } });
   expect(() => resolveBox({ boxSizing: 'border-box', width: 8, height: 8, minWidth: 9, maxWidth: 8, padding: 10 }, constraints)).toThrow(/minimum must not exceed maximum/);
 });
+
+it('combines finite asymmetric layout borders and padding once in both sizing modes', () => {
+  const edges = { padding: { left: 3, right: 5, top: 7, bottom: 11 }, borderWidth: { left: 2, right: 4, top: 6, bottom: 8 } };
+  const expected = { borderBox: { x: 0, y: 0, width: 54, height: 62 }, contentBox: { x: 5, y: 13, width: 40, height: 30 } };
+  expect(resolveBox({ ...edges, width: 40, height: 30 }, constraints)).toEqual(expected);
+  expect(resolveBox({ ...edges, boxSizing: 'border-box', width: 54, height: 62 }, constraints)).toEqual(expected);
+  expect(() => resolveBox({ borderWidth: -1 }, constraints)).toThrow(/borderWidth.*nonnegative/);
+  expect(() => resolveBox({ borderWidth: { left: Infinity } }, constraints)).toThrow(/borderWidth.left.*finite/);
+  expect(() => resolveBox({ borderWidth: Number.MAX_VALUE, padding: Number.MAX_VALUE }, constraints)).toThrow(/combined padding and border insets must be finite/);
+});

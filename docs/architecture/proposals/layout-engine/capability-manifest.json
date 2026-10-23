@@ -63,9 +63,11 @@
       { "id": "row-reverse-cap", "covers": ["flex.reverse-and-wrap-reverse", "flex.min-max"], "classification": "exact finite LTR main-axis reversal; first maxWidth80" },
       { "id": "column-reverse-cap", "covers": ["flex.reverse-and-wrap-reverse", "flex.min-max"], "classification": "exact finite LTR main-axis reversal; first maxHeight30" },
       { "id": "row-wrap", "covers": ["flex.row-column-nowrap-wrap", "flex.numeric-gap"], "classification": "exact finite three-item source-formed lines; numeric basis/minimum/gap" },
-      { "id": "row-wrap-reverse", "covers": ["flex.reverse-and-wrap-reverse", "flex.row-column-nowrap-wrap"], "classification": "exact finite reversed cross placement; source A/B/C order unchanged" }
+      { "id": "row-wrap-reverse", "covers": ["flex.reverse-and-wrap-reverse", "flex.row-column-nowrap-wrap"], "classification": "exact finite reversed cross placement; source A/B/C order unchanged" },
+      { "id": "border-box-floor-bounds", "covers": ["box.box-sizing", "flex.min-max"], "classification": "exact explicit padding floor and finite outer bounds" },
+      { "id": "border-box-percentage", "covers": ["box.box-sizing", "flex.grow-shrink-basis"], "classification": "exact definite percentage basis and cross size before inset conversion" }
     ],
-    "limit": "Twelve exact finite row/column/reverse/wrap fixtures; one explicit content-box/numeric-padding conversion. This does not establish general box-sizing, percentage, intrinsic or CSS parity."
+    "limit": "Fourteen exact finite row/column/reverse/wrap fixtures, content-box padding and border-box floor/bounds/percentage conversion. This does not establish general box-sizing, percentage, intrinsic or CSS parity."
   },
   "gateGroups": [
     {
@@ -405,22 +407,21 @@
       "id": "box.padding-and-layout-border",
       "target": "parity",
       "group": "box-and-direction",
-      "current": "numeric padding; painted stroke is separate",
+      "current": "numeric padding and explicit physical numeric layout borderWidth; painted stroke remains separate",
       "status": "partial",
-      "unresolvedPolicy": "Implementation direction is authorized; exact layout-border fields and percentage/logical padding signatures remain unresolved.",
+      "unresolvedPolicy": "Physical numeric borderWidth selected; percentage/logical padding signatures and broader intrinsic interactions remain unresolved.",
       "evidenceRefs": [
         "docs/design/layout-system-contract.md#flex",
         "docs/architecture/proposals/layout-engine/design.md#boxes-and-units"
       ],
       "evidence": {
-        "positive": ["numeric padding"],
-        "negative": ["paint stroke is not a layout border"],
+        "positive": ["numeric padding", "asymmetric row/column border plus padding content-box and border-box geometry"],
+        "negative": ["paint stroke is not a layout border", "negative/nonfinite borders and inset overflow rejected"],
         "interaction": [],
         "yogaCases": [],
         "missing": [
           "percentage padding",
           "logical padding",
-          "layout border",
           "content measurement"
         ]
       }
@@ -429,7 +430,7 @@
       "id": "box.box-sizing",
       "target": "parity",
       "group": "box-and-direction",
-      "current": "content-box default preserved; explicit border-box dimensions, bounds, Flex basis and percentage-before-padding conversion",
+      "current": "content-box default preserved; explicit border-box dimensions, bounds, Flex basis and percentage-before-combined-padding/border conversion",
       "status": "experimental",
       "unresolvedPolicy": "Opt-in policy selected with pinned Yoga padding floor; broad intrinsic/aspect/border interactions remain outside this slice.",
       "evidence": {
@@ -438,9 +439,8 @@
         "interaction": ["mode/basis signals move same-frame target geometry without remount", "paint-only allocation reuse", "source/built226 and installed229 input cleanup", "explicit editor/Bundler/NodeNext/Node helper policy use"],
         "yogaCases": [],
         "missing": [
-          "pinned corpus conversion fixture",
           "complete percentage/intrinsic and aspect interactions",
-          "layout-border integration"
+          "broader layout-border intrinsic interactions"
         ]
       }
     },

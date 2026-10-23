@@ -168,14 +168,16 @@ scientific notation, malformed strings, and non-finite results reject.
 - Allocation size, min/max, padding, gaps, and growth factors are nonnegative;
   minimum greater than maximum is an error.
 - `boxSizing` defaults to `"content-box"`: dimensions and min/max name content
-  sizes, then numeric padding is added. Explicit `"border-box"` dimensions,
+  sizes, then numeric padding and explicit layout borders are added. Explicit `"border-box"` dimensions,
   bounds and Flex basis name outer sizes. Percentages resolve against the existing
-  axis basis before padding is subtracted. Content floors at zero, and border-box
-  outer dimensions floor at total axis padding even if a declared maximum or
+  axis basis before combined padding and border insets are subtracted. Content floors at zero, and border-box
+  outer dimensions floor at total axis padding plus layout borders even if a declared maximum or
   parent allocation is smaller. Opposing min/max remain invalid before that
-  conversion. Painted strokes are independent; layout border widths are not added
-  by this option. Existing automatic/intrinsic sizing rules remain unchanged.
-- There is no margin. Parent placement uses `left`/`top`; drawing-local geometry
+  conversion. `borderWidth` is finite nonnegative physical numeric edge shorthand,
+  default zero; it reserves layout space and does not paint. Painted strokes remain independent. Existing automatic/intrinsic sizing rules remain unchanged.
+- Flex children support numeric physical margins under the layout contract;
+  automatic/logical margins and margin participation in other layout families
+  remain unsupported. Parent placement uses `left`/`top`; drawing-local geometry
   uses `x`/`y` (`x1`/`x2` or `y1`/`y2` for line helpers).
 - Primitive rectangle/image geometry retains signed Canvas semantics outside
   nonnegative layout allocation.

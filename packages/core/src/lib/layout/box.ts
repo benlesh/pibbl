@@ -3,7 +3,7 @@ import {
   layoutDiagnostic,
   type LayoutDiagnosticContext,
 } from '../style/diagnostics.js';
-import { normalizeEdges } from '../style/normalize.js';
+import { normalizeBoxInsets } from './box-insets.js';
 import { resolveLength } from '../style/resolve-length.js';
 import type { BoxStyle, Length, ResolvedBoxStyle } from '../style/types.js';
 import type { Constraints } from './types.js';
@@ -36,7 +36,7 @@ export function resolveBox(
   validateConstraints(constraints, diagnosticContext);
   const paddingFloor = borderBoxPaddingFloor(style);
   if (style.boxSizing !== undefined) style = contentBoxStyle(style, { width: constraints.maxWidth, height: constraints.maxHeight, context: diagnosticContext });
-  const padding = normalizeEdges(style.padding, 'padding', diagnosticContext);
+  const padding = normalizeBoxInsets(style, diagnosticContext);
 
   const horizontal = resolveAxis(
     'width',

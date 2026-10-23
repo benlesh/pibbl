@@ -77,8 +77,8 @@ export type EdgeValues =
  * @see {@link RectStyle}
  */
 export interface BoxStyle extends SystemStyle {
-  /** Selects whether dimensions, bounds and Flex basis include padding. Defaults to content-box.
-   * Border-box content floors at zero and the outer box floors at total axis padding.
+  /** Selects whether dimensions, bounds and Flex basis include padding and layout borders. Defaults to content-box.
+   * Border-box content floors at zero and the outer box floors at total axis padding plus layout borders.
    * Painted stroke widths remain independent. See {@link ResolvedBoxStyle}.
    */
   boxSizing?: 'content-box' | 'border-box';
@@ -94,8 +94,10 @@ export interface BoxStyle extends SystemStyle {
   minHeight?: Exclude<Length, 'auto'>;
   /** Maximum permitted height. See {@link Length}. */
   maxHeight?: Exclude<Length, 'auto'>;
-  /** Insets between the border box and content box. See {@link EdgeValues}. */
+  /** Padding inside layout borders and outside the content box. See {@link EdgeValues}. */
   padding?: EdgeValues;
+  /** Layout-only physical border insets, in logical pixels. Defaults to zero; does not paint a stroke. See {@link EdgeValues}. */
+  borderWidth?: EdgeValues;
   /** Selects `"visible"`, `"clip"` for overflow. See {@link BoxStyle}. */
   overflow?: 'visible' | 'clip';
 }

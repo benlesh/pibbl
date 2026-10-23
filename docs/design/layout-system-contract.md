@@ -85,12 +85,12 @@ paint outside its declared box when overflow is visible. A container does not
 silently clip paint merely because a child overflows or uses negative local
 geometry.
 
-### Box sizing
+### Box sizing and layout borders
 
 `BoxStyle.boxSizing` is `"content-box"` by default and accepts explicit
 `"border-box"`. Dimensions, min/max and Flex basis use the selected box model;
-percentages resolve first using their existing axis basis. Numeric padding is
-subtracted once for border-box inputs. Used content dimensions travel through
+percentages resolve first using their existing axis basis. Numeric padding plus
+explicit layout border insets are subtracted once for border-box inputs. Used content dimensions travel through
 prepared, measured, stretched and cached descriptors without another subtraction.
 Both normal and experimental Flex paths use the same content-valued records.
 
@@ -102,6 +102,15 @@ min/max and negative/nonfinite inputs are still rejected before conversion.
 Default content-box constraint behavior is preserved. The option does not turn
 painted stroke into a layout border, add percentage padding or expand intrinsic
 provider support. Existing Layer raster sizing rules remain separate.
+
+`BoxStyle.borderWidth` accepts the same finite nonnegative physical numeric edge
+shorthand as padding, defaulting to zero. It reserves layout space without
+painting. Content-box40×30 with padding left3/right5/top7/bottom11 and borders
+left2/right4/top6/bottom8 has outer54×62 and content origin5,13. Border-box54×62
+has identical geometry. Flex basis/intrinsic sizing, Grid stretch and Flow
+measurement use combined insets once; border-box floors include both. Percentage
+and logical border aliases are outside this slice. `strokeWidth` remains paint.
+Layer raster sizing continues to ignore these layout fields by its existing rule.
 
 ## Absolute
 

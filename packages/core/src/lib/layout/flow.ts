@@ -12,7 +12,7 @@ import {
   type PibblStructuralEventProps,
   wireStructuralEvents,
 } from '../components/structural-events.js';
-import { normalizeEdges } from '../style/normalize.js';
+import { normalizeBoxInsets } from './box-insets.js';
 import { setPreNormalizedStyle } from '../style/resolve-dispatch.js';
 import type { BoxStyle, LayoutItemStyle, ResolvedBoxStyle } from '../style/types.js';
 import type {
@@ -350,7 +350,7 @@ function provisionalFlowBox(
     algorithm: 'measurement',
     constraints,
   };
-  const padding = normalizeEdges(style.padding, 'padding', diagnosticContext);
+  const padding = normalizeBoxInsets(style, diagnosticContext);
   const width = finiteMeasurementBound(
     constraints.maxWidth,
     [style.width, style.minWidth, style.maxWidth],

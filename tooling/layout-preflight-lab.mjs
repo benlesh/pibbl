@@ -46,14 +46,16 @@ else {
       await lab.getByRole('button', { name: 'Paint box content', exact: true }).click();
       await lab.waitForFunction(() => document.querySelector('#subject').getContext('2d').getImageData(15,15,1,1).data[1] === 128);
       assert.equal(await lab.evaluate(() => globalThis.__PIBBL_LAYOUT_DIAGNOSTICS__().solves), beforePaint);
+      await lab.getByRole('button', { name: 'Add layout border', exact: true }).click();
+      await lab.waitForFunction(() => JSON.parse(document.querySelector('pre').textContent).allocatedWidth === 79);
       await lab.getByRole('button', { name: 'Use content-box sizing', exact: true }).click();
       await lab.waitForFunction(() => JSON.parse(document.querySelector('pre').textContent).allocatedWidth === 105);
-      await lab.locator('#subject').click({ position: { x: 127, y: 5 } });
+      await lab.locator('#subject').click({ position: { x: 133, y: 5 } });
       await lab.waitForFunction(() => JSON.parse(document.querySelector('pre').textContent).nativeHits === 3);
       const disposed = await lab.evaluate(() => { dispatchEvent(new PageTransitionEvent('pagehide')); return globalThis.__PIBBL_LAYOUT_DIAGNOSTICS__(); });
       assert.deepEqual(['activeNodes','activeArenas','activeWasmInstances','cachedMeasurements'].map(key => disposed[key]), [0,0,0,0]);
       assert.deepEqual(errors, []);
-      console.warn(`${built ? 'Built' : 'Source'} boxSizing: content80→85→105, moved target100→105→125, paint-only solve reuse, cleanup0/0/0/0; ${coreInputs.length} public core inputs`);
+      console.warn(`${built ? 'Built' : 'Source'} boxSizing: content80→85→79→105, moved target100→105→131, paint-only solve reuse, cleanup0/0/0/0; ${coreInputs.length} public core inputs`);
     } else if (process.argv.includes('--intrinsic-grid')) {
       const placements = () => lab.evaluate(() => globalThis.__PIBBL_LAYOUT_DIAGNOSTICS__().gridCellPlacements);
       const before = await placements();

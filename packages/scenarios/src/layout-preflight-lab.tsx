@@ -1,7 +1,7 @@
 import { Absolute, Flex, Flow, Grid, Group, HtmlBox, Layer, Overlay, Rectangle, useLayoutBox, defineLayoutComponent, type FlexStyle, type PibblNodeInput, type Signal } from '@pibbl/core';
 
 interface LabProps {
-  width: Signal<number>; grow: Signal<number>; minimum: Signal<number>; nested: Signal<boolean>; direct: Signal<boolean>; described: Signal<boolean>; layer: Signal<boolean>; grid: Signal<boolean>; gridRoot: Signal<boolean>; flowRoot: Signal<boolean>; overlayRoot: Signal<boolean>; absoluteRoot: Signal<boolean>; layerGrid: Signal<boolean>; directLayer: Signal<boolean>; describedLayer: Signal<boolean>; intrinsicFlow: Signal<boolean>; boxCard: Signal<boolean>; boxMode: Signal<'content-box'|'border-box'>; boxBasis: Signal<number>; intrinsicGrid: Signal<boolean>; intrinsicRow: Signal<number>; flow: Signal<boolean>; nativeGrid: Signal<boolean>; nativeFlow: Signal<boolean>; nativeSpan: Signal<boolean>; nativeFill: Signal<string>; nativeWidth: (index: number, width: number) => void; nativeHit: () => void;
+  width: Signal<number>; grow: Signal<number>; minimum: Signal<number>; nested: Signal<boolean>; direct: Signal<boolean>; described: Signal<boolean>; layer: Signal<boolean>; grid: Signal<boolean>; gridRoot: Signal<boolean>; flowRoot: Signal<boolean>; overlayRoot: Signal<boolean>; absoluteRoot: Signal<boolean>; layerGrid: Signal<boolean>; directLayer: Signal<boolean>; describedLayer: Signal<boolean>; intrinsicFlow: Signal<boolean>; boxCard: Signal<boolean>; boxMode: Signal<'content-box'|'border-box'>; boxBasis: Signal<number>; boxBorder: Signal<number>; intrinsicGrid: Signal<boolean>; intrinsicRow: Signal<number>; flow: Signal<boolean>; nativeGrid: Signal<boolean>; nativeFlow: Signal<boolean>; nativeSpan: Signal<boolean>; nativeFill: Signal<string>; nativeWidth: (index: number, width: number) => void; nativeHit: () => void;
   evaluate: (width: number) => void; hit: () => void; layerHit: () => void;
 }
 function PreflightProbe({ evaluate, hit }: {
@@ -20,9 +20,9 @@ function BoxSizingContent({ evaluate, fill }: { evaluate: (width: number) => voi
 const DescribedCard = defineLayoutComponent((props: { style: FlexStyle; children: PibblNodeInput }) => <Flex style={props.style}>{props.children}</Flex>);
 
 /** Deterministic public-surface fixture; the host owns fault/recovery controls. */
-export function LayoutPreflightLab({ width, grow, minimum, nested, direct, described, layer, grid, gridRoot, flowRoot, overlayRoot, absoluteRoot, layerGrid, directLayer, describedLayer, intrinsicFlow, boxCard, boxMode, boxBasis, intrinsicGrid, intrinsicRow, flow, nativeGrid, nativeFlow, nativeSpan, nativeFill, nativeWidth, nativeHit, evaluate, hit, layerHit }: LabProps) {
+export function LayoutPreflightLab({ width, grow, minimum, nested, direct, described, layer, grid, gridRoot, flowRoot, overlayRoot, absoluteRoot, layerGrid, directLayer, describedLayer, intrinsicFlow, boxCard, boxMode, boxBasis, boxBorder, intrinsicGrid, intrinsicRow, flow, nativeGrid, nativeFlow, nativeSpan, nativeFill, nativeWidth, nativeHit, evaluate, hit, layerHit }: LabProps) {
   if (boxCard.get()) return <Flex style={{ width: 240, height: 60, alignItems: 'flex-start' }}>
-    <Flex style={{ boxSizing: boxMode, flexBasis: boxBasis, flexShrink: 0, minWidth: 100, maxWidth: 110, height: 30, minHeight: 0, padding: 10 }}>
+    <Flex style={{ boxSizing: boxMode, flexBasis: boxBasis, flexShrink: 0, minWidth: 100, maxWidth: 110, height: 30, minHeight: 0, padding: 10, borderWidth: boxBorder }}>
       <BoxSizingContent evaluate={evaluate} fill={nativeFill} style={{ width: '100%', height: '100%', minWidth: 0, flexShrink: 0 }} />
     </Flex>
     <Rectangle style={{ width: 20, height: 20, minWidth: 0, flexShrink: 0, fill: 'blue' }} onClick={nativeHit} />

@@ -2,7 +2,8 @@
 
 ## Current checkpoint and single next slice — 2026-10-22
 
-Latest delivery is slice69 (Studio runtime dependency invalidation).
+Latest delivery is slice70 (explicit layout border widths).
+Slice69 is `9b530832` (Studio runtime dependency invalidation).
 Slice68 is `df3d0974` (pinned border-box bounds and percentage conformance).
 Slice67 is `16fe904e` (coherent content-box/border-box sizing).
 Slice66 is `6648bf66` (pinned Yoga wrap/cross-reversal conformance).
@@ -19,7 +20,7 @@ Slice56 is `cf2c7bc5` (prepared Flow-root planning/adoption).
 Slice55 is `1510efe3` (prepared Grid-root planning/adoption).
 Slice54 `773da7b9`,53 `aaa7ddcb`,52 `b5381e0d` are consolidated in `f322a709`.
 Every slice has its own commit. The fixed33-capability/seven-gate denominator is
-unchanged; all seven gates remain open. The single next slice is70, explicit layout border widths. Source5192/built5193, `#/testing/layout-preflight`:
+unchanged; all seven gates remain open. The single next slice is71, pinned asymmetric layout-border conformance. Source5192/built5193, `#/testing/layout-preflight`:
 Source5192/built5193 `#/examples/layout/wasm-yoga-migration`: Next case + resize
 cycles fourteen fixtures, including border-box bounds/percentages; click A/B/C targets.
 Canonical built comparison: http://127.0.0.1:5193/#/examples/layout/wasm-yoga-migration.
@@ -1151,14 +1152,37 @@ Typecheck and focused lint pass. Canonical built5193 was restarted for the plugi
 change and replays all14 cases,468private core inputs, errors[] and cleanup0/0/0.
 Diagnostic5194 retired. Logs `/tmp/pibbl-slice69-*`; Node26.9.0/Chromium.
 
-## [NEXT] Explicit layout border widths (slice 70)
+### Slice 70 — explicit layout border widths
 
-Add finite nonnegative numeric physical `BoxStyle.borderWidth` insets, distinct
-from painted stroke. Combine border plus padding once for content allocation,
-box sizing, Flex basis and intrinsic measurement; preserve default zero borders
-and Layer's separate raster-sizing policy. Public asymmetric row/column evidence
-comes first. No percentage/logical border aliases or new painting semantics.
-Group24 is70–72 after consolidation23 for67–69.
+Public `BoxStyle.borderWidth?: EdgeValues` reserves finite nonnegative physical
+numeric insets, default zero, independently from painted stroke. One internal
+combined-inset helper preserves the existing padding-only path and feeds box
+conversion/allocation, Flex main/cross and intrinsic records, Grid stretch and
+Flow measurement. No native ABI change. Layer raster sizing stays separate.
+Public asymmetric row/column RED preceded production; both sizing modes preserve
+content40×30, origin5,13, outer54×62 and following target. Border signals update
+allocation; paint-only changes retain solver reuse. Opposing finite arithmetic
+and edge validation remain explicit. Existing numeric Flex margin docs corrected.
+
+Focused experimental203pass/1normal-onlyskip in6files, normal3pass/117skip in2,
+plus Layer raster exception1pass in each lane. Source/built Studio preflight
+`--box-sizing` proves content80→85→79→105 and target100→105→131 with zero errors
+and exact cleanup;227public core inputs. Packed230installed-dist inputs passes
+Bundler/NodeNext literal border declarations, Node combined-inset geometry and
+browser lifecycle. Editor declaration authoring, typecheck, lint, linked JSDoc
+and Studio docs metadata/render/coverage pass. Scoped reused review: no material
+findings; no duplicate review. Logs `/tmp/pibbl-slice70-*`.
+Node26.9.0/pnpm11.21.0deps/Chromium. Kernel65282bytes unchanged. No parity, speed
+or Node24 full-trust claim; all seven gates remain open.
+
+## [NEXT] Pinned asymmetric layout-border conformance (slice 71)
+
+Add two independent Yoga3.2.1 border-box fixtures to the existing corpus/public
+comparison: row basis54 and column basis62 with asymmetric padding3/5/7/11 and
+borders2/4/6/8. Both outer54×62; second targets rowx66 and columny74. Preserve
+source order, content origin5,13 and distinct paint behavior. No percentage or
+logical borders, intrinsic provider expansion or new comparison harness.
+Group24 remains70–72, then bounded consolidation.
 
 ### Consolidation 23 completed for delivery slices 67–69
 

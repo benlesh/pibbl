@@ -1,5 +1,5 @@
 import type { BoxStyle, Length } from '../style/types.js';
-import { normalizeEdges } from '../style/normalize.js';
+import { normalizeBoxInsets } from './box-insets.js';
 import { resolveLength } from '../style/resolve-length.js';
 import { layoutDiagnostic, type LayoutDiagnosticContext } from '../style/diagnostics.js';
 
@@ -20,7 +20,7 @@ export function validateBoxSizing(style: Readonly<BoxStyle>, context: Readonly<L
 export function contentBoxStyle<S extends BoxStyle & { flexBasis?: Length }>(style: Readonly<S>, options: { width: number; height: number; mainAxis?: 'width' | 'height'; context: Readonly<LayoutDiagnosticContext> }): Readonly<S> {
   validateBoxSizing(style, options.context);
   if (style.boxSizing !== 'border-box') return style;
-  const padding = normalizeEdges(style.padding, 'padding', options.context);
+  const padding = normalizeBoxInsets(style, options.context);
   const horizontal = padding.left + padding.right, vertical = padding.top + padding.bottom;
   const width = nonnegativeLength(style.width, options.width, 'width', options.context);
   const height = nonnegativeLength(style.height, options.height, 'height', options.context);

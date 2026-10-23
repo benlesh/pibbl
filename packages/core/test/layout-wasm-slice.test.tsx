@@ -2174,3 +2174,46 @@ it('matches pinned border-box percentage content sizes and separated click targe
   expect(content).toEqual(reference.boxes.map(box => ({ width: box.width-20, height: box.height-20 })));
   expect([...canvas.getContext('2d')!.getImageData(105,15,1,1).data]).toEqual([0,0,0,0]); clickCanvas(canvas,15,15); clickCanvas(canvas,105,15); clickCanvas(canvas,125,15); expect(hits).toEqual([0,1]); controller.dispose();
 });
+
+for (const axis of ['row','column'] as const) {
+it(`reserves asymmetric layout borders independently from paint in ${axis}`, async () => {
+  const sizing = signal<'content-box'|'border-box'>('content-box');
+  const sizes: { width: number; height: number }[] = []; let hits = 0;
+  function Content(_props: { style: Record<string, unknown> }) {
+    const box = useLayoutBox(); sizes.push({ width: box.width, height: box.height });
+    return createElement(Rectangle, { style: { width: box.width, height: box.height, fill: 'red' } });
+  }
+  function Scene() {
+    const borderBox = sizing.get() === 'border-box';
+    return createElement(Flex, { style: { width: 180, height: 180, flexDirection: axis, alignItems: 'flex-start' }, children: [
+      createElement(Flex, { style: { boxSizing: sizing, width: borderBox ? 54 : 40, height: borderBox ? 62 : 30,
+        minWidth: 0, minHeight: 0, flexShrink: 0, padding: { left: 3, right: 5, top: 7, bottom: 11 },
+        borderWidth: { left: 2, right: 4, top: 6, bottom: 8 } }, children:
+        createElement(Content, { style: { width: '100%', height: '100%', minWidth: 0, flexShrink: 0 } }) }),
+      createElement(Rectangle, { style: { width: 20, height: 20, minWidth: 0, minHeight: 0, flexShrink: 0, fill: 'blue', strokeWidth: 4 }, onClick: () => hits++ }),
+    ] });
+  }
+  const canvas = document.createElement('canvas'); canvas.width = 200; canvas.height = 200; document.body.append(canvas);
+  const controller = pibbl(canvas, createElement(Scene, {})); controllers.push(controller); await nextFrame();
+  const verify = () => {
+    expect(sizes.at(-1)).toEqual({ width: 40, height: 30 });
+    expect([...canvas.getContext('2d')!.getImageData(6,14,1,1).data]).toEqual([255,0,0,255]);
+    expect([...canvas.getContext('2d')!.getImageData(1,1,1,1).data]).toEqual([0,0,0,0]);
+    const x = axis === 'row' ? 58 : 4, y = axis === 'row' ? 4 : 66;
+    clickCanvas(canvas,x,y);
+  };
+  verify(); expect(hits).toBe(1); sizing.set('border-box'); await nextFrame(); verify(); expect(hits).toBe(2);
+  controller.dispose();
+});
+}
+
+it('keeps Layer raster sizing independent from layout border and padding insets', async () => {
+  const canvas = document.createElement('canvas'); canvas.width = 120; canvas.height = 80; document.body.append(canvas);
+  const controller = pibbl(canvas, createElement(Layer, { style: { width: 80, height: 40, boxSizing: 'border-box', padding: 10, borderWidth: 5 }, children:
+    createElement(Rectangle, { style: { width: 120, height: 80, fill: 'red' } }) })); controllers.push(controller); await nextFrame();
+  expect([...canvas.getContext('2d')!.getImageData(1,1,1,1).data]).toEqual([255,0,0,255]);
+  expect([...canvas.getContext('2d')!.getImageData(79,39,1,1).data]).toEqual([255,0,0,255]);
+  expect([...canvas.getContext('2d')!.getImageData(81,39,1,1).data]).toEqual([0,0,0,0]);
+  expect([...canvas.getContext('2d')!.getImageData(79,41,1,1).data]).toEqual([0,0,0,0]);
+  controller.dispose();
+});

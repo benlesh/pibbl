@@ -71,7 +71,7 @@ const row = (
 The `style` received by `Tile` is its specified author value. The finite local
 box calculated by the parent comes from `useLayoutBox()`. Parent placement uses
 `left`/`top`; drawing-local geometry uses `x`/`y`. `width` and `height` describe
-content boxes by default. Use `boxSizing: "border-box"` to include numeric padding
+content boxes by default. Use `boxSizing: "border-box"` to include numeric padding and layout borders
 in declared dimensions, bounds and Flex basis. A border-box width100 with padding10
 has80px content; a content-box width100 has120px outer width. Padding forms a floor
 when a border-box dimension is smaller than its insets. `overflow: "clip"` clips both paint and
@@ -272,3 +272,10 @@ is shared by the Studio and headless browser evidence.
 
 See [responsive local styles](#/learn/guides/responsive-styles) for typed width
 and height conditions, the placement/content distinction, and measurement limits.
+
+`style.borderWidth` reserves finite nonnegative layout insets, using a number or
+physical `{ top, right, bottom, left }` edges. It defaults to zero and does not
+paint. Padding and borders combine once: content-box40×30 with padding10 and
+borderWidth2 occupies64×54; border-box64×54 preserves40×30 content.
+`strokeWidth` remains independent paint. Percentage/logical border aliases are
+not supported. Layer raster sizing retains its separate width/height policy.

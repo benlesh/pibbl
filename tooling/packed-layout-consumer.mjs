@@ -89,7 +89,7 @@ try {
   );
   await writeFile(join(consumer, "margin-types.ts"), `
 import { createElement, Rectangle, Flex, type FlexItemStyle, type BoxStyle } from '@pibbl/core';
-const box: BoxStyle = { boxSizing: 'border-box', width: '50%', height: 30, padding: 10 };
+const box: BoxStyle = { boxSizing: 'border-box', width: '50%', height: 30, padding: 10, borderWidth: { left: 2, right: 4 } };
 export const sized = createElement(Rectangle, { style: { ...box, width: 100, height: 30 } });
 // @ts-expect-error Box sizing is a closed policy, not arbitrary CSS.
 const invalidBox: BoxStyle = { boxSizing: 'padding-box' };
@@ -125,7 +125,7 @@ export const reverseFlex = createElement(Flex, { style: { width: 100, height: 40
   await run(process.execPath, [
     "--input-type=module",
     "-e",
-    `import { fileURLToPath } from 'node:url'; import { signal,isSignal,Flex,resolveBox } from '@pibbl/core'; import {jsx} from '@pibbl/core/jsx-runtime'; if(!isSignal(signal(1))||!jsx(Flex,{}))throw Error('identity'); const b=resolveBox({boxSizing:'border-box',width:100,height:30,padding:10},{minWidth:0,maxWidth:200,minHeight:0,maxHeight:100});if(b.borderBox.width!==100||b.contentBox.width!==80||b.contentBox.height!==10)throw Error('box sizing'); if(!fileURLToPath(import.meta.resolve('@pibbl/core')).startsWith(${JSON.stringify(installed + "/")}))throw Error('source fallback');`,
+    `import { fileURLToPath } from 'node:url'; import { signal,isSignal,Flex,resolveBox } from '@pibbl/core'; import {jsx} from '@pibbl/core/jsx-runtime'; if(!isSignal(signal(1))||!jsx(Flex,{}))throw Error('identity'); const b=resolveBox({boxSizing:'border-box',width:100,height:30,padding:10,borderWidth:2},{minWidth:0,maxWidth:200,minHeight:0,maxHeight:100});if(b.borderBox.width!==100||b.contentBox.width!==76||b.contentBox.height!==6)throw Error('box sizing'); if(!fileURLToPath(import.meta.resolve('@pibbl/core')).startsWith(${JSON.stringify(installed + "/")}))throw Error('source fallback');`,
   ]);
   await writeFile(
     join(consumer, "entry.ts"),
