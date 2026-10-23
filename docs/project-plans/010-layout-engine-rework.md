@@ -2,7 +2,8 @@
 
 ## Current checkpoint and single next slice — 2026-10-23
 
-Latest delivery is slice94 (final-width custom measurement), recorded below.
+Latest delivery is slice95 (combined direction evidence), recorded below.
+Slice94 is `196e8275` (final-width custom measurement).
 Slice93 is `a7c36733` (finite wrapped-row intrinsic height).
 Slice92 is `02f21ea3` (custom intrinsic providers).
 Slice91 is `3f943f70` (logical layout borders).
@@ -44,9 +45,9 @@ Slice56 is `cf2c7bc5` (prepared Flow-root planning/adoption).
 Slice55 is `1510efe3` (prepared Grid-root planning/adoption).
 Slice54 `773da7b9`,53 `aaa7ddcb`,52 `b5381e0d` are consolidated in `f322a709`.
 Every slice has its own commit. The fixed33-capability/seven-gate denominator is
-unchanged; all seven gates remain open. Consolidation26 is `2cd357d4`; consolidation27 is `abbaf209`; consolidation28 is `dfd16c8f`; consolidation29 is `f2e38dc6`; consolidation30 is recorded below; slices91–93 are delivered below; consolidation31 passed below; the single next delivery is95, the remaining wrapped/reverse/min/max direction exit. Source5192/built5193, `#/testing/layout-preflight`:
+unchanged; all seven gates remain open. Consolidation26 is `2cd357d4`; consolidation27 is `abbaf209`; consolidation28 is `dfd16c8f`; consolidation29 is `f2e38dc6`; consolidation30 is recorded below; slices91–93 are delivered below; consolidation31 passed below; slice95 combined direction evidence passed below; the single next delivery is96, independent direction-policy isolates. Source5192/built5193, `#/testing/layout-preflight`:
 Source5192/built5193 `#/examples/layout/wasm-yoga-migration`: Next case + resize
-cycles179 records:156matches/23classified differences; click A/B/C targets.
+cycles195 records:156matches/39classified differences; click A/B/C targets.
 Canonical built comparison: http://127.0.0.1:5193/#/examples/layout/wasm-yoga-migration.
 Native Grid tracks/spans and Flow wrap controls remain available.
 
@@ -2255,18 +2256,46 @@ unchanged. Custom-leaf capability remains partial: broader exact/at-most/unbound
 consumers, nested owner feedback and baselines remain. Group94–96 consolidates
 only after96. Final whole-codebase review stays at full program end.
 
-## [NEXT] Wrapped/reverse/min/max direction exit (slice 95)
+## Delivered combined direction evidence (slice 95)
 
-Keep the fixed33 denominator. Complete the nearest remaining whole-entry exit for
-`direction.rtl-and-logical-edges`: pin four main directions × wrap/wrap-reverse ×
-LTR/RTL with logical padding/borders, logical-only margins and min/max bounds;
-prove public semantic geometry, keyed focus retention, Tab source order, topmost
-paint/hits and exact cleanup. Reuse88–91 explicit child override, invalid-direction,
-Layer inheritance and classified physical/logical-margin evidence. Mixed margin
-width divergences stay attributed to `flex.margin`; do not advertise universal
-Yoga parity or close a group gate. Native16-case and focused focus-test drafts
-exist only in `/tmp`; inspect and establish public evidence before production.
-No new API or extra reviewer. Promote only if stated exit evidence actually passes.
+Sixteen pinned Yoga3.2.1 cases combine row/column, main reverse, wrap/wrap-reverse,
+LTR/RTL, logical start margins/padding/borders and min/max bounds. Public ordinary
+probes record complete world boxes before pixel and click checks. Keyed focus
+survives RTL; Tab and Shift-Tab remain source ordered. Negative logical margin
+overlap keeps later source paint and topmost hits. Native nodes, arenas and
+measurement caches return to baseline. No runtime or public API change.
+
+Exact coordinates caught a difference hidden by center-pixel samples: row center
+with margins2/4 is−1 vertically; column logical margins6/3 give±1.5. In column
+wrap-reverse, asymmetric root insets additionally differ because Pibbl reflects
+inside its content box while Yoga reflects the inset position against the outer
+box. Both are existing documented Pibbl policies, now explicitly classified as
+`preserved-margin-and-content-reflection`. Independent isolate evidence remains;
+the direction entry is deliberately still partial. Native corpus195 contains
+156matches and39classified differences, not195parity cases.
+
+Fresh Chromium: focused4pass, complete slice file346pass/7skip; ordinary
+JavaScript77pass/276skip. Source5192 and built5193 replay all16 exact preserved
+boxes, keyed stamps and A/B/C hits, with zero owned resources after disposal.
+Built receipt469dist inputs. Installed packed proof replays all16 and checks each
+controller cleanup, plus strict Bundler/NodeNext consumers and230installed inputs.
+Kernel and tarball are unchanged from94: tarball SHA256
+`3e8042b107ec4948368c27c817bf3bc53f32203db171bd60694421e7c4ed1432`.
+Native provenance, types, changed-code lint, catalog, documentation109RED probes,
+JSDoc and whitespace pass. No visual baselines changed. Node26.9.0/Chromium;
+no Node24 aggregate trust claim. Fixed33 stays4complete/11experimental/8partial/
+9missing/1excluded; all seven gates remain open.
+
+## [NEXT] Independent direction-policy isolates (slice 96)
+
+Separate the combined direction matrix's margin centering from asymmetric parent
+insets: native/public zero-margin column wrap/wrap-reverse LTR/RTL fixtures and
+no-root-inset logical-margin counterparts. Preserve existing margin-box and
+content-box contracts; classify each oracle difference at its actual source.
+Only promote the direction entry if complete geometry, interaction, negative,
+source/built/installed and cleanup evidence meets its stated exit. No new API,
+extra writer or duplicate review. Then consolidate94–96. Other fixed-program
+capabilities and all release gates remain outstanding.
 
 ### Consolidation 24 completed for delivery slices 70–72
 

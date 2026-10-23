@@ -1,7 +1,7 @@
 import { WasmFlexIntrinsicWrapExample } from '../../scenarios/src/learning/layout/wasm-flex-intrinsic-wrap.example';
 import yogaReference from '../../../tooling/layout-yoga-rehearsal/reference.json';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
-import { createElement, Absolute, Overlay, Flex, Grid, Flow, Group, Clip, Text, Rectangle, measureElement, useLayoutBox, useConst, Layer, signal, computed, type PibblNode, type PibblNodeInput, type GridStyle, type FlexStyle, type RectStyle, defineLayoutComponent, definePrimitive } from '@pibbl/core';
+import { createElement, Absolute, Overlay, Flex, Grid, Flow, Group, Clip, Text, Rectangle, FocusManagement, useCanvasContext, measureElement, useLayoutBox, useConst, Layer, signal, computed, type PibblNode, type PibblNodeInput, type GridStyle, type FlexStyle, type RectStyle, defineLayoutComponent, definePrimitive } from '@pibbl/core';
 import { pibblSync as pibbl } from '@pibbl/core/sync';
 import { prepareLayoutEngineSync } from '../src/lib/layout/wasm/embedded';
 import { WasmFlexTextExample as mountWasmFlexTextComponent } from "../../scenarios/src/learning/layout/wasm-flex-text.example";
@@ -866,7 +866,7 @@ const mount = createExampleMount(mountModule.WasmYogaMigrationExample);
   });
   const controller = mount(canvas); controllers.push(controller); await nextFrame();
   if(logicalPadding)for(let section=0;section<8;section++){clickCanvas(canvas,520,158);await nextFrame();}
-  const cases=yogaReference.cases.filter(fixture=>!('intrinsicFixture' in fixture) && ('contentBoxes' in fixture)===logicalPadding);
+  const cases=yogaReference.cases.filter(fixture=>!('intrinsicFixture' in fixture) && !('directionMatrixFixture' in fixture) && ('contentBoxes' in fixture)===logicalPadding);
   for (const [index, fixture] of cases.entries()) {
     const expected = fixture.pibblBoxes ?? fixture.boxes;
     if (index) { labels.length = 0; clickCanvas(canvas,60,158); await nextFrame(); }
@@ -3283,4 +3283,170 @@ it.runIf(experimentalLayout)('supplies custom final content width with border-bo
  const sibling=createElement(Rectangle,{style:{width:40,height:20,minWidth:0,flexShrink:0}});
  expect(layoutFlex({x:0,y:0,width:100,height:100},[child,sibling],{alignItems:'flex-start'},measurement)).toEqual([{x:0,y:0,width:60,height:60},{x:60,y:0,width:40,height:20}]);
  expect(queries).toContainEqual([40,40]);
+});
+
+it.runIf(experimentalLayout)('preserves source paint and topmost hit order when logical overlap mirrors', async () => {
+  const baseline = snapshotWasmLayoutDiagnostics();
+  const direction = signal<'ltr' | 'rtl'>('ltr');
+  const hits: string[] = [];
+  const canvas = document.createElement('canvas');
+  canvas.width = 100; canvas.height = 30; document.body.append(canvas);
+  const App = () => createElement(Flex, { style: {
+    width: 100, height: 30, layoutDirection: direction.get(), alignItems: 'flex-start',
+  }, children: [
+    createElement(Rectangle, { key: 'A', onClick: () => hits.push('A'), style: { width: 60, height: 30, minWidth: 0, flexShrink: 0, fill: '#19375b' } }),
+    createElement(Rectangle, { key: 'B', onClick: () => hits.push('B'), style: { width: 60, height: 30, minWidth: 0, flexShrink: 0, marginStart: -20, fill: '#a63758' } }),
+  ] });
+  const controller = pibbl(canvas, createElement(App, {}));
+  controllers.push(controller); await nextFrame();
+  const mounted = snapshotWasmLayoutDiagnostics();
+  for (let pass = 0; pass < 2; pass++) {
+    if (pass) { direction.set('rtl'); await nextFrame(); }
+    expect([...canvas.getContext('2d')!.getImageData(50, 10, 1, 1).data]).toEqual([166, 55, 88, 255]);
+    clickCanvas(canvas, 50, 10);
+    expect(hits).toEqual(pass ? ['B', 'B'] : ['B']);
+    expect(snapshotWasmLayoutDiagnostics().nodeCreates).toBe(mounted.nodeCreates);
+  }
+  controller.dispose();
+  const disposed = snapshotWasmLayoutDiagnostics();
+  expect(disposed.activeNodes).toBe(baseline.activeNodes);
+  expect(disposed.activeArenas).toBe(baseline.activeArenas);
+  expect(disposed.cachedMeasurements).toBe(baseline.cachedMeasurements);
+});
+
+
+it.runIf(experimentalLayout)('keeps keyed focus and source Tab order before pointer targeting while RTL mirrors a wrapped reverse row', async () => {
+  const baseline = snapshotWasmLayoutDiagnostics();
+  const direction = signal<'ltr' | 'rtl'>('ltr');
+  const focused: string[] = [];
+  const hits: string[] = [];
+  const canvas = document.createElement('canvas');
+  canvas.width = 120;
+  canvas.height = 80;
+  document.body.append(canvas);
+  const controller = pibbl(canvas, (
+    <FocusManagement>
+      <Flex style={{
+        width: 120,
+        height: 80,
+        layoutDirection: direction,
+        flexDirection: 'row-reverse',
+        flexWrap: 'wrap-reverse',
+        alignItems: 'flex-start',
+      }}>
+        <Rectangle key="A" keyboardFocusable onFocus={() => focused.push('A')} onClick={() => hits.push('A')} style={{ width: 60, height: 30, flexShrink: 0, minWidth: 0, fill: '#19375b' }} />
+        <Rectangle key="B" keyboardFocusable onFocus={() => focused.push('B')} onClick={() => hits.push('B')} style={{ width: 60, height: 30, flexShrink: 0, minWidth: 0, fill: '#a63758' }} />
+        <Rectangle key="C" keyboardFocusable onFocus={() => focused.push('C')} onClick={() => hits.push('C')} style={{ width: 60, height: 30, flexShrink: 0, minWidth: 0, fill: '#426b61' }} />
+      </Flex>
+    </FocusManagement>
+  ));
+  controllers.push(controller);
+  await nextFrame();
+
+  canvas.focus({ preventScroll: true });
+  const tab = (shiftKey = false) => canvas.dispatchEvent(new KeyboardEvent('keydown', {
+    key: 'Tab', code: 'Tab', shiftKey, bubbles: true, cancelable: true,
+  }));
+  expect(focused).toEqual(['A']);
+  expect(tab()).toBe(false);
+  expect(focused).toEqual(['A', 'B']);
+
+  direction.set('rtl');
+  await nextFrame();
+  // The keyed logical target survives the physical mirror.
+  expect(focused).toEqual(['A', 'B']);
+  expect(tab()).toBe(false);
+  expect(focused).toEqual(['A', 'B', 'C']);
+  expect(tab(true)).toBe(false);
+  expect(focused).toEqual(['A', 'B', 'C', 'B']);
+
+  clickCanvas(canvas, 90, 65);
+  clickCanvas(canvas, 30, 65);
+  expect(hits).toEqual(['B', 'A']);
+  const context = canvas.getContext('2d')!;
+  expect([...context.getImageData(90, 65, 1, 1).data]).toEqual([166, 55, 88, 255]);
+  expect([...context.getImageData(30, 65, 1, 1).data]).toEqual([25, 55, 91, 255]);
+  controller.dispose();
+  controllers.splice(controllers.indexOf(controller), 1);
+  canvas.remove();
+  const disposed = snapshotWasmLayoutDiagnostics();
+  expect(disposed.activeNodes).toBe(baseline.activeNodes);
+  expect(disposed.activeArenas).toBe(baseline.activeArenas);
+  expect(disposed.cachedMeasurements).toBe(baseline.cachedMeasurements);
+});
+
+it.runIf(experimentalLayout)('renders, targets, and releases every pinned public direction matrix fixture', async () => {
+  type DirectionFixture = {
+    readonly name: string;
+    readonly width: number;
+    readonly height: number;
+    readonly gap: number;
+    readonly flexDirection: 'row' | 'column' | 'row-reverse' | 'column-reverse';
+    readonly flexWrap: 'wrap' | 'wrap-reverse';
+    readonly layoutDirection: 'ltr' | 'rtl';
+    readonly containerStyle: FlexStyle;
+    readonly pibblBoxes: readonly { readonly x: number; readonly y: number; readonly width: number; readonly height: number }[];
+    readonly boxes: readonly { readonly x: number; readonly y: number; readonly width: number; readonly height: number }[];
+    readonly itemStyles: readonly RectStyle[];
+  };
+  const fixtures = yogaReference.cases.filter(fixture => 'directionMatrixFixture' in fixture) as unknown as readonly DirectionFixture[];
+  expect(fixtures).toHaveLength(16);
+  const baseline = snapshotWasmLayoutDiagnostics();
+  const fills: readonly [number, number, number][] = [[214, 227, 219], [225, 219, 202], [66, 107, 97]];
+  for (const fixture of fixtures) {
+    const hits: number[] = [];
+    const boxes = new Map<number, { x: number; y: number; width: number; height: number }>();
+    function Probe({ index, style: _style }: { index: number; style: RectStyle }) {
+      const box = useLayoutBox();
+      const transform = useCanvasContext().getTransform();
+      boxes.set(index, { x: transform.e, y: transform.f, width: box.width, height: box.height });
+      return <Rectangle
+        onClick={() => hits.push(index)}
+        style={{ width: box.width, height: box.height, fill: index === 0 ? '#d6e3db' : index === 1 ? '#e1dbca' : '#426b61' }}
+      />;
+    }
+    const canvas = document.createElement('canvas');
+    canvas.width = fixture.width;
+    canvas.height = fixture.height;
+    document.body.append(canvas);
+    const controller = pibbl(canvas, (
+      <Flex style={{
+        width: fixture.width,
+        height: fixture.height,
+        gap: fixture.gap,
+        flexDirection: fixture.flexDirection,
+        flexWrap: fixture.flexWrap,
+        layoutDirection: fixture.layoutDirection,
+        ...fixture.containerStyle,
+      }}>
+        {fixture.itemStyles.map((style, index) => (
+          <Probe key={String(index)} index={index} style={style} />
+        ))}
+      </Flex>
+    ));
+    controllers.push(controller);
+    try {
+      await nextFrame();
+      const context = canvas.getContext('2d')!;
+      for (let index = 0; index < fixture.pibblBoxes.length; index++) {
+        const box = fixture.pibblBoxes[index]!;
+        expect(boxes.get(index), `${fixture.name}: preserved world box ${index}`).toEqual(box);
+        const x = box.x + box.width / 2;
+        const y = box.y + box.height / 2;
+
+        expect([...context.getImageData(Math.floor(x), Math.floor(y), 1, 1).data].slice(0, 3), `${fixture.name}: box ${index}`).toEqual(fills[index]);
+        clickCanvas(canvas, x, y);
+        expect(hits.at(-1), `${fixture.name}: box ${index} target`).toBe(index);
+      }
+      expect(hits).toEqual(fixture.boxes.map((_box, index) => index));
+    } finally {
+      controller.dispose();
+      controllers.splice(controllers.indexOf(controller), 1);
+      canvas.remove();
+    }
+  }
+  const disposed = snapshotWasmLayoutDiagnostics();
+  expect(disposed.activeNodes).toBe(baseline.activeNodes);
+  expect(disposed.activeArenas).toBe(baseline.activeArenas);
+  expect(disposed.cachedMeasurements).toBe(baseline.cachedMeasurements);
 });

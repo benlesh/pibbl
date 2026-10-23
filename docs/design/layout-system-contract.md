@@ -767,6 +767,18 @@ scheduler is introduced. Plans reject mismatched direction before adoption. The
 WASM cross-placement ABI is identified by the `layout_abi_v1` export marker;
 older modules are rejected before publishing compiled code. Logical margin edges are specified below; logical padding is specified below; logical border edges remain a subsequent capability.
 
+The combined slice95 direction matrix deliberately preserves two existing rules.
+Wrapped cross-axis `center` aligns the margin box: margins top2/bottom4 shift the
+border-box center by−1 vertically; inline start6/end3 shift it by+1.5 in LTR or−1.5
+in RTL columns. Yoga3.2.1's multiline center pass ignores that margin difference.
+Pibbl also reflects wrapped columns within the parent's resolved content box;
+Yoga's final wrap-reverse pass reflects the already inset position against the
+outer box. Asymmetric parent insets therefore add a separate difference. The
+native comparison labels both policies and records native `boxes` separately
+from preserved `pibblBoxes`; these fixtures are not parity claims. Main direction,
+source paint/hit priority, keyed focus and Tab order retain their existing rules.
+Independent margin-only and zero-margin inset isolates remain the next exit.
+
 ## Experimental logical Flex margins
 
 `LayoutItemStyle` and `FlexItemStyle` add `marginStart?: number | Percentage`

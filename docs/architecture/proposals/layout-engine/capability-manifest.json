@@ -702,6 +702,134 @@
       {
         "id": "margin-percent-column-wrap-reverse-resized",
         "covers": ["flex.margin"]
+      },
+      {
+        "id": "direction-matrix-row-wrap-ltr",
+        "covers": [
+          "direction.rtl-and-logical-edges",
+          "flex.margin",
+          "box.padding-and-layout-border"
+        ]
+      },
+      {
+        "id": "direction-matrix-row-wrap-rtl",
+        "covers": [
+          "direction.rtl-and-logical-edges",
+          "flex.margin",
+          "box.padding-and-layout-border"
+        ]
+      },
+      {
+        "id": "direction-matrix-row-wrap-reverse-ltr",
+        "covers": [
+          "direction.rtl-and-logical-edges",
+          "flex.margin",
+          "box.padding-and-layout-border"
+        ]
+      },
+      {
+        "id": "direction-matrix-row-wrap-reverse-rtl",
+        "covers": [
+          "direction.rtl-and-logical-edges",
+          "flex.margin",
+          "box.padding-and-layout-border"
+        ]
+      },
+      {
+        "id": "direction-matrix-row-reverse-wrap-ltr",
+        "covers": [
+          "direction.rtl-and-logical-edges",
+          "flex.margin",
+          "box.padding-and-layout-border"
+        ]
+      },
+      {
+        "id": "direction-matrix-row-reverse-wrap-rtl",
+        "covers": [
+          "direction.rtl-and-logical-edges",
+          "flex.margin",
+          "box.padding-and-layout-border"
+        ]
+      },
+      {
+        "id": "direction-matrix-row-reverse-wrap-reverse-ltr",
+        "covers": [
+          "direction.rtl-and-logical-edges",
+          "flex.margin",
+          "box.padding-and-layout-border"
+        ]
+      },
+      {
+        "id": "direction-matrix-row-reverse-wrap-reverse-rtl",
+        "covers": [
+          "direction.rtl-and-logical-edges",
+          "flex.margin",
+          "box.padding-and-layout-border"
+        ]
+      },
+      {
+        "id": "direction-matrix-column-wrap-ltr",
+        "covers": [
+          "direction.rtl-and-logical-edges",
+          "flex.margin",
+          "box.padding-and-layout-border"
+        ]
+      },
+      {
+        "id": "direction-matrix-column-wrap-rtl",
+        "covers": [
+          "direction.rtl-and-logical-edges",
+          "flex.margin",
+          "box.padding-and-layout-border"
+        ]
+      },
+      {
+        "id": "direction-matrix-column-wrap-reverse-ltr",
+        "covers": [
+          "direction.rtl-and-logical-edges",
+          "flex.margin",
+          "box.padding-and-layout-border"
+        ]
+      },
+      {
+        "id": "direction-matrix-column-wrap-reverse-rtl",
+        "covers": [
+          "direction.rtl-and-logical-edges",
+          "flex.margin",
+          "box.padding-and-layout-border"
+        ]
+      },
+      {
+        "id": "direction-matrix-column-reverse-wrap-ltr",
+        "covers": [
+          "direction.rtl-and-logical-edges",
+          "flex.margin",
+          "box.padding-and-layout-border"
+        ]
+      },
+      {
+        "id": "direction-matrix-column-reverse-wrap-rtl",
+        "covers": [
+          "direction.rtl-and-logical-edges",
+          "flex.margin",
+          "box.padding-and-layout-border"
+        ]
+      },
+      {
+        "id": "direction-matrix-column-reverse-wrap-reverse-ltr",
+        "covers": [
+          "direction.rtl-and-logical-edges",
+          "flex.margin",
+          "box.padding-and-layout-border"
+        ]
+      },
+      {
+        "id": "direction-matrix-column-reverse-wrap-reverse-rtl",
+        "covers": [
+          "direction.rtl-and-logical-edges",
+          "flex.margin",
+          "box.padding-and-layout-border"
+        ]
       }
     ],
     "limit": "135 records:116 native matches and19 explicitly classified CSS allocation/safe-overflow/physical-margin differences; finite row/column/reverse/wrap, box conversion, distribution, definite percentage bounds, wrapped aspect ratios, allocated-owner percentage gaps/padding/cross bounds, nowrap/wrap/wrap-reverse physical margins and finite nested percentage owners. This does not establish general intrinsic, percentage or CSS parity."
@@ -768,7 +896,7 @@
           "public Flex/Text scenarios",
           "fixed-width direct Text auto-height forms wrapped columns before following card placement",
           "eight pinned nested percentage owners use final allocated main size before leaf40% basis and10% gap",
-          "finite row/column × nowrap/wrap resize matrix"
+          "finite row/column \u00d7 nowrap/wrap resize matrix"
         ],
         "negative": [
           "intrinsic wrapped containers rejected",
@@ -797,7 +925,7 @@
         ],
         "missing": []
       },
-      "supportedContract": "Finite LTR direct or explicitly allocated nested Flex; row/column × nowrap/wrap; numeric/percentage direct dimensions, basis and gaps; finite bounds; source-order paint/hits, owner resize, identity, paint-only reuse and exact teardown. Intrinsic percentage feedback and indefinite owners remain unsupported; reverse/RTL/automatic minima retain their separate fixed-ledger entries."
+      "supportedContract": "Finite LTR direct or explicitly allocated nested Flex; row/column \u00d7 nowrap/wrap; numeric/percentage direct dimensions, basis and gaps; finite bounds; source-order paint/hits, owner resize, identity, paint-only reuse and exact teardown. Intrinsic percentage feedback and indefinite owners remain unsupported; reverse/RTL/automatic minima retain their separate fixed-ledger entries."
     },
     {
       "id": "flex.reverse-and-wrap-reverse",
@@ -1005,7 +1133,7 @@
           "cap",
           "shrink",
           "definite percentage grow caps and shrink floors in both axes",
-          "200→240 cap owner and100→140 floor owner pairs",
+          "200\u2192240 cap owner and100\u2192140 floor owner pairs",
           "wrapped auto-cross stretch minimum60% expands line size and maximum25% caps the item in both axes"
         ],
         "negative": [
@@ -1150,7 +1278,7 @@
           "source/built and installed artifact teardown",
           "wrapped margin source paint/hit order",
           "public right-box wrap toggle moves target",
-          "source/built logical start 0↔10% with RTL, stable stamps, moved hits and paint reuse",
+          "source/built logical start 0\u219410% with RTL, stable stamps, moved hits and paint reuse",
           "fresh installed logical signal through retained Layer, pixels, targets and node identity"
         ],
         "yogaCases": [
@@ -1307,7 +1435,8 @@
           "content-box/border-box basis conversion before solving",
           "slice90: logical start/end override physical padding in both directions, including zero and setter order",
           "canonical allocated logical percentages retain owner width across resize and explicit receiver direction",
-          "isolated RTL intrinsic measurement accepts numeric winners and rejects active percentages"
+          "isolated RTL intrinsic measurement accepts numeric winners and rejects active percentages",
+          "slice91: numeric logical border edges and receiver precedence implemented; stale missing marker removed in slice95"
         ],
         "negative": [
           "paint stroke is not a layout border",
@@ -1335,7 +1464,6 @@
           "logical-padding-{start-zero,end-percent}-{ltr,rtl}-{logical-first,logical-last}: outer plus complete content region"
         ],
         "missing": [
-          "logical layout border edges",
           "percentage padding outside actual Flex ownership and broader content measurement"
         ]
       }
@@ -1425,28 +1553,31 @@
       "id": "direction.rtl-and-logical-edges",
       "target": "parity",
       "group": "box-and-direction",
-      "current": "experimental inherited Flex LTR/RTL direction with receiver-aware logical marginStart/marginEnd, paddingStart/paddingEnd and numeric borderStartWidth/borderEndWidth precedence; broader direction combinations remain partial",
+      "current": "experimental inherited Flex LTR/RTL direction with receiver-aware logical margins, padding and numeric borders; sixteen combined reverse/wrap/min/max fixtures, source focus order and content-box reflection recorded",
       "status": "partial",
-      "unresolvedPolicy": "Logical margin/padding/border precedence, zero and owner-width percentage reference are implemented. The broader wrapped/min/max direction matrix remains outstanding.",
+      "unresolvedPolicy": "The combined direction matrix passes the preserved Pibbl contract. Margin-box centering and asymmetric root content-box reflection differ from Yoga and are explicitly classified; independent zero-margin/root-inset isolates remain before capability completion.",
       "evidence": {
         "positive": [
           "slice88: inherited direction and explicit LTR override; row/column/reverse placement",
           "slice89: logical margin edge precedence, signed percentages, explicit zero and child Flex direction override",
           "slice90: logical padding zero/end-percentage precedence and exact native content geometry in both directions",
-          "slice91: numeric logical border precedence, explicit zero, both sizing modes and receiver override in eighteen native cases"
+          "slice91: numeric logical border precedence, explicit zero, both sizing modes and receiver override in eighteen native cases",
+          "slice95: sixteen row/column \u00d7 forward/reverse \u00d7 wrap/wrap-reverse \u00d7 LTR/RTL combined logical inset/margin/min/max fixtures with exact public world boxes"
         ],
         "negative": [
           "normal JavaScript RTL rejected; invalid direction rejected; stale ABI rejected"
         ],
         "interaction": [
           "source/built keyed wrap mirroring, stable stamps, moved hits, paint reuse, cleanup",
-          "installed package direction signal reaches retained Layer"
+          "installed package direction signal reaches retained Layer",
+          "slice95: keyed focus retained across RTL; Tab/Shift-Tab use source order; overlapping paint/hit priority unchanged; source/built keyed fixture transitions and installed package targets release owned resources"
         ],
         "yogaCases": [
-          "layout-direction-{row,row-reverse,column,column-reverse}-{ltr,rtl}"
+          "layout-direction-{row,row-reverse,column,column-reverse}-{ltr,rtl}",
+          "direction-matrix-{row,row-reverse,column,column-reverse}-{wrap,wrap-reverse}-{ltr,rtl}: preserved margin centering/content-box reflection explicitly classified"
         ],
         "missing": [
-          "broader wrapped/min/max direction matrix"
+          "independent margin-only and zero-margin asymmetric-root-inset direction isolates"
         ]
       }
     },
@@ -1546,9 +1677,19 @@
         "packages/core/src/lib/define-primitive.test.tsx"
       ],
       "evidence": {
-        "positive": ["measure callbacks", "finite-row paired intrinsic contribution, purity, retry and validation", "exact final-width finite cross height, declared-size/intrinsic-only compatibility and real zero width"],
-        "negative": ["opaque component measurement unsupported", "unsupported intrinsic provider with explicit basis/minimum escape", "mutable nested inputs conservatively remeasure"],
-        "interaction": ["reactive intrinsic minimum moves the public target; unrelated sibling paint reuses snapshot; exact disposal"],
+        "positive": [
+          "measure callbacks",
+          "finite-row paired intrinsic contribution, purity, retry and validation",
+          "exact final-width finite cross height, declared-size/intrinsic-only compatibility and real zero width"
+        ],
+        "negative": [
+          "opaque component measurement unsupported",
+          "unsupported intrinsic provider with explicit basis/minimum escape",
+          "mutable nested inputs conservatively remeasure"
+        ],
+        "interaction": [
+          "reactive intrinsic minimum moves the public target; unrelated sibling paint reuses snapshot; exact disposal"
+        ],
         "yogaCases": [],
         "missing": [
           "exact/at-most/unbounded",
@@ -1739,8 +1880,8 @@
       "evidence": {
         "positive": [
           "existing Grid",
-          "native mixed tracks resize200→260 with unchanged-axis reuse",
-          "native spanning areas170×45→230×45 and one-pixel spans after huge leading tracks"
+          "native mixed tracks resize200\u2192260 with unchanged-axis reuse",
+          "native spanning areas170\u00d745\u2192230\u00d745 and one-pixel spans after huge leading tracks"
         ],
         "negative": [
           "invalid/unresolved/stale native records rejected",
