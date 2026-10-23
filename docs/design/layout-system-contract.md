@@ -42,10 +42,11 @@ A child's parent-relative placement lives in its own specified style:
 ### Experimental direct-Flex static and relative insets
 
 Experimental finite `Flex` additionally accepts an explicit direct-child
-`position: "static" | "relative"` in any nowrap main direction under either
-LTR or RTL. The expanded non-row admission covers direct or exactly-forwarded
-primitive leaves; known layout children retain the row-only boundary. This is a placement adjustment, not a new containing-block or
-out-of-flow system:
+`position: "static" | "relative"` in any main direction under either LTR or RTL.
+Direct or exactly-forwarded primitive leaves support nowrap, wrap and wrap-reverse.
+Known layout children keep the existing nowrap containing-chain restrictions;
+wrapped positioned layout owners remain unsupported. This adjusts placement and
+does not introduce a containing-block or out-of-flow system:
 
 - Omitting `position` preserves the existing parent-owned placement behavior
   and its diagnostics for authored `left`/`top` under Flex.
@@ -65,10 +66,14 @@ out-of-flow system:
   but never negates the final physical offset. Yoga 3.2.1 reverses the relative
   offset in reversed main axes; the pinned corpus retains those native boxes
   and separately classifies Pibbl's preserved physical `pibblBoxes`.
+  Wrapped native probes also expose Yoga cross-axis offsets for static items and
+  cross-axis relative sign reversal under wrap-reverse. Pibbl keeps static equal
+  to ordinary flow and applies relative physical offsets after final line layout;
+  these differences are classified explicitly rather than reported as parity.
 
 `Absolute` keeps its existing independent `left`/`top` contract. This slice
 does not add absolute positioning, right/bottom anchoring, containing blocks,
-percent relative insets, wrapping, Flow/Grid/Overlay participation, or normal
+percent relative insets, wrapped layout owners, Flow/Grid/Overlay participation, or normal
 JavaScript Flex support.
 
 ### Experimental direct-Flex absolute participation

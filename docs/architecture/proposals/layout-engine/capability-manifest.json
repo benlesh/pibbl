@@ -2571,7 +2571,7 @@
       "id": "position.relative-static-absolute",
       "target": "parity",
       "group": "placement-and-participation",
-      "current": "experimental finite nowrap static/relative primitive placement and fixed/opposing-inset/aspect-derived absolute sizing with numeric bounds across all four main directions and LTR/RTL; preserved physical relative offsets; paired-provider natural sizing and bounded generic Text automatic height and unwrapped natural ink dimensions, including both-auto, across nowrap directions with explicit native query provenance; direct declarative nowrap static containing chains across main directions with fixed numeric neutral-flex owners; omitted-position legacy retained; all existing absolute sizing profiles supported across wrap/wrap-reverse directions when each physical axis has a finite numeric anchor",
+      "current": "experimental finite nowrap/wrap/wrap-reverse static/relative primitive placement and fixed/opposing-inset/aspect-derived absolute sizing with numeric bounds across all four main directions and LTR/RTL; preserved physical relative offsets; paired-provider natural sizing and bounded generic Text automatic height and unwrapped natural ink dimensions, including both-auto, across nowrap directions with explicit native query provenance; direct declarative nowrap static containing chains across main directions with fixed numeric neutral-flex owners; omitted-position legacy retained; all existing absolute sizing profiles supported across wrap/wrap-reverse directions when each physical axis has a finite numeric anchor",
       "status": "experimental",
       "unresolvedPolicy": "Intrinsic absolute sizing, explicit containing-block overrides, opaque/transformed ancestry and wider layout admission remain open.",
       "evidence": {
@@ -2596,7 +2596,8 @@
           "slice137: direct generic wrapped Text automatic absolute height at declared numeric width, real Canvas line origins/hits, content/font/width signal ownership, interactive conservative remeasurement, plain stable cache reuse/removal/restore, bounds and pair/aspect precedence; installed absoluteTextHeight receipt",
           "slice138: direct generic unwrapped Text natural absolute ink width at declared numeric height, live Canvas right-anchor/glyph geometry, content/font/height ownership, cache and cleanup; classified native font-source probes with column query provenance; installed absoluteTextWidth receipt",
           "slice139: generic unwrapped Text natural height at numeric width or both-auto ink dimensions, one unbounded-both query before independent clamps, stable cache/dimension-profile transitions, font/content changes, empty content, removal/restore and cleanup; classified native font/query probes and installed absoluteTextBoth receipt",
-          "slice140: physically anchored fixed/bounded/paired/aspect/provider/Text absolute profiles across all main directions, LTR/RTL and wrap/wrap-reverse; 34 native/source/built geometry cases, public wrapped direction/profile tests, keyed identity/paint reuse/cleanup and installed absoluteAnchoredWrap receipts"
+          "slice140: physically anchored fixed/bounded/paired/aspect/provider/Text absolute profiles across all main directions, LTR/RTL and wrap/wrap-reverse; 34 native/source/built geometry cases, public wrapped direction/profile tests, keyed identity/paint reuse/cleanup and installed absoluteAnchoredWrap receipts",
+          "slice141: static/relative primitive leaves across all main/writing directions and wrapping modes; static equals ordinary flow and relative preserves physical final-world offsets; 32 native/source/built comparison records explicitly classify 16 static cross-inset and 12 relative reversal differences; wrapped known layout owners remain rejected"
         ],
         "negative": [
           "packages/core/test/layout-positioning-diagnostics.test.tsx: unsupported contexts and unmoded opposite insets"
@@ -2747,7 +2748,7 @@
         ],
         "missing": [
           "general absolute intrinsic dimensions (built-in text/images, both-auto and nested owners)",
-          "non-row positioned known layout owners and wrapping positioning",
+          "broader positioned known layout owners and wrapped absolute no-inset alignment",
           "general containing-block ownership"
         ]
       }

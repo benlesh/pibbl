@@ -2,7 +2,8 @@
 
 ## Current checkpoint and single next slice — 2026-10-23
 
-Latest delivery is slice140 (physically anchored absolute profiles across wrapped Flex; this commit).
+Latest delivery is slice141 (static/relative primitive leaves across wrapped Flex; this commit).
+Slice140 is `a2308b97` (physically anchored absolute profiles across wrapped Flex).
 Slice139 is `f79b258f` (unwrapped Text natural height and both-auto ink dimensions).
 Slice138 is `b84f5322` (unwrapped Text natural absolute width).
 Consolidation46 is `c72afa72` for136–138.
@@ -101,7 +102,7 @@ Slice55 is `1510efe3` (prepared Grid-root planning/adoption).
 Slice54 `773da7b9`,53 `aaa7ddcb`,52 `b5381e0d` are consolidated in `f322a709`.
 Every slice has its own commit. The fixed33-capability/seven-gate denominator is
 unchanged; all seven gates remain open. Earlier checkpoints are recorded below.
-Current corpus:525 records:419 geometry matches,98 preserved-semantic comparisons and8 classified native font-source comparisons. Nine recorded column-width queries deliberately differ (five custom providers, four Text).
+Current corpus:557 records:423 geometry matches,126 preserved-semantic comparisons and8 classified native font-source comparisons. Nine recorded column-width queries deliberately differ (five custom providers, four Text).
 The concise public lesson retains5 cases; the complete corpus is private testing
 input. Current runnable source/built comparison:
 `http://127.0.0.1:5192/#/testing/layout-yoga-migration` and port5193.
@@ -4054,13 +4055,42 @@ Logs `/tmp/pibbl-slice140-{public-red,public-green,focused-final,normal,latest,s
 Environment remains Node26.9.0/macOS arm64/Chromium; no Node24 aggregate trust claim.
 Kernel and fixed33 capability denominator/all seven open release gates unchanged.
 
-## [NEXT] Static and relative primitive leaves in wrapped Flex (141)
+## Slice141 delivered: wrapped static and relative primitive leaves
 
-Pin wrapped flow participation and post-placement physical relative offsets across
-all main/writing directions with native provenance and a public failing test.
-Retain the existing boundary for wrapped known-layout containing owners. Deliver
-one coherent leaf profile, then consolidate139–141. Image intrinsic ownership,
-general containing blocks, participation, transactionality and release exits remain.
+Finite direct or exactly-forwarded primitive leaves now accept static/relative
+placement across all main directions, LTR/RTL and nowrap/wrap/wrap-reverse. Static
+ignores physical insets and equals ordinary flow; relative applies physical offset
+once after final line placement without changing sibling slots. Wrapped known
+layout owners remain rejected, including static wrap-reverse owners. No new API,
+ABI, kernel, containing-block or cache policy is introduced.
+
+Public RED captured the old nowrap guard before production. Final focused3 files
+passed79/2skip81; normal44/37skip81. The public matrix compares omitted positioning
+to static before relative deltas, source focus/hits, stable keyed stamps, paint
+reuse and exact cleanup. A duplicate negative using an unscheduled mount assertion
+was removed in favor of existing scheduler-aware diagnostics.
+
+Pinned native probes use explicit relative root conversion and B positioned among
+three flow items.32records comprise4matches and28 preserved-semantic comparisons:
+16 static cases expose native cross-axis inset application;12 relative cases
+expose main/cross reversal. Pibbl preserves static-ignore and physical-offset
+contracts. Source replay passes all32 with227inputs and zero cleanup/errors.
+Installed-package verification passes245inputs, strict Bundler/NodeNext, wrapped
+geometry/input/identity/paint/cleanup, plus104 auto-margin cases. Tarball SHA256
+`92a7c38012cdd3ab1a37a48f5d17e2c705941dd2924d85ca728085a3024072cd`.
+Scoped review found no material issue. Types, changed lint, docs109 mutation probes,
+JSDoc and public5/full557 boundary passed. Built replay passed all32 with227dist
+inputs, zero cleanup/errors, and the final comparison screenshot was inspected.
+Corpus557 is423matches/126preserved-semantic/8font-source; nine query differences
+remain separate. This does not claim a full557-case replay, font parity, speed,
+Node24 trust or completion of the fixed33 capability denominator/seven release gates.
+
+## [NEXT] Wrapped absolute omitted-axis alignment (142)
+
+Investigate native wrapped absolute static-position/alignment behavior and existing
+Pibbl main/cross alignment before relaxing the per-axis anchor guard. Pin mixed
+anchored/unanchored axes and direction/wrap policy with a public RED; retain all
+existing size/provider/Text/containing restrictions. Consolidate139–141 separately.
 
 ### Finite positioning exit matrix after134
 

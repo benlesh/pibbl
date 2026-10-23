@@ -1983,8 +1983,8 @@ function assertSupportedRelativeFlexPosition(
   if (!experimentalLayout || (position !== 'static' && position !== 'relative')) {
     throw childDiagnostic(child, 'position', position, container, 'PIBBL_LAYOUT_UNSUPPORTED_POSITION: uses an unsupported Flex placement mode');
   }
-  if (options.flexWrap !== 'nowrap') {
-    throw childDiagnostic(child, 'position', position, container, 'PIBBL_LAYOUT_UNSUPPORTED_POSITION: currently requires a finite nowrap Flex allocation');
+  if (options.flexWrap !== 'nowrap' && (isKnownLayoutType(child.type) || isLayoutComponent(child.type))) {
+    throw childDiagnostic(child, 'position', position, container, 'PIBBL_LAYOUT_UNSUPPORTED_POSITION: positioned layout children require a finite nowrap Flex allocation');
   }
   const childStyle = style as Readonly<FlexStyle & FlexItemStyle>;
   const nonRowChain = options.flexDirection !== 'row' || child.type === Flex && (childStyle.flexDirection ?? 'row') !== 'row';

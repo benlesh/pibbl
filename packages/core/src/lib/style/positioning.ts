@@ -156,10 +156,11 @@ export function getPlacementSignalHandoff(
  */
 export interface PositioningStyle extends SystemStyle {
   /**
-   * Experimental direct-Flex placement mode. In a finite nowrap Flex, static
+   * Experimental direct-Flex placement mode. In a finite Flex, static
    * keeps the allocated slot and ignores insets; relative offsets final geometry
-   * once without moving siblings. Non-row static/relative admission covers primitive
-   * leaves and fixed numeric direct nowrap Flex chains with zero grow/shrink and
+   * once without moving siblings. Primitive static/relative leaves support every
+   * main/writing direction and wrapping mode. Positioned layout owners require
+   * nowrap; non-row owners require fixed numeric direct Flex chains with zero grow/shrink and
    * omitted or automatic basis; physical offsets retain their sign through main reversal. Absolute stays out of sibling allocation, using
    * the padding box for explicit insets and content alignment for omitted axes.
    * Fixed numeric and admitted automatic absolute profiles support all main directions
