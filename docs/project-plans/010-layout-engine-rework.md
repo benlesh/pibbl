@@ -2,7 +2,8 @@
 
 ## Current checkpoint and single next slice — 2026-10-23
 
-Latest delivery is slice107 (automatic-width Text cross-auto sizing).
+Latest delivery is slice108 (wrapped-row measured Text cross-auto sizing).
+Slice107 is `7b599250` (automatic-width Text cross-auto sizing).
 Slice106 is `33832012` (measured built-in Flex owner cross-auto sizing).
 Slice105 is `931ecc2f` (measured custom primitive cross-auto sizing).
 Consolidation35 for103–105 passes, recorded below.
@@ -2748,17 +2749,43 @@ then Toggle comparison width. Fixed33 counts5complete/11experimental/8partial/
 8missing/1excluded; auto-margin partial, all7gates open. Node26.9.0, no Node24
 aggregate trust or controlled performance claim.
 
-## [NEXT] Wrapped-row measured Text cross-auto sizing (slice 108)
+## Delivered wrapped-row measured Text cross-auto sizing (slice 108)
 
-Admit direct generic wrapped Text at finite numeric declared width with automatic
-height and cross-auto margin in a finite row/wrap container. Reuse existing
-settled-width Text measurement before native per-line cross placement. A150×120
-row with10gap, Text width80→40 and60×40/60×30 siblings places Text at y20→10,
-keeps B at y0 and C at y50, while B moves x90→50. Keep auto-width wrapped Text,
-wrap-reverse, custom/provider/layout owners and query/aspect paths excluded.
-Prove public draws/hits/focus/native identity/cleanup, then source/built/installed
-surfaces without claiming native font parity. Consolidate106–108 after this slice.
-Final whole-codebase review stays at full program end.
+Direct generic wrapped Text at finite numeric declared width may use automatic
+height/cross-auto margins in a finite LTR row/wrap container, with automatic basis
+and zero grow/shrink. Existing final-width Text measurement precedes native
+per-line cross placement. Query/aspect, automatic-width wrapped Text, reverse/RTL/
+wrap-reverse, custom/provider/layout-owner and column variants retain diagnostics.
+The150×120 public row with10gap, Text80→40 and60×40/60×30 siblings places Text at
+y20→10 while B moves x90→50 and C stays at y50. No API, ABI, solver or cache added.
+
+Public RED fails the expected admission guard; final25focused tests pass/
+378skipped403. Actual draw lines, empty/old/new targets, focus/native identity,
+sibling paint reuse and exact cleanup pass. Six new excluded direction/factor/
+basis shapes are explicit. Source/built full Text controls replay passes,
+built469inputs/cleanup0/errors[]; switching to the three-item wrapped mode creates
+one expected new C node, while width and paint changes preserve those identities.
+Installed wrapped Text receipt plus prior automatic-width receipt and104auto+
+24direction cases pass,230distinputs and strict Bundler/NodeNext, SHA256
+`6ccf53d136422d04d974fa7a34a4356f91298d4f77c6387c85f6b6b632417b4b`.
+Fresh types/lint/docs109RED/JSDoc/catalog pass; source styles use the supported
+inline object contract. Scoped review reports no material issue. Browser host
+metrics define Text behavior; no Yoga font-parity fixture is added. Native
+corpus307=213matches+94classified and v5/68649bytes are unchanged.
+
+Source: http://127.0.0.1:5192/#/examples/layout/wasm-flex-text — Compare auto margins,
+Toggle wrapping, then Toggle comparison width. Fixed33 counts5complete/
+11experimental/8partial/8missing/1excluded; auto-margin partial, all7gates open.
+Node26.9.0, no Node24 aggregate trust or controlled performance claim.
+
+## [NEXT] Consolidation 36 for slices 106–108
+
+Run the bounded combined layout/measurement/ownership suites in experimental and
+ordinary modes before the next implementation expansion. Reuse fresh source/
+built/installed receipts without unchanged duplicate replays. Then select the
+nearest fixed-manifest exit; source-order preservation through reverse/RTL and
+Group/Layer/filter composition is being inspected, without claiming completion
+from older bounded evidence. Final whole-codebase review stays at program end.
 
 ### Consolidation 24 completed for delivery slices 70–72
 

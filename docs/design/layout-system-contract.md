@@ -1138,3 +1138,22 @@ width entries retain existing reuse; the automatic-minimum query still records
 one pure request per preparation. Sibling paint reuses native solves and nodes.
 Public draws, empty-margin and old/new target points, focus preservation and
 exact cleanup cover the mounted transition.
+
+
+### Measured Text cross-auto sizing in wrapped rows
+
+Direct generic wrapped Text with a declared finite numeric width may use
+automatic height and cross-auto margins in an experimental LTR row/wrap
+container. This bounded subset requires automatic basis, zero grow/shrink,
+visible/default fit/overflow and no prepared query/aspect sizing. Explicit
+main minimum participation remains required by existing Flex rules. Automatic
+width, reverse/RTL/wrap-reverse, provider/layout-owner and column variants retain
+their existing diagnostics; nowrap support remains separate.
+
+Native main solving forms lines before the existing final-width Text measurement
+updates preferred cross size. Native cross placement then absorbs free space
+within each item's actual line. No new native ABI, solver, API or measurement
+cache is added. In a150×120 row with10px gap, Text width80→40 changes height20→30
+and top20→10 beside a60×40 sibling; a60×30 second-line sibling stays at y50.
+The first sibling moves x90→50. Browser Canvas draw/hit/identity evidence defines
+the Text contract; no native font-parity fixture is asserted.

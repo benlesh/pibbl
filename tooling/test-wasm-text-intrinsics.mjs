@@ -47,12 +47,12 @@ try {
       return {x:+point.x.toFixed(3),y:+point.y.toFixed(3)};
     });
   }, await autoCrossBasis());
-  const autoCrossSiblingBox = async (left) => {
-    const box = {left,top:260,width:40,height:40};
+  const autoCrossSiblingBox = async (left, width = 40) => {
+    const box = {left,top:260,width,height:40};
     const colors = await sandbox.evaluate(({basis,box}) => {
       const context = document.querySelector('canvas').getContext('2d');
       const matrix = new DOMMatrix([basis.a,basis.b,basis.c,basis.d,basis.e,basis.f]);
-      return [[box.left+2,box.top+2],[box.left+38,box.top+38]].map(([x,y]) => {
+      return [[box.left+2,box.top+2],[box.left+box.width-2,box.top+38]].map(([x,y]) => {
         const point=matrix.transformPoint({x,y});
         return [...context.getImageData(Math.floor(point.x),Math.floor(point.y),1,1).data];
       });
@@ -111,6 +111,50 @@ try {
   assert.equal(autoPainted.solves, beforeAutoPaint.solves);
   assert.equal(autoPainted.measuredLeaves, beforeAutoPaint.measuredLeaves + 1);
   assert.equal(autoPainted.nodeCreates, beforeAutoPaint.nodeCreates);
+
+  // Restore the ordinary comparison, then exercise the bounded wrapped-row mode.
+  await click(250, 110); // Restore green sibling paint.
+  const beforeWide = await read();
+  await click(90, 110); // 100 -> 140.
+  const widened = await read();
+  assert.equal(widened.solves, beforeWide.solves + 1);
+  assert.equal(widened.nodeCreates, beforeWide.nodeCreates);
+  await sandbox.evaluate(() => { globalThis.__PIBBL_AUTO_CROSS_DRAWS__.length = 0; });
+  await click(500, 110); // Toggle wrapping.
+  assert.match(await frame.locator('pre').innerText(), /wrapped: true/);
+  const wrappedWide = await read();
+  assert.equal(wrappedWide.solves, widened.solves + 1);
+  assert.equal(wrappedWide.nodeCreates, widened.nodeCreates + 1);
+  assert.deepEqual((await autoCrossDraws()).slice(-2), [{ x: 28, y: 280 }, { x: 28, y: 290 }]);
+  const wrappedWideSibling = await autoCrossSiblingBox(118, 60);
+  assert.deepEqual(wrappedWideSibling, { left: 118, top: 260, width: 60, height: 40 });
+  await click(35, 270); // Empty automatic top margin.
+  assert.match(await frame.locator('pre').innerText(), /auto cross hits: 2/);
+  await click(35, 285); await selected('auto cross text');
+  assert.match(await frame.locator('pre').innerText(), /auto cross hits: 3/);
+  await click(148, 280); await selected('auto cross sibling');
+  await click(35, 320); await selected('auto cross following');
+  await sandbox.evaluate(() => { globalThis.__PIBBL_AUTO_CROSS_DRAWS__.length = 0; });
+  await click(90, 110); // 80 -> 40 in wrapped mode.
+  assert.match(await frame.locator('pre').innerText(), /comparison width: 100/);
+  const wrappedNarrow = await read();
+  assert.equal(wrappedNarrow.solves, wrappedWide.solves + 1);
+  assert.equal(wrappedNarrow.nodeCreates, wrappedWide.nodeCreates);
+  assert.deepEqual((await autoCrossDraws()).slice(-3), [{ x: 28, y: 270 }, { x: 28, y: 280 }, { x: 28, y: 290 }]);
+  const wrappedNarrowSibling = await autoCrossSiblingBox(78, 60);
+  assert.deepEqual(wrappedNarrowSibling, { left: 78, top: 260, width: 60, height: 40 });
+  await click(35, 265); // Former Text margin remains empty.
+  assert.match(await frame.locator('pre').innerText(), /auto cross hits: 3/);
+  await click(35, 275); await selected('auto cross text');
+  assert.match(await frame.locator('pre').innerText(), /auto cross hits: 4/);
+  await click(148, 280); await selected('auto cross text'); // Former B target misses.
+  await click(108, 280); await selected('auto cross sibling');
+  const beforeWrappedPaint = await read();
+  await click(250, 110); // Sibling-only paint remains a placement reuse.
+  const wrappedPainted = await read();
+  assert.equal(wrappedPainted.solves, beforeWrappedPaint.solves);
+  assert.equal(wrappedPainted.measuredLeaves, beforeWrappedPaint.measuredLeaves);
+  assert.equal(wrappedPainted.nodeCreates, beforeWrappedPaint.nodeCreates);
 
   await click(500, 76); // Return to the existing controls.
   await click(500, 40); // Minimum comparison.

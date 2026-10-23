@@ -3996,7 +3996,7 @@ it.runIf(experimentalLayout)('measures finite wrapped Text before allocating an 
 });
 
 it.runIf(experimentalLayout).each([
-  { label: 'wrapped row', options: { flexWrap: 'wrap' as const }, style: {} },
+  { label: 'wrapped automatic width', options: { flexWrap: 'wrap' as const }, style: { width: 'auto' } },
   { label: 'automatic width', options: {}, style: { width: 'auto' } },
   { label: 'custom font', options: {}, style: { font: '10px UnknownFont' } },
   { label: 'clipped overflow', options: {}, style: { overflow: 'clip' } },
@@ -4292,6 +4292,60 @@ it.runIf(experimentalLayout)('measures automatic-width Text before placing an au
   expect(disposed.cachedMeasurements).toBe(baseline.cachedMeasurements);
 });
 
+it.runIf(experimentalLayout)('measures direct wrapped Text before placing its automatic cross-axis margin', async () => {
+  const baseline = snapshotWasmLayoutDiagnostics();
+  const textWidth = signal(80), siblingPaint = signal('#426b61');
+  const hits: string[] = [], focused: string[] = [];
+  const canvas = document.createElement('canvas'); canvas.width = 150; canvas.height = 120; document.body.append(canvas);
+  const context = canvas.getContext('2d')!;
+  const draws: Array<{ x: number; y: number }> = [];
+  const fillText = context.fillText;
+  vi.spyOn(context, 'fillText').mockImplementation(function(this: CanvasRenderingContext2D, text, x, y, maxWidth) {
+    if (text.includes('aaaa')) { const transform = this.getTransform(); draws.push({ x: transform.e + x, y: transform.f + y }); }
+    fillText.call(this, text, x, y, maxWidth);
+  });
+  function Scene() {
+    return <FocusManagement><Flex style={{ width: 150, height: 120, flexWrap: 'wrap', gap: 10, alignItems: 'flex-start', alignContent: 'flex-start' }}>
+      <Text key="text" keyboardFocusable onFocus={() => focused.push('text')} onClick={() => hits.push('text')} style={{ width: textWidth, minWidth: 0, flexShrink: 0, wrap: true, font: '10px monospace', lineHeight: 10, marginTop: 'auto', fill: '#19375b', cursor: 'pointer' }}>aaaa aaaa aaaa</Text>
+      <Rectangle key="sibling" keyboardFocusable onFocus={() => focused.push('sibling')} onClick={() => hits.push('sibling')} style={{ width: 60, height: 40, minWidth: 0, minHeight: 0, flexShrink: 0, fill: siblingPaint, cursor: 'pointer' }} />
+      <Rectangle key="following" onClick={() => hits.push('following')} style={{ width: 60, height: 30, minWidth: 0, minHeight: 0, flexShrink: 0, fill: '#6e3e79', cursor: 'pointer' }} />
+    </Flex></FocusManagement>;
+  }
+  const controller = pibbl(canvas, <Scene />); controllers.push(controller); await nextFrame();
+  expect(draws.slice(-2)).toEqual([{ x: 0, y: 20 }, { x: 0, y: 30 }]);
+  canvas.focus({ preventScroll: true });
+  canvas.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', code: 'Tab', bubbles: true, cancelable: true }));
+  expect(focused).toEqual(['text', 'sibling']);
+  clickCanvas(canvas, 5, 15); await nextFrame(); expect(hits).toEqual([]);
+  clickCanvas(canvas, 5, 25); await nextFrame(); expect(hits).toEqual(['text']);
+  clickCanvas(canvas, 115, 5); await nextFrame(); expect(hits).toEqual(['text', 'sibling']);
+  clickCanvas(canvas, 5, 55); await nextFrame(); expect(hits).toEqual(['text', 'sibling', 'following']);
+  const initial = snapshotWasmLayoutDiagnostics();
+  const beforeResizeFocus = focused.slice();
+  draws.length = 0; textWidth.set(40); await nextFrame();
+  expect(focused).toEqual(beforeResizeFocus);
+  expect(draws.slice(-3)).toEqual([{ x: 0, y: 10 }, { x: 0, y: 20 }, { x: 0, y: 30 }]);
+  const narrowed = snapshotWasmLayoutDiagnostics();
+  expect(narrowed.solves).toBeGreaterThan(initial.solves);
+  expect(narrowed.measuredLeaves).toBeGreaterThan(initial.measuredLeaves);
+  expect(narrowed.nodeCreates).toBe(initial.nodeCreates);
+  clickCanvas(canvas, 5, 5); await nextFrame(); expect(hits).toEqual(['text', 'sibling', 'following']);
+  clickCanvas(canvas, 5, 15); await nextFrame(); expect(hits).toEqual(['text', 'sibling', 'following', 'text']);
+  clickCanvas(canvas, 115, 5); await nextFrame(); expect(hits).toEqual(['text', 'sibling', 'following', 'text']);
+  clickCanvas(canvas, 70, 5); await nextFrame(); expect(hits).toEqual(['text', 'sibling', 'following', 'text', 'sibling']);
+  const beforePaint = snapshotWasmLayoutDiagnostics();
+  siblingPaint.set('#a63758'); await nextFrame();
+  const painted = snapshotWasmLayoutDiagnostics();
+  expect(painted.solves).toBe(beforePaint.solves);
+  expect(painted.measuredLeaves).toBe(beforePaint.measuredLeaves);
+  expect(painted.nodeCreates).toBe(initial.nodeCreates);
+  controller.dispose();
+  const disposed = snapshotWasmLayoutDiagnostics();
+  expect(disposed.activeNodes).toBe(baseline.activeNodes);
+  expect(disposed.activeArenas).toBe(baseline.activeArenas);
+  expect(disposed.cachedMeasurements).toBe(baseline.cachedMeasurements);
+});
+
 it.runIf(experimentalLayout).each([
   { label: 'numeric basis', style: { flexBasis: 80 } },
   { label: 'positive grow', style: { flexGrow: 1 } },
@@ -4309,4 +4363,17 @@ it.runIf(experimentalLayout)('accepts explicit automatic Text width with cross-a
   expect(layoutFlex({ x: 0, y: 0, width: 200, height: 100 }, [text, sibling], {}, measurement)).toEqual([
     { x: 0, y: 90, width: 140, height: 10 }, { x: 140, y: 0, width: 40, height: 40 },
   ]);
+});
+
+
+it.runIf(experimentalLayout).each([
+  { label: 'wrap reverse', options: { flexWrap: 'wrap-reverse' as const }, style: {} },
+  { label: 'reversed row', options: { flexDirection: 'row-reverse' as const }, style: {} },
+  { label: 'RTL row', options: { layoutDirection: 'rtl' as const }, style: {} },
+  { label: 'numeric basis', options: {}, style: { flexBasis: 80 } },
+  { label: 'positive grow', options: {}, style: { flexGrow: 1 } },
+  { label: 'positive shrink', options: {}, style: { flexShrink: 1 } },
+])('keeps wrapped cross-auto Text admission bounded: $label', ({ options, style }) => {
+  const text = createElement(Text, { children: 'aaaa aaaa aaaa', style: { width: 80, minWidth: 0, flexShrink: 0, wrap: true, font: '10px monospace', lineHeight: 10, marginTop: 'auto', ...style } as import('@pibbl/core').TextStyle });
+  expect(() => layoutFlex({ x: 0, y: 0, width: 150, height: 120 }, [text], { flexWrap: 'wrap', ...options }, measurement)).toThrow(/auto cross-axis margins/);
 });

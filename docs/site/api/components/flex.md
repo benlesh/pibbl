@@ -259,3 +259,11 @@ required. Natural Canvas width supplies its basis; final allocated width control
 line count before auto-margin placement. In the Text comparison, a140→100px
 row with a40px sibling changes one10px line at y90 to two at y80/90. This is
 host Text sizing, without a native font-parity claim.
+
+
+Direct generic wrapped Text with finite numeric declared width also supports
+measured automatic height/cross-auto margins in an experimental LTR row/wrap
+container, with automatic basis and zero grow/shrink. Keep visible/default
+fit/overflow and omit query/aspect sizing. Its auto margin absorbs space in its
+actual line after final-width measurement. Automatic-width wrapped Text, reverse/
+RTL/wrap-reverse, provider/layout-owner and column variants remain deferred.

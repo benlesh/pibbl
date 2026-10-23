@@ -732,7 +732,13 @@ function resolveFlexPlacements(
       (normalized.flexBasis === undefined || normalized.flexBasis === 'auto') &&
       (normalized.flexGrow ?? 0) === 0 && typeof (normalized.flexShrink ?? 1) === 'number' && (normalized.flexShrink ?? 1) > 0 &&
       normalized.minWidth === undefined && normalized.maxWidth === undefined;
-    const measuredTextCrossAuto = (measuredAutoCross || automaticTextCrossWidth) && child.type === Text && normalized.wrap === true &&
+    const wrappedNumericTextCross = hasAutoCrossMargin && experimentalLayout && child.type === Text &&
+      options.flexDirection === 'row' && options.flexWrap === 'wrap' && options.layoutDirection === 'ltr' &&
+      (declaredCrossSize === undefined || declaredCrossSize === 'auto') &&
+      typeof declared.width === 'number' && typeof normalized.width === 'number' && Number.isFinite(normalized.width) && normalized.width >= 0 &&
+      (normalized.flexBasis ?? 'auto') === 'auto' && (normalized.flexGrow ?? 0) === 0 && normalized.flexShrink === 0 &&
+      !preparedStyleQuery(prepared) && aspectRatio === undefined;
+    const measuredTextCrossAuto = (measuredAutoCross || automaticTextCrossWidth || wrappedNumericTextCross) && child.type === Text && normalized.wrap === true &&
       (normalized.fit === undefined || normalized.fit === 'visible') &&
       (normalized.overflow === undefined || normalized.overflow === 'visible') && genericTextFont(normalized);
     const autoCrossDefinition = measuredAutoCross && !measuredTextCrossAuto ? getPrimitiveDefinition(child.type) : undefined;
