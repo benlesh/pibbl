@@ -82,11 +82,18 @@ describe('bounded direct-Flex absolute admission', () => {
     ['Overlay', <Overlay style={{ width: 200, height: 100 }}><Rectangle style={fixed} /></Overlay>],
     ['Flow', <Flow style={{ width: 200, height: 100 }}><Rectangle style={fixed} /></Flow>],
     ['Grid', <Grid style={{ width: 200, height: 100, gridTemplateColumns: [200], gridTemplateRows: [100] }}><Rectangle style={fixed} /></Grid>],
-    ['column', <Flex style={{ width: 200, height: 100, flexDirection: 'column' }}><Rectangle style={fixed} /></Flex>],
     ['wrap', <Flex style={{ width: 200, height: 100, flexWrap: 'wrap' }}><Rectangle style={fixed} /></Flex>],
     ['layout child', <Flex style={{ width: 200, height: 100 }}><Flex style={fixed}>{null}</Flex></Flex>],
   ] as const)('rejects absolute participation in %s outside the bounded contract', (_name, node) => {
     expect(mount(node)).toThrow('PIBBL_LAYOUT_UNSUPPORTED_POSITION');
+  });
+  it.runIf(!experimentalLayout)('rejects column absolute participation in the normal runtime', () => {
+    expect(mount(<Flex style={{ width: 200, height: 100, flexDirection: 'column' }}><Rectangle style={fixed} /></Flex>)).toThrow('PIBBL_LAYOUT_UNSUPPORTED_POSITION');
+  });
+  it.runIf(experimentalLayout).each(['row-reverse', 'column', 'column-reverse'] as const)('keeps automatic axes and numeric bounds outside expanded %s absolute placement', flexDirection => {
+    for (const style of [{ ...fixed, width: 'auto' as const, right: 18 }, { ...fixed, minWidth: 0 }, { ...fixed, aspectRatio: 2 }]) {
+      expect(mount(<Flex style={{ width: 200, height: 100, flexDirection }}><Rectangle style={style} /></Flex>)).toThrow('PIBBL_LAYOUT_UNSUPPORTED_POSITION');
+    }
   });
   it('rejects an opaque static Flex handoff when no declarative containing-block metadata exists', () => {
     function OpaqueStatic({ style }: { readonly style: FlexStyle & FlexItemStyle }) {

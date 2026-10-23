@@ -1281,7 +1281,7 @@ function resolveAbsoluteFlexPlacement(
   receiverToken: object,
   query: PreparedQuery | undefined,
   content: Readonly<LayoutBox>,
-  options: Readonly<Pick<ResolvedFlexStyle, 'justifyContent' | 'alignItems' | 'layoutDirection'>>,
+  options: Readonly<Pick<ResolvedFlexStyle, 'flexDirection' | 'justifyContent' | 'alignItems' | 'layoutDirection'>>,
   measurement?: FlexMeasurementInput,
   region?: LayoutRegion,
   measurementToken?: object,
@@ -1323,14 +1323,19 @@ function resolveAbsoluteFlexPlacement(
   const resolved = resolveDirectChildBox(paddingBox, child, 'absolute', settledStyle);
   const width = resolved.borderBox.width;
   const height = resolved.borderBox.height;
+  const row = isRowDirection(options.flexDirection);
+  const mainReversed = (options.flexDirection === 'row-reverse' || options.flexDirection === 'column-reverse') !==
+    (row && options.layoutDirection === 'rtl');
   const x = left !== undefined || right !== undefined ?
     options.layoutDirection === 'rtl'
       ? right === undefined ? paddingBox.x + left! : paddingBox.x + paddingBox.width - right - width
       : left === undefined ? paddingBox.x + paddingBox.width - right! - width : paddingBox.x + left :
-    resolveAbsoluteMainAlignment(content, width, options.justifyContent, options.layoutDirection);
+    row ? resolveAbsoluteMainAlignment(content, width, options.justifyContent, mainReversed, true) :
+      resolveAbsoluteCrossAlignment(content, width, options.alignItems, options.layoutDirection === 'rtl', false);
   const y = top !== undefined || bottom !== undefined ?
     top === undefined ? paddingBox.y + paddingBox.height - bottom! - height : paddingBox.y + top :
-    content.y + alignmentOffset(options.alignItems, content.height, height);
+    row ? resolveAbsoluteCrossAlignment(content, height, options.alignItems, false, true) :
+      resolveAbsoluteMainAlignment(content, height, options.justifyContent, mainReversed, false);
   const usedWidth = resolved.contentBox.width;
   const usedHeight = resolved.contentBox.height;
   return {
@@ -1363,17 +1368,35 @@ function resolveAbsoluteAutoSize(
 
 function resolveAbsoluteMainAlignment(
   content: Readonly<LayoutBox>,
-  width: number,
+  size: number,
   justifyContent: MainAlignment,
-  direction: 'ltr' | 'rtl',
+  reversed: boolean,
+  horizontal: boolean,
 ): number {
   let alignment: CrossAlignment = justifyContent === 'flex-end' ? 'flex-end' :
     justifyContent === 'flex-start' || justifyContent === 'space-between' ? 'flex-start' : 'center';
-  if (direction === 'rtl') {
+  if (reversed) {
     if (alignment === 'flex-start') alignment = 'flex-end';
     else if (alignment === 'flex-end') alignment = 'flex-start';
   }
-  return content.x + alignmentOffset(alignment, content.width, width);
+  return horizontal ? content.x + alignmentOffset(alignment, content.width, size) :
+    content.y + alignmentOffset(alignment, content.height, size);
+}
+
+function resolveAbsoluteCrossAlignment(
+  content: Readonly<LayoutBox>,
+  size: number,
+  alignItems: CrossAlignment,
+  reversed: boolean,
+  vertical: boolean,
+): number {
+  let alignment: CrossAlignment = alignItems === 'stretch' ? 'flex-start' : alignItems;
+  if (reversed) {
+    if (alignment === 'flex-start') alignment = 'flex-end';
+    else if (alignment === 'flex-end') alignment = 'flex-start';
+  }
+  return vertical ? content.y + alignmentOffset(alignment, content.height, size) :
+    content.x + alignmentOffset(alignment, content.width, size);
 }
 
 function genericTextFont(style: Readonly<Record<string, unknown>>): boolean {
@@ -1860,11 +1883,15 @@ function assertSupportedAbsoluteFlexPosition(
   if (isKnownLayoutType(child.type) || isLayoutComponent(child.type)) {
     throw childDiagnostic(child, 'position', style.position, container, 'PIBBL_LAYOUT_UNSUPPORTED_POSITION: absolute layout children and nested containing blocks are not supported in this slice');
   }
-  if (!experimentalLayout || options.flexDirection !== 'row' || options.flexWrap !== 'nowrap') {
-    throw childDiagnostic(child, 'position', style.position, container, 'PIBBL_LAYOUT_UNSUPPORTED_POSITION: absolute currently requires a finite row nowrap Flex allocation');
+  if (!experimentalLayout || options.flexWrap !== 'nowrap') {
+    throw childDiagnostic(child, 'position', style.position, container, 'PIBBL_LAYOUT_UNSUPPORTED_POSITION: absolute currently requires a finite nowrap Flex allocation');
   }
   const automaticWidth = style.width === undefined || style.width === 'auto';
   const automaticHeight = style.height === undefined || style.height === 'auto';
+  if (options.flexDirection !== 'row' && (automaticWidth || automaticHeight || style.aspectRatio !== undefined ||
+      style.minWidth !== undefined || style.maxWidth !== undefined || style.minHeight !== undefined || style.maxHeight !== undefined)) {
+    throw childDiagnostic(child, 'position', style.position, container, 'PIBBL_LAYOUT_UNSUPPORTED_POSITION: non-row absolute placement currently requires fixed finite dimensions without aspect ratio or size bounds');
+  }
   if ((!automaticWidth && (typeof style.width !== 'number' || !Number.isFinite(style.width) || style.width < 0)) ||
       (!automaticHeight && (typeof style.height !== 'number' || !Number.isFinite(style.height) || style.height < 0))) {
     throw childDiagnostic(child, 'position', style.position, container, 'PIBBL_LAYOUT_UNSUPPORTED_POSITION: absolute currently requires finite numeric dimensions or automatic dimensions with opposing physical insets');
@@ -1887,7 +1914,7 @@ function assertSupportedAbsoluteFlexPosition(
       (style.flexGrow !== undefined && style.flexGrow !== 0) || (style.flexShrink !== undefined && style.flexShrink !== 0) ||
       style.boxSizing !== undefined || style.padding !== undefined || style.paddingStart !== undefined || style.paddingEnd !== undefined ||
       style.borderWidth !== undefined || style.borderStartWidth !== undefined || style.borderEndWidth !== undefined || hasFlexMargin(style)) {
-    throw childDiagnostic(child, 'position', style.position, container, 'PIBBL_LAYOUT_UNSUPPORTED_POSITION: absolute excludes measurement, flex factors, margins, and child box decoration in this slice');
+    throw childDiagnostic(child, 'position', style.position, container, 'PIBBL_LAYOUT_UNSUPPORTED_POSITION: absolute excludes nonzero flex factors, margins, and child box decoration in this slice');
   }
 }
 

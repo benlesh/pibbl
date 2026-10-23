@@ -129,6 +129,7 @@ try {
       assert.equal(receipt.logicalMargins, true, 'Installed logical percentage margins must move Layer targets without new native nodes');
       assert.equal(receipt.layoutDirection, true, 'Installed direction must reach retained Layer geometry and targets');
       assert.equal(receipt.absoluteAlignment, true, 'Installed no-inset axes must use content alignment and preserve explicit inset axes');
+      assert.equal(receipt.absoluteMainDirections, true, 'Installed fixed absolute boxes must preserve physical insets and align correctly across row/column forward/reverse and RTL directions');
       assert.equal(receipt.absoluteContainingBlock, true, 'Installed static Flex inherits its ancestor box while relative and omitted Flex own their local absolute child');
       assert.equal(receipt.absoluteDerivedSize, true, 'Installed opposing insets must derive a finite auto absolute size, preserve forwarding, source order, identity and cleanup');
       assert.equal(receipt.absoluteAspect, true, 'Installed absolute aspect sizing preserves declared-axis bounds and opposing-inset precedence without measurement');

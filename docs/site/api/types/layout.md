@@ -345,6 +345,16 @@ slot is unchanged. This does not infer containing boxes through opaque
 components, Group, Clip, Layer, transforms, Flow or Grid, and adds no public
 override. See the layout contract for the bounded admission.
 
+### Experimental fixed absolute main directions
+
+A finite nowrap Flex accepts fixed numeric absolute boxes in `row`,
+`row-reverse`, `column` and `column-reverse`, including RTL. Physical insets keep
+the same padding-box reference. Without an inset, `justifyContent` controls the
+main axis and `alignItems` the cross axis, including reversal and horizontal RTL.
+A fixed box keeps its size under stretch. Authored paint, click and focus order
+remain unchanged. Size bounds, automatic/aspect/measured dimensions in directions
+other than `row` remain unsupported.
+
 ### Experimental measured absolute size
 
 A direct custom primitive with paired pure `measureIntrinsic` and `measure`

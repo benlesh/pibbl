@@ -2203,6 +2203,74 @@ static void absoluteMeasuredHeightCases() {
   }
 }
 
+static void absoluteMainDirectionCases() {
+  struct Case { YGFlexDirection direction; bool rtl; bool centered; bool insets; const char* name; };
+  const Case cases[] = {
+    {YGFlexDirectionColumn, false, false, false, "column-ltr"},
+    {YGFlexDirectionColumn, true, false, false, "column-rtl"},
+    {YGFlexDirectionColumnReverse, false, false, false, "column-reverse-ltr"},
+    {YGFlexDirectionColumnReverse, true, false, false, "column-reverse-rtl"},
+    {YGFlexDirectionColumn, false, true, false, "column-center-end-ltr"},
+    {YGFlexDirectionColumn, true, true, false, "column-center-end-rtl"},
+    {YGFlexDirectionColumnReverse, false, false, true, "column-reverse-insets-ltr"},
+    {YGFlexDirectionColumnReverse, true, false, true, "column-reverse-insets-rtl"},
+    {YGFlexDirectionRowReverse, false, false, false, "row-reverse-ltr"},
+    {YGFlexDirectionRowReverse, true, false, false, "row-reverse-rtl"},
+  };
+  for (const auto& current : cases) {
+    auto config = YGConfigNew();
+    YGConfigSetUseWebDefaults(config, false);
+    YGConfigSetPointScaleFactor(config, 0);
+    YGConfigSetErrata(config, YGErrataNone);
+    auto root = YGNodeNewWithConfig(config);
+    YGNodeStyleSetPositionType(root, YGPositionTypeRelative);
+    YGNodeStyleSetBoxSizing(root, YGBoxSizingBorderBox);
+    YGNodeStyleSetWidth(root, 204);
+    YGNodeStyleSetHeight(root, 244);
+    YGNodeStyleSetFlexDirection(root, current.direction);
+    YGNodeStyleSetFlexWrap(root, YGWrapNoWrap);
+    YGNodeStyleSetJustifyContent(root, current.centered ? YGJustifyCenter : YGJustifyFlexStart);
+    YGNodeStyleSetAlignItems(root, current.centered ? YGAlignFlexEnd : YGAlignStretch);
+    YGNodeStyleSetGap(root, YGGutterAll, 10);
+    YGNodeStyleSetPadding(root, YGEdgeLeft, 10);
+    YGNodeStyleSetPadding(root, YGEdgeRight, 30);
+    YGNodeStyleSetPadding(root, YGEdgeTop, 20);
+    YGNodeStyleSetPadding(root, YGEdgeBottom, 20);
+    YGNodeStyleSetBorder(root, YGEdgeAll, 2);
+    for (int item = 0; item < 3; ++item) {
+      auto child = YGNodeNewWithConfig(config);
+      YGNodeStyleSetWidth(child, item == 1 ? 30 : 50);
+      YGNodeStyleSetHeight(child, 20);
+      if (item != 1) {
+        YGNodeStyleSetMinWidth(child, 0);
+        YGNodeStyleSetMinHeight(child, 0);
+      }
+      YGNodeStyleSetFlexGrow(child, 0);
+      YGNodeStyleSetFlexShrink(child, 0);
+      if (item == 1) {
+        YGNodeStyleSetPositionType(child, YGPositionTypeAbsolute);
+        if (current.insets) {
+          YGNodeStyleSetPosition(child, YGEdgeLeft, 12);
+          YGNodeStyleSetPosition(child, YGEdgeTop, 8);
+        }
+      }
+      YGNodeInsertChild(root, child, item);
+    }
+    YGNodeCalculateLayout(root, YGUndefined, YGUndefined, current.rtl ? YGDirectionRTL : YGDirectionLTR);
+    std::cout << ",{\"name\":\"position-absolute-main-" << current.name
+              << "\",\"width\":204,\"height\":244,\"gap\":10,\"flexDirection\":\"" << (current.direction == YGFlexDirectionColumnReverse ? "column-reverse" : current.direction == YGFlexDirectionRowReverse ? "row-reverse" : "column")
+              << "\",\"flexWrap\":\"nowrap\",\"layoutDirection\":\"" << (current.rtl ? "rtl" : "ltr")
+              << "\",\"containerStyle\":{\"boxSizing\":\"border-box\",\"padding\":{\"left\":10,\"right\":30,\"top\":20,\"bottom\":20},\"borderWidth\":2,\"justifyContent\":\"" << (current.centered ? "center" : "flex-start") << "\",\"alignItems\":\"" << (current.centered ? "flex-end" : "stretch") << "\"},\"absoluteMainDirectionFixture\":true,\"boxes\":[";
+    for (int item = 0; item < 3; ++item) { if (item) std::cout << ','; printBox(YGNodeGetChild(root, item)); }
+    std::cout << "],\"itemStyles\":[{\"width\":50,\"height\":20,\"minWidth\":0,\"minHeight\":0,\"flexGrow\":0,\"flexShrink\":0},{\"position\":\"absolute\",\"width\":30,\"height\":20,\"flexGrow\":0,\"flexShrink\":0";
+    if (current.insets) std::cout << ",\"left\":12,\"top\":8";
+    std::cout << "},{\"width\":50,\"height\":20,\"minWidth\":0,\"minHeight\":0,\"flexGrow\":0,\"flexShrink\":0}]}";
+    YGNodeFreeRecursive(root);
+    YGConfigFree(config);
+  }
+}
+
+
 int main() {
   const char* names[] = {"grow", "cap", "shrink", "rectangle-shrink", "rectangle-percent-content-box", "column-grow", "column-cap", "column-shrink", "row-reverse-cap", "column-reverse-cap", "row-wrap", "row-wrap-reverse", "border-box-floor-bounds", "border-box-percentage", "border-box-asymmetric-row", "border-box-asymmetric-column", "zero-fractional-grow", "fractional-shrink", "grow-freeze-release", "shrink-freeze-release", "large-finite-differential", "subunit-zero-grow", "subunit-shrink-policy", "initial-freeze-grow-policy", "initial-freeze-shrink-policy"};
   std::cout << "[";
@@ -2358,5 +2426,6 @@ int main() {
   absoluteAspectCases();
   absoluteMeasuredWidthCases();
   absoluteMeasuredHeightCases();
+  absoluteMainDirectionCases();
   std::cout << "]\n";
 }

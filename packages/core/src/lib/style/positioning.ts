@@ -160,7 +160,10 @@ export interface PositioningStyle extends SystemStyle {
    * keeps the allocated slot and ignores insets; relative offsets final geometry
    * once without moving siblings; absolute stays out of sibling allocation, using
    * the padding box for explicit insets and content alignment for omitted axes.
-   * On the documented finite direct-child path, automatic absolute axes resolve
+   * Fixed numeric absolute boxes also support all reversed/column nowrap main
+   * directions and RTL, with main/cross alignment on inset-free axes. Bounds and
+   * automatic/aspect/measured dimensions remain row-only.
+   * On the documented finite row direct-child path, automatic absolute axes resolve
    * from opposing numeric physical insets. With a positive finite aspectRatio,
    * exactly one automatic axis can instead derive from its declared finite numeric opposite axis.
    * Opposing insets win. Finite numeric min/max bounds clamp used axes

@@ -101,13 +101,21 @@ explicit finite numeric dimension. Both-automatic and both-explicit ratio cases
 remain unsupported. Without a ratio, both automatic axes may still use their
 own opposing inset pairs.
 
+A fixed finite numeric absolute box also participates in experimental nowrap
+`row-reverse`, `column` and `column-reverse` Flex. In these expanded directions,
+size bounds, automatic axes, aspect derivation and measurement remain unsupported.
+The broader sizing paths above and below remain limited to `row`.
+
 On an axis without either inset, the fixed child aligns within the parent content
-box instead. Horizontal alignment uses `justifyContent`: start and space-between
-use main-start, end uses main-end, and center/space-around/space-evenly center.
-RTL reverses main-start/end. Vertical alignment uses `alignItems`; stretch keeps
-the fixed height at cross-start. Center and end retain their offsets when the
-child exceeds the content dimension. An explicit inset on one axis does not
-change the other axis's content alignment. `alignSelf` is not admitted.
+box instead. `justifyContent` controls the main axis: flex-start and space-between
+use main-start, flex-end uses main-end, and center/space-around/space-evenly center.
+`alignItems` controls the cross axis; stretch keeps the declared size at
+cross-start. Main reversal and horizontal RTL each apply once. Thus column-reverse
+starts at the bottom, while RTL columns use the right edge as cross-start.
+Logical start/end retain their existing direction-independent meaning. Center and
+end retain offsets when the child exceeds the content dimension. Physical insets
+and their precedence do not change with main direction. An inset on one axis does
+not change the other axis's content alignment. `alignSelf` is not admitted.
 
 This admission does not add intrinsic sizing, percentage insets, nested
 general containing-block selection, Flow/Grid/Layer participation, or a migration of

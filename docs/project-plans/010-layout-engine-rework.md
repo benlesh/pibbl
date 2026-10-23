@@ -2,10 +2,11 @@
 
 ## Current checkpoint and single next slice — 2026-10-23
 
-Latest delivery is slice129 (bounded measured absolute natural height; this commit).
+Latest delivery is slice130 (fixed absolute placement across all Flex main directions; this commit).
+Slice129 is `398dfa54` (bounded measured absolute natural height).
 Slice128 is `2539ff32` (bounded measured absolute natural width).
 Slice127 is `dfc5843c` (bounded absolute aspect-ratio derivation).
-Consolidation43 for127–129 passes below; consolidation42 is `99dfdf49` for124–126.
+Consolidation43 is `ce7f45a1` for127–129; consolidation42 is `99dfdf49` for124–126.
 Slice126 is `0bda56ec` (numeric absolute size bounds).
 Slice125 is `6603731e` (declarative static Flex containing-block ownership).
 Slice124 is `77452150` (opposing-inset derived absolute dimensions).
@@ -88,11 +89,11 @@ Slice55 is `1510efe3` (prepared Grid-root planning/adoption).
 Slice54 `773da7b9`,53 `aaa7ddcb`,52 `b5381e0d` are consolidated in `f322a709`.
 Every slice has its own commit. The fixed33-capability/seven-gate denominator is
 unchanged; all seven gates remain open. Earlier checkpoints are recorded below.
-Current corpus:373 records,279 native matches and94 classified differences.
+Current corpus:383 records,289 native matches and94 classified differences.
 The concise public lesson retains5 cases; the complete corpus is private testing
 input. Current runnable source/built comparison:
 `http://127.0.0.1:5192/#/testing/layout-yoga-migration` and port5193.
-Click Latest for the natural-height family; Next case advances its six records.
+Click Latest for the fixed absolute direction family; Next case advances its ten records.
 The public lesson is `#/examples/layout/wasm-yoga-migration`.
 
 The loading/named-component integration is ready for source feedback on branch
@@ -3640,25 +3641,55 @@ Docs109RED probes/JSDoc and public5/full373 boundary pass. Types/lint pass at129
 No baseline rewrite, capability promotion, new performance claim or Node24 trust.
 Fixed33 remains8complete/12experimental/6partial/6missing/1excluded; all7gates open.
 
-## [NEXT] Fixed absolute placement across Flex main directions (slice130)
+## Slice130 delivered: fixed absolute main directions
 
-Implement the public test-first fixed-size direction contract below, then expose
-it through the private source/built rehearsal and installed public consumer.
-Commit130 separately. The next consolidation is after130–132.
+Fixed finite numeric direct absolute boxes now support all four nowrap Flex main
+directions and LTR/RTL. Inset-free axes follow main/cross alignment; physical
+insets retain their existing padding-box reference and precedence. Main reversal
+is authored reverse XOR horizontal RTL. Logical start/end normalization rewrites
+only those logical values; it does not pre-reverse flex-start/end. Fixed stretch
+uses cross-start, including the right edge in RTL columns. No new API/ABI or
+native absolute nodes, and no expansion of row-only auto/aspect/bounded/provider
+sizing, nested containing ownership, wrapping, margins or child decoration.
 
-### Finite positioning exit matrix after129
+Public RED failed at missing column admission; green checks direction transitions,
+exact decorated geometry, overlapping clicks, authored focus order, stable keyed
+identity, paint reuse and cleanup. Focused3files65pass/1normal-onlyskip66; normal
+39pass/27skip66. Additional logical start/end × reverse/RTL, Latest navigation
+and cold measurement identity rollback pass3/430skip433. Scoped review found no
+material issue after correcting reversal and fixed-stretch semantics before
+application. Ten pinned fixtures bring383records=289matches+94classified.
+Source/built10pass227source/dist inputs, errors[]/cleanup[0,0,0]; screenshot
+inspected. Previous measured-width built6pass. Public5/full383 boundary passes.
+Fresh isolated package245dist inputs passes Bundler/NodeNext and explicit
+absoluteMainDirections receipt, earlier measurement/placement receipts and
+104auto-margin fixtures. Tarball SHA256
+`9258f4194758e891f7fd8871a3a168d61d6992160c4146d7b82e99ecc4b0e833`.
+Types, changed-code lint, docs109RED probes/JSDoc pass.
+Logs `/tmp/pibbl-slice130-{public-red,public-green,focused,normal,hardening,native,source,built,width-built,packed,types-final,lint-final,docs}.txt`.
+Kernel68649bytes/SHA unchanged. Node26.9.0/macOSChromium, no Node24 trust or full
+uninterrupted383-case browser claim. Fixed33 counts and all7open gates unchanged.
+
+## [NEXT] Static/relative placement across nowrap Flex main directions (slice131)
+
+Extend the existing finite slot-translation contract to reversed rows and columns,
+with pinned direction evidence and public paint/hit/focus geometry. Preserve the
+existing direct containing-block boundary; no opaque/nested ownership expansion.
+Commit131 separately; the next consolidation follows130–132.
+
+### Finite positioning exit matrix after130
 
 This refines existing manifest entries; it adds no capability or release gate.
 
 | Existing exit | Evidence still required before closing it |
 | --- | --- |
-| Direct static/relative/absolute placement | All accepted main directions and wrapping contexts, inset precedence and no-inset alignment, logical/percentage policy, supported child box and size constraints; pinned semantic geometry plus public paint/hit/focus evidence. Current direct row-nowrap admission is only a subset. |
+| Direct static/relative/absolute placement | All accepted main directions and wrapping contexts, inset precedence and no-inset alignment, logical/percentage policy, supported child box and size constraints; pinned semantic geometry plus public paint/hit/focus evidence. Static/relative remains row-nowrap; fixed absolute covers nowrap directions, while broader sizing remains row-only. |
 | Absolute intrinsic dimensions | Built-in Text/font and image contributions, both-auto sizing, nested described owners and supported constraint feedback. The paired-provider one-auto paths in128–129 do not supply these contracts. |
 | General containing-block ownership | Exact override, transformed/opaque/boxless ancestry policy and lifecycle evidence, retaining legacy omission only where specified. Direct static Flex chains alone do not close it. |
 | Hidden/contents participation | Declared retention/disposal, boxless layout contribution, identity, source order, clips, events and visibility transitions; current implementation is missing. |
 | Transactional publication | Position, hit, focus, HTML and external-layer geometry must publish or roll back coherently through the accepted root-wide preparation/ownership model. Per-region measurement rollback is bounded evidence only. |
 
-Selected next material slice130: fixed finite numeric absolute boxes in all four
+Delivered material slice130: fixed finite numeric absolute boxes in all four
 nowrap Flex main directions, LTR/RTL. No new public API. Explicit physical insets
 retain padding-box reference/precedence; inset-free axes use main/cross alignment
 with reverse and RTL applied once. Automatic/aspect/measured size and numeric

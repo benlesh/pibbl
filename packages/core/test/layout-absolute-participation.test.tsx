@@ -926,3 +926,110 @@ it.runIf(experimentalLayout)('queries an automatic absolute height at declared w
   await assertBounds({ minWidth: 100 }, 100);
   await assertBounds({ maxWidth: 60 }, 60);
 });
+
+
+it.runIf(experimentalLayout)('keeps finite absolute Flex placement physical while every main direction changes', async () => {
+  type PlacementStyle = PibblResponsiveStyle<RectStyle & FlexItemStyle>;
+  type Direction = 'row' | 'row-reverse' | 'column' | 'column-reverse';
+  const baseline = snapshotWasmLayoutDiagnostics();
+  const direction = signal<Direction>('column');
+  const layoutDirection = signal<'ltr' | 'rtl'>('ltr');
+  const centered = signal(false);
+  const logical = signal<'start' | 'end' | undefined>(undefined);
+  const physicalInsets = signal(false);
+  const ink = signal('#a63758');
+  const boxes = new Map<string, { x: number; y: number; width: number; height: number; stamp: number }>();
+  const hits: string[] = [];
+  const focused: string[] = [];
+  let nextStamp = 1;
+
+  function Probe({ name, style: _style }: { readonly name: string; readonly style: PlacementStyle }) {
+    const box = useLayoutBox();
+    const transform = useCanvasContext().getTransform();
+    const stamp = useConst(() => nextStamp++);
+    boxes.set(name, { x: transform.e, y: transform.f, width: box.width, height: box.height, stamp });
+    return <Rectangle keyboardFocusable onFocus={() => focused.push(name)} onClick={() => hits.push(name)} style={{
+      width: box.width, height: box.height, cursor: 'pointer',
+      fill: name === 'ABS' ? ink : name === 'A' ? '#19375b' : '#426b61',
+    }} />;
+  }
+
+  function Scene() {
+    const main = direction.get();
+    const vertical = main === 'column' || main === 'column-reverse';
+    const fixed = physicalInsets.get();
+    const ordinary: PlacementStyle = { width: 50, height: 20, minWidth: 0, minHeight: 0, flexGrow: 0, flexShrink: 0 };
+    const absolute: PlacementStyle = {
+      position: 'absolute', width: 30, height: 20, flexGrow: 0, flexShrink: 0,
+      left: fixed ? 12 : undefined, top: fixed ? 8 : undefined,
+    };
+    return <FocusManagement><Flex style={{
+      width: 204, height: vertical ? 244 : 104, boxSizing: 'border-box',
+      padding: { left: 10, right: 30, top: 20, bottom: 20 }, borderWidth: 2,
+      flexDirection: main, flexWrap: 'nowrap', gap: 10, layoutDirection: layoutDirection.get(),
+      justifyContent: logical.get() ?? (centered.get() ? 'center' : 'flex-start'), alignItems: centered.get() ? 'flex-end' : 'stretch',
+    }}>
+      <Probe key="A" name="A" style={ordinary} />
+      <Probe key="ABS" name="ABS" style={absolute} />
+      <Probe key="B" name="B" style={ordinary} />
+    </Flex></FocusManagement>;
+  }
+
+  const canvas = document.createElement('canvas'); canvas.width = 204; canvas.height = 244; document.body.append(canvas);
+  const controller = pibbl(canvas, <Scene />); controllers.push(controller);
+  await nextFrame();
+  expect(boxes.get('ABS')).toEqual({ x: 12, y: 22, width: 30, height: 20, stamp: 2 });
+  canvas.focus({ preventScroll: true });
+  canvas.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', code: 'Tab', bubbles: true, cancelable: true }));
+  canvas.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', code: 'Tab', bubbles: true, cancelable: true }));
+  expect(focused).toEqual(['A', 'ABS', 'B']);
+  clickCanvas(canvas, 18, 28); // ABS paints after the coincident A.
+  clickCanvas(canvas, 18, 58);
+  expect(hits).toEqual(['ABS', 'B']);
+
+  direction.set('column-reverse'); await nextFrame();
+  expect(boxes.get('ABS')).toEqual({ x: 12, y: 202, width: 30, height: 20, stamp: 2 });
+  layoutDirection.set('rtl'); await nextFrame();
+  expect(boxes.get('ABS')).toEqual({ x: 142, y: 202, width: 30, height: 20, stamp: 2 });
+  direction.set('column'); await nextFrame();
+  expect(boxes.get('ABS')).toEqual({ x: 142, y: 22, width: 30, height: 20, stamp: 2 });
+  direction.set('row'); await nextFrame();
+  expect(boxes.get('ABS')).toEqual({ x: 142, y: 22, width: 30, height: 20, stamp: 2 });
+  direction.set('row-reverse'); await nextFrame();
+  expect(boxes.get('ABS')).toEqual({ x: 12, y: 22, width: 30, height: 20, stamp: 2 });
+  layoutDirection.set('ltr'); await nextFrame();
+  expect(boxes.get('ABS')).toEqual({ x: 142, y: 22, width: 30, height: 20, stamp: 2 });
+  direction.set('row'); await nextFrame();
+  expect(boxes.get('ABS')).toEqual({ x: 12, y: 22, width: 30, height: 20, stamp: 2 });
+
+  direction.set('column'); centered.set(true); await nextFrame();
+  expect(boxes.get('ABS')).toEqual({ x: 142, y: 112, width: 30, height: 20, stamp: 2 });
+  layoutDirection.set('rtl'); await nextFrame();
+  expect(boxes.get('ABS')).toEqual({ x: 12, y: 112, width: 30, height: 20, stamp: 2 });
+  physicalInsets.set(true); await nextFrame();
+  expect(boxes.get('ABS')).toEqual({ x: 14, y: 10, width: 30, height: 20, stamp: 2 });
+
+  physicalInsets.set(false); centered.set(false); logical.set('start');
+  direction.set('column-reverse'); layoutDirection.set('ltr'); await nextFrame();
+  expect(boxes.get('ABS')).toEqual({ x: 12, y: 22, width: 30, height: 20, stamp: 2 });
+  direction.set('row-reverse'); await nextFrame();
+  expect(boxes.get('ABS')).toEqual({ x: 12, y: 22, width: 30, height: 20, stamp: 2 });
+  layoutDirection.set('rtl'); await nextFrame();
+  expect(boxes.get('ABS')).toEqual({ x: 142, y: 22, width: 30, height: 20, stamp: 2 });
+  logical.set('end'); await nextFrame();
+  expect(boxes.get('ABS')).toEqual({ x: 12, y: 22, width: 30, height: 20, stamp: 2 });
+  direction.set('column-reverse'); await nextFrame();
+  expect(boxes.get('ABS')).toEqual({ x: 142, y: 202, width: 30, height: 20, stamp: 2 });
+
+  const beforePaint = snapshotWasmLayoutDiagnostics();
+  ink.set('#6e3e79'); await nextFrame();
+  const painted = snapshotWasmLayoutDiagnostics();
+  expect(painted.solves).toBe(beforePaint.solves);
+  expect(painted.nodeCreates).toBe(beforePaint.nodeCreates);
+  expect([...boxes.values()].map(box => box.stamp)).toEqual([1, 2, 3]);
+  controller.dispose();
+  const disposed = snapshotWasmLayoutDiagnostics();
+  expect([disposed.activeNodes, disposed.activeArenas, disposed.cachedMeasurements]).toEqual([
+    baseline.activeNodes, baseline.activeArenas, baseline.cachedMeasurements,
+  ]);
+});
