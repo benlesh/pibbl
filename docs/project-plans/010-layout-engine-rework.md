@@ -1233,6 +1233,31 @@ only. Mark the capability complete only when these criteria pass, without closin
 the broader Flex gate or expanding the33-capability denominator. Consolidate
 70–72 as group24 first, then73–75 as group25.
 
+### Consolidation 24 completed for delivery slices 70–72
+
+Separate70 `b7d5dc68`,71 `ac38f518`,72 `dc4b7d42`. Explicit physical layout
+borders,16-case pinned border geometry and finite Flex outer aspect ratios are
+implemented with exact bounded contracts. Fresh combined Chromium run:
+280passed/1normal-onlyskip in12 layout, native loader and HTML ownership files.
+Log `/tmp/pibbl-consolidation24-focused.txt`. Negative-case diagnostic output is
+expected; no assertion failures. Source/built border and aspect controls pass;
+source/built16-case oracle replay passes with469private built inputs. Packed72
+fresh full command passes230installed inputs, explicit editor/Bundler/NodeNext
+fields, installed aspect pixels and exact lifecycle cleanup. Native border
+reproduction71 and preserved aspect semantic probe72 are independent pinned
+receipts. Types/lint/JSDoc/Studio metadata/render/search/coverage pass. Reused
+scoped reviews70/72 report no material findings; no duplicate or unchanged review.
+No screenshots/baselines rewritten. Kernel65282bytes unchanged. Environment
+Node26.9.0/pnpm11.21.0deps/Chromium/Apple C++20; no Node24 full-trust or speed claim.
+
+Fixed33 capabilities:12experimental,9partial,11missing,1deliberate exclusion;
+no capability is yet marked complete and all seven release gates remain open.
+The next73 specifically targets completion of the finite numeric-gap preserve
+entry using its stated exit criteria. Larger Flex sizing/distribution/intrinsic/
+direction, full prepared topology/minimal visits, atomic Canvas/hit/focus/HTML,
+standalone/framework/Pibbl migrations, Grid, broad pinned corpus, reproducible
+performance, Node24 trust and final separate critical review remain outstanding.
+
 ### Consolidation 23 completed for delivery slices 67–69
 
 Separate67 `16fe904e`,68 `df3d0974`,69 `9b530832`. Public opt-in border-box
