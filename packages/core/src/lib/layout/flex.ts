@@ -79,15 +79,15 @@ export interface FlexStyle extends BoxStyle, LayoutItemStyle {
   flexDirection?: FlexDirection;
   /** Whether children may wrap onto additional flex lines. See {@link FlexWrap}. */
   flexWrap?: FlexWrap;
-  /** Distribution of children along the main axis. See {@link MainAlignment}. */
-  justifyContent?: MainAlignment;
-  /** Default alignment of children on the cross or block axis. See {@link CrossAlignment}. */
-  alignItems?: CrossAlignment;
+  /** Distribution along the main axis. start/end keep physical LTR edges under reversal. See {@link MainAlignment}. */
+  justifyContent?: MainAlignment | 'start' | 'end';
+  /** Cross alignment. start/end keep physical LTR edges under wrap-reverse. See {@link CrossAlignment}. */
+  alignItems?: CrossAlignment | 'start' | 'end';
   /**
    * Distribution of wrapped flex lines within the available cross-axis space. See
    * {@link CrossAlignment}, {@link MainAlignment}.
    */
-  alignContent?: CrossAlignment | MainAlignment;
+  alignContent?: CrossAlignment | MainAlignment | 'start' | 'end';
   /** Spacing between adjacent items. See {@link FlexStyle}. */
   gap?: number;
   /** Space between adjacent rows or items on the row axis. See {@link FlexStyle}. */
@@ -706,7 +706,7 @@ function resolveFlexPlacements(
       throw childDiagnostic(child, needsMeasuredMain ? mainProperty : crossProperty, 'auto', container,
         'Experimental WASM column wrap requires a declared height or flexBasis and a declared width; intrinsic item sizes are unsupported.');
     }
-    const alignment = normalizeItemAlignment(normalized.alignSelf, child, container);
+    const alignment = normalizeItemAlignment(normalized.alignSelf, child, container, wrapReverse);
     const needsMeasuredCross = aspectRatio === undefined && crossAuto && alignment !== 'stretch' &&
       options.alignItems !== 'stretch';
     // A finite column cross allocation determines a stretched built-in child's
@@ -1274,19 +1274,19 @@ function normalizeFlexOptions(
     throw optionDiagnostic('flexWrap', flexWrap, container, 'uses an unsupported flex wrap in this build');
   }
   const justifyContent = supported(
-    style.justifyContent ?? 'flex-start',
+    normalizeLogicalAlignment(style.justifyContent ?? 'flex-start', flexDirection === 'row-reverse' || flexDirection === 'column-reverse'),
     ['flex-start', 'flex-end', 'center', 'space-between', 'space-around', 'space-evenly'],
     'justifyContent',
     container,
   );
   const alignItems = supported(
-    style.alignItems ?? 'stretch',
+    normalizeLogicalAlignment(style.alignItems ?? 'stretch', flexWrap === 'wrap-reverse'),
     ['stretch', 'flex-start', 'flex-end', 'center'],
     'alignItems',
     container,
   );
   const alignContent = supported(
-    style.alignContent ?? 'stretch',
+    normalizeLogicalAlignment(style.alignContent ?? 'stretch', flexWrap === 'wrap-reverse'),
     ['stretch', 'flex-start', 'flex-end', 'center', 'space-between', 'space-around', 'space-evenly'],
     'alignContent',
     container,
@@ -1399,12 +1399,21 @@ function resolveOptionalBound(
   return resolveItemLength(value, reference, property, child, container);
 }
 
+function normalizeLogicalAlignment(value: string, reversed: boolean): string {
+  if (value === 'start') return reversed ? 'flex-end' : 'flex-start';
+  if (value === 'end') return reversed ? 'flex-start' : 'flex-end';
+  return value;
+}
+
 function normalizeItemAlignment(
   value: LayoutItemStyle['alignSelf'],
   child: PibblElement<any>,
   container: Readonly<LayoutBox>,
+  reverseCross = false,
 ): CrossAlignment | 'auto' {
   if (value === undefined || value === 'auto') return 'auto';
+  if (value === 'start') return reverseCross ? 'flex-end' : 'flex-start';
+  if (value === 'end') return reverseCross ? 'flex-start' : 'flex-end';
   if (value === 'stretch' || value === 'flex-start' ||
     value === 'flex-end' || value === 'center') return value;
   throw childDiagnostic(

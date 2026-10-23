@@ -197,15 +197,15 @@ direction, margin collapsing, or baseline alignment.
 
 `Flex` implements a deliberately bounded CSS-compatible subset.
 
-| Container field              | Supported values and default                                                                             |
-| ---------------------------- | -------------------------------------------------------------------------------------------------------- |
-| `flexDirection`              | `row` (default), `column`                                                                                |
-| `flexWrap`                   | `nowrap` (default), `wrap`                                                                               |
-| `justifyContent`             | `flex-start` (default), `flex-end`, `center`, `space-between`, `space-around`, `space-evenly`            |
-| `alignItems`                 | `stretch` (default), `flex-start`, `flex-end`, `center`                                                  |
-| `alignContent`               | `stretch` (default), `flex-start`, `flex-end`, `center`, `space-between`, `space-around`, `space-evenly` |
-| `gap`, `rowGap`, `columnGap` | finite nonnegative numbers; axis values override `gap`; default `0`                                      |
-| item fields                  | `flexBasis: auto`, `flexGrow: 0`, `flexShrink: 1`, `alignSelf: auto` by default                          |
+| Container field              | Supported values and default                                                                                             |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `flexDirection`              | `row` (default), `column`                                                                                                |
+| `flexWrap`                   | `nowrap` (default), `wrap`                                                                                               |
+| `justifyContent`             | `flex-start` (default), `flex-end`, `start`, `end`, `center`, `space-between`, `space-around`, `space-evenly`            |
+| `alignItems`                 | `stretch` (default), `flex-start`, `flex-end`, `start`, `end`, `center`                                                  |
+| `alignContent`               | `stretch` (default), `flex-start`, `flex-end`, `start`, `end`, `center`, `space-between`, `space-around`, `space-evenly` |
+| `gap`, `rowGap`, `columnGap` | finite nonnegative numbers; axis values override `gap`; default `0`                                                      |
+| item fields                  | `flexBasis: auto`, `flexGrow: 0`, `flexShrink: 1`, `alignSelf: auto` by default                                          |
 
 Basis may be a definite number/percentage or pure measured `auto`. Whenever an
 item can shrink or uses measured/automatic basis, it must declare `minWidth` in
@@ -657,3 +657,11 @@ The outer direct layout parent still owns its child's placement, so a frame with
 authored `left` or `top` is invalid directly under `Flex`, `Flow`, or `Grid` in
 development/test execution and has no production placement effect. See the
 [component-manipulation contract](./component-manipulation-contract.md).
+
+Flex accepts `start` and `end` for `justifyContent`, `alignItems`,
+`alignContent`, and child `alignSelf`. In the current LTR layout these anchor
+to the physical left/top and right/bottom edges, respectively. Unlike
+`flex-start`/`flex-end`, they keep those edges under experimental reversed main
+axes and `wrap-reverse`. Normal forward axes accept the same values. RTL
+inheritance remains unsupported. Alignment changes preserve source paint and
+hit order and do not recreate native nodes or rerun numeric allocation.

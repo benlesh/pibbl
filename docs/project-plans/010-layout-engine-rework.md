@@ -2,7 +2,8 @@
 
 ## Current checkpoint and single next slice — 2026-10-22
 
-Latest delivery is slice74 (finite allocation evidence complete and initial-freeze correction).
+Latest delivery is slice75 (direction-independent start/end alignment in finite LTR Flex).
+Slice74 is `e6175c94` (finite allocation evidence and initial-freeze correction).
 Slice73 is `27b18dde` (finite numeric-gap capability evidence complete).
 Slice72 is `dc4b7d42` (finite Flex outer-box aspect ratios).
 Slice71 is `ac38f518` (pinned asymmetric layout-border conformance).
@@ -24,7 +25,7 @@ Slice56 is `cf2c7bc5` (prepared Flow-root planning/adoption).
 Slice55 is `1510efe3` (prepared Grid-root planning/adoption).
 Slice54 `773da7b9`,53 `aaa7ddcb`,52 `b5381e0d` are consolidated in `f322a709`.
 Every slice has its own commit. The fixed33-capability/seven-gate denominator is
-unchanged; all seven gates remain open. The single next slice is75, direction-independent start/end alignment in finite LTR Flex. Source5192/built5193, `#/testing/layout-preflight`:
+unchanged; all seven gates remain open. The single next slice is76, bounded distribution conformance evidence. Source5192/built5193, `#/testing/layout-preflight`:
 Source5192/built5193 `#/examples/layout/wasm-yoga-migration`: Next case + resize
 cycles25 records:22matches/3classified CSS differences; click A/B/C targets.
 Canonical built comparison: http://127.0.0.1:5193/#/examples/layout/wasm-yoga-migration.
@@ -68,14 +69,14 @@ The fixed denominator is the manifest's 33 capabilities and seven release-gate
 groups. The summary below groups work for readability; it does not add exits.
 Exactly one implementation slice is queued.
 
-| Exit                                               | Required completion evidence                                                                                                                                                                                                                                                                             | Current dependency or blocker                                                                                                                                                                                |
-| -------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Flex and native sizing                             | Implement and classify the accepted matrix: reverse/wrap-reverse, margins/auto margins, percentages/gaps, box sizing/borders, aspect ratio, baselines, RTL/logical edges, containing blocks and hidden/contents participation; positive/negative/interaction geometry fixtures for every supported entry | Current experimental subset is bounded; unresolved native minimum/provider and precedence policies require exact designs before those paths broaden                                                          |
-| Grid and other layout families                     | Preserve Absolute/Overlay/Flow and complete the declared Grid track/placement/implicit/intrinsic target, with mixed nested examples and semantic geometry tests                                                                                                                                          | General nested preparation and intrinsic constraints must be available first; current Grid subset is not completion                                                                                          |
-| Prepared transactional geometry and reactive reuse | One root-wide prepared ownership model; stable identity, changed-geometry publication, rollback/failure isolation, receiver roles and bounded invalidation; public nested component/Layer/external-renderer tests with deterministic cleanup                                                             | Shared root instances, bounded known Flex plans, pure Card/known columns and frozen allocation caches are foundations, not a full graph or atomic publication                                                |
+| Exit                                               | Required completion evidence                                                                                                                                                                                                                                                                             | Current dependency or blocker                                                                                                                                                                                                        |
+| -------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Flex and native sizing                             | Implement and classify the accepted matrix: reverse/wrap-reverse, margins/auto margins, percentages/gaps, box sizing/borders, aspect ratio, baselines, RTL/logical edges, containing blocks and hidden/contents participation; positive/negative/interaction geometry fixtures for every supported entry | Current experimental subset is bounded; unresolved native minimum/provider and precedence policies require exact designs before those paths broaden                                                                                  |
+| Grid and other layout families                     | Preserve Absolute/Overlay/Flow and complete the declared Grid track/placement/implicit/intrinsic target, with mixed nested examples and semantic geometry tests                                                                                                                                          | General nested preparation and intrinsic constraints must be available first; current Grid subset is not completion                                                                                                                  |
+| Prepared transactional geometry and reactive reuse | One root-wide prepared ownership model; stable identity, changed-geometry publication, rollback/failure isolation, receiver roles and bounded invalidation; public nested component/Layer/external-renderer tests with deterministic cleanup                                                             | Shared root instances, bounded known Flex plans, pure Card/known columns and frozen allocation caches are foundations, not a full graph or atomic publication                                                                        |
 | Migration and conformance                          | Version/commit/configuration-bound Yoga corpus with explicit Pibbl conversions/divergences; supported public Pibbl migration app and documented framework-author path using the same semantics; all unsupported entries visible                                                                          | Twelve exact pinned Yoga fixtures exist, including finite row/column/reverse/wrap and the Rectangle conversion cases; the broad classified corpus remains incomplete. Standalone API details must follow the public design agreement |
-| Reproducible performance                           | Comparable kernel, JS integration and whole Canvas workloads, structural work/allocation counts and reproducible timing receipts under documented environments                                                                                                                                           | Correct broad graph/algorithms precede timing claims; current counters demonstrate only their bounded paths                                                                                                  |
-| Final integration and release                      | Accepted behavior migrated across consumers/docs/editor/types/packed output, source/built browser and lifecycle evidence, documented Node24/pnpm11.21 trust gate, then the requested separate hyper-critical whole-codebase review                                                                       | Full supported behavior and prior exits must land before final aggregate verification/review; Node26 receipts are not Node24 release evidence                                                                |
+| Reproducible performance                           | Comparable kernel, JS integration and whole Canvas workloads, structural work/allocation counts and reproducible timing receipts under documented environments                                                                                                                                           | Correct broad graph/algorithms precede timing claims; current counters demonstrate only their bounded paths                                                                                                                          |
+| Final integration and release                      | Accepted behavior migrated across consumers/docs/editor/types/packed output, source/built browser and lifecycle evidence, documented Node24/pnpm11.21 trust gate, then the requested separate hyper-critical whole-codebase review                                                                       | Full supported behavior and prior exits must land before final aggregate verification/review; Node26 receipts are not Node24 release evidence                                                                                        |
 
 The exact seven manifest gates remain open as follows:
 
@@ -1281,14 +1282,42 @@ allocation now complete at capability-evidence level; broader intrinsic/minimum
 contributions remain in their separate capabilities. Engine still opt-in, all
 seven group gates open, no Node24 full trust/speed/general Yoga parity claim.
 
-## [NEXT] Direction-independent start/end alignment in finite LTR Flex (slice 75)
+## Slice 75 delivered — direction-independent start/end alignment
 
-Extend existing alignment policies with logical start/end, distinguishing physical
-LTR start/end from direction-relative flex-start/flex-end under main reversal and
-wrap-reverse. Preserve source paint/hit order and existing defaults. Establish
-public geometry, signal/target evidence and exact policy normalization before
-implementation; RTL inheritance remains a separate capability. Consolidate73–75
-as group25 afterward.
+Flex container justifyContent/alignItems/alignContent and FlexItemStyle.alignSelf
+accept start/end. They keep physical LTR edges under experimental reversed main
+axes and wrap-reverse; flex-start/flex-end remain direction-relative. Normalize
+to existing placement tokens without changing the native ABI or allocation.
+Normal forward axes accept both values; RTL remains separate.
+
+Public RED: three reversed-axis tests rejected unsupported alignment values.
+GREEN: reversed row/column geometry and moved hits, cross-line/self alignment,
+component identity and placement-only counters; two forward-axis tests pass in
+normal JavaScript. Source and built keyed collection replays pass final code,
+including new logical-edge controls, unchanged stamps/nodes/solves/main placement,
+advanced cross placement, gap misses, reorder/remove/restore and zero disposal
+ownership. Built receipt has469 private inputs. Source/built URLs:
+http://127.0.0.1:5192/#/examples/layout/wasm-flex-keyed-wrap and
+http://127.0.0.1:5193/#/examples/layout/wasm-flex-keyed-wrap. Click a collection
+heading to reverse lines, then Logical cross to compare flex-start/start/end.
+The label uses a reactive component rather than a one-time resource read.
+
+Fresh installed packed consumer passes230 dist inputs, Bundler/NodeNext and
+reversed main/start pixels alongside initially frozen allocation/aspect geometry.
+Tarball SHA256 ecea24b7ee0adea912f0555cd23d39bb853c23097c87ac416768d5b12cb9cfb7.
+Editor source/built declarations, typecheck and changed-code lint pass. Reused
+scoped read-only review found no material issues. Logs /tmp/pibbl-slice75-{source,
+built,packed,editor,types,lint,normal,red,green}.txt. Native kernel65364bytes
+unchanged. Remaining distribution gaps: pinned negative-free-space matrix,
+one-item lines and automatic cross sizes. No capability/gate completion claim.
+
+## [NEXT] Bounded distribution conformance evidence (slice 76)
+
+Close the remaining finite main/cross-distribution evidence: independently pinned
+negative-free-space policies, one-item lines and automatic cross sizes. Reuse
+supported public behavior and classify actual oracle differences. Preserve source
+paint/hit order, identity and cleanup. No new alignment API, RTL or broader
+intrinsic sizing scope. Keep the fixed33 capabilities and seven gate denominator.
 
 ### Consolidation 24 completed for delivery slices 70–72
 

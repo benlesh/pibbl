@@ -166,7 +166,7 @@ export type FlexItemStyle = Pick<
   'aspectRatio' | 'flexBasis' | 'flexGrow' | 'flexShrink' | 'margin' | 'marginTop' | 'marginRight' | 'marginBottom' | 'marginLeft'
 > & {
   /** This child's cross-axis or block-axis alignment override. See {@link FlexItemStyle}. */
-  alignSelf?: 'auto' | 'stretch' | 'flex-start' | 'flex-end' | 'center';
+  alignSelf?: 'auto' | 'stretch' | 'flex-start' | 'flex-end' | 'center' | 'start' | 'end';
 };
 
 /**

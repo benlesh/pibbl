@@ -184,3 +184,8 @@ paint. Padding and borders combine once: content-box40×30 with padding10 and
 borderWidth2 occupies64×54; border-box64×54 preserves40×30 content.
 `strokeWidth` remains independent paint. Percentage/logical border aliases are
 not supported. Layer raster sizing retains its separate width/height policy.
+
+Flex alignment values include `start` and `end` on `FlexStyle.justifyContent`,
+`alignItems`, `alignContent`, and `FlexItemStyle.alignSelf`. These keep their
+physical LTR edges under experimental main/cross reversal; `flex-start` and
+`flex-end` follow the reversed Flex axes. RTL inheritance is not implemented.

@@ -219,13 +219,13 @@
       "evidence": {
         "positive": [
           "main/cross placement scenarios",
+          "LTR start/end remain physical under reversed main axes and wrap-reverse; source/built and packed public evidence",
           "negative-free-space fallback subset"
         ],
         "negative": [],
         "interaction": ["placement target movement"],
         "yogaCases": [],
         "missing": [
-          "start/end semantics",
           "pinned Yoga matrix for negative free space",
           "one-item lines",
           "auto cross sizes"

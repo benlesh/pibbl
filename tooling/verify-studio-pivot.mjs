@@ -198,7 +198,7 @@ try {
   }
   const consumer = `
     /** @jsxImportSource @pibbl/core */
-    import { pibbl, Rectangle, DragHandle, ManipulationFrame, ResizeHandles, RotationHandle, drive, signal, useManipulation, useSignal, type PibblNode } from '@pibbl/core';
+    import { pibbl, Flex, Rectangle, DragHandle, ManipulationFrame, ResizeHandles, RotationHandle, drive, signal, useManipulation, useSignal, type PibblNode } from '@pibbl/core';
     import { defineThreeLayer, type PibblThreeTarget } from '@pibbl/three';
     import { loadOutlineFont, createTextGeometry } from '@pibbl/text';
     async function textOutline(bytes: Uint8Array) { using font = await loadOutlineFont(bytes); return createTextGeometry(font, 'Hello', {fontSize: 100, missingGlyphs: 'error'}); }
@@ -258,7 +258,7 @@ try {
       const sprite = <Sprite frame={spriteFrameSignal} sampling="nearest" />;
       void sprite;
       const manipulation = useManipulation({ box });
-      return <><ManipulationFrame {...manipulation.frameProps}><DragHandle controller={manipulation} formatReadout={({ left, top }) => String(left + top)} style={{ readout: { gap: 5, active: { visible: true, fill: 'blue' } } }}><Rectangle keyboardFocusable style={{ boxSizing: 'border-box', width: 20, height: 20, padding: 2, borderWidth: 1, aspectRatio: 2, cursor: 'grab' }} /></DragHandle><ResizeHandles controller={manipulation} /><RotationHandle controller={manipulation} /></ManipulationFrame><InspectionComposition /><Layer angle={1} style={{ width: 20, height: 20 }} /></>;
+      return <><Flex style={{ width: 100, height: 40, justifyContent: 'start', alignItems: 'end', alignContent: 'start' }}><Rectangle style={{ width: 20, height: 10, alignSelf: 'start' }} /></Flex><ManipulationFrame {...manipulation.frameProps}><DragHandle controller={manipulation} formatReadout={({ left, top }) => String(left + top)} style={{ readout: { gap: 5, active: { visible: true, fill: 'blue' } } }}><Rectangle keyboardFocusable style={{ boxSizing: 'border-box', width: 20, height: 20, padding: 2, borderWidth: 1, aspectRatio: 2, cursor: 'grab' }} /></DragHandle><ResizeHandles controller={manipulation} /><RotationHandle controller={manipulation} /></ManipulationFrame><InspectionComposition /><Layer angle={1} style={{ width: 20, height: 20 }} /></>;
     }
     declare const canvas: HTMLCanvasElement;
     pibbl(canvas, <App />);

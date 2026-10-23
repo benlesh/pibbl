@@ -20,6 +20,7 @@ function createWasmFlexKeyedWrapExampleContent(canvas: HTMLCanvasElement) {
   const ink = signal("#19375b");
   const reverseAxes = signal(false);
   const reverseLines = signal(false);
+  const crossEdge = signal<"flex-start" | "start" | "end">("flex-start");
   const wrapDirection = computed(() => reverseLines.get() ? "wrap-reverse" : "wrap");
   const rowDirection = computed(() => reverseAxes.get() ? "row-reverse" : "row");
   const columnDirection = computed(() => reverseAxes.get() ? "column-reverse" : "column");
@@ -113,8 +114,8 @@ function createWasmFlexKeyedWrapExampleContent(canvas: HTMLCanvasElement) {
             flexDirection: rowDirection,
             flexWrap: wrapDirection,
             gap: 12,
-            alignContent: "flex-start",
-            alignItems: "flex-start",
+            alignContent: crossEdge,
+            alignItems: crossEdge,
           }}
         >
           {order.map((name) => (
@@ -135,8 +136,8 @@ function createWasmFlexKeyedWrapExampleContent(canvas: HTMLCanvasElement) {
             flexDirection: columnDirection,
             flexWrap: wrapDirection,
             gap: 12,
-            alignContent: "flex-start",
-            alignItems: "flex-start",
+            alignContent: crossEdge,
+            alignItems: crossEdge,
           }}
         >
           {order.map((name) => (
@@ -189,6 +190,16 @@ function createWasmFlexKeyedWrapExampleContent(canvas: HTMLCanvasElement) {
       </>
     );
   }
+  function LogicalCrossLabel() {
+    return (
+      <Text
+        pointerEvents="none"
+        style={{ left: 258, top: 149, font: "13px sans-serif", fill: "#ffffff" }}
+      >
+        Logical cross: {crossEdge.get()}
+      </Text>
+    );
+  }
   node = (
     <>
       <Rectangle style={{ width: 760, height: 460, fill: "#f3f0e8" }} />
@@ -237,6 +248,22 @@ function createWasmFlexKeyedWrapExampleContent(canvas: HTMLCanvasElement) {
         }
       />
       <Button x={636} width={96} label="Flip axes" onClick={() => reverseAxes.update(value => !value)} />
+      <Rectangle
+        style={{
+          left: 248,
+          top: 142,
+          width: 180,
+          height: 28,
+          fill: "#6e3e79",
+          cursor: "pointer",
+        }}
+        onClick={() =>
+          crossEdge.update((value) =>
+            value === "flex-start" ? "start" : value === "start" ? "end" : "flex-start",
+          )
+        }
+      />
+      <LogicalCrossLabel />
       <Text
         style={{
           left: 28,
@@ -279,6 +306,7 @@ function createWasmFlexKeyedWrapExampleContent(canvas: HTMLCanvasElement) {
       keys: keys.get(),
       reverseAxes: reverseAxes.get(),
       reverseLines: reverseLines.get(),
+      crossEdge: crossEdge.get(),
       selected: selected.get(),
       hits,
       boxes: Object.fromEntries(boxes),

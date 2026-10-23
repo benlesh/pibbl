@@ -56,3 +56,10 @@ main axes. It reverses cross lines and cross start/end alignment while preservin
 source order. Normal JavaScript Flex and RTL remain outside this experimental slice.
 Use [Flip axes in the keyed collection example](#/examples/layout/wasm-flex-keyed-wrap)
 to compare placement with its separate Reverse order control. Click either collection heading to flip cross lines.
+
+`justifyContent`, `alignItems`, `alignContent`, and child `alignSelf` also accept
+`"start"` and `"end"`. In current LTR layout these stay at left/top and
+right/bottom respectively, including reversed axes and cross lines. In contrast,
+`"flex-start"` and `"flex-end"` follow the selected Flex direction. Forward axes
+accept these values in both builds. The keyed collection example's Cross edge
+control demonstrates the distinction while cross lines are reversed.

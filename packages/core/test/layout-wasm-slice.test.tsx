@@ -2338,3 +2338,41 @@ it('calculates partial free space after initially freezing constrained items', (
     {x:0,y:0,width:90,height:10},{x:102,y:0,width:62.5,height:10},
   ]);
 });
+
+for (const axis of ['row-reverse','column-reverse'] as const) {
+it.runIf(experimentalLayout)(`keeps logical start and end physical under ${axis}`, async () => {
+  const alignment = signal<'start'|'end'>('start'); let hits=0,mounts=0;
+  function Card({name,style:_style}:{name:string;style:Record<string,unknown>}) {useConst(()=>{mounts++;});const box=useLayoutBox();return createElement(Rectangle,{style:{width:box.width,height:box.height,fill:name==='A'?'red':'blue'},onClick:()=>{if(name==='A')hits++;}});}
+  const column=axis==='column-reverse';
+  const scene=createElement(Flex,{style:{width:100,height:100,flexDirection:axis,justifyContent:alignment,alignItems:'flex-start'},children:['A','B'].map(name=>createElement(Card,{key:name,name,style:{width:column?10:20,height:column?20:10,minWidth:0,minHeight:0,flexShrink:0}}))});
+  const canvas=document.createElement('canvas');canvas.width=120;canvas.height=120;document.body.append(canvas);const controller=pibbl(canvas,scene);controllers.push(controller);await nextFrame();
+  const point=(main:number)=>column?{x:5,y:main}:{x:main,y:5};let target=point(25);clickCanvas(canvas,target.x,target.y);expect(hits).toBe(1);
+  const before=snapshotWasmLayoutDiagnostics();alignment.set('end');await nextFrame();clickCanvas(canvas,target.x,target.y);expect(hits).toBe(1);target=point(85);clickCanvas(canvas,target.x,target.y);expect(hits).toBe(2);expect(mounts).toBe(2);
+  const after=snapshotWasmLayoutDiagnostics();expect(after.solves).toBe(before.solves);expect(after.nodeCreates).toBe(before.nodeCreates);expect(after.mainPlacements).toBeGreaterThan(before.mainPlacements);controller.dispose();
+});
+}
+
+it.runIf(experimentalLayout)('keeps logical cross edges physical under wrap-reverse including alignSelf', () => {
+  const children=[0,1,2].map(index=>createElement(Rectangle,{style:{width:40,height:10,minWidth:0,flexShrink:0,alignSelf:index===0?'end':undefined}}));
+  const options={flexWrap:'wrap-reverse',rowGap:10,alignContent:'stretch',alignItems:'start'} as const;
+  expect(layoutFlex({x:0,y:0,width:100,height:100},children,options,measurement)).toEqual([
+    {x:0,y:90,width:40,height:10},{x:40,y:55,width:40,height:10},{x:0,y:0,width:40,height:10},
+  ]);
+  expect(layoutFlex({x:0,y:0,width:100,height:100},children,{...options,alignContent:'start'},measurement)).toEqual([
+    {x:0,y:20,width:40,height:10},{x:40,y:20,width:40,height:10},{x:0,y:0,width:40,height:10},
+  ]);
+  expect(layoutFlex({x:0,y:0,width:100,height:100},children,{...options,alignContent:'end'},measurement)).toEqual([
+    {x:0,y:90,width:40,height:10},{x:40,y:90,width:40,height:10},{x:0,y:70,width:40,height:10},
+  ]);
+});
+
+for (const axis of ['row', 'column'] as const) {
+  it(`accepts physical start/end on forward ${axis} axes`, () => {
+    const child = createElement(Rectangle, { style: { width: 20, height: 10, minWidth: 0, minHeight: 0, flexShrink: 0 } });
+    expect(layoutFlex({ x: 0, y: 0, width: 100, height: 100 }, [child], {
+      flexDirection: axis, justifyContent: 'end', alignItems: 'start',
+    }, measurement)).toEqual([axis === 'row'
+      ? { x: 80, y: 0, width: 20, height: 10 }
+      : { x: 0, y: 90, width: 20, height: 10 }]);
+  });
+}
