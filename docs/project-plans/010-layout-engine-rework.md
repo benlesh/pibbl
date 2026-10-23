@@ -20,7 +20,8 @@ No new runtime behavior, capability promotion, or aggregate Node24 trust claim.
 Slice145 started with two public tests failing numeric-only admission before
 production changes; its completed evidence is recorded below.
 
-Latest runtime delivery is slice147 (logical absolute insets), in this commit.
+Latest runtime delivery is slice147 `f6e45350` (logical absolute insets).
+Consolidation49 is this commit for145–147.
 Slice146 is `3db077ea` (fixed direct wrapped containing owners).
 Slice145 is `c70ac2fd` (finite percentage absolute dimensions/bounds).
 Slice144 is `ced23362` (physical percentage static/relative insets).
@@ -4330,25 +4331,62 @@ claim logical relative parity or add cases to the709-case corpus. Typecheck,
 lint, docs/JSDoc/Studio checks pass. Fixed33 statuses and seven open release
 gates remain unchanged; no aggregate trust claim. Logs: `/tmp/pibbl-slice147-*`.
 
-## [NEXT] Consolidation49 for145–147
+## Consolidation49 — completed145–147 verification and gate audit
 
-Run the combined ownership/positioning/measurement/loading checks under Node24,
-reconcile the accepted positioning exit matrix with the fixed capability ledger,
-and select the shortest evidence-backed path toward closing one release gate.
-Do not infer completion from lesson controls or promote a bounded subset to
-complete CSS/Yoga parity. Preserve separate runtime commits and one next item.
+Fresh Node24.15.0/Chromium combined run:43 files,679 passed/11 skipped (690),
+80.51s. Normal lane:43 files,241 passed/449 skipped (690),4.54s. The same targeted
+ownership, measurement, loading, sizing and positioning set is extended only by
+145 and147's new public files. Logs:
+`/tmp/pibbl-consolidation49-{focused,normal}.txt`. Final147 installed proof uses
+245 dist inputs; source/built lesson uses469 built inputs and exact cleanup.
+Docs now compile110 API examples and315 snippets;109 mutation probes pass.
+JSDoc resolves6557 links over3458 members. These are fresh bounded checks,
+not the aggregate trust gate or a full709-case replay.
+
+The fixed ledger remains33 entries:8 complete,12 experimental,6 partial,
+6 missing,1 excluded; all seven release-gate groups remain open. 145–147 improve
+finite positioning but do not complete general containing ownership, absolute
+layout children/decoration, general intrinsic dimensions or both-auto providers,
+logical relative/static policy, or hidden/contents identity and events. Wider
+measurement, root-wide atomic publication, Grid, standalone/migration and release
+integration remain their existing accepted exits. No new capability is invented
+and no completed subset silently substitutes for those targets.
+
+The audit identifies material stale text in `flex.reverse-and-wrap-reverse`:
+its RTL-unsupported/RTL-missing statements contradict the already-complete
+`direction.rtl-and-logical-edges` evidence. Existing24 direction fixtures already
+include four combined reverse/wrap-reverse LTR/RTL cases with public/source/built/
+installed geometry, targets, identity and cleanup. Do not add another native
+matrix. One missing interaction receipt is real: the wrapped-collections example
+turns line reversal off before its overlapping composition proof, so that proof
+does not establish source-order overlap under wrap-reverse. The next item closes
+that small proof gap and reconciles this capability's ledger. Even if it becomes
+complete, `flex-core` still needs min/max and automatic-minimum exits; no single
+next item honestly closes a release gate. That is the shortest supported route
+toward the first gate, not a promise of a fixed remaining slice count.
+
+## [NEXT] Reverse/wrap-reverse capability reconciliation (148)
+
+Reuse the existing24 native direction fixtures and source/built/installed proof.
+Extend the existing overlapping composition mode using its line-reversal control
+so an actual wrapped overlap demonstrates later-source paint/target priority,
+pointer-none fallback, source focus, stable identities, bounded work and exact
+cleanup under combined reversal/RTL. Add only the genuinely absent public receipt;
+no new API, solver or corpus family. Reconcile the stale RTL-negative/missing
+claims and promote this one capability only if its accepted evidence is complete.
+All other statuses and release-gate dependencies remain explicit.
 
 ### Finite positioning exit matrix after134
 
 This refines existing manifest entries; it adds no capability or release gate.
 
-| Existing exit                             | Evidence still required before closing it                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Direct static/relative/absolute placement | All accepted main directions and wrapping contexts, inset precedence and no-inset alignment, logical/percentage policy, supported child box and size constraints; pinned semantic geometry plus public paint/hit/focus evidence. Static/relative leaves and fixed/opposing-inset absolute sizing/bounds cover nowrap directions; direct primitive static/relative and absolute fixed/derived/provider paths cover nowrap directions; positioned direct fixed neutral-flex nowrap Flex owners cover main directions; other known owners retain their prior boundary. |
-| Absolute intrinsic dimensions             | Broader Text/font and image contributions beyond137–139 bounded generic Text profiles, both-auto sizing, nested described owners and supported constraint feedback. The paired-provider one-auto paths in128–129 do not supply these contracts.                                                                                                                                                                                                                                                                                                                     |
-| General containing-block ownership        | Exact override, transformed/opaque/boxless ancestry policy and lifecycle evidence, retaining legacy omission only where specified. Direct static Flex chains alone do not close it.                                                                                                                                                                                                                                                                                                                                                                                 |
-| Hidden/contents participation             | Declared retention/disposal, boxless layout contribution, identity, source order, clips, events and visibility transitions; current implementation is missing.                                                                                                                                                                                                                                                                                                                                                                                                      |
-| Transactional publication                 | Position, hit, focus, HTML and external-layer geometry must publish or roll back coherently through the accepted root-wide preparation/ownership model. Per-region measurement rollback is bounded evidence only.                                                                                                                                                                                                                                                                                                                                                   |
+| Existing exit                             | Evidence still required before closing it                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| ----------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Direct static/relative/absolute placement | All accepted main directions and wrapping contexts, inset precedence and no-inset alignment, logical/percentage policy, supported child box and size constraints; pinned semantic geometry plus public paint/hit/focus evidence. Static/relative leaves and fixed/opposing-inset absolute sizing/bounds cover nowrap directions; direct primitive static/relative and absolute fixed/derived/provider paths cover nowrap directions; fixed direct internally-nowrap Flex owners cover wrapped parents; absolute numeric/percentage sizes, physical/logical absolute insets and admitted automatic profiles compose across main/wrapping directions. General layout owners, child decoration, intrinsic dimensions and containing ancestry retain their open boundaries. |
+| Absolute intrinsic dimensions             | Broader Text/font and image contributions beyond137–139 bounded generic Text profiles, both-auto sizing, nested described owners and supported constraint feedback. The paired-provider one-auto paths in128–129 do not supply these contracts.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| General containing-block ownership        | Exact override, transformed/opaque/boxless ancestry policy and lifecycle evidence, retaining legacy omission only where specified. Direct static Flex chains alone do not close it.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| Hidden/contents participation             | Declared retention/disposal, boxless layout contribution, identity, source order, clips, events and visibility transitions; current implementation is missing.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| Transactional publication                 | Position, hit, focus, HTML and external-layer geometry must publish or roll back coherently through the accepted root-wide preparation/ownership model. Per-region measurement rollback is bounded evidence only.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
 
 Delivered material slice130: fixed finite numeric absolute boxes in all four
 nowrap Flex main directions, LTR/RTL. No new public API. Explicit physical insets
