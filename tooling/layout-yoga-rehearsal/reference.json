@@ -3,7 +3,7 @@
   "commit": "042f5013152eb81c1552dec945b88f7b95ca350f",
   "license": "MIT",
   "licenseSha256": "52412d7bc7ce4157ea628bbaacb8829e0a9cb3c58f57f99176126bc8cf2bfc85",
-  "probeSha256": "73cde019933b9e9b4bfc08763d70a026d8bb0c0b15116b3639392d1a60608715",
+  "probeSha256": "c5ecc0971820b1aa443218a7cb8f407c994314c6fc0018f6536dc54066daaf50",
   "configuration": {
     "useWebDefaults": false,
     "pointScaleFactor": 0,
@@ -13,10 +13,10 @@
     "alignItems": "flex-start",
     "alignContent": "flex-start",
     "flexWrap": "explicit nowrap/wrap/wrap-reverse per case",
-    "gap": "12 in numeric flex cases; 0 in rectangle cases",
-    "shrink": 1,
-    "padding": "10 in rectangle-percent-content-box; otherwise 0",
-    "boxSizing": "content-box in rectangle-percent-content-box; otherwise Yoga default",
+    "gap": "explicit per case; 0 or 12",
+    "shrink": "1 except border-box-floor-bounds uses 0",
+    "padding": "10 in rectangle-percent-content-box and border-box cases; otherwise 0",
+    "boxSizing": "content-box in rectangle-percent-content-box; explicit border-box in border-box cases; otherwise Yoga default",
     "border": 0
   },
   "cases": [
@@ -24,6 +24,7 @@
       "name": "grow",
       "width": 300,
       "height": 100,
+      "gap": 12,
       "flexDirection": "row",
       "flexWrap": "nowrap",
       "boxes": [
@@ -45,6 +46,7 @@
       "name": "cap",
       "width": 300,
       "height": 100,
+      "gap": 12,
       "flexDirection": "row",
       "flexWrap": "nowrap",
       "boxes": [
@@ -66,6 +68,7 @@
       "name": "shrink",
       "width": 220,
       "height": 100,
+      "gap": 12,
       "flexDirection": "row",
       "flexWrap": "nowrap",
       "boxes": [
@@ -87,6 +90,7 @@
       "name": "rectangle-shrink",
       "width": 100,
       "height": 100,
+      "gap": 0,
       "flexDirection": "row",
       "flexWrap": "nowrap",
       "boxes": [
@@ -108,6 +112,7 @@
       "name": "rectangle-percent-content-box",
       "width": 200,
       "height": 100,
+      "gap": 0,
       "flexDirection": "row",
       "flexWrap": "nowrap",
       "boxes": [
@@ -129,6 +134,7 @@
       "name": "column-grow",
       "width": 100,
       "height": 100,
+      "gap": 12,
       "flexDirection": "column",
       "flexWrap": "nowrap",
       "boxes": [
@@ -150,6 +156,7 @@
       "name": "column-cap",
       "width": 100,
       "height": 100,
+      "gap": 12,
       "flexDirection": "column",
       "flexWrap": "nowrap",
       "boxes": [
@@ -171,6 +178,7 @@
       "name": "column-shrink",
       "width": 100,
       "height": 100,
+      "gap": 12,
       "flexDirection": "column",
       "flexWrap": "nowrap",
       "boxes": [
@@ -192,6 +200,7 @@
       "name": "row-reverse-cap",
       "width": 300,
       "height": 100,
+      "gap": 12,
       "flexDirection": "row-reverse",
       "flexWrap": "nowrap",
       "boxes": [
@@ -213,6 +222,7 @@
       "name": "column-reverse-cap",
       "width": 100,
       "height": 100,
+      "gap": 12,
       "flexDirection": "column-reverse",
       "flexWrap": "nowrap",
       "boxes": [
@@ -234,6 +244,7 @@
       "name": "row-wrap",
       "width": 150,
       "height": 100,
+      "gap": 12,
       "flexDirection": "row",
       "flexWrap": "wrap",
       "boxes": [
@@ -261,6 +272,7 @@
       "name": "row-wrap-reverse",
       "width": 150,
       "height": 100,
+      "gap": 12,
       "flexDirection": "row",
       "flexWrap": "wrap-reverse",
       "boxes": [
@@ -281,6 +293,50 @@
           "y": 48,
           "width": 60,
           "height": 20
+        }
+      ]
+    },
+    {
+      "name": "border-box-floor-bounds",
+      "width": 160,
+      "height": 80,
+      "gap": 12,
+      "flexDirection": "row",
+      "flexWrap": "nowrap",
+      "boxes": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 20,
+          "height": 60
+        },
+        {
+          "x": 32,
+          "y": 0,
+          "width": 100,
+          "height": 60
+        }
+      ]
+    },
+    {
+      "name": "border-box-percentage",
+      "width": 200,
+      "height": 100,
+      "gap": 0,
+      "flexDirection": "row",
+      "flexWrap": "nowrap",
+      "boxes": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 110,
+          "height": 60
+        },
+        {
+          "x": 110,
+          "y": 0,
+          "width": 90,
+          "height": 60
         }
       ]
     }

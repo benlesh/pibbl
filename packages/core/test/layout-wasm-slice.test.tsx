@@ -734,7 +734,7 @@ it.runIf(experimentalLayout)('carries final allocation through an ordinary panel
   expect(panels).toBe(initialPanels+1);
 });
 
-it.runIf(experimentalLayout)('rehearses twelve pinned Yoga cases through the public Pibbl example', async () => {
+it.runIf(experimentalLayout)('rehearses fourteen pinned Yoga cases through the public Pibbl example', async () => {
   const mountModule = await import('../../scenarios/src/learning/layout/wasm-yoga-migration.example');
 const mount = createExampleMount(mountModule.WasmYogaMigrationExample);
   const baseline = snapshotWasmLayoutDiagnostics();
@@ -765,15 +765,19 @@ const mount = createExampleMount(mountModule.WasmYogaMigrationExample);
     } else {
       const column = fixture.flexDirection.startsWith('column');
       for (const [boxIndex,box] of fixture.boxes.entries()) {
-        expect(labels.some(label => label.text === (fixture.flexWrap !== 'nowrap' ? `${String.fromCharCode(65+boxIndex)} ${box.width}×${box.height}` : column ? `${box.width} × ${box.height} px` : `${box.width} px`) && label.x === 392+box.x+(column || fixture.flexWrap !== 'nowrap' ? 4 : 12) && label.y === 240+box.y+(fixture.flexWrap !== 'nowrap' ? 4 : column ? 16 : 38))).toBe(true);
+        expect(labels.some(label => label.text === (box.width < 50 ? String.fromCharCode(65+boxIndex) : fixture.flexWrap !== 'nowrap' ? `${String.fromCharCode(65+boxIndex)} ${box.width}×${box.height}` : column ? `${box.width} × ${box.height} px` : `${box.width} px`) && label.x === 392+box.x+(column || fixture.flexWrap !== 'nowrap' || box.width < 50 ? 4 : 12) && label.y === 240+box.y+(box.width < 50 || fixture.flexWrap !== 'nowrap' ? 4 : column ? 16 : 38))).toBe(true);
       }
     }
     const column = fixture.flexDirection.startsWith('column');
     if (!fixture.name.startsWith('rectangle-')) {
       const shrinking = fixture.name === 'shrink' || fixture.name === 'column-shrink';
+      const boxed = fixture.name.startsWith('border-box-');
+      const floor = fixture.name === 'border-box-floor-bounds';
       const wrapped = fixture.flexWrap !== 'nowrap';
       const capped = fixture.name.endsWith('cap');
-      const children = fixture.boxes.map((_box,index) => createElement(Rectangle, { style: {
+      const children = fixture.boxes.map((_box,index) => {
+        if (boxed) return createElement(Rectangle, { style: { boxSizing: 'border-box', width: 80, height: floor ? 60 : '60%', padding: 10, flexBasis: floor ? index === 0 ? 8 : 80 : '70%', flexGrow: 0, flexShrink: floor ? 0 : 1, minWidth: floor ? index === 0 ? 0 : 100 : index === 0 ? 110 : 0, maxWidth: floor ? index === 0 ? 8 : 110 : index === 0 ? '60%' : undefined } });
+        return createElement(Rectangle, { style: {
         width: column ? 80 : 60, height: wrapped ? 20 : 80,
         flexBasis: column ? shrinking ? 80 : 20 : shrinking ? 180 : 60,
         flexGrow: wrapped || shrinking ? 0 : 1, flexShrink: 1,
@@ -781,16 +785,18 @@ const mount = createExampleMount(mountModule.WasmYogaMigrationExample);
         minHeight: column ? shrinking && index === 0 ? 60 : 0 : undefined,
         maxWidth: !column && capped && index === 0 ? 80 : undefined,
         maxHeight: column && capped && index === 0 ? 30 : undefined,
-      } }));
-      expect(layoutFlex({ x: 0, y: 0, width: fixture.width, height: fixture.height }, children, { flexDirection: fixture.flexDirection as 'row' | 'column' | 'row-reverse' | 'column-reverse', flexWrap: fixture.flexWrap as 'nowrap' | 'wrap' | 'wrap-reverse', alignContent: 'flex-start', alignItems: 'flex-start', gap: 12 }, measurement)).toEqual(fixture.boxes);
+      } }); });
+      expect(layoutFlex({ x: 0, y: 0, width: fixture.width, height: fixture.height }, children, { flexDirection: fixture.flexDirection as 'row' | 'column' | 'row-reverse' | 'column-reverse', flexWrap: fixture.flexWrap as 'nowrap' | 'wrap' | 'wrap-reverse', alignContent: 'flex-start', alignItems: 'flex-start', gap: fixture.gap }, measurement)).toEqual(fixture.boxes);
       for (const [index,box] of fixture.boxes.entries()) {
         clickCanvas(canvas,394+box.x,242+box.y); await expect.poll(() => canvas.nextElementSibling?.textContent).toContain(`selected: ${String.fromCharCode(65+index)}`);
       }
-      const gap = column ? Math.min(...fixture.boxes.map(box => box.y+box.height))+6 : Math.min(...fixture.boxes.map(box => box.x+box.width))+6;
-      clickCanvas(canvas,column ? 396 : 392+gap,column ? 240+gap : 244+fixture.boxes[0].y); await nextFrame();
-      expect(canvas.nextElementSibling?.textContent).toContain(`selected: ${String.fromCharCode(64+fixture.boxes.length)}`);
+      if (fixture.gap > 0) {
+        const gap = column ? Math.min(...fixture.boxes.map(box => box.y+box.height))+fixture.gap/2 : Math.min(...fixture.boxes.map(box => box.x+box.width))+fixture.gap/2;
+        clickCanvas(canvas,column ? 396 : 392+gap,column ? 240+gap : 244+fixture.boxes[0].y); await nextFrame();
+        expect(canvas.nextElementSibling?.textContent).toContain(`selected: ${String.fromCharCode(64+fixture.boxes.length)}`);
+      }
     }
-    if (fixture.flexWrap === 'nowrap') expect(fixture.boxes.reduce((sum,box) => sum+(column ? box.height : box.width),fixture.name.startsWith('rectangle-') ? 0 : 12)).toBe(column ? fixture.height : fixture.width);
+    if (fixture.flexWrap === 'nowrap' && fixture.name !== 'border-box-floor-bounds') expect(fixture.boxes.reduce((sum,box) => sum+(column ? box.height : box.width),fixture.gap*(fixture.boxes.length-1))).toBe(column ? fixture.height : fixture.width);
   }
   const beforePaint = snapshotWasmLayoutDiagnostics();
   clickCanvas(canvas,300,158); await nextFrame();
@@ -2153,4 +2159,18 @@ it('uses measured border-box Flow content once before placing its following targ
     createElement(Flex, { style: { boxSizing: 'border-box', padding: 10 }, children: createElement(Rectangle, { style: { width: 40, height: 10, minWidth: 0, flexShrink: 0, fill: 'red' } }) }),
     createElement(Rectangle, { style: { width: 10, height: 10, fill: 'blue' }, onClick: () => hits++ }),
   ] })); controllers.push(controller); await nextFrame(); expect([...canvas.getContext('2d')!.getImageData(65,5,1,1).data]).toEqual([0,0,255,255]); clickCanvas(canvas,45,5); expect(hits).toBe(0); clickCanvas(canvas,65,5); expect(hits).toBe(1); controller.dispose();
+});
+
+it('records pinned native Yoga border-box floor/bounds and percentage fixtures', () => {
+  expect(yogaReference.cases.map(fixture => fixture.name)).toEqual(expect.arrayContaining(['border-box-floor-bounds','border-box-percentage']));
+});
+
+it('matches pinned border-box percentage content sizes and separated click targets', async () => {
+  const reference = yogaReference.cases.find(fixture => fixture.name === 'border-box-percentage')!;
+  const content: { width: number; height: number }[] = []; const hits: number[] = [];
+  function Content({ index }: { index: number; style: Record<string, unknown> }) { const box = useLayoutBox(); content[index] = { width: box.width, height: box.height }; return createElement(Rectangle, { style: { width: box.width, height: box.height, fill: index === 0 ? 'red' : 'blue' }, onClick: () => hits.push(index) }); }
+  const canvas = document.createElement('canvas'); canvas.width = 220; canvas.height = 120; document.body.append(canvas);
+  const controller = pibbl(canvas, createElement(Flex, { style: { width: reference.width, height: reference.height, gap: reference.gap, alignItems: 'flex-start' }, children: [0,1].map(index => createElement(Flex, { style: { boxSizing: 'border-box', flexBasis: '70%', minWidth: index === 0 ? 110 : 0, maxWidth: index === 0 ? '60%' : undefined, height: '60%', padding: 10, flexShrink: 1 }, children: createElement(Content, { index, style: { width: '100%', height: '100%', minWidth: 0, flexShrink: 0 } }) })) })); controllers.push(controller); await nextFrame();
+  expect(content).toEqual(reference.boxes.map(box => ({ width: box.width-20, height: box.height-20 })));
+  expect([...canvas.getContext('2d')!.getImageData(105,15,1,1).data]).toEqual([0,0,0,0]); clickCanvas(canvas,15,15); clickCanvas(canvas,105,15); clickCanvas(canvas,125,15); expect(hits).toEqual([0,1]); controller.dispose();
 });

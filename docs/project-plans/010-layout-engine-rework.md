@@ -2,7 +2,8 @@
 
 ## Current checkpoint and single next slice — 2026-10-22
 
-Latest delivery is slice67 (coherent content-box/border-box sizing).
+Latest delivery is slice68 (pinned border-box bounds and percentage conformance).
+Slice67 is `16fe904e` (coherent content-box/border-box sizing).
 Slice66 is `6648bf66` (pinned Yoga wrap/cross-reversal conformance).
 Slice65 is `fcfea332` (pinned Yoga reverse-axis conformance).
 Slice64 is `f5639a2e` (pinned Yoga column conformance).
@@ -17,9 +18,10 @@ Slice56 is `cf2c7bc5` (prepared Flow-root planning/adoption).
 Slice55 is `1510efe3` (prepared Grid-root planning/adoption).
 Slice54 `773da7b9`,53 `aaa7ddcb`,52 `b5381e0d` are consolidated in `f322a709`.
 Every slice has its own commit. The fixed33-capability/seven-gate denominator is
-unchanged; all seven gates remain open. The single next slice is68, pinned border-box conformance and percentage coverage. Source5192/built5193, `#/testing/layout-preflight`:
+unchanged; all seven gates remain open. The single next slice is69, Studio runtime dependency invalidation. Source5192/built5193, `#/testing/layout-preflight`:
 Source5192/built5193 `#/examples/layout/wasm-yoga-migration`: Next case + resize
-cycles twelve fixtures, including row wrap/cross reversal; click A/B/C targets.
+cycles fourteen fixtures, including border-box bounds/percentages; click A/B/C targets.
+Fresh built comparison: http://127.0.0.1:5194/#/examples/layout/wasm-yoga-migration.
 Native Grid tracks/spans and Flow wrap controls remain available.
 
 The loading/named-component integration is ready for source feedback on branch
@@ -1114,13 +1116,32 @@ bytes unchanged. Logs `/tmp/pibbl-slice67-*`; Node26.9.0/pnpm11.21.0deps/Chromiu
 This is a runnable first box-sizing slice, not full intrinsic/aspect/layout-border
 conformance, Node24 trust or general Yoga parity. All seven release gates remain open.
 
-## [NEXT] Pinned border-box conformance and percentage coverage (slice 68)
+### Slice 68 — pinned border-box bounds and percentage conformance
 
-Move the independent box-model oracle evidence into the version/commit/configuration
-bound corpus and public comparison. Include finite basis/bounds/padding and a
-percentage-resolved case, with semantic content/outer geometry and targets in
-normal/WASM lanes. Preserve current defaults and avoid new intrinsic/aspect/border
-policy. Group23 is67–69, then bounded consolidation.
+The independently reproduced Yoga3.2.1 corpus now contains14 cases. New explicit
+border-box fixtures cover the padding floor against undersized basis/max bounds
+(A20×60, B100×60) and percentage basis/cross size with opposing item constraints
+(A110×60, B90×60). Per-case gap is recorded. Public normal/WASM evidence also
+checks content90×40/70×40 and separate click targets, preserving defaults.
+
+Missing-fixture RED preceded additions. Focused experimental6pass/99skip and
+normal6pass/99skip; typecheck/lint pass. Native reproduction and provenance checks
+pass. Source5192 and fresh built5194 replay all14 with errors[] and exact zero
+node/arena/measurement cleanup; built468 core inputs all from the private built
+package. Existing5193 failed with old content-box geometry28×80/120×80 despite
+current scenario inputs; fresh server success isolates cached virtual runtime.
+Failure retained `/tmp/pibbl-slice68-built.txt`; fresh success
+`/tmp/pibbl-slice68-fresh-built.txt`. Other receipts `/tmp/pibbl-slice68-*`.
+Node26.9.0/pnpm11.21.0deps/Chromium. No parity, full trust or performance claim;
+all seven gates remain open. Kernel unchanged65282bytes. No baseline rewritten.
+
+## [NEXT] Studio runtime dependency invalidation (slice 69)
+
+Register bundled runtime inputs with Vite so rebuilding a supported source/built
+runtime refreshes the served virtual bundle. Establish a focused failing watch
+contract and verify a running built Studio updates without source fallback.
+This observed delivery blocker precedes the planned layout-only border-width
+capability. Group23 remains67–69, then bounded consolidation.
 
 ### Consolidation 22 completed for delivery slices 64–66
 

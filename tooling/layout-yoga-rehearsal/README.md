@@ -52,7 +52,14 @@ places A/B at y80 and C at y48. Source A/B/C order remains fixed, all three
 identities are targeted publicly, and gaps miss. Classification is exact finite
 source-formed line/cross-reversal geometry.
 
-These twelve exact geometries do not prove general percentages, box
+Two explicit border-box fixtures add finite padding-floor/bounds and percentage
+basis/cross-size evidence. `border-box-floor-bounds` uses padding10 and outer
+height60: A basis8/max8 floors at20, B basis80/min100/max110 becomes100, gap12.
+`border-box-percentage` uses parent200×100, basis70%, height60%, padding10,
+shrink1, gap0; A min110/max60% and B min0 settle at110/90 outer widths.
+Content widths are90/70 and content height40. Both target identities are replayed.
+
+These fourteen exact geometries do not prove general percentages, intrinsic box
 sizing, automatic minima, text, fractional precision, general wrapping interactions, combined main/cross
 reversal or RTL. No Yoga implementation is bundled in Studio.
 

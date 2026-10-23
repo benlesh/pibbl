@@ -29,15 +29,17 @@ try {
     assert.ok((await frame.locator('pre').innerText()).includes(fixture.name));
     for (const [index, box] of fixture.boxes.entries()) {
       await click(392 + box.x + 4, 240 + box.y + 4);
-      assert.ok((await frame.locator('pre').innerText()).includes(`selected: ${String.fromCharCode(65+index)}`));
+      assert.ok((await frame.locator('pre').innerText()).includes(`selected: ${String.fromCharCode(65+index)}`), `${fixture.name}: target ${index}; ${(await frame.locator('pre').innerText()).slice(-350)}`);
     }
   }
   // Source-formed lines and reversed placement retain identities; gaps miss.
   const last = reference.cases.at(-1);
   const column = last.flexDirection.startsWith('column');
+  if (last.gap > 0) {
   const gap = column ? Math.min(...last.boxes.map(box => box.y + box.height)) + 6 : Math.min(...last.boxes.map(box => box.x + box.width)) + 6;
   await click(column ? 396 : 392+gap, column ? 240+gap : 244+last.boxes[0].y);
   assert.ok((await frame.locator('pre').innerText()).includes(`selected: ${String.fromCharCode(64+last.boxes.length)}`));
+  }
   if (process.argv.includes('--screenshot')) await frame.locator('canvas').screenshot({ path: '/tmp/pibbl-yoga-comparison.png' });
   const proof = await sandbox.evaluate(() => globalThis.__PIBBL_BUILT_LAYOUT_PROOF__);
   if (built) {

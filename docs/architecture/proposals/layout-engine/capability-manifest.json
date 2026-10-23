@@ -843,7 +843,7 @@
       "id": "migration.versioned-yoga-conversion",
       "target": "parity",
       "group": "migration-and-conformance",
-      "current": "twelve-case pinned row/column/reverse/wrap rehearsal, including direct empty Rectangle shrink and one content-box padding conversion",
+      "current": "fourteen-case pinned row/column/reverse/wrap rehearsal, including content-box conversion and border-box floor/bounds/percentage geometry",
       "status": "experimental",
       "unresolvedPolicy": "Implementation direction is authorized; conversion/analyzer return contracts and supported compatibility policy remain to be specified.",
       "evidenceRefs": [
@@ -852,7 +852,7 @@
         "packages/core/test/layout-wasm-slice.test.tsx"
       ],
       "evidence": {
-        "positive": ["twelve-case Yoga 3.2.1 rehearsal"],
+        "positive": ["fourteen-case Yoga 3.2.1 rehearsal"],
         "negative": ["no profile or public selector"],
         "interaction": ["migration example resize"],
         "yogaCases": [
@@ -867,7 +867,9 @@
           "row-reverse-cap",
           "column-reverse-cap",
           "row-wrap",
-          "row-wrap-reverse"
+          "row-wrap-reverse",
+          "border-box-floor-bounds",
+          "border-box-percentage"
         ],
         "missing": [
           "style/tree analysis",

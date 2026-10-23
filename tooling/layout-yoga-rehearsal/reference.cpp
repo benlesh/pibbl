@@ -2,30 +2,47 @@
 #include <yoga/Yoga.h>
 #include <iostream>
 int main() {
-  const char* names[] = {"grow", "cap", "shrink", "rectangle-shrink", "rectangle-percent-content-box", "column-grow", "column-cap", "column-shrink", "row-reverse-cap", "column-reverse-cap", "row-wrap", "row-wrap-reverse"};
+  const char* names[] = {"grow", "cap", "shrink", "rectangle-shrink", "rectangle-percent-content-box", "column-grow", "column-cap", "column-shrink", "row-reverse-cap", "column-reverse-cap", "row-wrap", "row-wrap-reverse", "border-box-floor-bounds", "border-box-percentage"};
   std::cout << "[";
-  for (int i = 0; i < 12; i++) {
+  for (int i = 0; i < 14; i++) {
     auto config = YGConfigNew();
     YGConfigSetUseWebDefaults(config, false);
     YGConfigSetPointScaleFactor(config, 0);
     YGConfigSetErrata(config, YGErrataNone);
     const bool column = (i >= 5 && i <= 7) || i == 9;
     const bool reverse = i == 8 || i == 9;
-    const bool wrapped = i >= 10;
+    const bool wrapped = i == 10 || i == 11;
+    const bool boxed = i >= 12;
     const int count = wrapped ? 3 : 2;
-    const auto width = wrapped ? 150 : column ? 100 : i == 2 ? 220 : i == 3 ? 100 : i == 4 ? 200 : 300;
+    const auto width = i == 12 ? 160 : i == 13 ? 200 : wrapped ? 150 : column ? 100 : i == 2 ? 220 : i == 3 ? 100 : i == 4 ? 200 : 300;
+    const auto height = i == 12 ? 80 : 100;
+    const auto gap = i == 13 ? 0 : i < 3 || column || reverse || wrapped || boxed ? 12 : 0;
     auto root = YGNodeNewWithConfig(config);
     YGNodeStyleSetWidth(root, width);
-    YGNodeStyleSetHeight(root, 100);
+    YGNodeStyleSetHeight(root, height);
     YGNodeStyleSetFlexDirection(root, column ? (reverse ? YGFlexDirectionColumnReverse : YGFlexDirectionColumn) : (reverse ? YGFlexDirectionRowReverse : YGFlexDirectionRow));
     YGNodeStyleSetAlignItems(root, YGAlignFlexStart);
     YGNodeStyleSetAlignContent(root, YGAlignFlexStart);
     YGNodeStyleSetFlexWrap(root, i == 11 ? YGWrapWrapReverse : wrapped ? YGWrapWrap : YGWrapNoWrap);
-    YGNodeStyleSetGap(root, YGGutterAll, i < 3 || column || reverse || wrapped ? 12 : 0);
+    YGNodeStyleSetGap(root, YGGutterAll, gap);
     for (int j = 0; j < count; j++) {
       auto child = YGNodeNewWithConfig(config);
       YGNodeStyleSetFlexShrink(child, 1);
-      if (wrapped) {
+      if (boxed) {
+        YGNodeStyleSetBoxSizing(child, YGBoxSizingBorderBox);
+        YGNodeStyleSetPadding(child, YGEdgeAll, 10);
+        YGNodeStyleSetFlexGrow(child, 0);
+        YGNodeStyleSetMinWidth(child, 0);
+        if (i == 12) {
+          YGNodeStyleSetFlexShrink(child, 0);
+          YGNodeStyleSetFlexBasis(child, j == 0 ? 8 : 80);
+          YGNodeStyleSetMaxWidth(child, j == 0 ? 8 : 110);
+          if (j == 1) YGNodeStyleSetMinWidth(child, 100);
+        } else {
+          YGNodeStyleSetFlexBasisPercent(child, 70);
+          if (j == 0) { YGNodeStyleSetMinWidth(child, 110); YGNodeStyleSetMaxWidthPercent(child, 60); }
+        }
+      } else if (wrapped) {
         YGNodeStyleSetWidth(child, 60);
         YGNodeStyleSetFlexBasis(child, 60);
         YGNodeStyleSetFlexGrow(child, 0);
@@ -50,12 +67,13 @@ int main() {
           if (j == 0) YGNodeStyleSetMinWidth(child, 90);
         }
       }
-      YGNodeStyleSetHeight(child, wrapped ? 20 : 80);
+      if (i == 13) YGNodeStyleSetHeightPercent(child, 60);
+      else YGNodeStyleSetHeight(child, boxed ? 60 : wrapped ? 20 : 80);
       YGNodeInsertChild(root, child, j);
     }
     YGNodeCalculateLayout(root, YGUndefined, YGUndefined, YGDirectionLTR);
     if (i) std::cout << ",";
-    std::cout << "{\"name\":\"" << names[i] << "\",\"width\":" << width << ",\"height\":100,\"flexDirection\":\"" << (column ? (reverse ? "column-reverse" : "column") : (reverse ? "row-reverse" : "row")) << "\",\"flexWrap\":\"" << (i == 11 ? "wrap-reverse" : wrapped ? "wrap" : "nowrap") << "\",\"boxes\":[";
+    std::cout << "{\"name\":\"" << names[i] << "\",\"width\":" << width << ",\"height\":" << height << ",\"gap\":" << gap << ",\"flexDirection\":\"" << (column ? (reverse ? "column-reverse" : "column") : (reverse ? "row-reverse" : "row")) << "\",\"flexWrap\":\"" << (i == 11 ? "wrap-reverse" : wrapped ? "wrap" : "nowrap") << "\",\"boxes\":[";
     for (int j = 0; j < count; j++) {
       auto child = YGNodeGetChild(root, j);
       if (j) std::cout << ",";
