@@ -2571,7 +2571,7 @@
       "id": "position.relative-static-absolute",
       "target": "parity",
       "group": "placement-and-participation",
-      "current": "experimental finite nowrap static/relative primitive placement and fixed/opposing-inset/aspect-derived absolute sizing with numeric bounds across all four main directions and LTR/RTL; preserved physical relative offsets; paired-provider natural sizing across nowrap directions with explicit native query differences; direct declarative nowrap static containing chains across main directions with fixed numeric neutral-flex owners; omitted-position legacy retained",
+      "current": "experimental finite nowrap static/relative primitive placement and fixed/opposing-inset/aspect-derived absolute sizing with numeric bounds across all four main directions and LTR/RTL; preserved physical relative offsets; paired-provider natural sizing across nowrap directions with explicit native query differences; direct declarative nowrap static containing chains across main directions with fixed numeric neutral-flex owners; omitted-position legacy retained; fixed physical left/top absolute leaves also supported in normal LTR row wrap",
       "status": "experimental",
       "unresolvedPolicy": "Intrinsic absolute sizing, explicit containing-block overrides, opaque/transformed ancestry and wider layout admission remain open.",
       "evidence": {
@@ -2591,7 +2591,8 @@
           "slice132: opposing-inset automatic and fixed numeric absolute bounds across all four nowrap main directions and LTR/RTL; resize, physical anchoring, unchanged flow slots, occlusion/source-order hits, paint reuse and cleanup; installed absoluteMainBounds receipt",
           "slice133: exactly-one-auto absolute aspect derivation in all four nowrap directions and LTR/RTL, declared-axis-before-bounds and paired-inset precedence, resize/pixels/identity/paint reuse/cleanup; installed absoluteMainAspect receipt",
           "slice134: paired absolute natural width/height across all four nowrap directions and LTR/RTL; exact Pibbl envelopes, explicit native column-query provenance, stable paint reuse, measurement signals, removal/restore and cleanup; installed absoluteMeasuredMain receipt",
-          "slice135: fixed numeric neutral-flex direct nowrap containing chains across directions; public cross-direction geometry/identity/resize/cleanup and 18 native/source/built cases"
+          "slice135: fixed numeric neutral-flex direct nowrap containing chains across directions; public cross-direction geometry/identity/resize/cleanup and 18 native/source/built cases",
+          "slice136: fixed physical-inset absolute leaves excluded from normal LTR wrapped row lines; public resize, source focus/hits, identity, paint reuse and teardown; native/source/built two-case proof and installed absoluteWrappedParticipation receipt"
         ],
         "negative": [
           "packages/core/test/layout-positioning-diagnostics.test.tsx: unsupported contexts and unmoded opposite insets"

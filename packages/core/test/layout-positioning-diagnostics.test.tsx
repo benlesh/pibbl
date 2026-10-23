@@ -84,10 +84,24 @@ describe('bounded direct-Flex absolute admission', () => {
     ['Overlay', <Overlay style={{ width: 200, height: 100 }}><Rectangle style={fixed} /></Overlay>],
     ['Flow', <Flow style={{ width: 200, height: 100 }}><Rectangle style={fixed} /></Flow>],
     ['Grid', <Grid style={{ width: 200, height: 100, gridTemplateColumns: [200], gridTemplateRows: [100] }}><Rectangle style={fixed} /></Grid>],
-    ['wrap', <Flex style={{ width: 200, height: 100, flexWrap: 'wrap' }}><Rectangle style={fixed} /></Flex>],
+    ['wrap-reverse', <Flex style={{ width: 200, height: 100, flexWrap: 'wrap-reverse' }}><Rectangle style={fixed} /></Flex>],
+    ['RTL wrap', <Flex style={{ width: 200, height: 100, flexWrap: 'wrap', layoutDirection: 'rtl' }}><Rectangle style={fixed} /></Flex>],
+    ['reversed wrap', <Flex style={{ width: 200, height: 100, flexDirection: 'row-reverse', flexWrap: 'wrap' }}><Rectangle style={fixed} /></Flex>],
     ['layout child', <Flex style={{ width: 200, height: 100 }}><Flex style={fixed}>{null}</Flex></Flex>],
   ] as const)('rejects absolute participation in %s outside the bounded contract', (_name, node) => {
-    expect(mount(node)).toThrow('PIBBL_LAYOUT_UNSUPPORTED_POSITION');
+    expect(mount(node)).toThrow(!experimentalLayout && (_name === 'wrap-reverse' || _name === 'RTL wrap' || _name === 'reversed wrap')
+      ? /uses an unsupported flex/ : 'PIBBL_LAYOUT_UNSUPPORTED_POSITION');
+  });
+  it.runIf(experimentalLayout).each([
+    ['automatic width', { ...fixed, width: 'auto' as const, right: 10 }],
+    ['missing top', { ...fixed, top: undefined }],
+    ['right inset', { ...fixed, right: 10 }],
+    ['bottom inset', { ...fixed, bottom: 10 }],
+    ['numeric maximum', { ...fixed, maxWidth: 40 }],
+    ['nonzero minimum', { ...fixed, minHeight: 10 }],
+    ['aspect ratio', { ...fixed, height: 'auto' as const, aspectRatio: 2 }],
+  ])('keeps wrapped absolute %s outside the fixed physical-inset admission', (_name, style) => {
+    expect(mount(<Flex style={{ width: 200, height: 100, flexWrap: 'wrap' }}><Rectangle style={style} /></Flex>)).toThrow('PIBBL_LAYOUT_UNSUPPORTED_POSITION');
   });
   it.runIf(!experimentalLayout)('rejects column absolute participation in the normal runtime', () => {
     expect(mount(<Flex style={{ width: 200, height: 100, flexDirection: 'column' }}><Rectangle style={fixed} /></Flex>)).toThrow('PIBBL_LAYOUT_UNSUPPORTED_POSITION');

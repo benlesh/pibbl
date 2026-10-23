@@ -165,6 +165,8 @@ export interface PositioningStyle extends SystemStyle {
    * Fixed numeric and opposing-inset automatic absolute boxes support all nowrap
    * main directions and RTL, with numeric bounds applied before anchoring.
    * Paired natural providers keep their exact/unbounded query in every nowrap direction.
+   * Normal LTR wrapped rows also accept fixed numeric absolute leaves with explicit
+   * left/top, no right/bottom/aspect and no nonzero minimum or maximum bounds.
    * On the documented finite direct-child path, automatic absolute axes resolve
    * from opposing numeric physical insets. With a positive finite aspectRatio,
    * exactly one automatic axis can instead derive from its declared finite numeric opposite axis.

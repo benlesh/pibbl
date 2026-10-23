@@ -2,8 +2,9 @@
 
 ## Current checkpoint and single next slice — 2026-10-23
 
-Latest delivery is slice135 `65b8bb94` (fixed declarative containing chains across nowrap directions).
-Consolidation45 for133–135 is this checkpoint commit.
+Latest delivery is slice136 (fixed physical-inset absolute leaves in normal wrapped rows; this commit).
+Slice135 is `65b8bb94` (fixed declarative containing chains across nowrap directions).
+Consolidation45 is `bf71abc6` for133–135.
 Slice134 is `4faba1f1` (paired absolute providers across main directions).
 Slice133 is `f639bce8` (absolute aspect main directions).
 Slice132 is `43f17fc1` (opposing-inset absolute size/bounds main directions).
@@ -95,11 +96,11 @@ Slice55 is `1510efe3` (prepared Grid-root planning/adoption).
 Slice54 `773da7b9`,53 `aaa7ddcb`,52 `b5381e0d` are consolidated in `f322a709`.
 Every slice has its own commit. The fixed33-capability/seven-gate denominator is
 unchanged; all seven gates remain open. Earlier checkpoints are recorded below.
-Current corpus:477 records,379 geometry matches and98 classified geometry differences; five recorded column-width provider queries deliberately differ.
+Current corpus:479 records,381 geometry matches and98 classified geometry differences; five recorded column-width provider queries deliberately differ.
 The concise public lesson retains5 cases; the complete corpus is private testing
 input. Current runnable source/built comparison:
 `http://127.0.0.1:5192/#/testing/layout-yoga-migration` and port5193.
-Click Latest for the containing-block direction family; Next case advances eighteen geometry-matching records.
+Click Latest for fixed absolute wrapped-row placement; Next case resizes the owner and wraps ordinary siblings.
 The public lesson is `#/examples/layout/wasm-yoga-migration`.
 
 The loading/named-component integration is ready for source feedback on branch
@@ -3863,12 +3864,42 @@ measurement diagnostics were emitted; no assertions failed. Logs
 `/tmp/pibbl-consolidation45-{focused,normal,docs}.txt`. Documentation109 mutation
 probes pass. This is bounded consolidation, not the Node24 aggregate trust gate.
 
-## [NEXT] Fixed absolute participation in finite wrapped rows (slice136)
+## Slice136 delivered: fixed absolute participation in wrapped rows
 
-Deliver fixed physical-inset absolute placement in finite normal wrapped rows
-as slice136. Existing API suffices; pin native geometry and public failing evidence
-before extending the nowrap guard. Keep broader sizing/alignment/wrapping policies
-outside that first runnable slice.
+Normal LTR row/wrap now accepts direct absolute leaves with finite numeric
+width/height/left/top, no right/bottom/aspect and no nonzero minimum or maximum.
+All previous neutral-flex, no-query/margin/child-decoration validation remains.
+The admission uses existing placement/source-order/ownership; it adds no native
+ABI or measurement/cache layer. Other wrapped contexts remain explicit rejections.
+
+Public failing test captured the finite-nowrap diagnostic before runtime edits:
+`/tmp/pibbl-slice136-public-red.txt`. Green covers a padded/bordered owner164→124,
+flow cards wrapping independently of the anchored absolute child, source focus,
+absolute-over-flow clicks, stable keyed stamps/nodes, paint no-solve reuse and
+exact node/arena/measurement cleanup. Native Yoga confirms both layouts before
+admission. Corpus479=381geometry matches+98classified geometry differences;
+five earlier native query differences remain separately reported.
+
+Fresh Node26.9.0/macOS Chromium: focused2files57pass/2skip59; normal43pass/16skip59;
+Latest1pass/413skip414. Scoped review found no material defect. Normal diagnostic expectations were corrected to account
+for direction validation preceding placement in that lane. Source/built2each use
+227source/dist inputs, exact boxes/hits/old-position miss/paint reuse/key identity,
+cleanup[0,0,0] and no errors. Screenshot inspected. Types, changed lint, docs109
+mutation probes, public JSDoc and concise5/full479 boundary pass. Fresh runtime
+build and installed consumer pass245inputs, strict Bundler/NodeNext, source focus,
+targets, resize, paint reuse, cleanup and104auto-margin cases. Tarball SHA256
+`80f010af3cea49e743f7efeff49ac48759d2249be757d6c0c2dee394d81e6b44`.
+Logs `/tmp/pibbl-slice136-{public-red,public-green,focused,normal-final,latest,source,built,packed,types-final,lint,docs}.txt`.
+Fixed33/seven-open-gate denominator unchanged; no full479-case replay, Node24
+trust, performance or release-completion claim.
+
+## [NEXT] Select the next intrinsic-sizing slice (137)
+
+Inspect built-in Text/provider ownership against the remaining absolute intrinsic
+exit, pin the bounded observable contract and failing public evidence before
+production. Broader wrapping directions, containing overrides, hidden/contents,
+transactional publication and release gates remain open; this checkpoint does
+not close them by fixture count.
 
 ### Finite positioning exit matrix after134
 

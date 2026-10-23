@@ -1881,7 +1881,7 @@ function finiteRelativePlacement(
 function assertSupportedAbsoluteFlexPosition(
   child: PibblElement<any>,
   style: Readonly<BoxStyle & FlexItemStyle & LayoutItemStyle>,
-  options: Readonly<Pick<ResolvedFlexStyle, 'flexDirection' | 'flexWrap'>>,
+  options: Readonly<Pick<ResolvedFlexStyle, 'flexDirection' | 'flexWrap' | 'layoutDirection'>>,
   container: Readonly<LayoutBox>,
   query: PreparedQuery | undefined,
   naturalWidth = false,
@@ -1890,8 +1890,8 @@ function assertSupportedAbsoluteFlexPosition(
   if (isKnownLayoutType(child.type) || isLayoutComponent(child.type)) {
     throw childDiagnostic(child, 'position', style.position, container, 'PIBBL_LAYOUT_UNSUPPORTED_POSITION: absolute layout children and nested containing blocks are not supported in this slice');
   }
-  if (!experimentalLayout || options.flexWrap !== 'nowrap') {
-    throw childDiagnostic(child, 'position', style.position, container, 'PIBBL_LAYOUT_UNSUPPORTED_POSITION: absolute currently requires a finite nowrap Flex allocation');
+  if (!experimentalLayout || options.flexWrap !== 'nowrap' && !isFixedLtrRowWrapAbsolute(style, options)) {
+    throw childDiagnostic(child, 'position', style.position, container, 'PIBBL_LAYOUT_UNSUPPORTED_POSITION: absolute currently requires a finite nowrap Flex allocation or fixed LTR row wrap placement');
   }
   const automaticWidth = style.width === undefined || style.width === 'auto';
   const automaticHeight = style.height === undefined || style.height === 'auto';
@@ -1919,6 +1919,21 @@ function assertSupportedAbsoluteFlexPosition(
       style.borderWidth !== undefined || style.borderStartWidth !== undefined || style.borderEndWidth !== undefined || hasFlexMargin(style)) {
     throw childDiagnostic(child, 'position', style.position, container, 'PIBBL_LAYOUT_UNSUPPORTED_POSITION: absolute excludes nonzero flex factors, margins, and child box decoration in this slice');
   }
+}
+
+function isFixedLtrRowWrapAbsolute(
+  style: Readonly<BoxStyle & FlexItemStyle & LayoutItemStyle>,
+  options: Readonly<Pick<ResolvedFlexStyle, 'flexDirection' | 'flexWrap' | 'layoutDirection'>>,
+): boolean {
+  return options.flexDirection === 'row' && options.flexWrap === 'wrap' && options.layoutDirection === 'ltr' &&
+    typeof style.width === 'number' && Number.isFinite(style.width) && style.width >= 0 &&
+    typeof style.height === 'number' && Number.isFinite(style.height) && style.height >= 0 &&
+    typeof style.left === 'number' && Number.isFinite(style.left) &&
+    typeof style.top === 'number' && Number.isFinite(style.top) &&
+    style.right === undefined && style.bottom === undefined && style.aspectRatio === undefined &&
+    (style.minWidth === undefined || style.minWidth === 0) &&
+    (style.minHeight === undefined || style.minHeight === 0) &&
+    style.maxWidth === undefined && style.maxHeight === undefined;
 }
 
 function validateAbsoluteBound(

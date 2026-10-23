@@ -80,6 +80,14 @@ its width, height and flex factors do not consume a sibling slot or an extra gap
 It remains at its authored position in paint order, pointer targeting and focus
 navigation. Its ordinary keyed identity and receiver-owned inputs remain active.
 
+A bounded normal LTR `row` with `flexWrap: "wrap"` also accepts direct absolute
+leaves with finite numeric width, height, left and top. The same padding-box
+origin and source order apply while ordinary siblings form lines independently.
+This wrapping admission excludes right/bottom or omitted insets, automatic sizes,
+aspect ratios, nonzero minimums, maximums, reversed/RTL directions and wrap-reverse.
+Existing neutral-flex, no-margin/child-decoration and no-responsive-query rules
+still apply. Owner resizing changes flow lines without reparenting keyed leaves.
+
 Explicit insets follow Yoga's inner-border/padding-box reference: the left/top
 origin includes the parent border but not its padding. Right/bottom measure from
 the opposite inner border edge. With both horizontal insets, left wins in LTR
