@@ -303,6 +303,9 @@ The same nested minimum is evidenced in a row-reverse wrapped border-box owner
 200×100→160: A remains at132,22, fixed inner leaves at132/172,22, and C moves
 y94→130. Decorations are removed before the percentage cross bound resolves;
 world reversal does not alter the containing content size.
+With the same decorated owner, a definite nested height60 capped at maxHeight25%
+receives25→40. Its100%-height leaves receive that final allocation once; the
+40-high sibling keeps C at y74. This definite path performs no pure measurement.
 Finite nested Flex allocations resolve percentages from the final inner content
 box, after outer line allocation. Pinned row/column × nowrap/wrap resize cases
 include inner40% dimensions/bases and10% gaps: allocated main81→51 gives child

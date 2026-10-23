@@ -869,7 +869,7 @@ const mount = createExampleMount(mountModule.WasmYogaMigrationExample);
   if(logicalPadding)for(let section=0;section<8;section++){clickCanvas(canvas,520,158);await nextFrame();}
   // This walk advances Next case through the contiguous original families. Later
   // sections (including rounding) have dedicated semantic tests and browser drivers.
-  const cases=yogaReference.cases.filter(fixture=>!('nestedDecoratedCrossMinFixture' in fixture) && !('nestedCrossMinFixture' in fixture) && !('roundingFixture' in fixture) && !('intrinsicFixture' in fixture) && !('directionMatrixFixture' in fixture) && !('autoMarginFixture' in fixture) && ('contentBoxes' in fixture)===logicalPadding);
+  const cases=yogaReference.cases.filter(fixture=>!('nestedDecoratedCrossMaxFixture' in fixture) && !('nestedDecoratedCrossMinFixture' in fixture) && !('nestedCrossMinFixture' in fixture) && !('roundingFixture' in fixture) && !('intrinsicFixture' in fixture) && !('directionMatrixFixture' in fixture) && !('autoMarginFixture' in fixture) && ('contentBoxes' in fixture)===logicalPadding);
   for (const [index, fixture] of cases.entries()) {
     const expected = fixture.pibblBoxes ?? fixture.boxes;
     if (index) { labels.length = 0; clickCanvas(canvas,60,158); await nextFrame(); }
@@ -4572,6 +4572,48 @@ it.runIf(experimentalLayout)('preserves a decorated row-reverse nested percentag
   const resized = snapshotWasmLayoutDiagnostics(); expect(resized.solves).toBe(initial.solves); expect(resized.crossPlacements).toBeGreaterThan(initial.crossPlacements); expect(resized.nodeCreates).toBe(initial.nodeCreates);
   fill.set('#a63758'); await nextFrame();
   const painted = snapshotWasmLayoutDiagnostics(); expect(painted.solves).toBe(resized.solves); expect(painted.lineFormations).toBe(resized.lineFormations); expect(painted.measuredLeaves).toBe(resized.measuredLeaves + 1); expect(painted.nodeCreates).toBe(resized.nodeCreates); expect(mounts).toBe(2);
+  controller.dispose(); const disposed = snapshotWasmLayoutDiagnostics(); expect([disposed.activeNodes, disposed.activeArenas, disposed.cachedMeasurements]).toEqual([baseline.activeNodes, baseline.activeArenas, baseline.cachedMeasurements]);
+});
+
+
+it.runIf(experimentalLayout)('preserves a decorated row-reverse nested percentage cross maximum and exposes its definite constrained leaf', async () => {
+  const fixtures = yogaReference.cases.filter((fixture) => 'nestedDecoratedCrossMaxFixture' in fixture);
+  expect(fixtures.map((fixture) => fixture.name)).toEqual(['nested-cross-max-decorated-row-reverse', 'nested-cross-max-decorated-row-reverse-resized']);
+  const [initialFixture, resizedFixture] = fixtures;
+  const height = signal(144), fill = signal('#426b61');
+  const baseline = snapshotWasmLayoutDiagnostics();
+  const leafBoxes = new Map<string, { x: number; y: number; width: number; height: number }>();
+  const stamps = new Map<string, number>();
+  let nextStamp = 1, mounts = 0, leafHits = 0;
+  function Leaf({ name, style: _style }: { name: string; style: Record<string, unknown> }) {
+    const stamp = useConst(() => { mounts++; return nextStamp++; });
+    const box = useLayoutBox();
+    stamps.set(name, stamp);
+    const transform = useCanvasContext().getTransform();
+    leafBoxes.set(name, { x: transform.e, y: transform.f, width: box.width, height: box.height });
+    return createElement(Rectangle, { onClick: () => leafHits++, style: { width: box.width, height: box.height, fill, cursor: 'pointer' } });
+  }
+  const canvas = document.createElement('canvas'); canvas.width = 280; canvas.height = 240; document.body.append(canvas);
+  const root = createElement(Flex, { style: { width: 244, height, boxSizing: 'border-box', padding: { left: 10, right: 30, top: 20, bottom: 20 }, borderWidth: 2, flexDirection: 'row-reverse', flexWrap: 'wrap', gap: 12, alignItems: 'stretch', alignContent: 'flex-start' }, children: [
+    createElement(Flex, { key: 'A', style: { width: 80, height: 60, flexBasis: 80, flexGrow: 0, flexShrink: 0, minWidth: 0, minHeight: 0, maxHeight: '25%', alignItems: 'stretch' }, children: ['A1','A2'].map(name => createElement(Leaf, { key: name, name, style: { width: 40, height: '100%', minWidth: 0, minHeight: 0, flexGrow: 0, flexShrink: 0 } })) }),
+    createElement(Rectangle, { key: 'B', style: { width: 80, height: 40, flexBasis: 80, flexGrow: 0, flexShrink: 0, minWidth: 0, minHeight: 0, fill: '#6e3e79' } }),
+    createElement(Rectangle, { key: 'C', style: { width: 80, height: 20, flexBasis: 80, flexGrow: 0, flexShrink: 0, minWidth: 0, minHeight: 0, fill } }),
+  ] });
+  const controller = pibbl(canvas, root); controllers.push(controller); await nextFrame();
+  expect(initialFixture.boxes).toEqual([{ x: 132, y: 22, width: 80, height: 25 }, { x: 40, y: 22, width: 80, height: 40 }, { x: 132, y: 74, width: 80, height: 20 }]);
+  expect(initialFixture.nestedDecoratedMaxBoxes).toEqual([{ x: 132, y: 22, width: 40, height: 25 }, { x: 172, y: 22, width: 40, height: 25 }]);
+  expect(leafBoxes).toEqual(new Map([['A1', { x: 132, y: 22, width: 40, height: 25 }], ['A2', { x: 172, y: 22, width: 40, height: 25 }]]));
+  clickCanvas(canvas, 136, 52); expect(leafHits).toBe(0);
+  const initial = snapshotWasmLayoutDiagnostics(), initialStamps = new Map(stamps);
+  height.set(204); await nextFrame();
+  expect(resizedFixture.boxes).toEqual([{ x: 132, y: 22, width: 80, height: 40 }, { x: 40, y: 22, width: 80, height: 40 }, { x: 132, y: 74, width: 80, height: 20 }]);
+  expect(resizedFixture.nestedDecoratedMaxBoxes).toEqual([{ x: 132, y: 22, width: 40, height: 40 }, { x: 172, y: 22, width: 40, height: 40 }]);
+  expect(leafBoxes).toEqual(new Map([['A1', { x: 132, y: 22, width: 40, height: 40 }], ['A2', { x: 172, y: 22, width: 40, height: 40 }]]));
+  expect(stamps).toEqual(initialStamps); expect(mounts).toBe(2);
+  clickCanvas(canvas, 136, 52); expect(leafHits).toBe(1);
+  const resized = snapshotWasmLayoutDiagnostics(); expect(resized.solves).toBe(initial.solves); expect(resized.lineFormations).toBe(initial.lineFormations); expect(resized.crossPlacements).toBeGreaterThan(initial.crossPlacements); expect(resized.nodeCreates).toBe(initial.nodeCreates); expect(resized.measuredLeaves).toBe(initial.measuredLeaves);
+  fill.set('#a63758'); await nextFrame();
+  const painted = snapshotWasmLayoutDiagnostics(); expect(painted.solves).toBe(resized.solves); expect(painted.lineFormations).toBe(resized.lineFormations); expect(painted.measuredLeaves).toBe(resized.measuredLeaves); expect(painted.nodeCreates).toBe(resized.nodeCreates); expect(mounts).toBe(2);
   controller.dispose(); const disposed = snapshotWasmLayoutDiagnostics(); expect([disposed.activeNodes, disposed.activeArenas, disposed.cachedMeasurements]).toEqual([baseline.activeNodes, baseline.activeArenas, baseline.cachedMeasurements]);
 });
 

@@ -481,3 +481,12 @@ and grows60→96; C moves132,94→130. `--nested-decorated-cross-min` checks act
 public nested leaves, B/C world geometry, keys, targets, native reuse and cleanup.
 The312-record corpus now has218matches/94classified differences. Surface height
 must admit the204-high root; a180-high viewport changes the actual constraints.
+
+### Definite nested cross maximum (slice 114)
+
+`nested-cross-max-decorated-row-reverse[-resized]` caps declared height60 by25%
+of the content owner100→160: A and its100%-height leaves become25→40. C stays
+at132,74 while point136,52 becomes an A1 target. `--nested-decorated-cross-max`
+checks source/private-built geometry, keys, input, native reuse and zero pure
+measurements. The isolated installed consumer repeats it. Corpus314=220matches/
+94classified; auto104/direction24 remain unchanged. Broader min/max scope is open.

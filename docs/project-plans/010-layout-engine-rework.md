@@ -2,7 +2,8 @@
 
 ## Current checkpoint and single next slice — 2026-10-23
 
-Latest delivery is slice113 (decorated reversed nested cross minima).
+Latest delivery is slice114 (definite nested percentage cross maxima).
+Slice113 is `b78d69ec` (decorated reversed nested cross minima).
 Slice112 is `3453bbe3` (nested wrapped percentage cross minima).
 Consolidation37 is `7dd05604` for109–111.
 Slice111 is `e014ac02` (real-root loading cancellation/failure cleanup).
@@ -66,9 +67,9 @@ Slice56 is `cf2c7bc5` (prepared Flow-root planning/adoption).
 Slice55 is `1510efe3` (prepared Grid-root planning/adoption).
 Slice54 `773da7b9`,53 `aaa7ddcb`,52 `b5381e0d` are consolidated in `f322a709`.
 Every slice has its own commit. The fixed33-capability/seven-gate denominator is
-unchanged; all seven gates remain open. Consolidation26 is `2cd357d4`; consolidation27 is `abbaf209`; consolidation28 is `dfd16c8f`; consolidation29 is `f2e38dc6`; consolidation30 is recorded below; slices91–93 are delivered below; consolidation31 passed below; slices95–96 direction evidence passed below; consolidation32 for94–96 passed below; slices97–99 are delivered below; consolidation33 passed below; consolidation34 of100–102 passed below; consolidation37 for109–111 passes below; the single next delivery is114, definite nested percentage cross maxima. Source5192/built5193, `#/testing/layout-preflight`:
+unchanged; all seven gates remain open. Consolidation26 is `2cd357d4`; consolidation27 is `abbaf209`; consolidation28 is `dfd16c8f`; consolidation29 is `f2e38dc6`; consolidation30 is recorded below; slices91–93 are delivered below; consolidation31 passed below; slices95–96 direction evidence passed below; consolidation32 for94–96 passed below; slices97–99 are delivered below; consolidation33 passed below; consolidation34 of100–102 passed below; consolidation37 for109–111 passes below; the single next checkpoint is consolidation38 for112–114. Source5192/built5193, `#/testing/layout-preflight`:
 Source5192/built5193 `#/examples/layout/wasm-yoga-migration`: Next case + resize
-cycles312 records:218matches/94classified differences; click A/B/C targets.
+cycles314 records:220matches/94classified differences; click A/B/C targets.
 Canonical built comparison: http://127.0.0.1:5193/#/examples/layout/wasm-yoga-migration.
 Native Grid tracks/spans and Flow wrap controls remain available.
 
@@ -2984,16 +2985,36 @@ Hands-on source/built ports5192/5193, `#/examples/layout/wasm-yoga-migration`:
 Next section23 times, then Next case. Inspect reversed world offsets, fixed leaves,
 C's94→130 movement, targets and Paint only.
 
-## [NEXT] Definite nested percentage cross maxima (slice 114)
+## Delivered definite nested percentage cross maxima (slice 114)
 
-Extend the bounded min/max matrix with a definite nested owner and percentage
-maximum, including decorated/reversed finite allocations where the native oracle
-supports them. Keep numeric definite dimensions so the public child can expose
-its final constrained height; do not introduce intrinsic feedback policy. Supply
-public geometry/target/reuse/teardown evidence, then consolidate112–114 before
-further expansion. At that checkpoint assess the oversized learning corpus
-separation without losing exhaustive source/built replay or public-only imports.
-Final whole-codebase review remains at full program end.
+Two pinned scale0 records cap a definite nested height60 by maxHeight25% in the
+same decorated row-reverse/wrap owner. Content height100→160 gives A/leaves25→40;
+100%-height children consume the settled allocation once. B stays40 high and C
+remains at132,74. A formerly empty point136,52 becomes an A1 target after resize.
+Fresh focused1pass/407skip408; source/private-built2matches,469builtinputs, no
+errors/cleanup0; installed245distinput strict Bundler/NodeNext geometry, keys,
+expanded target, native reuse and cleanup pass. Height-only updates preserve main
+solves/line formation; paint adds no pure measurement for this definite tree.
+
+Evidence-only, no core/API/ABI/binary change, no fabricated production RED or
+baseline rewrite. Native reproduction314=220matches+94classified; auto104 and
+direction24 unchanged. Types/lint/docs/catalog/discovery pass. v5/68649bytes and
+installed tarball SHA
+`6ccf53d136422d04d974fa7a34a4356f91298d4f77c6387c85f6b6b632417b4b` unchanged.
+`flex.min-max` remains partial; fixed33 statuses/all7open gates unchanged.
+Node26.9.0/Chromium; no Node24 aggregate trust or controlled performance claim.
+Hands-on ports5192/5193, `#/examples/layout/wasm-yoga-migration`: Next section24
+times then Next case. Inspect taller inner leaves, unchanged C, and new A1 extent.
+
+## [NEXT] Consolidation 38 for112–114
+
+Run the established23-file matrix in experimental and ordinary modes, preserving
+exact separate slice commits. Assess the oversized learning fixture corpus:
+projection-only extraction would break full public-browser family replay. A
+concise public projection plus a private full-corpus testing surface requires a
+bounded test-host seam; do not silently drop coverage or relax public-only imports.
+Record this assessment before choosing the next capability slice. The full
+program's final whole-codebase review remains outstanding until program end.
 
 ### Consolidation 24 completed for delivery slices 70–72
 

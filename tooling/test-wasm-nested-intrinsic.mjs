@@ -121,6 +121,7 @@ try {
       assert.equal(receipt.roundingDensity, true, 'Installed package must round backing dimensions without rounding fractional logical Layer geometry, pointer routing, or focus');
       assert.equal(receipt.nestedCrossMin, true, 'Installed package must settle nested percentage cross minimums before wrapped following targets, preserve keyed leaves, reuse paint, and dispose exactly');
       assert.equal(receipt.nestedDecoratedCrossMin, true, 'Installed package must retain decorated row-reverse nested percentage cross geometry, targets, identity, bounded measurement, and cleanup');
+      assert.equal(receipt.nestedDecoratedCrossMax, true, 'Installed package must retain decorated row-reverse nested percentage cross caps, expansion targets, identity, pure paint reuse, and cleanup');
       console.warn('Packed auto margins: 104 fixture cases passed');
       assert.equal(receipt.logicalMargins, true, 'Installed logical percentage margins must move Layer targets without new native nodes');
       assert.equal(receipt.layoutDirection, true, 'Installed direction must reach retained Layer geometry and targets');
