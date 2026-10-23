@@ -2,7 +2,8 @@
 
 ## Current checkpoint and single next slice — 2026-10-23
 
-Latest delivery is slice111 (real-root loading cancellation/failure cleanup).
+Latest delivery is slice112 (nested wrapped percentage cross minima).
+Consolidation37 is `7dd05604` for109–111.
 Slice111 is `e014ac02` (real-root loading cancellation/failure cleanup).
 Slice110 is `642941bc` (unrounded logical geometry policy and evidence).
 Slice109 is `f99a7cdd` (source-order Canvas composition evidence).
@@ -64,9 +65,9 @@ Slice56 is `cf2c7bc5` (prepared Flow-root planning/adoption).
 Slice55 is `1510efe3` (prepared Grid-root planning/adoption).
 Slice54 `773da7b9`,53 `aaa7ddcb`,52 `b5381e0d` are consolidated in `f322a709`.
 Every slice has its own commit. The fixed33-capability/seven-gate denominator is
-unchanged; all seven gates remain open. Consolidation26 is `2cd357d4`; consolidation27 is `abbaf209`; consolidation28 is `dfd16c8f`; consolidation29 is `f2e38dc6`; consolidation30 is recorded below; slices91–93 are delivered below; consolidation31 passed below; slices95–96 direction evidence passed below; consolidation32 for94–96 passed below; slices97–99 are delivered below; consolidation33 passed below; consolidation34 of100–102 passed below; consolidation37 for109–111 passes below; the single next delivery is112, nested wrapped percentage cross minima. Source5192/built5193, `#/testing/layout-preflight`:
+unchanged; all seven gates remain open. Consolidation26 is `2cd357d4`; consolidation27 is `abbaf209`; consolidation28 is `dfd16c8f`; consolidation29 is `f2e38dc6`; consolidation30 is recorded below; slices91–93 are delivered below; consolidation31 passed below; slices95–96 direction evidence passed below; consolidation32 for94–96 passed below; slices97–99 are delivered below; consolidation33 passed below; consolidation34 of100–102 passed below; consolidation37 for109–111 passes below; the single next delivery is113, decorated reversed nested cross minima. Source5192/built5193, `#/testing/layout-preflight`:
 Source5192/built5193 `#/examples/layout/wasm-yoga-migration`: Next case + resize
-cycles308 records:214matches/94classified differences; click A/B/C targets.
+cycles310 records:216matches/94classified differences; click A/B/C targets.
 Canonical built comparison: http://127.0.0.1:5193/#/examples/layout/wasm-yoga-migration.
 Native Grid tracks/spans and Flow wrap controls remain available.
 
@@ -2920,15 +2921,50 @@ matrix passes; no further broad rerun is needed without another change or concer
 All7release gates remain open; fixed33 counts stay8complete/11experimental/
 6partial/7missing/1excluded. No aggregate Node24 trust/performance claim.
 
-## [NEXT] Nested wrapped percentage cross minima (slice 112)
+## Delivered nested wrapped percentage cross minima (slice 112)
 
-Pin a definite200px row/wrap owner whose height100→160 settles a direct nested
-Flex's60% cross minimum to60→96. Prove nested leaf allocation and the next line's
-y72→108, moved targets, keyed/native reuse, paint-only stability and teardown.
-Extend the existing Yoga comparison and installed proof. This is the first bounded
-nested-bound vertical slice; reverse/decorated variants and indefinite-owner
-measurement policy remain separate work. No new public API or general intrinsic
-feedback policy is implied. Final whole-codebase review remains at program end.
+Evidence-only, with no core runtime/API/ABI/binary change. Two pinned native
+Yoga3.2.1 scale0 records use an actual nested row Flex A with two fixed40×20
+leaves. Outer200-wide row/wrap height100→160 resolves A minHeight60% to60→96;
+C moves y72→108 while inner leaves keep exact geometry and keyed identities.
+Source and installed proofs use the actual built-in A, not an opaque wrapper.
+A has no painted/hit region of its own; C's geometry and old-point miss/new-point
+hit provide public line-height evidence without inventing structural hit boxes.
+
+Fresh focused3pass/403skip406 includes the positive public case and two existing
+indefinite/max-only owner rejection boundaries. Height-only resizing reuses main
+solves/line formation and updates cross placement. Paint-only native geometry is
+reused while the inner automatic row height performs exactly one pure measurement
+per preparation; no snapshot cache admission was added. Source/private-built
+comparison2matches,469builtinputs, no errors, disposal0; installed245distinput
+consumer passes exact leaf/B/C boxes, moved hits, keys, reuse and cleanup plus
+strict Bundler/NodeNext. Tarball SHA remains
+`6ccf53d136422d04d974fa7a34a4356f91298d4f77c6387c85f6b6b632417b4b`.
+
+Native corpus310=216matches+94classified, auto104/direction24 unchanged. Reproduction,
+types/lint/docs109RED/catalog/discovery pass. Scoped changed-evidence review found
+no material gap. Initial proof mistakes (native minimum reset order, opaque test
+wrapper, main-solve counter expectation and missing packed hook import) were fixed
+in the proof before acceptance; no manufactured production RED or baseline rewrite.
+The generic contiguous corpus walk excludes this dedicated later section.
+
+`flex.min-max` remains partial: broader reverse/decorated/nested axes and indefinite
+owner measurement policy remain open. Fixed33 counts stay8complete/11experimental/
+6partial/7missing/1excluded, all7release gates open. Node26.9.0, Chromium; no Node24
+aggregate trust claim. Source and built ports5192/5193,
+`#/examples/layout/wasm-yoga-migration`: Next section22 times, then Next case. Inspect
+fixed inner leaves, C's72→108 position, click old/new positions and Paint only.
+
+## [NEXT] Decorated reversed nested cross minima (slice 113)
+
+Pin two definite border-box row-reverse/wrap cases with padding/border and a
+nested60% cross minimum. Determine the actual pinned percentage basis rather
+than assuming it; compare native world boxes with actual public nested Flex,
+old/new targets, identity/reuse and cleanup. This broadens the accepted min/max
+matrix without choosing indefinite-owner policy or adding an API. Consolidate
+112–114 before further expansion, including a bounded assessment of the oversized
+learning comparison's fixture data/editor readability. Final whole-codebase
+review remains at full program end.
 
 ### Consolidation 24 completed for delivery slices 70–72
 

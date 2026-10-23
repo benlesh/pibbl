@@ -328,7 +328,9 @@ function createWasmYogaMigrationExampleContent(canvas: HTMLCanvasElement) {
     {"name":"custom-cross-auto-top-stretch-narrow","width":160,"height":100,"gap":0,"flexDirection":"row","flexWrap":"nowrap","containerStyle":{"alignItems":"stretch","justifyContent":"flex-start"},"autoMarginFixture":true,"customCrossAutoFixture":true,"customMeasure":{"kind":"deterministic-cell-callback","jobs":8,"cellWidth":20,"rowHeight":10,"columns":"max(1,floor(width/20))","rows":"ceil(8/columns)","calls":1},"boxes":[{"x":0,"y":60,"width":40,"height":40},{"x":40,"y":0,"width":40,"height":40}],"itemStyles":[{"width":40,"minWidth":0,"flexShrink":0,"marginTop":"auto"},{"width":40,"height":40,"minWidth":0,"minHeight":0,"flexGrow":0,"flexShrink":0}]},
     {"name":"owner-cross-auto-top-stretch-wide","width":240,"height":120,"gap":0,"flexDirection":"row","flexWrap":"nowrap","containerStyle":{"alignItems":"stretch","justifyContent":"flex-start"},"autoMarginFixture":true,"ownerCrossAutoFixture":true,"boxes":[{"x":0,"y":60,"width":160,"height":60},{"x":160,"y":0,"width":40,"height":40}],"ownerNestedBoxes":[{"x":0,"y":60,"width":70,"height":20},{"x":80,"y":60,"width":70,"height":30},{"x":0,"y":100,"width":70,"height":20}],"ownerStyle":{"width":160,"minWidth":0,"minHeight":0,"flexGrow":0,"flexShrink":0,"flexDirection":"row","flexWrap":"wrap","gap":10,"alignItems":"flex-start","marginTop":"auto"},"ownerLeafStyles":[{"width":70,"height":20,"minWidth":0,"minHeight":0,"flexGrow":0,"flexShrink":0},{"width":70,"height":30,"minWidth":0,"minHeight":0,"flexGrow":0,"flexShrink":0},{"width":70,"height":20,"minWidth":0,"minHeight":0,"flexGrow":0,"flexShrink":0}],"itemStyles":[{"width":160,"minWidth":0,"minHeight":0,"flexGrow":0,"flexShrink":0,"flexDirection":"row","flexWrap":"wrap","gap":10,"alignItems":"flex-start","marginTop":"auto"},{"width":40,"height":40,"minWidth":0,"minHeight":0,"flexGrow":0,"flexShrink":0}]},
     {"name":"owner-cross-auto-top-stretch-narrow","width":240,"height":120,"gap":0,"flexDirection":"row","flexWrap":"nowrap","containerStyle":{"alignItems":"stretch","justifyContent":"flex-start"},"autoMarginFixture":true,"ownerCrossAutoFixture":true,"boxes":[{"x":0,"y":30,"width":90,"height":90},{"x":90,"y":0,"width":40,"height":40}],"ownerNestedBoxes":[{"x":0,"y":30,"width":70,"height":20},{"x":0,"y":60,"width":70,"height":30},{"x":0,"y":100,"width":70,"height":20}],"ownerStyle":{"width":90,"minWidth":0,"minHeight":0,"flexGrow":0,"flexShrink":0,"flexDirection":"row","flexWrap":"wrap","gap":10,"alignItems":"flex-start","marginTop":"auto"},"ownerLeafStyles":[{"width":70,"height":20,"minWidth":0,"minHeight":0,"flexGrow":0,"flexShrink":0},{"width":70,"height":30,"minWidth":0,"minHeight":0,"flexGrow":0,"flexShrink":0},{"width":70,"height":20,"minWidth":0,"minHeight":0,"flexGrow":0,"flexShrink":0}],"itemStyles":[{"width":90,"minWidth":0,"minHeight":0,"flexGrow":0,"flexShrink":0,"flexDirection":"row","flexWrap":"wrap","gap":10,"alignItems":"flex-start","marginTop":"auto"},{"width":40,"height":40,"minWidth":0,"minHeight":0,"flexGrow":0,"flexShrink":0}]},
-    {"name":"rounding-scale-zero-row","width":101.25,"height":61.5,"gap":2.5,"flexDirection":"row","flexWrap":"nowrap","roundingFixture":true,"containerStyle":{"alignItems":"flex-start","alignContent":"flex-start"},"boxes":[{"x":0,"y":0,"width":49.375,"height":10.375},{"x":51.875,"y":0,"width":49.375,"height":12.625}],"itemStyles":[{"width":20.125,"height":10.375,"flexBasis":20.125,"flexGrow":1,"flexShrink":0,"minWidth":0,"minHeight":0},{"width":20.125,"height":12.625,"flexBasis":20.125,"flexGrow":1,"flexShrink":0,"minWidth":0,"minHeight":0}]}
+    {"name":"rounding-scale-zero-row","width":101.25,"height":61.5,"gap":2.5,"flexDirection":"row","flexWrap":"nowrap","roundingFixture":true,"containerStyle":{"alignItems":"flex-start","alignContent":"flex-start"},"boxes":[{"x":0,"y":0,"width":49.375,"height":10.375},{"x":51.875,"y":0,"width":49.375,"height":12.625}],"itemStyles":[{"width":20.125,"height":10.375,"flexBasis":20.125,"flexGrow":1,"flexShrink":0,"minWidth":0,"minHeight":0},{"width":20.125,"height":12.625,"flexBasis":20.125,"flexGrow":1,"flexShrink":0,"minWidth":0,"minHeight":0}]},
+    {"name":"nested-cross-min-row","width":200,"height":100,"gap":12,"flexDirection":"row","flexWrap":"wrap","nestedCrossMinFixture":true,"containerStyle":{"alignItems":"stretch","alignContent":"flex-start"},"boxes":[{"x":0,"y":0,"width":80,"height":60},{"x":92,"y":0,"width":80,"height":40},{"x":0,"y":72,"width":80,"height":20}],"nestedCrossBoxes":[{"x":0,"y":0,"width":40,"height":20},{"x":40,"y":0,"width":40,"height":20}],"nestedOwnerStyle":{"width":80,"flexBasis":80,"flexGrow":0,"flexShrink":0,"minWidth":0,"minHeight":"60%","flexDirection":"row","alignItems":"flex-start"},"nestedItemStyles":[{"width":40,"height":20,"flexGrow":0,"flexShrink":0,"minWidth":0,"minHeight":0},{"width":40,"height":20,"flexGrow":0,"flexShrink":0,"minWidth":0,"minHeight":0}],"itemStyles":[{"width":80,"height":"auto","flexBasis":80,"flexGrow":0,"flexShrink":0,"minWidth":0,"minHeight":"60%"},{"width":80,"height":40,"flexBasis":80,"flexGrow":0,"flexShrink":0,"minWidth":0,"minHeight":0},{"width":80,"height":20,"flexBasis":80,"flexGrow":0,"flexShrink":0,"minWidth":0,"minHeight":0}]},
+    {"name":"nested-cross-min-row-resized","width":200,"height":160,"gap":12,"flexDirection":"row","flexWrap":"wrap","nestedCrossMinFixture":true,"containerStyle":{"alignItems":"stretch","alignContent":"flex-start"},"boxes":[{"x":0,"y":0,"width":80,"height":96},{"x":92,"y":0,"width":80,"height":40},{"x":0,"y":108,"width":80,"height":20}],"nestedCrossBoxes":[{"x":0,"y":0,"width":40,"height":20},{"x":40,"y":0,"width":40,"height":20}],"nestedOwnerStyle":{"width":80,"flexBasis":80,"flexGrow":0,"flexShrink":0,"minWidth":0,"minHeight":"60%","flexDirection":"row","alignItems":"flex-start"},"nestedItemStyles":[{"width":40,"height":20,"flexGrow":0,"flexShrink":0,"minWidth":0,"minHeight":0},{"width":40,"height":20,"flexGrow":0,"flexShrink":0,"minWidth":0,"minHeight":0}],"itemStyles":[{"width":80,"height":"auto","flexBasis":80,"flexGrow":0,"flexShrink":0,"minWidth":0,"minHeight":"60%"},{"width":80,"height":40,"flexBasis":80,"flexGrow":0,"flexShrink":0,"minWidth":0,"minHeight":0},{"width":80,"height":20,"flexBasis":80,"flexGrow":0,"flexShrink":0,"minWidth":0,"minHeight":0}]}
   ] as const;
   // END YOGA REFERENCE
   const index = signal(0);
@@ -438,6 +440,7 @@ function createWasmYogaMigrationExampleContent(canvas: HTMLCanvasElement) {
     const directionMatrixFixture = "directionMatrixFixture" in fixture;
     const autoMarginFixture = "autoMarginFixture" in fixture;
     const roundingFixture = "roundingFixture" in fixture;
+    const nestedCrossMinFixture = "nestedCrossMinFixture" in fixture;
     return (
       <>
         <Text
@@ -523,6 +526,38 @@ function createWasmYogaMigrationExampleContent(canvas: HTMLCanvasElement) {
             </Flex>
             <Panel name="B" style={fixture.footerStyle} />
           </> : "contentBoxes" in fixture ? <Flex style={{width:fixture.itemStyles[0].width,height:fixture.itemStyles[0].height,boxSizing:fixture.itemStyles[0].boxSizing,minWidth:0,minHeight:0,flexShrink:0,padding:"padding" in fixture.itemStyles[0]?fixture.itemStyles[0].padding:undefined,borderWidth:"borderWidth" in fixture.itemStyles[0]?fixture.itemStyles[0].borderWidth:undefined,borderStartWidth:"borderStartWidth" in fixture.itemStyles[0]?fixture.itemStyles[0].borderStartWidth:undefined,borderEndWidth:"borderEndWidth" in fixture.itemStyles[0]?fixture.itemStyles[0].borderEndWidth:undefined,layoutDirection:"layoutDirection" in fixture.itemStyles[0]?fixture.itemStyles[0].layoutDirection:undefined,paddingStart:"paddingStart" in fixture.itemStyles[0]?fixture.itemStyles[0].paddingStart:undefined,paddingEnd:"paddingEnd" in fixture.itemStyles[0]?fixture.itemStyles[0].paddingEnd:undefined}}><LogicalPaddingLeaf style={{width:"100%",height:"100%",flexShrink:0,minWidth:0,minHeight:0}} /></Flex>
+            : nestedCrossMinFixture ? <>
+              <Flex
+                key="A"
+                style={{
+                  width: fixture.nestedOwnerStyle.width,
+                  flexBasis: fixture.nestedOwnerStyle.flexBasis,
+                  flexGrow: fixture.nestedOwnerStyle.flexGrow,
+                  flexShrink: fixture.nestedOwnerStyle.flexShrink,
+                  minWidth: fixture.nestedOwnerStyle.minWidth,
+                  minHeight: fixture.nestedOwnerStyle.minHeight,
+                  flexDirection: fixture.nestedOwnerStyle.flexDirection,
+                  alignItems: fixture.nestedOwnerStyle.alignItems,
+                }}
+              >
+                {fixture.nestedItemStyles.map((style, itemIndex) => (
+                  <NestedLeaf
+                    key={`nested-cross-${itemIndex}`}
+                    name={`A${itemIndex + 1}`}
+                    style={{
+                      width: style.width,
+                      height: style.height,
+                      flexGrow: style.flexGrow,
+                      flexShrink: style.flexShrink,
+                      minWidth: style.minWidth,
+                      minHeight: style.minHeight,
+                    }}
+                  />
+                ))}
+              </Flex>
+              <Panel key="B" name="B" style={fixture.itemStyles[1]} />
+              <Panel key="C" name="C" style={fixture.itemStyles[2]} />
+            </>
             : "nestedBoxes" in fixture ? fixture.itemStyles.map((style,itemIndex) => itemIndex<3
             ? <NestedCard key={itemIndex} name={String.fromCharCode(65+itemIndex)} column={column} style={style} />
             : <Panel key={itemIndex} name="D" column={column} wrapped={wrapped} style={style} />)
@@ -598,6 +633,8 @@ function createWasmYogaMigrationExampleContent(canvas: HTMLCanvasElement) {
           }}
         >{intrinsicFixture
           ? `finite row wrap · numeric direct leaves settle ${fixture.boxes[0].width} × ${fixture.boxes[0].height} before footer B at y ${fixture.boxes[1].y}`
+          : nestedCrossMinFixture
+          ? "built-in Flex minHeight60% follows its finite outer cross size · fixed inner leaves stay 20px · C moves y72 → y108"
           : "ownerCrossAutoFixture" in fixture
           ? "3 direct jobs · built-in wrapped Flex height controls top auto margin · click jobs A and sibling B"
           : "customCrossAutoFixture" in fixture
@@ -730,7 +767,8 @@ function createWasmYogaMigrationExampleContent(canvas: HTMLCanvasElement) {
         const customCrossAuto = fixtureCases.findIndex(fixture => fixture.name === "custom-cross-auto-top-stretch-wide");
         const ownerCrossAuto = fixtureCases.findIndex(fixture => fixture.name === "owner-cross-auto-top-stretch-wide");
         const rounding = fixtureCases.findIndex(fixture => "roundingFixture" in fixture);
-        return value < bounds ? bounds : value < aspect ? aspect : value < gaps ? gaps : value < padding ? padding : value < crossBounds ? crossBounds : value < margins ? margins : value < nested ? nested : value < logicalPadding ? logicalPadding : value < logicalBorders ? logicalBorders : value < intrinsic ? intrinsic : value < directionMatrix ? directionMatrix : value < autoMargins ? autoMargins : value < wrappedAutoMargins ? wrappedAutoMargins : value < crossAutoMargins ? crossAutoMargins : value < crossAutoDirections ? crossAutoDirections : value < autoShorthand ? autoShorthand : value < autoOpposing ? autoOpposing : value < textCrossAuto ? textCrossAuto : value < customCrossAuto ? customCrossAuto : value < ownerCrossAuto ? ownerCrossAuto : value < rounding ? rounding : 0;
+        const nestedCrossMin = fixtureCases.findIndex(fixture => "nestedCrossMinFixture" in fixture);
+        return value < bounds ? bounds : value < aspect ? aspect : value < gaps ? gaps : value < padding ? padding : value < crossBounds ? crossBounds : value < margins ? margins : value < nested ? nested : value < logicalPadding ? logicalPadding : value < logicalBorders ? logicalBorders : value < intrinsic ? intrinsic : value < directionMatrix ? directionMatrix : value < autoMargins ? autoMargins : value < wrappedAutoMargins ? wrappedAutoMargins : value < crossAutoMargins ? crossAutoMargins : value < crossAutoDirections ? crossAutoDirections : value < autoShorthand ? autoShorthand : value < autoOpposing ? autoOpposing : value < textCrossAuto ? textCrossAuto : value < customCrossAuto ? customCrossAuto : value < ownerCrossAuto ? ownerCrossAuto : value < rounding ? rounding : value < nestedCrossMin ? nestedCrossMin : 0;
       })} />
       <Text pointerEvents="none" style={{left:496,top:150,font:"14px sans-serif",fill:"#ffffff"}}>Next section</Text>
       <Workspace />
@@ -766,7 +804,7 @@ function createWasmYogaMigrationExampleContent(canvas: HTMLCanvasElement) {
             .map(([key, value]) => `${key}: ${value}`)
             .join(" · ")
         : "Normal JS build"
-    }\nYoga 3.2.1 · 042f5013152e · ${fixture.name}${"comparisonLabel" in fixture ? " · "+fixture.comparisonLabel : ""} · actual A: ${"textCrossAutoFixture" in fixture ? `direct wrapped Text · sibling B: ${actual.get("B")} px` : "intrinsicFixture" in fixture ? `direct wrapped leaves · footer B: ${actual.get("B")} px` : "contentBoxes" in fixture ? `content ${actual.get("A1")} px` : fixture.name.startsWith("rectangle-") ? "direct Canvas boxes" : `${actual.get("A")} px · B: ${actual.get("B")} px`} · selected: ${selected.get()}${"intrinsicFixture" in fixture ? "\nintrinsic state: "+JSON.stringify({boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits}) : "roundingFixture" in fixture ? "\nrounding state: "+JSON.stringify({boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits}) : "autoMarginFixture" in fixture ? "\nauto margin state: "+JSON.stringify({boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits,canvasTransform:{a:rootTransform.a,b:rootTransform.b,c:rootTransform.c,d:rootTransform.d,e:rootTransform.e,f:rootTransform.f}}) : "directionMatrixFixture" in fixture ? "\ndirection matrix state: "+JSON.stringify({boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits}) : "contentBoxes" in fixture ? "\ncontent state: "+JSON.stringify({boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits}) : "nestedBoxes" in fixture ? "\nnested state: "+JSON.stringify({boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits}) : ""}`;
+    }\nYoga 3.2.1 · 042f5013152e · ${fixture.name}${"comparisonLabel" in fixture ? " · "+fixture.comparisonLabel : ""} · actual A: ${"textCrossAutoFixture" in fixture ? `direct wrapped Text · sibling B: ${actual.get("B")} px` : "intrinsicFixture" in fixture ? `direct wrapped leaves · footer B: ${actual.get("B")} px` : "nestedCrossMinFixture" in fixture ? `nested leaves A1/A2 · B: ${actual.get("B")} px · C: ${actual.get("C")} px` : "contentBoxes" in fixture ? `content ${actual.get("A1")} px` : fixture.name.startsWith("rectangle-") ? "direct Canvas boxes" : `${actual.get("A")} px · B: ${actual.get("B")} px`} · selected: ${selected.get()}${"intrinsicFixture" in fixture ? "\nintrinsic state: "+JSON.stringify({boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits}) : "nestedCrossMinFixture" in fixture ? "\nnested cross min state: "+JSON.stringify({boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits}) : "roundingFixture" in fixture ? "\nrounding state: "+JSON.stringify({boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits}) : "autoMarginFixture" in fixture ? "\nauto margin state: "+JSON.stringify({boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits,canvasTransform:{a:rootTransform.a,b:rootTransform.b,c:rootTransform.c,d:rootTransform.d,e:rootTransform.e,f:rootTransform.f}}) : "directionMatrixFixture" in fixture ? "\ndirection matrix state: "+JSON.stringify({boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits}) : "contentBoxes" in fixture ? "\ncontent state: "+JSON.stringify({boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits}) : "nestedBoxes" in fixture ? "\nnested state: "+JSON.stringify({boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits}) : ""}`;
   };
   refresh();
   const timer = window.setInterval(refresh, 200);

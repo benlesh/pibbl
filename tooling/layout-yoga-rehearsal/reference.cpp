@@ -436,6 +436,65 @@ static void nestedPercentageGapCases() {
     }
   }
 }
+static void nestedCrossMinimumCases() {
+  for (int resize = 0; resize < 2; ++resize) {
+    const bool resized = resize == 1;
+    auto config = YGConfigNew();
+    YGConfigSetUseWebDefaults(config, false);
+    YGConfigSetPointScaleFactor(config, 0);
+    YGConfigSetErrata(config, YGErrataNone);
+    auto root = YGNodeNewWithConfig(config);
+    YGNodeStyleSetWidth(root, 200);
+    YGNodeStyleSetHeight(root, resized ? 160 : 100);
+    YGNodeStyleSetFlexDirection(root, YGFlexDirectionRow);
+    YGNodeStyleSetFlexWrap(root, YGWrapWrap);
+    YGNodeStyleSetGap(root, YGGutterAll, 12);
+    YGNodeStyleSetAlignItems(root, YGAlignStretch);
+    YGNodeStyleSetAlignContent(root, YGAlignFlexStart);
+
+    auto nested = YGNodeNewWithConfig(config);
+    YGNodeStyleSetWidth(nested, 80);
+    YGNodeStyleSetFlexBasis(nested, 80);
+    YGNodeStyleSetFlexGrow(nested, 0);
+    YGNodeStyleSetFlexShrink(nested, 0);
+    YGNodeStyleSetFlexDirection(nested, YGFlexDirectionRow);
+    YGNodeStyleSetAlignItems(nested, YGAlignFlexStart);
+    setMinZero(nested);
+    YGNodeStyleSetMinHeightPercent(nested, 60);
+    for (int leafIndex = 0; leafIndex < 2; ++leafIndex) {
+      auto leaf = YGNodeNewWithConfig(config);
+      YGNodeStyleSetWidth(leaf, 40);
+      YGNodeStyleSetHeight(leaf, 20);
+      YGNodeStyleSetFlexGrow(leaf, 0);
+      YGNodeStyleSetFlexShrink(leaf, 0);
+      setMinZero(leaf);
+      YGNodeInsertChild(nested, leaf, leafIndex);
+    }
+    YGNodeInsertChild(root, nested, 0);
+    for (int index = 1; index < 3; ++index) {
+      auto child = YGNodeNewWithConfig(config);
+      YGNodeStyleSetWidth(child, 80);
+      YGNodeStyleSetHeight(child, index == 1 ? 40 : 20);
+      YGNodeStyleSetFlexBasis(child, 80);
+      YGNodeStyleSetFlexGrow(child, 0);
+      YGNodeStyleSetFlexShrink(child, 0);
+      setMinZero(child);
+      YGNodeInsertChild(root, child, index);
+    }
+    YGNodeCalculateLayout(root, YGUndefined, YGUndefined, YGDirectionLTR);
+    auto a = YGNodeGetChild(root, 0);
+    std::cout << ",{\"name\":\"nested-cross-min-row" << (resized ? "-resized" : "")
+              << "\",\"width\":200,\"height\":" << (resized ? 160 : 100)
+              << ",\"gap\":12,\"flexDirection\":\"row\",\"flexWrap\":\"wrap\",\"nestedCrossMinFixture\":true,\"containerStyle\":{\"alignItems\":\"stretch\",\"alignContent\":\"flex-start\"},\"boxes\":[";
+    for (int index = 0; index < 3; ++index) { if (index) std::cout << ','; printBox(YGNodeGetChild(root, index)); }
+    std::cout << "],\"nestedCrossBoxes\":[";
+    for (int leafIndex = 0; leafIndex < 2; ++leafIndex) { if (leafIndex) std::cout << ','; printBox(YGNodeGetChild(a, leafIndex), YGNodeLayoutGetLeft(a), YGNodeLayoutGetTop(a)); }
+    std::cout << "],\"nestedOwnerStyle\":{\"width\":80,\"flexBasis\":80,\"flexGrow\":0,\"flexShrink\":0,\"minWidth\":0,\"minHeight\":\"60%\",\"flexDirection\":\"row\",\"alignItems\":\"flex-start\"},\"nestedItemStyles\":[{\"width\":40,\"height\":20,\"flexGrow\":0,\"flexShrink\":0,\"minWidth\":0,\"minHeight\":0},{\"width\":40,\"height\":20,\"flexGrow\":0,\"flexShrink\":0,\"minWidth\":0,\"minHeight\":0}],\"itemStyles\":[{\"width\":80,\"height\":\"auto\",\"flexBasis\":80,\"flexGrow\":0,\"flexShrink\":0,\"minWidth\":0,\"minHeight\":\"60%\"},{\"width\":80,\"height\":40,\"flexBasis\":80,\"flexGrow\":0,\"flexShrink\":0,\"minWidth\":0,\"minHeight\":0},{\"width\":80,\"height\":20,\"flexBasis\":80,\"flexGrow\":0,\"flexShrink\":0,\"minWidth\":0,\"minHeight\":0}] }";
+    YGNodeFreeRecursive(root);
+    YGConfigFree(config);
+  }
+}
+
 static void wrappedPercentageMarginCases() {
   for (int axis = 0; axis < 2; ++axis) {
     const bool column = axis == 1;
@@ -1470,5 +1529,6 @@ int main() {
   customCrossAutoCases();
   ownerCrossAutoCases();
   roundingCases();
+  nestedCrossMinimumCases();
   std::cout << "]\n";
 }

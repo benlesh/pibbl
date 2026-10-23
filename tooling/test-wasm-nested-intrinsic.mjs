@@ -119,6 +119,7 @@ try {
       assert.equal(receipt.sourceOrderCanvas, true, 'Installed package must preserve source paint order through reverse Flex, Group, Layer and filter composition');
       assert.equal(receipt.roundingScaleZero, true, 'Installed package must preserve the pinned Yoga scale-zero fractional Flex geometry and targets');
       assert.equal(receipt.roundingDensity, true, 'Installed package must round backing dimensions without rounding fractional logical Layer geometry, pointer routing, or focus');
+      assert.equal(receipt.nestedCrossMin, true, 'Installed package must settle nested percentage cross minimums before wrapped following targets, preserve keyed leaves, reuse paint, and dispose exactly');
       console.warn('Packed auto margins: 104 fixture cases passed');
       assert.equal(receipt.logicalMargins, true, 'Installed logical percentage margins must move Layer targets without new native nodes');
       assert.equal(receipt.layoutDirection, true, 'Installed direction must reach retained Layer geometry and targets');

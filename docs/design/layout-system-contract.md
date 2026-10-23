@@ -292,6 +292,12 @@ owner-relative cross bounds. Cross minimum60% at owner cross100→160 expands th
 line60→96 and moves the next line72→108 with gap12; maximum25% caps the item25→40
 while a40-unit sibling keeps the next line at52. Source-order paint/hit targets
 move with those boxes; cross-only updates reuse main solving/line formation.
+A bounded nested case applies the same finite-owner cross minimum to a direct
+row Flex with two fixed40×20 children. In a200-wide wrapped row, owner height
+100→160 resolves its minHeight60% to60→96 and moves the following line y72→108.
+The inner leaves retain their logical geometry and identity. This inner automatic
+row height performs one pure measurement per preparation; it has no new snapshot
+cache admission. Paint-only updates reuse native solves, lines and numeric nodes.
 Finite nested Flex allocations resolve percentages from the final inner content
 box, after outer line allocation. Pinned row/column × nowrap/wrap resize cases
 include inner40% dimensions/bases and10% gaps: allocated main81→51 gives child

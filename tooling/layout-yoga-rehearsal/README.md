@@ -461,3 +461,14 @@ targets. The installed consumer also checks densities1/1.5/2 and fractional
 Group/Layer pointer/focus geometry. The selected policy preserves unrounded
 logical coordinates; only Canvas backing dimensions round. This does not claim
 positive Yoga point-scale pixel-grid snapping parity.
+
+### Nested finite cross minimum (slice 112)
+
+`nested-cross-min-row[-resized]` adds two independent tagged records: a direct
+nested Flex with two40×20 leaves and minHeight60% follows outer height100→160.
+Its line becomes60→96 and C moves y72→108. `--nested-cross-min` replays exact
+nested leaf/B/C boxes, moved hits, keys and native reuse through public source and
+private-built mounts. The installed consumer repeats the behavior. One pure
+measurement per preparation remains; no new row snapshot cache is claimed.
+The corpus is310=216matches+94classified; auto104/direction24 are unchanged.
+Broader reverse/decorated bounds and indefinite-owner policy remain outstanding.

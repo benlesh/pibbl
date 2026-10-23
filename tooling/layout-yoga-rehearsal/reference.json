@@ -3,7 +3,7 @@
   "commit": "042f5013152eb81c1552dec945b88f7b95ca350f",
   "license": "MIT",
   "licenseSha256": "52412d7bc7ce4157ea628bbaacb8829e0a9cb3c58f57f99176126bc8cf2bfc85",
-  "probeSha256": "43f1dad21c5f28211f08d99717cf5f5d8618994a57e61ae7f35de3de19de3c1c",
+  "probeSha256": "0128423402a00ddc88db326898cfc68ae0793b36f51c7cf297ee320ed3ce83c5",
   "configuration": {
     "useWebDefaults": false,
     "pointScaleFactor": 0,
@@ -18796,6 +18796,214 @@
           "height": 12.625,
           "flexBasis": 20.125,
           "flexGrow": 1,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0
+        }
+      ]
+    },
+    {
+      "name": "nested-cross-min-row",
+      "width": 200,
+      "height": 100,
+      "gap": 12,
+      "flexDirection": "row",
+      "flexWrap": "wrap",
+      "nestedCrossMinFixture": true,
+      "containerStyle": {
+        "alignItems": "stretch",
+        "alignContent": "flex-start"
+      },
+      "boxes": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 80,
+          "height": 60
+        },
+        {
+          "x": 92,
+          "y": 0,
+          "width": 80,
+          "height": 40
+        },
+        {
+          "x": 0,
+          "y": 72,
+          "width": 80,
+          "height": 20
+        }
+      ],
+      "nestedCrossBoxes": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 40,
+          "height": 20
+        },
+        {
+          "x": 40,
+          "y": 0,
+          "width": 40,
+          "height": 20
+        }
+      ],
+      "nestedOwnerStyle": {
+        "width": 80,
+        "flexBasis": 80,
+        "flexGrow": 0,
+        "flexShrink": 0,
+        "minWidth": 0,
+        "minHeight": "60%",
+        "flexDirection": "row",
+        "alignItems": "flex-start"
+      },
+      "nestedItemStyles": [
+        {
+          "width": 40,
+          "height": 20,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0
+        },
+        {
+          "width": 40,
+          "height": 20,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 80,
+          "height": "auto",
+          "flexBasis": 80,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": "60%"
+        },
+        {
+          "width": 80,
+          "height": 40,
+          "flexBasis": 80,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0
+        },
+        {
+          "width": 80,
+          "height": 20,
+          "flexBasis": 80,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0
+        }
+      ]
+    },
+    {
+      "name": "nested-cross-min-row-resized",
+      "width": 200,
+      "height": 160,
+      "gap": 12,
+      "flexDirection": "row",
+      "flexWrap": "wrap",
+      "nestedCrossMinFixture": true,
+      "containerStyle": {
+        "alignItems": "stretch",
+        "alignContent": "flex-start"
+      },
+      "boxes": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 80,
+          "height": 96
+        },
+        {
+          "x": 92,
+          "y": 0,
+          "width": 80,
+          "height": 40
+        },
+        {
+          "x": 0,
+          "y": 108,
+          "width": 80,
+          "height": 20
+        }
+      ],
+      "nestedCrossBoxes": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 40,
+          "height": 20
+        },
+        {
+          "x": 40,
+          "y": 0,
+          "width": 40,
+          "height": 20
+        }
+      ],
+      "nestedOwnerStyle": {
+        "width": 80,
+        "flexBasis": 80,
+        "flexGrow": 0,
+        "flexShrink": 0,
+        "minWidth": 0,
+        "minHeight": "60%",
+        "flexDirection": "row",
+        "alignItems": "flex-start"
+      },
+      "nestedItemStyles": [
+        {
+          "width": 40,
+          "height": 20,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0
+        },
+        {
+          "width": 40,
+          "height": 20,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 80,
+          "height": "auto",
+          "flexBasis": 80,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": "60%"
+        },
+        {
+          "width": 80,
+          "height": 40,
+          "flexBasis": 80,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0
+        },
+        {
+          "width": 80,
+          "height": 20,
+          "flexBasis": 80,
+          "flexGrow": 0,
           "flexShrink": 0,
           "minWidth": 0,
           "minHeight": 0
