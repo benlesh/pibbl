@@ -4252,25 +4252,25 @@ const drafts = [
   },
   {
     slug: "wasm-flex-percent-placement",
-    title: "Experimental physical percent placement",
+    title: "Experimental percent placement and direction",
     shortTitle: "WASM percent placement",
     section: "layout",
     order: 12014,
     summary:
-      "A responsive wrapped card row keeps direct Text natural height while relative offsets and bounded absolute percentage placement use their documented physical boxes.",
+      "A wrapped card row combines natural-height Text, fixed containing owners, bounded percentage sizing, and physical versus logical anchoring.",
     api: ["Flex", "Rectangle", "Text", "signal", "useLayoutBox"],
     objectives: [
       "Resize a finite wrapped card row and observe final-width Text reflow.",
-      "Compare a relative content-box percentage offset with an absolute padding-box badge whose percentage size is bounded as the owner resizes.",
+      "Compare fixed containing ownership with bounded physical and logical percentage anchors across LTR and RTL.",
     ],
     prompts: {
       gesture:
-        "Resize cards, toggle the green card's relative offset, then click the green card and the red badge.",
-      code: "The direct Text leaves use natural height. The relative card uses content-box percentage insets; the absolute badge uses padding-box percentage insets, percentage size, and finite bounds.",
+        "Resize cards, toggle the green owner, cycle the badge anchor, then click the green card and red badge.",
+      code: "Direct Text uses natural height. The fixed green Flex changes containing ownership; the absolute badge combines padding-box percentages, finite bounds, and direction-aware insetStart.",
     },
     apiNotes: [
       "Experimental finite Flex only. Relative percentages resolve against the parent content box; absolute percentages resolve against the selected padding box.",
-      "This is a runnable composition, not CSS parity: nested positioning owners, logical insets, and normal JavaScript experimental layout remain outside the lesson.",
+      "Wrapped containing owners must be fixed direct internally-nowrap Flex children. Logical insets require direct absolute Flex placement. Broader owners and normal JavaScript retain their diagnostics.",
     ],
     canvas: { width: 760, height: 460 },
     related: ["wasm-yoga-migration", "wasm-flex-wrap", "flex"],

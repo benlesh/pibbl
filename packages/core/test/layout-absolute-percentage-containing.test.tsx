@@ -42,3 +42,25 @@ it.runIf(experimentalLayout)('forwards signal-owned physical percentage absolute
   const controller = pibbl(canvas, <Flex style={{ width: 204, height: 104, boxSizing: 'border-box', borderWidth: 2, padding: { left: 10, right: 30, top: 20, bottom: 20 }, alignItems: 'flex-start' }}><Forwarded style={{ position: 'absolute', width: 30, height: 20, left, top, minWidth: 0, minHeight: 0, flexGrow: 0, flexShrink: 0 }} /></Flex>); controllers.push(controller); await frame();
   expect(boxes.get('absolute')).toEqual({ x: 22, y: 22, width: 30, height: 20 }); left.set('15%'); top.set('10%'); await frame(); expect(boxes.get('absolute')).toEqual({ x: 32, y: 12, width: 30, height: 20 });
 });
+
+
+it.runIf(experimentalLayout)('maps logical insets through the receiving Flex direction while static ownership inherits an outer padding box', async () => {
+  type Style = PibblResponsiveStyle<RectStyle & FlexItemStyle>;
+  const baseline = snapshotWasmLayoutDiagnostics();
+  const mode = signal<'static' | 'relative'>('static'), writing = signal<'ltr' | 'rtl'>('rtl');
+  let actual: { x: number; y: number; width: number; height: number } | undefined;
+  function Leaf({ style: _style }: { readonly style: Style }) {
+    const box = useLayoutBox(), transform = useCanvasContext().getTransform();
+    actual = { x: transform.e, y: transform.f, width: box.width, height: box.height };
+    return <Rectangle style={{ width: box.width, height: box.height, fill: '#a63758' }} />;
+  }
+  function Scene() { return <Flex style={{ width: 204, height: 104, boxSizing: 'border-box', borderWidth: 2, padding: { left: 10, right: 30, top: 20, bottom: 20 }, layoutDirection: 'ltr', alignItems: 'flex-start' }}><Flex style={{ position: mode, width: 80, height: 60, marginLeft: 20, marginTop: 10, minWidth: 0, minHeight: 0, flexGrow: 0, flexShrink: 0, layoutDirection: writing }}><Leaf style={{ position: 'absolute', width: 30, height: 20, insetStart: '10%', top: 8, minWidth: 0, minHeight: 0 }} /></Flex></Flex>; }
+  const canvas = document.createElement('canvas'); canvas.width = 204; canvas.height = 104; document.body.append(canvas);
+  const controller = pibbl(canvas, <Scene />); controllers.push(controller); await frame();
+  expect(actual).toEqual({ x: 152, y: 10, width: 30, height: 20 });
+  mode.set('relative'); await frame(); expect(actual).toEqual({ x: 74, y: 40, width: 30, height: 20 });
+  writing.set('ltr'); await frame(); expect(actual).toEqual({ x: 40, y: 40, width: 30, height: 20 });
+  mode.set('static'); await frame(); expect(actual).toEqual({ x: 22, y: 10, width: 30, height: 20 });
+  controller.dispose(); const disposed = snapshotWasmLayoutDiagnostics();
+  expect(disposed.activeNodes).toBe(baseline.activeNodes); expect(disposed.activeArenas).toBe(baseline.activeArenas); expect(disposed.cachedMeasurements).toBe(baseline.cachedMeasurements);
+});

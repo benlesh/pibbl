@@ -111,6 +111,26 @@ yield120×25. A40% width with automatic height and aspectRatio2 yields80×40.
 Natural Text and paired-provider profiles use the resolved declared fixed axis.
 Existing direct-child, measurement and decoration restrictions still apply.
 
+Experimental direct absolute Flex children additionally accept
+`insetStart?: Exclude<Length, "auto">` and
+`insetEnd?: Exclude<Length, "auto">`. These horizontal logical edges map through
+the receiving Flex's inherited or explicit `layoutDirection`: start is left in
+LTR and right in RTL, end is the opposite. They override their corresponding
+physical edge independent of property order, including explicit zero. An
+undefined logical edge leaves its physical edge intact; null, automatic,
+malformed and nonfinite values reject. Signed percentages use the selected
+containing padding-box width and may overflow. Geometry ownership and direction
+are independent: a static intermediate owner may inherit an outer box while its
+own receiving direction maps the logical edges.
+
+Map only at the existing absolute admission/placement reads. Authored logical
+and physical fields remain unchanged for exact object or signal forwarding.
+Opposing logical/physical edges feed the existing automatic, aspect and natural
+measurement rules; ordinary source paint/focus/target order is unchanged.
+Logical insets in static/relative mode, standalone roots and other layout
+families reject rather than silently disappear. No vertical writing mode or
+logical block inset API is added.
+
 All four main directions, LTR/RTL and nowrap/wrap/wrap-reverse reuse the same
 fixed/bounded, opposing-inset, aspect, paired-provider and admitted Text sizing
 profiles described below. Each anchored axis uses physical padding-box insets.

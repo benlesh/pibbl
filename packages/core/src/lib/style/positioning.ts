@@ -25,13 +25,13 @@ let activeSignalHandoff: {
 } | undefined;
 
 function hasPositioning(style: Readonly<Record<PropertyKey, unknown>>): boolean {
-  if (Object.hasOwn(style, 'position') || Object.hasOwn(style, 'left') || Object.hasOwn(style, 'right') || Object.hasOwn(style, 'top') || Object.hasOwn(style, 'bottom')) return true;
+  if (Object.hasOwn(style, 'position') || Object.hasOwn(style, 'left') || Object.hasOwn(style, 'right') || Object.hasOwn(style, 'top') || Object.hasOwn(style, 'bottom') || Object.hasOwn(style, 'insetStart') || Object.hasOwn(style, 'insetEnd')) return true;
   const when = style.when;
   return Array.isArray(when) && when.some((rule) => {
     if (!rule || typeof rule !== 'object') return false;
     const patch = (rule as { style?: unknown }).style;
     return !!patch && typeof patch === 'object' &&
-      (Object.hasOwn(patch, 'position') || Object.hasOwn(patch, 'left') || Object.hasOwn(patch, 'right') || Object.hasOwn(patch, 'top') || Object.hasOwn(patch, 'bottom'));
+      (Object.hasOwn(patch, 'position') || Object.hasOwn(patch, 'left') || Object.hasOwn(patch, 'right') || Object.hasOwn(patch, 'top') || Object.hasOwn(patch, 'bottom') || Object.hasOwn(patch, 'insetStart') || Object.hasOwn(patch, 'insetEnd'));
   });
 }
 
@@ -61,7 +61,8 @@ function samePositioning(style: Readonly<SystemStyle>, source: Readonly<SystemSt
   const right = source as Readonly<Record<string, unknown>>;
   return Object.is(left.position, right.position) && Object.is(left.left, right.left) &&
     Object.is(left.right, right.right) && Object.is(left.top, right.top) &&
-    Object.is(left.bottom, right.bottom);
+    Object.is(left.bottom, right.bottom) && Object.is(left.insetStart, right.insetStart) &&
+    Object.is(left.insetEnd, right.insetEnd);
 }
 
 /** @internal Marks a placed function component's object style for forwarding. */
@@ -199,6 +200,10 @@ export interface PositioningStyle extends SystemStyle {
   top?: Exclude<Length, 'auto'>;
   /** Bottom edge inset. Absolute Flex accepts finite numbers or percentages of the containing padding-box height; relative percentages use the parent content-box height. See {@link Length}. */
   bottom?: Exclude<Length, 'auto'>;
+  /** Experimental direct absolute Flex inline-start inset, mapped through the receiving Flex direction. Overrides the corresponding physical edge, including zero. Percentages use the selected containing padding-box width. See {@link Length}. */
+  insetStart?: Exclude<Length, 'auto'>;
+  /** Experimental direct absolute Flex inline-end inset, mapped through the receiving Flex direction. Overrides the corresponding physical edge. See {@link Length}. */
+  insetEnd?: Exclude<Length, 'auto'>;
 }
 
 export interface ResolvedPosition {

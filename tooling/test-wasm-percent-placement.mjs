@@ -74,6 +74,33 @@ try {
   assertBox(narrowRelative.boxes.pin, { x: 312.8, y: 266, width: 24, height: 14 });
   await click(narrow.boxes.badge.x + 4, narrow.boxes.badge.y + 4);
   assert.equal((await state()).selected, 'badge');
+
+  // Logical inline-start overrides the corresponding physical right edge and
+  // maps through the receiving Flex direction without changing badge size.
+  await click(432, 118);
+  const startLtr = await state();
+  assert.equal(startLtr.badgeAnchor, 'start-ltr');
+  assert.equal(startLtr.relative, true);
+  assertBox(startLtr.boxes.badge, { x: 100, y: 338, width: 100, height: 34.8 });
+  assert.deepEqual(await badgePixel(startLtr.boxes.badge), [166, 55, 88, 255]);
+  await click(startLtr.boxes.badge.x + 4, startLtr.boxes.badge.y + 4);
+  assert.equal((await state()).selected, 'badge');
+
+  await click(432, 118);
+  const startRtl = await state();
+  assert.equal(startRtl.badgeAnchor, 'start-rtl');
+  assert.equal(startRtl.relative, true);
+  assertBox(startRtl.boxes.badge, { x: 216, y: 338, width: 100, height: 34.8 });
+  assert.deepEqual(await badgePixel(startRtl.boxes.badge), [166, 55, 88, 255]);
+  await click(startRtl.boxes.badge.x + 4, startRtl.boxes.badge.y + 4);
+  assert.equal((await state()).selected, 'badge');
+
+  await click(432, 118);
+  const physical = await state();
+  assert.equal(physical.badgeAnchor, 'physical');
+  assert.equal(physical.relative, true);
+  assertBox(physical.boxes.badge, { x: 252, y: 338, width: 100, height: 34.8 });
+  assert.deepEqual(await badgePixel(physical.boxes.badge), [166, 55, 88, 255]);
   const screenshot = `/tmp/pibbl-percent-placement-${built ? 'built' : 'source'}.png`;
   await frame.locator('canvas').screenshot({ path: screenshot });
   const proof = await sandbox.evaluate(() => globalThis.__PIBBL_BUILT_LAYOUT_PROOF__);

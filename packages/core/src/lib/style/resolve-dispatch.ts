@@ -207,6 +207,11 @@ function assertExplicitPositionBoundary(
   context: Readonly<StyleResolutionContext>,
 ): void {
   const position = positioning.position;
+  if ((positioning.insetStart !== undefined || positioning.insetEnd !== undefined) && position !== 'absolute') {
+    throw layoutDiagnostic({ component: context.component, property: 'position', value: position,
+      algorithm: 'render-dispatch', constraints: context.constraints,
+      reason: 'PIBBL_LAYOUT_UNSUPPORTED_POSITION: logical insets require a supported direct absolute Flex child' });
+  }
   const hasRightOrBottom = positioning.right !== undefined || positioning.bottom !== undefined;
   if (position === undefined) {
     if (!hasRightOrBottom) return;
@@ -235,7 +240,9 @@ function assertExplicitPositionBoundary(
     Object.is(positioning.left, forwarded.left) &&
     Object.is(positioning.right, forwarded.right) &&
     Object.is(positioning.top, forwarded.top) &&
-    Object.is(positioning.bottom, forwarded.bottom)) return;
+    Object.is(positioning.bottom, forwarded.bottom) &&
+    Object.is(positioning.insetStart, forwarded.insetStart) &&
+    Object.is(positioning.insetEnd, forwarded.insetEnd)) return;
   throw layoutDiagnostic({
     component: context.component,
     property: 'position',

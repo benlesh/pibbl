@@ -150,6 +150,7 @@ try {
       assert.equal(receipt.absoluteAnchoredWrap, true, 'Installed anchored wrapped absolute boxes must remain physical across all wrap directions, preserve flow identity and collapse lines on resize');
       assert.equal(receipt.absoluteWrappedAlignment, true, 'Installed fixed wrapped absolute leaves must align omitted axes through main and wrap-reversed cross directions while preserving source focus, hit order, identity, paint reuse and cleanup');
       assert.equal(receipt.absolutePercentageInsets, true, 'Installed physical percentage absolute insets must resolve against the decorated padding box, retain physical precedence through wrap/direction, derive paired sizes before numeric bounds, forward through mounted primitives and clean up');
+      assert.equal(receipt.logicalAbsoluteInsets, true, 'Installed logical absolute insets preserve direction, zero precedence, paired sizing, forwarding and exact ownership');
       assert.equal(receipt.wrappedContainingBlockOwners, true, 'Installed fixed wrapped owners preserve static inheritance, relative offsets, identity, focus, hits and cleanup');
       assert.equal(receipt.absolutePercentageSize, true, 'Installed percentage absolute sizes and bounds must resize geometry, hits and ownership correctly');
       assert.equal(receipt.relativePercentageInsets, true, 'Installed static and relative percentages must use immediate content axes, preserve ordinary flow and physical offset signs, update on resize, and release exact ownership');

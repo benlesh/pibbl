@@ -236,3 +236,31 @@ describe('bounded both-auto Text measurement', () => {
     expect(mount(<Flex style={{ width: 200, height: 100 }}><Text style={textStyle}>aaaa aaaa</Text></Flex>)).toThrow('PIBBL_LAYOUT_UNSUPPORTED_POSITION');
   });
 });
+
+describe('logical inset boundary', () => {
+  const logical = { insetStart: 12, insetEnd: 18 };
+  it.each([
+    ['standalone no position', <Rectangle style={{ width: 30, height: 20, ...logical }} />],
+    ['standalone absolute', <Rectangle style={{ position: 'absolute', width: 30, height: 20, ...logical }} />],
+    ['relative Flex child', <Flex style={{ width: 200, height: 100 }}><Rectangle style={{ position: 'relative', width: 30, height: 20, ...logical }} /></Flex>],
+    ['static Flex child', <Flex style={{ width: 200, height: 100 }}><Rectangle style={{ position: 'static', width: 30, height: 20, ...logical }} /></Flex>],
+    ['Flow absolute child', <Flow style={{ width: 200, height: 100 }}><Rectangle style={{ position: 'absolute', width: 30, height: 20, ...logical }} /></Flow>],
+    ['Grid absolute child', <Grid style={{ width: 200, height: 100, gridTemplateColumns: [200], gridTemplateRows: [100] }}><Rectangle style={{ position: 'absolute', width: 30, height: 20, ...logical }} /></Grid>],
+    ['Overlay absolute child', <Overlay style={{ width: 200, height: 100 }}><Rectangle style={{ position: 'absolute', width: 30, height: 20, ...logical }} /></Overlay>],
+  ] as const)('diagnoses logical insets outside direct absolute Flex in %s', (_name, node) => {
+    expect(mount(node)).toThrow('PIBBL_LAYOUT_UNSUPPORTED_POSITION');
+  });
+});
+
+
+describe('logical absolute inset validation', () => {
+  it.runIf(experimentalLayout).each([
+    ['null start', { insetStart: null as never }],
+    ['null end', { insetEnd: null as never }],
+    ['automatic start', { insetStart: 'auto' as never }],
+    ['malformed percentage end', { insetStart: 0, insetEnd: '10%%' as never }],
+    ['nonfinite start', { insetStart: Infinity }],
+  ] as const)('rejects %s even when another physical edge is present', (_name, logical) => {
+    expect(mount(<Flex style={{ width: 200, height: 100 }}><Rectangle style={{ position: 'absolute', width: 30, height: 20, left: 30, right: 40, top: 8, ...logical }} /></Flex>)).toThrow();
+  });
+});

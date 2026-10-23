@@ -20,7 +20,8 @@ No new runtime behavior, capability promotion, or aggregate Node24 trust claim.
 Slice145 started with two public tests failing numeric-only admission before
 production changes; its completed evidence is recorded below.
 
-Latest runtime delivery is slice146 (fixed direct wrapped containing owners), in this commit.
+Latest runtime delivery is slice147 (logical absolute insets), in this commit.
+Slice146 is `3db077ea` (fixed direct wrapped containing owners).
 Slice145 is `c70ac2fd` (finite percentage absolute dimensions/bounds).
 Slice144 is `ced23362` (physical percentage static/relative insets).
 The public lesson companion for142–144 is `4cbc1ea6`.
@@ -4293,17 +4294,49 @@ The API reference/JSDoc also reconcile145's percentage-size wording. Fixed33
 statuses, seven open release gates,709-case native corpus and aggregate trust
 remain unchanged. No full-corpus replay is claimed.
 
-## [NEXT] Logical absolute insets (147)
+## Completed slice147 — logical absolute insets
 
-Add `insetStart`/`insetEnd` as optional numeric/percentage fields alongside the
-physical inset style language, following marginStart/paddingStart naming. First
-admit experimental direct absolute Flex profiles only. LTR maps start to left,
-RTL maps start to right; logical values override the mapped physical edge,
-including zero. Percentages use the selected padding-box width. Preserve raw
-style/signals through forwarding, paired-auto/aspect/provider sizing and existing
-physical placement. Other position modes/layout families must diagnose rather
-than ignore these fields. Public type/runtime/Studio/installed evidence precedes
-completion; no new selector, allocation cache or native ABI.
+Public `insetStart`/`insetEnd` accept finite numbers or signed decimal percentages
+on existing experimental direct absolute Flex profiles. Receiving direction maps
+start to left in LTR/right in RTL, end to the opposite. Logical values override
+the corresponding physical edge including zero; percentages use the selected
+padding-box width. Private reads preserve authored fields for exact object and
+whole-style signal forwarding. Paired-auto, aspect and natural-provider admission
+uses the same effective edges. Signals classify these inputs as layout work.
+Unsupported modes/layouts diagnose rather than ignoring the fields. Studio's
+editor declarations, JSDoc and public type evidence include both fields.
+
+Two public tests failed before production changes. Invalid-input hardening found
+`null` was treated as absent by nullish coalescing; two additional REDs pin that
+failure, and only exact undefined now falls back to the physical edge. The whole
+style signal proof changes edge, direction and owner width while retaining key
+identity. An inherited-owner proof separates receiving RTL from an outer LTR
+containing box. Scoped review found no other material issue; null rejection and
+its final getter changes are covered by fresh checks.
+
+Fresh Node24.15/Chromium evidence: six focused files98 passed/2 skipped (100),
+plus the separately extended inherited-owner file3 passed; normal six-file lane
+51 passed/50 skipped (101). Source5192 and built5193 lesson pass physical→logical
+LTR→logical RTL→physical geometry, pixels/hits,12→13 Text reflow and `[0,0,0]`
+cleanup; built uses469 actual dist inputs. Installed tarball passes Bundler/
+NodeNext accepted and rejected type cases,245 actual dist inputs, logical edge
+signals, zero precedence, paired percentages, resize, focus/hits, identity,
+paint reuse and cleanup. Its initial following-card click was above the padded
+flow box; the point was corrected without runtime changes. Tarball SHA256:
+`b7f3d0ccdad961b2932bf72264dafcab894fd30bb228dc17b0ca1c6a8c95fe26`.
+Pinned Yoga3.2.1 commit042f501 confirms logical precedence, zero, percentages and
+inherited direction with pointScale0/useWebDefaultsfalse/noErrata. This does not
+claim logical relative parity or add cases to the709-case corpus. Typecheck,
+lint, docs/JSDoc/Studio checks pass. Fixed33 statuses and seven open release
+gates remain unchanged; no aggregate trust claim. Logs: `/tmp/pibbl-slice147-*`.
+
+## [NEXT] Consolidation49 for145–147
+
+Run the combined ownership/positioning/measurement/loading checks under Node24,
+reconcile the accepted positioning exit matrix with the fixed capability ledger,
+and select the shortest evidence-backed path toward closing one release gate.
+Do not infer completion from lesson controls or promote a bounded subset to
+complete CSS/Yoga parity. Preserve separate runtime commits and one next item.
 
 ### Finite positioning exit matrix after134
 

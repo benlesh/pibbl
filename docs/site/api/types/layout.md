@@ -248,6 +248,38 @@ fit/overflow and omit query/aspect sizing. Its auto margin absorbs space in its
 actual line after final-width measurement. Automatic-width wrapped Text, reverse/
 RTL/wrap-reverse, provider/layout-owner and column variants remain deferred.
 
+### Experimental logical absolute insets
+
+Use `insetStart?: number | Percentage` and `insetEnd?: number | Percentage`
+with a supported direct absolute Flex child. Start maps to left in LTR and right
+in RTL; end maps to the opposite edge. Logical values override the mapped
+physical edge, including zero. Percentages use the selected containing padding
+box width. The receiving Flex direction performs the mapping even when a static
+owner inherits geometry from an outer box. Existing paired-auto, aspect and
+pure-provider sizing retain their contracts. Raw fields and signals forward once.
+Other position modes/layout families, automatic insets and invalid values reject.
+
+```tsx
+import { Flex, Rectangle } from "@pibbl/core";
+
+export function LogicalBadgeExample() {
+  return (
+    <Flex style={{ width: 240, height: 120, layoutDirection: "rtl" }}>
+      <Rectangle
+        style={{
+          position: "absolute",
+          width: 50,
+          height: 20,
+          insetStart: "10%",
+          top: 8,
+          fill: "#a63758",
+        }}
+      />
+    </Flex>
+  );
+}
+```
+
 ### Experimental nested containing boxes
 
 Within an admitted direct declarative finite Flex chain, explicit

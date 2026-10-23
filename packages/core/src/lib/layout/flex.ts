@@ -775,17 +775,17 @@ function resolveFlexPlacements(
       const automaticWidth = normalized.width === undefined || normalized.width === 'auto';
       const automaticHeight = normalized.height === undefined || normalized.height === 'auto';
       const naturalBoth = unwrappedText && automaticWidth && automaticHeight && normalized.aspectRatio === undefined &&
-        (normalized.left === undefined || normalized.right === undefined) &&
+        (absoluteLeftInset(normalized, options.layoutDirection) === undefined || absoluteRightInset(normalized, options.layoutDirection) === undefined) &&
         (normalized.top === undefined || normalized.bottom === undefined);
       const naturalWidth = naturalBoth || automaticWidth &&
         isAbsoluteSizeInput(normalized.height) &&
-        normalized.aspectRatio === undefined && (normalized.left === undefined || normalized.right === undefined) &&
+        normalized.aspectRatio === undefined && (absoluteLeftInset(normalized, options.layoutDirection) === undefined || absoluteRightInset(normalized, options.layoutDirection) === undefined) &&
         (hasPairedMeasurement || unwrappedText);
       const naturalHeight = naturalBoth || automaticHeight &&
         isAbsoluteSizeInput(normalized.width) &&
         normalized.aspectRatio === undefined && (normalized.top === undefined || normalized.bottom === undefined) &&
         (hasPairedMeasurement || measurableText);
-      assertSupportedAbsoluteFlexPosition(child, normalized, container, preparedStyleQuery(prepared), naturalWidth, naturalHeight);
+      assertSupportedAbsoluteFlexPosition(child, normalized, container, options.layoutDirection, preparedStyleQuery(prepared), naturalWidth, naturalHeight);
       const measurementToken = naturalWidth || naturalHeight ? region?.absoluteMeasurementIdentity(child.type,
         child.key === undefined ? `occurrence:${occurrence}` : `key:${typeof child.key}:${child.key}`) : undefined;
       if (measurementToken) (absoluteMeasurementTokens ??= new Set()).add(measurementToken);
@@ -1305,8 +1305,8 @@ function resolveAbsoluteFlexPlacement(
   region?: LayoutRegion,
   measurementToken?: object,
 ): FlexPlacement {
-  const left = resolveFlexInset(style.left, 'left', child, paddingBox);
-  const right = resolveFlexInset(style.right, 'right', child, paddingBox);
+  const left = resolveFlexInset(absoluteLeftInset(style, options.layoutDirection), 'left', child, paddingBox);
+  const right = resolveFlexInset(absoluteRightInset(style, options.layoutDirection), 'right', child, paddingBox);
   const top = resolveFlexInset(style.top, 'top', child, paddingBox);
   const bottom = resolveFlexInset(style.bottom, 'bottom', child, paddingBox);
   const specifiedWidth = resolveAbsoluteSize(style.width, 'width', paddingBox.width, child, paddingBox);
@@ -1916,6 +1916,7 @@ function assertSupportedAbsoluteFlexPosition(
   child: PibblElement<any>,
   style: Readonly<BoxStyle & FlexItemStyle & LayoutItemStyle>,
   container: Readonly<LayoutBox>,
+  direction: 'ltr' | 'rtl',
   query: PreparedQuery | undefined,
   naturalWidth = false,
   naturalHeight = false,
@@ -1935,9 +1936,9 @@ function assertSupportedAbsoluteFlexPosition(
   if (style.aspectRatio !== undefined && automaticWidth === automaticHeight) {
     throw childDiagnostic(child, 'aspectRatio', style.aspectRatio, container, 'PIBBL_LAYOUT_UNSUPPORTED_POSITION: absolute aspectRatio currently requires exactly one automatic axis and one finite numeric or percentage axis');
   }
-  if (style.aspectRatio === undefined && ((!naturalWidth && automaticWidth && (style.left === undefined || style.right === undefined)) ||
+  if (style.aspectRatio === undefined && ((!naturalWidth && automaticWidth && (absoluteLeftInset(style, direction) === undefined || absoluteRightInset(style, direction) === undefined)) ||
       (!naturalHeight && automaticHeight && (style.top === undefined || style.bottom === undefined)))) {
-    throw childDiagnostic(child, 'position', style.position, container, 'PIBBL_LAYOUT_UNSUPPORTED_POSITION: automatic absolute size requires both physical insets on its axis');
+    throw childDiagnostic(child, 'position', style.position, container, 'PIBBL_LAYOUT_UNSUPPORTED_POSITION: automatic absolute size requires opposing insets on its axis');
   }
   if (style.alignSelf !== undefined) {
     throw childDiagnostic(child, 'alignSelf', style.alignSelf, container, 'PIBBL_LAYOUT_UNSUPPORTED_POSITION: absolute currently uses parent alignItems only');
@@ -1981,6 +1982,17 @@ function resolveAbsoluteSize(
   const resolved = resolveLength(value as Percentage, reference, property, childContext(child, container))!;
   if (resolved < 0) throw childDiagnostic(child, property, value, container, 'absolute sizes must resolve to nonnegative finite numbers');
   return resolved;
+}
+
+// Read effective edges without rewriting authored inputs used by exact forwarding.
+function absoluteLeftInset(style: Readonly<LayoutItemStyle>, direction: 'ltr' | 'rtl') {
+  const logical = direction === 'rtl' ? style.insetEnd : style.insetStart;
+  return logical === undefined ? style.left : logical;
+}
+
+function absoluteRightInset(style: Readonly<LayoutItemStyle>, direction: 'ltr' | 'rtl') {
+  const logical = direction === 'rtl' ? style.insetStart : style.insetEnd;
+  return logical === undefined ? style.right : logical;
 }
 
 function resolveFlexInset(

@@ -465,6 +465,7 @@ export interface MeshTransformOptions {
     aspectRatio?: number;
     position?: 'static' | 'relative' | 'absolute';
     left?: Exclude<Length, 'auto'>; right?: Exclude<Length, 'auto'>; top?: Exclude<Length, 'auto'>; bottom?: Exclude<Length, 'auto'>;
+    insetStart?: Exclude<Length, 'auto'>; insetEnd?: Exclude<Length, 'auto'>;
     alignSelf?: 'auto' | 'start' | 'end' | 'center' | 'stretch' | 'flex-start' | 'flex-end';
     justifySelf?: 'auto' | 'start' | 'end' | 'center' | 'stretch';
     margin?: FlexMargin; marginTop?: FlexMargin; marginRight?: FlexMargin; marginBottom?: FlexMargin; marginLeft?: FlexMargin; marginStart?: FlexMargin; marginEnd?: FlexMargin;
@@ -472,7 +473,7 @@ export interface MeshTransformOptions {
     gridColumnStart?: number; gridColumnSpan?: number; gridRowStart?: number; gridRowSpan?: number;
   }
   export type FlexMargin = number | Percentage | 'auto';
-  export type FlexItemStyle = Pick<LayoutItemStyle, 'position' | 'left' | 'right' | 'top' | 'bottom' | 'aspectRatio' | 'flexBasis' | 'flexGrow' | 'flexShrink' | 'margin' | 'marginTop' | 'marginRight' | 'marginBottom' | 'marginLeft' | 'marginStart' | 'marginEnd'> & { alignSelf?: 'auto' | 'stretch' | 'flex-start' | 'flex-end' | 'center' | 'start' | 'end' };
+  export type FlexItemStyle = Pick<LayoutItemStyle, 'position' | 'left' | 'right' | 'top' | 'bottom' | 'insetStart' | 'insetEnd' | 'aspectRatio' | 'flexBasis' | 'flexGrow' | 'flexShrink' | 'margin' | 'marginTop' | 'marginRight' | 'marginBottom' | 'marginLeft' | 'marginStart' | 'marginEnd'> & { alignSelf?: 'auto' | 'stretch' | 'flex-start' | 'flex-end' | 'center' | 'start' | 'end' };
   export interface GridItemStyle extends SystemStyle {
     gridColumnStart?: number; gridColumnSpan?: number; gridRowStart?: number; gridRowSpan?: number;
     alignSelf?: 'auto' | 'stretch' | 'start' | 'center' | 'end';

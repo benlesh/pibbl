@@ -180,7 +180,7 @@ export interface LayoutItemStyle extends PositioningStyle {
  */
 export type FlexItemStyle = Pick<
   LayoutItemStyle,
-  'position' | 'left' | 'right' | 'top' | 'bottom' | 'aspectRatio' | 'flexBasis' | 'flexGrow' | 'flexShrink' | 'margin' | 'marginTop' | 'marginRight' | 'marginBottom' | 'marginLeft' | 'marginStart' | 'marginEnd'
+  'position' | 'left' | 'right' | 'top' | 'bottom' | 'insetStart' | 'insetEnd' | 'aspectRatio' | 'flexBasis' | 'flexGrow' | 'flexShrink' | 'margin' | 'marginTop' | 'marginRight' | 'marginBottom' | 'marginLeft' | 'marginStart' | 'marginEnd'
 > & {
   /** This child's cross-axis or block-axis alignment override. See {@link FlexItemStyle}. */
   alignSelf?: 'auto' | 'stretch' | 'flex-start' | 'flex-end' | 'center' | 'start' | 'end';
