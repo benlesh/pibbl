@@ -19,6 +19,8 @@ const LAYOUT_PARTICIPATION_KEYS = new Set([
   'marginRight',
   'marginBottom',
   'marginLeft',
+  'marginStart',
+  'marginEnd',
   'overflow',
   'left',
   'top',

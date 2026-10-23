@@ -20,6 +20,15 @@ try{
  const beforePaint=await read();await click(520,118);const painted=await read();
  for(const key of ['solves','mainPlacements','crossPlacements','nodeCreates','measuredLeaves'])assert.equal(painted.layout[key],beforePaint.layout[key],key);
  await click(660,155);const restored=await read();assert.deepEqual(restored.boxes,initial.boxes);
+ if(process.argv.includes('--logical-margins')){
+  await click(100,425);const logical=await read();assert.equal(logical.logicalMargin,'10%');
+  assert.equal(logical.boxes['row:A'].x-initial.boxes['row:A'].x,36);assert.ok(Math.abs(logical.boxes['column:A'].x-initial.boxes['column:A'].x-29.2)<.001);
+  for(const name of Object.keys(initial.boxes))assert.equal(logical.boxes[name].stamp,initial.boxes[name].stamp,name);
+  await click(660,155);const logicalRTL=await read();
+  for(const [name,box]of Object.entries(logical.boxes)){const actual=logicalRTL.boxes[name],left=name.startsWith('row:')?28:440,width=name.startsWith('row:')?360:292;assert.ok(Math.abs(actual.x-(2*left+width-box.x-box.width))<.002,name);assert.equal(actual.y,box.y,name);}
+  const target=logicalRTL.boxes['row:A'];await click(target.x+4,target.y+4);assert.equal((await read()).selected,'row:A');
+  const before=await read();await click(520,118);const paint=await read();for(const key of ['solves','mainPlacements','crossPlacements','nodeCreates','measuredLeaves'])assert.equal(paint.layout[key],before.layout[key],key);
+ }
  const sandbox=page.frames().find(value=>value.url()==='about:srcdoc');
  const proof=await sandbox.evaluate(()=>globalThis.__PIBBL_BUILT_LAYOUT_PROOF__);
  if(process.argv.includes('--built')){assert.equal(proof?.mode,'layout-wasm-built');assert.ok(proof.coreInputs.length&&proof.coreInputs.every(value=>value.includes('packages/core/.layout-wasm-package/dist/')));}

@@ -19,6 +19,7 @@ function createWasmFlexKeyedWrapExampleContent(canvas: HTMLCanvasElement) {
   const selected = signal("none");
   const ink = signal("#19375b");
   const layoutDirection = signal<"ltr" | "rtl">("ltr");
+  const logicalMargin = signal<number | "10%">(0);
   const reverseAxes = signal(false);
   const reverseLines = signal(false);
   const crossEdge = signal<"flex-start" | "start" | "end">("flex-start");
@@ -125,7 +126,7 @@ function createWasmFlexKeyedWrapExampleContent(canvas: HTMLCanvasElement) {
               key={name}
               name={name}
               zone="row"
-              style={{ flexBasis: 160, flexGrow: 1, minWidth: 0, height: 80 }}
+              style={{ flexBasis: 160, flexGrow: 1, minWidth: 0, height: 80, marginStart: logicalMargin.get() === 0 ? undefined : logicalMargin.get() }}
             />
           ))}
         </Flex>
@@ -148,7 +149,7 @@ function createWasmFlexKeyedWrapExampleContent(canvas: HTMLCanvasElement) {
               key={name}
               name={name}
               zone="column"
-              style={{ flexBasis: 72, flexGrow: 1, minHeight: 0, width: 130 }}
+              style={{ flexBasis: 72, flexGrow: 1, minHeight: 0, width: 130, marginStart: logicalMargin.get() === 0 ? undefined : logicalMargin.get() }}
             />
           ))}
         </Flex>
@@ -294,6 +295,9 @@ function createWasmFlexKeyedWrapExampleContent(canvas: HTMLCanvasElement) {
       <Text style={{ left: 648, top: 150, cursor: "pointer", font: "bold 14px sans-serif", fill: "#19375b" }} onClick={() => layoutDirection.update(value => value === "ltr" ? "rtl" : "ltr")}>
         {layoutDirection.get().toUpperCase()} ⇄
       </Text>
+      <Text style={{ left: 28, top: 420, cursor: "pointer", font: "bold 14px sans-serif", fill: "#19375b" }} onClick={() => logicalMargin.update(value => value === 0 ? "10%" : 0)}>
+        Logical start margin: {logicalMargin.get()} · click to toggle
+      </Text>
       <Collections />
     </>
   );
@@ -310,6 +314,7 @@ function createWasmFlexKeyedWrapExampleContent(canvas: HTMLCanvasElement) {
     panel.textContent = JSON.stringify({
       lane: read ? "experimental WASM" : "normal JavaScript",
       keys: keys.get(),
+      logicalMargin: logicalMargin.get(),
       layoutDirection: layoutDirection.get(),
       reverseAxes: reverseAxes.get(),
       reverseLines: reverseLines.get(),
@@ -319,7 +324,7 @@ function createWasmFlexKeyedWrapExampleContent(canvas: HTMLCanvasElement) {
       boxes: Object.fromEntries(boxes),
       layout: read?.() ?? {},
       limits:
-        "Finite row/declared-column wrap only; no intrinsic wrapped-container sizing or logical edge properties. RTL mirrors placement; reversing data preserves source paint order. Reversing data preserves source paint order.",
+        "Finite row/declared-column wrap only; no intrinsic wrapped-container sizing or general logical padding/border properties. RTL mirrors placement; reversing data preserves source paint order.",
     });
   };
   refresh();

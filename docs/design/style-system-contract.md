@@ -175,9 +175,12 @@ scientific notation, malformed strings, and non-finite results reject.
   parent allocation is smaller. Opposing min/max remain invalid before that
   conversion. `borderWidth` is finite nonnegative physical numeric edge shorthand,
   default zero; it reserves layout space and does not paint. Painted strokes remain independent. Existing automatic/intrinsic sizing rules remain unchanged.
-- Flex children support numeric physical margins under the layout contract;
-  automatic/logical margins and margin participation in other layout families
-  remain unsupported. Parent placement uses `left`/`top`; drawing-local geometry
+- Experimental Flex children support signed numeric and allocated percentage
+  physical margins plus logical `marginStart`/`marginEnd`. Logical edges map
+  through the receiving item’s direction and override their physical counterpart
+  and the `margin` shorthand regardless of property order. Explicit zero is an
+  override. Automatic margins and participation in other layout families remain
+  unsupported. Parent placement uses `left`/`top`; drawing-local geometry
   uses `x`/`y` (`x1`/`x2` or `y1`/`y2` for line helpers).
 - Primitive rectangle/image geometry retains signed Canvas semantics outside
   nonnegative layout allocation.

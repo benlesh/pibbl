@@ -138,6 +138,10 @@ export interface LayoutItemStyle extends PositioningStyle {
   marginBottom?: number | Percentage;
   /** Physical left margin overriding margin. See {@link LayoutItemStyle}. */
   marginLeft?: number | Percentage;
+  /** Inline-start margin overriding the corresponding physical edge and margin shorthand in experimental Flex. Signed percentages use allocated content width. See {@link LayoutItemStyle}. */
+  marginStart?: number | Percentage;
+  /** Inline-end margin overriding the corresponding physical edge and margin shorthand in experimental Flex. See {@link LayoutItemStyle}. */
+  marginEnd?: number | Percentage;
   /** This child's cross-axis or block-axis alignment override. See {@link LayoutItemStyle}. */
   alignSelf?: 'auto' | 'start' | 'end' | 'center' | 'stretch' | 'flex-start' | 'flex-end';
   /** This child's inline-axis alignment override. See {@link LayoutItemStyle}. */
@@ -165,7 +169,7 @@ export interface LayoutItemStyle extends PositioningStyle {
  */
 export type FlexItemStyle = Pick<
   LayoutItemStyle,
-  'aspectRatio' | 'flexBasis' | 'flexGrow' | 'flexShrink' | 'margin' | 'marginTop' | 'marginRight' | 'marginBottom' | 'marginLeft'
+  'aspectRatio' | 'flexBasis' | 'flexGrow' | 'flexShrink' | 'margin' | 'marginTop' | 'marginRight' | 'marginBottom' | 'marginLeft' | 'marginStart' | 'marginEnd'
 > & {
   /** This child's cross-axis or block-axis alignment override. See {@link FlexItemStyle}. */
   alignSelf?: 'auto' | 'stretch' | 'flex-start' | 'flex-end' | 'center' | 'start' | 'end';

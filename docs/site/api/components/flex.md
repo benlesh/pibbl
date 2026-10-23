@@ -162,6 +162,14 @@ redraws when it changes. Explicit `"ltr"` overrides inherited RTL. A signal can
 supply the direction. RTL mirrors row main placement and column cross placement,
 including reversed axes and lines. Physical margins stay physical; logical
 `start`/`end` follow direction, while `flex-start`/`flex-end` follow the flex axis.
-It does not reorder source paint, hits, focus traversal, or text glyphs. Logical
-edge properties and RTL outside experimental Flex remain unsupported. Try
+It does not reorder source paint, hits, focus traversal, or text glyphs. Logical padding/border edge properties and RTL outside experimental Flex remain unsupported. Try
 **LTR ⇄** in [keyed wrapped collections](#/examples/layout/wasm-flex-keyed-wrap).
+
+Experimental Flex items also accept `marginStart` and `marginEnd` as signed
+`number | Percentage` values. Start is left in LTR and right in RTL; end is the
+opposite edge. A child Flex’s explicit direction overrides inheritance for its
+own logical margins. Logical edges override physical edges and `margin`, including
+explicit zero, independently of declaration order. Percentages use the containing
+Flex content width. For example, `style={{ margin: 8, marginStart: "10%" }}`
+replaces only the start edge. Toggle **Logical start margin** in the keyed
+collection example, then toggle LTR/RTL. Auto margins remain unsupported.

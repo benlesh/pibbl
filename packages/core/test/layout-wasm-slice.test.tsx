@@ -1214,10 +1214,12 @@ it.runIf(experimentalLayout)('places numeric cross margins and rejects unsupport
   }
 });
 
-it.runIf(experimentalLayout)('rejects physical margins under other layout families rather than ignoring them', async () => {
+it.runIf(experimentalLayout)('rejects margins under other layout families rather than ignoring them', async () => {
   const { prepareDirectChildStyle } = await import('../src/lib/layout/absolute');
-  const child = createElement(Rectangle, { style: { width: 20, height: 20, marginLeft: 5 } });
-  expect(() => prepareDirectChildStyle(child)).toThrow(/margins.*experimental Flex/);
+  for (const margin of [{ marginLeft: 5 }, { marginStart: 0 }, { marginEnd: '-5%' as const }]) {
+    const child = createElement(Rectangle, { style: { width: 20, height: 20, ...margin } });
+    expect(() => prepareDirectChildStyle(child)).toThrow(/margins.*experimental Flex/);
+  }
 });
 
 it.runIf(experimentalLayout)('forms wrapped margin lines and preserves source paint/hit order under negative overlap', async () => {
@@ -2881,4 +2883,40 @@ it('rejects invalid layout direction before allocating native nodes',()=>{
  expect(()=>layoutFlex({x:0,y:0,width:100,height:40},[],{layoutDirection:'sideways' as 'rtl'},measurement)).toThrow(/layoutDirection/);
  if(!experimentalLayout)expect(()=>layoutFlex({x:0,y:0,width:100,height:40},[],{layoutDirection:'rtl'},measurement)).toThrow(/layoutDirection/);
  const after=snapshotWasmLayoutDiagnostics();expect(after.activeNodes).toBe(before.activeNodes);expect(after.activeArenas).toBe(before.activeArenas);
+});
+
+for(const rtl of [false,true])for(const start of ['10%',0,'-10%'] as const){
+ it.runIf(experimentalLayout)(`resolves logical margin precedence rtl=${rtl} start=${start}`,()=>{
+  const startSize=start===0?0:start==='10%'?20:-20;
+  const first={width:40,height:20,minWidth:0,minHeight:0,flexShrink:0,margin:7,marginLeft:30,marginRight:40,marginStart:start,marginEnd:'5%' as const};
+  const reordered={marginEnd:'5%' as const,marginStart:start,marginRight:40,marginLeft:30,margin:7,width:40,height:20,minWidth:0,minHeight:0,flexShrink:0};
+  const last=createElement(Rectangle,{style:{width:30,height:20,minWidth:0,minHeight:0,flexShrink:0}});
+  const expected=[{x:rtl?160-startSize:startSize,y:7,width:40,height:20},{x:rtl?108-startSize:62+startSize,y:0,width:30,height:20}];
+  for(const style of [first,reordered])expect(layoutFlex({x:0,y:0,width:200,height:60},[createElement(Rectangle,{style}),last],{layoutDirection:rtl?'rtl':'ltr',gap:12,alignItems:'flex-start'},measurement)).toEqual(expected);
+ });
+}
+it.runIf(experimentalLayout)('moves logical margin signal targets under inherited RTL without remounting',async()=>{
+ const baseline=snapshotWasmLayoutDiagnostics(),start=signal<number|'10%'>(0),direction=signal<'ltr'|'rtl'>('rtl'),fill=signal('red');let hits=0,mounts=0;
+ function Card(){useConst(()=>{mounts++;});const box=useLayoutBox();return createElement(Rectangle,{style:{width:box.width,height:box.height,fill},onClick:()=>hits++});}
+ const itemStyle={width:40,height:20,minWidth:0,minHeight:0,flexShrink:0,marginStart:start};const rootStyle={width:200,height:60,layoutDirection:direction};
+ const canvas=document.createElement('canvas');canvas.width=200;canvas.height=60;document.body.append(canvas);const controller=pibbl(canvas,createElement(Flex,{style:rootStyle,children:createElement(Card,{style:itemStyle})}));controllers.push(controller);await nextFrame();clickCanvas(canvas,195,5);expect(hits).toBe(1);const initial=snapshotWasmLayoutDiagnostics();
+ start.set('10%');await nextFrame();clickCanvas(canvas,195,5);expect(hits).toBe(1);clickCanvas(canvas,145,5);expect(hits).toBe(2);direction.set('ltr');await nextFrame();clickCanvas(canvas,145,5);expect(hits).toBe(2);clickCanvas(canvas,25,5);expect(hits).toBe(3);expect(mounts).toBe(1);expect(snapshotWasmLayoutDiagnostics().nodeCreates).toBe(initial.nodeCreates);
+ const before=snapshotWasmLayoutDiagnostics();fill.set('blue');await nextFrame();expect(snapshotWasmLayoutDiagnostics().solves).toBe(before.solves);controller.dispose();const disposed=snapshotWasmLayoutDiagnostics();expect([disposed.activeNodes,disposed.activeArenas,disposed.cachedMeasurements]).toEqual([baseline.activeNodes,baseline.activeArenas,baseline.cachedMeasurements]);
+});
+
+it.runIf(experimentalLayout)('uses an explicit child Flex direction for its logical margin',()=>{
+ const child=createElement(Flex,{style:{width:40,height:20,layoutDirection:'ltr',marginStart:10,minWidth:0,minHeight:0,flexShrink:0},children:[]});
+ expect(layoutFlex({x:0,y:0,width:200,height:60},[child],{layoutDirection:'rtl',alignItems:'flex-start'},measurement)).toEqual([{x:160,y:0,width:40,height:20}]);
+});
+it.runIf(experimentalLayout)('measures winning numeric logical margin instead of overridden physical percentage',()=>{
+ const root=createElement(Flex,{style:{height:20},children:createElement(Rectangle,{style:{width:40,height:20,minWidth:0,minHeight:0,flexShrink:0,marginLeft:'10%',marginStart:0}})});
+ expect(measureElement(root,{minWidth:0,maxWidth:200,minHeight:0,maxHeight:60},service)).toEqual({status:'measured',size:{width:40,height:20}});
+});
+
+it.runIf(experimentalLayout)('uses child RTL logical margins within an LTR Flex allocation',()=>{
+ const child=createElement(Flex,{style:{width:40,height:20,layoutDirection:'rtl',marginStart:10,minWidth:0,minHeight:0,flexShrink:0},children:[]});
+ expect(layoutFlex({x:0,y:0,width:200,height:60},[child],{layoutDirection:'ltr',alignItems:'flex-start'},measurement)).toEqual([{x:0,y:0,width:40,height:20}]);
+});
+it.skipIf(experimentalLayout)('rejects logical margins in normal JavaScript Flex',()=>{
+ for(const edge of [{marginStart:0},{marginEnd:'-10%' as const}]){const child=createElement(Rectangle,{style:{width:40,height:20,minWidth:0,...edge}});expect(()=>layoutFlex({x:0,y:0,width:200,height:60},[child],{},measurement)).toThrow(/margin/);}
 });

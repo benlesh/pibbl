@@ -289,9 +289,10 @@ export function prepareDirectChildStyle(
     const values = style as Readonly<Record<string, unknown>>;
     const property = values.margin !== undefined ? 'margin' : values.marginTop !== undefined ? 'marginTop' :
       values.marginRight !== undefined ? 'marginRight' : values.marginBottom !== undefined ? 'marginBottom' :
-      values.marginLeft !== undefined ? 'marginLeft' : undefined;
+      values.marginLeft !== undefined ? 'marginLeft' : values.marginStart !== undefined ? 'marginStart' :
+      values.marginEnd !== undefined ? 'marginEnd' : undefined;
     if (property) throw layoutDiagnostic({ component: child.type.name, algorithm: 'layout', property,
-      value: values[property], reason: 'physical margins currently require experimental Flex' });
+      value: values[property], reason: 'margins currently require experimental Flex' });
   }
   const filter = extractSystemFilter(style);
   const normalized = definition?.normalizeStyle ?

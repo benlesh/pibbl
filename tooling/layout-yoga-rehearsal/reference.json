@@ -3,7 +3,7 @@
   "commit": "042f5013152eb81c1552dec945b88f7b95ca350f",
   "license": "MIT",
   "licenseSha256": "52412d7bc7ce4157ea628bbaacb8829e0a9cb3c58f57f99176126bc8cf2bfc85",
-  "probeSha256": "1572293d7f126992e2d371e1da5bc3cd623f28b182208f24357fdf9846994427",
+  "probeSha256": "68347e6d8cbce85d12e95f5d4a608b0c99ef585f7448d10cb7da10692a2db831",
   "configuration": {
     "useWebDefaults": false,
     "pointScaleFactor": 0,
@@ -7216,6 +7216,318 @@
           "marginRight": 9,
           "marginTop": 2,
           "marginBottom": 4
+        }
+      ]
+    },
+    {
+      "name": "logical-margin-end-percent-ltr-logical-last",
+      "width": 200,
+      "height": 80,
+      "gap": 0,
+      "flexDirection": "row",
+      "flexWrap": "nowrap",
+      "layoutDirection": "ltr",
+      "containerStyle": {
+        "alignItems": "flex-start",
+        "justifyContent": "flex-start"
+      },
+      "boxes": [
+        {
+          "x": 8,
+          "y": 5,
+          "width": 40,
+          "height": 20
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 40,
+          "height": 20,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0,
+          "margin": 5,
+          "marginLeft": 8,
+          "marginRight": 20,
+          "marginEnd": "-10%"
+        }
+      ]
+    },
+    {
+      "name": "logical-margin-end-percent-ltr-logical-first",
+      "width": 200,
+      "height": 80,
+      "gap": 0,
+      "flexDirection": "row",
+      "flexWrap": "nowrap",
+      "layoutDirection": "ltr",
+      "containerStyle": {
+        "alignItems": "flex-start",
+        "justifyContent": "flex-start"
+      },
+      "boxes": [
+        {
+          "x": 8,
+          "y": 5,
+          "width": 40,
+          "height": 20
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 40,
+          "height": 20,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0,
+          "margin": 5,
+          "marginLeft": 8,
+          "marginRight": 20,
+          "marginEnd": "-10%"
+        }
+      ]
+    },
+    {
+      "name": "logical-margin-end-percent-rtl-logical-last",
+      "width": 200,
+      "height": 80,
+      "gap": 0,
+      "flexDirection": "row",
+      "flexWrap": "nowrap",
+      "layoutDirection": "rtl",
+      "containerStyle": {
+        "alignItems": "flex-start",
+        "justifyContent": "flex-start"
+      },
+      "boxes": [
+        {
+          "x": 152,
+          "y": 5,
+          "width": 28,
+          "height": 20
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 40,
+          "height": 20,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0,
+          "margin": 5,
+          "marginLeft": 8,
+          "marginRight": 20,
+          "marginEnd": "-10%"
+        }
+      ],
+      "classification": "preserved-physical-logical-conflict",
+      "comparisonLabel": "Pibbl preserves declared 40px width under RTL logical/physical margin conflict; Yoga reports a different outer width.",
+      "pibblBoxes": [
+        {
+          "x": 140,
+          "y": 5,
+          "width": 40,
+          "height": 20
+        }
+      ]
+    },
+    {
+      "name": "logical-margin-end-percent-rtl-logical-first",
+      "width": 200,
+      "height": 80,
+      "gap": 0,
+      "flexDirection": "row",
+      "flexWrap": "nowrap",
+      "layoutDirection": "rtl",
+      "containerStyle": {
+        "alignItems": "flex-start",
+        "justifyContent": "flex-start"
+      },
+      "boxes": [
+        {
+          "x": 152,
+          "y": 5,
+          "width": 28,
+          "height": 20
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 40,
+          "height": 20,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0,
+          "margin": 5,
+          "marginLeft": 8,
+          "marginRight": 20,
+          "marginEnd": "-10%"
+        }
+      ],
+      "classification": "preserved-physical-logical-conflict",
+      "comparisonLabel": "Pibbl preserves declared 40px width under RTL logical/physical margin conflict; Yoga reports a different outer width.",
+      "pibblBoxes": [
+        {
+          "x": 140,
+          "y": 5,
+          "width": 40,
+          "height": 20
+        }
+      ]
+    },
+    {
+      "name": "logical-margin-start-zero-ltr-logical-last",
+      "width": 200,
+      "height": 80,
+      "gap": 0,
+      "flexDirection": "row",
+      "flexWrap": "nowrap",
+      "layoutDirection": "ltr",
+      "containerStyle": {
+        "alignItems": "flex-start",
+        "justifyContent": "flex-start"
+      },
+      "boxes": [
+        {
+          "x": 0,
+          "y": 5,
+          "width": 40,
+          "height": 20
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 40,
+          "height": 20,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0,
+          "margin": 5,
+          "marginLeft": 8,
+          "marginRight": 20,
+          "marginStart": 0
+        }
+      ]
+    },
+    {
+      "name": "logical-margin-start-zero-ltr-logical-first",
+      "width": 200,
+      "height": 80,
+      "gap": 0,
+      "flexDirection": "row",
+      "flexWrap": "nowrap",
+      "layoutDirection": "ltr",
+      "containerStyle": {
+        "alignItems": "flex-start",
+        "justifyContent": "flex-start"
+      },
+      "boxes": [
+        {
+          "x": 0,
+          "y": 5,
+          "width": 40,
+          "height": 20
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 40,
+          "height": 20,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0,
+          "margin": 5,
+          "marginLeft": 8,
+          "marginRight": 20,
+          "marginStart": 0
+        }
+      ]
+    },
+    {
+      "name": "logical-margin-start-zero-rtl-logical-last",
+      "width": 200,
+      "height": 80,
+      "gap": 0,
+      "flexDirection": "row",
+      "flexWrap": "nowrap",
+      "layoutDirection": "rtl",
+      "containerStyle": {
+        "alignItems": "flex-start",
+        "justifyContent": "flex-start"
+      },
+      "boxes": [
+        {
+          "x": 148,
+          "y": 5,
+          "width": 52,
+          "height": 20
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 40,
+          "height": 20,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0,
+          "margin": 5,
+          "marginLeft": 8,
+          "marginRight": 20,
+          "marginStart": 0
+        }
+      ],
+      "classification": "preserved-physical-logical-conflict",
+      "comparisonLabel": "Pibbl preserves declared 40px width under RTL logical/physical margin conflict; Yoga reports a different outer width.",
+      "pibblBoxes": [
+        {
+          "x": 160,
+          "y": 5,
+          "width": 40,
+          "height": 20
+        }
+      ]
+    },
+    {
+      "name": "logical-margin-start-zero-rtl-logical-first",
+      "width": 200,
+      "height": 80,
+      "gap": 0,
+      "flexDirection": "row",
+      "flexWrap": "nowrap",
+      "layoutDirection": "rtl",
+      "containerStyle": {
+        "alignItems": "flex-start",
+        "justifyContent": "flex-start"
+      },
+      "boxes": [
+        {
+          "x": 148,
+          "y": 5,
+          "width": 52,
+          "height": 20
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 40,
+          "height": 20,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0,
+          "margin": 5,
+          "marginLeft": 8,
+          "marginRight": 20,
+          "marginStart": 0
+        }
+      ],
+      "classification": "preserved-physical-logical-conflict",
+      "comparisonLabel": "Pibbl preserves declared 40px width under RTL logical/physical margin conflict; Yoga reports a different outer width.",
+      "pibblBoxes": [
+        {
+          "x": 160,
+          "y": 5,
+          "width": 40,
+          "height": 20
         }
       ]
     }

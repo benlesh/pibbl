@@ -765,5 +765,31 @@ rendering remain unchanged. Existing allocation contexts, receiver signal inputs
 prepared plans and placement caches carry direction; no separate cascade or
 scheduler is introduced. Plans reject mismatched direction before adoption. The
 WASM cross-placement ABI is identified by the `layout_abi_v1` export marker;
-older modules are rejected before publishing compiled code. Logical start/end
-edge fields remain a subsequent capability.
+older modules are rejected before publishing compiled code. Logical margin edges are specified below; logical padding and border edges remain
+a subsequent capability.
+
+## Experimental logical Flex margins
+
+`LayoutItemStyle` and `FlexItemStyle` add `marginStart?: number | Percentage`
+and `marginEnd?: number | Percentage`, consumed by experimental Flex only. LTR
+maps start to left and end to right; RTL maps start to right and end to left.
+A direct child Flex’s explicit `layoutDirection` determines its own logical
+margins; otherwise the enclosing Flex direction is inherited. This does not
+make direction an arbitrary Rectangle style property. Percentage reference is
+always the containing Flex content width, including column layouts. Values may
+be signed; auto and nonfinite values remain unsupported.
+
+A specified logical edge wins over the corresponding physical edge; either
+specific edge wins over `margin`. Explicit zero wins. Property declaration order
+does not affect precedence. Logical mapping precedes physical axis reversal,
+line formation and existing margin-box placement. Physical-only behavior is
+unchanged. Intrinsic measurement supports winning numeric logical edges; a
+shadowed physical percentage does not require an owner basis. Winning percentage
+edges still require an actual finite allocation.
+
+Pinned Yoga cases validate both setter orders, explicit zero and signed end
+percentages. Four RTL cases combining logical and physical edges report widths
+28 or52 in Yoga for a declared40-wide item. Pibbl preserves the declared40-wide
+box and its existing physical margin algorithm. The public reference classifies
+those cases as `preserved-physical-logical-conflict` with both expected geometries
+and an explicit label. This is a recorded difference, not full Yoga parity.

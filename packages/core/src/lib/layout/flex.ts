@@ -424,12 +424,21 @@ function measureFlex(
     if (style.boxSizing !== undefined) style = contentBoxStyle(style, { width: diagnosticBox.width, height: diagnosticBox.height, mainAxis: row ? 'width' : 'height', context: childContext(child, diagnosticBox) });
     rejectUnsupportedItemFields(child, style, diagnosticBox);
     if (style.aspectRatio !== undefined) return unsupportedIntrinsic('does not support aspectRatio during intrinsic measurement');
-    if (isPercentage(style.margin) || isPercentage(style.marginTop) || isPercentage(style.marginRight) || isPercentage(style.marginBottom) || isPercentage(style.marginLeft)) return unsupportedIntrinsic('does not support percentage margins without an actual finite Flex allocation');
-    const allMargin = numericMargin(style.margin, 'margin', child, diagnosticBox);
-    const marginTop = numericMargin(style.marginTop === undefined ? allMargin : style.marginTop, 'marginTop', child, diagnosticBox);
-    const marginRight = numericMargin(style.marginRight === undefined ? allMargin : style.marginRight, 'marginRight', child, diagnosticBox);
-    const marginBottom = numericMargin(style.marginBottom === undefined ? allMargin : style.marginBottom, 'marginBottom', child, diagnosticBox);
-    const marginLeft = numericMargin(style.marginLeft === undefined ? allMargin : style.marginLeft, 'marginLeft', child, diagnosticBox);
+    const marginDirection = layoutChild.type === Flex ? style.layoutDirection ?? options.layoutDirection : options.layoutDirection;
+    const logicalLeft = marginDirection === 'rtl' ? style.marginEnd : style.marginStart;
+    const logicalRight = marginDirection === 'rtl' ? style.marginStart : style.marginEnd;
+    const leftValue = logicalLeft !== undefined ? logicalLeft : style.marginLeft === undefined ? style.margin : style.marginLeft;
+    const rightValue = logicalRight !== undefined ? logicalRight : style.marginRight === undefined ? style.margin : style.marginRight;
+    const topValue = style.marginTop === undefined ? style.margin : style.marginTop;
+    const bottomValue = style.marginBottom === undefined ? style.margin : style.marginBottom;
+    const hasLogicalMargin = style.marginStart !== undefined || style.marginEnd !== undefined;
+    if ((!hasLogicalMargin && isPercentage(style.margin)) || isPercentage(topValue) || isPercentage(rightValue) || isPercentage(bottomValue) || isPercentage(leftValue)) return unsupportedIntrinsic('does not support percentage margins without an actual finite Flex allocation');
+    // Physical-only paths retain their existing shorthand validation.
+    if (!hasLogicalMargin) numericMargin(style.margin, 'margin', child, diagnosticBox);
+    const marginTop = numericMargin(topValue, 'marginTop', child, diagnosticBox);
+    const marginRight = numericMargin(rightValue, logicalRight !== undefined ? marginDirection === 'rtl' ? 'marginStart' : 'marginEnd' : 'marginRight', child, diagnosticBox);
+    const marginBottom = numericMargin(bottomValue, 'marginBottom', child, diagnosticBox);
+    const marginLeft = numericMargin(leftValue, logicalLeft !== undefined ? marginDirection === 'rtl' ? 'marginEnd' : 'marginStart' : 'marginLeft', child, diagnosticBox);
     const marginMain = row ? marginLeft + marginRight : marginTop + marginBottom;
     const marginCross = row ? marginTop + marginBottom : marginLeft + marginRight;
     const grow = nonnegativeFactor(
@@ -676,9 +685,12 @@ function resolveFlexPlacements(
     rejectUnsupportedItemFields(child, normalized, container);
     const allMargin = allocatedMargin(normalized.margin, 'margin', child, container);
     const marginTop = allocatedMargin(normalized.marginTop === undefined ? allMargin : normalized.marginTop, 'marginTop', child, container);
-    const marginRight = allocatedMargin(normalized.marginRight === undefined ? allMargin : normalized.marginRight, 'marginRight', child, container);
+    const marginDirection = layoutChild.type === Flex ? normalized.layoutDirection ?? options.layoutDirection : options.layoutDirection;
+    const logicalLeft = marginDirection === 'rtl' ? normalized.marginEnd : normalized.marginStart;
+    const logicalRight = marginDirection === 'rtl' ? normalized.marginStart : normalized.marginEnd;
+    const marginRight = allocatedMargin(logicalRight !== undefined ? logicalRight : normalized.marginRight === undefined ? allMargin : normalized.marginRight, logicalRight !== undefined ? marginDirection === 'rtl' ? 'marginStart' : 'marginEnd' : 'marginRight', child, container);
     const marginBottom = allocatedMargin(normalized.marginBottom === undefined ? allMargin : normalized.marginBottom, 'marginBottom', child, container);
-    const marginLeft = allocatedMargin(normalized.marginLeft === undefined ? allMargin : normalized.marginLeft, 'marginLeft', child, container);
+    const marginLeft = allocatedMargin(logicalLeft !== undefined ? logicalLeft : normalized.marginLeft === undefined ? allMargin : normalized.marginLeft, logicalLeft !== undefined ? marginDirection === 'rtl' ? 'marginEnd' : 'marginStart' : 'marginLeft', child, container);
     const marginMainBefore = row ? reverse ? marginRight : marginLeft : reverse ? marginBottom : marginTop;
     const marginMainAfter = row ? reverse ? marginLeft : marginRight : reverse ? marginTop : marginBottom;
     const marginCrossBefore = row ? wrapReverse ? marginBottom : marginTop : wrapReverse ? marginRight : marginLeft;
@@ -1495,7 +1507,7 @@ function rejectUnsupportedItemFields(
   style: Readonly<Record<string, unknown>>,
   container: Readonly<LayoutBox>,
 ): void {
-  if (!experimentalLayout && hasPhysicalMargin(style)) throw childDiagnostic(child, 'margin', style.margin, container, 'physical margins require the experimental Flex engine');
+  if (!experimentalLayout && hasFlexMargin(style)) throw childDiagnostic(child, 'margin', style.margin, container, 'margins require the experimental Flex engine');
   for (let propertyIndex = 0; propertyIndex < unsupportedProperties.length; propertyIndex++) {
     const property = unsupportedProperties[propertyIndex];
     if (style[property] !== undefined) {
@@ -1510,9 +1522,10 @@ function rejectUnsupportedItemFields(
   }
 }
 
-function hasPhysicalMargin(style: Readonly<Record<string, unknown>>): boolean {
+function hasFlexMargin(style: Readonly<Record<string, unknown>>): boolean {
   return style.margin !== undefined || style.marginTop !== undefined || style.marginRight !== undefined ||
-    style.marginBottom !== undefined || style.marginLeft !== undefined;
+    style.marginBottom !== undefined || style.marginLeft !== undefined ||
+    style.marginStart !== undefined || style.marginEnd !== undefined;
 }
 function allocatedMargin(value: unknown, property: string, child: PibblElement<any>, container: Readonly<LayoutBox>): number {
   if (experimentalLayout && isPercentage(value)) {

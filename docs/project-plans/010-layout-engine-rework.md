@@ -2,7 +2,8 @@
 
 ## Current checkpoint and single next slice — 2026-10-23
 
-Latest delivery is slice88 (inherited Flex layoutDirection; this commit).
+Latest delivery is slice89 (logical Flex margins; this commit).
+Slice88 is `14386781` (inherited Flex layoutDirection).
 Previous delivery is slice87 `aac241f6` (wrap-reverse percentage physical margins).
 Slice86 is `cd55cff0` (wrapped percentage physical margins).
 Slice85 is `e4ea5c0d` (finite nested percentage wrapping evidence).
@@ -38,9 +39,9 @@ Slice56 is `cf2c7bc5` (prepared Flow-root planning/adoption).
 Slice55 is `1510efe3` (prepared Grid-root planning/adoption).
 Slice54 `773da7b9`,53 `aaa7ddcb`,52 `b5381e0d` are consolidated in `f322a709`.
 Every slice has its own commit. The fixed33-capability/seven-gate denominator is
-unchanged; all seven gates remain open. Consolidation26 is `2cd357d4`; consolidation27 is `abbaf209`; consolidation28 is `dfd16c8f`; consolidation29 is `f2e38dc6`; the single next slice is89, logical-edge precedence and a first margin edge slice. Source5192/built5193, `#/testing/layout-preflight`:
+unchanged; all seven gates remain open. Consolidation26 is `2cd357d4`; consolidation27 is `abbaf209`; consolidation28 is `dfd16c8f`; consolidation29 is `f2e38dc6`; the single next slice is90, logical padding edge precedence. Source5192/built5193, `#/testing/layout-preflight`:
 Source5192/built5193 `#/examples/layout/wasm-yoga-migration`: Next case + resize
-cycles143 records:124matches/19classified differences; click A/B/C targets.
+cycles151 records:128matches/23classified differences; click A/B/C targets.
 Canonical built comparison: http://127.0.0.1:5193/#/examples/layout/wasm-yoga-migration.
 Native Grid tracks/spans and Flow wrap controls remain available.
 
@@ -1931,18 +1932,66 @@ Logical edge fields and precedence remain incomplete, as do the other recorded
 whole-program exits. Review of the changed implementation found no material
 findings; final whole-codebase review remains at program completion.
 
-## [NEXT] Logical-edge precedence and first margin edge slice (slice 89)
+## Slice 89 delivered — receiver-aware logical Flex margins
 
-Keep additive layoutDirection and the fixed33/seven-gate denominator. First pin
-native start/end versus physical margin, specific-edge versus shorthand, signed
-percentage and explicit-zero precedence in both directions and declaration
-orders. Select concise public logical-margin names consistent with the existing
-margin fields and API guidance; record exact signatures/precedence before code.
-Deliver one observable nested RTL/LTR edge toggle through the public example,
-with RED geometry/hit evidence, source/built/installed declarations, stable keys
-and cleanup. Do not introduce a generalized cascade or alter unrelated layout
-families. Reuse the existing implementation helper and scoped reviewer. Complete
-89 and90 before consolidation30; no final whole-codebase review yet.
+Adds `marginStart?: number | Percentage` and `marginEnd?: number | Percentage`
+to LayoutItemStyle/FlexItemStyle, consumed by experimental Flex. Logical edges
+map the receiver’s inline direction, including a direct child Flex’s explicit
+LTR/RTL override. They override physical edges and the uniform margin shorthand
+independent of declaration order; explicit zero and signed percentages work.
+Percentages use containing Flex content width. Winning numeric edges support
+intrinsic measurement even when an overridden physical edge was a percentage.
+Physical-only behavior, axis reversal, source traversal and resource ownership
+remain unchanged. Normal JavaScript Flex and other layout families reject these
+margins. Receiver classification, stripping, editor types, packed consumers and
+public contracts are synchronized.
+
+Public RED:7failed precedence/reactive tests before implementation. Two further
+REDs pinned child-direction override and intrinsic shadowed-percentage behavior;
+both failed at the expected geometry/status before their fixes. A converse child
+RTL override and normal-build/other-family rejection supply bounded hardening.
+Scoped review confirmed the child-direction finding fixed with no new material
+findings. No extra overlapping or final whole-codebase review was run.
+
+Fresh macOS/Node26.9.0/pnpm11.21.0 dependencies/Chromium evidence:
+
+- Full public experimental slice suite:259pass/4skip (263total), all151reference
+  records. Normal focused margin/direction rejection:3pass/260skip.
+- Source5192/built5193 `test-wasm-layout-direction.mjs --logical-margins` pass,
+  469private built inputs, percentage reference36/29.2px for row/column owners,
+  RTL reflection, stable stamps, moved hit targets, unchanged paint-only work,
+  cleanup0/0/0 and errors[]. Initial zero means omitted margin in the learning
+  example, keeping its initial LTR state usable in the ordinary build.
+- Fresh offline packed tarball SHA256
+  `42ea4646528f3670ae198f253a182e5e609e6b0e6044c83bcf43d40f320b4f54`,
+  230installed-dist inputs, strict Bundler/NodeNext pass. Logical percentage
+  signal moves a retained Layer’s pixels/targets without native-node recreation.
+- Eight native Yoga3.2.1 records pin logical-first/logical-last setter order,
+  start0 and end-10% in LTR/RTL. Four LTR match; four RTL logical/physical
+  conflicts explicitly preserve Pibbl width40 versus native widths28/52.
+  Public corpus151 =128native matches +23classified differences. No parity claim.
+- Typecheck, changed-code lint, scenario discovery/catalog, docs109RED mutations,
+  public JSDoc and native receipt/embed reproduction pass. Kernel unchanged from
+  slice88:65432bytes. No Node24 aggregate-trust or performance claim.
+
+Hands-on: http://127.0.0.1:5192/#/examples/layout/wasm-flex-keyed-wrap;
+click Logical start margin at the bottom, then LTR ⇄. This is a slice ready for
+feedback. Fixed33 remains4complete/11experimental/8partial/9missing/1excluded;
+all7release gates are open. Auto margins, logical padding/borders and the other
+whole-program exits remain outstanding.
+
+## [NEXT] Logical padding edge precedence (slice 90)
+
+Resolve the smallest additive `paddingStart`/`paddingEnd` public contract before
+production code. Pin numeric/percentage, zero, specific-over-shorthand and
+logical-over-physical precedence in both directions against native Yoga, including
+receiver direction and canonical allocation ownership. Deliver a focused visible
+nested Flex toggle first with failing public geometry/hit evidence. Preserve
+physical-only padding, other layout-family contracts, pure measurement and
+canonical receiver snapshots; do not add a generalized cascade. Synchronize
+runtime/types/editor/source/built/packed evidence and exact cleanup. Reuse the
+existing helpers/reviewer. Commit90 separately, then consolidate88–90 as30.
+Fixed33/seven gates stay unchanged; final whole-codebase review is at full end.
 
 ### Consolidation 24 completed for delivery slices 70–72
 
