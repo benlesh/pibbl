@@ -109,15 +109,22 @@ right wins in RTL, and top wins over bottom. On an axis without an inset, the
 fixed child uses parent content-box `justifyContent` or `alignItems` alignment.
 For example center/flex-end puts a30×20 child at77,62 inside the decorated
 204×104 parent from the positioning rehearsal; supplying left12 changes only x
-to14. Stretch keeps the fixed height at cross-start. A width or height may be `"auto"` or omitted only when both finite numeric
-physical insets for that axis are present; Pibbl uses the remaining inner-border
-extent, after subtracting those insets, and clamps a negative result to zero.
-Finite numeric `minWidth`, `maxWidth`, `minHeight`, and `maxHeight` then clamp
-both fixed and derived axes before left/right/top/bottom precedence chooses the
-final origin. A numeric minimum above its maximum rejects; this preserves
+to14. Stretch keeps the fixed height at cross-start. A width or height may be `"auto"` or omitted when both finite numeric
+physical insets for that axis are present, or when the opposite axis is explicit
+finite numeric with a positive finite `aspectRatio`. A paired inset axis wins:
+Pibbl uses the remaining inner-border extent after subtracting those insets and
+clamps a negative result to zero. Without that pair, Pibbl derives the automatic
+outer axis from the declared numeric opposite axis before bounds. Finite numeric
+`minWidth`, `maxWidth`, `minHeight`, and `maxHeight` then clamp used axes
+independently before left/right/top/bottom precedence chooses the final origin;
+a clamp does not recouple the ratio. A numeric minimum above its maximum rejects; this preserves
 Pibbl's existing validation rather than Yoga's minimum-wins conflict behavior.
-This is finite placement arithmetic, not intrinsic measurement. An automatic
-or omitted axis without both insets, percentage insets, nonnumeric or automatic
+`aspectRatio` requires exactly one automatic axis and one declared numeric axis;
+both-automatic and both-explicit ratio cases remain unsupported. Without a ratio,
+both automatic axes may use their own opposing inset pairs. This is finite
+placement arithmetic, not intrinsic measurement. An automatic
+or omitted axis without both insets or admitted aspect derivation, percentage
+insets, nonnumeric or automatic
 bounds, direct layout children, child box decoration, margins and general nested
 containing-block selection remain unsupported.
 

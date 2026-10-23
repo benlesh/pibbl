@@ -2,7 +2,7 @@
 
 ## Current checkpoint and single next slice — 2026-10-23
 
-Latest delivery is slice126 (numeric absolute size bounds; this commit).
+Latest delivery is slice127 (bounded absolute aspect-ratio derivation; this commit).
 Consolidation42 for124–126 passes below.
 Slice126 is `0bda56ec` (numeric absolute size bounds).
 Slice125 is `6603731e` (declarative static Flex containing-block ownership).
@@ -3527,12 +3527,41 @@ caught the obsolete proof marker after geometry had passed; final receipts
 syntax/lint passes; no runtime change after the combined matrices. No release
 capability promotion or Node24 trust claim; all7gates remain open.
 
-## [NEXT] Bounded absolute aspect-ratio derivation (slice127)
+## Slice127 delivered: bounded absolute aspect-ratio derivation
 
-Investigate exactly one automatic axis derived from the other explicit numeric
-axis through existing finite aspectRatio. Native precedence and a public RED
-must establish the bounded contract before production. Do not infer intrinsic
-measurement or silently expand both-auto, percentage or decorated child cases.
+Existing positive finite aspectRatio admits exactly one automatic dimension and
+one explicit finite numeric dimension on direct absolute children. Opposing
+insets on the automatic axis win; otherwise the declared opposite dimension
+supplies ratio sizing before independent min/max clamps. Bounds do not recouple
+the ratio. Both-auto and both-explicit ratio cases remain diagnosed; unpaired
+automatic axes without a ratio remain unsupported. Absolute ratio items do not
+trigger the flow-only aspect pass. No intrinsic measurement, ABI or new API.
+
+Pinned probes establish80×40 from width80/ratio2,60×30 from height30/ratio2,
+width80/minWidth100→100×40, and top8/bottom10→80×82. Two public RED tests
+establish rejected ratio admission; an initial test fixture accidentally retained
+opposing insets while expecting ratio sizing and was corrected to match the
+native contract. Final2file53pass; normal39pass/17skip56; selected4file42pass/
+427skip469 including latest/cycle/containing. Invalid ratio, nonfinite derived
+arithmetic and out-of-scope ratio axis combinations reject. Six native corpus
+records bring the total361/267matches/94classified. Source/built6pass227core/dist
+inputs, errors[]/cleanup[0,0,0]. Screenshot inspected. Final packed245dist inputs,
+Bundler/NodeNext, absoluteAspect forwarding/bounds/inset/paint/cleanup and prior
+104auto-margin proofs pass; tarball SHA256
+`bc442f186edfbeded3024e9acbcd3ca9ecc917402fcf9a05b3d509ed38b97d6c`.
+Types, changed-code lint, docs109RED probes/JSDoc and scoped core review pass.
+Logs `/tmp/pibbl-slice127-{public-red,public-green-rerun,focused,normal,source,built,packed,docs}.txt`.
+Kernel68649bytes/SHA unchanged. No capability promotion, full361-case browser
+claim, baseline rewrite or Node24 trust claim. Counts8complete/12experimental/
+6partial/6missing/1excluded; all7release gates remain open.
+
+## [NEXT] Bounded measured absolute intrinsic sizing (slice128)
+
+Investigate a direct primitive with existing pure paired measurement providers,
+one automatic axis and a definite opposite dimension, without opposing insets
+or aspect derivation. Establish native shrink-to-fit constraints and public RED
+before production. Preserve receiver-owned measurement invalidation, keyed
+identity and failure cleanup; infer no intrinsic boxes from opaque components.
 
 ### Consolidation 24 completed for delivery slices 70–72
 

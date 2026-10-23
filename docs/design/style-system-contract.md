@@ -196,12 +196,16 @@ scientific notation, malformed strings, and non-finite results reject.
   edge; an axis without an inset uses parent content-box alignment through
   `justifyContent`/`alignItems`. LTR prefers left, RTL prefers right, and top
   prefers bottom. An automatic or omitted width/height is admitted only with
-  opposing finite physical insets on that axis; their remaining padding-box
-  extent becomes the finite used size and clamps at zero. Finite numeric
+  opposing finite physical insets on that axis, or with a positive finite
+  aspectRatio and one declared numeric opposite axis. Ratio admission requires
+  exactly one automatic axis; both-auto and both-explicit ratio cases reject.
+  Opposing insets win over ratio derivation; otherwise the declared opposite
+  axis derives the automatic axis before independent bounds. For paired insets,
+  the remaining padding-box extent becomes the finite used size and clamps at zero. Finite numeric
   min/max bounds then clamp fixed or derived axes before physical inset
   precedence places them; a numeric minimum above its maximum rejects rather
   than following Yoga's minimum-wins conflict behavior. This does not measure
-  the child. Percentages, unpaired automatic axes, nonnumeric or automatic
+  the child. Percentages, unpaired automatic axes without aspect derivation, nonnumeric or automatic
   bounds, child decoration/margins, direct layout children and general nested
   containing blocks are outside this
   admission; see the layout contract for exact limits.

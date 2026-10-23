@@ -564,3 +564,140 @@ it.runIf(experimentalLayout)('clamps opposing-inset automatic absolute axes befo
   expect(snapshotWasmLayoutDiagnostics().cachedMeasurements).toBe(baseline.cachedMeasurements);
   expect(snapshotWasmLayoutDiagnostics().activeArenas).toBe(baseline.activeArenas);
 });
+
+it.runIf(experimentalLayout)('derives exactly one automatic absolute axis from a finite outer aspect ratio without intrinsic measurement', async () => {
+  type PlacementStyle = PibblResponsiveStyle<RectStyle & FlexItemStyle>;
+  const baseline = snapshotWasmLayoutDiagnostics();
+  const axis = signal<'width' | 'height'>('width');
+  const size = signal(90);
+  const direction = signal<'ltr' | 'rtl'>('ltr');
+  const boxes = new Map<string, { x: number; y: number; width: number; height: number; stamp: number }>();
+  const hits: string[] = [];
+  let nextStamp = 1;
+
+  function Probe({ name, style: _style }: { readonly name: string; readonly style: PlacementStyle }) {
+    const box = useLayoutBox();
+    const transform = useCanvasContext().getTransform();
+    const stamp = useConst(() => nextStamp++);
+    boxes.set(name, { x: transform.e, y: transform.f, width: box.width, height: box.height, stamp });
+    return <Rectangle
+      keyboardFocusable
+      onClick={() => hits.push(name)}
+      style={{ width: box.width, height: box.height, fill: '#a63758', cursor: 'pointer' }}
+    />;
+  }
+
+  function Scene() {
+    const ordinary: PlacementStyle = { width: 50, height: 20, minWidth: 0, minHeight: 0, flexGrow: 0, flexShrink: 0 };
+    const absolute: PlacementStyle = axis.get() === 'width' ? {
+      position: 'absolute', left: 12, right: 18, top: 8,
+      width: size.get(), height: 'auto', aspectRatio: 3,
+      minWidth: 0, minHeight: 0, flexGrow: 0, flexShrink: 0,
+    } : {
+      position: 'absolute', right: 18, top: 8, bottom: 10,
+      width: 'auto', height: size.get(), aspectRatio: 3,
+      minWidth: 0, minHeight: 0, flexGrow: 0, flexShrink: 0,
+    };
+    return <Flex style={{
+      width: 204, height: 104, boxSizing: 'border-box',
+      padding: { left: 10, right: 30, top: 20, bottom: 20 }, borderWidth: 2,
+      flexDirection: 'row', flexWrap: 'nowrap', alignItems: 'flex-start', gap: 10,
+      layoutDirection: direction.get(),
+    }}>
+      <Probe key="A" name="A" style={ordinary} />
+      <Probe key="absolute" name="absolute" style={absolute} />
+      <Probe key="C" name="C" style={ordinary} />
+    </Flex>;
+  }
+
+  const canvas = document.createElement('canvas'); canvas.width = 204; canvas.height = 104; document.body.append(canvas);
+  const controller = pibbl(canvas, <Scene />); controllers.push(controller);
+  await nextFrame();
+  expect([...boxes.values()]).toEqual([
+    { x: 12, y: 22, width: 50, height: 20, stamp: 1 },
+    { x: 14, y: 10, width: 90, height: 30, stamp: 2 },
+    { x: 72, y: 22, width: 50, height: 20, stamp: 3 },
+  ]);
+  canvas.focus({ preventScroll: true });
+  clickCanvas(canvas, 20, 15);
+  clickCanvas(canvas, 80, 26); // later C remains topmost in the overlap.
+  expect(hits).toEqual(['absolute', 'C']);
+  const initial = snapshotWasmLayoutDiagnostics();
+
+  direction.set('rtl'); size.set(120);
+  await nextFrame();
+  expect([...boxes.values()]).toEqual([
+    { x: 122, y: 22, width: 50, height: 20, stamp: 1 },
+    { x: 64, y: 10, width: 120, height: 40, stamp: 2 },
+    { x: 62, y: 22, width: 50, height: 20, stamp: 3 },
+  ]);
+  clickCanvas(canvas, 170, 15);
+  clickCanvas(canvas, 70, 26);
+  expect(hits).toEqual(['absolute', 'C', 'absolute', 'C']);
+  const widthDerived = snapshotWasmLayoutDiagnostics();
+  expect(widthDerived.measuredLeaves).toBe(initial.measuredLeaves);
+  expect(widthDerived.nodeCreates).toBe(initial.nodeCreates);
+
+  axis.set('height'); size.set(50);
+  await nextFrame();
+  expect([...boxes.values()]).toEqual([
+    { x: 122, y: 22, width: 50, height: 20, stamp: 1 },
+    { x: 34, y: 10, width: 150, height: 50, stamp: 2 },
+    { x: 62, y: 22, width: 50, height: 20, stamp: 3 },
+  ]);
+  clickCanvas(canvas, 170, 45);
+  clickCanvas(canvas, 70, 26);
+  expect(hits).toEqual(['absolute', 'C', 'absolute', 'C', 'absolute', 'C']);
+  const heightDerived = snapshotWasmLayoutDiagnostics();
+  expect(heightDerived.measuredLeaves).toBe(widthDerived.measuredLeaves);
+  expect(heightDerived.nodeCreates).toBe(initial.nodeCreates);
+  expect([...boxes.values()].map(box => box.stamp)).toEqual([1, 2, 3]);
+
+  controller.dispose();
+  expect(snapshotWasmLayoutDiagnostics().activeNodes).toBe(baseline.activeNodes);
+  expect(snapshotWasmLayoutDiagnostics().cachedMeasurements).toBe(baseline.cachedMeasurements);
+  expect(snapshotWasmLayoutDiagnostics().activeArenas).toBe(baseline.activeArenas);
+});
+
+it.runIf(experimentalLayout)('applies absolute aspect derivation before bounds and lets opposing insets override its automatic axis', async () => {
+  type PlacementStyle = PibblResponsiveStyle<RectStyle & FlexItemStyle>;
+  const mode = signal<'bound' | 'insets'>('bound');
+  const boxes = new Map<string, { x: number; y: number; width: number; height: number }>();
+
+  function Probe({ name, style: _style }: { readonly name: string; readonly style: PlacementStyle }) {
+    const box = useLayoutBox();
+    const transform = useCanvasContext().getTransform();
+    boxes.set(name, { x: transform.e, y: transform.f, width: box.width, height: box.height });
+    return <Rectangle style={{ width: box.width, height: box.height, fill: '#a63758' }} />;
+  }
+
+  function Scene() {
+    const absolute: PlacementStyle = mode.get() === 'bound' ? {
+      position: 'absolute', left: 12, right: 18, top: 8,
+      width: 80, height: 'auto', aspectRatio: 2, minWidth: 100,
+      minHeight: 0, flexGrow: 0, flexShrink: 0,
+    } : {
+      position: 'absolute', left: 12, right: 18, top: 8, bottom: 10,
+      width: 80, height: 'auto', aspectRatio: 2,
+      minWidth: 0, minHeight: 0, flexGrow: 0, flexShrink: 0,
+    };
+    return <Flex style={{
+      width: 204, height: 104, boxSizing: 'border-box',
+      padding: { left: 10, right: 30, top: 20, bottom: 20 }, borderWidth: 2,
+      flexDirection: 'row', flexWrap: 'nowrap', alignItems: 'flex-start',
+    }}>
+      <Probe name="absolute" style={absolute} />
+    </Flex>;
+  }
+
+  const canvas = document.createElement('canvas'); canvas.width = 204; canvas.height = 104; document.body.append(canvas);
+  controllers.push(pibbl(canvas, <Scene />));
+  await nextFrame();
+  // Width clamps from 80 to 100, while height remains the 80 / 2 derivation.
+  expect(boxes.get('absolute')).toEqual({ x: 14, y: 10, width: 100, height: 40 });
+
+  mode.set('insets');
+  await nextFrame();
+  // The explicit top/bottom pair supplies the automatic height instead of aspect ratio.
+  expect(boxes.get('absolute')).toEqual({ x: 14, y: 10, width: 80, height: 82 });
+});

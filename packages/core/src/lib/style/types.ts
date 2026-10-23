@@ -137,7 +137,7 @@ export type FlexMargin = number | Percentage | 'auto';
  * @see {@link PathStyle}
  */
 export interface LayoutItemStyle extends PositioningStyle {
-  /** Positive finite outer width/height ratio consumed by finite Flex, including wrapped lines. Final per-line main size derives cross size before cross bounds; intrinsic main sizing is unsupported. See {@link FlexItemStyle}. */
+  /** Positive finite outer width/height ratio consumed by finite Flex, including wrapped lines. Final per-line main size derives cross size before cross bounds; intrinsic main sizing is unsupported. A documented direct absolute Flex child may derive exactly one automatic outer axis from its declared numeric opposite axis when no opposing inset pair supplies that axis. See {@link FlexItemStyle}. */
   aspectRatio?: number;
   /** Uniform physical margin in logical Canvas units, a percentage of allocated Flex content width, or auto on supported finite Flex axes. Finite negatives are allowed; specific edges override this value. Consumed by experimental Flex only. See {@link LayoutItemStyle}. */
   margin?: FlexMargin;

@@ -754,7 +754,6 @@ function resolveFlexPlacements(
     if (aspectRatio !== undefined && (typeof aspectRatio !== 'number' || !Number.isFinite(aspectRatio) || aspectRatio <= 0)) {
       throw childDiagnostic(child, 'aspectRatio', aspectRatio, container, 'must be a positive finite outer width/height ratio');
     }
-    if (aspectRatio !== undefined) hasAspectRatio = true;
     assertSupportedChildPosition('Flex', child, normalized, true);
     rejectUnsupportedItemFields(child, normalized, container);
     if (normalized.position === 'absolute') {
@@ -770,6 +769,7 @@ function resolveFlexPlacements(
       );
       continue;
     }
+    if (aspectRatio !== undefined) hasAspectRatio = true;
     const layoutChild = isLayoutComponent(child.type) ? prepareLayoutComponent(child, { receiverToken }) : child;
     const knownIntrinsicLayout = child.type === Flex || layoutChild.type === Flow || layoutChild.type === Grid || layoutChild.type === Flex &&
       isColumnDirection(normalized.flexDirection) && (normalized.flexWrap ?? 'nowrap') === 'nowrap';
@@ -1275,8 +1275,8 @@ function resolveAbsoluteFlexPlacement(
   const automaticHeight = style.height === undefined || style.height === 'auto';
   const settledStyle = automaticWidth || automaticHeight ? {
     ...style,
-    width: automaticWidth ? resolveAbsoluteAutoSize(left, right, paddingBox.width, 'width', child, paddingBox) : style.width,
-    height: automaticHeight ? resolveAbsoluteAutoSize(top, bottom, paddingBox.height, 'height', child, paddingBox) : style.height,
+    width: automaticWidth ? resolveAbsoluteAutoSize(left, right, paddingBox.width, 'width', child, paddingBox, style.aspectRatio === undefined ? undefined : (style.height as number) * style.aspectRatio) : style.width,
+    height: automaticHeight ? resolveAbsoluteAutoSize(top, bottom, paddingBox.height, 'height', child, paddingBox, style.aspectRatio === undefined ? undefined : (style.width as number) / style.aspectRatio) : style.height,
   } : style;
   if (automaticWidth || automaticHeight) markDerivedAbsoluteAxes(settledStyle, automaticWidth, automaticHeight);
   const resolved = resolveDirectChildBox(paddingBox, child, 'absolute', settledStyle);
@@ -1307,11 +1307,13 @@ function resolveAbsoluteAutoSize(
   property: 'width' | 'height',
   child: PibblElement<any>,
   container: Readonly<LayoutBox>,
+  aspectSize?: number,
 ): number {
-  if (start === undefined || end === undefined) {
-    throw childDiagnostic(child, property, 'auto', container, 'PIBBL_LAYOUT_UNSUPPORTED_POSITION: automatic absolute size requires both physical insets on its axis');
+  if ((start === undefined || end === undefined) && aspectSize === undefined) {
+    throw childDiagnostic(child, property, 'auto', container, 'PIBBL_LAYOUT_UNSUPPORTED_POSITION: automatic absolute size requires opposing physical insets or one definite aspect-ratio axis');
   }
-  const size = available - start - end;
+  // Opposing insets win; otherwise use the declared opposite axis before bounds.
+  const size = start !== undefined && end !== undefined ? available - start - end : aspectSize!;
   if (!Number.isFinite(size)) {
     throw childDiagnostic(child, property, size, container, 'derived absolute size must remain finite');
   }
@@ -1824,8 +1826,11 @@ function assertSupportedAbsoluteFlexPosition(
       (!automaticHeight && (typeof style.height !== 'number' || !Number.isFinite(style.height) || style.height < 0))) {
     throw childDiagnostic(child, 'position', style.position, container, 'PIBBL_LAYOUT_UNSUPPORTED_POSITION: absolute currently requires finite numeric dimensions or automatic dimensions with opposing physical insets');
   }
-  if ((automaticWidth && (style.left === undefined || style.right === undefined)) ||
-      (automaticHeight && (style.top === undefined || style.bottom === undefined))) {
+  if (style.aspectRatio !== undefined && automaticWidth === automaticHeight) {
+    throw childDiagnostic(child, 'aspectRatio', style.aspectRatio, container, 'PIBBL_LAYOUT_UNSUPPORTED_POSITION: absolute aspectRatio currently requires exactly one automatic axis and one finite numeric axis');
+  }
+  if (style.aspectRatio === undefined && ((automaticWidth && (style.left === undefined || style.right === undefined)) ||
+      (automaticHeight && (style.top === undefined || style.bottom === undefined)))) {
     throw childDiagnostic(child, 'position', style.position, container, 'PIBBL_LAYOUT_UNSUPPORTED_POSITION: automatic absolute size requires both physical insets on its axis');
   }
   if (style.alignSelf !== undefined) {
@@ -1835,7 +1840,7 @@ function assertSupportedAbsoluteFlexPosition(
   validateAbsoluteBound(style.maxWidth, 'maxWidth', child, container);
   validateAbsoluteBound(style.minHeight, 'minHeight', child, container);
   validateAbsoluteBound(style.maxHeight, 'maxHeight', child, container);
-  if (query || style.aspectRatio !== undefined || style.flexBasis !== undefined && style.flexBasis !== 'auto' ||
+  if (query || style.flexBasis !== undefined && style.flexBasis !== 'auto' ||
       (style.flexGrow !== undefined && style.flexGrow !== 0) || (style.flexShrink !== undefined && style.flexShrink !== 0) ||
       style.boxSizing !== undefined || style.padding !== undefined || style.paddingStart !== undefined || style.paddingEnd !== undefined ||
       style.borderWidth !== undefined || style.borderStartWidth !== undefined || style.borderEndWidth !== undefined || hasFlexMargin(style)) {

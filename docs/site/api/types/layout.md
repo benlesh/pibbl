@@ -108,19 +108,25 @@ feature does not provide containing blocks,
 percent-inset resolution, wrapping, or other layout-family support.
 
 Experimental direct row-nowrap Flex children may also select `position: "absolute"`
-with finite numeric width/height, or an automatic/omitted axis paired with
-both finite numeric physical insets on that axis. This excludes the child from
-Flex line allocation while preserving authored paint/target/focus order. Insets reference the parent's inner border edge; padding
+with finite numeric width/height or automatic/omitted axes paired with both
+finite numeric physical insets on each automatic axis. With a positive finite
+`aspectRatio`, exactly one automatic axis may instead derive from the declared
+finite numeric opposite axis. Both-automatic and both-explicit ratio cases remain
+outside this admission. This excludes the child from Flex line allocation while preserving authored
+paint/target/focus order. Insets reference the parent's inner border edge; padding
 does not shift an explicit inset. LTR prefers left, RTL prefers right, and top
 prefers bottom. An axis with no inset uses parent content-box alignment via
 `justifyContent` or `alignItems`; stretch leaves fixed height at cross-start.
 For a paired automatic axis, the remaining padding-box extent after both
-insets becomes the used dimension and a negative remainder clamps to zero; this
-does not invoke intrinsic measurement. Finite numeric min/max bounds then clamp
-fixed or derived axes before physical-inset precedence places them. A numeric
+insets becomes the used dimension and a negative remainder clamps to zero. That
+pair wins over aspect derivation. Otherwise the declared numeric opposite outer
+axis derives the automatic outer axis before bounds. Neither path invokes
+intrinsic measurement. Finite numeric min/max bounds then clamp used axes
+independently before physical-inset precedence places them; bounds do not
+recouple an aspect ratio. A numeric
 minimum above its maximum rejects; percent and automatic bounds remain outside
 this admission. Direct layout children, child box decoration, margins and flex
-factors remain unsupported, along with unpaired automatic sizing and general
+factors remain unsupported, along with unpaired automatic sizing without aspect derivation and general
 nested containing blocks.
 
 ## FlexMargin

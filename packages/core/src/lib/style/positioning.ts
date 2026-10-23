@@ -160,10 +160,11 @@ export interface PositioningStyle extends SystemStyle {
    * keeps the allocated slot and ignores insets; relative offsets final geometry
    * once without moving siblings; absolute stays out of sibling allocation, using
    * the padding box for explicit insets and content alignment for omitted axes.
-   * On the documented finite direct-child path, an automatic absolute width or
-   * height requires opposing numeric physical insets and resolves to their
-   * remaining padding-box extent. Finite numeric min/max bounds clamp fixed or
-   * derived axes before physical-inset precedence selects the final origin; a
+   * On the documented finite direct-child path, automatic absolute axes resolve
+   * from opposing numeric physical insets. With a positive finite aspectRatio,
+   * exactly one automatic axis can instead derive from its declared finite numeric opposite axis.
+   * Opposing insets win. Finite numeric min/max bounds clamp used axes
+   * independently after derivation; a clamp does not recouple aspectRatio, and a
    * numeric minimum above its maximum rejects. In direct declarative Flex chains,
    * static Flex passes the containing box outward while relative Flex owns a local box.
    * Omission retains the legacy local Flex boundary and left/top behavior.

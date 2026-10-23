@@ -79,19 +79,27 @@ navigation. Its ordinary keyed identity and receiver-owned inputs remain active.
 Explicit insets follow Yoga's inner-border/padding-box reference: the left/top
 origin includes the parent border but not its padding. Right/bottom measure from
 the opposite inner border edge. With both horizontal insets, left wins in LTR
-and right wins in RTL; top wins vertically. A width or height may instead be `"auto"` or omitted only when both finite
-physical insets on that axis are supplied. The parent inner-border/padding-box
-extent minus those two insets becomes the finite used dimension; the arithmetic
-must remain finite and a negative remainder clamps to zero. Finite numeric
-`minWidth`, `maxWidth`, `minHeight`, and `maxHeight` then clamp both explicitly
-sized and opposing-inset-derived axes before inset precedence chooses their
-final origin. A contradictory numeric minimum greater than its numeric maximum
+and right wins in RTL; top wins vertically. A width or height may instead be `"auto"` or omitted when either both finite
+physical insets on that axis are supplied, or the opposite axis is explicitly
+finite numeric with a positive finite `aspectRatio`. Opposing insets win for
+their automatic axis: the parent inner-border/padding-box extent minus those
+two insets becomes the finite used dimension. Otherwise Pibbl derives the
+automatic outer dimension from the declared numeric opposite axis before bounds.
+The arithmetic must remain finite and a negative opposing-inset remainder clamps
+to zero. Finite numeric `minWidth`, `maxWidth`, `minHeight`, and `maxHeight`
+then clamp used axes independently before inset precedence chooses the final
+origin. A clamp does not recouple the aspect ratio. A contradictory numeric minimum greater than its numeric maximum
 rejects; Pibbl deliberately preserves this existing validation rather than
 adopting Yoga's minimum-wins behavior. Percent and automatic bounds remain
 unsupported. This derives one placement allocation only—it does not measure the
 child, infer intrinsic size, or add opposite-inset stretch semantics outside
 that bounded axis. Placement is resolved before world transforms, and forwarded
 placement is consumed once.
+
+`aspectRatio` is admitted only with exactly one automatic dimension and one
+explicit finite numeric dimension. Both-automatic and both-explicit ratio cases
+remain unsupported. Without a ratio, both automatic axes may still use their
+own opposing inset pairs.
 
 On an axis without either inset, the fixed child aligns within the parent content
 box instead. Horizontal alignment uses `justifyContent`: start and space-between
@@ -106,7 +114,7 @@ general containing-block selection, Flow/Grid/Layer participation, or a migratio
 the existing `Absolute` convenience component. The first admission excludes
 direct layout-component children, child box decoration, margins, nonnumeric
 or automatic bounds, nonzero flex factors, and responsive style queries. Automatic or
-omitted axes without both physical insets reject explicitly, as do unsupported
+omitted axes without both physical insets or admitted aspect derivation reject explicitly, as do unsupported
 contexts and inset values.
 
 ### Experimental declarative Flex containing blocks

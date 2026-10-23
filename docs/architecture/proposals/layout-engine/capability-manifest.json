@@ -1609,7 +1609,7 @@
         "covers": ["flex.auto-margin", "flex.min-max"]
       }
     ],
-    "limit": "355 records:261 native matches and94 explicitly classified differences. Two custom cross-auto records use an explicit eight-job measurement callback. Two Text cross-auto records use an explicit deterministic measurement callback, not font-rendering parity. Finite evidence remains bounded and does not establish general intrinsic, percentage, auto-margin or CSS parity."
+    "limit": "361 records:267 native matches and94 explicitly classified differences. Two custom cross-auto records use an explicit eight-job measurement callback. Two Text cross-auto records use an explicit deterministic measurement callback, not font-rendering parity. Finite evidence remains bounded and does not establish general intrinsic, percentage, auto-margin or CSS parity."
   },
   "gateGroups": [
     {
@@ -2454,7 +2454,7 @@
       "id": "box.aspect-ratio",
       "target": "parity",
       "group": "box-and-direction",
-      "current": "positive finite FlexItemStyle/ LayoutItemStyle aspectRatio for finite nowrap/wrapped Flex; final per-line outer main derives cross before bounds",
+      "current": "positive finite FlexItemStyle/ LayoutItemStyle aspectRatio for finite nowrap/wrapped Flex; final per-line outer main derives cross before bounds; finite direct row-nowrap absolute exactly-one-auto derives from the declared numeric opposite axis, with opposing-inset priority and independent bounds",
       "status": "experimental",
       "unresolvedPolicy": "Finite Flex outer ratio and cross override/clamp precedence selected from pinned Yoga; intrinsic and other-parent ratio rules remain deferred.",
       "evidenceRefs": [
@@ -2470,7 +2470,8 @@
           "explicit cross and default stretch overridden",
           "combined outer insets and independent cross bounds",
           "numeric definite basis",
-          "row/column wrap and wrap-reverse with owner resize"
+          "row/column wrap and wrap-reverse with owner resize",
+          "slice127: direct absolute one-auto axis, declared-axis derivation before independent bounds, opposing-inset priority"
         ],
         "negative": [
           "nonpositive/nonfinite ratios rejected",
@@ -2490,7 +2491,13 @@
           "aspect-wrap-column",
           "aspect-wrap-column-resized",
           "aspect-wrap-column-reverse",
-          "aspect-wrap-column-reverse-resized"
+          "aspect-wrap-column-reverse-resized",
+          "position-absolute-aspect-width-auto-height-ltr",
+          "position-absolute-aspect-width-auto-height-rtl",
+          "position-absolute-aspect-height-auto-width-ltr",
+          "position-absolute-aspect-height-auto-width-rtl",
+          "position-absolute-aspect-width-bound-ltr",
+          "position-absolute-aspect-height-inset-pair-ltr"
         ],
         "missing": [
           "intrinsic both-auto and cross-to-main inference",
@@ -2564,7 +2571,7 @@
       "id": "position.relative-static-absolute",
       "target": "parity",
       "group": "placement-and-participation",
-      "current": "experimental direct finite row-nowrap Flex static/relative plus absolute participation with fixed or opposing-inset-derived dimensions and axis-wise fixed-size alignment in LTR/RTL; legacy local offsets and dedicated Absolute retained; direct declarative static Flex chains inherit the nearest containing box, relative and legacy omitted Flex establish local boxes; finite numeric absolute min/max clamps fixed and derived sizes before placement",
+      "current": "experimental finite row-nowrap Flex static/relative and absolute placement in LTR/RTL, fixed/opposing-inset/aspect-derived absolute dimensions, numeric bounds, axis-wise fixed alignment and declarative static containing chains; omitted-position legacy retained",
       "status": "experimental",
       "unresolvedPolicy": "Intrinsic absolute sizing, explicit containing-block overrides, opaque/transformed ancestry and wider layout admission remain open.",
       "evidence": {
@@ -2575,7 +2582,8 @@
           "packages/core/test/layout-absolute-participation.test.tsx: source-order absolute participation, known preflight and explicit intrinsic exclusion",
           "slice124: public direct and forwarded automatic dimensions, resize, finite-before-clamp validation, zero-size precedence; installed absoluteDerivedSize receipt",
           "slice125: direct static chains, relative reset, legacy omitted ownership, decorated ancestor resize; installed absoluteContainingBlock receipt",
-          "slice126: fixed/derived numeric absolute bounds, resize, RTL precedence and rejection of invalid/contradictory bounds; installed absoluteBounds receipt"
+          "slice126: fixed/derived numeric absolute bounds, resize, RTL precedence and rejection of invalid/contradictory bounds; installed absoluteBounds receipt",
+          "slice127: exactly-one-auto absolute aspect derivation before bounds, opposing inset precedence and no measurement; installed absoluteAspect receipt"
         ],
         "negative": [
           "packages/core/test/layout-positioning-diagnostics.test.tsx: unsupported contexts and unmoded opposite insets"
@@ -2618,7 +2626,13 @@
           "position-absolute-bounds-auto-ltr",
           "position-absolute-bounds-auto-rtl",
           "position-absolute-bounds-fixed-ltr",
-          "position-absolute-bounds-fixed-rtl"
+          "position-absolute-bounds-fixed-rtl",
+          "position-absolute-aspect-width-auto-height-ltr",
+          "position-absolute-aspect-width-auto-height-rtl",
+          "position-absolute-aspect-height-auto-width-ltr",
+          "position-absolute-aspect-height-auto-width-rtl",
+          "position-absolute-aspect-width-bound-ltr",
+          "position-absolute-aspect-height-inset-pair-ltr"
         ],
         "missing": [
           "absolute intrinsic dimensions",
