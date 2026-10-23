@@ -2,8 +2,9 @@
 
 ## Current checkpoint and single next slice — 2026-10-23
 
-Latest delivery is slice141 `187bec28` (static/relative primitive leaves across wrapped Flex).
-Consolidation47 is this commit for139–141.
+Latest delivery is slice142 (wrapped absolute omitted-axis alignment; this commit).
+Slice141 is `187bec28` (static/relative primitive leaves across wrapped Flex).
+Consolidation47 is `4afb3c84` for139–141.
 Slice140 is `a2308b97` (physically anchored absolute profiles across wrapped Flex).
 Slice139 is `f79b258f` (unwrapped Text natural height and both-auto ink dimensions).
 Slice138 is `b84f5322` (unwrapped Text natural absolute width).
@@ -103,7 +104,7 @@ Slice55 is `1510efe3` (prepared Grid-root planning/adoption).
 Slice54 `773da7b9`,53 `aaa7ddcb`,52 `b5381e0d` are consolidated in `f322a709`.
 Every slice has its own commit. The fixed33-capability/seven-gate denominator is
 unchanged; all seven gates remain open. Earlier checkpoints are recorded below.
-Current corpus:557 records:423 geometry matches,126 preserved-semantic comparisons and8 classified native font-source comparisons. Nine recorded column-width queries deliberately differ (five custom providers, four Text).
+Current corpus:621 records:487 geometry matches,126 preserved-semantic comparisons and8 classified native font-source comparisons. Nine recorded column-width queries deliberately differ (five custom providers, four Text).
 The concise public lesson retains5 cases; the complete corpus is private testing
 input. Current runnable source/built comparison:
 `http://127.0.0.1:5192/#/testing/layout-yoga-migration` and port5193.
@@ -4095,12 +4096,39 @@ represent runtime failures. Final docs109 mutation probes and public JSDoc passe
 Logs `/tmp/pibbl-consolidation47-{focused,normal,docs}.txt`. No kernel, fixed33
 capability status, release-gate or Node24 aggregate trust change is claimed.
 
-## [NEXT] Wrapped absolute omitted-axis alignment (142)
+## Slice142 delivered: wrapped absolute omitted-axis alignment
 
-Investigate native wrapped absolute static-position/alignment behavior and existing
-Pibbl main/cross alignment before relaxing the per-axis anchor guard. Pin mixed
-anchored/unanchored axes and direction/wrap policy with a public RED; retain all
-existing size/provider/Text/containing restrictions. Consolidation47 is complete.
+All previously admitted absolute sizing profiles now support omitted placement
+axes in finite wrap/wrap-reverse Flex. Anchored axes use physical padding-box
+insets and existing precedence; omitted axes align in the whole content box with
+main justifyContent/cross alignItems. Main reversal/row RTL retain prior behavior;
+wrap-reverse reverses only omitted cross alignment and combines with column RTL.
+Flow lines/alignContent do not supply a source-slot static position. Existing
+sizing, no-query/decorations/margins, containing-owner and cleanup boundaries hold.
+
+Public RED failed on the former anchor guard before runtime edits. Focused5files
+passed75/2skip77, including all directions/anchors, cross stretch/logical policies,
+main distribution policies and exact bounds/pair/aspect/provider/Text omitted-axis
+placement. Text origins use real Canvas ink metrics. Source and built each passed
+64 native geometry matches with227inputs and zero cleanup/errors. Two proven
+right-bottom fixtures fully cover absolute B with later-source C; exact geometry
+and overlap targeting still verify their occlusion. The final screenshot was
+inspected. Latest navigation passed1/413skip414. Scoped review found no material
+issue. Fresh installed package passed245inputs, strict Bundler/NodeNext,64wrapped
+alignment states, identity/paint reuse/input/cleanup and104 auto-margin cases.
+Tarball SHA256 `73b9522bd3bd6d5cbcb4679a815c3737524f9264524ecc371e98e1965951cbe3`.
+Docs109 mutation probes/JSDoc passed; final normal44/33skip77, types, changed
+lint and public5/full621 boundary passed. Logs `/tmp/pibbl-slice142-{public-red,focused-final,normal-final,latest,source,built,packed,types-final,lint-final,docs,boundary}.txt`.
+Corpus621 is487matches/126preserved-semantic/8font-source; nine query differences
+remain separate. No full621-case replay, kernel/ABI change, font parity, speed,
+Node24 aggregate trust or release-gate completion is claimed. Fixed33 unchanged.
+
+## [NEXT] Physical percentage absolute insets (143)
+
+Use the existing Length surface; pin per-axis percentage reference boxes, inset
+precedence, negative/overflow arithmetic, derived sizing and containing inheritance
+before implementation. Preserve relative offsets and all unrelated sizing/owner
+boundaries. Consolidate142–144 after the third separately committed slice.
 
 ### Finite positioning exit matrix after134
 

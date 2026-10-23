@@ -85,23 +85,21 @@ describe('bounded direct-Flex absolute admission', () => {
     ['Overlay', <Overlay style={{ width: 200, height: 100 }}><Rectangle style={fixed} /></Overlay>],
     ['Flow', <Flow style={{ width: 200, height: 100 }}><Rectangle style={fixed} /></Flow>],
     ['Grid', <Grid style={{ width: 200, height: 100, gridTemplateColumns: [200], gridTemplateRows: [100] }}><Rectangle style={fixed} /></Grid>],
-    ['unanchored wrap-reverse', <Flex style={{ width: 200, height: 100, flexWrap: 'wrap-reverse' }}><Rectangle style={{ ...fixed, top: undefined }} /></Flex>],
-    ['unanchored RTL wrap', <Flex style={{ width: 200, height: 100, flexWrap: 'wrap', layoutDirection: 'rtl' }}><Rectangle style={{ ...fixed, top: undefined }} /></Flex>],
-    ['unanchored reversed wrap', <Flex style={{ width: 200, height: 100, flexDirection: 'row-reverse', flexWrap: 'wrap' }}><Rectangle style={{ ...fixed, top: undefined }} /></Flex>],
+    ['wrapped layout owner wrap-reverse', <Flex style={{ width: 200, height: 100, flexWrap: 'wrap-reverse' }}><Flex style={fixed}>{null}</Flex></Flex>],
+    ['wrapped layout owner RTL', <Flex style={{ width: 200, height: 100, flexWrap: 'wrap', layoutDirection: 'rtl' }}><Flex style={fixed}>{null}</Flex></Flex>],
+    ['wrapped layout owner reversed', <Flex style={{ width: 200, height: 100, flexDirection: 'row-reverse', flexWrap: 'wrap' }}><Flex style={fixed}>{null}</Flex></Flex>],
     ['layout child', <Flex style={{ width: 200, height: 100 }}><Flex style={fixed}>{null}</Flex></Flex>],
   ] as const)('rejects absolute participation in %s outside the bounded contract', (_name, node) => {
-    expect(mount(node)).toThrow(!experimentalLayout && (_name === 'unanchored wrap-reverse' || _name === 'unanchored RTL wrap' || _name === 'unanchored reversed wrap')
+    expect(mount(node)).toThrow(!experimentalLayout && (_name === 'wrapped layout owner wrap-reverse' || _name === 'wrapped layout owner RTL' || _name === 'wrapped layout owner reversed')
       ? /uses an unsupported flex/ : 'PIBBL_LAYOUT_UNSUPPORTED_POSITION');
   });
   it.runIf(experimentalLayout).each([
     ['unpaired automatic width', { ...fixed, width: 'auto' as const }],
-    ['missing horizontal anchor', { ...fixed, left: undefined }],
-    ['missing vertical anchor', { ...fixed, top: undefined }],
     ['nonfinite horizontal anchor', { ...fixed, left: Infinity }],
     ['percentage horizontal anchor', { ...fixed, left: '10%' as const }],
     ['both-auto aspect', { ...fixed, width: 'auto' as const, height: 'auto' as const, aspectRatio: 2 }],
-  ])('keeps wrapped absolute %s outside anchored admission', (_name, style) => {
-    expect(mount(<Flex style={{ width: 200, height: 100, flexWrap: 'wrap' }}><Rectangle style={style} /></Flex>)).toThrow('PIBBL_LAYOUT_UNSUPPORTED_POSITION');
+  ])('keeps unsupported wrapped absolute %s diagnosed', (_name, style) => {
+    expect(mount(<Flex style={{ width: 200, height: 100, flexWrap: 'wrap' }}><Rectangle style={style} /></Flex>)).toThrow(_name.includes('horizontal anchor') ? 'currently requires a finite numeric absolute inset' : 'PIBBL_LAYOUT_UNSUPPORTED_POSITION');
   });
   it.runIf(!experimentalLayout)('rejects column absolute participation in the normal runtime', () => {
     expect(mount(<Flex style={{ width: 200, height: 100, flexDirection: 'column' }}><Rectangle style={fixed} /></Flex>)).toThrow('PIBBL_LAYOUT_UNSUPPORTED_POSITION');

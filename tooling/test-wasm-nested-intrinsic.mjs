@@ -148,6 +148,7 @@ try {
       assert.equal(receipt.absoluteTextBoth, true, 'Installed plain unwrapped Text must measure one both-auto natural ink box, remeasure owned text metrics, reuse sibling paint, and release exactly');
       assert.equal(receipt.absoluteTextBothFontMetrics, 'actual-canvas-ink-bounds', 'Installed both-auto Text proof must use host Canvas ink metrics, not synthetic native font parity');
       assert.equal(receipt.absoluteAnchoredWrap, true, 'Installed anchored wrapped absolute boxes must remain physical across all wrap directions, preserve flow identity and collapse lines on resize');
+      assert.equal(receipt.absoluteWrappedAlignment, true, 'Installed fixed wrapped absolute leaves must align omitted axes through main and wrap-reversed cross directions while preserving source focus, hit order, identity, paint reuse and cleanup');
       assert.equal(receipt.absoluteAnchoredWrapTextBoth, true, 'Installed anchored wrapped context must admit both-auto Text using actual Canvas ink dimensions');
       assert.equal(receipt.absoluteAnchoredWrapTextMetrics, 'actual-canvas-ink-bounds', 'Installed wrapped both-auto Text proof must not claim synthetic font parity');
       assert.equal(receipt.absoluteTextWidth, true, 'Installed Text must measure one automatic absolute width from actual Canvas ink bounds, preserve its physical right anchor across nowrap directions, and clean up exactly');

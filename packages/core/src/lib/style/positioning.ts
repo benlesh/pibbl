@@ -164,8 +164,9 @@ export interface PositioningStyle extends SystemStyle {
    * omitted or automatic basis; physical offsets retain their sign through main reversal. Absolute stays out of sibling allocation, using
    * the padding box for explicit insets and content alignment for omitted axes.
    * Fixed numeric and admitted automatic absolute profiles support all main directions
-   * and RTL, with numeric bounds applied before anchoring. Wrapped allocations
-   * require a finite numeric physical anchor on each axis; no-inset alignment stays nowrap.
+   * and RTL, with numeric bounds applied before placement. In every wrapping mode,
+   * omitted axes use whole-content main/cross alignment; wrap-reverse reverses
+   * omitted cross alignment and combines with column RTL exactly once.
    * Paired natural providers keep their exact/unbounded query in every admitted direction.
    * Direct wrapped Text with a generic pixel font and visible fit/overflow may
    * measure automatic height at declared numeric width through the same owned query.

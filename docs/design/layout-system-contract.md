@@ -80,18 +80,21 @@ JavaScript Flex support.
 
 A finite experimental Flex also accepts a direct child with
 `position: "absolute"` and finite numeric or admitted automatic dimensions.
-Physical insets are optional in nowrap allocations. The child leaves line allocation:
+Physical insets are optional in every admitted finite wrapping mode. The child leaves line allocation:
 its width, height and flex factors do not consume a sibling slot or an extra gap.
 It remains at its authored position in paint order, pointer targeting and focus
 navigation. Its ordinary keyed identity and receiver-owned inputs remain active.
 
-In `wrap` and `wrap-reverse` allocations, each absolute axis must have at least
-one finite numeric physical anchor (`left` or `right`, and `top` or `bottom`).
-With both axes anchored, all four main directions and LTR/RTL reuse the same
+All four main directions, LTR/RTL and nowrap/wrap/wrap-reverse reuse the same
 fixed/bounded, opposing-inset, aspect, paired-provider and admitted Text sizing
-profiles described below. Both placement axes use physical inset branches, so
-this adds no wrapped no-inset alignment/static-position policy. Existing neutral
-flex, no-margin/child-decoration, no-query and direct-child restrictions remain.
+profiles described below. Each anchored axis uses physical padding-box insets.
+An omitted axis uses the whole container content box: `justifyContent` on the
+main axis and `alignItems` on the cross axis, independent of individual flow
+lines and `alignContent`. Main reversal and row RTL reverse main alignment;
+wrap-reverse reverses cross alignment, combined with column RTL exactly once.
+Existing neutral flex, no-margin/child-decoration, no-query and direct-child
+restrictions remain. This is explicit container alignment, not a source-slot
+static-position contribution or a new containing-block system.
 Owner resizing changes ordinary flow lines without reparenting absolute leaves.
 
 Explicit insets follow Yoga's inner-border/padding-box reference: the left/top
@@ -120,17 +123,18 @@ remain unsupported. Without a ratio, both automatic axes may still use their
 own opposing inset pairs.
 
 Fixed finite numeric and opposing-inset automatic absolute boxes participate in
-all four experimental main directions and LTR/RTL in nowrap or physically anchored wrapped allocations. Numeric bounds clamp
+all four experimental main directions and LTR/RTL in every admitted wrapping mode. Numeric bounds clamp
 fixed and derived axes before anchoring in every direction. Aspect derivation uses the declared opposite dimension in every direction.
-Paired natural provider measurement also supports every finite nowrap main
+Paired natural provider measurement also supports every finite main/wrapping
 direction; it retains the same direction-independent Pibbl query contract. No intrinsic query is needed for opposing-inset sizing.
 
-In nowrap allocations, on an axis without either inset, the fixed child aligns within the parent content
+On an axis without either inset, the settled child aligns within the parent content
 box instead. `justifyContent` controls the main axis: flex-start and space-between
 use main-start, flex-end uses main-end, and center/space-around/space-evenly center.
 `alignItems` controls the cross axis; stretch keeps the declared size at
-cross-start. Main reversal and horizontal RTL each apply once. Thus column-reverse
-starts at the bottom, while RTL columns use the right edge as cross-start.
+cross-start. Main reversal and horizontal RTL each apply once. Wrap-reverse
+reverses cross alignment, combined with column RTL. Thus column-reverse starts at
+the bottom, while RTL columns in ordinary wrap/nowrap use the right edge as cross-start.
 Logical start/end retain their existing direction-independent meaning. Center and
 end retain offsets when the child exceeds the content dimension. Physical insets
 and their precedence do not change with main direction. An inset on one axis does
@@ -148,7 +152,7 @@ contexts and inset values.
 
 In a finite Flex of any main direction, a direct custom primitive with paired pure
 `measureIntrinsic` and `measure` providers may use exactly one automatic or omitted absolute dimension
-with an explicit finite numeric opposite dimension. Wrapped allocations require a physical anchor on each axis. Opposing insets on the
+with an explicit finite numeric opposite dimension. Omitted placement axes use content alignment. Opposing insets on the
 automatic axis and admitted aspect derivation retain their existing precedence.
 Otherwise the parent calls `measure` with one of these callback envelopes:
 
@@ -175,7 +179,7 @@ component. Both-auto custom-provider sizing, broader Text/font or image intrinsi
 and child decoration remain outside this admission.
 
 Direct built-in `Text` may use automatic or omitted absolute height at a declared
-finite numeric width in every finite main direction, with both axes physically anchored when wrapping. It requires `wrap: true`,
+finite numeric width in every admitted main direction and wrapping mode. It requires `wrap: true`,
 a generic pixel font, and omitted/visible `fit` and `overflow`. The existing Text
 provider measures real Canvas text at exact declared width and unbounded height;
 a measurement-only copy omits automatic height, while final settlement retains
