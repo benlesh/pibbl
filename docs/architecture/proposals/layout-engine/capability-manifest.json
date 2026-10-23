@@ -2758,18 +2758,36 @@
       "id": "integration.source-order-canvas",
       "target": "preserve",
       "group": "reactivity-and-publication",
-      "current": "present",
-      "status": "partial",
+      "current": "source paint, topmost coordinate targeting and source keyboard order preserved through finite reverse/RTL Flex, translated Group, retained Layer and filter capture composition",
+      "status": "complete",
       "evidenceRefs": [
         "docs/design/layout-system-contract.md",
-        "tooling/test-wasm-nested-intrinsic.mjs"
+        "packages/core/test/layout-wasm-slice.test.tsx",
+        "packages/core/test/filter-ownership.test.ts",
+        "packages/scenarios/src/learning/layout/wasm-flex-keyed-wrap.example.tsx",
+        "tooling/test-wasm-wrapped-collections.mjs",
+        "tooling/packed-layout-consumer.mjs",
+        "tooling/test-wasm-nested-intrinsic.mjs",
+        "docs/project-plans/010-layout-engine-rework.md"
       ],
       "evidence": {
-        "positive": ["source-order hit handling"],
-        "negative": [],
-        "interaction": ["moved targets"],
+        "positive": [
+          "source-order hit handling and Canvas paint remain independent of reverse/RTL spatial placement",
+          "Group translation, retained Layer and opacity-filter composition preserve later-source B over A",
+          "source and installed proofs cover filter-inside-Layer and filter-outside-Layer nesting"
+        ],
+        "negative": [
+          "pointerEvents none preserves B paint while the same overlap point targets A",
+          "disposed targets no longer receive clicks"
+        ],
+        "interaction": [
+          "world positions2/42 to42/2 to2/42 across row, row-reverse and RTL retain keyed stamps/native nodes",
+          "source Tab/Shift-Tab order and focused identity remain stable across geometry changes",
+          "paint-only updates change filtered content without another native numeric solve",
+          "source/built complete wrapped-collection and composition replay, installed245inputs with strict consumer types, exact disposal and fresh filter ownership test"
+        ],
         "yogaCases": [],
-        "missing": ["reverse/RTL proof", "Group/Layer/filter preservation"]
+        "missing": []
       }
     },
     {

@@ -2,8 +2,9 @@
 
 ## Current checkpoint and single next slice — 2026-10-23
 
-Latest delivery is slice108 `35eef93b` (wrapped-row measured Text cross-auto sizing).
-Consolidation36 passes for106–108, recorded below.
+Latest delivery is slice109 (source-order Canvas composition evidence).
+Slice108 is `35eef93b` (wrapped-row measured Text cross-auto sizing).
+Consolidation36 is `ac070c0c` for106–108.
 Slice107 is `7b599250` (automatic-width Text cross-auto sizing).
 Slice106 is `33832012` (measured built-in Flex owner cross-auto sizing).
 Slice105 is `931ecc2f` (measured custom primitive cross-auto sizing).
@@ -2798,17 +2799,48 @@ native unit run claimed. Node26.9.0/pnpm11.21.0deps/Chromium/macOSarm64; no Node
 aggregate trust or controlled performance claim. Fixed33 counts remain5complete/
 11experimental/8partial/8missing/1excluded; all7release gates remain open.
 
-## [NEXT] Source-order Canvas composition evidence (slice 109)
+## Delivered source-order Canvas composition evidence (slice 109)
 
-Address the fixed `integration.source-order-canvas` entry's remaining reverse/RTL
-and Group/Layer/filter preservation evidence. Use a public overlapping layout
-whose later source child remains the top painted and hit target as spatial
-positions mirror, including nontrivial composition. Preserve source keyboard
-order and keyed identity; decorative opt-out must change targeting without
-changing paint. Prove resource ownership and source/built/installed surfaces.
-Inspect existing passing behavior first: this may be an evidence-only slice,
-not a production change. Do not claim capability completion until its stated
-missing evidence is covered. Consolidate109–111 afterward; final whole-codebase
+Evidence-only: existing runtime preserves source paint, topmost coordinate target
+and source keyboard traversal through finite reversed/RTL Flex, translated Group,
+retained Layer and opacity filtering. No production code, public API, native ABI
+or binary change. The public100×30 overlap changes keyed A/B world x2/42→42/2→2/42;
+B paints last and remains the overlap target. B pointer opt-out preserves paint
+while selecting A underneath. Tab/Shift-Tab order and focused keys survive
+geometry changes; changed B paint reuses native solves and identities.
+
+Fresh focused3tests pass/401skipped404, plus the normal-build filter ownership
+stress test1pass. Reference Canvas direct-alpha composition allows only one RGB
+byte for filtered intermediate premultiplication quantization; alpha/geometry/
+targets remain exact. No baseline rewrites or manufactured production RED.
+Source/built complete wrapped-collection plus composition controls replay passes,
+built469inputs; pagehide releases node/arena/measurement/instance ownership to0
+and remains inert. Installed composition receipt and prior104auto+24direction
+cases pass with245distinputs/strict Bundler/NodeNext. Added public filters import
+accounts for the consumer's additional used modules; tarball unchanged at
+`6ccf53d136422d04d974fa7a34a4356f91298d4f77c6387c85f6b6b632417b4b`.
+Filter-inside-Layer and filter-outside-Layer are independently exercised. Fresh
+types/lint/docs109RED/JSDoc/catalog/discovery pass. Scoped audit found the entry's
+stated reverse/RTL and Group/Layer/filter evidence complete, with no material gap.
+
+`integration.source-order-canvas` is complete for this preservation contract.
+Fixed33 now6complete/11experimental/7partial/8missing/1excluded; all7gates remain
+open. Native corpus307=213matches+94classified and v5/68649bytes unchanged.
+Node26.9.0; no Node24 aggregate trust or controlled performance claim.
+Source: http://127.0.0.1:5192/#/examples/layout/wasm-flex-keyed-wrap — Composition
+order, Flip axes, LTR/RTL and B target. The original checkout remains untouched.
+
+## [NEXT] Unrounded logical geometry policy and evidence (slice 110)
+
+Apply the already-selected unrounded logical geometry policy from the approved
+layout design, with Yoga point scale0 as the oracle. Canvas backing-size rounding
+and density transforms remain raster concerns, without a public point-scale API
+or positive Yoga pixel-grid parity claim. Prove fractional density, negative/
+fractional/large nested edges, public logical boxes and pointer/focus inversion
+across Group/Layer boundaries; avoid antialiased pixel equality. Close the fixed
+rounding entry only for that stated policy after source/built/installed/native
+scale0 evidence. Deterministic real-root loading cancellation/failure cleanup is
+the next inspected ownership gap. Consolidate109–111 after111; final whole-codebase
 review stays at full program end.
 
 ### Consolidation 24 completed for delivery slices 70–72

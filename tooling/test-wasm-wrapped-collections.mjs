@@ -112,6 +112,77 @@ try {
   }
   const painted = await click(496,118);
   assert.equal(painted.layout.solves, restored.layout.solves); assert.equal(painted.layout.lineFormations, restored.layout.lineFormations);
+
+  // The optional composition mode uses the same reverse/RTL controls but has two
+  // overlapping keyed targets. B remains later in source paint and focus order
+  // while its pixels pass through a translated Group, retained Layer, and filter.
+  const beforeComposition = await state();
+  if (beforeComposition.reverseAxes) await click(660,118);
+  if (beforeComposition.layoutDirection !== 'ltr') await click(664,156);
+  const composition = await click(500,78);
+  assert.equal(composition.composition.mode, true);
+  assert.deepEqual(composition.composition.boxes['composition:A'], { x: 30, y: 230, width: 60, height: 30, stamp: composition.composition.boxes['composition:A'].stamp });
+  assert.deepEqual(composition.composition.boxes['composition:B'], { x: 70, y: 230, width: 60, height: 30, stamp: composition.composition.boxes['composition:B'].stamp });
+  const compositionStamps = {
+    A: composition.composition.boxes['composition:A'].stamp,
+    B: composition.composition.boxes['composition:B'].stamp,
+  };
+  const compositionPixel = async (value) => frame.locator('canvas').evaluate((canvas, { basis, fill }) => {
+    const reference = document.createElement('canvas'); reference.width = 1; reference.height = 1;
+    const expectedContext = reference.getContext('2d');
+    expectedContext.fillStyle = '#19375b'; expectedContext.fillRect(0, 0, 1, 1);
+    expectedContext.globalAlpha = 0.5; expectedContext.fillStyle = fill; expectedContext.fillRect(0, 0, 1, 1);
+    const x = Math.floor(basis.a * 80 + basis.c * 235 + basis.e);
+    const y = Math.floor(basis.b * 80 + basis.d * 235 + basis.f);
+    const actual = [...canvas.getContext('2d').getImageData(x, y, 1, 1).data];
+    const expected = [...expectedContext.getImageData(0, 0, 1, 1).data];
+    return { actual, expected };
+  }, { basis: value.composition.rootBasis, fill: value.composition.bFill });
+  const assertCompositionPixel = async (value) => {
+    const { actual, expected } = await compositionPixel(value);
+    for (let index = 0; index < 3; index++) assert.ok(Math.abs(actual[index] - expected[index]) <= 1, `composition RGB channel ${index}: ${actual[index]} !== ${expected[index]}`);
+    assert.equal(actual[3], expected[3], 'composition alpha must remain exact');
+  };
+  await assertCompositionPixel(composition);
+  await frame.locator('canvas').focus(); await page.waitForTimeout(180);
+  assert.equal((await state()).composition.focus, 'A');
+  await frame.locator('canvas').press('Tab'); await page.waitForTimeout(180);
+  assert.equal((await state()).composition.focus, 'B');
+  let compositionHit = await click(80,235);
+  assert.deepEqual(compositionHit.composition.hits, ['B']);
+
+  const compositionReverse = await click(660,118);
+  assert.deepEqual([compositionReverse.composition.boxes['composition:A'].x, compositionReverse.composition.boxes['composition:B'].x], [70, 30]);
+  assert.equal(compositionReverse.composition.boxes['composition:A'].stamp, compositionStamps.A);
+  assert.equal(compositionReverse.composition.boxes['composition:B'].stamp, compositionStamps.B);
+  await assertCompositionPixel(compositionReverse);
+  compositionHit = await click(80,235);
+  assert.deepEqual(compositionHit.composition.hits, ['B', 'B']);
+
+  const compositionRtl = await click(664,156);
+  assert.equal(compositionRtl.layoutDirection, 'rtl');
+  assert.deepEqual([compositionRtl.composition.boxes['composition:A'].x, compositionRtl.composition.boxes['composition:B'].x], [30, 70]);
+  assert.equal(compositionRtl.composition.boxes['composition:A'].stamp, compositionStamps.A);
+  assert.equal(compositionRtl.composition.boxes['composition:B'].stamp, compositionStamps.B);
+  await assertCompositionPixel(compositionRtl);
+  compositionHit = await click(80,235);
+  assert.deepEqual(compositionHit.composition.hits, ['B', 'B', 'B']);
+
+  const disabledTarget = await click(660,78);
+  assert.equal(disabledTarget.composition.targets, false);
+  await assertCompositionPixel(disabledTarget);
+  compositionHit = await click(80,235);
+  assert.deepEqual(compositionHit.composition.hits, ['B', 'B', 'B', 'A']);
+
+  const beforeCompositionPaint = await state();
+  const compositionPainted = await click(496,118);
+  assert.equal(compositionPainted.composition.bFill, '#426b61');
+  assert.equal(compositionPainted.layout.solves, beforeCompositionPaint.layout.solves);
+  assert.equal(compositionPainted.layout.nodeCreates, beforeCompositionPaint.layout.nodeCreates);
+  assert.equal(compositionPainted.composition.boxes['composition:A'].stamp, compositionStamps.A);
+  assert.equal(compositionPainted.composition.boxes['composition:B'].stamp, compositionStamps.B);
+  await assertCompositionPixel(compositionPainted);
+
   if (process.env.PIBBL_LAYOUT_SCREENSHOT) await frame.locator('canvas').screenshot({ path: process.env.PIBBL_LAYOUT_SCREENSHOT });
   const sandbox = page.frames().find(item => item.url() === 'about:srcdoc');
   const proof = await sandbox.evaluate(() => globalThis.__PIBBL_BUILT_LAYOUT_PROOF__);

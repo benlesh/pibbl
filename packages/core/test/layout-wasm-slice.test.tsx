@@ -2,6 +2,7 @@ import { WasmFlexIntrinsicWrapExample } from '../../scenarios/src/learning/layou
 import yogaReference from '../../../tooling/layout-yoga-rehearsal/reference.json';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { createElement, Absolute, Overlay, Flex, Grid, Flow, Group, Clip, Text, Rectangle, FocusManagement, useCanvasContext, measureElement, useLayoutBox, useConst, Layer, signal, computed, type PibblNode, type PibblNodeInput, type GridStyle, type FlexStyle, type RectStyle, type BoxStyle, type FlexItemStyle, defineLayoutComponent, definePrimitive } from '@pibbl/core';
+import { opacity } from '@pibbl/core/filters';
 import { pibblSync as pibbl } from '@pibbl/core/sync';
 import { prepareLayoutEngineSync } from '../src/lib/layout/wasm/embedded';
 import { WasmFlexTextExample as mountWasmFlexTextComponent } from "../../scenarios/src/learning/layout/wasm-flex-text.example";
@@ -3314,6 +3315,141 @@ it.runIf(experimentalLayout)('preserves source paint and topmost hit order when 
   expect(disposed.cachedMeasurements).toBe(baseline.cachedMeasurements);
 });
 
+
+
+it.runIf(experimentalLayout)('preserves source paint, targets, focus, and Layer-filter composition while reverse and RTL mirror overlap', async () => {
+  const baseline = snapshotWasmLayoutDiagnostics();
+  const direction = signal<'ltr' | 'rtl'>('ltr');
+  const flexDirection = signal<'row' | 'row-reverse'>('row');
+  const bTargets = signal(true);
+  const bFill = signal('#a63758');
+  const boxes = new Map<string, { x: number; y: number; stamp: number }>();
+  const focused: string[] = [];
+  const hits: string[] = [];
+  let serial = 0;
+
+  function Panel({ name, style: _style }: { name: 'A' | 'B'; style: RectStyle }) {
+    const stamp = useConst(() => ++serial);
+    const box = useLayoutBox();
+    const transform = useCanvasContext().getTransform();
+    boxes.set(name, { x: transform.e + 2, y: transform.f, stamp });
+    const content = <Rectangle
+      keyboardFocusable
+      pointerEvents={name === 'B' && !bTargets.get() ? 'none' : 'auto'}
+      onFocus={() => focused.push(name)}
+      onClick={() => hits.push(name)}
+      style={{ width: box.width, height: box.height, fill: name === 'A' ? '#19375b' : bFill.get() }}
+    />;
+    return <Group style={{ translateX: 2 }}>{name === 'B'
+      ? <Layer style={{ width: box.width, height: box.height }}><Group style={{ filter: opacity({ amount: 0.5 }) }}>{content}</Group></Layer>
+      : content}
+    </Group>;
+  }
+
+  function Scene() {
+    return <FocusManagement><Flex style={{
+      width: 100,
+      height: 30,
+      flexDirection: flexDirection.get(),
+      layoutDirection: direction.get(),
+      alignItems: 'flex-start',
+    }}>
+      <Panel key="A" name="A" style={{ width: 60, height: 30, minWidth: 0, flexShrink: 0, fill: '#19375b' }} />
+      <Panel key="B" name="B" style={{ width: 60, height: 30, minWidth: 0, flexShrink: 0, marginStart: -20, marginEnd: -20, fill: '#a63758' }} />
+    </Flex></FocusManagement>;
+  }
+
+  const canvas = document.createElement('canvas');
+  canvas.width = 100;
+  canvas.height = 30;
+  document.body.append(canvas);
+  const reference = document.createElement('canvas');
+  reference.width = 1;
+  reference.height = 1;
+  const expectedPixel = (fill: string) => {
+    const context = reference.getContext('2d')!;
+    context.clearRect(0, 0, 1, 1);
+    context.fillStyle = '#19375b';
+    context.fillRect(0, 0, 1, 1);
+    context.globalAlpha = 0.5;
+    context.fillStyle = fill;
+    context.fillRect(0, 0, 1, 1);
+    context.globalAlpha = 1;
+    return [...context.getImageData(0, 0, 1, 1).data];
+  };
+  const expectOverlapPixel = (fill: string) => {
+    const actual = [...canvas.getContext('2d')!.getImageData(52, 10, 1, 1).data];
+    const expected = expectedPixel(fill);
+    // The filtered intermediate bitmap can quantize RGB one byte differently
+    // from direct globalAlpha compositing. Alpha and source order stay exact.
+    for (let channel = 0; channel < 3; channel++) expect(Math.abs(actual[channel] - expected[channel])).toBeLessThanOrEqual(1);
+    expect(actual[3]).toBe(expected[3]);
+  };
+  const controller = pibbl(canvas, <Scene />);
+  controllers.push(controller);
+  await nextFrame();
+
+  expect([boxes.get('A'), boxes.get('B')]).toEqual([{ x: 2, y: 0, stamp: 1 }, { x: 42, y: 0, stamp: 2 }]);
+  expectOverlapPixel('#a63758');
+  canvas.focus({ preventScroll: true });
+  expect(focused).toEqual(['A']);
+  canvas.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', code: 'Tab', bubbles: true, cancelable: true }));
+  expect(focused).toEqual(['A', 'B']);
+  clickCanvas(canvas, 52, 10);
+  expect(hits).toEqual(['B']);
+
+  const mounted = snapshotWasmLayoutDiagnostics();
+  bTargets.set(false);
+  await nextFrame();
+  expectOverlapPixel('#a63758');
+  clickCanvas(canvas, 52, 10);
+  expect(hits).toEqual(['B', 'A']);
+  bTargets.set(true);
+  await nextFrame();
+
+  const beforeReverseFocus = focused.slice();
+  flexDirection.set('row-reverse');
+  await nextFrame();
+  expect([boxes.get('A'), boxes.get('B')]).toEqual([{ x: 42, y: 0, stamp: 1 }, { x: 2, y: 0, stamp: 2 }]);
+  expectOverlapPixel('#a63758');
+  expect(focused).toEqual(beforeReverseFocus);
+  canvas.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', code: 'Tab', bubbles: true, cancelable: true }));
+  expect(focused.at(-1)).toBe('B');
+  expect(snapshotWasmLayoutDiagnostics().nodeCreates).toBe(mounted.nodeCreates);
+  clickCanvas(canvas, 52, 10);
+  expect(hits).toEqual(['B', 'A', 'B']);
+
+  const beforeRtlFocus = focused.slice();
+  direction.set('rtl');
+  await nextFrame();
+  expect([boxes.get('A'), boxes.get('B')]).toEqual([{ x: 2, y: 0, stamp: 1 }, { x: 42, y: 0, stamp: 2 }]);
+  expect(snapshotWasmLayoutDiagnostics().nodeCreates).toBe(mounted.nodeCreates);
+  clickCanvas(canvas, 52, 10);
+  expect(hits).toEqual(['B', 'A', 'B', 'B']);
+  expectOverlapPixel('#a63758');
+  expect(focused).toEqual(beforeRtlFocus);
+  canvas.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', code: 'Tab', shiftKey: true, bubbles: true, cancelable: true }));
+  expect(focused.at(-1)).toBe('A');
+
+  const beforePaint = snapshotWasmLayoutDiagnostics();
+  bFill.set('#426b61');
+  await nextFrame();
+  expectOverlapPixel('#426b61');
+  const painted = snapshotWasmLayoutDiagnostics();
+  expect(painted.solves).toBe(beforePaint.solves);
+  expect(painted.nodeCreates).toBe(mounted.nodeCreates);
+  expect([boxes.get('A'), boxes.get('B')]).toEqual([{ x: 2, y: 0, stamp: 1 }, { x: 42, y: 0, stamp: 2 }]);
+
+  controller.dispose();
+  controllers.splice(controllers.indexOf(controller), 1);
+  const finalHits = hits.slice();
+  clickCanvas(canvas, 52, 10);
+  expect(hits).toEqual(finalHits);
+  const disposed = snapshotWasmLayoutDiagnostics();
+  expect(disposed.activeNodes).toBe(baseline.activeNodes);
+  expect(disposed.activeArenas).toBe(baseline.activeArenas);
+  expect(disposed.cachedMeasurements).toBe(baseline.cachedMeasurements);
+});
 
 it.runIf(experimentalLayout)('keeps keyed focus and source Tab order before pointer targeting while RTL mirrors a wrapped reverse row', async () => {
   const baseline = snapshotWasmLayoutDiagnostics();

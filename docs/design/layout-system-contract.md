@@ -1157,3 +1157,24 @@ cache is added. In a150×120 row with10px gap, Text width80→40 changes height2
 and top20→10 beside a60×40 sibling; a60×30 second-line sibling stays at y50.
 The first sibling moves x90→50. Browser Canvas draw/hit/identity evidence defines
 the Text contract; no native font-parity fixture is asserted.
+
+### Source-order Canvas integration preservation
+
+Layout changes positions, never source traversal order. Finite reversed/RTL Flex
+allocations preserve later-source painting, topmost coordinate targeting and
+source keyboard traversal through ordinary components, translated Group, retained
+Layer and filter capture boundaries. Filters change pixels without changing the
+logical target geometry; `pointerEvents="none"` removes a decorative target while
+retaining its paint. Key identity survives direction changes. Paint-only changes
+repaint the owning bitmap/composition without another native numeric solve.
+
+The public composition proof uses two60×30 cards in a100×30 row. B has−20px
+logical start/end margins and paints after A; Group translates both by2px. Their
+world x positions are2/42, then42/2 under row reversal, then2/42 after RTL.
+At x52 the later B stays above A through its half-opacity filter and Layer.
+Opting B out of pointer events preserves that pixel while selecting A. The
+source and installed proofs also retain source Tab order and keyed identity,
+repaint changed content, and detach targets/resources on disposal. The browser's
+direct-alpha reference can differ from a filtered intermediate bitmap by one
+RGB byte due to premultiplication; only that documented tolerance is allowed,
+with exact alpha, geometry and target assertions. No visual baseline changes.
