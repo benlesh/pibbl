@@ -1,4 +1,5 @@
 import { build, type Metafile } from "esbuild";
+import type { ViteDevServer, HmrContext } from "vite";
 import { isAbsolute, resolve, sep } from "node:path";
 
 const VIRTUAL_RUNTIME_ID = "virtual:pibbl-runtime-source";
@@ -145,6 +146,8 @@ function assertSingleRuntimeMode(
 
 export function pibblRuntimeSource(mode: string) {
   const entryPoints = pibblEntryPoints(mode);
+  const runtimeInputs = new Set<string>();
+  let server: ViteDevServer | undefined;
   let production = false;
   let base = "/";
   return {
@@ -152,6 +155,17 @@ export function pibblRuntimeSource(mode: string) {
     configResolved(config: { isProduction: boolean; base: string }) {
       production = config.isProduction;
       base = config.base;
+    },
+    configureServer(value: ViteDevServer) {
+      server = value;
+      server.watcher.add([...runtimeInputs]);
+    },
+    handleHotUpdate(context: HmrContext) {
+      if (!runtimeInputs.has(resolve(context.file))) return undefined;
+      const module = context.server.moduleGraph.getModuleById(RESOLVED_RUNTIME_ID);
+      if (!module) return undefined;
+      context.server.moduleGraph.invalidateModule(module);
+      return [module];
     },
     resolveId(id: string) {
       if (id === VIRTUAL_RUNTIME_ID) return RESOLVED_RUNTIME_ID;
@@ -216,6 +230,13 @@ export function pibblRuntimeSource(mode: string) {
         write: false,
       });
       assertSingleRuntimeMode(result.metafile, mode, repositoryRoot);
+      runtimeInputs.clear();
+      for (const input of Object.keys(result.metafile.inputs)) {
+        if (input.startsWith("packages/") || input.startsWith("tooling/")) {
+          runtimeInputs.add(resolve(repositoryRoot, input));
+        }
+      }
+      server?.watcher.add([...runtimeInputs]);
       const output = result.outputFiles[0]?.text;
       if (!output)
         throw new Error("Pibbl runtime bundling produced no browser output.");

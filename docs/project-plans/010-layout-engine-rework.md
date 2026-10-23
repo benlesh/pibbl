@@ -2,7 +2,8 @@
 
 ## Current checkpoint and single next slice — 2026-10-22
 
-Latest delivery is slice68 (pinned border-box bounds and percentage conformance).
+Latest delivery is slice69 (Studio runtime dependency invalidation).
+Slice68 is `df3d0974` (pinned border-box bounds and percentage conformance).
 Slice67 is `16fe904e` (coherent content-box/border-box sizing).
 Slice66 is `6648bf66` (pinned Yoga wrap/cross-reversal conformance).
 Slice65 is `fcfea332` (pinned Yoga reverse-axis conformance).
@@ -18,10 +19,10 @@ Slice56 is `cf2c7bc5` (prepared Flow-root planning/adoption).
 Slice55 is `1510efe3` (prepared Grid-root planning/adoption).
 Slice54 `773da7b9`,53 `aaa7ddcb`,52 `b5381e0d` are consolidated in `f322a709`.
 Every slice has its own commit. The fixed33-capability/seven-gate denominator is
-unchanged; all seven gates remain open. The single next slice is69, Studio runtime dependency invalidation. Source5192/built5193, `#/testing/layout-preflight`:
+unchanged; all seven gates remain open. The single next slice is70, explicit layout border widths. Source5192/built5193, `#/testing/layout-preflight`:
 Source5192/built5193 `#/examples/layout/wasm-yoga-migration`: Next case + resize
 cycles fourteen fixtures, including border-box bounds/percentages; click A/B/C targets.
-Fresh built comparison: http://127.0.0.1:5194/#/examples/layout/wasm-yoga-migration.
+Canonical built comparison: http://127.0.0.1:5193/#/examples/layout/wasm-yoga-migration.
 Native Grid tracks/spans and Flow wrap controls remain available.
 
 The loading/named-component integration is ready for source feedback on branch
@@ -1135,13 +1136,29 @@ Failure retained `/tmp/pibbl-slice68-built.txt`; fresh success
 Node26.9.0/pnpm11.21.0deps/Chromium. No parity, full trust or performance claim;
 all seven gates remain open. Kernel unchanged65282bytes. No baseline rewritten.
 
-## [NEXT] Studio runtime dependency invalidation (slice 69)
+### Slice 69 — Studio runtime dependency invalidation
 
-Register bundled runtime inputs with Vite so rebuilding a supported source/built
-runtime refreshes the served virtual bundle. Establish a focused failing watch
-contract and verify a running built Studio updates without source fallback.
-This observed delivery blocker precedes the planned layout-only border-width
-capability. Group23 remains67–69, then bounded consolidation.
+The Studio runtime's opaque esbuild bundle now records repository input paths,
+registers them with the dev watcher, and explicitly invalidates its virtual module
+on matching edits. Unrelated file edits do not invalidate it. Runtime package
+resolution and built provenance remain unchanged; no source fallback was added.
+
+Focused RED found the missing watcher hook; source/built synthetic checks pass.
+`node tooling/test-studio-runtime-invalidation.mjs --live` additionally starts an
+ephemeral real Vite server, reversibly edits a private built input, proves the
+served virtual string changes without restart, and restores the input in finally.
+Typecheck and focused lint pass. Canonical built5193 was restarted for the plugin
+change and replays all14 cases,468private core inputs, errors[] and cleanup0/0/0.
+Diagnostic5194 retired. Logs `/tmp/pibbl-slice69-*`; Node26.9.0/Chromium.
+
+## [NEXT] Explicit layout border widths (slice 70)
+
+Add finite nonnegative numeric physical `BoxStyle.borderWidth` insets, distinct
+from painted stroke. Combine border plus padding once for content allocation,
+box sizing, Flex basis and intrinsic measurement; preserve default zero borders
+and Layer's separate raster-sizing policy. Public asymmetric row/column evidence
+comes first. No percentage/logical border aliases or new painting semantics.
+Group24 is70–72 after consolidation23 for67–69.
 
 ### Consolidation 22 completed for delivery slices 64–66
 
