@@ -20,7 +20,7 @@ No new runtime behavior, capability promotion, or aggregate Node24 trust claim.
 Slice145 started with two public tests failing numeric-only admission before
 production changes; its completed evidence is recorded below.
 
-Latest runtime delivery is slice153 (exact caller-height column measurement).
+Latest runtime delivery is slice153 `4bd6ff9b` (exact caller-height column measurement).
 Slice152 is `5cb9ca57` (exact caller-width row measurement).
 Slice151 is `58dc7783` (symmetric decorated reverse main bounds).
 Slice150 is `f592b00c` (decorated reverse main percentage bounds).
@@ -4598,14 +4598,51 @@ trust claim. The native corpus remains717 records and no native parity claim is 
 `flex.min-max` remains partial only for the separate indefinite-owner and broader
 measured-owner policy; fixed ledger9/11/6/6/1 and all7 release gates remain open.
 
-## [NEXT] Consolidation51 for slices151–153
+## [DONE] Consolidation51 for slices151–153
 
-Consolidate the finite reverse
-main-bound matrix with exact caller row/column availability receipts. Preserve the
-partial `flex.min-max` status and its explicit indefinite-owner boundary; do not
-promote a maximum-only constraint to a definite owner or introduce intrinsic
-keywords/cyclic percentage feedback. Run only proportional source, built, packed,
-type, documentation and catalog evidence, then record exact commands and output.
+Separate delivery commits151 `58dc7783`,152 `5cb9ca57`,153 `4bd6ff9b`.
+Fresh macOS/Node24.15/Playwright Chromium bounded checks: experimental45 files,
+690 passed/11 skipped (701),82.43s; normal45 files,241 passed/460 skipped
+(701),5.36s. Commands used the consolidation50 selected file list plus
+`layout-exact-row-measurement.test.tsx` and
+`layout-exact-column-measurement.test.tsx`, with
+`node node_modules/vitest/vitest.mjs run <selected files> --mode layout-wasm
+--browser.headless --browser.ui=false` and the same command without `--mode`.
+Logs `/tmp/pibbl-consolidation51-focused-final.txt` and
+`/tmp/pibbl-consolidation51-normal.txt`.
+
+The first combined run found one stale negative assertion expecting the former
+broad percentage diagnostic. It now expects the exact-row requirement in the
+experimental row case, preserving unsupported status and no-allocation checks;
+normal and cross-axis cases retain the old diagnostic. No production behavior
+changed during consolidation. Fresh frozen source/built and installed153 proofs
+remain independent receipts. Final installed proof was rerun on Node24.15:
+245 dist inputs, strict Bundler/NodeNext/runtime, SHA256
+`a4a8f7b12d901bd6a21d0a2147abb18ec06e1929de6ada80ad8e4ede13194fdc`.
+
+Documentation checks passed109 RED probes,110 API programs and315 snippets;
+public JSDoc6557 links/3458 members and Studio metadata/rendering/API/manifest
+checks passed. Slice153 typecheck, changed-code lint and catalog170/12/33 passed.
+No aggregate trust or native717-case public-runtime replay is claimed.
+Fixed33 capabilities remain9 complete/11 experimental/6 partial/6 missing/1
+excluded; all7 release gates remain open. Exact row/column admission is bounded:
+maximum-only availability never becomes a percentage owner, both-exact fast
+paths are deferred, and intrinsic cycles require a specified policy rather than
+zero substitution or convergence guesses. General intrinsic vocabulary and
+measurement ownership remain separately tracked; finite profile permutations
+are not new capabilities.
+
+## [NEXT] Slice154: column Text natural cross-width with auto side margin
+
+Use existing Text/Flex authoring in a finite LTR nowrap column. Direct generic
+unwrapped Text with numeric height, automatic width and basis, zero grow/shrink,
+no query, aspect or width bounds measures its natural width before cross-auto
+absorption. Signal text changes must move paint/hit geometry while preserving
+source focus order, sibling main slots, identities, paint reuse and exact cleanup.
+This addresses the existing `flex.auto-margin` column Text gap without changing
+indefinite percentage policy or introducing a public API. Begin with a failing
+public test, then a runnable existing lesson composition; keep reverse/RTL/wrap,
+automatic main height and broader provider graphs outside this first admission.
 
 ### Finite positioning exit matrix after134
 

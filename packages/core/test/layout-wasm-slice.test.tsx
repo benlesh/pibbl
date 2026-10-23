@@ -3142,7 +3142,7 @@ for (const axis of ['row', 'column'] as const) {
     const child = createElement(Rectangle, {style:{width:40,height:40,flexBasis:40,flexGrow:0,flexShrink:0,minWidth:0,minHeight:0,[maximum]:'25%'} as RectStyle});
     const owner = createElement(Flex,{style:axis==='row'?{height:100,maxWidth:200}:{width:100,maxHeight:200},children:child});
     const before = snapshotWasmLayoutDiagnostics();
-    expect(measureElement(owner,{minWidth:0,maxWidth:200,minHeight:0,maxHeight:200},service)).toMatchObject({status:'unsupported',reason:expect.stringContaining('percentage child sizes or bounds')});
+    expect(measureElement(owner,{minWidth:0,maxWidth:200,minHeight:0,maxHeight:200},service)).toMatchObject({status:'unsupported',reason:expect.stringContaining(experimentalLayout && axis === 'row' ? 'exact finite row width' : 'percentage child sizes or bounds')});
     expect(snapshotWasmLayoutDiagnostics().nodeCreates).toBe(before.nodeCreates);
     expect(snapshotWasmLayoutDiagnostics().activeArenas).toBe(before.activeArenas);
   });
