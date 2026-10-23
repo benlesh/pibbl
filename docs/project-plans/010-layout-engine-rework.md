@@ -4822,6 +4822,19 @@ intrinsic-owner obligation. This fixes invalid-input semantics and supplies the
 required policy evidence without silently redefining completion. Fixed33 and all7
 open release gates remain unchanged.
 
+### Slice157 public lesson companion
+
+The existing intrinsic-provider lesson now exposes **Check bound inputs** at
+`http://127.0.0.1:5192/#/examples/layout/wasm-flex-intrinsic-primitive`
+(built5193same path). One click compares valid unresolved bounds with negative,
+malformed and nonfinite bounds in both axes under maximum-only/unbounded
+availability. Canvas status and the inspector show12invalid rejections,4valid
+unresolved results,0provider calls and unchanged resources. Source and built
+headless public-button drivers passed with cleanup `[0,0,0]`, no browser errors,
+and469built inputs. The existing exact-row source and exact-column built drivers
+also passed geometry, moved hits, identity, paint reuse and cleanup. Typecheck and
+focused lint passed. No new runtime rule, capability or gate promotion.
+
 ## [NEXT] Slice158: built-in Text baseline measurement
 
 Use the existing baseline operation with the same Canvas measurement and line

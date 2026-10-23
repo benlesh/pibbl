@@ -1,5 +1,7 @@
 import {
   Flex,
+  measureElement,
+  type Length,
   computed,
   Rectangle,
   Text,
@@ -168,10 +170,10 @@ function createWasmFlexIntrinsicPrimitiveContent(canvas: HTMLCanvasElement) {
         status: "unsupported" as const,
         reason: "Percentage main bounds require an exact main-axis owner.",
       }),
-      measure: ({ props, constraints, measureElement }): MeasureResult => {
+      measure: ({ props, constraints, measureElement: measureChild }): MeasureResult => {
         exactCapMeasureCalls++;
         const row = props.axis === "row";
-        return measureElement(
+        return measureChild(
           <Flex style={{ flexDirection: props.axis, flexWrap: "nowrap", alignItems: "flex-start" }}>
             <Rectangle style={{ width: row ? 40 : 20, height: row ? 20 : 40, flexBasis: 40, flexGrow: 0, flexShrink: 0, minWidth: row ? 0 : undefined, minHeight: row ? undefined : 0, maxWidth: row ? "25%" : undefined, maxHeight: row ? undefined : "25%" }} />
             <Rectangle style={{ width: 20, height: 20, flexBasis: 20, flexGrow: 0, flexShrink: 0, minWidth: row ? 0 : undefined, minHeight: row ? undefined : 0 }} />
@@ -184,6 +186,37 @@ function createWasmFlexIntrinsicPrimitiveContent(canvas: HTMLCanvasElement) {
     },
   );
 
+
+  let boundProviderCalls = 0;
+  let boundValidation: { invalid: number; unresolved: number; providerCalls: number; resourcesUnchanged: boolean } | undefined;
+  const boundStatus = signal("Validate inputs without an owner size");
+  const BoundProbe = definePrimitive<{}, BoxStyle & FlexItemStyle, BoxStyle & FlexItemStyle, SystemStyle>(() => undefined, {
+    resolveStyle: () => ({}),
+    measure: () => { boundProviderCalls++; return { status: "measured", size: { width: 40, height: 20 } }; },
+  });
+  const validateBounds = () => {
+    const read = (globalThis as typeof globalThis & { __PIBBL_LAYOUT_DIAGNOSTICS__: () => Record<string, number> }).__PIBBL_LAYOUT_DIAGNOSTICS__;
+    const before = read();
+    let invalid = 0, unresolved = 0;
+    for (const flexDirection of ["row", "column"] as const) {
+      const property = flexDirection === "row" ? "maxWidth" : "maxHeight";
+      const root = (value: Exclude<Length, "auto">) => flexDirection === "row"
+        ? <Flex style={{ flexDirection: "row" }}><BoundProbe style={{ width: 40, height: 20, minWidth: 0, minHeight: 0, flexBasis: 40, flexGrow: 0, flexShrink: 0, maxWidth: value }} /></Flex>
+        : <Flex style={{ flexDirection: "column" }}><BoundProbe style={{ width: 40, height: 20, minWidth: 0, minHeight: 0, flexBasis: 40, flexGrow: 0, flexShrink: 0, maxHeight: value }} /></Flex>;
+      for (const max of [160, Infinity]) {
+        const constraints = { minWidth: 0, maxWidth: flexDirection === "row" ? max : 100, minHeight: 0, maxHeight: flexDirection === "column" ? max : 100 };
+        const result = measureElement(root("25%"), constraints, { measureText: () => ({ width: 0 }) as TextMetrics });
+        if (result.status === "unsupported") unresolved++;
+        for (const value of ["-10%", "25%%", "9".repeat(400) + "%"]) {
+          try { measureElement(root(value as Exclude<Length, "auto">), constraints, { measureText: () => ({ width: 0 }) as TextMetrics }); }
+          catch (error) { if (String(error).includes(property) && /nonnegative|unsupported|finite/.test(String(error))) invalid++; else throw error; }
+        }
+      }
+    }
+    const after = read();
+    boundValidation = { invalid, unresolved, providerCalls: boundProviderCalls, resourcesUnchanged: before.activeNodes === after.activeNodes && before.activeArenas === after.activeArenas && before.cachedMeasurements === after.cachedMeasurements && before.activeWasmInstances === after.activeWasmInstances };
+    boundStatus.set(`${invalid} invalid rejected · ${unresolved} unresolved · ${boundProviderCalls} provider calls`);
+  };
 
   function Button({
     x,
@@ -323,6 +356,8 @@ function createWasmFlexIntrinsicPrimitiveContent(canvas: HTMLCanvasElement) {
         click={() => adaptivePaint.update(value => value === "#426b61" ? "#a63758" : "#426b61")}
         fill="#426b61"
       />
+      <Button x={380} y={300} label="Check bound inputs" click={validateBounds} />
+      <Text pointerEvents="none" style={{ left: 380, top: 342, font: "11px sans-serif", fill: "#19375b" }}>{boundStatus}</Text>
       <Text style={{ left: 72, top: 268, font: "bold 12px sans-serif", fill: "#19375b" }}>
         Row · 25% cap + 20 px
       </Text>
@@ -385,7 +420,7 @@ function createWasmFlexIntrinsicPrimitiveContent(canvas: HTMLCanvasElement) {
   canvas.insertAdjacentElement("afterend", panel);
   const refresh = () => {
     panel.textContent = read
-      ? `EXPERIMENTAL WASM · ${Object.entries(read()).map(([key, value]) => `${key}: ${value}`).join(" · ")}\nprovider calls: ${providerCalls} · column measure calls: ${columnMeasureCalls} · exact cap measure calls: ${exactCapMeasureCalls} · stamp: ${stamp} · follower hits: ${followerHits.get()} · column follower hits: ${columnFollowerHits.get()} · exact cap hits: ${exactCapHits.get()} · minimum: ${minimum.get()} · owner: ${owner.get()} · escape: ${escaped.get()}\nadaptive owner: ${adaptiveOwner.get()} · adaptive hits: ${adaptiveHits.get()} · adaptive finite calls: ${adaptiveFiniteCalls} · adaptive paint: ${adaptivePaint.get()} · disposed: ${disposed}\nexact cap state: ${JSON.stringify({ boxes: exactCapBoxes, bases: exactCapBases })}`
+      ? `EXPERIMENTAL WASM · ${Object.entries(read()).map(([key, value]) => `${key}: ${value}`).join(" · ")}\nprovider calls: ${providerCalls} · column measure calls: ${columnMeasureCalls} · exact cap measure calls: ${exactCapMeasureCalls} · stamp: ${stamp} · follower hits: ${followerHits.get()} · column follower hits: ${columnFollowerHits.get()} · exact cap hits: ${exactCapHits.get()} · minimum: ${minimum.get()} · owner: ${owner.get()} · escape: ${escaped.get()}\nadaptive owner: ${adaptiveOwner.get()} · adaptive hits: ${adaptiveHits.get()} · adaptive finite calls: ${adaptiveFiniteCalls} · adaptive paint: ${adaptivePaint.get()} · disposed: ${disposed}\nbound validation: ${JSON.stringify(boundValidation ?? null)}\nexact cap state: ${JSON.stringify({ boxes: exactCapBoxes, bases: exactCapBases })}`
       : "Normal JS build. Start Studio with --mode layout-wasm to inspect the experimental intrinsic provider.";
   };
   refresh();
