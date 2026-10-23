@@ -2633,7 +2633,12 @@
       "unresolvedPolicy": "Paired intrinsic callback is implemented for the bounded direct-leaf consumer; baselines and broader intrinsic consumers remain open.",
       "evidenceRefs": [
         "packages/core/src/lib/layout/layout-jsx.test.tsx",
-        "packages/core/src/lib/define-primitive.test.tsx"
+        "packages/core/src/lib/define-primitive.test.tsx",
+        "packages/core/test/layout-wasm-slice.test.tsx",
+        "tooling/layout-yoga-rehearsal/reference.json",
+        "tooling/test-wasm-yoga-migration.mjs",
+        "tooling/packed-layout-consumer.mjs",
+        "docs/design/layout-system-contract.md"
       ],
       "evidence": {
         "positive": [
@@ -2650,7 +2655,7 @@
         "interaction": [
           "reactive intrinsic minimum moves the public target; unrelated sibling paint reuses snapshot; exact disposal"
         ],
-        "yogaCases": [],
+        "yogaCases": ["custom-column-measure", "custom-column-measure-resized"],
         "missing": [
           "broader exact/at-most/unbounded constraint matrix beyond finite row/column admissions",
           "broader nested invalidation and owner feedback",

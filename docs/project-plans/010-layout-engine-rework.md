@@ -2,7 +2,8 @@
 
 ## Current checkpoint and single next slice — 2026-10-23
 
-Latest delivery is slice117 (finite column custom-provider exact-width measurement).
+Latest delivery is slice117 `dd7f292f` (finite column custom-provider exact-width measurement).
+Consolidation39 passes for115–117 below.
 Slice116 is `42e182cb` (definite nested column percentage cross minima).
 Slice115 is `6e1e1d3e` (column caps and one-click Latest proof).
 Slice114 is `4070b037` (definite nested percentage cross maxima).
@@ -3112,11 +3113,28 @@ and lifecycle cleanup; tarball SHA256
 Documentation109compiler RED probes, public JSDoc, catalog/discovery and
 source/built final replays pass. No Rust changes or fresh Rust test claim.
 
-## [NEXT] Consolidation39 for slices115–117
+## Consolidation39 completed for slices115–117
 
-Run the existing23-file experimental and normal matrix after the separate117
-commit, record fresh counts, and select the next bounded public-API slice. Full
-program completion and the final whole-codebase review remain outstanding.
+Separate delivery commits115 `6e1e1d3e`,116 `42e182cb`,117 `dd7f292f`.
+Fresh23-file experimental matrix:532passed/9skipped541 in79.64s. Normal matrix:
+190passed/351skipped541 in3.76s. Expected negative-case diagnostic output appears;
+no failures. Logs `/tmp/pibbl-consolidation39-focused.txt` and
+`/tmp/pibbl-consolidation39-normal.txt`. Source/built/installed117 evidence above
+remains current. Manifest now links the actual public/packed/native custom-leaf
+proofs. No release gate/status promotion, Node24 trust claim or baseline rewrite.
+The public learning corpus readability gap remains tracked: preserve exhaustive
+headless proof coverage while introducing a concise copyable surface through the
+existing private fixture-host seam; do not merely delete/project recorded cases.
+
+## [NEXT] Finite-column provider reactive content evidence (slice118)
+
+At fixed40px width, a stable custom queue reads a jobs signal only in `measure`.
+Changing8→12 jobs should measure height40→60, move the following target y40→60,
+preserve keyed/native identity, and reuse the result for unrelated paint. Run the
+focused public test before production edits. If it passes unchanged, classify it
+as evidence-only; do not fabricate a runtime fix. Then choose the nearest material
+remaining capability rather than indefinitely splitting individual proof cases.
+The full program, all7 release gates and final whole-codebase review remain open.
 
 ### Consolidation 24 completed for delivery slices 70–72
 
