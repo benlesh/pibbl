@@ -2,7 +2,8 @@
 
 ## Current checkpoint and single next slice — 2026-10-23
 
-Latest delivery is slice122 (bounded direct-Flex absolute participation).
+Latest delivery is slice123 (fixed absolute children with axis-wise alignment).
+Slice122 is `057873a3` (bounded direct-Flex absolute participation).
 Slice121 is `f4605ef2` (decorated-parent static/relative evidence).
 Slice120 is `a9d79df8` (bounded explicit direct-Flex static/relative positioning).
 Consolidation40 is `d06c7fc6` for118–120 (one corrected sequential-walk selector).
@@ -3353,16 +3354,57 @@ Logs `/tmp/pibbl-slice122-source-final.txt`, `...built-final.txt`,
 claim. Status remains8complete/12experimental/6partial/6missing/1excluded;
 all7release gates open, full-program review remains at the end.
 
-## [NEXT] Fixed absolute children with axis-wise no-inset alignment (slice123)
+## Slice123 delivered: axis-wise no-inset absolute alignment
 
-Remove one material admission limit without adding automatic sizes or a public
-API: on an axis with no inset, align the fixed absolute child using existing
-parent controls and the content box. Explicit inset axes retain122's inner-border
-rule. Pinned Yoga confirms center/flex-end produces absolute77,62 and flowing
-LTR A/C37,62/97,62; setting left12 moves only absolute to14,62. First add the
-focused public failing test, then implementation and source/built/installed proof.
-Keep automatic opposite-inset sizing and nested containing blocks outstanding.
-Consolidation41 follows121–123 before further expansion.
+No new API or ABI. Fixed direct absolute children now use the parent content box
+on an axis without either inset, with existing `justifyContent`/`alignItems`.
+Explicit axes retain122's padding-box origin. Main start/space-between use start,
+end uses end, center/around/evenly center; RTL reverses main-start/end. Stretch
+keeps the fixed cross size at start. `alignSelf` rejects explicitly. Automatic
+sizes, opposite-inset-derived dimensions and nested containing blocks stay open.
+
+Public RED `...slice123-public-red.txt` records missing-axis rejection with3old
+passing tests. Self-alignment RED establishes the rejected override. Initial
+implementation reused normal Flex distribution, which has a different safe
+negative-free-space policy: the new public overflow test failed x12 vs expected-8
+(`...slice123-overflow-red.txt`,1fail/32pass). The fix maps scalar alignment into
+existing allocation-free `alignmentOffset`, preserving Yoga's centered negative
+free space. Public final2files33pass. Selected3files30pass/416skip446;
+normal28pass/5skip33. Pinned source plus independently compiled overflow probe
+confirms x-8 for absolute200 in content160 with space-around (probe cross-start
+y22; public cross-end fixture y62). Six corpus cases cover centered/end no-inset,
+left-only, and default start/stretch in LTR/RTL:343total/249matches/94classified.
+No kernel/Rust/ABI change;68649byte SHA256 remains
+`029fd944e878b879a235461dcfac17219948569198795428caff12c4c388bfe9`.
+
+Actual browser exposed-target failure was isolated rather than masked: intended
+logical437,304 arrived via locator coordinates at436,303, the neighboring closed
+edge. The driver now computes native page-mouse coordinates through the iframe
+border and Canvas content origin; exact original exposed points and separate
+source-order overlap assertions pass. Mouse diagnostics are retained on assertion
+failure. Final source/built6matches,227core/dist inputs, errors[]/cleanup[0,0,0];
+source also replays122's7explicit-axis cases, and source/built public5lessons pass
+with zero private corpus requests (built editor469inputs). Screenshot inspected,
+no baseline rewrite. Installed proof passes245dist inputs, strictBundler/NodeNext,
+absoluteAlignment receipt, earlier placement/percentage/104auto-margin proofs,
+identity/paint reuse/cleanup. Tarball SHA256
+`c2bdef721f5262c1d219f75270e106248c9bf6cddcae52a0de1d47645e77130c`.
+Source receipt `/tmp/pibbl-slice123-source-calibrated.txt`, built
+`...slice123-built.txt`, installed `...slice123-packed.txt`, earlier failed click
+receipt `...slice123-mouse-diagnostic.txt`. Types, changed-code lint, catalog,
+JSDoc and109documentation RED probes pass. Scoped core review finds no material
+issue; one duplicate installed assertion removed. EnvironmentNode26.9.0/macOS
+Chromium; no Node24 trust claim. Counts remain8complete/12experimental/6partial/
+6missing/1excluded and all7gates open. Full-program review remains at the end.
+
+## [NEXT] Consolidation41 for slices121–123
+
+Commit123 separately, then combine the existing25-file layout/loading matrix
+with decorated-parent and absolute-participation tests in experimental/normal
+lanes. After the checkpoint select the next material fixed-program placement
+exit: derived absolute dimensions or containing-block semantics, rather than
+more supported-alignment permutations. Keep one next slice and all release
+limitations explicit.
 
 ### Consolidation 24 completed for delivery slices 70–72
 

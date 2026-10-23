@@ -192,3 +192,106 @@ it.runIf(experimentalLayout)('keeps absolute direct children out of automatic Fl
   const after = snapshotWasmLayoutDiagnostics();
   expect([after.nodeCreates, after.activeArenas]).toEqual([baseline.nodeCreates, baseline.activeArenas]);
 });
+
+
+it.runIf(experimentalLayout)('uses Flex alignment only on an absolute axis with no physical inset', async () => {
+  type PlacementStyle = PibblResponsiveStyle<RectStyle & FlexItemStyle>;
+  const baseline = snapshotWasmLayoutDiagnostics();
+  const left = signal<number | undefined>(undefined);
+  const ink = signal('#a63758');
+  const hits: string[] = [];
+  const focused: string[] = [];
+  const boxes = new Map<string, { x: number; y: number; width: number; height: number; stamp: number }>();
+  let nextStamp = 1;
+
+  function Probe({ name, style: _style }: { readonly name: string; readonly style: PlacementStyle }) {
+    const box = useLayoutBox();
+    const transform = useCanvasContext().getTransform();
+    const stamp = useConst(() => nextStamp++);
+    boxes.set(name, { x: transform.e, y: transform.f, width: box.width, height: box.height, stamp });
+    return <Rectangle
+      keyboardFocusable
+      onFocus={() => focused.push(name)}
+      onClick={() => hits.push(name)}
+      style={{ width: box.width, height: box.height, cursor: 'pointer', fill: name === 'absolute' ? ink : name === 'A' ? '#19375b' : '#246b61' }}
+    />;
+  }
+
+  const ordinary: PlacementStyle = { width: 50, height: 20, minWidth: 0, minHeight: 0, flexGrow: 0, flexShrink: 0 };
+  const absolute: PlacementStyle = {
+    width: 30, height: 20, minWidth: 0, minHeight: 0, flexGrow: 0, flexShrink: 0,
+    position: 'absolute', left,
+  };
+  const canvas = document.createElement('canvas'); canvas.width = 204; canvas.height = 104; document.body.append(canvas);
+  const controller = pibbl(canvas, <FocusManagement><Flex style={{
+    width: 204, height: 104, boxSizing: 'border-box',
+    padding: { left: 10, right: 30, top: 20, bottom: 20 }, borderWidth: 2,
+    flexDirection: 'row', flexWrap: 'nowrap', justifyContent: 'center', alignItems: 'flex-end', gap: 10,
+  }}>
+    <Probe key="A" name="A" style={ordinary} />
+    <Probe key="absolute" name="absolute" style={absolute} />
+    <Probe key="C" name="C" style={ordinary} />
+  </Flex></FocusManagement>);
+  controllers.push(controller);
+  await nextFrame();
+
+  expect([...boxes.values()]).toEqual([
+    { x: 37, y: 62, width: 50, height: 20, stamp: 1 },
+    { x: 77, y: 62, width: 30, height: 20, stamp: 2 },
+    { x: 97, y: 62, width: 50, height: 20, stamp: 3 },
+  ]);
+  canvas.focus({ preventScroll: true });
+  canvas.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', code: 'Tab', bubbles: true, cancelable: true }));
+  canvas.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', code: 'Tab', bubbles: true, cancelable: true }));
+  expect(focused).toEqual(['A', 'absolute', 'C']);
+  clickCanvas(canvas, 80, 63); // absolute-only space.
+  clickCanvas(canvas, 100, 63); // later C remains topmost in the overlap.
+  expect(hits).toEqual(['absolute', 'C']);
+  const aligned = snapshotWasmLayoutDiagnostics();
+
+  left.set(12);
+  await nextFrame();
+  expect([...boxes.values()]).toEqual([
+    { x: 37, y: 62, width: 50, height: 20, stamp: 1 },
+    { x: 14, y: 62, width: 30, height: 20, stamp: 2 },
+    { x: 97, y: 62, width: 50, height: 20, stamp: 3 },
+  ]);
+  clickCanvas(canvas, 40, 63); // absolute now follows the supplied left inset over A.
+  clickCanvas(canvas, 80, 63); // A is exposed at the former aligned absolute position.
+  expect(hits).toEqual(['absolute', 'C', 'absolute', 'A']);
+  const inset = snapshotWasmLayoutDiagnostics();
+  expect(inset.nodeCreates).toBe(aligned.nodeCreates);
+  expect([...boxes.values()].map(box => box.stamp)).toEqual([1, 2, 3]);
+
+  ink.set('#2c8d7d');
+  await nextFrame();
+  const painted = snapshotWasmLayoutDiagnostics();
+  expect(painted.solves).toBe(inset.solves);
+  expect(painted.nodeCreates).toBe(inset.nodeCreates);
+  expect([...canvas.getContext('2d')!.getImageData(40, 63, 1, 1).data]).toEqual([44, 141, 125, 255]);
+
+  controller.dispose();
+  const disposed = snapshotWasmLayoutDiagnostics();
+  expect([disposed.activeNodes, disposed.activeArenas, disposed.cachedMeasurements]).toEqual([
+    baseline.activeNodes, baseline.activeArenas, baseline.cachedMeasurements,
+  ]);
+});
+
+
+it.runIf(experimentalLayout)('centers an overflowing no-inset absolute child for distributed main alignment', async () => {
+  let worldBox: { x: number; y: number; width: number; height: number } | undefined;
+  function Wide({ style: _style }: { readonly style: RectStyle & FlexItemStyle }) {
+    const box = useLayoutBox();
+    const transform = useCanvasContext().getTransform();
+    worldBox = { x: transform.e, y: transform.f, width: box.width, height: box.height };
+    return <Rectangle style={{ width: box.width, height: box.height, fill: '#19375b' }} />;
+  }
+  const canvas = document.createElement('canvas'); canvas.width = 204; canvas.height = 104; document.body.append(canvas);
+  controllers.push(pibbl(canvas, <Flex style={{ width: 204, height: 104, boxSizing: 'border-box',
+    padding: { left: 10, right: 30, top: 20, bottom: 20 }, borderWidth: 2,
+    justifyContent: 'space-around', alignItems: 'flex-end', gap: 10 }}>
+    <Wide style={{ position: 'absolute', width: 200, height: 20, minWidth: 0, flexShrink: 0 }} />
+  </Flex>));
+  await nextFrame();
+  expect(worldBox).toEqual({ x: -8, y: 62, width: 200, height: 20 });
+});

@@ -1609,7 +1609,7 @@
         "covers": ["flex.auto-margin", "flex.min-max"]
       }
     ],
-    "limit": "337 records:243 native matches and94 explicitly classified differences. Two custom cross-auto records use an explicit eight-job measurement callback. Two Text cross-auto records use an explicit deterministic measurement callback, not font-rendering parity. Finite evidence remains bounded and does not establish general intrinsic, percentage, auto-margin or CSS parity."
+    "limit": "343 records:249 native matches and94 explicitly classified differences. Two custom cross-auto records use an explicit eight-job measurement callback. Two Text cross-auto records use an explicit deterministic measurement callback, not font-rendering parity. Finite evidence remains bounded and does not establish general intrinsic, percentage, auto-margin or CSS parity."
   },
   "gateGroups": [
     {
@@ -2564,13 +2564,13 @@
       "id": "position.relative-static-absolute",
       "target": "parity",
       "group": "placement-and-participation",
-      "current": "experimental direct finite row-nowrap Flex static/relative plus fixed-size absolute participation with physical numeric insets in LTR/RTL; legacy local offsets and dedicated Absolute retained",
+      "current": "experimental direct finite row-nowrap Flex static/relative plus fixed-size absolute participation with physical numeric insets or axis-wise content alignment in LTR/RTL; legacy local offsets and dedicated Absolute retained",
       "status": "experimental",
-      "unresolvedPolicy": "Automatic/derived absolute sizing, no-inset alignment, nested containing blocks, static ownership and wider layout admission remain open.",
+      "unresolvedPolicy": "Automatic/derived absolute sizing, nested containing blocks, static ownership and wider layout admission remain open.",
       "evidence": {
         "positive": [
           "packages/core/test/layout-relative-position.test.tsx: public static to relative slots, LTR/RTL precedence, right/bottom only, forwarded style consumed once",
-          "tooling/packed-layout-consumer.mjs: installed relativeStatic, decoratedRelativeStatic and absoluteParticipation receipts",
+          "tooling/packed-layout-consumer.mjs: installed relativeStatic, decoratedRelativeStatic and absoluteParticipation and absoluteAlignment receipts",
           "packages/core/test/layout-decorated-relative-position.test.tsx: asymmetric parent padding/border content origin and slots",
           "packages/core/test/layout-absolute-participation.test.tsx: source-order absolute participation, known preflight and explicit intrinsic exclusion"
         ],
@@ -2597,10 +2597,16 @@
           "position-absolute-decorated-left-top-rtl",
           "position-absolute-decorated-right-bottom-ltr",
           "position-absolute-decorated-right-bottom-rtl",
-          "position-absolute-decorated-left72-top8-ltr"
+          "position-absolute-decorated-left72-top8-ltr",
+          "position-absolute-alignment-none-center-end-ltr",
+          "position-absolute-alignment-none-center-end-rtl",
+          "position-absolute-alignment-left-center-end-ltr",
+          "position-absolute-alignment-left-center-end-rtl",
+          "position-absolute-alignment-none-default-ltr",
+          "position-absolute-alignment-none-default-rtl"
         ],
         "missing": [
-          "absolute automatic/derived dimensions and no-inset alignment",
+          "absolute automatic/derived dimensions",
           "nested static nodes",
           "column/wrap positioning",
           "containing-block ownership"

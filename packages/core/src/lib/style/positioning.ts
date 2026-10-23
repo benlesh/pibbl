@@ -126,8 +126,9 @@ export interface PositioningStyle extends SystemStyle {
   /**
    * Experimental direct-Flex placement mode. In a finite row-nowrap Flex, static
    * keeps the allocated slot and ignores insets; relative offsets final geometry
-   * once without moving siblings; absolute uses the Flex padding box and stays out
-   * of sibling allocation on the documented finite direct-child path. Omission
+   * once without moving siblings; absolute stays out of sibling allocation, using
+   * the padding box for explicit insets and content alignment for omitted axes
+   * on the documented finite direct-child path. Omission
    * retains legacy local left/top behavior.
    */
   position?: 'static' | 'relative' | 'absolute';

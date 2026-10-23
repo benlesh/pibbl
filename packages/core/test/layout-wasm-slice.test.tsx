@@ -872,7 +872,7 @@ const mount = createExampleMount(mountModule.WasmYogaMigrationExample);
   if(logicalPadding)for(let section=0;section<8;section++){clickCanvas(canvas,520,158);await nextFrame();}
   // This walk advances Next case through the contiguous original families. Later
   // sections (including rounding) have dedicated semantic tests and browser drivers.
-  const cases=yogaReference.cases.filter(fixture=>!('absoluteParticipationFixture' in fixture) && !('relativeStaticFixture' in fixture) && !('decoratedRelativeStaticFixture' in fixture) && !('customColumnMeasureFixture' in fixture) && !('nestedDecoratedColumnCrossMinFixture' in fixture) && !('nestedDecoratedColumnCrossMaxFixture' in fixture) && !('nestedDecoratedCrossMaxFixture' in fixture) && !('nestedDecoratedCrossMinFixture' in fixture) && !('nestedCrossMinFixture' in fixture) && !('roundingFixture' in fixture) && !('intrinsicFixture' in fixture) && !('directionMatrixFixture' in fixture) && !('autoMarginFixture' in fixture) && ('contentBoxes' in fixture)===logicalPadding);
+  const cases=yogaReference.cases.filter(fixture=>!('absoluteAlignmentFixture' in fixture) && !('absoluteParticipationFixture' in fixture) && !('relativeStaticFixture' in fixture) && !('decoratedRelativeStaticFixture' in fixture) && !('customColumnMeasureFixture' in fixture) && !('nestedDecoratedColumnCrossMinFixture' in fixture) && !('nestedDecoratedColumnCrossMaxFixture' in fixture) && !('nestedDecoratedCrossMaxFixture' in fixture) && !('nestedDecoratedCrossMinFixture' in fixture) && !('nestedCrossMinFixture' in fixture) && !('roundingFixture' in fixture) && !('intrinsicFixture' in fixture) && !('directionMatrixFixture' in fixture) && !('autoMarginFixture' in fixture) && ('contentBoxes' in fixture)===logicalPadding);
   for (const [index, fixture] of cases.entries()) {
     const expected = fixture.pibblBoxes ?? fixture.boxes;
     if (index) { labels.length = 0; clickCanvas(canvas,60,158); await nextFrame(); }
@@ -4907,7 +4907,9 @@ it.runIf(experimentalLayout)('jumps directly to the latest public proof and pres
   const canvas = document.createElement('canvas'); canvas.width = 760; canvas.height = 540; document.body.append(canvas);
   const controller = createExampleMount(WasmYogaMigrationExample)(canvas, { fixtures: fullYogaMigrationFixtures }); controllers.push(controller); await nextFrame();
   const last = yogaReference.cases.at(-1)!;
-  const firstName = 'absoluteParticipationFixture' in last
+  const firstName = 'absoluteAlignmentFixture' in last
+    ? yogaReference.cases.find(fixture => 'absoluteAlignmentFixture' in fixture)!.name
+    : 'absoluteParticipationFixture' in last
     ? yogaReference.cases.find(fixture => 'absoluteParticipationFixture' in fixture)!.name
     : 'decoratedRelativeStaticFixture' in last
     ? yogaReference.cases.find(fixture => 'decoratedRelativeStaticFixture' in fixture)!.name

@@ -70,8 +70,8 @@ JavaScript Flex support.
 ### Experimental direct-Flex absolute participation
 
 A finite experimental row-nowrap Flex also accepts a direct child with
-`position: "absolute"`, explicit finite numeric width and height, and at least
-one finite numeric physical inset on each axis. The child leaves line allocation:
+`position: "absolute"`, explicit finite numeric width and height, and optional
+finite numeric physical insets. The child leaves line allocation:
 its width, height and flex factors do not consume a sibling slot or an extra gap.
 It remains at its authored position in paint order, pointer targeting and focus
 navigation. Its ordinary keyed identity and receiver-owned inputs remain active.
@@ -83,12 +83,20 @@ and right wins in RTL; top wins vertically. Width and height stay explicit rathe
 than stretching between opposite insets. Placement is resolved before world
 transforms, and forwarded placement is consumed once.
 
-This admission does not add intrinsic or automatic absolute sizing, no-inset
-alignment, percentage insets, nested containing-block selection, Flow/Grid/Layer
-participation, or a migration of the existing `Absolute` convenience component.
+On an axis without either inset, the fixed child aligns within the parent content
+box instead. Horizontal alignment uses `justifyContent`: start and space-between
+use main-start, end uses main-end, and center/space-around/space-evenly center.
+RTL reverses main-start/end. Vertical alignment uses `alignItems`; stretch keeps
+the fixed height at cross-start. Center and end retain their offsets when the
+child exceeds the content dimension. An explicit inset on one axis does not
+change the other axis's content alignment. `alignSelf` is not admitted.
+
+This admission does not add intrinsic or automatic absolute sizing, percentage
+insets, nested containing-block selection, Flow/Grid/Layer participation, or a migration of the existing `Absolute` convenience component.
 The first admission excludes direct layout-component children, child box
 decoration, margins, nonzero bounds, nonzero flex factors, and responsive style
-queries. Unsupported contexts and omitted required sizing/insets reject explicitly.
+queries. Unsupported contexts, omitted required sizing and unsupported inset
+values reject explicitly.
 
 `PibblRenderLayerStyle` accepts the shared box and layout-item fields. Each
 omitted layer dimension uses its current finite logical allocation; an explicit

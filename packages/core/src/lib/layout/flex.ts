@@ -747,7 +747,8 @@ function resolveFlexPlacements(
         normalized,
         receiverToken,
         preparedStyleQuery(prepared),
-        options.layoutDirection,
+        container,
+        options,
       );
       continue;
     }
@@ -1234,7 +1235,8 @@ function resolveAbsoluteFlexPlacement(
   style: Readonly<BoxStyle & FlexItemStyle & LayoutItemStyle>,
   receiverToken: object,
   query: PreparedQuery | undefined,
-  direction: 'ltr' | 'rtl',
+  content: Readonly<LayoutBox>,
+  options: Readonly<Pick<ResolvedFlexStyle, 'justifyContent' | 'alignItems' | 'layoutDirection'>>,
 ): FlexPlacement {
   const left = numericAbsoluteInset(style.left, 'left', child, paddingBox);
   const right = numericAbsoluteInset(style.right, 'right', child, paddingBox);
@@ -1243,10 +1245,14 @@ function resolveAbsoluteFlexPlacement(
   const resolved = resolveDirectChildBox(paddingBox, child, 'absolute', style);
   const width = resolved.borderBox.width;
   const height = resolved.borderBox.height;
-  const x = direction === 'rtl'
-    ? right === undefined ? paddingBox.x + left! : paddingBox.x + paddingBox.width - right - width
-    : left === undefined ? paddingBox.x + paddingBox.width - right! - width : paddingBox.x + left;
-  const y = top === undefined ? paddingBox.y + paddingBox.height - bottom! - height : paddingBox.y + top;
+  const x = left !== undefined || right !== undefined ?
+    options.layoutDirection === 'rtl'
+      ? right === undefined ? paddingBox.x + left! : paddingBox.x + paddingBox.width - right - width
+      : left === undefined ? paddingBox.x + paddingBox.width - right! - width : paddingBox.x + left :
+    resolveAbsoluteMainAlignment(content, width, options.justifyContent, options.layoutDirection);
+  const y = top !== undefined || bottom !== undefined ?
+    top === undefined ? paddingBox.y + paddingBox.height - bottom! - height : paddingBox.y + top :
+    content.y + alignmentOffset(options.alignItems, content.height, height);
   const usedWidth = resolved.contentBox.width;
   const usedHeight = resolved.contentBox.height;
   return {
@@ -1255,6 +1261,21 @@ function resolveAbsoluteFlexPlacement(
     usedHeight,
     element: childWithUsedSize(child, style, usedWidth, usedHeight, receiverToken, query),
   };
+}
+
+function resolveAbsoluteMainAlignment(
+  content: Readonly<LayoutBox>,
+  width: number,
+  justifyContent: MainAlignment,
+  direction: 'ltr' | 'rtl',
+): number {
+  let alignment: CrossAlignment = justifyContent === 'flex-end' ? 'flex-end' :
+    justifyContent === 'flex-start' || justifyContent === 'space-between' ? 'flex-start' : 'center';
+  if (direction === 'rtl') {
+    if (alignment === 'flex-start') alignment = 'flex-end';
+    else if (alignment === 'flex-end') alignment = 'flex-start';
+  }
+  return content.x + alignmentOffset(alignment, content.width, width);
 }
 
 function genericTextFont(style: Readonly<Record<string, unknown>>): boolean {
@@ -1746,8 +1767,8 @@ function assertSupportedAbsoluteFlexPosition(
       typeof style.height !== 'number' || !Number.isFinite(style.height) || style.height < 0) {
     throw childDiagnostic(child, 'position', style.position, container, 'PIBBL_LAYOUT_UNSUPPORTED_POSITION: absolute currently requires explicit finite numeric width and height');
   }
-  if ((style.left === undefined && style.right === undefined) || (style.top === undefined && style.bottom === undefined)) {
-    throw childDiagnostic(child, 'position', style.position, container, 'PIBBL_LAYOUT_UNSUPPORTED_POSITION: absolute currently requires one physical numeric inset on each axis');
+  if (style.alignSelf !== undefined) {
+    throw childDiagnostic(child, 'alignSelf', style.alignSelf, container, 'PIBBL_LAYOUT_UNSUPPORTED_POSITION: absolute currently uses parent alignItems only');
   }
   if (query || style.aspectRatio !== undefined || style.flexBasis !== undefined && style.flexBasis !== 'auto' ||
       (style.flexGrow !== undefined && style.flexGrow !== 0) || (style.flexShrink !== undefined && style.flexShrink !== 0) ||

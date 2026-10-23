@@ -104,15 +104,17 @@ ordinary Flex slot and ignores insets. Relative retains that slot, then applies
 finite numeric `left`/`right`/`top`/`bottom` once to final geometry. LTR
 prefers left over right, RTL prefers right over left, and top prefers bottom.
 Omitting `position` preserves the existing Flex placement rules. This bounded
-feature does not provide CSS absolute positioning, containing blocks,
+feature does not provide containing blocks,
 percent-inset resolution, wrapping, or other layout-family support.
 
 Experimental direct row-nowrap Flex children may also select `position: "absolute"`
-with explicit finite numeric width/height and at least one numeric inset per
-axis. This excludes the child from Flex line allocation while preserving authored
+with explicit finite numeric width/height and optional numeric physical
+insets. This excludes the child from Flex line allocation while preserving authored
 paint/target/focus order. Insets reference the parent's inner border edge; padding
 does not shift an explicit inset. LTR prefers left, RTL prefers right, and top
-prefers bottom. Direct layout children, child box decoration, margins, nonzero sizing bounds
+prefers bottom. An axis with no inset uses parent content-box alignment via
+`justifyContent` or `alignItems`; stretch leaves fixed height at cross-start.
+Direct layout children, child box decoration, margins, nonzero sizing bounds
 and flex factors remain unsupported, along with automatic sizing and nested
 containing blocks.
 

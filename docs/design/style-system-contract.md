@@ -190,6 +190,14 @@ scientific notation, malformed strings, and non-finite results reject.
   Flex `left`/`top` diagnostic. This is not an Absolute or containing-block
   model; percentages, wrapping, other layout parents, and normal JavaScript
   Flex remain unsupported.
+- Experimental finite row-nowrap Flex also admits fixed-size direct children with
+  `position: "absolute"`. They leave line allocation but retain source paint,
+  hit and focus order. Explicit numeric insets use the inner-border/padding-box
+  edge; an axis without an inset uses parent content-box alignment through
+  `justifyContent`/`alignItems`. LTR prefers left, RTL prefers right, and top
+  prefers bottom. Width/height remain explicit. Automatic sizes, percentages,
+  child decoration/margins/bounds, direct layout children and nested containing
+  blocks are outside this admission; see the layout contract for exact limits.
 - Experimental `paddingStart` and `paddingEnd` override their direction-mapped
   physical padding edge, including zero and independent of declaration order.
   Values are nonnegative; percentages require actual allocated Flex ownership and

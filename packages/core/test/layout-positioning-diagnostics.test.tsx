@@ -90,10 +90,9 @@ describe('bounded direct-Flex absolute admission', () => {
   it.each([
     ['automatic width', { ...fixed, width: undefined }],
     ['percentage width', { ...fixed, width: '50%' as const }],
-    ['missing horizontal inset', { ...fixed, left: undefined }],
-    ['missing vertical inset', { ...fixed, top: undefined }],
     ['percentage inset', { ...fixed, left: '10%' as const }],
     ['nonfinite inset', { ...fixed, left: Infinity }],
+    ['self alignment', { ...fixed, alignSelf: 'center' as const }],
     ['margin', { ...fixed, margin: 1 }],
     ['child padding', { ...fixed, padding: 1 }],
   ] as const)('rejects unsupported absolute %s instead of changing flow', (_name, style) => {

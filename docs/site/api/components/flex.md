@@ -70,11 +70,11 @@ const relativeFlex = (
 
 The first rectangle still reserves its RTL slot, then shifts 18 units left and
 8 units down; the second remains in its original slot. This is experimental
-layout only. It does not add CSS absolute positioning, containing blocks,
+layout only. It does not add containing blocks,
 percent insets, wrapping, other layout parents, or normal JavaScript Flex.
 
 Experimental direct children can also use `position: "absolute"` with numeric
-width/height and at least one numeric inset per axis. Such a child leaves Flex
+width/height and optional numeric physical insets. Such a child leaves Flex
 allocation while keeping its authored paint, target and focus order:
 
 ```tsx
@@ -88,7 +88,11 @@ allocation while keeping its authored paint, target and focus order:
 The gold rectangle keeps its ordinary x=60 slot. The tomato rectangle paints
 between its two siblings and uses the parent's inner-border edge as its inset
 origin; padding does not add to explicit insets. Left wins over right in LTR,
-right wins in RTL, and top wins over bottom. Omitted sizing, no-inset alignment,
+right wins in RTL, and top wins over bottom. On an axis without an inset, the
+fixed child uses parent content-box `justifyContent` or `alignItems` alignment.
+For example center/flex-end puts a30×20 child at77,62 inside the decorated
+204×104 parent from the positioning rehearsal; supplying left12 changes only x
+to14. Stretch keeps the fixed height at cross-start. Omitted sizing,
 percentage insets, direct layout children, child box decoration, margins and
 nested containing-block selection remain unsupported.
 
