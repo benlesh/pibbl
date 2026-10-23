@@ -19,9 +19,14 @@ const source = sourceIndex < 0 ? undefined : process.argv[sourceIndex + 1];
 if (sourceIndex >= 0 && (!source || source.startsWith("--")))
   throw new Error("--source requires a Yoga Git checkout path");
 const writing = process.argv.includes("--write");
+const aspectProbe = process.argv.includes("--aspect-probe");
+const percentageOwnerProbe = process.argv.includes("--percentage-owner-probe");
 if (writing && !source)
   throw new Error("--write requires --source <Yoga Git checkout>");
-if (process.argv.includes("--aspect-probe") && (!source || writing)) throw new Error("--aspect-probe requires --source and cannot use --write");
+if ((aspectProbe || percentageOwnerProbe) && (!source || writing))
+  throw new Error("independent probes require --source and cannot use --write");
+if (aspectProbe && percentageOwnerProbe)
+  throw new Error("choose one independent probe");
 function run() {
 let record = source ? undefined : JSON.parse(readFileSync(recordPath, "utf8"));
 if (source) {
@@ -57,8 +62,11 @@ if (source) {
     }
     collect(join(temporary, "yoga"));
     const executable = join(temporary, "reference");
-    const aspectProbe = process.argv.includes("--aspect-probe");
-    const probe = join(folder, aspectProbe ? "aspect-probe.cpp" : "reference.cpp");
+    const probe = join(
+      folder,
+      aspectProbe ? "aspect-probe.cpp" :
+        percentageOwnerProbe ? "percentage-owner-probe.cpp" : "reference.cpp",
+    );
     execFileSync("c++", [
       "-std=c++20",
       "-O2",
@@ -69,8 +77,9 @@ if (source) {
       "-o",
       executable,
     ]);
-    if (aspectProbe) {
-      process.stderr.write(`Pinned Yoga 3.2.1 ${commit}; aspect probe SHA256 ${createHash("sha256").update(readFileSync(probe)).digest("hex")}\n`);
+    if (aspectProbe || percentageOwnerProbe) {
+      const probeName = aspectProbe ? "aspect probe" : "percentage-owner policy probe";
+      process.stderr.write(`Pinned Yoga 3.2.1 ${commit}; ${probeName} SHA256 ${createHash("sha256").update(readFileSync(probe)).digest("hex")}\n`);
       process.stderr.write(execFileSync(executable, { encoding: "utf8" }));
       return;
     }

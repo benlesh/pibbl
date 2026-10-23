@@ -20,7 +20,8 @@ No new runtime behavior, capability promotion, or aggregate Node24 trust claim.
 Slice145 started with two public tests failing numeric-only admission before
 production changes; its completed evidence is recorded below.
 
-Latest delivery is consolidation52 for154–156.
+Latest delivery is slice157 (indefinite-owner bound validity and pinned policy evidence).
+Consolidation52 is `8f65cb34` for154–156.
 Slice156 is `5e819d2f` (experimental first-baseline provider composition).
 Slice155 is `7c60ab49` (public mixed-track spanning Grid evidence).
 Slice154 is `a3d817fa` (column Text natural cross-width with auto side margin).
@@ -4785,21 +4786,52 @@ reference. The156 source/built public lesson, four-case private replays and stri
 installed-package proof remain separate fresh receipts, not a full corpus replay.
 No aggregate trust or capability/gate promotion is claimed.
 
-## [NEXT] Slice157: resolve the indefinite percentage-bound policy
+## Slice157: percentage validity before indefinite-owner rejection
 
-The shortest substantive flex-core exit is the existing `flex.min-max` policy
-gap. More finite geometry profiles do not close it. Exact finite caller width or
-height is already an acyclic containing basis; maximum-only and unbounded
-availability are not. A proposed staged independent result cannot be inferred
-from the current Flex measurement graph, because children determine the owner
-whose percentage bounds determine those children. Preserve rejection until a
-concrete rule is supported by the pinned oracle and accepted design. Inspect
-Yoga's intrinsic/final phases and prove the selected rule with one public slice;
-do not silently use the maximum, zero, or arbitrary fixed-point iteration.
-Automatic-minimum's broader text/font, image, aspect and fitting policies remain
-the other flex-core exit. Fixed33 stays9complete/12experimental/6partial/5missing/
-1excluded and all7release gates remain open. Root remains sole repository writer;
-helpers provide independent read-only policy research and review.
+A focused public test failed before production code: malformed/negative percentage
+bounds returned a generic unsupported owner instead of diagnosing invalid input.
+The shared percentage parser now validates its decimal coefficient independently
+of a containing reference. Intrinsic Flex validates each bound before deciding
+whether owner availability is usable. This performs no guessed-zero resolution,
+provider call, native allocation, cache relaxation or iterative solve. Valid
+non-exact/unbounded percentage bounds keep the accepted targeted diagnostic.
+
+Fresh Node24.15/Chromium:60passed/1skipped experimental and56passed/5skipped
+ordinary across6files, including exact row/column and existing Flex/measurement
+contracts. The installed offline tarball passed strict Bundler/NodeNext and public
+runtime validity/resource evidence with245dist inputs, SHA256
+`73b5942d69ee1c8eae5d017345d236a61364d599def9b1f19c4ec7a21719c5dc`.
+Typecheck, focused lint and read-only changed-code review passed.
+
+Independent native policy probe is reproducible via
+`node tooling/layout-yoga-rehearsal.mjs --source <pinned-Yoga-checkout> --percentage-owner-probe`.
+Six cases each run twice on fresh trees; pinned3.2.1 commit remains
+`042f5013152eb81c1552dec945b88f7b95ca350f`, probe SHA256
+`b0e76329816bb367ff3109137b6dcf91c2d0c3e7465c15831143bed0bddd26c4`.
+With80+80 leaves and a25% cap, maximum-only160 yields owner120/first40;
+40is not25%of the final120. An unbounded owner also yields120/40. With20+80
+and a50%floor, maximum-only160 yields160/80 but unbounded yields100/20.
+Exact160 yields cap40/floor80. This is phase-sensitive Yoga availability behavior,
+not a generic final-owner fixed point. The standalone probe leaves the721record
+main corpus untouched and makes no six-case Pibbl parity claim.
+
+The accepted style/layout design explicitly diagnoses intrinsic percentage
+feedback; adopting Yoga's temporary FitContent reference would be a new policy.
+`flex.min-max` therefore remains partial, including the broader supported
+intrinsic-owner obligation. This fixes invalid-input semantics and supplies the
+required policy evidence without silently redefining completion. Fixed33 and all7
+open release gates remain unchanged.
+
+## [NEXT] Slice158: built-in Text baseline measurement
+
+Use the existing baseline operation with the same Canvas measurement and line
+layout as Text painting, supplying actual first/last offsets rather than manually
+entered provider numbers. Start with the smallest exact admitted Text profile,
+prove mixed-font geometry and signal updates publicly, and retain explicit
+boundaries for any unsupported shaping/fitting/font lifecycle behavior. This is a
+substantive missing measurement prerequisite; it does not adopt a new percentage
+policy or close the full baseline capability. Consolidate157–159 before further
+behavior. Root remains sole writer; helpers propose patches or independent review.
 
 ### Finite positioning exit matrix after134
 

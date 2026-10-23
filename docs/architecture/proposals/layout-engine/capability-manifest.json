@@ -1945,6 +1945,8 @@
         "tooling/packed-layout-consumer.mjs",
         "packages/core/test/layout-exact-row-measurement.test.tsx",
         "packages/core/test/layout-exact-column-measurement.test.tsx",
+        "packages/core/test/layout-indefinite-bound-validation.test.tsx",
+        "tooling/layout-yoga-rehearsal/percentage-owner-probe.cpp",
         "packages/scenarios/src/learning/layout/wasm-flex-intrinsic-primitive.example.tsx",
         "tooling/test-wasm-intrinsic-primitive.mjs"
       ],
@@ -1970,7 +1972,8 @@
           "negative/nonfinite/malformed percentages rejected",
           "resolved opposing percent bounds rejected",
           "percentage-dependent intrinsic measurement remains unsupported without resource allocation",
-          "Maximum-only and unbounded row/column availability cannot supply a percentage main-bound basis; conflicting resolved bounds diagnose before provider evaluation"
+          "Maximum-only and unbounded row/column availability cannot supply a percentage main-bound basis; conflicting resolved bounds diagnose before provider evaluation",
+          "Malformed, negative and nonfinite percentage bounds diagnose before indefinite-owner rejection, provider evaluation or resource allocation"
         ],
         "interaction": [
           "owner resize recomputes percent limits and moves hit targets in the same frame",

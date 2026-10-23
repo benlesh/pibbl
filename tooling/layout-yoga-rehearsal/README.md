@@ -326,6 +326,28 @@ content-box width90 plus horizontal14 gives outer104, then outerheight104/3.
 The probe also records height-driven row behavior as discovery input; that
 intrinsic main inference is outside the initial Pibbl finite-main ratio slice.
 
+## Independent percentage-owner policy probe
+
+Run `node tooling/layout-yoga-rehearsal.mjs --source /path/to/yoga --percentage-owner-probe`.
+This compiles `percentage-owner-probe.cpp` against the pinned source and prints its
+commit, probe hash and six raw owner/child widths. It intentionally does not read,
+rewrite or enlarge `reference.json`.
+
+Each fresh configuration is a row with two fixed-height children. The first is
+either an 80px basis with `minWidth: 0` and `maxWidth: 25%`, or a 20px basis with
+`minWidth: 50%`; the second is an 80px fixed basis. The owner is respectively an
+exact 160px width, a `maxWidth: 160px` FitContent owner, or unbounded. The program
+runs every case twice with fresh Yoga configuration and node ownership, failing if
+the raw results differ.
+
+This is policy evidence, not a Pibbl parity corpus. In pinned Yoga the max-only
+FitContent path supplies a temporary available-size reference before its final
+content size is returned: for example, the capped case returns owner120/first40,
+where 40 is not 25% of final owner120. The floor case is 20 under unbounded
+availability but owner160/first80 under max-only160. Pibbl therefore keeps its
+accepted diagnostic for intrinsic percentage feedback; the probe must not be read
+as authorization to substitute a maximum, zero, or convergence guess.
+
 ## Allocation release corpus and classified CSS differences
 
 The comparison now contains25 records:22 native geometry matches and3 classified

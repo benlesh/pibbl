@@ -24,7 +24,7 @@ import {
   wireStructuralEvents,
 } from '../components/structural-events.js';
 import { normalizeBoxInsets, hasPercentageBoxPadding, resolveAllocatedInsets } from './box-insets.js';
-import { resolveLength } from '../style/resolve-length.js';
+import { resolveLength, parsePercentage } from '../style/resolve-length.js';
 import { setPreNormalizedStyle, peekPreNormalizedStyle } from '../style/resolve-dispatch.js';
 import type {
   BoxStyle,
@@ -483,6 +483,12 @@ function measureFlex(
     let style = preparedStyleValue(prepared) as Readonly<
       BoxStyle & FlexItemStyle & LayoutItemStyle & Record<string, unknown>
     >;
+    if (experimentalLayout) {
+      validateIntrinsicBound(style.minWidth, 'minWidth', child, diagnosticBox);
+      validateIntrinsicBound(style.maxWidth, 'maxWidth', child, diagnosticBox);
+      validateIntrinsicBound(style.minHeight, 'minHeight', child, diagnosticBox);
+      validateIntrinsicBound(style.maxHeight, 'maxHeight', child, diagnosticBox);
+    }
     if (hasPercentageBoxPadding(style, options.layoutDirection)) return unsupportedIntrinsic('does not support percentage padding without an actual finite Flex allocation');
     // Absolute children have no flow contribution. This first slice does not
     // define an intrinsic containing-block cascade, so fail before a child can
@@ -719,6 +725,16 @@ function intrinsicNumber(
     });
   }
   return value;
+}
+
+function validateIntrinsicBound(value: unknown, property: string, child: PibblElement<any>, container: Readonly<LayoutBox>): void {
+  if (value === undefined) return;
+  if (typeof value === 'number') {
+    if (!Number.isFinite(value) || value < 0) throw childDiagnostic(child, property, value, container, 'must be finite and nonnegative');
+    return;
+  }
+  const percentage = parsePercentage(value, property, childContext(child, container));
+  if (percentage < 0) throw childDiagnostic(child, property, value, container, 'must be nonnegative');
 }
 
 function intrinsicOptionalNumber(

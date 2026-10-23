@@ -1223,6 +1223,11 @@ The result retains the caller's exact width and the measured natural cross size.
 Resolved contradictory bounds diagnose before provider evaluation. Fixed declared
 child geometry does not invoke a child measurement callback.
 
+Percentage bound validity is checked independently of containing-size availability.
+Malformed decimal syntax, nonfinite coefficients and negative minimum/maximum
+percentages diagnose before an unsupported owner result, child provider calls or
+layout-resource allocation. This does not invent a zero reference for validation.
+
 A maximum-only limit or unbounded availability never supplies a percentage basis.
 When percentage main bounds need it, those calls return an unsupported result
 requiring an exact finite row width. Existing diagnostics remain for percentage

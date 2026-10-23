@@ -724,6 +724,22 @@ if(JSON.stringify(exactRowMeasured)!==JSON.stringify({status:'measured',size:{wi
 for(const constraints of [{minWidth:0,maxWidth:160,minHeight:0,maxHeight:Infinity},{minWidth:0,maxWidth:Infinity,minHeight:0,maxHeight:Infinity}]){const result=measureElement(exactRowDirect,constraints,exactRowMeasurement);if(result.status!=='unsupported')throw Error('installed nonexact row measurement '+JSON.stringify(result));}
 const exactRowContradictory=createElement(Flex,{style:{flexDirection:'row',flexWrap:'nowrap'},children:[createElement(Rectangle,{style:{width:100,height:20,minWidth:'70%',maxWidth:'25%',minHeight:0,flexBasis:100,flexGrow:0,flexShrink:0}})]});
 let exactRowContradiction=false;try{measureElement(exactRowContradictory,exactRowConstraints,exactRowMeasurement);}catch(error){exactRowContradiction=/minimum must not exceed maximum/i.test(String(error));}if(!exactRowContradiction)throw Error('installed exact row contradictory percentage bounds');
+// Percentage validity is independent of whether the measured owner is definite.
+const indefiniteBoundsBefore=(globalThis as any).__PIBBL_LAYOUT_DIAGNOSTICS__();
+for(const flexDirection of ['row','column'] as const){
+  const property=flexDirection==='row'?'maxWidth':'maxHeight';
+  for(const max of [160,Infinity]){
+    const constraints={minWidth:0,maxWidth:flexDirection==='row'?max:100,minHeight:0,maxHeight:flexDirection==='column'?max:100};
+    for(const value of ['-10%','25%%','9'.repeat(400)+'%']){
+      const root=createElement(Flex,{style:{flexDirection,flexWrap:'nowrap'},children:createElement(Rectangle,{style:{width:40,height:20,minWidth:0,minHeight:0,flexBasis:40,flexGrow:0,flexShrink:0,[property]:value}})});
+      let rejected=false;try{measureElement(root,constraints,exactRowMeasurement);}catch(error){rejected=String(error).includes(property)&&/nonnegative|unsupported|finite/.test(String(error));}
+      if(!rejected)throw Error('installed indefinite percentage validity '+property+' '+value);
+    }
+  }
+}
+const indefiniteBoundsAfter=(globalThis as any).__PIBBL_LAYOUT_DIAGNOSTICS__();
+if(indefiniteBoundsAfter.activeNodes!==indefiniteBoundsBefore.activeNodes||indefiniteBoundsAfter.activeArenas!==indefiniteBoundsBefore.activeArenas||indefiniteBoundsAfter.cachedMeasurements!==indefiniteBoundsBefore.cachedMeasurements||indefiniteBoundsAfter.activeWasmInstances!==indefiniteBoundsBefore.activeWasmInstances)throw Error('installed indefinite percentage cleanup');
+receipt.indefiniteBoundValidation=true;
 const exactRowCanvas=document.createElement('canvas');exactRowCanvas.width=100;exactRowCanvas.height=100;exactRowCanvas.style.cssText='width:100px;height:100px';document.body.append(exactRowCanvas);
 const exactRowWidth=signal(80),exactRowInk=signal('#426b61'),exactRowBoxes=new Map<string,{x:number;y:number;width:number;height:number;stamp:number}>(),exactRowHits:string[]=[];const exactRowQueries:Array<[number,number,number,number]>=[];let exactRowSerial=0;
 const ExactRowPanel=definePrimitive<{name:'A'|'B'},ExactRowChildStyle,ExactRowChildStyle,SystemStyle&{width:number;height:number}>((props,_style)=>{const box=useLayoutBox(),matrix=useCanvasContext().getTransform(),stamp=useConst(()=>++exactRowSerial);exactRowBoxes.set(props.name,{x:matrix.e,y:matrix.f,width:box.width,height:box.height,stamp});return createElement(Rectangle,{onClick:()=>exactRowHits.push(props.name),style:{width:box.width,height:box.height,fill:props.name==='A'?'#19375b':'#a63758',cursor:'pointer'}});},{resolveStyle:(_style,context)=>({width:context.allocation.width,height:context.allocation.height})});

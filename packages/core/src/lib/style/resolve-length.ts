@@ -34,14 +34,7 @@ export function resolveLength(
     return value;
   }
 
-  if (typeof value !== 'string' || !DECIMAL_PERCENTAGE.test(value)) {
-    throw diagnostic(
-      property,
-      value,
-      `uses an unsupported length value ${String(value)}`,
-      context,
-    );
-  }
+  const percentage = parsePercentage(value, property, context);
 
   if (reference === undefined || !Number.isFinite(reference)) {
     throw diagnostic(
@@ -60,7 +53,7 @@ export function resolveLength(
     );
   }
 
-  const resolved = (Number.parseFloat(value) / 100) * reference;
+  const resolved = (percentage / 100) * reference;
   if (!Number.isFinite(resolved)) {
     throw diagnostic(
       property,
@@ -70,6 +63,18 @@ export function resolveLength(
     );
   }
   return resolved;
+}
+
+/** @internal Parse a percentage independently of its containing-size reference. */
+export function parsePercentage(value: unknown, property: string, context: Readonly<LayoutDiagnosticContext> = {}): number {
+  if (typeof value !== 'string' || !DECIMAL_PERCENTAGE.test(value)) {
+    throw diagnostic(property, value, `uses an unsupported length value ${String(value)}`, context);
+  }
+  const percentage = Number.parseFloat(value);
+  if (!Number.isFinite(percentage)) {
+    throw diagnostic(property, value, 'percentage must be finite', context);
+  }
+  return percentage;
 }
 
 function diagnostic(
