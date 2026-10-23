@@ -867,7 +867,9 @@ const mount = createExampleMount(mountModule.WasmYogaMigrationExample);
   });
   const controller = mount(canvas); controllers.push(controller); await nextFrame();
   if(logicalPadding)for(let section=0;section<8;section++){clickCanvas(canvas,520,158);await nextFrame();}
-  const cases=yogaReference.cases.filter(fixture=>!('intrinsicFixture' in fixture) && !('directionMatrixFixture' in fixture) && !('autoMarginFixture' in fixture) && ('contentBoxes' in fixture)===logicalPadding);
+  // This walk advances Next case through the contiguous original families. Later
+  // sections (including rounding) have dedicated semantic tests and browser drivers.
+  const cases=yogaReference.cases.filter(fixture=>!('roundingFixture' in fixture) && !('intrinsicFixture' in fixture) && !('directionMatrixFixture' in fixture) && !('autoMarginFixture' in fixture) && ('contentBoxes' in fixture)===logicalPadding);
   for (const [index, fixture] of cases.entries()) {
     const expected = fixture.pibblBoxes ?? fixture.boxes;
     if (index) { labels.length = 0; clickCanvas(canvas,60,158); await nextFrame(); }

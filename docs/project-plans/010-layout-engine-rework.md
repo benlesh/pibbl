@@ -3,6 +3,7 @@
 ## Current checkpoint and single next slice — 2026-10-23
 
 Latest delivery is slice111 (real-root loading cancellation/failure cleanup).
+Slice111 is `e014ac02` (real-root loading cancellation/failure cleanup).
 Slice110 is `642941bc` (unrounded logical geometry policy and evidence).
 Slice109 is `f99a7cdd` (source-order Canvas composition evidence).
 Slice108 is `35eef93b` (wrapped-row measured Text cross-auto sizing).
@@ -63,7 +64,7 @@ Slice56 is `cf2c7bc5` (prepared Flow-root planning/adoption).
 Slice55 is `1510efe3` (prepared Grid-root planning/adoption).
 Slice54 `773da7b9`,53 `aaa7ddcb`,52 `b5381e0d` are consolidated in `f322a709`.
 Every slice has its own commit. The fixed33-capability/seven-gate denominator is
-unchanged; all seven gates remain open. Consolidation26 is `2cd357d4`; consolidation27 is `abbaf209`; consolidation28 is `dfd16c8f`; consolidation29 is `f2e38dc6`; consolidation30 is recorded below; slices91–93 are delivered below; consolidation31 passed below; slices95–96 direction evidence passed below; consolidation32 for94–96 passed below; slices97–99 are delivered below; consolidation33 passed below; consolidation34 of100–102 passed below; the single next checkpoint is consolidation37 for109–111. Source5192/built5193, `#/testing/layout-preflight`:
+unchanged; all seven gates remain open. Consolidation26 is `2cd357d4`; consolidation27 is `abbaf209`; consolidation28 is `dfd16c8f`; consolidation29 is `f2e38dc6`; consolidation30 is recorded below; slices91–93 are delivered below; consolidation31 passed below; slices95–96 direction evidence passed below; consolidation32 for94–96 passed below; slices97–99 are delivered below; consolidation33 passed below; consolidation34 of100–102 passed below; consolidation37 for109–111 passes below; the single next delivery is112, nested wrapped percentage cross minima. Source5192/built5193, `#/testing/layout-preflight`:
 Source5192/built5193 `#/examples/layout/wasm-yoga-migration`: Next case + resize
 cycles308 records:214matches/94classified differences; click A/B/C targets.
 Canonical built comparison: http://127.0.0.1:5193/#/examples/layout/wasm-yoga-migration.
@@ -2901,13 +2902,33 @@ all7release gates remain open. Native308records/v5/68649bytes unchanged. Normal 
 built fresh through generated-asset checks, declaration emission and build-core;
 Node26.9.0/Chromium, no Node24 aggregate trust claim.
 
-## [NEXT] Consolidation 37 for109–111
+## Consolidation 37 completed for109–111
 
-Consolidate source-order composition, unrounded geometry and real-root loading
-ownership before further capability expansion. Run the established focused matrix
-plus Canvas surface and loading suites in experimental and ordinary modes; record
-fresh totals and failures honestly. The final whole-codebase review remains at
-full program end. The next capability slice is selected only after this gate.
+Separate slice commits109 `f99a7cdd`,110 `642941bc`,111 `e014ac02`.
+Fresh23-file experimental matrix525pass/9skip534 (78.77s), ordinary matrix190pass/
+344skip534 (3.72s), Node26.9.0/Chromium. The established11files now include Canvas
+surface and all loading/checkpoint tests. Logs:
+`/tmp/pibbl-consolidation37-focused-final.txt` and
+`/tmp/pibbl-consolidation37-normal-final.txt`.
+
+The first grouped run found a harness-selection failure: the legacy contiguous
+Next-case walk included the newly appended rounding section despite excluding
+intervening dedicated families. It now excludes that separately tested section;
+its exact public Flex test and source/private-built/installed semantic rounding
+proof remain intact. No runtime change or baseline rewrite. The corrected full
+matrix passes; no further broad rerun is needed without another change or concern.
+All7release gates remain open; fixed33 counts stay8complete/11experimental/
+6partial/7missing/1excluded. No aggregate Node24 trust/performance claim.
+
+## [NEXT] Nested wrapped percentage cross minima (slice 112)
+
+Pin a definite200px row/wrap owner whose height100→160 settles a direct nested
+Flex's60% cross minimum to60→96. Prove nested leaf allocation and the next line's
+y72→108, moved targets, keyed/native reuse, paint-only stability and teardown.
+Extend the existing Yoga comparison and installed proof. This is the first bounded
+nested-bound vertical slice; reverse/decorated variants and indefinite-owner
+measurement policy remain separate work. No new public API or general intrinsic
+feedback policy is implied. Final whole-codebase review remains at program end.
 
 ### Consolidation 24 completed for delivery slices 70–72
 
