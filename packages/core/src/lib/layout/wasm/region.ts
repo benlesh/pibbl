@@ -41,6 +41,7 @@ interface Kernel {
   solve(handle: number, generation: number, main: number, gap: number): number;
   solve_wrap(handle: number, generation: number, main: number, gap: number): number;
   place_wrap_main(handle: number, generation: number, main: number, gap: number, alignment: number, reverse: number): number;
+  place_wrap_main_auto(handle: number, generation: number, main: number, gap: number, alignment: number, reverse: number): number;
   place_wrap_cross(handle: number, generation: number, size: number, gap: number, alignment: number, reverse: number): number;
   resize_grid(handle: number, generation: number, count: number, axis: number): number;
   resolve_grid_tracks(handle: number, generation: number, bound: number, gap: number, axis: number): number;
@@ -391,7 +392,7 @@ export class LayoutRegion {
     if (key !== this.mainPlacementKey) {
       try {
         if (autoMargins) {
-          if (this.wrap || autoMargins.length !== this.order.length) throw new Error('Auto margin placement requires a matching nowrap allocation.');
+          if (autoMargins.length !== this.order.length) throw new Error('Auto margin placement requires a matching allocation.');
           const autoPointer = kernel.resize_main_auto(this.handle, this.generation, this.order.length);
           const flags = new Float64Array(kernel.memory.buffer, autoPointer, this.order.length * 2);
           for (let index = 0; index < autoMargins.length; index++) {
@@ -400,7 +401,12 @@ export class LayoutRegion {
           }
         }
         const pointer = kernel.resize(this.handle, this.generation, this.order.length);
-        const status = autoMargins ? kernel.place_main_auto(this.handle, this.generation, main, gap, code, reverse ? 1 : 0) : this.wrap ? kernel.place_wrap_main(this.handle, this.generation, main, gap, code, reverse ? 1 : 0) : kernel.place_main(this.handle, this.generation, main, gap, code, reverse ? 1 : 0);
+        let status: number;
+        if (autoMargins) {
+          status = this.wrap ? kernel.place_wrap_main_auto(this.handle, this.generation, main, gap, code, reverse ? 1 : 0) : kernel.place_main_auto(this.handle, this.generation, main, gap, code, reverse ? 1 : 0);
+        } else {
+          status = this.wrap ? kernel.place_wrap_main(this.handle, this.generation, main, gap, code, reverse ? 1 : 0) : kernel.place_main(this.handle, this.generation, main, gap, code, reverse ? 1 : 0);
+        }
         if (status !== 0) throw new Error(`Experimental Flex WASM main placement failed (${status}); nonfinite geometry.`);
         const output = new Float64Array(kernel.memory.buffer, pointer, this.order.length * 10);
         this.mainOffsets = this.order.map((_, i) => output[i * 10 + 7]);

@@ -207,10 +207,13 @@ Finite measurement receives that width as both horizontal constraint bounds;
 layout and pointer targets use the resulting height in the same publication.
 Declared heights and intrinsic-only leaves keep their existing behavior.
 
-Experimental finite nowrap items may use
+Experimental finite nowrap, wrap and wrap-reverse items may use
 [`FlexMargin`](#/api/types/layout#flexmargin) on main-axis edges in any supported
 row/column direction, including reverse/RTL. Physical left/right apply to rows;
 top/bottom apply to columns. Logical start/end support row main edges after
 receiver-direction mapping. Auto edges divide positive free space after sizing
 and before justification; with no positive space they remain zero. Cross-axis,
-shorthand and wrapped auto margins remain deferred.
+shorthand and intrinsic auto margins remain deferred. Wrapped placement divides
+space using only the auto slots on each actual line; a line without auto slots
+keeps its justification. The comparison explicitly labels differences from the
+pinned Yoga implementation.

@@ -942,9 +942,161 @@
       {
         "id": "auto-logical-end-rtl",
         "covers": ["flex.auto-margin", "direction.rtl-and-logical-edges"]
+      },
+      {
+        "id": "auto-wrap-row-wrap-ltr",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ],
+        "classification": "css-line-local-auto-margin"
+      },
+      {
+        "id": "auto-wrap-row-wrap-rtl",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ],
+        "classification": "css-line-local-auto-margin"
+      },
+      {
+        "id": "auto-wrap-row-wrap-reverse-ltr",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ],
+        "classification": "css-line-local-auto-margin"
+      },
+      {
+        "id": "auto-wrap-row-wrap-reverse-rtl",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ],
+        "classification": "css-line-local-auto-margin"
+      },
+      {
+        "id": "auto-wrap-row-reverse-wrap-ltr",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ],
+        "classification": "css-line-local-auto-margin"
+      },
+      {
+        "id": "auto-wrap-row-reverse-wrap-rtl",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ],
+        "classification": "css-line-local-auto-margin"
+      },
+      {
+        "id": "auto-wrap-row-reverse-wrap-reverse-ltr",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ],
+        "classification": "css-line-local-auto-margin"
+      },
+      {
+        "id": "auto-wrap-row-reverse-wrap-reverse-rtl",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ],
+        "classification": "css-line-local-auto-margin"
+      },
+      {
+        "id": "auto-wrap-column-wrap-ltr",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ],
+        "classification": "css-line-local-auto-margin"
+      },
+      {
+        "id": "auto-wrap-column-wrap-rtl",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ],
+        "classification": "css-line-local-auto-margin"
+      },
+      {
+        "id": "auto-wrap-column-wrap-reverse-ltr",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ],
+        "classification": "css-line-local-auto-margin"
+      },
+      {
+        "id": "auto-wrap-column-wrap-reverse-rtl",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ],
+        "classification": "css-line-local-auto-margin"
+      },
+      {
+        "id": "auto-wrap-column-reverse-wrap-ltr",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ],
+        "classification": "css-line-local-auto-margin"
+      },
+      {
+        "id": "auto-wrap-column-reverse-wrap-rtl",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ],
+        "classification": "css-line-local-auto-margin"
+      },
+      {
+        "id": "auto-wrap-column-reverse-wrap-reverse-ltr",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ],
+        "classification": "css-line-local-auto-margin"
+      },
+      {
+        "id": "auto-wrap-column-reverse-wrap-reverse-rtl",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ],
+        "classification": "css-line-local-auto-margin"
+      },
+      {
+        "id": "auto-wrap-row-line-without-auto-center",
+        "covers": [
+          "flex.auto-margin",
+          "flex.row-column-nowrap-wrap",
+          "direction.rtl-and-logical-edges"
+        ]
       }
     ],
-    "limit": "135 records:116 native matches and19 explicitly classified CSS allocation/safe-overflow/physical-margin differences; finite row/column/reverse/wrap, box conversion, distribution, definite percentage bounds, wrapped aspect ratios, allocated-owner percentage gaps/padding/cross bounds, nowrap/wrap/wrap-reverse physical margins and finite nested percentage owners. This does not establish general intrinsic, percentage or CSS parity."
+    "limit": "237 records:176 native matches and61 explicitly classified differences, including16 CSS line-local wrapped auto-margin differences. Finite direction/box/distribution/percentage/intrinsic-provider and main auto-margin evidence remains bounded; this does not establish general intrinsic, percentage, auto-margin or CSS parity."
   },
   "gateGroups": [
     {
@@ -1426,28 +1578,30 @@
       "id": "flex.auto-margin",
       "target": "parity",
       "group": "box-and-direction",
-      "current": "experimental finite nowrap main-axis auto margins in row/column, forward/reverse and LTR/RTL; physical left/right/top/bottom plus row logical start/end; sizing precedes positive absorption and nonpositive space preserves alignment",
+      "current": "experimental finite nowrap/wrap/wrap-reverse main-axis auto margins in row/column, forward/reverse and LTR/RTL; physical left/right/top/bottom plus row logical start/end; sizing precedes positive absorption and nonpositive space preserves alignment",
       "status": "partial",
-      "unresolvedPolicy": "All finite nowrap main directions and receiver-aware row logical edges are supported. Wrapped per-line, cross-axis/shorthand and broader opposing/minmax auto combinations remain outstanding.",
+      "unresolvedPolicy": "Finite main directions, receiver-aware row logical edges and per-line wrapped absorption are supported. Cross-axis/shorthand, intrinsic and broader opposing/minmax auto combinations remain outstanding.",
       "evidence": {
         "positive": [
           "left/right/both slots divide positive free space after flexible sizing and before justification",
           "growth consumes space before auto slots; nonpositive free space preserves center alignment",
           "numeric-to-auto-to-numeric toggles update main placement only without re-solving or recreating nodes",
           "public FlexMargin and editor declarations expose all six edge values; runtime accepts only main-axis auto and shorthand auto remains a type error",
-          "slice98: four main directions \u00d7 LTR/RTL physical auto, logical row start/end and exact source-order geometry; axis/direction signals preserve keyed focus"
+          "slice98: four main directions \u00d7 LTR/RTL physical auto, logical row start/end and exact source-order geometry; axis/direction signals preserve keyed focus",
+          "slice99: each wrapped line counts its own auto slots; a line without auto slots retains justification; 16 CSS-line-local differences explicitly classified against pinned Yoga"
         ],
         "negative": [
           "normal JavaScript rejects auto margin admission",
-          "wrapped, cross-axis, column logical-inline and shorthand auto shapes rejected explicitly",
-          "old v1 modules rejected before publication; root/sync imports remain inert",
+          "cross-axis, column logical-inline and shorthand auto shapes rejected explicitly",
+          "old v1/v2 and incomplete v3 modules rejected before publication; root/sync imports remain inert",
           "native flag cardinality and NaN rejected without rewriting numeric margin inputs"
         ],
         "interaction": [
           "source/built seven-case semantic boxes, stable keyed stamps, moved A/B targets and zero disposal ownership",
           "fresh installed seven-case public geometry/targets, per-controller node/arena/cache cleanup and strict Bundler/NodeNext type consumers",
           "public mounted resize preserves stamps; paint-only preserves solves and node identity",
-          "slice98: seventeen exact native/source/built/installed auto cases; public row\u2192column\u2192RTL signal movement preserves focus/stamps/nodes, old target misses and new target hits"
+          "slice98: seventeen exact native/source/built/installed auto cases; public row\u2192column\u2192RTL signal movement preserves focus/stamps/nodes, old target misses and new target hits",
+          "slice99: source/built 17 wrapped cases plus installed 34-case auto family; line merge preserves keyed focus and moves targets; paint reuse and exact disposal"
         ],
         "yogaCases": [
           "auto-margin-left",
@@ -1466,10 +1620,26 @@
           "auto-main-column-reverse-ltr",
           "auto-main-column-reverse-rtl",
           "auto-logical-start-rtl",
-          "auto-logical-end-rtl"
+          "auto-logical-end-rtl",
+          "auto-wrap-row-wrap-ltr",
+          "auto-wrap-row-wrap-rtl",
+          "auto-wrap-row-wrap-reverse-ltr",
+          "auto-wrap-row-wrap-reverse-rtl",
+          "auto-wrap-row-reverse-wrap-ltr",
+          "auto-wrap-row-reverse-wrap-rtl",
+          "auto-wrap-row-reverse-wrap-reverse-ltr",
+          "auto-wrap-row-reverse-wrap-reverse-rtl",
+          "auto-wrap-column-wrap-ltr",
+          "auto-wrap-column-wrap-rtl",
+          "auto-wrap-column-wrap-reverse-ltr",
+          "auto-wrap-column-wrap-reverse-rtl",
+          "auto-wrap-column-reverse-wrap-ltr",
+          "auto-wrap-column-reverse-wrap-rtl",
+          "auto-wrap-column-reverse-wrap-reverse-ltr",
+          "auto-wrap-column-reverse-wrap-reverse-rtl",
+          "auto-wrap-row-line-without-auto-center"
         ],
         "missing": [
-          "wrapped per-line absorption",
           "cross-axis and shorthand auto margins",
           "broader min/max and opposing margin interactions"
         ]

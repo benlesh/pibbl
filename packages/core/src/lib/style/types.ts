@@ -125,7 +125,7 @@ export interface ResolvedBoxStyle {
   contentBox: LayoutBox;
 }
 
-/** Flex edge margin value. Auto consumes remaining positive main space in experimental finite nowrap Flex. See {@link FlexItemStyle}. */
+/** Flex edge margin value. Auto consumes remaining positive main space in experimental finite Flex main axes. See {@link FlexItemStyle}. */
 export type FlexMargin = number | Percentage | 'auto';
 
 /**

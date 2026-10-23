@@ -84,7 +84,7 @@ pub extern "C" fn resize_cross(handle: u32, generation: u32, count: usize) -> *m
     })
 }
 #[no_mangle]
-pub extern "C" fn layout_abi_v2() -> u32 { 2 }
+pub extern "C" fn layout_abi_v3() -> u32 { 3 }
 #[no_mangle]
 pub extern "C" fn place_cross(handle: u32, generation: u32, size: f64, reverse: u32) -> u32 {
     with_arena(handle, generation, 1, |arena| align_cross(&mut arena.cross, size, reverse != 0))
@@ -351,6 +351,23 @@ pub extern "C" fn place_wrap_main(handle: u32, generation: u32, main: f64, gap: 
     })
 }
 #[no_mangle]
+pub extern "C" fn place_wrap_main_auto(handle: u32, generation: u32, main: f64, gap: f64, alignment: u32, reverse: u32) -> u32 {
+    if !main.is_finite() || main < 0.0 || !gap.is_finite() || gap < 0.0 || alignment > 5 || reverse > 1 { return 1; }
+    with_arena(handle, generation, 1, |arena| {
+        let count = arena.nodes.len() / STRIDE;
+        if arena.main_auto.len() != count * 2 || arena.lines.last().map_or(0, |&(_, end)| end) != count { return 1; }
+        for &(start, end) in &arena.lines {
+            let status = align_main_auto(
+                &mut arena.nodes[start*STRIDE..end*STRIDE],
+                &arena.main_auto[start*2..end*2],
+                main, gap, alignment, reverse,
+            );
+            if status != 0 { return status; }
+        }
+        0
+    })
+}
+#[no_mangle]
 pub extern "C" fn place_wrap_cross(handle: u32, generation: u32, size: f64, gap: f64, alignment: u32, reverse: u32) -> u32 {
     with_arena(handle, generation, 1, |arena| {
         let records = &mut arena.cross;
@@ -610,6 +627,27 @@ mod tests {
         dispose(); dispose();
         assert_eq!(arena_create(),0);
         assert_eq!(arena_dispose(b,gb),1);
+    }
+
+    #[test] fn wrapped_auto_margins_share_free_space_per_line_without_rewriting_numeric_records() {
+        let handle = arena_create(); let generation = arena_generation(handle);
+        let pointer = resize(handle, generation, 4);
+        unsafe { std::slice::from_raw_parts_mut(pointer, 40).copy_from_slice(&[
+            40.,0.,f64::INFINITY,0.,0.,0.,0.,0.,0.,0.,
+            40.,0.,f64::INFINITY,0.,0.,0.,0.,0.,0.,0.,
+            40.,0.,f64::INFINITY,0.,0.,0.,0.,0.,0.,0.,
+            40.,0.,f64::INFINITY,0.,0.,0.,0.,0.,0.,0.,
+        ]); }
+        assert_eq!(solve_wrap(handle, generation, 100., 0.), 0);
+        let flags = resize_main_auto(handle, generation, 4);
+        unsafe { std::slice::from_raw_parts_mut(flags, 8).copy_from_slice(&[1.,0.,0.,0.,1.,0.,0.,0.]); }
+        assert_eq!(place_wrap_main_auto(handle, generation, 100., 0., 1, 0), 0);
+        unsafe {
+            let nodes = std::slice::from_raw_parts(pointer, 40);
+            assert_eq!((nodes[7], nodes[17], nodes[27], nodes[37]), (20., 60., 20., 60.));
+            assert_eq!((nodes[8], nodes[9], nodes[18], nodes[19], nodes[28], nodes[29], nodes[38], nodes[39]), (0.,0.,0.,0.,0.,0.,0.,0.));
+        }
+        assert_eq!(arena_dispose(handle, generation), 0);
     }
 
     #[test] fn auto_margins_place_after_sizing_without_mutating_numeric_records() {

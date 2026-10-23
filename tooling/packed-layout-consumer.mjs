@@ -276,7 +276,7 @@ for(const fixture of directionMatrixCases){
 }
 receipt.directionMatrix=true;
 const autoMarginCases = ${JSON.stringify(autoMarginFixtures)};
-if(autoMarginCases.length!==17)throw Error('installed auto-margin corpus');
+if(autoMarginCases.length!==34)throw Error('installed auto-margin corpus');
 for(const fixture of autoMarginCases){
  const autoCanvas=document.createElement('canvas');autoCanvas.width=fixture.width;autoCanvas.height=fixture.height;autoCanvas.style.cssText='width:'+fixture.width+'px;height:'+fixture.height+'px';document.body.append(autoCanvas);
  const autoBaseline=(globalThis as any).__PIBBL_LAYOUT_DIAGNOSTICS__();let autoRootTransform=new DOMMatrix();const autoHits:string[]=[];const autoBoxes=new Map<string,{x:number;y:number;width:number;height:number}>();

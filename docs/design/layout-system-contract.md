@@ -764,7 +764,7 @@ physical edges. Source traversal, paint/hit priority, focus order and glyph
 rendering remain unchanged. Existing allocation contexts, receiver signal inputs,
 prepared plans and placement caches carry direction; no separate cascade or
 scheduler is introduced. Plans reject mismatched direction before adoption. The
-WASM cross-placement ABI is identified by the `layout_abi_v2` export marker (including the optional auto-margin placement protocol);
+WASM cross-placement ABI is identified by the `layout_abi_v3` export marker (including optional nowrap/wrapped auto-margin placement protocols);
 older modules are rejected before publishing compiled code. Logical margin edges are specified below; logical padding is specified below; numeric logical border edges are specified below.
 
 The combined slice95 direction matrix deliberately preserves two existing rules.
@@ -943,12 +943,12 @@ example proves width100→60 changes height20→40 together with paint and hit b
 
 `FlexMargin = number | Percentage | "auto"` is exported for physical and logical
 edge fields: `marginLeft`, `marginRight`, `marginTop`, `marginBottom`,
-`marginStart` and `marginEnd`. Finite nowrap experimental Flex supports main-axis
+`marginStart` and `marginEnd`. Finite nowrap, wrap and wrap-reverse experimental Flex supports main-axis
 auto margins in row/column, forward/reverse and LTR/RTL. Left/right are row main
 edges; top/bottom are column main edges. Inline start/end map through the receiving
 direction (including a child Flex's explicit override) before main/cross
 admission. Logical edges override physical edges/shorthand; numeric zero can
-suppress a physical auto edge. Cross-axis, shorthand, wrapped and intrinsic auto
+suppress a physical auto edge. Cross-axis, shorthand and intrinsic auto
 margins remain unsupported. The ordinary build retains its experimental-margin
 diagnostic. Numeric/percentage margin behavior is unchanged.
 
@@ -968,6 +968,16 @@ solve. A separate flag revision invalidates the main-placement cache; toggling
 the fixed-size numeric0→auto→0 fixture preserves solves, cross placement and
 native identities. Unused
 auto scratch stays unallocated. Root/region disposal releases flags with their
-owner. Module validation rejects older v1 kernels before publication without
-instantiating a version probe; public entries remain import-time inert. Slice98
-uses the unchangedv2 kernel introduced in97.
+owner. Module validation rejects older kernels and incomplete v3 exports before
+publication without instantiating a version probe; public entries remain
+import-time inert. Slice99 adds the v3 wrapped placement entry. Each source-formed
+line uses only its own auto slots after sizing; lines without slots retain
+justification. Resizing can merge lines without replacing keyed children.
+
+The pinned Yoga3.2.1 implementation counts an overflowing candidate auto slot
+before breaking a line. Sixteen wrapped direction cases explicitly classify
+Pibbl's CSS line-local result as `css-line-local-auto-margin`, rather than parity.
+Native boxes remain recorded alongside independent Pibbl expectations. This
+follows [Flexbox main-axis alignment](https://www.w3.org/TR/css-flexbox-1/#main-alignment);
+an independent Chromium CSS fixture confirms the first row at10/60 and second
+row at60 for three40px items in100px with10px gaps.

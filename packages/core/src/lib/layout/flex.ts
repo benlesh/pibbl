@@ -723,12 +723,7 @@ function resolveFlexPlacements(
     }
     const autoMainBefore = row ? reverse ? autoRight : autoLeft : reverse ? autoBottom : autoTop;
     const autoMainAfter = row ? reverse ? autoLeft : autoRight : reverse ? autoTop : autoBottom;
-    if (autoMainBefore || autoMainAfter) {
-      if (options.flexWrap !== 'nowrap') {
-        throw childDiagnostic(child, row ? autoLeft ? marginLeftProperty : marginRightProperty : autoTop ? 'marginTop' : 'marginBottom', 'auto', container, 'auto main margins require a finite nowrap Flex allocation');
-      }
-      hasAutoMainMargins = true;
-    }
+    if (autoMainBefore || autoMainAfter) hasAutoMainMargins = true;
     const marginTop = allocatedMargin(autoTop ? 0 : marginTopValue, 'marginTop', child, container);
     const marginRight = allocatedMargin(autoRight ? 0 : marginRightValue, marginRightProperty, child, container);
     const marginBottom = allocatedMargin(autoBottom ? 0 : marginBottomValue, 'marginBottom', child, container);

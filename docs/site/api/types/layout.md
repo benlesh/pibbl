@@ -101,13 +101,14 @@ parent; it does not create a CSS cascade.
 ## FlexMargin
 
 `FlexMargin = number | Percentage | "auto"` describes physical and logical margin
-edges. Experimental finite nowrap Flex supports main-axis auto margins in all
+edges. Experimental finite Flex supports main-axis auto margins in all
 four directions and LTR/RTL. Physical left/right apply to rows; top/bottom apply
 to columns. Inline start/end map through the receiving direction and support
 row main-axis auto margins. Auto edges are zero during flexible sizing, then
-divide positive remaining main space before `justifyContent`. With no positive
+each actual nowrap/wrapped line divides its positive remaining main space among
+its own auto slots before `justifyContent`. With no positive
 space they remain zero and existing alignment applies. Cross-axis, shorthand,
-wrapped and intrinsic auto margins remain unsupported; the normal build retains
+intrinsic auto margins remain unsupported; the normal build retains
 its experimental-margin diagnostic. Numeric/percentage precedence is unchanged.
 
 ## FlexProps

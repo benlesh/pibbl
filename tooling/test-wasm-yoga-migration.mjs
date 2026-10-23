@@ -12,6 +12,7 @@ const logicalBordersOnly = process.argv.includes('--logical-borders');
 const logicalPaddingOnly = process.argv.includes('--logical-padding');
 const directionMatrixOnly = process.argv.includes('--direction-matrix');
 const autoMarginsOnly = process.argv.includes('--auto-margins');
+const wrappedAutoMarginsOnly = process.argv.includes('--wrapped-auto-margins');
 const crossOnly = process.argv.includes('--wrapped-cross-bounds');
 const paddingOnly = process.argv.includes('--percentage-padding');
 const gapOnly = process.argv.includes('--percentage-gaps');
@@ -40,8 +41,9 @@ try {
     } });
     await page.waitForTimeout(240);
   };
-  const cases = autoMarginsOnly ? reference.cases.filter(fixture => fixture.autoMarginFixture) : directionMatrixOnly ? reference.cases.filter(fixture => fixture.directionMatrixFixture) : intrinsicOnly ? reference.cases.filter(fixture => fixture.intrinsicFixture) : logicalBordersOnly ? reference.cases.filter(fixture => fixture.name.startsWith('logical-border-')) : logicalPaddingOnly ? reference.cases.filter(fixture => fixture.name.startsWith('logical-padding-')) : marginOnly ? reference.cases.filter(fixture => fixture.name.startsWith('margin-percent-')) : crossOnly ? reference.cases.filter(fixture => fixture.name.startsWith('cross-percent-')) : paddingOnly ? reference.cases.filter(fixture => fixture.name.startsWith('padding-percent-')) : gapOnly ? reference.cases.filter(fixture => fixture.name.startsWith('gap-percent-')) : aspectOnly ? reference.cases.filter(fixture => fixture.name.startsWith('aspect-wrap-')) : percentageOnly ? reference.cases.filter(fixture => fixture.name.startsWith('percent-')) : reference.cases;
-  if (autoMarginsOnly) { for(let section=0;section<12;section++) await click(520,158); }
+  const cases = wrappedAutoMarginsOnly ? reference.cases.filter(fixture => fixture.autoWrappedMarginFixture) : autoMarginsOnly ? reference.cases.filter(fixture => fixture.autoMarginFixture) : directionMatrixOnly ? reference.cases.filter(fixture => fixture.directionMatrixFixture) : intrinsicOnly ? reference.cases.filter(fixture => fixture.intrinsicFixture) : logicalBordersOnly ? reference.cases.filter(fixture => fixture.name.startsWith('logical-border-')) : logicalPaddingOnly ? reference.cases.filter(fixture => fixture.name.startsWith('logical-padding-')) : marginOnly ? reference.cases.filter(fixture => fixture.name.startsWith('margin-percent-')) : crossOnly ? reference.cases.filter(fixture => fixture.name.startsWith('cross-percent-')) : paddingOnly ? reference.cases.filter(fixture => fixture.name.startsWith('padding-percent-')) : gapOnly ? reference.cases.filter(fixture => fixture.name.startsWith('gap-percent-')) : aspectOnly ? reference.cases.filter(fixture => fixture.name.startsWith('aspect-wrap-')) : percentageOnly ? reference.cases.filter(fixture => fixture.name.startsWith('percent-')) : reference.cases;
+  if (wrappedAutoMarginsOnly) { for(let section=0;section<13;section++) await click(520,158); }
+  else if (autoMarginsOnly) { for(let section=0;section<12;section++) await click(520,158); }
   else if (directionMatrixOnly) { for(let section=0;section<11;section++) await click(520,158); }
   else if (intrinsicOnly) { for(let section=0;section<10;section++) await click(520,158); }
   else if (percentageOnly || aspectOnly || gapOnly || paddingOnly || crossOnly || marginOnly || logicalPaddingOnly || logicalBordersOnly) {
@@ -62,6 +64,7 @@ try {
   if (logicalBordersOnly) await click(520,158);
   let previousOwner;
   let previousDirectionStamps;
+  let previousLiveNames = [];
   for (const [index, fixture] of cases.entries()) {
     console.warn(`Replay ${index+1}/${cases.length}: ${fixture.name}`);
     if (index) await click(60, 158);
@@ -72,13 +75,17 @@ try {
     if (fixture.directionMatrixFixture || fixture.autoMarginFixture) {
       const state=JSON.parse((await frame.locator('pre').innerText()).split(fixture.autoMarginFixture ? 'auto margin state: ' : 'direction matrix state: ')[1]);
       assert.deepEqual(expected.map((_box,index)=>state.boxes[String.fromCharCode(65+index)]), expected, `${fixture.name}: semantic boxes`);
-      if (previousDirectionStamps) assert.deepEqual(state.stamps, previousDirectionStamps, `${fixture.name}: stable keyed panels`);
+      const liveNames = expected.map((_box, index) => String.fromCharCode(65 + index));
+      if (previousDirectionStamps) for (const name of liveNames) {
+        if (previousLiveNames.includes(name)) assert.equal(state.stamps[name], previousDirectionStamps[name], `${fixture.name}: stable keyed panel ${name}`);
+      }
       for (const [boxIndex, box] of expected.entries()) {
         await click(392+box.x+box.width/2,240+box.y+box.height/2);
         await frame.locator('pre').filter({ hasText: `selected: ${String.fromCharCode(65+boxIndex)}` }).waitFor({ state: 'visible' });
         assert.ok((await frame.locator('pre').innerText()).includes(`selected: ${String.fromCharCode(65+boxIndex)}`), `${fixture.name}: target ${boxIndex}`);
       }
       previousDirectionStamps=state.stamps;
+      previousLiveNames=liveNames;
       continue;
     }
     if (fixture.intrinsicFixture) {

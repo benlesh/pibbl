@@ -2,7 +2,8 @@
 
 ## Current checkpoint and single next slice — 2026-10-23
 
-Latest delivery is slice98 (finite nowrap main auto directions), recorded below.
+Latest delivery is slice99 (wrapped per-line main auto margins), recorded below.
+Slice98 is `aced729e` (finite nowrap main auto directions).
 Slice97 is `a47dd931` (finite physical main-axis auto margins).
 Slice96 is `3548157d`; consolidation32 is `2cd27a12`.
 Slice95 is `69b187a6` (combined direction evidence).
@@ -48,9 +49,9 @@ Slice56 is `cf2c7bc5` (prepared Flow-root planning/adoption).
 Slice55 is `1510efe3` (prepared Grid-root planning/adoption).
 Slice54 `773da7b9`,53 `aaa7ddcb`,52 `b5381e0d` are consolidated in `f322a709`.
 Every slice has its own commit. The fixed33-capability/seven-gate denominator is
-unchanged; all seven gates remain open. Consolidation26 is `2cd357d4`; consolidation27 is `abbaf209`; consolidation28 is `dfd16c8f`; consolidation29 is `f2e38dc6`; consolidation30 is recorded below; slices91–93 are delivered below; consolidation31 passed below; slices95–96 direction evidence passed below; consolidation32 for94–96 passed below; slices97–98 are delivered below; the single next delivery is99, wrapped per-line main-axis auto margins. Source5192/built5193, `#/testing/layout-preflight`:
+unchanged; all seven gates remain open. Consolidation26 is `2cd357d4`; consolidation27 is `abbaf209`; consolidation28 is `dfd16c8f`; consolidation29 is `f2e38dc6`; consolidation30 is recorded below; slices91–93 are delivered below; consolidation31 passed below; slices95–96 direction evidence passed below; consolidation32 for94–96 passed below; slices97–99 are delivered below; consolidation33 is in progress, then the single next delivery is100, finite cross-axis auto margins. Source5192/built5193, `#/testing/layout-preflight`:
 Source5192/built5193 `#/examples/layout/wasm-yoga-migration`: Next case + resize
-cycles220 records:175matches/45classified differences; click A/B/C targets.
+cycles237 records:176matches/61classified differences; click A/B/C targets.
 Canonical built comparison: http://127.0.0.1:5193/#/examples/layout/wasm-yoga-migration.
 Native Grid tracks/spans and Flow wrap controls remain available.
 
@@ -2406,18 +2407,49 @@ stays partial and all seven release gates remain open. No aggregate Node24 or
 wall-clock performance claim. No baseline rewrite, extra writer or overlapping
 review. Group97–99 consolidates only after99; whole-codebase review stays at end.
 
-## [NEXT] Wrapped per-line main-axis auto margins (slice 99)
+## Delivered wrapped per-line main-axis auto margins (slice 99)
 
-Use each actual source-formed line's own auto slots after that line's sizing;
-keep numeric allocation records unchanged. Add a private wrapped-auto placement
-entry and reject old modules before publication. Prove first-line vs second-line
-free-space shares, a line with no auto slots retaining justification, owner
-resize/line merge with moved keyed focus/targets, reverse/RTL and wrap-reverse.
-Compare pinned native results honestly: Yoga3.2.1 counts an overflowing candidate's
-auto margins before breaking the line, so per-line Pibbl geometry needs a separate
-explicit classification and isolated evidence. Do not call those cases parity.
-Cross-axis/shorthand auto margins remain unfinished. Then consolidate97–99 before
-the next fixed-program gap. No duplicate writer/reviewer or denominator change.
+Two focused public tests failed before the production change, then passed: each
+source-formed line divides its own free space among its actual auto slots; a line
+without slots retains justification. Width100→160 merges three40px items with10px
+gaps while preserving keyed stamps/focus, moving paint/hits and retaining paint-only
+reuse. Four cross-axis/shorthand unsupported shapes remain explicit negatives.
+Finite row/column, forward/reverse, LTR/RTL and wrap/wrap-reverse are exercised.
+
+Private ABIv3 adds wrapped-auto placement using line slices of existing immutable
+allocation records and lazy flags; no second solve or margin rewrite. Older and
+incomplete modules reject before publication, entries remain inert. Scoped review
+of changed Rust/region/cache/module/admission code found no material issue.
+Native12tests pass; kernel68589bytes SHA256
+`1127fd1f990385b760d2d512a9b7de83d8650fdb166268c7976e3af0c78ed6a3`.
+
+Pinned Yoga3.2.1 counts a deferred overflowing candidate's auto slot on the prior
+line. Sixteen independent per-line expectations are explicitly classified
+`css-line-local-auto-margin`; raw native boxes remain alongside them. The17th
+line-without-auto case matches native. A separate Chromium CSS probe reproduces
+A10/B60/C60 across two lines, consistent with
+[Flexbox main-axis alignment](https://www.w3.org/TR/css-flexbox-1/#main-alignment).
+This is a documented difference, not a native parity claim.
+
+Fresh source5192 and built5193 replay all17 wrapped cases with exact semantic
+boxes, stable live keys, A/B/C hits, cleanup0/errors[]; built469inputs. Installed
+package passes all34auto cases plus prior24direction cases, strict Bundler/NodeNext,
+per-controller cleanup and230dist inputs. Tarball SHA256
+`ef06686286c7dd14b7fb583648170c80e4d3efc4723d44f059c79744c10fdfd3`.
+Full slice+loader Chromium368pass/8skip(376), ordinary87pass/289skip(376).
+Source URL: http://127.0.0.1:5192/#/examples/layout/wasm-yoga-migration;
+Next section13times reaches wrapped autos. Corpus237=176matches+61classified.
+Fixed33 stays5complete/11experimental/8partial/8missing/1excluded; all7gates open.
+Auto-margin remains partial. Consolidate97–99 next; no Node24 aggregate or full
+program completion claim. Final whole-codebase review stays at full program end.
+
+## [NEXT] Finite cross-axis auto margins (slice 100)
+
+Start with the smallest public finite nowrap cross-axis auto-edge contract;
+sizing precedes per-item free-space distribution and auto margins override cross
+alignment. Preserve shifted layout/paint/focus/hit geometry and exact ownership.
+Resolve negative-space and reverse policies explicitly before broadening. Shorthand,
+intrinsic and broader opposing/minmax auto combinations remain fixed-ledger gaps.
 
 ### Consolidation 24 completed for delivery slices 70–72
 

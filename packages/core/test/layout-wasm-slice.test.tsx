@@ -3639,7 +3639,6 @@ it.runIf(experimentalLayout)('keeps keyed focus and pointer targets stable while
 });
 
 it.runIf(experimentalLayout).each([
-  { label: 'wrapped main axis', options: { flexWrap: 'wrap' as const }, style: { marginLeft: 'auto' } },
   { label: 'row cross axis', options: {}, style: { marginTop: 'auto' } },
   { label: 'column cross axis', options: { flexDirection: 'column' as const }, style: { marginLeft: 'auto' } },
   { label: 'column logical inline edge', options: { flexDirection: 'column' as const }, style: { marginStart: 'auto' } },
@@ -3648,6 +3647,64 @@ it.runIf(experimentalLayout).each([
   expect(() => layoutFlex({ x: 0, y: 0, width: 200, height: 80 }, [createElement(Rectangle, { style: { width: 40, height: 20, minWidth: 0, minHeight: 0, flexShrink: 0, ...style } as RectStyle })], options, measurement)).toThrow(/auto.*margin/i);
 });
 
+it.runIf(experimentalLayout)('reflows wrapped auto margins per line while retaining keyed focus, targets and paint reuse', async () => {
+  const baseline = snapshotWasmLayoutDiagnostics();
+  const width = signal(100);
+  const ink = signal('#19375b');
+  const boxes = new Map<string, { x: number; y: number; stamp: number }>();
+  const focused: string[] = [], hits: string[] = [];
+  let serial = 0;
+  function Card({ name, style: _style }: { name: string; style: BoxStyle & FlexItemStyle }) {
+    const stamp = useConst(() => ++serial);
+    const box = useLayoutBox();
+    const transform = useCanvasContext().getTransform();
+    boxes.set(name, { x: transform.e, y: transform.f, stamp });
+    return <Rectangle keyboardFocusable onFocus={() => focused.push(name)} onClick={() => hits.push(name)} style={{ width: box.width, height: box.height, fill: ink, cursor: 'pointer' }} />;
+  }
+  function Scene() {
+    return <FocusManagement><Flex style={{ width, height: 120, flexWrap: 'wrap', gap: 10, alignItems: 'flex-start', alignContent: 'flex-start' }}>
+      <Card key="A" name="A" style={{ width: 40, height: 20, minWidth: 0, minHeight: 0, flexShrink: 0, marginLeft: 'auto' }} />
+      <Card key="B" name="B" style={{ width: 40, height: 20, minWidth: 0, minHeight: 0, flexShrink: 0 }} />
+      <Card key="C" name="C" style={{ width: 40, height: 20, minWidth: 0, minHeight: 0, flexShrink: 0, marginLeft: 'auto' }} />
+    </Flex></FocusManagement>;
+  }
+  const canvas = document.createElement('canvas'); canvas.width = 180; canvas.height = 140; document.body.append(canvas);
+  const controller = pibbl(canvas, <Scene />); controllers.push(controller); await nextFrame();
+  expect(boxes.get('A')).toEqual({ x: 10, y: 0, stamp: 1 });
+  expect(boxes.get('B')).toEqual({ x: 60, y: 0, stamp: 2 });
+  expect(boxes.get('C')).toEqual({ x: 60, y: 30, stamp: 3 });
+  canvas.focus({ preventScroll: true });
+  canvas.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', code: 'Tab', bubbles: true, cancelable: true }));
+  expect(focused).toEqual(['A', 'B']);
+  clickCanvas(canvas, 70, 40); await nextFrame(); expect(hits).toEqual(['C']);
+  const initial = snapshotWasmLayoutDiagnostics();
+  const beforeResize=focused.slice();
+  width.set(160); await nextFrame();
+  expect(boxes.get('C')).toEqual({ x: 120, y: 0, stamp: 3 });
+  expect(focused).toEqual(beforeResize);
+  expect(snapshotWasmLayoutDiagnostics().nodeCreates).toBe(initial.nodeCreates);
+  clickCanvas(canvas, 70, 40); await nextFrame(); expect(hits).toEqual(['C']);
+  clickCanvas(canvas, 130, 10); await nextFrame(); expect(hits).toEqual(['C', 'C']);
+  const resized = snapshotWasmLayoutDiagnostics();
+  ink.set('#a63758'); await nextFrame();
+  const painted = snapshotWasmLayoutDiagnostics();
+  expect(painted.solves).toBe(resized.solves);
+  expect(painted.mainPlacements).toBe(resized.mainPlacements);
+  expect(painted.nodeCreates).toBe(initial.nodeCreates);
+  controller.dispose();
+  const disposed = snapshotWasmLayoutDiagnostics();
+  expect(disposed.activeNodes).toBe(baseline.activeNodes);
+  expect(disposed.activeArenas).toBe(baseline.activeArenas);
+  expect(disposed.cachedMeasurements).toBe(baseline.cachedMeasurements);
+});
+
 it.runIf(!experimentalLayout)('keeps ordinary JavaScript auto-margin admission explicit', () => {
   expect(()=>layoutFlex({x:0,y:0,width:200,height:20},[createElement(Rectangle,{style:{width:40,height:20,minWidth:0,marginLeft:'auto'}})],{},measurement)).toThrow(/experimental Flex engine/);
+});
+
+it.runIf(experimentalLayout)('keeps wrapped lines without auto slots on ordinary main alignment', () => {
+ const item=(auto=false)=>createElement(Rectangle,{style:{width:40,height:20,minWidth:0,minHeight:0,flexShrink:0,marginLeft:auto?'auto':0}});
+ expect(layoutFlex({x:0,y:0,width:100,height:120},[item(true),item(),item()],{flexWrap:'wrap',gap:10,alignItems:'flex-start',alignContent:'flex-start',justifyContent:'center'},measurement)).toEqual([
+  {x:10,y:0,width:40,height:20},{x:60,y:0,width:40,height:20},{x:30,y:30,width:40,height:20},
+ ]);
 });
