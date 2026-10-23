@@ -52,8 +52,8 @@ describe('explicit direct-Flex position modes', () => {
     ['Overlay', <Overlay style={{ width: 200, height: 100 }}><Rectangle style={positioned} /></Overlay>],
     ['Flow', <Flow style={{ width: 200, height: 100 }}><Rectangle style={positioned} /></Flow>],
     ['Grid', <Grid style={{ width: 200, height: 100, gridTemplateColumns: [200], gridTemplateRows: [100] }}><Rectangle style={positioned} /></Grid>],
-    ['wrapped Flex owner', <Flex style={{ width: 200, height: 100, flexWrap: 'wrap' }}><Flex style={positioned}><Rectangle style={{ width: 10, height: 10 }} /></Flex></Flex>],
-    ['wrap-reverse static Flex owner', <Flex style={{ width: 200, height: 100, flexWrap: 'wrap-reverse' }}><Flex style={{ ...positioned, position: 'static' }}><Rectangle style={{ width: 10, height: 10 }} /></Flex></Flex>],
+    ['wrapped Flex owner', <Flex style={{ width: 200, height: 100, flexWrap: 'wrap' }}><Flex style={{ ...positioned, flexShrink: 1 }}><Rectangle style={{ width: 10, height: 10 }} /></Flex></Flex>],
+    ['wrap-reverse static Flex owner', <Flex style={{ width: 200, height: 100, flexWrap: 'wrap-reverse' }}><Flex style={{ ...positioned, position: 'static', flexShrink: 1 }}><Rectangle style={{ width: 10, height: 10 }} /></Flex></Flex>],
   ] as const)('rejects relative placement in %s outside the finite nowrap contract', (_name, node) => {
     expect(mount(node)).toThrow(!experimentalLayout && _name === 'wrap-reverse static Flex owner' ? 'unsupported flex wrap' : 'PIBBL_LAYOUT_UNSUPPORTED_POSITION');
   });

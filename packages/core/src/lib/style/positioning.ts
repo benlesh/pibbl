@@ -159,32 +159,33 @@ export interface PositioningStyle extends SystemStyle {
    * Experimental direct-Flex placement mode. In a finite Flex, static
    * keeps the allocated slot and ignores insets; relative offsets final geometry
    * once without moving siblings. Primitive static/relative leaves support every
-   * main/writing direction and wrapping mode. Positioned layout owners require
-   * nowrap; non-row owners require fixed numeric direct Flex chains with zero grow/shrink and
+   * main/writing direction and wrapping mode. Wrapped parents admit fixed numeric
+   * direct Flex owners that remain internally nowrap; non-row chains use the same
+   * fixed owner restriction, with zero grow/shrink and
    * omitted or automatic basis; physical offsets retain their sign through main reversal. Absolute stays out of sibling allocation, using
    * the padding box for explicit insets and content alignment for omitted axes.
-   * Fixed numeric and admitted automatic absolute profiles support all main directions
-   * and RTL, with numeric bounds applied before placement. In every wrapping mode,
+   * Fixed numeric, percentage and admitted automatic absolute profiles support all main directions
+   * and RTL, with numeric or percentage bounds applied before placement. In every wrapping mode,
    * omitted axes use whole-content main/cross alignment; wrap-reverse reverses
    * omitted cross alignment and combines with column RTL exactly once.
    * Paired natural providers keep their exact/unbounded query in every admitted direction.
    * Direct wrapped Text with a generic pixel font and visible fit/overflow may
-   * measure automatic height at declared numeric width through the same owned query.
-   * Unwrapped Text may measure automatic width at declared numeric height, using
+   * measure automatic height at a resolved numeric or percentage width through the same owned query.
+   * Unwrapped Text may measure automatic width at a resolved numeric or percentage height, using
    * its existing Canvas ink-bounds width before bounds and physical anchoring.
    * Generic unwrapped Text also supports natural ink height and both automatic
    * dimensions through one unbounded query before independent numeric clamps;
    * mixed opposing-pair/natural feedback and both-auto aspect remain excluded.
    * On the documented finite direct-child path, automatic absolute axes resolve
-   * from opposing numeric physical insets. With a positive finite aspectRatio,
-   * exactly one automatic axis can instead derive from its declared finite numeric opposite axis.
-   * Opposing insets win. Finite numeric min/max bounds clamp used axes
+   * from opposing numeric or percentage physical insets. With a positive finite aspectRatio,
+   * exactly one automatic axis can instead derive from its resolved declared finite numeric or percentage opposite axis.
+   * Opposing insets win. Finite numeric or percentage min/max bounds clamp used axes
    * independently after derivation; a clamp does not recouple aspectRatio, and a
    * numeric minimum above its maximum rejects. A direct custom primitive with
    * paired pure measurement providers may instead measure natural automatic
-   * width at a declared numeric height, or natural height at a declared numeric
-   * width. The automatic axis is unbounded; the exact axis uses its declared
-   * value before numeric bounds clamp the used dimensions.
+   * width at a declared numeric or percentage height, or natural height at a declared numeric
+   * or percentage width. The automatic axis is unbounded; the exact axis uses its declared
+   * resolved padding-box value before bounds clamp the used dimensions.
    * In direct declarative Flex chains,
    * static Flex passes the containing box outward while relative Flex owns a local box.
    * Omission retains the legacy local Flex boundary and left/top behavior.

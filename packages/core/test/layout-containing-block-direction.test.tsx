@@ -66,3 +66,90 @@ it.runIf(experimentalLayout)('keeps direct finite static and relative Flex conta
   expect(after.activeArenas).toBe(baseline.activeArenas);
   expect(after.cachedMeasurements).toBe(baseline.cachedMeasurements);
 });
+
+it.runIf(experimentalLayout)('preserves wrapped fixed Flex owner slots while static inherits and relative applies physical final offsets in every parent direction', async () => {
+  type Direction = 'row' | 'row-reverse' | 'column' | 'column-reverse';
+  type OwnerStyle = PibblResponsiveStyle<FlexStyle & FlexItemStyle>;
+  type ProbeStyle = PibblResponsiveStyle<RectStyle & FlexItemStyle>;
+  const baseline = snapshotWasmLayoutDiagnostics();
+  const parentDirection = signal<Direction>('row');
+  const wrap = signal<'wrap' | 'wrap-reverse'>('wrap');
+  const writing = signal<'ltr' | 'rtl'>('ltr');
+  const mode = signal<'static' | 'relative' | undefined>(undefined);
+  const width = signal(164), height = signal(84);
+  const boxes = new Map<string, { x: number; y: number; width: number; height: number; stamp: number }>();
+  let serial = 1;
+
+  function Probe({ name, style: _style }: { readonly name: 'I' | 'absolute' | 'C'; readonly style: ProbeStyle }) {
+    const box = useLayoutBox(), transform = useCanvasContext().getTransform();
+    const stamp = useConst(() => serial++);
+    boxes.set(name, { x: transform.e, y: transform.f, width: box.width, height: box.height, stamp });
+    return <Rectangle style={{ width: box.width, height: box.height, fill: name === 'absolute' ? '#a63758' : '#246b61' }} />;
+  }
+
+  function Scene() {
+    const position = mode.get();
+    const owner: OwnerStyle = {
+      width: 80, height: 40, minWidth: 0, minHeight: 0, flexGrow: 0, flexShrink: 0,
+      flexDirection: 'row', flexWrap: 'nowrap', alignItems: 'flex-start',
+      ...(position === undefined ? {} : { position, left: 12, right: 18, top: 8 }),
+    };
+    const inner: ProbeStyle = { width: 80, height: 40, minWidth: 0, minHeight: 0, flexGrow: 0, flexShrink: 0 };
+    const absolute: ProbeStyle = { position: 'absolute', left: 12, top: 8, width: 20, height: 10, minWidth: 0, minHeight: 0, flexGrow: 0, flexShrink: 0 };
+    const sibling: ProbeStyle = { width: 60, height: 20, minWidth: 0, minHeight: 0, flexGrow: 0, flexShrink: 0 };
+    return <Flex style={{
+      width: width.get(), height: height.get(), boxSizing: 'border-box', borderWidth: 2, padding: 10,
+      flexDirection: parentDirection.get(), flexWrap: wrap.get(), layoutDirection: writing.get(),
+      alignItems: 'flex-start', alignContent: 'flex-start', gap: 10,
+    }}>
+      <Flex key="owner" style={owner}><Probe key="I" name="I" style={inner} /><Probe key="absolute" name="absolute" style={absolute} /></Flex>
+      <Probe key="C" name="C" style={sibling} />
+    </Flex>;
+  }
+
+  const canvas = document.createElement('canvas');
+  canvas.width = 244; canvas.height = 124; document.body.append(canvas);
+  const controller = pibbl(canvas, <Scene />); controllers.push(controller);
+  await nextFrame();
+  const initial = snapshotWasmLayoutDiagnostics();
+
+  for (const direction of ['row', 'row-reverse', 'column', 'column-reverse'] as const) {
+    for (const wrapped of ['wrap', 'wrap-reverse'] as const) {
+      for (const rtl of ['ltr', 'rtl'] as const) {
+        parentDirection.set(direction); wrap.set(wrapped); writing.set(rtl); mode.set(undefined);
+        await nextFrame();
+        const ordinaryI = boxes.get('I')!, ordinaryC = boxes.get('C')!;
+        const ordinaryStamps = [...boxes.values()].map(box => box.stamp);
+
+        mode.set('static');
+        await nextFrame();
+        expect(boxes.get('I')).toEqual(ordinaryI);
+        expect(boxes.get('C')).toEqual(ordinaryC);
+        expect(boxes.get('absolute')).toEqual({ x: 14, y: 10, width: 20, height: 10, stamp: 2 });
+
+        mode.set('relative');
+        await nextFrame();
+        const dx = rtl === 'ltr' ? 12 : -18;
+        expect(boxes.get('I')).toEqual({ ...ordinaryI, x: ordinaryI.x + dx, y: ordinaryI.y + 8 });
+        expect(boxes.get('C')).toEqual(ordinaryC);
+        expect(boxes.get('absolute')).toEqual({ x: ordinaryI.x + dx + 12, y: ordinaryI.y + 16, width: 20, height: 10, stamp: 2 });
+        expect([...boxes.values()].map(box => box.stamp)).toEqual(ordinaryStamps);
+      }
+    }
+  }
+
+  parentDirection.set('column-reverse'); wrap.set('wrap-reverse'); writing.set('rtl'); mode.set('relative');
+  width.set(244); height.set(124);
+  await nextFrame();
+  const resizedI = boxes.get('I')!, resizedC = boxes.get('C')!;
+  expect(boxes.get('absolute')).toEqual({ x: resizedI.x + 12, y: resizedI.y + 8, width: 20, height: 10, stamp: 2 });
+  expect(resizedC.stamp).toBe(3);
+  expect([...boxes.values()].map(box => box.stamp)).toEqual([1, 2, 3]);
+  expect(snapshotWasmLayoutDiagnostics().nodeCreates).toBe(initial.nodeCreates);
+
+  controller.dispose();
+  const disposed = snapshotWasmLayoutDiagnostics();
+  expect(disposed.activeNodes).toBe(baseline.activeNodes);
+  expect(disposed.activeArenas).toBe(baseline.activeArenas);
+  expect(disposed.cachedMeasurements).toBe(baseline.cachedMeasurements);
+});

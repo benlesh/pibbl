@@ -44,9 +44,10 @@ A child's parent-relative placement lives in its own specified style:
 Experimental finite `Flex` additionally accepts an explicit direct-child
 `position: "static" | "relative"` in any main direction under either LTR or RTL.
 Direct or exactly-forwarded primitive leaves support nowrap, wrap and wrap-reverse.
-Known layout children keep the existing nowrap containing-chain restrictions;
-wrapped positioned layout owners remain unsupported. This adjusts placement and
-does not introduce a containing-block or out-of-flow system:
+A direct fixed `Flex` owner also supports wrapped parents: it must declare finite
+nonnegative numeric width/height, zero grow/shrink, auto or omitted basis, and
+remain internally nowrap. Other positioned layout owners keep their existing
+restrictions. This adjusts placement within the containing-box contract below:
 
 - Omitting `position` preserves the existing parent-owned placement behavior
   and its diagnostics for authored `left`/`top` under Flex.
@@ -76,7 +77,7 @@ does not introduce a containing-block or out-of-flow system:
 
 `Absolute` keeps its existing independent `left`/`top` contract. This slice
 does not add absolute positioning, right/bottom anchoring, containing blocks,
-logical insets, wrapped layout owners, Flow/Grid/Overlay participation, or normal
+logical insets, general positioned layout owners, Flow/Grid/Overlay participation, or normal
 JavaScript Flex support.
 
 ### Experimental direct-Flex absolute participation
@@ -256,12 +257,15 @@ containing Flex's padding box to its absolute descendants. A direct nested Flex
 with `position: "relative"` establishes its own containing box. Omitted position
 keeps the existing Pibbl local Flex boundary; it does not adopt Yoga's static
 default. The top-level Flex is the fallback owner. This admission is limited to
-direct declarative nowrap Flex chains. Row-to-row chains retain their existing
-admission. Other parent/child main-direction combinations require the nested owner
-to declare finite nonnegative numeric width and height, zero grow and shrink, and
-an omitted or automatic basis. Wrapped, automatic-sized, flexing, opaque, and
-non-Flex owners remain outside this extension; it adds no public containing-block
-override.
+direct declarative Flex chains. Row-to-row nowrap chains retain their existing
+admission. A wrapped parent or other parent/child main-direction combination
+requires a nested internally nowrap owner with finite nonnegative numeric width
+and height, zero grow/shrink, and omitted or automatic basis. The wrapped parent
+may use either writing direction and any main direction. Its fixed owner keeps
+the ordinary line slot while relative offsets move final geometry only. Static
+owners pass the selected ancestor padding box through settled placement metadata.
+Internally wrapped, automatic-sized, flexing, opaque and non-Flex positioned
+owners remain outside this extension; it adds no public containing-box override.
 
 The ancestor box is translated into each static Flex's local content coordinates
 using settled placement and padding/border insets. Absolute children retain their

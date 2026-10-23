@@ -105,14 +105,16 @@ ordinary Flex slot and ignores insets. Relative retains that slot, then applies
 percentages use parent content width for left/right and height for top/bottom. LTR
 prefers left over right, RTL prefers right over left, and top takes precedence over bottom.
 Omitting `position` preserves the existing Flex placement rules. This bounded
-feature resolves relative percentages against parent content width/height and does not add wrapped containing owners
-or other layout-family support.
+feature resolves relative percentages against parent content width/height. A direct fixed `Flex` owner
+also supports wrapped parents when it remains internally nowrap, declares finite
+numeric width/height, zero grow/shrink and auto or omitted basis. Other layout
+families remain outside this admission.
 
 Experimental direct Flex children in any main direction and wrapping mode may also select `position: "absolute"`
-with finite numeric width/height or automatic/omitted axes paired with both
+with finite numeric or percentage width/height or automatic/omitted axes paired with both
 finite physical insets on each automatic axis. With a positive finite
 `aspectRatio`, exactly one automatic axis may instead derive from the declared
-finite numeric opposite axis. Both-automatic and both-explicit ratio cases remain
+finite numeric or percentage opposite axis. Both-automatic and both-explicit ratio cases remain
 outside this admission. This excludes the child from Flex line allocation while preserving authored
 paint/target/focus order. Insets reference the parent's inner border edge; padding
 does not shift an explicit inset. LTR prefers left, RTL prefers right, and top
@@ -120,13 +122,14 @@ takes precedence over bottom. An axis with no inset uses parent content-box alig
 `justifyContent` or `alignItems`; stretch leaves fixed height at cross-start.
 For a paired automatic axis, the remaining padding-box extent after both
 insets becomes the used dimension and a negative remainder clamps to zero. That
-pair wins over aspect derivation. Otherwise the declared numeric opposite outer
+pair wins over aspect derivation. Otherwise the resolved declared opposite outer
 axis derives the automatic outer axis before bounds. Neither path invokes
-intrinsic measurement. Finite numeric min/max bounds then clamp used axes
+intrinsic measurement. Finite numeric or percentage min/max bounds then clamp used axes
 independently before physical-inset precedence places them; bounds do not
 recouple an aspect ratio. A numeric
-minimum above its maximum rejects; percent and automatic bounds remain outside
-this admission. Direct layout children, child box decoration, margins and nonzero flex
+minimum above its maximum rejects; automatic bounds remain outside this admission.
+Absolute percentage sizes and bounds use the selected padding-box width/height
+before aspect sizing or pure fixed-axis provider queries. Direct layout children, child box decoration, margins and nonzero flex
 factors remain unsupported, along with general nested containing blocks. Unpaired
 automatic sizing requires the documented aspect or paired-provider path.
 
@@ -247,7 +250,7 @@ RTL/wrap-reverse, provider/layout-owner and column variants remain deferred.
 
 ### Experimental nested containing boxes
 
-Within a direct declarative finite nowrap Flex chain, explicit
+Within an admitted direct declarative finite Flex chain, explicit
 `position: "static"` passes absolute insets to the nearest containing Flex.
 `position: "relative"` establishes a local box. An omitted position retains
 Pibbl's existing local boundary. For an inner box at20,10 and an absolute child
@@ -259,7 +262,8 @@ override. See the layout contract for the bounded admission.
 Relative translation remains physical under main reversal. Yoga's four reversed
 relative cases are recorded as deliberate differences with separate Pibbl boxes.
 Non-row containing chains require fixed numeric direct Flex owners with zero
-grow/shrink and omitted or automatic basis. Both owners must remain nowrap.
+grow/shrink and omitted or automatic basis. The nested owner remains nowrap;
+its parent may wrap under the same fixed-owner restriction.
 
 ### Experimental absolute main directions
 

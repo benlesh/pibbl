@@ -383,10 +383,10 @@ function prepareFlexDescendants(plan: Pick<PreparedFlexLayoutPlan, 'children' | 
       if (child.type === Flex && (prepared.style as FlexStyle).position === 'static') {
         const childStyle = prepared.style as FlexStyle;
         const nonRowChain = style.flexDirection !== 'row' || (childStyle.flexDirection ?? 'row') !== 'row';
-        if (style.flexWrap !== 'nowrap' || (childStyle.flexWrap ?? 'nowrap') !== 'nowrap' ||
-            nonRowChain && !isFixedNowrapFlexContainingChild(childStyle)) {
+        if ((childStyle.flexWrap ?? 'nowrap') !== 'nowrap' ||
+            (style.flexWrap !== 'nowrap' || nonRowChain) && !isFixedNowrapFlexContainingChild(childStyle)) {
           throw childDiagnostic(child, 'position', 'static', plan.content,
-            'PIBBL_LAYOUT_UNSUPPORTED_POSITION: non-row static containing-block inheritance requires a fixed numeric direct nowrap Flex chain');
+            'PIBBL_LAYOUT_UNSUPPORTED_POSITION: wrapped or non-row static containing-block inheritance requires a fixed numeric direct nowrap Flex chain');
         }
         containingBox ??= resolveFlexContainingBox(style, plan.content);
         const insets = normalizeBoxInsets(prepared.style as FlexStyle, childContext(child, plan.content));
@@ -2008,10 +2008,11 @@ function assertSupportedRelativeFlexPosition(
   if (!experimentalLayout || (position !== 'static' && position !== 'relative')) {
     throw childDiagnostic(child, 'position', position, container, 'PIBBL_LAYOUT_UNSUPPORTED_POSITION: uses an unsupported Flex placement mode');
   }
-  if (options.flexWrap !== 'nowrap' && (isKnownLayoutType(child.type) || isLayoutComponent(child.type))) {
-    throw childDiagnostic(child, 'position', position, container, 'PIBBL_LAYOUT_UNSUPPORTED_POSITION: positioned layout children require a finite nowrap Flex allocation');
-  }
   const childStyle = style as Readonly<FlexStyle & FlexItemStyle>;
+  if (options.flexWrap !== 'nowrap' && (isKnownLayoutType(child.type) || isLayoutComponent(child.type)) &&
+      (child.type !== Flex || !isFixedNowrapFlexContainingChild(childStyle))) {
+    throw childDiagnostic(child, 'position', position, container, 'PIBBL_LAYOUT_UNSUPPORTED_POSITION: wrapped positioned layout children require a fixed numeric direct nowrap Flex owner');
+  }
   const nonRowChain = options.flexDirection !== 'row' || child.type === Flex && (childStyle.flexDirection ?? 'row') !== 'row';
   if (nonRowChain && (isKnownLayoutType(child.type) || isLayoutComponent(child.type)) &&
       (child.type !== Flex || !isFixedNowrapFlexContainingChild(childStyle))) {

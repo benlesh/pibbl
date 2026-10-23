@@ -20,7 +20,8 @@ No new runtime behavior, capability promotion, or aggregate Node24 trust claim.
 Slice145 started with two public tests failing numeric-only admission before
 production changes; its completed evidence is recorded below.
 
-Latest runtime delivery is slice145 (finite percentage absolute dimensions/bounds), in this commit.
+Latest runtime delivery is slice146 (fixed direct wrapped containing owners), in this commit.
+Slice145 is `c70ac2fd` (finite percentage absolute dimensions/bounds).
 Slice144 is `ced23362` (physical percentage static/relative insets).
 The public lesson companion for142–144 is `4cbc1ea6`.
 Consolidation48 is `70b2a85e` for142–144.
@@ -4260,13 +4261,49 @@ remains an explicitly preserved Pibbl rejection rather than Yoga's clamping.
 No full709-case replay or aggregate trust claim. Fixed33 statuses and seven
 open release gates remain unchanged. Logs: `/tmp/pibbl-slice145-*`.
 
-## [NEXT] Wrapped declarative positioning owners (146)
+## Completed slice146 — fixed direct wrapped containing owners
 
-Establish the smallest fixed direct Flex-owner profile for static/relative
-participation in a wrapped parent, preserving source flow, child-local geometry
-and containing-box ownership. First pin the supported public RED and diagnostics;
-unknown/opaque/transformed ancestry and automatic/intrinsic owner sizing stay
-outside until their separate contracts are demonstrated. No new public API.
+A wrapped parent admits an explicit static/relative direct Flex owner only with
+finite numeric width/height, zero grow/shrink, auto/omitted basis and internal
+nowrap. Parent main/writing/wrap direction does not change the owner's logical
+slot. Relative offsets move final geometry; static passes the selected ancestor
+padding box through settled metadata. Unknown, opaque/transformed, intrinsic,
+flexing and internally wrapped positioned owners retain their diagnostics. No
+public API, native ABI or cache change. Existing inherited containing contexts
+remain conservatively uncached.
+
+The public lesson adds a gold pin: relative anchors it inside green, static uses
+the outer box. Both source5192 and built5193 previews pass geometry, gold/red/
+green pixels,11→12 Text reflow, clicks and exact `[0,0,0]` cleanup. Focused public
+RED failed the old wrapped-owner gate before production changes. Fresh Node24.15/
+Chromium evidence:4 files81 passed/2 skipped (83), normal44 passed/39 skipped;
+lesson1 passed/414 skipped (415). The hardening covers16 parent direction/wrap/
+writing combinations, each static and relative, plus owner resize and stable
+identity. The initial resize assertion incorrectly added the relative offset a
+second time; it was corrected to the already-translated owner plus child inset.
+Installed proof initially omitted FocusManagement; the required public boundary
+is now mounted and keyboard/source-order evidence passes.
+
+Installed tarball passes Bundler/NodeNext with245 actual dist inputs, wrapped
+owner geometry, focus, hits, paint reuse and cleanup. SHA256:
+`6432316446f33ea2244469ff552a8d868f4e97f1678b13152dc101839c7bec59`.
+Typecheck, changed-code lint, docs109 RED probes, JSDoc6555 links and Studio docs
+pass; scoped review found no material defect. Source/built lesson469 dist inputs.
+The API reference/JSDoc also reconcile145's percentage-size wording. Fixed33
+statuses, seven open release gates,709-case native corpus and aggregate trust
+remain unchanged. No full-corpus replay is claimed.
+
+## [NEXT] Logical absolute insets (147)
+
+Add `insetStart`/`insetEnd` as optional numeric/percentage fields alongside the
+physical inset style language, following marginStart/paddingStart naming. First
+admit experimental direct absolute Flex profiles only. LTR maps start to left,
+RTL maps start to right; logical values override the mapped physical edge,
+including zero. Percentages use the selected padding-box width. Preserve raw
+style/signals through forwarding, paired-auto/aspect/provider sizing and existing
+physical placement. Other position modes/layout families must diagnose rather
+than ignore these fields. Public type/runtime/Studio/installed evidence precedes
+completion; no new selector, allocation cache or native ABI.
 
 ### Finite positioning exit matrix after134
 
