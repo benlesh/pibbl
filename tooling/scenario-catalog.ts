@@ -82,7 +82,7 @@ function renderIndex(): string {
     "",
     `The learner studio contains ${learningExampleCatalog.length} focused lessons and ${tutorialSnapshotCatalog.length} tutorial snapshots. A separate automated-testing catalog preserves ${scenarioCatalog.length} deterministic browser fixtures.`,
     "",
-    "Learning sources use one clean `mount(canvas)` contract and are both displayed and executed by the studio. Test fixtures retain their diagnostic metadata, actions, and exact headless-browser source.",
+    "Learning sources export descriptive named components; the Studio owns mounting and displays the same source it executes. Test fixtures retain their diagnostic metadata, actions, and exact headless-browser source.",
     "",
     "## Learning studio",
     "",

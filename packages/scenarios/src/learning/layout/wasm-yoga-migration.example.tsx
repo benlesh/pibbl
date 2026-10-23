@@ -245,7 +245,13 @@ function createWasmYogaMigrationExampleContent(canvas: HTMLCanvasElement) {
             flexDirection: fixture.flexDirection,
             flexWrap: fixture.flexWrap,
             gap: fixture.gap,
-            ...("containerStyle" in fixture ? fixture.containerStyle : { alignContent: "flex-start" as const, alignItems: "flex-start" as const }),
+            alignContent: "containerStyle" in fixture && "alignContent" in fixture.containerStyle ? fixture.containerStyle.alignContent : "flex-start",
+            alignItems: "containerStyle" in fixture && "alignItems" in fixture.containerStyle ? fixture.containerStyle.alignItems : "flex-start",
+            boxSizing: "containerStyle" in fixture && "boxSizing" in fixture.containerStyle ? fixture.containerStyle.boxSizing : undefined,
+            columnGap: "containerStyle" in fixture && "columnGap" in fixture.containerStyle ? fixture.containerStyle.columnGap : undefined,
+            justifyContent: "containerStyle" in fixture && "justifyContent" in fixture.containerStyle ? fixture.containerStyle.justifyContent : undefined,
+            padding: "containerStyle" in fixture && "padding" in fixture.containerStyle ? fixture.containerStyle.padding : undefined,
+            rowGap: "containerStyle" in fixture && "rowGap" in fixture.containerStyle ? fixture.containerStyle.rowGap : undefined,
           }}
         >
           {itemStyles ? itemStyles.map((style, index) => <Panel key={index} name={String.fromCharCode(65+index)} column={column} wrapped={wrapped} style={style} />) : rectangles ? <>

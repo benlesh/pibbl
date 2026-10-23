@@ -2,7 +2,7 @@
 
 ## Current checkpoint and single next slice — 2026-10-22
 
-Latest delivery is slice81 (finite allocated-child percentage padding).
+Latest delivery is slice81 `732ef064` (finite allocated-child percentage padding).
 Slice80 is `fe6d6bc1` (finite allocated-owner percentage gaps).
 Slice79 is `dbffc7c1` (settled-column percentage cross constraints).
 Slice78 is `a96ee4a2` (finite wrapped aspect-ratio participation).
@@ -31,7 +31,7 @@ Slice56 is `cf2c7bc5` (prepared Flow-root planning/adoption).
 Slice55 is `1510efe3` (prepared Grid-root planning/adoption).
 Slice54 `773da7b9`,53 `aaa7ddcb`,52 `b5381e0d` are consolidated in `f322a709`.
 Every slice has its own commit. The fixed33-capability/seven-gate denominator is
-unchanged; all seven gates remain open. Consolidation26 is `2cd357d4`; the next milestone is consolidation27 for slices79–81. Source5192/built5193, `#/testing/layout-preflight`:
+unchanged; all seven gates remain open. Consolidation26 is `2cd357d4`; consolidation27 is complete; the single next slice is82, stretched automatic cross sizing and percentage bounds in wrapped columns. Source5192/built5193, `#/testing/layout-preflight`:
 Source5192/built5193 `#/examples/layout/wasm-yoga-migration`: Next case + resize
 cycles107 records:96matches/11classified CSS differences; click A/B/C targets.
 Canonical built comparison: http://127.0.0.1:5193/#/examples/layout/wasm-yoga-migration.
@@ -1579,16 +1579,43 @@ reused review no material findings. Kernel65383bytes unchanged; no visual baseli
 rewrite. Node26.9.0, no Node24 aggregate-trust claim. Fixed33 remains3complete,
 12experimental,7partial,10missing,1excluded; all seven release gates open.
 
-## [NEXT] Consolidation 27 — slices 79–81
+### Consolidation 27 completed for delivery slices 79–81
 
-Commit81 separately, then run proportional combined layout, measurement and
-ownership checks and documentation/catalog/package consistency. Reuse completed
-source/built new-case and installed-package receipts rather than repeating old
-manual corpus loops. Preserve untracked dependency symlinks. Select the next
-concrete gate prerequisite afterward: finite wrapped percentage cross bounds are
-under independent native investigation; the current column-wrap stretched auto
-cross restriction is a real remaining behavior gap. No denominator redefinition,
-release enablement or final whole-codebase review at this checkpoint.
+Separate79 `dbffc7c1`,80 `fe6d6bc1`,81 `732ef064`. Fresh combined experimental
+Chromium252passed/2normal-onlyskips in10layout, pure measurement and edge
+normalization files. Ordinary JavaScript107passed/147experimental skips. Logs
+`/tmp/pibbl-consolidation27-{focused,normal}.txt`. Existing source/built eight-case
+percentage-gap and eight-case percentage-padding receipts include actual worktree
+catalog, stable node ownership and exact cleanup; installed final81 consumer
+230dist inputs/Bundler/NodeNext/inner geometry/cleanup pass. No unchanged old
+manual corpus replay or native kernel rebuild. Kernel65383bytes unchanged.
+
+Docs109REDmutation probes/JSDoc, canonical107case semantic equality and provenance,
+scenario discovery, catalog, safe Markdown/API metadata/Studio manifests, types,
+lint and changed Markdown format pass. Catalog initially rejected a containerStyle
+spread in the comparison. Replaced it with the seven explicit supported style
+fields, keeping authoring validation unchanged; rechecked the complete107case
+public example1passed/196skips. Generated index refreshed for accurate comparison
+metadata; generator introduction now reflects shipped descriptive named components
+and Studio-owned mounting. Logs `/tmp/pibbl-consolidation27-{catalog,discovery,studio-docs,comparison-final,final-types,final-lint,final-provenance,index-format}.txt`.
+Untracked dependency symlinks preserved, never staged. No screenshot baseline
+rewrite. Node26.9.0/pnpm11.21.0deps/Chromium; no Node24 aggregate trust/speed claim.
+Fixed33 remains3complete,12experimental,7partial,10missing,1excluded; all seven gates
+open. No additional Flex core entry can honestly close from this evidence alone.
+
+## [NEXT] Wrapped stretched cross sizing and percentage bounds (slice 82)
+
+Pin finite row/column wrapped percentage cross minimum/maximum fixtures with
+explicit main basis and an auto-cross stretched first item, fixed-cross siblings,
+owner cross100→160. Native evidence: minimum60% expands line cross60→96 and moves
+the next line72→108; maximum25% caps the first item25→40 while a40-unit sibling
+keeps next-line offset52 stable. Current column-wrap guard rejects the stretched
+auto-cross case: a real finite allocation gap. Add failing public tests before
+relaxing only that restriction, preserve intrinsic/auto-main and non-stretch
+cross measurement rejection, and prove paint/hit/identity/source order/cleanup
+through the existing comparison and installed package. No new public signature,
+no max-only inferred definiteness, no broad intrinsic graph closure or denominator
+change. Keep min/max partial until its remaining owner/intrinsic policy is resolved.
 
 ### Consolidation 24 completed for delivery slices 70–72
 
