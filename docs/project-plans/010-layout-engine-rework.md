@@ -46,7 +46,7 @@ Slice56 is `cf2c7bc5` (prepared Flow-root planning/adoption).
 Slice55 is `1510efe3` (prepared Grid-root planning/adoption).
 Slice54 `773da7b9`,53 `aaa7ddcb`,52 `b5381e0d` are consolidated in `f322a709`.
 Every slice has its own commit. The fixed33-capability/seven-gate denominator is
-unchanged; all seven gates remain open. Consolidation26 is `2cd357d4`; consolidation27 is `abbaf209`; consolidation28 is `dfd16c8f`; consolidation29 is `f2e38dc6`; consolidation30 is recorded below; slices91–93 are delivered below; consolidation31 passed below; slices95–96 direction evidence passed below; consolidation32 for94–96 follows before the next delivery97, finite main-axis auto margins. Source5192/built5193, `#/testing/layout-preflight`:
+unchanged; all seven gates remain open. Consolidation26 is `2cd357d4`; consolidation27 is `abbaf209`; consolidation28 is `dfd16c8f`; consolidation29 is `f2e38dc6`; consolidation30 is recorded below; slices91–93 are delivered below; consolidation31 passed below; slices95–96 direction evidence passed below; consolidation32 for94–96 passed below; the next delivery is97, finite main-axis auto margins. Source5192/built5193, `#/testing/layout-preflight`:
 Source5192/built5193 `#/examples/layout/wasm-yoga-migration`: Next case + resize
 cycles203 records:158matches/45classified differences; click A/B/C targets.
 Canonical built comparison: http://127.0.0.1:5193/#/examples/layout/wasm-yoga-migration.
@@ -2313,6 +2313,26 @@ Fixed33 is now5complete/11experimental/7partial/9missing/1excluded; all seven
 release gates remain open. Prior88–91 inheritance/receiver override, Layer,
 normal-build/invalid-direction/ABI negatives and95keyed focus/source priority are
 retained. Bounded consolidation32 of94–96 is next, then delivery97 below.
+
+### Consolidation 32 completed for delivery slices 94–96
+
+Separate94 `196e8275`,95 `69b187a6`,96 `3548157d`. One fresh bounded10-file
+Chromium run covers layout-WASM/public scenarios, Text auto basis/minima,
+measurement purity, structural Cards, paint reuse, Flex/measurement/box/length
+contracts:442passed/8skipped(450),76.86s. Ordinary JavaScript:157passed/
+293experimental skips(450),8passedfiles/2skippedfiles,3.31s. Logs
+`/tmp/pibbl-consolidation32-focused.txt` and
+`/tmp/pibbl-consolidation32-normal.txt`; both exited0. Expected negative-case
+layout diagnostics are not assertion failures. Reuse fresh96source/built24-case
+receipts, installed package230inputs/Bundler/NodeNext,203-case pinned native
+provenance and static checks. No runtime changes after96, no duplicate review or
+baseline rewrite. Node26.9.0/pnpm11.21.0deps/Chromium, not Node24 aggregate trust.
+
+Fixed33 remains5complete/11experimental/7partial/9missing/1excluded. All seven
+gates remain open. The next97 starts the existing auto-margin gap; broader
+intrinsic/baseline, prepared ownership/atomic publication, other participation,
+packaging migration, corpus/performance and Grid exits remain in the manifest.
+Final whole-codebase review stays at full program end.
 
 ## [NEXT] Finite main-axis auto margins (slice 97)
 
