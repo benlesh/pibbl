@@ -1,10 +1,17 @@
 // Pibbl-authored bounded probe against the separately supplied MIT-licensed Yoga source.
 #include <yoga/Yoga.h>
 #include <iostream>
+struct NumericStyle { double basis, grow, shrink, minimum, maximum; };
+static NumericStyle numericStyle(int i, int j) {
+  const double basis = i == 17 || i == 19 || i == 22 || i == 24 ? 80 : i == 18 ? 100 : i == 23 ? 20 : 0;
+  const double grow = i == 16 ? (j == 0 ? .5 : 1.5) : i == 18 ? 1 : i == 20 ? (j == 0 ? 1e30 : 2e30) : i == 21 || i == 23 ? .25 : 0;
+  const double shrink = i == 17 ? (j == 0 ? .5 : 1.5) : i == 19 ? (j == 0 ? 1 : 3) : i == 22 || i == 24 ? .25 : 0;
+  return {basis, grow, shrink, j == 0 ? (i == 24 ? 90. : i == 19 ? 70. : 0.) : 0., j == 0 ? (i == 23 ? 10. : i == 18 ? 110. : 1000000.) : 1000000.};
+}
 int main() {
-  const char* names[] = {"grow", "cap", "shrink", "rectangle-shrink", "rectangle-percent-content-box", "column-grow", "column-cap", "column-shrink", "row-reverse-cap", "column-reverse-cap", "row-wrap", "row-wrap-reverse", "border-box-floor-bounds", "border-box-percentage", "border-box-asymmetric-row", "border-box-asymmetric-column"};
+  const char* names[] = {"grow", "cap", "shrink", "rectangle-shrink", "rectangle-percent-content-box", "column-grow", "column-cap", "column-shrink", "row-reverse-cap", "column-reverse-cap", "row-wrap", "row-wrap-reverse", "border-box-floor-bounds", "border-box-percentage", "border-box-asymmetric-row", "border-box-asymmetric-column", "zero-fractional-grow", "fractional-shrink", "grow-freeze-release", "shrink-freeze-release", "large-finite-differential", "subunit-zero-grow", "subunit-shrink-policy", "initial-freeze-grow-policy", "initial-freeze-shrink-policy"};
   std::cout << "[";
-  for (int i = 0; i < 16; i++) {
+  for (int i = 0; i < 25; i++) {
     auto config = YGConfigNew();
     YGConfigSetUseWebDefaults(config, false);
     YGConfigSetPointScaleFactor(config, 0);
@@ -12,11 +19,11 @@ int main() {
     const bool column = (i >= 5 && i <= 7) || i == 9 || i == 15;
     const bool reverse = i == 8 || i == 9;
     const bool wrapped = i == 10 || i == 11;
-    const bool boxed = i >= 12;
+    const bool boxed = i >= 12 && i <= 15;
     const int count = wrapped ? 3 : 2;
-    const auto width = i == 14 ? 200 : i == 12 ? 160 : i == 13 ? 200 : wrapped ? 150 : column ? 100 : i == 2 ? 220 : i == 3 ? 100 : i == 4 ? 200 : 300;
+    const auto width = i >= 16 ? (i == 18 || i == 20 ? 312 : 112) : i == 14 ? 200 : i == 12 ? 160 : i == 13 ? 200 : wrapped ? 150 : column ? 100 : i == 2 ? 220 : i == 3 ? 100 : i == 4 ? 200 : 300;
     const auto height = i == 15 ? 160 : i == 12 ? 80 : 100;
-    const auto gap = i == 13 ? 0 : i < 3 || column || reverse || wrapped || boxed ? 12 : 0;
+    const auto gap = i >= 16 ? 12 : i == 13 ? 0 : i < 3 || column || reverse || wrapped || boxed ? 12 : 0;
     auto root = YGNodeNewWithConfig(config);
     YGNodeStyleSetWidth(root, width);
     YGNodeStyleSetHeight(root, height);
@@ -28,7 +35,12 @@ int main() {
     for (int j = 0; j < count; j++) {
       auto child = YGNodeNewWithConfig(config);
       YGNodeStyleSetFlexShrink(child, 1);
-      if (i >= 14) {
+      if (i >= 16) {
+        const auto style = numericStyle(i,j);
+        YGNodeStyleSetWidth(child, style.basis); YGNodeStyleSetFlexBasis(child, style.basis);
+        YGNodeStyleSetFlexGrow(child, style.grow); YGNodeStyleSetFlexShrink(child, style.shrink);
+        YGNodeStyleSetMinWidth(child, style.minimum); YGNodeStyleSetMaxWidth(child, style.maximum);
+      } else if (i >= 14) {
         YGNodeStyleSetBoxSizing(child, YGBoxSizingBorderBox);
         YGNodeStyleSetPadding(child, YGEdgeLeft, 3); YGNodeStyleSetPadding(child, YGEdgeRight, 5);
         YGNodeStyleSetPadding(child, YGEdgeTop, 7); YGNodeStyleSetPadding(child, YGEdgeBottom, 11);
@@ -90,7 +102,21 @@ int main() {
       if (j) std::cout << ",";
       std::cout << "{\"x\":" << YGNodeLayoutGetLeft(child) << ",\"y\":" << YGNodeLayoutGetTop(child) << ",\"width\":" << YGNodeLayoutGetWidth(child) << ",\"height\":" << YGNodeLayoutGetHeight(child) << "}";
     }
-    std::cout << "]}";
+    std::cout << "]";
+    if (i >= 16) {
+      std::cout << ",\"itemStyles\":[";
+      for (int j = 0; j < 2; j++) {
+        const auto style = numericStyle(i,j);
+        if (j) std::cout << ",";
+        std::cout << "{\"width\":" << style.basis << ",\"height\":80,\"flexBasis\":" << style.basis << ",\"flexGrow\":" << style.grow << ",\"flexShrink\":" << style.shrink << ",\"minWidth\":" << style.minimum << ",\"maxWidth\":" << style.maximum << "}";
+      }
+      std::cout << "]";
+    }
+    if (i == 22) std::cout << ",\"classification\":\"preserved-css-partial-shrink\",\"pibblBoxes\":[{\"x\":0,\"y\":0,\"width\":65,\"height\":80},{\"x\":77,\"y\":0,\"width\":65,\"height\":80}]";
+    if (i == 22) std::cout << ",\"comparisonLabel\":\"CSS partial shrink: Yoga50/50 vs Pibbl65/65\"";
+    if (i == 23) std::cout << ",\"classification\":\"css-initial-freeze-grow\",\"comparisonLabel\":\"CSS freeze grow: Yoga43.3333 vs Pibbl37.5\",\"pibblBoxes\":[{\"x\":0,\"y\":0,\"width\":10,\"height\":80},{\"x\":22,\"y\":0,\"width\":37.5,\"height\":80}]";
+    if (i == 24) std::cout << ",\"classification\":\"css-initial-freeze-shrink\",\"comparisonLabel\":\"CSS freeze shrink: Yoga10 vs Pibbl62.5\",\"pibblBoxes\":[{\"x\":0,\"y\":0,\"width\":90,\"height\":80},{\"x\":102,\"y\":0,\"width\":62.5,\"height\":80}]";
+    std::cout << "}";
     YGNodeFreeRecursive(root); YGConfigFree(config);
   }
   std::cout << "]\n";

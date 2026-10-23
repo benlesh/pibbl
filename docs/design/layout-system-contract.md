@@ -212,6 +212,13 @@ item can shrink or uses measured/automatic basis, it must declare `minWidth` in
 a row or `minHeight` in a column. Pibbl does not invent the browser's automatic
 minimum size. Lines collect in source order, hypothetical sizes choose grow or
 shrink mode, and iterative freeze/redistribution enforces min/max constraints.
+Initial free space is computed after the initial freezing pass, using frozen
+target sizes and unfrozen bases. If unfrozen factor totals are below one, partial
+free-space consumption follows the current CSS contract for grow and shrink.
+Three explicit divergences from pinned Yoga are recorded in the migration corpus,
+including the initial-freeze correction from35→37.5 and65→62.5. See
+`tooling/layout-yoga-rehearsal/README.md` for inputs, primary algorithm reference
+and independent Chromium evidence. Unconstrained partial-shrink65/65 is preserved.
 Negative remaining space keeps CSS-compatible alignment fallbacks for the
 accepted subset.
 

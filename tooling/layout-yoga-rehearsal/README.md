@@ -5,7 +5,7 @@ performance evidence, or a production WASM migration. Run Studio in `layout-wasm
 mode and open http://127.0.0.1:5192/#/examples/layout/wasm-yoga-migration.
 
 The left side draws recorded Yoga geometry. The right side uses ordinary public
-Pibbl `Flex`, direct `Rectangle` and `useLayoutBox`. **Next case + resize** cycles these exact fixtures:
+Pibbl `Flex`, direct `Rectangle` and `useLayoutBox`. **Next case + resize** cycles the recorded matching fixtures and explicitly labeled CSS divergences:
 
 | Case   | Parent width | Basis per item | Grow per item | A bound        | A/B widths   |
 | ------ | -----------: | -------------: | ------------: | -------------- | ------------ |
@@ -65,7 +65,7 @@ atx66; column B starts aty74. They select border-box, grow0/shrink0, physical
 padding left3/right5/top7/bottom11 and layout borders left2/right4/top6/bottom8.
 These borders reserve layout space; the comparison paints its own full footprint.
 
-These sixteen exact geometries do not prove general percentages, intrinsic box
+The original sixteen matching geometries and the allocation cases below do not prove general percentages, intrinsic box
 sizing, automatic minima, text, fractional precision, general wrapping interactions, combined main/cross
 reversal or RTL. No Yoga implementation is bundled in Studio.
 
@@ -94,7 +94,8 @@ The fresh receipt used Apple clang 21.0.0 on the recorded Node 26.9.0 host.
 Configuration explicitly sets `useWebDefaults=false`, point scale 0 (no rounding),
 no errata, per-case axes/wrap/reverse, LTR, start item/line alignment and gap. Default experiments remain disabled.
 This probes the native implementation; it is not a Yoga JS/WASM loading or speed
-comparison. All recorded integer dimensions are exactly representable in both engines.
+comparison. All matching-case dimensions are exact integers in both engines. The classified
+initial-freeze grow case serializes Yoga's fractional result with the C++ probe's default six significant digits; this is display precision, not pixel rounding.
 
 Without `--source`, the command checks only recorded provenance and consistency
 with the example's embedded data. It does **not** rerun Yoga:
@@ -316,3 +317,44 @@ width90 items in100 settle50×16⅔. Insets distinguish outer from content ratio
 content-box width90 plus horizontal14 gives outer104, then outerheight104/3.
 The probe also records height-driven row behavior as discovery input; that
 intrinsic main inference is outside the initial Pibbl finite-main ratio slice.
+
+## Allocation release corpus and classified CSS differences
+
+The comparison now contains25 records:22 native geometry matches and3 classified
+CSS differences. New records carry explicit `itemStyles`, used unchanged by the
+public fixture and semantic tests. All use finite row geometry and explicit minima;
+automatic-minimum/provider behavior is a separate capability.
+
+| Case | Parent/gap | Inputs | A/B widths |
+| --- | --- | --- | --- |
+| zero-fractional-grow |112/12|basis0; grow0.5/1.5|25/75|
+| fractional-shrink |112/12|basis80; shrink0.5/1.5|65/35|
+| grow-freeze-release |312/12|basis100; grow1; A max110|110/190|
+| shrink-freeze-release |112/12|basis80; shrink1/3; A min70|70/30|
+| large-finite-differential |312/12|basis0; grow1e30/2e30|100/200|
+| subunit-zero-grow |112/12|basis0; grow0.25 each|25/25, unused50|
+
+Factors1e30/2e30 remain finite in Yoga's f32 input domain. Separate Pibbl JS/Rust
+1e308:1 robustness assertions are f64 extension evidence, not a Yoga differential.
+
+The [CSS flexible-length algorithm, steps3–5](https://www.w3.org/TR/2025/CRD-css-flexbox-1-20251014/#resolve-flexible-lengths)
+first freezes constrained items, then computes initial free space using their
+frozen target sizes. A factor total below one can consume only part of that free
+space. Pibbl preserves this contract, which differs from pinned Yoga:
+
+| Classified case | Native Yoga A/B | Expected Pibbl A/B |
+| --- | --- | --- |
+| subunit-shrink-policy |50/50|65/65|
+| initial-freeze-grow-policy |10/43.3333|10/37.5|
+| initial-freeze-shrink-policy |90/10|90/62.5|
+
+`boxes` always contains native probe output. `pibblBoxes` separately records the
+classified Pibbl expectation, and `comparisonLabel` explicitly names the difference
+in Canvas and text status. Browser assertions target the Pibbl boxes; these cases
+are never counted as geometry matches. `node tooling/test-css-partial-flex.mjs`
+independently checks the two initial-freeze expectations with real Chromium CSS.
+
+Migration correction in slice74: constrained subunit growth changes B35→37.5,
+and constrained subunit shrink changes B65→62.5, because initially frozen sizes
+now participate in initial free space. Both JavaScript and Rust are corrected.
+The unconstrained partial-shrink65/65 policy remains unchanged.

@@ -2,7 +2,8 @@
 
 ## Current checkpoint and single next slice — 2026-10-22
 
-Latest delivery is slice73 (finite numeric-gap capability evidence complete).
+Latest delivery is slice74 (finite allocation evidence complete and initial-freeze correction).
+Slice73 is `27b18dde` (finite numeric-gap capability evidence complete).
 Slice72 is `dc4b7d42` (finite Flex outer-box aspect ratios).
 Slice71 is `ac38f518` (pinned asymmetric layout-border conformance).
 Slice70 is `b7d5dc68` (explicit layout border widths).
@@ -23,9 +24,9 @@ Slice56 is `cf2c7bc5` (prepared Flow-root planning/adoption).
 Slice55 is `1510efe3` (prepared Grid-root planning/adoption).
 Slice54 `773da7b9`,53 `aaa7ddcb`,52 `b5381e0d` are consolidated in `f322a709`.
 Every slice has its own commit. The fixed33-capability/seven-gate denominator is
-unchanged; all seven gates remain open. The single next slice is74, resolve grow/shrink/basis differential exits. Source5192/built5193, `#/testing/layout-preflight`:
+unchanged; all seven gates remain open. The single next slice is75, direction-independent start/end alignment in finite LTR Flex. Source5192/built5193, `#/testing/layout-preflight`:
 Source5192/built5193 `#/examples/layout/wasm-yoga-migration`: Next case + resize
-cycles sixteen fixtures, including asymmetric border-box row/column cases; click A/B/C targets.
+cycles25 records:22matches/3classified CSS differences; click A/B/C targets.
 Canonical built comparison: http://127.0.0.1:5193/#/examples/layout/wasm-yoga-migration.
 Native Grid tracks/spans and Flow wrap controls remain available.
 
@@ -1248,14 +1249,46 @@ No unchanged-runtime review repeated. Numeric gaps are complete for the finite
 numeric contract; percentage gaps are a separate missing capability. The engine
 remains opt-in and all seven group release gates remain open.
 
-## [NEXT] Resolve grow/shrink/basis differential exits (slice 74)
+### Slice 74 — finite allocation evidence complete and initial-freeze correction
 
-Target the existing `flex.grow-shrink-basis` missing list: fractional factors,
-zero bases, huge finite factors and the release freeze corpus. Use pinned Yoga
-for its representable finite domain, classify f32/f64 range differences explicitly,
-and preserve public semantic/interaction/provenance evidence. Fix actual failures;
-do not equate finite numeric allocation with automatic-minimum or general provider
-completion. Group25 is73–75, then bounded consolidation.
+Closed the fixed finite `flex.grow-shrink-basis` numerical evidence exits:
+fractional factors, zero bases, finite1e30/2e30 and grow/shrink freeze/release.
+The independently reproduced25-case Yoga3.2.1 corpus has22geometry matches and3
+explicit CSS partial-factor differences. Native `boxes` and expected `pibblBoxes`
+remain separate; `comparisonLabel` visibly names each difference. Shared explicit
+itemStyles drive the new public records. Unequal1e308/1 is separately tested as a
+Pibbl f64 robustness extension, never passed to Yoga's float input API.
+
+The matrix exposed an actual ordering bug: initial free space was measured before
+initial freezing. Focused RED got B35 instead of37.5. Primary CSS9.7steps3–5 and
+independent real Chromium confirm grow10/37.5 and shrink90/62.5. Both JS and Rust
+now accumulate initially frozen target sizes before partial-factor free space;
+no extra host traversal is added. Existing unconstrained partial-shrink65/65 is
+preserved despite Yoga50/50. Pinned initially-frozen native outcomes are also
+classified (Yoga B43.3333/B10 versus CSS/Pibbl37.5/62.5). Durable migration note and
+`tooling/test-css-partial-flex.mjs` retain inputs, primary link and independent proof.
+Scoped reused review of only this JS/Rust correction: no material findings.
+
+Fresh native10pass; kernel65364bytes with new hash. Experimental218pass/1normal-
+onlyskip in6files; normal41pass/117skip in2files. Source5192/built5193 replay25
+with22matches/3explicit labels, correct targets/gap misses, errors[] and cleanup0;
+469private built inputs. Visual inspection confirms readable differences/caption.
+Fresh packed230installed inputs passes types, installed initial-freeze and aspect
+pixels, and exact lifecycle. Native independent no-write reproduction and CSS
+browser proof pass; types/lint clean. Logs `/tmp/pibbl-slice74-*`.
+Node26.9.0/pnpm11.21.0deps/Chromium/Rust1.99.0/Apple C++20. Numeric gaps and finite
+allocation now complete at capability-evidence level; broader intrinsic/minimum
+contributions remain in their separate capabilities. Engine still opt-in, all
+seven group gates open, no Node24 full trust/speed/general Yoga parity claim.
+
+## [NEXT] Direction-independent start/end alignment in finite LTR Flex (slice 75)
+
+Extend existing alignment policies with logical start/end, distinguishing physical
+LTR start/end from direction-relative flex-start/flex-end under main reversal and
+wrap-reverse. Preserve source paint/hit order and existing defaults. Establish
+public geometry, signal/target evidence and exact policy normalization before
+implementation; RTL inheritance remains a separate capability. Consolidate73–75
+as group25 afterward.
 
 ### Consolidation 24 completed for delivery slices 70–72
 

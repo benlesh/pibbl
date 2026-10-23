@@ -68,9 +68,18 @@
       { "id": "border-box-floor-bounds", "covers": ["box.box-sizing", "flex.min-max"], "classification": "exact explicit padding floor and finite outer bounds" },
       { "id": "border-box-percentage", "covers": ["box.box-sizing", "flex.grow-shrink-basis"], "classification": "exact definite percentage basis and cross size before inset conversion" },
       { "id": "border-box-asymmetric-row", "covers": ["box.box-sizing", "box.padding-and-layout-border"], "classification": "exact physical numeric insets; row basis54" },
-      { "id": "border-box-asymmetric-column", "covers": ["box.box-sizing", "box.padding-and-layout-border"], "classification": "exact physical numeric insets; column basis62" }
+      { "id": "border-box-asymmetric-column", "covers": ["box.box-sizing", "box.padding-and-layout-border"], "classification": "exact physical numeric insets; column basis62" },
+      {"id": "zero-fractional-grow", "covers": ["flex.grow-shrink-basis"], "classification": "exact explicit finite inputs in Yoga f32/Pibbl f64 domain"},
+      {"id": "fractional-shrink", "covers": ["flex.grow-shrink-basis"], "classification": "exact explicit finite inputs in Yoga f32/Pibbl f64 domain"},
+      {"id": "grow-freeze-release", "covers": ["flex.grow-shrink-basis"], "classification": "exact explicit finite inputs in Yoga f32/Pibbl f64 domain"},
+      {"id": "shrink-freeze-release", "covers": ["flex.grow-shrink-basis"], "classification": "exact explicit finite inputs in Yoga f32/Pibbl f64 domain"},
+      {"id": "large-finite-differential", "covers": ["flex.grow-shrink-basis"], "classification": "exact explicit finite inputs in Yoga f32/Pibbl f64 domain"},
+      {"id": "subunit-zero-grow", "covers": ["flex.grow-shrink-basis"], "classification": "exact explicit finite inputs in Yoga f32/Pibbl f64 domain"},
+      {"id": "subunit-shrink-policy", "covers": ["flex.grow-shrink-basis"], "classification": "classified CSS partial-factor divergence; native boxes and expected pibblBoxes remain separate"},
+      {"id": "initial-freeze-grow-policy", "covers": ["flex.grow-shrink-basis"], "classification": "classified CSS partial-factor divergence; native boxes and expected pibblBoxes remain separate"},
+      {"id": "initial-freeze-shrink-policy", "covers": ["flex.grow-shrink-basis"], "classification": "classified CSS partial-factor divergence; native boxes and expected pibblBoxes remain separate"}
     ],
-    "limit": "Sixteen exact finite row/column/reverse/wrap fixtures, content-box padding, border-box floor/bounds/percentage and asymmetric row/column border conversion. This does not establish general box-sizing, percentage, intrinsic or CSS parity."
+    "limit": "Twenty-five records:22 native geometry matches and3 explicitly classified CSS partial-factor differences; row/column/reverse/wrap, box conversion and finite allocation evidence. This does not establish general box-sizing, percentage, intrinsic or CSS parity."
   },
   "gateGroups": [
     {
@@ -178,29 +187,23 @@
       "id": "flex.grow-shrink-basis",
       "target": "parity",
       "group": "flex-core",
-      "current": "bounded subset; experimental direct generic wrapped Text in nowrap rows has natural auto basis and a word minimum",
-      "status": "experimental",
+      "current": "finite numerical grow/shrink/basis allocation complete with classified CSS partial-factor differences and f64 range extension; intrinsic contributions remain separate capabilities",
+      "status": "complete",
       "evidenceRefs": [
         "packages/core/test/layout-wasm-slice.test.tsx",
         "packages/core/test/layout-text-auto-basis.test.tsx",
-        "tooling/layout-yoga-rehearsal/reference.json"
+        "packages/core/wasm/layout/src/lib.rs",
+        "tooling/layout-yoga-rehearsal/reference.json",
+        "tooling/layout-yoga-rehearsal/README.md",
+        "tooling/test-css-partial-flex.mjs"
       ],
       "evidence": {
-        "positive": [
-          "grow",
-          "cap",
-          "shrink",
-          "bounded direct Text natural auto basis"
-        ],
-        "negative": ["nonfinite intermediate allocation rejection"],
-        "interaction": ["signal resize"],
-        "yogaCases": ["grow", "cap", "shrink", "column-grow", "column-cap", "column-shrink"],
-        "missing": [
-          "fractional-factor differential coverage",
-          "zero-basis differential coverage",
-          "pinned Yoga differential coverage for huge finite factors",
-          "release freeze corpus"
-        ]
+        "positive": ["grow/cap/shrink and column allocation", "fractional and zero bases", "finite1e30/2e30 differential", "release grow/shrink freezing", "initially frozen sizes participate in partial free space", "bounded supported Text auto basis"],
+        "negative": ["nonfinite intermediate allocation rejection", "unequal1e308/1 f64 robustness is not a Yoga input-parity claim"],
+        "interaction": ["signal resize/cap/floor target geometry", "source/built25-case comparison with classification labels", "installed initially-frozen allocation pixels and lifecycle"],
+        "yogaCases": ["grow", "cap", "shrink", "column-grow", "column-cap", "column-shrink", "zero-fractional-grow", "fractional-shrink", "grow-freeze-release", "shrink-freeze-release", "large-finite-differential", "subunit-zero-grow", "subunit-shrink-policy", "initial-freeze-grow-policy", "initial-freeze-shrink-policy"],
+        "classifiedDivergences": ["subunit-shrink-policy", "initial-freeze-grow-policy", "initial-freeze-shrink-policy"],
+        "missing": []
       }
     },
     {
@@ -856,7 +859,7 @@
       "id": "migration.versioned-yoga-conversion",
       "target": "parity",
       "group": "migration-and-conformance",
-      "current": "sixteen-case pinned row/column/reverse/wrap rehearsal, including content-box conversion and border-box floor/bounds/percentage geometry",
+      "current": "25-case pinned rehearsal:22 geometry matches and3 classified CSS allocation differences, including box conversion and finite factors",
       "status": "experimental",
       "unresolvedPolicy": "Implementation direction is authorized; conversion/analyzer return contracts and supported compatibility policy remain to be specified.",
       "evidenceRefs": [
@@ -865,7 +868,7 @@
         "packages/core/test/layout-wasm-slice.test.tsx"
       ],
       "evidence": {
-        "positive": ["sixteen-case Yoga 3.2.1 rehearsal"],
+        "positive": ["25-case Yoga3.2.1 rehearsal with22matches/3classified differences"],
         "negative": ["no profile or public selector"],
         "interaction": ["migration example resize"],
         "yogaCases": [
@@ -884,7 +887,16 @@
           "border-box-floor-bounds",
           "border-box-percentage",
           "border-box-asymmetric-row",
-          "border-box-asymmetric-column"
+          "border-box-asymmetric-column",
+          "zero-fractional-grow",
+          "fractional-shrink",
+          "grow-freeze-release",
+          "shrink-freeze-release",
+          "large-finite-differential",
+          "subunit-zero-grow",
+          "subunit-shrink-policy",
+          "initial-freeze-grow-policy",
+          "initial-freeze-shrink-policy"
         ],
         "missing": [
           "style/tree analysis",

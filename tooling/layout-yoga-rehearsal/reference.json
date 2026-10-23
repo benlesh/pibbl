@@ -3,7 +3,7 @@
   "commit": "042f5013152eb81c1552dec945b88f7b95ca350f",
   "license": "MIT",
   "licenseSha256": "52412d7bc7ce4157ea628bbaacb8829e0a9cb3c58f57f99176126bc8cf2bfc85",
-  "probeSha256": "55daa8db0832be6f87bb52c2072fee19f48c50fb5a99566fe70b1e13d29f052e",
+  "probeSha256": "05256cd89dd891edd6d00ff009cd6b96c807aa258714d2bf4f282f0dda5e96d2",
   "configuration": {
     "useWebDefaults": false,
     "pointScaleFactor": 0,
@@ -14,7 +14,8 @@
     "alignContent": "flex-start",
     "flexWrap": "explicit nowrap/wrap/wrap-reverse per case",
     "gap": "explicit per case; 0 or 12",
-    "shrink": "1 except border-box-floor-bounds and asymmetric border cases use 0",
+    "shrink": "explicit itemStyles when present; otherwise 1 except floor/border cases use 0",
+    "comparison": "native boxes match except explicitly classified CSS partial-factor/freeze cases; pibblBoxes are expected Pibbl contract geometry",
     "padding": "10 in content-box/initial border-box cases; asymmetric physical 3/5/7/11 in border cases; otherwise 0",
     "boxSizing": "content-box in rectangle-percent-content-box; explicit border-box in border-box cases; otherwise Yoga default",
     "border": "physical left2/right4/top6/bottom8 in asymmetric border cases; otherwise 0"
@@ -381,6 +382,432 @@
           "y": 74,
           "width": 54,
           "height": 62
+        }
+      ]
+    },
+    {
+      "name": "zero-fractional-grow",
+      "width": 112,
+      "height": 100,
+      "gap": 12,
+      "flexDirection": "row",
+      "flexWrap": "nowrap",
+      "boxes": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 25,
+          "height": 80
+        },
+        {
+          "x": 37,
+          "y": 0,
+          "width": 75,
+          "height": 80
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 0,
+          "height": 80,
+          "flexBasis": 0,
+          "flexGrow": 0.5,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "maxWidth": 1000000
+        },
+        {
+          "width": 0,
+          "height": 80,
+          "flexBasis": 0,
+          "flexGrow": 1.5,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "maxWidth": 1000000
+        }
+      ]
+    },
+    {
+      "name": "fractional-shrink",
+      "width": 112,
+      "height": 100,
+      "gap": 12,
+      "flexDirection": "row",
+      "flexWrap": "nowrap",
+      "boxes": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 65,
+          "height": 80
+        },
+        {
+          "x": 77,
+          "y": 0,
+          "width": 35,
+          "height": 80
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 80,
+          "height": 80,
+          "flexBasis": 80,
+          "flexGrow": 0,
+          "flexShrink": 0.5,
+          "minWidth": 0,
+          "maxWidth": 1000000
+        },
+        {
+          "width": 80,
+          "height": 80,
+          "flexBasis": 80,
+          "flexGrow": 0,
+          "flexShrink": 1.5,
+          "minWidth": 0,
+          "maxWidth": 1000000
+        }
+      ]
+    },
+    {
+      "name": "grow-freeze-release",
+      "width": 312,
+      "height": 100,
+      "gap": 12,
+      "flexDirection": "row",
+      "flexWrap": "nowrap",
+      "boxes": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 110,
+          "height": 80
+        },
+        {
+          "x": 122,
+          "y": 0,
+          "width": 190,
+          "height": 80
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 100,
+          "height": 80,
+          "flexBasis": 100,
+          "flexGrow": 1,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "maxWidth": 110
+        },
+        {
+          "width": 100,
+          "height": 80,
+          "flexBasis": 100,
+          "flexGrow": 1,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "maxWidth": 1000000
+        }
+      ]
+    },
+    {
+      "name": "shrink-freeze-release",
+      "width": 112,
+      "height": 100,
+      "gap": 12,
+      "flexDirection": "row",
+      "flexWrap": "nowrap",
+      "boxes": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 70,
+          "height": 80
+        },
+        {
+          "x": 82,
+          "y": 0,
+          "width": 30,
+          "height": 80
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 80,
+          "height": 80,
+          "flexBasis": 80,
+          "flexGrow": 0,
+          "flexShrink": 1,
+          "minWidth": 70,
+          "maxWidth": 1000000
+        },
+        {
+          "width": 80,
+          "height": 80,
+          "flexBasis": 80,
+          "flexGrow": 0,
+          "flexShrink": 3,
+          "minWidth": 0,
+          "maxWidth": 1000000
+        }
+      ]
+    },
+    {
+      "name": "large-finite-differential",
+      "width": 312,
+      "height": 100,
+      "gap": 12,
+      "flexDirection": "row",
+      "flexWrap": "nowrap",
+      "boxes": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 100,
+          "height": 80
+        },
+        {
+          "x": 112,
+          "y": 0,
+          "width": 200,
+          "height": 80
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 0,
+          "height": 80,
+          "flexBasis": 0,
+          "flexGrow": 1e+30,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "maxWidth": 1000000
+        },
+        {
+          "width": 0,
+          "height": 80,
+          "flexBasis": 0,
+          "flexGrow": 2e+30,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "maxWidth": 1000000
+        }
+      ]
+    },
+    {
+      "name": "subunit-zero-grow",
+      "width": 112,
+      "height": 100,
+      "gap": 12,
+      "flexDirection": "row",
+      "flexWrap": "nowrap",
+      "boxes": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 25,
+          "height": 80
+        },
+        {
+          "x": 37,
+          "y": 0,
+          "width": 25,
+          "height": 80
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 0,
+          "height": 80,
+          "flexBasis": 0,
+          "flexGrow": 0.25,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "maxWidth": 1000000
+        },
+        {
+          "width": 0,
+          "height": 80,
+          "flexBasis": 0,
+          "flexGrow": 0.25,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "maxWidth": 1000000
+        }
+      ]
+    },
+    {
+      "name": "subunit-shrink-policy",
+      "width": 112,
+      "height": 100,
+      "gap": 12,
+      "flexDirection": "row",
+      "flexWrap": "nowrap",
+      "boxes": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 50,
+          "height": 80
+        },
+        {
+          "x": 62,
+          "y": 0,
+          "width": 50,
+          "height": 80
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 80,
+          "height": 80,
+          "flexBasis": 80,
+          "flexGrow": 0,
+          "flexShrink": 0.25,
+          "minWidth": 0,
+          "maxWidth": 1000000
+        },
+        {
+          "width": 80,
+          "height": 80,
+          "flexBasis": 80,
+          "flexGrow": 0,
+          "flexShrink": 0.25,
+          "minWidth": 0,
+          "maxWidth": 1000000
+        }
+      ],
+      "classification": "preserved-css-partial-shrink",
+      "pibblBoxes": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 65,
+          "height": 80
+        },
+        {
+          "x": 77,
+          "y": 0,
+          "width": 65,
+          "height": 80
+        }
+      ],
+      "comparisonLabel": "CSS partial shrink: Yoga50/50 vs Pibbl65/65"
+    },
+    {
+      "name": "initial-freeze-grow-policy",
+      "width": 112,
+      "height": 100,
+      "gap": 12,
+      "flexDirection": "row",
+      "flexWrap": "nowrap",
+      "boxes": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 10,
+          "height": 80
+        },
+        {
+          "x": 22,
+          "y": 0,
+          "width": 43.3333,
+          "height": 80
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 20,
+          "height": 80,
+          "flexBasis": 20,
+          "flexGrow": 0.25,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "maxWidth": 10
+        },
+        {
+          "width": 20,
+          "height": 80,
+          "flexBasis": 20,
+          "flexGrow": 0.25,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "maxWidth": 1000000
+        }
+      ],
+      "classification": "css-initial-freeze-grow",
+      "comparisonLabel": "CSS freeze grow: Yoga43.3333 vs Pibbl37.5",
+      "pibblBoxes": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 10,
+          "height": 80
+        },
+        {
+          "x": 22,
+          "y": 0,
+          "width": 37.5,
+          "height": 80
+        }
+      ]
+    },
+    {
+      "name": "initial-freeze-shrink-policy",
+      "width": 112,
+      "height": 100,
+      "gap": 12,
+      "flexDirection": "row",
+      "flexWrap": "nowrap",
+      "boxes": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 90,
+          "height": 80
+        },
+        {
+          "x": 102,
+          "y": 0,
+          "width": 10,
+          "height": 80
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 80,
+          "height": 80,
+          "flexBasis": 80,
+          "flexGrow": 0,
+          "flexShrink": 0.25,
+          "minWidth": 90,
+          "maxWidth": 1000000
+        },
+        {
+          "width": 80,
+          "height": 80,
+          "flexBasis": 80,
+          "flexGrow": 0,
+          "flexShrink": 0.25,
+          "minWidth": 0,
+          "maxWidth": 1000000
+        }
+      ],
+      "classification": "css-initial-freeze-shrink",
+      "comparisonLabel": "CSS freeze shrink: Yoga10 vs Pibbl62.5",
+      "pibblBoxes": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 90,
+          "height": 80
+        },
+        {
+          "x": 102,
+          "y": 0,
+          "width": 62.5,
+          "height": 80
         }
       ]
     }

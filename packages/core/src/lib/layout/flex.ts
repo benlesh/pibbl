@@ -1104,17 +1104,13 @@ function resolveFlexibleLengths(
   gap: number,
 ): void {
   const gapSpace = Math.max(0, line.items.length - 1) * gap;
-  const baseOuter = line.items.reduce(
-    (total, item) => total + item.baseMain + item.paddingMain,
-    0,
-  );
   const hypotheticalOuter = line.items.reduce(
     (total, item) => total +
       clamp(item.baseMain, item.minMain, item.maxMain) + item.paddingMain,
     0,
   );
   const growing = hypotheticalOuter + gapSpace < mainSize;
-  const initialFree = mainSize - gapSpace - baseOuter;
+  let initialOuter = gapSpace;
   const frozen = new Set<FlexItem>();
   for (const item of line.items) {
     item.targetMain = item.baseMain;
@@ -1127,7 +1123,10 @@ function resolveFlexibleLengths(
       item.targetMain = hypothetical;
       frozen.add(item);
     }
+    initialOuter += item.targetMain + item.paddingMain;
   }
+  const initialFree = mainSize - initialOuter;
+  if (!Number.isFinite(initialFree)) throw new Error('Flex numeric overflow during allocation');
 
   while (frozen.size < line.items.length) {
     const fixed = line.items.reduce(

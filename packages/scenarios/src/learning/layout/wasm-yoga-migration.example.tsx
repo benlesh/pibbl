@@ -380,6 +380,432 @@ function createWasmYogaMigrationExampleContent(canvas: HTMLCanvasElement) {
         "height": 62
       }
     ]
+  },
+  {
+    "name": "zero-fractional-grow",
+    "width": 112,
+    "height": 100,
+    "gap": 12,
+    "flexDirection": "row",
+    "flexWrap": "nowrap",
+    "boxes": [
+      {
+        "x": 0,
+        "y": 0,
+        "width": 25,
+        "height": 80
+      },
+      {
+        "x": 37,
+        "y": 0,
+        "width": 75,
+        "height": 80
+      }
+    ],
+    "itemStyles": [
+      {
+        "width": 0,
+        "height": 80,
+        "flexBasis": 0,
+        "flexGrow": 0.5,
+        "flexShrink": 0,
+        "minWidth": 0,
+        "maxWidth": 1000000
+      },
+      {
+        "width": 0,
+        "height": 80,
+        "flexBasis": 0,
+        "flexGrow": 1.5,
+        "flexShrink": 0,
+        "minWidth": 0,
+        "maxWidth": 1000000
+      }
+    ]
+  },
+  {
+    "name": "fractional-shrink",
+    "width": 112,
+    "height": 100,
+    "gap": 12,
+    "flexDirection": "row",
+    "flexWrap": "nowrap",
+    "boxes": [
+      {
+        "x": 0,
+        "y": 0,
+        "width": 65,
+        "height": 80
+      },
+      {
+        "x": 77,
+        "y": 0,
+        "width": 35,
+        "height": 80
+      }
+    ],
+    "itemStyles": [
+      {
+        "width": 80,
+        "height": 80,
+        "flexBasis": 80,
+        "flexGrow": 0,
+        "flexShrink": 0.5,
+        "minWidth": 0,
+        "maxWidth": 1000000
+      },
+      {
+        "width": 80,
+        "height": 80,
+        "flexBasis": 80,
+        "flexGrow": 0,
+        "flexShrink": 1.5,
+        "minWidth": 0,
+        "maxWidth": 1000000
+      }
+    ]
+  },
+  {
+    "name": "grow-freeze-release",
+    "width": 312,
+    "height": 100,
+    "gap": 12,
+    "flexDirection": "row",
+    "flexWrap": "nowrap",
+    "boxes": [
+      {
+        "x": 0,
+        "y": 0,
+        "width": 110,
+        "height": 80
+      },
+      {
+        "x": 122,
+        "y": 0,
+        "width": 190,
+        "height": 80
+      }
+    ],
+    "itemStyles": [
+      {
+        "width": 100,
+        "height": 80,
+        "flexBasis": 100,
+        "flexGrow": 1,
+        "flexShrink": 0,
+        "minWidth": 0,
+        "maxWidth": 110
+      },
+      {
+        "width": 100,
+        "height": 80,
+        "flexBasis": 100,
+        "flexGrow": 1,
+        "flexShrink": 0,
+        "minWidth": 0,
+        "maxWidth": 1000000
+      }
+    ]
+  },
+  {
+    "name": "shrink-freeze-release",
+    "width": 112,
+    "height": 100,
+    "gap": 12,
+    "flexDirection": "row",
+    "flexWrap": "nowrap",
+    "boxes": [
+      {
+        "x": 0,
+        "y": 0,
+        "width": 70,
+        "height": 80
+      },
+      {
+        "x": 82,
+        "y": 0,
+        "width": 30,
+        "height": 80
+      }
+    ],
+    "itemStyles": [
+      {
+        "width": 80,
+        "height": 80,
+        "flexBasis": 80,
+        "flexGrow": 0,
+        "flexShrink": 1,
+        "minWidth": 70,
+        "maxWidth": 1000000
+      },
+      {
+        "width": 80,
+        "height": 80,
+        "flexBasis": 80,
+        "flexGrow": 0,
+        "flexShrink": 3,
+        "minWidth": 0,
+        "maxWidth": 1000000
+      }
+    ]
+  },
+  {
+    "name": "large-finite-differential",
+    "width": 312,
+    "height": 100,
+    "gap": 12,
+    "flexDirection": "row",
+    "flexWrap": "nowrap",
+    "boxes": [
+      {
+        "x": 0,
+        "y": 0,
+        "width": 100,
+        "height": 80
+      },
+      {
+        "x": 112,
+        "y": 0,
+        "width": 200,
+        "height": 80
+      }
+    ],
+    "itemStyles": [
+      {
+        "width": 0,
+        "height": 80,
+        "flexBasis": 0,
+        "flexGrow": 1e+30,
+        "flexShrink": 0,
+        "minWidth": 0,
+        "maxWidth": 1000000
+      },
+      {
+        "width": 0,
+        "height": 80,
+        "flexBasis": 0,
+        "flexGrow": 2e+30,
+        "flexShrink": 0,
+        "minWidth": 0,
+        "maxWidth": 1000000
+      }
+    ]
+  },
+  {
+    "name": "subunit-zero-grow",
+    "width": 112,
+    "height": 100,
+    "gap": 12,
+    "flexDirection": "row",
+    "flexWrap": "nowrap",
+    "boxes": [
+      {
+        "x": 0,
+        "y": 0,
+        "width": 25,
+        "height": 80
+      },
+      {
+        "x": 37,
+        "y": 0,
+        "width": 25,
+        "height": 80
+      }
+    ],
+    "itemStyles": [
+      {
+        "width": 0,
+        "height": 80,
+        "flexBasis": 0,
+        "flexGrow": 0.25,
+        "flexShrink": 0,
+        "minWidth": 0,
+        "maxWidth": 1000000
+      },
+      {
+        "width": 0,
+        "height": 80,
+        "flexBasis": 0,
+        "flexGrow": 0.25,
+        "flexShrink": 0,
+        "minWidth": 0,
+        "maxWidth": 1000000
+      }
+    ]
+  },
+  {
+    "name": "subunit-shrink-policy",
+    "width": 112,
+    "height": 100,
+    "gap": 12,
+    "flexDirection": "row",
+    "flexWrap": "nowrap",
+    "boxes": [
+      {
+        "x": 0,
+        "y": 0,
+        "width": 50,
+        "height": 80
+      },
+      {
+        "x": 62,
+        "y": 0,
+        "width": 50,
+        "height": 80
+      }
+    ],
+    "itemStyles": [
+      {
+        "width": 80,
+        "height": 80,
+        "flexBasis": 80,
+        "flexGrow": 0,
+        "flexShrink": 0.25,
+        "minWidth": 0,
+        "maxWidth": 1000000
+      },
+      {
+        "width": 80,
+        "height": 80,
+        "flexBasis": 80,
+        "flexGrow": 0,
+        "flexShrink": 0.25,
+        "minWidth": 0,
+        "maxWidth": 1000000
+      }
+    ],
+    "classification": "preserved-css-partial-shrink",
+    "pibblBoxes": [
+      {
+        "x": 0,
+        "y": 0,
+        "width": 65,
+        "height": 80
+      },
+      {
+        "x": 77,
+        "y": 0,
+        "width": 65,
+        "height": 80
+      }
+    ],
+    "comparisonLabel": "CSS partial shrink: Yoga50/50 vs Pibbl65/65"
+  },
+  {
+    "name": "initial-freeze-grow-policy",
+    "width": 112,
+    "height": 100,
+    "gap": 12,
+    "flexDirection": "row",
+    "flexWrap": "nowrap",
+    "boxes": [
+      {
+        "x": 0,
+        "y": 0,
+        "width": 10,
+        "height": 80
+      },
+      {
+        "x": 22,
+        "y": 0,
+        "width": 43.3333,
+        "height": 80
+      }
+    ],
+    "itemStyles": [
+      {
+        "width": 20,
+        "height": 80,
+        "flexBasis": 20,
+        "flexGrow": 0.25,
+        "flexShrink": 0,
+        "minWidth": 0,
+        "maxWidth": 10
+      },
+      {
+        "width": 20,
+        "height": 80,
+        "flexBasis": 20,
+        "flexGrow": 0.25,
+        "flexShrink": 0,
+        "minWidth": 0,
+        "maxWidth": 1000000
+      }
+    ],
+    "classification": "css-initial-freeze-grow",
+    "comparisonLabel": "CSS freeze grow: Yoga43.3333 vs Pibbl37.5",
+    "pibblBoxes": [
+      {
+        "x": 0,
+        "y": 0,
+        "width": 10,
+        "height": 80
+      },
+      {
+        "x": 22,
+        "y": 0,
+        "width": 37.5,
+        "height": 80
+      }
+    ]
+  },
+  {
+    "name": "initial-freeze-shrink-policy",
+    "width": 112,
+    "height": 100,
+    "gap": 12,
+    "flexDirection": "row",
+    "flexWrap": "nowrap",
+    "boxes": [
+      {
+        "x": 0,
+        "y": 0,
+        "width": 90,
+        "height": 80
+      },
+      {
+        "x": 102,
+        "y": 0,
+        "width": 10,
+        "height": 80
+      }
+    ],
+    "itemStyles": [
+      {
+        "width": 80,
+        "height": 80,
+        "flexBasis": 80,
+        "flexGrow": 0,
+        "flexShrink": 0.25,
+        "minWidth": 90,
+        "maxWidth": 1000000
+      },
+      {
+        "width": 80,
+        "height": 80,
+        "flexBasis": 80,
+        "flexGrow": 0,
+        "flexShrink": 0.25,
+        "minWidth": 0,
+        "maxWidth": 1000000
+      }
+    ],
+    "classification": "css-initial-freeze-shrink",
+    "comparisonLabel": "CSS freeze shrink: Yoga10 vs Pibbl62.5",
+    "pibblBoxes": [
+      {
+        "x": 0,
+        "y": 0,
+        "width": 90,
+        "height": 80
+      },
+      {
+        "x": 102,
+        "y": 0,
+        "width": 62.5,
+        "height": 80
+      }
+    ]
   }
 ] as const;
   // END YOGA REFERENCE
@@ -427,6 +853,7 @@ function createWasmYogaMigrationExampleContent(canvas: HTMLCanvasElement) {
   }
   function Workspace() {
     const fixture = fixtureCases[index.get()];
+    const itemStyles = "itemStyles" in fixture ? fixture.itemStyles : undefined;
     const wrapped = fixture.flexWrap !== "nowrap";
     const boxed = fixture.name.startsWith("border-box-");
     const floor = fixture.name === "border-box-floor-bounds";
@@ -505,7 +932,7 @@ function createWasmYogaMigrationExampleContent(canvas: HTMLCanvasElement) {
             gap: fixture.gap,
           }}
         >
-          {rectangles ? <>
+          {itemStyles ? itemStyles.map((style, index) => <Panel key={index} name={String.fromCharCode(65+index)} style={style} />) : rectangles ? <>
             <Rectangle onClick={() => selected.set("A")} style={{
               width: 80, height: 80, flexBasis: padded ? "70%" : "auto", flexShrink: 1,
               minWidth: padded ? 90 : undefined, padding: padded ? 10 : 0,
@@ -563,7 +990,7 @@ function createWasmYogaMigrationExampleContent(canvas: HTMLCanvasElement) {
             font: "12px monospace",
             fill: "#19375b",
           }}
-        >{`${fixture.name} · parent ${fixture.width} × ${fixture.height} px · ${fixture.flexDirection} · gap ${fixture.gap} px`}</Text>
+        >{`${"comparisonLabel" in fixture ? fixture.comparisonLabel : fixture.name} · parent ${fixture.width} × ${fixture.height} px · ${fixture.flexDirection} · gap ${fixture.gap} px`}</Text>
       </>
     );
   }
@@ -583,12 +1010,12 @@ function createWasmYogaMigrationExampleContent(canvas: HTMLCanvasElement) {
       <Text
         style={{ left: 28, top: 62, font: "14px sans-serif", fill: "#475569" }}
       >
-        Sixteen pinned cases. Left is recorded geometry, not a live Yoga runtime.
+        25 recorded cases: 22 matches and three classified CSS differences.
       </Text>
       <Text
         style={{ left: 28, top: 100, font: "13px sans-serif", fill: "#475569" }}
       >
-        Explicit axes, wrapping and shrink; empty boxes, box sizing, padding and layout borders.
+        Explicit axes, wrapping, sizing, borders and factors; left is recorded Yoga, not a live runtime.
       </Text>
       <Rectangle
         style={{
@@ -658,6 +1085,7 @@ function createWasmYogaMigrationExampleContent(canvas: HTMLCanvasElement) {
     "font:12px monospace;white-space:pre-wrap;color:#19375b;padding:12px;background:#e7e5df";
   canvas.insertAdjacentElement("afterend", panel);
   const refresh = () => {
+    const fixture = fixtureCases[index.get()];
     panel.textContent = `${
       read
         ? "EXPERIMENTAL WASM · " +
@@ -665,7 +1093,7 @@ function createWasmYogaMigrationExampleContent(canvas: HTMLCanvasElement) {
             .map(([key, value]) => `${key}: ${value}`)
             .join(" · ")
         : "Normal JS build"
-    }\nYoga 3.2.1 · 042f5013152e · ${fixtureCases[index.get()].name} · actual A: ${fixtureCases[index.get()].name.startsWith("rectangle-") ? "direct Canvas boxes" : `${actual.get("A")} px · B: ${actual.get("B")} px`} · selected: ${selected.get()}`;
+    }\nYoga 3.2.1 · 042f5013152e · ${fixture.name}${"comparisonLabel" in fixture ? " · "+fixture.comparisonLabel : ""} · actual A: ${fixture.name.startsWith("rectangle-") ? "direct Canvas boxes" : `${actual.get("A")} px · B: ${actual.get("B")} px`} · selected: ${selected.get()}`;
   };
   refresh();
   const timer = window.setInterval(refresh, 200);

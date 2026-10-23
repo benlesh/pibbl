@@ -130,15 +130,18 @@ export const reverseFlex = createElement(Flex, { style: { width: 100, height: 40
   await writeFile(
     join(consumer, "entry.ts"),
     `import { WasmFlexNestedIntrinsicExample } from './example';
-import { createElement, Flex, Rectangle } from '@pibbl/core';
+import { createElement, Absolute, Flex, Rectangle } from '@pibbl/core';
 import { pibblSync } from '@pibbl/core/sync';
 const receipt = globalThis.__PIBBL_PACKED_PROOF__;
 if(receipt.modules || receipt.instances || receipt.frames) throw Error('Import-time work');
 receipt.importInert = true;
 globalThis.requestAnimationFrame = receipt.request;
 const aspectCanvas = document.createElement('canvas'); aspectCanvas.width=120; aspectCanvas.height=80; aspectCanvas.style.cssText='width:120px;height:80px'; document.body.append(aspectCanvas);
-const aspectController=pibblSync(aspectCanvas,createElement(Flex,{style:{width:100,height:60},children:createElement(Rectangle,{style:{width:90,height:50,minWidth:0,flexShrink:0,aspectRatio:3,fill:'red'}})}));
-try { await new Promise(resolve => requestAnimationFrame(resolve)); const context=aspectCanvas.getContext('2d')!; if(context.getImageData(85,25,1,1).data[3]!==255||context.getImageData(85,35,1,1).data[3]!==0)throw Error('installed aspect ratio geometry '+JSON.stringify({width:aspectCanvas.width,height:aspectCanvas.height,inside:[...context.getImageData(85,25,1,1).data],outside:[...context.getImageData(85,35,1,1).data]})); receipt.aspectRatio=true; } finally { aspectController.dispose(); aspectCanvas.remove(); }
+const aspectController=pibblSync(aspectCanvas,createElement(Absolute,{style:{width:120,height:80},children:[
+createElement(Flex,{style:{width:100,height:35},children:createElement(Rectangle,{style:{width:90,height:50,minWidth:0,flexShrink:0,aspectRatio:3,fill:'red'}})}),
+createElement(Flex,{style:{left:0,top:40,width:112,height:20,gap:12},children:[createElement(Rectangle,{style:{width:20,height:10,flexBasis:20,flexGrow:.25,flexShrink:0,minWidth:0,maxWidth:10,fill:'red'}}),createElement(Rectangle,{style:{width:20,height:10,flexBasis:20,flexGrow:.25,flexShrink:0,minWidth:0,fill:'red'}})]})
+]}));
+try { await new Promise(resolve => requestAnimationFrame(resolve)); const context=aspectCanvas.getContext('2d')!; if(context.getImageData(85,25,1,1).data[3]!==255||context.getImageData(85,35,1,1).data[3]!==0)throw Error('installed aspect ratio geometry '+JSON.stringify({width:aspectCanvas.width,height:aspectCanvas.height,inside:[...context.getImageData(85,25,1,1).data],outside:[...context.getImageData(85,35,1,1).data]})); receipt.aspectRatio=true; if(context.getImageData(58,45,1,1).data[3]!==255||context.getImageData(62,45,1,1).data[3]!==0)throw Error('installed initially frozen partial allocation'); receipt.frozenPartial=true; } finally { aspectController.dispose(); aspectCanvas.remove(); }
 const controller = pibblSync(document.querySelector('canvas')!, createElement(WasmFlexNestedIntrinsicExample, {}));
 addEventListener('pagehide', () => controller.dispose(), {once:true});`,
   );

@@ -367,11 +367,14 @@ fn allocate(nodes: &mut [f64], main: f64, gap: f64) -> u32 {
     }
     if !base_outer.is_finite() || !hypothetical.is_finite() { return 1; }
     let growing = hypothetical < main;
-    let initial_free = main - base_outer;
+    let mut initial_outer = gaps;
     for n in nodes.chunks_exact_mut(STRIDE) {
         let h = n[0].clamp(n[1], n[2]);
         if n[if growing {4} else {5}] == 0.0 || (growing && n[0] > h) || (!growing && n[0] < h) { n[6] = h; n[7] = 1.0; }
+        initial_outer += n[6] + n[3] + n[8] + n[9];
     }
+    let initial_free = main - initial_outer;
+    if !initial_free.is_finite() { return 1; }
     // Each pass freezes at least one item or returns. Finite bound is independent of floats.
     for _ in 0..=count {
         let active = nodes.chunks_exact(STRIDE).filter(|n| n[7] == 0.0).count();
@@ -406,6 +409,15 @@ fn allocate(nodes: &mut [f64], main: f64, gap: f64) -> u32 {
 }
 #[cfg(test)]
 mod tests {
+    #[test] fn partial_free_space_uses_initially_frozen_sizes() {
+        let mut grow = [20.,0.,10.,0.,0.25,0.,0.,0.,0.,0.,20.,0.,f64::INFINITY,0.,0.25,0.,0.,0.,0.,0.];
+        assert_eq!(allocate(&mut grow,112.,12.),0);
+        assert_eq!((grow[6],grow[16]),(10.,37.5));
+        let mut shrink = [80.,90.,f64::INFINITY,0.,0.,0.25,0.,0.,0.,0.,80.,0.,f64::INFINITY,0.,0.,0.25,0.,0.,0.,0.];
+        assert_eq!(allocate(&mut shrink,112.,12.),0);
+        assert_eq!((shrink[6],shrink[16]),(90.,62.5));
+    }
+
     #[test] fn numeric_gap_cardinality_has_no_phantom_edges() {
         assert_eq!(allocate(&mut [], 100., 10.), 0);
         assert_eq!(align_main(&mut [], 100., 10., 0, 0), 0);
@@ -492,6 +504,10 @@ mod tests {
         let mut nodes = [80.,0.,f64::INFINITY,0.,0.,1e308,0.,0.,0.,0.,80.,0.,f64::INFINITY,0.,0.,1e308,0.,0.,0.,0.];
         assert_eq!(allocate(&mut nodes,100.,0.),0);
         assert_eq!((nodes[6],nodes[16]),(50.,50.));
+        let mut unequal = [0.,0.,f64::INFINITY,0.,1e308,0.,0.,0.,0.,0.,0.,0.,f64::INFINITY,0.,1.,0.,0.,0.,0.,0.];
+        assert_eq!(allocate(&mut unequal,100.,0.),0);
+        assert_eq!(unequal[6],100.);
+        assert!(unequal[16].is_finite() && unequal[16] > 0.);
     }
     #[test] fn reverse_positions_keep_signed_margin_slots_separate() {
         let mut nodes = [0.,0.,0.,0.,0.,0.,40.,0.,7.,3., 0.,0.,0.,0.,0.,0.,30.,0.,9.,5.];

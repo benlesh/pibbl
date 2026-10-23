@@ -27,18 +27,21 @@ try {
   for (const [index, fixture] of reference.cases.entries()) {
     if (index) await click(60, 158);
     assert.ok((await frame.locator('pre').innerText()).includes(fixture.name));
-    for (const [index, box] of fixture.boxes.entries()) {
+    if (fixture.classification) assert.ok((await frame.locator('pre').innerText()).includes(fixture.comparisonLabel), 'Classified difference must be explicitly labeled');
+    const expected = fixture.pibblBoxes ?? fixture.boxes;
+    for (const [index, box] of expected.entries()) {
       await click(392 + box.x + 4, 240 + box.y + 4);
       assert.ok((await frame.locator('pre').innerText()).includes(`selected: ${String.fromCharCode(65+index)}`), `${fixture.name}: target ${index}; ${(await frame.locator('pre').innerText()).slice(-350)}`);
     }
   }
   // Source-formed lines and reversed placement retain identities; gaps miss.
   const last = reference.cases.at(-1);
+  const lastBoxes = last.pibblBoxes ?? last.boxes;
   const column = last.flexDirection.startsWith('column');
   if (last.gap > 0) {
-  const gap = column ? Math.min(...last.boxes.map(box => box.y + box.height)) + 6 : Math.min(...last.boxes.map(box => box.x + box.width)) + 6;
-  await click(column ? 396 : 392+gap, column ? 240+gap : 244+last.boxes[0].y);
-  assert.ok((await frame.locator('pre').innerText()).includes(`selected: ${String.fromCharCode(64+last.boxes.length)}`));
+  const gap = column ? Math.min(...lastBoxes.map(box => box.y + box.height)) + 6 : Math.min(...lastBoxes.map(box => box.x + box.width)) + 6;
+  await click(column ? 396 : 392+gap, column ? 240+gap : 244+lastBoxes[0].y);
+  assert.ok((await frame.locator('pre').innerText()).includes(`selected: ${String.fromCharCode(64+lastBoxes.length)}`));
   }
   if (process.argv.includes('--screenshot')) await frame.locator('canvas').screenshot({ path: '/tmp/pibbl-yoga-comparison.png' });
   const proof = await sandbox.evaluate(() => globalThis.__PIBBL_BUILT_LAYOUT_PROOF__);
@@ -52,5 +55,5 @@ try {
   });
   assert.deepEqual([disposed.activeNodes, disposed.activeArenas, disposed.cachedMeasurements], [0, 0, 0]);
   assert.deepEqual(errors, []);
-  console.warn(JSON.stringify({ base, commit: reference.commit, cases: reference.cases.map(value => value.name), builtInputs: proof?.coreInputs.length ?? null, cleanup: [0, 0, 0], errors }));
+  console.warn(JSON.stringify({ base, commit: reference.commit, cases: reference.cases.map(value => value.name), builtInputs: proof?.coreInputs.length ?? null, matched: reference.cases.filter(value => !value.pibblBoxes).length, classified: reference.cases.filter(value => value.pibblBoxes).map(value => value.name), cleanup: [0, 0, 0], errors }));
 } finally { await browser.close(); }

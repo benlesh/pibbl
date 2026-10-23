@@ -87,6 +87,7 @@ try {
       const receipt = await sandbox.evaluate(() => ({...globalThis.__PIBBL_PACKED_PROOF__, request: undefined}));
       assert.equal(receipt.importInert, true);
       assert.equal(receipt.aspectRatio, true, 'Installed package must honor final-main outer aspect geometry');
+      assert.equal(receipt.frozenPartial, true, 'Installed package must use initially frozen sizes for partial factors');
       assert.ok(receipt.modules > 0 && receipt.instances > 0, 'Installed package must execute embedded WASM');
       assert.match(proof.sha256, /^[a-f0-9]{64}$/);
     }
