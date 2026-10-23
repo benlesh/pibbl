@@ -164,7 +164,7 @@ export interface PositioningStyle extends SystemStyle {
    * the padding box for explicit insets and content alignment for omitted axes.
    * Fixed numeric and opposing-inset automatic absolute boxes support all nowrap
    * main directions and RTL, with numeric bounds applied before anchoring.
-   * Natural measured dimensions remain row-only.
+   * Paired natural providers keep their exact/unbounded query in every nowrap direction.
    * On the documented finite direct-child path, automatic absolute axes resolve
    * from opposing numeric physical insets. With a positive finite aspectRatio,
    * exactly one automatic axis can instead derive from its declared finite numeric opposite axis.

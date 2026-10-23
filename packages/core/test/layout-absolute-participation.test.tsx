@@ -1148,3 +1148,52 @@ it.runIf(experimentalLayout)('derives one automatic absolute aspect axis across 
   const disposed = snapshotWasmLayoutDiagnostics();
   expect([disposed.activeNodes, disposed.activeArenas, disposed.cachedMeasurements]).toEqual([baseline.activeNodes, baseline.activeArenas, baseline.cachedMeasurements]);
 });
+
+it.runIf(experimentalLayout)('keeps paired absolute provider constraints and ownership through every finite nowrap direction', async () => {
+  type Direction = 'row' | 'row-reverse' | 'column' | 'column-reverse';
+  type ProviderStyle = BoxStyle & FlexItemStyle;
+  type Resolved = SystemStyle & { readonly width: number; readonly height: number };
+  const baseline = snapshotWasmLayoutDiagnostics();
+  const direction = signal<Direction>('row'), writing = signal<'ltr' | 'rtl'>('ltr');
+  const visible = signal(true), jobs = signal(3), heightJobs = signal(8), paint = signal('#426b61');
+  const hits: string[] = [];
+  const constraints: Array<readonly [string, number, number, number, number]> = [];
+  const boxes = new Map<string, { x: number; y: number; width: number; height: number; stamp: number }>(); let nextStamp = 1, calls = 0;
+  function provider(name: 'width' | 'height') {
+    return definePrimitive<{ readonly jobs: typeof jobs }, ProviderStyle, ProviderStyle, Resolved>((_props, _style) => {
+      const box = useLayoutBox(), transform = useCanvasContext().getTransform(), stamp = useConst(() => nextStamp++);
+      boxes.set(name, { x: transform.e, y: transform.f, width: box.width, height: box.height, stamp });
+      return <Rectangle onClick={() => hits.push(name)} style={{ width: box.width, height: box.height, fill: '#a63758' }} />;
+    }, { preserveSignalProps: ['jobs'], resolveStyle: (_style, context) => ({ width: context.allocation.width, height: context.allocation.height }),
+      measureIntrinsic: () => ({ status: 'measured' as const, minContent: { width: 0, height: 20 }, maxContent: { width: 160, height: 80 } }),
+      measure: ({ props, constraints: input }) => { calls++; constraints.push([name, input.minWidth, input.maxWidth, input.minHeight, input.maxHeight]); return { status: 'measured' as const, size: name === 'width' ? { width: props.jobs.get() * 20, height: 20 } : { width: input.maxWidth, height: Math.ceil(props.jobs.get() / Math.max(1, Math.floor(input.maxWidth / 20))) * 10 } }; },
+    });
+  }
+  const Width = provider('width');
+  const Height = provider('height');
+  function Scene() {
+    const widthLeaf = useConst(() => <Width key="width" jobs={jobs} style={{ position: 'absolute', width: 'auto', height: 20, right: 18, top: 8, minWidth: 0, minHeight: 0, flexGrow: 0, flexShrink: 0 }} />);
+    const heightLeaf = useConst(() => <Height key="height" jobs={heightJobs} style={{ position: 'absolute', width: 80, height: 'auto', left: 12, bottom: 10, minWidth: 0, minHeight: 0, flexGrow: 0, flexShrink: 0 }} />);
+    const sibling = useConst(() => <Rectangle key="flow" style={{ width: 50, height: 20, minWidth: 0, minHeight: 0, flexGrow: 0, flexShrink: 0, fill: paint }} />);
+    return <Flex style={{ width: 204, height: 104, boxSizing: 'border-box', padding: { left: 10, right: 30, top: 20, bottom: 20 }, borderWidth: 2, flexDirection: direction.get(), flexWrap: 'nowrap', layoutDirection: writing.get(), alignItems: 'flex-start', gap: 10 }}>{visible.get() ? [widthLeaf, heightLeaf, sibling] : [sibling]}</Flex>;
+  }
+  const canvas = document.createElement('canvas'); canvas.width = 204; canvas.height = 104; document.body.append(canvas);
+  const controller = pibbl(canvas, <Scene />); controllers.push(controller); await nextFrame();
+  for (const main of ['row', 'row-reverse', 'column', 'column-reverse'] as const) for (const rtl of [false, true]) {
+    direction.set(main); writing.set(rtl ? 'rtl' : 'ltr'); await nextFrame();
+    expect(boxes.get('width')).toMatchObject({ x: 124, y: 10, width: 60, height: 20, stamp: 1 });
+    expect(constraints.findLast(entry => entry[0] === 'width')).toEqual(['width', 0, Infinity, 20, 20]);
+    expect(boxes.get('height')).toMatchObject({ x: 14, y: 72, width: 80, height: 20, stamp: 2 });
+    expect(constraints.findLast(entry => entry[0] === 'height')).toEqual(['height', 80, 80, 0, Infinity]);
+  }
+  const beforePaint = calls; paint.set('#6e3e79'); await nextFrame(); expect(calls).toBe(beforePaint);
+  jobs.set(6); heightJobs.set(12); await nextFrame();
+  expect(boxes.get('width')).toMatchObject({ x: 64, y: 10, width: 120, height: 20, stamp: 1 });
+  expect(boxes.get('height')).toMatchObject({ x: 14, y: 62, width: 80, height: 30, stamp: 2 });
+  clickCanvas(canvas, 70, 15); clickCanvas(canvas, 20, 65);
+  expect(hits).toEqual(['width', 'height']);
+  visible.set(false); await nextFrame(); expect(snapshotWasmLayoutDiagnostics().cachedMeasurements).toBe(baseline.cachedMeasurements); const removed = calls;
+  jobs.set(3); heightJobs.set(8); await nextFrame(); expect(calls).toBe(removed);
+  visible.set(true); await nextFrame(); expect(calls).toBe(removed + 2);
+  controller.dispose(); const disposed = snapshotWasmLayoutDiagnostics(); expect([disposed.activeNodes, disposed.activeArenas, disposed.cachedMeasurements]).toEqual([baseline.activeNodes, baseline.activeArenas, baseline.cachedMeasurements]);
+});

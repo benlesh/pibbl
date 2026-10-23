@@ -3,7 +3,7 @@
   "commit": "042f5013152eb81c1552dec945b88f7b95ca350f",
   "license": "MIT",
   "licenseSha256": "52412d7bc7ce4157ea628bbaacb8829e0a9cb3c58f57f99176126bc8cf2bfc85",
-  "probeSha256": "1c41a16f5bc012bad75c33e6924fe693ee3b29789bdeb7abf241d5920b57ff80",
+  "probeSha256": "4e9bf57526616156412d16447dba28f5673d5bdf2e750b4f593a7d4434c02a1d",
   "configuration": {
     "useWebDefaults": false,
     "pointScaleFactor": 0,
@@ -28150,6 +28150,1319 @@
           "height": "auto",
           "left": 12,
           "top": 8,
+          "bottom": 10
+        },
+        {
+          "width": 50,
+          "height": 20,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0
+        }
+      ]
+    },
+    {
+      "name": "position-absolute-measured-main-width-row-ltr",
+      "width": 204,
+      "height": 104,
+      "gap": 10,
+      "flexDirection": "row",
+      "flexWrap": "nowrap",
+      "layoutDirection": "ltr",
+      "containerStyle": {
+        "boxSizing": "border-box",
+        "padding": {
+          "left": 10,
+          "right": 30,
+          "top": 20,
+          "bottom": 20
+        },
+        "borderWidth": 2,
+        "alignItems": "flex-start"
+      },
+      "absoluteMeasuredMainFixture": true,
+      "measurementModel": "deterministic provider: 3 jobs x 20px; Pibbl width unbounded / height exact 20",
+      "boxes": [
+        {
+          "x": 12,
+          "y": 22,
+          "width": 50,
+          "height": 20
+        },
+        {
+          "x": 124,
+          "y": 10,
+          "width": 60,
+          "height": 20
+        },
+        {
+          "x": 72,
+          "y": 22,
+          "width": 50,
+          "height": 20
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 50,
+          "height": 20,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0
+        },
+        {
+          "position": "absolute",
+          "width": "auto",
+          "height": 20,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "right": 18,
+          "top": 8
+        },
+        {
+          "width": 50,
+          "height": 20,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0
+        }
+      ]
+    },
+    {
+      "name": "position-absolute-measured-main-width-row-rtl",
+      "width": 204,
+      "height": 104,
+      "gap": 10,
+      "flexDirection": "row",
+      "flexWrap": "nowrap",
+      "layoutDirection": "rtl",
+      "containerStyle": {
+        "boxSizing": "border-box",
+        "padding": {
+          "left": 10,
+          "right": 30,
+          "top": 20,
+          "bottom": 20
+        },
+        "borderWidth": 2,
+        "alignItems": "flex-start"
+      },
+      "absoluteMeasuredMainFixture": true,
+      "measurementModel": "deterministic provider: 3 jobs x 20px; Pibbl width unbounded / height exact 20",
+      "boxes": [
+        {
+          "x": 122,
+          "y": 22,
+          "width": 50,
+          "height": 20
+        },
+        {
+          "x": 124,
+          "y": 10,
+          "width": 60,
+          "height": 20
+        },
+        {
+          "x": 62,
+          "y": 22,
+          "width": 50,
+          "height": 20
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 50,
+          "height": 20,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0
+        },
+        {
+          "position": "absolute",
+          "width": "auto",
+          "height": 20,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "right": 18,
+          "top": 8
+        },
+        {
+          "width": 50,
+          "height": 20,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0
+        }
+      ]
+    },
+    {
+      "name": "position-absolute-measured-main-width-row-reverse-ltr",
+      "width": 204,
+      "height": 104,
+      "gap": 10,
+      "flexDirection": "row-reverse",
+      "flexWrap": "nowrap",
+      "layoutDirection": "ltr",
+      "containerStyle": {
+        "boxSizing": "border-box",
+        "padding": {
+          "left": 10,
+          "right": 30,
+          "top": 20,
+          "bottom": 20
+        },
+        "borderWidth": 2,
+        "alignItems": "flex-start"
+      },
+      "absoluteMeasuredMainFixture": true,
+      "measurementModel": "deterministic provider: 3 jobs x 20px; Pibbl width unbounded / height exact 20",
+      "boxes": [
+        {
+          "x": 122,
+          "y": 22,
+          "width": 50,
+          "height": 20
+        },
+        {
+          "x": 124,
+          "y": 10,
+          "width": 60,
+          "height": 20
+        },
+        {
+          "x": 62,
+          "y": 22,
+          "width": 50,
+          "height": 20
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 50,
+          "height": 20,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0
+        },
+        {
+          "position": "absolute",
+          "width": "auto",
+          "height": 20,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "right": 18,
+          "top": 8
+        },
+        {
+          "width": 50,
+          "height": 20,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0
+        }
+      ]
+    },
+    {
+      "name": "position-absolute-measured-main-width-row-reverse-rtl",
+      "width": 204,
+      "height": 104,
+      "gap": 10,
+      "flexDirection": "row-reverse",
+      "flexWrap": "nowrap",
+      "layoutDirection": "rtl",
+      "containerStyle": {
+        "boxSizing": "border-box",
+        "padding": {
+          "left": 10,
+          "right": 30,
+          "top": 20,
+          "bottom": 20
+        },
+        "borderWidth": 2,
+        "alignItems": "flex-start"
+      },
+      "absoluteMeasuredMainFixture": true,
+      "measurementModel": "deterministic provider: 3 jobs x 20px; Pibbl width unbounded / height exact 20",
+      "boxes": [
+        {
+          "x": 12,
+          "y": 22,
+          "width": 50,
+          "height": 20
+        },
+        {
+          "x": 124,
+          "y": 10,
+          "width": 60,
+          "height": 20
+        },
+        {
+          "x": 72,
+          "y": 22,
+          "width": 50,
+          "height": 20
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 50,
+          "height": 20,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0
+        },
+        {
+          "position": "absolute",
+          "width": "auto",
+          "height": 20,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "right": 18,
+          "top": 8
+        },
+        {
+          "width": 50,
+          "height": 20,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0
+        }
+      ]
+    },
+    {
+      "name": "position-absolute-measured-main-width-column-ltr",
+      "width": 204,
+      "height": 104,
+      "gap": 10,
+      "flexDirection": "column",
+      "flexWrap": "nowrap",
+      "layoutDirection": "ltr",
+      "containerStyle": {
+        "boxSizing": "border-box",
+        "padding": {
+          "left": 10,
+          "right": 30,
+          "top": 20,
+          "bottom": 20
+        },
+        "borderWidth": 2,
+        "alignItems": "flex-start"
+      },
+      "absoluteMeasuredMainFixture": true,
+      "measurementModel": "deterministic provider: 3 jobs x 20px; Pibbl width unbounded / height exact 20",
+      "measurementQueryDifference": true,
+      "nativeMeasurementConstraints": {
+        "minWidth": 0,
+        "maxWidth": 200,
+        "minHeight": 20,
+        "maxHeight": 20
+      },
+      "boxes": [
+        {
+          "x": 12,
+          "y": 22,
+          "width": 50,
+          "height": 20
+        },
+        {
+          "x": 124,
+          "y": 10,
+          "width": 60,
+          "height": 20
+        },
+        {
+          "x": 12,
+          "y": 52,
+          "width": 50,
+          "height": 20
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 50,
+          "height": 20,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0
+        },
+        {
+          "position": "absolute",
+          "width": "auto",
+          "height": 20,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "right": 18,
+          "top": 8
+        },
+        {
+          "width": 50,
+          "height": 20,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0
+        }
+      ]
+    },
+    {
+      "name": "position-absolute-measured-main-width-column-rtl",
+      "width": 204,
+      "height": 104,
+      "gap": 10,
+      "flexDirection": "column",
+      "flexWrap": "nowrap",
+      "layoutDirection": "rtl",
+      "containerStyle": {
+        "boxSizing": "border-box",
+        "padding": {
+          "left": 10,
+          "right": 30,
+          "top": 20,
+          "bottom": 20
+        },
+        "borderWidth": 2,
+        "alignItems": "flex-start"
+      },
+      "absoluteMeasuredMainFixture": true,
+      "measurementModel": "deterministic provider: 3 jobs x 20px; Pibbl width unbounded / height exact 20",
+      "measurementQueryDifference": true,
+      "nativeMeasurementConstraints": {
+        "minWidth": 0,
+        "maxWidth": 200,
+        "minHeight": 20,
+        "maxHeight": 20
+      },
+      "boxes": [
+        {
+          "x": 122,
+          "y": 22,
+          "width": 50,
+          "height": 20
+        },
+        {
+          "x": 124,
+          "y": 10,
+          "width": 60,
+          "height": 20
+        },
+        {
+          "x": 122,
+          "y": 52,
+          "width": 50,
+          "height": 20
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 50,
+          "height": 20,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0
+        },
+        {
+          "position": "absolute",
+          "width": "auto",
+          "height": 20,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "right": 18,
+          "top": 8
+        },
+        {
+          "width": 50,
+          "height": 20,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0
+        }
+      ]
+    },
+    {
+      "name": "position-absolute-measured-main-width-column-reverse-ltr",
+      "width": 204,
+      "height": 104,
+      "gap": 10,
+      "flexDirection": "column-reverse",
+      "flexWrap": "nowrap",
+      "layoutDirection": "ltr",
+      "containerStyle": {
+        "boxSizing": "border-box",
+        "padding": {
+          "left": 10,
+          "right": 30,
+          "top": 20,
+          "bottom": 20
+        },
+        "borderWidth": 2,
+        "alignItems": "flex-start"
+      },
+      "absoluteMeasuredMainFixture": true,
+      "measurementModel": "deterministic provider: 3 jobs x 20px; Pibbl width unbounded / height exact 20",
+      "measurementQueryDifference": true,
+      "nativeMeasurementConstraints": {
+        "minWidth": 0,
+        "maxWidth": 200,
+        "minHeight": 20,
+        "maxHeight": 20
+      },
+      "boxes": [
+        {
+          "x": 12,
+          "y": 62,
+          "width": 50,
+          "height": 20
+        },
+        {
+          "x": 124,
+          "y": 10,
+          "width": 60,
+          "height": 20
+        },
+        {
+          "x": 12,
+          "y": 32,
+          "width": 50,
+          "height": 20
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 50,
+          "height": 20,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0
+        },
+        {
+          "position": "absolute",
+          "width": "auto",
+          "height": 20,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "right": 18,
+          "top": 8
+        },
+        {
+          "width": 50,
+          "height": 20,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0
+        }
+      ]
+    },
+    {
+      "name": "position-absolute-measured-main-width-column-reverse-rtl",
+      "width": 204,
+      "height": 104,
+      "gap": 10,
+      "flexDirection": "column-reverse",
+      "flexWrap": "nowrap",
+      "layoutDirection": "rtl",
+      "containerStyle": {
+        "boxSizing": "border-box",
+        "padding": {
+          "left": 10,
+          "right": 30,
+          "top": 20,
+          "bottom": 20
+        },
+        "borderWidth": 2,
+        "alignItems": "flex-start"
+      },
+      "absoluteMeasuredMainFixture": true,
+      "measurementModel": "deterministic provider: 3 jobs x 20px; Pibbl width unbounded / height exact 20",
+      "measurementQueryDifference": true,
+      "nativeMeasurementConstraints": {
+        "minWidth": 0,
+        "maxWidth": 200,
+        "minHeight": 20,
+        "maxHeight": 20
+      },
+      "boxes": [
+        {
+          "x": 122,
+          "y": 62,
+          "width": 50,
+          "height": 20
+        },
+        {
+          "x": 124,
+          "y": 10,
+          "width": 60,
+          "height": 20
+        },
+        {
+          "x": 122,
+          "y": 32,
+          "width": 50,
+          "height": 20
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 50,
+          "height": 20,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0
+        },
+        {
+          "position": "absolute",
+          "width": "auto",
+          "height": 20,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "right": 18,
+          "top": 8
+        },
+        {
+          "width": 50,
+          "height": 20,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0
+        }
+      ]
+    },
+    {
+      "name": "position-absolute-measured-main-height-row-ltr",
+      "width": 204,
+      "height": 104,
+      "gap": 10,
+      "flexDirection": "row",
+      "flexWrap": "nowrap",
+      "layoutDirection": "ltr",
+      "containerStyle": {
+        "boxSizing": "border-box",
+        "padding": {
+          "left": 10,
+          "right": 30,
+          "top": 20,
+          "bottom": 20
+        },
+        "borderWidth": 2,
+        "alignItems": "flex-start"
+      },
+      "absoluteMeasuredMainFixture": true,
+      "measurementModel": "deterministic provider: 8 jobs x 20px; width exact 80 / height unbounded",
+      "boxes": [
+        {
+          "x": 12,
+          "y": 22,
+          "width": 50,
+          "height": 20
+        },
+        {
+          "x": 14,
+          "y": 72,
+          "width": 80,
+          "height": 20
+        },
+        {
+          "x": 72,
+          "y": 22,
+          "width": 50,
+          "height": 20
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 50,
+          "height": 20,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0
+        },
+        {
+          "position": "absolute",
+          "width": 80,
+          "height": "auto",
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "left": 12,
+          "bottom": 10
+        },
+        {
+          "width": 50,
+          "height": 20,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0
+        }
+      ]
+    },
+    {
+      "name": "position-absolute-measured-main-height-row-rtl",
+      "width": 204,
+      "height": 104,
+      "gap": 10,
+      "flexDirection": "row",
+      "flexWrap": "nowrap",
+      "layoutDirection": "rtl",
+      "containerStyle": {
+        "boxSizing": "border-box",
+        "padding": {
+          "left": 10,
+          "right": 30,
+          "top": 20,
+          "bottom": 20
+        },
+        "borderWidth": 2,
+        "alignItems": "flex-start"
+      },
+      "absoluteMeasuredMainFixture": true,
+      "measurementModel": "deterministic provider: 8 jobs x 20px; width exact 80 / height unbounded",
+      "boxes": [
+        {
+          "x": 122,
+          "y": 22,
+          "width": 50,
+          "height": 20
+        },
+        {
+          "x": 14,
+          "y": 72,
+          "width": 80,
+          "height": 20
+        },
+        {
+          "x": 62,
+          "y": 22,
+          "width": 50,
+          "height": 20
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 50,
+          "height": 20,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0
+        },
+        {
+          "position": "absolute",
+          "width": 80,
+          "height": "auto",
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "left": 12,
+          "bottom": 10
+        },
+        {
+          "width": 50,
+          "height": 20,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0
+        }
+      ]
+    },
+    {
+      "name": "position-absolute-measured-main-height-row-reverse-ltr",
+      "width": 204,
+      "height": 104,
+      "gap": 10,
+      "flexDirection": "row-reverse",
+      "flexWrap": "nowrap",
+      "layoutDirection": "ltr",
+      "containerStyle": {
+        "boxSizing": "border-box",
+        "padding": {
+          "left": 10,
+          "right": 30,
+          "top": 20,
+          "bottom": 20
+        },
+        "borderWidth": 2,
+        "alignItems": "flex-start"
+      },
+      "absoluteMeasuredMainFixture": true,
+      "measurementModel": "deterministic provider: 8 jobs x 20px; width exact 80 / height unbounded",
+      "boxes": [
+        {
+          "x": 122,
+          "y": 22,
+          "width": 50,
+          "height": 20
+        },
+        {
+          "x": 14,
+          "y": 72,
+          "width": 80,
+          "height": 20
+        },
+        {
+          "x": 62,
+          "y": 22,
+          "width": 50,
+          "height": 20
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 50,
+          "height": 20,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0
+        },
+        {
+          "position": "absolute",
+          "width": 80,
+          "height": "auto",
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "left": 12,
+          "bottom": 10
+        },
+        {
+          "width": 50,
+          "height": 20,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0
+        }
+      ]
+    },
+    {
+      "name": "position-absolute-measured-main-height-row-reverse-rtl",
+      "width": 204,
+      "height": 104,
+      "gap": 10,
+      "flexDirection": "row-reverse",
+      "flexWrap": "nowrap",
+      "layoutDirection": "rtl",
+      "containerStyle": {
+        "boxSizing": "border-box",
+        "padding": {
+          "left": 10,
+          "right": 30,
+          "top": 20,
+          "bottom": 20
+        },
+        "borderWidth": 2,
+        "alignItems": "flex-start"
+      },
+      "absoluteMeasuredMainFixture": true,
+      "measurementModel": "deterministic provider: 8 jobs x 20px; width exact 80 / height unbounded",
+      "boxes": [
+        {
+          "x": 12,
+          "y": 22,
+          "width": 50,
+          "height": 20
+        },
+        {
+          "x": 14,
+          "y": 72,
+          "width": 80,
+          "height": 20
+        },
+        {
+          "x": 72,
+          "y": 22,
+          "width": 50,
+          "height": 20
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 50,
+          "height": 20,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0
+        },
+        {
+          "position": "absolute",
+          "width": 80,
+          "height": "auto",
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "left": 12,
+          "bottom": 10
+        },
+        {
+          "width": 50,
+          "height": 20,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0
+        }
+      ]
+    },
+    {
+      "name": "position-absolute-measured-main-height-column-ltr",
+      "width": 204,
+      "height": 104,
+      "gap": 10,
+      "flexDirection": "column",
+      "flexWrap": "nowrap",
+      "layoutDirection": "ltr",
+      "containerStyle": {
+        "boxSizing": "border-box",
+        "padding": {
+          "left": 10,
+          "right": 30,
+          "top": 20,
+          "bottom": 20
+        },
+        "borderWidth": 2,
+        "alignItems": "flex-start"
+      },
+      "absoluteMeasuredMainFixture": true,
+      "measurementModel": "deterministic provider: 8 jobs x 20px; width exact 80 / height unbounded",
+      "boxes": [
+        {
+          "x": 12,
+          "y": 22,
+          "width": 50,
+          "height": 20
+        },
+        {
+          "x": 14,
+          "y": 72,
+          "width": 80,
+          "height": 20
+        },
+        {
+          "x": 12,
+          "y": 52,
+          "width": 50,
+          "height": 20
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 50,
+          "height": 20,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0
+        },
+        {
+          "position": "absolute",
+          "width": 80,
+          "height": "auto",
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "left": 12,
+          "bottom": 10
+        },
+        {
+          "width": 50,
+          "height": 20,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0
+        }
+      ]
+    },
+    {
+      "name": "position-absolute-measured-main-height-column-rtl",
+      "width": 204,
+      "height": 104,
+      "gap": 10,
+      "flexDirection": "column",
+      "flexWrap": "nowrap",
+      "layoutDirection": "rtl",
+      "containerStyle": {
+        "boxSizing": "border-box",
+        "padding": {
+          "left": 10,
+          "right": 30,
+          "top": 20,
+          "bottom": 20
+        },
+        "borderWidth": 2,
+        "alignItems": "flex-start"
+      },
+      "absoluteMeasuredMainFixture": true,
+      "measurementModel": "deterministic provider: 8 jobs x 20px; width exact 80 / height unbounded",
+      "boxes": [
+        {
+          "x": 122,
+          "y": 22,
+          "width": 50,
+          "height": 20
+        },
+        {
+          "x": 14,
+          "y": 72,
+          "width": 80,
+          "height": 20
+        },
+        {
+          "x": 122,
+          "y": 52,
+          "width": 50,
+          "height": 20
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 50,
+          "height": 20,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0
+        },
+        {
+          "position": "absolute",
+          "width": 80,
+          "height": "auto",
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "left": 12,
+          "bottom": 10
+        },
+        {
+          "width": 50,
+          "height": 20,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0
+        }
+      ]
+    },
+    {
+      "name": "position-absolute-measured-main-height-column-reverse-ltr",
+      "width": 204,
+      "height": 104,
+      "gap": 10,
+      "flexDirection": "column-reverse",
+      "flexWrap": "nowrap",
+      "layoutDirection": "ltr",
+      "containerStyle": {
+        "boxSizing": "border-box",
+        "padding": {
+          "left": 10,
+          "right": 30,
+          "top": 20,
+          "bottom": 20
+        },
+        "borderWidth": 2,
+        "alignItems": "flex-start"
+      },
+      "absoluteMeasuredMainFixture": true,
+      "measurementModel": "deterministic provider: 8 jobs x 20px; width exact 80 / height unbounded",
+      "boxes": [
+        {
+          "x": 12,
+          "y": 62,
+          "width": 50,
+          "height": 20
+        },
+        {
+          "x": 14,
+          "y": 72,
+          "width": 80,
+          "height": 20
+        },
+        {
+          "x": 12,
+          "y": 32,
+          "width": 50,
+          "height": 20
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 50,
+          "height": 20,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0
+        },
+        {
+          "position": "absolute",
+          "width": 80,
+          "height": "auto",
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "left": 12,
+          "bottom": 10
+        },
+        {
+          "width": 50,
+          "height": 20,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0
+        }
+      ]
+    },
+    {
+      "name": "position-absolute-measured-main-height-column-reverse-rtl",
+      "width": 204,
+      "height": 104,
+      "gap": 10,
+      "flexDirection": "column-reverse",
+      "flexWrap": "nowrap",
+      "layoutDirection": "rtl",
+      "containerStyle": {
+        "boxSizing": "border-box",
+        "padding": {
+          "left": 10,
+          "right": 30,
+          "top": 20,
+          "bottom": 20
+        },
+        "borderWidth": 2,
+        "alignItems": "flex-start"
+      },
+      "absoluteMeasuredMainFixture": true,
+      "measurementModel": "deterministic provider: 8 jobs x 20px; width exact 80 / height unbounded",
+      "boxes": [
+        {
+          "x": 122,
+          "y": 62,
+          "width": 50,
+          "height": 20
+        },
+        {
+          "x": 14,
+          "y": 72,
+          "width": 80,
+          "height": 20
+        },
+        {
+          "x": 122,
+          "y": 32,
+          "width": 50,
+          "height": 20
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 50,
+          "height": 20,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0
+        },
+        {
+          "position": "absolute",
+          "width": 80,
+          "height": "auto",
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "left": 12,
+          "bottom": 10
+        },
+        {
+          "width": 50,
+          "height": 20,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0
+        }
+      ]
+    },
+    {
+      "name": "position-absolute-measured-main-width-column-reverse-rtl-resized",
+      "width": 244,
+      "height": 104,
+      "gap": 10,
+      "flexDirection": "column-reverse",
+      "flexWrap": "nowrap",
+      "layoutDirection": "rtl",
+      "containerStyle": {
+        "boxSizing": "border-box",
+        "padding": {
+          "left": 10,
+          "right": 30,
+          "top": 20,
+          "bottom": 20
+        },
+        "borderWidth": 2,
+        "alignItems": "flex-start"
+      },
+      "absoluteMeasuredMainFixture": true,
+      "measurementModel": "deterministic provider resize",
+      "measurementQueryDifference": true,
+      "nativeMeasurementConstraints": {
+        "minWidth": 0,
+        "maxWidth": 240,
+        "minHeight": 20,
+        "maxHeight": 20
+      },
+      "boxes": [
+        {
+          "x": 162,
+          "y": 62,
+          "width": 50,
+          "height": 20
+        },
+        {
+          "x": 164,
+          "y": 10,
+          "width": 60,
+          "height": 20
+        },
+        {
+          "x": 162,
+          "y": 32,
+          "width": 50,
+          "height": 20
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 50,
+          "height": 20,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0
+        },
+        {
+          "position": "absolute",
+          "width": "auto",
+          "height": 20,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "right": 18,
+          "top": 8
+        },
+        {
+          "width": 50,
+          "height": 20,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0
+        }
+      ]
+    },
+    {
+      "name": "position-absolute-measured-main-height-column-reverse-rtl-resized",
+      "width": 204,
+      "height": 124,
+      "gap": 10,
+      "flexDirection": "column-reverse",
+      "flexWrap": "nowrap",
+      "layoutDirection": "rtl",
+      "containerStyle": {
+        "boxSizing": "border-box",
+        "padding": {
+          "left": 10,
+          "right": 30,
+          "top": 20,
+          "bottom": 20
+        },
+        "borderWidth": 2,
+        "alignItems": "flex-start"
+      },
+      "absoluteMeasuredMainFixture": true,
+      "measurementModel": "deterministic provider resize",
+      "boxes": [
+        {
+          "x": 122,
+          "y": 82,
+          "width": 50,
+          "height": 20
+        },
+        {
+          "x": 14,
+          "y": 92,
+          "width": 80,
+          "height": 20
+        },
+        {
+          "x": 122,
+          "y": 52,
+          "width": 50,
+          "height": 20
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 50,
+          "height": 20,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0
+        },
+        {
+          "position": "absolute",
+          "width": 80,
+          "height": "auto",
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "left": 12,
           "bottom": 10
         },
         {

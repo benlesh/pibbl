@@ -97,15 +97,14 @@ describe('bounded direct-Flex absolute admission', () => {
       expect(mount(<Flex style={{ width: 200, height: 100, flexDirection }}><Rectangle style={style} /></Flex>)).toThrow('PIBBL_LAYOUT_UNSUPPORTED_POSITION');
     }
   });
-  it.runIf(experimentalLayout).each(['row-reverse', 'column', 'column-reverse'] as const)('rejects paired natural providers in %s before measurement', flexDirection => {
+  it.runIf(experimentalLayout).each(['row-reverse', 'column', 'column-reverse'] as const)('requires paired natural providers in %s before measurement', flexDirection => {
     let calls = 0;
     const Leaf = definePrimitive<{}, BoxStyle & FlexItemStyle, BoxStyle & FlexItemStyle, SystemStyle & { width: number; height: number }>(() => null, {
       resolveStyle: (_style, context) => ({ width: context.allocation.width, height: context.allocation.height }),
-      measureIntrinsic: () => { calls++; return { status: 'measured', minContent: { width: 20, height: 20 }, maxContent: { width: 60, height: 20 } }; },
       measure: () => { calls++; return { status: 'measured', size: { width: 60, height: 20 } }; },
     });
     for (const style of [{ width: 'auto' as const, height: 20 }, { width: 80, height: 'auto' as const }]) {
-      expect(mount(<Flex style={{ width: 200, height: 100, flexDirection }}><Leaf style={{ ...style, position: 'absolute', left: 12, top: 8 }} /></Flex>)).toThrow('absolute natural measurement currently requires a row');
+      expect(mount(<Flex style={{ width: 200, height: 100, flexDirection }}><Leaf style={{ ...style, position: 'absolute', left: 12, top: 8 }} /></Flex>)).toThrow('PIBBL_LAYOUT_UNSUPPORTED_POSITION');
     }
     expect(calls).toBe(0);
   });

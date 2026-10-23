@@ -2571,7 +2571,7 @@
       "id": "position.relative-static-absolute",
       "target": "parity",
       "group": "placement-and-participation",
-      "current": "experimental finite nowrap static/relative primitive placement and fixed/opposing-inset/aspect-derived absolute sizing with numeric bounds across all four main directions and LTR/RTL; preserved physical relative offsets; row-only paired-provider natural sizing and direct declarative static containing chains; omitted-position legacy retained",
+      "current": "experimental finite nowrap static/relative primitive placement and fixed/opposing-inset/aspect-derived absolute sizing with numeric bounds across all four main directions and LTR/RTL; preserved physical relative offsets; paired-provider natural sizing across nowrap directions with explicit native query differences; row-only direct declarative static containing chains; omitted-position legacy retained",
       "status": "experimental",
       "unresolvedPolicy": "Intrinsic absolute sizing, explicit containing-block overrides, opaque/transformed ancestry and wider layout admission remain open.",
       "evidence": {
@@ -2589,7 +2589,8 @@
           "slice130: fixed absolute main/cross alignment across all four nowrap directions and RTL, physical insets unchanged, source focus/hit order, stable keyed identity, paint reuse and cleanup; installed absoluteMainDirections receipt",
           "slice131: static/relative leaves across all four nowrap directions and LTR/RTL; physical final offsets, source focus/hits, stable identity, paint reuse and cleanup; row-only known-layout/containing boundary; installed relativeMainDirections receipt",
           "slice132: opposing-inset automatic and fixed numeric absolute bounds across all four nowrap main directions and LTR/RTL; resize, physical anchoring, unchanged flow slots, occlusion/source-order hits, paint reuse and cleanup; installed absoluteMainBounds receipt",
-          "slice133: exactly-one-auto absolute aspect derivation in all four nowrap directions and LTR/RTL, declared-axis-before-bounds and paired-inset precedence, resize/pixels/identity/paint reuse/cleanup; installed absoluteMainAspect receipt"
+          "slice133: exactly-one-auto absolute aspect derivation in all four nowrap directions and LTR/RTL, declared-axis-before-bounds and paired-inset precedence, resize/pixels/identity/paint reuse/cleanup; installed absoluteMainAspect receipt",
+          "slice134: paired absolute natural width/height across all four nowrap directions and LTR/RTL; exact Pibbl envelopes, explicit native column-query provenance, stable paint reuse, measurement signals, removal/restore and cleanup; installed absoluteMeasuredMain receipt"
         ],
         "negative": [
           "packages/core/test/layout-positioning-diagnostics.test.tsx: unsupported contexts and unmoded opposite insets"
@@ -2718,11 +2719,29 @@
           "position-absolute-main-aspect-width-bound-column-reverse-rtl",
           "position-absolute-main-aspect-height-bound-column-reverse-rtl",
           "position-absolute-main-aspect-height-pair-column-reverse-rtl",
-          "position-absolute-main-aspect-height-pair-column-reverse-rtl-resized"
+          "position-absolute-main-aspect-height-pair-column-reverse-rtl-resized",
+          "position-absolute-measured-main-width-row-ltr",
+          "position-absolute-measured-main-width-row-rtl",
+          "position-absolute-measured-main-width-row-reverse-ltr",
+          "position-absolute-measured-main-width-row-reverse-rtl",
+          "position-absolute-measured-main-width-column-ltr",
+          "position-absolute-measured-main-width-column-rtl",
+          "position-absolute-measured-main-width-column-reverse-ltr",
+          "position-absolute-measured-main-width-column-reverse-rtl",
+          "position-absolute-measured-main-height-row-ltr",
+          "position-absolute-measured-main-height-row-rtl",
+          "position-absolute-measured-main-height-row-reverse-ltr",
+          "position-absolute-measured-main-height-row-reverse-rtl",
+          "position-absolute-measured-main-height-column-ltr",
+          "position-absolute-measured-main-height-column-rtl",
+          "position-absolute-measured-main-height-column-reverse-ltr",
+          "position-absolute-measured-main-height-column-reverse-rtl",
+          "position-absolute-measured-main-width-column-reverse-rtl-resized",
+          "position-absolute-measured-main-height-column-reverse-rtl-resized"
         ],
         "missing": [
           "general absolute intrinsic dimensions (built-in text/images, both-auto and nested owners)",
-          "non-row positioned known layout owners and wrapping positioning; non-row natural-measured absolute sizing",
+          "non-row positioned known layout owners and wrapping positioning",
           "general containing-block ownership"
         ]
       }
@@ -2780,7 +2799,7 @@
       "id": "measurement.custom-leaf",
       "target": "parity",
       "group": "measurement-and-intrinsic",
-      "current": "pure measure plus experimental paired intrinsic providers, exact settled-width finite height in nowrap rows and exact numeric-width automatic height in forward LTR nowrap columns; scalar/signal snapshot reuse and mutable-input correctness; direct absolute paired custom provider natural width with unbounded horizontal availability and definite exact height",
+      "current": "pure measure plus experimental paired intrinsic providers, exact settled-width finite height in nowrap rows and exact numeric-width automatic height in forward LTR nowrap columns; scalar/signal snapshot reuse and mutable-input correctness; direct absolute paired custom providers with one exact declared and one unbounded natural axis across finite nowrap main directions; native column-width query differences labeled separately from deterministic geometry",
       "status": "partial",
       "unresolvedPolicy": "Paired intrinsic callback is implemented for the bounded direct-leaf consumer; baselines and broader intrinsic consumers remain open.",
       "evidenceRefs": [
@@ -2799,7 +2818,8 @@
           "exact final-width finite cross height, declared-size/intrinsic-only compatibility and real zero width",
           "finite LTR column paired provider exact width40/60 and unbounded natural height40/30 with following-target movement",
           "finite-column measurement-only signal dependency moves following targets; unrelated paint reuses constrained snapshots",
-          "slice128: pure absolute width query at exact height, measurement-owned signals, conservative layout revision and stable sibling-paint reuse"
+          "slice128: pure absolute width query at exact height, measurement-owned signals, conservative layout revision and stable sibling-paint reuse",
+          "slices129/134: symmetric exact-width natural height and both absolute provider profiles across directions, query-before-bounds, owned signals, removal/restore and explicit native column-width query differences"
         ],
         "negative": [
           "opaque component measurement unsupported",
@@ -2823,7 +2843,25 @@
           "position-absolute-measured-height-top-resized",
           "position-absolute-measured-height-bottom-resized",
           "position-absolute-measured-height-top-min30",
-          "position-absolute-measured-height-bottom-max10"
+          "position-absolute-measured-height-bottom-max10",
+          "position-absolute-measured-main-width-row-ltr",
+          "position-absolute-measured-main-width-row-rtl",
+          "position-absolute-measured-main-width-row-reverse-ltr",
+          "position-absolute-measured-main-width-row-reverse-rtl",
+          "position-absolute-measured-main-width-column-ltr",
+          "position-absolute-measured-main-width-column-rtl",
+          "position-absolute-measured-main-width-column-reverse-ltr",
+          "position-absolute-measured-main-width-column-reverse-rtl",
+          "position-absolute-measured-main-height-row-ltr",
+          "position-absolute-measured-main-height-row-rtl",
+          "position-absolute-measured-main-height-row-reverse-ltr",
+          "position-absolute-measured-main-height-row-reverse-rtl",
+          "position-absolute-measured-main-height-column-ltr",
+          "position-absolute-measured-main-height-column-rtl",
+          "position-absolute-measured-main-height-column-reverse-ltr",
+          "position-absolute-measured-main-height-column-reverse-rtl",
+          "position-absolute-measured-main-width-column-reverse-rtl-resized",
+          "position-absolute-measured-main-height-column-reverse-rtl-resized"
         ],
         "missing": [
           "broader exact/at-most/unbounded constraint matrix beyond finite row/column admissions",

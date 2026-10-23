@@ -2203,6 +2203,72 @@ static void absoluteMeasuredHeightCases() {
   }
 }
 
+static float absoluteMeasuredMainQueryWidth;
+static YGMeasureMode absoluteMeasuredMainQueryWidthMode;
+static YGSize absoluteMeasuredMain(YGNodeConstRef, float width, YGMeasureMode widthMode, float height, YGMeasureMode) {
+  absoluteMeasuredMainQueryWidth = width;
+  absoluteMeasuredMainQueryWidthMode = widthMode;
+  // Deterministic provider oracle: 3 jobs × 20px. The selected automatic axis stays natural.
+  if (std::isfinite(height)) return {60, height};
+  const float columns = std::max(1.0f, std::floor(width / 20.0f));
+  return {width, std::ceil(8.0f / columns) * 10.0f};
+}
+static void absoluteMeasuredMainCases() {
+  struct Case { YGFlexDirection direction; bool rtl; const char* name; };
+  const Case directions[] = {
+    {YGFlexDirectionRow, false, "row-ltr"}, {YGFlexDirectionRow, true, "row-rtl"},
+    {YGFlexDirectionRowReverse, false, "row-reverse-ltr"}, {YGFlexDirectionRowReverse, true, "row-reverse-rtl"},
+    {YGFlexDirectionColumn, false, "column-ltr"}, {YGFlexDirectionColumn, true, "column-rtl"},
+    {YGFlexDirectionColumnReverse, false, "column-reverse-ltr"}, {YGFlexDirectionColumnReverse, true, "column-reverse-rtl"},
+  };
+  for (int profile = 0; profile < 2; ++profile) for (const auto& direction : directions) {
+    const bool naturalWidth = profile == 0;
+    auto config = YGConfigNew();
+    YGConfigSetUseWebDefaults(config, false); YGConfigSetPointScaleFactor(config, 0); YGConfigSetErrata(config, YGErrataNone);
+    auto root = YGNodeNewWithConfig(config);
+    YGNodeStyleSetPositionType(root, YGPositionTypeRelative); YGNodeStyleSetBoxSizing(root, YGBoxSizingBorderBox);
+    YGNodeStyleSetWidth(root, 204); YGNodeStyleSetHeight(root, 104); YGNodeStyleSetFlexDirection(root, direction.direction); YGNodeStyleSetFlexWrap(root, YGWrapNoWrap);
+    YGNodeStyleSetAlignItems(root, YGAlignFlexStart); YGNodeStyleSetGap(root, YGGutterAll, 10);
+    YGNodeStyleSetPadding(root, YGEdgeLeft, 10); YGNodeStyleSetPadding(root, YGEdgeRight, 30); YGNodeStyleSetPadding(root, YGEdgeTop, 20); YGNodeStyleSetPadding(root, YGEdgeBottom, 20); YGNodeStyleSetBorder(root, YGEdgeAll, 2);
+    for (int item = 0; item < 3; ++item) {
+      auto child = YGNodeNewWithConfig(config);
+      if (item == 1) {
+        YGNodeStyleSetPositionType(child, YGPositionTypeAbsolute); YGNodeStyleSetFlexGrow(child, 0); YGNodeStyleSetFlexShrink(child, 0); YGNodeStyleSetMinWidth(child, 0); YGNodeStyleSetMinHeight(child, 0);
+        if (naturalWidth) { YGNodeStyleSetHeight(child, 20); YGNodeStyleSetPosition(child, YGEdgeRight, 18); YGNodeStyleSetPosition(child, YGEdgeTop, 8); }
+        else { YGNodeStyleSetWidth(child, 80); YGNodeStyleSetPosition(child, YGEdgeLeft, 12); YGNodeStyleSetPosition(child, YGEdgeBottom, 10); }
+        YGNodeSetMeasureFunc(child, absoluteMeasuredMain);
+      } else { YGNodeStyleSetWidth(child, 50); YGNodeStyleSetHeight(child, 20); YGNodeStyleSetFlexGrow(child, 0); YGNodeStyleSetFlexShrink(child, 0); YGNodeStyleSetMinWidth(child, 0); YGNodeStyleSetMinHeight(child, 0); }
+      YGNodeInsertChild(root, child, item);
+    }
+    YGNodeCalculateLayout(root, YGUndefined, YGUndefined, direction.rtl ? YGDirectionRTL : YGDirectionLTR);
+    std::cout << ",{\"name\":\"position-absolute-measured-main-" << (naturalWidth ? "width" : "height") << '-' << direction.name
+              << "\",\"width\":204,\"height\":104,\"gap\":10,\"flexDirection\":\"" << (direction.direction == YGFlexDirectionRow ? "row" : direction.direction == YGFlexDirectionRowReverse ? "row-reverse" : direction.direction == YGFlexDirectionColumn ? "column" : "column-reverse") << "\",\"flexWrap\":\"nowrap\",\"layoutDirection\":\"" << (direction.rtl ? "rtl" : "ltr")
+              << "\",\"containerStyle\":{\"boxSizing\":\"border-box\",\"padding\":{\"left\":10,\"right\":30,\"top\":20,\"bottom\":20},\"borderWidth\":2,\"alignItems\":\"flex-start\"},\"absoluteMeasuredMainFixture\":true,\"measurementModel\":\"deterministic provider: " << (naturalWidth ? "3 jobs x 20px; Pibbl width unbounded / height exact 20" : "8 jobs x 20px; width exact 80 / height unbounded") << "\"";
+    if (naturalWidth && absoluteMeasuredMainQueryWidthMode == YGMeasureModeAtMost)
+      std::cout << ",\"measurementQueryDifference\":true,\"nativeMeasurementConstraints\":{\"minWidth\":0,\"maxWidth\":" << absoluteMeasuredMainQueryWidth << ",\"minHeight\":20,\"maxHeight\":20}";
+    std::cout << ",\"boxes\":[";
+    for (int item = 0; item < 3; ++item) { if (item) std::cout << ','; printBox(YGNodeGetChild(root, item)); }
+    std::cout << "],\"itemStyles\":[{\"width\":50,\"height\":20,\"flexGrow\":0,\"flexShrink\":0,\"minWidth\":0,\"minHeight\":0},{\"position\":\"absolute\",\"width\":" << (naturalWidth ? "\"auto\"" : "80") << ",\"height\":" << (naturalWidth ? "20" : "\"auto\"") << ",\"minWidth\":0,\"minHeight\":0,\"flexGrow\":0,\"flexShrink\":0," << (naturalWidth ? "\"right\":18,\"top\":8" : "\"left\":12,\"bottom\":10") << "},{\"width\":50,\"height\":20,\"flexGrow\":0,\"flexShrink\":0,\"minWidth\":0,\"minHeight\":0}]}";
+    YGNodeFreeRecursive(root); YGConfigFree(config);
+  }
+  for (int resize = 0; resize < 2; ++resize) {
+    const bool naturalWidth = resize == 0;
+    auto config = YGConfigNew(); YGConfigSetUseWebDefaults(config, false); YGConfigSetPointScaleFactor(config, 0); YGConfigSetErrata(config, YGErrataNone);
+    auto root = YGNodeNewWithConfig(config); YGNodeStyleSetPositionType(root, YGPositionTypeRelative); YGNodeStyleSetBoxSizing(root, YGBoxSizingBorderBox);
+    YGNodeStyleSetWidth(root, naturalWidth ? 244 : 204); YGNodeStyleSetHeight(root, naturalWidth ? 104 : 124); YGNodeStyleSetFlexDirection(root, YGFlexDirectionColumnReverse); YGNodeStyleSetFlexWrap(root, YGWrapNoWrap); YGNodeStyleSetAlignItems(root, YGAlignFlexStart); YGNodeStyleSetGap(root, YGGutterAll, 10);
+    YGNodeStyleSetPadding(root, YGEdgeLeft, 10); YGNodeStyleSetPadding(root, YGEdgeRight, 30); YGNodeStyleSetPadding(root, YGEdgeTop, 20); YGNodeStyleSetPadding(root, YGEdgeBottom, 20); YGNodeStyleSetBorder(root, YGEdgeAll, 2);
+    for (int item = 0; item < 3; ++item) { auto child = YGNodeNewWithConfig(config); if (item == 1) { YGNodeStyleSetPositionType(child, YGPositionTypeAbsolute); YGNodeStyleSetFlexGrow(child,0); YGNodeStyleSetFlexShrink(child,0); YGNodeStyleSetMinWidth(child,0); YGNodeStyleSetMinHeight(child,0); if (naturalWidth) { YGNodeStyleSetHeight(child,20); YGNodeStyleSetPosition(child,YGEdgeRight,18); YGNodeStyleSetPosition(child,YGEdgeTop,8); } else { YGNodeStyleSetWidth(child,80); YGNodeStyleSetPosition(child,YGEdgeLeft,12); YGNodeStyleSetPosition(child,YGEdgeBottom,10); } YGNodeSetMeasureFunc(child,absoluteMeasuredMain); } else { YGNodeStyleSetWidth(child,50); YGNodeStyleSetHeight(child,20); YGNodeStyleSetFlexGrow(child,0); YGNodeStyleSetFlexShrink(child,0); YGNodeStyleSetMinWidth(child,0); YGNodeStyleSetMinHeight(child,0); } YGNodeInsertChild(root,child,item); }
+    YGNodeCalculateLayout(root,YGUndefined,YGUndefined,YGDirectionRTL);
+    std::cout << ",{\"name\":\"position-absolute-measured-main-" << (naturalWidth ? "width-column-reverse-rtl-resized" : "height-column-reverse-rtl-resized") << "\",\"width\":" << (naturalWidth ? 244 : 204) << ",\"height\":" << (naturalWidth ? 104 : 124) << ",\"gap\":10,\"flexDirection\":\"column-reverse\",\"flexWrap\":\"nowrap\",\"layoutDirection\":\"rtl\",\"containerStyle\":{\"boxSizing\":\"border-box\",\"padding\":{\"left\":10,\"right\":30,\"top\":20,\"bottom\":20},\"borderWidth\":2,\"alignItems\":\"flex-start\"},\"absoluteMeasuredMainFixture\":true,\"measurementModel\":\"deterministic provider resize\"";
+    if (naturalWidth && absoluteMeasuredMainQueryWidthMode == YGMeasureModeAtMost)
+      std::cout << ",\"measurementQueryDifference\":true,\"nativeMeasurementConstraints\":{\"minWidth\":0,\"maxWidth\":" << absoluteMeasuredMainQueryWidth << ",\"minHeight\":20,\"maxHeight\":20}";
+    std::cout << ",\"boxes\":[";
+    for(int item=0;item<3;++item){if(item)std::cout<<',';printBox(YGNodeGetChild(root,item));}
+    std::cout << "],\"itemStyles\":[{\"width\":50,\"height\":20,\"flexGrow\":0,\"flexShrink\":0,\"minWidth\":0,\"minHeight\":0},{\"position\":\"absolute\",\"width\":" << (naturalWidth ? "\"auto\"" : "80") << ",\"height\":" << (naturalWidth ? "20" : "\"auto\"") << ",\"minWidth\":0,\"minHeight\":0,\"flexGrow\":0,\"flexShrink\":0," << (naturalWidth ? "\"right\":18,\"top\":8" : "\"left\":12,\"bottom\":10") << "},{\"width\":50,\"height\":20,\"flexGrow\":0,\"flexShrink\":0,\"minWidth\":0,\"minHeight\":0}]}";
+    YGNodeFreeRecursive(root); YGConfigFree(config);
+  }
+}
+
 static void absoluteMainDirectionCases() {
   struct Case { YGFlexDirection direction; bool rtl; bool centered; bool insets; const char* name; };
   const Case cases[] = {
@@ -2660,5 +2726,6 @@ int main() {
   relativeMainDirectionCases();
   absoluteMainBoundsCases();
   absoluteMainAspectCases();
+  absoluteMeasuredMainCases();
   std::cout << "]\n";
 }

@@ -108,8 +108,8 @@ own opposing inset pairs.
 Fixed finite numeric and opposing-inset automatic absolute boxes participate in
 all four experimental nowrap main directions and LTR/RTL. Numeric bounds clamp
 fixed and derived axes before anchoring in every direction. Aspect derivation uses the declared opposite dimension in every direction.
-Natural provider measurement remains limited to `row`; non-row attempts reject
-before invoking providers. No intrinsic query is needed for opposing-inset sizing.
+Paired natural provider measurement also supports every finite nowrap main
+direction; it retains the same direction-independent Pibbl query contract. No intrinsic query is needed for opposing-inset sizing.
 
 On an axis without either inset, the fixed child aligns within the parent content
 box instead. `justifyContent` controls the main axis: flex-start and space-between
@@ -132,7 +132,7 @@ contexts and inset values.
 
 ### Experimental measured absolute size
 
-In a finite row-nowrap Flex, a direct custom primitive with paired pure
+In a finite nowrap Flex of any main direction, a direct custom primitive with paired pure
 `measureIntrinsic` and `measure` providers may use exactly one automatic or omitted absolute dimension
 with an explicit finite numeric opposite dimension. Opposing insets on the
 automatic axis and admitted aspect derivation retain their existing precedence.
@@ -142,7 +142,11 @@ Otherwise the parent calls `measure` with one of these callback envelopes:
 - Automatic height: horizontal `[width, width]`, vertical `[0, Infinity]`.
 
 The exact axis uses its declared value before its own numeric min/max clamp.
-These match Yoga's undefined/exact callback constraints. The returned natural
+These preserve Pibbl's natural-size query contract. Yoga uses an at-most
+padding-box width for natural-width callbacks in columns; Pibbl deliberately
+keeps width unbounded there. Native query limits are captured and visibly labeled
+separately from matching geometry. The deterministic provider corpus does not
+claim general callback parity. The returned natural
 size supplies the automatic axis; numeric bounds then clamp the used dimensions
 before normal inset/alignment placement. Parent content availability does not
 invent a measurement constraint. The paired intrinsic callback marks the admitted

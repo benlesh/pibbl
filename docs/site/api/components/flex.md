@@ -387,19 +387,24 @@ A fixed box keeps its size under stretch. Authored paint, click and focus order
 remain unchanged. Numeric bounds apply to fixed and derived axes before inset
 anchoring in every direction. Exactly-one-auto aspect derivation also applies in every direction, with paired
 insets taking precedence and numeric bounds applied afterward. Natural measured
-dimensions remain row-only; other automatic axes need their opposing physical
-inset pair or the admitted aspect path.
+dimensions require paired pure providers and preserve their existing exact/unbounded
+query in every finite nowrap direction. Other automatic axes need their opposing
+physical inset pair or the admitted aspect path.
 
 ### Experimental measured absolute size
 
-A direct custom primitive with paired pure `measureIntrinsic` and `measure`
-providers can use `position: "absolute", width: "auto", height: 20` with, for
+In any finite nowrap main direction, a direct custom primitive with paired pure
+`measureIntrinsic` and `measure` providers can use `position: "absolute", width: "auto", height: 20` with, for
 example, `right: 18, top: 8`. Without an opposing horizontal inset pair or aspect
 ratio, `measure` receives `[0, Infinity]` width availability and exact20px height.
 A natural60px width is clamped by numeric bounds and positioned from the owning
 padding box. Resizing the owner moves a right-anchored child while preserving the
 measurement envelope; conservative invalidation can requery it. Measurement
 signals update width and targets through the existing scheduler.
+
+Yoga caps natural-width callbacks to padding-box width in columns. Pibbl preserves
+its unbounded-width contract there; the comparison labels this query difference
+separately from matching deterministic geometry. This is not callback parity.
 
 The symmetric `width: 80, height: "auto"` path queries exact80px width and
 `[0, Infinity]` height. A wrapping provider can return20px at80px width and40px
