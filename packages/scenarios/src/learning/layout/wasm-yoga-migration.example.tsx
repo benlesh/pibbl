@@ -415,27 +415,38 @@ function createWasmYogaMigrationExampleContent(canvas: HTMLCanvasElement) {
     );
   }
   type AutoQueueStyle = SystemStyle & { width?: number; height?: number; minWidth?: number; minHeight?: number; flexBasis?: number | "auto"; flexGrow?: number; flexShrink?: number; marginTop?: FlexMargin };
-  let queueMeasureCalls = 0;
+  let queueMeasureCalls = 0, measuredQueueJobs = 8;
+  const queueJobs = signal(8);
   const AutoQueue = definePrimitive<{ name: string }, AutoQueueStyle, AutoQueueStyle, SystemStyle & { width: number; height: number }>(props => {
     const box = recordBox(props.name);
     actual.set(props.name, `${box.width} × ${box.height}`);
     const columns = Math.max(1, Math.floor(box.width / 20));
     const tiles: PibblNode[] = [];
-    for (let job = 0; job < 8; job++) tiles.push(<Rectangle key={job} pointerEvents="none" style={{ left: (job % columns) * 20 + 1, top: Math.floor(job / columns) * 10 + 1, width: 18, height: 8, fill: "#426b61" }} />);
+    for (let job = 0; job < measuredQueueJobs; job++) tiles.push(<Rectangle key={job} pointerEvents="none" style={{ left: (job % columns) * 20 + 1, top: Math.floor(job / columns) * 10 + 1, width: 18, height: 8, fill: "#426b61" }} />);
     return <><Rectangle onClick={() => { hits++; selected.set(props.name); }} style={{ width: box.width, height: box.height, fill: "#d6e3db", cursor: "pointer" }} />{tiles}</>;
   }, {
     resolveStyle: (_style, context) => ({ width: context.allocation.width, height: context.allocation.height }),
     measureIntrinsic: () => ({ status: "measured", minContent: { width: 20, height: 80 }, maxContent: { width: 160, height: 10 } }),
     measure: ({ constraints }) => {
       queueMeasureCalls++;
+      const jobs = queueJobs.get();
+      measuredQueueJobs = jobs;
       const columns = Math.max(1, Math.floor(constraints.maxWidth / 20));
-      return { status: "measured", size: { width: constraints.maxWidth, height: Math.ceil(8 / columns) * 10 } };
+      return { status: "measured", size: { width: constraints.maxWidth, height: Math.ceil(jobs / columns) * 10 } };
     },
   });
   const queueWidth = computed(() => { const fixture = fixtureCases[index.get()]; return "customCrossAutoFixture" in fixture ? fixture.itemStyles[0].width : 80; });
   const queueNode = <AutoQueue key={0} name="A" style={{ width: queueWidth, minWidth: 0, flexShrink: 0, marginTop: "auto" }} />;
   const columnQueueWidth = computed(() => { const fixture = fixtureCases[index.get()]; return "customColumnMeasureFixture" in fixture ? fixture.itemStyles[0].width : 40; });
   const columnQueueNode = <AutoQueue key={0} name="A" style={{ width: columnQueueWidth, minWidth: 0, minHeight: 0, flexBasis: "auto", flexGrow: 0, flexShrink: 0 }} />;
+  function JobControls() {
+    const fixture = fixtureCases[index.get()];
+    if (!("customColumnMeasureFixture" in fixture)) return null;
+    return <>
+      <Rectangle style={{left:600,top:52,width:132,height:28,fill:"#426b61",cursor:"pointer"}} onClick={() => queueJobs.update(value => value === 8 ? 12 : 8)} />
+      <Text pointerEvents="none" style={{left:612,top:59,font:"12px sans-serif",fill:"#ffffff"}}>More jobs</Text>
+    </>;
+  }
   function Workspace() {
     rootTransform=useCanvasContext().getTransform();
     const fixture = fixtureCases[index.get()];
@@ -664,7 +675,7 @@ function createWasmYogaMigrationExampleContent(canvas: HTMLCanvasElement) {
           : "ownerCrossAutoFixture" in fixture
           ? "3 direct jobs · built-in wrapped Flex height controls top auto margin · click jobs A and sibling B"
           : "customColumnMeasureFixture" in fixture
-          ? "finite column · paired custom provider measures 8 jobs at its exact 40px → 60px width · B follows the measured height"
+          ? "finite column · paired custom provider measures 8 jobs at its exact 40px → 60px width · More jobs is a Pibbl-only content mutation; the pinned Yoga reference remains 8 jobs"
           : "customCrossAutoFixture" in fixture
           ? "8 job tiles · 20px columns × 10px rows · pure measured height controls top auto margin · click A/B"
           : "textCrossAutoFixture" in fixture
@@ -809,6 +820,7 @@ function createWasmYogaMigrationExampleContent(canvas: HTMLCanvasElement) {
         index.set(fixtureCases.findIndex(fixture => fixture.name === latestName));
       }} />
       <Text pointerEvents="none" style={{left:624,top:150,font:"14px sans-serif",fill:"#ffffff"}}>Latest proof</Text>
+      <JobControls />
       <Workspace />
       <Text
         style={{
@@ -842,7 +854,7 @@ function createWasmYogaMigrationExampleContent(canvas: HTMLCanvasElement) {
             .map(([key, value]) => `${key}: ${value}`)
             .join(" · ")
         : "Normal JS build"
-    }\nYoga 3.2.1 · 042f5013152e · ${fixture.name}${"comparisonLabel" in fixture ? " · "+fixture.comparisonLabel : ""} · actual A: ${"customColumnMeasureFixture" in fixture ? `paired column provider · B: ${actual.get("B")} px` : "textCrossAutoFixture" in fixture ? `direct wrapped Text · sibling B: ${actual.get("B")} px` : "intrinsicFixture" in fixture ? `direct wrapped leaves · footer B: ${actual.get("B")} px` : ("nestedCrossMinFixture" in fixture || "nestedDecoratedCrossMinFixture" in fixture || "nestedDecoratedCrossMaxFixture" in fixture || "nestedDecoratedColumnCrossMaxFixture" in fixture || "nestedDecoratedColumnCrossMinFixture" in fixture) ? `nested leaves A1/A2 · B: ${actual.get("B")} px · C: ${actual.get("C")} px` : "contentBoxes" in fixture ? `content ${actual.get("A1")} px` : fixture.name.startsWith("rectangle-") ? "direct Canvas boxes" : `${actual.get("A")} px · B: ${actual.get("B")} px`} · selected: ${selected.get()}${"customColumnMeasureFixture" in fixture ? "\ncustom column state: "+JSON.stringify({boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits,measureCalls:queueMeasureCalls}) : "intrinsicFixture" in fixture ? "\nintrinsic state: "+JSON.stringify({boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits}) : ("nestedCrossMinFixture" in fixture || "nestedDecoratedCrossMinFixture" in fixture || "nestedDecoratedCrossMaxFixture" in fixture || "nestedDecoratedColumnCrossMaxFixture" in fixture || "nestedDecoratedColumnCrossMinFixture" in fixture) ? "\nnested cross min state: "+JSON.stringify({decorated:"nestedDecoratedCrossMinFixture" in fixture || "nestedDecoratedCrossMaxFixture" in fixture || "nestedDecoratedColumnCrossMaxFixture" in fixture || "nestedDecoratedColumnCrossMinFixture" in fixture,maximum:"nestedDecoratedCrossMaxFixture" in fixture || "nestedDecoratedColumnCrossMaxFixture" in fixture,column:"nestedDecoratedColumnCrossMaxFixture" in fixture || "nestedDecoratedColumnCrossMinFixture" in fixture,minimum:"nestedDecoratedColumnCrossMinFixture" in fixture,boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits}) : "roundingFixture" in fixture ? "\nrounding state: "+JSON.stringify({boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits}) : "autoMarginFixture" in fixture ? "\nauto margin state: "+JSON.stringify({boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits,canvasTransform:{a:rootTransform.a,b:rootTransform.b,c:rootTransform.c,d:rootTransform.d,e:rootTransform.e,f:rootTransform.f}}) : "directionMatrixFixture" in fixture ? "\ndirection matrix state: "+JSON.stringify({boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits}) : "contentBoxes" in fixture ? "\ncontent state: "+JSON.stringify({boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits}) : "nestedBoxes" in fixture ? "\nnested state: "+JSON.stringify({boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits}) : ""}`;
+    }\nYoga 3.2.1 · 042f5013152e · ${fixture.name}${"comparisonLabel" in fixture ? " · "+fixture.comparisonLabel : ""} · actual A: ${"customColumnMeasureFixture" in fixture ? `paired column provider · B: ${actual.get("B")} px` : "textCrossAutoFixture" in fixture ? `direct wrapped Text · sibling B: ${actual.get("B")} px` : "intrinsicFixture" in fixture ? `direct wrapped leaves · footer B: ${actual.get("B")} px` : ("nestedCrossMinFixture" in fixture || "nestedDecoratedCrossMinFixture" in fixture || "nestedDecoratedCrossMaxFixture" in fixture || "nestedDecoratedColumnCrossMaxFixture" in fixture || "nestedDecoratedColumnCrossMinFixture" in fixture) ? `nested leaves A1/A2 · B: ${actual.get("B")} px · C: ${actual.get("C")} px` : "contentBoxes" in fixture ? `content ${actual.get("A1")} px` : fixture.name.startsWith("rectangle-") ? "direct Canvas boxes" : `${actual.get("A")} px · B: ${actual.get("B")} px`} · selected: ${selected.get()}${"customColumnMeasureFixture" in fixture ? "\ncustom column state: "+JSON.stringify({boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits,measureCalls:queueMeasureCalls,jobs:measuredQueueJobs,comparison:"pinned Yoga reference uses 8 jobs; More jobs is a Pibbl-only content mutation"}) : "intrinsicFixture" in fixture ? "\nintrinsic state: "+JSON.stringify({boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits}) : ("nestedCrossMinFixture" in fixture || "nestedDecoratedCrossMinFixture" in fixture || "nestedDecoratedCrossMaxFixture" in fixture || "nestedDecoratedColumnCrossMaxFixture" in fixture || "nestedDecoratedColumnCrossMinFixture" in fixture) ? "\nnested cross min state: "+JSON.stringify({decorated:"nestedDecoratedCrossMinFixture" in fixture || "nestedDecoratedCrossMaxFixture" in fixture || "nestedDecoratedColumnCrossMaxFixture" in fixture || "nestedDecoratedColumnCrossMinFixture" in fixture,maximum:"nestedDecoratedCrossMaxFixture" in fixture || "nestedDecoratedColumnCrossMaxFixture" in fixture,column:"nestedDecoratedColumnCrossMaxFixture" in fixture || "nestedDecoratedColumnCrossMinFixture" in fixture,minimum:"nestedDecoratedColumnCrossMinFixture" in fixture,boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits}) : "roundingFixture" in fixture ? "\nrounding state: "+JSON.stringify({boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits}) : "autoMarginFixture" in fixture ? "\nauto margin state: "+JSON.stringify({boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits,canvasTransform:{a:rootTransform.a,b:rootTransform.b,c:rootTransform.c,d:rootTransform.d,e:rootTransform.e,f:rootTransform.f}}) : "directionMatrixFixture" in fixture ? "\ndirection matrix state: "+JSON.stringify({boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits}) : "contentBoxes" in fixture ? "\ncontent state: "+JSON.stringify({boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits}) : "nestedBoxes" in fixture ? "\nnested state: "+JSON.stringify({boxes:Object.fromEntries(boxes),stamps:Object.fromEntries(stamps),hits}) : ""}`;
   };
   refresh();
   const timer = window.setInterval(refresh, 200);

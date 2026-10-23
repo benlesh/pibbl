@@ -2,7 +2,8 @@
 
 ## Current checkpoint and single next slice — 2026-10-23
 
-Latest delivery is slice117 `dd7f292f` (finite column custom-provider exact-width measurement).
+Latest delivery is slice118 (measurement-only reactive column content evidence).
+Slice117 is `dd7f292f` (finite column custom-provider exact-width measurement).
 Consolidation39 passes for115–117 below.
 Slice116 is `42e182cb` (definite nested column percentage cross minima).
 Slice115 is `6e1e1d3e` (column caps and one-click Latest proof).
@@ -3126,15 +3127,44 @@ The public learning corpus readability gap remains tracked: preserve exhaustive
 headless proof coverage while introducing a concise copyable surface through the
 existing private fixture-host seam; do not merely delete/project recorded cases.
 
-## [NEXT] Finite-column provider reactive content evidence (slice118)
+## Slice118: measurement-only reactive column content evidence
 
-At fixed40px width, a stable custom queue reads a jobs signal only in `measure`.
-Changing8→12 jobs should measure height40→60, move the following target y40→60,
-preserve keyed/native identity, and reuse the result for unrelated paint. Run the
-focused public test before production edits. If it passes unchanged, classify it
-as evidence-only; do not fabricate a runtime fix. Then choose the nearest material
-remaining capability rather than indefinitely splitting individual proof cases.
-The full program, all7 release gates and final whole-codebase review remain open.
+A stable custom queue reads a jobs signal only during its existing constrained
+`measure` callback. At fixed40px width, jobs8→12 produces height40→60 and moves
+its follower y40→60. The focused public test passes unchanged production code:
+1passed/412skipped413. This is evidence-only, not a new runtime capability or a
+production RED. An initial test fixture incorrectly treated an automatically
+resolved signal prop as a signal object; the corrected fixture reads the closure
+signal in `measure`, exercising the intended dependency contract.
+
+The contextual More jobs control uses a separate child component so changing
+sections does not recreate provider descriptors. Its12-job state visibly paints
+12tiles and explicitly labels the content mutation as Pibbl-only; the pinned
+Yoga reference retains8jobs. Source/built replay first matches both native cases,
+then verifies width60 content height30→40, follower target transfer and reset.
+Both pass with no browser errors and exact disposal; private built469inputs.
+Screenshot `/tmp/pibbl-slice118-content-mutation.png` inspected. Public/installed
+proofs additionally require exactly one measurement for changed content, stable
+native nodes and no measurement/solve on subsequent sibling paint.
+
+Installed strict Bundler/NodeNext proof passes245distinputs,104auto-margin cases
+and lifecycle checks. Tarball remains
+`ec98002ca94fb39b3e74edb100c2d446b11d9114c5b7041d7d2fa4cbcda05985`.
+Types/changed-code lint/docs109RED probes pass. No core/ABI/binary/native-corpus
+change:320cases/226matches/94classified,68649byte kernel. No status promotion;
+fixed33capabilities/all7gates remain open. Node26.9.0/macOS Chromium; no Node24
+aggregate trust claim. Consolidation40 is due after118–120.
+
+## [NEXT] Concise public comparison with exhaustive private fixture (slice119)
+
+Make the learning source readable without dropping the full generated corpus or
+headless interaction coverage. Reuse one public rendering body with concise
+self-contained default fixtures; an existing private fixture host supplies the
+full corpus through typed component props. Keep the public example copyable with
+public package imports only. Retarget source/built exhaustive replay to the
+private proving surface and keep public controls independently runnable. Resolve
+the exact typed host seam before edits; no new runtime API or duplicate renderer.
+The full program and final whole-codebase review remain outstanding.
 
 ### Consolidation 24 completed for delivery slices 70–72
 

@@ -355,6 +355,29 @@ try {
     }
     if ((fixture.name.startsWith('percent-cap-') || fixture.name.startsWith('aspect-wrap-') || fixture.name.startsWith('gap-percent-') || fixture.name.startsWith('padding-percent-') || fixture.name.startsWith('cross-percent-') || fixture.name.startsWith('margin-percent-')) && !fixture.name.endsWith('-resized')) previousOwner = {name:fixture.name,boxes:expected,layout:await sandbox.evaluate(() => globalThis.__PIBBL_LAYOUT_DIAGNOSTICS__())};
   }
+  if (customColumnMeasureOnly) {
+    const beforeMutation = JSON.parse((await frame.locator('pre').innerText()).split('custom column state: ')[1]);
+    assert.equal(beforeMutation.jobs, 8, 'pinned replay leaves the provider at eight jobs');
+    assert.equal(beforeMutation.comparison, 'pinned Yoga reference uses 8 jobs; More jobs is a Pibbl-only content mutation');
+    const beforeMutationLayout = await sandbox.evaluate(() => globalThis.__PIBBL_LAYOUT_DIAGNOSTICS__());
+    await click(666, 66);
+    const mutated = JSON.parse((await frame.locator('pre').innerText()).split('custom column state: ')[1]);
+    assert.equal(mutated.jobs, 12, 'more-jobs control changes only the measured content input');
+    assert.deepEqual([mutated.boxes.A, mutated.boxes.B], [{ x: 0, y: 0, width: 60, height: 40 }, { x: 0, y: 40, width: 20, height: 20 }], 'twelve jobs move the following target without claiming a Yoga fixture');
+    const mutatedLayout = await sandbox.evaluate(() => globalThis.__PIBBL_LAYOUT_DIAGNOSTICS__());
+    assert.ok(mutated.measureCalls > beforeMutation.measureCalls, 'content mutation queries the provider');
+    assert.ok(mutatedLayout.measuredLeaves > beforeMutationLayout.measuredLeaves, 'content mutation records measurement');
+    assert.equal(mutatedLayout.nodeCreates, beforeMutationLayout.nodeCreates, 'content mutation preserves native nodes');
+    await click(402, 275);
+    assert.ok((await frame.locator('pre').innerText()).includes('selected: A'), 'former follower point becomes queue content');
+    await click(402, 285);
+    assert.ok((await frame.locator('pre').innerText()).includes('selected: B'), 'moved follower targets after content mutation');
+    if (process.argv.includes('--screenshot')) await frame.locator('canvas').screenshot({ path: '/tmp/pibbl-slice118-content-mutation.png' });
+    await click(666, 66);
+    const reset = JSON.parse((await frame.locator('pre').innerText()).split('custom column state: ')[1]);
+    assert.equal(reset.jobs, 8, 'more-jobs control restores pinned reference content');
+    assert.deepEqual([reset.boxes.A, reset.boxes.B], cases.at(-1).boxes, 'reset restores the pinned resized geometry');
+  }
   assert.ok(catalogUrls.length > 0, 'Studio replay must observe its actual catalog source');
   let catalogSurface;
   for (const url of catalogUrls) {
@@ -388,5 +411,5 @@ try {
   });
   assert.deepEqual([disposed.activeNodes, disposed.activeArenas, disposed.cachedMeasurements], [0, 0, 0]);
   assert.deepEqual(errors, []);
-  console.warn(JSON.stringify({ base, commit: reference.commit, cases: cases.map(value => value.name), builtInputs: proof?.coreInputs.length ?? null, catalogUrls, catalogSurface, matched: cases.filter(value => !value.pibblBoxes).length, classified: cases.filter(value => value.pibblBoxes).map(value => value.name), cleanup: [0, 0, 0], errors }));
+  console.warn(JSON.stringify({ base, commit: reference.commit, cases: cases.map(value => value.name), builtInputs: proof?.coreInputs.length ?? null, catalogUrls, catalogSurface, customColumnContentMutation: customColumnMeasureOnly, matched: cases.filter(value => !value.pibblBoxes).length, classified: cases.filter(value => value.pibblBoxes).map(value => value.name), cleanup: [0, 0, 0], errors }));
 } finally { await browser.close(); }

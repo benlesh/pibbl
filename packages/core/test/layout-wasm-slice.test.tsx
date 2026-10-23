@@ -4987,3 +4987,78 @@ it.runIf(experimentalLayout)('measures a finite column custom queue at its exact
   const disposed = snapshotWasmLayoutDiagnostics();
   expect([disposed.activeNodes, disposed.activeArenas, disposed.cachedMeasurements]).toEqual([baseline.activeNodes, baseline.activeArenas, baseline.cachedMeasurements]);
 });
+
+it.runIf(experimentalLayout)('tracks a paired finite-column provider content signal without measuring on sibling paint', async () => {
+  type QueueStyle = import('@pibbl/core').SystemStyle & {
+    width?: number;
+    height?: number | 'auto';
+    minWidth?: number;
+    minHeight?: number;
+    flexBasis?: number | 'auto';
+    flexGrow?: number;
+    flexShrink?: number;
+  };
+  type ResolvedQueueStyle = import('@pibbl/core').SystemStyle & { width: number; height: number };
+  const baseline = snapshotWasmLayoutDiagnostics();
+  const jobs = signal(8);
+  const followerPaint = signal('#2f6b97');
+  const hits: string[] = [];
+  const exactQueries: Array<[number, number, number]> = [];
+  const rendered: Array<{ width: number; height: number; stamp: number }> = [];
+  let nextStamp = 1;
+  const Queue = definePrimitive<{}, QueueStyle, QueueStyle, ResolvedQueueStyle>(() => {
+    const box = useLayoutBox();
+    const stamp = useConst(() => nextStamp++);
+    rendered.push({ width: box.width, height: box.height, stamp });
+    return <Rectangle
+      onClick={() => hits.push('queue')}
+      style={{ width: box.width, height: box.height, fill: '#d6e3db', cursor: 'pointer' }}
+    />;
+  }, {
+    resolveStyle: (_style, context) => ({ width: context.allocation.width, height: context.allocation.height }),
+    measureIntrinsic: () => ({
+      status: 'measured' as const,
+      minContent: { width: 20, height: 80 },
+      maxContent: { width: 160, height: 10 },
+    }),
+    measure: ({ constraints }) => {
+      const count = jobs.get();
+      exactQueries.push([constraints.minWidth, constraints.maxWidth, count]);
+      const columns = Math.max(1, Math.floor(constraints.maxWidth / 20));
+      return {
+        status: 'measured' as const,
+        size: { width: constraints.maxWidth, height: Math.ceil(count / columns) * 10 },
+      };
+    },
+  });
+  const canvas = document.createElement('canvas'); canvas.width = 120; canvas.height = 140; document.body.append(canvas);
+  const root = <Flex style={{ width: 120, height: 140, flexDirection: 'column', alignItems: 'flex-start' }}>
+    <Queue key="queue" style={{ width: 40, height: 'auto', minWidth: 0, minHeight: 0, flexBasis: 'auto', flexGrow: 0, flexShrink: 0 }} />
+    <Rectangle key="follower" onClick={() => hits.push('follower')} style={{ width: 20, height: 20, minWidth: 0, minHeight: 0, flexGrow: 0, flexShrink: 0, fill: followerPaint, cursor: 'pointer' }} />
+  </Flex>;
+  const controller = pibbl(canvas, root); controllers.push(controller); await nextFrame();
+  expect(rendered.at(-1)).toEqual({ width: 40, height: 40, stamp: 1 });
+  expect(exactQueries).toEqual([[40, 40, 8]]);
+  clickCanvas(canvas, 10, 55); expect(hits).toEqual(['follower']);
+  const initial = snapshotWasmLayoutDiagnostics();
+  jobs.set(12); await nextFrame();
+  expect(rendered.at(-1)).toEqual({ width: 40, height: 60, stamp: 1 });
+  expect(exactQueries).toEqual([[40, 40, 8], [40, 40, 12]]);
+  const updated = snapshotWasmLayoutDiagnostics();
+  expect(updated.solves).toBeGreaterThan(initial.solves);
+  expect(updated.measuredLeaves).toBeGreaterThan(initial.measuredLeaves);
+  expect(updated.nodeCreates).toBe(initial.nodeCreates);
+  clickCanvas(canvas, 10, 55); expect(hits).toEqual(['follower', 'queue']);
+  clickCanvas(canvas, 10, 75); expect(hits).toEqual(['follower', 'queue', 'follower']);
+  const beforePaint = snapshotWasmLayoutDiagnostics();
+  const callsBeforePaint = exactQueries.length;
+  followerPaint.set('#a63758'); await nextFrame();
+  const painted = snapshotWasmLayoutDiagnostics();
+  expect(exactQueries).toHaveLength(callsBeforePaint);
+  expect(painted.solves).toBe(beforePaint.solves);
+  expect(painted.measuredLeaves).toBe(beforePaint.measuredLeaves);
+  expect(painted.nodeCreates).toBe(beforePaint.nodeCreates);
+  controller.dispose();
+  const disposed = snapshotWasmLayoutDiagnostics();
+  expect([disposed.activeNodes, disposed.activeArenas, disposed.cachedMeasurements]).toEqual([baseline.activeNodes, baseline.activeArenas, baseline.cachedMeasurements]);
+});

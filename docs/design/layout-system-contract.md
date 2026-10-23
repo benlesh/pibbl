@@ -985,7 +985,9 @@ intrinsic width query. The resulting finite height is the column's automatic
 main size, so following children move before paint. The eight-job example uses
 20px columns and 10px rows: width40→60 resolves height40→30 and moves its
 20px follower y40→30. Allocation-width changes replace the constrained snapshot;
-paint-only changes reuse it and native nodes.
+paint-only changes reuse it and native nodes. A signal read only in `measure`
+remains a measurement dependency: at fixed40px width, jobs8→12 changes height
+40→60 and moves the following target without recreating keyed native nodes.
 
 Columns with automatic/indefinite width, nonzero growth/shrink, missing `minHeight: 0`,
 active cross bounds, responsive queries, aspect ratio, reverse/RTL direction,
