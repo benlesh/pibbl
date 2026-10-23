@@ -2625,6 +2625,42 @@ static void absoluteWrapCases() {
   }
 }
 
+static int absoluteTextHeightMeasureCalls = 0;
+static int absoluteTextHeightWords = 3;
+static YGSize absoluteTextHeightMeasure(YGNodeConstRef, float width, YGMeasureMode widthMode, float, YGMeasureMode) {
+  absoluteTextHeightMeasureCalls++;
+  // Synthetic sizing callback only: `aaaa` and each space advance 6px.
+  // It records a native layout oracle, never Canvas-font parity.
+  const float usedWidth = widthMode == YGMeasureModeUndefined ? float(absoluteTextHeightWords * 24 + (absoluteTextHeightWords - 1) * 6) : width;
+  float lineWidth = 0, maximum = 0; int lines = 1;
+  for (int word = 0; word < absoluteTextHeightWords; ++word) {
+    const float next = lineWidth == 0 ? 24 : lineWidth + 30;
+    if (lineWidth != 0 && next > usedWidth) { maximum = std::max(maximum, lineWidth); ++lines; lineWidth = 24; }
+    else lineWidth = next;
+  }
+  return {std::max(maximum, lineWidth), float(lines * 10)};
+}
+static void absoluteTextHeightCases() {
+  for (int widthIndex = 0; widthIndex < 2; ++widthIndex) for (int wordIndex = 0; wordIndex < 2; ++wordIndex) {
+    const int textWidth = widthIndex == 0 ? 40 : 80;
+    absoluteTextHeightWords = wordIndex == 0 ? 3 : 6;
+    absoluteTextHeightMeasureCalls = 0;
+    auto config = YGConfigNew(); YGConfigSetUseWebDefaults(config, false); YGConfigSetPointScaleFactor(config, 0); YGConfigSetErrata(config, YGErrataNone);
+    auto root = YGNodeNewWithConfig(config); YGNodeStyleSetPositionType(root, YGPositionTypeRelative); YGNodeStyleSetBoxSizing(root, YGBoxSizingBorderBox);
+    YGNodeStyleSetWidth(root, 204); YGNodeStyleSetHeight(root, 104); YGNodeStyleSetFlexDirection(root, YGFlexDirectionRow); YGNodeStyleSetFlexWrap(root, YGWrapNoWrap); YGNodeStyleSetAlignItems(root, YGAlignFlexStart); YGNodeStyleSetGap(root, YGGutterAll, 10);
+    YGNodeStyleSetPadding(root, YGEdgeLeft, 10); YGNodeStyleSetPadding(root, YGEdgeRight, 30); YGNodeStyleSetPadding(root, YGEdgeTop, 20); YGNodeStyleSetPadding(root, YGEdgeBottom, 20); YGNodeStyleSetBorder(root, YGEdgeAll, 2);
+    auto a = YGNodeNewWithConfig(config), text = YGNodeNewWithConfig(config), c = YGNodeNewWithConfig(config);
+    for (auto flow : {a, c}) { YGNodeStyleSetWidth(flow, 50); YGNodeStyleSetHeight(flow, 20); YGNodeStyleSetFlexGrow(flow, 0); YGNodeStyleSetFlexShrink(flow, 0); setMinZero(flow); }
+    YGNodeStyleSetPositionType(text, YGPositionTypeAbsolute); YGNodeStyleSetWidth(text, textWidth); YGNodeStyleSetHeightAuto(text); YGNodeStyleSetPosition(text, YGEdgeLeft, 12); YGNodeStyleSetPosition(text, YGEdgeBottom, 10); YGNodeStyleSetFlexGrow(text, 0); YGNodeStyleSetFlexShrink(text, 0); setMinZero(text); YGNodeSetMeasureFunc(text, absoluteTextHeightMeasure);
+    YGNodeInsertChild(root, a, 0); YGNodeInsertChild(root, text, 1); YGNodeInsertChild(root, c, 2); YGNodeCalculateLayout(root, YGUndefined, YGUndefined, YGDirectionLTR);
+    const char* widthName = textWidth == 40 ? "narrow" : "wide"; const char* wordName = absoluteTextHeightWords == 3 ? "three" : "six";
+    std::cout << ",{\"name\":\"position-absolute-text-height-" << widthName << "-" << wordName << "\",\"width\":204,\"height\":104,\"gap\":10,\"flexDirection\":\"row\",\"flexWrap\":\"nowrap\",\"containerStyle\":{\"position\":\"relative\",\"boxSizing\":\"border-box\",\"padding\":{\"left\":10,\"right\":30,\"top\":20,\"bottom\":20},\"borderWidth\":2,\"alignItems\":\"flex-start\"},\"absoluteTextHeightFixture\":true,\"textValue\":\"";
+    for (int word = 0; word < absoluteTextHeightWords; ++word) { if (word) std::cout << " "; std::cout << "aaaa"; }
+    std::cout << "\",\"textMeasure\":{\"kind\":\"deterministic-callback\",\"glyphAdvance\":6,\"spaceAdvance\":6,\"lineHeight\":10,\"wrapAtSpaces\":true,\"fontParityClaim\":false,\"calls\":" << absoluteTextHeightMeasureCalls << "},\"boxes\":["; printBox(a); std::cout << ','; printBox(text); std::cout << ','; printBox(c); std::cout << "],\"itemStyles\":[{\"width\":50,\"height\":20,\"flexGrow\":0,\"flexShrink\":0,\"minWidth\":0,\"minHeight\":0},{\"position\":\"absolute\",\"width\":" << textWidth << ",\"height\":\"auto\",\"left\":12,\"bottom\":10,\"wrap\":true,\"font\":\"10px monospace\",\"lineHeight\":10,\"minWidth\":0,\"minHeight\":0,\"flexGrow\":0,\"flexShrink\":0},{\"width\":50,\"height\":20,\"flexGrow\":0,\"flexShrink\":0,\"minWidth\":0,\"minHeight\":0}]}";
+    YGNodeFreeRecursive(root); YGConfigFree(config);
+  }
+}
+
 int main() {
   const char* names[] = {"grow", "cap", "shrink", "rectangle-shrink", "rectangle-percent-content-box", "column-grow", "column-cap", "column-shrink", "row-reverse-cap", "column-reverse-cap", "row-wrap", "row-wrap-reverse", "border-box-floor-bounds", "border-box-percentage", "border-box-asymmetric-row", "border-box-asymmetric-column", "zero-fractional-grow", "fractional-shrink", "grow-freeze-release", "shrink-freeze-release", "large-finite-differential", "subunit-zero-grow", "subunit-shrink-policy", "initial-freeze-grow-policy", "initial-freeze-shrink-policy"};
   std::cout << "[";
@@ -2787,5 +2823,6 @@ int main() {
   absoluteMeasuredMainCases();
   nestedContainingBlockDirectionCases();
   absoluteWrapCases();
+  absoluteTextHeightCases();
   std::cout << "]\n";
 }

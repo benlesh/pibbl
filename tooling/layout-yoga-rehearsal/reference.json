@@ -3,7 +3,7 @@
   "commit": "042f5013152eb81c1552dec945b88f7b95ca350f",
   "license": "MIT",
   "licenseSha256": "52412d7bc7ce4157ea628bbaacb8829e0a9cb3c58f57f99176126bc8cf2bfc85",
-  "probeSha256": "0be17c15a771764edfa24c5b140188e35c4abb57608e3f64c466669a9b958a59",
+  "probeSha256": "a163d7291bb64594f703472e4b05597b0c87c2647a76a3d386b3667325c07e2a",
   "configuration": {
     "useWebDefaults": false,
     "pointScaleFactor": 0,
@@ -31283,6 +31283,338 @@
         },
         {
           "width": 60,
+          "height": 20,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0
+        }
+      ]
+    },
+    {
+      "name": "position-absolute-text-height-narrow-three",
+      "width": 204,
+      "height": 104,
+      "gap": 10,
+      "flexDirection": "row",
+      "flexWrap": "nowrap",
+      "containerStyle": {
+        "position": "relative",
+        "boxSizing": "border-box",
+        "padding": {
+          "left": 10,
+          "right": 30,
+          "top": 20,
+          "bottom": 20
+        },
+        "borderWidth": 2,
+        "alignItems": "flex-start"
+      },
+      "absoluteTextHeightFixture": true,
+      "textValue": "aaaa aaaa aaaa",
+      "textMeasure": {
+        "kind": "deterministic-callback",
+        "glyphAdvance": 6,
+        "spaceAdvance": 6,
+        "lineHeight": 10,
+        "wrapAtSpaces": true,
+        "fontParityClaim": false,
+        "calls": 1
+      },
+      "boxes": [
+        {
+          "x": 12,
+          "y": 22,
+          "width": 50,
+          "height": 20
+        },
+        {
+          "x": 14,
+          "y": 62,
+          "width": 40,
+          "height": 30
+        },
+        {
+          "x": 72,
+          "y": 22,
+          "width": 50,
+          "height": 20
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 50,
+          "height": 20,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0
+        },
+        {
+          "position": "absolute",
+          "width": 40,
+          "height": "auto",
+          "left": 12,
+          "bottom": 10,
+          "wrap": true,
+          "font": "10px monospace",
+          "lineHeight": 10,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0
+        },
+        {
+          "width": 50,
+          "height": 20,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0
+        }
+      ]
+    },
+    {
+      "name": "position-absolute-text-height-narrow-six",
+      "width": 204,
+      "height": 104,
+      "gap": 10,
+      "flexDirection": "row",
+      "flexWrap": "nowrap",
+      "containerStyle": {
+        "position": "relative",
+        "boxSizing": "border-box",
+        "padding": {
+          "left": 10,
+          "right": 30,
+          "top": 20,
+          "bottom": 20
+        },
+        "borderWidth": 2,
+        "alignItems": "flex-start"
+      },
+      "absoluteTextHeightFixture": true,
+      "textValue": "aaaa aaaa aaaa aaaa aaaa aaaa",
+      "textMeasure": {
+        "kind": "deterministic-callback",
+        "glyphAdvance": 6,
+        "spaceAdvance": 6,
+        "lineHeight": 10,
+        "wrapAtSpaces": true,
+        "fontParityClaim": false,
+        "calls": 1
+      },
+      "boxes": [
+        {
+          "x": 12,
+          "y": 22,
+          "width": 50,
+          "height": 20
+        },
+        {
+          "x": 14,
+          "y": 32,
+          "width": 40,
+          "height": 60
+        },
+        {
+          "x": 72,
+          "y": 22,
+          "width": 50,
+          "height": 20
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 50,
+          "height": 20,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0
+        },
+        {
+          "position": "absolute",
+          "width": 40,
+          "height": "auto",
+          "left": 12,
+          "bottom": 10,
+          "wrap": true,
+          "font": "10px monospace",
+          "lineHeight": 10,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0
+        },
+        {
+          "width": 50,
+          "height": 20,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0
+        }
+      ]
+    },
+    {
+      "name": "position-absolute-text-height-wide-three",
+      "width": 204,
+      "height": 104,
+      "gap": 10,
+      "flexDirection": "row",
+      "flexWrap": "nowrap",
+      "containerStyle": {
+        "position": "relative",
+        "boxSizing": "border-box",
+        "padding": {
+          "left": 10,
+          "right": 30,
+          "top": 20,
+          "bottom": 20
+        },
+        "borderWidth": 2,
+        "alignItems": "flex-start"
+      },
+      "absoluteTextHeightFixture": true,
+      "textValue": "aaaa aaaa aaaa",
+      "textMeasure": {
+        "kind": "deterministic-callback",
+        "glyphAdvance": 6,
+        "spaceAdvance": 6,
+        "lineHeight": 10,
+        "wrapAtSpaces": true,
+        "fontParityClaim": false,
+        "calls": 1
+      },
+      "boxes": [
+        {
+          "x": 12,
+          "y": 22,
+          "width": 50,
+          "height": 20
+        },
+        {
+          "x": 14,
+          "y": 72,
+          "width": 80,
+          "height": 20
+        },
+        {
+          "x": 72,
+          "y": 22,
+          "width": 50,
+          "height": 20
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 50,
+          "height": 20,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0
+        },
+        {
+          "position": "absolute",
+          "width": 80,
+          "height": "auto",
+          "left": 12,
+          "bottom": 10,
+          "wrap": true,
+          "font": "10px monospace",
+          "lineHeight": 10,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0
+        },
+        {
+          "width": 50,
+          "height": 20,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0
+        }
+      ]
+    },
+    {
+      "name": "position-absolute-text-height-wide-six",
+      "width": 204,
+      "height": 104,
+      "gap": 10,
+      "flexDirection": "row",
+      "flexWrap": "nowrap",
+      "containerStyle": {
+        "position": "relative",
+        "boxSizing": "border-box",
+        "padding": {
+          "left": 10,
+          "right": 30,
+          "top": 20,
+          "bottom": 20
+        },
+        "borderWidth": 2,
+        "alignItems": "flex-start"
+      },
+      "absoluteTextHeightFixture": true,
+      "textValue": "aaaa aaaa aaaa aaaa aaaa aaaa",
+      "textMeasure": {
+        "kind": "deterministic-callback",
+        "glyphAdvance": 6,
+        "spaceAdvance": 6,
+        "lineHeight": 10,
+        "wrapAtSpaces": true,
+        "fontParityClaim": false,
+        "calls": 1
+      },
+      "boxes": [
+        {
+          "x": 12,
+          "y": 22,
+          "width": 50,
+          "height": 20
+        },
+        {
+          "x": 14,
+          "y": 62,
+          "width": 80,
+          "height": 30
+        },
+        {
+          "x": 72,
+          "y": 22,
+          "width": 50,
+          "height": 20
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 50,
+          "height": 20,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0
+        },
+        {
+          "position": "absolute",
+          "width": 80,
+          "height": "auto",
+          "left": 12,
+          "bottom": 10,
+          "wrap": true,
+          "font": "10px monospace",
+          "lineHeight": 10,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0
+        },
+        {
+          "width": 50,
           "height": 20,
           "flexGrow": 0,
           "flexShrink": 0,

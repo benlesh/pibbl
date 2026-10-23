@@ -1,4 +1,4 @@
-import { Absolute, definePrimitive, type BoxStyle, type SystemStyle, Flex, Flow, Grid, Overlay, Rectangle, signal, type FlexItemStyle, type FlexStyle, type PibblNode, type PibblController, type RectStyle } from "@pibbl/core";
+import { Absolute, definePrimitive, type BoxStyle, type SystemStyle, Flex, Flow, Grid, Overlay, Rectangle, Text, signal, type FlexItemStyle, type FlexStyle, type PibblNode, type PibblController, type RectStyle } from "@pibbl/core";
 import { pibblSync as pibbl } from "@pibbl/core/sync";
 import { afterEach, describe, expect, it } from 'vitest';
 import { snapshotWasmLayoutDiagnostics, experimentalLayout } from '../src/lib/layout/wasm/region';
@@ -182,5 +182,20 @@ describe('static containing-block direction boundary', () => {
         <Rectangle style={absolute} />
       </Flex>
     </Flex>)).toThrow('PIBBL_LAYOUT_UNSUPPORTED_POSITION');
+  });
+});
+
+
+describe('bounded absolute wrapped Text height', () => {
+  const style = { position: 'absolute' as const, width: 40, height: 'auto' as const, left: 12, bottom: 10, minWidth: 0, minHeight: 0, flexShrink: 0, wrap: true, font: '10px monospace', lineHeight: 10 };
+  it.runIf(experimentalLayout).each([
+    ['unwrapped', { ...style, wrap: false }],
+    ['clipped fit', { ...style, fit: 'clip' as const }],
+    ['squished fit', { ...style, fit: 'squish' as const }],
+    ['clipped overflow', { ...style, overflow: 'clip' as const }],
+    ['custom font', { ...style, font: '10px AppFont' }],
+    ['both automatic axes', { ...style, width: 'auto' as const }],
+  ])('rejects natural Text height with %s', (_name, textStyle) => {
+    expect(mount(<Flex style={{ width: 200, height: 100 }}><Text style={textStyle}>aaaa aaaa</Text></Flex>)).toThrow('PIBBL_LAYOUT_UNSUPPORTED_POSITION');
   });
 });

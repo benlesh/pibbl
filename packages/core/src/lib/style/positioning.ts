@@ -165,6 +165,8 @@ export interface PositioningStyle extends SystemStyle {
    * Fixed numeric and opposing-inset automatic absolute boxes support all nowrap
    * main directions and RTL, with numeric bounds applied before anchoring.
    * Paired natural providers keep their exact/unbounded query in every nowrap direction.
+   * Direct wrapped Text with a generic pixel font and visible fit/overflow may
+   * measure automatic height at declared numeric width through the same owned query.
    * Normal LTR wrapped rows also accept fixed numeric absolute leaves with explicit
    * left/top, no right/bottom/aspect and no nonzero minimum or maximum bounds.
    * On the documented finite direct-child path, automatic absolute axes resolve

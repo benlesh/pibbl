@@ -166,8 +166,19 @@ provider signal reads are measurement-owned, hooks/paint/writes remain forbidden
 unsupported results and exceptions publish no successful snapshot, and returned
 sizes must be finite and nonnegative. No box is inferred from an ordinary function
 component. Both-auto natural
-sizing, built-in Text/font or image intrinsic sizing, responsive queries, margins
+sizing, broader Text/font or image intrinsic sizing, responsive queries, margins
 and child decoration remain outside this admission.
+
+Direct built-in `Text` may use automatic or omitted absolute height at a declared
+finite numeric width in every finite nowrap direction. It requires `wrap: true`,
+a generic pixel font, and omitted/visible `fit` and `overflow`. The existing Text
+provider measures real Canvas text at exact declared width and unbounded height;
+a measurement-only copy omits automatic height, while final settlement retains
+the authored style and applies numeric bounds and physical anchoring afterward.
+Opposing vertical insets and aspect derivation retain precedence and need no text
+query. Custom fonts, unwrapped/fitted/clipped content, both-auto and natural Text
+width are outside this admission. Native text fixtures use labeled synthetic
+metrics as sizing probes; they do not establish Canvas font parity.
 
 Stable scalar/signal inputs can reuse successful snapshots under the existing
 conservative allocation revision. A parent layout change may requery the same

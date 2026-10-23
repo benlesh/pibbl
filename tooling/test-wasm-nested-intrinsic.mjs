@@ -143,6 +143,7 @@ try {
       assert.equal(receipt.absoluteBounds, true, 'Installed absolute numeric bounds must clamp fixed and opposing-inset automatic axes before LTR/RTL placement, source-order targeting, identity and cleanup');
       assert.equal(receipt.absoluteParticipation, true, 'Installed absolute child must leave flow and preserve source-order interaction');
       assert.equal(receipt.absoluteWrappedParticipation, true, 'Installed wrapped absolute children must remain out of Flex lines while source order, targets, identity, paint reuse, and cleanup remain exact');
+      assert.equal(receipt.absoluteTextHeight, true, 'Installed Text must measure one automatic absolute height through actual Canvas wrapping, preserve physical anchoring across nowrap directions, and clean up exactly');
       assert.equal(receipt.decoratedRelativeStatic, true, 'Installed decorated positioning must resolve padding/border before relative offsets');
       assert.equal(receipt.relativeStatic, true, 'Installed static/relative placement must preserve slots and move final geometry once');
       assert.equal(receipt.nestedPercentageWrapping, true, 'Installed nested percentages must use final row/column nowrap/wrap owners across all eight native cases');
