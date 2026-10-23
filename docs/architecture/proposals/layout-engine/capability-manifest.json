@@ -1708,43 +1708,42 @@
       "id": "flex.reverse-and-wrap-reverse",
       "target": "parity",
       "group": "flex-core",
-      "current": "experimental row/column reverse main placement and wrap-reverse cross placement, including combinations; RTL remains unsupported",
-      "status": "experimental",
+      "current": "bounded experimental finite Flex reverse-main and wrap-reverse placement across row/column, LTR/RTL and their combinations; native margin/content-box reflection differences remain explicitly classified",
+      "status": "complete",
       "evidence": {
         "positive": [
           "row/column reverse with physical margins",
           "source-formed wrapped line reversal",
           "direction-relative flex-start/flex-end/center",
           "wrap-reverse row/column cross alignment with asymmetric physical margins",
-          "combined main/cross reversal",
-          "native ten-slot ABI margin and reversal fixtures"
+          "combined main/cross reversal across LTR/RTL",
+          "twenty-four pinned row/column forward/reverse × wrap/wrap-reverse × LTR/RTL fixtures with classified native differences"
         ],
         "negative": [
           "normal JavaScript reverse direction/wrap diagnostics",
-          "RTL unsupported",
           "native build rejects stale test fixtures"
         ],
         "interaction": [
-          "source paint/hit priority under overlap",
-          "axis flip preserves keys/mounts/nodes",
-          "main placement changes without allocation/measurement work",
-          "source/built moved targets and keyed lifecycle",
-          "cross-line flip preserves keys/mounts and allocation/measurement/main work",
-          "negative reversed cross overlap retains source paint/hit priority"
+          "combined main/cross/RTL transitions preserve keyed mounts, stamps and nodes",
+          "main and cross placement changes reuse allocation and measurement work",
+          "source/built and installed moved targets preserve source order and release owned resources",
+          "two wrap-reverse lines overlap through Group, Layer and filter: B stays topmost, pointer-events none reaches A, and Tab order remains source order"
         ],
         "yogaCases": [
           "row-reverse-cap",
           "column-reverse-cap",
-          "row-wrap-reverse"
+          "row-wrap-reverse",
+          "direction-matrix-{row,row-reverse,column,column-reverse}-{wrap,wrap-reverse}-{ltr,rtl}: preserved margin centering/content-box reflection explicitly classified"
         ],
-        "missing": [
-          "RTL interaction",
-          "broader reverse/wrap-reverse and combined-axis matrix"
-        ]
+        "missing": []
       },
+      "supportedContract": "Finite direct Flex row/column, forward/reverse main axis, wrap/wrap-reverse cross axis and inherited LTR/RTL direction. Numeric declared boxes, finite margins and cross alignment preserve source paint, focus and target order through keyed changes; pinned Yoga differences remain classified. Indefinite/intrinsic owner sizing, general CSS compatibility and capabilities listed separately remain outside this entry.",
       "evidenceRefs": [
         "packages/core/test/layout-wasm-slice.test.tsx",
+        "tooling/layout-yoga-rehearsal/reference.json",
+        "tooling/test-wasm-yoga-migration.mjs",
         "tooling/test-wasm-wrapped-collections.mjs",
+        "tooling/packed-layout-consumer.mjs",
         "docs/design/layout-system-contract.md"
       ]
     },

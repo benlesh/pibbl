@@ -127,19 +127,19 @@ try {
     A: composition.composition.boxes['composition:A'].stamp,
     B: composition.composition.boxes['composition:B'].stamp,
   };
-  const compositionPixel = async (value) => frame.locator('canvas').evaluate((canvas, { basis, fill }) => {
+  const compositionPixel = async (value, point = { x: 80, y: 235 }) => frame.locator('canvas').evaluate((canvas, { basis, fill, point }) => {
     const reference = document.createElement('canvas'); reference.width = 1; reference.height = 1;
     const expectedContext = reference.getContext('2d');
     expectedContext.fillStyle = '#19375b'; expectedContext.fillRect(0, 0, 1, 1);
     expectedContext.globalAlpha = 0.5; expectedContext.fillStyle = fill; expectedContext.fillRect(0, 0, 1, 1);
-    const x = Math.floor(basis.a * 80 + basis.c * 235 + basis.e);
-    const y = Math.floor(basis.b * 80 + basis.d * 235 + basis.f);
+    const x = Math.floor(basis.a * point.x + basis.c * point.y + basis.e);
+    const y = Math.floor(basis.b * point.x + basis.d * point.y + basis.f);
     const actual = [...canvas.getContext('2d').getImageData(x, y, 1, 1).data];
     const expected = [...expectedContext.getImageData(0, 0, 1, 1).data];
     return { actual, expected };
-  }, { basis: value.composition.rootBasis, fill: value.composition.bFill });
-  const assertCompositionPixel = async (value) => {
-    const { actual, expected } = await compositionPixel(value);
+  }, { basis: value.composition.rootBasis, fill: value.composition.bFill, point });
+  const assertCompositionPixel = async (value, point) => {
+    const { actual, expected } = await compositionPixel(value, point);
     for (let index = 0; index < 3; index++) assert.ok(Math.abs(actual[index] - expected[index]) <= 1, `composition RGB channel ${index}: ${actual[index]} !== ${expected[index]}`);
     assert.equal(actual[3], expected[3], 'composition alpha must remain exact');
   };
@@ -182,6 +182,54 @@ try {
   assert.equal(compositionPainted.composition.boxes['composition:A'].stamp, compositionStamps.A);
   assert.equal(compositionPainted.composition.boxes['composition:B'].stamp, compositionStamps.B);
   await assertCompositionPixel(compositionPainted);
+
+  // The default composition proof above deliberately remains nowrap. Reverse
+  // lines switches this same source-ordered Group → Layer → filter subtree to
+  // two overlapping wrapped lines, without changing target or ownership rules.
+  if (!compositionPainted.composition.targets) await click(660,78);
+  if (compositionPainted.reverseAxes) await click(660,118);
+  if (compositionPainted.layoutDirection !== 'ltr') await click(664,156);
+  const wrappedComposition = await click(80,156);
+  assert.equal(wrappedComposition.reverseLines, true);
+  assert.deepEqual(wrappedComposition.composition.boxes['composition:A'], { x: 30, y: 250, width: 60, height: 30, stamp: compositionStamps.A });
+  assert.deepEqual(wrappedComposition.composition.boxes['composition:B'], { x: 30, y: 240, width: 60, height: 30, stamp: compositionStamps.B });
+  await assertCompositionPixel(wrappedComposition, { x: 50, y: 255 });
+  await frame.locator('canvas').evaluate(canvas => canvas.blur());
+  await frame.locator('canvas').focus(); await page.waitForTimeout(180);
+  assert.equal((await state()).composition.focus, 'A');
+  await frame.locator('canvas').press('Tab'); await page.waitForTimeout(180);
+  assert.equal((await state()).composition.focus, 'B');
+  compositionHit = await click(50,255);
+  assert.equal(compositionHit.composition.hits.at(-1), 'B');
+  const wrappedNoTarget = await click(660,78);
+  assert.equal(wrappedNoTarget.composition.targets, false);
+  await assertCompositionPixel(wrappedNoTarget, { x: 50, y: 255 });
+  compositionHit = await click(50,255);
+  assert.equal(compositionHit.composition.hits.at(-1), 'A');
+  await click(660,78);
+  const wrappedReverse = await click(660,118);
+  assert.deepEqual([wrappedReverse.composition.boxes['composition:A'].x, wrappedReverse.composition.boxes['composition:B'].x], [70, 70]);
+  assert.equal(wrappedReverse.composition.boxes['composition:A'].stamp, compositionStamps.A);
+  assert.equal(wrappedReverse.composition.boxes['composition:B'].stamp, compositionStamps.B);
+  await assertCompositionPixel(wrappedReverse, { x: 80, y: 255 });
+  compositionHit = await click(80,255);
+  assert.equal(compositionHit.composition.hits.at(-1), 'B');
+  const wrappedRtl = await click(664,156);
+  assert.equal(wrappedRtl.layoutDirection, 'rtl');
+  assert.deepEqual([wrappedRtl.composition.boxes['composition:A'].x, wrappedRtl.composition.boxes['composition:B'].x], [30, 30]);
+  assert.equal(wrappedRtl.composition.boxes['composition:A'].stamp, compositionStamps.A);
+  assert.equal(wrappedRtl.composition.boxes['composition:B'].stamp, compositionStamps.B);
+  await assertCompositionPixel(wrappedRtl, { x: 50, y: 255 });
+  compositionHit = await click(50,255);
+  assert.equal(compositionHit.composition.hits.at(-1), 'B');
+  const beforeWrappedPaint = await state();
+  const wrappedPainted = await click(496,118);
+  assert.equal(wrappedPainted.layout.solves, beforeWrappedPaint.layout.solves);
+  assert.equal(wrappedPainted.layout.nodeCreates, beforeWrappedPaint.layout.nodeCreates);
+  assert.equal(wrappedPainted.composition.boxes['composition:A'].stamp, compositionStamps.A);
+  assert.equal(wrappedPainted.composition.boxes['composition:B'].stamp, compositionStamps.B);
+  await assertCompositionPixel(wrappedPainted, { x: 50, y: 255 });
+  console.warn('wrappedReverseComposition=true');
 
   if (process.env.PIBBL_LAYOUT_SCREENSHOT) await frame.locator('canvas').screenshot({ path: process.env.PIBBL_LAYOUT_SCREENSHOT });
   const sandbox = page.frames().find(item => item.url() === 'about:srcdoc');

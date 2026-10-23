@@ -181,13 +181,15 @@ function createWasmFlexKeyedWrapExampleContent(canvas: HTMLCanvasElement) {
             height: 30,
             layoutDirection,
             flexDirection: rowDirection,
+            flexWrap: reverseLines.get() ? wrapDirection : "nowrap",
+            alignContent: "flex-start",
             alignItems: "flex-start",
           }}
         >
           <CompositionPanel
             key="composition:A"
             name="A"
-            style={{ width: 60, height: 30, minWidth: 0, flexShrink: 0 }}
+            style={{ width: 60, height: 30, minWidth: 0, flexShrink: 0, marginBottom: reverseLines.get() ? -20 : undefined }}
           />
           <CompositionPanel
             key="composition:B"
@@ -197,8 +199,9 @@ function createWasmFlexKeyedWrapExampleContent(canvas: HTMLCanvasElement) {
               height: 30,
               minWidth: 0,
               flexShrink: 0,
-              marginStart: -20,
-              marginEnd: -20,
+              marginStart: reverseLines.get() ? undefined : -20,
+              marginEnd: reverseLines.get() ? undefined : -20,
+              marginBottom: reverseLines.get() ? -20 : undefined,
             }}
           />
         </Flex>
@@ -318,7 +321,9 @@ function createWasmFlexKeyedWrapExampleContent(canvas: HTMLCanvasElement) {
         style={{ left: 28, top: 62, font: "14px sans-serif", fill: "#475569" }}
       >
         {compositionMode.get()
-          ? "Later B stays on top as positions reverse."
+          ? reverseLines.get()
+            ? "Later B stays on top while two wrapped lines overlap."
+            : "Later B stays on top as positions reverse."
           : "Reverse positions; keyed cards keep their identity."}
       </Text>
     );

@@ -159,6 +159,7 @@ try {
       assert.equal(receipt.absoluteTextWidth, true, 'Installed Text must measure one automatic absolute width from actual Canvas ink bounds, preserve its physical right anchor across nowrap directions, and clean up exactly');
       assert.equal(receipt.absoluteTextWidthFontMetrics, 'actual-canvas-ink-bounds', 'Installed natural Text width proof must use host Canvas ink metrics rather than claim synthetic native font parity');
       assert.equal(receipt.decoratedRelativeStatic, true, 'Installed decorated positioning must resolve padding/border before relative offsets');
+      assert.equal(receipt.wrappedReverseComposition, true, 'Installed wrap-reverse composition must preserve source paint, targets, focus and cleanup');
       assert.equal(receipt.relativeStatic, true, 'Installed static/relative placement must preserve slots and move final geometry once');
       assert.equal(receipt.nestedPercentageWrapping, true, 'Installed nested percentages must use final row/column nowrap/wrap owners across all eight native cases');
       assert.equal(receipt.percentageMargins, true, 'Installed percentage margins must use allocated content width and move paint/targets');

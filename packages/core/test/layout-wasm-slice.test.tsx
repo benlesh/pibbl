@@ -1131,6 +1131,67 @@ const mount = createExampleMount(mountModule.WasmFlexKeyedWrapExample);
   expect(disposed.cachedMeasurements).toBe(baseline.cachedMeasurements);
 });
 
+it.runIf(experimentalLayout)('keeps wrapped reverse composition lines, filter pixels, focus, and source targets stable', async () => {
+  const module = await import('../../scenarios/src/learning/layout/wasm-flex-keyed-wrap.example');
+  const mount = createExampleMount(module.WasmFlexKeyedWrapExample);
+  const baseline = snapshotWasmLayoutDiagnostics();
+  const canvas = document.createElement('canvas'); canvas.width = 760; canvas.height = 460; document.body.append(canvas);
+  const controller = mount(canvas); controllers.push(controller); await nextFrame();
+  const state = () => JSON.parse(canvas.parentElement!.querySelector('pre')!.textContent!);
+  const refresh = () => new Promise(resolve => setTimeout(resolve, 120));
+  const click = async (x: number, y: number) => { clickCanvas(canvas, x, y); await nextFrame(); await refresh(); };
+  const expectedPixel = (fill: string) => {
+    const reference = document.createElement('canvas'); reference.width = 1; reference.height = 1;
+    const context = reference.getContext('2d')!;
+    context.fillStyle = '#19375b'; context.fillRect(0, 0, 1, 1);
+    context.globalAlpha = .5; context.fillStyle = fill; context.fillRect(0, 0, 1, 1);
+    context.globalAlpha = 1;
+    return [...context.getImageData(0, 0, 1, 1).data];
+  };
+  const expectOverlap = (x: number, fill: string) => {
+    const actual = [...canvas.getContext('2d')!.getImageData(x, 255, 1, 1).data];
+    const expected = expectedPixel(fill);
+    // Filtered intermediate pixels may quantize RGB by one byte; alpha stays exact.
+    for (let channel = 0; channel < 3; channel++) expect(Math.abs(actual[channel] - expected[channel])).toBeLessThanOrEqual(1);
+    expect(actual[3]).toBe(expected[3]);
+  };
+  await refresh(); await click(500, 78); await click(80, 156);
+  let current = state();
+  expect(current.reverseLines).toBe(true);
+  expect(current.composition.mode).toBe(true);
+  const initialA = current.composition.boxes['composition:A'];
+  const initialB = current.composition.boxes['composition:B'];
+  expect(initialA).toMatchObject({ x: 30, y: 250, width: 60, height: 30 });
+  expect(initialB).toMatchObject({ x: 30, y: 240, width: 60, height: 30 });
+  expect(initialA.y).not.toBe(initialB.y);
+  expectOverlap(50, '#a63758');
+  canvas.blur(); canvas.focus({ preventScroll: true }); await nextFrame(); await refresh();
+  expect(state().composition.focus).toBe('A');
+  canvas.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', code: 'Tab', bubbles: true, cancelable: true })); await nextFrame(); await refresh();
+  expect(state().composition.focus).toBe('B');
+  await click(50, 255); expect(state().composition.hits).toEqual(['B']);
+  await click(660, 78); expect(state().composition.targets).toBe(false); expectOverlap(50, '#a63758');
+  await click(50, 255); expect(state().composition.hits).toEqual(['B', 'A']);
+  await click(660, 78); await click(660, 118);
+  current = state();
+  expect([current.composition.boxes['composition:A'].x, current.composition.boxes['composition:B'].x]).toEqual([70, 70]);
+  expectOverlap(80, '#a63758'); await click(80, 255); expect(state().composition.hits.at(-1)).toBe('B');
+  await click(664, 156);
+  current = state();
+  expect(current.layoutDirection).toBe('rtl');
+  expect([current.composition.boxes['composition:A'].x, current.composition.boxes['composition:B'].x]).toEqual([30, 30]);
+  expect(current.composition.boxes['composition:A'].stamp).toBe(initialA.stamp);
+  expect(current.composition.boxes['composition:B'].stamp).toBe(initialB.stamp);
+  expectOverlap(50, '#a63758'); await click(50, 255); expect(state().composition.hits.at(-1)).toBe('B');
+  const beforePaint = snapshotWasmLayoutDiagnostics(); await click(496, 118);
+  current = state(); expect(current.composition.bFill).toBe('#426b61'); expectOverlap(50, '#426b61');
+  const painted = snapshotWasmLayoutDiagnostics();
+  expect(painted.solves).toBe(beforePaint.solves); expect(painted.nodeCreates).toBe(beforePaint.nodeCreates);
+  controller.dispose(); controllers.splice(controllers.indexOf(controller), 1);
+  const disposed = snapshotWasmLayoutDiagnostics();
+  expect(disposed.activeNodes).toBe(baseline.activeNodes); expect(disposed.activeArenas).toBe(baseline.activeArenas); expect(disposed.cachedMeasurements).toBe(baseline.cachedMeasurements);
+});
+
 it.runIf(experimentalLayout)('retains bounded measured Text caches across wrapped keyed topology changes', async () => {
   const baseline = snapshotWasmLayoutDiagnostics();
   const keys = signal(['A','B','C']), ink = signal('#19375b');

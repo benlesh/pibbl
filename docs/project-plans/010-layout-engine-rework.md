@@ -21,7 +21,7 @@ Slice145 started with two public tests failing numeric-only admission before
 production changes; its completed evidence is recorded below.
 
 Latest runtime delivery is slice147 `f6e45350` (logical absolute insets).
-Consolidation49 is this commit for145–147.
+Consolidation49 is `67428b3b` for145–147.
 Slice146 is `3db077ea` (fixed direct wrapped containing owners).
 Slice145 is `c70ac2fd` (finite percentage absolute dimensions/bounds).
 Slice144 is `ced23362` (physical percentage static/relative insets).
@@ -4365,16 +4365,41 @@ complete, `flex-core` still needs min/max and automatic-minimum exits; no single
 next item honestly closes a release gate. That is the shortest supported route
 toward the first gate, not a promise of a fixed remaining slice count.
 
-## [NEXT] Reverse/wrap-reverse capability reconciliation (148)
+## Slice148 complete: reverse/wrap-reverse capability evidence
 
-Reuse the existing24 native direction fixtures and source/built/installed proof.
-Extend the existing overlapping composition mode using its line-reversal control
-so an actual wrapped overlap demonstrates later-source paint/target priority,
-pointer-none fallback, source focus, stable identities, bounded work and exact
-cleanup under combined reversal/RTL. Add only the genuinely absent public receipt;
-no new API, solver or corpus family. Reconcile the stale RTL-negative/missing
-claims and promote this one capability only if its accepted evidence is complete.
-All other statuses and release-gate dependencies remain explicit.
+The existing wrapped-collections composition mode now uses two overlapping
+wrap-reverse lines when Flip lines is enabled. Group translation, a Layer and
+opacity filter preserve later-source B paint/target priority, pointer-none A
+fallback and A→B keyboard order through main reversal and RTL. Default nowrap
+composition remains unchanged. No core runtime, public API or native fixture was
+added. The public test failed on the original single-line geometry before the
+scenario change. Driver focus entry now explicitly blurs/refocuses the Canvas.
+
+Fresh evidence (2026-10-23): Node24.15/Chromium focused composition tests2 passed,
+414 skipped; isolated packed Bundler/NodeNext types and installed runtime passed,
+245 dist inputs, receipt `wrappedReverseComposition=true`, exact disposal. Tarball
+SHA256 `b7f3d0ccdad961b2932bf72264dafcab894fd30bb228dc17b0ca1c6a8c95fe26`.
+Node26.9/Chromium source and built wrapped drivers passed geometry, filter pixels
+(RGB±1 quantization tolerance, exact alpha), focus, targets, identity and paint
+reuse; built469 inputs. Existing24 direction fixtures passed source/built:
+2 native matches and22 explicitly classified preserved differences. Pinned native
+rehearsal reproduced709 reference cases; this is not a709 public-runtime replay.
+Typecheck and changed-code lint passed. No aggregate trust claim.
+
+The reverse capability is complete within its finite supported contract. The fixed
+33-entry denominator now has9 complete,11 experimental,6 partial,6 missing and1
+excluded; all7 group release gates remain open. This closes a capability proof
+gap, not the whole Flex gate or default migration.
+
+## [NEXT] Column custom-provider automatic minimum (149)
+
+Use the existing paired `definePrimitive` intrinsic provider through a direct
+finite LTR column/nowrap Flex. Establish a failing public test for an omitted
+minHeight honoring min-content height, explicit-zero escape, reactive floor
+changes and matching follower geometry/targets. Extend the existing intrinsic
+provider lesson once runnable. No new API or general intrinsic graph is planned;
+other admissions and the automatic-minimum capability remain bounded until their
+own accepted evidence is complete.
 
 ### Finite positioning exit matrix after134
 
