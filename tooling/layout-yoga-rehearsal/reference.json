@@ -3,7 +3,7 @@
   "commit": "042f5013152eb81c1552dec945b88f7b95ca350f",
   "license": "MIT",
   "licenseSha256": "52412d7bc7ce4157ea628bbaacb8829e0a9cb3c58f57f99176126bc8cf2bfc85",
-  "probeSha256": "cd72dcdb495ec37175f43571302d01afa6a0b88e661fe6378ab3eef9cd3515c0",
+  "probeSha256": "b8cc39e65929989e3434a0c90b2df9a44ff44f7e643bb7bf6b5642a25dabb9c7",
   "configuration": {
     "useWebDefaults": false,
     "pointScaleFactor": 0,
@@ -15,7 +15,7 @@
     "flexWrap": "explicit nowrap/wrap/wrap-reverse per case",
     "gap": "explicit numeric or allocated-axis percentage per case; nested owners use10%",
     "shrink": "explicit itemStyles when present; nested outer items1 and inner leaves0; otherwise1 except floor/border cases0",
-    "comparison": "native boxes match except explicitly classified partial-factor/freeze and CSS safe-overflow reverse cases; pibblBoxes are expected Pibbl contract geometry",
+    "comparison": "native boxes match except explicitly classified partial-factor/freeze, CSS safe-overflow reverse and preserved physical-margin cases; pibblBoxes are expected Pibbl contract geometry",
     "padding": "explicit numeric/percentage item or container padding per case; asymmetric physical3/5/7/11 in border cases; otherwise0",
     "boxSizing": "explicit item/container boxSizing per case; rectangle-percent-content-box uses content-box; otherwise Yoga default",
     "border": "physical left2/right4/top6/bottom8 in asymmetric border cases; otherwise 0"
@@ -5482,6 +5482,298 @@
           "height": 81
         }
       ],
+      "itemStyles": [
+        {
+          "width": 60,
+          "height": 30,
+          "flexBasis": 30,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0,
+          "marginLeft": "10%",
+          "marginRight": "15%",
+          "marginTop": "5%",
+          "marginBottom": "20%"
+        },
+        {
+          "width": 136,
+          "height": 81,
+          "flexBasis": 81,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0
+        }
+      ]
+    },
+    {
+      "name": "margin-percent-row-wrap",
+      "width": 300,
+      "height": 200,
+      "gap": 0,
+      "flexDirection": "row",
+      "flexWrap": "wrap",
+      "containerStyle": {
+        "boxSizing": "border-box",
+        "padding": {
+          "left": 10,
+          "right": 30,
+          "top": 20,
+          "bottom": 40
+        },
+        "alignContent": "flex-start",
+        "alignItems": "flex-start"
+      },
+      "boxes": [
+        {
+          "x": 36,
+          "y": 20,
+          "width": 60,
+          "height": 30
+        },
+        {
+          "x": 10,
+          "y": 115,
+          "width": 136,
+          "height": 81
+        }
+      ],
+      "pibblBoxes": [
+        {
+          "x": 36,
+          "y": 33,
+          "width": 60,
+          "height": 30
+        },
+        {
+          "x": 10,
+          "y": 115,
+          "width": 136,
+          "height": 81
+        }
+      ],
+      "classification": "preserved-physical-margin-offset",
+      "comparisonLabel": "Pibbl preserves the numeric leading cross-margin offset; Yoga wrapped cross-line placement omits it. Classified allocation difference, not a parity claim.",
+      "itemStyles": [
+        {
+          "width": 60,
+          "height": 30,
+          "flexBasis": 60,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0,
+          "marginLeft": "10%",
+          "marginRight": "15%",
+          "marginTop": "5%",
+          "marginBottom": "20%"
+        },
+        {
+          "width": 136,
+          "height": 81,
+          "flexBasis": 136,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0
+        }
+      ]
+    },
+    {
+      "name": "margin-percent-row-wrap-resized",
+      "width": 360,
+      "height": 250,
+      "gap": 0,
+      "flexDirection": "row",
+      "flexWrap": "wrap",
+      "containerStyle": {
+        "boxSizing": "border-box",
+        "padding": {
+          "left": 10,
+          "right": 30,
+          "top": 20,
+          "bottom": 40
+        },
+        "alignContent": "flex-start",
+        "alignItems": "flex-start"
+      },
+      "boxes": [
+        {
+          "x": 42,
+          "y": 20,
+          "width": 60,
+          "height": 30
+        },
+        {
+          "x": 150,
+          "y": 20,
+          "width": 136,
+          "height": 81
+        }
+      ],
+      "pibblBoxes": [
+        {
+          "x": 42,
+          "y": 36,
+          "width": 60,
+          "height": 30
+        },
+        {
+          "x": 150,
+          "y": 20,
+          "width": 136,
+          "height": 81
+        }
+      ],
+      "classification": "preserved-physical-margin-offset",
+      "comparisonLabel": "Pibbl preserves the numeric leading cross-margin offset; Yoga wrapped cross-line placement omits it. Classified allocation difference, not a parity claim.",
+      "itemStyles": [
+        {
+          "width": 60,
+          "height": 30,
+          "flexBasis": 60,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0,
+          "marginLeft": "10%",
+          "marginRight": "15%",
+          "marginTop": "5%",
+          "marginBottom": "20%"
+        },
+        {
+          "width": 136,
+          "height": 81,
+          "flexBasis": 136,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0
+        }
+      ]
+    },
+    {
+      "name": "margin-percent-column-wrap",
+      "width": 300,
+      "height": 200,
+      "gap": 0,
+      "flexDirection": "column",
+      "flexWrap": "wrap",
+      "containerStyle": {
+        "boxSizing": "border-box",
+        "padding": {
+          "left": 10,
+          "right": 30,
+          "top": 20,
+          "bottom": 40
+        },
+        "alignContent": "flex-start",
+        "alignItems": "flex-start"
+      },
+      "boxes": [
+        {
+          "x": 10,
+          "y": 33,
+          "width": 60,
+          "height": 30
+        },
+        {
+          "x": 135,
+          "y": 20,
+          "width": 136,
+          "height": 81
+        }
+      ],
+      "pibblBoxes": [
+        {
+          "x": 36,
+          "y": 33,
+          "width": 60,
+          "height": 30
+        },
+        {
+          "x": 135,
+          "y": 20,
+          "width": 136,
+          "height": 81
+        }
+      ],
+      "classification": "preserved-physical-margin-offset",
+      "comparisonLabel": "Pibbl preserves the numeric leading cross-margin offset; Yoga wrapped cross-line placement omits it. Classified allocation difference, not a parity claim.",
+      "itemStyles": [
+        {
+          "width": 60,
+          "height": 30,
+          "flexBasis": 30,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0,
+          "marginLeft": "10%",
+          "marginRight": "15%",
+          "marginTop": "5%",
+          "marginBottom": "20%"
+        },
+        {
+          "width": 136,
+          "height": 81,
+          "flexBasis": 81,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "minWidth": 0,
+          "minHeight": 0
+        }
+      ]
+    },
+    {
+      "name": "margin-percent-column-wrap-resized",
+      "width": 360,
+      "height": 250,
+      "gap": 0,
+      "flexDirection": "column",
+      "flexWrap": "wrap",
+      "containerStyle": {
+        "boxSizing": "border-box",
+        "padding": {
+          "left": 10,
+          "right": 30,
+          "top": 20,
+          "bottom": 40
+        },
+        "alignContent": "flex-start",
+        "alignItems": "flex-start"
+      },
+      "boxes": [
+        {
+          "x": 10,
+          "y": 36,
+          "width": 60,
+          "height": 30
+        },
+        {
+          "x": 150,
+          "y": 20,
+          "width": 136,
+          "height": 81
+        }
+      ],
+      "pibblBoxes": [
+        {
+          "x": 42,
+          "y": 36,
+          "width": 60,
+          "height": 30
+        },
+        {
+          "x": 150,
+          "y": 20,
+          "width": 136,
+          "height": 81
+        }
+      ],
+      "classification": "preserved-physical-margin-offset",
+      "comparisonLabel": "Pibbl preserves the numeric leading cross-margin offset; Yoga wrapped cross-line placement omits it. Classified allocation difference, not a parity claim.",
       "itemStyles": [
         {
           "width": 60,

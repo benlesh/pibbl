@@ -2,7 +2,8 @@
 
 ## Current checkpoint and single next slice — 2026-10-22
 
-Latest delivery is slice85 (finite nested percentage wrapping evidence).
+Latest delivery is slice86 (wrapped percentage physical margins).
+Slice85 is `e4ea5c0d` (finite nested percentage wrapping evidence).
 Slice84 is `86030541` (allocated-nowrap percentage physical margins).
 Slice83 is `43f8c34d` (fixed-width direct Text in wrapped columns).
 Slice82 is `3dc71e11` (wrapped stretched cross sizing and percentage bounds).
@@ -35,9 +36,9 @@ Slice56 is `cf2c7bc5` (prepared Flow-root planning/adoption).
 Slice55 is `1510efe3` (prepared Grid-root planning/adoption).
 Slice54 `773da7b9`,53 `aaa7ddcb`,52 `b5381e0d` are consolidated in `f322a709`.
 Every slice has its own commit. The fixed33-capability/seven-gate denominator is
-unchanged; all seven gates remain open. Consolidation26 is `2cd357d4`; consolidation27 is `abbaf209`; the single next slice is86, wrapped percentage margins preserving numeric physical-offset semantics. Source5192/built5193, `#/testing/layout-preflight`:
+unchanged; all seven gates remain open. Consolidation26 is `2cd357d4`; consolidation27 is `abbaf209`; the single next slice is87, wrap-reverse percentage margins preserving numeric semantics. Source5192/built5193, `#/testing/layout-preflight`:
 Source5192/built5193 `#/examples/layout/wasm-yoga-migration`: Next case + resize
-cycles127 records:116matches/11classified CSS differences; click A/B/C targets.
+cycles131 records:116matches/15classified differences; click A/B/C targets.
 Canonical built comparison: http://127.0.0.1:5193/#/examples/layout/wasm-yoga-migration.
 Native Grid tracks/spans and Flow wrap controls remain available.
 
@@ -1787,22 +1788,58 @@ gates remain open. Reverse/RTL, broad automatic minima, indefinite percentage
 feedback and standalone/release trust retain explicit separate entries. No general
 CSS/Yoga parity or Node24 aggregate trust claim. Kernel65383bytes unchanged.
 
-## [NEXT] Wrapped percentage physical margins preserving numeric semantics (slice 86)
+## Slice 86 delivered — wrapped percentage physical margins
 
-Complete actual allocated physical-margin wrapping admission with finite row/column
-wrap resize cases. First assert existing numeric physical-offset geometry and a
-failing equivalent percentage case. Preserve existing numeric paint/hit semantics;
-classify Yoga3.2.1's dropped leading cross-margin offsets explicitly instead of
-changing numeric behavior. Reuse the same percentage-width resolver, receiver and
-native records, and supply source/built/installed geometry/targets/cache/cleanup.
-Retain auto/logical margins and indefinite/intrinsic feedback as explicit gaps.
+Finite row/column wrap admits the existing percentage margin surface. Four focused
+public allocation tests first prove the existing numeric geometry, then fail for
+matching percentages before production. The shared width-based resolver is unchanged;
+only wrap admission changes. Wrap-reverse, intrinsic/indefinite owners and auto/
+logical margins retain explicit rejection/gaps. Numeric behavior is unchanged.
+Mounted row/column resize moves blue following targets without new nodes; paint-only
+updates reuse solves/line formation/measurement; exact disposal restores baseline.
 
-RTL is a separate missing capability, not blocked by this margin work. The approved
-proposal establishes rootLTR and nearest-layout-ancestor inheritance but still
-requires exact public direction home, start/end semantics, inheritance boundaries
-and logical/physical precedence. Present that concrete public contract before RTL
-production edits; no implied acceptance from a native LTR fixture. The next margin
-slice already has an authorized preservation policy and introduces no new API.
+Pinned native four wrapped records keep both Yoga boxes and explicit Pibbl boxes.
+At outer300×200,paddingL10/R30/T20/B40, A60×30 with L10%/R15%/T5%/B20% starts36,33
+in Pibbl, as with resolved numeric margins. Yoga starts36,20 in row wrap and10,33 in
+column wrap; B geometry agrees. All four resize records are explicitly labeled
+`preserved-physical-margin-offset`, with no numeric migration or parity claim.
+Corpus131:116matches/15classified differences. Native function and independent
+receipt preserved under `/tmp/pibbl-slice86-wrappedPercentageMarginCases*`.
+
+Seven focused tests pass; fresh full layout file236pass/3normal-onlyskips,
+`/tmp/pibbl-slice86-{red,green,mounted,full}.txt`. Source/built eight margin records
+pass with served worktree catalog760×540, labeled four matches/four differences,
+current targets and exact zero ownership: `/tmp/pibbl-slice86-{source,built}.txt`;
+469private built inputs. Packed230installed inputs/Bundler/NodeNext actual wrap
+pixels preserve physical offsets, old targets miss/new targets hit, paint reuse
+and node identity pass; final cleanup0/0/0. TarSHA
+`8ba96d144fcb0895dd6b2d9a0346faf683056a76f2ad77cc41458c2ab9d5b4b8`,
+`/tmp/pibbl-slice86-packed.txt`. A fixture-import union widened after margin data;
+the existing partial-shrink fixture needs the same RectStyle annotation used by
+the main oracle harness. Types/lint pass after that test-only annotation.
+Kernel65383bytes unchanged; no screenshot baseline rewrite. Node26.9.0, no Node24
+aggregate trust claim. Fixed33 remains4complete,11experimental,7partial,10missing,
+1excluded; all seven gates open.
+
+## [NEXT] Wrap-reverse percentage margin preservation (slice 87)
+
+First lock existing numeric physical offsets for row/column wrap-reverse and
+owner resize, then add failing equivalent percentage cases. Pin Yoga geometry
+separately and classify preserved numeric differences explicitly, including padding
+and reversed cross placement. Admit only the same finite allocation path; verify
+source/built/installed geometry, moved targets, cache/identity and cleanup. Retain
+intrinsic owners and auto/logical edges as gaps. Consolidate85–87 after delivery.
+
+RTL public contract remains pending assessment. The concrete recommendation is
+additive `FlexStyle.layoutDirection?: 'ltr'|'rtl'`: rootLTR, omitted value inherits
+through existing layout contexts; ordinary components/Group/Clip transparent and
+Layer forwards the value. Logical start/end follow inline edges; flex-start/end
+follow flex axes. Physical edges stay physical. Future precedence recommendation:
+specific beats shorthand; logical wins over physical at equal specificity.
+`FlowStyle.direction` already means horizontal/vertical, so shared `direction`
+would conflict and require an unauthorized breaking Flow rename. No RTL semantics
+are implemented or approved by this record; continue existing-contract gaps while
+the consequential public field/inheritance/edge contract is assessed.
 
 ### Consolidation 24 completed for delivery slices 70–72
 

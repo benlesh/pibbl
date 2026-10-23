@@ -420,7 +420,7 @@ function measureFlex(
     if (style.boxSizing !== undefined) style = contentBoxStyle(style, { width: diagnosticBox.width, height: diagnosticBox.height, mainAxis: row ? 'width' : 'height', context: childContext(child, diagnosticBox) });
     rejectUnsupportedItemFields(child, style, diagnosticBox);
     if (style.aspectRatio !== undefined) return unsupportedIntrinsic('does not support aspectRatio during intrinsic measurement');
-    if (isPercentage(style.margin) || isPercentage(style.marginTop) || isPercentage(style.marginRight) || isPercentage(style.marginBottom) || isPercentage(style.marginLeft)) return unsupportedIntrinsic('does not support percentage margins without an actual finite nowrap Flex allocation');
+    if (isPercentage(style.margin) || isPercentage(style.marginTop) || isPercentage(style.marginRight) || isPercentage(style.marginBottom) || isPercentage(style.marginLeft)) return unsupportedIntrinsic('does not support percentage margins without an actual finite Flex allocation');
     const allMargin = numericMargin(style.margin, 'margin', child, diagnosticBox);
     const marginTop = numericMargin(style.marginTop === undefined ? allMargin : style.marginTop, 'marginTop', child, diagnosticBox);
     const marginRight = numericMargin(style.marginRight === undefined ? allMargin : style.marginRight, 'marginRight', child, diagnosticBox);
@@ -668,7 +668,7 @@ function resolveFlexPlacements(
       isColumnDirection(normalized.flexDirection) && (normalized.flexWrap ?? 'nowrap') === 'nowrap';
     assertSupportedChildPosition('Flex', child, normalized);
     rejectUnsupportedItemFields(child, normalized, container);
-    if (options.flexWrap !== 'nowrap' && (isPercentage(normalized.margin) || isPercentage(normalized.marginTop) || isPercentage(normalized.marginRight) || isPercentage(normalized.marginBottom) || isPercentage(normalized.marginLeft))) throw childDiagnostic(child, 'margin', 'percentage', container, 'percentage margins currently require a finite nowrap Flex allocation; wrapped placement policy remains unsupported');
+    if (options.flexWrap === 'wrap-reverse' && (isPercentage(normalized.margin) || isPercentage(normalized.marginTop) || isPercentage(normalized.marginRight) || isPercentage(normalized.marginBottom) || isPercentage(normalized.marginLeft))) throw childDiagnostic(child, 'margin', 'percentage', container, 'percentage margins in wrap-reverse remain unsupported; use finite nowrap or wrap allocation');
     const allMargin = allocatedMargin(normalized.margin, 'margin', child, container);
     const marginTop = allocatedMargin(normalized.marginTop === undefined ? allMargin : normalized.marginTop, 'marginTop', child, container);
     const marginRight = allocatedMargin(normalized.marginRight === undefined ? allMargin : normalized.marginRight, 'marginRight', child, container);

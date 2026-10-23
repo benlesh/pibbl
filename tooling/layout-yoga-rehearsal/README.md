@@ -426,3 +426,15 @@ Fresh packed fixtures repeat all eight through installed public entries.
 The finite LTR row/column nowrap/wrap preserve entry is evidence-complete for its
 stated finite contract. RTL, reversal, automatic minima, intrinsic percentage
 feedback, standalone migration and release trust retain their own explicit gates.
+
+## Wrapped percentage physical margins (slice 86)
+
+Four `margin-percent-*-wrap*` records preserve existing numeric Pibbl physical
+cross offsets. Yoga3.2.1 drops those offsets in the same numeric and percentage
+trees; native boxes remain recorded separately from explicit `pibblBoxes` under
+`preserved-physical-margin-offset`. This is a classified placement difference,
+not a percentage-resolution mismatch. The existing margin section now contains
+eight records: four nowrap matches and four wrapped differences. Source/built and
+installed pixels/targets/cache/identity/cleanup checks cover both row/column pairs.
+Wrap-reverse percentages remain explicitly rejected until their own numeric
+preservation proof; auto/logical margins and indefinite owners remain gaps.

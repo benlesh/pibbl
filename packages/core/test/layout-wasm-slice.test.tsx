@@ -2379,7 +2379,7 @@ it('preserves the documented CSS partial-shrink divergence from pinned Yoga', ()
   expect(fixture.boxes.map(box => box.width)).toEqual([50,50]);
   if (!fixture.pibblBoxes || !fixture.itemStyles) throw new Error('Missing classified input and Pibbl expectation');
   expect(fixture.pibblBoxes.map(box => box.width)).toEqual([65,65]);
-  const children = fixture.itemStyles.map(style => createElement(Rectangle,{style}));
+  const children = fixture.itemStyles.map(style => createElement(Rectangle,{style:style as RectStyle}));
   expect(layoutFlex({x:0,y:0,width:fixture.width,height:fixture.height},children,{gap:fixture.gap},measurement)).toEqual(fixture.pibblBoxes);
 });
 
@@ -2753,9 +2753,9 @@ it.runIf(experimentalLayout)('moves allocated percentage margin paint and hit ta
   width.set(360);await nextFrame();clickCanvas(canvas,136,21);expect(hits).toBe(1);clickCanvas(canvas,151,21);expect(hits).toBe(2);expect(snapshotWasmLayoutDiagnostics().nodeCreates).toBe(before.nodeCreates);
   controller.dispose();const disposed=snapshotWasmLayoutDiagnostics();expect([disposed.activeNodes,disposed.activeArenas,disposed.cachedMeasurements]).toEqual([baseline.activeNodes,baseline.activeArenas,baseline.cachedMeasurements]);
 });
-it.runIf(experimentalLayout)('rejects percentage margins without allocated nowrap ownership',()=>{
+it.runIf(experimentalLayout)('rejects percentage margins without supported allocated ownership',()=>{
   const child=createElement(Rectangle,{style:{width:20,height:20,minWidth:0,margin:'10%'}});
-  expect(()=>layoutFlex({x:0,y:0,width:100,height:100},[child],{flexWrap:'wrap'},measurement)).toThrow(/nowrap/);
+  expect(()=>layoutFlex({x:0,y:0,width:100,height:100},[child],{flexWrap:'wrap-reverse'},measurement)).toThrow(/wrap-reverse/);
   const root=createElement(Flex,{style:{width:100},children:child});
   expect(measureElement(root,{minWidth:0,maxWidth:100,minHeight:0,maxHeight:100},service)).toMatchObject({status:'unsupported'});
 });
@@ -2790,4 +2790,26 @@ for(const maxOnly of [false,true]){
     const root=createElement(Flex,{style:{width:'auto',maxWidth:maxOnly?360:undefined},children:nested});
     expect(measureElement(root,{minWidth:0,maxWidth:360,minHeight:0,maxHeight:240},service)).toMatchObject({status:'unsupported',reason:expect.stringContaining('definite child basis')});
   });
+}
+for(const column of [false,true])for(const resized of [false,true]){
+  it.runIf(experimentalLayout)(`preserves numeric physical offsets for ${column?'column':'row'} wrapped percentages ${resized?'resized':'initial'}`,()=>{
+    const width=resized?320:260,box={x:10,y:20,width,height:resized?190:140};
+    const item=(percent:boolean)=>createElement(Rectangle,{style:{width:60,height:30,flexBasis:column?30:60,flexGrow:0,flexShrink:0,minWidth:0,minHeight:0,marginLeft:percent?'10%':width*.1,marginRight:percent?'15%':width*.15,marginTop:percent?'5%':width*.05,marginBottom:percent?'20%':width*.2}});
+    const following=createElement(Rectangle,{style:{width:136,height:81,flexBasis:column?81:136,flexGrow:0,flexShrink:0,minWidth:0,minHeight:0}});
+    const options={flexDirection:column?'column':'row',flexWrap:'wrap',alignItems:'flex-start',alignContent:'flex-start'} as const;
+    const expected=[{x:resized?42:36,y:resized?36:33,width:60,height:30},{x:column?(resized?150:135):resized?150:10,y:column||resized?20:115,width:136,height:81}];
+    expect(layoutFlex(box,[item(false),following],options,measurement)).toEqual(expected);
+    expect(layoutFlex(box,[item(true),following],options,measurement)).toEqual(expected);
+  });
+}
+
+for(const column of [false,true]){
+ it.runIf(experimentalLayout)(`moves ${column?'column':'row'} wrapped percentage margin targets without remounting`,async()=>{
+  const baseline=snapshotWasmLayoutDiagnostics(),width=signal(300),height=signal(200),fill=signal('red');let hits=0;
+  const canvas=document.createElement('canvas');canvas.width=400;canvas.height=280;document.body.append(canvas);
+  const root=createElement(Flex,{style:{width,height,boxSizing:'border-box',padding:{left:10,right:30,top:20,bottom:40},flexDirection:column?'column':'row',flexWrap:'wrap',alignContent:'flex-start',alignItems:'flex-start'},children:[createElement(Rectangle,{style:{width:60,height:30,flexBasis:column?30:60,flexGrow:0,flexShrink:0,minWidth:0,minHeight:0,marginLeft:'10%',marginRight:'15%',marginTop:'5%',marginBottom:'20%',fill}}),createElement(Rectangle,{style:{width:136,height:81,flexBasis:column?81:136,flexGrow:0,flexShrink:0,minWidth:0,minHeight:0,fill:'blue'},onClick:()=>hits++})]});
+  const controller=pibbl(canvas,root);controllers.push(controller);await nextFrame();clickCanvas(canvas,column?136:12,column?21:117);expect(hits).toBe(1);const before=snapshotWasmLayoutDiagnostics();fill.set('green');await nextFrame();const painted=snapshotWasmLayoutDiagnostics();expect(painted.solves).toBe(before.solves);expect(painted.lineFormations).toBe(before.lineFormations);expect(painted.measuredLeaves).toBe(before.measuredLeaves);
+  width.set(360);height.set(250);await nextFrame();clickCanvas(canvas,column?136:12,column?21:117);expect(hits).toBe(1);clickCanvas(canvas,152,22);expect(hits).toBe(2);expect(snapshotWasmLayoutDiagnostics().nodeCreates).toBe(before.nodeCreates);
+  controller.dispose();const disposed=snapshotWasmLayoutDiagnostics();expect([disposed.activeNodes,disposed.activeArenas,disposed.cachedMeasurements]).toEqual([baseline.activeNodes,baseline.activeArenas,baseline.cachedMeasurements]);
+ });
 }

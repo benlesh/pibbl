@@ -670,9 +670,25 @@
       {
         "id": "nested-percent-gap-column-wrap-resized",
         "covers": ["flex.row-column-nowrap-wrap"]
+      },
+      {
+        "id": "margin-percent-row-wrap",
+        "covers": ["flex.margin"]
+      },
+      {
+        "id": "margin-percent-row-wrap-resized",
+        "covers": ["flex.margin"]
+      },
+      {
+        "id": "margin-percent-column-wrap",
+        "covers": ["flex.margin"]
+      },
+      {
+        "id": "margin-percent-column-wrap-resized",
+        "covers": ["flex.margin"]
       }
     ],
-    "limit": "127 records:116 native matches and11 explicitly classified CSS allocation/safe-overflow differences; finite row/column/reverse/wrap, box conversion, distribution, definite percentage bounds, wrapped aspect ratios, allocated-owner percentage gaps/padding/cross bounds, nowrap physical margins and finite nested percentage owners. This does not establish general intrinsic, percentage or CSS parity."
+    "limit": "131 records:116 native matches and15 explicitly classified CSS allocation/safe-overflow/physical-margin differences; finite row/column/reverse/wrap, box conversion, distribution, definite percentage bounds, wrapped aspect ratios, allocated-owner percentage gaps/padding/cross bounds, nowrap/wrap physical margins and finite nested percentage owners. This does not establish general intrinsic, percentage or CSS parity."
   },
   "gateGroups": [
     {
@@ -1089,9 +1105,9 @@
       "id": "flex.margin",
       "target": "parity",
       "group": "box-and-direction",
-      "current": "experimental numeric physical margins on direct nowrap/wrapped row/column Flex items plus finite allocated-nowrap physical percentages against content width; finite negatives and specific-edge precedence; other families and normal JavaScript Flex reject",
+      "current": "experimental numeric physical margins on direct nowrap/wrapped row/column Flex items plus finite allocated-nowrap/wrap physical percentages against content width; finite negatives and specific-edge precedence; other families and normal JavaScript Flex reject",
       "status": "experimental",
-      "unresolvedPolicy": "Physical numeric and allocated-nowrap percentage signatures are selected; wrapped percentage placement, logical edges and auto margins remain subsequent supported-matrix work.",
+      "unresolvedPolicy": "Physical numeric and allocated-nowrap/wrap percentage semantics preserve existing Pibbl offsets; Yoga wrapped cross-margin differences are explicitly classified. Wrap-reverse percentages, logical edges and auto margins remain subsequent supported-matrix work.",
       "evidence": {
         "positive": [
           "nowrap row/column numeric margins",
@@ -1100,10 +1116,11 @@
           "cross stretch and specific-edge precedence",
           "final intrinsic auto dimension clamped after signed accumulation",
           "wrapped row and column margin-box line extents",
-          "negative margin overlap within and between lines"
+          "negative margin overlap within and between lines",
+          "wrapped row/column percentage margin boxes preserve pre-existing numeric physical offsets across owner resize"
         ],
         "negative": [
-          "intrinsic/wrapped percentage and auto/nonfinite/null rejection",
+          "intrinsic/wrap-reverse percentage and auto/nonfinite/null rejection",
           "other layout families reject",
           "normal JavaScript Flex diagnostic"
         ],
@@ -1114,9 +1131,18 @@
           "wrapped margin source paint/hit order",
           "public right-box wrap toggle moves target"
         ],
-        "yogaCases": [],
+        "yogaCases": [
+          "margin-percent-row-nowrap",
+          "margin-percent-row-nowrap-resized",
+          "margin-percent-column-nowrap",
+          "margin-percent-column-nowrap-resized",
+          "margin-percent-row-wrap",
+          "margin-percent-row-wrap-resized",
+          "margin-percent-column-wrap",
+          "margin-percent-column-wrap-resized"
+        ],
         "missing": [
-          "wrapped percentage margins",
+          "wrap-reverse percentage margins",
           "logical edges",
           "remaining overflow and opposing negative margin matrix"
         ]
@@ -1125,7 +1151,9 @@
         "packages/core/test/layout-wasm-slice.test.tsx",
         "tooling/test-wasm-text-intrinsics.mjs",
         "docs/design/layout-system-contract.md",
-        "docs/site/api/components/flex.md"
+        "docs/site/api/components/flex.md",
+        "tooling/layout-yoga-rehearsal/reference.json",
+        "tooling/test-wasm-yoga-migration.mjs"
       ]
     },
     {

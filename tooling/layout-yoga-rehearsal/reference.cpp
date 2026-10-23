@@ -436,6 +436,57 @@ static void nestedPercentageGapCases() {
     }
   }
 }
+static void wrappedPercentageMarginCases() {
+  for (int axis = 0; axis < 2; ++axis) {
+    const bool column = axis == 1;
+    for (int resize = 0; resize < 2; ++resize) {
+      const bool resized = resize == 1;
+      const float width = resized ? 360 : 300;
+      const float height = resized ? 250 : 200;
+      auto config = YGConfigNew();
+      YGConfigSetUseWebDefaults(config, false);
+      YGConfigSetPointScaleFactor(config, 0);
+      YGConfigSetErrata(config, YGErrataNone);
+      auto root = YGNodeNewWithConfig(config);
+      YGNodeStyleSetBoxSizing(root, YGBoxSizingBorderBox);
+      YGNodeStyleSetWidth(root, width); YGNodeStyleSetHeight(root, height);
+      YGNodeStyleSetFlexDirection(root, column ? YGFlexDirectionColumn : YGFlexDirectionRow);
+      YGNodeStyleSetFlexWrap(root, YGWrapWrap);
+      YGNodeStyleSetAlignItems(root, YGAlignFlexStart); YGNodeStyleSetAlignContent(root, YGAlignFlexStart);
+      YGNodeStyleSetPadding(root, YGEdgeLeft, 10); YGNodeStyleSetPadding(root, YGEdgeRight, 30);
+      YGNodeStyleSetPadding(root, YGEdgeTop, 20); YGNodeStyleSetPadding(root, YGEdgeBottom, 40);
+      auto a = YGNodeNewWithConfig(config);
+      YGNodeStyleSetWidth(a, 60); YGNodeStyleSetHeight(a, 30);
+      YGNodeStyleSetFlexBasis(a, column ? 30 : 60); YGNodeStyleSetFlexGrow(a, 0); YGNodeStyleSetFlexShrink(a, 0);
+      YGNodeStyleSetMinWidth(a, 0); YGNodeStyleSetMinHeight(a, 0);
+      YGNodeStyleSetMarginPercent(a, YGEdgeLeft, 10); YGNodeStyleSetMarginPercent(a, YGEdgeRight, 15);
+      YGNodeStyleSetMarginPercent(a, YGEdgeTop, 5); YGNodeStyleSetMarginPercent(a, YGEdgeBottom, 20);
+      auto b = YGNodeNewWithConfig(config);
+      YGNodeStyleSetWidth(b, 136); YGNodeStyleSetHeight(b, 81);
+      YGNodeStyleSetFlexBasis(b, column ? 81 : 136); YGNodeStyleSetFlexGrow(b, 0); YGNodeStyleSetFlexShrink(b, 0);
+      YGNodeStyleSetMinWidth(b, 0); YGNodeStyleSetMinHeight(b, 0);
+      YGNodeInsertChild(root, a, 0); YGNodeInsertChild(root, b, 1);
+      YGNodeCalculateLayout(root, YGUndefined, YGUndefined, YGDirectionLTR);
+      const float pibblAX = column && !resized ? 36 : column ? 42 : resized ? 42 : 36;
+      const float pibblAY = resized ? 36 : 33;
+      const float pibblBX = column && !resized ? 135 : column ? 150 : resized ? 150 : 10;
+      const float pibblBY = column ? 20 : resized ? 20 : 115;
+      std::cout << ",{\"name\":\"margin-percent-" << (column ? "column" : "row") << "-wrap" << (resized ? "-resized" : "")
+                << "\",\"width\":" << width << ",\"height\":" << height << ",\"gap\":0,\"flexDirection\":\"" << (column ? "column" : "row")
+                << "\",\"flexWrap\":\"wrap\",\"containerStyle\":{\"boxSizing\":\"border-box\",\"padding\":{\"left\":10,\"right\":30,\"top\":20,\"bottom\":40},\"alignContent\":\"flex-start\",\"alignItems\":\"flex-start\"},\"boxes\":[";
+      for (int item = 0; item < 2; ++item) {
+        if (item) std::cout << ',';
+        auto child = YGNodeGetChild(root, item);
+        std::cout << "{\"x\":" << YGNodeLayoutGetLeft(child) << ",\"y\":" << YGNodeLayoutGetTop(child) << ",\"width\":" << YGNodeLayoutGetWidth(child) << ",\"height\":" << YGNodeLayoutGetHeight(child) << '}';
+      }
+      std::cout << "],\"pibblBoxes\":[{\"x\":" << pibblAX << ",\"y\":" << pibblAY << ",\"width\":60,\"height\":30},{\"x\":" << pibblBX << ",\"y\":" << pibblBY << ",\"width\":136,\"height\":81}]"
+                << ",\"classification\":\"preserved-physical-margin-offset\",\"comparisonLabel\":\"Pibbl preserves the numeric leading cross-margin offset; Yoga wrapped cross-line placement omits it. Classified allocation difference, not a parity claim.\""
+                << ",\"itemStyles\":[{\"width\":60,\"height\":30,\"flexBasis\":" << (column ? 30 : 60) << ",\"flexGrow\":0,\"flexShrink\":0,\"minWidth\":0,\"minHeight\":0,\"marginLeft\":\"10%\",\"marginRight\":\"15%\",\"marginTop\":\"5%\",\"marginBottom\":\"20%\"},{\"width\":136,\"height\":81,\"flexBasis\":" << (column ? 81 : 136) << ",\"flexGrow\":0,\"flexShrink\":0,\"minWidth\":0,\"minHeight\":0}]}";
+      YGNodeFreeRecursive(root); YGConfigFree(config);
+    }
+  }
+}
+
 int main() {
   const char* names[] = {"grow", "cap", "shrink", "rectangle-shrink", "rectangle-percent-content-box", "column-grow", "column-cap", "column-shrink", "row-reverse-cap", "column-reverse-cap", "row-wrap", "row-wrap-reverse", "border-box-floor-bounds", "border-box-percentage", "border-box-asymmetric-row", "border-box-asymmetric-column", "zero-fractional-grow", "fractional-shrink", "grow-freeze-release", "shrink-freeze-release", "large-finite-differential", "subunit-zero-grow", "subunit-shrink-policy", "initial-freeze-grow-policy", "initial-freeze-shrink-policy"};
   std::cout << "[";
@@ -554,6 +605,7 @@ int main() {
   percentagePaddingCases();
   wrappedCrossPercentageCases();
   percentageMarginCases();
+  wrappedPercentageMarginCases();
   nestedPercentageGapCases();
   std::cout << "]\n";
 }
