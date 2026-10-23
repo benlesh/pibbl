@@ -2,7 +2,8 @@
 
 ## Current checkpoint and single next slice — 2026-10-23
 
-Latest delivery is slice103 (opposing auto-margin bounds evidence), recorded below.
+Latest delivery is slice104 (measured Text cross-auto sizing), recorded below.
+Slice103 is `d8e5bf09` (opposing auto-margin bounds evidence).
 Slice102 is `dc0565a6` (auto shorthand and edge precedence).
 Slice101 is `e2418916` (finite cross-auto direction coverage).
 Slice100 is `26613e70` (bounded finite row cross auto margins).
@@ -53,9 +54,9 @@ Slice56 is `cf2c7bc5` (prepared Flow-root planning/adoption).
 Slice55 is `1510efe3` (prepared Grid-root planning/adoption).
 Slice54 `773da7b9`,53 `aaa7ddcb`,52 `b5381e0d` are consolidated in `f322a709`.
 Every slice has its own commit. The fixed33-capability/seven-gate denominator is
-unchanged; all seven gates remain open. Consolidation26 is `2cd357d4`; consolidation27 is `abbaf209`; consolidation28 is `dfd16c8f`; consolidation29 is `f2e38dc6`; consolidation30 is recorded below; slices91–93 are delivered below; consolidation31 passed below; slices95–96 direction evidence passed below; consolidation32 for94–96 passed below; slices97–99 are delivered below; consolidation33 passed below; consolidation34 of100–102 passed below; the single next delivery is104, intrinsic Text cross-auto sizing. Source5192/built5193, `#/testing/layout-preflight`:
+unchanged; all seven gates remain open. Consolidation26 is `2cd357d4`; consolidation27 is `abbaf209`; consolidation28 is `dfd16c8f`; consolidation29 is `f2e38dc6`; consolidation30 is recorded below; slices91–93 are delivered below; consolidation31 passed below; slices95–96 direction evidence passed below; consolidation32 for94–96 passed below; slices97–99 are delivered below; consolidation33 passed below; consolidation34 of100–102 passed below; the single next delivery is105, measured custom primitive cross-auto sizing. Source5192/built5193, `#/testing/layout-preflight`:
 Source5192/built5193 `#/examples/layout/wasm-yoga-migration`: Next case + resize
-cycles301 records:207matches/94classified differences; click A/B/C targets.
+cycles303 records:209matches/94classified differences; click A/B/C targets.
 Canonical built comparison: http://127.0.0.1:5193/#/examples/layout/wasm-yoga-migration.
 Native Grid tracks/spans and Flow wrap controls remain available.
 
@@ -2612,13 +2613,49 @@ Fixed33 remains5complete/11experimental/8partial/8missing/1excluded, all7gates o
 Auto-margin stays partial: automatic/intrinsic cross sizing is not implemented.
 Consolidate103–105 after105; final whole-codebase review stays at program end.
 
-## [NEXT] Intrinsic Text cross-auto sizing (slice 104)
+## Delivered measured Text cross-auto sizing (slice 104)
 
-Start with direct wrapped Text in a finite nowrap row, declared width and automatic
-height. Its cross auto margin must consume space after final-width text measurement
-and suppress stretch, with text/width changes moving layout/paint/hit/focus bounds
-without replacing keyed identity. Keep unsupported custom/column/intrinsic shapes
-explicit until their own supported contracts and public evidence exist.
+Direct generic wrapped Text in a finite experimental nowrap row may have automatic
+height and a cross-auto margin at declared finite numeric width. Visible/default
+fit/overflow, no aspect sizing/query; other Text/custom/column/wrap shapes keep
+explicit diagnostics. This is allocated Text sizing, not pure intrinsic owner
+measurement. A narrow admission exception reuses the existing initial/final-width
+measurement and native cross-auto flags; no new API, protocol, owner or scheduler.
+
+The public mounted test failed before production changes, then passed with stretch
+suppressed: width80→40 makes two→three10px lines, height20→30, top80→70 and sibling
+x80→40. Actual Canvas draw positions, keyed focus, old/new hits, remeasurement/
+solve with stable nodes, paint-only reuse and exact cleanup pass. Eight added Text
+negative shapes pass; full slice+loader387passed/8skipped(395), ordinary89passed/
+306skipped(395). Scoped changed-guard/measurement/cache review found no material
+issue. Existing v5/68649byte/native13 evidence from101 is reused unchanged.
+
+Two pinned Yoga cases use a deterministic6px-glyph word-wrap measurement callback,
+with explicit provenance and no font-rendering parity claim. Native callback
+allocation matches the two browser Text cases. Source5192/built5193 draw/line-count/
+sibling-box/live-key/hit proofs pass, cleanup0/errors[]; built469inputs. The first
+Studio draw probe compared physical Canvas positions with logical expected values;
+normalizing through the actual root Canvas transform resolves that instrumentation
+error. No runtime coordinate change or visual baseline rewrite was needed.
+Fresh installed100auto+24direction cases include ordinary direct Text (not a custom
+sizing wrapper), draw geometry, empty margin misses, strict consumer types and
+230inputs. Tarball SHA256
+`a5bb0c2a7efc7522d715f195a3e0ab19b2072231d6a126873c92325311dd9f3b`.
+Types/lint/docs109RED/JSDoc/catalog/303-case provenance pass. Source URL
+http://127.0.0.1:5192/#/examples/layout/wasm-yoga-migration:
+Next section18times selects measured Text. Corpus303=209matches+94classified.
+Fixed33 stays5complete/11experimental/8partial/8missing/1excluded, all7gates open.
+Auto-margin remains partial. Consolidate103–105 after105; final whole-codebase
+review stays at full program end. No Node24 aggregate trust claim.
+
+## [NEXT] Measured custom primitive cross-auto sizing (slice 105)
+
+Extend the existing final-width direct primitive measurement path to automatic
+cross margins in a finite nowrap row. Require both ordinary and intrinsic pure
+measurement, finite declared width, no aspect/query. Prove measured20→40 height
+and top80→60 on width80→40, public focus/hit/identity/cache ownership, and explicit
+unsupported/failure cleanup. Keep other layout/column/wrapping/intrinsic owner gaps
+visible. Then consolidate103–105 before the next implementation expansion.
 
 ### Consolidation 24 completed for delivery slices 70–72
 

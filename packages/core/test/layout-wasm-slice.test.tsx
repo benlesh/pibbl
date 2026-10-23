@@ -3944,3 +3944,67 @@ it.runIf(experimentalLayout)('renders opposing auto-margin growth and bounds fix
     expect(disposed.activeNodes).toBe(baseline.activeNodes); expect(disposed.activeArenas).toBe(baseline.activeArenas); expect(disposed.cachedMeasurements).toBe(baseline.cachedMeasurements);
   }
 });
+
+it.runIf(experimentalLayout)('measures finite wrapped Text before allocating an automatic cross-axis margin', async () => {
+  const baseline = snapshotWasmLayoutDiagnostics();
+  const textWidth = signal(80);
+  const ink = signal('#2f6b97');
+  const focused: string[] = [], hits: string[] = [];
+  function Scene() {
+    return <FocusManagement><Flex style={{ width: 160, height: 100, alignItems: 'stretch' }}>
+      <Text key="text" keyboardFocusable onFocus={() => focused.push('text')} onClick={() => hits.push('text')} style={{ width: textWidth.get(), minWidth: 0, flexShrink: 0, wrap: true, font: '10px monospace', lineHeight: 10, marginTop: 'auto', fill: '#19375b', cursor: 'pointer' }}>aaaa aaaa aaaa</Text>
+      <Rectangle key="sibling" keyboardFocusable onFocus={() => focused.push('sibling')} onClick={() => hits.push('sibling')} style={{ width: 40, height: 40, minWidth: 0, minHeight: 0, flexShrink: 0, fill: ink, cursor: 'pointer' }} />
+    </Flex></FocusManagement>;
+  }
+  const canvas = document.createElement('canvas'); canvas.width = 160; canvas.height = 100; document.body.append(canvas);
+  const textDraws: { x: number; y: number }[] = [];
+  const context = canvas.getContext('2d')!; const draw = context.fillText;
+  vi.spyOn(context, 'fillText').mockImplementation(function(this: CanvasRenderingContext2D, text, x, y, maxWidth) {
+    if (text.includes('aaaa')) { const transform = this.getTransform(); textDraws.push({ x: transform.e + x, y: transform.f + y }); }
+    draw.call(this, text, x, y, maxWidth);
+  });
+  const controller = pibbl(canvas, <Scene />); controllers.push(controller); await nextFrame();
+  expect(textDraws.slice(-2)).toEqual([{ x: 0, y: 80 }, { x: 0, y: 90 }]);
+  canvas.focus({ preventScroll: true });
+  canvas.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', code: 'Tab', bubbles: true, cancelable: true }));
+  expect(focused).toEqual(['text', 'sibling']);
+  clickCanvas(canvas, 5, 75); await nextFrame(); expect(hits).toEqual([]);
+  clickCanvas(canvas, 5, 85); await nextFrame(); expect(hits).toEqual(['text']);
+  const initial = snapshotWasmLayoutDiagnostics();
+  const beforeWidthFocus = focused.slice();
+  textDraws.length = 0; textWidth.set(40); await nextFrame();
+  expect(textDraws.slice(-3)).toEqual([{ x: 0, y: 70 }, { x: 0, y: 80 }, { x: 0, y: 90 }]);
+  expect(focused).toEqual(beforeWidthFocus);
+  const narrowed = snapshotWasmLayoutDiagnostics();
+  expect(narrowed.solves).toBeGreaterThan(initial.solves);
+  expect(narrowed.measuredLeaves).toBeGreaterThan(initial.measuredLeaves);
+  expect(narrowed.nodeCreates).toBe(initial.nodeCreates);
+  clickCanvas(canvas, 5, 75); await nextFrame(); expect(hits).toEqual(['text', 'text']);
+  clickCanvas(canvas, 90, 10); await nextFrame(); expect(hits).toEqual(['text', 'text']);
+  clickCanvas(canvas, 50, 10); await nextFrame(); expect(hits).toEqual(['text', 'text', 'sibling']);
+  const beforePaint = snapshotWasmLayoutDiagnostics();
+  ink.set('#a63758'); await nextFrame();
+  const painted = snapshotWasmLayoutDiagnostics();
+  expect(painted.solves).toBe(beforePaint.solves);
+  expect(painted.measuredLeaves).toBe(beforePaint.measuredLeaves);
+  expect(painted.nodeCreates).toBe(initial.nodeCreates);
+  controller.dispose();
+  const disposed = snapshotWasmLayoutDiagnostics();
+  expect(disposed.activeNodes).toBe(baseline.activeNodes);
+  expect(disposed.activeArenas).toBe(baseline.activeArenas);
+  expect(disposed.cachedMeasurements).toBe(baseline.cachedMeasurements);
+});
+
+it.runIf(experimentalLayout).each([
+  { label: 'wrapped row', options: { flexWrap: 'wrap' as const }, style: {} },
+  { label: 'automatic width', options: {}, style: { width: 'auto' } },
+  { label: 'custom font', options: {}, style: { font: '10px UnknownFont' } },
+  { label: 'clipped overflow', options: {}, style: { overflow: 'clip' } },
+  { label: 'fitted text', options: {}, style: { fit: 'ellipsis' } },
+  { label: 'aspect sizing', options: {}, style: { aspectRatio: 2 } },
+  { label: 'unwrapped text', options: {}, style: { wrap: false } },
+  { label: 'automatic column width', options: { flexDirection: 'column' as const }, style: { width: 'auto', height: 20, marginTop: 0, marginLeft: 'auto' } },
+])('keeps unsupported automatic Text cross-margin shapes explicit: $label', ({ options, style }) => {
+  const text = createElement(Text, { children: 'aaaa aaaa aaaa', style: { width: 80, minWidth: 0, flexShrink: 0, wrap: true, font: '10px monospace', lineHeight: 10, marginTop: 'auto', ...style } as import('@pibbl/core').TextStyle });
+  expect(() => layoutFlex({ x: 0, y: 0, width: 160, height: 100 }, [text], options, measurement)).toThrow(/auto cross-axis margins/);
+});

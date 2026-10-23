@@ -721,7 +721,15 @@ function resolveFlexPlacements(
     const autoTop = marginTopValue === 'auto', autoRight = marginRightValue === 'auto';
     const autoBottom = marginBottomValue === 'auto', autoLeft = marginLeftValue === 'auto';
     const declaredCrossSize = row ? normalized.height : normalized.width;
-    if ((row ? autoTop || autoBottom : autoLeft || autoRight) &&
+    const hasAutoCrossMargin = row ? autoTop || autoBottom : autoLeft || autoRight;
+    const measuredTextCrossAuto = hasAutoCrossMargin && experimentalLayout && row && options.flexWrap === 'nowrap' &&
+      child.type === Text && normalized.wrap === true &&
+      (declaredCrossSize === undefined || declaredCrossSize === 'auto') &&
+      typeof declared.width === 'number' && typeof normalized.width === 'number' && Number.isFinite(normalized.width) && normalized.width >= 0 &&
+      (normalized.fit === undefined || normalized.fit === 'visible') &&
+      (normalized.overflow === undefined || normalized.overflow === 'visible') &&
+      !preparedStyleQuery(prepared) && aspectRatio === undefined && genericTextFont(normalized);
+    if (hasAutoCrossMargin && !measuredTextCrossAuto &&
         (typeof declaredCrossSize !== 'number' || !Number.isFinite(declaredCrossSize) || declaredCrossSize < 0 || aspectRatio !== undefined)) {
       throw childDiagnostic(child, row ? autoTop ? 'marginTop' : 'marginBottom' : autoLeft ? marginLeftProperty : marginRightProperty, 'auto', container, 'auto cross-axis margins require a finite numeric child cross size without aspect sizing');
     }

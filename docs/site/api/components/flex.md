@@ -218,7 +218,17 @@ edges before specific physical and logical overrides; explicit zero removes one
 auto slot. Finite nowrap/wrap/wrap-reverse rows
 and columns also accept physical and logical cross-auto edges on children with
 explicit numeric cross size, excluding aspect sizing. These share each item’s line
-space and override cross alignment; automatic child cross size remains deferred. Wrapped placement divides
+space and override cross alignment; other automatic child cross sizes remain deferred. Wrapped placement divides
 space using only the auto slots on each actual line; a line without auto slots
 keeps its justification. The comparison explicitly labels differences from the
 pinned Yoga implementation.
+
+
+Direct wrapped `Text` in a finite experimental nowrap row may use automatic height
+with a cross-auto margin at declared numeric width. Use a generic font and
+visible/default fit and overflow; aspect sizing and prepared queries are excluded.
+Text is measured at final width before auto-margin placement, and auto cross edges
+suppress stretch. The Studio comparison’s Text cross-auto section demonstrates
+width80→40 changing height20→30 and moving the Text top80→70 without replacing focus.
+Custom/opaque components, wrapping rows, column automatic cross sizing and pure
+intrinsic owners retain their existing diagnostics.

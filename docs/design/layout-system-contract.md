@@ -989,7 +989,8 @@ Finite nowrap/wrapped/wrap-reverse rows and columns accept physical and logical
 cross-edge auto margins when that child has a finite numeric cross size and no
 aspect-ratio sizing. Forward/reverse main directions and LTR/RTL are supported.
 Logical inline edges map through receiver direction before cross placement.
-Automatic child cross size and intrinsic measurement remain unsupported.
+Other automatic child cross sizes and pure intrinsic measurement remain unsupported;
+the direct Text exception is specified below.
 No new public operation or return contract is introduced.
 
 Each item distributes its own positive line cross free space equally among its
@@ -1031,7 +1032,8 @@ logical inline edges override their resolved physical edge. Numeric zero therefo
 removes one slot without affecting the others. It uses the same sizing and native
 main/cross placement paths; no kernel or ABI changes are needed for shorthand.
 Cross-auto requirements apply after overrides: an auto cross edge still requires
-finite numeric child cross size without aspect sizing. Normal builds and pure
+finite numeric child cross size without aspect sizing, except the supported direct
+Text measurement path below. Normal builds and pure
 intrinsic auto-margin measurement retain their existing diagnostics. Source,
 built and installed shorthand fixtures cover all/left-zero/top-zero/start-zero in
 LTR/RTL. Mounted overrides preserve keyed focus, geometry/hits and paint reuse.
@@ -1045,5 +1047,30 @@ fixed40px sibling. Numeric bounds resolve before slot distribution; this evidenc
 does not change runtime behavior. With two40px items in60px, auto slots become0
 and existing center alignment places them at−10/30. Pinned Yoga instead starts
 at0/40; `css-nonpositive-auto-alignment` explicitly labels the preserved CSS rule.
-Independent Chromium CSS verifies all eight expected boxes. Automatic/intrinsic
+Independent Chromium CSS verifies all eight expected boxes. Other automatic/intrinsic
 cross sizing remains unsupported; the auto-margin capability is still partial.
+
+
+### Measured direct Text cross-auto sizing
+
+Direct `Text` in a finite experimental nowrap row may omit height or use automatic
+height with a cross-auto margin. Width must be a declared finite nonnegative
+number; wrapping must be enabled, font generic, fit/overflow visible/default, and
+there must be no aspect ratio or prepared style query. Unsupported Text shapes,
+custom/opaque components and columns retain the existing explicit diagnostic.
+This is allocated Text sizing, not pure intrinsic Flex-owner measurement.
+
+The existing initial and final-main-width measurement passes determine Text’s
+preferred cross size. Cross auto then suppresses stretch and absorbs the remaining
+row space. No second layout path, native protocol, scheduler, resource owner or
+public operation is added. Content/style/constraint cache keys and paint-only reuse
+remain unchanged. At width80→40, `aaaa aaaa aaaa` in10px monospace/lineHeight10
+changes20→30 high and y80→70 in a100px row; its40px sibling moves x80→40.
+Public Canvas draw positions, focused identity, old/new hit points, native node
+reuse and exact cleanup prove the transition.
+
+The two pinned Yoga records use an explicit deterministic6px-glyph word-wrap
+callback. Its callback provenance is recorded and it makes no font-rendering
+parity claim. The browser uses ordinary Canvas Text. Source/built instrumentation
+normalizes draws through the actual root transform before comparing logical
+geometry, so Studio scaling is not mistaken for a layout difference.

@@ -113,7 +113,10 @@ space they remain zero and existing main alignment applies. Finite nowrap/wrappe
 rows and columns support physical/logical cross auto with an explicit numeric
 child cross size, including reverse/RTL and wrap-reverse, excluding aspect sizing.
 Cross auto overrides alignment and uses the item’s own line cross size. Automatic
-child cross size and intrinsic auto margins remain unsupported; the normal build retains
+child cross size has a bounded direct Text exception: generic wrapped Text at
+declared numeric width in a finite nowrap row may use automatic height, with
+visible/default fit/overflow and no aspect sizing or query. Other automatic cross
+sizes and pure intrinsic auto margins remain unsupported; the normal build retains
 its experimental-margin diagnostic. Numeric/percentage precedence is unchanged.
 
 ## FlexProps

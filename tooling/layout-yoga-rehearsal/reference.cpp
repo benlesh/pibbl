@@ -1213,6 +1213,34 @@ static void autoOpposingMarginCases() {
   }
 }
 
+static int crossAutoTextMeasureCalls = 0;
+static YGSize crossAutoTextMeasure(YGNodeConstRef, float width, YGMeasureMode widthMode, float, YGMeasureMode) {
+  crossAutoTextMeasureCalls++;
+  // `aaaa` is 4 glyphs × 6; spaces are 6. At 80, two words (54) fit;
+  // at 40, each 24px word occupies a line. This is a probe callback only.
+  const float usedWidth = widthMode == YGMeasureModeUndefined ? 84 : width;
+  float lineWidth = 0, maxWidth = 0; int lines = 1;
+  for (int word = 0; word < 3; ++word) {
+    const float nextWidth = lineWidth == 0 ? 24 : lineWidth + 30;
+    if (lineWidth != 0 && nextWidth > usedWidth) { maxWidth = maxWidth > lineWidth ? maxWidth : lineWidth; ++lines; lineWidth = 24; }
+    else lineWidth = nextWidth;
+  }
+  maxWidth = maxWidth > lineWidth ? maxWidth : lineWidth;
+  return {maxWidth, float(lines * 10)};
+}
+static void textCrossAutoCases() {
+ for(int narrow=0;narrow<2;narrow++) {
+  const int textWidth=narrow?40:80; crossAutoTextMeasureCalls=0;
+  auto config=YGConfigNew();YGConfigSetUseWebDefaults(config,false);YGConfigSetPointScaleFactor(config,0);YGConfigSetErrata(config,YGErrataNone);
+  auto root=YGNodeNewWithConfig(config);YGNodeStyleSetWidth(root,160);YGNodeStyleSetHeight(root,100);YGNodeStyleSetFlexDirection(root,YGFlexDirectionRow);YGNodeStyleSetFlexWrap(root,YGWrapNoWrap);YGNodeStyleSetAlignItems(root,YGAlignStretch);YGNodeStyleSetJustifyContent(root,YGJustifyFlexStart);
+  auto text=YGNodeNewWithConfig(config), sibling=YGNodeNewWithConfig(config);YGNodeStyleSetWidth(text,textWidth);YGNodeStyleSetFlexGrow(text,0);YGNodeStyleSetFlexShrink(text,0);setMinZero(text);YGNodeSetMeasureFunc(text,crossAutoTextMeasure);YGNodeStyleSetMarginAuto(text,YGEdgeTop);
+  YGNodeStyleSetWidth(sibling,40);YGNodeStyleSetHeight(sibling,40);YGNodeStyleSetFlexGrow(sibling,0);YGNodeStyleSetFlexShrink(sibling,0);setMinZero(sibling);
+  YGNodeInsertChild(root,text,0);YGNodeInsertChild(root,sibling,1);YGNodeCalculateLayout(root,YGUndefined,YGUndefined,YGDirectionLTR);
+  std::cout << ",{\"name\":\"text-cross-auto-top-stretch-"<<(narrow?"narrow":"wide")<<"\",\"width\":160,\"height\":100,\"gap\":0,\"flexDirection\":\"row\",\"flexWrap\":\"nowrap\",\"containerStyle\":{\"alignItems\":\"stretch\",\"justifyContent\":\"flex-start\"},\"autoMarginFixture\":true,\"textCrossAutoFixture\":true,\"textValue\":\"aaaa aaaa aaaa\",\"textMeasure\":{\"kind\":\"deterministic-callback\",\"font\":\"10px monospace\",\"glyphAdvance\":6,\"spaceAdvance\":6,\"lineHeight\":10,\"wrapAtSpaces\":true,\"fontParityClaim\":false,\"calls\":"<<crossAutoTextMeasureCalls<<"},\"boxes\":[";printBox(text);std::cout<<',';printBox(sibling);std::cout<<"],\"itemStyles\":[{\"width\":"<<textWidth<<",\"wrap\":true,\"font\":\"10px monospace\",\"lineHeight\":10,\"minWidth\":0,\"minHeight\":0,\"flexGrow\":0,\"flexShrink\":0,\"marginTop\":\"auto\"},{\"width\":40,\"height\":40,\"minWidth\":0,\"minHeight\":0,\"flexGrow\":0,\"flexShrink\":0}]}\n";
+  YGNodeFreeRecursive(root);YGConfigFree(config);
+ }
+}
+
 int main() {
   const char* names[] = {"grow", "cap", "shrink", "rectangle-shrink", "rectangle-percent-content-box", "column-grow", "column-cap", "column-shrink", "row-reverse-cap", "column-reverse-cap", "row-wrap", "row-wrap-reverse", "border-box-floor-bounds", "border-box-percentage", "border-box-asymmetric-row", "border-box-asymmetric-column", "zero-fractional-grow", "fractional-shrink", "grow-freeze-release", "shrink-freeze-release", "large-finite-differential", "subunit-zero-grow", "subunit-shrink-policy", "initial-freeze-grow-policy", "initial-freeze-shrink-policy"};
   std::cout << "[";
@@ -1348,5 +1376,6 @@ int main() {
   autoCrossDirectionCases();
   autoShorthandMarginCases();
   autoOpposingMarginCases();
+  textCrossAutoCases();
   std::cout << "]\n";
 }

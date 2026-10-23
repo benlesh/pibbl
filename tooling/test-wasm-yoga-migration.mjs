@@ -14,6 +14,7 @@ const directionMatrixOnly = process.argv.includes('--direction-matrix');
 const autoMarginsOnly = process.argv.includes('--auto-margins');
 const autoOpposingOnly = process.argv.includes('--auto-opposing');
 const autoShorthandOnly = process.argv.includes('--auto-shorthand');
+const textCrossAutoOnly = process.argv.includes('--text-cross-auto');
 const crossAutoDirectionsOnly = process.argv.includes('--cross-auto-directions');
 const crossAutoMarginsOnly = process.argv.includes('--cross-auto-margins');
 const wrappedAutoMarginsOnly = process.argv.includes('--wrapped-auto-margins');
@@ -36,6 +37,23 @@ try {
   const frame = page.frameLocator('iframe[srcdoc]');
   await frame.locator('pre').waitFor();
   const sandbox = page.frames().find(value => value.url() === 'about:srcdoc');
+  await sandbox.evaluate(() => {
+    const marker = '__PIBBL_TEXT_CROSS_AUTO_DRAWS__';
+    const originalMarker = '__PIBBL_TEXT_CROSS_AUTO_FILL_TEXT__';
+    globalThis[marker] = [];
+    if (globalThis[originalMarker]) return;
+    const original = CanvasRenderingContext2D.prototype.fillText;
+    globalThis[originalMarker] = original;
+    CanvasRenderingContext2D.prototype.fillText = function(text, x, y, ...rest) {
+      if (String(text).includes('aaaa')) {
+        const transform = this.getTransform();
+        const point = transform.transformPoint({ x: Number(x), y: Number(y) });
+        globalThis[marker].push({ worldDrawX: point.x, worldDrawY: point.y, transformE: transform.e, transformF: transform.f, font: this.font, text: String(text) });
+      }
+      return original.call(this, text, x, y, ...rest);
+    };
+  });
+  const clearTextCrossAutoDraws = () => sandbox.evaluate(() => { globalThis.__PIBBL_TEXT_CROSS_AUTO_DRAWS__.length = 0; });
   const click = async (x, y) => {
     const bounds = await frame.locator('canvas').boundingBox();
     const scale = Math.min(bounds.width / 760, bounds.height / 540);
@@ -45,8 +63,9 @@ try {
     } });
     await page.waitForTimeout(240);
   };
-  const cases = autoOpposingOnly ? reference.cases.filter(fixture => fixture.autoOpposingMarginFixture) : autoShorthandOnly ? reference.cases.filter(fixture => fixture.autoShorthandMarginFixture) : crossAutoDirectionsOnly ? reference.cases.filter(fixture => fixture.autoCrossDirectionFixture) : crossAutoMarginsOnly ? reference.cases.filter(fixture => fixture.autoCrossMarginFixture) : wrappedAutoMarginsOnly ? reference.cases.filter(fixture => fixture.autoWrappedMarginFixture) : autoMarginsOnly ? reference.cases.filter(fixture => fixture.autoMarginFixture) : directionMatrixOnly ? reference.cases.filter(fixture => fixture.directionMatrixFixture) : intrinsicOnly ? reference.cases.filter(fixture => fixture.intrinsicFixture) : logicalBordersOnly ? reference.cases.filter(fixture => fixture.name.startsWith('logical-border-')) : logicalPaddingOnly ? reference.cases.filter(fixture => fixture.name.startsWith('logical-padding-')) : marginOnly ? reference.cases.filter(fixture => fixture.name.startsWith('margin-percent-')) : crossOnly ? reference.cases.filter(fixture => fixture.name.startsWith('cross-percent-')) : paddingOnly ? reference.cases.filter(fixture => fixture.name.startsWith('padding-percent-')) : gapOnly ? reference.cases.filter(fixture => fixture.name.startsWith('gap-percent-')) : aspectOnly ? reference.cases.filter(fixture => fixture.name.startsWith('aspect-wrap-')) : percentageOnly ? reference.cases.filter(fixture => fixture.name.startsWith('percent-')) : reference.cases;
-  if (autoOpposingOnly) { for(let section=0;section<17;section++) await click(520,158); }
+  const cases = textCrossAutoOnly ? reference.cases.filter(fixture => fixture.textCrossAutoFixture) : autoOpposingOnly ? reference.cases.filter(fixture => fixture.autoOpposingMarginFixture) : autoShorthandOnly ? reference.cases.filter(fixture => fixture.autoShorthandMarginFixture) : crossAutoDirectionsOnly ? reference.cases.filter(fixture => fixture.autoCrossDirectionFixture) : crossAutoMarginsOnly ? reference.cases.filter(fixture => fixture.autoCrossMarginFixture) : wrappedAutoMarginsOnly ? reference.cases.filter(fixture => fixture.autoWrappedMarginFixture) : autoMarginsOnly ? reference.cases.filter(fixture => fixture.autoMarginFixture) : directionMatrixOnly ? reference.cases.filter(fixture => fixture.directionMatrixFixture) : intrinsicOnly ? reference.cases.filter(fixture => fixture.intrinsicFixture) : logicalBordersOnly ? reference.cases.filter(fixture => fixture.name.startsWith('logical-border-')) : logicalPaddingOnly ? reference.cases.filter(fixture => fixture.name.startsWith('logical-padding-')) : marginOnly ? reference.cases.filter(fixture => fixture.name.startsWith('margin-percent-')) : crossOnly ? reference.cases.filter(fixture => fixture.name.startsWith('cross-percent-')) : paddingOnly ? reference.cases.filter(fixture => fixture.name.startsWith('padding-percent-')) : gapOnly ? reference.cases.filter(fixture => fixture.name.startsWith('gap-percent-')) : aspectOnly ? reference.cases.filter(fixture => fixture.name.startsWith('aspect-wrap-')) : percentageOnly ? reference.cases.filter(fixture => fixture.name.startsWith('percent-')) : reference.cases;
+  if (textCrossAutoOnly) { for(let section=0;section<18;section++) { if (section === 17) await clearTextCrossAutoDraws(); await click(520,158); } }
+  else if (autoOpposingOnly) { for(let section=0;section<17;section++) await click(520,158); }
   else if (autoShorthandOnly) { for(let section=0;section<16;section++) await click(520,158); }
   else if (crossAutoDirectionsOnly) { for(let section=0;section<15;section++) await click(520,158); }
   else if (crossAutoMarginsOnly) { for(let section=0;section<14;section++) await click(520,158); }
@@ -71,15 +90,42 @@ try {
   }
   if (logicalBordersOnly) await click(520,158);
   let previousOwner;
+  let previousTextCrossSiblingStamp;
   let previousDirectionStamps;
   let previousLiveNames = [];
   for (const [index, fixture] of cases.entries()) {
     console.warn(`Replay ${index+1}/${cases.length}: ${fixture.name}`);
-    if (index) await click(60, 158);
+    if (index) { if (fixture.textCrossAutoFixture) await clearTextCrossAutoDraws(); await click(60, 158); }
     await frame.locator('pre').filter({ hasText: ` · ${fixture.name} ·` }).waitFor({ state: 'visible' });
     assert.ok((await frame.locator('pre').innerText()).includes(fixture.name));
     if (fixture.classification) assert.ok((await frame.locator('pre').innerText()).includes(fixture.comparisonLabel), 'Classified difference must be explicitly labeled');
     const expected = fixture.pibblBoxes ?? fixture.boxes;
+    if (fixture.textCrossAutoFixture) {
+      const inspector = await frame.locator('pre').innerText();
+      const state = JSON.parse(inspector.split('auto margin state: ')[1]);
+      const textBox = expected[0], sibling = expected[1];
+      assert.deepEqual(state.boxes.B, sibling, `${fixture.name}: sibling semantic box`);
+      if (previousTextCrossSiblingStamp !== undefined) assert.equal(state.stamps.B, previousTextCrossSiblingStamp, `${fixture.name}: sibling key remains stable`);
+      const draws = await sandbox.evaluate(() => globalThis.__PIBBL_TEXT_CROSS_AUTO_DRAWS__.slice());
+      const basis = state.canvasTransform, determinant = basis.a * basis.d - basis.b * basis.c;
+      const normalize = (x, y) => ({ x: +((basis.d * (x - basis.e) - basis.c * (y - basis.f)) / determinant).toFixed(3), y: +((-basis.b * (x - basis.e) + basis.a * (y - basis.f)) / determinant).toFixed(3) });
+      const textDraws = draws.filter(draw => draw.text.includes('aaaa')).slice(-textBox.height / 10).map(draw => {
+        const point = normalize(draw.worldDrawX, draw.worldDrawY), origin = normalize(draw.transformE, draw.transformF);
+        return { ...draw, worldDrawX: point.x, worldDrawY: point.y, transformE: origin.x, transformF: origin.y };
+      });
+      assert.equal(textDraws.length, textBox.height / 10, `${fixture.name}: measured line count`);
+      assert.deepEqual(textDraws.map(draw => ({ worldDrawX: draw.worldDrawX, worldDrawY: draw.worldDrawY, transformE: draw.transformE, transformF: draw.transformF, font: draw.font })), Array.from({ length: textBox.height / 10 }, (_, line) => ({ worldDrawX: 392 + textBox.x, worldDrawY: 240 + textBox.y + line * 10, transformE: 392 + textBox.x, transformF: 240 + textBox.y, font: '10px monospace' })), `${fixture.name}: direct Text draw positions`);
+      assert.ok(textDraws.every(draw => draw.text.includes('aaaa')), `${fixture.name}: direct Text draws only expected content`);
+      await click(392 + 5, 240 + textBox.y - 5);
+      assert.equal(JSON.parse((await frame.locator('pre').innerText()).split('auto margin state: ')[1]).hits, state.hits, `${fixture.name}: point above Text stays a miss`);
+      await click(392 + 5, 240 + textBox.y + 5);
+      assert.ok((await frame.locator('pre').innerText()).includes('selected: A'), `${fixture.name}: inside Text targets A`);
+      assert.equal(JSON.parse((await frame.locator('pre').innerText()).split('auto margin state: ')[1]).hits, state.hits + 1);
+      await click(392 + sibling.x + sibling.width / 2, 240 + sibling.y + sibling.height / 2);
+      assert.ok((await frame.locator('pre').innerText()).includes('selected: B'), `${fixture.name}: sibling center targets B`);
+      previousTextCrossSiblingStamp = state.stamps.B;
+      continue;
+    }
     if (fixture.directionMatrixFixture || fixture.autoMarginFixture) {
       const state=JSON.parse((await frame.locator('pre').innerText()).split(fixture.autoMarginFixture ? 'auto margin state: ' : 'direction matrix state: ')[1]);
       assert.deepEqual(expected.map((_box,index)=>state.boxes[String.fromCharCode(65+index)]), expected, `${fixture.name}: semantic boxes`);

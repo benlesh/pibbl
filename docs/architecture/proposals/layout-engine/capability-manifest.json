@@ -1579,9 +1579,19 @@
       {
         "id": "auto-opposing-cross-max",
         "covers": ["flex.auto-margin", "flex.min-max", "flex.grow-shrink-basis"]
+      },
+      {
+        "id": "text-cross-auto-top-stretch-wide",
+        "covers": ["flex.auto-margin", "flex.min-max"],
+        "note": "Native callback supplies explicit deterministic word-wrap measurement; no font-rendering parity claim."
+      },
+      {
+        "id": "text-cross-auto-top-stretch-narrow",
+        "covers": ["flex.auto-margin", "flex.min-max"],
+        "note": "Native callback supplies explicit deterministic word-wrap measurement; no font-rendering parity claim."
       }
     ],
-    "limit": "301 records:207 native matches and94 explicitly classified differences, including16 CSS line-local main auto,32 CSS cross-auto precedence and1 CSS nonpositive-auto alignment difference. Finite direction/box/distribution/percentage/intrinsic-provider/auto-margin evidence remains bounded; this does not establish general intrinsic, percentage, auto-margin or CSS parity."
+    "limit": "303 records:209 native matches and94 explicitly classified differences. Two Text cross-auto records use an explicit deterministic measurement callback, not font-rendering parity. Finite evidence remains bounded and does not establish general intrinsic, percentage, auto-margin or CSS parity."
   },
   "gateGroups": [
     {
@@ -2063,9 +2073,9 @@
       "id": "flex.auto-margin",
       "target": "parity",
       "group": "box-and-direction",
-      "current": "experimental finite main/cross-axis auto margins in rows/columns, all main directions, nowrap/wrap/wrap-reverse and LTR/RTL; physical and logical edges; explicit finite numeric cross size and no aspect sizing for cross auto; sizing precedes positive absorption and cross auto overrides alignment; uniform auto shorthand resolves before physical/logical edge overrides; numeric main/cross min-max and opposing-slot interactions have pinned public evidence",
+      "current": "experimental finite main/cross-axis auto margins in rows/columns, all main directions, nowrap/wrap/wrap-reverse and LTR/RTL; physical and logical edges; explicit finite numeric cross size and no aspect sizing for cross auto; sizing precedes positive absorption and cross auto overrides alignment; uniform auto shorthand resolves before physical/logical edge overrides; numeric main/cross min-max and opposing-slot interactions have pinned public evidence; direct generic wrapped Text in finite nowrap rows may use measured automatic height at declared numeric width",
       "status": "partial",
-      "unresolvedPolicy": "Finite main/cross directions, per-line absorption, shorthand precedence and numeric bound/opposing-slot interactions are evidenced. Automatic/intrinsic cross sizing remains outstanding; broader percentage/intrinsic feedback follows the separate sizing gates.",
+      "unresolvedPolicy": "Finite explicit-cross main/cross directions, shorthand and numeric bounds are evidenced. Direct generic Text automatic height is supported in finite nowrap rows at declared width. Other automatic/custom/layout cross sizing, wrapping/column Text and pure intrinsic owners remain outstanding; broader percentage/intrinsic feedback follows separate sizing gates.",
       "evidence": {
         "positive": [
           "left/right/both slots divide positive free space after flexible sizing and before justification",
@@ -2077,11 +2087,12 @@
           "slice100: per-line top/bottom/both cross-auto override alignment; finite explicit-height rows, reverse main/RTL, nowrap and wrap; zero/negative space overflows at start and numeric opposite margin is retained",
           "slice101: 36 additional physical cross-auto directions; effective cross reversal maps flags through the existing native conversion; logical column inline start/end and LTR/RTL oversized-item overflow remain coherent",
           "slice102: uniform margin auto fills four slots before physical/logical overrides; explicit zero removes only that edge; RTL distinguishes physical left from logical start",
-          "slice103: grow consumes free space before opposing slots; maxWidth freezing releases remainder to slots; shrink minWidth freezes before absorption; numeric opposite margin and cross min/max precede auto sharing"
+          "slice103: grow consumes free space before opposing slots; maxWidth freezing releases remainder to slots; shrink minWidth freezes before absorption; numeric opposite margin and cross min/max precede auto sharing",
+          "slice104: direct wrapped generic Text initial/final-width measurement precedes cross-auto absorption and suppresses stretch; width80 to40 produces height20 to30 and top80 to70 without replacing native identities"
         ],
         "negative": [
           "normal JavaScript rejects auto margin admission",
-          "automatic child cross size, including shorthand, and aspect sizing rejected explicitly",
+          "unsupported automatic child cross size and aspect sizing rejected explicitly; direct Text exception rejects wrapping rows, automatic widths, custom fonts, clipping/fitting and columns",
           "old v1/v2/v3/v4 modules rejected before publication; root/sync imports remain inert",
           "native flag cardinality and NaN rejected without rewriting numeric margin inputs"
         ],
@@ -2094,7 +2105,8 @@
           "slice100: source/built 12 cross-auto cases, 8 CSS cross-auto precedence differences plus4 native matches; installed46auto cases; cross-only flag changes preserve sizing/main placement/node identity, focus/hits and disposal",
           "slice101: all36 expected boxes independently match Chromium CSS; public mounted matrix plus source/built replay and installed82auto cases; wrap reversal and row-to-RTL-column signals preserve keyed focus and moved targets",
           "slice102: eight native/source/built exact shorthand cases, installed90auto cases with positive shorthand Bundler/NodeNext types; mounted overrides preserve keyed focus, moved hits and placement-only reuse",
-          "slice103: eight public/source/built bounds cases and installed98auto cases; seven native matches plus explicit CSS nonpositive-auto alignment; independent Chromium CSS matches every expected box, visible overflow target points remain clickable"
+          "slice103: eight public/source/built bounds cases and installed98auto cases; seven native matches plus explicit CSS nonpositive-auto alignment; independent Chromium CSS matches every expected box, visible overflow target points remain clickable",
+          "slice104: direct Text Canvas draw positions and real hit counts normalized through Studio root transform; source/built2cases and installed100auto cases, keyed focus and moved sibling target, paint-only measurement reuse and zero cleanup"
         ],
         "yogaCases": [
           "auto-margin-left",
@@ -2194,9 +2206,14 @@
           "auto-opposing-main-numeric-after",
           "auto-opposing-main-negative-center",
           "auto-opposing-cross-min",
-          "auto-opposing-cross-max"
+          "auto-opposing-cross-max",
+          "text-cross-auto-top-stretch-wide",
+          "text-cross-auto-top-stretch-narrow"
         ],
-        "missing": ["automatic/intrinsic cross-axis auto margins"]
+        "missing": [
+          "other automatic/custom/layout cross sizing and wrapping/column Text",
+          "pure intrinsic auto-margin owners"
+        ]
       },
       "evidenceRefs": [
         "packages/core/test/layout-wasm-slice.test.tsx",

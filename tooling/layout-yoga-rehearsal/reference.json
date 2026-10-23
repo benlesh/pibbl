@@ -3,7 +3,7 @@
   "commit": "042f5013152eb81c1552dec945b88f7b95ca350f",
   "license": "MIT",
   "licenseSha256": "52412d7bc7ce4157ea628bbaacb8829e0a9cb3c58f57f99176126bc8cf2bfc85",
-  "probeSha256": "52bf5e24860e7f9210cc6166c973a46980a1b85395b6743e30cf67d7dc4909e9",
+  "probeSha256": "021a89b96d5754d97f2ba54513f84ec455987a85966075a406bf9babb18ed482",
   "configuration": {
     "useWebDefaults": false,
     "pointScaleFactor": 0,
@@ -18306,6 +18306,126 @@
         {
           "width": 40,
           "height": 20,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0
+        }
+      ]
+    },
+    {
+      "name": "text-cross-auto-top-stretch-wide",
+      "width": 160,
+      "height": 100,
+      "gap": 0,
+      "flexDirection": "row",
+      "flexWrap": "nowrap",
+      "containerStyle": {
+        "alignItems": "stretch",
+        "justifyContent": "flex-start"
+      },
+      "autoMarginFixture": true,
+      "textCrossAutoFixture": true,
+      "textValue": "aaaa aaaa aaaa",
+      "textMeasure": {
+        "kind": "deterministic-callback",
+        "font": "10px monospace",
+        "glyphAdvance": 6,
+        "spaceAdvance": 6,
+        "lineHeight": 10,
+        "wrapAtSpaces": true,
+        "fontParityClaim": false,
+        "calls": 1
+      },
+      "boxes": [
+        {
+          "x": 0,
+          "y": 80,
+          "width": 80,
+          "height": 20
+        },
+        {
+          "x": 80,
+          "y": 0,
+          "width": 40,
+          "height": 40
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 80,
+          "wrap": true,
+          "font": "10px monospace",
+          "lineHeight": 10,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "marginTop": "auto"
+        },
+        {
+          "width": 40,
+          "height": 40,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0
+        }
+      ]
+    },
+    {
+      "name": "text-cross-auto-top-stretch-narrow",
+      "width": 160,
+      "height": 100,
+      "gap": 0,
+      "flexDirection": "row",
+      "flexWrap": "nowrap",
+      "containerStyle": {
+        "alignItems": "stretch",
+        "justifyContent": "flex-start"
+      },
+      "autoMarginFixture": true,
+      "textCrossAutoFixture": true,
+      "textValue": "aaaa aaaa aaaa",
+      "textMeasure": {
+        "kind": "deterministic-callback",
+        "font": "10px monospace",
+        "glyphAdvance": 6,
+        "spaceAdvance": 6,
+        "lineHeight": 10,
+        "wrapAtSpaces": true,
+        "fontParityClaim": false,
+        "calls": 1
+      },
+      "boxes": [
+        {
+          "x": 0,
+          "y": 70,
+          "width": 40,
+          "height": 30
+        },
+        {
+          "x": 40,
+          "y": 0,
+          "width": 40,
+          "height": 40
+        }
+      ],
+      "itemStyles": [
+        {
+          "width": 40,
+          "wrap": true,
+          "font": "10px monospace",
+          "lineHeight": 10,
+          "minWidth": 0,
+          "minHeight": 0,
+          "flexGrow": 0,
+          "flexShrink": 0,
+          "marginTop": "auto"
+        },
+        {
+          "width": 40,
+          "height": 40,
           "minWidth": 0,
           "minHeight": 0,
           "flexGrow": 0,
