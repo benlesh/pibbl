@@ -37,6 +37,11 @@ function createWasmFlexTextContent() {
   const frozenProof = signal(false);
   const minimumProof = signal(false);
   const naturalBasis = signal(false);
+  const autoCrossProof = signal(false);
+  let autoCrossTransform = { a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 };
+  const autoCrossWidth = signal(140);
+  const autoCrossHits = signal(0);
+  const autoCrossInk = signal("#426b61");
   const boxMargin = signal(5);
   const marginWrap = signal<"nowrap" | "wrap">("nowrap");
   const minimumRowWidth = computed(() => width.get() - 200);
@@ -139,6 +144,28 @@ function createWasmFlexTextContent() {
   const frozenPanel = <Flex style={{ left: 28, top: 260, width, height: 200, gap: 20, alignItems: "flex-start" }}>{frozenChildren}</Flex>;
   const frozenPanelStyle = (frozenPanel.props as Readonly<{ style: object }>).style;
   Object.freeze(frozenPanelStyle); Object.freeze(frozenPanel.props); Object.freeze(frozenPanel);
+  function AutoCrossComparison() {
+    const transform = useCanvasContext().getTransform();
+    autoCrossTransform = { a: transform.a, b: transform.b, c: transform.c, d: transform.d, e: transform.e, f: transform.f };
+    return <>
+      <Text pointerEvents="none" style={{ left: 28, top: 238, font: "12px sans-serif", fill: "#475569" }}>
+        Text starts at its natural width. Narrowing adds a line and reduces the top margin.
+      </Text>
+      <Rectangle pointerEvents="none" style={{ left: 28, top: 258, width: autoCrossWidth, height: 102, stroke: "#a63758", strokeWidth: 1 }} />
+      <Flex style={{ left: 28, top: 260, width: autoCrossWidth, height: 100 }}>
+        <Text
+          onClick={() => { autoCrossHits.update(value => value + 1); selected.set("auto cross text"); }}
+          style={{ wrap: true, font: "10px monospace", lineHeight: 10, marginTop: "auto", fill: "#19375b", cursor: "pointer" }}
+        >
+          aaaa aaaa aaaa
+        </Text>
+        <Rectangle
+          onClick={() => selected.set("auto cross sibling")}
+          style={{ width: 40, height: 40, minWidth: 0, minHeight: 0, flexShrink: 0, fill: autoCrossInk, cursor: "pointer" }}
+        />
+      </Flex>
+    </>;
+  }
   function MinimumComparison() {
     const basis = naturalBasis.get() ? "auto" : 200;
     return <>
@@ -175,11 +202,39 @@ function createWasmFlexTextContent() {
       }} />;
   }
   function Content() {
+    if (autoCrossProof.get()) return <AutoCrossComparison />;
     if (minimumProof.get()) return <MinimumComparison />;
     if (!frozenProof.get()) return <Paragraphs />;
     return <>
       <Text pointerEvents="none" style={{ left: 28, top: 238, font: "12px sans-serif", fill: "#475569" }}>Frozen proof: Paint only reuses allocation. Width and text still invalidate it.</Text>
       {frozenPanel}
+    </>;
+  }
+  function ProofControls() {
+    const autoCross = autoCrossProof.get();
+    return <>
+      <Button
+        x={28}
+        y={96}
+        width={180}
+        fill="#19375b"
+        label={autoCross ? "Toggle comparison width" : "Toggle width"}
+        onClick={() => {
+          if (autoCross) autoCrossWidth.update(value => value === 140 ? 100 : 140);
+          else activeWidth().set(width.get() === 560 ? 320 : 560);
+        }}
+      />
+      <Button
+        x={224}
+        y={96}
+        width={180}
+        fill="#6e3e79"
+        label="Paint only"
+        onClick={() => {
+          if (autoCross) autoCrossInk.update(value => value === "#426b61" ? "#a63758" : "#426b61");
+          else ink.update(value => value === "#19375b" ? "#a63758" : "#19375b");
+        }}
+      />
     </>;
   }
   const node = (
@@ -198,27 +253,11 @@ function createWasmFlexTextContent() {
       <Text
         style={{ left: 28, top: 62, font: "14px sans-serif", fill: "#475569" }}
       >
-        Resize the workspace. Text height follows its final width.
+        Resize: Text height follows its final width.
       </Text>
       <Button x={420} y={24} width={280} label="Compare Text minimum" onClick={() => minimumProof.update(value => !value)} />
-      <Button
-        x={28}
-        y={96}
-        width={180}
-        fill="#19375b"
-        label="Toggle width"
-        onClick={() => activeWidth().set(width.get() === 560 ? 320 : 560)}
-      />
-      <Button
-        x={224}
-        y={96}
-        width={180}
-        fill="#6e3e79"
-        label="Paint only"
-        onClick={() =>
-          ink.update((c) => (c === "#19375b" ? "#a63758" : "#19375b"))
-        }
-      />
+      <Button x={420} y={60} width={280} label="Compare auto margins" onClick={() => autoCrossProof.update(value => !value)} />
+      <ProofControls />
       <BasisButton />
       {[
         {
@@ -300,7 +339,7 @@ function createWasmFlexTextContent() {
   return {
     node,
     readInputs: () =>
-      `${minimumProof.get() ? "TEXT MINIMUM COMPARISON" : frozenProof.get() ? "FROZEN PROOF (keys controls apply to ordinary mode)" : "ORDINARY MODE"} · basis: ${naturalBasis.get() ? "auto" : "200px"} · source: ${alternate.get() ? "B" : "A"} · raw width: ${activeWidth().get()} · used width: ${width.get()} · order: ${keys.get().join(",")} · margin wrap: ${marginWrap.get()} · margin left: ${boxMargin.get()} · selected: ${selected.get()}`,
+      `${autoCrossProof.get() ? "AUTO CROSS COMPARISON" : minimumProof.get() ? "TEXT MINIMUM COMPARISON" : frozenProof.get() ? "FROZEN PROOF (keys controls apply to ordinary mode)" : "ORDINARY MODE"} · comparison width: ${autoCrossWidth.get()} · auto cross hits: ${autoCrossHits.get()} · basis: ${naturalBasis.get() ? "auto" : "200px"} · source: ${alternate.get() ? "B" : "A"} · raw width: ${activeWidth().get()} · used width: ${width.get()} · order: ${keys.get().join(",")} · margin wrap: ${marginWrap.get()} · margin left: ${boxMargin.get()} · selected: ${selected.get()} · auto cross transform: ${JSON.stringify(autoCrossTransform)}`,
   };
 }
 

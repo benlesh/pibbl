@@ -2,7 +2,8 @@
 
 ## Current checkpoint and single next slice — 2026-10-23
 
-Latest delivery is slice106 (measured built-in Flex owner cross-auto sizing).
+Latest delivery is slice107 (automatic-width Text cross-auto sizing).
+Slice106 is `33832012` (measured built-in Flex owner cross-auto sizing).
 Slice105 is `931ecc2f` (measured custom primitive cross-auto sizing).
 Consolidation35 for103–105 passes, recorded below.
 Slice104 is `9c974fe1` (measured Text cross-auto sizing).
@@ -2719,14 +2720,45 @@ Fixed33 counts5complete/11experimental/8partial/8missing/1excluded; auto-margin
 remains partial and all7gates open. Node26.9.0/pnpm11.21.0deps/Chromium; no Node24
 aggregate trust or controlled wall-clock performance claim.
 
-## [NEXT] Automatic-width Text cross-auto sizing (slice 107)
+## Delivered automatic-width Text cross-auto sizing (slice 107)
 
-Reuse direct generic wrapped Text natural auto basis and final-width measurement
-in a finite nowrap row with automatic width/height and top auto margin. Bound to
-auto basis, zero grow, ordinary shrink and no query/aspect/main bounds; retain
-existing explicit numeric-width behavior. Prove resize-driven line count/top
-placement, actual draws/targets/focus/identity and cleanup before extending the
-boundary. Consolidate106–108 afterward; final whole-codebase review at program end.
+Direct generic wrapped Text may omit width or use auto in a finite nowrap row
+with automatic height/cross-auto margins, automatic basis, zero grow, positive
+shrink and no main min/max/query/aspect. Existing natural basis and final-width
+measurement determine placement. Row140→100 with40px sibling changes one line at
+y90 to two at y80/90; actual Canvas font metrics define natural width.
+No new API, cache, native protocol or font-parity fixture is added.
+
+Public RED fails the intended admission guard; final18focused tests pass/
+378skipped396, including explicit auto width and five excluded main-size forms.
+Actual natural-basis pixels, draw lines, old/new hits, focus, native identity and
+cleanup pass. Sibling paint reuses native solves/nodes and retains exactly one
+existing automatic-minimum request per preparation; no zero-query promise.
+Source/built Text controls replay passes (including earlier minimum/frozen modes),
+built469inputs, cleanup0/errors[]. Studio draw/pixel instrumentation uses the
+actual root transform; physical host scaling is not a layout difference.
+Installed automatic-width Text receipt and104auto+24direction cases pass with
+230distinputs, strict Bundler/NodeNext, SHA256
+`df10892855c78fcd32c0a7aaa228f4b60f20b4e6d2bf3a874847f93e66be7a05`.
+Fresh types/lint/docs109RED/JSDoc/catalog pass; scoped review no material finding.
+Native corpus307=213matches+94classified and v5/68649bytes remain unchanged.
+
+Source: http://127.0.0.1:5192/#/examples/layout/wasm-flex-text — Compare auto margins,
+then Toggle comparison width. Fixed33 counts5complete/11experimental/8partial/
+8missing/1excluded; auto-margin partial, all7gates open. Node26.9.0, no Node24
+aggregate trust or controlled performance claim.
+
+## [NEXT] Wrapped-row measured Text cross-auto sizing (slice 108)
+
+Admit direct generic wrapped Text at finite numeric declared width with automatic
+height and cross-auto margin in a finite row/wrap container. Reuse existing
+settled-width Text measurement before native per-line cross placement. A150×120
+row with10gap, Text width80→40 and60×40/60×30 siblings places Text at y20→10,
+keeps B at y0 and C at y50, while B moves x90→50. Keep auto-width wrapped Text,
+wrap-reverse, custom/provider/layout owners and query/aspect paths excluded.
+Prove public draws/hits/focus/native identity/cleanup, then source/built/installed
+surfaces without claiming native font parity. Consolidate106–108 after this slice.
+Final whole-codebase review stays at full program end.
 
 ### Consolidation 24 completed for delivery slices 70–72
 

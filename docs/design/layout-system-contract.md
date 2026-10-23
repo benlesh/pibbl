@@ -1118,3 +1118,23 @@ the existing measurement and placement paths without a new protocol or cache.
 Paint-only sibling updates reuse native solves and identities, but this wrapped
 owner performs one existing pure measurement per preparation. It is not admitted
 to the existing column/Text snapshot cache; broader owner caching remains open.
+
+
+### Natural-width Text cross-auto sizing
+
+Direct generic wrapped `Text` in a finite experimental nowrap row may omit width
+or use `'auto'` together with automatic height and cross-auto margins. This
+bounded path requires automatic basis, zero grow, positive/default shrink, no
+main min/max, no prepared query/aspect sizing and visible/default fit/overflow.
+Other main sizing combinations retain the explicit cross-auto diagnostic.
+
+Existing natural Text width supplies the main basis and automatic word minimum;
+existing final allocated-width measurement determines line count and height
+before cross-auto placement. A140→100px row with a40px sibling changes
+`aaaa aaaa aaaa` in10px monospace from one10px line at y90 to two10px lines at
+y80/90. Host Canvas metrics determine natural width; no native callback/font
+parity is claimed. This adds no measurement API, protocol or cache. Natural/final
+width entries retain existing reuse; the automatic-minimum query still records
+one pure request per preparation. Sibling paint reuses native solves and nodes.
+Public draws, empty-margin and old/new target points, focus preservation and
+exact cleanup cover the mounted transition.

@@ -114,6 +114,7 @@ try {
       assert.equal(receipt.directionMatrix, true, 'Installed package must honor the finite logical-edge direction and wrap matrix');
       assert.equal(receipt.autoMargins, true, 'Installed package must honor finite physical auto margins and their alignment precedence');
       assert.equal(receipt.ownerCrossAuto, true, 'Installed package must measure direct wrapped Flex owners before automatic cross-margin placement');
+      assert.equal(receipt.automaticTextCrossWidth, true, 'Installed package must settle automatic-width Text before automatic cross-margin placement');
       console.warn('Packed auto margins: 104 fixture cases passed');
       assert.equal(receipt.logicalMargins, true, 'Installed logical percentage margins must move Layer targets without new native nodes');
       assert.equal(receipt.layoutDirection, true, 'Installed direction must reach retained Layer geometry and targets');

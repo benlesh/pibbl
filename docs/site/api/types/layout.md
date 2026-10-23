@@ -289,3 +289,12 @@ grow/shrink, without query/aspect sizing. Unsupported intrinsic content remains
 an error even under stretch. The Studio owner cross-auto section shows three
 jobs changing height60→90 and top60→30 as width160→90. Other layout-owner and
 pure intrinsic auto-margin shapes remain deferred.
+
+
+The direct generic wrapped Text cross-auto subset also accepts omitted or
+`'auto'` width with automatic basis, zero grow, positive/default shrink and no
+main min/max. Visible/default fit/overflow and no query/aspect sizing remain
+required. Natural Canvas width supplies its basis; final allocated width controls
+line count before auto-margin placement. In the Text comparison, a140→100px
+row with a40px sibling changes one10px line at y90 to two at y80/90. This is
+host Text sizing, without a native font-parity claim.

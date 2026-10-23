@@ -25,6 +25,41 @@ try {
     await page.waitForTimeout(230);
   };
   const selected = async name => assert.match(await frame.locator('pre').innerText(), new RegExp(`selected: ${name}`));
+  const installAutoCrossDrawProbe = () => sandbox.evaluate(() => {
+    const canvas = document.querySelector('canvas');
+    const context = canvas.getContext('2d');
+    const draws = [];
+    const fillText = context.fillText;
+    context.fillText = function(text, x, y, maxWidth) {
+      if (text.includes('aaaa')) {
+        const point = this.getTransform().transformPoint({x,y});
+        draws.push({ x: point.x, y: point.y });
+      }
+      return fillText.call(this, text, x, y, maxWidth);
+    };
+    globalThis.__PIBBL_AUTO_CROSS_DRAWS__ = draws;
+  });
+  const autoCrossBasis = async () => JSON.parse((await frame.locator('pre').innerText()).split('auto cross transform: ')[1]);
+  const autoCrossDraws = async () => sandbox.evaluate(basis => {
+    const inverse = new DOMMatrix([basis.a,basis.b,basis.c,basis.d,basis.e,basis.f]).inverse();
+    return globalThis.__PIBBL_AUTO_CROSS_DRAWS__.map(draw => {
+      const point = inverse.transformPoint(draw);
+      return {x:+point.x.toFixed(3),y:+point.y.toFixed(3)};
+    });
+  }, await autoCrossBasis());
+  const autoCrossSiblingBox = async (left) => {
+    const box = {left,top:260,width:40,height:40};
+    const colors = await sandbox.evaluate(({basis,box}) => {
+      const context = document.querySelector('canvas').getContext('2d');
+      const matrix = new DOMMatrix([basis.a,basis.b,basis.c,basis.d,basis.e,basis.f]);
+      return [[box.left+2,box.top+2],[box.left+38,box.top+38]].map(([x,y]) => {
+        const point=matrix.transformPoint({x,y});
+        return [...context.getImageData(Math.floor(point.x),Math.floor(point.y),1,1).data];
+      });
+    }, {basis:await autoCrossBasis(),box});
+    assert.deepEqual(colors,[[66,107,97,255],[66,107,97,255]],'host-transformed sibling corners');
+    return box;
+  };
   await click(500, 110); // Frozen proof.
   const frozen = await read();
   await click(250, 110); // Paint.
@@ -32,6 +67,52 @@ try {
   assert.equal(painted.allocationPasses, frozen.allocationPasses);
   assert.equal(painted.allocationItemVisits, frozen.allocationItemVisits);
   assert.ok(painted.allocationCacheHits > frozen.allocationCacheHits);
+
+  await installAutoCrossDrawProbe();
+  await click(500, 76); // Automatic-width cross-auto comparison.
+  assert.match(await frame.locator('pre').innerText(), /AUTO CROSS COMPARISON/);
+  const naturalWidth = await sandbox.evaluate(() => {
+    const context = document.querySelector('canvas').getContext('2d');
+    context.save(); context.font = '10px monospace';
+    const width = context.measureText('aaaa aaaa aaaa').width;
+    context.restore(); return width;
+  });
+  assert.ok(naturalWidth > 80 && naturalWidth < 90, `browser natural width ${naturalWidth}`);
+  const initialAutoDraws = await autoCrossDraws();
+  assert.deepEqual(initialAutoDraws.slice(-1), [{ x: 28, y: 350 }]);
+  await click(35, 345);
+  assert.match(await frame.locator('pre').innerText(), /auto cross hits: 0/);
+  await click(35, 355); await selected('auto cross text');
+  const wideSibling = await autoCrossSiblingBox(28+naturalWidth);
+  assert.deepEqual({ top: wideSibling.top, width: wideSibling.width, height: wideSibling.height }, { top: 260, width: 40, height: 40 });
+  await click(wideSibling.left + 20, wideSibling.top + 20); await selected('auto cross sibling');
+  const beforeAutoWidth = await read();
+  await sandbox.evaluate(() => { globalThis.__PIBBL_AUTO_CROSS_DRAWS__.length = 0; });
+  await click(90, 110); // 140 -> 100.
+  assert.match(await frame.locator('pre').innerText(), /comparison width: 100/);
+  assert.deepEqual((await autoCrossDraws()).slice(-2), [{ x: 28, y: 340 }, { x: 28, y: 350 }]);
+  const narrowSibling = await autoCrossSiblingBox(88);
+  assert.deepEqual({ top: narrowSibling.top, width: narrowSibling.width, height: narrowSibling.height }, { top: 260, width: 40, height: 40 });
+  assert.ok(narrowSibling.left < wideSibling.left, 'Browser-measured Text must release main-axis width after wrapping');
+  const narrowedAuto = await read();
+  assert.ok(narrowedAuto.solves > beforeAutoWidth.solves);
+  assert.ok(narrowedAuto.measuredLeaves > beforeAutoWidth.measuredLeaves);
+  assert.equal(narrowedAuto.nodeCreates, beforeAutoWidth.nodeCreates);
+  await click(wideSibling.left + 20, wideSibling.top + 20);
+  assert.match(await frame.locator('pre').innerText(), /auto cross hits: 1/);
+  await click(narrowSibling.left + 20, narrowSibling.top + 20); await selected('auto cross sibling');
+  await click(35, 335);
+  assert.match(await frame.locator('pre').innerText(), /auto cross hits: 1/);
+  await click(35, 345); await selected('auto cross text');
+  assert.match(await frame.locator('pre').innerText(), /auto cross hits: 2/);
+  const beforeAutoPaint = await read();
+  await click(250, 110); // Sibling-only paint.
+  const autoPainted = await read();
+  assert.equal(autoPainted.solves, beforeAutoPaint.solves);
+  assert.equal(autoPainted.measuredLeaves, beforeAutoPaint.measuredLeaves + 1);
+  assert.equal(autoPainted.nodeCreates, beforeAutoPaint.nodeCreates);
+
+  await click(500, 76); // Return to the existing controls.
   await click(500, 40); // Minimum comparison.
   await click(548, 320); await selected('empty left');
   await click(552, 320); await selected('empty right');

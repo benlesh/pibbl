@@ -4230,3 +4230,83 @@ it.runIf(experimentalLayout)('requires supported intrinsic descendants for a cro
   const owner = createElement(Flex, { style: { width: 90, minWidth: 0, flexShrink: 0, flexWrap: 'wrap', marginTop: 'auto' }, children: createElement(Text, { style: { width: 70, height: 20, minWidth: 0, flexShrink: 0 }, children: 'unsupported intrinsic job' }) });
   expect(() => layoutFlex({ x: 0, y: 0, width: 240, height: 120 }, [owner], { alignItems: 'stretch' }, measurement)).toThrow(/measurement is required but unsupported/);
 });
+
+it.runIf(experimentalLayout)('measures automatic-width Text before placing an automatic cross-axis margin', async () => {
+  const baseline = snapshotWasmLayoutDiagnostics();
+  const ownerWidth = signal(140);
+  const siblingPaint = signal('#2f6b97');
+  const focused: string[] = [], hits: string[] = [];
+  const canvas = document.createElement('canvas'); canvas.width = 140; canvas.height = 100; document.body.append(canvas);
+  const context = canvas.getContext('2d')!;
+  context.font = '10px monospace';
+  const naturalWidth = context.measureText('aaaa aaaa aaaa').width;
+  expect(naturalWidth).toBeGreaterThan(80);
+  expect(naturalWidth).toBeLessThan(90);
+  const draws: Array<{ x: number; y: number }> = [];
+  const fillText = context.fillText;
+  vi.spyOn(context, 'fillText').mockImplementation(function(this: CanvasRenderingContext2D, text, x, y, maxWidth) {
+    if (text.includes('aaaa')) { const transform = this.getTransform(); draws.push({ x: transform.e + x, y: transform.f + y }); }
+    fillText.call(this, text, x, y, maxWidth);
+  });
+  function Scene() {
+    return <FocusManagement><Flex style={{ width: ownerWidth, height: 100 }}>
+      <Text key="text" keyboardFocusable onFocus={() => focused.push('text')} onClick={() => hits.push('text')} style={{ wrap: true, font: '10px monospace', lineHeight: 10, marginTop: 'auto', fill: '#19375b', cursor: 'pointer' }}>aaaa aaaa aaaa</Text>
+      <Rectangle key="sibling" keyboardFocusable onFocus={() => focused.push('sibling')} onClick={() => hits.push('sibling')} style={{ width: 40, height: 40, minWidth: 0, minHeight: 0, flexShrink: 0, fill: siblingPaint, cursor: 'pointer' }} />
+    </Flex></FocusManagement>;
+  }
+  const controller = pibbl(canvas, <Scene />); controllers.push(controller); await nextFrame();
+  expect(draws.slice(-1)).toEqual([{ x: 0, y: 90 }]);
+  expect([...context.getImageData(Math.ceil(naturalWidth) + 1, 5, 1, 1).data]).toEqual([47, 107, 151, 255]);
+  expect(context.getImageData(Math.floor(naturalWidth) - 1, 5, 1, 1).data[3]).toBe(0);
+  canvas.focus({ preventScroll: true });
+  canvas.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', code: 'Tab', bubbles: true, cancelable: true }));
+  expect(focused).toEqual(['text', 'sibling']);
+  clickCanvas(canvas, 5, 85); await nextFrame(); expect(hits).toEqual([]);
+  clickCanvas(canvas, 5, 95); await nextFrame(); expect(hits).toEqual(['text']);
+  clickCanvas(canvas, 110, 5); await nextFrame(); expect(hits).toEqual(['text', 'sibling']);
+  const initial = snapshotWasmLayoutDiagnostics();
+
+  const beforeWidthFocus = focused.slice();
+  draws.length = 0; ownerWidth.set(100); await nextFrame();
+  expect(focused).toEqual(beforeWidthFocus);
+  expect(draws.slice(-2)).toEqual([{ x: 0, y: 80 }, { x: 0, y: 90 }]);
+  const narrowed = snapshotWasmLayoutDiagnostics();
+  expect(narrowed.solves).toBeGreaterThan(initial.solves);
+  expect(narrowed.measuredLeaves).toBeGreaterThan(initial.measuredLeaves);
+  expect(narrowed.nodeCreates).toBe(initial.nodeCreates);
+  clickCanvas(canvas, 5, 75); await nextFrame(); expect(hits).toEqual(['text', 'sibling']);
+  clickCanvas(canvas, 5, 85); await nextFrame(); expect(hits).toEqual(['text', 'sibling', 'text']);
+  clickCanvas(canvas, 110, 5); await nextFrame(); expect(hits).toEqual(['text', 'sibling', 'text']);
+  clickCanvas(canvas, 80, 5); await nextFrame(); expect(hits).toEqual(['text', 'sibling', 'text', 'sibling']);
+
+  const beforePaint = snapshotWasmLayoutDiagnostics();
+  siblingPaint.set('#a63758'); await nextFrame();
+  const painted = snapshotWasmLayoutDiagnostics();
+  expect(painted.solves).toBe(beforePaint.solves);
+  expect(painted.measuredLeaves).toBe(beforePaint.measuredLeaves + 1);
+  expect(painted.nodeCreates).toBe(initial.nodeCreates);
+  controller.dispose();
+  const disposed = snapshotWasmLayoutDiagnostics();
+  expect(disposed.activeNodes).toBe(baseline.activeNodes);
+  expect(disposed.activeArenas).toBe(baseline.activeArenas);
+  expect(disposed.cachedMeasurements).toBe(baseline.cachedMeasurements);
+});
+
+it.runIf(experimentalLayout).each([
+  { label: 'numeric basis', style: { flexBasis: 80 } },
+  { label: 'positive grow', style: { flexGrow: 1 } },
+  { label: 'zero shrink', style: { flexShrink: 0 } },
+  { label: 'explicit main minimum', style: { minWidth: 0 } },
+  { label: 'main maximum', style: { maxWidth: 80 } },
+])('keeps automatic-width cross-auto Text bounded: $label', ({ style }) => {
+  const text = createElement(Text, { children: 'aaaa aaaa aaaa', style: { width: 'auto', wrap: true, font: '10px monospace', lineHeight: 10, marginTop: 'auto', ...style } as import('@pibbl/core').TextStyle });
+  expect(() => layoutFlex({ x: 0, y: 0, width: 140, height: 100 }, [text], {}, measurement)).toThrow(/auto cross-axis margins/);
+});
+
+it.runIf(experimentalLayout)('accepts explicit automatic Text width with cross-auto placement', () => {
+  const text = createElement(Text, { children: 'aaaa aaaa aaaa', style: { width: 'auto', wrap: true, font: '10px monospace', lineHeight: 10, marginTop: 'auto' } });
+  const sibling = createElement(Rectangle, { style: { width: 40, height: 40, minWidth: 0, flexShrink: 0 } });
+  expect(layoutFlex({ x: 0, y: 0, width: 200, height: 100 }, [text, sibling], {}, measurement)).toEqual([
+    { x: 0, y: 90, width: 140, height: 10 }, { x: 140, y: 0, width: 40, height: 40 },
+  ]);
+});
