@@ -2,7 +2,8 @@
 
 ## Current checkpoint and single next slice — 2026-10-23
 
-Latest delivery is slice123 (fixed absolute children with axis-wise alignment).
+Latest delivery is slice123 `51bc20ad` (fixed absolute children with axis-wise alignment).
+Consolidation41 for121–123 passes below.
 Slice122 is `057873a3` (bounded direct-Flex absolute participation).
 Slice121 is `f4605ef2` (decorated-parent static/relative evidence).
 Slice120 is `a9d79df8` (bounded explicit direct-Flex static/relative positioning).
@@ -3397,14 +3398,30 @@ issue; one duplicate installed assertion removed. EnvironmentNode26.9.0/macOS
 Chromium; no Node24 trust claim. Counts remain8complete/12experimental/6partial/
 6missing/1excluded and all7gates open. Full-program review remains at the end.
 
-## [NEXT] Consolidation41 for slices121–123
+## Consolidation41 completed for slices121–123
 
-Commit123 separately, then combine the existing25-file layout/loading matrix
-with decorated-parent and absolute-participation tests in experimental/normal
-lanes. After the checkpoint select the next material fixed-program placement
-exit: derived absolute dimensions or containing-block semantics, rather than
-more supported-alignment permutations. Keep one next slice and all release
-limitations explicit.
+Separate delivery commits121 `f4605ef2`,122 `057873a3`,123 `51bc20ad`.
+Fresh27-file experimental matrix571passed/9skipped580 in79.38s; normal
+matrix218passed/362skipped580 in4.31s. Both uninterrupted runs pass; expected
+negative-case console diagnostics are included. Logs
+`/tmp/pibbl-consolidation41-focused.txt` and `...consolidation41-normal.txt`.
+Existing layout/loading, receiver ownership, pure measurement, geometry, styles
+and new positioning tests compose successfully. No source/built/installed receipt
+was replaced by a documentation claim. No kernel/ABI/baseline change, capability
+promotion or Node24 trust claim. All7release gates remain open.
+
+## [NEXT] Opposing-inset derived absolute dimensions (slice124)
+
+Use the existing `width: "auto"`/`height: "auto"` vocabulary (or omitted dimension
+on a function child's style) only when both numeric opposing insets on that axis
+are present. Derive against the parent's inner-border/padding-box dimension,
+clamp a negative finite result to zero, then preserve LTRleft/RTLright/top
+placement precedence. Unpaired automatic axes remain unsupported rather than
+inventing intrinsic measurement. Public outcome: decorated owner204×104→244×124
+with L12/R18/T8/B10 yields170×82→210×102 at14,10, while siblings keep flow
+slots. Add public RED first; preserve explicit-size alignment, source-order,
+receiver metadata, focus/keys/targets and exact teardown. No new API, ABI,
+containing-block cascade, margins, bounds or decoration admission.
 
 ### Consolidation 24 completed for delivery slices 70–72
 
